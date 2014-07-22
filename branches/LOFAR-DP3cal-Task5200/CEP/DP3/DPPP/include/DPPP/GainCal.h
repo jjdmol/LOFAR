@@ -151,6 +151,10 @@ namespace {
       void removeDeadAntennas ();
 
       // Fills the matrices itsVis and itsMVis
+      void fillMatrices (casa::Complex* model, casa::Complex* data, float* weight,
+                         const casa::Bool* flag);
+
+      // Fills the matrices itsVis and itsMVis
       void fillMatrices (dcomplex* model, casa::Complex* data, float* weight,
                          const casa::Bool* flag);
 
@@ -177,7 +181,7 @@ namespace {
       DPInput*         itsInput;
       string           itsName;
       string           itsSourceDBName;
-      string           itsModelColName;
+      bool             itsUseModelColumn;
       string           itsParmDBName;
       bool             itsApplyBeam;
       shared_ptr<BBS::ParmDB> itsParmDB;

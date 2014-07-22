@@ -66,8 +66,8 @@ namespace LOFAR {
                       const string& prefix)
       : itsInput         (input),
         itsName          (prefix),
-        itsSourceDBName  (parset.getString (prefix + "sourcedb","")),
-        itsModelColName  (parset.getString (prefix + "modelcolumn", "")),
+        itsSourceDBName  (""),
+        itsUseModelColumn(parset.getBool (prefix + "usemodelcolumn", false)),
         itsParmDBName    (parset.getString (prefix + "parmdb")),
         itsApplyBeam     (parset.getBool (prefix + "usebeammodel", false)),
         itsMode          (parset.getString (prefix + "caltype")),
@@ -87,7 +87,8 @@ namespace LOFAR {
         itsStalled       (0),
         itsNTimes        (0)
     {
-      if (itsModelColName=="") {
+      if (!itsUseModelColumn) {
+        itsSourceDBName = parset.getString (prefix + "sourcedb","");
         BBS::SourceDB sourceDB(BBS::ParmDBMeta("", itsSourceDBName), false);
 
         vector<PatchInfo> patchInfo=sourceDB.getPatchInfo();
@@ -109,6 +110,9 @@ namespace LOFAR {
     {
       info() = infoIn;
       info().setNeedVisData();
+      if (itsUseModelColumn) {
+        info().setNeedModelData();
+      }
       info().setNeedWrite();
 
       uint nBl=info().nbaselines();
@@ -167,7 +171,8 @@ namespace LOFAR {
 
     void GainCal::show (std::ostream& os) const
     {
-      os << "GainCal " << itsName << std::endl;
+      os << "GainCal " << itsName << endl;
+      os << "  use model col:  " << boolalpha << itsUseModelColumn << endl;
       os << "  sourcedb:       " << itsSourceDBName << endl;
       os << "   number of patches: " << itsPatchList.size() << endl;
       os << "  parmdb:         " << itsParmDBName << endl;
@@ -230,55 +235,58 @@ namespace LOFAR {
 
       const size_t thread = OpenMP::threadNum();
 
+      Complex* data=buf.getData().data();
+      Complex* model=buf.getModel().data();
+      float* weight = buf.getWeights().data();
+      const Bool* flag=buf.getFlags().data();
+
       // Simulate.
       //
       // Model visibilities for each direction of interest will be computed
       // and stored.
 
-      double time = buf.getTime();
-
-      ThreadPrivateStorage &storage = itsThreadStorage[thread];
-      size_t stride_uvw[2] = {1, 3};
-      cursor<double> cr_uvw_split(&(storage.uvw[0]), 2, stride_uvw);
-
-      Complex* data=buf.getData().data();
-      float* weight = buf.getWeights().data();
-      const Bool* flag=buf.getFlags().data();
-
-      size_t stride_model[3] = {1, nCr, nCr * nCh};
-      fill(storage.model.begin(), storage.model.end(), dcomplex());
-
-      const_cursor<double> cr_uvw = casa_const_cursor(buf.getUVW());
-      splitUVW(nSt, nBl, cr_baseline, cr_uvw, cr_uvw_split);
-      cursor<dcomplex> cr_model(&(storage.model_patch[0]), 3, stride_model);
-
-      StationResponse::vector3r_t refdir = dir2Itrf(info().delayCenterCopy(),storage.measConverter);
-      StationResponse::vector3r_t tiledir = dir2Itrf(info().tileBeamDirCopy(),storage.measConverter);
-      // Convert the directions to ITRF for the given time.
-      storage.measFrame.resetEpoch (MEpoch(MVEpoch(time/86400), MEpoch::UTC));
-
       itsTimerPredict.start();
-//#pragma omp parallel for
-      for(size_t dr = 0; dr < nDr; ++dr)
-      {
-        fill(storage.model_patch.begin(), storage.model_patch.end(), dcomplex());
+      ThreadPrivateStorage &storage = itsThreadStorage[thread];
+      if (!itsUseModelColumn) {
+        double time = buf.getTime();
 
-        simulate(itsPhaseRef, itsPatchList[dr], nSt, nBl, nCh, cr_baseline,
-                 cr_freq, cr_uvw_split, cr_model);
+        size_t stride_uvw[2] = {1, 3};
+        cursor<double> cr_uvw_split(&(storage.uvw[0]), 2, stride_uvw);
 
-        for(size_t i = 0; i < itsPatchList[dr]->nComponents(); ++i)
-        { // Apply beam for every source, not only once per patch
-          applyBeam(time, itsPatchList[dr]->component(i)->position(), itsApplyBeam,
-                    info().chanFreqs(), &(itsThreadStorage[thread].model_patch[0]),
-                    refdir, tiledir, &(itsThreadStorage[thread].beamvalues[0]),
-                    storage.measConverter);
+        size_t stride_model[3] = {1, nCr, nCr * nCh};
+        fill(storage.model.begin(), storage.model.end(), dcomplex());
+
+        const_cursor<double> cr_uvw = casa_const_cursor(buf.getUVW());
+        splitUVW(nSt, nBl, cr_baseline, cr_uvw, cr_uvw_split);
+        cursor<dcomplex> cr_model(&(storage.model_patch[0]), 3, stride_model);
+
+        StationResponse::vector3r_t refdir = dir2Itrf(info().delayCenterCopy(),storage.measConverter);
+        StationResponse::vector3r_t tiledir = dir2Itrf(info().tileBeamDirCopy(),storage.measConverter);
+        // Convert the directions to ITRF for the given time.
+        storage.measFrame.resetEpoch (MEpoch(MVEpoch(time/86400), MEpoch::UTC));
+
+  //#pragma omp parallel for
+        for(size_t dr = 0; dr < nDr; ++dr)
+        {
+          fill(storage.model_patch.begin(), storage.model_patch.end(), dcomplex());
+
+          simulate(itsPhaseRef, itsPatchList[dr], nSt, nBl, nCh, cr_baseline,
+                   cr_freq, cr_uvw_split, cr_model);
+
+          for(size_t i = 0; i < itsPatchList[dr]->nComponents(); ++i)
+          { // Apply beam for every source, not only once per patch
+            applyBeam(time, itsPatchList[dr]->component(i)->position(), itsApplyBeam,
+                      info().chanFreqs(), &(itsThreadStorage[thread].model_patch[0]),
+                      refdir, tiledir, &(itsThreadStorage[thread].beamvalues[0]),
+                      storage.measConverter);
+          }
+
+          for (size_t i=0; i<itsThreadStorage[thread].model_patch.size();++i) {
+            itsThreadStorage[thread].model[i]+=
+                itsThreadStorage[thread].model_patch[i];
+          }
         }
-
-        for (size_t i=0; i<itsThreadStorage[thread].model_patch.size();++i) {
-          itsThreadStorage[thread].model[i]+=
-              itsThreadStorage[thread].model_patch[i];
-        }
-      }
+      } //if(itsUseModelColumn)
 
       itsTimerPredict.stop();
       //copy result of model to data
@@ -294,7 +302,11 @@ namespace LOFAR {
           countAntUsedNotFlagged(flag);
           setAntennaMaps();
         }
-        fillMatrices(&storage.model[0],data,weight,flag);
+        if (itsUseModelColumn) {
+          fillMatrices(model,data,weight,flag);
+        } else {
+          fillMatrices(&storage.model[0],data,weight,flag);
+        }
 
         if (itsNTimes==itsSolInt-1) {
           if (itsMode=="diagonal" || itsMode=="phaseonly") {
@@ -318,6 +330,47 @@ namespace LOFAR {
     // flagged data from vis and mvis
     void GainCal::removeDeadAntennas() {
       //TODO: implement this function...
+    }
+
+
+    // Fills itsVis and itsMVis as matrices with all 00 polarizations in the
+    // top left, all 11 polarizations in the bottom right, etc. //TODO: make templated
+    void GainCal::fillMatrices (casa::Complex* model, casa::Complex* data, float* weight,
+                                const casa::Bool* flag) {
+      itsTimerFill.start();
+      vector<int>* antMap=&itsAntMaps[itsAntMaps.size()-1];
+
+      const size_t nBl = info().nbaselines();
+      const size_t nCh = info().nchan();
+      const size_t nCr = 4;
+
+      for (uint ch=0;ch<nCh;++ch) {
+        for (uint bl=0;bl<nBl;++bl) {
+          int ant1=(*antMap)[info().getAnt1()[bl]];
+          int ant2=(*antMap)[info().getAnt2()[bl]];
+          if (ant1==ant2 || ant1==-1 || ant2 == -1 || flag[bl*nCr*nCh+ch*nCr]) { // Only check flag of cr==0
+            continue;
+          }
+
+          for (uint cr=0;cr<nCr;++cr) {
+            itsVis (IPosition(6,ant1,cr/2,ch,itsNTimes,ant2,cr%2)) =
+                DComplex(data [bl*nCr*nCh+ch*nCr+cr]) *
+                DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+            itsMVis(IPosition(6,ant1,cr/2,ch,itsNTimes,ant2,cr%2)) =
+                DComplex(model[bl*nCr*nCh+ch*nCr+cr]) *
+                DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+
+            // conjugate transpose
+            itsVis (IPosition(6,ant2,cr%2,ch,itsNTimes,ant1,cr/2)) =
+                DComplex(conj(data [bl*nCr*nCh+ch*nCr+cr])) *
+                DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+            itsMVis(IPosition(6,ant2,cr%2,ch,itsNTimes,ant1,cr/2)) =
+                DComplex(conj(model[bl*nCr*nCh+ch*nCr+cr] )) *
+                DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+          }
+        }
+      }
+      itsTimerFill.stop();
     }
 
     // Fills itsVis and itsMVis as matrices with all 00 polarizations in the
