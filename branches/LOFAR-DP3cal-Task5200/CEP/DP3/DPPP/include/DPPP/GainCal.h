@@ -177,6 +177,7 @@ namespace {
       DPInput*         itsInput;
       string           itsName;
       string           itsSourceDBName;
+      string           itsModelColName;
       string           itsParmDBName;
       bool             itsApplyBeam;
       shared_ptr<BBS::ParmDB> itsParmDB;

@@ -66,14 +66,15 @@ namespace LOFAR {
                       const string& prefix)
       : itsInput         (input),
         itsName          (prefix),
-        itsSourceDBName  (parset.getString (prefix + "sourcedb")),
+        itsSourceDBName  (parset.getString (prefix + "sourcedb","")),
+        itsModelColName  (parset.getString (prefix + "modelcolumn", "")),
         itsParmDBName    (parset.getString (prefix + "parmdb")),
         itsApplyBeam     (parset.getBool (prefix + "usebeammodel", false)),
         itsMode          (parset.getString (prefix + "caltype")),
         itsTStep         (0),
         itsDebugLevel    (parset.getInt (prefix + "debuglevel", 0)),
         itsBaselines     (),
-        itsThreadStorage  (),
+        itsThreadStorage (),
         itsMaxIter       (parset.getInt (prefix + "maxiter", 50)),
         itsTolerance     (parset.getDouble (prefix + "tolerance", 1.e-5)),
         itsPropagateSolutions (parset.getBool(prefix + "propagatesolutions", false)),
@@ -86,18 +87,19 @@ namespace LOFAR {
         itsStalled       (0),
         itsNTimes        (0)
     {
-      BBS::SourceDB sourceDB(BBS::ParmDBMeta("", itsSourceDBName), false);
+      if (itsModelColName=="") {
+        BBS::SourceDB sourceDB(BBS::ParmDBMeta("", itsSourceDBName), false);
 
-      vector<PatchInfo> patchInfo=sourceDB.getPatchInfo();
-      vector<string> patchNames;
+        vector<PatchInfo> patchInfo=sourceDB.getPatchInfo();
+        vector<string> patchNames;
 
-      vector<string> sourcePatterns=parset.getStringVector(prefix + "sources",
-              vector<string>());
-      patchNames=makePatchList(sourceDB, sourcePatterns);
+        vector<string> sourcePatterns=parset.getStringVector(prefix + "sources",
+                                                             vector<string>());
+        patchNames=makePatchList(sourceDB, sourcePatterns);
 
+        itsPatchList = makePatches (sourceDB, patchNames, patchNames.size());
+      }
       ASSERT(itsMode=="diagonal" || itsMode=="phaseonly" || itsMode=="fulljones");
-
-      itsPatchList = makePatches (sourceDB, patchNames, patchNames.size());
     }
 
     GainCal::~GainCal()
@@ -453,8 +455,6 @@ namespace LOFAR {
       double fronormvis=0;
       double fronormmod=0;
 
-      double fronormvis1=0;
-      double fronormmod1=0;
       DComplex* vis_p;
       DComplex* mvis_p;
 
@@ -463,8 +463,8 @@ namespace LOFAR {
 
       uint vissize=itsVis.size();
       for (uint i=0;i<vissize;++i) {
-        fronormvis1+=norm(*vis_p++);
-        fronormmod1+=norm(*mvis_p++);
+        fronormvis+=norm(*vis_p++);
+        fronormmod+=norm(*mvis_p++);
       }
 
       fronormvis=sqrt(fronormvis);
@@ -555,30 +555,36 @@ namespace LOFAR {
           for (uint st=0;st<nUn;++st) {
             iS.h(st,0)=conj(iS.g(st,0));
           }
-
           for (uint st1=0;st1<nUn;++st1) {
             ww=0;
             t(0)=0;
-            mvis_p=&itsMVis(IPosition(6,0,0,0,0,st1,0));
-            vis_p = &itsVis(IPosition(6,0,0,0,0,st1,0));
+            mvis_p=&itsMVis(IPosition(6,0,0,0,0,st1%nSt,st1/nSt));
+            vis_p = &itsVis(IPosition(6,0,0,0,0,st1%nSt,st1/nSt));
             for (uint time=0;time<itsSolInt;++time) {
               for (uint ch=0;ch<nCh;++ch) {
                 for (uint st2=0;st2<nUn;++st2) {
-                  iS.z(nCh*nSt*time+ch*nSt+st2,0) = iS.h(st2,0) * *mvis_p; //itsMVis(IPosition(6,st2%nSt,st2/nSt,ch,time,st1%nSt,st1/nSt));
-                  ww+=norm(iS.z(nCh*nSt*time+ch*nSt+st2,0));
-                  t(0)+=conj(iS.z(nCh*nSt*time+ch*nSt+st2,0)) * *vis_p; //itsVis(IPosition(6,st2%nSt,st2/nSt,ch,time,st1%nSt,st1/nSt));
+                  iS.z(nCh*nUn*time+ch*nUn+st2,0) = iS.h(st2,0) * *mvis_p; //itsMVis(IPosition(6,st2%nSt,st2/nSt,ch,time,st1%nSt,st1/nSt));
+                  ww+=norm(iS.z(nCh*nUn*time+ch*nUn+st2,0));
+                  t(0)+=conj(iS.z(nCh*nUn*time+ch*nUn+st2,0)) * *vis_p; //itsVis(IPosition(6,st2%nSt,st2/nSt,ch,time,st1%nSt,st1/nSt));
                   mvis_p++;
                   vis_p++;
                 }
+                //cout<<"iS.z bij ch="<<ch<<"="<<iS.z<<endl<<"----"<<endl;
               }
             }
+            //cout<<"st1="<<st1%nSt<<(st1>=nSt?"y":"x")<<", t="<<t(0)<<"       ";
+            //cout<<", w="<<ww<<"       ";
             iS.g(st1,0)=t(0)/ww;
+            //cout<<", g="<<iS.g(st1,0)<<endl;
             if (itsMode=="phaseonly") {
               iS.g(st1,0)/=abs(iS.g(st1,0));
             }
           }
         }
         if (iter % 2 == 1) {
+          if (itsDebugLevel>7) {
+            cout<<"iter: "<<iter<<endl;
+          }
           if (dgx-dg <= 1.0e-3*dg) {
             if (itsDebugLevel>3) {
               cout<<"**"<<endl;
@@ -639,9 +645,6 @@ namespace LOFAR {
           }
 
           if (threestep) {
-            if (itsDebugLevel>7) {
-              cout<<"threestep"<<endl;
-            }
             if (sstep <= 0) {
               if (dg <= c1 * dgx) {
                 if (itsDebugLevel>7) {
@@ -707,7 +710,7 @@ namespace LOFAR {
       if (nSt>0) {
         DComplex p = conj(iS.g(0,0))/abs(iS.g(0,0));
         // Set phase of first gain to zero
-        for (uint st=0;st<nSt;++st) {
+        for (uint st=0;st<nUn;++st) {
           for (uint cr=0;cr<nCr;++cr) {
             iS.g(st,cr)*=p;
           }
@@ -724,17 +727,24 @@ namespace LOFAR {
       itsSols.push_back(iS.g.copy());
 
       if (itsDebugLevel>3) {
-        cout<<"g="<<iS.g<<endl;
+        //cout<<"g="<<iS.g<<endl;
+        cout<<"g=[";
+        for (uint i=0;i<nUn;++i) {
+          cout<<iS.g(i,0).real()<<(iS.g(i,0).imag()>=0?"+":"")<<iS.g(i,0).imag()<<"j; ";
+        }
+        cout<<endl;
+        THROW(Exception,"Klaar!");
       }
 
       if (dg > itsTolerance && itsDebugLevel>1 && nSt>0) {
         cout<<endl<<"Did not converge: dg="<<dg<<" tolerance="<<itsTolerance<<", nants="<<nSt<<endl;
         if (itsDebugLevel>12) {
           cout<<"g="<<iS.g<<endl;
-          exportToMatlab(0);
-          THROW(Exception,"Klaar!");
+          //exportToMatlab(0);
+          //THROW(Exception,"Klaar!");
         }
       }
+//      THROW(Exception,"Klaar!");
       itsTimerSolve.stop();
     }
 
