@@ -26,6 +26,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <Common/LofarLogger.h>
+#include <CoInterface/CorrelatedData.h>
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/gpu_wrapper.h>
@@ -50,21 +51,20 @@ namespace LOFAR
     class BeamFormedData: public SubbandProcOutputData
     {
     public:
+      class CorrelatedData: public MultiDimArrayHostBuffer<fcomplex,4>, public LOFAR::Cobalt::CorrelatedData {
+      public:
+        CorrelatedData(unsigned nrStations, 
+                                 unsigned nrChannels,
+                                 unsigned maxNrValidSamples,
+                                 gpu::Context &context);
+      };
+
       MultiDimArrayHostBuffer<float, 4> coherentData;
       MultiDimArrayHostBuffer<float, 4> incoherentData;
-     
-      BeamFormedData(unsigned nrCoherentTABs,
-                     unsigned nrCoherentStokes,
-                     size_t nrCoherentSamples,
-                     unsigned nrCoherentChannels,
-                     unsigned nrIncoherentTABs,
-                     unsigned nrIncoherentStokes,
-                     size_t nrIncoherentSamples,
-                     unsigned nrIncoherentChannels,
-                     gpu::Context &context);
 
-      /* Short-hand constructor to fetch all dimensions
-       * from a Parset */
+      CorrelatedData correlatedData;
+      bool emit_correlatedData;
+
       BeamFormedData(const Parset &ps,
                      gpu::Context &context);
     };

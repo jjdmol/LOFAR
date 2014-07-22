@@ -37,43 +37,50 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-
-    BeamFormedData::BeamFormedData(
-        unsigned nrCoherentTABs,
-        unsigned nrCoherentStokes,
-        size_t nrCoherentSamples,
-        unsigned nrCoherentChannels,
-        unsigned nrIncoherentTABs,
-        unsigned nrIncoherentStokes,
-        size_t nrIncoherentSamples,
-        unsigned nrIncoherentChannels,
-        gpu::Context &context) :
-      coherentData(boost::extents[nrCoherentTABs]
-                                 [nrCoherentStokes]
-                                 [nrCoherentSamples]
-                                 [nrCoherentChannels], context, 0),
-      incoherentData(boost::extents[nrIncoherentTABs]
-                                   [nrIncoherentStokes]
-                                   [nrIncoherentSamples]
-                                   [nrIncoherentChannels], context, 0)
-    {
-    }
-
     BeamFormedData::BeamFormedData(
         const Parset &ps,
         gpu::Context &context) :
-      coherentData(boost::extents[ps.settings.beamFormer.maxNrCoherentTABsPerSAP()]
-                                 [ps.settings.beamFormer.coherentSettings.nrStokes]
-                                 [ps.settings.beamFormer.coherentSettings.nrSamples]
-                                 [ps.settings.beamFormer.coherentSettings.nrChannels],
-                                 context, 0),
-      incoherentData(boost::extents[ps.settings.beamFormer.maxNrIncoherentTABsPerSAP()]
-                                   [ps.settings.beamFormer.incoherentSettings.nrStokes]
-                                   [ps.settings.beamFormer.incoherentSettings.nrSamples]
-                                   [ps.settings.beamFormer.incoherentSettings.nrChannels],
-                                   context, 0)
+      coherentData(ps.settings.beamFormer.anyCoherentTABs()
+        ? boost::extents[ps.settings.beamFormer.maxNrCoherentTABsPerSAP()]
+                        [ps.settings.beamFormer.coherentSettings.nrStokes]
+                        [ps.settings.beamFormer.coherentSettings.nrSamples]
+                        [ps.settings.beamFormer.coherentSettings.nrChannels]
+        : boost::extents[0][0][0][0],
+        context, 0),
+
+      incoherentData(ps.settings.beamFormer.anyIncoherentTABs()
+        ? boost::extents[ps.settings.beamFormer.maxNrIncoherentTABsPerSAP()]
+                        [ps.settings.beamFormer.incoherentSettings.nrStokes]
+                        [ps.settings.beamFormer.incoherentSettings.nrSamples]
+                        [ps.settings.beamFormer.incoherentSettings.nrChannels]
+        : boost::extents[0][0][0][0],
+        context, 0),
+
+      correlatedData(ps.settings.correlator.enabled ? ps.settings.antennaFields.size()           : 0,
+                     ps.settings.correlator.enabled ? ps.settings.correlator.nrChannels          : 0,
+                     ps.settings.correlator.enabled ? ps.settings.correlator.nrSamplesPerChannel : 0,
+                     context),
+      emit_correlatedData(false)
     {
     }
+
+
+    BeamFormedData::CorrelatedData::CorrelatedData(
+      unsigned nrStations, unsigned nrChannels,
+      unsigned maxNrValidSamples, gpu::Context &context)
+      :
+      MultiDimArrayHostBuffer<fcomplex, 4>(
+        boost::extents
+        [nrStations * (nrStations + 1) / 2]
+        [nrChannels][NR_POLARIZATIONS]
+        [NR_POLARIZATIONS], 
+        context, 0),
+      LOFAR::Cobalt::CorrelatedData(nrStations, nrChannels, 
+                     maxNrValidSamples, this->origin(),
+                     this->num_elements(), heapAllocator, 1)
+    {
+    }
+
 
     BeamFormerSubbandProc::BeamFormerSubbandProc(
       const Parset &parset,
