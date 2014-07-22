@@ -98,18 +98,13 @@ namespace LOFAR
       size_t devB_size = 0;
 
       if (factories.correlator) {
-        const bool correlatorPPF = ps.settings.correlator.nrChannels > 1;
-
         CorrelatorStep::Factories &cf = *factories.correlator;
 
         devA_size = std::max(devA_size,
-          correlatorPPF ? cf.correlator.bufferSize(CorrelatorKernel::INPUT_DATA)
-                        : std::max(cf.delayAndBandPass.bufferSize(DelayAndBandPassKernel::INPUT_DATA),
-                                   cf.correlator.bufferSize(CorrelatorKernel::OUTPUT_DATA)));
+          cf.firFilter ? cf.firFilter->bufferSize(FIR_FilterKernel::INPUT_DATA)
+                       : cf.delayAndBandPass.bufferSize(DelayAndBandPassKernel::INPUT_DATA));
         devB_size = std::max(devB_size,
-          correlatorPPF ? std::max(cf.correlator.bufferSize(CorrelatorKernel::INPUT_DATA),
-                                   cf.correlator.bufferSize(CorrelatorKernel::OUTPUT_DATA))
-                        : cf.correlator.bufferSize(CorrelatorKernel::INPUT_DATA));
+                      cf.correlator.bufferSize(CorrelatorKernel::INPUT_DATA));
       }
 
       if (factories.preprocessing) {
@@ -119,13 +114,11 @@ namespace LOFAR
           factories.preprocessing->intToFloat.bufferSize(IntToFloatKernel::OUTPUT_DATA));
       }
 
-      if (factories.coherentStokes) {
-        devA_size = std::max(devA_size,
-          factories.coherentStokes->beamFormer.bufferSize(BeamFormerKernel::OUTPUT_DATA));
-      }
-
       if (factories.incoherentStokes) {
-        /* buffers of the preprocessing step are big enough */
+        ASSERT(factories.preprocessing);
+
+        /* incoherentStokes uses devA and devB, but the sizes provided b the preprocessing
+           pipeline are already sufficient. */
       }
 
       // NOTE: For an explanation of the different buffers being used, please refer
@@ -151,7 +144,7 @@ namespace LOFAR
       if (factories.coherentStokes) {
         coherentStep = std::auto_ptr<BeamFormerCoherentStep>(
           new BeamFormerCoherentStep(parset, queue, context, *factories.coherentStokes,
-          devA, devB));
+          devB));
       }
 
       if (factories.incoherentStokes) {

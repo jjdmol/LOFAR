@@ -23,6 +23,8 @@ For max size, we assume:
 Note:
   MiB = 2^20 bytes (= 1048576 bytes).
 
+[ A -> E, trashes B ]
+
 Flow:           Data dimensions:                        Max size (fcomplex):                        Buffer:
 ===================================================================================================================
 (input)         [station][sample][pol]                  [80][196608][2]     = 120 MiB               A
@@ -32,18 +34,20 @@ Flow:           Data dimensions:                        Max size (fcomplex):    
    |            [station][pol][sample]                  [80][2][196608]     = 240 MiB               Nch: B
    V
   FFT (if >1ch) {inplace}
-   |            [station][pol][sample][channel]         [80][2][3072][64]   = 240 MiB               Nch: B
+   |            [station][pol][sample][channel]         [80][2][3072][64]   = 240 MiB               Nch: E
    V
 Delay compensation + Band pass + Transpose {I/O: delays}
-   |            [station][channel][sample][pol]         [80][64][3072][2]   = 240 MiB               1ch: B
-   V                                                                                                Nch: A
+   |            [station][channel][sample][pol]         [80][64][3072][2]   = 240 MiB               B
+   V
 Correlator
-   |            [baseline][channel][pol][pol]           [3240][64][2][2]    =   6 MiB               1ch: A
-   V                                                                                                Nch: B
+   |            [baseline][channel][pol][pol]           [3240][64][2][2]    =   6 MiB               E
+   V
 (output)
 
 
-    1ch        Nch
-A = 120 MiB    240 MiB
-B = 240 MiB    240 MiB
+A = 120 MiB
+B = 240 MiB
+E = 240 MiB
+
+A and E are allowed to overlap if A is not needed afterwards.
 

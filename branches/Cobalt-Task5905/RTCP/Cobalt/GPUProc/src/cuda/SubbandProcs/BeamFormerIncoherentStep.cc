@@ -120,22 +120,20 @@ namespace LOFAR
 
         // final FFT: B -> B
         incoherentFinalFFT = std::auto_ptr<FFT_Kernel>(
-          factories.incoherentFinalFFT->create(queue, *devB, *devB));
+          factories.incoherentFinalFFT->create(queue, *devB, *devA));
       }
 
-      // Incoherent Stokes kernel: A/B -> B/A
+      // Incoherent Stokes kernel: A-> B
       //
       // 1ch: input comes from incoherentInverseFFT in A, output in B
       // Nch: input comes from incoherentFinalFFT in B, output in A
       incoherentStokesKernel = std::auto_ptr<IncoherentStokesKernel>(
         factories.incoherentStokes.create(
-          queue,
-          incoherentStokesPPF ? *devB : *devA,
-          incoherentStokesPPF ? *devA : *devB));
+          queue, *devA, *devB));
     }
 
     gpu::DeviceMemory BeamFormerIncoherentStep::outputBuffer() {
-      return incoherentStokesPPF ? *devA : *devB;
+      return *devB;
     }
 
 

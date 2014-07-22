@@ -72,7 +72,6 @@ namespace LOFAR
         gpu::Stream &i_queue,
         gpu::Context &context,
         Factories &factories,
-        boost::shared_ptr<gpu::DeviceMemory> i_devA,
         boost::shared_ptr<gpu::DeviceMemory> i_devB);
 
       void initMembers(gpu::Context &context,
@@ -91,7 +90,6 @@ namespace LOFAR
       const bool coherentStokesPPF;
 
       // Data members
-      boost::shared_ptr<gpu::DeviceMemory> devA;
       boost::shared_ptr<gpu::DeviceMemory> devB;
       gpu::DeviceMemory devC;
       gpu::DeviceMemory devD;

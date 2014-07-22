@@ -133,6 +133,7 @@ namespace LOFAR
       //Data members
       boost::shared_ptr<gpu::DeviceMemory> devA;
       boost::shared_ptr<gpu::DeviceMemory> devB;
+      gpu::DeviceMemory devE;
 
       /*
        * Kernels

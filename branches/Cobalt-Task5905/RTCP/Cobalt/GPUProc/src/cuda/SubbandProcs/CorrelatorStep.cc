@@ -224,6 +224,10 @@ namespace LOFAR
       :
       ProcessStep(parset, i_queue),
       correlatorPPF(ps.settings.correlator.nrChannels > 1),
+      devE(context, correlatorPPF
+                    ? std::max(factories.correlator.bufferSize(CorrelatorKernel::INPUT_DATA),
+                               factories.correlator.bufferSize(CorrelatorKernel::OUTPUT_DATA))
+                    : factories.correlator.bufferSize(CorrelatorKernel::OUTPUT_DATA)),
       outputCounter(context, "output (correlator)"),
       integratedData(nrSubbandsPerSubbandProc)
     {
@@ -239,18 +243,16 @@ namespace LOFAR
         firFilterKernel = factories.firFilter->create(queue, *devA, *devB);
 
         // FFT
-        fftKernel = factories.fft->create(queue, *devB, *devB);
+        fftKernel = factories.fft->create(queue, *devB, devE);
       }
 
       // Delay and Bandpass
       delayAndBandPassKernel = std::auto_ptr<DelayAndBandPassKernel>(factories.delayAndBandPass.create(queue, 
-        correlatorPPF ? *devB : *devA,
-        correlatorPPF ? *devA : *devB));
+        devE, *devB));
 
       // Correlator
       correlatorKernel = std::auto_ptr<CorrelatorKernel>(factories.correlator.create(queue,
-        correlatorPPF ? *devA : *devB,
-        correlatorPPF ? *devB : *devA));
+        *devB, devE));
 
       // Initialize the output buffers for the long-time integration
       for (size_t i = 0; i < integratedData.size(); i++) {
@@ -298,7 +300,7 @@ namespace LOFAR
     void CorrelatorStep::readOutput(CorrelatedDataHostBuffer &output)
     {
       // Read data back from the kernel
-      queue.readBuffer(output, correlatorPPF ? *devB : *devA, outputCounter, false);
+      queue.readBuffer(output, devE, outputCounter, false);
     }
 
 

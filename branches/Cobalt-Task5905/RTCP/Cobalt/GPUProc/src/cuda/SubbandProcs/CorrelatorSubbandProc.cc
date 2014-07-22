@@ -63,18 +63,12 @@ namespace LOFAR
       prevBlock(-1),
       prevSAP(-1)
     {
-      const bool correlatorPPF = ps.settings.correlator.nrChannels > 1;
-
       devA.reset(new gpu::DeviceMemory(context, 
-        correlatorPPF ? factories.correlator.bufferSize(CorrelatorKernel::INPUT_DATA)
-                      : std::max(factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::INPUT_DATA),
-                                 factories.correlator.bufferSize(CorrelatorKernel::OUTPUT_DATA))));
+        factories.firFilter ? factories.firFilter->bufferSize(FIR_FilterKernel::INPUT_DATA)
+                            : factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::INPUT_DATA)));
 
       devB.reset(new gpu::DeviceMemory(context, 
-        correlatorPPF ? std::max(factories.correlator.bufferSize(CorrelatorKernel::INPUT_DATA),
-                                 factories.correlator.bufferSize(CorrelatorKernel::OUTPUT_DATA))
-                      : factories.correlator.bufferSize(CorrelatorKernel::INPUT_DATA)));
-
+                      factories.correlator.bufferSize(CorrelatorKernel::INPUT_DATA)));
       correlatorStep = new CorrelatorStep(parset, queue, context, factories, devA, devB, nrSubbandsPerSubbandProc);
 
       // put enough objects in the outputPool to operate
