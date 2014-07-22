@@ -985,6 +985,18 @@ namespace LOFAR
     }
 
 
+    bool ObservationSettings::BeamFormer::anyCoherentTABs() const
+    {
+      return enabled && maxNrCoherentTABsPerSAP() > 0;
+    }
+
+
+    bool ObservationSettings::BeamFormer::anyIncoherentTABs() const
+    {
+      return enabled && maxNrIncoherentTABsPerSAP() > 0;
+    }
+
+
     size_t ObservationSettings::BeamFormer::maxNrTABsPerSAP() const
     {
       size_t max = 0;
