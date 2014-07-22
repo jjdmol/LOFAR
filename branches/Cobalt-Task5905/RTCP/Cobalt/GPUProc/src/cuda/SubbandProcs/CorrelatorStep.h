@@ -156,7 +156,7 @@ namespace LOFAR
       // will be processed by this class instance. Each element of the vector
       // contains a counter that tracks the number of additions made to the data
       // buffer and the data buffer itself.
-      std::vector< std::pair< size_t, SmartPtr<CorrelatedDataHostBuffer> > >
+      std::vector< std::pair< size_t, SmartPtr<CorrelatedData> > >
       integratedData;
 
       bool integrate(CorrelatedDataHostBuffer &output);

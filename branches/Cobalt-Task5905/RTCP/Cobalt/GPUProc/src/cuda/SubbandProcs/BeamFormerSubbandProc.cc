@@ -94,8 +94,30 @@ namespace LOFAR
       inputCounter(context, "input")
     {
       // See doc/bf-pipeline.txt
-      size_t devA_size = factories.preprocessing.intToFloat.bufferSize(IntToFloatKernel::OUTPUT_DATA);
-      size_t devB_size = factories.preprocessing.intToFloat.bufferSize(IntToFloatKernel::OUTPUT_DATA);
+      size_t devA_size = 0;
+      size_t devB_size = 0;
+
+      if (factories.correlator) {
+        const bool correlatorPPF = ps.settings.correlator.nrChannels > 1;
+
+        CorrelatorStep::Factories &cf = *factories.correlator;
+
+        devA_size = std::max(devA_size,
+          correlatorPPF ? cf.correlator.bufferSize(CorrelatorKernel::INPUT_DATA)
+                        : std::max(cf.delayAndBandPass.bufferSize(DelayAndBandPassKernel::INPUT_DATA),
+                                   cf.correlator.bufferSize(CorrelatorKernel::OUTPUT_DATA)));
+        devB_size = std::max(devB_size,
+          correlatorPPF ? std::max(cf.correlator.bufferSize(CorrelatorKernel::INPUT_DATA),
+                                   cf.correlator.bufferSize(CorrelatorKernel::OUTPUT_DATA))
+                        : cf.correlator.bufferSize(CorrelatorKernel::INPUT_DATA));
+      }
+
+      if (factories.preprocessing) {
+        devA_size = std::max(devA_size,
+          factories.preprocessing->intToFloat.bufferSize(IntToFloatKernel::OUTPUT_DATA));
+        devB_size = std::max(devB_size,
+          factories.preprocessing->intToFloat.bufferSize(IntToFloatKernel::OUTPUT_DATA));
+      }
 
       if (factories.coherentStokes) {
         devA_size = std::max(devA_size,
@@ -113,9 +135,18 @@ namespace LOFAR
 
       //################################################
       // Create objects containing the kernel and device buffers
-      preprocessingPart = std::auto_ptr<BeamFormerPreprocessingStep>(
-        new BeamFormerPreprocessingStep(parset, queue, context, factories.preprocessing, 
-        devA, devB));
+
+      if (factories.correlator) {
+        correlatorStep = std::auto_ptr<CorrelatorStep>(
+          new CorrelatorStep(parset, queue, context, *factories.correlator,
+          devA, devB, nrSubbandsPerSubbandProc));
+      }
+
+      if (factories.preprocessing) {
+        preprocessingStep = std::auto_ptr<BeamFormerPreprocessingStep>(
+          new BeamFormerPreprocessingStep(parset, queue, context, *factories.preprocessing, 
+          devA, devB));
+      }
 
       if (factories.coherentStokes) {
         coherentStep = std::auto_ptr<BeamFormerCoherentStep>(
@@ -130,10 +161,12 @@ namespace LOFAR
       }
 
 
-      LOG_INFO_STR("Running coherent pipeline: " 
-        << (coherentStep.get() ? "yes" : "no")  
-        << ", incoherent pipeline: " 
-        << (incoherentStep.get() ? "yes" : "no"));
+      LOG_INFO_STR("Pipeline configuration: "
+        << (correlatorStep.get() ?    "[correlator] " : "")
+        << (preprocessingStep.get() ? "[bf preproc] " : "")
+        << (coherentStep.get() ?      "[coh stokes] " : "")
+        << (incoherentStep.get() ?    "[incoh stokes] " : "")
+      );
       
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < nrOutputElements(); ++i)
@@ -160,7 +193,7 @@ namespace LOFAR
       // Some additional buffers
       // Only upload delays if they changed w.r.t. the previous subband.
       if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) {
-        preprocessingPart->writeInput(input);
+        preprocessingStep->writeInput(input);
 
         if (coherentStep.get()) {
           coherentStep->writeInput(input);
@@ -173,7 +206,7 @@ namespace LOFAR
       // ************************************************
       // Start the processing
       // Preprocessing, the same for all
-      preprocessingPart->process(input);
+      preprocessingStep->process(input);
 
       if (coherentStep.get())
       {

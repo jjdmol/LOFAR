@@ -30,13 +30,19 @@ namespace LOFAR
   {
     BeamFormerFactories::BeamFormerFactories(const Parset &ps,
                                              size_t nrSubbandsPerSubbandProc) :
-      preprocessing(ps),
+      correlator(ps.settings.correlator.enabled
+        ? new CorrelatorStep::Factories(ps, nrSubbandsPerSubbandProc)
+        : NULL),
 
-      coherentStokes(ps.settings.beamFormer.maxNrCoherentTABsPerSAP() > 0
+      preprocessing(ps.settings.beamFormer.enabled
+        ? new BeamFormerPreprocessingStep::Factories(ps)
+        : NULL),
+
+      coherentStokes(ps.settings.beamFormer.anyCoherentTABs()
         ? new BeamFormerCoherentStep::Factories(ps, nrSubbandsPerSubbandProc)
         : NULL),
 
-      incoherentStokes(ps.settings.beamFormer.maxNrIncoherentTABsPerSAP() > 0
+      incoherentStokes(ps.settings.beamFormer.anyIncoherentTABs()
         ? new BeamFormerIncoherentStep::Factories(ps, nrSubbandsPerSubbandProc)
         : NULL)
     {

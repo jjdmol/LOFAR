@@ -34,6 +34,7 @@
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <GPUProc/Pipelines/BeamFormerPipeline.h>
 
+#include "CorrelatorStep.h"
 #include "BeamFormerPreprocessingStep.h"
 #include "BeamFormerCoherentStep.h"
 #include "BeamFormerIncoherentStep.h"
@@ -100,7 +101,8 @@ namespace LOFAR
 
       PerformanceCounter inputCounter;
 
-      std::auto_ptr<BeamFormerPreprocessingStep> preprocessingPart;
+      std::auto_ptr<CorrelatorStep> correlatorStep;
+      std::auto_ptr<BeamFormerPreprocessingStep> preprocessingStep;
       std::auto_ptr<BeamFormerCoherentStep> coherentStep;
       std::auto_ptr<BeamFormerIncoherentStep> incoherentStep;
     };

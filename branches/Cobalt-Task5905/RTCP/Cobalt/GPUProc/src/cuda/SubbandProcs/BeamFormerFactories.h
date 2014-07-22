@@ -25,6 +25,7 @@
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
 
+#include "CorrelatorStep.h"
 #include "BeamFormerPreprocessingStep.h"
 #include "BeamFormerCoherentStep.h"
 #include "BeamFormerIncoherentStep.h"
@@ -38,7 +39,9 @@ namespace LOFAR
       BeamFormerFactories(const Parset &ps, 
                             size_t nrSubbandsPerSubbandProc = 1);
 
-      BeamFormerPreprocessingStep::Factories preprocessing;
+      SmartPtr<CorrelatorStep::Factories> correlator;
+
+      SmartPtr<BeamFormerPreprocessingStep::Factories> preprocessing;
 
       SmartPtr<BeamFormerCoherentStep::Factories> coherentStokes;
       SmartPtr<BeamFormerIncoherentStep::Factories> incoherentStokes;

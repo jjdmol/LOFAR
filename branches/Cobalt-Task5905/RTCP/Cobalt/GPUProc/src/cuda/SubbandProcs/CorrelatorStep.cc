@@ -255,10 +255,9 @@ namespace LOFAR
       // Initialize the output buffers for the long-time integration
       for (size_t i = 0; i < integratedData.size(); i++) {
         integratedData[i] = 
-          make_pair(0, new CorrelatedDataHostBuffer(ps.settings.antennaFields.size(), 
+          make_pair(0, new CorrelatedData(ps.settings.antennaFields.size(), 
                                                     ps.settings.correlator.nrChannels,
-                                                    ps.settings.correlator.nrSamplesPerChannel,
-                                                    context));
+                                                    ps.settings.correlator.nrSamplesPerChannel));
       }
     }
 
