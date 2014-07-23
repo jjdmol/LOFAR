@@ -194,6 +194,9 @@ namespace LOFAR {
       // Are the visibility data needed?
       bool needVisData() const
         { return itsNeedVisData; }
+      // Are the model data needed?
+      bool needModelData() const
+        { return itsNeedModelData; }
       // Does the last step need to write data and/or flags?
       int needWrite() const
         { return itsNeedWrite; }
@@ -201,6 +204,9 @@ namespace LOFAR {
       // Set if visibility data needs to be read.
       void setNeedVisData()
         { itsNeedVisData = true; } 
+      // Set if model data needs to be read.
+      void setNeedModelData()
+        { itsNeedModelData = true; }
       // Set if the last step needs to write data and/or flags (default both).
       void setNeedWrite (int needWrite = NeedWriteData+NeedWriteFlags)
         { itsNeedWrite |= needWrite; }
@@ -221,6 +227,7 @@ namespace LOFAR {
 
       //# Data members.
       bool   itsNeedVisData;    //# Are the visibility data needed?
+      bool   itsNeedModelData;  //# Is the model column needed?
       int    itsNeedWrite;      //# Does the last step need to write data/flags?
       string itsMSName;
       string itsAntennaSet;

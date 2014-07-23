@@ -136,27 +136,27 @@ namespace {
         dir2Itrf(info().delayCenterCopy(),storage.measConverter);
       }
 
-      // Do a unpolarized stefcal
-      void stefcalunpol(dcomplex* model, casa::Complex* data, float* weight,
-                         const casa::Bool* flag);
+      // Perform stefcal (polarized or unpolarized)
+      void stefcal(string mode, uint solint=1);
 
-      // Do a polarized stefcal
-      void stefcalpol(dcomplex* model, casa::Complex* data, float* weight,
-                       const casa::Bool* flag);
+      // Counts the number of antennas with non-flagged data, adds this to
+      // dataPerAntenna
+      void countAntUsedNotFlagged (const casa::Bool* flag);
 
-      // Find all antennas with data
-      void setAntUsedNotFlagged (const casa::Bool* flag);
+      // Set a map for the used antennas
+      void setAntennaMaps ();
+
+      // Remove rows and colums corresponding to antennas with too much
+      // flagged data from vis and mvis
+      void removeDeadAntennas ();
 
       // Fills the matrices itsVis and itsMVis
-      void fillMatricesUnpol (dcomplex* model, casa::Complex* data, float* weight,
+      void fillMatrices (casa::Complex* model, casa::Complex* data, float* weight,
                          const casa::Bool* flag);
 
       // Fills the matrices itsVis and itsMVis
-      void fillMatricesPol (dcomplex* model, casa::Complex* data, float* weight,
+      void fillMatrices (dcomplex* model, casa::Complex* data, float* weight,
                          const casa::Bool* flag);
-
-      void stefcalunpol (dcomplex* model, casa::Complex* data, float* weight,
-                         const casa::Bool* flag, uint nCr, uint nSt, uint nBl);
 
       // Calculate the beam for the given sky direction and frequencies.
       // Apply it to the data.
@@ -178,6 +178,7 @@ namespace {
       DPInput*         itsInput;
       string           itsName;
       string           itsSourceDBName;
+      bool             itsUseModelColumn;
       string           itsParmDBName;
       bool             itsApplyBeam;
       shared_ptr<BBS::ParmDB> itsParmDB;
@@ -201,11 +202,14 @@ namespace {
       StefVecs         iS;
 
       casa::Vector<casa::String> itsAntennaUsedNames;
-      map<string,int>         itsParmIdMap; //# -1 = new parm name
+      casa::Vector<uint>     itsDataPerAntenna;
+      map<string,int>  itsParmIdMap; //# -1 = new parm name
 
       uint             itsMaxIter;
       double           itsTolerance;
       bool             itsPropagateSolutions;
+      uint             itsSolInt;
+      uint             itsMinBLperAnt;      
 
       //# The info needed to calculate the station beams.
       vector<StationResponse::Station::Ptr> itsAntBeamInfo;
@@ -214,6 +218,10 @@ namespace {
 
       string           itsOperation;
 
+      uint             itsConverged;
+      uint             itsNonconverged;
+      uint             itsStalled;
+      uint             itsNTimes;
       NSTimer          itsTimer;
       NSTimer          itsTimerPredict;
       NSTimer          itsTimerSolve;

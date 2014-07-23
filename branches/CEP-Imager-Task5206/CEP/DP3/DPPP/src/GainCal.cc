@@ -66,73 +66,42 @@ namespace LOFAR {
                       const string& prefix)
       : itsInput         (input),
         itsName          (prefix),
-        itsSourceDBName  (parset.getString (prefix + "sourcedb")),
+        itsSourceDBName  (""),
+        itsUseModelColumn(parset.getBool (prefix + "usemodelcolumn", false)),
         itsParmDBName    (parset.getString (prefix + "parmdb")),
         itsApplyBeam     (parset.getBool (prefix + "usebeammodel", false)),
         itsMode          (parset.getString (prefix + "caltype")),
         itsTStep         (0),
         itsDebugLevel    (parset.getInt (prefix + "debuglevel", 0)),
         itsBaselines     (),
-        itsThreadStorage  (),
+        itsThreadStorage (),
         itsMaxIter       (parset.getInt (prefix + "maxiter", 50)),
         itsTolerance     (parset.getDouble (prefix + "tolerance", 1.e-5)),
         itsPropagateSolutions (parset.getBool(prefix + "propagatesolutions", false)),
+        itsSolInt        (parset.getInt(prefix + "solint", 1)),
+        itsMinBLperAnt   (parset.getInt(prefix + "minblperant", 4)),
         itsPatchList     (),
-        itsOperation     (parset.getString(prefix + "operation", "solve"))
+        itsOperation     (parset.getString(prefix + "operation", "solve")),
+        itsConverged     (0),
+        itsNonconverged  (0),
+        itsStalled       (0),
+        itsNTimes        (0)
     {
-      BBS::SourceDB sourceDB(BBS::ParmDBMeta("", itsSourceDBName), false);
+      if (!itsUseModelColumn) {
+        itsSourceDBName = parset.getString (prefix + "sourcedb","");
+        BBS::SourceDB sourceDB(BBS::ParmDBMeta("", itsSourceDBName), false);
 
-      vector<PatchInfo> patchInfo=sourceDB.getPatchInfo();
-      vector<string> patchNames;
+        vector<PatchInfo> patchInfo=sourceDB.getPatchInfo();
+        vector<string> patchNames;
 
-      vector<string> sourcePatterns=parset.getStringVector(prefix + "sources",
-              vector<string>());
-      patchNames=makePatchList(sourceDB, sourcePatterns);
+        vector<string> sourcePatterns=parset.getStringVector(prefix + "sources",
+                                                             vector<string>());
+        patchNames=makePatchList(sourceDB, sourcePatterns);
 
-      ASSERT(itsMode=="diagonal" || itsMode=="phaseonly" || itsMode=="fulljones");
-
-      /*
-      vector<string> parms = parset.getStringVector(prefix+"parms",vector<string>());
-      uint numdiag=0;
-      uint numoffdiag=0;
-      for (vector<string>::iterator parmname=parms.begin(); parmname!=parms.end();++parmname) {
-        if ((*parmname).length()<8 ||
-            (*parmname).substr(0,5)!="Gain:") {
-          THROW (Exception, "Can only solve for gains");
-        }
-        string parmpol=(*parmname).substr(5,3);
-        if (parmpol=="0:1" || parmpol=="1:0") {
-          numoffdiag++;
-       } else if (parmpol=="0:0" || parmpol=="1:1") {
-          numdiag++;
-        } else {
-          THROW (Exception, "Can only solve for gains");
-        }
+        itsPatchList = makePatches (sourceDB, patchNames, patchNames.size());
       }
-      if (numoffdiag==2 && numdiag==2) {
-        itsMode="fullgain";
-      } else if (numoffdiag==0 && numdiag==2) {
-        itsMode="diaggain";
-      } else if (parms.size()==0) {
-        itsMode="fullgain";
-      } else {
-        THROW (Exception, "Can only solve for diagonal or all gains");
-      }
-
-      string parmmode=parset.getString(prefix+"mode","COMPLEX");
-      if (parmmode=="COMPLEX") {
-        itsPhaseOnly = false;
-      } else if (parmmode=="PHASE") {
-        itsPhaseOnly = true;
-        if (itsMode!="diaggain") {
-          THROW (Exception, "Mode PHASE only works when solving for diagonal gains");
-        }
-      } else {
-        THROW (Exception, "Can only handle the modes Phase and Complex");
-      }
-      */
-
-      itsPatchList = makePatches (sourceDB, patchNames, patchNames.size());
+      ASSERT(itsMode=="diagonal" || itsMode=="phaseonly" ||
+             itsMode=="fulljones" || itsMode=="scalarphase");
     }
 
     GainCal::~GainCal()
@@ -142,6 +111,9 @@ namespace LOFAR {
     {
       info() = infoIn;
       info().setNeedVisData();
+      if (itsUseModelColumn) {
+        info().setNeedModelData();
+      }
       info().setNeedWrite();
 
       uint nBl=info().nbaselines();
@@ -162,7 +134,10 @@ namespace LOFAR {
       const size_t nCh = info().nchan();
 
       // initialize storage
-      const size_t nThread=1;//OpenMP::maxThreads();
+      itsVis.resize (IPosition(6,nSt,2,nCh,itsSolInt,2,nSt));
+      itsMVis.resize(IPosition(6,nSt,2,nCh,itsSolInt,2,nSt));
+ 
+      const size_t nThread=OpenMP::maxThreads();
       itsThreadStorage.resize(nThread);
       for(vector<ThreadPrivateStorage>::iterator it = itsThreadStorage.begin(),
         end = itsThreadStorage.end(); it != end; ++it)
@@ -175,6 +150,7 @@ namespace LOFAR {
       // Read the antenna beam info from the MS.
       // Only take the stations actually used.
       itsAntennaUsedNames.resize(info().antennaUsed().size());
+      itsDataPerAntenna.resize(info().antennaUsed().size());
       casa::Vector<int> antsUsed = info().antennaUsed();
       for (int ant=0, nAnts=info().antennaUsed().size(); ant<nAnts; ++ant) {
         itsAntennaUsedNames[ant]=info().antennaNames()[info().antennaUsed()[ant]];
@@ -196,14 +172,16 @@ namespace LOFAR {
 
     void GainCal::show (std::ostream& os) const
     {
-      os << "GainCal " << itsName << std::endl;
+      os << "GainCal " << itsName << endl;
+      os << "  use model col:  " << boolalpha << itsUseModelColumn << endl;
       os << "  sourcedb:       " << itsSourceDBName << endl;
       os << "   number of patches: " << itsPatchList.size() << endl;
       os << "  parmdb:         " << itsParmDBName << endl;
       os << "  apply beam:     " << boolalpha << itsApplyBeam << endl;
+      os << "  solint          " << itsSolInt <<endl;
       os << "  max iter:       " << itsMaxIter << endl;
       os << "  tolerance:      " << itsTolerance << endl;
-      os << "  propagate sols: " << boolalpha << itsPropagateSolutions << endl;
+//      os << "  propagate sols: " << boolalpha << itsPropagateSolutions << endl;
       os << "  mode:           " << itsMode << endl;
     }
 
@@ -230,6 +208,8 @@ namespace LOFAR {
       FlagCounter::showPerc1 (os, itsTimerWrite.getElapsed(), totaltime);
       os << " of it spent in writing gain solutions to disk" << endl;
 
+      os << "          ";
+      os <<"Converged: "<<itsConverged<<", stalled: "<<itsStalled<<", non converged: "<<itsNonconverged<<endl;
     }
 
     bool GainCal::process (const DPBuffer& bufin)
@@ -256,50 +236,58 @@ namespace LOFAR {
 
       const size_t thread = OpenMP::threadNum();
 
+      Complex* data=buf.getData().data();
+      Complex* model=buf.getModel().data();
+      float* weight = buf.getWeights().data();
+      const Bool* flag=buf.getFlags().data();
+
       // Simulate.
       //
       // Model visibilities for each direction of interest will be computed
       // and stored.
 
-      double time = buf.getTime();
-
-      ThreadPrivateStorage &storage = itsThreadStorage[thread];
-      size_t stride_uvw[2] = {1, 3};
-      cursor<double> cr_uvw_split(&(storage.uvw[0]), 2, stride_uvw);
-
-      Complex* data=buf.getData().data();
-      float* weight = buf.getWeights().data();
-      const Bool* flag=buf.getFlags().data();
-
-      size_t stride_model[3] = {1, nCr, nCr * nCh};
-      fill(storage.model.begin(), storage.model.end(), dcomplex());
-
-      const_cursor<double> cr_uvw = casa_const_cursor(buf.getUVW());
-      splitUVW(nSt, nBl, cr_baseline, cr_uvw, cr_uvw_split);
-      cursor<dcomplex> cr_model(&(storage.model_patch[0]), 3, stride_model);
-
-      StationResponse::vector3r_t refdir = dir2Itrf(info().delayCenterCopy(),storage.measConverter);
-      StationResponse::vector3r_t tiledir = dir2Itrf(info().tileBeamDirCopy(),storage.measConverter);
-      // Convert the directions to ITRF for the given time.
-      storage.measFrame.resetEpoch (MEpoch(MVEpoch(time/86400), MEpoch::UTC));
-
       itsTimerPredict.start();
-      for(size_t dr = 0; dr < nDr; ++dr)
-      {
-        fill(storage.model_patch.begin(), storage.model_patch.end(), dcomplex());
+      ThreadPrivateStorage &storage = itsThreadStorage[thread];
+      if (!itsUseModelColumn) {
+        double time = buf.getTime();
 
-        simulate(itsPhaseRef, itsPatchList[dr], nSt, nBl, nCh, cr_baseline,
-                 cr_freq, cr_uvw_split, cr_model);
-        applyBeam(time, itsPatchList[dr]->position(), itsApplyBeam,
-                  info().chanFreqs(), &(itsThreadStorage[thread].model_patch[0]),
-                  refdir, tiledir, &(itsThreadStorage[thread].beamvalues[0]),
-                  storage.measConverter);
+        size_t stride_uvw[2] = {1, 3};
+        cursor<double> cr_uvw_split(&(storage.uvw[0]), 2, stride_uvw);
 
-        for (size_t i=0; i<itsThreadStorage[thread].model_patch.size();++i) {
-          itsThreadStorage[thread].model[i]+=
-              itsThreadStorage[thread].model_patch[i];
+        size_t stride_model[3] = {1, nCr, nCr * nCh};
+        fill(storage.model.begin(), storage.model.end(), dcomplex());
+
+        const_cursor<double> cr_uvw = casa_const_cursor(buf.getUVW());
+        splitUVW(nSt, nBl, cr_baseline, cr_uvw, cr_uvw_split);
+        cursor<dcomplex> cr_model(&(storage.model_patch[0]), 3, stride_model);
+
+        StationResponse::vector3r_t refdir = dir2Itrf(info().delayCenterCopy(),storage.measConverter);
+        StationResponse::vector3r_t tiledir = dir2Itrf(info().tileBeamDirCopy(),storage.measConverter);
+        // Convert the directions to ITRF for the given time.
+        storage.measFrame.resetEpoch (MEpoch(MVEpoch(time/86400), MEpoch::UTC));
+
+  //#pragma omp parallel for
+        for(size_t dr = 0; dr < nDr; ++dr)
+        {
+          fill(storage.model_patch.begin(), storage.model_patch.end(), dcomplex());
+
+          simulate(itsPhaseRef, itsPatchList[dr], nSt, nBl, nCh, cr_baseline,
+                   cr_freq, cr_uvw_split, cr_model);
+
+          for(size_t i = 0; i < itsPatchList[dr]->nComponents(); ++i)
+          { // Apply beam for every source, not only once per patch
+            applyBeam(time, itsPatchList[dr]->component(i)->position(), itsApplyBeam,
+                      info().chanFreqs(), &(itsThreadStorage[thread].model_patch[0]),
+                      refdir, tiledir, &(itsThreadStorage[thread].beamvalues[0]),
+                      storage.measConverter);
+          }
+
+          for (size_t i=0; i<itsThreadStorage[thread].model_patch.size();++i) {
+            itsThreadStorage[thread].model[i]+=
+                itsThreadStorage[thread].model_patch[i];
+          }
         }
-      }
+      } //if(itsUseModelColumn)
 
       itsTimerPredict.stop();
       //copy result of model to data
@@ -308,10 +296,24 @@ namespace LOFAR {
       }
 
       if (itsOperation=="solve") {
-        if (itsMode=="diagonal" || itsMode=="phaseonly") {
-          stefcalunpol(&storage.model[0], data, weight, flag);
+        if (itsNTimes==0) {
+          itsDataPerAntenna=0;
+          itsVis=0;
+          itsMVis=0;
+          countAntUsedNotFlagged(flag);
+          setAntennaMaps();
+        }
+        if (itsUseModelColumn) {
+          fillMatrices(model,data,weight,flag);
         } else {
-          stefcalpol(&storage.model[0], data, weight, flag);
+          fillMatrices(&storage.model[0],data,weight,flag);
+        }
+
+        if (itsNTimes==itsSolInt-1) {
+          stefcal(itsMode,itsSolInt);
+          itsNTimes=0;
+        } else {
+          itsNTimes++;
         }
       }
 
@@ -321,25 +323,63 @@ namespace LOFAR {
       return false;
     }
 
+    // Remove rows and colums corresponding to antennas with too much
+    // flagged data from vis and mvis
+    void GainCal::removeDeadAntennas() {
+      //TODO: implement this function...
+    }
+
+
+    // Fills itsVis and itsMVis as matrices with all 00 polarizations in the
+    // top left, all 11 polarizations in the bottom right, etc. //TODO: make templated
+    void GainCal::fillMatrices (casa::Complex* model, casa::Complex* data, float* weight,
+                                const casa::Bool* flag) {
+      itsTimerFill.start();
+      vector<int>* antMap=&itsAntMaps[itsAntMaps.size()-1];
+
+      const size_t nBl = info().nbaselines();
+      const size_t nCh = info().nchan();
+      const size_t nCr = 4;
+
+      for (uint ch=0;ch<nCh;++ch) {
+        for (uint bl=0;bl<nBl;++bl) {
+          int ant1=(*antMap)[info().getAnt1()[bl]];
+          int ant2=(*antMap)[info().getAnt2()[bl]];
+          if (ant1==ant2 || ant1==-1 || ant2 == -1 || flag[bl*nCr*nCh+ch*nCr]) { // Only check flag of cr==0
+            continue;
+          }
+
+          for (uint cr=0;cr<nCr;++cr) {
+            itsVis (IPosition(6,ant1,cr/2,ch,itsNTimes,cr%2,ant2)) =
+                DComplex(data [bl*nCr*nCh+ch*nCr+cr]) *
+                DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+            itsMVis(IPosition(6,ant1,cr/2,ch,itsNTimes,cr%2,ant2)) =
+                DComplex(model[bl*nCr*nCh+ch*nCr+cr]) *
+                DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+
+            // conjugate transpose
+            itsVis (IPosition(6,ant2,cr%2,ch,itsNTimes,cr/2,ant1)) =
+                DComplex(conj(data [bl*nCr*nCh+ch*nCr+cr])) *
+                DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+            itsMVis(IPosition(6,ant2,cr%2,ch,itsNTimes,cr/2,ant1)) =
+                DComplex(conj(model[bl*nCr*nCh+ch*nCr+cr] )) *
+                DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+          }
+        }
+      }
+      itsTimerFill.stop();
+    }
 
     // Fills itsVis and itsMVis as matrices with all 00 polarizations in the
     // top left, all 11 polarizations in the bottom right, etc.
-    void GainCal::fillMatricesUnpol (dcomplex* model, casa::Complex* data, float* weight,
+    void GainCal::fillMatrices (dcomplex* model, casa::Complex* data, float* weight,
                                 const casa::Bool* flag) {
       itsTimerFill.start();
-      vector<int>* antUsed=&itsAntUseds[itsAntUseds.size()-1];
-      uint nSt=(*antUsed).size();
-      vector<int>* antMap=&itsAntMaps[itsAntMaps.size()-1];
+      vector<int>* antMap=&itsAntMaps[itsAntMaps.size()-1];      
 
       const size_t nBl = info().nbaselines();
       const size_t nCh = info().nchan();
       const size_t nCr = 4;
-
-      itsVis.resize (IPosition(3,nSt*2,nCh,nSt*2));
-      itsMVis.resize(IPosition(3,nSt*2,nCh,nSt*2));
-
-      itsVis=0;
-      itsMVis=0;
 
       for (uint ch=0;ch<nCh;++ch) {
         for (uint bl=0;bl<nBl;++bl) {
@@ -350,62 +390,27 @@ namespace LOFAR {
           }
 
           for (uint cr=0;cr<nCr;++cr) {
-            itsVis (IPosition(3,ant1+nSt*(cr%2),ch,ant2+nSt*(cr/2))) = DComplex(data [bl*nCr*nCh+ch*nCr+cr])*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
-            itsMVis(IPosition(3,ant1+nSt*(cr%2),ch,ant2+nSt*(cr/2))) =          model[bl*nCr*nCh+ch*nCr+cr] *DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+            itsVis (IPosition(6,ant1,cr/2,ch,itsNTimes,cr%2,ant2)) =
+                DComplex(data [bl*nCr*nCh+ch*nCr+cr]) *
+                DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+            itsMVis(IPosition(6,ant1,cr/2,ch,itsNTimes,cr%2,ant2)) =
+                         model[bl*nCr*nCh+ch*nCr+cr] *
+                DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
 
-            // Below is the complex conjugate. tcr is the correlation for the transposed
-            itsVis (IPosition(3,ant2+nSt*(cr/2),ch,ant1+nSt*(cr%2))) = DComplex(conj(data [bl*nCr*nCh+ch*nCr+cr]))*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
-            itsMVis(IPosition(3,ant2+nSt*(cr/2),ch,ant1+nSt*(cr%2))) =          conj(model[bl*nCr*nCh+ch*nCr+cr] )*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+            // conjugate transpose
+            itsVis (IPosition(6,ant2,cr%2,ch,itsNTimes,cr/2,ant1)) =
+                DComplex(conj(data [bl*nCr*nCh+ch*nCr+cr])) *
+                DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+            itsMVis(IPosition(6,ant2,cr%2,ch,itsNTimes,cr/2,ant1)) =
+                         conj(model[bl*nCr*nCh+ch*nCr+cr] ) *
+                DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
           }
         }
       }
       itsTimerFill.stop();
     }
 
-
-    void GainCal::fillMatricesPol (dcomplex* model, casa::Complex* data, float* weight,
-                                const casa::Bool* flag) {
-      itsTimerFill.start();
-      vector<int>* antUsed=&itsAntUseds[itsAntUseds.size()-1];
-      uint nSt=(*antUsed).size();
-      vector<int>* antMap=&itsAntMaps[itsAntMaps.size()-1];
-
-      const size_t nBl = info().nbaselines();
-      const size_t nCh = info().nchan();
-      const size_t nCr = 4;
-
-      itsVis.resize (IPosition(4,nCr,nSt,nCh,nSt));
-      itsMVis.resize(IPosition(4,nCr,nSt,nCh,nSt));
-
-      itsVis=0;
-      itsMVis=0;
-
-      for (uint ch=0;ch<nCh;++ch) {
-        for (uint bl=0;bl<nBl;++bl) {
-          int ant1=(*antMap)[info().getAnt1()[bl]];
-          int ant2=(*antMap)[info().getAnt2()[bl]];
-          if (ant1==ant2 || ant1==-1 || ant2 == -1 || flag[bl*nCr*nCh+ch*nCr]) { // Only check flag of cr==0
-            continue;
-          }
-
-          for (uint cr=0;cr<nCr;++cr) {
-            itsVis (IPosition(4,cr,ant1,ch,ant2)) = DComplex(data [bl*nCr*nCh+ch*nCr+cr])*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
-            itsMVis(IPosition(4,cr,ant1,ch,ant2)) =          model[bl*nCr*nCh+ch*nCr+cr] *DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
-
-            // Below is the complex conjugate. tcr is the correlation for the transposed
-            uint tcr=cr;
-            if (cr==1 || cr==2) {
-              tcr=3-cr;
-            }
-            itsVis (IPosition(4,tcr,ant2,ch,ant1)) = DComplex(conj(data [bl*nCr*nCh+ch*nCr+cr]))*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
-            itsMVis(IPosition(4,tcr,ant2,ch,ant1)) =          conj(model[bl*nCr*nCh+ch*nCr+cr] )*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
-          }
-        }
-      }
-      itsTimerFill.stop();
-    }
-
-    void GainCal::setAntUsedNotFlagged (const Bool* flag) {
+    void GainCal::countAntUsedNotFlagged (const Bool* flag) {
       uint nCr=info().ncorr();
       uint nCh=info().nchan();
       uint nBl=info().nbaselines();
@@ -422,18 +427,21 @@ namespace LOFAR {
         for (uint ch=0;ch<nCh;++ch) {
           for (uint cr=0;cr<nCr;++cr) {
             if (!flag[bl*nCr*nCh + ch*nCr + cr]) {
-              dataPerAntenna[ant1]++;
-              dataPerAntenna[ant2]++;
+              itsDataPerAntenna[ant1]++;
+              itsDataPerAntenna[ant2]++;
             }
           }
         }
       }
+    }
+      
+    void GainCal::setAntennaMaps () {      
       vector<int> antMap(info().antennaNames().size(),-1);
+      uint nCr=info().ncorr();
 
-      const uint minBaselinesPerAntenna=4;
-      for (uint i=0; i<dataPerAntenna.size(); ++i) {
-        if (dataPerAntenna[i]>nCr*minBaselinesPerAntenna) {
-          antMap[i] = 0;
+      for (uint ant=0; ant<itsDataPerAntenna.size(); ++ant) {
+        if (itsDataPerAntenna[ant]>nCr*itsMinBLperAnt) {
+          antMap[ant] = 0;
         }
       }
 
@@ -450,10 +458,8 @@ namespace LOFAR {
       itsAntMaps.push_back(antMap);
     }
 
-    void GainCal::stefcalpol (dcomplex* model, casa::Complex* data, float* weight,
-                              const Bool* flag) {
-      setAntUsedNotFlagged(flag);
-      fillMatricesPol(model,data,weight,flag);
+    void GainCal::stefcal (string mode, uint solInt) {
+      vector<double> dgs;
 
       itsTimerSolve.start();
       double f2 = -1.0;
@@ -465,96 +471,207 @@ namespace LOFAR {
       uint nomega = 24;
       double c1 = 0.5;
       double c2 = 1.2;
-      double dg  =1.0e30;
+      double dg  =1.0e29;
       double dgx =1.0e30;
       double dgxx;
       bool threestep = false;
+      int nhit=0;
+      int maxhit=5;
 
-      uint nSt=itsMVis.shape()[1];
-      uint nCr=4;
+      uint nSt, nCr, nUn, nSp; // number of actual stations,
+                               // number of correlations,
+                               // number of unknowns
+                               // number that is two for scalarphase, one else
+
+      nSt=itsAntUseds[itsAntUseds.size()-1].size();
+      if (mode=="fulljones") {
+        nUn=nSt;
+        nCr=4;
+        nSp=1;
+      } else if (mode=="scalarphase") {
+        nUn=nSt;
+        nCr=1;
+        nSp=2;
+      } else {
+        nUn=nSt*2;
+        nCr=1;
+        nSp=1;
+      }
       uint nCh = info().nchan();
 
-      iS.g.resize(nSt,nCr);
-      iS.gold.resize(nSt,nCr);
-      iS.gx.resize(nSt,nCr);
-      iS.gxx.resize(nSt,nCr);
-      iS.h.resize(nSt,nCr);
-      iS.z.resize(nSt*nCh,nCr);
+      iS.g.resize(nUn,nCr);
+      iS.gold.resize(nUn,nCr);
+      iS.gx.resize(nUn,nCr);
+      iS.gxx.resize(nUn,nCr);
+      iS.h.resize(nUn,nCr);
+      iS.z.resize(nUn*nCh*solInt*nSp,nCr);
 
+      double ww; // Same as w, but specifically for pol==false
       Vector<DComplex> w(nCr);
       Vector<DComplex> t(nCr);
 
       // Initialize all vectors
-      for (uint st=0;st<nSt;++st) {
-        iS.g(st,0)=1.;
-        iS.g(st,1)=0.;
-        iS.g(st,2)=0.;
-        iS.g(st,3)=1.;
+      double fronormvis=0;
+      double fronormmod=0;
+
+      DComplex* vis_p;
+      DComplex* mvis_p;
+
+      vis_p=itsVis.data();
+      mvis_p=itsMVis.data();
+
+      uint vissize=itsVis.size();
+      for (uint i=0;i<vissize;++i) {
+        fronormvis+=norm(*vis_p++);
+        fronormmod+=norm(*mvis_p++);
+      }
+
+      fronormvis=sqrt(fronormvis);
+      fronormmod=sqrt(fronormmod);
+
+      double ginit=1;
+      if (nSt>0 && abs(fronormmod)>1.e-15) {
+        ginit=sqrt(fronormvis/fronormmod);
+      }
+      if (mode=="fulljones") {
+        for (uint st=0;st<nUn;++st) {
+          iS.g(st,0)=1.;
+          iS.g(st,1)=0.;
+          iS.g(st,2)=0.;
+          iS.g(st,3)=1.;
+        }
+      } else {
+        iS.g=ginit;
       }
 
       iS.gx = iS.g;
       int sstep=0;
 
-      DComplex* vis_p;
-      DComplex* mvis_p;
-
       uint iter=0;
+      if (nSt==0) {
+        iter=itsMaxIter;
+      }
       for (;iter<itsMaxIter;++iter) {
-        //cout<<"iter+1 = "<<iter+1<<endl;
         iS.gold=iS.g;
 
-        for (uint st=0;st<nSt;++st) {
-          iS.h(st,0)=conj(iS.g(st,0));
-          iS.h(st,1)=conj(iS.g(st,1));
-          iS.h(st,2)=conj(iS.g(st,2));
-          iS.h(st,3)=conj(iS.g(st,3));
-        }
+        if (mode=="fulljones") { // ======================== Polarized =======================
+          for (uint st=0;st<nSt;++st) {
+            iS.h(st,0)=conj(iS.g(st,0));
+            iS.h(st,1)=conj(iS.g(st,1));
+            iS.h(st,2)=conj(iS.g(st,2));
+            iS.h(st,3)=conj(iS.g(st,3));
+          }
 
-        for (uint st1=0;st1<nSt;++st1) {
-          mvis_p=&itsMVis(IPosition(4,0,0,0,st1));
-          for (uint ch=0;ch<nCh;++ch) {
-            for (uint st2=0;st2<nSt;++st2) {
-              iS.z(ch*nSt+st2,0) = iS.h(st2,0) * mvis_p[0] + iS.h(st2,2) * mvis_p[2];
-              iS.z(ch*nSt+st2,1) = iS.h(st2,0) * mvis_p[1] + iS.h(st2,2) * mvis_p[3];
-              iS.z(ch*nSt+st2,2) = iS.h(st2,1) * mvis_p[0] + iS.h(st2,3) * mvis_p[2];
-              iS.z(ch*nSt+st2,3) = iS.h(st2,1) * mvis_p[1] + iS.h(st2,3) * mvis_p[3];
-              mvis_p+=4;
+          for (uint st1=0;st1<nSt;++st1) {
+            for (uint time=0;time<solInt;++time) {
+              for (uint ch=0;ch<nCh;++ch) {
+                mvis_p=&itsMVis(IPosition(6,0,0,ch,time,0,st1,0)); for (uint st2=0;st2<nSt;++st2) { iS.z(st2+nSt*ch+nSt*nCh*time,0)  = iS.h(st2,0) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,0,ch,time,0,st1)); }
+                mvis_p=&itsMVis(IPosition(6,0,1,ch,time,0,st1,0)); for (uint st2=0;st2<nSt;++st2) { iS.z(st2+nSt*ch+nSt*nCh*time,0) += iS.h(st2,2) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,0,ch,time,1,st1)); }
+                mvis_p=&itsMVis(IPosition(6,0,0,ch,time,1,st1,1)); for (uint st2=0;st2<nSt;++st2) { iS.z(st2+nSt*ch+nSt*nCh*time,1)  = iS.h(st2,0) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,1,ch,time,0,st1)); }
+                mvis_p=&itsMVis(IPosition(6,0,1,ch,time,1,st1,1)); for (uint st2=0;st2<nSt;++st2) { iS.z(st2+nSt*ch+nSt*nCh*time,1) += iS.h(st2,2) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,1,ch,time,1,st1)); }
+                mvis_p=&itsMVis(IPosition(6,0,0,ch,time,0,st1,0)); for (uint st2=0;st2<nSt;++st2) { iS.z(st2+nSt*ch+nSt*nCh*time,2)  = iS.h(st2,1) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,0,ch,time,0,st1)); }
+                mvis_p=&itsMVis(IPosition(6,0,1,ch,time,0,st1,0)); for (uint st2=0;st2<nSt;++st2) { iS.z(st2+nSt*ch+nSt*nCh*time,2) += iS.h(st2,3) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,0,ch,time,1,st1)); }
+                mvis_p=&itsMVis(IPosition(6,0,0,ch,time,1,st1,1)); for (uint st2=0;st2<nSt;++st2) { iS.z(st2+nSt*ch+nSt*nCh*time,3)  = iS.h(st2,1) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,1,ch,time,0,st1)); }
+                mvis_p=&itsMVis(IPosition(6,0,1,ch,time,1,st1,1)); for (uint st2=0;st2<nSt;++st2) { iS.z(st2+nSt*ch+nSt*nCh*time,3) += iS.h(st2,3) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,1,ch,time,1,st1)); }
+              }
+            }
+
+            w=0;
+            t=0;
+
+            for (uint time=0;time<solInt;++time) {
+              for (uint ch=0;ch<nCh;++ch) {
+                for (uint st2=0;st2<nSt;++st2) {
+                  w(0) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,0))*iS.z(st2+nSt*ch+nSt*nCh*time,0) + conj(iS.z(st2+nSt*ch+nSt*nCh*time,2))*iS.z(st2+nSt*ch+nSt*nCh*time,2);
+                  w(1) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,0))*iS.z(st2+nSt*ch+nSt*nCh*time,1) + conj(iS.z(st2+nSt*ch+nSt*nCh*time,2))*iS.z(st2+nSt*ch+nSt*nCh*time,3);
+                  w(3) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,1))*iS.z(st2+nSt*ch+nSt*nCh*time,1) + conj(iS.z(st2+nSt*ch+nSt*nCh*time,3))*iS.z(st2+nSt*ch+nSt*nCh*time,3);
+                }
+              }
+            }
+            w(2)=conj(w(1));
+
+            t=0;
+
+            for (uint time=0;time<solInt;++time) {
+              for (uint ch=0;ch<nCh;++ch) {
+                vis_p=&itsVis(IPosition(6,0,0,ch,time,0,st1)); for (uint st2=0;st2<nSt;++st2) { t(0) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,0)) * vis_p[st2]; }// itsVis(IPosition(6,st2,0,ch,time,0,st1));}
+                vis_p=&itsVis(IPosition(6,0,1,ch,time,0,st1)); for (uint st2=0;st2<nSt;++st2) { t(0) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,2)) * vis_p[st2]; }// itsVis(IPosition(6,st2,0,ch,time,1,st1));}
+                vis_p=&itsVis(IPosition(6,0,0,ch,time,1,st1)); for (uint st2=0;st2<nSt;++st2) { t(1) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,0)) * vis_p[st2]; }// itsVis(IPosition(6,st2,1,ch,time,0,st1));}
+                vis_p=&itsVis(IPosition(6,0,1,ch,time,1,st1)); for (uint st2=0;st2<nSt;++st2) { t(1) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,2)) * vis_p[st2]; }// itsVis(IPosition(6,st2,1,ch,time,1,st1));}
+                vis_p=&itsVis(IPosition(6,0,0,ch,time,0,st1)); for (uint st2=0;st2<nSt;++st2) { t(2) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,1)) * vis_p[st2]; }// itsVis(IPosition(6,st2,0,ch,time,0,st1));}
+                vis_p=&itsVis(IPosition(6,0,1,ch,time,0,st1)); for (uint st2=0;st2<nSt;++st2) { t(2) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,3)) * vis_p[st2]; }// itsVis(IPosition(6,st2,0,ch,time,1,st1));}
+                vis_p=&itsVis(IPosition(6,0,0,ch,time,1,st1)); for (uint st2=0;st2<nSt;++st2) { t(3) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,1)) * vis_p[st2]; }// itsVis(IPosition(6,st2,1,ch,time,0,st1));}
+                vis_p=&itsVis(IPosition(6,0,1,ch,time,1,st1)); for (uint st2=0;st2<nSt;++st2) { t(3) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,3)) * vis_p[st2]; }// itsVis(IPosition(6,st2,1,ch,time,1,st1));}
+              }
+            }
+            DComplex invdet= 1./(w(0) * w (3) - w(1)*w(2));
+            iS.g(st1,0) = invdet * ( w(3) * t(0) - w(1) * t(2) );
+            iS.g(st1,1) = invdet * ( w(3) * t(1) - w(1) * t(3) );
+            iS.g(st1,2) = invdet * ( w(0) * t(2) - w(2) * t(0) );
+            iS.g(st1,3) = invdet * ( w(0) * t(3) - w(2) * t(1) );
+          }
+        } else {// ======================== Nonpolarized =======================
+          for (uint st=0;st<nUn;++st) {
+            iS.h(st,0)=conj(iS.g(st,0));
+          }
+          for (uint st1=0;st1<nUn;++st1) {
+            ww=0;
+            t(0)=0;
+            DComplex* z_p=iS.z.data();
+            mvis_p=&itsMVis(IPosition(6,0,0,0,0,st1/nSt,st1%nSt));
+            vis_p = &itsVis(IPosition(6,0,0,0,0,st1/nSt,st1%nSt));
+            for (uint st1pol=0;st1pol<nSp;++st1pol) {
+              for (uint time=0;time<solInt;++time) {
+                for (uint ch=0;ch<nCh;++ch) {
+                  DComplex* h_p=iS.h.data();
+                  for (uint st2=0;st2<nUn;++st2) {
+                    *z_p = h_p[st2] * *mvis_p; //itsMVis(IPosition(6,st2%nSt,st2/nSt,ch,time,st1/nSt,st1%nSt));
+                    ww+=norm(*z_p);
+                    t(0)+=conj(*z_p) * *vis_p; //itsVis(IPosition(6,st2%nSt,st2/nSt,ch,time,st1/nSt,st1%nSt));
+                    mvis_p++;
+                    vis_p++;
+                    z_p++;
+                  }
+                  //cout<<"iS.z bij ch="<<ch<<"="<<iS.z<<endl<<"----"<<endl;
+                }
+              }
+            }
+            //cout<<"st1="<<st1%nSt<<(st1>=nSt?"y":"x")<<", t="<<t(0)<<"       ";
+            //cout<<", w="<<ww<<"       ";
+            iS.g(st1,0)=t(0)/ww;
+            //cout<<", g="<<iS.g(st1,0)<<endl;
+            if (itsMode=="phaseonly" || itsMode=="scalarphase") {
+              iS.g(st1,0)/=abs(iS.g(st1,0));
             }
           }
-
-          w=0;
-          t=0;
-
-          for (uint st2ch=0;st2ch<nSt*nCh;++st2ch) {
-            w(0) += conj(iS.z(st2ch,0))*iS.z(st2ch,0) + conj(iS.z(st2ch,2))*iS.z(st2ch,2);
-            w(1) += conj(iS.z(st2ch,0))*iS.z(st2ch,1) + conj(iS.z(st2ch,2))*iS.z(st2ch,3);
-            w(3) += conj(iS.z(st2ch,1))*iS.z(st2ch,1) + conj(iS.z(st2ch,3))*iS.z(st2ch,3);
-          }
-          w(2)=conj(w(1));
-
-          t=0;
-          vis_p=&itsVis(IPosition(4,0,0,0,st1));
-          for (uint st2ch=0;st2ch<nSt*nCh;++st2ch) {
-              t(0) += conj(iS.z(st2ch,0)) * vis_p[0] + conj(iS.z(st2ch,2)) * vis_p[2];
-              t(1) += conj(iS.z(st2ch,0)) * vis_p[1] + conj(iS.z(st2ch,2)) * vis_p[3];
-              t(2) += conj(iS.z(st2ch,1)) * vis_p[0] + conj(iS.z(st2ch,3)) * vis_p[2];
-              t(3) += conj(iS.z(st2ch,1)) * vis_p[1] + conj(iS.z(st2ch,3)) * vis_p[3];
-              vis_p+=4;
-          }
-          DComplex invdet= 1./(w(0) * w (3) - w(1)*w(2));
-          iS.g(st1,0) = invdet * ( w(3) * t(0) - w(1) * t(2) );
-          iS.g(st1,1) = invdet * ( w(3) * t(1) - w(1) * t(3) );
-          iS.g(st1,2) = invdet * ( w(0) * t(2) - w(2) * t(0) );
-          iS.g(st1,3) = invdet * ( w(0) * t(3) - w(2) * t(1) );
         }
-
         if (iter % 2 == 1) {
+          if (itsDebugLevel>7) {
+            cout<<"iter: "<<iter<<endl;
+          }
+          if (dgx-dg <= 1.0e-3*dg) {
+            if (itsDebugLevel>3) {
+              cout<<"**"<<endl;
+            }
+            nhit++;
+          } else {
+            nhit=0;
+          }
+
+          if (nhit>=maxhit) {
+            if (itsDebugLevel>3) {
+              cout<<"Detected stall"<<endl;
+            }
+            itsStalled++;
+            break;
+          }
+
           dgxx = dgx;
           dgx  = dg;
 
           double fronormdiff=0;
           double fronormg=0;
-          for (uint ant=0;ant<nSt;++ant) {
+          for (uint ant=0;ant<nUn;++ant) {
             for (uint cr=0;cr<nCr;++cr) {
               DComplex diff=iS.g(ant,cr)-iS.gold(ant,cr);
               fronormdiff+=abs(diff*diff);
@@ -565,18 +682,19 @@ namespace LOFAR {
           fronormg=sqrt(fronormg);
 
           dg = fronormdiff/fronormg;
-          if (itsDebugLevel>6) {
-            cout<<"dg="<<dg<<endl;
+          if (itsDebugLevel>1) {
+            dgs.push_back(dg);
           }
 
           if (dg <= itsTolerance) {
+            itsConverged++;
             break;
           }
 
           if (itsDebugLevel>7) {
             cout<<"Averaged"<<endl;
           }
-          for (uint ant=0;ant<nSt;++ant) {
+          for (uint ant=0;ant<nUn;++ant) {
             for (uint cr=0;cr<nCr;++cr) {
               iS.g(ant,cr) = (1-omega) * iS.g(ant,cr) + omega * iS.gold(ant,cr);
             }
@@ -591,24 +709,21 @@ namespace LOFAR {
           }
 
           if (threestep) {
-            if (itsDebugLevel>7) {
-              cout<<"threestep"<<endl;
-            }
             if (sstep <= 0) {
               if (dg <= c1 * dgx) {
                 if (itsDebugLevel>7) {
                   cout<<"dg<=c1*dgx"<<endl;
                 }
-                for (uint ant=0;ant<nSt;++ant) {
+                for (uint ant=0;ant<nUn;++ant) {
                   for (uint cr=0;cr<nCr;++cr) {
                     iS.g(ant,cr) = f1q * iS.g(ant,cr) + f2q * iS.gx(ant,cr);
                   }
                 }
               } else if (dg <= dgx) {
-                if (itsDebugLevel>3) {
+                if (itsDebugLevel>7) {
                   cout<<"dg<=dgx"<<endl;
                 }
-                for (uint ant=0;ant<nSt;++ant) {
+                for (uint ant=0;ant<nUn;++ant) {
                   for (uint cr=0;cr<nCr;++cr) {
                     iS.g(ant,cr) = f1 * iS.g(ant,cr) + f2 * iS.gx(ant,cr) + f3 * iS.gxx(ant,cr);
                   }
@@ -635,226 +750,34 @@ namespace LOFAR {
           iS.gx = iS.g;
         }
       }
-      if (dg > itsTolerance && nSt>0 && itsDebugLevel>0) {
-        cerr<<"!";
+      if (dg > itsTolerance && nSt>0) {
+        if (nhit<maxhit) {
+          itsNonconverged++;
+        }
+        if (itsDebugLevel>0) {
+          cerr<<"!";
+        }
       }
 
       if (itsDebugLevel>1) {
-        cout<<"t: "<<itsTStep<<", iter:"<<iter<<", dg="<<dg<<endl;
-      }
-
-      DComplex p = conj(iS.g(0,0))/abs(iS.g(0,0));
-      // Set phase of first gain to zero
-      for (uint st=0;st<nSt;++st) {
-        for (uint cr=0;cr<nCr;++cr) {
-           iS.g(st,cr)*=p;
+        cout<<"t: "<<itsTStep<<", iter:"<<iter<<", dg=[";
+        if (dgs.size()>0) {
+          cout<<dgs[0];
         }
-      }
-
-      //for (uint ant2=0;ant2<nSt;++ant2) {
-        //cout<<"g["<<ant2<<"]={"<<g[ant2][0]<<", "<<g[ant2][1]<<", "<<g[ant2][2]<<", "<<g[ant2][3]<<"}"<<endl;
-        //cout<<"w["<<ant2<<"]={"<<w[ant2][0]<<", "<<w[ant2][1]<<", "<<w[ant2][2]<<", "<<w[ant2][3]<<"}"<<endl;
-      //}
-
-      // Stefcal terminated (either by maxiter or by converging)
-      // Let's save G...
-      itsSols.push_back(iS.g.copy());
-
-      if (itsDebugLevel>2) {
-        cout<<"g="<<iS.g<<endl;
-      }
-      itsTimerSolve.stop();
-    }
-
-
-    void GainCal::stefcalunpol (dcomplex* model, casa::Complex* data, float* weight,
-                                const Bool* flag) {
-      setAntUsedNotFlagged(flag);
-      fillMatricesUnpol(model,data,weight,flag);
-
-      itsTimerSolve.start();
-      double f2 = -1.0;
-      double f3 = -0.5;
-      double f1 = 1 - f2 - f3;
-      double f2q = -0.5;
-      double f1q = 1 - f2q;
-      double omega = 0.5;
-      uint nomega = 24;
-      double c1 = 0.5;
-      double c2 = 1.2;
-      double dg  =1.0e30;
-      double dgx =1.0e30;
-      double dgxx;
-      bool threestep = false;
-
-      uint nSt=itsMVis.shape()[0]/2;
-      uint nCh = info().nchan();
-
-      iS.g.resize(2*nSt,1);
-      iS.gold.resize(2*nSt,1);
-      iS.gx.resize(2*nSt,1);
-      iS.gxx.resize(2*nSt,1);
-      iS.h.resize(2*nSt,1);
-      iS.z.resize(2*nSt*nCh,1);
-
-      double w;
-      DComplex t;
-
-      // Initialize all vectors
-      double fronormvis=0;
-      double fronormmod=0;
-      for (uint st1=0;st1<2*nSt;++st1) {
-        for (uint st2=0;st2<2*nSt;++st2) {
-          //for (uint ch=0;ch<nCh;++ch) {
-            fronormvis+=norm( itsVis(IPosition(3,st2,0,st1)));
-            fronormmod+=norm(itsMVis(IPosition(3,st2,0,st1)));
-          //}
+        for (uint i=1;i<dgs.size();++i) {
+          cout<<","<<dgs[i];
         }
-      }
-      fronormvis=sqrt(fronormvis);
-      fronormmod=sqrt(fronormmod);
-
-      if (nSt>0 && abs(fronormmod)>1.e-15) {
-        iS.g=sqrt(fronormvis/fronormmod);
-      } else {  // No antennas...
-        iS.g=1;
+        cout<<"]"<<endl;
       }
 
-      iS.gx = iS.g;
-      int sstep=0;
-
-      if (itsDebugLevel>10) {
-        for (uint st1=0;st1<2*nSt;++st1) {
-          for (uint st2=0;st2<2*nSt;++st2) {
-            cout<<"st1="<<st1<<", st2="<<st2<<", mvis="<<itsMVis(IPosition(3,st1,0,st2))<<endl;
-          }
-        }
-      }
-
-      DComplex* vis_p;
-      DComplex* mvis_p;
-
-      uint iter=0;
-      if (nSt==0) {
-        iter=itsMaxIter;
-      }
-      for (;iter<itsMaxIter;++iter) {
-        //cout<<"iter+1 = "<<iter+1<<endl;
-        iS.gold=iS.g;
-
-        for (uint st=0;st<2*nSt;++st) {
-          iS.h(st,0)=conj(iS.g(st,0));
-        }
-
-        for (uint st1=0;st1<2*nSt;++st1) {
-          w=0;
-          t=0;
-          for (uint ch=0;ch<nCh;++ch) {
-            mvis_p=&itsMVis(IPosition(3,0,ch,st1));
-            vis_p = &itsVis(IPosition(3,0,ch,st1));
-            for (uint st2=0;st2<2*nSt;++st2) {
-              iS.z(ch*nSt+st2,0) = iS.h(st2,0) * (*mvis_p++);//itsMVis(IPosition(3,st2,ch,st1));
-              w+=norm(iS.z(ch*nSt+st2,0));
-              t+=conj(iS.z(ch*nSt+st2,0)) * (*vis_p++);//itsVis(IPosition(3,st2,ch,st1));
-            }
-          }
-          iS.g(st1,0)=t/w;
-          if (itsMode=="phaseonly") {
-            iS.g(st1,0)/=abs(iS.g(st1,0));
-          }
-        }
-        if (iter % 2 == 1) {
-          dgxx = dgx;
-          dgx  = dg;
-
-          double fronormdiff=0;
-          double fronormg=0;
-          for (uint ant=0;ant<2*nSt;++ant) {
-            DComplex diff=iS.g(ant,0)-iS.gold(ant,0);
-            fronormdiff+=abs(diff*diff);
-            fronormg+=abs(iS.g(ant,0)*iS.g(ant,0));
-          }
-          fronormdiff=sqrt(fronormdiff);
-          fronormg=sqrt(fronormg);
-
-          dg = fronormdiff/fronormg;
-          if (itsDebugLevel>7) {
-            cout<<"dg="<<dg<<endl;
-          }
-
-          if (dg <= itsTolerance) {
-            break;
-          }
-
-          if (itsDebugLevel>7) {
-            cout<<"Averaged"<<endl;
-          }
-          for (uint ant=0;ant<2*nSt;++ant) {
-            iS.g(ant,0) = (1-omega) * iS.g(ant,0) + omega * iS.gold(ant,0);
-          }
-
-          if (!threestep) {
-            threestep = (iter+1 >= nomega) ||
-                ( max(dg,max(dgx,dgxx)) <= 1.0e-3 && dg<dgx && dgx<dgxx);
-            if (itsDebugLevel>7) {
-              cout<<"Threestep="<<boolalpha<<threestep<<endl;
-            }
-          }
-
-          if (threestep) {
-            if (itsDebugLevel>7) {
-              cout<<"threestep"<<endl;
-            }
-            if (sstep <= 0) {
-              if (dg <= c1 * dgx) {
-                if (itsDebugLevel>7) {
-                  cout<<"dg<=c1*dgx"<<endl;
-                }
-                for (uint ant=0;ant<2*nSt;++ant) {
-                    iS.g(ant,0) = f1q * iS.g(ant,0) + f2q * iS.gx(ant,0);
-                }
-              } else if (dg <= dgx) {
-                if (itsDebugLevel>7) {
-                  cout<<"dg<=dgx"<<endl;
-                }
-                for (uint ant=0;ant<2*nSt;++ant) {
-                  iS.g(ant,0) = f1 * iS.g(ant,0) + f2 * iS.gx(ant,0) + f3 * iS.gxx(ant,0);
-                }
-              } else if (dg <= c2 *dgx) {
-                if (itsDebugLevel>7) {
-                  cout<<"dg<=c2*dgx"<<endl;
-                }
-                iS.g = iS.gx;
-                sstep = 1;
-              } else {
-                //cout<<"else"<<endl;
-                iS.g = iS.gxx;
-                sstep = 2;
-              }
-            } else {
-              if (itsDebugLevel>7) {
-                cout<<"no sstep"<<endl;
-              }
-              sstep = sstep - 1;
-            }
-          }
-          iS.gxx = iS.gx;
-          iS.gx = iS.g;
-        }
-      }
-      if (dg > itsTolerance && nSt>0 && itsDebugLevel>0) {
-        cerr<<"!";
-      }
-
-      if (itsDebugLevel>1) {
-        cout<<"t: "<<itsTStep<<", iter:"<<iter<<", dg="<<dg<<endl;
-      }
-
+      // Set phase of first station to zero
       if (nSt>0) {
         DComplex p = conj(iS.g(0,0))/abs(iS.g(0,0));
         // Set phase of first gain to zero
-        for (uint st=0;st<2*nSt;++st) {
-          iS.g(st,0)*=p;
+        for (uint st=0;st<nUn;++st) {
+          for (uint cr=0;cr<nCr;++cr) {
+            iS.g(st,cr)*=p;
+          }
         }
       }
 
@@ -867,20 +790,28 @@ namespace LOFAR {
       // Let's save G...
       itsSols.push_back(iS.g.copy());
 
-      if (itsDebugLevel>2) {
-        cout<<"g="<<iS.g<<endl;
+      if (itsDebugLevel>3) {
+        //cout<<"g="<<iS.g<<endl;
+        cout<<"g=[";
+        for (uint i=0;i<nUn;++i) {
+          cout<<iS.g(i,0).real()<<(iS.g(i,0).imag()>=0?"+":"")<<iS.g(i,0).imag()<<"j; ";
+        }
+        cout<<endl;
+        THROW(Exception,"Klaar!");
       }
 
       if (dg > itsTolerance && itsDebugLevel>1 && nSt>0) {
         cout<<endl<<"Did not converge: dg="<<dg<<" tolerance="<<itsTolerance<<", nants="<<nSt<<endl;
         if (itsDebugLevel>12) {
           cout<<"g="<<iS.g<<endl;
-          exportToMatlab(0);
-          THROW(Exception,"Klaar!");
+          //exportToMatlab(0);
+          //THROW(Exception,"Klaar!");
         }
       }
+//      THROW(Exception,"Klaar!");
       itsTimerSolve.stop();
     }
+
 
     void GainCal::exportToMatlab(uint ch) {
       ofstream mFile;
@@ -946,6 +877,7 @@ namespace LOFAR {
       uint nSt   = info().antennaUsed().size();
       uint nBl   = info().nbaselines();
 
+//#pragma omp parallel for
       for (size_t st=0; st<nSt; ++st) {
         itsAntBeamInfo[st]->response (nchan, time, chanFreqs.cbegin(),
                                       srcdir, info().refFreq(), refdir, tiledir,
@@ -982,109 +914,126 @@ namespace LOFAR {
     void GainCal::finish()
     {
       itsTimer.start();
+
+      //Solve remaining time slots if any
+      itsTimerSolve.start();
+      if (itsNTimes!=0) {
+        stefcal(itsMode,itsSolInt);
+      }
+      itsTimerSolve.stop();
+
       itsTimerWrite.start();
 
-      uint nSt=info().antennaUsed().size();
+      if (itsOperation=="solve") {
+        uint nSt=info().antennaUsed().size();
 
-      uint ntime=itsSols.size();
+        uint ntime=itsSols.size();
 
-      // Construct solution grid.
-      const Vector<double>& freq      = getInfo().chanFreqs();
-      const Vector<double>& freqWidth = getInfo().chanWidths();
-      BBS::Axis::ShPtr freqAxis(new BBS::RegularAxis(freq[0] - freqWidth[0]
-        * 0.5, getInfo().totalBW(), 1));
-      BBS::Axis::ShPtr timeAxis(new BBS::RegularAxis
-                                (info().startTime(),
-                                 info().timeInterval(), ntime));
-      BBS::Grid solGrid(freqAxis, timeAxis);
-      // Create domain grid.
-      BBS::Axis::ShPtr tdomAxis(new BBS::RegularAxis
-                                (info().startTime(),
-                                 info().timeInterval() * ntime, 1));
-      BBS::Grid domainGrid(freqAxis, tdomAxis);
+        // Construct solution grid.
+        const Vector<double>& freq      = getInfo().chanFreqs();
+        const Vector<double>& freqWidth = getInfo().chanWidths();
+        BBS::Axis::ShPtr freqAxis(new BBS::RegularAxis(freq[0] - freqWidth[0]
+          * 0.5, getInfo().totalBW(), 1));
+        BBS::Axis::ShPtr timeAxis(new BBS::RegularAxis
+                                  (info().startTime(),
+                                   info().timeInterval(), ntime));
+        BBS::Grid solGrid(freqAxis, timeAxis);
+        // Create domain grid.
+        BBS::Axis::ShPtr tdomAxis(new BBS::RegularAxis
+                                  (info().startTime(),
+                                   info().timeInterval() * ntime, 1));
+        BBS::Grid domainGrid(freqAxis, tdomAxis);
 
-      // Open the ParmDB at the first write.
-      // In that way the instrumentmodel ParmDB can be in the MS directory.
-      if (! itsParmDB) {
-        itsParmDB = boost::shared_ptr<BBS::ParmDB>
-          (new BBS::ParmDB(BBS::ParmDBMeta("casa", itsParmDBName),
-                           true));
-        itsParmDB->lock();
-        // Store the (freq, time) resolution of the solutions.
-        vector<double> resolution(2);
-        resolution[0] = freqWidth[0];
-        resolution[1] = info().timeInterval();
-        itsParmDB->setDefaultSteps(resolution);
-      }
-      // Write the solutions per parameter.
-      const char* str0101[] = {"0:0:","1:0:","0:1:","1:1:"}; // Conjugate transpose!
-      const char* strri[] = {"Real:","Imag:"};
-      Matrix<double> values(1, ntime);
+        // Open the ParmDB at the first write.
+        // In that way the instrumentmodel ParmDB can be in the MS directory.
+        if (! itsParmDB) {
+          itsParmDB = boost::shared_ptr<BBS::ParmDB>
+            (new BBS::ParmDB(BBS::ParmDBMeta("casa", itsParmDBName),
+                             true));
+          itsParmDB->lock();
+          // Store the (freq, time) resolution of the solutions.
+          vector<double> resolution(2);
+          resolution[0] = freqWidth[0];
+          resolution[1] = info().timeInterval();
+          itsParmDB->setDefaultSteps(resolution);
+        }
+        // Write the solutions per parameter.
+        const char* str0101[] = {"0:0:","1:0:","0:1:","1:1:"}; // Conjugate transpose!
+        const char* strri[] = {"Real:","Imag:"};
+        Matrix<double> values(1, ntime);
 
-      DComplex sol;
+        DComplex sol;
 
-      for (size_t st=0; st<nSt; ++st) {
-        uint seqnr = 0; // To take care of real and imaginary part
-        string suffix(itsAntennaUsedNames[st]);
+        for (size_t st=0; st<nSt; ++st) {
+          uint seqnr = 0; // To take care of real and imaginary part
+          string suffix(itsAntennaUsedNames[st]);
 
-        for (int i=0; i<4; ++i) {
-          if ((itsMode=="diagonal" || itsMode=="phaseonly") && (i==1||i==2)) {
-            continue;
-          }
-          int kmax;
-          if (itsMode=="phaseonly") {
-            kmax=1;
-          } else {
-            kmax=2;
-          }
-          for (int k=0; k<kmax; ++k) {
-            string name(string("Gain:") +
-                        str0101[i] + (itsMode=="phaseonly"?"Phase:":strri[k]) + suffix);
-            // Collect its solutions for all times in a single array.
-            for (uint ts=0; ts<ntime; ++ts) {
-              if (itsAntMaps[ts][st]==-1) {
-                if (itsMode!="phaseonly" && k==0 && (i==0||i==3)) {
-                  values(0, ts) = 1;
-                } else {
-                  values(0, ts) = 0;
-                }
-              } else {
-                int rst=itsAntMaps[ts][st];
-                if (itsMode=="fulljones") {
-                  if (seqnr%2==0) {
-                    values(0, ts) = real(itsSols[ts](rst,seqnr/2));
+          for (int pol=0; pol<4; ++pol) { // For 0101
+            if ((itsMode=="diagonal" || itsMode=="phaseonly") && (pol==1||pol==2)) {
+              continue;
+            }
+            if (itsMode=="scalarphase" && pol>0) {
+              continue;
+            }
+            int realimmax;
+            if (itsMode=="phaseonly" || itsMode=="scalarphase") {
+              realimmax=1;
+            } else {
+              realimmax=2;
+            }
+            for (int realim=0; realim<realimmax; ++realim) { // For real and imaginary
+              string name(string("Gain:") +
+                          str0101[pol] + (itsMode=="phaseonly"?"Phase:":strri[realim]) + suffix);
+              if (itsMode=="scalarphase") {
+                name="CommonScalarPhase:"+suffix;
+              }
+              // Collect its solutions for all times in a single array.
+              for (uint ts=0; ts<ntime; ++ts) {
+                if (itsAntMaps[ts][st]==-1) {
+                  if (itsMode!="phaseonly" && itsMode!="scalarphase" &&
+                      realim==0 && (pol==0||pol==3)) {
+                    values(0, ts) = 1;
                   } else {
-                    values(0, ts) = -imag(itsSols[ts](rst,seqnr/2)); // Conjugate transpose!
-                  }
-                } else if (itsMode=="diagonal") {
-                  uint sSt=itsSols[ts].size()/2;
-                  if (seqnr%2==0) {
-                    values(0, ts) = real(itsSols[ts](i/3*sSt+rst,0)); // nSt times Gain:0:0 at the beginning, then nSt times Gain:1:1
-                  } else {
-                    values(0, ts) = -imag(itsSols[ts](i/3*sSt+rst,0)); // Conjugate transpose!
+                    values(0, ts) = 0;
                   }
                 } else {
-                  uint sSt=itsSols[ts].size()/2;
-                  values(0, ts) = -arg(itsSols[ts](i/3*sSt+rst,0)); // nSt times Gain:0:0 at the beginning, then nSt times Gain:1:1 // Transpose!
+                  int rst=itsAntMaps[ts][st];
+                  if (itsMode=="fulljones") {
+                    if (seqnr%2==0) {
+                      values(0, ts) = real(itsSols[ts](rst,seqnr/2));
+                    } else {
+                      values(0, ts) = -imag(itsSols[ts](rst,seqnr/2)); // Conjugate transpose!
+                    }
+                  } else if (itsMode=="diagonal") {
+                    uint sSt=itsSols[ts].size()/2;
+                    if (seqnr%2==0) {
+                      values(0, ts) = real(itsSols[ts](pol/3*sSt+rst,0)); // nSt times Gain:0:0 at the beginning, then nSt times Gain:1:1
+                    } else {
+                      values(0, ts) = -imag(itsSols[ts](pol/3*sSt+rst,0)); // Conjugate transpose!
+                    }
+                  } else if (itsMode=="scalarphase" || itsMode=="phaseonly") {
+                    uint sSt=itsSols[ts].size()/2;
+                    values(0, ts) = -arg(itsSols[ts](pol/3*sSt+rst,0)); // nSt times Gain:0:0 at the beginning, then nSt times Gain:1:1
+                  }
                 }
               }
-            }
-            cout.flush();
-            seqnr++;
-            BBS::ParmValue::ShPtr pv(new BBS::ParmValue());
-            pv->setScalars (solGrid, values);
-            BBS::ParmValueSet pvs(domainGrid,
-                                  vector<BBS::ParmValue::ShPtr>(1, pv));
-            map<string,int>::const_iterator pit = itsParmIdMap.find(name);
-            if (pit == itsParmIdMap.end()) {
-              // First time, so a new nameId will be set.
-              int nameId = -1;
-              itsParmDB->putValues (name, nameId, pvs);
-              itsParmIdMap[name] = nameId;
-            } else {
-              // Parm has been put before.
-              int nameId = pit->second;
-              itsParmDB->putValues (name, nameId, pvs);
+              cout.flush();
+              seqnr++;
+              BBS::ParmValue::ShPtr pv(new BBS::ParmValue());
+              pv->setScalars (solGrid, values);
+              BBS::ParmValueSet pvs(domainGrid,
+                                    vector<BBS::ParmValue::ShPtr>(1, pv));
+              map<string,int>::const_iterator pit = itsParmIdMap.find(name);
+              if (pit == itsParmIdMap.end()) {
+                // First time, so a new nameId will be set.
+                int nameId = -1;
+                itsParmDB->putValues (name, nameId, pvs);
+                itsParmIdMap[name] = nameId;
+              } else {
+                // Parm has been put before.
+                int nameId = pit->second;
+                itsParmDB->putValues (name, nameId, pvs);
+              }
             }
           }
         }
