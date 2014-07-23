@@ -1,4 +1,4 @@
-//# createHeaders.cc: Generates all .h5/.MS files given a (OLAP) parset
+//# createFeedback.cc: Generates basic LTA feedback from a parset
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -21,14 +21,13 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <cstdlib>
 #include <string>
 #include <iostream>
 #include <boost/format.hpp>
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
-#include "OutputThread.h"
+#include <CoInterface/LTAFeedback.h>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -41,7 +40,7 @@ Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char *argv[])
 {
-  INIT_LOGGER("createHeaders");
+  INIT_LOGGER("createFeedback");
 
   if (argc != 2) {
     cout << str(format("usage: %s parset") % argv[0]) << endl;
@@ -51,33 +50,15 @@ int main(int argc, char *argv[])
   }
 
   Parset parset(argv[1]);
-  MACIO::RTmetadata rtmd(parset.observationID(), "", ""); // dummy
 
-  // Process correlated data
-  if (parset.settings.correlator.enabled) {
-    for (size_t fileIdx = 0; fileIdx < parset.settings.correlator.files.size(); ++fileIdx)
-    {
-      string logPrefix = str(format("[correlated stream %3u] ") % fileIdx);
+  LTAFeedback fb(parset.settings);
+  Parset feedbackLTA;
 
-      Pool<StreamableData> outputPool(logPrefix);
+  // add all parameters
+  feedbackLTA.adoptCollection(fb.allFeedback());
 
-      SubbandOutputThread writer(parset, fileIdx, outputPool, rtmd, "rtmd key prefix", logPrefix, ".");
-      writer.createMS();
-    }
-  }
-
-  // Process beam-formed data
-  if (parset.settings.beamFormer.enabled) {
-    for (size_t fileIdx = 0; fileIdx < parset.settings.beamFormer.files.size(); ++fileIdx)
-    {
-      string logPrefix = str(format("[beamformed stream %3u] ") % fileIdx);
-
-      Pool<TABTranspose::BeamformedData> outputPool(logPrefix);
-
-      TABOutputThread writer(parset, fileIdx, outputPool, rtmd, "rtmd key prefix", logPrefix, ".");
-      writer.createMS();
-    }
-  }
+  // Write to disk
+  feedbackLTA.writeFile(str(format("Observation%d_feedback") % parset.settings.observationID), false);
 
   return 0;
 }

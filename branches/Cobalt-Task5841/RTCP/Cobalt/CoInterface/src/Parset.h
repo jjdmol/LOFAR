@@ -47,6 +47,10 @@ namespace LOFAR
 
     enum StokesType { STOKES_I = 0, STOKES_IQUV, STOKES_XXYY, INVALID_STOKES = -1 };
 
+    StokesType stokesType( const std::string &name );
+    size_t nrStokes( StokesType type );
+    std::string stokesType( StokesType type );
+
     // All settings relevant for an observation (well, it should become that,
     // we don't copy all Parset values yet!).
  
@@ -71,6 +75,11 @@ namespace LOFAR
       // key: Observation.startTime
       double startTime;
 
+      // Raw start time string, as provided in the parset
+      //
+      // key: Observation.startTime
+      std::string rawStartTime;
+
       // Specified observation stop time, in seconds since 1970.
       //
       // key: Observation.stopTime
@@ -86,6 +95,9 @@ namespace LOFAR
 
       // The bandwidth of a single subband, in Hz
       double subbandWidth() const;
+
+      // The length of an input sample, in s
+      double sampleDuration() const;
 
       // The number of samples in one block of one subband.
       //
@@ -219,6 +231,11 @@ namespace LOFAR
       //
       // length: len(OLAP.storageStationNames)
       std::vector<struct AntennaField> antennaFields;
+
+      // A list of the stations used in the observation
+      //
+      // key: Observation.VirtualInstrument.stationList
+      std::string rawStationList;
 
       ssize_t antennaFieldIndex(const std::string &name) const;
 
@@ -417,9 +434,6 @@ namespace LOFAR
           size_t streamNr;
 
           struct FileLocation location;
-
-          // the ParameterSet prefix for LTA feedback for this file
-          std::string LTAprefix() const;
         };
 
         // The list of files to write, indexed by subband
@@ -460,9 +474,6 @@ namespace LOFAR
           // interpretation is same as in globalSubbandIdx, i.e. [0, 488)
           unsigned firstSubbandIdx;
           unsigned lastSubbandIdx; // exclusive
-
-          // the ParameterSet prefix for LTA feedback for this file
-          std::string LTAprefix() const;
         };
 
         // The list of files to write, one file
@@ -701,19 +712,6 @@ namespace LOFAR
       std::vector<double>         itsStPositions;
 
       std::string                 PVSS_TempObsName() const;
-
-      // Return the file-specific LTA feedback for correlator and beamformed output, respectively.
-      // File sizes and percentages written are set to 0, and expected to be overwritten
-      // by updates from OutputProc.
-      ParameterSet                getCorrelatedLTAFeedbackParameters(size_t fileno) const;
-      ParameterSet                getBeamFormedLTAFeedbackParameters(size_t fileno) const;
-
-      // Return the LTA feedback parameters.
-      // \note Details about the meaning of the different meta-data parameters
-      // can be found in the XSD that describes the Submission Information
-      // Package (sip) for the LTA.
-      // \see http://proposal.astron.nl/schemas/LTA-SIP.xsd
-      ParameterSet                getGlobalLTAFeedbackParameters() const;
 
     private:
       const std::string itsName;

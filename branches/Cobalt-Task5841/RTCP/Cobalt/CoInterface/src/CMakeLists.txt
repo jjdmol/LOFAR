@@ -13,6 +13,7 @@ lofar_add_library(cointerface
   CorrelatedData.cc
   BlockID.cc
   FinalMetaData.cc
+  LTAFeedback.cc
   Stream.cc
   Parset.cc
   RunningStatistics.cc
@@ -24,3 +25,4 @@ lofar_add_library(cointerface
 lofar_add_bin_program(versioncointerface versioncointerface.cc)
 
 lofar_add_sbin_program(cmpfloat cmpfloat.cc)
+lofar_add_sbin_program(createFeedback createFeedback.cc)

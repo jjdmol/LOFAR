@@ -41,6 +41,7 @@
 
 #include <CoInterface/OutputTypes.h>
 #include <CoInterface/Exceptions.h>
+#include <CoInterface/LTAFeedback.h>
 
 #if defined HAVE_AIPSPP
 #include <casa/Exceptions/Error.h>
@@ -241,7 +242,7 @@ namespace LOFAR
           mdKeyPrefix,
           logPrefix + "[SubbandOutputThread] ",
           targetDirectory,
-          parset.settings.correlator.files[streamNr].LTAprefix())
+          LTAFeedback::correlatedPrefix(streamNr))
     {
     }
 
@@ -310,7 +311,7 @@ namespace LOFAR
           mdKeyPrefix,
           logPrefix + "[TABOutputThread] ",
           targetDirectory,
-          parset.settings.beamFormer.files[streamNr].LTAprefix())
+          LTAFeedback::beamFormedPrefix(streamNr))
     {
     }
 
