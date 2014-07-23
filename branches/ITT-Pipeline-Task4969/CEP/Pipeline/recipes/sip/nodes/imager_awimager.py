@@ -379,7 +379,7 @@ class imager_awimager(LOFARnodeTCP):
                           posbaseline[:, 1] ** 2) ** 0.5 
 
       bestBeamresol	= round((wavelenght / maxBaseline) * 
-                            (180.0 / 3.14) * 3600.0, 0)
+                            (180.0 / math.pi) * 3600.0, 0)
 
       # Beam resolution limitation to 10arcsec to avoid too large images
       if bestBeamresol < 10.0:
@@ -416,7 +416,7 @@ class imager_awimager(LOFARnodeTCP):
       robust	= round(1.0 - (3.0 * scaling_factor), 2)
 
       UVmax	= round((wavelenght) / 
-                       (pixPerBeam * pixsize / 3600.0 * 3.14 / 180.0 ) / 
+                       (pixPerBeam * pixsize / 3600.0 * math.pi / 180.0 ) / 
                        (1E3 * wavelenght), 3)
 
       wmax	= round(UVmax * (wavelenght) * 1E3, 3)		
