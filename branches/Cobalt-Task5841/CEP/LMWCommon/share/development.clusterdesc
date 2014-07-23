@@ -1,0 +1,4 @@
+ClusterName = Development
+
+# Directory is the same as the parent.
+SubClusters = [sub7.clusterdesc]

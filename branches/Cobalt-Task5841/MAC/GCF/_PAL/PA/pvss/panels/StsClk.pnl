@@ -1,0 +1,282 @@
+V 10
+1
+LANG:1 0 
+PANEL,99 78 548 191 N "_3DFace" 0
+E E E E E 1 -1 -1 0  -1 2
+""0  1
+E E 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+14 0
+"TEXT_FIELD1"
+""
+1 120 60 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+0 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
+0
+""  120 60 240 86
+3 "s" 0 0 0 0 0 -1  E "// SimpleCtrlScriptStart {valid}
+main()
+{
+  EP_setEnabled();
+  EP_textFieldIn();
+}
+
+EP_setEnabled()
+{
+dyn_errClass err;
+
+  if( !dpExists( \"CS010:StationClock.clock:_online.._value\"))
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"EP_setEnabledCB\",
+            \"CS010:StationClock.clock:_online.._value\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+
+EP_setEnabledCB(string dp, int iNewValue)
+{
+  setValue(\"\", \"enabled\",
+           (iNewValue != 123));
+}
+
+EP_textFieldIn()
+{
+dyn_errClass err;
+
+  if( !dpExists( \"CS010:StationClock.clock:_online.._value\"))
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"EP_textFieldInCB\",
+            \"CS010:StationClock.clock:_online.._value\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+EP_textFieldInCB(string dp, int iNewValue)
+{
+  setValue(\"\", \"text\", dpValToString(dp, iNewValue, TRUE) );
+}
+
+// SimpleCtrlScript {EP_setEnabled}
+// DP {CS010:StationClock.clock}
+// DPConfig {:_online.._value}
+// DPType {int}
+// Active {1}
+// Operator {notequal}
+// Value {123}
+// SimpleCtrlScriptEnd {EP_setEnabled}
+// SimpleCtrlScript {EP_textFieldIn}
+// DP {CS010:StationClock.clock}
+// DPConfig {:_online.._value}
+// DPType {int}
+// UseDPUnit {TRUE}
+// UseDPFormat {TRUE}
+// SimpleCtrlScriptEnd {EP_textFieldIn}
+" 0
+ "// SimpleCtrlScriptStart {valid}
+main()
+{
+  EP_textFieldOut();
+}
+
+EP_textFieldOut()
+{
+int iNewValue;
+dyn_errClass err;
+string sTmp;
+string sFormat, sDp;
+
+  getValue(\"\", \"text\", sTmp);
+  sscanf(sTmp, \"%d\", iNewValue);
+
+  sDp = dpSubStr(\"CS010:StationClock.clock:_original.._value\",  DPSUB_SYS_DP_EL);
+  if ( strpos(sDp,\".\") < 1 )
+    sDp += \".\";
+
+  sFormat = dpGetFormat( sDp );
+  if( !checkStringFormat(sTmp, sFormat) )
+  {
+    ChildPanelOnCentral( \"vision/MessageWarning\",
+                         getCatStr( \"e_para\", \"warning\" ),
+                         makeDynString( getCatStr( \"e_para\", \"wrongFormat\" )));
+    return;
+  }
+
+  dpSetWait(\"CS010:StationClock.clock:_original.._value\", sTmp);
+  err = getLastError();
+  if (dynlen(err) > 0)
+    errorDialog(err);
+}
+
+// SimpleCtrlScript {EP_textFieldOut}
+// DP {CS010:StationClock.clock}
+// Config {:_original.._value}
+// DPType {int}
+// SimpleCtrlScriptEnd {EP_textFieldOut}
+" 0
+
+13 1
+"PUSH_BUTTON1"
+""
+1 200 110 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+0 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
+0
+""  200 110 280 134
+
+T 
+1
+LANG:1 7 200 MHz
+E "// SimpleCtrlScriptStart {valid}
+main()
+{
+  EP_setDP();
+}
+
+EP_setDP()
+{
+dyn_errClass err;
+
+  dpSetWait(\"CS010:StationClock.clock:_original.._value\", 200);
+  err = getLastError();
+  if (dynlen(err) > 0)
+    errorDialog(err);
+}
+
+// SimpleCtrlScript {EP_setDP}
+// DP1 {CS010:StationClock.clock}
+// Config1 {:_original.._value}
+// Type1 {int}
+// Value1 {200}
+// SimpleCtrlScriptEnd {EP_setDP}
+" 0
+ E E
+13 2
+"PUSH_BUTTON2"
+""
+1 100 109 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
+0
+""  100 109 180 133
+
+T 
+1
+LANG:1 7 160 MHz
+E "// SimpleCtrlScriptStart {valid}
+main()
+{
+  EP_setDP();
+}
+
+EP_setDP()
+{
+dyn_errClass err;
+
+  dpSetWait(\"CS010:StationClock.clock:_original.._value\", 160);
+  err = getLastError();
+  if (dynlen(err) > 0)
+    errorDialog(err);
+}
+
+// SimpleCtrlScript {EP_setDP}
+// DP1 {CS010:StationClock.clock}
+// Config1 {:_original.._value}
+// Type1 {int}
+// Value1 {160}
+// SimpleCtrlScriptEnd {EP_setDP}
+" 0
+ E E
+13 3
+"PUSH_BUTTON3"
+""
+1 160 119 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
+0
+""  160 119 160 120
+
+T 
+1
+LANG:1 3 ???
+E E E E
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

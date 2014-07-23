@@ -1,0 +1,9 @@
+[general]
+pvss_path = "/opt/WinCC_OA/3.10"
+proj_path = "/opt/pvss/pvssproj/Navigator_MCU099"
+proj_version = "3.10"
+langs = "en_US.iso88591"
+data = "MCU099"
+event = "MCU099"
+userName = "root"
+password = ""
