@@ -6,7 +6,6 @@
 from __future__ import with_statement
 import sys
 import os
-import copy
 
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.baserecipe import BaseRecipe

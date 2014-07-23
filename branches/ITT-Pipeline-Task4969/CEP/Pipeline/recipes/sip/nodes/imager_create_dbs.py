@@ -66,10 +66,10 @@ class imager_create_dbs(LOFARnodeTCP):
         #*******************************************************************
         # 1. get a sourcelist: from gsm or from file
         source_list, append = self._create_source_list(
-                 source_list_path_extern,sourcedb_target_path, 
-                 concatenated_measurement_set,monet_db_hostname, 
-                 monet_db_port, monet_db_name, monet_db_user,
-                 monet_db_password, assoc_theta)       
+            source_list_path_extern,sourcedb_target_path, 
+            concatenated_measurement_set,monet_db_hostname, 
+            monet_db_port, monet_db_name, monet_db_user,
+            monet_db_password, assoc_theta)       
 
         #*******************************************************************
         # 2convert it to a sourcedb (casa table)
@@ -119,7 +119,8 @@ class imager_create_dbs(LOFARnodeTCP):
             append = False
         else:
             source_list = source_list_path_extern
-            append = False
+            append = False # Nicolas Should this be true or false? 
+            # later steps should not contain the original bootstrapping input
 
         return source_list, append
 

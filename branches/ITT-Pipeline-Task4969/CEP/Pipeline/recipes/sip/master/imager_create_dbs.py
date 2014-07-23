@@ -95,8 +95,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         'sourcedb_map_path': ingredient.StringField(
             '--sourcedb-map-path',
             help="path to mapfile containing produced sourcedb files"
-        )        
-        
+        )
     }
 
     outputs = {

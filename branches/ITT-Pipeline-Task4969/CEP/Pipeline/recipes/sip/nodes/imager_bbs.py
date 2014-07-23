@@ -46,8 +46,6 @@ class imager_bbs(LOFARnodeTCP):
         parmdb_map = MultiDataMap.load(parmdb_list_path)
         sky_list = MultiDataMap.load(sky_list_path)
         source_db = sky_list[0].file[0] # the sourcedb is the first file entry
-
-        ms_list = list()
       
         try:
             bbs_process_group = SubProcessGroup(self.logger)
@@ -63,10 +61,7 @@ class imager_bbs(LOFARnodeTCP):
                     parset]
                 self.logger.info("Executing bbs command: {0}".format(" ".join(
                             command)))
-                            
-                ms_list.append(measurement_set)
                 bbs_process_group.run(command)
-
 
             # *****************************************************************
             # 3. check status of the processes
@@ -104,12 +99,11 @@ class imager_bbs(LOFARnodeTCP):
               'time_slices_cycle_{0}'.format(major_cycle))
 
             cmd = "cp -r {0} {1}".format(time_slice_dir, time_slice_copy_dir) 
-            os.system(cmd)        
+            os.system(cmd)     
         except:
           self.logger.error(
                "Debug copy of temporary files failed: continue operations")
-          pass # Do nothing
-        
+          pass # Do nothing       
 
         return 0
 

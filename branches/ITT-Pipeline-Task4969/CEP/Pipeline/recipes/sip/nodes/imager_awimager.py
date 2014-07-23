@@ -20,7 +20,6 @@ import sys
 import shutil
 import os.path
 import math
-import fpformat
 import pyfits
 
 from lofarpipe.support.lofarnode import LOFARnodeTCP
@@ -61,8 +60,11 @@ class imager_awimager(LOFARnodeTCP):
         :param fov: if  autogenerate_parameters is false calculate 
            imageparameter (cellsize, npix, wprojplanes, wmax) relative to this 
            fov
-        :param major_cycle: number of the current cycle to determine 
+        :param major_cycle: number of the self calibration cycle to determine 
             the imaging parameters: cellsize, npix, wprojplanes, wmax, fov            
+        :param nr_cycles: The requested number of self cal cycles           
+        :param perform_self_cal: Bool used to control the selfcal functionality
+            or the old semi-automatic functionality       
         :rtype: self.outputs["image"] The path to the output image
         """
         self.logger.info("Start imager_awimager node run:")
@@ -85,8 +87,7 @@ class imager_awimager(LOFARnodeTCP):
                    UVmin, UVmax, robust, threshold =\
                         self._get_selfcal_parameters(
                             concatenated_measurement_set,
-                            parset, major_cycle, nr_cycles)
-                
+                            parset, major_cycle, nr_cycles)               
 
             else:
                 self.logger.info(
@@ -157,7 +158,7 @@ class imager_awimager(LOFARnodeTCP):
             # save the parset at the target dir for the image
             calculated_parset_path = os.path.join(image_path_head,
                                                        "parset.par")
-                                                                                                            
+
             try:
                 temp_parset_filename = patch_parset(parset, patch_dictionary)
                 # Copy tmp file to the final location
@@ -167,7 +168,7 @@ class imager_awimager(LOFARnodeTCP):
             finally:
                 # remove temp file
                 os.remove(temp_parset_filename)
-                            
+
             # *****************************************************************
             # 5. Run the awimager with the parameterset
             cmd = [executable, calculated_parset_path]
@@ -195,7 +196,6 @@ class imager_awimager(LOFARnodeTCP):
         # The actual output image has this extention always, default of
         # awimager
         self.outputs["image"] = output_image + ".restored"
-
         return 0
 
     def _get_imaging_parameters(self, measurement_set, parset,

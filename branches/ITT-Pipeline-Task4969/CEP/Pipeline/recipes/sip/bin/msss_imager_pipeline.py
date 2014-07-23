@@ -347,10 +347,13 @@ class msss_imager_pipeline(control):
         """
         # Create the parsets for the different sourcefinder runs
         bdsm_parset_pass_1 = self.parset.makeSubset("BDSM[0].")
+
+        self._selfcal_modify_parset(bdsm_parset_pass_1, "pybdsm_first_pass.par")
         parset_path_pass_1 = self._write_parset_to_file(bdsm_parset_pass_1,
                 "pybdsm_first_pass.par", "Sourcefinder first pass parset.")
 
         bdsm_parset_pass_2 = self.parset.makeSubset("BDSM[1].")
+        self._selfcal_modify_parset(bdsm_parset_pass_2, "pybdsm_second_pass.par")
         parset_path_pass_2 = self._write_parset_to_file(bdsm_parset_pass_2,
                 "pybdsm_second_pass.par", "sourcefinder second pass parset")
 
@@ -394,6 +397,7 @@ class msss_imager_pipeline(control):
         """
         # create parset for bbs run
         parset = self.parset.makeSubset("BBS.")
+        self._selfcal_modify_parset(parset, "bbs")
         parset_path = self._write_parset_to_file(parset, "bbs",
                         "Parset for calibration with a local sky model")
 
@@ -556,12 +560,6 @@ class msss_imager_pipeline(control):
     def _create_dbs(self, input_map_path, timeslice_map_path, 
                     major_cycle, source_list_map_path , 
                     skip_create_dbs = False):
-
-
-        # need the output directory path (use the same structure as for bbs)
-        prepare_phase_output = input_map_path
-
-
         """
         Create for each of the concatenated input measurement sets
         an instrument model and parmdb
@@ -598,27 +596,11 @@ class msss_imager_pipeline(control):
 
     # TODO: Move these helpers to the parent class
     def _write_parset_to_file(self, parset, parset_name, message):
-
-        """
-        Mofication of parsets (bbs) for selfcal imaging pipeline.
-        done by nicolas Vilchez
-        """      
-        if parset_name == "bbs":
-             self._selfcal_modify_parset(parset, parset_name)           
-
-        if parset_name == "pybdsm_first_pass.par":
-             self._selfcal_modify_parset(parset, parset_name)          
-
-        if parset_name == "pybdsm_second_pass.par":
-             self._selfcal_modify_parset(parset, parset_name)  
-
         """
         Write the suplied the suplied parameterset to the parameter set
         directory in the jobs dir with the filename suplied in parset_name.
         Return the full path to the created file.
         """
-        
-        
         parset_dir = os.path.join(
             self.config.get("layout", "job_directory"), "parsets")
         # create the parset dir if it does not exist
@@ -669,9 +651,9 @@ class msss_imager_pipeline(control):
         return mapfile_path
 
 
-
+    # This functionality should be moved outside into MOM/ default template.
+    # This is now a static we should be able to control this.
     def _selfcal_modify_parset(self, parset, parset_name):    
-        
         """ 
         Modification of the BBS parset for selfcal implementation, add, 
         remove, modify some values in bbs parset, done by 
@@ -721,11 +703,6 @@ class msss_imager_pipeline(control):
              parset.replace('blank_limit', '1E-4')
              parset.replace('ini_method', 'curvature')
              parset.replace('atrous_do', 'True')             
-
-
-
-
-
 
 
 

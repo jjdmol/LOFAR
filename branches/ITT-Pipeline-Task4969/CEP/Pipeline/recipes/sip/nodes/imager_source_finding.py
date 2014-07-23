@@ -70,12 +70,12 @@ class imager_source_finding(LOFARnodeTCP):
             # output of the previous iteration. The 1+ iteration have a 
             # seperate parameter set. 
             if idx == 0:
-                input_image_local 		= input_image # input_image_cropped
+                input_image_local = input_image # input_image_cropped
                 image_output_path_local = image_output_path + "_0"
                 bdsm_parameter_local = parameterset(bdsm_parameter_run1_path)
             else:
                 input_image_local = image_output_path + "_{0}".format(
-                                                                str(idx - 1))                                        
+                                                                str(idx - 1))
                 image_output_path_local = image_output_path + "_{0}".format(
                                                                     str(idx))
                 bdsm_parameter_local = parameterset(bdsm_parameter_run2x_path)
