@@ -192,7 +192,7 @@ class msss_imager_pipeline(control):
                                     target_mapfile, add_beam_tables)
 
         # We start with an empty source_list map. It should contain n_output
-        # entries all set to zero
+        # entries all set to empty strings
         source_list_map_path = os.path.join(self.mapfile_dir,
                                         "initial_sourcelist.mapfile")
         source_list_map = DataMap.load(target_mapfile) # copy the output map
@@ -203,8 +203,10 @@ class msss_imager_pipeline(control):
         number_of_major_cycles = self.parset.getInt(
                                     "Imaging.number_of_major_cycles")
 
-        number_of_major_cycles = 6
-        nof_cycle = number_of_major_cycles 
+        if number_of_major_cycles < 3:
+            raise PipelineException(
+                "The number of major cycles must be 3 or higher, correct"
+                " the key: Imaging.number_of_major_cycles")
         
         for idx_loop in range(number_of_major_cycles):
             # *****************************************************************
