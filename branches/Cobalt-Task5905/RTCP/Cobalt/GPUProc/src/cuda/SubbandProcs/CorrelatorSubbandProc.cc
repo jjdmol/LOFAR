@@ -32,28 +32,6 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    CorrelatedDataHostBuffer::CorrelatedDataHostBuffer(
-      unsigned nrStations, unsigned nrChannels,
-      unsigned maxNrValidSamples, gpu::Context &context)
-      :
-      MultiDimArrayHostBuffer<fcomplex, 4>(
-        boost::extents
-        [nrStations * (nrStations + 1) / 2]
-        [nrChannels][NR_POLARIZATIONS]
-        [NR_POLARIZATIONS], 
-        context, 0),
-      CorrelatedData(nrStations, nrChannels, 
-                     maxNrValidSamples, this->origin(),
-                     this->num_elements(), heapAllocator, 1)
-    {
-    }
-
-
-    void CorrelatedDataHostBuffer::reset()
-    {
-      CorrelatedData::reset();
-    }
-
     CorrelatorSubbandProc::CorrelatorSubbandProc(
       const Parset &parset, gpu::Context &context, 
       CorrelatorStep::Factories &factories, size_t nrSubbandsPerSubbandProc)
@@ -73,7 +51,7 @@ namespace LOFAR
 
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < nrOutputElements(); ++i) {
-        outputPool.free.append(new CorrelatedDataHostBuffer(
+        outputPool.free.append(new CorrelatorStep::CorrelatedData(
                                  ps.settings.antennaFields.size(),
                                  ps.settings.correlator.nrChannels,
                                  ps.settings.correlator.nrSamplesPerChannel,
@@ -85,8 +63,8 @@ namespace LOFAR
     void CorrelatorSubbandProc::processSubband(SubbandProcInputData &input,
                                                SubbandProcOutputData &_output)
     {
-      CorrelatedDataHostBuffer &output = 
-        dynamic_cast<CorrelatedDataHostBuffer&>(_output);
+      CorrelatorStep::CorrelatedData &output = 
+        dynamic_cast<CorrelatorStep::CorrelatedData&>(_output);
 
       // ***************************************************
       // Copy data to the GPU 
@@ -121,8 +99,8 @@ namespace LOFAR
 
     bool CorrelatorSubbandProc::postprocessSubband(SubbandProcOutputData &_output)
     {
-      CorrelatedDataHostBuffer &output = 
-        dynamic_cast<CorrelatedDataHostBuffer&>(_output);
+      CorrelatorStep::CorrelatedData &output = 
+        dynamic_cast<CorrelatorStep::CorrelatedData&>(_output);
 
       return correlatorStep->postprocessSubband(output);
     }

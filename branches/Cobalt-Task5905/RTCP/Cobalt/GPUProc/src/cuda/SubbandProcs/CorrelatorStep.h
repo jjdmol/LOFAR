@@ -33,6 +33,7 @@
 
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <CoInterface/BlockID.h>
+#include <CoInterface/CorrelatedData.h>
 
 #include "SubbandProc.h"
 #include "ProcessStep.h"
@@ -49,12 +50,20 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    class CorrelatedDataHostBuffer;
-    class CorrelatedData;
-
     class CorrelatorStep: public ProcessStep
     {
     public:
+      struct CorrelatedData:
+        public MultiDimArrayHostBuffer<fcomplex,4>,
+        public LOFAR::Cobalt::CorrelatedData,
+        public SubbandProcOutputData
+      {
+        CorrelatedData(unsigned nrStations, 
+                       unsigned nrChannels,
+                       unsigned maxNrValidSamples,
+                       gpu::Context &context);
+      };
+
       struct Factories {
         Factories(const Parset &ps, size_t nrSubbandsPerSubbandProc);
 
@@ -80,11 +89,11 @@ namespace LOFAR
       void writeInput(const SubbandProcInputData &input);
 
       void process(const SubbandProcInputData &input);
-      void processCPU(const SubbandProcInputData &input, CorrelatedDataHostBuffer &output);
+      void processCPU(const SubbandProcInputData &input, CorrelatedData &output);
 
-      void readOutput(CorrelatedDataHostBuffer &output);
+      void readOutput(CorrelatedData &output);
 
-      bool postprocessSubband(CorrelatedDataHostBuffer &output);
+      bool postprocessSubband(CorrelatedData &output);
 
       // Collection of functions to tranfer the input flags to the output.
       // \c propagateFlags can be called parallel to the kernels.
@@ -97,11 +106,11 @@ namespace LOFAR
         // samples and save this in output
         static void propagateFlags(Parset const & parset,
           MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
-          CorrelatedData &output);
+          LOFAR::Cobalt::CorrelatedData &output);
 
         // 2. Calculate the weight based on the number of flags and apply this
         // weighting to all output values
-        static void applyWeights(Parset const &parset, CorrelatedData &output);
+        static void applyWeights(Parset const &parset, LOFAR::Cobalt::CorrelatedData &output);
 
         // 1.2 Calculate the number of flagged samples and set this on the
         // output dataproduct This function is aware of the used filter width a
@@ -109,21 +118,21 @@ namespace LOFAR
         static void
         calcWeights(Parset const &parset,
                     MultiDimArray<SparseSet<unsigned>, 2>const &flagsPerChannel,
-                    CorrelatedData &output);
+                    LOFAR::Cobalt::CorrelatedData &output);
 
         // 2.1 Apply the supplied weight to the complex values in the channel
         // and baseline
         static void applyWeight(unsigned baseline, unsigned channel,
-                                float weight, CorrelatedData &output);
+                                float weight, LOFAR::Cobalt::CorrelatedData &output);
       private:
         template<typename T>
-        static void applyWeights(Parset const &parset, CorrelatedData &output);
+        static void applyWeights(Parset const &parset, LOFAR::Cobalt::CorrelatedData &output);
 
         template<typename T>
         static void
         calcWeights(Parset const &parset,
                     MultiDimArray<SparseSet<unsigned>, 2>const &flagsPerChannel,
-                    CorrelatedData &output);
+                    LOFAR::Cobalt::CorrelatedData &output);
 
       };
 
@@ -157,10 +166,10 @@ namespace LOFAR
       // will be processed by this class instance. Each element of the vector
       // contains a counter that tracks the number of additions made to the data
       // buffer and the data buffer itself.
-      std::vector< std::pair< size_t, SmartPtr<CorrelatedData> > >
+      std::vector< std::pair< size_t, SmartPtr<LOFAR::Cobalt::CorrelatedData> > >
       integratedData;
 
-      bool integrate(CorrelatedDataHostBuffer &output);
+      bool integrate(CorrelatedData &output);
     };
   }
 }

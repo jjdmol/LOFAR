@@ -52,18 +52,11 @@ namespace LOFAR
     class BeamFormedData: public SubbandProcOutputData
     {
     public:
-      class CorrelatedData: public MultiDimArrayHostBuffer<fcomplex,4>, public LOFAR::Cobalt::CorrelatedData {
-      public:
-        CorrelatedData(unsigned nrStations, 
-                                 unsigned nrChannels,
-                                 unsigned maxNrValidSamples,
-                                 gpu::Context &context);
-      };
 
       MultiDimArrayHostBuffer<float, 4> coherentData;
       MultiDimArrayHostBuffer<float, 4> incoherentData;
 
-      CorrelatedData correlatedData;
+      CorrelatorStep::CorrelatedData correlatedData;
       bool emit_correlatedData;
 
       BeamFormedData(const Parset &ps,

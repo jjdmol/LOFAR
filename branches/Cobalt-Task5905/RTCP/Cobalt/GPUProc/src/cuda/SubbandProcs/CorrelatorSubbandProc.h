@@ -46,22 +46,6 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-
-    // A CorrelatedData object tied to a HostBuffer. Represents an output
-    // data item that can be efficiently filled from the GPU.
-    class CorrelatedDataHostBuffer: public MultiDimArrayHostBuffer<fcomplex, 4>,
-                                    public CorrelatedData,
-                                    public SubbandProcOutputData
-    {
-    public:
-      CorrelatedDataHostBuffer(unsigned nrStations, 
-                               unsigned nrChannels,
-                               unsigned maxNrValidSamples,
-                               gpu::Context &context);
-      // Reset the MultiDimArrayHostBuffer and the CorrelatedData
-      void reset();
-    };
-
     class CorrelatorSubbandProc : public SubbandProc
     {
     public:

@@ -65,23 +65,6 @@ namespace LOFAR
     }
 
 
-    BeamFormedData::CorrelatedData::CorrelatedData(
-      unsigned nrStations, unsigned nrChannels,
-      unsigned maxNrValidSamples, gpu::Context &context)
-      :
-      MultiDimArrayHostBuffer<fcomplex, 4>(
-        boost::extents
-        [nrStations * (nrStations + 1) / 2]
-        [nrChannels][NR_POLARIZATIONS]
-        [NR_POLARIZATIONS], 
-        context, 0),
-      LOFAR::Cobalt::CorrelatedData(nrStations, nrChannels, 
-                     maxNrValidSamples, this->origin(),
-                     this->num_elements(), heapAllocator, 1)
-    {
-    }
-
-
     BeamFormerSubbandProc::BeamFormerSubbandProc(
       const Parset &parset,
       gpu::Context &context,
@@ -186,7 +169,13 @@ namespace LOFAR
       // Some additional buffers
       // Only upload delays if they changed w.r.t. the previous subband.
       if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) {
-        preprocessingStep->writeInput(input);
+        if (correlatorStep.get()) {
+          correlatorStep->writeInput(input);
+        }
+
+        if (preprocessingStep.get()) {
+          preprocessingStep->writeInput(input);
+        }
 
         if (coherentStep.get()) {
           coherentStep->writeInput(input);
@@ -197,9 +186,18 @@ namespace LOFAR
       }
 
       // ************************************************
-      // Start the processing
-      // Preprocessing, the same for all
-      preprocessingStep->process(input);
+      // Start the GPU processing
+
+      if (correlatorStep.get()) {
+        output.correlatedData.blockID = input.blockID;
+
+        correlatorStep->process(input);
+        correlatorStep->readOutput(output.correlatedData);
+      }
+
+      if (preprocessingStep.get()) {
+        preprocessingStep->process(input);
+      }
 
       if (coherentStep.get())
       {
@@ -213,13 +211,25 @@ namespace LOFAR
         incoherentStep->readOutput(output);
       }
 
+      // ************************************************
+      // Do CPU computations while the GPU is working
+
+      if (correlatorStep.get()) {
+        correlatorStep->processCPU(input, output.correlatedData);
+      }
+
       // Synchronise to assure that all the work in the data is done
       queue.synchronize();
     }
 
     bool BeamFormerSubbandProc::postprocessSubband(SubbandProcOutputData &_output)
     {
-      (void)_output;
+      BeamFormedData &output = dynamic_cast<BeamFormedData&>(_output);
+
+      if (correlatorStep.get()) {
+        output.emit_correlatedData = correlatorStep->postprocessSubband(output.correlatedData);
+      }
+
       return true;
     }
 

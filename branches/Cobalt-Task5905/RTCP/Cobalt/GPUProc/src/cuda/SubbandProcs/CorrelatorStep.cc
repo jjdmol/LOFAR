@@ -36,6 +36,23 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    CorrelatorStep::CorrelatedData::CorrelatedData(
+      unsigned nrStations, unsigned nrChannels,
+      unsigned maxNrValidSamples, gpu::Context &context)
+      :
+      MultiDimArrayHostBuffer<fcomplex, 4>(
+        boost::extents
+        [nrStations * (nrStations + 1) / 2]
+        [nrChannels][NR_POLARIZATIONS]
+        [NR_POLARIZATIONS], 
+        context, 0),
+      LOFAR::Cobalt::CorrelatedData(nrStations, nrChannels, 
+                     maxNrValidSamples, this->origin(),
+                     this->num_elements(), heapAllocator, 1)
+    {
+    }
+
+
     CorrelatorStep::Factories::Factories(const Parset &ps, size_t nrSubbandsPerSubbandProc) :
       fft(ps.settings.correlator.nrChannels > 1
         ? new KernelFactory<FFT_Kernel>(FFT_Kernel::Parameters(
@@ -71,7 +88,7 @@ namespace LOFAR
     void CorrelatorStep::Flagger::propagateFlags(
       Parset const &parset,
       MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
-      CorrelatedData &output)
+      LOFAR::Cobalt::CorrelatedData &output)
     {   
       // Object for storing transformed flags
       MultiDimArray<SparseSet<unsigned>, 2> flagsPerChannel(
@@ -100,7 +117,7 @@ namespace LOFAR
     template<typename T> void CorrelatorStep::Flagger::calcWeights(
       Parset const &parset,
       MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
-      CorrelatedData &output)
+      LOFAR::Cobalt::CorrelatedData &output)
     {
       unsigned nrSamplesPerIntegration = parset.settings.correlator.nrSamplesPerChannel;
 
@@ -144,7 +161,7 @@ namespace LOFAR
     void CorrelatorStep::Flagger::calcWeights(
       Parset const &parset,
       MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
-      CorrelatedData &output)
+      LOFAR::Cobalt::CorrelatedData &output)
     {
       switch (output.itsNrBytesPerNrValidSamples) {
         case 4:
@@ -163,7 +180,7 @@ namespace LOFAR
 
 
     void CorrelatorStep::Flagger::applyWeight(unsigned baseline, 
-      unsigned channel, float weight, CorrelatedData &output)
+      unsigned channel, float weight, LOFAR::Cobalt::CorrelatedData &output)
     {
       for(unsigned pol1 = 0; pol1 < NR_POLARIZATIONS; ++pol1)
         for(unsigned pol2 = 0; pol2 < NR_POLARIZATIONS; ++pol2)
@@ -173,7 +190,7 @@ namespace LOFAR
 
     template<typename T> void 
     CorrelatorStep::Flagger::applyWeights(Parset const &parset,
-                                                 CorrelatedData &output)
+                                                 LOFAR::Cobalt::CorrelatedData &output)
     {
       for (unsigned bl = 0; bl < output.itsNrBaselines; ++bl)
       {
@@ -196,7 +213,7 @@ namespace LOFAR
 
 
     void CorrelatorStep::Flagger::applyWeights(Parset const &parset,
-                                                 CorrelatedData &output)
+                                                 LOFAR::Cobalt::CorrelatedData &output)
     {
       switch (output.itsNrBytesPerNrValidSamples) {
         case 4:
@@ -257,9 +274,9 @@ namespace LOFAR
       // Initialize the output buffers for the long-time integration
       for (size_t i = 0; i < integratedData.size(); i++) {
         integratedData[i] = 
-          make_pair(0, new CorrelatedData(ps.settings.antennaFields.size(), 
-                                                    ps.settings.correlator.nrChannels,
-                                                    ps.settings.correlator.nrSamplesPerChannel));
+          make_pair(0, new LOFAR::Cobalt::CorrelatedData(ps.settings.antennaFields.size(), 
+                                          ps.settings.correlator.nrChannels,
+                                          ps.settings.correlator.nrSamplesPerChannel));
       }
     }
 
@@ -297,14 +314,14 @@ namespace LOFAR
     }
 
 
-    void CorrelatorStep::readOutput(CorrelatedDataHostBuffer &output)
+    void CorrelatorStep::readOutput(CorrelatedData &output)
     {
       // Read data back from the kernel
       queue.readBuffer(output, devE, outputCounter, false);
     }
 
 
-    void CorrelatorStep::processCPU(const SubbandProcInputData &input, CorrelatedDataHostBuffer &output)
+    void CorrelatorStep::processCPU(const SubbandProcInputData &input, CorrelatedData &output)
     {
       // Propagate the flags.
       MultiDimArray<LOFAR::SparseSet<unsigned>, 1> flags = input.inputFlags;
@@ -320,7 +337,7 @@ namespace LOFAR
     }
 
 
-    bool CorrelatorStep::integrate(CorrelatedDataHostBuffer &output)
+    bool CorrelatorStep::integrate(CorrelatedData &output)
     {
       const size_t idx = output.blockID.subbandProcSubbandIdx;
       const size_t nblock = ps.settings.correlator.nrBlocksPerIntegration;
@@ -347,7 +364,7 @@ namespace LOFAR
     }
 
 
-    bool CorrelatorStep::postprocessSubband(CorrelatedDataHostBuffer &output)
+    bool CorrelatorStep::postprocessSubband(CorrelatedData &output)
     {
       if (!integrate(output)) {
         // Not yet done constructing output block 

@@ -89,7 +89,7 @@ int main() {
     nrBeams, nrStations, nrPolarisations, maxNrTABsPerSAP,
     nrSamplesPerSubband, nrBytesPerComplexSample, ctx);
 
-  CorrelatedDataHostBuffer out(
+  CorrelatorStep::CorrelatedData out(
     nrStations, nrChannelsPerSubband, integrationSteps, ctx);
 
   LOG_INFO_STR(
