@@ -55,6 +55,9 @@ int main(int argc, char *argv[])
 
   Parset feedbackLTA;
 
+  // Add global parameters
+  feedbackLTA.adoptCollection(parset.getGlobalLTAFeedbackParameters());
+
   // Process correlated data
   if (parset.settings.correlator.enabled) {
     for (size_t fileIdx = 0; fileIdx < parset.settings.correlator.files.size(); ++fileIdx)
@@ -82,9 +85,6 @@ int main(int argc, char *argv[])
       feedbackLTA.adoptCollection(writer.feedbackLTA());
     }
   }
-
-  // Add global parameters
-  feedbackLTA.adoptCollection(parset.getGlobalLTAFeedbackParameters());
 
   // Write to disk
   feedbackLTA.writeFile(str(format("Observation%d_feedback") % parset.settings.observationID), false);

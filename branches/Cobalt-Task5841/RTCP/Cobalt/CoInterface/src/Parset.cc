@@ -539,6 +539,7 @@ namespace LOFAR
           if (i >= locations.size())
             THROW(CoInterfaceException, "No correlator filename or location specified for subband " << i);
 
+          settings.correlator.files[i].streamNr = i;
           settings.correlator.files[i].location = locations[i];
 
           outputProcHosts.insert(settings.correlator.files[i].location.host);
@@ -1399,9 +1400,154 @@ namespace LOFAR
     }
 
 
-    Parset Parset::getGlobalLTAFeedbackParameters() const
+    ParameterSet Parset::getCorrelatedLTAFeedbackParameters(size_t fileno) const
     {
-      Parset ps;
+      ParameterSet ps;
+
+      const ObservationSettings::Correlator::File &f = settings.correlator.files[fileno];
+
+      const string prefix = f.LTAprefix();
+
+      ps.add(prefix + "fileFormat",           "AIPS++/CASA");
+      ps.add(prefix + "filename",             f.location.filename);
+      ps.add(prefix + "size",                 "0");
+      ps.add(prefix + "location",             f.location.host + ":" + f.location.directory);
+
+      ps.add(prefix + "percentageWritten",    "0");
+      ps.add(prefix + "startTime",            getString("Observation.startTime"));
+      ps.add(prefix + "duration",             "0");
+      ps.add(prefix + "integrationInterval",  str(format("%f") % settings.correlator.integrationTime()));
+      ps.add(prefix + "centralFrequency",     str(format("%f") % settings.subbands[fileno].centralFrequency));
+      ps.add(prefix + "channelWidth",         str(format("%f") % channelWidth()));
+      ps.add(prefix + "channelsPerSubband",   str(format("%u") % nrChannelsPerSubband()));
+      ps.add(prefix + "stationSubband",       str(format("%u") % settings.subbands[fileno].stationIdx));
+      ps.add(prefix + "subband",              str(format("%u") % fileno));
+      ps.add(prefix + "SAP",                  str(format("%u") % settings.subbands[fileno].SAP));
+
+      return ps;
+    }
+
+
+    ParameterSet Parset::getBeamFormedLTAFeedbackParameters(size_t fileno) const
+    {
+      ParameterSet ps;
+
+      // construct feedback for LTA -- Implements Output_Beamformed_.comp
+      const struct ObservationSettings::BeamFormer::File &f = settings.beamFormer.files.at(fileno);
+
+      const string prefix = f.LTAprefix();
+
+      const struct ObservationSettings::BeamFormer::StokesSettings &stokesSet =
+        f.coherent ? settings.beamFormer.coherentSettings
+                   : settings.beamFormer.incoherentSettings;
+
+      const struct ObservationSettings::SAP &sap =
+        settings.SAPs.at(f.sapNr);
+      const struct ObservationSettings::BeamFormer::TAB &tab =
+        settings.beamFormer.SAPs.at(f.sapNr).TABs.at(f.tabNr);
+
+      vector<string> stokesVars;
+
+      switch (stokesSet.type) {
+      case STOKES_I:
+        stokesVars.push_back("I");
+        break;
+
+      case STOKES_IQUV:
+        stokesVars.push_back("I");
+        stokesVars.push_back("Q");
+        stokesVars.push_back("U");
+        stokesVars.push_back("V");
+        break;
+
+      case STOKES_XXYY:
+        stokesVars.push_back("Xre");
+        stokesVars.push_back("Xim");
+        stokesVars.push_back("Yre");
+        stokesVars.push_back("Yim");
+        break;
+
+      case INVALID_STOKES:
+        THROW(CoInterfaceException, "MSWriterDAL asked to write INVALID_STOKES");
+      }
+
+      ps.add(prefix + "fileFormat",                "HDF5");
+      ps.add(prefix + "filename",                  f.location.filename);
+      ps.add(prefix + "size",                      "0");
+      ps.add(prefix + "location",                  f.location.host + ":" + f.location.directory);
+      ps.add(prefix + "percentageWritten",         "0");
+
+      ps.add(prefix + "nrOfCoherentStokesBeams",   "0");
+      ps.add(prefix + "nrOfIncoherentStokesBeams", "0");
+      ps.add(prefix + "nrOfFlysEyeBeams",          "0");
+
+      ps.add(prefix + "beamTypes",                 "[]");
+
+      const string type = 
+        settings.beamFormer.doFlysEye ? "FlysEyeBeam" : 
+        (f.coherent ? "CoherentStokesBeam" : "IncoherentStokesBeam");
+
+      const string beamPrefix = str(format("%s%s[0].") % prefix % type);
+
+      ps.add(beamPrefix + "SAP",               str(format("%u") % f.sapNr));
+      ps.add(beamPrefix + "TAB",               str(format("%u") % f.tabNr));
+      ps.add(beamPrefix + "samplingTime",      str(format("%f") % (sampleDuration() * stokesSet.nrChannels * stokesSet.timeIntegrationFactor)));
+      ps.add(beamPrefix + "dispersionMeasure", str(format("%f") % tab.dispersionMeasure));
+      ps.add(beamPrefix + "nrSubbands",        str(format("%u") % (f.lastSubbandIdx - f.firstSubbandIdx)));
+
+      ostringstream centralFreqsStr;
+      centralFreqsStr << "[";
+      for (size_t i = f.firstSubbandIdx; i < f.lastSubbandIdx; ++i) {
+        if( i > 0 )
+          centralFreqsStr << ", ";
+        centralFreqsStr << str(format("%.4lf") % settings.subbands[i].centralFrequency);
+      }
+      centralFreqsStr << "]";
+
+      ps.add(beamPrefix + "centralFrequencies", centralFreqsStr.str());
+
+      ostringstream stationSubbandsStr;
+      stationSubbandsStr << "[";
+      for (size_t i = f.firstSubbandIdx; i < f.lastSubbandIdx; ++i) {
+        if( i > 0 )
+          stationSubbandsStr << ", ";
+        stationSubbandsStr << str(format("%u") % settings.subbands[i].stationIdx);
+      }
+      stationSubbandsStr << "]";
+
+      ps.add(beamPrefix + "stationSubbands",  stationSubbandsStr.str());
+
+      ps.add(beamPrefix + "channelWidth",      str(format("%f") % (settings.subbandWidth() / stokesSet.nrChannels)));
+      ps.add(beamPrefix + "channelsPerSubband",str(format("%u") % stokesSet.nrChannels));
+      ps.add(beamPrefix + "stokes",            str(format("[%s]") % stokesVars[f.stokesNr]));
+
+      ps.replace(str(format("nrOf%ss") % type), "1");
+
+      if (type == "CoherentStokesBeam") {
+        ps.add(beamPrefix + "Pointing.equinox",   "J2000");
+        ps.add(beamPrefix + "Pointing.coordType", "RA-DEC");
+        ps.add(beamPrefix + "Pointing.angle1",    str(format("%f") % tab.direction.angle1));
+        ps.add(beamPrefix + "Pointing.angle2",    str(format("%f") % tab.direction.angle2));
+
+        ps.add(beamPrefix + "Offset.equinox",     "J2000");
+        ps.add(beamPrefix + "Offset.coordType",   "RA-DEC");
+        ps.add(beamPrefix + "Offset.angle1",      str(format("%f") % (tab.direction.angle1 - sap.direction.angle1)));
+        ps.add(beamPrefix + "Offset.angle2",      str(format("%f") % (tab.direction.angle2 - sap.direction.angle2)));
+      } else if (type == "FlysEyeBeam") {
+        string fullName = settings.antennaFields.at(f.tabNr).name;
+        string stationName = fullName.substr(0,5);
+        string antennaFieldName = fullName.substr(5);
+        ps.add(beamPrefix + "stationName", stationName);
+        ps.add(beamPrefix + "antennaFieldName", antennaFieldName);
+      }
+
+      return ps;
+    }
+
+
+    ParameterSet Parset::getGlobalLTAFeedbackParameters() const
+    {
+      ParameterSet ps;
 
       // for MoM, to discriminate between Cobalt and BG/P observations
       ps.add("_isCobalt", "T");
@@ -1414,6 +1560,11 @@ namespace LOFAR
       if (settings.correlator.enabled) {
         ps.add("Observation.Correlator.integrationInterval",
                str(format("%.16g") % settings.correlator.integrationTime()));
+
+        // add the feedback for the individual files
+        for (size_t i = 0; i < settings.correlator.files.size(); ++i) {
+          ps.adoptCollection(getCorrelatedLTAFeedbackParameters(i));
+        }
       }
 
       if (settings.beamFormer.enabled) {
@@ -1464,6 +1615,11 @@ namespace LOFAR
                get("Observation.VirtualInstrument.stationList"));
         ps.add("Observation.IncoherentStokes.stationList",
                get("Observation.VirtualInstrument.stationList"));
+
+        // add the feedback for the individual files
+        for (size_t i = 0; i < settings.beamFormer.files.size(); ++i) {
+          ps.adoptCollection(getBeamFormedLTAFeedbackParameters(i));
+        }
       }
       return ps;
     }
@@ -1477,6 +1633,16 @@ namespace LOFAR
     size_t ObservationSettings::BeamFormer::SAP::nrIncoherentTAB() const
     {
       return nrIncoherent;
+    }
+
+    std::string ObservationSettings::Correlator::File::LTAprefix() const
+    {
+      return str(format("Observation.DataProducts.Output_Correlated_[%u].") % streamNr);
+    }
+
+    std::string ObservationSettings::BeamFormer::File::LTAprefix() const
+    {
+      return str(format("Observation.DataProducts.Output_Beamformed_[%u].") % streamNr);
     }
   } // namespace Cobalt
 } // namespace LOFAR

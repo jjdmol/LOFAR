@@ -414,7 +414,12 @@ namespace LOFAR
         std::vector<struct Station> stations;
 
         struct File {
+          size_t streamNr;
+
           struct FileLocation location;
+
+          // the ParameterSet prefix for LTA feedback for this file
+          std::string LTAprefix() const;
         };
 
         // The list of files to write, indexed by subband
@@ -455,6 +460,9 @@ namespace LOFAR
           // interpretation is same as in globalSubbandIdx, i.e. [0, 488)
           unsigned firstSubbandIdx;
           unsigned lastSubbandIdx; // exclusive
+
+          // the ParameterSet prefix for LTA feedback for this file
+          std::string LTAprefix() const;
         };
 
         // The list of files to write, one file
@@ -694,12 +702,18 @@ namespace LOFAR
 
       std::string                 PVSS_TempObsName() const;
 
-      // Return the global, non file specific, LTA feedback parameters.
+      // Return the file-specific LTA feedback for correlator and beamformed output, respectively.
+      // File sizes and percentages written are set to 0, and expected to be overwritten
+      // by updates from OutputProc.
+      ParameterSet                getCorrelatedLTAFeedbackParameters(size_t fileno) const;
+      ParameterSet                getBeamFormedLTAFeedbackParameters(size_t fileno) const;
+
+      // Return the LTA feedback parameters.
       // \note Details about the meaning of the different meta-data parameters
       // can be found in the XSD that describes the Submission Information
       // Package (sip) for the LTA.
       // \see http://proposal.astron.nl/schemas/LTA-SIP.xsd
-      Parset                      getGlobalLTAFeedbackParameters() const;
+      ParameterSet                getGlobalLTAFeedbackParameters() const;
 
     private:
       const std::string itsName;

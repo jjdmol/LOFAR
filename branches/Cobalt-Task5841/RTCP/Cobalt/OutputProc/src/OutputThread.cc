@@ -241,7 +241,7 @@ namespace LOFAR
           mdKeyPrefix,
           logPrefix + "[SubbandOutputThread] ",
           targetDirectory,
-          formatString("Observation.DataProducts.Output_Correlated_[%u].", streamNr))
+          parset.settings.correlator.files[streamNr].LTAprefix())
     {
     }
 
@@ -310,8 +310,7 @@ namespace LOFAR
           mdKeyPrefix,
           logPrefix + "[TABOutputThread] ",
           targetDirectory,
-          formatString("Observation.DataProducts.Output_Beamformed_[%u].", streamNr)
-          )
+          parset.settings.beamFormer.files[streamNr].LTAprefix())
     {
     }
 

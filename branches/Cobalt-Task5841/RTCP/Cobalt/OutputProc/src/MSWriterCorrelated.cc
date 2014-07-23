@@ -80,34 +80,11 @@ namespace LOFAR
           //bl = s1 * (s1 + 1) / 2 + stat2 ;
           baselineNames[bl++] = str(format("%s_%s") % stationNames[s1] % stationNames[s2]);
 #endif
-      createLTAfeedback(parset, subbandIndex);
     }
 
 
     MSWriterCorrelated::~MSWriterCorrelated()
     {
-    }
-
-
-    void MSWriterCorrelated::createLTAfeedback(const Parset &parset, size_t fileno)
-    {
-      const ObservationSettings::Correlator::File &f = parset.settings.correlator.files[fileno];
-
-      itsConfiguration.add("fileFormat",           "AIPS++/CASA");
-      itsConfiguration.add("filename",             f.location.filename);
-      itsConfiguration.add("size",                 "0");
-      itsConfiguration.add("location",             f.location.host + ":" + f.location.directory);
-
-      itsConfiguration.add("percentageWritten",    "0");
-      itsConfiguration.add("startTime",            parset.getString("Observation.startTime"));
-      itsConfiguration.add("duration",             "0");
-      itsConfiguration.add("integrationInterval",  str(format("%f") % parset.settings.correlator.integrationTime()));
-      itsConfiguration.add("centralFrequency",     str(format("%f") % parset.settings.subbands[fileno].centralFrequency));
-      itsConfiguration.add("channelWidth",         str(format("%f") % parset.channelWidth()));
-      itsConfiguration.add("channelsPerSubband",   str(format("%u") % parset.nrChannelsPerSubband()));
-      itsConfiguration.add("stationSubband",       str(format("%u") % parset.settings.subbands[fileno].stationIdx));
-      itsConfiguration.add("subband",              str(format("%u") % fileno));
-      itsConfiguration.add("SAP",                  str(format("%u") % parset.settings.subbands[fileno].SAP));
     }
 
 

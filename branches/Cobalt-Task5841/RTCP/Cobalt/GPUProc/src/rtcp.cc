@@ -565,10 +565,12 @@ int main(int argc, char **argv)
 
     // obtain LTA feedback
     Parset feedbackLTA;
-    feedbackLTA.adoptCollection(storageProcesses->feedbackLTA());
 
     // augment LTA feedback with global information
     feedbackLTA.adoptCollection(ps.getGlobalLTAFeedbackParameters());
+
+    // process updates from outputProc
+    feedbackLTA.adoptCollection(storageProcesses->feedbackLTA());
 
     // write LTA feedback to disk
     const char *LOFARROOT = getenv("LOFARROOT");
