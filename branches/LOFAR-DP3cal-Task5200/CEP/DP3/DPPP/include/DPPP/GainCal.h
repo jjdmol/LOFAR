@@ -137,7 +137,7 @@ namespace {
       }
 
       // Perform stefcal (polarized or unpolarized)
-      void stefcal(bool pol=false);
+      void stefcal(string mode, uint solint=1);
 
       // Counts the number of antennas with non-flagged data, adds this to
       // dataPerAntenna
@@ -157,9 +157,6 @@ namespace {
       // Fills the matrices itsVis and itsMVis
       void fillMatrices (dcomplex* model, casa::Complex* data, float* weight,
                          const casa::Bool* flag);
-
-      void stefcalunpol (dcomplex* model, casa::Complex* data, float* weight,
-                         const casa::Bool* flag, uint nCr, uint nSt, uint nBl);
 
       // Calculate the beam for the given sky direction and frequencies.
       // Apply it to the data.
