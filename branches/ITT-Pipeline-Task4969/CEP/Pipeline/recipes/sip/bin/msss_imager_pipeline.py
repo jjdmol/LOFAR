@@ -222,7 +222,7 @@ class msss_imager_pipeline(control):
 
             
             # TODO: Extra recipe: concat timeslices using pyrap.concatms
-            # (see prepare)
+            # (see prepare) redmine issue #6021
             # Done in imager_bbs.p at the node level after calibration 
 
             # *****************************************************************
@@ -384,7 +384,7 @@ class msss_imager_pipeline(control):
             return source_list_map, sourcedb_map_path
 
     @xml_node
-    def _bbs(self, prepare_phase_output, timeslice_map_path, parmdbs_map_path, sourcedb_map_path,
+    def _bbs(self, concat_ms_map_path, timeslice_map_path, parmdbs_map_path, sourcedb_map_path,
               major_cycle, skip = False):
         """
         Perform a calibration step. First with a set of sources from the
@@ -428,7 +428,7 @@ class msss_imager_pipeline(control):
                       sourcedb_mapfile = sourcedb_map_path,
                       mapfile = output_mapfile,
                       working_directory = self.scratch_directory,
-                      prepare_phase_output=prepare_phase_output,
+                      concat_ms_map_path=concat_ms_map_path,
                       major_cycle=major_cycle)
 
         return output_mapfile

@@ -31,7 +31,7 @@ class imager_bbs(LOFARnodeTCP):
     """
     
     def run(self, bbs_executable, parset, ms_list_path, parmdb_list_path,
-             sky_list_path, measurement_path_timeconcat,major_cycle):
+             sky_list_path, concat_ms_path, major_cycle):
         """
         imager_bbs functionality. Called by framework performing all the work
         """
@@ -80,18 +80,37 @@ class imager_bbs(LOFARnodeTCP):
             
         # *********************************************************************
         # 4. Concat in time after bbs calibration your MSs using 
-        #    msconcat (pyrap.tables module) (added by N.Vilchez)                   
-        pt.msconcat(sorted(ms_list),measurement_path_timeconcat, concatTime=True)       
-           
+        #    msconcat (pyrap.tables module) (added by N.Vilchez)        
+        # this step has te be performed on this location. because the bbs run 
+        # might add additional columns not present in the original ms
+        # and therefore not produced in the concat done in the prepare phase
+        # redmine issue #6021     
+        pt.msconcat(ms_map[0].file,concat_ms_path, concatTime=True)                 
  
         # *********************************************************************
         # 5. copy time slives directory to a new one  
+        # This is done for debugging purpose: The copy is not used for anything
+        # The actual selfcal steps are done in place
         #  (added by N.Vilchez)                   
-        time_slices_dir = measurement_path_timeconcat.split('concat.ms')
-        copy_cmd = 'cp -r %s %s'%(time_slices_dir[0] + 'time_slices', 
-                time_slices_dir[0] + 'time_slices_cycle_%s'%(str(major_cycle)))     
-        os.system(copy_cmd)        
-            
+        # THe save location is created relative to the concat.ms
+        # we could also use the self.scratch_directory from the toplevel recipe
+        # this would need an aditional ingredient
+        # This is a 'debugging' step and should never ever cause a failure of \
+        # the pipeline
+        try:
+            working_dir = os.path.dirname(concat_ms_path)
+            time_slice_dir = os.path.join(working_dir, 'time_slices')
+            time_slice_copy_dir = os.path.join(working_dir, 
+              'time_slices_cycle_{0}'.format(major_cycle))
+
+            cmd = "cp -r {0} {1}".format(time_slice_dir, time_slice_copy_dir) 
+            os.system(cmd)        
+        except:
+          self.logger.error(
+               "Debug copy of temporary files failed: continue operations")
+          pass # Do nothing
+        
+
         return 0
 
 

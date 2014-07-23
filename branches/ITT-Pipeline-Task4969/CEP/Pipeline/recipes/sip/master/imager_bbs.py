@@ -60,8 +60,8 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
             '--mapfile',
             help="Full path to the file containing the output data products"
         ),
-        'prepare_phase_output': ingredient.FileField(
-            '--prepare_phase_output',
+        'concat_ms_map_path': ingredient.FileField(
+            '--concat-ms-map-path',
             help="Output of the concat MS file"
         ),
         'major_cycle': ingredient.IntField(
@@ -88,14 +88,7 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
         ms_map = MultiDataMap.load(self.inputs['args'][0])        
         parmdb_map = MultiDataMap.load(self.inputs['instrument_mapfile'])
         sourcedb_map = DataMap.load(self.inputs['sourcedb_mapfile'])
-
-        # TODO: DataMap extention
-#        #Check if the input has equal length and on the same nodes
-#        if not validate_data_maps(ms_map, parmdb_map):
-#            self.logger.error("The combination of mapfiles failed validation:")
-#            self.logger.error("ms_map: \n{0}".format(ms_map))
-#            self.logger.error("parmdb_map: \n{0}".format(parmdb_map))
-#            return 1
+        concat_ms_map = DataMap.load(self.inputs['concat_ms_map_path']) 
 
         # *********************************************************************
         # 2. Start the node scripts
@@ -107,43 +100,17 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # Update the skip fields of the four maps. If 'skip' is True in any of
         # these maps, then 'skip' must be set to True in all maps.
-        for w, x, y in zip(ms_map, parmdb_map, sourcedb_map):
-            w.skip = x.skip = y.skip = (
-                w.skip or x.skip or y.skip
-            )
+        for w, x, y, c in zip(ms_map, parmdb_map, sourcedb_map, concat_ms_map):
+            w.skip = x.skip = y.skip = c.skip = (
+                w.skip or x.skip or y.skip or c.skip )
 
         ms_map.iterator = parmdb_map.iterator = sourcedb_map.iterator = \
-            DataMap.SkipIterator
- 
+            concat_ms_map.iterator = DataMap.SkipIterator
         
-        
-        # *********************************************************************
-        # 2.bis Extract the concat MS (added by Nicolas Vilchez)
-        input_map = DataMap.load(self.inputs['prepare_phase_output']) 
-        
-        if not validate_data_maps(input_map):
-            self.logger.error(
-                        "the supplied input_ms mapfile and sourcedb mapfile"
-                        "are incorrect. Aborting")
-            self.logger.error(repr(input_map))
-            return 1              
-        
-        output_map = copy.deepcopy(input_map)        
-        for w, x in zip(input_map, output_map):
-            w.skip = x.skip = (
-                w.skip or x.skip
-            )
 
-        input_map.iterator = output_map.iterator = \
-            DataMap.SkipIterator
-
-        for (measurement_item, output_map) in zip(input_map, output_map):
-                host_timeconcat , measurement_path_timeconcat = \
-                measurement_item.host, measurement_item.file
-
-        # *********************************************************************
-        # 2.continue from here (concat.ms caught)                      
-        for (ms, parmdb, sourcedb) in zip(ms_map, parmdb_map, sourcedb_map):
+        # *********************************************************************               
+        for (ms, parmdb, sourcedb, concat_ms) in zip(ms_map, parmdb_map,
+                                                  sourcedb_map, concat_ms_map):
             #host is same for each entry (validate_data_maps)
             host, ms_list = ms.host, ms.file
 
@@ -161,12 +128,17 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
                     map_dir, host + "_sky_" + run_id + ".map")
             MultiDataMap(
                 [tuple([host, [sourcedb.file], False])]).save(sourcedb_list_path)
-                
-                                               
+
+            # THe concat ms does not have to be written: It already is a 
+            # singular item (it is the output of the reduce step) 
+            # redmine issue #6021                                                 
             arguments = [self.inputs['bbs_executable'],
                          self.inputs['parset'],
-                         ms_list_path, parmdb_list_path, sourcedb_list_path, 
-                         measurement_path_timeconcat,self.inputs['major_cycle']]
+                         ms_list_path, 
+                         parmdb_list_path, 
+                         sourcedb_list_path, 
+                         concat_ms.file,
+                         self.inputs['major_cycle']]
             jobs.append(ComputeJob(host, node_command, arguments))
 
         # start and wait till all are finished
