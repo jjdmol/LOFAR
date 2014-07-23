@@ -480,7 +480,8 @@ class msss_imager_pipeline(control):
                           working_directory = self.scratch_directory,
                           autogenerate_parameters = autogenerate_parameters,
                           specify_fov = specify_fov, major_cycle = major_cycle,
-                          nof_cycle = number_of_major_cycles)
+                          nr_cycles = number_of_major_cycles,
+                          perform_self_cal = True)
 
         return output_mapfile, max_baseline
 
