@@ -119,7 +119,7 @@ ConvolutionFunction::ConvolutionFunction
     itsAveragePB(),
     itsSpheroidal(),
     itsSpheroidalCF(),
-    itsSupportCF(11)
+    itsSupportCF(15)
 {
   itsFFTMachines.resize (OpenMP::maxThreads());
 
@@ -386,6 +386,73 @@ void ConvolutionFunction::computeAterm (Double time)
   } // end omp parallel
   aTimer.stop();
   itsTimeA = aTimer.getReal();
+}
+
+// void ConvolutionFunction::computeElementBeam (const DirectionCoordinate &coordinates, const IPosition &shape,  Double time)
+void ConvolutionFunction::computeElementBeam (Double time)
+{
+  cout << "Computing element beam..." << flush;
+  
+  DirectionCoordinate coordinate = itsCoordinates;
+  
+  Int Npixels = itsSupportCF;
+  
+  Vector<Double> increment(2);
+  increment(0) = (coordinate.increment()(0) * itsShape(0)) / Npixels;
+  increment(1) = (coordinate.increment()(1) * itsShape(1)) / Npixels;
+  coordinate.setIncrement(increment);
+  Vector<Double> refpix(2, 0.5*(Npixels-1));
+  coordinate.setReferencePixel(refpix);
+
+  IPosition shape = IPosition(2,Npixels, Npixels);
+  
+  itsATerm->setDirection(coordinate, shape);
+  
+  MEpoch binEpoch;
+  binEpoch.set(Quantity(time, "s"));
+  itsATerm->setEpoch(binEpoch);
+
+  Double freq = 0.0;
+  
+  for (uInt ch=0; ch<itsNChannel; ++ch) 
+  {
+    freq += itsFrequencyList[ch];
+  }
+  freq /= itsNChannel;
+  
+  Cube<Complex> e(itsATerm->evaluateElementResponse(0, 0, Vector<Double>(1,freq), True)[0]);
+  
+  for(int i = 0; i<4; i++)
+  {
+    Matrix<Complex> e_i(e[i] * getSpheroidalCF());
+    normalized_fft (e_i, true);
+  }
+  
+  itsElementBeam.reference(zero_padding(e, itsShape(0)));
+  
+  Matrix<Float> s(getSpheroidal());
+  for(int i = 0; i<4; i++)
+  {
+    Matrix<Complex> e_i(itsElementBeam[i]);
+    normalized_fft (e_i, false);
+    for(int j = 0; j<e_i.shape()(0); j++)
+    {
+      for(int k = 0; k<e_i.shape()(1); k++)
+      {
+        if (s(j,k) > 0.02)
+        {
+          e_i(j, k) /= s(j, k);
+        }
+        else
+        {
+          e_i(j, k) = 0;
+        }
+      }
+    }
+  }
+  
+  cout << "done." << endl;
+  
 }
 
 CFStore ConvolutionFunction::makeConvolutionFunction(
@@ -769,10 +836,12 @@ Cube<Complex> ConvolutionFunction::zero_padding(
   {
     return Image.copy();
   }
-  if ((Npixel_Out%2) != 1) 
-  {
-    Npixel_Out++;
-  }
+  
+//   if ((Npixel_Out%2) != 1) 
+//   {
+//     Npixel_Out++;
+//   }
+  
   Cube<Complex> image_enlarged(Npixel_Out,Npixel_Out,Image.shape()[2]);
   uInt Dii = Image.shape()(0)/2;
   uInt Start_image_enlarged=Npixel_Out/2-Dii; //Is an even number, Assume square image
@@ -806,10 +875,12 @@ Matrix<Complex> ConvolutionFunction::zero_padding
   {
     return Image.copy();
   }
-  if (Npixel_Out%2 != 1) 
-  {
-    Npixel_Out++;
-  }
+  
+//   if (Npixel_Out%2 != 1) 
+//   {
+//     Npixel_Out++;
+//   }
+  
   IPosition shape_im_out(2, Npixel_Out, Npixel_Out);
   Matrix<Complex> image_enlarged(shape_im_out, Complex(0.));
 
@@ -927,6 +998,7 @@ Double ConvolutionFunction::estimateWResolution(
 
 Double ConvolutionFunction::get_w_from_support(Int support) const
 {
+  if (support == 0) support = itsSupportCF;
   Double pixelSize = abs(itsCoordinates.increment()[0]);
   Double diam_image = pixelSize*itsShape[0];         // image diameter in radian
 
@@ -1003,7 +1075,6 @@ void ConvolutionFunction::applyWterm(casa::Array<casa::Complex>& grid, double w)
 
   IPosition pos(4,1,1,1,1);
   Complex pix;
-  uInt jj;
   Complex wterm;
   double l, m, phase;
   for(uInt ch=0; ch<grid.shape()[3]; ++ch)
@@ -1013,7 +1084,7 @@ void ConvolutionFunction::applyWterm(casa::Array<casa::Complex>& grid, double w)
     {
       pos[0]=ii;
       m = resolution[1] * (ii - radius[1]);
-      for(jj=0; jj<grid.shape()[0]; ++jj)
+      for(uInt jj=0; jj<grid.shape()[0]; ++jj)
       {
         pos[1]=jj;
         l = resolution[0] * (jj - radius[0]);
@@ -1029,7 +1100,46 @@ void ConvolutionFunction::applyWterm(casa::Array<casa::Complex>& grid, double w)
   }
 }
 
-
+void ConvolutionFunction::applyElementBeam(casa::Array<casa::Complex>& grid, Bool conjugate)
+{
+  for(uInt ch=0; ch<grid.shape()[3]; ++ch)
+  {
+    Cube<Complex> g(grid[ch]);
+    for(uInt ii=0; ii<grid.shape()(0); ++ii)
+    {
+      for(uInt jj=0; jj<grid.shape()(1); ++jj)
+      {
+        Complex e0 = itsElementBeam(ii,jj,0);
+        Complex e1 = itsElementBeam(ii,jj,1);
+        Complex e2 = itsElementBeam(ii,jj,2);
+        Complex e3 = itsElementBeam(ii,jj,3);
+        
+        if (conjugate)
+        {
+          e0 = conj(e0);
+          e1 = conj(e2);
+          e2 = conj(e1);
+          e3 = conj(e3);
+        }
+        
+        Complex g0 = g(ii,jj,0);
+        Complex g1 = g(ii,jj,1);
+        Complex g2 = g(ii,jj,2);
+        Complex g3 = g(ii,jj,3);
+        
+        Complex a0 = g0*e0 + g1*e2;
+        Complex a1 = g0*e1 + g1*e3;
+        Complex a2 = g2*e0 + g3*e2;
+        Complex a3 = g2*e1 + g3*e3;
+        
+        g(ii,jj,0) = conj(e0)*a0 + conj(e2)*a2;
+        g(ii,jj,1) = conj(e0)*a1 + conj(e2)*a3;
+        g(ii,jj,2) = conj(e1)*a0 + conj(e3)*a2;
+        g(ii,jj,3) = conj(e1)*a1 + conj(e3)*a3;
+      }
+    }
+  }
+}
 
 } //# end namespace LofarFT
 } //# end namespace LOFAR

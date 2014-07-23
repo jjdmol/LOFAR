@@ -98,6 +98,9 @@ public:
   // and append it to a map object with a (double time) key.
   void computeAterm(casa::Double time);
 
+//   void computeElementBeam(const casa::DirectionCoordinate &coordinates, const casa::IPosition &shape, casa::Double time);
+  void computeElementBeam(casa::Double time);
+
   // Compute the convolution function for all channel, for the polarisations
   // specified in the Mueller_mask matrix
   // Also specify weither to compute the Mueller matrix for the forward or
@@ -143,12 +146,14 @@ public:
     {return itsFrequencyList;}
 
   void applyWterm(casa::Array<casa::Complex>& grid, double w);
+
+  void applyElementBeam(casa::Array<casa::Complex>& grid, casa::Bool conjugate = casa::False);
   
   // Get the reference frequency
   const casa::Double refFrequency() const
   { return itsRefFrequency;}
   
-  casa::Double get_w_from_support(casa::Int support = 11) const;
+  casa::Double get_w_from_support(casa::Int support = 0) const;
 
 
 protected:
@@ -160,6 +165,7 @@ protected:
   casa::Matrix<casa::Float> itsAveragePB;
   casa::Matrix<casa::Float> itsSpheroidal;
   casa::Matrix<casa::Float> itsSpheroidalCF;
+  casa::Cube<casa::Complex> itsElementBeam;
 
   void FindNWplanes();
   

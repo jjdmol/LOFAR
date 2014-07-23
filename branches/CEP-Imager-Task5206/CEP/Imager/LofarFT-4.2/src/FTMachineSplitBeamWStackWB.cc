@@ -308,6 +308,12 @@ void FTMachineSplitBeamWStackWB::put(const VisBuffer& vb, Int row, Bool dopsf,
     endRow=row; 
   }
 
+  if (itsSplitBeam)
+  {
+    Double t = (vb.timeCentroid()(0) + vb.timeCentroid()(nRow-1)) / 2;
+//     itsConvFunc->computeElementBeam(t);
+  }
+
   Matrix<Double> uvw(3, vb.uvw().nelements());  uvw=0.0;
   Vector<Double> dphase(vb.uvw().nelements());  dphase=0.0;
   
@@ -386,6 +392,12 @@ void FTMachineSplitBeamWStackWB::put(const VisBuffer& vb, Int row, Bool dopsf,
         
         // Apply W term in image domain
         itsConvFunc->applyWterm(w_plane_grids[i], -w_offset);
+        
+        if (itsSplitBeam)
+        {
+//            itsConvFunc->applyElementBeam(w_plane_grids[i], True);
+        }
+        
         // Add image to master grid
         itsGriddedData[i] += w_plane_grids[i];
         // reset the grid
@@ -394,6 +406,8 @@ void FTMachineSplitBeamWStackWB::put(const VisBuffer& vb, Int row, Bool dopsf,
       }
     }
   }
+  
+  
 }
 
 bool FTMachineSplitBeamWStackWB::put_on_w_plane(
@@ -542,6 +556,13 @@ void FTMachineSplitBeamWStackWB::get(VisBuffer& vb, Int row)
   itsVisResampler->setParams(itsUVScale, itsUVOffset, dphase);
   itsVisResampler->setMaps(chanMap, polMap);
 
+  if (itsSplitBeam)
+  {
+    Double t = (vb.timeCentroid()(0) + vb.timeCentroid()(nRow-1)) / 2;
+//     itsConvFunc->computeElementBeam(t);
+  }
+
+
   const casa::Vector< casa::Double > &frequency_list_CF = itsConvFunc->get_frequency_list();
 
   double w_step = 2*itsConvFunc->get_w_from_support();
@@ -614,6 +635,11 @@ void FTMachineSplitBeamWStackWB::get(VisBuffer& vb, Int row)
 //             LatticeFFT::cfft2d(*itsComplexModelImages[i], True);
             
             itsModelGrids[i].reference(itsComplexModelImages[i]->get());
+            
+            if (itsSplitBeam)
+            {
+//               itsConvFunc->applyElementBeam(itsModelGrids[i], False);
+            }
             
             FFTCMatrix f;
             for(Int pol=0; pol<itsNPol; ++pol)
