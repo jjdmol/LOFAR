@@ -52,6 +52,8 @@ namespace LOFAR
       unsigned itsNextSeqNr;
       unsigned itsFileNr;
       unsigned itsBlockSize; // the size of StreamableData::samples, in T
+
+      void createLTAfeedback(const Parset &parset, size_t fileno);
     };
   }
 }

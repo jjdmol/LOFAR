@@ -56,6 +56,8 @@ namespace LOFAR
 
     private:
       void makeMeasurementSet(const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex);
+
+      void createLTAfeedback(const Parset &parset, size_t fileno);
     };
 
 
