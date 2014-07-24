@@ -1,0 +1,61 @@
+Gain:S1:Real:1  type=scalar
+    domain:  freq=[1e-06 MHz +0.002 KHz] time=[1858/11/17/00:00:02 +2 sec]
+    values:  0.1,0.2  shape=[2, 1]
+    pert=1e-06 pert_rel=y
+Wrote new record for parameter Gain:S1:Real:1
+Gain:S1:Imag:1  type=scalar
+    domain:  freq=[1e-06 MHz +0.002 KHz] time=[1858/11/17/00:00:02 +2 sec]
+    values:  1,2  shape=[2, 1]
+    pert=1e-06 pert_rel=y
+Wrote new record for parameter Gain:S1:Imag:1
+
+0 default parms and 0 values found
+Gain:S1:Imag:1  type=scalar
+    domain:  freq=[1e-06 MHz +0.002 KHz] time=[-5877631/01/18/00:00:00 +2e+30 sec]
+    values:  1,2  shape=[2, 1]
+    pert=1e-06 pert_rel=y
+Gain:S1:Real:1  type=scalar
+    domain:  freq=[1e-06 MHz +0.002 KHz] time=[-5877631/01/18/00:00:00 +2e+30 sec]
+    values:  0.1,0.2  shape=[2, 1]
+    pert=1e-06 pert_rel=y
+2 parms and 2 values found
+
+0 default parms and 0 values found
+Gain:S1:Ampl:1  type=scalar
+    domain:  freq=[1e-06 MHz +0.002 KHz] time=[-5877631/01/18/00:00:00 +2e+30 sec]
+    values:  1.00499,2.00998  shape=[2, 1]
+    pert=1e-06 pert_rel=y
+Gain:S1:Phase:1  type=scalar
+    domain:  freq=[1e-06 MHz +0.002 KHz] time=[-5877631/01/18/00:00:00 +2e+30 sec]
+    values:  0.0996687,0.0996687  shape=[2, 1]
+    pert=1e-06 pert_rel=n
+2 parms and 2 values found
+
+Gain:S1:Phase:1  type=scalar
+    domain:  freq=[1e-06 MHz +0.002 KHz] time=[1858/11/17/00:00:02 +2 sec]
+    values:  0.1,0.2  shape=[1, 2]
+    pert=1e-06 pert_rel=y
+Wrote new record for parameter Gain:S1:Phase:1
+Gain:S1:Ampl:1  type=scalar
+    domain:  freq=[1e-06 MHz +0.002 KHz] time=[1858/11/17/00:00:02 +2 sec]
+    values:  1,2  shape=[1, 2]
+    pert=1e-06 pert_rel=y
+Wrote new record for parameter Gain:S1:Ampl:1
+
+Gain:S1:Ampl:1  type=scalar
+    values:  1  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+Gain:S1:Phase:1  type=scalar
+    values:  0  shape=[1, 1]
+    pert=1e-06 pert_rel=n
+2 default parms and 2 values found
+0 parms and 0 values found
+
+Gain:S1:Imag:1  type=scalar
+    values:  0.995004  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+Gain:S1:Real:1  type=scalar
+    values:  0.0998334  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+2 default parms and 2 values found
+0 parms and 0 values found

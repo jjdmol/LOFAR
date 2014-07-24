@@ -1,0 +1,256 @@
+V 11
+1
+LANG:1 0 
+PANEL,-1 -1 765 50 N "_3DFace" 1
+"$station"
+"main()
+{
+  swline1.visible(false);
+  swline2.visible(false);
+  swline3.visible(false);
+  swline4.visible(false);
+  swline5.visible(false);
+  swline6.visible(false);
+  station = $station;
+  
+  baseDP = station+\":LOFAR_PermSW_Daemons_SoftwareMonitor\";
+
+  if (navFunct_dpReachable(baseDP)) {
+    if(dpExists(baseDP+\".SWLevel\")) {
+      if (dpConnect(\"setSWLine\", baseDP+\".SWLevel:_online.._value\",
+                                          baseDP+\".SWLevel:_online.._invalid\") == -1) {
+        LOG_ERROR(\"MCUSWLevelView.pnl:main|Couldn't connect to: \"+baseDP+\".SWLevel\");
+      }
+    } else {
+      LOG_ERROR(\"MCUSWLevelView.pnl:main|\"+baseDP+\".SWLevel not found\");
+    }
+  }  
+}
+
+void setSWLine(string dp1, int swlvl,
+               string dp2, bool invalid) {
+  swline1.visible(false);
+  swline2.visible(false);
+  swline3.visible(false);
+  swline4.visible(false);
+  swline5.visible(false);
+  swline6.visible(false);
+  if (!invalid) {
+    switch(swlvl) {
+      case 1:
+      swline1.visible(true);
+      break;
+      case 2:
+      swline2.visible(true);
+      break;
+      case 3:
+      swline3.visible(true);
+      break;
+      case 4:
+      swline4.visible(true);
+      break;
+      case 5:
+      swline5.visible(true);
+      break;
+      case 6:
+      swline6.visible(true);
+      break;
+    }
+  }
+}
+" 0
+ E E E E 1 -1 -1 0  0 0
+""0  1
+E "#uses \"navPanel.ctl\"
+string baseDP=\"\";
+string station;" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+2 16
+"PRIMITIVE_TEXT1"
+""
+1 70 80 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+16 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 70 80 71 93
+0 2 2 "0s" 0 0 0 192 0 0  70 80 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 0 
+1 31 1 "" 0
+0
+1 32 2 "" 0
+0
+1 33 3 "" 0
+0
+1 34 4 "" 0
+0
+1 35 11 "" 0
+0
+1 36 12 "" 0
+0
+1 37 13 "" 0
+0
+4 24
+"swline1"
+""
+1 68 0 E E E 1 E 1 E N "_3DText" E N {255,255,255} E E
+ E E
+31 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  68 0 68 9
+4 25
+"swline2"
+""
+1 126 0 E E E 1 E 1 E N "_3DText" E N {255,255,255} E E
+ E E
+32 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  126 0 126 9
+4 26
+"swline3"
+""
+1 176 0 E E E 1 E 1 E N "_3DText" E N {255,255,255} E E
+ E E
+33 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  176 0 176 9
+4 27
+"swline4"
+""
+1 210 0 E E E 1 E 1 E N "_3DText" E N {255,255,255} E E
+ E E
+34 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  210 0 210 9
+4 28
+"swline5"
+""
+1 250 0 E E E 1 E 1 E N "_3DText" E N {255,255,255} E E
+ E E
+35 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  250 0 250 9
+4 30
+"swline6"
+""
+1 370 0 E E E 1 E 1 E N "_3DText" E N {255,255,255} E E
+ E E
+37 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  370 0 370 9
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+3 1 "PANEL_REF1" -1
+"objects\\Processes\\SWControler_small.pnl" 0 0 T 18 U 
+2
+"$name""PermSW_Daemons_SoftwareMonitor"
+"$station""$station"
+3 2 "PANEL_REF2" -1
+"objects\\Processes\\SWControler_small.pnl" 20 0 T 19 1 0 1 -4 0
+2
+"$name""PermSW_Daemons_LogProcessor"
+"$station""$station"
+3 3 "PANEL_REF3" -1
+"objects\\Processes\\SWControler_small.pnl" 30 0 T 20 1 0 1 2 0
+2
+"$name""PermSW_Daemons_ServiceBroker"
+"$station""$station"
+3 4 "PANEL_REF4" -1
+"objects\\Processes\\SWControler_small.pnl" 50 0 T 21 1 0 1 -2 0
+2
+"$name""PermSW_Daemons_SASGateway"
+"$station""$station"
+3 11 "PANEL_REF11" -1
+"objects\\Processes\\SWControler_small.pnl" 270 0 T 28 U 
+2
+"$name""PermSW_CTStartDaemon"
+"$station""$station"
+3 12 "PANEL_REF12" -1
+"objects\\Processes\\SWControler_small.pnl" 290 0 T 29 1 0 1 -4 0
+2
+"$name""PermSW_MACScheduler"
+"$station""$station"
+3 13 "PANEL_REF13" -1
+"objects\\Processes\\SWControler_small.pnl" 300 0 T 30 1 0 1 2 0
+2
+"$name""ObservationControl"
+"$station""$station"
+0

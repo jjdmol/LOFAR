@@ -1,0 +1,18 @@
+#!/bin/bash
+
+CREATEFEEDBACK=${PWD}/../src/createFeedback
+
+mkdir -p tLTAFeedback.out
+cd tLTAFeedback.out || exit 1
+
+# Create the feedback files
+for PARSET in ../tLTAFeedback.in_parsets/*.parset
+do
+  $CREATEFEEDBACK $PARSET || exit 1
+done
+
+# Compare the feedback to the reference
+for FEEDBACK in Observation*_feedback
+do
+  diff <(sort ../tLTAFeedback.in_reference/$FEEDBACK) <(sort $FEEDBACK) || exit 1
+done
