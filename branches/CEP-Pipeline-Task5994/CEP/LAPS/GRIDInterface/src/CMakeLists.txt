@@ -7,4 +7,4 @@ python_install(
   pcombine.py
   pipeline_job.py
 
-  DESTINATION GridInterface)
+  DESTINATION LAPS/GridInterface)
