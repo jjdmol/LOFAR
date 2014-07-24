@@ -58,7 +58,7 @@ namespace LOFAR
   {
 
 
-    static StokesType stokesType( const std::string &name )
+    StokesType stokesType( const std::string &name )
     {
       if (name == "I")
         return STOKES_I;
@@ -73,7 +73,7 @@ namespace LOFAR
     }
 
 
-    static size_t nrStokes( StokesType type)
+    size_t nrStokes( StokesType type )
     {
       switch(type) {
         case STOKES_I:
@@ -90,7 +90,7 @@ namespace LOFAR
     }
 
 
-    static string stokesType( StokesType type )
+    string stokesType( StokesType type )
     {
       switch(type) {
       case STOKES_I: 
@@ -322,6 +322,7 @@ namespace LOFAR
       settings.realTime = getBool("Cobalt.realTime", false);
       settings.observationID = getUint32("Observation.ObsID", 0);
       settings.startTime = getTime("Observation.startTime", "2013-01-01 00:00:00");
+      settings.rawStartTime = getString("Observation.startTime", "2013-01-01 00:00:00");
       settings.stopTime  = getTime("Observation.stopTime",  "2013-01-01 00:01:00");
       settings.clockMHz = getUint32("Observation.sampleClock", 200);
 
@@ -400,6 +401,8 @@ namespace LOFAR
       // Conversion from station names to antenna field names.
       vector<ObservationSettings::AntennaFieldName> fieldNames =
         ObservationSettings::antennaFieldNames(stations, settings.antennaSet);
+
+      settings.rawStationList = getString("Observation.VirtualInstrument.stationList", "[]");
 
       settings.antennaFields.resize(fieldNames.size());
       for (unsigned i = 0; i < settings.antennaFields.size(); ++i) {
@@ -539,6 +542,7 @@ namespace LOFAR
           if (i >= locations.size())
             THROW(CoInterfaceException, "No correlator filename or location specified for subband " << i);
 
+          settings.correlator.files[i].streamNr = i;
           settings.correlator.files[i].location = locations[i];
 
           outputProcHosts.insert(settings.correlator.files[i].location.host);
@@ -931,6 +935,11 @@ namespace LOFAR
       return 1.0 * clockHz() / 1024;
     }
 
+
+    double ObservationSettings::sampleDuration() const {
+      return 1.0 / subbandWidth();
+    }
+
     unsigned ObservationSettings::nrCrossPolarisations() const {
       return nrPolarisations * nrPolarisations;
     }
@@ -940,7 +949,7 @@ namespace LOFAR
     }
 
     double ObservationSettings::blockDuration() const {
-      return nrSamplesPerSubband() / subbandWidth();
+      return nrSamplesPerSubband() * sampleDuration();
     }
 
     vector<unsigned> ObservationSettings::SAP::subbandIndices() const {
@@ -1396,76 +1405,6 @@ namespace LOFAR
     string Parset::PVSS_TempObsName() const
     {
       return getString("_DPname", "LOFAR_ObsSW_TempObs_Unk");
-    }
-
-
-    Parset Parset::getGlobalLTAFeedbackParameters() const
-    {
-      Parset ps;
-
-      // for MoM, to discriminate between Cobalt and BG/P observations
-      ps.add("_isCobalt", "T");
-
-      ps.add("Observation.DataProducts.nrOfOutput_Beamformed_", 
-             str(format("%u") % nrStreams(BEAM_FORMED_DATA)));
-      ps.add("Observation.DataProducts.nrOfOutput_Correlated_", 
-             str(format("%u") % nrStreams(CORRELATED_DATA)));
-
-      if (settings.correlator.enabled) {
-        ps.add("Observation.Correlator.integrationInterval",
-               str(format("%.16g") % settings.correlator.integrationTime()));
-      }
-
-      if (settings.beamFormer.enabled) {
-        const ObservationSettings::BeamFormer::StokesSettings&
-          coherentStokes = settings.beamFormer.coherentSettings;
-        const ObservationSettings::BeamFormer::StokesSettings&
-          incoherentStokes = settings.beamFormer.incoherentSettings;
-
-        // The 'rawSamplingTime' is the duration of a sample right after the PPF
-        ps.add("Observation.CoherentStokes.rawSamplingTime",
-               str(format("%.16g") % 
-                   (sampleDuration() * coherentStokes.nrChannels)));
-        ps.add("Observation.IncoherentStokes.rawSamplingTime",
-               str(format("%.16g") % 
-                   (sampleDuration() * incoherentStokes.nrChannels)));
-
-        // The 'samplingTime' is the duration of a sample in the output
-        ps.add("Observation.CoherentStokes.samplingTime",
-               str(format("%.16g") % 
-                   (sampleDuration() * coherentStokes.nrChannels * coherentStokes.timeIntegrationFactor)));
-        ps.add("Observation.IncoherentStokes.samplingTime",
-               str(format("%.16g") % 
-                   (sampleDuration() * incoherentStokes.nrChannels * incoherentStokes.timeIntegrationFactor)));
-
-        ps.add("Observation.CoherentStokes.timeDownsamplingFactor",
-               str(format("%.16g") % coherentStokes.timeIntegrationFactor));
-        ps.add("Observation.IncoherentStokes.timeDownsamplingFactor",
-               str(format("%.16g") % incoherentStokes.timeIntegrationFactor));
-
-        // The BG/P could 'collapse channels'. Cobalt does not need that, so we
-        // put fixed/trivial values here.
-        ps.add("Observation.CoherentStokes.nrOfCollapsedChannels",
-               str(format("%u") % coherentStokes.nrChannels));
-        ps.add("Observation.IncoherentStokes.nrOfCollapsedChannels",
-               str(format("%u") % incoherentStokes.nrChannels));
-        ps.add("Observation.CoherentStokes.frequencyDownsamplingFactor", "1");
-        ps.add("Observation.IncoherentStokes.frequencyDownsamplingFactor", "1");
-
-        ps.add("Observation.CoherentStokes.stokes",
-               stokesType(coherentStokes.type));
-        ps.add("Observation.IncoherentStokes.stokes",
-               stokesType(incoherentStokes.type));
-        ps.add("Observation.CoherentStokes.antennaSet",
-               settings.antennaSet);
-        ps.add("Observation.IncoherentStokes.antennaSet",
-               settings.antennaSet);
-        ps.add("Observation.CoherentStokes.stationList",
-               get("Observation.VirtualInstrument.stationList"));
-        ps.add("Observation.IncoherentStokes.stationList",
-               get("Observation.VirtualInstrument.stationList"));
-      }
-      return ps;
     }
 
 

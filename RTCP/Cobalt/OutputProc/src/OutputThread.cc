@@ -41,6 +41,7 @@
 
 #include <CoInterface/OutputTypes.h>
 #include <CoInterface/Exceptions.h>
+#include <CoInterface/LTAFeedback.h>
 
 #if defined HAVE_AIPSPP
 #include <casa/Exceptions/Error.h>
@@ -241,7 +242,7 @@ namespace LOFAR
           mdKeyPrefix,
           logPrefix + "[SubbandOutputThread] ",
           targetDirectory,
-          formatString("Observation.DataProducts.Output_Correlated_[%u].", streamNr))
+          LTAFeedback::correlatedPrefix(streamNr))
     {
     }
 
@@ -310,8 +311,7 @@ namespace LOFAR
           mdKeyPrefix,
           logPrefix + "[TABOutputThread] ",
           targetDirectory,
-          formatString("Observation.DataProducts.Output_Beamformed_[%u].", streamNr)
-          )
+          LTAFeedback::beamFormedPrefix(streamNr))
     {
     }
 

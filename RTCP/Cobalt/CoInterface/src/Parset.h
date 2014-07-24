@@ -47,6 +47,10 @@ namespace LOFAR
 
     enum StokesType { STOKES_I = 0, STOKES_IQUV, STOKES_XXYY, INVALID_STOKES = -1 };
 
+    StokesType stokesType( const std::string &name );
+    size_t nrStokes( StokesType type );
+    std::string stokesType( StokesType type );
+
     // All settings relevant for an observation (well, it should become that,
     // we don't copy all Parset values yet!).
  
@@ -71,6 +75,11 @@ namespace LOFAR
       // key: Observation.startTime
       double startTime;
 
+      // Raw start time string, as provided in the parset
+      //
+      // key: Observation.startTime
+      std::string rawStartTime;
+
       // Specified observation stop time, in seconds since 1970.
       //
       // key: Observation.stopTime
@@ -86,6 +95,9 @@ namespace LOFAR
 
       // The bandwidth of a single subband, in Hz
       double subbandWidth() const;
+
+      // The length of an input sample, in s
+      double sampleDuration() const;
 
       // The number of samples in one block of one subband.
       //
@@ -219,6 +231,11 @@ namespace LOFAR
       //
       // length: len(OLAP.storageStationNames)
       std::vector<struct AntennaField> antennaFields;
+
+      // A list of the stations used in the observation
+      //
+      // key: Observation.VirtualInstrument.stationList
+      std::string rawStationList;
 
       ssize_t antennaFieldIndex(const std::string &name) const;
 
@@ -414,6 +431,8 @@ namespace LOFAR
         std::vector<struct Station> stations;
 
         struct File {
+          size_t streamNr;
+
           struct FileLocation location;
         };
 
@@ -693,13 +712,6 @@ namespace LOFAR
       std::vector<double>         itsStPositions;
 
       std::string                 PVSS_TempObsName() const;
-
-      // Return the global, non file specific, LTA feedback parameters.
-      // \note Details about the meaning of the different meta-data parameters
-      // can be found in the XSD that describes the Submission Information
-      // Package (sip) for the LTA.
-      // \see http://proposal.astron.nl/schemas/LTA-SIP.xsd
-      Parset                      getGlobalLTAFeedbackParameters() const;
 
     private:
       const std::string itsName;
