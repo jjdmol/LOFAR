@@ -146,7 +146,7 @@ namespace LOFAR
       ostringstream centralFreqsStr;
       centralFreqsStr << "[";
       for (size_t i = f.firstSubbandIdx; i < f.lastSubbandIdx; ++i) {
-        if( i > 0 )
+        if (i > f.firstSubbandIdx)
           centralFreqsStr << ", ";
         centralFreqsStr << str(format("%.4lf") % settings.subbands[i].centralFrequency);
       }
@@ -157,7 +157,7 @@ namespace LOFAR
       ostringstream stationSubbandsStr;
       stationSubbandsStr << "[";
       for (size_t i = f.firstSubbandIdx; i < f.lastSubbandIdx; ++i) {
-        if( i > 0 )
+        if (i > f.firstSubbandIdx)
           stationSubbandsStr << ", ";
         stationSubbandsStr << str(format("%u") % settings.subbands[i].stationIdx);
       }
