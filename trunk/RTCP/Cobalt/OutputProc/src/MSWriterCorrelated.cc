@@ -80,22 +80,6 @@ namespace LOFAR
           //bl = s1 * (s1 + 1) / 2 + stat2 ;
           baselineNames[bl++] = str(format("%s_%s") % stationNames[s1] % stationNames[s2]);
 #endif
-
-      itsConfiguration.add("fileFormat",           "AIPS++/CASA");
-      itsConfiguration.add("filename",             LOFAR::basename(msName));
-      itsConfiguration.add("size",                 "0");
-      itsConfiguration.add("location",             parset.getHostName(CORRELATED_DATA, subbandIndex) + ":" + parset.getDirectoryName(CORRELATED_DATA, subbandIndex));
-
-      itsConfiguration.add("percentageWritten",    "0");
-      itsConfiguration.add("startTime",            parset.getString("Observation.startTime"));
-      itsConfiguration.add("duration",             "0");
-      itsConfiguration.add("integrationInterval",  str(format("%f") % parset.IONintegrationTime()));
-      itsConfiguration.add("centralFrequency",     str(format("%f") % parset.settings.subbands[subbandIndex].centralFrequency));
-      itsConfiguration.add("channelWidth",         str(format("%f") % parset.channelWidth()));
-      itsConfiguration.add("channelsPerSubband",   str(format("%u") % parset.nrChannelsPerSubband()));
-      itsConfiguration.add("stationSubband",       str(format("%u") % parset.settings.subbands[subbandIndex].stationIdx));
-      itsConfiguration.add("subband",              str(format("%u") % subbandIndex));
-      itsConfiguration.add("SAP",                  str(format("%u") % parset.settings.subbands[subbandIndex].SAP));
     }
 
 

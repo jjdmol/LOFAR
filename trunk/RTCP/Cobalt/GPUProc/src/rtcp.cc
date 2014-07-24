@@ -56,6 +56,7 @@
 #include <ApplCommon/StationInfo.h>
 #include <MACIO/RTmetadata.h>
 #include <CoInterface/Parset.h>
+#include <CoInterface/LTAFeedback.h>
 #include <CoInterface/OutputTypes.h>
 #include <CoInterface/OMPThread.h>
 #include <CoInterface/Pool.h>
@@ -564,11 +565,14 @@ int main(int argc, char **argv)
     LOG_INFO("Writing LTA feedback to disk");
 
     // obtain LTA feedback
+    LTAFeedback fb(ps.settings);
     Parset feedbackLTA;
-    feedbackLTA.adoptCollection(storageProcesses->feedbackLTA());
 
     // augment LTA feedback with global information
-    feedbackLTA.adoptCollection(ps.getGlobalLTAFeedbackParameters());
+    feedbackLTA.adoptCollection(fb.allFeedback());
+
+    // process updates from outputProc
+    feedbackLTA.adoptCollection(storageProcesses->feedbackLTA());
 
     // write LTA feedback to disk
     const char *LOFARROOT = getenv("LOFARROOT");
