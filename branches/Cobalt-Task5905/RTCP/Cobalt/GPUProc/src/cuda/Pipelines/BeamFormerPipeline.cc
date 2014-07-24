@@ -49,6 +49,9 @@ namespace LOFAR
     {
       TABTranspose::MultiSender::HostMap hostMap;
 
+      if (!ps.settings.beamFormer.enabled)
+        return hostMap;
+
       // The requested service is an unique identifier for this observation,
       // and for our process.
       const string service = str(format("2nd-transpose-obs-%u-fromrank-%u")
