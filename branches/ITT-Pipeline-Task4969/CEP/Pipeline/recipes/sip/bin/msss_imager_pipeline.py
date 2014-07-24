@@ -185,6 +185,17 @@ class msss_imager_pipeline(control):
         add_beam_tables = self.parset.getBool(
                                     "Imaging.addBeamTables", False)
 
+
+        number_of_major_cycles = self.parset.getInt(
+                                    "Imaging.number_of_major_cycles")
+
+        if number_of_major_cycles < 3:
+            self.logger.error(
+                "The number of major cycles must be 3 or higher, correct"
+                " the key: Imaging.number_of_major_cycles")
+            number_of_major_cycles = 6  # for now default to 6 cycles
+
+
         # ******************************************************************
         # (1) prepare phase: copy and collect the ms
         concat_ms_map_path, timeslice_map_path, raw_ms_per_image_map_path, \
@@ -200,13 +211,7 @@ class msss_imager_pipeline(control):
             item.file = ""             # set all to empty string
         source_list_map.save(source_list_map_path)
 
-        number_of_major_cycles = self.parset.getInt(
-                                    "Imaging.number_of_major_cycles")
 
-        if number_of_major_cycles < 3:
-            raise PipelineException(
-                "The number of major cycles must be 3 or higher, correct"
-                " the key: Imaging.number_of_major_cycles")
         
         for idx_loop in range(number_of_major_cycles):
             # *****************************************************************
