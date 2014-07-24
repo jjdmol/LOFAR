@@ -759,7 +759,7 @@ namespace LOFAR {
         }
       }
 
-      if (itsDebugLevel>1) {
+      if ((itsDebugLevel>1 && dg>itsTolerance) || itsDebugLevel>2) {
         cout<<"t: "<<itsTStep<<", iter:"<<iter<<", dg=[";
         if (dgs.size()>0) {
           cout<<dgs[0];
