@@ -1,10 +1,9 @@
 # $Id$
 
-lofar_add_package(Pipeline-Framework framework)
-lofar_add_package(Pipeline-Recipes recipes)
-#lofar_add_package(Pipeline-MAC mac)
+lofar_add_package(Laps-GRIDInterface GRIDInterface)
+lofar_add_package(Laps-ParsetCombiner ParsetCombiner)
 
-add_subdirectory(test)
+#add_subdirectory(test)
 
-INSTALL(DIRECTORY DESTINATION var/run/pipeline)
-INSTALL(DIRECTORY DESTINATION var/log)
+INSTALL(DIRECTORY DESTINATION var/run/laps)
+
