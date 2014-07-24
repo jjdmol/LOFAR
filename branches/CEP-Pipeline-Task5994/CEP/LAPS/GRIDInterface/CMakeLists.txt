@@ -2,4 +2,4 @@
 
 lofar_package(Laps-GRIDInterface 0.1)
 
-add_subdirectory(GRIDInterface)
+add_subdirectory(src)
