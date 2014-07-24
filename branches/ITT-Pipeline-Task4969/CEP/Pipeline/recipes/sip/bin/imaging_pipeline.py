@@ -187,8 +187,15 @@ class imaging_pipeline(control):
             processed_ms_dir = self._prepare_phase(input_mapfile,
                                     target_mapfile)
 
-        # We start with an empty source_list
-        source_list = ""  # path to local sky model (list of 'found' sources)
+        # We start with an empty source_list map. It should contain n_output
+        # entries all set to empty strings
+        source_list_map_path = os.path.join(self.mapfile_dir,
+                                        "initial_sourcelist.mapfile")
+        source_list_map = DataMap.load(target_mapfile) # copy the output map
+        for item in source_list_map:
+            item.file = ""             # set all to empty string
+        source_list_map.save(source_list_map_path)
+
         number_of_major_cycles = self.parset.getInt(
                                     "Imaging.number_of_major_cycles")
         for idx_loop in range(number_of_major_cycles):
@@ -196,13 +203,13 @@ class imaging_pipeline(control):
             # (2) Create dbs and sky model
             parmdbs_path, sourcedb_map_path = self._create_dbs(
                         concat_ms_map_path, timeslice_map_path,
-                        source_list = source_list,
+                        source_list_map_path = source_list_map_path,
                         skip_create_dbs = False)
 
             # *****************************************************************
             # (3)  bbs_imager recipe.
-            bbs_output = self._bbs(timeslice_map_path, parmdbs_path,
-                        sourcedb_map_path, skip = False)
+            bbs_output = self._bbs(concat_ms_map_path, timeslice_map_path, 
+                 parmdbs_path, sourcedb_map_path, idx_loop, skip = False)
 
             # TODO: Extra recipe: concat timeslices using pyrap.concatms
             # (see prepare)
@@ -210,7 +217,7 @@ class imaging_pipeline(control):
             # *****************************************************************
             # (4) Get parameters awimager from the prepare_parset and inputs
             aw_image_mapfile, maxbaseline = self._aw_imager(concat_ms_map_path,
-                        idx_loop, sourcedb_map_path,
+                        idx_loop, sourcedb_map_path, number_of_major_cycles,
                         skip = False)
 
             # *****************************************************************
@@ -366,8 +373,8 @@ class imaging_pipeline(control):
             return source_list_map, sourcedb_map_path
 
     @xml_node
-    def _bbs(self, timeslice_map_path, parmdbs_map_path, sourcedb_map_path,
-              skip = False):
+    def _bbs(self, concat_ms_map_path, timeslice_map_path, parmdbs_map_path, sourcedb_map_path,
+              major_cycle, skip = False):
         """
         Perform a calibration step. First with a set of sources from the
         gsm and in later iterations also on the found sources
@@ -409,13 +416,15 @@ class imaging_pipeline(control):
                       instrument_mapfile = parmdbs_map_path,
                       sourcedb_mapfile = sourcedb_map_path,
                       mapfile = output_mapfile,
-                      working_directory = self.scratch_directory)
+                      working_directory = self.scratch_directory,
+                      concat_ms_map_path=concat_ms_map_path,
+                      major_cycle=major_cycle)
 
         return output_mapfile
 
     @xml_node
     def _aw_imager(self, prepare_phase_output, major_cycle, sky_path,
-                   skip = False):
+                  number_of_major_cycles, skip = False):
         """
         Create an image based on the calibrated, filtered and combined data.
         """
@@ -459,6 +468,9 @@ class imaging_pipeline(control):
                           working_directory = self.scratch_directory,
                           autogenerate_parameters = auto_imaging_specs,
                           specify_fov = specify_fov,
+                          major_cycle = major_cycle,
+                          nr_cycles = number_of_major_cycles,
+                          perform_self_cal = False,
                           fov = fov)
 
         return output_mapfile, max_baseline
@@ -527,7 +539,7 @@ class imaging_pipeline(control):
             processed_ms_dir
 
     @xml_node
-    def _create_dbs(self, input_map_path, timeslice_map_path, source_list = "",
+    def _create_dbs(self, input_map_path, timeslice_map_path, source_list_map_path,
                     skip_create_dbs = False):
         """
         Create for each of the concatenated input measurement sets
@@ -558,7 +570,7 @@ class imaging_pipeline(control):
                         parmdb_suffix = ".parmdb",
                         parmdbs_map_path = parmdbs_map_path,
                         sourcedb_map_path = sourcedb_map_path,
-                        source_list_path = source_list,
+                        source_list_map_path = source_list_map_path,
                         working_directory = self.scratch_directory)
 
         return parmdbs_map_path, sourcedb_map_path
