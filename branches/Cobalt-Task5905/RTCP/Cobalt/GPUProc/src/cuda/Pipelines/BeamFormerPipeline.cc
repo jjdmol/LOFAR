@@ -110,10 +110,28 @@ namespace LOFAR
                   mdLogger, mdKeyPrefix, 3.0),
       factories(ps, nrSubbandsPerSubbandProc)
     {
-      ASSERT(ps.settings.beamFormer.enabled);
 
       // Write data point(s) for monitoring (PVSS).
-      itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DATA_PRODUCT_TYPE, "Beamformed");
+      string dataProductType;
+
+      switch (1 * (int)ps.settings.beamFormer.enabled
+            + 2 * (int)ps.settings.correlator.enabled) {
+        case 3:
+          dataProductType = "Correlated + Beamformed";
+          break;
+        case 2:
+          dataProductType = "Correlated";
+          break;
+        case 1:
+          dataProductType = "Beamformed";
+          break;
+        case 0:
+        default:
+          dataProductType = "None";
+          break;
+      }
+
+      itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DATA_PRODUCT_TYPE, dataProductType);
     }
 
     void BeamFormerPipeline::allocateResources()

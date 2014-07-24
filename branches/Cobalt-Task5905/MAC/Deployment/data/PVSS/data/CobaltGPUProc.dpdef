@@ -4,7 +4,7 @@
 # Observation ID as string
 observationName		string
 
-# Type of data ("Correlated" or "Beamformed")
+# Type of data ("Correlated", "Beamformed", or "Correlated + Beamformed")
 dataProductType		string
 
 # Subband index number (usually in the range [0..966> (max in 4 bit mode))
