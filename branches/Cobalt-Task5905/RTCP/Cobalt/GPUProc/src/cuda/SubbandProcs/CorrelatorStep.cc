@@ -256,18 +256,18 @@ namespace LOFAR
     void CorrelatorStep::initMembers(gpu::Context &context,
       Factories &factories){
       if (correlatorPPF) {
-        // FIR filter
+        // FIR filter: A -> B
         firFilterKernel = factories.firFilter->create(queue, *devA, *devB);
 
-        // FFT
+        // FFT: B -> E
         fftKernel = factories.fft->create(queue, *devB, devE);
       }
 
-      // Delay and Bandpass
+      // Delay and Bandpass: A/E -> B
       delayAndBandPassKernel = std::auto_ptr<DelayAndBandPassKernel>(factories.delayAndBandPass.create(queue, 
-        devE, *devB));
+        correlatorPPF ? devE : *devA, *devB));
 
-      // Correlator
+      // Correlator: B -> E
       correlatorKernel = std::auto_ptr<CorrelatorKernel>(factories.correlator.create(queue,
         *devB, devE));
 
