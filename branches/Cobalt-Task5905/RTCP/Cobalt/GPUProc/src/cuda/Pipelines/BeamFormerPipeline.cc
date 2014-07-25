@@ -230,77 +230,79 @@ namespace LOFAR
 
         LOG_DEBUG_STR("[" << id << "] Writing start");
 
-        // Try all files until we found the file(s) this block belongs to.
-        // TODO: This could be optimized, either by recognizing that only the Stokes can
-        // change the file idx, or by preparing a better data structure for 1 lookup here.
-        // Idem for the data copying (assign()) below.
-        for (size_t fileIdx = 0;
-             fileIdx < ps.settings.beamFormer.files.size();
-             ++fileIdx) 
-        {
-          const struct ObservationSettings::BeamFormer::File &file = 
-                ps.settings.beamFormer.files[fileIdx];
+        if (ps.settings.beamFormer.enabled) {
+          // Try all files until we found the file(s) this block belongs to.
+          // TODO: This could be optimized, either by recognizing that only the Stokes can
+          // change the file idx, or by preparing a better data structure for 1 lookup here.
+          // Idem for the data copying (assign()) below.
+          for (size_t fileIdx = 0;
+               fileIdx < ps.settings.beamFormer.files.size();
+               ++fileIdx) 
+          {
+            const struct ObservationSettings::BeamFormer::File &file = 
+                  ps.settings.beamFormer.files[fileIdx];
 
-          // Skip SAPs and subbands (parts) that we are not responsible for.
-          if (file.sapNr != SAP)
-            continue;
+            // Skip SAPs and subbands (parts) that we are not responsible for.
+            if (file.sapNr != SAP)
+              continue;
 
-          if (globalSubbandIdx < file.firstSubbandIdx || globalSubbandIdx >= file.lastSubbandIdx)
-            continue;
+            if (globalSubbandIdx < file.firstSubbandIdx || globalSubbandIdx >= file.lastSubbandIdx)
+              continue;
 
-          // Note that the 'file' encodes 1 Stokes of 1 TAB, so each TAB we've
-          // produced can be visited 1 or 4 times.
+            // Note that the 'file' encodes 1 Stokes of 1 TAB, so each TAB we've
+            // produced can be visited 1 or 4 times.
 
-          // Compute shape of block
-          const ObservationSettings::BeamFormer::StokesSettings &stokes =
-            file.coherent
-            ? ps.settings.beamFormer.coherentSettings
-            : ps.settings.beamFormer.incoherentSettings;
-
-          const size_t nrChannels = stokes.nrChannels;
-          const size_t nrSamples =  stokes.nrSamples;
-
-          // Our data has the shape
-          //   beamFormedData.(in)coherentData[tab][stokes][sample][channel]
-          //
-          // To transpose our data, we copy a slice representing
-          //   slice[sample][channel]
-          // and send it to outputProc to combine with the other subbands.
-          //
-          // We create a copy to be able to release outputData, since our
-          // slices can be blocked by writes to any number of outputProcs.
-          SmartPtr<struct TABTranspose::Subband> subband = 
-                new TABTranspose::Subband(nrSamples, nrChannels);
-
-          // These 3 values are guarded with ASSERTSTR() on the other side at
-          // outputProc (Block::addSubband()).
-          subband->id.fileIdx  = file.streamNr;
-          // global to local sb idx: here local means to the TAB Transpose,
-          // which only knows about #subbands and #blocks in a file (part).
-          unsigned sbIdxInFile = globalSubbandIdx - file.firstSubbandIdx;
-          subband->id.subband  = sbIdxInFile;
-          subband->id.block    = id.block;
-
-          // Create view of subarray 
-          MultiDimArray<float, 2> srcData(
-              boost::extents[nrSamples][nrChannels],
+            // Compute shape of block
+            const ObservationSettings::BeamFormer::StokesSettings &stokes =
               file.coherent
-                   ? beamFormedData.coherentData[file.coherentIdxInSAP][file.stokesNr].origin()
-                   : beamFormedData.incoherentData[file.incoherentIdxInSAP][file.stokesNr].origin(),
-              false);
+              ? ps.settings.beamFormer.coherentSettings
+              : ps.settings.beamFormer.incoherentSettings;
 
-          // Copy data to block
-          transposeTimer.start();
-          subband->data.assign(srcData.origin(), srcData.origin() + srcData.num_elements());
-          transposeTimer.stop();
+            const size_t nrChannels = stokes.nrChannels;
+            const size_t nrSamples =  stokes.nrSamples;
 
-          // Forward block to MultiSender, who takes ownership.
-          forwardTimer.start();
-          multiSender.append(subband);
-          forwardTimer.stop();
+            // Our data has the shape
+            //   beamFormedData.(in)coherentData[tab][stokes][sample][channel]
+            //
+            // To transpose our data, we copy a slice representing
+            //   slice[sample][channel]
+            // and send it to outputProc to combine with the other subbands.
+            //
+            // We create a copy to be able to release outputData, since our
+            // slices can be blocked by writes to any number of outputProcs.
+            SmartPtr<struct TABTranspose::Subband> subband = 
+                  new TABTranspose::Subband(nrSamples, nrChannels);
 
-          // If `subband' is still alive, it has been dropped instead of sent.
-          ASSERT(ps.realTime() || !subband); 
+            // These 3 values are guarded with ASSERTSTR() on the other side at
+            // outputProc (Block::addSubband()).
+            subband->id.fileIdx  = file.streamNr;
+            // global to local sb idx: here local means to the TAB Transpose,
+            // which only knows about #subbands and #blocks in a file (part).
+            unsigned sbIdxInFile = globalSubbandIdx - file.firstSubbandIdx;
+            subband->id.subband  = sbIdxInFile;
+            subband->id.block    = id.block;
+
+            // Create view of subarray 
+            MultiDimArray<float, 2> srcData(
+                boost::extents[nrSamples][nrChannels],
+                file.coherent
+                     ? beamFormedData.coherentData[file.coherentIdxInSAP][file.stokesNr].origin()
+                     : beamFormedData.incoherentData[file.incoherentIdxInSAP][file.stokesNr].origin(),
+                false);
+
+            // Copy data to block
+            transposeTimer.start();
+            subband->data.assign(srcData.origin(), srcData.origin() + srcData.num_elements());
+            transposeTimer.stop();
+
+            // Forward block to MultiSender, who takes ownership.
+            forwardTimer.start();
+            multiSender.append(subband);
+            forwardTimer.stop();
+
+            // If `subband' is still alive, it has been dropped instead of sent.
+            ASSERT(ps.realTime() || !subband); 
+          }
         }
 
         // Return outputData back to the workQueue.
@@ -331,15 +333,15 @@ namespace LOFAR
       // Register our thread to be killable at exit
       OMPThreadSet::ScopedRun sr(outputThreads);
 
-      SmartPtr<Stream> outputStream;
+      SmartPtr<Stream> outputStream = new NullStream;
 
-      try {
-        const std::string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, globalSubbandIdx);
-        outputStream = createStream(desc, false, ps.realTime() ? ps.stopTime() : 0);
-      } catch (Exception &ex) {
-        LOG_ERROR_STR("Error writing subband " << globalSubbandIdx << ", dropping all subsequent blocks: " << ex.what());
-
-        outputStream = new NullStream;
+      if (ps.settings.correlator.enabled) {
+        try {
+          const std::string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, globalSubbandIdx);
+          outputStream = createStream(desc, false, ps.realTime() ? ps.stopTime() : 0);
+        } catch (Exception &ex) {
+          LOG_ERROR_STR("Error writing subband " << globalSubbandIdx << ", dropping all subsequent blocks: " << ex.what());
+        }
       }
 
       SmartPtr<SubbandProcOutputData> data;
@@ -358,6 +360,8 @@ namespace LOFAR
         ASSERT( globalSubbandIdx == id.globalSubbandIdx );
 
         if (beamFormedData.emit_correlatedData) {
+          ASSERT(ps.settings.correlator.enabled);
+
           LOG_DEBUG_STR("[" << id << "] Writing start");
 
           blocksDropped += correlatedData.sequenceNumber() - nextSequenceNumber;
