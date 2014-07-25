@@ -51,7 +51,22 @@ namespace LOFAR
       virtual void processObservation();
 
       // Send subbands to outputProc
-      virtual void writeOutput(unsigned globalSubbandIdx, struct Output &output);
+      virtual void writeOutput(
+        unsigned globalSubbandIdx,
+        Queue< SmartPtr<SubbandProcOutputData> > &inputQueue,
+        Queue< SmartPtr<SubbandProcOutputData> > &outputQueue );
+
+      void writeBeamformedOutput(
+        unsigned globalSubbandIdx,
+        Queue< SmartPtr<SubbandProcOutputData> > &inputQueue,
+        Queue< SmartPtr<SubbandProcOutputData> > &outputQueue );
+
+      void writeCorrelatedOutput(
+        unsigned globalSubbandIdx,
+        Queue< SmartPtr<SubbandProcOutputData> > &inputQueue,
+        Queue< SmartPtr<SubbandProcOutputData> > &outputQueue );
+
+      SmartPtr<Stream> correlatedOutputStream(unsigned globalSubbandIdx) const;
 
       // Signal all subbands have been written
       virtual void doneWritingOutput();

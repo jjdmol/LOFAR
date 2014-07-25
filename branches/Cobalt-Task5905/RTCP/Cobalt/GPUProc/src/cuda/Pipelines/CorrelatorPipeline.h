@@ -58,7 +58,10 @@ namespace LOFAR
       virtual void allocateResources();
 
       // Send subbands to outputProc
-      virtual void writeOutput(unsigned globalSubbandIdx, struct Output &output);
+      virtual void writeOutput(
+        unsigned globalSubbandIdx,
+        Queue< SmartPtr<SubbandProcOutputData> > &inputQueue,
+        Queue< SmartPtr<SubbandProcOutputData> > &outputQueue );
 
       // Create Stream to outputProc
       SmartPtr<Stream> connectToOutput(unsigned globalSubbandIdx) const;

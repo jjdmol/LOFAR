@@ -228,6 +228,8 @@ namespace LOFAR
 
       if (correlatorStep.get()) {
         output.emit_correlatedData = correlatorStep->postprocessSubband(output.correlatedData);
+      } else {
+        output.emit_correlatedData = false;
       }
 
       return true;

@@ -80,20 +80,23 @@ namespace LOFAR
     }
 
 
-    void CorrelatorPipeline::writeOutput( unsigned globalSubbandIdx, struct Output &output )
+    void CorrelatorPipeline::writeOutput(
+      unsigned globalSubbandIdx,
+      Queue< SmartPtr<SubbandProcOutputData> > &inputQueue,
+      Queue< SmartPtr<SubbandProcOutputData> > &outputQueue )
     {
       // Register our thread to be killable at exit
       OMPThreadSet::ScopedRun sr(outputThreads);
 
       SmartPtr<Stream> outputStream = connectToOutput(globalSubbandIdx);
 
-      SmartPtr<SubbandProcOutputData> outputData;
+      SmartPtr<SubbandProcOutputData> data;
 
       // Process pool elements until end-of-output
-      while ((outputData = output.queue->remove()) != NULL) {
-        CorrelatedData &correlatedData = dynamic_cast<CorrelatedData&>(*outputData);
+      while ((data = inputQueue.remove()) != NULL) {
+        CorrelatedData &correlatedData = dynamic_cast<CorrelatedData&>(*data);
 
-        const struct BlockID id = outputData->blockID;
+        const struct BlockID id = data->blockID;
         ASSERT( globalSubbandIdx == id.globalSubbandIdx );
 
         LOG_DEBUG_STR("[" << id << "] Writing start");
@@ -116,10 +119,8 @@ namespace LOFAR
           droppedBlocks += 1;
         }
 
-        SubbandProc &workQueue = *workQueues[id.localSubbandIdx % workQueues.size()];
-        workQueue.outputPool.free.append(outputData);
-
-        ASSERT(!outputData);
+        outputQueue.append(data);
+        ASSERT(!data);
 
         if (id.localSubbandIdx == 0 || id.localSubbandIdx == subbandIndices.size() - 1)
           LOG_INFO_STR("[" << id << "] Done"); 

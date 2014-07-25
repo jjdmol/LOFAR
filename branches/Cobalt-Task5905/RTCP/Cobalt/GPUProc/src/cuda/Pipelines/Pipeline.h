@@ -71,6 +71,8 @@ namespace LOFAR
         SmartPtr< Queue< SmartPtr<SubbandProcOutputData> > > queue;
       };
 
+      std::vector< SmartPtr<SubbandProc> > workQueues;
+
     protected:
       const Parset             &ps;
       const std::vector<gpu::Device> devices;
@@ -80,8 +82,6 @@ namespace LOFAR
       // Whether we're the pipeline that processes the first subband.
       // If true, we log our progress at INFO. Otherwise, at DEBUG.
       const bool processingSubband0;
-
-      std::vector< SmartPtr<SubbandProc> > workQueues;
 
       const size_t nrSubbandsPerSubbandProc;
 
@@ -112,7 +112,10 @@ namespace LOFAR
       void postprocessSubbands(SubbandProc &workQueue);
 
       // Send subbands to Storage
-      virtual void writeOutput(unsigned globalSubbandIdx, struct Output &output) = 0;
+      virtual void writeOutput(
+        unsigned globalSubbandIdx,
+        Queue< SmartPtr<SubbandProcOutputData> > &inputQueue,
+        Queue< SmartPtr<SubbandProcOutputData> > &outputQueue ) = 0;
 
       // Signal that all output has been emitted
       virtual void doneWritingOutput();

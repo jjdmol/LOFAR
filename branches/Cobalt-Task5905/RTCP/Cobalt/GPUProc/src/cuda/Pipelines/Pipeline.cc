@@ -76,11 +76,11 @@ namespace LOFAR
         const std::vector<gpu::Device> &devices, Pool<struct MPIRecvData> &pool,
         RTmetadata &mdLogger, const std::string &mdKeyPrefix)
       :
+      workQueues(std::max(1UL, (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size())),
       ps(ps),
       devices(devices),
       subbandIndices(subbandIndices),
       processingSubband0(std::find(subbandIndices.begin(), subbandIndices.end(), 0U) != subbandIndices.end()),
-      workQueues(std::max(1UL, (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size())),
       nrSubbandsPerSubbandProc(ceilDiv(subbandIndices.size(), workQueues.size())),
       itsMdLogger(mdLogger),
       itsMdKeyPrefix(mdKeyPrefix),
@@ -221,7 +221,7 @@ namespace LOFAR
         {
 #         pragma omp parallel for num_threads(writePool.size())
           for (size_t i = 0; i < writePool.size(); ++i) {
-            writeOutput(subbandIndices[i], writePool[i]);
+            writeOutput(subbandIndices[i], *writePool[i].queue, workQueues[i % workQueues.size()]->outputPool.free);
           }
 
           // Signal end-of-output (needed by BeamFormerPipeline), to unlock

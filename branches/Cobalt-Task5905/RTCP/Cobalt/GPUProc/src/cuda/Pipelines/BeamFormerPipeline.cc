@@ -26,11 +26,14 @@
 #include <string>
 #include <iomanip>
 #include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
 #include <ApplCommon/PVSSDatapointDefs.h>
 
+#include <Stream/NullStream.h>
+#include <Stream/FileStream.h>
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/Stream.h>
 #include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
@@ -44,6 +47,7 @@ namespace LOFAR
   {
     using namespace std;
     using boost::format;
+    using boost::lexical_cast;
 
     static TABTranspose::MultiSender::HostMap hostMap(const Parset &ps, const vector<size_t> &subbandIndices, int hostID)
     {
@@ -173,25 +177,51 @@ namespace LOFAR
       }
     }
 
+
+    void BeamFormerPipeline::writeOutput(
+      unsigned globalSubbandIdx,
+      Queue< SmartPtr<SubbandProcOutputData> > &inputQueue,
+      Queue< SmartPtr<SubbandProcOutputData> > &outputQueue )
+    {
+      Queue< SmartPtr<SubbandProcOutputData> > queue(str(boost::format("BeamFormerPipeline::writeOutput [subband %u]") % globalSubbandIdx));
+
+#     pragma omp parallel sections num_threads(2)
+      {
+        // Let parent do work
+#       pragma omp section
+        {
+          writeBeamformedOutput(globalSubbandIdx, inputQueue, queue);
+        }
+
+        // Output processing
+#       pragma omp section
+        {
+          writeCorrelatedOutput(globalSubbandIdx, queue, outputQueue);
+        }
+      }
+    }
+
     // Write the blocks of rtcp bf output via the MultiSender towards outputProc.
     // Removes the blocks the queue in 'output'.
     // All output corresponds to the subband indexed by globalSubbandIdx in the list of sb.
-    void BeamFormerPipeline::writeOutput( unsigned globalSubbandIdx,
-           struct Output &output )
+    void BeamFormerPipeline::writeBeamformedOutput(
+      unsigned globalSubbandIdx,
+      Queue< SmartPtr<SubbandProcOutputData> > &inputQueue,
+      Queue< SmartPtr<SubbandProcOutputData> > &outputQueue )
     {
       NSTimer transposeTimer(str(format("BeamFormerPipeline::writeOutput(subband %u) transpose/file") % globalSubbandIdx), true, true);
       NSTimer forwardTimer(str(format("BeamFormerPipeline::writeOutput(subband %u) forward/file") % globalSubbandIdx), true, true);
 
       const unsigned SAP = ps.settings.subbands[globalSubbandIdx].SAP;
 
-      SmartPtr<SubbandProcOutputData> outputData;
+      SmartPtr<SubbandProcOutputData> data;
 
       // Process pool elements until end-of-output
-      while ((outputData = output.queue->remove()) != NULL) 
+      while ((data = inputQueue.remove()) != NULL) 
       {
-        BeamFormedData &beamFormedData = dynamic_cast<BeamFormedData&>(*outputData);
+        BeamFormedData &beamFormedData = dynamic_cast<BeamFormedData&>(*data);
 
-        const struct BlockID id = outputData->blockID;
+        const struct BlockID id = data->blockID;
         ASSERT( globalSubbandIdx == id.globalSubbandIdx );
         ASSERT( id.block >= 0 ); // Negative blocks should not reach storage
 
@@ -271,16 +301,107 @@ namespace LOFAR
         }
 
         // Return outputData back to the workQueue.
-        SubbandProc &workQueue = *workQueues[id.localSubbandIdx % workQueues.size()];
-        workQueue.outputPool.free.append(outputData);
-
-        ASSERT(!outputData);
+        outputQueue.append(data);
+        ASSERT(!data);
 
         if (id.localSubbandIdx == 0 || id.localSubbandIdx == subbandIndices.size() - 1)
           LOG_INFO_STR("[" << id << "] Done"); 
         else
           LOG_DEBUG_STR("[" << id << "] Done"); 
       }
+    }
+
+
+    void BeamFormerPipeline::writeCorrelatedOutput(
+      unsigned globalSubbandIdx,
+      Queue< SmartPtr<SubbandProcOutputData> > &inputQueue,
+      Queue< SmartPtr<SubbandProcOutputData> > &outputQueue )
+    {
+      // Register our thread to be killable at exit
+      OMPThreadSet::ScopedRun sr(outputThreads);
+
+      SmartPtr<Stream> outputStream = correlatedOutputStream(globalSubbandIdx);
+
+      SmartPtr<SubbandProcOutputData> data;
+
+      size_t nextSequenceNumber = 0;
+      size_t blocksWritten = 0;
+      size_t blocksDropped = 0;
+      bool dropping = false;
+
+      // Process pool elements until end-of-output
+      while ((data = inputQueue.remove()) != NULL) {
+        BeamFormedData &beamFormedData = dynamic_cast<BeamFormedData&>(*data);
+        CorrelatedData &correlatedData = beamFormedData.correlatedData;
+
+        const struct BlockID id = data->blockID;
+        ASSERT( globalSubbandIdx == id.globalSubbandIdx );
+
+        if (beamFormedData.emit_correlatedData) {
+          LOG_DEBUG_STR("[" << id << "] Writing start");
+
+          blocksDropped += correlatedData.sequenceNumber() - nextSequenceNumber;
+          nextSequenceNumber = correlatedData.sequenceNumber() + 1;
+
+          // Write block to outputProc 
+          try {
+            correlatedData.write(outputStream.get(), true);
+
+            if (dropping)
+              blocksDropped += 1;
+            else
+              blocksWritten += 1;
+
+          } catch (Exception &ex) {
+            // No reconnect, as outputProc doesn't yet re-listen when the conn drops.
+            LOG_ERROR_STR("Error writing subband " << id.globalSubbandIdx << ", dropping all subsequent blocks: " << ex.what());
+
+            outputStream = new NullStream;
+
+            blocksDropped += 1;
+            dropping = true;
+          }
+
+          if (id.localSubbandIdx == 0 || id.localSubbandIdx == subbandIndices.size() - 1)
+            LOG_INFO_STR("[" << id << "] Done"); 
+          else
+            LOG_DEBUG_STR("[" << id << "] Done"); 
+
+          itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPING + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
+                          dropping);
+          itsMdLogger.log(itsMdKeyPrefix + PN_CGP_WRITTEN  + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
+                          blocksWritten * static_cast<float>(ps.settings.blockDuration()));
+          itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPED  + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
+                          blocksDropped * static_cast<float>(ps.settings.blockDuration()));
+        }
+
+        outputQueue.append(data);
+        ASSERT(!data);
+      }
+    }
+
+
+    SmartPtr<Stream> BeamFormerPipeline::correlatedOutputStream(unsigned globalSubbandIdx) const
+    {
+      SmartPtr<Stream> outputStream;
+
+      try {
+        if (ps.getHostName(CORRELATED_DATA, globalSubbandIdx) == "") {
+          // an empty host name means 'write to disk directly', to
+          // make debugging easier for now
+          outputStream = new FileStream(ps.getFileName(CORRELATED_DATA, globalSubbandIdx), 0666);
+        } else {
+          // connect to the output process for this output
+          const std::string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, globalSubbandIdx);
+          outputStream = createStream(desc, false, ps.realTime() ? ps.stopTime() : 0);
+        }
+      } catch (Exception &ex) {
+        LOG_ERROR_STR("Failed to connect to output proc; dropping rest of subband " << globalSubbandIdx << ": " << ex.what());
+
+        outputStream = new NullStream;
+      }
+
+      return outputStream;
     }
 
 
