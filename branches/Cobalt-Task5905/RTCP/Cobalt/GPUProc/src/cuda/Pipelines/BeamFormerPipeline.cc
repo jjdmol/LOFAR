@@ -217,6 +217,11 @@ namespace LOFAR
 
       const unsigned SAP = ps.settings.subbands[globalSubbandIdx].SAP;
 
+      // Statistics for forwarding blocks to writeCorrelatedOutput
+      bool dropping = false;
+      size_t blocksWritten = 0;
+      size_t blocksDropped = 0;
+
       SmartPtr<SubbandProcOutputData> data;
 
       // Process pool elements until end-of-output
@@ -311,11 +316,22 @@ namespace LOFAR
         if (ps.settings.realTime && TimeSpec::now() - outputQueue.oldest() > maxRetentionTime) {
           // Drop
           spillQueue.append(data);
+          dropping = true;
+          blocksDropped++;
         } else {
           // Forward to correlator
           outputQueue.append(data);
+          dropping = false;
+          blocksWritten++;
         }
         ASSERT(!data);
+
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPING + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
+                        dropping);
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_WRITTEN  + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
+                        blocksWritten * static_cast<float>(ps.settings.blockDuration()));
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPED  + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
+                        blocksDropped * static_cast<float>(ps.settings.blockDuration()));
 
         if (id.localSubbandIdx == 0 || id.localSubbandIdx == subbandIndices.size() - 1)
           LOG_INFO_STR("[" << id << "] Done"); 
@@ -333,23 +349,20 @@ namespace LOFAR
       // Register our thread to be killable at exit
       OMPThreadSet::ScopedRun sr(outputThreads);
 
-      SmartPtr<Stream> outputStream = new NullStream;
+      SmartPtr<Stream> outputStream;
 
       if (ps.settings.correlator.enabled) {
+        const string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, globalSubbandIdx);
+
         try {
-          const std::string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, globalSubbandIdx);
           outputStream = createStream(desc, false, ps.realTime() ? ps.stopTime() : 0);
         } catch (Exception &ex) {
           LOG_ERROR_STR("Error writing subband " << globalSubbandIdx << ", dropping all subsequent blocks: " << ex.what());
+          return;
         }
       }
 
       SmartPtr<SubbandProcOutputData> data;
-
-      size_t nextSequenceNumber = 0;
-      size_t blocksWritten = 0;
-      size_t blocksDropped = 0;
-      bool dropping = false;
 
       // Process pool elements until end-of-output
       while ((data = inputQueue.remove()) != NULL) {
@@ -361,42 +374,23 @@ namespace LOFAR
 
         if (beamFormedData.emit_correlatedData) {
           ASSERT(ps.settings.correlator.enabled);
+          ASSERT(outputStream.get());
 
           LOG_DEBUG_STR("[" << id << "] Writing start");
-
-          blocksDropped += correlatedData.sequenceNumber() - nextSequenceNumber;
-          nextSequenceNumber = correlatedData.sequenceNumber() + 1;
 
           // Write block to outputProc 
           try {
             correlatedData.write(outputStream.get(), true);
-
-            if (dropping)
-              blocksDropped += 1;
-            else
-              blocksWritten += 1;
-
           } catch (Exception &ex) {
             // No reconnect, as outputProc doesn't yet re-listen when the conn drops.
             LOG_ERROR_STR("Error writing subband " << id.globalSubbandIdx << ", dropping all subsequent blocks: " << ex.what());
-
-            outputStream = new NullStream;
-
-            blocksDropped += 1;
-            dropping = true;
+            return;
           }
 
           if (id.localSubbandIdx == 0 || id.localSubbandIdx == subbandIndices.size() - 1)
             LOG_INFO_STR("[" << id << "] Done"); 
           else
             LOG_DEBUG_STR("[" << id << "] Done"); 
-
-          itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPING + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
-                          dropping);
-          itsMdLogger.log(itsMdKeyPrefix + PN_CGP_WRITTEN  + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
-                          blocksWritten * static_cast<float>(ps.settings.blockDuration()));
-          itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPED  + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
-                          blocksDropped * static_cast<float>(ps.settings.blockDuration()));
         }
 
         outputQueue.append(data);
