@@ -75,11 +75,6 @@ namespace LOFAR
       // key: Observation.startTime
       double startTime;
 
-      // Raw start time string, as provided in the parset
-      //
-      // key: Observation.startTime
-      std::string rawStartTime;
-
       // Specified observation stop time, in seconds since 1970.
       //
       // key: Observation.stopTime
