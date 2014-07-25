@@ -54,12 +54,10 @@ if(USE_CUDA)
     #cuda/Kernels/UHEP_TriggerKernel.cc
     cuda/Pipelines/Pipeline.cc
     cuda/Pipelines/BeamFormerPipeline.cc
-    cuda/Pipelines/CorrelatorPipeline.cc
 #    cuda/Pipelines/UHEP_Pipeline.cc
     cuda/SubbandProcs/SubbandProc.cc
     cuda/SubbandProcs/BeamFormerSubbandProc.cc
     cuda/SubbandProcs/BeamFormerFactories.cc
-    cuda/SubbandProcs/CorrelatorSubbandProc.cc
     cuda/SubbandProcs/CorrelatorStep.cc
     cuda/SubbandProcs/BeamFormerPreprocessingStep.cc
     cuda/SubbandProcs/BeamFormerCoherentStep.cc

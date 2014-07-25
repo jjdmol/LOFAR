@@ -26,7 +26,6 @@
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
 #include <GPUProc/Kernels/BandPassCorrectionKernel.h>
-#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
 #include <GPUProc/PerformanceCounter.h>
 #include <CoInterface/BlockID.h>
 

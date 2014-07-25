@@ -21,7 +21,6 @@
 #include <lofar_config.h>
 
 #include "CorrelatorStep.h"
-#include "CorrelatorSubbandProc.h"
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_wrapper.h>

@@ -26,7 +26,7 @@
 #include <CoInterface/fpequals.h>
 #include <CoInterface/Parset.h>
 #include <GPUProc/gpu_utils.h>
-#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
+#include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
 
 using namespace std;
 using namespace LOFAR;
@@ -82,15 +82,14 @@ int main() {
   // correction (but that kernel will run to convert int to float and to
   // transform the data order).
 
-  CorrelatorStep::Factories factories(ps, 1);
-  CorrelatorSubbandProc cwq(ps, ctx, factories);
+  BeamFormerFactories factories(ps, 1);
+  BeamFormerSubbandProc cwq(ps, ctx, factories);
 
   SubbandProcInputData in(
     nrBeams, nrStations, nrPolarisations, maxNrTABsPerSAP,
     nrSamplesPerSubband, nrBytesPerComplexSample, ctx);
 
-  CorrelatorStep::CorrelatedData out(
-    nrStations, nrChannelsPerSubband, integrationSteps, ctx);
+  BeamFormedData out(ps, ctx);
 
   LOG_INFO_STR(
     "\nInput info:" <<
@@ -115,7 +114,7 @@ int main() {
     "\n  scaleFactor = " << scaleFactor << 
     "\n  outputValue = " << outputValue <<
     "\n  ----------------------------" <<
-    "\n  Total bytes = " << out.size());
+    "\n  Total bytes = " << out.correlatedData.size());
 
   // Initialize synthetic input to all (1, 1).
   for (size_t st = 0; st < nrStations; st++)
@@ -150,14 +149,13 @@ int main() {
   for (size_t i = 0; i < in.phase0s.size(); i++)
     in.phase0s.get<float>()[i] = 0.0f;
 
-  bool integrationDone(false);
   size_t block(0);
 
   LOG_INFO("Processing ...");
-  for (block = 0; block < nrBlocksPerIntegration && !integrationDone; block++) {
+  for (block = 0; block < nrBlocksPerIntegration && !out.emit_correlatedData; block++) {
     LOG_DEBUG_STR("Processing block #" << block);
     cwq.processSubband(in, out);
-    integrationDone = cwq.postprocessSubband(out);
+    cwq.postprocessSubband(out);
   }
   ASSERT(block == nrBlocksPerIntegration);
 
@@ -166,9 +164,9 @@ int main() {
     for (size_t c = 0; c < nrChannelsPerSubband; c++)
       for (size_t pol0 = 0; pol0 < nrPolarisations; pol0++)
         for (size_t pol1 = 0; pol1 < nrPolarisations; pol1++)
-          ASSERTSTR(fpEquals(out[b][c][pol0][pol1], outputValue),
+          ASSERTSTR(fpEquals(out.correlatedData[b][c][pol0][pol1], outputValue),
                     "out[" << b << "][" << c << "][" << pol0 << 
-                    "][" << pol1 << "] = " << out[b][c][pol0][pol1] << 
+                    "][" << pol1 << "] = " << out.correlatedData[b][c][pol0][pol1] << 
                     "; outputValue = " << outputValue);
 
   LOG_INFO("Test OK");

@@ -28,7 +28,7 @@
 #include <CoInterface/Parset.h>
 #include <CoInterface/OMPThread.h>
 #include <InputProc/Transpose/MPIUtil.h>
-#include <GPUProc/Pipelines/CorrelatorPipeline.h>
+#include <GPUProc/Pipelines/BeamFormerPipeline.h>
 #include <GPUProc/Station/StationInput.h>
 
 using namespace std;
@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
   // So do kernel compilation (reqs fork()) first.
   // Don't bother passing a hostname to (or start()ing) the mdLogger.
   MACIO::RTmetadata rtmd(ps.observationID(), "", "");
-  SmartPtr<Pipeline> pipeline = new CorrelatorPipeline(ps, subbands, devices,
+  SmartPtr<Pipeline> pipeline = new BeamFormerPipeline(ps, subbands, devices,
       MPI_receive_pool, rtmd, "rtmd key prefix");
 
   //pipeline->allocateResources();
