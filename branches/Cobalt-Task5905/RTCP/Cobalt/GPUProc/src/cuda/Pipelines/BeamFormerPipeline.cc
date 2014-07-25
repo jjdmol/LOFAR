@@ -192,6 +192,7 @@ namespace LOFAR
 #       pragma omp section
         {
           writeBeamformedOutput(globalSubbandIdx, inputQueue, queue, outputQueue);
+          queue.append(NULL);
         }
 
         // Output processing
@@ -330,7 +331,16 @@ namespace LOFAR
       // Register our thread to be killable at exit
       OMPThreadSet::ScopedRun sr(outputThreads);
 
-      SmartPtr<Stream> outputStream = correlatedOutputStream(globalSubbandIdx);
+      SmartPtr<Stream> outputStream;
+
+      try {
+        const std::string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, globalSubbandIdx);
+        outputStream = createStream(desc, false, ps.realTime() ? ps.stopTime() : 0);
+      } catch (Exception &ex) {
+        LOG_ERROR_STR("Error writing subband " << globalSubbandIdx << ", dropping all subsequent blocks: " << ex.what());
+
+        outputStream = new NullStream;
+      }
 
       SmartPtr<SubbandProcOutputData> data;
 
@@ -388,30 +398,6 @@ namespace LOFAR
         outputQueue.append(data);
         ASSERT(!data);
       }
-    }
-
-
-    SmartPtr<Stream> BeamFormerPipeline::correlatedOutputStream(unsigned globalSubbandIdx) const
-    {
-      SmartPtr<Stream> outputStream;
-
-      try {
-        if (ps.getHostName(CORRELATED_DATA, globalSubbandIdx) == "") {
-          // an empty host name means 'write to disk directly', to
-          // make debugging easier for now
-          outputStream = new FileStream(ps.getFileName(CORRELATED_DATA, globalSubbandIdx), 0666);
-        } else {
-          // connect to the output process for this output
-          const std::string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, globalSubbandIdx);
-          outputStream = createStream(desc, false, ps.realTime() ? ps.stopTime() : 0);
-        }
-      } catch (Exception &ex) {
-        LOG_ERROR_STR("Failed to connect to output proc; dropping rest of subband " << globalSubbandIdx << ": " << ex.what());
-
-        outputStream = new NullStream;
-      }
-
-      return outputStream;
     }
 
 

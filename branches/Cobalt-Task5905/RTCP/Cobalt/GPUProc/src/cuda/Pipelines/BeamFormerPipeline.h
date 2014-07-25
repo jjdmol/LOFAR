@@ -67,8 +67,6 @@ namespace LOFAR
         Queue< SmartPtr<SubbandProcOutputData> > &inputQueue,
         Queue< SmartPtr<SubbandProcOutputData> > &outputQueue );
 
-      SmartPtr<Stream> correlatedOutputStream(unsigned globalSubbandIdx) const;
-
       // Signal all subbands have been written
       virtual void doneWritingOutput();
 
