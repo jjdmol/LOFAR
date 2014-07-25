@@ -322,7 +322,6 @@ namespace LOFAR
       settings.realTime = getBool("Cobalt.realTime", false);
       settings.observationID = getUint32("Observation.ObsID", 0);
       settings.startTime = getTime("Observation.startTime", "2013-01-01 00:00:00");
-      settings.rawStartTime = getString("Observation.startTime", "2013-01-01 00:00:00");
       settings.stopTime  = getTime("Observation.stopTime",  "2013-01-01 00:01:00");
       settings.clockMHz = getUint32("Observation.sampleClock", 200);
 

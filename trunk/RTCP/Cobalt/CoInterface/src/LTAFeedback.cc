@@ -22,6 +22,7 @@
 #include <lofar_config.h>
 
 #include <CoInterface/LTAFeedback.h>
+#include <CoInterface/TimeFuncs.h>
 
 #include <string>
 #include <boost/format.hpp>
@@ -62,7 +63,7 @@ namespace LOFAR
       ps.add(prefix + "location",             f.location.host + ":" + f.location.directory);
 
       ps.add(prefix + "percentageWritten",    "0");
-      ps.add(prefix + "startTime",            settings.rawStartTime);
+      ps.add(prefix + "startTime",            TimeDouble::toString(settings.startTime, false));
       ps.add(prefix + "duration",             "0");
       ps.add(prefix + "integrationInterval",  str(format("%f") % settings.correlator.integrationTime()));
       ps.add(prefix + "centralFrequency",     str(format("%f") % settings.subbands[fileno].centralFrequency));
