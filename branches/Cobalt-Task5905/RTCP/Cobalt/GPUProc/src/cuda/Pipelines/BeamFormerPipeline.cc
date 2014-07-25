@@ -36,6 +36,7 @@
 #include <Stream/FileStream.h>
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/Stream.h>
+#include <CoInterface/TimeFuncs.h>
 #include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
@@ -190,7 +191,7 @@ namespace LOFAR
         // Let parent do work
 #       pragma omp section
         {
-          writeBeamformedOutput(globalSubbandIdx, inputQueue, queue);
+          writeBeamformedOutput(globalSubbandIdx, inputQueue, queue, outputQueue);
         }
 
         // Output processing
@@ -207,7 +208,8 @@ namespace LOFAR
     void BeamFormerPipeline::writeBeamformedOutput(
       unsigned globalSubbandIdx,
       Queue< SmartPtr<SubbandProcOutputData> > &inputQueue,
-      Queue< SmartPtr<SubbandProcOutputData> > &outputQueue )
+      Queue< SmartPtr<SubbandProcOutputData> > &outputQueue,
+      Queue< SmartPtr<SubbandProcOutputData> > &spillQueue )
     {
       NSTimer transposeTimer(str(format("BeamFormerPipeline::writeOutput(subband %u) transpose/file") % globalSubbandIdx), true, true);
       NSTimer forwardTimer(str(format("BeamFormerPipeline::writeOutput(subband %u) forward/file") % globalSubbandIdx), true, true);
@@ -301,7 +303,15 @@ namespace LOFAR
         }
 
         // Return outputData back to the workQueue.
-        outputQueue.append(data);
+        const double maxRetentionTime = 3.0;
+        using namespace TimeSpec;
+        if (ps.settings.realTime && TimeSpec::now() - outputQueue.oldest() > maxRetentionTime) {
+          // Drop
+          spillQueue.append(data);
+        } else {
+          // Forward to correlator
+          outputQueue.append(data);
+        }
         ASSERT(!data);
 
         if (id.localSubbandIdx == 0 || id.localSubbandIdx == subbandIndices.size() - 1)

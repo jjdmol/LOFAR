@@ -59,7 +59,8 @@ namespace LOFAR
       void writeBeamformedOutput(
         unsigned globalSubbandIdx,
         Queue< SmartPtr<SubbandProcOutputData> > &inputQueue,
-        Queue< SmartPtr<SubbandProcOutputData> > &outputQueue );
+        Queue< SmartPtr<SubbandProcOutputData> > &outputQueue,
+        Queue< SmartPtr<SubbandProcOutputData> > &spillQueue );
 
       void writeCorrelatedOutput(
         unsigned globalSubbandIdx,
