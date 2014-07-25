@@ -68,9 +68,18 @@ ATermPython::ATermPython(const MeasurementSet& ms, const ParameterSet& parameter
     
     // Get the python class object from the imported module
     boost::python::object pyATerm = embedded_module.attr(parameters.getString("ATermPython.class").c_str());
+
+    // Import the lofar.parameterset module
+    boost::python::object lofar_parameterset_module = boost::python::import("lofar.parameterset");
+    
+    boost::python::object pyparameterset = lofar_parameterset_module.attr("parameterset")();
+    
+    ParameterSet ps = boost::python::extract<ParameterSet>(pyparameterset);
+    
+    ps.adoptCollection(parameters);
     
     // create an instance of the python class
-    itsPyaterm = pyATerm(); 
+    itsPyaterm = pyATerm(pyparameterset); 
   }
   catch(boost::python::error_already_set const &)
   {
