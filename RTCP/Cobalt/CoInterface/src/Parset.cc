@@ -392,6 +392,7 @@ namespace LOFAR
       // Station information (used pointing information to verify settings)
       vector<string> stations = getStringVector("Observation.VirtualInstrument.stationList", emptyVectorString, true);
       ASSERTSTR(!stations.empty(), "station list (Observation.VirtualInstrument.stationList) must be non-empty");
+      settings.rawStationList = getString("Observation.VirtualInstrument.stationList", "[]");
 
       // Sort stations (CS, RS, int'l), to get a consistent and predictable
       // order in the MeasurementSets.
@@ -400,8 +401,6 @@ namespace LOFAR
       // Conversion from station names to antenna field names.
       vector<ObservationSettings::AntennaFieldName> fieldNames =
         ObservationSettings::antennaFieldNames(stations, settings.antennaSet);
-
-      settings.rawStationList = getString("Observation.VirtualInstrument.stationList", "[]");
 
       settings.antennaFields.resize(fieldNames.size());
       for (unsigned i = 0; i < settings.antennaFields.size(); ++i) {
