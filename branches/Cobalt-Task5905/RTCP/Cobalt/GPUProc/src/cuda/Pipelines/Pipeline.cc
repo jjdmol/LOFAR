@@ -435,16 +435,9 @@ namespace LOFAR
         LOG_DEBUG_STR("[" << id << "] Post processing start");
 
         postprocessTimer.start();
-        bool handOffOutput = workQueue.postprocessSubband(*output);
+        workQueue.postprocessSubband(*output);
         postprocessTimer.stop();
 
-        if (!handOffOutput) {
-          workQueue.outputPool.free.append(output);
-          ASSERT(!output);
-          continue;
-        }
-
-        // Hand off output, force in-order as Storage expects it that way
         struct Output &pool = writePool[id.localSubbandIdx];
 
         pool.queue->append(output);

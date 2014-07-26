@@ -222,7 +222,7 @@ namespace LOFAR
       queue.synchronize();
     }
 
-    bool BeamFormerSubbandProc::postprocessSubband(SubbandProcOutputData &_output)
+    void BeamFormerSubbandProc::postprocessSubband(SubbandProcOutputData &_output)
     {
       BeamFormedData &output = dynamic_cast<BeamFormedData&>(_output);
 
@@ -231,8 +231,6 @@ namespace LOFAR
       } else {
         output.emit_correlatedData = false;
       }
-
-      return true;
     }
 
   }

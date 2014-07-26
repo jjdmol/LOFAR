@@ -75,7 +75,7 @@ namespace LOFAR
                                   SubbandProcOutputData &output);
 
       // Do post processing on the CPU
-      virtual bool postprocessSubband(SubbandProcOutputData &output);
+      virtual void postprocessSubband(SubbandProcOutputData &output);
 
     private:
       // The previously processed SAP/block, or -1 if nothing has been
