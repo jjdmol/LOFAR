@@ -37,7 +37,7 @@
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/Stream.h>
 #include <CoInterface/TimeFuncs.h>
-#include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
+#include <GPUProc/SubbandProcs/SubbandProc.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/global_defines.h>
@@ -151,7 +151,7 @@ namespace LOFAR
       for (size_t i = 0; i < workQueues.size(); ++i) {
         gpu::Context context(devices[i % devices.size()]);
 
-        workQueues[i] = new BeamFormerSubbandProc(ps, context, factories, nrSubbandsPerSubbandProc);
+        workQueues[i] = new SubbandProc(ps, context, factories, nrSubbandsPerSubbandProc);
       }
     }
 
@@ -227,8 +227,6 @@ namespace LOFAR
       // Process pool elements until end-of-output
       while ((data = inputQueue.remove()) != NULL) 
       {
-        BeamFormedData &beamFormedData = dynamic_cast<BeamFormedData&>(*data);
-
         const struct BlockID id = data->blockID;
         ASSERT( globalSubbandIdx == id.globalSubbandIdx );
         ASSERT( id.block >= 0 ); // Negative blocks should not reach storage
@@ -267,7 +265,7 @@ namespace LOFAR
             const size_t nrSamples =  stokes.nrSamples;
 
             // Our data has the shape
-            //   beamFormedData.(in)coherentData[tab][stokes][sample][channel]
+            //   data->(in)coherentData[tab][stokes][sample][channel]
             //
             // To transpose our data, we copy a slice representing
             //   slice[sample][channel]
@@ -291,8 +289,8 @@ namespace LOFAR
             MultiDimArray<float, 2> srcData(
                 boost::extents[nrSamples][nrChannels],
                 file.coherent
-                     ? beamFormedData.coherentData[file.coherentIdxInSAP][file.stokesNr].origin()
-                     : beamFormedData.incoherentData[file.incoherentIdxInSAP][file.stokesNr].origin(),
+                     ? data->coherentData[file.coherentIdxInSAP][file.stokesNr].origin()
+                     : data->incoherentData[file.incoherentIdxInSAP][file.stokesNr].origin(),
                 false);
 
             // Copy data to block
@@ -366,13 +364,12 @@ namespace LOFAR
 
       // Process pool elements until end-of-output
       while ((data = inputQueue.remove()) != NULL) {
-        BeamFormedData &beamFormedData = dynamic_cast<BeamFormedData&>(*data);
-        CorrelatedData &correlatedData = beamFormedData.correlatedData;
+        CorrelatedData &correlatedData = data->correlatedData;
 
         const struct BlockID id = data->blockID;
         ASSERT( globalSubbandIdx == id.globalSubbandIdx );
 
-        if (beamFormedData.emit_correlatedData) {
+        if (data->emit_correlatedData) {
           ASSERT(ps.settings.correlator.enabled);
           ASSERT(outputStream.get());
 

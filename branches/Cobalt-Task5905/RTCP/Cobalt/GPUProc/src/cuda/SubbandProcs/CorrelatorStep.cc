@@ -21,6 +21,7 @@
 #include <lofar_config.h>
 
 #include "CorrelatorStep.h"
+#include "SubbandProc.h"
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_wrapper.h>
@@ -35,21 +36,6 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    CorrelatorStep::CorrelatedData::CorrelatedData(
-      unsigned nrStations, unsigned nrChannels,
-      unsigned maxNrValidSamples, gpu::Context &context)
-      :
-      MultiDimArrayHostBuffer<fcomplex, 4>(
-        boost::extents
-        [nrStations * (nrStations + 1) / 2]
-        [nrChannels][NR_POLARIZATIONS]
-        [NR_POLARIZATIONS], 
-        context, 0),
-      LOFAR::Cobalt::CorrelatedData(nrStations, nrChannels, 
-                     maxNrValidSamples, this->origin(),
-                     this->num_elements(), heapAllocator, 1)
-    {
-    }
 
 
     CorrelatorStep::Factories::Factories(const Parset &ps, size_t nrSubbandsPerSubbandProc) :
@@ -95,7 +81,7 @@ namespace LOFAR
 
       // First transform the flags to channel flags: taking in account 
       // reduced resolution in time and the size of the filter
-      convertFlagsToChannelFlags(parset, inputFlags, flagsPerChannel);
+      SubbandProc::Flagger::convertFlagsToChannelFlags(parset, inputFlags, flagsPerChannel);
 
       // Calculate the number of flags per baseline and assign to
       // output object.
@@ -313,14 +299,14 @@ namespace LOFAR
     }
 
 
-    void CorrelatorStep::readOutput(CorrelatedData &output)
+    void CorrelatorStep::readOutput(SubbandProcOutputData &output)
     {
       // Read data back from the kernel
-      queue.readBuffer(output, devE, outputCounter, false);
+      queue.readBuffer(output.correlatedData, devE, outputCounter, false);
     }
 
 
-    void CorrelatorStep::processCPU(const SubbandProcInputData &input, CorrelatedData &output)
+    void CorrelatorStep::processCPU(const SubbandProcInputData &input, SubbandProcOutputData &output)
     {
       // Propagate the flags.
       MultiDimArray<LOFAR::SparseSet<unsigned>, 1> flags = input.inputFlags;
@@ -332,30 +318,30 @@ namespace LOFAR
           flags, input.blockID.subbandProcSubbandIdx);
       }
 
-      Flagger::propagateFlags(ps, flags, output);
+      Flagger::propagateFlags(ps, flags, output.correlatedData);
     }
 
 
-    bool CorrelatorStep::integrate(CorrelatedData &output)
+    bool CorrelatorStep::integrate(SubbandProcOutputData &output)
     {
       const size_t idx = output.blockID.subbandProcSubbandIdx;
       const size_t nblock = ps.settings.correlator.nrBlocksPerIntegration;
       
       // We don't want to copy the data if we don't need to integrate.
       if (nblock == 1) {
-        output.setSequenceNumber(output.blockID.block);
+        output.correlatedData.setSequenceNumber(output.blockID.block);
         return true;
       }
 
       integratedData[idx].first++;
 
       if (integratedData[idx].first < nblock) {
-        *integratedData[idx].second += output;
+        *integratedData[idx].second += output.correlatedData;
         return false;
       }
       else {
-        output += *integratedData[idx].second;
-        output.setSequenceNumber(output.blockID.block / nblock);
+        output.correlatedData += *integratedData[idx].second;
+        output.correlatedData.setSequenceNumber(output.blockID.block / nblock);
         integratedData[idx].first = 0;
         integratedData[idx].second->reset();
         return true;
@@ -363,7 +349,7 @@ namespace LOFAR
     }
 
 
-    bool CorrelatorStep::postprocessSubband(CorrelatedData &output)
+    bool CorrelatorStep::postprocessSubband(SubbandProcOutputData &output)
     {
       if (!integrate(output)) {
         // Not yet done constructing output block 
@@ -372,7 +358,7 @@ namespace LOFAR
 
       // The flags are already copied to the correct location
       // now the flagged amount should be applied to the visibilities
-      Flagger::applyWeights(ps, output);  
+      Flagger::applyWeights(ps, output.correlatedData);  
 
       return true;
     }

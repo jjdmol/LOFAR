@@ -32,7 +32,6 @@
 #include <CoInterface/Parset.h>
 
 #include "SubbandProc.h"
-#include "BeamFormerSubbandProc.h"
 
 #include "BeamFormerIncoherentStep.h"
 
@@ -171,7 +170,7 @@ namespace LOFAR
     }
 
 
-    void BeamFormerIncoherentStep::readOutput(BeamFormedData &output)
+    void BeamFormerIncoherentStep::readOutput(SubbandProcOutputData &output)
     {
       if (nrIncoherent(output.blockID) == 0)
         return;

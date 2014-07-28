@@ -32,7 +32,8 @@
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <CoInterface/BlockID.h>
 
-#include "SubbandProc.h"
+#include "SubbandProcInputData.h"
+#include "SubbandProcOutputData.h"
 #include "ProcessStep.h"
 
 #include <GPUProc/KernelFactory.h>

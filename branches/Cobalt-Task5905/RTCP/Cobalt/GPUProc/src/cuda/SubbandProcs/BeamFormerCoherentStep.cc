@@ -32,8 +32,6 @@
 #include <CoInterface/Parset.h>
 
 #include "SubbandProc.h"
-
-#include "BeamFormerSubbandProc.h"
 #include "BeamFormerCoherentStep.h"
 
 #include <iomanip>
@@ -184,7 +182,7 @@ void BeamFormerCoherentStep::process(const SubbandProcInputData &input)
 }
 
 
-void BeamFormerCoherentStep::readOutput(BeamFormedData &output)
+void BeamFormerCoherentStep::readOutput(SubbandProcOutputData &output)
 {
   if (nrCoherent(output.blockID) == 0)
     return;

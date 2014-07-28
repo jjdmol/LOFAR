@@ -23,7 +23,12 @@
 
 #include <string>
 #include <map>
+#include <complex>
+#include <memory>
 
+#include <boost/shared_ptr.hpp>
+#include <Common/LofarLogger.h>
+#include <CoInterface/CorrelatedData.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/Pool.h>
 #include <CoInterface/SmartPtr.h>
@@ -34,6 +39,13 @@
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 
+#include "SubbandProcInputData.h"
+#include "SubbandProcOutputData.h"
+#include "CorrelatorStep.h"
+#include "BeamFormerPreprocessingStep.h"
+#include "BeamFormerCoherentStep.h"
+#include "BeamFormerIncoherentStep.h"
+
 // \file
 // TODO: Update documentation
 
@@ -41,101 +53,8 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    //   Collect all inputData for the correlatorSubbandProc item:
-    //    \arg inputsamples
-    //    \arg delays
-    //    \arg phaseOffSets
-    //    \arg flags
-    // It also contains a read function parsing all this data from an input stream.   
-    class SubbandProcInputData
-    {
-    public:
-      // Which block this InputData represents
-      struct BlockID blockID;
-
-      // Delays are computed and applied in double precision,
-      // otherwise the to be computed phase shifts become too inprecise.
-
-      //!< Whole sample delays at the start of the workitem      
-      MultiDimArrayHostBuffer<double, 3> delaysAtBegin;
-
-      //!< Whole sample delays at the end of the workitem      
-      MultiDimArrayHostBuffer<double, 3> delaysAfterEnd;
-
-      //!< Remainder of delays
-      MultiDimArrayHostBuffer<double, 2> phase0s;
-
-      //!< Delays for TABs (aka pencil beams) after station beam correction
-      MultiDimArrayHostBuffer<double, 3> tabDelays;
-
-      // inputdata with flagged data set to zero
-      MultiDimArrayHostBuffer<char, 4> inputSamples;
-
-      // The input flags
-      MultiDimArray<SparseSet<unsigned>, 1> inputFlags;
-
-      // CPU-side holder for the Meta Data
-      std::vector<SubbandMetaData> metaData; // [station]
-
-      // Create the inputData object we need shared host/device memory on the
-      // supplied devicequeue
-      SubbandProcInputData(size_t n_beams, size_t n_stations, 
-                           size_t n_polarizations, size_t n_coherent_tabs, 
-                           size_t n_samples, size_t bytes_per_complex_sample,
-                           gpu::Context &context,
-                           unsigned int hostBufferFlags = 0)
-        :
-        delaysAtBegin(boost::extents[n_beams][n_stations][n_polarizations],
-                       context, hostBufferFlags),
-        delaysAfterEnd(boost::extents[n_beams][n_stations][n_polarizations],
-                       context, hostBufferFlags),
-        phase0s(boost::extents[n_stations][n_polarizations],
-                       context, hostBufferFlags),
-        tabDelays(boost::extents[n_beams][n_stations][n_coherent_tabs],
-                       context, hostBufferFlags),
-        inputSamples(boost::extents[n_stations][n_samples][n_polarizations][bytes_per_complex_sample],
-                       context, hostBufferFlags), // TODO: The size of the buffer is NOT validated
-        inputFlags(boost::extents[n_stations]),
-        metaData(n_stations)
-      {
-      }
-
-      // Short-hand constructor pulling all relevant values from a Parset
-      SubbandProcInputData(const Parset &ps,
-                           gpu::Context &context,
-                           unsigned int hostBufferFlags = 0)
-        :
-        delaysAtBegin(boost::extents[ps.settings.SAPs.size()][ps.settings.antennaFields.size()][NR_POLARIZATIONS],
-                       context, hostBufferFlags),
-        delaysAfterEnd(boost::extents[ps.settings.SAPs.size()][ps.settings.antennaFields.size()][NR_POLARIZATIONS],
-                       context, hostBufferFlags),
-        phase0s(boost::extents[ps.settings.antennaFields.size()][NR_POLARIZATIONS],
-                       context, hostBufferFlags),
-        tabDelays(boost::extents[ps.settings.SAPs.size()][ps.settings.antennaFields.size()][ps.settings.beamFormer.maxNrCoherentTABsPerSAP()],
-                       context, hostBufferFlags),
-        inputSamples(boost::extents[ps.settings.antennaFields.size()][ps.settings.blockSize][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()],
-                       context, hostBufferFlags), // TODO: The size of the buffer is NOT validated
-        inputFlags(boost::extents[ps.settings.antennaFields.size()]),
-        metaData(ps.settings.antennaFields.size())
-      {
-      }
-
-      // process the given meta data 
-      void applyMetaData(const Parset &ps, unsigned station,
-                         unsigned SAP, const SubbandMetaData &metaData);
-
-      // set all flagged inputSamples to zero.
-      void flagInputSamples(unsigned station, const SubbandMetaData& metaData);
-    };
-
-    class SubbandProcOutputData
-    {
-    public:
-      struct BlockID blockID;
-
-      // Need a virtual destructor to make type polymorphic
-      virtual ~SubbandProcOutputData() {}
-    };
+    //# Forward declarations
+    struct BeamFormerFactories;
 
     /*
      * The SubbandProc does the following transformation:
@@ -179,15 +98,15 @@ namespace LOFAR
     class SubbandProc {
     public:
       SubbandProc(const Parset &ps, gpu::Context &context,
+                  BeamFormerFactories &factories,
                   size_t nrSubbandsPerSubbandProc = 1);
-      virtual ~SubbandProc();
 
       class Flagger
       {
       public:
         // 1.1 Convert the flags per station to channel flags, change time scale
         // if nchannel > 1
-        static void convertFlagsToChannelFlags(Parset const &parset,
+        static void convertFlagsToChannelFlags(Parset const &ps,
           MultiDimArray<SparseSet<unsigned>, 1> const &inputFlags,
           MultiDimArray<SparseSet<unsigned>, 2> &flagsPerChannel);
       };
@@ -204,16 +123,37 @@ namespace LOFAR
       Pool<SubbandProcOutputData> outputPool;
 
       // Correlate the data found in the input data buffer
-      virtual void processSubband(SubbandProcInputData &input, SubbandProcOutputData &output) = 0;
+      void processSubband(SubbandProcInputData &input, SubbandProcOutputData &output);
 
       // Do post processing on the CPU.
-      virtual void postprocessSubband(SubbandProcOutputData &output) = 0;
+      void postprocessSubband(SubbandProcOutputData &output);
 
     protected:
       const Parset &ps;
       const size_t nrSubbandsPerSubbandProc;
 
       gpu::Stream queue;
+
+      // The previously processed SAP/block, or -1 if nothing has been
+      // processed yet. Used in order to determine if new delays have
+      // to be uploaded.
+      ssize_t prevBlock;
+      signed int prevSAP;
+
+      // @{
+      // Device memory buffers. These buffers are used interleaved. For details,
+      // please refer to the document bf-pipeline.txt in the directory
+      // GPUProc/doc.
+      boost::shared_ptr<gpu::DeviceMemory> devA;
+      boost::shared_ptr<gpu::DeviceMemory> devB;
+      // @}
+
+      PerformanceCounter inputCounter;
+
+      std::auto_ptr<CorrelatorStep> correlatorStep;
+      std::auto_ptr<BeamFormerPreprocessingStep> preprocessingStep;
+      std::auto_ptr<BeamFormerCoherentStep> coherentStep;
+      std::auto_ptr<BeamFormerIncoherentStep> incoherentStep;
 
       // Returns the number of output elements to create to get a smooth
       // running pipeline.

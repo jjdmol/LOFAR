@@ -29,7 +29,7 @@
 #include <CoInterface/Parset.h>
 #include <CoInterface/fpequals.h>
 #include <GPUProc/gpu_utils.h>
-#include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
+#include <GPUProc/SubbandProcs/SubbandProc.h>
 #include <GPUProc/SubbandProcs/BeamFormerFactories.h>
 
 using namespace std;
@@ -113,7 +113,7 @@ int main() {
   // transform the data order).
 
   BeamFormerFactories factories(ps);
-  BeamFormerSubbandProc bwq(ps, ctx, factories);
+  SubbandProc bwq(ps, ctx, factories);
 
   SubbandProcInputData in(ps, ctx);
 
@@ -162,7 +162,7 @@ int main() {
   for (size_t i = 0; i < in.tabDelays.num_elements(); i++)
     in.tabDelays.get<float>()[i] = 0.0f;
 
-  BeamFormedData out(ps, ctx);
+  SubbandProcOutputData out(ps, ctx);
 
   for (size_t i = 0; i < out.coherentData.num_elements(); i++)
     out.coherentData.get<float>()[i] = 42.0f;

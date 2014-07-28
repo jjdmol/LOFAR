@@ -28,6 +28,8 @@
 
 #include "Pipeline.h"
 
+#include <MACIO/RTmetadata.h>
+
 #include <GPUProc/SubbandProcs/BeamFormerFactories.h>
 
 namespace LOFAR

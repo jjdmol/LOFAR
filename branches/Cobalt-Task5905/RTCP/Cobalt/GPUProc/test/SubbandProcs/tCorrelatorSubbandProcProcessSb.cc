@@ -26,7 +26,8 @@
 #include <CoInterface/fpequals.h>
 #include <CoInterface/Parset.h>
 #include <GPUProc/gpu_utils.h>
-#include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
+#include <GPUProc/SubbandProcs/BeamFormerFactories.h>
+#include <GPUProc/SubbandProcs/SubbandProc.h>
 
 using namespace std;
 using namespace LOFAR;
@@ -83,13 +84,13 @@ int main() {
   // transform the data order).
 
   BeamFormerFactories factories(ps, 1);
-  BeamFormerSubbandProc cwq(ps, ctx, factories);
+  SubbandProc cwq(ps, ctx, factories);
 
   SubbandProcInputData in(
     nrBeams, nrStations, nrPolarisations, maxNrTABsPerSAP,
     nrSamplesPerSubband, nrBytesPerComplexSample, ctx);
 
-  BeamFormedData out(ps, ctx);
+  SubbandProcOutputData out(ps, ctx);
 
   LOG_INFO_STR(
     "\nInput info:" <<

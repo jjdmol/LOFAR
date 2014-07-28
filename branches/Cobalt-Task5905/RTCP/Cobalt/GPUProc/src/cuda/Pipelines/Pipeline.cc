@@ -39,7 +39,6 @@
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/global_defines.h>
 #include <GPUProc/Kernels/Kernel.h>
-#include <GPUProc/SubbandProcs/SubbandProc.h>
 #include <InputProc/SampleType.h>
 #include <InputProc/RSPTimeStamp.h>
 

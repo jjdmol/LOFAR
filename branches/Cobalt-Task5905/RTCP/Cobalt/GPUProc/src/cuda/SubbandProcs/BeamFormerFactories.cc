@@ -22,7 +22,6 @@
 #include <lofar_config.h>
 
 #include "BeamFormerFactories.h"
-#include "BeamFormerSubbandProc.h"
 
 namespace LOFAR
 {

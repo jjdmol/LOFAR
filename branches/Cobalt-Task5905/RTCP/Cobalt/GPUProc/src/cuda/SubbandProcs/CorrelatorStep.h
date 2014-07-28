@@ -25,8 +25,8 @@
 #include <vector>
 #include <utility> // for std::pair
 
-#include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
+#include <CoInterface/SmartPtr.h>
 
 #include <boost/shared_ptr.hpp>
 #include <GPUProc/gpu_wrapper.h>
@@ -35,7 +35,8 @@
 #include <CoInterface/BlockID.h>
 #include <CoInterface/CorrelatedData.h>
 
-#include "SubbandProc.h"
+#include "SubbandProcInputData.h"
+#include "SubbandProcOutputData.h"
 #include "ProcessStep.h"
 
 #include <GPUProc/PerformanceCounter.h>
@@ -53,17 +54,6 @@ namespace LOFAR
     class CorrelatorStep: public ProcessStep
     {
     public:
-      struct CorrelatedData:
-        public MultiDimArrayHostBuffer<fcomplex,4>,
-        public LOFAR::Cobalt::CorrelatedData,
-        public SubbandProcOutputData
-      {
-        CorrelatedData(unsigned nrStations, 
-                       unsigned nrChannels,
-                       unsigned maxNrValidSamples,
-                       gpu::Context &context);
-      };
-
       struct Factories {
         Factories(const Parset &ps, size_t nrSubbandsPerSubbandProc);
 
@@ -89,17 +79,17 @@ namespace LOFAR
       void writeInput(const SubbandProcInputData &input);
 
       void process(const SubbandProcInputData &input);
-      void processCPU(const SubbandProcInputData &input, CorrelatedData &output);
+      void processCPU(const SubbandProcInputData &input, SubbandProcOutputData &output);
 
-      void readOutput(CorrelatedData &output);
+      void readOutput(SubbandProcOutputData &output);
 
-      bool postprocessSubband(CorrelatedData &output);
+      bool postprocessSubband(SubbandProcOutputData &output);
 
       // Collection of functions to tranfer the input flags to the output.
       // \c propagateFlags can be called parallel to the kernels.
       // After the data is copied from the the shared buffer
       // \c applyWeights can be used to weight the visibilities
-      class Flagger: public SubbandProc::Flagger
+      class Flagger
       {
       public:
         // 1. Convert input flags to channel flags, calculate the amount flagged
@@ -169,7 +159,7 @@ namespace LOFAR
       std::vector< std::pair< size_t, SmartPtr<LOFAR::Cobalt::CorrelatedData> > >
       integratedData;
 
-      bool integrate(CorrelatedData &output);
+      bool integrate(SubbandProcOutputData &output);
     };
   }
 }

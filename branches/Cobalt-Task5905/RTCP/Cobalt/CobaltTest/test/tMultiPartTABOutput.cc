@@ -30,7 +30,7 @@
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
 #include <GPUProc/Pipelines/BeamFormerPipeline.h>
-#include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
+#include <GPUProc/cuda/SubbandProcs/SubbandProcOutputData.h>
 #include <GPUProc/Station/StationInput.h>
 #include <GPUProc/Storage/StorageProcesses.h>
 
@@ -44,8 +44,7 @@ using boost::str;
 SmartPtr<SubbandProcOutputData> getTestSbIncohData(const Parset& ps, gpu::Context& ctx,
                                                    unsigned blockIdx, unsigned sbIdx)
 {
-  // BeamFormedData is a sub-class of SubbandProcOutputData.
-  BeamFormedData *bfData = new BeamFormedData(ps, ctx);
+  SubbandProcOutputData *bfData = new SubbandProcOutputData(ps, ctx);
 
   bfData->blockID.block = blockIdx;
   bfData->blockID.globalSubbandIdx = sbIdx;
