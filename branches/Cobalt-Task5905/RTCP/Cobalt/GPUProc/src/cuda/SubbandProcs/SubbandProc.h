@@ -24,7 +24,6 @@
 #include <string>
 #include <map>
 
-#include <Common/Timer.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/Pool.h>
 #include <CoInterface/SmartPtr.h>
@@ -183,9 +182,6 @@ namespace LOFAR
                   size_t nrSubbandsPerSubbandProc = 1);
       virtual ~SubbandProc();
 
-      // TODO: clean up access by Pipeline class and move under protected
-      std::map<std::string, SmartPtr<NSTimer> > timers;
-
       class Flagger
       {
       public:
@@ -221,8 +217,6 @@ namespace LOFAR
       const size_t nrSubbandsPerSubbandProc;
 
       gpu::Stream queue;
-
-      void addTimer(const std::string &name);
 
       // Returns the number of output elements to create to get a smooth
       // running pipeline.

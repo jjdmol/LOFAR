@@ -53,12 +53,6 @@ namespace LOFAR
     {
     }
 
-    void SubbandProc::addTimer(const std::string &name)
-    {
-      timers[name] = new NSTimer(name, false, false);
-    }
-
-
     size_t SubbandProc::nrOutputElements() const
     {
       /*
