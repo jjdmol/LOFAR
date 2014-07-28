@@ -24,6 +24,8 @@
 
 #include <Common/LofarLogger.h>
 
+#include <CoInterface/Align.h>
+
 #include <GPUProc/global_defines.h>
 
 namespace LOFAR
@@ -136,23 +138,6 @@ namespace LOFAR
         size_t size = stride * (it->end - it->begin) * sizeof_sample;
         memset(offset, 0, size);
       }
-    }
-
-
-    // Get the log2 of the supplied number
-    // TODO: move this into a util/helper function/file (just like CorrelatorSubbandProc.cc::baseline() and Align.h::powerOfTwo(),roundUpToPowerOfTwo())
-    unsigned SubbandProc::Flagger::log2(unsigned n)
-    {
-      ASSERT(powerOfTwo(n));
-
-      unsigned log;
-      for (log = 0; 1U << log != n; log ++)
-        {;} // do nothing, the creation of the log is a side effect of the for loop
-
-      //Alternative solution snipped:
-      //int targetlevel = 0;
-      //while (index >>= 1) ++targetlevel; 
-      return log;
     }
 
     void SubbandProc::Flagger::convertFlagsToChannelFlags(Parset const &parset,

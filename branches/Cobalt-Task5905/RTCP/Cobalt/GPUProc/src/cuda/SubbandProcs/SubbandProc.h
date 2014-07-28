@@ -190,9 +190,6 @@ namespace LOFAR
         static void convertFlagsToChannelFlags(Parset const &parset,
           MultiDimArray<SparseSet<unsigned>, 1> const &inputFlags,
           MultiDimArray<SparseSet<unsigned>, 2> &flagsPerChannel);
-
-        // 1.3 Get the LOG2 of the input. Used to speed up devisions by 2
-        static unsigned log2(unsigned n);
       };
 
       // A pool of input data, to allow items to be filled and

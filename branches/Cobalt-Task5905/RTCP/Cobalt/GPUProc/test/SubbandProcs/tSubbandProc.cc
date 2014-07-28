@@ -32,17 +32,6 @@
 
 using namespace LOFAR::Cobalt;
 
-
-TEST(log2)
-{
-  CHECK_EQUAL(6u, SubbandProc::Flagger::log2(64));
-  CHECK_EQUAL(7u, SubbandProc::Flagger::log2(128));
-  CHECK_EQUAL(0u, SubbandProc::Flagger::log2(1));
-
-  //cant take 2log of zero: raise exception
-  //CHECK_THROW(get2LogOfNrChannels(0), LOFAR::AssertError);
-}
-
 TEST(convertFlagsToChannelFlags)
 {
   // Create a parset with the needed parameters
