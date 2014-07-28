@@ -100,7 +100,7 @@ namespace LOFAR
 
     Pipeline::~Pipeline()
     {
-      if (ps.realTime()) {
+      if (ps.settings.realTime) {
         // Ensure all output is stopped, even if we didn't start processing.
         outputThreads.killAll();
       }
@@ -168,9 +168,7 @@ namespace LOFAR
             SubbandProc &queue = *workQueues[i];
 
             // run the queue
-            //queue.timers["CPU - total"]->start();
             processSubbands(queue);
-            //queue.timers["CPU - total"]->stop();
 
             // Signal end of output
             queue.outputPool.filled.append(NULL);
@@ -249,7 +247,7 @@ namespace LOFAR
 
 #ifdef DO_PROCESSING
         MultiDimArray<SampleT,3> data(
-          boost::extents[ps.nrStations()][subbandIndices.size()][ps.nrSamplesPerSubband()],
+          boost::extents[ps.nrStations()][subbandIndices.size()][ps.settings.blockSize],
           (SampleT*)input->data.get(), false);
 
         MultiDimArray<struct MPIProtocol::MetaData,2> metaData(
@@ -280,7 +278,7 @@ namespace LOFAR
 #if 1
             memcpy(&subbandData->inputSamples[stat][0][0][0],
                    &data[stat][subbandIdx][0],
-                   ps.nrSamplesPerSubband() * sizeof(SampleT));
+                   ps.settings.blockSize * sizeof(SampleT));
 #endif
             // Copy the metadata
             subbandData->metaData[stat] = metaData[stat][subbandIdx];
@@ -301,7 +299,7 @@ namespace LOFAR
         stringstream cleanStr; // antenna fields with  0% flags
 
         for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
-          const double flagPerc = 100.0 * nrFlaggedSamples[stat] / subbandIndices.size() / ps.nrSamplesPerSubband();
+          const double flagPerc = 100.0 * nrFlaggedSamples[stat] / subbandIndices.size() / ps.settings.blockSize;
 
           if (flagPerc == 0.0)
             cleanStr << str(boost::format("%s, ") % ps.settings.antennaFields[stat].name);
@@ -323,10 +321,6 @@ namespace LOFAR
         workQueues[i]->inputPool.filled.append(NULL);
       }
     }
-
-    template void Pipeline::transposeInput< SampleType<i16complex> >();
-    template void Pipeline::transposeInput< SampleType<i8complex> >();
-    template void Pipeline::transposeInput< SampleType<i4complex> >();
 
     void Pipeline::transposeInput()
     {
