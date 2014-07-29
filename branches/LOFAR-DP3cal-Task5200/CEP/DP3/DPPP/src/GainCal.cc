@@ -914,11 +914,11 @@ namespace LOFAR {
       // Apply the beam values of both stations to the predicted data.
       dcomplex tmp[4];
       for (size_t bl=0; bl<nBl; ++bl) {
+        const StationResponse::matrix22c_t *left =
+            &(beamvalues[nchan * info().getAnt1()[bl]]);
+        const StationResponse::matrix22c_t *right =
+            &(beamvalues[nchan * info().getAnt2()[bl]]);
         for (size_t ch=0; ch<nchan; ++ch) {
-          const StationResponse::matrix22c_t *left =
-              &(beamvalues[nchan * info().getAnt1()[bl] + ch]);
-          const StationResponse::matrix22c_t *right =
-              &(beamvalues[nchan * info().getAnt2()[bl] + ch]);
 
           dcomplex l[] = {left[ch][0][0], left[ch][0][1],
                           left[ch][1][0], left[ch][1][1]};
