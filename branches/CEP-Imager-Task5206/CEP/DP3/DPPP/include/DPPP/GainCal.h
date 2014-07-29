@@ -181,6 +181,7 @@ namespace {
       bool             itsUseModelColumn;
       string           itsParmDBName;
       bool             itsApplyBeam;
+      bool             itsUseChannelFreq;
       shared_ptr<BBS::ParmDB> itsParmDB;
       Position         itsPhaseRef;
 
@@ -188,6 +189,8 @@ namespace {
       uint             itsTStep;
 
       uint             itsDebugLevel;
+      bool             itsDetectStalling;
+      string           itsStefcalVariant;
 
       vector<Baseline> itsBaselines;
       vector<ThreadPrivateStorage> itsThreadStorage;

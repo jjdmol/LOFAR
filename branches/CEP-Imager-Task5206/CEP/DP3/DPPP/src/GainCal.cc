@@ -70,9 +70,12 @@ namespace LOFAR {
         itsUseModelColumn(parset.getBool (prefix + "usemodelcolumn", false)),
         itsParmDBName    (parset.getString (prefix + "parmdb")),
         itsApplyBeam     (parset.getBool (prefix + "usebeammodel", false)),
+        itsUseChannelFreq(parset.getBool (prefix + "usechannelfreq", true)),
         itsMode          (parset.getString (prefix + "caltype")),
         itsTStep         (0),
         itsDebugLevel    (parset.getInt (prefix + "debuglevel", 0)),
+        itsDetectStalling (parset.getBool (prefix + "detectstalling", true)),
+        itsStefcalVariant(parset.getString (prefix + "stefcalvariant", "1c")),
         itsBaselines     (),
         itsThreadStorage (),
         itsMaxIter       (parset.getInt (prefix + "maxiter", 50)),
@@ -133,6 +136,10 @@ namespace LOFAR {
       const size_t nSt = info().antennaUsed().size();
       const size_t nCh = info().nchan();
 
+      if (itsSolInt==0) {
+        itsSolInt=info().ntime();
+      }
+
       // initialize storage
       itsVis.resize (IPosition(6,nSt,2,nCh,itsSolInt,2,nSt));
       itsMVis.resize(IPosition(6,nSt,2,nCh,itsSolInt,2,nSt));
@@ -183,6 +190,8 @@ namespace LOFAR {
       os << "  tolerance:      " << itsTolerance << endl;
 //      os << "  propagate sols: " << boolalpha << itsPropagateSolutions << endl;
       os << "  mode:           " << itsMode << endl;
+      os << "  stefcalvariant: " << itsStefcalVariant <<endl;
+      os << "  detect stalling:" << boolalpha << itsDetectStalling << endl;
     }
 
     void GainCal::showTimings (std::ostream& os, double duration) const
@@ -296,6 +305,7 @@ namespace LOFAR {
       }
 
       if (itsOperation=="solve") {
+        itsTimerFill.start();
         if (itsNTimes==0) {
           itsDataPerAntenna=0;
           itsVis=0;
@@ -308,6 +318,7 @@ namespace LOFAR {
         } else {
           fillMatrices(&storage.model[0],data,weight,flag);
         }
+        itsTimerFill.stop();
 
         if (itsNTimes==itsSolInt-1) {
           stefcal(itsMode,itsSolInt);
@@ -609,6 +620,13 @@ namespace LOFAR {
             iS.g(st1,1) = invdet * ( w(3) * t(1) - w(1) * t(3) );
             iS.g(st1,2) = invdet * ( w(0) * t(2) - w(2) * t(0) );
             iS.g(st1,3) = invdet * ( w(0) * t(3) - w(2) * t(1) );
+
+            if (itsStefcalVariant=="2a") {
+              iS.h(st1,0)=conj(iS.g(st1,0));
+              iS.h(st1,1)=conj(iS.g(st1,1));
+              iS.h(st1,2)=conj(iS.g(st1,2));
+              iS.h(st1,3)=conj(iS.g(st1,3));
+            }
           }
         } else {// ======================== Nonpolarized =======================
           for (uint st=0;st<nUn;++st) {
@@ -643,9 +661,18 @@ namespace LOFAR {
             if (itsMode=="phaseonly" || itsMode=="scalarphase") {
               iS.g(st1,0)/=abs(iS.g(st1,0));
             }
+
+            if (itsStefcalVariant=="2a") {
+              iS.h(st1,0)=conj(iS.g(st1,0));
+            } else if (itsStefcalVariant=="2b") {
+              iS.h(st1,0)=omega*iS.h(st1,0)+(1-omega)*conj(iS.g(st1,0));
+            }
           }
-        }
-        if (iter % 2 == 1) {
+          //if (itsStefcalVariant!="1c") {
+          //  dgs.push_back(dg);
+          //}
+        } // ============================== Relaxation   =======================
+        if (iter % 2 == 1/* && itsStefcalVariant=="1c"*/) {
           if (itsDebugLevel>7) {
             cout<<"iter: "<<iter<<endl;
           }
@@ -658,7 +685,7 @@ namespace LOFAR {
             nhit=0;
           }
 
-          if (nhit>=maxhit) {
+          if (nhit>=maxhit && itsDetectStalling) {
             if (itsDebugLevel>3) {
               cout<<"Detected stall"<<endl;
             }
@@ -759,7 +786,7 @@ namespace LOFAR {
         }
       }
 
-      if (itsDebugLevel>1) {
+      if ((itsDebugLevel>1 && dg>itsTolerance) || itsDebugLevel>2) {
         cout<<"t: "<<itsTStep<<", iter:"<<iter<<", dg=[";
         if (dgs.size()>0) {
           cout<<dgs[0];
@@ -879,18 +906,32 @@ namespace LOFAR {
 
 //#pragma omp parallel for
       for (size_t st=0; st<nSt; ++st) {
+        if (itsUseChannelFreq) {
+        for (size_t ch=0; ch<nchan; ++ch) {
+          itsAntBeamInfo[st]->response (nchan, time, chanFreqs.cbegin(),
+                                        srcdir, info().refFreq(), refdir,
+                                        tiledir, &(beamvalues[nchan*st+ch]));
+        }
+        } else {
         itsAntBeamInfo[st]->response (nchan, time, chanFreqs.cbegin(),
                                       srcdir, info().refFreq(), refdir, tiledir,
                                       &(beamvalues[nchan*st]));
+        }
       }
       // Apply the beam values of both stations to the predicted data.
       dcomplex tmp[4];
       for (size_t bl=0; bl<nBl; ++bl) {
-        const StationResponse::matrix22c_t* left =
-          &(beamvalues[nchan * info().getAnt1()[bl]]);
-        const StationResponse::matrix22c_t* right =
-          &(beamvalues[nchan * info().getAnt2()[bl]]);
+        const StationResponse::matrix22c_t *left, *right;
+        if (!itsUseChannelFreq) {
+          left = &(beamvalues[nchan * info().getAnt1()[bl]]);
+          right= &(beamvalues[nchan * info().getAnt2()[bl]]);
+        }
         for (size_t ch=0; ch<nchan; ++ch) {
+          if (itsUseChannelFreq) {
+            left = &(beamvalues[nchan * info().getAnt1()[bl] + ch]);
+            right= &(beamvalues[nchan * info().getAnt2()[bl] + ch]);
+          }
+
           dcomplex l[] = {left[ch][0][0], left[ch][0][1],
                           left[ch][1][0], left[ch][1][1]};
           // Form transposed conjugate of right.
