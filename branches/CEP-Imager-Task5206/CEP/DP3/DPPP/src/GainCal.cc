@@ -145,11 +145,14 @@ namespace LOFAR {
       itsMVis.resize(IPosition(6,nSt,2,nCh,itsSolInt,2,nSt));
  
       const size_t nThread=OpenMP::maxThreads();
-      itsThreadStorage.resize(nThread);
-      for(vector<ThreadPrivateStorage>::iterator it = itsThreadStorage.begin(),
-        end = itsThreadStorage.end(); it != end; ++it)
-      {
-        initThreadPrivateStorage(*it, nDr, nSt, nBl, nCh, nCh);
+
+      if (!itsUseModelColumn) {
+        itsThreadStorage.resize(nThread);
+        for(vector<ThreadPrivateStorage>::iterator it = itsThreadStorage.begin(),
+            end = itsThreadStorage.end(); it != end; ++it)
+        {
+          initThreadPrivateStorage(*it, nDr, nSt, nBl, nCh, nCh);
+        }
       }
 
       itsSols.reserve(info().ntime());
@@ -162,7 +165,10 @@ namespace LOFAR {
       for (int ant=0, nAnts=info().antennaUsed().size(); ant<nAnts; ++ant) {
         itsAntennaUsedNames[ant]=info().antennaNames()[info().antennaUsed()[ant]];
       }
-      itsInput->fillBeamInfo (itsAntBeamInfo, itsAntennaUsedNames);
+
+      if (!itsUseModelColumn) {
+        itsInput->fillBeamInfo (itsAntBeamInfo, itsAntennaUsedNames);
+      }
     }
 
     StationResponse::vector3r_t GainCal::dir2Itrf (const MDirection& dir,
