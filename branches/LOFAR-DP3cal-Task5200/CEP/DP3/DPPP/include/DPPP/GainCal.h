@@ -188,6 +188,8 @@ namespace {
       uint             itsTStep;
 
       uint             itsDebugLevel;
+      bool             itsDetectStalling;
+      string           itsStefcalVariant;
 
       vector<Baseline> itsBaselines;
       vector<ThreadPrivateStorage> itsThreadStorage;

@@ -73,6 +73,8 @@ namespace LOFAR {
         itsMode          (parset.getString (prefix + "caltype")),
         itsTStep         (0),
         itsDebugLevel    (parset.getInt (prefix + "debuglevel", 0)),
+        itsDetectStalling (parset.getBool (prefix + "detectstalling", true)),
+        itsStefcalVariant(parset.getString (prefix + "stefcalvariant", "1c")),
         itsBaselines     (),
         itsThreadStorage (),
         itsMaxIter       (parset.getInt (prefix + "maxiter", 50)),
@@ -133,6 +135,10 @@ namespace LOFAR {
       const size_t nSt = info().antennaUsed().size();
       const size_t nCh = info().nchan();
 
+      if (itsSolInt==0) {
+        itsSolInt=info().ntime();
+      }
+
       // initialize storage
       itsVis.resize (IPosition(6,nSt,2,nCh,itsSolInt,2,nSt));
       itsMVis.resize(IPosition(6,nSt,2,nCh,itsSolInt,2,nSt));
@@ -183,6 +189,8 @@ namespace LOFAR {
       os << "  tolerance:      " << itsTolerance << endl;
 //      os << "  propagate sols: " << boolalpha << itsPropagateSolutions << endl;
       os << "  mode:           " << itsMode << endl;
+      os << "  stefcalvariant: " << itsStefcalVariant <<endl;
+      os << "  detect stalling:" << boolalpha << itsDetectStalling << endl;
     }
 
     void GainCal::showTimings (std::ostream& os, double duration) const
@@ -609,6 +617,13 @@ namespace LOFAR {
             iS.g(st1,1) = invdet * ( w(3) * t(1) - w(1) * t(3) );
             iS.g(st1,2) = invdet * ( w(0) * t(2) - w(2) * t(0) );
             iS.g(st1,3) = invdet * ( w(0) * t(3) - w(2) * t(1) );
+
+            if (itsStefcalVariant=="2a") {
+              iS.h(st1,0)=conj(iS.g(st1,0));
+              iS.h(st1,1)=conj(iS.g(st1,1));
+              iS.h(st1,2)=conj(iS.g(st1,2));
+              iS.h(st1,3)=conj(iS.g(st1,3));
+            }
           }
         } else {// ======================== Nonpolarized =======================
           for (uint st=0;st<nUn;++st) {
@@ -643,9 +658,18 @@ namespace LOFAR {
             if (itsMode=="phaseonly" || itsMode=="scalarphase") {
               iS.g(st1,0)/=abs(iS.g(st1,0));
             }
+
+            if (itsStefcalVariant=="2a") {
+              iS.h(st1,0)=conj(iS.g(st1,0));
+            } else if (itsStefcalVariant=="2b") {
+              iS.h(st1,0)=omega*iS.h(st1,0)+(1-omega)*conj(iS.g(st1,0));
+            }
           }
-        }
-        if (iter % 2 == 1) {
+          //if (itsStefcalVariant!="1c") {
+          //  dgs.push_back(dg);
+          //}
+        } // ============================== Relaxation   =======================
+        if (iter % 2 == 1/* && itsStefcalVariant=="1c"*/) {
           if (itsDebugLevel>7) {
             cout<<"iter: "<<iter<<endl;
           }
@@ -658,7 +682,7 @@ namespace LOFAR {
             nhit=0;
           }
 
-          if (nhit>=maxhit) {
+          if (nhit>=maxhit && itsDetectStalling) {
             if (itsDebugLevel>3) {
               cout<<"Detected stall"<<endl;
             }
