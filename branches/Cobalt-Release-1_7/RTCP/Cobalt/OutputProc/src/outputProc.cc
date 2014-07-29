@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
 
   setIOpriority();
   setRTpriority();
-  lockInMemory();
+  lockInMemory(16 * 1024 * 1024 * 1024); // limit memory to 16 GB
 
   PortBroker::createInstance(storageBrokerPort(observationID));
 
