@@ -75,12 +75,12 @@ namespace LOFAR
         const std::vector<gpu::Device> &devices, Pool<struct MPIRecvData> &pool,
         RTmetadata &mdLogger, const std::string &mdKeyPrefix)
       :
-      workQueues(std::max(1UL, (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size())),
+      subbandProcs(std::max(1UL, (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size())),
       ps(ps),
       devices(devices),
       subbandIndices(subbandIndices),
       processingSubband0(std::find(subbandIndices.begin(), subbandIndices.end(), 0U) != subbandIndices.end()),
-      nrSubbandsPerSubbandProc(ceilDiv(subbandIndices.size(), workQueues.size())),
+      nrSubbandsPerSubbandProc(ceilDiv(subbandIndices.size(), subbandProcs.size())),
       itsMdLogger(mdLogger),
       itsMdKeyPrefix(mdKeyPrefix),
       mpiPool(pool),
@@ -138,13 +138,13 @@ namespace LOFAR
         /*
          * WORKQUEUE INPUTPOOL -> PROCESSPOOL
          *
-         * Perform pre-processing, one thread per workQueue.
+         * Perform pre-processing, one thread per subbandProc.
          */
 #       pragma omp section
         {
-#         pragma omp parallel for num_threads(workQueues.size())
-          for (size_t i = 0; i < workQueues.size(); ++i) {
-            SubbandProc &queue = *workQueues[i];
+#         pragma omp parallel for num_threads(subbandProcs.size())
+          for (size_t i = 0; i < subbandProcs.size(); ++i) {
+            SubbandProc &queue = *subbandProcs[i];
 
             // run the queue
             preprocessSubbands(queue);
@@ -157,14 +157,14 @@ namespace LOFAR
         /*
          * WORKQUEUE INPUTPOOL -> WORKQUEUE OUTPUTPOOL
          *
-         * Perform GPU processing, one thread per workQueue.
+         * Perform GPU processing, one thread per subbandProc.
          */
 #       pragma omp section
         {
-#         pragma omp parallel for num_threads(workQueues.size())
-          for (size_t i = 0; i < workQueues.size(); ++i) 
+#         pragma omp parallel for num_threads(subbandProcs.size())
+          for (size_t i = 0; i < subbandProcs.size(); ++i) 
           {
-            SubbandProc &queue = *workQueues[i];
+            SubbandProc &queue = *subbandProcs[i];
 
             // run the queue
             processSubbands(queue);
@@ -177,13 +177,13 @@ namespace LOFAR
         /*
          * WORKQUEUE OUTPUTPOOL -> WRITEPOOL
          *
-         * Perform post-processing, one thread per workQueue.
+         * Perform post-processing, one thread per subbandProc.
          */
 #       pragma omp section
         {
-#         pragma omp parallel for num_threads(workQueues.size())
-          for (size_t i = 0; i < workQueues.size(); ++i) {
-            SubbandProc &queue = *workQueues[i];
+#         pragma omp parallel for num_threads(subbandProcs.size())
+          for (size_t i = 0; i < subbandProcs.size(); ++i) {
+            SubbandProc &queue = *subbandProcs[i];
 
             // run the queue
             postprocessSubbands(queue);
@@ -218,7 +218,7 @@ namespace LOFAR
         {
 #         pragma omp parallel for num_threads(writePool.size())
           for (size_t i = 0; i < writePool.size(); ++i) {
-            writeOutput(subbandIndices[i], *writePool[i].queue, workQueues[i % workQueues.size()]->outputPool.free);
+            writeOutput(subbandIndices[i], *writePool[i].queue, subbandProcs[i % subbandProcs.size()]->outputPool.free);
           }
 
           // Signal end-of-output (needed by BeamFormerPipeline), to unlock
@@ -258,7 +258,7 @@ namespace LOFAR
 
         for (size_t subbandIdx = 0; subbandIdx < subbandIndices.size(); ++subbandIdx) {
           // Fetch an input object to store this subband.
-          SubbandProc &queue = *workQueues[subbandIdx % workQueues.size()];
+          SubbandProc &queue = *subbandProcs[subbandIdx % subbandProcs.size()];
 
           // Fetch an input object to fill from the selected queue.
           SmartPtr<SubbandProcInputData> subbandData = queue.inputPool.free.remove();
@@ -268,7 +268,7 @@ namespace LOFAR
           id.block                 = block;
           id.globalSubbandIdx      = subbandIndices[subbandIdx];
           id.localSubbandIdx       = subbandIdx;
-          id.subbandProcSubbandIdx = subbandIdx / workQueues.size();
+          id.subbandProcSubbandIdx = subbandIdx / subbandProcs.size();
           subbandData->blockID = id;
 
           copyTimer.start();
@@ -316,8 +316,8 @@ namespace LOFAR
       }
 
       // Signal end of input
-      for (size_t i = 0; i < workQueues.size(); ++i) {
-        workQueues[i]->inputPool.filled.append(NULL);
+      for (size_t i = 0; i < subbandProcs.size(); ++i) {
+        subbandProcs[i]->inputPool.filled.append(NULL);
       }
     }
 
@@ -338,14 +338,14 @@ namespace LOFAR
     }
 
 
-    void Pipeline::preprocessSubbands(SubbandProc &workQueue)
+    void Pipeline::preprocessSubbands(SubbandProc &subbandProc)
     {
       SmartPtr<SubbandProcInputData> input;
 
       NSTimer preprocessTimer("preprocess", true, true);
 
       // Keep fetching input objects until end-of-output
-      while ((input = workQueue.inputPool.filled.remove()) != NULL) {
+      while ((input = subbandProc.inputPool.filled.remove()) != NULL) {
         const struct BlockID &id = input->blockID;
 
         LOG_DEBUG_STR("[" << id << "] Pre processing start");
@@ -364,7 +364,7 @@ namespace LOFAR
         /* PREPROCESS END */
 
         // Hand off output to processing
-        workQueue.processPool.filled.append(input);
+        subbandProc.processPool.filled.append(input);
         ASSERT(!input);
 
         LOG_DEBUG_STR("[" << id << "] Forwarded input to processing");
@@ -372,20 +372,20 @@ namespace LOFAR
     }
 
 
-    void Pipeline::processSubbands(SubbandProc &workQueue)
+    void Pipeline::processSubbands(SubbandProc &subbandProc)
     {
       SmartPtr<SubbandProcInputData> input;
 
       NSTimer processTimer("process", true, true);
 
       // Keep fetching input objects until end-of-input
-      while ((input = workQueue.processPool.filled.remove()) != NULL) {
+      while ((input = subbandProc.processPool.filled.remove()) != NULL) {
         const struct BlockID id = input->blockID;
 
         LOG_DEBUG_STR("[" << id << "] Processing start");
 
         // Also fetch an output object to store results
-        SmartPtr<SubbandProcOutputData> output = workQueue.outputPool.free.remove();
+        SmartPtr<SubbandProcOutputData> output = subbandProc.outputPool.free.remove();
 
         // Only _we_ signal end-of-data, so we should _never_ receive it
         ASSERT(output != NULL); 
@@ -394,20 +394,20 @@ namespace LOFAR
 
         // Perform calculations
         processTimer.start();
-        workQueue.processSubband(*input, *output);
+        subbandProc.processSubband(*input, *output);
         processTimer.stop();
 
         if (id.block < 0) {
           // Ignore block; only used to initialize FIR history samples
-          workQueue.outputPool.free.append(output);
+          subbandProc.outputPool.free.append(output);
         } else {
           // Hand off output to post processing
-          workQueue.outputPool.filled.append(output);
+          subbandProc.outputPool.filled.append(output);
         }
         ASSERT(!output);
 
         // Give back input data for a refill
-        workQueue.inputPool.free.append(input);
+        subbandProc.inputPool.free.append(input);
         ASSERT(!input);
 
         LOG_DEBUG_STR("[" << id << "] Forwarded output to post processing");
@@ -415,20 +415,20 @@ namespace LOFAR
     }
 
 
-    void Pipeline::postprocessSubbands(SubbandProc &workQueue)
+    void Pipeline::postprocessSubbands(SubbandProc &subbandProc)
     {
       SmartPtr<SubbandProcOutputData> output;
 
       NSTimer postprocessTimer("postprocess", true, true);
 
       // Keep fetching output objects until end-of-output
-      while ((output = workQueue.outputPool.filled.remove()) != NULL) {
+      while ((output = subbandProc.outputPool.filled.remove()) != NULL) {
         const struct BlockID id = output->blockID;
 
         LOG_DEBUG_STR("[" << id << "] Post processing start");
 
         postprocessTimer.start();
-        workQueue.postprocessSubband(*output);
+        subbandProc.postprocessSubband(*output);
         postprocessTimer.stop();
 
         struct Output &pool = writePool[id.localSubbandIdx];

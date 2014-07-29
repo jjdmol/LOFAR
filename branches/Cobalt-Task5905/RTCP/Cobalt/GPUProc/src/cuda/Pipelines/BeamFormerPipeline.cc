@@ -148,10 +148,10 @@ namespace LOFAR
 
       // Create the SubbandProcs, which in turn allocate the GPU buffers and
       // functions.
-      for (size_t i = 0; i < workQueues.size(); ++i) {
+      for (size_t i = 0; i < subbandProcs.size(); ++i) {
         gpu::Context context(devices[i % devices.size()]);
 
-        workQueues[i] = new SubbandProc(ps, context, factories, nrSubbandsPerSubbandProc);
+        subbandProcs[i] = new SubbandProc(ps, context, factories, nrSubbandsPerSubbandProc);
       }
     }
 
@@ -308,7 +308,7 @@ namespace LOFAR
           }
         }
 
-        // Return outputData back to the workQueue.
+        // Return outputData back to the subbandProc.
         const double maxRetentionTime = 3.0;
         using namespace TimeSpec;
         if (ps.settings.realTime && TimeSpec::now() - outputQueue.oldest() > maxRetentionTime) {

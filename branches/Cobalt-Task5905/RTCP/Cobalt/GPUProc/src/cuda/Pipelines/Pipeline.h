@@ -71,7 +71,7 @@ namespace LOFAR
         SmartPtr< Queue< SmartPtr<SubbandProcOutputData> > > queue;
       };
 
-      std::vector< SmartPtr<SubbandProc> > workQueues;
+      std::vector< SmartPtr<SubbandProc> > subbandProcs;
 
     protected:
       const Parset             &ps;
@@ -98,18 +98,18 @@ namespace LOFAR
       Pool<struct MPIRecvData> &mpiPool;
 
       // For each block, transpose all subbands from all stations, and divide the
-      // work over the workQueues
+      // work over the subbandProcs
       void transposeInput();
       template<typename SampleT> void transposeInput();
 
       // preprocess subbands on the CPU
-      void preprocessSubbands(SubbandProc &workQueue);
+      void preprocessSubbands(SubbandProc &subbandProc);
 
       // process subbands on the GPU
-      void processSubbands(SubbandProc &workQueue);
+      void processSubbands(SubbandProc &subbandProc);
 
       // Post-process subbands on the CPU
-      void postprocessSubbands(SubbandProc &workQueue);
+      void postprocessSubbands(SubbandProc &subbandProc);
 
       // Send subbands to Storage
       virtual void writeOutput(

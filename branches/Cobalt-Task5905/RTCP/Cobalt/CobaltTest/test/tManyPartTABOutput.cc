@@ -134,7 +134,7 @@ int main()
   for (unsigned globalSubbandIdx = 0; globalSubbandIdx < nrSubbands;
        globalSubbandIdx++) {
     unsigned localSubbandIdx = globalSubbandIdx;
-    bfpl.writeOutput(globalSubbandIdx, *writePool[localSubbandIdx].queue, bfpl.workQueues[localSubbandIdx % bfpl.workQueues.size()]->outputPool.free);
+    bfpl.writeOutput(globalSubbandIdx, *writePool[localSubbandIdx].queue, bfpl.subbandProcs[localSubbandIdx % bfpl.subbandProcs.size()]->outputPool.free);
   }
 
   bfpl.multiSender.finish();
