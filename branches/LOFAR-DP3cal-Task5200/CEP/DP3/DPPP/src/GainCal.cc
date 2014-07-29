@@ -262,8 +262,9 @@ namespace LOFAR {
       // and stored.
 
       itsTimerPredict.start();
-      ThreadPrivateStorage &storage = itsThreadStorage[thread];
+      ThreadPrivateStorage &storage;
       if (!itsUseModelColumn) {
+        storage = itsThreadStorage[thread];
         double time = buf.getTime();
 
         size_t stride_uvw[2] = {1, 3};
@@ -307,6 +308,7 @@ namespace LOFAR {
       itsTimerPredict.stop();
       //copy result of model to data
       if (itsOperation=="predict") {
+        storage = itsThreadStorage[thread];
         copy(storage.model.begin(),storage.model.begin()+nSamples,data);
       }
 
@@ -322,6 +324,7 @@ namespace LOFAR {
         if (itsUseModelColumn) {
           fillMatrices(model,data,weight,flag);
         } else {
+          storage = itsThreadStorage[thread];
           fillMatrices(&storage.model[0],data,weight,flag);
         }
         itsTimerFill.stop();
