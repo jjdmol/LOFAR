@@ -387,7 +387,6 @@ namespace LOFAR {
     // top left, all 11 polarizations in the bottom right, etc.
     void GainCal::fillMatrices (dcomplex* model, casa::Complex* data, float* weight,
                                 const casa::Bool* flag) {
-      itsTimerFill.start();
       vector<int>* antMap=&itsAntMaps[itsAntMaps.size()-1];      
 
       const size_t nBl = info().nbaselines();
@@ -420,7 +419,6 @@ namespace LOFAR {
           }
         }
       }
-      itsTimerFill.stop();
     }
 
     void GainCal::countAntUsedNotFlagged (const Bool* flag) {
