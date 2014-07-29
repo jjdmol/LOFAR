@@ -30,7 +30,7 @@
 #include <CoInterface/fpequals.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/SubbandProcs/SubbandProc.h>
-#include <GPUProc/SubbandProcs/BeamFormerFactories.h>
+#include <GPUProc/SubbandProcs/KernelFactories.h>
 
 #include "../Kernels/KernelTestHelpers.h"
 
@@ -141,7 +141,7 @@ int main(/*int argc, char *argv[]*/) {
   // correction (but that kernel will run to convert int to float and to
   // transform the data order).
 
-  BeamFormerFactories factories(ps);
+  KernelFactories factories(ps);
   SubbandProc bwq(ps, ctx, factories);
 
   SubbandProcInputData in(

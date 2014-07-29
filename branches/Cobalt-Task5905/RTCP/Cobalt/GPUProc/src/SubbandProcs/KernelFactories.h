@@ -1,4 +1,4 @@
-//# BeamFormerFactories.h
+//# KernelFactories.h
 //#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -30,9 +30,9 @@
 #endif
 
 #if defined (USE_CUDA)
-# include <GPUProc/cuda/SubbandProcs/BeamFormerFactories.h>
+# include <GPUProc/cuda/SubbandProcs/KernelFactories.h>
 #elif defined (USE_OPENCL)
-# include <GPUProc/opencl/SubbandProcs/BeamFormerFactories.h>
+# include <GPUProc/opencl/SubbandProcs/KernelFactories.h>
 #else
 # error "Either CUDA or OpenCL must be enabled, not neither"
 #endif

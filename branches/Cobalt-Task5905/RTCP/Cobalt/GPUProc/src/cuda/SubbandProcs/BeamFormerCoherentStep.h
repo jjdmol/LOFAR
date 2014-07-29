@@ -50,7 +50,7 @@ namespace LOFAR
   namespace Cobalt
   {
     //# Forward declarations
-    struct BeamFormerFactories;
+    struct KernelFactories;
 
     class BeamFormerCoherentStep: public ProcessStep
     {

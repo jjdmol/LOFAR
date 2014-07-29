@@ -21,7 +21,7 @@
 #include <lofar_config.h>
 
 #include "SubbandProc.h"
-#include "BeamFormerFactories.h"
+#include "KernelFactories.h"
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_wrapper.h>
@@ -41,7 +41,7 @@ namespace LOFAR
     SubbandProc::SubbandProc(
       const Parset &ps,
       gpu::Context &context,
-      BeamFormerFactories &factories,
+      KernelFactories &factories,
       size_t nrSubbandsPerSubbandProc)
     :
       inputPool("SubbandProc::inputPool"),

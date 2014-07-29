@@ -26,7 +26,7 @@
 #include <CoInterface/fpequals.h>
 #include <CoInterface/Parset.h>
 #include <GPUProc/gpu_utils.h>
-#include <GPUProc/SubbandProcs/BeamFormerFactories.h>
+#include <GPUProc/SubbandProcs/KernelFactories.h>
 #include <GPUProc/SubbandProcs/SubbandProc.h>
 
 using namespace std;
@@ -83,7 +83,7 @@ int main() {
   // correction (but that kernel will run to convert int to float and to
   // transform the data order).
 
-  BeamFormerFactories factories(ps, 1);
+  KernelFactories factories(ps, 1);
   SubbandProc cwq(ps, ctx, factories);
 
   SubbandProcInputData in(

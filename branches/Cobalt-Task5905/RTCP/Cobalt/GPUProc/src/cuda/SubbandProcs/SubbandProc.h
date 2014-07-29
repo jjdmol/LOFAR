@@ -54,7 +54,7 @@ namespace LOFAR
   namespace Cobalt
   {
     //# Forward declarations
-    struct BeamFormerFactories;
+    struct KernelFactories;
 
     /*
      * The SubbandProc does the following transformation:
@@ -98,7 +98,7 @@ namespace LOFAR
     class SubbandProc {
     public:
       SubbandProc(const Parset &ps, gpu::Context &context,
-                  BeamFormerFactories &factories,
+                  KernelFactories &factories,
                   size_t nrSubbandsPerSubbandProc = 1);
 
       class Flagger

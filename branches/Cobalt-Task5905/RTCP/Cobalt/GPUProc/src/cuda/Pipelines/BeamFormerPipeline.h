@@ -30,7 +30,7 @@
 
 #include <MACIO/RTmetadata.h>
 
-#include <GPUProc/SubbandProcs/BeamFormerFactories.h>
+#include <GPUProc/SubbandProcs/KernelFactories.h>
 
 namespace LOFAR
 {
@@ -76,7 +76,7 @@ namespace LOFAR
       TABTranspose::MultiSender multiSender;
 
     private:
-      BeamFormerFactories factories;
+      KernelFactories factories;
     };
   }
 }

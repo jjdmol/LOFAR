@@ -58,7 +58,7 @@ if(USE_CUDA)
     cuda/SubbandProcs/SubbandProc.cc
     cuda/SubbandProcs/SubbandProcInputData.cc
     cuda/SubbandProcs/SubbandProcOutputData.cc
-    cuda/SubbandProcs/BeamFormerFactories.cc
+    cuda/SubbandProcs/KernelFactories.cc
     cuda/SubbandProcs/CorrelatorStep.cc
     cuda/SubbandProcs/BeamFormerPreprocessingStep.cc
     cuda/SubbandProcs/BeamFormerCoherentStep.cc

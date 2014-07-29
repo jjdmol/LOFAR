@@ -1,4 +1,4 @@
-//# BeamFormerFactories.h
+//# KernelFactories.h
 //#
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -34,9 +34,9 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    struct BeamFormerFactories
+    struct KernelFactories
     {
-      BeamFormerFactories(const Parset &ps, 
+      KernelFactories(const Parset &ps, 
                             size_t nrSubbandsPerSubbandProc = 1);
 
       SmartPtr<CorrelatorStep::Factories> correlator;
