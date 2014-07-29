@@ -257,7 +257,7 @@ BlockCollector::~BlockCollector()
 {
   // Make SURE the threads can finish, regardless of whether finish() was called
   inputQueue.noMore();
-  outputQueue.append(NULL, false);
+  outputQueue.noMore();
 }
 
 
@@ -338,7 +338,7 @@ void BlockCollector::processSubband( SmartPtr<Subband> &subband ) {
       ASSERT(blocks.empty());
 
       // Signal end-of-stream
-      outputQueue.append(NULL);
+      outputQueue.noMore();
     }
   }
 }
@@ -360,7 +360,7 @@ void BlockCollector::finish() {
   }
 
   // Signal end-of-stream
-  outputQueue.append(NULL, false);
+  outputQueue.noMore();
   outputThread.wait();
 }
 
