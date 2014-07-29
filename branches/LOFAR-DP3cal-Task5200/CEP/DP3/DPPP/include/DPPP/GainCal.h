@@ -116,9 +116,6 @@ namespace {
                                     size_t nBaseline, size_t nChannel,
                                     size_t nChannelSubtr)
       {
-        if (itsUseModelColumn) {
-          return;
-        }
         storage.unknowns.resize(nDirection * nStation * 8);
         storage.uvw.resize(nStation * 3);
         storage.model.resize(nBaseline * nChannel * 4);
@@ -184,7 +181,6 @@ namespace {
       bool             itsUseModelColumn;
       string           itsParmDBName;
       bool             itsApplyBeam;
-      bool             itsUseChannelFreq;
       shared_ptr<BBS::ParmDB> itsParmDB;
       Position         itsPhaseRef;
 
