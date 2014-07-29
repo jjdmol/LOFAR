@@ -154,59 +154,6 @@ namespace LOFAR
       return 7 * nrSubbandsPerSubbandProc;
     }
 
-    void SubbandProc::Flagger::convertFlagsToChannelFlags(Parset const &ps,
-      MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
-      MultiDimArray<SparseSet<unsigned>, 2>& flagsPerChannel)
-    {
-      unsigned numberOfChannels = ps.nrChannelsPerSubband();
-      unsigned log2NrChannels = log2(numberOfChannels);
-      //Convert the flags per sample to flags per channel
-      for (unsigned station = 0; station < ps.nrStations(); station ++) 
-      {
-        // get the flag ranges
-        const SparseSet<unsigned>::Ranges &ranges = inputFlags[station].getRanges();
-        for (SparseSet<unsigned>::const_iterator it = ranges.begin();
-          it != ranges.end(); it ++) 
-        {
-          unsigned begin_idx;
-          unsigned end_idx;
-          if (numberOfChannels == 1)
-          {
-            // do nothing, just take the ranges as supplied
-            begin_idx = it->begin; 
-            end_idx = std::min(ps.nrSamplesPerChannel(), it->end );
-          }
-          else
-          {
-            // Never flag before the start of the time range               
-            // use bitshift to divide to the number of channels. 
-            //
-            // NR_TAPS is the width of the filter: they are
-            // absorbed by the FIR and thus should be excluded
-            // from the original flag set.
-            //
-            // At the same time, every sample is affected by
-            // the NR_TAPS-1 samples before it. So, any flagged
-            // sample in the input flags NR_TAPS samples in
-            // the channel.
-            begin_idx = std::max(0, 
-              (signed) (it->begin >> log2NrChannels) - NR_TAPS + 1);
-
-            // The min is needed, because flagging the last input
-            // samples would cause NR_TAPS subsequent samples to
-            // be flagged, which aren't necessarily part of this block.
-            end_idx = std::min(ps.nrSamplesPerChannel() + 1, 
-              ((it->end - 1) >> log2NrChannels) + 1);
-          }
-
-          // Now copy the transformed ranges to the channelflags
-          for (unsigned ch = 0; ch < numberOfChannels; ch++) {
-            flagsPerChannel[ch][station].include(begin_idx, end_idx);
-          }
-        }
-      }
-    }
-
 
     void SubbandProc::processSubband( SubbandProcInputData &input,
       SubbandProcOutputData &output)

@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include <GPUProc/SubbandProcs/SubbandProc.h>
+#include <GPUProc/cuda/SubbandProcs/CorrelatorStep.h>
 
 #include <UnitTest++.h>
 #include <iostream>
@@ -70,7 +70,7 @@ TEST(convertFlagsToChannelFlags)
           boost::extents[parset.nrChannelsPerSubband()][parset.nrStations()]);
 
   // ****** perform the translation
-  SubbandProc::Flagger::convertFlagsToChannelFlags(parset, inputFlags, flagsPerChanel);
+  CorrelatorStep::Flagger::convertFlagsToChannelFlags(parset, inputFlags, flagsPerChanel);
   // ******
 
   //validate the corner cases
@@ -90,7 +90,7 @@ TEST(convertFlagsToChannelFlags)
 
 int main()
 {
-  INIT_LOGGER("tSubbandProc");
+  INIT_LOGGER("tCorrelatorStep");
   return UnitTest::RunAllTests() > 0;
 }
 

@@ -98,6 +98,12 @@ namespace LOFAR
           MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
           LOFAR::Cobalt::CorrelatedData &output);
 
+        // 1.1 Convert the flags per station to channel flags, change time scale
+        // if nchannel > 1
+        static void convertFlagsToChannelFlags(Parset const &ps,
+          MultiDimArray<SparseSet<unsigned>, 1> const &inputFlags,
+          MultiDimArray<SparseSet<unsigned>, 2> &flagsPerChannel);
+
         // 2. Calculate the weight based on the number of flags and apply this
         // weighting to all output values
         static void applyWeights(Parset const &parset, LOFAR::Cobalt::CorrelatedData &output);

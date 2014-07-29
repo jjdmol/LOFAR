@@ -101,16 +101,6 @@ namespace LOFAR
                   KernelFactories &factories,
                   size_t nrSubbandsPerSubbandProc = 1);
 
-      class Flagger
-      {
-      public:
-        // 1.1 Convert the flags per station to channel flags, change time scale
-        // if nchannel > 1
-        static void convertFlagsToChannelFlags(Parset const &ps,
-          MultiDimArray<SparseSet<unsigned>, 1> const &inputFlags,
-          MultiDimArray<SparseSet<unsigned>, 2> &flagsPerChannel);
-      };
-
       // A pool of input data, to allow items to be filled and
       // computed on in parallel.
       Pool<SubbandProcInputData> inputPool;
