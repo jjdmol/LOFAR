@@ -146,13 +146,11 @@ namespace LOFAR {
  
       const size_t nThread=OpenMP::maxThreads();
 
-      if (!itsUseModelColumn) {
-        itsThreadStorage.resize(nThread);
-        for(vector<ThreadPrivateStorage>::iterator it = itsThreadStorage.begin(),
-            end = itsThreadStorage.end(); it != end; ++it)
-        {
-          initThreadPrivateStorage(*it, nDr, nSt, nBl, nCh, nCh);
-        }
+      itsThreadStorage.resize(nThread);
+      for(vector<ThreadPrivateStorage>::iterator it = itsThreadStorage.begin(),
+          end = itsThreadStorage.end(); it != end; ++it)
+      {
+        initThreadPrivateStorage(*it, nDr, nSt, nBl, nCh, nCh);
       }
 
       itsSols.reserve(info().ntime());
@@ -262,6 +260,7 @@ namespace LOFAR {
       // and stored.
 
       itsTimerPredict.start();
+
       ThreadPrivateStorage &storage = itsThreadStorage[thread];
       if (!itsUseModelColumn) {
         double time = buf.getTime();
