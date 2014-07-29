@@ -247,7 +247,7 @@ namespace LOFAR {
       const_cursor<double> cr_freq = casa_const_cursor(info().chanFreqs());
       const_cursor<Baseline> cr_baseline(&(itsBaselines[0]));
 
-      const size_t thread = OpenMP::threadNum();
+      const size_t thread = 0;//OpenMP::threadNum();
 
       Complex* data=buf.getData().data();
       Complex* model=buf.getModel().data();
