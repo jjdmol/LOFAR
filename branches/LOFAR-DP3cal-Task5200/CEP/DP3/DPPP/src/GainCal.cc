@@ -947,11 +947,9 @@ namespace LOFAR {
       itsTimer.start();
 
       //Solve remaining time slots if any
-      itsTimerSolve.start();
       if (itsNTimes!=0) {
         stefcal(itsMode,itsSolInt);
       }
-      itsTimerSolve.stop();
 
       itsTimerWrite.start();
 
