@@ -17,7 +17,6 @@
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
 # $Id$
-#coding: iso-8859-15
 import os,sys,time,pg
 from optparse import OptionParser
 import laps.MsgBus
