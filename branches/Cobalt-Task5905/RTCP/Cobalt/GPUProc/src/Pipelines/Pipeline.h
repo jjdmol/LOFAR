@@ -1,4 +1,4 @@
-//# BeamFormerPipeline.h
+//# Pipeline.h
 //#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -22,17 +22,17 @@
 // \file
 // Support for the beamformer pipeline.
 
-#ifndef LOFAR_GPUPROC_BEAM_FORMER_PIPELINE_H
-#define LOFAR_GPUPROC_BEAM_FORMER_PIPELINE_H
+#ifndef LOFAR_GPUPROC_PIPELINE_H
+#define LOFAR_GPUPROC_PIPELINE_H
 
 #if defined (USE_CUDA) && defined (USE_OPENCL)
 # error "Either CUDA or OpenCL must be enabled, not both"
 #endif
 
 #if defined (USE_CUDA)
-# include <GPUProc/cuda/Pipelines/BeamFormerPipeline.h>
+# include <GPUProc/cuda/Pipelines/Pipeline.h>
 #elif defined (USE_OPENCL)
-# include <GPUProc/opencl/Pipelines/BeamFormerPipeline.h>
+# include <GPUProc/opencl/Pipelines/Pipeline.h>
 #else
 # error "Either CUDA or OpenCL must be enabled, not neither"
 #endif

@@ -66,7 +66,7 @@
 #include "global_defines.h"
 #include <GPUProc/Station/StationInput.h>
 #include <GPUProc/Station/StationNodeAllocation.h>
-#include "Pipelines/BeamFormerPipeline.h"
+#include "Pipelines/Pipeline.h"
 //#include "Pipelines/UHEP_Pipeline.h"
 #include "Storage/StorageProcesses.h"
 
@@ -411,7 +411,7 @@ int main(int argc, char **argv)
     // no operation -- don't even create a pipeline!
     pipeline = NULL;
   } else {
-    pipeline = new BeamFormerPipeline(ps, subbandIndices, devices,
+    pipeline = new Pipeline(ps, subbandIndices, devices,
                                       MPI_receive_pool, mdLogger, mdKeyPrefix, mpi.rank());
   } 
 

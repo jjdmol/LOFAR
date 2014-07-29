@@ -29,7 +29,7 @@
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
-#include <GPUProc/Pipelines/BeamFormerPipeline.h>
+#include <GPUProc/Pipelines/Pipeline.h>
 #include <GPUProc/cuda/SubbandProcs/SubbandProcOutputData.h>
 #include <GPUProc/Station/StationInput.h>
 #include <GPUProc/Storage/StorageProcesses.h>
@@ -91,7 +91,7 @@ int main()
 
   Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_receive_pool");
   MACIO::RTmetadata rtmd(ps.observationID(), "", "");
-  BeamFormerPipeline bfpl(ps, localSbIndices, devices, MPI_receive_pool,
+  Pipeline bfpl(ps, localSbIndices, devices, MPI_receive_pool,
                           rtmd, "rtmd key prefix");
   bfpl.allocateResources();
 
@@ -112,7 +112,7 @@ int main()
 #  pragma omp section
     {
   // Insert 2 blocks of test data per sb.
-  std::vector<struct BeamFormerPipeline::Output> writePool(nrSubbands); // [localSubbandIdx]
+  std::vector<struct Pipeline::Output> writePool(nrSubbands); // [localSubbandIdx]
   for (unsigned i = 0; i < writePool.size(); i++) {
     SmartPtr<SubbandProcOutputData> data;
     unsigned blockIdx;

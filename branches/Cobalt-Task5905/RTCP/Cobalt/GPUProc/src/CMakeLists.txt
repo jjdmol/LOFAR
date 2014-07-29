@@ -53,7 +53,6 @@ if(USE_CUDA)
     #cuda/Kernels/UHEP_TransposeKernel.cc
     #cuda/Kernels/UHEP_TriggerKernel.cc
     cuda/Pipelines/Pipeline.cc
-    cuda/Pipelines/BeamFormerPipeline.cc
 #    cuda/Pipelines/UHEP_Pipeline.cc
     cuda/SubbandProcs/SubbandProc.cc
     cuda/SubbandProcs/SubbandProcInputData.cc

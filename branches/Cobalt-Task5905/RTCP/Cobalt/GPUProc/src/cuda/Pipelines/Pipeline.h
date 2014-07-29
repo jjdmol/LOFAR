@@ -30,10 +30,12 @@
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/Pool.h>
 #include <CoInterface/OMPThread.h>
+#include <CoInterface/TABTranspose.h>
 
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/PerformanceCounter.h>
 #include <GPUProc/SubbandProcs/SubbandProc.h>
+#include <GPUProc/SubbandProcs/KernelFactories.h>
 
 #include <GPUProc/MPIReceiver.h>
 
@@ -46,11 +48,13 @@ namespace LOFAR
     class Pipeline
     {
     public:
-      Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, 
-        const std::vector<gpu::Device> &devices, Pool<struct MPIRecvData> &pool,
-        RTmetadata &mdLogger, const std::string &mdKeyPrefix);
+      Pipeline(const Parset &, const std::vector<size_t> &subbandIndices, 
+        const std::vector<gpu::Device> &devices,
+        Pool<struct MPIRecvData> &pool,
+        RTmetadata &mdLogger, const std::string &mdKeyPrefix,
+        int hostID = 0);
 
-      virtual ~Pipeline();
+      ~Pipeline();
 
       // allocate resources, such as GPU buffers.
       //
@@ -60,10 +64,10 @@ namespace LOFAR
       // An alternative to delayed allocation could be to retry the GPU malloc
       // with a timeout, but that could potentially dead-lock two concurrent
       // observations.
-      virtual void allocateResources();
+      void allocateResources();
 
       // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
-      virtual void processObservation();
+      void processObservation();
 
       struct Output 
       {
@@ -88,14 +92,15 @@ namespace LOFAR
       RTmetadata &itsMdLogger; // non-const to be able to use its log()
       const std::string itsMdKeyPrefix;
 
-    protected:
       // Threads that write to outputProc, and need to
       // be killed when they stall at observation end.
       OMPThreadSet outputThreads;
 
-    private:
-
       Pool<struct MPIRecvData> &mpiPool;
+
+      std::vector<struct Output> writePool; // [localSubbandIdx]
+
+      KernelFactories factories;
 
       // For each block, transpose all subbands from all stations, and divide the
       // work over the subbandProcs
@@ -111,16 +116,26 @@ namespace LOFAR
       // Post-process subbands on the CPU
       void postprocessSubbands(SubbandProc &subbandProc);
 
-      // Send subbands to Storage
-      virtual void writeOutput(
+      void writeBeamformedOutput(
         unsigned globalSubbandIdx,
         Queue< SmartPtr<SubbandProcOutputData> > &inputQueue,
-        Queue< SmartPtr<SubbandProcOutputData> > &outputQueue ) = 0;
+        Queue< SmartPtr<SubbandProcOutputData> > &outputQueue,
+        Queue< SmartPtr<SubbandProcOutputData> > &spillQueue );
 
-      // Signal that all output has been emitted
-      virtual void doneWritingOutput();
+      void writeCorrelatedOutput(
+        unsigned globalSubbandIdx,
+        Queue< SmartPtr<SubbandProcOutputData> > &inputQueue,
+        Queue< SmartPtr<SubbandProcOutputData> > &outputQueue );
 
-      std::vector<struct Output> writePool; // [localSubbandIdx]
+    public:
+      // Send subbands to Storage
+      void writeOutput(
+        unsigned globalSubbandIdx,
+        Queue< SmartPtr<SubbandProcOutputData> > &inputQueue,
+        Queue< SmartPtr<SubbandProcOutputData> > &outputQueue );
+
+      // Output send engine, takes care of the host connections and the multiplexing.
+      TABTranspose::MultiSender multiSender;
     };
   }
 }
