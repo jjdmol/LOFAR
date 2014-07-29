@@ -20,7 +20,7 @@
 
 import sys
 import os
-import laps.MsgBus
+import LAPS.MsgBus
 
 print " setup connection "
 
@@ -33,23 +33,23 @@ workspace="/cep/lofar_build/lofar/release/"
 message, filename = msgbus.get()
 
 while message:
-  	print "received :"
-	f = open(filename,"wr")
-	f.write(message)
-	f.close() 
+    print "received :"
+    f = open(filename,"wr")
+    f.write(message).close() 
 
-	parsetvals={}
-	index=0
-	for line in message.split('\n'):
-		nme,val = line.partition("=")[::2]
-		parsetvals[nme.strip()]=val.strip()
-		#print "got %s : %s nvpair" %(nme,val) 
-		#print "got line %d : %s " %(index,line)
-		#index=index+1
-	pythonprogram = parsetvals["ObsSW.Observation.ObservationControl.PythonControl.pythonProgram"] 
-	os.system('python "%s/bin/%s.py" "%s/%s.parset" -c "%s/pipeline.cfg" -d' %( workspace,pythonprogram,workdir,pythonprogram,workdir))
-	#os.system("startPython.sh %s %s >> logfile.txt 2>&1" %(pythonprogram,filename))
-  	msgbus.ack()
-	message, subject = msgbus.get()
-
-
+    parsetvals={}
+    index=0
+    for line in message.split('\n'):
+        name,val = line.partition("=")[::2]
+        parsetvals[nme.strip()]=val.strip()
+        #print "got %s : %s nvpair" %(nme,val) 
+        #print "got line %d : %s " %(index,line)
+        #index=index+1
+  
+    pythonprogram = parsetvals[
+            "ObsSW.Observation.ObservationControl.PythonControl.pythonProgram"] 
+    os.system('python "%s/bin/%s.py" "%s/%s.parset" -c "%s/pipeline.cfg" -d' %( 
+                        workspace,pythonprogram,workdir,pythonprogram,workdir))
+    #os.system("startPython.sh %s %s >> logfile.txt 2>&1" %(pythonprogram,filename))
+    msgbus.ack()
+    message, subject = msgbus.get()
