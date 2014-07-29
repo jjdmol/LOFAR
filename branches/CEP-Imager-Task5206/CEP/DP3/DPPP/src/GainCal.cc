@@ -144,7 +144,7 @@ namespace LOFAR {
       itsVis.resize (IPosition(6,nSt,2,nCh,itsSolInt,2,nSt));
       itsMVis.resize(IPosition(6,nSt,2,nCh,itsSolInt,2,nSt));
  
-      const size_t nThread=OpenMP::maxThreads();
+      const size_t nThread=1;//OpenMP::maxThreads();
 
       itsThreadStorage.resize(nThread);
       for(vector<ThreadPrivateStorage>::iterator it = itsThreadStorage.begin(),
