@@ -70,6 +70,7 @@ namespace LOFAR {
         itsUseModelColumn(parset.getBool (prefix + "usemodelcolumn", false)),
         itsParmDBName    (parset.getString (prefix + "parmdb")),
         itsApplyBeam     (parset.getBool (prefix + "usebeammodel", false)),
+        itsUseChannelFreq(parset.getBool (prefix + "usechannelfreq", true)),
         itsMode          (parset.getString (prefix + "caltype")),
         itsTStep         (0),
         itsDebugLevel    (parset.getInt (prefix + "debuglevel", 0)),
@@ -304,6 +305,7 @@ namespace LOFAR {
       }
 
       if (itsOperation=="solve") {
+        itsTimerFill.start();
         if (itsNTimes==0) {
           itsDataPerAntenna=0;
           itsVis=0;
@@ -316,6 +318,7 @@ namespace LOFAR {
         } else {
           fillMatrices(&storage.model[0],data,weight,flag);
         }
+        itsTimerFill.stop();
 
         if (itsNTimes==itsSolInt-1) {
           stefcal(itsMode,itsSolInt);
@@ -903,18 +906,32 @@ namespace LOFAR {
 
 //#pragma omp parallel for
       for (size_t st=0; st<nSt; ++st) {
+        if (itsUseChannelFreq) {
+        for (size_t ch=0; ch<nchan; ++ch) {
+          itsAntBeamInfo[st]->response (nchan, time, chanFreqs.cbegin(),
+                                        srcdir, info().refFreq(), refdir,
+                                        tiledir, &(beamvalues[nchan*st+ch]));
+        }
+        } else {
         itsAntBeamInfo[st]->response (nchan, time, chanFreqs.cbegin(),
                                       srcdir, info().refFreq(), refdir, tiledir,
                                       &(beamvalues[nchan*st]));
+        }
       }
       // Apply the beam values of both stations to the predicted data.
       dcomplex tmp[4];
       for (size_t bl=0; bl<nBl; ++bl) {
-        const StationResponse::matrix22c_t* left =
-          &(beamvalues[nchan * info().getAnt1()[bl]]);
-        const StationResponse::matrix22c_t* right =
-          &(beamvalues[nchan * info().getAnt2()[bl]]);
+        const StationResponse::matrix22c_t *left, *right;
+        if (!itsUseChannelFreq) {
+          left = &(beamvalues[nchan * info().getAnt1()[bl]]);
+          right= &(beamvalues[nchan * info().getAnt2()[bl]]);
+        }
         for (size_t ch=0; ch<nchan; ++ch) {
+          if (itsUseChannelFreq) {
+            left = &(beamvalues[nchan * info().getAnt1()[bl] + ch]);
+            right= &(beamvalues[nchan * info().getAnt2()[bl] + ch]);
+          }
+
           dcomplex l[] = {left[ch][0][0], left[ch][0][1],
                           left[ch][1][0], left[ch][1][1]};
           // Form transposed conjugate of right.

@@ -181,6 +181,7 @@ namespace {
       bool             itsUseModelColumn;
       string           itsParmDBName;
       bool             itsApplyBeam;
+      bool             itsUseChannelFreq;
       shared_ptr<BBS::ParmDB> itsParmDB;
       Position         itsPhaseRef;
 
