@@ -349,7 +349,6 @@ namespace LOFAR {
     // top left, all 11 polarizations in the bottom right, etc. //TODO: make templated
     void GainCal::fillMatrices (casa::Complex* model, casa::Complex* data, float* weight,
                                 const casa::Bool* flag) {
-      itsTimerFill.start();
       vector<int>* antMap=&itsAntMaps[itsAntMaps.size()-1];
 
       const size_t nBl = info().nbaselines();
@@ -382,7 +381,6 @@ namespace LOFAR {
           }
         }
       }
-      itsTimerFill.stop();
     }
 
     // Fills itsVis and itsMVis as matrices with all 00 polarizations in the
