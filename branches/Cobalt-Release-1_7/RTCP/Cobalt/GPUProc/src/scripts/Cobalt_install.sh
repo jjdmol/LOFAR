@@ -30,7 +30,7 @@ for ((h = 1; h <= $nhosts; h++)); do
 
   # Create temp location for incoming tar file
   dl_dir=/localhome/lofarbuild/incoming
-  mkdir -p $dl_dir && cd $dl_dir || exit 1
+  mkdir -p \$dl_dir && cd \$dl_dir || exit 1
 
   # Download archive from NEXUS. -N: clobber existing files
   wget -N --tries=3 --no-check-certificate \"${NEXUS_URL}\" || exit 1
