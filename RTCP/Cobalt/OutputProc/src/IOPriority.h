@@ -132,23 +132,43 @@ inline void setRTpriority()
 }
 
 
-inline void lockInMemory()
+inline void lockInMemory(rlim_t memLockLimit = RLIM_INFINITY)
 {
+  struct passwd *user = getpwnam("lofarsys");
+  bool am_lofarsys = (user != NULL) && (getuid() == user->pw_uid);
+
   if (mlockall(MCL_CURRENT | MCL_FUTURE) < 0) {
     switch (errno) {
     case ENOMEM:
     case EPERM:
     {
-      struct passwd *user = getpwnam("lofarsys");
-      if ((user != NULL) && (getuid() != user->pw_uid))
-        LOG_WARN_STR("Failed to lock application in memory, permission denied");
-      else
+      if (am_lofarsys)
         LOG_ERROR_STR("Failed to lock application in memory, capability CAP_IPC_LOCK not set?");
+      else
+        LOG_WARN_STR("Failed to lock application in memory, permission denied");
     } break;
     case EINVAL:
     default:
       LOG_ERROR_STR("Failed to lock application in memory: flags invalid");
     }
+  }
+
+  const struct rlimit limit = { memLockLimit, memLockLimit };
+
+  // Set MEMLOCK limit
+  if (setrlimit(RLIMIT_MEMLOCK, &limit) < 0) {
+    if (am_lofarsys)
+      LOG_ERROR_STR("Failed to set MEMLOCK limit");
+    else
+      LOG_WARN_STR("Failed to set MEMLOCK limit");
+  }
+
+  // Set DATA limit
+  if (setrlimit(RLIMIT_DATA, &limit) < 0) {
+    if (am_lofarsys)
+      LOG_ERROR_STR("Failed to set DATA limit");
+    else
+      LOG_WARN_STR("Failed to set DATA limit");
   }
 }
 
