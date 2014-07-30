@@ -10,8 +10,8 @@ import pyrap.tables as pt
 import numpy as np
 
 # Import local modules (classes)
-import class_obspar
-import class_mergesubbands
+from lofar.selfcal import class_obspar
+from lofar.selfcal import class_mergesubbands
     
 
 

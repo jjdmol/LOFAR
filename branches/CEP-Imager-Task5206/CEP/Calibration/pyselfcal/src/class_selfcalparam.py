@@ -59,7 +59,7 @@ class selfCalParam:
 				fov	= 5.0	    
 
 
-		pixPerBeam	= 3.0
+		pixPerBeam	= 4.0
 
 		
 		#################################################	    
@@ -67,6 +67,12 @@ class selfCalParam:
 		#################################################				
 		
 		bestBeamresol	= float(fpformat.fix((3E8/self.frequency/self.maxBaseline)*180./3.14*3600.,0))
+		
+		#Only for CEP 1=> memory limitation
+		if bestBeamresol < 10.0:
+			bestBeamresol = 10.0
+		
+		
 		bestPixelResol	= float(fpformat.fix(bestBeamresol/pixPerBeam,2))  
 
 
