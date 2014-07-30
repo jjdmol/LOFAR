@@ -35,6 +35,7 @@
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
 #include <Common/KVpair.h>
+#include <Common/LofarLogger.h>
 #include <Common/Thread/Thread.h>
 #include <Common/Thread/Mutex.h>
 #include <Common/Thread/Condition.h>
@@ -85,6 +86,7 @@ public:
 	template <typename T> 
 	inline void log(const string& key, const T& value)
 	{
+    LOG_DEBUG_STR("[RTmetadata " << itsRegisterName << " -> " << itsHostName << "] " << key << " = " << value);
 		log(KVpair(key, value));
 	}
 
