@@ -185,7 +185,7 @@ namespace LOFAR
         std::map<size_t, SmartPtr<Block> > blocks;
 
         BestEffortQueue< SmartPtr<Subband> > inputQueue;
-        Queue< SmartPtr<Block> >             outputQueue;
+        BestEffortQueue< SmartPtr<Block> >   outputQueue;
         Pool<BeamformedData> &outputPool;
 
         const size_t fileIdx;
