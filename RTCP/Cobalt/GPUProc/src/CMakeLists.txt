@@ -124,6 +124,7 @@ lofar_add_bin_program(station_stream Station/station_stream.cc)
 install(PROGRAMS
   scripts/CobaltControl.sh
   scripts/runObservation.sh
+  scripts/startstopkeys.sh
   scripts/startBGL.sh
   scripts/stopBGL.sh
   scripts/watchlogs.sh
@@ -134,8 +135,8 @@ install(PROGRAMS
   scripts/Cobalt_build.sh
   scripts/Cobalt_install.sh
   scripts/Cobalt_setcurrent.sh
+  scripts/CobaltVersions.sh
   scripts/setloglevels.sh
-  scripts/startstopkeys.sh
   scripts/get_casacore_measures_data.sh
   scripts/apply_casacore_measures_data.sh
   DESTINATION sbin)
