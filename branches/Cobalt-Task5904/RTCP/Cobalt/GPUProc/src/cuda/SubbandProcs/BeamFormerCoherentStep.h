@@ -33,7 +33,8 @@
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <CoInterface/BlockID.h>
 
-#include "SubbandProc.h"
+#include "SubbandProcInputData.h"
+#include "SubbandProcOutputData.h"
 #include "ProcessStep.h"
 
 #include <GPUProc/Kernels/BeamFormerKernel.h>
@@ -49,8 +50,7 @@ namespace LOFAR
   namespace Cobalt
   {
     //# Forward declarations
-    struct BeamFormerFactories;
-    class BeamFormedData;
+    struct KernelFactories;
 
     class BeamFormerCoherentStep: public ProcessStep
     {
@@ -72,7 +72,6 @@ namespace LOFAR
         gpu::Stream &i_queue,
         gpu::Context &context,
         Factories &factories,
-        boost::shared_ptr<gpu::DeviceMemory> i_devA,
         boost::shared_ptr<gpu::DeviceMemory> i_devB);
 
       void initMembers(gpu::Context &context,
@@ -84,14 +83,13 @@ namespace LOFAR
 
       void process(const SubbandProcInputData &input);
 
-      void readOutput(BeamFormedData &output);
+      void readOutput(SubbandProcOutputData &output);
 
     private:
 
       const bool coherentStokesPPF;
 
       // Data members
-      boost::shared_ptr<gpu::DeviceMemory> devA;
       boost::shared_ptr<gpu::DeviceMemory> devB;
       gpu::DeviceMemory devC;
       gpu::DeviceMemory devD;

@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
+#include <GPUProc/cuda/SubbandProcs/CorrelatorStep.h>
 
 #include <UnitTest++.h>
 #include <iostream>

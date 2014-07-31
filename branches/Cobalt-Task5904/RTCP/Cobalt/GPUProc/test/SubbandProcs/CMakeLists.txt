@@ -4,7 +4,7 @@ include(LofarCTest)
 
 if(UNITTEST++_FOUND)
   lofar_add_test(tCorrelatorSubbandProc tCorrelatorSubbandProc.cc)
-  lofar_add_test(tSubbandProc tSubbandProc.cc)
+  lofar_add_test(tCorrelatorStep tCorrelatorStep.cc)
 endif()
 
 # This test is instable. Added to issue tracker: https://support.astron.nl/lofar_issuetracker/issues/5807

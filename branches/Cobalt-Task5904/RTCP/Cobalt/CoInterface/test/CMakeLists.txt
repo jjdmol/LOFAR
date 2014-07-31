@@ -13,6 +13,7 @@ lofar_add_test(tcmpfloat DEPENDS cmpfloat)
 
 
 if(UNITTEST++_FOUND)
+  lofar_add_test(tAlign tAlign.cc)
   lofar_add_test(tOMPThread tOMPThread.cc)
   lofar_add_test(tParset tParset.cc tParsetDefault.cc)
   lofar_add_test(tQueue2 tQueue2.cc)

@@ -25,16 +25,18 @@
 #include <vector>
 #include <utility> // for std::pair
 
-#include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
+#include <CoInterface/SmartPtr.h>
 
 #include <boost/shared_ptr.hpp>
 #include <GPUProc/gpu_wrapper.h>
 
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <CoInterface/BlockID.h>
+#include <CoInterface/CorrelatedData.h>
 
-#include "SubbandProc.h"
+#include "SubbandProcInputData.h"
+#include "SubbandProcOutputData.h"
 #include "ProcessStep.h"
 
 #include <GPUProc/PerformanceCounter.h>
@@ -49,9 +51,6 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    class CorrelatedDataHostBuffer;
-    class CorrelatedData;
-
     class CorrelatorStep: public ProcessStep
     {
     public:
@@ -80,28 +79,34 @@ namespace LOFAR
       void writeInput(const SubbandProcInputData &input);
 
       void process(const SubbandProcInputData &input);
-      void processCPU(const SubbandProcInputData &input, CorrelatedDataHostBuffer &output);
+      void processCPU(const SubbandProcInputData &input, SubbandProcOutputData &output);
 
-      void readOutput(CorrelatedDataHostBuffer &output);
+      void readOutput(SubbandProcOutputData &output);
 
-      bool postprocessSubband(CorrelatedDataHostBuffer &output);
+      bool postprocessSubband(SubbandProcOutputData &output);
 
       // Collection of functions to tranfer the input flags to the output.
       // \c propagateFlags can be called parallel to the kernels.
       // After the data is copied from the the shared buffer
       // \c applyWeights can be used to weight the visibilities
-      class Flagger: public SubbandProc::Flagger
+      class Flagger
       {
       public:
         // 1. Convert input flags to channel flags, calculate the amount flagged
         // samples and save this in output
         static void propagateFlags(Parset const & parset,
           MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
-          CorrelatedData &output);
+          LOFAR::Cobalt::CorrelatedData &output);
+
+        // 1.1 Convert the flags per station to channel flags, change time scale
+        // if nchannel > 1
+        static void convertFlagsToChannelFlags(Parset const &ps,
+          MultiDimArray<SparseSet<unsigned>, 1> const &inputFlags,
+          MultiDimArray<SparseSet<unsigned>, 2> &flagsPerChannel);
 
         // 2. Calculate the weight based on the number of flags and apply this
         // weighting to all output values
-        static void applyWeights(Parset const &parset, CorrelatedData &output);
+        static void applyWeights(Parset const &parset, LOFAR::Cobalt::CorrelatedData &output);
 
         // 1.2 Calculate the number of flagged samples and set this on the
         // output dataproduct This function is aware of the used filter width a
@@ -109,21 +114,21 @@ namespace LOFAR
         static void
         calcWeights(Parset const &parset,
                     MultiDimArray<SparseSet<unsigned>, 2>const &flagsPerChannel,
-                    CorrelatedData &output);
+                    LOFAR::Cobalt::CorrelatedData &output);
 
         // 2.1 Apply the supplied weight to the complex values in the channel
         // and baseline
         static void applyWeight(unsigned baseline, unsigned channel,
-                                float weight, CorrelatedData &output);
+                                float weight, LOFAR::Cobalt::CorrelatedData &output);
       private:
         template<typename T>
-        static void applyWeights(Parset const &parset, CorrelatedData &output);
+        static void applyWeights(Parset const &parset, LOFAR::Cobalt::CorrelatedData &output);
 
         template<typename T>
         static void
         calcWeights(Parset const &parset,
                     MultiDimArray<SparseSet<unsigned>, 2>const &flagsPerChannel,
-                    CorrelatedData &output);
+                    LOFAR::Cobalt::CorrelatedData &output);
 
       };
 
@@ -133,6 +138,7 @@ namespace LOFAR
       //Data members
       boost::shared_ptr<gpu::DeviceMemory> devA;
       boost::shared_ptr<gpu::DeviceMemory> devB;
+      gpu::DeviceMemory devE;
 
       /*
        * Kernels
@@ -156,10 +162,10 @@ namespace LOFAR
       // will be processed by this class instance. Each element of the vector
       // contains a counter that tracks the number of additions made to the data
       // buffer and the data buffer itself.
-      std::vector< std::pair< size_t, SmartPtr<CorrelatedDataHostBuffer> > >
+      std::vector< std::pair< size_t, SmartPtr<LOFAR::Cobalt::CorrelatedData> > >
       integratedData;
 
-      bool integrate(CorrelatedDataHostBuffer &output);
+      bool integrate(SubbandProcOutputData &output);
     };
   }
 }

@@ -32,8 +32,6 @@
 #include <CoInterface/Parset.h>
 
 #include "SubbandProc.h"
-
-#include "BeamFormerSubbandProc.h"
 #include "BeamFormerCoherentStep.h"
 
 #include <iomanip>
@@ -85,7 +83,6 @@ namespace LOFAR
       gpu::Stream &i_queue,
       gpu::Context &context,
       Factories &factories,
-      boost::shared_ptr<gpu::DeviceMemory> i_devA,
       boost::shared_ptr<gpu::DeviceMemory> i_devB)
       :
       ProcessStep(parset, i_queue),
@@ -94,7 +91,6 @@ namespace LOFAR
       devD(context, factories.beamFormer.bufferSize(BeamFormerKernel::OUTPUT_DATA)),
       outputCounter(context, "output (coherent)")
     {
-      devA = i_devA;
       devB = i_devB;
       initMembers(context, factories);
     }
@@ -103,12 +99,12 @@ namespace LOFAR
       Factories &factories)
     {
     beamFormerKernel = std::auto_ptr<BeamFormerKernel>(
-      factories.beamFormer.create(queue, *devB, *devA));
+      factories.beamFormer.create(queue, *devB, devD));
 
     // transpose after beamforming: A -> C
     coherentTransposeKernel = std::auto_ptr<CoherentStokesTransposeKernel>(
       factories.coherentTranspose.create(
-      queue, *devA, devC));
+      queue, devD, devC));
 
     // inverse FFT: C -> C (in-place)
     inverseFFT = std::auto_ptr<FFT_Kernel>(
@@ -125,22 +121,19 @@ namespace LOFAR
       firFilterKernel = std::auto_ptr<FIR_FilterKernel>(
         factories.coherentFirFilter->create(queue, devC, devD));
 
-      // final FFT: D -> D (in-place) = firFilterBuffers.output
+      // final FFT: D -> C
       coherentFinalFFT = std::auto_ptr<FFT_Kernel>(
-        factories.coherentFinalFFT->create(queue, devD, devD));
+        factories.coherentFinalFFT->create(queue, devD, devC));
     }
 
-    // coherentStokes:
-    //    coherentstokesPPF: D -> C
-    //                 else: C -> D
+    // coherentStokes: C -> D
     coherentStokesKernel = std::auto_ptr<CoherentStokesKernel>(
       factories.coherentStokes.create(queue,
-      coherentStokesPPF ? devD : devC,
-      coherentStokesPPF ? devC : devD));
+      devC, devD));
   }
 
   gpu::DeviceMemory BeamFormerCoherentStep::outputBuffer() {
-    return coherentStokesPPF ? devC : devD;
+    return devD;
   }
 
 
@@ -189,7 +182,7 @@ void BeamFormerCoherentStep::process(const SubbandProcInputData &input)
 }
 
 
-void BeamFormerCoherentStep::readOutput(BeamFormedData &output)
+void BeamFormerCoherentStep::readOutput(SubbandProcOutputData &output)
 {
   if (nrCoherent(output.blockID) == 0)
     return;

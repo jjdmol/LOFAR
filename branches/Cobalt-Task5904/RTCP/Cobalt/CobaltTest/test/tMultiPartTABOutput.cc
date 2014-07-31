@@ -29,8 +29,8 @@
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
-#include <GPUProc/Pipelines/BeamFormerPipeline.h>
-#include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
+#include <GPUProc/Pipelines/Pipeline.h>
+#include <GPUProc/cuda/SubbandProcs/SubbandProcOutputData.h>
 #include <GPUProc/Station/StationInput.h>
 #include <GPUProc/Storage/StorageProcesses.h>
 
@@ -44,8 +44,7 @@ using boost::str;
 SmartPtr<SubbandProcOutputData> getTestSbIncohData(const Parset& ps, gpu::Context& ctx,
                                                    unsigned blockIdx, unsigned sbIdx)
 {
-  // BeamFormedData is a sub-class of SubbandProcOutputData.
-  BeamFormedData *bfData = new BeamFormedData(ps, ctx);
+  SubbandProcOutputData *bfData = new SubbandProcOutputData(ps, ctx);
 
   bfData->blockID.block = blockIdx;
   bfData->blockID.globalSubbandIdx = sbIdx;
@@ -90,9 +89,9 @@ int main()
   }
   omp_set_nested(true); // for around and within .multiSender.process()
 
-  Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_receive_pool");
+  Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_receive_pool", true);
   MACIO::RTmetadata rtmd(ps.observationID(), "", "");
-  BeamFormerPipeline bfpl(ps, localSbIndices, devices, MPI_receive_pool,
+  Pipeline bfpl(ps, localSbIndices, devices, MPI_receive_pool,
                           rtmd, "rtmd key prefix");
   bfpl.allocateResources();
 
@@ -113,18 +112,18 @@ int main()
 #  pragma omp section
     {
   // Insert 1 block of test data per sb.
-  std::vector<struct BeamFormerPipeline::Output> writePool(nrSubbands); // [localSubbandIdx]
+  std::vector<struct Pipeline::Output> writePool(nrSubbands); // [localSubbandIdx]
   for (unsigned i = 0; i < writePool.size(); i++) {
     SmartPtr<SubbandProcOutputData> data;
     unsigned blockIdx;
 
-    writePool[i].bequeue = new BestEffortQueue< SmartPtr<SubbandProcOutputData> >(str(format("writePool [file %u]") % i), 3, ps.realTime());
+    writePool[i].queue = new Queue< SmartPtr<SubbandProcOutputData> >(str(format("writePool [file %u]") % i));
 
     blockIdx = 0;
     data = getTestSbIncohData(ps, ctx, blockIdx, i);
-    ASSERT(writePool[i].bequeue->append(data));
+    writePool[i].queue->append(data);
 
-    writePool[i].bequeue->noMore();
+    writePool[i].queue->append(NULL);
   }
 
   // Have it push a block of values per sb to outputProc.
@@ -132,7 +131,7 @@ int main()
   for (unsigned globalSubbandIdx = 0; globalSubbandIdx < nrSubbands;
        globalSubbandIdx++) {
     unsigned localSubbandIdx = globalSubbandIdx;
-    bfpl.writeOutput(globalSubbandIdx, writePool[localSubbandIdx]);
+    bfpl.writeOutput(globalSubbandIdx, *writePool[localSubbandIdx].queue, bfpl.subbandProcs[localSubbandIdx % bfpl.subbandProcs.size()]->outputPool.free);
   }
 
   bfpl.multiSender.finish();

@@ -520,6 +520,11 @@ namespace LOFAR
         // size: len(Observation.nrBeams)
         std::vector<struct SAP> SAPs;
 
+        // Return whether there are any (in)coherent TABs specified in the
+        // observation. These functions are valid even if enabled == false.
+        bool anyCoherentTABs() const;
+        bool anyIncoherentTABs() const;
+
         size_t maxNrTABsPerSAP() const;
         size_t maxNrCoherentTABsPerSAP() const;
         size_t maxNrIncoherentTABsPerSAP() const;

@@ -21,7 +21,7 @@
 #include <lofar_config.h>
 
 #include "CorrelatorStep.h"
-#include "CorrelatorSubbandProc.h"
+#include "SubbandProc.h"
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_wrapper.h>
@@ -36,6 +36,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+
     CorrelatorStep::Factories::Factories(const Parset &ps, size_t nrSubbandsPerSubbandProc) :
       fft(ps.settings.correlator.nrChannels > 1
         ? new KernelFactory<FFT_Kernel>(FFT_Kernel::Parameters(
@@ -67,11 +68,64 @@ namespace LOFAR
     {
     }
 
+    void CorrelatorStep::Flagger::convertFlagsToChannelFlags(Parset const &ps,
+      MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
+      MultiDimArray<SparseSet<unsigned>, 2>& flagsPerChannel)
+    {
+      unsigned numberOfChannels = ps.nrChannelsPerSubband();
+      unsigned log2NrChannels = log2(numberOfChannels);
+      //Convert the flags per sample to flags per channel
+      for (unsigned station = 0; station < ps.nrStations(); station ++) 
+      {
+        // get the flag ranges
+        const SparseSet<unsigned>::Ranges &ranges = inputFlags[station].getRanges();
+        for (SparseSet<unsigned>::const_iterator it = ranges.begin();
+          it != ranges.end(); it ++) 
+        {
+          unsigned begin_idx;
+          unsigned end_idx;
+          if (numberOfChannels == 1)
+          {
+            // do nothing, just take the ranges as supplied
+            begin_idx = it->begin; 
+            end_idx = std::min(ps.nrSamplesPerChannel(), it->end );
+          }
+          else
+          {
+            // Never flag before the start of the time range               
+            // use bitshift to divide to the number of channels. 
+            //
+            // NR_TAPS is the width of the filter: they are
+            // absorbed by the FIR and thus should be excluded
+            // from the original flag set.
+            //
+            // At the same time, every sample is affected by
+            // the NR_TAPS-1 samples before it. So, any flagged
+            // sample in the input flags NR_TAPS samples in
+            // the channel.
+            begin_idx = std::max(0, 
+              (signed) (it->begin >> log2NrChannels) - NR_TAPS + 1);
+
+            // The min is needed, because flagging the last input
+            // samples would cause NR_TAPS subsequent samples to
+            // be flagged, which aren't necessarily part of this block.
+            end_idx = std::min(ps.nrSamplesPerChannel() + 1, 
+              ((it->end - 1) >> log2NrChannels) + 1);
+          }
+
+          // Now copy the transformed ranges to the channelflags
+          for (unsigned ch = 0; ch < numberOfChannels; ch++) {
+            flagsPerChannel[ch][station].include(begin_idx, end_idx);
+          }
+        }
+      }
+    }
+
 
     void CorrelatorStep::Flagger::propagateFlags(
       Parset const &parset,
       MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
-      CorrelatedData &output)
+      LOFAR::Cobalt::CorrelatedData &output)
     {   
       // Object for storing transformed flags
       MultiDimArray<SparseSet<unsigned>, 2> flagsPerChannel(
@@ -100,7 +154,7 @@ namespace LOFAR
     template<typename T> void CorrelatorStep::Flagger::calcWeights(
       Parset const &parset,
       MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
-      CorrelatedData &output)
+      LOFAR::Cobalt::CorrelatedData &output)
     {
       unsigned nrSamplesPerIntegration = parset.settings.correlator.nrSamplesPerChannel;
 
@@ -144,7 +198,7 @@ namespace LOFAR
     void CorrelatorStep::Flagger::calcWeights(
       Parset const &parset,
       MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
-      CorrelatedData &output)
+      LOFAR::Cobalt::CorrelatedData &output)
     {
       switch (output.itsNrBytesPerNrValidSamples) {
         case 4:
@@ -163,7 +217,7 @@ namespace LOFAR
 
 
     void CorrelatorStep::Flagger::applyWeight(unsigned baseline, 
-      unsigned channel, float weight, CorrelatedData &output)
+      unsigned channel, float weight, LOFAR::Cobalt::CorrelatedData &output)
     {
       for(unsigned pol1 = 0; pol1 < NR_POLARIZATIONS; ++pol1)
         for(unsigned pol2 = 0; pol2 < NR_POLARIZATIONS; ++pol2)
@@ -173,7 +227,7 @@ namespace LOFAR
 
     template<typename T> void 
     CorrelatorStep::Flagger::applyWeights(Parset const &parset,
-                                                 CorrelatedData &output)
+                                                 LOFAR::Cobalt::CorrelatedData &output)
     {
       for (unsigned bl = 0; bl < output.itsNrBaselines; ++bl)
       {
@@ -196,7 +250,7 @@ namespace LOFAR
 
 
     void CorrelatorStep::Flagger::applyWeights(Parset const &parset,
-                                                 CorrelatedData &output)
+                                                 LOFAR::Cobalt::CorrelatedData &output)
     {
       switch (output.itsNrBytesPerNrValidSamples) {
         case 4:
@@ -224,6 +278,10 @@ namespace LOFAR
       :
       ProcessStep(parset, i_queue),
       correlatorPPF(ps.settings.correlator.nrChannels > 1),
+      devE(context, correlatorPPF
+                    ? std::max(factories.correlator.bufferSize(CorrelatorKernel::INPUT_DATA),
+                               factories.correlator.bufferSize(CorrelatorKernel::OUTPUT_DATA))
+                    : factories.correlator.bufferSize(CorrelatorKernel::OUTPUT_DATA)),
       outputCounter(context, "output (correlator)"),
       integratedData(nrSubbandsPerSubbandProc)
     {
@@ -235,30 +293,27 @@ namespace LOFAR
     void CorrelatorStep::initMembers(gpu::Context &context,
       Factories &factories){
       if (correlatorPPF) {
-        // FIR filter
+        // FIR filter: A -> B
         firFilterKernel = factories.firFilter->create(queue, *devA, *devB);
 
-        // FFT
-        fftKernel = factories.fft->create(queue, *devB, *devB);
+        // FFT: B -> E
+        fftKernel = factories.fft->create(queue, *devB, devE);
       }
 
-      // Delay and Bandpass
+      // Delay and Bandpass: A/E -> B
       delayAndBandPassKernel = std::auto_ptr<DelayAndBandPassKernel>(factories.delayAndBandPass.create(queue, 
-        correlatorPPF ? *devB : *devA,
-        correlatorPPF ? *devA : *devB));
+        correlatorPPF ? devE : *devA, *devB));
 
-      // Correlator
+      // Correlator: B -> E
       correlatorKernel = std::auto_ptr<CorrelatorKernel>(factories.correlator.create(queue,
-        correlatorPPF ? *devA : *devB,
-        correlatorPPF ? *devB : *devA));
+        *devB, devE));
 
       // Initialize the output buffers for the long-time integration
       for (size_t i = 0; i < integratedData.size(); i++) {
         integratedData[i] = 
-          make_pair(0, new CorrelatedDataHostBuffer(ps.settings.antennaFields.size(), 
-                                                    ps.settings.correlator.nrChannels,
-                                                    ps.settings.correlator.nrSamplesPerChannel,
-                                                    context));
+          make_pair(0, new LOFAR::Cobalt::CorrelatedData(ps.settings.antennaFields.size(), 
+                                          ps.settings.correlator.nrChannels,
+                                          ps.settings.correlator.nrSamplesPerChannel));
       }
     }
 
@@ -296,14 +351,14 @@ namespace LOFAR
     }
 
 
-    void CorrelatorStep::readOutput(CorrelatedDataHostBuffer &output)
+    void CorrelatorStep::readOutput(SubbandProcOutputData &output)
     {
       // Read data back from the kernel
-      queue.readBuffer(output, correlatorPPF ? *devB : *devA, outputCounter, false);
+      queue.readBuffer(output.correlatedData, devE, outputCounter, false);
     }
 
 
-    void CorrelatorStep::processCPU(const SubbandProcInputData &input, CorrelatedDataHostBuffer &output)
+    void CorrelatorStep::processCPU(const SubbandProcInputData &input, SubbandProcOutputData &output)
     {
       // Propagate the flags.
       MultiDimArray<LOFAR::SparseSet<unsigned>, 1> flags = input.inputFlags;
@@ -315,30 +370,30 @@ namespace LOFAR
           flags, input.blockID.subbandProcSubbandIdx);
       }
 
-      Flagger::propagateFlags(ps, flags, output);
+      Flagger::propagateFlags(ps, flags, output.correlatedData);
     }
 
 
-    bool CorrelatorStep::integrate(CorrelatedDataHostBuffer &output)
+    bool CorrelatorStep::integrate(SubbandProcOutputData &output)
     {
       const size_t idx = output.blockID.subbandProcSubbandIdx;
       const size_t nblock = ps.settings.correlator.nrBlocksPerIntegration;
       
       // We don't want to copy the data if we don't need to integrate.
       if (nblock == 1) {
-        output.setSequenceNumber(output.blockID.block);
+        output.correlatedData.setSequenceNumber(output.blockID.block);
         return true;
       }
 
       integratedData[idx].first++;
 
       if (integratedData[idx].first < nblock) {
-        *integratedData[idx].second += output;
+        *integratedData[idx].second += output.correlatedData;
         return false;
       }
       else {
-        output += *integratedData[idx].second;
-        output.setSequenceNumber(output.blockID.block / nblock);
+        output.correlatedData += *integratedData[idx].second;
+        output.correlatedData.setSequenceNumber(output.blockID.block / nblock);
         integratedData[idx].first = 0;
         integratedData[idx].second->reset();
         return true;
@@ -346,7 +401,7 @@ namespace LOFAR
     }
 
 
-    bool CorrelatorStep::postprocessSubband(CorrelatedDataHostBuffer &output)
+    bool CorrelatorStep::postprocessSubband(SubbandProcOutputData &output)
     {
       if (!integrate(output)) {
         // Not yet done constructing output block 
@@ -355,7 +410,7 @@ namespace LOFAR
 
       // The flags are already copied to the correct location
       // now the flagged amount should be applied to the visibilities
-      Flagger::applyWeights(ps, output);  
+      Flagger::applyWeights(ps, output.correlatedData);  
 
       return true;
     }

@@ -30,6 +30,32 @@ Note:
 Flow:           Data dimensions:                        Max size (fcomplex):                        Buffer:
 ===================================================================================================================
 (input)         [station][sample][pol]                  [48][196608][2]     =  72 MiB               A
+                                                        (i16complex)
+
+Correlator [A -> E, trashes B]
+-----------------------------------
+NB: Numbers are for 80 antenna fields.
+
+(input)         [station][sample][pol]                  [80][196608][2]     = 120 MiB               A
+   |
+   V
+  FIR (if >1ch) {IntToFloat} {I/O: history samples}
+   |            [station][pol][sample]                  [80][2][196608]     = 240 MiB               Nch: B
+   V
+  FFT (if >1ch) {out-of-place}
+   |            [station][pol][sample][channel]         [80][2][3072][64]   = 240 MiB               Nch: E
+   V
+Delay compensation + Band pass + Transpose {I/O: delays}
+   |            [station][channel][sample][pol]         [80][64][3072][2]   = 240 MiB               B
+   V
+Correlator
+   |            [baseline][channel][pol][pol]           [3240][64][2][2]    =   6 MiB               E
+   V
+(output)
+
+(BF) Preprocessing [A -> B, trashes A]
+-----------------------------------
+(input)         [station][sample][pol]                  [48][196608][2]     =  72 MiB               A
    |                                                    (i16complex)
    V
 IntToFloat + Transpose
@@ -55,13 +81,13 @@ BandPass + Transpose {I/O: weights}
    V          = [station][channel][sample][pol]
    X
 
-Complex Voltages/Coherent Stokes:
+Complex Voltages/Coherent Stokes: [B -> C, trashes A]
 -----------------------------------
    X            [station][channel][sample][pol]         [48][4096][48][2]   = 144 MiB               B
    |
    V
 BeamFormer {I/O: weights}
-   |            [channel][sample][tab][pol]             [4096][48][tab][2]  = 3 MiB/TAB             A
+   |            [channel][sample][tab][pol]             [4096][48][tab][2]  = 3 MiB/TAB             D
    V
 Transpose  
    |            [tab][pol][sample][channel]             [tab][2][48][4096]  = 3 MiB/TAB             C
@@ -76,20 +102,20 @@ FFT-shift {inplace}
    |
    V
 FIR-16 (if >1ch) {I/O: history samples}
-   |            [tab][pol][sample]                      [tab][2][196608]    = 3 MiB/TAB             1ch: -
-   |                                                                                                Nch: D
+   |            [tab][pol][sample]                      [tab][2][196608]    = 3 MiB/TAB             Nch: D
+   |
    V
 FFT-16 {inplace} (if >1ch)
-   |            [tab][pol][sample][channel]             [tab][2][12288][16] = 3 MiB/TAB             1ch: -
-   |                                                                                                Nch: D
+   |            [tab][pol][sample][channel]             [tab][2][12288][16] = 3 MiB/TAB             Nch: C
+   |
    V
 Coherent Stokes
-   |            [tab][stokes][sample][channel]          [tab][4][12288][16] = 0.75 MiB/TAB/Stokes   1ch: D
-   |                                                    (float)                                     Nch: C
+   |            [tab][stokes][sample][channel]          [tab][4][12288][16] = 0.75 MiB/TAB/Stokes   D
+   |                                                    (float)
    V
 (output)
 
-Incoherent Stokes:
+Incoherent Stokes: [B -> B, trashes A]
 -----------------------------------
    X            [station][channel][sample][pol]         [48][4096][48][2]   = 144 MiB               B
    |
@@ -108,21 +134,30 @@ FIR-16 (if >1ch) {I/O: history samples}
    |
    V
 FFT-16 {inplace} (if >1ch)
-   |            [station][pol][sample][channel]         [48][2][12288][16]  = 144 MiB               Nch: B
+   |            [station][pol][sample][channel]         [48][2][12288][16]  = 144 MiB               Nch: A
    V
 Incoherent Stokes
-   |            [stokes][sample][channel]               [4][12288][16]      = 3 MiB                 1ch: B
-   V                                                    (float)                                     Nch: A
+   |            [stokes][sample][channel]               [4][12288][16]      = 3 MiB                 B
+   V                                                    (float)
 (output)
 
 
-A = max(144 MiB, 3 MiB * #coherent TABs)
+A = 144 MiB
 B = 144 MiB
 C = 3 MiB * #coherent TABs
 D = 3 MiB * #coherent TABs
+E = 144 MiB
 
 The WQ has 1791 MiB GPU memory available, because we have 2 WQ's per GPU core,
-and (according to nvidia-smi) we have 3583MiB GPU memory per core.
+and (according to nvidia-smi) we have 3583 MiB GPU memory per core.
 
-Since we can form more than 48 TABs, the size of buffers A, C and D are determined by the number of TABs. 
-So, the maximum number of TABs that we can form is: (1791 - 144) MiB / (3 * 3 MiB/TAB) = 183 TABs.
+BF only:
+---------
+Since we can form more than 48 TABs, the size of buffers C and D are determined by the number of TABs. 
+So, the maximum number of TABs that we can form is: (1791 - 288) MiB / (2 * 3 MiB/TAB) >= 250 TABs.
+
+Corr+BF:
+---------
+Since we can form more than 48 TABs, the size of buffers C and D are determined by the number of TABs. 
+So, the maximum number of TABs that we can form is: (1791 - 432) MiB / (2 * 3 MiB/TAB) >= 226 TABs.
+

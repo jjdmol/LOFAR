@@ -33,7 +33,8 @@
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <CoInterface/BlockID.h>
 
-#include "SubbandProc.h"
+#include "SubbandProcInputData.h"
+#include "SubbandProcOutputData.h"
 #include "ProcessStep.h"
 
 #include <GPUProc/Kernels/FFT_Kernel.h>
@@ -47,9 +48,6 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    //# Forward declarations
-    class BeamFormedData;
-
     class BeamFormerIncoherentStep : public ProcessStep
     {
     public:
@@ -81,7 +79,7 @@ namespace LOFAR
 
       void process(const SubbandProcInputData &input);
 
-      void readOutput(BeamFormedData &output);
+      void readOutput(SubbandProcOutputData &output);
 
     private:
 

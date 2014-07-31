@@ -1,4 +1,4 @@
-//# ProcessStep.h
+//# SubbandProcOutputData.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,39 +18,48 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_PROCESS_STEP_H
-#define LOFAR_GPUPROC_CUDA_PROCESS_STEP_H
+#ifndef LOFAR_GPUPROC_CUDA_SUBBAND_PROC_OUTPUT_DATA_H
+#define LOFAR_GPUPROC_CUDA_SUBBAND_PROC_OUTPUT_DATA_H
 
+#include <CoInterface/BlockID.h>
 #include <CoInterface/Parset.h>
-
+#include <CoInterface/CorrelatedData.h>
 #include <GPUProc/gpu_wrapper.h>
+#include <GPUProc/MultiDimArrayHostBuffer.h>
 
-#include "SubbandProcInputData.h"
+// \file
+// TODO: Update documentation
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    class ProcessStep
+    // Our output data type
+    class SubbandProcOutputData
     {
     public:
-      virtual void process(const SubbandProcInputData &input) = 0;
+      struct BlockID blockID;
 
-      virtual ~ProcessStep()
-       {}
+      MultiDimArrayHostBuffer<float, 4> coherentData;
+      MultiDimArrayHostBuffer<float, 4> incoherentData;
 
-    protected:
-      ProcessStep(const Parset &parset,
-        gpu::Stream &queue)
-        :
-        ps(parset),
-        queue(queue) 
-        {};
+      struct CorrelatedData:
+        public MultiDimArrayHostBuffer<fcomplex,4>,
+        public LOFAR::Cobalt::CorrelatedData
+      {
+        CorrelatedData(unsigned nrStations, 
+                       unsigned nrChannels,
+                       unsigned maxNrValidSamples,
+                       gpu::Context &context);
+      };
 
-      const Parset ps;
-      gpu::Stream queue;
+      CorrelatedData correlatedData;
+      bool emit_correlatedData;
+
+      SubbandProcOutputData(const Parset &ps, gpu::Context &context);
     };
   }
 }
 
 #endif
+
