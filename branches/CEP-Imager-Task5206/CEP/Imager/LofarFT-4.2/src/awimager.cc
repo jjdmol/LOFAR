@@ -51,6 +51,7 @@
 #include <casa/iostream.h>
 #include <casa/sstream.h>
 
+#include <Common/OpenMP.h>
 #include <boost/algorithm/string/join.hpp>
 
 using namespace casa;
@@ -117,6 +118,10 @@ int main (Int argc, char** argv)
     cerr << "Valid operations are: \""<<boost::algorithm::join(operations, "\", \"")<<"\""<<endl;
     return 1;
   }
+
+  uint maxthreads = parset.getInt("numthreads",8);
+
+  LOFAR::OpenMP::setNumThreads(maxthreads);
 
   operation->init();
 

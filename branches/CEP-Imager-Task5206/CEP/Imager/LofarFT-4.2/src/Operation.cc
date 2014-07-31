@@ -230,7 +230,10 @@ void Operation::showHelp (ostream& os, const string& name)
   "  verbose          : verbosity level                               "<<endl<<
   "                     int   ,  default 0                            "<<endl<<
   "  chunksize        : amount of data read at once (0 means automatic)"<<endl<<
-  "                     int   ,  default 0                            "<<endl<<endl;
+  "                     int   ,  default 0                            "<<endl<<
+  "  numthreads       : maximum number of threads to use              "<<endl<<
+  "                     int   ,  default 8                            "<<endl<<endl;
+
   os<<
   "Output parameters:"<<endl<<
   "  output.imagename : base name for output image                    "<<endl<<
