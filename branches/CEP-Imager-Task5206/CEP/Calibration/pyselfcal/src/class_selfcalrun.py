@@ -410,7 +410,7 @@ class selfCalRun:
 				self.nbpixel[self.i] = self.nbpixel[self.i]+1
 					
 			#Imaging now with the image 
-			cmd_image="""awimager data.ms=%s output.image=%sImage_%sarcsec_Iter%s weight.type=robust weight.robust=%s image.npix=%s image.cellsize=%sarcsec gridding.padding=1.18 clean.niter=%s operation=clean gridding.timewindow=300 data.uvrange=[%s,%s] data.wmax=%s clean.threshold=%sJy"""%("""%sAll_Iteration_number_%s"""%(self.IterDir,self.i),self.ImagePathDir,self.pixsize[self.i],self.i,self.robust[self.i],self.nbpixel[self.i],self.pixsize[self.i],self.nIteration, self.UVmin,self.UVmax[self.i],self.wmax[self.i],threshold) 
+			cmd_image="""awimager data.ms=%s output.imagename=%sImage_%sarcsec_Iter%s weight.type=robust weight.robust=%s image.npix=%s image.cellsize=%sarcsec gridding.padding=1.18 clean.niter=%s operation=clean gridding.timewindow=300 data.uvrange=[%s,%s] data.wmax=%s clean.threshold=%sJy"""%("""%sAll_Iteration_number_%s"""%(self.IterDir,self.i),self.ImagePathDir,self.pixsize[self.i],self.i,self.robust[self.i],self.nbpixel[self.i],self.pixsize[self.i],self.nIteration, self.UVmin,self.UVmax[self.i],self.wmax[self.i],threshold) 
 			print ''
 			print cmd_image
 			print ''
