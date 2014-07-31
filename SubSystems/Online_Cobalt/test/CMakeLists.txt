@@ -25,3 +25,4 @@ set_tests_properties(tRTmetadataToFile PROPERTIES RUN_SERIAL ON)
 
 add_subdirectory(Correlator)
 add_subdirectory(Beamformer)
+add_subdirectory(Commensal)
