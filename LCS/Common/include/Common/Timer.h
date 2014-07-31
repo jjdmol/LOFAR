@@ -104,7 +104,7 @@ namespace LOFAR {
         NSTimer& itsTimer;
     };
 
-  private:
+  protected:
     void print_time(std::ostream &, const char *which, double time) const;
 
     union {
