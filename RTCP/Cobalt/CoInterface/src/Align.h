@@ -24,6 +24,7 @@
 #include <cstddef>
 
 #include <Common/LofarTypes.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
@@ -63,6 +64,24 @@ namespace LOFAR
       n++;
       n += (n == 0);
       return n;
+    }
+
+
+    /*
+     * Get the log2 of the supplied number.
+     *
+     * n must be a power of two.
+     */
+    static unsigned log2(unsigned n)
+    {
+      ASSERT(powerOfTwo(n));
+
+      unsigned log;
+
+      for (log = 0; 1U << log != n; log ++)
+        ; // do nothing, the creation of the log is a side effect of the for loop
+
+      return log;
     }
 
 

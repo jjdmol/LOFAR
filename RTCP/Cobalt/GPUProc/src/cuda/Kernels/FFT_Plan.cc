@@ -27,7 +27,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    FFT_Plan::FFT_Plan(gpu::Context &context, unsigned fftSize, unsigned nrFFTs)
+    FFT_Plan::FFT_Plan(const gpu::Context &context, unsigned fftSize, unsigned nrFFTs)
       :
       context(context)
     {

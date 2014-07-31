@@ -1,4 +1,4 @@
-//# BeamFormerSubbandProcStep.h
+//# SubbandProcOutputData.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,51 +18,48 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_BEAMFORMER_SUBBAND_PROC_STEP_H
-#define LOFAR_GPUPROC_CUDA_BEAMFORMER_SUBBAND_PROC_STEP_H
-
-#include <CoInterface/Parset.h>
-
-#include <GPUProc/gpu_wrapper.h>
+#ifndef LOFAR_GPUPROC_CUDA_SUBBAND_PROC_OUTPUT_DATA_H
+#define LOFAR_GPUPROC_CUDA_SUBBAND_PROC_OUTPUT_DATA_H
 
 #include <CoInterface/BlockID.h>
+#include <CoInterface/Parset.h>
+#include <CoInterface/CorrelatedData.h>
+#include <GPUProc/gpu_wrapper.h>
+#include <GPUProc/MultiDimArrayHostBuffer.h>
 
-#include "SubbandProc.h"
+// \file
+// TODO: Update documentation
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-
-    //# Forward declarations
-    struct BeamFormerFactories;
-
-    class BeamFormerSubbandProcStep
+    // Our output data type
+    class SubbandProcOutputData
     {
     public:
-      virtual void process(BlockID blockID,
-        unsigned subband) = 0;
+      struct BlockID blockID;
 
-      virtual void printStats() =0;
+      MultiDimArrayHostBuffer<float, 4> coherentData;
+      MultiDimArrayHostBuffer<float, 4> incoherentData;
 
-      virtual void logTime() = 0;
+      struct CorrelatedData:
+        public MultiDimArrayHostBuffer<fcomplex,4>,
+        public LOFAR::Cobalt::CorrelatedData
+      {
+        CorrelatedData(unsigned nrStations, 
+                       unsigned nrChannels,
+                       unsigned maxNrValidSamples,
+                       gpu::Context &context);
+      };
 
-      virtual ~BeamFormerSubbandProcStep()
-       {}
+      CorrelatedData correlatedData;
+      bool emit_correlatedData;
 
-    protected:
-      BeamFormerSubbandProcStep(const Parset &parset,
-        gpu::Stream &i_queue)
-        :
-        ps(parset),
-        queue(i_queue) 
-        {} ;
-
-      const Parset ps;
-      gpu::Stream queue;
-
+      SubbandProcOutputData(const Parset &ps, gpu::Context &context);
     };
   }
 }
 
 #endif
+

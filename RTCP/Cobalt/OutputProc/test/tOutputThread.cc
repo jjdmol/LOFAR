@@ -64,7 +64,7 @@ TEST(testCorrelatorOutputThreadThrowsStorageException)
   //par.add("PIC.Core.CS002HBA0.phaseCenter", "0.0")
   par.updateSettings();
 
-  Pool<StreamableData> outputPool("testCorrelatorOutputThreadThrowsStorageException::outputPool");
+  Pool<StreamableData> outputPool("testCorrelatorOutputThreadThrowsStorageException::outputPool", true);
   MACIO::RTmetadata rtmd(12345, "", "");
 
   try
@@ -142,7 +142,7 @@ TEST(testCorrelatorOutputThreadRealtimeThrowsNoException)
   par.add("Cobalt.realTime", "true");
   par.updateSettings();
 
-  Pool<StreamableData> outputPool("testCorrelatorOutputThreadRealtimeThrowsNoException::outputPool");
+  Pool<StreamableData> outputPool("testCorrelatorOutputThreadRealtimeThrowsNoException::outputPool", true);
   MACIO::RTmetadata rtmd(12345, "", "");
 
   // We have a realtime system. We should not throw exceptions
@@ -191,7 +191,7 @@ TEST(testBeamformerOutputThreadThrowsStorageException)
   //par.add("PIC.Core.CS002HBA0.phaseCenter", "0.0")
   par.updateSettings();
 
-  Pool<StreamableData> outputPool("testBeamformerOutputThreadThrowsStorageException::outputPool");
+  Pool<StreamableData> outputPool("testBeamformerOutputThreadThrowsStorageException::outputPool", true);
   MACIO::RTmetadata rtmd(12345, "", "");
 
   try
@@ -272,7 +272,7 @@ TEST(testBeamformerOutputThreadRealtimeThrowsNoException)
   par.add("Cobalt.realTime", "true");
   par.updateSettings();
 
-  Pool<TABTranspose::BeamformedData> outputPool("testBeamformerOutputThreadRealtimeThrowsNoException");
+  Pool<TABTranspose::BeamformedData> outputPool("testBeamformerOutputThreadRealtimeThrowsNoException", true);
   MACIO::RTmetadata rtmd(12345, "", "");
 
   // We have a realtime system. We should not throw exceptions

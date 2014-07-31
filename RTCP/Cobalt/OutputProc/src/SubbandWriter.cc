@@ -35,7 +35,7 @@ namespace LOFAR
         RTmetadata &mdLogger, const std::string &mdKeyPrefix,
         const std::string &logPrefix)
     :
-      itsOutputPool(str(format("SubbandWriter::itsOutputPool [stream %u]") % streamNr)),
+      itsOutputPool(str(format("SubbandWriter::itsOutputPool [stream %u]") % streamNr), parset.settings.realTime),
       itsInputThread(parset, streamNr, itsOutputPool, logPrefix),
       itsOutputThread(parset, streamNr, itsOutputPool, mdLogger, mdKeyPrefix, logPrefix)
     {

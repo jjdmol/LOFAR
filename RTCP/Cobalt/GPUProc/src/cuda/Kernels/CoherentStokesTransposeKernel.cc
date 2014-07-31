@@ -45,6 +45,7 @@ namespace LOFAR
     string CoherentStokesTransposeKernel::theirFunction = "coherentStokesTranspose";
 
     CoherentStokesTransposeKernel::Parameters::Parameters(const Parset& ps) :
+      Kernel::Parameters("coherentStokesTranspose"),
       nrChannels(ps.settings.beamFormer.nrHighResolutionChannels),
       nrSamplesPerChannel(ps.settings.blockSize / nrChannels),
 
@@ -57,12 +58,26 @@ namespace LOFAR
             ps.settings.observationID);
     }
 
+
+    size_t CoherentStokesTransposeKernel::Parameters::bufferSize(BufferType bufferType) const
+    {
+      switch (bufferType) {
+      case CoherentStokesTransposeKernel::INPUT_DATA: 
+      case CoherentStokesTransposeKernel::OUTPUT_DATA:
+        return
+          (size_t) nrChannels * nrSamplesPerChannel * 
+            NR_POLARIZATIONS * nrTABs * sizeof(std::complex<float>);
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
+
     CoherentStokesTransposeKernel::
     CoherentStokesTransposeKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
+      CompiledKernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       ASSERT(params.nrSamplesPerChannel > 0);
       ASSERT(params.nrTABs > 0);
@@ -82,20 +97,6 @@ namespace LOFAR
     }
 
     //--------  Template specializations for KernelFactory  --------//
-
-    template<> size_t 
-    KernelFactory<CoherentStokesTransposeKernel>::bufferSize(BufferType bufferType) const
-    {
-      switch (bufferType) {
-      case CoherentStokesTransposeKernel::INPUT_DATA: 
-      case CoherentStokesTransposeKernel::OUTPUT_DATA:
-        return
-          (size_t) itsParameters.nrChannels * itsParameters.nrSamplesPerChannel * 
-            NR_POLARIZATIONS * itsParameters.nrTABs * sizeof(std::complex<float>);
-      default:
-        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
-      }
-    }
 
     template<> CompileDefinitions
     KernelFactory<CoherentStokesTransposeKernel>::compileDefinitions() const

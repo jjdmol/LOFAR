@@ -137,7 +137,7 @@ struct Fixture {
 
   Fixture()
   :
-    outputPool("Fixture::outputPool"),
+    outputPool("Fixture::outputPool", true),
     ctr(outputPool, 0, nrSubbands, nrChannels, nrSamples)
   {
     for (size_t i = 0; i < nrBlocks; ++i) {
@@ -401,7 +401,7 @@ SUITE(SendReceive) {
     Receiver::CollectorMap collectors;
 
     for (size_t i = 0; i < nrTABs; ++i) {
-      outputPools[i] = new Pool<BeamformedData>(str(format("OneToOne::outputPool[%u]") % i));
+      outputPools[i] = new Pool<BeamformedData>(str(format("OneToOne::outputPool[%u]") % i), true);
       for (size_t b = 0; b < nrBlocks; ++b) {
         outputPools[i]->free.append(new BeamformedData(
           boost::extents[nrSamples][nrSubbands][nrChannels],
@@ -589,7 +589,7 @@ SUITE(MultiReceiver) {
             if (t % nrReceivers != r)
               continue;
 
-            outputPools[t] = new Pool<BeamformedData>(str(format("MultiReceiver::Transpose::outputPool[%u]") % t));
+            outputPools[t] = new Pool<BeamformedData>(str(format("MultiReceiver::Transpose::outputPool[%u]") % t), true);
 
             for (size_t i = 0; i < nrBlocks; ++i) {
               outputPools[t]->free.append(new BeamformedData(

@@ -67,8 +67,7 @@
 #include "global_defines.h"
 #include <GPUProc/Station/StationInput.h>
 #include <GPUProc/Station/StationNodeAllocation.h>
-#include "Pipelines/CorrelatorPipeline.h"
-#include "Pipelines/BeamFormerPipeline.h"
+#include "Pipelines/Pipeline.h"
 //#include "Pipelines/UHEP_Pipeline.h"
 #include "Storage/StorageProcesses.h"
 
@@ -393,15 +392,7 @@ int main(int argc, char **argv)
     subbandDistribution[receiverRank].push_back(subband);
   }
 
-  bool correlatorEnabled = ps.settings.correlator.enabled;
-  bool beamFormerEnabled = ps.settings.beamFormer.enabled;
-
-  if (correlatorEnabled && beamFormerEnabled) {
-    LOG_FATAL("Commensal observations (correlator+beamformer) not supported yet.");
-    return EXIT_FAILURE;
-  }
-
-  Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_recieve_pool");
+  Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_receive_pool", ps.settings.realTime);
 
   const std::vector<size_t>  subbandIndices(subbandDistribution[mpi.rank()]);
 
@@ -417,26 +408,13 @@ int main(int argc, char **argv)
 
   // Creation of pipelines cause fork/exec, which we need to
   // do before we start doing anything fancy with libraries and threads.
-  if (subbandIndices.empty()) 
-  {
+  if (subbandIndices.empty()) {
     // no operation -- don't even create a pipeline!
     pipeline = NULL;
-  } 
-  else if (correlatorEnabled) 
-  {
-    pipeline = new CorrelatorPipeline(ps, subbandIndices, devices,
-                                      MPI_receive_pool, mdLogger, mdKeyPrefix);
-  } 
-  else if (beamFormerEnabled) 
-  {
-    pipeline = new BeamFormerPipeline(ps, subbandIndices, devices,
+  } else {
+    pipeline = new Pipeline(ps, subbandIndices, devices,
                                       MPI_receive_pool, mdLogger, mdKeyPrefix, mpi.rank());
   } 
-  else 
-  {
-    LOG_FATAL("No pipeline selected.");
-    return EXIT_FAILURE;
-  }
 
   // After pipeline creation (post-fork()), allow creation of a thread to send
   // data points for monitoring (PVSS).

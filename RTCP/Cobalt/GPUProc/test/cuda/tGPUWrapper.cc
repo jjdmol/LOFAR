@@ -169,7 +169,7 @@ SUITE(Memory) {
       Context ctx(*i);     
       Stream s(ctx);
 
-      PerformanceCounter counter(ctx);
+      PerformanceCounter counter(ctx, "writeBuffer");
       // Allocate memory on host and device
       const size_t size = 1024 * 1024;
       HostMemory hm(ctx, size);
@@ -202,7 +202,7 @@ SUITE(Memory) {
     for (vector<Device>::const_iterator i = devices.begin(); i != devices.end(); ++i) {
       Context ctx(*i);
       Stream s(ctx);
-      PerformanceCounter counter(ctx);
+      PerformanceCounter counter(ctx, "copyBuffer");
 
       // Allocate memory on host and device
       const size_t size = 1024 * 1024;

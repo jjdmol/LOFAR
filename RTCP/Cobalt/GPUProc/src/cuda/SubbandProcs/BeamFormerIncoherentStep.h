@@ -33,8 +33,9 @@
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <CoInterface/BlockID.h>
 
-#include "SubbandProc.h"
-#include "BeamFormerSubbandProcStep.h"
+#include "SubbandProcInputData.h"
+#include "SubbandProcOutputData.h"
+#include "ProcessStep.h"
 
 #include <GPUProc/Kernels/FFT_Kernel.h>
 #include <GPUProc/Kernels/FFTShiftKernel.h>
@@ -47,7 +48,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    class BeamFormerIncoherentStep : public BeamFormerSubbandProcStep
+    class BeamFormerIncoherentStep : public ProcessStep
     {
     public:
       struct Factories
@@ -55,8 +56,10 @@ namespace LOFAR
         Factories(const Parset &ps, size_t nrSubbandsPerSubbandProc = 1);
 
         KernelFactory<IncoherentStokesTransposeKernel> incoherentStokesTranspose;
+        KernelFactory<FFT_Kernel> incoherentInverseFFT;
         KernelFactory<FFTShiftKernel> incoherentInverseFFTShift;
         SmartPtr< KernelFactory<FIR_FilterKernel> > incoherentFirFilter;
+        SmartPtr< KernelFactory<FFT_Kernel> > incoherentFinalFFT;
         KernelFactory<IncoherentStokesKernel> incoherentStokes;
       };
 
@@ -64,7 +67,6 @@ namespace LOFAR
         gpu::Stream &i_queue,
         gpu::Context &context,
         Factories &factories,
-        boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
         boost::shared_ptr<gpu::DeviceMemory> i_devA,
         boost::shared_ptr<gpu::DeviceMemory> i_devB
         );
@@ -75,17 +77,13 @@ namespace LOFAR
 
       gpu::DeviceMemory outputBuffer();
 
-      void process(BlockID blockID,
-        unsigned subband);
+      void process(const SubbandProcInputData &input);
 
-      void printStats();
-
-      void logTime();
+      void readOutput(SubbandProcOutputData &output);
 
     private:
 
       // Data members
-      boost::shared_ptr<SubbandProcInputData::DeviceBuffers> devInput;
       boost::shared_ptr<gpu::DeviceMemory> devA;
       boost::shared_ptr<gpu::DeviceMemory> devB;
 
@@ -94,27 +92,24 @@ namespace LOFAR
       const bool incoherentStokesPPF;
 
       // Transpose 
-      std::auto_ptr<IncoherentStokesTransposeKernel::Buffers> incoherentTransposeBuffers;
       std::auto_ptr<IncoherentStokesTransposeKernel> incoherentTranspose;
 
       // Inverse (4k points) FFT
       std::auto_ptr<FFT_Kernel> incoherentInverseFFT;
 
       // Inverse FFT-shift
-      std::auto_ptr<FFTShiftKernel::Buffers> incoherentInverseFFTShiftBuffers;
       std::auto_ptr<FFTShiftKernel> incoherentInverseFFTShiftKernel;
 
       // Poly-phase filter (FIR + FFT)
-      std::auto_ptr<gpu::DeviceMemory> devIncoherentFilterWeights;
-      std::auto_ptr<gpu::DeviceMemory> devIncoherentFilterHistoryData;
-
-      std::auto_ptr<FIR_FilterKernel::Buffers> incoherentFirFilterBuffers;
       std::auto_ptr<FIR_FilterKernel> incoherentFirFilterKernel;
       std::auto_ptr<FFT_Kernel> incoherentFinalFFT;
 
       // Incoherent Stokes
-      std::auto_ptr<IncoherentStokesKernel::Buffers> incoherentStokesBuffers;
       std::auto_ptr<IncoherentStokesKernel> incoherentStokesKernel;
+
+      PerformanceCounter outputCounter;
+
+      size_t nrIncoherent(const BlockID &blockID) const;
     };
   }
 }

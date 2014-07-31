@@ -1,4 +1,5 @@
-//# PerformanceCounter.h
+//# KernelFactories.h
+//#
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,45 +19,35 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_PERFORMANCECOUNTER_H
-#define LOFAR_GPUPROC_CUDA_PERFORMANCECOUNTER_H
+#ifndef LOFAR_GPUPROC_CUDA_BEAM_FORMER_FACTORIES_H
+#define LOFAR_GPUPROC_CUDA_BEAM_FORMER_FACTORIES_H
 
+#include <CoInterface/Parset.h>
+#include <CoInterface/SmartPtr.h>
 
-#include <GPUProc/gpu_wrapper.h>
-#include <CoInterface/RunningStatistics.h>
+#include "CorrelatorStep.h"
+#include "BeamFormerPreprocessingStep.h"
+#include "BeamFormerCoherentStep.h"
+#include "BeamFormerIncoherentStep.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    class PerformanceCounter
+    struct KernelFactories
     {
-    public:
-      PerformanceCounter(const gpu::Context &context, const std::string &name);
-      ~PerformanceCounter();
+      KernelFactories(const Parset &ps, 
+                            size_t nrSubbandsPerSubbandProc = 1);
 
-      void recordStart(const gpu::Stream &stream);
-      void recordStop(const gpu::Stream &stream);
+      SmartPtr<CorrelatorStep::Factories> correlator;
 
-    private:
-      const std::string name;
+      SmartPtr<BeamFormerPreprocessingStep::Factories> preprocessing;
 
-      // Public event: it needs to be inserted into a stream.
-      // @{
-      gpu::Event start;
-      gpu::Event stop;
-      // @}
-
-      // Whether we have posted events that still need to be
-      // processed in logTime()
-      bool recording;
-
-      RunningStatistics stats;
-
-      void logTime();
+      SmartPtr<BeamFormerCoherentStep::Factories> coherentStokes;
+      SmartPtr<BeamFormerIncoherentStep::Factories> incoherentStokes;
     };
+
   }
 }
 
 #endif
-

@@ -31,27 +31,29 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    class FFTShiftKernel : public Kernel
+    class FFTShiftKernel : public CompiledKernel
     {
     public:
       static std::string theirSourceFile;
       static std::string theirFunction;
 
-      // Parameters that must be passed to the constructor of the
-      // IntToFloatKernel class.
-      struct Parameters : Kernel::Parameters
-      {
-        Parameters(const Parset& ps, unsigned nrSTABs, unsigned nrChannels);
-        unsigned nrSTABs;
-
-        unsigned nrChannels;
-        unsigned nrSamplesPerChannel;
-      };
-
       enum BufferType
       {
         INPUT_DATA,
         OUTPUT_DATA
+      };
+
+      // Parameters that must be passed to the constructor of the
+      // IntToFloatKernel class.
+      struct Parameters : Kernel::Parameters
+      {
+        Parameters(const Parset& ps, unsigned nrSTABs, unsigned nrChannels, const std::string &name = "FFT-shift");
+        unsigned nrSTABs;
+
+        unsigned nrChannels;
+        unsigned nrSamplesPerChannel;
+
+        size_t bufferSize(BufferType bufferType) const;
       };
 
       // Construct a FFTShift kernel.
@@ -67,9 +69,6 @@ namespace LOFAR
     };
 
     //# --------  Template specializations for KernelFactory  -------- #//
-
-    template<> size_t
-    KernelFactory<FFTShiftKernel>::bufferSize(BufferType bufferType) const;
 
     template<> CompileDefinitions
     KernelFactory<FFTShiftKernel>::compileDefinitions() const;
