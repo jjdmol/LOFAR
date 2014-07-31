@@ -44,9 +44,9 @@ namespace LOFAR
       KernelFactories &factories,
       size_t nrSubbandsPerSubbandProc)
     :
-      inputPool("SubbandProc::inputPool"),
-      processPool("SubbandProc::processPool"),
-      outputPool("SubbandProc::outputPool"),
+      inputPool("SubbandProc::inputPool", ps.settings.realTime),
+      processPool("SubbandProc::processPool", ps.settings.realTime),
+      outputPool("SubbandProc::outputPool", ps.settings.realTime),
 
       ps(ps),
       nrSubbandsPerSubbandProc(nrSubbandsPerSubbandProc),

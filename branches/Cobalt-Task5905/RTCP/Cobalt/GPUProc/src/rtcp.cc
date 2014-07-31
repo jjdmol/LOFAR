@@ -391,7 +391,7 @@ int main(int argc, char **argv)
     subbandDistribution[receiverRank].push_back(subband);
   }
 
-  Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_recieve_pool");
+  Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_receive_pool", ps.settings.realTime);
 
   const std::vector<size_t>  subbandIndices(subbandDistribution[mpi.rank()]);
 

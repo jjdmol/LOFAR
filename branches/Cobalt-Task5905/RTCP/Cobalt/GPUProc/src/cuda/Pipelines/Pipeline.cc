@@ -35,6 +35,7 @@
 #include <Stream/NullStream.h>
 
 #include <CoInterface/Align.h>
+#include <CoInterface/BudgetTimer.h>
 #include <CoInterface/Stream.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/global_defines.h>
@@ -334,7 +335,10 @@ namespace LOFAR
     {
       SmartPtr<struct MPIRecvData> input;
 
-      NSTimer copyTimer("transpose input data", true, true);
+      BudgetTimer copyTimer(
+        "transposeInput",
+        ps.settings.blockDuration() / subbandIndices.size(),
+        true, true);
 
       // Keep fetching input objects until end-of-output
       while ((input = mpiPool.filled.remove()) != NULL) {
@@ -440,7 +444,10 @@ namespace LOFAR
     {
       SmartPtr<SubbandProcInputData> input;
 
-      NSTimer preprocessTimer("preprocess", true, true);
+      BudgetTimer preprocessTimer(
+        "preprocess",
+        ps.settings.blockDuration() / nrSubbandsPerSubbandProc,
+        true, true);
 
       // Keep fetching input objects until end-of-output
       while ((input = subbandProc.inputPool.filled.remove()) != NULL) {
@@ -474,7 +481,10 @@ namespace LOFAR
     {
       SmartPtr<SubbandProcInputData> input;
 
-      NSTimer processTimer("process", true, true);
+      BudgetTimer processTimer(
+        "process",
+        ps.settings.blockDuration() / nrSubbandsPerSubbandProc,
+        true, true);
 
       // Keep fetching input objects until end-of-input
       while ((input = subbandProc.processPool.filled.remove()) != NULL) {
@@ -517,7 +527,10 @@ namespace LOFAR
     {
       SmartPtr<SubbandProcOutputData> output;
 
-      NSTimer postprocessTimer("postprocess", true, true);
+      BudgetTimer postprocessTimer(
+        "postprocess",
+        ps.settings.blockDuration() / nrSubbandsPerSubbandProc,
+        true, true);
 
       // Keep fetching output objects until end-of-output
       while ((output = subbandProc.outputPool.filled.remove()) != NULL) {
@@ -571,8 +584,8 @@ namespace LOFAR
       Queue< SmartPtr<SubbandProcOutputData> > &outputQueue,
       Queue< SmartPtr<SubbandProcOutputData> > &spillQueue )
     {
-      NSTimer transposeTimer(str(format("Pipeline::writeOutput(subband %u) transpose/file") % globalSubbandIdx), true, true);
-      NSTimer forwardTimer(str(format("Pipeline::writeOutput(subband %u) forward/file") % globalSubbandIdx), true, true);
+      NSTimer transposeTimer(str(format("Pipeline::writeBeamFormedOutput(subband %u) transpose/file") % globalSubbandIdx), true, true);
+      NSTimer forwardTimer(str(format("Pipeline::writeBeamFormedOutput(subband %u) forward/file") % globalSubbandIdx), true, true);
 
       const unsigned SAP = ps.settings.subbands[globalSubbandIdx].SAP;
 
@@ -703,6 +716,8 @@ namespace LOFAR
       Queue< SmartPtr<SubbandProcOutputData> > &inputQueue,
       Queue< SmartPtr<SubbandProcOutputData> > &outputQueue )
     {
+      NSTimer writeTimer(str(format("Pipeline::writeCorrelatedOutput(subband %u)") % globalSubbandIdx), true, true);
+
       // Register our thread to be killable at exit
       OMPThreadSet::ScopedRun sr(outputThreads);
 
@@ -736,7 +751,9 @@ namespace LOFAR
 
           // Write block to outputProc 
           try {
+            writeTimer.start();
             correlatedData.write(outputStream.get(), true);
+            writeTimer.stop();
           } catch (Exception &ex) {
             // No reconnect, as outputProc doesn't yet re-listen when the conn drops.
             LOG_ERROR_STR("Error writing subband " << id.globalSubbandIdx << ", dropping all subsequent blocks: " << ex.what());

@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
     subbands.push_back(sb);
   }
 
-  Pool<struct MPIRecvData> MPI_receive_pool("MPI_receive_pool");
+  Pool<struct MPIRecvData> MPI_receive_pool("MPI_receive_pool", true);
 
 
 

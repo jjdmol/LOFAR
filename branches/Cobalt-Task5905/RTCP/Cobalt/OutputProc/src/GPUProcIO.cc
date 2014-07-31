@@ -140,7 +140,7 @@ bool process(Stream &controlStream, unsigned myRank)
         const size_t nrChannels = stokes.nrChannels;
         const size_t nrSamples = stokes.nrSamples;
 
-        outputPools[fileIdx] = new Pool<TABTranspose::BeamformedData>(str(format("process::outputPool [file %u]") % fileIdx));
+        outputPools[fileIdx] = new Pool<TABTranspose::BeamformedData>(str(format("process::outputPool [file %u]") % fileIdx), parset.settings.realTime);
 
         // Create and fill an outputPool for this fileIdx
         for (size_t i = 0; i < 10; ++i) {
