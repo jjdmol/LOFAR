@@ -29,8 +29,8 @@
 #include <CoInterface/Parset.h>
 #include <CoInterface/fpequals.h>
 #include <GPUProc/gpu_utils.h>
-#include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
-#include <GPUProc/SubbandProcs/BeamFormerFactories.h>
+#include <GPUProc/SubbandProcs/SubbandProc.h>
+#include <GPUProc/SubbandProcs/KernelFactories.h>
 
 #include "../Kernels/KernelTestHelpers.h"
 
@@ -141,8 +141,8 @@ int main(/*int argc, char *argv[]*/) {
   // correction (but that kernel will run to convert int to float and to
   // transform the data order).
 
-  BeamFormerFactories factories(ps);
-  BeamFormerSubbandProc bwq(ps, ctx, factories);
+  KernelFactories factories(ps);
+  SubbandProc bwq(ps, ctx, factories);
 
   SubbandProcInputData in(
     nrBeams, nrStations, nrPolarisations, maxNrTABsPerSAP, 
@@ -193,7 +193,7 @@ int main(/*int argc, char *argv[]*/) {
   for (size_t i = 0; i < in.tabDelays.num_elements(); i++)
     in.tabDelays.get<float>()[i] = 0.0f;
 
-  BeamFormedData out(ps, ctx);
+  SubbandProcOutputData out(ps, ctx);
 
   for (size_t i = 0; i < out.coherentData.num_elements(); i++)
     out.coherentData.get<float>()[i] = 42.0f;

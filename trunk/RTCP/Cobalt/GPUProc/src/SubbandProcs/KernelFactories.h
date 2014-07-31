@@ -1,4 +1,4 @@
-//# CorrelatorPipeline.h
+//# KernelFactories.h
 //#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -20,19 +20,19 @@
 //# $Id$
 
 // \file
-// Support for the correlator pipeline.
+// Include the right GPU API include with our options.
 
-#ifndef LOFAR_GPUPROC_CORRELATOR_PIPELINE_H
-#define LOFAR_GPUPROC_CORRELATOR_PIPELINE_H
+#ifndef LOFAR_GPUPROC_BEAM_FORMER_FACTORIES_H
+#define LOFAR_GPUPROC_BEAM_FORMER_FACTORIES_H
 
 #if defined (USE_CUDA) && defined (USE_OPENCL)
 # error "Either CUDA or OpenCL must be enabled, not both"
 #endif
 
 #if defined (USE_CUDA)
-# include <GPUProc/cuda/Pipelines/CorrelatorPipeline.h>
+# include <GPUProc/cuda/SubbandProcs/KernelFactories.h>
 #elif defined (USE_OPENCL)
-# include <GPUProc/opencl/Pipelines/CorrelatorPipeline.h>
+# include <GPUProc/opencl/SubbandProcs/KernelFactories.h>
 #else
 # error "Either CUDA or OpenCL must be enabled, not neither"
 #endif

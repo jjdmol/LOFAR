@@ -31,11 +31,17 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    class CoherentStokesTransposeKernel : public Kernel
+    class CoherentStokesTransposeKernel : public CompiledKernel
     {
     public:
       static std::string theirSourceFile;
       static std::string theirFunction;
+
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA
+      };
 
       // Parameters that must be passed to the constructor of the
       // BeamFormerKernel class.
@@ -46,12 +52,8 @@ namespace LOFAR
         unsigned nrSamplesPerChannel;
 
         unsigned nrTABs;
-      };
 
-      enum BufferType
-      {
-        INPUT_DATA,
-        OUTPUT_DATA
+        size_t bufferSize(BufferType bufferType) const;
       };
 
       CoherentStokesTransposeKernel(const gpu::Stream &stream,
@@ -62,9 +64,6 @@ namespace LOFAR
     };
 
     //# --------  Template specializations for KernelFactory  -------- #//
-
-    template<> size_t
-    KernelFactory<CoherentStokesTransposeKernel>::bufferSize(BufferType bufferType) const;
 
     template<> CompileDefinitions
     KernelFactory<CoherentStokesTransposeKernel>::compileDefinitions() const;

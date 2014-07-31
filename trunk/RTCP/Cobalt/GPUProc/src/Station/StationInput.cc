@@ -76,7 +76,7 @@ namespace LOFAR {
       nrSamples(ps.settings.blockSize),
       nrBlocks((stopTime - startTime) / nrSamples),
 
-      metaDataPool(str(format("StationMetaData::metaDataPool [station %s]") % stationID.name())),
+      metaDataPool(str(format("StationMetaData::metaDataPool [station %s]") % stationID.name()), false),
 
       subbands(values(subbandDistribution))
     {
@@ -162,7 +162,7 @@ namespace LOFAR {
       beamletIndices(generateBeamletIndices())
     {
       for (size_t i = 0; i < nrBoards; ++i) {
-        rspDataPool.push_back(new Pool<RSPData>(str(format("StationInput::rspDataPool[%u] [station %s]") % i % stationID.name())));
+        rspDataPool.push_back(new Pool<RSPData>(str(format("StationInput::rspDataPool[%u] [station %s]") % i % stationID.name()), ps.settings.realTime));
       }
 
       // Log all input descriptions

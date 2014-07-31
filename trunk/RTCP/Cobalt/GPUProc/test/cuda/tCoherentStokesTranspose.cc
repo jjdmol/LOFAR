@@ -88,8 +88,7 @@ void runTest( Context &ctx, Stream &stream )
           boost::extents[NR_TABS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS], ctx);
 
   // Create kernel
-  CoherentStokesTransposeKernel::Buffers buffers(dInput, dOutput);
-  std::auto_ptr<CoherentStokesTransposeKernel> kernel(factory.create(stream, buffers));
+  std::auto_ptr<CoherentStokesTransposeKernel> kernel(factory.create(stream, dInput, dOutput));
 
   // Run kernel
   stream.writeBuffer(dInput, hInput, false);

@@ -67,7 +67,7 @@ int main(int argc, char **argv)
   // to the receiver to be filled
   // In this test it is simply emptied without doing anything with the data.
   // normally the pool is emptied by transpose input 
-  Pool<struct MPIRecvData> MPI_receive_pool("MPI_receive_pool");
+  Pool<struct MPIRecvData> MPI_receive_pool("MPI_receive_pool", true);
   // Who received what subband?
   const std::vector<size_t>  subbandIndices(subbandDistribution[mpi.rank()]);
   bool isThisSubbandZero = std::find(subbandIndices.begin(),

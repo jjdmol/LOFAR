@@ -135,7 +135,11 @@ namespace LOFAR
     {
       string host = parset.getHostName(outputType, streamNr);
       uint16 port = storageBrokerPort(parset.observationID());
-      return str(format("tcpbroker:%s:%u:ion-storage-obs-%u-type-%u-stream-%u") % host % port % parset.observationID() % outputType % streamNr);
+
+      if (host == "")
+        return str(format("file:%s") % parset.getFileName(outputType, streamNr));
+      else
+        return str(format("tcpbroker:%s:%u:ion-storage-obs-%u-type-%u-stream-%u") % host % port % parset.observationID() % outputType % streamNr);
     }
 
   } // namespace Cobalt

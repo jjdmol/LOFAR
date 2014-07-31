@@ -42,6 +42,7 @@ namespace LOFAR
       "transpose";
 
     IncoherentStokesTransposeKernel::Parameters::Parameters(const Parset& ps) :
+      Kernel::Parameters("incoherentStokesTranspose"),
       nrStations(ps.settings.antennaFields.size()),
       nrChannels(ps.settings.beamFormer.nrHighResolutionChannels),
       nrSamplesPerChannel(ps.settings.blockSize / nrChannels),
@@ -56,12 +57,26 @@ namespace LOFAR
             ps.settings.observationID);
     }
 
+    size_t IncoherentStokesTransposeKernel::Parameters::bufferSize(BufferType bufferType) const
+    {
+      switch (bufferType) {
+      case IncoherentStokesTransposeKernel::INPUT_DATA:
+      case IncoherentStokesTransposeKernel::OUTPUT_DATA:
+        return 
+          (size_t) nrStations * 
+          nrChannels * nrSamplesPerChannel * 
+          NR_POLARIZATIONS * sizeof(std::complex<float>);
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
+
     IncoherentStokesTransposeKernel::
     IncoherentStokesTransposeKernel(const gpu::Stream& stream,
                                     const gpu::Module& module,
                                     const Buffers& buffers,
                                     const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
+      CompiledKernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
@@ -82,23 +97,6 @@ namespace LOFAR
     }
 
     //--------  Template specializations for KernelFactory  --------//
-
-    template<> size_t
-    KernelFactory<IncoherentStokesTransposeKernel>::
-    bufferSize(BufferType bufferType) const
-    {
-      switch (bufferType) {
-      case IncoherentStokesTransposeKernel::INPUT_DATA:
-      case IncoherentStokesTransposeKernel::OUTPUT_DATA:
-        return 
-          (size_t) itsParameters.nrStations * 
-          itsParameters.nrChannels *
-          itsParameters.nrSamplesPerChannel * 
-          NR_POLARIZATIONS * sizeof(std::complex<float>);
-      default:
-        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
-      }
-    }
 
     template<> CompileDefinitions
     KernelFactory<IncoherentStokesTransposeKernel>::compileDefinitions() const

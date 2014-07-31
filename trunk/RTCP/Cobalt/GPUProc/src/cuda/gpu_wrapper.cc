@@ -49,6 +49,17 @@
     }                                                                   \
   } while(0)
 
+// Like checkCuCall, but don't emit log lines
+#define checkCuCall_noLog(func)                                               \
+  do {                                                                  \
+    CUresult result = func;                                             \
+    if (result != CUDA_SUCCESS) {                                       \
+      THROW (LOFAR::Cobalt::gpu::CUDAException,                         \
+             # func << ": " << LOFAR::Cobalt::gpu::errorMessage(result)); \
+    }                                                                   \
+  } while(0)
+
+
 LOFAR::Exception::TerminateHandler th(LOFAR::Exception::terminate);
 
 using boost::format;
@@ -820,13 +831,7 @@ namespace LOFAR
 
           float ms;
 
-          try {
-            checkCuCall(cuEventElapsedTime(&ms, other, _event));
-          } catch (LOFAR::Cobalt::gpu::CUDAException &ex) {
-            // Prevent exceptions/crashes caused by querying unused timers
-            // checkCuCall already logs the error
-            ms = 0.0f;
-          }
+          checkCuCall_noLog(cuEventElapsedTime(&ms, other, _event));
 
           return ms;
         }
@@ -996,18 +1001,11 @@ namespace LOFAR
       }
 
       void Stream::writeBuffer(const DeviceMemory &devMem, const HostMemory &hostMem,
-                         const PerformanceCounter &counter, bool synchronous) const
+                         PerformanceCounter &counter, bool synchronous) const
       {
-        if (gpuProfiling)
-        {
-          recordEvent(counter.start);
-          writeBuffer(devMem, hostMem, synchronous); 
-          recordEvent(counter.stop);
-        }
-        else
-        {
-          writeBuffer(devMem, hostMem, synchronous);
-        }
+        counter.recordStart(*this);
+        writeBuffer(devMem, hostMem, synchronous); 
+        counter.recordStop(*this);
       }
 
       void Stream::copyBuffer(const DeviceMemory &devTarget, 
@@ -1034,19 +1032,12 @@ namespace LOFAR
 
       void Stream::copyBuffer(const DeviceMemory &devTarget, 
                               const DeviceMemory &devSource,
-                              const PerformanceCounter &counter,
+                              PerformanceCounter &counter,
                               bool synchronous) const
       {
-        if (gpuProfiling)
-        {
-          recordEvent(counter.start);
-          copyBuffer(devTarget, devSource, synchronous); 
-          recordEvent(counter.stop);
-        }
-        else
-        {
-          copyBuffer(devTarget, devSource, synchronous);
-        }
+        counter.recordStart(*this);
+        copyBuffer(devTarget, devSource, synchronous); 
+        counter.recordStop(*this);
       }
 
       void Stream::readBuffer(const HostMemory &hostMem, 
@@ -1069,18 +1060,11 @@ namespace LOFAR
       }
 
       void Stream::readBuffer(const HostMemory &hostMem, const DeviceMemory &devMem,
-                        const PerformanceCounter &counter, bool synchronous) const
+                        PerformanceCounter &counter, bool synchronous) const
       {
-        if (gpuProfiling)
-        {
-          recordEvent(counter.start);
-          readBuffer(hostMem, devMem, synchronous);  
-          recordEvent(counter.stop);
-        }
-        else
-        {
-          writeBuffer(devMem, hostMem, synchronous);
-        }
+        counter.recordStart(*this);
+        readBuffer(hostMem, devMem, synchronous);  
+        counter.recordStop(*this);
       }
 
 

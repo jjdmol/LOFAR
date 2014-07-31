@@ -44,6 +44,7 @@ namespace LOFAR
     string CorrelatorKernel::theirFunction = "correlate";
 
     CorrelatorKernel::Parameters::Parameters(const Parset& ps) :
+      Kernel::Parameters("correlator"),
       nrStations(ps.settings.antennaFields.size()),
       // For Cobalt (= up to 80 antenna fields), the 2x2 kernel gives the best
       // performance.
@@ -63,11 +64,28 @@ namespace LOFAR
       return nrStations * (nrStations + 1) / 2;
     }
 
+
+    size_t CorrelatorKernel::Parameters::bufferSize(BufferType bufferType) const
+    {
+      switch (bufferType) {
+      case CorrelatorKernel::INPUT_DATA:
+        return
+          (size_t) nrChannels * nrSamplesPerChannel * nrStations * 
+            NR_POLARIZATIONS * sizeof(std::complex<float>);
+      case CorrelatorKernel::OUTPUT_DATA:
+        return 
+          (size_t) nrBaselines() * nrChannels * 
+            NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
+      default: 
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
+
     CorrelatorKernel::CorrelatorKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
+      CompiledKernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
@@ -95,23 +113,6 @@ namespace LOFAR
     }
 
     //--------  Template specializations for KernelFactory  --------//
-
-    template<> size_t 
-    KernelFactory<CorrelatorKernel>::bufferSize(BufferType bufferType) const
-    {
-      switch (bufferType) {
-      case CorrelatorKernel::INPUT_DATA:
-        return
-          (size_t) itsParameters.nrChannels * itsParameters.nrSamplesPerChannel * itsParameters.nrStations * 
-            NR_POLARIZATIONS * sizeof(std::complex<float>);
-      case CorrelatorKernel::OUTPUT_DATA:
-        return 
-          (size_t) itsParameters.nrBaselines() * itsParameters.nrChannels * 
-            NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
-      default: 
-        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
-      }
-    }
 
 
     template<> CompileDefinitions

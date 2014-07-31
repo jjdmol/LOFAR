@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
     {
       string logPrefix = str(format("[correlated stream %3u] ") % fileIdx);
 
-      Pool<StreamableData> outputPool(logPrefix);
+      Pool<StreamableData> outputPool(logPrefix, true);
 
       SubbandOutputThread writer(parset, fileIdx, outputPool, rtmd, "rtmd key prefix", logPrefix, ".");
       writer.createMS();
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
     {
       string logPrefix = str(format("[beamformed stream %3u] ") % fileIdx);
 
-      Pool<TABTranspose::BeamformedData> outputPool(logPrefix);
+      Pool<TABTranspose::BeamformedData> outputPool(logPrefix, true);
 
       TABOutputThread writer(parset, fileIdx, outputPool, rtmd, "rtmd key prefix", logPrefix, ".");
       writer.createMS();

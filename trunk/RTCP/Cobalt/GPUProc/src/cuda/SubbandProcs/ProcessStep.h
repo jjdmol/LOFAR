@@ -1,5 +1,4 @@
-//# BeamFormerFactories.h
-//#
+//# ProcessStep.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -19,31 +18,38 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_BEAM_FORMER_FACTORIES_H
-#define LOFAR_GPUPROC_CUDA_BEAM_FORMER_FACTORIES_H
+#ifndef LOFAR_GPUPROC_CUDA_PROCESS_STEP_H
+#define LOFAR_GPUPROC_CUDA_PROCESS_STEP_H
 
 #include <CoInterface/Parset.h>
-#include <CoInterface/SmartPtr.h>
 
-#include "BeamFormerPreprocessingStep.h"
-#include "BeamFormerCoherentStep.h"
-#include "BeamFormerIncoherentStep.h"
+#include <GPUProc/gpu_wrapper.h>
+
+#include "SubbandProcInputData.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    struct BeamFormerFactories
+    class ProcessStep
     {
-      BeamFormerFactories(const Parset &ps, 
-                            size_t nrSubbandsPerSubbandProc = 1);
+    public:
+      virtual void process(const SubbandProcInputData &input) = 0;
 
-      BeamFormerPreprocessingStep::Factories preprocessing;
+      virtual ~ProcessStep()
+       {}
 
-      SmartPtr<BeamFormerCoherentStep::Factories> coherentStokes;
-      SmartPtr<BeamFormerIncoherentStep::Factories> incoherentStokes;
+    protected:
+      ProcessStep(const Parset &parset,
+        gpu::Stream &queue)
+        :
+        ps(parset),
+        queue(queue) 
+        {};
+
+      const Parset ps;
+      gpu::Stream queue;
     };
-
   }
 }
 

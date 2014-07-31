@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include <GPUProc/SubbandProcs/SubbandProc.h>
+#include <GPUProc/cuda/SubbandProcs/CorrelatorStep.h>
 
 #include <UnitTest++.h>
 #include <iostream>
@@ -31,17 +31,6 @@
 #include <complex>
 
 using namespace LOFAR::Cobalt;
-
-
-TEST(log2)
-{
-  CHECK_EQUAL(6u, SubbandProc::Flagger::log2(64));
-  CHECK_EQUAL(7u, SubbandProc::Flagger::log2(128));
-  CHECK_EQUAL(0u, SubbandProc::Flagger::log2(1));
-
-  //cant take 2log of zero: raise exception
-  //CHECK_THROW(get2LogOfNrChannels(0), LOFAR::AssertError);
-}
 
 TEST(convertFlagsToChannelFlags)
 {
@@ -81,7 +70,7 @@ TEST(convertFlagsToChannelFlags)
           boost::extents[parset.nrChannelsPerSubband()][parset.nrStations()]);
 
   // ****** perform the translation
-  SubbandProc::Flagger::convertFlagsToChannelFlags(parset, inputFlags, flagsPerChanel);
+  CorrelatorStep::Flagger::convertFlagsToChannelFlags(parset, inputFlags, flagsPerChanel);
   // ******
 
   //validate the corner cases
@@ -101,7 +90,7 @@ TEST(convertFlagsToChannelFlags)
 
 int main()
 {
-  INIT_LOGGER("tSubbandProc");
+  INIT_LOGGER("tCorrelatorStep");
   return UnitTest::RunAllTests() > 0;
 }
 
