@@ -287,11 +287,7 @@ namespace LOFAR
     {
       devA=i_devA;
       devB=i_devB;
-      initMembers(context, factories);
-    }
 
-    void CorrelatorStep::initMembers(gpu::Context &context,
-      Factories &factories){
       if (correlatorPPF) {
         // FIR filter: A -> B
         firFilterKernel = factories.firFilter->create(queue, *devA, *devB);

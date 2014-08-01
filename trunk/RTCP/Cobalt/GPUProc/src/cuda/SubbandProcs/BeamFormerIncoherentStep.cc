@@ -89,14 +89,6 @@ namespace LOFAR
     {
       devA = i_devA;
       devB = i_devB;
-      initMembers(context,
-        factories);
-    }
-
-
-    void BeamFormerIncoherentStep::initMembers(gpu::Context &context,
-      Factories &factories)
-    {
 
       // Transpose: B -> A
       incoherentTranspose = std::auto_ptr<IncoherentStokesTransposeKernel>(

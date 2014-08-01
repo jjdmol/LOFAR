@@ -92,12 +92,7 @@ namespace LOFAR
       outputCounter(context, "output (coherent)")
     {
       devB = i_devB;
-      initMembers(context, factories);
-    }
 
-    void BeamFormerCoherentStep::initMembers(gpu::Context &context,
-      Factories &factories)
-    {
     beamFormerKernel = std::auto_ptr<BeamFormerKernel>(
       factories.beamFormer.create(queue, *devB, devD));
 

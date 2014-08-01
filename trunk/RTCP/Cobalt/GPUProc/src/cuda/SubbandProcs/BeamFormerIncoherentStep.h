@@ -71,10 +71,6 @@ namespace LOFAR
         boost::shared_ptr<gpu::DeviceMemory> i_devB
         );
 
-
-      void initMembers(gpu::Context &context,
-        Factories &factories);
-
       gpu::DeviceMemory outputBuffer();
 
       void process(const SubbandProcInputData &input);
