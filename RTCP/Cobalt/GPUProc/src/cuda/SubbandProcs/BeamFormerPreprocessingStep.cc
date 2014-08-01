@@ -73,12 +73,7 @@ namespace LOFAR
     {
       devA=i_devA;
       devB=i_devB;
-      initMembers(context, factories);
-    }
-
-
-    void BeamFormerPreprocessingStep::initMembers(gpu::Context &context,
-      Factories &factories){
+      (void)context;
 
       doSecondFFT = 
         (ps.settings.beamFormer.nrHighResolutionChannels /
