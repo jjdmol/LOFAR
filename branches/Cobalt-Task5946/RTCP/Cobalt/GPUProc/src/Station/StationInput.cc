@@ -609,9 +609,6 @@ namespace LOFAR {
     {
       // sanity check: Find out if we should actual start working here.
       StationMetaData<SampleT> sm(ps, stationIdx, subbandDistribution);
-      if (sm.nrBlocks == 0) {  // Nothing to process -- stop
-        return;
-      }
 
       StationInput si(ps, stationIdx, subbandDistribution);
 

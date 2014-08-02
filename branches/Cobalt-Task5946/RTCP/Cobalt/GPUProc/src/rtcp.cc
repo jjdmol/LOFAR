@@ -505,9 +505,7 @@ int main(int argc, char **argv)
     // receive data over MPI and insert into pool
 #   pragma omp section
     {
-      size_t nrBlocks = floor((ps.settings.stopTime - ps.settings.startTime) / ps.settings.blockDuration());
-
-      MPI_receiver.receiveInput(nrBlocks);
+      MPI_receiver.receiveInput();
     }
 
     // Retrieve items from pool and process further on

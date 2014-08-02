@@ -114,13 +114,9 @@ int main(int argc, char **argv)
     // receive the data over MPI and place in pool
 #pragma omp section
     {
-
-    size_t nrBlocks = floor((ps.settings.stopTime - ps.settings.startTime) / ps.settings.blockDuration());
-    cout << "N blocks: " << nrBlocks << endl;
-
-    MPI_receiver.receiveInput(nrBlocks);
-    cout << "second ended" << endl;
-  }
+      MPI_receiver.receiveInput();
+      cout << "second ended" << endl;
+    }
 
    // empty the pool
 #pragma omp section

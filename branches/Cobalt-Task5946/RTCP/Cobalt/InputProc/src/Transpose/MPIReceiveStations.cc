@@ -51,7 +51,8 @@ namespace LOFAR {
       nrStations(nrStations),
       beamlets(beamlets),
       blockSize(blockSize),
-      stationSourceRanks(nrStations, MPI_ANY_SOURCE)
+      stationSourceRanks(nrStations, MPI_ANY_SOURCE),
+      stationDone(nrStations, false)
     {
     }
 
@@ -80,10 +81,10 @@ namespace LOFAR {
 
 
     template<typename T>
-    void MPIReceiveStations::receiveBlock( MultiDimArray<T, 3> &data, MultiDimArray<struct MPIProtocol::MetaData, 2> &metaData )
+    bool MPIReceiveStations::receiveBlock( MultiDimArray<T, 3> &data, MultiDimArray<struct MPIProtocol::MetaData, 2> &metaData )
     {
       if (beamlets.empty())
-        return;
+        return true;
 
       ASSERT(data.num_elements() == nrStations * beamlets.size() * blockSize);
       ASSERT(metaData.num_elements() == nrStations * beamlets.size());
@@ -95,6 +96,14 @@ namespace LOFAR {
         ScopedLock sl(MPIMutex);
 
         for (size_t stat = 0; stat < nrStations; ++stat) {
+          if (stationDone[stat]) {
+            // Set EOS bit for this station
+            for (size_t b = 0; b < beamlets.size(); ++b )
+              metaData[stat][b].EOS = true;
+
+            continue;
+          }
+
           requests.push_back(receiveData<T>(stat, &data[stat][0][0]));
           requests.push_back(receiveMetaData(stat, &metaData[stat][0]));
         }
@@ -106,12 +115,25 @@ namespace LOFAR {
 
       RequestSet payload_rs(requests, true, str(boost::format("%s data & metadata") % logPrefix));
       payload_rs.waitAll();
+
+      // Sync stationDone and metaData[stat][0].EOS, and count the number of finished stations
+      size_t nrStationsDone = 0;
+
+      for (size_t stat = 0; stat < nrStations; ++stat) {
+        if (metaData[stat][0].EOS)
+          stationDone[stat] = true;
+
+        if (stationDone[stat])
+          nrStationsDone++;
+      }
+
+      return nrStationsDone == nrStations;
     }
 
     // Create all necessary instantiations
 #define INSTANTIATE(T) \
     template MPI_Request MPIReceiveStations::receiveData<T>( size_t station, T *buffer ); \
-    template void MPIReceiveStations::receiveBlock<T>( MultiDimArray<T, 3> &data, MultiDimArray<struct MPIProtocol::MetaData, 2> &metaData );
+    template bool MPIReceiveStations::receiveBlock<T>( MultiDimArray<T, 3> &data, MultiDimArray<struct MPIProtocol::MetaData, 2> &metaData );
 
     INSTANTIATE(SampleType<i4complex>);
     INSTANTIATE(SampleType<i8complex>);
