@@ -727,7 +727,7 @@ namespace LOFAR
         const string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, globalSubbandIdx);
 
         try {
-          outputStream = createStream(desc, false, ps.realTime() ? ps.stopTime() : 0);
+          outputStream = createStream(desc, false);
         } catch (Exception &ex) {
           LOG_ERROR_STR("Error writing subband " << globalSubbandIdx << ", dropping all subsequent blocks: " << ex.what());
           return;
