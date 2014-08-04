@@ -70,6 +70,11 @@ namespace LOFAR
       // key: Observation.ObsID
       unsigned observationID;
 
+      // Command stream, or null: if not used
+      //
+      // key: Cobalt.commandStream
+      std::string commandStream;
+
       // Specified observation start time, in seconds since 1970.
       //
       // key: Observation.startTime

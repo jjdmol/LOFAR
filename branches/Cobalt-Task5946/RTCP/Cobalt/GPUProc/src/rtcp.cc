@@ -48,10 +48,12 @@
 
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string/replace.hpp>
 
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>
 #include <Common/StringUtil.h>
+#include <Common/Thread/Trigger.h>
 #include <ApplCommon/PVSSDatapointDefs.h>
 #include <ApplCommon/StationInfo.h>
 #include <MACIO/RTmetadata.h>
@@ -60,11 +62,13 @@
 #include <CoInterface/OutputTypes.h>
 #include <CoInterface/OMPThread.h>
 #include <CoInterface/Pool.h>
+#include <CoInterface/Stream.h>
 #include <InputProc/SampleType.h>
 #include <InputProc/WallClockTime.h>
 #include <InputProc/Buffer/StationID.h>
 
 #include "global_defines.h"
+#include "CommandThread.h"
 #include <GPUProc/Station/StationInput.h>
 #include <GPUProc/Station/StationNodeAllocation.h>
 #include "Pipelines/Pipeline.h"
@@ -449,71 +453,120 @@ int main(int argc, char **argv)
 
   LOG_INFO_STR("Processing subbands " << subbandDistribution[mpi.rank()]);
 
-  if (ps.realTime()) {
-    // Wait just before the obs starts to allocate resources,
-    // both the UDP sockets and the GPU buffers!
-    LOG_INFO_STR("Waiting to start obs running from " << TimeStamp::convert(ps.settings.startTime, ps.settings.clockHz()) << " to " << TimeStamp::convert(ps.settings.stopTime, ps.settings.clockHz()));
+  Trigger stopSwitch;
+  SmartPtr<CommandThread> commandThread;
 
-    const time_t deadline = floor(ps.settings.startTime) - allocationTimeout;
-    WallClockTime waiter;
-    waiter.waitUntil(deadline);
-  }
-
-  #pragma omp parallel sections num_threads(3)
+  #pragma omp parallel sections num_threads(2)
   {
     #pragma omp section
     {
-      // Read and forward station data over MPI
-      #pragma omp parallel for num_threads(ps.nrStations())
-      for (size_t stat = 0; stat < ps.nrStations(); ++stat) 
-      {       
-        // Determine if this station should start a pipeline for station..
-        const struct StationID stationID(
-          StationID::parseFullFieldName(
-          ps.settings.antennaFields.at(stat).name));
-        const StationNodeAllocation allocation(stationID, ps, mpi.rank(), mpi.size());
+      /*
+       * COMMAND THREAD
+       */
 
-        if (!allocation.receivedHere()) 
-        {// Station is not sending from this node, skip          
-          continue;
+      if (mpi.rank() == 0) {
+        commandThread = new CommandThread(ps.settings.commandStream);
+      }
+
+      string command;
+
+      do {
+        if (mpi.rank() == 0) {
+          // master
+          command = commandThread->pop();
+
+          CommandThread::broadcast_send(command, mpi.size());
+        } else {
+          // slave
+          command = CommandThread::broadcast_receive();
         }
 
-        const string antennaFieldName = stationID.name();
+        // handle command
+        if (command == "stop") {
+          stopSwitch.trigger();
+        }
+      } while (command != "");
 
-        // For InputProc use the GPUProc mdLogger (same process), but our own key prefix.
-        // For InputProc use boost::format to fill in one conv specifications (%xx).
-        // Since InputProc is inside GPUProc, don't inform the MAC Log Processor.
-        string fmtStrInputProc(createPropertySetName(PSN_COBALT_STATION_INPUT,
-                                                     "", ps.PVSS_TempObsName()));
-        format prFmtInputProc;
-        prFmtInputProc.exceptions(boost::io::no_error_bits); // avoid throw
-        prFmtInputProc.parse(fmtStrInputProc);
-        string mdKeyPrefixInputProc = str(prFmtInputProc % antennaFieldName);
-        mdKeyPrefixInputProc.push_back('.'); // keys look like: "keyPrefix.subKeyName"
-
-        mdLogger.log(mdKeyPrefixInputProc + PN_CSI_OBSERVATION_NAME,
-                     boost::lexical_cast<string>(ps.observationID()));
-        mdLogger.log(mdKeyPrefixInputProc + PN_CSI_NODE, hostName);
-        mdLogger.log(mdKeyPrefixInputProc + PN_CSI_CPU,  cpuNr);
-
-
-        sendInputToPipeline(ps, stat, subbandDistribution,
-                            mdLogger, mdKeyPrefixInputProc);
-      }
+      LOG_DEBUG("[CommandThread] Done");
     }
 
-    // receive data over MPI and insert into pool
-#   pragma omp section
-    {
-      MPI_receiver.receiveInput();
-    }
-
-    // Retrieve items from pool and process further on
     #pragma omp section
     {
-      // Process station data
-      if (!subbandDistribution[mpi.rank()].empty()) {
-        pipeline->processObservation();
+      /*
+       * THE OBSERVATION
+       */
+
+      if (ps.realTime()) {
+        // Wait just before the obs starts to allocate resources,
+        // both the UDP sockets and the GPU buffers!
+        LOG_INFO_STR("Waiting to start obs running from " << TimeStamp::convert(ps.settings.startTime, ps.settings.clockHz()) << " to " << TimeStamp::convert(ps.settings.stopTime, ps.settings.clockHz()));
+
+        const time_t deadline = floor(ps.settings.startTime) - allocationTimeout;
+        WallClockTime waiter;
+        waiter.waitUntil(deadline);
+      }
+
+      #pragma omp parallel sections num_threads(3)
+      {
+        #pragma omp section
+        {
+          // Read and forward station data over MPI
+          #pragma omp parallel for num_threads(ps.nrStations())
+          for (size_t stat = 0; stat < ps.nrStations(); ++stat) 
+          {       
+            // Determine if this station should start a pipeline for station..
+            const struct StationID stationID(
+              StationID::parseFullFieldName(
+              ps.settings.antennaFields.at(stat).name));
+            const StationNodeAllocation allocation(stationID, ps, mpi.rank(), mpi.size());
+
+            if (!allocation.receivedHere()) 
+            {// Station is not sending from this node, skip          
+              continue;
+            }
+
+            const string antennaFieldName = stationID.name();
+
+            // For InputProc use the GPUProc mdLogger (same process), but our own key prefix.
+            // For InputProc use boost::format to fill in one conv specifications (%xx).
+            // Since InputProc is inside GPUProc, don't inform the MAC Log Processor.
+            string fmtStrInputProc(createPropertySetName(PSN_COBALT_STATION_INPUT,
+                                                         "", ps.PVSS_TempObsName()));
+            format prFmtInputProc;
+            prFmtInputProc.exceptions(boost::io::no_error_bits); // avoid throw
+            prFmtInputProc.parse(fmtStrInputProc);
+            string mdKeyPrefixInputProc = str(prFmtInputProc % antennaFieldName);
+            mdKeyPrefixInputProc.push_back('.'); // keys look like: "keyPrefix.subKeyName"
+
+            mdLogger.log(mdKeyPrefixInputProc + PN_CSI_OBSERVATION_NAME,
+                         boost::lexical_cast<string>(ps.observationID()));
+            mdLogger.log(mdKeyPrefixInputProc + PN_CSI_NODE, hostName);
+            mdLogger.log(mdKeyPrefixInputProc + PN_CSI_CPU,  cpuNr);
+
+
+            sendInputToPipeline(ps, stat, subbandDistribution,
+                                mdLogger, mdKeyPrefixInputProc, &stopSwitch);
+          }
+        }
+
+        // receive data over MPI and insert into pool
+        #pragma omp section
+        {
+          MPI_receiver.receiveInput();
+        }
+
+        // Retrieve items from pool and process further on
+        #pragma omp section
+        {
+          // Process station data
+          if (!subbandDistribution[mpi.rank()].empty()) {
+            pipeline->processObservation();
+          }
+        }
+      }
+
+      if (mpi.rank() == 0) {
+        commandThread->stop();
       }
     }
   }
