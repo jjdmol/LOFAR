@@ -23,8 +23,6 @@
 #include "MPIReceiver.h"
 #include <InputProc/Transpose/MPIProtocol.h>
 
-
-
 namespace LOFAR
 {
   namespace Cobalt
@@ -66,11 +64,10 @@ namespace LOFAR
       NSTimer receiveTimer("MPI: Receive station data", true, true);
      
       // RECEIVE: Set up to receive our subbands as indicated by subbandIndices
-#ifdef HAVE_MPI
       MPIReceiveStations receiver(nrStations, subbandIndices, 
                                   nrSamplesPerSubband);
 
-      //Fill the pool with data items
+      // Fill the pool with data items
       size_t N_PoolItems = 4;
       for (size_t i = 0; i < N_PoolItems; i++)
       {
@@ -84,10 +81,6 @@ namespace LOFAR
         // add to the free pool
         mpiPool.free.append(mpiData, false);
       }
-
-#else // ?
-      DirectInput &receiver = DirectInput::instance();
-#endif
 
       // Receive input from StationInput::sendInputToPipeline.
       //
@@ -157,3 +150,4 @@ namespace LOFAR
     }
   }
 }
+

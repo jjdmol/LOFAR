@@ -32,10 +32,8 @@
 #include <InputProc/RSPTimeStamp.h>
 #include <InputProc/Station/RSP.h>
 
-#ifdef HAVE_MPI
 #include <InputProc/Transpose/MPIProtocol.h>
 #include <InputProc/Transpose/MPIUtil.h>
-#endif
 
 namespace LOFAR {
   namespace Cobalt {

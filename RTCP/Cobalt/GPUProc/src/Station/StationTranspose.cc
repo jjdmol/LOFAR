@@ -37,12 +37,10 @@
 #include <string>
 #include <boost/format.hpp>
 
-#ifdef HAVE_MPI
 #include <mpi.h>
 #include <InputProc/Transpose/MPISendStation.h>
 #include <InputProc/Transpose/MapUtil.h>
 #include <InputProc/Transpose/MPIUtil.h>
-#endif
 
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>

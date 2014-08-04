@@ -41,10 +41,8 @@
 #include <numaif.h>
 #endif
 
-#ifdef HAVE_MPI
 #include <mpi.h>
 #include <InputProc/Transpose/MPIUtil.h>
-#endif
 
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
@@ -192,11 +190,7 @@ int main(int argc, char **argv)
   const string mdHostName = ps.getString("Cobalt.PVSSGateway.host", "");
   MACIO::RTmetadata mdLogger(ps.observationID(), mdRegisterName, mdHostName);
 
-#ifdef HAVE_MPI
   LOG_INFO_STR("MPI rank " << mpi.rank() << " out of " << mpi.size() << " hosts");
-#else
-  LOG_WARN("Running without MPI!");
-#endif
 
   /*
    * Initialise the system environment
@@ -428,15 +422,10 @@ int main(int argc, char **argv)
     storageProcesses = new StorageProcesses(ps, "");
   }
 
-#ifdef HAVE_MPI
   /*
    * Initialise MPI (we are done forking)
    */
   mpi.init(argc, argv);
-#else
-  // Create the DirectInput instance
-  DirectInput::instance(&ps);
-#endif
 
   // Periodically log system information
   SysInfoLogger siLogger(ps.startTime(), ps.stopTime());
