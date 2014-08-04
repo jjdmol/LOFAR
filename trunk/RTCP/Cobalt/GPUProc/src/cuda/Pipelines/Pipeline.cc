@@ -43,12 +43,8 @@
 #include <InputProc/SampleType.h>
 #include <InputProc/RSPTimeStamp.h>
 
-#ifdef HAVE_MPI
 #include <InputProc/Transpose/MPIReceiveStations.h>
 #include <InputProc/Transpose/MPIProtocol.h>
-#else
-#include <GPUProc/Station/StationInput.h>
-#endif
 
 #include <cmath>
 
@@ -211,7 +207,6 @@ namespace LOFAR
 
       LOG_INFO("----- Allocating resources");
       allocateResources();
-
 
       //sections = program segments defined by the following omp section directive
       //           are distributed for parallel execution among available threads
