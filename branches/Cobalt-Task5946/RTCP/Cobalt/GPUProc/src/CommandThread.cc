@@ -49,6 +49,8 @@ namespace LOFAR {
 
     void CommandThread::readOneCommand() {
       try {
+        LOG_INFO_STR("[CommandThread] Reading from " << streamdesc);
+
         SmartPtr<Stream> commandStream = createStream(streamdesc, true);
 
         const string command = commandStream->readLine();
