@@ -697,19 +697,25 @@ void MultiSender::append( SmartPtr<struct Subband> &subband )
 
     dropping = true;
     itsBlocksDropped += 1;
+#if 0
     itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPED + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
         itsBlocksDropped * static_cast<float>(itsParset.settings.blockDuration()));
+#endif
   } else {
     drop_rates.at(fileIdx).push(0.0);
 
     dropping = false;
     itsBlocksWritten += 1;
+#if 0
     itsMdLogger.log(itsMdKeyPrefix + PN_CGP_WRITTEN + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
         itsBlocksWritten * static_cast<float>(itsParset.settings.blockDuration()));
+#endif
   }
 
+#if 0
   itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPING + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
                   dropping);
+#endif
 
   // Append the data to the respective queue
   queue->append(subband);
