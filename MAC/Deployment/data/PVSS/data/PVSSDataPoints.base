@@ -84,8 +84,8 @@ SubRack				SRCK		S	N	LOFAR_PIC_@cabinet@_@subrack@
 RSPBoard			RSP		S	N	LOFAR_PIC_@cabinet@_@subrack@_@RSPBoard@
 RCU				RCU		S	N	LOFAR_PIC_@cabinet@_@subrack@_@RSPBoard@_@rcu@
 TBBoard				TBB		S	Y	LOFAR_PIC_@cabinet@_@subrack@_@TBBoard@
-UniBoard	                UNI		S	N	LOFAR_PIC_CABINET1_UniBoard
-FPGA		                FPGA		S	Y	LOFAR_PIC_CABINET1_UniBoard_@fpga@
+UniBoard	                UNI		S	N	LOFAR_PIC_Cabinet1_UniBoard
+FPGA		                FPGA		S	Y	LOFAR_PIC_Cabinet1_UniBoard_@fpga@
 UriBoard			URI		S	Y	LOFAR_PIC_@uriboard@
 LBAAntenna                      LBA             S       Y       LOFAR_PIC_@lbaantenna@
 HBAAntenna                      HBA             S       N       LOFAR_PIC_@hbaantenna@
