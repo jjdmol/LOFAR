@@ -36,7 +36,7 @@
 // navFunct_dpReachable                       : looks if the databpoint on a dist system is also reachable
 // navFunct_dpStripLastElement                : Returns DP string without last element 
 // navFunct_dynToString                       : Returns a dynArray as a , seperated string
-// navFunct_fillHardwareLists                 : Fill g_StationList, g_CabinetList,g_SubrackList,gRSPList,g_RCUList and g_TBBList
+// navFunct_fillHardwareLists                 : Fill g_StationList, g_CabinetList,g_SubrackList,g_RSPList,g_RCUList and g_TBBList
 // navFunct_fillHardwareTree                  : Prepare the DP for HardwareTrees
 // navFunct_fillObservationsList              : Fill g_observationList
 // navFunct_fillObservationsTree              : Prepare the DP for ObservationTrees
@@ -65,6 +65,7 @@
 // navFunct_getWritersForObservation          : returns all the writers that are in use for an observation
 // navFunct_giveFadedColor                    : returns faded color string between green and red depending on min,max and currentValue
 // navFunct_hardware2Obs                      : Looks if a piece of hardware maps to an observation
+// navFunct_hasAARTFAAC                       : checks if a given station belongs to the AARTFAAC stations
 // navFunct_IONode2DPName                     : returns the DP name based on the ionode number.
 // navFunct_isCoreStation                     : returns TRUE if the station is part of the Core stations
 // navFunct_isHBA                             : returns true if the antenna is an International HBA antenna
@@ -98,7 +99,7 @@
 // navFunct_TBB2Subrack                       : Returns the SubrackNr for a given TBB
 // navFunct_TempToObs                         : returns the observationname from the temp
 // navFunct_updateObservations                : Callback for the above query
-// navFunct_waitObjectReady                   : Loops till object Read or breaks out with error. 
+// navFunct_waitObjectReady                   : Loops till object Ready or breaks out with error. 
 
 #uses "GCFLogging.ctl"
 #uses "GCFCommon.ctl"
@@ -1173,7 +1174,6 @@ void navFunct_fillHardwareLists() {
   navFunct_fillHardwareTree();  
 }  
 
-
 // ****************************************
 // Name: navFunct_fillObservationList   
 // ****************************************
@@ -1516,6 +1516,37 @@ void navFunct_fillHardwareTree() {
         lvl="Cabinet";
       }
   
+      // add UriBoards
+      if (dynlen(g_uriBoardList) > 0) {
+        for (int i = 1; i <= dynlen(g_uriBoardList); i++) {
+          int cabinetNr=navFunct_uriBoard2Cabinet(g_uriBoardList[i]);
+          if (lvl == "Cabinet") {
+            connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr;
+          }
+          dp = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_UriBoard"+g_uriBoardList[i];
+          dynAppend(result,connectTo+",UriBoard"+g_uriBoardList[i]+","+dp);
+        }
+      }
+
+      // add UniBoards (only one per station for now)
+      if (dynlen(g_uniBoardList) > 0) {
+        int cabinetNr=1;
+        if (lvl == "Cabinet") {
+          connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr;
+        }
+        dp = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_UniBoard";
+        dynAppend(result,connectTo+",UniBoard,"+dp);
+      }
+
+      // add fpgas
+      if (dynlen(g_FPGAList) > 0) {
+        for (int i = 1; i <= dynlen(g_FPGAList); i++) {
+          connectTo = station+":LOFAR_PIC_Cabinet1_UniBoard";
+          dp = station+":LOFAR_PIC_Cabinet1_UniBoard_FPGA"+g_FPGAList[i];
+          dynAppend(result,connectTo+",FPGA"+g_FPGAList[i]+","+dp);
+        }
+      }
+
       // add Subracks
       if (dynlen(g_subrackList) > 0) {
         for (int i = 1; i <= dynlen(g_subrackList); i++) {
@@ -1710,6 +1741,8 @@ void navFunct_clearGlobalLists() {
   dynClear(g_stationList);
   dynClear(g_cabinetList);
   dynClear(g_subrackList);
+  dynClear(g_uriBoardList);
+  dynClear(g_uniBoardList);
   dynClear(g_RSPList);
   dynClear(g_TBBList);
   dynClear(g_RCUList);
@@ -2108,7 +2141,6 @@ bool navFunct_isObservation(string obsName) {
   return isObs;
 }
 
-
 // ***************************
 // navFunct_getStationInputForObservation
 // ***************************
@@ -2175,8 +2207,10 @@ dyn_string navFunct_getInputBuffersForStation(string station) {
   dyn_string inputBuffers;
   dyn_dyn_anytype tab;
   
+  string stUp = strtoupper(station);
+  
   if (!navFunct_dpReachable(CEPDBName)) return inputBuffers;
-  string query="SELECT '_online.._value' FROM 'LOFAR_*_InputBuffer*.stationName' REMOTE '"+CEPDBName+"' WHERE '_online.._value' == \""+station+"\"";
+  string query="SELECT '_online.._value' FROM 'LOFAR_PermSW_"+stUp+"*_CobaltStationInput.observationName' REMOTE '"+CEPDBName+"'";
   dpQuery(query,tab);
   for(int z=2;z<=dynlen(tab);z++) {
     string dp = dpSubStr(tab[z][1],DPSUB_SYS_DP);
@@ -2471,17 +2505,34 @@ bool navFunct_isLBAInner(string stationName,int antennaNr) {
 }
 
 // **********************
-// navFunct_isLBAOuter
+// navFunct_hasAARTFAAC
 // **********************
 // stationName:  the station in question
-// antennaNr  :  the antennanr in question
 //
-// returns true if the antenna is a Core or Remote LBA Outer antenna
+// returns true if the station has AARTFAAC capabilities
 // **********************
 //
-bool navFunct_isLBAOuter(string stationName,int antennaNr) {
-  if ((navFunct_isCoreStation(stationName) || navFunct_isRemoteStation(stationName))&& antennaNr > 47) {
-    return true;
+bool navFunct_hasAARTFAAC(string stationName) {
+  stationName = navFunct_bareDBName(stationName);
+  string aartfaacDP = stationName+":LOFAR_PIC_StationInfo.AARTFAAC";
+  bool hasAARTFAAC=false;
+  if (dpExists(aartfaacDP)) {
+    dpGet(aartfaacDP,hasAARTFAAC);
   }
-  return false;
+  return hasAARTFAAC;
 }
+
+// ****************************************
+// Name : navFunct_uriBoard2Cabinet
+// ****************************************
+// Description:
+//    Returns the cabinetNr to which an uriBoard is connected 
+//
+// Returns:
+//    The cabinetnr
+// ***************************************
+
+int navFunct_uriBoard2Cabinet(int uriBoardNr) {
+  return floor(uriBoardNr/2);
+}
+

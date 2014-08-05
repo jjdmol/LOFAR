@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 913 56 N "_3DFace" 4
+PANEL,-1 -1 1062 56 N "_3DFace" 4
 "$barColor"
 "$station"
 "$xPos"
@@ -190,7 +190,7 @@ void swlevel_stationCallback(string dp1, bool aTrig) {
 {
   click();
 }" 0
- 0 1 1 2 1 E U  1 E 0 0 891 15
+ 0 1 1 2 1 E U  1 E 0 0 931 15
 6 0
 "bar"
 ""
@@ -204,11 +204,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 0 1 2 1 E U  1 E 3 3 888 12
+E E 0 0 1 2 1 E U  1 E 3 3 928 12
 2 4
 "station_text"
 ""
-1 850 0 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 890 0 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  "main()
 {
   rClick(station);
@@ -230,8 +230,8 @@ E "main(int x, int y)
 {
   click(station);
 }" 0
- 0 1 1 2 1 E U  0 E 850 0 878 13
-0 2 2 "0s" 0 0 0 192 0 0  850 0 1
+ 0 1 1 2 1 E U  0 E 890 0 918 13
+0 2 2 "0s" 0 0 0 192 0 0  890 0 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1

@@ -211,9 +211,7 @@ void outputprocCB(dyn_string dps, dyn_dyn_bool values)
     dyn_float dropped;
     dyn_string lnodes;
     string dp = dps[i];
-    DebugN(dp+\" : \"+ values[i]);
     dyn_bool dropping = values[i];
-    DebugN(dropping);
     string outputprocDP = dpSubStr(dp,DPSUB_SYS_DP);
     dpGet(outputprocDP+\".dropped\",dropped);
     dpGet(outputprocDP+\".locusNode\",lnodes);

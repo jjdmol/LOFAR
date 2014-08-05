@@ -240,7 +240,7 @@ void connectStationInputStreams() {
 
 void connectCobaltNodesAndProcesses() {
 
-  if (dynlen(observationsList) > 0) {
+  if (dynlen(observationsList) > 0 && navFunct_dpReachable(CEPDBName) ){
 
     // change all found DP's to contain all the elements that contain the states and childstates
     if (connectedStates) {
