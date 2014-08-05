@@ -418,13 +418,13 @@ substitute_uriboard()
 {
 	awk -v nrURIs=$NRURIS '
 	{
-		hasuri=index($1,"@furiboard@");
+		hasuri=index($1,"@uriboard@");
 		if (hasfpga > 0) {
 			for (uriNr = 0; uriNr < nrURIs; uriNr++) {
 				dpname=$1;
 				cNr=0;
 				if (uriNr > 1) cNr = 1
-				newname = sprintf("Cabinet%1d_URIboard%1d",cNr,uriNr);
+				newname = sprintf("Cabinet%1d_UriBoard%1d",cNr,uriNr);
 				sub("@uriboard@", newname, dpname);
 				print dpname"	"$2;
 				}
