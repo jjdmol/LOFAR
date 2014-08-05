@@ -13,7 +13,11 @@ PANEL,-1 -1 1200 823 N "_3DFace" 0
   if(dpExists(baseDP+\"_Cabinet2\")) {
     addPanelName= \"objects/Hardware/Station-3Cabinets.pnl\";
   } else {
-    addPanelName= \"objects/Hardware/Station-2Cabinets.pnl\";
+    if (navFunct_hasAARTFAAC(sysName) ){
+      addPanelName= \"objects/Hardware/Station-AARTFAAC-Cabinets.pnl\";
+    } else {
+      addPanelName= \"objects/Hardware/Station-2Cabinets.pnl\";
+    }
   }      
   if (  addSymbol(  strModuleName,        // Stay in this module
 	     	    \"\",                   // Name of this panel
@@ -42,7 +46,7 @@ void prepareHardwareList() {
   
   // For this panel Cabinets and subracks should be selectable so we get them for the treelist
   // Cabinets first
-  dpQuery(\"SELECT '_original.._value' FROM '\"+baseDP+\"_*.status.state' REMOTE '\"+sysName+\"' WHERE _DPT= \\\"Cabinet\\\" OR _DPT=\\\"SubRack\\\" \", tab);
+  dpQuery(\"SELECT '_original.._value' FROM '\"+baseDP+\"_*.status.state' REMOTE '\"+sysName+\"' WHERE _DPT= \\\"Cabinet\\\" OR _DPT=\\\"SubRack\\\"  OR _DPT=\\\"UriBoard\\\"   OR _DPT=\\\"UniBoard\\\"\", tab);
   LOG_TRACE(\"Station_Cabinet.pnl:prepareHardwareList|tab: \"+tab);
   
   dyn_string aDS=navFunct_getDynString(tab, 2,1);
@@ -55,13 +59,21 @@ void prepareHardwareList() {
     // strip all b4 Cabinet out of the string
     strreplace(aS,baseDP+\"_\",\"\");
     
-    // Remainder should be Cabinet?_Subrack? combinations, split on _ 
+    // Remainder should be Cabinet?_Subrack?  and Cabinet?_UriBoard? combinations, split on _ 
     dyn_string spl=strsplit(aS,\"_\");
     if (dynlen(spl) > 1) { // Subrack
-      string subrack = spl[2];
-      strreplace(subrack,\"Subrack\",\"\");
-      int s = subrack;
-      dynAppend(g_subrackList,s);
+      string node = spl[2];
+      if (strpos(node,\"Subrack\") >= 0) {
+        strreplace(node,\"Subrack\",\"\");
+        int s = node;
+        dynAppend(g_subrackList,s);
+       } else if (strpos(node,\"UriBoard\") >= 0) {
+        strreplace(node,\"UriBoard\",\"\");
+        int u = node;
+        dynAppend(g_uriBoardList,u);
+       } else if (strpos(node,\"UniBoard\") >= 0) {
+        dynAppend(g_uniBoardList,0);   // only one uniBoard
+      }
     } else {   // Cabinet
       string cabinet = spl[1];
       strreplace(cabinet,\"Cabinet\",\"\");

@@ -264,6 +264,22 @@ main()
         }
       }
     }
+
+    if (strpos(dynStr_fileContent[index],"RS.AARTFAAC")>-1) {
+      dyn_string value = strsplit(dynStr_fileContent[index],"=");
+      if (dynlen(value) > 1) {
+        if (substr(value[2],0,1) == "N" ||
+            substr(value[2],0,1) == "n" ||
+            substr(value[2],0,1) == "F" ||
+            substr(value[2],0,1) == "f") {
+          dpSet("LOFAR_PIC_StationInfo.AARTFAAC",false);
+        } else {
+          dpSet("LOFAR_PIC_StationInfo.AARTFAAC",true);
+        }
+      }
+    }
+
+
   }
 }
 

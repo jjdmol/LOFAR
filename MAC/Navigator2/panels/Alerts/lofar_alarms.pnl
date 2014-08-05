@@ -9,6 +9,7 @@ PANEL,-1 -1 1225 823 N "_3DFace" 0
 
   baseDP = g_currentDatapoint;
   
+  DebugN(baseDP);
    
 }
 

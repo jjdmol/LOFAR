@@ -303,7 +303,6 @@ void acknowledgeAlarm(int iPos,time timeStamp,string dp,string message,int statu
     for (int i=1;i<dynlen(g_alarms[ \"TIME\" ]);i++) {
       if (g_alarms[ \"TIME\"][i] == timeStamp) {
         if (g_alarms[ \"MESSAGE\"][i] == message && g_alarms[ \"STATUS\" ][i] == status) {
-          DebugN(\"removing from g_alarms\");
           dynRemove(g_alarms[\"DPNAME\" ],i);
           dynRemove(g_alarms[\"TIME\"   ],i);  
           dynRemove(g_alarms[\"STATE\"  ],i);
