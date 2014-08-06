@@ -1420,7 +1420,7 @@ void StationControl::_initAntennaMasks()
 	// Adopt values from RemoteStation.conf
 	StationConfig	SC;
 	itsNrRSPs = SC.nrRSPs;
-	itsNrTBBs = SC.nrRSPs;
+	itsNrTBBs = SC.nrTBBs;
 	itsNrLBAs = SC.nrLBAs;
 	itsNrHBAs = SC.nrHBAs;
 	itsNrRCUs = SC.nrRSPs * NR_RCUS_PER_RSPBOARD;
