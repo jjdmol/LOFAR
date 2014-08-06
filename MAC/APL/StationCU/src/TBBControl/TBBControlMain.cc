@@ -35,7 +35,7 @@ Exception::TerminateHandler t(Exception::terminate);
 int main(int argc, char* argv[])
 {
 	// args: cntlrname, parentHost, parentService
-	GCFScheduler::instance()->init(argc, argv, argv[0]);
+	GCFScheduler::instance()->init(argc, argv, LOFAR::basename(argv[0]));
 	GCFScheduler::instance()->disableQueue();  // run as fast as possible
 
 	ParentControl*	pc = ParentControl::instance();

@@ -70,7 +70,8 @@ VHECRsettings::VHECRsettings(ParameterSet* aParSet)
 	vector<uint16> RCUnumbers(rcuParset.getUint16Vector("x"));
 	if (RCUnumbers.empty()) {           // No receivers in the list?
 		RCUsetActive.set();                     // assume all receivers
-	} else {
+	} 
+    else {
 		for (uint i = 0; i < RCUnumbers.size();i++) {
 			RCUsetActive.set(RCUnumbers[i]);    // set mentioned receivers in all set
 		}
@@ -126,6 +127,7 @@ VHECRsettings::VHECRsettings(ParameterSet* aParSet)
 		LOG_DEBUG_STR("VHECR settings NOT defined");
 	}
 }
+
 
 //#
 //# operator<<

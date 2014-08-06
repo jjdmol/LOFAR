@@ -237,7 +237,7 @@ private:
 
     bool isBoardUsed(int board);
     
-    ParameterSet*       itsParameterSet;
+    //ParameterSet*       itsParameterSet;
     RTDBPropertySet*    itsPropertySet;
     bool                itsPropertySetInitialized;
     int                 itsNrTBBs;
