@@ -60,7 +60,7 @@ namespace LOFAR {
 
         receivedCommands.append(command);
       } catch(Stream::EndOfStreamException &) {
-        LOG_WARN("[CommandThread] Connection reset by peer");
+        LOG_INFO("[CommandThread] Connection reset by peer");
       } catch(Exception &ex) {
         LOG_ERROR_STR("[CommandThread] Caught exception: " << ex.what());
       }
