@@ -23,6 +23,7 @@
 #include "CommandThread.h"
 
 #include <Common/LofarLogger.h>
+#include <CoInterface/MultiDimArray.h>
 #include <CoInterface/Stream.h>
 #include <InputProc/Transpose/MPIProtocol.h>
 #include <InputProc/Transpose/MPIUtil.h>
@@ -93,12 +94,13 @@ namespace LOFAR {
 
       vector<MPI_Request> requests;
 
-      char buf[1024];
-      strncpy(&buf[0], str.c_str(), sizeof buf - 1);
-      buf[sizeof buf - 1] = 0;
+      Vector<char> buf(1024, 1, mpiAllocator);
+
+      strncpy(&buf[0], str.c_str(), buf.size() - 1);
+      buf[buf.size() - 1] = 0;
 
       for (int r = 1; r < mpiSize; r++)
-        requests.push_back(Guarded_MPI_Isend(&buf[0], sizeof buf, r, tag.value));
+        requests.push_back(Guarded_MPI_Isend(&buf[0], buf.size(), r, tag.value));
 
       RequestSet rs(requests, true, "commandThread");
       rs.waitAll();
@@ -111,13 +113,15 @@ namespace LOFAR {
 
       vector<MPI_Request> requests;
 
-      char buf[1024];
-      requests.push_back(Guarded_MPI_Irecv(&buf[0], sizeof buf, 0, tag.value));
+      Vector<char> buf(1024, 1, mpiAllocator);
+
+      requests.push_back(Guarded_MPI_Irecv(&buf[0], buf.size(), 0, tag.value));
+      buf[buf.size() - 1] = 0;
 
       RequestSet rs(requests, true, "commandThread");
       rs.waitAll();
 
-      return buf;
+      return &buf[0];
     }
   }
 }
