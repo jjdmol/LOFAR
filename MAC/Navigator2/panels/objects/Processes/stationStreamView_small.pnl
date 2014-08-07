@@ -57,7 +57,7 @@ private void reload() {
   
   
   // get all the InputBuffers used by this station
-  inputBuffers = navFunct_getInputBuffersForStation(station);
+  inputBuffers = navFunct_getInputBuffersForStation(station);  
   
   if (dynlen(connectToSave) > 0) {
     dpDisconnect(\"monitorStreamsCB\", connectToSave);
@@ -67,7 +67,9 @@ private void reload() {
   for (int i=1; i<= dynlen(inputBuffers); i++) {
     // We need to know if this station is involved in an active observation to see if the inputbuffers are showing real values.
     // if not connected then we grey out the symbol
-    if (navFunct_stationInObservation(station,\"active\")) {
+    string obs = \"\";
+    dpGet(inputBuffers[i]+\".observationName\",obs);
+    if (navFunct_stationInObservation(station,\"active\") && navFunct_observationInPool(\"Observation\"+obs,\"active\") ) {
       dynAppend(connectTo,inputBuffers[i]+\".\"+stream+\".rejected:_online.._value\");
     } else {
       setValue(\"stationStreamObject0\", \"backCol\", \"Lofar_off\");
@@ -118,19 +120,14 @@ void monitorStreamsCB(dyn_string dps, dyn_float values)
   dyn_string toollist0;
   dyn_string toollist1;
 
-  // Here we get the nuber of rejected values and we have to determine how many are wrong. if a station has more then ??% rejected data
-  // we need to set the color to red, if bad data occurs but its lower then the above mentioned
-  // values we set the color to orange, and if no bad percentages occur the color is green.
-  
 
   for (int i = 1; i<= dynlen(values); i++) {
-
 
     // in case of the corestations we will have LBA,HBA,HBA0 & HBA1 outputs, the remote and the foreign stations have only LBA & HBA
     //  LBA and HBA are connected to stream0 HBA0 and HBA1 are connected to stream1
     
-    string stationfield = strsplit(dps[i],\"_\")[2];
-    string field = substr(stationfield,strpos(stationfield,station));
+    string stationfield = strsplit(dps[i],\"_\")[3];
+    string field = substr(stationfield,strpos(stationfield,station)+5);
 
     int val = values[i];    
     if (val == 0) {
@@ -142,12 +139,7 @@ void monitorStreamsCB(dyn_string dps, dyn_float values)
     } else if (val >= 25) {
       color = \"Lofar_broken\";
     }
-
-    if (!stream1) {
-      setValue(\"stationStreamObject\"+rsppos, \"backCol\", \"Lofar_off\");
-      setValue(\"stationStreamObject\"+rsppos, \"foreCol\", \"Lofar_off\");
-    }    
-
+    
     if (field == \"LBA\" || field == \"HBA\") {
       toolTipText0+=\"  \"+field+\" <br>--------------<br>\";     
       if (val > 0) {
@@ -155,17 +147,22 @@ void monitorStreamsCB(dyn_string dps, dyn_float values)
         dynAppend(toollist0,aS);
         count0++;
       }
+      setValue(\"stationStreamObject0\", \"backCol\", color);
+      setValue(\"stationStreamObject0\", \"foreCol\", color);
       if (!stream1) {
-        setValue(\"stationStreamObject0\", \"backCol\", color);
-        setValue(\"stationStreamObject0\", \"foreCol\", color);
         setValue(\"stationStreamObject1\", \"backCol\", color);
         setValue(\"stationStreamObject1\", \"foreCol\", color);
-      } else {
-        setValue(\"stationStreamObject0\", \"backCol\", color);
-        setValue(\"stationStreamObject0\", \"foreCol\", color);
       }
-        
-    } else {
+     } else if (field == \"HBA0\"){
+      toolTipText0+=\"  \"+field+\"<br>--------------<br>\";     
+      if (val > 0) {
+        string aS=station+\"</t> :\"+val+\"<br>\";
+        dynAppend(toollist0,aS);
+        count0++;
+      }
+      setValue(\"stationStreamObject0\", \"backCol\", color);
+      setValue(\"stationStreamObject0\", \"foreCol\", color);
+    } else if (field == \"HBA1\"){
       toolTipText1+=\"  \"+field+\"<br>--------------<br>\";     
       if (val > 0) {
         string aS=station+\"</t> :\"+val+\"<br>\";
@@ -191,6 +188,7 @@ void monitorStreamsCB(dyn_string dps, dyn_float values)
 
   setValue(\"stationStreamObject0\",\"toolTipText\",toolTipText0);
   setValue(\"stationStreamObject1\",\"toolTipText\",toolTipText1);
+  
 }" 0
  E "main(int x, int y)
 {

@@ -82,6 +82,8 @@
 // navFunct_listToDynString                   : puts [a,b,d] lists into dynstrings
 // navFunct_locusNode2OSRack                  : Returns the OSRackNr for a given LocusNode
 // navFunct_lofarDate2PVSSDate                : returns Lofardate Datestring 2000.11.19 [18:12:21[.888]] in PVSS format 2000.11.19 [18:12:21[.888]]
+// navFunct_observationInPool                 : Look if a given observation is in a given pool (planned,active, finished)
+// navFunct_observationNameToNumber           : Strips Observation from the name and returns the bare number
 // navFunct_ObsToTemp                         : returns the temp observationname
 // navFunct_queryConnectObservations          : Queryconnect to keep track of all observations
 // navFunct_receiver2Cabinet                  : Returns the CabinetNr for a RecieverNr
@@ -2328,6 +2330,25 @@ dyn_string navFunct_getWritersForObservation(string obsName) {
 }
 
 // ***************************
+// navFunct_observationInPool
+// ***************************
+// observation : the station in question
+// pool    : the pool to search into
+//
+// Returns true if the pool contains this observation
+// ***************************
+// 
+bool navFunct_observationInPool(string obs,string pool) {
+  for (int i = 1; i <= dynlen(g_observations["SCHEDULE"]); i++ ) {
+    if (g_observations["SCHEDULE"][i] == pool && dynContains(g_observations["NAME"],"LOFAR_ObsSW_"+obs)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+
+// ***************************
 // navFunct_stationInObservation
 // ***************************
 // station : the station in question
@@ -2535,4 +2556,18 @@ bool navFunct_hasAARTFAAC(string stationName) {
 int navFunct_uriBoard2Cabinet(int uriBoardNr) {
   return floor(uriBoardNr/2);
 }
+
+// ****************************************
+// Name : navFunct_observationNameToNumber
+// ****************************************
+// Description:
+//    Returns: the observationName without "observation"
+// ***************************************
+
+int navFunct_observationNameToNumber(string obsname) {
+  strreplace(obsname, "Observation", ""); 
+  return obsname;
+}
+
+
 
