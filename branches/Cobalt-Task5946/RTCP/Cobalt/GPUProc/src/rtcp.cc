@@ -471,15 +471,11 @@ int main(int argc, char **argv)
       string command;
 
       do {
-        if (mpi.rank() == 0) {
-          // master
-          command = commandThread->pop();
+        // rank 0 obtains next command
+        command = mpi.rank() == 0 ? commandThread->pop() : "";
 
-          CommandThread::broadcast_send(command, mpi.size());
-        } else {
-          // slave
-          command = CommandThread::broadcast_receive();
-        }
+        // sync command across nodes
+        command = CommandThread::broadcast(command);
 
         // handle command
         if (command == "stop") {

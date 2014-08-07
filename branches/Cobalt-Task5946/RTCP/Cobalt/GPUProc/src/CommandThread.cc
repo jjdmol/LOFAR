@@ -48,7 +48,10 @@ namespace LOFAR {
       stop();
     }
 
-    void CommandThread::readOneCommand() {
+    bool CommandThread::readOneCommand() {
+      if (streamdesc == "null:")
+        return false;
+
       try {
         LOG_INFO_STR("[CommandThread] Reading from " << streamdesc);
 
@@ -63,16 +66,15 @@ namespace LOFAR {
         LOG_INFO("[CommandThread] Connection reset by peer");
       } catch(Exception &ex) {
         LOG_ERROR_STR("[CommandThread] Caught exception: " << ex.what());
+        return false;
       }
+
+      return true;
     }
 
     void CommandThread::mainLoop() {
-      if (streamdesc == "null:")
-        return;
-
-      while(true) {
-        readOneCommand();
-      }
+      while(readOneCommand())
+        ;
     }
 
     void CommandThread::stop() {
@@ -87,7 +89,7 @@ namespace LOFAR {
       return receivedCommands.remove(TimeSpec::universe_heat_death, "");
     }
 
-    void CommandThread::broadcast_send(const std::string &str, int mpiSize)
+    std::string CommandThread::broadcast(const std::string &str)
     {
       MPIProtocol::tag_t tag;
       tag.bits.type = MPIProtocol::CONTROL;
@@ -99,28 +101,16 @@ namespace LOFAR {
       strncpy(&buf[0], str.c_str(), buf.size() - 1);
       buf[buf.size() - 1] = 0;
 
-      for (int r = 1; r < mpiSize; r++)
-        requests.push_back(Guarded_MPI_Isend(&buf[0], buf.size(), r, tag.value));
+      {
+        ScopedLock sl(MPIMutex);
+
+        requests = Guarded_MPI_Ibcast(&buf[0], buf.size(), 0, tag.value);
+      }
 
       RequestSet rs(requests, true, "commandThread");
       rs.waitAll();
-    }
 
-    std::string CommandThread::broadcast_receive()
-    {
-      MPIProtocol::tag_t tag;
-      tag.bits.type = MPIProtocol::CONTROL;
-
-      vector<MPI_Request> requests;
-
-      Vector<char> buf(1024, 1, mpiAllocator);
-
-      requests.push_back(Guarded_MPI_Irecv(&buf[0], buf.size(), 0, tag.value));
       buf[buf.size() - 1] = 0;
-
-      RequestSet rs(requests, true, "commandThread");
-      rs.waitAll();
-
       return &buf[0];
     }
   }

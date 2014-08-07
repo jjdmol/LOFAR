@@ -121,6 +121,13 @@ namespace LOFAR {
      */
     MPI_Request Guarded_MPI_Irecv(void *ptr, size_t numBytes, int srcRank, int tag);
 
+    /*
+     * A guarded version of MPI_Ibcast with fewer parameters.
+     *
+     * NOT LOCKED
+     */
+    std::vector<MPI_Request> Guarded_MPI_Ibcast(void *ptr, size_t numBytes, int srcRank, int tag);
+
     class RequestSet;
 
     typedef MPI_Request handle_t;

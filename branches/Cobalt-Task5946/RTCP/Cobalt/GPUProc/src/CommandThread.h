@@ -40,10 +40,9 @@ namespace LOFAR {
       std::string pop();
 
       // Broadcast a command from rank 0 to [1, mpiSize)
-      static void broadcast_send(const std::string &str, int mpiSize);
-
-      // Receive a broadcasted command from rank 0
-      static std::string broadcast_receive();
+      // Rank 0 should provide the string to broadcast,
+      // and all ranks return the broadcasted string.
+      static std::string broadcast(const std::string &str);
 
     private:
       const std::string streamdesc;
@@ -55,7 +54,9 @@ namespace LOFAR {
       void mainLoop();
 
     protected:
-      void readOneCommand();
+      // Read a single command -- return whether waiting for the
+      // next command is desirable
+      bool readOneCommand();
     };
   }
 }
