@@ -93,7 +93,7 @@ void OperationClean::init()
   Vector<String> modelNames(nterms);
   Vector<String> residualNames(nterms);
   Vector<String> restoredNames(nterms);
-  Vector<String> psfNames(nterms);
+  Vector<String> psfNames((nterms*(nterms+1))/2);
   
   if (nterms == 1)
   {
