@@ -215,12 +215,13 @@ void outputprocCB(dyn_string dps, dyn_dyn_bool values)
     string outputprocDP = dpSubStr(dp,DPSUB_SYS_DP);
     dpGet(outputprocDP+\".dropped\",dropped);
     dpGet(outputprocDP+\".locusNode\",lnodes);
-
+    
     for (int j=1; j<= dynlen(lnodes);j++) {
       dynAppend(locusnodes,lnodes[j]);
-      if (dropped[j] > 0) {
+      if (dynlen(dropped) <= j)  continue;
+      if ( dropped[j] > 0) {
         color = \"Lofar_broken\";
-        toolTipText+=lnode[j]+\"<br>\";
+        toolTipText+=lnodes[j]+\"<br>\";
       }
     }
   }

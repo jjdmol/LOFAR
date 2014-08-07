@@ -35,7 +35,6 @@ void prepareHardwareList() {
     //keep Path
     string path=aS;
 
-    DebugN(aS);
      // strip all b4 and including Subrack out of the string
 //    strreplace(aS,navFunct_getPathLessOne(baseDP)+\"_Cabinet\"+uNr+\"_\",\"\");
     
