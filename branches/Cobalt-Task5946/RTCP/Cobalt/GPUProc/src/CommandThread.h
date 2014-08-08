@@ -21,8 +21,8 @@
 #ifndef LOFAR_GPUPROC_COMMANDTHREAD_H
 #define LOFAR_GPUPROC_COMMANDTHREAD_H
 
-#include <Common/Thread/Thread.h>
 #include <CoInterface/Queue.h>
+#include <CoInterface/OMPThread.h>
 
 #include <string>
 
@@ -47,16 +47,7 @@ namespace LOFAR {
     private:
       const std::string streamdesc;
 
-      Queue<std::string> receivedCommands;
-
-      Thread thread;
-
-      void mainLoop();
-
-    protected:
-      // Read a single command -- return whether waiting for the
-      // next command is desirable
-      bool readOneCommand();
+      OMPThreadSet readerThread;
     };
   }
 }

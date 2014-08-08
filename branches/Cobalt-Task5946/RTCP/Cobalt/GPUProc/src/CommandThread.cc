@@ -34,12 +34,7 @@ namespace LOFAR {
   namespace Cobalt {
     CommandThread::CommandThread(const std::string &streamdesc)
     :
-      streamdesc(streamdesc),
-      receivedCommands("receivedCommands", false),
-
-      // We need a separate thread to be able to cancel the syscalls used in Stream.
-      // SIGHUP (which we'd otherwise use) does not interrupt all syscalls.
-      thread(this, &CommandThread::mainLoop)
+      streamdesc(streamdesc)
     {
     }
 
@@ -48,11 +43,13 @@ namespace LOFAR {
       stop();
     }
 
-    bool CommandThread::readOneCommand() {
+    std::string CommandThread::pop() {
       if (streamdesc == "null:")
-        return false;
+        return "";
 
       try {
+        OMPThreadSet::ScopedRun sr(readerThread);
+
         LOG_INFO_STR("[CommandThread] Reading from " << streamdesc);
 
         SmartPtr<Stream> commandStream = createStream(streamdesc, true);
@@ -61,32 +58,18 @@ namespace LOFAR {
 
         LOG_INFO_STR("[CommandThread] Received command: '" << command << "'");
 
-        receivedCommands.append(command);
+        return command;
       } catch(Stream::EndOfStreamException &) {
         LOG_INFO("[CommandThread] Connection reset by peer");
       } catch(Exception &ex) {
         LOG_ERROR_STR("[CommandThread] Caught exception: " << ex.what());
-        return false;
       }
 
-      return true;
-    }
-
-    void CommandThread::mainLoop() {
-      while(readOneCommand())
-        ;
+      return "";
     }
 
     void CommandThread::stop() {
-      thread.cancel();
-      thread.wait();
-
-      // Send EOS
-      receivedCommands.append("");
-    }
-
-    std::string CommandThread::pop() {
-      return receivedCommands.remove(TimeSpec::universe_heat_death, "");
+      readerThread.killAll();
     }
 
     std::string CommandThread::broadcast(const std::string &str)
@@ -107,7 +90,7 @@ namespace LOFAR {
         requests = Guarded_MPI_Ibcast(&buf[0], buf.size(), 0, tag.value);
       }
 
-      RequestSet rs(requests, true, "commandThread");
+      RequestSet rs(requests, true, "command bcast");
       rs.waitAll();
 
       buf[buf.size() - 1] = 0;
