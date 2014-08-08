@@ -62,9 +62,11 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
     add_executable(${_name} ${ARGN})
     get_property(_libs GLOBAL PROPERTY ${PACKAGE_NAME}_LIBRARIES)
     if(${CMAKE_VERSION} VERSION_LESS 2.8.12)
-      target_link_libraries(${_name} ${_libs} ${LOFAR_EXTRA_LIBRARIES})
+      target_link_libraries(${_name} ${_libs}
+        ${${PACKAGE_NAME}_LINK_LIBRARIES} ${LOFAR_EXTRA_LIBRARIES})
     else()
-      target_link_libraries(${_name} PRIVATE ${_libs} ${LOFAR_EXTRA_LIBRARIES})
+      target_link_libraries(${_name} PRIVATE ${_libs}
+        ${${PACKAGE_NAME}_LINK_LIBRARIES} ${LOFAR_EXTRA_LIBRARIES})
     endif()
     add_dependencies(${_name} ${PACKAGE_NAME}_PackageVersion)
     add_dependencies(${PACKAGE_NAME} ${_name})
