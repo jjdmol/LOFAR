@@ -93,13 +93,15 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
     if(NOT "${ARGN}" MATCHES "^MODULE")
       set_property(GLOBAL APPEND PROPERTY ${PACKAGE_NAME}_LIBRARIES ${_name})
     endif(NOT "${ARGN}" MATCHES "^MODULE")
-    target_link_libraries(${_name} PRIVATE
-      ${${PACKAGE_NAME}_LINK_LIBRARIES} ${LOFAR_EXTRA_LIBRARIES})
-    # For unknown reasons, this seems to cause havoc on Apple.
-    if(NOT APPLE)
-      target_link_libraries(${_name} PUBLIC
+    if(${CMAKE_VERSION} VERSION_LESS 2.8.12)
+      target_link_libraries(${_name} 
+        ${${PACKAGE_NAME}_LINK_LIBRARIES} ${LOFAR_EXTRA_LIBRARIES})
+      target_link_libraries(${_name} LINK_INTERFACE_LIBRARIES
         ${${PACKAGE_NAME}_LINK_LIBRARIES})
-    endif(NOT APPLE)
+    else(${CMAKE_VERSION} VERSION_LESS 2.8.12)
+      target_link_libraries(${_name} PRIVATE ${LOFAR_EXTRA_LIBRARIES})
+      target_link_libraries(${_name} PUBLIC ${${PACKAGE_NAME}_LINK_LIBRARIES})
+    endif(${CMAKE_VERSION} VERSION_LESS 2.8.12)
 #    set_target_properties(${_name} PROPERTIES 
 #      VERSION ${${PACKAGE_NAME}_VERSION}
 #      OUTPUT_NAME lofar_${_name})
