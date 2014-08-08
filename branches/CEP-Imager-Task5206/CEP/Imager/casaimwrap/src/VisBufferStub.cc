@@ -92,6 +92,7 @@ void VisBufferStub::setChunk(const Vector<Int> &antenna1,
     itsFlagRow.reference(flagRow);
     itsImagingWeightCube.reference(imagingWeightCube);
     itsFlag.reference(flag);
+    std::cout<<"going to set an empty cube..."<<endl; // INI: added comment
     itsData.reference(data);
     itsNewMS = newMS;
 

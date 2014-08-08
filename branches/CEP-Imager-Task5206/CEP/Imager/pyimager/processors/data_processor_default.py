@@ -74,6 +74,24 @@ class DataProcessorDefault(DataProcessorBase):
         return (self.normalize(coordinates, image, Normalization.FLAT_NOISE,
             normalization), weight)
 
+    def grid_chunk(self, coordinates, shape, normalization =
+        Normalization.FLAT_NOISE, chunksize=0):
+
+        self._update_image_configuration(coordinates, shape)
+
+        # Grid.
+        image, weight = self._processor.grid_chunk(self._coordinates, self._shape,
+            False, chunksize)
+
+        # Divide out the summed weight.
+        exp_weight = weight[:, :, numpy.newaxis, numpy.newaxis]
+        #image = numpy.where(exp_weight > 0.0, image / exp_weight, 0.0)
+
+        # Normalize residual image to the requested normalization. Note that the
+        # image produced by gridding is flat noise by default.
+        return (self.normalize(coordinates, image, Normalization.FLAT_NOISE,
+            normalization), weight)
+
     def degrid(self, coordinates, model, normalization =
         Normalization.FLAT_GAIN):
 
@@ -84,6 +102,17 @@ class DataProcessorDefault(DataProcessorBase):
 
         # Degrid
         self._processor.degrid(self._coordinates, model, False)
+
+    def degrid_chunk(self, coordinates, model, normalization =
+        Normalization.FLAT_GAIN, chunksize=0):
+
+        self._update_image_configuration(coordinates, model.shape)
+
+        model = self.normalize(coordinates, model, normalization,
+            Normalization.FLAT_GAIN)
+
+        # Degrid
+        self._processor.degrid_chunk(self._coordinates, model, False, chunksize)
 
     def residual(self, coordinates, model, normalization_model =
         Normalization.FLAT_GAIN, normalization_residual =

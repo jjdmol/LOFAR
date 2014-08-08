@@ -1,5 +1,6 @@
 import numpy
 import pyrap.images
+import pyrap.tables
 
 import lofar.casaimwrap
 import lofar.pyimager.processors as processors
@@ -20,6 +21,8 @@ def degridder(options):
     processor_options["noise"] = options.noise
     processor_options["robustness"] = options.robustness
     processor_options["profile"] = options.profile
+    processor_options["chunksize"] = options.chunksize
+    processor_options["outcol"] = options.outcol
     
     processor_options["gridding.ATerm.name"] = "ATermPython"
     processor_options["ATermPython.module"] = "lofar.imager.myaterm"
@@ -70,4 +73,13 @@ def degridder(options):
 
     #degrid
     util.notice("Predicting visibilities...")
-    processor.degrid(model_coordinates, model, processors.Normalization.FLAT_GAIN)
+    tab = pyrap.tables.table(options.ms)
+    nrows = tab.nrows()
+    tab.close()
+    print "There are ", nrows, " rows in the MS..."
+    if options.chunksize > 0 and options.chunksize <= nrows:
+      print 'calling degrid_chunk...'
+      processor.degrid_chunk(model_coordinates, model, processors.Normalization.FLAT_GAIN, options.chunksize)
+    else:
+      print 'calling degrid...'
+      processor.degrid(model_coordinates, model, processors.Normalization.FLAT_GAIN)

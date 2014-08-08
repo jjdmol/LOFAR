@@ -28,6 +28,9 @@
 #include <pyrap/Converters/PycRecord.h>
 #include <pyrap/Converters/PycArray.h>
 
+#include <coordinates/Coordinates/DirectionCoordinate.h>
+#include <ms/MeasurementSets/MeasurementSet.h>
+
 using namespace casa;
 
 namespace
@@ -53,6 +56,8 @@ ATermPython::ATermPython(const MeasurementSet& ms, const ParameterSet& parameter
   Py_Initialize();
   
   boost::python::class_<LOFAR::LofarFT::ATerm::ITRFDirectionMap>("ITRFDirectionMap", "Hi there");
+  boost::python::class_<casa::DirectionCoordinate>("DirectionCoordinate", "dir. coords");
+  boost::python::class_<casa::MEpoch>("MEpoch", "Mepoch");
   
   // Register converters for casa types from/to python types
   casa::pyrap::register_convert_excp();
@@ -103,6 +108,19 @@ vector<casa::Cube<casa::Complex> > ATermPython::evaluate(
   return ATermLofar::evaluate(idStation, freq, reference, normalize);
 }
 
+void ATermPython::setDirection(
+  const casa::DirectionCoordinate &coordinates,
+  const IPosition &shape)
+{
+	itsPyaterm.attr("setDirection")(coordinates, shape);
+	ATermLofar::setDirection(coordinates, shape);
+}
+
+void ATermPython::setEpoch( const MEpoch &epoch )
+{
+	itsPyaterm.attr("setEpoch")(epoch);
+	ATermLofar::setEpoch(epoch);
+}
+
 } // end namespace LofarFT
 } // end namespace LOFAR
-  

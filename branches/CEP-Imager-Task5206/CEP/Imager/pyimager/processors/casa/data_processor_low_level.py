@@ -15,7 +15,13 @@ class DataProcessorLowLevel(DataProcessorLowLevelBase):
             " 0 && FIELD_ID == 0 && DATA_DESC_ID == 0")
 
 #        assert(options["weight_algorithm"] == WeightAlgorithm.NATURAL)
-        self._data_column = "CORRECTED_DATA"
+
+	# INI: 'outcol' is defined in degridder. If called from degridder, this is a value read from the command line.
+	if options.has_key("outcol"):
+          self._data_column = options["outcol"]
+	else:
+	  self._data_column = "CORRECTED_DATA"
+
         self._modeldata_column = "MODEL_DATA"
 
         self._coordinates = None
@@ -174,9 +180,62 @@ class DataProcessorLowLevel(DataProcessorLowLevelBase):
         args["IMAGING_WEIGHT_CUBE"] = numpy.ones(args["FLAG"].shape, dtype=numpy.float32)
         args["DATA"] = self._ms.getcol(self._data_column)
 
-        lofar.casaimwrap.begin_grid(self._context, shape, coordinates.dict(), \
+	# INI: Modified grid in casaimwrap to separate begin_grid, grid and end_grid
+        '''lofar.casaimwrap.begin_grid(self._context, shape, coordinates.dict(), \
             False, args)
-        result = lofar.casaimwrap.end_grid(self._context, False)
+        result = lofar.casaimwrap.end_grid(self._context, False)'''
+
+        lofar.casaimwrap.begin_grid(self._context, shape, coordinates.dict(), \
+            False)
+        lofar.casaimwrap.grid(self._context, \
+            args)
+        result = lofar.casaimwrap.end_grid(self._context, False) # INI: why is this False? Insert proper options here
+
+        self._response_available = True
+        return (result["image"], result["weight"])
+
+    def grid_chunk(self, coordinates, shape, as_grid, chunksize):
+        assert(not as_grid)
+        self._update_image_configuration(coordinates, shape)
+
+        lofar.casaimwrap.begin_grid(self._context, shape, coordinates.dict(), \
+            False)
+
+        # INI: looping through chunks of data
+        nrows = self._ms.nrows()
+        lastchunksize = nrows % chunksize
+        if lastchunksize > 0:
+            nchunks = nrows / chunksize + 1
+        else:
+            nchunks = nrows / chunksize
+
+        print 'nrows, chunksize, lastchunksize: ', nrows, chunksize, lastchunksize
+
+        for chunk in numpy.arange(nchunks):
+                start = chunk * chunksize
+                if chunk == nchunks-1 and lastchunksize > 0:
+                        nrow = lastchunksize
+                else:
+                        nrow = chunksize
+
+	        args = {}
+        	args["ANTENNA1"] = self._ms.getcol("ANTENNA1",start,nrow)
+	        args["ANTENNA2"] = self._ms.getcol("ANTENNA2",start,nrow)
+        	args["UVW"] = self._ms.getcol("UVW",start,nrow)
+	        args["TIME"] = self._ms.getcol("TIME",start,nrow)
+        	args["TIME_CENTROID"] = self._ms.getcol("TIME_CENTROID",start,nrow)
+	        args["FLAG_ROW"] = self._ms.getcol("FLAG_ROW",start,nrow)
+        	args["FLAG"] = self._ms.getcol("FLAG",start,nrow)
+	        args["IMAGING_WEIGHT_CUBE"] = numpy.ones(args["FLAG"].shape, dtype=numpy.float32)
+        	args["DATA"] = self._ms.getcol(self._data_column,start,nrow)
+
+	        lofar.casaimwrap.grid(self._context, \
+        	    args)
+
+        result = lofar.casaimwrap.end_grid(self._context, False) # INI: why is this False? Insert proper options here
+
+	print "Result is ------------------: ", result
+
         self._response_available = True
         return (result["image"], result["weight"])
 
@@ -204,6 +263,48 @@ class DataProcessorLowLevel(DataProcessorLowLevelBase):
         self._response_available = True
 	# INI: uncommenting the line below so that the result is written to the MS.
         self._ms.putcol(self._data_column, result["data"])
+
+    def degrid_chunk(self, coordinates, model, as_grid, chunksize):
+        assert(not as_grid)
+        self._update_image_configuration(coordinates, model.shape)
+
+        lofar.casaimwrap.begin_degrid(self._context, \
+            coordinates.dict(), model)
+
+	# INI: looping through chunks of data
+	nrows = self._ms.nrows()
+	lastchunksize = nrows % chunksize
+	if lastchunksize > 0:
+	    nchunks = nrows / chunksize + 1
+	else:
+	    nchunks = nrows / chunksize
+
+	print 'nrows, chunksize, lastchunksize: ', nrows, chunksize, lastchunksize
+
+	for chunk in numpy.arange(nchunks):
+		start = chunk * chunksize
+		if chunk == nchunks-1 and lastchunksize > 0:
+			nrow = lastchunksize
+		else:
+			nrow = chunksize
+
+	        args = {}
+	        args["ANTENNA1"] = self._ms.getcol("ANTENNA1",start,nrow)
+	        args["ANTENNA2"] = self._ms.getcol("ANTENNA2",start,nrow)
+	        args["UVW"] = self._ms.getcol("UVW",start,nrow)
+	        args["TIME"] = self._ms.getcol("TIME",start,nrow)
+	        args["TIME_CENTROID"] = self._ms.getcol("TIME_CENTROID",start,nrow)
+	        args["FLAG_ROW"] = self._ms.getcol("FLAG_ROW",start,nrow)
+	        args["FLAG"] = self._ms.getcol("FLAG",start,nrow)
+	        args["IMAGING_WEIGHT_CUBE"] = numpy.ones(args["FLAG"].shape, dtype=numpy.float32)
+     
+        	result = lofar.casaimwrap.degrid(self._context, \
+	            args)
+	        self._ms.putcol(self._data_column, result["data"], start, nrow)
+          
+        lofar.casaimwrap.end_degrid(self._context)
+
+        self._response_available = True
 
     def residual(self, coordinates, model, as_grid):
         assert(not as_grid)

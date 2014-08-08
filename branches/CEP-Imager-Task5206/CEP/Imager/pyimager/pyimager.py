@@ -25,6 +25,10 @@ def main():
         default = 0.0, metavar = "ROBUSTNESS", help = "")
     subparser.add_argument("--profile", dest = "profile",
         default = "", metavar = "PROFILE", help = "ipcluster profile name")
+    subparser.add_argument("--chunksize", dest = "chunksize", type = int,
+	default = 0, metavar = "CHUNKSIZE", help = "Number of rows to read from MS (0 for auto)")
+    subparser.add_argument("--outcol", dest = "outcol",
+        metavar = "OUTCOL", default = "DATA", help = "Column where predicted visibilities will be written")
     subparser.add_argument("ms", help = "input measurement set")
     subparser.add_argument("image", help = "input model image")
     subparser.set_defaults(func = algorithms.degridder)
@@ -69,6 +73,8 @@ def main():
         default = 0.0, metavar = "ROBUSTNESS", help = "")
     subparser.add_argument("--profile", dest = "profile",
         default = "", metavar = "PROFILE", help = "ipcluster profile name")
+    subparser.add_argument("--chunksize", dest = "chunksize", type = int,
+	default = 0, metavar = "CHUNKSIZE", help = "Number of rows to read from MS (0 for auto)")
     subparser.add_argument("ms", help = "input measurement set")
     subparser.add_argument("image", help = "output image")
     subparser.set_defaults(func = algorithms.dirty)

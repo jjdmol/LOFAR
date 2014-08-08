@@ -50,7 +50,17 @@ class DataProcessorLowLevelBase:
         """
 
     @abstractmethod
+    def grid_chunk(self, coordinates, shape, as_grid, chunksize):
+        """
+        """
+
+    @abstractmethod
     def degrid(self, coordinates, model, as_grid):
+        """
+        """
+
+    @abstractmethod
+    def degrid_chunk(self, coordinates, model, as_grid, chunksize):
         """
         """
 

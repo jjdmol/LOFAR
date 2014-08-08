@@ -58,6 +58,10 @@ public:
     const casa::Vector<casa::Double> &reference, 
     bool normalize = false)
     const;
+
+  void setDirection(const casa::DirectionCoordinate &coordinates, const casa::IPosition &shape);
+
+  void setEpoch(const casa::MEpoch &epoch);
     
 protected:    
   boost::python::object itsPyaterm;

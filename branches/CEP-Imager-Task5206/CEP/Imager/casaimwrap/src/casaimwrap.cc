@@ -437,8 +437,10 @@ void end_degrid(CASAContext &context)
     context.ft->finalizeToVis();
 }
 
+//void begin_grid(CASAContext &context, const ValueHolder &shape,
+//    const Record &coordinates, bool psf, const Record &chunk)
 void begin_grid(CASAContext &context, const ValueHolder &shape,
-    const Record &coordinates, bool psf, const Record &chunk)
+    const Record &coordinates, bool psf)
 {
     context.psf = psf;
 
@@ -457,7 +459,7 @@ void begin_grid(CASAContext &context, const ValueHolder &shape,
     context.image = TempImage<Float>(context.shape, context.coordinates);
     context.image.set(0.0);
 
-    // Update temporary VisBuffer.
+    /*// Update temporary VisBuffer.
     context.buffer->setChunk(chunk.asArrayInt("ANTENNA1"),
         chunk.asArrayInt("ANTENNA2"),
         chunk.asArrayDouble("UVW"),
@@ -467,7 +469,7 @@ void begin_grid(CASAContext &context, const ValueHolder &shape,
         chunk.asArrayFloat("IMAGING_WEIGHT_CUBE"),
         chunk.asArrayBool("FLAG"),
         chunk.asArrayComplex("DATA"),
-        true);
+        true);*/
 
     // Initialize static information in temporary VisBuffer.
     PtrBlock<ImageInterface<Float> * > images(1);
@@ -475,9 +477,10 @@ void begin_grid(CASAContext &context, const ValueHolder &shape,
     context.ft->initializeToSky(images, False);
 
     // Grid data.
-    context.ft->put(*context.buffer, -1, context.psf, FTMachine::OBSERVED);
+    //context.ft->put(*context.buffer, -1, context.psf, FTMachine::OBSERVED);
 }
 
+//Record grid(CASAContext &context, const Record &chunk, bool normalize)
 void grid(CASAContext &context, const Record &chunk)
 {
     // Update temporary VisBuffer.
@@ -494,6 +497,7 @@ void grid(CASAContext &context, const Record &chunk)
 
     // Grid data.
     context.ft->put(*context.buffer, -1, context.psf, FTMachine::OBSERVED);
+
 }
 
 Record end_grid(CASAContext &context, bool normalize)
@@ -501,7 +505,6 @@ Record end_grid(CASAContext &context, bool normalize)
     context.ft->finalizeToSky();
 
     context.ft->getImages(context.weight, normalize);
-    
 
     Record result;
     result.define("weight", context.weight);
@@ -888,8 +891,8 @@ BOOST_PYTHON_MODULE(_casaimwrap)
 
     def("begin_grid", LOFAR::casaimwrap::begin_grid,
         (boost::python::arg("context"), boost::python::arg("shape"),
-        boost::python::arg("coordinates"), boost::python::arg("psf"),
-        boost::python::arg("chunk")));
+        boost::python::arg("coordinates"), boost::python::arg("psf")));
+//        boost::python::arg("chunk")));
 
     def("grid", LOFAR::casaimwrap::grid,
         (boost::python::arg("context"),
@@ -897,7 +900,7 @@ BOOST_PYTHON_MODULE(_casaimwrap)
 
     def("end_grid", LOFAR::casaimwrap::end_grid,
         (boost::python::arg("context"),
-        boost::python::arg("normalize")));
+	boost::python::arg("normalize")));
 
 //     def("init_cf", LOFAR::casaimwrap::init_cf,
 //         (boost::python::arg("context"),

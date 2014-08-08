@@ -34,6 +34,12 @@ def dirty(options):
     processor_options["noise"] = options.noise
     processor_options["robustness"] = options.robustness
     processor_options["profile"] = options.profile
+    processor_options["chunksize"] = options.chunksize
+
+    processor_options["gridding.ATerm.name"] = "ATermPython"
+    processor_options["ATermPython.module"] = "lofar.imager.myaterm"
+    processor_options["ATermPython.class"] = "MyATerm"
+
     processor = processors.create_data_processor(options.ms, processor_options)
 
     channel_freq = processor.channel_frequency()
@@ -70,7 +76,17 @@ def dirty(options):
     # Call the data processor to grid the visibility data (i.e. compute the
     # dirty image).
     util.notice("creating dirty image...")
-    dirty_image, _ = processor.grid(image_coordinates, image_shape,
+    tab = pyrap.tables.table(options.ms)
+    nrows = tab.nrows()
+    tab.close()
+    print "There are ", nrows, " rows in the MS..."
+    if options.chunksize > 0 and options.chunksize <= nrows:
+      print 'calling grid_chunk...'
+      dirty_image, _ = processor.grid_chunk(image_coordinates, image_shape,
+        processors.Normalization.FLAT_NOISE, options.chunksize)
+    else:
+      print 'calling grid...'
+      dirty_image, _ = processor.grid(image_coordinates, image_shape,
         processors.Normalization.FLAT_NOISE)
 
     # Store output images. Store both a flat noise and a flat gain image.
