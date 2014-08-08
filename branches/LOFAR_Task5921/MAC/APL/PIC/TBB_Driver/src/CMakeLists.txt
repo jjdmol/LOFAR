@@ -17,16 +17,11 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 # Add current source directory to -I path.
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-lofar_add_library(tp_protocol
-  TP_Protocol.cc
-  RawEvent.cc)
-  
-add_dependencies(tp_protocol TBB_Driver-TP_Protocol)
-
 lofar_add_library(tbbdriver
   Package__Version.cc
   DriverSettings.cc
-  TP_Protocol.ph
+  TP_Protocol.cc
+  RawEvent.cc
   Command.cc
   AllocCmd.cc
   BoardCmdHandler.cc
@@ -65,8 +60,6 @@ lofar_add_library(tbbdriver
   CepDelayCmd.cc
   WatchDogCmd.cc
   TempLimitCmd.cc)
-
-target_link_libraries(tbbdriver tp_protocol)
 
 lofar_add_bin_program(versiontbb_driver versiontbb_driver.cc)
 lofar_add_bin_program(tbbctl tbbctl.cc)
