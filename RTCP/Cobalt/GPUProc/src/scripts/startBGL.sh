@@ -25,6 +25,9 @@ PIDFILE=$LOFARROOT/var/run/rtcp-$OBSID.pid
 # The file we will log the observation output to
 LOGFILE=$LOFARROOT/var/log/rtcp-$OBSID.log
 
+# The FIFO used for communication with rtcp
+COMMANDPIPE=$LOFARROOT/var/run/rtcp-$OBSID.pipe
+
 function addlogprefix {
   ME="`basename "$0" .sh`@`hostname`"
   while read LINE
@@ -57,9 +60,14 @@ echo "Copying parset to $TBB_PARSET for postprocessing"
 cp "$PARSET" "$TBB_PARSET" || true
 ln -sfT $TBB_PARSET /globalhome/lofarsystem/log/latest || true
 
+# Create the command pipe
+[ -e "$COMMANDPIPE" ] && rm -f "$COMMANDPIPE"
+mkfifo -m 0660 "$COMMANDPIPE" || true
+
 # Start observation in the background
-echo "Starting runObservation.sh -P $PIDFILE $PARSET"
-runObservation.sh -P "$PIDFILE" "$PARSET" > $LOGFILE 2>&1 </dev/null &
+PARAMS="-P $PIDFILE -o Cobalt.commandStream=file:$COMMANDPIPE $PARSET"
+echo "Starting runObservation.sh $PARAMS"
+runObservation.sh $PARAMS > $LOGFILE 2>&1 </dev/null &
 PID=$!
 echo "PID: $PID"
 

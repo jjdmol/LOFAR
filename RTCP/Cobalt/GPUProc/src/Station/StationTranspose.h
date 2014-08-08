@@ -92,6 +92,11 @@ namespace LOFAR {
       void serialiseMetaData();
 
       /*
+       * Turns this block into an EOS packet.
+       */
+      void setEOS();
+
+      /*
        * Write a certain RSP packet into mpi_samples, and update
        * metaData.
        *

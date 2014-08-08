@@ -370,16 +370,27 @@ namespace LOFAR
 
           copyTimer.start();
           for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
-            // Copy the data
-#if 1
-            memcpy(&subbandData->inputSamples[stat][0][0][0],
-                   &data[stat][subbandIdx][0],
-                   ps.settings.blockSize * sizeof(SampleT));
-#endif
-            // Copy the metadata
-            subbandData->metaData[stat] = metaData[stat][subbandIdx];
+            if (metaData[stat][subbandIdx].EOS) {
+              // Flag everything -- note that delays etc will not matter, so no need to set them
+              subbandData->metaData[stat].flags.include(0, ps.settings.blockSize);
+            } else {
+              // Copy the metadata
+              subbandData->metaData[stat] = metaData[stat][subbandIdx];
+            }
 
-            nrFlaggedSamples[stat] += subbandData->metaData[stat].flags.count();
+            const size_t nflags = subbandData->metaData[stat].flags.count();
+
+            nrFlaggedSamples[stat] += nflags;
+#if 1
+            // Flagged input samples will be set to zero (in preprocessSubband),
+            // so no need to copy anything if everything is flagged.
+            if (nflags < ps.settings.blockSize) {
+              // Copy the data
+              memcpy(&subbandData->inputSamples[stat][0][0][0],
+                     &data[stat][subbandIdx][0],
+                     ps.settings.blockSize * sizeof(SampleT));
+            }
+#endif
           }
           copyTimer.stop();
 

@@ -89,7 +89,7 @@ namespace LOFAR {
      * Output: metaDataPool.filled
      */
     template <typename SampleT>
-    void StationMetaData<SampleT>::computeMetaData()
+    void StationMetaData<SampleT>::computeMetaData(Trigger *stopSwitch)
     {
       /*
        * Allocate buffer elements.
@@ -115,6 +115,11 @@ namespace LOFAR {
       delays.getNextDelays(*delaysAtBegin);
 
       for (ssize_t block = -1; block < (ssize_t)nrBlocks; ++block) {
+        if (stopSwitch && stopSwitch->test()) {
+          LOG_WARN_STR(logPrefix << "Requested to stop");
+          break;
+        }
+
         LOG_DEBUG_STR(logPrefix << str(format("[block %d] Retrieving delays") % block));
 
         // Fetch end delays (start delays are set by the previous block, or
@@ -605,13 +610,10 @@ namespace LOFAR {
 
     template<typename SampleT> void sendInputToPipeline(const Parset &ps, 
             size_t stationIdx, const SubbandDistribution &subbandDistribution,
-            MACIO::RTmetadata &mdLogger, const string &mdKeyPrefix)
+            MACIO::RTmetadata &mdLogger, const string &mdKeyPrefix, Trigger *stopSwitch)
     {
       // sanity check: Find out if we should actual start working here.
       StationMetaData<SampleT> sm(ps, stationIdx, subbandDistribution);
-      if (sm.nrBlocks == 0) {  // Nothing to process -- stop
-        return;
-      }
 
       StationInput si(ps, stationIdx, subbandDistribution);
 
@@ -639,7 +641,7 @@ namespace LOFAR {
          */
         #pragma omp section
         {
-          sm.computeMetaData();
+          sm.computeMetaData(stopSwitch);
           LOG_INFO_STR(logPrefix << "StationMetaData: done");
         }
 
@@ -672,26 +674,26 @@ namespace LOFAR {
 
     void sendInputToPipeline(const Parset &ps, size_t stationIdx, 
                              const SubbandDistribution &subbandDistribution,
-                             MACIO::RTmetadata &mdLogger, const string &mdKeyPrefix)
+                             MACIO::RTmetadata &mdLogger, const string &mdKeyPrefix, Trigger *stopSwitch)
     {
       switch (ps.nrBitsPerSample()) {
         default:
         case 16: 
           sendInputToPipeline< SampleType<i16complex> >(ps, stationIdx,
                                                         subbandDistribution,
-                                                        mdLogger, mdKeyPrefix);
+                                                        mdLogger, mdKeyPrefix, stopSwitch);
           break;
 
         case 8: 
           sendInputToPipeline< SampleType< i8complex> >(ps, stationIdx,
                                                         subbandDistribution,
-                                                        mdLogger, mdKeyPrefix);
+                                                        mdLogger, mdKeyPrefix, stopSwitch);
           break;
 
         case 4: 
           sendInputToPipeline< SampleType< i4complex> >(ps, stationIdx,
                                                         subbandDistribution,
-                                                        mdLogger, mdKeyPrefix);
+                                                        mdLogger, mdKeyPrefix, stopSwitch);
           break;
       }
     }

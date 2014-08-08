@@ -183,6 +183,37 @@ namespace LOFAR {
       return request;
     }
 
+    vector<MPI_Request> Guarded_MPI_Ibcast(void *ptr, size_t numBytes, int srcRank, int tag) {
+      DEBUG("BCAST: size " << numBytes << " tag " << hex << tag);
+
+      //SmartPtr<ScopedLock> sl = MPI_threadSafe() ? 0 : new ScopedLock(MPIMutex);
+
+      vector<MPI_Request> requests;
+
+      /* MPI_Ibcast is MPI 3.0+, which is not a requirement,
+       * so we emulate it instead using Irecv and Isend.
+       */
+
+      int rank, size;
+      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+      MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+      if (rank == srcRank) {
+        // send
+        for (int i = 0; i < size; ++i) {
+          if (i == srcRank)
+            continue;
+
+          requests.push_back(Guarded_MPI_Isend(ptr, numBytes, i, tag));
+        }
+      } else {
+        // receive
+        requests.push_back(Guarded_MPI_Irecv(ptr, numBytes, srcRank, tag));
+      }
+
+      return requests;
+    }
+
 
     MPIPoll::MPIPoll()
     :

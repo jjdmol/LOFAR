@@ -42,7 +42,7 @@ function setkey {
 
 function usage {
   error \
-    "\nUsage: $0 [-A] [-B] [-C] [-F] [-P pidfile] [-l nprocs] [-p] PARSET"\
+    "\nUsage: $0 [-A] [-B] [-C] [-F] [-P pidfile] [-l nprocs] [-p] [-o KEY=VALUE] PARSET"\
     "\n"\
     "\n  Run the observation specified by PARSET"\
     "\n"\
@@ -53,7 +53,9 @@ function usage {
     "\n    -F: do NOT send feedback to OnlineControl and do NOT send data points to a PVSS gateway"\
     "\n    -P: create PID file"\
     "\n    -l: run solely on localhost using 'nprocs' MPI processes (isolated test)"\
-    "\n    -p: enable profiling\n"
+    "\n    -p: enable profiling" \
+    "\n    -o: add option KEY=VALUE to the parset" \
+    "\n"
 }
 
 # command_retry expects a string it will execute as a subprocess
@@ -95,6 +97,9 @@ ONLINECONTROL_FEEDBACK=1
 # Augment the parset with etc/parset-additions.d/* ?
 AUGMENT_PARSET=1
 
+# Extra parset keys to add
+EXTRA_PARSET_KEYS=""
+
 # File to write PID to
 PIDFILE=""
 
@@ -118,7 +123,7 @@ shopt -s nullglob
 # ******************************
 # Parse command-line options
 # ******************************
-while getopts ":ABCFP:l:p" opt; do
+while getopts ":ABCFP:l:o:p" opt; do
   case $opt in
       A)  AUGMENT_PARSET=0
           ;;
@@ -132,6 +137,8 @@ while getopts ":ABCFP:l:p" opt; do
           ;;
       l)  FORCE_LOCALHOST=1
           MPIRUN_PARAMS="$MPIRUN_PARAMS -np $OPTARG"
+          ;;
+      o)  EXTRA_PARSET_KEYS="${EXTRA_PARSET_KEYS}${OPTARG}\n"
           ;;
       p)  RTCP_PARAMS="$RTCP_PARAMS -p"
           ;;
@@ -235,6 +242,9 @@ then
   then
     setkey Cobalt.FinalMetaDataGatherer.enabled       false
   fi
+
+  # Add extra keys specified on the command line
+  echo -e "$EXTRA_PARSET_KEYS" >> $PARSET
 fi
 
 # ******************************
