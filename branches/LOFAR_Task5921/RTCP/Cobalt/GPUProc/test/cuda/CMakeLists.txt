@@ -63,9 +63,13 @@ endif(UNITTEST++_FOUND)
 # This way we don't need a generated .sh file, nor compile to .ptx from our test code.
 cuda_compile_ptx(tcuda_driver_api_ptx tcuda-driver-api.cu)
 cuda_add_executable(tcuda-driver-api  tcuda-driver-api.cu  OPTIONS "-DPTX_FILE_CSTR=\"${tcuda_driver_api_ptx}\"")
-target_link_libraries(tcuda-driver-api cuda)
-add_test(tcuda-driver-api  "${CMAKE_CURRENT_BINARY_DIR}/tcuda-driver-api")
+if(${CMAKE_VERSION} VERSION_LESS 2.8.12)
+  target_link_libraries(tcuda-driver-api cuda)
+else()
+  target_link_libraries(tcuda-driver-api PRIVATE cuda)
+endif()
+add_test(tcuda-driver-api  tcuda-driver-api)
 
 cuda_add_executable(tcuda-runtime-api tcuda-runtime-api.cu)
-add_test(tcuda-runtime-api "${CMAKE_CURRENT_BINARY_DIR}/tcuda-runtime-api")
+add_test(tcuda-runtime-api tcuda-runtime-api)
 
