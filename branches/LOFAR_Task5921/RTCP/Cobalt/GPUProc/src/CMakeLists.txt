@@ -69,7 +69,11 @@ if(USE_CUDA)
 
   lofar_add_library(gpuproc ${_gpuproc_sources})
   if(CUDA_cufft_LIBRARY)
-    target_link_libraries(gpuproc ${CUDA_cufft_LIBRARY})
+    if(${CMAKE_VERSION} VERSION_LESS 2.8.12)
+      target_link_libraries(gpuproc ${CUDA_cufft_LIBRARY})
+    else()
+      target_link_libraries(gpuproc PRIVATE ${CUDA_cufft_LIBRARY})
+    endif()
   endif()
 
   lofar_add_bin_program(rtcp rtcp.cc)
