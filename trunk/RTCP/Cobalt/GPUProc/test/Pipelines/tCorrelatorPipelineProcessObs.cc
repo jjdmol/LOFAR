@@ -82,44 +82,15 @@ int main(int argc, char *argv[]) {
   SmartPtr<Pipeline> pipeline = new Pipeline(ps, subbands, devices,
       MPI_receive_pool, rtmd, "rtmd key prefix");
 
-  //pipeline->allocateResources();
   mpi.init(argc, argv);
 
-  SubbandDistribution subbandDistribution; // rank -> [subbands]
+  MPI_receive_pool.filled.append(NULL);
 
-  for (size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
-    int receiverRank = subband % mpi.size();
-
-    subbandDistribution[receiverRank].push_back(subband);
-  }
-  const std::vector<size_t>  subbandIndices(subbandDistribution[mpi.rank()]);
-  MPIReceiver MPI_receiver(MPI_receive_pool,
-    subbandDistribution[mpi.rank()],
-    std::find(subbandIndices.begin(),
-    subbandIndices.end(), 0U) != subbandIndices.end(),
-    ps.nrSamplesPerSubband(),
-    ps.nrStations(),
-    ps.nrBitsPerSample());
-
-#pragma omp parallel sections num_threads(2)
-  {
-#pragma omp section
-    {
-      size_t nrBlocks = floor((ps.settings.stopTime - ps.settings.startTime) / ps.settings.blockDuration());
-
-      MPI_receiver.receiveInput(nrBlocks);
-    }
-
-#pragma omp section
-    {
   // no data, so no need to run a sender:
   // receiver(s) from processObservation() will fwd a end of data NULL pool item immediately.
   // idem for storage proc: we'll get a failed to connect to storage log msg, but don't care.
-      pipeline->processObservation();
-      pipeline = 0;
-    }
-
-  }
+  pipeline->processObservation();
+  pipeline = 0;
 
   return 0;
 }

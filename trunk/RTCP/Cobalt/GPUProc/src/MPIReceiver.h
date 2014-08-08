@@ -80,11 +80,11 @@ namespace LOFAR
       // raw MPIRecvData     
       // This function is typically started in a seperate thread
       // Internally the type of samples depends on nrBitsPerSample
-      void receiveInput(size_t nrBlocks);
+      void receiveInput();
       
     private:
       // The templeted receive function.
-      template<typename SampleT> void receiveInput(size_t nrBlocks);
+      template<typename SampleT> void receiveInput();
 
       Pool<struct MPIRecvData> &mpiPool;
       const std::vector<size_t> subbandIndices;

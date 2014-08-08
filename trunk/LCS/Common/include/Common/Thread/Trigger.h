@@ -38,6 +38,7 @@ class Trigger
     Trigger();
 
     void trigger();
+    bool test();
     void wait();
     bool wait(const struct timespec &timespec);
 
@@ -57,6 +58,11 @@ inline Trigger::Trigger()
 :
   triggered(false)
 {
+}
+
+inline bool Trigger::test()
+{
+  return triggered;
 }
 
 

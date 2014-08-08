@@ -27,7 +27,7 @@
 #include <cstring>
 
 #include <Stream/Stream.h>
-#include <Common/Thread/Semaphore.h>
+#include <Common/Thread/Trigger.h>
 #include <MACIO/RTmetadata.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/Pool.h>
@@ -51,7 +51,7 @@ namespace LOFAR {
     public:
       StationMetaData( const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution );
 
-      void computeMetaData();
+      void computeMetaData(Trigger *stopSwitch = NULL);
 
     private:
       const Parset &ps;
@@ -161,7 +161,8 @@ namespace LOFAR {
     void sendInputToPipeline(const Parset &ps, size_t stationIdx,
                              const SubbandDistribution &subbandDistribution,
                              MACIO::RTmetadata &mdLogger,
-                             const std::string &mdKeyPrefix);
+                             const std::string &mdKeyPrefix,
+                             Trigger *stopSwitch = NULL);
   }
 }
 
