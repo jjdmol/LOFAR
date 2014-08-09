@@ -2,7 +2,14 @@
 
 include(LofarPackageVersion)
 
-link_libraries(${BOOST_LIBRARIES})
+# Helper macro to work around incompatible interface change in CMake 2.8.12.
+macro(ao_target_link_libraries _target)
+  if(${CMAKE_VERSION} VERSION_LESS 2.8.12)
+    target_link_libraries(${_target} ${ARGN} ${BOOST_LIBRARIES})
+  else()
+    target_link_libraries(${_target} PRIVATE ${ARGN} ${BOOST_LIBRARIES})
+  endif()
+endmacro()
 
 set(CMAKE_CXX_FLAGS "-g -Wall -DNDEBUG -funroll-loops")
 
@@ -222,7 +229,7 @@ if(GTKMM_FOUND)
   link_directories(${GTKMM_LIBDIR})
   
   lofar_add_bin_program(rfigui rfigui.cpp ${GUI_FILES})
-  target_link_libraries(rfigui ${GTKMM_LIBRARIES})
+  ao_target_link_libraries(rfigui ${GTKMM_LIBRARIES})
   
 	if(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)
 		lofar_add_bin_program(aoqplot aoqplot.cpp
@@ -242,11 +249,11 @@ if(GTKMM_FOUND)
 		gui/imagewidget.cpp
 		gui/imagepropertieswindow.cpp
 		)
-		target_link_libraries(aoqplot ${GTKMM_LIBRARIES})
+		ao_target_link_libraries(aoqplot ${GTKMM_LIBRARIES})
 		lofar_add_bin_program(badstations badstations.cpp ${REMOTE_FILES})
-		target_link_libraries(badstations ${GTKMM_LIBRARIES})
+		ao_target_link_libraries(badstations ${GTKMM_LIBRARIES})
 		lofar_add_bin_program(aofrequencyfilter aofrequencyfilter.cpp ${REMOTE_FILES})
-		target_link_libraries(aofrequencyfilter ${GTKMM_LIBRARIES})
+		ao_target_link_libraries(aofrequencyfilter ${GTKMM_LIBRARIES})
 	endif(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)
 else()
   message(WARNING " The graphical user interface library GTKMM was not found; rfigui and aoqplot will not be compiled.")
@@ -264,9 +271,9 @@ lofar_add_bin_program(imgzenith imgzenith.cpp imaging/zenithimager.cpp)
 
 if(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)
   lofar_add_bin_program(aoquality aoquality.cpp ${REMOTE_FILES})
-  target_link_libraries(aoquality ${SIGCXX_LIBRARIES})
+  ao_target_link_libraries(aoquality ${SIGCXX_LIBRARIES})
 
 	lofar_add_bin_program(aoremoteclient aoremoteclient.cpp
   ${REMOTE_FILES} )
-  target_link_libraries(aoremoteclient ${SIGCXX_LIBRARIES})
+  ao_target_link_libraries(aoremoteclient ${SIGCXX_LIBRARIES})
 endif(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)
