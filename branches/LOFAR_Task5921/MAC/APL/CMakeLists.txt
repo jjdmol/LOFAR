@@ -5,6 +5,14 @@
 execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory
   ${CMAKE_BINARY_DIR}/include/APL)
 
+macro(apl_target_link_libraries _target)
+  if(${CMAKE_VERSION} VERSION_LESS 2.8.12)
+    target_link_libraries(${_target} ${ARGN})
+  else()
+    target_link_libraries(${_target} PRIVATE ${ARGN})
+  endif()
+endmacro()
+
 lofar_add_package(APLCommon)       # Common tasks and functions
 lofar_add_package(RTCCommon)       # Real Time Control functions
 lofar_add_package(RTDBCommon)      # RealTimeDataBase common software
