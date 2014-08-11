@@ -61,13 +61,8 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
   macro(lofar_add_executable _name)
     add_executable(${_name} ${ARGN})
     get_property(_libs GLOBAL PROPERTY ${PACKAGE_NAME}_LIBRARIES)
-    if(${CMAKE_VERSION} VERSION_LESS 2.8.12)
-      target_link_libraries(${_name} ${_libs}
-        ${${PACKAGE_NAME}_LINK_LIBRARIES} ${LOFAR_EXTRA_LIBRARIES})
-    else()
-      target_link_libraries(${_name} PRIVATE ${_libs}
-        ${${PACKAGE_NAME}_LINK_LIBRARIES} ${LOFAR_EXTRA_LIBRARIES})
-    endif()
+    target_link_libraries(${_name} ${_libs} 
+      ${${PACKAGE_NAME}_LINK_LIBRARIES} ${LOFAR_EXTRA_LIBRARIES})
     add_dependencies(${_name} ${PACKAGE_NAME}_PackageVersion)
     add_dependencies(${PACKAGE_NAME} ${_name})
   endmacro(lofar_add_executable)
@@ -98,15 +93,13 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
     if(NOT "${ARGN}" MATCHES "^MODULE")
       set_property(GLOBAL APPEND PROPERTY ${PACKAGE_NAME}_LIBRARIES ${_name})
     endif(NOT "${ARGN}" MATCHES "^MODULE")
-    if(${CMAKE_VERSION} VERSION_LESS 2.8.12)
-      target_link_libraries(${_name} 
-        ${${PACKAGE_NAME}_LINK_LIBRARIES} ${LOFAR_EXTRA_LIBRARIES})
+    target_link_libraries(${_name} 
+      ${${PACKAGE_NAME}_LINK_LIBRARIES} ${LOFAR_EXTRA_LIBRARIES})
+    # For unknown reasons, this seems to cause havoc on Apple.
+    if(NOT APPLE)
       target_link_libraries(${_name} LINK_INTERFACE_LIBRARIES
         ${${PACKAGE_NAME}_LINK_LIBRARIES})
-    else(${CMAKE_VERSION} VERSION_LESS 2.8.12)
-      target_link_libraries(${_name} PRIVATE ${LOFAR_EXTRA_LIBRARIES})
-      target_link_libraries(${_name} PUBLIC ${${PACKAGE_NAME}_LINK_LIBRARIES})
-    endif(${CMAKE_VERSION} VERSION_LESS 2.8.12)
+    endif(NOT APPLE)
 #    set_target_properties(${_name} PROPERTIES 
 #      VERSION ${${PACKAGE_NAME}_VERSION}
 #      OUTPUT_NAME lofar_${_name})

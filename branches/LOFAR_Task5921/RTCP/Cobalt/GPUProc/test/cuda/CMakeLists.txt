@@ -64,8 +64,8 @@ endif(UNITTEST++_FOUND)
 cuda_compile_ptx(tcuda_driver_api_ptx tcuda-driver-api.cu)
 cuda_add_executable(tcuda-driver-api  tcuda-driver-api.cu  OPTIONS "-DPTX_FILE_CSTR=\"${tcuda_driver_api_ptx}\"")
 target_link_libraries(tcuda-driver-api cuda)
-add_test(tcuda-driver-api  tcuda-driver-api)
+add_test(tcuda-driver-api  "${CMAKE_CURRENT_BINARY_DIR}/tcuda-driver-api")
 
 cuda_add_executable(tcuda-runtime-api tcuda-runtime-api.cu)
-add_test(tcuda-runtime-api tcuda-runtime-api)
+add_test(tcuda-runtime-api "${CMAKE_CURRENT_BINARY_DIR}/tcuda-runtime-api")
 

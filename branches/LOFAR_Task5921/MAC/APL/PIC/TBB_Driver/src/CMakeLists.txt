@@ -66,7 +66,7 @@ lofar_add_library(tbbdriver
   WatchDogCmd.cc
   TempLimitCmd.cc)
 
-apl_target_link_libraries(tbbdriver tp_protocol)
+target_link_libraries(tbbdriver tp_protocol)
 
 lofar_add_bin_program(versiontbb_driver versiontbb_driver.cc)
 lofar_add_bin_program(tbbctl tbbctl.cc)

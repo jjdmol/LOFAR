@@ -8,7 +8,7 @@ lofar_add_bin_program(StationControl
   StationControl.cc
   ActiveObs.cc)
 
-apl_target_link_libraries(StationControl clock_protocol)
+target_link_libraries(StationControl clock_protocol)
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/StationControl.conf.in
