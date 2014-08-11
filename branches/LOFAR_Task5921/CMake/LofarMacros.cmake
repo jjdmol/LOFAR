@@ -96,10 +96,13 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
     target_link_libraries(${_name} 
       ${${PACKAGE_NAME}_LINK_LIBRARIES} ${LOFAR_EXTRA_LIBRARIES})
     # For unknown reasons, this seems to cause havoc on Apple.
-    if(NOT APPLE)
+    # Moreover, CMake >= 2.8.12 deprecated the use of LINK_INTERFACE_LIBRARIES
+    # (policy CMP0022). Don't bother about overlinking in that case; GCC >= 4.6
+    # (that will likely be used) will not link in unused libraries.
+    if(NOT APPLE AND NOT POLICY CMP0022)
       target_link_libraries(${_name} LINK_INTERFACE_LIBRARIES
         ${${PACKAGE_NAME}_LINK_LIBRARIES})
-    endif(NOT APPLE)
+    endif(NOT APPLE AND NOT POLICY CMP0022)
 #    set_target_properties(${_name} PROPERTIES 
 #      VERSION ${${PACKAGE_NAME}_VERSION}
 #      OUTPUT_NAME lofar_${_name})
