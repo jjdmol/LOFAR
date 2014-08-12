@@ -8,11 +8,12 @@
 #
 # > Createfiles test test1 test2
 #
-# Will create a RSPDriver.conf which uses connection test1 and test2 for 
-# Lane0 and lane1, resp.
+# Will create a RSPDriver.conf which uses these connections 
 #
 
-# Alias   DestIP    DestMAC             BGP node
+# alias   DestIP    DestMAC              Name
 #-------------------------------------------------
-test1 10.170.1.1    00:14:5E:7D:1E:53   R01-M0-N00-J00
-test2 10.170.1.2    00:14:5E:7D:1E:54   R01-M0-N00-J01
+test1 10.168.104.1 A0:36:9F:1F:36:E4 cbt009-10GB01
+test2 10.168.104.2 A0:36:9F:1F:36:E6 cbt009-10GB02 
+test3 10.168.104.3 A0:36:9F:1F:78:64 cbt009-10GB03 
+test4 10.168.104.4 A0:36:9F:1F:78:66 cbt009-10GB04 
