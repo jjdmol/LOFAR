@@ -1,3 +1,3 @@
 #!/bin/sh
 
-./runctest.sh startPythonFromMsg.sh
+./runctest.sh startPythonFromMsg
