@@ -6,7 +6,7 @@ lofar_add_package(Laps-DBToQDeamon DBToQDeamon)
 lofar_add_package(Laps-QToPipeline QToPipeline)
 lofar_add_package(Laps-Messaging Messaging)
 
-#add_subdirectory(test)
+add_subdirectory(test)
 
 INSTALL(DIRECTORY DESTINATION var/run/laps)
 
