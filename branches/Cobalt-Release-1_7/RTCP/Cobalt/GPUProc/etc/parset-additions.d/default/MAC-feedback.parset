@@ -12,4 +12,7 @@ Cobalt.Feedback.remotePath = /opt/lofar/var/run
 # If empty, data points are never sent.
 # One can also start a PVSSGateway_Stub
 #   on localhost, which writes to a file.
-Cobalt.PVSSGateway.host = ccu001
+
+# PVSSGateway disabled until bug #5843 is fixed.
+#Cobalt.PVSSGateway.host = ccu001
+Cobalt.PVSSGateway.host =
