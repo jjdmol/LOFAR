@@ -5,6 +5,10 @@ GET_ALL_VERSIONS=0
 SET_VERSION=""
 LIST_VERSIONS=0
 
+if [ -z "$HOSTS" ]; then
+  HOSTS="cbm001 cbm002 cbm003 cbm004 cbm005 cbm006 cbm007 cbm008"
+fi
+
 function error() {
   echo "$@" >&2
   exit 1
@@ -13,10 +17,12 @@ function error() {
 function usage() {
   echo "$0 [-l] [-g] [-G] [-s VERSION]"
   echo ""
-  echo "  -l            List available Cobalt versions"
-  echo "  -g            Get active Cobalt version"
-  echo "  -G            Get active Cobalt version on each Cobalt node"
-  echo "  -s VERSION    Set active Cobalt version"
+  echo "  -l            List available Cobalt versions (localhost)"
+  echo "  -g            Get active Cobalt version (localhost)"
+  echo "  -G            Get active Cobalt version on each Cobalt node (\$HOSTS)"
+  echo "  -s VERSION    Set active Cobalt version (\$HOSTS)"
+  echo ""
+  echo "\$HOSTS is set to '$HOSTS'"
   exit 1
 }
 
@@ -40,7 +46,6 @@ while getopts "hgGls:" opt; do
 done
 
 COBALT_VERSIONS_DIR=/localhome/lofar/lofar_versions
-HOSTS="cbm001 cbm002 cbm003 cbm004 cbm005 cbm006 cbm007 cbm008 cbm009"
 
 [ -d "$COBALT_VERSIONS_DIR" ] || error "Directory not found: $COBALT_VERSIONS_DIR"
 
@@ -68,6 +73,6 @@ if [ -n "$SET_VERSION" ]; then
 
   echo "Switching Cobalt to $SET_VERSION"
 
-  RELEASE_NAME="$SET_VERSION" Cobalt_setcurrent.sh
+  HOSTS="$HOSTS" RELEASE_NAME="$SET_VERSION" Cobalt_setcurrent.sh
 fi
 
