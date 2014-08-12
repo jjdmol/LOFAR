@@ -387,17 +387,17 @@ class selfCalRun:
 			fitsImage	= pyfits.open(previousImagePath) 
 			scidata 	= fitsImage[0].data 
 			
-			dataRange	= range(fitsImage[0].shape[2])
-			sortedData	=  range(fitsImage[0].shape[2]**2)
+			dataRange	= range(scidata.shape[2])
+			sortedData	=  range(scidata.shape[2]**2)
 			
 			for i in dataRange:
 				for j in dataRange:
-					sortedData[i*fitsImage[0].shape[2]+j]	=  scidata[0,0,i,j]
+					sortedData[i*scidata.shape[2]+j]	=  scidata[0,0,i,j]
 			
 			sortedData 		= sorted(sortedData)
 			
 			# Percent of faintest data to use to determine 5sigma value : use 5%			
-			dataPercent		= int(fitsImage[0].shape[2]*0.05)
+			dataPercent		= int(scidata.shape[2]*0.05)
 			
 			fiveSigmaData	= sum(sortedData[0:dataPercent])/dataPercent	
 			threshold		= abs(fiveSigmaData)/5.0*2.335/2.0
@@ -410,7 +410,7 @@ class selfCalRun:
 				self.nbpixel[self.i] = self.nbpixel[self.i]+1
 					
 			#Imaging now with the image 
-			cmd_image="""awimager ms=%s image=%sImage_%sarcsec_Iter%s weight=briggs robust=%s npix=%s cellsize=%sarcsec data=CORRECTED_DATA padding=1.18 niter=%s stokes=I operation=mfclark timewindow=300 UVmin=%s UVmax=%s wmax=%s fits="" threshold=%sJy"""%("""%sAll_Iteration_number_%s"""%(self.IterDir,self.i),self.ImagePathDir,self.pixsize[self.i],self.i,self.robust[self.i],self.nbpixel[self.i],self.pixsize[self.i],self.nIteration, self.UVmin,self.UVmax[self.i],self.wmax[self.i],threshold) 
+			cmd_image="""awimager data.ms=%s output.image=%sImage_%sarcsec_Iter%s weight.type=robust weight.robust=%s image.npix=%s image.cellsize=%sarcsec gridding.padding=1.18 clean.niter=%s operation=clean gridding.timewindow=300 data.uvrange=[%s,%s] data.wmax=%s clean.threshold=%sJy"""%("""%sAll_Iteration_number_%s"""%(self.IterDir,self.i),self.ImagePathDir,self.pixsize[self.i],self.i,self.robust[self.i],self.nbpixel[self.i],self.pixsize[self.i],self.nIteration, self.UVmin,self.UVmax[self.i],self.wmax[self.i],threshold) 
 			print ''
 			print cmd_image
 			print ''
@@ -426,7 +426,7 @@ class selfCalRun:
 				self.nbpixel[self.i-1] = self.nbpixel[self.i-1]+1
 					
 			#Imaging now with the image 
-			cmd_image="""awimager ms=%s image=%sFinal_Image_%sarcsec_Iter%s weight=briggs robust=%s npix=%s cellsize=%sarcsec data=CORRECTED_DATA padding=1.18 niter=%s stokes=I operation=mfclark timewindow=300 UVmin=%s UVmax=%s wmax=%s fits="" threshold=%sJy"""%("""%sAll_Iteration_number_%s"""%(self.IterDir,self.i),self.ImagePathDir,self.pixsize[self.i-1],self.i,self.robust[self.i-1],self.nbpixel[self.i-1],self.pixsize[self.i-1],self.nIteration, self.UVmin,self.UVmax[self.i-1],self.wmax[self.i-1],threshold) 
+			cmd_image="""awimager data.ms=%s output.imagename=%sFinal_Image_%sarcsec_Iter%s weight.type=robust weight.robust=%s image.npix=%s image.cellsize=%sarcsec gridding.padding=1.18 clean.niter=%s operation=clean gridding.timewindow=300 data.uvrange=[%s,%s] data.wmax=%s clean.threshold=%sJy"""%("""%sAll_Iteration_number_%s"""%(self.IterDir,self.i),self.ImagePathDir,self.pixsize[self.i-1],self.i,self.robust[self.i-1],self.nbpixel[self.i-1],self.pixsize[self.i-1],self.nIteration, self.UVmin,self.UVmax[self.i-1],self.wmax[self.i-1],threshold) 
 			print ''
 			print cmd_image
 			print ''
