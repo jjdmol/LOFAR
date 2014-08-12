@@ -3,7 +3,7 @@
 include(PythonInstall)
 
 python_install(
-  MsgBus.py
+  MsgBus/Bus.py
   __init__.py
 
   DESTINATION LAPS/MsgBus)
