@@ -13,6 +13,15 @@ if(UNITTEST++_FOUND)
   # GPU kernel UnitTest++ tests
   lofar_add_test(tDelayAndBandPass tDelayAndBandPass.cc)
   lofar_add_test(tBandPassCorrection tBandPassCorrection.cc)
+  lofar_add_test(tIntToFloat tIntToFloat.cc)
+
+  set_tests_properties(
+    tDelayAndBandPass
+    tBandPassCorrection
+    tIncoherentStokes
+    tIntToFloat
+    PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
+  )
 endif(UNITTEST++_FOUND)
 
 # CUDA CPU side unit tests
@@ -22,7 +31,6 @@ lofar_add_test(tStreamReadBuffer tStreamReadBuffer.cc)
 lofar_add_test(tMultiDimArrayHostBuffer tMultiDimArrayHostBuffer.cc)
 
 # GPU kernel unit tests
-lofar_add_test(tIntToFloat tIntToFloat.cc)
 lofar_add_test(tFIR_Filter tFIR_Filter.cc)
 lofar_add_test(tFFT tFFT.cc)
 #lofar_add_executable(tFFT_leakage tFFT_leakage.cc)  # not an automatic test, keep buildable (doesn't right now)
@@ -38,7 +46,6 @@ lofar_add_test(tIncoherentStokesTranspose tIncoherentStokesTranspose.cc)
 set_tests_properties(
   tFIR_Filter
   tCorrelator
-  tIntToFloat
   tBeamFormer
   tTranspose
   tTranspose2
@@ -46,15 +53,6 @@ set_tests_properties(
   tCoherentStokesTranspose
   PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
 )
-
-if(UNITTEST++_FOUND)
-  set_tests_properties(
-    tDelayAndBandPass
-    tBandPassCorrection
-    tIncoherentStokes
-    PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
-  )
-endif(UNITTEST++_FOUND)
 
 
 # Tests built by nvcc
