@@ -54,9 +54,20 @@ if [ "$NEW_MODE" != "" ]; then
     # Switch to test system
     test) echo "Creating $OVERRIDE_PARSET"
           (
+          echo "# NOTE: This file has been GENERATED"
+          echo "#       by `readlink -f $0`"
+          echo "#       on `date +"%F %T"`"
+          echo ""
+          echo "# Route all meta data to the test systems"
           echo "Cobalt.PVSSGateway.host = ccu099"
           echo "Cobalt.Feedback.host = ccu099"
           echo "Cobalt.FinalMetaDataGatherer.database.host = sasdbtest"
+          echo ""
+          echo "# Use only cbt009 to observe"
+          echo "Cobalt.Nodes = [cbt009_0, cbt009_1]"
+          echo ""
+          echo "# Accept stations on any interface"
+          cat $LOFARROOT/etc/parset-additions.d/default/StationStreams.parset | grep "RSP.ports" | sed 's/udp:[^:]*:/udp:0:/g'
           ) > $OVERRIDE_PARSET
           echo "Cobalt is now in test mode"
           ;;
