@@ -1,1 +1,1 @@
-set(CUDA_HOST_COMPILER "/usr/bin/gcc-4.6")
+#set(CUDA_HOST_COMPILER "/usr/bin/gcc-4.6")
