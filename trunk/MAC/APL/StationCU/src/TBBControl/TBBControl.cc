@@ -1208,7 +1208,7 @@ int TBBControl::handleRecordAck(GCFEvent& event)
     for (int b = 0; b < itsNrTBBs; b++) {
         if (isBoardUsed(b) == false) { continue; }
         if (ack.status_mask[b] != TBB_SUCCESS) {
-            status_ok = false;  // error
+            //status_ok = false;  // error
             LOG_DEBUG_STR (formatString("returned status TBB_RECORD_ACK, board-%d status=%u", b, ack.status_mask[b])); 
         }
     }
@@ -1251,7 +1251,7 @@ int TBBControl::handleReleaseAck(GCFEvent& event)
     for (int b = 0; b < itsNrTBBs; b++) {
         if (isBoardUsed(b) == false) { continue; }
         if (ack.status_mask[b] != TBB_SUCCESS) {
-            status_ok = false;  // error
+            //status_ok = false;  // error
             LOG_DEBUG_STR (formatString("returned status TBB_TRIG_RELEASE_ACK, board-%d status=%u", b, ack.status_mask[b])); 
         }
     }
@@ -1344,7 +1344,7 @@ int TBBControl::handleStopAck(GCFEvent& event)
     for (int b = 0; b < itsNrTBBs; b++) {
         if (isBoardUsed(b) == false) { continue; }
         if (ack.status_mask[b] != TBB_SUCCESS) {  // if error, check if rcu is used
-            status_ok = false;
+            //status_ok = false;
             LOG_DEBUG_STR(formatString("returned status TBB_STOP_ACK, board=%d", b));
         }
     }
@@ -1388,7 +1388,7 @@ int TBBControl::handleCepStatusAck(GCFEvent& event)
         if (isBoardUsed(b) == false) { continue; }
         if (ack.status_mask[b] != TBB_SUCCESS) {
             itsBoardInfo.at(b).cepActive = false;
-            status_ok = false;  // error
+            //status_ok = false;  // error
             LOG_DEBUG_STR (formatString("returned status TBB_CEP_STATUS_ACK, board-%d status=%u", b, ack.status_mask[b])); 
         }
         else {
@@ -1440,7 +1440,7 @@ int TBBControl::handleCepDelayAck(GCFEvent& event)
     
     for (int b = 0; b < itsNrTBBs; b++) {
         if (ack.status_mask[b] != TBB_SUCCESS) {
-            status_ok = false;  // error
+            //status_ok = false;  // error
             LOG_DEBUG_STR (formatString("returned status TBB_CEP_DELAY_ACK, board-%d status=%u", b, ack.status_mask[b])); 
         }
     }
@@ -1485,7 +1485,7 @@ int TBBControl::handleStopCepAck(GCFEvent& event)
     for (int b = 0; b < itsNrTBBs; b++) {
         if (ack.status_mask[b] != TBB_SUCCESS) {
             itsBoardInfo.at(b).cepActive = false;
-            status_ok = false;  // error
+            //status_ok = false;  // error
             LOG_DEBUG_STR (formatString("returned status TBB_STOP_CEP_ACK, board-%d status=%u", b, ack.status_mask[b])); 
         }
         itsBoardInfo.at(b).cepActive = false; 
@@ -1713,7 +1713,7 @@ int TBBControl::handleFreeAck(GCFEvent& event)
     for (int b = 0; b < itsNrTBBs; b++) {
         if (isBoardUsed(b) == false) { continue; }
         if (ack.status_mask[b] != TBB_SUCCESS) {  // if error, check if rcu is used
-            status_ok = false;
+            //status_ok = false;
             LOG_DEBUG_STR (formatString("returned status TBB_FREE_ACK, board-%d status=0x%x", b, ack.status_mask[b])); 
         }
     }
@@ -1753,7 +1753,7 @@ int TBBControl::handleAllocAck(GCFEvent& event)
     for (int b = 0; b < itsNrTBBs; b++) {
         if (isBoardUsed(b) == false) { continue; }
         if (ack.status_mask[b] != TBB_SUCCESS) {
-            status_ok = false;  // error
+            //status_ok = false;  // error
             LOG_DEBUG_STR (formatString("returned status TBB_ALLOC_ACK, board-%d status=%u", b, ack.status_mask[b])); 
         }
     }
@@ -1790,7 +1790,7 @@ int TBBControl::handleRcuInfoAck(GCFEvent& event)
     bool status_ok = true;
 
     if (ack.status_mask != TBB_SUCCESS) {
-        status_ok = false;  // error
+        //status_ok = false;  // error
         LOG_DEBUG_STR (formatString("returned status TBB_RCU_INFO_ACK, status=%u", ack.status_mask)); 
     }
 
@@ -1858,7 +1858,7 @@ int TBBControl::handleTrigSetupAck(GCFEvent& event)
     for (int b = 0; b < itsNrTBBs; b++) {
         if (isBoardUsed(b) == false) { continue; }
         if (ack.status_mask[b] != TBB_SUCCESS) {
-            status_ok = false;  // error
+            //status_ok = false;  // error
             LOG_DEBUG_STR (formatString("returned status TBB_TRIG_SETUP_ACK, board-%d status=%u", b, ack.status_mask[b])); 
         }
     }
@@ -1912,7 +1912,7 @@ int TBBControl::handleTrigCoefAck(GCFEvent& event)
     for (int b = 0; b < itsNrTBBs; b++) {
         if (isBoardUsed(b) == false) { continue; }
         if (ack.status_mask[b] != TBB_SUCCESS) {
-            status_ok = false;  // error
+            //status_ok = false;  // error
             LOG_DEBUG_STR (formatString("returned status TBB_TRIG_ACK, board-%d status=%u", b, ack.status_mask[b])); 
         }
     }

@@ -702,6 +702,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 //			itsTimerPort->cancelTimer(theObs->second->itsStopTimerID);
 			delete theObs->second;
 			itsObsMap.erase(theObs);
+			return (GCFEvent::HANDLED);
 		}
 
 		// check if all actions for this event are finished.
