@@ -8,6 +8,9 @@ foreach(_file testFuncs )
     ${CMAKE_CURRENT_BINARY_DIR}/${_file}.sh @ONLY)
 endforeach()
 
+lofar_add_test(tExampleTest)
+lofar_add_test(tBasicQueueTest)
+
 # set(_tests
   # tgenerateStationStreams
   # tMACfeedback
@@ -19,9 +22,3 @@ endforeach()
   # lofar_add_test(${_test})
   # set_tests_properties(${_test} PROPERTIES RUN_SERIAL ON)
 # endforeach(_test ${_tests})
-
-lofar_add_test(tExampleTest)
-# set_tests_properties(tRTmetadataToFile PROPERTIES RUN_SERIAL ON)
-
-# add_subdirectory(Correlator)
-# add_subdirectory(Beamformer)
