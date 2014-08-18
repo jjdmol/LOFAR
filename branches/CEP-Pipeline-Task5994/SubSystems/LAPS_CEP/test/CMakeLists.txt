@@ -10,6 +10,7 @@ endforeach()
 
 lofar_add_test(tExampleTest)
 lofar_add_test(tBasicQueueTest)
+lofar_add_test(startPythonFromMsg)
 
 # set(_tests
   # tgenerateStationStreams
