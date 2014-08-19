@@ -11,9 +11,7 @@
 #PYTHONPATH=${srcdir}/test_framework/fixture:${PYTHONPATH}
 #export PYTHONPATH
 
-python startPythonFromMsg.py
-
-echo $PATH
+python startPythonFromMsg.py alksdjfhlskdajfh
 
 if [ $? -ne 0 ]; then
   exit 1

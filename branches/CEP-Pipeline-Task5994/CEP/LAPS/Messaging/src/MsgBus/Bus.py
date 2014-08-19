@@ -25,7 +25,7 @@ address="laps.cep3.pipeline.start"
 options="create:always, node: { type: queue, durable: True}"
 
 class Bus():
-    def __init__(self):
+    def __init__(self,broker=broker, address=address,options=options):
         self.connection = Connection(broker)
         self.connection.reconnect = True
 
