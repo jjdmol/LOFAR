@@ -1,8 +1,10 @@
 #!/bin/bash
 #
-# V1.0, M.J.Norden, 13-04-2011
+# V2.0, M.J.Norden, 21-08-2014
 # usage: ./poweruphba.sh 5  (or 6 or 7)
 # Power up of the HBA Tiles needs to be slowed down because of high rush-in current. 
+# for rcumode 6 you need to switch the clock seperately (rspctl --clock=160)
+#
 
 if [ "$1" != "" ]; then
     if   [ $1 -lt 5 ]; then
@@ -21,31 +23,25 @@ fi
 
 if [ -e /opt/lofar/etc/RemoteStation.conf ]; then
   let rspboards=`sed -n  's/^\s*RS\.N_RSPBOARDS\s*=\s*\([0-9][0-9]*\).*$/\1/p' /opt/lofar/etc/RemoteStation.conf`
-  let rcus=$rspboards*8
+  let "last=$rspboards/2"
 else
   echo "Could not find /opt/lofar/etc/RemoteStation.conf"
-  let rspboards=12
-  let rcus=$rspboards*8
+  let last=6
 fi
 
-rspctl --rcumode=$hbamode --sel=0:31
-sleep 2
-rspctl --rcumode=$hbamode --sel=32:63
-sleep 2
-rspctl --rcumode=$hbamode --sel=64:95
-sleep 2
+for (( idx = 0; idx < $last ; idx++)) ; do
+  let "a=16*$idx"
+  let "b=$a + 15"
+  rspctl --rcumode=$hbamode --sel=$a:$b
+  sleep 1
+done
 
-if [ $rcus -eq 192 ]; then
-  rspctl --rcumode=$hbamode --sel=96:127
-  sleep 2
-  rspctl --rcumode=$hbamode --sel=128:159
-  sleep 2
-  rspctl --rcumode=$hbamode --sel=160:191
-  sleep 2
-fi
-
+sleep 1
 rspctl --rcuenable=1
-sleep 2
+sleep 1
+
 if [ $hbamode -eq 5 ]; then 
    rspctl --specinv=1
+else
+   rspctl --specinv=0
 fi
