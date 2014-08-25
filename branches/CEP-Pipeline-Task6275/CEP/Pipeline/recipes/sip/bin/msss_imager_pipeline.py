@@ -235,13 +235,32 @@ class msss_imager_pipeline(control):
 
         # *********************************************************************
         # (7) Get metadata
-        # Create a parset-file containing the metadata for MAC/SAS
+        # create a parset with information that is available on the toplevel
+        toplevel_meta_data = parameterset()
+        toplevel_meta_data.replace("numberOfMajorCycles", 
+                                           str(number_of_major_cycles))
+        toplevel_meta_data_path = os.path.join(
+                self.parset_dir, "toplevel_meta_data.parset")
+
+        try:
+            toplevel_meta_data.writeFile(toplevel_meta_data_path)
+            self.logger.info("Wrote meta data to: " + 
+                    toplevel_meta_data_path)
+        except RuntimeError, err:
+            self.logger.error(
+              "Failed to write toplevel meta information parset: %s" % str(
+                                    toplevel_meta_data_path))
+            return 1
+
+        
+        # Create a parset-file containing the metadata for MAC/SAS at nodes
         self.run_task("get_metadata", placed_data_image_map,
             parset_file = self.parset_feedback_file,
             parset_prefix = (
                 full_parset.getString('prefix') +
                 full_parset.fullModuleName('DataProducts')
             ),
+            toplevel_meta_data_path=toplevel_meta_data_path, 
             product_type = "SkyImage")
 
         return 0
