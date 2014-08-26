@@ -1,8 +1,6 @@
 Observation.CoherentStokes.antennaSet=HBA_DUAL
 Observation.CoherentStokes.channelWidth=12207.03125
 Observation.CoherentStokes.channelsPerSubband=16
-Observation.CoherentStokes.frequencyDownsamplingFactor=1
-Observation.CoherentStokes.nrOfCollapsedChannels=16
 Observation.CoherentStokes.rawSamplingTime=8.192e-05
 Observation.CoherentStokes.samplingTime=0.0004915200000000001
 Observation.CoherentStokes.stationList=[CS007,CS005,CS002,CS004,CS006,CS003]
@@ -5983,8 +5981,6 @@ Observation.DataProducts.nrOfOutput_Correlated_=0
 Observation.IncoherentStokes.antennaSet=HBA_DUAL
 Observation.IncoherentStokes.channelWidth=12207.03125
 Observation.IncoherentStokes.channelsPerSubband=16
-Observation.IncoherentStokes.frequencyDownsamplingFactor=1
-Observation.IncoherentStokes.nrOfCollapsedChannels=16
 Observation.IncoherentStokes.rawSamplingTime=8.192e-05
 Observation.IncoherentStokes.samplingTime=0.0004915200000000001
 Observation.IncoherentStokes.stationList=[CS007,CS005,CS002,CS004,CS006,CS003]
