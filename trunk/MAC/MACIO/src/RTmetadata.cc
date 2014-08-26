@@ -157,9 +157,11 @@ void RTmetadata::rtmLoop()
 			LOG_WARN_STR("Connection failure to PVSS Gateway: " << exc.what() << ". Will attempt to reconnect in a moment.");
 			itsLogEvents.kvps.clear(); // trash possibly half-sent events
 			delete itsKVTport;
+			itsKVTport = 0;
 		} catch (...) {
 			LOG_DEBUG("Caught cancellation (or unknown) exception. Stopping...");
 			delete itsKVTport;
+			itsKVTport = 0;
 			throw; // cancellation exc must be re-thrown
 		}
 
