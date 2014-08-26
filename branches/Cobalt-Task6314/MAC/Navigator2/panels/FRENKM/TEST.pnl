@@ -1,0 +1,286 @@
+V 10
+1
+LANG:1 0 
+PANEL,-1 -1 1134 569 N "_3DFace" 0
+E E E E E 1 -1 -1 0  40 34
+""0  1
+E "#uses \"navigator.ctl\"" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+1 45 0 "" 1
+0
+1 46 0 "" 2
+0
+1 47 0 "" 3
+0
+1 48 0 "" 5
+0
+1 49 0 "" 6
+0
+1 50 0 "" 7
+0
+1 51 0 "" 8
+0
+1 52 0 "" 9
+0
+1 53 1 "0" 18
+0
+1 54 1 "0" 19
+0
+1 55 1 "0" 24
+0
+1 56 1 "0" 8
+0
+1 57 1 "0" 9
+0
+1 58 1 "0" 16
+0
+1 59 1 "0" 12
+0
+1 60 1 "0" 14
+0
+1 61 1 "0" 17
+0
+1 62 1 "0" 25
+0
+1 63 1 "0" 11
+0
+1 64 1 "0" 15
+0
+1 65 1 "0" 21
+0
+1 66 1 "0" 22
+0
+1 67 1 "0" 0
+0
+1 68 1 "0" 1
+31 "transform" 0 0 1 0 3.42857142857143 0 -1068.57142857143
+0
+1 69 2 "" 1
+0
+1 70 2 "" 2
+0
+1 71 2 "" 3
+0
+1 72 2 "" 5
+0
+1 73 2 "" 6
+0
+1 74 2 "" 7
+0
+1 75 2 "" 8
+0
+1 76 2 "" 9
+0
+1 77 3 "" 1
+0
+1 78 3 "" 2
+0
+1 79 3 "" 3
+0
+1 80 3 "" 5
+0
+1 81 3 "" 6
+0
+1 82 3 "" 7
+0
+1 83 3 "" 8
+0
+1 84 3 "" 9
+0
+4 37
+"LINE1"
+""
+1 112 176 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 2 1 E  112 176 112 248
+4 38
+"LINE2"
+""
+1 112 248 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 2 1 E  112 248 168 248
+4 39
+"LINE3"
+""
+1 320 320 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 2 1 E  320 320 320 376
+4 40
+"LINE4"
+""
+1 320 376 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 2 1 E  320 376 448 376
+2 41
+"PRIMITIVE_TEXT5"
+""
+1 456 64 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 2 1 E U  1 E 456 64 624 88
+0 2 2 "0s" 0 0 0 64 0 0  456 64 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 30 Type object to be highlighted:
+14 42
+"TEXT_FIELD1"
+""
+1 688 56 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 686 54 890 82
+3 "0s" 0 0 0 0 0 -1  E E "main()
+{
+  dynClear( strHighlight );
+  strHighlight[1] = this.text;
+  dpSet( \"Trigger.trigger\", true );
+  
+}" 0
+
+30 43
+"FRAME1"
+""
+1 448 30 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+10 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 0 1 0 1 E U  0 E 448 30 921 169
+1
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 9 Highlight
+2 44
+"PRIMITIVE_TEXT6"
+""
+1 464 96 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 2 1 E U  1 E 464 96 888 144
+0 2 2 "0s" 0 0 0 64 0 0  464 96 2
+1
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 50 ( Type the datapoint name of the object and press 
+1
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 9 <enter> )
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+3 0 "PANEL_REF1"
+"FRENKM/Object.pnl" 40 34 T 0 U 
+1
+"$DP""LOFAR"
+3 1 "PANEL_REF2"
+"objects/STD_PANELS/AESRow.pnl" 13 401 T 1 1 0 1 8 8
+1
+"$AESREGDOLLAR_SCREENTYPE""aes_alertRow"
+3 2 "PANEL_REF3"
+"FRENKM/Object.pnl" 40 34 T 2 1 0 1 152 144
+1
+"$DP""LOFAR_ObsSW"
+3 3 "PANEL_REF4"
+"FRENKM/Object.pnl" 40 34 T 3 1 0 1 432 256
+1
+"$DP""LOFAR_ObsSW_TempObs0001"
+0
