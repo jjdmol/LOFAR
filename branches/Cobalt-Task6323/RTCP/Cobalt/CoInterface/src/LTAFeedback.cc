@@ -237,12 +237,6 @@ namespace LOFAR
         ps.add("Observation.CoherentStokes.timeDownsamplingFactor",
                str(format("%.16g") % coherentStokes.timeIntegrationFactor));
 
-        // The BG/P could 'collapse channels'. Cobalt does not need that, so we
-        // put fixed/trivial values here.
-        ps.add("Observation.CoherentStokes.nrOfCollapsedChannels",
-               str(format("%u") % coherentStokes.nrChannels));
-        ps.add("Observation.CoherentStokes.frequencyDownsamplingFactor", "1");
-
         ps.add("Observation.CoherentStokes.channelsPerSubband",
                str(format("%u") % coherentStokes.nrChannels));
         ps.add("Observation.CoherentStokes.channelWidth",
@@ -301,12 +295,6 @@ namespace LOFAR
 
         ps.add("Observation.IncoherentStokes.timeDownsamplingFactor",
                str(format("%.16g") % incoherentStokes.timeIntegrationFactor));
-
-        // The BG/P could 'collapse channels'. Cobalt does not need that, so we
-        // put fixed/trivial values here.
-        ps.add("Observation.IncoherentStokes.nrOfCollapsedChannels",
-               str(format("%u") % incoherentStokes.nrChannels));
-        ps.add("Observation.IncoherentStokes.frequencyDownsamplingFactor", "1");
 
         ps.add("Observation.IncoherentStokes.channelsPerSubband",
                str(format("%u") % incoherentStokes.nrChannels));
