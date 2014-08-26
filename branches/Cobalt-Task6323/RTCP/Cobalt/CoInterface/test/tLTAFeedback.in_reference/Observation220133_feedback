@@ -1,3 +1,5 @@
+Observation.Correlator.channelWidth=3051.7578125
+Observation.Correlator.channelsPerSubband=64
 Observation.Correlator.integrationInterval=1.00663296
 Observation.DataProducts.Output_Correlated_[0].SAP=0
 Observation.DataProducts.Output_Correlated_[0].centralFrequency=30468750.000000
