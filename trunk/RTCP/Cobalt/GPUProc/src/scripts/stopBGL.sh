@@ -48,7 +48,7 @@ function writecommand {
   TIMEOUT=60
   while [ $TIMEOUT -gt 0 ] && kill -0 "$CMDPID" 2>/dev/null
   do 
-    if kill -0 "$PID" 2>/dev/null; then
+    if ! kill -0 "$PID" 2>/dev/null; then
       echo "Process $PID terminated."
       break
     fi
