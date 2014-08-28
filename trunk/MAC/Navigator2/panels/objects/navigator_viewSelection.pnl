@@ -117,11 +117,14 @@ LANG:1 0
 1
 LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
 0  -2 8 1201 854
-E5 "Hardware" 1
+E6 "Hardware" 1
 LANG:1 8 Hardware
 0
 "Observations" 1
 LANG:1 12 Observations
+0
+"Pipelines" 1
+LANG:1 9 Pipelines
 0
 "Processes" 1
 LANG:1 9 Processes
@@ -249,9 +252,9 @@ LANG:1 0
 "objects\\Hardware\\lofar_HW_state.pnl" 45 5 T 16 1 0 1 -16 1
 0
 3 1 "PANEL_REF2" -1
-"objects\\Observations\\lofar_Obs_state.pnl" 125 5 T 16 1 0 1 -8 1
+"objects\\Observations\\lofar_Obs_state.pnl" 125 5 T 16 1 0 1 43 1
 0
 3 2 "PANEL_REF3" -1
-"objects\\Processes\\lofar_Proc_state.pnl" 225 5 T 16 1 0 1 -19 1
+"objects\\Processes\\lofar_Proc_state.pnl" 225 5 T 16 1 0 1 59 1
 0
 0

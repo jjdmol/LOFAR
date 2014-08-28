@@ -201,25 +201,38 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
         LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| g_stationList entry");
         navFunct_fillHardwareTree();
         navFunct_fillObservationsList();
+        navFunct_fillPipelinesList();
         navFunct_fillProcessesList();
       } else {    
-        LOG_ERROR("navCtrl.ctl:navCtrl_handleViewBoxEvent| in hardware but g_stationList is empy ????");
+        LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| in hardware but g_stationList is empy ????");
       }
     } else if (ACTIVE_TAB == "Observations") {
       if (dynlen(g_observationsList) > 0) {
         LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| g_observations entry");
         navFunct_fillObservationsTree();
         navFunct_fillHardwareLists();
-        navFunct_fillProcessesList();
+        navFunct_fillProcessesList();       
+        navFunct_fillPipelinesList();
       } else {
-        LOG_ERROR("navCtrl.ctl:navCtrl_handleViewBoxEvent| in observations but g_observationsList is empy ????");
+        LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| in observations but g_observationsList is empy ????");
+      }
+    } else if (ACTIVE_TAB == "Pipelines") {
+      if (dynlen(g_pipelinesList) > 0) {
+        LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| g_pipelines entry");
+        navFunct_fillPipelinesTree();
+        navFunct_fillHardwareLists();
+        navFunct_fillProcessesList();       
+        navFunct_fillObservationsList();
+      } else {
+        LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| in observations but g_pipelinesList is empy ????");
       }
     } else if (ACTIVE_TAB == "Processes") {
       if (dynlen(g_processesList) > 0) {
-        LOG_ERROR("navCtrl.ctl:navCtrl_handleViewBoxEvent| g_processes entry");
+        LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| g_processes entry");
         navFunct_fillProcessesTree();
         navFunct_fillHardwareLists();
         navFunct_fillObservationsList();
+        navFunct_fillPipelinesList();
       } else {
         LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| in processes but g_processesList is empy ????");
       }
@@ -279,6 +292,7 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
           LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|g_stationList: ",g_stationList);
           LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|g_processesList: ",g_processesList);
           LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|g_observationsList: ",g_observationsList);
+          LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|g_pipelinesList: ",g_pipelinesList);
 
         LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|ACTIVE TAB: "+ACTIVE_TAB); 
    
@@ -1061,6 +1075,16 @@ void navCtrl_highlightAddObservationsFromHardware(string selection) {
   LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddObservationsFromHardware|leaving with highlight now: ", highlight);
 }
 
+void navCtrl_highlightAddPipelinesFromHardware(string selection) {
+  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddPipelinesFromHardware|entered with highlight: "+ highlight + " selection: " + selection);  
+
+  // To be done
+  
+  
+  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddPipelinesFromHardware|leaving with highlight now: ", highlight);
+}
+
+
 void navCtrl_highlightAddHardwareFromObservation(string selection) {
   LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromObservation|entered with highlight: " + highlight+ "selection: " + selection); 
   LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromObservation|g_stationList: " + g_stationList); 
@@ -1117,6 +1141,15 @@ void navCtrl_highlightAddHardwareFromObservation(string selection) {
       }
     }
   }
+  
+  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromObservation|leaving with highlight: " + highlight);
+}
+
+void navCtrl_highlightAddHardwareFromPipeline(string selection) {
+  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromPipeline|entered with highlight: " + highlight+ "selection: " + selection); 
+  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromPipeline|g_stationList: " + g_stationList); 
+   
+  // To be done
   
   LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromObservation|leaving with highlight: " + highlight);
 }
@@ -1184,6 +1217,16 @@ void navCtrl_highlightAddObservationsFromProcess(string selection) {
   LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddObservationsFromProcess|leaving with highlight: " + highlight);
 }
 
+// selection is a single processline, check if it contains an observation
+void navCtrl_highlightAddPipelinesFromProcess(string selection) {
+  
+  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddPipelinesFromProcess|entered with highlight: "+ highlight + " selection: " + selection);  
+
+    // To be done
+  
+  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddObservationsFromProcess|leaving with highlight: " + highlight);
+}
+
 // selection is a single observationitem, check for all processes that have that hardware in its line
 void navCtrl_highlightAddProcessesFromObservation(string selection) {
   
@@ -1200,6 +1243,16 @@ void navCtrl_highlightAddProcessesFromObservation(string selection) {
     }
   }
   LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddProcessesFromHardware|leaving with highlight: " + highlight);
+}
+
+// selection is a single pipelineitem, check for all processes that have that hardware in its line
+void navCtrl_highlightAddProcessesFromPipeline(string selection) {
+  
+  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddProcessesFromPipeline|entered with highlight: "+ highlight + " selection: " + selection);  
+  
+  // To be done
+  
+  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddProcessesFromPipeline|leaving with highlight: " + highlight);
 }
 
 // Strips names like xxxx:yyyy_zzzz_wwww
