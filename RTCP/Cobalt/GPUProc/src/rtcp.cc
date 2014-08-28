@@ -192,7 +192,9 @@ int main(int argc, char **argv)
   // much later, after the pipeline creation (post-fork()), so we don't crash.
   const string mdRegisterName = PST_COBALTGPU_PROC;
   const string mdHostName = ps.getString("Cobalt.PVSSGateway.host", "");
-  MACIO::RTmetadata mdLogger(ps.observationID(), mdRegisterName, mdHostName);
+
+  // Don't connect to PVSS for non-real-time observations -- they have no proper flow control
+  MACIO::RTmetadata mdLogger(ps.observationID(), mdRegisterName, ps.settings.realTime ? mdHostName : "");
 
   LOG_INFO_STR("MPI rank " << mpi.rank() << " out of " << mpi.size() << " hosts");
 
