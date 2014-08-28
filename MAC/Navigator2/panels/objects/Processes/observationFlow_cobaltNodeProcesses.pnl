@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 16 childStateBorder
-PANEL,-1 -1 500 91 N "_3DFace" 0
+PANEL,-1 -1 302 91 N "_3DFace" 0
 "main()
 {
   baseDP = \"LOFAR_PermSW\";
@@ -139,6 +139,9 @@ void connectGPUProcs() {
       gpuprocs = navFunct_getGPUProcsForObservation(observationsList[i]);
       for (int i=1; i<= dynlen(gpuprocs); i++) {
         dynAppend(connectToGPUProcs,gpuprocs[i]+\".dropping:_online.._value\");
+        dynAppend(connectToGPUProcs,gpuprocs[i]+\".dropped:_online.._value\");
+        dynAppend(connectToGPUProcs,gpuprocs[i]+\".subband:_online.._value\");
+        dynAppend(connectToGPUProcs,gpuprocs[i]+\".dataProductType:_online.._value\");
       }
       if (dynlen(gpuprocs) > 0) baseDP = gpuprocs[1];
     }
@@ -149,7 +152,7 @@ void connectGPUProcs() {
         setValue(\"GPUProcsObject\", \"foreCol\", \"Lofar_dpdoesnotexist\");
       }
     } else {
-      setValue(\"GPUProcsObject\", \"foreCol\", \"Lofar_dpOffline\");
+      setValue(\"GPUProcsObject\", \"foreCol\", \"Lofar_off\");
     }
   } else {
       setValue(\"GPUProcsObject\", \"foreCol\", \"Lofar_off\");    
@@ -206,33 +209,34 @@ void connectStationInputStreams() {
       
   
     // check if the required datapoint for this view are enabled and accessible
-    if (navFunct_dpReachable(CEPDBName) && dynlen(connectTo0)>0 ){
+    if (dynlen(connectTo0)>0 && navFunct_dpReachable(CEPDBName)  ){
       if (dpConnect(\"streamCB0\", connectTo0) == -1) {
         setValue(\"streamObject0\", \"foreCol\", \"Lofar_dpdoesnotexist\");
       }
     } else {
-      setValue(\"streamObject0\", \"foreCol\", \"Lofar_dpOffline\");
+      
+      setValue(\"streamObject0\", \"foreCol\", \"Lofar_off\");
     }
-    if (navFunct_dpReachable(CEPDBName) && dynlen(connectTo1)>0 ){
+    if (dynlen(connectTo1)>0 && navFunct_dpReachable(CEPDBName) ){
       if (dpConnect(\"streamCB1\", connectTo1) == -1) {
         setValue(\"streamObject1\", \"foreCol\", \"Lofar_dpdoesnotexist\");
       }
     } else {
-      setValue(\"streamObject1\", \"foreCol\", \"Lofar_dpOffline\");
+      setValue(\"streamObject1\", \"foreCol\", \"Lofar_off\");
     }
-    if (navFunct_dpReachable(CEPDBName) && dynlen(connectTo2)>0 ){
+    if (dynlen(connectTo2)>0 &&  navFunct_dpReachable(CEPDBName) ){
       if (dpConnect(\"streamCB2\", connectTo2) == -1) {
         setValue(\"streamObject2\", \"foreCol\", \"Lofar_dpdoesnotexist\");
       }
     } else {
-      setValue(\"streamObject2\", \"foreCol\", \"Lofar_dpOffline\");
+      setValue(\"streamObject2\", \"foreCol\", \"Lofar_off\");
     }
-    if (navFunct_dpReachable(CEPDBName) && dynlen(connectTo3)>0 ){
+    if (dynlen(connectTo3)>0 && navFunct_dpReachable(CEPDBName)){
       if (dpConnect(\"streamCB3\", connectTo3) == -1) {
         setValue(\"streamObject3\", \"foreCol\", \"Lofar_dpdoesnotexist\");
       }
     } else {
-      setValue(\"streamObject3\", \"foreCol\", \"Lofar_dpOffline\");
+      setValue(\"streamObject3\", \"foreCol\", \"Lofar_off\");
     }
   } else {
       setValue(\"streamObject0\", \"foreCol\", \"Lofar_off\");    
@@ -388,6 +392,9 @@ void calcValues(int stream,dyn_string dps,dyn_float values)
 void gpuprocCB(dyn_string dps, dyn_dyn_bool values)
 {
   string color = \"Lofar_operational\";
+  
+  DebugN(\"dps : \", dps);
+  DebugN(\"vals: \", values);
 
   // Here we get dropping values. 
   // dps[i]  contains the GPUproc that is dropping

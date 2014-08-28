@@ -40,6 +40,8 @@
 // navFunct_fillHardwareTree                  : Prepare the DP for HardwareTrees
 // navFunct_fillObservationsList              : Fill g_observationList
 // navFunct_fillObservationsTree              : Prepare the DP for ObservationTrees
+// navFunct_fillPipelinesList                 : Fill g_pipelineList
+// navFunct_fillPipelinesTree                 : Prepare the DP for PipelinesTrees
 // navFunct_fillProcessesList                 : Fill g_processList
 // navFunct_fillProcessesTree                 : Prepare the DP for ProcessTrees
 // navFunct_fillStationLists                  : fill global lists with core/europe and remote stations
@@ -64,6 +66,7 @@
 // navFunct_getStationInputForObservation     : Returns all stationInputs used for this observation
 // navFunct_getWritersForObservation          : returns all the writers that are in use for an observation
 // navFunct_giveFadedColor                    : returns faded color string between green and red depending on min,max and currentValue
+// navFunct_handleUndockClick                 : undock window from navigator framework
 // navFunct_hardware2Obs                      : Looks if a piece of hardware maps to an observation
 // navFunct_hasAARTFAAC                       : checks if a given station belongs to the AARTFAAC stations
 // navFunct_IONode2DPName                     : returns the DP name based on the ionode number.
@@ -1122,13 +1125,14 @@ bool navFunct_hardware2Obs(string stationName, string observation,
 // ****************************************
 // Name: navFunct_fillHardwareLists   
 // ****************************************
-//     Fill Hardware lists based on Observations or processes, 
+//     Fill Hardware lists based on Observations/Pipelines or processes, 
 //     depending on what list is filled by a panel
 //     also fill the db Point with the new tree          
 // ****************************************
 void navFunct_fillHardwareLists() {
   LOG_DEBUG("navFunct.ctl:navFunct_fillHardwareLists| Entered");     
   LOG_DEBUG("navFunct.ctl:navFunct_fillHardwareLists| g_observationsList: "+g_observationsList);     
+  LOG_DEBUG("navFunct.ctl:navFunct_fillHardwareLists| g_pipelinesList: "+g_pipelinesList);     
   LOG_DEBUG("navFunct.ctl:navFunct_fillHardwareLists| g_processesList: "+g_processesList);     
 
   dynClear(strHighlight);
@@ -1154,6 +1158,13 @@ void navFunct_fillHardwareLists() {
       }
     }
 
+    // or based on available pipelines
+  } else if (dynlen(g_pipelinesList) > 0) {
+    for (int i=1; i<= dynlen(g_pipelinesList); i++) {
+
+     // To be done
+      
+    }
     
   // or based on processes
 
@@ -1188,6 +1199,7 @@ void navFunct_fillObservationsList() {
   LOG_DEBUG("navFunct.ctl:navFunct_fillObservationsLists| Entered");     
   LOG_DEBUG("navFunct.ctl:navFunct_fillObservationsLists| g_stationsList: "+g_stationList);     
   LOG_DEBUG("navFunct.ctl:navFunct_fillObservationsLists| g_processesList: "+g_processesList);     
+  LOG_DEBUG("navFunct.ctl:navFunct_fillObservationsLists| g_pipelinesList: "+g_pipelinesList);     
   LOG_DEBUG("navFunct.ctl:navFunct_fillObservationsLists| g_observationsList: "+g_observationsList);     
   dynClear(strHighlight);
   dynClear(highlight);
@@ -1359,6 +1371,26 @@ void navFunct_fillObservationsList() {
 }
 
 // ****************************************
+// Name: navFunct_fillPipelinesList   
+// ****************************************
+//     Fill Pipeline lists based on hardware or processes, 
+//     depending on what list is filled by a panel
+//     also fill the db Point with the new tree          
+// ****************************************
+
+void navFunct_fillPipelinesList() {
+  LOG_DEBUG("navFunct.ctl:navFunct_fillPipelinesLists| Entered");     
+  LOG_DEBUG("navFunct.ctl:navFunct_fillPipelinesLists| g_stationsList: "+g_stationList);     
+  LOG_DEBUG("navFunct.ctl:navFunct_fillPipelinesLists| g_processesList: "+g_processesList);     
+  LOG_DEBUG("navFunct.ctl:navFunct_fillPipelinesLists| g_pipelinesList: "+g_pipelinesList);     
+  LOG_DEBUG("navFunct.ctl:navFunct_fillPipelinesLists| g_observationsList: "+g_observationsList);     
+  dynClear(strHighlight);
+  dynClear(highlight);
+  // now prepare the ObservationTree    
+  navFunct_fillPipelinesTree();  
+}
+  
+// ****************************************
 // Name: navFunct_fillProcessesList   
 // ****************************************
 //     Fill Processes lists based on hardware or observations, 
@@ -1372,6 +1404,7 @@ void navFunct_fillProcessesList() {
   LOG_DEBUG("navFunct.ctl:navFunct_fillProcesseLists| Entered");     
   LOG_DEBUG("navFunct.ctl:navFunct_fillProcesseLists| g_stationsList: "+g_stationList);     
   LOG_DEBUG("navFunct.ctl:navFunct_fillProcesseLists| g_processesList: "+g_processesList);     
+  LOG_DEBUG("navFunct.ctl:navFunct_fillPipelinesLists| g_pipelinesList: "+g_pipelinesList);     
   LOG_DEBUG("navFunct.ctl:navFunct_fillProcesseLists| g_observationsList: "+g_observationsList);
 
   dynClear(strHighlight);
@@ -1733,6 +1766,45 @@ void navFunct_fillObservationsTree() {
 }
 
 // ****************************************
+// Name: navFunct_fillObservationsTree   
+// ****************************************
+//     Fill Observations Tree based on available Observations in the global
+//     hardwareLists
+//
+// ****************************************
+void navFunct_fillPipelinesTree() {
+  dyn_string result;
+    
+    
+  dyn_string result;
+  dynAppend(result,",planned,planned");
+  dynAppend(result,",active,active");
+  dynAppend(result,",finished,finished");  
+  
+  //  loop over all involved observations
+  for (int i = 1; i <= dynlen(g_pipelinesList); i++) {
+    string obsName= "LOFAR_ObsSW_"+g_pipelinesList[i];
+                    
+    //check position in available pipelines
+    int iPos = dynContains(g_observations["NAME"],obsName);
+    if (iPos < 1) {
+      LOG_DEBUG("navFunct.ctl:navFunct_fillPipelinesTree|ERROR, couldn't find "+obsName+" in g_observations");
+      continue;
+    }
+           
+    
+    string aS=g_observations["SCHEDULE"][iPos]+","+g_pipelinesList[i]+","+g_observations["DP"][iPos];
+    if (!dynContains(result,aS)){
+        dynAppend(result,aS);
+    }
+  }
+  
+  LOG_DEBUG("navFunct.ctl:navFunct_fillPipelinesTree|result: "+ result);     
+  
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".pipelinesList",result);  
+}
+
+// ****************************************
 // Name: navFunct_clearGlobalLists  
 // ****************************************
 //     Clear all global observations,hardware and processesLists
@@ -1757,6 +1829,7 @@ void navFunct_clearGlobalLists() {
   dynClear(g_cobaltNICList);
 
   dynClear(g_observationsList);
+  dynClear(g_pipelinesList);
   dynClear(g_processesList);
 }
 
@@ -2569,5 +2642,15 @@ int navFunct_observationNameToNumber(string obsname) {
   return obsname;
 }
 
+// ****************************************
+// Name : navFunct_handleUndockClick()
+// ****************************************
+// Description:
+//    tries to undock to current panel in mainView
+//    from the navigator
+// ***************************************
 
-
+void navFunct_handleUndockClick() {
+      
+  ModuleOnWithPanel(ACTIVE_TAB+"_Undocked", -1, -1, 0, 0, 1, 1, "", g_activePanel, ACTIVE_TAB+":"+g_currentDatapoint, makeDynString());
+}
