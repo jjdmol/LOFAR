@@ -82,17 +82,17 @@ EventPort::EventPort(const string&		aServiceMask,
 EventPort::~EventPort()
 {
 	if (itsSocket) {
-		itsSocket->shutdown();
+		itsSocket->close();
 		delete itsSocket;
 	};
 
 	if (itsListenSocket) {
-		itsListenSocket->shutdown();
+		itsListenSocket->close();
 		delete itsListenSocket;
 	};
 
 	if (itsBrokerSocket) {
-		itsBrokerSocket->shutdown();
+		itsBrokerSocket->close();
 		delete itsBrokerSocket;
 	};
 
