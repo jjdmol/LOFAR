@@ -36,8 +36,9 @@ function addlogprefix {
 }
 
 function writecommand {
-  PIPE=$1
-  CMD=$2
+  PID=$1
+  PIPE=$2
+  CMD=$3
 
   # Send the stop command for a graceful shutdown
   echo $CMD > $PIPE &
@@ -47,6 +48,11 @@ function writecommand {
   TIMEOUT=60
   while [ $TIMEOUT -gt 0 ] && kill -0 "$CMDPID" 2>/dev/null
   do 
+    if kill -0 "$PID" 2>/dev/null; then
+      echo "Process $PID terminated."
+      break
+    fi
+
     echo "Timeout writing command: $TIMEOUT seconds left"
     sleep 1
     TIMEOUT=$((TIMEOUT - 1))
@@ -89,7 +95,7 @@ echo "Process:"
 ps --no-headers -p "$PID" || error "Process not running: PID $PID"
 
 # Send the stop command for a graceful shutdown
-writecommand $COMMANDPIPE "stop" || error "Could not send 'stop' command"
+writecommand $PID $COMMANDPIPE "stop" || error "Could not send 'stop' command"
 
 # Remove command pipe (because startBGL.sh was its creator)
 rm -f "$COMMANDPIPE" || true
