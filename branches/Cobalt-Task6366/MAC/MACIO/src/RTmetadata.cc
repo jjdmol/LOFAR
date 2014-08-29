@@ -180,10 +180,10 @@ void RTmetadata::setupConnection()
 {
 	// Use synchronous socket (last arg), since we already have a thread
 	// to provide full async (and thread-safety on log()).
+  //
+  // Note: the EventPort connect()s in the constructor
 	itsKVTport = new EventPort(MAC_SVCMASK_PVSSGATEWAY, false, KVT_PROTOCOL,
 				   itsHostName, true); // may throw AssertError exc
-
-	ASSERTSTR(itsKVTport->connect(), "failed to connect to PVSSGateway");
 
 	LOG_DEBUG("Registering at PVSSGateway");
 	KVTRegisterEvent regEvent;
