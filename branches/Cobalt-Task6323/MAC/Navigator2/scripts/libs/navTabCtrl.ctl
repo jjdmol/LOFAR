@@ -298,6 +298,9 @@ bool navTabCtrl_showView(int panelNr=1)
     }
     LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_showView|Trying to load panel: "+splitName[1]);
     setValue(tabCtrl,"namedRegisterPanel", ACTIVE_TAB, splitName[1], makeDynString(""));
+    
+    // store active panelname in global for later use
+    g_activePanel = splitName[1];
     tabCtrlHasPanel=true;
     
     // fill and disable/enable the panelChoice combobox

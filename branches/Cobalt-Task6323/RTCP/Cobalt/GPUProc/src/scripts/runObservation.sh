@@ -243,6 +243,11 @@ then
     setkey Cobalt.FinalMetaDataGatherer.enabled       false
   fi
 
+  if [ "$ONLINECONTROL_FEEDBACK" -eq "0" ]
+  then
+    setkey Cobalt.PVSSGateway.host                    ""
+  fi
+
   # Add extra keys specified on the command line
   echo -e "$EXTRA_PARSET_KEYS" >> $PARSET
 fi
