@@ -340,21 +340,6 @@ class imager_awimager(LOFARnodeTCP):
       # vilchez@astron.nl
       """		
       
-      print ''
-      print ''
-      print ''
-      print ''
-      print ''
-      print ''
-      print major_cycle, '   ', nr_cycles
-      print ''            
-      print ''
-      print ''
-      print ''
-      print ''      
-      
-      
-      
       
       # ********************************************************************
       #0. modify the nof cycle to have a final step at the same resolution 
@@ -424,22 +409,7 @@ class imager_awimager(LOFARnodeTCP):
       pixsize	= round((badResolFactor * bestPixelResol) - 
           (badResolFactor * bestPixelResol - bestPixelResol) *
            scaling_factor , 3)
-           
-      print ''
-      print ''
-      print ''
-      print ''
-      print ''
-      print ''
-      print pixsize, 'arcsec   ', scaling_factor
-      print ''            
-      print ''
-      print ''
-      print ''
-      print ''            
-           
-           
-           
+                   
 
       # number of pixel must be a multiple of 2 !!
       nbpixel	= int(fov * 3600.0 / pixsize)
