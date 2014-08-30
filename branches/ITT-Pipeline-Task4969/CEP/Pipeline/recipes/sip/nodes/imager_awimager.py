@@ -339,6 +339,23 @@ class imager_awimager(LOFARnodeTCP):
       # Nicolas Vilchez, 2014
       # vilchez@astron.nl
       """		
+      
+      print ''
+      print ''
+      print ''
+      print ''
+      print ''
+      print ''
+      print major_cycle, '   ', nr_cycles
+      print ''            
+      print ''
+      print ''
+      print ''
+      print ''      
+      
+      
+      
+      
       # ********************************************************************
       #0. modify the nof cycle to have a final step at the same resolution 
       #as the previous last cycle
@@ -346,7 +363,7 @@ class imager_awimager(LOFARnodeTCP):
       if major_cycle < nr_cycles-1:          
            nr_cycles = nr_cycles-1
 
-      scaling_factor = major_cycle / (nr_cycles - 1)
+      scaling_factor = float(major_cycle) / float(nr_cycles - 1)
     
       # ********************************************************************
       #1. Determine Target coordinates for UVmin
@@ -407,6 +424,22 @@ class imager_awimager(LOFARnodeTCP):
       pixsize	= round((badResolFactor * bestPixelResol) - 
           (badResolFactor * bestPixelResol - bestPixelResol) *
            scaling_factor , 3)
+           
+      print ''
+      print ''
+      print ''
+      print ''
+      print ''
+      print ''
+      print pixsize, 'arcsec   ', scaling_factor
+      print ''            
+      print ''
+      print ''
+      print ''
+      print ''            
+           
+           
+           
 
       # number of pixel must be a multiple of 2 !!
       nbpixel	= int(fov * 3600.0 / pixsize)
@@ -454,7 +487,7 @@ class imager_awimager(LOFARnodeTCP):
       # ********************************************************************        
       # 7. Threshold determination from the previous cycle 
       if major_cycle == 0:
-          threshold = '0.005Jy'	
+          threshold = '0.010Jy'	
       else:
         fits_image_path_list	= measurement_set.split('concat.ms')
         fits_image_path			= fits_image_path_list[0] +\

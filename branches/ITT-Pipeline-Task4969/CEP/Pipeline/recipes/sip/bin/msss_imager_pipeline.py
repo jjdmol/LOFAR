@@ -688,26 +688,28 @@ class msss_imager_pipeline(control):
              
              parset.replace('advanced_opts', 'True')
              parset.replace('atrous_do', 'True')
-             parset.replace('rms_box', '(15.0,10.0)')
-             parset.replace('thresh_isl', '6')
-             parset.replace('thresh_pix', '8')
+             parset.replace('rms_box', '(80.0,15.0)')
+             parset.replace('thresh_isl', '5')
+             parset.replace('thresh_pix', '5')
              parset.replace('adaptive_rms_box', 'True')
              parset.replace('blank_limit', '1E-4')
              parset.replace('ini_method', 'curvature')
-             parset.replace('atrous_do', 'True')             
+             parset.replace('atrous_do', 'True')
+             parset.replace('thresh', 'hard')              
              
 
         if parset_name == "pybdsm_second_pass.par":
              
              parset.replace('advanced_opts', 'True')
              parset.replace('atrous_do', 'True')
-             parset.replace('rms_box', '(15.0,10.0)')
-             parset.replace('thresh_isl', '6')
-             parset.replace('thresh_pix', '8')
+             parset.replace('rms_box', '(80.0,15.0)')
+             parset.replace('thresh_isl', '5')
+             parset.replace('thresh_pix', '5')
              parset.replace('adaptive_rms_box', 'True')
              parset.replace('blank_limit', '1E-4')
              parset.replace('ini_method', 'curvature')
-             parset.replace('atrous_do', 'True')             
+             parset.replace('atrous_do', 'True')
+             parset.replace('thresh', 'hard')              
 
 
 
