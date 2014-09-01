@@ -62,15 +62,15 @@ pvss_cmdprefix()
   [ $pvss_version_major -eq 3 ] || \
     error "Unsupported PVSS version $pvss_version"
 
-  [ $pvss_version_minor -le 10 ] && echo "PVSS00"
-  [ $pvss_version_minor -gt 10 ] && echo "WCCOA"
+  [ $pvss_version_minor -le 10 ] && { echo "PVSS00"; return; }
+  [ $pvss_version_minor -gt 10 ] && { echo "WCCOA"; return; }
 }
 
 # Import the given data-point-list file into the PVSS database
 pvss_import_dplist()
 {
   [ $# -eq 1 ] || error "Usage: pvss_import_dplist <filename>"
-  cmd="$(pvss_cmdprefix)ascii -in $1"
+  cmd="$(pvss_cmdprefix)ascii -yes -in $1"
   $cmd || error "Error executing command: $cmd"
 }
 
