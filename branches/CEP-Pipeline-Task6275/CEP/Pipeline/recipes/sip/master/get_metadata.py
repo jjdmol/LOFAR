@@ -142,7 +142,6 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
         except RuntimeError, err:
             self.logger.error("Failed to write meta-data: %s" % str(err))
             return 1
-        raise Exception("bwaaaaaa")
         return 0
 
 
