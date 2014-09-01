@@ -70,6 +70,7 @@ namespace LOFAR {
         itsUseModelColumn(parset.getBool (prefix + "usemodelcolumn", false)),
         itsParmDBName    (parset.getString (prefix + "parmdb")),
         itsApplyBeam     (parset.getBool (prefix + "usebeammodel", false)),
+        itsBeamPerPatch  (parset.getBool (prefix + "beamperpatch", true)),
         itsMode          (parset.getString (prefix + "caltype")),
         itsTStep         (0),
         itsDebugLevel    (parset.getInt (prefix + "debuglevel", 0)),
@@ -287,12 +288,19 @@ namespace LOFAR {
           simulate(itsPhaseRef, itsPatchList[dr], nSt, nBl, nCh, cr_baseline,
                    cr_freq, cr_uvw_split, cr_model);
 
-          for(size_t i = 0; i < itsPatchList[dr]->nComponents(); ++i)
-          { // Apply beam for every source, not only once per patch
-            applyBeam(time, itsPatchList[dr]->component(i)->position(), itsApplyBeam,
+          if (itsBeamPerPatch) {
+            applyBeam(time, itsPatchList[dr]->position(), itsApplyBeam,
                       info().chanFreqs(), &(itsThreadStorage[thread].model_patch[0]),
                       refdir, tiledir, &(itsThreadStorage[thread].beamvalues[0]),
                       storage.measConverter);
+          } else {
+            for(size_t i = 0; i < itsPatchList[dr]->nComponents(); ++i) {
+              // Apply beam for every source, not only once per patch
+              applyBeam(time, itsPatchList[dr]->component(i)->position(), itsApplyBeam,
+                        info().chanFreqs(), &(itsThreadStorage[thread].model_patch[0]),
+                        refdir, tiledir, &(itsThreadStorage[thread].beamvalues[0]),
+                        storage.measConverter);
+            }
           }
 
           for (size_t i=0; i<itsThreadStorage[thread].model_patch.size();++i) {
@@ -665,14 +673,27 @@ namespace LOFAR {
             if (itsStefcalVariant=="2a") {
               iS.h(st1,0)=conj(iS.g(st1,0));
             } else if (itsStefcalVariant=="2b") {
-              iS.h(st1,0)=omega*iS.h(st1,0)+(1-omega)*conj(iS.g(st1,0));
+              iS.h(st1,0)=0.8*iS.h(st1,0)-0.2*conj(iS.g(st1,0));
             }
           }
-          //if (itsStefcalVariant!="1c") {
-          //  dgs.push_back(dg);
-          //}
+          if (itsStefcalVariant!="1c") {
+            double fronormdiff=0;
+            double fronormg=0;
+            for (uint ant=0;ant<nUn;++ant) {
+              for (uint cr=0;cr<nCr;++cr) {
+                DComplex diff=iS.g(ant,cr)-iS.gold(ant,cr);
+                fronormdiff+=abs(diff*diff);
+                fronormg+=abs(iS.g(ant,cr)*iS.g(ant,cr));
+              }
+            }
+            fronormdiff=sqrt(fronormdiff);
+            fronormg=sqrt(fronormg);
+
+            dg = fronormdiff/fronormg;
+            dgs.push_back(dg);
+          }
         } // ============================== Relaxation   =======================
-        if (iter % 2 == 1/* && itsStefcalVariant=="1c"*/) {
+        if (iter % 2 == 1 && itsStefcalVariant=="1c") {
           if (itsDebugLevel>7) {
             cout<<"iter: "<<iter<<endl;
           }
