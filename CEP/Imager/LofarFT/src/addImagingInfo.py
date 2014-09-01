@@ -28,9 +28,11 @@ import lofar.get_rms_noise as grn
 import numpy as np
 
 """ Add a subtable of an MS to the image """
-def addSubTable (image, msName, subName, removeColumns=[]):
+def addSubTable (image, msName, subName, removeColumns=[], newColumns=''):
     # Make a selection of all rows/columns of the MS subtable
-    sel = pt.taql ("select * from '" + msName + "/" + subName + "'")
+    # Add possible new columns which have to be given in TaQL form like:
+    #  ", 0. as OBSERVATION_INTEGRATION_TIME, '' as SOME_STRING_COLUMN"
+    sel = pt.taql ("select *" + newColumns + " from '" + msName + "/" + subName + "'")
     # Remove the required columns.
     if len(removeColumns) > 0:
         sel.removecols (removeColumns)
@@ -214,17 +216,18 @@ def addSourceTable (image, sourcedbName, minTime, maxTime):
 
 """ Update times and frequencies in the LOFAR_OBSERVATION subtable """
 def updateObsTable (image, msName, minbl, maxbl, usedCounts, visCounts,
-                    minTime, maxTime):
+                    minTime, maxTime, totTime):
     obstab = pt.table (image.name() + "/LOFAR_OBSERVATION", readonly=False,
                        ack=False)
     oritab = pt.table (image.name() + "/LOFAR_ORIGIN", ack=False)
     minfreq = pt.taql ("calc min([select FREQUENCY_MIN from '" +
                        oritab.name() + "'])")
     maxfreq = pt.taql ("calc max([select FREQUENCY_MAX from '" +
-                       oritab.name() + "'])")
+                       oritab.name() + "'])") 
     obstab.putcell ("OBSERVATION_FREQUENCY_MIN", 0, minfreq[0]);
     obstab.putcell ("OBSERVATION_FREQUENCY_MAX", 0, maxfreq[0]);
     obstab.putcell ("OBSERVATION_FREQUENCY_CENTER", 0, (minfreq[0]+maxfreq[0])/2);
+    obstab.putcell ("OBSERVATION_INTEGRATION_TIME", 0, totTime);
     obstab.putcell ("OBSERVATION_START", 0, minTime);
     obstab.putcell ("OBSERVATION_END", 0, maxTime);
     obstab.putcell ("TIME_RANGE", 0, (minTime, maxTime));
@@ -273,6 +276,7 @@ def countVisTime (msNames, taqlStr, baselineStr, minbl, maxbl):
     usedCounts = np.zeros ((len(msNames), nant, nant), 'int');
     minTime    = +1e30
     maxTime    = -1e30
+    totTime    = 0.
     for j in range(len(msNames)):
         # If baseline selection is done, use msselect to apply it.
         msname = msNames[j];
@@ -300,12 +304,15 @@ def countVisTime (msNames, taqlStr, baselineStr, minbl, maxbl):
             usedCounts[j, ant2[i], ant1[i]] += nused[i]
             visCounts [j, ant1[i], ant2[i]] += nvis[i]
             visCounts [j, ant2[i], ant1[i]] += nvis[i]
+        sTime = t.getcol('STIME').min()
+        eTime = t.getcol('ETIME').max()
         minTime = min(minTime, t.getcol('STIME').min())
         maxTime = max(maxTime, t.getcol('ETIME').max())
+        totTime += (eTime - sTime)
         t.close()
         if msname != msNames[j]:
             os.system ('rm -rf ' + msname)
-    return (usedCounts, visCounts, minTime, maxTime)
+    return (usedCounts, visCounts, minTime, maxTime, totTime)
 
 
 """ Add all imaging info
@@ -334,7 +341,7 @@ def addImagingInfo (imageName, msNames, sourcedbName="", minbl=0., maxbl=0.,
         raise Exception("addImagingInfo already done (keyword ATTRGROUPS already exists)")
     image.putkeyword ("ATTRGROUPS", {})
     # Find the number of unflagged visibilities per antenna per MS.
-    (usedCounts,visCounts,minTime,maxTime) = countVisTime (msNames, taqlStr, baseline, minbl, maxbl)
+    (usedCounts,visCounts,minTime,maxTime,totTime) = countVisTime (msNames, taqlStr, baseline, minbl, maxbl)
     # Add all subtables while removing obsolete columns.
     addSubTable (image, msNames[0], "POINTING")
     addSubTable (image, msNames[0], "FIELD")
@@ -342,14 +349,15 @@ def addImagingInfo (imageName, msNames, sourcedbName="", minbl=0., maxbl=0.,
     addSubTable (image, msNames[0], "LOFAR_STATION")
     addSubTable (image, msNames[0], "HISTORY")
     addSubTable (image, msNames[0], "OBSERVATION",
-                 ["LOG", "SCHEDULE_TYPE", "SCHEDULE"])
+                 ["LOG", "SCHEDULE_TYPE", "SCHEDULE"],
+                 ", 0. as OBSERVATION_INTEGRATION_TIME")
     # Create the LOFAR_QUALITY subtable.
     addQualityTable (image, usedCounts, visCounts)
     # Create the LOFAR_ORIGIN subtable from all MSs.
     addOriginTable (image, msNames)
     # Update times/frequencies/etc. in the LOFAR_OBSERVATION table.
     updateObsTable (image, msNames[0], minbl, maxbl,
-                    usedCounts, visCounts, minTime, maxTime)
+                    usedCounts, visCounts, minTime, maxTime, totTime)
     # If needed, add the LOFAR_SOURCE table.
     if len(sourcedbName) > 0:
         addSourceTable (image, sourcedbName, minTime, maxTime)
