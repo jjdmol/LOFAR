@@ -719,15 +719,18 @@ namespace LOFAR
 
         const double blockDuration = ps.settings.blockDuration();
 
+        // Prevent division by zero for observations without beam former
+        const size_t nrFiles = std::max(multiSender.nrFiles(), 1UL);
+
         itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPING + '[' + lexical_cast<string>(id.localSubbandIdx) + ']',
                         correlatorLoss.dropping || beamFormerLoss.dropping);
         itsMdLogger.log(itsMdKeyPrefix + PN_CGP_WRITTEN  + '[' + lexical_cast<string>(id.localSubbandIdx) + ']',
                         static_cast<float>(correlatorLoss.blocksWritten * blockDuration) +
-                        static_cast<float>(beamFormerLoss.blocksWritten * blockDuration / multiSender.nrFiles())
+                        static_cast<float>(beamFormerLoss.blocksWritten * blockDuration / nrFiles)
                        );
         itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPED  + '[' + lexical_cast<string>(id.localSubbandIdx) + ']',
                         static_cast<float>(correlatorLoss.blocksDropped * blockDuration) +
-                        static_cast<float>(beamFormerLoss.blocksDropped * blockDuration / multiSender.nrFiles())
+                        static_cast<float>(beamFormerLoss.blocksDropped * blockDuration / nrFiles)
                        );
 
         if (id.localSubbandIdx == 0 || id.localSubbandIdx == subbandIndices.size() - 1)
