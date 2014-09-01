@@ -286,6 +286,11 @@ class SkyImage(DataProduct):
                 'Pointing' : self._get_pointing(image),
                 'percentageWritten' : 100
             })
+            imagerIntegrationTime = image.attrget(
+                    'LOFAR_OBSERVATION', 'OBSERVATION_INTEGRATION_TIME', 0)
+            self._data.update({
+                'imagerIntegrationTime':imagerIntegrationTime
+            })
         except Exception, error:
             print >> sys.stderr, (
                 "%s: %s\n\twhile processing file %s" % 
