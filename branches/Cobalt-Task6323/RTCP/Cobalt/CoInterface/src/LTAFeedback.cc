@@ -308,12 +308,15 @@ namespace LOFAR
                settings.antennaSet);
         ps.add("Observation.IncoherentStokes.stationList",
                settings.rawStationList);
-
+      }
+      
+      if (settings.beamFormer.enabled) {
         // add the feedback for the individual files
         for (size_t i = 0; i < settings.beamFormer.files.size(); ++i) {
           ps.adoptCollection(beamFormedFeedback(i));
         }
       }
+
       return ps;
     }
   } // namespace Cobalt
