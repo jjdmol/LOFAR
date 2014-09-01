@@ -96,7 +96,6 @@ mpirun.sh
 ------------------------------
 
 The Cobalt software is started by calling the `rtcp' executable with the parset.
-If MPI is to be used:
 
    mpirun.sh -x LOFARROOT=$LOFARROOT -H `mpi_node_list -n $PARSET` \
              `which rtcp` $PARSET
@@ -109,10 +108,6 @@ Note that:
   * LOFARROOT is propagated, to make sure that rtcp can find the installation.
   * `which rtcp` expands "rtcp" into its full path, preventing the $PATH in the
     login shell from redirecting to a different executable.
-
-If MPI is not to be used:
-
-   rtcp $PARSET
 
 Command line parameters include:
   -p            Enable profiling. This enforces:

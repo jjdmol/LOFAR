@@ -73,7 +73,15 @@ EventPort::EventPort(const string&		aServiceMask,
 	itsBrokerSocket = new Socket("ServiceBroker", itsHost, toString(MAC_SERVICEBROKER_PORT));
 	ASSERTSTR(itsBrokerSocket, "can't allocate socket to serviceBroker");
 
-	_setupConnection();
+  // Some clients expect us to connect(), but clean up in case of errors, because
+  // the destructor won't run!
+  try {
+    _setupConnection();
+  } catch(...) {
+    itsBrokerSocket->close();
+    delete itsBrokerSocket;
+    throw;
+  }
 }
 
 //
@@ -82,17 +90,17 @@ EventPort::EventPort(const string&		aServiceMask,
 EventPort::~EventPort()
 {
 	if (itsSocket) {
-		itsSocket->shutdown();
+		itsSocket->close();
 		delete itsSocket;
 	};
 
 	if (itsListenSocket) {
-		itsListenSocket->shutdown();
+		itsListenSocket->close();
 		delete itsListenSocket;
 	};
 
 	if (itsBrokerSocket) {
-		itsBrokerSocket->shutdown();
+		itsBrokerSocket->close();
 		delete itsBrokerSocket;
 	};
 
@@ -250,7 +258,8 @@ int32 EventPort::_waitForSBAnswer()
 		LOG_INFO_STR("Service " << itsServiceName << " is at port " << itsPort);
 
 		// close connection with Broker.
-		itsBrokerSocket->shutdown();
+		itsBrokerSocket->close();
+    delete itsBrokerSocket;
 		itsBrokerSocket = 0;
 	}
 

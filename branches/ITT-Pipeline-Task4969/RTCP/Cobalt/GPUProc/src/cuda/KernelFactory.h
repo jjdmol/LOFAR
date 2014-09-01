@@ -61,16 +61,6 @@ namespace LOFAR
       typedef typename T::Buffers Buffers;
 
       // Construct a factory for creating Kernel objects of type \c T, using the
-      // settings in the Parset \a ps.
-      KernelFactory(const Parset& ps) :
-        itsParameters(ps),
-        itsPTX(createPTX(T::theirSourceFile,
-                         compileDefinitions(),
-                         compileFlags()))
-      {
-      }
-
-      // Construct a factory for creating Kernel objects of type \c T, using the
       // settings provided by \a params.
       KernelFactory(const typename T::Parameters &params) :
         itsParameters(params),
@@ -80,28 +70,19 @@ namespace LOFAR
 
       // Create a new Kernel object of type \c T.
       T* create(const gpu::Stream& stream,
-                const typename T::Buffers& buffers) const
+                gpu::DeviceMemory &inputBuffer,
+                gpu::DeviceMemory &outputBuffer) const
       {
-        // Since we use overlapping input/output buffers, their size
-        // could be wrong.
-        ASSERT(buffers.input.size() >= bufferSize(T::INPUT_DATA));
-        // Untill we have optional kernel compilation this test will fail on unused and thus incorrect kernels
-        //ASSERT(buffers.output.size() >= bufferSize(T::OUTPUT_DATA));
+        const typename T::Buffers buffers(inputBuffer, outputBuffer);
 
-        return new T(
-          stream, createModule(stream.getContext(), 
-                               T::theirSourceFile,
-                               itsPTX), 
-          buffers, itsParameters);
+        return create(stream, buffers);
       }
 
-      // // Create a new Kernel object of type \c T, using kernel-specific
-      // // parameters to instantiate this new object.
-      // T* create(const Parameters& params)
-      //   { return new T(params); }
-
       // Return required buffer size for \a bufferType
-      size_t bufferSize(BufferType bufferType) const;
+      size_t bufferSize(BufferType bufferType) const
+      {
+        return itsParameters.bufferSize(bufferType);
+      }
 
     private:
       // Used by the constructors to construct the PTX from the other
@@ -110,6 +91,22 @@ namespace LOFAR
         return createPTX(T::theirSourceFile,
                            compileDefinitions(),
                            compileFlags());
+      }
+
+      // Create a new Kernel object of type \c T.
+      T* create(const gpu::Stream& stream,
+                const typename T::Buffers& buffers) const
+      {
+        // Since we use overlapping input/output buffers, their size
+        // could be larger than we need.
+        ASSERT(buffers.input.size() >= bufferSize(T::INPUT_DATA));
+        ASSERT(buffers.output.size() >= bufferSize(T::OUTPUT_DATA));
+
+        return new T(
+          stream, createModule(stream.getContext(), 
+                               T::theirSourceFile,
+                               itsPTX), 
+          buffers, itsParameters);
       }
 
       // Return compile definitions to use when creating PTX code for kernels of

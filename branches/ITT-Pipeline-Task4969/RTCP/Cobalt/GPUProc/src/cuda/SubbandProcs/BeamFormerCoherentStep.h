@@ -33,8 +33,9 @@
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <CoInterface/BlockID.h>
 
-#include "SubbandProc.h"
-#include "BeamFormerSubbandProcStep.h"
+#include "SubbandProcInputData.h"
+#include "SubbandProcOutputData.h"
+#include "ProcessStep.h"
 
 #include <GPUProc/Kernels/BeamFormerKernel.h>
 #include <GPUProc/Kernels/CoherentStokesTransposeKernel.h>
@@ -49,83 +50,69 @@ namespace LOFAR
   namespace Cobalt
   {
     //# Forward declarations
-    struct BeamFormerFactories;
+    struct KernelFactories;
 
-    class BeamFormerCoherentStep: public BeamFormerSubbandProcStep
+    class BeamFormerCoherentStep: public ProcessStep
     {
     public:
+      struct Factories
+      {
+        Factories(const Parset &ps, size_t nrSubbandsPerSubbandProc = 1);
+
+        KernelFactory<BeamFormerKernel> beamFormer;
+        KernelFactory<CoherentStokesTransposeKernel> coherentTranspose;
+        KernelFactory<FFT_Kernel> coherentInverseFFT;
+        KernelFactory<FFTShiftKernel> coherentInverseFFTShift;
+        SmartPtr< KernelFactory<FIR_FilterKernel> > coherentFirFilter;
+        SmartPtr< KernelFactory<FFT_Kernel> > coherentFinalFFT;
+        KernelFactory<CoherentStokesKernel> coherentStokes;
+      };
 
       BeamFormerCoherentStep(const Parset &parset,
         gpu::Stream &i_queue,
         gpu::Context &context,
-        BeamFormerFactories &factories,
-        boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
-        boost::shared_ptr<gpu::DeviceMemory> i_devA,
-        boost::shared_ptr<gpu::DeviceMemory> i_devB,
-        boost::shared_ptr<gpu::DeviceMemory> i_devC,
-        boost::shared_ptr<gpu::DeviceMemory> i_devD,
-        boost::shared_ptr<gpu::DeviceMemory> i_devBeamFormerDelays,
-        boost::shared_ptr<gpu::DeviceMemory> i_devNull);
+        Factories &factories,
+        boost::shared_ptr<gpu::DeviceMemory> i_devB);
 
+      gpu::DeviceMemory outputBuffer();
 
+      void writeInput(const SubbandProcInputData &input);
 
-      void initMembers(gpu::Context &context,
-        BeamFormerFactories &factories);
+      void process(const SubbandProcInputData &input);
 
-      void process(BlockID blockID,
-        unsigned subband);
-
-      void printStats();
-
-      void logTime();
-
-      ~BeamFormerCoherentStep();
+      void readOutput(SubbandProcOutputData &output);
 
     private:
 
-      bool coherentStokesPPF;
+      const bool coherentStokesPPF;
 
       // Data members
-      boost::shared_ptr<SubbandProcInputData::DeviceBuffers> devInput;
-      boost::shared_ptr<gpu::DeviceMemory> devA;
       boost::shared_ptr<gpu::DeviceMemory> devB;
-      boost::shared_ptr<gpu::DeviceMemory> devC;
-      boost::shared_ptr<gpu::DeviceMemory> devD;
-      boost::shared_ptr<gpu::DeviceMemory> devBeamFormerDelays;
-      boost::shared_ptr<gpu::DeviceMemory> devNull;
-
-
+      gpu::DeviceMemory devC;
+      gpu::DeviceMemory devD;
 
       // Kernel members
-
-      std::auto_ptr<BeamFormerKernel::Buffers> beamFormerBuffers;
       std::auto_ptr<BeamFormerKernel> beamFormerKernel;
 
       // Transpose 
-      std::auto_ptr<CoherentStokesTransposeKernel::Buffers> coherentTransposeBuffers;
       std::auto_ptr<CoherentStokesTransposeKernel> coherentTransposeKernel;
 
       // inverse (4k points) FFT
       std::auto_ptr<FFT_Kernel> inverseFFT;
 
       // inverse FFT-shift
-      std::auto_ptr<FFTShiftKernel::Buffers> inverseFFTShiftBuffers;
       std::auto_ptr<FFTShiftKernel> inverseFFTShiftKernel;
 
       // Poly-phase filter (FIR + FFT)
-      std::auto_ptr<gpu::DeviceMemory> devFilterWeights;
-      std::auto_ptr<gpu::DeviceMemory> devFilterHistoryData;
-      std::auto_ptr<FIR_FilterKernel::Buffers> firFilterBuffers;
       std::auto_ptr<FIR_FilterKernel> firFilterKernel;
-      std::auto_ptr<FFT_Kernel>finalFFT;
+      std::auto_ptr<FFT_Kernel> coherentFinalFFT;
 
       // Coherent Stokes
-      std::auto_ptr<CoherentStokesKernel::Buffers> coherentStokesBuffers;
       std::auto_ptr<CoherentStokesKernel> coherentStokesKernel;
 
+      PerformanceCounter outputCounter;
 
-
-
+      size_t nrCoherent(const BlockID &blockID) const;
     };
 
 

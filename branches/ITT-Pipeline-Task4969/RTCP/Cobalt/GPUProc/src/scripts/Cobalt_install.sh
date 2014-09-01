@@ -19,18 +19,16 @@ if [ "${RELEASE_NAME}" = "" ]; then
   exit 1
 fi
 
-nhosts=9
-for ((h = 1; h <= $nhosts; h++)); do
-  host=$(printf cbm%03u $h)
-  echo "ssh-ing to node $host"
+for HOST in ${HOSTS:-cbm001 cbm002 cbm003 cbm004 cbm005 cbm006 cbm007 cbm008}; do
+  echo "ssh-ing to node $HOST"
 
   # Escape double quotes below the following line!
-  ssh $host "
+  ssh $HOST "
   pwd
 
   # Create temp location for incoming tar file
   dl_dir=/localhome/lofarbuild/incoming
-  mkdir -p $dl_dir && cd $dl_dir || exit 1
+  mkdir -p \$dl_dir && cd \$dl_dir || exit 1
 
   # Download archive from NEXUS. -N: clobber existing files
   wget -N --tries=3 --no-check-certificate \"${NEXUS_URL}\" || exit 1

@@ -31,13 +31,7 @@
 #define NR_BASELINES     (NR_STATIONS * (NR_STATIONS + 1) / 2)
 
 #if NR_STATIONS == 288
-#  if defined NVIDIA_CUDA
-#    define BLOCK_SIZE	 8
-#  elif NR_SAMPLES_PER_CHANNEL % 6 == 0
-#    define BLOCK_SIZE	 6
-#  else
-#    define BLOCK_SIZE	 4
-#  endif
+#  define BLOCK_SIZE	 8
 #elif NR_SAMPLES_PER_CHANNEL % 24 == 0
 #  define BLOCK_SIZE	 24
 #else
@@ -46,12 +40,6 @@
 
 typedef float2 fcomplex;
 typedef float4 fcomplex2;
-/* typedef LOFAR::Cobalt::gpu::complex<float> fcomplex; */
-/* typedef fcomplex fcomplex2[2]; */
-/* typedef fcomplex fcomplex4[4]; */
-
-/* typedef __global fcomplex2 (*CorrectedDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL]; */
-/* typedef __global fcomplex4 (*VisibilitiesType)[NR_BASELINES][NR_CHANNELS]; */
 
 typedef fcomplex2 (*CorrectedDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
 typedef fcomplex (*VisibilitiesType)[NR_BASELINES][NR_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];
@@ -64,6 +52,51 @@ typedef fcomplex (*VisibilitiesType)[NR_BASELINES][NR_CHANNELS][NR_POLARIZATIONS
 inline __device__ int baseline(int major, int minor)
 {
   return major * (major + 1) / 2 + minor;
+}
+
+/*
+ * Baselines are ordered like:
+ *   0-0, 1-0, 1-1, 2-0, 2-1, 2-2, ...
+ *
+ * if 
+ *   b = baseline
+ *   x = stat1 (major)
+ *   y = stat2 (minor)
+ *   x >= y
+ * then
+ *   b_xy = x * (x + 1) / 2 + y
+ * let
+ *   u := b_x0
+ * then
+ *     u            = x * (x + 1) / 2
+ *     8u           = 4x^2 + 4x
+ *     8u + 1       = 4x^2 + 4x + 1 = (2x + 1)^2
+ *     sqrt(8u + 1) = 2x + 1
+ *                x = (sqrt(8u + 1) - 1) / 2
+ *
+ * Let us define
+ *   x'(b) = (sqrt(8b + 1) - 1) / 2
+ * which increases monotonically and is a continuation of y(b).
+ *
+ * Because y simply increases by 1 when b increases enough, we
+ * can just take the floor function to obtain the discrete y(b):
+ *   x(b) = floor(x'(b))
+ *        = floor(sqrt(8b + 1) - 1) / 2)
+ */
+
+#undef major
+inline __device__ int major(int baseline) {
+  return __float2uint_rz(sqrtf(float(8 * baseline + 1)) - 0.99999f) / 2;
+}
+
+/*
+ * And, of course
+ *  y = b - x * (x + 1)/2
+ */
+
+#undef minor
+inline __device__ int minor(int baseline, int major) {
+  return baseline - ::baseline(major, 0);
 }
 
 extern "C" {
@@ -88,6 +121,7 @@ extern "C" {
  * Pre-processor input symbols (some are tied to the execution configuration)
  * Symbol                  | Valid Values            | Description
  * ----------------------- | ----------------------- | -----------
+ * NR_STATIONS_PER_THREAD  | 1, 2, 3, 4              | the number of stations correlated by each thread
  * NR_STATIONS             | >= 1                    | number of antenna fields
  * NR_SAMPLES_PER_CHANNEL  | multiple of BLOCK_SIZE  | number of input samples per channel
  * NR_CHANNELS             | >= 1                    | number of frequency channels per subband
@@ -146,7 +180,7 @@ extern "C" {
  * transform.
  */
 
-__global__ void correlate(void *visibilitiesPtr, const void *correctedDataPtr) 
+__device__ void correlate_1x1(void *visibilitiesPtr, const void *correctedDataPtr) 
 {
   VisibilitiesType visibilities = (VisibilitiesType) visibilitiesPtr;
   CorrectedDataType correctedData = (CorrectedDataType) correctedDataPtr;
@@ -154,50 +188,10 @@ __global__ void correlate(void *visibilitiesPtr, const void *correctedDataPtr)
   __shared__ float samples[4][BLOCK_SIZE][NR_STATIONS | 1]; // avoid power-of-2
 
   int baseline = blockIdx.x * blockDim.x + threadIdx.x;
+  int channel = NR_CHANNELS == 1 ? 0 : blockIdx.y + 1;
 
-#if NR_CHANNELS == 1
-  uint channel = blockIdx.y;
-#else
-  uint channel = blockIdx.y + 1;
-#endif
-
-  /*
-   * Baselines are ordered like:
-   *   0-0, 1-0, 1-1, 2-0, 2-1, 2-2, ...
-   *
-   * if 
-   *   b = baseline
-   *   x = stat1
-   *   y = stat2
-   *   x >= y
-   * then
-   *   b_xy = x * (x + 1) / 2 + y
-   * let
-   *   u := b_x0
-   * then
-   *     u            = x * (x + 1) / 2
-   *     8u           = 4x^2 + 4x
-   *     8u + 1       = 4x^2 + 4x + 1 = (2x + 1)^2
-   *     sqrt(8u + 1) = 2x + 1
-   *                x = (sqrt(8u + 1) - 1) / 2
-   *
-   * Let us define
-   *   x'(b) = (sqrt(8b + 1) - 1) / 2
-   * which increases monotonically and is a continuation of y(b).
-   *
-   * Because y simply increases by 1 when b increases enough, we
-   * can just take the floor function to obtain the discrete y(b):
-   *   x(b) = floor(x'(b))
-   *        = floor(sqrt(8b + 1) - 1) / 2)
-   */
-
-  int x = __float2uint_rz(sqrtf(float(8 * baseline + 1)) - 0.99999f) / 2;
-
-  /*
-   * And, of course
-   *  y = b - x * (x + 1)/2
-   */
-  int y = baseline - x * (x + 1) / 2;
+  int x = ::major(baseline);
+  int y = ::minor(baseline, x);
 
   /* NOTE: stat0 >= statA holds */
   int stat_0 = x;
@@ -273,26 +267,18 @@ __global__ void correlate(void *visibilitiesPtr, const void *correctedDataPtr)
 /* __kernel void correlate_2x2(__global void *visibilitiesPtr, */
 /*                             __global const void *correctedDataPtr */
 /*                             ) */
-__global__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPtr)
+__device__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPtr)
 {
   VisibilitiesType visibilities = (VisibilitiesType) visibilitiesPtr;
   CorrectedDataType correctedData = (CorrectedDataType) correctedDataPtr;
 
-  /* __local fcomplex2 samples[2][BLOCK_SIZE][(NR_STATIONS + 1) / 2 | 1]; // avoid power-of-2 */
   __shared__ fcomplex2 samples[2][BLOCK_SIZE][(NR_STATIONS + 1) / 2 | 1]; // avoid power-of-2
 
-  /* uint block = get_global_id(0); */
-  uint block =  blockIdx.x * blockDim.x + threadIdx.x;
-  /* uint channel = get_global_id(1) + 1; */
-#if NR_CHANNELS == 1
-  uint channel = blockIdx.y;
-#else
-  uint channel = blockIdx.y + 1;
-#endif
+  int block =  blockIdx.x * blockDim.x + threadIdx.x;
+  int channel = NR_CHANNELS == 1 ? 0 : blockIdx.y + 1;
 
-  /* uint x = convert_uint_rtz(sqrt(convert_float(8 * block + 1)) - 0.99999f) / 2; */
-  int x = __float2uint_rz(sqrtf(float(8 * block + 1)) - 0.99999f) / 2;
-  int y = block - x * (x + 1) / 2;
+  int x = ::major(block);
+  int y = ::minor(block, x);
 
   /* NOTE: stat_0 >= stat_A holds */
   int stat_0 = 2 * x;
@@ -300,10 +286,6 @@ __global__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPt
 
   bool compute_correlations = stat_0 < NR_STATIONS;
 
-  /* float4 vis_0A_r = (float4) 0, vis_0A_i = (float4) 0; */
-  /* float4 vis_0B_r = (float4) 0, vis_0B_i = (float4) 0; */
-  /* float4 vis_1A_r = (float4) 0, vis_1A_i = (float4) 0; */
-  /* float4 vis_1B_r = (float4) 0, vis_1B_i = (float4) 0; */
   float4 vis_0A_r = {0, 0, 0, 0}, vis_0A_i = {0, 0, 0, 0};
   float4 vis_0B_r = {0, 0, 0, 0}, vis_0B_i = {0, 0, 0, 0};
   float4 vis_1A_r = {0, 0, 0, 0}, vis_1A_i = {0, 0, 0, 0};
@@ -312,7 +294,6 @@ __global__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPt
   for (uint major = 0; major < NR_SAMPLES_PER_CHANNEL; major += BLOCK_SIZE) {
     /* load data into local memory */
 #pragma unroll 1
-    /* for (uint i = get_local_id(0); i < BLOCK_SIZE * NR_STATIONS; i += get_local_size(0)) { */
     for (uint i = threadIdx.x; i < BLOCK_SIZE * NR_STATIONS; i += blockDim.x) {
       uint time = i % BLOCK_SIZE;
       uint stat = i / BLOCK_SIZE;
@@ -320,7 +301,6 @@ __global__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPt
       samples[stat & 1][time][stat / 2] = (*correctedData)[stat][channel][major + time];
     }
 
-    /* barrier(CLK_LOCAL_MEM_FENCE); */
     __syncthreads();
 
     if (compute_correlations) {
@@ -330,14 +310,6 @@ __global__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPt
         float4 sample_B = samples[1][time][y];
         float4 sample_1 = samples[1][time][x];
 
-        /* vis_0A_r += sample_0.xxzz * sample_A.xzxz; */
-        /* vis_0A_i += sample_0.yyww * sample_A.xzxz; */
-        /* vis_0B_r += sample_0.xxzz * sample_B.xzxz; */
-        /* vis_0B_i += sample_0.yyww * sample_B.xzxz; */
-        /* vis_1A_r += sample_1.xxzz * sample_A.xzxz; */
-        /* vis_1A_i += sample_1.yyww * sample_A.xzxz; */
-        /* vis_1B_r += sample_1.xxzz * sample_B.xzxz; */
-        /* vis_1B_i += sample_1.yyww * sample_B.xzxz; */
         vis_0A_r += SWIZZLE(sample_0,x,x,z,z) * SWIZZLE(sample_A,x,z,x,z);
         vis_0A_i += SWIZZLE(sample_0,y,y,w,w) * SWIZZLE(sample_A,x,z,x,z);
         vis_0B_r += SWIZZLE(sample_0,x,x,z,z) * SWIZZLE(sample_B,x,z,x,z);
@@ -347,14 +319,6 @@ __global__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPt
         vis_1B_r += SWIZZLE(sample_1,x,x,z,z) * SWIZZLE(sample_B,x,z,x,z);
         vis_1B_i += SWIZZLE(sample_1,y,y,w,w) * SWIZZLE(sample_B,x,z,x,z);
 
-        /* vis_0A_r += sample_0.yyww * sample_A.ywyw; */
-        /* vis_0A_i -= sample_0.xxzz * sample_A.ywyw; */
-        /* vis_0B_r += sample_0.yyww * sample_B.ywyw; */
-        /* vis_0B_i -= sample_0.xxzz * sample_B.ywyw; */
-        /* vis_1A_r += sample_1.yyww * sample_A.ywyw; */
-        /* vis_1A_i -= sample_1.xxzz * sample_A.ywyw; */
-        /* vis_1B_r += sample_1.yyww * sample_B.ywyw; */
-        /* vis_1B_i -= sample_1.xxzz * sample_B.ywyw; */
         vis_0A_r += SWIZZLE(sample_0,y,y,w,w) * SWIZZLE(sample_A,y,w,y,w);
         vis_0A_i -= SWIZZLE(sample_0,x,x,z,z) * SWIZZLE(sample_A,y,w,y,w);
         vis_0B_r += SWIZZLE(sample_0,y,y,w,w) * SWIZZLE(sample_B,y,w,y,w);
@@ -366,7 +330,6 @@ __global__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPt
       }
     }
 
-    /* barrier(CLK_LOCAL_MEM_FENCE); */
     __syncthreads();
   }
 
@@ -381,7 +344,6 @@ __global__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_0A) {
     int baseline = ::baseline(stat_0, stat_A);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_0A_r.x, vis_0A_i.x, vis_0A_r.y, vis_0A_i.y, vis_0A_r.z, vis_0A_i.z, vis_0A_r.w, vis_0A_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_0A_r.x, vis_0A_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_0A_r.y, vis_0A_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_0A_r.z, vis_0A_i.z);
@@ -390,7 +352,6 @@ __global__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_0B) {
     int baseline = ::baseline(stat_0, stat_B);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_0B_r.x, vis_0B_i.x, vis_0B_r.y, vis_0B_i.y, vis_0B_r.z, vis_0B_i.z, vis_0B_r.w, vis_0B_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_0B_r.x, vis_0B_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_0B_r.y, vis_0B_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_0B_r.z, vis_0B_i.z);
@@ -399,7 +360,6 @@ __global__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_1A) {
     int baseline = ::baseline(stat_1, stat_A);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_1A_r.x, vis_1A_i.x, vis_1A_r.y, vis_1A_i.y, vis_1A_r.z, vis_1A_i.z, vis_1A_r.w, vis_1A_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_1A_r.x, vis_1A_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_1A_r.y, vis_1A_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_1A_r.z, vis_1A_i.z);
@@ -408,7 +368,6 @@ __global__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_1B) {
     int baseline = ::baseline(stat_1, stat_B);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_1B_r.x, vis_1B_i.x, vis_1B_r.y, vis_1B_i.y, vis_1B_r.z, vis_1B_i.z, vis_1B_r.w, vis_1B_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_1B_r.x, vis_1B_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_1B_r.y, vis_1B_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_1B_r.z, vis_1B_i.z);
@@ -423,25 +382,18 @@ __global__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPt
 /* __kernel void correlate_3x3(__global void *visibilitiesPtr, */
 /*                             __global const void *correctedDataPtr */
 /*                             ) */
-__global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPtr)
+__device__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPtr)
 {
   VisibilitiesType visibilities = (VisibilitiesType) visibilitiesPtr;
   CorrectedDataType correctedData = (CorrectedDataType) correctedDataPtr;
 
   __shared__ fcomplex2 samples[3][BLOCK_SIZE][(NR_STATIONS + 2) / 3 | 1]; // avoid power-of-2
 
-  /* uint block = get_global_id(0); */
-  uint block = blockIdx.x * blockDim.x + threadIdx.x;
-  /* uint channel = get_global_id(1) + 1; */
-#if NR_CHANNELS == 1
-  uint channel = blockIdx.y;
-#else
-  uint channel = blockIdx.y + 1;
-#endif
+  int block = blockIdx.x * blockDim.x + threadIdx.x;
+  int channel = NR_CHANNELS == 1 ? 0 : blockIdx.y + 1;
 
-  /* uint x = convert_uint_rtz(sqrt(convert_float(8 * block + 1)) - 0.99999f) / 2; */
-  uint x = __float2uint_rz(sqrtf(float(8 * block + 1)) - 0.99999f) / 2;
-  uint y = block - x * (x + 1) / 2;
+  int x = ::major(block);
+  int y = ::minor(block, x);
 
   /* NOTE: stat_0 >= stat_A holds */
   int stat_0 = 3 * x;
@@ -462,7 +414,6 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
   for (uint major = 0; major < NR_SAMPLES_PER_CHANNEL; major += BLOCK_SIZE) {
     /* load data into local memory */
 #pragma unroll 1
-    /* for (uint i = get_local_id(0); i < BLOCK_SIZE * NR_STATIONS; i += get_local_size(0)) { */
     for (uint i = threadIdx.x; i < BLOCK_SIZE * NR_STATIONS; i += blockDim.x) {
       uint time = i % BLOCK_SIZE;
       uint stat = i / BLOCK_SIZE;
@@ -470,7 +421,6 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
       samples[stat % 3][time][stat / 3] = (*correctedData)[stat][channel][major + time];
     }
 
-    /* barrier(CLK_LOCAL_MEM_FENCE); */
     __syncthreads();
 
     if (compute_correlations) {
@@ -482,24 +432,6 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
         fcomplex2 sample_1 = samples[1][time][x];
         fcomplex2 sample_2 = samples[2][time][x];
 
-        /* vis_0A_r += sample_0.xxzz * sample_A.xzxz; */
-        /* vis_0A_i += sample_0.yyww * sample_A.xzxz; */
-        /* vis_0B_r += sample_0.xxzz * sample_B.xzxz; */
-        /* vis_0B_i += sample_0.yyww * sample_B.xzxz; */
-        /* vis_0C_r += sample_0.xxzz * sample_C.xzxz; */
-        /* vis_0C_i += sample_0.yyww * sample_C.xzxz; */
-        /* vis_1A_r += sample_1.xxzz * sample_A.xzxz; */
-        /* vis_1A_i += sample_1.yyww * sample_A.xzxz; */
-        /* vis_1B_r += sample_1.xxzz * sample_B.xzxz; */
-        /* vis_1B_i += sample_1.yyww * sample_B.xzxz; */
-        /* vis_1C_r += sample_1.xxzz * sample_C.xzxz; */
-        /* vis_1C_i += sample_1.yyww * sample_C.xzxz; */
-        /* vis_2A_r += sample_2.xxzz * sample_A.xzxz; */
-        /* vis_2A_i += sample_2.yyww * sample_A.xzxz; */
-        /* vis_2B_r += sample_2.xxzz * sample_B.xzxz; */
-        /* vis_2B_i += sample_2.yyww * sample_B.xzxz; */
-        /* vis_2C_r += sample_2.xxzz * sample_C.xzxz; */
-        /* vis_2C_i += sample_2.yyww * sample_C.xzxz; */
         vis_0A_r += SWIZZLE(sample_0,x,x,z,z) * SWIZZLE(sample_A,x,z,x,z);
         vis_0A_i += SWIZZLE(sample_0,y,y,w,w) * SWIZZLE(sample_A,x,z,x,z);
         vis_0B_r += SWIZZLE(sample_0,x,x,z,z) * SWIZZLE(sample_B,x,z,x,z);
@@ -519,24 +451,6 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
         vis_2C_r += SWIZZLE(sample_2,x,x,z,z) * SWIZZLE(sample_C,x,z,x,z);
         vis_2C_i += SWIZZLE(sample_2,y,y,w,w) * SWIZZLE(sample_C,x,z,x,z);
 
-        /* vis_0A_r += sample_0.yyww * sample_A.ywyw; */
-        /* vis_0A_i -= sample_0.xxzz * sample_A.ywyw; */
-        /* vis_0B_r += sample_0.yyww * sample_B.ywyw; */
-        /* vis_0B_i -= sample_0.xxzz * sample_B.ywyw; */
-        /* vis_0C_r += sample_0.yyww * sample_C.ywyw; */
-        /* vis_0C_i -= sample_0.xxzz * sample_C.ywyw; */
-        /* vis_1A_r += sample_1.yyww * sample_A.ywyw; */
-        /* vis_1A_i -= sample_1.xxzz * sample_A.ywyw; */
-        /* vis_1B_r += sample_1.yyww * sample_B.ywyw; */
-        /* vis_1B_i -= sample_1.xxzz * sample_B.ywyw; */
-        /* vis_1C_r += sample_1.yyww * sample_C.ywyw; */
-        /* vis_1C_i -= sample_1.xxzz * sample_C.ywyw; */
-        /* vis_2A_r += sample_2.yyww * sample_A.ywyw; */
-        /* vis_2A_i -= sample_2.xxzz * sample_A.ywyw; */
-        /* vis_2B_r += sample_2.yyww * sample_B.ywyw; */
-        /* vis_2B_i -= sample_2.xxzz * sample_B.ywyw; */
-        /* vis_2C_r += sample_2.yyww * sample_C.ywyw; */
-        /* vis_2C_i -= sample_2.xxzz * sample_C.ywyw; */
         vis_0A_r += SWIZZLE(sample_0,y,y,w,w) * SWIZZLE(sample_A,y,w,y,w);
         vis_0A_i -= SWIZZLE(sample_0,x,x,z,z) * SWIZZLE(sample_A,y,w,y,w);
         vis_0B_r += SWIZZLE(sample_0,y,y,w,w) * SWIZZLE(sample_B,y,w,y,w);
@@ -581,7 +495,6 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_0A) {
     int baseline = ::baseline(stat_0, stat_A);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_0A_r.x, vis_0A_i.x, vis_0A_r.y, vis_0A_i.y, vis_0A_r.z, vis_0A_i.z, vis_0A_r.w, vis_0A_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_0A_r.x, vis_0A_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_0A_r.y, vis_0A_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_0A_r.z, vis_0A_i.z);
@@ -590,7 +503,6 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_0B) {
     int baseline = ::baseline(stat_0, stat_B);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_0B_r.x, vis_0B_i.x, vis_0B_r.y, vis_0B_i.y, vis_0B_r.z, vis_0B_i.z, vis_0B_r.w, vis_0B_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_0B_r.x, vis_0B_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_0B_r.y, vis_0B_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_0B_r.z, vis_0B_i.z);
@@ -599,7 +511,6 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_0C) {
     int baseline = ::baseline(stat_0, stat_C);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_0C_r.x, vis_0C_i.x, vis_0C_r.y, vis_0C_i.y, vis_0C_r.z, vis_0C_i.z, vis_0C_r.w, vis_0C_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_0C_r.x, vis_0C_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_0C_r.y, vis_0C_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_0C_r.z, vis_0C_i.z);
@@ -608,7 +519,6 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_1A) {
     int baseline = ::baseline(stat_1, stat_A);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_1A_r.x, vis_1A_i.x, vis_1A_r.y, vis_1A_i.y, vis_1A_r.z, vis_1A_i.z, vis_1A_r.w, vis_1A_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_1A_r.x, vis_1A_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_1A_r.y, vis_1A_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_1A_r.z, vis_1A_i.z);
@@ -617,7 +527,6 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_1B) {
     int baseline = ::baseline(stat_1, stat_B);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_1B_r.x, vis_1B_i.x, vis_1B_r.y, vis_1B_i.y, vis_1B_r.z, vis_1B_i.z, vis_1B_r.w, vis_1B_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_1B_r.x, vis_1B_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_1B_r.y, vis_1B_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_1B_r.z, vis_1B_i.z);
@@ -626,7 +535,6 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_1C) {
     int baseline = ::baseline(stat_1, stat_C);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_1C_r.x, vis_1C_i.x, vis_1C_r.y, vis_1C_i.y, vis_1C_r.z, vis_1C_i.z, vis_1C_r.w, vis_1C_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_1C_r.x, vis_1C_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_1C_r.y, vis_1C_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_1C_r.z, vis_1C_i.z);
@@ -635,7 +543,6 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_2A) {
     int baseline = ::baseline(stat_2, stat_A);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_2A_r.x, vis_2A_i.x, vis_2A_r.y, vis_2A_i.y, vis_2A_r.z, vis_2A_i.z, vis_2A_r.w, vis_2A_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_2A_r.x, vis_2A_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_2A_r.y, vis_2A_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_2A_r.z, vis_2A_i.z);
@@ -644,7 +551,6 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_2B) {
     int baseline = ::baseline(stat_2, stat_B);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_2B_r.x, vis_2B_i.x, vis_2B_r.y, vis_2B_i.y, vis_2B_r.z, vis_2B_i.z, vis_2B_r.w, vis_2B_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_2B_r.x, vis_2B_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_2B_r.y, vis_2B_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_2B_r.z, vis_2B_i.z);
@@ -653,7 +559,6 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_2C) {
     int baseline = ::baseline(stat_2, stat_C);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_2C_r.x, vis_2C_i.x, vis_2C_r.y, vis_2C_i.y, vis_2C_r.z, vis_2C_i.z, vis_2C_r.w, vis_2C_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_2C_r.x, vis_2C_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_2C_r.y, vis_2C_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_2C_r.z, vis_2C_i.z);
@@ -668,25 +573,18 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
 /* __kernel void correlate_4x4(__global void *visibilitiesPtr, */
 /*                             __global const void *correctedDataPtr */
 /*                             ) */
-__global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPtr)
+__device__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPtr)
 {
   VisibilitiesType visibilities = (VisibilitiesType) visibilitiesPtr;
   CorrectedDataType correctedData = (CorrectedDataType) correctedDataPtr;
 
   __shared__ fcomplex2 samples[4][BLOCK_SIZE][(NR_STATIONS + 3) / 4 | 1]; // avoid power-of-2
 
-  /* uint block = get_global_id(0); */
-  uint block = blockIdx.x * blockDim.x + threadIdx.x;
-  /* uint channel = get_global_id(1) + 1; */
-#if NR_CHANNELS == 1
-  uint channel = blockIdx.y;
-#else
-  uint channel = blockIdx.y + 1;
-#endif
+  int block = blockIdx.x * blockDim.x + threadIdx.x;
+  int channel = NR_CHANNELS == 1 ? 0 : blockIdx.y + 1;
 
-  /* uint x = convert_uint_rtz(sqrt(convert_float(8 * block + 1)) - 0.99999f) / 2; */
-  int x = __float2uint_rz(sqrtf(float(8 * block + 1)) - 0.99999f) / 2;
-  int y = block - x * (x + 1) / 2;
+  int x = ::major(block);
+  int y = ::minor(block, x);
 
   /* NOTE: stat_0 >= stat_A holds */
   int stat_0 = 4 * x;
@@ -694,22 +592,6 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
 
   bool compute_correlations = stat_0 < NR_STATIONS;
 
-  /* float4 vis_0A_r = (float4) 0, vis_0A_i = (float4) 0; */
-  /* float4 vis_0B_r = (float4) 0, vis_0B_i = (float4) 0; */
-  /* float4 vis_0C_r = (float4) 0, vis_0C_i = (float4) 0; */
-  /* float4 vis_0D_r = (float4) 0, vis_0D_i = (float4) 0; */
-  /* float4 vis_1A_r = (float4) 0, vis_1A_i = (float4) 0; */
-  /* float4 vis_1B_r = (float4) 0, vis_1B_i = (float4) 0; */
-  /* float4 vis_1C_r = (float4) 0, vis_1C_i = (float4) 0; */
-  /* float4 vis_1D_r = (float4) 0, vis_1D_i = (float4) 0; */
-  /* float4 vis_2A_r = (float4) 0, vis_2A_i = (float4) 0; */
-  /* float4 vis_2B_r = (float4) 0, vis_2B_i = (float4) 0; */
-  /* float4 vis_2C_r = (float4) 0, vis_2C_i = (float4) 0; */
-  /* float4 vis_2D_r = (float4) 0, vis_2D_i = (float4) 0; */
-  /* float4 vis_3A_r = (float4) 0, vis_3A_i = (float4) 0; */
-  /* float4 vis_3B_r = (float4) 0, vis_3B_i = (float4) 0; */
-  /* float4 vis_3C_r = (float4) 0, vis_3C_i = (float4) 0; */
-  /* float4 vis_3D_r = (float4) 0, vis_3D_i = (float4) 0; */
   float4 vis_0A_r = {0, 0, 0, 0}, vis_0A_i = {0, 0, 0, 0};
   float4 vis_0B_r = {0, 0, 0, 0}, vis_0B_i = {0, 0, 0, 0};
   float4 vis_0C_r = {0, 0, 0, 0}, vis_0C_i = {0, 0, 0, 0};
@@ -730,7 +612,6 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
   for (uint major = 0; major < NR_SAMPLES_PER_CHANNEL; major += BLOCK_SIZE) {
     /* load data into local memory */
 #pragma unroll 1
-    /* for (uint i = get_local_id(0); i < BLOCK_SIZE * NR_STATIONS; i += get_local_size(0)) { */
     for (uint i = threadIdx.x; i < BLOCK_SIZE * NR_STATIONS; i += blockDim.x) {
       uint time = i % BLOCK_SIZE;
       uint stat = i / BLOCK_SIZE;
@@ -738,7 +619,6 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
       samples[stat % 4][time][stat / 4] = (*correctedData)[stat][channel][major + time];
     }
 
-    /* barrier(CLK_LOCAL_MEM_FENCE); */
     __syncthreads();
 
     if (compute_correlations) {
@@ -752,38 +632,6 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
         fcomplex2 sample_2 = samples[2][time][x];
         fcomplex2 sample_3 = samples[3][time][x];
 
-        /* vis_0A_r += sample_0.xxzz * sample_A.xzxz; */
-        /* vis_0A_i += sample_0.yyww * sample_A.xzxz; */
-        /* vis_0B_r += sample_0.xxzz * sample_B.xzxz; */
-        /* vis_0B_i += sample_0.yyww * sample_B.xzxz; */
-        /* vis_0C_r += sample_0.xxzz * sample_C.xzxz; */
-        /* vis_0C_i += sample_0.yyww * sample_C.xzxz; */
-        /* vis_0D_r += sample_0.xxzz * sample_D.xzxz; */
-        /* vis_0D_i += sample_0.yyww * sample_D.xzxz; */
-        /* vis_1A_r += sample_1.xxzz * sample_A.xzxz; */
-        /* vis_1A_i += sample_1.yyww * sample_A.xzxz; */
-        /* vis_1B_r += sample_1.xxzz * sample_B.xzxz; */
-        /* vis_1B_i += sample_1.yyww * sample_B.xzxz; */
-        /* vis_1C_r += sample_1.xxzz * sample_C.xzxz; */
-        /* vis_1C_i += sample_1.yyww * sample_C.xzxz; */
-        /* vis_1D_r += sample_1.xxzz * sample_D.xzxz; */
-        /* vis_1D_i += sample_1.yyww * sample_D.xzxz; */
-        /* vis_2A_r += sample_2.xxzz * sample_A.xzxz; */
-        /* vis_2A_i += sample_2.yyww * sample_A.xzxz; */
-        /* vis_2B_r += sample_2.xxzz * sample_B.xzxz; */
-        /* vis_2B_i += sample_2.yyww * sample_B.xzxz; */
-        /* vis_2C_r += sample_2.xxzz * sample_C.xzxz; */
-        /* vis_2C_i += sample_2.yyww * sample_C.xzxz; */
-        /* vis_2D_r += sample_2.xxzz * sample_D.xzxz; */
-        /* vis_2D_i += sample_2.yyww * sample_D.xzxz; */
-        /* vis_3A_r += sample_3.xxzz * sample_A.xzxz; */
-        /* vis_3A_i += sample_3.yyww * sample_A.xzxz; */
-        /* vis_3B_r += sample_3.xxzz * sample_B.xzxz; */
-        /* vis_3B_i += sample_3.yyww * sample_B.xzxz; */
-        /* vis_3C_r += sample_3.xxzz * sample_C.xzxz; */
-        /* vis_3C_i += sample_3.yyww * sample_C.xzxz; */
-        /* vis_3D_r += sample_3.xxzz * sample_D.xzxz; */
-        /* vis_3D_i += sample_3.yyww * sample_D.xzxz; */
         vis_0A_r += SWIZZLE(sample_0,x,x,z,z) * SWIZZLE(sample_A,x,z,x,z);
         vis_0A_i += SWIZZLE(sample_0,y,y,w,w) * SWIZZLE(sample_A,x,z,x,z);
         vis_0B_r += SWIZZLE(sample_0,x,x,z,z) * SWIZZLE(sample_B,x,z,x,z);
@@ -817,38 +665,6 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
         vis_3D_r += SWIZZLE(sample_3,x,x,z,z) * SWIZZLE(sample_D,x,z,x,z);
         vis_3D_i += SWIZZLE(sample_3,y,y,w,w) * SWIZZLE(sample_D,x,z,x,z);
 
-        /* vis_0A_r += sample_0.yyww * sample_A.ywyw; */
-        /* vis_0A_i -= sample_0.xxzz * sample_A.ywyw; */
-        /* vis_0B_r += sample_0.yyww * sample_B.ywyw; */
-        /* vis_0B_i -= sample_0.xxzz * sample_B.ywyw; */
-        /* vis_0C_r += sample_0.yyww * sample_C.ywyw; */
-        /* vis_0C_i -= sample_0.xxzz * sample_C.ywyw; */
-        /* vis_0D_r += sample_0.yyww * sample_D.ywyw; */
-        /* vis_0D_i -= sample_0.xxzz * sample_D.ywyw; */
-        /* vis_1A_r += sample_1.yyww * sample_A.ywyw; */
-        /* vis_1A_i -= sample_1.xxzz * sample_A.ywyw; */
-        /* vis_1B_r += sample_1.yyww * sample_B.ywyw; */
-        /* vis_1B_i -= sample_1.xxzz * sample_B.ywyw; */
-        /* vis_1C_r += sample_1.yyww * sample_C.ywyw; */
-        /* vis_1C_i -= sample_1.xxzz * sample_C.ywyw; */
-        /* vis_1D_r += sample_1.yyww * sample_D.ywyw; */
-        /* vis_1D_i -= sample_1.xxzz * sample_D.ywyw; */
-        /* vis_2A_r += sample_2.yyww * sample_A.ywyw; */
-        /* vis_2A_i -= sample_2.xxzz * sample_A.ywyw; */
-        /* vis_2B_r += sample_2.yyww * sample_B.ywyw; */
-        /* vis_2B_i -= sample_2.xxzz * sample_B.ywyw; */
-        /* vis_2C_r += sample_2.yyww * sample_C.ywyw; */
-        /* vis_2C_i -= sample_2.xxzz * sample_C.ywyw; */
-        /* vis_2D_r += sample_2.yyww * sample_D.ywyw; */
-        /* vis_2D_i -= sample_2.xxzz * sample_D.ywyw; */
-        /* vis_3A_r += sample_3.yyww * sample_A.ywyw; */
-        /* vis_3A_i -= sample_3.xxzz * sample_A.ywyw; */
-        /* vis_3B_r += sample_3.yyww * sample_B.ywyw; */
-        /* vis_3B_i -= sample_3.xxzz * sample_B.ywyw; */
-        /* vis_3C_r += sample_3.yyww * sample_C.ywyw; */
-        /* vis_3C_i -= sample_3.xxzz * sample_C.ywyw; */
-        /* vis_3D_r += sample_3.yyww * sample_D.ywyw; */
-        /* vis_3D_i -= sample_3.xxzz * sample_D.ywyw; */
         vis_0A_r += SWIZZLE(sample_0,y,y,w,w) * SWIZZLE(sample_A,y,w,y,w);
         vis_0A_i -= SWIZZLE(sample_0,x,x,z,z) * SWIZZLE(sample_A,y,w,y,w);
         vis_0B_r += SWIZZLE(sample_0,y,y,w,w) * SWIZZLE(sample_B,y,w,y,w);
@@ -884,7 +700,6 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
       }
     }
 
-    /* barrier(CLK_LOCAL_MEM_FENCE); */
     __syncthreads();
   }
 
@@ -916,7 +731,6 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_0A) {
     int baseline = ::baseline(stat_0, stat_A);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_0A_r.x, vis_0A_i.x, vis_0A_r.y, vis_0A_i.y, vis_0A_r.z, vis_0A_i.z, vis_0A_r.w, vis_0A_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_0A_r.x, vis_0A_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_0A_r.y, vis_0A_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_0A_r.z, vis_0A_i.z);
@@ -925,7 +739,6 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_0B) {
     int baseline = ::baseline(stat_0, stat_B);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_0B_r.x, vis_0B_i.x, vis_0B_r.y, vis_0B_i.y, vis_0B_r.z, vis_0B_i.z, vis_0B_r.w, vis_0B_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_0B_r.x, vis_0B_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_0B_r.y, vis_0B_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_0B_r.z, vis_0B_i.z);
@@ -934,7 +747,6 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_0C) {
     int baseline = ::baseline(stat_0, stat_C);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_0C_r.x, vis_0C_i.x, vis_0C_r.y, vis_0C_i.y, vis_0C_r.z, vis_0C_i.z, vis_0C_r.w, vis_0C_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_0C_r.x, vis_0C_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_0C_r.y, vis_0C_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_0C_r.z, vis_0C_i.z);
@@ -943,7 +755,6 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_0D) {
     int baseline = ::baseline(stat_0, stat_D);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_0D_r.x, vis_0D_i.x, vis_0D_r.y, vis_0D_i.y, vis_0D_r.z, vis_0D_i.z, vis_0D_r.w, vis_0D_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_0D_r.x, vis_0D_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_0D_r.y, vis_0D_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_0D_r.z, vis_0D_i.z);
@@ -952,7 +763,6 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_1A) {
     int baseline = ::baseline(stat_1, stat_A);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_1A_r.x, vis_1A_i.x, vis_1A_r.y, vis_1A_i.y, vis_1A_r.z, vis_1A_i.z, vis_1A_r.w, vis_1A_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_1A_r.x, vis_1A_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_1A_r.y, vis_1A_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_1A_r.z, vis_1A_i.z);
@@ -961,7 +771,6 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_1B) {
     int baseline = ::baseline(stat_1, stat_B);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_1B_r.x, vis_1B_i.x, vis_1B_r.y, vis_1B_i.y, vis_1B_r.z, vis_1B_i.z, vis_1B_r.w, vis_1B_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_1B_r.x, vis_1B_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_1B_r.y, vis_1B_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_1B_r.z, vis_1B_i.z);
@@ -970,7 +779,6 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_1C) {
     int baseline = ::baseline(stat_1, stat_C);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_1C_r.x, vis_1C_i.x, vis_1C_r.y, vis_1C_i.y, vis_1C_r.z, vis_1C_i.z, vis_1C_r.w, vis_1C_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_1C_r.x, vis_1C_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_1C_r.y, vis_1C_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_1C_r.z, vis_1C_i.z);
@@ -979,7 +787,6 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_1D) {
     int baseline = ::baseline(stat_1, stat_D);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_1D_r.x, vis_1D_i.x, vis_1D_r.y, vis_1D_i.y, vis_1D_r.z, vis_1D_i.z, vis_1D_r.w, vis_1D_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_1D_r.x, vis_1D_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_1D_r.y, vis_1D_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_1D_r.z, vis_1D_i.z);
@@ -988,7 +795,6 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_2A) {
     int baseline = ::baseline(stat_2, stat_A);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_2A_r.x, vis_2A_i.x, vis_2A_r.y, vis_2A_i.y, vis_2A_r.z, vis_2A_i.z, vis_2A_r.w, vis_2A_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_2A_r.x, vis_2A_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_2A_r.y, vis_2A_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_2A_r.z, vis_2A_i.z);
@@ -997,7 +803,6 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_2B) {
     int baseline = ::baseline(stat_2, stat_B);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_2B_r.x, vis_2B_i.x, vis_2B_r.y, vis_2B_i.y, vis_2B_r.z, vis_2B_i.z, vis_2B_r.w, vis_2B_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_2B_r.x, vis_2B_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_2B_r.y, vis_2B_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_2B_r.z, vis_2B_i.z);
@@ -1006,7 +811,6 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_2C) {
     int baseline = ::baseline(stat_2, stat_C);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_2C_r.x, vis_2C_i.x, vis_2C_r.y, vis_2C_i.y, vis_2C_r.z, vis_2C_i.z, vis_2C_r.w, vis_2C_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_2C_r.x, vis_2C_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_2C_r.y, vis_2C_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_2C_r.z, vis_2C_i.z);
@@ -1015,7 +819,6 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_2D) {
     int baseline = ::baseline(stat_2, stat_D);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_2D_r.x, vis_2D_i.x, vis_2D_r.y, vis_2D_i.y, vis_2D_r.z, vis_2D_i.z, vis_2D_r.w, vis_2D_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_2D_r.x, vis_2D_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_2D_r.y, vis_2D_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_2D_r.z, vis_2D_i.z);
@@ -1024,7 +827,6 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_3A) {
     int baseline = ::baseline(stat_3, stat_A);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_3A_r.x, vis_3A_i.x, vis_3A_r.y, vis_3A_i.y, vis_3A_r.z, vis_3A_i.z, vis_3A_r.w, vis_3A_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_3A_r.x, vis_3A_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_3A_r.y, vis_3A_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_3A_r.z, vis_3A_i.z);
@@ -1033,7 +835,6 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_3B) {
     int baseline = ::baseline(stat_3, stat_B);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_3B_r.x, vis_3B_i.x, vis_3B_r.y, vis_3B_i.y, vis_3B_r.z, vis_3B_i.z, vis_3B_r.w, vis_3B_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_3B_r.x, vis_3B_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_3B_r.y, vis_3B_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_3B_r.z, vis_3B_i.z);
@@ -1042,7 +843,6 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_3C) {
     int baseline = ::baseline(stat_3, stat_C);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_3C_r.x, vis_3C_i.x, vis_3C_r.y, vis_3C_i.y, vis_3C_r.z, vis_3C_i.z, vis_3C_r.w, vis_3C_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_3C_r.x, vis_3C_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_3C_r.y, vis_3C_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_3C_r.z, vis_3C_i.z);
@@ -1051,11 +851,28 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_3D) {
     int baseline = ::baseline(stat_3, stat_D);
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_3D_r.x, vis_3D_i.x, vis_3D_r.y, vis_3D_i.y, vis_3D_r.z, vis_3D_i.z, vis_3D_r.w, vis_3D_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_3D_r.x, vis_3D_i.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(vis_3D_r.y, vis_3D_i.y);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_3D_r.z, vis_3D_i.z);
     (*visibilities)[baseline][channel][1][1] = make_float2(vis_3D_r.w, vis_3D_i.w);
+  }
+}
+
+__global__ void correlate(void *visibilitiesPtr, const void *correctedDataPtr)
+{
+  switch (NR_STATIONS_PER_THREAD) {
+    case 1:
+      correlate_1x1(visibilitiesPtr, correctedDataPtr);
+      break;
+    case 2:
+      correlate_2x2(visibilitiesPtr, correctedDataPtr);
+      break;
+    case 3:
+      correlate_3x3(visibilitiesPtr, correctedDataPtr);
+      break;
+    case 4:
+      correlate_4x4(visibilitiesPtr, correctedDataPtr);
+      break;
   }
 }
 

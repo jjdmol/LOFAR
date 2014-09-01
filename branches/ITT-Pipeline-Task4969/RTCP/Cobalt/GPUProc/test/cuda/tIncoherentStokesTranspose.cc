@@ -62,7 +62,7 @@ void runTest( gpu::Context &ctx, gpu::Stream &stream )
   IncoherentStokesTransposeKernel::Parameters params(ps);
 
   // Update the parameters ourselves.
-  params.nrChannelsPerSubband = NR_CHANNELS;
+  params.nrChannels = NR_CHANNELS;
   params.nrSamplesPerChannel = NR_SAMPLES_PER_CHANNEL;
   params.nrStations = NR_STATIONS;
 
@@ -100,9 +100,8 @@ void runTest( gpu::Context &ctx, gpu::Stream &stream )
   fill(hOutput.data(), hOutput.data() + hOutput.num_elements(), fcomplex());
 
   // Create kernel
-  IncoherentStokesTransposeKernel::Buffers buffers(dInput, dOutput);
   auto_ptr<IncoherentStokesTransposeKernel> 
-    kernel(factory.create(stream, buffers));
+    kernel(factory.create(stream, dInput, dOutput));
 
   // Run kernel
   stream.writeBuffer(dInput, hInput, false);

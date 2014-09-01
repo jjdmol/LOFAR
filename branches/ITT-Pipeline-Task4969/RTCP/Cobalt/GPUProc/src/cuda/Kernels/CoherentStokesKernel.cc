@@ -31,8 +31,8 @@
 #include <Common/LofarLogger.h>
 #include <CoInterface/BlockID.h>
 #include <CoInterface/Align.h>
+#include <CoInterface/Config.h>
 #include <CoInterface/fpequals.h>
-#include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_utils.h>
 
 namespace LOFAR
@@ -46,16 +46,15 @@ namespace LOFAR
     string CoherentStokesKernel::theirFunction = "coherentStokes";
 
     CoherentStokesKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters(ps),
+      Kernel::Parameters("coherentStokes"),
+      nrChannels(ps.settings.beamFormer.coherentSettings.nrChannels),
+      nrSamplesPerChannel(ps.settings.blockSize / nrChannels),
+
       nrTABs(ps.settings.beamFormer.maxNrCoherentTABsPerSAP()),
       nrStokes(ps.settings.beamFormer.coherentSettings.nrStokes),
       outputComplexVoltages(ps.settings.beamFormer.coherentSettings.type == STOKES_XXYY),
-      timeIntegrationFactor(
-        ps.settings.beamFormer.coherentSettings.timeIntegrationFactor)
+      timeIntegrationFactor(ps.settings.beamFormer.coherentSettings.timeIntegrationFactor)
      {
-      nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
-      nrSamplesPerChannel  = ps.settings.beamFormer.coherentSettings.nrSamples;
-
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.CoherentStokesKernel.dumpOutput", false);
       dumpFilePattern = 
@@ -64,11 +63,30 @@ namespace LOFAR
     }
 
 
+    size_t CoherentStokesKernel::Parameters::bufferSize(BufferType bufferType) const
+    {
+
+      switch (bufferType) {
+      case CoherentStokesKernel::INPUT_DATA:
+        return
+          (size_t) nrChannels * nrSamplesPerChannel *
+            NR_POLARIZATIONS * nrTABs * sizeof(std::complex<float>);
+
+      case CoherentStokesKernel::OUTPUT_DATA:
+        return 
+          (size_t) nrTABs * nrStokes * nrSamplesPerChannel /
+            timeIntegrationFactor * nrChannels * sizeof(float);
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
+
+
     CoherentStokesKernel::CoherentStokesKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
+      CompiledKernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       ASSERT(params.timeIntegrationFactor > 0);
       ASSERT(params.nrSamplesPerChannel % params.timeIntegrationFactor == 0);
@@ -91,17 +109,17 @@ namespace LOFAR
       const unsigned defaultNrChannelsPerBlock = 16;
       const unsigned defaultNrTABsPerBlock     = 16;
 
-      const unsigned minNrChannelsPerBlock  = std::min(params.nrChannelsPerSubband,
-                                                      defaultNrChannelsPerBlock);
+      const unsigned minNrChannelsPerBlock  = std::min(params.nrChannels,
+                                                       defaultNrChannelsPerBlock);
       const unsigned minTimeParallelThreads = 1;
       const unsigned minNrTABsPerBlock      = std::min(params.nrTABs,
                                                        defaultNrTABsPerBlock);
 
       const gpu::Block maxLocalWorkSize     = device.getMaxBlockDims();
-      const unsigned maxNrChannelsPerBlock  = std::min(params.nrChannelsPerSubband,
+      const unsigned maxNrChannelsPerBlock  = std::min(params.nrChannels,
                                                        maxLocalWorkSize.x);
       const unsigned maxTimeParallelThreads = 
-              std::min(params.nrSamplesPerChannel / params.timeIntegrationFactor,
+              gcd(params.nrSamplesPerChannel / params.timeIntegrationFactor,
                                                        maxLocalWorkSize.y);
       const unsigned maxNrTABsPerBlock      = std::min(params.nrTABs,
                                                        maxLocalWorkSize.z);
@@ -123,7 +141,7 @@ namespace LOFAR
                nrChannelsPerBlock = align(++nrChannelsPerBlock, defaultNrChannelsPerBlock)) {
 
             // Grid dims in terms of #threads (Note: i.e. OpenCL semantics!)
-            unsigned nrChannelThreads      = align(params.nrChannelsPerSubband,
+            unsigned nrChannelThreads      = align(params.nrChannels,
                                                    nrChannelsPerBlock);
             unsigned nrTimeParallelThreads = align(maxTimeParallelThreads,
                                                    nrTimeParallelThreadsPerBlock);
@@ -219,9 +237,9 @@ namespace LOFAR
       setArg(2, itsTimeParallelFactor); // could be a kernel define, but not yet known at kernel compilation
 
 
-      nrOperations = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * (params.nrStokes == 1 ? 8 : 20 + 2.0 / params.timeIntegrationFactor);
-      nrBytesRead = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * NR_POLARIZATIONS * sizeof(std::complex<float>);
-      nrBytesWritten = (size_t) params.nrTABs * params.nrStokes * params.nrSamplesPerChannel / params.timeIntegrationFactor * params.nrChannelsPerSubband * sizeof(float);
+      nrOperations = (size_t) params.nrChannels * params.nrSamplesPerChannel * params.nrTABs * (params.nrStokes == 1 ? 8 : 20 + 2.0 / params.timeIntegrationFactor);
+      nrBytesRead = (size_t) params.nrChannels * params.nrSamplesPerChannel * params.nrTABs * NR_POLARIZATIONS * sizeof(std::complex<float>);
+      nrBytesWritten = (size_t) params.nrTABs * params.nrStokes * params.nrSamplesPerChannel / params.timeIntegrationFactor * params.nrChannels * sizeof(float);
     }
 
     std::ostream& operator<<(std::ostream& os,
@@ -251,30 +269,16 @@ namespace LOFAR
 
     //--------  Template specializations for KernelFactory  --------//
 
-    template<> size_t
-    KernelFactory<CoherentStokesKernel>::bufferSize(BufferType bufferType) const
-    {
-
-      switch (bufferType) {
-      case CoherentStokesKernel::INPUT_DATA:
-        return
-          (size_t) itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
-            NR_POLARIZATIONS * itsParameters.nrTABs * sizeof(std::complex<float>);
-
-      case CoherentStokesKernel::OUTPUT_DATA:
-        return 
-          (size_t) itsParameters.nrTABs * itsParameters.nrStokes * itsParameters.nrSamplesPerChannel /
-            itsParameters.timeIntegrationFactor * itsParameters.nrChannelsPerSubband * sizeof(float);
-      default:
-        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
-      }
-    }
-
     template<> CompileDefinitions
     KernelFactory<CoherentStokesKernel>::compileDefinitions() const
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
+
+      defs["NR_CHANNELS"] = lexical_cast<string>(itsParameters.nrChannels);
+      defs["NR_SAMPLES_PER_CHANNEL"] = 
+        lexical_cast<string>(itsParameters.nrSamplesPerChannel);
+
       defs["NR_TABS"] =
         lexical_cast<string>(itsParameters.nrTABs);
       defs["COMPLEX_VOLTAGES"] =

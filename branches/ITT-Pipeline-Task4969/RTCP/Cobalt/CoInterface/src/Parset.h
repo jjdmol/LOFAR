@@ -47,6 +47,10 @@ namespace LOFAR
 
     enum StokesType { STOKES_I = 0, STOKES_IQUV, STOKES_XXYY, INVALID_STOKES = -1 };
 
+    StokesType stokesType( const std::string &name );
+    size_t nrStokes( StokesType type );
+    std::string stokesType( StokesType type );
+
     // All settings relevant for an observation (well, it should become that,
     // we don't copy all Parset values yet!).
  
@@ -58,13 +62,18 @@ namespace LOFAR
       // Whether the observation runs at real time. Non-real time
       // observations are not allowed to lose data.
       //
-      // key: OLAP.realTime
+      // key: Cobalt.realTime
       bool realTime;
 
       // The SAS/MAC observation number
       //
       // key: Observation.ObsID
       unsigned observationID;
+
+      // Command stream, or null: if not used
+      //
+      // key: Cobalt.commandStream
+      std::string commandStream;
 
       // Specified observation start time, in seconds since 1970.
       //
@@ -86,6 +95,9 @@ namespace LOFAR
 
       // The bandwidth of a single subband, in Hz
       double subbandWidth() const;
+
+      // The length of an input sample, in s
+      double sampleDuration() const;
 
       // The number of samples in one block of one subband.
       //
@@ -112,17 +124,17 @@ namespace LOFAR
       struct Corrections {
         // Whether the station band pass should be corrected for
         //
-        // key: OLAP.correctBandPass
+        // key: Cobalt.correctBandPass
         bool bandPass;
 
         // Whether the station clock offsets should be corrected for
         //
-        // key: OLAP.correctClocks
+        // key: Cobalt.correctClocks
         bool clock;
 
         // Whether to dedisperse tied-array beams
         //
-        // key: OLAP.coherentDedisperseChannels
+        // key: Cobalt.BeamFormer.coherentDedisperseChannels
         bool dedisperse;
       };
       
@@ -131,7 +143,7 @@ namespace LOFAR
       struct DelayCompensation {
         // Whether geometric delays should be compensated for
         //
-        // key: OLAP.delayCompensation
+        // key: Cobalt.delayCompensation
         bool enabled;
 
         // The ITRF position to compensate delays to
@@ -220,6 +232,11 @@ namespace LOFAR
       // length: len(OLAP.storageStationNames)
       std::vector<struct AntennaField> antennaFields;
 
+      // A list of the stations used in the observation
+      //
+      // key: Observation.VirtualInstrument.stationList
+      std::string rawStationList;
+
       ssize_t antennaFieldIndex(const std::string &name) const;
 
       /*
@@ -300,8 +317,8 @@ namespace LOFAR
 
         // Two angles within the coordinate type (RA/DEC, etc)
         //
-        // key: *.absoluteAngle1
-        // key: *.absoluteAngle2
+        // key: *.angle1
+        // key: *.angle2
         double angle1;
         double angle2;
       };
@@ -366,7 +383,7 @@ namespace LOFAR
 
         // Number of requested frequency channels per subband
         //
-        // key: Observation.channelsPerSubband
+        // key: Cobalt.Correlator.nrChannelsPerSubband
         unsigned nrChannels;
 
         // The bandwidth of a single channel, in Hz
@@ -382,7 +399,7 @@ namespace LOFAR
         // The number of blocks to integrate to obtain the final
         // integration time.
         //
-        // key: OLAP.IONProc.integrationSteps
+        // key: Cobalt.Correlator.nrBlocksPerIntegration
         size_t nrBlocksPerIntegration;
 
         // The total integration time of all blocks, in seconds.
@@ -414,6 +431,8 @@ namespace LOFAR
         std::vector<struct Station> stations;
 
         struct File {
+          size_t streamNr;
+
           struct FileLocation location;
         };
 
@@ -520,6 +539,11 @@ namespace LOFAR
         // size: len(Observation.nrBeams)
         std::vector<struct SAP> SAPs;
 
+        // Return whether there are any (in)coherent TABs specified in the
+        // observation. These functions are valid even if enabled == false.
+        bool anyCoherentTABs() const;
+        bool anyIncoherentTABs() const;
+
         size_t maxNrTABsPerSAP() const;
         size_t maxNrCoherentTABsPerSAP() const;
         size_t maxNrIncoherentTABsPerSAP() const;
@@ -562,18 +586,18 @@ namespace LOFAR
 
         // Settings for Coherent Stokes output
         //
-        // key: OLAP.CNProc_CoherentStokes.*
+        // key: Cobalt.BeamFormer.CoherentStokes.*
         struct StokesSettings coherentSettings;
 
         // Settings for Incoherent Stokes output
         //
-        // key: OLAP.CNProc_IncoherentStokes.*
+        // key: Cobalt.BeamFormer.IncoherentStokes.*
         struct StokesSettings incoherentSettings;
 
 
         // Size of FFT for coherent dedispersion
         //
-        // key: OLAP.CNProc.dedispersionFFTsize
+        // key: Cobalt.BeamFormer.dedispersionFFTsize
         size_t dedispersionFFTsize;
       };
 
@@ -694,13 +718,6 @@ namespace LOFAR
 
       std::string                 PVSS_TempObsName() const;
 
-      // Return the global, non file specific, LTA feedback parameters.
-      // \note Details about the meaning of the different meta-data parameters
-      // can be found in the XSD that describes the Submission Information
-      // Package (sip) for the LTA.
-      // \see http://proposal.astron.nl/schemas/LTA-SIP.xsd
-      Parset                      getGlobalLTAFeedbackParameters() const;
-
     private:
       const std::string itsName;
 
@@ -729,13 +746,6 @@ namespace LOFAR
       double                      maxObservationFrequency(const struct ObservationSettings& settings,
                                                           double subbandWidth) const;
       unsigned                    calcNrDelayCompensationChannels(const struct ObservationSettings& settings) const;
-
-      // If a parset key is renamed, this function allows the old
-      // name to be used as a fall-back.
-      //
-      // Returns the name of the key in the parset, or `newname' if
-      // neither key is defined.
-      std::string renamedKey(const std::string &newname, const std::string &oldname) const;
     };
   } // namespace Cobalt
 } // namespace LOFAR

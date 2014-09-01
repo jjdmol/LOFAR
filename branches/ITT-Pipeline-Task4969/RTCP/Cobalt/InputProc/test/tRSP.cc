@@ -46,12 +46,6 @@ void report( const string &filename )
   // read header
   f.read( &packet.header, sizeof (RSP::Header) );
 
-#ifdef WORDS_BIGENDIAN
-  dataConvert(LittleEndian, packet.header.configuration);
-  dataConvert(LittleEndian, packet.header.timestamp);
-  dataConvert(LittleEndian, packet.header.blockSequenceNumber);
-#endif
-
   cout << "RSP version:  " << (int)packet.header.version << endl;
   cout << "RSP board nr: " << packet.rspBoard() << endl;
   cout << "Payload OK:   " << (packet.payloadError() ? "NO" : "YES") << endl;

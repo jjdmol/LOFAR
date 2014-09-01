@@ -26,7 +26,6 @@
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
 #include <GPUProc/Kernels/BandPassCorrectionKernel.h>
-#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
 #include <GPUProc/PerformanceCounter.h>
 #include <CoInterface/BlockID.h>
 
@@ -61,14 +60,10 @@ int main() {
   // Get the buffers as created by factory
   gpu::DeviceMemory 
     inputData(ctx, factory.bufferSize(BandPassCorrectionKernel::INPUT_DATA)),
-    filteredData(ctx, factory.bufferSize(BandPassCorrectionKernel::OUTPUT_DATA)),
-    bandPassCorrectionWeights(ctx, factory.bufferSize(BandPassCorrectionKernel::BAND_PASS_CORRECTION_WEIGHTS));
+    filteredData(ctx, factory.bufferSize(BandPassCorrectionKernel::OUTPUT_DATA));
 
-  BandPassCorrectionKernel::Buffers buffers(inputData, filteredData, bandPassCorrectionWeights);
+  auto_ptr<BandPassCorrectionKernel> kernel(factory.create(stream, inputData, filteredData));
 
-  auto_ptr<BandPassCorrectionKernel> kernel(factory.create(stream, buffers));
-
-  PerformanceCounter counter(ctx);
   BlockID blockId;
   kernel->enqueue(blockId);
   stream.synchronize();

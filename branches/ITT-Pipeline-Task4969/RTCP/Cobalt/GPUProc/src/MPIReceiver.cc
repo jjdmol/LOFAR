@@ -23,8 +23,6 @@
 #include "MPIReceiver.h"
 #include <InputProc/Transpose/MPIProtocol.h>
 
-
-
 namespace LOFAR
 {
   namespace Cobalt
@@ -61,16 +59,15 @@ namespace LOFAR
       nrBitsPerSample(i_nrBitsPerSample)
     {}
 
-    template<typename SampleT> void MPIReceiver::receiveInput(size_t nrBlocks)
+    template<typename SampleT> void MPIReceiver::receiveInput()
     {
       NSTimer receiveTimer("MPI: Receive station data", true, true);
      
       // RECEIVE: Set up to receive our subbands as indicated by subbandIndices
-#ifdef HAVE_MPI
       MPIReceiveStations receiver(nrStations, subbandIndices, 
                                   nrSamplesPerSubband);
 
-      //Fill the pool with data items
+      // Fill the pool with data items
       size_t N_PoolItems = 4;
       for (size_t i = 0; i < N_PoolItems; i++)
       {
@@ -85,17 +82,13 @@ namespace LOFAR
         mpiPool.free.append(mpiData, false);
       }
 
-#else // ?
-      DirectInput &receiver = DirectInput::instance();
-#endif
+      bool allDone = false;
 
       // Receive input from StationInput::sendInputToPipeline.
       //
       // Start processing from block -1, and don't process anything if the
       // observation is empty.
-      if (nrBlocks > 0)
-        for (ssize_t block = -1; 
-           block < ssize_t(nrBlocks); block++) 
+      for (ssize_t block = -1; !allDone; block++) 
       {
         // Receive the samples from all subbands from the ant fields for this block.
         LOG_INFO_STR("[block " << block << "] Collecting input buffers");
@@ -120,7 +113,7 @@ namespace LOFAR
 
         if (block > 2) // allow warmup before starting the timers
           receiveTimer.start();
-        receiver.receiveBlock<SampleT>(data, metaData);
+        allDone = receiver.receiveBlock<SampleT>(data, metaData);
         if (block > 2) 
           receiveTimer.stop();
 
@@ -129,29 +122,28 @@ namespace LOFAR
         else
           LOG_INFO_STR("[block " << block << "] Input received");
 
-        mpiPool.filled.append(mpiData);
+        if (allDone)
+          mpiPool.free.append(mpiData);
+        else
+          mpiPool.filled.append(mpiData);
       }
 
       // Signal end of input
       mpiPool.filled.append(NULL);
     }
 
-    template void MPIReceiver::receiveInput< SampleType<i16complex> >(size_t nrBlocks);
-    template void MPIReceiver::receiveInput< SampleType<i8complex> >(size_t nrBlocks);
-    template void MPIReceiver::receiveInput< SampleType<i4complex> >(size_t nrBlocks);
-
-    void MPIReceiver::receiveInput(size_t nrBlocks)
+    void MPIReceiver::receiveInput()
     {
       switch (nrBitsPerSample) {
       default:
       case 16:
-        receiveInput< SampleType<i16complex> >(nrBlocks);
+        receiveInput< SampleType<i16complex> >();
         break;
       case 8:
-        receiveInput< SampleType<i8complex> >(nrBlocks);
+        receiveInput< SampleType<i8complex> >();
         break;
       case 4:
-        receiveInput< SampleType<i4complex> >(nrBlocks);
+        receiveInput< SampleType<i4complex> >();
         break;
       }
     }

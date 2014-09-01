@@ -9,7 +9,7 @@ import numpy as np
 import logging
 from time import sleep
 
-test_version = '0314'
+test_version = '0515'
 
 logger = None
 def init_data_lib():
@@ -21,19 +21,19 @@ def init_data_lib():
 class cRCUdata:
     global logger
     def __init__(self, n_rcus, minvalue=1):
-        self.n_rcus = n_rcus
-        self.frames = 0
-        self.clock = 200.0
+        self.n_rcus   = n_rcus
+        self.frames   = 0
+        self.clock    = 200.0
         self.minvalue = minvalue
         self.reset()
 
     def reset(self):
         self.ssData = np.ones((self.n_rcus, 1, 512), np.float64)
-        self.testSignal_X = -1.0
-        self.testSubband_X = 0
-        self.testSignal_Y = -1.0
-        self.testSubband_Y = 0
-        self.mean_spectra = np.zeros((512), float)
+        self.testSignal_X   = -1.0
+        self.testSubband_X  = 0
+        self.testSignal_Y   = -1.0
+        self.testSubband_Y  = 0
+        self.mean_spectra   = np.zeros((512), float)
         self.mean_spectra_X = np.zeros((512), float)
         self.mean_spectra_Y = np.zeros((512), float)
         

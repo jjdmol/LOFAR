@@ -46,8 +46,10 @@ namespace LOFAR
     class SubbandWriter
     {
     public:
-      SubbandWriter(const Parset &,
+      SubbandWriter(const Parset &parset,
                     unsigned streamNr,
+                    RTmetadata &mdLogger,
+                    const std::string &mdKeyPrefix,
                     const std::string &logPrefix);
 
       void process();

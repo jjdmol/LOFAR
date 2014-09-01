@@ -23,7 +23,6 @@
 #include "MPISendStation.h"
 #include "MapUtil.h"
 #include "MPIUtil.h"
-#include "MPIUtil2.h"
 
 #include <InputProc/SampleType.h>
 

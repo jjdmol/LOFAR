@@ -89,7 +89,7 @@ namespace LOFAR
         LOG_INFO_STR( logPrefix << "End of stream");
       } catch (SystemCallException &ex) {
         if (ex.error == EINTR)
-          LOG_INFO_STR( logPrefix << "Aborted: " << ex.what());
+          LOG_INFO_STR( logPrefix << "Stopped: " << ex.what());
         else
           LOG_ERROR_STR( logPrefix << "Caught Exception: " << ex);
       } catch (Exception &ex) {

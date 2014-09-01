@@ -32,9 +32,11 @@
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <CoInterface/BlockID.h>
 
-#include "SubbandProc.h"
-#include "BeamFormerSubbandProcStep.h"
+#include "SubbandProcInputData.h"
+#include "SubbandProcOutputData.h"
+#include "ProcessStep.h"
 
+#include <GPUProc/KernelFactory.h>
 #include <GPUProc/Kernels/BandPassCorrectionKernel.h>
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
 #include <GPUProc/Kernels/FFTShiftKernel.h>
@@ -46,76 +48,60 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-
-    //# Forward declarations
-    struct BeamFormerFactories;
-
-
-    class BeamFormerPreprocessingStep: public BeamFormerSubbandProcStep
+    class BeamFormerPreprocessingStep: public ProcessStep
     {
     public:
+      struct Factories {
+        Factories(const Parset &ps);
 
-      BeamFormerPreprocessingStep(const Parset &parset, 
-        gpu::Stream &i_queue,
-        boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
-        boost::shared_ptr<gpu::DeviceMemory> i_devA,
-        boost::shared_ptr<gpu::DeviceMemory> i_devB,
-        boost::shared_ptr<gpu::DeviceMemory> i_devNull);
+        KernelFactory<IntToFloatKernel> intToFloat;
+
+        KernelFactory<FFT_Kernel> firstFFT;
+        KernelFactory<FFTShiftKernel> fftShift;
+
+        KernelFactory<DelayAndBandPassKernel> delayCompensation;
+
+        KernelFactory<FFT_Kernel> secondFFT;
+
+        KernelFactory<BandPassCorrectionKernel> bandPassCorrection;
+      };
 
       BeamFormerPreprocessingStep(const Parset &parset,
         gpu::Stream &i_queue, 
         gpu::Context &context,
-        BeamFormerFactories &factories,
-        boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
+        Factories &factories,
         boost::shared_ptr<gpu::DeviceMemory> i_devA,
-        boost::shared_ptr<gpu::DeviceMemory> i_devB,
-        boost::shared_ptr<gpu::DeviceMemory> i_devNull);
+        boost::shared_ptr<gpu::DeviceMemory> i_devB);
 
-      void initMembers(gpu::Context &context,
-        BeamFormerFactories &factories);
+      void writeInput(const SubbandProcInputData &input);
 
-      void process(BlockID blockID,
-        unsigned subband);
-
-      void printStats();
-
-      void logTime();
-
-      ~BeamFormerPreprocessingStep();
+      void process(const SubbandProcInputData &input);
 
     private:
 
       //Data members
-      boost::shared_ptr<SubbandProcInputData::DeviceBuffers> devInput;
       boost::shared_ptr<gpu::DeviceMemory> devA;
       boost::shared_ptr<gpu::DeviceMemory> devB;
-      boost::shared_ptr<gpu::DeviceMemory> devNull;
 
       // Int -> Float conversion
-      std::auto_ptr<IntToFloatKernel::Buffers> intToFloatBuffers;
       std::auto_ptr<IntToFloatKernel> intToFloatKernel;
 
       // First FFT-shift
-      std::auto_ptr<FFTShiftKernel::Buffers> firstFFTShiftBuffers;
       std::auto_ptr<FFTShiftKernel> firstFFTShiftKernel;
 
       // First (64 points) FFT
       std::auto_ptr<FFT_Kernel> firstFFT;
 
       // Delay compensation
-      std::auto_ptr<DelayAndBandPassKernel::Buffers> delayCompensationBuffers;
       std::auto_ptr<DelayAndBandPassKernel> delayCompensationKernel;
 
       // Second FFT-shift
-      std::auto_ptr<FFTShiftKernel::Buffers> secondFFTShiftBuffers;
       std::auto_ptr<FFTShiftKernel> secondFFTShiftKernel;
 
       // Second (64 points) FFT
       std::auto_ptr<FFT_Kernel> secondFFT;
 
       // Bandpass correction and tranpose
-      std::auto_ptr<gpu::DeviceMemory> devBandPassCorrectionWeights;
-      std::auto_ptr<BandPassCorrectionKernel::Buffers> bandPassCorrectionBuffers;
       std::auto_ptr<BandPassCorrectionKernel> bandPassCorrectionKernel;
 
       // Flag that indicates if we need to perform a second FFT

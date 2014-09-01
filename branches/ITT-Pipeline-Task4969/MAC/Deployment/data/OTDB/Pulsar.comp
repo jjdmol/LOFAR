@@ -25,6 +25,7 @@ par pulsar                              I       text    -       10      0       
 par raw_to_8bit                         I       bool    -       10      0       false   -       "convert raw 32-bit data to 8 bits"
 par rfifind_extra_opts                  I       text    -       10      0       ''      -       "user additional options for rfifind"
 par rrats                               I       bool    -       10      0       false   -       "enable rrats analysis"
+par rrats_dm_range                      I       flt     -       10      0       5.0     -       "specify DM-range for rrats analysis"
 par single_pulse                        I       bool    -       10      0       false   -       "single-pulse analysis"
 par skip_dspsr                          I       bool    -       10      0       false   -       "skip running dspsr"
 par skip_dynamic_spectrum               I       bool    -       10      0       false   -       "skip the creation of a dynamic spectrum of the observation data"

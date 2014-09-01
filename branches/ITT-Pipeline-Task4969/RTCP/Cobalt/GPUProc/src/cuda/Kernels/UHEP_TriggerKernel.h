@@ -37,7 +37,7 @@ namespace LOFAR
       unsigned bestApproxIndex;
     };
 
-    class UHEP_TriggerKernel : public Kernel
+    class UHEP_TriggerKernel : public CompiledKernel
     {
     public:
       UHEP_TriggerKernel(const Parset &ps, gpu::Module &program,

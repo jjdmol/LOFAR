@@ -1,6 +1,6 @@
 V 11
 1
-LANG:1 7 BGPRack
+LANG:1 10 CEP_OSRack
 PANEL,-1 -1 201 432 N "_3DFace" 1
 "$osNr"
 "main()
@@ -163,7 +163,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 40 20 79.5 36
+E E 0 1 1 0 1 E U  0 E 40 20 79 36
 0 2 0 "0s" 0 0 0 192 0 0  40 20 1
 1
 LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0

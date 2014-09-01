@@ -28,6 +28,7 @@
 #include <GPUProc/global_defines.h>
 #include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/PerformanceCounter.h>
+#include <CoInterface/Align.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/BlockID.h>
 #include <Common/LofarLogger.h>
@@ -38,34 +39,64 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    Kernel::Parameters::Parameters(const Parset& ps) :
-      nrStations(ps.nrStations()),
-      nrChannelsPerSubband(ps.nrChannelsPerSubband()),
-      nrSamplesPerChannel(ps.nrSamplesPerChannel()),
-      nrSamplesPerSubband(ps.nrSamplesPerSubband()),
-      nrPolarizations(NR_POLARIZATIONS),
+    Kernel::Parameters::Parameters(const std::string &name) :
+      name(name),
       dumpBuffers(false)
     {
     }
+
 
     Kernel::~Kernel()
     {
     }
 
+
     Kernel::Kernel(const gpu::Stream& stream, 
-                   const gpu::Function& function,
                    const Buffers &buffers,
                    const Parameters &params)
       : 
-      gpu::Function(function),
-      itsCounter(_context),
-      maxThreadsPerBlock(function.getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK)),
+      itsCounter(stream.getContext(), params.name),
       itsStream(stream),
       itsBuffers(buffers),
       itsParameters(params)
     {
+    }
+
+    void Kernel::enqueue(const BlockID &blockId)
+    {
+      // record duration of last invocation (or noop
+      // if there was none)
+      itsCounter.recordStart(itsStream);
+      launch();
+      itsCounter.recordStop(itsStream);
+
+      if (itsParameters.dumpBuffers && blockId.block >= 0) {
+        itsStream.synchronize();
+        dumpBuffers(blockId);
+      }
+    }
+
+    void Kernel::dumpBuffers(const BlockID &blockId) const
+    {
+      dumpBuffer(itsBuffers.output,
+                 str(boost::format(itsParameters.dumpFilePattern) %
+                     blockId.globalSubbandIdx %
+                     blockId.block));
+    }
+
+
+    CompiledKernel::CompiledKernel(
+                   const gpu::Stream& stream, 
+                   const gpu::Function& function,
+                   const Buffers &buffers,
+                   const Parameters &params)
+      : 
+      Kernel(stream, buffers, params),
+      gpu::Function(function),
+      maxThreadsPerBlock(getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK))
+    {
       LOG_INFO_STR(
-        "Function " << function.name() << ":" << 
+        "Function " << name() << ":" << 
         "\n  nr. of registers used : " <<
         getAttribute(CU_FUNC_ATTRIBUTE_NUM_REGS) <<
         "\n  nr. of bytes of shared memory used (static) : " <<
@@ -73,9 +104,21 @@ namespace LOFAR
       );
     }
 
-    void Kernel::setEnqueueWorkSizes(gpu::Grid globalWorkSize, 
-                                     gpu::Block localWorkSize,
-                                     string* errorStrings)
+
+    CompiledKernel::~CompiledKernel()
+    {
+    }
+
+
+    void CompiledKernel::launch() const
+    {
+      itsStream.launchKernel(*this, itsGridDims, itsBlockDims);
+    }
+
+
+    void CompiledKernel::setEnqueueWorkSizes(gpu::Grid globalWorkSize, 
+                                             gpu::Block localWorkSize,
+                                             string* errorStrings)
     {
       const gpu::Device device(_context.getDevice());
       gpu::Grid grid;
@@ -140,7 +183,7 @@ namespace LOFAR
       itsBlockDims = localWorkSize;
     }
 
-    unsigned Kernel::getNrBlocksPerMultiProc(unsigned dynSharedMemBytes) const
+    unsigned CompiledKernel::getNrBlocksPerMultiProc(unsigned dynSharedMemBytes) const
     {
       // See NVIDIA's CUDA_Occupancy_Calculator.xls
       // TODO: Take warp allocation granularity into account. (Or only use a multiple of 32.)
@@ -215,7 +258,7 @@ namespace LOFAR
       return factor;
     }
 
-    double Kernel::predictMultiProcOccupancy(unsigned dynSharedMemBytes) const
+    double CompiledKernel::predictMultiProcOccupancy(unsigned dynSharedMemBytes) const
     {
       const gpu::Device device(_context.getDevice());
       //const unsigned nrMPs = device.getMultiProcessorCount();
@@ -223,7 +266,7 @@ namespace LOFAR
 
       const unsigned warpSize = device.getAttribute(CU_DEVICE_ATTRIBUTE_WARP_SIZE);
       unsigned nrThreadsPerBlock = itsBlockDims.x * itsBlockDims.y * itsBlockDims.z;
-      unsigned nrWarpsPerBlock = (nrThreadsPerBlock + warpSize - 1) / warpSize;
+      unsigned nrWarpsPerBlock = ceilDiv(nrThreadsPerBlock, warpSize);
       unsigned nrBlocksPerMP = getNrBlocksPerMultiProc(dynSharedMemBytes);
       unsigned nrWarps = nrBlocksPerMP * nrWarpsPerBlock;
 
@@ -231,31 +274,6 @@ namespace LOFAR
       unsigned maxNrWarpsPerMP = maxThreadsPerMP / warpSize;
 
       return static_cast<double>(nrWarps) / maxNrWarpsPerMP;
-    }
-
-    void Kernel::enqueue(const BlockID &blockId) const
-    {
-      itsStream.recordEvent(itsCounter.start);
-      itsStream.launchKernel(*this, itsGridDims, itsBlockDims);
-      itsStream.recordEvent(itsCounter.stop);
-
-      if (itsParameters.dumpBuffers && blockId.block >= 0) {
-        itsStream.synchronize();
-        dumpBuffers(blockId);
-      }
-    }
-
-    void Kernel::dumpBuffers(const BlockID &blockId) const
-    {
-      dumpBuffer(itsBuffers.output,
-                 str(boost::format(itsParameters.dumpFilePattern) %
-                     blockId.globalSubbandIdx %
-                     blockId.block));
-    }
-
-    PerformanceCounter &Kernel::getCounter()
-    {
-      return itsCounter;
     }
 
   }

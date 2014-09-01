@@ -1,5 +1,9 @@
 # $Id$
 
+# Whether we should obtain the broken-antenna information in the first place.
+# If disabled, empty sets will be forwarded to outputProc.
+Cobalt.FinalMetaDataGatherer.enabled = true
+
 # The database hostname to connect to:
 #   Production:  sasdb
 #   Development: sasdbtest (do not use here; prefer hostname redirection)

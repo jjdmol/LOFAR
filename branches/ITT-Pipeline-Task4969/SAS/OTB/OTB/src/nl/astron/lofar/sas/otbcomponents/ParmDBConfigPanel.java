@@ -198,7 +198,6 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
     }
     /* Set's the different fields in the GUI */
     private void setField(jOTDBnode parent,jOTDBparam aParam, jOTDBnode aNode) {
-        // OLAP_HW settings
         if (aParam==null) {
             return;
         }

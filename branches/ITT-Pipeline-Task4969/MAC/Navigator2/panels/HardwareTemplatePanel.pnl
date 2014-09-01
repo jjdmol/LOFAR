@@ -59,9 +59,8 @@ void prepareHardwareList() {
   //   g_HBAList;           // holds valid HBAAntenna's for choices in the viewBox
   //   g_LBAList;           // holds valid LBAAntenna's for choices in the viewBox
   // CEP based globals
-  //   g_BGPRackList;       // holds valid bgpracks for choices in viewBox
-  //   g_BGPMidplaneList;   // holds valid bgpmidplanes for choices in viewBox
-  //   g_IONodeList;        // holds valid ionodes for choices in viewBox
+  //   g_cobaltRackList     // holds valid cobaltRacks for choices in viewBox
+  //   g_cobaltNodeList;    // holds valid ionodes for choices in viewBox
   //   g_OSRackList;        // holds valid Offline/Storageracks for choices in view
   //   g_locusNodeList;     // holds valid storagenodes for choices in view
 

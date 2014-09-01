@@ -39,10 +39,10 @@ namespace LOFAR
       Queue< SmartPtr<element_type> > free;
       Queue< SmartPtr<element_type> > filled;
 
-      Pool(const std::string &name)
+      Pool(const std::string &name, bool complain_on_empty_free_queue)
       :
-        free(name + " [.free]"),
-        filled(name + " [.filled]")
+        free(name + " [.free]", complain_on_empty_free_queue),
+        filled(name + " [.filled]", false)
       {
       }
     };

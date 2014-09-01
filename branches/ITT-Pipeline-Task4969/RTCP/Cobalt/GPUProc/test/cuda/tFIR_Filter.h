@@ -52,6 +52,8 @@ typedef signed char SampleType;
 #include <exception>
 #include <cuda.h>
 
+#include <CoInterface/Align.h>
+
 extern cudaError_t FIR_filter_wrapper(float *DevFilteredData,
   float const *DevSampledData,
   float const *DevWeightsData);
@@ -171,7 +173,7 @@ namespace LOFAR
 
         int MAXNRCUDATHREADS = 512;
         size_t maxNrThreads = MAXNRCUDATHREADS;
-        unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
+        unsigned nrPasses = ceilDiv(totalNrThreads, maxNrThreads);
         dim3 localWorkSize(totalNrThreads / nrPasses, 1); 
 
 

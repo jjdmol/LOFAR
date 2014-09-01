@@ -1,16 +1,12 @@
-# All the keys in this file represent a vector. There must be one element in
-# each vector for _every_ file that will be written. For correlated data, the
-# number of files is the same as the number of subbands. For 
-# beamformed data, there can be more or fewer files than subbands.
-#
-# NOTE: All vectors _must_ be equal in length. All values for a given index
-# are related. Ideally, a vector of struct should be used, but that's not
-# feasible.
+# All the *Arr keys in this file represent a (dyn) array. There must be one
+# element in each array for _every_ file that will be written. For correlated data,
+# the number of files is the same as the number of subbands. For beamformed data,
+# there can be more or fewer files than subbands.
 
 # Number of the locus node, i.e. the node name with 'locus' stripped off.
 locusNode	intArr
 
-# Data type: Correlated/Beamformed
+# Data type: "Correlated" or "Beamformed"
 dataProductType	stringArr
 
 # Name of the output file

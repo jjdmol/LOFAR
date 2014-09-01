@@ -53,12 +53,11 @@ unsigned NR_BASELINES = (NR_STATIONS * (NR_STATIONS + 1) / 2);
 HostMemory runTest(gpu::Context ctx,
                    Stream cuStream,
                    float * inputData,
-                   string function,
-                   unsigned nrStationsPerFunction)
+                   unsigned nrStationsPerThread)
 {
   string kernelFile = "Correlator.cu";
 
-  cout << "\n==== runTest: function = " << function << " ====\n" << endl;
+  cout << "\n==== runTest: correlate_" << nrStationsPerThread << "x" << nrStationsPerThread << " ====\n" << endl;
 
   // Get an instantiation of the default parameters
   CompileDefinitions definitions = CompileDefinitions();
@@ -68,6 +67,7 @@ HostMemory runTest(gpu::Context ctx,
   // Compile to ptx
   // Set op string string pairs to be provided to the compiler as defines
   definitions["NVIDIA_CUDA"] = "";
+  definitions["NR_STATIONS_PER_THREAD"] = lexical_cast<string>(nrStationsPerThread);
   definitions["NR_STATIONS"] = lexical_cast<string>(NR_STATIONS);
   definitions["NR_CHANNELS"] = lexical_cast<string>(NR_CHANNELS);
   definitions["NR_SAMPLES_PER_CHANNEL"] = lexical_cast<string>(NR_SAMPLES_PER_CHANNEL);
@@ -77,7 +77,7 @@ HostMemory runTest(gpu::Context ctx,
   vector<Device> devices(1, ctx.getDevice());
   string ptx = createPTX(kernelFile, definitions, flags, devices);
   gpu::Module module(createModule(ctx, kernelFile, ptx));
-  Function hKernel(module, function);   // c function this no argument overloading
+  Function hKernel(module, "correlate");   // c function this no argument overloading
 
   // *************************************************************
   // Create the data arrays
@@ -103,10 +103,10 @@ HostMemory runTest(gpu::Context ctx,
   hKernel.setArg(1, devCorrectedMemory);
 
   // Calculate the number of threads in total and per block
-  unsigned nrFuncStations = (NR_STATIONS + nrStationsPerFunction - 1)/nrStationsPerFunction;
+  unsigned nrFuncStations = ceilDiv(NR_STATIONS, nrStationsPerThread);
   unsigned nrBlocks = nrFuncStations * (nrFuncStations + 1) / 2;
-  unsigned nrPasses = (nrBlocks + 1024 - 1) / 1024;
-  unsigned nrThreads = (nrBlocks + nrPasses - 1) / nrPasses;
+  unsigned nrPasses = ceilDiv(nrBlocks, 1024U);
+  unsigned nrThreads = ceilDiv(nrBlocks, nrPasses);
   unsigned nrUsableChannels = 15;
   Grid globalWorkSize(nrPasses, nrUsableChannels, 1);
   Block localWorkSize(nrThreads, 1,1);
@@ -147,20 +147,9 @@ int main()
   MultiDimArray<float, 3> outputData(boost::extents[NR_BASELINES][NR_CHANNELS][NR_POLARIZATIONS * NR_POLARIZATIONS * COMPLEX]);
   float * outputOnHostPtr;
 
-  const char * kernel_functions[] = {
-    "correlate", "correlate_2x2", "correlate_3x3", "correlate_4x4"
-  };
-  unsigned kernel_nrstations[] = {
-    1, 2, 3, 4
-  };
-
-  unsigned nr_kernel_functions =
-    sizeof(kernel_functions) / sizeof(kernel_functions[0]);
-
-  for (unsigned func_idx = 0; func_idx < nr_kernel_functions; func_idx++) 
+  for (unsigned nrStationsPerThread = 1; nrStationsPerThread <= 4; nrStationsPerThread++)
   {
-    cerr << kernel_functions[func_idx] << endl;
-    const char* function = kernel_functions[func_idx];
+    cerr << "correlate_" << nrStationsPerThread << "x" << nrStationsPerThread << endl;
 
     // ***********************************************************
     // Baseline test: If all input data is zero the output should be zero
@@ -168,7 +157,7 @@ int main()
     for (unsigned idx = 0; idx < inputData.num_elements(); ++idx)
       inputData.origin()[idx] = 0;
 
-    HostMemory outputOnHost = runTest(ctx, cuStream, inputData.origin(), function, kernel_nrstations[func_idx]);
+    HostMemory outputOnHost = runTest(ctx, cuStream, inputData.origin(), nrStationsPerThread);
 
     // Copy the output data to a local array
     outputOnHostPtr = outputOnHost.get<float>();
@@ -247,7 +236,7 @@ int main()
     }
 
     // Run the kernel
-    outputOnHost = runTest(ctx, cuStream, inputData.origin(), function, kernel_nrstations[func_idx]);
+    outputOnHost = runTest(ctx, cuStream, inputData.origin(), nrStationsPerThread);
 
     // Copy the output data to a local array
     outputOnHostPtr = outputOnHost.get<float>();
@@ -319,7 +308,7 @@ int main()
     const unsigned baseline10 = 1;
     const unsigned baseline11 = 2;
 
-    outputOnHost = runTest(ctx, cuStream, inputData.origin(), function, kernel_nrstations[func_idx]);
+    outputOnHost = runTest(ctx, cuStream, inputData.origin(), nrStationsPerThread);
 
     // Copy the output data to a local array
     outputOnHostPtr = outputOnHost.get<float>();

@@ -83,6 +83,18 @@ class Poller(Thread):
             except KeyError:
                 clock.sleep()
                 continue
+            spids = self.config['stoppedpids'].copy()
+            for pid in spids:
+                tstamp = str(time.time())
+                out = "{0} {1} {2}".format(tstamp, self.config['pidnames'][pid], "stopped")
+                del(self.config['pidnames'][pid])
+                self.config['stoppedpids'].remove(pid)
+                self.config['obspids'].remove(pid)
+                output_vals[pid] = (out, out)
+            starts = self.config['startpids'].copy()
+            for sp in starts:
+                self.config['obspids'].add(sp)
+                self.config['startpids'].remove(sp)
             for pid in self.config['obspids']:
                 pps = SP.Popen([self.poll_execpath, str(pid)], stdin=SP.PIPE, stdout=SP.PIPE, stderr=SP.PIPE)
                 out, err = pps.communicate()

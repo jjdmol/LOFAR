@@ -42,17 +42,20 @@ function setkey {
 
 function usage {
   error \
-    "\nUsage: $0 [-A] [-C] [-F] [-P pidfile] [-l nprocs] [-p] PARSET"\
+    "\nUsage: $0 [-A] [-B] [-C] [-F] [-P pidfile] [-l nprocs] [-p] [-o KEY=VALUE] PARSET"\
     "\n"\
     "\n  Run the observation specified by PARSET"\
     "\n"\
     "\n    -A: do NOT augment parset"\
+    "\n    -B: do NOT add broken antenna information"\
     "\n    -C: run with check tool specified in environment variable"\
     "LOFAR_CHECKTOOL"\
-    "\n    -F: do NOT send feedback to OnlineControl"\
+    "\n    -F: do NOT send feedback to OnlineControl and do NOT send data points to a PVSS gateway"\
     "\n    -P: create PID file"\
     "\n    -l: run solely on localhost using 'nprocs' MPI processes (isolated test)"\
-    "\n    -p: enable profiling\n"
+    "\n    -p: enable profiling" \
+    "\n    -o: add option KEY=VALUE to the parset" \
+    "\n"
 }
 
 # command_retry expects a string it will execute as a subprocess
@@ -88,11 +91,14 @@ echo "Called as: $0 $@"
 # Set default options
 # ******************************
 
-# Provide feedback to OnlineControl?
+# Provide feedback to OnlineControl and data points to PVSS?
 ONLINECONTROL_FEEDBACK=1
 
 # Augment the parset with etc/parset-additions.d/* ?
 AUGMENT_PARSET=1
+
+# Extra parset keys to add
+EXTRA_PARSET_KEYS=""
 
 # File to write PID to
 PIDFILE=""
@@ -101,6 +107,9 @@ PIDFILE=""
 # in the parset?
 FORCE_LOCALHOST=0
 NRPROCS_LOCALHOST=0
+
+# Add broken antenna information?
+ADD_BROKENANTENNAINFO=1
 
 # Parameters to pass to mpirun
 MPIRUN_PARAMS=""
@@ -114,9 +123,11 @@ shopt -s nullglob
 # ******************************
 # Parse command-line options
 # ******************************
-while getopts ":ACFP:l:p" opt; do
+while getopts ":ABCFP:l:o:p" opt; do
   case $opt in
       A)  AUGMENT_PARSET=0
+          ;;
+      B)  ADD_BROKENANTENNAINFO=0
           ;;
       C)  CHECK_TOOL="$LOFAR_CHECKTOOL"
           ;;
@@ -126,6 +137,8 @@ while getopts ":ACFP:l:p" opt; do
           ;;
       l)  FORCE_LOCALHOST=1
           MPIRUN_PARAMS="$MPIRUN_PARAMS -np $OPTARG"
+          ;;
+      o)  EXTRA_PARSET_KEYS="${EXTRA_PARSET_KEYS}${OPTARG}\n"
           ;;
       p)  RTCP_PARAMS="$RTCP_PARAMS -p"
           ;;
@@ -218,11 +231,25 @@ then
     setkey Cobalt.FinalMetaDataGatherer.database.host localhost
     setkey Cobalt.Feedback.host                       localhost
     setkey Cobalt.Feedback.remotePath                 "$LOFARROOT/var/run"
+    setkey Cobalt.PVSSGateway.host                    ""
 
     # Redirect UDP/TCP input streams to any interface on the local machine
     sed 's/udp:[^:]*:/udp:0:/g' -i $PARSET
     sed 's/tcp:[^:]*:/tcp:0:/g' -i $PARSET
   fi
+
+  if [ "$ADD_BROKENANTENNAINFO" -eq "0" ]
+  then
+    setkey Cobalt.FinalMetaDataGatherer.enabled       false
+  fi
+
+  if [ "$ONLINECONTROL_FEEDBACK" -eq "0" ]
+  then
+    setkey Cobalt.PVSSGateway.host                    ""
+  fi
+
+  # Add extra keys specified on the command line
+  echo -e "$EXTRA_PARSET_KEYS" >> $PARSET
 fi
 
 # ******************************
@@ -355,7 +382,7 @@ mpirun.sh -x LOFARROOT="$LOFARROOT" \
 PID=$!
 
 # Propagate SIGTERM
-trap 'echo runObservation.sh: Received signal cleaning up child processes; clean_up 1 $PID' SIGTERM SIGINT SIGQUIT SIGHUP
+trap "echo runObservation.sh: Received signal cleaning up child processes; clean_up 1 $PID" SIGTERM SIGINT SIGQUIT SIGHUP
 
 # Wait for $COMMAND to finish. We use 'wait' because it will exit immediately if it
 # receives a signal.
@@ -432,7 +459,7 @@ fi
 # clean up outputProc children
 echo "Allowing 120 second for normal end of outputProc"
 #    Set trap to kill the sleep in case of signals                    save the pid of sleep
-( trap 'kill $SLEEP_PID' SIGTERM SIGINT SIGQUIT SIGHUP ; sleep 120&  SLEEP_PID=$!; echo "Starting forced cleanup outputProc:"; clean_up 0 ) & 
+( trap 'kill $SLEEP_PID' SIGTERM SIGINT SIGQUIT SIGHUP; sleep 120&  SLEEP_PID=$!; echo 'Starting forced cleanup outputProc:'; clean_up 0 ) & 
 KILLER_PID=$!
 
 # Waiting for the child processes to finish

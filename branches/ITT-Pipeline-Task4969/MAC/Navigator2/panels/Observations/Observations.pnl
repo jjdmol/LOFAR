@@ -44,6 +44,16 @@ void updateObservationsList(string dp1, dyn_string plannedObs,
                             string dp3, dyn_string finishedObs,
                             string dp4, bool invalid)
 {
+  for (int i=dynlen(plannedObs); i > 0; i--) {
+    if (!navFunct_isObservation(plannedObs[i])) dynRemove(plannedObs,i);
+  }
+  for (int i=dynlen(activeObs); i > 0; i--) {
+    if (!navFunct_isObservation(activeObs[i])) dynRemove(activeObs,i);
+  }
+  for (int i=dynlen(finishedObs); i > 0; i--) {
+    if (!navFunct_isObservation(finishedObs[i])) dynRemove(finishedObs,i);
+  }
+
   dynSortAsc(plannedObs);
   dynSortAsc(activeObs);
   dynSortAsc(finishedObs);

@@ -702,6 +702,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 //			itsTimerPort->cancelTimer(theObs->second->itsStopTimerID);
 			delete theObs->second;
 			itsObsMap.erase(theObs);
+			return (GCFEvent::HANDLED);
 		}
 
 		// check if all actions for this event are finished.
@@ -1420,7 +1421,7 @@ void StationControl::_initAntennaMasks()
 	// Adopt values from RemoteStation.conf
 	StationConfig	SC;
 	itsNrRSPs = SC.nrRSPs;
-	itsNrTBBs = SC.nrRSPs;
+	itsNrTBBs = SC.nrTBBs;
 	itsNrLBAs = SC.nrLBAs;
 	itsNrHBAs = SC.nrHBAs;
 	itsNrRCUs = SC.nrRSPs * NR_RCUS_PER_RSPBOARD;

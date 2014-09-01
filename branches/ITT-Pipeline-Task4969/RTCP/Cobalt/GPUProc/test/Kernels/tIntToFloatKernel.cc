@@ -27,7 +27,6 @@
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
 #include <GPUProc/Kernels/IntToFloatKernel.h>
-#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
 
 using namespace std;
 using namespace LOFAR::Cobalt;
@@ -68,8 +67,7 @@ int main() {
   gpu::HostMemory convertedData(ctx,  factory.bufferSize(IntToFloatKernel::OUTPUT_DATA));
   //stream.writeBuffer(devConvertedData, sampledData, true);
 
-  IntToFloatKernel::Buffers buffers(devSampledData, devConvertedData);
-  auto_ptr<IntToFloatKernel> kernel(factory.create(stream, buffers));
+  auto_ptr<IntToFloatKernel> kernel(factory.create(stream, devSampledData, devConvertedData));
 
   BlockID blockId;
   kernel->enqueue(blockId);

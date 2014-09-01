@@ -63,7 +63,7 @@ void runTest( Context &ctx, Stream &stream )
   ps.updateSettings();
 
   BeamFormerTransposeKernel::Parameters params(ps);
-  params.nrChannelsPerSubband = NR_CHANNELS;
+  params.nrChannels = NR_CHANNELS;
   params.nrSamplesPerChannel = NR_SAMPLES_PER_CHANNEL;
   params.nrTABs = NR_TABS;
 
@@ -84,8 +84,7 @@ void runTest( Context &ctx, Stream &stream )
   MultiDimArrayHostBuffer<fcomplex, 4> hOutput(boost::extents[NR_TABS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL], ctx);
 
   // Create kernel
-  BeamFormerTransposeKernel::Buffers buffers(dInput, dOutput);
-  std::auto_ptr<BeamFormerTransposeKernel> kernel(factory.create(stream, buffers));
+  std::auto_ptr<BeamFormerTransposeKernel> kernel(factory.create(stream, dInput, dOutput));
 
   // Run kernel
   stream.writeBuffer(dInput, hInput, false);

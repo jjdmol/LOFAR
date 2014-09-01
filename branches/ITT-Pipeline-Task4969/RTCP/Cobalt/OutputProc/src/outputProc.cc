@@ -81,11 +81,11 @@ int main(int argc, char *argv[])
     switch (opt) {
     case 'h':
       usage(argv[0]);
-      exit(EXIT_SUCCESS);
+      return EXIT_SUCCESS;
 
     default: /* '?' */
       usage(argv[0]);
-      exit(EXIT_FAILURE);
+      return EXIT_FAILURE;
     }
   }
 
@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
 
   setIOpriority();
   setRTpriority();
-  lockInMemory();
+  lockInMemory(16UL * 1024UL * 1024UL * 1024UL); // limit memory to 16 GB
 
   PortBroker::createInstance(storageBrokerPort(observationID));
 

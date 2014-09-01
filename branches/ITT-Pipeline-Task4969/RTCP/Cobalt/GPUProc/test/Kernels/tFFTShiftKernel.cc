@@ -24,10 +24,10 @@
 
 #include <lofar_config.h>
 
-#include <GPUProc/global_defines.h>
 #include <GPUProc/Kernels/FFTShiftKernel.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <CoInterface/BlockID.h>
+#include <CoInterface/Config.h>
 #include <CoInterface/Parset.h>
 #include <Common/LofarLogger.h>
 
@@ -66,7 +66,7 @@ struct ParsetSUT
     // 4 for number of stokes
     size_t nr_files =  inrTabs * 4; 
     parset.add("Observation.DataProducts.Output_CoherentStokes.enabled", "true");
-    parset.add("OLAP.CNProc_CoherentStokes.which", stokes);
+    parset.add("Cobalt.BeamFormer.CoherentStokes.which", stokes);
     parset.add("Observation.VirtualInstrument.stationList",
       str(format("[%d*RS000]") % nrStations));
     parset.add("Observation.antennaSet", "LBA_INNER");
@@ -114,7 +114,6 @@ struct SUTWrapper : ParsetSUT
   MultiDimArrayHostBuffer<fcomplex, 4> hOutput;
   MultiDimArrayHostBuffer<fcomplex, 4> hRefOutput;
   gpu::DeviceMemory deviceMemory;
-  FFTShiftKernel::Buffers buffers;
   scoped_ptr<FFTShiftKernel> kernel;
 
   SUTWrapper(size_t inrChannels , size_t inrStations,
@@ -136,8 +135,7 @@ struct SUTWrapper : ParsetSUT
       boost::extents[inrStations][NR_POLARIZATIONS][nrChannels][inrOutputinSamplesPerSuband],
       context),
     deviceMemory(context, factory.bufferSize(FFTShiftKernel::INPUT_DATA)),
-    buffers(deviceMemory, deviceMemory),
-    kernel(factory.create(stream, buffers))
+    kernel(factory.create(stream, deviceMemory, deviceMemory))
   {
     initializeHostBuffers();
   }
@@ -146,14 +144,7 @@ struct SUTWrapper : ParsetSUT
   // These values are normaly added in the SubbandProc (compile time default).
   FFTShiftKernel::Parameters FFTShiftParams(Parset parset)
   {
-    FFTShiftKernel::Parameters params(parset);
-
-    // time integration has not taken place yet, so calculate the nrSamples
-    // manually
-    params.nrChannelsPerSubband = nrChannels;
-
-    params.nrSamplesPerChannel =
-      parset.nrSamplesPerSubband() / params.nrChannelsPerSubband;
+    FFTShiftKernel::Parameters params(parset, nrStations, nrChannels);
 
     return params;
   }
@@ -166,12 +157,12 @@ struct SUTWrapper : ParsetSUT
     cout << "Kernel buffersize set to: " << factory.bufferSize(
               FFTShiftKernel::INPUT_DATA) << endl;
     cout << "\nInitializing host buffers..." << endl
-      << " buffers.input.size()  = " << setw(7) << buffers.input.size() << endl
+      << " buffers.input.size()  = " << setw(7) << deviceMemory.size() << endl
       << " hInput.size()  = " << setw(7) << hInput.size() << endl
-      << " buffers.output.size() = " << setw(7) << buffers.output.size() 
+      << " buffers.output.size() = " << setw(7) << deviceMemory.size() 
       << endl;
-    CHECK_EQUAL(buffers.input.size(), hInput.size());
-    CHECK_EQUAL(buffers.output.size(), hOutput.size());
+    CHECK_EQUAL(deviceMemory.size(), hInput.size());
+    CHECK_EQUAL(deviceMemory.size(), hOutput.size());
     fill(hInput.data(), hInput.data() + hInput.num_elements(),
              fcomplex(0.0f, 0.0f));
     fill(hRefOutput.data(), hRefOutput.data() + hRefOutput.num_elements(),
@@ -183,11 +174,11 @@ struct SUTWrapper : ParsetSUT
     // Dummy BlockID
     BlockID blockId;
     // Copy input data from host- to device buffer synchronously
-    stream.writeBuffer(buffers.input, hInput, true);
+    stream.writeBuffer(deviceMemory, hInput, true);
     // Launch the kernel
     kernel->enqueue(blockId);
     // Copy output data from device- to host buffer synchronously
-    stream.readBuffer(hOutput, buffers.output, true);
+    stream.readBuffer(hOutput, deviceMemory, true);
   }
 
 };

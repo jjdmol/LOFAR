@@ -64,10 +64,10 @@ namespace LOFAR
       // [stationRanks.size()][beamlets.size()]. Each sample block needs to be
       // blockSize in length.
       //
-      // It is the callers responsibility to call receiveBlock exactly as often
-      // as sendBlock is called by the stations.
+      // Returns whether all stations are done sending. If so, this block does not
+      // have to be processed either since all metatData[stat][0].EOS will be set.
       template<typename T>
-      void receiveBlock( MultiDimArray<T,3> &data, MultiDimArray<struct MPIProtocol::MetaData,2> &metaData );
+      bool receiveBlock( MultiDimArray<T,3> &data, MultiDimArray<struct MPIProtocol::MetaData,2> &metaData );
 
     private:
       const std::string logPrefix;
@@ -78,6 +78,9 @@ namespace LOFAR
       const size_t blockSize;
 
       std::vector<int> stationSourceRanks; // [station]
+
+      // Which stations are done sending (and we should thus post no receive for for subsequent blocks)
+      std::vector<bool> stationDone; // [station]
 
       // Receive beamlet data (async) from the given rank.
       template<typename T>

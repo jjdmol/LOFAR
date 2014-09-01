@@ -1,4 +1,3 @@
-
 //# tSubbandWriter.cc
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -47,7 +46,8 @@ using namespace Cobalt;
 using namespace casa;
 using boost::format;
 
-unsigned obsId = 0;
+unsigned obsId = 54321;
+MACIO::RTmetadata rtmd(54321, "", "");
 
 SUITE(SubbandWriter)
 {
@@ -83,12 +83,12 @@ SUITE(SubbandWriter)
 
   TEST_FIXTURE(OneBeam, Construction)
   {
-    SubbandWriter w(ps, 0, "");
+    SubbandWriter w(ps, 0, rtmd, "", "");
   }
 
   TEST_FIXTURE(OneBeam, IO)
   {
-    SubbandWriter w(ps, 0, "");
+    SubbandWriter w(ps, 0, rtmd, "", "");
 
     // process, and provide input
 #   pragma omp parallel sections
@@ -130,7 +130,7 @@ SUITE(SubbandWriter)
 
   TEST_FIXTURE(OneBeam, FinalMetaData)
   {
-    SubbandWriter w(ps, 0, "");
+    SubbandWriter w(ps, 0, rtmd, "", "");
 
     // process
 #   pragma omp parallel sections

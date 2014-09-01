@@ -73,12 +73,12 @@ namespace LOFAR
       // has to be stored, which fits either in 1, 2, or 4 bytes.
       const unsigned itsNrBytesPerNrValidSamples;     // 1, 2, or 4
 
+      // Reset the contents of the valid samples
+      void reset();
+
     protected:
       virtual void readData(Stream *, unsigned);
       virtual void writeData(Stream *, unsigned);
-
-      // Reset the contents of the valid samples
-      void reset();
 
     private:
       void init(unsigned nrChannels, Allocator &allocator);

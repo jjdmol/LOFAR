@@ -184,6 +184,13 @@ namespace LOFAR {
 
     FinalMetaData getFinalMetaData( const Parset &parset )
     {
+      bool enabled    = parset.getBool("Cobalt.FinalMetaDataGatherer.enabled", true);
+
+      if (!enabled) {
+        LOG_INFO_STR("Retrieval of broken-antenna information was disabled in the parset!");
+        return FinalMetaData();
+      }
+
       string host     = parset.getString("Cobalt.FinalMetaDataGatherer.database.host", "");
       if (host.empty())
         host = "sasdb";

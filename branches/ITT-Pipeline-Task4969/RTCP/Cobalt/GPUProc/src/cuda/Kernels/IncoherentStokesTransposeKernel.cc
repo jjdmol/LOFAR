@@ -22,8 +22,8 @@
 
 #include "IncoherentStokesTransposeKernel.h"
 
-#include <GPUProc/global_defines.h>
 #include <CoInterface/Align.h>
+#include <CoInterface/Config.h>
 #include <Common/lofar_complex.h>
 
 #include <boost/format.hpp>
@@ -42,7 +42,11 @@ namespace LOFAR
       "transpose";
 
     IncoherentStokesTransposeKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters(ps),
+      Kernel::Parameters("incoherentStokesTranspose"),
+      nrStations(ps.settings.antennaFields.size()),
+      nrChannels(ps.settings.beamFormer.nrHighResolutionChannels),
+      nrSamplesPerChannel(ps.settings.blockSize / nrChannels),
+
       tileSize(16)
     {
       dumpBuffers = 
@@ -53,12 +57,26 @@ namespace LOFAR
             ps.settings.observationID);
     }
 
+    size_t IncoherentStokesTransposeKernel::Parameters::bufferSize(BufferType bufferType) const
+    {
+      switch (bufferType) {
+      case IncoherentStokesTransposeKernel::INPUT_DATA:
+      case IncoherentStokesTransposeKernel::OUTPUT_DATA:
+        return 
+          (size_t) nrStations * 
+          nrChannels * nrSamplesPerChannel * 
+          NR_POLARIZATIONS * sizeof(std::complex<float>);
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
+
     IncoherentStokesTransposeKernel::
     IncoherentStokesTransposeKernel(const gpu::Stream& stream,
                                     const gpu::Module& module,
                                     const Buffers& buffers,
                                     const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
+      CompiledKernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
@@ -67,41 +85,32 @@ namespace LOFAR
       //               << "align(" << params.nrSamplesPerChannel
       //               << ", " << params.tileSize << ") = " 
       //               << align(params.nrSamplesPerChannel, params.tileSize));
-      // LOG_DEBUG_STR("align(params.nrChannelsPerSubband, params.tileSize)) = "
-      //               << "align(" << params.nrChannelsPerSubband 
+      // LOG_DEBUG_STR("align(params.nrChannels, params.tileSize)) = "
+      //               << "align(" << params.nrChannels 
       //               << ", " << params.tileSize << ") = "
-      //               << align(params.nrChannelsPerSubband, params.tileSize));
+      //               << align(params.nrChannels, params.tileSize));
 
       setEnqueueWorkSizes(
         gpu::Grid(align(params.nrSamplesPerChannel, params.tileSize), 
-                  align(params.nrChannelsPerSubband, params.tileSize)),
+                  align(params.nrChannels, params.tileSize)),
         gpu::Block(params.tileSize, params.tileSize));
     }
 
     //--------  Template specializations for KernelFactory  --------//
-
-    template<> size_t
-    KernelFactory<IncoherentStokesTransposeKernel>::
-    bufferSize(BufferType bufferType) const
-    {
-      switch (bufferType) {
-      case IncoherentStokesTransposeKernel::INPUT_DATA:
-      case IncoherentStokesTransposeKernel::OUTPUT_DATA:
-        return 
-          (size_t) itsParameters.nrStations * 
-          itsParameters.nrChannelsPerSubband *
-          itsParameters.nrSamplesPerChannel * 
-          NR_POLARIZATIONS * sizeof(std::complex<float>);
-      default:
-        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
-      }
-    }
 
     template<> CompileDefinitions
     KernelFactory<IncoherentStokesTransposeKernel>::compileDefinitions() const
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
+
+      defs["NR_STATIONS"] = 
+        lexical_cast<string>(itsParameters.nrStations);
+      defs["NR_CHANNELS"] = 
+        lexical_cast<string>(itsParameters.nrChannels);
+      defs["NR_SAMPLES_PER_CHANNEL"] = 
+        lexical_cast<string>(itsParameters.nrSamplesPerChannel);
+
       defs["TILE_SIZE"] = lexical_cast<string>(itsParameters.tileSize);
       return defs;
     }

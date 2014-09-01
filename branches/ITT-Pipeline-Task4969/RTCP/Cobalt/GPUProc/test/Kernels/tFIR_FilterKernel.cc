@@ -45,13 +45,21 @@ TEST(FIR_FilterKernel)
   ps.add("Observation.nrBeams", "1");
   ps.add("Observation.Beam[0].subbandList", "[0]");
   ps.add("OLAP.CNProc.integrationSteps", "128");
-  ps.add("Observation.channelsPerSubband", "64");
+  ps.add("Cobalt.Correlator.nrChannelsPerSubband", "64");
   ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
   ps.add("Observation.DataProducts.Output_Correlated.filenames", "[L12345_SAP000_SB000_uv.MS]");
   ps.add("Observation.DataProducts.Output_Correlated.locations", "[localhost:.]");
   ps.updateSettings();
 
-  KernelFactory<FIR_FilterKernel> factory(ps);
+  FIR_FilterKernel::Parameters params(ps,
+    ps.settings.antennaFields.size(),
+    true,
+    1,
+    ps.settings.correlator.nrChannels,
+    1.0f
+    );
+
+  KernelFactory<FIR_FilterKernel> factory(params);
 
   gpu::Device device(gpu::Platform().devices()[0]);
   gpu::Context context(device);
@@ -65,14 +73,10 @@ TEST(FIR_FilterKernel)
 
   gpu::HostMemory
     hInput(context, dInput.size()),
-    hOutput(context, dOutput.size()),
-    hCoeff(context, dCoeff.size()),
-    hHistory(context, dHistory.size());
+    hOutput(context, dOutput.size());
 
   cout << "dInput.size() = " << dInput.size() << endl;
   cout << "dOutput.size() = " << dOutput.size() << endl;
-  cout << "dCoeff.size() = " << dCoeff.size() << endl;
-  cout << "dHistory.size() = " << dHistory.size() << endl;
 
   // hInput.get<i8complex>()[2176] = i8complex(1,0);
 
@@ -86,14 +90,11 @@ TEST(FIR_FilterKernel)
   // initialize history data
   dHistory.set(0);
 
-  FIR_FilterKernel::Buffers buffers(dInput, dOutput, dCoeff, dHistory);
-  auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, buffers));
-  PerformanceCounter counter(context);
+  auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, dInput, dOutput));
   BlockID blockId;
-  kernel->enqueue(blockId,  0);
+  kernel->enqueue(blockId, 0);
 
   stream.readBuffer(hOutput, dOutput);
-  stream.readBuffer(hCoeff, dCoeff);
 
   /*  Comment out printing of this information: it disrupts the logfile and add no information.
   float* buf = hOutput.get<float>();
@@ -123,13 +124,19 @@ TEST(HistoryFlags)
   ps.add("Observation.nrBeams", "1");
   ps.add("Observation.Beam[0].subbandList", "[0]");
   ps.add("OLAP.CNProc.integrationSteps", "128");
-  ps.add("Observation.channelsPerSubband", "64");
+  ps.add("Cobalt.Correlator.nrChannelsPerSubband", "64");
   ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
   ps.add("Observation.DataProducts.Output_Correlated.filenames", "[L12345_SAP000_SB000_uv.MS]");
   ps.add("Observation.DataProducts.Output_Correlated.locations", "[localhost:.]");
   ps.updateSettings();
 
-  FIR_FilterKernel::Parameters params(ps);
+  FIR_FilterKernel::Parameters params(ps,
+    ps.settings.antennaFields.size(),
+    true,
+    1,
+    ps.settings.correlator.nrChannels,
+    1.0f
+    );
 
   KernelFactory<FIR_FilterKernel> factory(params);
 
@@ -139,12 +146,9 @@ TEST(HistoryFlags)
 
   gpu::DeviceMemory
     dInput(context, factory.bufferSize(FIR_FilterKernel::INPUT_DATA)),
-    dOutput(context, factory.bufferSize(FIR_FilterKernel::OUTPUT_DATA)),
-    dCoeff(context, factory.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
-    dHistory(context, factory.bufferSize(FIR_FilterKernel::HISTORY_DATA));
+    dOutput(context, factory.bufferSize(FIR_FilterKernel::OUTPUT_DATA));
 
-  FIR_FilterKernel::Buffers buffers(dInput, dOutput, dCoeff, dHistory);
-  auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, buffers));
+  auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, dInput, dOutput));
 
   /*
    * Test propagation of history flags. Each block tests for the flags of

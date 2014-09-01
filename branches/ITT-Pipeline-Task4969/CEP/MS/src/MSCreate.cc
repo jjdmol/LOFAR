@@ -851,6 +851,7 @@ void MSCreate::addImagerColumns (MeasurementSet& ms)
     ArrayColumn<Complex> mcd(ms, colName);
     mcd.rwKeywordSet().define ("CHANNEL_SELECTION",selection);
   }
+  /*///
   colName = MS::columnName(MS::IMAGING_WEIGHT);
   if (! ms.tableDesc().isColumn(colName)) {
     TableDesc td;
@@ -864,4 +865,5 @@ void MSCreate::addImagerColumns (MeasurementSet& ms)
     TiledColumnStMan stMan("TiledImagingWeight", dataTileShape.getLast(2));
     ms.addColumn (td, stMan);
   }
+  */
 }

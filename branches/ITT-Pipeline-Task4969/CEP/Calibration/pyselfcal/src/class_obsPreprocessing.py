@@ -127,7 +127,7 @@ class obsPreprocessing:
 				self.nbpixel = self.nbpixel+1
 					
 		#Imaging now with the image 
-		cmd_image='awimager ms=%s image=%sImage_substraction%s weight=briggs robust=1 npix=%s cellsize=%sarcsec data=CORRECTED_DATA padding=1.18 niter=%s stokes=I operation=mfclark timewindow=300 UVmin=%s UVmax=%s wmax=%s fits threshold=%sJy'%(self.initialConcatMS,self.preprocessImageDir,self.i,self.nbpixel,self.pixsize,self.nIteration,self.UVmin,self.UVmax,self.wmax,threshold) 
+		cmd_image='awimager ms=%s image=%sImage_substraction%s weight=briggs robust=1 npix=%s cellsize=%sarcsec data=CORRECTED_DATA padding=1.18 niter=%s stokes=I operation=mfclark timewindow=300 UVmin=%s UVmax=%s wmax=%s fits="" threshold=%sJy'%(self.initialConcatMS,self.preprocessImageDir,self.i,self.nbpixel,self.pixsize,self.nIteration,self.UVmin,self.UVmax,self.wmax,threshold) 
 		print ''
 		print cmd_image
 		print ''

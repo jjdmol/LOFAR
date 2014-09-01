@@ -32,9 +32,14 @@ namespace LOFAR
     class PerformanceCounter
     {
     public:
-      PerformanceCounter(const gpu::Context &context);
+      PerformanceCounter(const gpu::Context &context, const std::string &name);
+      ~PerformanceCounter();
 
-      void logTime();
+      void recordStart(const gpu::Stream &stream);
+      void recordStop(const gpu::Stream &stream);
+
+    private:
+      const std::string name;
 
       // Public event: it needs to be inserted into a stream.
       // @{
@@ -42,9 +47,13 @@ namespace LOFAR
       gpu::Event stop;
       // @}
 
+      // Whether we have posted events that still need to be
+      // processed in logTime()
+      bool recording;
+
       RunningStatistics stats;
-    private:
-      
+
+      void logTime();
     };
   }
 }

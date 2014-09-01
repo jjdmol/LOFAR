@@ -30,7 +30,9 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarTypes.h>
 #include <CoInterface/BlockID.h>
+#include <CoInterface/SmartPtr.h>
 #include <GPUProc/Kernels/FFT_Kernel.h>
+#include <GPUProc/KernelFactory.h>
 #include <GPUProc/PerformanceCounter.h>
 
 using namespace std;
@@ -81,7 +83,7 @@ int main() {
 
   const size_t size = 16 * 1024 * 1024 + 256;
   const int fftSize = 256;
-  const unsigned nrFFTs = size / fftSize;
+  const int nrFFTs = size / fftSize;
 
   // GPU buffers and plans
   gpu::HostMemory inout(ctx, size  * sizeof(fcomplex));
@@ -90,14 +92,17 @@ int main() {
   // Dummy Block-ID
   BlockID blockId;
 
-  FFT_Kernel fftFwdKernel(stream, fftSize, nrFFTs, true, d_inout);
-  FFT_Kernel fftBwdKernel(stream, fftSize, nrFFTs, false, d_inout);
+  KernelFactory<FFT_Kernel> factoryFwd(FFT_Kernel::Parameters(fftSize, size, true));
+  KernelFactory<FFT_Kernel> factoryBwd(FFT_Kernel::Parameters(fftSize, size, false));
+
+  SmartPtr<FFT_Kernel> fftFwdKernel(factoryFwd.create(stream, d_inout, d_inout));
+  SmartPtr<FFT_Kernel> fftBwdKernel(factoryBwd.create(stream, d_inout, d_inout));
 
   // FFTW buffers and plans
   ASSERT(fftw_init_threads() != 0);
   fftw_plan_with_nthreads(4); // use up to 4 threads (don't care about test performance, but be impatient anyway...)
 
-  fftwf_complex *f_inout = (fftwf_complex*)fftw_malloc(fftSize * nrFFTs * sizeof(fftw_complex));
+  fftwf_complex *f_inout = (fftwf_complex*)fftw_malloc(size * sizeof(fftw_complex));
   ASSERT(f_inout);
 
   fftwf_plan f_fftFwdPlan = fftwf_plan_many_dft(1, &fftSize, nrFFTs, // int rank, const int *n (=dims), int howmany,
@@ -125,7 +130,7 @@ int main() {
     // Forward FFT: compute and I/O
     stream.writeBuffer(d_inout, inout);
         
-    fftFwdKernel.enqueue(blockId);
+    fftFwdKernel->enqueue(blockId);
     stream.readBuffer(inout, d_inout, true);
     stream.synchronize();
     // do a call to the stats functionality 
@@ -143,7 +148,7 @@ int main() {
     }
 
     // Backward FFT: compute and I/O
-    fftFwdKernel.enqueue(blockId);
+    fftFwdKernel->enqueue(blockId);
     stream.synchronize();
     stream.readBuffer(inout, d_inout, true);
 
@@ -184,7 +189,7 @@ int main() {
 
     // GPU: Forward FFT: compute and I/O
     stream.writeBuffer(d_inout, inout);
-    fftFwdKernel.enqueue(blockId);
+    fftFwdKernel->enqueue(blockId);
     stream.readBuffer(inout, d_inout, true);
 
     // FFTW: Forward FFT

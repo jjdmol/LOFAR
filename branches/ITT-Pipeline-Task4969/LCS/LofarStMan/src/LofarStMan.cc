@@ -157,6 +157,10 @@ void LofarStMan::registerClass()
   DataManager::registerCtor ("LofarStMan", makeObject);
 }
 
+Bool LofarStMan::isRegular() const
+{
+  return False;
+}
 Bool LofarStMan::canAddRow() const
 {
   return False;

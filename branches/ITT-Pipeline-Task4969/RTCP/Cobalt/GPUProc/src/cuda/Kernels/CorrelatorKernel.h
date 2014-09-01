@@ -29,21 +29,29 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    class CorrelatorKernel : public Kernel
+    class CorrelatorKernel : public CompiledKernel
     {
     public:
       static std::string theirSourceFile;
       static std::string theirFunction;
 
-      struct Parameters : Kernel::Parameters
-      {
-        Parameters(const Parset& ps);
-      };
-
       enum BufferType
       {
         INPUT_DATA,
         OUTPUT_DATA
+      };
+
+      struct Parameters : Kernel::Parameters
+      {
+        Parameters(const Parset& ps);
+        unsigned nrStations;
+        unsigned nrStationsPerThread;
+        unsigned nrBaselines() const;
+
+        unsigned nrChannels;
+        unsigned nrSamplesPerChannel;
+
+        size_t bufferSize(BufferType bufferType) const;
       };
 
       CorrelatorKernel(const gpu::Stream &stream,
@@ -54,8 +62,8 @@ namespace LOFAR
 
     //# --------  Template specializations for KernelFactory  -------- #//
 
-    template<> size_t
-    KernelFactory<CorrelatorKernel>::bufferSize(BufferType bufferType) const;
+    template<> CompileDefinitions
+    KernelFactory<CorrelatorKernel>::compileDefinitions() const;
   }
 }
 

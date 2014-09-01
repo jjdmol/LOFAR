@@ -22,10 +22,10 @@
 
 #include "BandPassCorrectionKernel.h"
 
-#include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
 #include <CoInterface/BlockID.h>
+#include <CoInterface/Config.h>
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
 
@@ -45,12 +45,14 @@ namespace LOFAR
     string BandPassCorrectionKernel::theirFunction = "bandPassCorrection";
 
     BandPassCorrectionKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters(ps),
+      Kernel::Parameters("bandpassCorrection"),
+      nrStations(ps.settings.antennaFields.size()),
       nrBitsPerSample(ps.settings.nrBitsPerSample),
-      nrBytesPerComplexSample(ps.nrBytesPerComplexSample()),
-      nrSAPs(ps.settings.SAPs.size()),
+
       nrDelayCompensationChannels(ps.settings.beamFormer.nrDelayCompensationChannels),
       nrHighResolutionChannels(ps.settings.beamFormer.nrHighResolutionChannels),
+      nrSamplesPerChannel(ps.settings.blockSize / nrHighResolutionChannels),
+
       correctBandPass(ps.settings.corrections.bandPass)
     {
       dumpBuffers = 
@@ -60,15 +62,39 @@ namespace LOFAR
             ps.settings.observationID );
     }
 
+    size_t BandPassCorrectionKernel::Parameters::bufferSize(BandPassCorrectionKernel::BufferType bufferType) const
+    {
+      switch (bufferType) {
+      case BandPassCorrectionKernel::INPUT_DATA: 
+        return 
+            (size_t) nrStations * NR_POLARIZATIONS * 
+            nrSamplesPerChannel *
+            nrHighResolutionChannels *
+            sizeof(std::complex<float>);
+      case BandPassCorrectionKernel::OUTPUT_DATA:
+        return
+            (size_t) nrStations * NR_POLARIZATIONS * 
+            nrSamplesPerChannel *
+            nrHighResolutionChannels *
+            sizeof(std::complex<float>);
+      case BandPassCorrectionKernel::BAND_PASS_CORRECTION_WEIGHTS:
+        return
+            (size_t) nrHighResolutionChannels * sizeof(float);
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
+
     BandPassCorrectionKernel::BandPassCorrectionKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
+      CompiledKernel(stream, gpu::Function(module, theirFunction), buffers, params),
+      bandPassCorrectionWeights(stream.getContext(), params.bufferSize(BAND_PASS_CORRECTION_WEIGHTS))
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
-      setArg(2, buffers.bandPassCorrectionWeights);
+      setArg(2, bandPassCorrectionWeights);
 
       const unsigned nrChannels2 = params.nrHighResolutionChannels / params.nrDelayCompensationChannels;
 
@@ -84,54 +110,37 @@ namespace LOFAR
       nrOperations = nrSamples ;
       nrBytesRead = nrBytesWritten = nrSamples * sizeof(std::complex<float>);
 
-      gpu::HostMemory bpWeights(stream.getContext(), buffers.bandPassCorrectionWeights.size());
+      gpu::HostMemory bpWeights(stream.getContext(), bandPassCorrectionWeights.size());
       BandPass::computeCorrectionFactors(bpWeights.get<float>(),
                                          params.nrHighResolutionChannels,
                                          1.0 / params.nrHighResolutionChannels);
-      stream.writeBuffer(buffers.bandPassCorrectionWeights, bpWeights, true);
+      stream.writeBuffer(bandPassCorrectionWeights, bpWeights, true);
     }
 
 
     //--------  Template specializations for KernelFactory  --------//
-
-    template<> size_t 
-    KernelFactory<BandPassCorrectionKernel>::bufferSize(BufferType bufferType) const
-    {
-      switch (bufferType) {
-      case BandPassCorrectionKernel::INPUT_DATA: 
-        return 
-            (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
-            itsParameters.nrSamplesPerChannel *
-            itsParameters.nrHighResolutionChannels *
-            sizeof(std::complex<float>);
-      case BandPassCorrectionKernel::OUTPUT_DATA:
-        return
-            (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
-            itsParameters.nrSamplesPerChannel *
-            itsParameters.nrHighResolutionChannels *
-            sizeof(std::complex<float>);
-      case BandPassCorrectionKernel::BAND_PASS_CORRECTION_WEIGHTS:
-        return
-            (size_t) itsParameters.nrHighResolutionChannels * sizeof(float);
-      default:
-        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
-      }
-    }
 
     template<> CompileDefinitions
     KernelFactory<BandPassCorrectionKernel>::compileDefinitions() const
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
+
+      defs["NR_STATIONS"] = lexical_cast<string>(itsParameters.nrStations);
       defs["NR_BITS_PER_SAMPLE"] =
         lexical_cast<string>(itsParameters.nrBitsPerSample);
+
       defs["NR_CHANNELS_1"] =
         lexical_cast<string>(itsParameters.nrDelayCompensationChannels);
       defs["NR_CHANNELS_2"] =
         lexical_cast<string>(itsParameters.nrHighResolutionChannels /
                              itsParameters.nrDelayCompensationChannels);
+      defs["NR_SAMPLES_PER_CHANNEL"] = 
+        lexical_cast<string>(itsParameters.nrSamplesPerChannel);
+
       if (itsParameters.correctBandPass)
         defs["DO_BANDPASS_CORRECTION"] = "1";
+
       return defs;
     }
   }

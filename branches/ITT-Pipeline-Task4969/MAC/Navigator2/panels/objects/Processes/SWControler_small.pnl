@@ -43,12 +43,13 @@ PANEL,-1 -1 399 95 N "_3DFace" 2
 void levelChanged(string dp1, int swlvl,
                   string dp2, bool invalid) {
   if (swlvl == 6 ) {
-    if (observationChangedConnected) {
+/*    if (observationChangedConnected) {
       if (dpDisconnect(\"observationChanged\", MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations:_online.._value\",
                                           MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations:_online.._invalid\") == -1) {
         LOG_ERROR(\"SWController_small.pnl:main|Couldn't disconnect to: \"+MainDBName+\":LOFAR_PermSW_MACScheduler.activeObservations: \"+getLastError());
       }
     }
+    */
     observationChangedConnected = false;
       
     if (navFunct_dpReachable(MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\")) {

@@ -42,11 +42,8 @@
 #error Precondition violated: NR_SAMPLES_PER_CHANNEL > 0 && NR_SAMPLES_PER_CHANNEL % TIME_INTEGRATION_FACTOR == 0
 #endif
 
-// This kernel is also compiled for unused combination of settings.
-// with 0 tabs. Change to warning untill we have optional kernel compilation
-
 #if !(NR_TABS >= 1)
-#warning Precondition violated: NR_TABS >= 1
+#error Precondition violated: NR_TABS >= 1
 #endif
 
 //4D input array of complex samples. For each tab and polarization there are

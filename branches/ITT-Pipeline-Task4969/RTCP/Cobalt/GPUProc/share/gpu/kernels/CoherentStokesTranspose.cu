@@ -52,10 +52,8 @@
 #error Precondition violated: NR_SAMPLES_PER_CHANNEL >= 1
 #endif
 
-// This kernel is also compiled for unused combination of settings.
-// with 0 tabs. Change to warning untill we have optional kernel compilation
 #if !(NR_TABS >= 1)
-#warning Precondition violated: NR_TABS >= 1
+#error Precondition violated: NR_TABS >= 1
 #endif
 
 #if !(NR_CHANNELS >= 16)

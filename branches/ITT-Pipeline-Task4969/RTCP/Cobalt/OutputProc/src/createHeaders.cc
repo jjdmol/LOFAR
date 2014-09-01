@@ -51,8 +51,7 @@ int main(int argc, char *argv[])
   }
 
   Parset parset(argv[1]);
-
-  Parset feedbackLTA;
+  MACIO::RTmetadata rtmd(parset.observationID(), "", ""); // dummy
 
   // Process correlated data
   if (parset.settings.correlator.enabled) {
@@ -60,11 +59,10 @@ int main(int argc, char *argv[])
     {
       string logPrefix = str(format("[correlated stream %3u] ") % fileIdx);
 
-      Pool<StreamableData> outputPool(logPrefix);
+      Pool<StreamableData> outputPool(logPrefix, true);
 
-      SubbandOutputThread writer(parset, fileIdx, outputPool, logPrefix, ".");
+      SubbandOutputThread writer(parset, fileIdx, outputPool, rtmd, "rtmd key prefix", logPrefix, ".");
       writer.createMS();
-      feedbackLTA.adoptCollection(writer.feedbackLTA());
     }
   }
 
@@ -74,19 +72,12 @@ int main(int argc, char *argv[])
     {
       string logPrefix = str(format("[beamformed stream %3u] ") % fileIdx);
 
-      Pool<TABTranspose::BeamformedData> outputPool(logPrefix);
+      Pool<TABTranspose::BeamformedData> outputPool(logPrefix, true);
 
-      TABOutputThread writer(parset, fileIdx, outputPool, logPrefix, ".");
+      TABOutputThread writer(parset, fileIdx, outputPool, rtmd, "rtmd key prefix", logPrefix, ".");
       writer.createMS();
-      feedbackLTA.adoptCollection(writer.feedbackLTA());
     }
   }
-
-  // Add global parameters
-  feedbackLTA.adoptCollection(parset.getGlobalLTAFeedbackParameters());
-
-  // Write to disk
-  feedbackLTA.writeFile(str(format("Observation%d_feedback") % parset.settings.observationID), false);
 
   return 0;
 }

@@ -24,11 +24,10 @@
 #include <lofar_config.h>
 
 //# Includes
+#include <unistd.h>
 #include <Common/LofarLogger.h>
 #include <MACIO/RTmetadata.h>
 #include <MACIO/KVT_Protocol.ph>
-
-#include <boost/date_time/gregorian/gregorian.hpp>
 
 using namespace LOFAR;
 using namespace LOFAR::MACIO;
@@ -61,7 +60,7 @@ void test()
 	pairs.push_back(pair);
 	myLogger.log(pairs);
 
-	myLogger.log("foo", 1.2);
+	myLogger.log("Get a drink at the foobar", 4.25);
 }
 
 int main (int	/*argc*/, char* argv[]) 

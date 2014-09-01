@@ -23,7 +23,6 @@
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
-#include <GPUProc/SubbandProcs/BeamFormerFactories.h>
 #include <GPUProc/PerformanceCounter.h>
 #include <CoInterface/BlockID.h>
 #include <CoInterface/Parset.h>
@@ -56,27 +55,19 @@ int main(int argc, char *argv[])
   gpu::Context ctx(device);
   gpu::Stream stream(ctx);
 
-  
-  KernelFactory<DelayAndBandPassKernel> factory(BeamFormerFactories::delayCompensationParams(ps));
-  stream.synchronize();
+  DelayAndBandPassKernel::Parameters dbpparams(ps, false);
+  KernelFactory<DelayAndBandPassKernel> factory(dbpparams);
 
   gpu::DeviceMemory
     inputData(ctx, factory.bufferSize(DelayAndBandPassKernel::INPUT_DATA)),
-    filteredData(ctx, factory.bufferSize(DelayAndBandPassKernel::OUTPUT_DATA)),
-    delaysAtBegin(ctx, factory.bufferSize(DelayAndBandPassKernel::DELAYS)),
-    delaysAfterEnd(ctx, factory.bufferSize(DelayAndBandPassKernel::DELAYS)),
-    phase0s(ctx, factory.bufferSize(DelayAndBandPassKernel::PHASE_ZEROS)),
-    bandPassCorrectionWeights(ctx, factory.bufferSize(DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS));
+    filteredData(ctx, factory.bufferSize(DelayAndBandPassKernel::OUTPUT_DATA));
 
-  DelayAndBandPassKernel::Buffers buffers(inputData, filteredData, delaysAtBegin, delaysAfterEnd, phase0s, bandPassCorrectionWeights);
-
-  auto_ptr<DelayAndBandPassKernel> kernel(factory.create(stream, buffers));
+  auto_ptr<DelayAndBandPassKernel> kernel(factory.create(stream, inputData, filteredData));
 
 
   size_t subbandIdx = 0;
   float centralFrequency = ps.settings.subbands[subbandIdx].centralFrequency;
   size_t SAP = ps.settings.subbands[subbandIdx].SAP;
-  PerformanceCounter counter(ctx);
   BlockID blockId;
   kernel->enqueue(blockId, centralFrequency, SAP);
   stream.synchronize();

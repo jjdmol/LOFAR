@@ -1,7 +1,7 @@
 Observation.nrBitsPerSample		 = 8
 Observation.sampleClock			 = 200
 Observation.nrPolarisations		 = 2
-Observation.channelsPerSubband		 = 64
+Cobalt.Correlator.nrChannelsPerSubband		 = 64
 Observation.VirtualInstrument.stationList = [CS001]
 Observation.antennaSet                   = LBA_INNER
 Observation.Dataslots.CS001LBA.RSPBoardList = [0]

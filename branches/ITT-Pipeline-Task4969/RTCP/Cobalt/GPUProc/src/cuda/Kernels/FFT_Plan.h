@@ -34,7 +34,7 @@ namespace LOFAR
     class FFT_Plan
     {
     public:
-      FFT_Plan(gpu::Context &context, unsigned fftSize, unsigned nrFFTs);
+      FFT_Plan(const gpu::Context &context, unsigned fftSize, unsigned nrFFTs);
       ~FFT_Plan();
 
       // Tie the plan to a specific stream
