@@ -152,7 +152,7 @@ namespace LOFAR
       // Write data point(s) for monitoring (PVSS).
       itsMdLogger.log(itsMdKeyPrefix + PN_CGP_OBSERVATION_NAME, boost::lexical_cast<string>(ps.observationID()));
       for (unsigned i = 0; i < subbandIndices.size(); ++i) {
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_SUBBAND + '[' + boost::lexical_cast<string>(subbandIndices[i]) + ']',
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_SUBBAND + '[' + boost::lexical_cast<string>(i) + ']',
                         (int)subbandIndices[i]);
       }
 
@@ -719,13 +719,13 @@ namespace LOFAR
 
         const double blockDuration = ps.settings.blockDuration();
 
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPING + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPING + '[' + lexical_cast<string>(id.localSubbandIdx) + ']',
                         correlatorLoss.dropping || beamFormerLoss.dropping);
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_WRITTEN  + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_WRITTEN  + '[' + lexical_cast<string>(id.localSubbandIdx) + ']',
                         static_cast<float>(correlatorLoss.blocksWritten * blockDuration) +
                         static_cast<float>(beamFormerLoss.blocksWritten * blockDuration / multiSender.nrFiles())
                        );
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPED  + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPED  + '[' + lexical_cast<string>(id.localSubbandIdx) + ']',
                         static_cast<float>(correlatorLoss.blocksDropped * blockDuration) +
                         static_cast<float>(beamFormerLoss.blocksDropped * blockDuration / multiSender.nrFiles())
                        );
