@@ -37,6 +37,7 @@ PVSS00pmon			-		M	Y	LOFAR_PermSW_Daemons_PVSS00pmon
 LogProcessor			-		M	Y	LOFAR_PermSW_Daemons_LogProcessor
 ServiceBroker			- 		M	Y	LOFAR_PermSW_Daemons_ServiceBroker
 SASGateway			-		M	Y	LOFAR_PermSW_Daemons_SASGateway
+PVSSGateway			-		M	Y	LOFAR_PermSW_Daemons_PVSSGateway
 SoftwareMonitor			-		M	Y	LOFAR_PermSW_Daemons_SoftwareMonitor
 CTStartDaemon			-		M	Y	LOFAR_PermSW_CTStartDaemon
 MACScheduler			MS		M	Y	LOFAR_PermSW_MACScheduler
@@ -99,6 +100,7 @@ PVSS00pmon			-		S	Y	LOFAR_PermSW_Daemons_PVSS00pmon
 LogProcessor			LGP		S	Y	LOFAR_PermSW_Daemons_LogProcessor
 ServiceBroker			- 		S	Y	LOFAR_PermSW_Daemons_ServiceBroker
 SASGateway			SGW		S	Y	LOFAR_PermSW_Daemons_SASGateway
+PVSSGateway			-		S	Y	LOFAR_PermSW_Daemons_PVSSGateway
 SoftwareMonitor			SWM		S	Y	LOFAR_PermSW_Daemons_SoftwareMonitor
 CTStartDaemon			-		S	Y	LOFAR_PermSW_CTStartDaemon
 RSPDriver			-		S	Y	LOFAR_PermSW_RSPDriver
@@ -115,4 +117,3 @@ StnObservation			OBS		S	N	LOFAR_ObsSW_@observation@
 BeamControl			BC		S	Y	LOFAR_ObsSW_@observation@_BeamControl
 CalibrationControl		CC		S	Y	LOFAR_ObsSW_@observation@_CalibrationControl
 TBBControl			TBC		S	Y	LOFAR_ObsSW_@observation@_TBBControl
-
