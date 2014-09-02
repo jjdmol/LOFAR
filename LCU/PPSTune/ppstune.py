@@ -53,9 +53,9 @@ def version_string():
     **Example**
 
     >>> version_string()
-    '1.2'
+    '1.4'
     '''
-    return '1.2'
+    return '1.4'
 
 
 #######################
@@ -939,7 +939,8 @@ def rspctl_status_diffs(rspctl_cmd = '/opt/lofar/bin/rspctl', sleep_s = 1.0, tim
     r'''
     Analyze the output of ``rspctl --status`` to obtain the diffs and
     determine if we are measuring the diffs in an even or an odd
-    second since startup of the boards.
+    second since startup of the boards, or if we are in 160 MHz clock
+    mode.
 
     **Parameters**
 
@@ -974,6 +975,9 @@ def rspctl_status_diffs(rspctl_cmd = '/opt/lofar/bin/rspctl', sleep_s = 1.0, tim
     ('odd', [512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 511, 512, 512, 512, 512, 511, 512, 512, 512, 512, 513, 512, 512, 512, 512, 513])
     >>> rspctl_status_diffs('test/rspctl-even', sleep_s = 0.0)
     ('even', [0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    >>> rspctl_status_diffs('test/rspctl-160', sleep_s = 0.0)
+    ('even', [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0])
+
     '''
     time.sleep(sleep_s)
     rspctl = check_output([rspctl_cmd, '--status'], timeout_s = timeout_s)
@@ -985,15 +989,17 @@ def rspctl_status_diffs(rspctl_cmd = '/opt/lofar/bin/rspctl', sleep_s = 1.0, tim
                                for line_no in diff_header_line_no])
     records    = [parse_rspctl_status_diff_line(line) for line in diff_lines]
     diffs      = [record['diff']             for record in records]
-    even       = [record['slices'] == 195312 for record in records]
-    odd        = [record['slices'] == 195313 for record in records]
-
-    if all(even):
+    slices_even_second = [record['slices'] == 195312 for record in records]
+    slices_odd_second  = [record['slices'] == 195313 for record in records]
+    slices_160_mhz = [record['slices'] == 156250 for record in records]
+    if all(slices_even_second):
         return ('even', diffs)
-    elif all(odd):
+    elif all(slices_odd_second):
         return ('odd', diffs)
+    elif all(slices_160_mhz):
+        return('even', diffs)
     else:
-        raise RuntimeError('rspctl_status_diffs(): Measurement not in one second, please try again.\n$ rspctl --status\n%s' % rspctl)
+        raise RuntimeError('rspctl_status_diffs(): Measurement not in one second or clock neither in 160 nor 200 MHz: please look at slices\n$ rspctl --status\n%s' % rspctl)
         
 
 def fan_state(state_byte):
@@ -1502,8 +1508,8 @@ def measure_all_delays(station, clock_mhz,
         Command to run rspctl. Use a different value for testing.        
 
     num_delay_steps : int
-        Number of 0.078 ns delay steps to scan. Default is the maximum
-        of 64 at LOFAR RSP boards.
+        Number of 0.075 ns delay steps to scan at 200 MHz, 0.060 ns at
+        160 MHz. Default is the maximum of 64 at LOFAR RSP boards.
 
 
     **Returns**
@@ -2734,10 +2740,18 @@ def pps_tune_main(argv):
             logging.info('Clocks locked to %d MHz', clock_mhz)
             for swlevel_step in range(2, initial_swlevel+1):
                 swlevel(swlevel_step)
-            logging.info('Starting TBBs...')
-            start_tbb_output = check_output('/home/lofarsys/startTBB.sh',
-                                            timeout_s = 60.0)
-            logging.debug('startTBB.sh output:\n%s', start_tbb_output)
+            start_tbb_sh = os.path.join('/home', 'lofarsys', 'startTBB.sh')
+            if os.path.exists(start_tbb_sh):
+                logging.info('Starting TBBs...')
+                start_tbb_output = check_output(start_tbb_sh, timeout_s=60.0)
+                logging.debug('startTBB.sh output:\n%s', start_tbb_output)
+            else:
+                logging.warn('''Will not start TBBs: %s not found.
+WARNING: ==============================================================
+WARNING: This is totally harmless when in local mode, but cause to warn
+WARNING: software support <softwaresupport@astron.nl> when in ILT mode.
+WARNING: ==============================================================''',
+                             start_tbb_sh)
         else:
             swlevel(initial_swlevel)
 
