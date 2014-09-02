@@ -7,7 +7,7 @@ case `hostname` in
         lcurun -s $1 -c 'grep -e "\(ERR\|WARN\)" /localhome/ppstune/log/pps-tuning-*.log' |grep `date +'%Y-%m-%d'`|sort -k 1,4 ;;
 
     *) 
-       cd /opt/stationtest
+       cd /opt/stationtest;
        PYTHONPATH="/opt/stationtest/modules:$PYTHONPATH" ppstune.py $1 $2 $3 $4 $5 $6 $7 $8 $9 ;;
 esac
 
