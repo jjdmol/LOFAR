@@ -471,6 +471,8 @@ class imager_awimager(LOFARnodeTCP):
         dataRange	= range(fitsImage[0].shape[2])
         sortedData	=  range(fitsImage[0].shape[2] ** 2)
 
+        # FIXME We have the sneaking suspicion that this takes very long
+        # due to bad coding style... (double for loop with compute in inner loop)
         for i in dataRange:
             for j in dataRange:
                 sortedData[i * fitsImage[0].shape[2] + j]	=  scidata[0,0,i,j]

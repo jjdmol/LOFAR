@@ -250,7 +250,7 @@ class msss_imager_pipeline(control):
         # *********************************************************************
         # (6) Finalize:
         placed_data_image_map = self._finalize(aw_image_mapfile,
-            processed_ms_dir, raw_ms_per_image_map_path, sourcelist_map,
+            processed_ms_dir, raw_ms_per_image_map_path, source_list_map_path,
             minbaseline, maxbaseline, target_mapfile, output_image_mapfile,
             found_sourcedb_path)
 
