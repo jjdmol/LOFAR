@@ -1,4 +1,4 @@
-# -- Output_CoherentStokes --
+# -- Output_FlysEye --
 #
 # Component description of a InstrumentModel Dataproduct
 #
@@ -22,7 +22,7 @@
 # -- Output_CoherentStokes --
 #      name       	vers   qual  		constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  Output_CoherentStokes	4.0.0  development  	'node constraint'  "CoherentStokes specification"
+node  Output_FlysEye	4.0.0  development  	'node constraint'  "FlysEye specification"
 
 #
 # name			name of the parameter
