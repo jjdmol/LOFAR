@@ -23,6 +23,11 @@
 #
 # $Id$
 
+echo
+echo "Initializing the Calibration and Imaging Tiger Team Release"
+echo "You should not see this message in any other release of the LOFAR software"
+echo
+
 # Define root here.
 # This is a placeholder, so do NOT change the line.
 # The actual value is filled in by make install (see Makefile.am).
@@ -57,6 +62,17 @@ if [ "$LOFARROOT" != "" ]; then
     PYTHONPATH=`echo $PYTHONPATH | sed -e "s%:$lfr_pyt:%:%g" -e "s%^$lfr_pyt:%%"  -e "s%:$lfr_pyt$%%" -e "s%^$lfr_pyt$%%"`
     export PYTHONPATH
 fi
+
+
+if [ "$LD_LIBRARY_PATH" != "" ]; then
+  echo "WARNING"
+  echo "LD_LIBRARY_PATH contains path(s) to other packages"
+  echo "LD_LIBRARY_PATH=\"$LD_LIBRARY_PATH\""
+  echo "These might interfere with the citt release, so they will be removed from the path"
+  export LD_LIBRARY_PATH=""
+fi
+
+
 
 # Now define the new LOFARROOT (if possible)
 # Do it only if the bin directory exists.

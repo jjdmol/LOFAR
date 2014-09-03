@@ -23,6 +23,11 @@
 #
 # $Id$
 
+echo
+echo "Initializing the Calibration and Imaging Tiger Team Release"
+echo "You should not see this message in any other release of the LOFAR software"
+echo
+
 # Define root here.
 # This is a placeholder, so do NOT change the line.
 # The actual value is filled in by make install (see Makefile.am).
@@ -89,6 +94,18 @@ else
         set lfr_pyt = "$lfr_path/$lfr_pylibdir"
         setenv PYTHONPATH `echo $PYTHONPATH | sed -e "s%:${lfr_pyt}:%:%g" -e "s%^${lfr_pyt}:%%"  -e "s%:${lfr_pyt}"'$%%' -e "s%^${lfr_pyt}"'$%%'`
     endif
+    
+    if( "${?LD_LIBRARY_PATH}" != 0 ) then
+        if( "${LD_LIBRARY_PATH}" != "" ) then
+          echo "=== WARNING ==="
+            echo "LD_LIBRARY_PATH contains path(s) to other packages"
+            echo "LD_LIBRARY_PATH='$LD_LIBRARY_PATH'"
+            echo "These might interfere with the citt release, so they will be removed from the path"
+            echo
+            setenv LD_LIBRARY_PATH ""
+        endif
+    endif
+    
 
     # Add the path to the standard paths.
     if (! $?PATH) then
