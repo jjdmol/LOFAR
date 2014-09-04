@@ -53,21 +53,28 @@ void OperationClean::init()
 {
   Operation::init();
 
-  Vector<Double> userScaleSizes(itsParset.getDoubleVector("clean.uservector",std::vector<double>(1,0.),false));
-  String scaleMethod;
-  Vector<Float> userVector(1); userVector(0)=0;
-//   convertArray (userVector, userScaleSizes);
+  Vector<Float> userVector(itsParset.getFloatVector("clean.uservector",std::vector<float>(0)));
   
-//   if (userScaleSizes.size() > 1) 
-//   {
-    scaleMethod = "uservector";
-//   } 
-//   else 
-//   {
-//     scaleMethod = "nscales";
-//   }
+  Int nscales = itsParset.getInt("clean.nscales", 0);
+  if (nscales < 1) nscales = 1;
   
-  itsImager->setscales(scaleMethod, 1, userVector);
+  String scaleMethod = "uservector"; // always set to uservector, see comment below
+  
+  if (userVector.size() == 0) 
+  {
+    userVector.resize(nscales);
+    userVector(0) = 0;
+    // This is how the scales are set in MFMSCleanImageSkyModel and MSCleanImageSkyModel.
+    // WBCleanImageSkyModel does not set scales when no uservector is supplied
+    // therefore we fill the uservector here.
+    Float scaleInc = 2.0;
+    for (Int scale=1; scale<nscales;scale++) 
+    {
+      userVector(scale) = scaleInc * pow(10.0, (Float(scale)-2.0)/2.0);
+    }
+  }
+  
+  itsImager->setscales(scaleMethod, nscales, userVector);
 
 
   Double cyclefactor   = itsParset.getDouble("clean.cyclefactor",1.5);

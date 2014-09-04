@@ -464,14 +464,18 @@ Record Imager::initClean(const String& algorithm,
         doWideBand_p = True;
         useNewMTFT_p=False;
 
-        if (!scaleInfoValid_p) {
+        if (!scaleInfoValid_p) 
+        {
           this->unlock();
           os << LogIO::WARN << "Scales not yet set, using power law" << LogIO::POST;
           sm_p = new WBCleanImageSkyModel(ntaylor_p, 1 ,reffreq_p);
         }
-        if (scaleMethod_p=="uservector") {      
+        if (scaleMethod_p == "uservector")
+        { 
           sm_p = new WBCleanImageSkyModel(ntaylor_p,userScaleSizes_p,reffreq_p);
-        } else {
+        }
+        else 
+        {
           sm_p = new WBCleanImageSkyModel(ntaylor_p,nscales_p,reffreq_p);
         }
         os << LogIO::NORMAL // Loglevel INFO
