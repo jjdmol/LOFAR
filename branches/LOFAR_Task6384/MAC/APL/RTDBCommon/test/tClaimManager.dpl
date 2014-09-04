@@ -18,4 +18,5 @@ ClaimManager.ClaimManager	1#1
 		claimDates	10#14
 
 # Datapoint/DpId
+DpName	TypeName	ID
 ClaimManager	ClaimManager	1483
