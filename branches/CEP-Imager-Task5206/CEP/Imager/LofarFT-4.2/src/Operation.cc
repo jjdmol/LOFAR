@@ -65,6 +65,11 @@ void Operation::initData()
     select = '(' + select + ") && ANTENNA1 != ANTENNA2";
   }
 
+  if (!itsMS.tableDesc().isColumn("CORRECTED_DATA"))
+  {
+    throw(AipsError("CORRECTED_DATA column not found."));
+  }
+  
   MSSpWindowColumns window(itsMS.spectralWindow());
   Vector<Int> wind(window.nrow());
   for(uInt iii=0;iii<window.nrow();++iii){wind(iii)=iii;};
