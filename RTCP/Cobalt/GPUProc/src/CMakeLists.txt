@@ -132,6 +132,7 @@ install(PROGRAMS
 
 # install support scripts (install, roll-out, debugging) into sbin
 install(PROGRAMS
+  scripts/bw_monitor.sh
   scripts/cobaltswitch
   scripts/Cobalt_build.sh
   scripts/Cobalt_install.sh
