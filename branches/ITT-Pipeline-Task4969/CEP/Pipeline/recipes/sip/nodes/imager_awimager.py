@@ -468,29 +468,22 @@ class imager_awimager(LOFARnodeTCP):
         fitsImage	= pyfits.open(fits_image_path) 
         scidata 	= fitsImage[0].data 
 
-        #dataRange	= range(fitsImage[0].shape[2])
-        #sortedData	=  range(fitsImage[0].shape[2] ** 2)
+        dataRange	= range(fitsImage[0].shape[2])
+        sortedData	=  range(fitsImage[0].shape[2] ** 2)
 
         # FIXME We have the sneaking suspicion that this takes very long
         # due to bad coding style... (double for loop with compute in inner loop)
-        #for i in dataRange:
-        #    for j in dataRange:
-        #        sortedData[i * fitsImage[0].shape[2] + j]	=  scidata[0,0,i,j]
+        for i in dataRange:
+            for j in dataRange:
+                sortedData[i * fitsImage[0].shape[2] + j]	=  scidata[0,0,i,j]
 
-        #sortedData 		= sorted(sortedData)
+        sortedData 		= sorted(sortedData)
 
         # Percent of faintest data to use to determine 5sigma value : use 5%			
-        #dataPercent		= int(fitsImage[0].shape[2] * 0.05)
-        #fiveSigmaData	= sum(sortedData[0:dataPercent]) / dataPercent	
-        #threshold		= abs(fiveSigmaData) / 5.0 * 2.335 / 2.0
+        dataPercent		= int(fitsImage[0].shape[2] * 0.05)
 
-        fitsImage	= pyfits.open(fits_image_path) 
-        scidata 	= fitsImage[0].data 
-        scidata 	= scidata.reshape((scidata.size,))
-        scidata		= scidata[scidata<0]
-        xx,yy		= self.cumul(scidata)
-        threshold	= abs((np.interp(0.32,yy,xx))*2.35/2.0)
-
+        fiveSigmaData	= sum(sortedData[0:dataPercent]) / dataPercent	
+        threshold		= abs(fiveSigmaData) / 5.0 * 2.335 / 2.0
 
       return pixsize, str(nbpixel), str(wmax), str(w_proj_planes), \
              str(UVmin), str(UVmax), str(robust), str(threshold)
@@ -783,21 +776,6 @@ class imager_awimager(LOFARnodeTCP):
         
         """
         return int(pow(2, math.ceil(math.log(value, 2))))
-
-
-    def cumul(self,datain,nbins=1000,minmax=(None,None)):
-			m0,m1=minmax
-			if m0==None: m0=np.min(datain)
-			if m1==None: m1=np.max(datain)
-
-			data=np.sort(datain).reshape(datain.size,1)
-			xx=np.linspace(m0,m1,nbins)
-
-			yy=np.sum((data<xx.reshape(1,nbins)),axis=0)
-			yy=yy.astype(np.float32)/data.size
-
-			return xx,yy
-
 
 
 if __name__ == "__main__":
