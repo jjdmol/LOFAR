@@ -56,7 +56,6 @@ ATermPython::ATermPython(const MeasurementSet& ms, const ParameterSet& parameter
   Py_Initialize();
   
   boost::python::class_<LOFAR::LofarFT::ATerm::ITRFDirectionMap>("ITRFDirectionMap", "Hi there");
-  boost::python::class_<casa::DirectionCoordinate>("DirectionCoordinate", "dir. coords");
   boost::python::class_<casa::MEpoch>("MEpoch", "Mepoch");
   
   // Register converters for casa types from/to python types
@@ -101,25 +100,59 @@ vector<casa::Cube<casa::Complex> > ATermPython::evaluate(
   bool normalize) const
 {
   // call the evaluta method of the python ATerm instance
+  boost::python::object result;
   #pragma omp critical
-  itsPyaterm.attr("evaluate")(itsTime, itsITRFDirectionMap, idStation, freq, reference, normalize);
+  try
+  {
+    result = itsPyaterm.attr("evaluate")(idStation, freq, reference, normalize);
+  }
+  catch(boost::python::error_already_set const &)
+  {
+    // handle the exception in some way
+    PyErr_Print();
+  }
+  ValueHolder v = boost::python::extract<ValueHolder>(result);
+  Array<Complex> result_array = v.asArrayComplex();
+  
+  vector<Cube<Complex> > result_vector;
+  for(ArrayIterator<Complex> it(result_array, 3); !it.pastEnd(); it.next())
+  {
+    Cube<Complex> slice(it.array().shape());
+    convertArray(slice, it.array());
+    result_vector.push_back(slice);
+  }
+  return result_vector;
+
   
   // Ignore the result of the python code and return the result of the evaluate method of our parent
-  return ATermLofar::evaluate(idStation, freq, reference, normalize);
+//   return ATermLofar::evaluate(idStation, freq, reference, normalize);
 }
 
 void ATermPython::setDirection(
   const casa::DirectionCoordinate &coordinates,
   const IPosition &shape)
 {
-	itsPyaterm.attr("setDirection")(coordinates, shape);
-	ATermLofar::setDirection(coordinates, shape);
+  Record r;
+  coordinates.save(r, "");
+  Record r1 = r.asRecord(0);
+  itsPyaterm.attr("setDirection")(r1, shape);
 }
 
 void ATermPython::setEpoch( const MEpoch &epoch )
 {
-	itsPyaterm.attr("setEpoch")(epoch);
-	ATermLofar::setEpoch(epoch);
+  Double time = epoch.get(casa::Unit("s")).getValue();
+  
+  #pragma omp critical
+  try
+  {
+    itsPyaterm.attr("setEpoch")(time);
+  }
+  catch(boost::python::error_already_set const &)
+  {
+    // handle the exception in some way
+    PyErr_Print();
+  }
+  
 }
 
 } // end namespace LofarFT

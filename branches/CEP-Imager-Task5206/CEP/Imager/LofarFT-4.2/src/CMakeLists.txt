@@ -39,6 +39,11 @@ lofar_add_bin_program(awimager
   OperationPredict.cc
 )
   
+# if (IDG_FOUND)
+#   lofar_add_library(ftmachineidg
+#     FTMachineIDG.cc
+#   )
+# endif(IDG_FOUND)
 
 # lofar_add_library(ftmachinesimple
 #   FTMachineSimple.cc
@@ -71,13 +76,13 @@ python_install(
 python_install(
   __init__.py 
   myaterm.py
+  atermimages.py
   DESTINATION lofar/imager)
 
   
   
 # Suppress compiler warnings from casarest by disabling them for some sources
 set_source_files_properties(
-  CubeSkyEquation.cc
   FTMachine.cc
   FTMachineWsplit.cc
   Imager.cc

@@ -2,7 +2,7 @@ import lofar.parameterset
 import pyrap.images
 import numpy
 
-class MyATerm :
+class ATermImages :
   def __init__(self, parameters) :
     #print "\033[94mPython MyATerm constructor\033[0m"
     #print parameters.keys()
