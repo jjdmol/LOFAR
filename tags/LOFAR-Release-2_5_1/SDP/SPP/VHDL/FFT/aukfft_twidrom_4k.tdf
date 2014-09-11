@@ -1,0 +1,272 @@
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+--
+-- Revision Control Information
+--
+-- Header
+--
+-- $Workfile:   aukfft_twidrom_4k.tdf  $
+--
+-- $Revision:   1.2  $
+--
+-- $Date:   20 Mar 2002 14:24:02  $
+--
+-- $Project     :  FFT
+--
+-- Description  :  Subdesign : aukfft_twidrom
+--
+-- Copyright 2000 (c) Altera Corporation
+-- All rights reserved
+--
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+
+INCLUDE "altsyncram.inc";
+
+FUNCTION lpm_rom 
+(
+	address[LPM_WIDTHAD-1..0], 
+	inclock, 
+	outclock, 
+	memenab
+)
+RETURNS 
+(
+	q[LPM_WIDTH-1..0]
+);
+
+FUNCTION lpm_compare 
+(
+	dataa[LPM_WIDTH-1..0], 
+	datab[LPM_WIDTH-1..0], 
+	clock, 
+	aclr, 
+	clken
+)
+WITH 
+(
+	LPM_WIDTH, 
+	LPM_REPRESENTATION, 
+	LPM_PIPELINE, 
+	CHAIN_SIZE, 
+	ONE_INPUT_IS_CONSTANT
+)
+RETURNS 
+(
+	alb, 
+	aeb, 
+	agb, 
+	ageb, 
+	aneb, 
+	aleb
+);
+   
+
+PARAMETERS
+(
+    addresswidth	 	= 18, 
+    twiddlewidth 		= 16, 
+    sin_file 			= "../demonstrator/myfftcore_twidsin.hex"
+);
+
+
+constant num_words 		= 2^(addresswidth-2);
+
+subdesign aukfft_twidrom_4k
+(
+    sysclk 						: INPUT;
+    address[addresswidth..1] 	: INPUT;
+    
+    twreal[twiddlewidth..1] 	: OUTPUT;
+    twimag[twiddlewidth..1] 	: OUTPUT;
+)
+
+
+
+VARIABLE
+    quad_address[addresswidth-2..1] : node;
+	neg_addr[addresswidth-2..1], pos_addr[addresswidth-2..1] : node; 
+	sin_addr[addresswidth-2..1], cos_addr[addresswidth-2..1] : dffe;
+    quad_select[2..1] : node;
+    dlyquad_select[4..1][2..1] : dffe;
+	allzero : dffe;
+    regrealout[twiddlewidth..1],
+    regimagout[twiddlewidth..1] : dffe;    
+	use_pos_addr_cos : node;
+	sin_rom_op[twiddlewidth..1], cos_rom_op[twiddlewidth..1] : node;
+	not_sin_rom_op[twiddlewidth..1], not_cos_rom_op[twiddlewidth..1] : node;
+	not_quart_sin_select, not_quart_cos_select : node;
+	half_sin[twiddlewidth..1], half_cos[twiddlewidth..1] : node;
+	half_sin_reg[twiddlewidth..1], half_cos_reg[twiddlewidth..1] : dffe;	
+	neg_half_sin[twiddlewidth..1], neg_half_cos[twiddlewidth..1] : node;
+	sin_out[twiddlewidth..1], cos_out[twiddlewidth..1] : node;
+	cos_neg_half_select, sin_neg_half_select : node;
+	use_pos_addr_sin : node;
+	
+	-- use altsyncram in bi-directional mode to create
+	-- rom with two read addresses
+			
+	sin_rom 				:	altsyncram 
+								WITH 
+								(
+								OPERATION_MODE 						= "BIDIR_DUAL_PORT",
+								MAXIMUM_DEPTH 						= (twiddlewidth * num_words),
+								WIDTH_A 							= twiddlewidth,
+								WIDTHAD_A 							= addresswidth-2,
+								NUMWORDS_A 							= num_words,
+								WIDTH_B 							= twiddlewidth,
+								WIDTHAD_B 							= addresswidth-2,
+								NUMWORDS_B 							= num_words,
+								WIDTH_BYTEENA_A 					= 1,
+								WIDTH_BYTEENA_B 					= 1,
+								OUTDATA_REG_A 						= "CLOCK0",
+								OUTDATA_ACLR_A 						= "NONE",
+								OUTDATA_REG_B 						= "CLOCK0",
+								INDATA_ACLR_A 						= "NONE",
+								WRCONTROL_ACLR_A 					= "NONE",
+								ADDRESS_ACLR_A 						= "NONE",
+								INDATA_REG_B 						= "CLOCK0",
+								ADDRESS_REG_B 						= "CLOCK0",
+								WRCONTROL_WRADDRESS_REG_B 			= "CLOCK0",
+								INDATA_ACLR_B 						= "NONE",
+								WRCONTROL_ACLR_B 					= "NONE",
+								ADDRESS_ACLR_B 						= "NONE",
+								OUTDATA_ACLR_B 						= "NONE",
+								READ_DURING_WRITE_MODE_MIXED_PORTS 	= "DONT_CARE",
+								RAM_BLOCK_TYPE 						= "M4K",
+								INIT_FILE 							= sin_file,
+								INTENDED_DEVICE_FAMILY 				= "Stratix"
+								);			
+
+
+	lpm_compare_component	:	lpm_compare 
+								WITH 
+								(
+								LPM_WIDTH 							= addresswidth-2,
+								LPM_TYPE 							= "LPM_COMPARE",
+								LPM_REPRESENTATION 					= "UNSIGNED",
+								LPM_HINT 							= "ONE_INPUT_IS_CONSTANT=YES",
+								LPM_PIPELINE 						= 2
+								);
+
+
+BEGIN
+
+    -- top two bits of address determine quadrant
+    quad_select[]  					= address[addresswidth..addresswidth-1];
+    
+    -- remainder of bits determine address in quadrant
+    quad_address[] 					= address[addresswidth-2..1];
+
+
+    -- DELAY THE SELECT SIGNALS TO REMAIN SYNCHRONISED WITH
+    -- THE DATA WHICH IT WILL LATER MULTIPLEX
+    
+    dlyquad_select[][].clk 			= sysclk;
+    dlyquad_select[1][] 			= quad_select[];
+    dlyquad_select[2][] 			= dlyquad_select[1][];    	
+    dlyquad_select[3][] 			= dlyquad_select[2][];
+    dlyquad_select[4][] 			= dlyquad_select[3][];    	        
+    	    
+    -- create -1* quad_address
+    neg_addr[] 						= -quad_address[];
+    pos_addr[] 						= quad_address[];    
+    
+    -- if quadrant address = 0 	 
+    lpm_compare_component.dataa[] 	= quad_address[];
+    lpm_compare_component.datab[] 	= 0;
+    lpm_compare_component.clock 	= sysclk;
+    allzero 						= lpm_compare_component.AeB; 
+    
+    allzero.clk = sysclk;
+    
+    -- when sine address for quadrant is quad_address otherwise -1*quad_address 
+    use_pos_addr_sin 				= !quad_select[1];
+    sin_addr[] 						= (quad_address[] & use_pos_addr_sin) # (neg_addr[] & !use_pos_addr_sin);
+
+    -- when cos address for quadrant is quad_address otherwise -1*quad_address     
+    use_pos_addr_cos 				= quad_select[1];
+    cos_addr[] 						= (quad_address[] & use_pos_addr_cos) # (neg_addr[] & !use_pos_addr_cos);
+    
+    sin_addr[].clk 					= sysclk;
+    cos_addr[].clk 					= sysclk;
+    
+    
+    -- tie write ports to ground
+    
+    sin_rom.wren_a 					= GND;
+    sin_rom.wren_b 					= GND;
+    sin_rom.data_a[] 				= 0;
+    sin_rom.data_b[] 				= 0;    
+    
+    sin_rom.address_a[] 			= sin_addr[];
+    sin_rom.address_b[] 			= cos_addr[];
+
+    sin_rom.clock0 					= sysclk;
+     
+    sin_rom_op[] 					= sin_rom.q_a[];
+    cos_rom_op[] 					= sin_rom.q_b[];
+    
+    -- Create inverted version of output of rom, but keep sign bit positive
+    not_sin_rom_op[] 				= (gnd, !sin_rom_op[twiddlewidth-1..1]);
+    not_cos_rom_op[] 				= (gnd, !cos_rom_op[twiddlewidth-1..1]);
+    
+    -- To get peaks of wave, use inverted output of rom
+    not_quart_sin_select 			= dlyquad_select[3][1] & allzero;    	    
+    half_sin_reg[] 					= (not_sin_rom_op[] & not_quart_sin_select) # (sin_rom_op[] & !not_quart_sin_select);
+        	
+    not_quart_cos_select 			= !dlyquad_select[3][1] & allzero;
+    half_cos_reg[] 					= (not_quart_cos_select & not_cos_rom_op[]) # (!not_quart_cos_select & cos_rom_op[]);
+    
+    -- at this point sine looks like, need to get negative of second form
+    -- 
+    -- max     -      -   
+    --        / \    / \  
+    --       /   \  /   \ 
+    -- 0    /     \/     \
+    --
+    
+    half_sin_reg[].clk 				= sysclk;
+    half_cos_reg[].clk 				= sysclk;	
+    
+    
+    half_sin[] 						= half_sin_reg[];
+    half_cos[] 						= half_cos_reg[];
+    
+    -- Create inverted form of signal
+    -- 0    \     /\     /
+    --       \   /  \   /
+    --        \ /    \ /
+    -- -max    -      -
+    --    
+    
+    neg_half_sin[] 					= -half_sin[];
+    neg_half_cos[] 					= -half_cos[];
+    
+    cos_neg_half_select 			= (dlyquad_select[4][2] xor dlyquad_select[4][1]); 	    
+    sin_out[] 						= (neg_half_sin[] & sin_neg_half_select) # (half_sin[] & !sin_neg_half_select);
+    
+    sin_neg_half_select 			= not(dlyquad_select[4][2]);    
+    cos_out[] 						= (neg_half_cos[] & cos_neg_half_select) # (half_cos[] & !cos_neg_half_select);
+    
+    -- now have full sine & cosine waves
+    --
+    -- max     -
+    --        / \
+    --       /   \ 
+    -- 0    /     \     /
+    --             \   /
+    --              \ /
+    -- -max	     -
+    --
+    
+    regrealout[] 					= cos_out[];
+    regimagout[] 					= sin_out[];
+ 
+    regrealout[].clk 				= sysclk;
+    regimagout[].clk 				= sysclk;
+    
+    twreal[] 						= regrealout[];
+    twimag[] 						= regimagout[];
+    
+END;

@@ -1,0 +1,7 @@
+# HardwareMonitor
+#
+RSP.connected		bool
+
+TBB.connected		bool
+
+EC.connected		bool
