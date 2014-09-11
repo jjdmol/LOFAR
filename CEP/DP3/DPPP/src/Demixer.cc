@@ -76,8 +76,6 @@ namespace LOFAR {
         itsSkyName        (parset.getString(prefix+"skymodel", "sky")),
         itsInstrumentName (parset.getString(prefix+"instrumentmodel",
                                             "instrument")),
-        itsDefaultGain    (parset.getDouble(prefix+"defaultgain",1.0)),
-        itsMaxIter        (parset.getInt(prefix+"maxiter",50)),
         itsSelBL          (parset, prefix, false, "cross"),
         itsFilter         (input, itsSelBL),
         itsAvgResultSubtr (0),
@@ -336,13 +334,13 @@ namespace LOFAR {
       vector<double>::iterator it_end = itsPrevSolution.end();
       while(it != it_end)
       {
-        *it++ = itsDefaultGain;
+        *it++ = 1.0;
         *it++ = 0.0;
         *it++ = 0.0;
         *it++ = 0.0;
         *it++ = 0.0;
         *it++ = 0.0;
-        *it++ = itsDefaultGain;
+        *it++ = 1.0;
         *it++ = 0.0;
       }
     }
@@ -352,8 +350,6 @@ namespace LOFAR {
       os << "Demixer " << itsName << std::endl;
       os << "  skymodel:           " << itsSkyName << std::endl;
       os << "  instrumentmodel:    " << itsInstrumentName << std::endl;
-      os << "  default gain:       " << itsDefaultGain << std::endl;
-      os << "  max iterations:     " << itsMaxIter << std::endl;
       itsSelBL.show (os);
       if (itsSelBL.hasSelection()) {
         os << "    demixing " << itsFilter.getInfo().nbaselines()
@@ -939,8 +935,7 @@ namespace LOFAR {
         }
 
         bool converged = estimate(nDr, nSt, nBl, nCh, cr_baseline, cr_data,
-          cr_model, cr_flag, cr_weight, cr_mix, &(storage.unknowns[0]),
-          itsMaxIter);
+          cr_model, cr_flag, cr_weight, cr_mix, &(storage.unknowns[0]));
         if(converged)
         {
           ++storage.count_converged;
