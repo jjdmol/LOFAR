@@ -344,7 +344,7 @@ TRIGCtl::TRIGCtl(string name, int argc, char** argv): GCFTask((State)&TRIGCtl::i
     itsCommand(0),itsArgc(argc),itsArgv(argv)
 {
     registerProtocol (CR_PROTOCOL, CR_PROTOCOL_STRINGS);
-    itsRTDBPort     = new GCF::RTDB::GCFRTDBPort(*this, "RTDBControlPort", PSN_CR_TRIGGERPORT);
+    itsRTDBPort     = new GCF::RTDB::GCFRTDBPort(*this, "RTDB_CR_TriggerPort", PSN_CR_TRIGGERPORT);
     ASSERTSTR(itsRTDBPort, "Can't allocate RTDBPort");
     
     itsTimerPort = new GCFTimerPort(*this, "timerPort");
