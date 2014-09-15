@@ -182,10 +182,18 @@ FR606	206    E    2.1926264    47.3759658      192.45  24    12    96    96    N
 SE607	207    E    11.9302386   57.3990617       50.34  24    12    96    96    No       No    No
 # Chillbolton
 UK608	208    E    -1.4342539   51.1439472      137.66  24    12    96    96    No       No    No
+# Norderstedt (H=67.246568409726024)
+DE609   210    E     9.9692802   53.698808         0.0   24    12    96    96    No       No    No       
+#
+PL610   211    E     0.0         0.0               0.0   24    12    96    96    No       No    No
+#
+PL611   212    E     0.0         0.0               0.0   24    12    96    96    No       No    No
+#
+PL612   213    E     0.0         0.0               0.0   24    12    96    96    No       No    No
+
+# Non-ILT stations
 # Finland
 FI609	209    E    20.7609103   69.0714225      533.25  12    6     48    48    No       No    No
-## 210 - 255
-##
 
 ## Test systems
 # name  ID     ring long         lat             height  nrRSP nrTBB nrLBA nrHBA HBAsplit LBAcal
@@ -194,4 +202,5 @@ CS100  230    C    6.3952067    52.8121013         0      6     12     4    4   
 #MCU099 231
 #CCU099 232
 #RS002   102   R    6.0000000    52.00000000     50.000  4     0     16    16    Yes      No
+
 
