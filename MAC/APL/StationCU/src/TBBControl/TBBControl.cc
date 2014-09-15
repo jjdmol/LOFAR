@@ -208,7 +208,7 @@ TBBControl::TBBControl(const string&    cntlrName) :
     
     // prepare RTDB port for receiving External trigger messages.
     itsTriggerPort = new GCFRTDBPort (*this,
-                                    "RTDB_TriggerPort",
+                                    "RTDB_CR_TriggerPort",
                                     PSN_CR_TRIGGERPORT);
     
     // prepare TCP port to TBBDriver.
