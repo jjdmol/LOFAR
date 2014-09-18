@@ -6,7 +6,7 @@ PANEL,-1 -1 114 42 N "_3DFace" 1
 "main()
 {
   station = $station+\":\";
-  baseDP = \"MCU001:LOFAR_PIC_AARTFAAC\";
+  baseDP = station+\"LOFAR_PIC_AARTFAAC\";
 
   if (navFunct_hasAARTFAAC(station)) {      
     reload();
