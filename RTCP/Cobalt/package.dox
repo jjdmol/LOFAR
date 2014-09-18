@@ -3,6 +3,6 @@
 \ingroup RTCP
 \defgroup Cobalt Cobalt
 
-Project area for the new GPU based correlator and beam-former.
+The Cobalt package contains the correlation and beam-forming software that runs on the COBALT CPU/GPU cluster.
 
 */
