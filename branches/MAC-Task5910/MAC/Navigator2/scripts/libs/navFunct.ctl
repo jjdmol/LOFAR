@@ -2652,5 +2652,5 @@ int navFunct_observationNameToNumber(string obsname) {
 
 void navFunct_handleUndockClick() {
       
-  ModuleOnWithPanel(ACTIVE_TAB+"_Undocked", -1, -1, 0, 0, 1, 1, "", g_activePanel, ACTIVE_TAB+":"+g_currentDatapoint, makeDynString());
+  ModuleOnWithPanel(ACTIVE_TAB+"_Undocked", -1, -1, 0, 0, 1, 1, "", g_activePanel, ACTIVE_TAB+":"+g_currentDatapoint, makeDynString("$undocked:" + true));
 }
