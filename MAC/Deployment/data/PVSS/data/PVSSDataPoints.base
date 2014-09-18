@@ -19,7 +19,6 @@
 #----------------------------------------------------------------------------
 LOFAR				-		M	N	LOFAR
 PIC				-		M	N	LOFAR_PIC
-AARTFAAC			AF		M	Y	LOFAR_PIC_AARTFAAC
 Ring				-		M	N	LOFAR_PIC_@ring@
 Station				-		M	Y	LOFAR_PIC_@ring@_@station@
 WAN				-		M	N	LOFAR_PIC_WAN
@@ -80,6 +79,7 @@ CobaltOutputProc		COP		C	Y	LOFAR_ObsSW_@observation@_CobaltOutputProc
 #
 StnLOFAR			-		S	N	LOFAR
 StnPIC				-		S	N	LOFAR_PIC
+AARTFAAC			AF		S	Y	LOFAR_PIC_AARTFAAC
 Cabinet				CAB		S	N	LOFAR_PIC_@cabinet@
 SubRack				SRCK		S	N	LOFAR_PIC_@cabinet@_@subrack@
 RSPBoard			RSP		S	N	LOFAR_PIC_@cabinet@_@subrack@_@RSPBoard@
