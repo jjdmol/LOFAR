@@ -23,10 +23,11 @@
 #ifndef LOFARFT_FFTCMATRIX_H
 #define LOFARFT_FFTCMATRIX_H
 
+#include <complex>
 #include <fftw3.h>
 #include <Common/LofarTypes.h>
-#include <complex>
-
+#include <casa/BasicSL/Complex.h>
+#include <casa/Arrays/Matrix.h>
 
 namespace LOFAR {
 
@@ -73,7 +74,7 @@ namespace LOFAR {
     FFTCMatrix (const FFTCMatrix& that);
 
     ~FFTCMatrix()
-      { clear(); }
+      { clear(); clear_padding();}
 
     // Assigment calls the reserve function with the reservation of that.
     // It's defined for convenience only (e.g. to use a vector<FFTCMatrix>).
@@ -88,6 +89,8 @@ namespace LOFAR {
 
     // Clear all info in the object (reset to state of default constructor).
     void clear();
+    
+    void clear_padding();
 
     // Get the size (of a single axis).
     size_t size() const
@@ -138,12 +141,27 @@ namespace LOFAR {
     void backward (size_t size, std::complex<float>* data,
                    int nthreads=1,
 		   unsigned flags=FFTW_ESTIMATE);
-    void normalized_forward (size_t size, std::complex<float>* data,
+    
+    void normalized_forward (size_t size, 
+                             std::complex<float>* data,
                              int nthreads=1,
-			     unsigned flags=FFTW_ESTIMATE);
-    void normalized_backward (size_t size, std::complex<float>* data,
+                             unsigned flags=FFTW_ESTIMATE);
+    
+    void normalized_backward (size_t size, 
+                              std::complex<float>* data,
                               int nthreads=1,
-			      unsigned flags=FFTW_ESTIMATE);
+                              unsigned flags=FFTW_ESTIMATE);
+
+    void init_padding(size_t n, int padding);
+    casa::Matrix<casa::Complex> padded_forward (casa::Matrix<casa::Complex> data, 
+                             int padding,
+                             int nthreads=1,
+                             unsigned flags=FFTW_ESTIMATE);
+    
+    casa::Matrix<casa::Complex> padded_backward (casa::Matrix<casa::Complex> data, 
+                             int padding,
+                             int nthreads=1,
+                             unsigned flags=FFTW_ESTIMATE);
 
     ///  private:
     // Flip the quadrants as needed for the FFT.
@@ -192,6 +210,14 @@ namespace LOFAR {
     int                  itsNThreads;
     bool                 itsIsForward;
     static bool          theirInitDone;
+    fftwf_complex*       itsPaddingBuffer0;
+    fftwf_complex*       itsPaddingBuffer1;
+    fftwf_complex*       itsPaddingBuffer2;
+    fftwf_complex*       itsPaddingBuffer3;
+    fftwf_plan           itsPaddingPlan0;
+    fftwf_plan           itsPaddingPlan1;
+    int                  itsPadding;
+    size_t               itsPaddingInputSize;
   };
 
 }   //# end namespace

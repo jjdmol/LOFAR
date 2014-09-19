@@ -20,6 +20,9 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
+
 #include <LofarFT/FFTCMatrix.h>
 #include <Common/LofarLogger.h>
 #include <casa/Utilities/Copy.h>
@@ -27,6 +30,9 @@
 #include <vector>
 #include <algorithm>
 #include <stdio.h>
+#include <cstring>
+
+using namespace casa;
 
 namespace LOFAR {
 
@@ -37,6 +43,14 @@ namespace LOFAR {
       itsPlan      (0),
       itsSize      (0),
       itsReserved  (0),
+      itsPaddingBuffer0(0),
+      itsPaddingBuffer1(0),
+      itsPaddingBuffer2(0),
+      itsPaddingBuffer3(0),
+      itsPaddingPlan0(0),
+      itsPaddingPlan1(0),
+      itsPaddingInputSize(0),
+      itsPadding(0),
       itsNThreads  (0),
       itsIsForward (false)
   {
@@ -78,6 +92,14 @@ namespace LOFAR {
       itsPlan      (0),
       itsSize      (0),
       itsReserved  (0),
+      itsPaddingBuffer0(0),
+      itsPaddingBuffer1(0),
+      itsPaddingBuffer2(0),
+      itsPaddingBuffer3(0),
+      itsPaddingPlan0(0),
+      itsPaddingPlan1(0),
+      itsPaddingInputSize(0),
+      itsPadding(0),
       itsIsForward (false)
   {
     reserve (that.itsReserved);
@@ -93,16 +115,32 @@ namespace LOFAR {
 
   void FFTCMatrix::clear()
   {
-    if (itsData) {
-      fftw_free (itsData);
-    }
-    if (itsPlan) {
-      fftwf_destroy_plan (itsPlan);
-    }
+    if (itsData) fftw_free (itsData);
+    if (itsPlan) fftwf_destroy_plan (itsPlan);
+
     itsData     = 0;
     itsPlan     = 0;
     itsSize     = 0;
     itsReserved = 0;
+  }
+
+  void FFTCMatrix::clear_padding()
+  {
+    if (itsPaddingPlan0) fftwf_destroy_plan (itsPaddingPlan0);
+    if (itsPaddingPlan1) fftwf_destroy_plan (itsPaddingPlan1);
+    if (itsPaddingBuffer0) fftwf_free(itsPaddingBuffer0);
+    if (itsPaddingBuffer1) fftwf_free(itsPaddingBuffer1);
+    if (itsPaddingBuffer2) fftwf_free(itsPaddingBuffer2);
+    if (itsPaddingBuffer3) fftwf_free(itsPaddingBuffer3);
+
+    itsPaddingPlan0 = 0;
+    itsPaddingPlan1 = 0;
+    itsPaddingBuffer0 = 0;
+    itsPaddingBuffer1 = 0;
+    itsPaddingBuffer2 = 0;
+    itsPaddingBuffer3 = 0;
+    itsPaddingInputSize = 0;
+    itsPadding = 0;
   }
 
   void FFTCMatrix::reserve (size_t size)
@@ -167,15 +205,21 @@ namespace LOFAR {
 
   void FFTCMatrix::normalized_fft()
   {
-    if (itsIsForward) {
+    if (itsIsForward) 
+    {
       flip (true);
       fftwf_execute (itsPlan);
       scaledFlip (false, 1./(itsSize*itsSize));
-    } else {
-      if (itsSize%4 == 0) {
+    } 
+    else 
+    {
+      if (itsSize%4 == 0) 
+      {
         negatedFlip();
         fftwf_execute (itsPlan);
-      } else {
+      } 
+      else 
+      {
         flip (true);
         fftwf_execute (itsPlan);
         flip (false);
@@ -213,15 +257,182 @@ namespace LOFAR {
     scaledFlip (itsData, data, false, 1./(size*size));
   }
 
-void FFTCMatrix::normalized_backward (size_t size, std::complex<float>* data,
-                                      int nthreads,
-				      unsigned flags)
+  void FFTCMatrix::normalized_backward (size_t size, std::complex<float>* data,
+                                        int nthreads,
+                                        unsigned flags)
+    {
+      plan (size, false, nthreads, flags);
+      flip (data, itsData, true);
+      fftwf_execute (itsPlan);
+      flip (itsData, data, false);
+    }
+    
+  void FFTCMatrix::init_padding(size_t n, int padding)
   {
-    plan (size, false, nthreads, flags);
-    flip (data, itsData, true);
-    fftwf_execute (itsPlan);
-    flip (itsData, data, false);
+    ASSERTSTR ((n % 2) == 1, "FFTCMatrix padding input size must be odd");
+    ASSERTSTR ((padding % 2) == 1, "FFTCMatrix padding factor must be odd");
+  
+    clear_padding();
+    
+    itsPaddingInputSize = n;
+    itsPadding = padding;
+
+    // fftw allocate buffer 0 
+    itsPaddingBuffer0 = fftwf_alloc_complex(n * n * padding);
+    // fill buffer with zeros (zero padding)
+    memset( itsPaddingBuffer0, 0, sizeof ( fftwf_complex ) * n * n * padding);
+    
+    // fftw allocate buffer 1
+    itsPaddingBuffer1 = fftwf_alloc_complex(n * n * padding);
+
+    // fftw allocate buffer 2
+    itsPaddingBuffer2 = fftwf_alloc_complex(n * n * padding * padding);
+    memset( itsPaddingBuffer2, 0, sizeof ( fftwf_complex ) * n * n * padding * padding);
+
+    // fftw allocate buffer 3
+    itsPaddingBuffer3 = fftwf_alloc_complex(n * n * padding * padding);
+    
+    // plan many fft
+    
+    int rank = 1;
+    int n1[] = {n*padding};
+    int howmany = n;
+    int idist = n*padding;
+    int odist = n*padding;
+    int istride = 1;
+    int ostride = 1;
+    int *inembed = NULL;
+    int *onembed = NULL;
+    
+    #pragma omp critical(fftcmatrix_plan)
+    {
+      itsPaddingPlan0 = fftwf_plan_many_dft(rank, n1, howmany,
+                                    itsPaddingBuffer0, inembed,istride, idist,
+                                    itsPaddingBuffer1, onembed, ostride, odist,
+                                    FFTW_FORWARD, FFTW_MEASURE);
+
+      howmany = n*padding;    
+      itsPaddingPlan1 = fftwf_plan_many_dft(rank, n1, howmany,
+                          itsPaddingBuffer2, inembed,istride, idist,
+                          itsPaddingBuffer3, onembed, ostride, odist,
+                          FFTW_FORWARD, FFTW_MEASURE);
+    }
+    
   }
+
+  
+  Matrix<Complex> FFTCMatrix::padded_forward (Matrix<Complex> data, 
+                            int padding,
+                            int nthreads,
+                            unsigned flags)
+  {
+    size_t nx = data.shape()(0);
+    size_t ny = data.shape()(1);
+    ASSERTSTR (nx == ny, "FFTCMatrix matrix must be square");
+    size_t n = nx;
+    ASSERTSTR (itsPaddingInputSize == n, "FFTCMatrix padding matrix size mismatch init");
+    ASSERTSTR (itsPadding == padding, "FFTCMatrix padding mismatch init");
+    
+
+    // flip transpose
+    size_t center_in = n/2;
+    size_t center_out = (n*padding)/2;
+    
+    // Use 2 separate loops to move the halves
+
+    // upper halve
+    const std::complex<float>* __restrict__ fr = (data.data());
+    std::complex<float>* __restrict__ to = reinterpret_cast<std::complex<float>*>(itsPaddingBuffer0) + n*padding-center_in;
+    for (size_t j=0; j<center_in; ++j) {
+      for (size_t i=0; i<n; ++i) 
+      {
+        to[j+i*n*padding] = fr[j*n+i];
+      }
+    }
+    
+    // lower halve
+    fr = data.data() + center_in*n;
+    to = reinterpret_cast<std::complex<float>*>(itsPaddingBuffer0);
+    for (size_t j=0; j<=center_in; ++j) {
+      for (size_t i=0; i<n; ++i) {
+        to[j+i*n*padding] = fr[j*n+i];
+      }
+    }
+
+    fftwf_execute ( itsPaddingPlan0 );
+    
+    // transpose zeropad
+
+    // upper halve
+    fr = reinterpret_cast<std::complex<float>*>(itsPaddingBuffer1);
+    to = reinterpret_cast<std::complex<float>*>(itsPaddingBuffer2) + n*padding-center_in;
+    for (size_t j=0; j<center_in; ++j) {
+      for (size_t i=0; i<n*padding; ++i) {
+        to[j+i*n*padding] = fr[j*n*padding+i];
+      }
+    }
+    
+    // lower halve
+    fr = reinterpret_cast<std::complex<float>*>(itsPaddingBuffer1) + center_in*n*padding;
+    to = reinterpret_cast<std::complex<float>*>(itsPaddingBuffer2);
+    for (size_t j=0; j<=center_in; ++j) {
+      for (size_t i=0; i<n*padding; ++i) {
+        to[j+i*n*padding] = fr[j*n*padding+i];
+      }
+    }
+    
+    fftwf_execute ( itsPaddingPlan1 );
+    
+    Matrix<Complex> result(IPosition(2, n*padding, n*padding));
+    
+    size_t n_out = n*padding;
+    
+    // Use 4 separate loops to move the quadrants.
+    // q1
+    fr = reinterpret_cast<std::complex<float>*>(itsPaddingBuffer3);
+    to = result.data() + n_out * center_out + center_out;
+    for (size_t j=0; j<=center_out; ++j) {
+      for (size_t i=0; i<=center_out; ++i) {
+        to[i+j*n_out] = fr[i+j*n_out];
+      }
+    }
+    // q2
+    fr = reinterpret_cast<std::complex<float>*>(itsPaddingBuffer3) + center_out+1;
+    to = result.data() + n_out * center_out;
+    for (size_t j=0; j<=center_out; ++j) {
+      for (size_t i=0; i<center_out; ++i) {
+        to[i+j*n_out] = fr[i+j*n_out];
+      }
+    }
+    // q3
+    fr = reinterpret_cast<std::complex<float>*>(itsPaddingBuffer3) + (center_out+1)*n_out;
+    to = result.data() + center_out;
+    for (size_t j=0; j<center_out; ++j) {
+      for (size_t i=0; i<=center_out; ++i) 
+      {
+        to[i+j*n_out] = fr[i+j*n_out];
+      }
+    }
+    // q4
+    fr = reinterpret_cast<std::complex<float>*>(itsPaddingBuffer3) + (center_out+1)*n_out+center_out+1;
+    to = result.data();
+    for (size_t j=0; j<center_out; ++j) {
+      for (size_t i=0; i<center_out; ++i) {
+        to[i+j*n_out] = fr[i+j*n_out];
+      }
+    }
+    
+    return result;
+  }
+
+  Matrix<Complex> FFTCMatrix::padded_backward (Matrix<Complex> data, 
+                            int padding,
+                            int nthreads,
+                            unsigned flags)
+  {
+    
+  }
+
 
   // Flip the quadrants which is needed for the FFT.
   //  q1 q2    gets   q4 q3

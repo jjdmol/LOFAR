@@ -27,6 +27,7 @@
 
 //# Includes
 #include <lofar_config.h>
+#include <LofarFT/ScopedTimer.h>
 #include <LofarFT/Imager.h>
 #include <LofarFT/Operation.h>
 #include <Common/ParameterSet.h>
@@ -47,7 +48,6 @@
 #include <casa/OS/File.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/OS/Timer.h>
-#include <casa/OS/PrecTimer.h>
 #include <casa/iostream.h>
 #include <casa/sstream.h>
 
@@ -123,9 +123,15 @@ int main (Int argc, char** argv)
 
   LOFAR::OpenMP::setNumThreads(maxthreads);
 
-  operation->init();
-
-  ASSERTSTR(parset.getString("weight.operation","natural")=="natural", "Only natural weighting is supported for now");
+  try 
+  {
+    operation->init();
+  }
+  catch (AipsError& x) 
+  {
+    cout << x.getMesg() << endl;
+    return 1;
+  }
 
   vector<string> unused = parset.unusedKeys();
   if (! unused.empty()) {
@@ -136,14 +142,17 @@ int main (Int argc, char** argv)
   
   try 
   {
+    LOFAR::LofarFT::ScopedTimer t("operation->run()");
     operation->run();
   }
-  
   catch (AipsError& x) 
   {
     cout << x.getMesg() << endl;
     return 1;
   }
+  
+  LOFAR::LofarFT::ScopedTimer::show();
+  
   cout << "awimager normally ended" << endl;
   return 0;
 }

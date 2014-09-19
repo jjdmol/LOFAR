@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <LofarFT/VisResamplerMatrixWB.h>
+#include <LofarFT/ScopedTimer.h>
 #include <synthesis/TransformMachines/Utils.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
@@ -69,6 +70,7 @@ void VisResamplerMatrixWB::DataToGridImpl_p(
   CFStore& cfs,
   Vector<Double> &taylor_weight)
 {
+  ScopedTimer t("VisResamplerMatrixWB::DataToGridImpl_p");
   // Get size of grid.
   Int nGridX    = grid.shape()[0];
   Int nGridY    = grid.shape()[1];
@@ -157,15 +159,12 @@ void VisResamplerMatrixWB::DataToGridImpl_p(
         visPtr = psfValues;
       }
       // Handle a visibility if not flagged.
+      #pragma omp for
       for (Int ipol=0; ipol<4; ++ipol)  // ipol run over image polarizations
       {
-        if (flagPtr[ipol]) continue; // TODO: is this correct? ipol runs over image polarizations, 
-                                     //       not over data polarizations
-
         // Get the offset in the grid data array.
         Int goff = (gridChan*4 + ipol) * nGridX * nGridY;
         // Loop over the scaled support.
-        #pragma omp for
         for (Int sy=-fsupy; sy<=fsupy; ++sy) 
         {
           // Get the pointer in the grid for the first x in this y.
@@ -186,6 +185,7 @@ void VisResamplerMatrixWB::DataToGridImpl_p(
             Complex polSum(0,0);
             for (Int i=0; i<4; ++i) // i runs over data polarizations
             {
+              if (flagPtr[i]) continue; 
               polSum += Complex(visPtr[i].real(), visPtr[i].imag() * sign_w) * *cf[i];
               cf[i] += fsampx;
             }
@@ -193,7 +193,7 @@ void VisResamplerMatrixWB::DataToGridImpl_p(
             *gridPtr++ += polSum;
           }
         }
-        #pragma omp single
+//         #pragma omp single
         sumWtPtr[ipol+gridChan*4] += imgWtPtr[ipol];
       } // end for ipol
     } // end for visChan

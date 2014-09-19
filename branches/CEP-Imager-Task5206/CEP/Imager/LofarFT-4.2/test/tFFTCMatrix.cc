@@ -136,8 +136,20 @@ void testOptSize()
   ASSERT (FFTCMatrix::optimalOddFFTSize(1485001) == 1485001);
 }
 
+void testpaddedforward()
+{
+  FFTCMatrix fftmat;
+  fftmat.init_padding(15, 9);
+  Matrix<Complex> data(IPosition(2,15,15));
+  fftmat.padded_forward(data, 9);
+}
+
+
 int main (int argc, char*[])
 {
+  testpaddedforward();
+  return 0;
+  
   testOptSize();
   // Parallellize fftw.
   vector<FFTCMatrix> fftmats(OpenMP::maxThreads()); 
@@ -224,5 +236,4 @@ int main (int argc, char*[])
       testforward(fftmat, arr, true);
     }
   }
-  return 0;
 }

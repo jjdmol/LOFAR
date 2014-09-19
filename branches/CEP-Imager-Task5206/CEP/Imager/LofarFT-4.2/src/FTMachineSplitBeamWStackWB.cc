@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 
 #include <LofarFT/FTMachineSplitBeamWStackWB.h>
+#include <LofarFT/ScopedTimer.h>
 #include <LofarFT/FFTCMatrix.h>
 #include <LofarFT/VBStore.h>
 #include <LofarFT/CFStore.h>
@@ -168,7 +169,7 @@ FTMachineSplitBeamWStackWB::VisibilityMap FTMachineSplitBeamWStackWB::make_mappi
 )
 {
   
-  cout << "make map..." << flush;
+  ScopedTimer t("make_mapping");
   
   VisibilityMap v;
   
@@ -388,10 +389,31 @@ void FTMachineSplitBeamWStackWB::put(const VisBuffer& vb, Int row, Bool dopsf,
       {
         // transform to image domain
         ArrayLattice<Complex> lattice(w_plane_grids[i]);
-        LatticeFFT::cfft2d(lattice, True);
+        
+        Array<Complex> w_plane_grid(w_plane_grids[i]);
+        
+        {
+          ScopedTimer t("W plane fft");
+          FFTCMatrix fft;
+//           LatticeFFT::cfft2d(lattice, True);
+          for (int ii = 0; ii<w_plane_grid.shape()(3); ii++)
+          {
+            for (int jj = 0; jj<w_plane_grid.shape()(2); jj++)
+            {
+              Matrix<Complex> im(w_plane_grid[ii][jj]);
+//               cout << endl << w_plane_grid[ii][jj].shape() << endl;
+              fft.normalized_backward (im.nrow(), im.data(), 4);
+            }
+          }
+          
+        }
         
         // Apply W term in image domain
-        itsConvFunc->applyWterm(w_plane_grids[i], -w_offset);
+        {
+          ScopedTimer t("W plane apply");
+          itsConvFunc->applyWterm(w_plane_grids[i], -w_offset);
+        }
+        
         
         if (itsSplitBeam)
         {

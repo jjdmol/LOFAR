@@ -119,7 +119,9 @@ void  SkyEquation::predict(Bool incremental, MS::PredefinedColumns col)
   for (Int model=0; model < (sm_->numberOfModels());++model){
     isEmpty = isEmpty &&  (sm_->isEmpty(model));                
   }
-  
+
+  //TODO: check for the existence of column visCol instead of MODEL_DATA
+  //TODO: optionally create column if it does not exists
   noModelCol_p = rvi_p->msColumns().modelData().isNull();
   
   if (isEmpty) cout << "Sorry, model is empty" << endl;
@@ -298,6 +300,8 @@ void SkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
         // Get the model visibilities -> degridding
         // Model visibilities are put in the modelVisCube of vb
         itsFTMachine->get(* vb, -1);
+        
+        //TODO: optionally write model visibilities to MS
         
         // Compute residual 
         vb->modelVisCube() = vb->correctedVisCube() - vb->modelVisCube();

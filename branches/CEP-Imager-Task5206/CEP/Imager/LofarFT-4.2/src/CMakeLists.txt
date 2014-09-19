@@ -27,6 +27,7 @@ lofar_add_library(lofarft
   VisResamplerDiagonalWB.cc
   SkyEquation.cc
   util.cc
+  ScopedTimer.cc
 )
 
 lofar_add_bin_program(awimager 

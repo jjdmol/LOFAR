@@ -10,6 +10,7 @@ lofar_find_package(Boost REQUIRED COMPONENTS thread python system)
 lofar_find_package(FFTW3 REQUIRED COMPONENTS single double threads)
 lofar_find_package(Python REQUIRED)
 lofar_find_package(Pyrap REQUIRED)
+lofar_find_package(IDG)
 
 
 # Needed for casarest

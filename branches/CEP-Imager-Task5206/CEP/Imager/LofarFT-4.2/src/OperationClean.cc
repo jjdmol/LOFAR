@@ -104,18 +104,18 @@ void OperationClean::init()
   
   if (nterms == 1)
   {
-    modelNames(0) = imgName + ".model";
-    residualNames(0) = imgName + ".residual";
-    restoredNames(0) = imgName + ".restored";
+    modelNames(0) = imgName + ".model.flatnoise";
+    residualNames(0) = imgName + ".residual.flatnoise";
+    restoredNames(0) = imgName + ".restored.flatnoise";
     psfNames(0) = imgName + ".psf";
   }
   else
   {
     for(Int i=0;i<nterms;++i)
     {
-      modelNames(i) = imgName + ".model.tt" + String::toString(i);
-      residualNames(i) = imgName + ".residual.tt" + String::toString(i);
-      restoredNames(i) = imgName + ".restored.tt" + String::toString(i);
+      modelNames(i) = imgName + ".model.tt" + String::toString(i) + ".flatnoise";
+      residualNames(i) = imgName + ".residual.tt" + String::toString(i)  + ".flatnoise";
+      restoredNames(i) = imgName + ".restored.tt" + String::toString(i)  + ".flatnoise";
     }
     for(Int i=0;i<((nterms*(nterms+1))/2);++i)
     {
@@ -132,6 +132,11 @@ void OperationClean::init()
   Bool displayProgress = False;
   
   String maskName  = itsParset.getString("clean.maskimage","");
+  
+  if ((maskName != "") && !Table::isReadable(maskName))
+  {
+    throw(AipsError("Mask " + maskName + " is not readable."));
+  }
   
   itsImager->initClean(
     "msmfs",                     // algorithm,

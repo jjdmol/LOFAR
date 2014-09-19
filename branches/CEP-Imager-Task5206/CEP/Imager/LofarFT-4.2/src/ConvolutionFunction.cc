@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <LofarFT/ConvolutionFunction.h>
+#include <LofarFT/ScopedTimer.h>
 #include <Common/LofarLogger.h>
 #include <Common/OpenMP.h>
 
@@ -119,7 +120,7 @@ ConvolutionFunction::ConvolutionFunction
     itsAveragePB(),
     itsSpheroidal(),
     itsSpheroidalCF(),
-    itsSupportCF(15)
+    itsSupportCF(21)
 {
   itsFFTMachines.resize (OpenMP::maxThreads());
 
@@ -139,6 +140,13 @@ ConvolutionFunction::ConvolutionFunction
   {
     itsOversampling++;
   }
+  
+  for(int i=0; i<OpenMP::maxThreads(); i++)
+  {
+    itsFFTMachines[i].reserve(itsSupportCF * itsOversampling);
+    itsFFTMachines[i].init_padding(itsSupportCF, itsOversampling);
+  }
+  
 
   ROMSAntennaColumns antenna(ms.antenna());
   itsNStations = antenna.nrow();
@@ -310,11 +318,17 @@ void ConvolutionFunction::FindNWplanes()
 // Put it in a map object with a (double time) key.
 void ConvolutionFunction::computeAterm (Double time)
 {
+  ScopedTimer t("ConvolutionFunction::computeAterm");
+  
   if (itsAtermStore.find(time) != itsAtermStore.end()) 
   {
     // Already done.
     return;
   }
+  
+//   cout << endl << "aterm " << setprecision(15) << time << endl;
+
+  
   PrecTimer aTimer;
   aTimer.start();
   Double pixelSize = abs(itsCoordinates.increment()[0]);
@@ -464,6 +478,8 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
   const vector<bool> &channel_selection,
   double w_offset)
 {
+  ScopedTimer t("ConvolutionFunction::makeConvolutionFunction");
+
   // Initialize timers.
   PrecTimer timerFFT;
   PrecTimer timerPar;
@@ -478,8 +494,6 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
   
   ASSERT (aiter != itsAtermStore.end());
   const vector< vector< Cube<Complex> > >& aterm = aiter->second;
-
-  Int Npix_out2 = 0;
 
   Vector<Int> xsup(itsNChannel,0);
   Vector<Int> ysup(itsNChannel,0);
@@ -502,31 +516,18 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
 
     Double pixelSize = abs(itsCoordinates.increment()[0]);
     Double imageDiameter = pixelSize * itsShape(0);
-    Double wPixelAngSize = min(itsPixelSizeSpheroidal,
-                                estimateWResolution(itsShape, pixelSize, abs(w_lambda)));
-    Int nPixelsConv = round(imageDiameter / wPixelAngSize);
-    
-    if (nPixelsConv > itsMaxSupport) 
-    {
-      nPixelsConv = itsMaxSupport;
-    }
-    // Make odd and optimal.
-    nPixelsConv = FFTCMatrix::optimalOddFFTSize (nPixelsConv);
-    wPixelAngSize = imageDiameter / nPixelsConv;
-
-    
-    int nPixelsAterm = aterm[stationA][ch].shape()(1);
     
     if (itsSumCF.empty())
     {
-      itsSumCF.resize(nPixelsAterm, nPixelsAterm);
+      itsSumCF.resize(itsSupportCF, itsSupportCF);
       itsSumCF = 0.0;
       itsSumWeight = 0.0;
     }
     
-    IPosition shape(2, nPixelsConv, nPixelsConv);
+    IPosition shape(2, itsSupportCF, itsSupportCF);
+    
     //Careful with the sign of increment!!!! To check!!!!!!!
-    Vector<Double> increment(2, wPixelAngSize);
+    Vector<Double> increment(2, imageDiameter/itsSupportCF);
     
     // Note this is the conjugate!
     Matrix<Complex> wTerm = itsWTerm.evaluate(shape, increment, -w_lambda);
@@ -534,11 +535,9 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
     // Load the Aterm
     const Cube<Complex>& aTerm1(aterm[stationA][ch]);
     const Cube<Complex>& aTerm2(aterm[stationB][ch]);
-    // Determine maximum support of A, W, and Spheroidal function for zero padding
-    int Npix_out = nPixelsConv;
     
-    xsup(ch) = Npix_out/2;
-    ysup(ch) = Npix_out/2;
+    xsup(ch) = itsSupportCF/2;
+    ysup(ch) = itsSupportCF/2;
     
     // Create the vectors of Matrices giving the convolution functions
     // for each Mueller element.
@@ -548,6 +547,9 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
     
     // Iterate over the row index of the Jones matrices
     // The row index corresponds to the visibility polarizations
+//     cout << "=====================" << endl;
+//     cout << itsSupportCF << " " << w_lambda << endl;
+//     cout << "=====================" << endl;
     #pragma omp parallel for collapse(4)
     for (uInt row2=0; row2<=1; ++row2) // iterate over the rows of Jones matrix 2
     {
@@ -591,26 +593,86 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
               // because all cross terms need to be computed
               
               // 3. fft to uv domain
-              normalized_fft (timerFFT, aTerm, true);
+//               normalized_fft (timerFFT, aTerm, true);
               
-              // 4. zero pad to match size of wterm
             }
             
-            Matrix<Complex> aTerm_padded(zero_padding(aTerm, Npix_out));
-            
-            // 5. fft to image domain
-            normalized_fft (timerFFT, aTerm_padded, false);
             
             // 6. multiply with wterm
-            aTerm_padded = aTerm_padded * wTerm;
+            aTerm = aTerm * wTerm;
+
+            int Npix_out = itsSupportCF;
+            
+
+            Bool trim(False);
+            Int d = 0;
+            
+            if (trim)
+            {  
+              Matrix<Complex> aTerm1(aTerm.copy());
+              // fft to uv domain
+              normalized_fft (timerFFT, aTerm1, true);
+              
+              // find support of conv func
+              Float n = max(real(abs(aTerm1)));
+              for(d=0; d<=(Npix_out/2); d++)
+              {
+                Float m = 0.0;
+                for(int e=0; e<(Npix_out-2*d); e++)
+                {
+                  m = max(m, abs(aTerm1(d, d+e)));
+                  m = max(m, abs(aTerm1(Npix_out-d-1, d+e)));
+                  m = max(m, abs(aTerm1(d+e, d)));
+                  m = max(m, abs(aTerm1(d+e, Npix_out-d-1)));
+                } 
+                if ((m/n) > 0.01)
+                {
+                  Double n1 = Npix_out * Npix_out;
+                  Double n2 = (Npix_out-d*2)*(Npix_out-d*2);
+  //                 #pragma omp critical
+  //                 cout << d << " " << (m/n) << " " << ((n2*log2(n2)) / (n1*log2(n1))) << endl;
+                  break;
+                }
+                
+              }
+              
+              // trim outer rim of conv func below threshold
+    
+              if (d>0  )
+              {
+                IPosition start(2, d, d);
+                IPosition end(2, Npix_out-1-d, Npix_out-1-d);
+                aTerm1.reference(aTerm1(start, end).copy());
+                normalized_fft (timerFFT, aTerm1, false);
+                aTerm.reference(aTerm1);
+              }
+              
+              
+            }
             
             // 7. zero pad with oversampling factor
-            Matrix<Complex> aTerm_oversampled(zero_padding(aTerm_padded, Npix_out * itsOversampling));
+            Matrix<Complex> aTerm_oversampled;
             
             // 8. fft to uv domain
-            normalized_fft(timerFFT, aTerm_oversampled, true);
+//             {
+//               ScopedTimer t("Oversampling I");
+//               aTerm_oversampled = zero_padding(aTerm, (Npix_out-2*d) * itsOversampling);
+//               normalized_fft(timerFFT, aTerm_oversampled, true);
+//             }
+            
+            {
+              ScopedTimer t("Oversampling II");
+              int tnr = OpenMP::threadNum();
+              aTerm_oversampled = itsFFTMachines[tnr].padded_forward (aTerm, itsOversampling);
+            }
             
             aTerm_oversampled *= Float(itsOversampling * itsOversampling);
+            
+            // zero pad to original support because gridder can not (yet) handle varying support
+            if (d>0)
+            {
+              aTerm_oversampled.reference(zero_padding(aTerm_oversampled, Npix_out * itsOversampling));
+            }
 
             kronecker_product[ii][jj].reference (aTerm_oversampled);
           }
@@ -796,7 +858,7 @@ Double ConvolutionFunction::makeSpheroidCut()
   normalized_fft(spheroid_cut_paddedf, false);
   itsSpheroid_cut_im.reference (real(spheroid_cut_paddedf));
   // Only this one is really needed.
-  store(itsSpheroid_cut_im, itsImgName + ".spheroid_cut_im");
+//   store(itsSpheroid_cut_im, itsImgName + ".spheroid_cut_im");
   if (itsVerbose > 0) 
   {
     store(itsSpheroid_cut, itsImgName + ".spheroid_cut");
@@ -915,11 +977,11 @@ void ConvolutionFunction::normalized_fft(
   int tnr = OpenMP::threadNum();
   if (toFreq) 
   {
-    itsFFTMachines[tnr].normalized_forward (im.nrow(), im.data());
+    itsFFTMachines[tnr].normalized_forward (im.nrow(), im.data(), 4);
   } 
   else 
   {
-    itsFFTMachines[tnr].normalized_backward (im.nrow(), im.data());
+    itsFFTMachines[tnr].normalized_backward (im.nrow(), im.data(), 4);
   }
 }
 
@@ -1065,35 +1127,52 @@ void ConvolutionFunction::showPerc1 (ostream& os,
 void ConvolutionFunction::applyWterm(casa::Array<casa::Complex>& grid, double w)
 {
 
-  Double res_ini = abs(itsCoordinates.increment()(0));
-  Vector<Double> resolution(2, res_ini);
+  Double res = abs(itsCoordinates.increment()(0));
 
   int nx(grid.shape()[0]);
-  int ny(grid.shape()[0]);
-  double radius[2] = {0.5 * (nx), 0.5 * (ny)};
+  
+  int nx2 = nx/2;
+  
   double twoPiW = 2.0 * casa::C::pi * w;
 
-  IPosition pos(4,1,1,1,1);
-  Complex pix;
-  Complex wterm;
-  double l, m, phase;
-  for(uInt ch=0; ch<grid.shape()[3]; ++ch)
+  #pragma omp parallel for schedule(dynamic)
+  for(uInt ii=1; ii<=nx2; ++ii)
   {
-    pos[3]=ch;
-    for(uInt ii=0; ii<grid.shape()[0]; ++ii)
+    for(uInt jj=0; jj<=ii; ++jj)
     {
+      IPosition pos(4,1,1,1,1);
+      Complex wterm;
+      double l, m, phase;
       pos[0]=ii;
-      m = resolution[1] * (ii - radius[1]);
-      for(uInt jj=0; jj<grid.shape()[0]; ++jj)
+      pos[1]=jj;
+      l = res * jj;
+      m = res * ii;
+      phase = twoPiW * (sqrt(1.0 - l*l - m*m) - 1.0);
+      wterm = Complex(cos(phase), sin(phase));
+      
+      
+      for(uInt ch=0; ch<grid.shape()[3]; ++ch)
       {
-        pos[1]=jj;
-        l = resolution[0] * (jj - radius[0]);
-        phase = twoPiW * (sqrt(1.0 - l*l - m*m) - 1.0);
-        wterm=Complex(cos(phase), sin(phase));
         for(uInt pol=0; pol<grid.shape()[2]; ++pol)
         {
-          pos[2]=pol;
-          grid(pos) *= wterm;
+          Complex v0 = grid(IPosition(4, (nx2 + ii) % nx, (nx2 + jj) % nx, pol, ch));
+          Complex v1 = grid(IPosition(4, (nx2 + ii) % nx, (nx2 - jj) % nx, pol, ch));
+          Complex v2 = grid(IPosition(4, (nx2 - ii) % nx, (nx2 + jj) % nx, pol, ch));
+          Complex v3 = grid(IPosition(4, (nx2 - ii) % nx, (nx2 - jj) % nx, pol, ch));
+          Complex v4 = grid(IPosition(4, (nx2 + jj) % nx, (nx2 + ii) % nx, pol, ch));
+          Complex v5 = grid(IPosition(4, (nx2 + jj) % nx, (nx2 - ii) % nx, pol, ch));
+          Complex v6 = grid(IPosition(4, (nx2 - jj) % nx, (nx2 + ii) % nx, pol, ch));
+          Complex v7 = grid(IPosition(4, (nx2 - jj) % nx, (nx2 - ii) % nx, pol, ch));
+
+          grid(IPosition(4, (nx2 + ii) % nx, (nx2 + jj) % nx, pol, ch)) = v0*wterm;
+          grid(IPosition(4, (nx2 + ii) % nx, (nx2 - jj) % nx, pol, ch)) = v1*wterm;
+          grid(IPosition(4, (nx2 - ii) % nx, (nx2 + jj) % nx, pol, ch)) = v2*wterm;
+          grid(IPosition(4, (nx2 - ii) % nx, (nx2 - jj) % nx, pol, ch)) = v3*wterm;
+          grid(IPosition(4, (nx2 + jj) % nx, (nx2 + ii) % nx, pol, ch)) = v4*wterm;
+          grid(IPosition(4, (nx2 + jj) % nx, (nx2 - ii) % nx, pol, ch)) = v5*wterm;
+          grid(IPosition(4, (nx2 - jj) % nx, (nx2 + ii) % nx, pol, ch)) = v6*wterm;
+          grid(IPosition(4, (nx2 - jj) % nx, (nx2 - ii) % nx, pol, ch)) = v7*wterm;
+          
         }
       }
     }

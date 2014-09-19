@@ -244,7 +244,6 @@ FTMachine::~FTMachine()
 
 const Matrix<Float>& FTMachine::getAveragePB() const
 {
-  // Read average beam from disk if not present.
   if (itsAveragePB.empty()) {
     
     IPosition blc(

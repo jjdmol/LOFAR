@@ -1,4 +1,4 @@
-//# OperationClean.cc:
+//# ScopedTimer.cc:
 //#
 //# Copyright (C) 2014
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -22,47 +22,41 @@
 
 #include <lofar_config.h>
 
-#include <Common/lofar_iostream.h>
-#include <LofarFT/OperationImage.h>
+#include <LofarFT/ScopedTimer.h>
 
 namespace LOFAR {
 namespace LofarFT {
-
-namespace
+  
+ScopedTimer::ScopedTimer(casa::String id)
 {
-  bool dummy = OperationFactory::instance().
-    registerClass<OperationImage>("image");
+  #pragma omp ScopedTimer critical
+  itsTime = &ScopedTimer::timings()[id];
+  itsPrecTimer.start();
+}
+
+ScopedTimer::~ScopedTimer()
+{
+  itsPrecTimer.stop();
+  casa::Double t = itsPrecTimer.getReal();
+  #pragma omp atomic
+  *itsTime += t;
+}
+
+std::map<casa::String, casa::Double>& ScopedTimer::timings()
+{
+  static std::map<casa::String, casa::Double> t;
+  return t;
+}
+
+void ScopedTimer::show()
+{
+  // show content:
+  for (std::map<casa::String,casa::Double>::iterator it=timings().begin(); it!=timings().end(); ++it)
+    std::cout << it->first << " => " << it->second << '\n';
 }
 
   
-OperationImage::OperationImage(ParameterSet& parset): Operation(parset)
-{
-    needsData = true;
-    needsImage = true;
-    needsWeight = true;
-    needsFTMachine = true;
-}
-
-void OperationImage::init()
-{
-  Operation::init();
-  itsImageName = itsParset.getString("output.imagename");
-}
-
-void OperationImage::run()
-{
-  itsImager->makeimage ("corrected", itsImageName + ".flatnoise");
-}
-
-void OperationImage::showHelp (ostream& os, const std::string& name)
-{
-  Operation::showHelp(os,name);
-
-  os<<
-  "Operation \"image\": create a dirty image                         "<<endl<<
-  "  No extra parameters for operation \"image\"                     "<<endl;
-};
+} // namespace LofarFT
+} // namespace LOFAR
 
 
-} //# namespace LofarFT
-} //# namespace LOFAR
