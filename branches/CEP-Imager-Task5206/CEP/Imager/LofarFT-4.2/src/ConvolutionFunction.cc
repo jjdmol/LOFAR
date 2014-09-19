@@ -120,7 +120,7 @@ ConvolutionFunction::ConvolutionFunction
     itsAveragePB(),
     itsSpheroidal(),
     itsSpheroidalCF(),
-    itsSupportCF(21)
+    itsSupportCF(15)
 {
   itsFFTMachines.resize (OpenMP::maxThreads());
 
@@ -658,6 +658,7 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
 //               ScopedTimer t("Oversampling I");
 //               aTerm_oversampled = zero_padding(aTerm, (Npix_out-2*d) * itsOversampling);
 //               normalized_fft(timerFFT, aTerm_oversampled, true);
+//               aTerm_oversampled *= Float(itsOversampling * itsOversampling);
 //             }
             
             {
@@ -666,7 +667,6 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
               aTerm_oversampled = itsFFTMachines[tnr].padded_forward (aTerm, itsOversampling);
             }
             
-            aTerm_oversampled *= Float(itsOversampling * itsOversampling);
             
             // zero pad to original support because gridder can not (yet) handle varying support
             if (d>0)

@@ -393,7 +393,7 @@ namespace LOFAR {
     to = result.data() + n_out * center_out + center_out;
     for (size_t j=0; j<=center_out; ++j) {
       for (size_t i=0; i<=center_out; ++i) {
-        to[i+j*n_out] = fr[i+j*n_out];
+        to[i+j*n_out] = fr[i+j*n_out]/int(n*n);
       }
     }
     // q2
@@ -401,7 +401,7 @@ namespace LOFAR {
     to = result.data() + n_out * center_out;
     for (size_t j=0; j<=center_out; ++j) {
       for (size_t i=0; i<center_out; ++i) {
-        to[i+j*n_out] = fr[i+j*n_out];
+        to[i+j*n_out] = fr[i+j*n_out]/int(n*n);
       }
     }
     // q3
@@ -410,7 +410,7 @@ namespace LOFAR {
     for (size_t j=0; j<center_out; ++j) {
       for (size_t i=0; i<=center_out; ++i) 
       {
-        to[i+j*n_out] = fr[i+j*n_out];
+        to[i+j*n_out] = fr[i+j*n_out]/int(n*n);
       }
     }
     // q4
@@ -418,7 +418,7 @@ namespace LOFAR {
     to = result.data();
     for (size_t j=0; j<center_out; ++j) {
       for (size_t i=0; i<center_out; ++i) {
-        to[i+j*n_out] = fr[i+j*n_out];
+        to[i+j*n_out] = fr[i+j*n_out]/int(n*n);
       }
     }
     
