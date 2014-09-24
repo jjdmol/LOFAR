@@ -223,14 +223,14 @@ RSPDriver::RSPDriver(string name) :
     readPPSdelaySettings();
 
 	itsSyncMode = GET_CONFIG("RSPDriver.SYNC_MODE", i);
-	if (itsSyncMode < SYNC_SOFTWARE || itsSyncMode > SYNC_PPS) {
+	if (itsSyncMode < SYNC_SOFTWARE || itsSyncMode > SYNC_NO_PPS_USAGE) {
 		LOG_FATAL_STR("Invalid SYNC_MODE: " << itsSyncMode);
 		exit(EXIT_FAILURE);
 	}
+	itsPPSdelay = globalParameterSet()->getInt("RSPDriver.PPS_DELAY", 0);
 
 #ifdef HAVE_SYS_TIMEPPS_H
 	memset(&m_ppsinfo, 0, sizeof(pps_info_t));
-	itsPPSdelay = globalParameterSet()->getInt("RSPDriver.PPS_DELAY", 0);
 #endif
 
 	// Register protocols for debugging
@@ -999,6 +999,19 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 				//
 				m_acceptor.setTimer(1.0, 1.0); // every second after 1.0 second
 			}
+			else if (itsSyncMode == SYNC_NO_PPS_USAGE) {
+				//
+				// don't use the PPS of the GPS, simulate our own second transition
+				//
+				struct timeval		sysTime;
+				gettimeofday(&sysTime, 0);
+				usleep (1999000 - sysTime.tv_usec);		// try to wait for a second passage
+				m_boardPorts[0].setTimer(0.95); 		// set 'workable time' to just under a second.
+
+				LOG_INFO("Hopefully on whole second now");
+				gettimeofday(&sysTime, 0);
+				itsLastSecond = sysTime.tv_sec;
+			}
 			else if (itsSyncMode == SYNC_PPS) {
 #ifdef HAVE_SYS_TIMEPPS_H
 				//
@@ -1122,6 +1135,42 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 			if ((itsSyncMode == SYNC_SOFTWARE) || (itsSyncMode == SYNC_FAST)) {
 				(void)clock_tick(m_acceptor); // force clock tick
 			}
+			else if (itsSyncMode == SYNC_NO_PPS_USAGE) {
+				// First wait for second transition
+				struct timeval		sysTime;
+				gettimeofday(&sysTime, 0);
+				usleep (1000000 - sysTime.tv_usec);		// try to wait for a second passage
+				m_boardPorts[0].setTimer(0.95); 	// come back here after nearly 1 second
+
+				// print time of day, ugly
+				char timestr[32];
+				gettimeofday(&sysTime, 0);
+				strftime(timestr, 32, "%T", gmtime(&sysTime.tv_sec));
+				LOG_INFO(formatString("TICK: noPPS_time=%s.%06d UTC", timestr, sysTime.tv_usec));
+
+				// wait PPSdelay time
+				if (itsPPSdelay) {
+					usleep(itsPPSdelay);
+				}
+
+				// construct a timer event
+				GCFTimerEvent	timer;
+				gettimeofday(&sysTime, 0);
+				timer.sec  = sysTime.tv_sec;
+				timer.usec = sysTime.tv_usec;
+				timer.id   = 0;
+				timer.arg  = 0;
+
+				// check for missed second(s)
+				if (sysTime.tv_sec - itsLastSecond != 1) {
+					LOG_WARN_STR("Missed " << sysTime.tv_sec - itsLastSecond - 1 << " seconds.");
+				}
+				itsLastSecond = sysTime.tv_sec;
+
+				/* run the scheduler with the timer event */
+				status = m_scheduler.run(timer, port);
+				Sequencer::getInstance().run(timer, port);
+			}
 			else if (itsSyncMode == SYNC_PPS) {
 				GCFTimerEvent timer;
 
@@ -1238,8 +1287,7 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 				// if SYNC_FAST mode and sync has completed
 				// send new clock_tick
 				//
-				if ((itsSyncMode == SYNC_FAST) &&
-						m_scheduler.syncHasCompleted()) {
+				if ((itsSyncMode == SYNC_FAST) && m_scheduler.syncHasCompleted()) {
 					m_boardPorts[0].setTimer(0.0); // immediate
 					m_update_counter++;
 				}
