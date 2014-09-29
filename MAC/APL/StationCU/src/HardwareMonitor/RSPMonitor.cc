@@ -297,6 +297,7 @@ GCFEvent::TResult RSPMonitor::askConfiguration(GCFEvent& event,
 		itsNrHBAs = RSconf.getInt("RS.N_HBAS", 0);
 		itsNrLBAs = RSconf.getInt("RS.N_LBAS", 0);
 		itsHasSplitters = RSconf.getBool("RS.HBA_SPLIT", false);
+		itsHasAartfaac  = RSconf.getBool("RS.AARTFAAC", false);
 
 		// inform user
 		LOG_INFO(formatString("nr RCUs      = %d",ack.n_rcus));
@@ -307,6 +308,7 @@ GCFEvent::TResult RSPMonitor::askConfiguration(GCFEvent& event,
 		LOG_INFO(formatString("nr HBAs      = %d", itsNrHBAs));
 		LOG_INFO_STR(         "RSPmask      = " << itsRSPmask);
 		LOG_INFO(formatString("has splitters= %s", (itsHasSplitters ? "yes" : "no")));
+		LOG_INFO(formatString("has aartfaac = %s", (itsHasAartfaac ? "yes" : "no")));
 	
 		// do some checks
 		if (itsNrRSPboards != (uint32)ack.max_rspboards) {
@@ -1248,7 +1250,12 @@ GCFEvent::TResult RSPMonitor::askDatastream(GCFEvent& event, GCFPortInterface& p
 	case F_TIMER:
 		LOG_ERROR_STR ("RSP:Timeout on getting the datastream information, trying other information");
 		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getdatastream timeout"));
-		TRAN(RSPMonitor::askAartfaacState);			// go to next state.
+		if (itsHasAartfaac) {
+			TRAN(RSPMonitor::askAartfaacState);			// go to next state.
+		}
+		else {
+			TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
+		}	
 		break;
 
 	case RSP_GETDATASTREAMACK: {
@@ -1257,7 +1264,12 @@ GCFEvent::TResult RSPMonitor::askDatastream(GCFEvent& event, GCFPortInterface& p
 		if (ack.status != RSP_SUCCESS) {
 			LOG_ERROR ("RSP:Failed to get the datastream information. Trying other information");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getdatastream error"));
-			TRAN(RSPMonitor::askAartfaacState);			// go to next state.
+			if (itsHasAartfaac) {
+				TRAN(RSPMonitor::askAartfaacState);			// go to next state.
+			}
+			else {
+				TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
+			}	
 			break;
 		}
 
@@ -1268,7 +1280,12 @@ GCFEvent::TResult RSPMonitor::askDatastream(GCFEvent& event, GCFPortInterface& p
 
 		LOG_DEBUG ("Updated datastream information, waiting for next cycle");
 //		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
-		TRAN(RSPMonitor::askAartfaacState);			// go to next state.
+		if (itsHasAartfaac) {
+			TRAN(RSPMonitor::askAartfaacState);			// go to next state.
+		}
+		else {
+			TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
+		}
 	}
 	break;
 
@@ -1294,6 +1311,7 @@ GCFEvent::TResult RSPMonitor::askDatastream(GCFEvent& event, GCFPortInterface& p
 
 	return (status);
 }
+
 
 //
 // askAartfaacState(event, port)
