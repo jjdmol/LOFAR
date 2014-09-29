@@ -12,6 +12,7 @@
 
 function error {
   echo -e "$@" >&2
+  sendback_status 1
   exit 1
 }
 
@@ -41,7 +42,7 @@ function setkey {
 }
 
 function usage {
-  error \
+  echo -e \
     "\nUsage: $0 [-A] [-B] [-C] [-F] [-P pidfile] [-l nprocs] [-p] [-o KEY=VALUE] PARSET"\
     "\n"\
     "\n  Run the observation specified by PARSET"\
@@ -55,7 +56,8 @@ function usage {
     "\n    -l: run solely on localhost using 'nprocs' MPI processes (isolated test)"\
     "\n    -p: enable profiling" \
     "\n    -o: add option KEY=VALUE to the parset" \
-    "\n"
+    "\n" >&2
+  exit 1
 }
 
 # command_retry expects a string it will execute as a subprocess
@@ -81,6 +83,68 @@ function command_retry {
     sleep $SLEEP_DURATION                  # Sleep if ssh failed
     SLEEP_DURATION=$((SLEEP_DURATION + 1)) # Increase duration   
   done
+}
+
+# Send the result status back to OnlineControl.
+#
+# to report success:
+#   sendback_status 0
+# to report failure:
+#   sendback_status 1
+function sendback_status {
+  OBSRESULT="$1"
+
+  if [ -n "$PARSET" ]
+  then
+    echo "Not communicating back to OnlineControl (no parset)"
+    return 0
+  fi
+
+  if [ "$ONLINECONTROL_FEEDBACK" -eq "0" ]
+  then
+    echo "Not communicating back to OnlineControl (disabled on command line)"
+    return 0
+  fi
+
+  if [ "$ONLINECONTROL_FEEDBACK" -eq "1" ]
+  then
+    ONLINECONTROL_USER=`getkey Cobalt.Feedback.userName $USER`
+    ONLINECONTROL_HOST=`getkey Cobalt.Feedback.host`
+
+    if [ $OBSRESULT -eq 0 ]
+    then
+      # ***** Observation ran successfully
+
+      # Copy LTA feedback file to ccu001
+      FEEDBACK_DEST="$ONLINECONTROL_USER@$ONLINECONTROL_HOST:`getkey Cobalt.Feedback.remotePath`"
+
+      echo "Copying feedback to $FEEDBACK_DEST"
+      timeout $KILLOPT 30s scp "$FEEDBACK_FILE" "$FEEDBACK_DEST"
+      FEEDBACK_RESULT=$?
+      if [ $FEEDBACK_RESULT -ne 0 ]
+      then
+        echo "Failed to copy file $FEEDBACK_FILE to $FEEDBACK_DEST (status: $FEEDBACK_RESULT)"
+        OBSRESULT=$FEEDBACK_RESULT
+      fi
+    fi
+
+    # Communicate result back to OnlineControl
+    ONLINECONTROL_RESULT_PORT=$((21000 + $OBSID % 1000))
+
+    if [ $OBSRESULT -eq 0 ]
+    then
+      # Signal success to OnlineControl
+      echo "Signalling success to $ONLINECONTROL_HOST"
+      echo -n "FINISHED" > /dev/tcp/$ONLINECONTROL_HOST/$ONLINECONTROL_RESULT_PORT
+    else
+      # ***** Observation or sending feedback failed for some reason
+      # Signal failure to OnlineControl
+      echo "Signalling failure to $ONLINECONTROL_HOST"
+      echo -n "ABORT" > /dev/tcp/$ONLINECONTROL_HOST/$ONLINECONTROL_RESULT_PORT
+    fi
+  fi
+
+  return 1
 }
 
 #############################
@@ -306,12 +370,11 @@ then
 fi
 
 # test the connection with local host: minimal test for valid credentials
-ssh -l $SSH_USER_NAME $KEY_STRING "localhost" "/bin/true" || { echo "Failed to create a connection to localhost, ssh error" ; exit 1; }
+ssh -l $SSH_USER_NAME $KEY_STRING "localhost" "/bin/true" || error "Failed to create a connection to localhost, ssh error"
 
 # Create a helper function for delete child processes and
 # a file containing the PID of these processes
 PID_LIST_FILE="$LOFARROOT/var/run/outputProc-$OBSERVATIONID.pids"
-
 
 
 # Function clean_up will clean op all PID in the
@@ -416,45 +479,7 @@ fi
 # Post-process the observation
 # ******************************
 
-if [ "$ONLINECONTROL_FEEDBACK" -eq "1" ]
-then
-  ONLINECONTROL_USER=`getkey Cobalt.Feedback.userName $USER`
-  ONLINECONTROL_HOST=`getkey Cobalt.Feedback.host`
-
-  if [ $OBSRESULT -eq 0 ]
-  then
-    # ***** Observation ran successfully
-
-    # Copy LTA feedback file to ccu001
-    FEEDBACK_DEST=$ONLINECONTROL_USER@$ONLINECONTROL_HOST:`getkey Cobalt.Feedback.remotePath`
-
-    echo "Copying feedback to $FEEDBACK_DEST"
-    timeout $KILLOPT 30s scp $FEEDBACK_FILE $FEEDBACK_DEST
-    FEEDBACK_RESULT=$?
-    if [ $FEEDBACK_RESULT -ne 0 ]
-    then
-      echo "Failed to copy file $FEEDBACK_FILE to $FEEDBACK_DEST (status: $FEEDBACK_RESULT)"
-      OBSRESULT=$FEEDBACK_RESULT
-    fi
-  fi
-
-  # Communicate result back to OnlineControl
-  ONLINECONTROL_RESULT_PORT=$((21000 + $OBSID % 1000))
-
-  if [ $OBSRESULT -eq 0 ]
-  then
-    # Signal success to OnlineControl
-    echo "Signalling success to $ONLINECONTROL_HOST"
-    echo -n "FINISHED" > /dev/tcp/$ONLINECONTROL_HOST/$ONLINECONTROL_RESULT_PORT
-  else
-    # ***** Observation or sending feedback failed for some reason
-    # Signal failure to OnlineControl
-    echo "Signalling failure to $ONLINECONTROL_HOST"
-    echo -n "ABORT" > /dev/tcp/$ONLINECONTROL_HOST/$ONLINECONTROL_RESULT_PORT
-  fi
-else
-  echo "Not communicating back to OnlineControl"
-fi
+sendback_status "$OBSRESULT"
 
 # clean up outputProc children
 echo "Allowing 120 second for normal end of outputProc"
