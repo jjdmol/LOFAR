@@ -526,7 +526,8 @@ SUITE(MultiReceiver) {
     Parset ps = makeDefaultTestParset();
     ps.replace("Cobalt.realTime", "false");
     ps.updateSettings();
-    MultiSender msender(hostMap, ps);
+    MACIO::RTmetadata rtmd(ps.observationID(), "", "");
+    MultiSender msender(hostMap, ps, rtmd, "rtmd key prefix");
   }
 
   TEST(Transpose) {
@@ -649,7 +650,8 @@ SUITE(MultiReceiver) {
             hostMap[FILEIDX(t)] = host;
           }
 
-          MultiSender msender(hostMap, ps);
+          MACIO::RTmetadata rtmd(ps.observationID(), "", "");
+          MultiSender msender(hostMap, ps, rtmd, "rtmd key prefix");
 
 #         pragma omp parallel sections num_threads(2)
           {

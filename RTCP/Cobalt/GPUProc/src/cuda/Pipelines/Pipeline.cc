@@ -145,14 +145,14 @@ namespace LOFAR
       // be in bulk: if processing is cheap, all subbands will be output right after they have been received.
       //
       // Allow queue to drop items older than 3 seconds.
-      multiSender(hostMap(ps, subbandIndices, hostID), ps, 3.0)
+      multiSender(hostMap(ps, subbandIndices, hostID), ps, mdLogger, mdKeyPrefix, 3.0)
     {
       ASSERTSTR(!devices.empty(), "Not bound to any GPU!");
 
       // Write data point(s) for monitoring (PVSS).
       itsMdLogger.log(itsMdKeyPrefix + PN_CGP_OBSERVATION_NAME, boost::lexical_cast<string>(ps.observationID()));
       for (unsigned i = 0; i < subbandIndices.size(); ++i) {
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_SUBBAND + '[' + boost::lexical_cast<string>(i) + ']',
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_SUBBAND + '[' + boost::lexical_cast<string>(subbandIndices[i]) + ']',
                         (int)subbandIndices[i]);
       }
 
@@ -596,14 +596,9 @@ namespace LOFAR
       const unsigned SAP = ps.settings.subbands[globalSubbandIdx].SAP;
 
       // Statistics for forwarding blocks to writeCorrelatedOutput
-      struct LossStatistics {
-        bool dropping;
-        size_t blocksWritten;
-        size_t blocksDropped;
-      };
-      
-      struct LossStatistics correlatorLoss = {false, 0, 0};
-      struct LossStatistics beamFormerLoss = {false, 0, 0};
+      bool dropping = false;
+      size_t blocksWritten = 0;
+      size_t blocksDropped = 0;
 
       SmartPtr<SubbandProcOutputData> data;
 
@@ -615,10 +610,6 @@ namespace LOFAR
         ASSERT( id.block >= 0 ); // Negative blocks should not reach storage
 
         LOG_DEBUG_STR("[" << id << "] Writing start");
-
-        // 'dropping' will be toggled once we detect dropped data
-        correlatorLoss.dropping = false;
-        beamFormerLoss.dropping = false;
 
         if (ps.settings.beamFormer.enabled) {
           // Try all files until we found the file(s) this block belongs to.
@@ -687,14 +678,7 @@ namespace LOFAR
 
             // Forward block to MultiSender, who takes ownership.
             forwardTimer.start();
-            if (multiSender.append(subband)) {
-              // Added a block
-              beamFormerLoss.blocksWritten++;
-            } else {
-              // Dropped a block
-              beamFormerLoss.dropping = true;
-              beamFormerLoss.blocksDropped++;
-            }
+            multiSender.append(subband);
             forwardTimer.stop();
 
             // If `subband' is still alive, it has been dropped instead of sent.
@@ -708,30 +692,22 @@ namespace LOFAR
         if (ps.settings.realTime && TimeSpec::now() - outputQueue.oldest() > maxRetentionTime) {
           // Drop
           spillQueue.append(data);
-          correlatorLoss.dropping = true;
-          correlatorLoss.blocksDropped++;
+          dropping = true;
+          blocksDropped++;
         } else {
           // Forward to correlator
           outputQueue.append(data);
-          correlatorLoss.blocksWritten++;
+          dropping = false;
+          blocksWritten++;
         }
         ASSERT(!data);
 
-        const double blockDuration = ps.settings.blockDuration();
-
-        // Prevent division by zero for observations without beam former
-        const size_t nrFiles = std::max(multiSender.nrFiles(), 1UL);
-
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPING + '[' + lexical_cast<string>(id.localSubbandIdx) + ']',
-                        correlatorLoss.dropping || beamFormerLoss.dropping);
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_WRITTEN  + '[' + lexical_cast<string>(id.localSubbandIdx) + ']',
-                        static_cast<float>(correlatorLoss.blocksWritten * blockDuration) +
-                        static_cast<float>(beamFormerLoss.blocksWritten * blockDuration / nrFiles)
-                       );
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPED  + '[' + lexical_cast<string>(id.localSubbandIdx) + ']',
-                        static_cast<float>(correlatorLoss.blocksDropped * blockDuration) +
-                        static_cast<float>(beamFormerLoss.blocksDropped * blockDuration / nrFiles)
-                       );
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPING + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
+                        dropping);
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_WRITTEN  + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
+                        blocksWritten * static_cast<float>(ps.settings.blockDuration()));
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPED  + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
+                        blocksDropped * static_cast<float>(ps.settings.blockDuration()));
 
         if (id.localSubbandIdx == 0 || id.localSubbandIdx == subbandIndices.size() - 1)
           LOG_INFO_STR("[" << id << "] Done"); 

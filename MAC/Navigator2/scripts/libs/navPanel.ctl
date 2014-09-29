@@ -57,9 +57,6 @@ global bool VhEnable=FALSE;
 global bool bandSelLbaHba=FALSE;
 global bool VddVccEnable=FALSE;
 
-bool undocked = false;
-
-
 // ****************************************
 // Name : navPanel_initPanel
 // ****************************************
@@ -74,13 +71,6 @@ void navPanel_initPanel(string objectName) {
   
   // sets global to busy
   g_objectReady=false;
-  
-  undocked = false;
-  
-  //check if the panle is in the framework or started via the undock button.
-  if (isDollarDefined("$undocked") ){
-    undocked = $undocked;
-  }
   
   itsNavigatorObject = objectName;
   itsActionDp    = DPNAME_NAVIGATOR + g_navigatorID + "." + objectName + ".action";  
