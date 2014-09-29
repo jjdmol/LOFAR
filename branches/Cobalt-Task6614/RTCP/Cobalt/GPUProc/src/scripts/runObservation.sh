@@ -94,7 +94,7 @@ function command_retry {
 function sendback_status {
   OBSRESULT="$1"
 
-  if [ -n "$PARSET" ]
+  if [ -z "$PARSET" ]
   then
     echo "Not communicating back to OnlineControl (no parset)"
     return 0
@@ -321,11 +321,10 @@ fi
 # ******************************
 
 # Determine node list to run on
-if [ "$FORCE_LOCALHOST" -eq "1" ]
-then
+HOSTS=`mpi_node_list -n "$PARSET"`
+
+if [ -z "$HOSTS" ]; then
   HOSTS=localhost
-else
-  HOSTS=`mpi_node_list -n "$PARSET"`
 fi
 
 echo "Hosts: $HOSTS"
