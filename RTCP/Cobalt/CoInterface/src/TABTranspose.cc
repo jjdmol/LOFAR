@@ -589,10 +589,15 @@ void MultiReceiver::dispatch( PortBroker::ServerStream *stream )
 // Maintains the connections of an rtcp process with all its outputProc processes
 // it needs to send data to.
 MultiSender::MultiSender( const HostMap &hostMap, const Parset &parset,
+                          RTmetadata &mdLogger, const std::string &mdKeyPrefix,
                           double maxRetentionTime )
 :
   hostMap(hostMap),
   itsParset(parset),
+  itsMdLogger(mdLogger),
+  itsMdKeyPrefix(mdKeyPrefix),
+  itsBlocksWritten(0),
+  itsBlocksDropped(0),
   maxRetentionTime(maxRetentionTime)
 {
   for (HostMap::const_iterator i = hostMap.begin(); i != hostMap.end(); ++i) {
@@ -666,7 +671,7 @@ void MultiSender::process( OMPThreadSet *threadSet )
 
 
 // The pipeline calls here to write a block for a single file (part).
-bool MultiSender::append( SmartPtr<struct Subband> &subband )
+void MultiSender::append( SmartPtr<struct Subband> &subband )
 {
   using namespace TimeSpec;
 
@@ -678,8 +683,7 @@ bool MultiSender::append( SmartPtr<struct Subband> &subband )
 
   const size_t globalSubbandIdx = subband->id.subband +
       itsParset.settings.beamFormer.files[fileIdx].firstSubbandIdx;
-
-  bool dropped = false;
+  bool dropping;
 
   // If oldest packet in queue is too old, drop it in lieu of this new one
   if (itsParset.realTime() && TimeSpec::now() - queue->oldest() > maxRetentionTime) {
@@ -691,15 +695,24 @@ bool MultiSender::append( SmartPtr<struct Subband> &subband )
     // would be weird to have NULL in here while we're appending elements
     ASSERT(subband);
 
-    dropped = true;
+    dropping = true;
+    itsBlocksDropped += 1;
+    itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPED + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
+        itsBlocksDropped * static_cast<float>(itsParset.settings.blockDuration()));
   } else {
     drop_rates.at(fileIdx).push(0.0);
+
+    dropping = false;
+    itsBlocksWritten += 1;
+    itsMdLogger.log(itsMdKeyPrefix + PN_CGP_WRITTEN + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
+        itsBlocksWritten * static_cast<float>(itsParset.settings.blockDuration()));
   }
+
+  itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPING + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
+                  dropping);
 
   // Append the data to the respective queue
   queue->append(subband);
-
-  return !dropped;
 }
 
 

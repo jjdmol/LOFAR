@@ -69,6 +69,7 @@ void rClick(int row) {
 updateObservations(string dp1, dyn_string obs,
                    string dp2, bool invalid)
 {
+  DebugN(\"Update for \"+$name+\" : \",obs);
   string obsDP;
 
   // disconnect old connections

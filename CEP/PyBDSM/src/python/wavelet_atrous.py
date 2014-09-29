@@ -290,8 +290,6 @@ class Op_wavelet_atrous(Op):
               isl.island_id = i
               for g in isl.gaul:
                   g.island_id = i
-              for dg in isl.dgaul:
-                  dg.island_id = i
               if i == 0:
                   img.pyrank[isl.bbox] = N.invert(isl.mask_active) - 1
               else:
@@ -609,8 +607,6 @@ def renumber_islands(img):
         isl.island_id = i
         for g in isl.gaul:
             g.island_id = i
-        for dg in isl.dgaul:
-            dg.island_id = i
         if i == 0:
             img.pyrank[isl.bbox] = N.invert(isl.mask_active) - 1
         else:
