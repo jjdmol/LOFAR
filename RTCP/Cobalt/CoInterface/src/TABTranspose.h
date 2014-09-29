@@ -29,7 +29,6 @@
 #include <Common/Thread/Condition.h>
 #include <Stream/Stream.h>
 #include <Stream/PortBroker.h>
-#include <MACIO/RTmetadata.h>
 #include "RunningStatistics.h"
 #include "BestEffortQueue.h"
 #include "MultiDimArray.h"
@@ -44,8 +43,6 @@ namespace LOFAR
   {
     namespace TABTranspose
     {
-      using MACIO::RTmetadata;
-
       /*
        * A piece of data belonging to a certain subband.
        *
@@ -353,11 +350,8 @@ namespace LOFAR
         //
         // hostMap:          the mapping fileIdx -> Host
         // parset:           the parset (i.e. observation configuration)
-        // mdLogger:         MACIO/PVSS metadata logger for monitoring
-        // mdKeyPrefix:      prefix needed to log MAC/PVSS events
         // maxRetentionTime: drop data older than this from the queue
         MultiSender( const HostMap &hostMap, const Parset &parset,
-                     RTmetadata &mdLogger, const std::string &mdKeyPrefix,
                      double maxRetentionTime = 3.0 );
         ~MultiSender();
 
@@ -369,10 +363,16 @@ namespace LOFAR
         void process( OMPThreadSet *threadSet = 0 );
 
         // Add a subband for sending. Ownership of the data is taken.
-        void append( SmartPtr<struct Subband> &subband );
+        //
+        // Returns `true' if the subband was appended without dropping data.
+        // Returns `false' if a subband was dropped to make space for this one.
+        bool append( SmartPtr<struct Subband> &subband );
 
         // Flush the queues.
         void finish();
+
+        // Report the number of files we're managing
+        size_t nrFiles() const { return hostMap.size(); }
 
       protected:
         // fileIdx -> host mapping
@@ -381,11 +381,6 @@ namespace LOFAR
         const Parset &itsParset;
 
         std::map<size_t, RunningStatistics> drop_rates; // [fileIdx]
-
-        // Logging for monitoring (PVSS).
-        RTmetadata &itsMdLogger; // non-const to be able to use its log()
-        const std::string itsMdKeyPrefix;
-        size_t itsBlocksWritten, itsBlocksDropped;
 
         // MultiSender has a queue per host it sends to. If it appends an element
         // to a queue, it will discard the head if it is older than maxRententionTime.
