@@ -1,5 +1,5 @@
 # LOFAR IMAGING PIPELINE
-# Prepare phase node
+# long_baseline node
 # Wouter Klijn
 # 2012
 # klijn@astron.nl
@@ -25,20 +25,21 @@ from lofarpipe.support.subprocessgroup import SubProcessGroup
 _time_slice_dir_name = "time_slices"
 
 
-class imager_prepare(LOFARnodeTCP):
+class long_baseline(LOFARnodeTCP):
     """
     Steps perform on the node:
     
     0. Create directories and assure that they are empty.
     1. Collect the Measurement Sets (MSs): copy to the current node.
     2. Start dppp: Combines the data from subgroups into single timeslice.
-    3. Flag rfi.
+    3. Flag rfi. IF supplied executable is empty skipped
     4. Add addImagingColumns to the casa ms.
-    5. Concatenate the time slice measurment sets, to a single virtual ms.
-    6. Filter bad stations. Find station with repeated bad measurement and
-       remove these completely from the dataset.
-
-    **Members:**
+    5. Filter bad stations. Find station with repeated bad measurement and
+       remove these completely from the dataset. Skipped if one of the
+       exectutables is missing.
+    6. optionally add beamtables
+    7. Convert polarization
+    8. Concatenate the time slice measurment sets, to a single virtual ms.
     """
     def run(self, environment, parset, working_dir, processed_ms_dir,
              ndppp_executable, output_measurement_set,
@@ -49,9 +50,9 @@ class imager_prepare(LOFARnodeTCP):
         Entry point for the node recipe
         """
         self.environment.update(environment)
+
         with log_time(self.logger):
             input_map = DataMap.load(raw_ms_mapfile)
-
             #******************************************************************
             # I. Create the directories used in this recipe
             create_directory(processed_ms_dir)
@@ -90,8 +91,9 @@ class imager_prepare(LOFARnodeTCP):
                     "Produced time slices: {0}".format(time_slices_path_list))
             #***********************************************************
             # 3. run rfi_concole: flag datapoints which are corrupted
-            self._run_rficonsole(rficonsole_executable, time_slice_dir,
-                                 time_slices_path_list)
+            if rficonsole_executable != "":
+                self._run_rficonsole(rficonsole_executable, time_slice_dir,
+                                     time_slices_path_list)
 
             #******************************************************************
             # 4. Add imaging columns to each timeslice
@@ -104,17 +106,27 @@ class imager_prepare(LOFARnodeTCP):
 
             #*****************************************************************
             # 5. Filter bad stations
-            time_slice_filtered_path_list = self._filter_bad_stations(
-                time_slices_path_list, asciistat_executable,
-                statplot_executable, msselect_executable)
+            if not(asciistat_executable == "" or
+                 statplot_executable == "" or
+                 msselect_executable == "" or True):
+                time_slice_filtered_path_list = self._filter_bad_stations(
+                    time_slices_path_list, asciistat_executable,
+                    statplot_executable, msselect_executable)
+            else:
+                # use the unfiltered list
+                time_slice_filtered_path_list = time_slices_path_list
 
             #*****************************************************************
-            # Add measurmenttables
+            # 6. Add measurmenttables
             if add_beam_tables:
                 self.add_beam_tables(time_slice_filtered_path_list)
 
             #******************************************************************
-            # 6. Perform the (virtual) concatenation of the timeslices
+            # 7. Perform Convert polarization:
+            self._convert_polarization(time_slice_filtered_path_list)
+
+            #******************************************************************
+            # 8. Perform the (virtual) concatenation of the timeslices
             self._concat_timeslices(time_slice_filtered_path_list,
                                     output_measurement_set)
 
@@ -205,7 +217,7 @@ class imager_prepare(LOFARnodeTCP):
         Wraps dppp with catchLog4CPLus and catch_segfaults
         """
         with CatchLog4CPlus(working_dir, self.logger.name +
-             "." + os.path.basename("imager_prepare_ndppp"),
+             "." + os.path.basename("long_baseline_ndppp"),
                   os.path.basename(ndppp)) as logger:
             catch_segfaults(cmd, working_dir, environment,
                                   logger, cleanup = None)
@@ -432,7 +444,29 @@ class imager_prepare(LOFARnodeTCP):
         return filtered_list_of_ms
 
 
+    def _convert_polarization(self, time_slice_filtered_path_list):
+        """
+        # convert to circular polarization 
+        # method based on input from Javier Moldon <moldon@astron.nl>
+        """
+        for time_slice in time_slice_filtered_path_list:
+            #apply the polarization to each ms
+            try:
+                opened_ms=pt.taql(
+                    "update {0}/ set DATA = mscal.stokes(DATA,'circ')".format(time_slice))
+                opened_ms.close()
+
+                opened_ms=pt.taql(
+                    "update {0}/POLARIZATION set CORR_TYPE=[5,6,7,8]".format(time_slice))
+                opened_ms.close()
+                self.logger.info("Converted to circular polarization using taql")
+            except Exception, exception:
+                self.logger.error("Problem applying polarization to ms: {0}".format(
+                    time_slice))
+                raise exception
+
+
 if __name__ == "__main__":
     _jobid, _jobhost, _jobport = sys.argv[1:4]
     sys.exit(
-        imager_prepare(_jobid, _jobhost, _jobport).run_with_stored_arguments())
+        long_baseline(_jobid, _jobhost, _jobport).run_with_stored_arguments())

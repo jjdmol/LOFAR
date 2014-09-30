@@ -20,7 +20,7 @@ from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.data_map import DataMap, MultiDataMap
 
-class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
+class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
     """
     Prepare phase master:
 
@@ -108,7 +108,7 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             '--add_beam_tables',
             default=False,
             help="Developer option, adds beamtables to ms"
-        )
+        ),
     }
 
     outputs = {
@@ -128,8 +128,9 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         """
         Entry point for recipe: Called by the pipeline framework
         """
-        super(imager_prepare, self).go()
-        self.logger.info("Starting imager_prepare run")
+        super(long_baseline, self).go()
+        self.logger.info("Starting long_baseline run")
+
         # *********************************************************************
         # input data     
         input_map = DataMap.load(self.inputs['args'][0])
@@ -246,6 +247,7 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         self.outputs['slices_mapfile'] = self.inputs['slices_mapfile']
         self.outputs['raw_ms_per_image_mapfile'] = \
             self.inputs["raw_ms_per_image_mapfile"]
+
         return 0
 
     def _create_input_map_for_sbgroup(self, slices_per_image,
@@ -306,4 +308,4 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
 
 
 if __name__ == "__main__":
-    sys.exit(imager_prepare().main())
+    sys.exit(long_baseline().main())

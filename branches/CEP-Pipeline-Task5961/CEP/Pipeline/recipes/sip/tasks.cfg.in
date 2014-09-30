@@ -78,7 +78,7 @@ executable = %(lofarroot)s/bin/awimager
 [imager_create_dbs]
 recipe = imager_create_dbs
 parmdb_executable = %(lofarroot)s/bin/parmdbm
-makesourcedb_path = %(lofarroot)s/bin/makesourcedb
+makesourcedb_path = %(casaroot)s/bin/makesourcedb
 
 [imager_bbs]
 recipe = imager_bbs
