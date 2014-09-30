@@ -3,17 +3,19 @@ V 11
 LANG:1 4 aHBA
 LANG:6 0 
 LANG:30 0 
-PANEL,-1 -1 241 145 N "_3DFace" 4
+PANEL,-1 -1 241 145 N "_3DFace" 5
 "$aNr"
 "$aX"
 "$aY"
 "$aZ"
+"$sysName"
 "main()
 {
   baseDP  = g_currentDatapoint;
   
   curHBA= $aNr;
-  sysName=dpSubStr(baseDP,DPSUB_SYS);
+  sysName=$sysName;
+  
   string aS=sysName+\"LOFAR_PIC_HBA\";
   extrazero=\"\";
   if (curHBA < 10) {
