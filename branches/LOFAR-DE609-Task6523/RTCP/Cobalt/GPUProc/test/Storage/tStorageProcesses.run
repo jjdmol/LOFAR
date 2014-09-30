@@ -1,8 +1,0 @@
-#!/bin/bash
-#
-DummyStorage 12345 0&                  # Run the command
-PID_ID=$!                              # get the PID
-
-tStorageProcesses || exit 1
-wait $PID_ID
-exit 0  # do not exit with DymmyStorage exit. If we are waiting the test should succeed
