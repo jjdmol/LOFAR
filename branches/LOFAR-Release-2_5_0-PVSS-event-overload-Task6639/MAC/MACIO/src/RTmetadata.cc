@@ -130,9 +130,9 @@ void RTmetadata::log(const vector<KVpair>& pairs)
 		if (nfree == MAX_QUEUED_EVENTS) {
 			itsQueuedEventsCond.signal();
 		}
-	} else {
-		itsNrEventsDropped += pairs.size() - nfree;
 	}
+
+	itsNrEventsDropped += pairs.size() - count;
 }
 
 
