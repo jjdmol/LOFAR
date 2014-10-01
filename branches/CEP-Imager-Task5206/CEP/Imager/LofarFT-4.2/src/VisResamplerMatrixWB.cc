@@ -90,8 +90,7 @@ void VisResamplerMatrixWB::DataToGridImpl_p(
 
 
   // Loop over all visibility rows to process.
-  omp_set_nested(1);
-  #pragma omp parallel num_threads(4)
+  #pragma omp parallel // num_threads(4)
   for (Int inx=rbeg; inx<=rend; ++inx) 
   {
     Int irow = rows[inx];
@@ -99,12 +98,12 @@ void VisResamplerMatrixWB::DataToGridImpl_p(
     const Double*  __restrict__ uvwPtr   = vbs.uvw().data() + irow*3;
     Int sign_w = sign(uvwPtr[2]);
     
-    
     // Loop over all channels in the visibility data.
     // Map the visibility channel to the grid channel.
     // Skip channel if data are not needed.
     for (Int visChan=0; visChan<nVisChan; ++visChan) 
     {
+      
       Float tw = taylor_weight(visChan);
       Int gridChan = itsChanMap[visChan];
 
@@ -135,12 +134,6 @@ void VisResamplerMatrixWB::DataToGridImpl_p(
       Int offy = SynthesisUtils::nint (diffy * sampy); // oversampling
       offx += (nConvX-1)/2;
       offy += (nConvY-1)/2;
-      // Scaling with frequency is not necessary (according to Cyril).
-      Double freqFact = 1;   // = cfFreq / vbs.freq_p[visChan];
-      Int fsampx = SynthesisUtils::nint (sampx * freqFact);
-      Int fsampy = SynthesisUtils::nint (sampy * freqFact);
-      Int fsupx  = SynthesisUtils::nint (supx / freqFact);
-      Int fsupy  = SynthesisUtils::nint (supy / freqFact);
 
       // Only use visibility point if the full support is within grid.
 
@@ -158,43 +151,43 @@ void VisResamplerMatrixWB::DataToGridImpl_p(
       {
         visPtr = psfValues;
       }
+      visPtr = psfValues;
       // Handle a visibility if not flagged.
-      #pragma omp for
+      #pragma omp for collapse(2) schedule(static,1) nowait
       for (Int ipol=0; ipol<4; ++ipol)  // ipol run over image polarizations
       {
-        // Get the offset in the grid data array.
-        Int goff = (gridChan*4 + ipol) * nGridX * nGridY;
         // Loop over the scaled support.
-        for (Int sy=-fsupy; sy<=fsupy; ++sy) 
+        for (Int sy=-supy; sy<=supy; ++sy) 
         {
+          // Get the offset in the grid data array.
+          Int goff = (gridChan*4 + ipol) * nGridX * nGridY;
           // Get the pointer in the grid for the first x in this y.
-          T* __restrict__ gridPtr = grid.data() + goff +
-                                    (locy+sy)*nGridX + locx-supx;
+          
+          // DEBUG
+          locy = 100;
+          
+          T* __restrict__ gridPtr = grid.data() + goff + (locy+sy)*nGridX + locx-supx;
           // Get pointers to the first element to use in the 4
           // convolution functions for this channel,pol.
 
           const Complex* __restrict__ cf[4];
-          Int cfoff = (offy + sy*fsampy)*nConvX + offx - fsupx*fsampx;
+          Int cfoff = (offy + sy)*nConvX + offx - supx*sampx;
           for (int i=0; i<4; ++i) // i runs over data polarizations
           {
             cf[i] = cfs.vdata()[CFChan][i][ipol].data() + cfoff;
           }
-          for (Int sx=-fsupx; sx<=fsupx; ++sx) 
+          for (Int sx=0; sx<=2*supx; ++sx) 
           {
             // Loop over polarizations to correct for leakage.
             Complex polSum(0,0);
             for (Int i=0; i<4; ++i) // i runs over data polarizations
             {
-              if (flagPtr[i]) continue; 
-              polSum += Complex(visPtr[i].real(), visPtr[i].imag() * sign_w) * *cf[i];
-              cf[i] += fsampx;
+              if (!flagPtr[i]) polSum += Complex(visPtr[i].real(), visPtr[i].imag() * sign_w) * cf[i][sx];
             }
-            polSum *= *imgWtPtr * tw;
-            *gridPtr++ += polSum;
+            gridPtr[sx] += polSum * *imgWtPtr * tw;
           }
         }
-//         #pragma omp single
-        sumWtPtr[ipol+gridChan*4] += imgWtPtr[ipol];
+//         sumWtPtr[ipol+gridChan*4] += imgWtPtr[ipol];
       } // end for ipol
     } // end for visChan
   } // end for inx
@@ -303,8 +296,7 @@ void VisResamplerMatrixWB::GridToData(
         for (Int sy=-supy; sy<=supy; ++sy) 
         {
           // Get the pointer in the grid for the first x in this y.
-          const Complex* __restrict__ gridPtr = grid.data() + goff +
-                                        (locy+sy)*nGridX + locx-supx;
+          const Complex* __restrict__ gridPtr = grid.data() + goff + (locy+sy)*nGridX + locx-supx;
           // Get pointers to the first element to use in the 4
           // convolution functions for this channel,pol.
 

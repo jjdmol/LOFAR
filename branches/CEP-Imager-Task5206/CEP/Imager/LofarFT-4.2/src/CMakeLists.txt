@@ -94,3 +94,10 @@ set_source_files_properties(
     "-Wno-extra -Wno-ignored-qualifiers -Wno-overloaded-virtual -Wno-unused"
 )
 
+set_source_files_properties(
+  VisResamplerMatrixWB.cc
+  ConvolutionFunction.cc
+  PROPERTIES COMPILE_FLAGS
+    "-O3 -Wno-extra -Wno-ignored-qualifiers -Wno-overloaded-virtual -Wno-unused"
+)
+#  -march=native 

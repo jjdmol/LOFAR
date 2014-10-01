@@ -120,7 +120,7 @@ ConvolutionFunction::ConvolutionFunction
     itsAveragePB(),
     itsSpheroidal(),
     itsSpheroidalCF(),
-    itsSupportCF(15)
+    itsSupportCF(27)
 {
   itsFFTMachines.resize (OpenMP::maxThreads());
 

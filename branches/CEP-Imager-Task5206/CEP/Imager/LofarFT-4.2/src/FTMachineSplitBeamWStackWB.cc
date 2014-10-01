@@ -59,6 +59,7 @@ FTMachineSplitBeamWStackWB::FTMachineSplitBeamWStackWB(
     itsSplitBeam(parset.getBool("gridding.splitbeam", False)),
     itsNThread(OpenMP::maxThreads())
 {
+  //TODO 
   itsMachineName = theirName;
   itsNGrid = itsNThread;
   AlwaysAssert (itsNThread>0, AipsError);
@@ -186,12 +187,31 @@ FTMachineSplitBeamWStackWB::VisibilityMap FTMachineSplitBeamWStackWB::make_mappi
   Vector<uInt> &blIndex = v.baseline_index_map;
   GenSortIndirect<Int>::sort (blIndex, blnr);
   
+//   /////vvvvvvvvvvvvvvvvv///////////////////////
+// 
+//   int nrow = vb.nRow();
+//   int nchan = vb.frequency().size();
+//   Vector w(nrow * nchan);
+//   
+//   for (int i; i<nrow; i++)
+//   {
+//     for (int ch=0; ch<nchan; ch++)
+//     {
+//       float freq = vb.frequency()(ch);
+//       float wavelength = casa::C::c / freq;
+//       w(i*nchan+ch) = abs(uvw(i)(2))/wavelength;
+//     }
+//   }        
+//   /////^^^^^^^^^^^^^^^^^////////////////////////
+//           
+
+  
   // Now determine nr of unique baselines and their start index.
   Int  lastbl     = -1;
   Int  lastIndex  = 0;
   bool allFlagged = true;
   const Vector<Bool>& flagRow = vb.flagRow();
-  
+
   Double time0 = times[0];
   for (uint i=0; i<=blnr.size(); ++i) 
   {
@@ -352,22 +372,22 @@ void FTMachineSplitBeamWStackWB::put(const VisBuffer& vb, Int row, Bool dopsf,
   // sum weights per chunk
   // for average beam computation
   // TODO take care of flags
-  for (std::vector<Chunk>::iterator chunk = v.chunks.begin() ; chunk != v.chunks.end(); ++chunk)
-  {
-    chunk->sum_weight.resize(IPosition(2,4,chan_map_CF.size()));
-    chunk->sum_weight = 0.0;
-    // iterate over time in chunk
-    for(int i=chunk->start; i<=chunk->end; i++)
-    {
-      int idx = v.baseline_index_map[i];
-      // iterate over channels in data
-      for(int ch=0; ch<vb.nChannel(); ch++)
-      {
-        // map to CF channels and sum weight
-        chunk->sum_weight[chan_map_CF[ch]] = chunk->sum_weight[chan_map_CF[ch]] + imagingWeightCube[idx][ch];
-      }
-    }
-  }
+//   for (std::vector<Chunk>::iterator chunk = v.chunks.begin() ; chunk != v.chunks.end(); ++chunk)
+//   {
+//     chunk->sum_weight.resize(IPosition(2,4,chan_map_CF.size()));
+//     chunk->sum_weight = 0.0;
+//     // iterate over time in chunk
+//     for(int i=chunk->start; i<=chunk->end; i++)
+//     {
+//       int idx = v.baseline_index_map[i];
+//       // iterate over channels in data
+//       for(int ch=0; ch<vb.nChannel(); ch++)
+//       {
+//         // map to CF channels and sum weight
+//         chunk->sum_weight[chan_map_CF[ch]] = chunk->sum_weight[chan_map_CF[ch]] + imagingWeightCube[idx][ch];
+//       }
+//     }
+//   }
   
 
   // init the grids to zero
@@ -381,6 +401,11 @@ void FTMachineSplitBeamWStackWB::put(const VisBuffer& vb, Int row, Bool dopsf,
   for (int w_plane=0; w_plane <= v.max_w_plane; w_plane++)
   {
     double w_offset = (w_plane+0.5) * w_step;
+    
+//     //DEBUG
+//     put_on_w_plane(vb, vbs, lsr_frequency, w_plane_grids, v, w_plane, w_offset, dopsf);
+//     break;
+    
     if (put_on_w_plane(vb, vbs, lsr_frequency, w_plane_grids, v, w_plane, w_offset, dopsf))
     // returns true if anything was put on this plane
     {
@@ -443,6 +468,7 @@ bool FTMachineSplitBeamWStackWB::put_on_w_plane(
   bool dopsf)
 {
 //       Get the convolution function.
+  omp_set_nested(1);
 
   bool any_match = false;
   int i = 0;
@@ -466,6 +492,9 @@ bool FTMachineSplitBeamWStackWB::put_on_w_plane(
       int ant2 = vb.antenna2()[idx];
       
       itsConvFunc->computeAterm (chunk->time);
+      
+      //DEBUG (added static to reduce runtime, results are incorrect)
+//       static CFStore cfStore = itsConvFunc->makeConvolutionFunction (
       CFStore cfStore = itsConvFunc->makeConvolutionFunction (
         ant1, 
         ant2, 
@@ -474,7 +503,6 @@ bool FTMachineSplitBeamWStackWB::put_on_w_plane(
         chunk->sum_weight,
         channel_selection, 
         w_offset);
-      
       if (itsUseDoubleGrid) 
       {
     //       TODO: support for double precision grids
@@ -490,7 +518,7 @@ bool FTMachineSplitBeamWStackWB::put_on_w_plane(
       } 
       else 
       {
-        #pragma omp parallel for num_threads(itsNGrid)
+//         #pragma omp parallel for num_threads(itsNGrid)
         for (int taylor_idx = 0; taylor_idx<itsNGrid; taylor_idx++)
         {
           Vector<Double> taylor_weights(lsr_frequency.nelements(), 1.0);

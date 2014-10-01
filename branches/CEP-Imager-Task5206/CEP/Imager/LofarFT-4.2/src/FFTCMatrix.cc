@@ -278,19 +278,23 @@ namespace LOFAR {
     itsPadding = padding;
 
     // fftw allocate buffer 0 
-    itsPaddingBuffer0 = fftwf_alloc_complex(n * n * padding);
+//     itsPaddingBuffer0 = fftwf_alloc_complex(n * n * padding);
+    itsPaddingBuffer0 = (fftwf_complex *)fftwf_malloc(n * n * padding *sizeof(fftwf_complex));
     // fill buffer with zeros (zero padding)
     memset( itsPaddingBuffer0, 0, sizeof ( fftwf_complex ) * n * n * padding);
     
     // fftw allocate buffer 1
-    itsPaddingBuffer1 = fftwf_alloc_complex(n * n * padding);
+//     itsPaddingBuffer1 = fftwf_alloc_complex(n * n * padding);
+    itsPaddingBuffer1 = (fftwf_complex *)fftwf_malloc(n * n * padding *sizeof(fftwf_complex));
 
     // fftw allocate buffer 2
-    itsPaddingBuffer2 = fftwf_alloc_complex(n * n * padding * padding);
+//     itsPaddingBuffer2 = fftwf_alloc_complex(n * n * padding * padding);
+    itsPaddingBuffer2 = (fftwf_complex *)fftwf_malloc(n * n * padding * padding *sizeof(fftwf_complex));
     memset( itsPaddingBuffer2, 0, sizeof ( fftwf_complex ) * n * n * padding * padding);
 
     // fftw allocate buffer 3
-    itsPaddingBuffer3 = fftwf_alloc_complex(n * n * padding * padding);
+//     itsPaddingBuffer3 = fftwf_alloc_complex(n * n * padding * padding);
+    itsPaddingBuffer3 = (fftwf_complex *)fftwf_malloc(n * n * padding * padding *sizeof(fftwf_complex));
     
     // plan many fft
     
@@ -391,7 +395,8 @@ namespace LOFAR {
     // q1
     fr = reinterpret_cast<std::complex<float>*>(itsPaddingBuffer3);
     to = result.data() + n_out * center_out + center_out;
-    for (size_t j=0; j<=center_out; ++j) {
+    for (size_t j=0; j<=center_out; ++j) 
+    {
       for (size_t i=0; i<=center_out; ++i) {
         to[i+j*n_out] = fr[i+j*n_out]/int(n*n);
       }
