@@ -2,7 +2,7 @@
 # output on stdout.
 
 # Configure the loggers
-log4cplus.rootLogger=INFO, STDERR
+log4cplus.rootLogger=DEBUG, STDERR
 log4cplus.logger.TRC=INFO
 
 # prevent debug messages: accept >=WARN only, and don't forward messages to the rootLogger

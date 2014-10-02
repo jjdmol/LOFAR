@@ -2,7 +2,7 @@
 # Configure the loggers
 
 # logging to the MACCLP socket appender.
-log4cplus.rootLogger=INFO, STDERR
+log4cplus.rootLogger=DEBUG, STDERR
 log4cplus.logger.TRC=INFO
 
 # prevent debug messages: accept >=WARN only, and don't forward messages to the rootLogger
