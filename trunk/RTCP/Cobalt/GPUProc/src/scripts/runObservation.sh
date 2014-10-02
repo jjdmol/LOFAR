@@ -117,9 +117,6 @@ MPIRUN_PARAMS=""
 # Parameters to pass to rtcp
 RTCP_PARAMS=""
 
-# Avoid passing on "*" if it matches nothing
-shopt -s nullglob
-
 # ******************************
 # Parse command-line options
 # ******************************
@@ -205,16 +202,21 @@ then
   DOT_COBALT_DEFAULT=$HOME/.cobalt/default/*.parset
   DOT_COBALT_OVERRIDE=$HOME/.cobalt/override/*.parset
   if [ "$USER" == "lofarsys" ]; then
-    ls $DOT_COBALT_DEFAULT $DOT_COBALT_OVERRIDE >/dev/null 2>&1 && \
-      echo "WARNING: ignoring augmentation parset(s) in $HOME/.cobalt/" >&2
+    ls -U -- $DOT_COBALT_DEFAULT >/dev/null 2>&1 && echo "WARN: ignoring augmentation parset(s) $DOT_COBALT_DEFAULT" >&2
+    ls -U -- $DOT_COBALT_OVERRIDE >/dev/null 2>&1 && echo "WARN: ignoring augmentation parset(s) $DOT_COBALT_OVERRIDE" >&2
     unset DOT_COBALT_DEFAULT DOT_COBALT_OVERRIDE
   fi
+
+  # Avoid passing on "*" if it matches nothing. Restore afterwards.
+  nullglob_state=`shopt -p nullglob`
+  shopt -s nullglob
   cat $LOFARROOT/etc/parset-additions.d/default/*.parset \
       $DOT_COBALT_DEFAULT \
       $PARSET \
       $LOFARROOT/etc/parset-additions.d/override/*.parset \
       $DOT_COBALT_OVERRIDE \
       > $AUGMENTED_PARSET || error "Could not create parset $AUGMENTED_PARSET"
+  eval $nullglob_state
 
   # Use the new one from now on
   PARSET="$AUGMENTED_PARSET"
