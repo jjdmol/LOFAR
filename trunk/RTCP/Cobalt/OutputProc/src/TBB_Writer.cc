@@ -901,7 +901,7 @@ namespace LOFAR
     {
       /*
        * LOFAR uses a sample rate of either 200 or 160 MHz.
-       * In transient mode, at 200 MHz we get 1024 samples per frame, and thus 195213.5 frames per second.
+       * In transient mode, at 200 MHz we get 1024 samples per frame, and thus 195312.5 frames per second.
        * This means that every 2 seconds, a frame overlaps a seconds boundary. But the sample values generated
        * by the RSPs start at zero for each second, even if it should start at 512 for odd timestamps at 200 MHz.
        * At 160 MHz sample rate, an integer number of frames fits in a second (156250), so no correction is needed.
