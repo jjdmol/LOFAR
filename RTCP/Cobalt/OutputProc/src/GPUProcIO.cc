@@ -83,7 +83,8 @@ bool process(Stream &controlStream, unsigned myRank)
   LOG_INFO_STR("MACProcessScope: " << mdKeyPrefix);
   mdKeyPrefix.push_back('.'); // keys look like: "keyPrefix.subKeyName[x]"
 
-  const string mdRegisterName = PST_COBALT_OUTPUT_PROC;
+  const string mdRegisterName = string(PST_COBALT_OUTPUT_PROC) + ":" +
+                                lexical_cast<string>(parset.observationID()) + "@" + myHostName;
   const string mdHostName = parset.getString("Cobalt.PVSSGateway.host", "");
   MACIO::RTmetadata mdLogger(parset.observationID(), mdRegisterName, mdHostName);
   mdLogger.start();
