@@ -46,6 +46,9 @@ RTmetadata::RTmetadata(uint32		observationID,
 	itsKVTport		 (NULL),
 	itsNrEventsDropped	 (0)
 {
+	// use negative seqnr to avoid ack messages
+	itsLogEvents.seqnr = -1;
+
 	itsLogEvents.kvps.reserve(MAX_QUEUED_EVENTS);
 	itsQueuedEvents.reserve(MAX_QUEUED_EVENTS);
 }
@@ -157,7 +160,6 @@ void RTmetadata::rtmLoop()
 			// not reached
 		} catch (LOFAR::AssertError& exc) {
 			LOG_WARN_STR("[RTmetadata " << itsRegisterName << "] Connection failure to PVSS Gateway: " << exc.what() << ". Will attempt to reconnect in " << sleepTime << " us.");
-			itsLogEvents.kvps.clear(); // trash possibly half-sent events
 			delete itsKVTport;
 			itsKVTport = 0;
 		} catch (...) {
@@ -203,7 +205,6 @@ void RTmetadata::setupConnection()
 	ASSERTSTR(ack.obsID == itsObsID && ack.name == itsRegisterName,
 		  "PVSSGateway identity error");
 
-	itsLogEvents.seqnr = 0;
 	LOG_DEBUG_STR("[RTmetadata " << itsRegisterName << "] Connected to and registered at the PVSSGateway");
 }
 
@@ -213,6 +214,8 @@ void RTmetadata::setupConnection()
 void RTmetadata::sendEventsLoop()
 {
 	while (true) {
+		itsLogEvents.kvps.clear();
+
 		{
 			ScopedLock lock(itsQueuedEventsMutex);
 
@@ -222,13 +225,10 @@ void RTmetadata::sendEventsLoop()
 			itsQueuedEvents.swap(itsLogEvents.kvps);
 		}
 
-		// use negative seqnrs to avoid ack messages
-		itsLogEvents.seqnr -= 1;
 		LOG_DEBUG_STR("[RTmetadata " << itsRegisterName << "] sending " << itsLogEvents.kvps.size() << " PVSS DPs; 1st: " <<
 		              itsLogEvents.kvps[0] << " last: " << itsLogEvents.kvps[itsLogEvents.kvps.size() - 1]);
 		itsKVTport->send(&itsLogEvents); // may throw AssertError exc
 		LOG_DEBUG_STR("[RTmetadata " << itsRegisterName << "] sent " << itsLogEvents.kvps.size() << " PVSS DPs");
-		itsLogEvents.kvps.clear();
 	}
 }
 
