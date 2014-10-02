@@ -190,7 +190,8 @@ int main(int argc, char **argv)
 
   // Create mdLogger for monitoring (PVSS). We can already log(), but start() the event send thread
   // much later, after the pipeline creation (post-fork()), so we don't crash.
-  const string mdRegisterName = PST_COBALTGPU_PROC + cpuNr + ':' + ps.observationID() + '@' + hostName;
+  const string mdRegisterName = PST_COBALTGPU_PROC + boost::lexical_cast<string>(cpuNr) + ":" +
+                                boost::lexical_cast<string>(ps.observationID()) + "@" + hostName;
   const string mdHostName = ps.getString("Cobalt.PVSSGateway.host", "");
 
   // Don't connect to PVSS for non-real-time observations -- they have no proper flow control
