@@ -125,7 +125,8 @@ namespace LOFAR
       defs["NR_STATIONS_PER_THREAD"] = lexical_cast<string>(itsParameters.nrStationsPerThread);
 
       defs["NR_CHANNELS"] = lexical_cast<string>(itsParameters.nrChannels);
-      defs["NR_SAMPLES_PER_CHANNEL"] = 
+      defs["NR_INTEGRATIONS"] = "1";
+      defs["NR_SAMPLES_PER_INTEGRATION"] = 
         lexical_cast<string>(itsParameters.nrSamplesPerChannel);
 
       return defs;
