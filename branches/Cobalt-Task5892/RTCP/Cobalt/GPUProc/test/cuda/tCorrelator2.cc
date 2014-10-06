@@ -1,4 +1,4 @@
-//# tTranspose.cc: test Transpose CUDA kernel
+//# tCorrelate2.cc: test Correlator CUDA kernel, with full output comparison
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -132,6 +132,7 @@ void runTest(
               ASSERTSTR(equals(
                   static_cast<dcomplex>(hOutput[i][b][c][p1][p2]),
                   sum,
+
                   // sum(1..t) is O(t^2), and correlating is again O(t^2)
                   // precision of float is 2^24
                   pow(2 * BLOCKSIZE * NR_STATIONS, 4)/pow(2,24)),
