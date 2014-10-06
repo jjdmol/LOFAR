@@ -26,43 +26,38 @@ from lofar.parameterset import parameterset
 
 class msss_imager_pipeline(control):
     """
-    The Automatic MSSS imager pipeline is used to generate MSSS images and find
-    sources in the generated images. Generated images and lists of found
-    sources are complemented with meta data and thus ready for consumption by
-    the Long Term Storage (LTA)
+    The Automatic MSSS long baselione pipeline is used to generate MSSS 
+    measurement sets combining information of multiple subbands and or 
+    observations into measurements sets. They are are complemented with meta
+    data and thus ready for consumption by the Long Term Storage (LTA)
 
     *subband groups*
-    The imager_pipeline is able to generate images on the frequency range of
+    The pipeline is able to generate measurementssets on the frequency range of
     LOFAR in parallel. Combining the frequency subbands together in so called
-    subbandgroups. Each subband group will result in an image and sourcelist,
-    (typically 8, because ten subband groups are combined).
+    subbandgroups. 
 
     *Time Slices*
-    MSSS images are compiled from a number of so-called (time) slices. Each
-    slice comprises a short (approx. 10 min) observation of a field (an area on
+    the measurmentsets are compiled from a number of so-called (time) slices. Each
+    slice comprises an observation of a field (an area on
     the sky) containing typically 80 subbands. The number of slices will be
     different for LBA observations (typically 9) and HBA observations
     (typically 2), due to differences in sensitivity.
 
-    Each image will be compiled on a different cluster node to balance the
-    processing load. The input- and output- files and locations are determined
-    by the scheduler and specified in the parset-file.
-
+    
     **This pipeline performs the following operations:**
 
-    1. Prepare Phase. Copy the preprocessed MS's from the different compute
+    1. Long baseline . Copy the preprocessed MS's from the different compute
        nodes to the nodes where the images will be compiled (the prepare phase)
        Combine the subbands in subband groups, concattenate the timeslice in a
        single large measurement set and perform flagging, RFI and bad station
        exclusion.
 
+    2. Generate meta information feedback files based on dataproduct information
+       and parset/configuration data
 
     **Per subband-group, the following output products will be delivered:**
 
-    a. An image
-    b. A source list
-    c. (Calibration solutions and corrected visibilities)
-
+    a. An measurement set
     """
     def __init__(self):
         """
@@ -165,8 +160,6 @@ class msss_imager_pipeline(control):
             processed_ms_dir = self._long_baseline(input_mapfile,
                                     target_mapfile, add_beam_tables)
 
-
-
         # *********************************************************************
         # (7) Get metadata
         # create a parset with information that is available on the toplevel
@@ -204,8 +197,6 @@ class msss_imager_pipeline(control):
             ),
             toplevel_meta_data_path=toplevel_meta_data_path, 
             product_type = "Correlated")
-
-
 
         return 0
 

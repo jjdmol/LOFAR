@@ -1,5 +1,5 @@
 # LOFAR IMAGING PIPELINE
-# Prepare phase master
+# long basseline master
 # 
 # 1. Create input files for individual nodes based on the  input mapfile
 # 2. Perform basic input parsing and input validation
@@ -7,7 +7,7 @@
 # 4. validate performance
 #
 # Wouter Klijn 
-# 2012
+# 2014
 # klijn@astron.nl
 # ------------------------------------------------------------------------------
 from __future__ import with_statement
@@ -22,7 +22,7 @@ from lofarpipe.support.data_map import DataMap, MultiDataMap
 
 class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
     """
-    Prepare phase master:
+    Long baseline master:
 
     1. Validate input
     2. Create mapfiles with input for work to be perform on the individual nodes

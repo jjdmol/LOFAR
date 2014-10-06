@@ -1,7 +1,7 @@
 # LOFAR IMAGING PIPELINE
 # long_baseline node
 # Wouter Klijn
-# 2012
+# 2014
 # klijn@astron.nl
 # -----------------------------------------------------------------------------
 from __future__ import with_statement
