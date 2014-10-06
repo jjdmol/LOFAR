@@ -222,11 +222,11 @@ class msss_imager_pipeline(control):
         self.output_data = DataMap([
             tuple(os.path.join(location, filename).split(':')) + (skip,)
                 for location, filename, skip in zip(
-                    dps.getStringVector('Output_SkyImage.locations'),
-                    dps.getStringVector('Output_SkyImage.filenames'),
-                    dps.getBoolVector('Output_SkyImage.skip'))
+                    dps.getStringVector('Output_Correlated.locations'),
+                    dps.getStringVector('Output_Correlated.filenames'),
+                    dps.getBoolVector('Output_Correlated.skip'))
         ])
-        self.logger.debug("%d Output_SkyImage data products specified" %
+        self.logger.debug("%d Output_Correlated data products specified" %
                           len(self.output_data))
 
         # # Sanity checks on input- and output data product specifications
@@ -305,8 +305,8 @@ class msss_imager_pipeline(control):
                                                          "raw_ms_per_image")
 
         # get some parameters from the imaging pipeline parset:
-        slices_per_image = self.parset.getInt("Imaging.slices_per_image")
-        subbands_per_image = self.parset.getInt("Imaging.subbands_per_image")
+        slices_per_image = self.parset.getInt("LongBaseline.slices_per_ms")
+        subbands_per_image = self.parset.getInt("LongBaseline.subbands_per_ms")
 
         outputs = self.run_task("long_baseline", input_ms_map_path,
                 parset = ndppp_parset_path,
