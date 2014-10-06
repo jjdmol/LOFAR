@@ -153,7 +153,7 @@ bool process(Stream &controlStream, unsigned myRank)
 
         // Create a collector for this fileIdx
         collectors[fileIdx] = new TABTranspose::BlockCollector(
-          *outputPools[fileIdx], fileIdx, nrSubbands, nrChannels, nrSamples, parset.nrBeamFormedBlocks(), parset.realTime() ? 5 : 0);
+          *outputPools[fileIdx], fileIdx, nrSubbands, nrChannels, nrSamples, parset.settings.nrBlocks(), parset.settings.realTime ? 5 : 0);
 
         string logPrefix = str(format("[obs %u beamformed stream %3u] ")
                                                     % parset.observationID() % fileIdx);

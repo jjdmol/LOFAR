@@ -23,6 +23,7 @@ For max size, we assume:
  - 48 stations
  - 1 subband
  - 1 second blocks (195312.5 samples) rounded to next multiple of 4096 (= 196608 samples).
+ - 10 integration periods/block (~0.1s integration time)
 
 Note:
   MiB = 2^20 bytes (= 1048576 bytes).
@@ -49,7 +50,7 @@ Delay compensation + Band pass + Transpose {I/O: delays}
    |            [station][channel][sample][pol]         [80][64][3072][2]   = 240 MiB               B
    V
 Correlator
-   |            [baseline][channel][pol][pol]           [3240][64][2][2]    =   6 MiB               E
+   |            [subblks][baseline][channel][pol][pol]  [10][3240][64][2][2]=  60 MiB               E
    V
 (output)
 

@@ -93,7 +93,7 @@ namespace LOFAR
         // samples and save this in output
         static void propagateFlags(Parset const & parset,
           MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
-          LOFAR::Cobalt::CorrelatedData &output);
+          SubbandProcOutputData::CorrelatedData &output);
 
         // 1.1 Convert the flags per station to channel flags, change time scale
         // if nchannel > 1
@@ -111,7 +111,7 @@ namespace LOFAR
         static void
         calcWeights(Parset const &parset,
                     MultiDimArray<SparseSet<unsigned>, 2>const &flagsPerChannel,
-                    LOFAR::Cobalt::CorrelatedData &output);
+                    SubbandProcOutputData::CorrelatedData &output);
 
         // 2.1 Apply the supplied weight to the complex values in the channel
         // and baseline
@@ -125,7 +125,7 @@ namespace LOFAR
         static void
         calcWeights(Parset const &parset,
                     MultiDimArray<SparseSet<unsigned>, 2>const &flagsPerChannel,
-                    LOFAR::Cobalt::CorrelatedData &output);
+                    SubbandProcOutputData::CorrelatedData &output);
 
       };
 

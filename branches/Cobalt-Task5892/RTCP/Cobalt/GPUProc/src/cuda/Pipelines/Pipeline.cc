@@ -703,18 +703,23 @@ namespace LOFAR
         }
 
         // Return outputData back to the subbandProc.
-        const double maxRetentionTime = 3.0;
-        using namespace TimeSpec;
-        if (ps.settings.realTime && TimeSpec::now() - outputQueue.oldest() > maxRetentionTime) {
-          // Drop
-          spillQueue.append(data);
-          correlatorLoss.dropping = true;
-          correlatorLoss.blocksDropped++;
+        if (ps.settings.correlator.enabled) {
+          const double maxRetentionTime = 3.0 + ps.settings.blockDuration();
+          using namespace TimeSpec;
+          if (ps.settings.realTime && TimeSpec::now() - outputQueue.oldest() > maxRetentionTime) {
+            // Drop
+            spillQueue.append(data);
+            correlatorLoss.dropping = true;
+            correlatorLoss.blocksDropped++;
+          } else {
+            // Forward to correlator
+            outputQueue.append(data);
+            correlatorLoss.blocksWritten++;
+          }
         } else {
-          // Forward to correlator
-          outputQueue.append(data);
-          correlatorLoss.blocksWritten++;
+          spillQueue.append(data);
         }
+
         ASSERT(!data);
 
         const double blockDuration = ps.settings.blockDuration();
@@ -768,8 +773,6 @@ namespace LOFAR
 
       // Process pool elements until end-of-output
       while ((data = inputQueue.remove()) != NULL) {
-        CorrelatedData &correlatedData = data->correlatedData;
-
         const struct BlockID id = data->blockID;
         ASSERT( globalSubbandIdx == id.globalSubbandIdx );
 
@@ -782,7 +785,8 @@ namespace LOFAR
           // Write block to outputProc 
           try {
             writeTimer.start();
-            correlatedData.write(outputStream.get(), true);
+            for (size_t i = 0; i < data->correlatedData.integrations.size(); ++i)
+              data->correlatedData.integrations[i]->write(outputStream.get(), true);
             writeTimer.stop();
           } catch (Exception &ex) {
             // No reconnect, as outputProc doesn't yet re-listen when the conn drops.

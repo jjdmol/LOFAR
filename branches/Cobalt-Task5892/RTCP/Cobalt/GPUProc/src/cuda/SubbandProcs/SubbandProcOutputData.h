@@ -24,6 +24,7 @@
 #include <CoInterface/BlockID.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/CorrelatedData.h>
+#include <CoInterface/SmartPtr.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 
@@ -43,14 +44,16 @@ namespace LOFAR
       MultiDimArrayHostBuffer<float, 4> coherentData;
       MultiDimArrayHostBuffer<float, 4> incoherentData;
 
-      struct CorrelatedData:
-        public MultiDimArrayHostBuffer<fcomplex,4>,
-        public LOFAR::Cobalt::CorrelatedData
+      struct CorrelatedData
       {
-        CorrelatedData(unsigned nrStations, 
+        CorrelatedData(unsigned nrIntegrations,
+                       unsigned nrStations, 
                        unsigned nrChannels,
                        unsigned maxNrValidSamples,
                        gpu::Context &context);
+
+        MultiDimArrayHostBuffer<fcomplex, 5> data;
+        std::vector< SmartPtr<LOFAR::Cobalt::CorrelatedData> > integrations;
       };
 
       CorrelatedData correlatedData;

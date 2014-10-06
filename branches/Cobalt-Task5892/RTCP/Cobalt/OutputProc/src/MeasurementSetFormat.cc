@@ -110,10 +110,10 @@ namespace LOFAR
                   antPos.size() << " == " << itsPS.nrStations());
       }
 
-      itsStartTime = toMJDs(itsPS.startTime());
+      itsStartTime = toMJDs(itsPS.settings.startTime);
 
-      itsTimeStep = itsPS.IONintegrationTime();
-      itsNrTimes = itsPS.nrCorrelatedBlocks();
+      itsTimeStep = itsPS.settings.correlator.integrationTime();
+      itsNrTimes = itsPS.settings.correlator.nrIntegrationsPerBlock * itsPS.settings.nrBlocks();
     }
 
 
@@ -349,7 +349,7 @@ namespace LOFAR
 
     void MeasurementSetFormat::fillPola()
     {
-      const unsigned npolarizations = itsPS.nrCrossPolarisations();
+      const unsigned npolarizations = itsPS.settings.nrCrossPolarisations();
 
       MSPolarization mspol = itsMS->polarization();
       MSPolarizationColumns mspolCol(mspol);
@@ -414,11 +414,11 @@ namespace LOFAR
       double minFreq = *std::min_element( freqs.begin(), freqs.end() );
       double maxFreq = *std::max_element( freqs.begin(), freqs.end() );
 
-      size_t nchan = itsPS.nrChannelsPerSubband();
+      const size_t nchan = itsPS.settings.correlator.nrChannels;
 
       if( nchan > 1 ) {
         // 2nd PPF shifts frequencies downwards by half a channel
-        double width = itsPS.channelWidth();
+        const double width = itsPS.settings.correlator.channelWidth;
 
         minFreq -= 0.5 * nchan * width;
         maxFreq -= 0.5 * nchan * width;
@@ -469,7 +469,7 @@ namespace LOFAR
       msobsCol.nofBitsPerSample().put(0, itsPS.nrBitsPerSample());
       msobsCol.antennaSet().put(0, itsPS.antennaSet());
       msobsCol.filterSelection().put(0, itsPS.bandFilter());
-      msobsCol.clockFrequencyQuant().put(0, Quantity(itsPS.clockSpeed(), "Hz"));
+      msobsCol.clockFrequencyQuant().put(0, Quantity(itsPS.settings.clockHz(), "Hz"));
       msobsCol.target().put(0, ctargets);
       msobsCol.systemVersion().put(0, Version::getInfo<OutputProcVersion>("OutputProc",
                                                                           "brief"));
@@ -485,8 +485,8 @@ namespace LOFAR
     void MeasurementSetFormat::fillSpecWindow(unsigned subband)
     {
       const double refFreq = itsPS.settings.subbands[subband].centralFrequency;
-      const size_t nchan = itsPS.nrChannelsPerSubband();
-      const double chanWidth = itsPS.channelWidth();
+      const size_t nchan = itsPS.settings.correlator.nrChannels;
+      const double chanWidth = itsPS.settings.correlator.channelWidth;
       const double totalBW = nchan * chanWidth;
       const double channel0freq = itsPS.channel0Frequency(subband, nchan);
 
@@ -583,15 +583,18 @@ namespace LOFAR
       aio.putstart("LofarStMan", LofarStManVersion);
       aio << ant1 << ant2
           << itsStartTime
-          << itsPS.IONintegrationTime()
-          << itsPS.nrChannelsPerSubband()
-          << itsPS.nrCrossPolarisations()
-          << static_cast<double>(itsPS.CNintegrationSteps() * itsPS.IONintegrationSteps())
+          << itsPS.settings.correlator.integrationTime()
+          << itsPS.settings.correlator.nrChannels
+          << itsPS.settings.nrCrossPolarisations()
+          << static_cast<double>(itsPS.settings.correlator.nrSamplesPerIntegration())
           << itsAlignment
           << false; // isBigEndian
       if (LofarStManVersion > 1) {
-        uInt itsNrBytesPerNrValidSamples =
-          itsPS.integrationSteps() < 256 ? 1 : itsPS.integrationSteps() < 65536 ? 2 : 4;
+        const size_t integrationSteps = itsPS.settings.correlator.nrSamplesPerIntegration();
+        const uInt itsNrBytesPerNrValidSamples =
+          integrationSteps < 256 ? 1 :
+          integrationSteps < 65536 ? 2 :
+          4;
         aio << itsNrBytesPerNrValidSamples;
       }
       aio.close();

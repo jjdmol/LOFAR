@@ -243,7 +243,7 @@ int main(int argc, char **argv)
     // ends.
 
     const time_t now = time(0);
-    const double stopTime = ps.stopTime();
+    const double stopTime = ps.settings.stopTime;
 
     if (now < stopTime + rtcpTimeout) {
       size_t maxRunTime = stopTime + rtcpTimeout - now;
@@ -435,7 +435,7 @@ int main(int argc, char **argv)
   mpi.init(argc, argv);
 
   // Periodically log system information
-  SysInfoLogger siLogger(ps.startTime(), ps.stopTime());
+  SysInfoLogger siLogger(ps.settings.startTime, ps.settings.stopTime);
 
   /*
    * RUN stage

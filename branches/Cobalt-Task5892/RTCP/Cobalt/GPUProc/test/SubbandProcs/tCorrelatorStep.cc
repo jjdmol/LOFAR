@@ -67,7 +67,7 @@ TEST(convertFlagsToChannelFlags)
   inputFlags[1].include(100, 600); // E. Second station (10, 150)
   // The converted channel flags
   MultiDimArray<LOFAR::SparseSet<unsigned>, 2> flagsPerChanel(
-          boost::extents[parset.nrChannelsPerSubband()][parset.nrStations()]);
+          boost::extents[parset.settings.correlator.nrChannels][parset.nrStations()]);
 
   // ****** perform the translation
   CorrelatorStep::Flagger::convertFlagsToChannelFlags(parset, inputFlags, flagsPerChanel);

@@ -70,11 +70,11 @@ namespace LOFAR {
       stationID(StationID::parseFullFieldName(ps.settings.antennaFields.at(stationIdx).name)),
       logPrefix(str(format("[station %s] ") % stationID.name())),
 
-      startTime(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed()),
-      stopTime(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed()),
+      startTime(ps.settings.startTime * ps.settings.subbandWidth(), ps.settings.clockHz()),
+      stopTime(ps.settings.stopTime * ps.settings.subbandWidth(), ps.settings.clockHz()),
 
       nrSamples(ps.settings.blockSize),
-      nrBlocks((stopTime - startTime) / nrSamples),
+      nrBlocks(ps.settings.nrBlocks()),
 
       metaDataPool(str(format("StationMetaData::metaDataPool [station %s]") % stationID.name()), false),
 
@@ -234,8 +234,8 @@ namespace LOFAR {
       }
 
       if (desc == "factory:") {
-        const TimeStamp from(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed());
-        const TimeStamp to(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed());
+        const TimeStamp from(ps.settings.startTime * ps.settings.subbandWidth(), ps.settings.clockHz());
+        const TimeStamp to(ps.settings.stopTime * ps.settings.subbandWidth(), ps.settings.clockHz());
 
         const struct BoardMode mode(ps.settings.nrBitsPerSample, ps.settings.clockMHz);
         PacketFactory factory(mode);

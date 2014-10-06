@@ -293,7 +293,7 @@ namespace LOFAR
 #endif
       }
 
-      itsNrExpectedBlocks = itsParset.nrCorrelatedBlocks();
+      itsNrExpectedBlocks = itsParset.settings.nrBlocks() * itsParset.settings.correlator.nrIntegrationsPerBlock;
     }
 
 
@@ -366,7 +366,7 @@ namespace LOFAR
 #endif
       }
 
-      itsNrExpectedBlocks = itsParset.nrBeamFormedBlocks();
+      itsNrExpectedBlocks = itsParset.settings.nrBlocks();
     }
   } // namespace Cobalt
 } // namespace LOFAR
