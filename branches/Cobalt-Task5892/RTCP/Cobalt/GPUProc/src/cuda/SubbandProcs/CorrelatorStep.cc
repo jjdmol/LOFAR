@@ -173,7 +173,7 @@ namespace LOFAR
               flagsPerChannel[ch][stat1] | flagsPerChannel[ch][stat2];
 
             for (size_t i = 0; i < parset.settings.correlator.nrIntegrationsPerBlock; ++i) {
-              LOFAR::Cobalt::CorrelatedData &correlatedData = *output.integrations[i];
+              LOFAR::Cobalt::CorrelatedData &correlatedData = *output.subblocks[i];
 
               // Channel zero is invalid, unless we have only one channel
               if (parset.settings.correlator.nrChannels > 1 && ch == 0) {
@@ -202,7 +202,7 @@ namespace LOFAR
       MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
       SubbandProcOutputData::CorrelatedData &output)
     {
-      switch (output.integrations[0]->itsNrBytesPerNrValidSamples) {
+      switch (output.subblocks[0]->itsNrBytesPerNrValidSamples) {
         case 4:
           calcWeights<uint32_t>(parset, flagsPerChannel, output);
           break;
@@ -382,7 +382,7 @@ namespace LOFAR
       // We don't want to copy the data if we don't need to integrate.
       if (nblock == 1) {
         for (size_t i = 0; i < nsubblock; ++i) {
-          output.correlatedData.integrations[i]->setSequenceNumber(output.blockID.block * nsubblock + i);
+          output.correlatedData.subblocks[i]->setSequenceNumber(output.blockID.block * nsubblock + i);
         }
         return true;
       }
@@ -393,12 +393,12 @@ namespace LOFAR
       integratedData[idx].first++;
 
       if (integratedData[idx].first < nblock) {
-        *integratedData[idx].second += *output.correlatedData.integrations[0];
+        *integratedData[idx].second += *output.correlatedData.subblocks[0];
         return false;
       }
       else {
-        *output.correlatedData.integrations[0] += *integratedData[idx].second;
-        output.correlatedData.integrations[0]->setSequenceNumber(output.blockID.block / nblock);
+        *output.correlatedData.subblocks[0] += *integratedData[idx].second;
+        output.correlatedData.subblocks[0]->setSequenceNumber(output.blockID.block / nblock);
         integratedData[idx].first = 0;
         integratedData[idx].second->reset();
         return true;
@@ -416,7 +416,7 @@ namespace LOFAR
       // The flags are already copied to the correct location
       // now the flagged amount should be applied to the visibilities
       for (size_t i = 0; i < ps.settings.correlator.nrIntegrationsPerBlock; ++i) {
-        Flagger::applyWeights(ps, *output.correlatedData.integrations[i]);  
+        Flagger::applyWeights(ps, *output.correlatedData.subblocks[i]);  
       }
 
       return true;

@@ -67,12 +67,12 @@ namespace LOFAR
         [nrChannels][NR_POLARIZATIONS]
         [NR_POLARIZATIONS], 
         context, 0),
-      integrations(nrIntegrations)
+      subblocks(nrIntegrations)
     {
       for (size_t i = 0; i < nrIntegrations; ++i) {
         const size_t num_elements = data.strides()[0];
 
-        integrations[i] = new LOFAR::Cobalt::CorrelatedData(
+        subblocks[i] = new LOFAR::Cobalt::CorrelatedData(
                        nrStations, nrChannels, maxNrValidSamples,
                        &data[i][0][0][0][0], num_elements,
                        heapAllocator, 1);

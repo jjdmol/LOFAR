@@ -115,7 +115,7 @@ int main() {
     "\n  scaleFactor = " << scaleFactor << 
     "\n  outputValue = " << outputValue <<
     "\n  ----------------------------" <<
-    "\n  Total bytes = " << out.correlatedData.integrations[0]->visibilities.size());
+    "\n  Total bytes = " << out.correlatedData.subblocks[0]->visibilities.size());
 
   // Initialize synthetic input to all (1, 1).
   for (size_t st = 0; st < nrStations; st++)
@@ -165,9 +165,9 @@ int main() {
     for (size_t c = 0; c < nrChannelsPerSubband; c++)
       for (size_t pol0 = 0; pol0 < nrPolarisations; pol0++)
         for (size_t pol1 = 0; pol1 < nrPolarisations; pol1++)
-          ASSERTSTR(fpEquals(out.correlatedData.integrations[0]->visibilities[b][c][pol0][pol1], outputValue),
+          ASSERTSTR(fpEquals(out.correlatedData.subblocks[0]->visibilities[b][c][pol0][pol1], outputValue),
                     "out[" << b << "][" << c << "][" << pol0 << 
-                    "][" << pol1 << "] = " << out.correlatedData.integrations[0]->visibilities[b][c][pol0][pol1] << 
+                    "][" << pol1 << "] = " << out.correlatedData.subblocks[0]->visibilities[b][c][pol0][pol1] << 
                     "; outputValue = " << outputValue);
 
   LOG_INFO("Test OK");

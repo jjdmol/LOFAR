@@ -406,7 +406,7 @@ namespace LOFAR
         // key: Cobalt.Correlator.nrBlocksPerIntegration
         size_t nrBlocksPerIntegration;
 
-        // The number of integrations to produce per block.
+        // The number of subblocks to produce per block.
         //
         // If >1, the integration time is shorter than the blockSize.
         //

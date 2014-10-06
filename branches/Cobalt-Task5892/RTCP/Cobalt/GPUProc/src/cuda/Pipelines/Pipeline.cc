@@ -785,8 +785,8 @@ namespace LOFAR
           // Write block to outputProc 
           try {
             writeTimer.start();
-            for (size_t i = 0; i < data->correlatedData.integrations.size(); ++i)
-              data->correlatedData.integrations[i]->write(outputStream.get(), true);
+            for (size_t i = 0; i < data->correlatedData.subblocks.size(); ++i)
+              data->correlatedData.subblocks[i]->write(outputStream.get(), true);
             writeTimer.stop();
           } catch (Exception &ex) {
             // No reconnect, as outputProc doesn't yet re-listen when the conn drops.

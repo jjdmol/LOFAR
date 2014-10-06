@@ -53,7 +53,7 @@ namespace LOFAR
                        gpu::Context &context);
 
         MultiDimArrayHostBuffer<fcomplex, 5> data;
-        std::vector< SmartPtr<LOFAR::Cobalt::CorrelatedData> > integrations;
+        std::vector< SmartPtr<LOFAR::Cobalt::CorrelatedData> > subblocks;
       };
 
       CorrelatedData correlatedData;

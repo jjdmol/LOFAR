@@ -74,7 +74,7 @@ TEST(propagateFlags)
                      parset.settings.correlator.nrChannels, 
                      parset.settings.correlator.nrSamplesPerIntegration(),
                      *context);
-  MultiDimArray<fcomplex, 4> &visibilities = output.integrations[0]->visibilities;
+  MultiDimArray<fcomplex, 4> &visibilities = output.subblocks[0]->visibilities;
 
   // The content ergo the visibilities should be 1, this allows us to validate the weighting
   //assign all values 1 pol 0
@@ -90,7 +90,7 @@ TEST(propagateFlags)
   CorrelatorStep::Flagger::propagateFlags(parset, inputFlags, output);
 
   // now perform weighting of the data based on the number of valid samples
-  CorrelatorStep::Flagger::applyWeights(parset, *output.integrations[0]);  
+  CorrelatorStep::Flagger::applyWeights(parset, *output.subblocks[0]);  
   // *********************************************************************************************
 
   // Now validate the functionality:
@@ -195,14 +195,14 @@ TEST(calcWeights4Channels)
   
   // Now check that the flags are correctly set in the ouput object
 
-  CHECK_EQUAL(256u - 11u, output.integrations[0]->getNrValidSamples(0,1)); // 11 flagged in station 1
-  CHECK_EQUAL(256u - 20u, output.integrations[0]->getNrValidSamples(1,1)); // The union is 11+9 == 20 flagged
-  CHECK_EQUAL(256u - 9u, output.integrations[0]->getNrValidSamples(2,1)); // 9 flagged in station 2
+  CHECK_EQUAL(256u - 11u, output.subblocks[0]->getNrValidSamples(0,1)); // 11 flagged in station 1
+  CHECK_EQUAL(256u - 20u, output.subblocks[0]->getNrValidSamples(1,1)); // The union is 11+9 == 20 flagged
+  CHECK_EQUAL(256u - 9u, output.subblocks[0]->getNrValidSamples(2,1)); // 9 flagged in station 2
  
   // Channel zero should always be all flagged
-  CHECK_EQUAL(0u, output.integrations[0]->getNrValidSamples(0,0)); // all flagged in station 2
-  CHECK_EQUAL(0u, output.integrations[0]->getNrValidSamples(1,0)); // all flagged in station 2
-  CHECK_EQUAL(0u, output.integrations[0]->getNrValidSamples(2,0)); // all flagged in station 2
+  CHECK_EQUAL(0u, output.subblocks[0]->getNrValidSamples(0,0)); // all flagged in station 2
+  CHECK_EQUAL(0u, output.subblocks[0]->getNrValidSamples(1,0)); // all flagged in station 2
+  CHECK_EQUAL(0u, output.subblocks[0]->getNrValidSamples(2,0)); // all flagged in station 2
 }
 
 TEST(calcWeights1Channels)
@@ -247,9 +247,9 @@ TEST(calcWeights1Channels)
   
   // Now check that the flags are correctly set in the ouput object
   // channel is 1 so no time resolution loss!!
-  CHECK_EQUAL(245u, output.integrations[0]->getNrValidSamples(0,0)); // 11 flagged in station 1
-  CHECK_EQUAL(236u, output.integrations[0]->getNrValidSamples(1,0)); // The union is 11+9 == 20 flagged
-  CHECK_EQUAL(247u, output.integrations[0]->getNrValidSamples(2,0)); // 9 flagged in station 2  
+  CHECK_EQUAL(245u, output.subblocks[0]->getNrValidSamples(0,0)); // 11 flagged in station 1
+  CHECK_EQUAL(236u, output.subblocks[0]->getNrValidSamples(1,0)); // The union is 11+9 == 20 flagged
+  CHECK_EQUAL(247u, output.subblocks[0]->getNrValidSamples(2,0)); // 9 flagged in station 2  
 }
 
 TEST(applyWeights)
@@ -278,7 +278,7 @@ TEST(applyWeights)
                      parset.settings.correlator.nrChannels, 
                      parset.settings.correlator.nrSamplesPerIntegration(),
                      *context);
-  MultiDimArray<fcomplex, 4> &visibilities = output.integrations[0]->visibilities;
+  MultiDimArray<fcomplex, 4> &visibilities = output.subblocks[0]->visibilities;
  
   //assign all values 1 pol 0
   for(unsigned idx_baseline = 0; idx_baseline < 3; ++idx_baseline)
@@ -289,10 +289,10 @@ TEST(applyWeights)
         
   // set some flagged samples
   unsigned n_valid_samples = 20;
-  output.integrations[0]->setNrValidSamples(0,1,n_valid_samples); //baseline 0, channel 1
-  output.integrations[0]->setNrValidSamples(1,1,256); //baseline 1, channel 1
-  output.integrations[0]->setNrValidSamples(2,1,0); //baseline 0, channel 1
-  CorrelatorStep::Flagger::applyWeights(parset, *output.integrations[0]);
+  output.subblocks[0]->setNrValidSamples(0,1,n_valid_samples); //baseline 0, channel 1
+  output.subblocks[0]->setNrValidSamples(1,1,256); //baseline 1, channel 1
+  output.subblocks[0]->setNrValidSamples(2,1,0); //baseline 0, channel 1
+  CorrelatorStep::Flagger::applyWeights(parset, *output.subblocks[0]);
 
   // 4 channels: therefore the chanel zero should be zero
   CHECK_EQUAL(std::complex<float>(0,0), visibilities[0][0][0][0]);
@@ -341,7 +341,7 @@ TEST(applyWeight)
                         parset.settings.correlator.nrChannels, 
                         parset.settings.correlator.nrSamplesPerIntegration(),
                         *context);
-  MultiDimArray<fcomplex, 4> &visibilities = output.integrations[0]->visibilities;
+  MultiDimArray<fcomplex, 4> &visibilities = output.subblocks[0]->visibilities;
  
   //assign all visibilities values 1 pol 0
   for(unsigned idx_baseline = 0; idx_baseline < 3; ++idx_baseline)
@@ -351,7 +351,7 @@ TEST(applyWeight)
            visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2] = std::complex<float>(1,0);
         
   //  multiply all polarization in sb 0 channel 0 with 0,5
-  CorrelatorStep::Flagger::applyWeight(0,0,0.5, *output.integrations[0]);
+  CorrelatorStep::Flagger::applyWeight(0,0,0.5, *output.subblocks[0]);
 
   //sb 0 should be (0.5, 0)
   CHECK_EQUAL(std::complex<float>(0.5,0), visibilities[0][0][0][0]);
