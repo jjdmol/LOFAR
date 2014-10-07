@@ -338,23 +338,57 @@ vector<Cube<Complex> > ATermLofar::evaluate(
   const uint nFreq = freq.size();
 
   Array<DComplex> result(IPosition(4, nX, nY, 4, nFreq));
-  for(ArrayIterator<DComplex> it(result, 3); !it.pastEnd(); it.next())
+
+  if (itsApplyBeam)
   {
-    const uint idx = it.pos()(3);
-    Cube<DComplex> slice(it.array());
-
-    for(uint y = 0; y < nY; ++y)
+    for(ArrayIterator<DComplex> it(result, 3); !it.pastEnd(); it.next())
     {
-      for(uint x = 0; x < nX; ++x)
-      {
-        matrix22c_t response = station->response(map.time0, freq(idx),
-          map.directions(x, y), freq0(idx), map.station0, map.tile0);
+      const uint idx = it.pos()(3);
+      Cube<DComplex> slice(it.array());
 
-        slice(x, y, 0) = response[0][0];
-        slice(x, y, 1) = response[0][1];
-        slice(x, y, 2) = response[1][0];
-        slice(x, y, 3) = response[1][1];
+      for(uint y = 0; y < nY; ++y)
+      {
+        for(uint x = 0; x < nX; ++x)
+        {
+          matrix22c_t response = station->response(map.time0, freq(idx),
+            map.directions(x, y), freq0(idx), map.station0, map.tile0);
+
+          slice(x, y, 0) = response[0][0];
+          slice(x, y, 1) = response[0][1];
+          slice(x, y, 2) = response[1][0];
+          slice(x, y, 3) = response[1][1];
+        }
       }
+    }
+  }
+  else
+  {
+    for(ArrayIterator<DComplex> it(result, 3); !it.pastEnd(); it.next())
+    {
+      const uint idx = it.pos()(3);
+      Cube<DComplex> slice(it.array());
+
+      for(uint y = 0; y < nY; ++y)
+      {
+        for(uint x = 0; x < nX; ++x)
+        {
+          slice(x, y, 0) = 1.0;
+          slice(x, y, 1) = 0.0;
+          slice(x, y, 2) = 0.0;
+          slice(x, y, 3) = 1.0;
+        }
+      }
+    }
+  }
+  
+  if (itsApplyIonosphere)
+  {
+    Cube<DComplex> IF = evaluateIonosphere(idStation, freq);
+    // iterate over polarizations
+    for(ArrayIterator<DComplex> it(result, 2); !it.pastEnd(); it.next())
+    {
+      Cube<DComplex> slice(it.array());
+      slice *= conj(IF);
     }
   }
 

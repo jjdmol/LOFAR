@@ -122,10 +122,7 @@ vector<casa::Cube<casa::Complex> > ATermPython::evaluate(
     result_vector.push_back(slice);
   }
   return result_vector;
-
   
-  // Ignore the result of the python code and return the result of the evaluate method of our parent
-//   return ATermLofar::evaluate(idStation, freq, reference, normalize);
 }
 
 void ATermPython::setDirection(
