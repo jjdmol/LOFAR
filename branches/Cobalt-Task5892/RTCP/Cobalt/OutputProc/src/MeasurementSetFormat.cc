@@ -106,8 +106,8 @@ namespace LOFAR
         ASSERTSTR(antPos.size() == itsPS.nrTabStations(),
                   antPos.size() << " == " << itsPS.nrTabStations());
       } else {
-        ASSERTSTR(antPos.size() == itsPS.nrStations(),
-                  antPos.size() << " == " << itsPS.nrStations());
+        ASSERTSTR(antPos.size() == itsPS.settings.antennaFields.size(),
+                  antPos.size() << " == " << itsPS.settings.antennaFields.size());
       }
 
       itsStartTime = toMJDs(itsPS.settings.startTime);
@@ -560,7 +560,7 @@ namespace LOFAR
       Block<Int> ant1(itsPS.nrBaselines());
       Block<Int> ant2(itsPS.nrBaselines());
       uInt inx = 0;
-      uInt nStations = itsPS.nrTabStations() > 0 ? itsPS.nrTabStations() : itsPS.nrStations();
+      uInt nStations = itsPS.nrTabStations() > 0 ? itsPS.nrTabStations() : itsPS.settings.antennaFields.size();
 
       for (uInt i = 0; i < nStations; ++i) {
         for (uInt j = 0; j <= i; ++j) {

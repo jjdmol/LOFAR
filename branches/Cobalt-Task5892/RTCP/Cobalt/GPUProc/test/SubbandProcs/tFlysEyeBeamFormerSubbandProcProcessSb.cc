@@ -75,7 +75,7 @@ int main() {
 
   // Input array sizes
   const size_t nrBeams = ps.settings.SAPs.size();
-  const size_t nrStations = ps.nrStations();
+  const size_t nrStations = ps.settings.antennaFields.size();
   const size_t nrPolarisations = ps.settings.nrPolarisations;
   const size_t maxNrTABsPerSAP = ps.settings.beamFormer.maxNrTABsPerSAP();
   const size_t nrSamplesPerSubband = ps.settings.blockSize;

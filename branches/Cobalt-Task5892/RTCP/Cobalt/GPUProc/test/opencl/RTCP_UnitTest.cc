@@ -70,7 +70,7 @@ int main(int argc, char **argv)
 
   Parset ps(argv[1]);
 
-  std::cout << "Obs ps: nSt=" << ps.nrStations() << " nPol=" << NR_POLARIZATIONS
+  std::cout << "Obs ps: nSt=" << ps.settings.antennaFields.size() << " nPol=" << NR_POLARIZATIONS
             << " nSampPerCh=" << ps.nrSamplesPerChannel() << " nChPerSb="
             << ps.nrChannelsPerSubband() << " nTaps=" << ps.nrPPFTaps()
             << " nBitsPerSamp=" << ps.nrBitsPerSample() << std::endl;

@@ -1216,18 +1216,12 @@ namespace LOFAR
     // TODO: rename allStationNames to allAntennaFieldNames
     std::vector<std::string> Parset::allStationNames() const
     {
-      vector<string> names(nrStations());
+      vector<string> names(settings.antennaFields.size());
 
       for (unsigned af = 0; af < names.size(); ++af)
         names[af] = settings.antennaFields[af].name;
 
       return names;
-    }
-
-    // TODO: rename nrStations to nrAntennaFields
-    unsigned Parset::nrStations() const
-    {
-      return settings.antennaFields.size();
     }
 
     unsigned Parset::nrTabStations() const

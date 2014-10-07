@@ -662,7 +662,6 @@ namespace LOFAR
 
       unsigned                    observationID() const;
 
-      unsigned                    nrStations() const;
       unsigned                    nrTabStations() const;
       unsigned                    nrMergedStations() const;
       std::vector<std::string>    mergedStationNames() const;

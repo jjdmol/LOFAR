@@ -214,7 +214,7 @@ namespace LOFAR
       file.observationEndUTC().value = toUTC(stopTime);
       file.observationEndMJD().value = toMJD(stopTime);
 
-      file.observationNofStations().value = parset.nrStations(); // TODO: SS beamformer?
+      file.observationNofStations().value = parset.settings.antennaFields.size(); // TODO: SS beamformer?
       file.observationStationsList().value = parset.allStationNames(); // TODO: SS beamformer?
 
       double subbandBandwidth = parset.settings.subbandWidth();

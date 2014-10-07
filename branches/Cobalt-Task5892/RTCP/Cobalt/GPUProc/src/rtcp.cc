@@ -283,7 +283,7 @@ int main(int argc, char **argv)
    */
 
   if (mpi.rank() == 0) {
-    LOG_INFO_STR("nr stations = " << ps.nrStations());
+    LOG_INFO_STR("nr stations = " << ps.settings.antennaFields.size());
     LOG_INFO_STR("nr subbands = " << ps.settings.subbands.size());
     LOG_INFO_STR("bitmode     = " << ps.nrBitsPerSample());
   }
@@ -402,7 +402,7 @@ int main(int argc, char **argv)
     std::find(subbandIndices.begin(), 
               subbandIndices.end(), 0U) != subbandIndices.end(),
               ps.settings.blockSize,
-              ps.nrStations(),
+              ps.settings.antennaFields.size(),
               ps.nrBitsPerSample());
       
   SmartPtr<Pipeline> pipeline;
@@ -499,8 +499,8 @@ int main(int argc, char **argv)
         #pragma omp section
         {
           // Read and forward station data over MPI
-          #pragma omp parallel for num_threads(ps.nrStations())
-          for (size_t stat = 0; stat < ps.nrStations(); ++stat) 
+          #pragma omp parallel for num_threads(ps.settings.antennaFields.size())
+          for (size_t stat = 0; stat < ps.settings.antennaFields.size(); ++stat) 
           {       
             // Determine if this station should start a pipeline for station..
             const struct StationID stationID(

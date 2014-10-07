@@ -173,7 +173,7 @@ namespace LOFAR
           std::srand(seed);
 
           const unsigned fftSize = ps.nrChannelsPerSubband();
-          const unsigned nrFFTs = ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerChannel();
+          const unsigned nrFFTs = ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.nrSamplesPerChannel();
           MultiArraySharedBuffer<std::complex<float>, 2> inout3(boost::extents[nrFFTs][fftSize], queue, CL_MEM_READ_WRITE, CL_MEM_READ_WRITE);
 
           FFT_Kernel fftFwdKernel3(context, fftSize, nrFFTs, true, inout3);

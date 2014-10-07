@@ -339,15 +339,15 @@ namespace LOFAR
       while ((input = mpiPool.filled.remove()) != NULL) {
         const ssize_t block = input->block;
 
-        vector<size_t> nrFlaggedSamples(ps.nrStations(), 0);
+        vector<size_t> nrFlaggedSamples(ps.settings.antennaFields.size(), 0);
 
 #ifdef DO_PROCESSING
         MultiDimArray<SampleT,3> data(
-          boost::extents[ps.nrStations()][subbandIndices.size()][ps.settings.blockSize],
+          boost::extents[ps.settings.antennaFields.size()][subbandIndices.size()][ps.settings.blockSize],
           (SampleT*)input->data.get(), false);
 
         MultiDimArray<struct MPIProtocol::MetaData,2> metaData(
-          boost::extents[ps.nrStations()][subbandIndices.size()],
+          boost::extents[ps.settings.antennaFields.size()][subbandIndices.size()],
           (struct MPIProtocol::MetaData*)input->metaData.get(), false);
 
         // The set of InputData objects we're using for this block.
@@ -369,7 +369,7 @@ namespace LOFAR
           subbandData->blockID = id;
 
           copyTimer.start();
-          for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+          for (size_t stat = 0; stat < ps.settings.antennaFields.size(); ++stat) {
             if (metaData[stat][subbandIdx].EOS) {
               // Flag everything -- note that delays etc will not matter, so no need to set them
               subbandData->metaData[stat].flags.include(0, ps.settings.blockSize);
@@ -405,7 +405,7 @@ namespace LOFAR
         stringstream flagStr;  // antenna fields with >0% flags
         stringstream cleanStr; // antenna fields with  0% flags
 
-        for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+        for (size_t stat = 0; stat < ps.settings.antennaFields.size(); ++stat) {
           const double flagPerc = 100.0 * nrFlaggedSamples[stat] / subbandIndices.size() / ps.settings.blockSize;
 
           if (flagPerc == 0.0)
@@ -467,7 +467,7 @@ namespace LOFAR
         const unsigned SAP = ps.settings.subbands[id.globalSubbandIdx].SAP;
 
         // Translate the metadata as provided by receiver
-        for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+        for (size_t stat = 0; stat < ps.settings.antennaFields.size(); ++stat) {
           input->applyMetaData(ps, stat, SAP, input->metaData[stat]);
         }
 

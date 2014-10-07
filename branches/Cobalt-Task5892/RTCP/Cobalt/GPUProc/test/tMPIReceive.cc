@@ -89,8 +89,8 @@ int main(int argc, char **argv)
     {
       // Read and forward station data
       // This is the code that send the data over the MPI line
-#pragma omp parallel for num_threads(ps.nrStations())
-      for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+#pragma omp parallel for num_threads(ps.settings.antennaFields.size())
+      for (size_t stat = 0; stat < ps.settings.antennaFields.size(); ++stat) {
 
         // Determine if this station should start a pipeline for 
         // station..

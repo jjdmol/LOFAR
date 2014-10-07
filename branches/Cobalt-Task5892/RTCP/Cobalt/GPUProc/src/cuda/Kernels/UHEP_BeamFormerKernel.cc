@@ -45,27 +45,27 @@ namespace LOFAR
                            gpu::Block(NR_POLARIZATIONS, ps.nrTABs(0), 1) );
 
       size_t count = ps.nrSubbands() * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * NR_POLARIZATIONS;
-      size_t nrWeightsBytes = ps.nrStations() * ps.nrTABs(0) * ps.nrSubbands() * NR_POLARIZATIONS * sizeof(std::complex<float>);
-      size_t nrSampleBytes = count * ps.nrStations() * ps.nrBytesPerComplexSample();
+      size_t nrWeightsBytes = ps.settings.antennaFields.size() * ps.nrTABs(0) * ps.nrSubbands() * NR_POLARIZATIONS * sizeof(std::complex<float>);
+      size_t nrSampleBytes = count * ps.settings.antennaFields.size() * ps.nrBytesPerComplexSample();
       size_t nrComplexVoltagesBytesPerPass = count * ps.nrTABs(0) * sizeof(std::complex<float>);
-      unsigned nrPasses = std::max((ps.nrStations() + 6) / 16, 1U);
-      nrOperations = count * ps.nrStations() * ps.nrTABs(0) * 8;
+      unsigned nrPasses = std::max((ps.settings.antennaFields.size() + 6) / 16, 1U);
+      nrOperations = count * ps.settings.antennaFields.size() * ps.nrTABs(0) * 8;
       nrBytesRead = nrWeightsBytes + nrSampleBytes + (nrPasses - 1) * nrComplexVoltagesBytesPerPass;
       nrBytesWritten = nrPasses * nrComplexVoltagesBytesPerPass;
 #else
       ASSERT(ps.nrTABs(0) % 3 == 0);
-      ASSERT(ps.nrStations() % 6 == 0);
-      unsigned nrThreads = NR_POLARIZATIONS * (ps.nrTABs(0) / 3) * (ps.nrStations() / 6);
+      ASSERT(ps.settings.antennaFields.size() % 6 == 0);
+      unsigned nrThreads = NR_POLARIZATIONS * (ps.nrTABs(0) / 3) * (ps.settings.antennaFields.size() / 6);
       globalWorkSize = gpu::Grid(nrThreads, ps.nrSubbands());
       localWorkSize = gpu::Block(nrThreads, 1);
-      //globalWorkSize = gpu::Grid(ps.nrStations() / 6, ps.nrTABs(0) / 3, ps.nrSubbands());
-      //localWorkSize  = gpu::dim3(ps.nrStations() / 6, ps.nrTABs(0) / 3, 1);
+      //globalWorkSize = gpu::Grid(ps.settings.antennaFields.size() / 6, ps.nrTABs(0) / 3, ps.nrSubbands());
+      //localWorkSize  = gpu::dim3(ps.settings.antennaFields.size() / 6, ps.nrTABs(0) / 3, 1);
 
       size_t count = ps.nrSubbands() * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * NR_POLARIZATIONS;
-      size_t nrWeightsBytes = ps.nrStations() * ps.nrTABs(0) * ps.nrSubbands() * NR_POLARIZATIONS * sizeof(std::complex<float>);
-      size_t nrSampleBytes = count * ps.nrStations() * ps.nrBytesPerComplexSample();
+      size_t nrWeightsBytes = ps.settings.antennaFields.size() * ps.nrTABs(0) * ps.nrSubbands() * NR_POLARIZATIONS * sizeof(std::complex<float>);
+      size_t nrSampleBytes = count * ps.settings.antennaFields.size() * ps.nrBytesPerComplexSample();
       size_t nrComplexVoltagesBytes = count * ps.nrTABs(0) * sizeof(std::complex<float>);
-      nrOperations = count * ps.nrStations() * ps.nrTABs(0) * 8;
+      nrOperations = count * ps.settings.antennaFields.size() * ps.nrTABs(0) * 8;
       nrBytesRead = nrWeightsBytes + nrSampleBytes;
       nrBytesWritten = nrComplexVoltagesBytes;
 #endif
