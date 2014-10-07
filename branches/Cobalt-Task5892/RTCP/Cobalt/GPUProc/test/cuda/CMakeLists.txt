@@ -13,14 +13,21 @@ if(UNITTEST++_FOUND)
   # GPU kernel UnitTest++ tests
   lofar_add_test(tDelayAndBandPass tDelayAndBandPass.cc)
   lofar_add_test(tBandPassCorrection tBandPassCorrection.cc)
+  lofar_add_test(tCorrelatorPerformance tCorrelatorPerformance.cc)
   lofar_add_test(tIntToFloat tIntToFloat.cc)
 
   set_tests_properties(
     tDelayAndBandPass
     tBandPassCorrection
+    tCorrelatorPerformance
     tIncoherentStokes
     tIntToFloat
     PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
+  )
+
+  set_tests_properties(
+    tCorrelatorPerformance
+    PROPERTIES RUN_SERIAL ON
   )
 endif(UNITTEST++_FOUND)
 

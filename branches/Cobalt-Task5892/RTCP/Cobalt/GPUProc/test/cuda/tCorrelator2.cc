@@ -1,4 +1,4 @@
-//# tCorrelate2.cc: test Correlator CUDA kernel, with full output comparison
+//# tCorrelator2.cc: test Correlator CUDA kernel, with full output comparison
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
