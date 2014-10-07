@@ -23,6 +23,10 @@ class polltimer(object):
     
     def sleep(self):
         """Sleep and increment the counters (and change the wait time if needed"""
+
+        # is this correct? I do not see the numwaits being increased.
+        # further the if statement is always true.
+        # What happens of tdouble is 0?
         if self.numwaits < self.tdouble:
             self.numwaits = 0
             self.slptim *= 2
@@ -40,12 +44,14 @@ class Poller(Thread):
         self.config = config
         self.pollexecutable = self.config['poll_execute']
         try:
+            # this is fragile.
             if isinstance(self.config['searchpath'], str):
                 self.searchpath = [self.config['searchpath']]
             else:
                 self.searchpath = self.config['searchpath']
         except KeyError:
             self.searchpath = list()
+
         self.searchpath.extend([".",self.config.path])
         self.poll_execpath = None
         for pn in self.searchpath:
@@ -55,6 +61,7 @@ class Poller(Thread):
                 break
         if not self.poll_execpath:
             raise Exception # ToDo: define exception class
+
         self.tzero = self.config['tzero']
         self.tdouble = self.config['tdouble']
         self.outfile = self.config['outfile'].format(self.config['parentpid'])
@@ -81,7 +88,7 @@ class Poller(Thread):
             try:
                 pidlist = self.config['obspids']
             except KeyError:
-                clock.sleep()
+                clock.sleep()  #!!!! What happens here?
                 continue
             spids = self.config['stoppedpids'].copy()
             for pid in spids:
