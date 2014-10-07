@@ -1,0 +1,165 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,-1 -1 257 137 N "_3DFace" 0
+"main()
+{
+  	
+  baseDP = g_currentDatapoint;
+
+ 
+  string database=sysName;
+  if ( strlen(database) <= 0) {
+    database=\"MainCU\";
+  } else {
+    strreplace(database,\":\",\"\");
+  }
+	
+  dyn_string dpAr= strsplit(dpSubStr(baseDP,DPSUB_DP),\"_\");
+	
+  for (int i = 1; i <= dynlen(dpAr);i++ ) {
+    if (strpos(dpAr[i],\"Cabinet\") > -1) {
+      cNr = substr(dpAr[i],7,strlen(dpAr[i]));
+    } else if (strpos(dpAr[i],\"Subrack\") > -1) {
+      sNr = substr(dpAr[i],7,strlen(dpAr[i]));
+    }
+  }
+  
+  setValue(\"Station_Txt\",\"text\",\"Station: \"+database);
+  setValue(\"Cabinet_Txt\",\"text\",\"Cabinet: \"+cNr);
+  setValue(\"Subrack_Txt\",\"text\",\"Subrack: \"+sNr);
+  
+
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+
+  // connect for childUpdates
+  showChildState(baseDP);
+  // connect for selfUpdates
+  showSelfState(baseDP);
+}" 0
+ E E E E 1 0 0 0  10 98
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string    baseDP  = \"\";
+int       cNr     = -1;
+int       sNr     = -1;
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 0
+"childStateBorder"
+""
+1 10 98 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 0 1 E U  1 E 10 10 194 98
+2 1
+"Subrack_Txt"
+""
+1 20 68 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 70 74 87
+0 2 0 "0s" 0 0 0 192 0 0  22 70 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 7 Subrack
+2 2
+"Cabinet_Txt"
+""
+1 20 42 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 44 71 61
+0 2 0 "0s" 0 0 0 192 0 0  22 44 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 7 Cabinet
+2 3
+"Station_Txt"
+""
+1 20 15 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 17 67 34
+0 2 0 "0s" 0 0 0 192 0 0  22 17 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 7 Station
+1 4 0 "" 1
+0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 0 "selfState"
+"objects\\lofar_self_state.pnl" 173 17 T 1 1 0 1 0 -1
+0
+0

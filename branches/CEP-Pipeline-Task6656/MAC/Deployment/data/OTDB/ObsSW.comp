@@ -1,0 +1,8 @@
+# -- ObsSW--
+#
+# $Id$
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  ObsSW        4.0.3  development 'node constraint'  "Observation Software"
+uses  Observation  4.0.3  development 1                  "Observations under this SW control"

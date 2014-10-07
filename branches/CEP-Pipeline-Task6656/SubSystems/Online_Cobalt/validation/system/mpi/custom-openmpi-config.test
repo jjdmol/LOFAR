@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# Check whether we use our custom OpenMPI configuration file
+fgrep 'OpenMPI parameters for cbt00X' /opt/openmpi/etc/openmpi-mca-params.conf || exit 1
