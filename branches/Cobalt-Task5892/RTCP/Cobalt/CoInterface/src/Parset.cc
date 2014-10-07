@@ -951,12 +951,8 @@ namespace LOFAR
       return nrPolarisations * nrPolarisations;
     }
 
-    size_t ObservationSettings::nrSamplesPerSubband() const {
-      return blockSize;
-    }
-
     double ObservationSettings::blockDuration() const {
-      return nrSamplesPerSubband() * sampleDuration();
+      return blockSize * sampleDuration();
     }
 
     vector<unsigned> ObservationSettings::SAP::subbandIndices() const {
@@ -1074,12 +1070,6 @@ namespace LOFAR
     }
 
 
-    bool Parset::correctClocks() const
-    {
-      return settings.corrections.clock;
-    }
-
-
     std::string Parset::getHostName(OutputType outputType, unsigned streamNr) const
     {
       if (outputType == CORRELATED_DATA)
@@ -1131,12 +1121,6 @@ namespace LOFAR
     size_t Parset::nrBytesPerComplexSample() const
     {
       return 2 * nrBitsPerSample() / 8;
-    }
-
-
-    unsigned Parset::nrBeams() const
-    {
-      return settings.SAPs.size();
     }
 
 
@@ -1297,29 +1281,9 @@ namespace LOFAR
       }
     }
 
-    unsigned Parset::nrSamplesPerSubband() const
-    {
-      return settings.nrSamplesPerSubband();
-    }
-
-    size_t Parset::nrSubbands() const
-    {
-      return settings.subbands.size();
-    }
-
-    bool Parset::delayCompensation() const
-    {
-      return settings.delayCompensation.enabled;
-    }
-
     string Parset::positionType() const
     {
       return "ITRF";
-    }
-
-    bool Parset::correctBandPass() const
-    {
-      return settings.corrections.bandPass;
     }
 
     double Parset::channel0Frequency(size_t subband, size_t nrChannels) const
@@ -1335,35 +1299,9 @@ namespace LOFAR
       return sbFreq - 0.5 * settings.subbandWidth();
     }
 
-    bool Parset::realTime() const
-    {
-      return settings.realTime;
-    }
-
-    string Parset::bandFilter() const
-    {
-      return settings.bandFilter;
-    }
-
-    string Parset::antennaSet() const
-    {
-      return settings.antennaSet;
-    }
-
     string Parset::PVSS_TempObsName() const
     {
       return getString("_DPname", "LOFAR_ObsSW_TempObs_Unk");
-    }
-
-
-    size_t ObservationSettings::BeamFormer::SAP::nrCoherentTAB() const
-    {
-      return nrCoherent;
-    }
-
-    size_t ObservationSettings::BeamFormer::SAP::nrIncoherentTAB() const
-    {
-      return nrIncoherent;
     }
   } // namespace Cobalt
 } // namespace LOFAR

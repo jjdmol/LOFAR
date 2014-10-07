@@ -198,7 +198,7 @@ namespace LOFAR
                         configLocator.getPath());
           // Fill the tables containing the beam info.
           BeamTables::fill(*itsMS,
-                           itsPS.antennaSet(),
+                           itsPS.settings.antennaSet,
                            configLocator.locate("AntennaSets.conf"),
                            configLocator.locate("StaticMetaData"),
                            configLocator.locate("StaticMetaData"));
@@ -405,8 +405,8 @@ namespace LOFAR
       timeRange[1] = itsStartTime + itsNrTimes * itsTimeStep;
 
       // Get minimum and maximum frequency.
-      vector<double> freqs(itsPS.nrSubbands());
-      for(size_t sb = 0; sb < itsPS.nrSubbands(); ++sb)
+      vector<double> freqs(itsPS.settings.subbands.size());
+      for(size_t sb = 0; sb < itsPS.settings.subbands.size(); ++sb)
          freqs[sb] = itsPS.settings.subbands[sb].centralFrequency;
 
       ASSERT( freqs.size() > 0 );
@@ -467,8 +467,8 @@ namespace LOFAR
       msobsCol.observationFrequencyCenterQuant().put(0, Quantity(0.5 * (minFreq + maxFreq), "Hz"));
       msobsCol.subArrayPointing().put(0, subarray);
       msobsCol.nofBitsPerSample().put(0, itsPS.nrBitsPerSample());
-      msobsCol.antennaSet().put(0, itsPS.antennaSet());
-      msobsCol.filterSelection().put(0, itsPS.bandFilter());
+      msobsCol.antennaSet().put(0, itsPS.settings.antennaSet);
+      msobsCol.filterSelection().put(0, itsPS.settings.bandFilter);
       msobsCol.clockFrequencyQuant().put(0, Quantity(itsPS.settings.clockHz(), "Hz"));
       msobsCol.target().put(0, ctargets);
       msobsCol.systemVersion().put(0, Version::getInfo<OutputProcVersion>("OutputProc",

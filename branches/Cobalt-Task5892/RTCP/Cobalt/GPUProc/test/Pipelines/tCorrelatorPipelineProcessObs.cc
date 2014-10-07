@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
 
   // "distribute" subbands over 1 node
   vector<size_t> subbands;
-  for (size_t sb = 0; sb < ps.nrSubbands(); sb++)
+  for (size_t sb = 0; sb < ps.settings.subbands.size(); sb++)
   {
     subbands.push_back(sb);
   }

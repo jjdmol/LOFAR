@@ -63,7 +63,7 @@ int main( int argc, char **argv )
   const TimeStamp from(ps.settings.startTime * ps.settings.subbandWidth(), ps.settings.clockHz());
   const TimeStamp to(ps.settings.stopTime * ps.settings.subbandWidth(), ps.settings.clockHz());
   ssize_t block = -1;
-  size_t blockSize = ps.nrSamplesPerSubband();
+  size_t blockSize = ps.settings.blockSize;
 
   /* Print header */
   cout << "# Parset:           " << argv[1] << endl;

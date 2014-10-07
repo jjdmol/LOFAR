@@ -69,7 +69,7 @@ namespace LOFAR
             const struct ObservationSettings::BeamFormer::SAP &bfSap = parset.settings.beamFormer.SAPs[sap];
 
             // Reserve room for coherent TABs only
-            SAPs[sap].TABs.resize(bfSap.nrCoherentTAB());
+            SAPs[sap].TABs.resize(bfSap.nrCoherent);
           }
         }
     }

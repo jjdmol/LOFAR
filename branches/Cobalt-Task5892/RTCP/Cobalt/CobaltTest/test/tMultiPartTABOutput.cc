@@ -79,7 +79,7 @@ int main()
   vector<gpu::Device> devices = gpu::Platform().devices();
   gpu::Context ctx(devices[0]);
 
-  const unsigned nrSubbands = ps.nrSubbands();
+  const unsigned nrSubbands = ps.settings.subbands.size();
 
   // Create BF Pipeline. We're the only rank: do all the subbands.
   // So for the rest of the test code globalSubbandIdx equals localSubbandIdx.

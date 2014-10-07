@@ -106,9 +106,6 @@ namespace LOFAR
 
       size_t nrBlocks() const;
 
-      // Alias for blockSize
-      size_t nrSamplesPerSubband() const;
-
       // The number of seconds represented by each block.
       double blockDuration() const;
 
@@ -529,12 +526,6 @@ namespace LOFAR
           // size: Observation.Beam[sap].nrTiedArrayBeams
           std::vector<struct TAB> TABs;
 
-          // Return the number of coherentstokes tabs, 
-          size_t nrCoherentTAB() const;
-
-          // Return the number of incoherentstokes tabs
-          size_t nrIncoherentTAB() const;
-
           // calculated at construction time
           size_t nrCoherent;
           size_t nrIncoherent;
@@ -683,10 +674,6 @@ namespace LOFAR
       std::string                 positionType() const;
       unsigned                    dedispersionFFTsize() const;
 
-      unsigned                    nrSamplesPerSubband() const;
-      bool                        delayCompensation() const;
-      bool                        correctClocks() const;
-      bool                        correctBandPass() const;
       std::vector<std::string>    allStationNames() const;
 
       bool outputThisType(OutputType) const;
@@ -696,16 +683,7 @@ namespace LOFAR
       std::string getFileName(OutputType, unsigned streamNr) const;
       std::string getDirectoryName(OutputType, unsigned streamNr) const;
 
-      std::string                 bandFilter() const;
-      std::string                 antennaSet() const;
-
-      unsigned                    nrBeams() const;
-
-      size_t                      nrSubbands() const;
-
       double channel0Frequency( size_t subband, size_t nrChannels ) const;
-
-      bool                        realTime() const;
 
       std::vector<double>         itsStPositions;
 

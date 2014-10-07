@@ -140,7 +140,7 @@ namespace LOFAR
       unsigned nrSubbands = f.lastSubbandIdx - f.firstSubbandIdx;
 
       itsNrChannels = stokesSet.nrChannels * nrSubbands; 
-      itsNrSamples = parset.settings.nrSamplesPerSubband() /
+      itsNrSamples = parset.settings.blockSize /
                      stokesSet.nrChannels / stokesSet.timeIntegrationFactor;
 
       itsBlockSize = itsNrSamples * itsNrChannels;
@@ -226,8 +226,8 @@ namespace LOFAR
       double frequencyOffsetPPF = stokesSet.nrChannels > 1 ? 0.5 * channelBandwidth : 0.0; // TODO: cover both CS and IS!
 
       // For the whole obs, regardless which SAP and subbands (parts) this file contains.
-      vector<double> subbandCenterFrequencies(parset.nrSubbands());
-      for(size_t sb = 0; sb < parset.nrSubbands(); ++sb)
+      vector<double> subbandCenterFrequencies(parset.settings.subbands.size());
+      for(size_t sb = 0; sb < parset.settings.subbands.size(); ++sb)
         subbandCenterFrequencies[sb] = parset.settings.subbands[sb].centralFrequency;
 
       double min_centerfrequency = *min_element( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end() );

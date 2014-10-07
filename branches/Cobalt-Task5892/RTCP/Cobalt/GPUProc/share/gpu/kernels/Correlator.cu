@@ -38,6 +38,8 @@
 #  define BLOCK_SIZE	 16
 #endif
 
+// TODO: Asssert NR_SAMPLES_PER_INTEGRATION % BLOCK_SIZE == 0
+
 typedef float2 fcomplex;
 typedef float4 fcomplex2;
 

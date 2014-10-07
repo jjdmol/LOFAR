@@ -276,7 +276,7 @@ namespace LOFAR
       catch (Exception &ex) 
       {
         LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
-        if ( !itsParset.realTime())   
+        if ( !itsParset.settings.realTime)   
           THROW(StorageException, ex); 
 
         itsWriter = new MSWriterNull(itsParset);
@@ -286,7 +286,7 @@ namespace LOFAR
       {
         LOG_ERROR_STR(itsLogPrefix << "Caught AipsError: " << ex.what());
 
-        if (!itsParset.realTime())    
+        if (!itsParset.settings.realTime)    
           THROW(StorageException, ex.what()); 
 
         itsWriter = new MSWriterNull(itsParset);
@@ -350,7 +350,7 @@ namespace LOFAR
       catch (Exception &ex)
       {
         LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
-        if (!itsParset.realTime())
+        if (!itsParset.settings.realTime)
           THROW(StorageException, ex);
 
         itsWriter = new MSWriterNull(itsParset);
@@ -359,7 +359,7 @@ namespace LOFAR
       catch (casa::AipsError &ex) 
       {
         LOG_ERROR_STR(itsLogPrefix << "Caught AipsError: " << ex.what());
-        if ( !itsParset.realTime())       
+        if ( !itsParset.settings.realTime)       
           THROW(StorageException, ex.what());  
 
         itsWriter = new MSWriterNull(itsParset);

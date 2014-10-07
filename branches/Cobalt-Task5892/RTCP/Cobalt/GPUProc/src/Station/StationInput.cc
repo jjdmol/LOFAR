@@ -196,7 +196,7 @@ namespace LOFAR {
       for(size_t n = 0; n < result.num_elements(); ++n)
         result.origin()[n] = -1;
 
-      for(size_t i = 0; i < ps.nrSubbands(); ++i) {
+      for(size_t i = 0; i < targetSubbands.size(); ++i) {
         // The subband stored at position i
         const size_t sb = targetSubbands.at(i);
 
@@ -512,7 +512,7 @@ namespace LOFAR {
     {
       OMPThreadSet packetReaderThreads;
 
-      if (ps.realTime()) {
+      if (ps.settings.realTime) {
         // Each board has its own pool to reduce lock contention
         for (size_t board = 0; board < nrBoards; ++board)
           for (size_t i = 0; i < 16; ++i)
@@ -541,7 +541,7 @@ namespace LOFAR {
         {
           LOG_INFO_STR(logPrefix << "Processing packets");
 
-          if (ps.realTime()) {
+          if (ps.settings.realTime) {
             #pragma omp parallel for num_threads(nrBoards)
             for(size_t board = 0; board < nrBoards; board++) {
               OMPThreadSet::ScopedRun sr(packetReaderThreads);
@@ -575,7 +575,7 @@ namespace LOFAR {
           while((current = next ? next : inputQueue.remove()) != NULL) {
             next = inputQueue.remove();
 
-            if (ps.realTime()) {
+            if (ps.settings.realTime) {
               writeRSPRealTime<SampleT>(*current, next);
             } else {
               writeRSPNonRealTime<SampleT>(*current, next);
@@ -598,7 +598,7 @@ namespace LOFAR {
           for (size_t i = 0; i < nrBoards; ++i)
             rspDataPool[i]->free.prepend(NULL);
 
-          if (ps.realTime()) {
+          if (ps.settings.realTime) {
             // kill reader threads
             LOG_INFO_STR( logPrefix << "Stopping all boards" );
             packetReaderThreads.killAll();

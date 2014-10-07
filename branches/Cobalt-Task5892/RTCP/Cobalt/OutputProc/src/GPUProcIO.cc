@@ -189,7 +189,7 @@ bool process(Stream &controlStream, unsigned myRank)
           LOG_ERROR_STR("Failed to read broken tile information: " << err);
         }
 
-        if (parset.realTime()) {
+        if (parset.settings.realTime) {
           // Real-time observations: stop now. MultiReceiver::kill
           // will stop the TABWriters.
           mr.kill(0);

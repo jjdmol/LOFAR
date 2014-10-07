@@ -47,7 +47,7 @@ int main(int argc, char **argv)
   Parset ps(parsetFile);
 
   SubbandDistribution subbandDistribution; // rank -> [subbands]
-  for (size_t subband = 0; subband < ps.nrSubbands(); ++subband) 
+  for (size_t subband = 0; subband < ps.settings.subbands.size(); ++subband) 
   {
     int receiverRank = subband % mpi.size();
     subbandDistribution[receiverRank].push_back(subband);
@@ -77,8 +77,8 @@ int main(int argc, char **argv)
   MPIReceiver MPI_receiver(MPI_receive_pool,  // pool to insert data into
     subbandIndices,                           // what to process
     isThisSubbandZero,
-    ps.nrSamplesPerSubband(),
-    ps.nrStations(),
+    ps.settings.blockSize,
+    ps.settings.antennaFields.size(),
     ps.nrBitsPerSample());
 
   cout << "Processing subbands " << subbandDistribution[mpi.rank()] << endl;

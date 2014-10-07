@@ -237,7 +237,7 @@ int main(int argc, char **argv)
     "\n  outputProcTimeout    : " << outputProcTimeout << "s" <<
     "\n  rtcpTimeout          : " << rtcpTimeout << "s");
 
-  if (ps.realTime() && getenv("COBALT_NO_ALARM") == NULL) {
+  if (ps.settings.realTime && getenv("COBALT_NO_ALARM") == NULL) {
     // First of all, make sure we can't freeze for too long
     // by scheduling an alarm() some time after the observation
     // ends.
@@ -284,7 +284,7 @@ int main(int argc, char **argv)
 
   if (mpi.rank() == 0) {
     LOG_INFO_STR("nr stations = " << ps.nrStations());
-    LOG_INFO_STR("nr subbands = " << ps.nrSubbands());
+    LOG_INFO_STR("nr subbands = " << ps.settings.subbands.size());
     LOG_INFO_STR("bitmode     = " << ps.nrBitsPerSample());
   }
 
@@ -387,7 +387,7 @@ int main(int argc, char **argv)
   // Distribute the subbands over the MPI ranks
   SubbandDistribution subbandDistribution; // rank -> [subbands]
 
-  for( size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
+  for( size_t subband = 0; subband < ps.settings.subbands.size(); ++subband) {
     int receiverRank = subband % mpi.size();
 
     subbandDistribution[receiverRank].push_back(subband);
@@ -401,7 +401,7 @@ int main(int argc, char **argv)
                      subbandIndices,
     std::find(subbandIndices.begin(), 
               subbandIndices.end(), 0U) != subbandIndices.end(),
-              ps.nrSamplesPerSubband(),
+              ps.settings.blockSize,
               ps.nrStations(),
               ps.nrBitsPerSample());
       
@@ -484,7 +484,7 @@ int main(int argc, char **argv)
        * THE OBSERVATION
        */
 
-      if (ps.realTime()) {
+      if (ps.settings.realTime) {
         // Wait just before the obs starts to allocate resources,
         // both the UDP sockets and the GPU buffers!
         LOG_INFO_STR("Waiting to start obs running from " << TimeStamp::convert(ps.settings.startTime, ps.settings.clockHz()) << " to " << TimeStamp::convert(ps.settings.stopTime, ps.settings.clockHz()));

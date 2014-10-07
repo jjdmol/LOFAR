@@ -87,7 +87,6 @@ TEST(realTime) {
     Parset ps = makeDefaultTestParset("Cobalt.realTime", valstr);
 
     CHECK_EQUAL(val, ps.settings.realTime);
-    CHECK_EQUAL(val, ps.realTime());
   }
 }
 
@@ -173,7 +172,6 @@ SUITE(corrections) {
       Parset ps = makeDefaultTestParset("Cobalt.correctBandPass", valstr);
 
       CHECK_EQUAL(val, ps.settings.corrections.bandPass);
-      CHECK_EQUAL(val, ps.correctBandPass());
     }
   }
 
@@ -182,7 +180,6 @@ SUITE(corrections) {
       Parset ps = makeDefaultTestParset("Cobalt.correctClocks", valstr);
 
       CHECK_EQUAL(val, ps.settings.corrections.clock);
-      CHECK_EQUAL(val, ps.correctClocks());
     }
   }
 
@@ -201,7 +198,6 @@ SUITE(delayCompensation) {
       Parset ps = makeDefaultTestParset("Cobalt.delayCompensation", valstr);
 
       CHECK_EQUAL(val, ps.settings.delayCompensation.enabled);
-      CHECK_EQUAL(val, ps.delayCompensation());
     }
   }
 
@@ -230,7 +226,6 @@ TEST(antennaSetLBA) {
     ps.replace("Observation.bandFilter", "LBA_30_70");
 
     CHECK_EQUAL(*i, ps.settings.antennaSet);
-    CHECK_EQUAL(*i, ps.antennaSet());
   }
 }
 
@@ -250,7 +245,6 @@ TEST(antennaSetHBA) {
     ps.replace("Observation.bandFilter", "HBA_110_190");
 
     CHECK_EQUAL(*i, ps.settings.antennaSet);
-    CHECK_EQUAL(*i, ps.antennaSet());
   }
 }
 
@@ -267,8 +261,6 @@ TEST(bandFilter) {
     Parset ps = makeDefaultTestParset("Observation.bandFilter", i->first);
 
     CHECK_EQUAL(i->first, ps.settings.bandFilter);
-    CHECK_EQUAL(i->first, ps.bandFilter());
-    
     CHECK_EQUAL(i->second, ps.settings.nyquistZone());
   }
 }

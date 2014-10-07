@@ -284,7 +284,7 @@ namespace LOFAR
 
           // Wait for data to propagate towards outputProc,
           // and kill lingering outputThreads.
-          if (ps.realTime()) {
+          if (ps.settings.realTime) {
             struct timespec deadline = TimeSpec::now();
             TimeSpec::inc(deadline, outputFlushTimeout);
 
@@ -698,7 +698,7 @@ namespace LOFAR
             forwardTimer.stop();
 
             // If `subband' is still alive, it has been dropped instead of sent.
-            ASSERT(ps.realTime() || !subband); 
+            ASSERT(ps.settings.realTime || !subband); 
           }
         }
 
