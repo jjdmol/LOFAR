@@ -13,7 +13,7 @@ print "Best started in background so that you can observe the monitor files."
 # We might make it part of the pipeine framework as an include?
 mypid = os.getpid()
 # Use PID of caller to identify which monitor to talk with
-mp = subprocess.Popen(["../monitor.py",str(mypid)]) 
+mp = subprocess.Popen(["monitor.py",str(mypid)]) 
 
 # This wait would not be needed if imported in the the class
 time.sleep(3) # wait till it started. This time is fully is arbitrary
