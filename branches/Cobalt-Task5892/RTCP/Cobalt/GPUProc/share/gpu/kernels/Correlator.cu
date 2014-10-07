@@ -202,7 +202,12 @@ __device__ void correlate_1x1(void *visibilitiesPtr, const void *correctedDataPt
   int stat_0 = x;
   int stat_A = y;
 
+#if NR_INTEGRATIONS == 1
+  // Fast code path for common case
+  const int integration = 0; {
+#else
   for (uint integration = 0; integration < NR_INTEGRATIONS; integration++) {
+#endif
     /* visR and visI will contain the real and imaginary parts, respectively, of
      * the four visibilities (i.e., the four correlation products between the two
      * antennae A and B with polarizations x and y):
@@ -293,7 +298,12 @@ __device__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPt
 
   bool compute_correlations = stat_0 < NR_STATIONS;
 
-  for (uint integration = 0; integration < NR_INTEGRATIONS; integration++) {
+#if NR_INTEGRATIONS == 1
+  // Fast code path for common case
+  const int integration = 0; {
+#else
+  for (int integration = 0; integration < NR_INTEGRATIONS; integration++) {
+#endif
     float4 vis_0A_r = {0, 0, 0, 0}, vis_0A_i = {0, 0, 0, 0};
     float4 vis_0B_r = {0, 0, 0, 0}, vis_0B_i = {0, 0, 0, 0};
     float4 vis_1A_r = {0, 0, 0, 0}, vis_1A_i = {0, 0, 0, 0};
@@ -410,7 +420,12 @@ __device__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
 
   bool compute_correlations = stat_0 < NR_STATIONS;
 
+#if NR_INTEGRATIONS == 1
+  // Fast code path for common case
+  const int integration = 0; {
+#else
   for (uint integration = 0; integration < NR_INTEGRATIONS; integration++) {
+#endif
     float4 vis_0A_r = {0, 0, 0, 0}, vis_0A_i = {0, 0, 0, 0};
     float4 vis_0B_r = {0, 0, 0, 0}, vis_0B_i = {0, 0, 0, 0};
     float4 vis_0C_r = {0, 0, 0, 0}, vis_0C_i = {0, 0, 0, 0};
@@ -603,7 +618,12 @@ __device__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
 
   bool compute_correlations = stat_0 < NR_STATIONS;
 
+#if NR_INTEGRATIONS == 1
+  // Fast code path for common case
+  const int integration = 0; {
+#else
   for (uint integration = 0; integration < NR_INTEGRATIONS; integration++) {
+#endif
     float4 vis_0A_r = {0, 0, 0, 0}, vis_0A_i = {0, 0, 0, 0};
     float4 vis_0B_r = {0, 0, 0, 0}, vis_0B_i = {0, 0, 0, 0};
     float4 vis_0C_r = {0, 0, 0, 0}, vis_0C_i = {0, 0, 0, 0};
