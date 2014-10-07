@@ -48,7 +48,7 @@ namespace LOFAR
       nrStations(ps.settings.antennaFields.size()),
       // For Cobalt (= up to 80 antenna fields), the 2x2 kernel gives the best
       // performance.
-      nrStationsPerThread(1),
+      nrStationsPerThread(2),
 
       nrChannels(ps.settings.correlator.nrChannels),
       nrSamplesPerIntegration(ps.settings.correlator.nrSamplesPerBlock / ps.settings.correlator.nrIntegrationsPerBlock),
