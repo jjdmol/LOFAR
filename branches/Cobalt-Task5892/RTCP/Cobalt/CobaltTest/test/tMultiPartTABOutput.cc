@@ -90,7 +90,7 @@ int main()
   omp_set_nested(true); // for around and within .multiSender.process()
 
   Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_receive_pool", true);
-  MACIO::RTmetadata rtmd(ps.observationID(), "", "");
+  MACIO::RTmetadata rtmd(ps.settings.observationID, "", "");
   Pipeline bfpl(ps, localSbIndices, devices, MPI_receive_pool,
                           rtmd, "rtmd key prefix");
   bfpl.allocateResources();

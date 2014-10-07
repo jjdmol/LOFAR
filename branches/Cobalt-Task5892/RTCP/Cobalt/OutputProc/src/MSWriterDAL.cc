@@ -203,7 +203,7 @@ namespace LOFAR
       file.projectCOI().value = oss.str();
       file.projectContact().value = parset.getString("Observation.Campaign.contact", "");
 
-      file.observationID().value = str(format("%u") % parset.observationID());
+      file.settings.observationID.value = str(format("%u") % parset.settings.observationID);
 
       file.observationStartUTC().value = toUTC(parset.settings.startTime);
       file.observationStartMJD().value = toMJD(parset.settings.startTime);

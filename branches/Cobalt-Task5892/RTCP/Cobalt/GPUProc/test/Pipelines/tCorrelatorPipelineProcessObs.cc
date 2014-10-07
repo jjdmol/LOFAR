@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
   // Init the pipeline *before* touching MPI. MPI doesn't like fork().
   // So do kernel compilation (reqs fork()) first.
   // Don't bother passing a hostname to (or start()ing) the mdLogger.
-  MACIO::RTmetadata rtmd(ps.observationID(), "", "");
+  MACIO::RTmetadata rtmd(ps.settings.observationID, "", "");
   SmartPtr<Pipeline> pipeline = new Pipeline(ps, subbands, devices,
       MPI_receive_pool, rtmd, "rtmd key prefix");
 

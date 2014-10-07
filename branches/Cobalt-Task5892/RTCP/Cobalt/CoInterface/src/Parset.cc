@@ -1198,11 +1198,6 @@ namespace LOFAR
       return itsName;
     }
 
-    unsigned Parset::observationID() const
-    {
-      return settings.observationID;
-    }
-
     ssize_t ObservationSettings::antennaFieldIndex(const std::string &name) const
     {
       for (size_t a = 0; a < antennaFields.size(); ++a) {

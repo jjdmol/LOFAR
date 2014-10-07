@@ -84,9 +84,9 @@ bool process(Stream &controlStream, unsigned myRank)
   mdKeyPrefix.push_back('.'); // keys look like: "keyPrefix.subKeyName[x]"
 
   const string mdRegisterName = string(PST_COBALT_OUTPUT_PROC) + ":" +
-                                lexical_cast<string>(parset.observationID()) + "@" + myHostName;
+                                lexical_cast<string>(parset.settings.observationID) + "@" + myHostName;
   const string mdHostName = parset.getString("Cobalt.PVSSGateway.host", "");
-  MACIO::RTmetadata mdLogger(parset.observationID(), mdRegisterName, mdHostName);
+  MACIO::RTmetadata mdLogger(parset.settings.observationID, mdRegisterName, mdHostName);
   mdLogger.start();
 
   {
@@ -110,7 +110,7 @@ bool process(Stream &controlStream, unsigned myRank)
                      formatDataPointLocusName(myHostName));
 
         string logPrefix = str(format("[obs %u correlated stream %3u] ")
-                               % parset.observationID() % fileIdx);
+                               % parset.settings.observationID % fileIdx);
 
         SubbandWriter *writer = new SubbandWriter(parset, fileIdx, mdLogger, mdKeyPrefix, logPrefix);
         subbandWriters.push_back(writer);
@@ -156,7 +156,7 @@ bool process(Stream &controlStream, unsigned myRank)
           *outputPools[fileIdx], fileIdx, nrSubbands, nrChannels, nrSamples, parset.settings.nrBlocks(), parset.settings.realTime ? 5 : 0);
 
         string logPrefix = str(format("[obs %u beamformed stream %3u] ")
-                                                    % parset.observationID() % fileIdx);
+                                                    % parset.settings.observationID % fileIdx);
 
         TABOutputThread *writer = new TABOutputThread(parset, fileIdx, *outputPools[fileIdx], mdLogger, mdKeyPrefix, logPrefix);
         tabWriters.push_back(writer);

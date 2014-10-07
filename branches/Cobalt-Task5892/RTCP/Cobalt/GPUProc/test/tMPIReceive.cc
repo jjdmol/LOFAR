@@ -105,7 +105,7 @@ int main(int argc, char **argv)
           continue;
         }
 
-        MACIO::RTmetadata rtmd(ps.observationID(), "", "");
+        MACIO::RTmetadata rtmd(ps.settings.observationID, "", "");
         sendInputToPipeline(ps, stat, subbandDistribution,
                             rtmd, "rtmd key prefix");
         cout << "First ended" << endl;

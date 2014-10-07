@@ -94,7 +94,6 @@ TEST(observationID) {
   Parset ps = makeDefaultTestParset("Observation.ObsID", "12345");
 
   CHECK_EQUAL(12345U, ps.settings.observationID);
-  CHECK_EQUAL(12345U, ps.observationID());
 }
 
 TEST(startTime) {

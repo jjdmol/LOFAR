@@ -191,11 +191,11 @@ int main(int argc, char **argv)
   // Create mdLogger for monitoring (PVSS). We can already log(), but start() the event send thread
   // much later, after the pipeline creation (post-fork()), so we don't crash.
   const string mdRegisterName = PST_COBALTGPU_PROC + boost::lexical_cast<string>(cpuNr) + ":" +
-                                boost::lexical_cast<string>(ps.observationID()) + "@" + hostName;
+                                boost::lexical_cast<string>(ps.settings.observationID) + "@" + hostName;
   const string mdHostName = ps.getString("Cobalt.PVSSGateway.host", "");
 
   // Don't connect to PVSS for non-real-time observations -- they have no proper flow control
-  MACIO::RTmetadata mdLogger(ps.observationID(), mdRegisterName, ps.settings.realTime ? mdHostName : "");
+  MACIO::RTmetadata mdLogger(ps.settings.observationID, mdRegisterName, ps.settings.realTime ? mdHostName : "");
 
   LOG_INFO_STR("MPI rank " << mpi.rank() << " out of " << mpi.size() << " hosts");
 
@@ -527,7 +527,7 @@ int main(int argc, char **argv)
             mdKeyPrefixInputProc.push_back('.'); // keys look like: "keyPrefix.subKeyName"
 
             mdLogger.log(mdKeyPrefixInputProc + PN_CSI_OBSERVATION_NAME,
-                         boost::lexical_cast<string>(ps.observationID()));
+                         boost::lexical_cast<string>(ps.settings.observationID));
             mdLogger.log(mdKeyPrefixInputProc + PN_CSI_NODE, hostName);
             mdLogger.log(mdKeyPrefixInputProc + PN_CSI_CPU,  cpuNr);
 
@@ -594,7 +594,7 @@ int main(int argc, char **argv)
     // write LTA feedback to disk
     const char *LOFARROOT = getenv("LOFARROOT");
     if (LOFARROOT != NULL) {
-      string feedbackFilename = str(format("%s/var/run/Observation%s_feedback") % LOFARROOT % ps.observationID());
+      string feedbackFilename = str(format("%s/var/run/Observation%s_feedback") % LOFARROOT % ps.settings.observationID);
 
       try {
         feedbackLTA.writeFile(feedbackFilename, false);

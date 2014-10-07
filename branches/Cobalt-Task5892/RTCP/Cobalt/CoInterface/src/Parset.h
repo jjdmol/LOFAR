@@ -660,8 +660,6 @@ namespace LOFAR
 
       void                        write(Stream *) const;
 
-      unsigned                    observationID() const;
-
       unsigned                    nrTabStations() const;
       unsigned                    nrMergedStations() const;
       std::vector<std::string>    mergedStationNames() const;

@@ -459,7 +459,7 @@ namespace LOFAR
       msobsCol.projectPI().put(0,  itsPS.getString("Observation.Campaign.PI", ""));
       msobsCol.projectCoI().put(0, ccois);
       msobsCol.projectContact().put(0, itsPS.getString("Observation.Campaign.contact", ""));
-      msobsCol.observationId().put(0, String::toString(itsPS.observationID()));
+      msobsCol.observationId().put(0, String::toString(itsPS.settings.observationID));
       msobsCol.observationStart().put(0, timeRange[0]);
       msobsCol.observationEnd().put(0, timeRange[1]);
       msobsCol.observationFrequencyMaxQuant().put(0, Quantity(maxFreq, "Hz"));

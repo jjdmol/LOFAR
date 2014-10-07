@@ -150,7 +150,7 @@ namespace LOFAR
       ASSERTSTR(!devices.empty(), "Not bound to any GPU!");
 
       // Write data point(s) for monitoring (PVSS).
-      itsMdLogger.log(itsMdKeyPrefix + PN_CGP_OBSERVATION_NAME, boost::lexical_cast<string>(ps.observationID()));
+      itsMdLogger.log(itsMdKeyPrefix + PN_CGP_OBSERVATION_NAME, boost::lexical_cast<string>(ps.settings.observationID));
       for (unsigned i = 0; i < subbandIndices.size(); ++i) {
         itsMdLogger.log(itsMdKeyPrefix + PN_CGP_SUBBAND + '[' + boost::lexical_cast<string>(i) + ']',
                         (int)subbandIndices[i]);

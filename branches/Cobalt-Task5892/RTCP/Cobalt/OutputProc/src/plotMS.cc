@@ -186,7 +186,7 @@ int main(int argc, char *argv[])
     std::string secondStation = stationNames[itsAnt2[baseline]];
 
     printf( "# baseline %s - %s channel %d\n", firstStation.c_str(), secondStation.c_str(), channel);
-    printf( "# observation %u\n", parset.observationID());
+    printf( "# observation %u\n", parset.settings.observationID);
     if (realimag)
       printf( "# blocknr real(XX) imag(XX) real(XY) imag(XY) real(YX) imag(YX) real(YY) imag(YY)\n");
     else
