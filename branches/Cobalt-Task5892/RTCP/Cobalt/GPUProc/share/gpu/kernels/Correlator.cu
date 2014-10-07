@@ -38,7 +38,9 @@
 #  define BLOCK_SIZE	 16
 #endif
 
-// TODO: Asssert NR_SAMPLES_PER_INTEGRATION % BLOCK_SIZE == 0
+#if !(NR_SAMPLES_PER_INTEGRATION % BLOCK_SIZE == 0)
+#error Precondition violated: NR_SAMPLES_PER_INTEGRATION % BLOCK_SIZE == 0
+#endif
 
 typedef float2 fcomplex;
 typedef float4 fcomplex2;
@@ -127,6 +129,7 @@ extern "C" {
  * NR_STATIONS             | >= 1                    | number of antenna fields
  * NR_SAMPLES_PER_INTEGRATION  | multiple of BLOCK_SIZE  | number of input samples per channel
  * NR_CHANNELS             | >= 1                    | number of frequency channels per subband
+ * NR_INTEGRATIONS         | >= 1                    | number of integrations to produce per block
  * Note that for > 1 channels, NR_CHANNELS-1 channels are actually processed,
  * because the second PPF has "corrupted" channel 0. (An inverse PPF can disambiguate.) \n
  * Note that if NR_CHANNELS is low (esp. 1), these kernels perform poorly.
