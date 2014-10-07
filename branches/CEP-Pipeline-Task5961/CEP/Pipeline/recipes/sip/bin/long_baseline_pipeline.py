@@ -166,8 +166,8 @@ class msss_imager_pipeline(control):
         toplevel_meta_data = parameterset()
 
         # get some parameters from the imaging pipeline parset:
-        slices_per_image = self.parset.getInt("Imaging.slices_per_image")
-        subbands_per_image = self.parset.getInt("Imaging.subbands_per_image")
+        slices_per_image = self.parset.getInt("LongBaseline.slices_per_ms")
+        subbands_per_image = self.parset.getInt("LongBaseline.subbands_per_ms")
 
         toplevel_meta_data.replace("subbandsPerSubbandGroup", 
                                            str(subbands_per_image))
