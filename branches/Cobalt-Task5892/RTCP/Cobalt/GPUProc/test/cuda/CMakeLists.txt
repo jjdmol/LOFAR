@@ -47,6 +47,7 @@ lofar_add_test(tIncoherentStokesTranspose tIncoherentStokesTranspose.cc)
 set_tests_properties(
   tFIR_Filter
   tCorrelator
+  tCorrelator2
   tBeamFormer
   tTranspose
   tTranspose2
