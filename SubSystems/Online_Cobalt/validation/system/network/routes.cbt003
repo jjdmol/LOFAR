@@ -44,3 +44,5 @@ default via 10.151.255.254 dev eth0  metric 100
 10.175.255.202 dev eth3  scope link 
 10.175.255.203 dev eth4  scope link 
 10.175.255.204 dev eth5  scope link 
+10.200.41.0/24 dev vlan2041  proto kernel  scope link  src 10.200.41.50 
+10.200.81.0/24 dev vlan2081  proto kernel  scope link  src 10.200.81.50 
