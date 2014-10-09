@@ -15,8 +15,9 @@ if __name__ == "__main__":
     cfg.add_item('parentpid',parpid)
     lst = Listener(cfg)
     lst.start()
-
+    print "listener started"
     # Where is the output class?
     
-    pol = Poller(cfg)
+    pol = Poller(cfg)   
     pol.start()
+    print "Poller started"

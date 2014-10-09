@@ -27,10 +27,23 @@ class polltimer(object):
         # is this correct? I do not see the numwaits being increased.
         # further the if statement is always true.
         # What happens of tdouble is 0?
-        if self.numwaits < self.tdouble:
+        if self.numwaits > self.tdouble:
             self.numwaits = 0
-            self.slptim *= 2
+            self.slptim += 1
+        else:
+            self.numwaits += 1
         time.sleep(self.slptim)   
+
+
+def pid_is_active(pid):        
+    """ Check For the existence of a unix pid. """
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        return False
+    else:
+        return True
+
         
 class Poller(Thread):
     """ This class will poll a command (defined in the config as 'poll_execute'.
@@ -74,6 +87,7 @@ class Poller(Thread):
 
     def run(self):
         """ Poll untill the stop function has been called."""
+        itter = 0
         while self.running:
             try:
                 stop = self.config['stop']
@@ -83,6 +97,7 @@ class Poller(Thread):
                 if stop:
                     self.stop()
                     continue
+
             clock = polltimer(self.tzero, self.tdouble)
             output_vals = output.Output()
             try:
@@ -90,6 +105,7 @@ class Poller(Thread):
             except KeyError:
                 clock.sleep()  #!!!! What happens here?
                 continue
+
             spids = self.config['stoppedpids'].copy()
             for pid in spids:
                 tstamp = str(time.time())
@@ -98,20 +114,42 @@ class Poller(Thread):
                 self.config['stoppedpids'].remove(pid)
                 self.config['obspids'].remove(pid)
                 output_vals[pid] = (out, out)
+
             starts = self.config['startpids'].copy()
             for sp in starts:
                 self.config['obspids'].add(sp)
                 self.config['startpids'].remove(sp)
+
+            ## tear down monitor if all pid to monitor are dead
+            #if itter > 10 and len(self.config['obspids']) == 0:
+            #    self.stop()
+            #    raise Exception("bwaaaaa")
+
+
+            dead_pids = []
+            # here the call with the script getting info from proc
             for pid in self.config['obspids']:
+                # skip logging this pid
+                if not pid_is_active(pid):
+                    dead_pids.append(pid)
+                    continue
+
                 pps = SP.Popen([self.poll_execpath, str(pid)], stdin=SP.PIPE, stdout=SP.PIPE, stderr=SP.PIPE)
                 out, err = pps.communicate()
                 tstamp = str(time.time())
                 if out != "":
-                    out = "{0} {1} {2}".format(tstamp, self.config['pidnames'][pid], out.strip())
+                    out = "{0}".format( out.strip())
                 if err != "":
                     err = "{0} {1} {2}".format(tstamp, self.config['pidnames'][pid], err.strip())
                 output_vals[pid] = (out, err)
+
             output_vals.tofile(self.outfile, self.errfile)
+
+            # remove dead pids from the scan list
+            if len(dead_pids) > 0:
+                for pid in dead_pids:
+                    self.config['obspids'].remove(pid)
+            itter+=1
             clock.sleep()
 
     def stop(self):
