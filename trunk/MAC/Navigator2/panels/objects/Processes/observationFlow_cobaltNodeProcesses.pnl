@@ -8,6 +8,7 @@ PANEL,-1 -1 302 91 N "_3DFace" 0
   database=dpSubStr(baseDP,DPSUB_SYS);
   
   activeObsDP =MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\";
+/*  
   // check if MACScheduler pointenabled and accessible
   if (dpExists(activeObsDP)) {
     if (dpConnect(\"updateActiveObservations\", activeObsDP+\":_online.._value\",
@@ -16,7 +17,8 @@ PANEL,-1 -1 302 91 N "_3DFace" 0
     }
   } else {
     if (!isStandalone()) LOG_ERROR(\"ObservationFlow_cobaltNodeProcesses.pnl:main|Couldn't find DP to connect to: \"+activeObsDP);
-  }	
+  }
+  */	
 }
 " 0
  E "main(int x, int y)
