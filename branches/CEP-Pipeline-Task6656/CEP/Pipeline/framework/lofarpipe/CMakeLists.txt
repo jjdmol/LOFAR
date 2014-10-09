@@ -4,6 +4,7 @@ include(PythonInstall)
 
 install(FILES
   monitoring/config/defaults.dat
+  monitoring/config/poll_execute.sh
   DESTINATION lofarpipe)
 
 python_install(
@@ -43,6 +44,5 @@ python_install(
   monitoring/output.py
   monitoring/poller.py
   monitoring/__init__.py
-  monitoring/config/__init__.py
-  monitoring/config/poll_execute.sh
+  monitoring/config/__init__.py  
   DESTINATION lofarpipe)
