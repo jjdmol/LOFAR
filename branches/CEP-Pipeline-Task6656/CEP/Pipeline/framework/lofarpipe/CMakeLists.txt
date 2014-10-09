@@ -2,6 +2,10 @@
 
 include(PythonInstall)
 
+install(FILES
+  monitoring/config/defaults.dat
+  DESTINATION lofarpipe)
+
 python_install(
   __init__.py
   cuisine/__init__.py
@@ -40,6 +44,5 @@ python_install(
   monitoring/poller.py
   monitoring/__init__.py
   monitoring/config/__init__.py
-  monitoring/config/defaults.dat
   monitoring/config/poll_execute.sh
   DESTINATION lofarpipe)
