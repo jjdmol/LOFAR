@@ -23,7 +23,7 @@ class imager_bbs(LOFARnodeTCP):
     3. Check if the processes finished correctly
     """
     def run(self, bbs_executable, parset, ms_list_path, parmdb_list_path,
-             sky_list_path):
+             sky_list_path, poller_script):
         """
         imager_bbs functionality. Called by framework performing all the work
         """

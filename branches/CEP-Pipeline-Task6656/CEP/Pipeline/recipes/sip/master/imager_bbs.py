@@ -59,6 +59,10 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
             '--mapfile',
             help="Full path to the file containing the output data products"
         ),
+        'poller_script': ingredient.StringField(
+            '--poller-script',
+            help="Full path to the script performing resource poll"
+        ),
     }
 
     outputs = {
@@ -127,7 +131,8 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
 
             arguments = [self.inputs['bbs_executable'],
                          self.inputs['parset'],
-                         ms_list_path, parmdb_list_path, sourcedb_list_path]
+                         ms_list_path, parmdb_list_path, sourcedb_list_path,
+                         self.inputs['poller_script'],]
             jobs.append(ComputeJob(host, node_command, arguments))
 
         # start and wait till all are finished
