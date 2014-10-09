@@ -34,4 +34,12 @@ python_install(
   support/subprocessgroup.py
   support/utilities.py
   support/xmllogging.py
+  monitoring/listener.py
+  monitoring/monitor.py
+  monitoring/output.py
+  monitoring/poller.py
+  monitoring/__init__.py
+  monitoring/config/__init__.py
+  monitoring/config/default.cfg
+  monitoring/config/poll_execute.sh
   DESTINATION lofarpipe)
