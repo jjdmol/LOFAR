@@ -298,6 +298,9 @@ if __name__ == '__main__':
 	print "  Could not find old master template ID. Stopping now"
 	otdb.close()
 	sys.exit(1)
+
+    # Wrap all modifications in a transaction, to avoid leaving behind a broken database
+    otdb.query("BEGIN")
 	
     # for each old default template make a new template
     print "   TreeID of new master template = %s" % newMasterID
@@ -305,5 +308,8 @@ if __name__ == '__main__':
     for treeID in dfltTmplInfo:
         createNewDefaultTemplate(treeID, oldMasterID, newMasterID, dfltTmplInfo[treeID])
 
+    # Write all changes to the database
+    otdb.query("COMMIT")
     otdb.close()
     sys.exit(0)
+

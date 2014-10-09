@@ -33,6 +33,8 @@ if __name__ == '__main__':
         print "PIC trees cannot be copied"
         sys.exit(1)
 
+    database.query("BEGIN");
+
     # What's the version of this tree?
     treeID    = DBtree[0]['treeid']
     nodeDefID = database.query("select * from getTopNode(%d)" % treeID).dictresult()[0]
@@ -64,6 +66,7 @@ if __name__ == '__main__':
         else:
             print "parent node NOT in victree, ready"
 
+    database.query("COMMIT")
     database.close()
     sys.exit(0)
 
