@@ -40,6 +40,6 @@ python_install(
   monitoring/poller.py
   monitoring/__init__.py
   monitoring/config/__init__.py
-  monitoring/config/default.cfg
+  monitoring/config/defaults.cfg
   monitoring/config/poll_execute.sh
   DESTINATION lofarpipe)
