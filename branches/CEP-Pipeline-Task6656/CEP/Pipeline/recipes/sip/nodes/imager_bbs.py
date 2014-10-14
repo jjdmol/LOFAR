@@ -23,7 +23,7 @@ class imager_bbs(LOFARnodeTCP):
     3. Check if the processes finished correctly
     """
     def run(self, bbs_executable, parset, ms_list_path, parmdb_list_path,
-             sky_list_path, poller_script):
+             sky_list_path):
         """
         imager_bbs functionality. Called by framework performing all the work
         """
@@ -54,7 +54,8 @@ class imager_bbs(LOFARnodeTCP):
                 self.logger.info("Executing bbs command: {0}".format(" ".join(
                             command)))
 
-                bbs_process_group.run(command)
+                pid = bbs_process_group.run(command)
+                self.resourceMonitor.addPID(pid)
 
             # *****************************************************************
             # 3. check status of the processes

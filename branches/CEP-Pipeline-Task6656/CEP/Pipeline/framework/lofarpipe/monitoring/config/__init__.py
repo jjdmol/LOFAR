@@ -6,7 +6,7 @@ class Config(object):
     also ship with a defaults.cfg file in the same folder which defines 
     all default values."""
     def __init__(self, filename = None):
-        self.default_file = "defaults.cfg"
+        self.default_file = "defaults.dat"
         self.path = dirname(__file__)
         self.__valsdict = dict()
         self.__defdict = dict()

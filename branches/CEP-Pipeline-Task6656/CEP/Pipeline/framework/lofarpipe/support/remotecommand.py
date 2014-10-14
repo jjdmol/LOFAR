@@ -233,10 +233,10 @@ class ComputeJob(object):
         Note that error is an instance of threading.Event, which will be set
         if the remote job fails for some reason.
         """
-        # time the duration of this node
-        time_info_start = time.time()
         self.id = id
         limiter[self.host].acquire()
+        # Start the time after we aquire the lock!
+        time_info_start = time.time()
         try:
             if killswitch.isSet():
                 logger.debug("Shutdown in progress: not starting remote job")
@@ -275,6 +275,7 @@ class ComputeJob(object):
             return 1
         finally:
             limiter[self.host].release()
+
         if process.returncode != 0:
             logger.error(
                 "Remote process %s %s failed on %s (status: %d)" % \
@@ -288,8 +289,10 @@ class ComputeJob(object):
         self.results["job_duration"] = str(time_info_end - time_info_start)
         self.results['returncode'] = process.returncode
 
-        logger.debug("compute.dispatch results job {0}: {1}".format(
-                    self.id, self.results))
+        logger.debug(
+            "compute.dispatch results job {0}: {1}: {2}, {3}: {4} ".format(
+              self.id, "job_duration", self.results["job_duration"],
+                     "returncode", self.results["returncode"] ))
         return process.returncode
 
 
@@ -376,18 +379,27 @@ class RemoteCommandRecipeMixIn(object):
         node_durations = local_document.createElement("nodes")
         for job_id, job in enumerate(jobs):
             # Test if the duration is there
+            # fixme the name of node_durations is not logical
             if "job_duration" in job.results:
                 child_node_duration = add_child(node_durations, "job")
                 child_node_duration.setAttribute("job_id", str(job_id))
                 child_node_duration.setAttribute("duration",
                      str(job.results["job_duration"]))
-                # return code if present (Not there on error
+
+                # return code if present (Not there on error)
                 if "returncode" in job.results:
                     child_node_duration.setAttribute(
                         "returncode", str(job.results['returncode']))
                 else:
                     child_node_duration.setAttribute(
                         "returncode", str(-1))
+
+                ## If there is 'node level' resource logging available
+                if "monitor_stats" in job.results:
+                      return_node = xml.parseString(
+                          job.results['monitor_stats']).documentElement
+
+                      child_node_duration.appendChild(return_node)
 
 
         # manually add the result xml as an ingredient output.

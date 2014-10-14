@@ -52,6 +52,9 @@ class SubProcessGroup(object):
             else:
                 self.logger.info("Subprocess started: {0}".format(cmd))
 
+            # return the create Popen pid for possible monitoring
+            return process.pid
+
         def wait_for_finish(self):
             """
             Wait for all the processes started in the current group to end.

@@ -15,6 +15,8 @@ import logging
 import logging.handlers
 import cPickle as pickle
 
+from lofarpipe.monitoring.poller import UsageStats
+
 def run_node(*args):
     """
     Run on node to automatically locate, instantiate and execute the
@@ -46,6 +48,7 @@ class LOFARnode(object):
         self.logport = int(logport)
         self.outputs = {}
         self.environment = os.environ
+        self.resourceMonitor = UsageStats(self.logger, 5.0)      
 
     def run_with_logging(self, *args):
         """
@@ -56,8 +59,13 @@ class LOFARnode(object):
             my_tcp_handler = logging.handlers.SocketHandler(self.loghost, self.logport)
             self.logger.addHandler(my_tcp_handler)
         try:
-            return self.run(*args)
+            self.resourceMonitor.start()
+            return_value = self.run(*args)
+            self.outputs["monitor_stats"] = \
+                    self.resourceMonitor.getStatsAsXmlString()
+            return return_value
         finally:
+            self.resourceMonitor.setStopFlag()
             if self.loghost:
                 my_tcp_handler.close()
                 self.logger.removeHandler(my_tcp_handler)
