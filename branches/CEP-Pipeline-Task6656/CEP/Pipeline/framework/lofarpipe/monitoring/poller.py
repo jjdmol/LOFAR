@@ -18,13 +18,14 @@ rb=`cat /proc/${PID}/io | grep read_bytes | awk '{print $2}'`
 wb=`cat /proc/${PID}/io | grep write_bytes | grep -v cancelled | awk '{print $2}'`
 cwb=`cat /proc/${PID}/io | grep cancelled_write_bytes | awk '{print $2}'`
 TIME=$(($(date +%s%3N))) 
-PSOUTPUT=($(ps -p ${PID}man -o %cpu,%mem ))  # could be gotten from proc. This works for now ( Optionally use resident -  man ps)
+PSOUTPUT=($(ps -p ${PID} -o %cpu,%mem | tail -n 1))  # could be gotten from proc. This works for now ( Optionally use resident -  man ps)
 # print the PID, TIME, executable, readbytes,writebytes,cancelled bytes, the cpu% , memory%
-echo "['${exe}', '$TIME','${rb}','${wb}','${cwb}','${PSOUTPUT[0]}','${PSOUTPUT[1]}']" #,  # The executable could be added as aditional information is very spammy though
+echo "['${exe}', '$TIME','${rb}','${wb}','${cwb}','${PSOUTPUT[0]}','${PSOUTPUT[1]}']" 
 """
 
+
 class UsageStats(threading.Thread):
-    def __init__(self, logger,  poll_interval):
+    def __init__(self, logger,  poll_interval=10.0):
         threading.Thread.__init__(self)
         self.logger = logger
         self.stopFlag = threading.Event()
@@ -64,6 +65,7 @@ class UsageStats(threading.Thread):
                            stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                            stderr=subprocess.PIPE)
                 out, err = pps.communicate()
+
                 parset_output = eval(out.rstrip()) # remove trailing white space
                 self.pid_stats[pid].append(parset_output)
 
@@ -98,6 +100,8 @@ class UsageStats(threading.Thread):
                     child_pid.setAttribute("executable", str(value[0][0]))
                     child_pid.setAttribute("pid", str(key))
                     for entry in value:
+                        if "MEM" in str(entry[6]):  # this is the default value
+                            continue
                         data_point = add_child(child_pid, "data_point")
                         data_point.setAttribute("timestamp", str(entry[1]))
                         data_point.setAttribute("read_bytes", str(entry[2]))

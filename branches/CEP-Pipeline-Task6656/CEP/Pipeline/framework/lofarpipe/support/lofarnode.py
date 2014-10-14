@@ -48,7 +48,7 @@ class LOFARnode(object):
         self.logport = int(logport)
         self.outputs = {}
         self.environment = os.environ
-        self.resourceMonitor = UsageStats(self.logger, 5.0)      
+        self.resourceMonitor = UsageStats(self.logger)      
 
     def run_with_logging(self, *args):
         """

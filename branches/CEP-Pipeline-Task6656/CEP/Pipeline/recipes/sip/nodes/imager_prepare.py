@@ -328,7 +328,8 @@ class imager_prepare(LOFARnodeTCP):
                             " ".join(command)))
 
                 # Add the command to the process group
-                rfi_console_proc_group.run(command, cwd = temp_slice_path)
+                pid = rfi_console_proc_group.run(command, cwd = temp_slice_path)
+                self.resourceMonitor.addPID(pid)
 
             # wait for all to finish
             if rfi_console_proc_group.wait_for_finish() != None:
