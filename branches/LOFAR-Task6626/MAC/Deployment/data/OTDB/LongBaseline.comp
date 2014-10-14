@@ -2,7 +2,7 @@
 #
 # Component description of LongBaseline configuration setting
 #
-# $Id: Imaging.comp 28119 2014-02-03 12:24:54Z schoenmakers $
+# $Id$
 #
 # name          name of the node
 # version       version of this node specification
@@ -36,5 +36,5 @@ node  LongBaseline      4.0.0  development  'node constraint'  "Long Baseline"
 #--------------------------------------------------------------------------------------------------------
 #   name                    dir. type   unit   prun. vm   value     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par slices_per_ms           I    uint    -     10    0    1           -      'Number of time slices per measurement set'
-par subbands_per_ms         I    uint    -     10    0    1           -      'Number of frequency subbands per measurement set'
+par subbandgroups_per_ms           I    uint    -     10    0    1           -      'Number of subband-groups to concat in a single measurement set'
+par subbands_per_subbandgroup      I    uint    -     10    0    1           -      'Number of subbands that will be concatenated in a group'
