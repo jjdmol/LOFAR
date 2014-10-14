@@ -208,7 +208,7 @@ class imager_prepare(LOFARnodeTCP):
              "." + os.path.basename("imager_prepare_ndppp"),
                   os.path.basename(ndppp)) as logger:
             catch_segfaults(cmd, working_dir, environment,
-                                  logger, cleanup = None)
+                                  logger, cleanup = None, usageStats=self.resourceMonitor)
 
     def _run_dppp(self, working_dir, time_slice_dir_path, slices_per_image,
                   copied_ms_map, subbands_per_image, collected_ms_dir_name, parset,
