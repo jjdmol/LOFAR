@@ -44,6 +44,7 @@ while getopts "hgGls:" opt; do
         ;;
   esac
 done
+[ $OPTIND -eq 1 ] && usage
 
 COBALT_VERSIONS_DIR=/localhome/lofar/lofar_versions
 
