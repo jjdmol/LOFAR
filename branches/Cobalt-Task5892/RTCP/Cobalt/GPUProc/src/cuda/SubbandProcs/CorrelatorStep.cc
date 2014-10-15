@@ -245,6 +245,10 @@ namespace LOFAR
           // TODO: make a lookup table for the expensive division; measure first
           float weight = nrValidSamples ? 1.0f / nrValidSamples : 0;  
 
+          // Apply the weight to this sample, turning the visibilities into the
+          // average visibility over the non-flagged samples.
+          //
+          // This step thus normalises the visibilities for any integration time.
           applyWeight(bl, ch, weight, output);
         }
       }
