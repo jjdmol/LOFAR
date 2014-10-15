@@ -23,6 +23,7 @@
     <Compile Include="framework\lofarpipe\process_monitoring\monitor.py" />
     <Compile Include="framework\lofarpipe\process_monitoring\output.py" />
     <Compile Include="framework\lofarpipe\process_monitoring\poller.py" />
+    <Compile Include="framework\lofarpipe\support\usagestats.py" />
     <Compile Include="framework\setup.py" />
     <Content Include="framework\lofarpipe\process_monitoring\config\defaults.cfg" />
     <Content Include="framework\lofarpipe\process_monitoring\config\poll_execute.sh" />

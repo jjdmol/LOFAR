@@ -1,3 +1,9 @@
+#                                                      LOFAR PIPELINE FRAMEWORK
+#
+#                                                               UsageStat class
+#                                                           Wouter Klijn, 2014
+#                                                               klijn@astron.nl
+# ------------------------------------------------------------------------------
 import threading 
 import time
 import subprocess
@@ -25,7 +31,25 @@ echo "['${exe}', '$TIME','${rb}','${wb}','${cwb}','${PSOUTPUT[0]}','${PSOUTPUT[1
 
 
 class UsageStats(threading.Thread):
-    def __init__(self, logger,  poll_interval=10.0):
+    """
+    Class used for monitoring resource usage of processes.
+    Each poll_interval mem, cpu and disk activity of trackeds pid is gathered
+
+    usage:
+    After initiation is must be started using the start()
+    Pids to monitor can be added with addPID
+    setStopFlag stop the monitor
+    The recorded data can be retrieved using the getStatsAsXmlString
+
+    Should be thread save (adding of pids is done in a lock)
+    Created temp files should be cleaned on keyboard intterupt
+    """
+    def __init__(self, logger=None,  poll_interval=10.0):
+        """
+        Create the usage stat object. Create events for starting and stopping.
+        By default the Process creating the object is tracked.
+        Default polling interval is 10 seconds
+        """
         threading.Thread.__init__(self)
         self.logger = logger
         self.stopFlag = threading.Event()
@@ -37,6 +61,16 @@ class UsageStats(threading.Thread):
         self.poll_interval = poll_interval
 
     def run(self):
+        """
+        Run function. 
+
+        While no stopflag is set:
+        Add the new PIDs that might have been added during the sleep
+        Create the bash script used for collecting data from os
+        Parse data and add to storage member
+        Remove the bash script 
+        sleep for poll_interval
+        """
         while not self.stopFlag.isSet():
             # *************************************
             # first add new to track pids to the active list
@@ -76,22 +110,36 @@ class UsageStats(threading.Thread):
 
 
     def addPID(self, pid):
+        """
+        Threadsave add a process id to track. It will be added at the next 
+        poll_interval
+        """
         self.lock.acquire()
         self.pid_in.append(pid)
         self.lock.release()
 
     def setStopFlag(self):
+        """
+        Stop the monitor
+        """
         self.stopFlag.set()
      
     def getStatsAsXmlString(self):
+        """
+        returns the collected data as a xml file
+        Data is cleaned and labeled according to the metric used.
+        """
         local_document = xml.Document()
         resource_stat_xml = local_document.createElement("resource_usage")
+        resource_stat_xml.setAttribute("node_recipe_pid",str(self.owner_pid))
 
         if not self.pid_stats:  # if there are no entries in the stats dict
             resource_stat_xml.setAttribute("noStatsRecorded", "true")
             return resource_stat_xml.toxml(encoding = "ascii")
         
         try:
+            # TODO: The returned values are not in order and the owner PID
+            # might not be printed with idx 0. Maybee print seperately
             for idx,(key,value) in enumerate(self.pid_stats.iteritems()):
                 #if there are entries
                 if value:  

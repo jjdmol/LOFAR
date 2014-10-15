@@ -208,7 +208,7 @@ class imager_prepare(LOFARnodeTCP):
              "." + os.path.basename("imager_prepare_ndppp"),
                   os.path.basename(ndppp)) as logger:
             catch_segfaults(cmd, working_dir, environment,
-                                  logger, cleanup = None, usageStats=self.resourceMonitor)
+                   logger, cleanup = None, usageStats=self.resourceMonitor)
 
     def _run_dppp(self, working_dir, time_slice_dir_path, slices_per_image,
                   copied_ms_map, subbands_per_image, collected_ms_dir_name, parset,
@@ -313,7 +313,8 @@ class imager_prepare(LOFARnodeTCP):
         create_directory(rfi_temp_dir)
 
         try:
-            rfi_console_proc_group = SubProcessGroup(self.logger)
+            rfi_console_proc_group = SubProcessGroup(self.logger,
+                                                self.resourceMonitor)
             for time_slice in time_slices:
                 # Each rfi console needs own working space for temp files
                 temp_slice_path = os.path.join(rfi_temp_dir,
@@ -328,8 +329,8 @@ class imager_prepare(LOFARnodeTCP):
                             " ".join(command)))
 
                 # Add the command to the process group
-                pid = rfi_console_proc_group.run(command, cwd = temp_slice_path)
-                self.resourceMonitor.addPID(pid)
+                rfi_console_proc_group.run(command, cwd = temp_slice_path)
+                
 
             # wait for all to finish
             if rfi_console_proc_group.wait_for_finish() != None:

@@ -15,7 +15,7 @@ import logging
 import logging.handlers
 import cPickle as pickle
 
-from lofarpipe.monitoring.poller import UsageStats
+from lofarpipe.support.usagestats import UsageStats
 
 def run_node(*args):
     """

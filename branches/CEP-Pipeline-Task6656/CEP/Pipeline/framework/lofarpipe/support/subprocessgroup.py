@@ -42,7 +42,7 @@ class SubProcessGroup(object):
 
             # add to resource monitor if available
             if self.usageStats:
-                self.usageStats.addPid(process.pid)
+                self.usageStats.addPID(process.pid)
 
 
             # TODO: SubProcessGroup could saturate a system with to much 

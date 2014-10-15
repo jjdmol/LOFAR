@@ -40,7 +40,8 @@ class imager_bbs(LOFARnodeTCP):
         source_db = sky_list[0].file[0] # the sourcedb is the first file entry
 
         try:
-            bbs_process_group = SubProcessGroup(self.logger)
+            bbs_process_group = SubProcessGroup(self.logger,
+                                  self.resourceMonitor)
             # *****************************************************************
             # 2. start the bbs executable with data
             for (measurement_set, parmdm) in zip(ms_map[0].file,
