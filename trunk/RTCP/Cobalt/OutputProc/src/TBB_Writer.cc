@@ -642,7 +642,7 @@ namespace LOFAR
       itsH5File.projectCOI().value = oss.str();
       itsH5File.projectContact().value = itsParset.getString("Observation.Campaign.contact", "");
 
-      itsH5File.observationID().value = formatString("%u", itsParset.observationID());
+      itsH5File.settings.observationID.value = formatString("%u", itsParset.settings.observationID);
 
       itsH5File.observationStartUTC().value = utcTimeStr(itsParset.startTime());
       itsH5File.observationStartMJD().value = toMJD(itsParset.startTime());
@@ -654,7 +654,7 @@ namespace LOFAR
       itsH5File.observationEndUTC().value = utcTimeStr(stopTime);
       itsH5File.observationEndMJD().value = toMJD(stopTime);
 
-      itsH5File.observationNofStations().value = itsParset.nrStations(); // TODO: SS beamformer?
+      itsH5File.observationNofStations().value = itsParset.settings.antennaFields.size(); // TODO: SS beamformer?
       // For the observation attribs, dump all stations participating in the observation (i.e. allStationNames(), not mergedStationNames()).
       // This may not correspond to which station HDF5 groups will be written for TBB, but that is true anyway, regardless of any merging.
       vector<string> allStNames(itsParset.allStationNames());
@@ -1218,7 +1218,7 @@ namespace LOFAR
     string TBB_Writer::createNewTBB_H5Filename(const TBB_Header& header, const string& stationName)
     {
       const string typeExt("tbb.h5");
-      string obsIDStr(formatString("%u", itsParset.observationID()));
+      string obsIDStr(formatString("%u", itsParset.settings.observationID));
 
       // Use the recording time of the first (received) frame as timestamp.
       struct timeval tv;

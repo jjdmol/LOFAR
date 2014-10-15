@@ -54,11 +54,11 @@ TEST(convertFlagsToChannelFlags)
   parset.updateSettings();
   
   // Input flags: an array of sparseset
-  MultiDimArray<LOFAR::SparseSet<unsigned>, 1> inputFlags(boost::extents[parset.nrStations()]);
+  MultiDimArray<LOFAR::SparseSet<unsigned>, 1> inputFlags(boost::extents[parset.settings.antennaFields.size()]);
 
   //// Insert some flag ranges
   //std::cout << "inputFlags.size(): " << inputFlags.size() << std::endl;
-  //std::cout << "parset.nrStations(): " << parset.nrStations() << std::endl;
+  //std::cout << "parset.settings.antennaFields.size(): " << parset.settings.antennaFields.size() << std::endl;
   inputFlags[0].include(62, 63);    // A. should result in channelflag (0,16) due to the filter width
   inputFlags[0].include(128, 129);  // B. Outside of the begin range result: (128 / 4) - 16 + 1 = 17 end 33
   inputFlags[0].include(255, 522);  // C. Flag all large ranges (48, 131)
@@ -67,7 +67,7 @@ TEST(convertFlagsToChannelFlags)
   inputFlags[1].include(100, 600); // E. Second station (10, 150)
   // The converted channel flags
   MultiDimArray<LOFAR::SparseSet<unsigned>, 2> flagsPerChanel(
-          boost::extents[parset.nrChannelsPerSubband()][parset.nrStations()]);
+          boost::extents[parset.settings.correlator.nrChannels][parset.settings.antennaFields.size()]);
 
   // ****** perform the translation
   CorrelatorStep::Flagger::convertFlagsToChannelFlags(parset, inputFlags, flagsPerChanel);

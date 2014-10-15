@@ -240,7 +240,7 @@ SUITE(StationMetaData) {
 
     // Just send everything to rank 0
     SubbandDistribution subbandDistribution;
-    for (size_t sb = 0; sb < ps.nrSubbands(); ++sb)
+    for (size_t sb = 0; sb < ps.settings.subbands.size(); ++sb)
       subbandDistribution[0].push_back(sb);
 
     // Compute meta data

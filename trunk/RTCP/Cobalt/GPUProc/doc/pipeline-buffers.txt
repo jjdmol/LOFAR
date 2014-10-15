@@ -23,6 +23,7 @@ For max size, we assume:
  - 48 stations
  - 1 subband
  - 1 second blocks (195312.5 samples) rounded to next multiple of 4096 (= 196608 samples).
+ - 10 integration periods/block (~0.1s integration time)
 
 Note:
   MiB = 2^20 bytes (= 1048576 bytes).
@@ -49,7 +50,7 @@ Delay compensation + Band pass + Transpose {I/O: delays}
    |            [station][channel][sample][pol]         [80][64][3072][2]   = 240 MiB               B
    V
 Correlator
-   |            [baseline][channel][pol][pol]           [3240][64][2][2]    =   6 MiB               E
+   |            [subblks][baseline][channel][pol][pol]  [10][3240][64][2][2]=  60 MiB               E
    V
 (output)
 
@@ -141,12 +142,17 @@ Incoherent Stokes
    V                                                    (float)
 (output)
 
+The buffers thus have the following sizes (in MiB) in the various observational modes:
 
-A = 144 MiB
-B = 144 MiB
-C = 3 MiB * #coherent TABs
-D = 3 MiB * #coherent TABs
-E = 144 MiB
+buffer |       bf | corr | commensal 
+-------+----------+------+--------------
+A      |      144 | 120  |      144
+B      |      144 | 240  |      240
+C      | 3 * #TAB |   -  | 3 * #TAB
+D      | 3 * #TAB |   -  | 3 * #TAB
+E      |        - | 240  |      240
+
+#TAB = number of coherent TABs (for one subband)
 
 The WQ has 1791 MiB GPU memory available, because we have 2 WQ's per GPU core,
 and (according to nvidia-smi) we have 3583 MiB GPU memory per core.
@@ -159,5 +165,5 @@ So, the maximum number of TABs that we can form is: (1791 - 288) MiB / (2 * 3 Mi
 Corr+BF:
 ---------
 Since we can form more than 48 TABs, the size of buffers C and D are determined by the number of TABs. 
-So, the maximum number of TABs that we can form is: (1791 - 432) MiB / (2 * 3 MiB/TAB) >= 226 TABs.
+So, the maximum number of TABs that we can form is: (1791 - 624) MiB / (2 * 3 MiB/TAB) >= 194 TABs.
 

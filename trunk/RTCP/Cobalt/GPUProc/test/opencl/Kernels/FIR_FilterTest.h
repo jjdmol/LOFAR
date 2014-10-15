@@ -41,10 +41,10 @@ namespace LOFAR
             	bool testOk = true;
 
                 MultiArraySharedBuffer<float, 5> filteredData(
-                    boost::extents[ps.nrStations()][NR_POLARIZATIONS][ps.nrSamplesPerChannel()][ps.nrChannelsPerSubband()][ps.nrBytesPerComplexSample()],
+                    boost::extents[ps.settings.antennaFields.size()][NR_POLARIZATIONS][ps.nrSamplesPerChannel()][ps.nrChannelsPerSubband()][ps.nrBytesPerComplexSample()],
                     queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY);
                 MultiArraySharedBuffer<signed char, 5> inputSamples(
-                    boost::extents[ps.nrStations()][ps.nrPPFTaps() - 1 + ps.nrSamplesPerChannel()][ps.nrChannelsPerSubband()][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()],
+                    boost::extents[ps.settings.antennaFields.size()][ps.nrPPFTaps() - 1 + ps.nrSamplesPerChannel()][ps.nrChannelsPerSubband()][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()],
                     queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY);
                 MultiArraySharedBuffer<float, 2> firWeights(
                     boost::extents[ps.nrChannelsPerSubband()][ps.nrPPFTaps()],
@@ -94,7 +94,7 @@ namespace LOFAR
                     }
                 }
 
-                for (station = 0; station < ps.nrStations(); station++) {
+                for (station = 0; station < ps.settings.antennaFields.size(); station++) {
                     for (sample = ps.nrPPFTaps() - 1; sample < ps.nrPPFTaps() - 1 + ps.nrSamplesPerChannel(); sample += 2 * ps.nrPPFTaps()) {
                         for (ch = 0; ch < ps.nrChannelsPerSubband(); ch++) {
                             for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
@@ -111,7 +111,7 @@ namespace LOFAR
 
                 // Expected output: sequences of (filterbank scaled by station nr, NR_TAPS zeros)
                 unsigned nrErrors = 0;
-                for (station = 0; station < ps.nrStations(); station++) {
+                for (station = 0; station < ps.settings.antennaFields.size(); station++) {
                     for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
                         unsigned s;
                         for (sample = 0; sample < ps.nrSamplesPerChannel() / (2 * ps.nrPPFTaps()); sample += s) {
@@ -168,7 +168,7 @@ namespace LOFAR
                     }
                 }
 
-                for (station = 0; station < ps.nrStations(); station++) {
+                for (station = 0; station < ps.settings.antennaFields.size(); station++) {
                     for (sample = 0; sample < ps.nrPPFTaps() - 1 + ps.nrSamplesPerChannel(); sample++) {
                         for (ch = 0; ch < ps.nrChannelsPerSubband(); ch++) {
                             for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
@@ -186,7 +186,7 @@ namespace LOFAR
 
                 nrErrors = 0;
                 const float eps = 2.0f * std::numeric_limits<float>::epsilon();
-                for (station = 0; station < ps.nrStations(); station++) {
+                for (station = 0; station < ps.settings.antennaFields.size(); station++) {
                     for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
                         for (sample = 0; sample < ps.nrSamplesPerChannel(); sample++) {
                             for (ch = 0; ch < ps.nrChannelsPerSubband(); ch++) {

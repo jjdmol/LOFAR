@@ -51,12 +51,12 @@ int main() {
   Parset ps("tCorrelatorSubbandProcProcessSb.parset");
 
   // Input info
-  const size_t nrBeams = ps.nrBeams();
-  const size_t nrStations = ps.nrStations();
+  const size_t nrBeams = ps.settings.SAPs.size();
+  const size_t nrStations = ps.settings.antennaFields.size();
   const size_t nrPolarisations = ps.settings.nrPolarisations;
   const size_t maxNrTABsPerSAP = ps.settings.beamFormer.maxNrTABsPerSAP();
-  const size_t nrSamplesPerChannel = ps.nrSamplesPerChannel();
-  const size_t nrSamplesPerSubband = ps.nrSamplesPerSubband();
+  const size_t nrSamplesPerChannel = ps.settings.correlator.nrSamplesPerIntegration();
+  const size_t nrSamplesPerSubband = ps.settings.blockSize;
   const size_t nrBitsPerSample = ps.settings.nrBitsPerSample;
   const size_t nrBytesPerComplexSample = ps.nrBytesPerComplexSample();
   const fcomplex inputValue(1,1);
@@ -68,8 +68,8 @@ int main() {
   const size_t nrBaselines = nrStations * (nrStations + 1) / 2;
   const size_t nrBlocksPerIntegration = 
     ps.settings.correlator.nrBlocksPerIntegration;
-  const size_t nrChannelsPerSubband = ps.nrChannelsPerSubband();
-  const size_t integrationSteps = ps.integrationSteps();
+  const size_t nrChannelsPerSubband = ps.settings.correlator.nrChannels;
+  const size_t integrationSteps = ps.settings.correlator.nrSamplesPerIntegration();
   const size_t scaleFactor = nrBitsPerSample == 16 ? 1 : 16;
 
   // The output is the correlation-product of two inputs (with identical
@@ -115,7 +115,7 @@ int main() {
     "\n  scaleFactor = " << scaleFactor << 
     "\n  outputValue = " << outputValue <<
     "\n  ----------------------------" <<
-    "\n  Total bytes = " << out.correlatedData.size());
+    "\n  Total bytes = " << out.correlatedData.subblocks[0]->visibilities.size());
 
   // Initialize synthetic input to all (1, 1).
   for (size_t st = 0; st < nrStations; st++)
@@ -165,9 +165,9 @@ int main() {
     for (size_t c = 0; c < nrChannelsPerSubband; c++)
       for (size_t pol0 = 0; pol0 < nrPolarisations; pol0++)
         for (size_t pol1 = 0; pol1 < nrPolarisations; pol1++)
-          ASSERTSTR(fpEquals(out.correlatedData[b][c][pol0][pol1], outputValue),
+          ASSERTSTR(fpEquals(out.correlatedData.subblocks[0]->visibilities[b][c][pol0][pol1], outputValue),
                     "out[" << b << "][" << c << "][" << pol0 << 
-                    "][" << pol1 << "] = " << out.correlatedData[b][c][pol0][pol1] << 
+                    "][" << pol1 << "] = " << out.correlatedData.subblocks[0]->visibilities[b][c][pol0][pol1] << 
                     "; outputValue = " << outputValue);
 
   LOG_INFO("Test OK");

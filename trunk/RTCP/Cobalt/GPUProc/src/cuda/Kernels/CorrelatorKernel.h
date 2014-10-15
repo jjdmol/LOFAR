@@ -49,7 +49,9 @@ namespace LOFAR
         unsigned nrBaselines() const;
 
         unsigned nrChannels;
-        unsigned nrSamplesPerChannel;
+        unsigned nrSamplesPerIntegration;
+        unsigned nrIntegrationsPerBlock;
+        size_t nrSamplesPerBlock() const;
 
         size_t bufferSize(BufferType bufferType) const;
       };
