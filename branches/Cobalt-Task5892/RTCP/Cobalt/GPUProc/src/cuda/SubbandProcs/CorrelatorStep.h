@@ -115,7 +115,7 @@ namespace LOFAR
 
         // 2.1 Apply the supplied weight to the complex values in the channel
         // and baseline
-        static void applyNrValidSamples(unsigned baseline, unsigned channel,
+        static void applyWeight(unsigned baseline, unsigned channel,
                                 float weight, LOFAR::Cobalt::CorrelatedData &output);
       private:
         template<typename T>

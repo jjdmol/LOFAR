@@ -218,7 +218,7 @@ namespace LOFAR
     }
 
 
-    void CorrelatorStep::Flagger::applyNrValidSamples(unsigned baseline, 
+    void CorrelatorStep::Flagger::applyWeight(unsigned baseline, 
       unsigned channel, float weight, LOFAR::Cobalt::CorrelatedData &output)
     {
       for(unsigned pol1 = 0; pol1 < NR_POLARIZATIONS; ++pol1)
@@ -245,7 +245,7 @@ namespace LOFAR
           // TODO: make a lookup table for the expensive division; measure first
           float weight = nrValidSamples ? 1.0f / nrValidSamples : 0;  
 
-          applyNrValidSamples(bl, ch, weight, output);
+          applyWeight(bl, ch, weight, output);
         }
       }
     }

@@ -351,7 +351,7 @@ TEST(applyNrValidSamples)
            visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2] = std::complex<float>(1,0);
         
   //  multiply all polarization in sb 0 channel 0 with 0,5
-  CorrelatorStep::Flagger::applyNrValidSamples(0,0,0.5, *output.subblocks[0]);
+  CorrelatorStep::Flagger::applyWeight(0,0,0.5, *output.subblocks[0]);
 
   //sb 0 should be (0.5, 0)
   CHECK_EQUAL(std::complex<float>(0.5,0), visibilities[0][0][0][0]);
