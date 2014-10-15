@@ -90,7 +90,7 @@ TEST(propagateFlags)
   CorrelatorStep::Flagger::propagateFlags(parset, inputFlags, output);
 
   // now perform weighting of the data based on the number of valid samples
-  CorrelatorStep::Flagger::applyWeights(parset, *output.subblocks[0]);  
+  CorrelatorStep::Flagger::applyNrValidSampless(parset, *output.subblocks[0]);  
   // *********************************************************************************************
 
   // Now validate the functionality:
@@ -153,7 +153,7 @@ TEST(propagateFlags)
 }
 
 
-TEST(calcWeights4Channels)
+TEST(calcNrValidSamples4Channels)
 {
   // Create a parset with the needed parameters
   Parset parset;
@@ -191,7 +191,7 @@ TEST(calcWeights4Channels)
   flagsPerChannel[1][1].include(111,120);//E. second station flags
   
   //propageFlags
-  CorrelatorStep::Flagger::calcWeights(parset, flagsPerChannel, output);
+  CorrelatorStep::Flagger::calcNrValidSamples(parset, flagsPerChannel, output);
   
   // Now check that the flags are correctly set in the ouput object
 
@@ -205,7 +205,7 @@ TEST(calcWeights4Channels)
   CHECK_EQUAL(0u, output.subblocks[0]->getNrValidSamples(2,0)); // all flagged in station 2
 }
 
-TEST(calcWeights1Channels)
+TEST(calcNrValidSamples1Channels)
 {
   // on channel so the zero channel should be filled with the flags!!
   // Create a parset with the needed parameters
@@ -243,7 +243,7 @@ TEST(calcWeights1Channels)
   flagsPerChannel[0][1].include(111,120);//E. second station flags
   
   //propageFlags
-  CorrelatorStep::Flagger::calcWeights(parset, flagsPerChannel, output);
+  CorrelatorStep::Flagger::calcNrValidSamples(parset, flagsPerChannel, output);
   
   // Now check that the flags are correctly set in the ouput object
   // channel is 1 so no time resolution loss!!
@@ -252,7 +252,7 @@ TEST(calcWeights1Channels)
   CHECK_EQUAL(247u, output.subblocks[0]->getNrValidSamples(2,0)); // 9 flagged in station 2  
 }
 
-TEST(applyWeights)
+TEST(applyNrValidSampless)
 {
   // Create a parset with the needed parameters
   Parset parset;
@@ -292,7 +292,7 @@ TEST(applyWeights)
   output.subblocks[0]->setNrValidSamples(0,1,n_valid_samples); //baseline 0, channel 1
   output.subblocks[0]->setNrValidSamples(1,1,256); //baseline 1, channel 1
   output.subblocks[0]->setNrValidSamples(2,1,0); //baseline 0, channel 1
-  CorrelatorStep::Flagger::applyWeights(parset, *output.subblocks[0]);
+  CorrelatorStep::Flagger::applyNrValidSampless(parset, *output.subblocks[0]);
 
   // 4 channels: therefore the chanel zero should be zero
   CHECK_EQUAL(std::complex<float>(0,0), visibilities[0][0][0][0]);
@@ -311,7 +311,7 @@ TEST(applyWeights)
   CHECK_EQUAL(std::complex<float>(0,0), visibilities[2][1][1][1]);
 }
 
-TEST(applyWeight)
+TEST(applyNrValidSamples)
 {
     // on channel so the zero channel should be filled with the flags!!
   // Create a parset with the needed parameters
@@ -351,7 +351,7 @@ TEST(applyWeight)
            visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2] = std::complex<float>(1,0);
         
   //  multiply all polarization in sb 0 channel 0 with 0,5
-  CorrelatorStep::Flagger::applyWeight(0,0,0.5, *output.subblocks[0]);
+  CorrelatorStep::Flagger::applyNrValidSamples(0,0,0.5, *output.subblocks[0]);
 
   //sb 0 should be (0.5, 0)
   CHECK_EQUAL(std::complex<float>(0.5,0), visibilities[0][0][0][0]);

@@ -137,7 +137,7 @@ namespace LOFAR
 
       // Calculate the number of flags per baseline and assign to
       // output object.
-      calcWeights(parset, flagsPerChannel, output);
+      calcNrValidSamples(parset, flagsPerChannel, output);
     }
 
 
@@ -151,7 +151,7 @@ namespace LOFAR
       }
     }
 
-    template<typename T> void CorrelatorStep::Flagger::calcWeights(
+    template<typename T> void CorrelatorStep::Flagger::calcNrValidSamples(
       Parset const &parset,
       MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
       SubbandProcOutputData::CorrelatedData &output)
@@ -197,28 +197,28 @@ namespace LOFAR
     }
 
 
-    void CorrelatorStep::Flagger::calcWeights(
+    void CorrelatorStep::Flagger::calcNrValidSamples(
       Parset const &parset,
       MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
       SubbandProcOutputData::CorrelatedData &output)
     {
       switch (output.subblocks[0]->itsNrBytesPerNrValidSamples) {
         case 4:
-          calcWeights<uint32_t>(parset, flagsPerChannel, output);
+          calcNrValidSamples<uint32_t>(parset, flagsPerChannel, output);
           break;
 
         case 2:
-          calcWeights<uint16_t>(parset, flagsPerChannel, output);
+          calcNrValidSamples<uint16_t>(parset, flagsPerChannel, output);
           break;
 
         case 1:
-          calcWeights<uint8_t>(parset, flagsPerChannel, output);
+          calcNrValidSamples<uint8_t>(parset, flagsPerChannel, output);
           break;
       }
     }
 
 
-    void CorrelatorStep::Flagger::applyWeight(unsigned baseline, 
+    void CorrelatorStep::Flagger::applyNrValidSamples(unsigned baseline, 
       unsigned channel, float weight, LOFAR::Cobalt::CorrelatedData &output)
     {
       for(unsigned pol1 = 0; pol1 < NR_POLARIZATIONS; ++pol1)
@@ -228,7 +228,7 @@ namespace LOFAR
 
 
     template<typename T> void 
-    CorrelatorStep::Flagger::applyWeights(Parset const &parset,
+    CorrelatorStep::Flagger::applyNrValidSampless(Parset const &parset,
                                                  LOFAR::Cobalt::CorrelatedData &output)
     {
       for (unsigned bl = 0; bl < output.itsNrBaselines; ++bl)
@@ -245,26 +245,26 @@ namespace LOFAR
           // TODO: make a lookup table for the expensive division; measure first
           float weight = nrValidSamples ? 1.0f / nrValidSamples : 0;  
 
-          applyWeight(bl, ch, weight, output);
+          applyNrValidSamples(bl, ch, weight, output);
         }
       }
     }
 
 
-    void CorrelatorStep::Flagger::applyWeights(Parset const &parset,
+    void CorrelatorStep::Flagger::applyNrValidSampless(Parset const &parset,
                                                  LOFAR::Cobalt::CorrelatedData &output)
     {
       switch (output.itsNrBytesPerNrValidSamples) {
         case 4:
-          applyWeights<uint32_t>(parset, output);  
+          applyNrValidSampless<uint32_t>(parset, output);  
           break;
 
         case 2:
-          applyWeights<uint16_t>(parset, output);  
+          applyNrValidSampless<uint16_t>(parset, output);  
           break;
 
         case 1:
-          applyWeights<uint8_t>(parset, output);  
+          applyNrValidSampless<uint8_t>(parset, output);  
           break;
       }
     }
@@ -416,7 +416,7 @@ namespace LOFAR
       // The flags are already copied to the correct location
       // now the flagged amount should be applied to the visibilities
       for (size_t i = 0; i < ps.settings.correlator.nrIntegrationsPerBlock; ++i) {
-        Flagger::applyWeights(ps, *output.correlatedData.subblocks[i]);  
+        Flagger::applyNrValidSampless(ps, *output.correlatedData.subblocks[i]);  
       }
 
       return true;
