@@ -31,6 +31,7 @@
 #include <Common/LofarLogger.h>
 
 #include <CoInterface/BlockID.h>
+#include <CoInterface/fpequals.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <GPUProc/Kernels/CorrelatorKernel.h>
@@ -43,14 +44,6 @@ using namespace LOFAR::TYPES;
 using LOFAR::Exception;
 
 Exception::TerminateHandler t(Exception::terminate);
-
-template<typename T> bool equals(const T a, const T b, const double eps = 0) {
-  return (a >= b ? a - b : b - a) <= eps;
-}
-
-template<> bool equals<dcomplex>(const dcomplex a, const dcomplex b, const double eps) {
-  return equals(real(a),real(b),eps) && equals(imag(a),imag(b),eps);
-}
 
 dcomplex correlate( const dcomplex s1, const dcomplex s2 )
 {
@@ -129,13 +122,21 @@ void runTest(
                 //LOG_INFO_STR(sum);
               }
 
-              ASSERTSTR(equals(
+              /* We compare relative to the sum we're expecting, NOT relative
+               * to the sum itself. This is due to the fact that summing positive
+               * and negative numbers results in a smaller sum, but not necessarily
+               * in a better precision.
+               */
+
+              ASSERTSTR(fpEquals(
                   static_cast<dcomplex>(hOutput[i][b][c][p1][p2]),
                   sum,
 
                   // sum(1..t) is O(t^2), and correlating is again O(t^2)
                   // precision of float is 2^24
-                  pow(2 * BLOCKSIZE * NR_STATIONS, 4)/pow(2,24)),
+                  pow(BLOCKSIZE * NR_STATIONS, 4)/pow(2,24),
+                  true,
+                  false),
 
                   "For "
                     << NR_STATIONS << " stations, "
