@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
   }
 
   Parset parset(argv[1]);
-  MACIO::RTmetadata rtmd(parset.observationID(), "", ""); // dummy
+  MACIO::RTmetadata rtmd(parset.settings.observationID, "", ""); // dummy
 
   // Process correlated data
   if (parset.settings.correlator.enabled) {

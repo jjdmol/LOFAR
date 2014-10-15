@@ -40,7 +40,7 @@ namespace LOFAR
       itsLogPrefix(logPrefix + "[InputThread] "),
       itsInputDescriptor(getStreamDescriptorBetweenIONandStorage(parset, CORRELATED_DATA, streamNr)),
       itsOutputPool(outputPool),
-      itsDeadline(parset.realTime() ? parset.stopTime() : 0)
+      itsDeadline(parset.settings.realTime ? parset.settings.stopTime : 0)
     {
     }
 

@@ -53,7 +53,7 @@ int main() {
   params.nrDelayCompensationChannels = 64; // unused
   params.nrHighResolutionChannels = 4096;
   params.nrSamplesPerChannel = 
-    ps.nrSamplesPerSubband() / params.nrHighResolutionChannels;
+    ps.settings.blockSize / params.nrHighResolutionChannels;
 
   KernelFactory<BandPassCorrectionKernel> factory(params);
 

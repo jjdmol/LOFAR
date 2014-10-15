@@ -64,9 +64,9 @@ namespace LOFAR
 
     void UHEP_Pipeline::doWork()
     {
-      float delaysAtBegin[ps.nrBeams()][ps.nrStations()][NR_POLARIZATIONS] __attribute__((aligned(32)));
-      float delaysAfterEnd[ps.nrBeams()][ps.nrStations()][NR_POLARIZATIONS] __attribute__((aligned(32)));
-      float phaseOffsets[ps.nrStations()][NR_POLARIZATIONS] __attribute__((aligned(32)));
+      float delaysAtBegin[ps.nrBeams()][ps.settings.antennaFields.size()][NR_POLARIZATIONS] __attribute__((aligned(32)));
+      float delaysAfterEnd[ps.nrBeams()][ps.settings.antennaFields.size()][NR_POLARIZATIONS] __attribute__((aligned(32)));
+      float phaseOffsets[ps.settings.antennaFields.size()][NR_POLARIZATIONS] __attribute__((aligned(32)));
 
       memset(delaysAtBegin, 0, sizeof delaysAtBegin);
       memset(delaysAfterEnd, 0, sizeof delaysAfterEnd);

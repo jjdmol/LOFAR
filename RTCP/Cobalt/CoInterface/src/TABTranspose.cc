@@ -612,7 +612,7 @@ MultiSender::MultiSender( const HostMap &hostMap, const Parset &parset,
 
 MultiSender::~MultiSender()
 {
-  LOG_INFO_STR("MultiSender: realTime = " << itsParset.realTime() << ", maxRetentionTime = " << maxRetentionTime);
+  LOG_INFO_STR("MultiSender: realTime = " << itsParset.settings.realTime << ", maxRetentionTime = " << maxRetentionTime);
   for (HostMap::const_iterator i = hostMap.begin(); i != hostMap.end(); ++i) {
     LOG_INFO_STR("MultiSender: [file " << i->first << " to " << i->second.hostName << "] Dropped " << drop_rates.at(i->first).mean() << "% of the data");
   }
@@ -676,13 +676,10 @@ bool MultiSender::append( SmartPtr<struct Subband> &subband )
 
   SmartPtr< Queue< SmartPtr<struct Subband> > > &queue = queues.at(host);
 
-  const size_t globalSubbandIdx = subband->id.subband +
-      itsParset.settings.beamFormer.files[fileIdx].firstSubbandIdx;
-
   bool dropped = false;
 
   // If oldest packet in queue is too old, drop it in lieu of this new one
-  if (itsParset.realTime() && TimeSpec::now() - queue->oldest() > maxRetentionTime) {
+  if (itsParset.settings.realTime && TimeSpec::now() - queue->oldest() > maxRetentionTime) {
     drop_rates.at(fileIdx).push(100.0);
 
     // remove oldest item

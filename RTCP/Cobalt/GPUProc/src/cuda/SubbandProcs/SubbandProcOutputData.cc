@@ -45,9 +45,10 @@ namespace LOFAR
         : boost::extents[0][0][0][0],
         context, 0),
 
-      correlatedData(ps.settings.correlator.enabled ? ps.settings.antennaFields.size()           : 0,
-                     ps.settings.correlator.enabled ? ps.settings.correlator.nrChannels          : 0,
-                     ps.settings.correlator.enabled ? ps.settings.correlator.nrSamplesPerChannel : 0,
+      correlatedData(ps.settings.correlator.enabled ? ps.settings.correlator.nrIntegrationsPerBlock    : 0,
+                     ps.settings.correlator.enabled ? ps.settings.antennaFields.size()                 : 0,
+                     ps.settings.correlator.enabled ? ps.settings.correlator.nrChannels                : 0,
+                     ps.settings.correlator.enabled ? ps.settings.correlator.nrSamplesPerIntegration() : 0,
                      context),
       emit_correlatedData(false)
     {
@@ -55,21 +56,28 @@ namespace LOFAR
 
 
     SubbandProcOutputData::CorrelatedData::CorrelatedData(
+      unsigned nrIntegrations, 
       unsigned nrStations, unsigned nrChannels,
       unsigned maxNrValidSamples, gpu::Context &context)
       :
-      MultiDimArrayHostBuffer<fcomplex, 4>(
+      data(
         boost::extents
+        [nrIntegrations]
         [nrStations * (nrStations + 1) / 2]
         [nrChannels][NR_POLARIZATIONS]
         [NR_POLARIZATIONS], 
         context, 0),
-      LOFAR::Cobalt::CorrelatedData(nrStations, nrChannels, 
-                     maxNrValidSamples, this->origin(),
-                     this->num_elements(), heapAllocator, 1)
+      subblocks(nrIntegrations)
     {
+      for (size_t i = 0; i < nrIntegrations; ++i) {
+        const size_t num_elements = data.strides()[0];
+
+        subblocks[i] = new LOFAR::Cobalt::CorrelatedData(
+                       nrStations, nrChannels, maxNrValidSamples,
+                       &data[i][0][0][0][0], num_elements,
+                       heapAllocator, 1);
+      }
     }
   }
 }
-
 

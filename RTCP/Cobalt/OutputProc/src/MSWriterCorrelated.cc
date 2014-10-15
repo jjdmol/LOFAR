@@ -121,7 +121,7 @@ namespace LOFAR
       itsNrBlocksWritten++;
 
       itsConfiguration.replace("size",     str(format("%u") % getDataSize()));
-      itsConfiguration.replace("duration", str(format("%f") % ((data->sequenceNumber() + 1) * itsParset.IONintegrationTime())));
+      itsConfiguration.replace("duration", str(format("%f") % ((data->sequenceNumber() + 1) * itsParset.settings.correlator.integrationTime())));
       itsConfiguration.replace("percentageWritten", str(format("%u") % percentageWritten()));
     }
 
