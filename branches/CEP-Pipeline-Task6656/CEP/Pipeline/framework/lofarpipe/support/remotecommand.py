@@ -383,6 +383,7 @@ class RemoteCommandRecipeMixIn(object):
             if "job_duration" in job.results:
                 child_node_duration = add_child(node_durations, "job")
                 child_node_duration.setAttribute("job_id", str(job_id))
+                child_node_duration.setAttribute("job_host", str(job.host))
                 child_node_duration.setAttribute("duration",
                      str(job.results["job_duration"]))
 
