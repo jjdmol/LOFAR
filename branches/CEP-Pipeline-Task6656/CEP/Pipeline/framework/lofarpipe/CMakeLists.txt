@@ -2,15 +2,6 @@
 
 include(PythonInstall)
 
-install(FILES
-  monitoring/config/defaults.dat
-  
-  DESTINATION lofarpipe)
-  
-install(PROGRAMS
-  monitoring/config/poll_execute.sh
-  DESTINATION bin)
-
 python_install(
   __init__.py
   cuisine/__init__.py

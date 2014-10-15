@@ -54,8 +54,7 @@ class imager_bbs(LOFARnodeTCP):
                 self.logger.info("Executing bbs command: {0}".format(" ".join(
                             command)))
 
-                pid = bbs_process_group.run(command)
-                self.resourceMonitor.addPID(pid)
+                bbs_process_group.run(command)
 
             # *****************************************************************
             # 3. check status of the processes
