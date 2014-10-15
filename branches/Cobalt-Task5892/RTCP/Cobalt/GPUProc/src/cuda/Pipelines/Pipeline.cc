@@ -702,26 +702,36 @@ namespace LOFAR
           }
         }
 
-        // Return outputData back to the subbandProc.
+        /*
+         * Forward the output to writeCorrelatedOutput (if visibilities are produced).
+         *
+         * Note that loss of throughput must be detected here, since writeCorrelatedOutput()
+         * can freeze in its write() routine. Detecting correlator loss here also allows
+         * us to derive a global loss figure for this subband.
+         */
         if (ps.settings.correlator.enabled) {
           const double maxRetentionTime = 3.0 + ps.settings.blockDuration();
           using namespace TimeSpec;
           if (ps.settings.realTime && TimeSpec::now() - outputQueue.oldest() > maxRetentionTime) {
-            // Drop
+            // Drop: return outputData back to the subbandProc.
             spillQueue.append(data);
             correlatorLoss.dropping = true;
             correlatorLoss.blocksDropped++;
           } else {
-            // Forward to correlator
+            // Forward to writeCorrelatedOutput
             outputQueue.append(data);
             correlatorLoss.blocksWritten++;
           }
         } else {
+          // Return outputData back to the subbandProc.
           spillQueue.append(data);
         }
 
         ASSERT(!data);
 
+        /*
+         * Update the loss figures for this subband.
+         */
         const double blockDuration = ps.settings.blockDuration();
 
         // Prevent division by zero for observations without beam former
