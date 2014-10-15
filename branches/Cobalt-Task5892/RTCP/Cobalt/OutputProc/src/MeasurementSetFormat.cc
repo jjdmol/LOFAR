@@ -113,7 +113,7 @@ namespace LOFAR
       itsStartTime = toMJDs(itsPS.settings.startTime);
 
       itsTimeStep = itsPS.settings.correlator.integrationTime();
-      itsNrTimes = itsPS.settings.correlator.nrIntegrationsPerBlock * itsPS.settings.nrBlocks();
+      itsNrTimes = itsPS.settings.correlator.nrIntegrations;
     }
 
 

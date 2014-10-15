@@ -293,7 +293,7 @@ namespace LOFAR
 #endif
       }
 
-      itsNrExpectedBlocks = itsParset.settings.nrBlocks() * itsParset.settings.correlator.nrIntegrationsPerBlock;
+      itsNrExpectedBlocks = itsParset.settings.correlator.nrIntegrations;
     }
 
 

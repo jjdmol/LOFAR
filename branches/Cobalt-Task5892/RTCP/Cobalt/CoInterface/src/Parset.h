@@ -410,6 +410,12 @@ namespace LOFAR
         // key: Cobalt.Correlator.nrIntegrationsPerBlock
         size_t nrIntegrationsPerBlock;
 
+        // The number of integrations that will be emitted between
+        // the start and end time of the observation. This is the
+        // expected number of CorrelatedData blocks written in the
+        // MeasurementSet.
+        size_t nrIntegrations;
+
         // The number of samples to integrate over.
         size_t nrSamplesPerIntegration() const;
 

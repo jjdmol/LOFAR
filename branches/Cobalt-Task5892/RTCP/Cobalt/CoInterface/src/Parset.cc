@@ -502,6 +502,10 @@ namespace LOFAR
         // of a block, but never both.
         ASSERT(settings.correlator.nrBlocksPerIntegration == 1 || settings.correlator.nrIntegrationsPerBlock == 1);
 
+        settings.correlator.nrIntegrations = settings.nrBlocks()
+                                           * settings.correlator.nrIntegrationsPerBlock
+                                           / settings.correlator.nrBlocksPerIntegration;
+
         // super-station beam former
         //
         // TODO: Super-station beam former is unused, so will likely be
