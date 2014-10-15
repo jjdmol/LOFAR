@@ -264,7 +264,7 @@ def catch_segfaults(cmd, cwd, env, logger, max = 1, cleanup = lambda: None,
             logger.debug("Retrying...")
         logger.debug("Running: %s" % (' '.join(cmd),))
         process = spawn_process(cmd, logger, cwd, env)
-        // add the created process to the usageStat object
+        #add the created process to the usageStat object
         if usageStats:
             usageStats.addPID(process.pid)
 
