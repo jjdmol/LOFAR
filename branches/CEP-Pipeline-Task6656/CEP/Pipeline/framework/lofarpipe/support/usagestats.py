@@ -15,18 +15,17 @@ import xml.dom.minidom as xml
 
 
 poller_string = """
-#! /bin/bash
+#!/bin/bash -e
 
-PID=$(echo $1)
-uid=`ls -ld /proc/${PID} | awk '{ print $3 }' `
-exe=` ls -l /proc/${PID}/exe | awk '{print $10}'`
-rb=`cat /proc/${PID}/io | grep read_bytes | awk '{print $2}'`
-wb=`cat /proc/${PID}/io | grep write_bytes | grep -v cancelled | awk '{print $2}'`
-cwb=`cat /proc/${PID}/io | grep cancelled_write_bytes | awk '{print $2}'`
-TIME=$(($(date +%s%3N))) 
-PSOUTPUT=($(ps -p ${PID} -o %cpu,%mem | tail -n 1))  # could be gotten from proc. This works for now ( Optionally use resident -  man ps)
-# print the PID, TIME, executable, readbytes,writebytes,cancelled bytes, the cpu% , memory%
-echo "['${exe}', '$TIME','${rb}','${wb}','${cwb}','${PSOUTPUT[0]}','${PSOUTPUT[1]}']" 
+PID=$1
+exe=$(readlink /proc/${PID}/exe)
+rb=$(grep ^read_bytes /proc/${PID}/io | awk '{print $2}')
+wb=$(grep ^write_bytes /proc/${PID}/io | awk '{print $2}')
+cwb=$(grep ^cancelled_write_bytes /proc/${PID}/io | awk '{print $2}')
+TIME=$(date +%s%3N) 
+PSOUT=($(ps -p ${PID} --no-header -o %cpu,%mem))  # could be gotten from proc. This works for now ( Optionally use resident -  man ps)
+# print executable, TIME, readbytes, writebytes, cancelled bytes, %cpu, %memory
+echo "['${exe}','${TIME}','${rb}','${wb}','${cwb}','${PSOUT[0]}','${PSOUT[1]}']"
 """
 
 
@@ -36,14 +35,16 @@ class UsageStats(threading.Thread):
     Each poll_interval mem, cpu and disk activity of trackeds pid is gathered
 
     usage:
-    After initiation is must be started using the start()
+    After initiation it must be started using the start() method
     Pids to monitor can be added with addPID
-    setStopFlag stop the monitor
+    setStopFlag stops the monitor
     The recorded data can be retrieved using the getStatsAsXmlString
 
     Should be thread save (adding of pids is done in a lock)
     Created temp files should be cleaned on keyboard intterupt
     """
+    # TODO: Make class "with-block" aware by defining __enter__ and __exit__
+    # This make code using this class cleaner.
     def __init__(self, logger=None,  poll_interval=10.0):
         """
         Create the usage stat object. Create events for starting and stopping.
@@ -75,8 +76,9 @@ class UsageStats(threading.Thread):
             # *************************************
             # first add new to track pids to the active list
             # in a lock to assure correct functioning
+            # TODO: use "with self.lock:" instead of manual acquire/release
             self.lock.acquire()
-            if self.pid_in:           
+            if self.pid_in:
                 self.pid_tracked.extend(self.pid_in)
                
                 
@@ -100,7 +102,7 @@ class UsageStats(threading.Thread):
                                stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
                     out, err = pps.communicate()
-
+                    # TODO: check return value of bash script using pps.returncode
                     parset_output = eval(out.rstrip()) # remove trailing white space
                     self.pid_stats[pid].append(parset_output)
             finally:
@@ -114,6 +116,7 @@ class UsageStats(threading.Thread):
         Threadsave add a process id to track. It will be added at the next 
         poll_interval
         """
+        # TODO: use "with self.lock:" instead of manual acquire/release
         self.lock.acquire()
         self.pid_in.append(pid)
         self.lock.release()
@@ -149,6 +152,7 @@ class UsageStats(threading.Thread):
                     child_pid.setAttribute("executable", str(value[0][0]))
                     child_pid.setAttribute("pid", str(key))
                     for entry in value:
+                        # TODO: probably no longer needed with updated bash script
                         if "MEM" in str(entry[6]):  # this is the default value
                             continue
                         data_point = add_child(child_pid, "data_point")
@@ -161,6 +165,7 @@ class UsageStats(threading.Thread):
         except:
             self.logger.error("monitoring statistic recording failed")
             resource_stat_xml.setAttribute("noStatsRecorded", "Exception")
+            # TODO: coalesce these two returns in one "finally:"
             return resource_stat_xml.toxml(encoding = "ascii")
 
         return resource_stat_xml.toxml(encoding = "ascii")
