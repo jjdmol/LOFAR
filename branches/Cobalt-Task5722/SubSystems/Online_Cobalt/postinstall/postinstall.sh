@@ -38,7 +38,7 @@ function postinstall_lofarsys {
   cp -a /globalhome/lofarsystem/.ssh ~
 
   echo "  Testing..."
-  ssh localhost >/dev/null
+  ssh localhost true >/dev/null
 
   # ********************************************
   #  Install bash initialisation scripts
