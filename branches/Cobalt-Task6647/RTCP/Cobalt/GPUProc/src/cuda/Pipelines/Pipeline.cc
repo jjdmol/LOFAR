@@ -369,6 +369,10 @@ namespace LOFAR
           subbandData->blockID = id;
 
           copyTimer.start();
+          // transposeInput requires a significant amount of CPU to copy the buffers.
+          // We need to spread the load across a few cores to keep running within
+          // budget if there are too many stations.
+#         pragma omp parallel for num_threads(4)
           for (size_t stat = 0; stat < ps.settings.antennaFields.size(); ++stat) {
             if (metaData[stat][subbandIdx].EOS) {
               // Flag everything -- note that delays etc will not matter, so no need to set them
