@@ -523,6 +523,11 @@ namespace LOFAR {
           rspDataPool[0]->free.append(new RSPData(1), false);
       }
 
+      // Make sure we only read RSP packets when we're ready to actually process them. Otherwise,
+      // the rspDataPool[*]->free queues will starve, causing both WARNings and blocking the
+      // reading of the RSP packets we do need.
+      Trigger startSwitch;
+
       #pragma omp parallel sections num_threads(2)
       {
         /*
@@ -540,6 +545,9 @@ namespace LOFAR {
         #pragma omp section
         {
           LOG_INFO_STR(logPrefix << "Processing packets");
+
+          // Wait until RSP packets can actually be processed
+          startSwitch.wait();
 
           if (ps.settings.realTime) {
             #pragma omp parallel for num_threads(nrBoards)
@@ -575,6 +583,9 @@ namespace LOFAR {
           while((current = next ? next : inputQueue.remove()) != NULL) {
             next = inputQueue.remove();
 
+            // We can now process RSP packets
+            startSwitch.trigger();
+
             if (ps.settings.realTime) {
               writeRSPRealTime<SampleT>(*current, next);
             } else {
@@ -597,6 +608,9 @@ namespace LOFAR {
           // having the reader flush the whole queue first.
           for (size_t i = 0; i < nrBoards; ++i)
             rspDataPool[i]->free.prepend(NULL);
+
+          // Make sure we don't get stuck in startup
+          startSwitch.trigger();
 
           if (ps.settings.realTime) {
             // kill reader threads

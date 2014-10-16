@@ -61,6 +61,9 @@ namespace LOFAR {
         return command;
       } catch(Stream::EndOfStreamException &) {
         LOG_INFO("[CommandThread] Connection reset by peer");
+      } catch(OMPThreadSet::CannotStartException &) {
+        /* stop() was called */
+        LOG_INFO("[CommandThread] Stopped");
       } catch(SystemCallException &ex) {
         if (ex.error == EINTR)
           /* False positive: stop() was called */
