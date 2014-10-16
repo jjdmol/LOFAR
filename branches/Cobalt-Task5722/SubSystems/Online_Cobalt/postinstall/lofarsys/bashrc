@@ -1,3 +1,5 @@
+# Source:  https://svn.astron.nl/LOFAR/trunk/SubSystems/Online_Cobalt/postinstall/lofarsys/bashrc
+
 # Sample .bashrc for SuSE Linux
 # Copyright (c) SuSE GmbH Nuernberg
 
@@ -25,7 +27,7 @@ ulimit -s unlimited
 #export COBALT_NO_ALARM=1
 
 # add casacore bin dir to PATH
-export PATH=$PATH:/opt/casacore/bin
+export PATH=$PATH:/localhome/lofar/casacore-1.7.0/bin
 
 # set up environment for 'current' Cobalt version
 source /opt/lofar/lofarinit.sh
