@@ -11,7 +11,7 @@ class Output(dict):
         with open(log_fname,"a") as f:
             for val in self.keys():
                 if self[val][0] != "":
-                    f.write("{0} {1}\n".format(val, self[val][0]))
+                    f.write("{1}\n".format(val, self[val][0]))
         with open(err_fname, "a") as f:
             for val in self.keys():
                 if self[val][1] != "":

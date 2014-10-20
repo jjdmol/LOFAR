@@ -85,7 +85,7 @@ class imager_finalize(LOFARnodeTCP):
                 if "addImagingInfo already done" in str(error):
                     pass
                 else:
-                    raise Exception(error) #Exception: Key Name unknown 
+                    raise Exception(error) 
                 #The majority of the tables is updated correctly
 
             # ***************************************************************

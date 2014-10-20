@@ -4,32 +4,35 @@
 import time
 import os
 
-time.sleep(20)
 
 # I/O and some mem:
-#print "IO"
-
+print "IO operations"
 for i in xrange(100):
+    print "repeat {0}".format(i)
     f1 = open("/dev/urandom")
     f2 = open("./testfile","w")
     var = f1.read(4024)
-    time.sleep(1)
+    time.sleep(0.01)
     f2.write(var)
-    time.sleep(1)
+    time.sleep(0.01)
     f1.close()
     f2.close()
 
-#print "MEM"
+time.sleep(2)
+
+print "MEM operations"
 #mem
+
 b=list()
-for i in range(100):
-    b.append(range(100000))
-    time.sleep(1)
+for i in range(200):
+    b.append(range(i, 1000000))
+    time.sleep(0.01)
 
 del(b)
 
-#print "CPU"
+time.sleep(2)
 
 #CPU 
-for i in xrange(100000000):
+print "CPU intensive"
+for i in xrange(300000000):
     a = 1093398476662. * 1093398476661.

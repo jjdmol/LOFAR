@@ -139,7 +139,7 @@ class imager_awimager(LOFARnodeTCP):
                         os.path.basename(executable)
                 ) as logger:
                     catch_segfaults(cmd, working_directory, self.environment,
-                                            logger)
+                                            logger, usageStats=self.resourceMonitor)
 
             # Thrown by catch_segfault
             except CalledProcessError, exception:
