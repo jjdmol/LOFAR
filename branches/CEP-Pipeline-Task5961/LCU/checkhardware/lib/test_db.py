@@ -15,7 +15,6 @@ def init_test_db():
     logger.debug("init logger test_db")
 
 class cDB:
-    global logger
     def __init__(self, StID, nRSP, nTBB, nLBL, nLBH, nHBA, HBA_SPLIT):
         self.StID              = StID
         self.nr_rsp            = nRSP
@@ -310,12 +309,11 @@ class cDB:
                         log.addLine("%s,HBA,%03d,C_SUMMATOR" %(date, tile.nr))
                     else:
                         for elem in tile.element:
-                            if (elem.no_modem or elem.modem_error):
-                                if elem.no_modem:
-                                    valstr += ",E%02d=??" %(elem.nr)
-                                
-                                elif elem.modem_error:
-                                    valstr += ",E%02d=error" %(elem.nr)
+                            if elem.no_modem:
+                                valstr += ",E%02d=??" %(elem.nr)
+                            
+                            elif elem.modem_error:
+                                valstr += ",E%02d=error" %(elem.nr)
                         if len(valstr):
                             log.addLine("%s,HBA,%03d,MODEM%s" %(date, tile.nr, valstr))
                     
@@ -756,11 +754,15 @@ class cDB:
                     return
                 
                 def test(self):
+                    modem_err = 0
+                    if self.no_modem or self.modem_error:  
+                        modem_err = 1
+                        
                     self.x.error = max(self.x.too_low, self.x.too_high, self.x.low_noise, self.x.high_noise, self.x.no_signal,
-                                       self.x.jitter, self.no_power, self.x.spurious, self.x.osc, self.no_modem, self.modem_error)
+                                       self.x.jitter, self.no_power, self.x.spurious, self.x.osc, modem_err)
                     
                     self.y.error = max(self.y.too_low, self.y.too_high, self.y.low_noise, self.y.high_noise, self.y.no_signal, 
-                                       self.y.jitter, self.no_power, self.y.spurious, self.y.osc, self.no_modem, self.modem_error)
+                                       self.y.jitter, self.no_power, self.y.spurious, self.y.osc, modem_err)
                     return
          
                 

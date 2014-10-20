@@ -231,8 +231,6 @@ void calcViewboxSize() {
 
 void redraw(string mode) {
   
-  DebugN(\"redraw-undocked: \", undocked);
-  DebugN(\"redraw-sysName : \", sysName);
   
   float maxXOffsetValue=1.;
   float maxYOffsetValue=1.;
@@ -386,7 +384,6 @@ void updateField() {
   */
   
 
-  DebugN( \"updateField sysName: \" , sysName);
   string field=sysName+\"LOFAR_PIC_StationInfo.\";
   if (dpExists(field+txt+\".centerX:_online.._value\")) {
     // found match, save found strings and redraw screen

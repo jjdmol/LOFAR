@@ -114,7 +114,6 @@ def addOriginTable (image, msNames):
     # Update the columns not in OBSERVATION table.
     # Get EXPOSURE from first row in main tables.
     # Get NUM_CHAN from SPECTRAL_WINDOW subtables.
-    # Calculate CHANNEL_WIDTH (convert from MHz to Hz).
     # Get SUBBAND from MS name.
     for i in range(len(msNames)):
         t = pt.table(msNames[i], ack=False)
@@ -215,8 +214,8 @@ def addSourceTable (image, sourcedbName, minTime, maxTime):
     print "Added subtable LOFAR_SOURCE containing", row, "rows"
 
 """ Update times and frequencies in the LOFAR_OBSERVATION subtable """
-def updateObsTable (image, msName, minbl, maxbl, usedCounts, visCounts,
-                    minTime, maxTime, totTime):
+def updateObsTable (image, msName, minbl, maxbl, aswvl,
+                    usedCounts, visCounts, minTime, maxTime, totTime):
     obstab = pt.table (image.name() + "/LOFAR_OBSERVATION", readonly=False,
                        ack=False)
     oritab = pt.table (image.name() + "/LOFAR_ORIGIN", ack=False)
@@ -236,7 +235,11 @@ def updateObsTable (image, msName, minbl, maxbl, usedCounts, visCounts,
     pt.taql ("update '" + obstab.name() + "' set FILEDATE = mjd(date()), " +
              "RELEASE_DATE = mjd(date()+365)")
     # Determine minimum and maximum baseline length
+    # If needed, convert from wavelengths to meters.
     mstab = pt.table(msName, ack=False)
+    if aswvl:
+        minbl *= 2.99792e8 / maxfreq[0]
+        maxbl *= 2.99792e8 / minfreq[0]
     if minbl <= 0:
         mbl = pt.taql ("calc sqrt(min([select sumsqr(UVW[:2]) from " + msName + "]))")
         minbl = max(mbl[0], abs(minbl))
@@ -333,7 +336,7 @@ baseline       Baseline selection string (in CASA syntax) used in imager
 
 """
 def addImagingInfo (imageName, msNames, sourcedbName="", minbl=0., maxbl=0.,
-                    taqlStr="", baseline=""):
+                    aswvl=False, taqlStr="", baseline=""):
     image = pt.table (imageName, readonly=False, ack=False)
     # Check if ATTRGROUPS already exists.
     # If not, add it as an empty dict.
@@ -356,7 +359,7 @@ def addImagingInfo (imageName, msNames, sourcedbName="", minbl=0., maxbl=0.,
     # Create the LOFAR_ORIGIN subtable from all MSs.
     addOriginTable (image, msNames)
     # Update times/frequencies/etc. in the LOFAR_OBSERVATION table.
-    updateObsTable (image, msNames[0], minbl, maxbl,
+    updateObsTable (image, msNames[0], minbl, maxbl, aswvl,
                     usedCounts, visCounts, minTime, maxTime, totTime)
     # If needed, add the LOFAR_SOURCE table.
     if len(sourcedbName) > 0:

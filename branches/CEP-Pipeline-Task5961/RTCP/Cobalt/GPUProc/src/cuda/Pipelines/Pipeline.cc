@@ -145,14 +145,14 @@ namespace LOFAR
       // be in bulk: if processing is cheap, all subbands will be output right after they have been received.
       //
       // Allow queue to drop items older than 3 seconds.
-      multiSender(hostMap(ps, subbandIndices, hostID), ps, mdLogger, mdKeyPrefix, 3.0)
+      multiSender(hostMap(ps, subbandIndices, hostID), ps, 3.0)
     {
       ASSERTSTR(!devices.empty(), "Not bound to any GPU!");
 
       // Write data point(s) for monitoring (PVSS).
-      itsMdLogger.log(itsMdKeyPrefix + PN_CGP_OBSERVATION_NAME, boost::lexical_cast<string>(ps.observationID()));
+      itsMdLogger.log(itsMdKeyPrefix + PN_CGP_OBSERVATION_NAME, boost::lexical_cast<string>(ps.settings.observationID));
       for (unsigned i = 0; i < subbandIndices.size(); ++i) {
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_SUBBAND + '[' + boost::lexical_cast<string>(subbandIndices[i]) + ']',
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_SUBBAND + '[' + boost::lexical_cast<string>(i) + ']',
                         (int)subbandIndices[i]);
       }
 
@@ -284,7 +284,7 @@ namespace LOFAR
 
           // Wait for data to propagate towards outputProc,
           // and kill lingering outputThreads.
-          if (ps.realTime()) {
+          if (ps.settings.realTime) {
             struct timespec deadline = TimeSpec::now();
             TimeSpec::inc(deadline, outputFlushTimeout);
 
@@ -339,15 +339,15 @@ namespace LOFAR
       while ((input = mpiPool.filled.remove()) != NULL) {
         const ssize_t block = input->block;
 
-        vector<size_t> nrFlaggedSamples(ps.nrStations(), 0);
+        vector<size_t> nrFlaggedSamples(ps.settings.antennaFields.size(), 0);
 
 #ifdef DO_PROCESSING
         MultiDimArray<SampleT,3> data(
-          boost::extents[ps.nrStations()][subbandIndices.size()][ps.settings.blockSize],
+          boost::extents[ps.settings.antennaFields.size()][subbandIndices.size()][ps.settings.blockSize],
           (SampleT*)input->data.get(), false);
 
         MultiDimArray<struct MPIProtocol::MetaData,2> metaData(
-          boost::extents[ps.nrStations()][subbandIndices.size()],
+          boost::extents[ps.settings.antennaFields.size()][subbandIndices.size()],
           (struct MPIProtocol::MetaData*)input->metaData.get(), false);
 
         // The set of InputData objects we're using for this block.
@@ -369,7 +369,7 @@ namespace LOFAR
           subbandData->blockID = id;
 
           copyTimer.start();
-          for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+          for (size_t stat = 0; stat < ps.settings.antennaFields.size(); ++stat) {
             if (metaData[stat][subbandIdx].EOS) {
               // Flag everything -- note that delays etc will not matter, so no need to set them
               subbandData->metaData[stat].flags.include(0, ps.settings.blockSize);
@@ -405,7 +405,7 @@ namespace LOFAR
         stringstream flagStr;  // antenna fields with >0% flags
         stringstream cleanStr; // antenna fields with  0% flags
 
-        for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+        for (size_t stat = 0; stat < ps.settings.antennaFields.size(); ++stat) {
           const double flagPerc = 100.0 * nrFlaggedSamples[stat] / subbandIndices.size() / ps.settings.blockSize;
 
           if (flagPerc == 0.0)
@@ -467,7 +467,7 @@ namespace LOFAR
         const unsigned SAP = ps.settings.subbands[id.globalSubbandIdx].SAP;
 
         // Translate the metadata as provided by receiver
-        for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+        for (size_t stat = 0; stat < ps.settings.antennaFields.size(); ++stat) {
           input->applyMetaData(ps, stat, SAP, input->metaData[stat]);
         }
 
@@ -596,9 +596,14 @@ namespace LOFAR
       const unsigned SAP = ps.settings.subbands[globalSubbandIdx].SAP;
 
       // Statistics for forwarding blocks to writeCorrelatedOutput
-      bool dropping = false;
-      size_t blocksWritten = 0;
-      size_t blocksDropped = 0;
+      struct LossStatistics {
+        bool dropping;
+        size_t blocksWritten;
+        size_t blocksDropped;
+      };
+      
+      struct LossStatistics correlatorLoss = {false, 0, 0};
+      struct LossStatistics beamFormerLoss = {false, 0, 0};
 
       SmartPtr<SubbandProcOutputData> data;
 
@@ -610,6 +615,10 @@ namespace LOFAR
         ASSERT( id.block >= 0 ); // Negative blocks should not reach storage
 
         LOG_DEBUG_STR("[" << id << "] Writing start");
+
+        // 'dropping' will be toggled once we detect dropped data
+        correlatorLoss.dropping = false;
+        beamFormerLoss.dropping = false;
 
         if (ps.settings.beamFormer.enabled) {
           // Try all files until we found the file(s) this block belongs to.
@@ -678,36 +687,66 @@ namespace LOFAR
 
             // Forward block to MultiSender, who takes ownership.
             forwardTimer.start();
-            multiSender.append(subband);
+            if (multiSender.append(subband)) {
+              // Added a block
+              beamFormerLoss.blocksWritten++;
+            } else {
+              // Dropped a block
+              beamFormerLoss.dropping = true;
+              beamFormerLoss.blocksDropped++;
+            }
             forwardTimer.stop();
 
             // If `subband' is still alive, it has been dropped instead of sent.
-            ASSERT(ps.realTime() || !subband); 
+            ASSERT(ps.settings.realTime || !subband); 
           }
         }
 
-        // Return outputData back to the subbandProc.
-        const double maxRetentionTime = 3.0;
-        using namespace TimeSpec;
-        if (ps.settings.realTime && TimeSpec::now() - outputQueue.oldest() > maxRetentionTime) {
-          // Drop
-          spillQueue.append(data);
-          dropping = true;
-          blocksDropped++;
+        /*
+         * Forward the output to writeCorrelatedOutput (if visibilities are produced).
+         *
+         * Note that loss of throughput must be detected here, since writeCorrelatedOutput()
+         * can freeze in its write() routine. Detecting correlator loss here also allows
+         * us to derive a global loss figure for this subband.
+         */
+        if (ps.settings.correlator.enabled) {
+          const double maxRetentionTime = 3.0 + ps.settings.blockDuration();
+          using namespace TimeSpec;
+          if (ps.settings.realTime && TimeSpec::now() - outputQueue.oldest() > maxRetentionTime) {
+            // Drop: return outputData back to the subbandProc.
+            spillQueue.append(data);
+            correlatorLoss.dropping = true;
+            correlatorLoss.blocksDropped++;
+          } else {
+            // Forward to writeCorrelatedOutput
+            outputQueue.append(data);
+            correlatorLoss.blocksWritten++;
+          }
         } else {
-          // Forward to correlator
-          outputQueue.append(data);
-          dropping = false;
-          blocksWritten++;
+          // Return outputData back to the subbandProc.
+          spillQueue.append(data);
         }
+
         ASSERT(!data);
 
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPING + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
-                        dropping);
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_WRITTEN  + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
-                        blocksWritten * static_cast<float>(ps.settings.blockDuration()));
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPED  + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
-                        blocksDropped * static_cast<float>(ps.settings.blockDuration()));
+        /*
+         * Update the loss figures for this subband.
+         */
+        const double blockDuration = ps.settings.blockDuration();
+
+        // Prevent division by zero for observations without beam former
+        const size_t nrFiles = std::max(multiSender.nrFiles(), 1UL);
+
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPING + '[' + lexical_cast<string>(id.localSubbandIdx) + ']',
+                        correlatorLoss.dropping || beamFormerLoss.dropping);
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_WRITTEN  + '[' + lexical_cast<string>(id.localSubbandIdx) + ']',
+                        static_cast<float>(correlatorLoss.blocksWritten * blockDuration) +
+                        static_cast<float>(beamFormerLoss.blocksWritten * blockDuration / nrFiles)
+                       );
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPED  + '[' + lexical_cast<string>(id.localSubbandIdx) + ']',
+                        static_cast<float>(correlatorLoss.blocksDropped * blockDuration) +
+                        static_cast<float>(beamFormerLoss.blocksDropped * blockDuration / nrFiles)
+                       );
 
         if (id.localSubbandIdx == 0 || id.localSubbandIdx == subbandIndices.size() - 1)
           LOG_INFO_STR("[" << id << "] Done"); 
@@ -744,8 +783,6 @@ namespace LOFAR
 
       // Process pool elements until end-of-output
       while ((data = inputQueue.remove()) != NULL) {
-        CorrelatedData &correlatedData = data->correlatedData;
-
         const struct BlockID id = data->blockID;
         ASSERT( globalSubbandIdx == id.globalSubbandIdx );
 
@@ -758,7 +795,8 @@ namespace LOFAR
           // Write block to outputProc 
           try {
             writeTimer.start();
-            correlatedData.write(outputStream.get(), true);
+            for (size_t i = 0; i < data->correlatedData.subblocks.size(); ++i)
+              data->correlatedData.subblocks[i]->write(outputStream.get(), true);
             writeTimer.stop();
           } catch (Exception &ex) {
             // No reconnect, as outputProc doesn't yet re-listen when the conn drops.

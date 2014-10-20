@@ -89,6 +89,9 @@ DE605      TBB_0      locus077
 FR606      TBB_0      locus078
 SE607      TBB_0      locus079
 UK608      TBB_0      locus080
+DE609      TBB_0      locus081
+
+# Non-ILT Stations (for completeness)
 FI609      TBB_0      locus081
 # Test entries can follow here
 

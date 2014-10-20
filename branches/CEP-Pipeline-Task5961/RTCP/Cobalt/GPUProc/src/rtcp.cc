@@ -190,11 +190,12 @@ int main(int argc, char **argv)
 
   // Create mdLogger for monitoring (PVSS). We can already log(), but start() the event send thread
   // much later, after the pipeline creation (post-fork()), so we don't crash.
-  const string mdRegisterName = PST_COBALTGPU_PROC;
+  const string mdRegisterName = PST_COBALTGPU_PROC + boost::lexical_cast<string>(cpuNr) + ":" +
+                                boost::lexical_cast<string>(ps.settings.observationID) + "@" + hostName;
   const string mdHostName = ps.getString("Cobalt.PVSSGateway.host", "");
 
   // Don't connect to PVSS for non-real-time observations -- they have no proper flow control
-  MACIO::RTmetadata mdLogger(ps.observationID(), mdRegisterName, ps.settings.realTime ? mdHostName : "");
+  MACIO::RTmetadata mdLogger(ps.settings.observationID, mdRegisterName, ps.settings.realTime ? mdHostName : "");
 
   LOG_INFO_STR("MPI rank " << mpi.rank() << " out of " << mpi.size() << " hosts");
 
@@ -236,13 +237,13 @@ int main(int argc, char **argv)
     "\n  outputProcTimeout    : " << outputProcTimeout << "s" <<
     "\n  rtcpTimeout          : " << rtcpTimeout << "s");
 
-  if (ps.realTime() && getenv("COBALT_NO_ALARM") == NULL) {
+  if (ps.settings.realTime && getenv("COBALT_NO_ALARM") == NULL) {
     // First of all, make sure we can't freeze for too long
     // by scheduling an alarm() some time after the observation
     // ends.
 
     const time_t now = time(0);
-    const double stopTime = ps.stopTime();
+    const double stopTime = ps.settings.stopTime;
 
     if (now < stopTime + rtcpTimeout) {
       size_t maxRunTime = stopTime + rtcpTimeout - now;
@@ -282,8 +283,8 @@ int main(int argc, char **argv)
    */
 
   if (mpi.rank() == 0) {
-    LOG_INFO_STR("nr stations = " << ps.nrStations());
-    LOG_INFO_STR("nr subbands = " << ps.nrSubbands());
+    LOG_INFO_STR("nr stations = " << ps.settings.antennaFields.size());
+    LOG_INFO_STR("nr subbands = " << ps.settings.subbands.size());
     LOG_INFO_STR("bitmode     = " << ps.nrBitsPerSample());
   }
 
@@ -386,7 +387,7 @@ int main(int argc, char **argv)
   // Distribute the subbands over the MPI ranks
   SubbandDistribution subbandDistribution; // rank -> [subbands]
 
-  for( size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
+  for( size_t subband = 0; subband < ps.settings.subbands.size(); ++subband) {
     int receiverRank = subband % mpi.size();
 
     subbandDistribution[receiverRank].push_back(subband);
@@ -400,8 +401,8 @@ int main(int argc, char **argv)
                      subbandIndices,
     std::find(subbandIndices.begin(), 
               subbandIndices.end(), 0U) != subbandIndices.end(),
-              ps.nrSamplesPerSubband(),
-              ps.nrStations(),
+              ps.settings.blockSize,
+              ps.settings.antennaFields.size(),
               ps.nrBitsPerSample());
       
   SmartPtr<Pipeline> pipeline;
@@ -434,7 +435,7 @@ int main(int argc, char **argv)
   mpi.init(argc, argv);
 
   // Periodically log system information
-  SysInfoLogger siLogger(ps.startTime(), ps.stopTime());
+  SysInfoLogger siLogger(ps.settings.startTime, ps.settings.stopTime);
 
   /*
    * RUN stage
@@ -483,7 +484,7 @@ int main(int argc, char **argv)
        * THE OBSERVATION
        */
 
-      if (ps.realTime()) {
+      if (ps.settings.realTime) {
         // Wait just before the obs starts to allocate resources,
         // both the UDP sockets and the GPU buffers!
         LOG_INFO_STR("Waiting to start obs running from " << TimeStamp::convert(ps.settings.startTime, ps.settings.clockHz()) << " to " << TimeStamp::convert(ps.settings.stopTime, ps.settings.clockHz()));
@@ -498,8 +499,8 @@ int main(int argc, char **argv)
         #pragma omp section
         {
           // Read and forward station data over MPI
-          #pragma omp parallel for num_threads(ps.nrStations())
-          for (size_t stat = 0; stat < ps.nrStations(); ++stat) 
+          #pragma omp parallel for num_threads(ps.settings.antennaFields.size())
+          for (size_t stat = 0; stat < ps.settings.antennaFields.size(); ++stat) 
           {       
             // Determine if this station should start a pipeline for station..
             const struct StationID stationID(
@@ -526,7 +527,7 @@ int main(int argc, char **argv)
             mdKeyPrefixInputProc.push_back('.'); // keys look like: "keyPrefix.subKeyName"
 
             mdLogger.log(mdKeyPrefixInputProc + PN_CSI_OBSERVATION_NAME,
-                         boost::lexical_cast<string>(ps.observationID()));
+                         boost::lexical_cast<string>(ps.settings.observationID));
             mdLogger.log(mdKeyPrefixInputProc + PN_CSI_NODE, hostName);
             mdLogger.log(mdKeyPrefixInputProc + PN_CSI_CPU,  cpuNr);
 
@@ -593,7 +594,7 @@ int main(int argc, char **argv)
     // write LTA feedback to disk
     const char *LOFARROOT = getenv("LOFARROOT");
     if (LOFARROOT != NULL) {
-      string feedbackFilename = str(format("%s/var/run/Observation%s_feedback") % LOFARROOT % ps.observationID());
+      string feedbackFilename = str(format("%s/var/run/Observation%s_feedback") % LOFARROOT % ps.settings.observationID);
 
       try {
         feedbackLTA.writeFile(feedbackFilename, false);

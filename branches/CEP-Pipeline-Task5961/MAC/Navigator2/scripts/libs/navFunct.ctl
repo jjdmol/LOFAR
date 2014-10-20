@@ -29,6 +29,7 @@
 // navFunct_acknowledgePanel                  : Returns acknowledge on a given action
 // navFunct_bareDBName                        : Returns a DatabaseName without the : (if any)
 // navFunct_CEPName2inputBuf                  : returns ionr from CEPname
+// navFunct_checkEmailAddress                 : checks if an email address has the correct syntax
 // navFunct_clearGlobalLists                  : clear all temporarily global hardware,observation and processes lists..
 // navFunct_dpGetFullPathAsTypes              : Returns full dp path (maincu && station components) as dynstring)
 // navFunct_dpGetLastElement                  : Returns last element from DP 
@@ -2653,4 +2654,24 @@ int navFunct_observationNameToNumber(string obsname) {
 void navFunct_handleUndockClick() {
       
   ModuleOnWithPanel(ACTIVE_TAB+"_Undocked", -1, -1, 0, 0, 1, 1, "", g_activePanel, ACTIVE_TAB+":"+g_currentDatapoint, makeDynString("$undocked:" + true));
+}
+
+// ****************************************
+// Name : navFunct_checkEmailAddress
+// ****************************************
+// Description:
+//    checks an emailAddress for its correct syntax
+//    
+// ***************************************
+
+bool navFunct_checkEmailAddress(string anAddress)
+{
+  // an email should be in the form xxxx@yyyy.zz
+  // can be improved obviously
+  if (anAddress == "") return FALSE;
+  dyn_string part1 = strsplit(anAddress,"@");
+  if (dynlen(part1) != 2 || part1[1] == "" || part1[2] == "" ) return FALSE;
+  dyn_string part2 = strsplit(part1[2],".");
+  if (dynlen(part2) != 2 || part2[1] == "" || part2[2] == "" ) return FALSE;
+  return TRUE;
 }

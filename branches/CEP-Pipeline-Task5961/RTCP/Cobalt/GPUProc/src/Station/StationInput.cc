@@ -70,11 +70,11 @@ namespace LOFAR {
       stationID(StationID::parseFullFieldName(ps.settings.antennaFields.at(stationIdx).name)),
       logPrefix(str(format("[station %s] ") % stationID.name())),
 
-      startTime(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed()),
-      stopTime(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed()),
+      startTime(ps.settings.startTime * ps.settings.subbandWidth(), ps.settings.clockHz()),
+      stopTime(ps.settings.stopTime * ps.settings.subbandWidth(), ps.settings.clockHz()),
 
       nrSamples(ps.settings.blockSize),
-      nrBlocks((stopTime - startTime) / nrSamples),
+      nrBlocks(ps.settings.nrBlocks()),
 
       metaDataPool(str(format("StationMetaData::metaDataPool [station %s]") % stationID.name()), false),
 
@@ -196,7 +196,7 @@ namespace LOFAR {
       for(size_t n = 0; n < result.num_elements(); ++n)
         result.origin()[n] = -1;
 
-      for(size_t i = 0; i < ps.nrSubbands(); ++i) {
+      for(size_t i = 0; i < targetSubbands.size(); ++i) {
         // The subband stored at position i
         const size_t sb = targetSubbands.at(i);
 
@@ -234,8 +234,8 @@ namespace LOFAR {
       }
 
       if (desc == "factory:") {
-        const TimeStamp from(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed());
-        const TimeStamp to(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed());
+        const TimeStamp from(ps.settings.startTime * ps.settings.subbandWidth(), ps.settings.clockHz());
+        const TimeStamp to(ps.settings.stopTime * ps.settings.subbandWidth(), ps.settings.clockHz());
 
         const struct BoardMode mode(ps.settings.nrBitsPerSample, ps.settings.clockMHz);
         PacketFactory factory(mode);
@@ -512,7 +512,7 @@ namespace LOFAR {
     {
       OMPThreadSet packetReaderThreads;
 
-      if (ps.realTime()) {
+      if (ps.settings.realTime) {
         // Each board has its own pool to reduce lock contention
         for (size_t board = 0; board < nrBoards; ++board)
           for (size_t i = 0; i < 16; ++i)
@@ -522,6 +522,11 @@ namespace LOFAR {
         for (size_t i = 0; i < 16; ++i)
           rspDataPool[0]->free.append(new RSPData(1), false);
       }
+
+      // Make sure we only read RSP packets when we're ready to actually process them. Otherwise,
+      // the rspDataPool[*]->free queues will starve, causing both WARNings and blocking the
+      // reading of the RSP packets we do need.
+      Trigger startSwitch;
 
       #pragma omp parallel sections num_threads(2)
       {
@@ -541,7 +546,10 @@ namespace LOFAR {
         {
           LOG_INFO_STR(logPrefix << "Processing packets");
 
-          if (ps.realTime()) {
+          // Wait until RSP packets can actually be processed
+          startSwitch.wait();
+
+          if (ps.settings.realTime) {
             #pragma omp parallel for num_threads(nrBoards)
             for(size_t board = 0; board < nrBoards; board++) {
               OMPThreadSet::ScopedRun sr(packetReaderThreads);
@@ -575,7 +583,10 @@ namespace LOFAR {
           while((current = next ? next : inputQueue.remove()) != NULL) {
             next = inputQueue.remove();
 
-            if (ps.realTime()) {
+            // We can now process RSP packets
+            startSwitch.trigger();
+
+            if (ps.settings.realTime) {
               writeRSPRealTime<SampleT>(*current, next);
             } else {
               writeRSPNonRealTime<SampleT>(*current, next);
@@ -598,7 +609,10 @@ namespace LOFAR {
           for (size_t i = 0; i < nrBoards; ++i)
             rspDataPool[i]->free.prepend(NULL);
 
-          if (ps.realTime()) {
+          // Make sure we don't get stuck in startup
+          startSwitch.trigger();
+
+          if (ps.settings.realTime) {
             // kill reader threads
             LOG_INFO_STR( logPrefix << "Stopping all boards" );
             packetReaderThreads.killAll();

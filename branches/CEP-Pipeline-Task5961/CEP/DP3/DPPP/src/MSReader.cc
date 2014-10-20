@@ -392,7 +392,7 @@ namespace LOFAR {
         }
         os << std::endl;
         os << "  WEIGHT column:  " << itsWeightColName << std::endl;
-        os << "  autoweight:     " << itsAutoWeight << std::endl;
+        os << "  autoweight:     " << boolalpha << itsAutoWeight << std::endl;
       }
     }
 
@@ -526,6 +526,12 @@ namespace LOFAR {
       // Set antenna/baseline info.
       info().set (nameCol.getColumn(), diamCol.getColumn(), antPos,
                   ant1col.getColumn(), ant2col.getColumn());
+
+      if (itsAutoWeight) {
+        info().setNeedVisData();
+        info().setNeedWrite(info().needWrite() | DPInfo::NeedWriteWeight);
+      }
+
       // Read the phase reference position from the FIELD subtable.
       // Only use the main value from the PHASE_DIR array.
       // The same for DELAY_DIR and LOFAR_TILE_BEAM_DIR.

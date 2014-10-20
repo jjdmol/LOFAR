@@ -455,8 +455,15 @@ GCFEvent::TResult TBBMonitor::askVersion(GCFEvent& event, GCFPortInterface& port
 			itsTBBs[tbb]->flush();
 			
 			// set right color
-			setObjectState(getName(), itsTBBs[tbb]->getFullScope(), (ack.status_mask[tbb] == TBB_SUCCESS) ? 
-							RTDB_OBJ_STATE_OPERATIONAL : RTDB_OBJ_STATE_OFF);
+			//string reasonStr;
+			if (ack.status_mask[tbb] == TBB_SUCCESS) {
+				//reasonStr = formatString("%s: good", getName());
+				setObjectState("TBBMonitor: good", itsTBBs[tbb]->getFullScope(), RTDB_OBJ_STATE_OPERATIONAL);
+			}
+			else {
+				//reasonStr = formatString("%s: wrong image", getName());
+				setObjectState("TBBMonitor: wrong image", itsTBBs[tbb]->getFullScope(), RTDB_OBJ_STATE_BROKEN);
+			}
 		}
 
 		LOG_DEBUG_STR ("Version information updated, going to status information");
@@ -1007,5 +1014,5 @@ string	TBBMonitor::TBBRCUstate(char	stateCode)
 	}
 }
 
-}; // StationCU
+	}; // StationCU
 }; // LOFAR
