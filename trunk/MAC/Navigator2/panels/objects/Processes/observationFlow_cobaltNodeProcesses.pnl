@@ -1,14 +1,13 @@
 V 11
 1
 LANG:1 16 childStateBorder
-PANEL,-1 -1 302 91 N "_3DFace" 0
+PANEL,-1 -1 524 91 N "_3DFace" 0
 "main()
 {
   baseDP = \"LOFAR_PermSW\";
   database=dpSubStr(baseDP,DPSUB_SYS);
   
-  activeObsDP =MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\";
-/*  
+  activeObsDP =MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\";  
   // check if MACScheduler pointenabled and accessible
   if (dpExists(activeObsDP)) {
     if (dpConnect(\"updateActiveObservations\", activeObsDP+\":_online.._value\",
@@ -17,8 +16,7 @@ PANEL,-1 -1 302 91 N "_3DFace" 0
     }
   } else {
     if (!isStandalone()) LOG_ERROR(\"ObservationFlow_cobaltNodeProcesses.pnl:main|Couldn't find DP to connect to: \"+activeObsDP);
-  }
-  */	
+  }	
 }
 " 0
  E "main(int x, int y)
@@ -118,8 +116,8 @@ void updateActiveObservations(string dp1, dyn_string obs,
   }
   
   LOG_DEBUG(\"ObservationFlow_cobaltNodeProcesses.pnl:updateActiveObservations|observationList: \"+observationsList);
-  connectCobaltNodesAndProcesses();
   connectStationInputStreams();
+  connectCobaltNodesAndProcesses();
   connectGPUProcs();
 }
 
@@ -264,6 +262,7 @@ void connectCobaltNodesAndProcesses() {
         connectToStates  +=\"OR  'observationName:_online.._value' == \\\"\"+observation+\"\\\"\";
       }
     }
+    LOG_DEBUG( \"ObservationFlow_cobaltNodeProcesses.pnl:connectCobaltNodesAndProcesses|connect to: \" + connectToStates);
     if (dpQueryConnectAll(\"cobaltNodesAndProcessesCB\",true,\"cobaltStateUpdate\",connectToStates) == -1) {
       LOG_ERROR(\"ObservationFlow_cobaltNodeProcesses.pnl:connectCobaltNodesAndProcesses| ERROR: Query fails:\"+connectToStates);
     }
@@ -276,6 +275,7 @@ void cobaltNodesAndProcessesCB(string strIdent,  dyn_dyn_anytype aResult)
 {
   LOG_DEBUG( \"ObservationFlow_cobaltNodeProcesses.pnl:cobaltNodesAndProcessesCB| has \" + dynlen( aResult ) + \" results\" );
   LOG_DEBUG( \"ObservationFlow_cobaltNodeProcesses.pnl:cobaltNodesAndProcessesCB| \"+aResult);
+  
   int highestState=0;
   int highestChildState=0;
 
@@ -391,32 +391,28 @@ void calcValues(int stream,dyn_string dps,dyn_float values)
 
 }
 
-void gpuprocCB(dyn_string dps, dyn_dyn_bool values)
+void gpuprocCB(dyn_string dps, dyn_dyn_anytype values)
 {
+  LOG_DEBUG(\"ObservationFlow_cobaltNodeProcesses.pnl:gpuProcCB| entered\");
   string color = \"Lofar_operational\";
   
-  DebugN(\"dps : \", dps);
-  DebugN(\"vals: \", values);
-
   // Here we get dropping values. 
   // dps[i]  contains the GPUproc that is dropping
   // vals[i]  contains list of all subbands with on vals[i][j]  the subband if it is dropping
   string toolTipText = \"Dropping GPUProcs<br>\";
   
-  for (int i = 1; i<= dynlen(dps); i++) {
-    dyn_bool droplist = values[i];
-    string dp = dps[i];
-    for (int j = 1; j<= dynlen(droplist); j++) {
-      if (droplist[j]) {
-        color = \"Lofar_broken\";
-//        dyn_int subband =\"-1\";
-//        dyn_string dataProductType=\"\";
-//        dyn_int dropped=0;
-//       dpGet(gpuprocs[i]+\".dropped\",dropped);
-//        dpGet(gpuprocs[i]+\".subband\",subband);
-//        dpGet(gpuprocs[i]+\".dataProductType\",dataProductType);
-
-//        toolTipText+=dp+\"</t> :\"+dropped[j]+\" - \"+subband[j]+\" - \"+dataProductType[j]+\"<br>\";
+  for (int i = 1; i <= dynlen(dps); i+=4) {
+    string dp = dpSubStr(dps[i],DPSUB_DP);
+    dyn_bool dropping = values[i];
+    if (dynContains(dropping,TRUE )) {
+      color = \"Lofar_broken\";
+      dyn_float dropped = values[i+1];
+      dyn_int subband = values[i+2];
+      string dataProductType = values[i+3];
+      for (int j = 1; j <= dynlen(dropped); j++) {
+        if (dropping[j] == TRUE) {
+          toolTipText+=dp+\"</t> :\"+dropped[j]+\" - \"+subband[j]+\" - \"+dataProductType+\"<br>\";
+        }
       }
     }
   }

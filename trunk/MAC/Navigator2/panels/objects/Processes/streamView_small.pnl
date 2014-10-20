@@ -14,7 +14,7 @@ PANEL,-1 -1 414 134 N "_3DFace" 2
   baseDP =CEPDBName+\"LOFAR_PermSW_PSIONode00_InputBuffer\";
 
   obsDP=MainDBName+claimManager_nameToRealName(\"LOFAR_ObsSW_\"+observation);
-/*
+
   if (navFunct_dpReachable(obsDP)){
     if (dpConnect(\"obsRunning\", obsDP+\".runState:_online.._value\",
                                 obsDP+\".runState:_online.._invalid\")== -1) {
@@ -24,7 +24,7 @@ PANEL,-1 -1 414 134 N "_3DFace" 2
   } else {
     setValue(\"streamObject\", \"backCol\", \"Lofar_dpOffline\");
   }
-  */
+ 
 }
 
 private void obsRunning(string dp1,string running,
