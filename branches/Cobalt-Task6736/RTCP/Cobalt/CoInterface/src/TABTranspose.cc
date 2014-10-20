@@ -244,8 +244,8 @@ BlockCollector::BlockCollector( Pool<BeamformedData> &outputPool, size_t fileIdx
   canDrop(maxBlocksInFlight > 0),
   lastEmitted(-1),
 
-  inputThread(this, &BlockCollector::inputLoop),
-  outputThread(this, &BlockCollector::outputLoop)
+  inputThread(this, &BlockCollector::inputLoop, str(format("BC:input %u") % fileIdx)),
+  outputThread(this, &BlockCollector::outputLoop, str(format("BC:output %u") % fileIdx))
 {
   ASSERT(nrSubbands > 0);
   ASSERT(nrChannels > 0);

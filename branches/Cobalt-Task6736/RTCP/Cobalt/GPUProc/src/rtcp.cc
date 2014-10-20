@@ -277,6 +277,7 @@ int main(int argc, char **argv)
 
   // Allow OpenMP thread registration
   OMPThread::init();
+  OMPThread::ScopedName sn("main");
 
   /*
    * INIT stage
@@ -456,6 +457,8 @@ int main(int argc, char **argv)
        * COMMAND THREAD
        */
 
+      OMPThread::ScopedName sn("CommandThr bcast");
+
       if (mpi.rank() == 0) {
         commandThread = new CommandThread(ps.settings.commandStream);
       }
@@ -484,6 +487,9 @@ int main(int argc, char **argv)
        * THE OBSERVATION
        */
 
+      OMPThread::ScopedName sn("stations");
+
+
       if (ps.settings.realTime) {
         // Wait just before the obs starts to allocate resources,
         // both the UDP sockets and the GPU buffers!
@@ -502,6 +508,8 @@ int main(int argc, char **argv)
           #pragma omp parallel for num_threads(ps.settings.antennaFields.size())
           for (size_t stat = 0; stat < ps.settings.antennaFields.size(); ++stat) 
           {       
+            OMPThread::ScopedName sn(str(format("%s main") % ps.settings.antennaFields.at(stat).name));
+
             // Determine if this station should start a pipeline for station..
             const struct StationID stationID(
               StationID::parseFullFieldName(
@@ -540,12 +548,16 @@ int main(int argc, char **argv)
         // receive data over MPI and insert into pool
         #pragma omp section
         {
+          OMPThread::ScopedName sn("mpi recv");
+
           MPI_receiver.receiveInput();
         }
 
         // Retrieve items from pool and process further on
         #pragma omp section
         {
+          OMPThread::ScopedName sn("obs process");
+
           // Process station data
           if (!subbandDistribution[mpi.rank()].empty()) {
             pipeline->processObservation();

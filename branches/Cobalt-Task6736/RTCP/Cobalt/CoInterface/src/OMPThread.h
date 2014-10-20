@@ -23,9 +23,10 @@
 
 #include <ctime>
 #include <csignal>
-#include <pthread.h>
 #include <vector>
 #include <algorithm>
+
+#include <pthread.h>
 
 #include <Common/LofarLogger.h>
 #include <Common/SystemCallException.h>
@@ -133,6 +134,53 @@ namespace LOFAR
       if (::sigaction(SIGHUP, &sa, NULL) < 0)
         THROW_SYSCALL("sigaction(SIGHUP, &sa, NULL)");
     }
+
+    /*
+     * Set the name of this thread for the scope
+     * of the object.
+     */
+    class ScopedName {
+    public:
+      ScopedName(const std::string newName)
+      :
+        oldName(get())
+      {
+        set(newName);
+      }
+
+      ~ScopedName() {
+        set(oldName);
+      }
+
+    private:
+      const std::string oldName;
+
+      void set(const std::string &name) const {
+#ifdef _GNU_SOURCE
+        // Inform the kernel of the thread name (only first 16 characters are used!)
+        int retval;
+
+        if ((retval = pthread_setname_np(pthread_self(), name.substr(0,15).c_str())) != 0)
+          throw SystemCallException("pthread_setname_np", retval, THROW_ARGS);
+#endif
+      }
+
+      std::string get() const {
+#ifdef _GNU_SOURCE
+        char cname[1024];
+
+        // Inform the kernel of the thread name (only first 16 characters are used!)
+        int retval;
+
+        if ((retval = pthread_getname_np(pthread_self(), &cname[0], sizeof cname)) != 0)
+          throw SystemCallException("pthread_getname_np", retval, THROW_ARGS);
+
+        return std::string(cname);
+#else
+        return "<unknown>";
+#endif
+      }
+    };
 
   private:
     const pthread_t id;

@@ -64,7 +64,7 @@ namespace LOFAR
     {
       ASSERTSTR(!itsThread, "StorageProcess has already been started");
 
-      itsThread = new Thread(this, &StorageProcess::controlThread, itsLogPrefix + "[ControlThread] ", 65535);
+      itsThread = new Thread(this, &StorageProcess::controlThread, str(boost::format("%s ctrl") % itsHostname), itsLogPrefix + "[ControlThread] ", 65535);
     }
 
 

@@ -278,7 +278,7 @@ namespace LOFAR {
 
       started = true;
 
-      thread = new Thread(this, &MPIPoll::pollThread, "MPIPoll::pollThread");
+      thread = new Thread(this, &MPIPoll::pollThread, "MPIPoll", "MPIPoll::pollThread");
     }
 
 

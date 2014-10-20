@@ -220,6 +220,8 @@ namespace LOFAR
          */
 #       pragma omp section
         {
+          OMPThread::ScopedName sn("transposeInput");
+
           transposeInput();
         }
 
@@ -230,8 +232,12 @@ namespace LOFAR
          */
 #       pragma omp section
         {
+          OMPThread::ScopedName sn("preprocess");
+
 #         pragma omp parallel for num_threads(subbandProcs.size())
           for (size_t i = 0; i < subbandProcs.size(); ++i) {
+            OMPThread::ScopedName sn(str(format("preprocess %u") % i));
+
             SubbandProc &queue = *subbandProcs[i];
 
             // run the queue
@@ -249,9 +255,13 @@ namespace LOFAR
          */
 #       pragma omp section
         {
+          OMPThread::ScopedName sn("process");
+
 #         pragma omp parallel for num_threads(subbandProcs.size())
           for (size_t i = 0; i < subbandProcs.size(); ++i) 
           {
+            OMPThread::ScopedName sn(str(format("process %u") % i));
+
             SubbandProc &queue = *subbandProcs[i];
 
             // run the queue
@@ -269,8 +279,12 @@ namespace LOFAR
          */
 #       pragma omp section
         {
+          OMPThread::ScopedName sn("postprocess");
+
 #         pragma omp parallel for num_threads(subbandProcs.size())
           for (size_t i = 0; i < subbandProcs.size(); ++i) {
+            OMPThread::ScopedName sn(str(format("postprocess %u") % i));
+
             SubbandProc &queue = *subbandProcs[i];
 
             // run the queue
@@ -304,8 +318,12 @@ namespace LOFAR
          */
 #       pragma omp section
         {
+          OMPThread::ScopedName sn("writeOutput");
+
 #         pragma omp parallel for num_threads(writePool.size())
           for (size_t i = 0; i < writePool.size(); ++i) {
+            OMPThread::ScopedName sn(str(format("writeOutput %u") % i));
+
             writeOutput(subbandIndices[i], *writePool[i].queue, subbandProcs[i % subbandProcs.size()]->outputPool.free);
           }
 
@@ -319,6 +337,8 @@ namespace LOFAR
         // Output processing
 #       pragma omp section
         {
+          OMPThread::ScopedName sn("MS::process");
+
           multiSender.process(&outputThreads);
         }
       }
@@ -569,6 +589,8 @@ namespace LOFAR
         // Let parent do work
 #       pragma omp section
         {
+          OMPThread::ScopedName sn(str(format("writeBF %u") % globalSubbandIdx));
+
           writeBeamformedOutput(globalSubbandIdx, inputQueue, queue, outputQueue);
           queue.append(NULL);
         }
@@ -576,6 +598,8 @@ namespace LOFAR
         // Output processing
 #       pragma omp section
         {
+          OMPThread::ScopedName sn(str(format("writeCorr %u") % globalSubbandIdx));
+
           writeCorrelatedOutput(globalSubbandIdx, queue, outputQueue);
         }
       }
