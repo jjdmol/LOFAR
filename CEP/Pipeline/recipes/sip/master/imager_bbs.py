@@ -9,7 +9,7 @@ import os
 
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.baserecipe import BaseRecipe
-from lofarpipe.support.data_map import DataMap, MultiDataMap
+from lofarpipe.support.data_map import DataMap, MultiDataMap, validate_data_maps
 import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.remotecommand import ComputeJob
 
@@ -59,6 +59,14 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
             '--mapfile',
             help="Full path to the file containing the output data products"
         ),
+        'concat_ms_map_path': ingredient.FileField(
+            '--concat-ms-map-path',
+            help="Output of the concat MS file"
+        ),
+        'major_cycle': ingredient.IntField(
+            '--major_cycle',
+            help="ID for the current major cycle"
+        )                 
     }
 
     outputs = {
@@ -75,19 +83,11 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
         self.logger.info("Starting imager_bbs run")
 
         # ********************************************************************
-        # 1. Load the and validate the data
-
-        ms_map = MultiDataMap.load(self.inputs['args'][0])
+        # 1. Load the and validate the data        
+        ms_map = MultiDataMap.load(self.inputs['args'][0])        
         parmdb_map = MultiDataMap.load(self.inputs['instrument_mapfile'])
         sourcedb_map = DataMap.load(self.inputs['sourcedb_mapfile'])
-
-        # TODO: DataMap extention
-#        #Check if the input has equal length and on the same nodes
-#        if not validate_data_maps(ms_map, parmdb_map):
-#            self.logger.error("The combination of mapfiles failed validation:")
-#            self.logger.error("ms_map: \n{0}".format(ms_map))
-#            self.logger.error("parmdb_map: \n{0}".format(parmdb_map))
-#            return 1
+        concat_ms_map = DataMap.load(self.inputs['concat_ms_map_path']) 
 
         # *********************************************************************
         # 2. Start the node scripts
@@ -99,14 +99,17 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # Update the skip fields of the four maps. If 'skip' is True in any of
         # these maps, then 'skip' must be set to True in all maps.
-        for w, x, y in zip(ms_map, parmdb_map, sourcedb_map):
-            w.skip = x.skip = y.skip = (
-                w.skip or x.skip or y.skip
-            )
+        for w, x, y, c in zip(ms_map, parmdb_map, sourcedb_map, concat_ms_map):
+            w.skip = x.skip = y.skip = c.skip = (
+                w.skip or x.skip or y.skip or c.skip )
 
         ms_map.iterator = parmdb_map.iterator = sourcedb_map.iterator = \
-            DataMap.SkipIterator
-        for (ms, parmdb, sourcedb) in zip(ms_map, parmdb_map, sourcedb_map):
+            concat_ms_map.iterator = DataMap.SkipIterator
+        
+
+        # *********************************************************************               
+        for (ms, parmdb, sourcedb, concat_ms) in zip(ms_map, parmdb_map,
+                                                  sourcedb_map, concat_ms_map):
             #host is same for each entry (validate_data_maps)
             host, ms_list = ms.host, ms.file
 
@@ -125,9 +128,16 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
             MultiDataMap(
                 [tuple([host, [sourcedb.file], False])]).save(sourcedb_list_path)
 
+            # THe concat ms does not have to be written: It already is a 
+            # singular item (it is the output of the reduce step) 
+            # redmine issue #6021                                                 
             arguments = [self.inputs['bbs_executable'],
                          self.inputs['parset'],
-                         ms_list_path, parmdb_list_path, sourcedb_list_path]
+                         ms_list_path, 
+                         parmdb_list_path, 
+                         sourcedb_list_path, 
+                         concat_ms.file,
+                         self.inputs['major_cycle']]
             jobs.append(ComputeJob(host, node_command, arguments))
 
         # start and wait till all are finished
