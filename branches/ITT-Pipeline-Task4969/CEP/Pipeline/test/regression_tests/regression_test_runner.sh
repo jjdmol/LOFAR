@@ -34,18 +34,19 @@ HOST2=$3  # not always need
 # They are currently in active development and the regression test data has not yet been created
 # also the total running time is in the order of 5 hours, which might not be a good idea for a automatic integration test
 
-if [ "$PIPELINE" = "msss_imager_pipeline" ]
+if [ "$PIPELINE" == "msss_imager_pipeline" ]
 then
+    echo "----------------------------------------------------------------------------------------------------"
     echo "Warning! This pipeline is in active development and is currently not supported in regression testing"
-    return 0
+    exit 0
 fi
 
-if [ "$PIPELINE" = "imaging_pipeline" ]
+if [ "$PIPELINE" == "imaging_pipeline" ]
 then
+    echo "----------------------------------------------------------------------------------------------------"
     echo "Warning! This pipeline is in active development and is currently not supported in regression testing"
-    return 0
+    exit 0
 fi
-
 
 # test if we started in the correct directory
 # we need to be able to grab and change installed files for full functionality
