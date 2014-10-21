@@ -332,6 +332,7 @@ namespace LOFAR {
     #   pragma omp parallel for num_threads(nrBoards)
         for (size_t board = 0; board < nrBoards; board++) {
           //NSTimer copyRSPTimer(str(format("%s [board %i] copy RSP -> block") % logPrefix % board), true, true);
+          OMPThread::ScopedName sn(str(format("%s wr %u") % ps.settings.antennaFields.at(stationIdx).name % board));
 
           Queue< SmartPtr<RSPData> > &inputQueue = rspDataPool[board]->filled;
           Queue< SmartPtr<RSPData> > &outputQueue = rspDataPool[board]->free;
@@ -544,6 +545,8 @@ namespace LOFAR {
          */
         #pragma omp section
         {
+          OMPThread::ScopedName sn(str(format("%s rd") % ps.settings.antennaFields.at(stationIdx).name));
+
           LOG_INFO_STR(logPrefix << "Processing packets");
 
           // Wait until RSP packets can actually be processed
@@ -553,6 +556,7 @@ namespace LOFAR {
             #pragma omp parallel for num_threads(nrBoards)
             for(size_t board = 0; board < nrBoards; board++) {
               OMPThreadSet::ScopedRun sr(packetReaderThreads);
+              OMPThread::ScopedName sn(str(format("%s rd %u") % ps.settings.antennaFields.at(stationIdx).name % board));
 
               Thread::ScopedPriority sp(SCHED_FIFO, 10);
 
@@ -568,6 +572,7 @@ namespace LOFAR {
          */
         #pragma omp section
         {
+          OMPThread::ScopedName sn(str(format("%s wr") % ps.settings.antennaFields.at(stationIdx).name));
           //Thread::ScopedPriority sp(SCHED_FIFO, 10);
 
           /*
@@ -655,6 +660,8 @@ namespace LOFAR {
          */
         #pragma omp section
         {
+          OMPThread::ScopedName sn(str(format("%s meta") % ps.settings.antennaFields.at(stationIdx).name));
+
           sm.computeMetaData(stopSwitch);
           LOG_INFO_STR(logPrefix << "StationMetaData: done");
         }
@@ -666,6 +673,8 @@ namespace LOFAR {
          */
         #pragma omp section
         {
+          OMPThread::ScopedName sn(str(format("%s proc") % ps.settings.antennaFields.at(stationIdx).name));
+
           si.processInput<SampleT>( sm.metaDataPool.filled, mpiQueue,
                                     mdLogger, mdKeyPrefix );
           LOG_INFO_STR(logPrefix << "StationInput: done");
@@ -678,6 +687,8 @@ namespace LOFAR {
          */
         #pragma omp section
         {
+          OMPThread::ScopedName sn(str(format("%s send") % ps.settings.antennaFields.at(stationIdx).name));
+
           sender.sendBlocks<SampleT>( mpiQueue, sm.metaDataPool.free );
           LOG_INFO_STR(logPrefix << "MPISender: done");
         } 
