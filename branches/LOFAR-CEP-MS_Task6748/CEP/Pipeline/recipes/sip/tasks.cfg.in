@@ -60,7 +60,7 @@ recipe = imager_prepare
 ndppp_exec = %(lofarroot)s/bin/NDPPP
 asciistat_executable = %(lofarroot)s/bin/asciistats.py
 statplot_executable = %(lofarroot)s/bin/statsplot.py
-msselect_executable = %(lofarroot)s/bin/msselect
+msselect_executable = %(casaroot)s/bin/msselect
 rficonsole_executable = %(lofarroot)s/bin/rficonsole
 
 [long_baseline]
@@ -68,7 +68,7 @@ recipe = long_baseline
 ndppp_exec = %(lofarroot)s/bin/NDPPP
 asciistat_executable = %(lofarroot)s/bin/asciistats.py
 statplot_executable = %(lofarroot)s/bin/statsplot.py
-msselect_executable = %(lofarroot)s/bin/msselect
+msselect_executable = %(casaroot)s/bin/msselect
 rficonsole_executable = %(lofarroot)s/bin/rficonsole
 
 [imager_awimager]
