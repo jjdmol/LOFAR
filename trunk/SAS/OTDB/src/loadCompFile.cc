@@ -433,6 +433,9 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename,
 	 	return (0);
 	}
 
+	// start transaction
+	work	xAction(*(itsConn->getConn()), "loadComponentFile");
+
 	// get convertors (from database)
 	ParamTypeConv	PTconv(itsConn);
 	UnitConv		UTconv(itsConn);
@@ -557,6 +560,11 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename,
 	}
 
 	inFile.close();
+
+	if (!inError) {
+		// commit changes
+		xAction.commit();
+	}
 
 	return (inError ? 0 : topNodeID);
 }
