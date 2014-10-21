@@ -76,6 +76,8 @@ namespace LOFAR
       // Return the LTA feedback produced by this writer.
       ParameterSet feedbackLTA() const;
 
+      unsigned       streamNr() const { return itsStreamNr; }
+
     protected:
       void checkForDroppedData(StreamableData *);
       void doWork();

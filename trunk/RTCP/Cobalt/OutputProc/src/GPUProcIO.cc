@@ -37,6 +37,7 @@
 #include <ApplCommon/StationInfo.h>
 #include <MACIO/RTmetadata.h>
 #include <CoInterface/Exceptions.h>
+#include <CoInterface/OMPThread.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/FinalMetaData.h>
 #include <CoInterface/Stream.h>
@@ -178,6 +179,8 @@ bool process(Stream &controlStream, unsigned myRank)
       // Done signal from controller, by sending the final meta data
 #     pragma omp section
       {
+        OMPThread::ScopedName sn("finalMetaData");
+
         // Add final meta data (broken tile information, etc)
         // that is obtained after the end of an observation.
         LOG_INFO_STR("Waiting for final meta data");
@@ -206,17 +209,26 @@ bool process(Stream &controlStream, unsigned myRank)
       // SubbandWriters
 #     pragma omp section
       {
+        OMPThread::ScopedName sn("subbandWr");
+
 #       pragma omp parallel for num_threads(subbandWriters.size())
-        for (int i = 0; i < (int)subbandWriters.size(); ++i)
+        for (int i = 0; i < (int)subbandWriters.size(); ++i) {
+          OMPThread::ScopedName sn(str(format("subbandWr %u") % subbandWriters[i]->streamNr()));
+
           subbandWriters[i]->process();
+        }
       }
 
       // TABWriters
 #     pragma omp section
       {
+        OMPThread::ScopedName sn("tabWr");
+
 #       pragma omp parallel for num_threads(tabWriters.size())       
-        for (int i = 0; i < (int)tabWriters.size(); ++i)
+        for (int i = 0; i < (int)tabWriters.size(); ++i) {
+          OMPThread::ScopedName sn(str(format("tabWr %u") % tabWriters[i]->streamNr()));
           tabWriters[i]->process();
+        }
       }
     }
 

@@ -36,6 +36,7 @@
 #include <CoInterface/Exceptions.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/Stream.h>
+#include <CoInterface/OMPThread.h>
 #include <OutputProc/Package__Version.h>
 #include "GPUProcIO.h"
 #include "IOPriority.h"
@@ -103,6 +104,8 @@ int main(int argc, char *argv[])
   unsigned myRank = boost::lexical_cast<unsigned>(argv[2]);
 
   omp_set_nested(true);
+
+  OMPThread::init();
 
   setIOpriority();
   setRTpriority();
