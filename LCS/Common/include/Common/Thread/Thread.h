@@ -60,7 +60,7 @@ class Thread
     //
     // The thread is joined in the destructor of the Thread object
       
-    template <typename T> Thread(T *object, void (T::*method)(), const std::string &logPrefix = "", size_t stackSize = 0);
+    template <typename T> Thread(T *object, void (T::*method)(), const std::string &name = "<anon>", const std::string &logPrefix = "", size_t stackSize = 0);
 
     // ~Thread() is NOT virtual, because Thread should NOT be inherited. An
     // DerivedThread class would partially destruct itself before reaching
@@ -162,6 +162,7 @@ class Thread
     template <typename T> static void *stub(void *);
 
     const std::string logPrefix;
+    const std::string name;
     Semaphore	      started, finished;
     pthread_t	      thread;
 
@@ -199,9 +200,10 @@ private:
   Mutex   mutex;
 };
 
-template <typename T> inline Thread::Thread(T *object, void (T::*method)(), const std::string &logPrefix, size_t stackSize)
+template <typename T> inline Thread::Thread(T *object, void (T::*method)(), const std::string &name, const std::string &logPrefix, size_t stackSize)
 :
   logPrefix(logPrefix),
+  name(name),
   caught_exception(false)
 {
   int retval;
@@ -224,6 +226,11 @@ template <typename T> inline Thread::Thread(T *object, void (T::*method)(), cons
     if ((retval = pthread_create(&thread, 0, &Thread::stub<T>, new Args<T>(object, method, this))) != 0)
       throw SystemCallException("pthread_create", retval, THROW_ARGS);
   }
+
+#ifdef _GNU_SOURCE
+  if ((retval = pthread_setname_np(thread, name.substr(0,15).c_str())) != 0)
+    throw SystemCallException("pthread_setname_np", retval, THROW_ARGS);
+#endif
 }
 
 
