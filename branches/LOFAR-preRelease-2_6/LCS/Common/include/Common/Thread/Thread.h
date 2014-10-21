@@ -27,6 +27,7 @@
 
 #ifdef USE_THREADS
 
+#include <features.h>
 #include <pthread.h>
 #include <signal.h>
 #include <sched.h>
@@ -227,7 +228,7 @@ template <typename T> inline Thread::Thread(T *object, void (T::*method)(), cons
       throw SystemCallException("pthread_create", retval, THROW_ARGS);
   }
 
-#ifdef _GNU_SOURCE
+#if defined(_GNU_SOURCE) && __GLIBC_PREREQ(2, 12)
   if ((retval = pthread_setname_np(thread, name.substr(0,15).c_str())) != 0)
     throw SystemCallException("pthread_setname_np", retval, THROW_ARGS);
 #endif
