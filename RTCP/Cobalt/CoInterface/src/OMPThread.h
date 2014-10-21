@@ -156,7 +156,7 @@ namespace LOFAR
       const std::string oldName;
 
       void set(const std::string &name) const {
-#ifdef _GNU_SOURCE
+#if defined(_GNU_SOURCE) && __GLIBC_PREREQ(2, 12)
         // Inform the kernel of the thread name (only first 16 characters are used!)
         int retval;
 
@@ -166,7 +166,7 @@ namespace LOFAR
       }
 
       std::string get() const {
-#ifdef _GNU_SOURCE
+#if defined(_GNU_SOURCE) && __GLIBC_PREREQ(2, 12)
         char cname[1024];
 
         // Inform the kernel of the thread name (only first 16 characters are used!)
