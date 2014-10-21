@@ -504,6 +504,8 @@ int main(int argc, char **argv)
       {
         #pragma omp section
         {
+          OMPThread::ScopedName sn("stations");
+
           // Read and forward station data over MPI
           #pragma omp parallel for num_threads(ps.settings.antennaFields.size())
           for (size_t stat = 0; stat < ps.settings.antennaFields.size(); ++stat) 
