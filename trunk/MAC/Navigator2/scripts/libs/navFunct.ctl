@@ -1818,6 +1818,7 @@ void navFunct_clearGlobalLists() {
   dynClear(g_subrackList);
   dynClear(g_uriBoardList);
   dynClear(g_uniBoardList);
+  dynClear(g_FPGAList);
   dynClear(g_RSPList);
   dynClear(g_TBBList);
   dynClear(g_RCUList);
