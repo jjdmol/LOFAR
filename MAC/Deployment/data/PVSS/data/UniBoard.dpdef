@@ -8,5 +8,5 @@ power			bool
 ethTemp			float
 current			float
 voltage			float
-e2cError		float
+i2cError		float
 
