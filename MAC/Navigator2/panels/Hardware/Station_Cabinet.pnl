@@ -58,6 +58,7 @@ void prepareHardwareList() {
 
     // strip all b4 Cabinet out of the string
     strreplace(aS,baseDP+\"_\",\"\");
+    if (aS == \"\") continue;
     
     // Remainder should be Cabinet?_Subrack?  and Cabinet?_UriBoard? combinations, split on _ 
     dyn_string spl=strsplit(aS,\"_\");
