@@ -394,6 +394,8 @@ namespace LOFAR
           // budget if there are too many stations.
 #         pragma omp parallel for num_threads(4)
           for (size_t stat = 0; stat < ps.settings.antennaFields.size(); ++stat) {
+            OMPThread::ScopedName sn("transposeInput");
+
             if (metaData[stat][subbandIdx].EOS) {
               // Flag everything -- note that delays etc will not matter, so no need to set them
               subbandData->metaData[stat].flags.include(0, ps.settings.blockSize);
