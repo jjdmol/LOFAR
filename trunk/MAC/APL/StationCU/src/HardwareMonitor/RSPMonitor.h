@@ -107,7 +107,7 @@ private:
 	vector<RTDBPropertySet*>	itsRSPs;
 	vector<RTDBPropertySet*>	itsRCUs;
 	RTDBPropertySet*		itsStationInfo;
-	RTDBPropertySet*			itsAartfaacInfo;
+	RTDBPropertySet*		itsAartfaacInfo;
 
 	blitz::Array<uint,1>		itsRCUstates;		// actual status of the RCUs
 	blitz::Array<bool,2>		itsRCUInputStates;	// enable state of the three RCU inputs
