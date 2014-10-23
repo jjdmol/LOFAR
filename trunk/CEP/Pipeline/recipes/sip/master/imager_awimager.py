@@ -3,8 +3,6 @@
 #                                    Example recipe with simple job distribution
 #                                                          Wouter Klijn, 2010
 #                                                      swinbank@transientskp.org
-#                                                         Nicolas Vilchez, 2014
-#                                                             vilchez@astron.nl
 # ------------------------------------------------------------------------------
 import sys
 import copy
@@ -67,7 +65,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
             help = "Turns on the autogeneration of: cellsize, image-size, fov."
             " MSSS 'type' functionality"
         ),
-        'specify_fov': ingredient.BoolField(
+        'specify_fov': ingredient.FloatField(
             '--specify-fov',
             default = False,
             help = "calculated Image parameters are relative to fov, parameter"
@@ -79,19 +77,6 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
             help = "calculated Image parameters are relative to this"
             " Field Of View in arcSec. This parameter is obligatory when"
             " specify_fov is True"
-        ),
-        'major_cycle': ingredient.IntField(
-            '--major_cycle',
-            help = "The number of the current cycle to modify the parset."
-        ),
-        'nr_cycles': ingredient.IntField(
-            '--nr-cycles',
-            help = "The number major cycles."
-        ) ,
-        'perform_self_cal': ingredient.BoolField(
-            '--perform-self-cal',
-            default=False,          
-            help = "Control the usage of the self callibartion functionality"
         )
     }
 
@@ -156,9 +141,6 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
                          self.inputs['autogenerate_parameters'],
                          self.inputs['specify_fov'],
                          self.inputs['fov'],
-                         self.inputs['major_cycle'],
-                         self.inputs['nr_cycles'],
-                         self.inputs['perform_self_cal']
                          ]
 
             jobs.append(ComputeJob(host, node_command, arguments))
