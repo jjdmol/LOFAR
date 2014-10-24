@@ -204,6 +204,10 @@ namespace LOFAR
       if (settings.correlator.enabled) {
         ps.add("Observation.Correlator.integrationInterval",
                str(format("%.16g") % settings.correlator.integrationTime()));
+        ps.add("Observation.Correlator.channelsPerSubband",
+               str(format("%u") % settings.correlator.nrChannels));
+        ps.add("Observation.Correlator.channelWidth",
+               str(format("%.16g") % (settings.subbandWidth() / settings.correlator.nrChannels)));
 
         // add the feedback for the individual files
         for (size_t i = 0; i < settings.correlator.files.size(); ++i) {
@@ -214,60 +218,104 @@ namespace LOFAR
       ps.add("Observation.DataProducts.nrOfOutput_Beamformed_", 
              str(format("%u") % (settings.beamFormer.enabled ? settings.beamFormer.files.size() : 0)));
 
-      if (settings.beamFormer.enabled) {
+      if (settings.beamFormer.enabled && settings.beamFormer.anyCoherentTABs() && !settings.beamFormer.doFlysEye) {
+        /* Coherent Stokes, no Fly's Eye */
         const ObservationSettings::BeamFormer::StokesSettings&
           coherentStokes = settings.beamFormer.coherentSettings;
-        const ObservationSettings::BeamFormer::StokesSettings&
-          incoherentStokes = settings.beamFormer.incoherentSettings;
 
         // The 'rawSamplingTime' is the duration of a sample right after the PPF
         ps.add("Observation.CoherentStokes.rawSamplingTime",
                str(format("%.16g") % 
                    (settings.sampleDuration() * coherentStokes.nrChannels)));
-        ps.add("Observation.IncoherentStokes.rawSamplingTime",
-               str(format("%.16g") % 
-                   (settings.sampleDuration() * incoherentStokes.nrChannels)));
 
         // The 'samplingTime' is the duration of a sample in the output
         ps.add("Observation.CoherentStokes.samplingTime",
                str(format("%.16g") % 
                    (settings.sampleDuration() * coherentStokes.nrChannels * coherentStokes.timeIntegrationFactor)));
+
+        ps.add("Observation.CoherentStokes.timeDownsamplingFactor",
+               str(format("%.16g") % coherentStokes.timeIntegrationFactor));
+
+        ps.add("Observation.CoherentStokes.channelsPerSubband",
+               str(format("%u") % coherentStokes.nrChannels));
+        ps.add("Observation.CoherentStokes.channelWidth",
+               str(format("%.16g") % (settings.subbandWidth() / coherentStokes.nrChannels)));
+
+        ps.add("Observation.CoherentStokes.stokes",
+               stokesType(coherentStokes.type));
+
+        ps.add("Observation.CoherentStokes.antennaSet",
+               settings.antennaSet);
+        ps.add("Observation.CoherentStokes.stationList",
+               settings.rawStationList);
+      }
+
+      if (settings.beamFormer.enabled && settings.beamFormer.anyCoherentTABs() && settings.beamFormer.doFlysEye) {
+        /* Fly's Eye */
+        const ObservationSettings::BeamFormer::StokesSettings&
+          coherentStokes = settings.beamFormer.coherentSettings;
+
+        // The 'rawSamplingTime' is the duration of a sample right after the PPF
+        ps.add("Observation.FlysEye.rawSamplingTime",
+               str(format("%.16g") % 
+                   (settings.sampleDuration() * coherentStokes.nrChannels)));
+
+        // The 'samplingTime' is the duration of a sample in the output
+        ps.add("Observation.FlysEye.samplingTime",
+               str(format("%.16g") % 
+                   (settings.sampleDuration() * coherentStokes.nrChannels * coherentStokes.timeIntegrationFactor)));
+
+        ps.add("Observation.FlysEye.timeDownsamplingFactor",
+               str(format("%.16g") % coherentStokes.timeIntegrationFactor));
+
+        ps.add("Observation.FlysEye.channelsPerSubband",
+               str(format("%u") % coherentStokes.nrChannels));
+        ps.add("Observation.FlysEye.channelWidth",
+               str(format("%.16g") % (settings.subbandWidth() / coherentStokes.nrChannels)));
+
+        ps.add("Observation.FlysEye.stokes",
+               stokesType(coherentStokes.type));
+      }
+
+      if (settings.beamFormer.enabled && settings.beamFormer.anyIncoherentTABs()) {
+        /* Incoherent Stokes */
+        const ObservationSettings::BeamFormer::StokesSettings&
+          incoherentStokes = settings.beamFormer.incoherentSettings;
+
+        // The 'rawSamplingTime' is the duration of a sample right after the PPF
+        ps.add("Observation.IncoherentStokes.rawSamplingTime",
+               str(format("%.16g") % 
+                   (settings.sampleDuration() * incoherentStokes.nrChannels)));
+
+        // The 'samplingTime' is the duration of a sample in the output
         ps.add("Observation.IncoherentStokes.samplingTime",
                str(format("%.16g") % 
                    (settings.sampleDuration() * incoherentStokes.nrChannels * incoherentStokes.timeIntegrationFactor)));
 
-        ps.add("Observation.CoherentStokes.timeDownsamplingFactor",
-               str(format("%.16g") % coherentStokes.timeIntegrationFactor));
         ps.add("Observation.IncoherentStokes.timeDownsamplingFactor",
                str(format("%.16g") % incoherentStokes.timeIntegrationFactor));
 
-        // The BG/P could 'collapse channels'. Cobalt does not need that, so we
-        // put fixed/trivial values here.
-        ps.add("Observation.CoherentStokes.nrOfCollapsedChannels",
-               str(format("%u") % coherentStokes.nrChannels));
-        ps.add("Observation.IncoherentStokes.nrOfCollapsedChannels",
+        ps.add("Observation.IncoherentStokes.channelsPerSubband",
                str(format("%u") % incoherentStokes.nrChannels));
-        ps.add("Observation.CoherentStokes.frequencyDownsamplingFactor", "1");
-        ps.add("Observation.IncoherentStokes.frequencyDownsamplingFactor", "1");
+        ps.add("Observation.IncoherentStokes.channelWidth",
+               str(format("%.16g") % (settings.subbandWidth() / incoherentStokes.nrChannels)));
 
-        ps.add("Observation.CoherentStokes.stokes",
-               stokesType(coherentStokes.type));
         ps.add("Observation.IncoherentStokes.stokes",
                stokesType(incoherentStokes.type));
-        ps.add("Observation.CoherentStokes.antennaSet",
-               settings.antennaSet);
+
         ps.add("Observation.IncoherentStokes.antennaSet",
                settings.antennaSet);
-        ps.add("Observation.CoherentStokes.stationList",
-               settings.rawStationList);
         ps.add("Observation.IncoherentStokes.stationList",
                settings.rawStationList);
-
+      }
+      
+      if (settings.beamFormer.enabled) {
         // add the feedback for the individual files
         for (size_t i = 0; i < settings.beamFormer.files.size(); ++i) {
           ps.adoptCollection(beamFormedFeedback(i));
         }
       }
+
       return ps;
     }
   } // namespace Cobalt
