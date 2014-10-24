@@ -16,15 +16,30 @@ CAN_SUDO=$?
 function runTest() {
   TEST=$1
 
+  echo "----------------------------------------------------------------"
+  echo " Running test: $TEST"
+  echo " Working dir:  `pwd`"
+  echo "        User:  `whoami`"
+  echo "        Host:  `hostname`"
+  echo "        Time:  `date +"%F %T"`"
+  echo "----------------------------------------------------------------"
+
   if [ "${TEST%%.root.test}" == "${TEST}" ]; then
-    $TEST
+    bash -v $TEST
+    RESULT=$?
   else
     if [ $CAN_SUDO -eq 0 ]; then
-      sudo -n $TEST
+      sudo -n bash -v $TEST
+      RESULT=$?
     else
       return 42
     fi
   fi
+
+  echo "----------------------------------------------------------------"
+  echo " Exit code: $RESULT"
+  echo "----------------------------------------------------------------"
+  return $RESULT
 }
 
 NRTESTS=0
