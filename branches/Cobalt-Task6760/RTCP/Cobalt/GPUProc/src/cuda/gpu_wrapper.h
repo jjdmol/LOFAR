@@ -213,7 +213,29 @@ namespace LOFAR
       public:
         // Create a new CUDA context and associate it with the calling thread.
         // In other words, \c setCurrent() is implied.
-        Context(const Device &device, unsigned int flags = CU_CTX_SCHED_YIELD);
+        //
+        // Flags:
+
+        //    CU_CTX_SCHED_AUTO:
+        //        The default value if the flags parameter is zero, uses a
+        //        heuristic based on the number of active CUDA contexts in the
+        //        process C and the number of logical processors in the system P.
+        //        If C > P, then CUDA will yield to other OS threads when waiting
+        //        for the GPU, otherwise CUDA will not yield while waiting for
+        //        results and actively spin on the processor.
+        //    CU_CTX_SCHED_SPIN:
+        //        Instruct CUDA to actively spin when waiting for results from the GPU.
+        //        This can decrease latency when waiting for the GPU, but may lower
+        //        the performance of CPU threads if they are performing work in parallel
+        //        with the CUDA thread.
+        //    CU_CTX_SCHED_YIELD:
+        //        Instruct CUDA to yield its thread when waiting for results from the GPU.
+        //        This can increase latency when waiting for the GPU, but can increase
+        //        the performance of CPU threads performing work in parallel with the GPU.
+        //    CU_CTX_SCHED_BLOCKING_SYNC:
+        //        Instruct CUDA to block the CPU thread on a synchronization primitive
+        //        when waiting for the GPU to finish work.
+        Context(const Device &device, unsigned int flags = CU_CTX_SCHED_BLOCKING_SYNC);
 
         // Returns the device associated to this context.
         Device getDevice() const;
