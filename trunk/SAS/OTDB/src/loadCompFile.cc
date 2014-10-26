@@ -434,7 +434,8 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename,
 	}
 
 	// start transaction
-	work	xAction(*(itsConn->getConn()), "loadComponentFile");
+  // This does not seem to work on kis001, because we're starting to nest transactions, causing pqxx to throw a logic_error?
+	//work	xAction(*(itsConn->getConn()), "loadComponentFile");
 
 	// get convertors (from database)
 	ParamTypeConv	PTconv(itsConn);
@@ -561,10 +562,12 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename,
 
 	inFile.close();
 
+#if 0
 	if (!inError) {
 		// commit changes
 		xAction.commit();
 	}
+#endif
 
 	return (inError ? 0 : topNodeID);
 }
