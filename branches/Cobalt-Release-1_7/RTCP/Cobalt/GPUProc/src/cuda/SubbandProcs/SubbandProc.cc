@@ -202,7 +202,7 @@ namespace LOFAR
             // The min is needed, because flagging the last input
             // samples would cause NR_TAPS subsequent samples to
             // be flagged, which aren't necessarily part of this block.
-            end_idx = std::min(parset.nrSamplesPerChannel() + 1, 
+            end_idx = std::min(parset.nrSamplesPerChannel(), 
               ((it->end - 1) >> log2NrChannels) + 1);
           }
 
