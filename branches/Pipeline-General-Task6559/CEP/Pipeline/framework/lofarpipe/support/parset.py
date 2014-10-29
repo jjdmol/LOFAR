@@ -109,6 +109,7 @@ def patch_parset(parset, data, output_dir=None):
     `parset` may either be the filename of a parset-file or an instance of
     `lofar.parameterset.parameterset`.
     """
+    output_dir = os.environ.get('HOME')
     if isinstance(parset, str):
         temp_parset = parameterset(parset)
     else:
