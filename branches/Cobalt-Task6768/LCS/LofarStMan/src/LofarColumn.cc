@@ -40,8 +40,6 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
 
-#include <algorithm>
-
 using namespace casa;
 
 
@@ -423,9 +421,6 @@ namespace LOFAR {
     case 2:
     case 3:
     {
-      // NOTE: Weights in observations taken by Cobalt
-      //       between 2013-03-28 and 2014-10-28 can erroneously
-      //       be >1.0. We fix that by capping the weight to 1.0.
       switch (itsParent->getNrBytesPerNrValidSamples()) {
       case 1:
       {
@@ -435,7 +430,7 @@ namespace LOFAR {
 	if (dataPtr->contiguousStorage()) {
 	  for (Array<Float>::contiter iter=dataPtr->cbegin();
 	       data<dataEnd; ++data) {
-	    Float weight = std::min(1.0, *data / maxn);
+	    Float weight = *data / maxn;
 	    for (uInt i=0; i<npol; ++i, ++iter) {
 	      *iter = weight;
 	    }
@@ -443,7 +438,7 @@ namespace LOFAR {
 	} else {
 	  for (Array<Float>::iterator iter=dataPtr->begin();
 	       data<dataEnd; ++data, ++iter) {
-	    Float weight = std::min(1.0, *data / maxn);
+	    Float weight = *data / maxn;
 	    for (uInt i=0; i<npol; ++i, ++iter) {
 	      *iter = weight;
 	    }
@@ -458,7 +453,7 @@ namespace LOFAR {
 	if (dataPtr->contiguousStorage()) {
 	  for (Array<Float>::contiter iter=dataPtr->cbegin();
 	       data<dataEnd; ++data) {
-	    Float weight = std::min(1.0, *data / maxn);
+	    Float weight = *data / maxn;
 	    for (uInt i=0; i<npol; ++i, ++iter) {
 	      *iter = weight;
 	    }
@@ -466,7 +461,7 @@ namespace LOFAR {
 	} else {
 	  for (Array<Float>::iterator iter=dataPtr->begin();
 	       data<dataEnd; ++data, ++iter) {
-	    Float weight = std::min(1.0, *data / maxn);
+	    Float weight = *data / maxn;
 	    for (uInt i=0; i<npol; ++i, ++iter) {
 	      *iter = weight;
 	    }
@@ -482,7 +477,7 @@ namespace LOFAR {
 	if (dataPtr->contiguousStorage()) {
 	  for (Array<Float>::contiter iter=dataPtr->cbegin();
 	       data<dataEnd; ++data) {
-	    Float weight = std::min(1.0, *data / maxn);
+	    Float weight = *data / maxn;
 	    for (uInt i=0; i<npol; ++i, ++iter) {
 	      *iter = weight;
 	    }
@@ -490,7 +485,7 @@ namespace LOFAR {
 	} else {
 	  for (Array<Float>::iterator iter=dataPtr->begin();
 	       data<dataEnd; ++data, ++iter) {
-	    Float weight = std::min(1.0, *data / maxn);
+	    Float weight = *data / maxn;
 	    for (uInt i=0; i<npol; ++i, ++iter) {
 	      *iter = weight;
 	    }

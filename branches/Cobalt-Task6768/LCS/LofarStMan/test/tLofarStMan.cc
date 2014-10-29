@@ -239,6 +239,8 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
   indgen (nsample1);
   indgen (nsample2);
   indgen (nsample4);
+  nsample2(IPosition(1,nchan-1)) = 33000; // invalid nsample for Cobalt bugfix
+  nsample4(IPosition(1,nchan-1)) = 33000; // invalid nsample for Cobalt bugfix
 
   // Allocate space for possible block alignment.
   if (alignment < 1) {
@@ -384,7 +386,7 @@ void checkUVW (uInt row, uInt nant, Vector<Double> uvw)
 }
 
 // maxWeight tells maximum weight before it wraps
-// (because nbytesPerSample is small).
+// (when nbytesPerSample is small).
 void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
                 Double startTime, Double interval, const Complex& startValue,
                 Float maxWeight)
@@ -438,6 +440,9 @@ void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
           while (weightExp.data()[i] >= maxWeight) {
             weightExp.data()[i] -= maxWeight;
           }
+        }
+        if (maxWeight > 32768) {
+          weightExp(IPosition(2,0,nchan-1)) = 0;   // invalid nsample
         }
         // Contents must be present except for FLAG_CATEGORY.
 	AlwaysAssertExit (dataCol.isDefined (row));
