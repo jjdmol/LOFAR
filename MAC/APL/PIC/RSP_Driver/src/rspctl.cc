@@ -2857,7 +2857,7 @@ void XCStatisticsCommand::plot_xcstatistics(Array<complex<double>, 4>& xcstats, 
 	//	thestats = 10.0*log(thestats)/log(10.0);
 	//}
 
-	if ((size_t)thestats.size() != fwrite(thestats.data(), sizeof(double), (size_t)thestats.size(), handle->gnucmd)) {
+	if (thestats.size() != fwrite(thestats.data(), sizeof(double), thestats.size(), handle->gnucmd)) {
 		logMessage(cerr, "Failed to write to gnuplot.");
 	}
 }
@@ -2883,7 +2883,7 @@ void XCStatisticsCommand::dump_xcstatistics(Array<complex<double>, 4>& stats, co
 	FILE* file = getFile(0,fileName);
 
 	if (thestats.size()
-			!= (int)fwrite(thestats.data(), sizeof(complex<double>),
+			!= fwrite(thestats.data(), sizeof(complex<double>),
 					thestats.size(), file)) {
 		logMessage(cerr,formatString("Error: unable to write to file %s",fileName));
 		exit(EXIT_FAILURE);
