@@ -28,7 +28,7 @@
 using namespace LOFAR;
 %}
 
-%pure_parser                /* make parser re-entrant */
+%pure-parser                /* make parser re-entrant */
 
 %union {
 LOFAR::KeyValue* val;
