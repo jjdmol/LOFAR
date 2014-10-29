@@ -435,7 +435,7 @@ namespace LOFAR {
 	if (dataPtr->contiguousStorage()) {
 	  for (Array<Float>::contiter iter=dataPtr->cbegin();
 	       data<dataEnd; ++data) {
-	    Float weight = std::min(Float(1.0f), *data / maxn);
+	    Float weight = std::min(1.0, *data / maxn);
 	    for (uInt i=0; i<npol; ++i, ++iter) {
 	      *iter = weight;
 	    }
@@ -443,7 +443,7 @@ namespace LOFAR {
 	} else {
 	  for (Array<Float>::iterator iter=dataPtr->begin();
 	       data<dataEnd; ++data, ++iter) {
-	    Float weight = std::min(Float(1.0f), *data / maxn);
+	    Float weight = std::min(1.0, *data / maxn);
 	    for (uInt i=0; i<npol; ++i, ++iter) {
 	      *iter = weight;
 	    }
@@ -458,7 +458,7 @@ namespace LOFAR {
 	if (dataPtr->contiguousStorage()) {
 	  for (Array<Float>::contiter iter=dataPtr->cbegin();
 	       data<dataEnd; ++data) {
-	    Float weight = std::min(Float(1.0f), *data / maxn);
+	    Float weight = std::min(1.0, *data / maxn);
 	    for (uInt i=0; i<npol; ++i, ++iter) {
 	      *iter = weight;
 	    }
@@ -466,7 +466,7 @@ namespace LOFAR {
 	} else {
 	  for (Array<Float>::iterator iter=dataPtr->begin();
 	       data<dataEnd; ++data, ++iter) {
-	    Float weight = std::min(Float(1.0f), *data / maxn);
+	    Float weight = std::min(1.0, *data / maxn);
 	    for (uInt i=0; i<npol; ++i, ++iter) {
 	      *iter = weight;
 	    }
@@ -482,7 +482,7 @@ namespace LOFAR {
 	if (dataPtr->contiguousStorage()) {
 	  for (Array<Float>::contiter iter=dataPtr->cbegin();
 	       data<dataEnd; ++data) {
-	    Float weight = std::min(Float(1.0f), *data / maxn);
+	    Float weight = std::min(1.0, *data / maxn);
 	    for (uInt i=0; i<npol; ++i, ++iter) {
 	      *iter = weight;
 	    }
@@ -490,7 +490,7 @@ namespace LOFAR {
 	} else {
 	  for (Array<Float>::iterator iter=dataPtr->begin();
 	       data<dataEnd; ++data, ++iter) {
-	    Float weight = std::min(Float(1.0f), *data / maxn);
+	    Float weight = std::min(1.0, *data / maxn);
 	    for (uInt i=0; i<npol; ++i, ++iter) {
 	      *iter = weight;
 	    }
