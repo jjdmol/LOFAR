@@ -99,6 +99,14 @@ namespace LOFAR
             // absorbed by the FIR and thus should be excluded
             // from the original flag set.
             //
+            // The original flag set can span up to
+            //    [0, nrSamplesPerBlock + nrChannels * (NR_TAPS - 1))
+            // of which the FIRST (NR_TAPS - 1) samples belong to
+            // the previous block, and are used to initialise the
+            // FIR filter. Every sample i of the current block is thus
+            // actually at index (i + nrChannels * (NR_TAPS - 1)),
+            // or, after converting to channels, at index (i' + NR_TAPS - 1).
+            //
             // At the same time, every sample is affected by
             // the NR_TAPS-1 samples before it. So, any flagged
             // sample in the input flags NR_TAPS samples in
@@ -109,7 +117,7 @@ namespace LOFAR
             // The min is needed, because flagging the last input
             // samples would cause NR_TAPS subsequent samples to
             // be flagged, which aren't necessarily part of this block.
-            end_idx = std::min(static_cast<unsigned>(ps.settings.correlator.nrSamplesPerBlock + 1U), 
+            end_idx = std::min(static_cast<unsigned>(ps.settings.correlator.nrSamplesPerBlock), 
               ((it->end - 1) >> log2NrChannels) + 1);
           }
 
