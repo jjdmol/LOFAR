@@ -152,7 +152,7 @@ class Thread
     Thread& operator=(const Thread&);
 
     template <typename T> struct Args {
-      Args(T *object, void (T::*method)(), Thread *thread, const std::string &name) : object(object), method(method), thread(thread, name(name)) {}
+      Args(T *object, void (T::*method)(), Thread *thread, const std::string &name) : object(object), method(method), thread(thread), name(name) {}
 
       T	     *object;
       void   (T::*method)();
