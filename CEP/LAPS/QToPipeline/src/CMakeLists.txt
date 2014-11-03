@@ -1,8 +1,7 @@
 # $Id$
 
-include(PythonInstall)
 
-python_install(
+install(PROGRAMS
   QToPipeline.py
 
-  DESTINATION LAPS/QToPipeline)
+  DESTINATION bin)
