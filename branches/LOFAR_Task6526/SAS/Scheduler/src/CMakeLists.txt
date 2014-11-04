@@ -3,7 +3,7 @@
 # Add current source- and binary directory to include path
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-set(scheduler_SOURCES
+set(scheduler_SRCS
   main.cpp
   Angle.cpp
   astrodate.cpp
@@ -83,7 +83,7 @@ set(scheduler_SOURCES
   tiedarraybeamdialog.cpp
   TimeEdit.cpp)
 
-set(scheduler_HEADERS
+set(scheduler_MOC_HDRS
 #  Angle.h
 #  astrodate.h
 #  astrodatetime.h
@@ -163,7 +163,7 @@ set(scheduler_HEADERS
 #  TiedArrayBeam.h
   TimeEdit.h)
 
-set(scheduler_FORMS 
+set(scheduler_UIS 
   conflictdialog.ui
   dataslotdialog.ui
   digitalbeamdialog.ui
@@ -188,17 +188,17 @@ set(scheduler_FORMS
   thrashbin.ui
   tiedarraybeamdialog.ui)
 
-set(scheduler_RESOURCES
+set(scheduler_RCS
   scheduler_resources.qrc)
 
-qt4_wrap_cpp(scheduler_HEADERS_MOC ${scheduler_HEADERS})
-qt4_wrap_ui(scheduler_FORMS_HEADERS ${scheduler_FORMS})
-qt4_add_resources(scheduler_RESOURCES_RCC ${scheduler_RESOURCES})
+qt4_wrap_cpp(scheduler_MOC_SRCS ${scheduler_MOC_HDRS})
+qt4_wrap_ui(scheduler_UI_HDRS ${scheduler_UIS})
+qt4_add_resources(scheduler_RC_SRCS ${scheduler_RCS})
 
 add_executable(scheduler
-  ${scheduler_SOURCES} 
-  ${scheduler_HEADERS_MOC} 
-  ${scheduler_FORMS_HEADERS} 
-  ${scheduler_RESOURCES_RCC})
+  ${scheduler_SRCS} 
+  ${scheduler_MOC_SRCS} 
+  ${scheduler_UI_HDRS} 
+  ${scheduler_RC_SRCS})
 
 target_link_libraries(scheduler ${QT_LIBRARIES})
