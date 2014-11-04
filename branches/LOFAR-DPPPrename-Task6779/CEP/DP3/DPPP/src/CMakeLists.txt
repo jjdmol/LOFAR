@@ -19,7 +19,7 @@ lofar_add_library(dppp
   DemixerNew.cc DemixInfo.cc DemixWorker.cc
 )
 
-lofar_add_bin_program(NDPPP NDPPP.cc)
+lofar_add_bin_program(DPPP DPPP.cc)
 lofar_add_bin_program(versiondppp versiondppp.cc)
 
 install(PROGRAMS

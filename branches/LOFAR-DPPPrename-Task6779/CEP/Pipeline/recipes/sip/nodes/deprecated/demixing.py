@@ -127,7 +127,7 @@ class demixing(LOFARnodeTCP):
                 f.write('preflag.corrtype=auto\n')
                 f.close()
                 self.logger.info("Starting NDPPP demix ...")
-                if not self._execute(['NDPPP', basename + 'NDPPP_dmx.parset']):
+                if not self._execute(['DPPP', basename + 'NDPPP_dmx.parset']):
                     return 1
             else:
                 if infile == mstarget:
@@ -181,7 +181,7 @@ class demixing(LOFARnodeTCP):
                 if os.system ('rm -f -r '+msout) != 0:
                     return 1
 
-                if not self._execute(['NDPPP', basename + 'dmx_avg.parset']):
+                if not self._execute(['DPPP', basename + 'dmx_avg.parset']):
                     return 1
 
                 # Form avg output names.

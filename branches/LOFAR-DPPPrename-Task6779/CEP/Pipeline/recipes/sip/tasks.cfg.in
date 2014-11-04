@@ -1,6 +1,6 @@
 [ndppp]
 recipe = dppp
-executable = %(lofarroot)s/bin/NDPPP
+executable = %(lofarroot)s/bin/DPPP
 dry_run = False
 mapfile = %(runtime_directory)s/%(job_name)s/mapfiles/dppp.mapfile
 parset = %(runtime_directory)s/%(job_name)s/parsets/NDPPP.parset
@@ -57,7 +57,7 @@ recipe = get_metadata
 
 [imager_prepare]
 recipe = imager_prepare
-ndppp_exec = %(lofarroot)s/bin/NDPPP
+ndppp_exec = %(lofarroot)s/bin/DPPP
 asciistat_executable = %(lofarroot)s/bin/asciistats.py
 statplot_executable = %(lofarroot)s/bin/statsplot.py
 msselect_executable = %(lofarroot)s/bin/msselect

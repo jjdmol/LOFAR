@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
       // First argument is parset name (except if it's a key-value pair)
       parsetName = argv[1];
     } else if (argc==1) { // If no arguments given, load NDPPP.parset
-      parsetName="NDPPP.parset";
+      parsetName="DPPP.parset";
     }
     // Execute the parset file.
     DPRun::execute (parsetName, argc, argv);

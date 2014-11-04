@@ -69,7 +69,7 @@ framework. Drop them into ``~/pipeline_runtime/jobs/L2009_16007_1/parsets``.
 Note that some parameters will be added to the parset by the framework as part
 of the run. At present, these are:
 
-* NDPPP: ``msin``, ``msout``
+* DPPP: ``msin``, ``msout``
 * MWImager: ``dataset``
 
 Prepare your task definitions
@@ -88,7 +88,7 @@ basically the combination of a recipe and a set of parameters. We will use the
 
    [ndppp]
    recipe = dppp
-   executable = %(lofarroot)s/bin/NDPPP
+   executable = %(lofarroot)s/bin/DPPP
    initscript = %(lofarroot)s/lofarinit.sh
    working_directory = %(default_working_directory)s
    parset = %(runtime_directory)s/jobs/%(job_name)s/parsets/ndppp.parset
