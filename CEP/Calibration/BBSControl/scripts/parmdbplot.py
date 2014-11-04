@@ -787,6 +787,38 @@ class PlotWindow(QFrame):
         self.canvas.draw()
 
 
+class DefValuesWindow(QFrame):
+    def __init__(self, db, parent=None, title=None):
+        QFrame.__init__(self,None)
+
+        defvalues=db.getDefValues()
+
+        layout = QVBoxLayout()
+        self.table = QTableWidget(len(defvalues),2)
+
+        row=0
+        for defname in defvalues:
+          self.table.setItem(row, 0, QTableWidgetItem(defname))
+          valItem = QTableWidgetItem(str(defvalues[defname][0][0]))
+          valItem.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
+          self.table.setItem(row, 1, QTableWidgetItem(valItem))
+          row = row+1
+
+
+        self.table.verticalHeader().setVisible(False)
+        self.table.horizontalHeader().setVisible(False)
+        self.table.horizontalHeader().setResizeMode(QHeaderView.Fixed)
+        self.table.horizontalHeader().setResizeMode(1,QHeaderView.Stretch)
+        self.table.resizeColumnsToContents();
+        self.table.setSelectionMode(QAbstractItemView.NoSelection)
+        layout.addWidget(self.table,1)
+        self.setWindowTitle(title)
+
+        self.db=db
+
+        self.setLayout(layout);
+
+
 class MainWindow(QFrame):
     def __init__(self, db, windowname):
         QFrame.__init__(self)
@@ -821,11 +853,14 @@ class MainWindow(QFrame):
 
         self.plot_button = QPushButton("Plot")
         self.connect(self.plot_button, SIGNAL('clicked()'), self.handle_plot)
+        self.defvalues_button = QPushButton("DefValues")
+        self.connect(self.defvalues_button, SIGNAL('clicked()'), self.handle_defvalues)
         self.close_button = QPushButton("Close figures")
         self.connect(self.close_button, SIGNAL('clicked()'), self.handle_close)
 
         hbox = QHBoxLayout()
         hbox.addWidget(self.plot_button)
+        hbox.addWidget(self.defvalues_button)
         hbox.addWidget(self.close_button)
         layout.addLayout(hbox)
 
@@ -928,6 +963,10 @@ class MainWindow(QFrame):
             self.figures.append(PlotWindow(self.parms, this_selection, resolution, title=self.windowname + ": Figure %d" % (len(self.figures) + 1)))
             
             self.figures[-1].show()
+
+    def handle_defvalues(self):
+        self.defvalueswindow=DefValuesWindow(db, title=parmdbname+': default Values')
+        self.defvalueswindow.show()
 
     def handle_close(self):
         self.close_all_figures()
