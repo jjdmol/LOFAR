@@ -44,6 +44,27 @@ int main(int argc, char *argv[])
     INIT_LOGGER(basename(string(argv[0])));
     // Get the name of the parset file.
     string parsetName("");
+
+    if (argc > 1 && (string(argv[1])=="--help" || string(argv[1])=="help" ||
+        string(argv[1])=="-help" || string(argv[1])=="-h" || 
+        string(argv[1])=="--usage" || string(argv[1])=="-usage")) {
+      std::cout<<"Usage: DPPP [parsetfile] [parsetkeys...]"<<std::endl;
+      std::cout<<"  parsetfile: a file containing one parset key=value pair "<<
+        "per line"<<std::endl;
+      std::cout<<"  parsetkeys: any number of parset key=value pairs, e.g. "<<
+        "msin=my.MS"<<std::endl<<std::endl;
+      std::cout<<"If both a file and command-line keys are specified, the "<<
+        "keys on the command line override those in the file."<<std::endl;
+      std::cout<<"If no arguments are speicified, the program tries to read "<<
+        "DPPP.parset as a default."<<std::endl;
+      exit(0);
+    }
+
+    if (basename(string(argv[0]))=="NDPPP") {
+      std::cout<<"Warning: this executable is now called DPPP (without the N)";
+      std::cout<<std::endl;
+    }
+
     if (argc > 1 && string(argv[1]).find('=')==string::npos) {
       // First argument is parset name (except if it's a key-value pair)
       parsetName = argv[1];
