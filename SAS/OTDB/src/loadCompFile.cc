@@ -433,9 +433,11 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename,
 	 	return (0);
 	}
 
+#if 0
 	// start transaction
-  // This does not seem to work on kis001, because we're starting to nest transactions, causing pqxx to throw a logic_error?
+  // This does not seem to work on kis001, because we're starting to nest transactions, causing pqxx to throw a logic_error. PostGreSQL does not support nested transacions.
 	//work	xAction(*(itsConn->getConn()), "loadComponentFile");
+#endif
 
 	// get convertors (from database)
 	ParamTypeConv	PTconv(itsConn);
