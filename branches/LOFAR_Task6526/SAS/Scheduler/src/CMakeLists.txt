@@ -1,8 +1,5 @@
 # $Id$
 
-# Add current source- and binary directory to include path
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 set(scheduler_SRCS
   Angle.cpp
   astrodate.cpp
