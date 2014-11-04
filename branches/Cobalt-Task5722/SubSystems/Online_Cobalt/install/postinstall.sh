@@ -21,7 +21,7 @@ function postinstall_lofarsys {
   cp lofarsys/bash_profile ~/.bash_profile
 
   echo "  Validating login..."
-  ssh lofarsys@localhost true
+  ssh localhost true
 
   # ********************************************
   #  Create directories for LOFAR's
