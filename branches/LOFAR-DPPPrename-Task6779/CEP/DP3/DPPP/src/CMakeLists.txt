@@ -19,8 +19,14 @@ lofar_add_library(dppp
   DemixerNew.cc DemixInfo.cc DemixWorker.cc
 )
 
-lofar_add_bin_program(DPPP DPPP.cc)
+lofar_add_bin_program(DPPP_main DPPP.cc)
+set_target_properties(DPPP_main PROPERTIES OUTPUT_NAME DPPP)
 lofar_add_bin_program(versiondppp versiondppp.cc)
+
+#install(CODE "EXECUTE_PROCESS(
+#  COMMAND \"${CMAKE_COMMAND}\" -E create_symlink DPPP NDPPP WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/bin
+#  )" 
+#)
 
 install(PROGRAMS
   taqlflagger
