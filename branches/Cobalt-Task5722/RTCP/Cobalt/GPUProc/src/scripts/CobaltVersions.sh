@@ -5,14 +5,29 @@ GET_ALL_VERSIONS=0
 SET_VERSION=""
 LIST_VERSIONS=0
 
-if [ -z "$HOSTS" ]; then
-  HOSTS="cbm001 cbm002 cbm003 cbm004 cbm005 cbm006 cbm007 cbm008"
-fi
-
 function error() {
   echo "$@" >&2
   exit 1
 }
+
+if [ -z "$HOSTS" ]; then
+  case `hostname` in
+    cbt001|cbt002|cbt003|cbt004|cbt005|cbt006|cbt007|cbt008)
+      # Production system
+      HOSTS="cbm001 cbm002 cbm003 cbm004 cbm005 cbm006 cbm007 cbm008"
+      ;;
+
+    cbt009|cbt010)
+      # Test system
+      HOSTS="cbm009 cbm010"
+      ;;
+
+    *)
+      echo "WARNING: Cannot derive \$HOSTS variable. Will only operate on localhost"
+      HOSTS="localhost"
+      ;;
+  esac
+fi
 
 function usage() {
   echo "$0 [-l] [-g] [-G] [-s VERSION]"
@@ -74,6 +89,6 @@ if [ -n "$SET_VERSION" ]; then
 
   echo "Switching Cobalt to $SET_VERSION"
 
-  HOSTS="$HOSTS" RELEASE_NAME="$SET_VERSION" Cobalt_setcurrent.sh
+  HOSTS="$HOSTS" RELEASE_NAME="$SET_VERSION" $COBALT_VERSIONS_DIR/$SET_VERSION/sbin/Cobalt_setcurrent.sh
 fi
 
