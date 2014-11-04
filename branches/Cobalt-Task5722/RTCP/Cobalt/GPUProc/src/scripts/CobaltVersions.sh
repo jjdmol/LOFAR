@@ -85,10 +85,11 @@ fi
 
 # Set current Cobalt version
 if [ -n "$SET_VERSION" ]; then
-  [ -d $COBALT_VERSIONS_DIR/$SET_VERSION ] || error "Cobalt version $SET_VERSION not found."
-
   echo "Switching Cobalt to $SET_VERSION"
 
-  HOSTS="$HOSTS" RELEASE_NAME="$SET_VERSION" $COBALT_VERSIONS_DIR/$SET_VERSION/sbin/Cobalt_setcurrent.sh
+  for HOST in $HOSTS; do
+    echo "$HOST"
+    ssh $HOST "ln -sfT \"${COBALT_VERSIONS_DIR}/${SET_VERSION}\" /localhome/lofarsystem/lofar/current" || exit 1
+  done
 fi
 
