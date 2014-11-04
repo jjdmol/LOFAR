@@ -83,83 +83,45 @@ set(scheduler_SRCS
   TimeEdit.cpp)
 
 set(scheduler_MOC_HDRS
-#  Angle.h
-#  astrodate.h
-#  astrodatetime.h
-#  astrotime.h
-#  blocksize.h
-#  calibrationpipeline.h
   CheckBox.h
   ComboBox.h
   conflictdialog.h
   Controller.h
-#  DataHandler.h
-#  DataMonitorConnection.h
   dataslotdialog.h
-#  DataTreeWidgetItem.h
   DateEdit.h
   DateTimeEdit.h
-#  demixingsettings.h
   digitalbeamdialog.h
-#  DigitalBeam.h
   doublespinbox.h
-#  FileUtils.h
-#  GraphicCurrentTimeLine.h
   GraphicResourceScene.h
-#  GraphicStationTaskLine.h
   graphicstoragescene.h
-#  GraphicStorageTimeLine.h
   GraphicTask.h
-#  GraphicTimeLine.h
-#  imagingpipeline.h
   LineEdit.h
   ListWidget.h
-#  lofar_scheduler.h
-#  lofar_utils.h
-#  longbaselinepipeline.h
-#  neighboursolution.h
-#  observation.h
-#  OTDBnode.h
-#  OTDBtree.h
   parsettreeviewer.h
-#  pipeline.h
   publishdialog.h
-#  pulsarpipeline.h
   qcustomplot.h
   qlofardatamodel.h
   redistributetasksdialog.h
   sasconnectdialog.h
-#  SASConnection.h
   sasprogressdialog.h
   sasstatusdialog.h
   sasuploaddialog.h
-#  schedulerdatablock.h
-#  schedulerdata.h
   schedulergui.h
   Scheduler.h
-#  schedulersettings.h
   schedulesettingsdialog.h
   scheduletabledelegate.h
   shifttasksdialog.h
   SpinBox.h
   statehistorydialog.h
-#  station.h
   stationlistwidget.h
-#  stationtask.h
   stationtreewidget.h
-#  storage_definitions.h
-#  Storage.h
-#  StorageNode.h
   storageplot.h
   tablecolumnselectdialog.h
   tableview.h
   taskcopydialog.h
   taskdialog.h
-#  task.h
-#  taskstorage.h
   thrashbin.h
   tiedarraybeamdialog.h
-#  TiedArrayBeam.h
   TimeEdit.h)
 
 set(scheduler_UIS 
