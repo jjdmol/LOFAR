@@ -229,6 +229,8 @@ def plot(fig, y, x=None, clf=True, sub=None, scatter=False, stack=False,
             else:
                 offset += y[i].mean() + sep * y[i].std()
 
+    fig.tight_layout()
+
     if not labels is None and show_legend:
         axes.legend(prop=FontProperties(size="x-small"), markerscale=0.5)
 
