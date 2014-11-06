@@ -305,13 +305,14 @@ class msss_imager_pipeline(control):
                                                          "raw_ms_per_image")
 
         # get some parameters from the imaging pipeline parset:
-        slices_per_image = self.parset.getInt("LongBaseline.slices_per_ms")
-        subbands_per_image = self.parset.getInt("LongBaseline.subbands_per_ms")
+        subbandgroups_per_ms = self.parset.getInt("LongBaseline.subbandgroups_per_ms")
+        subbands_per_subbandgroup = self.parset.getInt("LongBaseline.subbands_per_subbandgroup")
+
 
         outputs = self.run_task("long_baseline", input_ms_map_path,
                 parset = ndppp_parset_path,
                 target_mapfile = target_mapfile,
-                slices_per_image = slices_per_image,
+                subbandgroups_per_ms = subbandgroups_per_ms,
                 subbands_per_image = subbands_per_image,
                 mapfile = output_mapfile,
                 slices_mapfile = time_slices_mapfile,
