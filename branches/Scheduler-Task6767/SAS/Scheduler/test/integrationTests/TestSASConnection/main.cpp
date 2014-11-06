@@ -39,16 +39,16 @@ private:
         // make the next step conditional
         sleep(3);
 
-        // Step 1: Press download button
-        signalForward("DownloadSASSchedule","");
-        sleep(5);
+//        // Step 1: Press download button
+//        signalForward("DownloadSASSchedule","");
+//        sleep(5);
 
-        // Step 2: Press close button
-        signalForward("DownloadSASScheduleClose","");
-        sleep(3);
+//        // Step 2: Press close button
+//        signalForward("DownloadSASScheduleClose","");
+//        sleep(3);
 
-        // Assert that the sas connection worked...?
-        // We need faulty state then
+//        // Assert that the sas connection worked...?
+//        // We need faulty state then
 
         // step 4: Press close application button
         signalForward("MainWindowClose","");
