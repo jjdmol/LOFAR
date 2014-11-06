@@ -15,9 +15,21 @@ public:
 	void addText(const QString &text); // force an immediate redraw
     void addError(const QString &text);
     void setProgressPercentage(int value) {ui.progressBar->setValue(value);}
-    void clear(void) {ui.listWidget_Progress->clear();ui.progressBar->setValue(0); disableClose();}
-    void disableClose(void) {ui.pushButton_Close->setText("Please wait"); ui.pushButton_Close->setEnabled(false);}
-    void enableClose(void) {ui.pushButton_Close->setText("Close"); ui.pushButton_Close->setEnabled(true);}
+    void clear(void) {
+        ui.listWidget_Progress->clear();
+        ui.progressBar->setValue(0);
+        disableClose();
+    }
+    void disableClose(void) {
+        ui.pushButton_Close->setText("Please wait");
+        ui.pushButton_Close->setEnabled(false);
+    }
+    void enableClose(void) {
+        ui.pushButton_Close->setText("Close");
+        ui.pushButton_Close->setEnabled(true);
+    }
+
+    Ui::SASProgressDialogClass* getUi(){return &ui;}
 
 private:
     Ui::SASProgressDialogClass ui;

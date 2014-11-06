@@ -53,7 +53,8 @@ SchedulerSettings Controller::theSchedulerSettings = SchedulerSettings();
 unsigned Controller::itsFileVersion = 0;
 
 Controller::Controller(QApplication &app) :
-    application(&app) , gui(0), itsSettingsDialog(0), itsConflictDialog(0)
+    application(&app) , gui(0), itsSettingsDialog(0),
+    possiblySaveMessageBox(0),itsConflictDialog(0)
 {
     itsAutoPublishAllowed = currentUser == "lofarsys" ? true : false;
 #if defined Q_OS_WINDOWS || _DEBUG_
@@ -95,6 +96,8 @@ Controller::~Controller() {
 	if (itsDMConnection) delete itsDMConnection;
 	if (gui) delete gui;
 	if (itsDataHandler) delete itsDataHandler;
+
+    if (possiblySaveMessageBox) delete possiblySaveMessageBox;
 }
 
 #ifdef DEBUG_SCHEDULER
@@ -2033,30 +2036,52 @@ bool Controller::checkSettings() const {
 	return true;
 }
 
-bool Controller::possiblySave()
-{ 	// check if data needs to be saved before cleaning up data
-	// returns true if data saving went OK or when no data needs to be saved.
-	// returns false if user decided to cancel the save or something else went wrong with saving the data.
-	if (data.getSaveRequired()) { // check in SchedulingData if save required
-		// ask user if he wants to save project file
-		int answer = QMessageBox::question(gui, tr("Save schedule project"),
-				tr("Schedule project contains unsaved changes\nDo you want to save the schedule project?"),
-				QMessageBox::Save,
-				QMessageBox::No,
-				QMessageBox::Cancel) ;
-		if (answer == QMessageBox::No) {
-			return true;
-		}
-		else if (answer == QMessageBox::Save) {
-			if (saveSchedule()) { // save the data
-				return true;
-			}
-			else return false; // something went wrong saving the data
-		}
-		else return false;
-	}
-	else return true;  // no changes need to be saved
+// Dialogbox asking for saving of schedule project
+int Controller::possiblySaveDialog()
+{
+
+    // Save the pointer to the message box to allow sending signals from
+    // outside threads (testing)
+    possiblySaveMessageBox = new QMessageBox();
+    QMessageBox *possiblySaveMessageBox = new QMessageBox();
+    possiblySaveMessageBox->setWindowTitle(      tr("Save schedule project") );
+    possiblySaveMessageBox->setText(             tr("Schedule project contains unsaved changes\nDo you want to save the schedule project?") );
+    possiblySaveMessageBox->setStandardButtons(  QMessageBox::Save | QMessageBox::No | QMessageBox::Cancel);
+    possiblySaveMessageBox->setDefaultButton(    QMessageBox::Save);
+    possiblySaveMessageBox->setEscapeButton(     QMessageBox::Cancel);
+
+    // execute and wait
+   return possiblySaveMessageBox->exec();
 }
+
+// check if data needs to be saved before cleaning up data
+// returns true if data saving went OK or when no data needs to be saved.
+// returns false if user decided to cancel the save or something else went wrong
+// with saving the data.
+// TODO: The return value of this function mixes error state and selected choices.
+bool Controller::possiblySave()
+{
+    // check in SchedulingData if save required
+    if (!data.getSaveRequired() )
+        return true;
+
+    // ask user if he wants to save project file
+    int answer = possiblySaveDialog();
+
+    // If user answered no or cancel we can exit with true exit state ( no error
+    if (answer == QMessageBox::No)
+        return true;
+
+    if (answer == QMessageBox::Cancel)
+        return false;
+
+    // If save is selected attempt save If this fails return false
+    if (answer == QMessageBox::Save && saveSchedule())
+        return true;
+    else// default return is false
+        return false;
+}
+
 
 void Controller::cleanup(bool keepUndo, bool cleanSasConnection) {
 	itsSelectedTasks.clear();
@@ -5572,10 +5597,9 @@ bool Controller::assignStorageResources(Task *task) {
                         tStorage->generateFileList();
                     }
                     else if ((*it)->getGroupID() == 0) { // grouped observations are assigned resources together in automatic storage selection modes
-                        if (assignStorageToTask(*it)) {
-                            (*it)->clearAllStorageConflicts();
-                        }
-                        else bResult = false;
+                        if (!assignStorageToTask(*it))
+                            bResult = false;
+                        (*it)->clearAllStorageConflicts();
                         tStorage->generateFileList();
                     }
                 }

@@ -15,6 +15,7 @@
 #ifndef CONTROLLER_H_
 #define CONTROLLER_H_
 
+#include <QMessageBox>
 #include <vector>
 #include <string>
 #include "lofar_scheduler.h"
@@ -31,6 +32,10 @@
 #include "Storage.h"
 #include "SASConnection.h"
 #include "shifttasksdialog.h"
+// todo ( This could be added in the project file, as a compiler option)
+//#ifdef SCHEDULER_TEST
+#include "signalhandler.h"
+//#endif
 
 class Thrashbin;
 class AstroDateTime;
@@ -54,7 +59,10 @@ typedef std::vector<std::pair<undo_type, std::pair<QString, std::vector<unsigned
 class Controller : public QObject
 {
 	Q_OBJECT
-
+//todo
+//#ifdef SCHEDULER_TEST
+    friend class SignalHandler;
+//#endif
 public:
 	Controller(QApplication &app);
 	virtual ~Controller();
@@ -185,6 +193,7 @@ public:
 	bool assignStorageResources(Task *task = 0);
 	bool calculateDataSlots(void);
 
+
 #ifdef HAS_SAS_CONNECTION
 	QString lastSASError(void) const;
 	bool checkSASSettings(void);
@@ -203,6 +212,7 @@ private:
 	void clearRedoStack(void);
 	void checkTableItem(const QModelIndex &index); // checks the value of the table item index. Used after changes were made to a table cell
 	bool possiblySave(); // check if things need to be saved and then cleans up the data
+    int possiblySaveDialog();
 	void cleanup(bool keepUndo = false, bool cleanSasConnection = true); // does the actual cleaning
 	bool checkStationList(const std::string & stations) const; // return true if all stations mentioned in the string stations actually exist
 	bool checkSettings() const;
@@ -278,7 +288,7 @@ public:
 	static unsigned itsFileVersion; // used for storing the last read input file version
 
 private:
-
+    QMessageBox *possiblySaveMessageBox;
 	QApplication *application;
 	Scheduler scheduler;
 	SchedulerGUI *gui;
