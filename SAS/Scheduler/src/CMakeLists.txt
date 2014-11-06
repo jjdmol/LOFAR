@@ -1,5 +1,10 @@
 # $Id$
 
+# Create symbolic link to include directory.
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_BINARY_DIR}/include/${PACKAGE_NAME})
+
 set(scheduler_SRCS
   Angle.cpp
   astrodate.cpp
@@ -55,10 +60,12 @@ set(scheduler_SRCS
   schedulerdatablock.cpp
   schedulerdata.cpp
   schedulergui.cpp
+  schedulerLib.cpp
   schedulersettings.cpp
   schedulesettingsdialog.cpp
   scheduletabledelegate.cpp
   shifttasksdialog.cpp
+  signalhandler.cpp
   SpinBox.cpp
   statehistorydialog.cpp
   station.cpp
@@ -108,6 +115,7 @@ set(scheduler_MOC_HDRS
   schedulesettingsdialog.h
   scheduletabledelegate.h
   shifttasksdialog.h
+  signalhandler.h
   SpinBox.h
   statehistorydialog.h
   stationlistwidget.h
