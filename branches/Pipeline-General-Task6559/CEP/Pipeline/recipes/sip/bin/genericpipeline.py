@@ -29,24 +29,24 @@ class GenericPipeline(control):
                              "NYI"
         return 1
 
-    #def go(self):
+    def go(self):
         #"""
         #Read the parset-file that was given as input argument, and set the
         #jobname before calling the base-class's `go()` method.
         #"""
-        #try:
-        #    parset_file = os.path.abspath(self.inputs['args'][0])
-        #except IndexError:
-        #    return self.usage()
+        try:
+            parset_file = os.path.abspath(self.inputs['args'][0])
+        except IndexError:
+            return self.usage()
 
         # Set job-name to basename of parset-file w/o extension, if it's not
         # set on the command-line with '-j' or '--job-name'
-        #if not 'job_name' in self.inputs:
-        #    self.inputs['job_name'] = (
-        #        os.path.splitext(os.path.basename(parset_file))[0])
+        if not 'job_name' in self.inputs:
+            self.inputs['job_name'] = (
+                os.path.splitext(os.path.basename(parset_file))[0])
 
         # Call the base-class's `go()` method.
-        #return super(GenericPipeline, self).go()
+        return super(GenericPipeline, self).go()
 
     def pipeline_logic(self):
         try:
@@ -80,33 +80,42 @@ class GenericPipeline(control):
         create_directory(parset_dir)
         create_directory(mapfile_dir)
 
-        steplist = []
-        for step in py_parset.getStringVector('steps'):
-            steplist.append(self.parset.makeSubset(self.parset.fullModuleName(str(step)) + '.'))
+        stepparsetlist = []
+        stepnamelist = py_parset.getStringVector('steps')
+
+        for step in stepnamelist:
+            stepparsetlist.append(self.parset.makeSubset(self.parset.fullModuleName(str(step)) + '.'))
             print step
 
-        stepcontrols = []
-        stepparsets = []
-        step_parset_files = []
+        stepcontrollist = []
+        stepargparsetlist = {}
+        step_parset_files = {}
         mapfiles = {}
-        for step in steplist:
-            stepcontrols.append(step.makeSubset(step.fullModuleName('control') + '.'))
-            stepparsets.append(step.makeSubset(step.fullModuleName('args') + '.'))
-            print stepcontrols[-1].getString('typename')
-            print stepparsets[-1].getString('start')
+
+        for step, stepname in zip(stepparsetlist, stepnamelist):
+            stepcontrollist.append(step.makeSubset(step.fullModuleName('control') + '.'))
+            if step.fullModuleName('parsetarg'):
+                stepargparsetlist[stepname]=step.makeSubset(step.fullModuleName('parsetarg') + '.')
+            else:
+                print "no parset given"
 
         #save parsets
-        for ps, stepname in zip(stepparsets, py_parset.getStringVector('steps')):
-            step_parset = os.path.join(parset_dir, stepname + '.parset')
-            step_parset_files.append(step_parset)
-            ps.writeFile(step_parset)
+        for k, v in stepargparsetlist.iteritems():
+            try:
+                step_parset = v.getString('parset')
+            except:
+                step_parset = os.path.join(parset_dir, k + '.parset')
+                v.writeFile(step_parset)
+            step_parset_files[k]=step_parset
 
-        testmapfile = self._create_mapfile_from_folder('/home/zam/sfroehli/testpipeline/data')
+        testmapfile = self._create_mapfile_from_folder('/home/zam/sfroehli/testpipeline/data/MS')
         testmapfile_name = os.path.join(mapfile_dir, 'measurements.mapfile')
         testmapfile.save(testmapfile_name)
         mapfiles['input'] = testmapfile_name
         print testmapfile
-        for step, stepname in zip(stepcontrols, py_parset.getStringVector('steps')):
+        print 'parset HERE: ',step_parset_files
+        resultdicts = {}#{'first': {'mapfile': 'dummy'}}
+        for step, stepname in zip(stepcontrollist, stepnamelist):
             # common
             try:
                 input_mapfile = mapfiles[step.getString('mapfilefromstep')]
@@ -114,21 +123,51 @@ class GenericPipeline(control):
                 input_mapfile = mapfiles.values()[-1]  # input mapfile: last in list. added from last step.
 
             # recipes
-            if step.getString('type') == 'recipe':
+            if step.getString('kind') == 'recipe':
+                #inputdict = {"mapfile": os.path.join(mapfile_dir, stepname + '.mapfile')}
+                inputdict={}
+                if stepname in step_parset_files:
+                    print 'ADDED PARSET'
+                    inputdict['parset']=step_parset_files[stepname]
+
+                self._construct_input(inputdict, step, resultdicts)
+
                 with duration(self, stepname):
-                    resultdict = self.run_task(
-                        step.getString('typename'),
+                    if stepname is 'vdsreader':
+                        resultdict = self.run_task(
+                        step.getString('type'),
+                        **inputdict
+                        )
+                    else:
+                        resultdict = self.run_task(
+                        step.getString('type'),
                         input_mapfile,
-                        parset=os.path.join(parset_dir, stepname + '.parset'),  # input
-                        mapfile=os.path.join(mapfile_dir, stepname + '.mapfile')  # mapfile outputname
-                    )
+                        **inputdict
+                        )
                     if 'mapfile' in resultdict:
                         mapfiles[stepname] = resultdict['mapfile']
+                    resultdicts[stepname] = resultdict
 
             # plugins
-            if step.getString('type') == 'plugin':
-                loader.call_plugin(step.getString('typename'), py_parset.getString('pluginpath'),
-                                   step.getString('typename'), input_mapfile)
+            if step.getString('kind') == 'plugin':
+                loader.call_plugin(step.getString('type'), py_parset.getString('pluginpath'),
+                                   step.getString('type'), input_mapfile)
+
+    def _construct_input(self, indict, controlparset, resdicts):
+        argsparset = controlparset.makeSubset(controlparset.fullModuleName('args') + '.')
+        for k in argsparset.keys():
+            print 'THIS IS K: ',k
+            if argsparset.getString(k).__contains__('.output.'):
+                step, outvar = argsparset.getString(k).split('.output.')
+                print "FOUND RESULTREQUEST FROM %s FOR VALUE %s: %s" % (step, outvar, resdicts[step][outvar])
+            else:
+                indict[k] = argsparset.getString(k)
+        return indict
+
+    def _construct_step_parsets(self, steplistparsets):
+
+        parsetdict = {}
+        return parsetdict
 
     def _create_mapfile_from_folder(self, folder):
         #here comes the creation of a data mapfile (what MS lays where)

@@ -63,8 +63,8 @@ class executable_parsetonly(LOFARnodeTCP):
             try:
                 parset = Parset()
                 parset.adoptFile(parsetfile)
-                if parset['exec']:
-                    executable = str(parset['exec'])
+                #if parset['exec']:
+                #    executable = str(parset['exec'])
                 print 'Running executable %s from parset args' % executable
             except:
                 print 'could not load executable from parset args'
