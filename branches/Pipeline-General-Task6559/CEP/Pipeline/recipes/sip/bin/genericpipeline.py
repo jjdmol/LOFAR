@@ -4,8 +4,9 @@ import sys
 from lofarpipe.support.parset import Parset
 from lofarpipe.support.control import control
 
-from lofarpipe.support.loggingdecorators import mail_log_on_exception, duration
-from lofarpipe.support.data_map import DataMap, DataProduct
+from lofarpipe.support.loggingdecorators import duration
+from lofarpipe.support.data_map import DataMap, DataProduct, validate_data_maps
+from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.utilities import create_directory
 
 import loader
@@ -29,24 +30,24 @@ class GenericPipeline(control):
                              "NYI"
         return 1
 
-    def go(self):
+    #def go(self):
         #"""
         #Read the parset-file that was given as input argument, and set the
         #jobname before calling the base-class's `go()` method.
         #"""
-        try:
-            parset_file = os.path.abspath(self.inputs['args'][0])
-        except IndexError:
-            return self.usage()
+    #    try:
+    #        parset_file = os.path.abspath(self.inputs['args'][0])
+    #    except IndexError:
+    #        return self.usage()
 
         # Set job-name to basename of parset-file w/o extension, if it's not
         # set on the command-line with '-j' or '--job-name'
-        if not 'job_name' in self.inputs:
-            self.inputs['job_name'] = (
-                os.path.splitext(os.path.basename(parset_file))[0])
+    #    if not 'job_name' in self.inputs:
+    #        self.inputs['job_name'] = (
+    #            os.path.splitext(os.path.basename(parset_file))[0])
 
         # Call the base-class's `go()` method.
-        return super(GenericPipeline, self).go()
+    #    return super(GenericPipeline, self).go()
 
     def pipeline_logic(self):
         try:
@@ -59,6 +60,8 @@ class GenericPipeline(control):
         except RuntimeError:
             print >> sys.stderr, "Error: Parset file not found!"
             return self.usage()
+
+        # just a reminder that this has to be implemented
         validator = GenericPipelineParsetValidation(self.parset)
         if not validator.validate_pipeline():
             self.usage()
@@ -67,12 +70,7 @@ class GenericPipeline(control):
             self.usage()
             exit(1)
 
-        print self.parset
-
-        py_parset = self.parset.makeSubset(
-            self.parset.fullModuleName('pipeline') + '.')
-
-        #set up directories for variables
+        #set up directories
         job_dir = self.config.get("layout", "job_directory")
         parset_dir = os.path.join(job_dir, "parsets")
         mapfile_dir = os.path.join(job_dir, "mapfiles")
@@ -80,107 +78,183 @@ class GenericPipeline(control):
         create_directory(parset_dir)
         create_directory(mapfile_dir)
 
-        stepparsetlist = []
-        stepnamelist = py_parset.getStringVector('steps')
+        self._get_io_product_specs()
+        # Write input- and output data map-files
+        input_correlated_mapfile = os.path.join(
+            mapfile_dir, "input_correlated.mapfile"
+        )
+        output_correlated_mapfile = os.path.join(
+            mapfile_dir, "output_correlated.mapfile"
+        )
+        output_instrument_mapfile = os.path.join(
+            mapfile_dir, "output_instrument.mapfile"
+        )
+        self.input_data['correlated'].save(input_correlated_mapfile)
+        self.output_data['correlated'].save(output_correlated_mapfile)
+        self.output_data['instrument'].save(output_instrument_mapfile)
 
-        for step in stepnamelist:
-            stepparsetlist.append(self.parset.makeSubset(self.parset.fullModuleName(str(step)) + '.'))
-            print step
+        # *********************************************************************
+        # maybe we dont need a subset but just a steplist
+        # at the moment only a list with stepnames is given for the pipeline.steps parameter
+        # pipeline.steps=[vdsmaker,vdsreader,setupparmdb1,setupsourcedb1,ndppp1,....]
+        # the names will be the prefix for parset subsets
+        py_parset = self.parset.makeSubset(
+            self.parset.fullModuleName('pipeline') + '.')
 
-        stepcontrollist = []
-        stepargparsetlist = {}
+        # *********************************************************************
+        # forward declaration of things. just for better overview and understanding whats in here.
+        # some of this might be removed in upcoming iterations, or stuff gets added.
+        step_parset_list = []
+        step_name_list = py_parset.getStringVector('steps')
+        step_control_list = []
+        step_parsetarg_list = {}
         step_parset_files = {}
-        mapfiles = {}
 
-        for step, stepname in zip(stepparsetlist, stepnamelist):
-            stepcontrollist.append(step.makeSubset(step.fullModuleName('control') + '.'))
+        for step in step_name_list:
+            step_parset_list.append(self.parset.makeSubset(self.parset.fullModuleName(str(step)) + '.'))
+
+        for step, stepname in zip(step_parset_list, step_name_list):
+            step_control_list.append(step.makeSubset(step.fullModuleName('control') + '.'))
             if step.fullModuleName('parsetarg'):
-                stepargparsetlist[stepname]=step.makeSubset(step.fullModuleName('parsetarg') + '.')
-            else:
-                print "no parset given"
+                step_parsetarg_list[stepname] = step.makeSubset(step.fullModuleName('parsetarg') + '.')
 
-        #save parsets
-        for k, v in stepargparsetlist.iteritems():
+        # *********************************************************************
+        # save parsets
+        # either a filename is given in the main parset
+        # or files will be created from subsets with stepnames.parset as filenames
+        for name, parset in step_parsetarg_list.iteritems():
             try:
-                step_parset = v.getString('parset')
+                step_parset = parset.getString('parset')
             except:
-                step_parset = os.path.join(parset_dir, k + '.parset')
-                v.writeFile(step_parset)
-            step_parset_files[k]=step_parset
+                step_parset = os.path.join(parset_dir, name + '.parset')
+                parset.writeFile(step_parset)
+            step_parset_files[name] = step_parset
 
-        testmapfile = self._create_mapfile_from_folder('/home/zam/sfroehli/testpipeline/data/MS')
-        testmapfile_name = os.path.join(mapfile_dir, 'measurements.mapfile')
-        testmapfile.save(testmapfile_name)
-        mapfiles['input'] = testmapfile_name
-        print testmapfile
-        print 'parset HERE: ',step_parset_files
-        resultdicts = {}#{'first': {'mapfile': 'dummy'}}
-        for step, stepname in zip(stepcontrollist, stepnamelist):
-            # common
-            try:
-                input_mapfile = mapfiles[step.getString('mapfilefromstep')]
-            except:
-                input_mapfile = mapfiles.values()[-1]  # input mapfile: last in list. added from last step.
+        # initial parameters to be saved in resultsdict so that recipes have access to this step0
+        #testmapfile = self._create_mapfile_from_folder('/home/zam/sfroehli/testpipeline/data/MS')
+        #testmapfile_name = os.path.join(mapfile_dir, 'measurements.mapfile')
+        #testmapfile.save(testmapfile_name)
+        #resultdicts = {'input': {'mapfile': testmapfile_name}}
 
+        resultdicts = {'input': {'mapfile': input_correlated_mapfile,
+                                 'output_instrument_mapfile': output_instrument_mapfile,
+                                 'output_correlated_mapfile': output_correlated_mapfile}}
+
+        # *********************************************************************
+        # main loop
+        # there is a distinction between recipes and plugins for user scripts.
+        # plugins are not used at the moment and might better be replaced with master recipes
+        for step, stepname in zip(step_control_list, step_name_list):
             # recipes
             if step.getString('kind') == 'recipe':
-                #inputdict = {"mapfile": os.path.join(mapfile_dir, stepname + '.mapfile')}
-                inputdict={}
+                inputdict = {}
+                inputargs = []
+
+                self._construct_cmdline(inputargs, step, resultdicts)
+
                 if stepname in step_parset_files:
-                    print 'ADDED PARSET'
-                    inputdict['parset']=step_parset_files[stepname]
+                    inputdict['parset'] = step_parset_files[stepname]
 
                 self._construct_input(inputdict, step, resultdicts)
 
                 with duration(self, stepname):
-                    if stepname is 'vdsreader':
-                        resultdict = self.run_task(
+                    resultdict = self.run_task(
                         step.getString('type'),
+                        inputargs,
                         **inputdict
-                        )
-                    else:
-                        resultdict = self.run_task(
-                        step.getString('type'),
-                        input_mapfile,
-                        **inputdict
-                        )
-                    if 'mapfile' in resultdict:
-                        mapfiles[stepname] = resultdict['mapfile']
+                    )
                     resultdicts[stepname] = resultdict
 
             # plugins
-            if step.getString('kind') == 'plugin':
-                loader.call_plugin(step.getString('type'), py_parset.getString('pluginpath'),
-                                   step.getString('type'), input_mapfile)
+            #if step.getString('kind') == 'plugin':
+            #    loader.call_plugin(step.getString('type'), py_parset.getString('pluginpath'),
+            #                       step.getString('type'), input_mapfile)
 
-    def _construct_input(self, indict, controlparset, resdicts):
-        argsparset = controlparset.makeSubset(controlparset.fullModuleName('args') + '.')
+    # *********************************************************************
+    # build the inputs for the master recipes.
+    # args are for the commandline arguments and the dict for the input parameters
+    # values are added from normal parset subsets or from output of earlier steps
+    # parset would look something like
+    # ----- bbsreducer.control.opts.sky_mapfile=setupsourcedb2.output.mapfile -----
+    # 'mapfile' is the name of value in the outputdict from step setupsourcedb2.
+    # that value gets assigned to 'sky_mapfile' of step with the name bbsreducer
+    # code is somewhat double... need to think of some fancy method with reusabilty
+    def _construct_input(self, inoutdict, controlparset, resdicts):
+        argsparset = controlparset.makeSubset(controlparset.fullModuleName('opts') + '.')
         for k in argsparset.keys():
-            print 'THIS IS K: ',k
             if argsparset.getString(k).__contains__('.output.'):
                 step, outvar = argsparset.getString(k).split('.output.')
-                print "FOUND RESULTREQUEST FROM %s FOR VALUE %s: %s" % (step, outvar, resdicts[step][outvar])
+                inoutdict[k] = resdicts[step][outvar]
             else:
-                indict[k] = argsparset.getString(k)
-        return indict
+                inoutdict[k] = argsparset.getString(k)
 
-    def _construct_step_parsets(self, steplistparsets):
+    def _construct_cmdline(self, inoutargs, controlparset, resdicts):
+        argsparset = controlparset.makeSubset(controlparset.fullModuleName('cmdline') + '.')
+        for k in argsparset.keys():
+            if argsparset.getString(k).__contains__('.output.'):
+                step, outvar = argsparset.getString(k).split('.output.')
+                inoutargs.append(resdicts[step][outvar])
+            else:
+                inoutargs.append(argsparset.getString(k))
 
-        parsetdict = {}
-        return parsetdict
-
+    # helper function
     def _create_mapfile_from_folder(self, folder):
-        #here comes the creation of a data mapfile (what MS lays where)
-        #list of dicts [{host: string, file: string, skip: bool}, {next MS}]
-        #just a string of the filename?!
-        #mapfile = 'testmap.txt'
-        maps = DataMap()
+        maps = DataMap([])
         measurements = os.listdir(folder)
         measurements.sort()
         for ms in measurements:
             maps.data.append(DataProduct('localhost', folder + '/' + ms, False))
-        #maps.save(mapfile)
         return maps
+
+    # copy paste from old msss_calibrator for the sake of tests
+    # what mapfiles have to be loaded in the beginning is subject to discuss
+    def _get_io_product_specs(self):
+        """
+        Get input- and output-data product specifications from the
+        parset-file, and do some sanity checks.
+        """
+        dps = self.parset.makeSubset(
+            self.parset.fullModuleName('DataProducts') + '.'
+        )
+        self.input_data['correlated'] = DataMap([
+            tuple(os.path.join(location, filename).split(':')) + (skip,)
+                for location, filename, skip in zip(
+                    dps.getStringVector('Input_Correlated.locations'),
+                    dps.getStringVector('Input_Correlated.filenames'),
+                    dps.getBoolVector('Input_Correlated.skip'))
+        ])
+        self.logger.debug("%d Input_Correlated data products specified" %
+                          len(self.input_data['correlated']))
+
+        self.output_data['correlated'] = DataMap([
+            tuple(os.path.join(location, filename).split(':')) + (skip,)
+                for location, filename, skip in zip(
+                    dps.getStringVector('Output_Correlated.locations'),
+                    dps.getStringVector('Output_Correlated.filenames'),
+                    dps.getBoolVector('Output_Correlated.skip'))
+        ])
+        self.logger.debug("%d Output_Correlated data products specified" %
+                          len(self.output_data['correlated']))
+
+        self.output_data['instrument'] = DataMap([
+            tuple(os.path.join(location, filename).split(':')) + (skip,)
+                for location, filename, skip in zip(
+                    dps.getStringVector('Output_InstrumentModel.locations'),
+                    dps.getStringVector('Output_InstrumentModel.filenames'),
+                    dps.getBoolVector('Output_InstrumentModel.skip'))
+        ])
+        self.logger.debug("%d Output_InstrumentModel data products specified" %
+                          len(self.output_data['instrument']))
+
+        # Sanity checks on input- and output data product specifications
+        if not validate_data_maps(
+            self.input_data['correlated'],
+            self.output_data['correlated'],
+            self.output_data['instrument']):
+            raise PipelineException(
+                "Validation of input/output data product specification failed!"
+            )
+
 
 
 class GenericPipelineParsetValidation():

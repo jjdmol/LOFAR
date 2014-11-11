@@ -192,14 +192,6 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
         this one to perform necessary initialisation.
         """
         # Every recipe needs a job identifier
-        try:
-            parset_file = os.path.abspath(self.inputs['args'][0])
-        except IndexError:
-            self.logger.error('Insufficient Arguments. No Parset given.')
-            exit(1)
-        if not 'job_name' in self.inputs:
-            self.inputs['job_name'] = (
-                os.path.splitext(os.path.basename(parset_file))[0])
         if not self.inputs.has_key("job_name"):
             raise PipelineException("Job undefined")
 
