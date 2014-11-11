@@ -80,6 +80,9 @@ void VisResamplerMatrixWB::DataToGridImpl_p(
   Int nVisPol   = vbs.flagCube().shape()[0];
   Int nVisChan  = vbs.flagCube().shape()[1];
 
+  Int conjugate_sign = 1;
+  if (cfs.isConjugated()) conjugate_sign = -1;
+  
   // Get oversampling and support size.
   Int sampx = SynthesisUtils::nint (cfs.sampling()[0]);
   Int sampy = SynthesisUtils::nint (cfs.sampling()[1]);
@@ -96,7 +99,6 @@ void VisResamplerMatrixWB::DataToGridImpl_p(
     Int irow = rows[inx];
 
     const Double*  __restrict__ uvwPtr   = vbs.uvw().data() + irow*3;
-    Int sign_w = sign(uvwPtr[2]);
     
     // Loop over all channels in the visibility data.
     // Map the visibility channel to the grid channel.
@@ -124,16 +126,17 @@ void VisResamplerMatrixWB::DataToGridImpl_p(
 
       // Determine the grid position from the UV coordinates in wavelengths.
       Double recipWvl = vbs.freq()[visChan] / C::c;
-      Double posx = sign_w * uvwScale_p[0] * uvwPtr[0] * recipWvl + offset_p[0];
-      Double posy = sign_w * uvwScale_p[1] * uvwPtr[1] * recipWvl + offset_p[1];
+      Double posx = conjugate_sign * uvwScale_p[0] * uvwPtr[0] * recipWvl + nGridX/2;
+      Double posy = conjugate_sign * uvwScale_p[1] * uvwPtr[1] * recipWvl + nGridY/2;
+      
       Int locx = SynthesisUtils::nint (posx);    // location in grid
       Int locy = SynthesisUtils::nint (posy);
       Double diffx = locx - posx;
       Double diffy = locy - posy;
       Int offx = SynthesisUtils::nint (diffx * sampx); // location in
       Int offy = SynthesisUtils::nint (diffy * sampy); // oversampling
-      offx += (nConvX-1)/2;
-      offy += (nConvY-1)/2;
+      offx += (sampx-1)/2;
+      offy += (sampy-1)/2;
 
       // Only use visibility point if the full support is within grid.
 
@@ -144,50 +147,60 @@ void VisResamplerMatrixWB::DataToGridImpl_p(
       ///            cout << "in grid"<<endl;
       // Get pointer to data and flags for this channel.
       Int doff = (irow * nVisChan + visChan) * nVisPol;
-      const Complex* __restrict__ visPtr  = vbs.visCube().data()  + doff;
+      const Complex* __restrict__ visPtr  = vbs.visCube().data() + doff;
       const Bool*    __restrict__ flagPtr = vbs.flagCube().data() + doff;
       const Float*   __restrict__ imgWtPtr = vbs.imagingWeightCube().data() + doff;
       if (dopsf) 
       {
         visPtr = psfValues;
       }
-      visPtr = psfValues;
       // Handle a visibility if not flagged.
-      #pragma omp for collapse(2) schedule(static,1) nowait
-      for (Int ipol=0; ipol<4; ++ipol)  // ipol run over image polarizations
-      {
-        // Loop over the scaled support.
-        for (Int sy=-supy; sy<=supy; ++sy) 
-        {
-          // Get the offset in the grid data array.
-          Int goff = (gridChan*4 + ipol) * nGridX * nGridY;
-          // Get the pointer in the grid for the first x in this y.
-          
-          // DEBUG
-          locy = 100;
-          
-          T* __restrict__ gridPtr = grid.data() + goff + (locy+sy)*nGridX + locx-supx;
-          // Get pointers to the first element to use in the 4
-          // convolution functions for this channel,pol.
 
-          const Complex* __restrict__ cf[4];
-          Int cfoff = (offy + sy)*nConvX + offx - supx*sampx;
-          for (int i=0; i<4; ++i) // i runs over data polarizations
-          {
-            cf[i] = cfs.vdata()[CFChan][i][ipol].data() + cfoff;
-          }
-          for (Int sx=0; sx<=2*supx; ++sx) 
-          {
-            // Loop over polarizations to correct for leakage.
-            Complex polSum(0,0);
-            for (Int i=0; i<4; ++i) // i runs over data polarizations
-            {
-              if (!flagPtr[i]) polSum += Complex(visPtr[i].real(), visPtr[i].imag() * sign_w) * cf[i][sx];
-            }
-            gridPtr[sx] += polSum * *imgWtPtr * tw;
-          }
+      #pragma omp single nowait
+      for(Int ipol=0; ipol<4; ipol++)
+      {
+        sumWtPtr[ipol+gridChan*4] += imgWtPtr[ipol];
+      }
+
+      Int start = (locy*4) % omp_get_num_threads();
+      
+      #pragma omp for schedule(static,1) nowait
+      
+      for (Int ii=-start; ii < 4*(supy*2+1) ; ++ii)
+      {
+        if (ii<0) continue;
+        Int sy = (ii/4);
+        Int ipol = ii % 4;
+        
+        
+        // Get the offset in the grid data array.
+        Int goff = (gridChan*4 + ipol) * nGridX * nGridY;
+        // Get the pointer in the grid for the first x in this y.
+        
+        T* __restrict__ gridPtr = grid.data() + goff + (locy+sy-supy)*nGridX + locx-supx;
+        // Get pointers to the first element to use in the 4
+        // convolution functions for this channel,pol.
+
+        const Complex* __restrict__ cf[4];
+        Int cfoff = (offx + offy*sampx)*(supx*2+1)*(supy*2+1) + sy*(supx*2+1);
+        for (int i=0; i<4; ++i) // i runs over data polarizations
+        {
+          cf[i] = cfs.vdata()[CFChan][i][ipol].data() + cfoff;
         }
-//         sumWtPtr[ipol+gridChan*4] += imgWtPtr[ipol];
+        for (Int sx=0; sx<=2*supx; ++sx) 
+        {
+          // Loop over polarizations to correct for leakage.
+          Complex polSum(0,0);
+          for (Int i=0; i<4; ++i) // i runs over data polarizations
+          {
+            if (!flagPtr[i]) polSum += 
+              Complex(visPtr[i].real(), conjugate_sign * 
+              visPtr[i].imag()) * 
+              cf[i][sx] *
+              imgWtPtr[i];
+          }
+          gridPtr[sx] += polSum * tw;
+        }
       } // end for ipol
     } // end for visChan
   } // end for inx
@@ -220,13 +233,14 @@ void VisResamplerMatrixWB::GridToData(
   Int sampx = SynthesisUtils::nint (cfs.sampling()[0]);
   Int sampy = SynthesisUtils::nint (cfs.sampling()[1]);
 
+  Int conjugate_sign = 1;
+  if (cfs.isConjugated()) conjugate_sign = -1;
+
   // Loop over all visibility rows to process.
   #pragma omp parallel for
   for (Int inx=rbeg; inx<=rend; ++inx) {
     Int irow = rows[inx];
     const Double*  __restrict__ uvwPtr   = vbs.uvw().data() + irow*3;
-    
-    Int sign_w = sign(uvwPtr[2]);
     
     // Loop over all channels in the visibility data.
     // Map the visibility channel to the grid channel.
@@ -255,16 +269,8 @@ void VisResamplerMatrixWB::GridToData(
       Double posx;
       Double posy;
       
-      if (uvwPtr[2] > 0) 
-      {
-        posx = - uvwScale_p[0] * uvwPtr[0] * recipWvl + offset_p[0];
-        posy = - uvwScale_p[1] * uvwPtr[1] * recipWvl + offset_p[1];
-      }
-      else
-      {
-        posx = uvwScale_p[0] * uvwPtr[0] * recipWvl + offset_p[0];
-        posy = uvwScale_p[1] * uvwPtr[1] * recipWvl + offset_p[1];
-      }
+      posx = conjugate_sign * uvwScale_p[0] * uvwPtr[0] * recipWvl + nGridX/2;
+      posy = conjugate_sign * uvwScale_p[1] * uvwPtr[1] * recipWvl + nGridY/2;
       
       Int locx = SynthesisUtils::nint (posx);    // location in grid
       Int locy = SynthesisUtils::nint (posy);
@@ -274,8 +280,8 @@ void VisResamplerMatrixWB::GridToData(
 
       Int offx = SynthesisUtils::nint (diffx * sampx); // location in
       Int offy = SynthesisUtils::nint (diffy * sampy); // oversampling
-      offx += (nConvX-1)/2;
-      offy += (nConvY-1)/2;
+      offx += (sampx-1)/2;
+      offy += (sampy-1)/2;
       
       // Only use visibility point if the full support is within grid.
       if (locx-supx < 0  ||  locx+supx >= nGridX  ||
@@ -293,32 +299,38 @@ void VisResamplerMatrixWB::GridToData(
         // Get the offset in the grid data array.
         Int goff = (gridChan*4 + ipol) * nGridX * nGridY;
         // Loop over the scaled support.
-        for (Int sy=-supy; sy<=supy; ++sy) 
+        for (Int sy=0; sy<=(2*supy); ++sy) 
         {
           // Get the pointer in the grid for the first x in this y.
-          const Complex* __restrict__ gridPtr = grid.data() + goff + (locy+sy)*nGridX + locx-supx;
+          const Complex* __restrict__ gridPtr = grid.data() + goff + (locy+sy-supy)*nGridX + locx-supx;
           // Get pointers to the first element to use in the 4
           // convolution functions for this channel,pol.
 
           const Complex* __restrict__ cf[4];
-          Int cfoff = (offy + sy*sampy)*nConvX + offx - supx*sampx;
+          Int cfoff = (offx + offy*sampx)*(supx*2+1)*(supy*2+1) + sy*(supx*2+1);
           for (int i=0; i<4; ++i) 
           {
             cf[i] = cfs.vdata()[gridChan][i][ipol].data() + cfoff;
           }
-          for (Int sx=-supx; sx<=supx; ++sx) 
+          for (Int sx=0; sx<=(2*supx); ++sx) 
           {
             for (Int i=0; i<4; ++i) 
             {
-              Complex v = *gridPtr * conj(*cf[i]) * tw;
-              v = Complex(v.real(), v.imag() * sign_w);
-              visPtr[i] += v;
-              cf[i] += sampx;
+              Complex v = gridPtr[sx] * conj(cf[i][sx]) * tw;
+              visPtr[i] += Complex(v.real(), v.imag() * conjugate_sign);
             }
-            gridPtr++;
           }
         }
       } // end for ipol
+// #pragma omp critical
+// {
+//         for (Int i=0; i<4; ++i) 
+//         {
+//           cout << visPtr[i] << " ";
+//         }
+//         cout << endl;
+// }        
+      
     } // end for visChan
   } // end for inx
 }

@@ -44,7 +44,8 @@ namespace LofarFT{
     itsMaxXSupport(-1), 
     itsMaxYSupport(-1),
     itsPA(), 
-    itsMosPointingPos(0) 
+    itsMosPointingPos(0),
+    itsConjugated(False)    
   {};
 
   CFStore::CFStore(
@@ -56,7 +57,8 @@ namespace LofarFT{
     casa::Int maxXSup, 
     casa::Int maxYSup,
     casa::Quantity PA, 
-    casa::Int mosPointing)
+    casa::Int mosPointing,
+    casa::Bool conjugated)
   : itsData(dataPtr),
     itsRData(),
     itsVData(), 
@@ -67,7 +69,8 @@ namespace LofarFT{
     itsMaxXSupport(maxXSup),
     itsMaxYSupport(maxYSup), 
     itsPA(PA), 
-    itsMosPointingPos(mosPointing)
+    itsMosPointingPos(mosPointing),
+    itsConjugated(conjugated)
   {};
 
   CFStore::CFStore(
@@ -79,7 +82,8 @@ namespace LofarFT{
     casa::Int maxXSup, 
     casa::Int maxYSup,
     casa::Quantity PA, 
-    casa::Int mosPointing)
+    casa::Int mosPointing,
+    casa::Bool conjugated)
   : itsData(),
     itsRData(),
     itsVData(dataPtr), 
@@ -90,7 +94,8 @@ namespace LofarFT{
     itsMaxXSupport(maxXSup),
     itsMaxYSupport(maxYSup), 
     itsPA(PA), 
-    itsMosPointingPos(mosPointing)
+    itsMosPointingPos(mosPointing),
+    itsConjugated(conjugated)
   {};
   
   
@@ -106,6 +111,7 @@ namespace LofarFT{
       itsXSupport.assign(other.itsXSupport);
       itsYSupport.assign(other.itsYSupport);
       itsPA=other.itsPA;
+      itsConjugated=other.itsConjugated;
     }
     return *this;
   };
@@ -120,6 +126,7 @@ namespace LofarFT{
     itsMaxYSupport = other.itsMaxYSupport; 
     itsPA=other.itsPA;
     itsMosPointingPos = other.itsMosPointingPos;
+    itsConjugated = other.itsConjugated;
   };
 
   void CFStore::set(
@@ -131,7 +138,8 @@ namespace LofarFT{
     casa::Int maxXSup, 
     casa::Int maxYSup,
     casa::Quantity PA, 
-    const casa::Int mosPointing)
+    const casa::Int mosPointing,
+    casa::Bool conjugated)
   {
     itsData=dataPtr;
     itsCoordSys=cs; 
@@ -142,6 +150,7 @@ namespace LofarFT{
     itsMaxYSupport=maxYSup;
     itsPA=PA;
     itsMosPointingPos = mosPointing;
+    itsConjugated = conjugated;
   };
 
   void CFStore::set(
@@ -153,7 +162,8 @@ namespace LofarFT{
     casa::Int maxXSup, 
     casa::Int maxYSup,
     casa::Quantity PA, 
-    const casa::Int mosPointing)
+    const casa::Int mosPointing,
+    casa::Bool conjugated)
   {
     itsVData=dataPtr; 
     itsCoordSys=cs; 
@@ -164,6 +174,7 @@ namespace LofarFT{
     itsMaxYSupport=maxYSup;
     itsPA=PA;
     itsMosPointingPos = mosPointing;
+    itsConjugated = conjugated;
   };
 
   void CFStore::show(

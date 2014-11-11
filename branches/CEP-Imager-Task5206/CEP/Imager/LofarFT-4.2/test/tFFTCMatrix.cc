@@ -139,9 +139,48 @@ void testOptSize()
 void testpaddedforward()
 {
   FFTCMatrix fftmat;
+  FFTCMatrix fftmat0;
+  int nx = 15;
+  int oversampling = 9;
   fftmat.init_padding(15, 9);
-  Matrix<Complex> data(IPosition(2,15,15));
-  fftmat.padded_forward(data, 9);
+  Matrix<Complex> data(IPosition(2,15,15), 1.0);
+  for(int i = 0; i<nx; i++)
+  {
+    for(int j = 0; j<nx; j++)
+    {
+      data(i,j) = i*i+j*j;
+    }
+  }
+  Matrix<Complex> oversampled = fftmat.padded_forward(data, 9);
+  
+  int center = (nx*oversampling)/2;
+  
+  Matrix<Complex> oversampled0(15*9, 15*9, Complex(0.0));
+  for(int i = 0; i<nx; i++)
+  {
+    for(int j = 0; j<nx; j++)
+    {
+      oversampled0(i + center - nx/2,j + center - nx/2) = data(i,j);
+    }
+  }
+  fftmat0.normalized_forward(oversampled0.nrow(), oversampled0.data());
+  oversampled0 = oversampled0*Complex(oversampling*oversampling);
+  
+  double m = 0.0;
+  for(int i = 0; i<nx*oversampling; i++)
+  {
+    for(int j = 0; j<nx*oversampling; j++)
+    {
+      int ii0 = i % oversampling;
+      int ii1 = i / oversampling;
+      int jj0 = j % oversampling;
+      int jj1 = j / oversampling;
+      
+      double d = abs(oversampled.data()[(ii0+jj0*oversampling)*nx*nx + ii1 + jj1*nx] - oversampled0(i,j));
+      if (d>m) m = d;
+    }
+  }
+  cout << m << endl;
 }
 
 

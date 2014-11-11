@@ -150,7 +150,8 @@ void  SkyEquation::predict(Bool incremental, MS::PredefinedColumns col)
         // Get the model visibilities -> degridding
         // Model visibilities are put in the modelVisCube of vb
         itsFTMachine->get(* vb, -1);
-        
+//         cout << vb->modelVisCube() << endl;
+        cout << "visCol: " << visCol << " " << VisibilityIterator::Model << endl;
         vi.setVis(vb->modelVisCube(),visCol);
       }
     }
@@ -306,7 +307,7 @@ void SkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
         // Compute residual 
         vb->modelVisCube() = vb->correctedVisCube() - vb->modelVisCube();
         
-        // Put residual on grid -> degridding
+        // Put residual on grid -> gridding
         itsFTMachine->put(* vb, -1, doPSF, FTMachine::MODEL);
       }
     }

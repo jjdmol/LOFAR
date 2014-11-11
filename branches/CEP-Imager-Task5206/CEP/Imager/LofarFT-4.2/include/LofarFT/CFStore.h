@@ -53,7 +53,8 @@ public:
           casa::Int maxXSup, 
           casa::Int maxYSup,
           casa::Quantity PA, 
-          casa::Int mosPointing);
+          casa::Int mosPointing,
+          casa::Bool conjugated = casa::False);
 
   CFStore(const casa::CountedPtr<CFTypeVec>& dataPtr, 
           casa::CoordinateSystem& cs, 
@@ -63,7 +64,8 @@ public:
           casa::Int maxXSup, 
           casa::Int maxYSup,
           casa::Quantity PA, 
-          casa::Int mosPointing);
+          casa::Int mosPointing,
+          casa::Bool conjugated = casa::False);
 
   ~CFStore() {};
 
@@ -71,7 +73,9 @@ public:
   
   void show(const char *Mesg=NULL, casa::ostream &os=casa::cerr);
   
-  casa::Bool isNull() {return itsData.null();};
+  casa::Bool isNull() {return itsData.null();}
+  
+  casa::Bool isConjugated() {return itsConjugated;}
   
   void set(const CFStore& other);
 
@@ -83,7 +87,8 @@ public:
            casa::Int maxXSup, 
            casa::Int maxYSup,
            casa::Quantity PA, 
-           const casa::Int mosPointing=0);
+           const casa::Int mosPointing=0,
+           casa::Bool conjugated = casa::False);
 
   void set(CFTypeVec *dataPtr, 
            casa::CoordinateSystem& cs, 
@@ -93,7 +98,8 @@ public:
            casa::Int maxXSup, 
            casa::Int maxYSup,
            casa::Quantity PA, 
-           const casa::Int mosPointing=0);
+           const casa::Int mosPointing=0,
+           casa::Bool conjugated=casa::False);
 
   void resize(casa::Int nw, 
               casa::Bool retainValues=casa::False);
@@ -118,6 +124,7 @@ public:
   casa::Int itsMaxYSupport;
   casa::Quantity itsPA;
   casa::Int itsMosPointingPos;
+  casa::Bool itsConjugated;
 };
 
 } //# NAMESPACE LofarFT - END

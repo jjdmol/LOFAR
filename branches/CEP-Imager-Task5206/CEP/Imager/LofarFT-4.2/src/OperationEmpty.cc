@@ -57,11 +57,11 @@ void OperationEmpty::run()
 
 void OperationEmpty::showHelp (ostream& os, const string& name)
 {
-  Operation::showHelp(os,name);
+  os<< COLOR_OPERATION << 
+  "Operation \"empty\": create an empty image" << COLOR_RESET << endl <<
+  "  No more parameters for operation\"empty\"" << endl << endl;
 
-  os<<
-  "Operation \"empty\": create an empty image                        "<<endl<<
-  "  No more parameters for operation\"empty\"                       "<<endl;
+  Operation::showHelp(os,name);
 };
 
 

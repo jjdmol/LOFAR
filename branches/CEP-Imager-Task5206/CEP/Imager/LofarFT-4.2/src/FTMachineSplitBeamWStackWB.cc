@@ -37,6 +37,7 @@
 #include <Common/OpenMP.h>
 #include <lattices/Lattices/LatticeFFT.h>
 
+#include "helper_functions.tcc"
 
 using namespace casa;
 
@@ -228,7 +229,7 @@ FTMachineSplitBeamWStackWB::VisibilityMap FTMachineSplitBeamWStackWB::make_mappi
         Int end_idx = blIndex[chunk.end];
         
         chunk.time = 0.5 * (times[start_idx] + times[end_idx]);
-        chunk.w = 0.5 * (abs(uvw(start_idx)(2)) + abs(uvw(end_idx)(2)));
+        chunk.w = 0.5 * (uvw(start_idx)(2) + uvw(end_idx)(2));
         
         int N_CF_chan = frequency_list_CF.nelements();
         chunk.wplane_map.resize(N_CF_chan);
@@ -265,6 +266,9 @@ FTMachineSplitBeamWStackWB::VisibilityMap FTMachineSplitBeamWStackWB::make_mappi
 void FTMachineSplitBeamWStackWB::put(const VisBuffer& vb, Int row, Bool dopsf,
                          FTMachine::Type type) 
 {
+  
+  ScopedTimer _t("FTMachineSplitBeamWStackWB::put");
+  
   if (itsVerbose > 0) {
     logIO() << LogOrigin(theirName, "put") << LogIO::NORMAL
             << "I am gridding " << vb.nRow() << " row(s)."  << LogIO::POST;
@@ -372,22 +376,22 @@ void FTMachineSplitBeamWStackWB::put(const VisBuffer& vb, Int row, Bool dopsf,
   // sum weights per chunk
   // for average beam computation
   // TODO take care of flags
-//   for (std::vector<Chunk>::iterator chunk = v.chunks.begin() ; chunk != v.chunks.end(); ++chunk)
-//   {
-//     chunk->sum_weight.resize(IPosition(2,4,chan_map_CF.size()));
-//     chunk->sum_weight = 0.0;
-//     // iterate over time in chunk
-//     for(int i=chunk->start; i<=chunk->end; i++)
-//     {
-//       int idx = v.baseline_index_map[i];
-//       // iterate over channels in data
-//       for(int ch=0; ch<vb.nChannel(); ch++)
-//       {
-//         // map to CF channels and sum weight
-//         chunk->sum_weight[chan_map_CF[ch]] = chunk->sum_weight[chan_map_CF[ch]] + imagingWeightCube[idx][ch];
-//       }
-//     }
-//   }
+  for (std::vector<Chunk>::iterator chunk = v.chunks.begin() ; chunk != v.chunks.end(); ++chunk)
+  {
+    chunk->sum_weight.resize(IPosition(2,4,chan_map_CF.size()));
+    chunk->sum_weight = 0.0;
+    // iterate over time in chunk
+    for(int i=chunk->start; i<=chunk->end; i++)
+    {
+      int idx = v.baseline_index_map[i];
+      // iterate over channels in data
+      for(int ch=0; ch<vb.nChannel(); ch++)
+      {
+        // map to CF channels and sum weight
+        chunk->sum_weight[chan_map_CF[ch]] = chunk->sum_weight[chan_map_CF[ch]] + imagingWeightCube[idx][ch];
+      }
+    }
+  }
   
 
   // init the grids to zero
@@ -402,35 +406,31 @@ void FTMachineSplitBeamWStackWB::put(const VisBuffer& vb, Int row, Bool dopsf,
   {
     double w_offset = (w_plane+0.5) * w_step;
     
-//     //DEBUG
-//     put_on_w_plane(vb, vbs, lsr_frequency, w_plane_grids, v, w_plane, w_offset, dopsf);
-//     break;
-    
     if (put_on_w_plane(vb, vbs, lsr_frequency, w_plane_grids, v, w_plane, w_offset, dopsf))
     // returns true if anything was put on this plane
     {
+//       store(Matrix<Complex>(w_plane_grids[0][0][0]), "grid1");
+//       throw AipsError("stop");
+      
       cout << "w_plane: " << w_plane << endl;
       for (int i=0; i<itsNGrid; i++)
       {
         // transform to image domain
-        ArrayLattice<Complex> lattice(w_plane_grids[i]);
-        
-        Array<Complex> w_plane_grid(w_plane_grids[i]);
+//         ArrayLattice<Complex> lattice(w_plane_grids[i]);
+//         LatticeFFT::cfft2d(lattice, True);
         
         {
           ScopedTimer t("W plane fft");
+          Array<Complex> w_plane_grid(w_plane_grids[i]);
           FFTCMatrix fft;
-//           LatticeFFT::cfft2d(lattice, True);
           for (int ii = 0; ii<w_plane_grid.shape()(3); ii++)
           {
             for (int jj = 0; jj<w_plane_grid.shape()(2); jj++)
             {
               Matrix<Complex> im(w_plane_grid[ii][jj]);
-//               cout << endl << w_plane_grid[ii][jj].shape() << endl;
-              fft.normalized_backward (im.nrow(), im.data(), 4);
+              fft.forward (im.nrow(), im.data(), OpenMP::maxThreads());
             }
           }
-          
         }
         
         // Apply W term in image domain
@@ -475,6 +475,10 @@ bool FTMachineSplitBeamWStackWB::put_on_w_plane(
   for (std::vector<Chunk>::const_iterator chunk = v.chunks.begin() ; chunk != v.chunks.end(); ++chunk)
   {
     cout << "\r" << i++ << "/" << v.chunks.size() << flush;
+    
+//     // DEBUG
+//     if (chunk->w > 0) continue;
+
     bool any_channel_match = false;
     vector<bool> channel_selection;
     channel_selection.reserve(chunk->wplane_map.size());
@@ -538,6 +542,8 @@ bool FTMachineSplitBeamWStackWB::put_on_w_plane(
             taylor_weights);
         }
       }
+      //DEBUG
+//       break;
     }
   }
   return any_match;
@@ -623,6 +629,7 @@ void FTMachineSplitBeamWStackWB::get(VisBuffer& vb, Int row)
   for (int w_plane=0; w_plane <= v.max_w_plane; w_plane++)
   {
     double w_offset = (w_plane+0.5) * w_step;
+    
     bool model_grids_initialized = false;
 
     // disable w-stack
@@ -695,9 +702,8 @@ void FTMachineSplitBeamWStackWB::get(VisBuffer& vb, Int row)
             for(Int pol=0; pol<itsNPol; ++pol)
             {
               Complex* ptr = itsModelGrids[i].data() + pol*itsPaddedNX*itsPaddedNY;
-              f.forward(itsPaddedNX, ptr, OpenMP::maxThreads());
+              f.normalized_backward(itsPaddedNX, ptr, OpenMP::maxThreads());
             }
-            
           }
           model_grids_initialized = true;
         }

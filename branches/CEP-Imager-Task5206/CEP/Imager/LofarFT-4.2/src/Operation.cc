@@ -65,10 +65,10 @@ void Operation::initData()
     select = '(' + select + ") && ANTENNA1 != ANTENNA2";
   }
 
-  if (!itsMS.tableDesc().isColumn("CORRECTED_DATA"))
-  {
-    throw(AipsError("CORRECTED_DATA column not found."));
-  }
+//   if (!itsMS.tableDesc().isColumn("CORRECTED_DATA"))
+//   {
+//     throw(AipsError("CORRECTED_DATA column not found."));
+//   }
   
   MSSpWindowColumns window(itsMS.spectralWindow());
   Vector<Int> wind(window.nrow());
@@ -173,56 +173,60 @@ void Operation::showHelpData(ostream& os, const string& name)
   os<<
   "Data parameters:"<<endl<<
   "  data.ms          : name of input measurement set with uv-data    "<<endl<<
-  "                     string,  no default                           "<<endl<<
+  "                     string,  " << COLOR_DEFAULT << "no default" << COLOR_RESET << endl <<
   "  data.query       : TaQL selection string for MS                  "<<endl<<
-  "                     string,  default \"ANTENNA1 != ANTENNA2\"     "<<endl<<
-  "  data.uvrange     : UV range, for example 1klambda~10klambda      "<<endl<<
-  "                     string,  default \"\"                         "<<endl<<
+  "                     string,  " << COLOR_DEFAULT << "default \"\"" << COLOR_RESET <<endl <<
+  "  data.uvrange     : UV range, for example 1~10klambda      "<<endl<<
+  "                     string,  " << COLOR_DEFAULT << "default \"\"" << COLOR_RESET << endl<<
   "  data.baselines   : baseline selection string                     "<<endl<<
-  "                     string,  default \"\"                         "<<endl<<endl;
+  "                     string,  " << COLOR_DEFAULT << "default \"\"" << COLOR_RESET << endl<<endl;
 }
 
 void Operation::showHelpImage(ostream& os, const string& name)
 {
   os<<
-  "Image pameters:"<<endl<<
+  "Image parameters:"<<endl<<
   "  image.npix       : number of pixels                              "<<endl<<
-  "                     int   ,  default 256                          "<<endl<<
+  "                     int   ,  " << COLOR_DEFAULT << "default 256" << COLOR_RESET << endl<<
   "  image.cellsize   : pixel width                                   "<<endl<<
-  "                     string,  default \"1arcsec\"                  "<<endl<<
+  "                     string,  " << COLOR_DEFAULT << "default \"1arcsec\"" << COLOR_RESET << endl <<
   "  image.reffreq    : reference frequency (Hz), only used for multi-term images"<<endl<<
-  "                     double,  default is reference frequency from ms"<<endl<<
+  "                     double,  " << COLOR_DEFAULT << 
+  "default is reference frequency from ms" << COLOR_RESET << endl<<
   "  image.nterms     : number of terms for wideband imaging          "<<endl<<
-  "                     int   ,  default 1                            "<<endl<<endl;
+  "                     int   ,  " << COLOR_RESET << "default 1" << COLOR_RESET << endl << endl;
 }
 
 void Operation::showHelpFTMachine(ostream& os, const string& name)
 {
   os<<
-  "Gridding pameters:"<<endl<<
+  "Gridding parameters:"<<endl<<
   "  gridding.ftmachine  : FTMachine to use                           "<<endl<<
-  "                        string, default FTMachineSplitBeamWStackWB "<<endl<<
+  "                        string, " << COLOR_DEFAULT << 
+  "default FTMachineSplitBeamWStackWB" << COLOR_RESET << endl <<
   "  gridding.oversample : oversampling factor                        "<<endl<<
-  "                        int   , default 8                          "<<endl<<endl;
+  "                        int   , " << COLOR_DEFAULT << "default 9" << 
+  COLOR_RESET << endl<<
+  endl;
 }
 
 void Operation::showHelpWeight(ostream& os, const string& name)
 {
   os<<
-  "Weight pameters:"<<endl<<
+  "Weight parameters:"<<endl<<
   "  weight.type       : weighting scheme,                            "<<endl<<
-  "                        string, default natural                    "<<endl<<
+  "                        string, " << COLOR_DEFAULT << "default natural" << COLOR_RESET << endl<<
   "                        (natural, robust, uniform)                 "<<endl<<endl;
   os<<
   "  weight.robust     : robustness,                                  "<<endl<<
-  "                        float, default 0.0                         "<<endl<<endl;
+  "                        float, " << COLOR_DEFAULT << "default 0.0" << COLOR_RESET << endl<<endl;
   os<<
   "  weight.mode       : robust weighting mode,                       "<<endl<<
-  "                        string, default norm                       "<<endl<<
+  "                        string, " << COLOR_DEFAULT << "default norm" << COLOR_RESET << endl<<
   "                        (norm, abs)                                "<<endl<<endl;
   os<<
   "  weight.noise       : robust abs noise,                           "<<endl<<
-  "                        string, default 0Jy                        "<<endl<<endl;
+  "                        string, " << COLOR_DEFAULT << "default 0Jy" << COLOR_RESET << endl<<endl;
 }
 
 // Show the help info.
@@ -231,18 +235,18 @@ void Operation::showHelp (ostream& os, const string& name)
   os<<
   "General parameters:"<<endl<<
   "  operation        : operation name                                "<<endl<<
-  "                     string,  no default                           "<<endl<<
+  "                     string,  " << COLOR_DEFAULT << "no default" << COLOR_RESET <<endl<<
   "  verbose          : verbosity level                               "<<endl<<
-  "                     int   ,  default 0                            "<<endl<<
+  "                     int   ,  " << COLOR_DEFAULT << "default 0" << COLOR_RESET << endl<<
   "  chunksize        : amount of data read at once (0 means automatic)"<<endl<<
-  "                     int   ,  default 0                            "<<endl<<
+  "                     int   ,  " << COLOR_DEFAULT << "default 0" << COLOR_DEFAULT << endl<<
   "  numthreads       : maximum number of threads to use              "<<endl<<
-  "                     int   ,  default 8                            "<<endl<<endl;
+  "                     int   ,  " << COLOR_DEFAULT << "default 8" << COLOR_RESET <<endl<<endl;
 
   os<<
   "Output parameters:"<<endl<<
   "  output.imagename : base name for output image                    "<<endl<<
-  "                     string,  no default                           "<<endl<<endl;
+  "                     string,  " << COLOR_DEFAULT << "no default" << COLOR_RESET << endl<<endl;
 
   if (needsData) showHelpData(os,name);
   if (needsImage) showHelpImage(os,name);

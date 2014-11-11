@@ -53,12 +53,12 @@ void OperationPredict::run()
 
 void OperationPredict::showHelp (ostream& os, const string& name)
 {
-  Operation::showHelp(os,name);
-  os<<
-  "Operation \"predict\": create a predicted image                   "<<endl<<
+  os<< COLOR_OPERATION << 
+  "Operation \"predict\": create a predicted image"<< COLOR_RESET <<endl<<
   "Parameters:                                                       "<<endl<<
   "  modelimage       : model to be predicted                        "<<endl<<
-  "                     (string,  no default)                        "<<endl<<endl;
+  "                     (string,  " << COLOR_DEFAULT << "no default" << COLOR_RESET ")"<<endl<<endl;
+  Operation::showHelp(os,name);
 };
 
 

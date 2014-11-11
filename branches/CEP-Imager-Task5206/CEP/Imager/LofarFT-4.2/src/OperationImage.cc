@@ -56,11 +56,12 @@ void OperationImage::run()
 
 void OperationImage::showHelp (ostream& os, const std::string& name)
 {
-  Operation::showHelp(os,name);
 
-  os<<
-  "Operation \"image\": create a dirty image                         "<<endl<<
-  "  No extra parameters for operation \"image\"                     "<<endl;
+  os<< COLOR_OPERATION << 
+  "Operation \"image\": create a dirty image" << COLOR_RESET << endl <<
+  "  No extra parameters for operation \"image\""<<endl << endl;
+
+  Operation::showHelp(os,name);
 };
 
 

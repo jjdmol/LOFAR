@@ -120,7 +120,7 @@ ConvolutionFunction::ConvolutionFunction
     itsAveragePB(),
     itsSpheroidal(),
     itsSpheroidalCF(),
-    itsSupportCF(27)
+    itsSupportCF(9)
 {
   itsFFTMachines.resize (OpenMP::maxThreads());
 
@@ -573,8 +573,7 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
             #pragma omp critical
             {
               // 1. Multiply aTerm1, aTerm2 and spheroidal
-              // Note this is the conjugate!
-              aTerm.reference(aTerm1.xyPlane(ind1) * conj(aTerm2.xyPlane(ind2)) * getSpheroidalCF());
+              aTerm.reference(conj(aTerm1.xyPlane(ind1)) * aTerm2.xyPlane(ind2) * getSpheroidalCF());
               if (w<0)
               {
                 aTerm = conj(aTerm);
@@ -667,6 +666,14 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
               aTerm_oversampled = itsFFTMachines[tnr].padded_forward (aTerm, itsOversampling);
             }
             
+            static int a = 1;
+            #pragma omp critical
+            if (a)
+            {
+              store(aTerm_oversampled, "aterm");
+              a = 0;
+            }
+            
             
             // zero pad to original support because gridder can not (yet) handle varying support
             if (d>0)
@@ -705,7 +712,7 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
   itsTimeCFpar += ptime;
 
   return CFStore (res, csys, samp,  xsup, ysup, maxXSup, maxYSup,
-                        pa, mosPointing);
+                        pa, mosPointing, (w<0));
 }
 
 
@@ -1061,6 +1068,7 @@ Double ConvolutionFunction::estimateWResolution(
 Double ConvolutionFunction::get_w_from_support(Int support) const
 {
   if (support == 0) support = itsSupportCF;
+  
   Double pixelSize = abs(itsCoordinates.increment()[0]);
   Double diam_image = pixelSize*itsShape[0];         // image diameter in radian
 

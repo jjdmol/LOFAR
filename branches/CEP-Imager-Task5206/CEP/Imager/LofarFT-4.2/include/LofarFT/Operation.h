@@ -33,6 +33,13 @@
 #include <casa/Containers/Record.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 
+
+// Define color codes for help text
+#define COLOR_DEFAULT "\033[38;2;40;120;130m"
+#define COLOR_OPERATION "\033[38;2;0;60;130m"
+#define COLOR_RESET "\033[0m"
+
+
 namespace LOFAR { 
   
   namespace LofarFT {

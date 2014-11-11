@@ -394,36 +394,60 @@ namespace LOFAR {
     // Use 4 separate loops to move the quadrants.
     // q1
     fr = reinterpret_cast<std::complex<float>*>(itsPaddingBuffer3);
-    to = result.data() + n_out * center_out + center_out;
+    to = result.data();
     for (size_t j=0; j<=center_out; ++j) 
     {
-      for (size_t i=0; i<=center_out; ++i) {
-        to[i+j*n_out] = fr[i+j*n_out]/int(n*n);
+      for (size_t i=0; i<=center_out; ++i) 
+      {
+        Int ii = i+center_out;
+        Int jj = j+center_out;
+        Int ii0 = (ii % padding);
+        Int ii1 = (ii / padding);
+        Int jj0 = (jj % padding);
+        Int jj1 = (jj / padding);
+        to[ (ii0 + jj0*padding)*n*n + ii1 + jj1*n ] = fr[i+j*n_out]/int(n*n);
       }
     }
     // q2
     fr = reinterpret_cast<std::complex<float>*>(itsPaddingBuffer3) + center_out+1;
-    to = result.data() + n_out * center_out;
     for (size_t j=0; j<=center_out; ++j) {
-      for (size_t i=0; i<center_out; ++i) {
-        to[i+j*n_out] = fr[i+j*n_out]/int(n*n);
+      for (size_t i=0; i<center_out; ++i) 
+      {
+        Int ii = i;
+        Int jj = j + center_out;
+        Int ii0 = (ii % padding);
+        Int ii1 = (ii / padding);
+        Int jj0 = (jj % padding);
+        Int jj1 = (jj / padding);
+        to[ (ii0 + jj0*padding)*n*n + ii1 + jj1*n ] = fr[i+j*n_out]/int(n*n);
       }
     }
     // q3
     fr = reinterpret_cast<std::complex<float>*>(itsPaddingBuffer3) + (center_out+1)*n_out;
-    to = result.data() + center_out;
     for (size_t j=0; j<center_out; ++j) {
       for (size_t i=0; i<=center_out; ++i) 
       {
-        to[i+j*n_out] = fr[i+j*n_out]/int(n*n);
+        Int ii = i + center_out;
+        Int jj = j;
+        Int ii0 = (ii % padding);
+        Int ii1 = (ii / padding);
+        Int jj0 = (jj % padding);
+        Int jj1 = (jj / padding);
+        to[ (ii0 + jj0*padding)*n*n + ii1 + jj1*n ] = fr[i+j*n_out]/int(n*n);
       }
     }
     // q4
     fr = reinterpret_cast<std::complex<float>*>(itsPaddingBuffer3) + (center_out+1)*n_out+center_out+1;
-    to = result.data();
     for (size_t j=0; j<center_out; ++j) {
-      for (size_t i=0; i<center_out; ++i) {
-        to[i+j*n_out] = fr[i+j*n_out]/int(n*n);
+      for (size_t i=0; i<center_out; ++i) 
+      {
+        Int ii = i;
+        Int jj = j;
+        Int ii0 = (ii % padding);
+        Int ii1 = (ii / padding);
+        Int jj0 = (jj % padding);
+        Int jj1 = (jj / padding);
+        to[ (ii0 + jj0*padding)*n*n + ii1 + jj1*n ] = fr[i+j*n_out]/int(n*n);
       }
     }
     

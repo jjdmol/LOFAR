@@ -157,28 +157,28 @@ void OperationClean::run()
   itsImager->doClean();
 }
 
-
 void OperationClean::showHelp (ostream& os, const string& name)
 {
-  Operation::showHelp(os,name);
-
   os<<
+  COLOR_OPERATION <<
   "Operation \"clean\": perform a clean cycle                          "<<endl<<
+  COLOR_RESET << endl <<
   "Parameters:                                                         "<<endl<<
   "  clean.niter       : number of clean iterations                    "<<endl<<
-  "                      int   ,  default 1000                         "<<endl<<
+  "                      int   ,  " << COLOR_DEFAULT << "default 1000" << COLOR_RESET <<endl<<
   "  clean.threshold   : flux level at which to stop cleaning          "<<endl<<
-  "                      string,  \"0Jy\"                              "<<endl<<
+  "                      string,  " << COLOR_DEFAULT << "default \"0Jy\"" << COLOR_RESET <<endl<<
   "  clean.maskimage   : name of the mask image to use in cleaning     "<<endl<<
-  "                      string,  default \"\"                         "<<endl<<
+  "                      string,  " << COLOR_DEFAULT << "default \"\"" << COLOR_RESET <<endl<<
   "  clean.cyclefactor : see casa documentation                        "<<endl<<
-  "                      double,  default 1.5                          "<<endl<<
+  "                      double,  " << COLOR_DEFAULT << "default 1.5" << COLOR_RESET <<endl<<
   "  clean.cyclespeedup: see casa documentation                        "<<endl<<
-  "                      double,  default -1                           "<<endl<<
+  "                      double,  " << COLOR_DEFAULT << "default -1"<< COLOR_RESET << endl<<
   "  clean.nscales     : number of scales for multiscale clean         "<<endl<<
-  "                      int   ,  default 5                            "<<endl<<
+  "                      int   ,  " << COLOR_DEFAULT << "default 1" << COLOR_RESET <<endl<<
   "  clean.uservector  : user-defined scales for multi-scale clean     "<<endl<<
-  "                      float vector,  default [0.]                   "<<endl<<endl;
+  "                      float vector,  " << COLOR_DEFAULT << "default [0.]" << COLOR_RESET<< endl<<endl;
+  Operation::showHelp(os,name);
 };
 
 
