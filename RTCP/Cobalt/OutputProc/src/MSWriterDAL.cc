@@ -467,7 +467,7 @@ namespace LOFAR
       spectralCoordinate.get()->storageType().value = vector<string>(1,"Tabular");
       spectralCoordinate.get()->nofAxes().value = 1;
       spectralCoordinate.get()->axisNames().value = vector<string>(1,"Frequency");
-      spectralCoordinate.get()->axisUnits().value = vector<string>(1,"Hz");
+      spectralCoordinate.get()->axisUnits().value = vector<string>(1,"MHz");
 
       spectralCoordinate.get()->referenceValue().value = 0; // not used
       spectralCoordinate.get()->referencePixel().value = 0; // not used

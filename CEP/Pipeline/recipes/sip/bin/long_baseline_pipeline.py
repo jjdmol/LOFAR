@@ -156,9 +156,8 @@ class msss_imager_pipeline(control):
 
         # ******************************************************************
         # (1) prepare phase: copy and collect the ms
-        concat_ms_map_path, timeslice_map_path, raw_ms_per_image_map_path, \
-            processed_ms_dir = self._long_baseline(input_mapfile,
-                                    target_mapfile, add_beam_tables)
+        concat_ms_map_path = self._long_baseline(
+              input_mapfile,  target_mapfile, add_beam_tables)
 
         # *********************************************************************
         # (7) Get metadata
@@ -299,22 +298,24 @@ class msss_imager_pipeline(control):
         # create the output file paths
         # [1] output -> prepare_output
         output_mapfile = self._write_datamap_to_file(None, "prepare_output")
-        time_slices_mapfile = self._write_datamap_to_file(None,
+        subband_group_mapfile = self._write_datamap_to_file(None,
                                                     "prepare_time_slices")
         raw_ms_per_image_mapfile = self._write_datamap_to_file(None,
                                                          "raw_ms_per_image")
 
         # get some parameters from the imaging pipeline parset:
-        slices_per_image = self.parset.getInt("LongBaseline.slices_per_ms")
-        subbands_per_image = self.parset.getInt("LongBaseline.subbands_per_ms")
+
+
+        subbandgroups_per_ms = self.parset.getInt("LongBaseline.subbandgroups_per_ms")
+        subbands_per_subbandgroup = self.parset.getInt("LongBaseline.subbands_per_subbandgroup")
 
         outputs = self.run_task("long_baseline", input_ms_map_path,
                 parset = ndppp_parset_path,
                 target_mapfile = target_mapfile,
-                slices_per_image = slices_per_image,
-                subbands_per_image = subbands_per_image,
+                subbandgroups_per_ms = subbandgroups_per_ms,
+                subbands_per_subbandgroup = subbands_per_subbandgroup,
                 mapfile = output_mapfile,
-                slices_mapfile = time_slices_mapfile,
+                slices_mapfile = subband_group_mapfile,
                 raw_ms_per_image_mapfile = raw_ms_per_image_mapfile,
                 working_directory = self.scratch_directory,
                 processed_ms_dir = processed_ms_dir,
@@ -341,8 +342,7 @@ class msss_imager_pipeline(control):
             raise PipelineException(error_msg)
 
         # Return the mapfiles paths with processed data
-        return output_mapfile, outputs["slices_mapfile"], raw_ms_per_image_mapfile, \
-            processed_ms_dir
+        return output_mapfile
 
 
     # TODO: Move these helpers to the parent class
