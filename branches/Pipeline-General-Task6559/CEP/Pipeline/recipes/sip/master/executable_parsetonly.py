@@ -66,7 +66,6 @@ class executable_parsetonly(BaseRecipe, RemoteCommandRecipeMixIn):
         # 1. load input data file, validate output vs the input location if
         #    output locations are provided
         args = self.inputs['args']
-        #print "FUCK: ",args
         self.logger.debug("Loading input-data mapfile: %s" % args[0])
         indata = DataMap.load(args[0])
         if len(args) > 1:

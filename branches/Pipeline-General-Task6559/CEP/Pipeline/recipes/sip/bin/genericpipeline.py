@@ -138,24 +138,26 @@ class GenericPipeline(control):
 
         resultdicts = {'input': {'mapfile': input_correlated_mapfile,
                                  'output_instrument_mapfile': output_instrument_mapfile,
-                                 'output_correlated_mapfile': output_correlated_mapfile}}
+                                 'output_correlated_mapfile': output_correlated_mapfile,
+                                 'parset': parset_file}}
 
         # *********************************************************************
         # main loop
         # there is a distinction between recipes and plugins for user scripts.
         # plugins are not used at the moment and might better be replaced with master recipes
         for step, stepname in zip(step_control_list, step_name_list):
+            inputdict = {}
+            inputargs = []
+            resultdict = {}
+            self._construct_cmdline(inputargs, step, resultdicts)
+
+            if stepname in step_parset_files:
+                inputdict['parset'] = step_parset_files[stepname]
+
+            self._construct_input(inputdict, step, resultdicts)
+
             # recipes
             if step.getString('kind') == 'recipe':
-                inputdict = {}
-                inputargs = []
-
-                self._construct_cmdline(inputargs, step, resultdicts)
-
-                if stepname in step_parset_files:
-                    inputdict['parset'] = step_parset_files[stepname]
-
-                self._construct_input(inputdict, step, resultdicts)
 
                 with duration(self, stepname):
                     resultdict = self.run_task(
@@ -163,12 +165,14 @@ class GenericPipeline(control):
                         inputargs,
                         **inputdict
                     )
-                    resultdicts[stepname] = resultdict
 
             # plugins
-            #if step.getString('kind') == 'plugin':
-            #    loader.call_plugin(step.getString('type'), py_parset.getString('pluginpath'),
-            #                       step.getString('type'), input_mapfile)
+            if step.getString('kind') == 'plugin':
+                with duration(self, stepname):
+                    resultdict = loader.call_plugin(step.getString('type'), py_parset.getString('pluginpath'),
+                                                    inputargs,
+                                                    **inputdict)
+            resultdicts[stepname] = resultdict
 
     # *********************************************************************
     # build the inputs for the master recipes.
