@@ -1,0 +1,19 @@
+#!/bin/sh
+killall beamctl
+sleep 10
+declare mpos
+declare blidx
+declare blidx2
+declare -i N=216
+for ((idx = 0; idx < $N; idx++)) do
+    echo $idx
+    mpos=$(eval "echo \"($idx / $N)\" | bc -l")
+    blidx=$(eval "echo \"$idx\" | bc")
+    blidx2=$(eval "echo \"$blidx+8\" | bc")
+    echo $blidx
+    eval "/opt/lofar_beam/bin/beamctl --array=CS1-TEST --rcumode=3 --rcus=0:95 --subbands=256 --beamlets=$blidx --direction=$mpos,0,LOFAR_LMN &"
+#    echo "recording snapshot $idx"
+#    ./rspctl --statistics=beamlet --select=0,1 --integration=1 --duration=1 --directory=/home/lofartest/sjw/beamexperiment
+#   killall beamctl
+done
+
