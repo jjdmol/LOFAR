@@ -2252,3 +2252,8 @@ void SchedulerGUI::about()
 
    QMessageBox::about(this, "About LOFAR Scheduler", msg);
 }
+
+bool SchedulerGUI::sceneBlockSignals(bool flag)
+{
+  return itsGraphicResourceScene->blockSignals(flag);
+}

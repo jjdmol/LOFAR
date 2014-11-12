@@ -21,7 +21,6 @@
 #include "schedulergui.h"
 #include "Scheduler.h"
 #include "schedulersettings.h"
-#include "GraphicResourceScene.h"
 #include "conflictdialog.h"
 #include "taskcopydialog.h"
 #include "DigitalBeam.h"
@@ -758,7 +757,7 @@ void Controller::deleteSelectedTasks(void) {
 			// have to block signals from GUI otherwise it will send signals when deleting graphicTasks from its view,
 			// (i.e. it will generate signal selectionChanged which in turn is coupled to SLOT graphicResourceScene::handleRubberBandSelection()
 			// which will indirectly alter (clear) the selection from the Controller while the following FOR loop is still active
-			gui->scene()->blockSignals(true);
+            gui->sceneBlockSignals(true);
 			for (vector<unsigned>::iterator it = itsSelectedTasks.begin(); it != itsSelectedTasks.end(); ++it) { // do the actual deletion
                 Task *delTask(data.deleteTask(*it, ID_SCHEDULER, false));
                 if (delTask) {
@@ -770,7 +769,7 @@ void Controller::deleteSelectedTasks(void) {
                     gui->deleteTaskFromGUI(*it); // will cause signals to be generated if we don't block them (see remark just before FOR loop)
                 }
 			}
-			gui->scene()->blockSignals(false);
+            gui->sceneBlockSignals(false);
 
 			if (!deletedTasks.empty()) {
 				itsThrashBin.addTasks(deletedTasks);
@@ -1990,7 +1989,8 @@ void Controller::redo(void) {
 			if (!itsDeletedTasksRedoStack.empty()) {
                 vector<Task *> deletedTasks;
 				vector<unsigned> &taskIDvec = itsDeletedTasksRedoStack.back();
-                gui->scene()->blockSignals(true);
+
+                gui->sceneBlockSignals(true);
                 unsigned treeID;
                 for (vector<unsigned>::iterator it = taskIDvec.begin(); it != taskIDvec.end(); ++it) {
                     Task *delTask(data.deleteTask(*it, ID_SCHEDULER, false));
@@ -2006,7 +2006,8 @@ void Controller::redo(void) {
 						debugWarn("si","Redo delete: could not find task: ", *it); // should never occur
 					}
 				}
-                gui->scene()->blockSignals(false);
+                gui->sceneBlockSignals(false);
+
                 if (!deletedTasks.empty()) {
                     itsDeletedTasks.push_back(deletedTasks);
                     itsThrashBin.addTasks(deletedTasks);
