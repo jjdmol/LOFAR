@@ -119,7 +119,7 @@ const char *SAS_item_names[NR_TASK_PROPERTIES] = {"task_id", "antenna mode", "cl
             "imaging specify fov", "imaging fov", "imaging npix", "imaging cellsize", "subbands_per_subbandgroup", "subbandgroups_per_MS",
             "demix always", "demix_if_needed", "demix_skyModel", "demix_freqstep", "demix_timestep",
             "avg.freqstep", "avg.timestep", "cal_skyModel", "pulsar pipeline settings", "enabled output data types",
-            "output storage settings", "output data products", "TBB piggyback", "Aartfaac piggyback", "input data products", "description"};
+            "output storage settings", "output data products", "TBB piggyback", "Aartfaac piggyback", "input data products", "description", "Pipeline Version"};
 
 const char * DATA_TYPES[_END_DATA_TYPES] = {"I", "IQUV", "XXYY", "UNDEFINED"};
 
