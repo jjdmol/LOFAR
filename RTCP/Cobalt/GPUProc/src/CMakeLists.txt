@@ -136,8 +136,11 @@ install(PROGRAMS
   scripts/cobaltswitch
   scripts/Cobalt_build.sh
   scripts/Cobalt_install.sh
+  scripts/Cobalt_setcurrent.sh
   scripts/CobaltVersions.sh
   scripts/setloglevels.sh
+  scripts/get_casacore_measures_data.sh
+  scripts/apply_casacore_measures_data.sh
   DESTINATION sbin)
 
 # install logprop files

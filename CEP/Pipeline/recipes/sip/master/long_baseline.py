@@ -62,11 +62,11 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
             help="Contains the node and path to target files, defines"
                " the number of nodes the script will start on."
         ),
-        'slices_per_image': ingredient.IntField(
+        'subbandgroups_per_ms': ingredient.IntField(
             '--slices-per-image',
             help="The number of (time) slices for each output image"
         ),
-        'subbands_per_image': ingredient.IntField(
+        'subbands_per_subbandgroup': ingredient.IntField(
             '--subbands-per-image',
             help="The number of subbands to be collected in each output image"
         ),
@@ -135,11 +135,11 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
         # input data     
         input_map = DataMap.load(self.inputs['args'][0])
         output_map = DataMap.load(self.inputs['target_mapfile'])
-        slices_per_image = self.inputs['slices_per_image']
-        subbands_per_image = self.inputs['subbands_per_image']
+        subbandgroups_per_ms = self.inputs['subbandgroups_per_ms']
+        subbands_per_subbandgroup = self.inputs['subbands_per_subbandgroup']
         # Validate input
-        if not self._validate_input_map(input_map, output_map, slices_per_image,
-                            subbands_per_image):
+        if not self._validate_input_map(input_map, output_map, subbandgroups_per_ms,
+                            subbands_per_subbandgroup):
             return 1
 
         # outputs
@@ -160,8 +160,8 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
                               "on: {0}".format(item.host))
             inputs_for_image_map = \
                 self._create_input_map_for_sbgroup(
-                                slices_per_image, n_subband_groups,
-                                subbands_per_image, idx_sb_group, input_map)
+                                subbandgroups_per_ms, n_subband_groups,
+                                subbands_per_subbandgroup, idx_sb_group, input_map)
 
             # Save the mapfile
             job_directory = self.config.get(
@@ -182,8 +182,8 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
                          self.inputs['processed_ms_dir'],
                          self.inputs['ndppp_exec'],
                          item.file,
-                         slices_per_image,
-                         subbands_per_image,
+                         subbandgroups_per_ms,
+                         subbands_per_subbandgroup,
                          inputs_for_image_mapfile_path,
                          self.inputs['asciistat_executable'],
                          self.inputs['statplot_executable'],
@@ -250,8 +250,8 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
 
         return 0
 
-    def _create_input_map_for_sbgroup(self, slices_per_image,
-            n_subband_groups, subbands_per_image, idx_sb_group, input_mapfile):
+    def _create_input_map_for_sbgroup(self, subbandgroups_per_ms,
+            n_subband_groups, subbands_per_subbandgroup, idx_sb_group, input_mapfile):
         """
         Creates an input mapfile:
         This is a subset of the complete input_mapfile based on the subband 
@@ -262,12 +262,12 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
         """
         inputs_for_image = []
         # collect the inputs: first step over the time slices
-        for idx_slice in range(slices_per_image):
+        for idx_slice in range(subbandgroups_per_ms):
             # calculate the first line for current time slice and subband group
             line_idx_start = idx_slice * \
-                (n_subband_groups * subbands_per_image) + \
-                (idx_sb_group * subbands_per_image)
-            line_idx_end = line_idx_start + subbands_per_image
+                (n_subband_groups * subbands_per_subbandgroup) + \
+                (idx_sb_group * subbands_per_subbandgroup)
+            line_idx_end = line_idx_start + subbands_per_subbandgroup
 
             #extend inputs with the files for the current time slice
             inputs_for_image.extend(input_mapfile[line_idx_start: line_idx_end])
@@ -275,15 +275,15 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
         return DataMap(inputs_for_image)
 
 
-    def _validate_input_map(self, input_map, output_map, slices_per_image,
-                            subbands_per_image):
+    def _validate_input_map(self, input_map, output_map, subbandgroups_per_ms,
+                            subbands_per_subbandgroup):
         """
         Return False if the inputs supplied are incorrect:
         the number if inputs and  output does not match. 
         Return True if correct.              
         The number of inputs is correct iff.
         len(input_map) == 
-        len(output_map) * slices_per_image * subbands_per_image
+        len(output_map) * subbandgroups_per_ms * subbands_per_subbandgroup
         """
         # The output_map contains a number of path/node pairs. The final data 
         # dataproduct of the prepare phase: The 'input' for each of these pairs
@@ -291,15 +291,15 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
         # the number of subbands collected into each of these time slices.
         # The total length of the input map should match this.
         if len(input_map) != len(output_map) * \
-                                   (slices_per_image * subbands_per_image):
+                                   (subbandgroups_per_ms * subbands_per_subbandgroup):
             self.logger.error(
                 "Incorrect number of input ms for supplied parameters:\n\t"
                 "len(input_map) = {0}\n\t"
-                "len(output_map) * slices_per_image * subbands_per_image = "
+                "len(output_map) * subbandgroups_per_ms * subbands_per_subbandgroup = "
                 "{1} * {2} * {3} = {4}".format(
                     len(input_map), len(output_map),
-                    slices_per_image, subbands_per_image,
-                    len(output_map) * slices_per_image * subbands_per_image
+                    subbandgroups_per_ms, subbands_per_subbandgroup,
+                    len(output_map) * subbandgroups_per_ms * subbands_per_subbandgroup
                 )
             )
             return False
