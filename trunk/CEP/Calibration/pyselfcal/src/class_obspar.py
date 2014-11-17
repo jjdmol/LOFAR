@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 
+########################################################################
+#                                                                      #
+# Created by N.Vilchez (vilchez@astron.nl)                             #
+# 14/11/2014                                                           #
+#                                                                      #
+########################################################################
 
 
+########################################################################
 # IMPORT general modules
-
-import sys
-import glob
-import os
-import pyrap.tables as pt
-import numpy as np
-import fpformat
-
+########################################################################
+import sys,os,glob
 
 
 ######################################################################
@@ -22,28 +23,35 @@ import fpformat
 
 class observationParam:
 
-    def __init__(self,obsDir):
-    
-	self.obsDir	= obsDir
 
+
+    def __init__(self,obsDir,checkNames):
+
+	####################################################################
+	# Initialization
+	####################################################################
+    
+	self.obsDir				= obsDir
+	self.checkNames			= checkNames
+
+	self.checkNames			= 'yes'
  
- 
-	#####################################################
-	# Observation parameter for data to merge in subbands
-	##################################################### 
- 
+
  
     
     def obsParamFunc(self):
+  
+  
+	####################################################################
+	# Check data format (intermediate and Final products)
+	####################################################################    
     
-    
-	##############################
 	# generate the list of files
 	listFiles	= sorted(glob.glob(self.obsDir+'*'))
 	NbFiles		= len(listFiles)
 	
 	
-	##############################	
+
 	# check type of observation: intermediate data or final data product not the same nomenclature
 	splinter1	= self.obsDir
 	splinter2	= '_uv.'
@@ -65,11 +73,12 @@ class observationParam:
 	    print ''
 	    print 'The observation format is not valid:\nMust be Lxxxxxx_SBxxx_uv.dppp.MS or Lxxxxxx_SAPxxx_SBxxx_uv.MS.dppp\n'
 	    print ''
+	    #if self.checkNames == 'yes':	
 	    sys.exit(2)
+			
 	    
 	    
 	    
-	##############################	    
 	# Check if intermediate and final data product are mixed
 	
 	kobsType	= range(NbFiles)
@@ -93,7 +102,11 @@ class observationParam:
 		sys.exit(2)
 	
 	      
-	##############################	    
+
+	####################################################################
+	# Extract Parameter
+	####################################################################  
+
 	#Determine IDs and SBs
 	
 	Files		= range(NbFiles)
@@ -193,14 +206,24 @@ class observationParam:
 	    
 	    if IDsTemp[i] != IDsTemp[i+1]:
 			IDs.append(IDsTemp[i+1])
+
+
+
+	####################################################################
+	# OVERVIEW
+	####################################################################
 				 		    
-		
+	print '############################################################'
+	print '				CONCATENATION OVERVIEW                         '
+	print '############################################################'
+	print ''		
 	print 'List Of Files to merge: %s\n'%(listFiles)
 	print ''	
 	print 'Number of subbands: %s\n'%(NbSB)
 	print ''
 	print 'First subband: %s, Last subband: %s'%(StartSB,EndSB)
-		
+	print ''
+	print '############################################################'	
 		    
 	
 	#Return value
