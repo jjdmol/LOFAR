@@ -110,8 +110,8 @@ void updateActiveObservations(string dp1, dyn_string obs,
   }
   
   LOG_DEBUG(\"ObservationFlow_cobaltLocusNodeProcesses.pnl:updateActiveObservations|observationList: \"+observationsList);
-  connectCobaltLocusNodesAndProcesses();
-  connectOutputProcs();
+//  connectCobaltLocusNodesAndProcesses();
+//  connectOutputProcs();
 }
 
 // connect to stationInputStreams from the active observations
