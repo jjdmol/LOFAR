@@ -226,10 +226,10 @@ public:
 
 	Task();
     Task(unsigned task_id);
-#ifdef HAS_SAS_CONNECTION
+
     Task(unsigned task_id, const OTDBtree &SAS_tree); // constructor used for incomplete SAS tasks that have no stored scheduler properties
 	Task(const QSqlQuery &query, const OTDBtree &SAS_tree);
-#endif
+
 	virtual ~Task();
 
     friend QDataStream& operator<< (QDataStream &out, const Task &task); // used for writing data to binary file
@@ -422,11 +422,11 @@ protected:
 	AstroDate lastPossibleDay; // time window last possible scheduling date
 
 	// SAS parameters
-//#ifdef HAS_SAS_CONNECTION
+
 	OTDBtree itsSASTree;
 public :
 	const OTDBtree &SASTree(void) const {return itsSASTree;}
-//#endif
+
 };
 
 

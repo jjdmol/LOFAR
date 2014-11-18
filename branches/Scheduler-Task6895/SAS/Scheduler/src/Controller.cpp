@@ -32,9 +32,9 @@
 #include <vector>
 #include <cmath>
 #include <limits>
-#ifdef HAS_SAS_CONNECTION
+
 #include "SASConnection.h"
-#endif
+
 #include "DataMonitorConnection.h"
 
 extern QString currentUser;
@@ -67,10 +67,10 @@ Controller::Controller(QApplication &app) :
 	gui = new SchedulerGUI(this);
 	itsSettingsDialog = new ScheduleSettingsDialog(this);
 	itsConflictDialog = new ConflictDialog(this);
-#ifdef HAS_SAS_CONNECTION
+
 	itsSASConnection = new SASConnection(this);
 	itsSASConnection->setLastDownloadDate(QDateTime(Controller::theSchedulerSettings.getEarliestSchedulingDay().toQDate()));
-#endif
+
 	// connection to the Data Monitor
 	itsDMConnection = new DataMonitorConnection(this);
 	itsDataHandler = new DataHandler(this);
@@ -180,11 +180,11 @@ void Controller::connectSignals(void)
 	itsThrashBin.connect(&itsThrashBin, SIGNAL(thrashBinContainsItems()), this, SLOT(thrashBinNotEmpty()));
 	itsThrashBin.connect(&itsThrashBin, SIGNAL(destroyTasks(std::vector<unsigned>)), this, SLOT(doDestroyTasks(std::vector<unsigned>)));
 
-#ifdef HAS_SAS_CONNECTION
+
 	gui->connect(gui->getSchedulerGUIClass().action_DownloadSASSchedule, SIGNAL(triggered()), this, SLOT(downloadSASSchedule()));
 	gui->connect(gui->getSchedulerGUIClass().action_SyncSASSchedule, SIGNAL(triggered()), this, SLOT(InitSynchronizeSASSchedule()));
 	gui->connect(gui->getSchedulerGUIClass().actionCheck_SAS_status, SIGNAL(triggered()), this, SLOT(checkSASStatus()));
-#endif
+
 
 }
 
@@ -195,7 +195,7 @@ const AstroDateTime &Controller::now(void) {
 	return itsTimeNow;
 }
 
-#ifdef HAS_SAS_CONNECTION
+
 
 void Controller::checkSASStatus(void) const {
 	itsSASConnection->checkSASStatus();
@@ -502,7 +502,7 @@ QString Controller::lastSASError(void) const {
 	return itsSASConnection->lastConnectionError();
 }
 
-#endif // HAS_SAS_CONNECTION
+
 /*
 void Controller::checkPredecessor(unsigned predecessor_id) const {
 	if (data.predecessorExists(predecessor_id)) {

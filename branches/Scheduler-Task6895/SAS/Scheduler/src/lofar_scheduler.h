@@ -16,7 +16,6 @@
 
 #define SCHEDULER_VERSION "v2.6"
 
-#define HAS_SAS_CONNECTION
 #define DEBUG_SCHEDULER
 
 // undefine to compile away the debug output:

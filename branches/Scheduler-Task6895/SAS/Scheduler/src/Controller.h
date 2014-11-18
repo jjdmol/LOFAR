@@ -193,13 +193,11 @@ public:
 	bool calculateDataSlots(void);
 
 
-#ifdef HAS_SAS_CONNECTION
 	QString lastSASError(void) const;
 	bool checkSASSettings(void);
 	int checkSASconnection(const QString &username, const QString &password, const QString &DBname, const QString &hostname);
 	void setSASConnectionSettings(const QString &username, const QString &password, const QString &DBname, const QString &hostname);
 	void commitScheduleToSAS(void);
-#endif
 
 private:
 	bool doScheduleChecks(Task *);
@@ -276,11 +274,11 @@ private slots:
 	void newSchedule(void);
 	int assignResources(bool showResult = true);
 
-#ifdef HAS_SAS_CONNECTION
+
 	void downloadSASSchedule(void);
 	void InitSynchronizeSASSchedule(void);
 	void checkSASStatus(void) const;
-#endif
+
 
 public:
 	static SchedulerSettings theSchedulerSettings; // everyone can access these settings
@@ -301,10 +299,8 @@ private:
 	std::vector<unsigned> itsSelectedTasks;
 	Thrashbin itsThrashBin;
 
-#ifdef HAS_SAS_CONNECTION
 	// connection to SAS database
 	SASConnection *itsSASConnection;
-#endif
 
 	DataMonitorConnection *itsDMConnection;
 
