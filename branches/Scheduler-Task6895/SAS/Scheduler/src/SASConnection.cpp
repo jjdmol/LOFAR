@@ -71,32 +71,41 @@ void SASConnection::cleanup(void) {
 	itsSASdeletedTrees.clear();
 }
 
-int SASConnection::testConnect(const QString &username, const QString &password, const QString &DBname, const QString &hostname) {
-	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
-	sasDB.close();
-	QSqlDatabase::removeDatabase( "SASDB" );
-	sasDB = QSqlDatabase::addDatabase("QPSQL","SASDB");
+// Clears the internal connection to sasdb
+// reinit the connection and attempt connection to OTDB tables
+// test authentication
+// exit negative values on value zero on succes
+// refactoring:
+// Shared functionality with other functions.
+// Name does not cover functionality
+int SASConnection::testConnect(const QString &username,
+       const QString &password, const QString &DBname, const QString &hostname)
+{
+    disconnect();
+    QSqlDatabase sasDB = QSqlDatabase::addDatabase("QPSQL","SASDB");
+    // TODO: hardcode username and password
 	sasDB.setUserName("postgres");
 	sasDB.setPassword("");
 	sasDB.setHostName(hostname);
 	sasDB.setDatabaseName(DBname);
 
-	if (!sasDB.open()) {
+    if (!sasDB.open())
 		return -1; // could not connect to SAS database
-	}
-	else {
-		QSqlQuery query(sasDB);
-		query.exec("SELECT OTDBlogin('" + username + "','" + password + "')");
-		if (query.next()) {
-			if (query.value(0).toUInt() == 0) { // check authentication token (should not be zero)
-				return -2; // no write permissions to SAS DB
-			}
-		}
-		else return -3; // could not execute query on database
-		query.finish();
-	}
-	//cleanup test connection to database
-	return 0; // test OK.
+
+    // I Have seen this functionality before (almost)
+    QSqlQuery query(sasDB);
+    query.exec("SELECT OTDBlogin('" + username + "','" + password + "')");
+    if (query.next()) {
+        if (query.value(0).toUInt() == 0) { // check authentication token (should not be zero)
+            return -2; // no write permissions to SAS DB
+        }
+    }
+    else
+        return -3; // could not execute query on database
+
+    query.finish(); //
+
+    return 0;
 }
 
 
@@ -105,6 +114,8 @@ QString SASConnection::lastConnectionError(void) const {
 	return sasDB.lastError().text();
 }
 
+// Create a connection with database using credentials from the scheduler
+// settings
 int SASConnection::connect(void) {
 	return connect(Controller::theSchedulerSettings.getSASUserName(),
 			Controller::theSchedulerSettings.getSASPassword(),
@@ -112,36 +123,48 @@ int SASConnection::connect(void) {
 			Controller::theSchedulerSettings.getSASHostName());
 }
 
+// Create a connection with SASDB
+// IF fails try initializing it first
+// IF still failing exit with error state -1
+// Else check if authorisation is ok. exit -2 if incorrect
+// then getCampaignsFromSAS()
+// return 0
+// refactor notes:
+// mixture of control and model.
+// side effects not clear from function name.
+// Candidate for refactoring using pqxx
 int SASConnection::connect(const QString &user, const QString &password, const QString &DBName, const QString &hostName) {
 	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
-	if (!sasDB.open()) {  // sasDB could not be opened, re-init connection
-		init(user, password, DBName, hostName);
-		if (!sasDB.open()) {
-			debugErr("sssssss","Could not establish SAS connection! Settings used:\n",
-					"Username: ", sasDB.userName().toStdString().c_str(),
-					", database: ", sasDB.databaseName().toStdString().c_str(),
-					", hostname: ", sasDB.hostName().toStdString().c_str()
-			);
-			return -1; // could not connect to SAS database
-		}
-	}
-	if (sasDB.isOpen()) {
-		QSqlQuery query(sasDB);
-		if (itsAuthToken.isEmpty()) {
-			query.exec("SELECT OTDBlogin('" + itsSASUserName + "','" + itsSASPassword + "')");
-			if (query.next()) {
-				itsAuthToken = query.value(0).toString();
-				if (itsAuthToken.isEmpty()) {
-					return -2; // no write permissions to SAS DB
-				}
-			}
-			query.finish();
-		}
+    if (!sasDB.open())   // sasDB could not be opened, re-init connection
+        init(user, password, DBName, hostName);
 
-		// get the list of campaigns from SAS
-		getCampaignsFromSAS();
-	}
-	return 0;
+    // still no connection? error
+    if (!sasDB.open()) {
+        debugErr("sssssss","Could not establish SAS connection! Settings used:\n",
+                 "Username: ", sasDB.userName().toStdString().c_str(),
+                 ", database: ", sasDB.databaseName().toStdString().c_str(),
+                 ", hostname: ", sasDB.hostName().toStdString().c_str()
+                 );
+        return -1; // could not connect to SAS database
+    }
+
+    // Check authorisation  get authorisation.
+    QSqlQuery query(sasDB);
+    if (itsAuthToken.isEmpty()) { // do a querie to get authorisation.
+        query.exec("SELECT OTDBlogin('" + itsSASUserName + "','" + itsSASPassword + "')");
+        if (query.next()) {
+            itsAuthToken = query.value(0).toString();
+            if (itsAuthToken.isEmpty()) {
+                return -2; // no write permissions to SAS DB
+            }
+        }
+        query.finish();
+    }
+
+    // get the list of campaigns from SAS
+    getCampaignsFromSAS();
+
+    return 0;
 }
 
 

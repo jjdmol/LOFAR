@@ -66,16 +66,23 @@ public:
 	SASConnection(Controller *controller);
 	virtual ~SASConnection();
 
-	void init(const QString &username, const QString &password, const QString &DBName, const QString &hostname);
+    void init(const QString &username, const QString &password,
+              const QString &DBName, const QString &hostname);
 	void setLastDownloadDate(const QDateTime &date) { itsLastDownloadDate = date; }
 	void cleanup(void); // do a cleanup
 
     // Dirty connection with database
 	int connect(void);
-	int connect(const QString &username, const QString &password, const QString &database, const QString &host);
+    int connect(const QString &username, const QString &password,
+                const QString &database, const QString &host);
 
-	int testConnect(const QString &username, const QString &password, const QString &DBname, const QString &hostname);
-	void disconnect(void) {	QSqlDatabase::database( "SASDB" ).close(); QSqlDatabase::removeDatabase( "SASDB" ); }
+    int testConnect(const QString &username, const QString &password,
+                    const QString &DBname, const QString &hostname);
+    void disconnect(void) {	QSqlDatabase::database( "SASDB" ).close();
+                            QSqlDatabase::removeDatabase( "SASDB" ); }
+
+    // Clean connections with database
+
 
     // dirty model functionality
     bool downloadAllSASTasks(void);
