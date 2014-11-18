@@ -147,22 +147,12 @@ void RCUProtocolWrite::sendrequest()
                 // add waits while turning on hbas to reduce power peaks.
                 // if RCU enable changed or rcumode changed
                 // if rcumode > 0
-                if ((rcucontrol.isModeModified()) && (rcucontrol.getMode() > 0)) {
+                if (rcucontrol.isModeModified()) {
                     // wait between two RCUs is set to maximum, so that an international station
                     // running on 160MHz clock can finisch the job in 1 second.
-                    uint32 delay = 0; // in clock ticks, 2000000 = 8msec on 200MHz, 10msec on 160MHz
-                    // add extra wait for each board only for first rcu
-                    /*
-                    if ((global_rcu % 8) == 0) {
-                        delay = (4000000 * (global_rcu / 2)); // power up one power RCU at a time.
-                        //delay = (2000000 * ((global_rcu % 32) / 2)); // per crate, 3 or 6 power RCUs at a time.
-                    }
-                    else  if ((global_rcu % 2) == 0) {
-                        delay = 16000000 * (global_rcu / 2);
-                    }*/
-                    delay = 4000000 * (global_rcu / 2);
-                    uint32 wait = htonl(delay);
-                    LOG_INFO_STR(formatString("RCU I2C wait rcu %d = %f sec (delay=%04x, wait=%04x)", global_rcu, delay * (1./200e6), delay, wait));
+                    // in clock ticks, 1500000 = 7.5msec on 200MHz, 9.4msec on 160MHz
+                    uint32 wait = 660000 * global_rcu;
+                    LOG_INFO_STR(formatString("RCUProtocolWrite add wait rcu %d = %f sec", global_rcu, wait * (1./200e6)));
                     memcpy(i2c_protocol_write+1, &wait, 4);
                 }
 

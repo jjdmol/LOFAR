@@ -45,34 +45,6 @@ namespace LOFAR {
 #define WRITE_ALL_TIMEOUT  5
 
 
-/*
- * Implements the following sequences:
- *  from idle state:
- * - SEQ_STARTUP, starts on sequence disableClock
- * - SEQ_SETCLOCK, starts on sequence writeClock
- * - SEQ_RSPCLEAR, starts on sequence RSUclear
- *
- *  idle_state  <--------------------------------------------,
- *   |  |  |                                                 |
- *   |  |  '-> disableClock_state <-------------------.      |   STARTUP_WAIT
- *   |  |      writePLL_state     ---> writeError ----'      |   WRITE_TIMEOUT
- *   |  '----> writeClock_state   <-------------------.      |   STARTUP_WAIT
- *   |         readClock_state    ---> readError -----'      |   TDREAD_TIMEOUT
- *   |  ,------- ok <------------'                           |
- *   '--C----> RSUclear_state     <----------------------,   |   RSUCLEAR_WAIT
- *      |----> RCUdisable_state -----> writeError -------|   |   WRITE_TIMEOUT
- *      | ,----- ok <-----------' '--> ok & finalState---C---'
- *      | '--> setBlocksync_state  --> writeError -------|       WRITE_TIMEOUT
- *      |      RADwrite_state      --> writeError -------|       WRITE_TIMEOUT
- *      |      PPSsync_state       --> writeError -------|       WRITE_TIMEOUT
- *      |      RCUenable_state     --> writeError -------|       WRITE_TIMEOUT
- *      |      CDOenable_state     --> writeError -------|       WRITE_TIMEOUT
- *      |      writeSDO_state      --> writeError -------'       WRITE_TIMEOUT
- *      |                          --> finalState=True --,
- *      |                                                |
- *      '------------------------------------------------'
- *
- */
 
 /*
  * Implements the following sequences:
@@ -483,7 +455,6 @@ GCFEvent::TResult Sequencer::RCUdisable_state(GCFEvent& event, GCFPortInterface&
                 TRAN(Sequencer::idle_state);
             }
             else {
-                //TRAN(Sequencer::setBlocksync_state);
                 TRAN(Sequencer::setAll_state);
             }
         }
@@ -526,7 +497,6 @@ GCFEvent::TResult Sequencer::RSUclear_state(GCFEvent& event, GCFPortInterface& /
 
     case F_TIMER:
         if (itsTimer++ > RSUCLEAR_WAIT && Cache::getInstance().getState().rsuclear().isMatchAll(RegisterState::IDLE)) {
-            //TRAN(Sequencer::setBlocksync_state);
             TRAN(Sequencer::setAll_state);
         }
         break;
@@ -556,6 +526,9 @@ GCFEvent::TResult Sequencer::setAll_state(GCFEvent& event, GCFPortInterface& /*p
         Cache::getInstance().getState().rad().write();
         Cache::getInstance().getState().crcontrol().reset();
         Cache::getInstance().getState().crcontrol().read();
+        // Note: we set the state to read iso write so that the CRSync action knows it a new start.
+        //       It will send a 'reset' to the registers first and than change the state to write during
+        //       the repeated writes till all APs have the right delay.
         Cache::getInstance().getState().cdo().reset();
         Cache::getInstance().getState().cdo().write();
         if (StationSettings::instance()->hasAartfaac()) {
@@ -590,19 +563,6 @@ GCFEvent::TResult Sequencer::setAll_state(GCFEvent& event, GCFPortInterface& /*p
             if (Cache::getInstance().getState().cdo().getMatchCount(RegisterState::WRITE) > 0) {
                 LOG_WARN("Failed to enable receivers. Retrying...");
             }
-/*
-            if (StationSettings::instance()->hasAartfaac()) {
-                if (Cache::getInstance().getState().sdoState().getMatchCount(RegisterState::WRITE) > 0) {
-                    LOG_WARN("Failed to set SDO state. Retrying...");
-                }
-                if (Cache::getInstance().getState().sdoSelectState().getMatchCount(RegisterState::WRITE) > 0) {
-                    LOG_WARN("Failed to set SDO select. Retrying...");
-                }
-                if (Cache::getInstance().getState().bypasssettings().getMatchCount(RegisterState::WRITE) > 0) {
-                    LOG_WARN("Failed to set SDO settings. Retrying...");
-                }
-            }
-*/
             TRAN(Sequencer::RSUclear_state);
         }
         else if (Cache::getInstance().getState().bs().isMatchAll(RegisterState::IDLE)
@@ -611,18 +571,6 @@ GCFEvent::TResult Sequencer::setAll_state(GCFEvent& event, GCFPortInterface& /*p
               && Cache::getInstance().getState().cdo().isMatchAll(RegisterState::IDLE) ) {
 
                 TRAN(Sequencer::RCUenable_state);
-/*
-            if (StationSettings::instance()->hasAartfaac()) {
-                if ( Cache::getInstance().getState().sdoState().isMatchAll(RegisterState::IDLE)
-                  && Cache::getInstance().getState().sdoSelectState().isMatchAll(RegisterState::IDLE)
-                  && Cache::getInstance().getState().bypasssettings().isMatchAll(RegisterState::IDLE) ) {
-                    TRAN(Sequencer::RCUenable_state);
-                }
-            }
-            else {
-                TRAN(Sequencer::RCUenable_state);
-            }
-*/
         }
         break;
 
@@ -637,118 +585,6 @@ GCFEvent::TResult Sequencer::setAll_state(GCFEvent& event, GCFPortInterface& /*p
     return (GCFEvent::HANDLED);
 }
 
-
-//
-// setBlocksync_state(event, port)
-//
-GCFEvent::TResult Sequencer::setBlocksync_state(GCFEvent& event, GCFPortInterface& /*port*/)
-{
-    switch (event.signal) {
-    case F_ENTRY:
-        LOG_INFO("Entering Sequencer::setBlocksync_state");
-        Cache::getInstance().getState().bs().reset();
-        Cache::getInstance().getState().bs().write();
-        itsTimer = 0;
-        break;
-
-    case F_TIMER:
-        if (itsTimer++ > WRITE_TIMEOUT &&
-                Cache::getInstance().getState().bs().getMatchCount(RegisterState::WRITE) > 0) {
-            LOG_WARN("Failed to set BS (blocksync) register. Retrying...");
-            Cache::getInstance().getState().bs().reset();
-            TRAN(Sequencer::RSUclear_state);
-        }
-        else if (Cache::getInstance().getState().bs().isMatchAll(RegisterState::IDLE)) {
-            TRAN(Sequencer::RADwrite_state);
-        }
-        break;
-
-    case F_EXIT:
-        LOG_DEBUG("Leaving Sequencer::setBlocksync_state");
-        break;
-
-    default:
-        break;
-    }
-
-    return (GCFEvent::HANDLED);
-}
-
-//
-// RADwrite_state(event, port)
-//
-GCFEvent::TResult Sequencer::RADwrite_state(GCFEvent& event, GCFPortInterface& /*port*/)
-{
-    switch (event.signal) {
-    case F_ENTRY:
-        LOG_INFO("Entering Sequencer::RADwrite_state");
-        Cache::getInstance().getState().rad().reset();
-        Cache::getInstance().getState().rad().write();
-        itsTimer = 0;
-        break;
-
-    case F_TIMER:
-        if (itsTimer++ > WRITE_TIMEOUT &&
-                Cache::getInstance().getState().rad().getMatchCount(RegisterState::WRITE) > 0) {
-            LOG_WARN("Failed to write RAD settings register. Retrying...");
-            TRAN(Sequencer::RSUclear_state);
-        }
-        else if (Cache::getInstance().getState().rad().isMatchAll(RegisterState::IDLE)) {
-            TRAN(Sequencer::PPSsync_state);
-        }
-        break;
-
-    case F_EXIT:
-        LOG_DEBUG("Leaving Sequencer::RADwrite_state");
-        break;
-
-    default:
-        break;
-    }
-
-    return (GCFEvent::HANDLED);
-}
-
-//
-// PPSsync_state(event, port)
-//
-GCFEvent::TResult Sequencer::PPSsync_state(GCFEvent& event, GCFPortInterface& /*port*/)
-{
-    switch (event.signal) {
-    case F_ENTRY:
-        LOG_INFO("Entering Sequencer::PPSsync_state");
-        Cache::getInstance().getState().crcontrol().reset(); // set to IDLE
-        Cache::getInstance().getState().crcontrol().read();  // set to READ
-        // Note: we set the state to read iso write so that the CRSync action knows it a new start.
-        //       It will send a 'reset' to the registers first and than change the state to write during
-        //       the repeated writes till all APs have the right delay.
-        itsTimer = 0;
-        break;
-
-    case F_TIMER:
-        if (itsTimer++ > WRITE_TIMEOUT &&
-                Cache::getInstance().getState().crcontrol().getMatchCount(RegisterState::WRITE) > 0) {
-            LOG_WARN("Failed to write PPSsync settings register. Retrying...");
-            stringstream    ss;
-            Cache::getInstance().getState().crcontrol().print(ss);
-            LOG_DEBUG_STR("PPSsync failure state: " << ss);
-            TRAN(Sequencer::RSUclear_state);
-        }
-        else if (Cache::getInstance().getState().crcontrol().isMatchAll(RegisterState::IDLE)) {
-            TRAN(Sequencer::RCUenable_state);
-        }
-        break;
-
-    case F_EXIT:
-        LOG_DEBUG("Leaving Sequencer::PPSsync_state");
-        break;
-
-    default:
-        break;
-    }
-
-    return (GCFEvent::HANDLED);
-}
 
 //
 // enableRCUs [private]
@@ -812,7 +648,6 @@ GCFEvent::TResult Sequencer::RCUenable_state(GCFEvent& event, GCFPortInterface& 
         } else if (Cache::getInstance().getState().rcusettings().isMatchAll(RegisterState::IDLE)) {
             itsFinalState = true;
             TRAN(Sequencer::RCUdisable_state);
-            //TRAN(Sequencer::CDOenable_state);
         }
     }
     break;
@@ -827,82 +662,6 @@ GCFEvent::TResult Sequencer::RCUenable_state(GCFEvent& event, GCFPortInterface& 
 
     return (GCFEvent::HANDLED);
 }
-
-//
-// CDOenable_state(event, port)
-//
-GCFEvent::TResult Sequencer::CDOenable_state(GCFEvent& event, GCFPortInterface& /*port*/)
-{
-    switch (event.signal) {
-    case F_ENTRY:
-        LOG_INFO("Entering Sequencer::CDOenable_state");
-        Cache::getInstance().getState().cdo().reset();
-        Cache::getInstance().getState().cdo().write();
-        itsTimer = 0;
-        break;
-
-    case F_TIMER:
-        if (itsTimer++ > WRITE_TIMEOUT &&
-                Cache::getInstance().getState().cdo().getMatchCount(RegisterState::WRITE) > 0) {
-            LOG_WARN("Failed to enable receivers. Retrying...");
-            TRAN(Sequencer::RSUclear_state);
-        } else if (Cache::getInstance().getState().cdo().isMatchAll(RegisterState::IDLE)) {
-            if (StationSettings::instance()->hasAartfaac()) {
-                TRAN(Sequencer::setSDOwrite_state);
-            }
-            else {
-                itsFinalState = true;
-                TRAN(Sequencer::RCUdisable_state);
-            }
-        }
-        break;
-
-    case F_EXIT:
-        LOG_DEBUG("Leaving Sequencer::CDOenable_state");
-        break;
-
-    default:
-        break;
-    }
-
-    return (GCFEvent::HANDLED);
-}
-
-//
-// setSDOwrite_state(event, port)
-//
-GCFEvent::TResult Sequencer::setSDOwrite_state(GCFEvent& event, GCFPortInterface& /*port*/)
-{
-    switch (event.signal) {
-    case F_ENTRY:
-        LOG_INFO("Entering Sequencer::setSDOwrite_state");
-
-        Cache::getInstance().getState().sdoState().reset();
-        Cache::getInstance().getState().sdoState().write();
-        Cache::getInstance().getState().sdoSelectState().reset();
-        Cache::getInstance().getState().sdoSelectState().write();
-
-        for (int blp_nr = 0; blp_nr < StationSettings::instance()->nrBlps(); blp_nr += 4) {
-            Cache::getInstance().getState().bypasssettings().reset(blp_nr);
-            Cache::getInstance().getState().bypasssettings().write(blp_nr);
-        }
-        itsFinalState = true;
-        TRAN(Sequencer::RCUdisable_state);
-        break;
-
-    case F_TIMER:
-        break;
-
-    case F_EXIT:
-        LOG_DEBUG("Leaving Sequencer::setSDOwrite_state");
-        break;
-
-    default:
-        break;
-    }
-    return (GCFEvent::HANDLED);
-}
-
 
   } // namespace RSP
 } // namespace LOFAR

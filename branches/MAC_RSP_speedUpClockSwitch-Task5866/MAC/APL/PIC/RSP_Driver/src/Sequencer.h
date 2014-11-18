@@ -79,12 +79,7 @@ public:
     GCFEvent::TResult RCUdisable_state  (GCFEvent& event, GCFPortInterface& port);
     GCFEvent::TResult RSUclear_state    (GCFEvent& event, GCFPortInterface& port);
     GCFEvent::TResult setAll_state      (GCFEvent& event, GCFPortInterface& port);
-    GCFEvent::TResult setBlocksync_state(GCFEvent& event, GCFPortInterface& port);
-    GCFEvent::TResult RADwrite_state    (GCFEvent& event, GCFPortInterface& port);
-    GCFEvent::TResult PPSsync_state     (GCFEvent& event, GCFPortInterface& port);
     GCFEvent::TResult RCUenable_state   (GCFEvent& event, GCFPortInterface& port);
-    GCFEvent::TResult CDOenable_state   (GCFEvent& event, GCFPortInterface& port);
-    GCFEvent::TResult setSDOwrite_state (GCFEvent& event, GCFPortInterface& port);
     /*@}*/
 
 private:
