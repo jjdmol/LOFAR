@@ -2432,48 +2432,6 @@ void Controller::fixTaskErrors() {
 	}
 }
 
-/*
-void Controller::tryRescheduleTask(unsigned task_id, AstroDateTime start_time) {
-	// check if multiple tasks are selected, if so try to 'shift' them all
-	if (multipleSelected())  {
-		const Task *pTask(data.getTask(task_id));
-		AstroDateTime new_start;
-		AstroTime dif = pTask->getScheduledStart().timeDifference(start_time);
-		bool negative = start_time < pTask->getScheduledStart() ? true : false;
-		storeScheduleUndo("Reschedule of multiple tasks");
-		bool save_required(true);
-		for (std::vector<unsigned>::const_iterator it = itsSelectedTasks.begin(); it != itsSelectedTasks.end(); ++it) {
-			const Task *task(data.getTask(*it));
-			if (negative) {
-				new_start = task->getScheduledStart() - dif;
-			}
-			else {
-				new_start = task->getScheduledStart() + dif;
-			}
-			if (!scheduler.tryRescheduleTask(*it, new_start)) {
-				undo();
-				deleteLastStoredUndo();
-				save_required = false;
-				break;
-			}
-		}
-		setSaveRequired(save_required);
-	}
-	else {
-		// TODO: check if the move of the task is not beyond the predecessor limits (if the task has predecessors)
-		storeTaskUndo(task_id, QString("Reschedule task ") + QString::number(task_id));
-		if (scheduler.tryRescheduleTask(task_id, start_time)) {
-			setSaveRequired(true);
-		}
-		else {
-			deleteLastStoredUndo();
-		}
-	}
-	for (std::vector<unsigned>::const_iterator it = itsSelectedTasks.begin(); it != itsSelectedTasks.end(); ++it) {
-		gui->updateTask(*it,Task::OBSERVATION);
-	}
-}
-*/
 
 void Controller::rescheduleTask(unsigned task_id, AstroDateTime new_start) {
 	const Task *pTask = data.getTask(task_id);

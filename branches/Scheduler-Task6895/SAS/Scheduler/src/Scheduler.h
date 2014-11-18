@@ -37,27 +37,12 @@ public:
 	int optimize(void); // starts optimizing the schedule
 	void setData(SchedulerData &data); // loads the data in the scheduler
 
-	// sorts the unscheduled tasks according to priority (MOVED TO schedulerDataBlock)
-	//void sortUnscheduledTasks2Priority();
-
-	// check if the task with ID taskToCheck conflicts with the specified filter setting
-	bool checkFilterConflict(unsigned taskToCheck, station_filter_type filter);
-	// check if the task with ID taskToCheck conflicts with the specified station clock setting
-    bool checkClockFrequencyConflict(unsigned task_id, station_clock clock);
-	// check if the task with ID taskToCheck conflicts with the specified task type
-	bool checkTaskTypeConflict(unsigned taskToCheck, Task::task_type type);
-//	void logConflicts(unsigned int taskID, std::vector<unsigned int> &possible_conflicts);
-	//void scheduleFixedTasks(void); // schedules tasks marked with fixed day or fixed time
-//	void calculatePenalties(void);
-//	void calculateSunSetsAndSunDowns(void);
 	void setMinimumTimeBetweenTasks(const AstroTime &min_time) {minTimeBetweenTasks = min_time;}
-	void setMaxOptimizationIterations(unsigned max_optimizations) {maxNrOfOptimizeIterations = max_optimizations;}
 	void updateSettings(void); // updates the scheduler settings according to the settings in Controller::theSchedulerSettings
-	bool tryRescheduleTask(unsigned task_id, const AstroDateTime &new_start);
 	bool rescheduleAbortedTask(unsigned task_id, const AstroDateTime &new_start);
 
 private:
-	bool tryMoveTaskToAdjacentDay(Task *task);
+    bool rescheduleAbortedTask(Task *task);
 	bool tryShiftTask(Task *task, SchedulerDataBlock &testSchedule);
 	bool tryShiftTaskWithinDay(Task *task);
 

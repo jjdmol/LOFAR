@@ -20,7 +20,7 @@
 #include "GraphicTimeLine.h"
 
 // TODO remove zombie code
-// Is not used in the scheduler at all!!
+// Is only used to forward stuff to the itsTimeLine
 class GraphicStorageScene : public QGraphicsScene
 {
     Q_OBJECT

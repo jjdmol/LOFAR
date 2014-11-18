@@ -244,7 +244,8 @@ public:
         }
 	}
 
-    virtual Task & operator=(const Task &);
+    // removed to prevent build errors all over the place
+    //virtual Task & operator=(const Task &);
 	bool operator==(unsigned int taskID) const {return (this->getID() == taskID);}
 
     virtual bool diff(const Task *other, task_diff &dif) const;

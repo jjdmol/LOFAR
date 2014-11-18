@@ -17,6 +17,8 @@
 #include <QGraphicsItem>
 #include "graphicstoragescene.h"
 
+
+//TODO: Does not appear to be used in the scheduler
 class GraphicStorageTimeLine : public QGraphicsItem {
 public:
 	GraphicStorageTimeLine(GraphicStorageScene *parent, int yPos);

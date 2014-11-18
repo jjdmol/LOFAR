@@ -51,35 +51,6 @@ void Scheduler::updateSettings(void) { // updates the scheduler settings accordi
 	minTimeBetweenTasks = Controller::theSchedulerSettings.getMinimumTimeBetweenTasks();
 }
 
-/*
-void Scheduler::calculateSunSetsAndSunDowns(void) {
-}
-
-void Scheduler::calculatePenalties(void) {
-	// For every task (scheduled and unscheduled) do the following:
-	// step 0: determine if the penalty needs to be recalculated ( Task::penaltyCalculationNeeded() ), if so:
-	// for every station used by the task calculate:
-	// x = [0:1:100] = percentage of task scheduled at daytime for that station
-	// y = night time weight factor (for penalty calculation [0.0, 1.0]
-	// curve 1: y = 1  ( in other words: task may not be scheduled during daytime)
-	// curve 2: y = 1-c^-x  // c = 1.1
-	// curve 3: y = 1-c^-x  // c = 1.04
-	// curve 4: y = x
-	// curve 5: y = c^(x-100) - 0.019800040113920 // c = 1.04
-	// curve 6: y = c^(x-100) - 0.000072565715901  // c = 1.1
-	// curve 7: y = 0 ( in other words: task may be scheduled at daytime without penalty)
-
-	// penalty contribution of (partially) day time scheduling
-	// step 1: calculate sun set and sun down for the currently scheduled day
-	// step 2: calculate percentage overlap of schedule period with day time (factor x)
-	// step 3: calculate night time weight factor according to user chosen curve (1 to 7) (this is factor y)
-	// step 4: calculate penalty contribution for partially day time scheduling with:
-	// penalty contribution = d * y,  where d is the maximum penalty for full day time scheduling
-	// step 5: sum all penalties of all tasks to determine the total penalty for the schedule being examined
-
-}
-*/
-
 int Scheduler::optimize(void)
 {
 	bestSchedule = pData->getCurrentSchedule(); // needs operator = for class NeighbourSolution
@@ -91,9 +62,6 @@ int Scheduler::optimize(void)
 	// c is the control parameter that determines the acceptance rate of a test schedule with a higher penalty
 	// We gradually force c to zero during subsequent iterations
 	unsigned int c = 500; //maxNrOfOptimizeIterations + 1; //(pData->getNrScheduled() + pData->getNrUnscheduled()) * MAX_TASK_PENALTY;
-	//unsigned int c_step = 2 * c / maxNrOfOptimizeIterations;
-	//	unsigned int currentScheduleMaxChangeCount = pData->getNrOfConflicts();
-	//	bool allowUnscheduleFixedTasks = Controller::theSchedulerSettings.getAllowUnscheduleFixedTasks();
 	unsigned iteration(0), taskID; // , predTaskID, successorTaskID;
 	bool scheduleChanged(false);
 	Task * pTask(0);
@@ -203,82 +171,8 @@ bool Scheduler::createStartSchedule(void)
 	else return false;
 }
 
-bool Scheduler::tryRescheduleTask(unsigned task_id, const AstroDateTime &new_start) {
-	return pData->rescheduleTask(task_id, new_start);
-}
 
 bool Scheduler::rescheduleAbortedTask(unsigned task_id, const AstroDateTime &new_start) {
 	return pData->rescheduleAbortedTask(task_id, new_start);
-}
-
-bool Scheduler::checkFilterConflict(unsigned taskToCheck, station_filter_type filter) {
-	//std::vector<unsigned int>::const_iterator task_it = task_ids.begin();
-    const Observation *pTask = pData->getScheduledObservation(taskToCheck);
-	if (pTask) {
-        if (pTask->getFilterType() == filter) return false; // no conflict if filters are the same
-	}
-	else {
-		// task was not found in scheduled tasks -> no conflicts possible
-		debugWarn("sis","Task with ID: ",taskToCheck, "is not scheduled. Therefore, there are no filter conflicts!");
-        return false;
-	}
-    return true;
-}
-
-bool Scheduler::checkClockFrequencyConflict(unsigned task_id, station_clock clock) {
-    const Observation *pTask = pData->getScheduledObservation(task_id);
-	if (pTask) {
-        if (pTask->getStationClock() == clock) {
-            return false; // no conflict if filters are the same
-		}
-		else {
-            return true; // conflicting clock frequency settings
-		}
-	}
-    else {
-        // task was not found in scheduled tasks -> no conflicts possible
-        debugWarn("sis","Task with ID: ",task_id, "is not scheduled. Therefore, there are no filter conflicts!");
-        return false;
-    }
-}
-
-bool Scheduler::checkTaskTypeConflict(unsigned taskToCheck, Task::task_type type) {
-    const Task *pTask = pData->getScheduledTask(taskToCheck);
-	if (pTask) {
-		Task::task_type ttype = pTask->getType();
-		switch (type) {
-		case Task::OBSERVATION:
-            if (ttype == Task::MAINTENANCE) return true; // no other tasks possible when Maintenance is being performed
-            return false;
-			break;
-		case Task::RESERVATION:
-            if (ttype == Task::MAINTENANCE) return true; // no other tasks possible when Maintenance is being performed
-            return false;
-			break;
-		case Task::MAINTENANCE:
-			return 1; // maintenance cannot be scheduled when other task type is scheduled
-			break;
-		case Task::PIPELINE:
-            if (ttype == Task::MAINTENANCE) return true; // no other tasks possible when Maintenance is being performed
-            return false;
-			break;
-		case Task::SYSTEM:
-            if (ttype == Task::MAINTENANCE) return true; // no other tasks possible when Maintenance is being performed
-            return false;
-			break;
-		case Task::UNKNOWN:
-            if (ttype == Task::MAINTENANCE) return true; // no other tasks possible when Maintenance is being performed
-            return false;
-			break;
-		default:
-			debugWarn("sis", "Task with ID: ",taskToCheck, "has an unknown task type specification");
-			break;
-		}
-	}
-	else {
-		// task was not found in scheduled tasks -> no conflicts possible
-		debugWarn("sis","Task with ID: ",taskToCheck, "is not scheduled. Therefore, there are no task type conflicts!");
-	}
-    return false;
 }
 

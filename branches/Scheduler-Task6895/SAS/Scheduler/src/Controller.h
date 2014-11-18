@@ -69,8 +69,7 @@ public:
 
 	// interface members to SchedulerGUI
 	void start(void); // show the SchedulerGUI
-//	unsigned getCurrentUndoLevel(void) const {return current_undo_level;};
-	bool fixTasks();
+
 	const Task *getScheduledTask(unsigned taskID) const {return data.getScheduledTask(taskID);}
 	const Task *getInactiveTask(unsigned taskID) const {return data.getInactiveTask(taskID);}
 	const Task *getUnscheduledTask(unsigned taskID) const {return data.getUnscheduledTask(taskID);}
@@ -263,7 +262,7 @@ private slots:
 	void applyTableItemChange(unsigned, data_headers, const QVariant &, const QModelIndex &); // keep track of all changes to the schedule table made by the user
 	void fixTaskErrors(void);
 	void updateStatusBarOptimize(unsigned);
-//	void tryRescheduleTask(unsigned, AstroDateTime);
+
 //	void alignLeft(void);
 	void showThrashBin(void);
 	void thrashBinEmpty(void) const {gui->setEmptyThrashIcon();}
