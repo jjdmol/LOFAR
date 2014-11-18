@@ -67,7 +67,7 @@ int	gBeamformerGain = 0;
 //
 // BeamServer(name)
 //
-BeamServer::BeamServer(const string& name, long	timestamp) : 
+BeamServer::BeamServer(const string& name, NenuFarAdmin*	nnfAdmin, long	timestamp) : 
 	GCFTask((State)&BeamServer::con2rspdriver, name),
 	itsCurrentBitsPerSample (MAX_BITS_PER_SAMPLE),
 	itsCurrentMaxBeamlets   (maxBeamlets(itsCurrentBitsPerSample)),
@@ -78,6 +78,7 @@ BeamServer::BeamServer(const string& name, long	timestamp) :
 	itsCalServer			(0),
 	itsBeamsModified		(false),
 	itsAnaBeamMgr			(0),
+	itsNenuFarAdmin			(nnfAdmin),
 	itsCalTableMode1		(0),
 	itsCalTableMode3		(0),
 	itsCalTableMode5		(0),
@@ -191,11 +192,11 @@ GCFEvent::TResult BeamServer::con2rspdriver(GCFEvent& event, GCFPortInterface& p
 
 		// load the antenna positions
 		ASSERTSTR(globalAntennaField(), "Could not load the antennaposition file");
-		LOG_DEBUG("Loaded antenna postions file");
-		LOG_DEBUG_STR("LBA rcu=" << globalAntennaField()->RCUPos("LBA"));
-		LOG_DEBUG_STR("HBA rcu=" << globalAntennaField()->RCUPos("HBA"));
-		LOG_DEBUG_STR("HBA0 rcu=" << globalAntennaField()->RCUPos("HBA0"));
-		LOG_DEBUG_STR("HBA1 rcu=" << globalAntennaField()->RCUPos("HBA1"));
+		LOG_DEBUG("Loaded antenna positions file");
+		for (int i = 0; i < globalAntennaField()->maxFields(); i++) {
+			string fieldname(globalAntennaField()->index2Name(i));
+			LOG_DEBUG_STR(fieldname << " rcu=" << globalAntennaField()->RCUPos(fieldname));
+		}
 	} break;
 
 	case F_ENTRY: {
@@ -1089,6 +1090,8 @@ int BeamServer::beampointto_action(IBSPointtoEvent&		ptEvent,
 	// note we don't know if we added the beam before, just do it again and ignore returnvalue.
 	itsAnaBeamMgr->addBeam(AnalogueBeam(ptEvent.beamName, beamIter->second->antennaSetName(), 
 									beamIter->second->rcuMask(), ptEvent.rank));
+	// TODO: IMPLEMENT HERE THE UPDATE OF THE NENUFAR ADMIN... 
+	// xxx->addPointing(ptEvent, beamIter->second->antennaSetName(), beamIter->second->rcuMask());
 	if (!itsAnaBeamMgr->addPointing(ptEvent.beamName, ptEvent.pointing)) {
 		return (IBS_UNKNOWN_BEAM_ERR);
 	}
@@ -1612,23 +1615,25 @@ void BeamServer::compute_weights(Timestamp weightTime)
 
 	int beamletsPerPlane = maxBeamletsPerPlane(itsCurrentBitsPerSample);
 	// Check both LBA and HBA antennas
-	for (uint	fieldNr = 0; fieldNr < 4; fieldNr++) {
-		string	fieldName;
-		switch(fieldNr) {			// TODO: needs improvement
-			case 0: fieldName = "LBA";	break;
-			case 1: fieldName = "HBA";	break;
-			case 2: fieldName = "HBA0";	break;
-			case 3: fieldName = "HBA1";	break;
-		}
-		bool LBAfield = (fieldNr == 0);
+	uint	nrFields = globalAntennaField()->maxFields();
+	for (uint	fieldNr = 0; fieldNr < nrFields; fieldNr++) {
+		string	fieldName(globalAntennaField()->index2Name(fieldNr));	// LBA, HBA, HBA0, HBA1, NNF, ...
 
 		LOG_DEBUG_STR("Checking " << fieldName << " antennas");
 		// Any beams on this antenna field?
-		if ((LBAfield && !itsNrLBAbeams) || (!LBAfield && !itsNrHBAbeams)) {
+		map<string, DigitalBeam*>::iterator	beamIter = itsBeamPool.begin();
+		map<string, DigitalBeam*>::iterator	end		 = itsBeamPool.end();
+		for ( ; beamIter != end; ++beamIter) {
+			// must be of the same antenna field.
+			if (globalAntennaSets()->antennaField(beamIter->second->antennaSetName()) == fieldName) {
+				break;
+			}
+		}
+		if (beamIter == end) {
 			LOG_DEBUG_STR("No beams defined for these antennas");
 			continue;
 		}
-
+			
 		// Get ITRF position of the RCU's [rcu, xyz]
 		blitz::Array<double, 2> rcuPosITRF = gAntField->RCUPos(fieldName);
 		if (rcuPosITRF.size() == 0) {
@@ -1657,8 +1662,8 @@ void BeamServer::compute_weights(Timestamp weightTime)
 //		LOG_DEBUG_STR("J2000RCUPos@fullLength=" << rcuJ2000Pos);
 
 		// for all beams using this field
-		map<string, DigitalBeam*>::iterator	beamIter = itsBeamPool.begin();
-		map<string, DigitalBeam*>::iterator	end		 = itsBeamPool.end();
+		beamIter = itsBeamPool.begin();
+		end		 = itsBeamPool.end();
 		for ( ; beamIter != end; ++beamIter) {
 			// must be of the same antenna field.
 			if (globalAntennaSets()->antennaField(beamIter->second->antennaSetName()) != fieldName) {

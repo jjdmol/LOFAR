@@ -58,8 +58,20 @@ AntennaField* globalAntennaField()
 // The info is stored in itsxxxAntPos[ant,pol,xyz] and in itsxxxRCUPos[rcu,xyz] because
 // some programs are antenna based while others are rcu based.
 //
-AntennaField::AntennaField(const string& filename)
-  : itsAntField (filename)
+AntennaField::AntennaField(const string& filename) :
+	itsAntField (filename)
+{
+	init ();
+}
+
+AntennaField::AntennaField(const string& filename, vector<string> additionalFields) :
+	itsAntField (filename, additionalFields)
+
+{
+	init ();
+}
+
+void AntennaField::init()
 {
   int maxFields = itsAntField.maxFields();
   // Reserve space for expected info.
@@ -69,6 +81,7 @@ AntennaField::AntennaField(const string& filename)
   itsNormVectors.resize    (maxFields);
   itsRotationMatrix.resize (maxFields);
   itsRCULengths.resize     (maxFields);
+
   // Create the blitz arrays for the various fields.
   for (int i=0; i<maxFields; ++i) {
     makeArray3d (itsAntField.AntPos(i),         itsAntPos[i]);
@@ -95,8 +108,7 @@ void AntennaField::makeArray1d (AntField::AFArray& array,
     TinyVector<int,1> shape;
     shape[0] = AntField::getShape(array)[0];
     double* dataPtr = &(AntField::getData(array)[0]);
-    out.reference (blitz::Array<double,1>(dataPtr, shape,
-                                          blitz::neverDeleteData));
+    out.reference (blitz::Array<double,1>(dataPtr, shape, blitz::neverDeleteData));
   }
 }
 
@@ -108,8 +120,7 @@ void AntennaField::makeArray2d (AntField::AFArray& array,
     shape[0] = AntField::getShape(array)[0];
     shape[1] = AntField::getShape(array)[1];
     double* dataPtr = &(AntField::getData(array)[0]);
-    out.reference (blitz::Array<double,2>(dataPtr, shape,
-                                          blitz::neverDeleteData));
+    out.reference (blitz::Array<double,2>(dataPtr, shape, blitz::neverDeleteData));
   }
 }
 
@@ -122,8 +133,7 @@ void AntennaField::makeArray3d (AntField::AFArray& array,
     shape[1] = AntField::getShape(array)[1];
     shape[2] = AntField::getShape(array)[2];
     double* dataPtr = &(AntField::getData(array)[0]);
-    out.reference (blitz::Array<double,3>(dataPtr, shape,
-                                          blitz::neverDeleteData));
+    out.reference (blitz::Array<double,3>(dataPtr, shape, blitz::neverDeleteData));
   }
 }
 
@@ -135,8 +145,7 @@ void AntennaField::makeRCUPos (AntField::AFArray& array,
     shape[0] = AntField::getShape(array)[0] * AntField::getShape(array)[1];
     shape[1] = AntField::getShape(array)[2];
     double* dataPtr = &(AntField::getData(array)[0]);
-    out.reference (blitz::Array<double,2>(dataPtr, shape,
-                                          blitz::neverDeleteData));
+    out.reference (blitz::Array<double,2>(dataPtr, shape, blitz::neverDeleteData));
   }
 }
 

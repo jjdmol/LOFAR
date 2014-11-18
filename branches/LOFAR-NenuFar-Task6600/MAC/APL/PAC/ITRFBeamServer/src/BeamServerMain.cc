@@ -23,8 +23,11 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
+#include <Common/ParameterSet.h>
 
 #include "BeamServer.h"
+#include "NenuFarAdmin.h"
+#include "NenuFarIO.h"
 
 using namespace LOFAR;
 using namespace LOFAR::GCF::TM;
@@ -42,8 +45,14 @@ int main(int argc, char* argv[])
 	if (argc == 2) {
 		testTime = atol(argv[1]);
 	}
-	BeamServer	bsTask(LOFAR::basename(argv[0]), testTime);
+	NenuFarAdmin	theNNFadmin;
+	BeamServer	bsTask(LOFAR::basename(argv[0]), &theNNFadmin, testTime);
 	bsTask.start(); 	// make initial transition
+
+	if (globalParameterSet()->isDefined("BeamServer.NenuFar.hostname")) {
+		NenuFarIO	nnfTask(&theNNFadmin);
+		nnfTask.start();
+	}
 
 	GCFScheduler::instance()->run();
 

@@ -25,6 +25,7 @@
 #include <Common/LofarLocators.h>
 #include <Common/StringUtil.h>
 #include <Common/ParameterSet.h>
+#include <ApplCommon/StationConfig.h>
 #include <ApplCommon/StationInfo.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
@@ -292,11 +293,10 @@ GCFEvent::TResult RSPMonitor::askConfiguration(GCFEvent& event,
 		}
 		
 		// Read number of Antenna's from RemoteStation.conf file.
-		ConfigLocator	CL;
-		ParameterSet	RSconf(CL.locate("RemoteStation.conf"));
-		itsNrHBAs = RSconf.getInt("RS.N_HBAS", 0);
-		itsNrLBAs = RSconf.getInt("RS.N_LBAS", 0);
-		itsHasSplitters = RSconf.getBool("RS.HBA_SPLIT", false);
+		StationConfig	RSconf;
+		itsNrHBAs = RSconf.nrAntennas("HBA");
+		itsNrLBAs = RSconf.nrAntennas("LBA");
+		itsHasSplitters = RSconf.hasSplitters;
 
 		// inform user
 		LOG_INFO(formatString("nr RCUs      = %d",ack.n_rcus));

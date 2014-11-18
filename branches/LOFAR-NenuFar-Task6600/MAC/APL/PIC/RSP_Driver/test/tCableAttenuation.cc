@@ -56,27 +56,5 @@ int main (int, char*	argv[])
 	catch (Exception& ex) {
 		LOG_INFO_STR("Expected exception:" << ex.what());
 	}
-
-	try {
-		CableAttenuation	CA4("tCableAttenuation.in_4");
-	}
-	catch (Exception& ex) {
-		LOG_INFO_STR("Expected exception:" << ex.what());
-	}
-
-	try {
-		CableAttenuation	CA5("tCableAttenuation.in_5");
-	}
-	catch (Exception& ex) {
-		LOG_INFO_STR("Expected exception:" << ex.what());
-	}
-
-	try {
-		CableAttenuation	CA6("tCableAttenuation.in_6");
-	}
-	catch (Exception& ex) {
-		LOG_INFO_STR("Expected exception:" << ex.what());
-	}
-
 }
 

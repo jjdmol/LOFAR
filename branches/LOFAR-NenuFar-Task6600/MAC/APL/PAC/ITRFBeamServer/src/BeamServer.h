@@ -34,6 +34,7 @@
 #include "DigitalBeam.h"
 #include "AnaBeamMgr.h"
 #include "StatCal.h"
+#include "NenuFarAdmin.h"
 
 namespace LOFAR {
   using namespace CASATools;
@@ -76,7 +77,7 @@ private:
 public:
 	// The constructor of the BeamServer task.
 	// @param name The name of the task.
-	explicit BeamServer(const string& name, long timestamp = 0);
+	explicit BeamServer(const string& name, NenuFarAdmin*	nnfAdmin, long timestamp = 0);
 	~BeamServer();
 
 private:
@@ -231,6 +232,7 @@ private:
 	bool						itsSplitterOn;			// state of the ringsplitter
 	map<string, DigitalBeam*> 	itsBeamPool;			//
 	AnaBeamMgr*					itsAnaBeamMgr;			// for managing the analogue beams
+	NenuFarAdmin*				itsNenuFarAdmin;		// interface with optional NenuFarIO task.
 
 	StatCal*					itsCalTableMode1;		// table for mode 1 and 2
 	StatCal*					itsCalTableMode3;		// table for mode 3 and 4

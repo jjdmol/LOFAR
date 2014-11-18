@@ -664,7 +664,7 @@ bool	CalibrationControl::startCalibration()
 
 	// inform operator about these values.
 	itsPropertySet->setValue(PN_CC_BEAM_NAMES,	 GCFPVDynArr(LPT_DYNSTRING, beamNameArr));
-	itsPropertySet->setValue(PN_CC_ANTENNA_ARRAY,GCFPVString(itsObsPar->antennaArray));
+	itsPropertySet->setValue(PN_CC_ANTENNA_ARRAY,GCFPVString(itsObsPar->antennaField));
 	itsPropertySet->setValue(PN_CC_FILTER,		 GCFPVString(itsObsPar->filter));
 	itsPropertySet->setValue(PN_CC_NYQUISTZONE,	 GCFPVInteger(itsObsPar->nyquistZone));
 	itsPropertySet->setValue(PN_CC_RCUS,		 GCFPVString(

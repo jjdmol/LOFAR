@@ -18,7 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id: tAntennaField.cc 15222 2010-03-15 14:27:41Z loose $
+//#  $Id: tAntennaField.cc 17833 2011-04-22 07:20:51Z diepen $
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -28,48 +28,71 @@
 #include <Common/StreamUtil.h>
 #include <APL/APLCommon/AntennaField.h>
 
+// Define a function to print an AFArray.
+
 using namespace LOFAR;
 
-int main (int, char* argv[]) 
+void show (const AntennaField& theAP, const string& fileName)
 {
-	INIT_VAR_LOGGER(argv[0], argv[0]);
-
-	AntennaField	theAP("tAntennaField.in");	// read the tAntennaField.in file into memory
-
 	// Show the names of the sets.
-	cout <<"The tAntennaField.in file containes the following definitions:" << endl;
-	cout <<"LBA count        : " << theAP.nrAnts("LBA") << endl;
-	cout <<"LBA centre       : " << theAP.Centre("LBA") << endl;
-	cout <<"LBA normVector   : " << theAP.normVector("LBA") << endl;
-	cout <<"LBA rot.Matrix   : " << theAP.rotationMatrix("LBA") << endl;
-	cout <<"LBA Ant positions: " << theAP.AntPos("LBA") << endl;
-	cout <<"LBA RCU positions: " << theAP.RCUPos("LBA") << endl;
-	cout <<"LBA RCU lengths  : " << theAP.RCULengths("LBA") << endl;
-	
-	cout <<"HBA count        : " << theAP.nrAnts("HBA") << endl;
-	cout <<"HBA centre       : " << theAP.Centre("HBA") << endl;
-	cout <<"HBA normVector   : " << theAP.normVector("HBA") << endl;
-	cout <<"HBA rot.Matrix   : " << theAP.rotationMatrix("HBA") << endl;
-	cout <<"HBA Ant positions: " << theAP.AntPos("HBA") << endl;
-	cout <<"HBA RCU positions: " << theAP.RCUPos("HBA") << endl;
-	cout <<"HBA RCU lengths  : " << theAP.RCULengths("HBA") << endl;
-	
-	cout <<"HBA0 count        : " << theAP.nrAnts("HBA0") << endl;
-	cout <<"HBA0 centre       : " << theAP.Centre("HBA0") << endl;
-	cout <<"HBA0 normVector   : " << theAP.normVector("HBA0") << endl;
-	cout <<"HBA0 rot.Matrix   : " << theAP.rotationMatrix("HBA0") << endl;
-	cout <<"HBA0 Ant positions: " << theAP.AntPos("HBA0") << endl;
-	cout <<"HBA0 RCU positions: " << theAP.RCUPos("HBA0") << endl;
-	cout <<"HBA0 RCU lengths  : " << theAP.RCULengths("HBA0") << endl;
+	cout << endl;
+	cout << fileName << " contains the following definitions:" << endl;
 
-	cout <<"HBA1 count        : " << theAP.nrAnts("HBA1") << endl;
-	cout <<"HBA1 centre       : " << theAP.Centre("HBA1") << endl;
-	cout <<"HBA1 normVector   : " << theAP.normVector("HBA1") << endl;
-	cout <<"HBA1 rot.Matrix   : " << theAP.rotationMatrix("HBA1") << endl;
-	cout <<"HBA1 Ant positions: " << theAP.AntPos("HBA1") << endl;
-	cout <<"HBA1 RCU positions: " << theAP.RCUPos("HBA1") << endl;
-	cout <<"HBA1 RCU lengths  : " << theAP.RCULengths("HBA1") << endl;
+	for (int i = 0; i < theAP.maxFields(); ++i) {
+		string	fieldname(theAP.index2Name(i));
+		cout << fieldname << " count        : " << theAP.nrAnts(fieldname) << endl;
+		cout << fieldname << " centre       : " << theAP.Centre(fieldname) << endl;
+		cout << fieldname << " normVector   : " << theAP.normVector(fieldname) << endl;
+		cout << fieldname << " rot.Matrix   : " << theAP.rotationMatrix(fieldname) << endl;
+		cout << fieldname << " Ant positions: " << theAP.AntPos(fieldname) << endl;
+		cout << fieldname << " RCU lengths  : " << theAP.RCULengths(fieldname) << endl;
+	}
+}
 
-	return (0);
+int main()
+{
+  // Read a core station file.
+  AntennaField theAP1("tAntennaField.in");
+  show (theAP1, "tAntennaField.in");
+
+  // Read a remote station file.
+  AntennaField theAP1r("tAntennaField.in_rs");
+  show (theAP1r, "tAntennaField.in_rs");
+
+  // Read a European station file.
+  AntennaField theAP1d("tAntennaField.in_de");
+  show (theAP1d, "tAntennaField.in_de");
+
+  // Test if exception is thrown for a non-existing file.
+  bool failed = false;
+  try {
+    AntennaField theAP4("tAntFielx.in");
+  } catch (LOFAR::Exception&) {
+    failed = true;
+  }
+  ASSERT (failed);
+
+  // Read a file with 1 extra field
+  vector<string>	addedFields;
+  addedFields.push_back("LSS");
+  // Test if exception is thrown when addition field is not mentioned.
+  failed = false;
+  try {
+    AntennaField theAP1E("tAntennaField.in_fr1");
+  } catch (LOFAR::Exception&) {
+    failed = true;
+  }
+  ASSERT (failed);
+
+  // Test if it goes ok when additional field IS mentioned.
+  AntennaField theAP1E("tAntennaField.in_fr1", addedFields);
+  show (theAP1E, "tAntennaField.in_fr1");
+
+  // Test if more additional fields works also
+  addedFields.push_back("ABC");
+  AntennaField theAP2E("tAntennaField.in_fr2", addedFields);
+  show (theAP2E, "tAntennaField.in_fr2");
+
+  return (0);
 }
 

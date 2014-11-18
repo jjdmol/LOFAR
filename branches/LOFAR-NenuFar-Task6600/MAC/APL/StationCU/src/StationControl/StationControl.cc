@@ -1277,7 +1277,7 @@ uint16 StationControl::_addObservation(const string&	name)
 	bool			onLBAField(itsAntSet->usesLBAfield(theObs.antennaSet));
 	RCUmask_t		definedReceivers = (onLBAField ? itsAntSet->LBAallocation(theObs.antennaSet) 
 									 			   : itsAntSet->HBAallocation(theObs.antennaSet));
-	RCUmask_t		userReceivers    = theObs.getRCUbitset(config.nrLBAs, config.nrHBAs, theObs.antennaSet);
+	RCUmask_t		userReceivers    = theObs.getRCUbitset(config.nrAntennas("LBA"), config.nrAntennas("HBA"), theObs.antennaSet);
 	RCUmask_t		realReceivers    = definedReceivers & userReceivers;
 LOG_DEBUG_STR("definedReceivers =" << definedReceivers);
 LOG_DEBUG_STR("userReceivers    =" << userReceivers);
@@ -1285,17 +1285,17 @@ LOG_DEBUG_STR("def&userReceivers=" << realReceivers);
 	// Before optionally applying the current hardware status make bitmap strings for PVSS.
 	string		LBAbitmap;
 	string		HBAbitmap;
-	LBAbitmap.resize(config.nrLBAs,'0');
-	HBAbitmap.resize(config.nrHBAs,'0');
+	LBAbitmap.resize(config.nrAntennas("LBA"),'0');
+	HBAbitmap.resize(config.nrAntennas("HBA"),'0');
 	if (onLBAField) {
-		for (int i(0); i < config.nrLBAs; i++) {
+		for (int i(0); i < config.nrAntennas("LBA"); i++) {
 			if (realReceivers[2*i] || realReceivers[2*i+1]) {
 				LBAbitmap[i] ='1';
 			}
 		}
 	} 
 	else  {
-		for (int i(0); i < config.nrHBAs; i++) {
+		for (int i(0); i < config.nrAntennas("HBA"); i++) {
 			if (realReceivers[2*i] || realReceivers[2*i+1]) {
 				HBAbitmap[i] ='1';
 			}
@@ -1422,8 +1422,8 @@ void StationControl::_initAntennaMasks()
 	StationConfig	SC;
 	itsNrRSPs = SC.nrRSPs;
 	itsNrTBBs = SC.nrTBBs;
-	itsNrLBAs = SC.nrLBAs;
-	itsNrHBAs = SC.nrHBAs;
+	itsNrLBAs = SC.nrAntennas("LBA");
+	itsNrHBAs = SC.nrAntennas("HBA");
 	itsNrRCUs = SC.nrRSPs * NR_RCUS_PER_RSPBOARD;
 	itsHasSplitters= SC.hasSplitters;
 

@@ -428,13 +428,11 @@ void SHMSession::getRspStatus(GCFEvent& e)
 	if (_nrOfRCUs == 0) {
 		try {
 		  //MAXMOD
-		  //_nrOfRCUs = GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
 		  _nrOfRCUs = GET_CONFIG("RS.N_RSPBOARDS", i) * 4 * N_POL;
 		  LOG_DEBUG(formatString ("NrOfRCUs %d", _nrOfRCUs));
 		  _allRCUSMask.reset(); // init all bits to false value
 		  _allRCUSMask.flip(); // flips all bits to the true value
 		  // if nrOfRCUs is less than MAX_N_RCUS the not used bits must be unset
-		  //for (int i = _nrOfRCUs; i < MAX_RCUS; i++) {
 		  for (int i = _nrOfRCUs; i < MAX_RCUS; i++) {
 		    _allRCUSMask.set(i, false);
 		  }
@@ -561,13 +559,11 @@ void SHMSession::getSubbandStatistics(GCFEvent& e)
 	if (_nrOfRCUs == 0) {
 		try {
 		  //MAXMOD
-		  //_nrOfRCUs = GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
 		  _nrOfRCUs = GET_CONFIG("RS.N_RSPBOARDS", i) * 4 * N_POL;
 			LOG_DEBUG(formatString ("NrOfRCUs %d", _nrOfRCUs));
 			_allRCUSMask.reset(); // init all bits to false value
 			_allRCUSMask.flip(); // flips all bits to the true value
 			// if nrOfRCUs is less than MAX_N_RCUS the not used bits must be unset
-			//for (int i = _nrOfRCUs; i < MAX_RCUS; i++) {
 			for (int i = _nrOfRCUs; i < MAX_RCUS; i++) {
 				_allRCUSMask.set(i, false);
 				LOG_DEBUG(formatString("MAXMOD: in _allRCUSMask loop, i = %d",i));

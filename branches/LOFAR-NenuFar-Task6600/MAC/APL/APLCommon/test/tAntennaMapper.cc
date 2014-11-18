@@ -63,6 +63,12 @@ int main (int, char *argv[])
 	doTest(5+48, AntennaMapper::AT_LBA, AMEurope);
 	doTest(5, 	 AntennaMapper::AT_HBA, AMEurope);
 	
+	cout << endl << "NenuFar station with full HW and full LBA and HBA and NenuFar antennas" << endl;
+	doTest(5, 	 AntennaMapper::AT_LBA, AMEurope);
+	doTest(5+48, AntennaMapper::AT_LBA, AMEurope);
+	doTest(5+96, AntennaMapper::AT_LBA, AMEurope);
+	doTest(5, 	 AntennaMapper::AT_HBA, AMEurope);
+	
 	return (0);
 }
 

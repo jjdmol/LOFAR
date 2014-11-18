@@ -698,7 +698,7 @@ ostream& ActiveObs::print (ostream& os) const
 	os << "nyquistZone       : " << itsObsPar.nyquistZone << endl;
 	os << "sampleClock       : " << itsObsPar.sampleClock << endl;
 	os << "filter            : " << itsObsPar.filter << endl;
-	os << "antennaArray      : " << itsObsPar.antennaArray << endl;
+	os << "antennaField      : " << itsObsPar.antennaField << endl;
 	os << "receiverList      : " << itsObsPar.receiverList << endl;
 	os << "BeamCntlr ready   : " << itsBeamCntlrReady << endl;
 	os << "CalCntlr ready    : " << itsCalCntlrReady << endl;

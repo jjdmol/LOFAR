@@ -368,7 +368,7 @@ void AnaBeamMgr::calculateHBAdelays(RTC::Timestamp	targetTime, CasaConverter&	aJ
 				}
 
 				// Do the HBA_1 antennas use a different rotation and are we calculating such an antenna?
-				int HBAdeltaOffset = (itsDiffHBArotations && (rcu/N_POL >= (itsSC.nrHBAs/2)) 
+				int HBAdeltaOffset = (itsDiffHBArotations && (rcu/N_POL >= (itsSC.nrAntennas("HBA")/2)) 
 									? N_HBA_ELEM_PER_TILE : 0);
 
 				for (int element = 0; element < N_HBA_ELEM_PER_TILE; ++element) {
