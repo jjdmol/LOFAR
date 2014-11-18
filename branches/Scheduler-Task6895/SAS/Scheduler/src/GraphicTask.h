@@ -32,6 +32,7 @@ class GraphicStationTaskLine;
 class GraphicTask : public QObject, public QGraphicsItem {
 
 	Q_OBJECT
+    Q_INTERFACES(QGraphicsItem)
 
 public:
 	GraphicTask(GraphicStationTaskLine *stationLine, GraphicResourceScene *scene, unsigned int task_id,
@@ -47,19 +48,12 @@ public:
     std::string toolTipHTML(void) const; // the tooltip but with all the '\n' replaced by <br>
 
     void setTaskColorMode(Task::task_color_mode color_mode) { if (itsColorMode != color_mode) {itsColorMode = color_mode; update(itsBoundings);} }
-//    void setNormalColorMode(void) {itsTaskTypeColorOn = false;}
-//    void hoverEnterEvent(QGraphicsSceneMouseEvent * event);
-//    void hoverLeaveEvent(QGraphicsSceneMouseEvent * event);
+
 
     void setSelected(bool is_selected);
     void setPredecessorHighLight(bool onoff) {itsPredecessorHighLightOn = onoff; update(itsBoundings);}
-//    void fixSchedule(bool fix_schedule) {fixedSchedule = fix_schedule;}
-//    void setStatus(task_status) { itsStatus = task_status;}
-//    void setInactive(bool inactive) {isInactive = inactive;}
-//    void setHovered(bool is_hovered);
 
     unsigned stationID(void) const {return itsStationID;}
-//    const IDvector &getPredecessors(void) const;
 
     void updateTask(/*bool inActive*/);
 	void updatePosition(void);
@@ -78,7 +72,7 @@ protected:
 	void mouseDoubleClickEvent ( QGraphicsSceneMouseEvent * event );
 
 private slots:
-//	void abortTask(void);
+
 	void unscheduleTask(void);
 	void unscheduleSelectedTasks(void);
 	void preScheduleTask(void);
@@ -113,7 +107,7 @@ private:
 	bool EndBeforeStart;
 	std::string itsTooltip;
 	Task::task_color_mode itsColorMode;
-	bool itsSelectedHighLightOn, itsPredecessorHighLightOn; //itsHoverHighLightOn
+    bool itsSelectedHighLightOn, itsPredecessorHighLightOn;
 	QPoint dragStartPosition;
 	bool dontMove, hasBeenMoved;
 };

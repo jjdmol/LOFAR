@@ -287,11 +287,12 @@ public:
 	static unsigned itsFileVersion; // used for storing the last read input file version
 
 private:
-    QMessageBox *possiblySaveMessageBox;
+
 	QApplication *application;
 	Scheduler scheduler;
 	SchedulerGUI *gui;
 	ScheduleSettingsDialog *itsSettingsDialog;
+    QMessageBox *possiblySaveMessageBox;
 	ConflictDialog *itsConflictDialog;
 	SchedulerData data;
 	DataHandler *itsDataHandler;

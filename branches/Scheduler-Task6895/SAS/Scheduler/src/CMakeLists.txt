@@ -177,3 +177,7 @@ target_link_libraries(scheduler lofar_scheduler)
 install(TARGETS lofar_scheduler scheduler 
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION ${LOFAR_LIBDIR})
+  
+install(FILES
+  default_settings.set
+  DESTINATION share/scheduler)  

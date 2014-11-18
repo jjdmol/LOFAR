@@ -48,6 +48,7 @@ using std::pair;
 #define STORE_UNDO false
 #define STORE_REDO true
 
+// Why o why a global variable?
 SchedulerSettings Controller::theSchedulerSettings = SchedulerSettings();
 unsigned Controller::itsFileVersion = 0;
 

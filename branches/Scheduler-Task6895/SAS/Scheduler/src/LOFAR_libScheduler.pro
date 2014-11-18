@@ -116,7 +116,8 @@ HEADERS += blocksize.h \
     demixingsettings.h \
     CheckBox.h \
     schedulerLib.h \
-    signalhandler.h
+    signalhandler.h \
+    qcustomplot.h
 FORMS += \
     redistributetasksdialog.ui \
     sasconnectdialog.ui \
@@ -219,7 +220,8 @@ SOURCES += \
     blocksize.cpp \
     CheckBox.cpp \
     schedulerLib.cpp \
-    signalhandler.cpp
+    signalhandler.cpp \
+    qcustomplot.cpp
 RESOURCES += scheduler_resources.qrc
 
 

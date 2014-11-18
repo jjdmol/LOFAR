@@ -138,7 +138,7 @@ typedef std::map<std::string ,campaignInfo> campaignMap;
 // first.second = column
 // second = changed value
 
-#define PROGRAM_DEFAULT_SETTINGS_FILENAME ".default_settings.set"
+#define PROGRAM_DEFAULT_SETTINGS_FILENAME "default_settings.set"
 #define PROGRAM_PREFERENCES_FILENAME ".scheduler_preferences.pre"
 
 // The following two defines must be kept 'synchronized'
