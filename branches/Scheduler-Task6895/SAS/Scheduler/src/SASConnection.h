@@ -69,12 +69,21 @@ public:
 	void init(const QString &username, const QString &password, const QString &DBName, const QString &hostname);
 	void setLastDownloadDate(const QDateTime &date) { itsLastDownloadDate = date; }
 	void cleanup(void); // do a cleanup
+
+    // Connection with the database
 	int connect(void);
 	int connect(const QString &username, const QString &password, const QString &database, const QString &host);
 	int testConnect(const QString &username, const QString &password, const QString &DBname, const QString &hostname);
 	void disconnect(void) {	QSqlDatabase::database( "SASDB" ).close(); QSqlDatabase::removeDatabase( "SASDB" ); }
+
+    // model functionality
 	bool downloadAllSASTasks(void/*bool mode = DOWNLOAD_MODE*/);
+
+
+    // GUI / VIEW
 	bool checkSynchronizeNeeded(void);
+
+
 	std::vector<unsigned> getUsedSASTaskIDs(void) const;// {return itsSASTaskIDs;}
     const std::pair<AstroDate, AstroDate> &getUploadedDateRange(void) const {return itsUploadedDateRange;}
 
@@ -155,7 +164,6 @@ private:
 	bool getScheduledTimes(int treeID, Task &task);
     bool getSchedulerInfo(int tree_id, Task &task);
 	void getCampaignInfo(Task &task);
-	void updateDefaultTemplates(void);
     void updateMoMToSasIDmapping(void); // updates the map used for translating Mom IDs to SAS IDs
     void storePublishDates(const Task *pTask);
     void clearItsSASTasks(void);

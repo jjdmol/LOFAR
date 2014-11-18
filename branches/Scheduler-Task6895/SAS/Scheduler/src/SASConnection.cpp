@@ -832,20 +832,6 @@ std::pair<bool, Task *> SASConnection::getTaskFromSAS(int treeID, OTDBtree otdb_
         return retVal;
 }
 
-void SASConnection::updateDefaultTemplates(void) {
-	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
-	Controller::theSchedulerSettings.updateDefaultTemplates();
-	// also update the default dataslot node id, used for creating data slots in VIC trees.
-/*
-	QSqlQuery query(sasDB);
-	query.exec("SELECT nodeid from getVTitemList(" + QString::number(Controller::theSchedulerSettings.getSchedulerDefaultTemplate()) + ",'DataslotInfo')");
-	if (query.next()) {
-		itsDataslotTemplateIDstr = query.value(0).toString();
-	}
-	query.finish();
-*/
-}
-
 
 void SASConnection::clearItsSASTasks(void) {
     for (SAStasks::iterator it = itsSASTasks.begin(); it != itsSASTasks.end(); ++it) {
@@ -860,7 +846,7 @@ bool SASConnection::downloadAllSASTasks(void) {
     clearItsSASTasks();
 
 	if (sasDB.isOpen()) {
-		updateDefaultTemplates();
+        Controller::theSchedulerSettings.updateDefaultTemplates();
 		// show the progress dialog
 		itsProgressDialog.clear();
 		itsProgressDialog.show();
@@ -928,36 +914,7 @@ void SASConnection::showProgressUploadDialog(void) {
 }
 
 
-bool SASConnection::checkSynchronizeNeeded(void) {
-	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
-	if (sasDB.isOpen()) {
-		updateDefaultTemplates();
-		itsProgressDialog.addText(QObject::tr("Start synchronize SAS schedule procedure"));
-		itsProgressDialog.addText(QObject::tr("Checking for changes in SAS database..."));
 
-		int retVal(getModifiedVICTrees(itsLastDownloadDate));
-
-		if (retVal == -1) {
-			itsProgressDialog.addError(QObject::tr("ERROR: could not fetch tasks from SAS. Aborting synchronize!"));
-			return false;
-		}
-
-		size_t nrOfModifiedSASTrees = itsSASmodifiedTasks.size();
-		if (nrOfModifiedSASTrees != 0) {
-			itsProgressDialog.addText(QObject::tr("Check complete. Number of modified tasks in SAS database: ") +
-					QString::number(nrOfModifiedSASTrees));
-			return true;
-		}
-		else {
-			itsProgressDialog.addText(QObject::tr("Check complete. No modified tasks needed to be downloaded."));
-			return true;
-		}
-	}
-	else {
-		itsProgressDialog.addError(QObject::tr("ERROR: Not connected to SAS database. Aborting synchronize!"));
-		return false;
-	}
-}
 
 bool SASConnection::startSynchronizeProcedure(const SchedulerData &scheduler_data) {
 	// ------------------------------- STEP 1 -------------------------------
@@ -5164,4 +5121,52 @@ std::string getSasTextState(int sas_state) {
 		break;
 	}
 	return task_states_str[Task::IDLE];
+}
+
+//*****************************************************************************
+// From here GUI / View functionality
+
+
+// Makes connection with the SASDB and checks if there are tasks changed that
+// should be update locally.
+// Returns false on problems with connection with the SAS database
+// True otherwise.
+// This is function is used on a single location
+// No side effects
+bool SASConnection::checkSynchronizeNeeded(void) {
+    QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
+    if (!sasDB.isOpen())
+    {
+        itsProgressDialog.addError(QObject::tr(
+                "ERROR: Not connected to SAS database. Aborting synchronize!"));
+        return false;
+    }
+
+    Controller::theSchedulerSettings.updateDefaultTemplates();
+
+    itsProgressDialog.addText(QObject::tr(
+                                "Start synchronize SAS schedule procedure"));
+    itsProgressDialog.addText(QObject::tr(
+                                 "Checking for changes in SAS database..."));
+
+    int retVal(getModifiedVICTrees(itsLastDownloadDate));
+
+    if (retVal == -1) {
+        itsProgressDialog.addError(QObject::tr(
+             "ERROR: could not fetch tasks from SAS. Aborting synchronize!"));
+        return false;
+    }
+
+    size_t nrOfModifiedSASTrees = itsSASmodifiedTasks.size();
+    if (nrOfModifiedSASTrees != 0) {
+        itsProgressDialog.addText(QObject::tr(
+             "Check complete. Number of modified tasks in SAS database: ") +
+                                  QString::number(nrOfModifiedSASTrees));
+        return true;
+    }
+    else {
+        itsProgressDialog.addText(QObject::tr(
+                "Check complete. No modified tasks needed to be downloaded."));
+        return true;
+    }
 }
