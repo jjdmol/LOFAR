@@ -1110,39 +1110,36 @@ bool SASConnection::startSynchronizeProcedure(const SchedulerData &scheduler_dat
 	}
 }
 
+// Adds a tree to the delete stack.
+// issues a debug warning if already in the stack
 void SASConnection::addToTreesToDelete(unsigned treeID, unsigned task_id) {
-	if (find(itsTreesToDelete.begin(), itsTreesToDelete.end(), treeID) == itsTreesToDelete.end()) {
-		itsTreesToDelete.push_back(treeID);
+    if (find(itsTreesToDelete.begin(), itsTreesToDelete.end(), treeID) !=
+            itsTreesToDelete.end())
+    {
+        debugWarn("sis", "task ", task_id,
+                  "was already added to the list of SAS trees to delete");
+        return;
 	}
-	else {
-		debugWarn("sis", "task ", task_id, "was already added to the list of SAS trees to delete");
-	}
+    itsTreesToDelete.push_back(treeID);
 }
 
-void SASConnection::removeFromSASTaskToDelete(unsigned treeID) {
-	if (treeID) {
-		std::vector<unsigned>::iterator it = find(itsTreesToDelete.begin(), itsTreesToDelete.end(), treeID);
-		if (it != itsTreesToDelete.end()) {
-			itsTreesToDelete.erase(it);
-		}
-		else {
-			debugWarn("sis", "tree ", treeID, "was not found in the list of SAS trees to delete");
-		}
-	}
-}
+// Inverse of addToTreesToDelete
+// removes a tree from the delete stack.
+// issues a debug warning of tree is not on the stack
+void SASConnection::removeFromSASTaskToDelete(unsigned treeID) {    
+    if (!treeID)
+        return;
 
-/*
-void SASConnection::addChangedIDTasks(const changedIDTasks &changedIDTasks) {
-	for (changedIDTasks::const_iterator it = changedIDTasks.begin(); it != changedIDTasks.end(); ++it) {
-		itsChangedIDTasks.push_back(*it);
-		const Task *pTask(itsController->getTask(it->newTaskID));
-		if (pTask) {
-		itsProgressDialog.addText(QString("Tree ") + QString::number(pTask->getSASTreeID()) +
-				" has non unique task ID " + QString::number(it->oldTaskID) + ". Task ID is changed to " + QString::number(it->newTaskID));
-		}
-	}
+    std::vector<unsigned>::iterator it = find(itsTreesToDelete.begin(),
+                                              itsTreesToDelete.end(), treeID);
+    if (it == itsTreesToDelete.end())
+    {   // if nothing found
+        debugWarn("sis", "tree ", treeID, "was not found in the list of SAS trees to delete");
+        return;
+    }
+
+    itsTreesToDelete.erase(it);
 }
-*/
 
 bool SASConnection::deleteTrees(void) {
 	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
@@ -2224,52 +2221,67 @@ QString SASConnection::getMetaData(int treeID) {
     return parset;
 }
 
+
+// COnnect to the database and delete a task
+// Check if the tree exists in the database
+//
 bool SASConnection::abortTask(int treeID) {
 	// get the current status of the tree from SAS
 	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
-	QSqlQuery query("select state from gettreeinfo(" + QString::number(treeID) + ", false)", sasDB);
-	if (query.next()) {
-		int state = query.value(0).toInt();
-		if ((state == SAS_STATE_ACTIVE) | (state == SAS_STATE_QUEUED)) {
-			//if the status is SAS_STATE_QUEUED or SAS_STATE_ACTIVE then allow the abort
-			return setTreeState(treeID, SAS_STATE_ABORTED);
-		}
-		else {
-			debugWarn("sis","SASConnection:abortTask, tree:", treeID, " is not queued nor active, it could not be aborted");
-			return false;
-		}
-	}
-	else {
-        std::cerr << "SASConnection::abortTask: Error, could not get the tree state of tree: " << treeID << std::endl << query.lastError().text().toStdString() << std::endl;
-		return false;
-	}
+    QSqlQuery query("select state from gettreeinfo(" +
+                    QString::number(treeID) + ", false)", sasDB);
+    if (!query.next())
+    {
+        debugWarn("sis","SASConnection:abortTask, tree:", treeID,
+                  " could not get the state of tree, error:",
+                  query.lastError().text().toStdString().c_str());
+
+        return false;
+    }
+
+    int state = query.value(0).toInt();
+
+    if ((state != SAS_STATE_ACTIVE) && (state != SAS_STATE_QUEUED))
+    {
+        debugWarn("sis","SASConnection:abortTask, tree:", treeID,
+                  " is not queued nor active, it could not be aborted");
+        return false;
+    }
+    //if the status is SAS_STATE_QUEUED or SAS_STATE_ACTIVE then allow the abort
+    return setTreeState(treeID, SAS_STATE_ABORTED);
 }
 
+
+// Sets a tree to onhold in the database and in the internal 'data stores'
+// Returns valse if state could not be set in the database else true
 bool SASConnection::setTaskOnHold(int treeID) {
-	if (setTreeState(treeID, SAS_STATE_ON_HOLD)) {
-		SAStasks::iterator it = itsSASTasks.find(treeID);
-		if (it != itsSASTasks.end()) {
-            it->second->setStatus(Task::ON_HOLD);
-		}
-		std::map<unsigned, OTDBtree>::iterator sit = itsSASVicTrees.find(treeID);
-		if (sit != itsSASVicTrees.end()) {
-            sit->second.setState(SAS_STATE_ON_HOLD);
-		}
-		return true;
-	}
-	else return false;
+    if (!setTreeState(treeID, SAS_STATE_ON_HOLD))
+        return false;
+
+    SAStasks::iterator it = itsSASTasks.find(treeID);
+    if (it != itsSASTasks.end()) {
+        it->second->setStatus(Task::ON_HOLD);
+    }
+
+    std::map<unsigned, OTDBtree>::iterator sit = itsSASVicTrees.find(treeID);
+    if (sit != itsSASVicTrees.end()) {
+        sit->second.setState(SAS_STATE_ON_HOLD);
+    }
+    return true;
 }
 
+
+// For each of the supplied trees set the status on hold in the database
+// and internal datastores. uses setTaskOnHold
+// return the and of the individual setTaskOnHold operations
 bool SASConnection::setTasksOnHold(const std::vector<int> trees) {
 	bool bResult(true);
-	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
-	if (sasDB.open()) {
-		for (std::vector<int>::const_iterator it = trees.begin(); it != trees.end(); ++it) {
-			bResult &= setTaskOnHold(*it);
-		}
-	}
-	else return false;
-
+    // Database connection is checked internally
+    for (std::vector<int>::const_iterator it = trees.begin();
+         it != trees.end(); ++it)
+    {
+        bResult &= setTaskOnHold(*it);
+    }
 	return bResult;
 }
 
@@ -3160,7 +3172,7 @@ bool SASConnection::setTreeState(int treeID, int SAS_state) const {
 		return true;
 	}
 	else {
-		debugErr("ssss", "SAS DB ", query.lastError().text().toStdString().c_str(),
+        debugErr("SASConnection::setTreeState", "SAS DB ", query.lastError().text().toStdString().c_str(),
 				" query:", query.lastQuery().toStdString().c_str());
 		return false;
 	}

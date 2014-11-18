@@ -68,50 +68,65 @@ public:
 
     void init(const QString &username, const QString &password,
               const QString &DBName, const QString &hostname);
-	void setLastDownloadDate(const QDateTime &date) { itsLastDownloadDate = date; }
+    void setLastDownloadDate(const QDateTime &date) {
+       itsLastDownloadDate = date; }
 	void cleanup(void); // do a cleanup
 
-    // Dirty connection with database
+    // *************** Dirty connection with database ***************
 	int connect(void);
     int connect(const QString &username, const QString &password,
                 const QString &database, const QString &host);
 
     int testConnect(const QString &username, const QString &password,
-                    const QString &DBname, const QString &hostname);
+                    const QString &DBname, const QString &hostname);   
+
+    // ***************Clean connections with database ***************
     void disconnect(void) {	QSqlDatabase::database( "SASDB" ).close();
                             QSqlDatabase::removeDatabase( "SASDB" ); }
 
-    // Clean connections with database
-
-
-    // dirty model functionality
+    // ***************dirty model functionality***************
     bool downloadAllSASTasks(void);
 
-    // clean model functionality
+    // ****** clean model functionality  ***************
     std::vector<unsigned> getUsedSASTaskIDs(void) const;
 
+    // addToTreesToDelete: used by Controller when a task is deleted from the scheduler
+    void addToTreesToDelete(unsigned treeID, unsigned task_id);
 
-    // dirty GUI / VIEW
+    // used by Controller when a previously deleted task is undeleted to
+    //add it back to the record of SAS tasks
+    void removeFromSASTaskToDelete(unsigned treeID);
+
+    // aborts a vic tree that is active or queued
+    bool abortTask(int treeID);
+
+    // set the tree to the ON_HOLD state,
+    // the tree to SAS_STATE_ON_HOLD status in the database and
+    // sets the itsSASVicTrees to SAS_STATE_ON_HOLD
+    bool setTaskOnHold(int treeID);
+
+    // set multiple trees on hold
+    bool setTasksOnHold(const std::vector<int> trees);
+
+    // *************** dirty GUI / VIEW ***************
 	bool checkSynchronizeNeeded(void);
 
-    // clead GUI / view
+    // *************** clean GUI / view ***************
 
-
-
-    const std::pair<AstroDate, AstroDate> &getUploadedDateRange(void) const {return itsUploadedDateRange;}
-
+    // *************** getters: ***************
+    const std::pair<AstroDate, AstroDate> &getUploadedDateRange(void) const {
+       return itsUploadedDateRange;}
     void setAutoPublishEnabled(bool enable) {itsUploadDialog->setAutoPublishEnabled(enable);}
     bool autoPublish(void) const {return itsUploadDialog->autoPublish();}
-	// addToTreesToDelete: used by Controller when a task is deleted from the scheduler
-	void addToTreesToDelete(unsigned treeID, unsigned task_id);
-	// used by Controller when a previously deleted task is undeleted to add it back to the record of SAS tasks
-	void removeFromSASTaskToDelete(unsigned treeID);
 	// get the SAS authentication token from the SAS database
 	const QString &getAuthToken(void) const {return itsAuthToken;}
 
-	bool abortTask(int treeID); // aborts a vic tree that is active or queued
-	bool setTaskOnHold(int treeID);// {return setTreeState(treeID, SAS_STATE_ON_HOLD);} // set the tree to the ON_HOLD state
-	bool setTasksOnHold(const std::vector<int> trees); // set multiple trees on hold
+
+
+
+
+
+
 	const SAStasks &SASTasks(void) const {return itsSASTasks;}
 	// opens the clean upload dialog
 	void showProgressUploadDialog(void);
