@@ -70,21 +70,27 @@ public:
 	void setLastDownloadDate(const QDateTime &date) { itsLastDownloadDate = date; }
 	void cleanup(void); // do a cleanup
 
-    // Connection with the database
+    // Dirty connection with database
 	int connect(void);
 	int connect(const QString &username, const QString &password, const QString &database, const QString &host);
+
 	int testConnect(const QString &username, const QString &password, const QString &DBname, const QString &hostname);
 	void disconnect(void) {	QSqlDatabase::database( "SASDB" ).close(); QSqlDatabase::removeDatabase( "SASDB" ); }
 
-    // model functionality
-	bool downloadAllSASTasks(void/*bool mode = DOWNLOAD_MODE*/);
+    // dirty model functionality
+    bool downloadAllSASTasks(void);
+
+    // clean model functionality
+    std::vector<unsigned> getUsedSASTaskIDs(void) const;
 
 
-    // GUI / VIEW
+    // dirty GUI / VIEW
 	bool checkSynchronizeNeeded(void);
 
+    // clead GUI / view
 
-	std::vector<unsigned> getUsedSASTaskIDs(void) const;// {return itsSASTaskIDs;}
+
+
     const std::pair<AstroDate, AstroDate> &getUploadedDateRange(void) const {return itsUploadedDateRange;}
 
     void setAutoPublishEnabled(bool enable) {itsUploadDialog->setAutoPublishEnabled(enable);}

@@ -114,7 +114,6 @@ int SASConnection::connect(void) {
 
 int SASConnection::connect(const QString &user, const QString &password, const QString &DBName, const QString &hostName) {
 	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
-	QVariant value;
 	if (!sasDB.open()) {  // sasDB could not be opened, re-init connection
 		init(user, password, DBName, hostName);
 		if (!sasDB.open()) {
@@ -138,17 +137,6 @@ int SASConnection::connect(const QString &user, const QString &password, const Q
 			}
 			query.finish();
 		}
-
-/*
-		if (itsDataslotTemplateIDstr.isEmpty()) {
-			// get the node ID of the dataslotsinfo node in the default template tree (needed to be able to create and save dataslot info for new trees)
-			query.exec("SELECT nodeid from getVTitemList(" + QString::number(Controller::theSchedulerSettings.getSchedulerDefaultTemplate()) + ",'DataslotInfo')");
-			if (query.next()) {
-				itsDataslotTemplateIDstr = query.value(0).toString();
-			}
-			query.finish();
-		}
-*/
 
 		// get the list of campaigns from SAS
 		getCampaignsFromSAS();
@@ -840,70 +828,77 @@ void SASConnection::clearItsSASTasks(void) {
     itsSASTasks.clear();
 }
 
+// Do a refresh of the current stored SAS data
+// FIRST: Clears current tasks stored.
+// Return false if no connection true if there are no errors
+// display progress dialog
+// model view controll is mixed.
+// candidate for splitting if multi functions.
 bool SASConnection::downloadAllSASTasks(void) {
 	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
 	itsSASVicTrees.clear();
     clearItsSASTasks();
 
-	if (sasDB.isOpen()) {
-        Controller::theSchedulerSettings.updateDefaultTemplates();
-		// show the progress dialog
-		itsProgressDialog.clear();
-		itsProgressDialog.show();
-		itsProgressDialog.setWindowTitle("Download running schedule from SAS database");
-		itsProgressDialog.addText(QObject::tr("Start Download SAS schedule procedure"));
-		itsProgressDialog.addText(QObject::tr("Starting inventory of tasks to download from SAS database..."));
-		AstroDateTime endDate = Controller::theSchedulerSettings.getLatestSchedulingDay() + AstroTime("23:59:59");
+    if ( ! sasDB.isOpen())
+      return false;
 
-		QDateTime prevLastDownloadDate(itsLastDownloadDate);
-		updateLastDownloadDate();
+    Controller::theSchedulerSettings.updateDefaultTemplates();
+    // show the progress dialog
+    itsProgressDialog.clear();
+    itsProgressDialog.show();
+    itsProgressDialog.setWindowTitle("Download running schedule from SAS database");
+    itsProgressDialog.addText(QObject::tr("Start Download SAS schedule procedure"));
+    itsProgressDialog.addText(QObject::tr("Starting inventory of tasks to download from SAS database..."));
+    AstroDateTime endDate = Controller::theSchedulerSettings.getLatestSchedulingDay() + AstroTime("23:59:59");
 
-		int retVal(getAllSASTasksWithinPeriod(VIC_TREE, Controller::theSchedulerSettings.getEarliestSchedulingDay(), endDate));
-		if (retVal == -1) {
-			itsProgressDialog.addError(QObject::tr("ERROR: could not fetch tasks from SAS. Aborting download!"));
-			itsProgressDialog.enableClose();
-			itsLastDownloadDate = prevLastDownloadDate;
-			return false;
-		}
-		else if (retVal == -2) {
-			itsProgressDialog.addText(QObject::tr("Warning: Not all predecessor tasks were found in the SAS database."));
-		}
-		size_t nrOfSASTrees = itsSASVicTrees.size();
-		if (nrOfSASTrees) {
-			itsProgressDialog.addText(QObject::tr("Check complete. Number of tasks to download (within scheduling period): ") +
-					QString::number(nrOfSASTrees));
-			itsProgressDialog.addText(QObject::tr("Downloading tasks..."));
-		}
-		else {
-			itsProgressDialog.addText(QObject::tr("Inventory complete. There are no tasks to download from SAS within the schedule period."));
-		}
+    QDateTime prevLastDownloadDate(itsLastDownloadDate);
+    updateLastDownloadDate();
 
-		if (nrOfSASTrees) {
-			// copy SAS tree's to regular task objects in itsSASTasks map
-			size_t count(0);
-            std::pair<bool, Task *> retVal;
-            for (std::map<unsigned, OTDBtree>::const_iterator it = itsSASVicTrees.begin(); it != itsSASVicTrees.end(); ++it) {
-				retVal = getTaskFromSAS(it->first, it->second);
-                if (retVal.second) {
-                    itsSASTasks.insert(SAStasks::value_type(it->first, retVal.second));
-                }
-                itsProgressDialog.setProgressPercentage((++count * 100) / nrOfSASTrees);
-			}
+    int retVal(getAllSASTasksWithinPeriod(VIC_TREE, Controller::theSchedulerSettings.getEarliestSchedulingDay(), endDate));
+    if (retVal == -1) {
+        itsProgressDialog.addError(QObject::tr("ERROR: could not fetch tasks from SAS. Aborting download!"));
+        itsProgressDialog.enableClose();
+        itsLastDownloadDate = prevLastDownloadDate;
+        return false;
+    }
+    else if (retVal == -2) {
+        itsProgressDialog.addText(QObject::tr("Warning: Not all predecessor tasks were found in the SAS database."));
+    }
+    size_t nrOfSASTrees = itsSASVicTrees.size();
+    if (nrOfSASTrees) {
+        itsProgressDialog.addText(QObject::tr("Check complete. Number of tasks to download (within scheduling period): ") +
+                                  QString::number(nrOfSASTrees));
+        itsProgressDialog.addText(QObject::tr("Downloading tasks..."));
+    }
+    else {
+        itsProgressDialog.addText(QObject::tr("Inventory complete. There are no tasks to download from SAS within the schedule period."));
+    }
 
-			itsProgressDialog.addText(QObject::tr("Task download complete."));
-			itsProgressDialog.addText(QObject::tr("Number of downloaded valid tasks: ") + QString::number(itsSASTasks.size()));
-		}
-		// now insert the downloaded tasks into the schedule if required
-        if (!itsSASTasks.empty()) {
-			itsProgressDialog.addText(QObject::tr("Inserting tasks in scheduler..."));
-			itsController->mergeDownloadedSASTasks();
-			itsProgressDialog.addText(QObject::tr("Tasks inserted."));
-			itsProgressDialog.addText(QObject::tr("Download schedule from SAS completed successfully."));
-		}
-		itsProgressDialog.enableClose();
-		return true;
-	}
-	else return false; // no connection to SAS database
+    if (nrOfSASTrees) {
+        // copy SAS tree's to regular task objects in itsSASTasks map
+        size_t count(0);
+        std::pair<bool, Task *> retVal;
+        for (std::map<unsigned, OTDBtree>::const_iterator it = itsSASVicTrees.begin(); it != itsSASVicTrees.end(); ++it) {
+            retVal = getTaskFromSAS(it->first, it->second);
+            if (retVal.second) {
+                itsSASTasks.insert(SAStasks::value_type(it->first, retVal.second));
+            }
+            itsProgressDialog.setProgressPercentage((++count * 100) / nrOfSASTrees);
+        }
+
+        itsProgressDialog.addText(QObject::tr("Task download complete."));
+        itsProgressDialog.addText(QObject::tr("Number of downloaded valid tasks: ") + QString::number(itsSASTasks.size()));
+    }
+    // now insert the downloaded tasks into the schedule if required
+    if (!itsSASTasks.empty()) {
+        itsProgressDialog.addText(QObject::tr("Inserting tasks in scheduler..."));
+        itsController->mergeDownloadedSASTasks();
+        itsProgressDialog.addText(QObject::tr("Tasks inserted."));
+        itsProgressDialog.addText(QObject::tr("Download schedule from SAS completed successfully."));
+    }
+    itsProgressDialog.enableClose();
+    return true;
+
 }
 
 
@@ -5130,9 +5125,14 @@ std::string getSasTextState(int sas_state) {
 // Makes connection with the SASDB and checks if there are tasks changed that
 // should be update locally.
 // Returns false on problems with connection with the SAS database
-// True otherwise.
+// True otherwise (if there are changes is only shown in progress window
+// refactoring comments:
 // This is function is used on a single location
-// No side effects
+// controller
+// Side effects
+// gui
+// Candidate for removal. Does not do anything, exit value is true or
+// false on external errors.
 bool SASConnection::checkSynchronizeNeeded(void) {
     QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
     if (!sasDB.isOpen())
@@ -5149,7 +5149,9 @@ bool SASConnection::checkSynchronizeNeeded(void) {
     itsProgressDialog.addText(QObject::tr(
                                  "Checking for changes in SAS database..."));
 
+    // This function downloads the modified tasks
     int retVal(getModifiedVICTrees(itsLastDownloadDate));
+
 
     if (retVal == -1) {
         itsProgressDialog.addError(QObject::tr(
@@ -5157,6 +5159,7 @@ bool SASConnection::checkSynchronizeNeeded(void) {
         return false;
     }
 
+    // Now check the number of modified tasks. And display this as text string
     size_t nrOfModifiedSASTrees = itsSASmodifiedTasks.size();
     if (nrOfModifiedSASTrees != 0) {
         itsProgressDialog.addText(QObject::tr(
