@@ -934,180 +934,206 @@ void SASConnection::showProgressUploadDialog(void) {
 
 
 
-bool SASConnection::startSynchronizeProcedure(const SchedulerData &scheduler_data) {
+bool SASConnection::startSynchronizeProcedure(
+        const SchedulerData &scheduler_data) {
 	// ------------------------------- STEP 1 -------------------------------
-	// Do a new download from SAS database so that any intermediate changes are also taken into account
+    // Do a new download from SAS database so that any intermediate changes
+    // are also taken into account
 	bool issueChangeConflict(false);
 
-	if (checkSynchronizeNeeded()) {
-		itsProgressDialog.addText(QObject::tr("Start compare with SAS database schedule..."));
-		itsNewSchedulerTasks.clear();
-		itsChangedTasks.clear();
-		itsUploadDialog->clear(); // resets the upload dialog
+    if (!checkSynchronizeNeeded())
+    {
+        itsProgressDialog.enableClose();
+        return false;
+    }
 
-		// itsSASVicTrees contains all previously downloaded trees including modifications that have just been detected
-		// vic trees that don't exist anymore in SAS have been deleted already from itsSASVicTrees and
-		// their tree ID have been inserted in itsSASdeletedTrees
-		// itsSASmodifiedTrees contain all tasks with modifications since last download
+    // GUI
+    itsProgressDialog.addText(QObject::tr(
+                        "Start compare with SAS database schedule..."));
+    itsNewSchedulerTasks.clear();
+    itsChangedTasks.clear();
+    itsUploadDialog->clear(); // resets the upload dialog
 
-		// ------------------------------- STEP 1 -------------------------------
-		const scheduledTasksMap &scheduled_tasks = scheduler_data.getScheduledTasks();
-		unsigned treeID;
-		for (scheduledTasksMap::const_iterator it = scheduled_tasks.begin(); it != scheduled_tasks.end(); ++it) {
-			treeID = it->second->getSASTreeID();
-			if (treeID == 0) { // new task added by scheduler
-				// add to new scheduler tasks
-				itsNewSchedulerTasks.push_back(it->second->getID());
-				itsUploadDialog->addNewSchedulerTask(*(it->second));
-			}
-		}
-		const reservationsMap &reservations = scheduler_data.getReservations();
-		for (reservationsMap::const_iterator it = reservations.begin(); it != reservations.end(); ++it) {
-			treeID = it->second->getSASTreeID();
-			if (treeID == 0) { // new task added by scheduler
-				// add to new scheduler tasks
-				itsNewSchedulerTasks.push_back(it->second->getID());
-				itsUploadDialog->addNewSchedulerTask(*(it->second));
-			}
-		}
-		const unscheduledTasksDeque &unscheduled_tasks = scheduler_data.getUnscheduledTasks();
-		for (unscheduledTasksDeque::const_iterator it = unscheduled_tasks.begin(); it != unscheduled_tasks.end(); ++it) {
-			treeID = (*it)->getSASTreeID();
-			if (treeID == 0) { // new task added by scheduler
-					// add to new scheduler tasks
-					itsNewSchedulerTasks.push_back((*it)->getID());
-					itsUploadDialog->addNewSchedulerTask(**it);
-					// For these tasks a new tree has to be build using the SAS DB API
-			}
-		}
-		const pipelinesMap &pipeline_tasks = scheduler_data.getPipelineTasks();
-		for (pipelinesMap::const_iterator it = pipeline_tasks.begin(); it != pipeline_tasks.end(); ++it) {
-			treeID = it->second->getSASTreeID();
-			if (treeID == 0) { // new task added by scheduler
-				// add to new scheduler tasks
-				itsNewSchedulerTasks.push_back(it->second->getID());
-				itsUploadDialog->addNewSchedulerTask(*(it->second));
-			}
-		}
-
-
-		// ------------------------------- STEP 2 -------------------------------
-		// check for differences that need to be uploaded to SAS
-
-		bool difDetected;
-		SAStasks::const_iterator sit;
-		std::vector<unsigned> new_tasks;
-        for (std::map<unsigned, OTDBtree>::const_iterator it = itsSASVicTrees.begin(); it != itsSASVicTrees.end(); ++it) {
-            task_diff diff;
-			const unsigned &treeID(it->first);
-			if (find(itsTreesToDelete.begin(), itsTreesToDelete.end(), it->first) == itsTreesToDelete.end()) { // don't consider trees that have to be deleted here
-				sit = itsSASTasks.find(treeID);
-				if (sit != itsSASTasks.end()) {
-					// diff between current! SAS task state (at upload time) and previous SAS task state at download time
-					// to prevent changing a task that in the meantime had a status change in SAS
-                    if (it->second.state() == sit->second->SASTree().state()) {
-						// only allow changes to tasks with state < FINISHED
-							const Task *pTask = scheduler_data.getTask(treeID, ID_SAS);
-							if (pTask) {
-                                difDetected = pTask->diff(sit->second, diff); // diff between task currently in scheduler memory and the previously! downloaded SAS task
-								if (difDetected) {
-                                    QString difstr = pTask->diffString(diff);
-									if (itsSASmodifiedTasks.find(treeID) == itsSASmodifiedTasks.end()) {
-										itsUploadDialog->addChangedTask(*pTask, difstr);
-										itsChangedTasks.insert(changedTasks::value_type(treeID, diff));
-									}
-									else { // the task was also externally modified, issue change conflict
-										itsUploadDialog->addChangedTask(*pTask, difstr, true);
-										issueChangeConflict = true;
-									}
-								}
-								else {
-									itsUploadDialog->addUnchangedTask(*pTask);
-								}
-							}
-					}
-					else {
-						// special case the tree state was changed externally in sas database
-						// check if this task was also changed by the user, if not just download without warning
-						// if it was changed also by the user then warning that the changes will be lost and the task will be downloaded again
-//						externallyChangedTasks.push_back(it->treeID());
-						const Task *pTask = scheduler_data.getTask(treeID, ID_SAS);
-						if (pTask) {
-                            difDetected = pTask->diff(sit->second, diff);
-							if (difDetected) {
-                                QString difstr = pTask->diffString(diff);
-								itsUploadDialog->addChangedTask(*pTask, difstr, true);
-								issueChangeConflict = true;
-							}
-						}
-					}
-				}
-                else {
-                    // new tree in the SAS database detected, download it in the scheduler
-                    new_tasks.push_back(treeID);
-                }
-			}
-		}
+    // itsSASVicTrees contains all previously downloaded trees including modifications that have just been detected
+    // vic trees that don't exist anymore in SAS have been deleted already from itsSASVicTrees and
+    // their tree ID have been inserted in itsSASdeletedTrees
+    // itsSASmodifiedTrees contain all tasks with modifications since last download
+    // ------------------------------- STEP 1 -------------------------------
+    const scheduledTasksMap &scheduled_tasks = scheduler_data.getScheduledTasks();
+    unsigned treeID;
+    for (scheduledTasksMap::const_iterator it = scheduled_tasks.begin(); it != scheduled_tasks.end(); ++it) {
+        treeID = it->second->getSASTreeID();
+        if (treeID == 0) { // new task added by scheduler
+            // add to new scheduler tasks
+            itsNewSchedulerTasks.push_back(it->second->getID());
+            itsUploadDialog->addNewSchedulerTask(*(it->second));
+        }
+    }
+    const reservationsMap &reservations = scheduler_data.getReservations();
+    for (reservationsMap::const_iterator it = reservations.begin(); it != reservations.end(); ++it) {
+        treeID = it->second->getSASTreeID();
+        if (treeID == 0) { // new task added by scheduler
+            // add to new scheduler tasks
+            itsNewSchedulerTasks.push_back(it->second->getID());
+            itsUploadDialog->addNewSchedulerTask(*(it->second));
+        }
+    }
+    const unscheduledTasksDeque &unscheduled_tasks = scheduler_data.getUnscheduledTasks();
+    for (unscheduledTasksDeque::const_iterator it = unscheduled_tasks.begin(); it != unscheduled_tasks.end(); ++it) {
+        treeID = (*it)->getSASTreeID();
+        if (treeID == 0) { // new task added by scheduler
+            // add to new scheduler tasks
+            itsNewSchedulerTasks.push_back((*it)->getID());
+            itsUploadDialog->addNewSchedulerTask(**it);
+            // For these tasks a new tree has to be build using the SAS DB API
+        }
+    }
+    const pipelinesMap &pipeline_tasks = scheduler_data.getPipelineTasks();
+    for (pipelinesMap::const_iterator it = pipeline_tasks.begin(); it != pipeline_tasks.end(); ++it) {
+        treeID = it->second->getSASTreeID();
+        if (treeID == 0) { // new task added by scheduler
+            // add to new scheduler tasks
+            itsNewSchedulerTasks.push_back(it->second->getID());
+            itsUploadDialog->addNewSchedulerTask(*(it->second));
+        }
+    }
 
 
-        SAStasks::iterator sasit;
-        Task *pCloneTask;
-		// update externally modified tasks in scheduler now
-        for (std::map<unsigned, Task *>::const_iterator sit = itsSASmodifiedTasks.begin(); sit != itsSASmodifiedTasks.end(); ++sit) {
-			// replace the task in itsSAStasks with the updated task from SAS
-            sasit = itsSASTasks.find(sit->first);
-            if (sasit != itsSASTasks.end()) {
-                pCloneTask = cloneTask(sit->second);
-                if (pCloneTask) {
-                    delete sasit->second;
-                    sasit->second = pCloneTask;
-                }
+    // ------------------------------- STEP 2 -------------------------------
+    // check for differences that need to be uploaded to SAS
+    bool difDetected;
+    SAStasks::const_iterator sit;
+    std::vector<unsigned> new_tasks;
+    for (std::map<unsigned, OTDBtree>::const_iterator it = itsSASVicTrees.begin(); it != itsSASVicTrees.end(); ++it) {
+        task_diff diff;
+        const unsigned &treeID(it->first);
+
+        // don't consider trees that have to be deleted here
+        if (find(itsTreesToDelete.begin(), itsTreesToDelete.end(),
+                 it->first) != itsTreesToDelete.end())
+            continue;
+
+        // If it is a new tree insert and continue
+        sit = itsSASTasks.find(treeID);
+        if (sit == itsSASTasks.end())
+        {
+            new_tasks.push_back(treeID);
+            continue;
+        }
+
+        // diff between current! SAS task state (at upload time) and previous
+        // SAS task state at download time to prevent changing a task that in
+        // the meantime had a status change in SAS
+        if (it->second.state() == sit->second->SASTree().state()) {
+            // only allow changes to tasks with state < FINISHED
+            const Task *pTask = scheduler_data.getTask(treeID, ID_SAS);
+            if (!pTask)
+                continue;
+
+            // diff between task currently in scheduler memory and the
+            // previously! downloaded SAS task
+            difDetected = pTask->diff(sit->second, diff);
+
+            // if no changes detected
+            if (!difDetected) {
+                itsUploadDialog->addUnchangedTask(*pTask);
+                continue;
             }
-            itsController->synchronizeTask(sit->second);
-            if (find(new_tasks.begin(), new_tasks.end(), sit->first) != new_tasks.end()) {
-                itsUploadDialog->addNewSASTask(sit->second);
-			}
-		}
 
-		// ------------------------------- STEP 4 -------------------------------
-		// Add the trees that have to be deleted from SAS
-		for (std::vector<unsigned>::const_iterator it = itsTreesToDelete.begin(); it != itsTreesToDelete.end(); ++it) {
-			sasit = itsSASTasks.find(*it);
-			if (sasit != itsSASTasks.end()) {
-                itsUploadDialog->addDeletedSchedulerTask(sasit->second);
-			}
-		}
+            // Test if changed in sasmodified tasks
+            QString difstr = pTask->diffString(diff);
+            if (itsSASmodifiedTasks.find(treeID) == itsSASmodifiedTasks.end()) {
+                itsUploadDialog->addChangedTask(*pTask, difstr);
+                itsChangedTasks.insert(changedTasks::value_type(treeID, diff));
+            }
+            else { // the task was also externally modified, issue change conflict
+                itsUploadDialog->addChangedTask(*pTask, difstr, true);
+                issueChangeConflict = true;
+            }
 
-		// add the tasks that have been deleted from sas in the upload dialog
-		for (std::vector<unsigned>::const_iterator dsit = itsSASdeletedTrees.begin(); dsit != itsSASdeletedTrees.end(); ++dsit) {
-			const Task *pTask = scheduler_data.getTask(*dsit, ID_SAS);
-            itsUploadDialog->addDeletedSASTask(pTask);
-            // directly delete the task from the scheduler because the tree does not exist anymore and nothing can be done abuot that (no cancel option)
-            sasit = itsSASTasks.find(*dsit);
-            if (sasit != itsSASTasks.end()) {
+        }
+        else {
+            // special case the tree state was changed externally in sas database
+            // check if this task was also changed by the user, if not just
+            // download without warning  if it was changed also by the user
+            // then warning that the changes will be lost and the task will be
+            // downloaded again
+            const Task *pTask = scheduler_data.getTask(treeID, ID_SAS);
+            if (!pTask)  // nothing found
+                continue;
+
+            //
+            difDetected = pTask->diff(sit->second, diff);
+
+            if (difDetected)
+            {
+                QString difstr = pTask->diffString(diff);
+                itsUploadDialog->addChangedTask(*pTask, difstr, true);
+                issueChangeConflict = true;
+
+            }
+        }
+    }
+
+
+    SAStasks::iterator sasit;
+    Task *pCloneTask;
+    // update externally modified tasks in scheduler now
+    for (std::map<unsigned, Task *>::const_iterator sit = itsSASmodifiedTasks.begin();
+         sit != itsSASmodifiedTasks.end(); ++sit) {
+        // replace the task in itsSAStasks with the updated task from SAS
+        sasit = itsSASTasks.find(sit->first);
+        if (sasit != itsSASTasks.end()) {
+            pCloneTask = cloneTask(sit->second);
+            if (pCloneTask) {
                 delete sasit->second;
-                itsSASTasks.erase(sasit);
+                sasit->second = pCloneTask;
             }
-            itsController->expungeTask(*dsit);
-		}
-		itsSASdeletedTrees.clear();
+        }
+        itsController->synchronizeTask(sit->second);
+        if (find(new_tasks.begin(), new_tasks.end(),
+                 sit->first) != new_tasks.end()) {
+            itsUploadDialog->addNewSASTask(sit->second);
+        }
+    }
 
-		// ALL DONE
-		itsProgressDialog.addText(QObject::tr("Compare finished."));
-		itsProgressDialog.hide();
-		itsUploadDialog->show();
+    // ------------------------------- STEP 4 -------------------------------
+    // Add the trees that have to be deleted from SAS
+    for (std::vector<unsigned>::const_iterator it = itsTreesToDelete.begin();
+         it != itsTreesToDelete.end(); ++it) {
+        sasit = itsSASTasks.find(*it);
+        if (sasit != itsSASTasks.end()) {
+            itsUploadDialog->addDeletedSchedulerTask(sasit->second);
+        }
+    }
 
-		if (issueChangeConflict) {
-			QMessageBox::warning(0, QObject::tr("External changes detected"),
-					QObject::tr("Some task changes cannot be applied because their status has been changed in SAS. These tasks are marked red in the changed tasks table.\nThey have been updated to their current state in SAS.\nYou will have to redo the changes you made to these tasks"));
-		}
+    // add the tasks that have been deleted from sas in the upload dialog
+    for (std::vector<unsigned>::const_iterator dsit = itsSASdeletedTrees.begin();
+         dsit != itsSASdeletedTrees.end(); ++dsit) {
+        const Task *pTask = scheduler_data.getTask(*dsit, ID_SAS);
+        itsUploadDialog->addDeletedSASTask(pTask);
+        // directly delete the task from the scheduler because the tree does
+        // not exist anymore and nothing can be done abuot that (no cancel option)
+        sasit = itsSASTasks.find(*dsit);
+        if (sasit != itsSASTasks.end()) {
+            delete sasit->second;
+            itsSASTasks.erase(sasit);
+        }
+        itsController->expungeTask(*dsit);
+    }
+    itsSASdeletedTrees.clear();
 
-		return true;
-	}
-	else {
-		itsProgressDialog.enableClose();
-		return false;
-	}
+    // ALL DONE
+    itsProgressDialog.addText(QObject::tr("Compare finished."));
+    itsProgressDialog.hide();
+    itsUploadDialog->show();
+
+    if (issueChangeConflict) {
+        QMessageBox::warning(0, QObject::tr("External changes detected"),
+                             QObject::tr("Some task changes cannot be applied because their status has been changed in SAS. These tasks are marked red in the changed tasks table.\nThey have been updated to their current state in SAS.\nYou will have to redo the changes you made to these tasks"));
+    }
+
+    return true;
 }
 
 // Adds a tree to the delete stack.

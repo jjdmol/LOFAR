@@ -129,17 +129,18 @@ public:
 	const QString &getAuthToken(void) const {return itsAuthToken;}
     const SAStasks &SASTasks(void) const {return itsSASTasks;}
 
-
-
-
-
-
-
-
-
-
+    // *************** CORE controller functionality DIRTY***************
+    // Large and unstructed functionality
 	//  start checking for changes that will be committed to the SAS database and the schedule
 	bool startSynchronizeProcedure(const SchedulerData &scheduler_data);
+
+
+
+
+
+
+
+
 	// commit the schedule to the SAS database and create and alter tasks in the database
 	bool commitScheduleToSAS(SchedulerData &data);
 	// check SAS connection status, database status, database access rights, database integrity and show this in a status dialog
