@@ -112,6 +112,13 @@ public:
 	bool checkSynchronizeNeeded(void);
 
     // *************** clean GUI / view ***************
+    // opens the clean upload dialog
+    void showProgressUploadDialog(void);
+
+    // hides the upload progress dialog
+    void closeProgressUploadDialog(void) {itsProgressDialog.hide();}
+
+    SASProgressDialog &progressDialog(void) {return itsProgressDialog;}
 
     // *************** getters: ***************
     const std::pair<AstroDate, AstroDate> &getUploadedDateRange(void) const {
@@ -120,6 +127,7 @@ public:
     bool autoPublish(void) const {return itsUploadDialog->autoPublish();}
 	// get the SAS authentication token from the SAS database
 	const QString &getAuthToken(void) const {return itsAuthToken;}
+    const SAStasks &SASTasks(void) const {return itsSASTasks;}
 
 
 
@@ -127,12 +135,9 @@ public:
 
 
 
-	const SAStasks &SASTasks(void) const {return itsSASTasks;}
-	// opens the clean upload dialog
-	void showProgressUploadDialog(void);
-	// hides the upload progress dialog
-	void closeProgressUploadDialog(void) {itsProgressDialog.hide();}
-	SASProgressDialog &progressDialog(void) {return itsProgressDialog;}
+
+
+
 	//  start checking for changes that will be committed to the SAS database and the schedule
 	bool startSynchronizeProcedure(const SchedulerData &scheduler_data);
 	// commit the schedule to the SAS database and create and alter tasks in the database
