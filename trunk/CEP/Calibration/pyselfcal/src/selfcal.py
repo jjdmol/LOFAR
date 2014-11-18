@@ -17,10 +17,10 @@ import getopt
 ########################################################################
 # Import local modules (classes)
 ########################################################################
-import class_obsparMergedData
-import class_obsPreprocessing
-import class_selfcalparam
-import class_selfcalrun  
+from lofar.selfcal import class_obsparMergedData
+from lofar.selfcal import class_obsPreprocessing
+from lofar.selfcal import class_selfcalparam
+from lofar.selfcal import class_selfcalrun  
 
 
 ########################################################################
