@@ -59,7 +59,7 @@ void OperationImage::showHelp (ostream& os, const std::string& name)
 
   os<< COLOR_OPERATION << 
   "Operation \"image\": create a dirty image" << COLOR_RESET << endl <<
-  "  No extra parameters for operation \"image\""<<endl << endl;
+  "  There are no parameters specific for operation \"image\""<<endl << endl;
 
   Operation::showHelp(os,name);
 };

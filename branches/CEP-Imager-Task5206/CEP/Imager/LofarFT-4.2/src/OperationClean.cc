@@ -164,19 +164,19 @@ void OperationClean::showHelp (ostream& os, const string& name)
   "Operation \"clean\": perform a clean cycle                          "<<endl<<
   COLOR_RESET << endl <<
   "Parameters:                                                         "<<endl<<
-  "  clean.niter       : number of clean iterations                    "<<endl<<
+  "  " << COLOR_PARAMETER << "clean.niter" << COLOR_RESET << "       : number of clean iterations                    "<<endl<<
   "                      int   ,  " << COLOR_DEFAULT << "default 1000" << COLOR_RESET <<endl<<
-  "  clean.threshold   : flux level at which to stop cleaning          "<<endl<<
+  "  " << COLOR_PARAMETER << "clean.threshold" << COLOR_RESET << "   : flux level at which to stop cleaning          "<<endl<<
   "                      string,  " << COLOR_DEFAULT << "default \"0Jy\"" << COLOR_RESET <<endl<<
-  "  clean.maskimage   : name of the mask image to use in cleaning     "<<endl<<
+  "  " << COLOR_PARAMETER << "clean.maskimage" << COLOR_RESET << "   : name of the mask image to use in cleaning     "<<endl<<
   "                      string,  " << COLOR_DEFAULT << "default \"\"" << COLOR_RESET <<endl<<
-  "  clean.cyclefactor : see casa documentation                        "<<endl<<
+  "  " << COLOR_PARAMETER << "clean.cyclefactor" << COLOR_RESET << " : see casa documentation                        "<<endl<<
   "                      double,  " << COLOR_DEFAULT << "default 1.5" << COLOR_RESET <<endl<<
-  "  clean.cyclespeedup: see casa documentation                        "<<endl<<
+  "  " << COLOR_PARAMETER << "clean.cyclespeedup" << COLOR_RESET << ": see casa documentation                        "<<endl<<
   "                      double,  " << COLOR_DEFAULT << "default -1"<< COLOR_RESET << endl<<
-  "  clean.nscales     : number of scales for multiscale clean         "<<endl<<
+  "  " << COLOR_PARAMETER << "clean.nscales" << COLOR_RESET << "     : number of scales for multiscale clean         "<<endl<<
   "                      int   ,  " << COLOR_DEFAULT << "default 1" << COLOR_RESET <<endl<<
-  "  clean.uservector  : user-defined scales for multi-scale clean     "<<endl<<
+  "  " << COLOR_PARAMETER << "clean.uservector" << COLOR_RESET << "  : user-defined scales for multi-scale clean     "<<endl<<
   "                      float vector,  " << COLOR_DEFAULT << "default [0.]" << COLOR_RESET<< endl<<endl;
   Operation::showHelp(os,name);
 };

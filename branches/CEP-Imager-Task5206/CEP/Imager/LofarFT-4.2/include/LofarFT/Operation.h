@@ -35,8 +35,15 @@
 
 
 // Define color codes for help text
-#define COLOR_DEFAULT "\033[38;2;40;120;130m"
-#define COLOR_OPERATION "\033[38;2;0;60;130m"
+
+// #define COLOR_DEFAULT "\033[38;2;40;120;130m"
+#define COLOR_DEFAULT "\033[36m"
+
+// #define COLOR_OPERATION "\033[38;2;0;60;130m"
+#define COLOR_OPERATION "\033[34m"
+
+#define COLOR_PARAMETER "\033[35m"
+
 #define COLOR_RESET "\033[0m"
 
 
