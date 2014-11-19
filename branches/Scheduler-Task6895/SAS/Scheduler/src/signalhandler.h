@@ -23,6 +23,7 @@ public:
     int signalForward(std::string action, std::string parameter);
 
 signals:
+    void mainWindowClose();
     // TODO: We might need signals back:
     //   - gui opened
     //   - exit called

@@ -16,7 +16,10 @@
 
 #include <iostream>
 
-
+//************** receiving signal back: **********************************
+// In this case a queued connection is used, therefore you’re required to run
+// an event loop in the thread the Thread object is living in.
+// http://qt-project.org/wiki/ThreadsEventsQObjects
 
 SignalHandler::SignalHandler(QApplication *app, Controller *c)
 {
