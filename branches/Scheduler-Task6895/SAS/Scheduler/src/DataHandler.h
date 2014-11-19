@@ -40,6 +40,12 @@ public:
 
 private:
     void writeTaskToFile(QTextStream &out, const Task *ptask) ; // Retrieves and writes the details of a task to file
+
+    // Returns the default settingsfile installed in $LOFARROOT/share/scheduler
+    // if available. If not found return the default scheduler settings
+    // filename.
+    std::string getDefaultSettingsPath();
+
 	QString itsFileName;
 	const Controller *itsController;
 };
