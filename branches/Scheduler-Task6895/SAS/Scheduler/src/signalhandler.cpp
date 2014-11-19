@@ -27,8 +27,20 @@ SignalHandler::SignalHandler(QApplication *app, Controller *c)
     itsController = c;
     // Create the connection between the SignalHandler class and the possible
     // items to action upon.
+
+    connectSignals();
     connect(itsController->gui->getSchedulerGUIClass().action_DownloadSASSchedule,
             SIGNAL(triggered()), itsController, SLOT(downloadSASSchedule()));
+
+}
+
+void SignalHandler::connectSignals(void)
+{
+    connect(this,                          // This QObject signal
+                     SIGNAL(mainWindowClose()),     // Function in this object
+                     itsController,                    // The target object
+                     SLOT(quit()));                 // The slot to 'call'
+
 }
 
 int SignalHandler::signalForward(std::string action, std::string /*parameter*/)
@@ -55,9 +67,7 @@ int SignalHandler::signalForward(std::string action, std::string /*parameter*/)
     }
     else if (action == "MainWindowClose")
     {
-        QApplication::sendEvent(
-                    itsApplication,
-                    new QCloseEvent());
+        emit mainWindowClose();
 
     }
     // This action does not work. Saving this as a starting point for a next

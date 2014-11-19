@@ -140,7 +140,8 @@ void Controller::connectSignals(void)
 //#endif
 
 	// subscribe to signals from the gui->
-	gui->connect(gui->getSchedulerGUIClass().action_New_schedule, SIGNAL(triggered()), this, SLOT(newSchedule()));
+    gui->connect(gui->getSchedulerGUIClass().action_New_schedule,
+                 SIGNAL(triggered()), this, SLOT(newSchedule()));
 	gui->connect(gui->getSchedulerGUIClass().action_Save_schedule, SIGNAL(triggered()), this, SLOT(saveSchedule()));
 	gui->connect(gui->getSchedulerGUIClass().action_Save_schedule_as, SIGNAL(triggered()), this, SLOT(saveScheduleAs()));
 	gui->connect(gui->getSchedulerGUIClass().action_Open_Schedule, SIGNAL(triggered()), this, SLOT(openSchedule()));

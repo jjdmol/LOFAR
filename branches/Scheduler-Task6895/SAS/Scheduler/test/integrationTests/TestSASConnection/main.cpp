@@ -25,6 +25,11 @@
 // TODO: The majority of this source is boilerplate.
 // refactor to remove duplicate code between tests.
 
+//************** receiving signal back: **********************************
+// In this case a queued connection is used, therefore you’re required to run
+// an event loop in the thread the Thread object is living in.
+// http://qt-project.org/wiki/ThreadsEventsQObjects
+
 // The exercising of the scheduler should happen in a thread. The gui runs in
 // the main thread. TODO: This is the cause of errors: The event loop
 // might get corrupted.
@@ -52,9 +57,9 @@ private:
 
         // step 4: Press close application button
         signalForward("MainWindowClose","");
-        sleep(2);
+        //sleep(2);
         // step 5: press no button, do not save
-        signalForward("PresNoInSaveDialog", ",");
+        //signalForward("PresNoInSaveDialog", ",");
 
         // Assertain correct correct closure of program.
     }

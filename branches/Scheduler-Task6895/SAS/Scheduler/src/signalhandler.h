@@ -33,6 +33,9 @@ signals:
 public slots:
 
 private:
+    // Connects all the available signals to the main application
+    void connectSignals(void);
+
     Controller *itsController;
     QApplication *itsApplication;
 };
