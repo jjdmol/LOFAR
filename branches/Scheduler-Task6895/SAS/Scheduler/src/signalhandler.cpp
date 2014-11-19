@@ -44,6 +44,8 @@ void SignalHandler::connectSignals(void)
     connect(this,          SIGNAL(downloadSASSchedule()),
             itsController, SLOT(downloadSASSchedule()));
 
+    connect(this,          SIGNAL(closeSASScheduleDownloadDialog()),
+            &itsController->itsSASConnection->progressDialog(), SLOT(close ()));
 }
 
 int SignalHandler::signalForward(std::string action, std::string /*parameter*/)
@@ -58,11 +60,11 @@ int SignalHandler::signalForward(std::string action, std::string /*parameter*/)
         emit downloadSASSchedule();
     else if (action == "DownloadSASScheduleClose")
     {
-
-        QApplication::sendEvent(
-            &itsController->itsSASConnection->progressDialog(),
-                    new QCloseEvent());
-        // TODO: Might cause an xevent que mixup
+        emit closeSASScheduleDownloadDialog();
+//        QApplication::sendEvent(
+//            &itsController->itsSASConnection->progressDialog(),
+//                    new QCloseEvent());
+//        // TODO: Might cause an xevent que mixup
         // Xlib: sequence lost (0x1037e > 0x381) in reply type 0x9!
         //(google gives comparable/same erros
         // and the possible cause

@@ -49,8 +49,8 @@ private:
         sleep(5);
 
 //        // Step 2: Press close button
-//        signalForward("DownloadSASScheduleClose","");
-//        sleep(3);
+        signalForward("DownloadSASScheduleClose","");
+        sleep(3);
 
 //        // Assert that the sas connection worked...?
 //        // We need faulty state then

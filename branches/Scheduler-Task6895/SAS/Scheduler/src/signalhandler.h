@@ -24,7 +24,8 @@ public:
 
 signals:
     void mainWindowClose();
-    void downloadSASSchedule(void);
+    void downloadSASSchedule();
+    void closeSASScheduleDownloadDialog();
 
     // TODO: We might need signals back:
     //   - gui opened

@@ -147,7 +147,8 @@ void Controller::connectSignals(void)
 	gui->connect(gui->getSchedulerGUIClass().action_Open_Schedule, SIGNAL(triggered()), this, SLOT(openSchedule()));
 //	gui->connect(gui->getSchedulerGUIClass().action_Open_task_list, SIGNAL(triggered()), this, SLOT(openTaskList()));
     gui->connect(gui->getSchedulerGUIClass().action_Save_task_list, SIGNAL(triggered()), this, SLOT(saveTaskListAs()));
-	gui->connect(gui->getSchedulerGUIClass().action_Close_schedule, SIGNAL(triggered()), this, SLOT(closeSchedule()));
+    gui->connect(gui->getSchedulerGUIClass().action_Close_schedule, SIGNAL(triggered()),
+                 this, SLOT(closeSchedule()));
 	gui->connect(gui->getSchedulerGUIClass().action_Create_initial_schedule, SIGNAL(triggered()), this, SLOT(createInitialSchedule()));
 	gui->connect(gui->getSchedulerGUIClass().action_Optimize_schedule, SIGNAL(triggered()), this, SLOT(optimizeSchedule()));
 	gui->connect(gui->getSchedulerGUIClass().action_Schedule_Settings, SIGNAL(triggered()), this, SLOT(openSettingsDialog()));
