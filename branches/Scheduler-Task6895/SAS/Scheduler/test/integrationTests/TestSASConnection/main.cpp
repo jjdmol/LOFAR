@@ -44,9 +44,9 @@ private:
         // make the next step conditional
         sleep(3);
 
-//        // Step 1: Press download button
-//        signalForward("DownloadSASSchedule","");
-//        sleep(5);
+        // Step 1: Press download button
+        signalForward("DownloadSASSchedule","");
+        sleep(5);
 
 //        // Step 2: Press close button
 //        signalForward("DownloadSASScheduleClose","");
@@ -56,7 +56,7 @@ private:
 //        // We need faulty state then
 
         // step 4: Press close application button
-        signalForward("MainWindowClose","");
+        //signalForward("MainWindowClose","");
         //sleep(2);
         // step 5: press no button, do not save
         //signalForward("PresNoInSaveDialog", ",");

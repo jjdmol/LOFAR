@@ -37,9 +37,12 @@ SignalHandler::SignalHandler(QApplication *app, Controller *c)
 void SignalHandler::connectSignals(void)
 {
     connect(this,                          // This QObject signal
-                     SIGNAL(mainWindowClose()),     // Function in this object
-                     itsController,                    // The target object
-                     SLOT(quit()));                 // The slot to 'call'
+            SIGNAL(mainWindowClose()),     // Function in this object
+            itsController,                 // The target object
+            SLOT(quit()));                 // The slot to 'call'
+
+    connect(this,          SIGNAL(downloadSASSchedule()),
+            itsController, SLOT(downloadSASSchedule()));
 
 }
 
@@ -52,8 +55,7 @@ int SignalHandler::signalForward(std::string action, std::string /*parameter*/)
     std::cerr << "Received command: " << action << std::endl;
 
     if (action == "DownloadSASSchedule")
-        emit itsController->gui->getSchedulerGUIClass(
-                ).action_DownloadSASSchedule->trigger();
+        emit downloadSASSchedule();
     else if (action == "DownloadSASScheduleClose")
     {
 
@@ -68,7 +70,6 @@ int SignalHandler::signalForward(std::string action, std::string /*parameter*/)
     else if (action == "MainWindowClose")
     {
         emit mainWindowClose();
-
     }
     // This action does not work. Saving this as a starting point for a next
     // atempt.
