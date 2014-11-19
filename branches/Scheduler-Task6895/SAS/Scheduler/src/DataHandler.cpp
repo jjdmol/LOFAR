@@ -180,7 +180,7 @@ std::string DataHandler::getDefaultSettingsPath()
     char * lofarRoot = getenv("LOFARROOT");
     // Test if env returned the lofarroot variable
     if (lofarRoot) //linux specific path concat. Is ugly
-        path = string(lofarRoot)+ "/" + PROGRAM_DEFAULT_SETTINGS_FILENAME;
+        path = string(lofarRoot)+ "/share/scheduler/" + PROGRAM_DEFAULT_SETTINGS_FILENAME;
 
     else // LOFARROOT not found
         path = string(PROGRAM_DEFAULT_SETTINGS_FILENAME);
