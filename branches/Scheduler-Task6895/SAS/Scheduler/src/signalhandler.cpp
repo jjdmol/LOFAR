@@ -45,7 +45,8 @@ void SignalHandler::connectSignals(void)
             itsController, SLOT(downloadSASSchedule()));
 
     connect(this,          SIGNAL(closeSASScheduleDownloadDialog()),
-            &itsController->itsSASConnection->progressDialog(), SLOT(close ()));
+            &itsController->itsSASConnection->progressDialog(), SLOT(close()));
+
 }
 
 int SignalHandler::signalForward(std::string action, std::string /*parameter*/)
@@ -59,28 +60,22 @@ int SignalHandler::signalForward(std::string action, std::string /*parameter*/)
     if (action == "DownloadSASSchedule")
         emit downloadSASSchedule();
     else if (action == "DownloadSASScheduleClose")
-    {
         emit closeSASScheduleDownloadDialog();
-//        QApplication::sendEvent(
-//            &itsController->itsSASConnection->progressDialog(),
-//                    new QCloseEvent());
-//        // TODO: Might cause an xevent que mixup
-        // Xlib: sequence lost (0x1037e > 0x381) in reply type 0x9!
-        //(google gives comparable/same erros
-        // and the possible cause
-    }
     else if (action == "MainWindowClose")
-    {
         emit mainWindowClose();
-    }
-    // This action does not work. Saving this as a starting point for a next
-    // atempt.
     else if (action == "PresNoInSaveDialog")
     {
-        QMessageBox* box = itsController->possiblySaveMessageBox;
+        QMessageBox* box = itsController->getPossiblySaveMessageBox();
         std::cout << "debug 1" << std::endl;
-        if (!box)  // If null pointer we cannot press a button in the dialog
+        if (box)
+        {
+            // wait with connecting untill we know the box exists
+            connect(this,          SIGNAL(pressNoInSaveScheduleMsgBox()),
+                    box, SLOT(reject()));
+            emit pressNoInSaveScheduleMsgBox();
+            std::cout << "debug !box" << std::endl;
             return 0;
+        }
         std::cout << "debug 2" << std::endl;
 
         //TODO: Emit a "do not save button clicked event"

@@ -56,10 +56,10 @@ private:
 //        // We need faulty state then
 
         // step 4: Press close application button
-        //signalForward("MainWindowClose","");
-        //sleep(2);
+        signalForward("MainWindowClose","");
+        sleep(2);
         // step 5: press no button, do not save
-        //signalForward("PresNoInSaveDialog", ",");
+        signalForward("PresNoInSaveDialog", ",");
 
         // Assertain correct correct closure of program.
     }

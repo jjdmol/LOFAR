@@ -123,6 +123,9 @@ public:
 //	const Task *createSASErrorTask(const OTDBtree& SAS_tree, unsigned task_id = 0); // creates a new unscheduled task with some properties set by the erronneus SAS task tree.
     QString getSasDatabaseName(void) const {return theSchedulerSettings.getSASDatabase();}
 
+    // Test hook returning a pointer to the possiblySaveMessageBox or zero
+    // if it not exists.
+    QMessageBox *getPossiblySaveMessageBox(){return possiblySaveMessageBox;}
 	void unscheduleSelectedTasks(void);
 	void setSelectedTasksOnHold(void);
 
