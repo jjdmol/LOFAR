@@ -176,7 +176,8 @@ public:
 	bool createTask(const Task &task);
     bool createReservation(const Task *reservation);
     void createPipeline(const Pipeline *pipeline);
-	std::vector<DefaultTemplate> getDefaultTemplatesFromSAS(void) {return itsSASConnection->getDefaultTemplates();}
+    std::vector<DefaultTemplate> getDefaultTemplatesFromSAS(void) {
+        return itsSASConnection->getDefaultTemplates();}
 	void defaultTemplatesUpdated(void) {gui->loadProcessTypes();}
 	void setStatusText(const char *text) {gui->setStatusText(text);}
 	void clearStatusText(void) {gui->clearStatusText();}

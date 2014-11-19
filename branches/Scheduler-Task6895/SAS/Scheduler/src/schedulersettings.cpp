@@ -436,14 +436,60 @@ QStringList SchedulerSettings::getAllStrategies(const QString &processType, cons
 	return strategies;
 }
 
+
+/***************************************************
+0: #Preprocessing LB
+0: #Preprocessing Pipeline
+0: #TBB standalone (C)
+0: #Calibration Pipeline Target
+0: #TBB standalone (E)
+0: #Calibrator Pipeline (export)
+0: #TBB standalone (D)
+0: #BeamObservation
+0: #Imaging Pipeline HBA
+0: #Pulsar Pipeline
+0: #imaging pipeline LBA
+0: #Interferometer
+0: #Calibrator Pipeline (no export)
+0: #Calibration Pipeline
+0: #Long-Baseline Pipeline
+0: #STAND_ALONE
+0: #MAINTENANCE
+0: #RESERVATION
+0: imaging pipeline LBA
+0: STAND_ALONE
+0: TBB standalone (E)
+0: Imaging Pipeline HBA
+0: TBB standalone (C)
+0: MAINTENANCE
+0: Pulsar Pipeline
+0: Calibration Pipeline Target
+0: Preprocessing Pipeline
+0: RESERVATION
+0: Calibration Pipeline
+0: BeamObservation
+0: Calibrator Pipeline (no export)
+0: Calibrator Pipeline (export)
+0: Preprocessing LB
+0: Interferometer
+0: TBB standalone (D)
+0: Long-Baseline Pipeline
+*/
 const std::map<quint32, DefaultTemplate> &SchedulerSettings::updateDefaultTemplates(void) {
 	clearDefaultTemplates();
 	itsSchedulerDefaultTemplate = 0;
 	itsDefaultTemplates.clear();
-	std::vector<DefaultTemplate> defaultTemplates = itsController->getDefaultTemplatesFromSAS();
-	for (std::vector<DefaultTemplate>::const_iterator it = defaultTemplates.begin(); it != defaultTemplates.end(); ++it) {
-		itsDefaultTemplates.insert(std::map<quint32, DefaultTemplate>::value_type(it->treeID, *it));
-		if (it->name == "Scheduler default template") {
+    std::vector<DefaultTemplate> defaultTemplates =
+            itsController->getDefaultTemplatesFromSAS();
+
+    for (std::vector<DefaultTemplate>::const_iterator it = defaultTemplates.begin()
+         ; it != defaultTemplates.end()
+         ; ++it)
+    {
+        itsDefaultTemplates.insert(
+               std::map<quint32, DefaultTemplate>::value_type(it->treeID, *it));
+        // 'Scheduler default template' does not exist in the database
+        if (it->name == "Scheduler default template") {
 			itsSchedulerDefaultTemplate = it->treeID;
 		}
 	}
