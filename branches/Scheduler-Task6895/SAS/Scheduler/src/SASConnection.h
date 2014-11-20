@@ -130,6 +130,9 @@ public:
 	const QString &getAuthToken(void) const {return itsAuthToken;}
     const SAStasks &SASTasks(void) const {return itsSASTasks;}
 
+    // Return SASStatus dialog 
+    SASStatusDialog& getSASStatusDialog(){ return statDlg;}
+
     // *************** CORE controller functionality DIRTY***************
     // Large and unstructed functionality
 	//  start checking for changes that will be committed to the SAS database and the schedule
@@ -320,7 +323,7 @@ private:
 
 	QString itsSASUserName, itsSASPassword;
     QString itsLastErrorString;
-    SASStatusDialog * statDlg;
+    SASStatusDialog statDlg;
 };
 
 std::string getSasTextState(int sas_state);

@@ -55,6 +55,10 @@ private:
 
         // validate sas status
 
+        // Close the status window
+        signalForward("closeCheckSASStatusDialog", "");
+        sleep(1);
+
         // step 4: Press close application button
         signalForward("MainWindowClose","");
         //sleep(2);

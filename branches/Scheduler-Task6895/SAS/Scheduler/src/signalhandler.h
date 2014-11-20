@@ -28,6 +28,7 @@ signals:
     void closeSASScheduleDownloadDialog();
     void doNotSaveSchedule();
     void checkSASStatus();
+    void closeCheckSASStatusDialog();
 
     // TODO: We might need signals back:
     //   - gui opened

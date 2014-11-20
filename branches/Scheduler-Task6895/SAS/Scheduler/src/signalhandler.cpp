@@ -53,6 +53,9 @@ void SignalHandler::connectSignals(void)
     connect(this,          SIGNAL(checkSASStatus()),
             itsController, SLOT(checkSASStatus()));
 
+    connect(this,          SIGNAL(closeCheckSASStatusDialog()),
+            &(itsController->itsSASConnection->getSASStatusDialog()), SLOT(close()));
+
 }
 
 int SignalHandler::signalForward(std::string action, std::string /*parameter*/)
@@ -74,9 +77,9 @@ int SignalHandler::signalForward(std::string action, std::string /*parameter*/)
         emit mainWindowClose();
     }
     else if (action == "checkSASStatus")
-    {
         emit checkSASStatus();
-    }
+    else if (action == "closeCheckSASStatusDialog")
+        emit closeCheckSASStatusDialog();
 
 
     else{ // If an unknown action string is received return 1

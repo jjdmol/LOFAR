@@ -1776,13 +1776,7 @@ bool SASConnection::getSchedulerInfo(int tree_id, Task &task) {
 	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
 	QSqlQuery query(sasDB);
 
-	// task description
-//	task.setTaskDescription(SAS_tree.description());
-//	task.setSASTreeID(SAS_tree.treeID());
-//    task.setSASTree(SAS_tree);
-//	task.setType(SAS_tree.processType(), SAS_tree.processSubType(), SAS_tree.strategy());
-
-	// duration, start and stop time
+    // duration, start and stop time
 	query.exec("SELECT limits from getVHitemList(" + treeID + ",'LOFAR.ObsSW.Observation.Scheduler.taskDuration')");
 	if (query.next()) {
 		unsigned secondsDuration = query.value(0).toUInt();
@@ -1798,67 +1792,6 @@ bool SASConnection::getSchedulerInfo(int tree_id, Task &task) {
 	}
 	query.finish();
 
-/*
-	bool startSet(SAS_tree.startTime().isSet()), endSet(SAS_tree.stopTime().isSet());
-	if (startSet && endSet) {
-		task.setScheduledPeriod(SAS_tree.startTime(), SAS_tree.stopTime());
-	}
-	else if (!startSet & !endSet) { // this is true when the task has just been approved from MoM and no start and end times are defined
-		query.exec("SELECT limits from getVHitemList(" + treeID + ",'LOFAR.ObsSW.Observation.Scheduler.taskDuration')");
-		if (query.next()) {
-			unsigned secondsDuration = query.value(0).toUInt();
-			if (secondsDuration) {
-				AstroTime duration;
-				duration = duration.addSeconds(secondsDuration);
-				task.setDuration(duration);
-			}
-		}
-		else {
-			itsProgressDialog.addError(QString("Error: Scheduler.taskDuration node of SAS tree: ") + treeID + " could not be fetched");
-			bResult = false;
-		}
-		query.finish();
-	}
-	else if (startSet & !endSet) {
-		query.exec("SELECT limits from getVHitemList(" + treeID + ",'LOFAR.ObsSW.Observation.Scheduler.taskDuration')");
-		if (query.next()) {
-			unsigned secondsDuration = query.value(0).toUInt();
-			if (secondsDuration) {
-				AstroTime duration;
-				duration = duration.addSeconds(secondsDuration);
-				task.setDuration(duration);
-			}
-		}
-		else {
-			itsProgressDialog.addError(QString("Warning: Scheduler.taskDuration node of SAS tree: ") + treeID + " could not be fetched");
-			bResult = false;
-		}
-		query.finish();
-	}
-	else if (!startSet & endSet) {
-		query.exec("SELECT limits from getVHitemList(" + treeID + ",'LOFAR.ObsSW.Observation.Scheduler.taskDuration')");
-		if (query.next()) {
-			unsigned secondsDuration = query.value(0).toUInt();
-			if (secondsDuration) {
-				AstroTime duration;
-				task.setDuration(duration.addSeconds(secondsDuration));
-				task.setScheduledStart(SAS_tree.stopTime() - duration);
-			}
-			else {
-				task.setScheduledStart(SAS_tree.stopTime());
-				task.setDuration(AstroTime(0));
-			}
-		}
-		else {
-			itsProgressDialog.addError(QString("Warning: Scheduler.taskDuration node of SAS tree: ") + treeID + " could not be fetched");
-			bResult = false;
-		}
-		query.finish();
-	}
-*/
-
-	// status is set according to the SAS status from SAS_tree
-//	task.setStatusSAS(SAS_tree.state());
 
     // TODO: remove backwards compatible task type, this is replaced by processType meta-data
     // taskType
@@ -4896,19 +4829,18 @@ const Task *SASConnection::fetchPredecessorObservation(const QString predStr) {
 bool SASConnection::checkSASStatus(void) {
     bool bResult(true);
     QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
-    //SASStatusDialog * statDlg = new SASStatusDialog();
-    statDlg = new SASStatusDialog();
-    statDlg->show();
-    statDlg->addText("USing refactored SAS status version.");
+
+    statDlg.show();
+    statDlg.addText("USing refactored SAS status version.");
     int result = connect();
     // connection ok // write permission ok
     if (result == 0)
     {
         // Display current status in dialog
-        statDlg->addText("SAS connection OK.");
-        statDlg->addText("SAS write permissions OK");
+        statDlg.addText("SAS connection OK.");
+        statDlg.addText("SAS write permissions OK");
         // checking functions
-        statDlg->addText("Checking SAS database functions:");
+        statDlg.addText("Checking SAS database functions:");
 
         // Check some random timespan if we can query the db
         QSqlQuery query(sasDB);
@@ -4917,11 +4849,11 @@ bool SASConnection::checkSASStatus(void) {
                    + QString::number(VIC_TREE)
                    + "','2010-01-01 00:00:00', '2010-01-01 23:59:59')");
         if (resultQuerygetTreesInPeriod) {
-            statDlg->addText("function: 'getTreesInPeriod' OK");
+            statDlg.addText("function: 'getTreesInPeriod' OK");
         }
         else {
-            statDlg->addError("function: 'getTreesInPeriod' ERROR");
-            statDlg->addError(sasDB.lastError().text());
+            statDlg.addError("function: 'getTreesInPeriod' ERROR");
+            statDlg.addError(sasDB.lastError().text());
             bResult = false;
             // TODO: we should exit here, the db connection is broken
         }
@@ -4935,19 +4867,19 @@ bool SASConnection::checkSASStatus(void) {
                    + SASDefaultTreeIDstr + ",'taskID')");
         if (!resultQuerygetvtitemlist)
         {   // error detected
-            statDlg->addError("function: 'getvtitemlist' ERROR");
-            statDlg->addError(sasDB.lastError().text());
+            statDlg.addError("function: 'getvtitemlist' ERROR");
+            statDlg.addError(sasDB.lastError().text());
         }
         else if (!query.next())
         {   // error detected
-            statDlg->addError(QString("function: 'SAS default VIC template tree ")
+            statDlg.addError(QString("function: 'SAS default VIC template tree ")
                   + SASDefaultTreeIDstr
                   + " Not found. (Is the default template treeID correct?)");
             bResult = false;
         }
         else
         {
-            statDlg->addText(QString("function: 'SAS default template tree ")
+            statDlg.addText(QString("function: 'SAS default template tree ")
                              + SASDefaultTreeIDstr + " OK");
             int newTreeID(0);
 
@@ -4956,8 +4888,8 @@ bool SASConnection::checkSASStatus(void) {
                           +  itsAuthToken + "," + SASDefaultTreeIDstr + ")");
             if (!resultQueryinstanciateVHtree)
             {   // error detected
-                statDlg->addError("function: 'instanciateVHtree' ERROR");
-                statDlg->addError(sasDB.lastError().text());
+                statDlg.addError("function: 'instanciateVHtree' ERROR");
+                statDlg.addError(sasDB.lastError().text());
                 bResult = false;
             }
             else
@@ -4967,25 +4899,25 @@ bool SASConnection::checkSASStatus(void) {
                                             "instanciateVHtree")).toInt();
                 if (!newTreeID)
                 {   // error detected
-                    statDlg->addError(
+                    statDlg.addError(
                         "function: 'instanciateVHtree' could not create tree ERROR");
-                    statDlg->addError(sasDB.lastError().text());
+                    statDlg.addError(sasDB.lastError().text());
                     bResult = false;
                 }
                 else
                 {
-                    statDlg->addText("function: 'instanciateVHtree' OK");
+                    statDlg.addText("function: 'instanciateVHtree' OK");
                     // check getVHitemList
                     vector<OTDBnode> fieldList = getItemList(newTreeID,
                               "LOFAR.ObsSW.Observation.Scheduler.taskID");
                     if (fieldList.size() != 1)
                     {   // error detected
-                        statDlg->addError("function: 'getVHitemList' ERROR returned multiple taskID fields for one tree!");
+                        statDlg.addError("function: 'getVHitemList' ERROR returned multiple taskID fields for one tree!");
                         bResult = false;
                     }
                     else
                     { // should be unique property
-                        statDlg->addText("function: 'getVHitemList' OK");
+                        statDlg.addText("function: 'getVHitemList' OK");
                         // check updateVTnode function
                         bool resultQueryupdateVTnode =
                              query.exec("SELECT updateVTnode("
@@ -4995,8 +4927,8 @@ bool SASConnection::checkSASStatus(void) {
                                  + ",'1','100')");
                         if (!resultQueryupdateVTnode)
                         {    // error detected
-                            statDlg->addError("function: 'updateVTnode' ERROR");
-                            statDlg->addError(sasDB.lastError().text());
+                            statDlg.addError("function: 'updateVTnode' ERROR");
+                            statDlg.addError(sasDB.lastError().text());
                             bResult = false;
                         }
                         else
@@ -5008,13 +4940,13 @@ bool SASConnection::checkSASStatus(void) {
 
                             if (!resultQueryupdatevtnode)
                             {   // error detected
-                                statDlg->addError("function: 'updateVTnode' ERROR");
-                                statDlg->addError(sasDB.lastError().text());
+                                statDlg.addError("function: 'updateVTnode' ERROR");
+                                statDlg.addError(sasDB.lastError().text());
                                 bResult = false;
                             }
                             else
                             {   // error detected
-                                statDlg->addText("function: 'updateVTnode' OK");
+                                statDlg.addText("function: 'updateVTnode' OK");
 
                                 // check function getSchedulerInfo
                                 query.finish();
@@ -5022,8 +4954,8 @@ bool SASConnection::checkSASStatus(void) {
                                 bool resultQuerygetSchedulerInfo = query.exec("SELECT * from getSchedulerInfo(" + QString::number(newTreeID) + ")");
                                 if (!resultQuerygetSchedulerInfo)
                                 {   // error detected
-                                    statDlg->addError("function: 'getSchedulerInfo' ERROR (Can also be caused by a wrong SAS Scheduler master template tree)");
-                                    statDlg->addError(sasDB.lastError().text());
+                                    statDlg.addError("function: 'getSchedulerInfo' ERROR (Can also be caused by a wrong SAS Scheduler master template tree)");
+                                    statDlg.addError(sasDB.lastError().text());
                                     bResult = false;
                                 }
 
@@ -5032,10 +4964,10 @@ bool SASConnection::checkSASStatus(void) {
                                     query.next();
                                     taskid = query.value(query.record().indexOf("taskID")).toUInt();
                                     if (taskid == 100) {
-                                        statDlg->addText("function: 'getSchedulerInfo' OK");
+                                        statDlg.addText("function: 'getSchedulerInfo' OK");
                                     }
                                     else {
-                                        statDlg->addError("function: 'getSchedulerInfo' did not return the expected value!");
+                                        statDlg.addError("function: 'getSchedulerInfo' did not return the expected value!");
                                         bResult = false;
                                     }
                                 }
@@ -5049,11 +4981,11 @@ bool SASConnection::checkSASStatus(void) {
                         if (!query.exec("SELECT deleteTree(" +
                                         itsAuthToken + "," +
                                         QString::number(newTreeID) + ")")) {
-                            statDlg->addError("function: 'deleteTree' ERROR");
-                            statDlg->addError(sasDB.lastError().text());
+                            statDlg.addError("function: 'deleteTree' ERROR");
+                            statDlg.addError(sasDB.lastError().text());
                         }
                         else {
-                            statDlg->addText("function: 'deleteTree' OK");
+                            statDlg.addText("function: 'deleteTree' OK");
                         }
                     }
                 }
@@ -5063,22 +4995,22 @@ bool SASConnection::checkSASStatus(void) {
     }
     else if (result == -1) {
         // no connection to SAS database
-        statDlg->addError("SAS connection ERROR: ");
-        statDlg->addError(sasDB.lastError().text());
+        statDlg.addError("SAS connection ERROR: ");
+        statDlg.addError(sasDB.lastError().text());
         bResult = false;
     }
     else if (result == -2) {
         // connection ok but no write permissions to SAS database
-        statDlg->addText("SAS connection OK.");
-        statDlg->addError("SAS write permissions ERROR. No write permissions to database! Please check SAS User name and password.");
+        statDlg.addText("SAS connection OK.");
+        statDlg.addError("SAS write permissions ERROR. No write permissions to database! Please check SAS User name and password.");
         bResult = false;
     }
 
     if (bResult) {
-        statDlg->addText("Everything OK!");
+        statDlg.addText("Everything OK!");
     }
     else {
-        statDlg->addText("ERRORS detected!");
+        statDlg.addText("ERRORS detected!");
     }
     return bResult;
 }
