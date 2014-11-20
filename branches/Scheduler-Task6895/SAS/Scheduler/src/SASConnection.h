@@ -33,6 +33,7 @@
 #include "imagingpipeline.h"
 #include "longbaselinepipeline.h"
 #include "sasstatusdialog.h"
+#include "query/sasquery.h"
 class Controller;
 class SchedulerData;
 class CEPCleanMainWindow;
@@ -324,6 +325,7 @@ private:
 	QString itsSASUserName, itsSASPassword;
     QString itsLastErrorString;
     SASStatusDialog statDlg;
+    SASQuery sasquery;
 };
 
 std::string getSasTextState(int sas_state);
