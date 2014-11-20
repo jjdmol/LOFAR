@@ -1,6 +1,7 @@
 # $Id$
 
-lofar_package(Scheduler 1.0)
+lofar_package(Scheduler 1.0 
+  DEPENDS Common)
 
 # Search for Qt4 and setup CMake environment for it
 find_package(Qt4 COMPONENTS QtCore QtGui QtSql QtTest REQUIRED)

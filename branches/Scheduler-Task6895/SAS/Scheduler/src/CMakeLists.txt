@@ -167,7 +167,7 @@ add_library(lofar_scheduler
   ${scheduler_MOC_SRCS} 
   ${scheduler_UI_HDRS})
 
-target_link_libraries(lofar_scheduler ${QT_LIBRARIES})
+target_link_libraries(lofar_scheduler common ${QT_LIBRARIES} )
 
 add_executable(scheduler
   main.cpp

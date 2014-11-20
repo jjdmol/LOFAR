@@ -99,9 +99,11 @@ int SASConnection::testConnect(const QString &username,
     // I Have seen this functionality before (almost)
     QSqlQuery query(sasDB);
     query.exec("SELECT OTDBlogin('" + username + "','" + password + "')");
+
     if (query.next())
     {
-        if (query.value(0).toUInt() == 0) { // check authentication token (should not be zero)
+        if (query.value(0).toUInt() == 0)
+        { // check authentication token (should not be zero)
             return -2; // no write permissions to SAS DB
         }
     }

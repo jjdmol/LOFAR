@@ -12,6 +12,8 @@
  *
  */
 
+#include <lofar_config.h>
+
 #include "Scheduler/schedulerLib.h"
 
 #include <time.h>
@@ -19,6 +21,12 @@
 #include <iostream>
 #include <exception>
 #include <QtCore>
+
+#include <Common/Exception.h>
+#include <Common/LofarLogger.h>
+
+LOFAR::Exception::TerminateHandler th(LOFAR::Exception::terminate);
+
 
 // Example scheduler integration test.
 // We start the scheduler in the main thread but also start a thread containing
@@ -31,6 +39,8 @@
 // an event loop in the thread the Thread object is living in.
 // http://qt-project.org/wiki/ThreadsEventsQObjects
 
+
+
 class TestThread : public QThread
 {
     // Very shallow wrapper around the run function
@@ -42,9 +52,11 @@ private:
         // make the next step conditional
         sleep(3);
 
+
         // Step 1: Press download button
         signalForward("DownloadSASSchedule","");
         sleep(5);
+
 
         // Step 2: Press close button
         signalForward("DownloadSASScheduleClose","");
@@ -56,11 +68,8 @@ private:
 
         // validate sas status
         bool result = getStatusSASDialogFeedbackResult();
-
-        // FOR now throw an exception. We need to think about throwing nice
-        // exceptions!!!!
         if (!result)
-            throw 1;  // Test failed
+            THROW(LOFAR::Exception, "Test of SAS status return an problem") ;
 
         // Close the status window
         signalForward("closeCheckSASStatusDialog", "");
