@@ -45,8 +45,11 @@ void SignalHandler::connectSignals(void)
             itsController, SLOT(downloadSASSchedule()));
 
     connect(this,          SIGNAL(closeSASScheduleDownloadDialog()),
-            &itsController->itsSASConnection->progressDialog(), SLOT(close()));
+            &(itsController->itsSASConnection->progressDialog()), SLOT(close()));
 
+
+    connect(this,          SIGNAL(doNotSaveSchedule()),
+            itsController, SLOT(setDoNotSaveSchedule()));
 }
 
 int SignalHandler::signalForward(std::string action, std::string /*parameter*/)
@@ -62,7 +65,11 @@ int SignalHandler::signalForward(std::string action, std::string /*parameter*/)
     else if (action == "DownloadSASScheduleClose")
         emit closeSASScheduleDownloadDialog();
     else if (action == "MainWindowClose")
+    {   // The save dialog does not play nice with the with the signal system
+        // Set a noSave flag and then close
+        emit doNotSaveSchedule();
         emit mainWindowClose();
+    }
     else if (action == "PresNoInSaveDialog")
     {
         QMessageBox* box = itsController->getPossiblySaveMessageBox();
@@ -70,9 +77,14 @@ int SignalHandler::signalForward(std::string action, std::string /*parameter*/)
         if (box)
         {
             // wait with connecting untill we know the box exists
-            connect(this,          SIGNAL(pressNoInSaveScheduleMsgBox()),
-                    box, SLOT(reject()));
-            emit pressNoInSaveScheduleMsgBox();
+
+            QKeyEvent key(QKeyEvent::KeyPress,
+                          Qt::Key_Enter, Qt::ShiftModifier, "Ok", false, 1 );
+
+            QApplication::sendEvent(box, &key);
+//            connect(this,          SIGNAL(pressNoInSaveScheduleMsgBox()),
+//                    box, SLOT(reject()));
+//            emit pressNoInSaveScheduleMsgBox();
             std::cout << "debug !box" << std::endl;
             return 0;
         }

@@ -239,9 +239,13 @@ signals:
 	void schedulerSettingsChanged(void);
 
 public slots:
-	void quit(void); // exit Scheduler application after some checks
+    // exit Scheduler application after some checks
+    void quit(void);
+
 	void deleteSelectedTasks(void);
-//	void abortTask(unsigned int taskID);
+
+    // Set a flag signalling a closure of the scheduler without saving
+    void setDoNotSaveSchedule();
 
 private slots:
 	void tableSortingChanged(void); // the sorting column and/or order was changed
@@ -319,6 +323,7 @@ private:
 	std::vector<std::vector<unsigned> > itsDeletedTasksRedoStack;
 
     bool itsAutoPublishAllowed;
+    bool doNotSaveScheduleFlag;
 };
 
 #endif /* CONTROLLER_H_ */

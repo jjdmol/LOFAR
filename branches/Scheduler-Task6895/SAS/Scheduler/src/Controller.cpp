@@ -54,7 +54,8 @@ unsigned Controller::itsFileVersion = 0;
 
 Controller::Controller(QApplication &app) :
     application(&app) , gui(0), itsSettingsDialog(0),
-    possiblySaveMessageBox(0),itsConflictDialog(0)
+    possiblySaveMessageBox(0),itsConflictDialog(0),
+    doNotSaveScheduleFlag(false)
 {
     itsAutoPublishAllowed = currentUser == "lofarsys" ? true : false;
 #if defined Q_OS_WINDOWS || _DEBUG_
@@ -2040,6 +2041,12 @@ bool Controller::checkSettings() const {
 	return true;
 }
 
+
+void Controller::setDoNotSaveSchedule()
+{
+    doNotSaveScheduleFlag = true;
+}
+
 // Dialogbox asking for saving of schedule project
 int Controller::possiblySaveDialog()
 {
@@ -2065,6 +2072,12 @@ int Controller::possiblySaveDialog()
 // TODO: The return value of this function mixes error state and selected choices.
 bool Controller::possiblySave()
 {
+    // Flag that can be set from the outside world.
+    // Used to skip the save dialog which does not play well with the signaling
+    // mechanism. 'test hook'
+    if (doNotSaveScheduleFlag)
+        return true;
+
     // check in SchedulingData if save required
     if (!data.getSaveRequired() )
         return true;
