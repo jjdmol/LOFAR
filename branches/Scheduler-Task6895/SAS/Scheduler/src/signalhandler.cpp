@@ -47,9 +47,12 @@ void SignalHandler::connectSignals(void)
     connect(this,          SIGNAL(closeSASScheduleDownloadDialog()),
             &(itsController->itsSASConnection->progressDialog()), SLOT(close()));
 
-
     connect(this,          SIGNAL(doNotSaveSchedule()),
             itsController, SLOT(setDoNotSaveSchedule()));
+
+    connect(this,          SIGNAL(checkSASStatus()),
+            itsController, SLOT(checkSASStatus()));
+
 }
 
 int SignalHandler::signalForward(std::string action, std::string /*parameter*/)
@@ -70,41 +73,11 @@ int SignalHandler::signalForward(std::string action, std::string /*parameter*/)
         emit doNotSaveSchedule();
         emit mainWindowClose();
     }
-    else if (action == "PresNoInSaveDialog")
+    else if (action == "checkSASStatus")
     {
-        QMessageBox* box = itsController->getPossiblySaveMessageBox();
-        std::cout << "debug 1" << std::endl;
-        if (box)
-        {
-            // wait with connecting untill we know the box exists
-
-            QKeyEvent key(QKeyEvent::KeyPress,
-                          Qt::Key_Enter, Qt::ShiftModifier, "Ok", false, 1 );
-
-            QApplication::sendEvent(box, &key);
-//            connect(this,          SIGNAL(pressNoInSaveScheduleMsgBox()),
-//                    box, SLOT(reject()));
-//            emit pressNoInSaveScheduleMsgBox();
-            std::cout << "debug !box" << std::endl;
-            return 0;
-        }
-        std::cout << "debug 2" << std::endl;
-
-        //TODO: Emit a "do not save button clicked event"
-
-        //QAbstractButton* noButton = box->button(QMessageBox::No);
-        //QPushButton* noButton = dynamic_cast<QPushButton*>(box->button(QMessageBox::No));
-
-        //std::cout << "result: " << box->result() << std::endl;
-        //box->setResult(QMessageBox::No);
-        //std::cout << "result: " << box->result() << std::endl;
-
-        //QPushButton* pushButton = box->findChild<QPushButton*>();
-        //std::cout << "debug 3" << std::endl;
-        //std::cout << "Found buttons: " << pushButton << std::cout;
-
-
+        emit checkSASStatus();
     }
+
 
     else{ // If an unknown action string is received return 1
         // TODO: Add to logfile line that unknown signal was received.

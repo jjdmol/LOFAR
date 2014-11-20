@@ -21,21 +21,25 @@
 #include "SASConnection.h"
 #include "Controller.h"
 #include "sasstatusdialog.h"
+
 using std::string;
 using std::vector;
 using std::map;
 
 SASConnection::SASConnection(void)
-	: itsController(0), itsUploadDialog(0)
+    : itsController(0),
+      itsUploadDialog(0),
+      statDlg(0)
 {
     QSqlDatabase::addDatabase( "QPSQL", "SASDB" );
 }
 
 SASConnection::SASConnection(Controller *controller)
-	: itsController(controller)
+    : itsController(controller),
+      itsUploadDialog(new SASUploadDialog(0, itsController)),
+      statDlg(0)
 {
-    QSqlDatabase::addDatabase( "QPSQL", "SASDB" );
-	itsUploadDialog = new SASUploadDialog(0, itsController);
+    QSqlDatabase::addDatabase( "QPSQL", "SASDB" );   
 }
 
 SASConnection::~SASConnection() {
@@ -4892,7 +4896,8 @@ const Task *SASConnection::fetchPredecessorObservation(const QString predStr) {
 bool SASConnection::checkSASStatus(void) {
     bool bResult(true);
     QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
-    SASStatusDialog * statDlg = new SASStatusDialog();
+    //SASStatusDialog * statDlg = new SASStatusDialog();
+    statDlg = new SASStatusDialog();
     statDlg->show();
     statDlg->addText("USing refactored SAS status version.");
     int result = connect();
@@ -5184,3 +5189,4 @@ bool SASConnection::checkSynchronizeNeeded(void) {
         return true;
     }
 }
+

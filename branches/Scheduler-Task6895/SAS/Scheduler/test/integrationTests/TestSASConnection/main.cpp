@@ -45,9 +45,15 @@ private:
         signalForward("DownloadSASSchedule","");
         sleep(5);
 
-//        // Step 2: Press close button
+        // Step 2: Press close button
         signalForward("DownloadSASScheduleClose","");
         sleep(3);
+
+        // Step 3: checkSASStatus
+        signalForward("checkSASStatus","");
+        sleep(5);
+
+        // validate sas status
 
         // step 4: Press close application button
         signalForward("MainWindowClose","");

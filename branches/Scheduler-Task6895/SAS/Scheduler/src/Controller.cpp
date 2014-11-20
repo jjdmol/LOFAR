@@ -169,24 +169,18 @@ void Controller::connectSignals(void)
 	gui->connect(gui->getTableDelegate(), SIGNAL(tableItemChanged(unsigned, data_headers, const QVariant &, const QModelIndex &)), this, SLOT(applyTableItemChange(unsigned, data_headers, const QVariant &, const QModelIndex &)));
 	gui->connect(itsSettingsDialog, SIGNAL(actionSaveSettings()), this, SLOT(closeSettingsDialog()));
 	scheduler.connect(&scheduler, SIGNAL(optimizeIterationFinished(unsigned)), this, SLOT(updateStatusBarOptimize(unsigned)));
-//	gui->scene()->connect(gui->scene(), SIGNAL(taskRescheduleRequest(unsigned, AstroDateTime, bool)), this, SLOT(moveTaskRequest(unsigned, const AstroDateTime &)));
-//	gui->taskDialog()->connect(gui->taskDialog(), SIGNAL(taskChanged(Task &, bool)), this, SLOT(updateTask(Task &, bool)));
-//	gui->taskDialog()->connect(gui->taskDialog(), SIGNAL(abortTask(unsigned int)), this, SLOT(abortTask(unsigned int)));
-//	gui->taskDialog()->connect(gui->taskDialog(), SIGNAL(addNewTask(const Task &)), this, SLOT(createTask(const Task &)));
-//	gui->taskDialog()->connect(gui->taskDialog(), SIGNAL(addNewReservation(const Task &)), this, SLOT(createReservation(const Task &)));
-//	gui->taskDialog()->connect(gui->taskDialog(), SIGNAL(checkPredecessor(unsigned)), this, SLOT(checkPredecessor(unsigned)));
-//	gui->connect(gui->getSchedulerGUIClass().action_Align_left, SIGNAL(triggered()), this, SLOT(alignLeft()));
-// thrash bin connections
 	gui->connect(gui->getSchedulerGUIClass().action_Thrashcan, SIGNAL(triggered()), this, SLOT(showThrashBin()));
 	itsThrashBin.connect(&itsThrashBin, SIGNAL(restoreTasksRequest(const std::vector<unsigned> &)), this, SLOT(restoreTasks(const std::vector<unsigned> &)));
 	itsThrashBin.connect(&itsThrashBin, SIGNAL(thrashBinIsEmpty()), this, SLOT(thrashBinEmpty()));
 	itsThrashBin.connect(&itsThrashBin, SIGNAL(thrashBinContainsItems()), this, SLOT(thrashBinNotEmpty()));
-	itsThrashBin.connect(&itsThrashBin, SIGNAL(destroyTasks(std::vector<unsigned>)), this, SLOT(doDestroyTasks(std::vector<unsigned>)));
+    itsThrashBin.connect(&itsThrashBin, SIGNAL(destroyTasks(std::vector<unsigned>)),
+                         this, SLOT(doDestroyTasks(std::vector<unsigned>)));
 
 
 	gui->connect(gui->getSchedulerGUIClass().action_DownloadSASSchedule, SIGNAL(triggered()), this, SLOT(downloadSASSchedule()));
 	gui->connect(gui->getSchedulerGUIClass().action_SyncSASSchedule, SIGNAL(triggered()), this, SLOT(InitSynchronizeSASSchedule()));
-	gui->connect(gui->getSchedulerGUIClass().actionCheck_SAS_status, SIGNAL(triggered()), this, SLOT(checkSASStatus()));
+    gui->connect(gui->getSchedulerGUIClass().actionCheck_SAS_status, SIGNAL(triggered()),
+                 this, SLOT(checkSASStatus()));
 
 
 }
@@ -2852,100 +2846,6 @@ void Controller::synchronizeTask(const Task *pTask) {
     gui->updateTask(pClone);
     updateStatusBar();
 }
-
-/*
-void Controller::synchronizeTask(const Task &task) {
-	unsigned treeID(task.getSASTreeID()), taskID(task.getID());
-	Task::task_status state(task.getStatus());
-	Task *schedulerTask = data.getTaskForChange(treeID, ID_SAS);
-	if (schedulerTask) {
-		Task::task_status prev_status(schedulerTask->getStatus());
-
-		if ((prev_status >= Task::PRESCHEDULED) && (prev_status <= Task::ACTIVE)) { // if task was scheduled on stations
-			data.unscheduleTask(taskID);
-		}
-		if (prev_status >= Task::FINISHED && state < Task::FINISHED) {
-			Task *pTask(data.moveTaskFromInactive(taskID));
-			if (pTask) {
-				schedulerTask = pTask;
-			}
-		}
-
-		taskID = schedulerTask->getID();
-        *schedulerTask = task; // THIS DOES NOT WORK FOR DERIVED CLASSES BECAUSE THEIR PROPERTIES ARE NOT COPIED (ONLY THE BASE CLASS PROPERTIES ARE COPIED THROUGH BASE POINTERS!!!)
-		schedulerTask->setID(taskID);
-	}
-    else { // task not found in scheduler , create it now
-		if (task.isPipeline()) {
-            schedulerTask = data.newPipeline(taskID, static_cast<const Pipeline &>(task).pipelinetype(), OVERRIDE_SAS_TASKIDS); // this should always succeed because OVERRIDE_SAS_TASKIDS is true
-			if (schedulerTask) {
-				taskID = schedulerTask->getID();
-				*schedulerTask = task;
-				schedulerTask->setID(taskID);
-                setInputFilesForPipeline(schedulerTask);
-				schedulerTask->calculateDataFiles();
-			}
-			else {
-				std::cerr << "Controller::synchronizeTask: Could not create Pipeline task for tree:" << treeID << std::endl;
-				return;
-			}
-		}
-		else { // TODO: Also tasks of type SYSTEM are for the moment created here to prevent SEGFAULTs. But it should maybe be created in another way than with newTask?
-			schedulerTask = data.newTask(taskID, OVERRIDE_SAS_TASKIDS); // this should always succeed because OVERRIDE_SAS_TASKIDS is true
-			if (schedulerTask) {
-				taskID = schedulerTask->getID();
-				*schedulerTask = task;
-				schedulerTask->setID(taskID);
-			}
-			else {
-				std::cerr << "Controller::synchronizeTask: Could not create task for tree:" << treeID << std::endl;
-				return;
-			}
-		}
-	}
-
-	if (task.isScheduled()) {
-		data.scheduleTask(schedulerTask);
-		Task *pTask = data.getTaskForChange(taskID);
-		pTask->setStatus(task.getStatus());
-	}
-	else {
-		if (state >= Task::FINISHED) {
-			data.moveTaskToInactive(taskID);
-		}
-	}
-
-	gui->updateTask(treeID, ID_SAS, task.getType());
-	updateStatusBar();
-}
-*/
-
-/*
-void Controller::abortTask(unsigned int taskID) {
-	Task *pTask = data.getScheduledTaskForChange(taskID);
-	if (pTask) {
-		Task::task_status status = pTask->getStatus();
-		if ((status == Task::ACTIVE) | (status == Task::STARTING) | (status == Task::SCHEDULED)) {
-			QString taskStr = tr("Aborting task (") + QString::number(taskID) + ") " + pTask->getTaskName() + ", SAS_ID:" + QString::number(pTask->getSASTreeID());
-			if (QMessageBox::question(0, taskStr,
-					taskStr + "\n" + tr("The abort will be instantaneously committed to SAS.\nThe abort cannot be undone.\nDo you really want to abort the task?"),
-					QMessageBox::Yes,
-					QMessageBox::No) == QMessageBox::Yes) {
-				if (itsSASConnection->abortTask(pTask->getSASTreeID())) {
-					pTask->setStatus(Task::ABORTED);
-					data.moveTaskToInactive(taskID);
-					gui->updateTask(taskID);
-					updateStatusBar();
-				}
-				else {
-					QMessageBox::critical(0, tr("Could not abort the task"),
-							tr("Could not abort the task. Probably the task is not in the ACTIVE or STARTING state"));
-				}
-			}
-		}
-	}
-}
-*/
 
 const char *Controller::getReservationName(unsigned reservation_id) const {
 	const Task *pRes = data.getReservation(reservation_id);
