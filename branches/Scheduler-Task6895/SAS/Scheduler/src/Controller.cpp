@@ -37,6 +37,8 @@
 
 #include "DataMonitorConnection.h"
 
+#include "signalhandler.h"
+
 extern QString currentUser;
 
 using std::string;
@@ -54,8 +56,8 @@ unsigned Controller::itsFileVersion = 0;
 
 Controller::Controller(QApplication &app) :
     application(&app) , gui(0), itsSettingsDialog(0),
-    possiblySaveMessageBox(0),itsConflictDialog(0),
-    doNotSaveScheduleFlag(false)
+    possiblySaveMessageBox(0),itsConflictDialog(0),    
+    itsSignalHandler(0),doNotSaveScheduleFlag(false)
 {
     itsAutoPublishAllowed = currentUser == "lofarsys" ? true : false;
 #if defined Q_OS_WINDOWS || _DEBUG_
@@ -181,24 +183,36 @@ void Controller::connectSignals(void)
 	gui->connect(gui->getSchedulerGUIClass().action_SyncSASSchedule, SIGNAL(triggered()), this, SLOT(InitSynchronizeSASSchedule()));
     gui->connect(gui->getSchedulerGUIClass().actionCheck_SAS_status, SIGNAL(triggered()),
                  this, SLOT(checkSASStatus()));
-
-
 }
 
 const AstroDateTime &Controller::now(void) {
 	QDateTime currentTime = QDateTime::currentDateTimeUtc();
-	itsTimeNow = AstroDateTime(currentTime.date().day(), currentTime.date().month(), currentTime.date().year(),
-			currentTime.time().hour(), currentTime.time().minute(), currentTime.time().second());
+    itsTimeNow = AstroDateTime(currentTime.date().day(),
+                               currentTime.date().month(),
+                               currentTime.date().year(),
+                               currentTime.time().hour(),
+                               currentTime.time().minute(),
+                               currentTime.time().second());
 	return itsTimeNow;
 }
 
 
 
-void Controller::checkSASStatus(void) const {
-	itsSASConnection->checkSASStatus();
+void Controller::checkSASStatus(void)
+{
+    // itsSignalHandler is 'instantiated' after the other connections
+    // are added, therefore add the feedback signal here
+    connect(this,             SIGNAL(statusSASDialogFeedback(bool)),
+            itsSignalHandler, SLOT(statusSASDialogFeedback(bool)));
+    bool result = itsSASConnection->checkSASStatus();
+
+    // send information back to the signalhandler
+    emit statusSASDialogFeedback(result);
 }
 
-void Controller::setSASConnectionSettings(const QString &username, const QString &password, const QString &DBname, const QString &hostname) {
+void Controller::setSASConnectionSettings(const QString &username,
+                 const QString &password, const QString &DBname,
+                 const QString &hostname) {
 	Controller::theSchedulerSettings.setSASConnectionSettings(username, password, DBname, hostname);
 }
 

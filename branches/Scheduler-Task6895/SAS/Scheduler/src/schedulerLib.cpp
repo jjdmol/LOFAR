@@ -39,6 +39,19 @@ int signalForward(std::string functionName, std::string parameter)
     return handler->signalForward(functionName, parameter);
 }
 
+
+bool getStatusSASDialogFeedbackResult()
+{
+    // The signalForward is depending on handler* that is instantiated created in a different thread
+    // Assure that it is assigned/created
+    if (!handler)
+        throw new exception();
+
+    // Forward the signal and set return value
+    return handler->getStatusSASDialogFeedbackResult();
+}
+
+
 int main_function(int argc, char *argv[])
 {
     // remember the user running the scheduler, to know if
@@ -56,7 +69,7 @@ int main_function(int argc, char *argv[])
     // Assign the handler with the adresses of the app and the controller
     // TODO: MVC seperation, where is the model? The M should be instantiated as a
     // specific object
-    handler = new SignalHandler(&app, &c);
+    handler = new SignalHandler(app, c);
 
     // c.start() does not return it does this after closing gui window.
     try {

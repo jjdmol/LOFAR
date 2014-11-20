@@ -17,6 +17,7 @@
 #include <time.h>
 #include <string>
 #include <iostream>
+#include <exception>
 #include <QtCore>
 
 // Example scheduler integration test.
@@ -54,6 +55,12 @@ private:
         sleep(5);
 
         // validate sas status
+        bool result = getStatusSASDialogFeedbackResult();
+
+        // FOR now throw an exception. We need to think about throwing nice
+        // exceptions!!!!
+        if (!result)
+            throw 1;  // Test failed
 
         // Close the status window
         signalForward("closeCheckSASStatusDialog", "");

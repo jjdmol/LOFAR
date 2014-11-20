@@ -188,6 +188,8 @@ public:
     void setAutoPublish(bool enabled) {theSchedulerSettings.setAutoPublish(enabled);}
     bool autoPublishAllowed(void) {return itsAutoPublishAllowed;}
 
+    void setSignalHandler(SignalHandler* signalHandler)
+        {itsSignalHandler = signalHandler;}
 #ifdef DEBUG_SCHEDULER
 	void printSelectedTasks(const std::string &callerName) const;
 #endif
@@ -237,6 +239,7 @@ private:
 
 signals:
 	void schedulerSettingsChanged(void);
+    void statusSASDialogFeedback(bool);
 
 public slots:
     // exit Scheduler application after some checks
@@ -285,7 +288,7 @@ private slots:
 
 	void downloadSASSchedule(void);
 	void InitSynchronizeSASSchedule(void);
-	void checkSASStatus(void) const;
+    void checkSASStatus(void);
 
 
 public:
@@ -302,6 +305,7 @@ private:
 	ConflictDialog *itsConflictDialog;
 	SchedulerData data;
 	DataHandler *itsDataHandler;
+    SignalHandler *itsSignalHandler;
 
 	AstroDateTime itsTimeNow;
 	std::vector<unsigned> itsSelectedTasks;

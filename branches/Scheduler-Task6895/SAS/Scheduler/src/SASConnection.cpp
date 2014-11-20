@@ -4831,7 +4831,6 @@ bool SASConnection::checkSASStatus(void) {
     QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
 
     statDlg.show();
-    statDlg.addText("USing refactored SAS status version.");
     int result = connect();
     // connection ok // write permission ok
     if (result == 0)

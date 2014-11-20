@@ -20,18 +20,17 @@
 // In this case a queued connection is used, therefore you’re required to run
 // an event loop in the thread the Thread object is living in.
 // http://qt-project.org/wiki/ThreadsEventsQObjects
-
-SignalHandler::SignalHandler(QApplication *app, Controller *c)
+// https://samdutton.wordpress.com/2008/10/03/debugging-signals-and-slots-in-qt/
+SignalHandler::SignalHandler(QApplication &app, Controller &c)
 {
-    itsApplication = app;
-    itsController = c;
+    itsApplication = &app;
+    itsController = &c;
+
+    itsController->setSignalHandler(this);
     // Create the connection between the SignalHandler class and the possible
     // items to action upon.
 
     connectSignals();
-    connect(itsController->gui->getSchedulerGUIClass().action_DownloadSASSchedule,
-            SIGNAL(triggered()), itsController, SLOT(downloadSASSchedule()));
-
 }
 
 void SignalHandler::connectSignals(void)
@@ -44,6 +43,7 @@ void SignalHandler::connectSignals(void)
     connect(this,          SIGNAL(downloadSASSchedule()),
             itsController, SLOT(downloadSASSchedule()));
 
+    //TODO: I'm not happy with this dereferenced pointer pointer magix
     connect(this,          SIGNAL(closeSASScheduleDownloadDialog()),
             &(itsController->itsSASConnection->progressDialog()), SLOT(close()));
 
@@ -56,6 +56,11 @@ void SignalHandler::connectSignals(void)
     connect(this,          SIGNAL(closeCheckSASStatusDialog()),
             &(itsController->itsSASConnection->getSASStatusDialog()), SLOT(close()));
 
+}
+
+bool SignalHandler::getStatusSASDialogFeedbackResult()
+{
+    return statusSASDialogFeedbackResult;
 }
 
 int SignalHandler::signalForward(std::string action, std::string /*parameter*/)
@@ -91,4 +96,8 @@ int SignalHandler::signalForward(std::string action, std::string /*parameter*/)
     return 0;
 }
 
-
+// TODO: Refactor into a generic feedback handler?
+void SignalHandler::statusSASDialogFeedback(bool result)
+{
+     statusSASDialogFeedbackResult = result;
+}
