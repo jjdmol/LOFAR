@@ -642,7 +642,7 @@ namespace LOFAR
       itsH5File.projectCOI().value = oss.str();
       itsH5File.projectContact().value = itsParset.getString("Observation.Campaign.contact", "");
 
-      itsH5File.observationID().value = formatString("%u", itsParset.observationID());
+      itsH5File.settings.observationID.value = formatString("%u", itsParset.settings.observationID);
 
       itsH5File.observationStartUTC().value = utcTimeStr(itsParset.startTime());
       itsH5File.observationStartMJD().value = toMJD(itsParset.startTime());
@@ -654,7 +654,7 @@ namespace LOFAR
       itsH5File.observationEndUTC().value = utcTimeStr(stopTime);
       itsH5File.observationEndMJD().value = toMJD(stopTime);
 
-      itsH5File.observationNofStations().value = itsParset.nrStations(); // TODO: SS beamformer?
+      itsH5File.observationNofStations().value = itsParset.settings.antennaFields.size(); // TODO: SS beamformer?
       // For the observation attribs, dump all stations participating in the observation (i.e. allStationNames(), not mergedStationNames()).
       // This may not correspond to which station HDF5 groups will be written for TBB, but that is true anyway, regardless of any merging.
       vector<string> allStNames(itsParset.allStationNames());
@@ -901,7 +901,7 @@ namespace LOFAR
     {
       /*
        * LOFAR uses a sample rate of either 200 or 160 MHz.
-       * In transient mode, at 200 MHz we get 1024 samples per frame, and thus 195213.5 frames per second.
+       * In transient mode, at 200 MHz we get 1024 samples per frame, and thus 195312.5 frames per second.
        * This means that every 2 seconds, a frame overlaps a seconds boundary. But the sample values generated
        * by the RSPs start at zero for each second, even if it should start at 512 for odd timestamps at 200 MHz.
        * At 160 MHz sample rate, an integer number of frames fits in a second (156250), so no correction is needed.
@@ -1218,7 +1218,7 @@ namespace LOFAR
     string TBB_Writer::createNewTBB_H5Filename(const TBB_Header& header, const string& stationName)
     {
       const string typeExt("tbb.h5");
-      string obsIDStr(formatString("%u", itsParset.observationID()));
+      string obsIDStr(formatString("%u", itsParset.settings.observationID));
 
       // Use the recording time of the first (received) frame as timestamp.
       struct timeval tv;

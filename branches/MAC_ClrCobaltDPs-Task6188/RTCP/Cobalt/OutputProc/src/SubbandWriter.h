@@ -58,8 +58,12 @@ namespace LOFAR
 
       ParameterSet feedbackLTA() const;
 
+      unsigned streamNr() const { return itsStreamNr; }
+
     private:
       static const unsigned maxReceiveQueueSize = 60;
+
+      const unsigned itsStreamNr;
 
       Pool<StreamableData> itsOutputPool;
 

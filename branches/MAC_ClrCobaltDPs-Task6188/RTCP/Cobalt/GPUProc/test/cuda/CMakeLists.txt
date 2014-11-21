@@ -13,14 +13,21 @@ if(UNITTEST++_FOUND)
   # GPU kernel UnitTest++ tests
   lofar_add_test(tDelayAndBandPass tDelayAndBandPass.cc)
   lofar_add_test(tBandPassCorrection tBandPassCorrection.cc)
+  lofar_add_test(tCorrelatorPerformance tCorrelatorPerformance.cc)
   lofar_add_test(tIntToFloat tIntToFloat.cc)
 
   set_tests_properties(
     tDelayAndBandPass
     tBandPassCorrection
+    tCorrelatorPerformance
     tIncoherentStokes
     tIntToFloat
     PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
+  )
+
+  set_tests_properties(
+    tCorrelatorPerformance
+    PROPERTIES RUN_SERIAL ON
   )
 endif(UNITTEST++_FOUND)
 
@@ -35,6 +42,7 @@ lofar_add_test(tFIR_Filter tFIR_Filter.cc)
 lofar_add_test(tFFT tFFT.cc)
 #lofar_add_executable(tFFT_leakage tFFT_leakage.cc)  # not an automatic test, keep buildable (doesn't right now)
 lofar_add_test(tCorrelator tCorrelator.cc)
+lofar_add_test(tCorrelator2 tCorrelator2.cc)
 lofar_add_test(tBeamFormer tBeamFormer.cc)
 lofar_add_test(tTranspose tTranspose.cc)
 lofar_add_test(tTranspose2 tTranspose2.cc)
@@ -46,6 +54,7 @@ lofar_add_test(tIncoherentStokesTranspose tIncoherentStokesTranspose.cc)
 set_tests_properties(
   tFIR_Filter
   tCorrelator
+  tCorrelator2
   tBeamFormer
   tTranspose
   tTranspose2
@@ -60,7 +69,7 @@ set_tests_properties(
 # CUDA driver API tests need a .ptx file compiled first and passed to the host code compilation.
 # This way we don't need a generated .sh file, nor compile to .ptx from our test code.
 cuda_compile_ptx(tcuda_driver_api_ptx tcuda-driver-api.cu)
-cuda_add_executable(tcuda-driver-api  tcuda-driver-api.cu  OPTIONS "-DPTX_FILE_CSTR=\"${tcuda_driver_api_ptx}\"")
+cuda_add_executable(tcuda-driver-api  tcuda-driver-api.cu  OPTIONS "-DPTX_FILENAME=${tcuda_driver_api_ptx}")
 target_link_libraries(tcuda-driver-api cuda)
 add_test(tcuda-driver-api  "${CMAKE_CURRENT_BINARY_DIR}/tcuda-driver-api")
 

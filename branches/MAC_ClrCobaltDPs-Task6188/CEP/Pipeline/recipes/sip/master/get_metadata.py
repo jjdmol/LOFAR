@@ -44,6 +44,11 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
             '--parset-prefix',
             help="Prefix for each key in the output parset file",
             default=''
+        ),
+        'toplevel_meta_data_path': ingredient.StringField(
+            '--toplevel-meta-data',
+            help="Path to parset with toplevel meta information, default = ''",
+            default=''
         )
     }
 
@@ -116,6 +121,13 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
         parset = parameterset()
         prefix = "Output_%s_" % product_type
         parset.replace('%snrOf%s' % (global_prefix, prefix), str(len(jobs)))
+
+        # If there is meta data to add from the toplevel script
+        pipeline_meta_parset_path = self.inputs['toplevel_meta_data_path']
+        if pipeline_meta_parset_path != "":
+            pipeline_meta_parset = parameterset(pipeline_meta_parset_path)
+            parset.adoptCollection(pipeline_meta_parset)
+
         prefix = global_prefix + prefix
         for idx, job in enumerate(jobs):
             self.logger.debug("job[%d].results = %s" % (idx, job.results))

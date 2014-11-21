@@ -15,18 +15,19 @@ lofar_add_library(dppp
   Apply.cc EstimateMixed.cc EstimateNew.cc Simulate.cc Simulator.cc
   SubtractMixed.cc SubtractNew.cc
   ModelComponent.cc PointSource.cc GaussianSource.cc Patch.cc
-  ModelComponentVisitor.cc
+  ModelComponentVisitor.cc GainCal.cc
   DemixerNew.cc DemixInfo.cc DemixWorker.cc
-  FlaggerStatistics.cc
 )
 
 lofar_add_bin_program(NDPPP NDPPP.cc)
-#lofar_add_bin_program(IDPPP IDPPP.cc PipelineProcessControl.cc)
 lofar_add_bin_program(versiondppp versiondppp.cc)
 
+install(CODE "EXECUTE_PROCESS(
+  COMMAND \"${CMAKE_COMMAND}\" -E create_symlink NDPPP DPPP WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/bin
+  )"
+)
+
 install(PROGRAMS
-  mwflagger
-  mwflagger-part
   taqlflagger
   DESTINATION bin)
 

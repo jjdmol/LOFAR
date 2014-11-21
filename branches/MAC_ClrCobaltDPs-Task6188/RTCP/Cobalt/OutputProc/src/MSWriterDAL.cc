@@ -110,7 +110,7 @@ namespace LOFAR
       itsNextSeqNr(0),
       itsFileNr(fileno)
     {
-      itsNrExpectedBlocks = itsParset.nrBeamFormedBlocks();
+      itsNrExpectedBlocks = itsParset.settings.nrBlocks();
 
       string h5filename = forceextension(string(filename),".h5");
       string rawfilename = forceextension(string(filename),".raw");
@@ -140,13 +140,11 @@ namespace LOFAR
       unsigned nrSubbands = f.lastSubbandIdx - f.firstSubbandIdx;
 
       itsNrChannels = stokesSet.nrChannels * nrSubbands; 
-      itsNrSamples = parset.settings.nrSamplesPerSubband() /
+      itsNrSamples = parset.settings.blockSize /
                      stokesSet.nrChannels / stokesSet.timeIntegrationFactor;
 
       itsBlockSize = itsNrSamples * itsNrChannels;
 
-      unsigned nrBlocks = parset.nrBeamFormedBlocks();
-      
       //*******************************
 
       vector<string> stokesVars;
@@ -205,21 +203,21 @@ namespace LOFAR
       file.projectCOI().value = oss.str();
       file.projectContact().value = parset.getString("Observation.Campaign.contact", "");
 
-      file.observationID().value = str(format("%u") % parset.observationID());
+      file.observationID().value = str(format("%u") % parset.settings.observationID);
 
       file.observationStartUTC().value = toUTC(parset.settings.startTime);
       file.observationStartMJD().value = toMJD(parset.settings.startTime);
 
       // The stop time can be a bit further than the one actually specified, because we process in blocks.
-      double stopTime = parset.settings.startTime + nrBlocks * parset.settings.blockDuration();
+      double stopTime = parset.settings.startTime + itsNrExpectedBlocks * parset.settings.blockDuration();
 
       file.observationEndUTC().value = toUTC(stopTime);
       file.observationEndMJD().value = toMJD(stopTime);
 
-      file.observationNofStations().value = parset.nrStations(); // TODO: SS beamformer?
+      file.observationNofStations().value = parset.settings.antennaFields.size(); // TODO: SS beamformer?
       file.observationStationsList().value = parset.allStationNames(); // TODO: SS beamformer?
 
-      double subbandBandwidth = parset.subbandBandwidth();
+      double subbandBandwidth = parset.settings.subbandWidth();
       double channelBandwidth = subbandBandwidth / stokesSet.nrChannels;
 
       // if PPF is used, the frequencies are shifted down by half a channel
@@ -228,8 +226,8 @@ namespace LOFAR
       double frequencyOffsetPPF = stokesSet.nrChannels > 1 ? 0.5 * channelBandwidth : 0.0; // TODO: cover both CS and IS!
 
       // For the whole obs, regardless which SAP and subbands (parts) this file contains.
-      vector<double> subbandCenterFrequencies(parset.nrSubbands());
-      for(size_t sb = 0; sb < parset.nrSubbands(); ++sb)
+      vector<double> subbandCenterFrequencies(parset.settings.subbands.size());
+      for(size_t sb = 0; sb < parset.settings.subbands.size(); ++sb)
         subbandCenterFrequencies[sb] = parset.settings.subbands[sb].centralFrequency;
 
       double min_centerfrequency = *min_element( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end() );
@@ -269,7 +267,7 @@ namespace LOFAR
       file.BFFormat().value = "TAB";
       file.BFVersion().value = str(format("Cobalt/OutputProc %s r%s using DAL %s and HDF5 %s") % OutputProcVersion::getVersion() % OutputProcVersion::getRevision() % dal::version().to_string() % dal::version_hdf5().to_string());
 
-      file.totalIntegrationTime().value = nrBlocks * parset.settings.blockDuration();
+      file.totalIntegrationTime().value = itsNrExpectedBlocks * parset.settings.blockDuration();
       file.totalIntegrationTimeUnit().value = "s";
 
       //file.subArrayPointingDiameter().value = 0.0;
@@ -298,7 +296,7 @@ namespace LOFAR
 
       // TODO: fix the system to use the parset.beamDuration(sapNr), but OLAP
       // does not work that way yet (beamDuration is currently unsupported).
-      sap.totalIntegrationTime().value = nrBlocks * parset.settings.blockDuration();
+      sap.totalIntegrationTime().value = itsNrExpectedBlocks * parset.settings.blockDuration();
       sap.totalIntegrationTimeUnit().value = "s";
 
       // TODO: non-J2000 pointings.
@@ -363,10 +361,10 @@ namespace LOFAR
       beam.beamDiameterDEC().value = 0;
       beam.beamDiameterDECUnit().value = "arcmin";
 
-      beam.nofSamples().value = itsNrSamples * nrBlocks;
-      beam.samplingRate().value = parset.subbandBandwidth() / stokesSet.nrChannels / stokesSet.timeIntegrationFactor;
+      beam.nofSamples().value = itsNrSamples * itsNrExpectedBlocks;
+      beam.samplingRate().value = parset.settings.subbandWidth() / stokesSet.nrChannels / stokesSet.timeIntegrationFactor;
       beam.samplingRateUnit().value = "Hz";
-      beam.samplingTime().value = parset.sampleDuration() * stokesSet.nrChannels * stokesSet.timeIntegrationFactor;
+      beam.samplingTime().value = parset.settings.sampleDuration() * stokesSet.nrChannels * stokesSet.timeIntegrationFactor;
       beam.samplingTimeUnit().value = "s";
 
       beam.channelsPerSubband().value = stokesSet.nrChannels;
@@ -469,7 +467,7 @@ namespace LOFAR
       spectralCoordinate.get()->storageType().value = vector<string>(1,"Tabular");
       spectralCoordinate.get()->nofAxes().value = 1;
       spectralCoordinate.get()->axisNames().value = vector<string>(1,"Frequency");
-      spectralCoordinate.get()->axisUnits().value = vector<string>(1,"MHz");
+      spectralCoordinate.get()->axisUnits().value = vector<string>(1,"Hz");
 
       spectralCoordinate.get()->referenceValue().value = 0; // not used
       spectralCoordinate.get()->referencePixel().value = 0; // not used
@@ -502,7 +500,7 @@ namespace LOFAR
 
       vector<ssize_t> dims(2), maxdims(2);
 
-      dims[0] = itsNrSamples * nrBlocks;
+      dims[0] = itsNrSamples * itsNrExpectedBlocks;
       dims[1] = itsNrChannels;
 
       maxdims[0] = -1;

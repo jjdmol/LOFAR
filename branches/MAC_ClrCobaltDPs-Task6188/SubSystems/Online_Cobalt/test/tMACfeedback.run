@@ -2,34 +2,43 @@
 
 . ./testFuncs.sh
 
-PARSET=$PWD/tMACfeedback.in_parset
+function test_parset {
+  PARSET="$1" 
+  EXPECTED_OBSRESULT="$2"
+  EXTRA_PARAMS="$3"
 
-# Add the connection information for this test
-echo "Cobalt.Feedback.host=localhost" >> $PARSET
-echo "Cobalt.Feedback.remotePath=$LOFARROOT/var/run" >> $PARSET
-echo "Cobalt.FinalMetaDataGatherer.host=localhost" >> $PARSET
+  echo "Testing $PARSET, expecting result $EXPECTED_OBSRESULT"
 
-# Start a mock OnlineControl to verify the communications of runObservation.sh
-$srcdir/MockOnlineControl.sh $PARSET &
-ONLINECONTROL_PID=$!
+  # Add the connection information for this test
+  echo "Cobalt.Feedback.host=localhost" >> $PARSET
+  echo "Cobalt.Feedback.remotePath=$LOFARROOT/var/run" >> $PARSET
+  echo "Cobalt.FinalMetaDataGatherer.host=localhost" >> $PARSET
 
-# Run the observation
-runObservation.sh -B -C -l 1 $PARSET
-OBSRESULT=$?
+  # Start a mock OnlineControl to verify the communications of runObservation.sh
+  $srcdir/MockOnlineControl.sh $PARSET &
+  ONLINECONTROL_PID=$!
 
-# Wait for OnlineControl to finish
-wait $ONLINECONTROL_PID
-ONLINECONTROLRESULT=$?
+  # Run the observation
+  runObservation.sh -B -C -l 1 $EXTRA_PARAMS $PARSET
+  OBSRESULT=$?
 
-if [ $OBSRESULT -gt 0 ]; then
-  echo "runObservation.sh failed (status: $OBSRESULT)"
-  exit $OBSRESULT
-fi
+  # Wait for OnlineControl to finish
+  wait $ONLINECONTROL_PID
+  ONLINECONTROLRESULT=$?
 
-if [ $ONLINECONTROLRESULT -gt 0 ]; then
-  echo "MockOnlineControl.sh failed (status: $ONLINECONTROLRESULT)"
-  exit $ONLINECONTROLRESULT
-fi
+  if [ $OBSRESULT -ne $EXPECTED_OBSRESULT ]; then
+    echo "runObservation.sh failed (status: $OBSRESULT)"
+    exit 1
+  fi
+
+  if [ $ONLINECONTROLRESULT -gt 0 ]; then
+    echo "MockOnlineControl.sh failed (status: $ONLINECONTROLRESULT)"
+    exit 1
+  fi
+}
+
+test_parset $PWD/tMACfeedback.in_parset_success_1 0 ""
+test_parset $PWD/tMACfeedback.in_parset_failure_1 1 "-o Cobalt.Nodes=[unreachable]"
 
 # Everything went ok
 exit 0

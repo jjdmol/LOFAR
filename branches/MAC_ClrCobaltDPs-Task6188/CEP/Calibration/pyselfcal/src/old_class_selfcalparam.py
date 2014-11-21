@@ -199,7 +199,7 @@ class selfCalParam:
 		cmd12	= """Step.solve.Model.Ionosphere.Enable = F\n"""
 		cmd13	= """Step.solve.Model.TEC.Enable = F\n"""
 		cmd14	= """Step.solve.Model.Phasors.Enable = T # If solving for AMP or PHASE, or if in addition TEC is enabled. For TEC only, it's F.\n"""
-		cmd15	= """Step.solve.Solve.Mode = PHASE  #Step.solve.Solve.Mode = COMPLEX\n"""
+		cmd15	= """Step.solve.Solve.Mode = COMPLEX  #Step.solve.Solve.Mode = COMPLEX\n"""
 		cmd16	= """Step.solve.Solve.Parms = ["Gain:0:0:Phase:*", "Gain:1:1:Phase:*"]\n"""
 		cmd17	= """Step.solve.Solve.CellSize.Freq = 0 # If not enough SNR, phase solve over entire band of concatenated data\n"""
 		cmd18	= """Step.solve.Solve.CellSize.Time = 1\n"""

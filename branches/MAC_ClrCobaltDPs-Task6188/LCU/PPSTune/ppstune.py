@@ -15,7 +15,7 @@ import signal, inspect
 import subprocess
 import logging
 import pwd
-from math import log
+from math import log, floor
 
 
 try:
@@ -53,9 +53,9 @@ def version_string():
     **Example**
 
     >>> version_string()
-    '1.1'
+    '1.4'
     '''
-    return '1.1'
+    return '1.4'
 
 
 #######################
@@ -686,8 +686,10 @@ def set_clock_frequency_mhz(clock_mhz, rspctl_cmd = '/opt/lofar/bin/rspctl', tim
                                                 timeout_s  = timeout_s)
     if current_clock_mhz != clock_mhz:
         logging.info('Switching clock to %d MHz', clock_mhz)
-        check_output([rspctl_cmd, '--clock', str(clock_mhz)], timeout_s = 1.0)
-        time.sleep(1.0)
+        check_output([rspctl_cmd, '--clock=%d' % clock_mhz], timeout_s = 1.0)
+        time.sleep(10.0) # Clock switch takes ~ 45 s, but only starts
+        # after a couple sec. If one does not wait enough, one may
+        # still see the clock in the previous clock mode.
         current_clock_mhz = wait_for_clocks_to_lock(rspctl_cmd = rspctl_cmd,
                                                     timeout_s  = timeout_s)
         if current_clock_mhz != clock_mhz:
@@ -937,7 +939,8 @@ def rspctl_status_diffs(rspctl_cmd = '/opt/lofar/bin/rspctl', sleep_s = 1.0, tim
     r'''
     Analyze the output of ``rspctl --status`` to obtain the diffs and
     determine if we are measuring the diffs in an even or an odd
-    second since startup of the boards.
+    second since startup of the boards, or if we are in 160 MHz clock
+    mode.
 
     **Parameters**
 
@@ -972,6 +975,9 @@ def rspctl_status_diffs(rspctl_cmd = '/opt/lofar/bin/rspctl', sleep_s = 1.0, tim
     ('odd', [512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 511, 512, 512, 512, 512, 511, 512, 512, 512, 512, 513, 512, 512, 512, 512, 513])
     >>> rspctl_status_diffs('test/rspctl-even', sleep_s = 0.0)
     ('even', [0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    >>> rspctl_status_diffs('test/rspctl-160', sleep_s = 0.0)
+    ('even', [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0])
+
     '''
     time.sleep(sleep_s)
     rspctl = check_output([rspctl_cmd, '--status'], timeout_s = timeout_s)
@@ -983,15 +989,17 @@ def rspctl_status_diffs(rspctl_cmd = '/opt/lofar/bin/rspctl', sleep_s = 1.0, tim
                                for line_no in diff_header_line_no])
     records    = [parse_rspctl_status_diff_line(line) for line in diff_lines]
     diffs      = [record['diff']             for record in records]
-    even       = [record['slices'] == 195312 for record in records]
-    odd        = [record['slices'] == 195313 for record in records]
-
-    if all(even):
+    slices_even_second = [record['slices'] == 195312 for record in records]
+    slices_odd_second  = [record['slices'] == 195313 for record in records]
+    slices_160_mhz = [record['slices'] == 156250 for record in records]
+    if all(slices_even_second):
         return ('even', diffs)
-    elif all(odd):
+    elif all(slices_odd_second):
         return ('odd', diffs)
+    elif all(slices_160_mhz):
+        return('even', diffs)
     else:
-        raise RuntimeError('Measurement not in one second')
+        raise RuntimeError('rspctl_status_diffs(): Measurement not in one second or clock neither in 160 nor 200 MHz: please look at slices\n$ rspctl --status\n%s' % rspctl)
         
 
 def fan_state(state_byte):
@@ -1052,18 +1060,19 @@ def statusdata_command(station):
     **Examples**
 
     >>> statusdata_command('CS101')
-    'test/envcontroltest/nlStatusData.py'
+    '/opt/lofar/sbin/nlStatusData.py'
     >>> statusdata_command('RS509')
-    'test/envcontroltest/nlStatusData.py'
+    '/opt/lofar/sbin/nlStatusData.py'
     >>> statusdata_command('FR606')
-    'test/envcontroltest/isStatusData.py'
+    '/opt/lofar/sbin/isStatusData.py'
     >>> statusdata_command('brazil_101')
-    'test/envcontroltest/isStatusData.py'
+    '/opt/lofar/sbin/isStatusData.py'
     '''
     if is_nl(station):
         return '/opt/lofar/sbin/nlStatusData.py'
     else:
         return '/opt/lofar/sbin/isStatusData.py'
+    
 
 
 def cabinet_climate(statusdata_cmd):
@@ -1499,8 +1508,8 @@ def measure_all_delays(station, clock_mhz,
         Command to run rspctl. Use a different value for testing.        
 
     num_delay_steps : int
-        Number of 0.078 ns delay steps to scan. Default is the maximum
-        of 64 at LOFAR RSP boards.
+        Number of 0.075 ns delay steps to scan at 200 MHz, 0.060 ns at
+        160 MHz. Default is the maximum of 64 at LOFAR RSP boards.
 
 
     **Returns**
@@ -1768,12 +1777,16 @@ def ap_optimal_delay_step(ap_failures, cycle_length = 67):
     **Returns**
 
     An int containing the index of the point that is farthest away
-    from any failures.
+    from any failures. Returns -floor(cycle_length/2) if the number of
+    tuning failures is the same at every PPS delay. In that case, it
+    is most likely that the flank ended up in the unprobed tuning
+    range. The optimum will than be at arount +cycle_length/2 (or
+    -cycle_length/2 % cycle_length).
 
     **Examples**
 
     >>> ap_optimal_delay_step([0,0,0,0,0,0,0])
-    0
+    -33
 
     Here is a very long sequence of zeros:
 
@@ -1800,7 +1813,7 @@ def ap_optimal_delay_step(ap_failures, cycle_length = 67):
     at_minimum = [fails == minimum for fails in ap_failures]
     
     if all(at_minimum):
-        return 0
+        return -int(floor(cycle_length/2))
 
     d_forward = distance_forward(at_minimum, False)
     d_reverse = distance_forward(at_minimum[::-1], False)[::-1]
@@ -1840,7 +1853,7 @@ def find_optimal_delays(diff_error_counts):
 
     >>> diff_error_counts = eval(open('testdata/rs106-fails.txt').read())
     >>> find_optimal_delays(diff_error_counts)
-    [28, 33, 39, 45, 29, 34, 42, 46, 27, 34, 41, 46, 26, 33, 40, 46, 27, 35, 42, 46, 30, 35, 63, 46, 28, 63, 42, 63, 27, 29, 41, 46, 31, 36, 44, 49, 30, 35, 43, 49, 33, 39, 44, 49, 29, 36, 41, 46]
+    [28, 33, 39, 45, 29, 34, 42, 46, 27, 34, 41, 46, 26, 33, 40, 46, 27, 35, 42, 46, 30, 35, 33, 46, 28, 33, 42, 33, 27, 29, 41, 46, 31, 36, 44, 49, 30, 35, 43, 49, 33, 39, 44, 49, 29, 36, 41, 46]
     '''
     logging.debug('find_optimal_delays(%r)', diff_error_counts)
     diff_errors_t = transpose_lists(diff_error_counts)
@@ -1848,7 +1861,8 @@ def find_optimal_delays(diff_error_counts):
                      for ap_failures in diff_errors_t]
     logging.info('Raw optimum: [%s]',
                  ' '.join([('%3d' % step) for step in optimal_steps]))
-    median_optimal_step = sorted(optimal_steps)[len(optimal_steps)/2]
+    sorted_filtered_optimal_steps = sorted([step for step in optimal_steps if step >= 0])
+    median_optimal_step = sorted_filtered_optimal_steps[len(sorted_filtered_optimal_steps)/2]
     median_optimal_step = median_optimal_step % 66
     if median_optimal_step > 65:
         median_optimal_step = 0
@@ -1857,7 +1871,10 @@ def find_optimal_delays(diff_error_counts):
     logging.info('median_optimal_step = %r', median_optimal_step)
 
     corrected = []
-    for step in optimal_steps:
+    for antenna_processor, step in enumerate(optimal_steps):
+        if step < 0:
+            logging.warn('AP %02d: no pulse edge detected (assuming it\'s in the unprobed regime).',
+                         antenna_processor)
         corr = step % 66
         # Avoid impossible tuning range
         if corr > 65:
@@ -1902,22 +1919,24 @@ def pps_delays_conf(station, start_date, pps_delays):
 
     **Examples**
 
-    >>> print(pps_delays_conf('CS030', 1332246766.307168,
+    >>> expected = """#
+    ... # PPSdelays.conf for CS030
+    ... #
+    ... # Created by %s
+    ... #
+    ... # 2012-03-20 12:32:46
+    ... #
+    ... 
+    ... 48 [
+    ...  36  26  21  36  17  53  49   9  50   7  51  48  60  42  11  37
+    ...  47  57  33  47  49  22   2  51  61  44  14  63  61   3  37  19
+    ...  57  36  35  54  35  34  42  60  59  63  63  37   4  53  52  10
+    ... ]""" % pwd.getpwuid(os.getuid()).pw_name
+    >>> expected == pps_delays_conf('CS030', 1332246766.307168,
     ... [36, 26, 21, 36, 17, 53, 49, 9, 50, 7, 51, 48, 60, 42, 11, 37,
     ...  47, 57, 33, 47, 49, 22, 2, 51, 61, 44, 14, 63, 61, 3, 37, 19,
-    ...  57, 36, 35, 54, 35, 34, 42, 60, 59, 63, 63, 37, 4, 53, 52, 10]))
-    #
-    # PPSdelays.conf for CS030
-    #
-    # 2012-03-20 12:32:46
-    #
-    <BLANKLINE>
-    48 [
-     36  26  21  36  17  53  49   9  50   7  51  48  60  42  11  37
-     47  57  33  47  49  22   2  51  61  44  14  63  61   3  37  19
-     57  36  35  54  35  34  42  60  59  63  63  37   4  53  52  10
-    ]
-
+    ...  57, 36, 35, 54, 35, 34, 42, 60, 59, 63, 63, 37, 4, 53, 52, 10])
+    True
     '''
 
     header_format = '''#
@@ -1929,8 +1948,8 @@ def pps_delays_conf(station, start_date, pps_delays):
 #
 
 '''
-    user =  pwd.getpwuid(os.getuid()).pw_name
-    header = header_format % ((station,user,)+gmtime_tuple(start_date))
+    user = pwd.getpwuid(os.getuid()).pw_name
+    header = header_format % ((station, user)+gmtime_tuple(start_date))
     contents = header + str(len(pps_delays)) + ' [\n'
     for subrack in range(len(pps_delays) / 16):
         subrack_delays = pps_delays[subrack*16:(subrack+1)*16]
@@ -1971,7 +1990,7 @@ def parse_command_line(argv):
     **Examples**
 
     >>> parse_command_line(['ppstune.py']).output_dir
-    '/opt/lofar/etc'
+    '/localhome/ppstune/data'
     >>> parse_command_line(['ppstune.py', '--output-dir', '/tmp']).output_dir
     '/tmp'
     >>> parse_command_line(['ppstune.py', '--edge', 'both']).edge
@@ -2006,7 +2025,7 @@ def parse_command_line(argv):
     
     '''
     prefix  = os.path.join('/localhome', 'ppstune', 'data')
-    log_dir = os.path.join('/localhome', 'ppstune','log')
+    log_dir = os.path.join('/localhome', 'ppstune', 'log')
     parser  = OptionParser(usage   = 'python2 %prog [options]',
                            version = '%prog '+version_string())
     parser.add_option('--output-dir', type = 'string',
@@ -2667,7 +2686,7 @@ def pps_tune_main(argv):
 
             pps_delays = pps_delays_conf(station, start_date, new_delays)
             logging.info('New delays:\n%s', pps_delays)
-            
+
             if old_delays:
                 logging.info('Difference new - old:\n%r',
                              [p_new - p_old
@@ -2721,10 +2740,18 @@ def pps_tune_main(argv):
             logging.info('Clocks locked to %d MHz', clock_mhz)
             for swlevel_step in range(2, initial_swlevel+1):
                 swlevel(swlevel_step)
-            logging.info('Starting TBBs...')
-            start_tbb_output = check_output('/home/lofarsys/startTBB.sh',
-                                            timeout_s = 60.0)
-            logging.debug('startTBB.sh output:\n%s', start_tbb_output)
+            start_tbb_sh = os.path.join('/home', 'lofarsys', 'startTBB.sh')
+            if os.path.exists(start_tbb_sh):
+                logging.info('Starting TBBs...')
+                start_tbb_output = check_output(start_tbb_sh, timeout_s=60.0)
+                logging.debug('startTBB.sh output:\n%s', start_tbb_output)
+            else:
+                logging.warn('''Will not start TBBs: %s not found.
+WARNING: ==============================================================
+WARNING: This is totally harmless when in local mode, but cause to warn
+WARNING: software support <softwaresupport@astron.nl> when in ILT mode.
+WARNING: ==============================================================''',
+                             start_tbb_sh)
         else:
             swlevel(initial_swlevel)
 

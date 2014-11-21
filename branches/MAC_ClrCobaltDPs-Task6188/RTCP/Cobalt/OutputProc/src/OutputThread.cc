@@ -139,21 +139,23 @@ namespace LOFAR
 
       ASSERTSTR(data->sequenceNumber() >= itsNextSequenceNumber, "Received block nr " << data->sequenceNumber() << " out of order! I expected nothing before " << itsNextSequenceNumber);
 
+      const string streamNrStr = '[' + lexical_cast<string>(itsStreamNr) + ']';
+
       if (droppedBlocks > 0) {
         itsBlocksDropped += droppedBlocks;
 
         LOG_WARN_STR(itsLogPrefix << "Just dropped " << droppedBlocks << " blocks. Dropped " << itsBlocksDropped << " blocks and written " << itsBlocksWritten << " blocks so far.");
 
-        itsMdLogger.log(itsMdKeyPrefix + PN_COP_DROPPED  + '[' + lexical_cast<string>(itsStreamNr) + ']',
+        itsMdLogger.log(itsMdKeyPrefix + PN_COP_DROPPED + streamNrStr,
                         itsBlocksDropped * static_cast<float>(itsParset.settings.blockDuration()));
       }
 
       itsNextSequenceNumber = data->sequenceNumber() + 1;
       itsBlocksWritten++;
 
-      itsMdLogger.log(itsMdKeyPrefix + PN_COP_DROPPING + '[' + lexical_cast<string>(itsStreamNr) + ']',
+      itsMdLogger.log(itsMdKeyPrefix + PN_COP_DROPPING + streamNrStr,
                       droppedBlocks > 0); // logged too late if dropping: not anymore...
-      itsMdLogger.log(itsMdKeyPrefix + PN_COP_WRITTEN  + '[' + lexical_cast<string>(itsStreamNr) + ']',
+      itsMdLogger.log(itsMdKeyPrefix + PN_COP_WRITTEN  + streamNrStr,
                       itsBlocksWritten * static_cast<float>(itsParset.settings.blockDuration()));
     }
 
@@ -177,6 +179,27 @@ namespace LOFAR
         // print debug info for the other blocks
         LOG_DEBUG_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written (" << itsWriter->percentageWritten() << "%), " << itsBlocksDropped << " blocks dropped");
       }
+    }
+
+
+    template<typename T>
+    void OutputThread<T>::logInitialStreamMetadataEvents(const string& dataProductType,
+                                                         const string& fileName,
+                                                         const string& directoryName)
+    {
+      // Write data points wrt @dataProductType output file for monitoring (PVSS).
+      const string streamNrStr = '[' + lexical_cast<string>(itsStreamNr) + ']';
+
+      itsMdLogger.log(itsMdKeyPrefix + PN_COP_DATA_PRODUCT_TYPE + streamNrStr, dataProductType);
+      itsMdLogger.log(itsMdKeyPrefix + PN_COP_FILE_NAME         + streamNrStr, fileName);
+      itsMdLogger.log(itsMdKeyPrefix + PN_COP_DIRECTORY         + streamNrStr, directoryName);
+
+      // After obs start these dynarray data points are written conditionally, so init.
+      // While we only have to write the last index (PVSSGateway will zero the rest),
+      // we'd have to find out who has the last subband. Don't bother, just init all.
+      itsMdLogger.log(itsMdKeyPrefix + PN_COP_DROPPING + streamNrStr, 0);
+      itsMdLogger.log(itsMdKeyPrefix + PN_COP_WRITTEN  + streamNrStr, 0.0f);
+      itsMdLogger.log(itsMdKeyPrefix + PN_COP_DROPPED  + streamNrStr, 0.0f);
     }
 
 
@@ -260,23 +283,19 @@ namespace LOFAR
 
       const std::string path = directoryName + "/" + fileName;
 
-   try
+      try
       {
         recursiveMakeDir(directoryName, itsLogPrefix);
         LOG_INFO_STR(itsLogPrefix << "Writing to " << path);
 
         itsWriter = new MSWriterCorrelated(itsLogPrefix, path, itsParset, itsStreamNr);
 
-        // Write data points wrt correlated output file for monitoring (PVSS)
-        // once we know the file could at least be created.
-        itsMdLogger.log(itsMdKeyPrefix + PN_COP_DATA_PRODUCT_TYPE + '[' + lexical_cast<string>(itsStreamNr) + ']', "Correlated");
-        itsMdLogger.log(itsMdKeyPrefix + PN_COP_FILE_NAME         + '[' + lexical_cast<string>(itsStreamNr) + ']', fileName);
-        itsMdLogger.log(itsMdKeyPrefix + PN_COP_DIRECTORY         + '[' + lexical_cast<string>(itsStreamNr) + ']', directoryName);
+        logInitialStreamMetadataEvents("Correlated", fileName, directoryName);
       } 
       catch (Exception &ex) 
       {
         LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
-        if ( !itsParset.realTime())   
+        if ( !itsParset.settings.realTime)   
           THROW(StorageException, ex); 
 
         itsWriter = new MSWriterNull(itsParset);
@@ -286,14 +305,14 @@ namespace LOFAR
       {
         LOG_ERROR_STR(itsLogPrefix << "Caught AipsError: " << ex.what());
 
-        if (!itsParset.realTime())    
+        if (!itsParset.settings.realTime)    
           THROW(StorageException, ex.what()); 
 
         itsWriter = new MSWriterNull(itsParset);
 #endif
       }
 
-      itsNrExpectedBlocks = itsParset.nrCorrelatedBlocks();
+      itsNrExpectedBlocks = itsParset.settings.correlator.nrIntegrations;
     }
 
 
@@ -341,16 +360,12 @@ namespace LOFAR
         itsWriter = new MSWriterFile(path);
 #endif
 
-        // Write data points for beamformed output file for monitoring (PVSS)
-        // once we know the file could at least be created.
-        itsMdLogger.log(itsMdKeyPrefix + PN_COP_DATA_PRODUCT_TYPE + '[' + lexical_cast<string>(itsStreamNr) + ']', "Beamformed");
-        itsMdLogger.log(itsMdKeyPrefix + PN_COP_FILE_NAME         + '[' + lexical_cast<string>(itsStreamNr) + ']', fileName);
-        itsMdLogger.log(itsMdKeyPrefix + PN_COP_DIRECTORY         + '[' + lexical_cast<string>(itsStreamNr) + ']', directoryName);
+        logInitialStreamMetadataEvents("Beamformed", fileName, directoryName);
       }
       catch (Exception &ex)
       {
         LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
-        if (!itsParset.realTime())
+        if (!itsParset.settings.realTime)
           THROW(StorageException, ex);
 
         itsWriter = new MSWriterNull(itsParset);
@@ -359,14 +374,14 @@ namespace LOFAR
       catch (casa::AipsError &ex) 
       {
         LOG_ERROR_STR(itsLogPrefix << "Caught AipsError: " << ex.what());
-        if ( !itsParset.realTime())       
+        if ( !itsParset.settings.realTime)       
           THROW(StorageException, ex.what());  
 
         itsWriter = new MSWriterNull(itsParset);
 #endif
       }
 
-      itsNrExpectedBlocks = itsParset.nrBeamFormedBlocks();
+      itsNrExpectedBlocks = itsParset.settings.nrBlocks();
     }
   } // namespace Cobalt
 } // namespace LOFAR

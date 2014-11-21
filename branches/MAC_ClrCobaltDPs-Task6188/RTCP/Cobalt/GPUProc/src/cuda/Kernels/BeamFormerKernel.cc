@@ -49,7 +49,7 @@ namespace LOFAR
       nrStations(ps.settings.antennaFields.size()),
 
       nrChannels(ps.settings.beamFormer.nrHighResolutionChannels),
-      nrSamplesPerChannel(ps.nrSamplesPerSubband() / nrChannels),
+      nrSamplesPerChannel(ps.settings.blockSize / nrChannels),
 
       nrSAPs(ps.settings.beamFormer.SAPs.size()),
       nrTABs(ps.settings.beamFormer.maxNrCoherentTABsPerSAP()),

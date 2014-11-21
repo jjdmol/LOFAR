@@ -19,7 +19,6 @@
 #----------------------------------------------------------------------------
 LOFAR				-		M	N	LOFAR
 PIC				-		M	N	LOFAR_PIC
-AARTFAAC			-		M	Y	LOFAR_PIC_AARTFAAC
 Ring				-		M	N	LOFAR_PIC_@ring@
 Station				-		M	Y	LOFAR_PIC_@ring@_@station@
 WAN				-		M	N	LOFAR_PIC_WAN
@@ -37,6 +36,7 @@ PVSS00pmon			-		M	Y	LOFAR_PermSW_Daemons_PVSS00pmon
 LogProcessor			-		M	Y	LOFAR_PermSW_Daemons_LogProcessor
 ServiceBroker			- 		M	Y	LOFAR_PermSW_Daemons_ServiceBroker
 SASGateway			-		M	Y	LOFAR_PermSW_Daemons_SASGateway
+PVSSGateway			-		M	Y	LOFAR_PermSW_Daemons_PVSSGateway
 SoftwareMonitor			-		M	Y	LOFAR_PermSW_Daemons_SoftwareMonitor
 CTStartDaemon			-		M	Y	LOFAR_PermSW_CTStartDaemon
 MACScheduler			MS		M	Y	LOFAR_PermSW_MACScheduler
@@ -79,6 +79,7 @@ CobaltOutputProc		COP		C	Y	LOFAR_ObsSW_@observation@_CobaltOutputProc
 #
 StnLOFAR			-		S	N	LOFAR
 StnPIC				-		S	N	LOFAR_PIC
+AARTFAAC			AF		S	Y	LOFAR_PIC_AARTFAAC
 Cabinet				CAB		S	N	LOFAR_PIC_@cabinet@
 SubRack				SRCK		S	N	LOFAR_PIC_@cabinet@_@subrack@
 RSPBoard			RSP		S	N	LOFAR_PIC_@cabinet@_@subrack@_@RSPBoard@
@@ -86,7 +87,7 @@ RCU				RCU		S	N	LOFAR_PIC_@cabinet@_@subrack@_@RSPBoard@_@rcu@
 TBBoard				TBB		S	Y	LOFAR_PIC_@cabinet@_@subrack@_@TBBoard@
 UniBoard	                UNI		S	N	LOFAR_PIC_Cabinet1_UniBoard
 FPGA		                FPGA		S	Y	LOFAR_PIC_Cabinet1_UniBoard_@fpga@
-UriBoard			URI		S	Y	LOFAR_PIC_@uriboard@
+URIBoard			URI		S	Y	LOFAR_PIC_@uriboard@
 LBAAntenna                      LBA             S       Y       LOFAR_PIC_@lbaantenna@
 HBAAntenna                      HBA             S       N       LOFAR_PIC_@hbaantenna@
 StationInfo			STI		S	Y	LOFAR_PIC_StationInfo
@@ -99,6 +100,7 @@ PVSS00pmon			-		S	Y	LOFAR_PermSW_Daemons_PVSS00pmon
 LogProcessor			LGP		S	Y	LOFAR_PermSW_Daemons_LogProcessor
 ServiceBroker			- 		S	Y	LOFAR_PermSW_Daemons_ServiceBroker
 SASGateway			SGW		S	Y	LOFAR_PermSW_Daemons_SASGateway
+PVSSGateway			-		S	Y	LOFAR_PermSW_Daemons_PVSSGateway
 SoftwareMonitor			SWM		S	Y	LOFAR_PermSW_Daemons_SoftwareMonitor
 CTStartDaemon			-		S	Y	LOFAR_PermSW_CTStartDaemon
 RSPDriver			-		S	Y	LOFAR_PermSW_RSPDriver
@@ -115,4 +117,3 @@ StnObservation			OBS		S	N	LOFAR_ObsSW_@observation@
 BeamControl			BC		S	Y	LOFAR_ObsSW_@observation@_BeamControl
 CalibrationControl		CC		S	Y	LOFAR_ObsSW_@observation@_CalibrationControl
 TBBControl			TBC		S	Y	LOFAR_ObsSW_@observation@_TBBControl
-

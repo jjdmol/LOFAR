@@ -1,12 +1,12 @@
 V 11
 1
 LANG:1 16 childStateBorder
-PANEL,-1 -1 335 89 N "_3DFace" 0
+PANEL,-1 -1 335 88 N "_3DFace" 0
 "main()
 {
   baseDP = \"LOFAR_PermSW\";
   database=dpSubStr(baseDP,DPSUB_SYS);
-  
+  /*
   activeObsDP =MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\";
   // check if MACScheduler pointenabled and accessible
   if (dpExists(activeObsDP)) {
@@ -17,6 +17,7 @@ PANEL,-1 -1 335 89 N "_3DFace" 0
   } else {
     if (!isStandalone()) LOG_ERROR(\"ObservationFlow_cobaltLocusNodeProcesses.pnl:main|Couldn't find DP to connect to: \"+activeObsDP);
   }	
+  */
 }
 " 0
  E "main(int x, int y)
@@ -109,8 +110,8 @@ void updateActiveObservations(string dp1, dyn_string obs,
   }
   
   LOG_DEBUG(\"ObservationFlow_cobaltLocusNodeProcesses.pnl:updateActiveObservations|observationList: \"+observationsList);
-//  connectCobaltNodesAndProcesses();
-  connectOutputProcs();
+//  connectCobaltLocusNodesAndProcesses();
+//  connectOutputProcs();
 }
 
 // connect to stationInputStreams from the active observations
@@ -122,26 +123,26 @@ void connectOutputProcs() {
     // change all found DP's to contain all the elements that contain the .dropping
     if (connectedOutputProcs) {
       dpDisconnect(\"outputProcCB\",connectToOutputProcs);
-      dynClear(connectToOutputProcs);
     }
-
+    dynClear(connectToOutputProcs);
+    DebugN(\"Found observations: \",observationsList);
     // prepare connectList
     for(int i=1; i <= dynlen(observationsList); i++) {
       // get all the OutputProcs used by this observation
       string dp = CEPDBName+claimManager_nameToRealName(\"LOFAR_ObsSW_\"+observationsList[i]);
       dynAppend(connectToOutputProcs,dp+\"_CobaltOutputProc.dropped:_online.._value\");
     }
-    
+    DebugN(\"Found connect points: \", connectToOutputProcs);
     // check if the required datapoint for this view is enabled and accessible
     if (navFunct_dpReachable(CEPDBName) && dynlen(connectToOutputProcs)>0 ){
       if (dpConnect(\"outputprocCB\", connectToOutputProcs) == -1) {
-        setValue(\"outputProcsObject\", \"backCol\", \"Lofar_dpdoesnotexist\");
+        setValue(\"outputProcsObject\", \"foreCol\", \"Lofar_dpdoesnotexist\");
       }
     } else {
-      setValue(\"outputProcsObject\", \"backCol\", \"Lofar_dpOffline\");
+      setValue(\"outputProcsObject\", \"foreCol\", \"Lofar_dpOffline\");
     }
   } else {
-      setValue(\"outputProcsObject\", \"backCol\", \"Lofar_off\");    
+      setValue(\"outputProcsObject\", \"foreCol\", \"Lofar_off\");    
   }
 }
 
@@ -206,7 +207,9 @@ void outputprocCB(dyn_string dps, dyn_dyn_bool values)
   string toolTipText = \"Dropping outputProcs<br>\";
   
   string color = \"Lofar_operational\";
-      
+
+  DebugN(\"found dps: \",dps);  
+  DebugN(\"found val: \",values);  
   for (int i = 1; i<= dynlen(values); i++) {
     dyn_float dropped;
     dyn_string lnodes;
@@ -230,7 +233,6 @@ void outputprocCB(dyn_string dps, dyn_dyn_bool values)
   setValue(\"outputProcsObject\", \"foreCol\", color);
 
  }
-
 
 void setStates(int state, int childState) {
    string SymbolCol;

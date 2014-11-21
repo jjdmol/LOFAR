@@ -890,7 +890,7 @@ void OnlineControl::_handleDisconnect(GCFPortInterface& port)
 	port.close();
 	// QUICKFIX #4022
 	if (&port == itsFeedbackPort) {
-		LOG_FATAL_STR("Lost connection with Feedback of OLAP.");
+		LOG_INFO_STR("Lost connection with Feedback of OLAP.");
 		delete itsFeedbackPort;
 		itsFeedbackPort = 0;
 	}

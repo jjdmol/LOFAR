@@ -96,7 +96,7 @@ updateObservations(string dp1, dyn_string obs,
     obsDP=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+obs[i]);
     
     
-    if (dpExists(obsDP)) {
+    if (dpExists(obsDP) && navFunct_isObservation(obs[i])) {
       myTable.appendLine(\"Name\",obs[i]);
       LOG_DEBUG(\"Observation_small.pnl:updateObservations|connecting : \"+obsDP);    
       if (dpConnect(\"updateObservationsTableValues\",obsDP + \".status.state\",
@@ -112,7 +112,7 @@ updateObservations(string dp1, dyn_string obs,
         updateObservationsTableValues(\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",true);
       }
          
-    } else {
+    } else if (!dpExists(obsDP)){
       LOG_ERROR(\"Observation_small.pnl:updateObservations|ERROR: Dp for LOFAR_ObsSW_\"+obs[i]+\" doesn't exist.\");   
     }
   }
@@ -211,7 +211,7 @@ void ObservationCallback(string dp1, bool aTrig) {
 {
   click(row);
 }" 0
- 1 0 1 6 0 "Name" 10 1 0 "s" 1
+ 1 0 1 6 0 "Name" 12 1 0 "s" 1
 LANG:1 4 Name
 E
 1

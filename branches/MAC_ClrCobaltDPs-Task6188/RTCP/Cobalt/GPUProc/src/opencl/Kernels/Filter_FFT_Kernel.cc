@@ -30,7 +30,7 @@ namespace LOFAR
   {
     Filter_FFT_Kernel::Filter_FFT_Kernel(const Parset &ps, cl::Context &context, cl::Buffer &devFilteredData)
       :
-      FFT_Kernel(context, ps.nrChannelsPerSubband(), ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerChannel(), true, devFilteredData)
+      FFT_Kernel(context, ps.nrChannelsPerSubband(), ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.nrSamplesPerChannel(), true, devFilteredData)
     {
     }
 

@@ -76,9 +76,14 @@ namespace LOFAR
       // Return the LTA feedback produced by this writer.
       ParameterSet feedbackLTA() const;
 
+      unsigned       streamNr() const { return itsStreamNr; }
+
     protected:
       void checkForDroppedData(StreamableData *);
       void doWork();
+      void logInitialStreamMetadataEvents(const std::string& dataProductType,
+                                          const std::string& fileName,
+                                          const std::string& directoryName);
 
       const Parset &itsParset;
       const unsigned itsStreamNr;
@@ -111,7 +116,7 @@ namespace LOFAR
                           const std::string &logPrefix,
                           const std::string &targetDirectory = "");
 
-      void           createMS();
+      virtual void createMS();
     };
 
 
@@ -129,7 +134,7 @@ namespace LOFAR
                       const std::string &logPrefix,
                       const std::string &targetDirectory = "");
 
-      void           createMS();
+      virtual void createMS();
     };
 
 

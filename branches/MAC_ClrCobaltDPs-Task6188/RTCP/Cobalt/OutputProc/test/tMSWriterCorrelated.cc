@@ -42,7 +42,7 @@ int main()
     MSWriterCorrelated writer("", "tMSWriterCorrelated.in_1/SB000.MS", parset, 0);
 
     // Write some data
-    CorrelatedData data(parset.nrMergedStations(), parset.nrChannelsPerSubband(), parset.integrationSteps(), heapAllocator, 512);
+    CorrelatedData data(parset.nrMergedStations(), parset.settings.correlator.nrChannels, parset.settings.correlator.nrSamplesPerIntegration(), heapAllocator, 512);
 
     writer.write(&data);
 
