@@ -45,7 +45,7 @@ class long_baseline(LOFARnodeTCP):
              ndppp_executable, output_measurement_set,
             subbandgroups_per_ms, subbands_per_subbandgroup, raw_ms_mapfile,
             asciistat_executable, statplot_executable, msselect_executable,
-            rficonsole_executable, add_beam_tables):
+            rficonsole_executable, add_beam_tables, final_output_path):
         """
         Entry point for the node recipe
         """
@@ -129,6 +129,14 @@ class long_baseline(LOFARnodeTCP):
             # 8. Perform the (virtual) concatenation of the timeslices
             self._concat_timeslices(time_slice_filtered_path_list,
                                     output_measurement_set)
+
+            #*****************************************************************
+            # 9. Use table.copy(deep=true) to copy the ms to the correct
+            # output location: create a new measurement set.
+            self._deep_copy_to_output_location(output_measurement_set,
+                                               final_output_path)
+
+
 
             #******************************************************************
             # return
@@ -222,8 +230,8 @@ class long_baseline(LOFARnodeTCP):
             catch_segfaults(cmd, working_dir, environment,
                                   logger, cleanup = None)
 
-    def _run_dppp(self, working_dir, time_slice_dir_path, subbandgroups_per_ms,
-                  copied_ms_map, subbands_per_subbandgroup, collected_ms_dir_name, parset,
+    def _run_dppp(self, working_dir, time_slice_dir_path, slices_per_image,
+                  copied_ms_map, subbands_per_image, collected_ms_dir_name, parset,
                   ndppp):
         """
         Run NDPPP:
@@ -232,9 +240,9 @@ class long_baseline(LOFARnodeTCP):
         supplied in parset
         """
         time_slice_path_list = []
-        for idx_time_slice in range(subbandgroups_per_ms):
-            start_slice_range = idx_time_slice * subbands_per_subbandgroup
-            end_slice_range = (idx_time_slice + 1) * subbands_per_subbandgroup
+        for idx_time_slice in range(slices_per_image):
+            start_slice_range = idx_time_slice * subbands_per_image
+            end_slice_range = (idx_time_slice + 1) * subbands_per_image
             # Get the subset of ms that are part of the current timeslice,
             # cast to datamap
             input_map_subgroup = DataMap(
@@ -464,6 +472,20 @@ class long_baseline(LOFARnodeTCP):
                 self.logger.error("Problem applying polarization to ms: {0}".format(
                     time_slice))
                 raise exception
+
+    def _deep_copy_to_output_location(self,output_measurement_set,
+                                               final_output_path):
+        ##################################
+
+        table = pt.table(output_measurement_set)
+
+        try:
+          os.makedirs(os.path.dirname(final_output_path))
+        except:
+          pass # do nothing, the path already exists, we can output to this
+               # location
+
+        table.copy(final_output_path, deep=True)
 
 
 if __name__ == "__main__":
