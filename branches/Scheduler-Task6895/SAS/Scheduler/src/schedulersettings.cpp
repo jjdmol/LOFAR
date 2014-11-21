@@ -18,10 +18,22 @@
 #include <QDate>
 
 SchedulerSettings::SchedulerSettings()
-	: itsMinTimeBetweenTasks(MIN_TIME_BETWEEN_TASKS_GREGORIAN), uniqueStationID(1), itsAllowMultipleRaidPerNode(false), itsStorageNodeBandWidth(STORAGE_NODE_kbps), itsRaidMaxWriteSpeed(STORAGE_RAID_WRITE_KBS),
-	  itsStorageFillPercentage(STORAGE_FILL_PECENTAGE), itsUserAcceptedPenaltyEnabled(false), itsMaxNrOptimizationsEnabled(true), itsAllowUnscheduleFixedTasks(false),
-	itsLoadDefaultSettings(true), itsfocusTaskAtClick(true), itsIsTestEnvironment(false), itsUserAcceptedPenalty(0), itsMaxNrOptimizations(MAX_OPTIMIZE_ITERATIONS), itsMaxNrOfFilesPerStorageNode(MAX_FILES_PER_STORAGE_NODE),
-    itsPublishLocal(false)
+    : itsMinTimeBetweenTasks(MIN_TIME_BETWEEN_TASKS_GREGORIAN),
+      uniqueStationID(1),
+      itsAllowMultipleRaidPerNode(false),
+      itsStorageNodeBandWidth(STORAGE_NODE_kbps),
+      itsRaidMaxWriteSpeed(STORAGE_RAID_WRITE_KBS),
+      itsStorageFillPercentage(STORAGE_FILL_PECENTAGE),
+      itsUserAcceptedPenaltyEnabled(false),
+      itsMaxNrOptimizationsEnabled(true),
+      itsAllowUnscheduleFixedTasks(false),
+      itsLoadDefaultSettings(true),
+      itsfocusTaskAtClick(true),
+      itsIsTestEnvironment(false),
+      itsUserAcceptedPenalty(0),
+      itsMaxNrOptimizations(MAX_OPTIMIZE_ITERATIONS),
+      itsMaxNrOfFilesPerStorageNode(MAX_FILES_PER_STORAGE_NODE),
+      itsPublishLocal(false)
 {
 	QDate day = QDate::currentDate();
 	day = day.addDays(-day.dayOfWeek() + 1); // start on monday

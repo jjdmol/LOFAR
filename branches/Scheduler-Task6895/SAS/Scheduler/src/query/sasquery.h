@@ -30,8 +30,12 @@ class SASQuery
 {
 public:
     SASQuery();
+//            const QString &username,
+//             const QString &password,
+//             const QString &DBName,
+//             const QString &hostname);
 
-    QSqlQuery OTDBLogin(QString username, QString password);
+    //QSqlQuery OTDBLogin(QString username, QString password);
 
 private:
     QSqlDatabase sasDB;

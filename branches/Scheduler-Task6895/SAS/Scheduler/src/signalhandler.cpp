@@ -99,5 +99,6 @@ int SignalHandler::signalForward(std::string action, std::string /*parameter*/)
 // TODO: Refactor into a generic feedback handler?
 void SignalHandler::statusSASDialogFeedback(bool result)
 {
-     statusSASDialogFeedbackResult = result;
+    std::cerr << "Received statusSASDialogFeedback: " << result << std::endl;
+    statusSASDialogFeedbackResult = result;
 }

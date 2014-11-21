@@ -71,14 +71,20 @@ Controller::Controller(QApplication &app) :
 	itsSettingsDialog = new ScheduleSettingsDialog(this);
 	itsConflictDialog = new ConflictDialog(this);
 
-	itsSASConnection = new SASConnection(this);
-	itsSASConnection->setLastDownloadDate(QDateTime(Controller::theSchedulerSettings.getEarliestSchedulingDay().toQDate()));
+    // connection to the Data Monitor
+    itsDMConnection = new DataMonitorConnection(this);
+    itsDataHandler = new DataHandler(this);
+    itsDataHandler->setFileName("");
 
-	// connection to the Data Monitor
-	itsDMConnection = new DataMonitorConnection(this);
-	itsDataHandler = new DataHandler(this);
-	itsDataHandler->setFileName("");
-	loadProgramPreferences();
+    // Load data from the datafile will contain parameter used by the sas
+    // connection
+    loadProgramPreferences();
+
+
+	itsSASConnection = new SASConnection(this);
+    itsSASConnection->setLastDownloadDate(
+         QDateTime(Controller::theSchedulerSettings.getEarliestSchedulingDay().toQDate()));
+
 	connectSignals();
 	vector<std::string> headers;
 	for (unsigned i = 0; i < NR_DATA_HEADERS; ++i) {
@@ -235,6 +241,8 @@ void Controller::downloadSASSchedule(void) {
 	storeScheduleUndo(QObject::tr("Download SAS schedule"));
 	if (checkSASSettings()) {
 		gui->setStatusText("Now downloading running schedule from SAS...");
+        // WHy use an init function? The Sas COnnection should be up or in a state
+        //
 		itsSASConnection->init(theSchedulerSettings.getSASUserName(),
 							theSchedulerSettings.getSASPassword(),
 							theSchedulerSettings.getSASDatabase(),

@@ -51,7 +51,9 @@ SASConnection::~SASConnection() {
 	}
 }
 
-void SASConnection::init(const QString &username, const QString &password, const QString &DBName, const QString &hostname) {
+void SASConnection::init(const QString &username,
+                         const QString &password,
+                         const QString &DBName, const QString &hostname) {
 	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
 	QSqlDatabase::database( "SASDB" ).close();
 	QSqlDatabase::removeDatabase( "SASDB" );
@@ -79,6 +81,7 @@ void SASConnection::cleanup(void) {
 // reinit the connection and attempt connection to OTDB tables
 // test authentication
 // exit negative values on value zero on succes
+// Exit values are used at the receiving side for selection of stuff to display
 // refactoring:
 // Shared functionality with other functions.
 // Name does not cover functionality
