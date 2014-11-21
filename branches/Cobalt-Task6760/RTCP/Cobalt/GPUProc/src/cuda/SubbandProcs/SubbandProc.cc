@@ -31,6 +31,7 @@
 
 #include <ApplCommon/PosixTime.h>
 #include <Common/LofarLogger.h>
+#include <Common/Thread/Thread.h>
 
 #include <iomanip>
 
@@ -223,7 +224,13 @@ namespace LOFAR
       processCPUTimer.stop();
 
       // Synchronise to assure that all the work in the data is done
-      queue.synchronize();
+      {
+        // If we delay the reception of the DONE signal from the GPU,
+        // we can't schedule the next batch of work in time.
+        Thread::ScopedPriority sp(SCHED_RR, 10);
+
+        queue.synchronize();
+      }
     }
 
 
