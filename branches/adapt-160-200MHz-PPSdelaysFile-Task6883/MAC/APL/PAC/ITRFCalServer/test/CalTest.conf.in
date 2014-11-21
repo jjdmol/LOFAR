@@ -1,0 +1,6 @@
+
+#
+# Configuration to connect CalTest to the RPSDriver
+#
+mac.ns.CalTest.server.type=TCP
+mac.top.CalTest.server.remoteservice=CalServer:acceptor_v2
