@@ -26,19 +26,27 @@
 #include "qsqldatabase.h"
 
 // Class collecting all querys used by SASConnection in a single object
-class SASQuery
+class SASDatabaseConnection
 {
 public:
-    SASQuery();
-//            const QString &username,
-//             const QString &password,
-//             const QString &DBName,
-//             const QString &hostname);
+    // Create the db connection, resulting in an object with a valid state.
+    SASDatabaseConnection(
+            const QString &username,
+             const QString &password,
+             const QString &DBName,
+             const QString &hostname);
 
-    //QSqlQuery OTDBLogin(QString username, QString password);
+    // Test the authentication of the current dbconnection
+    int SASDatabaseConnection::testAuthentication();
 
 private:
     QSqlDatabase sasDB;
+
+    QString itsSASUserName;
+    QString itsSASPassword;
+    QString itsHostname;
+    QString itsDBName;
+
 };
 
 #endif

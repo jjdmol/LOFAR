@@ -3,14 +3,36 @@
 # include "sasquery.h"
 
 
-SASQuery::SASQuery()/*const QString &username,
-                   const QString &password,
-                   const QString &DBName,
-                   const QString &hostname)*/
+SASDatabaseConnection::SASDatabaseConnection(const QString &aUsername,
+                   const QString &aPassword,
+                   const QString &aDBName,
+                   const QString &aHostname)
 {
+    sasDB = QSqlDatabase::addDatabase("QPSQL","SASDB");
 
-    // DO nothing yet
+    itsSASUserName = aUsername;
+    itsSASPassword = aPassword;
+    itsDBName      = aDBName;
+    itsHostname    = aHostname;
+
+    sasDB.setHostName(aHostname);
+    sasDB.setDatabaseName(aDBName);
+
+    // The database has no password.....
+    sasDB.setUserName("postgres");
+    sasDB.setPassword("");
+
+
 }
+
+int SASDatabaseConnection::testAuthentication()
+{
+    if (!sasDB.open())
+        return -1; // could not connect to SAS database
+
+}
+
+
 
 
 /*
