@@ -132,6 +132,11 @@ class msss_imager_pipeline(control):
         # Input measure ment sets
         input_mapfile = os.path.join(self.mapfile_dir, "uvdata.mapfile")
         self.input_data.save(input_mapfile)
+
+        ## ***************************************************************
+        #output_mapfile_path = os.path.join(self.mapfile_dir, "output.mapfile")
+        #self.output_mapfile.save(output_mapfile_path)
+
         # storedata_map(input_mapfile, self.input_data)
         self.logger.debug(
             "Wrote input UV-data mapfile: {0}".format(input_mapfile))
@@ -143,10 +148,10 @@ class msss_imager_pipeline(control):
             "Wrote target mapfile: {0}".format(target_mapfile))
 
         # images datafiles
-        output_image_mapfile = os.path.join(self.mapfile_dir, "images.mapfile")
-        self.output_data.save(output_image_mapfile)
+        output_ms_mapfile = os.path.join(self.mapfile_dir, "output.mapfile")
+        self.output_data.save(output_ms_mapfile)
         self.logger.debug(
-            "Wrote output sky-image mapfile: {0}".format(output_image_mapfile))
+            "Wrote output sky-image mapfile: {0}".format(output_ms_mapfile))
 
         # TODO: This is a backdoor option to manually add beamtables when these
         # are missing on the provided ms. There is NO use case for users of the
@@ -158,7 +163,7 @@ class msss_imager_pipeline(control):
         # (1) prepare phase: copy and collect the ms
         concat_ms_map_path, timeslice_map_path, raw_ms_per_image_map_path, \
             processed_ms_dir = self._long_baseline(input_mapfile,
-                                    target_mapfile, add_beam_tables)
+                         target_mapfile, add_beam_tables, output_ms_mapfile)
 
         # *********************************************************************
         # (7) Get metadata
@@ -189,7 +194,7 @@ class msss_imager_pipeline(control):
 
         
         # Create a parset-file containing the metadata for MAC/SAS at nodes
-        self.run_task("get_metadata", concat_ms_map_path,
+        self.run_task("get_metadata", output_ms_mapfile,
             parset_file = self.parset_feedback_file,
             parset_prefix = (
                 full_parset.getString('prefix') +
@@ -247,7 +252,7 @@ class msss_imager_pipeline(control):
     def _finalize(self, awimager_output_map, processed_ms_dir,
                   raw_ms_per_image_map, sourcelist_map, minbaseline,
                   maxbaseline, target_mapfile,
-                  output_image_mapfile, sourcedb_map, skip = False):
+                  output_ms_mapfile, sourcedb_map, skip = False):
         """
         Perform the final step of the imager:
         Convert the output image to hdf5 and copy to output location
@@ -262,7 +267,6 @@ class msss_imager_pipeline(control):
         if skip:
             return placed_image_mapfile
         else:
-            # run the awimager recipe
             placed_image_mapfile = self.run_task("imager_finalize",
                 target_mapfile, awimager_output_map = awimager_output_map,
                     raw_ms_per_image_map = raw_ms_per_image_map,
@@ -271,7 +275,7 @@ class msss_imager_pipeline(control):
                     minbaseline = minbaseline,
                     maxbaseline = maxbaseline,
                     target_mapfile = target_mapfile,
-                    output_image_mapfile = output_image_mapfile,
+                    output_ms_mapfile = output_ms_mapfile,
                     processed_ms_dir = processed_ms_dir,
                     placed_image_mapfile = placed_image_mapfile
                     )["placed_image_mapfile"]
@@ -281,7 +285,7 @@ class msss_imager_pipeline(control):
 
     @xml_node
     def _long_baseline(self, input_ms_map_path, target_mapfile,
-        add_beam_tables):
+        add_beam_tables, output_ms_mapfile):
         """
         Copy ms to correct location, combine the ms in slices and combine
         the time slices into a large virtual measurement set
@@ -313,13 +317,14 @@ class msss_imager_pipeline(control):
                 parset = ndppp_parset_path,
                 target_mapfile = target_mapfile,
                 subbandgroups_per_ms = subbandgroups_per_ms,
-                subbands_per_image = subbands_per_image,
+                subbands_per_subbandgroup = subbands_per_subbandgroup,
                 mapfile = output_mapfile,
                 slices_mapfile = time_slices_mapfile,
                 raw_ms_per_image_mapfile = raw_ms_per_image_mapfile,
                 working_directory = self.scratch_directory,
                 processed_ms_dir = processed_ms_dir,
-                add_beam_tables = add_beam_tables)
+                add_beam_tables = add_beam_tables,
+                output_ms_mapfile = output_ms_mapfile)
 
         # validate that the prepare phase produced the correct data
         output_keys = outputs.keys()
