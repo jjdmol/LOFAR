@@ -1,7 +1,6 @@
 #ifndef SASQUERY_H
 #define SASQUERY_H
 
-//# sasquery.h
 //# Copyright (C) 2012-2014  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -37,7 +36,7 @@ public:
              const QString &hostname);
 
     // Test the authentication of the current dbconnection
-    int SASDatabaseConnection::testAuthentication();
+    int testAuthentication();
 
 private:
     QSqlDatabase sasDB;

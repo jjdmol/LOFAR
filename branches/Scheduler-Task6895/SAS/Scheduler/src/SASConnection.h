@@ -33,7 +33,8 @@
 #include "imagingpipeline.h"
 #include "longbaselinepipeline.h"
 #include "sasstatusdialog.h"
-#include "query/sasquery.h"
+#include "databaseconnections/sasdatabaseconnection.h"
+
 class Controller;
 class SchedulerData;
 class CEPCleanMainWindow;

@@ -1,6 +1,6 @@
 #include <lofar_config.h>
 
-# include "sasquery.h"
+# include "sasdatabaseconnection.h"
 
 
 SASDatabaseConnection::SASDatabaseConnection(const QString &aUsername,

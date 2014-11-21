@@ -118,7 +118,7 @@ HEADERS += blocksize.h \
     schedulerLib.h \
     signalhandler.h \
     qcustomplot.h \
-    query/sasquery.h
+    databaseconnections/sasdatabaseconnection.h
 FORMS += \
     redistributetasksdialog.ui \
     sasconnectdialog.ui \
@@ -223,7 +223,8 @@ SOURCES += \
     schedulerLib.cpp \
     signalhandler.cpp \
     qcustomplot.cpp \
-    query/sasquery.cpp
+    query/sasquery.cpp \
+    databaseconnections/sasdatabaseconnection.cpp
 RESOURCES += scheduler_resources.qrc
 
 
