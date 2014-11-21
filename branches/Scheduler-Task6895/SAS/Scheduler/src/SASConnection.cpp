@@ -26,18 +26,14 @@ using std::string;
 using std::vector;
 using std::map;
 
-SASConnection::SASConnection(void)
-    : itsController(0),
-      itsUploadDialog(0),
-      statDlg(0)
-{
-    QSqlDatabase::addDatabase( "QPSQL", "SASDB" );
-}
-
 SASConnection::SASConnection(Controller *controller)
     : itsController(controller),
       itsUploadDialog(new SASUploadDialog(0, itsController)),
-      statDlg(0)
+      statDlg(0),
+      sasquery(Controller::theSchedulerSettings.getSASUserName(),
+               Controller::theSchedulerSettings.getSASPassword(),
+               Controller::theSchedulerSettings.getSASDatabase(),
+               Controller::theSchedulerSettings.getSASHostName())
 {
     QSqlDatabase::addDatabase( "QPSQL", "SASDB" );   
 }

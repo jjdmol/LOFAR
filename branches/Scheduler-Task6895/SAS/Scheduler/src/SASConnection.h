@@ -64,7 +64,6 @@ typedef std::vector<changedIDTask> changedIDTasks;
 
 class SASConnection {
 public:
-	SASConnection();
 	SASConnection(Controller *controller);
 	virtual ~SASConnection();
 
@@ -325,7 +324,7 @@ private:
 	QString itsSASUserName, itsSASPassword;
     QString itsLastErrorString;
     SASStatusDialog statDlg;
-    SASQuery sasquery;
+    SASDatabaseConnection sasquery;
 };
 
 std::string getSasTextState(int sas_state);
