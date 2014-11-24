@@ -100,3 +100,10 @@ QSqlQuery SASDatabaseConnection::now()
 {
     return sasQueries.now(sasDB);
 }
+
+QSqlQuery SASDatabaseConnection::getTreesInPeriod(
+        QString start_date, QString end_date, int treetype)
+{
+    return sasQueries.getTreesInPeriod(sasDB,
+                       start_date, end_date, treetype);
+}

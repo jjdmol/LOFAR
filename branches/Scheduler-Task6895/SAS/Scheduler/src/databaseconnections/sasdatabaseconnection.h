@@ -61,10 +61,12 @@ public:
 
     QSqlDatabase getSasDB(){return sasDB;}
 
-
+    // Functions forwarding a request for data to the internal query class
     QSqlQuery treeidFROMgettreelist(QString tree);
 
     QSqlQuery now();
+
+    QSqlQuery getTreesInPeriod(QString start_date, QString end_date, int treetype);
 
 private:
     QSqlDatabase sasDB;

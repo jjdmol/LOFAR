@@ -51,3 +51,17 @@ QSqlQuery SASSqlQueries::now(QSqlDatabase sasDB)
     query.exec("SELECT now()");
     return query;
 }
+
+
+QSqlQuery SASSqlQueries::getTreesInPeriod(QSqlDatabase sasDB,
+                     QString start_date, QString end_date, int treetype)
+{
+    QSqlQuery query(sasDB);
+    query.exec("SELECT * from getTreesInPeriod('" +
+               QString::number(treetype) + "','" +
+               start_date                + "','" +
+               end_date                  + "')");
+    return query;
+
+
+}

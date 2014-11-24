@@ -36,6 +36,9 @@ public:
 
     QSqlQuery now(QSqlDatabase sasDB);
 
+    QSqlQuery getTreesInPeriod(QSqlDatabase sasDB,
+                         QString start_date, QString end_date, int treetype);
+
 };
 
 #endif

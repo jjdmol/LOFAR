@@ -248,21 +248,20 @@ void SASConnection::updateLastDownloadDate(void) {
 
 // function getAllSASTasksWithinPeriod gets all OTDB trees (not complete vic trees but only their metadata) within the specified period
 // This function will also check if the tree depends (has predecessors) on other trees and will the also download those predecessor trees
-int SASConnection::getAllSASTasksWithinPeriod(int treeType, const AstroDateTime &begindate, const AstroDateTime &enddate) {
-
-
+int SASConnection::getAllSASTasksWithinPeriod(int treeType,
+          const AstroDateTime &begindate, const AstroDateTime &enddate)
+{
     int retVal(0);
-	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
-	itsSASVicTrees.clear();
-	QDateTime start_date = begindate.toQDateTime(), end_date = enddate.toQDateTime();
+    itsSASVicTrees.clear();
+    QString start_date = begindate.toQDateTime().toString("yyyy-MM-dd hh:mm:ss");
+    QString end_date = enddate.toQDateTime().toString("yyyy-MM-dd hh:mm:ss");
 
-	QSqlQuery query("SELECT * from getTreesInPeriod('" +
-					QString::number(treeType) + "','" +
-					start_date.toString("yyyy-MM-dd hh:mm:ss") + "','" +
-					end_date.toString("yyyy-MM-dd hh:mm:ss") + "')", sasDB);
+    QSqlQuery query = dbConnection.getTreesInPeriod(start_date, end_date, treeType );
 
-	if (query.isActive()) {
-		while (query.next()) {
+    if (query.isActive())
+    {
+        while (query.next())
+        {
 			OTDBtree tree(query);
 			itsSASVicTrees.insert(std::map<unsigned, OTDBtree>::value_type(tree.treeID(), tree));
 		}
