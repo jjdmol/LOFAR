@@ -103,34 +103,23 @@ int SASConnection::connect(void) {
 // mixture of control and model.
 // side effects not clear from function name.
 // Candidate for refactoring using pqxx
-int SASConnection::connect(const QString &user, const QString &password, const QString &DBName, const QString &hostName) {
+int SASConnection::connect(const QString &user, const QString &password,
+                           const QString &DBName, const QString &hostName) {
 
-    QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
-    if (!sasDB.open())   // sasDB could not be opened, re-init connection
-        init(user, password, DBName, hostName);
 
-    // still no connection? error
-    if (!sasDB.open()) {
-        debugErr("sssssss","Could not establish SAS connection! Settings used:\n",
-                 "Username: ", sasDB.userName().toStdString().c_str(),
-                 ", database: ", sasDB.databaseName().toStdString().c_str(),
-                 ", hostname: ", sasDB.hostName().toStdString().c_str()
-                 );
-        return -1; // could not connect to SAS database
-    }
+    // If not in a valid state reconnect
+    if (dbConnection.testAuthentication() != 0)
+        dbConnection = SASDatabaseConnection(user, password, hostName, DBName);
 
-    // Check authorisation  get authorisation.
-    QSqlQuery query(sasDB);
-    if (itsAuthToken.isEmpty()) { // do a querie to get authorisation.
-        query.exec("SELECT OTDBlogin('" + itsSASUserName + "','" + itsSASPassword + "')");
-        if (query.next()) {
-            itsAuthToken = query.value(0).toString();
-            if (itsAuthToken.isEmpty()) {
-                return -2; // no write permissions to SAS DB
-            }
-        }
-        query.finish();
-    }
+    int authReturn = dbConnection.testAuthentication();
+
+    if ( authReturn != 0)
+        return authReturn;
+
+    QSqlDatabase sasDB  = dbConnection.getSasDB();
+
+    //
+    itsAuthToken = dbConnection.getAuthToken();
 
     // get the list of campaigns from SAS
     getCampaignsFromSAS();

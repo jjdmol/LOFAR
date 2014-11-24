@@ -54,6 +54,8 @@ SASDatabaseConnection::SASDatabaseConnection(const QString &aUsername,
     sasDB.setPassword(itsPostgresPassword);
 
     sasDB = QSqlDatabase::database(itsDBId);
+
+    testAuthentication();
 }
 
 int SASDatabaseConnection::testAuthentication()
@@ -68,8 +70,10 @@ int SASDatabaseConnection::testAuthentication()
     if (!query.next())
         return -3;
 
+    itsAuthToken = query.value(0).toString();
+
     // check authentication token (should not be zero)
-    if (query.value(0).toUInt() == 0)
+    if (itsAuthToken.isEmpty())
         return -2; // no write permissions to SAS DB
 
     return 0;

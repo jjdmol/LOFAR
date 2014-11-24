@@ -56,6 +56,11 @@ public:
     // Return the open status of the internal connection
     bool open(){return sasDB.open();}
 
+
+    QString getAuthToken(){return itsAuthToken;}
+
+    QSqlDatabase getSasDB(){return sasDB;}
+
 private:
     QSqlDatabase sasDB;
     SASSqlQueries sasQueries;
@@ -69,7 +74,7 @@ private:
     QString itsPostgresUsername;
     QString itsPostgresPassword;
 
-
+    QString itsAuthToken;
 
 };
 
