@@ -45,37 +45,41 @@ namespace LOFAR {
 #define WRITE_ALL_TIMEOUT  5
 
 
-
 /*
  * Implements the following sequences:
  * from idle state:
- * - SEQ_STARTUP, starts on sequence disableClock
- * - SEQ_SETCLOCK, starts on sequence writeClock
- * - SEQ_RSPCLEAR, starts on sequence RSUclear
+ * - SEQ_STARTUP, on driver startup, starts on sequence disableClock
+ * - SEQ_SETCLOCK, on clock change, starts on sequence writeClock
+ * - SEQ_RSPCLEAR, on request, starts on sequence RSUclear
  *
- *  idle_state  <--------------------------------------------,
- *   |  |  |                                                 |
- *   |  |  '-> disableClock_state <-------------------.      |   STARTUP_WAIT
- *   |  |      writePLL_state     ---> writeError ----'      |   WRITE_TIMEOUT
- *   |  '----> writeClock_state   <-------------------.      |   STARTUP_WAIT
- *   |         readClock_state    ---> readError -----'      |   TDREAD_TIMEOUT
- *   |  ,------- ok <------------'                           |
- *   '--C----> RSUclear_state     <----------------------,   |   RSUCLEAR_WAIT
- *      |----> RCUdisable_state -----> writeError -------|   |   WRITE_TIMEOUT
- *      | ,----- ok <-----------' '--> ok & finalState---C---'
- *      | '--> setAll_state        --> writeError -------|       WRITE_TIMEOUT
- *      |      - Blocksync                               |
- *      |      - RADwrite                                |
- *      |      - PPSsync                                 |
- *      |      - CDOenable                               |
- *      |      - SDObitmode                              |
- *      |      - SDOselect                               |
- *      |      - SDOenable                               |
- *      |      RCUenable_state     --> writeError -------'       WRITE_TIMEOUT
- *      |                          --> finalState=True --,
+ *  idle_state  <-------------------------------------------.
+ *   |  |  |                                                |
+ *   |  |  '-> disableClock_state <----------------------.  |        STARTUP_WAIT
+ *   |  |      readDisabledClock_state --> readError ----'  |        
+ *   |  |      writePLL_state <--------------------------.  |        WRITE_TIMEOUT
+ *   |  |      readPLL_state  ---------> readError ------'  |        TDREAD_TIMEOUT
+ *   |  |                                                   |        
+ *   |  '----> writeClock_state <------------------------.  |        STARTUP_WAIT
+ *   |         readClock_state --------> readError ------'  |        TDREAD_TIMEOUT
+ *   |  .------- ok <----------'                            |        
+ *   |  |                                                   |        
+ *   '--|----> RSUclear_state <--------------------------.  |        RSUCLEAR_WAIT
+ *      |                                                |  |        
+ *      x----> RCUdisable_state -----> writeError -------x  |        WRITE_TIMEOUT
+ *      | .----- ok <-----------' '--> ok & finalState---|--'        
+ *      | |                                              |            
+ *      | '--> setAll_state ---------> writeError -------x            WRITE_TIMEOUT
+ *      |      - Blocksync                               |            
+ *      |      - RADwrite                                |            
+ *      |      - PPSsync                                 |            
+ *      |      - CDOenable                               |            
+ *      |      - SDObitmode                              |            
+ *      |      - SDOselect                               |            
+ *      |      - SDOenable                               |            
+ *      |      RCUenable_state ------> writeError -------'            WRITE_TIMEOUT
+ *      |                      '-----> finalState=True --.
  *      |                                                |
  *      '------------------------------------------------'
- *
  */
 
 
@@ -161,8 +165,9 @@ GCFEvent::TResult Sequencer::idle_state(GCFEvent& event, GCFPortInterface& /*por
 //
 // disableClock_state(event, port)
 //
-// before switching clock, goto 125 MHz (both clocks off)
-// this prevents locking of firmware
+// Before programming  the PLL on the TDS boards disable clock outputs.
+// The RSPBoards will reload the fpga firmware running on internal 125MHz clock. 
+// This prevents blocking RSPBoards while programming the PLL. 
 //
 GCFEvent::TResult Sequencer::disableClock_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
@@ -170,7 +175,7 @@ GCFEvent::TResult Sequencer::disableClock_state(GCFEvent& event, GCFPortInterfac
     case F_ENTRY: {
         LOG_INFO("Entering Sequencer::disableClock_state");
 
-        // save clock
+        // save clock, for later use
         itsClockRequest = Cache::getInstance().getBack().getClock();
 
         // set clock to internal board clock (125MHz)
@@ -202,6 +207,8 @@ GCFEvent::TResult Sequencer::disableClock_state(GCFEvent& event, GCFPortInterfac
 
 //
 // readClock_state(event, port)
+//
+// read back clock, to check if firmware is really running on 125MHz.
 //
 GCFEvent::TResult Sequencer::readDisabledClock_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
@@ -249,7 +256,10 @@ GCFEvent::TResult Sequencer::readDisabledClock_state(GCFEvent& event, GCFPortInt
 
 //
 // writePLL_state(event, port)
-//
+// 
+// write start sequence to PLL on TDS board this is needed only once, on Driver start.
+// PLL is programmed if clock is set to 0
+// 
 GCFEvent::TResult Sequencer::writePLL_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
     switch (event.signal) {
@@ -287,6 +297,8 @@ GCFEvent::TResult Sequencer::writePLL_state(GCFEvent& event, GCFPortInterface& /
 //
 // readPLL_state(event, port)
 //
+// check programming result, if no errors, set clock back to default freq (from RSPDriver.conf)
+//
 GCFEvent::TResult Sequencer::readPLL_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
     switch (event.signal) {
@@ -314,8 +326,9 @@ GCFEvent::TResult Sequencer::readPLL_state(GCFEvent& event, GCFPortInterface& /*
             }
         }
         else if (Cache::getInstance().getState().tdread().isMatchAll(RegisterState::IDLE)) {
-            Cache::getInstance().getBack().getClock() = 200; //itsClockRequest;
-            Cache::getInstance().getFront().getClock() = 200; //itsClockRequest;
+            // set back default clock frequency
+            Cache::getInstance().getBack().getClock() = itsClockRequest; 
+            Cache::getInstance().getFront().getClock() = itsClockRequest;
             TRAN(Sequencer::writeClock_state);
         }
         break;
