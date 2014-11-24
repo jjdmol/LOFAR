@@ -175,7 +175,7 @@ public:
     // translates all mom IDs in the supplied IDvector to SAS ids and directly updates the IDvector
     void translateMomPredecessors(IDvector &predecessors);
 
-	QString lastConnectionError(void) const;
+    QString lastConnectionError(void);
 	OTDBtree getTreeInfo(int treeID) const;
     QString getTreeParset(int treeID); // gets the complete tree (parset) as a string
     QString getMetaData(int treeID);
@@ -325,7 +325,7 @@ private:
 	QString itsSASUserName, itsSASPassword;
     QString itsLastErrorString;
     SASStatusDialog statDlg;
-    SASDatabaseConnection sasquery;
+    SASDatabaseConnection dbConnection;
 };
 
 std::string getSasTextState(int sas_state);

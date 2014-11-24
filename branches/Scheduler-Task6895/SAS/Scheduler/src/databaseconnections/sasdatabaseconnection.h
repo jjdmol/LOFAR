@@ -46,6 +46,16 @@ public:
     // return -3 of the query failed
     int testAuthentication();
 
+    // Close the internal database connection and remove the symbolic link
+    // from the qt database container
+    void disconnect();
+
+    // Get the last error of the internal QSql database connection
+    QString lastError();
+
+    // Return the open status of the internal connection
+    bool open(){return sasDB.open();}
+
 private:
     QSqlDatabase sasDB;
     SASSqlQueries sasQueries;

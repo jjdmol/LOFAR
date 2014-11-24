@@ -31,6 +31,7 @@ SASDatabaseConnection::SASDatabaseConnection(const QString &aUsername,
                    const QString &aPassword,
                    const QString &aHostname,
                    const QString &aDBName,
+
                    const QString &aDBId,
                    const QString &aDBType,
                    const QString &postgresUsername,
@@ -45,14 +46,14 @@ SASDatabaseConnection::SASDatabaseConnection(const QString &aUsername,
       itsPostgresUsername(postgresUsername),
       itsPostgresPassword(postgresPassword)
 {
-    sasDB = QSqlDatabase::addDatabase(itsDBType,itsDBId);
+    sasDB = QSqlDatabase::addDatabase(itsDBType, itsDBId);
+
     sasDB.setHostName(itsHostname);
     sasDB.setDatabaseName(itsDBName);
     sasDB.setUserName(itsPostgresUsername);
     sasDB.setPassword(itsPostgresPassword);
 
     sasDB = QSqlDatabase::database(itsDBId);
-
 }
 
 int SASDatabaseConnection::testAuthentication()
@@ -60,8 +61,9 @@ int SASDatabaseConnection::testAuthentication()
     if (!sasDB.open())
         return -1; // could not connect to SAS database
 
-    QSqlQuery query = sasQueries.doOTDBlogin(sasDB, itsSASUserName,
-                                             itsSASPassword);
+    QSqlQuery query = sasQueries.doOTDBlogin(
+               sasDB, itsSASUserName, itsSASPassword);
+
     // If query returned any feedback
     if (!query.next())
         return -3;
@@ -72,3 +74,15 @@ int SASDatabaseConnection::testAuthentication()
 
     return 0;
 }
+
+void SASDatabaseConnection::disconnect()
+{
+    sasDB.close();
+    QSqlDatabase::removeDatabase(itsDBId);
+}
+
+QString SASDatabaseConnection::lastError()
+{
+    return sasDB.lastError().text();
+}
+

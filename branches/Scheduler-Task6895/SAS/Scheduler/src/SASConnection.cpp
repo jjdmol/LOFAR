@@ -30,16 +30,16 @@ SASConnection::SASConnection(Controller *controller)
     : itsController(controller),
       itsUploadDialog(new SASUploadDialog(0, itsController)),
       statDlg(0),
-      sasquery(Controller::theSchedulerSettings.getSASUserName(),
-               Controller::theSchedulerSettings.getSASPassword(),
-               Controller::theSchedulerSettings.getSASDatabase(),
-               Controller::theSchedulerSettings.getSASHostName())
+      dbConnection(Controller::theSchedulerSettings.getSASUserName(),
+                   Controller::theSchedulerSettings.getSASPassword(),
+                    Controller::theSchedulerSettings.getSASHostName(),
+                    Controller::theSchedulerSettings.getSASDatabase())
 {
-    QSqlDatabase::addDatabase( "QPSQL", "SASDB" );   
+
 }
 
 SASConnection::~SASConnection() {
-	QSqlDatabase::database( "SASDB" ).close();
+    QSqlDatabase::database( "SASDB" ).close();
 	QSqlDatabase::removeDatabase( "SASDB" );
 
 	if (itsUploadDialog) {
@@ -49,18 +49,8 @@ SASConnection::~SASConnection() {
 
 void SASConnection::init(const QString &username,
                          const QString &password,
-                         const QString &DBName, const QString &hostname) {
-	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
-	QSqlDatabase::database( "SASDB" ).close();
-	QSqlDatabase::removeDatabase( "SASDB" );
-	sasDB = QSqlDatabase::addDatabase("QPSQL","SASDB");
-
-	itsSASUserName = username;
-	itsSASPassword = password;
-    sasDB.setHostName(hostname);
-    sasDB.setDatabaseName(DBName);
-    sasDB.setUserName("postgres");
-    sasDB.setPassword("");
+                         const QString &DBName,
+                         const QString &hostname) {
 }
 
 void SASConnection::cleanup(void) {
@@ -84,40 +74,14 @@ void SASConnection::cleanup(void) {
 int SASConnection::testConnect(const QString &username,
        const QString &password, const QString &DBname, const QString &hostname)
 {
-    disconnect();
-    QSqlDatabase sasDB = QSqlDatabase::addDatabase("QPSQL","SASDB");
-    // TODO: hardcode username and password
-	sasDB.setUserName("postgres");
-	sasDB.setPassword("");
-	sasDB.setHostName(hostname);
-	sasDB.setDatabaseName(DBname);
-
-    if (!sasDB.open())
-		return -1; // could not connect to SAS database
-
-    // I Have seen this functionality before (almost)
-    QSqlQuery query(sasDB);
-    query.exec("SELECT OTDBlogin('" + username + "','" + password + "')");
-
-    if (query.next())
-    {
-        if (query.value(0).toUInt() == 0)
-        { // check authentication token (should not be zero)
-            return -2; // no write permissions to SAS DB
-        }
-    }
-    else
-        return -3; // could not execute query on database
-
-    query.finish(); //
-
-    return 0;
+    dbConnection.disconnect();
+    dbConnection = SASDatabaseConnection(username, password, DBname, hostname);
+    return dbConnection.testAuthentication();
 }
 
 
-QString SASConnection::lastConnectionError(void) const {
-	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
-	return sasDB.lastError().text();
+QString SASConnection::lastConnectionError(void)  {
+    return dbConnection.lastError();
 }
 
 // Create a connection with database using credentials from the scheduler
@@ -140,7 +104,8 @@ int SASConnection::connect(void) {
 // side effects not clear from function name.
 // Candidate for refactoring using pqxx
 int SASConnection::connect(const QString &user, const QString &password, const QString &DBName, const QString &hostName) {
-	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
+
+    QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
     if (!sasDB.open())   // sasDB could not be opened, re-init connection
         init(user, password, DBName, hostName);
 
