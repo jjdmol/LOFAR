@@ -1,5 +1,5 @@
-#ifndef SASQUERY_H
-#define SASQUERY_H
+#ifndef SASDATABASECONNECTION_H
+#define SASDATABASECONNECTION_H
 
 //# Copyright (C) 2012-2014  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -23,6 +23,7 @@
 #include "qsqlquery.h"
 #include "qstring.h"
 #include "qsqldatabase.h"
+#include "sassqlqueries.h"
 
 // Class collecting all querys used by SASConnection in a single object
 class SASDatabaseConnection
@@ -47,6 +48,7 @@ public:
 
 private:
     QSqlDatabase sasDB;
+    SASSqlQueries sasQueries;
 
     QString itsSASUserName;
     QString itsSASPassword;

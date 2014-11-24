@@ -16,3 +16,23 @@
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
 //# $Id$
+#ifndef SASSQLQUERIES_H
+#define SASSQLQUERIES_H
+
+#include "qsqlquery.h"
+#include "qstring.h"
+#include "qsqldatabase.h"
+
+class SASSqlQueries
+{
+
+public:
+    SASSqlQueries();
+
+    QSqlQuery doOTDBlogin(QSqlDatabase sasDB, QString sasUserName,
+                          QString sasPassword);
+
+
+};
+
+#endif

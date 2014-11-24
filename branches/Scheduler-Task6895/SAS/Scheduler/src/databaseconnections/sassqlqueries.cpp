@@ -16,3 +16,21 @@
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
 //# $Id$
+#include <lofar_config.h>
+
+#include "sassqlqueries.h"
+
+SASSqlQueries::SASSqlQueries()
+{
+
+}
+
+QSqlQuery SASSqlQueries::doOTDBlogin(QSqlDatabase sasDB,
+                                     QString sasUserName,
+                                     QString sasPassword)
+{
+    QSqlQuery query(sasDB);
+    query.exec("SELECT OTDBlogin('" + sasUserName
+               + "','" + sasPassword + "')");
+    return query;
+}

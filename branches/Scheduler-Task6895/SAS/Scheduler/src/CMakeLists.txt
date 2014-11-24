@@ -85,7 +85,8 @@ set(scheduler_SRCS
   TiedArrayBeam.cpp
   tiedarraybeamdialog.cpp
   TimeEdit.cpp
-  databaseconnections/sasdatabaseconnection.cpp)
+  databaseconnections/sasdatabaseconnection.cpp
+  databaseconnections/sassqlqueries.cpp)
 
 set(scheduler_MOC_HDRS
   CheckBox.h

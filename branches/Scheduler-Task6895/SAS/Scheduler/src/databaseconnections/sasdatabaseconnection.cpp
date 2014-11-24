@@ -24,6 +24,7 @@
 #include "sasdatabaseconnection.h"
 
 
+
 using namespace std;
 
 SASDatabaseConnection::SASDatabaseConnection(const QString &aUsername,
@@ -59,10 +60,8 @@ int SASDatabaseConnection::testAuthentication()
     if (!sasDB.open())
         return -1; // could not connect to SAS database
 
-    QSqlQuery query(sasDB);
-    query.exec("SELECT OTDBlogin('" + itsSASUserName
-               + "','" + itsSASPassword + "')");
-
+    QSqlQuery query = sasQueries.doOTDBlogin(sasDB, itsSASUserName,
+                                             itsSASPassword);
     // If query returned any feedback
     if (!query.next())
         return -3;
