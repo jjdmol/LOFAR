@@ -29,13 +29,20 @@ class SASDatabaseConnection
 {
 public:
     // Create the db connection, resulting in an object with a valid state.
-    SASDatabaseConnection(
-            const QString &username,
-             const QString &password,
-             const QString &DBName,
-             const QString &hostname);
+    SASDatabaseConnection(const QString &username,
+                          const QString &password,
+                          const QString &hostname,
+                          const QString &DBName,
+                          const QString &DBId  = "SASDB",
+                          const QString &DBType = "QPSQL",
+                          const QString &postgresUsername = "postgres",
+                          const QString &postgresPassword = "");
 
     // Test the authentication of the current dbconnection
+    // return 0 if no issues found.
+    // return -1 if SAS database connection is not up
+    // return -2 if OTDBlogin select statement returned with incorrect information
+    // return -3 of the query failed
     int testAuthentication();
 
 private:
@@ -45,6 +52,12 @@ private:
     QString itsSASPassword;
     QString itsHostname;
     QString itsDBName;
+    QString itsDBId;
+    QString itsDBType;
+    QString itsPostgresUsername;
+    QString itsPostgresPassword;
+
+
 
 };
 

@@ -1,18 +1,28 @@
+#include <lofar_config.h>
+
 #include <QtTest/QtTest>
- 
-class TestQString: public QObject
+
+#include "../../../src/databaseconnections/sasdatabaseconnection.h"
+
+class testsasdatabaseconnection: public QObject
 {
-    Q_OBJECT
-	     private slots:
-    void toUpper();
+        Q_OBJECT
+private slots:
+    void  testConstructor();
 };
  
-void TestQString::toUpper()
+void testsasdatabaseconnection::testConstructor()
 {
-  QString str = "Hello";
-  QCOMPARE(str.toUpper(), QString("HELLO"));
+
+
+    SASDatabaseConnection connection(QString("paulus"),
+                                     QString("boskabouter"),
+                                     QString("sas099.control.lofar"),
+                                     QString("LOFAR-preRelease-2_5"));
+    QCOMPARE(connection.testAuthentication(), 0);
+
 }
  
-QTEST_MAIN(TestQString)
-#include "testqstring.moc"
+QTEST_MAIN(testsasdatabaseconnection)
+#include "testsasdatabaseconnection.moc"
 
