@@ -81,7 +81,7 @@ void updateActiveObservations(string dp1, dyn_string obs,
     string obsDP=MainDBName+claimManager_nameToRealName(obsName);
 
     // add DP to list with all connects
-    dynAppend(obsConnections,obsDP+\".runState\");
+    if (! dynContains(obsConnections,obsDP+\".runState\")) dynAppend(obsConnections,obsDP+\".runState\");
   }
   
   if (dynlen(oldObsConnections) > 0) {
@@ -105,18 +105,54 @@ void updateActiveObservations(string dp1, dyn_string obs,
 }
 
 void monitorRunStates(dyn_string dpList,dyn_string runStates) {
-  connectStationInputStreams();
+  for (int i=1; i<= dynlen(runStates); i++) {
+    if (runStates[i] == \"Running\" || runStates[i] == \"Quiting\") {
+      connectStationInputStreams(runStates[i]);
+      break;
+    }
+  }
 }
 
 
 
+
 // connect to stationInputStreams from the active observations
-void connectStationInputStreams() {
+void connectStationInputStreams(string runState) {
   string obsDP=\"\";
   dyn_string stream0DPList;
   dyn_string stream1DPList;
   dyn_string stream2DPList;
   dyn_string stream3DPList;
+
+      // change all found DP's to contain all the elements that contain the stream.percBad
+    if (connected0) {
+      dpDisconnect(\"streamCB0\",connectTo0);
+      dynClear(connectTo0);
+      connected0 = false;
+    }
+    if (connected1) {
+      dpDisconnect(\"streamCB1\",connectTo1);
+      dynClear(connectTo1);
+      connected1 = false;
+    }
+    if (connected2) {
+      dpDisconnect(\"streamCB2\",connectTo2);
+      dynClear(connectTo2);
+      connected2 = false;
+    }
+    if (connected3) {
+      dpDisconnect(\"streamCB3\",connectTo3);
+      dynClear(connectTo3);
+      connected3 = false;
+    }
+
+    if (dynlen(observationsList) == 1 && runState == \"Quiting\") {
+      setValue(\"streamObject0\", \"foreCol\", \"Lofar_off\");
+      setValue(\"streamObject1\", \"foreCol\", \"Lofar_off\");
+      setValue(\"streamObject2\", \"foreCol\", \"Lofar_off\");
+      setValue(\"streamObject3\", \"foreCol\", \"Lofar_off\");
+    return;
+  }
 
 
   //collect all active observations and their stationInputStreams
@@ -130,33 +166,12 @@ void connectStationInputStreams() {
       // For all observations collect the PermSW streamInfo
       dyn_string stationInputs = navFunct_getStationInputForObservation(observationsList[i]);
   
-      // change all found DP's to contain all the elements that contain the stream.percBad
-      if (connected0) {
-        dpDisconnect(\"streamCB0\",connectTo0);
-        dynClear(connectTo0);
-        connected0 = false;
-      }
-      if (connected1) {
-        dpDisconnect(\"streamCB1\",connectTo1);
-        dynClear(connectTo1);
-        connected1 = false;
-      }
-      if (connected2) {
-        dpDisconnect(\"streamCB2\",connectTo2);
-        dynClear(connectTo2);
-        connected2 = false;
-      }
-      if (connected3) {
-        dpDisconnect(\"streamCB3\",connectTo3);
-        dynClear(connectTo3);
-        connected3 = false;
-      }
 
       for (int i=1; i<= dynlen(stationInputs); i++) {
-        dynAppend(connectTo0,stationInputs[i]+\".stream0.rejected:_online.._value\");
-        dynAppend(connectTo1,stationInputs[i]+\".stream1.rejected:_online.._value\");
-        dynAppend(connectTo2,stationInputs[i]+\".stream2.rejected:_online.._value\");
-        dynAppend(connectTo3,stationInputs[i]+\".stream3.rejected:_online.._value\");
+        if (! dynContains(connectTo0,stationInputs[i]+\".stream0:_online.._value\")) dynAppend(connectTo0,stationInputs[i]+\".stream0.rejected:_online.._value\");
+        if (! dynContains(connectTo1,stationInputs[i]+\".stream1:_online.._value\")) dynAppend(connectTo1,stationInputs[i]+\".stream1.rejected:_online.._value\");
+        if (! dynContains(connectTo2,stationInputs[i]+\".stream2:_online.._value\")) dynAppend(connectTo2,stationInputs[i]+\".stream2.rejected:_online.._value\");
+        if (! dynContains(connectTo3,stationInputs[i]+\".stream3:_online.._value\")) dynAppend(connectTo3,stationInputs[i]+\".stream3.rejected:_online.._value\");
       }
       if (dynlen(stationInputs) > 0) baseDP = stationInputs[1];
     }

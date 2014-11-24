@@ -140,18 +140,30 @@ void updateActiveObservations(string dp1, dyn_string obs,
 }
 
 void monitorRunStates(dyn_string dpList,dyn_string runStates) {
-  connectCobaltNodesAndProcesses();
+  for (int i=1; i<= dynlen(runStates); i++) {
+    if (runStates[i] == \"Running\" || runStates[i] == \"Quiting\") {
+      connectCobaltNodesAndProcesses(runStates[i]);
+      break;
+    }
+  }
 }
 
 
-void connectCobaltNodesAndProcesses() {
+void connectCobaltNodesAndProcesses(string runState) {
+  
+  // change all found DP's to contain all the elements that contain the states and childstates
+  if (connectedStates) {
+    dpDisconnect(\"cobaltNodesAndProcessesCB\",oldStateDPs);
+    connectedStates = false;
+  }
+
+  if (dynlen(observationsList) == 1 && runState == \"Quiting\") {
+    setStates(0,0);
+    return;
+  }
+
   if (dynlen(observationsList) > 0 && navFunct_dpReachable(CEPDBName) ){
 
-    // change all found DP's to contain all the elements that contain the states and childstates
-    if (connectedStates) {
-      dpDisconnect(\"cobaltNodesAndProcessesCB\",oldStateDPs);
-      connectedStates = false;
-    }
     
     // prepare connectList for States/childStates for each observation
     for(int i=1; i <= dynlen(observationsList); i++) {
@@ -173,7 +185,7 @@ void connectCobaltNodesAndProcesses() {
       // skip the lines that contain the observationNames
       string line = aResult[t][1];
       if (strpos(line,\"observationName\") >= 0) continue;
-      dynAppend(stateDPs,line);
+      if (!dynContains(stateDPs, line)) dynAppend(stateDPs,line);
     }
   
     // append the main hardware state

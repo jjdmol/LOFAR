@@ -140,12 +140,16 @@ void monitorStreamsCB(dyn_string dps, dyn_float values)
       color = \"Lofar_broken\";
     }
     
+    
     if (field == \"LBA\" || field == \"HBA\") {
       toolTipText0+=\"  \"+field+\" <br>--------------<br>\";     
+      toolTipText1+=\"  \"+field+\" <br>--------------<br>\";     
       if (val > 0) {
         string aS=station+\"</t> :\"+val+\"<br>\";
         dynAppend(toollist0,aS);
+        dynAppend(toollist1,aS);
         count0++;
+        count1++;
       }
       setValue(\"stationStreamObject0\", \"backCol\", color);
       setValue(\"stationStreamObject0\", \"foreCol\", color);

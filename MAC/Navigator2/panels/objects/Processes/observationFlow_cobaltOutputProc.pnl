@@ -1,25 +1,25 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 305 78 N "_3DFace" 0
+PANEL,-1 -1 447 41 N "_3DFace" 0
 "main()
 {
   baseDP = \"LOFAR_PermSW\";
   database=dpSubStr(baseDP,DPSUB_SYS);
-  
-  activeObsDP =MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\";  
+
+  activeObsDP =MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\";
   // check if MACScheduler pointenabled and accessible
   if (dpExists(activeObsDP)) {
     if (dpConnect(\"updateActiveObservations\", activeObsDP+\":_online.._value\",
-                                             activeObsDP+\":_online.._invalid\") == -1) {
-      LOG_ERROR(\"ObservationFlow_cobaltGPUProcs.pnl:main|Couldn't connect to: \"+activeObsDP);
+                                              activeObsDP+\":_online.._invalid\") == -1) {
+      LOG_ERROR(\"ObservationFlow_cobaltOutputProc.pnl:main|Couldn't connect to: \"+activeObsDP);
     }
   } else {
-    if (!isStandalone()) LOG_ERROR(\"ObservationFlow_cobaltGPUProcs.pnl:main|Couldn't find DP to connect to: \"+activeObsDP);
-  }
-  
-  	
-}" 0
+    if (!isStandalone()) LOG_ERROR(\"ObservationFlow_cobaltOutputProc.pnl:main|Couldn't find DP to connect to: \"+activeObsDP);
+  }	
+
+}
+" 0
  E E E E 1 -1 -1 0  0 0
 ""0  1
 E "#uses \"navPanel.ctl\"
@@ -28,14 +28,14 @@ string baseDP          = \"\";
 dyn_string observationsList;
 dyn_string oldObsConnections;   // keep copy latest observations to be disconnected when the list changes
 dyn_string activeObservations;
+dyn_int locusnodes;
 string activeObsDP = \"\";
 string database;
-dyn_string gpuprocs;
-dyn_string connectToGPUProcs;
-bool connectedGPUProcs;
+dyn_string outputProcs;
+dyn_string connectToOutputProcs;
+bool connectedOutputProcs;
 
 bool selectedObservations=false;
-
 
 void updateActiveObservations(string dp1, dyn_string obs,
                               string dp2, bool invalid)
@@ -62,7 +62,6 @@ void updateActiveObservations(string dp1, dyn_string obs,
   if (!selectedObservations) {
     observationsList = activeObservations;
   }
-  
   // because CobaltProcesses claim their datapoints when the observation is actually running we need to connect to all these observations
   // and give a signal when the runstate of one of them changes to running to trigger the Cobalt point collection
   
@@ -77,7 +76,7 @@ void updateActiveObservations(string dp1, dyn_string obs,
     string obsDP=MainDBName+claimManager_nameToRealName(obsName);
 
     // add DP to list with all connects
-    if (! dynContains(obsConnections,obsDP+\".runState\" )) dynAppend(obsConnections,obsDP+\".runState\");
+    if (! dynContains(obsConnections,obsDP+\".runState\")) dynAppend(obsConnections,obsDP+\".runState\");
   }
   
   if (dynlen(oldObsConnections) > 0) {
@@ -88,100 +87,103 @@ void updateActiveObservations(string dp1, dyn_string obs,
   
   // connect to runState for all active observations  
   if (dynlen(obsConnections) > 0 && dpConnect(\"monitorRunStates\",obsConnections) == -1) {
-    LOG_ERROR(\"ObservationFlow_cobaltGPUProcs.pnl:updateActiveObservations|ERROR: couldn't connect to : \"+obsConnections+ \" \" + getLastError());
+    LOG_ERROR(\"ObservationFlow_cobaltOutputProcs.pnl:updateActiveObservations|ERROR: couldn't connect to : \"+obsConnections+ \" \" + getLastError());
   } else if (dynlen(obsConnections) > 0) {
     oldObsConnections = obsConnections;
   }  else {
-     setValue(\"GPUProcsObject\", \"foreCol\", \"Lofar_off\");
+     setValue(\"outputProcsObject\", \"foreCol\", \"Lofar_off\");
   }    
 }
 
 void monitorRunStates(dyn_string dpList,dyn_string runStates) {
+
   for (int i=1; i<= dynlen(runStates); i++) {
     if (runStates[i] == \"Running\" || runStates[i] == \"Quiting\") {
-      connectGPUProcs(runStates[i]);
+      connectOutputProcs(runStates[i]);
       break;
     }
   }
 }
-// connect to GPUProcs from the active observations
-void connectGPUProcs(string runState) {
 
-  
+// connect to stationInputStreams from the active observations
+void connectOutputProcs(string runState) {
+
   // change all found DP's to contain all the elements that contain the .dropping
-  if (connectedGPUProcs) {
-    dpDisconnect(\"gpuprocCB\",connectToGPUProcs);
-    dynClear(connectToGPUProcs);
-    connectedGPUProcs = false;
-  }  
-  
+  if (connectedOutputProcs) {
+    dpDisconnect(\"outputProcCB\",connectToOutputProcs);
+    dynClear(connectToOutputProcs);
+    connectedOutputProcs = false;
+  }
+
   if (dynlen(observationsList) == 1 && runState == \"Quiting\") {
-    setValue(\"GPUProcsObject\", \"foreCol\", \"Lofar_off\");
+    setValue(\"outputProcsObject\", \"foreCol\", \"Lofar_off\");
     return;
   }
 
-  //collect all active observations and their stationInputStreams
+    //collect all active observations and their stationInputStreams
   if (dynlen(observationsList) > 0) {
-
 
     // prepare connectList
     for(int i=1; i <= dynlen(observationsList); i++) {
-      // get all the GPUProcs used by this observation
-      gpuprocs = navFunct_getGPUProcsForObservation(observationsList[i]);
-      for (int i=1; i<= dynlen(gpuprocs); i++) {
-        if (! dynContains(connectToGPUProcs,gpuprocs[i]+\".dropping:_online.._value\")) dynAppend(connectToGPUProcs,gpuprocs[i]+\".dropping:_online.._value\");
-        if (! dynContains(connectToGPUProcs,gpuprocs[i]+\".dropped:_online.._value\")) dynAppend(connectToGPUProcs,gpuprocs[i]+\".dropped:_online.._value\");
-        if (! dynContains(connectToGPUProcs,gpuprocs[i]+\".subband:_online.._value\")) dynAppend(connectToGPUProcs,gpuprocs[i]+\".subband:_online.._value\");
-        if (! dynContains(connectToGPUProcs,gpuprocs[i]+\".dataProductType:_online.._value\")) dynAppend(connectToGPUProcs,gpuprocs[i]+\".dataProductType:_online.._value\");
+      // get all the OutputProcs used by this observation
+      string dp = CEPDBName+claimManager_nameToRealName(\"LOFAR_ObsSW_\"+observationsList[i]);
+      if (! dynContains(connectToOutputProcs,dp+\"_CobaltOutputProc.dropping:_online.._value\")) {
+        dynAppend(connectToOutputProcs,dp+\"_CobaltOutputProc.dropping:_online.._value\");
       }
-      if (dynlen(gpuprocs) > 0) baseDP = gpuprocs[1];
     }
-    
+
+
     // check if the required datapoint for this view is enabled and accessible
-    if (navFunct_dpReachable(CEPDBName) && dynlen(connectToGPUProcs)>0 ){
-      if (dpConnect(\"gpuprocCB\", connectToGPUProcs) == -1) {
-        setValue(\"GPUProcsObject\", \"foreCol\", \"Lofar_dpdoesnotexist\");
-      } else {
-        connectedGPUProcs = true;
+    if (navFunct_dpReachable(CEPDBName) && dynlen(connectToOutputProcs)>0 ){
+      if (dpConnect(\"outputProcCB\", connectToOutputProcs) == -1) {
+        setValue(\"outputProcsObject\", \"foreCol\", \"Lofar_dpdoesnotexist\");
+      } else {         
+        connectedOutputProcs = true;
       }
     } else {
-      setValue(\"GPUProcsObject\", \"foreCol\", \"Lofar_off\");
+      setValue(\"outputProcsObject\", \"foreCol\", \"Lofar_off\");
     }
   } else {
-      setValue(\"GPUProcsObject\", \"foreCol\", \"Lofar_off\");    
+      setValue(\"outputProcsObject\", \"foreCol\", \"Lofar_off\");    
   }
 }
 
+      
 
-void gpuprocCB(dyn_string dps, dyn_dyn_anytype values)
+
+void outputProcCB(dyn_string dps, dyn_dyn_bool values)
 {
-  LOG_DEBUG(\"ObservationFlow_cobaltGPUProcs.pnl:gpuProcCB| entered\");
+
+  dynClear(locusnodes);
+  // Here we get dropping  and locusnodevalues from all involved observations
+  string toolTipText = \"Dropping outputProcs<br>\";
+  
   string color = \"Lofar_operational\";
-  
-  // Here we get dropping values. 
-  // dps[i]  contains the GPUproc that is dropping
-  // vals[i]  contains list of all subbands with on vals[i][j]  the subband if it is dropping
-  string toolTipText = \"Dropping GPUProcs<br>\";
-  
-  for (int i = 1; i <= dynlen(dps); i+=4) {
-    string dp = dpSubStr(dps[i],DPSUB_DP);
+
+  for (int i = 1; i<= dynlen(values); i++) {
+    dyn_float dropped;
+    dyn_string lnodes;
+    string dp = dps[i];
     dyn_bool dropping = values[i];
-    if (dynContains(dropping,TRUE )) {
-      color = \"Lofar_broken\";
-      dyn_float dropped = values[i+1];
-      dyn_int subband = values[i+2];
-      string dataProductType = values[i+3];
-      for (int j = 1; j <= dynlen(dropped); j++) {
-        if (dropping[j] == TRUE) {
-          toolTipText+=dp+\"</t> :\"+dropped[j]+\" - \"+subband[j]+\" - \"+dataProductType+\"<br>\";
-        }
+    
+    string outputProcDP = dpSubStr(dp,DPSUB_SYS_DP);
+    dpGet(outputProcDP+\".dropped\",dropped);
+    dpGet(outputProcDP+\".locusNode\",lnodes);
+    
+    for (int j=1; j<= dynlen(lnodes);j++) {
+      dynAppend(locusnodes,lnodes[j]);
+      if (dynlen(dropped) <= j)  continue;
+      if ( dropped[j] > 0) {
+        color = \"Lofar_broken\";
+        toolTipText+=lnodes[j]+\"<br>\";
       }
     }
   }
 
-  setValue(\"GPUProcsObject\",\"toolTipText\",toolTipText);
-  setValue(\"GPUProcsObject\", \"foreCol\", color);
-}
+  setValue(\"outputProcsObject\",\"toolTipText\",toolTipText);
+  setValue(\"outputProcsObject\", \"foreCol\", color);
+
+ }
 " 0
  2
 "CBRef" "1"
@@ -192,19 +194,19 @@ LAYER, 0
 1
 LANG:1 0 
 4 0
-"GPUProcsObject"
+"outputProcsObject"
 ""
-1 20 30 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+1 20 20 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
  E E
 0 0 0 0 0 0
 E E E
 0
 1
-LANG:1 69 All GPUProcs involved in the  currently(selected) active observations
+LANG:1 72 All OutputProcs involved in the  currently(selected) active observations
 
 1
 "dashclr"N "_Transparent"
-E E 0 4 1 2 1 E  20 30 50 30
+E E 0 4 1 2 1 E  20 20 50 20
 0
 LAYER, 1 
 1
