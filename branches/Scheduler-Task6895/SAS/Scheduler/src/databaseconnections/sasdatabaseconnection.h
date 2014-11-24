@@ -61,6 +61,11 @@ public:
 
     QSqlDatabase getSasDB(){return sasDB;}
 
+
+    QSqlQuery treeidFROMgettreelist(QString tree);
+
+    QSqlQuery now();
+
 private:
     QSqlDatabase sasDB;
     SASSqlQueries sasQueries;

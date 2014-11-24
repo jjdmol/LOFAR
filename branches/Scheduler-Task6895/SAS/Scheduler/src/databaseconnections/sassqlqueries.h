@@ -32,6 +32,9 @@ public:
     QSqlQuery doOTDBlogin(QSqlDatabase sasDB, QString sasUserName,
                           QString sasPassword);
 
+    QSqlQuery treeidFROMgettreelist(QSqlDatabase sasDB, QString tree);
+
+    QSqlQuery now(QSqlDatabase sasDB);
 
 };
 

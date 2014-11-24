@@ -63,8 +63,8 @@ int SASDatabaseConnection::testAuthentication()
     if (!sasDB.open())
         return -1; // could not connect to SAS database
 
-    QSqlQuery query = sasQueries.doOTDBlogin(
-               sasDB, itsSASUserName, itsSASPassword);
+    // Call helper function on query containing class
+    QSqlQuery query = sasQueries.doOTDBlogin(sasDB, itsSASUserName, itsSASPassword);
 
     // If query returned any feedback
     if (!query.next())
@@ -90,3 +90,13 @@ QString SASDatabaseConnection::lastError()
     return sasDB.lastError().text();
 }
 
+QSqlQuery SASDatabaseConnection::treeidFROMgettreelist(
+         QString tree)
+{
+    return sasQueries.treeidFROMgettreelist(sasDB, tree);
+}
+
+QSqlQuery SASDatabaseConnection::now()
+{
+    return sasQueries.now(sasDB);
+}

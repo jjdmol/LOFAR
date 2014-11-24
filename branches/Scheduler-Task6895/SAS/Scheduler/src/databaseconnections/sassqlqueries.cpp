@@ -34,3 +34,20 @@ QSqlQuery SASSqlQueries::doOTDBlogin(QSqlDatabase sasDB,
                + "','" + sasPassword + "')");
     return query;
 }
+
+
+QSqlQuery SASSqlQueries::treeidFROMgettreelist(QSqlDatabase sasDB, QString tree)
+{
+    QSqlQuery query(sasDB);
+    query.exec("SELECT treeid FROM gettreelist('"
+                    + tree
+                    + "','0',0,'','','')");
+    return query;
+}
+
+QSqlQuery SASSqlQueries::now(QSqlDatabase sasDB)
+{
+    QSqlQuery query(sasDB);
+    query.exec("SELECT now()");
+    return query;
+}

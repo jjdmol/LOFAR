@@ -69,7 +69,6 @@ void SASConnection::cleanup(void) {
 // exit negative values on value zero on succes
 // Exit values are used at the receiving side for selection of stuff to display
 // refactoring:
-// Shared functionality with other functions.
 // Name does not cover functionality
 int SASConnection::testConnect(const QString &username,
        const QString &password, const QString &DBname, const QString &hostname)
@@ -94,31 +93,28 @@ int SASConnection::connect(void) {
 }
 
 // Create a connection with SASDB
-// IF fails try initializing it first
-// IF still failing exit with error state -1
-// Else check if authorisation is ok. exit -2 if incorrect
-// then getCampaignsFromSAS()
-// return 0
+//
+// If connection is not in a correct state
+// recreate the connection
+// exit with the exit state of testAuthentication() if not 0
+// Assign
 // refactor notes:
 // mixture of control and model.
 // side effects not clear from function name.
 // Candidate for refactoring using pqxx
 int SASConnection::connect(const QString &user, const QString &password,
-                           const QString &DBName, const QString &hostName) {
-
-
+                           const QString &DBName, const QString &hostName)
+{
     // If not in a valid state reconnect
     if (dbConnection.testAuthentication() != 0)
         dbConnection = SASDatabaseConnection(user, password, hostName, DBName);
 
+    // Get the output of the auth test for the new connection
     int authReturn = dbConnection.testAuthentication();
-
     if ( authReturn != 0)
-        return authReturn;
+        return authReturn;  // Return the error code
 
-    QSqlDatabase sasDB  = dbConnection.getSasDB();
-
-    //
+    // If the connect is good, get the authToken from the dbConnection
     itsAuthToken = dbConnection.getAuthToken();
 
     // get the list of campaigns from SAS
@@ -131,9 +127,11 @@ int SASConnection::connect(const QString &user, const QString &password,
 int SASConnection::getModifiedVICTrees(const QDateTime &afterdate) {
 	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
 
-	// check which trees still exist in sas database and remove them from itsSASVicTrees if they don't exist anymore
-	std::vector<unsigned> existingVICs;
-	QSqlQuery query("SELECT treeid FROM gettreelist('" + QString::number(VIC_TREE) + "','0',0,'','','')", sasDB);
+    // check which trees still exist in sas database and remove them from itsSASVicTrees if they don't exist anymore
+    std::vector<unsigned> existingVICs;
+    QSqlQuery query("SELECT treeid FROM gettreelist('"
+                    + QString::number(VIC_TREE)
+                    + "','0',0,'','','')", sasDB);
 	if (query.isActive()) {
 		while (query.next()) {
 			existingVICs.push_back(query.value(0).toUInt());
@@ -237,11 +235,12 @@ int SASConnection::getModifiedVICTrees(const QDateTime &afterdate) {
 }
 
 void SASConnection::updateLastDownloadDate(void) {
-	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
-	QSqlQuery query("SELECT now()", sasDB);
+    QSqlQuery query = dbConnection.now();
+
 	if (query.isActive()) {
 		if (query.next()) {
-			itsLastDownloadDate = QDateTime::fromString(query.value(0).toString(),"yyyy-MM-ddThh:mm:ss"); // one second added because some sas stored procedures will return changes *equal to* and greater this modification date, not
+            itsLastDownloadDate = QDateTime::fromString(query.value(0).toString(),
+        "yyyy-MM-ddThh:mm:ss");
 		}
 	}
 	query.finish();
@@ -250,6 +249,8 @@ void SASConnection::updateLastDownloadDate(void) {
 // function getAllSASTasksWithinPeriod gets all OTDB trees (not complete vic trees but only their metadata) within the specified period
 // This function will also check if the tree depends (has predecessors) on other trees and will the also download those predecessor trees
 int SASConnection::getAllSASTasksWithinPeriod(int treeType, const AstroDateTime &begindate, const AstroDateTime &enddate) {
+
+
     int retVal(0);
 	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
 	itsSASVicTrees.clear();
