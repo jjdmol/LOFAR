@@ -40,6 +40,84 @@ using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 
+// default settings
+// sdo_ss=295:330,331:366,367:402,403:438
+blitz::Array<uint16, 2> str2blitz(const char* str, int max)
+{
+    string inputstring(str);
+    char* start  = (char*)inputstring.c_str();
+    char* end  = 0;
+    bool  range  = false;
+    long  prevval = 0;
+
+    blitz::Array<uint16, 2> ss(4,36); // ss = subband select
+    int bank_nr = 0;
+    int sb_nr = 0;
+    long i;
+
+    ss = 0;
+    while (start) {
+        long val = strtol(start, &end, 10); // read decimal numbers
+        start = (end ? (*end ? end + 1 : 0) : 0); // advance
+        if (val >= max || val < 0) {
+            LOG_WARN(formatString("Error: value %ld out of range",val));
+            ss = 0;
+            return ss;
+        }
+        LOG_INFO_STR("val=" << val << "  prevval=" << prevval);
+        if (end) {
+            switch (*end) {
+                case ',':
+                case 0: {
+                    if (range) {
+                        if (0 == prevval && 0 == val) {
+                            val = max - 1;
+                        }
+                        if (val < prevval) {
+                            LOG_WARN("Error: invalid range specification");
+                            ss = 0;
+                            return ss;
+                        }
+
+                        for (i = prevval; i <= val; i++) {
+                            //LOG_INFO(formatString("add value %ld to ss(%d,%d)", i, bank_nr, sb_nr));
+                            ss(bank_nr, sb_nr) = (uint16)i;
+                            sb_nr++;
+                            if (sb_nr >= 36) {
+                                bank_nr++;
+                                sb_nr = 0;
+                            }
+                        }
+                    }
+                    else {
+                        ss(bank_nr, sb_nr) = (uint16)val;
+                        sb_nr++;
+                        if (sb_nr >= 36) {
+                            bank_nr++;
+                            sb_nr = 0;
+                        }
+                    }
+                    range=false;
+                } break;
+
+                case ':': {
+                    range=true;
+                } break;
+
+                default: {
+                    LOG_WARN(formatString("Error: invalid character %c",*end));
+                    ss = 0;
+                    return ss;
+                } break;
+            } // switch
+        } // if (end)
+        prevval = val;
+    } // while
+
+    return (ss);
+}
+
+
 /**
  * Instance pointer for the Cache singleton class.
  */
@@ -89,30 +167,30 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
   LOG_DEBUG_STR("itsSDOModeInfo.size()                =" << itsSDOModeInfo().size()       * sizeof(EPA_Protocol::RSRSDOMode));
   LOG_DEBUG_STR("itsSDOSelection.size()               =" << itsSDOSelection.subbands().size() * sizeof(uint16));
   LOG_DEBUG_STR("itsSDOBitsPerSample.size()           =" << sizeof(itsSDOBitsPerSample));
-  
+
   LOG_INFO_STR(formatString("CacheBuffer size = %d bytes",
-	         m_beamletweights().size()    	       
-	       + m_subbandselection.crosslets().size()  
-	       + m_subbandselection.beamlets().size()  
-	       + m_rcusettings().size()       
-	       + m_hbasettings().size()       
-	       + m_hbareadings().size()       
-	       + m_rsusettings().size()       
-	       + m_wgsettings().size()        
-	       + m_subbandstats().size()      
-	       + m_beamletstats().size()      
-	       + m_xcstats().size()           
-	       + m_systemstatus.board().size()
-	       + m_versions.bp().size()       
-	       + m_versions.ap().size()       
-	       + m_tdstatus.board().size()    
-	       + m_spustatus.subrack().size()    
-	       + m_tbbsettings().size()
-	       + m_bypasssettings().size()
-		   + ETH_DATA_LEN + sizeof(uint16)
-		   + sizeof(itsSdsWriteBuffer)
-		   + sizeof(itsSdsReadBuffer)
-		   + itsLatencys().size()
+             m_beamletweights().size()
+           + m_subbandselection.crosslets().size()
+           + m_subbandselection.beamlets().size()
+           + m_rcusettings().size()
+           + m_hbasettings().size()
+           + m_hbareadings().size()
+           + m_rsusettings().size()
+           + m_wgsettings().size()
+           + m_subbandstats().size()
+           + m_beamletstats().size()
+           + m_xcstats().size()
+           + m_systemstatus.board().size()
+           + m_versions.bp().size()
+           + m_versions.ap().size()
+           + m_tdstatus.board().size()
+           + m_spustatus.subrack().size()
+           + m_tbbsettings().size()
+           + m_bypasssettings().size()
+           + ETH_DATA_LEN + sizeof(uint16)
+           + sizeof(itsSdsWriteBuffer)
+           + sizeof(itsSdsReadBuffer)
+           + itsLatencys().size()
            + itsSwappedXY.size()
            + itsBitModeInfo().size()
            + sizeof(itsBitsPerSample)
@@ -150,204 +228,224 @@ CacheBuffer::~CacheBuffer()
 
 void CacheBuffer::reset(void)
 {
-	//
-	// Initialize cache, allocating memory and setting default values
-	//
-	struct timeval tv;
-	tv.tv_sec = 0; tv.tv_usec = 0;
-	m_timestamp.set(tv);
+    //
+    // Initialize cache, allocating memory and setting default values
+    //
+    struct timeval tv;
+    tv.tv_sec = 0; tv.tv_usec = 0;
+    m_timestamp.set(tv);
 
     itsBitsPerSample = MAX_BITS_PER_SAMPLE;
     itsSDOBitsPerSample = MAX_BITS_PER_SAMPLE;
-    
-	m_beamletweights().resize( BeamletWeights::SINGLE_TIMESTEP, 
-	                           StationSettings::instance()->nrRcus(),
-	                           MAX_NR_BM_BANKS, 
-	                           MEPHeader::N_BEAMLETS);
-	m_beamletweights() = complex<int16>(25,36);
+
+    m_beamletweights().resize( BeamletWeights::SINGLE_TIMESTEP,
+                               StationSettings::instance()->nrRcus(),
+                               MAX_NR_BM_BANKS,
+                               MEPHeader::N_BEAMLETS);
+    m_beamletweights() = complex<int16>(25,36);
 // TODO remove this code!!!
-	for (int rcu = 0 ; rcu < StationSettings::instance()->nrRcus(); rcu++) {
-		int16	value=0;
-		for (int bank = 0; bank < (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE); bank++) {
-			for (int beamlet = 0; beamlet < MEPHeader::N_BEAMLETS; beamlet++) {
-				m_beamletweights()(0,rcu,bank,beamlet)=complex<int16>(value++,bank+10);
-			}
-		}
-	}
+    for (int rcu = 0 ; rcu < StationSettings::instance()->nrRcus(); rcu++) {
+        int16   value=0;
+        for (int bank = 0; bank < (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE); bank++) {
+            for (int beamlet = 0; beamlet < MEPHeader::N_BEAMLETS; beamlet++) {
+                m_beamletweights()(0,rcu,bank,beamlet)=complex<int16>(value++,bank+10);
+            }
+        }
+    }
 //TODO
 
-	m_subbandselection.crosslets().resize(StationSettings::instance()->nrRcus(),
-	                                      (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE),
-	                                      MEPHeader::N_LOCAL_XLETS );
-	m_subbandselection.crosslets() = 0;
+    m_subbandselection.crosslets().resize(StationSettings::instance()->nrRcus(),
+                                          (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE),
+                                          MEPHeader::N_LOCAL_XLETS );
+    m_subbandselection.crosslets() = 0;
     m_subbandselection.beamlets().resize(StationSettings::instance()->nrRcus(),
                                          (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE),
                                          MEPHeader::N_BEAMLETS );
-	m_subbandselection.beamlets() = 0;
-	
-	if (GET_CONFIG("RSPDriver.IDENTITY_WEIGHTS", i)) {
-		// these weights ensure that the beamlet statistics
-		// exactly match the subband statistics
-		m_beamletweights() = complex<int16>(GET_CONFIG("RSPDriver.BF_GAIN", i), 0);
+    m_subbandselection.beamlets() = 0;
 
-		//
-		// Set default subband selection starting at RSPDriver.FIRST_SUBBAND
-		//
-		int		firstSubband = GET_CONFIG("RSPDriver.FIRST_SUBBAND", i);
-		for (int rcu = 0; rcu < m_subbandselection.beamlets().extent(firstDim); rcu++) {
-    		for (int bank = 0; bank < (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE); bank++) {	
-    			for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
-    				int	start(lane*(MEPHeader::N_BEAMLETS/MEPHeader::N_SERDES_LANES));
-    				int stop (start + maxBeamletsPerRSP(itsBitsPerSample));
-    				if (rcu==0) LOG_DEBUG_STR("start=" << start << ", stop=" << stop);
-    				for (int sb = start; sb < stop; sb++) {
-    					m_subbandselection.beamlets()(rcu, bank, sb) = (rcu%N_POL) + (sb*N_POL) + (firstSubband*2);
-    				} // for sb
-    			} // for lane
-    		} // for bank
-		} // for rcu
-		LOG_DEBUG_STR("m_subbandsel(0): " << m_subbandselection.beamlets()(0, Range::all(), Range::all()));
-	} // if identity_weights
+    if (GET_CONFIG("RSPDriver.IDENTITY_WEIGHTS", i)) {
+        // these weights ensure that the beamlet statistics
+        // exactly match the subband statistics
+        m_beamletweights() = complex<int16>(GET_CONFIG("RSPDriver.BF_GAIN", i), 0);
 
-	// initialize RCU settings
-	m_rcusettings().resize(StationSettings::instance()->nrRcus());
+        //
+        // Set default subband selection starting at RSPDriver.FIRST_SUBBAND
+        //
+        int     firstSubband = GET_CONFIG("RSPDriver.FIRST_SUBBAND", i);
+        for (int rcu = 0; rcu < m_subbandselection.beamlets().extent(firstDim); rcu++) {
+            for (int bank = 0; bank < (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE); bank++) {
+                for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
+                    int start(lane*(MEPHeader::N_BEAMLETS/MEPHeader::N_SERDES_LANES));
+                    int stop (start + maxBeamletsPerRSP(itsBitsPerSample));
+                    if (rcu==0) LOG_DEBUG_STR("start=" << start << ", stop=" << stop);
+                    for (int sb = start; sb < stop; sb++) {
+                        m_subbandselection.beamlets()(rcu, bank, sb) = (rcu%N_POL) + (sb*N_POL) + (firstSubband*2);
+                    } // for sb
+                } // for lane
+            } // for bank
+        } // for rcu
+        LOG_DEBUG_STR("m_subbandsel(0): " << m_subbandselection.beamlets()(0, Range::all(), Range::all()));
+    } // if identity_weights
 
-	RCUSettings::Control rcumode;
-	rcumode.setMode(RCUSettings::Control::MODE_OFF);
-	m_rcusettings() = rcumode;
+    // initialize RCU settings
+    m_rcusettings().resize(StationSettings::instance()->nrRcus());
 
-	// initialize HBA settings
-	m_hbasettings().resize(StationSettings::instance()->nrRcus(), N_HBA_ELEM_PER_TILE);
-	m_hbasettings() = 0; // initialize to 0
-	m_hbareadings().resize(StationSettings::instance()->nrRcus(), N_HBA_ELEM_PER_TILE);
-	m_hbareadings() = 0; // initialize to 0
+    RCUSettings::Control rcumode;
+    rcumode.setMode(RCUSettings::Control::MODE_OFF);
+    m_rcusettings() = rcumode;
 
-	// RSU settings
-	m_rsusettings().resize(StationSettings::instance()->nrRspBoards());
-	RSUSettings::ResetControl 	rsumode;
-	rsumode.setRaw(RSUSettings::ResetControl::CTRL_OFF);
-	m_rsusettings() = rsumode;
+    // initialize HBA settings
+    m_hbasettings().resize(StationSettings::instance()->nrRcus(), N_HBA_ELEM_PER_TILE);
+    m_hbasettings() = 0; // initialize to 0
+    m_hbareadings().resize(StationSettings::instance()->nrRcus(), N_HBA_ELEM_PER_TILE);
+    m_hbareadings() = 0; // initialize to 0
 
-	m_wgsettings().resize(StationSettings::instance()->nrRcus());
-	WGSettings::WGRegisterType init;
-	init.freq        = 0;
-	init.phase       = 0;
-	init.ampl        = 0;
-	init.nof_samples = 0;
-	init.mode = WGSettings::MODE_OFF;
-	init.preset = WGSettings::PRESET_SINE;
-	m_wgsettings() = init;
+    // RSU settings
+    m_rsusettings().resize(StationSettings::instance()->nrRspBoards());
+    RSUSettings::ResetControl   rsumode;
+    rsumode.setRaw(RSUSettings::ResetControl::CTRL_OFF);
+    m_rsusettings() = rsumode;
 
-	m_wgsettings.waveforms().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_WAVE_SAMPLES);
-	m_wgsettings.waveforms() = 0;
+    m_wgsettings().resize(StationSettings::instance()->nrRcus());
+    WGSettings::WGRegisterType init;
+    init.freq        = 0;
+    init.phase       = 0;
+    init.ampl        = 0;
+    init.nof_samples = 0;
+    init.mode = WGSettings::MODE_OFF;
+    init.preset = WGSettings::PRESET_SINE;
+    m_wgsettings() = init;
 
-	m_subbandstats().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_SUBBANDS);
-	m_subbandstats() = 0;
-    
+    m_wgsettings.waveforms().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_WAVE_SAMPLES);
+    m_wgsettings.waveforms() = 0;
+
+    m_subbandstats().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_SUBBANDS);
+    m_subbandstats() = 0;
+
     // Number of cep streams -> in normal mode 4, in splitmode 8.
-    int maxStreams = 8; 
-	m_beamletstats().resize((maxStreams/MEPHeader::N_SERDES_LANES) * N_POL,
-	                        (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE) * MEPHeader::N_BEAMLETS);
-	m_beamletstats() = 0;
+    int maxStreams = 8;
+    m_beamletstats().resize((maxStreams/MEPHeader::N_SERDES_LANES) * N_POL,
+                            (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE) * MEPHeader::N_BEAMLETS);
+    m_beamletstats() = 0;
 
-	m_xcstats().resize(N_POL, N_POL, StationSettings::instance()->nrBlps(), StationSettings::instance()->nrBlps());
-	m_xcstats() = complex<double>(0,0);
+    m_xcstats().resize(N_POL, N_POL, StationSettings::instance()->nrBlps(), StationSettings::instance()->nrBlps());
+    m_xcstats() = complex<double>(0,0);
 
-	// BoardStatus
-	m_systemstatus.board().resize(StationSettings::instance()->nrRspBoards());
-	BoardStatus boardinit;
-	memset(&boardinit, 0, sizeof(BoardStatus));
-	m_systemstatus.board() = boardinit;
+    // BoardStatus
+    m_systemstatus.board().resize(StationSettings::instance()->nrRspBoards());
+    BoardStatus boardinit;
+    memset(&boardinit, 0, sizeof(BoardStatus));
+    m_systemstatus.board() = boardinit;
 
-	EPA_Protocol::RSRVersion versioninit = { { 0 }, 0, 0 };
-	m_versions.bp().resize(StationSettings::instance()->nrRspBoards());
-	m_versions.bp() = versioninit;
-	m_versions.ap().resize(StationSettings::instance()->nrBlps());
-	m_versions.ap() = versioninit;
+    EPA_Protocol::RSRVersion versioninit = { { 0 }, 0, 0 };
+    m_versions.bp().resize(StationSettings::instance()->nrRspBoards());
+    m_versions.bp() = versioninit;
+    m_versions.ap().resize(StationSettings::instance()->nrBlps());
+    m_versions.ap() = versioninit;
 
-	// TDBoardStatus
-	m_tdstatus.board().resize(StationSettings::instance()->nrRspBoards());
-	TDBoardStatus tdstatusinit;
-	memset(&tdstatusinit, 0, sizeof(TDBoardStatus));
-	tdstatusinit.unknown = 1;
-	m_tdstatus.board() = tdstatusinit;
+    // TDBoardStatus
+    m_tdstatus.board().resize(StationSettings::instance()->nrRspBoards());
+    TDBoardStatus tdstatusinit;
+    memset(&tdstatusinit, 0, sizeof(TDBoardStatus));
+    tdstatusinit.unknown = 1;
+    m_tdstatus.board() = tdstatusinit;
 
-	// SPUBoardStatus
-	int	nrSubRacks = StationSettings::instance()->maxRspBoards()/NR_RSPBOARDS_PER_SUBRACK;
-	nrSubRacks += (StationSettings::instance()->maxRspBoards() % NR_RSPBOARDS_PER_SUBRACK == 0) ? 0 : 1;
-	m_spustatus.subrack().resize(nrSubRacks);
-	LOG_INFO_STR("Resizing SPU array to " << m_spustatus.subrack().size());
-	SPUBoardStatus spustatusinit;
-	memset(&spustatusinit, 0, sizeof(SPUBoardStatus));
-	m_spustatus.subrack() = spustatusinit;
+    // SPUBoardStatus
+    int nrSubRacks = StationSettings::instance()->maxRspBoards()/NR_RSPBOARDS_PER_SUBRACK;
+    nrSubRacks += (StationSettings::instance()->maxRspBoards() % NR_RSPBOARDS_PER_SUBRACK == 0) ? 0 : 1;
+    m_spustatus.subrack().resize(nrSubRacks);
+    LOG_INFO_STR("Resizing SPU array to " << m_spustatus.subrack().size());
+    SPUBoardStatus spustatusinit;
+    memset(&spustatusinit, 0, sizeof(SPUBoardStatus));
+    m_spustatus.subrack() = spustatusinit;
 
-	// TBBSettings
-	m_tbbsettings().resize(StationSettings::instance()->nrRcus());
-	bitset<MEPHeader::N_SUBBANDS> bandsel;
-	bandsel = 0;
-	m_tbbsettings() = bandsel;
+    // TBBSettings
+    m_tbbsettings().resize(StationSettings::instance()->nrRcus());
+    bitset<MEPHeader::N_SUBBANDS> bandsel;
+    bandsel = 0;
+    m_tbbsettings() = bandsel;
 
-	// BypassSettings (BP and AP's)
-	LOG_INFO_STR("Resizing bypass array to: " << StationSettings::instance()->nrBlps());
+    // BypassSettings (BP and AP's)
+    LOG_INFO_STR("Resizing bypass array to: " << StationSettings::instance()->nrBlps());
     m_bypasssettings().resize(StationSettings::instance()->nrBlps());
-	BypassSettings::Control	control;
-	m_bypasssettings() = control;
-    
-	// clear rawdatablock
-	itsRawDataBlock.address = 0;
-	itsRawDataBlock.offset  = 0;
-	itsRawDataBlock.dataLen = 0;
-	memset(itsRawDataBlock.data, 0, RSP_RAW_BLOCK_SIZE);
+    BypassSettings::Control control;
+    m_bypasssettings() = control;
+    for (int blp_nr = 0; blp_nr < StationSettings::instance()->nrBlps(); blp_nr += 4) {
+        m_bypasssettings()(blp_nr).setSDO(1);
+    }
 
-	// clear SerdesBuffer
-	itsSdsWriteBuffer.clear();
-	for (int rsp = 0; rsp < MAX_N_RSPBOARDS; rsp++) {
-		itsSdsReadBuffer[rsp].clear();
-	}
+    // clear rawdatablock
+    itsRawDataBlock.address = 0;
+    itsRawDataBlock.offset  = 0;
+    itsRawDataBlock.dataLen = 0;
+    memset(itsRawDataBlock.data, 0, RSP_RAW_BLOCK_SIZE);
 
-	// clear I2C flag
-	itsI2Cuser = NONE;
-	
-	// set Splitter not active
-	itsSplitterActive = false;
-	// set CEP port enabled
-	itsCepEnabled0 = false;
-	itsCepEnabled1 = false;
-	
-	// Latency status
-	itsLatencys().resize(StationSettings::instance()->nrRspBoards());
-	RADLatency radlatencyinit;
-	memset(&radlatencyinit, 0, sizeof(RADLatency));
-	itsLatencys() = radlatencyinit;
-	itsSwappedXY.reset();
-	
-	// BitMode
-	itsBitModeInfo().resize(StationSettings::instance()->nrRspBoards());
-	RSRBeamMode bitmodeinfo;
-	bitmodeinfo.bm_select = 0;
-	bitmodeinfo.bm_max = 0;
-	itsBitModeInfo() = bitmodeinfo;
-	
-    // SDOMode
-	itsSDOModeInfo().resize(StationSettings::instance()->nrRspBoards());
-	RSRSDOMode sdomodeinfo;
-	sdomodeinfo.bm_select = 0;
-	sdomodeinfo.bm_max = 0;
-	itsSDOModeInfo() = sdomodeinfo;
-    
+    // clear SerdesBuffer
+    itsSdsWriteBuffer.clear();
+    for (int rsp = 0; rsp < MAX_N_RSPBOARDS; rsp++) {
+        itsSdsReadBuffer[rsp].clear();
+    }
+
+    // clear I2C flag
+    itsI2Cuser = NONE;
+
+    // set Splitter not active
+    itsSplitterActive = false;
+    // set CEP port enabled
+    itsCepEnabled0 = false;
+    itsCepEnabled1 = false;
+
+    // Latency status
+    itsLatencys().resize(StationSettings::instance()->nrRspBoards());
+    RADLatency radlatencyinit;
+    memset(&radlatencyinit, 0, sizeof(RADLatency));
+    itsLatencys() = radlatencyinit;
+    itsSwappedXY.reset();
+
+    // BitMode
+    itsBitModeInfo().resize(StationSettings::instance()->nrRspBoards());
+    RSRBeamMode bitmodeinfo;
+    bitmodeinfo.bm_select = 0;
+    bitmodeinfo.bm_max = 0;
+    itsBitModeInfo() = bitmodeinfo;
+
+    // SDO default Mode selection
+    int sdo_mode = 0;
+    int bits_per_sample = GET_CONFIG("RSPDriver.SDO_MODE", i);
+    if      (bits_per_sample == 8) { sdo_mode = 1; }
+    else if (bits_per_sample == 5) { sdo_mode = 2; }
+    else if (bits_per_sample == 4) { sdo_mode = 3; }
+
+    itsSDOModeInfo().resize(StationSettings::instance()->nrRspBoards());
+    RSRSDOMode sdomodeinfo;
+    sdomodeinfo.bm_select = sdo_mode;
+    sdomodeinfo.bm_max = 3;
+    itsSDOModeInfo() = sdomodeinfo;
+
+    // SDO default subband selection
     itsSDOSelection.subbands().resize(StationSettings::instance()->nrRcus(),
                                      (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE),
                                       MEPHeader::N_SDO_SUBBANDS);
-	itsSDOSelection.subbands() = 0;
-	//TODO: itsSDOSelection() = 0;
+    char select_str[64];
+    blitz::Array<uint16, 2> select(4,36);
+    strncpy(select_str, GET_CONFIG_STRING("RSPDriver.SDO_SS"), 64);
+    select = str2blitz(select_str, 512);
+    for (int rcu = 0; rcu < StationSettings::instance()->nrRcus(); rcu++) {
+        for (int bank = 0; bank < (MAX_BITS_PER_SAMPLE / MIN_BITS_PER_SAMPLE); bank++) {
+            itsSDOSelection.subbands()(rcu, bank, Range::all()) = 0;
+            for (int sb = 0; sb < 36; sb++) {
+                itsSDOSelection.subbands()(rcu, bank, sb) = (select(bank, sb) * 2) + (rcu % 2);
+            } // for each subband
+        } // for each bank
+    }
 }
 
 
-SerdesBuffer&	CacheBuffer::getSdsReadBuffer(int	rspBoardNr)
+SerdesBuffer&   CacheBuffer::getSdsReadBuffer(int   rspBoardNr)
 {
-	ASSERTSTR(rspBoardNr >= 0 && rspBoardNr < MAX_N_RSPBOARDS, 
-				"RSPboard index out of range in getting serdesReadBuffer: " << rspBoardNr);
-	return (itsSdsReadBuffer[rspBoardNr]);
+    ASSERTSTR(rspBoardNr >= 0 && rspBoardNr < MAX_N_RSPBOARDS,
+                "RSPboard index out of range in getting serdesReadBuffer: " << rspBoardNr);
+    return (itsSdsReadBuffer[rspBoardNr]);
 }
 
 void CacheBuffer::setTimestamp(const RTC::Timestamp& timestamp)
@@ -360,70 +458,71 @@ void CacheBuffer::setTimestamp(const RTC::Timestamp& timestamp)
 //
 Cache& Cache::getInstance()
 {
-	if (!m_instance) {
-		m_instance = new Cache;
-	}
-	return (*m_instance);
+    if (!m_instance) {
+        m_instance = new Cache;
+    }
+    return (*m_instance);
 }
 
 Cache::Cache() : m_front(0), m_back(0)
 {
-	// initialize preset waveforms
-	WGSettings::initWaveformPresets();
+    // initialize preset waveforms
+    WGSettings::initWaveformPresets();
 
-	m_front = new CacheBuffer(this); ASSERT(m_front);
-	m_back = new CacheBuffer(this);  ASSERT(m_back);
+    m_front = new CacheBuffer(this); ASSERT(m_front);
+    m_back = new CacheBuffer(this);  ASSERT(m_back);
 
-	getState().init(StationSettings::instance()->nrRspBoards(),
-					StationSettings::instance()->nrBlps(),
-					StationSettings::instance()->nrRcus());
+    getState().init(StationSettings::instance()->nrRspBoards(),
+                    StationSettings::instance()->nrBlps(),
+                    StationSettings::instance()->nrRcus());
 
-	// start by writing the correct clock setting
-	Sequencer::getInstance().startSequence(Sequencer::SEQ_SETCLOCK);
+    // start by writing the correct clock setting
+    Sequencer::getInstance().startSequence(Sequencer::SEQ_STARTUP);
 }
 
 Cache::~Cache()
 {
-	if (m_front) delete m_front;
-	if (m_back) delete m_back;
+    if (m_front) delete m_front;
+    if (m_back) delete m_back;
 }
 
 void Cache::reset(void)
 {
-	m_front->reset();
-	m_back->reset();
+    m_front->reset();
+    m_back->reset();
 }
 
 void Cache::swapBuffers()
 {
-	if (GET_CONFIG("RSPDriver.XC_FILL", i)) {
-		// fill xcorr array by copying and taking complex conjugate of values mirrored in the diagonal
-		Array<complex<double>, 4> xc(m_back->getXCStats()());
-		firstIndex  i; secondIndex j; thirdIndex  k; fourthIndex  l;
-		xc = where(xc(i,j,k,l)==complex<double>(0,0), conj(xc(j,i,l,k)), xc(i,j,k,l));
-	}
+    if (GET_CONFIG("RSPDriver.XC_FILL", i)) {
+        // fill xcorr array by copying and taking complex conjugate of values mirrored in the diagonal
+        Array<complex<double>, 4> xc(m_back->getXCStats()());
+        firstIndex  i; secondIndex j; thirdIndex  k; fourthIndex  l;
+        xc = where(xc(i,j,k,l)==complex<double>(0,0), conj(xc(j,i,l,k)), xc(i,j,k,l));
+    }
 
-	CacheBuffer *tmp = m_front;
-	m_front = m_back;
-	m_back  = tmp;
+    CacheBuffer *tmp = m_front;
+    m_front = m_back;
+    m_back  = tmp;
 }
 
 void Cache::resetI2Cuser()
 {
-	I2Cuser	busUser = NONE;
-	if ((m_front->getI2Cuser() == HBA) && (!m_allstate.hbaprotocol().isMatchAll(RegisterState::CHECK))) {
-		busUser = HBA;
-	}
-	else if ((m_front->getI2Cuser() == RCU_W) && (!m_allstate.rcuprotocol().isMatchAll(RegisterState::CHECK))) {
-		busUser = RCU_W;
-	}
-	else if ((m_front->getI2Cuser() == RCU_R) && (!m_allstate.rcuread().isMatchAll(RegisterState::CHECK))) {
-		busUser = RCU_R;
-	}
-	m_front->setI2Cuser(busUser);
-	m_back->setI2Cuser (busUser);
-	LOG_INFO_STR("new I2Cuser = " << ((busUser == NONE) ? "NONE" : 
-									 ((busUser == HBA) ? "HBA" : 
-									 ((busUser == RCU_R) ? "RCU_R" : "RCU_W"))));
+    I2Cuser busUser = NONE;
+    if ((m_front->getI2Cuser() == HBA) && (!m_allstate.hbaprotocol().isMatchAll(RegisterState::CHECK))) {
+        busUser = HBA;
+    }
+    else if ((m_front->getI2Cuser() == RCU_W) && (!m_allstate.rcuprotocol().isMatchAll(RegisterState::CHECK))) {
+        busUser = RCU_W;
+    }
+    else if ((m_front->getI2Cuser() == RCU_R) && (!m_allstate.rcuread().isMatchAll(RegisterState::CHECK))) {
+        busUser = RCU_R;
+    }
+    m_front->setI2Cuser(busUser);
+    m_back->setI2Cuser (busUser);
+    LOG_INFO_STR("new I2Cuser = " << ((busUser == NONE) ? "NONE" :
+                                     ((busUser == HBA) ? "HBA" :
+                                     ((busUser == RCU_R) ? "RCU_R" : "RCU_W"))));
 
 }
+
