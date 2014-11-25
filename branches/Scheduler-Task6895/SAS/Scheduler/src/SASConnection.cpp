@@ -235,8 +235,8 @@ int SASConnection::getModifiedVICTrees(const QDateTime &afterdate) {
 }
 
 void SASConnection::updateLastDownloadDate(void) {
-    QSqlQuery query = dbConnection.now();
 
+    QSqlQuery query = dbConnection.now();
 	if (query.isActive()) {
 		if (query.next()) {
             itsLastDownloadDate = QDateTime::fromString(query.value(0).toString(),
@@ -259,7 +259,6 @@ int SASConnection::getAllSASTasksWithinPeriod(int treeType,
     itsSASVicTrees.clear();
     QString start_date = begindate.toQDateTime().toString("yyyy-MM-dd hh:mm:ss");
     QString end_date = enddate.toQDateTime().toString("yyyy-MM-dd hh:mm:ss");
-
     QSqlQuery query = dbConnection.getTreesInPeriod(start_date, end_date, treeType );
 
     if (query.isActive())
@@ -416,7 +415,6 @@ bool SASConnection::fetchAllPredecessorTasks(void) {
 int SASConnection::createNewTree(Task &task) {
     // step 1: create a new template tree from a default template tree
 
-    throw 20;
 	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
 	QSqlQuery query(sasDB);
 	QString authToken(itsAuthToken);
