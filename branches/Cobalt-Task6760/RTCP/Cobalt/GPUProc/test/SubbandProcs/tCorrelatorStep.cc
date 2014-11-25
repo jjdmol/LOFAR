@@ -20,7 +20,9 @@
 
 #include <lofar_config.h>
 
+#include <CoInterface/BudgetTimer.h>
 #include <GPUProc/cuda/SubbandProcs/CorrelatorStep.h>
+#include <GPUProc/cuda/gpu_wrapper.h>
 
 #include <UnitTest++.h>
 #include <iostream>
@@ -29,8 +31,12 @@
 #include <CoInterface/MultiDimArray.h>
 #include <Common/LofarLogger.h>
 #include <complex>
+#include <boost/format.hpp>
+
+using boost::format;
 
 using namespace LOFAR::Cobalt;
+using namespace LOFAR::Cobalt::gpu;
 
 TEST(convertFlagsToChannelFlags)
 {
@@ -87,10 +93,70 @@ TEST(convertFlagsToChannelFlags)
         150 == flagsPerChanel[0][1].getRanges()[0].end);  //E.
 }
 
+TEST(propagateFlags)
+{
+  /* Test the PERFORMANCE of CorrelatorStep::propagateFlags. */
+
+  const unsigned nrChannels = 256;
+  const unsigned nrSubblocks = 1;
+
+  // Create a parset with the needed parameters
+  Parset parset;
+  parset.add("Cobalt.Correlator.nrChannelsPerSubband",   str(format("%u") % nrChannels));
+  parset.add("Cobalt.Correlator.nrBlocksPerIntegration", str(format("%u") % nrSubblocks));
+  parset.add("Cobalt.blockSize", "196608");
+  
+  parset.add("Observation.VirtualInstrument.stationList", "[80*RS106]"); // Number of names here sets the number of stations.
+  parset.add("Observation.antennaSet", "HBA_ZERO");
+  parset.add("Observation.rspBoardList", "[0]");
+  parset.add("Observation.rspSlotList", "[0]");
+  parset.add("Observation.nrBeams", "1");
+  parset.add("Observation.Beam[0].subbandList", "[0]");
+
+  parset.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+  parset.add("Observation.DataProducts.Output_Correlated.filenames","[L24523_B000_S0_P000_bf.ms]");
+  parset.add("Observation.DataProducts.Output_Correlated.locations","[lse011:/data3/L2011_24523/]");
+
+  parset.updateSettings();
+
+  // All flagged data
+  MultiDimArray<LOFAR::SparseSet<unsigned>, 1> flags(boost::extents[parset.settings.antennaFields.size()]);
+  for (size_t i = 0; i < parset.settings.antennaFields.size(); ++i) {
+    flags[i].include(0, 196608);
+  }
+
+  // Create a default context
+  Device device(0);
+  Context ctx(device);
+
+  // Output data holder
+  SubbandProcOutputData::CorrelatedData correlatedData(nrSubblocks, parset.settings.antennaFields.size(), nrChannels, 65536, ctx);
+
+  const unsigned nrSubbandsPerSubbandProc = 16;
+
+  BudgetTimer processCPUTimer("processCPU", parset.settings.blockDuration() / nrSubbandsPerSubbandProc, true, true);
+
+  processCPUTimer.start();
+  CorrelatorStep::Flagger::propagateFlags(parset, flags, correlatedData);
+  processCPUTimer.stop();
+}
+
 
 int main()
 {
   INIT_LOGGER("tCorrelatorStep");
+
+  try 
+  {
+    Platform pf;
+    LOG_INFO_STR("Detected " << pf.size() << " CUDA devices");
+  } 
+  catch (CUDAException& e) 
+  {
+    LOG_ERROR_STR("Caught exception: " << e.what());
+    return 3;
+  }
+
   return UnitTest::RunAllTests() > 0;
 }
 
