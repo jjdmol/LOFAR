@@ -181,13 +181,9 @@ namespace LOFAR
                 continue;
               }
 
-              // Extract the flags for this subblock
-              const SparseSet<unsigned> subBlockFlags = flags.subset(
-                      i * nrSamples,
-                + (i+1) * nrSamples);
-
+              // Count the flags for this subblock
               const T nrValidSamples =
-                nrSamples - subBlockFlags.count();
+                nrSamples - flags.count(i * nrSamples, (i+1) * nrSamples);
 
               correlatedData.nrValidSamples<T>(bl, ch) = nrValidSamples;
             }
