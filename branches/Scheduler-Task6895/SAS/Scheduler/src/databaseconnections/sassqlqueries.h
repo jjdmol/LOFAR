@@ -19,15 +19,25 @@
 #ifndef SASSQLQUERIES_H
 #define SASSQLQUERIES_H
 
+#include <map>
+#include <vector>
+#include <string>
+
 #include "qsqlquery.h"
 #include "qstring.h"
 #include "qsqldatabase.h"
+
+
+
 
 class SASSqlQueries
 {
 
 public:
     SASSqlQueries();
+
+    QSqlQuery doQuery(QSqlDatabase sasDB, QString queryId,
+                      const std::vector<QString> &queryArgs);
 
     QSqlQuery doOTDBlogin(QSqlDatabase sasDB, QString sasUserName,
                           QString sasPassword);
@@ -41,6 +51,10 @@ public:
 
     QSqlQuery limitsFromGetVHitemList(QSqlDatabase sasDB,
                                       QString vicTreeId);
+
+private:
+    std::map<QString, QString> queryIdToTemplate;
+
 };
 
 #endif

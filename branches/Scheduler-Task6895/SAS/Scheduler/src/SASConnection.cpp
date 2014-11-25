@@ -320,12 +320,9 @@ void SASConnection::translateMomPredecessors(IDvector &predecessors) {
 }
 
 bool SASConnection::fetchAllPredecessorTasks(void) {
-	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
 	bool bResult(true);
 	QString IDonly;
-	QSqlQuery query(sasDB);
 	std::map<unsigned, OTDBtree> itsTmpSASVicTrees1(itsSASVicTrees), itsTmpSASVicTrees2;
-
     const QString & ObsIDPrefix(Controller::theSchedulerSettings.getObservationIDprefix());
 
 	bool fetchPredecessor(false);
@@ -339,7 +336,7 @@ bool SASConnection::fetchAllPredecessorTasks(void) {
 			const SAS_task_status &state(it_1->second.state());
             QSqlQuery query = dbConnection.limitsFromGetVHitemList(
                         QString::number(it_1->first));
-            //query.exec("SELECT limits from getVHitemList(" + QString::number(it_1->first) + ",'LOFAR.ObsSW.Observation.Scheduler.predecessors')");
+
 			if (query.next()) {
 				std::vector<QString> predecessors(string2VectorOfStrings(query.value(0).toString()));
 				query.finish();
@@ -418,6 +415,8 @@ bool SASConnection::fetchAllPredecessorTasks(void) {
 
 int SASConnection::createNewTree(Task &task) {
     // step 1: create a new template tree from a default template tree
+
+    throw 20;
 	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
 	QSqlQuery query(sasDB);
 	QString authToken(itsAuthToken);

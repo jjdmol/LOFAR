@@ -19,10 +19,45 @@
 #include <lofar_config.h>
 
 #include "sassqlqueries.h"
+#include <utility>
+#include <iostream>
+
+using namespace std;
+
+#define QUERYIT std::map<QString,QString>::iterator
+#define STRIT std::vector<QString>::const_iterator
 
 SASSqlQueries::SASSqlQueries()
 {
+    queryIdToTemplate.insert(
+        pair<QString, QString>("OTDBlogin",
+                               "SELECT OTDBlogin('%1','%2')"));
+}
 
+
+// TODO no exception thrown yet. What happens on mistakes?
+QSqlQuery SASSqlQueries::doQuery(QSqlDatabase sasDB, QString queryId,
+                  const std::vector<QString> &queryArgs)
+{
+    // construct the query string from the template and the arguments
+    // 1 Get template from storage
+    QString templateQuery;
+    QUERYIT queryIt = queryIdToTemplate.find(queryId);
+    if( queryIt != queryIdToTemplate.end())
+    {
+         templateQuery = queryIt->second;
+    }
+
+    // Insert the strings
+    for(STRIT arg = queryArgs.begin(); arg != queryArgs.end(); arg++)
+    {
+        templateQuery = templateQuery.arg(*arg);
+    }
+    // perform the query
+
+    QSqlQuery query(sasDB);
+    query.exec(templateQuery);
+    return query;
 }
 
 QSqlQuery SASSqlQueries::doOTDBlogin(QSqlDatabase sasDB,

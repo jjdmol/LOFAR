@@ -46,25 +46,31 @@ SASDatabaseConnection::SASDatabaseConnection(const QString &aUsername,
       itsPostgresUsername(postgresUsername),
       itsPostgresPassword(postgresPassword)
 {
-    sasDB = QSqlDatabase::addDatabase(itsDBType, itsDBId);
 
-    sasDB.setHostName(itsHostname);
-    sasDB.setDatabaseName(itsDBName);
-    sasDB.setUserName(itsPostgresUsername);
-    sasDB.setPassword(itsPostgresPassword);
+    QSqlDatabase tempDB = QSqlDatabase::addDatabase(itsDBType, itsDBId);
 
-    sasDB = QSqlDatabase::database(itsDBId);
 
+    tempDB.setHostName(itsHostname);
+    tempDB.setDatabaseName(itsDBName);
+    tempDB.setUserName(itsPostgresUsername);
+    tempDB.setPassword(itsPostgresPassword);
+
+    sasDB = new QSqlDatabase(QSqlDatabase::database(itsDBId));
     testAuthentication();
+}
+
+SASDatabaseConnection::~SASDatabaseConnection()
+{
+    disconnect();
 }
 
 int SASDatabaseConnection::testAuthentication()
 {
-    if (!sasDB.open())
+    if (!sasDB->open())
         return -1; // could not connect to SAS database
 
     // Call helper function on query containing class
-    QSqlQuery query = sasQueries.doOTDBlogin(sasDB, itsSASUserName, itsSASPassword);
+    QSqlQuery query = sasQueries.doOTDBlogin(*sasDB, itsSASUserName, itsSASPassword);
 
     // If query returned any feedback
     if (!query.next())
@@ -81,36 +87,37 @@ int SASDatabaseConnection::testAuthentication()
 
 void SASDatabaseConnection::disconnect()
 {
-    sasDB.close();
+    sasDB->close();
+    delete sasDB; // Forcefully destruct the connection
     QSqlDatabase::removeDatabase(itsDBId);
 }
 
 QString SASDatabaseConnection::lastError()
 {
-    return sasDB.lastError().text();
+    return sasDB->lastError().text();
 }
 
 QSqlQuery SASDatabaseConnection::treeidFROMgettreelist(
          QString tree)
 {
-    return sasQueries.treeidFROMgettreelist(sasDB, tree);
+    return sasQueries.treeidFROMgettreelist(*sasDB, tree);
 }
 
 QSqlQuery SASDatabaseConnection::now()
 {
-    return sasQueries.now(sasDB);
+    return sasQueries.now(*sasDB);
 }
 
 QSqlQuery SASDatabaseConnection::getTreesInPeriod(
         QString start_date, QString end_date, int treetype)
 {
-    return sasQueries.getTreesInPeriod(sasDB,
+    return sasQueries.getTreesInPeriod(*sasDB,
                        start_date, end_date, treetype);
 }
 
 QSqlQuery SASDatabaseConnection::limitsFromGetVHitemList(QString vicTreeId)
 {
-    return sasQueries.limitsFromGetVHitemList(sasDB,
+    return sasQueries.limitsFromGetVHitemList(*sasDB,
                        vicTreeId);
 }
 

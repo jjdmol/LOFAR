@@ -24,6 +24,8 @@
 #include "qstring.h"
 #include "qsqldatabase.h"
 #include "sassqlqueries.h"
+#include <vector>
+
 
 // Class collecting all querys used by SASConnection in a single object
 class SASDatabaseConnection
@@ -38,6 +40,8 @@ public:
                           const QString &DBType = "QPSQL",
                           const QString &postgresUsername = "postgres",
                           const QString &postgresPassword = "");
+
+    ~SASDatabaseConnection();
 
     // Test the authentication of the current dbconnection
     // return 0 if no issues found.
@@ -54,12 +58,19 @@ public:
     QString lastError();
 
     // Return the open status of the internal connection
-    bool open(){return sasDB.open();}
+    bool open(){return sasDB->open();}
 
+
+    //
+    QSqlQuery doQuery(QString queryId,
+                      const std::vector<QString> &queryArgs)
+    {
+        return sasQueries.doQuery(*sasDB, queryId, queryArgs );
+    }
 
     QString getAuthToken(){return itsAuthToken;}
 
-    QSqlDatabase getSasDB(){return sasDB;}
+    QSqlDatabase getSasDB(){return *sasDB;}
 
     // Functions forwarding a request for data to the internal query class
     QSqlQuery treeidFROMgettreelist(QString tree);
@@ -71,7 +82,7 @@ public:
     QSqlQuery limitsFromGetVHitemList(QString vicTreeId);
 
 private:
-    QSqlDatabase sasDB;
+    QSqlDatabase *sasDB;
     SASSqlQueries sasQueries;
 
     QString itsSASUserName;
