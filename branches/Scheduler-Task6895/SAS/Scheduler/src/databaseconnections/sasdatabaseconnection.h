@@ -68,6 +68,8 @@ public:
 
     QSqlQuery getTreesInPeriod(QString start_date, QString end_date, int treetype);
 
+    QSqlQuery limitsFromGetVHitemList(QString vicTreeId);
+
 private:
     QSqlDatabase sasDB;
     SASSqlQueries sasQueries;

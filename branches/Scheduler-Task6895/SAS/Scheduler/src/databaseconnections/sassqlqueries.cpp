@@ -62,6 +62,14 @@ QSqlQuery SASSqlQueries::getTreesInPeriod(QSqlDatabase sasDB,
                start_date                + "','" +
                end_date                  + "')");
     return query;
+}
 
-
+QSqlQuery SASSqlQueries::limitsFromGetVHitemList(QSqlDatabase sasDB,
+                                                 QString vicTreeId)
+{
+    QSqlQuery query(sasDB);
+    query.exec("SELECT limits from getVHitemList("
+               +  vicTreeId
+               + ",'LOFAR.ObsSW.Observation.Scheduler.predecessors')");
+    return query;
 }

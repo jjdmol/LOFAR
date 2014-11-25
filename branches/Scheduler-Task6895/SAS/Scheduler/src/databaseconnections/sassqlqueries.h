@@ -39,6 +39,8 @@ public:
     QSqlQuery getTreesInPeriod(QSqlDatabase sasDB,
                          QString start_date, QString end_date, int treetype);
 
+    QSqlQuery limitsFromGetVHitemList(QSqlDatabase sasDB,
+                                      QString vicTreeId);
 };
 
 #endif

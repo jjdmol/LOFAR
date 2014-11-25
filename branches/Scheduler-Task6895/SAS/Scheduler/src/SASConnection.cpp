@@ -246,8 +246,12 @@ void SASConnection::updateLastDownloadDate(void) {
 	query.finish();
 }
 
-// function getAllSASTasksWithinPeriod gets all OTDB trees (not complete vic trees but only their metadata) within the specified period
-// This function will also check if the tree depends (has predecessors) on other trees and will the also download those predecessor trees
+// function getAllSASTasksWithinPeriod gets all OTDB trees (not complete
+// vic trees but only their metadata) within the specified period
+// This function will also check if the tree depends (has predecessors)
+// on other trees and will the also download those predecessor trees
+// refactoringL
+// This converts sql to data. Part of the model.
 int SASConnection::getAllSASTasksWithinPeriod(int treeType,
           const AstroDateTime &begindate, const AstroDateTime &enddate)
 {
@@ -333,7 +337,9 @@ bool SASConnection::fetchAllPredecessorTasks(void) {
 			// fetch all predecessor trees from the current tree and put them in itsTmpSASVicTrees2 and in itsSASVicTrees
 			// first get the predecessor list from the current task
 			const SAS_task_status &state(it_1->second.state());
-			query.exec("SELECT limits from getVHitemList(" + QString::number(it_1->first) + ",'LOFAR.ObsSW.Observation.Scheduler.predecessors')");
+            QSqlQuery query = dbConnection.limitsFromGetVHitemList(
+                        QString::number(it_1->first));
+            //query.exec("SELECT limits from getVHitemList(" + QString::number(it_1->first) + ",'LOFAR.ObsSW.Observation.Scheduler.predecessors')");
 			if (query.next()) {
 				std::vector<QString> predecessors(string2VectorOfStrings(query.value(0).toString()));
 				query.finish();

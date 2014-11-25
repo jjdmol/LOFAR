@@ -107,3 +107,10 @@ QSqlQuery SASDatabaseConnection::getTreesInPeriod(
     return sasQueries.getTreesInPeriod(sasDB,
                        start_date, end_date, treetype);
 }
+
+QSqlQuery SASDatabaseConnection::limitsFromGetVHitemList(QString vicTreeId)
+{
+    return sasQueries.limitsFromGetVHitemList(sasDB,
+                       vicTreeId);
+}
+
