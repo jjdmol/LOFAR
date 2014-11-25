@@ -227,7 +227,7 @@ namespace LOFAR
       {
         // If we delay the reception of the DONE signal from the GPU,
         // we can't schedule the next batch of work in time.
-        Thread::ScopedPriority sp(SCHED_RR, 10);
+        //Thread::ScopedPriority sp(SCHED_RR, 10);
 
         queue.synchronize();
       }

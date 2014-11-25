@@ -235,7 +235,7 @@ namespace LOFAR
         //    CU_CTX_SCHED_BLOCKING_SYNC:
         //        Instruct CUDA to block the CPU thread on a synchronization primitive
         //        when waiting for the GPU to finish work.
-        Context(const Device &device, unsigned int flags = CU_CTX_SCHED_SPIN);
+        Context(const Device &device, unsigned int flags = CU_CTX_SCHED_YIELD);
 
         // Returns the device associated to this context.
         Device getDevice() const;
