@@ -73,6 +73,9 @@ public:
     QSqlDatabase getSasDB(){return *sasDB;}
 
     // Functions forwarding a request for data to the internal query class
+    QSqlQuery doOTDBlogin(QString sasUserName,
+                         QString sasPassword);
+
     QSqlQuery treeidFROMgettreelist(QString tree);
 
     QSqlQuery now();

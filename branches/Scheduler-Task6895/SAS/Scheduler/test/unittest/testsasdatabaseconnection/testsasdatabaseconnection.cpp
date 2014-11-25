@@ -46,6 +46,7 @@ void testsasdatabaseconnection::testDoQuery()
     QCOMPARE(query.next(), true);
 }
 
+
  
 QTEST_MAIN(testsasdatabaseconnection)
 #include "testsasdatabaseconnection.moc"

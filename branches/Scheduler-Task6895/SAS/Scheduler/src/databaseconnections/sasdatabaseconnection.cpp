@@ -46,7 +46,6 @@ SASDatabaseConnection::SASDatabaseConnection(const QString &aUsername,
       itsPostgresUsername(postgresUsername),
       itsPostgresPassword(postgresPassword)
 {
-
     QSqlDatabase tempDB = QSqlDatabase::addDatabase(itsDBType, itsDBId);
 
 
@@ -70,7 +69,7 @@ int SASDatabaseConnection::testAuthentication()
         return -1; // could not connect to SAS database
 
     // Call helper function on query containing class
-    QSqlQuery query = sasQueries.doOTDBlogin(*sasDB, itsSASUserName, itsSASPassword);
+    QSqlQuery query = doOTDBlogin(itsSASUserName, itsSASPassword);
 
     // If query returned any feedback
     if (!query.next())
@@ -87,8 +86,8 @@ int SASDatabaseConnection::testAuthentication()
 
 void SASDatabaseConnection::disconnect()
 {
-    sasDB->close();
     delete sasDB; // Forcefully destruct the connection
+    sasDB = 0;
     QSqlDatabase::removeDatabase(itsDBId);
 }
 
@@ -97,27 +96,44 @@ QString SASDatabaseConnection::lastError()
     return sasDB->lastError().text();
 }
 
+QSqlQuery SASDatabaseConnection::doOTDBlogin(QString sasUserName,
+                                     QString sasPassword)
+{
+    std::vector<QString> argumentList;
+    argumentList.push_back(sasUserName);
+    argumentList.push_back(sasPassword);
+    return  sasQueries.doQuery(*sasDB, "otdblogin", argumentList);
+}
+
 QSqlQuery SASDatabaseConnection::treeidFROMgettreelist(
          QString tree)
 {
-    return sasQueries.treeidFROMgettreelist(*sasDB, tree);
+    std::vector<QString> argumentList;
+    argumentList.push_back(tree);
+    return sasQueries.doQuery(*sasDB, "gettreelist",  argumentList);
 }
 
 QSqlQuery SASDatabaseConnection::now()
 {
-    return sasQueries.now(*sasDB);
+    std::vector<QString> argumentList;
+    return sasQueries.doQuery(*sasDB, "now",  argumentList);
 }
 
 QSqlQuery SASDatabaseConnection::getTreesInPeriod(
         QString start_date, QString end_date, int treetype)
 {
-    return sasQueries.getTreesInPeriod(*sasDB,
-                       start_date, end_date, treetype);
+    std::vector<QString> argumentList;
+    argumentList.push_back(QString::number(treetype));
+    argumentList.push_back(start_date);
+    argumentList.push_back(end_date);
+
+    return sasQueries.doQuery(*sasDB, "getTreesInPeriod",  argumentList);
 }
 
 QSqlQuery SASDatabaseConnection::limitsFromGetVHitemList(QString vicTreeId)
 {
-    return sasQueries.limitsFromGetVHitemList(*sasDB,
-                       vicTreeId);
+    std::vector<QString> argumentList;
+    argumentList.push_back(vicTreeId);
+    return sasQueries.doQuery(*sasDB, "limitsfromgetVHitemList",  argumentList);
 }
 

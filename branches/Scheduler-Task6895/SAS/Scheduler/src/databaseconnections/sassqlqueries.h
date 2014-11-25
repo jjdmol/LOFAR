@@ -29,28 +29,20 @@
 
 
 
-
+// Collects all the sas queries used by the scheduler.
+// Queries can be excercised using the doQuery function
 class SASSqlQueries
 {
 
 public:
+    // Create the object. Sets the internal
+    // list of queries to list currently used
     SASSqlQueries();
 
-    QSqlQuery doQuery(QSqlDatabase sasDB, QString queryId,
+    // Perform the query with queryId on database sasDB,
+    // the arguments in queryArgs are inserted in the query
+    QSqlQuery doQuery(const QSqlDatabase &sasDB, const QString &queryId,
                       const std::vector<QString> &queryArgs);
-
-    QSqlQuery doOTDBlogin(QSqlDatabase sasDB, QString sasUserName,
-                          QString sasPassword);
-
-    QSqlQuery treeidFROMgettreelist(QSqlDatabase sasDB, QString tree);
-
-    QSqlQuery now(QSqlDatabase sasDB);
-
-    QSqlQuery getTreesInPeriod(QSqlDatabase sasDB,
-                         QString start_date, QString end_date, int treetype);
-
-    QSqlQuery limitsFromGetVHitemList(QSqlDatabase sasDB,
-                                      QString vicTreeId);
 
 private:
     std::map<QString, QString> queryIdToTemplate;

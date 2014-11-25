@@ -29,82 +29,33 @@ using namespace std;
 
 SASSqlQueries::SASSqlQueries()
 {
-    queryIdToTemplate.insert(
-        pair<QString, QString>("OTDBlogin",
-                               "SELECT OTDBlogin('%1','%2')"));
+    queryIdToTemplate["otdblogin"] = "SELECT OTDBlogin('%1','%2')";
+    queryIdToTemplate["gettreelist"] = "SELECT treeid FROM gettreelist('%1','0',0,'','','')";
+    queryIdToTemplate["now"] = "SELECT now()";
+    queryIdToTemplate["getTreesInPeriod"] = "SELECT * from getTreesInPeriod('%1','%2','%3')";
+    queryIdToTemplate["limitsfromgetVHitemList"] = "SELECT limits from getVHitemList(%1,'LOFAR.ObsSW.Observation.Scheduler.predecessors')"   ;
 }
 
 
 // TODO no exception thrown yet. What happens on mistakes?
-QSqlQuery SASSqlQueries::doQuery(QSqlDatabase sasDB, QString queryId,
-                  const std::vector<QString> &queryArgs)
+QSqlQuery SASSqlQueries::doQuery(const QSqlDatabase &sasDB,
+                                 const QString &queryId,
+                                 const std::vector<QString> &queryArgs)
 {
     // construct the query string from the template and the arguments
     // 1 Get template from storage
     QString templateQuery;
     QUERYIT queryIt = queryIdToTemplate.find(queryId);
     if( queryIt != queryIdToTemplate.end())
-    {
          templateQuery = queryIt->second;
-    }
 
     // Insert the strings
     for(STRIT arg = queryArgs.begin(); arg != queryArgs.end(); arg++)
-    {
         templateQuery = templateQuery.arg(*arg);
-    }
-    // perform the query
 
+    // perform the query
     QSqlQuery query(sasDB);
     query.exec(templateQuery);
     return query;
 }
 
-QSqlQuery SASSqlQueries::doOTDBlogin(QSqlDatabase sasDB,
-                                     QString sasUserName,
-                                     QString sasPassword)
-{
-    QSqlQuery query(sasDB);
-    query.exec("SELECT OTDBlogin('" + sasUserName
-               + "','" + sasPassword + "')");
-    return query;
-}
-
-
-QSqlQuery SASSqlQueries::treeidFROMgettreelist(QSqlDatabase sasDB, QString tree)
-{
-    QSqlQuery query(sasDB);
-    query.exec("SELECT treeid FROM gettreelist('"
-                    + tree
-                    + "','0',0,'','','')");
-    return query;
-}
-
-QSqlQuery SASSqlQueries::now(QSqlDatabase sasDB)
-{
-    QSqlQuery query(sasDB);
-    query.exec("SELECT now()");
-    return query;
-}
-
-
-QSqlQuery SASSqlQueries::getTreesInPeriod(QSqlDatabase sasDB,
-                     QString start_date, QString end_date, int treetype)
-{
-    QSqlQuery query(sasDB);
-    query.exec("SELECT * from getTreesInPeriod('" +
-               QString::number(treetype) + "','" +
-               start_date                + "','" +
-               end_date                  + "')");
-    return query;
-}
-
-QSqlQuery SASSqlQueries::limitsFromGetVHitemList(QSqlDatabase sasDB,
-                                                 QString vicTreeId)
-{
-    QSqlQuery query(sasDB);
-    query.exec("SELECT limits from getVHitemList("
-               +  vicTreeId
-               + ",'LOFAR.ObsSW.Observation.Scheduler.predecessors')");
-    return query;
-}
