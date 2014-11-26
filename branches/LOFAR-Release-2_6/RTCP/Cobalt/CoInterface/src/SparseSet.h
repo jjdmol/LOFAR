@@ -77,6 +77,9 @@ namespace LOFAR
     // Returns the number of elements in the set.
     T            count() const;
 
+    // Returns the number of elements in [first, last).
+    T            count(T first, T last) const;
+
     // Returns true if `index' is in the set.
     bool         test(T index) const;
 
@@ -279,6 +282,25 @@ namespace LOFAR
 
     for (const_iterator it = ranges.begin(); it != ranges.end(); it++)
       count += it->end - it->begin;
+
+    return count;
+  }
+
+
+  template <typename T>
+  T SparseSet<T>::count(T first, T last) const
+  {
+    T count = 0;
+
+    for (const_iterator it = ranges.begin(); it != ranges.end(); it++) {
+      if (it->end <= first)
+        continue;
+
+      if (it->begin >= last)
+        break;
+
+      count += std::min(last, it->end) - std::max(first, it->begin);
+    }
 
     return count;
   }
