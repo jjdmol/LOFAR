@@ -230,6 +230,11 @@ namespace LOFAR
     void CorrelatorStep::Flagger::applyWeight(unsigned baseline, 
       unsigned nrChannels, float weight, LOFAR::Cobalt::CorrelatedData &output)
     {
+      /*
+       * All channels and polarisations are stored consecutively, so
+       * we can just grab a pointer to the first sample and walk over
+       * all samples in the baseline.
+       */
       fcomplex *s = &output.visibilities[baseline][0][0][0];
 
       unsigned i = 0;
@@ -255,6 +260,8 @@ namespace LOFAR
       for (unsigned bl = 0; bl < output.itsNrBaselines; ++bl)
       {
         // Calculate the weights for the channels
+        //
+        // NOTE: We assume all channels to have the same nrValidSamples (except possibly channel 0).
         const T nrValidSamples = output.nrValidSamples<T>(bl, singleChannel ? 0 : 1);
 
         // If all samples flagged, weights is zero.
