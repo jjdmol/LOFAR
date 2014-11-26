@@ -113,9 +113,9 @@ namespace LOFAR
                     MultiDimArray<SparseSet<unsigned>, 1> const &flagsPerChannel,
                     SubbandProcOutputData::CorrelatedData &output);
 
-        // 2.1 Apply the supplied weight to the complex values in the channel
-        // and baseline
-        static void applyWeight(unsigned baseline, unsigned channel,
+        // 2.1 Apply the supplied weight to the complex values in the channels
+        // for the given baseline. If nrChannels > 1, visibilities for channel 0 will be set to 0.0.
+        static void applyWeight(unsigned baseline, unsigned nrChannels,
                                 float weight, LOFAR::Cobalt::CorrelatedData &output);
       private:
         template<typename T>

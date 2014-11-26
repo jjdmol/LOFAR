@@ -228,11 +228,21 @@ namespace LOFAR
 
 
     void CorrelatorStep::Flagger::applyWeight(unsigned baseline, 
-      unsigned channel, float weight, LOFAR::Cobalt::CorrelatedData &output)
+      unsigned nrChannels, float weight, LOFAR::Cobalt::CorrelatedData &output)
     {
-      for(unsigned pol1 = 0; pol1 < NR_POLARIZATIONS; ++pol1)
-        for(unsigned pol2 = 0; pol2 < NR_POLARIZATIONS; ++pol2)
-          output.visibilities[baseline][channel][pol1][pol2] *= weight;
+      fcomplex *s = &output.visibilities[baseline][0][0][0];
+
+      unsigned i = 0;
+
+      if (nrChannels > 1) {
+        // Channel 0 has weight 0.0 (unless it's the only channel)
+        for(; i < NR_POLARIZATIONS * NR_POLARIZATIONS; ++i)
+          *(s++) = 0.0;
+      }
+
+      // Remaining channels are adjusted by the provided weight
+      for(; i < nrChannels * NR_POLARIZATIONS * NR_POLARIZATIONS; ++i)
+        *(s++) *= weight;
     }
 
 
@@ -240,26 +250,21 @@ namespace LOFAR
     CorrelatorStep::Flagger::applyNrValidSamples(Parset const &parset,
                                                  LOFAR::Cobalt::CorrelatedData &output)
     {
+      const bool singleChannel = parset.settings.correlator.nrChannels == 1;
+
       for (unsigned bl = 0; bl < output.itsNrBaselines; ++bl)
       {
         // Calculate the weights for the channels
+        const T nrValidSamples = output.nrValidSamples<T>(bl, singleChannel ? 0 : 1);
+
+        // If all samples flagged, weights is zero.
+        const float weight = nrValidSamples ? 1.0f / nrValidSamples : 0;  
+
+        // Apply the weight to this sample, turning the visibilities into the
+        // average visibility over the non-flagged samples.
         //
-        // Channel 0 is already flagged according to specs, so we can simply
-        // include it both for 1 and >1 channels/subband.
-        for (unsigned ch = 0; ch < parset.settings.correlator.nrChannels; ch++) 
-        {
-          const T nrValidSamples = output.nrValidSamples<T>(bl, ch);
-
-          // If all samples flagged, weights is zero.
-          // TODO: make a lookup table for the expensive division; measure first
-          float weight = nrValidSamples ? 1.0f / nrValidSamples : 0;  
-
-          // Apply the weight to this sample, turning the visibilities into the
-          // average visibility over the non-flagged samples.
-          //
-          // This step thus normalises the visibilities for any integration time.
-          applyWeight(bl, ch, weight, output);
-        }
+        // This step thus normalises the visibilities for any integration time.
+        applyWeight(bl, parset.settings.correlator.nrChannels, weight, output);
       }
     }
 

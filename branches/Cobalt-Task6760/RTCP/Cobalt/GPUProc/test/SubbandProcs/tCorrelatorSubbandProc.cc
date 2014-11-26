@@ -351,12 +351,21 @@ TEST(applyNrValidSamples2)
            visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2] = std::complex<float>(1,0);
         
   //  multiply all polarization in sb 0 channel 0 with 0,5
-  CorrelatorStep::Flagger::applyWeight(0,0,0.5, *output.subblocks[0]);
+  CorrelatorStep::Flagger::applyWeight(0, parset.settings.correlator.nrChannels, 0.5, *output.subblocks[0]);
 
-  //sb 0 should be (0.5, 0)
-  CHECK_EQUAL(std::complex<float>(0.5,0), visibilities[0][0][0][0]);
-  //still be 1.0
+  //ch 0 should be (0, 0)
+  CHECK_EQUAL(std::complex<float>(0,0),   visibilities[0][0][0][0]);
+  CHECK_EQUAL(std::complex<float>(0,0),   visibilities[0][0][0][1]);
+  CHECK_EQUAL(std::complex<float>(0,0),   visibilities[0][0][1][0]);
+  CHECK_EQUAL(std::complex<float>(0,0),   visibilities[0][0][1][1]);
+  //ch 1 should be (0.5, 0)
+  CHECK_EQUAL(std::complex<float>(0.5,0), visibilities[0][1][0][0]);
+  CHECK_EQUAL(std::complex<float>(0.5,0), visibilities[0][1][0][1]);
+  CHECK_EQUAL(std::complex<float>(0.5,0), visibilities[0][1][1][0]);
+  CHECK_EQUAL(std::complex<float>(0.5,0), visibilities[0][1][1][1]);
+  //baseline 1 should be untouched
   CHECK_EQUAL(std::complex<float>(1,0),   visibilities[1][0][0][0]);
+  CHECK_EQUAL(std::complex<float>(1,0),   visibilities[1][1][0][0]);
    
 }
 
