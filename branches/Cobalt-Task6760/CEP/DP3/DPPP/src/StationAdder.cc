@@ -134,8 +134,9 @@ namespace LOFAR {
         // Expand possible .. in the parameter value.
         vector<int> parts = getMatchingStations
           (antennaNames, iter->second.expand().getStringVector());
-        ASSERTSTR (!parts.empty(), "No stations found for superstation "
-                   << iter->first);
+        if (parts.empty()) {
+          continue;
+        }
         MVPosition newPosition;
         // Check if the stations exist and not used for other superstations.
         // Add their ITRF positions.
@@ -275,10 +276,10 @@ namespace LOFAR {
         os << ']' << endl;
       }
       os << "  minpoints:      " << itsMinNPoint << std::endl;
-      os << "  autocorr:       " << itsMakeAutoCorr << std::endl;
-      os << "  sumauto:        " << itsSumAutoCorr << std::endl;
-      os << "  average:        " << itsDoAverage << std::endl;
-      os << "  useweights:     " << itsUseWeight << std::endl;
+      os << "  autocorr:       " << boolalpha << itsMakeAutoCorr << std::endl;
+      os << "  sumauto:        " << boolalpha << itsSumAutoCorr << std::endl;
+      os << "  average:        " << boolalpha << itsDoAverage << std::endl;
+      os << "  useweights:     " << boolalpha << itsUseWeight << std::endl;
     }
 
     void StationAdder::showTimings (std::ostream& os, double duration) const
@@ -548,6 +549,9 @@ namespace LOFAR {
       int nextClockId = max(clockIds);
       // Loop over all new antennae.
       for (uint i=0; i<itsParts.size(); ++i) {
+        if (itsParts[i].empty()) {
+          break;
+        }
         // Do all antennae of a new antenna share the same clock?
         // If so, use that clock-id, otherwise make a new one.
         int cid = clockIds[statIds[itsParts[i][0]]];

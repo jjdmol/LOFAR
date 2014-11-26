@@ -87,7 +87,7 @@ TEST(convertFlagsToChannelFlags)
   CHECK(48 == flagsPerChannel[0].getRanges()[2].begin &&
         131 == flagsPerChannel[0].getRanges()[2].end);  //C.
   CHECK(235 == flagsPerChannel[0].getRanges()[3].begin &&
-        257 == flagsPerChannel[0].getRanges()[3].end);  //D.
+        256 == flagsPerChannel[0].getRanges()[3].end);  //D.
 
   CHECK(10 == flagsPerChannel[1].getRanges()[0].begin &&
         150 == flagsPerChannel[1].getRanges()[0].end);  //E.

@@ -69,7 +69,7 @@ set_tests_properties(
 # CUDA driver API tests need a .ptx file compiled first and passed to the host code compilation.
 # This way we don't need a generated .sh file, nor compile to .ptx from our test code.
 cuda_compile_ptx(tcuda_driver_api_ptx tcuda-driver-api.cu)
-cuda_add_executable(tcuda-driver-api  tcuda-driver-api.cu  OPTIONS "-DPTX_FILE_CSTR=\"${tcuda_driver_api_ptx}\"")
+cuda_add_executable(tcuda-driver-api  tcuda-driver-api.cu  OPTIONS "-DPTX_FILENAME=${tcuda_driver_api_ptx}")
 target_link_libraries(tcuda-driver-api cuda)
 add_test(tcuda-driver-api  "${CMAKE_CURRENT_BINARY_DIR}/tcuda-driver-api")
 
