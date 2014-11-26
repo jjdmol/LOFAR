@@ -53,7 +53,8 @@ namespace LOFAR
       queue(gpu::Stream(context)),
       prevBlock(-1),
       prevSAP(-1),
-      inputCounter(context, "input")
+      inputCounter(context, "input"),
+      processCPUTimer("processCPU", ps.settings.blockDuration() / nrSubbandsPerSubbandProc, true, true)
     {
       // See doc/bf-pipeline.txt
       size_t devA_size = 0;
@@ -213,9 +214,13 @@ namespace LOFAR
       // ************************************************
       // Do CPU computations while the GPU is working
 
+      processCPUTimer.start();
+
       if (correlatorStep.get()) {
         correlatorStep->processCPU(input, output);
       }
+
+      processCPUTimer.stop();
 
       // Synchronise to assure that all the work in the data is done
       queue.synchronize();
