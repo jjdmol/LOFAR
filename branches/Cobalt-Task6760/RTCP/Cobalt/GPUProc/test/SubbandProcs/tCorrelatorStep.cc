@@ -72,25 +72,25 @@ TEST(convertFlagsToChannelFlags)
 
   inputFlags[1].include(100, 600); // E. Second station (10, 150)
   // The converted channel flags
-  MultiDimArray<LOFAR::SparseSet<unsigned>, 2> flagsPerChanel(
-          boost::extents[parset.settings.correlator.nrChannels][parset.settings.antennaFields.size()]);
+  MultiDimArray<LOFAR::SparseSet<unsigned>, 1> flagsPerChanel(
+          boost::extents[parset.settings.antennaFields.size()]);
 
   // ****** perform the translation
   CorrelatorStep::Flagger::convertFlagsToChannelFlags(parset, inputFlags, flagsPerChanel);
   // ******
 
   //validate the corner cases
-  CHECK(0 == flagsPerChanel[0][0].getRanges()[0].begin && 
-        16 == flagsPerChanel[0][0].getRanges()[0].end);  //A.
-  CHECK(17 == flagsPerChanel[0][0].getRanges()[1].begin &&
-        33 == flagsPerChanel[0][0].getRanges()[1].end);  //B.
-  CHECK(48 == flagsPerChanel[0][0].getRanges()[2].begin &&
-        131 == flagsPerChanel[0][0].getRanges()[2].end);  //C.
-  CHECK(235 == flagsPerChanel[0][0].getRanges()[3].begin &&
-        257 == flagsPerChanel[0][0].getRanges()[3].end);  //D.
+  CHECK(0 == flagsPerChanel[0].getRanges()[0].begin && 
+        16 == flagsPerChanel[0].getRanges()[0].end);  //A.
+  CHECK(17 == flagsPerChanel[0].getRanges()[1].begin &&
+        33 == flagsPerChanel[0].getRanges()[1].end);  //B.
+  CHECK(48 == flagsPerChanel[0].getRanges()[2].begin &&
+        131 == flagsPerChanel[0].getRanges()[2].end);  //C.
+  CHECK(235 == flagsPerChanel[0].getRanges()[3].begin &&
+        257 == flagsPerChanel[0].getRanges()[3].end);  //D.
 
-  CHECK(10 == flagsPerChanel[0][1].getRanges()[0].begin &&
-        150 == flagsPerChanel[0][1].getRanges()[0].end);  //E.
+  CHECK(10 == flagsPerChanel[1].getRanges()[0].begin &&
+        150 == flagsPerChanel[1].getRanges()[0].end);  //E.
 }
 
 TEST(propagateFlags)
@@ -98,7 +98,7 @@ TEST(propagateFlags)
   /* Test the PERFORMANCE of CorrelatorStep::propagateFlags. */
 
   const unsigned nrChannels = 256;
-  const unsigned nrSubblocks = 1;
+  const unsigned nrSubblocks = 4;
 
   // Create a parset with the needed parameters
   Parset parset;
