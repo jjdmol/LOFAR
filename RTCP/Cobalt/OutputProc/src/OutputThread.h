@@ -81,9 +81,6 @@ namespace LOFAR
     protected:
       void checkForDroppedData(StreamableData *);
       void doWork();
-      void logInitialStreamMetadataEvents(const std::string& dataProductType,
-                                          const std::string& fileName,
-                                          const std::string& directoryName);
 
       const Parset &itsParset;
       const unsigned itsStreamNr;
@@ -116,7 +113,7 @@ namespace LOFAR
                           const std::string &logPrefix,
                           const std::string &targetDirectory = "");
 
-      virtual void createMS();
+      void           createMS();
     };
 
 
@@ -134,7 +131,7 @@ namespace LOFAR
                       const std::string &logPrefix,
                       const std::string &targetDirectory = "");
 
-      virtual void createMS();
+      void           createMS();
     };
 
 

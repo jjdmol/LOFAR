@@ -735,16 +735,55 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 
 				//
 				// set the control register of the RCU's
+				// if in HBA mode turn on HBAs in groups to prevent resetting of boards
+				//
+
 				RSPSetrcuEvent setrcu;
+				bitset<MAX_RCUS> testmask;
+				Timestamp timeStamp;
 
-                setrcu.timestamp = Timestamp(0,0); 
-                setrcu.rcumask = start.subset & validmask;
-                setrcu.settings().resize(1);
-                setrcu.settings()(0) = start.rcumode()(0);
+	//			#define N_PWR_RCUS_PER_STEP 12
+				#define N_PWR_RCUS_PER_STEP 8
 
-				LOG_DEBUG(formatString("Sending RSP_SETRCU(%08X)", start.rcumode()(0).getRaw()));
-				itsRSPDriver->send(setrcu);
-				_enableRCUs(subarray, SCHEDULING_DELAY + 4);
+				int nPwrRCUs = m_n_rcus / 2;  // only the even rcus deliver power to the HBAs
+				int steps    = nPwrRCUs / N_PWR_RCUS_PER_STEP;  // 4 steps for NL stations, 8 steps for IS stations
+				int jump     = m_n_rcus / N_PWR_RCUS_PER_STEP;  // jump = 8 for NL stations and 16 for IS stations
+
+				if (steps == 0) { steps = 1; }  // limit for test cabinet
+				if (jump < 2) { jump = 2; }     // limit for test cabinet
+
+				// if LBA mode select all rcus in one step
+				if (start.rcumode()(0).getMode() <= 4) {
+					steps = 1;
+					jump = 2;
+				}
+				int delay(0);
+				for (int step = 0; step < steps; ++step) {
+					validmask.reset();
+					// select 12 even(X) rcus and 12 odd(Y) rcus
+					for (uint rcu = (step * 2); rcu < m_n_rcus; rcu += jump) {
+						validmask.set(rcu);   // select X (HBA power supply)
+						validmask.set(rcu+1); // select Y
+					}
+
+					// if any rcus in this masker send command
+					testmask = start.subset & validmask;
+					if (testmask.any()) {
+						delay = SCHEDULING_DELAY + step;
+						timeStamp.setNow(delay);
+						setrcu.timestamp = timeStamp; // in steps of 1 second
+
+						//TODO: Step20.2: might have to send 2 settings e.g. when using all X-pols
+
+						setrcu.rcumask = start.subset & validmask;
+						setrcu.settings().resize(1);
+						setrcu.settings()(0) = start.rcumode()(0);
+
+						LOG_DEBUG(formatString("Sending RSP_SETRCU(%08X)", start.rcumode()(0).getRaw()));
+						itsRSPDriver->send(setrcu);
+					} // if in mask
+				} // for steps
+				_enableRCUs(subarray, delay + 4);
 			} // conflict?
 		}
 	}

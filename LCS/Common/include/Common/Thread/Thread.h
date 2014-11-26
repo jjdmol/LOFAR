@@ -152,7 +152,7 @@ class Thread
     Thread& operator=(const Thread&);
 
     template <typename T> struct Args {
-      Args(T *object, void (T::*method)(), Thread *thread, const std::string &name) : object(object), method(method), thread(thread), name(name) {}
+      Args(T *object, void (T::*method)(), Thread *thread) : object(object), method(method), thread(thread, name(name)) {}
 
       T	     *object;
       void   (T::*method)();
@@ -318,8 +318,6 @@ template <typename T> inline void Thread::stub(Args<T> *args)
 
   try {
 #if defined(_GNU_SOURCE) && __GLIBC_PREREQ(2, 12)
-    int retval;
-
     // Set name WITHIN the thread, to avoid race conditions
     if ((retval = pthread_setname_np(pthread_self(), args->name.substr(0,15).c_str())) != 0)
       throw SystemCallException("pthread_setname_np", retval, THROW_ARGS);
