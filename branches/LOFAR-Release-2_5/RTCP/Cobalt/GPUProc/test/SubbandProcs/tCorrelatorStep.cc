@@ -66,25 +66,25 @@ TEST(convertFlagsToChannelFlags)
 
   inputFlags[1].include(100, 600); // E. Second station (10, 150)
   // The converted channel flags
-  MultiDimArray<LOFAR::SparseSet<unsigned>, 2> flagsPerChanel(
+  MultiDimArray<LOFAR::SparseSet<unsigned>, 2> flagsPerChannel(
           boost::extents[parset.nrChannelsPerSubband()][parset.nrStations()]);
 
   // ****** perform the translation
-  CorrelatorStep::Flagger::convertFlagsToChannelFlags(parset, inputFlags, flagsPerChanel);
+  CorrelatorStep::Flagger::convertFlagsToChannelFlags(parset, inputFlags, flagsPerChannel);
   // ******
 
   //validate the corner cases
-  CHECK(0 == flagsPerChanel[0][0].getRanges()[0].begin && 
-        16 == flagsPerChanel[0][0].getRanges()[0].end);  //A.
-  CHECK(17 == flagsPerChanel[0][0].getRanges()[1].begin &&
-        33 == flagsPerChanel[0][0].getRanges()[1].end);  //B.
-  CHECK(48 == flagsPerChanel[0][0].getRanges()[2].begin &&
-        131 == flagsPerChanel[0][0].getRanges()[2].end);  //C.
-  CHECK(235 == flagsPerChanel[0][0].getRanges()[3].begin &&
-        257 == flagsPerChanel[0][0].getRanges()[3].end);  //D.
+  CHECK(0 == flagsPerChannel[0][0].getRanges()[0].begin && 
+        16 == flagsPerChannel[0][0].getRanges()[0].end);  //A.
+  CHECK(17 == flagsPerChannel[0][0].getRanges()[1].begin &&
+        33 == flagsPerChannel[0][0].getRanges()[1].end);  //B.
+  CHECK(48 == flagsPerChannel[0][0].getRanges()[2].begin &&
+        131 == flagsPerChannel[0][0].getRanges()[2].end);  //C.
+  CHECK(235 == flagsPerChannel[0][0].getRanges()[3].begin &&
+        256 == flagsPerChannel[0][0].getRanges()[3].end);  //D.
 
-  CHECK(10 == flagsPerChanel[0][1].getRanges()[0].begin &&
-        150 == flagsPerChanel[0][1].getRanges()[0].end);  //E.
+  CHECK(10 == flagsPerChannel[0][1].getRanges()[0].begin &&
+        150 == flagsPerChannel[0][1].getRanges()[0].end);  //E.
 }
 
 
