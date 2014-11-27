@@ -12,7 +12,6 @@ lofar_add_library(cointerface
   Allocator.cc
   CorrelatedData.cc
   BlockID.cc
-  BudgetTimer.cc
   FinalMetaData.cc
   LTAFeedback.cc
   Stream.cc

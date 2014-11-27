@@ -274,7 +274,7 @@ static LOFAR::Cobalt::StationMetaDataMap getExternalStationMetaData(const LOFAR:
 static int doTBB_Run(const vector<string>& inputStreamNames, const LOFAR::Cobalt::Parset& parset,
                      const LOFAR::Cobalt::StationMetaDataMap& stMdMap, struct progArgs& args)
 {
-  string logPrefix("TBB obs " + LOFAR::formatString("%u", parset.settings.observationID) + ": ");
+  string logPrefix("TBB obs " + LOFAR::formatString("%u", parset.observationID()) + ": ");
 
   vector<int> thrExitStatus(2 * inputStreamNames.size(), 0);
   int err = 1;

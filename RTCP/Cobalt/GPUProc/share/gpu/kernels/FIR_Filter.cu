@@ -19,6 +19,7 @@
 //# $Id$
 
 #include "IntToFloat.cuh"
+#include <stdio.h>
 
 #if !(NR_STABS >= 1)
 #error Precondition violated: NR_STABS >= 1

@@ -79,7 +79,7 @@ int main()
   vector<gpu::Device> devices = gpu::Platform().devices();
   gpu::Context ctx(devices[0]);
 
-  const unsigned nrSubbands = ps.settings.subbands.size();
+  const unsigned nrSubbands = ps.nrSubbands();
 
   // Create BF Pipeline. We're the only rank: do all the subbands.
   // So for the rest of the test code globalSubbandIdx equals localSubbandIdx.
@@ -90,7 +90,7 @@ int main()
   omp_set_nested(true); // for around and within .multiSender.process()
 
   Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_receive_pool", true);
-  MACIO::RTmetadata rtmd(ps.settings.observationID, "", "");
+  MACIO::RTmetadata rtmd(ps.observationID(), "", "");
   Pipeline bfpl(ps, localSbIndices, devices, MPI_receive_pool,
                           rtmd, "rtmd key prefix");
   bfpl.allocateResources();

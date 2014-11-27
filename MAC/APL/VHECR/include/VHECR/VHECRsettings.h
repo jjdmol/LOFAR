@@ -33,9 +33,7 @@
 #include <Common/LofarTypes.h>
 #include <Common/lofar_bitset.h>
 #include <Common/LofarConstants.h>
-#include <ApplCommon/AntennaSets.h>
 #include <APL/APLCommon/AntennaField.h>
-#include <blitz/array.h>
 
 namespace LOFAR {
   namespace VHECR {
@@ -69,8 +67,7 @@ public:
 	\param ParamExtension - String with "keyword=value;" pairs for additional parameters during development.
     */
     string        antennaSet;
-	string        antennaField;
-    blitz::Array<double, 2> rcuPosITRF;
+	AntennaField*  antennaField;
 	int           clockFreq;
 	
 	int           noCoincChann;

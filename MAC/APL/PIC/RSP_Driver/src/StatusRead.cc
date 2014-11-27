@@ -42,9 +42,6 @@ StatusRead::StatusRead(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, 1)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
-
-  // this action should be performed at initialisation
-  //doAtInit();
 }
 
 StatusRead::~StatusRead()
@@ -113,29 +110,26 @@ GCFEvent::TResult StatusRead::handleack(GCFEvent& event, GCFPortInterface& /*por
   // if cache value different from hardware reported value, make equal
   switch (ack.board.rsp.bp_clock) {
 
-  case 125:
   case 160:
   case 200:
     if (0 == getBoardId()) {
       if (0 == Cache::getInstance().getBack().getClock()) {
-
 #if 0
-    LOG_INFO_STR(formatString("Receiving initial clock setting from RSP board: %d MHz. Adjusting cache value.",
-                  ack.board.rsp.bp_clock));
-    Cache::getInstance().getFront().getClock() = ack.board.rsp.bp_clock;
-    Cache::getInstance().getBack().getClock()  = ack.board.rsp.bp_clock;
+	LOG_INFO_STR(formatString("Receiving initial clock setting from RSP board: %d MHz. Adjusting cache value.",
+				  ack.board.rsp.bp_clock));
+	Cache::getInstance().getFront().getClock() = ack.board.rsp.bp_clock;
+	Cache::getInstance().getBack().getClock()  = ack.board.rsp.bp_clock;
 #endif
-
       } else if (ack.board.rsp.bp_clock != Cache::getInstance().getBack().getClock()) {
-        LOG_WARN_STR(formatString("Reported clock (%d MHz) is different from cache settings (%d MHz) on RSP board %d",
-                  ack.board.rsp.bp_clock, Cache::getInstance().getBack().getClock(), getBoardId()));
+	LOG_WARN_STR(formatString("Reported clock (%d MHz) is different from cache settings (%d MHz) on RSP board %d",
+				  ack.board.rsp.bp_clock, Cache::getInstance().getBack().getClock(), getBoardId()));
       }
     }
     break;
 
   default:
     LOG_WARN_STR(formatString("Invalid clock setting received from RSP board (%d): %d MHz",
-                  getBoardId(), ack.board.rsp.bp_clock));
+			      getBoardId(), ack.board.rsp.bp_clock));
     break;
   }
 

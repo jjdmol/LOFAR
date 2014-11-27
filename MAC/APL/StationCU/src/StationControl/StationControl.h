@@ -156,6 +156,8 @@ private:
 	uint32									itsNrTBBs;
 	bool									itsHasSplitters;
 	bitset<MAX_RSPBOARDS>					itsSplitters;	// On or Off.
+	vector<int>								itsLBAmapping;
+	vector<int>								itsHBAmapping;
     unsigned                                itsSetupSequence;
 };
 

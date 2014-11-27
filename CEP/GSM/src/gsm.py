@@ -4,8 +4,6 @@
 def gsmMain (name, argv):
 
     import sys
- 
-    import math
 
     import monetdb
     import monetdb.sql as db
@@ -39,15 +37,8 @@ def gsmMain (name, argv):
         patch = argv[1]
         st = 2
     outfile = argv[st]
-    try:
-      ra      = float(argv[st+1])
-      dec     = float(argv[st+2])
-    except ValueError:
-      # Try to parse ra-dec as in the output of msoverview, e.g. 08:13:36.0000 +48.13.03.0000
-      ralst = argv[st+1].split(':')
-      ra = math.copysign(abs(float(ralst[0]))+float(ralst[1])/60.+float(ralst[2])/3600.,float(ralst[0]))
-      declst = argv[st+2].split('.')
-      dec = math.copysign(abs(float(declst[0]))+float(declst[1])/60.+float('.'.join(declst[2:]))/3600.,float(declst[0]))
+    ra      = float(argv[st+1])
+    dec     = float(argv[st+2])
     radius  = float(argv[st+3])
     cutoff  = 4.
     theta   = 0.00278

@@ -104,7 +104,8 @@ namespace LOFAR
       // key: Cobalt.blockSize
       size_t blockSize;
 
-      size_t nrBlocks() const;
+      // Alias for blockSize
+      size_t nrSamplesPerSubband() const;
 
       // The number of seconds represented by each block.
       double blockDuration() const;
@@ -393,34 +394,21 @@ namespace LOFAR
         // The number of samples in one block of one channel.
         //
         // key: OLAP.CNProc.integrationSteps
-        size_t nrSamplesPerBlock;
+        size_t nrSamplesPerChannel;
 
         // The number of blocks to integrate to obtain the final
         // integration time.
         //
-        // If >1, the integration time is longer than the blockSize.
-        //
         // key: Cobalt.Correlator.nrBlocksPerIntegration
         size_t nrBlocksPerIntegration;
 
-        // The number of subblocks to produce per block.
-        //
-        // If >1, the integration time is shorter than the blockSize.
-        //
-        // key: Cobalt.Correlator.nrIntegrationsPerBlock
-        size_t nrIntegrationsPerBlock;
-
-        // The number of integrations that will be emitted between
-        // the start and end time of the observation. This is the
-        // expected number of CorrelatedData blocks written in the
-        // MeasurementSet.
-        size_t nrIntegrations;
-
-        // The number of samples to integrate over.
-        size_t nrSamplesPerIntegration() const;
-
         // The total integration time of all blocks, in seconds.
         double integrationTime() const;
+
+        // The number of blocks in this observation.
+        //
+        // set to: floor((stopTime - startTime) / integrationTime())
+        size_t nrBlocksPerObservation;
 
         struct Station {
           // The name of this (super)station
@@ -531,6 +519,12 @@ namespace LOFAR
           //
           // size: Observation.Beam[sap].nrTiedArrayBeams
           std::vector<struct TAB> TABs;
+
+          // Return the number of coherentstokes tabs, 
+          size_t nrCoherentTAB() const;
+
+          // Return the number of incoherentstokes tabs
+          size_t nrIncoherentTAB() const;
 
           // calculated at construction time
           size_t nrCoherent;
@@ -666,17 +660,40 @@ namespace LOFAR
 
       void                        write(Stream *) const;
 
+      unsigned                    observationID() const;
+      double                      startTime() const;
+      double                      stopTime() const;
+
+      unsigned    nrCorrelatedBlocks() const;
+      unsigned    nrBeamFormedBlocks() const;
+
+      unsigned                    nrStations() const;
       unsigned                    nrTabStations() const;
       unsigned                    nrMergedStations() const;
       std::vector<std::string>    mergedStationNames() const;
       unsigned                    nrBaselines() const;
+      unsigned                    nrCrossPolarisations() const;
+      unsigned                    clockSpeed() const; // Hz
+      double                      subbandBandwidth() const;
       double                      sampleDuration() const;
       unsigned                    nrBitsPerSample() const;
       size_t                      nrBytesPerComplexSample() const;
       MultiDimArray<double,2>     positions() const;
       std::string                 positionType() const;
       unsigned                    dedispersionFFTsize() const;
+      unsigned                    CNintegrationSteps() const;
+      unsigned                    IONintegrationSteps() const;
+      unsigned                    integrationSteps() const;
 
+      double                      CNintegrationTime() const;
+      double                      IONintegrationTime() const;
+      unsigned                    nrSamplesPerChannel() const;
+      unsigned                    nrSamplesPerSubband() const;
+      unsigned                    nrChannelsPerSubband() const;
+      double                      channelWidth() const;
+      bool                        delayCompensation() const;
+      bool                        correctClocks() const;
+      bool                        correctBandPass() const;
       std::vector<std::string>    allStationNames() const;
 
       bool outputThisType(OutputType) const;
@@ -686,7 +703,16 @@ namespace LOFAR
       std::string getFileName(OutputType, unsigned streamNr) const;
       std::string getDirectoryName(OutputType, unsigned streamNr) const;
 
+      std::string                 bandFilter() const;
+      std::string                 antennaSet() const;
+
+      unsigned                    nrBeams() const;
+
+      size_t                      nrSubbands() const;
+
       double channel0Frequency( size_t subband, size_t nrChannels ) const;
+
+      bool                        realTime() const;
 
       std::vector<double>         itsStPositions;
 

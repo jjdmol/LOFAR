@@ -494,17 +494,9 @@ namespace LOFAR
         settings.correlator.nrChannels = getUint32("Cobalt.Correlator.nrChannelsPerSubband", 64);
         //settings.correlator.nrChannels = getUint32("Observation.channelsPerSubband", 64);
         settings.correlator.channelWidth = settings.subbandWidth() / settings.correlator.nrChannels;
-        settings.correlator.nrSamplesPerBlock       = settings.blockSize / settings.correlator.nrChannels;
+        settings.correlator.nrSamplesPerChannel = settings.blockSize / settings.correlator.nrChannels;
         settings.correlator.nrBlocksPerIntegration = getUint32("Cobalt.Correlator.nrBlocksPerIntegration", 1);
-        settings.correlator.nrIntegrationsPerBlock = getUint32("Cobalt.Correlator.nrIntegrationsPerBlock", 1);
-
-        // We either have the integration time spanning multiple blocks, or the integration time being a part
-        // of a block, but never both.
-        ASSERT(settings.correlator.nrBlocksPerIntegration == 1 || settings.correlator.nrIntegrationsPerBlock == 1);
-
-        settings.correlator.nrIntegrations = settings.nrBlocks()
-                                           * settings.correlator.nrIntegrationsPerBlock
-                                           / settings.correlator.nrBlocksPerIntegration;
+        settings.correlator.nrBlocksPerObservation = static_cast<size_t>(floor((settings.stopTime - settings.startTime) / settings.correlator.integrationTime()));
 
         // super-station beam former
         //
@@ -826,7 +818,7 @@ namespace LOFAR
           }
         }
 
-        settings.beamFormer.dedispersionFFTsize = getUint32("Cobalt.BeamFormer.dedispersionFFTsize", settings.blockSize);
+        settings.beamFormer.dedispersionFFTsize = getUint32("Cobalt.BeamFormer.dedispersionFFTsize", settings.correlator.nrSamplesPerChannel);
       }
 
       // set output hosts
@@ -937,10 +929,6 @@ namespace LOFAR
       return max_n_FFT_pow2;
     }
 
-    size_t ObservationSettings::nrBlocks() const {
-      return static_cast<size_t>(floor((stopTime - startTime) * subbandWidth() / blockSize));
-    }
-
 
     double ObservationSettings::subbandWidth() const {
       return 1.0 * clockHz() / 1024;
@@ -955,8 +943,12 @@ namespace LOFAR
       return nrPolarisations * nrPolarisations;
     }
 
+    size_t ObservationSettings::nrSamplesPerSubband() const {
+      return blockSize;
+    }
+
     double ObservationSettings::blockDuration() const {
-      return blockSize * sampleDuration();
+      return nrSamplesPerSubband() * sampleDuration();
     }
 
     vector<unsigned> ObservationSettings::SAP::subbandIndices() const {
@@ -970,11 +962,7 @@ namespace LOFAR
     }
 
     double ObservationSettings::Correlator::integrationTime() const {
-      return 1.0 * nrSamplesPerIntegration() / channelWidth;
-    }
-
-    size_t ObservationSettings::Correlator::nrSamplesPerIntegration() const {
-      return nrSamplesPerBlock / nrIntegrationsPerBlock * nrBlocksPerIntegration;
+      return 1.0 * nrSamplesPerChannel * nrBlocksPerIntegration / channelWidth;
     }
 
     std::vector<struct ObservationSettings::FileLocation> Parset::getFileLocations(const std::string outputType) const {
@@ -1074,6 +1062,12 @@ namespace LOFAR
     }
 
 
+    bool Parset::correctClocks() const
+    {
+      return settings.corrections.clock;
+    }
+
+
     std::string Parset::getHostName(OutputType outputType, unsigned streamNr) const
     {
       if (outputType == CORRELATED_DATA)
@@ -1125,6 +1119,12 @@ namespace LOFAR
     size_t Parset::nrBytesPerComplexSample() const
     {
       return 2 * nrBitsPerSample() / 8;
+    }
+
+
+    unsigned Parset::nrBeams() const
+    {
+      return settings.SAPs.size();
     }
 
 
@@ -1202,6 +1202,31 @@ namespace LOFAR
       return itsName;
     }
 
+    unsigned Parset::observationID() const
+    {
+      return settings.observationID;
+    }
+
+    double Parset::startTime() const
+    {
+      return settings.startTime;
+    }
+
+    double Parset::stopTime() const
+    {
+      return settings.stopTime;
+    }
+
+    unsigned Parset::nrCorrelatedBlocks() const
+    {
+      return settings.correlator.nrBlocksPerObservation;
+    }
+
+    unsigned Parset::nrBeamFormedBlocks() const
+    {
+      return static_cast<unsigned>(floor( (stopTime() - startTime()) / CNintegrationTime()));
+    }
+
     ssize_t ObservationSettings::antennaFieldIndex(const std::string &name) const
     {
       for (size_t a = 0; a < antennaFields.size(); ++a) {
@@ -1215,12 +1240,18 @@ namespace LOFAR
     // TODO: rename allStationNames to allAntennaFieldNames
     std::vector<std::string> Parset::allStationNames() const
     {
-      vector<string> names(settings.antennaFields.size());
+      vector<string> names(nrStations());
 
       for (unsigned af = 0; af < names.size(); ++af)
         names[af] = settings.antennaFields[af].name;
 
       return names;
+    }
+
+    // TODO: rename nrStations to nrAntennaFields
+    unsigned Parset::nrStations() const
+    {
+      return settings.antennaFields.size();
     }
 
     unsigned Parset::nrTabStations() const
@@ -1250,9 +1281,24 @@ namespace LOFAR
       return stations * (stations + 1) / 2;
     }
 
+    unsigned Parset::nrCrossPolarisations() const
+    {
+      return settings.nrCrossPolarisations();
+    }
+
+    unsigned Parset::clockSpeed() const
+    {
+      return settings.clockHz();
+    }
+
+    double Parset::subbandBandwidth() const
+    {
+      return settings.subbandWidth();
+    }
+
     double Parset::sampleDuration() const
     {
-      return 1.0 / settings.subbandWidth();
+      return 1.0 / subbandBandwidth();
     }
 
     unsigned Parset::dedispersionFFTsize() const
@@ -1265,6 +1311,21 @@ namespace LOFAR
       return settings.nrBitsPerSample;
     }
 
+    unsigned Parset::CNintegrationSteps() const
+    {
+      return settings.correlator.nrSamplesPerChannel;
+    }
+
+    unsigned Parset::IONintegrationSteps() const
+    {
+      return settings.correlator.nrBlocksPerIntegration;
+    }
+
+    unsigned Parset::integrationSteps() const
+    {
+      return CNintegrationSteps() * IONintegrationSteps();
+    }
+
     bool Parset::outputThisType(OutputType outputType) const
     {
       switch (outputType) {
@@ -1274,9 +1335,54 @@ namespace LOFAR
       }
     }
 
+    double Parset::CNintegrationTime() const
+    {
+      return nrSamplesPerSubband() / subbandBandwidth();
+    }
+
+    double Parset::IONintegrationTime() const
+    {
+      return settings.correlator.integrationTime();
+    }
+
+    unsigned Parset::nrSamplesPerSubband() const
+    {
+      return settings.nrSamplesPerSubband();
+    }
+
+    unsigned Parset::nrSamplesPerChannel() const
+    {
+      return settings.correlator.enabled ? settings.correlator.nrSamplesPerChannel : 0;
+    }
+
+    unsigned Parset::nrChannelsPerSubband() const
+    {
+      return settings.correlator.enabled ? settings.correlator.nrChannels : 0;
+    }
+
+    size_t Parset::nrSubbands() const
+    {
+      return settings.subbands.size();
+    }
+
+    double Parset::channelWidth() const
+    {
+      return settings.correlator.channelWidth;
+    }
+
+    bool Parset::delayCompensation() const
+    {
+      return settings.delayCompensation.enabled;
+    }
+
     string Parset::positionType() const
     {
       return "ITRF";
+    }
+
+    bool Parset::correctBandPass() const
+    {
+      return settings.corrections.bandPass;
     }
 
     double Parset::channel0Frequency(size_t subband, size_t nrChannels) const
@@ -1289,12 +1395,38 @@ namespace LOFAR
       // if the 2nd PPF is used, the subband is shifted half a channel
       // downwards, so subtracting half a subband results in the
       // center of channel 0 (instead of the bottom).
-      return sbFreq - 0.5 * settings.subbandWidth();
+      return sbFreq - 0.5 * subbandBandwidth();
+    }
+
+    bool Parset::realTime() const
+    {
+      return settings.realTime;
+    }
+
+    string Parset::bandFilter() const
+    {
+      return settings.bandFilter;
+    }
+
+    string Parset::antennaSet() const
+    {
+      return settings.antennaSet;
     }
 
     string Parset::PVSS_TempObsName() const
     {
-      return getString("_DPname", "LOFAR_ObsSW_TempObs_0001");
+      return getString("_DPname", "LOFAR_ObsSW_TempObs_Unk");
+    }
+
+
+    size_t ObservationSettings::BeamFormer::SAP::nrCoherentTAB() const
+    {
+      return nrCoherent;
+    }
+
+    size_t ObservationSettings::BeamFormer::SAP::nrIncoherentTAB() const
+    {
+      return nrIncoherent;
     }
   } // namespace Cobalt
 } // namespace LOFAR

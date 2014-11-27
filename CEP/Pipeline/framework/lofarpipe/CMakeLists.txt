@@ -34,5 +34,4 @@ python_install(
   support/subprocessgroup.py
   support/utilities.py
   support/xmllogging.py
-  support/usagestats.py
   DESTINATION lofarpipe)

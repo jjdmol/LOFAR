@@ -94,7 +94,7 @@ PortBroker::~PortBroker()
 
 
 void PortBroker::start() {
-  itsThread.reset(new Thread(this, &PortBroker::serverLoop, "PortBroker", "[PortBroker] ", 65535));
+  itsThread.reset(new Thread(this, &PortBroker::serverLoop, "[PortBroker] ", 65535));
 }
 
 

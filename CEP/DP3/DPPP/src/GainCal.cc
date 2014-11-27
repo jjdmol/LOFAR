@@ -70,7 +70,7 @@ namespace LOFAR {
         itsUseModelColumn(parset.getBool (prefix + "usemodelcolumn", false)),
         itsParmDBName    (parset.getString (prefix + "parmdb")),
         itsApplyBeam     (parset.getBool (prefix + "usebeammodel", false)),
-        itsOneBeamPerPatch  (parset.getBool (prefix + "onebeamperpatch", true)),
+        itsBeamPerPatch  (parset.getBool (prefix + "onebeamperpatch", true)),
         itsUseChannelFreq(parset.getBool (prefix + "usechannelfreq", true)),
         itsMode          (parset.getString (prefix + "caltype")),
         itsTStep         (0),
@@ -103,9 +103,6 @@ namespace LOFAR {
         patchNames=makePatchList(sourceDB, sourcePatterns);
 
         itsPatchList = makePatches (sourceDB, patchNames, patchNames.size());
-        if (!itsOneBeamPerPatch) {
-          itsPatchList = makeOnePatchPerComponent(itsPatchList);
-        }
       }
       ASSERT(itsMode=="diagonal" || itsMode=="phaseonly" ||
              itsMode=="fulljones" || itsMode=="scalarphase");
@@ -189,10 +186,8 @@ namespace LOFAR {
       os << "   number of patches: " << itsPatchList.size() << endl;
       os << "  parmdb:             " << itsParmDBName << endl;
       os << "  apply beam:         " << boolalpha << itsApplyBeam << endl;
-      if (itsApplyBeam) {
-        os << "   beam per patch:    " << boolalpha << itsOneBeamPerPatch << endl;
-        os << "   use channelfreq:   " << boolalpha << itsUseChannelFreq << endl;
-      }
+      os << "   beam per patch:    " << boolalpha << itsBeamPerPatch << endl;
+      os << "   use channelfreq:   " << boolalpha << itsUseChannelFreq << endl;
       os << "  solint              " << itsSolInt <<endl;
       os << "  max iter:           " << itsMaxIter << endl;
       os << "  tolerance:          " << itsTolerance << endl;
@@ -292,10 +287,20 @@ namespace LOFAR {
           simulate(itsPhaseRef, itsPatchList[dr], nSt, nBl, nCh, cr_baseline,
                    cr_freq, cr_uvw_split, cr_model);
 
-          applyBeam(time, itsPatchList[dr]->position(), itsApplyBeam,
-                    info().chanFreqs(), &(itsThreadStorage[thread].model_patch[0]),
-                    refdir, tiledir, &(itsThreadStorage[thread].beamvalues[0]),
-                    storage.measConverter);
+          if (itsBeamPerPatch) {
+            applyBeam(time, itsPatchList[dr]->position(), itsApplyBeam,
+                      info().chanFreqs(), &(itsThreadStorage[thread].model_patch[0]),
+                      refdir, tiledir, &(itsThreadStorage[thread].beamvalues[0]),
+                      storage.measConverter);
+          } else {
+            for(size_t i = 0; i < itsPatchList[dr]->nComponents(); ++i) {
+              // Apply beam for every source, not only once per patch
+              applyBeam(time, itsPatchList[dr]->component(i)->position(), itsApplyBeam,
+                        info().chanFreqs(), &(itsThreadStorage[thread].model_patch[0]),
+                        refdir, tiledir, &(itsThreadStorage[thread].beamvalues[0]),
+                        storage.measConverter);
+            }
+          }
 
           for (size_t i=0; i<itsThreadStorage[thread].model_patch.size();++i) {
             itsThreadStorage[thread].model[i]+=
@@ -339,6 +344,13 @@ namespace LOFAR {
       getNextStep()->process(buf);
       return false;
     }
+
+    // Remove rows and colums corresponding to antennas with too much
+    // flagged data from vis and mvis
+    void GainCal::removeDeadAntennas() {
+      //TODO: implement this function...
+    }
+
 
     // Fills itsVis and itsMVis as matrices with all 00 polarizations in the
     // top left, all 11 polarizations in the bottom right, etc. //TODO: make templated
@@ -694,10 +706,8 @@ namespace LOFAR {
           if (itsDebugLevel>7) {
             cout<<"iter: "<<iter<<endl;
           }
-          if (itsDetectStalling && iter > 20 && dgx-dg <= 5.0e-3*dg) {
+          if (itsDetectStalling && dgx-dg <= 1.0e-3*dg) {
           // This iteration did not improve much upon the previous
-          // Stalling detection only after 20 iterations, to account for
-          // ''startup problems''
             if (itsDebugLevel>3) {
               cout<<"**"<<endl;
             }

@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
-import os
-import sys
-
 check_version = '0214'
+
+import sys
+import os
 
 mainPath = r'/opt/stationtest'
 libPath  = os.path.join(mainPath, 'lib')
@@ -19,7 +19,6 @@ from general_lib import *
 from lofar_lib import *
 from test_lib import *
 from test_db import *
-from data_lib import *
 from search_lib import search_version
 
 os.umask(001)
@@ -110,7 +109,7 @@ testInfo['TV']     = "TBB Version test"
 def addToArgs(key, value):
     if key == '':
         return
-    global args, rsp_check, rcu_m5_check, tbb_check
+    global args, rsp_keys, rsp_check, rcu_m5_keys, rcu_m5_check, tbb_keys, tbb_check
     if key in rsp_keys or key in tbb_keys or key in ('H','L','LS','LF','R','START','STOP'):
         if value != '-':
             args[key] = value
@@ -162,7 +161,7 @@ def getArguments():
                        
 # get checklevel and set tests to do
 def setLevelTests(conf):
-    #global args
+    global args
     
     level = args.get('L', '0')
     if level == '0':
@@ -256,16 +255,6 @@ def init_logging():
         logger.addHandler(stream_handler)
     return
 
-def backupLogFiles():
-    for nr in range(8,-1,-1):
-        if nr == 0:
-            full_filename = os.path.join(logPath, 'checkHardware.log')
-        else:
-            full_filename = os.path.join(logPath, 'checkHardware.log.%d' %(nr))
-        full_filename_new = os.path.join(logPath, 'checkHardware.log.%d' %(nr+1))
-        if os.path.exists(full_filename):
-            os.rename(full_filename, full_filename_new)
-    return        
 
 def waitForStart(start_datetime):
     start_time = time.mktime(start_datetime.timetuple())
@@ -280,24 +269,22 @@ def waitForStart(start_datetime):
 
 
 def main():
-    #global args
-    #global all_keys
-    #global rsp_check, rcu_m5_check, tbb_check
-    #global logger
+    global args
+    global all_keys
+    global rsp_check, rcu_m5_check, tbb_check
+    global logger
 
     getArguments()
-    print args
+    #print args
     if len(args) == 0 or args.has_key('H'):
         printHelp()
         sys.exit()
 
-    backupLogFiles() # backup logfiles, max 10 logfiles .9 is the oldest    
-    
+        
     init_logging()
     init_lofar_lib()
     init_test_db()
     init_test_lib()
-    init_data_lib()
 
     conf = cConfiguration()
 

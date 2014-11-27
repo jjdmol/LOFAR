@@ -106,18 +106,17 @@ private:
 	vector<RTDBPropertySet*>	itsSubracks;
 	vector<RTDBPropertySet*>	itsRSPs;
 	vector<RTDBPropertySet*>	itsRCUs;
-	RTDBPropertySet*		itsStationInfo;
-	RTDBPropertySet*		itsAartfaacInfo;
+	RTDBPropertySet*			itsStationInfo;
+	RTDBPropertySet*			itsAartfaacInfo;
 
 	blitz::Array<uint,1>		itsRCUstates;		// actual status of the RCUs
 	blitz::Array<bool,2>		itsRCUInputStates;	// enable state of the three RCU inputs
-	int				itsRCUquery;		// ID of the PVSS query
-	AntennaMapper*			itsAntMapper;
-	bool				itsHasSplitters;	// from RemoteStation.conf
-	bool				itsHasAartfaac;	// from RemoteStation.conf
+	int							itsRCUquery;		// ID of the PVSS query
+	AntennaMapper*				itsAntMapper;
+	bool						itsHasSplitters;	// from RemoteStation.conf
 	bitset<MAX_RSPBOARDS>		itsSplitters;		// on or off.
 	bitset<MAX_RSPBOARDS>		itsRSPmask;			// present in station or not
-	bitset<MAX_RCUS>		itsRCUmask;			// present in station or not
+	bitset<MAX_RCUS>			itsRCUmask;			// present in station or not
 
 };
 

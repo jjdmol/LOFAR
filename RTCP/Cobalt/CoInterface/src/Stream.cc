@@ -134,12 +134,12 @@ namespace LOFAR
     string getStreamDescriptorBetweenIONandStorage(const Parset &parset, OutputType outputType, unsigned streamNr)
     {
       string host = parset.getHostName(outputType, streamNr);
-      uint16 port = storageBrokerPort(parset.settings.observationID);
+      uint16 port = storageBrokerPort(parset.observationID());
 
       if (host == "")
         return str(format("file:%s") % parset.getFileName(outputType, streamNr));
       else
-        return str(format("tcpbroker:%s:%u:ion-storage-obs-%u-type-%u-stream-%u") % host % port % parset.settings.observationID % outputType % streamNr);
+        return str(format("tcpbroker:%s:%u:ion-storage-obs-%u-type-%u-stream-%u") % host % port % parset.observationID() % outputType % streamNr);
     }
 
   } // namespace Cobalt

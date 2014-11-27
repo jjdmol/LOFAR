@@ -69,7 +69,7 @@ namespace LOFAR
             const struct ObservationSettings::BeamFormer::SAP &bfSap = parset.settings.beamFormer.SAPs[sap];
 
             // Reserve room for coherent TABs only
-            SAPs[sap].TABs.resize(bfSap.nrCoherent);
+            SAPs[sap].TABs.resize(bfSap.nrCoherentTAB());
           }
         }
     }
@@ -284,8 +284,8 @@ namespace LOFAR
 
         // The coarse delay compensation is based on the average delay
         // between begin and end.
-        coarseDelaysSamples[sap] = static_cast<ssize_t>(round(0.5 * (delayAtBegin + delayAfterEnd) * parset.settings.subbandWidth()));
-        coarseDelaysSeconds[sap] = coarseDelaysSamples[sap] / parset.settings.subbandWidth();
+        coarseDelaysSamples[sap] = static_cast<ssize_t>(round(0.5 * (delayAtBegin + delayAfterEnd) * parset.subbandBandwidth()));
+        coarseDelaysSeconds[sap] = coarseDelaysSamples[sap] / parset.subbandBandwidth();
       }
 
       // Compute the offsets at which each subband is read

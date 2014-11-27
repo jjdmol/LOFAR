@@ -1,7 +1,8 @@
 # $Id$
 
+include(PythonInstall)
 
-install(PROGRAMS
+python_install(
   DBToQDeamon.py
 
-  DESTINATION bin)
+  DESTINATION LAPS/DBToQDeamon)

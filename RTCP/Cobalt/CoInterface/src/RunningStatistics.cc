@@ -30,7 +30,7 @@ namespace LOFAR
 
     RunningStatistics::RunningStatistics(const std::string &unit) 
     :
-      _unit(unit)
+      unit(unit)
     {
       reset();
     }
@@ -64,11 +64,6 @@ namespace LOFAR
     size_t RunningStatistics::count() const
     {
       return counter;
-    }
-
-    std::string RunningStatistics::unit() const
-    {
-      return _unit;
     }
 
     double RunningStatistics::mean() const
@@ -145,7 +140,7 @@ namespace LOFAR
             << " stDev: " << std::setw(8) << stDev()
             << " min:   " << std::setw(8) << min()    
             << " max:   " << std::setw(8) << max()
-            << " (stats in " << unit() << ")" ;
+            << " (stats in " << unit << ")" ;
       }
     }
 

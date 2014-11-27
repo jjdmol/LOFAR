@@ -7,10 +7,9 @@ class SubProcessGroup(object):
         A wrapper class for the subprocess module: allows fire and forget
         insertion of commands with a an optional sync/ barrier/ return
         """
-        def __init__(self, logger=None, usageStats = None):
+        def __init__(self, logger=None):
             self.process_group = []
             self.logger = logger
-            self.usageStats = usageStats
 
 
         def run(self, cmd_in, unsave=False, cwd=None):
@@ -36,14 +35,8 @@ class SubProcessGroup(object):
                         stdin=subprocess.PIPE,
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE)
-            
             # save the process
             self.process_group.append((cmd, process))
-
-            # add to resource monitor if available
-            if self.usageStats:
-                self.usageStats.addPID(process.pid)
-
 
             # TODO: SubProcessGroup could saturate a system with to much 
             # concurent calss: artifical limit to 20 subprocesses
@@ -58,7 +51,6 @@ class SubProcessGroup(object):
                 print "Subprocess started: {0}".format(cmd)
             else:
                 self.logger.info("Subprocess started: {0}".format(cmd))
-
 
         def wait_for_finish(self):
             """

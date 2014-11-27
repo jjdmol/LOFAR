@@ -1,46 +1,41 @@
 #!/usr/bin/env python
 
-########################################################################
-#                                                                      #
-# Created by N.Vilchez (vilchez@astron.nl)                             #
-# 14/11/2014                                                           #
-#                                                                      #
-########################################################################
 
 
-########################################################################
 # IMPORT general modules
-########################################################################
-import sys, glob, os
+
+import sys
+import glob
+import os
 import pyrap.tables as pt
+import numpy as np
 import fpformat
 
 
 
-########################################################################
-# Define observation directory parameters (NbTimechunk, NbSB etc ...)
-########################################################################
+
+######################################################################
+## Define observation directory parameters (NbTimechunk, NbSB etc ...)
+######################################################################
 
 
 
 
 class observationMergedDataParam:
 
-    def __init__(self,obsDir,UVmin):
+    def __init__(self,obsDir):
     
-	self.obsDir		= obsDir
-	self.UVmin		= UVmin
-	
+	self.obsDir	= obsDir
 
  
  
-	####################################################################
+	############################################################################################################
 	# Observation parameter for merged data
-	####################################################################	
+	############################################################################################################	
 	
     def obsParamMergedDataFunc(self):
     
-
+		##############################
 		# generate the list of files
 		listFiles	= sorted(glob.glob(self.obsDir+'*'))
 		NbFiles		= len(listFiles)
@@ -87,7 +82,7 @@ class observationMergedDataParam:
 				
 				print ''
 				print '#################' 
-				print 'Time chunk %s and %s have not the same reference frequency! \n%s MHz and %s MHz  respectively'%(Files[i],Files[i+1],freq0/1E6,freq1/1E6)
+				print """Time chunk %s and %s have not the same reference frequency! \n%s MHz and %s MHz  respectively"""%(Files[i],Files[i+1],freq0/1E6,freq1/1E6)
 				print '#################'
 				print ''
 				sys.exit(2)
@@ -95,7 +90,7 @@ class observationMergedDataParam:
 			if nbchan0 != nbchan1:
 				print ''
 				print '#################' 
-				print 'Time chunk %s and %s have not the same number of channels! \n%s and %s channels respectively'%(Files[i],Files[i+1],nbchan0,nbchan1)
+				print """Time chunk %s and %s have not the same number of channels! \n%s and %s channels respectively"""%(Files[i],Files[i+1],nbchan0,nbchan1)
 				print '#################'
 				print ''
 				sys.exit(2)				
@@ -116,13 +111,9 @@ class observationMergedDataParam:
 		target		= coords[0]*180./3.14
 		
 		
-		print self.UVmin
-		
-		if self.UVmin == 'none':
-			if target[1] <= 35:
-				self.UVmin=0.1
-			else:
-				self.UVmin=0			
+		UVmin=0
+		if target[1] <= 35:
+		    UVmin=0.1
 		    
 		ra_target	= target[0]+360.
 		dec_target	= target[1]
@@ -160,7 +151,7 @@ class observationMergedDataParam:
 		
 		
 		
-		return 	listFiles,Files,NbFiles,nbChan,frequency,maxBaseline,integTimeOnechunk,observationIntegTime,self.UVmin,ra_target,dec_target
+		return 	listFiles,Files,NbFiles,nbChan,frequency,maxBaseline,integTimeOnechunk,observationIntegTime,UVmin,ra_target,dec_target
 					
 								
 	

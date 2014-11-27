@@ -57,7 +57,6 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-using LOFAR::operator<<;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::RTDB;
@@ -1305,20 +1304,13 @@ LOG_DEBUG_STR("def&userReceivers=" << realReceivers);
 
 	// apply the current state of the hardware to the desired selection when user likes that.
 	if (itsUseHWinfo) {
-		vector<int16>	antMapping = itsAntSet->positionIndex(theObs.antennaSet);
-		AntennaMask_t	antMask    = onLBAField ? itsLBAmask     : itsHBAmask;		// bitset[rcu]=<in field or not>
-		LOG_DEBUG_STR("AntennaMask:" << antMask);
-		stringstream oss;
-		writeVector(oss, antMapping, ",", "[", "]");
-		LOG_DEBUG_STR("AntNrs    :" << oss.str());
+		vector<int>		*mappingPtr = onLBAField ? &itsLBAmapping : &itsHBAmapping;
+		AntennaMask_t	antBitSet   = onLBAField ? itsLBAmask     : itsHBAmask;
 		for (int rcu = 0; rcu < MAX_RCUS; rcu++) {
-			int		antNr(antMapping[rcu]>=0 ? antMapping[rcu]/2 : -1);
-			// realReceivers: definedRCUsInField AND userSelection
-			// itsRCUmask: PVSS derived availability	192 elements
-			// itsAntmask: PVSS derived availability	 96 elements
-			if (!realReceivers[rcu] || antNr<0 || !antMask[antNr] || !itsRCUmask[rcu]) {
+			int		idx((*mappingPtr)[rcu]);
+			if (!realReceivers[rcu] || idx<0 || !antBitSet[idx] || !itsRCUmask[rcu]) {
 				realReceivers.reset(rcu);
-				if (antNr >= 0 && !antMask[antNr]) {
+				if (idx >= 0 && !antBitSet[idx]) {
 					LOG_INFO_STR("Rejecting RCU " << rcu << " because Antenna is out of order");
 				}
 			}
@@ -1437,6 +1429,35 @@ void StationControl::_initAntennaMasks()
 
 	ASSERTSTR (itsNrLBAs <= itsLBAmask.size() && 
 			   itsNrHBAs <= itsHBAmask.size(), "Number of antennas exceed expected count");
+
+	// Setup mapping from LBA antennas and HBA antennas to RCU numbers.
+	// itsxBAmapping(antNr,*) contains the
+	itsLBAmapping.resize(MAX_RCUS, -1);		// 192
+	itsHBAmapping.resize(MAX_RCUS, -1);
+	for (int ant  = 0; ant < (int)MAX_ANTENNAS; ant++) {
+		if (ant < (int)itsNrHBAs) {
+			itsHBAmapping[N_POL*ant]   = ant;
+			itsHBAmapping[N_POL*ant+1] = ant;
+		}
+		if (ant < (int)itsNrLBAs) {
+			if (ant > (int)itsNrRSPs * (int)NR_ANTENNAS_PER_RSPBOARD) {
+				itsLBAmapping[N_POL*ant+1 - (NR_RCUS_PER_RSPBOARD*itsNrRSPs)] = ant;
+				itsLBAmapping[N_POL*ant   - (NR_RCUS_PER_RSPBOARD*itsNrRSPs)] = ant;
+			}
+			else {
+				itsLBAmapping[N_POL*ant]   = ant;
+				itsLBAmapping[N_POL*ant+1] = ant;
+			}
+		}
+	}
+	 {	stringstream	oss;
+		writeVector(oss, itsLBAmapping);
+		LOG_DEBUG_STR("LBAmap: " << oss.str());
+	}
+	{	stringstream	oss;
+		writeVector(oss, itsHBAmapping);
+		LOG_DEBUG_STR("HBAmap: " << oss.str());
+	}
 
 	// The masks are now initialized with the static information. The _handleQueryEvent routine
 	// corrects the sets with the life information from PVSS. We assume that PVSS always has the 

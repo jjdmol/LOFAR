@@ -71,7 +71,7 @@ void RCUWrite::sendrequest()
   rcusettings.hdr.set(MEPHeader::RCU_SETTINGS_HDR, 1 << getCurrentIndex()); // also sets payload_length
   rcusettings.ap = EPA_Protocol::RCUHandler();
   rcusettings.ap.input_delay_x = x.getDelay();
-  rcusettings.ap.enable_x      = x.getEnable();
+  rcusettings.ap.enable_x      = y.getEnable();
   rcusettings.ap.input_delay_y = y.getDelay();
   rcusettings.ap.enable_y      = y.getEnable();
 
@@ -91,7 +91,7 @@ GCFEvent::TResult RCUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*
     LOG_WARN("RCUWrite::handleack:: unexpected ack");
     return GCFEvent::NOT_HANDLED;
   }
-
+  
   EPAWriteackEvent ack(event);
 
   uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + getCurrentIndex();

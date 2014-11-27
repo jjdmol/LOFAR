@@ -26,7 +26,6 @@ python_install(
   master/setupsourcedb.py
   master/vdsmaker.py
   master/vdsreader.py
-  master/long_baseline.py
   nodes/__init__.py
   nodes/bbs_reducer.py
   nodes/copier.py
@@ -45,7 +44,6 @@ python_install(
   nodes/setupparmdb.py
   nodes/setupsourcedb.py
   nodes/vdsmaker.py
-  nodes/long_baseline.py
   DESTINATION lofarpipe/recipes)
 
 install(PROGRAMS
@@ -56,7 +54,6 @@ install(PROGRAMS
   bin/preprocessing_pipeline.py
   bin/imaging_pipeline.py
   bin/pulsar_pipeline.py
-  bin/long_baseline_pipeline.py
   bin/startPython.sh
   bin/startPythonVersion.sh
   bin/stopPython.sh

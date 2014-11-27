@@ -86,6 +86,7 @@ public:
 	template <typename T> 
 	inline void log(const string& key, const T& value)
 	{
+    LOG_DEBUG_STR("[RTmetadata " << itsRegisterName << " -> " << itsHostName << "] " << key << " = " << value);
 		log(KVpair(key, value));
 	}
 

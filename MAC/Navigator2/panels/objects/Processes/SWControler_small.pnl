@@ -84,22 +84,24 @@ private void observationChanged(string dp1, dyn_string observations,
   // We also have to check if the swleve;l is higher then 6 for the obs dependant ctrl'ers
   if (dynlen(observations) >= 1) {
     for (int i = 1; i <= dynlen(observations); i++)  {
-      if ($name != \"PythonControl\" && navFunct_isObservation(observations[i]) && firstObservation == \"\") {
+      if ($name != \"PythonControl\" && navFunct_isObservation(observations[i])) {
         firstObservation = observations[i];
-      } else if ($name == \"PythonControl\" && !navFunct_isObservation(observations[i]) && firstPipeline == \"\") {
+        break;
+      } else if ($name == \"PythonControl\" && !navFunct_isObservation(observations[i])) {
         firstPipeline = observations[i];
       }
-    }
-    
-    
-    if ($name != \"PythonControl\" && firstObservation == \"\") {
-      setValue(\"process\", \"backCol\", \"Lofar_off\");
-      return;
-    }
+      if ($name != \"PythonControl\" && firstObservation == \"\") {
+        setValue(\"process\", \"backCol\", \"Lofar_off\");
+        return;
+      }
       
-    if ($name == \"PythonControl\" && firstPipeline == \"\") {
-      setValue(\"process\", \"backCol\", \"Lofar_off\");
-      return;
+      if ($name == \"PythonControl\" && firstPipeline == \"\") {
+        setValue(\"process\", \"backCol\", \"Lofar_off\");
+        return;
+      } else if ($name == \"PythonControl\") {
+//        firstObservation=firstPipeline;
+      }
+      
     }
   }
   if (firstObservation == \"\") {

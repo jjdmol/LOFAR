@@ -60,10 +60,7 @@ namespace LOFAR {
       casa::Timer timer;
       NSTimer nstimer;
       nstimer.start();
-      ParameterSet parset;
-      if (parsetName!="") {
-        parset.adoptFile(parsetName);
-      }
+      ParameterSet parset (parsetName);
       // Adopt possible parameters given at the command line.
       parset.adoptArgv (argc, argv); //# works fine if argc==0 and argv==0
       DPLogger::useLogger = parset.getBool ("uselogger", false);

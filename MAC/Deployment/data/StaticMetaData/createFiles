@@ -52,17 +52,15 @@ def findIPNumber(stationName):
             return outwords[0]
     else:
         # Use UNix 'host' command and catch output
-        command = "getent hosts "+stationName+"C"
+        command = "host "+stationName+"C"
         output = Popen(command,shell=True, stdout=PIPE).stdout
         stdout = output.readlines()
         outline = stdout[0].strip()
         outwords = outline.split()
-        if (len(outwords) != 3):
-            print "Could not find IP for station, assuming 10.150.1.1"
+        if (len(outwords) != 4):
             return "10.150.1.1"
         else:
-            print "Found IP for station: ",outwords[0]
-            return outwords[0]
+            return outwords[3]
         
 
 #
@@ -279,11 +277,10 @@ def createRSPDriverFile(resultDir, stationName, dataDir,int_local,is_Cobalt):
 
     # Need globally unique IP port numbers.
     basePort = 10000 + stationNr * 10
-
+    
     if (is_int_station and int_local == 1):
         # International station in local mode takes dest. MAC/IP info from
         # separate file 
-        print "now here"
         ip_mac_alias = findIPandMAC_local(stationName,dataDir)
         for rspNr in range(len(ip_mac_alias)):  
             blet_out = find_Blets(stationName, dataDir)[1+rspNr];
@@ -393,14 +390,7 @@ def createRSPDriverFile(resultDir, stationName, dataDir,int_local,is_Cobalt):
         RSPconfig = RSPconfig.replace("@STATION_HID@",  hexStationID)
         RSPconfig = RSPconfig.replace("@FIRST_XLET_OUT@",  "5")
         RSPconfig = RSPconfig.replace("@LAST_XLET_OUT@",  "23")
-        # International station in local mode takes dest. MAC/IP info from
-        # separate file 
-        if int_local == 1:
-          print "now here"
-          IPandMAC = findIPandMAC_local(stationName,dataDir)
-        else:
-          IPandMAC = findIPandMAC_station(stationName, dataDir)
-        
+        IPandMAC = findIPandMAC_station(stationName, dataDir)
         nrNodes = len(IPandMAC) # Number of occurences in file
         for rspNr in range(4):        
             if nrNodes == 4:
@@ -887,8 +877,7 @@ if __name__ == "__main__":
         int_local=0
         if (len(sys.argv) > 4):
             if sys.argv[4] == "local":
-                int_local=1
-                is_Cobalt=0
+                int_local=1       
 
         for stationName in stationList:
             resultDir = resultRoot+"/"+stationName+"/"

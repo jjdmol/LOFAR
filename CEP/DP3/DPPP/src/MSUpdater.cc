@@ -70,8 +70,8 @@ namespace LOFAR {
         itsDataColAdded = addColumn(itsDataColName, TpComplex, cd);
       }
       if (itsWriteWeight) {
-        ArrayColumn<Complex> scalarcol(itsReader->table(), "DATA");
-        IPosition dataShape = scalarcol.shape(0);
+        IPosition dataShape =
+            itsReader->table().tableDesc().columnDesc("DATA").shape();
         ArrayColumnDesc<float> cd("WEIGHT_SPECTRUM", "weight per corr/chan",
             dataShape, ColumnDesc::FixedShape);
         itsWeightColAdded = addColumn(itsWeightColName, TpFloat, cd);

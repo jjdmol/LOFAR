@@ -68,7 +68,7 @@ class Op_shapelets(Op):
 
         Returns shapelet parameters.
         """
-        if opts is None:
+        if opts == None:
             opts = img.opts
         if opts.shapelet_gresid:
             shape = img.shape

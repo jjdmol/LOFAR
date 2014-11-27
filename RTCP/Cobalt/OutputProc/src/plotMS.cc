@@ -131,16 +131,14 @@ int main(int argc, char *argv[])
       usage(argv[0], 1);
 
     Parset parset(parset_filename);
-    ASSERT( parset.settings.correlator.enabled );
-
     FileStream datafile(table_filename);
-    CorrelatedData *data = new CorrelatedData(parset.nrMergedStations(), parset.settings.correlator.nrChannels, parset.settings.correlator.nrSamplesPerIntegration(), heapAllocator, 512);
+    CorrelatedData *data = new CorrelatedData(parset.nrMergedStations(), parset.nrChannelsPerSubband(), parset.integrationSteps(), heapAllocator, 512);
 
     if (channel == -1)
-      channel = parset.settings.correlator.nrChannels == 1 ? 0 : 1;  // default to first useful channel
+      channel = parset.nrChannelsPerSubband() == 1 ? 0 : 1;  // default to first useful channel
 
     ASSERT( data );
-    ASSERT( channel >= 0 && (unsigned)channel < parset.settings.correlator.nrChannels );
+    ASSERT( channel >= 0 && (unsigned)channel < parset.nrChannelsPerSubband() );
 
     // determine base line from string
     casa::Block<int32> itsAnt1;
@@ -186,7 +184,7 @@ int main(int argc, char *argv[])
     std::string secondStation = stationNames[itsAnt2[baseline]];
 
     printf( "# baseline %s - %s channel %d\n", firstStation.c_str(), secondStation.c_str(), channel);
-    printf( "# observation %u\n", parset.settings.observationID);
+    printf( "# observation %u\n", parset.observationID());
     if (realimag)
       printf( "# blocknr real(XX) imag(XX) real(XY) imag(XY) real(YX) imag(YX) real(YY) imag(YY)\n");
     else

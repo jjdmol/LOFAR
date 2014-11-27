@@ -748,9 +748,25 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 2 1 2 1 E  130 776 160 776
-1 177 3 "" 1
+1 177 2 "" 1
 0
-1 178 3 "" 2
+1 178 2 "" 2
+0
+1 179 2 "" 3
+0
+1 180 2 "" 4
+0
+1 181 2 "" 5
+0
+1 182 2 "" 6
+0
+1 183 2 "" 7
+0
+1 184 3 "" 1
+0
+1 185 3 "" 2
+0
+1 186 3 "" 7
 0
 2 172
 "PRIMITIVE_TEXT40"
@@ -771,22 +787,6 @@ E E 0 1 1 2 1 E U  0 E 790 10 823 23
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
 LANG:1 5 AardF
-1 179 4 "" 0
-0
-1 180 4 "" 1
-0
-1 181 4 "" 2
-0
-1 182 4 "" 3
-0
-1 183 5 "" 0
-0
-1 184 6 "" 1
-0
-1 185 6 "" 2
-0
-1 186 7 "" 0
-0
 0
 LAYER, 1 
 1
@@ -864,19 +864,10 @@ LANG:1 0
 3 1 "PANEL_REF1" -1
 "objects\\Hardware\\observationFlow_stations.pnl" 220 810 T 60 U 
 0
+3 2 "PANEL_REF2" -1
+"objects\\Processes\\observationFlow_cobaltNodeProcesses.pnl" 380 810 T 63 1 0 1 -40 -1.13686837721616e-013
+0
 3 3 "PANEL_REF3" -1
 "objects\\Processes\\observationFlow_cobaltLocusNodeProcesses.pnl" 500 810 T 64 U 
-0
-3 4 "PANEL_REF4" -1
-"objects\\Processes\\observationFlow_cobaltInputStreams.pnl" 280 750 T 66 U 
-0
-3 5 "PANEL_REF5" -1
-"objects\\Processes\\observationFlow_cobaltGPUProcs.pnl" 430 750 T 66 1 0 1 0 -5
-0
-3 6 "PANEL_REF6" -1
-"objects\\Processes\\observationFlow_cobaltNodeProcesses.pnl" 340 810 T 66 U 
-0
-3 7 "PANEL_REF7" -1
-"objects/Processes\\observationFlow_cobaltOutputProc.pnl" 590 750 T 66 1 0 1 0 4
 0
 0

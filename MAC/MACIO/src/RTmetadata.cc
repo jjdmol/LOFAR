@@ -46,9 +46,6 @@ RTmetadata::RTmetadata(uint32		observationID,
 	itsKVTport		 (NULL),
 	itsNrEventsDropped	 (0)
 {
-	// use negative seqnr to avoid ack messages
-	itsLogEvents.seqnr = -1;
-
 	itsLogEvents.kvps.reserve(MAX_QUEUED_EVENTS);
 	itsQueuedEvents.reserve(MAX_QUEUED_EVENTS);
 }
@@ -72,7 +69,7 @@ RTmetadata::~RTmetadata()
 	}
 
 	if (itsNrEventsDropped > 0) {
-		LOG_WARN_STR("[RTmetadata " << itsRegisterName << "] dropped " << itsNrEventsDropped << " PVSS events");
+		LOG_WARN_STR("RTmetadata object dropped " << itsNrEventsDropped << " event(s) for PVSS");
 	}
 }
 
@@ -84,13 +81,13 @@ void RTmetadata::start()
 	// Some tests clear the supplied hostname (don't use PVSSGatewayStub).
 	// Code under test may still log(), but that will be lost as intended.
 	if (itsHostName.empty()) {
-		LOG_WARN_STR("[RTmetadata (PVSS) " << itsRegisterName << "] Empty PVSSGateway hostname; dropping all events");
+		LOG_WARN("Empty hostname, so logged PVSS data points will be dropped.");
 		return;
 	}
 
 	ScopedLock lock(itsQueuedEventsMutex);
 	if (!itsThread) {
-		itsThread.reset(new Thread(this, &RTmetadata::rtmLoop, "[RTMetadata (PVSS) send thread] "));
+		itsThread.reset(new Thread(this, &RTmetadata::rtmLoop, "RTMetadata (PVSS) thread: "));
 	}
 }
 
@@ -99,8 +96,6 @@ void RTmetadata::start()
 //
 void RTmetadata::log(const KVpair& pair)
 {
-	LOG_DEBUG_STR("[RTmetadata " << itsRegisterName << "] log() " << pair);
-
 	ScopedLock lock(itsQueuedEventsMutex);
 
 	// Limit the queue size, possibly losing events.
@@ -135,9 +130,9 @@ void RTmetadata::log(const vector<KVpair>& pairs)
 		if (nfree == MAX_QUEUED_EVENTS) {
 			itsQueuedEventsCond.signal();
 		}
+	} else {
+		itsNrEventsDropped += pairs.size() - nfree;
 	}
-
-	itsNrEventsDropped += pairs.size() - count;
 }
 
 
@@ -159,11 +154,12 @@ void RTmetadata::rtmLoop()
 			sendEventsLoop();
 			// not reached
 		} catch (LOFAR::AssertError& exc) {
-			LOG_WARN_STR("[RTmetadata " << itsRegisterName << "] Connection failure to PVSS Gateway: " << exc.what() << ". Will attempt to reconnect in " << sleepTime << " us.");
+			LOG_WARN_STR("Connection failure to PVSS Gateway: " << exc.what() << ". Will attempt to reconnect in a moment.");
+			itsLogEvents.kvps.clear(); // trash possibly half-sent events
 			delete itsKVTport;
 			itsKVTport = 0;
 		} catch (...) {
-			LOG_DEBUG_STR("[RTmetadata " << itsRegisterName << "] Caught cancellation (or unknown) exception. Stopping...");
+			LOG_DEBUG("Caught cancellation (or unknown) exception. Stopping...");
 			delete itsKVTport;
 			itsKVTport = 0;
 			throw; // cancellation exc must be re-thrown
@@ -184,20 +180,19 @@ void RTmetadata::setupConnection()
 {
 	// Use synchronous socket (last arg), since we already have a thread
 	// to provide full async (and thread-safety on log()).
-
-	LOG_DEBUG_STR("[RTmetadata " << itsRegisterName << "] Creating EventPort for host " << itsHostName);
-	// Note: the EventPort connect()s in the constructor
+  //
+  // Note: the EventPort connect()s in the constructor
 	itsKVTport = new EventPort(MAC_SVCMASK_PVSSGATEWAY, false, KVT_PROTOCOL,
 				   itsHostName, true); // may throw AssertError exc
 
-	LOG_DEBUG_STR("[RTmetadata " << itsRegisterName << "] Registering at PVSSGateway");
+	LOG_DEBUG("Registering at PVSSGateway");
 	KVTRegisterEvent regEvent;
 	regEvent.obsID = itsObsID;
 	regEvent.name  = itsRegisterName;
 	ASSERTSTR(itsKVTport->send(&regEvent),
 		  "failed to send registration to PVSSGateway"); // send() may throw AssertError exc
 
-	LOG_DEBUG_STR("[RTmetadata " << itsRegisterName << "] Waiting for PVSSGateway register acknowledgement");
+	LOG_DEBUG("Waiting for PVSSGateway register acknowledgement");
 	GCFEvent* ackPtr;
 	ASSERTSTR((ackPtr = itsKVTport->receive()) != NULL,
 		  "bad registration ack from PVSSGateway"); // receive may throw AssertError exc
@@ -205,7 +200,8 @@ void RTmetadata::setupConnection()
 	ASSERTSTR(ack.obsID == itsObsID && ack.name == itsRegisterName,
 		  "PVSSGateway identity error");
 
-	LOG_DEBUG_STR("[RTmetadata " << itsRegisterName << "] Connected to and registered at the PVSSGateway");
+	itsLogEvents.seqnr = 0;
+	LOG_DEBUG("Connected to and registered at the PVSSGateway");
 }
 
 //
@@ -214,8 +210,6 @@ void RTmetadata::setupConnection()
 void RTmetadata::sendEventsLoop()
 {
 	while (true) {
-		itsLogEvents.kvps.clear();
-
 		{
 			ScopedLock lock(itsQueuedEventsMutex);
 
@@ -225,10 +219,11 @@ void RTmetadata::sendEventsLoop()
 			itsQueuedEvents.swap(itsLogEvents.kvps);
 		}
 
-		LOG_DEBUG_STR("[RTmetadata " << itsRegisterName << "] sending " << itsLogEvents.kvps.size() << " PVSS DPs; 1st: " <<
-		              itsLogEvents.kvps[0] << " last: " << itsLogEvents.kvps[itsLogEvents.kvps.size() - 1]);
+		// use negative seqnrs to avoid ack messages
+		itsLogEvents.seqnr -= 1;
 		itsKVTport->send(&itsLogEvents); // may throw AssertError exc
-		LOG_DEBUG_STR("[RTmetadata " << itsRegisterName << "] sent " << itsLogEvents.kvps.size() << " PVSS DPs");
+		LOG_DEBUG_STR("Sent " << itsLogEvents.kvps.size() << " PVSS data point events");
+		itsLogEvents.kvps.clear();
 	}
 }
 

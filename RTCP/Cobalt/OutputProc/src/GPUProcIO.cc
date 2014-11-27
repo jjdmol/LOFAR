@@ -37,7 +37,6 @@
 #include <ApplCommon/StationInfo.h>
 #include <MACIO/RTmetadata.h>
 #include <CoInterface/Exceptions.h>
-#include <CoInterface/OMPThread.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/FinalMetaData.h>
 #include <CoInterface/Stream.h>
@@ -84,10 +83,9 @@ bool process(Stream &controlStream, unsigned myRank)
   LOG_INFO_STR("MACProcessScope: " << mdKeyPrefix);
   mdKeyPrefix.push_back('.'); // keys look like: "keyPrefix.subKeyName[x]"
 
-  const string mdRegisterName = string(PST_COBALT_OUTPUT_PROC) + ":" +
-                                lexical_cast<string>(parset.settings.observationID) + "@" + myHostName;
+  const string mdRegisterName = PST_COBALT_OUTPUT_PROC;
   const string mdHostName = parset.getString("Cobalt.PVSSGateway.host", "");
-  MACIO::RTmetadata mdLogger(parset.settings.observationID, mdRegisterName, mdHostName);
+  MACIO::RTmetadata mdLogger(parset.observationID(), mdRegisterName, mdHostName);
   mdLogger.start();
 
   {
@@ -111,7 +109,7 @@ bool process(Stream &controlStream, unsigned myRank)
                      formatDataPointLocusName(myHostName));
 
         string logPrefix = str(format("[obs %u correlated stream %3u] ")
-                               % parset.settings.observationID % fileIdx);
+                               % parset.observationID() % fileIdx);
 
         SubbandWriter *writer = new SubbandWriter(parset, fileIdx, mdLogger, mdKeyPrefix, logPrefix);
         subbandWriters.push_back(writer);
@@ -154,10 +152,10 @@ bool process(Stream &controlStream, unsigned myRank)
 
         // Create a collector for this fileIdx
         collectors[fileIdx] = new TABTranspose::BlockCollector(
-          *outputPools[fileIdx], fileIdx, nrSubbands, nrChannels, nrSamples, parset.settings.nrBlocks(), parset.settings.realTime ? 5 : 0);
+          *outputPools[fileIdx], fileIdx, nrSubbands, nrChannels, nrSamples, parset.nrBeamFormedBlocks(), parset.realTime() ? 5 : 0);
 
         string logPrefix = str(format("[obs %u beamformed stream %3u] ")
-                                                    % parset.settings.observationID % fileIdx);
+                                                    % parset.observationID() % fileIdx);
 
         TABOutputThread *writer = new TABOutputThread(parset, fileIdx, *outputPools[fileIdx], mdLogger, mdKeyPrefix, logPrefix);
         tabWriters.push_back(writer);
@@ -179,8 +177,6 @@ bool process(Stream &controlStream, unsigned myRank)
       // Done signal from controller, by sending the final meta data
 #     pragma omp section
       {
-        OMPThread::ScopedName sn("finalMetaData");
-
         // Add final meta data (broken tile information, etc)
         // that is obtained after the end of an observation.
         LOG_INFO_STR("Waiting for final meta data");
@@ -192,7 +188,7 @@ bool process(Stream &controlStream, unsigned myRank)
           LOG_ERROR_STR("Failed to read broken tile information: " << err);
         }
 
-        if (parset.settings.realTime) {
+        if (parset.realTime()) {
           // Real-time observations: stop now. MultiReceiver::kill
           // will stop the TABWriters.
           mr.kill(0);
@@ -209,26 +205,17 @@ bool process(Stream &controlStream, unsigned myRank)
       // SubbandWriters
 #     pragma omp section
       {
-        OMPThread::ScopedName sn("subbandWr");
-
 #       pragma omp parallel for num_threads(subbandWriters.size())
-        for (int i = 0; i < (int)subbandWriters.size(); ++i) {
-          OMPThread::ScopedName sn(str(format("subbandWr %u") % subbandWriters[i]->streamNr()));
-
+        for (int i = 0; i < (int)subbandWriters.size(); ++i)
           subbandWriters[i]->process();
-        }
       }
 
       // TABWriters
 #     pragma omp section
       {
-        OMPThread::ScopedName sn("tabWr");
-
 #       pragma omp parallel for num_threads(tabWriters.size())       
-        for (int i = 0; i < (int)tabWriters.size(); ++i) {
-          OMPThread::ScopedName sn(str(format("tabWr %u") % tabWriters[i]->streamNr()));
+        for (int i = 0; i < (int)tabWriters.size(); ++i)
           tabWriters[i]->process();
-        }
       }
     }
 

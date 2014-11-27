@@ -150,11 +150,11 @@ namespace {
       // flagged data from vis and mvis
       void removeDeadAntennas ();
 
-      // Fills the matrices itsVis and itsMVis (single precision model)
+      // Fills the matrices itsVis and itsMVis
       void fillMatrices (casa::Complex* model, casa::Complex* data, float* weight,
                          const casa::Bool* flag);
 
-      // Fills the matrices itsVis and itsMVis (for double precision model)
+      // Fills the matrices itsVis and itsMVis
       void fillMatrices (dcomplex* model, casa::Complex* data, float* weight,
                          const casa::Bool* flag);
 
@@ -171,6 +171,9 @@ namespace {
       // Convert a direction to ITRF.
       StationResponse::vector3r_t dir2Itrf (const casa::MDirection&, casa::MDirection::Convert&) const;
 
+      // Do the actual calibration (called by process and finish)
+      void handleCal();
+
       //# Data members.
       DPInput*         itsInput;
       string           itsName;
@@ -178,7 +181,7 @@ namespace {
       bool             itsUseModelColumn;
       string           itsParmDBName;
       bool             itsApplyBeam;
-      bool             itsOneBeamPerPatch;
+      bool             itsBeamPerPatch;
       bool             itsUseChannelFreq;
       shared_ptr<BBS::ParmDB> itsParmDB;
       Position         itsPhaseRef;

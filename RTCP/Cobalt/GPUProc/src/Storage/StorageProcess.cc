@@ -64,7 +64,7 @@ namespace LOFAR
     {
       ASSERTSTR(!itsThread, "StorageProcess has already been started");
 
-      itsThread = new Thread(this, &StorageProcess::controlThread, str(boost::format("%s ctrl") % itsHostname), itsLogPrefix + "[ControlThread] ", 65535);
+      itsThread = new Thread(this, &StorageProcess::controlThread, itsLogPrefix + "[ControlThread] ", 65535);
     }
 
 
@@ -108,8 +108,8 @@ namespace LOFAR
     {
       // Connect control stream
       LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] connecting...");
-      std::string resource = getStorageControlDescription(itsParset.settings.observationID, itsRank);
-      PortBroker::ClientStream stream(itsHostname, storageBrokerPort(itsParset.settings.observationID), resource, 0);
+      std::string resource = getStorageControlDescription(itsParset.observationID(), itsRank);
+      PortBroker::ClientStream stream(itsHostname, storageBrokerPort(itsParset.observationID()), resource, 0);
 
       // Send parset
       LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] connected -- sending parset");

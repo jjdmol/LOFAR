@@ -104,7 +104,7 @@ SUITE(SubbandWriter)
 
         SmartPtr<Stream> inputStream = createStream(sendDesc, false, 0);
 
-        CorrelatedData data(ps.nrMergedStations(), ps.settings.correlator.nrChannels, ps.settings.correlator.nrSamplesPerIntegration(), heapAllocator, 512);
+        CorrelatedData data(ps.nrMergedStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), heapAllocator, 512);
 
         for (size_t i = 0; i < data.visibilities.num_elements(); ++i) {
           *(data.visibilities.origin() + i) = complex<float>(i, 2*i);
@@ -118,7 +118,7 @@ SUITE(SubbandWriter)
     {
       FileStream f("tWriter.out_raw/table.f0data");
 
-      CorrelatedData data(ps.nrMergedStations(), ps.settings.correlator.nrChannels, ps.settings.correlator.nrSamplesPerIntegration(), heapAllocator, 512);
+      CorrelatedData data(ps.nrMergedStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), heapAllocator, 512);
 
       data.read(&f, true, 512);
 
