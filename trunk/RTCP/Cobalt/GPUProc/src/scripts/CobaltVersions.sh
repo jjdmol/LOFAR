@@ -70,9 +70,11 @@ if [ $LIST_VERSIONS -eq 1 ]; then
   ls -1 $COBALT_VERSIONS_DIR
 fi
 
+CURRENT_VERSION=`readlink -f /opt/lofar | awk -F/ '{ print $NF; }'`
+
 # Get current Cobalt version
 if [ $GET_VERSION -eq 1 ]; then
-  readlink -f /opt/lofar | awk -F/ '{ print $NF; }'
+  echo "$CURRENT_VERSION"
 fi
 
 # Get current Cobalt version on ALL hosts
@@ -87,9 +89,22 @@ fi
 if [ -n "$SET_VERSION" ]; then
   echo "Switching Cobalt to $SET_VERSION"
 
-  for HOST in $HOSTS; do
-    echo "$HOST"
-    ssh $HOST "ln -sfT \"${COBALT_VERSIONS_DIR}/${SET_VERSION}\" /localhome/lofarsystem/lofar/current" || exit 1
-  done
+  function set_version {
+    VERSION="$1"
+    for HOST in $HOSTS; do
+      echo "$HOST"
+      ssh $HOST "[ -d \"${COBALT_VERSIONS_DIR}/${VERSION}\" ] && ln -sfT \"${COBALT_VERSIONS_DIR}/${VERSION}\" /localhome/lofarsystem/lofar/current" || return 1
+    done
+
+    return 0
+  }
+
+  if ! set_version "$SET_VERSION"; then
+    echo "------------------------------------------------------------------------------"
+    echo "ERROR Switching to $SET_VERSION. Switching back to $CURRENT_VERSION"
+    echo "------------------------------------------------------------------------------"
+
+    set_version "$CURRENT_VERSION"
+  fi
 fi
 
