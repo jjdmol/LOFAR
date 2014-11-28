@@ -30,24 +30,24 @@ class GenericPipeline(control):
                              "NYI"
         return 1
 
-    #def go(self):
+    def go(self):
         #"""
         #Read the parset-file that was given as input argument, and set the
         #jobname before calling the base-class's `go()` method.
         #"""
-    #    try:
-    #        parset_file = os.path.abspath(self.inputs['args'][0])
-    #    except IndexError:
-    #        return self.usage()
+        try:
+            parset_file = os.path.abspath(self.inputs['args'][0])
+        except IndexError:
+            return self.usage()
 
         # Set job-name to basename of parset-file w/o extension, if it's not
         # set on the command-line with '-j' or '--job-name'
-    #    if not 'job_name' in self.inputs:
-    #        self.inputs['job_name'] = (
-    #            os.path.splitext(os.path.basename(parset_file))[0])
+        if not 'job_name' in self.inputs:
+            self.inputs['job_name'] = (
+                os.path.splitext(os.path.basename(parset_file))[0])
 
         # Call the base-class's `go()` method.
-    #    return super(GenericPipeline, self).go()
+        return super(GenericPipeline, self).go()
 
     def pipeline_logic(self):
         try:
@@ -77,21 +77,6 @@ class GenericPipeline(control):
         # Create directories for temporary parset- and map files
         create_directory(parset_dir)
         create_directory(mapfile_dir)
-
-        self._get_io_product_specs()
-        # Write input- and output data map-files
-        input_correlated_mapfile = os.path.join(
-            mapfile_dir, "input_correlated.mapfile"
-        )
-        output_correlated_mapfile = os.path.join(
-            mapfile_dir, "output_correlated.mapfile"
-        )
-        output_instrument_mapfile = os.path.join(
-            mapfile_dir, "output_instrument.mapfile"
-        )
-        self.input_data['correlated'].save(input_correlated_mapfile)
-        self.output_data['correlated'].save(output_correlated_mapfile)
-        self.output_data['instrument'].save(output_instrument_mapfile)
 
         # *********************************************************************
         # maybe we dont need a subset but just a steplist
@@ -131,15 +116,15 @@ class GenericPipeline(control):
             step_parset_files[name] = step_parset
 
         # initial parameters to be saved in resultsdict so that recipes have access to this step0
-        #testmapfile = self._create_mapfile_from_folder('/home/zam/sfroehli/testpipeline/data/MS')
-        #testmapfile_name = os.path.join(mapfile_dir, 'measurements.mapfile')
-        #testmapfile.save(testmapfile_name)
-        #resultdicts = {'input': {'mapfile': testmapfile_name}}
-
-        resultdicts = {'input': {'mapfile': input_correlated_mapfile,
-                                 'output_instrument_mapfile': output_instrument_mapfile,
-                                 'output_correlated_mapfile': output_correlated_mapfile,
-                                 'parset': parset_file}}
+        resultdicts = {'input': {
+            #'mapfile': input_correlated_mapfile,
+             #                    'output_instrument_mapfile': output_instrument_mapfile,
+              #                   'output_correlated_mapfile': output_correlated_mapfile,
+                                 'parset': parset_file,
+                                 'parsetobj': self.parset,
+                                 'job_dir': job_dir,
+                                 'parset_dir': parset_dir,
+                                 'mapfile_dir': mapfile_dir}}
 
         # *********************************************************************
         # main loop
@@ -149,6 +134,7 @@ class GenericPipeline(control):
             inputdict = {}
             inputargs = []
             resultdict = {}
+            print 'RESULTS: ',resultdicts
             self._construct_cmdline(inputargs, step, resultdicts)
 
             if stepname in step_parset_files:
@@ -209,56 +195,6 @@ class GenericPipeline(control):
         for ms in measurements:
             maps.data.append(DataProduct('localhost', folder + '/' + ms, False))
         return maps
-
-    # copy paste from old msss_calibrator for the sake of tests
-    # what mapfiles have to be loaded in the beginning is subject to discuss
-    def _get_io_product_specs(self):
-        """
-        Get input- and output-data product specifications from the
-        parset-file, and do some sanity checks.
-        """
-        dps = self.parset.makeSubset(
-            self.parset.fullModuleName('DataProducts') + '.'
-        )
-        self.input_data['correlated'] = DataMap([
-            tuple(os.path.join(location, filename).split(':')) + (skip,)
-                for location, filename, skip in zip(
-                    dps.getStringVector('Input_Correlated.locations'),
-                    dps.getStringVector('Input_Correlated.filenames'),
-                    dps.getBoolVector('Input_Correlated.skip'))
-        ])
-        self.logger.debug("%d Input_Correlated data products specified" %
-                          len(self.input_data['correlated']))
-
-        self.output_data['correlated'] = DataMap([
-            tuple(os.path.join(location, filename).split(':')) + (skip,)
-                for location, filename, skip in zip(
-                    dps.getStringVector('Output_Correlated.locations'),
-                    dps.getStringVector('Output_Correlated.filenames'),
-                    dps.getBoolVector('Output_Correlated.skip'))
-        ])
-        self.logger.debug("%d Output_Correlated data products specified" %
-                          len(self.output_data['correlated']))
-
-        self.output_data['instrument'] = DataMap([
-            tuple(os.path.join(location, filename).split(':')) + (skip,)
-                for location, filename, skip in zip(
-                    dps.getStringVector('Output_InstrumentModel.locations'),
-                    dps.getStringVector('Output_InstrumentModel.filenames'),
-                    dps.getBoolVector('Output_InstrumentModel.skip'))
-        ])
-        self.logger.debug("%d Output_InstrumentModel data products specified" %
-                          len(self.output_data['instrument']))
-
-        # Sanity checks on input- and output data product specifications
-        if not validate_data_maps(
-            self.input_data['correlated'],
-            self.output_data['correlated'],
-            self.output_data['instrument']):
-            raise PipelineException(
-                "Validation of input/output data product specification failed!"
-            )
-
 
 
 class GenericPipelineParsetValidation():

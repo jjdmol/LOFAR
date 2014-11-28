@@ -10,6 +10,4 @@ def load_plugin(name, path=None):
 
 def call_plugin(path, name, *args, **kwargs):
     plugin = load_plugin(path, name)
-    plugin.plugin_main(*args, **kwargs)
-
-#call_plugin("example", 1234)
+    return plugin.plugin_main(*args, **kwargs)
