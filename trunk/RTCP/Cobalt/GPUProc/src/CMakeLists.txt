@@ -138,6 +138,7 @@ install(PROGRAMS
   scripts/Cobalt_install.sh
   scripts/CobaltVersions.sh
   scripts/setloglevels.sh
+  scripts/station_routes.sh
   DESTINATION sbin)
 
 # install logprop files
