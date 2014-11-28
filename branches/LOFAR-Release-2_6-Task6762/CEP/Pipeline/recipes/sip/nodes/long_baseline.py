@@ -89,9 +89,10 @@ class long_baseline(LOFARnodeTCP):
 
             self.logger.debug(
                     "Produced time slices: {0}".format(time_slices_path_list))
+
             #***********************************************************
             # 3. run rfi_concole: flag datapoints which are corrupted
-            if rficonsole_executable != "":
+            if False:
                 self._run_rficonsole(rficonsole_executable, time_slice_dir,
                                      time_slices_path_list)
 
@@ -106,9 +107,10 @@ class long_baseline(LOFARnodeTCP):
 
             #*****************************************************************
             # 5. Filter bad stations
-            if not(asciistat_executable == "" or
-                 statplot_executable == "" or
-                 msselect_executable == "" or True):
+            #if not(asciistat_executable == "" or
+            #     statplot_executable == "" or
+            #     msselect_executable == "" or True):
+            if False:
                 time_slice_filtered_path_list = self._filter_bad_stations(
                     time_slices_path_list, asciistat_executable,
                     statplot_executable, msselect_executable)
