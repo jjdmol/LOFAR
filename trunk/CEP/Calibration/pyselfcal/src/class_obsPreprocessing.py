@@ -11,6 +11,7 @@
 ########################################################################
 # IMPORT general modules
 ########################################################################
+
 import sys, glob, os
 import pyrap.tables as pt
 import numpy as np
@@ -22,9 +23,8 @@ import time
 ########################################################################
 #import Lofar modules
 ########################################################################
+
 import lofar.bdsm as bdsm
-
-
 
 ########################################################################
 # Preprocessing (annulus out the FOV) independant directrion subtraction

@@ -11,17 +11,18 @@
 ########################################################################
 # IMPORT general modules
 ########################################################################
+
 import sys,os,glob,time
 import getopt
 
 ########################################################################
 # Import local modules (classes)
 ########################################################################
+
 from lofar.selfcal import class_obsparMergedData
 from lofar.selfcal import class_obsPreprocessing
 from lofar.selfcal import class_selfcalparam
 from lofar.selfcal import class_selfcalrun  
-
 
 ########################################################################
 #							OVERVIEW
@@ -640,7 +641,7 @@ if __name__=='__main__':
 			nbCycle=len(resolutionVector)
 			if nbCycle < 1:
 				print ''
-				print 'resolutionVector must contains at least 3 components !!'
+				print 'resolutionVector must contains at least 1 components !!'
 				print ''
 				sys.exit(2)
 					
@@ -1131,7 +1132,7 @@ if __name__=='__main__':
 	
 
     # selfcal parameters determination
-    selfCalParam_Obj																								= class_selfcalparam.selfCalParam(obsDir,outputDir,listFiles,Files,NbFiles,nbChan,frequency,maxBaseline,integTimeOnechunk,observationIntegTime,nbCycle,ra_target,dec_target,outerfovclean,VLSSuse,preprocessIndex,FOV,nofPixelPerBeam,startResolution,endResolution,resolutionVector,startingFactor,robust,skyModel,UVmin)
+    selfCalParam_Obj																								= class_selfcalparam.selfCalParam(obsDir,outputDir,listFiles,Files,NbFiles,nbChan,frequency,maxBaseline,integTimeOnechunk,observationIntegTime,nbCycle,ra_target,dec_target,outerfovclean,VLSSuse,preprocessIndex,FOV,nofPixelPerBeam,startResolution,endResolution,resolutionVector,startingFactor,robust,skyModel,UVmin,annulusRadius)
     ImagePathDir,pixsize,nbpixel,robust,UVmax,wmax,SkymodelPath,GSMSkymodel,RMS_BOX,RMS_BOX_Bright,BBSParset,thresh_isl,thresh_pix	= selfCalParam_Obj.selfCalParamFunc()
 	
     tstop=time.time()

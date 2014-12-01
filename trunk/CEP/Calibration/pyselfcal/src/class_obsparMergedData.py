@@ -11,11 +11,10 @@
 ########################################################################
 # IMPORT general modules
 ########################################################################
+
 import sys, glob, os
 import pyrap.tables as pt
 import fpformat
-
-
 
 ########################################################################
 # Define observation directory parameters (NbTimechunk, NbSB etc ...)
