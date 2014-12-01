@@ -124,14 +124,25 @@ class selfCalRun:
 			if os.path.isdir(self.IterDir) != True:
 				cmd="""mkdir %s"""%(self.IterDir)
 				os.system(cmd)	
-				
-			print ''
-			cmd="""cp -r %s* %s"""%(self.obsDir,self.IterDir)
-			print cmd
-			print '' 
-			os.system(cmd)				
+							
 			
-			
+			# copy original data
+			if self.outerFOVclean =='no':
+					
+					print ''
+					cmd=""" cp -r %s* %s"""%(self.obsDir,self.IterDir)
+					print cmd
+					print ''
+					os.system(cmd)							
+									
+			# copy data from PreProcessing directory		
+			if self.outerFOVclean =='yes':
+
+					print ''							
+					cmd=""" cp -r %s %s"""%("""%sPreprocessDir/Iter%s/*sub%s"""%(self.outputDir,self.preprocessIndex,self.preprocessIndex),self.IterDir)
+					print cmd
+					print ''
+					os.system(cmd)				
 			
 			#if os.listdir(self.IterDir) == []:
 			#		cmd=""" cp -r %s %s"""%(self.outputDir+"""Iter%s/*Iter%s"""%(self.i-1,self.i-1),self.IterDir)
