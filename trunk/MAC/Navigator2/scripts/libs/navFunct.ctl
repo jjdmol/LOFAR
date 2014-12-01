@@ -54,7 +54,6 @@
 // navFunct_getDynString                      : Returns a dynString from a dyn_dyn[index]
 // navFunct_getGPUProcsForObservation         : Returns all the GPUProcs for a given observation
 // navFunct_getHBABitmap                      : get the HBABitmap from a given observation on a given station
-// navFunct_getInputBuffersForObservations    : returns all the InputBuffers that are in use for an observation
 // navFunct_getInputBuffersForStation         : returns all the InputBuffers that are connected to a station
 // navFunct_getLBABitmap                      : get the LBABitmap from a given observation on a given station
 // navFunct_getLocusNodesForObservation       : returns all the LocusNOdes that are in use for an observation
@@ -2245,32 +2244,6 @@ dyn_string navFunct_getStationInputForObservation(string obsName) {
   return stationInput;
 }
 
-// ***************************
-// navFunct_getInputBuffersForObservation
-// ***************************
-// obsName : the observation in question
-//
-// Returns a dyn_string containing all InputBuffers used by this observation
-// ***************************
-// 
-dyn_string navFunct_getInputBuffersForObservation(string obsName) {
-  //  we only need the number from the observation
-  if (strpos(obsName,"Observation") >= 0) {
-    strreplace(obsName,"Observation","");
-  }
-  dyn_string inputBuffers;
-  dyn_dyn_anytype tab;
-  if (!navFunct_dpReachable(CEPDBName)) return inputBuffers;
-
-  string query="SELECT '_online.._value' FROM 'LOFAR_*_InputBuffer*.observationName' REMOTE '"+CEPDBName+"' WHERE '_online.._value' == \""+obsName+"\"";
-  dpQuery(query,tab);
-  for(int z=2;z<=dynlen(tab);z++) {
-    string dp = dpSubStr(tab[z][1],DPSUB_SYS_DP);
-    dynAppend(inputBuffers,dp);
-  }
-  dynSort(inputBuffers);
-  return inputBuffers;
-}
 
 // ***************************
 // navFunct_getInputBuffersForStation
