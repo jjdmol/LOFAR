@@ -45,6 +45,7 @@ void updateActiveObservations(string dp1, dyn_string obs,
   for (int i=dynlen(obs);i > 0;  i--) if (!navFunct_isObservation(obs[i])) dynRemove(obs,i);
   
   activeObservations = obs;
+
   // if there are selected observation check the observationsList if those selected observations still are active
   // remove the unactive observations from the list  
   
@@ -91,7 +92,7 @@ void updateActiveObservations(string dp1, dyn_string obs,
   } else if (dynlen(obsConnections) > 0) {
     oldObsConnections = obsConnections;
   }  else {
-     setValue(\"outputProcsObject\", \"foreCol\", \"Lofar_off\");
+    setValue(\"outputProcsObject\", \"foreCol\", \"Lofar_off\");
   }    
 }
 
@@ -132,7 +133,6 @@ void connectOutputProcs(string runState) {
       }
     }
 
-
     // check if the required datapoint for this view is enabled and accessible
     if (navFunct_dpReachable(CEPDBName) && dynlen(connectToOutputProcs)>0 ){
       if (dpConnect(\"outputProcCB\", connectToOutputProcs) == -1) {
@@ -155,6 +155,14 @@ void outputProcCB(dyn_string dps, dyn_dyn_bool values)
 {
 
   dynClear(locusnodes);
+  
+  // only needed when there are still observations in the list. sometimes the cb is still fired while 
+  // in fact the observation was already finished.
+  if (dynlen(observationsList) <= 0) {
+    setValue(\"outputProcsObject\", \"foreCol\", \"Lofar_off\");    
+    return;
+  }
+  
   // Here we get dropping  and locusnodevalues from all involved observations
   string toolTipText = \"Dropping outputProcs<br>\";
   

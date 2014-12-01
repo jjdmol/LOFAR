@@ -184,7 +184,7 @@ void showSelfState(string aDP) {
             setValue("selfState.light","backCol","Lofar_invalid");
           }
           if (!navFunct_dpReachable(aDP+".status.state")) {
-           updateSelfState("",0,"",true);
+           updateSelfState("",0,"","","",true);
           }              
   	} 
   	else {
