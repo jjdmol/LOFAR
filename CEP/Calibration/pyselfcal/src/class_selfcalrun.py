@@ -11,6 +11,7 @@
 ########################################################################
 # IMPORT general modules
 ########################################################################
+
 import sys,os,glob
 import pyrap.tables as pt
 import numpy as np
@@ -22,9 +23,8 @@ import threading
 ########################################################################
 #import Lofar modules
 ########################################################################
+
 import lofar.bdsm as bdsm
-
-
 
 ########################################################################
 ## Define selfcalibration strategy, iteration, levels, perpare parsets
@@ -39,7 +39,7 @@ class selfCalRun:
 	# Preparation of the Iteration run
 	####################################################################
 
-    def __init__(self,i,obsDir,outputDir,nbCycle,listFiles,Files,NbFiles,BBSParset,SkymodelPath,GSMSkymodel,ImagePathDir,UVmin,UVmax,wmax,pixsize,nbpixel,robust,nIteration,RMS_BOX,RMS_BOX_Bright,thresh_isl,thresh_pix,outerFOVclean,VLSSuse,preprocessIndex,mask,maskDilatation):
+    def __init__(self,i,obsDir,outputDir,nbCycle,listFiles,Files,NbFiles,BBSParset,SkymodelPath,GSMSkymodel,ImagePathDir,UVmin,UVmax,wmax,pixsize,nbpixel,robust,nIteration,RMS_BOX,RMS_BOX_Bright,thresh_isl,thresh_pix,outerfovclean,VLSSuse,preprocessIndex,mask,maskDilatation):
     
 	self.i				= i
 	self.j				= 0
@@ -65,7 +65,7 @@ class selfCalRun:
 	self.thresh_isl		= thresh_isl
 	self.thresh_pix		= thresh_pix
 	
-	self.outerFOVclean	= outerFOVclean
+	self.outerfovclean	= outerfovclean
 	self.VLSSuse		= VLSSuse
 	self.preprocessIndex= preprocessIndex
 	self.mask			= mask
@@ -87,7 +87,7 @@ class selfCalRun:
 
 			
 			# copy original data
-			if self.outerFOVclean =='no':
+			if self.outerfovclean =='no':
 					
 					print ''
 					cmd=""" cp -r %s* %s"""%(self.obsDir,self.IterDir)
@@ -96,7 +96,7 @@ class selfCalRun:
 					os.system(cmd)							
 									
 			# copy data from PreProcessing directory		
-			if self.outerFOVclean =='yes':
+			if self.outerfovclean =='yes':
 
 					print ''							
 					cmd=""" cp -r %s %s"""%("""%sPreprocessDir/Iter%s/*sub%s"""%(self.outputDir,self.preprocessIndex,self.preprocessIndex),self.IterDir)
@@ -127,7 +127,7 @@ class selfCalRun:
 							
 			
 			# copy original data
-			if self.outerFOVclean =='no':
+			if self.outerfovclean =='no':
 					
 					print ''
 					cmd=""" cp -r %s* %s"""%(self.obsDir,self.IterDir)
@@ -136,7 +136,7 @@ class selfCalRun:
 					os.system(cmd)							
 									
 			# copy data from PreProcessing directory		
-			if self.outerFOVclean =='yes':
+			if self.outerfovclean =='yes':
 
 					print ''							
 					cmd=""" cp -r %s %s"""%("""%sPreprocessDir/Iter%s/*sub%s"""%(self.outputDir,self.preprocessIndex,self.preprocessIndex),self.IterDir)
@@ -247,7 +247,7 @@ class selfCalRun:
 
 		#Run calibration 				
 
-		if self.outerFOVclean =='yes':
+		if self.outerfovclean =='yes':
 		
 				if self.i ==0:
 					cmd_cal="""calibrate-stand-alone -f -t %s %s %s %s"""%(core_index,""" %s%s_sub%s"""%(self.IterDir,files_k,self.preprocessIndex),self.BBSParset,self.GSMSkymodel)
@@ -265,7 +265,7 @@ class selfCalRun:
 					os.system(cmd_cal)
 	
 					
-		if self.outerFOVclean =='no':
+		if self.outerfovclean =='no':
 		
 				if self.i ==0:
 					cmd_cal="""calibrate-stand-alone -f -t %s %s %s %s"""%(core_index,""" %s%s"""%(self.IterDir,files_k),self.BBSParset,self.GSMSkymodel)
@@ -288,14 +288,14 @@ class selfCalRun:
 		
 		file = open(param_k,'w')
 		
-		if self.outerFOVclean =='yes':
+		if self.outerfovclean =='yes':
 		
 
 				cmd1 ="""msin = %s%s_sub%s\n"""%(self.IterDir,files_k,self.preprocessIndex)
 				cmd2 ="""msout = %s%s_sub%s_Iter%s\n"""%(self.IterDir,files_k,self.preprocessIndex,self.i)
 				
 					
-		if self.outerFOVclean =='no':
+		if self.outerfovclean =='no':
 		
 				cmd1 ="""msin = %s%s\n"""%(self.IterDir,files_k)
 				cmd2 ="""msout = %s%s_Iter%s\n"""%(self.IterDir,files_k,self.i)
@@ -344,14 +344,14 @@ class selfCalRun:
 		os.system(cmd_NDPPP)
 		
 		
-		if self.outerFOVclean =='no':
+		if self.outerfovclean =='no':
 		
 				# Copy (Calibrated)DATA from DATA column to CORRECTED 
 				# DATA Column for imaging		
 				
 				self.copy_data("""%s%s_Iter%s"""%(self.IterDir,files_k,self.i))	
 		
-		if self.outerFOVclean =='yes':
+		if self.outerfovclean =='yes':
 		
 				# Copy (Calibrated)DATA from DATA column to CORRECTED 
 				# DATA Column for imaging		
