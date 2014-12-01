@@ -43,7 +43,7 @@ class long_baseline(LOFARnodeTCP):
     """
     def run(self, environment, parset, working_dir, processed_ms_dir,
              ndppp_executable, output_measurement_set,
-            time_slices_per_image, subbands_per_group, raw_ms_mapfile,
+            subbandgroups_per_ms, subbands_per_subbandgroup, raw_ms_mapfile,
             asciistat_executable, statplot_executable, msselect_executable,
             rficonsole_executable, add_beam_tables):
         """
@@ -78,7 +78,7 @@ class long_baseline(LOFARnodeTCP):
             # 2. run dppp: collect frequencies into larger group
             time_slices_path_list = \
                 self._run_dppp(working_dir, time_slice_dir,
-                    time_slices_per_image, copied_ms_map, subbands_per_group,
+                    subbandgroups_per_ms, copied_ms_map, subbands_per_subbandgroup,
                     processed_ms_dir, parset, ndppp_executable)
 
             # If no timeslices were created, bail out with exit status 1
@@ -222,8 +222,8 @@ class long_baseline(LOFARnodeTCP):
             catch_segfaults(cmd, working_dir, environment,
                                   logger, cleanup = None)
 
-    def _run_dppp(self, working_dir, time_slice_dir_path, slices_per_image,
-                  copied_ms_map, subbands_per_image, collected_ms_dir_name, parset,
+    def _run_dppp(self, working_dir, time_slice_dir_path, subbandgroups_per_ms,
+                  copied_ms_map, subbands_per_subbandgroup, collected_ms_dir_name, parset,
                   ndppp):
         """
         Run NDPPP:
@@ -232,9 +232,9 @@ class long_baseline(LOFARnodeTCP):
         supplied in parset
         """
         time_slice_path_list = []
-        for idx_time_slice in range(slices_per_image):
-            start_slice_range = idx_time_slice * subbands_per_image
-            end_slice_range = (idx_time_slice + 1) * subbands_per_image
+        for idx_time_slice in range(subbandgroups_per_ms):
+            start_slice_range = idx_time_slice * subbands_per_subbandgroup
+            end_slice_range = (idx_time_slice + 1) * subbands_per_subbandgroup
             # Get the subset of ms that are part of the current timeslice,
             # cast to datamap
             input_map_subgroup = DataMap(
