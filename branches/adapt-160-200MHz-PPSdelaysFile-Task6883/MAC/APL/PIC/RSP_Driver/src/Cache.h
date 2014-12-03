@@ -114,6 +114,8 @@ public:
 	void setSDOBitsPerSample(int bits) { itsSDOBitsPerSample = bits; }
 	/*@}*/
     
+    blitz::Array<int, 1> getPPSdelays() { return itsPPSsyncDelays; }
+	void setPPSdelays(blitz::Array<int, 1> pps_delays) { itsPPSsyncDelays = pps_delays; }
     
 	// update timestamp
 	void setTimestamp(const RTC::Timestamp& timestamp);
@@ -134,8 +136,11 @@ private:
 	//	which is never the case.
 
 	CacheBuffer(); // prevent default construction
-
-	// --- datamembers ---
+    
+    // function to readin PPSdelays
+    void readPPSdelaySettings();
+	
+    // --- datamembers ---
 	RTC::Timestamp					m_timestamp;
 	I2Cuser							itsI2Cuser;
 	RSP_Protocol::BeamletWeights	m_beamletweights;
@@ -168,7 +173,8 @@ private:
 	RSP_Protocol::SDOModeInfo       itsSDOModeInfo;
 	RSP_Protocol::SDOSelection      itsSDOSelection;
 	int                             itsSDOBitsPerSample;
-	 
+    blitz::Array<int, 1>            itsPPSsyncDelays;  // one delay for each AP
+
 	Cache* m_cache;		// pointer to container
 };
 
@@ -181,11 +187,11 @@ public:
 	static Cache& getInstance();
 	virtual ~Cache();
 	/*@}*/
-
+    
 	// Reset cache front and back buffers.
 	void reset(void);
 	void resetI2Cuser(void);
-
+    
 	// Swap the front and back buffers.
 	void swapBuffers();
 
@@ -199,6 +205,7 @@ public:
 private:
 	// Direct construction not allowed.
 	Cache();
+    
 
 	// Keep register update state.
 	AllRegisterState m_allstate; // communication status of all register
@@ -208,7 +215,9 @@ private:
 	CacheBuffer* m_front;
 	CacheBuffer* m_back;
 	/*@}*/
-
+    
+   
+    
 	// Singleton class.
 	static Cache* m_instance;
 };

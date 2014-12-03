@@ -218,8 +218,8 @@ RSPDriver::RSPDriver(string name) :
 	RCUCables		cables("Attenuation.conf", "CableDelays.conf");
 	CableSettings::createInstance(cables);
 
-	LOG_DEBUG("Trying to load delay settings for synchronising the PPS between the subracks");
-    readPPSdelaySettings();
+	// LOG_DEBUG("Trying to load delay settings for synchronising the PPS between the subracks");
+    // readPPSdelaySettings();
 
 	int mode = GET_CONFIG("RSPDriver.SYNC_MODE", i);
 	if (mode < SYNC_SOFTWARE || mode > SYNC_PPS) {
@@ -291,8 +291,8 @@ RSPDriver::~RSPDriver()
 void RSPDriver::readPPSdelaySettings()
 {
 	ConfigLocator	CL;
-	string	filename = (CL.locate(GET_CONFIG_STRING("RSPDriver.PPSdelayFile")));
-	LOG_DEBUG_STR("Trying to load the PPS delay settings from file: " << filename);
+	string	filename = (CL.locate(GET_CONFIG_STRING("RSPDriver.PPSdelayFile160")));
+	LOG_DEBUG_STR("Trying to load the PPS delay settings for 160 MHz from file: " << filename);
 
 	// setup default values first
 	int	nrRspBoards = StationSettings::instance()->nrRspBoards();
@@ -718,9 +718,10 @@ void RSPDriver::addAllSyncActions()
 		}
 
 		// Always add CRsync because it is used in the init sequence
-		int	sliceBegin = boardid * NR_BLPS_PER_RSPBOARD;
-		int sliceEnd   = sliceBegin + NR_BLPS_PER_RSPBOARD - 1;
-		CRSyncWrite* CrWrite = new CRSyncWrite(m_boardPorts[boardid], boardid, itsPPSsyncDelays(Range(sliceBegin, sliceEnd)));
+		//int	sliceBegin = boardid * NR_BLPS_PER_RSPBOARD;
+		//int sliceEnd   = sliceBegin + NR_BLPS_PER_RSPBOARD - 1;
+		//CRSyncWrite* CrWrite = new CRSyncWrite(m_boardPorts[boardid], boardid, itsPPSsyncDelays(Range(sliceBegin, sliceEnd)));
+		CRSyncWrite* CrWrite = new CRSyncWrite(m_boardPorts[boardid], boardid);
 		ASSERT(CrWrite);
 		m_scheduler.addSyncAction(CrWrite);
 
