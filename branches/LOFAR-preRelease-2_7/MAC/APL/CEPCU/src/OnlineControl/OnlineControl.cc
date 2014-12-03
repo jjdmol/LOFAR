@@ -39,7 +39,6 @@
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSservice.h>
 #include <GCF/RTDB/DP_Protocol.ph>
-#include <GCF/RTDB/DPservice.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/ControllerDefines.h>
@@ -530,8 +529,6 @@ GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterfa
 //
 uint32 OnlineControl::_startApplications()
 {
-	_clearCobaltDatapoints();
-
 	ParameterSet*	thePS  = globalParameterSet();		// shortcut to global PS.
 
 	// Get list of all application that should be managed
@@ -660,139 +657,6 @@ void OnlineControl::_stopApplications()
 	LOG_INFO_STR("About to start: " << startCmd);
 	uint32	result = forkexec(startCmd.c_str());
 	LOG_INFO_STR ("Result of command = " << result);
-}
-
-//
-// _clearCobaltDatapoints()
-//
-void OnlineControl::_clearCobaltDatapoints()
-{
-	ParameterSet*	thePS  = globalParameterSet();		// shortcut to global PS.
-
-	// create a datapoint service for clearing all the datapoints
-	DPservice*	myDPservice = new DPservice(this);
-	if (!myDPservice) {
-		LOG_ERROR_STR("Can't allocate DPservice to PVSS to clear Cobalt values! Navigator contents no longer guaranteed");
-		return;
-	}
-
-	// _DPname=LOFAR_ObsSW_TempObs0185
-	string	DPbasename(thePS->getString("_DPname", "NO_DPNAME_IN_PARSET"));
-
-	// OSCBT<000>_CobaltGPUProc<00> for 001-009 and 00-01
-	string	propSetNameMask(createPropertySetName(PSN_COBALTGPU_PROC, getName(), DPbasename));
-	// prepare 'cleared value set'
-	vector<string>		fields;
-	vector<GCFPValue*>	values;
-	fields.push_back(PN_CGP_OBSERVATION_NAME);
-	fields.push_back(PN_CGP_DATA_PRODUCT_TYPE);
-	fields.push_back(PN_CGP_SUBBAND);
-	fields.push_back(PN_CGP_DROPPING);
-	fields.push_back(PN_CGP_WRITTEN);
-	fields.push_back(PN_CGP_DROPPED);
-	GCFPValueArray	emptyArr;
-	values.push_back(new GCFPVString(""));
-	values.push_back(new GCFPVString(""));
-	values.push_back(new GCFPVDynArr(LPT_INTEGER, emptyArr));
-	values.push_back(new GCFPVDynArr(LPT_BOOL, emptyArr));
-	values.push_back(new GCFPVDynArr(LPT_DOUBLE, emptyArr));
-	values.push_back(new GCFPVDynArr(LPT_DOUBLE, emptyArr));
-	for (int nodeNr = 1; nodeNr <= 9; ++nodeNr) {
-		for (int gpuNr = 0; gpuNr <= 1; ++gpuNr) {
-			string	DPname(formatString(propSetNameMask.c_str(), nodeNr, gpuNr));
-			LOG_DEBUG_STR("Clearing " << DPname);
-
-			PVSSresult	result = myDPservice->setValue(DPname, fields, values, 0.0, false);
-			if (result != SA_NO_ERROR) {
-				LOG_WARN_STR("Call to PVSS for setValue for " << DPname << " returned: " << result);
-			}
-		}
-	}
-	// free allocated GCFValues.
-	for (int i = values.size()-1 ; i >= 0; i--) {
-		delete values[i];
-	}
-	fields.clear();
-
-
-	// CobaltOutputProc
-	string	DPname(createPropertySetName(PSN_COBALT_OUTPUT_PROC, getName(), DPbasename));
-	// prepare 'cleared value set'
-	fields.push_back(PN_COP_LOCUS_NODE);
-	fields.push_back(PN_COP_DATA_PRODUCT_TYPE);
-	fields.push_back(PN_COP_FILE_NAME);
-	fields.push_back(PN_COP_DIRECTORY);
-	fields.push_back(PN_COP_DROPPING);
-	fields.push_back(PN_COP_WRITTEN);
-	fields.push_back(PN_COP_DROPPED);
-	values.push_back(new GCFPVDynArr(LPT_INTEGER, emptyArr));
-	values.push_back(new GCFPVDynArr(LPT_STRING, emptyArr));
-	values.push_back(new GCFPVDynArr(LPT_STRING, emptyArr));
-	values.push_back(new GCFPVDynArr(LPT_STRING, emptyArr));
-	values.push_back(new GCFPVDynArr(LPT_BOOL, emptyArr));
-	values.push_back(new GCFPVDynArr(LPT_DOUBLE, emptyArr));
-	values.push_back(new GCFPVDynArr(LPT_DOUBLE, emptyArr));
-
-	LOG_DEBUG_STR("Clearing " << DPname);
-	PVSSresult	result = myDPservice->setValue(DPname, fields, values, 0.0, false);
-	if (result != SA_NO_ERROR) {
-		LOG_WARN_STR("Call to PVSS for setValue for " << DPname << " returned: " << result);
-	}
-	// free allocated GCFValues.
-	for (int i = values.size()-1 ; i >= 0; i--) {
-		delete values[i];
-	}
-	fields.clear();
-
-
-	// CS<000><xBAy>_CobaltStationInput
-	propSetNameMask = createPropertySetName(PSN_COBALT_STATION_INPUT, getName(), DPbasename);
-	// LOFAR_PermSW_@stationfield@_CobaltStationInput	--> @stationfield@ := %s
-	// prepare 'cleared value set'
-	fields.push_back(PN_CSI_NODE);
-	fields.push_back(PN_CSI_CPU);
-	fields.push_back(PN_CSI_OBSERVATION_NAME);
-	fields.push_back(PN_CSI_STREAM0_BLOCKS_IN);
-	fields.push_back(PN_CSI_STREAM0_REJECTED);
-	fields.push_back(PN_CSI_STREAM1_BLOCKS_IN);
-	fields.push_back(PN_CSI_STREAM1_REJECTED);
-	fields.push_back(PN_CSI_STREAM2_BLOCKS_IN);
-	fields.push_back(PN_CSI_STREAM2_REJECTED);
-	fields.push_back(PN_CSI_STREAM3_BLOCKS_IN);
-	fields.push_back(PN_CSI_STREAM3_REJECTED);
-	values.push_back(new GCFPVString(""));
-	values.push_back(new GCFPVInteger(0));
-	values.push_back(new GCFPVString(""));
-	for (int i = 0; i < 8; ++i) {
-		values.push_back(new GCFPVInteger(0));
-	}
-	const string	AntFields[] = {"LBA", "HBA", "HBA0", "HBA1" };
-	string			ObsLocation(globalParameterSet()->fullModuleName("Observation"));
-	vector<string>	stationList(globalParameterSet()->getStringVector(ObsLocation+".VirtualInstrument.stationList"));
-	int firstAF   = (globalParameterSet()->getString(ObsLocation+".antennaArray") == "LBA") ? 0 : 1;
-	vector<string>::const_iterator	iter = stationList.begin();
-	vector<string>::const_iterator	end  = stationList.end();
-	while (iter != end) {
-		int	nrAFs2Clean = 1 + (firstAF>0 && iter->substr(0,2)=="CS") ? 2 : 0;
-		for (int AFindex = firstAF; AFindex < firstAF+nrAFs2Clean; ++AFindex) {
-			string	stationField(*iter + AntFields[AFindex]);	// eg. CS001 + LBA
-			string	DPname(formatString(propSetNameMask.c_str(), stationField.c_str()));
-			LOG_DEBUG_STR("Clearing " << DPname);
-
-			PVSSresult	result = myDPservice->setValue(DPname, fields, values, 0.0, false);
-			if (result != SA_NO_ERROR) {
-				LOG_WARN_STR("Call to PVSS for setValue for " << DPname << " returned: " << result);
-			}
-		} // for
-		++iter;
-	}
-	// free allocated GCFValues.
-	for (int i = values.size()-1 ; i >= 0; i--) {
-		delete values[i];
-	}
-	fields.clear();
-
-	delete myDPservice;
 }
 
 //
