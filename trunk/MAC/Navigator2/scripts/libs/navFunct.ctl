@@ -2613,8 +2613,7 @@ int navFunct_uriBoard2Cabinet(int uriBoardNr) {
 // ***************************************
 
 int navFunct_observationNameToNumber(string obsname) {
-  strreplace(obsname, "Observation", ""); 
-  return obsname;
+  return substr(obsname,strpos(obsname,"Observation")+strlen("Observation"));
 }
 
 // ****************************************
