@@ -62,12 +62,14 @@ class observationParam:
 	File0split2	= File0_1.split(splinter2)
 	File0_2		= File0split2[1]
 	
-	
+	obsType = 'none'
+		
 	if File0_2 == 'MS.dppp':
 	    obsType = 'intermediateData'
 	if File0_2 == 'dppp.MS':
 	    obsType = 'finalData'
-	 
+	
+ 
 	 
 	if obsType != 'intermediateData' and  obsType != 'finalData':
 	    print ''

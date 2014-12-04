@@ -242,12 +242,25 @@ class selfCalRun:
 		if self.NbFiles <=2:
 			core_index=8
 		else: 
-			core_index=1		
+			core_index=1
+			
+			
+					
 		
 
 		#Run calibration 				
 
 		if self.outerfovclean =='yes':
+	
+				# Copy CORRECTED DATA Column to DATA column		
+				try:
+					self.copy_data("""%s%s_sub%s"""%(self.IterDir,files_k,self.preprocessIndex))		
+				except:
+					print ''
+					print 'There are no CORRECTED DATA COLUMN !! Please have AMPLITUDE calibrated data in the corrected data column !!'
+					print ''
+					sys.exit()		
+		
 		
 				if self.i ==0:
 					cmd_cal="""calibrate-stand-alone -f -t %s %s %s %s"""%(core_index,""" %s%s_sub%s"""%(self.IterDir,files_k,self.preprocessIndex),self.BBSParset,self.GSMSkymodel)
@@ -266,7 +279,17 @@ class selfCalRun:
 	
 					
 		if self.outerfovclean =='no':
+
+				# Copy CORRECTED DATA Column to DATA column		
+				try:				
+					self.copy_data("""%s%s"""%(self.IterDir,files_k))	
+				except:
+					print ''
+					print 'There are no CORRECTED DATA COLUMN !! Please have AMPLITUDE calibrated data in the corrected data column !!'
+					print ''
+					sys.exit()		
 		
+				
 				if self.i ==0:
 					cmd_cal="""calibrate-stand-alone -f -t %s %s %s %s"""%(core_index,""" %s%s"""%(self.IterDir,files_k),self.BBSParset,self.GSMSkymodel)
 					print ''
