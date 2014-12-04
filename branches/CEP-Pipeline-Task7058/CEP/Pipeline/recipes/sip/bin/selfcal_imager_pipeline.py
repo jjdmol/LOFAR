@@ -1,11 +1,13 @@
 #!/usr/bin/env python
-#                                                LOFAR STANDARD IMAGING PIPELINE
+#                                                        LOFAR IMAGING PIPELINE
 #
 #                                                        Imager Pipeline recipe
 #                                                            Marcel Loose, 2012
 #                                                               loose@astron.nl
 #                                                            Wouter Klijn, 2012
 #                                                               klijn@astron.nl
+#                                                         Nicolas Vilchez, 2014
+#                                                             vilchez@astron.nl
 # -----------------------------------------------------------------------------
 import os
 import sys
@@ -20,17 +22,13 @@ from lofarpipe.support.loggingdecorators import xml_node, mail_log_on_exception
 
 from lofar.parameterset import parameterset
 
-class imaging_pipeline(control):
+
+class msss_imager_pipeline(control):
     """
-    The imaging pipeline is used to generate images and find
+    The Automatic MSSS imager pipeline is used to generate MSSS images and find
     sources in the generated images. Generated images and lists of found
     sources are complemented with meta data and thus ready for consumption by
     the Long Term Storage (LTA)
-    
-    This pipeline difference from the MSSS imaging pipeline on two aspects:
-    1. It does not by default perform any automated parameter determination for,
-    the awimager.
-    2. It does not output images and sourcelist to the image server.
 
     *subband groups*
     The imager_pipeline is able to generate images on the frequency range of
@@ -39,7 +37,7 @@ class imaging_pipeline(control):
     (typically 8, because ten subband groups are combined).
 
     *Time Slices*
-    Images are compiled from a number of so-called (time) slices. Each
+    MSSS images are compiled from a number of so-called (time) slices. Each
     slice comprises a short (approx. 10 min) observation of a field (an area on
     the sky) containing typically 80 subbands. The number of slices will be
     different for LBA observations (typically 9) and HBA observations
@@ -130,7 +128,7 @@ class imaging_pipeline(control):
             self.inputs['job_name'] = (
                 os.path.splitext(os.path.basename(parset_file))[0]
             )
-        return super(imaging_pipeline, self).go()
+        return super(msss_imager_pipeline, self).go()
 
     @mail_log_on_exception
     def pipeline_logic(self):
@@ -181,11 +179,28 @@ class imaging_pipeline(control):
         self.logger.debug(
             "Wrote output sky-image mapfile: {0}".format(output_image_mapfile))
 
+        # TODO: This is a backdoor option to manually add beamtables when these
+        # are missing on the provided ms. There is NO use case for users of the
+        # pipeline
+        add_beam_tables = self.parset.getBool(
+                                    "Imaging.addBeamTables", False)
+
+
+        number_of_major_cycles = self.parset.getInt(
+                                    "Imaging.number_of_major_cycles")
+
+        if number_of_major_cycles < 3:
+            self.logger.error(
+                "The number of major cycles must be 3 or higher, correct"
+                " the key: Imaging.number_of_major_cycles")
+            number_of_major_cycles = 6  # for now default to 6 cycles
+
+
         # ******************************************************************
         # (1) prepare phase: copy and collect the ms
         concat_ms_map_path, timeslice_map_path, raw_ms_per_image_map_path, \
             processed_ms_dir = self._prepare_phase(input_mapfile,
-                                    target_mapfile)
+                                    target_mapfile, add_beam_tables)
 
         # We start with an empty source_list map. It should contain n_output
         # entries all set to empty strings
@@ -196,23 +211,26 @@ class imaging_pipeline(control):
             item.file = ""             # set all to empty string
         source_list_map.save(source_list_map_path)
 
-        number_of_major_cycles = self.parset.getInt(
-                                    "Imaging.number_of_major_cycles")
+
+        
         for idx_loop in range(number_of_major_cycles):
             # *****************************************************************
             # (2) Create dbs and sky model
             parmdbs_path, sourcedb_map_path = self._create_dbs(
-                        concat_ms_map_path, timeslice_map_path,
+                        concat_ms_map_path, timeslice_map_path,idx_loop,
                         source_list_map_path = source_list_map_path,
                         skip_create_dbs = False)
+
 
             # *****************************************************************
             # (3)  bbs_imager recipe.
             bbs_output = self._bbs(concat_ms_map_path, timeslice_map_path, 
-                 parmdbs_path, sourcedb_map_path, idx_loop, skip = False)
+                    parmdbs_path, sourcedb_map_path, idx_loop, skip = False)
 
+            
             # TODO: Extra recipe: concat timeslices using pyrap.concatms
-            # (see prepare)
+            # (see prepare) redmine issue #6021
+            # Done in imager_bbs.p at the node level after calibration 
 
             # *****************************************************************
             # (4) Get parameters awimager from the prepare_parset and inputs
@@ -222,7 +240,7 @@ class imaging_pipeline(control):
 
             # *****************************************************************
             # (5) Source finding
-            sourcelist_map, found_sourcedb_path = self._source_finding(
+            source_list_map_path, found_sourcedb_path = self._source_finding(
                     aw_image_mapfile, idx_loop, skip = False)
             # should the output be a sourcedb? instead of a sourcelist
 
@@ -232,19 +250,38 @@ class imaging_pipeline(control):
         # *********************************************************************
         # (6) Finalize:
         placed_data_image_map = self._finalize(aw_image_mapfile,
-            processed_ms_dir, raw_ms_per_image_map_path, sourcelist_map,
+            processed_ms_dir, raw_ms_per_image_map_path, source_list_map_path,
             minbaseline, maxbaseline, target_mapfile, output_image_mapfile,
             found_sourcedb_path)
 
         # *********************************************************************
         # (7) Get metadata
-        # Create a parset-file containing the metadata for MAC/SAS
+        # create a parset with information that is available on the toplevel
+        toplevel_meta_data = parameterset()
+        toplevel_meta_data.replace("numberOfMajorCycles", 
+                                           str(number_of_major_cycles))
+        toplevel_meta_data_path = os.path.join(
+                self.parset_dir, "toplevel_meta_data.parset")
+
+        try:
+            toplevel_meta_data.writeFile(toplevel_meta_data_path)
+            self.logger.info("Wrote meta data to: " + 
+                    toplevel_meta_data_path)
+        except RuntimeError, err:
+            self.logger.error(
+              "Failed to write toplevel meta information parset: %s" % str(
+                                    toplevel_meta_data_path))
+            return 1
+
+        
+        # Create a parset-file containing the metadata for MAC/SAS at nodes
         self.run_task("get_metadata", placed_data_image_map,
             parset_file = self.parset_feedback_file,
             parset_prefix = (
                 full_parset.getString('prefix') +
                 full_parset.fullModuleName('DataProducts')
             ),
+            toplevel_meta_data_path=toplevel_meta_data_path, 
             product_type = "SkyImage")
 
         return 0
@@ -334,10 +371,13 @@ class imaging_pipeline(control):
         """
         # Create the parsets for the different sourcefinder runs
         bdsm_parset_pass_1 = self.parset.makeSubset("BDSM[0].")
+
+        self._selfcal_modify_parset(bdsm_parset_pass_1, "pybdsm_first_pass.par")
         parset_path_pass_1 = self._write_parset_to_file(bdsm_parset_pass_1,
                 "pybdsm_first_pass.par", "Sourcefinder first pass parset.")
 
         bdsm_parset_pass_2 = self.parset.makeSubset("BDSM[1].")
+        self._selfcal_modify_parset(bdsm_parset_pass_2, "pybdsm_second_pass.par")
         parset_path_pass_2 = self._write_parset_to_file(bdsm_parset_pass_2,
                 "pybdsm_second_pass.par", "sourcefinder second pass parset")
 
@@ -381,6 +421,7 @@ class imaging_pipeline(control):
         """
         # create parset for bbs run
         parset = self.parset.makeSubset("BBS.")
+        self._selfcal_modify_parset(parset, "bbs")
         parset_path = self._write_parset_to_file(parset, "bbs",
                         "Parset for calibration with a local sky model")
 
@@ -424,7 +465,7 @@ class imaging_pipeline(control):
 
     @xml_node
     def _aw_imager(self, prepare_phase_output, major_cycle, sky_path,
-                  number_of_major_cycles, skip = False):
+                  number_of_major_cycles,   skip = False):
         """
         Create an image based on the calibrated, filtered and combined data.
         """
@@ -452,9 +493,10 @@ class imaging_pipeline(control):
                                     "output map for awimager recipe")
 
         mask_patch_size = self.parset.getInt("Imaging.mask_patch_size")
-        auto_imaging_specs = self.parset.getBool("Imaging.auto_imaging_specs")
-        fov = self.parset.getFloat("Imaging.fov")
-        specify_fov = self.parset.getBool("Imaging.specify_fov")
+        autogenerate_parameters = self.parset.getBool(
+                                    "Imaging.auto_imaging_specs")
+        specify_fov = self.parset.getBool(
+                                    "Imaging.specify_fov")
         if skip:
             pass
         else:
@@ -466,17 +508,16 @@ class imaging_pipeline(control):
                           mask_patch_size = mask_patch_size,
                           sourcedb_path = sky_path,
                           working_directory = self.scratch_directory,
-                          autogenerate_parameters = auto_imaging_specs,
-                          specify_fov = specify_fov,
-                          major_cycle = major_cycle,
+                          autogenerate_parameters = autogenerate_parameters,
+                          specify_fov = specify_fov, major_cycle = major_cycle,
                           nr_cycles = number_of_major_cycles,
-                          perform_self_cal = False,
-                          fov = fov)
+                          perform_self_cal = True)
 
         return output_mapfile, max_baseline
 
     @xml_node
-    def _prepare_phase(self, input_ms_map_path, target_mapfile):
+    def _prepare_phase(self, input_ms_map_path, target_mapfile,
+        add_beam_tables):
         """
         Copy ms to correct location, combine the ms in slices and combine
         the time slices into a large virtual measurement set
@@ -512,7 +553,8 @@ class imaging_pipeline(control):
                 slices_mapfile = time_slices_mapfile,
                 raw_ms_per_image_mapfile = raw_ms_per_image_mapfile,
                 working_directory = self.scratch_directory,
-                processed_ms_dir = processed_ms_dir)
+                processed_ms_dir = processed_ms_dir,
+                add_beam_tables = add_beam_tables)
 
         # validate that the prepare phase produced the correct data
         output_keys = outputs.keys()
@@ -539,7 +581,8 @@ class imaging_pipeline(control):
             processed_ms_dir
 
     @xml_node
-    def _create_dbs(self, input_map_path, timeslice_map_path, source_list_map_path,
+    def _create_dbs(self, input_map_path, timeslice_map_path, 
+                    major_cycle, source_list_map_path , 
                     skip_create_dbs = False):
         """
         Create for each of the concatenated input measurement sets
@@ -603,7 +646,7 @@ class imaging_pipeline(control):
         Write the suplied the suplied map to the mapfile.
         directory in the jobs dir with the filename suplied in mapfile_name.
         Return the full path to the created file.
-        Id supllied data is None then the file is touched if not existing, but
+        If suplied data is None then the file is touched if not existing, but
         existing files are kept as is
         """
 
@@ -632,5 +675,62 @@ class imaging_pipeline(control):
         return mapfile_path
 
 
+    # This functionality should be moved outside into MOM/ default template.
+    # This is now a static we should be able to control this.
+    def _selfcal_modify_parset(self, parset, parset_name):    
+        """ 
+        Modification of the BBS parset for selfcal implementation, add, 
+        remove, modify some values in bbs parset, done by 
+        done by Nicolas Vilchez
+        """            
+        
+        if parset_name == "bbs":			
+        
+             parset.replace('Step.solve.Model.Beam.UseChannelFreq', 'True')
+             parset.replace('Step.solve.Model.Ionosphere.Enable', 'F')
+             parset.replace('Step.solve.Model.TEC.Enable', 'F')
+             parset.replace('Step.correct.Model.Beam.UseChannelFreq', 'True')
+             parset.replace('Step.correct.Model.TEC.Enable', 'F')
+             parset.replace('Step.correct.Model.Phasors.Enable', 'T')
+             parset.replace('Step.correct.Output.WriteCovariance', 'T')             
+                         
+             #must be erased, by default I replace to the default value
+             parset.replace('Step.solve.Baselines', '*&')
+             
+             parset.replace('Step.solve.Solve.Mode', 'COMPLEX')
+             parset.replace('Step.solve.Solve.CellChunkSize', '100')                             
+             parset.replace('Step.solve.Solve.PropagateSolutions', 'F')                    
+             parset.replace('Step.solve.Solve.Options.MaxIter', '100')  
+                   
+
+        if parset_name == "pybdsm_first_pass.par":
+             
+             parset.replace('advanced_opts', 'True')
+             parset.replace('atrous_do', 'True')
+             parset.replace('rms_box', '(80.0,15.0)')
+             parset.replace('thresh_isl', '5')
+             parset.replace('thresh_pix', '5')
+             parset.replace('adaptive_rms_box', 'True')
+             parset.replace('blank_limit', '1E-4')
+             parset.replace('ini_method', 'curvature')
+             parset.replace('atrous_do', 'True')
+             parset.replace('thresh', 'hard')              
+             
+
+        if parset_name == "pybdsm_second_pass.par":
+             
+             parset.replace('advanced_opts', 'True')
+             parset.replace('atrous_do', 'True')
+             parset.replace('rms_box', '(80.0,15.0)')
+             parset.replace('thresh_isl', '5')
+             parset.replace('thresh_pix', '5')
+             parset.replace('adaptive_rms_box', 'True')
+             parset.replace('blank_limit', '1E-4')
+             parset.replace('ini_method', 'curvature')
+             parset.replace('atrous_do', 'True')
+             parset.replace('thresh', 'hard')              
+
+
+
 if __name__ == '__main__':
-    sys.exit(imaging_pipeline().main())
+    sys.exit(msss_imager_pipeline().main())
