@@ -31,7 +31,7 @@ dyn_string activeObservations;
 string activeObsDP = \"\";
 string database;
 dyn_string gpuprocs;
-dyn_string connectToGPUProcs;
+dyn_string oldConnectToGPUProcs;
 bool connectedGPUProcs;
 
 bool selectedObservations=false;
@@ -107,11 +107,12 @@ void monitorRunStates(dyn_string dpList,dyn_string runStates) {
 // connect to GPUProcs from the active observations
 void connectGPUProcs(string runState) {
 
+  dyn_string connectToGPUProcs;
   
   // change all found DP's to contain all the elements that contain the .dropping
   if (connectedGPUProcs) {
-    dpDisconnect(\"gpuprocCB\",connectToGPUProcs);
-    dynClear(connectToGPUProcs);
+    dpDisconnect(\"gpuprocCB\",oldConnectToGPUProcs);
+    dynClear(oldConnectToGPUProcs);
     connectedGPUProcs = false;
   }  
   
@@ -143,6 +144,7 @@ void connectGPUProcs(string runState) {
         setValue(\"GPUProcsObject\", \"foreCol\", \"Lofar_dpdoesnotexist\");
       } else {
         connectedGPUProcs = true;
+        oldConnectToGPUProcs = connectToGPUProcs;
       }
     } else {
       setValue(\"GPUProcsObject\", \"foreCol\", \"Lofar_off\");
@@ -168,11 +170,35 @@ void gpuprocCB(dyn_string dps, dyn_dyn_anytype values)
     dyn_bool dropping = values[i];
     if (dynContains(dropping,TRUE )) {
       color = \"Lofar_broken\";
-      dyn_float dropped = values[i+1];
-      dyn_int subband = values[i+2];
-      string dataProductType = values[i+3];
+//      DebugN(\"val i+1 \",values[i+1]);
+//      DebugN(\"val i+2 \",values[i+2]);
+//      DebugN(\"val i+3 \",values[i+3]);
+      
+      dyn_float dropped;
+      dyn_int subband;
+      string dataProductType;
+      bool error = false;
+      if (i+1 <= dynlen(values)) {
+        dropped = values[i+1];
+      } else {
+        DebugN(\"error too less data, needed : \"+ i+1 +\" got: \"+dynlen(values));
+        error = true;
+      }
+      if (i+2 <= dynlen(values)){
+        subband = values[i+2];
+      } else {
+        DebugN(\"error too less data, needed : \"+ i+2 +\" got: \"+dynlen(values));
+        error = true;
+      }
+      if (i+3 <= dynlen(values)) {
+        dataProductType = values[i+3];
+      } else {
+        DebugN(\"error too less data, needed : \"+ i+3 +\" got: \"+dynlen(values));
+        error = true;
+      }
+      
       for (int j = 1; j <= dynlen(dropped); j++) {
-        if (dropping[j] == TRUE) {
+        if (dropping[j] == TRUE && !error) {
           toolTipText+=dp+\"</t> :\"+dropped[j]+\" - \"+subband[j]+\" - \"+dataProductType+\"<br>\";
         }
       }

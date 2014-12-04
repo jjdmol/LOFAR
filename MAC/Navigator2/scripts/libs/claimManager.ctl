@@ -94,9 +94,8 @@ string claimManager_nameToRealName( string strName )
 
 string claimManager_realNameToName( string strName )
 {
-  
   // Do we know the 'Claimed' name
-  int iPos = dynContains( strClaimDPName, strName );
+  int iPos = dynContains( strClaimDPName, dpSubStr(strName,DPSUB_DP) );
   
   if( iPos < 1 )
     return "";

@@ -43,10 +43,10 @@ dyn_string activeObservations;
 string activeObsDP = \"\";
 string database;
 dyn_string stationInputs;
-dyn_string connectTo0;
-dyn_string connectTo1;
-dyn_string connectTo2;
-dyn_string connectTo3;
+dyn_string oldConnectTo0;
+dyn_string oldConnectTo1;
+dyn_string oldConnectTo2;
+dyn_string oldConnectTo3;
 bool connected0;
 bool connected1;
 bool connected2;
@@ -171,25 +171,30 @@ void connectStationInputStreams(string runState) {
   dyn_string stream2DPList;
   dyn_string stream3DPList;
 
+  dyn_string connectTo0;
+  dyn_string connectTo1;
+  dyn_string connectTo2;
+  dyn_string connectTo3;
+  
   // change all found DP's to contain all the elements that contain the stream.percBad
   if (connected0) {
-    dpDisconnect(\"streamCB0\",connectTo0);
-    dynClear(connectTo0);
+    dpDisconnect(\"streamCB0\",oldConnectTo0);
+    dynClear(oldConnectTo0);
     connected0 = false;
   }
   if (connected1) {
-    dpDisconnect(\"streamCB1\",connectTo1);
-    dynClear(connectTo1);
+    dpDisconnect(\"streamCB1\",oldConnectTo1);
+    dynClear(oldConnectTo1);
     connected1 = false;
   }
   if (connected2) {
-    dpDisconnect(\"streamCB2\",connectTo2);
-    dynClear(connectTo2);
+    dpDisconnect(\"streamCB2\",oldConnectTo2);
+    dynClear(oldConnectTo2);
     connected2 = false;
   }
   if (connected3) {
-    dpDisconnect(\"streamCB3\",connectTo3);
-    dynClear(connectTo3);
+    dpDisconnect(\"streamCB3\",oldConnectTo3);
+    dynClear(oldConnectTo3);
     connected3 = false;
   }
 
@@ -230,6 +235,7 @@ void connectStationInputStreams(string runState) {
         setValue(\"streamObject0\", \"foreCol\", \"Lofar_dpdoesnotexist\");
       } else {
         connected0 = true;
+        oldConnectTo0 = connectTo0;
       }
     } else {
       
@@ -240,6 +246,7 @@ void connectStationInputStreams(string runState) {
         setValue(\"streamObject1\", \"foreCol\", \"Lofar_dpdoesnotexist\");
       } else {
         connected1 = true;
+        oldConnectTo1 = connectTo1;
       }
     } else {
       setValue(\"streamObject1\", \"foreCol\", \"Lofar_off\");
@@ -249,6 +256,7 @@ void connectStationInputStreams(string runState) {
         setValue(\"streamObject2\", \"foreCol\", \"Lofar_dpdoesnotexist\");
       } else {
         connected2 = true;
+        oldConnectTo2 = connectTo2;
       }
     } else {
       setValue(\"streamObject2\", \"foreCol\", \"Lofar_off\");
@@ -258,6 +266,7 @@ void connectStationInputStreams(string runState) {
         setValue(\"streamObject3\", \"foreCol\", \"Lofar_dpdoesnotexist\");
       } else {
         connected3 = true;
+        oldConnectTo3 = connectTo3;
       }
     } else {
       setValue(\"streamObject3\", \"foreCol\", \"Lofar_off\");
