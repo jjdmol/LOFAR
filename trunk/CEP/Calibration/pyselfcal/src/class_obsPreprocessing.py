@@ -86,6 +86,17 @@ class obsPreprocessing:
 			print cmd
 			os.system(cmd)	
 			print ''
+					
+			for MS in self.Files:		
+					# Copy CORRECTED DATA Column to DATA column		
+					try:				
+							self.copy_data("""%s%s"""%(self.IterDir,MS))	
+					except:
+							print ''
+							print 'There are no CORRECTED DATA COLUMN !! Please have AMPLITUDE calibrated data in the corrected data column !!'
+							print ''
+							sys.exit()				
+			
 
 		else:
 			cmd=""" cp -r %s %s"""%(self.preprocessDir+'Iter%s/*sub%s'%(self.i-1,self.i-1),self.IterDir)
@@ -94,6 +105,9 @@ class obsPreprocessing:
 			os.system(cmd)			
 			print ''
 			
+
+
+
 		
 		# Concatenate Initial Time chunks 
 		self.list0	= sorted(glob.glob(('%s*')%(self.IterDir)))
@@ -223,7 +237,7 @@ class obsPreprocessing:
 				
 					
 		#Imaging now with the image 
-		cmd_image='awimager ms=%s image=%sImage_substraction%s weight=briggs robust=1 npix=%s cellsize=%sarcsec data=CORRECTED_DATA padding=1.18 niter=%s stokes=I operation=mfclark timewindow=300 UVmin=%s UVmax=%s wmax=%s fits threshold=%sJy'%(self.initialConcatMS,self.preprocessImageDir,self.i,self.nbpixel,self.pixsize,self.nIteration,self.UVmin,self.UVmax,self.wmax,threshold) 
+		cmd_image='awimager ms=%s image=%sImage_substraction%s weight=briggs robust=1 npix=%s cellsize=%sarcsec data=CORRECTED_DATA padding=1.18 niter=%s stokes=I operation=mfclark timewindow=300 UVmin=%s UVmax=%s wmax=%s fits="" threshold=%sJy'%(self.initialConcatMS,self.preprocessImageDir,self.i,self.nbpixel,self.pixsize,self.nIteration,self.UVmin,self.UVmax,self.wmax,threshold) 
 		
 		print ''
 		print cmd_image
