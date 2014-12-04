@@ -84,6 +84,10 @@ namespace LOFAR {
         casa::Quantity& bminor, 
         casa::Quantity& bpa);
 
+      static void normalize(
+        casa::String imagename_in, 
+        casa::String avgpb_name, 
+        casa::String imagename_out);
       
     protected:
       ParameterSet               &itsParset;

@@ -25,6 +25,7 @@
 #include <Common/lofar_iostream.h>
 #include <LofarFT/Operation.h>
 #include <LofarFT/util.h>
+#include <casa/OS/Directory.h>
 
 using namespace casa;
 
@@ -241,7 +242,7 @@ void Operation::showHelp (ostream& os, const string& name)
   "  " << COLOR_PARAMETER << "chunksize" << COLOR_RESET<< "        : amount of data read at once (0 means automatic)"<<endl<<
   "                     int   ,  " << COLOR_DEFAULT << "default 0" << COLOR_RESET << endl<<
   "  " << COLOR_PARAMETER << "numthreads" << COLOR_RESET<< "       : maximum number of threads to use              "<<endl<<
-  "                     int   ,  " << COLOR_DEFAULT << "default 8" << COLOR_RESET <<endl<<endl;
+  "                     int   ,  " << COLOR_DEFAULT << "default 0 (= use sytem default)" << COLOR_RESET <<endl<<endl;
 
   os<<
   "Output parameters:"<<endl<<
@@ -304,6 +305,42 @@ void Operation::readFilter (const String& filter,
   }
   if (! strs[2].empty()) {
     bpa = readQuantity (strs[2]);
+  }
+}
+
+void Operation::normalize(String imagename_in, String avgpb_name, String imagename_out)
+{
+  Directory imagedir_in(imagename_in);
+  imagedir_in.copy (imagename_out);
+  
+  PagedImage<Float> image_in(imagename_in);
+  PagedImage<Float> image_out(imagename_out);
+  PagedImage<Float> avgpb(avgpb_name);
+
+  for(Int i = 0; i < image_in.shape()[3]; ++i)
+  {
+    for(Int j = 0; j < image_in.shape()[2]; ++j)
+    {
+      for(Int k = 0; k < image_in.shape()[1]; ++k)
+      {
+        for(Int l = 0; l < image_in.shape()[0]; ++l)
+        {
+          IPosition pos(4,l,k,j,i);
+          IPosition pos1(4,l,k,0,0);
+          
+          Float v = image_in.getAt(pos);
+          Float f = avgpb.getAt(pos1);
+          if (f>0.02)
+          {
+            image_out.putAt(v/f, pos);
+          }
+          else
+          {
+            image_out.putAt(0.0, pos);
+          }
+        }
+      }
+    }
   }
 }
 

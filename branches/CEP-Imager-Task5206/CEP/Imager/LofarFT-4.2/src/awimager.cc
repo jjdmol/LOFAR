@@ -119,9 +119,8 @@ int main (Int argc, char** argv)
     return 1;
   }
 
-  uint maxthreads = parset.getInt("numthreads",8);
-
-  LOFAR::OpenMP::setNumThreads(maxthreads);
+  uint maxthreads = parset.getInt("numthreads",0);
+  if (maxthreads) LOFAR::OpenMP::setNumThreads(maxthreads);
 
   try 
   {

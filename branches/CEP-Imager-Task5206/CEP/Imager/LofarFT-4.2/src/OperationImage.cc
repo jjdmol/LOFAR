@@ -52,6 +52,7 @@ void OperationImage::init()
 void OperationImage::run()
 {
   itsImager->makeimage ("corrected", itsImageName + ".flatnoise");
+  normalize(itsImageName + ".flatnoise", itsImageName + ".avgpb", itsImageName + ".flatgain");
 }
 
 void OperationImage::showHelp (ostream& os, const std::string& name)

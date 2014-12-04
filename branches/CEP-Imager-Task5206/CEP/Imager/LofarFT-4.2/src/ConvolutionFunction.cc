@@ -120,7 +120,7 @@ ConvolutionFunction::ConvolutionFunction
     itsAveragePB(),
     itsSpheroidal(),
     itsSpheroidalCF(),
-    itsSupportCF(9)
+    itsSupportCF(15)
 {
   itsFFTMachines.resize (OpenMP::maxThreads());
 
@@ -339,67 +339,49 @@ void ConvolutionFunction::computeAterm (Double time)
   vector< vector< Cube<Complex> > >& aTermList = itsAtermStore[time];
   // Calculate the A-term and fill the vector for all stations.
   aTermList.resize (itsNStations);
-  ///#pragma omp parallel
+  
+  DirectionCoordinate coordinate = itsCoordinates;
+  Double aPixelAngSize = min(itsPixelSizeSpheroidal, estimateAResolution(itsShape, itsCoordinates));
+  Int nPixelsConv = imageDiameter / aPixelAngSize;
+  if (nPixelsConv > itsMaxSupport) {
+    nPixelsConv = itsMaxSupport;
+  }
+  // Make odd and optimal.
+  nPixelsConv = FFTCMatrix::optimalOddFFTSize (nPixelsConv);
+  nPixelsConv = itsSupportCF;
+  aPixelAngSize = imageDiameter / nPixelsConv;
+  if (itsVerbose > 1) 
   {
-    // Thread private variables.
-    PrecTimer timerFFT;
-    PrecTimer timerPar;
-    ///#pragma omp for
-    for (uInt i=0; i<itsNStations; ++i) {
-      timerPar.start();
-      DirectionCoordinate coordinate = itsCoordinates;
-      Double aPixelAngSize = min(itsPixelSizeSpheroidal, estimateAResolution(itsShape, itsCoordinates));
-      Int nPixelsConv = imageDiameter / aPixelAngSize;
-      if (nPixelsConv > itsMaxSupport) {
-        nPixelsConv = itsMaxSupport;
-      }
-      // Make odd and optimal.
-      nPixelsConv = FFTCMatrix::optimalOddFFTSize (nPixelsConv);
-      nPixelsConv = itsSupportCF;
-      aPixelAngSize = imageDiameter / nPixelsConv;
-      if (itsVerbose > 1) 
-      {
-        cout.precision(20);
-        cout<<"Number of pixels in the Aplane of "<<i<<": "<<nPixelsConv
-            <<", time="<<fixed<<time<<endl;
-      }
-      IPosition shape(2, nPixelsConv, nPixelsConv);
-      Vector<Double> increment_old(coordinate.increment());
-      Vector<Double> increment(2);
-      increment[0] = aPixelAngSize*sign(increment_old[0]);
-      increment[1] = aPixelAngSize*sign(increment_old[1]);
-      coordinate.setIncrement(increment);
-      Vector<Double> refpix(2, 0.5*(nPixelsConv-1));
-      coordinate.setReferencePixel(refpix);
+    cout.precision(20);
+    cout << "Number of pixels in the Aplane: " << nPixelsConv
+         << ", time=" << fixed << time << endl;
+  }
+  IPosition shape(2, nPixelsConv, nPixelsConv);
+  Vector<Double> increment_old(coordinate.increment());
+  Vector<Double> increment(2);
+  increment[0] = aPixelAngSize*sign(increment_old[0]);
+  increment[1] = aPixelAngSize*sign(increment_old[1]);
+  coordinate.setIncrement(increment);
+  Vector<Double> refpix(2, 0.5*(nPixelsConv-1));
+  coordinate.setReferencePixel(refpix);
 
-      itsATerm->setDirection(coordinate, shape);
-      
-      MEpoch binEpoch;
-      binEpoch.set(Quantity(time, "s"));
-      
-      itsATerm->setEpoch(binEpoch);
-      
-      vector< Cube<Complex> > aTermA = itsATerm->evaluate(
-        i, 
-        itsFrequencyList, 
-        itsFrequencyList, 
-        true);
-      aTermList[i] = aTermA;
-      timerPar.stop();
-    } // end omp for
-    // Update the timing info.
-    double ftime = timerFFT.getReal();
-    ///#pragma omp atomic
-    itsTimeAfft += ftime;
-    unsigned long long cnt = timerFFT.getCount();
-    ///#pragma omp atomic
-    itsTimeAcnt += cnt;
-    double ptime = timerPar.getReal();
-    ///#pragma omp atomic
-    itsTimeApar += ptime;
-  } // end omp parallel
-  aTimer.stop();
-  itsTimeA = aTimer.getReal();
+  itsATerm->setDirection(coordinate, shape);
+  
+  MEpoch binEpoch;
+  binEpoch.set(Quantity(time, "s"));
+  
+  itsATerm->setEpoch(binEpoch);
+    
+  #pragma omp parallel for
+  for (uInt i=0; i<itsNStations; ++i) 
+  {
+    vector< Cube<Complex> > aTermA = itsATerm->evaluate(
+      i, 
+      itsFrequencyList, 
+      itsFrequencyList, 
+      true);
+    aTermList[i] = aTermA;
+  }
 }
 
 // void ConvolutionFunction::computeElementBeam (const DirectionCoordinate &coordinates, const IPosition &shape,  Double time)
@@ -574,6 +556,10 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
             {
               // 1. Multiply aTerm1, aTerm2 and spheroidal
               aTerm.reference(conj(aTerm1.xyPlane(ind1)) * aTerm2.xyPlane(ind2) * getSpheroidalCF());
+              
+              //DEBUG
+//               aTerm = conj(aTerm);
+              
               if (w<0)
               {
                 aTerm = conj(aTerm);
@@ -599,6 +585,10 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
             
             // 6. multiply with wterm
             aTerm = aTerm * wTerm;
+            
+            //DEBUG
+            aTerm = conj(aTerm);
+            
 
             int Npix_out = itsSupportCF;
             
@@ -663,17 +653,18 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
             {
               ScopedTimer t("Oversampling II");
               int tnr = OpenMP::threadNum();
-              aTerm_oversampled = itsFFTMachines[tnr].padded_forward (aTerm, itsOversampling);
+//               aTerm_oversampled = itsFFTMachines[tnr].padded_forward (aTerm, itsOversampling);
+              aTerm_oversampled = conj(itsFFTMachines[tnr].padded_forward (aTerm, itsOversampling));
             }
             
-            static int a = 1;
-            #pragma omp critical
-            if (a)
-            {
-              store(aTerm_oversampled, "aterm");
-              a = 0;
-            }
-            
+//             static int a = 1;
+//             #pragma omp critical
+//             if (a)
+//             {
+//               store(aTerm_oversampled, "aterm");
+//               a = 0;
+//             }
+//             
             
             // zero pad to original support because gridder can not (yet) handle varying support
             if (d>0)
@@ -979,6 +970,7 @@ void ConvolutionFunction::normalized_fft(
   Matrix<Complex> &im, 
   bool toFreq)
 {
+  cout << im.ncolumn() << " " << im.nrow() << " " << im.size() << " " << im.contiguousStorage() << endl;
   ASSERT (im.ncolumn() == im.nrow()  &&  im.size() > 0  &&
                 im.contiguousStorage());
   int tnr = OpenMP::threadNum();

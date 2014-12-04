@@ -41,7 +41,14 @@ namespace
     registerClass<OperationClean>("clean");
 }
 
-OperationClean::OperationClean(ParameterSet& parset): Operation(parset)
+OperationClean::OperationClean(ParameterSet& parset): Operation(parset),
+  itsModelNames(0),
+  itsResidualNames(0),
+  itsRestoredNames(0),
+  itsModelNames_normalized(0),
+  itsResidualNames_normalized(0),
+  itsRestoredNames_normalized(0),
+  itsPsfNames(0)
 {
     needsData=true;
     needsImage=true;
@@ -97,29 +104,40 @@ void OperationClean::init()
 
   Int nterms = itsParset.getInt("image.nterms",1);
 
-  Vector<String> modelNames(nterms);
-  Vector<String> residualNames(nterms);
-  Vector<String> restoredNames(nterms);
-  Vector<String> psfNames((nterms*(nterms+1))/2);
+  itsModelNames.resize(nterms);
+  itsResidualNames.resize(nterms);
+  itsRestoredNames.resize(nterms);
+  itsModelNames_normalized.resize(nterms);
+  itsResidualNames_normalized.resize(nterms);
+  itsRestoredNames_normalized.resize(nterms);
+  itsPsfNames.resize((nterms*(nterms+1))/2);
   
+  itsAvgpbName = imgName + ".avgpb";
+
   if (nterms == 1)
   {
-    modelNames(0) = imgName + ".model.flatnoise";
-    residualNames(0) = imgName + ".residual.flatnoise";
-    restoredNames(0) = imgName + ".restored.flatnoise";
-    psfNames(0) = imgName + ".psf";
+    itsModelNames(0) = imgName + ".model.flatnoise";
+    itsModelNames_normalized(0) = imgName + ".model.flatgain";
+    itsResidualNames(0) = imgName + ".residual.flatnoise";
+    itsResidualNames_normalized(0) = imgName + ".residual.flatgain";
+    itsRestoredNames(0) = imgName + ".restored.flatnoise";
+    itsRestoredNames_normalized(0) = imgName + ".restored.flatgain";
+    itsPsfNames(0) = imgName + ".psf";
   }
   else
   {
     for(Int i=0;i<nterms;++i)
     {
-      modelNames(i) = imgName + ".model.tt" + String::toString(i) + ".flatnoise";
-      residualNames(i) = imgName + ".residual.tt" + String::toString(i)  + ".flatnoise";
-      restoredNames(i) = imgName + ".restored.tt" + String::toString(i)  + ".flatnoise";
+      itsModelNames(i) = imgName + ".model.tt" + String::toString(i) + ".flatnoise";
+      itsModelNames_normalized(i) = imgName + ".model.tt" + String::toString(i) + ".flatgain";
+      itsResidualNames(i) = imgName + ".residual.tt" + String::toString(i)  + ".flatnoise";
+      itsResidualNames_normalized(i) = imgName + ".residual.tt" + String::toString(i)  + ".flatgain";
+      itsResidualNames(i) = imgName + ".residual.tt" + String::toString(i)  + ".flatnoise";
+      itsResidualNames_normalized(i) = imgName + ".residual.tt" + String::toString(i)  + ".flatgain";
     }
     for(Int i=0;i<((nterms*(nterms+1))/2);++i)
     {
-      psfNames(i) = imgName + ".psf.tt" + String::toString(i);
+      itsPsfNames(i) = imgName + ".psf.tt" + String::toString(i);
     }
   }
   
@@ -143,18 +161,26 @@ void OperationClean::init()
     niter,                       // niter
     gain,                        // gain
     threshold,                   // threshold
-    modelNames,
+    itsModelNames,
     Vector<Bool>(nterms, False), // fixed
     "",                          // complist
     Vector<String>(1, maskName), // mask
-    restoredNames,               // restored
-    residualNames,               // residual
-    psfNames);                   // psf
+    itsRestoredNames,               // restored
+    itsResidualNames,               // residual
+    itsPsfNames);                   // psf
 }
 
 void OperationClean::run()
 {
   itsImager->doClean();
+  
+  // make flat gain images
+  for(Int i; i<itsModelNames.shape()(0); ++i)
+  {
+    normalize(itsModelNames(i), itsAvgpbName, itsModelNames_normalized(i));
+    normalize(itsResidualNames(i), itsAvgpbName, itsResidualNames_normalized(i));
+    normalize(itsRestoredNames(i), itsAvgpbName, itsRestoredNames_normalized(i));
+  }  
 }
 
 void OperationClean::showHelp (ostream& os, const string& name)

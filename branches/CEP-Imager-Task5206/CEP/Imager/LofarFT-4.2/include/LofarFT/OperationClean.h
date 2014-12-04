@@ -35,7 +35,18 @@ namespace LofarFT {
 
     virtual void showHelp (ostream& os, const string& name);
 
+  
+  private:
+    casa::String itsAvgpbName;
+    casa::Vector<casa::String> itsModelNames;
+    casa::Vector<casa::String> itsResidualNames;
+    casa::Vector<casa::String> itsRestoredNames;
+    casa::Vector<casa::String> itsModelNames_normalized;
+    casa::Vector<casa::String> itsResidualNames_normalized;
+    casa::Vector<casa::String> itsRestoredNames_normalized;
+    casa::Vector<casa::String> itsPsfNames;
   };
+
 
 } //# namespace LofarFT
 } //# namespace LOFAR

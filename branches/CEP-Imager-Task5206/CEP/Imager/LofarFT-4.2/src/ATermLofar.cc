@@ -552,8 +552,8 @@ Cube<DComplex> ATermLofar::evaluateIonosphere(
   
   const ITRFDirectionMap &map = itsITRFDirectionMap;
 
-  const uint nX = map.directions.shape()[1];
-  const uint nY = map.directions.shape()[2];
+  const uint nX = map.directions.shape()[0];
+  const uint nY = map.directions.shape()[1];
   const uint nFreq = freq.size();
   
   const MVPosition p = toMPositionITRF(station->position()).getValue();
@@ -577,6 +577,13 @@ Cube<DComplex> ATermLofar::evaluateIonosphere(
   
   casa::Cube<double> piercepoints(4, nX, nY, 0.0);
   
+  Matrix<Double> tec(nX, nY, 0.0);
+  
+  Double r0sqr = itsR0 * itsR0;
+  Double beta_2 = 0.5 * itsBeta;
+  Cube<DComplex> IF(nX, nY, nFreq, DComplex(0.0, 0.0));
+  
+//   #pragma omp parallel for collapse(2)
   for(uint i = 0 ; i < nX; ++i) 
   {
     for(uint j = 0 ; j < nY; ++j) 
@@ -633,16 +640,6 @@ Cube<DComplex> ATermLofar::evaluateIonosphere(
         (map.directions(i,j)[0]*normal_x + map.directions(i,j)[1]*normal_y + map.directions(i,j)[2]*normal_z);
       piercepoints(3, i, j) = cos_za_rec;
 
-    }
-  }  
-  Matrix<Double> tec(nX, nY, 0.0);
-  
-  Double r0sqr = itsR0 * itsR0;
-  Double beta_2 = 0.5 * itsBeta;
-  for(uint i = 0 ; i < nX; ++i) 
-  {
-    for(uint j = 0 ; j < nY; ++j) 
-    {
       for(uint k = 0 ; k < itsCal_pp_names.size(); ++k) 
       {
         Double dx = itsCal_pp(0, k) - piercepoints(0,i,j);
@@ -652,19 +649,11 @@ Cube<DComplex> ATermLofar::evaluateIonosphere(
         tec(i,j) += weight * itsTec_white(k);
       }
       tec(i,j) *= (-0.5 * piercepoints(3,i,j));
-    }
-  }
-  
-  Cube<DComplex> IF(nX, nY, nFreq, DComplex(0.0, 0.0));
-  for (uint i = 0; i < freq.size(); ++i)
-  {
-    Double a = (8.44797245e9 / freq[i]);
-    for(uint j = 0 ; j < nX; ++j) 
-    {
-      for(uint k = 0 ; k < nY; ++k) 
+      for (uint k = 0; k < freq.size(); ++k)
       {
-        Double phase = -tec(j,k) * a; 
-        IF(j,k,i) = DComplex(cos(phase), sin(phase));
+        Double a = (8.44797245e9 / freq[k]);
+        Double phase = -tec(i,j) * a; 
+        IF(i,j,k) = DComplex(cos(phase), sin(phase));
       }
     }
   }
