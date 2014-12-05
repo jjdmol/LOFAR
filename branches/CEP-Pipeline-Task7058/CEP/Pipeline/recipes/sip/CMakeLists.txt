@@ -60,6 +60,7 @@ install(PROGRAMS
   bin/preprocessing_pipeline.py
   bin/imaging_pipeline.py
   bin/pulsar_pipeline.py
+  bin/selfcal_imager_pipeline.py
   bin/startPython.sh
   bin/startPythonVersion.sh
   bin/stopPython.sh
