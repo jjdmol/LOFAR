@@ -84,7 +84,7 @@ pvss_project_config()
     sed -n 's,^currentProject *= *"\([^"]*\)"$,\1,p' $PVSSINST_CONF
   )
   pvss_ii=$(
-    sed -n '/^\[.*'$currentProj'\]$/,/^\[/s,^PVSS_II *= *"\([^"]*\)"$,\1,p' \
+    sed -n '/^\[.*\\'$currentProj'\]$/,/^\[/s,^PVSS_II *= *"\([^"]*\)"$,\1,p' \
       $PVSSINST_CONF
   )
   [ -f $pvss_ii ] && echo "$pvss_ii" || \
