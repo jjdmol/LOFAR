@@ -22,6 +22,8 @@ import numpy as np
 
 from lofar.selfcal import class_obsPreprocessing
 
+#import class_obsPreprocessing
+
 ########################################################################
 ## Define selfcalibration Parameters for cycles & prepare parsets
 ########################################################################
