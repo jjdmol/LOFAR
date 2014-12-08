@@ -281,10 +281,13 @@ def createRSPDriverFile(resultDir, stationName, dataDir,int_local,is_Cobalt):
     basePort = 10000 + stationNr * 10
 
     if (is_int_station and int_local == 1):
+
+        print "International station in local mode"
         # International station in local mode takes dest. MAC/IP info from
         # separate file 
-        print "now here"
         ip_mac_alias = findIPandMAC_local(stationName,dataDir)
+        # International stations still need old (BG) portnumbers
+        basePort = 0x10FA
         for rspNr in range(len(ip_mac_alias)):  
             blet_out = find_Blets(stationName, dataDir)[1+rspNr];
 
@@ -396,7 +399,6 @@ def createRSPDriverFile(resultDir, stationName, dataDir,int_local,is_Cobalt):
         # International station in local mode takes dest. MAC/IP info from
         # separate file 
         if int_local == 1:
-          print "now here"
           IPandMAC = findIPandMAC_local(stationName,dataDir)
         else:
           IPandMAC = findIPandMAC_station(stationName, dataDir)
@@ -454,7 +456,7 @@ def createRSPDriverFile_Test(resultDir, stationName, dataDir, alias):
 
     # Need globally unique IP port numbers.
     basePort = 10000 + stationNr * 10
-    
+
     ip_mac_alias = findIPandMAC_test(alias[0],dataDir)
     for rspNr in range(4):  
             blet_out = find_Blets(stationName, dataDir)[1+rspNr];
