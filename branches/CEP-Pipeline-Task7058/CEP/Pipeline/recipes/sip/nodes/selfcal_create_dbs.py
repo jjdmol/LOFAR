@@ -509,15 +509,6 @@ class selfcal_create_dbs(LOFARnodeTCP):
                 self.logger.error(parmdb_entry)
                 continue    # slices might be missing, not an exit error
 
-        self.logger.info("**************************************")
-        self.logger.info(concatenated_measurement_set)
-        self.logger.info(sourcedb_target_path)
-        self.logger.info(parmdbs_path)
-        self.logger.info(major_cycle)
-        self.logger.info("**************************************")
-
-        raise Exception("Bwaaaaaa")
-
 
 if __name__ == "__main__":
     # args contain information regarding to the logging server
