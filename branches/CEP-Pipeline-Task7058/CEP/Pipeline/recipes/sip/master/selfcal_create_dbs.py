@@ -95,7 +95,11 @@ class selfcal_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         'sourcedb_map_path': ingredient.StringField(
             '--sourcedb-map-path',
             help="path to mapfile containing produced sourcedb files"
-        )
+        ),
+        'major_cycle': ingredient.IntField(
+            '--major_cycle',
+            help = "The number of the current cycle"
+        ),
     }
 
     outputs = {
@@ -129,7 +133,8 @@ class selfcal_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # Run the nodes with now collected inputs
         jobs, output_map = self._run_create_dbs_node(
-                 input_map, slice_paths_map, assoc_theta, source_list_map)
+                 input_map, slice_paths_map, assoc_theta,
+                 source_list_map)
 
         # Collect the output of the node scripts write to (map) files
         return self._collect_and_assign_outputs(jobs, output_map,
@@ -205,7 +210,8 @@ class selfcal_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
                          self.environment,
                          self.inputs["working_directory"],
                          self.inputs["makesourcedb_path"],
-                         source_list_item.file]
+                         source_list_item.file,
+                         self.inputs["major_cycle"]]
 
             jobs.append(ComputeJob(host_ms, node_command, arguments))
         # Wait the nodes to finish

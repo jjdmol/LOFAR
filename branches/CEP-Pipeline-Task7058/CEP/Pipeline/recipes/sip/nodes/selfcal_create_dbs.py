@@ -51,14 +51,16 @@ class selfcal_create_dbs(LOFARnodeTCP):
        There is a single sourcedb for a concatenated measurement set/ image
     3. Each individual timeslice needs a place to collect parameters: This is
        done in the paramdb. 
-    4. Assign the outputs of the script
+    4. Add the created databases as meta information to the measurment set
+       
+    5. Assign the outputs of the script
     
     """
     def run(self, concatenated_measurement_set, sourcedb_target_path,
             monet_db_hostname, monet_db_port, monet_db_name, monet_db_user,
             monet_db_password, assoc_theta, parmdb_executable, slice_paths,
             parmdb_suffix, environment, working_directory, makesourcedb_path,
-            source_list_path_extern):
+            source_list_path_extern, major_cycle):
 
         self.logger.info("Starting selfcal_create_dbs Node")
         self.environment.update(environment)
@@ -87,10 +89,16 @@ class selfcal_create_dbs(LOFARnodeTCP):
             self.logger.error("failed creating paramdb for slices")
             return 1
 
+        # *******************************************************************
+        # Add the create databases to the measurments set,
+        self._add_dbs_to_ms(concatenated_measurement_set, sourcedb_target_path,
+                            parmdbs, major_cycle)
+
+
         #*******************************************************************
-        # 4. Assign the outputs
+        # 5. Assign the outputs
         self.outputs["sourcedb"] = sourcedb_target_path
-        self.outputs["parmdbs"] = parmdbs
+        self.outputs["parmdbs"] = sourcedb_target_path
         return 0
 
     def _create_source_list(self, source_list_path_extern, sourcedb_target_path,
@@ -462,10 +470,60 @@ class selfcal_create_dbs(LOFARnodeTCP):
 
         return None
 
+    def _add_dbs_to_ms(self, concatenated_measurement_set, sourcedb_target_path,
+                            parmdbs_path, major_cycle):
+        """
+        Add the in this recipe created sourcedb and instrument table(parmdb)
+        to the local measurementset.
+        """
+        # Create the base meta information directory
+        meta_directory = os.path.join(concatenated_measurement_set,
+                                "selfcal_information")
+        if not os.path.exists(meta_directory):
+             os.makedirs(meta_directory)
+
+        # Cycle dir
+        cycle_directory = os.path.join(meta_directory,
+                                "cycle_0")
+        if not os.path.exists(cycle_directory):
+             os.makedirs(cycle_directory)
+
+        #COpy the actual data. parmdbs_path is a list!
+        sourcedb_directory = os.path.join(cycle_directory,
+               os.path.basename(sourcedb_target_path))
+        if os.path.exists(sourcedb_directory):
+            shutil.rmtree(sourcedb_directory)  # delete dir to assure copy succeeds
+        shutil.copytree(sourcedb_target_path, sourcedb_directory)
+
+        #parmdbs_path is a list!
+        for parmdb_entry in parmdbs_path:
+            #try:
+                parmdb_directory = os.path.join(cycle_directory,
+                    os.path.basename(parmdb_entry))
+                # delete dir to assure copy succeeds
+                if os.path.exists(parmdb_directory):
+                    shutil.rmtree(parmdb_directory)
+                shutil.copytree(parmdb_entry, parmdb_directory)
+            #except:
+                self.logger.error("Failed copying parmdb:")
+                self.logger.error(parmdb_entry)
+                continue    # slices might be missing, not an exit error
+
+        self.logger.info("**************************************")
+        self.logger.info(concatenated_measurement_set)
+        self.logger.info(sourcedb_target_path)
+        self.logger.info(parmdbs_path)
+        self.logger.info(major_cycle)
+        self.logger.info("**************************************")
+
+        raise Exception("Bwaaaaaa")
+
 
 if __name__ == "__main__":
     # args contain information regarding to the logging server
     _jobid, _jobhost, _jobport = sys.argv[1:4]
     sys.exit(selfcal_create_dbs(
         _jobid, _jobhost, _jobport).run_with_stored_arguments())
+
+
 

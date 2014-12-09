@@ -37,7 +37,7 @@ class selfcal_imager_pipeline(control):
     (typically 8, because ten subband groups are combined).
 
     *Time Slices*
-    MSSS images are compiled from a number of so-called (time) slices. Each
+    selfcal images are compiled from a number of so-called (time) slices. Each
     slice comprises a short (approx. 10 min) observation of a field (an area on
     the sky) containing typically 80 subbands. The number of slices will be
     different for LBA observations (typically 9) and HBA observations
@@ -128,7 +128,7 @@ class selfcal_imager_pipeline(control):
             self.inputs['job_name'] = (
                 os.path.splitext(os.path.basename(parset_file))[0]
             )
-        return super(msss_imager_pipeline, self).go()
+        return super(selfcal_imager_pipeline, self).go()
 
     @mail_log_on_exception
     def pipeline_logic(self):
@@ -218,7 +218,7 @@ class selfcal_imager_pipeline(control):
             # *****************************************************************
             # (2) Create dbs and sky model
             parmdbs_path, sourcedb_map_path = self._create_dbs(
-                        concat_ms_map_path, timeslice_map_path,idx_loop,
+                        concat_ms_map_path, timeslice_map_path, idx_loop,
                         source_list_map_path = source_list_map_path,
                         skip_create_dbs = False)
 
@@ -615,7 +615,8 @@ class selfcal_imager_pipeline(control):
                         parmdbs_map_path = parmdbs_map_path,
                         sourcedb_map_path = sourcedb_map_path,
                         source_list_map_path = source_list_map_path,
-                        working_directory = self.scratch_directory)
+                        working_directory = self.scratch_directory,
+                        major_cycle = major_cycle)
 
         return parmdbs_map_path, sourcedb_map_path
 
