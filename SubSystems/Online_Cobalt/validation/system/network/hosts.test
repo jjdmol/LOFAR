@@ -7,6 +7,8 @@ fgrep `hostname` /etc/hosts || exit 1
 # Check for specific /etc/hosts entries
 
 fgrep ccu001 /etc/hosts || exit 1
+fgrep sas003 /etc/hosts || exit 1
+fgrep sasdb  /etc/hosts || exit 1
 fgrep kis001 /etc/hosts || exit 1
 fgrep lhn001 /etc/hosts || exit 1
 fgrep sasdb /etc/hosts || exit 1
