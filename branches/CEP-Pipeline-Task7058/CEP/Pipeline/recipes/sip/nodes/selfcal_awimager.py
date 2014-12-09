@@ -38,7 +38,7 @@ import lofar.parmdb  # @UnresolvedImport
 import numpy as np
 
 
-class imager_awimager(LOFARnodeTCP):
+class selfcal_awimager(LOFARnodeTCP):
     def run(self, executable, environment, parset, working_directory,
             output_image, concatenated_measurement_set, sourcedb_path,
              mask_patch_size, autogenerate_parameters, specify_fov, fov, 
@@ -67,8 +67,8 @@ class imager_awimager(LOFARnodeTCP):
             or the old semi-automatic functionality       
         :rtype: self.outputs["image"] The path to the output image
         """
-        self.logger.info("Start imager_awimager node run:")
-        log4_cplus_name = "imager_awimager"
+        self.logger.info("Start selfcal_awimager node run:")
+        log4_cplus_name = "selfcal_awimager"
         self.environment.update(environment)
 
         with log_time(self.logger):
@@ -780,6 +780,6 @@ class imager_awimager(LOFARnodeTCP):
 
 if __name__ == "__main__":
     _JOBID, _JOBHOST, _JOBPORT = sys.argv[1:4]
-    sys.exit(imager_awimager(
+    sys.exit(selfcal_awimager(
                     _JOBID, _JOBHOST, _JOBPORT).run_with_stored_arguments())
 

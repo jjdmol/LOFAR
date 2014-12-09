@@ -1,6 +1,6 @@
 """
 # LOFAR AUTOMATIC IMAGING PIPELINE
-# imager_create_dbs (node)
+# selfcal_create_dbs (node)
 # Wouter Klijn 2012
 # klijn@astron.nl
 # -----------------------------------------------------------------------------
@@ -36,7 +36,7 @@ quit
 """
 
 
-class imager_create_dbs(LOFARnodeTCP):
+class selfcal_create_dbs(LOFARnodeTCP):
     """
     Creates two dbs: A sourcedb containgin sources in the direction of the
     current measurement. And a parmdb which will be used for an instrument
@@ -60,7 +60,7 @@ class imager_create_dbs(LOFARnodeTCP):
             parmdb_suffix, environment, working_directory, makesourcedb_path,
             source_list_path_extern):
 
-        self.logger.info("Starting imager_create_dbs Node")
+        self.logger.info("Starting selfcal_create_dbs Node")
         self.environment.update(environment)
 
         #*******************************************************************
@@ -466,6 +466,6 @@ class imager_create_dbs(LOFARnodeTCP):
 if __name__ == "__main__":
     # args contain information regarding to the logging server
     _jobid, _jobhost, _jobport = sys.argv[1:4]
-    sys.exit(imager_create_dbs(
+    sys.exit(selfcal_create_dbs(
         _jobid, _jobhost, _jobport).run_with_stored_arguments())
 

@@ -14,7 +14,7 @@ from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.data_map import DataMap, validate_data_maps
 
-class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
+class selfcal_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
     """
     Master script for the awimager. Collects arguments from command line and
     pipeline inputs.
@@ -104,7 +104,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         This member contains all the functionality of the imager_awimager.
         Functionality is all located at the node side of the script.
         """
-        super(imager_awimager, self).go()
+        super(selfcal_awimager, self).go()
         self.logger.info("Starting imager_awimager run")
 
         # *********************************************************************
@@ -204,5 +204,5 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
 
 
 if __name__ == "__main__":
-    sys.exit(imager_awimager().main())
+    sys.exit(selfcal_awimager().main())
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #                                                        LOFAR IMAGING PIPELINE
 #
-#                                                        Imager Pipeline recipe
+#                                                      selfcal Pipeline recipe
 #                                                            Marcel Loose, 2012
 #                                                               loose@astron.nl
 #                                                            Wouter Klijn, 2012
@@ -23,9 +23,9 @@ from lofarpipe.support.loggingdecorators import xml_node, mail_log_on_exception
 from lofar.parameterset import parameterset
 
 
-class msss_imager_pipeline(control):
+class selfcal_imager_pipeline(control):
     """
-    The Automatic MSSS imager pipeline is used to generate MSSS images and find
+    The self calibration pipeline is used to generate images and find
     sources in the generated images. Generated images and lists of found
     sources are complemented with meta data and thus ready for consumption by
     the Long Term Storage (LTA)
@@ -193,7 +193,8 @@ class msss_imager_pipeline(control):
             self.logger.error(
                 "The number of major cycles must be 3 or higher, correct"
                 " the key: Imaging.number_of_major_cycles")
-            number_of_major_cycles = 6  # for now default to 6 cycles
+            raise PipelineException(
+                     "Incorrect number_of_major_cycles in the parset")
 
 
         # ******************************************************************
@@ -451,7 +452,7 @@ class msss_imager_pipeline(control):
             self.logger.error(repr(parmdbs_map))
             raise PipelineException("Invalid input data for imager_bbs recipe")
 
-        self.run_task("imager_bbs",
+        self.run_task("selfcal_bbs",
                       timeslice_map_path,
                       parset = parset_path,
                       instrument_mapfile = parmdbs_map_path,
@@ -501,7 +502,7 @@ class msss_imager_pipeline(control):
             pass
         else:
             # run the awimager recipe
-            self.run_task("imager_awimager", prepare_phase_output,
+            self.run_task("selfcal_awimager", prepare_phase_output,
                           parset = aw_image_parset_path,
                           mapfile = output_mapfile,
                           output_image = intermediate_image_path,
@@ -601,7 +602,7 @@ class msss_imager_pipeline(control):
         if skip_create_dbs:
             pass
         else:
-            self.run_task("imager_create_dbs", input_map_path,
+            self.run_task("selfcal_create_dbs", input_map_path,
                         monetdb_hostname = parset.getString("monetdb_hostname"),
                         monetdb_port = parset.getInt("monetdb_port"),
                         monetdb_name = parset.getString("monetdb_name"),
@@ -731,6 +732,5 @@ class msss_imager_pipeline(control):
              parset.replace('thresh', 'hard')              
 
 
-
 if __name__ == '__main__':
-    sys.exit(msss_imager_pipeline().main())
+    sys.exit(selfcal_imager_pipeline().main())

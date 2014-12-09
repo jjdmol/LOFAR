@@ -1,5 +1,5 @@
 # LOFAR AUTOMATIC IMAGING PIPELINE
-# imager_bbs
+# selfcal_bbs
 # Wouter Klijn 2012
 # klijn@astron.nl
 # Nicolas Vilchez, 2014
@@ -16,7 +16,7 @@ from lofarpipe.support.group_data import load_data_map
 from lofarpipe.support.subprocessgroup import SubProcessGroup
 from lofarpipe.support.data_map import MultiDataMap
 
-class imager_bbs(LOFARnodeTCP):
+class selfcal_bbs(LOFARnodeTCP):
     """
     imager_bbs node performs a bbs run for each of measuremt sets supplied in 
     the  mapfile at ms_list_path. Calibration is done on the sources in 
@@ -33,9 +33,9 @@ class imager_bbs(LOFARnodeTCP):
     def run(self, bbs_executable, parset, ms_list_path, parmdb_list_path,
              sky_list_path, concat_ms_path, major_cycle):
         """
-        imager_bbs functionality. Called by framework performing all the work
+        selfcal_bbs functionality. Called by framework performing all the work
         """
-        self.logger.debug("Starting imager_bbs Node")
+        self.logger.debug("Starting selfcal_bbs Node")
         # *********************************************************************
         # 1. Load mapfiles
         # read in the mapfiles to data maps: The master recipe added the single
@@ -113,4 +113,4 @@ class imager_bbs(LOFARnodeTCP):
 
 if __name__ == "__main__":
     _JOBID, _JOBHOST, _JOBPORT = sys.argv[1:4]
-    sys.exit(imager_bbs(_JOBID, _JOBHOST, _JOBPORT).run_with_stored_arguments())
+    sys.exit(selfcal_bbs(_JOBID, _JOBHOST, _JOBPORT).run_with_stored_arguments())

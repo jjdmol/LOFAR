@@ -32,6 +32,16 @@
     <Content Include="mac\CMakeLists.txt" />
     <Content Include="recipes\CMakeLists.txt" />
     <Content Include="test\CMakeLists.txt" />
+    <Compile Include="recipes\sip\bin\long_baseline_pipeline.py" />
+    <Compile Include="recipes\sip\bin\selfcal_imager_pipeline.py" />
+    <Compile Include="recipes\sip\master\long_baseline.py" />
+    <Compile Include="recipes\sip\master\selfcal_awimager.py" />
+    <Compile Include="recipes\sip\master\selfcal_bbs.py" />
+    <Compile Include="recipes\sip\master\selfcal_create_dbs.py" />
+    <Compile Include="recipes\sip\nodes\long_baseline.py" />
+    <Compile Include="recipes\sip\nodes\selfcal_awimager.py" />
+    <Compile Include="recipes\sip\nodes\selfcal_bbs.py" />
+    <Compile Include="recipes\sip\nodes\selfcal_create_dbs.py" />
     <Compile Include="test\__init__.py" />
     <Compile Include="deploy\deprecated\fabfile.py" />
     <Compile Include="deploy\deprecated\start_cluster.py" />

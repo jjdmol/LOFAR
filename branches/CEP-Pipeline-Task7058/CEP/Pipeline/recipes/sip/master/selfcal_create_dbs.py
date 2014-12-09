@@ -1,5 +1,5 @@
 # LOFAR AUTOMATIC IMAGING PIPELINE
-# imager_create_dbs (master)
+# selfcal_create_dbs (master)
 # Wouter Klijn, 2012
 # klijn@astron.nl
 # ------------------------------------------------------------------------------
@@ -14,7 +14,7 @@ from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.data_map import DataMap, MultiDataMap, validate_data_maps
 
 
-class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
+class selfcal_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
     """
     responsible for creating a number 
     of databases needed by imaging pipeline:
@@ -108,10 +108,10 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
     }
 
     def __init__(self):
-        super(imager_create_dbs, self).__init__()
+        super(selfcal_create_dbs, self).__init__()
 
     def go(self):
-        super(imager_create_dbs, self).go()
+        super(selfcal_create_dbs, self).go()
 
         # get assoc_theta, convert from empty string if needed 
         assoc_theta = self.inputs["assoc_theta"]
@@ -243,7 +243,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
             # The current job has to be skipped (due to skip field)
             # Or if the node failed:
             if not node_succeeded:
-                self.logger.warn("Warning failed ImagerCreateDBs run "
+                self.logger.warn("Warning failed selfcalCreateDBs run "
                     "detected: No sourcedb file created, {0} continue".format(
                                                             host))
                 output_item.file = "failed"
@@ -283,4 +283,4 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         return 0
 
 if __name__ == "__main__":
-    sys.exit(imager_create_dbs().main())
+    sys.exit(selfcal_create_dbs().main())

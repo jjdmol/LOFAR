@@ -1,5 +1,5 @@
 # LOFAR IMAGING PIPELINE
-# imager_bbz BBS (BlackBoard Selfcal) recipe
+# selfcal_bbs BBS (BlackBoard Selfcal) recipe
 # Wouter Klijn
 # klijn@astron.nl
 # ------------------------------------------------------------------------------
@@ -13,7 +13,7 @@ from lofarpipe.support.data_map import DataMap, MultiDataMap, validate_data_maps
 import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.remotecommand import ComputeJob
 
-class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
+class selfcal_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
     """
     Imager_bbs master performs a bbs run based on the supplied parset it is a
     shallow wrapper around bbs. Additional functionality compared to the default
@@ -79,7 +79,7 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
         """
         imager_bbs functionality. Called by framework performing all the work
         """
-        super(imager_bbs, self).go()
+        super(selfcal_bbs, self).go()
         self.logger.info("Starting imager_bbs run")
 
         # ********************************************************************
@@ -160,4 +160,4 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
 
 
 if __name__ == '__main__':
-    sys.exit(imager_bbs().main())
+    sys.exit(selfcal_bbs().main())
