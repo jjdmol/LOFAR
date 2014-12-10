@@ -484,7 +484,7 @@ class selfcal_create_dbs(LOFARnodeTCP):
 
         # Cycle dir
         cycle_directory = os.path.join(meta_directory,
-                                "cycle_0")
+                                "cycle_" + str(major_cycle))
         if not os.path.exists(cycle_directory):
              os.makedirs(cycle_directory)
 
