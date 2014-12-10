@@ -350,7 +350,7 @@ class selfcal_imager_pipeline(control):
             return placed_image_mapfile
         else:
             # run the awimager recipe
-            placed_image_mapfile = self.run_task("imager_finalize",
+            placed_image_mapfile = self.run_task("selfcal_finalize",
                 target_mapfile, awimager_output_map = awimager_output_map,
                     raw_ms_per_image_map = raw_ms_per_image_map,
                     sourcelist_map = sourcelist_map,
