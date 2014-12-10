@@ -87,7 +87,10 @@ class selfcal_awimager(LOFARnodeTCP):
                    UVmin, UVmax, robust, threshold =\
                         self._get_selfcal_parameters(
                             concatenated_measurement_set,
-                            parset, major_cycle, nr_cycles)               
+                            parset, major_cycle, nr_cycles) 
+
+                self._save_selfcal_info(concatenated_measurement_set, 
+                                        major_cycle, npix, UVmin, UVmax)
 
             else:
                 self.logger.info(
@@ -776,6 +779,36 @@ class selfcal_awimager(LOFARnodeTCP):
         
         """
         return int(pow(2, math.ceil(math.log(value, 2))))
+
+
+    def _save_selfcal_info(self, concatenated_measurement_set,
+                           major_cycle, npix, UVmin, UVmax):
+        """ 
+        The selfcal team requested meta information to be added to 
+        measurement set that allows the reproduction of intermediate
+        steps.
+        """ 
+        self.logger.info("Save-ing selfcal parameters to file:")
+        meta_file = os.path.join(
+              concatenated_measurement_set + "_selfcal_information",
+                                  "uvcut_and_npix.txt")
+        self.logger.info(meta_file)
+
+        # check if we have the output file? Add the header 
+        if not os.path.exists(meta_file):
+            meta_file_pt = open(meta_file, 'w')
+            meta_file_pt.write("#cycle_nr npix uvmin(klambda) uvmax(klambda)\n")
+            meta_file_pt.close()
+                 
+        meta_file_pt = open(meta_file, 'a')
+
+        # Create the actual string with info
+        meta_info_str = " ".join([str(major_cycle),
+                                 str(npix),
+                                 str(UVmin),
+                                str(UVmax)])
+        meta_file_pt.write(meta_info_str + "\n")
+        meta_file_pt.close()
 
 
 if __name__ == "__main__":

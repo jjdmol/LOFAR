@@ -52,6 +52,8 @@ class selfcal_bbs(LOFARnodeTCP):
                                   self.resourceMonitor)
             # *****************************************************************
             # 2. start the bbs executable with data
+            # The data is located in multimaps. We need the first entry
+            # TODO: THis is not 'nice' usage of the multimap
             for (measurement_set, parmdm) in zip(ms_map[0].file,
                                                 parmdb_map[0].file):
                 command = [

@@ -98,7 +98,7 @@ class selfcal_create_dbs(LOFARnodeTCP):
         #*******************************************************************
         # 5. Assign the outputs
         self.outputs["sourcedb"] = sourcedb_target_path
-        self.outputs["parmdbs"] = sourcedb_target_path
+        self.outputs["parmdbs"] = parmdbs
         return 0
 
     def _create_source_list(self, source_list_path_extern, sourcedb_target_path,
@@ -476,9 +476,9 @@ class selfcal_create_dbs(LOFARnodeTCP):
         Add the in this recipe created sourcedb and instrument table(parmdb)
         to the local measurementset.
         """
-        # Create the base meta information directory
-        meta_directory = os.path.join(concatenated_measurement_set,
-                                "selfcal_information")
+        self.logger.info("Adding sourcemodel and instrument model to output ms.")
+        # Create the base meta information directory        
+        meta_directory = concatenated_measurement_set + "_selfcal_information"
         if not os.path.exists(meta_directory):
              os.makedirs(meta_directory)
 
@@ -497,14 +497,14 @@ class selfcal_create_dbs(LOFARnodeTCP):
 
         #parmdbs_path is a list!
         for parmdb_entry in parmdbs_path:
-            #try:
+            try:
                 parmdb_directory = os.path.join(cycle_directory,
                     os.path.basename(parmdb_entry))
                 # delete dir to assure copy succeeds
                 if os.path.exists(parmdb_directory):
                     shutil.rmtree(parmdb_directory)
                 shutil.copytree(parmdb_entry, parmdb_directory)
-            #except:
+            except:
                 self.logger.error("Failed copying parmdb:")
                 self.logger.error(parmdb_entry)
                 continue    # slices might be missing, not an exit error
