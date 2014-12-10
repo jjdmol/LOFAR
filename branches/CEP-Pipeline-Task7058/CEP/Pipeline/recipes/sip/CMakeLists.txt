@@ -29,6 +29,7 @@ python_install(
   master/selfcal_create_dbs.py
   master/selfcal_awimager.py
   master/selfcal_bbs.py
+  master/selfcal_finalize.py
   nodes/__init__.py
   nodes/bbs_reducer.py
   nodes/copier.py
@@ -50,6 +51,7 @@ python_install(
   nodes/selfcal_create_dbs.py
   nodes/selfcal_awimager.py
   nodes/selfcal_bbs.py
+  nodes/selfcal_finalize.py
   DESTINATION lofarpipe/recipes)
 
 install(PROGRAMS

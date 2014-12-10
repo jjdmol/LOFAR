@@ -99,6 +99,7 @@ class selfcal_imager_pipeline(control):
         self.input_data = DataMap()
         self.target_data = DataMap()
         self.output_data = DataMap()
+        self.output_correlated_data = DataMap()
         self.scratch_directory = None
         self.parset_feedback_file = None
         self.parset_dir = None
@@ -179,6 +180,13 @@ class selfcal_imager_pipeline(control):
         self.logger.debug(
             "Wrote output sky-image mapfile: {0}".format(output_image_mapfile))
 
+        # Location of the output measurement set
+        output_correlated_mapfile = os.path.join(self.mapfile_dir, 
+                                                 "correlated.mapfile")
+        self.output_correlated_data.save(output_correlated_mapfile)
+        self.logger.debug(
+            "Wrote output correlated mapfile: {0}".format(output_correlated_mapfile))
+
         # TODO: This is a backdoor option to manually add beamtables when these
         # are missing on the provided ms. There is NO use case for users of the
         # pipeline
@@ -250,10 +258,11 @@ class selfcal_imager_pipeline(control):
 
         # *********************************************************************
         # (6) Finalize:
-        placed_data_image_map = self._finalize(aw_image_mapfile,
+        placed_data_image_map, placed_correlated_map =  \
+                                        self._finalize(aw_image_mapfile, 
             processed_ms_dir, raw_ms_per_image_map_path, source_list_map_path,
             minbaseline, maxbaseline, target_mapfile, output_image_mapfile,
-            found_sourcedb_path)
+            found_sourcedb_path, concat_ms_map_path, output_correlated_mapfile)
 
         # *********************************************************************
         # (7) Get metadata
@@ -316,6 +325,16 @@ class selfcal_imager_pipeline(control):
         self.logger.debug("%d Output_SkyImage data products specified" %
                           len(self.output_data))
 
+        self.output_correlated_data = DataMap([
+            tuple(os.path.join(location, filename).split(':')) + (skip,)
+                for location, filename, skip in zip(
+                    dps.getStringVector('Output_Correlated.locations'),
+                    dps.getStringVector('Output_Correlated.filenames'),
+                    dps.getBoolVector('Output_Correlated.skip'))
+        ])
+        self.logger.debug("%d Output_Correlated data products specified" %
+                          len(self.output_correlated_data))
+
         # # Sanity checks on input- and output data product specifications
         # if not validate_data_maps(self.input_data, self.output_data):
         #    raise PipelineException(
@@ -334,7 +353,8 @@ class selfcal_imager_pipeline(control):
     def _finalize(self, awimager_output_map, processed_ms_dir,
                   raw_ms_per_image_map, sourcelist_map, minbaseline,
                   maxbaseline, target_mapfile,
-                  output_image_mapfile, sourcedb_map, skip = False):
+                  output_image_mapfile, sourcedb_map, concat_ms_map_path,
+                  output_correlated_mapfile, skip = False):
         """
         Perform the final step of the imager:
         Convert the output image to hdf5 and copy to output location
@@ -346,11 +366,16 @@ class selfcal_imager_pipeline(control):
         self.logger.debug("Touched mapfile for correctly placed"
                         " hdf images: {0}".format(placed_image_mapfile))
 
+        placed_correlated_mapfile = self._write_datamap_to_file(None,
+             "placed_image")
+        self.logger.debug("Touched mapfile for correctly placed"
+                        " hdf images: {0}".format(placed_correlated_mapfile))
+
         if skip:
-            return placed_image_mapfile
+            return placed_image_mapfile, placed_correlated_mapfile
         else:
             # run the awimager recipe
-            placed_image_mapfile = self.run_task("selfcal_finalize",
+            outputs = self.run_task("selfcal_finalize",
                 target_mapfile, awimager_output_map = awimager_output_map,
                     raw_ms_per_image_map = raw_ms_per_image_map,
                     sourcelist_map = sourcelist_map,
@@ -360,10 +385,14 @@ class selfcal_imager_pipeline(control):
                     target_mapfile = target_mapfile,
                     output_image_mapfile = output_image_mapfile,
                     processed_ms_dir = processed_ms_dir,
-                    placed_image_mapfile = placed_image_mapfile
-                    )["placed_image_mapfile"]
+                    placed_image_mapfile = placed_image_mapfile,
+                    placed_correlated_mapfile = placed_correlated_mapfile,
+                    concat_ms_map_path = concat_ms_map_path,
+                    output_correlated_mapfile = output_correlated_mapfile
+                    )
 
-        return placed_image_mapfile
+        return outputs["placed_image_mapfile"], \
+                outputs["placed_correlated_mapfile"]
 
     @xml_node
     def _source_finding(self, image_map_path, major_cycle, skip = True):
