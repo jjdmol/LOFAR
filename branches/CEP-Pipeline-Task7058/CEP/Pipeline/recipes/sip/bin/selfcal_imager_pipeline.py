@@ -307,13 +307,12 @@ class selfcal_imager_pipeline(control):
         self.run_task("get_metadata", placed_data_image_map,
             parset_file = skyimage_metadata,
             parset_prefix = parset_prefix,
-            toplevel_meta_data_path=toplevel_meta_data_path, 
+            toplevel_meta_data_path=toplevel_meta_data_path, # only add once
             product_type = "SkyImage")
 
         self.run_task("get_metadata", placed_correlated_map,
             parset_file = correlated_metadata,
             parset_prefix = parset_prefix,
-            toplevel_meta_data_path=toplevel_meta_data_path, 
             product_type = "Correlated")
 
         parset = parameterset(skyimage_metadata)
