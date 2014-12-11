@@ -119,7 +119,8 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
         # ********************************************************************
         # 5. Create the parset-file and write it to disk.        
         parset = parameterset()
-        prefix = "Output_%s" % product_type
+        prefix = "Output_%s_" % product_type  #Underscore is needed because
+                             # Mom / LTA cannot differentiate input and output
         parset.replace('%snrOf%s' % (global_prefix, prefix), str(len(jobs)))
 
         # If there is meta data to add from the toplevel script
