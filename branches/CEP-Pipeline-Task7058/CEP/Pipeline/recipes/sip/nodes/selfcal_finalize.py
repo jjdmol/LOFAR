@@ -186,7 +186,6 @@ class selfcal_finalize(LOFARnodeTCP):
             self.outputs["image"] = output_image
             self.outputs["correlated"] = correlated_output_location
 
-
         
         return 0
 

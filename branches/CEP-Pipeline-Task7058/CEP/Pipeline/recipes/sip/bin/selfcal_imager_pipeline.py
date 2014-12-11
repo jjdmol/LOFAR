@@ -283,16 +283,32 @@ class selfcal_imager_pipeline(control):
                                     toplevel_meta_data_path))
             return 1
 
-        
+        skyimage_metadata = os.path.join(self.parset_dir, "skyimage.metadata")
+        correlated_metadata = os.path.join(self.parset_dir, "correlated.metadata")
         # Create a parset-file containing the metadata for MAC/SAS at nodes
         self.run_task("get_metadata", placed_data_image_map,
-            parset_file = self.parset_feedback_file,
+            parset_file = skyimage_metadata,
             parset_prefix = (
                 full_parset.getString('prefix') +
                 full_parset.fullModuleName('DataProducts')
             ),
             toplevel_meta_data_path=toplevel_meta_data_path, 
             product_type = "SkyImage")
+
+                # Create a parset-file containing the metadata for MAC/SAS at nodes
+        self.run_task("get_metadata", placed_correlated_map,
+            parset_file = correlated_metadata,
+            parset_prefix = (
+                full_parset.getString('prefix') +
+                full_parset.fullModuleName('DataProducts')
+            ),
+            toplevel_meta_data_path=toplevel_meta_data_path, 
+            product_type = "Correlated")
+
+        parset = parameterset(skyimage_metadata)
+        parset.adoptFile(correlated_metadata)
+        parset.writeFile(self.parset_feedback_file)
+
 
         return 0
 
