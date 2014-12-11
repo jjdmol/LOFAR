@@ -38,11 +38,12 @@ class get_metadata(LOFARnodeTCP):
 
             self.logger.debug("Product type: %s" % product_type)
             if product_type == "Correlated":
-                self.outputs = metadata.Correlated(infile).data()
+                self.outputs = metadata.Correlated(self.logger, infile).data()
             elif product_type == "InstrumentModel":
-                self.outputs = metadata.InstrumentModel(infile).data()
+                self.outputs = metadata.InstrumentModel(self.logger, 
+                                                        infile).data()
             elif product_type == "SkyImage":
-                self.outputs = metadata.SkyImage(infile).data()
+                self.outputs = metadata.SkyImage(self.logger, infile).data()
             else:
                 self.logger.error("Unknown product type: %s" % product_type)
                 return 1

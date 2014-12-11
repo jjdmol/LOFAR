@@ -267,8 +267,24 @@ class selfcal_imager_pipeline(control):
         # *********************************************************************
         # (7) Get metadata
         # create a parset with information that is available on the toplevel
+
+        self._get_meta_data(number_of_major_cycles, placed_data_image_map,
+                       placed_correlated_map, full_parset)
+
+
+        return 0
+
+    def _get_meta_data(self, number_of_major_cycles, placed_data_image_map,
+                       placed_correlated_map, full_parset):
+        """
+        Function combining all the meta data collection steps of the processing
+        """
+        parset_prefix = full_parset.getString('prefix') + \
+                full_parset.fullModuleName('DataProducts')
+                    
         toplevel_meta_data = parameterset()
-        toplevel_meta_data.replace("numberOfMajorCycles", 
+        toplevel_meta_data.replace(
+             parset_prefix + ".numberOfMajorCycles", 
                                            str(number_of_major_cycles))
         toplevel_meta_data_path = os.path.join(
                 self.parset_dir, "toplevel_meta_data.parset")
@@ -284,24 +300,19 @@ class selfcal_imager_pipeline(control):
             return 1
 
         skyimage_metadata = os.path.join(self.parset_dir, "skyimage.metadata")
-        correlated_metadata = os.path.join(self.parset_dir, "correlated.metadata")
+        correlated_metadata = os.path.join(self.parset_dir, 
+                                           "correlated.metadata")
+
         # Create a parset-file containing the metadata for MAC/SAS at nodes
         self.run_task("get_metadata", placed_data_image_map,
             parset_file = skyimage_metadata,
-            parset_prefix = (
-                full_parset.getString('prefix') +
-                full_parset.fullModuleName('DataProducts')
-            ),
+            parset_prefix = parset_prefix,
             toplevel_meta_data_path=toplevel_meta_data_path, 
             product_type = "SkyImage")
 
-                # Create a parset-file containing the metadata for MAC/SAS at nodes
         self.run_task("get_metadata", placed_correlated_map,
             parset_file = correlated_metadata,
-            parset_prefix = (
-                full_parset.getString('prefix') +
-                full_parset.fullModuleName('DataProducts')
-            ),
+            parset_prefix = parset_prefix,
             toplevel_meta_data_path=toplevel_meta_data_path, 
             product_type = "Correlated")
 
@@ -309,8 +320,6 @@ class selfcal_imager_pipeline(control):
         parset.adoptFile(correlated_metadata)
         parset.writeFile(self.parset_feedback_file)
 
-
-        return 0
 
     def _get_io_product_specs(self):
         """
@@ -383,9 +392,9 @@ class selfcal_imager_pipeline(control):
                         " hdf images: {0}".format(placed_image_mapfile))
 
         placed_correlated_mapfile = self._write_datamap_to_file(None,
-             "placed_image")
+             "placed_correlated")
         self.logger.debug("Touched mapfile for correctly placed"
-                        " hdf images: {0}".format(placed_correlated_mapfile))
+                        " correlated datasets: {0}".format(placed_correlated_mapfile))
 
         if skip:
             return placed_image_mapfile, placed_correlated_mapfile

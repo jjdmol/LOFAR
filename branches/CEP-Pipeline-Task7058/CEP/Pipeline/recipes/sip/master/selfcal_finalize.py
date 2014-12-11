@@ -183,20 +183,23 @@ class selfcal_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
         if not succesful_run:
             self.logger.warn("Not a single finalizer succeeded")
             return 1
-
+       
+        # Save the location of the output images
         output_image_mapfile.save(self.inputs['placed_image_mapfile'])
-        output_correlated_map.save(self.inputs['placed_correlated_mapfile'])
         self.logger.debug(
            "Wrote mapfile containing placed hdf5 images: {0}".format(
                            self.inputs['placed_image_mapfile']))
 
-        self.outputs["placed_image_mapfile"] = self.inputs[
-                                                    'placed_image_mapfile']
-        self.outputs["placed_correlated_mapfile"] = self.inputs[
-                                             'placed_correlated_mapfile']
+        # save the location of measurements sets
+        output_correlated_map.save(self.inputs['placed_correlated_mapfile'])
         self.logger.debug(
            "Wrote mapfile containing placed mss: {0}".format(
                            self.inputs['placed_correlated_mapfile']))
+
+        self.outputs["placed_image_mapfile"] = self.inputs[
+                                                    'placed_image_mapfile']
+        self.outputs["placed_correlated_mapfile"] = self.inputs[
+                                             'placed_correlated_mapfile']       
 
         return 0
 
