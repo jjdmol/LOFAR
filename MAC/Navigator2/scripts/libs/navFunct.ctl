@@ -1886,8 +1886,8 @@ void navFunct_fillStationLists() {
 //                                 "RS306","RS307","RS308","RS309","RS310","RS311",
 //                                 "RS404","RS406","RS407","RS408","RS409","RS410","RS411","RS412","RS413",
 //                                 "RS503","RS506","RS507","RS508","RS509");
-//  europeStations = makeDynString("DE601","DE602","DE603","DE604","DE605",,"DE609""FR606","SE607","UK608");
-  europeStations = makeDynString("DE601","DE602","DE603","DE604","DE605","DE609","FR606","SE607","UK608");
+//  europeStations = makeDynString("DE601","DE602","DE603","DE604","DE605","FR606","SE607","UK608","FI609");
+  europeStations = makeDynString("DE601","DE602","DE603","DE604","DE605","FR606","SE607","UK608");
   superTerpStations = makeDynString("CS002","CS003","CS004","CS005","CS006","CS007");
   cs0nnCoreStations = makeDynString("CS001",
                                     "CS011","CS013","CS017",
@@ -2613,7 +2613,8 @@ int navFunct_uriBoard2Cabinet(int uriBoardNr) {
 // ***************************************
 
 int navFunct_observationNameToNumber(string obsname) {
-  return substr(obsname,strpos(obsname,"Observation")+strlen("Observation"));
+  strreplace(obsname, "Observation", ""); 
+  return obsname;
 }
 
 // ****************************************
