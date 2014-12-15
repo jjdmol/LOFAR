@@ -416,15 +416,15 @@ substitute_CtrlDebug()
 #
 substitute_uriboard()
 {
-	awk -v nrURIs=$NRURIS '
+	awk -v nrURIs=$NRURIS  -v hasAartFaac = $AARTFAAC'
 	{
 		hasuri=index($1,"@uriboard@");
-		if (hasuri > 0) {
+		if (hasuri > 0 && hasAartFaac) {
 			for (uriNr = 0; uriNr < nrURIs; uriNr++) {
 				dpname=$1;
 				cNr=0;
 				if (uriNr > 1) cNr = 1
-				newname = sprintf("Cabinet%1d_URIboard%1d",cNr,uriNr);
+				newname = sprintf("Cabinet%1d_URIBoard%1d",cNr,uriNr);
 				sub("@uriboard@", newname, dpname);
 				print dpname"	"$2;
 				}
@@ -1453,10 +1453,15 @@ let NRURIS=3
 let NRRSPBOARDS=0
 let NRLBAS=0
 let NRHBAS=0
+let AARTFAAC=0
 if [ "${DBTYPE}" == "S" ]; then
 	let NRRSPBOARDS=`grep -s ${STNNAME}[[:space:]]  ${STATIONINFOFILE} | awk '{ print $7 }'`
 	let NRLBAS=`grep -s ${STNNAME}[[:space:]] ${STATIONINFOFILE} | awk '{ print $9 }'`
 	let NRHBAS=`grep -s ${STNNAME}[[:space:]] ${STATIONINFOFILE} | awk '{ print $10 }'`
+	HASAARTFAAC=`grep -s ${STNNAME}[[:space:]] ${STATIONINFOFILE} | awk '{ print $13 }'`	
+	if [ "${HASAARTFAAC}" == "Yes" }; then
+		let AARTFAAC=1
+	fi
 fi
 
 # create the desired files
