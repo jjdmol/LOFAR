@@ -20,7 +20,7 @@ PANEL,-1 -1 284 128 N "_3DFace" 1
   // pass baseDP to selfstate Object to work with
   setValue(\"selfState.light\",\"toolTipText\",baseDP);
 
-  if (dpExists(baseDP) ){
+  if (dpExists(baseDP) && navFunct_hasAARTFAAC(sysName) ){
     // connect for childUpdates
     showChildState(baseDP);
     // connect for selfUpdates
@@ -128,7 +128,9 @@ LANG:1 0
 "dashclr"N "_Transparent"
 "main()
 {
-  dpConnect( \"UniCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+  if (navFunct_hasAARTFAAC(sysName)) {
+    dpConnect( \"UniCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+  }
 }
 
 void UniCallback(string dp1, bool aTrig) {

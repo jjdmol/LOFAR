@@ -13,24 +13,23 @@ PANEL,-1 -1 1010 66 N "_3DFace" 2
   
   baseDP         = g_currentDatapoint;
   inputBufferDP  = $inputBuffer;
-    
+  DebugN(inputBufferDP);
+
+  stationName = strsplit(inputBufferDP,\"_\")[3];
   // connect to the inputBuffer values  
   // check if the requiered datapoint for this view are enabled and accessible
-  if (dpExists(inputBufferDP + \".stationName\")) {
-     if (!dpConnect(\"updateBuffer\", inputBufferDP + \".stationName\",
-                                 inputBufferDP + \".late\",
-	                                inputBufferDP + \".IOTime\",
+      
+  if (dpExists(inputBufferDP + \".observationName\")) {
+     if (!dpConnect(\"updateBuffer\", inputBufferDP + \".observationName\",
+                                 inputBufferDP + \".Node\",
+	                                inputBufferDP + \".CPU\",
 	                                inputBufferDP + \".stream0.blocksIn\",
-	                                inputBufferDP + \".stream0.percBad\",
 	                                inputBufferDP + \".stream0.rejected\", 
 	                                inputBufferDP + \".stream1.blocksIn\",
-   	                             inputBufferDP + \".stream1.percBad\",
 	                                inputBufferDP + \".stream1.rejected\", 
 	                                inputBufferDP + \".stream2.blocksIn\",
-	                                inputBufferDP + \".stream2.percBad\",
 	                                inputBufferDP + \".stream2.rejected\", 
 	                                inputBufferDP + \".stream3.blocksIn\",
-	                                inputBufferDP + \".stream3.percBad\",
                                  inputBufferDP + \".stream3.rejected\", 
                                  inputBufferDP + \".status.state:_online.._invalid\") == -1) {
       LOG_ERROR(\"inputBuffer.pnl:updateTrigger|Couldn't connect to: \"+inputBufferDP+\" \"+getLastError());
@@ -38,20 +37,21 @@ PANEL,-1 -1 1010 66 N "_3DFace" 2
   } else {
     LOG_ERROR(\"inputBuffer.pnl:updateTrigger|Couldn't find DP to connect to: \"+inputBufferDP);
     setValue(\"stationName\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"late\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"IOTime\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"observationName\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"Node\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"CPU\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"stream0_blocksIn\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"stream0_percBad\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"stream0_rejected\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"stream1_blocksIn\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"stream1_percBad\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"stream1_rejected\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"stream2_blocksIn\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"stream2_percBad\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"stream2_rejected\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"stream3_blocksIn\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"stream3_percBad\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"stream3_rejected\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"error_stream0\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"error_stream1\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"error_stream2\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"error_stream3\", \"backCol\", \"Lofar_dpdoesnotexist\");
   }    
     
   // pass baseDP to selfstate Object to work with
@@ -63,61 +63,95 @@ PANEL,-1 -1 1010 66 N "_3DFace" 2
 }
 
 
-updateBuffer(string dp1, string stationName, 
-             string dp2, string late,
-             string dp3, string IOTime,
+updateBuffer(string dp1, string observationName, 
+             string dp2, string node,
+             string dp3, string CPU,
              string dp4, string in0,
-             string dp5, string bad0,
-             string dp6, string rejected0,
-             string dp7, string in1,
-             string dp8, string bad1,
-             string dp9, string rejected1,
-             string dp10, string in2,
-             string dp11, string bad2,
-             string dp12, string rejected2,
-             string dp13, string in3,
-             string dp14, string bad3,
-             string dp15, string rejected3,
-             string dp16, bool invalid)
+             string dp5, string rejected0,
+             string dp6, string in1,
+             string dp7, string rejected1,
+             string dp8, string in2,
+             string dp9, string rejected2,
+             string dp10, string in3,
+             string dp11, string rejected3,
+             string dp12, bool invalid)
 {
 
   LOG_DEBUG(\"inputBuffer.pnl:updateBuffer|entered\"); 
-  
+  string color = \"_WindowText\";
   if (!invalid) {
-    setValue(\"stationName\",\"text\",stationName);
-    setValue(\"late\", \"text\", late);
-    setValue(\"IOTime\", \"text\", IOTime);
+    setValue(\"stationName\", \"text\", stationName);
+    setValue(\"observationName\",\"text\",observationName);
+    setValue(\"Node\", \"text\", node);
+    setValue(\"CPU\", \"text\", CPU);
     setValue(\"stream0_blocksIn\", \"text\", in0);
-    setValue(\"stream0_percBad\", \"text\", bad0);
     setValue(\"stream0_rejected\", \"text\", rejected0);
     setValue(\"stream1_blocksIn\", \"text\", in1);
-    setValue(\"stream1_percBad\", \"text\", bad1);
     setValue(\"stream1_rejected\", \"text\", rejected1);
     setValue(\"stream2_blocksIn\", \"text\", in2);
-    setValue(\"stream2_percBad\", \"text\", bad2);
     setValue(\"stream2_rejected\", \"text\", rejected2);
     setValue(\"stream3_blocksIn\", \"text\", in3);
-    setValue(\"stream3_percBad\", \"text\", bad3);
     setValue(\"stream3_rejected\", \"text\", rejected3);
+    setValue(\"stationName\", \"foreCol\", color);
+    setValue(\"observationName\",\"foreCol\", color);
+    setValue(\"Node\", \"foreCol\", color);
+    setValue(\"CPU\", \"foreCol\", color);
+    setValue(\"stream0_blocksIn\", \"foreCol\", color);
+    setValue(\"stream0_rejected\", \"foreCol\", getColor(rejected0,color));
+    setValue(\"stream1_blocksIn\", \"foreCol\", color);
+    setValue(\"stream1_rejected\", \"foreCol\", getColor(rejected1,color));
+    setValue(\"stream2_blocksIn\", \"foreCol\", color);
+    setValue(\"stream2_rejected\", \"foreCol\", getColor(rejected2,color));
+    setValue(\"stream3_blocksIn\", \"foreCol\", color);
+    setValue(\"stream3_rejected\", \"foreCol\", getColor(rejected3,color));
+    setValue(\"error_stream0\", \"backCol\", getColor(rejected0,color));
+    setValue(\"error_stream1\", \"backCol\", getColor(rejected1,color));
+    setValue(\"error_stream2\", \"backCol\", getColor(rejected2,color));
+    setValue(\"error_stream3\", \"backCol\", getColor(rejected3,color));
+
   } else {
-    setValue(\"stationName\",\"text\",\"???\");
-    setValue(\"late\", \"text\", \"\");
-    setValue(\"IOTime\", \"text\", \"\");
+    color = \"Lofar_invalid\";
+    setValue(\"stationName\", \"text\", stationName);
+    setValue(\"observationName\",\"text\",\"???\");
+    setValue(\"Node\", \"text\", \"\");
+    setValue(\"CPU\", \"text\",\"\");
     setValue(\"stream0_blocksIn\", \"text\", \"\");
-    setValue(\"stream0_percBad\", \"text\", \"\");
     setValue(\"stream0_rejected\", \"text\", \"\");
     setValue(\"stream1_blocksIn\", \"text\", \"\");
-    setValue(\"stream1_percBad\", \"text\", \"\");
     setValue(\"stream1_rejected\", \"text\", \"\");
     setValue(\"stream2_blocksIn\", \"text\", \"\");
-    setValue(\"stream2_percBad\", \"text\", \"\");
     setValue(\"stream2_rejected\", \"text\", \"\");
     setValue(\"stream3_blocksIn\", \"text\", \"\");
-    setValue(\"stream3_percBad\", \"text\", \"\");
     setValue(\"stream3_rejected\", \"text\", \"\");
+    setValue(\"stationName\", \"foreCol\", color);
+    setValue(\"observationName\",\"foreCol\", color);
+    setValue(\"Node\", \"foreCol\", color);
+    setValue(\"CPU\", \"foreCol\", color);
+    setValue(\"stream0_blocksIn\", \"foreCol\", color);
+    setValue(\"stream0_rejected\", \"foreCol\", color);
+    setValue(\"stream1_blocksIn\", \"foreCol\", color);
+    setValue(\"stream1_rejected\", \"foreCol\", color);
+    setValue(\"stream2_blocksIn\", \"foreCol\", color);
+    setValue(\"stream2_rejected\", \"foreCol\", color);
+    setValue(\"stream3_blocksIn\", \"foreCol\", color);
+    setValue(\"stream3_rejected\", \"foreCol\", color);
+    setValue(\"error_stream0\", \"backCol\", color);
+    setValue(\"error_stream1\", \"backCol\", color);
+    setValue(\"error_stream2\", \"backCol\", color);
+    setValue(\"error_stream3\", \"backCol\", color);
   }
 }
-" 0
+
+string getColor(int val, string color) {
+  if (val > 0 && val < 10) {
+    color = \"Lofar_test\";
+  } else if (val >= 10 && val < 25) {
+    color = \"Lofar_maintenance\";
+  } else if (val >= 25) {
+    color = \"Lofar_broken\";
+  }
+  return color;
+}" 0
  E E E E 1 -1 -1 0  0 0
 ""0  1
 E "#uses \"navPanel.ctl\"
@@ -128,6 +162,7 @@ string database=\"\";
 string baseDP = \"\";
 string inputBufferDP=\"\";
 string station=\"\";
+string stationName=\"\";
 string stationDP=\"\";
 string barColor=\"\";
 
@@ -173,7 +208,7 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 0 
-6 16
+6 0
 "bar"
 ""
 1 0 0 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
@@ -186,8 +221,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 0 3 999 17
-2 0
+E E 0 1 1 2 1 E 0.8308308308308308 0 1 0 0 1 E 0 3 999 17
+2 1
 "stationName"
 ""
 1 22 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
@@ -206,10 +241,10 @@ E E 0 1 1 2 1 E U  0 E 22 4 53 17
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
 LANG:1 5 CS000
-2 1
-"late"
+2 2
+"Node"
 ""
-1 73 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 232 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 1 0 0 0 0 0
 E E E
@@ -219,16 +254,16 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 73 4 115 17
-0 2 2 "0.3f" 4 0 0 192 0 0  73 4 1
+E E 0 1 1 2 1 E U  0 E 232 4 274 17
+0 2 2 "0s" 0 0 0 192 0 0  232 4 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
 LANG:1 7 0000000
-2 2
-"IOTime"
+2 3
+"CPU"
 ""
-1 136 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 295 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 2 0 0 0 0 0
 E E E
@@ -236,18 +271,19 @@ E E E
 1
 LANG:1 0 
 
-1
+2
+"hoverbclr" "N \"_Transparent\""
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 136 4 178 17
-0 2 2 "0s" 0 0 0 192 0 0  136 4 1
+E E 0 1 1 2 1 E U  0 E 295 4 337 17
+0 2 2 "0s" 0 1 0 192 0 0  295 4 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
 LANG:1 7 0000000
-2 3
+2 4
 "stream0_blocksIn"
 ""
-1 210 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 369 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 3 0 0 0 0 0
 E E E
@@ -257,27 +293,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 210 4 246 17
-0 2 2 "0s" 0 0 0 192 0 0  210 4 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
-0 1
-LANG:1 6 000000
-2 4
-"stream0_percBad"
-""
-1 270 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-4 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 270 4 306 17
-0 2 2 "0s" 0 0 0 192 0 0  270 4 1
+E E 0 1 1 2 1 E U  0 E 369 4 405 17
+0 2 2 "0s" 0 0 0 192 0 0  369 4 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
@@ -285,7 +302,7 @@ LANG:1 6 000000
 2 5
 "stream0_rejected"
 ""
-1 330 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 429 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 5 0 0 0 0 0
 E E E
@@ -295,8 +312,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 330 4 366 17
-0 2 2 "0s" 0 0 0 192 0 0  330 4 1
+E E 0 1 1 2 1 E U  0 E 429 4 465 17
+0 2 2 "0s" 0 0 0 192 0 0  429 4 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
@@ -304,7 +321,7 @@ LANG:1 6 000000
 2 6
 "stream1_blocksIn"
 ""
-1 410 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 489 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 6 0 0 0 0 0
 E E E
@@ -314,35 +331,16 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 410 4 446 17
-0 2 2 "0s" 0 0 0 192 0 0  410 4 1
+E E 0 1 1 2 1 E U  0 E 489 4 525 17
+0 2 2 "0s" 0 0 0 192 0 0  489 4 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
 LANG:1 6 000000
 2 7
-"stream1_percBad"
-""
-1 470 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-7 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 470 4 506 17
-0 2 2 "0s" 0 0 0 192 0 0  470 4 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
-0 1
-LANG:1 6 000000
-2 8
 "stream1_rejected"
 ""
-1 530 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 549 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 8 0 0 0 0 0
 E E E
@@ -352,13 +350,13 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 530 4 566 17
-0 2 2 "0s" 0 0 0 192 0 0  530 4 1
+E E 0 1 1 2 1 E U  0 E 549 4 585 17
+0 2 2 "0s" 0 0 0 192 0 0  549 4 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
 LANG:1 6 000000
-2 9
+2 8
 "stream2_blocksIn"
 ""
 1 610 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
@@ -377,12 +375,12 @@ E E 0 1 1 2 1 E U  0 E 610 4 646 17
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
 LANG:1 6 000000
-2 10
-"stream2_percBad"
+2 9
+"stream2_rejected"
 ""
-1 670 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 669 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
-10 0 0 0 0 0
+11 0 0 0 0 0
 E E E
 0
 1
@@ -390,18 +388,18 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 670 4 706 17
-0 2 2 "0s" 0 0 0 192 0 0  670 4 1
+E E 0 1 1 2 1 E U  0 E 669 4 705 17
+0 2 2 "0s" 0 0 0 192 0 0  669 4 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
 LANG:1 6 000000
-2 11
-"stream2_rejected"
+2 10
+"stream3_blocksIn"
 ""
 1 730 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
-11 0 0 0 0 0
+12 0 0 0 0 0
 E E E
 0
 1
@@ -415,48 +413,10 @@ E E 0 1 1 2 1 E U  0 E 730 4 766 17
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
 LANG:1 6 000000
-2 12
-"stream3_blocksIn"
-""
-1 810 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-12 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 810 4 846 17
-0 2 2 "0s" 0 0 0 192 0 0  810 4 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
-0 1
-LANG:1 6 000000
-2 13
-"stream3_percBad"
-""
-1 870 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-13 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 870 4 906 17
-0 2 2 "0s" 0 0 0 192 0 0  870 4 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
-0 1
-LANG:1 6 000000
-2 14
+2 11
 "stream3_rejected"
 ""
-1 930 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 789 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 14 0 0 0 0 0
 E E E
@@ -466,14 +426,89 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 930 4 966 17
-0 2 2 "0s" 0 0 0 192 0 0  930 4 1
+E E 0 1 1 2 1 E U  0 E 789 4 825 17
+0 2 2 "0s" 0 0 0 192 0 0  789 4 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
 LANG:1 6 000000
-1 17 0 "" 1
+1 14 0 "" 1
 0
+2 13
+"observationName"
+""
+1 90 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+16 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 90 4 132 17
+0 2 2 "0s" 0 0 0 192 0 0  90 4 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 7 0000000
+6 15
+"error_stream0"
+""
+1 850 10 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+17 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 0 -7 1 E 850 10 870 24
+6 16
+"error_stream1"
+""
+1 850 10 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+18 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 30 -7 1 E 850 10 870 24
+6 17
+"error_stream2"
+""
+1 850 10 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+19 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 60 -7 1 E 850 10 870 24
+6 18
+"error_stream3"
+""
+1 850 10 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+20 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 90 -7 1 E 850 10 870 24
 0
 LAYER, 1 
 1
