@@ -39,7 +39,7 @@ class selfCalRun:
 	# Preparation of the Iteration run
 	####################################################################
 
-    def __init__(self,i,obsDir,outputDir,nbCycle,listFiles,Files,NbFiles,BBSParset,SkymodelPath,GSMSkymodel,ImagePathDir,UVmin,UVmax,wmax,pixsize,nbpixel,robust,nIteration,RMS_BOX,RMS_BOX_Bright,thresh_isl,thresh_pix,outerfovclean,VLSSuse,preprocessIndex,mask,maskDilatation):
+    def __init__(self,i,obsDir,outputDir,nbCycle,listFiles,Files,NbFiles,BBSParset,SkymodelPath,GSMSkymodel,ImagePathDir,UVmin,UVmax,wmax,pixsize,nbpixel,robust,nIteration,RMS_BOX,RMS_BOX_Bright,thresh_isl,thresh_pix,outerfovclean,VLSSuse,preprocessIndex,mask,maskDilation):
     
 	self.i				= i
 	self.j				= 0
@@ -69,7 +69,7 @@ class selfCalRun:
 	self.VLSSuse		= VLSSuse
 	self.preprocessIndex= preprocessIndex
 	self.mask			= mask
-	self.maskDilatation	= maskDilatation
+	self.maskDilation	= maskDilation
 	
 
 	
@@ -93,7 +93,31 @@ class selfCalRun:
 					cmd=""" cp -r %s* %s"""%(self.obsDir,self.IterDir)
 					print cmd
 					print ''
-					os.system(cmd)							
+					os.system(cmd)	
+	
+					
+					# check if CORRECTED_DATA column exists, if not take DATA 
+					# column, and anyway copy CORRECTED_DATA column to DATA 
+					# column
+								
+					for MS in self.Files:		
+							# Copy CORRECTED DATA Column to DATA column		
+							try:				
+									
+									t = pt.table("""%s%s"""%(self.IterDir,MS), readonly=False, ack=True)
+									data = t.getcol('CORRECTED_DATA')
+									t.close()								
+							except:
+									print ''
+									print 'There are no CORRECTED DATA COLUMN !!'
+									print 'Selfcal will copy by default your DATA column to the CORRECTED_DATA column'
+									self.copy_data("""%s%s"""%(self.IterDir,MS))
+									print ''
+							
+							
+							self.copy_data_invert("""%s%s"""%(self.IterDir,MS))					
+							
+											
 									
 			# copy data from PreProcessing directory		
 			if self.outerfovclean =='yes':
@@ -133,7 +157,30 @@ class selfCalRun:
 					cmd=""" cp -r %s* %s"""%(self.obsDir,self.IterDir)
 					print cmd
 					print ''
-					os.system(cmd)							
+					os.system(cmd)	
+					
+					# check if CORRECTED_DATA column exists, if not take DATA 
+					# column, and anyway copy CORRECTED_DATA column to DATA 
+					# column
+								
+					for MS in self.Files:		
+							# Copy CORRECTED DATA Column to DATA column		
+							try:				
+									
+									t = pt.table("""%s%s"""%(self.IterDir,MS), readonly=False, ack=True)
+									data = t.getcol('CORRECTED_DATA')
+									t.close()								
+							except:
+									print ''
+									print 'There are no CORRECTED DATA COLUMN !!'
+									print 'Selfcal will copy by default your DATA column to the CORRECTED_DATA column'
+									self.copy_data("""%s%s"""%(self.IterDir,MS))
+									print ''
+							
+							
+							self.copy_data_invert("""%s%s"""%(self.IterDir,MS))						
+					
+											
 									
 			# copy data from PreProcessing directory		
 			if self.outerfovclean =='yes':
@@ -484,7 +531,7 @@ class selfCalRun:
 								self.nbpixel[self.i] = self.nbpixel[self.i]+1
 									
 							#Imaging now with the image 
-							cmd_image="""awimager ms=%s image=%sImage_%sarcsec_Iter%s weight=briggs robust=%s npix=%s cellsize=%sarcsec data=CORRECTED_DATA padding=1.18 niter=%s stokes=I operation=mfclark timewindow=300 UVmin=%s UVmax=%s wmax=%s fits="" threshold=%sJy mask=%s"""%("""%sAll_Iteration_number_%s"""%(self.IterDir,self.i),self.ImagePathDir,self.pixsize[self.i],self.i,self.robust[self.i],self.nbpixel[self.i],self.pixsize[self.i],self.nIteration, self.UVmin,self.UVmax[self.i],self.wmax[self.i],threshold,"""%sMask_Iter%s.fits"""%(self.SkymodelPath,self.i+1)) 
+							cmd_image="""awimager ms=%s image=%sImage_%sarcsec_Iter%s weight=briggs robust=%s npix=%s cellsize=%sarcsec data=CORRECTED_DATA padding=1.18 niter=%s stokes=I operation=mfclark timewindow=300 UVmin=%s UVmax=%s wmax=%s fits="" threshold=%sJy mask=%s"""%("""%sAll_Iteration_number_%s"""%(self.IterDir,self.i),self.ImagePathDir,self.pixsize[self.i],self.i,self.robust[self.i],self.nbpixel[self.i],self.pixsize[self.i],self.nIteration, self.UVmin,self.UVmax[self.i],self.wmax[self.i],threshold,"""%sMask_Iter%s.casa"""%(self.SkymodelPath,self.i+1)) 
 							print ''
 							print cmd_image
 							print ''
@@ -497,7 +544,7 @@ class selfCalRun:
 								self.nbpixel[self.i-1] = self.nbpixel[self.i-1]+1
 									
 							#Imaging now with the image 
-							cmd_image="""awimager ms=%s image=%sFinal_Image_%sarcsec_Iter%s weight=briggs robust=%s npix=%s cellsize=%sarcsec data=CORRECTED_DATA padding=1.18 niter=%s stokes=I operation=mfclark timewindow=300 UVmin=%s UVmax=%s wmax=%s fits="" threshold=%sJy mask=%s"""%("""%sAll_Iteration_number_%s"""%(self.IterDir,self.i),self.ImagePathDir,self.pixsize[self.i-1],self.i,self.robust[self.i-1],self.nbpixel[self.i-1],self.pixsize[self.i-1],self.nIteration, self.UVmin,self.UVmax[self.i-1],self.wmax[self.i-1],threshold,"""%sFinal_Mask_Iter%s.fits"""%(self.SkymodelPath,self.i+1)) 
+							cmd_image="""awimager ms=%s image=%sFinal_Image_%sarcsec_Iter%s weight=briggs robust=%s npix=%s cellsize=%sarcsec data=CORRECTED_DATA padding=1.18 niter=%s stokes=I operation=mfclark timewindow=300 UVmin=%s UVmax=%s wmax=%s fits="" threshold=%sJy mask=%s"""%("""%sAll_Iteration_number_%s"""%(self.IterDir,self.i),self.ImagePathDir,self.pixsize[self.i-1],self.i,self.robust[self.i-1],self.nbpixel[self.i-1],self.pixsize[self.i-1],self.nIteration, self.UVmin,self.UVmax[self.i-1],self.wmax[self.i-1],threshold,"""%sFinal_Mask_Iter%s.casa"""%(self.SkymodelPath,self.i+1)) 
 							print ''
 							print cmd_image
 							print ''
@@ -576,7 +623,7 @@ class selfCalRun:
 							img.write_catalog(outfile="""%sTemporary_Skymodel_Iter%s.fits"""%(self.SkymodelPath,self.i+1),catalog_type='gaul',format='fits',correct_proj='True')
 
 							# Extract the mask in fits format
-							img.export_image(outfile="""%sMask_Iter%s.fits"""%(self.SkymodelPath,self.i+1),img_format='fits',img_type='island_mask',mask_dilation=self.maskDilatation)
+							img.export_image(outfile="""%sMask_Iter%s.casa"""%(self.SkymodelPath,self.i+1),img_format='casa',img_type='island_mask',mask_dilation=self.maskDilation)
 
 
 					if self.i == self.nbCycle:
@@ -602,7 +649,7 @@ class selfCalRun:
 							
 							
 							# Extract the mask in fits format
-							img.export_image(outfile="""%sFinal_Mask_Iter%s.fits"""%(self.SkymodelPath,self.i+1),img_format='fits',img_type='island_mask',mask_dilation=self.maskDilatation)
+							img.export_image(outfile="""%sFinal_Mask_Iter%s.casa"""%(self.SkymodelPath,self.i+1),img_format='casa',img_type='island_mask',mask_dilation=self.maskDilation)
 
 
 				# 1: cleaning with mask			
@@ -721,3 +768,11 @@ class selfCalRun:
 			t.putcol('CORRECTED_DATA', data)
 			t.close()		
 		
+    def copy_data_invert(self,inms):
+		
+			## Create corrected data colun and Put data to corrected data column 
+			t = pt.table(inms, readonly=False, ack=True)
+			data = t.getcol('CORRECTED_DATA')
+			pt.addImagingColumns(inms, ack=True)
+			t.putcol('DATA', data)
+			t.close()	
