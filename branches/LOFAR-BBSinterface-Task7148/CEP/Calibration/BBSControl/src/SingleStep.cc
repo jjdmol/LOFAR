@@ -86,13 +86,13 @@ namespace LOFAR
     }
 
 
-    void SingleStep::read(const ParameterSet& ps)
+    void SingleStep::read(const ParameterSet& ps, const string prefix)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      Step::read(ps);
-      itsOutputColumn = ps.getString("Output.Column", "");
-      itsWriteFlags = ps.getBool("Output.WriteFlags", true);
-      itsWriteCov = ps.getBool("Output.WriteCovariance", false);
+      Step::read(ps,prefix);
+      itsOutputColumn = ps.getString(prefix+"Output.Column", "");
+      itsWriteFlags = ps.getBool(prefix+"Output.WriteFlags", true);
+      itsWriteCov = ps.getBool(prefix+"Output.WriteCovariance", false);
     }
 
   } // namespace BBS

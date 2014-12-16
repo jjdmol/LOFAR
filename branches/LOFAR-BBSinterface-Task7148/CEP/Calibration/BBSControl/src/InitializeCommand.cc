@@ -102,19 +102,19 @@ namespace LOFAR
     }
 
 
-    void InitializeCommand::read(const ParameterSet& ps)
+    void InitializeCommand::read(const ParameterSet& ps, const std::string prefix)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // Read input column.
-      itsInputColumn = ps.getString("InputColumn");
+      itsInputColumn = ps.getString(prefix+"InputColumn");
 
       // Read data selection.
-      itsBaselines = ps.getString("Baselines");
-      itsCorrelations = ps.getStringVector("Correlations");
+      itsBaselines = ps.getString(prefix+"Baselines");
+      itsCorrelations = ps.getStringVector(prefix+"Correlations");
 
       // Read flag that controls use of the global solver.
-      itsUseSolver = ps.getBool("UseSolver");
+      itsUseSolver = ps.getBool(prefix+"UseSolver");
     }
 
   } //# namespace BBS
