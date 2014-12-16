@@ -78,12 +78,12 @@ def main(initparameterlist):
 
 	try:
 
-	      opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "obsDir=", "outputDir=", "skyModel=", "nbCycle=", "outerfovclean=", "VLSSuse=", "annulusRadius=", "startResolution=", "endResolution=", "resolutionVector=", "mask=", "UVmin=", "startingFactor=", "FOV=", "nofPixelPerBeam=", "robust=", "maskDilatation="])
+	      opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "obsDir=", "outputDir=", "skyModel=", "nbCycle=", "outerfovclean=", "VLSSuse=", "annulusRadius=", "startResolution=", "endResolution=", "resolutionVector=", "mask=", "UVmin=", "startingFactor=", "FOV=", "nofPixelPerBeam=", "robust=", "maskDilation="])
 
       
 	except getopt.GetoptError as err:
 	      print ""		
-	      print "Usage: selfcal.py --obsDir= --outputDir= [Options: --skyModel= --nbCycle= --outerfovclean= --VLSSuse= --annulusRadius= --startResolution= --endResolution= --resolutionVector= --mask= --UVmin= --startingFactor= --FOV= --nofPixelPerBeam= --robust= --maskDilatation=]"
+	      print "Usage: selfcal.py --obsDir= --outputDir= [Options: --skyModel= --nbCycle= --outerfovclean= --VLSSuse= --annulusRadius= --startResolution= --endResolution= --resolutionVector= --mask= --UVmin= --startingFactor= --FOV= --nofPixelPerBeam= --robust= --maskDilation=]"
 	      print ""
 	      print "For more details: type selfcal.py -h"
 	      print ""
@@ -104,7 +104,7 @@ def main(initparameterlist):
 						print ""
 						print "Usage: selfcal.py PATH/parsetFile"
 						print 'OR'
-						print "Usage: selfcal.py --obsDir= --outputDir= [Options: --skyModel= --nbCycle= --outerfovclean= --VLSSuse= --annulusRadius= --startResolution= --endResolution= --resolutionVector= --mask= --UVmin= --startingFactor= --FOV= --nofPixelPerBeam= --robust= --maskDilatation=]\n"
+						print "Usage: selfcal.py --obsDir= --outputDir= [Options: --skyModel= --nbCycle= --outerfovclean= --VLSSuse= --annulusRadius= --startResolution= --endResolution= --resolutionVector= --mask= --UVmin= --startingFactor= --FOV= --nofPixelPerBeam= --robust= --maskDilation=]\n"
 						
 						print """
 ******************************************************************************
@@ -154,7 +154,7 @@ If the user does not want to use VLSSS Skymodel (VLSSuse=no), the code will crea
 
 *  --mask(string,default:yes): yes or no =>  Use clean masks when imaging.
 
-*  --maskDilatation(integer,default:0): If mask is used (generated from pybdsm extracted skyModel), it is possible to dilate it. 0 => no dilatation, 1 => extend the no dilated mask by 1 pixel in all directions, etc ...
+*  --maskDilation(integer,default:0): If mask is used (generated from pybdsm extracted skyModel), it is possible to dilate it. 0 => no dilatation, 1 => extend the no dilated mask by 1 pixel in all directions, etc ...
 For more details see pybdsm export_image documentation.
 
 *  --UVmin(float, default:0 or 0.1 in klambda): Set UVmin for each imaging run. If unset, UVmin=0.1 for observations with declinations below 35 degrees, otherwise UVmin=0. It is recommended to set UVmin=0 if the user is interested in imaging extended or diffuse emission.
@@ -237,7 +237,7 @@ nofPixelPerBeam  =  3
 					initparameterlist[14]=strcompress(par2)			
 				elif par1 in ("--robust"):
 					initparameterlist[15]=strcompress(par2)		
-				elif par1 in ("--maskDilatation"):
+				elif par1 in ("--maskDilation"):
 					initparameterlist[16]=strcompress(par2)				
 																																																	
 				else:
@@ -253,7 +253,7 @@ nofPixelPerBeam  =  3
 				print ""
 				print "Usage: selfcal.py PATH/parsetFile"
 				print 'OR'
-				print "Usage: selfcal.py --obsDir= --outputDir= [Options: --skyModel= --nbCycle= --outerfovclean= --VLSSuse= --annulusRadius= --startResolution= --endResolution= --resolutionVector= --mask= --UVmin= --startingFactor= --FOV= --nofPixelPerBeam= --robust= --maskDilatation=]\n"
+				print "Usage: selfcal.py --obsDir= --outputDir= [Options: --skyModel= --nbCycle= --outerfovclean= --VLSSuse= --annulusRadius= --startResolution= --endResolution= --resolutionVector= --mask= --UVmin= --startingFactor= --FOV= --nofPixelPerBeam= --robust= --maskDilation=]\n"
 				print ""
 				sys.exit(2)       	
  
@@ -304,7 +304,7 @@ nofPixelPerBeam  =  3
 								print ""
 								print "Usage: selfcal.py PATH/parsetFile"
 								print 'OR'
-								print "Usage: selfcal.py --obsDir= --outputDir= [Options: --skyModel= --nbCycle= --outerfovclean= --VLSSuse= --annulusRadius= --startResolution= --endResolution= --resolutionVector= --mask= --UVmin= --startingFactor= --FOV= --nofPixelPerBeam= --robust= --maskDilatation=]\n"							
+								print "Usage: selfcal.py --obsDir= --outputDir= [Options: --skyModel= --nbCycle= --outerfovclean= --VLSSuse= --annulusRadius= --startResolution= --endResolution= --resolutionVector= --mask= --UVmin= --startingFactor= --FOV= --nofPixelPerBeam= --robust= --maskDilation=]\n"							
 								
 								print """
 ******************************************************************************
@@ -354,7 +354,7 @@ If the user does not want to use VLSSS Skymodel (VLSSuse=no), the code will crea
 
 *  --mask(string,default:yes): yes or no =>  Use clean masks when imaging.
 
-*  --maskDilatation(integer,default:0): If mask is used (generated from pybdsm extracted skyModel), it is possible to dilate it. 0 => no dilatation, 1 => extend the no dilated mask by 1 pixel in all directions, etc ...
+*  --maskDilation(integer,default:0): If mask is used (generated from pybdsm extracted skyModel), it is possible to dilate it. 0 => no dilatation, 1 => extend the no dilated mask by 1 pixel in all directions, etc ...
 For more details see pybdsm export_image documentation.
 
 *  --UVmin(float, default:0 or 0.1 in klambda): Set UVmin for each imaging run. If unset, UVmin=0.1 for observations with declinations below 35 degrees, otherwise UVmin=0. It is recommended to set UVmin=0 if the user is interested in imaging extended or diffuse emission.
@@ -437,7 +437,7 @@ nofPixelPerBeam  =  3
 							initparameterlist[14]=strcompress(par2)			
 						elif strcompress(par1)	 in ("robust"):
 							initparameterlist[15]=strcompress(par2)		
-						elif strcompress(par1)	 in ("maskDilatation"):
+						elif strcompress(par1)	 in ("maskDilation"):
 							initparameterlist[16]=strcompress(par2)				
 																																																			
 						else:
@@ -452,7 +452,7 @@ nofPixelPerBeam  =  3
 					print ""
 					print "Usage: selfcal.py PATH/parsetFile"
 					print 'OR'
-					print "Usage: selfcal.py --obsDir= --outputDir= [Options: --skyModel= --nbCycle= --outerfovclean= --VLSSuse= --annulusRadius= --startResolution= --endResolution= --resolutionVector= --mask= --UVmin= --startingFactor= --FOV= --nofPixelPerBeam= --robust= --maskDilatation=]\n"				
+					print "Usage: selfcal.py --obsDir= --outputDir= [Options: --skyModel= --nbCycle= --outerfovclean= --VLSSuse= --annulusRadius= --startResolution= --endResolution= --resolutionVector= --mask= --UVmin= --startingFactor= --FOV= --nofPixelPerBeam= --robust= --maskDilation=]\n"				
 					print ""
 					sys.exit(2)       	
 						
@@ -465,7 +465,7 @@ nofPixelPerBeam  =  3
 						print ""
 						print "Usage: selfcal.py PATH/parsetFile"
 						print 'OR'
-						print "Usage: selfcal.py --obsDir= --outputDir= [Options: --skyModel= --nbCycle= --outerfovclean= --VLSSuse= --annulusRadius= --startResolution= --endResolution= --resolutionVector= --mask= --UVmin= --startingFactor= --FOV= --nofPixelPerBeam= --robust= --maskDilatation=  --catalogType= --peeling= --DDC= --nofDirections=]\n"
+						print "Usage: selfcal.py --obsDir= --outputDir= [Options: --skyModel= --nbCycle= --outerfovclean= --VLSSuse= --annulusRadius= --startResolution= --endResolution= --resolutionVector= --mask= --UVmin= --startingFactor= --FOV= --nofPixelPerBeam= --robust= --maskDilation=  --catalogType= --peeling= --DDC= --nofDirections=]\n"
 						
 						print """
 ******************************************************************************
@@ -515,7 +515,7 @@ If the user does not want to use VLSSS Skymodel (VLSSuse=no), the code will crea
 
 *  --mask(string,default:yes): yes or no =>  Use clean masks when imaging.
 
-*  --maskDilatation(integer,default:0): If mask is used (generated from pybdsm extracted skyModel), it is possible to dilate it. 0 => no dilatation, 1 => extend the no dilated mask by 1 pixel in all directions, etc ...
+*  --maskDilation(integer,default:0): If mask is used (generated from pybdsm extracted skyModel), it is possible to dilate it. 0 => no dilatation, 1 => extend the no dilated mask by 1 pixel in all directions, etc ...
 For more details see pybdsm export_image documentation.
 
 *  --UVmin(float, default:0 or 0.1 in klambda): Set UVmin for each imaging run. If unset, UVmin=0.1 for observations with declinations below 35 degrees, otherwise UVmin=0. It is recommended to set UVmin=0 if the user is interested in imaging extended or diffuse emission.
@@ -644,7 +644,7 @@ if __name__=='__main__':
     skyModel		= initparameterlist[13]
     nofPixelPerBeam	= initparameterlist[14]
     robust			= initparameterlist[15]
-    maskDilatation	= initparameterlist[16]
+    maskDilation	= initparameterlist[16]
 
 
     
@@ -809,8 +809,8 @@ if __name__=='__main__':
     if mask == 'none':
 		mask='yes'
 
-    if maskDilatation == 'none':
-		maskDilatation = 0
+    if maskDilation == 'none':
+		maskDilation = 0
 		
     if startingFactor == 'none':
 		startingFactor=15.0
@@ -856,9 +856,9 @@ if __name__=='__main__':
  		print ""
 		sys.exit(2)
 		
-    if  int(maskDilatation) < 0: 
+    if  int(maskDilation) < 0: 
 		print ''
-		print 'maskDilatation parameter must be equal or greater to 0 !' 
+		print 'maskDilation parameter must be equal or greater to 0 !' 
  		print ""
 		sys.exit(2)
 	
@@ -915,10 +915,10 @@ if __name__=='__main__':
 
     try:
 
-	      maskDilatation = int(maskDilatation)     
+	      maskDilation = int(maskDilation)     
     except:
 	      print ""
-	      print "maskDilatation parameter must be an integer or not provided !"
+	      print "maskDilation parameter must be an integer or not provided !"
 	      print ""
 	      sys.exit(2)
 
@@ -1112,7 +1112,7 @@ if __name__=='__main__':
     print ''
     print 'robust = %s'%(robust)
     print ''
-    print 'maskDilatation = %s'%(maskDilatation)    
+    print 'maskDilation = %s'%(maskDilation)    
     print ''        
     print '############################################################'
 
@@ -1330,7 +1330,7 @@ if __name__=='__main__':
 			 
 			
 			# Selfcal Initialization
-			selfCalRun_Obj	= class_selfcalrun.selfCalRun(i,obsDir,outputDir,nbCycle,listFiles,Files,NbFiles,BBSParset,SkymodelPath,GSMSkymodel,ImagePathDir,UVmin,UVmax,wmax,pixsize,nbpixel,robust,nIteration,RMS_BOX,RMS_BOX_Bright,thresh_isl,thresh_pix,outerfovclean,VLSSuse,preprocessIndex,mask,maskDilatation)
+			selfCalRun_Obj	= class_selfcalrun.selfCalRun(i,obsDir,outputDir,nbCycle,listFiles,Files,NbFiles,BBSParset,SkymodelPath,GSMSkymodel,ImagePathDir,UVmin,UVmax,wmax,pixsize,nbpixel,robust,nIteration,RMS_BOX,RMS_BOX_Bright,thresh_isl,thresh_pix,outerfovclean,VLSSuse,preprocessIndex,mask,maskDilation)
 			
 			
 			# Run the BBS-cal on each Time chunks
@@ -1453,7 +1453,7 @@ if __name__=='__main__':
       
     # Iniatialization (Object creation)
     i=nbCycle	
-    selfCalRun_Obj	= class_selfcalrun.selfCalRun(i,obsDir,outputDir,nbCycle,listFiles,Files,NbFiles,BBSParset,SkymodelPath,GSMSkymodel,ImagePathDir,UVmin,UVmax,wmax,pixsize,nbpixel,robust,nIteration,RMS_BOX,RMS_BOX_Bright,thresh_isl,thresh_pix,outerfovclean,VLSSuse,preprocessIndex,mask,maskDilatation)
+    selfCalRun_Obj	= class_selfcalrun.selfCalRun(i,obsDir,outputDir,nbCycle,listFiles,Files,NbFiles,BBSParset,SkymodelPath,GSMSkymodel,ImagePathDir,UVmin,UVmax,wmax,pixsize,nbpixel,robust,nIteration,RMS_BOX,RMS_BOX_Bright,thresh_isl,thresh_pix,outerfovclean,VLSSuse,preprocessIndex,mask,maskDilation)
 	
     
     # Run the BBS-cal on each Time chunks

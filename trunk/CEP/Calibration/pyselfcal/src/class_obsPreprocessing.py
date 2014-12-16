@@ -87,17 +87,25 @@ class obsPreprocessing:
 			os.system(cmd)	
 			print ''
 					
+			# check if CORRECTED_DATA column exists, if not take DATA 
+			# column, and anyway copy CORRECTED_DATA column to DATA 
+			# column
+					
 			for MS in self.Files:		
 					# Copy CORRECTED DATA Column to DATA column		
-					try:				
-							self.copy_data("""%s%s"""%(self.IterDir,MS))	
+					try:											
+							t = pt.table("""%s%s"""%(self.IterDir,MS), readonly=False, ack=True)
+							data = t.getcol('CORRECTED_DATA')
+							t.close()								
 					except:
 							print ''
-							print 'There are no CORRECTED DATA COLUMN !! Please have AMPLITUDE calibrated data in the corrected data column !!'
+							print 'There are no CORRECTED DATA COLUMN !!'
+							print 'Selfcal will copy by default your DATA column to the CORRECTED_DATA column'
+							self.copy_data("""%s%s"""%(self.IterDir,MS))
 							print ''
-							sys.exit()				
-			
-
+								
+					self.copy_data_invert("""%s%s"""%(self.IterDir,MS))
+													
 		else:
 			cmd=""" cp -r %s %s"""%(self.preprocessDir+'Iter%s/*sub%s'%(self.i-1,self.i-1),self.IterDir)
 			print ''
@@ -105,9 +113,6 @@ class obsPreprocessing:
 			os.system(cmd)			
 			print ''
 			
-
-
-
 		
 		# Concatenate Initial Time chunks 
 		self.list0	= sorted(glob.glob(('%s*')%(self.IterDir)))
@@ -712,4 +717,11 @@ class obsPreprocessing:
 			t.putcol('CORRECTED_DATA', data)
 			t.close()		
 		
+    def copy_data_invert(self,inms):
 		
+			## Create corrected data colun and Put data to corrected data column 
+			t = pt.table(inms, readonly=False, ack=True)
+			data = t.getcol('CORRECTED_DATA')
+			pt.addImagingColumns(inms, ack=True)
+			t.putcol('DATA', data)
+			t.close()			
