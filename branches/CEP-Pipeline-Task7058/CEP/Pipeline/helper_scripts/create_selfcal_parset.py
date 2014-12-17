@@ -152,6 +152,26 @@ def output_parset_to_file(parset_as_dict_of_string_to_string,
     file_ptr.close()
 
 
+def basic_validity_ok(locations, parset_as_dict_of_string_to_string):
+    """
+    Performs a very basic (set of) test (s) to check if the created output 
+    parset would make any sense 
+    """
+    skip_list_as_string = parset_as_dict_of_string_to_string["ObsSW.Observation.DataProducts.Output_Correlated.skip"]
+    skip_list = eval(skip_list_as_string)
+
+    # now check if the lenght is the same, if not the config does not match the parset
+    if len(skip_list) != len(locations):
+        print "The length of the skip list in the provided parset"
+        print "is not the same as the number of dataproduct specified in the config\n"
+        print "aborting, NO output parset written!"
+
+        return False
+
+    return True
+
+
+
 def usage():
     print """"***************************
     usage: python create_selfcal_parset.py <config_file> <parset_file> <output_parset_path>
@@ -186,6 +206,12 @@ if __name__ == "__main__":
     # Create the new list with output location
     filenames_h5, filenames_ms, locations = \
       create_output_lists(config_dict)
+
+    # Very basic check if what was specified is correct
+
+    if not basic_validity_ok(locations, parset_as_dict_of_string_to_string):
+        exit(1)
+      
 
     # Add them to the parset, 
     add_output_lists_to_parset(parset_as_dict_of_string_to_string, filenames_h5, 
