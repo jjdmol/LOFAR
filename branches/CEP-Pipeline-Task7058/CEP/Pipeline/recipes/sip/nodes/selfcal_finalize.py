@@ -156,8 +156,8 @@ class selfcal_finalize(LOFARnodeTCP):
                 return 1
 
             # *****************************************************************
-            # 4. Move the meta information to the correct directory in the 
-            # output mesurements set
+            # 4. Move the meta information to the correct directory next to the
+            #    concat.ms
             self.logger.info("Save-ing selfcal parameters to file:")
             meta_dir =  concat_ms + "_selfcal_information"
             meta_dir_target =  os.path.join(concat_ms, "selfcal_information")

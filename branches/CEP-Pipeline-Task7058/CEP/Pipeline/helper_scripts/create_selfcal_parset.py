@@ -39,13 +39,26 @@ def open_and_parse_config_file(file_location):
     config_dict["new_obs_name"] = new_obs_name
 
     # *********************
-    # second line, list of the nodes to run the pipeline on 
-    node_list = []
+    # second line, output path 
+    output_path = ""
     try:
-        node_list = eval(lines[1])  # just read as a python list
+        output_path = lines[1]  # just read as a python list
     except:
         print "Tried parsing:"
         print  lines[1]
+        print "this failed"
+        raise ImportError
+
+    config_dict["output_path"] = output_path
+
+    # *********************
+    # second line, list of the nodes to run the pipeline on 
+    node_list = []
+    try:
+        node_list = eval(lines[2])  # just read as a python list
+    except:
+        print "Tried parsing:"
+        print  lines[2]
         print "this failed"
         raise ImportError
 
@@ -55,14 +68,16 @@ def open_and_parse_config_file(file_location):
 
     config_dict["node_list"] = node_list
 
+
+
     # *********************
     # number of major cycles
     number_of_major_cycles = ""
     try:
-        number_of_major_cycles = int(eval(lines[2]))  
+        number_of_major_cycles = int(eval(lines[3]))  
     except:
         print "tried parsing:"
-        print  lines[2]
+        print  lines[3]
         print "this failed"
         raise importerror
 
@@ -109,12 +124,9 @@ def create_output_lists(config_dict):
         filename_single = (config_dict["new_obs_name"] + "_" + str(idx) + ".MS")
         filenames_ms.append(filename_single)
 
-        location_single = (node + ":/data/" + config_dict["new_obs_name"] + "/")
+        location_single = (node + ":"  + config_dict["output_path"] + config_dict["new_obs_name"] + "/")
         locations.append(location_single)
         
-        # If you want to add skip functionality this would be the place to 
-        # add this, you would need to add a parser for the skip fields
-        # currently the values in the parset are used
 
     return filenames_h5, filenames_ms, locations
 
@@ -133,7 +145,15 @@ def add_output_lists_to_parset(parset_as_dict, filenames_h5,
     
     parset_as_dict["ObsSW.Observation.DataProducts.Output_Correlated.locations"] = repr(filenames_ms)
 
+    # Grab the skip list from the output skyimage and add it with the correct c
+    # correlated key
+    parset_as_dict["ObsSW.Observation.DataProducts.Output_Correlated.skip"] = parset_as_dict["ObsSW.Observation.DataProducts.Output_SkyImage.skip"]
+
     parset_as_dict["ObsSW.Observation.ObservationControl.PythonControl.Imaging.number_of_major_cycles"] = str( number_of_major_cycles)
+
+    
+
+
 
 
 def output_parset_to_file(parset_as_dict_of_string_to_string, 

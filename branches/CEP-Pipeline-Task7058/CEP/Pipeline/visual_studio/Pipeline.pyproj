@@ -44,6 +44,7 @@
     <Compile Include="recipes\sip\nodes\selfcal_bbs.py" />
     <Compile Include="recipes\sip\nodes\selfcal_create_dbs.py" />
     <Compile Include="recipes\sip\nodes\selfcal_finalize.py" />
+    <Compile Include="test\regression_tests\regression_test_runner.py" />
     <Compile Include="test\__init__.py" />
     <Compile Include="deploy\deprecated\fabfile.py" />
     <Compile Include="deploy\deprecated\start_cluster.py" />
