@@ -1,0 +1,8 @@
+# lines starting with # are ignored.
+# characters follwing a # on a line are ignored
+
+# Only the output needs to be flexible
+TObservation12345                    # New name of the run
+['locus101', 'locus099', 'locus033']  # The locus nodes the pipeline should run
+
+6									  # number of major cycles
