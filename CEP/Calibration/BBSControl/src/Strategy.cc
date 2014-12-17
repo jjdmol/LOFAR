@@ -50,23 +50,23 @@ namespace LOFAR
 
       // Create a subset of \a aParSet, containing only the relevant keys for
       // the Strategy.
-      ParameterSet ps(parset.makeSubset("Strategy."));
+      //ParameterSet ps(parset.makeSubset("Strategy."));
 
       // Get the name of the input column
-      itsInputColumn = ps.getString("InputColumn", "DATA");
+      itsInputColumn = parset.getString("Strategy.InputColumn", "DATA");
 
       // Read data selection.
-      itsBaselines = ps.getString("Baselines", "*&");
-      itsCorrelations = ps.getStringVector("Correlations", vector<string>());
+      itsBaselines = parset.getString("Strategy.Baselines", "*&");
+      itsCorrelations = parset.getStringVector("Strategy.Correlations", vector<string>());
 
       // Get the time range.
-      itsTimeRange = ps.getStringVector("TimeRange", vector<string>());
+      itsTimeRange = parset.getStringVector("Strategy.TimeRange", vector<string>());
 
       // Get the chunk size.
-      itsChunkSize = ps.getUint32("ChunkSize");
+      itsChunkSize = parset.getUint32("Strategy.ChunkSize");
 
       // This strategy consists of the following steps.
-      vector<string> steps(ps.getStringVector("Steps"));
+      vector<string> steps(parset.getStringVector("Strategy.Steps"));
 
       if(steps.empty()) {
         THROW(BBSControlException, "Strategy contains no steps");
@@ -78,6 +78,15 @@ namespace LOFAR
       }
 
       itsUseSolver = findGlobalSolveStep();
+
+      vector<string> unused = parset.unusedKeys();
+      if (! unused.empty()) {
+           cout << "*** WARNING: the following parset keywords were not used ***"
+           << endl
+           << "             maybe they are misspelled"
+           << endl
+           << "    " << unused << endl;
+      }
     }
 
     Strategy::~Strategy()
