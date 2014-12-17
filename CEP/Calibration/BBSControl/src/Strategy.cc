@@ -79,13 +79,25 @@ namespace LOFAR
 
       itsUseSolver = findGlobalSolveStep();
 
-      vector<string> unused = parset.unusedKeys();
-      if (! unused.empty()) {
-           cout << "*** WARNING: the following parset keywords were not used ***"
-           << endl
-           << "             maybe they are misspelled"
-           << endl
-           << "    " << unused << endl;
+      int checkparset = 0;
+      try {
+        checkparset = parset.getInt ("checkparset", 0);
+      } catch (...) {
+        LOG_WARN_STR ("Parameter checkparset should be an integer value");
+        checkparset = parset.getBool ("checkparset") ? 1:0;
+      }
+
+      if (checkparset>=0) {
+        vector<string> unused = parset.unusedKeys();
+        if (! unused.empty()) {
+           LOG_WARN_STR (endl << 
+             "*** WARNING: the following parset keywords were not used ***"
+             << endl
+             << "             maybe they are misspelled"
+             << endl
+             << "    " << unused << endl);
+           ASSERTSTR (checkparset==0, "Unused parset keywords found");   
+        }
       }
     }
 
