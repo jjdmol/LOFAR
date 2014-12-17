@@ -2,8 +2,8 @@ import sys
 
 def open_and_parse_config_file(file_location):
     """
-    This script uses the most simples parameters parsing possible.
-    If you enter incorrect settings it will crash, tough luck!!
+    This script uses the most simple parameter parsing possible.
+    If you enter incorrect settings it will raise an exception, tough luck!!
     """    
     config_dict = {}
     # *********************
@@ -25,7 +25,7 @@ def open_and_parse_config_file(file_location):
   
 
     # *********************
-    # Predecessor, first entry
+    # new_obs_name, first entry
     new_obs_name = ""
     try:
 
@@ -39,7 +39,7 @@ def open_and_parse_config_file(file_location):
     config_dict["new_obs_name"] = new_obs_name
 
     # *********************
-    # second line, list of the source nodes
+    # second line, list of the nodes to run the pipeline on 
     node_list = []
     try:
         node_list = eval(lines[1])  # just read as a python list
@@ -55,7 +55,7 @@ def open_and_parse_config_file(file_location):
 
     config_dict["node_list"] = node_list
 
-        # *********************
+    # *********************
     # number of major cycles
     number_of_major_cycles = ""
     try:
@@ -114,7 +114,7 @@ def create_output_lists(config_dict):
         
         # If you want to add skip functionality this would be the place to 
         # add this, you would need to add a parser for the skip fields
-        # currently the defaults in the parsed are used
+        # currently the values in the parset are used
 
     return filenames_h5, filenames_ms, locations
 
@@ -171,7 +171,6 @@ def basic_validity_ok(locations, parset_as_dict_of_string_to_string):
     return True
 
 
-
 def usage():
     print """"***************************
     usage: python create_selfcal_parset.py <config_file> <parset_file> <output_parset_path>
@@ -184,6 +183,8 @@ def usage():
     The config file allows the controling of the locus nodes and the output
     observation ID. It also allows the settings of the number of major cycles.   
     See config file for syntax
+
+    output_parset_path will be overwritten without any prompth
     ****************************************
     """
 
@@ -210,8 +211,7 @@ if __name__ == "__main__":
     # Very basic check if what was specified is correct
 
     if not basic_validity_ok(locations, parset_as_dict_of_string_to_string):
-        exit(1)
-      
+        exit(1)     
 
     # Add them to the parset, 
     add_output_lists_to_parset(parset_as_dict_of_string_to_string, filenames_h5, 
