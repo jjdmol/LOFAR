@@ -40,11 +40,11 @@ lofar_add_bin_program(awimager
   OperationPredict.cc
 )
   
-# if (IDG_FOUND)
-#   lofar_add_library(ftmachineidg
-#     FTMachineIDG.cc
-#   )
-# endif(IDG_FOUND)
+if (IDG_FOUND)
+  lofar_add_library(ftmachineidg
+    FTMachineIDG.cc
+  )
+endif(IDG_FOUND)
 
 # lofar_add_library(ftmachinesimple
 #   FTMachineSimple.cc

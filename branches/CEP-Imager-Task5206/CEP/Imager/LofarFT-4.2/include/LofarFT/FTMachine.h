@@ -235,10 +235,10 @@ public:
     casa::Bool normalize);
   
   // Get the average primary beam.
-  const casa::Matrix<casa::Float>& getAveragePB() const;
+  virtual const casa::Matrix<casa::Float>& getAveragePB() const;
 
   // Get the spheroidal cut.
-  const casa::Matrix<casa::Float>& getSpheroidal() const
+  virtual const casa::Matrix<casa::Float>& getSpheroidal() const
     { return itsConvFunc->getSpheroidal(); }
 
 
