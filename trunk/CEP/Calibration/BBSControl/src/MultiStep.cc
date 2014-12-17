@@ -44,7 +44,7 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
-      read(parset);
+      read(parset,"Step." + name + ".");
 
 //       // This multistep consists of the following steps.
 //       vector<string> steps(parset.getStringVector("Step." + name + ".Steps"));
@@ -90,11 +90,11 @@ namespace LOFAR
     }
 
 
-    void MultiStep::read(const ParameterSet& ps)
+    void MultiStep::read(const ParameterSet& ps, const string prefix)
     {
       LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, "Step." << name());
-      Step::read(ps.makeSubset("Step." + name() + "."));
-      readSteps(ps);
+      Step::read(ps,prefix);
+      readSteps(ps,prefix);
     }
 
 
@@ -124,10 +124,10 @@ namespace LOFAR
     }
 
 
-    void MultiStep::readSteps(const ParameterSet& ps)
+    void MultiStep::readSteps(const ParameterSet& ps, const string prefix)
     {
       // This multistep consists of the following steps.
-      vector<string> steps(ps.getStringVector("Step." + name() + ".Steps"));
+      vector<string> steps(ps.getStringVector(prefix+"Step." + name() + ".Steps"));
 
       // An empty multistep is considered an error.
       if (steps.empty()) {
