@@ -11,7 +11,6 @@
 ########################################################################
 # IMPORT general modules
 ########################################################################
-
 import sys,os,glob
 import fpformat
 import numpy as np
@@ -19,10 +18,9 @@ import numpy as np
 ########################################################################
 # Extra modules
 ########################################################################
-
 from lofar.selfcal import class_obsPreprocessing
 
-#import class_obsPreprocessing
+
 
 ########################################################################
 ## Define selfcalibration Parameters for cycles & prepare parsets
@@ -32,7 +30,7 @@ from lofar.selfcal import class_obsPreprocessing
 
 class selfCalParam:
 
-    def __init__(self,obsDir,outputDir,listFiles,Files,NbFiles,nbChan,frequency,maxBaseline,integTimeOnechunk,observationIntegTime,nbCycle,ra_target,dec_target,outerfovclean,VLSSuse,preprocessIndex,FOV,nofPixelPerBeam,startResolution,endResolution,resolutionVector,startingFactor,robust,skyModel,UVmin,annulusRadius):
+    def __init__(self,obsDir,outputDir,listFiles,Files,NbFiles,nbChan,frequency,maxBaseline,integTimeOnechunk,observationIntegTime,nbCycle,ra_target,dec_target,outerFOVclean,VLSSuse,preprocessIndex,FOV,nofPixelPerBeam,startResolution,endResolution,resolutionVector,startingFactor,robust,skyModel,UVmin):
 
 		################################################################	    
 		# Initialization
@@ -52,7 +50,7 @@ class selfCalParam:
 		self.ra_target				= ra_target
 		self.dec_target				= dec_target
 		
-		self.outerfovclean			= outerfovclean
+		self.outerFOVclean			= outerFOVclean
 		self.VLSSuse				= VLSSuse
 		self.preprocessIndex		= preprocessIndex
 		
@@ -66,7 +64,6 @@ class selfCalParam:
 		self.robust					= robust
 		self.skyModel				= skyModel
 		self.UVmin					= UVmin
-		self.annulusRadius			= annulusRadius
 
 
 
@@ -357,7 +354,7 @@ class selfCalParam:
 		# If the Iniatial Skymodel is extracted a low resolution image			
 		if self.VLSSuse == 'no':
 			
-				if self.outerfovclean == 'yes':
+				if self.outerFOVclean == 'yes':
 				
 						cmd	= 'cp %sPreprocessDir/Skymodel/Skymodel_substraction%s_center %s'%(self.outputDir,self.preprocessIndex,GSMSkymodel)
 						print ''
@@ -369,7 +366,7 @@ class selfCalParam:
 				
 				
 
-				if self.outerfovclean == 'no':
+				if self.outerFOVclean == 'no':
 				
 						preprocessDir	= '%sPreprocessDir/'%(self.outputDir)
 						cmd="""mkdir %s"""%(preprocessDir)
@@ -415,7 +412,7 @@ class selfCalParam:
 							UVmin = self.UVmin
 							
 						
-						obsPreprocess_Obj									= class_obsPreprocessing.obsPreprocessing(self.obsDir,preprocessDir,preprocessImageDir,preprocessSkymodelDir,preprocessBBSDir,i,self.listFiles,self.Files,self.NbFiles,self.frequency,UVmin,nIteration,self.ra_target,self.dec_target,initNofAnnulusSources,self.annulusRadius,self.FOV)
+						obsPreprocess_Obj									= class_obsPreprocessing.obsPreprocessing(self.obsDir,preprocessDir,preprocessImageDir,preprocessSkymodelDir,preprocessBBSDir,i,self.listFiles,self.Files,self.NbFiles,self.frequency,UVmin,nIteration,self.ra_target,self.dec_target,initNofAnnulusSources)
 						obsPreprocess_Obj.obsPreprocessImagingFunc() 
 						obsPreprocess_Obj.obsPreprocessSrcExtractionFunc()	
 						initNofAnnulusSources,nb_annulus					= obsPreprocess_Obj.obsPreprocessAnnulusExtractionFunc()
