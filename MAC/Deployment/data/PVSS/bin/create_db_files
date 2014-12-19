@@ -248,7 +248,7 @@ substitute_cobaltnode_cobaltnic()
 	{
 		hasCobaltNIC=index($1,"@cobaltnode@_@cobaltnic@");
 		if (hasCobaltNIC > 0) {
-			for (cnic=0; cnic<36; cnic++) {
+			for (cnic=0; cnic<40; cnic++) {
 			    cnode = int(cnic/4)+1;    
 			    dpname=$1;
 			    
@@ -300,7 +300,7 @@ substitute_oscobaltnode()
 	{
 		hasCobaltNode=index($1,"@oscobaltnode@");
 		if (hasCobaltNode > 0) {
-			for (cnode=1; cnode<10; cnode++) {
+			for (cnode=1; cnode<11; cnode++) {
 				dpname=$1;
                                 newname = sprintf("OSCBT%03d",cnode);
                                 sub("@oscobaltnode@", newname, dpname);
@@ -348,9 +348,10 @@ substitute_cobaltnode()
 	{
 		hasCobaltNode=index($1,"@cobaltnode@");
 		if (hasCobaltNode > 0) {
-			for (cnode=1; cnode<10; cnode++) {
+			for (cnode=1; cnode<11; cnode++) {
 				dpname=$1;
-				sub("@cobaltnode@", "CBT00"cnode, dpname);
+                                newname = sprintf("CBT%03d",cnode);
+  				sub("@cobaltnode@", newname, dpname);
 				print dpname"	"$2;
 			}
 		}
