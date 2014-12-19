@@ -328,7 +328,7 @@ string FileLocator::resolveInput(const string&	input)
 					getenv(input.substr(startPos, slashPos-startPos).c_str());
 			if (!valPtr) {
 				LOG_WARN_STR("Environment variable " <<
-						input.substr(startPos, endPos-startPos) <<
+						input.substr(startPos, slashPos-startPos) <<
 						" can not be solved, excluding it from search path!");
 			}
 			else {
