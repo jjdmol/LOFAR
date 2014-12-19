@@ -295,7 +295,8 @@ string FileLocator::resolveInput(const string&	input)
 	string::size_type		startPos = 0;
 	string		result;
 	do {
-		result   = input.substr(startPos, dollarPos);	// add part till $
+    result.append(input.substr(startPos, dollarPos-startPos)); // add part till $
+
 		startPos = dollarPos+1;
 		string::size_type	slashPos = input.find("/", dollarPos);
 		string::size_type	colonPos = input.find(":", dollarPos);
