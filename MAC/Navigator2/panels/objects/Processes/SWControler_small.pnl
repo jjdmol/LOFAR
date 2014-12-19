@@ -138,13 +138,8 @@ updateSWController(string dp1, int status,
   
   
   int lvl = 0;
-  if (navFunct_dpReachable(\"LOFAR_PermSW_Daemons_SoftwareMonitor.SWLevel:_online.._value\")) {
-    dpGet(\"LOFAR_PermSW_Daemons_SoftwareMonitor.SWLevel:_online.._value\",lvl);
-  } else {
-    setValue(\"process\", \"backCol\", \"Lofar_dpOffline\");
-    return;
-  }
-    
+  dpGet(\"LOFAR_PermSW_Daemons_SoftwareMonitor.SWLevel:_online.._value\",lvl);
+
   if (invalid) {
     setValue(\"process\", \"backCol\", \"Lofar_invalid\");
     return;

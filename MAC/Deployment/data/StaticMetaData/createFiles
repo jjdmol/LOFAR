@@ -57,7 +57,7 @@ def findIPNumber(stationName):
         stdout = output.readlines()
         outline = stdout[0].strip()
         outwords = outline.split()
-        if (len(outwords) != 3):
+        if (len(outwords) < 2):
             print "Could not find IP for station, assuming 10.150.1.1"
             return "10.150.1.1"
         else:
@@ -275,6 +275,7 @@ def createRSPDriverFile(resultDir, stationName, dataDir,int_local,is_Cobalt):
     stationNr = int(name[2:])
 
     # International stations can be identified by the second part of their IP address
+    is_core_station = name[:2] == "CS"
     is_int_station = (ip_parts[1] != "151")
 
     # Need globally unique IP port numbers.
@@ -301,11 +302,13 @@ def createRSPDriverFile(resultDir, stationName, dataDir,int_local,is_Cobalt):
         # NL and Int. stations in ILT mode
         IPandMAC = findIPandMAC_station(stationName, dataDir)
         nrNodes = len(IPandMAC) # Number of occurences in file
-        # Core stations have two occurences (these have a splitter), and so
+
+        # Core stations have two streams (these have a splitter), and so
         # for these we need to fill in LANE0x and LANE1x values.
-        # All other stations have one occurence, so only LANE_0x is relevant.
-        # International stations can have up to four entries
-        if (nrNodes == 2):
+        # All other stations have one stream, so only LANE_0x is relevant.
+
+        # International stations can have 1, 2, or 4 entries
+        if is_core_station:
             node = IPandMAC[1][0]
             ip = IPandMAC[1][1]
             mac = IPandMAC[1][2]
@@ -315,16 +318,20 @@ def createRSPDriverFile(resultDir, stationName, dataDir,int_local,is_Cobalt):
                 RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  ip)
                 RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_PORT@", str(basePort + 6 + rspNr))
                 RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_BLET@", blet_out) 
-
         
         for rspNr in range(4):
             if is_int_station and is_Cobalt:
                 # Cobalt nodes are part of the international station VLANs,
                 # allowing routing to x.x.x.50 (with x.x.x.x being the RSP board IPs).
-                if nrNodes == 4:
-                    ip = IPandMAC[rspNr][1]
-                else:
-                    ip = IPandMAC[0][1]
+                #
+                # intl nodes can have 1, 2, or 4 entries
+                if nrNodes == 1:
+                  ip = IPandMAC[0][1]
+                elif nrNodes == 2:
+                  ip = IPandMAC[rspNr/2][1]
+                else: # nrNodes == 4
+                  ip = IPandMAC[rspNr][1]
+
                 node = IPandMAC[0][0]
                 mac = IPandMAC[0][2]
             else:
@@ -405,16 +412,18 @@ def createRSPDriverFile(resultDir, stationName, dataDir,int_local,is_Cobalt):
         
         nrNodes = len(IPandMAC) # Number of occurences in file
         for rspNr in range(4):        
-            if nrNodes == 4:
-                ip = IPandMAC[rspNr][1]
-            else:
-                ip = IPandMAC[0][1]
+            # intl nodes can have 1, 2, or 4 entries, for which we need an even
+            # distribution
+            if nrNodes == 1:
+              ip = IPandMAC[0][1]
+            elif nrNodes == 2:
+              ip = IPandMAC[rspNr/2][1]
+            else: # nrNodes == 4
+              ip = IPandMAC[rspNr][1]
+
             rspip_parts = ip.split('.')                
             repl_str = "@IP_EXTEN_0"+str(rspNr)+"@"
-            if nrNodes == 4:
-                RSPconfig = RSPconfig.replace(repl_str, "1")
-            else:
-                RSPconfig = RSPconfig.replace(repl_str, str(rspNr+1))
+            RSPconfig = RSPconfig.replace(repl_str, str(rspNr % nrNodes + 1))
             repl_str = "@IP_PREFIX_0"+str(rspNr)+"@"
             RSPconfig = RSPconfig.replace(repl_str, rspip_parts[1])
             repl_str = "@IP_SUBNET_0"+str(rspNr)+"@"
@@ -521,18 +530,20 @@ def createRSPDriverFile_Test(resultDir, stationName, dataDir, alias):
         RSPconfig = RSPconfig.replace("@FIRST_XLET_OUT@",  "5")
         RSPconfig = RSPconfig.replace("@LAST_XLET_OUT@",  "23")
         IPandMAC = findIPandMAC_station(stationName, dataDir)
-        nrNodes = len(IPandMAC) # Number of occurences in file
+        nrNodes = len(IPandMAC) # Number of occurences in file -- we divide boards equally
         for rspNr in range(4):        
-            if nrNodes == 4:
-                ip = IPandMAC[rspNr][1]
-            else:
-                ip = IPandMAC[0][1]
+            # intl nodes can have 1, 2, or 4 entries, for which we need an even
+            # distribution
+            if nrNodes == 1:
+              ip = IPandMAC[0][1]
+            elif nrNodes == 2:
+              ip = IPandMAC[rspNr/2][1]
+            else: # nrNodes == 4
+              ip = IPandMAC[rspNr][1]
+
             rspip_parts = ip.split('.')                
             repl_str = "@IP_EXTEN_0"+str(rspNr)+"@"
-            if nrNodes == 4:
-                RSPconfig = RSPconfig.replace(repl_str, "1")
-            else:
-                RSPconfig = RSPconfig.replace(repl_str, str(rspNr+1))
+            RSPconfig = RSPconfig.replace(repl_str, str(rspNr % nrNodes + 1))
             repl_str = "@IP_PREFIX_0"+str(rspNr)+"@"
             RSPconfig = RSPconfig.replace(repl_str, rspip_parts[1])
             repl_str = "@IP_SUBNET_0"+str(rspNr)+"@"

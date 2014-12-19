@@ -11,7 +11,6 @@
 ########################################################################
 # IMPORT general modules
 ########################################################################
-
 import sys,os,glob
 import pyrap.tables as pt
 import numpy as np
@@ -23,8 +22,9 @@ import threading
 ########################################################################
 #import Lofar modules
 ########################################################################
-
 import lofar.bdsm as bdsm
+
+
 
 ########################################################################
 ## Define selfcalibration strategy, iteration, levels, perpare parsets
@@ -39,7 +39,7 @@ class selfCalRun:
 	# Preparation of the Iteration run
 	####################################################################
 
-    def __init__(self,i,obsDir,outputDir,nbCycle,listFiles,Files,NbFiles,BBSParset,SkymodelPath,GSMSkymodel,ImagePathDir,UVmin,UVmax,wmax,pixsize,nbpixel,robust,nIteration,RMS_BOX,RMS_BOX_Bright,thresh_isl,thresh_pix,outerfovclean,VLSSuse,preprocessIndex,mask,maskDilation):
+    def __init__(self,i,obsDir,outputDir,nbCycle,listFiles,Files,NbFiles,BBSParset,SkymodelPath,GSMSkymodel,ImagePathDir,UVmin,UVmax,wmax,pixsize,nbpixel,robust,nIteration,RMS_BOX,RMS_BOX_Bright,thresh_isl,thresh_pix,outerFOVclean,VLSSuse,preprocessIndex,mask,maskDilatation):
     
 	self.i				= i
 	self.j				= 0
@@ -65,11 +65,11 @@ class selfCalRun:
 	self.thresh_isl		= thresh_isl
 	self.thresh_pix		= thresh_pix
 	
-	self.outerfovclean	= outerfovclean
+	self.outerFOVclean	= outerFOVclean
 	self.VLSSuse		= VLSSuse
 	self.preprocessIndex= preprocessIndex
 	self.mask			= mask
-	self.maskDilation	= maskDilation
+	self.maskDilatation	= maskDilatation
 	
 
 	
@@ -87,40 +87,16 @@ class selfCalRun:
 
 			
 			# copy original data
-			if self.outerfovclean =='no':
+			if self.outerFOVclean =='no':
 					
 					print ''
 					cmd=""" cp -r %s* %s"""%(self.obsDir,self.IterDir)
 					print cmd
 					print ''
-					os.system(cmd)	
-	
-					
-					# check if CORRECTED_DATA column exists, if not take DATA 
-					# column, and anyway copy CORRECTED_DATA column to DATA 
-					# column
-								
-					for MS in self.Files:		
-							# Copy CORRECTED DATA Column to DATA column		
-							try:				
-									
-									t = pt.table("""%s%s"""%(self.IterDir,MS), readonly=False, ack=True)
-									data = t.getcol('CORRECTED_DATA')
-									t.close()								
-							except:
-									print ''
-									print 'There are no CORRECTED DATA COLUMN !!'
-									print 'Selfcal will copy by default your DATA column to the CORRECTED_DATA column'
-									self.copy_data("""%s%s"""%(self.IterDir,MS))
-									print ''
-							
-							
-							self.copy_data_invert("""%s%s"""%(self.IterDir,MS))					
-							
-											
+					os.system(cmd)							
 									
 			# copy data from PreProcessing directory		
-			if self.outerfovclean =='yes':
+			if self.outerFOVclean =='yes':
 
 					print ''							
 					cmd=""" cp -r %s %s"""%("""%sPreprocessDir/Iter%s/*sub%s"""%(self.outputDir,self.preprocessIndex,self.preprocessIndex),self.IterDir)
@@ -148,48 +124,14 @@ class selfCalRun:
 			if os.path.isdir(self.IterDir) != True:
 				cmd="""mkdir %s"""%(self.IterDir)
 				os.system(cmd)	
-							
+				
+			print ''
+			cmd="""cp -r %s* %s"""%(self.obsDir,self.IterDir)
+			print cmd
+			print '' 
+			os.system(cmd)				
 			
-			# copy original data
-			if self.outerfovclean =='no':
-					
-					print ''
-					cmd=""" cp -r %s* %s"""%(self.obsDir,self.IterDir)
-					print cmd
-					print ''
-					os.system(cmd)	
-					
-					# check if CORRECTED_DATA column exists, if not take DATA 
-					# column, and anyway copy CORRECTED_DATA column to DATA 
-					# column
-								
-					for MS in self.Files:		
-							# Copy CORRECTED DATA Column to DATA column		
-							try:				
-									
-									t = pt.table("""%s%s"""%(self.IterDir,MS), readonly=False, ack=True)
-									data = t.getcol('CORRECTED_DATA')
-									t.close()								
-							except:
-									print ''
-									print 'There are no CORRECTED DATA COLUMN !!'
-									print 'Selfcal will copy by default your DATA column to the CORRECTED_DATA column'
-									self.copy_data("""%s%s"""%(self.IterDir,MS))
-									print ''
-							
-							
-							self.copy_data_invert("""%s%s"""%(self.IterDir,MS))						
-					
-											
-									
-			# copy data from PreProcessing directory		
-			if self.outerfovclean =='yes':
-
-					print ''							
-					cmd=""" cp -r %s %s"""%("""%sPreprocessDir/Iter%s/*sub%s"""%(self.outputDir,self.preprocessIndex,self.preprocessIndex),self.IterDir)
-					print cmd
-					print ''
-					os.system(cmd)				
+			
 			
 			#if os.listdir(self.IterDir) == []:
 			#		cmd=""" cp -r %s %s"""%(self.outputDir+"""Iter%s/*Iter%s"""%(self.i-1,self.i-1),self.IterDir)
@@ -289,25 +231,12 @@ class selfCalRun:
 		if self.NbFiles <=2:
 			core_index=8
 		else: 
-			core_index=1
-			
-			
-					
+			core_index=1		
 		
 
 		#Run calibration 				
 
-		if self.outerfovclean =='yes':
-	
-				# Copy CORRECTED DATA Column to DATA column		
-				try:
-					self.copy_data("""%s%s_sub%s"""%(self.IterDir,files_k,self.preprocessIndex))		
-				except:
-					print ''
-					print 'There are no CORRECTED DATA COLUMN !! Please have AMPLITUDE calibrated data in the corrected data column !!'
-					print ''
-					sys.exit()		
-		
+		if self.outerFOVclean =='yes':
 		
 				if self.i ==0:
 					cmd_cal="""calibrate-stand-alone -f -t %s %s %s %s"""%(core_index,""" %s%s_sub%s"""%(self.IterDir,files_k,self.preprocessIndex),self.BBSParset,self.GSMSkymodel)
@@ -325,18 +254,8 @@ class selfCalRun:
 					os.system(cmd_cal)
 	
 					
-		if self.outerfovclean =='no':
-
-				# Copy CORRECTED DATA Column to DATA column		
-				try:				
-					self.copy_data("""%s%s"""%(self.IterDir,files_k))	
-				except:
-					print ''
-					print 'There are no CORRECTED DATA COLUMN !! Please have AMPLITUDE calibrated data in the corrected data column !!'
-					print ''
-					sys.exit()		
+		if self.outerFOVclean =='no':
 		
-				
 				if self.i ==0:
 					cmd_cal="""calibrate-stand-alone -f -t %s %s %s %s"""%(core_index,""" %s%s"""%(self.IterDir,files_k),self.BBSParset,self.GSMSkymodel)
 					print ''
@@ -358,14 +277,14 @@ class selfCalRun:
 		
 		file = open(param_k,'w')
 		
-		if self.outerfovclean =='yes':
+		if self.outerFOVclean =='yes':
 		
 
 				cmd1 ="""msin = %s%s_sub%s\n"""%(self.IterDir,files_k,self.preprocessIndex)
 				cmd2 ="""msout = %s%s_sub%s_Iter%s\n"""%(self.IterDir,files_k,self.preprocessIndex,self.i)
 				
 					
-		if self.outerfovclean =='no':
+		if self.outerFOVclean =='no':
 		
 				cmd1 ="""msin = %s%s\n"""%(self.IterDir,files_k)
 				cmd2 ="""msout = %s%s_Iter%s\n"""%(self.IterDir,files_k,self.i)
@@ -414,14 +333,14 @@ class selfCalRun:
 		os.system(cmd_NDPPP)
 		
 		
-		if self.outerfovclean =='no':
+		if self.outerFOVclean =='no':
 		
 				# Copy (Calibrated)DATA from DATA column to CORRECTED 
 				# DATA Column for imaging		
 				
 				self.copy_data("""%s%s_Iter%s"""%(self.IterDir,files_k,self.i))	
 		
-		if self.outerfovclean =='yes':
+		if self.outerFOVclean =='yes':
 		
 				# Copy (Calibrated)DATA from DATA column to CORRECTED 
 				# DATA Column for imaging		
@@ -531,7 +450,7 @@ class selfCalRun:
 								self.nbpixel[self.i] = self.nbpixel[self.i]+1
 									
 							#Imaging now with the image 
-							cmd_image="""awimager ms=%s image=%sImage_%sarcsec_Iter%s weight=briggs robust=%s npix=%s cellsize=%sarcsec data=CORRECTED_DATA padding=1.18 niter=%s stokes=I operation=mfclark timewindow=300 UVmin=%s UVmax=%s wmax=%s fits="" threshold=%sJy mask=%s"""%("""%sAll_Iteration_number_%s"""%(self.IterDir,self.i),self.ImagePathDir,self.pixsize[self.i],self.i,self.robust[self.i],self.nbpixel[self.i],self.pixsize[self.i],self.nIteration, self.UVmin,self.UVmax[self.i],self.wmax[self.i],threshold,"""%sMask_Iter%s.casa"""%(self.SkymodelPath,self.i+1)) 
+							cmd_image="""awimager ms=%s image=%sImage_%sarcsec_Iter%s weight=briggs robust=%s npix=%s cellsize=%sarcsec data=CORRECTED_DATA padding=1.18 niter=%s stokes=I operation=mfclark timewindow=300 UVmin=%s UVmax=%s wmax=%s fits="" threshold=%sJy mask=%s"""%("""%sAll_Iteration_number_%s"""%(self.IterDir,self.i),self.ImagePathDir,self.pixsize[self.i],self.i,self.robust[self.i],self.nbpixel[self.i],self.pixsize[self.i],self.nIteration, self.UVmin,self.UVmax[self.i],self.wmax[self.i],threshold,"""%sMask_Iter%s.fits"""%(self.SkymodelPath,self.i+1)) 
 							print ''
 							print cmd_image
 							print ''
@@ -544,7 +463,7 @@ class selfCalRun:
 								self.nbpixel[self.i-1] = self.nbpixel[self.i-1]+1
 									
 							#Imaging now with the image 
-							cmd_image="""awimager ms=%s image=%sFinal_Image_%sarcsec_Iter%s weight=briggs robust=%s npix=%s cellsize=%sarcsec data=CORRECTED_DATA padding=1.18 niter=%s stokes=I operation=mfclark timewindow=300 UVmin=%s UVmax=%s wmax=%s fits="" threshold=%sJy mask=%s"""%("""%sAll_Iteration_number_%s"""%(self.IterDir,self.i),self.ImagePathDir,self.pixsize[self.i-1],self.i,self.robust[self.i-1],self.nbpixel[self.i-1],self.pixsize[self.i-1],self.nIteration, self.UVmin,self.UVmax[self.i-1],self.wmax[self.i-1],threshold,"""%sFinal_Mask_Iter%s.casa"""%(self.SkymodelPath,self.i+1)) 
+							cmd_image="""awimager ms=%s image=%sFinal_Image_%sarcsec_Iter%s weight=briggs robust=%s npix=%s cellsize=%sarcsec data=CORRECTED_DATA padding=1.18 niter=%s stokes=I operation=mfclark timewindow=300 UVmin=%s UVmax=%s wmax=%s fits="" threshold=%sJy mask=%s"""%("""%sAll_Iteration_number_%s"""%(self.IterDir,self.i),self.ImagePathDir,self.pixsize[self.i-1],self.i,self.robust[self.i-1],self.nbpixel[self.i-1],self.pixsize[self.i-1],self.nIteration, self.UVmin,self.UVmax[self.i-1],self.wmax[self.i-1],threshold,"""%sFinal_Mask_Iter%s.fits"""%(self.SkymodelPath,self.i+1)) 
 							print ''
 							print cmd_image
 							print ''
@@ -623,7 +542,7 @@ class selfCalRun:
 							img.write_catalog(outfile="""%sTemporary_Skymodel_Iter%s.fits"""%(self.SkymodelPath,self.i+1),catalog_type='gaul',format='fits',correct_proj='True')
 
 							# Extract the mask in fits format
-							img.export_image(outfile="""%sMask_Iter%s.casa"""%(self.SkymodelPath,self.i+1),img_format='casa',img_type='island_mask',mask_dilation=self.maskDilation)
+							img.export_image(outfile="""%sMask_Iter%s.fits"""%(self.SkymodelPath,self.i+1),img_format='fits',img_type='island_mask',mask_dilation=self.maskDilatation)
 
 
 					if self.i == self.nbCycle:
@@ -649,7 +568,7 @@ class selfCalRun:
 							
 							
 							# Extract the mask in fits format
-							img.export_image(outfile="""%sFinal_Mask_Iter%s.casa"""%(self.SkymodelPath,self.i+1),img_format='casa',img_type='island_mask',mask_dilation=self.maskDilation)
+							img.export_image(outfile="""%sFinal_Mask_Iter%s.fits"""%(self.SkymodelPath,self.i+1),img_format='fits',img_type='island_mask',mask_dilation=self.maskDilatation)
 
 
 				# 1: cleaning with mask			
@@ -768,11 +687,3 @@ class selfCalRun:
 			t.putcol('CORRECTED_DATA', data)
 			t.close()		
 		
-    def copy_data_invert(self,inms):
-		
-			## Create corrected data colun and Put data to corrected data column 
-			t = pt.table(inms, readonly=False, ack=True)
-			data = t.getcol('CORRECTED_DATA')
-			pt.addImagingColumns(inms, ack=True)
-			t.putcol('DATA', data)
-			t.close()	
