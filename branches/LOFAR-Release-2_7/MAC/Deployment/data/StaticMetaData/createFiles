@@ -286,7 +286,7 @@ def createRSPDriverFile(resultDir, stationName, dataDir,int_local,is_Cobalt):
         print "International station in local mode"
         # International station in local mode takes dest. MAC/IP info from
         # separate file 
-        ip_mac_alias = findIPandMAC_local(stationName,dataDir)
+        dstip_mac_alias = findIPandMAC_local(stationName,dataDir)
         # International stations still need old (BG) portnumbers
         basePort = 0x10FA
         for rspNr in range(len(ip_mac_alias)):  
@@ -295,8 +295,8 @@ def createRSPDriverFile(resultDir, stationName, dataDir,int_local,is_Cobalt):
             RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_BLET@", blet_out) 
             # Need to fill this in until RSPDriver is fixed...
             RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_BLET@", blet_out)
-            RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_MAC@", ip_mac_alias[rspNr][2] +"   # "+ip_mac_alias[rspNr][3])
-            RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_IP@",  ip_mac_alias[rspNr][1])
+            RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_MAC@", dstip_mac_alias[rspNr][2] +"   # "+dstip_mac_alias[rspNr][3])
+            RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_IP@",  dstip_mac_alias[rspNr][1])
             RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_PORT@", str(basePort + rspNr))
     else:
         # NL and Int. stations in ILT mode
@@ -310,12 +310,12 @@ def createRSPDriverFile(resultDir, stationName, dataDir,int_local,is_Cobalt):
         # International stations can have 1, 2, or 4 entries
         if is_core_station:
             node = IPandMAC[1][0]
-            ip = IPandMAC[1][1]
+            dstip = IPandMAC[1][1]
             mac = IPandMAC[1][2]
             for rspNr in range(4):
                 blet_out = find_Blets(stationName, dataDir)[5+rspNr];
                 RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_MAC@", mac +"   # "+ node)
-                RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  ip)
+                RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  dstip)
                 RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_PORT@", str(basePort + 6 + rspNr))
                 RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_BLET@", blet_out) 
         
@@ -326,17 +326,17 @@ def createRSPDriverFile(resultDir, stationName, dataDir,int_local,is_Cobalt):
                 #
                 # intl nodes can have 1, 2, or 4 entries
                 if nrNodes == 1:
-                  ip = IPandMAC[0][1]
+                  dstip = IPandMAC[0][1]
                 elif nrNodes == 2:
-                  ip = IPandMAC[rspNr/2][1]
+                  dstip = IPandMAC[rspNr/2][1]
                 else: # nrNodes == 4
-                  ip = IPandMAC[rspNr][1]
+                  dstip = IPandMAC[rspNr][1]
 
                 node = IPandMAC[0][0]
                 mac = IPandMAC[0][2]
             else:
                 node = IPandMAC[0][0]
-                ip = IPandMAC[0][1]
+                dstip = IPandMAC[0][1]
                 mac = IPandMAC[0][2]
 
             #print node, ip, mac
@@ -344,7 +344,7 @@ def createRSPDriverFile(resultDir, stationName, dataDir,int_local,is_Cobalt):
             RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_MAC@", mac +"   # "+node)
             # Need to fill this in until RSPDriver is fixed...
             RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_BLET@", blet_out)
-            RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_IP@",  ip)
+            RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_IP@",  dstip)
             RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_PORT@", str(basePort + rspNr))
             RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_BLET@", blet_out) 
             # The following is only necessary for not crashing the
@@ -352,7 +352,7 @@ def createRSPDriverFile(resultDir, stationName, dataDir,int_local,is_Cobalt):
             # stations have no splitter so there is no LANE_1X
             if (nrNodes == 1):
                 RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_MAC@", mac +"   # "+node)
-                RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  ip)
+                RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  dstip)
                 RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_PORT@", str(basePort + 6 + rspNr))
 
 
@@ -415,15 +415,18 @@ def createRSPDriverFile(resultDir, stationName, dataDir,int_local,is_Cobalt):
             # intl nodes can have 1, 2, or 4 entries, for which we need an even
             # distribution
             if nrNodes == 1:
-              ip = IPandMAC[0][1]
+              srcip = IPandMAC[0][1]
+              srcip_suffix = rspNr + 1
             elif nrNodes == 2:
-              ip = IPandMAC[rspNr/2][1]
+              srcip = IPandMAC[rspNr/2][1]
+              srcip_suffix = rspNr % 2 + 1
             else: # nrNodes == 4
-              ip = IPandMAC[rspNr][1]
+              srcip = IPandMAC[rspNr][1]
+              srcip_suffix = 1
 
-            rspip_parts = ip.split('.')                
+            rspip_parts = srcip.split('.')                
             repl_str = "@IP_EXTEN_0"+str(rspNr)+"@"
-            RSPconfig = RSPconfig.replace(repl_str, str(rspNr % nrNodes + 1))
+            RSPconfig = RSPconfig.replace(repl_str, str(srcip_suffix))
             repl_str = "@IP_PREFIX_0"+str(rspNr)+"@"
             RSPconfig = RSPconfig.replace(repl_str, rspip_parts[1])
             repl_str = "@IP_SUBNET_0"+str(rspNr)+"@"
@@ -535,15 +538,18 @@ def createRSPDriverFile_Test(resultDir, stationName, dataDir, alias):
             # intl nodes can have 1, 2, or 4 entries, for which we need an even
             # distribution
             if nrNodes == 1:
-              ip = IPandMAC[0][1]
+              srcip = IPandMAC[0][1]
+              srcip_suffix = rspNr + 1
             elif nrNodes == 2:
-              ip = IPandMAC[rspNr/2][1]
+              srcip = IPandMAC[rspNr/2][1]
+              srcip_suffix = rspNr % 2 + 1
             else: # nrNodes == 4
-              ip = IPandMAC[rspNr][1]
+              srcip = IPandMAC[rspNr][1]
+              srcip_suffix = 1
 
-            rspip_parts = ip.split('.')                
+            rspip_parts = srcip.split('.')                
             repl_str = "@IP_EXTEN_0"+str(rspNr)+"@"
-            RSPconfig = RSPconfig.replace(repl_str, str(rspNr % nrNodes + 1))
+            RSPconfig = RSPconfig.replace(repl_str, str(srcip_suffix))
             repl_str = "@IP_PREFIX_0"+str(rspNr)+"@"
             RSPconfig = RSPconfig.replace(repl_str, rspip_parts[1])
             repl_str = "@IP_SUBNET_0"+str(rspNr)+"@"
