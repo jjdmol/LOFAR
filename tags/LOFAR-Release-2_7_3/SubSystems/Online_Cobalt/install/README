@@ -1,0 +1,4 @@
+This directory contains the scripts required for the post-install procedure of the Cobalt systems.
+
+The included postinstall.sh must be run as lofarbuild, followed by a run as lofarsys.
+
