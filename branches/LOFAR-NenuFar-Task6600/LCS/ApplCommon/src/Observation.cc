@@ -32,6 +32,7 @@
 #include <Common/StreamUtil.h>
 #include <Common/SystemUtil.h>
 #include <Common/LofarBitModeInfo.h>
+#include <ApplCommon/AntennaSets.h>
 #include <ApplCommon/Observation.h>
 
 #include <Common/lofar_map.h>
@@ -110,7 +111,6 @@ Observation::Observation(const ParameterSet*		aParSet,
 	// miscellaneous
 	sampleClock   = aParSet->getUint32(prefix+"sampleClock",  0);
 	filter 		  = aParSet->getString(prefix+"bandFilter",   "");
-	antennaArray  = aParSet->getString(prefix+"antennaArray", "");
 	processType   = aParSet->getString(prefix+"processType", "");
 	processSubtype= aParSet->getString(prefix+"processSubtype", "");
 	strategy	  = aParSet->getString(prefix+"strategy", "");
@@ -129,10 +129,6 @@ Observation::Observation(const ParameterSet*		aParSet,
 	antennaSet  	 = aParSet->getString(prefix+"antennaSet", "");
 	useLongBaselines = aParSet->getBool  (prefix+"longBaselines", false);
 
-	// auto select the right antennaArray when antennaSet variable is used.
-	if (!antennaSet.empty()) {
-		antennaArray = antennaSet.substr(0,3);	// LBA or HBA
-	}
 	splitterOn = ((antennaSet.substr(0,8) == "HBA_ZERO") || (antennaSet.substr(0,7) == "HBA_ONE") || 
 				  (antennaSet.substr(0,8) == "HBA_DUAL"));
 	dualMode   =  (antennaSet.substr(0,8) == "HBA_DUAL");
@@ -548,6 +544,17 @@ Observation::Observation(const ParameterSet*		aParSet,
 			} // for filenames
 		} // for nrDataProducts
 	}
+
+	// Finally try to resolve the antennaFieldName
+	try {
+		AntennaSets*	asp = globalAntennaSets();
+		if (asp) {
+			antennaField = asp->antennaField(antennaSet);
+		}
+	} catch (LOFAR::Exception& ex) { 
+		antennaField = "???";
+		LOG_WARN_STR(ex.what() << " AntennaField is unknown!");
+	}
 }
 
 
@@ -679,7 +686,7 @@ vector<int> Observation::getBeamAllocation(const string& stationName) const
 	string	dsl(str(format("%s%s.DataslotList") % station % fieldName));
 	string	rbl(str(format("%s%s.RSPBoardList") % station % fieldName));
 	if (!itsDataslotParset.isDefined(dsl) || !itsDataslotParset.isDefined(rbl)) {
-		LOG_ERROR_STR("No dataslots defined for " << station << antennaArray);
+		LOG_ERROR_STR("No dataslots defined for " << station << fieldName);
 		return (b2b);
 	}
 	vector<int>	RSPboardList = itsDataslotParset.getIntVector(rbl,true);
@@ -753,36 +760,38 @@ vector<int>	Observation::getBeamlets (uint beamIdx, const string&	stationName) c
 	return (result);
 }
 
-
-//
-// TEMP HACK TO GET THE ANTENNAFIELDNAME
 //
 // Except for the beamIdx dependancy we should look in the antennaSet file.
 //
 string Observation::getAntennaFieldName(bool hasSplitters, uint32	beamIdx) const
 {
-	string	result;
-	if (antennaSet.empty()) {
-		result = antennaArray;
-	}
-	else {
-		result = antennaSet;
+	// ugly exception!
+	if (hasSplitters && antennaSet.substr(0,8) == "HBA_DUAL")	 {
+		return (beamIdx % 2 == 0 ? "HBA0" : "HBA1");
 	}
 
-	if (result.find("LBA") == 0)  {
+	// found during construction?
+	if (!antennaField.empty()) {
+		return (antennaField);
+	}
+
+	// File could not be read, fall back to old code that HACKs in a hardcoded (limited) solution.
+	LOG_WARN_STR("AntennaFieldname could not be resolved (file not found), making best guess!");
+
+	if (antennaSet.find("LBA") == 0)  {
 		return ("LBA");
 	}
 	
-	if (!hasSplitters) {		// no splitter, always use all HBA
+	if (hasSplitters) {		// translate the things we most commonly use
+		// station has splitters
+		if (antennaSet.substr(0,8) == "HBA_ZERO") 	return ("HBA0");
+		if (antennaSet.substr(0,7) == "HBA_ONE") 	return ("HBA1");
+		if (antennaSet.substr(0,10)== "HBA_JOINED")	return ("HBA");
+	}
+	if (antennaSet.find("HBA") == 0)  {
 		return ("HBA");
 	}
-
-	// station has splitters
-	if (result.substr(0,8) == "HBA_ZERO") 	return ("HBA0");
-	if (result.substr(0,7) == "HBA_ONE") 	return ("HBA1");
-	if (result.substr(0,10)== "HBA_JOINED")	return ("HBA");
-	if (result.substr(0,8) == "HBA_DUAL")	return (beamIdx % 2 == 0 ? "HBA0" : "HBA1");
-	return ("HBA");
+	return ("???");
 }	
 
 //
@@ -806,6 +815,10 @@ bool Observation::_isStationName(const string&	hostname) const
 {
 	// allow AA999, AA999C and AA999T
 	if (hostname.length() != 5 && hostname.length() != 6) 
+		return (false);
+
+	// check for trailing C,c,T or t
+	if (hostname.length() == 6 && (toupper(hostname[5]) != 'C' && toupper(hostname[5]) != 'T'))
 		return (false);
 
 	// We make a rough guess about the vality of the hostname.
@@ -874,7 +887,7 @@ ostream& Observation::print (ostream&	os) const
     os << "stoptime     : " << to_simple_string(from_time_t(stopTime)) << endl;
     os << "stations     : " << stations << endl;
 //    os << "stations     : "; writeVector(os, stations, ",", "[", "]"); os << endl;
-    os << "antennaArray : " << antennaArray << endl;
+    os << "antennaField : " << antennaField << endl;
     os << "antenna set  : " << antennaSet << endl;
     os << "receiver set : " << RCUset << endl;
     os << "sampleClock  : " << sampleClock << endl;

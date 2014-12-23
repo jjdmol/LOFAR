@@ -48,6 +48,9 @@ int main(int, char*	argv[])
 
 	IBS_Protocol::Pointing	pointing1(1.11, 2.22, "J2000", RTC::Timestamp(10000, 0), 3000);
 	IBS_Protocol::Pointing	pointing2(1.11, 2.22, "J2000", RTC::Timestamp(10050, 0), 3000);
+	vector<string>		extraInfo;
+	extraInfo.push_back("extraKey1=25");
+	extraInfo.push_back("extraKey2=[aap,noot,mies]");
 
 	// --- First test with one beam to see how the firstCommand function works.
 	//     add one beam and ask for several timestamps what to communicate.
@@ -57,7 +60,7 @@ int main(int, char*	argv[])
 		NenuFarAdmin			nfa;
 		NenuFarAdmin::BeamInfo	tmp;
 		cout << endl << "Testing with one beam and comm_state == NONE" << endl;
-		nfa.addBeam("beam1", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15);
+		nfa.addBeam("beam1", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15, extraInfo);
 		// test around start time.
 		tmp	= nfa.firstCommand(10000-5);	checkResult (tmp, "5 sec before start: ", "beam1");
 		tmp	= nfa.firstCommand(10000); 		checkResult (tmp, "at starttime      : ", "beam1");
@@ -75,7 +78,7 @@ int main(int, char*	argv[])
 		NenuFarAdmin			nfa;
 		NenuFarAdmin::BeamInfo	tmp;
 		cout << endl << "Testing with one beam and comm_state == NEW" << endl;
-		nfa.addBeam("beam1", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15);
+		nfa.addBeam("beam1", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15, extraInfo);
 		ASSERTSTR(nfa.setCommState("beam1", NenuFarAdmin::BeamInfo::BS_NEW), "Setting state of beam1 to NEW failed");
 		// test around start time.
 		tmp	= nfa.firstCommand(10000-5);	checkResult (tmp, "5 sec before start: ", "");
@@ -93,7 +96,7 @@ int main(int, char*	argv[])
 		NenuFarAdmin			nfa;
 		NenuFarAdmin::BeamInfo	tmp;
 		cout << endl << "Testing with one beam and comm_state == ENDED" << endl;
-		nfa.addBeam("beam1", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15);
+		nfa.addBeam("beam1", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15, extraInfo);
 		ASSERTSTR(nfa.setCommState("beam1", NenuFarAdmin::BeamInfo::BS_ENDED), "Setting state of beam1 to ENDED failed");
 		// test around start time.
 		tmp	= nfa.firstCommand(10000-5);	checkResult (tmp, "5 sec before start: ", "");	// impossible
@@ -113,8 +116,8 @@ int main(int, char*	argv[])
 		NenuFarAdmin			nfa;
 		NenuFarAdmin::BeamInfo	tmp;
 		cout << endl << "Testing with two beams and comm_state == NONE" << endl;
-		nfa.addBeam("beam1", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15);
-		nfa.addBeam("beam2", "LBA_OUTER", bitset<192>(0x0FDE37F), 1, pointing2, 15);
+		nfa.addBeam("beam1", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15, extraInfo);
+		nfa.addBeam("beam2", "LBA_OUTER", bitset<192>(0x0FDE37F), 1, pointing2, 15, extraInfo);
 		tmp	= nfa.firstCommand(10030); 		checkResult (tmp, "between both starts:", "beam1");
 		tmp	= nfa.firstCommand(10030); 		checkResult (tmp, "and again...       :", "beam1");
 		tmp	= nfa.firstCommand(10075); 		checkResult (tmp, "when both active   :", "beam1");
@@ -129,8 +132,8 @@ int main(int, char*	argv[])
 		NenuFarAdmin			nfa;
 		NenuFarAdmin::BeamInfo	tmp;
 		cout << endl << "Testing with two beams in resp. comm_state NEW and NONE" << endl;
-		nfa.addBeam("beam1", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15);
-		nfa.addBeam("beam2", "LBA_OUTER", bitset<192>(0x0FDE37F), 1, pointing2, 15);
+		nfa.addBeam("beam1", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15, extraInfo);
+		nfa.addBeam("beam2", "LBA_OUTER", bitset<192>(0x0FDE37F), 1, pointing2, 15, extraInfo);
 		ASSERTSTR(nfa.setCommState("beam1", NenuFarAdmin::BeamInfo::BS_NEW), "Setting state of beam1 to NEW failed");
 		tmp	= nfa.firstCommand(10030); 		checkResult (tmp, "between both starts:", "beam2");
 		tmp	= nfa.firstCommand(10030); 		checkResult (tmp, "and again...       :", "beam2");
@@ -145,7 +148,7 @@ int main(int, char*	argv[])
 		NenuFarAdmin			nfa;
 		NenuFarAdmin::BeamInfo	tmp;
 		cout << endl << "Testing abort with one beam in NONE" << endl;
-		nfa.addBeam("beam1", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15);
+		nfa.addBeam("beam1", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15, extraInfo);
 		tmp	= nfa.firstCommand(10000-5); 	checkResult (tmp, "NONE before start   :", "beam1");
 		tmp	= nfa.firstCommand(10000+5);	checkResult (tmp, "NONE after start    :", "beam1");
 		ASSERTSTR(nfa.abortBeam("beam1"), "Aborting beam1");
@@ -159,7 +162,7 @@ int main(int, char*	argv[])
 		NenuFarAdmin			nfa;
 		NenuFarAdmin::BeamInfo	tmp;
 		cout << endl << "Testing abort with 1 beam in NEW" << endl;
-		nfa.addBeam("beam1", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15);
+		nfa.addBeam("beam1", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15, extraInfo);
 		ASSERTSTR(nfa.setCommState("beam1", NenuFarAdmin::BeamInfo::BS_NEW), "Setting state of beam1 to NEW failed");
 		tmp	= nfa.firstCommand(10000-5); 	checkResult (tmp, "NEW before start    :", "");
 		tmp	= nfa.firstCommand(10000+5);	checkResult (tmp, "NEW after start     :", "");

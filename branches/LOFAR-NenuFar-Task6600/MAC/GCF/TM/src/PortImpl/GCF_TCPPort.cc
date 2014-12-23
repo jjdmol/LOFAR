@@ -249,7 +249,13 @@ bool GCFTCPPort::open()
 //
 void GCFTCPPort::autoOpen(uint	nrRetries, double	timeout, double	reconnectInterval)
 {
-	itsAutoOpen = true;
+	itsAutoOpen 	  = true;
+	itsAutoOpenTimer  = 0;
+	itsAutoRetryTimer = 0;
+	itsAutoRetries    = nrRetries ? nrRetries : -1;		// nrRetries == 0 means forever.
+	itsAutoRetryItv   = reconnectInterval;
+
+	LOG_TRACE_STAT_STR("autoOpen:" << nrRetries << "," << timeout << "," << reconnectInterval);
 
 	if (open()) {							// first try to open it
 		return;
@@ -258,15 +264,9 @@ void GCFTCPPort::autoOpen(uint	nrRetries, double	timeout, double	reconnectInterv
 	// It is not open yet. But the call to open() activated the ServiceBroker task to do it job.
 	// All we have to do is copy the user settings, (start a timer) and wait.
 
-	itsAutoOpenTimer  = 0;
-	itsAutoRetryTimer = 0;
-	itsAutoRetries    = nrRetries;
-	itsAutoRetryItv   = reconnectInterval;
 	if (timeout > 0.0) {		// absolute max auto-open time specified? Set timer for doomsday.
 		itsAutoOpenTimer = _pTimerHandler->setTimer(*this, (uint64)(1000000.0*timeout), 0, &itsAutoOpenTimer);
-		if (itsAutoRetries == 0) {
-			itsAutoRetries = -1;		// to let the timeout timer running
-		}
+		LOG_TRACE_STAT("open:Setting autoOpen timer");
 	}
 }
 
@@ -286,6 +286,7 @@ void GCFTCPPort::_handleDisconnect()
 	// retries left?
 	if (itsAutoOpen) {
 		if (itsAutoRetries != 0) {
+			LOG_TRACE_STAT("disco:Setting autoOpen timer");
 			itsAutoRetryTimer = _pTimerHandler->setTimer(*this, (uint64)(1000000.0*itsAutoRetryItv), 0, &itsAutoRetryTimer);
 			return;
 		}

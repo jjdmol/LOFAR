@@ -50,12 +50,14 @@ int main (int argc, char* argv[])
 			cout << "getRCUbitset(96,96,LBA_XXX) = " << someObs.getRCUbitset(96,96,"LBA_XXX") << endl;	// Core
 			cout << "getRCUbitset(96,48,HBA_XXX) = " << someObs.getRCUbitset(96,48,"HBA_XXX") << endl;	// Core
 			cout << "getRCUbitset(96,96,HBA_XXX) = " << someObs.getRCUbitset(96,96,"HBA_XXX") << endl;	// Core
-			vector<int>	b2b = someObs.getBeamAllocation("CS002");
-			cout << "BeamAlloc for CS002 : " << b2b << endl;
+			string someStation = someObs.stations[someObs.stations.size()>=3 ? 2 : 0];
+			vector<int>	b2b = someObs.getBeamAllocation(someStation);
+			cout << "BeamAlloc for " << someStation << ":" << b2b << endl;
 			int	nrStreams = someObs.streamsToStorage.size();
 			for (int i = 0; i < nrStreams; i++) {
 				showSTS(someObs.streamsToStorage[i]);
 			}
+cout << someObs.stations << endl;
 			return (0);
 		}
 
@@ -144,30 +146,6 @@ int main (int argc, char* argv[])
 		cout << "getRCUbitset(96,48,HBA_XXX) = " << obs3.getRCUbitset(96,48,"HBA_XXX") << endl;	// Core
 		cout << "getRCUbitset(96,96,HBA_XXX) = " << obs3.getRCUbitset(96,96,"HBA_XXX") << endl;	// Core
 		
-		// test translation of antennaSetname
-		obs3.antennaSet = "HBA_ZERO";
-		cout << "HBA_ZERO(false) = " << obs3.getAntennaFieldName(false) << endl;
-		cout << "HBA_ZERO(true)  = " << obs3.getAntennaFieldName(true) << endl;
-		obs3.antennaSet = "HBA_ONE";
-		cout << "HBA_ONE(false) = " << obs3.getAntennaFieldName(false) << endl;
-		cout << "HBA_ONE(true)  = " << obs3.getAntennaFieldName(true) << endl;
-		obs3.antennaSet = "HBA_DUAL";
-		cout << "HBA_DUAL(false) = " << obs3.getAntennaFieldName(false) << endl;
-		cout << "HBA_DUAL(true)  = " << obs3.getAntennaFieldName(true) << endl;
-		obs3.antennaSet = "HBA_JOINED";
-		cout << "HBA_JOINED(false) = " << obs3.getAntennaFieldName(false) << endl;
-		cout << "HBA_JOINED(true)  = " << obs3.getAntennaFieldName(true) << endl;
-
-		obs3.antennaSet = "LBA_INNER";
-		cout << "LBA_INNER(false) = " << obs3.getAntennaFieldName(false) << endl;
-		cout << "LBA_INNER(true)  = " << obs3.getAntennaFieldName(true) << endl;
-		obs3.antennaSet = "LBA_OUTER";
-		cout << "LBA_OUTER(false) = " << obs3.getAntennaFieldName(false) << endl;
-		cout << "LBA_OUTER(true)  = " << obs3.getAntennaFieldName(true) << endl;
-		obs3.antennaSet = "LBA_X";
-		cout << "LBA_X(false) = " << obs3.getAntennaFieldName(false) << endl;
-		cout << "LBA_X(true)  = " << obs3.getAntennaFieldName(true) << endl;
-
 		// test old syntax agains new syntax
 		cout << ">>>" << endl; // off
 		cout << "### SHOW DIFFERENT BETWEEN OLD AND NEW DATASLOT SYNTAX ###" << endl;
@@ -181,14 +159,6 @@ int main (int argc, char* argv[])
 		cout << "NEW SYNTAX" << endl;
 		cout << newObs << endl;
 		cout << "<<<" << endl; // on
-
-    // These observations bugged before:
-		ParameterSet p103821("tObservation.in_parset_obs103821");
-		Observation  o103821(&p103821,true);
-		cout << "OBS 103821" << endl;
-		cout << o103821 << endl;
-		cout << "<<<" << endl;
-
 	}
 	catch (Exception& e) {
 		cout << "Exception: " << e.what() << endl;

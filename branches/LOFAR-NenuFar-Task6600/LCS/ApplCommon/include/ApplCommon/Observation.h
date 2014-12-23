@@ -62,6 +62,7 @@ public:
 	// get name of a beam (idx starts at 0)
 	string getBeamName(uint	beamIdx) const;
 	string getAnaBeamName() const;
+	string getAntennaFieldName(bool hasSplitters, uint32 beamIdx = 0) const;
 
 	// check if the given Observation conflicts with this one
 	bool	conflicts(const	Observation&	other) const;
@@ -75,9 +76,6 @@ public:
 
 	// for operator <<
 	ostream& print (ostream&	os) const;
-
-	// TEMP HACK
-	string getAntennaFieldName(bool hasSplitters, uint32 beamIdx = 0) const;
 
 	// data types
 	typedef bitset<MAX_RCUS> 	  RCUset_t;
@@ -186,10 +184,11 @@ public:
 	string			realPVSSdatapoint;
 
 	// old way of specifying antennas
-	string			antennaArray;
+//	string			antennaArray;
 
 	// new way of selecting antennas
 	string			antennaSet;			// like LBA_INNER, LBA_OUTER, etc.
+	string			antennaField;		// like LBA, HBA, HBA0, NNF, etc
 	bool			useLongBaselines;
 	bool			splitterOn;			// On or Off
 	bool			dualMode;			// HBA_DUAL selected

@@ -24,6 +24,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
+#include <Common/hexdump.h>
 #include "../src/NenuFarMsg.h"
 #include "tNenuFarStub.h"
 
@@ -92,11 +93,64 @@ GCFEvent::TResult tNenuFarStub::connected(GCFEvent& event, GCFPortInterface& por
 	break;
 
 	case F_DATAIN: {
-		@@@
+		char	buf[1600];
+		ssize_t btsRead = port.recv((void*)&buf[0], 1600);
+		buf[btsRead] = '\0';
+//		string  s;
+//		hexdump(s, buf, btsRead);
+//		LOG_INFO_STR("Received command on feedback port: " << s);
+
+		ParameterSet	request = NenuFarMsg::unpack2parset(buf, btsRead+1);
+		LOG_INFO_STR("Received:\n" << request);
+		string	msgtype;
+
+		// handle special test requests.
+		if (request.isDefined("no_answer")) {
+			LOG_INFO("REQUESTED FAILURE: no answer");
+			return (GCFEvent::HANDLED);
+		}
+		if (request.isDefined("delay")) {
+			int  delay = request.getInt("delay");
+			LOG_INFO_STR("REQUESTED DELAY: " << delay << " seconds...");
+			sleep (delay);
+		}
+		if (request.isDefined("presume_msgtype")) {
+			msgtype = request.getString("presume_msgtype");
+			LOG_INFO_STR("REQUESTED WRONG ANSWERTYPE: " << msgtype);
+		}
+		if (msgtype.empty()) {
+			msgtype = request.getString("msgtype");
+		}
+		if (msgtype == "ABORT_ALL_BEAMS") {
+			return (GCFEvent::HANDLED);
+		}
+
+		ParameterSet	answer;
+		answer.add("beamName", request.getString("beamName"));
+		NenuFarMsg*		msg;
+		if (msgtype == "NEW_BEAM") {
+			answer.add("accepted", "Yes");
+			msg = new NenuFarMsg(0x0100, NEW_BEAM_ACK_MSG, answer);
+		}
+		else if (msgtype == "STOP_BEAM") {
+			answer.add("result", "0");
+			msg = new NenuFarMsg(0x0100, STOP_BEAM_ACK_MSG, answer);
+
+		}
+		else if (msgtype == "ABORT_BEAM") {
+			answer.add("result", "0");
+			msg = new NenuFarMsg(0x0100, ABORT_BEAM_ACK_MSG, answer);
+		}
+		else {
+			LOG_ERROR_STR("Received invalid command: " << msgtype);
+		}
+		LOG_INFO_STR("Sending answer..." << *msg);
+		((GCFTCPPort*)&port)->send(msg->data(), msg->size());
+		delete msg;
 	} break;
 
     case F_DISCONNECTED:
-		LOG_DEBUG_STR("SERVER received 'disconnect', closing port");
+		LOG_INFO_STR("SERVER received 'disconnect', closing port");
 		port.close();
 //		TRAN(tNenuFarStub::initial);	// hope this will work...
 		break;

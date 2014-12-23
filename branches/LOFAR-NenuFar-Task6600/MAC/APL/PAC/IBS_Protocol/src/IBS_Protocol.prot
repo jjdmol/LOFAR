@@ -15,7 +15,6 @@ include = '<Common/lofar_bitset.h>';
 include = '<APL/IBS_Protocol/Beamlet2SubbandMap.h>';
 include = '<APL/IBS_Protocol/Pointing.h>';
 include = '<APL/RTCCommon/Timestamp.h>';
-include = '<MACIO/StringVector.h>';
 
 prelude = << PRELUDE_END
 
@@ -160,6 +159,11 @@ event = {
 	param = {
 		name = "rcuMode";
 		type = "uint32";
+	};
+
+	param = {
+		name = "extra";
+		type = "vector<string>";
 	};
 };
 
@@ -322,9 +326,7 @@ event = {
 	dir = OUT;
 	param = {
 		name = "names";
-		type = "MACIO::StringVector";
-		userdefined;
-		printable;
+		type = "vector<string>";
 	};
 };
 
