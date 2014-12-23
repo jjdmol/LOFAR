@@ -114,7 +114,6 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
                     "Some jobs failed, continuing with succeeded runs"
                 )
         self.logger.debug("Updating data map file: %s" % args[0])
-        data.save(args[0])
 
         # ********************************************************************
         # 5. Create the parset-file and write it to disk.        
@@ -131,10 +130,20 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
         prefix = global_prefix + prefix
         for idx, job in enumerate(jobs):
             self.logger.debug("job[%d].results = %s" % (idx, job.results))
-            parset.adoptCollection(
-                metadata.to_parset(job.results), '%s[%d].' % (prefix, idx)
-            )
+
+            # the Master/node communication adds a monitor_stats entry,
+            # this must be remove manually here 
+            meta_data_parset = metadata.to_parset(job.results)
+            try:
+                meta_data_parset.remove("monitor_stats")
+            except:
+                pass
+
+            parset.adoptCollection(meta_data_parset,
+                                   '%s[%d].' % (prefix, idx))
+
         try:
+
             create_directory(os.path.dirname(self.inputs['parset_file']))
             parset.writeFile(self.inputs['parset_file'])
             self.logger.info("Wrote meta data to: " + 
