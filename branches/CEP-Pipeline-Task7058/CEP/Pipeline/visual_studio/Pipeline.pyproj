@@ -44,6 +44,7 @@
     <Compile Include="recipes\sip\nodes\selfcal_bbs.py" />
     <Compile Include="recipes\sip\nodes\selfcal_create_dbs.py" />
     <Compile Include="recipes\sip\nodes\selfcal_finalize.py" />
+    <Compile Include="test\helper_scripts\create_selfcal_parset.py" />
     <Compile Include="test\regression_tests\regression_test_runner.py" />
     <Compile Include="test\__init__.py" />
     <Compile Include="deploy\deprecated\fabfile.py" />
@@ -280,6 +281,7 @@
     <Folder Include="recipes\sip\nodes\deprecated\demix" />
     <Folder Include="test" />
     <Folder Include="test\cuisine" />
+    <Folder Include="test\helper_scripts\" />
     <Folder Include="test\recipes" />
     <Folder Include="test\recipes\helpers" />
     <Folder Include="test\recipes\master" />

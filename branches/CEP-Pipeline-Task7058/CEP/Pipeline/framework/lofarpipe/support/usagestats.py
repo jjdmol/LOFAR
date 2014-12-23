@@ -3,6 +3,34 @@
 #                                                               UsageStat class
 #                                                           Wouter Klijn, 2014
 #                                                               klijn@astron.nl
+#
+# TODO:
+# 1. The stats are currently collecting using os calls and subprocess.
+#    A light weight version might use /proc/pid directly
+# 2. Large scale refactor: 
+#    Enforce the reading and writing of each recipe to a specific directory
+#    In combination with du we could then exactly measure how much file data is
+#    written.
+#    An idea is to make this part of the recipe. Although I like the idea of a
+#    decorator: this makes is explicit
+# 3. Creating a decorator version of this stat collected might be a plan anyways
+#    Marcel suggested a with-block syntax. When lots of decorated functionality
+#    becomes available this might lead to boilerplate eg:
+#
+#    @logging("scriptname")
+#    @usage_stat("scriptname")
+#    def recipename(bla):
+#
+#    vs
+#    def recipename(bla):
+#        with logging("striptname"):
+#        with usage_stat("scriptname"):
+#        with xml_loggin("scriptname"):
+#     
+# 4. I dont like that xml magix is needed to fill the nodes.
+#    A number of helper function on the xmllogging might be a good idea.
+#    Supporting direct xml should still be possible for lo-tech / api acces
+#    should be supported also.
 # ------------------------------------------------------------------------------
 import threading 
 import time
