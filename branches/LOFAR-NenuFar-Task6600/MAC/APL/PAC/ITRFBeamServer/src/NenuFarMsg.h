@@ -87,9 +87,11 @@ public:
 	//NenuFarMsg (const NenuFarMsg&) {};
 	//NenuFarMsg& operator= (const NenuFarMsg&) {};
 
+	// Handy functions for visualising the msgtypes.
+	int 	msgTypeSize  (uint	msgType) const;
+	string	msgTypeString(uint	msgType) const;
+
 private:
-	int 	msgTypeSize  (uint	msgType);
-	string	msgTypeString(uint	msgType);
 	//# ----- DATAMEMBERS -----
 	// queue of future pointings as delivered by the user.
 	char*		itsPackedMsg;

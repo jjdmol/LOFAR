@@ -100,12 +100,12 @@ NenuFarMsg::~NenuFarMsg()
 	delete [] itsPackedMsg;
 }
 
-int NenuFarMsg::msgTypeSize(uint	msgType)
+int NenuFarMsg::msgTypeSize(uint	msgType) const
 {
 	return (msgTypeString(msgType).size() + 1);
 }
 
-string NenuFarMsg::msgTypeString(uint	msgType) 
+string NenuFarMsg::msgTypeString(uint	msgType) const
 {
 	switch (msgType) {
 	case NEW_BEAM_MSG:			return ("NEW_BEAM");

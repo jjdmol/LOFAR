@@ -52,7 +52,7 @@ namespace LOFAR {
 class NenuFarAdmin {
 public:
 	// Default constructor
-	NenuFarAdmin() {};
+	NenuFarAdmin(): itsAllBeamsAborted(false) {};
 
 	// Default destructor.
 	virtual ~NenuFarAdmin();
@@ -63,7 +63,8 @@ public:
 		 		const RCUmask_t&				RCUselection,
 				int 							rank, 
 				const IBS_Protocol::Pointing& 	pointing, 
-				int 							filter);
+				int 							filter,
+				const vector<string>&			extraInfo);
 
 	// Abort a beam from the admin
 	bool abortBeam(const string& beamName);
@@ -89,7 +90,7 @@ public:
 			beam_state	 (BS_NONE),
 			comm_state	 (BS_NONE) {};
 		BeamInfo(const string& nameOfBeam, const string& antennaSet, const RCUmask_t& RCUselect, int rank,
-				 const IBS_Protocol::Pointing& pointing, int hpf) :
+				 const IBS_Protocol::Pointing& pointing, int hpf, const vector<string>& extraInfo) :
 			startTime    (pointing.time().sec()),
 			endTime      (pointing.endTime().sec()),
 			beamName     (nameOfBeam),
@@ -98,7 +99,9 @@ public:
 			rankNr	     (rank),
 			angle2Pi     (pointing.angle0()),
 			anglePi	     (pointing.angle1()),
+			coordFrame	 (pointing.getType()),
 			filter	     (hpf),
+			extra		 (extraInfo),
 			beam_state	 (BS_NEW),
 			comm_state	 (BS_NONE) {};
 		ParameterSet	asParset()  const ;
@@ -106,19 +109,26 @@ public:
 		string			name()	    const { return (beamName); }
 		int				beamState() const { return (beam_state); }
 		int				commState() const { return (comm_state); }
+		static string	stateName(int state) { switch (state) {
+												 case 0: return "NONE";  break;
+												 case 1: return "NEW";   break;
+												 case 2: return "ENDED"; break;
+												 case 3: return "ABORT"; break; }; 
+												 return (""); }
 	  private:
-		time_t		startTime;
-		time_t		endTime;
-		string		beamName;
-		string		antennaSet;
-		RCUmask_t	RCUselection;
-		int			rankNr;
-		double		angle2Pi;
-		double		anglePi;
-		string		coordFrame;
-		int			filter;
-		int			beam_state;
-		int			comm_state;
+		time_t			startTime;
+		time_t			endTime;
+		string			beamName;
+		string			antennaSet;
+		RCUmask_t		RCUselection;
+		int				rankNr;
+		double			angle2Pi;
+		double			anglePi;
+		string			coordFrame;
+		int				filter;
+		vector<string>	extra;
+		int				beam_state;
+		int				comm_state;
 
 		friend class NenuFarAdmin;
 	};
@@ -129,6 +139,12 @@ public:
 	// set communication state of a beam
 	bool	setCommState(const string& beamName, int new_comm_state);
 
+	// For testing only
+	size_t	nrBeams() const { return (itsBeams.size()); }
+
+	// Check for abortion of all beams.
+	bool	allBeamsAborted() { bool result = itsAllBeamsAborted; itsAllBeamsAborted = false; return result; }
+
 	// print function for operator<<
 	ostream& print (ostream& os) const;
 
@@ -136,6 +152,8 @@ private:
 	//# ----- DATAMEMBERS -----
 	// queue of future pointings as delivered by the user.
 	list<BeamInfo>			itsBeams;
+
+	bool					itsAllBeamsAborted;
 };
 
 //# -------------------- inline functions --------------------

@@ -1,6 +1,6 @@
 //#  NenuFarAdmin.h: implementation of the NenuFarAdmin class
 //#
-//#  Copyright (C) 2002-2004
+//#  Copyright (C) 2014
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -48,10 +48,11 @@ void NenuFarAdmin::addBeam(const string& 				 beamName,
 						   const RCUmask_t&				 RCUselection, 
 						   int 							 rank, 
 						   const IBS_Protocol::Pointing& pointing, 
-						   int 							 filter)
+						   int 							 filter,
+						   const vector<string>&		 extraInfo)
 {
 	LOG_INFO_STR("NenuFarAdmin: adding " << beamName);
-	itsBeams.push_back(BeamInfo(beamName, antennaSet, RCUselection, rank, pointing, filter));
+	itsBeams.push_back(BeamInfo(beamName, antennaSet, RCUselection, rank, pointing, filter, extraInfo));
 }
 
 
@@ -85,12 +86,8 @@ bool NenuFarAdmin::abortBeam(const string& beamName)
 void NenuFarAdmin::abortAllBeams()
 {
 	LOG_INFO("NenuFarAdmin: aborting all beams");
-	list<BeamInfo>::iterator	iter = itsBeams.begin();
-	list<BeamInfo>::iterator	end  = itsBeams.end();
-	while (iter != end) {
-		iter->beam_state = BeamInfo::BS_ABORT;
-		++iter;
-	}
+	itsAllBeamsAborted = true;
+	itsBeams.clear();
 }
 
 //
@@ -161,7 +158,11 @@ bool	NenuFarAdmin::setCommState(const string& beamName, int new_comm_state)
 	while (iter != end) {
 		if (iter->beamName == beamName) {
 			iter->comm_state = new_comm_state;
-			LOG_INFO_STR("NenuFarAdmin: commstate of " << iter->name() << " set to " << new_comm_state);
+			LOG_INFO_STR("NenuFarAdmin: commstate of " << iter->name() << " set to " << BeamInfo::stateName(new_comm_state));
+			// final state reached? delete the entry.
+			if (new_comm_state == BeamInfo::BS_ABORT) {
+				itsBeams.erase(iter);
+			}
 			return (true);
 		}
 		++iter;
@@ -186,6 +187,15 @@ ParameterSet	NenuFarAdmin::BeamInfo::asParset() const
 	ps.add("rankNumber", toString(rankNr));
 	ps.add("startTime",  toString(startTime));
 	ps.add("stopTime", 	 toString(endTime));
+	for (size_t i = 0; i < extra.size(); ++i) {
+		size_t	pos = extra[i].find('=');
+		if (pos == string::npos) {
+			LOG_ERROR_STR("Extra argument missing equal-sign: " << extra[i]);
+		}
+		else {
+			ps.add(extra[i].substr(0,pos), extra[i].substr(pos+1));
+		}
+	} // for
 	return (ps);
 }
 

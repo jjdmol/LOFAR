@@ -28,6 +28,7 @@
 #include <Common/LofarTypes.h>
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_list.h>
+#include <Common/lofar_vector.h>
 #include <GCF/TM/GCF_Control.h>
 #include <APL/IBS_Protocol/Pointing.h>
 
@@ -67,8 +68,10 @@ private:
 	bitset<MAX_RCUS> 	getRCUMask() const;
 	list<int> 			strtolist(const char* str, int max) const;
 	void 		 		printList(list<int>&		theList) const;
-	void 				usage() const;
+	void 				usage(bool expert = false) const;
 	void send_direction(double	longitude, double	latitude, const string&	dirType, bool	isAnalogue);
+	void 				interpretParset(const string& filename);
+	void 				addPointing    (char c, const string&		arg);
 
 	// ports
 	GCFTCPPort*		itsCalServer;
@@ -86,6 +89,10 @@ private:
 	list<Pointing>	itsDigPointings;
 	list<Pointing>	itsAnaPointings;
 	bool			itsCalInfo;			// request for calibrationinformation
+
+	// NenuFar
+	int				itsHighPassFilter;
+	vector<string>	itsExtraInfo;
 
 	int 	itsSkyScanTotalTime;
 	int 	itsSkyScanPointTime;

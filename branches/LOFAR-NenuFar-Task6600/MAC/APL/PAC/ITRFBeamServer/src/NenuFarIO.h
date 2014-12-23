@@ -72,7 +72,7 @@ private:
 	int		itsNCUportnr;		// portnumber the NCU system listens on
 	double	itsReconInterval;	// how often to try to reconnect
 
-	int		itsIOtimeout;		// how long to wait for answers for the NCU
+	double	itsIOtimeout;		// how long to wait for answers for the NCU (sec)
 
 	NenuFarAdmin*			itsBeams;
 	NenuFarAdmin::BeamInfo	itsCurrentBeam;

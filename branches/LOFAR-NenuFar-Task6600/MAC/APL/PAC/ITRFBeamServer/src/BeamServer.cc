@@ -1090,6 +1090,7 @@ int BeamServer::beampointto_action(IBSPointtoEvent&		ptEvent,
 	// note we don't know if we added the beam before, just do it again and ignore returnvalue.
 	itsAnaBeamMgr->addBeam(AnalogueBeam(ptEvent.beamName, beamIter->second->antennaSetName(), 
 									beamIter->second->rcuMask(), ptEvent.rank));
+
 	// TODO: IMPLEMENT HERE THE UPDATE OF THE NENUFAR ADMIN... 
 	// xxx->addPointing(ptEvent, beamIter->second->antennaSetName(), beamIter->second->rcuMask());
 	if (!itsAnaBeamMgr->addPointing(ptEvent.beamName, ptEvent.pointing)) {
