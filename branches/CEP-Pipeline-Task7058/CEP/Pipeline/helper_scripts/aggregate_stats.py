@@ -424,6 +424,11 @@ def create_trace_plot_information(step_dict):
     max_time_stamp = 0
     min_time_stamp = 9999999999999 # insanely large timestamp know larger then in the stats 
 
+    if not step_dict.has_key('jobs'):
+        time_stamps = []
+        return time_stamps, all_traces, aggregate_traces
+
+
 
     for id, node_dict in step_dict['jobs'].items():      # the node level information
         for id, pid_dict in node_dict['traces'].items(): # traces of the actual executables
@@ -636,6 +641,103 @@ def create_plots_of_traces(time_stamps, all_traces, aggregate_traces,
         plt.plot(time_stamps, trace)  
     plt.show()
    
+def create_pipeline_traces_and_stat(pipeline_information):
+    """
+
+    """
+    traces = {}
+
+    
+    for key, entrie in pipeline_information.items()[1:]:  # skip first entry not a step
+        # First create the traces
+        time_stamps, all_traces, aggregate_traces = create_trace_plot_information(entrie) 
+        traces[key] = {'time_stamps':time_stamps, 
+                       'all_traces':all_traces,
+                       'aggregate_traces':aggregate_traces}
+
+        statistical_traces = {}
+        # use numpy to calculate some statistics
+        for metric_key, node_traces in aggregate_traces.items():
+            statistical_traces[metric_key] =  {}
+
+            statistical_traces[metric_key]['median'] = \
+                np.median(node_traces, axis=0).tolist()
+
+            statistical_traces[metric_key]['min'] = \
+                np.amin(node_traces, axis=0).tolist()
+
+            statistical_traces[metric_key]['max'] = \
+                np.amax(node_traces, axis=0).tolist()
+
+            mean = np.mean(node_traces, axis=0)
+            statistical_traces[metric_key]['mean'] = \
+                mean.tolist()
+
+            # The std is not that interesting on it self, we need it to be 
+            # as traces
+            std =  np.std(node_traces, axis=0)
+            statistical_traces[metric_key]['std_top'] = \
+                np.add(mean, std).tolist()
+
+            statistical_traces[metric_key]['std_bot'] = \
+                np.subtract(mean, std).tolist()
+        
+
+        traces[key]['statistical_traces'] = statistical_traces
+
+    return traces
+
+
+def create_plot_of_full_pipeline(pipeline_information, step_name_list):
+
+
+    first_loop = True
+    first_time_stamp = 0
+    
+    f = plt.figure()
+
+    # step 1, add all the information to the plots
+    for (key, entrie), step_name in zip(pipeline_information.items(), step_name_list):
+        if first_loop:
+            first_time_stamp = entrie['time_stamps'][0]            
+            first_loop = False
+
+        ax1 = plt.subplot(5,1,1)
+        # Clean the time stamps: start at zero and convert to seconds
+        time_stamps = [(x - first_time_stamp) / 1000 for x in entrie['time_stamps']]
+        #plt.suptitle(super_title, fontsize=20)
+   
+        #plt.title("CPU (% of core)")
+        #plt.ylabel('Traces of all processes')
+        aggregate_traces = entrie['aggregate_traces']
+        statistical_traces = entrie['statistical_traces']
+
+        for idx,(aggregate, statistical) in enumerate(
+                          zip(aggregate_traces.items(),
+                              statistical_traces.items())):
+
+            # plot all the node traces
+            ax1 = plt.subplot(5,1,idx + 1) # subplot index starts at 1
+            agg_key, agg_value = aggregate           
+            for trace in agg_value:
+                plt.plot(time_stamps, trace, color='g') 
+
+            #plot the max in red, the mean in black and the std in black dotted
+            stat_key, stat_value = statistical
+            plt.plot(time_stamps, stat_value['max'], color='r') 
+            plt.plot(time_stamps, stat_value['mean'], color='k') 
+            plt.plot(time_stamps, stat_value['std_top'], color='k', linestyle=':' ) 
+            plt.plot(time_stamps, stat_value['std_bot'], color='k', linestyle=':' ) 
+
+    # make up the plot 
+    plt.subplots_adjust(hspace=0.001)
+    # remove xlabel of the first 4 plots
+    xticklabels = plt.subplot(5,1,1).get_xticklabels()+plt.subplot(5,1,2).get_xticklabels()+ \
+                 plt.subplot(5,1,3).get_xticklabels()+plt.subplot(5,1,4).get_xticklabels()
+    plt.setp(xticklabels, visible=False)
+
+    plt.show()
+
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         usage()
@@ -655,22 +757,18 @@ if __name__ == '__main__':
     
     # Create the roughest stat possible: A duration list.
     duration_list, step_name_list = create_recipe_duration_lists(pipeline_information)
-    create_toplevel_pipeline_visualizations(duration_list, step_name_list)
-    
-    # Create performance plots for all pipeline steps
-    final_time_stamp = 0
-    pipeline_time_stamps = []
-    pipeline_aggregate_traces = {'mem':[],'cpu':[], 'read_bytes':[], 
-                                 'write_bytes':[],'cancelled_bytes':[]}
-    
-    time_stamps, all_traces, aggregate_traces = create_trace_plot_information(pipeline_information[4]) 
-    print pipeline_information[4]
-    print "*************************"
-    print aggregate_traces
-    print all_traces
 
-    #exit(1)
+    # Create all the traces including statistical traces of all the staps
+    traces = create_pipeline_traces_and_stat(pipeline_information)
 
+    create_plot_of_full_pipeline(traces, step_name_list)
+    #print pipeline_information[4]
+    #print "*************************"
+    #print aggregate_traces
+    #print all_traces
+
+    exit(1)
+    #create_toplevel_pipeline_visualizations(duration_list, step_name_list)
     #for idx in range(1,len(pipeline_information)):
     #    time_stamps, all_traces, aggregate_traces = create_trace_plot_information(pipeline_information[4]) 
     #    print time_stamps
@@ -681,8 +779,7 @@ if __name__ == '__main__':
     #    pipeline_aggregate_traces['read_bytes'].extend(aggregate_traces['read_bytes'][0])
     #    pipeline_aggregate_traces['write_bytes'].extend(aggregate_traces['write_bytes'][0])
     #    pipeline_aggregate_traces['cancelled_bytes'].extend(aggregate_traces['cancelled_bytes'][0])
-
-
+    
     #print pipeline_aggregate_traces
     #time_stamps, all_traces, aggregate_traces = create_trace_plot_information(pipeline_information[1]) 
     #create_plots_of_traces(time_stamps, all_traces, aggregate_traces, "prepare")
