@@ -45,6 +45,12 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
     """
 
     inputs = {
+        'nproc': ingredient.IntField(
+            '--nproc',
+            default=1,   # More then one might cause issues when ndppp shares 
+                         # temp files between runs
+            help="Maximum number of simultaneous processes per output node"
+        ),
         'ndppp_exec': ingredient.ExecField(
             '--ndppp-exec',
             help="The full path to the ndppp executable"
@@ -202,7 +208,7 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
             jobs.append(ComputeJob(output_item.host, node_command, arguments))
 
         # Hand over the job(s) to the pipeline scheduler
-        self._schedule_jobs(jobs)
+        self._schedule_jobs(jobs, max_per_node=self.inputs['nproc'])
 
         # *********************************************************************
         # validate the output, cleanup, return output
