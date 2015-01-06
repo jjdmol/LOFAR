@@ -134,10 +134,7 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
             # the Master/node communication adds a monitor_stats entry,
             # this must be remove manually here 
             meta_data_parset = metadata.to_parset(job.results)
-            try:
-                meta_data_parset.remove("monitor_stats")
-            except:
-                pass
+            meta_data_parset.remove("monitor_stats")
 
             parset.adoptCollection(meta_data_parset,
                                    '%s[%d].' % (prefix, idx))
