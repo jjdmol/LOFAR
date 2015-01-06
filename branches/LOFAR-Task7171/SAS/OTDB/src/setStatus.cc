@@ -24,6 +24,7 @@
 #include <unistd.h>
 
 #include <Common/LofarLogger.h>
+#include <Common/LofarLocators.h>
 #include <Common/ParameterSet.h>
 #include <OTDB/OTDBconnection.h>
 #include <OTDB/OTDBtypes.h>
@@ -36,10 +37,13 @@ using namespace std;
 
 void usage(const char *argv0)
 {
-  cerr << "Usage: " << argv0 << " -o obsID -s status" << endl;
+  cerr << "Usage: " << argv0 << " -o obsID" << endl;
+  cerr << "     Print the current status of `obsID`." << endl;
   cerr << endl;
-  cerr << "Put the status of `obsID` to `status`." << endl;
-  cerr << "Valid statusses: queued, active, completing, finished, aborted" << endl;
+  cerr << "Usage: " << argv0 << " -o obsID -s status" << endl;
+  cerr << "     Put the status of `obsID` to `status`." << endl;
+  cerr << endl;
+  cerr << "Valid statusses: approved, queued, active, completing, finished, aborted" << endl;
 }
 
 int main(int argc, char **argv)
@@ -72,7 +76,7 @@ int main(int argc, char **argv)
     }
   }
 
-  if (obsID <= 0 || status.empty()) {
+  if (obsID <= 0) {
     usage(argv[0]);
     return EXIT_FAILURE;
   }
@@ -80,18 +84,28 @@ int main(int argc, char **argv)
   // Try to connect to the SAS database.
   ConfigLocator cl;
   ParameterSet ps(cl.locate("SASGateway.conf"));
-  string username	= ps.getString("OTDBusername");
-  string DBname 	= ps.getString("OTDBdatabasename");
-  string password	= ps.getString("OTDBpassword");
-  string hostname	= ps.getString("OTDBhostname");
+  string DBname 	= ps.getString("SASGateway.OTDBdatabase");
+  string hostname	= ps.getString("SASGateway.OTDBhostname");
 
-  LOG_INFO_STR ("Trying to connect to the OTDB on " << hostname);
-  OTDBconnection *conn = new OTDBconnection(username, password, DBname, hostname);
-
-  LOG_INFO_STR ("Setting status of observation " << obsID << " to " << status);
-  OTDB::TreeMaintenance tm(conn);
+  LOG_INFO_STR ("Trying to connect to the OTDB on " << DBname << "@" << hostname);
+  OTDBconnection *conn = new OTDBconnection("paulus", "boskabouter", DBname, hostname);
   TreeStateConv tsc(conn);
-  tm.setTreeState(obsID, tsc.get(status));
+
+  if (!status.empty()) {
+    LOG_INFO_STR ("Setting status of observation " << obsID << " to " << status);
+    OTDB::TreeMaintenance tm(conn);
+    tm.setTreeState(obsID, tsc.get(status));
+  }
+
+  LOG_INFO_STR ("Getting status of observation " << obsID);
+  vector<TreeState> states = conn->getStateList(obsID);
+
+  if (states.empty()) {
+    cout << "UNKNOWN" << endl;
+  } else {
+    // report last known state
+    cout << tsc.get(states.rbegin()->newState) << endl;
+  }
 
   LOG_INFO_STR ("Disconnecting from OTDB");
   delete conn;
