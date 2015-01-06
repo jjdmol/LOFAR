@@ -62,7 +62,7 @@ namespace LOFAR {
 
       if (budget > 0.0 && elapsed > budget) {
         const double realTimePerc = 100.0 * elapsed / budget;
-        LOG_WARN_STR("Run-time budget exceeded: " << itsName << " ran at " << realTimePerc << "% (took " << elapsed << " s, budget is " << budget << " s)");
+        LOG_DEBUG_STR("Run-time budget exceeded: " << itsName << " ran at " << realTimePerc << "% (took " << elapsed << " s, budget is " << budget << " s)");
       }
     }
   } // namespace Cobalt
