@@ -20,33 +20,75 @@
 //#
 //#  $Id: MACScheduler.cc 27964 2014-01-17 11:04:09Z mol $
 #include <lofar_config.h>
+#include <iostream>
+#include <unistd.h>
+
 #include <Common/LofarLogger.h>
 #include <Common/ParameterSet.h>
 #include "TreeStateConv.h"
 
 using namespace LOFAR;
 using namespace LOFAR::OTDB;
+using namespace std;
 
-int main()
+void usage(const char *argv0)
 {
-	std::string obsID;
-	std::string status; // queued, active, completing, finished, aborted
+  cerr << "Usage: " << argv0 << " -o obsid -s status" << endl;
+  cerr << endl;
+  cerr << "Put the status of `obsid` to `status`." << endl;
+  cerr << "Valid statusses: queued, active, completing, finished, aborted" << endl;
+}
 
-	// Try to connect to the SAS database.
-	ParameterSet* pParamSet = globalParameterSet();
-	string username	= pParamSet->getString("OTDBusername");
-	string DBname 	= pParamSet->getString("OTDBdatabasename");
-	string password	= pParamSet->getString("OTDBpassword");
-	string hostname	= pParamSet->getString("OTDBhostname");
+int main(int argc, char **argv)
+{
+  std::string obsID;
+  std::string status; // queued, active, completing, finished, aborted
 
-	LOG_INFO_STR ("Trying to connect to the OTDB on " << hostname);
-	conn = new OTDBconnection(username, password, DBname, hostname);
+  /*
+   * Parse command-line options
+   */
 
-	LOG_INFO_STR ("Setting status of observation " << obsID << " to " << status);
-	OTDB::TreeMaintenance tm(conn);
-	TreeStateConv tsc(conn);
-	tm.setTreeState(obsID, tsc.get(status));
+  int opt;
+  while ((opt = getopt(argc, argv, "o:s:h")) != -1) {
+    switch (opt) {
+    case 'o':
+      obsid = optarg;
+      break;
 
-	LOG_INFO_STR ("Disconnecting from OTDB");
-	delete conn;
+    case 's':
+      status = optarg;
+      break;
+
+    case 'h':
+      usage(argv[0]);
+      return EXIT_SUCCESS;
+
+    default: /* '?' */
+      usage(argv[0]);
+      return EXIT_FAILURE;
+    }
+  }
+
+  if (obsid.empty() || status.empty()) {
+    usage(argv[0]);
+    return EXIT_FAILURE;
+  }
+
+  // Try to connect to the SAS database.
+  ParameterSet* pParamSet = globalParameterSet();
+  string username	= pParamSet->getString("OTDBusername");
+  string DBname 	= pParamSet->getString("OTDBdatabasename");
+  string password	= pParamSet->getString("OTDBpassword");
+  string hostname	= pParamSet->getString("OTDBhostname");
+
+  LOG_INFO_STR ("Trying to connect to the OTDB on " << hostname);
+  conn = new OTDBconnection(username, password, DBname, hostname);
+
+  LOG_INFO_STR ("Setting status of observation " << obsID << " to " << status);
+  OTDB::TreeMaintenance tm(conn);
+  TreeStateConv tsc(conn);
+  tm.setTreeState(obsID, tsc.get(status));
+
+  LOG_INFO_STR ("Disconnecting from OTDB");
+  delete conn;
 }
