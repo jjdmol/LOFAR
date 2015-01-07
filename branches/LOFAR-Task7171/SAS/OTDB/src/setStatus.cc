@@ -48,6 +48,8 @@ void usage(const char *argv0)
 
 int main(int argc, char **argv)
 {
+  INIT_LOGGER("setStatus");
+
   treeIDType obsID;
   std::string status; // queued, active, completing, finished, aborted
 
@@ -83,9 +85,9 @@ int main(int argc, char **argv)
 
   // Try to connect to the SAS database.
   ConfigLocator cl;
-  ParameterSet ps(cl.locate("SASGateway.conf"));
-  string DBname 	= ps.getString("SASGateway.OTDBdatabase");
-  string hostname	= ps.getString("SASGateway.OTDBhostname");
+  ParameterSet ps(cl.locate("setStatus.conf"));
+  string DBname 	= ps.getString("OTDBdatabase");
+  string hostname	= ps.getString("OTDBhostname");
 
   LOG_INFO_STR ("Trying to connect to the OTDB on " << DBname << "@" << hostname);
   OTDBconnection *conn = new OTDBconnection("paulus", "boskabouter", DBname, hostname);
