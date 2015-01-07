@@ -153,6 +153,9 @@
 /* Define if using Rational Purify */
 #cmakedefine HAVE_PURIFY 1
 
+/* Define if QPID is installed */
+#cmakedefine HAVE_QPID 1
+
 /* Define if readline is installed */
 #cmakedefine HAVE_READLINE 1
 
