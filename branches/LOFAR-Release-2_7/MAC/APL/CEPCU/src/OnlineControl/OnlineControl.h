@@ -95,6 +95,7 @@ private:
 	void	_setState	  		 (CTState::CTstateNr	newState);
 	void	_databaseEventHandler(GCFEvent&				event);
 	void	_passMetadatToOTDB   ();
+	void	_clearCobaltDatapoints();
 
 	// ----- datamembers -----
 	string						itsMyName;

@@ -62,12 +62,13 @@ class tGSAService : public GCFTask
   GCFEvent::TResult test8	 (GCFEvent& e, GCFPortInterface& p);
   GCFEvent::TResult test9	 (GCFEvent& e, GCFPortInterface& p);
   GCFEvent::TResult test10	 (GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult testCreateMdpe		(GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult testWriteMdpe		(GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult testWriteMdpeTimed	(GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult testWriteDynArray	(GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult testQuerySingle		(GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult testQueryUnsubscribe(GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult testCreateMdpe			(GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult testWriteMdpe			(GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult testWriteMdpeTimed		(GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult testWriteDynArray		(GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult testWriteMultipleDynArr	(GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult testQuerySingle			(GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult testQueryUnsubscribe	(GCFEvent& e, GCFPortInterface& p);
 
  private:
 
