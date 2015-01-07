@@ -50,7 +50,7 @@ int main(int argc, char **argv)
 {
   INIT_LOGGER("setStatus");
 
-  treeIDType obsID;
+  treeIDType obsID = 0;
   std::string status; // queued, active, completing, finished, aborted
 
   /*
