@@ -736,12 +736,14 @@ namespace LOFAR
               {
                 const string prefix = str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
                 tab.direction.type    = getString(prefix + ".directionType", "J2000");
-              
-                tab.direction.angle1  = getDouble(prefix + ".angle1", 0.0);
-                tab.direction.angle2  = getDouble(prefix + ".angle2", 0.0);
 
                 tab.dispersionMeasure     = getDouble(prefix + ".dispersionMeasure", 0.0);
                 tab.coherent              = getBool(prefix + ".coherent", true);
+             
+                // Incoherent TABs point in the same direction as the SAP by definition. The processing
+                // pipelines do not use the angles, but the data writer does as part of its annotation.
+                tab.direction.angle1  = tab.coherent ? getDouble(prefix + ".angle1", 0.0) : sap.direction.angle1;
+                tab.direction.angle2  = tab.coherent ? getDouble(prefix + ".angle2", 0.0) : sap.direction.angle2;
               }
               else
               {
