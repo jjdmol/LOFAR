@@ -200,7 +200,9 @@ INSERT INTO station VALUES ('DE602', 'UnterWeilenbach (Garching)');
 INSERT INTO station VALUES ('DE603', 'Tautenburg');
 INSERT INTO station VALUES ('DE604', 'Potsdam');
 INSERT INTO station VALUES ('DE605', 'Juelich');
+INSERT INTO station VALUES ('DE609', 'Norderstedt');
 INSERT INTO station VALUES ('FR606', 'Nancy');
 INSERT INTO station VALUES ('SE607', 'Onsala');
 INSERT INTO station VALUES ('UK608', 'Chillbolton');
+INSERT INTO station VALUES ('FI609', 'Kaira');
 
