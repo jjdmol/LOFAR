@@ -262,7 +262,7 @@ class obsPreprocessing:
 		
 		#extract the source model with pybdsm
 		print ''
-		print 'extraction by pybdsm: bdsm.process_image %s,adaptive_rms_box=True,advanced_opts=True,detection_image=%s,thresh_isl=%s,thresh_pix=%s,rms_box=(%s,%s),rms_box_bright=(%s,%s),adaptive_thresh=30,blank_limit=1E-4,atrous_do=True,psf_vary_do=True,psf_stype_only=False,psf_snrcut=5,psf_snrcutstack=5,psf_snrtop=0.3'%('%sImage_substraction%s.restored.corr'%(self.preprocessImageDir,self.i),'%sImage_substraction%s.restored'%(self.preprocessImageDir,self.i),self.thresh_isl,self.thresh_pix,80,10,40,10)
+		print 'extraction by pybdsm: bdsm.process_image %s,adaptive_rms_box=True,advanced_opts=True,detection_image=%s,thresh_isl=%s,thresh_pix=%s,rms_box=(%s,%s),rms_box_bright=(%s,%s),adaptive_thresh=30,blank_limit=1E-4,atrous_do=True,ini_method=curvature,psf_vary_do=True,psf_stype_only=False,psf_snrcut=5,psf_snrcutstack=5,psf_snrtop=0.3'%('%sImage_substraction%s.restored.corr'%(self.preprocessImageDir,self.i),'%sImage_substraction%s.restored'%(self.preprocessImageDir,self.i),self.thresh_isl,self.thresh_pix,80,10,40,10)
 		print ''		
 		
 		#extract the source model with pybdsm
