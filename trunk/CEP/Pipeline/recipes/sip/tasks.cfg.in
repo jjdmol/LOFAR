@@ -70,6 +70,7 @@ asciistat_executable = %(lofarroot)s/bin/asciistats.py
 statplot_executable = %(lofarroot)s/bin/statsplot.py
 msselect_executable = %(lofarroot)s/bin/msselect
 rficonsole_executable = %(lofarroot)s/bin/rficonsole
+nproc = 1
 
 [imager_awimager]
 recipe = imager_awimager

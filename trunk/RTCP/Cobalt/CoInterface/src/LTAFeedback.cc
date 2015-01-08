@@ -219,8 +219,13 @@ namespace LOFAR
       ps.add("Observation.DataProducts.nrOfOutput_Beamformed_", 
              str(format("%u") % (settings.beamFormer.enabled ? settings.beamFormer.files.size() : 0)));
 
-      if (settings.beamFormer.enabled && settings.beamFormer.anyCoherentTABs() && !settings.beamFormer.doFlysEye) {
-        /* Coherent Stokes, no Fly's Eye */
+      if (settings.beamFormer.enabled && settings.beamFormer.anyCoherentTABs()) {
+        /* Coherent Stokes, or Fly's Eye.
+         *
+         * The specifications have to enable Coherent Stokes even in Fly's Eye mode, which means
+         * that the specification tools (MoM) expect feedback about Coherent Stokes, even if there
+         * are no coherent non-Fly's Eye TABs (related to #7109 and SIP 2.5.0).
+         */
         const ObservationSettings::BeamFormer::StokesSettings&
           coherentStokes = settings.beamFormer.coherentSettings;
 
