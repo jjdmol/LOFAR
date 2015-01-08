@@ -89,13 +89,14 @@ private:
 
 	// Create new beam and update administration
 	DigitalBeam*	checkBeam(GCFPortInterface* 					port,
-					string 								name, 
-					string 								subarrayname, 
-					IBS_Protocol::Beamlet2SubbandMap	allocation,
-					bitset<LOFAR::MAX_RCUS>				rcumask,
-					uint								ringNr,
-					uint								rcuMode,
-					int*								beamError);
+							  string 								name, 
+							  string 								subarrayname, 
+							  IBS_Protocol::Beamlet2SubbandMap		allocation,
+							  bitset<LOFAR::MAX_RCUS>				rcumask,
+							  uint									ringNr,
+							  uint									rcuMode,
+							  const vector<string>&					extraOptions,
+							  int*									beamError);
 
 	// Destroy beam of specified transaction.
 	// @param bt the beamtransaction specifying the beam to destroy
@@ -133,6 +134,11 @@ private:
 	// The beamfree state. In this state the BeamServer unsubscribes
 	// with the calibration server for the specified beam.
 	GCFEvent::TResult beamfree_state(GCFEvent& e, GCFPortInterface& p);
+
+	// functions for clean shutdown.
+	static void sigintHandler(int signum);
+	void finish();
+	GCFEvent::TResult finishing_state(GCFEvent&	e, GCFPortInterface& p);
 
 	// action methods
 

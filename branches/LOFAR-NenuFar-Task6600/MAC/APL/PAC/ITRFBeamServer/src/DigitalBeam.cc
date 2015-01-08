@@ -53,11 +53,13 @@ DigitalBeam::DigitalBeam(const string& 				name,
 					     const Beamlet2SubbandMap&	allocation, 
 					     const bitset<MAX_RCUS>&	rcuMask,
 					     uint						ringNr,
-						 uint						rcuMode) :
+						 uint						rcuMode,
+						 const vector<string>&		extraOptions) :
 	Beam 				(name, antennaSet, rcuMask),
 	itsBeamletAllocation(allocation),
 	itsRingNr			(ringNr),
-	itsRCUmode			(rcuMode)
+	itsRCUmode			(rcuMode),
+	itsExtraOptions		(extraOptions)
 {}
 
 //

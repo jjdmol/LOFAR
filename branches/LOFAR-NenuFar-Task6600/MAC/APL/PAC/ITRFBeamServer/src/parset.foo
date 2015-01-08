@@ -1,0 +1,8 @@
+antennaset=LBA_INNER 
+rcus=0:15 
+rcumode=3 
+digdir=0.5,0.7,J2000 
+anadir=0.6,0.6,J2000 
+subbands=10:100 
+beamlets=10:100 
+hpf=20

@@ -48,11 +48,14 @@ void NenuFarAdmin::addBeam(const string& 				 beamName,
 						   const RCUmask_t&				 RCUselection, 
 						   int 							 rank, 
 						   const IBS_Protocol::Pointing& pointing, 
-						   int 							 filter,
 						   const vector<string>&		 extraInfo)
 {
+	if (!itsIsActive) {
+		return;
+	}
+
 	LOG_INFO_STR("NenuFarAdmin: adding " << beamName);
-	itsBeams.push_back(BeamInfo(beamName, antennaSet, RCUselection, rank, pointing, filter, extraInfo));
+	itsBeams.push_back(BeamInfo(beamName, antennaSet, RCUselection, rank, pointing, extraInfo));
 }
 
 
@@ -61,6 +64,10 @@ void NenuFarAdmin::addBeam(const string& 				 beamName,
 //
 bool NenuFarAdmin::abortBeam(const string& beamName)
 {
+	if (!itsIsActive) {
+		return(false);
+	}
+
 	list<BeamInfo>::iterator	iter = itsBeams.begin();
 	list<BeamInfo>::iterator	end  = itsBeams.end();
 	while (iter != end) {
@@ -85,6 +92,10 @@ bool NenuFarAdmin::abortBeam(const string& beamName)
 //
 void NenuFarAdmin::abortAllBeams()
 {
+	if (!itsIsActive) {
+		return;
+	}
+
 	LOG_INFO("NenuFarAdmin: aborting all beams");
 	itsAllBeamsAborted = true;
 	itsBeams.clear();
@@ -180,7 +191,6 @@ ParameterSet	NenuFarAdmin::BeamInfo::asParset() const
 	ps.add("beamName", 	 beamName);
 	ps.add("antennaSet", antennaSet);
 	ps.add("rcus", 		 RCUselection.to_string<char,char_traits<char>,allocator<char> >());
-	ps.add("hpf", 		 toString(filter));
 	ps.add("angle2Pi", 	 toString(angle2Pi));
 	ps.add("anglePi", 	 toString(anglePi));
 	ps.add("coordFrame", coordFrame);

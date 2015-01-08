@@ -34,7 +34,7 @@ namespace LOFAR {
 
 // This class does all the 'clever' bookkeeping of the beams that should be communicated to NenuFar.
 // The bookkeeping is based on the beam_state and the comm_state: the beam_state is the actual state
-// of the beam (= the state the beam has in LOFAR) and the comm_state is the state that is communicated
+// of the beam (= the state the beam has in LOFAR) and the comm_state is the state that has been communicated
 // to NenuFar. Normally these states would be in sync but when the communication with NenuFar is lost 
 // this could be different.
 // The LOFAR task uses the addBeam and abort(All)Beam(s) calls to update its state.
@@ -52,7 +52,7 @@ namespace LOFAR {
 class NenuFarAdmin {
 public:
 	// Default constructor
-	NenuFarAdmin(): itsAllBeamsAborted(false) {};
+	NenuFarAdmin(): itsAllBeamsAborted(false),itsIsActive(false) {};
 
 	// Default destructor.
 	virtual ~NenuFarAdmin();
@@ -63,7 +63,6 @@ public:
 		 		const RCUmask_t&				RCUselection,
 				int 							rank, 
 				const IBS_Protocol::Pointing& 	pointing, 
-				int 							filter,
 				const vector<string>&			extraInfo);
 
 	// Abort a beam from the admin
@@ -86,11 +85,10 @@ public:
 			rankNr	     (0),
 			angle2Pi     (0.0),
 			anglePi	     (0.0),
-			filter	     (0),
 			beam_state	 (BS_NONE),
 			comm_state	 (BS_NONE) {};
 		BeamInfo(const string& nameOfBeam, const string& antennaSet, const RCUmask_t& RCUselect, int rank,
-				 const IBS_Protocol::Pointing& pointing, int hpf, const vector<string>& extraInfo) :
+				 const IBS_Protocol::Pointing& pointing, const vector<string>& extraInfo) :
 			startTime    (pointing.time().sec()),
 			endTime      (pointing.endTime().sec()),
 			beamName     (nameOfBeam),
@@ -100,7 +98,6 @@ public:
 			angle2Pi     (pointing.angle0()),
 			anglePi	     (pointing.angle1()),
 			coordFrame	 (pointing.getType()),
-			filter	     (hpf),
 			extra		 (extraInfo),
 			beam_state	 (BS_NEW),
 			comm_state	 (BS_NONE) {};
@@ -125,7 +122,6 @@ public:
 		double			angle2Pi;
 		double			anglePi;
 		string			coordFrame;
-		int				filter;
 		vector<string>	extra;
 		int				beam_state;
 		int				comm_state;
@@ -145,6 +141,9 @@ public:
 	// Check for abortion of all beams.
 	bool	allBeamsAborted() { bool result = itsAllBeamsAborted; itsAllBeamsAborted = false; return result; }
 
+	// Enable administration
+	void	activateAdmin() { itsIsActive = true; };
+
 	// print function for operator<<
 	ostream& print (ostream& os) const;
 
@@ -154,6 +153,8 @@ private:
 	list<BeamInfo>			itsBeams;
 
 	bool					itsAllBeamsAborted;
+
+	bool					itsIsActive;	// if not activated all functions are idle.
 };
 
 //# -------------------- inline functions --------------------

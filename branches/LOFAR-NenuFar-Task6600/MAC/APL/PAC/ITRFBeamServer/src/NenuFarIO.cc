@@ -51,6 +51,11 @@ NenuFarIO::NenuFarIO(NenuFarAdmin*	nnfAdmin) :
 	// prepare TCP port to NCU.
 	itsNCUport = new GCFTCPPort (*this, "NCU_IO_port", GCFPortInterface::SAP, 0, true);	// raw data
 	ASSERTSTR(itsNCUport, "Cannot allocate TCPport to NenuFar system");
+
+	// enable interface the BeamServerTask uses.
+	itsBeams->activateAdmin();
+
+	LOG_INFO("NenuFarIO task succesfully initialized");
 }
 
 //

@@ -67,7 +67,8 @@ GCFEvent::TResult tNenuFarIO::sunshine(GCFEvent& event, GCFPortInterface& /*port
 		vector<string>		extraInfo;
 		extraInfo.push_back("extraKey1=25");
 		extraInfo.push_back("extraKey2=[aap,noot,mies]");
-		itsAdmin->addBeam("beam_sunshine", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15, extraInfo);
+		extraInfo.push_back("hpf=15");
+		itsAdmin->addBeam("beam_sunshine", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, extraInfo);
 		ASSERTSTR(itsAdmin->nrBeams() == 1, "beamAdmin not correct!");
 		LOG_INFO("### Admin OK, waiting 15 seconds...");
 		itsTimer->setTimer (15.0);
@@ -105,7 +106,7 @@ GCFEvent::TResult tNenuFarIO::noAnswer(GCFEvent& event, GCFPortInterface& /*port
 		extraInfo.push_back("extraKey1=25");
 		extraInfo.push_back("extraKey2=[aap,noot,mies]");
 		extraInfo.push_back("no_answer=true");
-		itsAdmin->addBeam("beam_noanswer", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15, extraInfo);
+		itsAdmin->addBeam("beam_noanswer", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, extraInfo);
 		ASSERTSTR(itsAdmin->nrBeams() == 1, "beamAdmin not correct!");
 		itsTimer->setTimer(8.0);
 		LOG_INFO("### Waiting 8 seconds...");
@@ -144,7 +145,7 @@ GCFEvent::TResult tNenuFarIO::testAbort(GCFEvent& event, GCFPortInterface& /*por
 		vector<string>		extraInfo;
 		extraInfo.push_back("extraKey1=25");
 		extraInfo.push_back("extraKey2=[aap,noot,mies]");
-		itsAdmin->addBeam("beam_2abort", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15, extraInfo);
+		itsAdmin->addBeam("beam_2abort", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, extraInfo);
 		itsTimer->setTimer(10.0);
 		LOG_INFO("### Waiting 10 seconds...");
 	} break;
@@ -188,11 +189,11 @@ GCFEvent::TResult tNenuFarIO::testMultipleBeams(GCFEvent& event, GCFPortInterfac
 		vector<string>		extraInfo;
 		extraInfo.push_back("extraKey1=25");
 		extraInfo.push_back("extraKey2=[aap,noot,mies]");
-		itsAdmin->addBeam("beam_1", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15, extraInfo);
-		itsAdmin->addBeam("beam_2", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15, extraInfo);
-		itsAdmin->addBeam("beam_3", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15, extraInfo);
-		itsAdmin->addBeam("beam_4", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15, extraInfo);
-		itsAdmin->addBeam("beam_5", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15, extraInfo);
+		itsAdmin->addBeam("beam_1", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, extraInfo);
+		itsAdmin->addBeam("beam_2", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, extraInfo);
+		itsAdmin->addBeam("beam_3", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, extraInfo);
+		itsAdmin->addBeam("beam_4", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, extraInfo);
+		itsAdmin->addBeam("beam_5", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, extraInfo);
 		ASSERTSTR(itsAdmin->nrBeams() == 5, "beamAdmin not correct!");
 		LOG_INFO("### Waiting 12 seconds");
 		itsTimer->setTimer(12.0);
@@ -230,11 +231,11 @@ GCFEvent::TResult tNenuFarIO::testAbortAll(GCFEvent& event, GCFPortInterface& /*
 		vector<string>		extraInfo;
 		extraInfo.push_back("extraKey1=25");
 		extraInfo.push_back("extraKey2=[aap,noot,mies]");
-		itsAdmin->addBeam("beam_10", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15, extraInfo);
-		itsAdmin->addBeam("beam_20", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15, extraInfo);
-		itsAdmin->addBeam("beam_30", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15, extraInfo);
-		itsAdmin->addBeam("beam_40", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15, extraInfo);
-		itsAdmin->addBeam("beam_50", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, 15, extraInfo);
+		itsAdmin->addBeam("beam_10", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, extraInfo);
+		itsAdmin->addBeam("beam_20", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, extraInfo);
+		itsAdmin->addBeam("beam_30", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, extraInfo);
+		itsAdmin->addBeam("beam_40", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, extraInfo);
+		itsAdmin->addBeam("beam_50", "LBA_INNER", bitset<192>(0x0FF0FFF), 1, pointing1, extraInfo);
 		itsTimer->setTimer(6.0);
 	} break;
 

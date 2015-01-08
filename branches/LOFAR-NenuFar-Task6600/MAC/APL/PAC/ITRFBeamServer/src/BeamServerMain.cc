@@ -49,9 +49,12 @@ int main(int argc, char* argv[])
 	BeamServer	bsTask(LOFAR::basename(argv[0]), &theNNFadmin, testTime);
 	bsTask.start(); 	// make initial transition
 
+	LOG_DEBUG_STR(*globalParameterSet());
+
+	NenuFarIO*	nnfTask;
 	if (globalParameterSet()->isDefined("BeamServer.NenuFar.hostname")) {
-		NenuFarIO	nnfTask(&theNNFadmin);
-		nnfTask.start();
+		nnfTask = new NenuFarIO(&theNNFadmin);
+		nnfTask->start();
 	}
 
 	GCFScheduler::instance()->run();

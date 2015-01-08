@@ -52,7 +52,7 @@ GCFPortInterface::GCFPortInterface (GCFTask*		pTask,
 								    bool			transportRawData) :
 	_pTask(pTask), 
 	_name(name), 
-	_deviceNameMask(),
+	_deviceNameMask(""),
 	_state(S_DISCONNECTED), 
 	_type(type), 
 	_protocol(protocol),
