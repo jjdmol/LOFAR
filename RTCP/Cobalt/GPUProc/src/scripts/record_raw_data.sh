@@ -28,10 +28,10 @@ fi
 # -s: Number of subbands to record [SET TO NUMBER OF SUBBANDS]
 # -f: Record from this timestamp [SET TO OBS START TIME - 1SEC]
 # -t: Record until this timestamp [SET TO OBS END TIME]
-FILTERPARAMS="-s 122 -q -f '2014-05-22 13:34:59' -t '2014-05-22 13:40:01'"
+FILTERPARAMS="-s 122 -q -f '2015-01-12 13:29:59' -t '2015-01-12 13:35:01'"
 
 # Identifier for the output files [SET TO SOMETHING UNIQUE]
-NAME="cs-is-scaling"
+NAME="b1919-2015-01-12"
 
 # Just a note containing all stations
 ALLSTATIONS="
@@ -72,7 +72,6 @@ STATIONS="
   CS201
   CS301 CS302
   CS401
-  CS501
 "
 
 # Output to "locus" or to "file"
@@ -83,7 +82,7 @@ OUTPUT=locus
 # To sort locus nodes on disk space available on /data, use:
 #
 # [lhn001] cexec -p df /data | grep sda10 | sort -n -k 7 | cut -c 12-14 | tr '\n' ' '
-LOCUS_NODES=(055 100 080 065 093 094 058 043 004 022 034 037 059 083 045 062 067 090 010 021 023 033 066 087 009 013 029 056 069 071 079 086 019 039 064 014 035 050 053 088 001 016 026 041 051 054 060 061 077 082 089 005 007 008 068 085 017 018 020 038 049 076 091 002 047 063 098 012 027 072 006 074 024 031 057 075 078 052 070 011 046 048 003 040 081 015 025 042 044 084 095 096 032 073 028 036 097 030 092 099)
+LOCUS_NODES=(094 092 100 093 080 058 013 069 079 077 063 066 071 076 082 090 061 062 064 068 085 060 067 072 086 087 089 047 048 050 053 055 088 049 056 078 040 043 045 070 075 051 054 074 026 027 073 081 091 098 016 029 039 041 008 012 014 025 034 035 038 042 052 006 010 018 031 032 037 057 005 007 011 017 020 021 028 030 046 015 019 022 023 059 084 004 003 009 036 044 001 065 083 096 099 095 024 002 033 097)
 LOCUS_FIRST_PORT=12345
 
 # Temporary location for the parset we create
@@ -197,7 +196,7 @@ do
 
     # The command to execute to record this field
     echo "# stream $s board $b [$INSTREAM -> $OUTSTREAM]" >> record.sh
-    echo ssh $HOST \"nice -n -20 numactl --cpunodebind=$CPU --membind=$CPU $LOFARROOT/filterRSP -i $INSTREAM -o $OUTSTREAM "$FILTERPARAMS" \" "&" >> record.sh
+    echo ssh $HOST \"nice -n -20 numactl --cpunodebind=$CPU --membind=$CPU $LOFARROOT/bin/filterRSP -i $INSTREAM -o $OUTSTREAM "$FILTERPARAMS" \" "&" >> record.sh
   done
 
   echo "PIC.Core.$s.RSP.ports = [$OBS_INSTREAMS]" >> replay.parset
