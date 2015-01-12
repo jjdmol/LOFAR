@@ -185,7 +185,7 @@ do
         echo ssh $DESTNODE \"/globalhome/romein/bin.x86_64/udp-copy tcp:0:$DESTPORT $FILESTREAM\" "&" >> record-locus.sh
 
         OBS_INSTREAM="tcp:$IFACE:$DESTPORT"
-        echo "ssh $DESTNODE \"/globalhome/romein/bin.x86_64/udp-copy $FILESTREAM $INSTREAM \"" "&" >> replay.sh
+        echo "ssh $DESTNODE \"/globalhome/romein/bin.x86_64/udp-copy $FILESTREAM $OBS_INSTREAM \"" "&" >> replay.sh
         ;;
     esac
 
