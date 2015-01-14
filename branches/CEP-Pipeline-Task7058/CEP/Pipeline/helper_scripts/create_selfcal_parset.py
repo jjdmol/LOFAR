@@ -137,13 +137,13 @@ def add_output_lists_to_parset(parset_as_dict, filenames_h5,
     Insert the newly create lists into the parset dict using correct
     HARD CODED key vlues
     """
-    parset_as_dict["ObsSW.Observation.DataProducts.Output_SkyImage.filenames"] =  repr(locations)
+    parset_as_dict["ObsSW.Observation.DataProducts.Output_SkyImage.filenames"] =  repr(filenames_h5)
 
-    parset_as_dict["ObsSW.Observation.DataProducts.Output_SkyImage.locations"] =  repr(filenames_h5)
+    parset_as_dict["ObsSW.Observation.DataProducts.Output_SkyImage.locations"] =  repr(locations)
 
-    parset_as_dict["ObsSW.Observation.DataProducts.Output_Correlated.filenames"] = repr(locations)
+    parset_as_dict["ObsSW.Observation.DataProducts.Output_Correlated.filenames"] = repr(filenames_ms)
     
-    parset_as_dict["ObsSW.Observation.DataProducts.Output_Correlated.locations"] = repr(filenames_ms)
+    parset_as_dict["ObsSW.Observation.DataProducts.Output_Correlated.locations"] = repr(locations)
 
     # Grab the skip list from the output skyimage and add it with the correct c
     # correlated key
@@ -177,7 +177,7 @@ def basic_validity_ok(locations, parset_as_dict_of_string_to_string):
     Performs a very basic (set of) test (s) to check if the created output 
     parset would make any sense 
     """
-    skip_list_as_string = parset_as_dict_of_string_to_string["ObsSW.Observation.DataProducts.Output_Correlated.skip"]
+    skip_list_as_string = parset_as_dict_of_string_to_string["ObsSW.Observation.DataProducts.Output_SkyImage.skip"]
     skip_list = eval(skip_list_as_string)
 
     # now check if the lenght is the same, if not the config does not match the parset
