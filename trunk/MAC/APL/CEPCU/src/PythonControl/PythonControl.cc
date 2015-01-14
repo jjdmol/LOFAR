@@ -308,7 +308,9 @@ GCFEvent::TResult PythonControl::initial_state(GCFEvent& event, GCFPortInterface
 	case F_ENTRY:
 		itsListener->open();	// will result in F_CONN
 		// QUICK FIX #3633
-		itsFeedbackListener->setPortNumber(MAC_PYTHON_FEEDBACK_QF + getObservationNr(getName())%1000);
+                unsigned portNr = MAC_PYTHON_FEEDBACK_QF + getObservationNr(getName()) % 7000;
+		LOG_INFO_STR("Listening for feedback on port " << portNr);
+		itsFeedbackListener->setPortNumber(portNr);
 		itsFeedbackListener->open();	// will result in F_CONN
    		break;
 
