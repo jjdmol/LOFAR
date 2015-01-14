@@ -55,6 +55,22 @@ namespace LOFAR {
       return *this;
     }
 
+    void DPBuffer::copy (const DPBuffer& that)
+    {
+      if (this != &that) {
+        itsTime     = that.itsTime;
+        itsExposure = that.itsExposure;
+        itsRowNrs.assign (that.itsRowNrs);
+        itsData.assign (that.itsData);
+        itsAmpl.assign (that.itsAmpl);
+        itsFlags.assign (that.itsFlags);
+        itsWeights.assign (that.itsWeights);
+        itsModel.assign (that.itsModel);
+        itsUVW.assign (that.itsUVW);
+        itsFullResFlags.assign (that.itsFullResFlags);
+      }
+    }
+
     void DPBuffer::clear()
     {
       itsRowNrs.resize();

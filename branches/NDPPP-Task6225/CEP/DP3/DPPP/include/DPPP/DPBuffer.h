@@ -113,6 +113,9 @@ namespace LOFAR {
       // Assignment uses reference copies.
       DPBuffer& operator= (const DPBuffer&);
 
+      // Make a deep copy of all arrays in that to this.
+      void copy (const DPBuffer& that);
+
       // Remove all arrays from the buffer.
       void clear();
 

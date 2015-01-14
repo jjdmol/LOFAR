@@ -35,6 +35,7 @@
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/ArrColDesc.h>
 #include <tables/Tables/StandardStMan.h>
+#include <tables/Tables/TiledStManAccessor.h>
 #include <measures/TableMeasures/ArrayMeasColumn.h>
 #include <measures/Measures/MCDirection.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -81,7 +82,7 @@ namespace LOFAR {
       ASSERTSTR (itsWeightColName == "WEIGHT_SPECTRUM", "Currently only the "
           "WEIGHT_SPECTRUM column can be used as output when writing a new MS");
       // Create the MS.
-      if (tileNChan <= 0) {
+      if (tileNChan <= 0  ||  tileNChan > info.nchan()) {
         tileNChan = info.nchan();
       }
       createMS (outName, info, tileSize, tileNChan);
@@ -124,6 +125,14 @@ namespace LOFAR {
     {
       NSTimer::StartStop sstime(itsTimer);
       itsMS.flush();
+      ROTiledStManAccessor acc1(itsMS, "TiledData");
+      acc1.showCacheStatistics (cout);
+      ROTiledStManAccessor acc2(itsMS, "TiledFlag");
+      acc2.showCacheStatistics (cout);
+      ROTiledStManAccessor acc3(itsMS, "TiledUVW");
+      acc3.showCacheStatistics (cout);
+      ROTiledStManAccessor acc4(itsMS, "TiledFullResFlag");
+      acc4.showCacheStatistics (cout);
       // Create the VDS file.
       if (! itsClusterDesc.empty()) {
         string vdsName = itsMS.tableName() + ".vds";
@@ -299,7 +308,7 @@ namespace LOFAR {
         // this run, so the full resolution is the combination of both.
         uint orignchan = itsNrChan * itsNChanAvg;
         IPosition dataShapeF(2, (orignchan+7)/8, itsNTimeAvg);
-        IPosition tileShapeF(2, (orignchan+7)/8, 1024);
+        IPosition tileShapeF(3, (orignchan+7)/8, 1024, tileShape[2]);
         TiledColumnStMan tsmf("TiledFullResFlag", tileShapeF);
         ArrayColumnDesc<uChar> padesc("LOFAR_FULL_RES_FLAG",
                                       "flags in original full resolution",

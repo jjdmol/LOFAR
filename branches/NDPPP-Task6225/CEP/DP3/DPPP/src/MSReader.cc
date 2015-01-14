@@ -216,9 +216,21 @@ namespace LOFAR {
 
     bool MSReader::process (const DPBuffer&)
     {
+      if (itsNrRead == 0) {
+        if (itsReadVisData) {
+          itsBuffer.getData().resize (itsNrCorr, itsNrChan, itsNrBl);
+        }
+        if (itsReadModelData) {
+          itsBuffer.getModel().resize (itsNrCorr, itsNrChan, itsNrBl);
+        }
+        if (itsUseFlags) {
+          itsBuffer.getFlags().resize (itsNrCorr, itsNrChan, itsNrBl);
+        }
+        ///cout<<(void*)(itsBuffer.getData().data())<<" upd"<<endl;
+      }
       {
         NSTimer::StartStop sstime(itsTimer);
-        itsBuffer.clear();
+        ///        itsBuffer.clear();
         // Use time from the current time slot in the MS.
         bool useIter = false;
         while (!itsIter.pastEnd()) {
@@ -281,28 +293,34 @@ namespace LOFAR {
             itsBuffer.setExposure (ROScalarColumn<double>
                                    (itsIter.table(), "EXPOSURE")(0));
             // Get data and flags from the MS.
+            ///            if (itsNrRead%50 < 4) {
+            ///              cout<<(void*)(itsBuffer.getData().data())<<" rd1"<<endl;
+            ///}
             if (itsReadVisData) {
               ROArrayColumn<Complex> dataCol(itsIter.table(), itsDataColName);
               if (itsUseAllChan) {
-                itsBuffer.setData (dataCol.getColumn());
+                dataCol.getColumn (itsBuffer.getData());
               } else {
-                itsBuffer.setData (dataCol.getColumn(itsColSlicer));
+                dataCol.getColumn (itsColSlicer, itsBuffer.getData());
               }
             }
+            ///if (itsNrRead%50 < 4) {
+            ///cout<<(void*)(itsBuffer.getData().data())<<" rd2"<<endl;
+            ///}
             if (itsReadModelData) {
               ROArrayColumn<Complex> modelCol(itsIter.table(), itsModelColName);
               if (itsUseAllChan) {
-                itsBuffer.setModel(modelCol.getColumn());
+                modelCol.getColumn (itsBuffer.getModel());
               } else {
-                itsBuffer.setModel(modelCol.getColumn(itsColSlicer));
+                modelCol.getColumn (itsColSlicer, itsBuffer.getModel());
               }
             }
             if (itsUseFlags) {
               ROArrayColumn<bool> flagCol(itsIter.table(), "FLAG");
               if (itsUseAllChan) {
-                itsBuffer.setFlags (flagCol.getColumn());
+                flagCol.getColumn (itsBuffer.getFlags());
               } else {
-                itsBuffer.setFlags (flagCol.getColumn(itsColSlicer));
+                flagCol.getColumn(itsColSlicer, itsBuffer.getFlags());
               }
               // Set flags if FLAG_ROW is set.
               ROScalarColumn<bool> flagrowCol(itsIter.table(), "FLAG_ROW");
