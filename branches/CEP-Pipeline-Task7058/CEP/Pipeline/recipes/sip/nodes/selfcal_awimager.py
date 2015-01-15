@@ -121,11 +121,10 @@ class selfcal_awimager(LOFARnodeTCP):
 
             # ****************************************************************
             # 3. Create the mask
-            mask_file_path = self._create_mask(npix, cell_size, output_image,
-                         concatenated_measurement_set, executable,
-                         working_directory, log4_cplus_name, sourcedb_path,
-                          mask_patch_size, image_path_head)
-
+            #mask_file_path = self._create_mask(npix, cell_size, output_image,
+            #             concatenated_measurement_set, executable,
+            #             working_directory, log4_cplus_name, sourcedb_path,
+            #              mask_patch_size, image_path_head)
             # *****************************************************************
             # 4. Update the parset with calculated parameters, and output image
             patch_dictionary = {'uselogger': 'True',  # enables log4cpluscd log
@@ -175,6 +174,8 @@ class selfcal_awimager(LOFARnodeTCP):
             # *****************************************************************
             # 5. Run the awimager with the parameterset
             cmd = [executable, calculated_parset_path]
+            self.logger.debug("Parset used for awimager run:")
+            self.logger.debug(cmd)
             try:
                 with CatchLog4CPlus(working_directory,
                         self.logger.name + "." +
