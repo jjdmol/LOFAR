@@ -181,11 +181,11 @@ public:
 	static Cache& getInstance();
 	virtual ~Cache();
 	/*@}*/
-    
+
 	// Reset cache front and back buffers.
 	void reset(void);
 	void resetI2Cuser(void);
-    
+
 	// Swap the front and back buffers.
 	void swapBuffers();
 
@@ -199,7 +199,6 @@ public:
 private:
 	// Direct construction not allowed.
 	Cache();
-    
 
 	// Keep register update state.
 	AllRegisterState m_allstate; // communication status of all register
