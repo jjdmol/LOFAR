@@ -161,21 +161,19 @@ namespace LOFAR {
       // Show the timings.
       virtual void showTimings (std::ostream&, double duration) const;
 
-      // Read the UVW at the given row numbers.
-      virtual casa::Matrix<double> getUVW (const casa::RefRows& rowNrs);
+      // Read the UVW at the given row numbers into the buffer.
+      virtual void getUVW (const casa::RefRows& rowNrs,
+                           DPBuffer&);
 
-      // Read the weights at the given row numbers.
-      virtual casa::Cube<float> getWeights (const casa::RefRows& rowNrs,
-                                            const DPBuffer& buf);
+      // Read the weights at the given row numbers into the buffer.
+      virtual void getWeights (const casa::RefRows& rowNrs,
+                               DPBuffer&);
 
-      // Read the FullRes flags (LOFAR_FULL_RES_FLAG) at the given row numbers.
-      // It returns a 3-dim array [norigchan, ntimeavg, nbaseline].
-      // If undefined, an empty array is returned.
-      virtual casa::Cube<bool> getFullResFlags (const casa::RefRows& rowNrs);
-
-      // Read the given data column at the given row numbers.
-      ///      virtual casa::Cube<casa::Complex> getData (const casa::String& columnName,
-      ///                                                 const casa::RefRows& rowNrs);
+      // Read the fullRes flags (LOFAR_FULL_RES_FLAG) at the given row numbers
+      // into the buffer.
+      // If undefined, false is returned.
+      virtual bool getFullResFlags (const casa::RefRows& rowNrs,
+                                    DPBuffer&);
 
       // Fill the vector with station beam info from the input MS.
       // Only fill it for the given station names.

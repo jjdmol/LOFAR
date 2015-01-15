@@ -60,6 +60,11 @@ namespace LOFAR {
     //   <td>The visibility data as [ncorr,nchan,nbaseline].</td>
     //  </tr>
     //  <tr>
+    //   <td>MODEL_DATA</td>
+    //   <td>The data from the MODEL_DATA column as
+    //       [ncorr,nchan,nbaseline].</td>
+    //  </tr>
+    //  <tr>
     //   <td>FLAG</td>
     //   <td>The data flags as [ncorr,nchan,nbaseline] (True is bad).
     //       Note that the ncorr axis is redundant because NDPPP will always
@@ -93,13 +98,33 @@ namespace LOFAR {
     //   </td>
     //  </tr>
     // </table>
-    // The DATA and FLAG data members should always filled in, so each DPStep
-    // should do that. Other data members do not need to be filled.
+    // The FLAG data member should always be filled in, so the first DPStep
+    // (MSReader) will do that. The DATA data member is filled in if any
+    // DPStep needs DATA. Other data members are filled on demand.
     // The DPInput::fetch functions should be used to get data for those
-    // members. They take care that the buffer's data is used if available,
-    // otherwise they get it from the DPInput object.
+    // members. They take care that the input buffer's data are used if
+    // available, otherwise they get it from the DPInput object.
     // In that way as little memory as needed is used. Note that e.g. the
-    // MedFlagger can use a lot of memory if a large time window is used.
+    // AOFlagger can use a lot of memory if a large time window is used.
+    //
+    // Until early 2015 NDPPP used the strategy of shallow data copies.
+    // I.e., a step increased the data reference counter and did not make
+    // an actual copy. Only when data were changed, a new data array was made.
+    // Thus MSReader allocated a new array when it read the data.
+    // However, it appeared this strategy lead to memory fragmentation and
+    // to sudden jumps in memory usage on Linux systems.
+    // <br>Therefore the strategy was changed to having each step preallocate
+    // its buffers and making deep copies when moving data from one step to
+    // the next one. It appeared that it not only improved memory usage,
+    // but also improved performance, possible due to far less mallocs.
+    //
+    // The buffer/step guidelines are as follows:
+    // 1. If a step keeps a buffer for later processing (e.g. AORFlagger),
+    //    it must make a copy of the buffer because the input data arrays
+    //    might have changed before that step processes the data.
+    // 2. A shallow copy of a data member can be used if a step processes
+    //    the data immediately (e.g. Averager).
+    // The DPInput::fetch functions come in those 2 flavours.
 
     class DPBuffer
     {

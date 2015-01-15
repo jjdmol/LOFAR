@@ -65,18 +65,22 @@ namespace LOFAR {
     public:
       virtual ~DPInput();
 
-      // Read the UVW at the given row numbers.
+      // Read the UVW at the given row numbers into the buffer.
       // The default implementation throws an exception.
-      virtual casa::Matrix<double> getUVW (const casa::RefRows& rowNrs);
+      virtual void getUVW (const casa::RefRows& rowNrs,
+                           DPBuffer&);
 
-      // Read the weights at the given row numbers.
+      // Read the weights at the given row numbers into the buffer.
       // The default implementation throws an exception.
-      virtual casa::Cube<float> getWeights (const casa::RefRows& rowNrs,
-                                            const DPBuffer&);
+      virtual void getWeights (const casa::RefRows& rowNrs,
+                               DPBuffer&);
 
-      // Read the fullRes flags (LOFAR_FULL_RES_FLAG) at the given row numbers.
+      // Read the fullRes flags (LOFAR_FULL_RES_FLAG) at the given row numbers
+      // into the buffer.
+      // If undefined, false is returned.
       // The default implementation throws an exception.
-      virtual casa::Cube<bool> getFullResFlags (const casa::RefRows& rowNrs);
+      virtual bool getFullResFlags (const casa::RefRows& rowNrs,
+                                    DPBuffer&);
 
       // Get the MS name.
       // The default implementation returns an empty string.
@@ -97,26 +101,44 @@ namespace LOFAR {
       // that if an averaged channel is flagged, the corresponding FullRes
       // flags are set.
       // <br>It does a stop/start of the timer when actually reading the data.
-      casa::Cube<bool> fetchFullResFlags (const DPBuffer& buf,
+      const casa::Cube<bool>& fetchFullResFlagsC (const DPBuffer& bufin,
+                                                  DPBuffer& bufout,
+                                                  const casa::RefRows& rowNrs,
+                                                  NSTimer& timer,
+                                                  bool merge=false);
+      casa::Cube<bool>& fetchFullResFlags (const DPBuffer& bufin,
+                                          DPBuffer& bufout,
                                           const casa::RefRows& rowNrs,
                                           NSTimer& timer,
                                           bool merge=false);
+
+      //NOTE: SO FAR ONLY THE c FUNCTIONS ARE NEEDED !!!
 
       // Fetch the weights.
       // If defined in the buffer, they are taken from there.
       // Otherwise there are read from the input.
       // <br>It does a stop/start of the timer when actually reading the data.
-      casa::Cube<float> fetchWeights (const DPBuffer& buf,
-                                      const casa::RefRows& rowNrs,
-                                      NSTimer& timer);
+      const casa::Cube<float>& fetchWeightsC (const DPBuffer& bufin,
+                                             DPBuffer& bufout,
+                                             const casa::RefRows& rowNrs,
+                                             NSTimer& timer);
+      casa::Cube<float>& fetchWeights (const DPBuffer& bufin,
+                                       DPBuffer& bufout,
+                                       const casa::RefRows& rowNrs,
+                                       NSTimer& timer);
 
       // Fetch the UVW.
       // If defined in the buffer, they are taken from there.
       // Otherwise there are read from the input.
       // <br>It does a stop/start of the timer when actually reading the data.
-      casa::Matrix<double> fetchUVW (const DPBuffer& buf,
-                                     const casa::RefRows& rowNrs,
-                                     NSTimer& timer);
+      const casa::Matrix<double>& fetchUVWC (const DPBuffer& bufin,
+                                             DPBuffer& bufout,
+                                             const casa::RefRows& rowNrs,
+                                             NSTimer& timer);
+      casa::Matrix<double>& fetchUVW (const DPBuffer& bufin,
+                                      DPBuffer& bufout,
+                                      const casa::RefRows& rowNrs,
+                                      NSTimer& timer);
     };
 
   } //# end namespace

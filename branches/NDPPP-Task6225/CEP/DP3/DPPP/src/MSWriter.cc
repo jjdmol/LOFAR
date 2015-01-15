@@ -498,19 +498,22 @@ namespace LOFAR {
       ArrayColumn<Float> weightCol(out, "WEIGHT_SPECTRUM");
       ArrayColumn<Double> uvwCol(out, "UVW");
       // Do not account for getting the data in the timings.
-      Array<Float> weights (itsReader->fetchWeights (buf, buf.getRowNrs(),
-                                                     itsTimer));
+      const Array<Float>& weights (itsReader->fetchWeightsC (buf, itsBuffer,
+                                                             buf.getRowNrs(),
+                                                             itsTimer));
       weightCol.putColumn (weights);
-      Array<Double> uvws (itsReader->fetchUVW (buf, buf.getRowNrs(),
-                                               itsTimer));
+      Array<Double> uvws (itsReader->fetchUVWC (buf, itsBuffer,
+                                                buf.getRowNrs(),
+                                                itsTimer));
       uvwCol.putColumn (uvws);
     }
 
     void MSWriter::writeFullResFlags (Table& out, const DPBuffer& buf)
     {
       // Get the flags.
-      Cube<bool> flags (itsReader->fetchFullResFlags (buf, buf.getRowNrs(),
-                                                      itsTimer));
+      Cube<bool> flags (itsReader->fetchFullResFlagsC (buf, itsBuffer,
+                                                       buf.getRowNrs(),
+                                                       itsTimer));
       const IPosition& ofShape = flags.shape();
       ASSERTSTR (uint(ofShape[0]) == itsNChanAvg * itsNrChan,
           ofShape<<itsNChanAvg<<'*'<<itsNrChan);

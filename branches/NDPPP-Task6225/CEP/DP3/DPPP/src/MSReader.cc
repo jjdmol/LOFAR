@@ -670,65 +670,65 @@ namespace LOFAR {
       itsBuffer.setUVW (uvws);
     }
 
-    Matrix<double> MSReader::getUVW (const RefRows& rowNrs)
+    void MSReader::getUVW (const RefRows& rowNrs, DPBuffer& buf)
     {
       NSTimer::StartStop sstime(itsTimer);
       // Empty rownrs cannot happen for data, because in that case the buffer
       // should contain UVW for a missing time slot.
       ASSERT (! rowNrs.rowVector().empty());
       ROArrayColumn<double> dataCol(itsMS, "UVW");
-      return dataCol.getColumnCells (rowNrs);
+      dataCol.getColumnCells (rowNrs, buf.getUVW());
     }
 
-    Cube<float> MSReader::getWeights (const RefRows& rowNrs,
-                                      const DPBuffer& buf)
+    void MSReader::getWeights (const RefRows& rowNrs, DPBuffer& buf)
     {
       NSTimer::StartStop sstime(itsTimer);
+      Cube<float>& weights = buf.getWeights();
+      // Resize if needed (probably when called for first time).
+      if (weights.empty()) {
+        weights.resize (itsNrCorr, itsNrChan, itsNrBl);
+      }
       if (rowNrs.rowVector().empty()) {
         // rowNrs can be empty if a time slot was inserted.
-        Cube<float> weights(itsNrCorr, itsNrChan, itsNrBl);
         weights = 0;
-        return weights;
-      }
-      Cube<float> weights;
-      // Get weights for entire spectrum if present.
-      if (itsHasWeightSpectrum) {
-        ROArrayColumn<float> wsCol(itsMS, itsWeightColName);
-        // Using getColumnCells(rowNrs,itsColSlicer) fails for LofarStMan.
-        // Hence work around it.
-        weights.reference (wsCol.getColumnCells (rowNrs));
-        if (!itsUseAllChan) {
-          // Make a copy, so the weights are consecutive in memory.
-          weights.reference (weights(itsArrSlicer).copy());
-        }
       } else {
-        // No spectrum present; get global weights and assign to each channel.
-        ROArrayColumn<float> wCol(itsMS, "WEIGHT");
-        Matrix<float> inArr = wCol.getColumnCells (rowNrs);
-        Cube<float> outArr(itsNrCorr, itsNrChan, itsNrBl);
-        float* inPtr  = inArr.data();
-        float* outPtr = outArr.data();
-        for (uint i=0; i<itsNrBl; ++i) {
-          // If global weights are zero, set them to 1. Some old MSs need that.
-          for (uint k=0; k<itsNrCorr; ++k) {
-            if (inPtr[k] == 0.) {
-              inPtr[k] = 1.;
-            }
+        // Get weights for entire spectrum if present.
+        if (itsHasWeightSpectrum) {
+          ROArrayColumn<float> wsCol(itsMS, itsWeightColName);
+          // Using getColumnCells(rowNrs,itsColSlicer) fails for LofarStMan.
+          // Hence work around it.
+          if (itsUseAllChan) {
+            wsCol.getColumnCells (rowNrs, weights);
+          } else {
+            Cube<float> w = wsCol.getColumnCells (rowNrs);
+            weights = w(itsArrSlicer);
           }
-          for (uint j=0; j<itsNrChan; ++j) {
+        } else {
+          // No spectrum present; get global weights and assign to each channel.
+          ROArrayColumn<float> wCol(itsMS, "WEIGHT");
+          Matrix<float> inArr = wCol.getColumnCells (rowNrs);
+          float* inPtr  = inArr.data();
+          float* outPtr = weights.data();
+          for (uint i=0; i<itsNrBl; ++i) {
+            // Set global weights to 1 if zero. Some old MSs need that.
             for (uint k=0; k<itsNrCorr; ++k) {
-              *outPtr++ = inPtr[k];
+              if (inPtr[k] == 0.) {
+                inPtr[k] = 1.;
+              }
             }
+            for (uint j=0; j<itsNrChan; ++j) {
+              for (uint k=0; k<itsNrCorr; ++k) {
+                *outPtr++ = inPtr[k];
+              }
+            }
+            inPtr += itsNrCorr;
           }
-          inPtr += itsNrCorr;
         }
-        weights.reference (outArr);
+        if (itsAutoWeight) {
+          // Adapt weights using autocorrelations.
+          autoWeight (weights, buf);
+        }
       }
-      if (itsAutoWeight) {
-        // Adapt weights using autocorrelations.
-        autoWeight (weights, buf);
-      }
-      return weights;
     }
 
     void MSReader::autoWeight (Cube<float>& weights, const DPBuffer& buf)
@@ -779,16 +779,24 @@ namespace LOFAR {
       }
     }
 
-    Cube<bool> MSReader::getFullResFlags (const RefRows& rowNrs)
+    bool MSReader::getFullResFlags (const RefRows& rowNrs, DPBuffer& buf)
     {
       NSTimer::StartStop sstime(itsTimer);
+      Cube<bool>& flags = buf.getFullResFlags();
       int norigchan = itsNrChan * itsFullResNChanAvg;
-      // Return empty array if no fullRes flags.
+      // Resize if needed (probably when called for first time).
+      if (flags.empty()) {
+        flags.resize (norigchan, itsFullResNTimeAvg, itsNrBl);
+      }
+      // Return false if no fullRes flags available.
       if (!itsHasFullResFlags) {
-        return Cube<bool>();
-      } else if (rowNrs.rowVector().empty()) {
-        // Return all False if rows are missing.
-        return Cube<bool>(norigchan, itsFullResNTimeAvg, itsNrBl, true);
+        flags = false;
+        return false;
+      }
+      // Flag everything if data rows are missing.
+      if (rowNrs.rowVector().empty()) {
+        flags = true;
+        return true;
       }
       ROArrayColumn<uChar> fullResFlagCol(itsMS, "LOFAR_FULL_RES_FLAG");
       int origstart = itsStartChan * itsFullResNChanAvg;
@@ -799,40 +807,24 @@ namespace LOFAR {
       // ntimeavg is the nr of times used when averaging.
       // Return it as Cube<bool>[norigchan,ntimeavg,nrbl].
       IPosition chShape = chars.shape();
-      IPosition ofShape(3, norigchan, chShape[1], chShape[2]);
-      Cube<bool> flags(ofShape);
+      ASSERT (chShape[1] == itsFullResNTimeAvg  &&  chShape[2] == itsNrBl);
       // Now expand the bits to bools.
       // If all bits to convert are contiguous, do it all in one go.
       // Otherwise we have to iterate.
-      if (ofShape[0] == chShape[0]*8) {
+      if (norigchan == chShape[0]*8) {
         Conversion::bitToBool (flags.data(), chars.data(), flags.size());
       } else {
-        ASSERT (ofShape[0] < chShape[0]*8);
+        ASSERT (norigchan < chShape[0]*8);
         const uChar* charsPtr = chars.data();
         bool* flagsPtr = flags.data();
-        for (int i=0; i<ofShape[1]*ofShape[2]; ++i) {
-          Conversion::bitToBool (flagsPtr, charsPtr, origstart, ofShape[0]);
-          flagsPtr += ofShape[0];
+        for (int i=0; i<chShape[1]*chShape[2]; ++i) {
+          Conversion::bitToBool (flagsPtr, charsPtr, origstart, norigchan);
+          flagsPtr += norigchan;
           charsPtr += chShape[0];
         }
       }
-      return flags;
+      return true;
     }
-
-    /*
-    Cube<Complex> MSReader::getData (const String& columnName,
-                                     const RefRows& rowNrs)
-    {
-      NSTimer::StartStop sstime(itsTimer);
-      // Empty rownrs cannot happen for data, because in that case the buffer
-      // should contain data for a missing time slot.
-      ASSERT (! rowNrs.rowVector().empty());
-      ROArrayColumn<Complex> dataCol(itsMS, columnName);
-      // Also work around LofarStMan/getColumnCells slice problem.
-      Cube<Complex> data = dataCol.getColumnCells (rowNrs);
-      return (itsUseAllChan ? data : data(itsArrSlicer));
-    }
-    */
 
     void MSReader::fillBeamInfo (vector<StationResponse::Station::Ptr>& vec,
                                  const Vector<String>& antNames)
