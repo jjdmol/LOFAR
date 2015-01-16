@@ -305,14 +305,15 @@ GCFEvent::TResult PythonControl::initial_state(GCFEvent& event, GCFPortInterface
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
 	switch (event.signal) {
-	case F_ENTRY:
+	case F_ENTRY: {
 		itsListener->open();	// will result in F_CONN
 		// QUICK FIX #3633
-                unsigned portNr = MAC_PYTHON_FEEDBACK_QF + getObservationNr(getName()) % 7000;
+     unsigned portNr = MAC_PYTHON_FEEDBACK_QF + getObservationNr(getName()) % 7000;
 		LOG_INFO_STR("Listening for feedback on port " << portNr);
 		itsFeedbackListener->setPortNumber(portNr);
 		itsFeedbackListener->open();	// will result in F_CONN
-   		break;
+    }
+  	break;
 
     case F_INIT: {
 #ifdef USE_PVSS_DATABASE
