@@ -408,13 +408,6 @@
 				</Point>
 			</Placemark>
 			<Placemark>
-				<description>DE609</description>
-				<styleUrl>#msn_shaded_dot</styleUrl>
-				<Point>
-					<coordinates>9.9692322,53.6988092,69.27</coordinates>
-				</Point>
-			</Placemark>
-			<Placemark>
 				<description>FI609</description>
 				<styleUrl>#msn_shaded_dot</styleUrl>
 				<Point>

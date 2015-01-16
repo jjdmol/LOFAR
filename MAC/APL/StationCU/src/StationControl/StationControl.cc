@@ -1008,7 +1008,7 @@ void StationControl::_databaseEventHandler(GCFEvent& event)
 		// during startup we adopt the value set by the ClockController.
 		if (strstr(dpEvent.DPname.c_str(), PN_CLC_ACTUAL_CLOCK) != 0) {
 			itsClock = ((GCFPVInteger*)(dpEvent.value._pValue))->getValue();
-			LOG_INFO_STR("Received (actual)clock change from PVSS, clock is now " << itsClock);
+			LOG_INFO_STR("Received (actual)clock change from PVSS, bitmode is now " << itsClock);
 			_abortObsWithWrongClock();
 			break;
 		}

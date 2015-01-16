@@ -179,11 +179,6 @@ int main (int, char *argv[]) {
 	LOG_INFO ("Searching file 'ServiceBroker.conf'");
 	LOG_INFO_STR ("fullname = " << Locator2.locate("ServiceBroker.conf"));
 	CHECK(Locator2.locate("ServiceBroker.conf") == "");
-  
-  LOG_INFO ("Creating fileLocator with two variables");
-  FileLocator   Locator3("$LOFARROOT:$LOFARROOT");
-  LOG_INFO_STR ("Locator3.getPath() = " <<Locator3.getPath());
-  CHECK(Locator3.getPath() == "/usr/local:/usr/local");
 
 	LOG_INFO ("Testing ConfigLocator");
 	ConfigLocator	aCL;
