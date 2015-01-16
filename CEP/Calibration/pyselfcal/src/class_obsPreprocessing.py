@@ -11,7 +11,6 @@
 ########################################################################
 # IMPORT general modules
 ########################################################################
-
 import sys, glob, os
 import pyrap.tables as pt
 import numpy as np
@@ -23,8 +22,9 @@ import time
 ########################################################################
 #import Lofar modules
 ########################################################################
-
 import lofar.bdsm as bdsm
+
+
 
 ########################################################################
 # Preprocessing (annulus out the FOV) independant directrion subtraction
@@ -86,26 +86,7 @@ class obsPreprocessing:
 			print cmd
 			os.system(cmd)	
 			print ''
-					
-			# check if CORRECTED_DATA column exists, if not take DATA 
-			# column, and anyway copy CORRECTED_DATA column to DATA 
-			# column
-					
-			for MS in self.Files:		
-					# Copy CORRECTED DATA Column to DATA column		
-					try:											
-							t = pt.table("""%s%s"""%(self.IterDir,MS), readonly=False, ack=True)
-							data = t.getcol('CORRECTED_DATA')
-							t.close()								
-					except:
-							print ''
-							print 'There are no CORRECTED DATA COLUMN !!'
-							print 'Selfcal will copy by default your DATA column to the CORRECTED_DATA column'
-							self.copy_data("""%s%s"""%(self.IterDir,MS))
-							print ''
-								
-					self.copy_data_invert("""%s%s"""%(self.IterDir,MS))
-													
+
 		else:
 			cmd=""" cp -r %s %s"""%(self.preprocessDir+'Iter%s/*sub%s'%(self.i-1,self.i-1),self.IterDir)
 			print ''
@@ -242,7 +223,7 @@ class obsPreprocessing:
 				
 					
 		#Imaging now with the image 
-		cmd_image='awimager ms=%s image=%sImage_substraction%s weight=briggs robust=1 npix=%s cellsize=%sarcsec data=CORRECTED_DATA padding=1.18 niter=%s stokes=I operation=mfclark timewindow=300 UVmin=%s UVmax=%s wmax=%s fits="" threshold=%sJy'%(self.initialConcatMS,self.preprocessImageDir,self.i,self.nbpixel,self.pixsize,self.nIteration,self.UVmin,self.UVmax,self.wmax,threshold) 
+		cmd_image='awimager ms=%s image=%sImage_substraction%s weight=briggs robust=1 npix=%s cellsize=%sarcsec data=CORRECTED_DATA padding=1.18 niter=%s stokes=I operation=mfclark timewindow=300 UVmin=%s UVmax=%s wmax=%s fits threshold=%sJy'%(self.initialConcatMS,self.preprocessImageDir,self.i,self.nbpixel,self.pixsize,self.nIteration,self.UVmin,self.UVmax,self.wmax,threshold) 
 		
 		print ''
 		print cmd_image
@@ -262,7 +243,7 @@ class obsPreprocessing:
 		
 		#extract the source model with pybdsm
 		print ''
-		print 'extraction by pybdsm: bdsm.process_image %s,adaptive_rms_box=True,advanced_opts=True,detection_image=%s,thresh_isl=%s,thresh_pix=%s,rms_box=(%s,%s),rms_box_bright=(%s,%s),adaptive_thresh=30,blank_limit=1E-4,atrous_do=True,ini_method=curvature,psf_vary_do=True,psf_stype_only=False,psf_snrcut=5,psf_snrcutstack=5,psf_snrtop=0.3'%('%sImage_substraction%s.restored.corr'%(self.preprocessImageDir,self.i),'%sImage_substraction%s.restored'%(self.preprocessImageDir,self.i),self.thresh_isl,self.thresh_pix,80,10,40,10)
+		print 'extraction by pybdsm: bdsm.process_image %s,adaptive_rms_box=True,advanced_opts=True,detection_image=%s,thresh_isl=%s,thresh_pix=%s,rms_box=(%s,%s),rms_box_bright=(%s,%s),adaptive_thresh=30,blank_limit=1E-4,atrous_do=True,psf_vary_do=True,psf_stype_only=False,psf_snrcut=5,psf_snrcutstack=5,psf_snrtop=0.3'%('%sImage_substraction%s.restored.corr'%(self.preprocessImageDir,self.i),'%sImage_substraction%s.restored'%(self.preprocessImageDir,self.i),self.thresh_isl,self.thresh_pix,80,10,40,10)
 		print ''		
 		
 		#extract the source model with pybdsm
@@ -717,11 +698,4 @@ class obsPreprocessing:
 			t.putcol('CORRECTED_DATA', data)
 			t.close()		
 		
-    def copy_data_invert(self,inms):
 		
-			## Create corrected data colun and Put data to corrected data column 
-			t = pt.table(inms, readonly=False, ack=True)
-			data = t.getcol('CORRECTED_DATA')
-			pt.addImagingColumns(inms, ack=True)
-			t.putcol('DATA', data)
-			t.close()			

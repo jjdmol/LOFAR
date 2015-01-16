@@ -674,12 +674,13 @@ namespace LOFAR
         for (unsigned i = 0; i < nrSAPs; ++i) 
         {
           struct ObservationSettings::BeamFormer::SAP &sap = settings.beamFormer.SAPs[i];
-          struct ObservationSettings::SAP &obsSap = settings.SAPs[i];
 
           size_t nrTABs    = getUint32(str(format("Observation.Beam[%u].nrTiedArrayBeams") % i), 0);
           size_t nrTABSParset = nrTABs;
           size_t nrRings   = getUint32(str(format("Observation.Beam[%u].nrTabRings") % i), 0);
           double ringWidth = getDouble(str(format("Observation.Beam[%u].tabRingSize") % i), 0.0);
+          double sapAngle1 = getDouble(str(format("Observation.Beam[%u].angle1") % i), 0.0);
+          double sapAngle2 = getDouble(str(format("Observation.Beam[%u].angle2") % i), 0.0);
 
           // Create a ptr to RingCoordinates object
           // If there are tab rings the object will be actuall constructed
@@ -702,7 +703,7 @@ namespace LOFAR
             // Create coords object
             ptrRingCoords = std::auto_ptr<RingCoordinates>(
               new RingCoordinates(nrRings, ringWidth,
-              RingCoordinates::Coordinate(obsSap.direction.angle1, obsSap.direction.angle2), type));
+              RingCoordinates::Coordinate(sapAngle1, sapAngle2), type));
 
             // Increase the amount of tabs with the number from the coords object
             // this might be zero
@@ -735,14 +736,12 @@ namespace LOFAR
               {
                 const string prefix = str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
                 tab.direction.type    = getString(prefix + ".directionType", "J2000");
+              
+                tab.direction.angle1  = getDouble(prefix + ".angle1", 0.0);
+                tab.direction.angle2  = getDouble(prefix + ".angle2", 0.0);
 
                 tab.dispersionMeasure     = getDouble(prefix + ".dispersionMeasure", 0.0);
                 tab.coherent              = getBool(prefix + ".coherent", true);
-             
-                // Incoherent TABs point in the same direction as the SAP by definition. The processing
-                // pipelines do not use the angles, but the data writer does as part of its annotation.
-                tab.direction.angle1  = tab.coherent ? getDouble(prefix + ".angle1", 0.0) : obsSap.direction.angle1;
-                tab.direction.angle2  = tab.coherent ? getDouble(prefix + ".angle2", 0.0) : obsSap.direction.angle2;
               }
               else
               {
@@ -754,8 +753,8 @@ namespace LOFAR
                 // Note that RingCoordinates provide *relative* coordinates, and
                 // we need absolute ones.
                 tab.direction.type = ptrRingCoords->coordTypeAsString();
-                tab.direction.angle1 = obsSap.direction.angle1 + pointing.first;
-                tab.direction.angle2 = obsSap.direction.angle2 + pointing.second;
+                tab.direction.angle1 = sapAngle1 + pointing.first;
+                tab.direction.angle2 = sapAngle2 + pointing.second;
                 // One dispersion measure for all TABs in rings is inconvenient,
                 // but not used anyway. Unclear if setting to 0.0 is better/worse.
                 const string prefix = str(format("Cobalt.Observation.Beam[%u]") % i);

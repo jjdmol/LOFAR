@@ -11,11 +11,11 @@
 ########################################################################
 # IMPORT general modules
 ########################################################################
-
 import sys, glob, os
 import pyrap.tables as pt
 import fpformat
-import numpy as np
+
+
 
 ########################################################################
 # Define observation directory parameters (NbTimechunk, NbSB etc ...)
@@ -140,11 +140,7 @@ class observationMergedDataParam:
 		for i in k1: 
 				tab0 	= pt.table(listFiles[i], readonly=False, ack=True)
 				pos0	= tab0.getcol('UVW')
-				flag0	= tab0.getcol('FLAG_ROW')
-				indexes	= np.where(flag0[:] == 0)[0]
-				
-				dist[i] = max(pos0[indexes,0]**2+pos0[indexes,1]**2)**0.5 	
-				
+				dist[i] = max(pos0[:,0]**2+pos0[:,1]**2)**0.5 	
 				
 		maxBaseline	= max(dist)
 
