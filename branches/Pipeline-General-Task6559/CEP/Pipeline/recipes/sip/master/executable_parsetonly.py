@@ -1,8 +1,7 @@
-#                                                         LOFAR IMAGING PIPELINE
+#                                                                 LOFAR PIPELINE
 #
-#                                         New DPPP recipe: fixed node allocation
-#                                                            John Swinbank, 2010
-#                                                      swinbank@transientskp.org
+#                                                         Stefan Froehlich, 2015
+#                                                      s.froehlich@fz-juelich.de
 # ------------------------------------------------------------------------------
 
 import copy
@@ -33,13 +32,24 @@ class executable_parsetonly(BaseRecipe, RemoteCommandRecipeMixIn):
 
     """
     inputs = {
-        'kind': ingredient.StringField('--kind'),
-        'type': ingredient.StringField('--type'),
-        #'init': ingredient.StringField('--init'),
         'parset': ingredient.FileField(
             '-p', '--parset',
             help="The full path to a configuration parset. The ``msin`` "
                  "and ``msout`` keys will be added by this recipe"
+        ),
+        'inputkey': ingredient.StringField(
+            '-i', '--inputkey',
+            help="Parset key that the executable will recognize as key for inputfile"
+        ),
+        'outputkey': ingredient.StringField(
+            '-0', '--outputkey',
+            help="Parset key that the executable will recognize as key for outputfile",
+            default=''
+        ),
+        'patchparset': ingredient.DictField(
+            '-P', '--patchparset',
+            help="The dictionary for patching the parset on the nodes.",
+            optional=True
         ),
         'executable': ingredient.ExecField(
             '--executable',
@@ -78,6 +88,9 @@ class executable_parsetonly(BaseRecipe, RemoteCommandRecipeMixIn):
                 w.skip = x.skip = (
                     w.skip or x.skip
                 )
+            # following function from datamap should be used
+            # beware it is not checking for the data itself just for length of mapfile
+            #align_data_maps(indata, outdata)
         else:
             outdata = copy.deepcopy(indata)
             for item in outdata:
@@ -113,6 +126,8 @@ class executable_parsetonly(BaseRecipe, RemoteCommandRecipeMixIn):
                         outp.file,
                         self.inputs['parset'],
                         self.inputs['executable'],
+                        self.inputs['inputkey'],
+                        self.inputs['outputkey'],
                         self.environment
                     ]
                 )

@@ -83,58 +83,37 @@ class GenericPipeline(control):
         # at the moment only a list with stepnames is given for the pipeline.steps parameter
         # pipeline.steps=[vdsmaker,vdsreader,setupparmdb1,setupsourcedb1,ndppp1,....]
         # the names will be the prefix for parset subsets
-        py_parset = self.parset.makeSubset(
+        pipeline_args = self.parset.makeSubset(
             self.parset.fullModuleName('pipeline') + '.')
 
         # *********************************************************************
         # forward declaration of things. just for better overview and understanding whats in here.
         # some of this might be removed in upcoming iterations, or stuff gets added.
-        step_parset_list = []
-        step_name_list = py_parset.getStringVector('steps')
-        step_control_list = []
-        step_parsetarg_list = {}
+        step_name_list = pipeline_args.getStringVector('steps')
+        step_control_dict = {}
         step_parset_files = {}
-
-        for step in step_name_list:
-            step_parset_list.append(self.parset.makeSubset(self.parset.fullModuleName(str(step)) + '.'))
-
-        for step, stepname in zip(step_parset_list, step_name_list):
-            step_control_list.append(step.makeSubset(step.fullModuleName('control') + '.'))
-            if step.fullModuleName('parsetarg'):
-                step_parsetarg_list[stepname] = step.makeSubset(step.fullModuleName('parsetarg') + '.')
-
-        # *********************************************************************
-        # save parsets
-        # either a filename is given in the main parset
-        # or files will be created from subsets with stepnames.parset as filenames
-        for name, parset in step_parsetarg_list.iteritems():
-            try:
-                step_parset = parset.getString('parset')
-            except:
-                step_parset = os.path.join(parset_dir, name + '.parset')
-                parset.writeFile(step_parset)
-            step_parset_files[name] = step_parset
-
+        activeloop = ''
+        # construct the list of step names and controls
+        self._construct_steps(step_name_list, step_control_dict, step_parset_files, parset_dir)
         # initial parameters to be saved in resultsdict so that recipes have access to this step0
         resultdicts = {'input': {
-            #'mapfile': input_correlated_mapfile,
-             #                    'output_instrument_mapfile': output_instrument_mapfile,
-              #                   'output_correlated_mapfile': output_correlated_mapfile,
-                                 'parset': parset_file,
-                                 'parsetobj': self.parset,
-                                 'job_dir': job_dir,
-                                 'parset_dir': parset_dir,
-                                 'mapfile_dir': mapfile_dir}}
+            'parset': parset_file,
+            'parsetobj': self.parset,
+            'job_dir': job_dir,
+            'parset_dir': parset_dir,
+            'mapfile_dir': mapfile_dir}}
 
         # *********************************************************************
         # main loop
         # there is a distinction between recipes and plugins for user scripts.
         # plugins are not used at the moment and might better be replaced with master recipes
-        for step, stepname in zip(step_control_list, step_name_list):
+        while step_name_list:
+            stepname = step_name_list.pop(0)
+            step = step_control_dict[stepname]
             inputdict = {}
             inputargs = []
             resultdict = {}
-            print 'RESULTS: ',resultdicts
+
             self._construct_cmdline(inputargs, step, resultdicts)
 
             if stepname in step_parset_files:
@@ -142,9 +121,37 @@ class GenericPipeline(control):
 
             self._construct_input(inputdict, step, resultdicts)
 
+            # loop
+            if step.getString('kind') == 'loop':
+                # remember what loop is running to stop it from a conditional step
+                activeloop = stepname
+                # prepare
+                counter = 0
+                breakloop = False
+                if stepname in resultdicts:
+                    counter = resultdicts[stepname]['counter'] + 1
+                    breakloop = resultdicts[stepname]['break']
+                loopsteps = step.getStringVector('loopsteps')
+
+                # break at max iteration or when other step sets break variable
+                if counter is step.getInt('loopcount'):
+                    breakloop = True
+                if not breakloop:
+                    # add loop steps to the pipeline including the loop itself
+                    step_name_list.insert(0, stepname)
+                    if not loopsteps[0] + stepname + str(counter) in step_control_dict:
+                        self._construct_steps(loopsteps, step_control_dict, step_parset_files, parset_dir)
+                    for j in reversed(loopsteps):
+                        step_control_dict[j + stepname + str(counter)] = step_control_dict[j]
+                        step_name_list.insert(0, j + stepname + str(counter))
+                    # results for other steps to check and write states
+                    resultdict = {'counter': counter, 'break': breakloop}
+                else:
+                    # reset values for second use of the loop (but why would you do that?)
+                    resultdict = {'counter': -1, 'break': False}
+
             # recipes
             if step.getString('kind') == 'recipe':
-
                 with duration(self, stepname):
                     resultdict = self.run_task(
                         step.getString('type'),
@@ -155,10 +162,15 @@ class GenericPipeline(control):
             # plugins
             if step.getString('kind') == 'plugin':
                 with duration(self, stepname):
-                    resultdict = loader.call_plugin(step.getString('type'), py_parset.getString('pluginpath'),
+                    resultdict = loader.call_plugin(step.getString('type'), pipeline_args.getString('pluginpath'),
                                                     inputargs,
                                                     **inputdict)
             resultdicts[stepname] = resultdict
+
+            # breaking the loopstep
+            # if the step has the keyword for loopbreaks assign the value
+            if resultdict is not None and 'break' in resultdict:
+                resultdicts[activeloop]['break'] = resultdict['break']
 
     # *********************************************************************
     # build the inputs for the master recipes.
@@ -187,19 +199,28 @@ class GenericPipeline(control):
             else:
                 inoutargs.append(argsparset.getString(k))
 
-    # helper function
-    def _create_mapfile_from_folder(self, folder):
-        maps = DataMap([])
-        measurements = os.listdir(folder)
-        measurements.sort()
-        for ms in measurements:
-            maps.data.append(DataProduct('localhost', folder + '/' + ms, False))
-        return maps
-
+    def _construct_steps(self, step_name_list,step_control_dict, step_parset_files,parset_dir):
+        for stepname in step_name_list:
+            fullparset = self.parset.makeSubset(self.parset.fullModuleName(str(stepname)) + '.')
+            subparset = fullparset.makeSubset(fullparset.fullModuleName('control') + '.')
+            step_control_dict[stepname] = subparset
+            if fullparset.fullModuleName('parsetarg'):
+                stepparset = fullparset.makeSubset(fullparset.fullModuleName('parsetarg') + '.')
+                # *********************************************************************
+                # save parsets
+                # either a filename is given in the main parset
+                # or files will be created from subsets with stepnames.parset as filenames
+                #for name, parset in step_parset_dict.iteritems():
+                try:
+                    step_parset = stepparset.getString('parset')
+                except:
+                    step_parset = os.path.join(parset_dir, stepname + '.parset')
+                    stepparset.writeFile(step_parset)
+                step_parset_files[stepname] = step_parset
 
 class GenericPipelineParsetValidation():
 
-    def __init__(self,parset):
+    def __init__(self, parset):
         self.parset = parset
         #self.validate_pipeline()
         #self.validate_steps()

@@ -1,8 +1,8 @@
-#                                                         LOFAR IMAGING PIPELINE
+#                                                          LOFAR PIPELINE SCRIPT
 #
-#                                        DPPP (Data Pre-Procesing Pipeline) node
-#                                                            John Swinbank, 2010
-#                                                      swinbank@transientskp.org
+#                                           running an executable with arguments
+#                                                         Stefan Froehlich, 2014
+#                                                      s.froehlich@fz-juelich.de
 # ------------------------------------------------------------------------------
 
 from __future__ import with_statement
@@ -24,13 +24,11 @@ from lofarpipe.support.parset import Parset
 
 class executable_parsetonly(LOFARnodeTCP):
     """
-    Call ndppp with a parset augmented with locally calculate parameters:
-
-
+    Call an executable with a parset augmented with locally calculate parameters:
     """
 
     def run(self, infile, outfile,
-            parsetfile, executable, environment):
+            parsetfile, executable, inputkey, outputkey, environment):
         """
         This function contains all the needed functionality
         """
@@ -38,13 +36,15 @@ class executable_parsetonly(LOFARnodeTCP):
         self.logger.debug("infile          = %s" % infile)
         self.logger.debug("outfile         = %s" % outfile)
         self.logger.debug("parsetfile      = %s" % parsetfile)
+        self.logger.debug("inputkey        = %s" % inputkey)
+        self.logger.debug("outputkey       = %s" % outputkey)
         self.logger.debug("executable      = %s" % executable)
         self.logger.debug("environment     = %s" % environment)
 
         self.environment.update(environment)
 
         # ********************************************************************
-        # 1. preparations. set nthreads, Validate input, clean workspace
+        # preparations. Validate input, clean workspace
         #
         if not outfile:
             outfile = infile
@@ -58,16 +58,6 @@ class executable_parsetonly(LOFARnodeTCP):
                 self.logger.error("Dataset %s does not exist" % (infile))
                 return 1
 
-            # override executable from task.cfg
-            # temporary solution
-            try:
-                parset = Parset()
-                parset.adoptFile(parsetfile)
-                #if parset['exec']:
-                #    executable = str(parset['exec'])
-                print 'Running executable %s from parset args' % executable
-            except:
-                print 'could not load executable from parset args'
             # Check if executable is present
             if not os.access(executable, os.X_OK):
                 self.logger.error("Executable %s not found" % executable)
@@ -77,7 +67,7 @@ class executable_parsetonly(LOFARnodeTCP):
             shutil.rmtree(tmpfile, ignore_errors=True)
 
             # *****************************************************************
-            # 2. Perform house keeping, test if work is already done
+            # Perform house keeping, test if work is already done
             # If input and output files are different, and if output file
             # already exists, then we're done.
             if outfile != infile and os.path.exists(outfile):
@@ -101,11 +91,14 @@ class executable_parsetonly(LOFARnodeTCP):
             # Put arguments we need to pass to some private methods in a dict
             kwargs = {
                 'infile': infile,
-                'tmpfile': tmpfile,
-                'parsetfile': parsetfile
+                #'tmpfile': tmpfile,
+                'tmpfile': outfile,
+                'parsetfile': parsetfile,
+                'inputkey': inputkey,
+                'outputkey': outputkey
             }
 
-            # Prepare for the actual DPPP run.
+            # Prepare for the actual run.
             with patched_parset(
             # *****************************************************************
             # 4. Add ms names to the parset, start/end times if availabe, etc.
@@ -115,7 +108,10 @@ class executable_parsetonly(LOFARnodeTCP):
                     temp_parset_filename
                 )
                 try:
-                    working_dir = tempfile.mkdtemp()
+                    # Create output directory for output MS.
+                    create_directory(os.path.dirname(outfile))
+                    #working_dir = tempfile.mkdtemp()
+                    working_dir = os.path.dirname(outfile)
             # ****************************************************************
             # 5. Run
                     cmd = [executable, temp_parset_filename]# + ' '+os.environ.get('HOME')]# +' > ' + tmpfile]
@@ -130,9 +126,8 @@ class executable_parsetonly(LOFARnodeTCP):
                             cmd, working_dir, self.environment, logger,
                             cleanup=lambda : shutil.rmtree(tmpfile, ignore_errors=True)
                         )
-                        # Replace outfile with the updated working copy
-                        shutil.rmtree(outfile, ignore_errors=True)
-                        os.rename(tmpfile, outfile)
+                        # Rename tmpfile to outfile with the updated working copy
+                        #os.rename(tmpfile, outfile)
                 except CalledProcessError, err:
                     # CalledProcessError isn't properly propagated by IPython
                     self.logger.error(str(err))
@@ -140,22 +135,21 @@ class executable_parsetonly(LOFARnodeTCP):
                 except Exception, err:
                     self.logger.error(str(err))
                     return 1
-                finally:
-                    shutil.rmtree(working_dir)
+                #finally:
+                #    print 'FINALLY'
+                    #shutil.rmtree(working_dir)
 
         # We need some signal to the master script that the script ran ok.
         self.outputs['ok'] = True
         return 0
 
     def _prepare_steps(self, **kwargs):
-        # Create output directory for output MS.
-        create_directory(os.path.dirname(kwargs['tmpfile']))
+        patch_dictionary = {'uselogger': 'True'}
+        if kwargs['inputkey']:
+            patch_dictionary[kwargs['inputkey']] = kwargs['infile']
 
-        patch_dictionary = {
-            'msin': kwargs['infile'],
-            'msout': kwargs['tmpfile'],
-            'uselogger': 'True'
-        }
+        if kwargs['outputkey']:
+            patch_dictionary[kwargs['outputkey']] = kwargs['tmpfile']
 
         # Return the patch dictionary that must be applied to the parset.
         return patch_dictionary
