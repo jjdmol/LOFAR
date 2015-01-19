@@ -75,6 +75,7 @@ class selfcal_finalize(LOFARnodeTCP):
                                                             raw_ms_file_name))
             #add the information the image
             try:
+                self.logger.debug("Start addImage Info")
                 addimg.addImagingInfo(awimager_output, processed_ms_paths,
                     sourcedb, minbaseline, maxbaseline)
 
@@ -117,6 +118,7 @@ class selfcal_finalize(LOFARnodeTCP):
                 os.unlink(fits_output)
 
             try:
+                self.logger.debug("Start convert to fits")
                 temp_dir = tempfile.mkdtemp()
                 with CatchLog4CPlus(temp_dir,
                     self.logger.name + '.' + os.path.basename(awimager_output),
