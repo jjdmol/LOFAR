@@ -68,6 +68,7 @@ namespace LOFAR {
       // Read the UVW at the given row numbers into the buffer.
       // The default implementation throws an exception.
       virtual void getUVW (const casa::RefRows& rowNrs,
+                           double time,
                            DPBuffer&);
 
       // Read the weights at the given row numbers into the buffer.
@@ -103,14 +104,12 @@ namespace LOFAR {
       // <br>It does a stop/start of the timer when actually reading the data.
       const casa::Cube<bool>& fetchFullResFlagsC (const DPBuffer& bufin,
                                                   DPBuffer& bufout,
-                                                  const casa::RefRows& rowNrs,
                                                   NSTimer& timer,
                                                   bool merge=false);
-      casa::Cube<bool>& fetchFullResFlags (const DPBuffer& bufin,
-                                          DPBuffer& bufout,
-                                          const casa::RefRows& rowNrs,
-                                          NSTimer& timer,
-                                          bool merge=false);
+      ///      casa::Cube<bool>& fetchFullResFlags (const DPBuffer& bufin,
+      ///                                          DPBuffer& bufout,
+      ///                                          NSTimer& timer,
+      ///bool merge=false);
 
       //NOTE: SO FAR ONLY THE c FUNCTIONS ARE NEEDED !!!
 
@@ -120,12 +119,10 @@ namespace LOFAR {
       // <br>It does a stop/start of the timer when actually reading the data.
       const casa::Cube<float>& fetchWeightsC (const DPBuffer& bufin,
                                              DPBuffer& bufout,
-                                             const casa::RefRows& rowNrs,
                                              NSTimer& timer);
-      casa::Cube<float>& fetchWeights (const DPBuffer& bufin,
-                                       DPBuffer& bufout,
-                                       const casa::RefRows& rowNrs,
-                                       NSTimer& timer);
+    ///      casa::Cube<float>& fetchWeights (const DPBuffer& bufin,
+    ///                                       DPBuffer& bufout,
+    ///                                       NSTimer& timer);
 
       // Fetch the UVW.
       // If defined in the buffer, they are taken from there.
@@ -133,12 +130,10 @@ namespace LOFAR {
       // <br>It does a stop/start of the timer when actually reading the data.
       const casa::Matrix<double>& fetchUVWC (const DPBuffer& bufin,
                                              DPBuffer& bufout,
-                                             const casa::RefRows& rowNrs,
                                              NSTimer& timer);
-      casa::Matrix<double>& fetchUVW (const DPBuffer& bufin,
-                                      DPBuffer& bufout,
-                                      const casa::RefRows& rowNrs,
-                                      NSTimer& timer);
+    ///      casa::Matrix<double>& fetchUVW (const DPBuffer& bufin,
+    ///                                      DPBuffer& bufout,
+    ///                                      NSTimer& timer);
     };
 
   } //# end namespace

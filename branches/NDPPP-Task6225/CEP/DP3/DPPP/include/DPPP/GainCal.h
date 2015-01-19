@@ -174,6 +174,7 @@ namespace {
       //# Data members.
       DPInput*         itsInput;
       string           itsName;
+      DPBuffer         itsBuf;
       string           itsSourceDBName;
       bool             itsUseModelColumn;
       string           itsParmDBName;

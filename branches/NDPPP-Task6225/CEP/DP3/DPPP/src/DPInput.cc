@@ -44,7 +44,6 @@ namespace LOFAR {
 
     const Cube<bool>& DPInput::fetchFullResFlagsC (const DPBuffer& bufin,
                                                    DPBuffer& bufout,
-                                                   const RefRows& rowNrs,
                                                    NSTimer& timer,
                                                    bool merge)
     {
@@ -54,7 +53,7 @@ namespace LOFAR {
       }
       // No fullRes flags in buffer, so get them from the input.
       timer.stop();
-      bool fnd = getFullResFlags(rowNrs, bufout);
+      bool fnd = getFullResFlags (bufin.getRowNrs(), bufout);
       timer.start();
       Cube<bool>& fullResFlags = bufout.getFullResFlags();
       if (!fnd) {
@@ -77,22 +76,22 @@ namespace LOFAR {
       return fullResFlags;
     }
 
+    /*
     Cube<bool>& DPInput::fetchFullResFlags (const DPBuffer& bufin,
                                             DPBuffer& bufout,
-                                            const RefRows& rowNrs,
                                             NSTimer& timer,
                                             bool merge)
     {
-      const Cube<bool>& w = fetchFullResFlagsC (bufin, bufout, rowNrs,
+      const Cube<bool>& w = fetchFullResFlagsC (bufin, bufout,
                                                 timer, merge);
       Cube<bool>& wout = bufout.getFullResFlags();
       wout.assign (w);
       return wout;
     }
+    */
 
     const Cube<float>& DPInput::fetchWeightsC (const DPBuffer& bufin,
                                                DPBuffer& bufout,
-                                               const RefRows& rowNrs,
                                                NSTimer& timer)
     {
       // If already defined in the buffer, return those weights.
@@ -102,17 +101,17 @@ namespace LOFAR {
       // No weights in buffer, so get them from the input.
       // It might need the data and flags in the buffer.
       timer.stop();
-      getWeights (rowNrs, bufout);
+      getWeights (bufin.getRowNrs(), bufout);
       timer.start();
       return bufout.getWeights();
     }
 
+    /*
     Cube<float>& DPInput::fetchWeights (const DPBuffer& bufin,
                                         DPBuffer& bufout,
-                                        const RefRows& rowNrs,
                                         NSTimer& timer)
     {
-      const Cube<float>& w = fetchWeightsC (bufin, bufout, rowNrs, timer);
+      const Cube<float>& w = fetchWeightsC (bufin, bufout, timer);
       // Note that fetchWeightsC can return a reference to the weights
       // in the input or output buffer. The assign makes a copy, but won't
       // do anything if the reference is to the output buffer.
@@ -120,10 +119,10 @@ namespace LOFAR {
       wout.assign (w);
       return wout;
     }
+    */
 
     const Matrix<double>& DPInput::fetchUVWC (const DPBuffer& bufin,
                                               DPBuffer& bufout,
-                                              const RefRows& rowNrs,
                                               NSTimer& timer)
     {
       // If already defined in the buffer, return those UVW.
@@ -132,23 +131,24 @@ namespace LOFAR {
       }
       // No UVW in buffer, so get them from the input.
       timer.stop();
-      getUVW(rowNrs, bufout);
+      getUVW (bufin.getRowNrs(), bufin.getTime(), bufout);
       timer.start();
       return bufout.getUVW();
     }
 
+    /*
     Matrix<double>& DPInput::fetchUVW (const DPBuffer& bufin,
                                        DPBuffer& bufout,
-                                       const RefRows& rowNrs,
                                        NSTimer& timer)
     {
-      const Matrix<double>& w = fetchUVWC (bufin, bufout, rowNrs, timer);
+      const Matrix<double>& w = fetchUVWC (bufin, bufout, timer);
       Matrix<double>& wout = bufout.getUVW();
       wout.assign (w);
       return wout;
     }
+    */
 
-    void DPInput::getUVW (const RefRows&, DPBuffer&)
+    void DPInput::getUVW (const RefRows&, double, DPBuffer&)
       { throw Exception ("DPInput::getUVW not implemented"); }
 
     void DPInput::getWeights (const RefRows&, DPBuffer&)

@@ -357,10 +357,11 @@ namespace LOFAR {
       }
     }
 
-    void MultiMSReader::getUVW (const RefRows& rowNrs, DPBuffer& buf)
+    void MultiMSReader::getUVW (const RefRows& rowNrs,
+                                double time, DPBuffer& buf)
     {
       // All MSs have the same UVWs, so use first one.
-      itsReaders[itsFirst]->getUVW (rowNrs, buf);
+      itsReaders[itsFirst]->getUVW (rowNrs, time, buf);
     }
 
     void MultiMSReader::getWeights (const RefRows& rowNrs, DPBuffer& buf)

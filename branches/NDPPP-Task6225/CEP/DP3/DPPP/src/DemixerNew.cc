@@ -340,18 +340,10 @@ namespace LOFAR {
       // Collect sufficient data buffers.
       // Make sure all required data arrays are filled in.
       DPBuffer& newBuf = itsBufIn[itsNTime];
-      newBuf = buf;
-      RefRows refRows(newBuf.getRowNrs());
-      if (newBuf.getUVW().empty()) {
-        newBuf.setUVW(itsInput->fetchUVW(newBuf, refRows, itsTimer));
-      }
-      if (newBuf.getWeights().empty()) {
-        newBuf.setWeights(itsInput->fetchWeights(newBuf, refRows, itsTimer));
-      }
-      if (newBuf.getFullResFlags().empty()) {
-        newBuf.setFullResFlags(itsInput->fetchFullResFlags(newBuf, refRows,
-                                                           itsTimer));
-      }
+      newBuf.copy (buf);
+      itsInput->fetchUVWC(newBuf, newBuf, itsTimer);
+      itsInput->fetchWeightsC(newBuf, newBuf, itsTimer);
+      itsInput->fetchFullResFlagsC(newBuf, newBuf, itsTimer);
       // Process the data if entire buffer is filled.
       if (++itsNTime >= itsBufIn.size()) {
         processData();

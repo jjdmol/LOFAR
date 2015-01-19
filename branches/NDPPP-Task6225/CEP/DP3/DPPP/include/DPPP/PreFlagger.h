@@ -282,6 +282,7 @@ namespace LOFAR {
       //# Data members of PreFlagger.
       string      itsName;
       DPInput*    itsInput;
+      DPBuffer    itsBuffer;
       Mode        itsMode;
       NSTimer     itsTimer;
       PSet        itsPSet;

@@ -156,6 +156,7 @@ namespace LOFAR {
 
       // Read the UVW at the given row numbers.
       virtual void getUVW (const casa::RefRows& rowNrs,
+                           double time,
                            DPBuffer& buf);
 
       // Read the weights at the given row numbers.

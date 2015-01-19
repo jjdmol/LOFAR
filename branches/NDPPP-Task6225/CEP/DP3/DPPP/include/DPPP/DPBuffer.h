@@ -72,11 +72,6 @@ namespace LOFAR {
     //       correlations are there is because the MS expects them.</td>
     //  </tr>
     //  <tr>
-    //   <td>AMPLITUDE</td>
-    //   <td>The amplitudes of the visibility data. It is used by the
-    //       MedFlagger to avoid having to recalculate amplitudes.</td>
-    //  </tr>
-    //  <tr>
     //   <td>WEIGHT</td>
     //   <td>The data weights as [ncorr,nchan,nbaseline].
     //       Similarly to FLAG the ncorr axis is redundant because the
@@ -141,8 +136,8 @@ namespace LOFAR {
       // Make a deep copy of all arrays in that to this.
       void copy (const DPBuffer& that);
 
-      // Remove all arrays from the buffer.
-      void clear();
+      // Reference only the arrays that are filled in that.
+      void referenceFilled (const DPBuffer& that);
 
       // Set or get the visibility data per corr,chan,baseline.
       void setData (const casa::Cube<casa::Complex>& data)
@@ -159,16 +154,6 @@ namespace LOFAR {
         { return itsFlags; }
       casa::Cube<bool>& getFlags()
         { return itsFlags; }
-
-      // Set or get the amplitudes of the visibility data.
-      // This is used by the MedFlagger to avoid calculating amplitudes
-      // over and over again.
-      void setAmplitudes (const casa::Cube<float>& ampl)
-        { itsAmpl.reference (ampl); }
-      const casa::Cube<float>& getAmplitudes() const
-        { return itsAmpl; }
-      casa::Cube<float>& getAmplitudes()
-        { return itsAmpl; }
 
       // Set or get the weights per corr,chan,baseline.
       void setWeights (const casa::Cube<float>& weights)
@@ -231,7 +216,6 @@ namespace LOFAR {
       double                    itsExposure;
       casa::Vector<uint>        itsRowNrs;
       casa::Cube<casa::Complex> itsData;        //# ncorr,nchan,nbasel
-      casa::Cube<float>         itsAmpl;        //# amplitude of data
       casa::Cube<bool>          itsFlags;       //# ncorr,nchan,nbasel
       casa::Matrix<double>      itsUVW;         //# 3,nbasel
       casa::Cube<float>         itsWeights;     //# ncorr,nchan,nbasel

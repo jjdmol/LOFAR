@@ -45,7 +45,6 @@ namespace LOFAR {
         itsExposure = that.itsExposure;
         itsRowNrs.reference (that.itsRowNrs);
         itsData.reference (that.itsData);
-        itsAmpl.reference (that.itsAmpl);
         itsFlags.reference (that.itsFlags);
         itsWeights.reference (that.itsWeights);
         itsModel.reference (that.itsModel);
@@ -61,26 +60,52 @@ namespace LOFAR {
         itsTime     = that.itsTime;
         itsExposure = that.itsExposure;
         itsRowNrs.assign (that.itsRowNrs);
-        itsData.assign (that.itsData);
-        itsAmpl.assign (that.itsAmpl);
-        itsFlags.assign (that.itsFlags);
-        itsWeights.assign (that.itsWeights);
-        itsModel.assign (that.itsModel);
-        itsUVW.assign (that.itsUVW);
-        itsFullResFlags.assign (that.itsFullResFlags);
+        if (! that.itsData.empty()) {
+          itsData.assign (that.itsData);
+        }
+        if (! that.itsFlags.empty()) {
+          itsFlags.assign (that.itsFlags);
+        }
+        if (! that.itsWeights.empty()) {
+          itsWeights.assign (that.itsWeights);
+        }
+        if (! that.itsModel.empty()) {
+          itsModel.assign (that.itsModel);
+        }
+        if (! that.itsUVW.empty()) {
+          itsUVW.assign (that.itsUVW);
+        }
+        if (! that.itsFullResFlags.empty()) {
+          itsFullResFlags.assign (that.itsFullResFlags);
+        }
       }
     }
 
-    void DPBuffer::clear()
+    void DPBuffer::referenceFilled (const DPBuffer& that)
     {
-      itsRowNrs.resize();
-      itsData.resize();
-      itsAmpl.resize();
-      itsFlags.resize();
-      itsWeights.resize();
-      itsModel.resize();
-      itsUVW.resize();
-      itsFullResFlags.resize();
+      if (this != &that) {
+        itsTime     = that.itsTime;
+        itsExposure = that.itsExposure;
+        itsRowNrs.reference (that.itsRowNrs);
+        if (! that.itsData.empty()) {
+          itsData.reference (that.itsData);
+        }
+        if (! that.itsFlags.empty()) {
+          itsFlags.reference (that.itsFlags);
+        }
+        if (! that.itsWeights.empty()) {
+          itsWeights.reference (that.itsWeights);
+        }
+        if (! that.itsModel.empty()) {
+          itsModel.reference (that.itsModel);
+        }
+        if (! that.itsUVW.empty()) {
+          itsUVW.reference (that.itsUVW);
+        }
+        if (! that.itsFullResFlags.empty()) {
+          itsFullResFlags.reference (that.itsFullResFlags);
+        }
+      }
     }
 
     void DPBuffer::mergeFullResFlags (Cube<bool>& fullResFlags,

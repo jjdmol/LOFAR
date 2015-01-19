@@ -272,22 +272,20 @@ namespace LOFAR {
           // Need to insert a fully flagged time slot.
           itsBuffer.setRowNrs (Vector<uint>());
           itsBuffer.setExposure (itsTimeInterval);
-          itsBuffer.getData().resize  (itsNrCorr, itsNrChan, itsNrBl);
-          itsBuffer.getFlags().resize (itsNrCorr, itsNrChan, itsNrBl);
-          itsBuffer.getData() = Complex();
           itsBuffer.getFlags() = true;
-          // Calculate UVWs for them. Setup UVW object if not done yet.
-          calcUVW();
+          if (itsReadVisData){
+            itsBuffer.getData() = Complex();
+          }
           itsNrInserted++;
         } else {
           itsBuffer.setRowNrs (itsIter.table().rowNumbers(itsMS, True));
           if (itsMissingData) {
             // Data column not present, so fill a fully flagged time slot.
             itsBuffer.setExposure (itsTimeInterval);
-            itsBuffer.getData().resize  (itsNrCorr, itsNrChan, itsNrBl);
-            itsBuffer.getFlags().resize (itsNrCorr, itsNrChan, itsNrBl);
-            itsBuffer.getData() = Complex();
             itsBuffer.getFlags() = true;
+            if (itsReadVisData) {
+              itsBuffer.getData() = Complex();
+            }
           } else {
             // Set exposure.
             itsBuffer.setExposure (ROScalarColumn<double>
@@ -659,25 +657,27 @@ namespace LOFAR {
       }
     }
 
-    void MSReader::calcUVW()
+    void MSReader::calcUVW (double time, DPBuffer& buf)
     {
-      Matrix<double> uvws(3, itsNrBl);
+      Matrix<double>& uvws = buf.getUVW();
+      uvws.resize (3, itsNrBl);
       const Vector<Int>& ant1 = getInfo().getAnt1();
       const Vector<Int>& ant2 = getInfo().getAnt2();
       for (uint i=0; i<itsNrBl; ++i) {
-        uvws.column(i) = itsUVWCalc.getUVW (ant1[i], ant2[i], itsNextTime);
+        uvws.column(i) = itsUVWCalc.getUVW (ant1[i], ant2[i], time);
       }
-      itsBuffer.setUVW (uvws);
     }
 
-    void MSReader::getUVW (const RefRows& rowNrs, DPBuffer& buf)
+    void MSReader::getUVW (const RefRows& rowNrs, double time, DPBuffer& buf)
     {
       NSTimer::StartStop sstime(itsTimer);
-      // Empty rownrs cannot happen for data, because in that case the buffer
-      // should contain UVW for a missing time slot.
-      ASSERT (! rowNrs.rowVector().empty());
-      ROArrayColumn<double> dataCol(itsMS, "UVW");
-      dataCol.getColumnCells (rowNrs, buf.getUVW());
+      // Calculate UVWs if empty rownrs (i.e., missing data).
+      if (rowNrs.rowVector().empty()) {
+        calcUVW (time, buf);
+      } else {
+        ROArrayColumn<double> dataCol(itsMS, "UVW");
+        dataCol.getColumnCells (rowNrs, buf.getUVW());
+      }
     }
 
     void MSReader::getWeights (const RefRows& rowNrs, DPBuffer& buf)

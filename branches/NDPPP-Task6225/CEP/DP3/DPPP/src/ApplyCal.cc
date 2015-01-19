@@ -169,7 +169,6 @@ namespace LOFAR {
     {
       itsTimer.start();
       itsBuffer.copy (bufin);
-      const RefRows& rowNrs = bufin.getRowNrs();
       double bufStartTime = bufin.getTime() - 0.5*itsTimeInterval;
 
       if (bufin.getTime() > itsLastTime) {
@@ -185,7 +184,7 @@ namespace LOFAR {
 
       Complex* data = itsBuffer.getData().data();
 
-      itsInput->fetchWeightsC (bufin, itsBuffer, rowNrs, itsTimer);
+      itsInput->fetchWeightsC (bufin, itsBuffer, itsTimer);
       float* weight = itsBuffer.getWeights().data();
 
       size_t nchan = itsBuffer.getData().shape()[1];

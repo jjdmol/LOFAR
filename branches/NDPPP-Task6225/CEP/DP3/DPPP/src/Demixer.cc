@@ -433,21 +433,13 @@ namespace LOFAR {
       // Update the count.
       itsNTimeIn++;
       // Make sure all required data arrays are filled in.
-      DPBuffer newBuf(buf);
-      RefRows refRows(newBuf.getRowNrs());
-      if (newBuf.getUVW().empty()) {
-        newBuf.setUVW(itsInput->fetchUVW(newBuf, refRows, itsTimer));
-      }
-      if (newBuf.getWeights().empty()) {
-        newBuf.setWeights(itsInput->fetchWeights(newBuf, refRows, itsTimer));
-      }
-      if (newBuf.getFullResFlags().empty()) {
-        newBuf.setFullResFlags(itsInput->fetchFullResFlags(newBuf, refRows,
-                                                           itsTimer));
-      }
+      itsBufTmp.referenceFilled (buf);
+      itsInput->fetchUVWC (itsBufTmp, itsBufTmp, itsTimer);
+      itsInput->fetchWeightsC (itsBufTmp, itsBufTmp, itsTimer);
+      itsInput->fetchFullResFlagsC (itsBufTmp, itsBufTmp, itsTimer);
 
       // Do the filter step first.
-      itsFilter.process (newBuf);
+      itsFilter.process (itsBufTmp);
       const DPBuffer& selBuf = itsFilter.getBuffer();
       // Do the next steps (phaseshift and average) on the filter output.
       itsTimerPhaseShift.start();
@@ -455,7 +447,7 @@ namespace LOFAR {
         itsFirstSteps[i]->process(selBuf);
       }
       // Do the average and filter step for the output for all data.
-      itsAvgStepSubtr->process (newBuf);
+      itsAvgStepSubtr->process (itsBufTmp);
       itsTimerPhaseShift.stop();
 
       // For each itsNTimeAvg times, calculate the phase rotation per direction

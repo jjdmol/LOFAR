@@ -107,16 +107,15 @@ namespace LOFAR {
         return true;
       }
       itsTimer.start();
-      RefRows rowNrs(buf.getRowNrs());
       // Sum the data in time applying the weights.
       // The summing in channel and the averaging is done in function average.
       if (itsNTimes == 0) {
         // The first time we assign because that is faster than first clearing
         // and adding thereafter.
-        itsBuf.copy (buf);
-        itsInput->fetchUVWC (buf, itsBuf, rowNrs, itsTimer);
-        itsInput->fetchWeightsC (buf, itsBuf, rowNrs, itsTimer);
-        itsInput->fetchFullResFlagsC (buf, itsBuf, rowNrs, itsTimer);
+        itsBuf.getData().assign (buf.getData());
+        itsBuf.getFlags().assign (buf.getFlags());
+        itsBuf.getUVW().assign (itsInput->fetchUVWC (buf, itsBuf, itsTimer));
+        itsBuf.getWeights().assign (itsInput->fetchWeightsC (buf, itsBuf, itsTimer));
         IPosition shapeIn = buf.getData().shape();
         itsNPoints.resize (shapeIn);
         itsAvgAll.reference (buf.getData() * itsBuf.getWeights());
@@ -124,11 +123,13 @@ namespace LOFAR {
         itsWeightAll = itsBuf.getWeights();
         // Take care of the fullRes flags.
         // We have to shape the output array and copy to a part of it.
-        IPosition ofShape = itsBuf.getFullResFlags().shape();
+        const Cube<bool>& fullResFlags =
+          itsInput->fetchFullResFlagsC (buf, itsBufTmp, itsTimer);
+        IPosition ofShape = fullResFlags.shape();
         ofShape[1] *= itsNTimeAvg;      // more time entries, same chan and bl
-        itsFullResFlags.resize (ofShape);
-        itsFullResFlags = true; // initialize for times missing at end
-        copyFullResFlags (itsBuf.getFullResFlags(), buf.getFlags(), 0);
+        itsBuf.getFullResFlags().resize (ofShape);
+        itsBuf.getFullResFlags() = true; // initialize for times missing at end
+        copyFullResFlags (fullResFlags, buf.getFlags(), 0);
         // Set middle of new interval.
         double time = buf.getTime() + 0.5*(itsNTimeAvg-1)*itsTimeInterval;
         itsBuf.setTime     (time);
@@ -161,10 +162,11 @@ namespace LOFAR {
         // For now we assume that all timeslots have the same nr of baselines,
         // so check if the buffer sizes are the same.
         ASSERT (itsBuf.getData().shape() == buf.getData().shape());
-        itsBuf.getUVW() += itsInput->fetchUVWC (buf, itsBufTmp, rowNrs, itsTimer);
-        copyFullResFlags (itsInput->fetchFullResFlagsC (buf, itsBufTmp, rowNrs, itsTimer),
+        itsBuf.getUVW() += itsInput->fetchUVWC (buf, itsBufTmp, itsTimer);
+        copyFullResFlags (itsInput->fetchFullResFlagsC (buf, itsBufTmp, itsTimer),
                           buf.getFlags(), itsNTimes);
-        Cube<float> weights(itsInput->fetchWeightsC(buf, itsBufTmp, rowNrs, itsTimer));
+        const Cube<float>& weights =
+          itsInput->fetchWeightsC(buf, itsBufTmp, itsTimer);
         // Ignore flagged points.
         Array<Complex>::const_contiter indIter = buf.getData().cbegin();
         Array<float>::const_contiter   inwIter = weights.cbegin();

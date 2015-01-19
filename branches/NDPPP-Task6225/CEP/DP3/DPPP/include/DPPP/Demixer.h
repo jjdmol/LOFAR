@@ -124,6 +124,7 @@ namespace LOFAR {
       //# Data members.
       DPInput*                              itsInput;
       string                                itsName;
+      DPBuffer                              itsBufTmp;
       string                                itsSkyName;
       string                                itsInstrumentName;
       double                                itsDefaultGain;

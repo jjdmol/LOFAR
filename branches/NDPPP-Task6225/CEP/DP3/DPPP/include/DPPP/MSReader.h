@@ -163,6 +163,7 @@ namespace LOFAR {
 
       // Read the UVW at the given row numbers into the buffer.
       virtual void getUVW (const casa::RefRows& rowNrs,
+                           double time,
                            DPBuffer&);
 
       // Read the weights at the given row numbers into the buffer.
@@ -267,7 +268,7 @@ namespace LOFAR {
       void skipFirstTimes();
 
       // Calculate the UVWs for a missing time slot.
-      void calcUVW();
+      void calcUVW (double time, DPBuffer&);
 
       // Calculate the weights from the autocorrelations.
       void autoWeight (casa::Cube<float>& weights, const DPBuffer& buf);
