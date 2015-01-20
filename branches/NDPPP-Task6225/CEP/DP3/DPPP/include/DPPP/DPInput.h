@@ -83,6 +83,11 @@ namespace LOFAR {
       virtual bool getFullResFlags (const casa::RefRows& rowNrs,
                                     DPBuffer&);
 
+      // Read the model data at the given row numbers into the array.
+      // The default implementation throws an exception.
+      virtual void getModelData (const casa::RefRows& rowNrs,
+                                 casa::Cube<casa::Complex>&);
+
       // Get the MS name.
       // The default implementation returns an empty string.
       virtual casa::String msName() const;
@@ -102,38 +107,26 @@ namespace LOFAR {
       // that if an averaged channel is flagged, the corresponding FullRes
       // flags are set.
       // <br>It does a stop/start of the timer when actually reading the data.
-      const casa::Cube<bool>& fetchFullResFlagsC (const DPBuffer& bufin,
-                                                  DPBuffer& bufout,
-                                                  NSTimer& timer,
-                                                  bool merge=false);
-      ///      casa::Cube<bool>& fetchFullResFlags (const DPBuffer& bufin,
-      ///                                          DPBuffer& bufout,
-      ///                                          NSTimer& timer,
-      ///bool merge=false);
-
-      //NOTE: SO FAR ONLY THE c FUNCTIONS ARE NEEDED !!!
+      const casa::Cube<bool>& fetchFullResFlags (const DPBuffer& bufin,
+                                                 DPBuffer& bufout,
+                                                 NSTimer& timer,
+                                                 bool merge=false);
 
       // Fetch the weights.
       // If defined in the buffer, they are taken from there.
       // Otherwise there are read from the input.
       // <br>It does a stop/start of the timer when actually reading the data.
-      const casa::Cube<float>& fetchWeightsC (const DPBuffer& bufin,
+      const casa::Cube<float>& fetchWeights (const DPBuffer& bufin,
                                              DPBuffer& bufout,
                                              NSTimer& timer);
-    ///      casa::Cube<float>& fetchWeights (const DPBuffer& bufin,
-    ///                                       DPBuffer& bufout,
-    ///                                       NSTimer& timer);
 
       // Fetch the UVW.
       // If defined in the buffer, they are taken from there.
       // Otherwise there are read from the input.
       // <br>It does a stop/start of the timer when actually reading the data.
-      const casa::Matrix<double>& fetchUVWC (const DPBuffer& bufin,
-                                             DPBuffer& bufout,
-                                             NSTimer& timer);
-    ///      casa::Matrix<double>& fetchUVW (const DPBuffer& bufin,
-    ///                                      DPBuffer& bufout,
-    ///                                      NSTimer& timer);
+      const casa::Matrix<double>& fetchUVW (const DPBuffer& bufin,
+                                            DPBuffer& bufout,
+                                            NSTimer& timer);
     };
 
   } //# end namespace

@@ -341,9 +341,9 @@ namespace LOFAR {
       // Make sure all required data arrays are filled in.
       DPBuffer& newBuf = itsBufIn[itsNTime];
       newBuf.copy (buf);
-      itsInput->fetchUVWC(newBuf, newBuf, itsTimer);
-      itsInput->fetchWeightsC(newBuf, newBuf, itsTimer);
-      itsInput->fetchFullResFlagsC(newBuf, newBuf, itsTimer);
+      itsInput->fetchUVW(buf, newBuf, itsTimer);
+      itsInput->fetchWeights(buf, newBuf, itsTimer);
+      itsInput->fetchFullResFlags(buf, newBuf, itsTimer);
       // Process the data if entire buffer is filled.
       if (++itsNTime >= itsBufIn.size()) {
         processData();

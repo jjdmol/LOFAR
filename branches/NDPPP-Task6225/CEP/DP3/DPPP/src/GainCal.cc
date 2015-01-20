@@ -118,9 +118,6 @@ namespace LOFAR {
     {
       info() = infoIn;
       info().setNeedVisData();
-      if (itsUseModelColumn) {
-        info().setNeedModelData();
-      }
       info().setNeedWrite();
 
       uint nBl=info().nbaselines();
@@ -233,9 +230,9 @@ namespace LOFAR {
     {
       itsTimer.start();
       itsBuf.referenceFilled (bufin);
-      itsInput->fetchUVWC(itsBuf, itsBuf, itsTimer);
-      itsInput->fetchWeightsC(itsBuf, itsBuf, itsTimer);
-      itsInput->fetchFullResFlagsC(itsBuf, itsBuf, itsTimer);
+      itsInput->fetchUVW(bufin, itsBuf, itsTimer);
+      itsInput->fetchWeights(bufin, itsBuf, itsTimer);
+      itsInput->fetchFullResFlags(bufin, itsBuf, itsTimer);
 
       // Determine the various sizes.
       const size_t nDr = itsPatchList.size();
@@ -250,8 +247,11 @@ namespace LOFAR {
 
       const size_t thread = 0;//OpenMP::threadNum();
 
+      if (itsUseModelColumn) {
+        itsInput->getModelData (itsBuf.getRowNrs(), itsModelData);
+      }
       Complex* data=itsBuf.getData().data();
-      Complex* model=itsBuf.getModel().data();
+      Complex* model=itsModelData.data();
       float* weight = itsBuf.getWeights().data();
       const Bool* flag=itsBuf.getFlags().data();
 

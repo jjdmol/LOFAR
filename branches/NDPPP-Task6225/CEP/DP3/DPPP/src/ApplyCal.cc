@@ -184,7 +184,7 @@ namespace LOFAR {
 
       Complex* data = itsBuffer.getData().data();
 
-      itsInput->fetchWeightsC (bufin, itsBuffer, itsTimer);
+      itsInput->fetchWeights (bufin, itsBuffer, itsTimer);
       float* weight = itsBuffer.getWeights().data();
 
       size_t nchan = itsBuffer.getData().shape()[1];

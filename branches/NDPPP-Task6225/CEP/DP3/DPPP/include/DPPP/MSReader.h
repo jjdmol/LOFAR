@@ -176,6 +176,10 @@ namespace LOFAR {
       virtual bool getFullResFlags (const casa::RefRows& rowNrs,
                                     DPBuffer&);
 
+      // Read the model data at the given row numbers into the array.
+      virtual void getModelData (const casa::RefRows& rowNrs,
+                                 casa::Cube<casa::Complex>&);
+
       // Fill the vector with station beam info from the input MS.
       // Only fill it for the given station names.
       virtual void fillBeamInfo (vector<StationResponse::Station::Ptr>&,
@@ -183,9 +187,6 @@ namespace LOFAR {
 
       // Tell if the visibility data are to be read.
       virtual void setReadVisData (bool readVisData);
-
-      // Tell if the visibility data are to be read.
-      virtual void setReadModelData (bool readModelData);
 
       // Get the main MS table.
       casa::Table& table()
@@ -286,7 +287,6 @@ namespace LOFAR {
       casa::String        itsNrChanStr;     //# nchan expression
       string              itsSelBL;         //# Baseline selection string
       bool                itsReadVisData;   //# read visibility data?
-      bool                itsReadModelData; //# read model data?
       bool                itsNeedSort;      //# sort needed on time,baseline?
       bool                itsAutoWeight;    //# calculate weights from autocorr?
       bool                itsAutoWeightForce; //# always calculate weights?

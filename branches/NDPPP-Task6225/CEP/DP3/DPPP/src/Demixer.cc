@@ -434,9 +434,9 @@ namespace LOFAR {
       itsNTimeIn++;
       // Make sure all required data arrays are filled in.
       itsBufTmp.referenceFilled (buf);
-      itsInput->fetchUVWC (itsBufTmp, itsBufTmp, itsTimer);
-      itsInput->fetchWeightsC (itsBufTmp, itsBufTmp, itsTimer);
-      itsInput->fetchFullResFlagsC (itsBufTmp, itsBufTmp, itsTimer);
+      itsInput->fetchUVW (buf, itsBufTmp, itsTimer);
+      itsInput->fetchWeights (buf, itsBufTmp, itsTimer);
+      itsInput->fetchFullResFlags (buf, itsBufTmp, itsTimer);
 
       // Do the filter step first.
       itsFilter.process (itsBufTmp);

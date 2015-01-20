@@ -39,7 +39,6 @@ namespace LOFAR {
 
     DPInfo::DPInfo()
       : itsNeedVisData  (false),
-        itsNeedModelData(false),
         itsNeedWrite    (0),
         itsNCorr        (0),
         itsStartChan    (0),

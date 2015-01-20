@@ -114,8 +114,8 @@ namespace LOFAR {
         // and adding thereafter.
         itsBuf.getData().assign (buf.getData());
         itsBuf.getFlags().assign (buf.getFlags());
-        itsBuf.getUVW().assign (itsInput->fetchUVWC (buf, itsBuf, itsTimer));
-        itsBuf.getWeights().assign (itsInput->fetchWeightsC (buf, itsBuf, itsTimer));
+        itsBuf.getUVW().assign (itsInput->fetchUVW(buf, itsBuf, itsTimer));
+        itsBuf.getWeights().assign (itsInput->fetchWeights(buf, itsBuf, itsTimer));
         IPosition shapeIn = buf.getData().shape();
         itsNPoints.resize (shapeIn);
         itsAvgAll.reference (buf.getData() * itsBuf.getWeights());
@@ -124,7 +124,7 @@ namespace LOFAR {
         // Take care of the fullRes flags.
         // We have to shape the output array and copy to a part of it.
         const Cube<bool>& fullResFlags =
-          itsInput->fetchFullResFlagsC (buf, itsBufTmp, itsTimer);
+          itsInput->fetchFullResFlags (buf, itsBufTmp, itsTimer);
         IPosition ofShape = fullResFlags.shape();
         ofShape[1] *= itsNTimeAvg;      // more time entries, same chan and bl
         itsBuf.getFullResFlags().resize (ofShape);
@@ -162,11 +162,11 @@ namespace LOFAR {
         // For now we assume that all timeslots have the same nr of baselines,
         // so check if the buffer sizes are the same.
         ASSERT (itsBuf.getData().shape() == buf.getData().shape());
-        itsBuf.getUVW() += itsInput->fetchUVWC (buf, itsBufTmp, itsTimer);
-        copyFullResFlags (itsInput->fetchFullResFlagsC (buf, itsBufTmp, itsTimer),
+        itsBuf.getUVW() += itsInput->fetchUVW (buf, itsBufTmp, itsTimer);
+        copyFullResFlags (itsInput->fetchFullResFlags (buf, itsBufTmp, itsTimer),
                           buf.getFlags(), itsNTimes);
         const Cube<float>& weights =
-          itsInput->fetchWeightsC(buf, itsBufTmp, itsTimer);
+          itsInput->fetchWeights (buf, itsBufTmp, itsTimer);
         // Ignore flagged points.
         Array<Complex>::const_contiter indIter = buf.getData().cbegin();
         Array<float>::const_contiter   inwIter = weights.cbegin();

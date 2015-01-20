@@ -141,7 +141,7 @@ namespace LOFAR {
       // Input uvw coordinates are only needed if no new phase center is used.
       Matrix<double> uvws;
       if (itsCenter.empty()) {
-        uvws.reference (itsInput->fetchUVWC (buf, itsBuffer, itsTimer));
+        uvws.reference (itsInput->fetchUVW (buf, itsBuffer, itsTimer));
       }
       const double* uvwPtr = uvws.data();
       bool* flagPtr = flags.data();

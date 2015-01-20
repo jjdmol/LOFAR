@@ -120,7 +120,7 @@ namespace LOFAR {
     {
       itsTimer.start();
       itsBuf.referenceFilled (buf);
-      itsInput->fetchUVWC (itsBuf, itsBuf, itsTimer);
+      itsInput->fetchUVW (buf, itsBuf, itsTimer);
       int ncorr  = itsBuf.getData().shape()[0];
       int nchan  = itsBuf.getData().shape()[1];
       int nbl    = itsBuf.getData().shape()[2];

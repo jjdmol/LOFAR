@@ -47,7 +47,6 @@ namespace LOFAR {
         itsData.reference (that.itsData);
         itsFlags.reference (that.itsFlags);
         itsWeights.reference (that.itsWeights);
-        itsModel.reference (that.itsModel);
         itsUVW.reference (that.itsUVW);
         itsFullResFlags.reference (that.itsFullResFlags);
       }
@@ -68,9 +67,6 @@ namespace LOFAR {
         }
         if (! that.itsWeights.empty()) {
           itsWeights.assign (that.itsWeights);
-        }
-        if (! that.itsModel.empty()) {
-          itsModel.assign (that.itsModel);
         }
         if (! that.itsUVW.empty()) {
           itsUVW.assign (that.itsUVW);
@@ -95,9 +91,6 @@ namespace LOFAR {
         }
         if (! that.itsWeights.empty()) {
           itsWeights.reference (that.itsWeights);
-        }
-        if (! that.itsModel.empty()) {
-          itsModel.reference (that.itsModel);
         }
         if (! that.itsUVW.empty()) {
           itsUVW.reference (that.itsUVW);

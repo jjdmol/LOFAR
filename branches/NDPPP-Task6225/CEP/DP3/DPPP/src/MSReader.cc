@@ -53,7 +53,6 @@ namespace LOFAR {
 
     MSReader::MSReader()
       : itsReadVisData   (False),
-        itsReadModelData (False),
         itsLastMSTime    (0),
         itsNrRead        (0),
         itsNrInserted    (0)
@@ -64,7 +63,6 @@ namespace LOFAR {
                         const string& prefix,
                         bool missingData)
       : itsReadVisData   (False),
-        itsReadModelData (False),
         itsMissingData   (missingData),
         itsLastMSTime    (0),
         itsNrRead        (0),
@@ -209,19 +207,11 @@ namespace LOFAR {
       itsReadVisData = readVisData;
     }
 
-    void MSReader::setReadModelData(bool readModelData)
-    {
-      itsReadModelData = readModelData;
-    }
-
     bool MSReader::process (const DPBuffer&)
     {
       if (itsNrRead == 0) {
         if (itsReadVisData) {
           itsBuffer.getData().resize (itsNrCorr, itsNrChan, itsNrBl);
-        }
-        if (itsReadModelData) {
-          itsBuffer.getModel().resize (itsNrCorr, itsNrChan, itsNrBl);
         }
         if (itsUseFlags) {
           itsBuffer.getFlags().resize (itsNrCorr, itsNrChan, itsNrBl);
@@ -305,14 +295,6 @@ namespace LOFAR {
             ///if (itsNrRead%50 < 4) {
             ///cout<<(void*)(itsBuffer.getData().data())<<" rd2"<<endl;
             ///}
-            if (itsReadModelData) {
-              ROArrayColumn<Complex> modelCol(itsIter.table(), itsModelColName);
-              if (itsUseAllChan) {
-                modelCol.getColumn (itsBuffer.getModel());
-              } else {
-                modelCol.getColumn (itsColSlicer, itsBuffer.getModel());
-              }
-            }
             if (itsUseFlags) {
               ROArrayColumn<bool> flagCol(itsIter.table(), "FLAG");
               if (itsUseAllChan) {
@@ -824,6 +806,23 @@ namespace LOFAR {
         }
       }
       return true;
+    }
+
+    void MSReader::getModelData (const casa::RefRows& rowNrs,
+                                 casa::Cube<casa::Complex>& arr)
+    {
+      NSTimer::StartStop sstime(itsTimer);
+      if (rowNrs.rowVector().empty()) {
+        arr.resize (itsNrCorr, itsNrChan, itsNrBl);
+        arr = Complex();
+      } else {
+        ROArrayColumn<Complex> modelCol(itsMS, itsModelColName);
+        if (itsUseAllChan) {
+          modelCol.getColumnCells (rowNrs, arr);
+        } else {
+          modelCol.getColumnCells (rowNrs, itsColSlicer, arr);
+        }
+      }
     }
 
     void MSReader::fillBeamInfo (vector<StationResponse::Station::Ptr>& vec,

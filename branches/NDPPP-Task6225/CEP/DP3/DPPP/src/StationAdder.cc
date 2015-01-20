@@ -296,11 +296,11 @@ namespace LOFAR {
       const Array<Complex>& data = buf.getData();
       const Array<Bool>& flags = buf.getFlags();
       const Array<Float>& weights =
-        itsInput->fetchWeightsC (buf, itsBufTmp, itsTimer);
+        itsInput->fetchWeights (buf, itsBufTmp, itsTimer);
       const Array<Double>& uvws =
-        itsInput->fetchUVWC (buf, itsBufTmp, itsTimer);
+        itsInput->fetchUVW (buf, itsBufTmp, itsTimer);
       const Array<Bool>& frFlags =
-        itsInput->fetchFullResFlagsC (buf, itsBufTmp, itsTimer);
+        itsInput->fetchFullResFlags (buf, itsBufTmp, itsTimer);
       // Size fullResFlags if not done yet.
       if (itsBuf.getFullResFlags().empty()) {
         IPosition frfShp = frFlags.shape();

@@ -60,11 +60,6 @@ namespace LOFAR {
     //   <td>The visibility data as [ncorr,nchan,nbaseline].</td>
     //  </tr>
     //  <tr>
-    //   <td>MODEL_DATA</td>
-    //   <td>The data from the MODEL_DATA column as
-    //       [ncorr,nchan,nbaseline].</td>
-    //  </tr>
-    //  <tr>
     //   <td>FLAG</td>
     //   <td>The data flags as [ncorr,nchan,nbaseline] (True is bad).
     //       Note that the ncorr axis is redundant because NDPPP will always
@@ -163,14 +158,6 @@ namespace LOFAR {
       casa::Cube<float>& getWeights()
         { return itsWeights; }
 
-      // Set or get model visibility data per corr,chan,baseline.
-      void setModel(const casa::Cube<casa::Complex>& data)
-        { itsModel.reference (data); }
-      const casa::Cube<casa::Complex>& getModel() const
-        { return itsModel; }
-      casa::Cube<casa::Complex>& getModel()
-        { return itsModel; }
-
       // Set or get the flags at the full resolution per chan,timeavg,baseline.
       void setFullResFlags (const casa::Cube<bool>& flags)
         { itsFullResFlags.reference (flags); }
@@ -219,7 +206,6 @@ namespace LOFAR {
       casa::Cube<bool>          itsFlags;       //# ncorr,nchan,nbasel
       casa::Matrix<double>      itsUVW;         //# 3,nbasel
       casa::Cube<float>         itsWeights;     //# ncorr,nchan,nbasel
-      casa::Cube<casa::Complex> itsModel;       //# ncorr,nchan,nbasel
       casa::Cube<bool>          itsFullResFlags; //# fullres_nchan,ntimeavg,nbl
     };
 

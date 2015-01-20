@@ -42,10 +42,10 @@ namespace LOFAR {
       return String();
     }
 
-    const Cube<bool>& DPInput::fetchFullResFlagsC (const DPBuffer& bufin,
-                                                   DPBuffer& bufout,
-                                                   NSTimer& timer,
-                                                   bool merge)
+    const Cube<bool>& DPInput::fetchFullResFlags (const DPBuffer& bufin,
+                                                  DPBuffer& bufout,
+                                                  NSTimer& timer,
+                                                  bool merge)
     {
       // If already defined in the buffer, return those fullRes flags.
       if (! bufin.getFullResFlags().empty()) {
@@ -76,23 +76,9 @@ namespace LOFAR {
       return fullResFlags;
     }
 
-    /*
-    Cube<bool>& DPInput::fetchFullResFlags (const DPBuffer& bufin,
-                                            DPBuffer& bufout,
-                                            NSTimer& timer,
-                                            bool merge)
-    {
-      const Cube<bool>& w = fetchFullResFlagsC (bufin, bufout,
-                                                timer, merge);
-      Cube<bool>& wout = bufout.getFullResFlags();
-      wout.assign (w);
-      return wout;
-    }
-    */
-
-    const Cube<float>& DPInput::fetchWeightsC (const DPBuffer& bufin,
-                                               DPBuffer& bufout,
-                                               NSTimer& timer)
+    const Cube<float>& DPInput::fetchWeights (const DPBuffer& bufin,
+                                              DPBuffer& bufout,
+                                              NSTimer& timer)
     {
       // If already defined in the buffer, return those weights.
       if (! bufin.getWeights().empty()) {
@@ -106,24 +92,9 @@ namespace LOFAR {
       return bufout.getWeights();
     }
 
-    /*
-    Cube<float>& DPInput::fetchWeights (const DPBuffer& bufin,
-                                        DPBuffer& bufout,
-                                        NSTimer& timer)
-    {
-      const Cube<float>& w = fetchWeightsC (bufin, bufout, timer);
-      // Note that fetchWeightsC can return a reference to the weights
-      // in the input or output buffer. The assign makes a copy, but won't
-      // do anything if the reference is to the output buffer.
-      Cube<float>& wout = bufout.getWeights();
-      wout.assign (w);
-      return wout;
-    }
-    */
-
-    const Matrix<double>& DPInput::fetchUVWC (const DPBuffer& bufin,
-                                              DPBuffer& bufout,
-                                              NSTimer& timer)
+    const Matrix<double>& DPInput::fetchUVW (const DPBuffer& bufin,
+                                             DPBuffer& bufout,
+                                             NSTimer& timer)
     {
       // If already defined in the buffer, return those UVW.
       if (! bufin.getUVW().empty()) {
@@ -136,18 +107,6 @@ namespace LOFAR {
       return bufout.getUVW();
     }
 
-    /*
-    Matrix<double>& DPInput::fetchUVW (const DPBuffer& bufin,
-                                       DPBuffer& bufout,
-                                       NSTimer& timer)
-    {
-      const Matrix<double>& w = fetchUVWC (bufin, bufout, timer);
-      Matrix<double>& wout = bufout.getUVW();
-      wout.assign (w);
-      return wout;
-    }
-    */
-
     void DPInput::getUVW (const RefRows&, double, DPBuffer&)
       { throw Exception ("DPInput::getUVW not implemented"); }
 
@@ -156,6 +115,9 @@ namespace LOFAR {
 
     bool DPInput::getFullResFlags (const RefRows&, DPBuffer&)
       { throw Exception ("DPInput::getFullResFlags not implemented"); }
+
+    void DPInput::getModelData (const RefRows&, Cube<Complex>&)
+      { throw Exception ("DPInput::getModelData not implemented"); }
 
     void DPInput::fillBeamInfo (vector<StationResponse::Station::Ptr>&,
                                 const Vector<String>&)
