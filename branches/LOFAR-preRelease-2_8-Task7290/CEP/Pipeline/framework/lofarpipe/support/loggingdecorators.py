@@ -6,9 +6,10 @@ import smtplib
 from email.mime.text import MIMEText
 import time
 import os
+import xml.dom.minidom as _xml
 
 from lofarpipe.support.xmllogging import enter_active_stack, \
-        exit_active_stack, get_active_stack
+        exit_active_stack, get_active_stack, get_child
 
 def xml_node(target):
     """
@@ -99,6 +100,30 @@ class duration:
             False
 
 
+def strip_xml_to_master_details(pipeline_xml, logger):
+    """
+    Helper function that returns a 'streamlined' subset of the data contained
+    in the pipeline_xml. The current xml countains for instance resource level
+    information not of interest of receivers of pipeline updates.
+
+    This function removes most of the data in the xml limiting the size.
+    """
+    local_document = _xml.Document()
+    
+    simplyfied_pipeline_xml = local_document.createElement("Simplyfied_pipeline_xml")
+    simplyfied_pipeline_xml.appendChild(get_child(pipeline_xml, "active_stack").cloneNode(True))
+
+    for node in pipeline_xml.childNodes:
+        # Active stack is copied in full
+        if node.nodeName == "active_stack":
+            continue
+
+        # Create copy of the xml, make a shallow clone
+        simplyfied_pipeline_xml.appendChild(node.cloneNode(False)) 
+        
+    return simplyfied_pipeline_xml
+
+
 def mail_log_on_exception(target):
     """
     Simple decorator, it tests if the any exceptions are throw in the wrapped
@@ -125,12 +150,14 @@ def mail_log_on_exception(target):
             if stack != None:
                 stack.setAttribute(
                     "duration", duration_recipe)
+                simplyfied_pipeline_xml = strip_xml_to_master_details(
+                                               stack, calling_object.logger)
                 msg_string = stack.toprettyxml(encoding='ascii')
+
             else:
                 msg_string = "duration: {0} \n "\
-                 "No additional pipeline data available".format(duration_recipe
-                        )
-
+                 "No additional pipeline data available".format(duration_recipe)
+    
             _mail_msg_to("pipeline_finished", "klijn@astron.nl",
                          "pipeline finished: {0}: {1}".format(
                                 os.path.basename(calling_object.__file__),
@@ -138,18 +165,22 @@ def mail_log_on_exception(target):
                          msg_string)
 
         except Exception, message:
-            # Static list of mail to be send (could be made configurable,
-            # but yeah temp mail functionality so...)
-            mail_list = ["klijn@astron.nl", "frieswijk@astron.nl",
-                         "pizzo@astron.nl", "orru@astron.nl",
-                         "jong@astron.nl"
+            # Static list of mail to be send
+            mail_list = ["klijn@astron.nl", 
+                         "orru@astron.nl",
+                         "sciencesupport@astron.nl"
                          ]
 
             # get the active stack
             stack = get_active_stack(calling_object)
             active_stack_data = ""
             if stack != None:
-                active_stack_data = stack.toprettyxml(encoding='ascii')
+                simplyfied_pipeline_xml = strip_xml_to_master_details(
+                                               stack, calling_object.logger)
+
+                active_stack_data = simplyfied_pipeline_xml.toprettyxml(
+                                                              encoding='ascii')           
+            
             # get the Obsid and pipeline name add to subjecy title
             subject = "Failed pipeline run {0}: {1}".format(
                         os.path.basename(calling_object.__file__),
