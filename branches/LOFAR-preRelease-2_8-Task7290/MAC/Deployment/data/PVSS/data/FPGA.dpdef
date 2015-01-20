@@ -1,0 +1,12 @@
+#
+# FPGA
+#
+
+# static informatiion
+firmName			string
+firmVersion			string
+hwVersion			string
+
+# process information
+highTemp			float
+fpgaTemp			float
