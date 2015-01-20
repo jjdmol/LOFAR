@@ -20,9 +20,9 @@ import numpy as np
 # Extra modules
 ########################################################################
 
-#from lofar.selfcal import class_obsPreprocessing
+from lofar.selfcal import class_obsPreprocessing
 
-import class_obsPreprocessing
+#import class_obsPreprocessing
 
 ########################################################################
 ## Define selfcalibration Parameters for cycles & prepare parsets
