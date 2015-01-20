@@ -29,9 +29,16 @@
     <Content Include="framework\lofarpipe\process_monitoring\config\poll_execute.sh" />
     <Content Include="framework\lofarpipe\process_monitoring\example\poll_execute.sh" />
     <Content Include="framework\lofarpipe\process_monitoring\example\testfile" />
+    <Content Include="helper_scripts\pipeline_commisioning.txt" />
+    <Content Include="helper_scripts\selfcal.parset" />
+    <Content Include="helper_scripts\selfcal.settings" />
+    <Content Include="helper_scripts\selfcal.settings.bak" />
+    <Content Include="helper_scripts\statistics.xml" />
     <Content Include="mac\CMakeLists.txt" />
     <Content Include="recipes\CMakeLists.txt" />
     <Content Include="test\CMakeLists.txt" />
+    <Compile Include="helper_scripts\aggregate_stats.py" />
+    <Compile Include="helper_scripts\create_selfcal_parset.py" />
     <Compile Include="recipes\sip\bin\long_baseline_pipeline.py" />
     <Compile Include="recipes\sip\bin\selfcal_imager_pipeline.py" />
     <Compile Include="recipes\sip\master\long_baseline.py" />
@@ -256,6 +263,7 @@
     <Folder Include="framework\lofarpipe\process_monitoring\example\" />
     <Folder Include="framework\lofarpipe\support" />
     <Folder Include="framework\lofarpipe\support\deprecated" />
+    <Folder Include="helper_scripts\" />
     <Folder Include="mac" />
     <Folder Include="mac\ep" />
     <Folder Include="mac\ep\control" />
