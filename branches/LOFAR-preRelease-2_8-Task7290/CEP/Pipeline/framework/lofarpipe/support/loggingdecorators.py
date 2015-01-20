@@ -152,7 +152,7 @@ def mail_log_on_exception(target):
                     "duration", duration_recipe)
                 simplyfied_pipeline_xml = strip_xml_to_master_details(
                                                stack, calling_object.logger)
-                msg_string = stack.toprettyxml(encoding='ascii')
+                msg_string = simplyfied_pipeline_xml.toprettyxml(encoding='ascii')
 
             else:
                 msg_string = "duration: {0} \n "\
