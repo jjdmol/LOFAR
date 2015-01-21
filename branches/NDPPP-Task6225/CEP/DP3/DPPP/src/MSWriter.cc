@@ -125,14 +125,14 @@ namespace LOFAR {
     {
       NSTimer::StartStop sstime(itsTimer);
       itsMS.flush();
-      ROTiledStManAccessor acc1(itsMS, "TiledData");
-      acc1.showCacheStatistics (cout);
-      ROTiledStManAccessor acc2(itsMS, "TiledFlag");
-      acc2.showCacheStatistics (cout);
-      ROTiledStManAccessor acc3(itsMS, "TiledUVW");
-      acc3.showCacheStatistics (cout);
-      ROTiledStManAccessor acc4(itsMS, "TiledFullResFlag");
-      acc4.showCacheStatistics (cout);
+      ///ROTiledStManAccessor acc1(itsMS, "TiledData");
+      ///acc1.showCacheStatistics (cout);
+      ///ROTiledStManAccessor acc2(itsMS, "TiledFlag");
+      ///acc2.showCacheStatistics (cout);
+      ///ROTiledStManAccessor acc3(itsMS, "TiledUVW");
+      ///acc3.showCacheStatistics (cout);
+      ///ROTiledStManAccessor acc4(itsMS, "TiledFullResFlag");
+      ///acc4.showCacheStatistics (cout);
       // Create the VDS file.
       if (! itsClusterDesc.empty()) {
         string vdsName = itsMS.tableName() + ".vds";
@@ -498,6 +498,7 @@ namespace LOFAR {
       ArrayColumn<Float> weightCol(out, "WEIGHT_SPECTRUM");
       ArrayColumn<Double> uvwCol(out, "UVW");
       // Do not account for getting the data in the timings.
+      itsBuffer.referenceFilled (buf);
       const Array<Float>& weights = itsReader->fetchWeights (buf, itsBuffer,
                                                              itsTimer);
       weightCol.putColumn (weights);

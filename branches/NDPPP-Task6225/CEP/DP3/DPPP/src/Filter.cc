@@ -149,6 +149,7 @@ namespace LOFAR {
         return true;
       }
       // Get the various data arrays.
+      itsBufTmp.referenceFilled (buf);
       const Array<Complex>& data = buf.getData();
       const Array<Bool>& flags = buf.getFlags();
       const Array<Float>& weights =

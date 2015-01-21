@@ -162,6 +162,7 @@ namespace LOFAR {
         // For now we assume that all timeslots have the same nr of baselines,
         // so check if the buffer sizes are the same.
         ASSERT (itsBuf.getData().shape() == buf.getData().shape());
+        itsBufTmp.referenceFilled (buf);
         itsBuf.getUVW() += itsInput->fetchUVW (buf, itsBufTmp, itsTimer);
         copyFullResFlags (itsInput->fetchFullResFlags (buf, itsBufTmp, itsTimer),
                           buf.getFlags(), itsNTimes);
