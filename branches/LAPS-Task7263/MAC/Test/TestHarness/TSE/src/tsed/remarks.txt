@@ -1,0 +1,3 @@
+- devioctl.h is property Microsoft... (!!)
+
+- ebtusb.h is property Glaze AB ?
