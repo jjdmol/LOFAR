@@ -2,19 +2,14 @@
 import sys
 import laps.MsgBus
 
-if (len(sys.argv) > 2):
-	broker=sys.argv[1]
-	queuename=sys.argv[2]
-	
+if (len(sys.argv) > 1):
+	queuename=sys.argv[1]
 else:
-    print "usage:"
-    print "purgequeue.sh broker queuename"
-    exit(-1)
-
+	queuename="testqueue"
 
 num_processed = -1
 
-t = laps.MsgBus.Bus(broker, queuename)
+t = laps.MsgBus.Bus(queuename)
 msg="bla"
 while ( msg != "None") :
   num_processed += 1
