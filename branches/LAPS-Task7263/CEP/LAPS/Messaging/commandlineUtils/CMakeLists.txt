@@ -7,4 +7,5 @@ install(PROGRAMS
   cleanupq.sh
   addtopic.sh
   addqueue.sh
+  purgequeue.sh
   DESTINATION bin)
