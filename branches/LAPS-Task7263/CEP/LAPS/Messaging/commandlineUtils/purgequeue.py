@@ -15,7 +15,7 @@ t = LAPS.MsgBus.Bus(queuename)
 msg="Purging"
 while ( msg != "None") :
   num_processed += 1
-  msg, subject = t.get(0.5)
+  msg, subject = t.get()
   #print " received : %s\n "  %( msg )
   t.ack()
 
