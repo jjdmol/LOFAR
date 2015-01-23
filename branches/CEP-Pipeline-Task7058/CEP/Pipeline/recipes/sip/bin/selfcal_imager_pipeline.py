@@ -598,7 +598,7 @@ class selfcal_imager_pipeline(control):
         slices_per_image = self.parset.getInt("Imaging.slices_per_image")
         subbands_per_image = self.parset.getInt("Imaging.subbands_per_image")
 
-        outputs = self.run_task("imager_prepare", input_ms_map_path,
+        outputs = self.run_task("selfcal_prepare", input_ms_map_path,
                 parset = ndppp_parset_path,
                 target_mapfile = target_mapfile,
                 slices_per_image = slices_per_image,

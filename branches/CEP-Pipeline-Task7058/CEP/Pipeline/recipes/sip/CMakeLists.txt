@@ -26,6 +26,7 @@ python_install(
   master/setupsourcedb.py
   master/vdsmaker.py
   master/vdsreader.py
+  master/selfcal_prepare.py
   master/selfcal_create_dbs.py
   master/selfcal_awimager.py
   master/selfcal_bbs.py
@@ -48,6 +49,7 @@ python_install(
   nodes/setupparmdb.py
   nodes/setupsourcedb.py
   nodes/vdsmaker.py
+  nodes/selfcal_prepare.py
   nodes/selfcal_create_dbs.py
   nodes/selfcal_awimager.py
   nodes/selfcal_bbs.py

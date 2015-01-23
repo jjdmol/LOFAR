@@ -96,6 +96,15 @@ instrument_mapfile = %(runtime_directory)s/%(job_name)s/mapfiles/instrument.mapf
 sky_mapfile = %(runtime_directory)s/%(job_name)s/mapfiles/sky.mapfile
 data_mapfile = %(runtime_directory)s/%(job_name)s/mapfiles/bbs.mapfile
 
+
+[selfcal_prepare]
+recipe = imager_prepare
+ndppp_exec = %(lofarroot)s/bin/NDPPP
+asciistat_executable = %(lofarroot)s/bin/asciistats.py
+statplot_executable = %(lofarroot)s/bin/statsplot.py
+msselect_executable = %(lofarroot)s/bin/msselect
+rficonsole_executable = %(lofarroot)s/bin/rficonsole
+
 [selfcal_awimager]
 recipe = selfcal_awimager
 executable = %(lofarroot)s/bin/awimager
