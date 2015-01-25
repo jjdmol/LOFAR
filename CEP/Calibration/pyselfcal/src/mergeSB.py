@@ -20,9 +20,7 @@ import numpy as np
 ########################################################################
 from lofar.selfcal import class_obspar
 from lofar.selfcal import class_mergesubbands
-
-#import class_obspar
-#import class_mergesubbands    
+    
 
 ########################################################################
 #							OVERVIEW
