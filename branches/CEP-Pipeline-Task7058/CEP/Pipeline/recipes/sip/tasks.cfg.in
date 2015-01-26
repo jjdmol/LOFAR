@@ -98,7 +98,7 @@ data_mapfile = %(runtime_directory)s/%(job_name)s/mapfiles/bbs.mapfile
 
 
 [selfcal_prepare]
-recipe = imager_prepare
+recipe = selfcal_prepare
 ndppp_exec = %(lofarroot)s/bin/NDPPP
 asciistat_executable = %(lofarroot)s/bin/asciistats.py
 statplot_executable = %(lofarroot)s/bin/statsplot.py

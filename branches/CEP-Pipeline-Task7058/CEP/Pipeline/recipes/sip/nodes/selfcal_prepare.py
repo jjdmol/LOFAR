@@ -86,12 +86,13 @@ class selfcal_prepare(LOFARnodeTCP):
                 self.logger.error("Exiting with error state 1")
                 return 1
 
+
             self.logger.debug(
                     "Produced time slices: {0}".format(time_slices_path_list))
-            #***********************************************************
-            # 3. run rfi_concole: flag datapoints which are corrupted
-            self._run_rficonsole(rficonsole_executable, time_slice_dir,
-                                 time_slices_path_list)
+            ##***********************************************************
+            ## 3. run rfi_concole: flag datapoints which are corrupted
+            #self._run_rficonsole(rficonsole_executable, time_slice_dir,
+            #                     time_slices_path_list)
 
             #******************************************************************
             # 4. Add imaging columns to each timeslice

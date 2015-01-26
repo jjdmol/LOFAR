@@ -128,8 +128,8 @@ class selfcal_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         """
         Entry point for recipe: Called by the pipeline framework
         """
-        super(imager_prepare, self).go()
-        self.logger.info("Starting imager_prepare run")
+        super(selfcal_prepare, self).go()
+        self.logger.info("Starting selfcal_prepare run")
         # *********************************************************************
         # input data     
         input_map = DataMap.load(self.inputs['args'][0])
