@@ -80,6 +80,7 @@ class selfcal_prepare(LOFARnodeTCP):
                     time_slices_per_image, copied_ms_map, subbands_per_group,
                     processed_ms_dir, parset, ndppp_executable)
 
+
             # If no timeslices were created, bail out with exit status 1
             if len(time_slices_path_list) == 0:
                 self.logger.error("No timeslices were created.")
@@ -205,6 +206,8 @@ class selfcal_prepare(LOFARnodeTCP):
         Muckable function running the dppp executable.
         Wraps dppp with catchLog4CPLus and catch_segfaults
         """
+        environment['OMP_NUM_THREADS'] = str(8)
+        logger.debug("Using %s threads for ndppp" % 8)
         with CatchLog4CPlus(working_dir, self.logger.name +
              "." + os.path.basename("imager_prepare_ndppp"),
                   os.path.basename(ndppp)) as logger:
