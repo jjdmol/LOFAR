@@ -1,5 +1,7 @@
 #include <MessageBus/MsgBus.h>
 
+#include <iostream>
+
 using namespace qpid::messaging;
 
 using std::string;

@@ -29,10 +29,7 @@
 #include <qpid/messaging/Sender.h>
 #include <qpid/messaging/Session.h>
 
-#include <cstdlib>
-#include <iostream>
 #include <map>
-#include <sstream>
 
 class FromBus: private qpid::messaging::Connection 
 {
