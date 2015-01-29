@@ -34,17 +34,11 @@
 #include <map>
 #include <sstream>
 
-using namespace qpid::messaging;
-using namespace qpid::types;
-
-using std::stringstream;
-using std::string;
-
-class FromBus: private Connection 
+class FromBus: private qpid::messaging::Connection 
 {
-  string queuename,brokername;
-  Session session;
-  Receiver receiver;
+  std::string queuename,brokername;
+  qpid::messaging::Session session;
+  qpid::messaging::Receiver receiver;
   int DiffNumAck;
   int state;
   void cleanup(void);
@@ -52,16 +46,16 @@ class FromBus: private Connection
 public:
   FromBus(const std::string &address="testqueue" , const std::string &options="; {create: always}", const std::string &broker = "amqp:tcp:127.0.0.1:5672") ;
   std::string GetStr(double timeout =0.0); // timeout 0.0 means blocking
-  Message GetMsg(double timeout =0.0); // timeout 0.0 means blocking
+  qpid::messaging::Message GetMsg(double timeout =0.0); // timeout 0.0 means blocking
   void Ack(void);
   ~FromBus(void);
 };
 
-class ToBus: private Connection 
+class ToBus: private qpid::messaging::Connection 
 {
-  string queuename,brokername;
-  Session session;
-  Sender sender;
+  std::string queuename,brokername;
+  qpid::messaging::Session session;
+  qpid::messaging::Sender sender;
   int state,DiffNumAck;
   void cleanup(void);
   
@@ -80,11 +74,11 @@ typedef struct
   std::string queuename;
 } MsgWorker;
 
-class MultiBus: private Connection 
+class MultiBus: private qpid::messaging::Connection 
 {
-  std::map<Receiver,MsgWorker*> handlers;
+  std::map<qpid::messaging::Receiver, MsgWorker*> handlers;
   std::string brokername;
-  Session session;
+  qpid::messaging::Session session;
   int state;
   int DiffNumAck;
   void cleanup(void);
@@ -93,7 +87,7 @@ public:
   MultiBus(MsgHandler handler, const std::string &address="testqueue", const std::string &options="; {create: always}", const std::string &broker = "amqp:tcp:127.0.0.1:5672") ;
   void add(MsgHandler handler, const std::string &address="testqueue", const std::string &options="; {create: always}");
   void HandleMessages(void);
-  Message Get(double timeout =0.0); // timeout 0.0 means blocking
+  qpid::messaging::Message Get(double timeout =0.0); // timeout 0.0 means blocking
   ~MultiBus();
 };
 

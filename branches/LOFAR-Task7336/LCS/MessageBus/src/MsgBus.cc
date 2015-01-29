@@ -1,9 +1,7 @@
 #include <MessageBus/MsgBus.h>
 
 using namespace qpid::messaging;
-using namespace qpid::types;
 
-using std::stringstream;
 using std::string;
 
 #define S_OPEN 1
