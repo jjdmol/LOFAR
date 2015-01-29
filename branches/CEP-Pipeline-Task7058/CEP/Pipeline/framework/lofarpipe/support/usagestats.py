@@ -46,7 +46,7 @@ poller_string = """
 #!/bin/bash -e
 
 PID=$1
-exe=$(readlink /proc/${PID}/exe)
+exe=$(readlink /proc/${PID}/exe) || exit 1
 rb=$(grep ^read_bytes /proc/${PID}/io | awk '{print $2}')
 wb=$(grep ^write_bytes /proc/${PID}/io | awk '{print $2}')
 cwb=$(grep ^cancelled_write_bytes /proc/${PID}/io | awk '{print $2}')
@@ -89,6 +89,20 @@ class UsageStats(threading.Thread):
         self.pid_tracked = []
         self.pid_stats = {}
         self.poll_interval = poll_interval
+        self.temp_path = None
+
+        # Write a bash file which will retrieve the needed info from proc
+        (temp_file, self.temp_path) = tempfile.mkstemp()
+        temp_file = open(self.temp_path, "w")
+        temp_file.write(poller_string)
+        temp_file.close()
+            
+    def __del__(self):
+        """
+        Clean up the temp file after the file is not in use anymore
+        """
+        os.remove(self.temp_path)
+            
 
     def run(self):
         """
@@ -116,32 +130,22 @@ class UsageStats(threading.Thread):
                     self.pid_stats[pid] = []
                 
                 self.pid_in = []
-
             self.lock.release()
-            
-            (temp_file, temp_path) = tempfile.mkstemp()
-            temp_file = open(temp_path, "w")
-            temp_file.write(poller_string)
-            temp_file.close()
-
-            # now get stats for each tracked pid
-            try:
-                for pid in self.pid_tracked:
-                    pps = subprocess.Popen(["bash", temp_path, str(pid)],
-                               stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE)
-                    out, err = pps.communicate()
-                    # Store pids that are not active anymore (process has closed)
-                    if not pps.returncode == 0:
-                        self.pid_out.append(pid)
-                        continue                    # nothing to store continue
-
-                    parset_output = eval(out.rstrip()) # remove trailing white space
-
-                    self.pid_stats[pid].append(parset_output)
-            finally:
-                os.remove(temp_path)
-
+           
+            # now get stats for each tracked pid           
+            for pid in self.pid_tracked:
+                pps = subprocess.Popen(["bash", self.temp_path, str(pid)],
+                            stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+                out, err = pps.communicate()
+                # Store pids that are not active anymore (process has closed)
+                if not pps.returncode == 0:
+                    self.pid_out.append(pid)
+                    continue                    # nothing to store continue
+                    
+                parset_output = eval(out.rstrip()) # remove trailing white space
+                self.pid_stats[pid].append(parset_output)
+                
             # in the previous loop we stored al the pid that are involid and can
             # be cleared
             for pid in self.pid_out:
@@ -149,11 +153,9 @@ class UsageStats(threading.Thread):
                     self.pid_tracked.remove(pid)
                 except ValueError:  # key does not exist (should not happen)
                     pass
-
             self.pid_out = []  # reset the outlist
 
             time.sleep(self.poll_interval)
-
 
     def addPID(self, pid):
         """
