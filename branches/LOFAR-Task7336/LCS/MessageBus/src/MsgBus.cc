@@ -20,7 +20,8 @@ using std::string;
 
 
   FromBus::FromBus(const std::string &address, const std::string &options, const std::string &broker)
-  :Connection(broker)
+  :Connection(broker),
+  DiffNumAck(0)
   {
      try {
             open();
@@ -105,12 +106,12 @@ using std::string;
   }
 
   MultiBus::MultiBus(MsgHandler handler, const std::string &address, const std::string &options, const std::string &broker) 
-  : Connection(broker)
+  : Connection(broker),
+  DiffNumAck(0)
   {
      string queuename = string(address);
      brokername = string(broker);
      state = 0;
-     DiffNumAck= 0;
      try {
             open();
             state |= S_OPEN;
