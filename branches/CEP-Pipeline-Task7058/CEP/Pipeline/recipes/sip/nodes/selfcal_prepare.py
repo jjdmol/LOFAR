@@ -207,7 +207,7 @@ class selfcal_prepare(LOFARnodeTCP):
         Wraps dppp with catchLog4CPLus and catch_segfaults
         """
         environment['OMP_NUM_THREADS'] = str(8)
-        logger.debug("Using %s threads for ndppp" % 8)
+        self.logger.debug("Using %s threads for ndppp" % 8)
         with CatchLog4CPlus(working_dir, self.logger.name +
              "." + os.path.basename("imager_prepare_ndppp"),
                   os.path.basename(ndppp)) as logger:
