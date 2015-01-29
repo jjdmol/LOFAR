@@ -127,7 +127,12 @@ diag22c_t Station::arrayFactor(real_t time, real_t freq,
         af.weight[1] += field.weight[1] * antenna.weight[1];
     }
 
-    return af;//normalize(af);
+    diag22c_t unnormalizedaf = {{}};
+
+    unnormalizedaf[0] = af.factor[0];
+    unnormalizedaf[1] = af.factor[1];
+
+    return unnormalizedaf;
 }
 
 raw_array_factor_t
