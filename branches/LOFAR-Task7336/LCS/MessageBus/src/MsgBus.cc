@@ -19,7 +19,7 @@ using std::string;
   }
 
 
-  FromBus::FromBus( char * address,char * options, char * broker)
+  FromBus::FromBus(const std::string &address, const std::string &options, const std::string &broker)
   {
      try {
             open();
@@ -69,7 +69,7 @@ using std::string;
 //        if (state&S_OPEN) { this.close(); state &= ~S_OPEN;}
   }
   
- ToBus::ToBus( char * address,char * options, char * broker) 
+ ToBus::ToBus(const std::string &address, const std::string &options, const std::string &broker) 
   : Connection(broker)
   {
      queuename = string(address);
@@ -105,7 +105,7 @@ using std::string;
 //        if (state&S_OPEN) { this.close(); state &= ~S_OPEN;}
   }
 
-  MultiBus::MultiBus( MsgHandler handler, char * address,char * options, char * broker) 
+  MultiBus::MultiBus(MsgHandler handler, const std::string &address, const std::string &options, const std::string &broker) 
   : Connection(broker)
   {
      string queuename = string(address);
@@ -130,7 +130,7 @@ using std::string;
     }
   }
 
-  void MultiBus::add(MsgHandler handler, char * address,char * options)
+  void MultiBus::add(MsgHandler handler, const std::string &address, const std::string &options)
   {
             Receiver receiver = session.createReceiver(address);
             receiver.setCapacity(1);

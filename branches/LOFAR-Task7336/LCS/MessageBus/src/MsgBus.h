@@ -46,7 +46,7 @@ class FromBus: private Connection
   void cleanup(void);
 
 public:
-  FromBus( char * address="testqueue" ,char * options="; {create: always}", char * broker = "amqp:tcp:127.0.0.1:5672") ;
+  FromBus(const std::string &address="testqueue" , const std::string &options="; {create: always}", const std::string &broker = "amqp:tcp:127.0.0.1:5672") ;
    // : Connection(broker);
   std::string & GetStr(void);
   Message GetMsg();
@@ -63,7 +63,7 @@ class ToBus: private Connection
   void cleanup(void);
   
 public:
-  ToBus( char * address="testqueue" ,char * options="; {create: always}", char * broker = "amqp:tcp:127.0.0.1:5672") ;
+  ToBus(const std::string &address="testqueue" , const std::string &options="; {create: always}", const std::string &broker = "amqp:tcp:127.0.0.1:5672") ;
   //: Connection(broker);
 
   void Send( std::string & m);
@@ -89,9 +89,9 @@ class MultiBus: private Connection
   void cleanup(void);
 
 public:
-  MultiBus( MsgHandler handler, char * address="testqueue" ,char *options="; {create: always}", char * broker = "amqp:tcp:127.0.0.1:5672") ;
+  MultiBus(MsgHandler handler, const std::string &address="testqueue", const std::string &options="; {create: always}", const std::string &broker = "amqp:tcp:127.0.0.1:5672") ;
   //: Connection(broker);
-  void add(MsgHandler handler, char * address="testqueue", char*options="; {create: always}");
+  void add(MsgHandler handler, const std::string &address="testqueue", const std::string &options="; {create: always}");
   void HandleMessages(void);
   Message Get(double timeout =0.0); // timeout 0.0 means blocking
   ~MultiBus();
