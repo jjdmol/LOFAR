@@ -20,6 +20,7 @@ using std::string;
 
 
   FromBus::FromBus(const std::string &address, const std::string &options, const std::string &broker)
+  :Connection(broker)
   {
      try {
             open();
@@ -30,18 +31,20 @@ using std::string;
         close();
     }
   }
-  std::string & FromBus::GetStr(void)
+  std::string FromBus::GetStr(double dtimeout) // timeout 0.0 means blocking
   {
-        std::string ret;
-        Message incoming = receiver.fetch();
-        ret == incoming.getContent();
+        Duration timeout=Duration::FOREVER;
+        if (dtimeout>0.0) timeout = (Duration) (1000.0 * dtimeout);
+        Message incoming = receiver.fetch(timeout);
         DiffNumAck ++;
-        return ret;
+        return incoming.getContent();
   }
 
-  Message FromBus::GetMsg()
+  Message FromBus::GetMsg(double dtimeout) // timeout 0.0 means blocking
   {
-        Message incoming = receiver.fetch();
+        Duration timeout=Duration::FOREVER;
+        if (dtimeout>0.0) timeout = (Duration) (1000.0 * dtimeout);
+        Message incoming = receiver.fetch(timeout);
         DiffNumAck ++;
         return incoming;
   }
@@ -57,10 +60,6 @@ using std::string;
     if (DiffNumAck) { std::cout << "Queue " << queuename << " on broker " << brokername << " has " << DiffNumAck << " messages not ack'ed " << std::endl;};
     close();
   }
-
-
-
-
 
  void ToBus::cleanup(void)
   {

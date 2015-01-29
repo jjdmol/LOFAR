@@ -47,9 +47,8 @@ class FromBus: private Connection
 
 public:
   FromBus(const std::string &address="testqueue" , const std::string &options="; {create: always}", const std::string &broker = "amqp:tcp:127.0.0.1:5672") ;
-   // : Connection(broker);
-  std::string & GetStr(void);
-  Message GetMsg();
+  std::string GetStr(double timeout =0.0); // timeout 0.0 means blocking
+  Message GetMsg(double timeout =0.0); // timeout 0.0 means blocking
   void Ack(void);
   ~FromBus(void);
 };
@@ -64,13 +63,11 @@ class ToBus: private Connection
   
 public:
   ToBus(const std::string &address="testqueue" , const std::string &options="; {create: always}", const std::string &broker = "amqp:tcp:127.0.0.1:5672") ;
-  //: Connection(broker);
 
   void Send( std::string & m);
   ~ToBus(void);
 };
 
-//typedef int (* MsgHandler)(Message &,std::string &);
 typedef int (* MsgHandler)(std::string &,std::string &);
 
 typedef struct
@@ -90,7 +87,6 @@ class MultiBus: private Connection
 
 public:
   MultiBus(MsgHandler handler, const std::string &address="testqueue", const std::string &options="; {create: always}", const std::string &broker = "amqp:tcp:127.0.0.1:5672") ;
-  //: Connection(broker);
   void add(MsgHandler handler, const std::string &address="testqueue", const std::string &options="; {create: always}");
   void HandleMessages(void);
   Message Get(double timeout =0.0); // timeout 0.0 means blocking
