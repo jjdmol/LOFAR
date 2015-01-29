@@ -1,4 +1,4 @@
-#include "MsgBus.h"
+#include <MessageBus/MsgBus.h>
 
 using namespace qpid::messaging;
 using namespace qpid::types;
