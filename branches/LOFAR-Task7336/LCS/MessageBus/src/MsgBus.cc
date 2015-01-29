@@ -11,6 +11,14 @@ using std::string;
 #define S_SENDER 4
 #define S_RECEIVER 8
 
+static Duration TimeOutSecs(double secs)
+{
+        Duration timeout=Duration::FOREVER;
+        if (dtimeout>0.0) timeout = (Duration) (1000.0 * dtimeout);
+        return timeout;
+}
+
+
   void FromBus::cleanup(void)
   {
 //        if (state&S_SENDER) { sender = 0; state &= ~S_SENDER;}
@@ -26,28 +34,29 @@ using std::string;
      try {
             open();
             session = createSession();
-            receiver = session.createReceiver(address);
+            Address addr(address+options);
+            receiver = session.createReceiver(addr);
      } catch (const std::exception& error) {
         std::cout << error.what() << std::endl;
         close();
     }
   }
-  std::string FromBus::GetStr(double dtimeout) // timeout 0.0 means blocking
+  bool FromBus::GetStr( std::string & Str; double dtimeout) // timeout 0.0 means blocking
   {
-        Duration timeout=Duration::FOREVER;
-        if (dtimeout>0.0) timeout = (Duration) (1000.0 * dtimeout);
-        Message incoming = receiver.fetch(timeout);
-        DiffNumAck ++;
-        return incoming.getContent();
+        Message incoming;
+        bool ret = receiver.fetch(incoming,TimeOutSecs(timeout));
+        if (ret) {
+            DiffNumAck ++;
+            Str= incoming.getContent();
+        }
+        return ret;
   }
 
-  Message FromBus::GetMsg(double dtimeout) // timeout 0.0 means blocking
+  Message FromBus::GetMsg(Message & msg,double dtimeout) // timeout 0.0 means blocking
   {
-        Duration timeout=Duration::FOREVER;
-        if (dtimeout>0.0) timeout = (Duration) (1000.0 * dtimeout);
-        Message incoming = receiver.fetch(timeout);
-        DiffNumAck ++;
-        return incoming;
+        bool ret= receiver.fetch(msg,TimeOutSecs(timeout));
+        if (ret) DifNumAck++;
+        return ret;
   }
 
   void FromBus::Ack(void)
@@ -81,7 +90,8 @@ using std::string;
             state |= S_OPEN;
             session = createSession();
             state |= S_SESSION;
-            sender = session.createSender(address);
+            Address addr(address+options);
+            sender = session.createSender(addr);
             state |= S_SENDER;
      } catch (const std::exception& error) {
         std::cout << error.what() << std::endl;
@@ -165,14 +175,20 @@ using std::string;
      }
   }
 
-  Message MultiBus::Get(double dtimeout)
+  bool MultiBus::GetMsg(Message & msg ,double timeout)
   {
-
-   Duration timeout=Duration::FOREVER;
-   if (dtimeout>0.0) timeout = (Duration) (1000.0 * dtimeout);
    Receiver nrec = session.nextReceiver();
-   Message msg = nrec.get(timeout);
-   return msg;
+   return nrec.get(msg,TimeOutSecs(timeout));
+  }
+
+  bool MultiBus::GetStr(std::string & Str ,double timeout)
+  {
+   Message msg;
+   Receiver nrec = session.nextReceiver();
+   bool ret=nrec.get(msg,TimeOutSecs(timeout));
+   if (ret) 
+      Str = msg.getContent();
+   return ret;
   }
 
   MultiBus::~MultiBus()

@@ -28,6 +28,7 @@
 #include <qpid/messaging/Receiver.h>
 #include <qpid/messaging/Sender.h>
 #include <qpid/messaging/Session.h>
+#include <qpid/messaging/Address.h>
 
 #include <map>
 
@@ -42,8 +43,8 @@ class FromBus: private qpid::messaging::Connection
 
 public:
   FromBus(const std::string &address="testqueue" , const std::string &options="; {create: always}", const std::string &broker = "amqp:tcp:127.0.0.1:5672") ;
-  std::string GetStr(double timeout =0.0); // timeout 0.0 means blocking
-  qpid::messaging::Message GetMsg(double timeout =0.0); // timeout 0.0 means blocking
+  bool GetStr(std::string &str,double timeout =0.0); // timeout 0.0 means blocking
+  bool GetMsg(qpid::messaging::Message &msg, double timeout =0.0); // timeout 0.0 means blocking
   void Ack(void);
   ~FromBus(void);
 };
@@ -84,7 +85,10 @@ public:
   MultiBus(MsgHandler handler, const std::string &address="testqueue", const std::string &options="; {create: always}", const std::string &broker = "amqp:tcp:127.0.0.1:5672") ;
   void add(MsgHandler handler, const std::string &address="testqueue", const std::string &options="; {create: always}");
   void HandleMessages(void);
-  qpid::messaging::Message Get(double timeout =0.0); // timeout 0.0 means blocking
+   
+  bool GetMsg(qpid::messaging::Message &msg, double timeout =0.0); // timeout 0.0 means blocking
+ bool GetStr(std::string &str, double timeout =0.0); // timeout 0.0 means blocking
+
   ~MultiBus();
 };
 
