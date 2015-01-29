@@ -14,7 +14,7 @@ using std::string;
 static Duration TimeOutSecs(double secs)
 {
         Duration timeout=Duration::FOREVER;
-        if (dtimeout>0.0) timeout = (Duration) (1000.0 * dtimeout);
+        if (secs>0.0) timeout = (Duration) (1000.0 * secs);
         return timeout;
 }
 
@@ -41,7 +41,7 @@ static Duration TimeOutSecs(double secs)
         close();
     }
   }
-  bool FromBus::GetStr( std::string & Str; double dtimeout) // timeout 0.0 means blocking
+  bool FromBus::GetStr( std::string & Str, double timeout) // timeout 0.0 means blocking
   {
         Message incoming;
         bool ret = receiver.fetch(incoming,TimeOutSecs(timeout));
@@ -52,10 +52,10 @@ static Duration TimeOutSecs(double secs)
         return ret;
   }
 
-  Message FromBus::GetMsg(Message & msg,double dtimeout) // timeout 0.0 means blocking
+  bool FromBus::GetMsg(Message & msg, double timeout) // timeout 0.0 means blocking
   {
         bool ret= receiver.fetch(msg,TimeOutSecs(timeout));
-        if (ret) DifNumAck++;
+        if (ret) DiffNumAck++;
         return ret;
   }
 
@@ -127,7 +127,8 @@ static Duration TimeOutSecs(double secs)
             state |= S_OPEN;
             session = createSession();
             state |= S_SESSION;
-            Receiver receiver = session.createReceiver(address);
+            Address addr(address+options);
+            Receiver receiver = session.createReceiver(addr);
             receiver.setCapacity(1);
             MsgWorker *worker=new MsgWorker;
             worker->handler=handler;
@@ -142,7 +143,8 @@ static Duration TimeOutSecs(double secs)
 
   void MultiBus::add(MsgHandler handler, const std::string &address, const std::string &options)
   {
-            Receiver receiver = session.createReceiver(address);
+            Address addr(address+options);
+            Receiver receiver = session.createReceiver(addr);
             receiver.setCapacity(1);
             MsgWorker * worker = new MsgWorker;
             worker->handler=handler;
