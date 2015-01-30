@@ -3,90 +3,117 @@
 #include <MessageBus/MsgBus.h>
 #include <Common/LofarLogger.h>
 
+#ifdef HAVE_QPID
 #include <qpid/types/Exception.h>
 
 using namespace qpid::messaging;
+#endif
 
 using std::string;
 
 namespace LOFAR {
 
-#define S_OPEN 1
-#define S_SESSION 2
-#define S_SENDER 4
-#define S_RECEIVER 8
-
-  static Duration TimeOutSecs(double secs)
+#ifdef HAVE_QPID
+  static Duration TimeOutDuration(double secs)
   {
     if (secs > 0.0)
       return (Duration)(1000.0 * secs);
 
     return Duration::FOREVER;
   }
+#endif
 
 
   FromBus::FromBus(const std::string &address, const std::string &options, const std::string &broker)
+#ifdef HAVE_QPID
   try:
-    connection(broker),
-    DiffNumAck(0)
+    itsBrokerName(broker),
+    itsQueueName(address),
+    itsConnection(broker),
+    itsNrMissingACKs(0)
   {
-    connection.open();
+    itsConnection.open();
 
-    session = connection.createSession();
+    itsSession = itsConnection.createSession();
 
     Address addr(address+options);
-    receiver = session.createReceiver(addr);
+    receiver = itsSession.createReceiver(addr);
   } catch(const qpid::types::Exception &ex) {
     THROW(MessageBusException, ex.what());
   }
+#else
+  :
+    itsBrokerName(broker),
+    itsQueueName(address),
+    itsNrMissingACKs(0)
+  {
+  }
+#endif
 
  
   FromBus::~FromBus(void)
   {
-    if (DiffNumAck) { std::cout << "Queue " << queuename << " on broker " << brokername << " has " << DiffNumAck << " messages not ack'ed " << std::endl;};
+    if (itsNrMissingACKs)
+      LOG_ERROR_STR("Queue " << itsQueueName << " on broker " << itsBrokerName << " has " << itsNrMissingACKs << " messages not ACK'ed ");
   }
 
   bool FromBus::getString( std::string &str, double timeout) // timeout 0.0 means blocking
   {
+#ifdef HAVE_QPID
     Message msg;
 
     bool ret = getMessage(msg, timeout);
     if (ret) {
-        DiffNumAck ++;
+        itsNrMissingACKs ++;
         str = msg.getContent();
     }
 
     return ret;
+#else
+    return false;
+#endif
   }
 
+#ifdef HAVE_QPID
   bool FromBus::getMessage(Message & msg, double timeout) // timeout 0.0 means blocking
   {
-    bool ret= receiver.fetch(msg, TimeOutSecs(timeout));
-    if (ret) DiffNumAck++;
+    bool ret= receiver.fetch(msg, TimeOutDuration(timeout));
+    if (ret) itsNrMissingACKs++;
     return ret;
   }
+#endif
 
   void FromBus::ack(void)
   {
-     session.acknowledge();
-     DiffNumAck --;
+#ifdef HAVE_QPID
+     itsSession.acknowledge();
+#endif
+     itsNrMissingACKs --;
   }
   
  ToBus::ToBus(const std::string &address, const std::string &options, const std::string &broker) 
+#ifdef HAVE_QPID
   try:
-    connection(broker),
-    DiffNumAck(0)
+    itsBrokerName(broker),
+    itsQueueName(address),
+    itsConnection(broker)
   {
-     queuename = string(address);
-     brokername = string( broker);
+     itsConnection.open();
 
-     connection.open();
-     session = connection.createSession();
+     itsSession = itsConnection.createSession();
+
      Address addr(address+options);
-     sender = session.createSender(addr);
+     sender = itsSession.createSender(addr);
   } catch(const qpid::types::Exception &ex) {
     THROW(MessageBusException, ex.what());
   }
+#else
+  :
+    itsBrokerName(broker),
+    itsQueueName(address)
+  {
+  }
+#endif
 
   ToBus::~ToBus(void)
   {
@@ -94,23 +121,31 @@ namespace LOFAR {
 
   void ToBus::send(const std::string &msg)
   {
+#ifdef HAVE_QPID
     Message tosend(msg);
     sender.send(tosend,true);
-    DiffNumAck ++;
+#endif
   }
 
   MultiBus::MultiBus(const std::string &broker) 
+#ifdef HAVE_QPID
   try: 
-    connection(broker),
-    DiffNumAck(0)
+    itsBrokerName(broker),
+    itsConnection(broker),
+    itsNrMissingACKs(0)
   {
-     brokername = string(broker);
-
-     connection.open();
-     session = connection.createSession();
+     itsConnection.open();
+     itsSession = itsConnection.createSession();
   } catch(const qpid::types::Exception &ex) {
     THROW(MessageBusException, ex.what());
   }
+#else
+  :
+    itsBrokerName(broker),
+    itsNrMissingACKs(0)
+  {
+  }
+#endif
 
   MultiBus::~MultiBus()
   {
@@ -119,22 +154,25 @@ namespace LOFAR {
 
   void MultiBus::addQueue(MsgHandler handler, const std::string &address, const std::string &options)
   {
+#ifdef HAVE_QPID
     Address addr(address+options);
-    Receiver receiver = session.createReceiver(addr);
+    Receiver receiver = itsSession.createReceiver(addr);
     receiver.setCapacity(1);
 
     MsgWorker worker;
     worker.handler = handler;
     worker.queuename = string(address);
-    handlers[receiver] = worker;
+    itsHandlers[receiver] = worker;
+#endif
   }
 
   void MultiBus::handleMessages(void)
   {
+#ifdef HAVE_QPID
      while (1)
      {
-        Receiver nrec = session.nextReceiver();
-        MsgWorker worker = handlers[nrec];
+        Receiver nrec = itsSession.nextReceiver();
+        MsgWorker worker = itsHandlers[nrec];
         Message msg;
         nrec.get(msg);
 
@@ -143,26 +181,33 @@ namespace LOFAR {
         ASSERTSTR(worker.handler, "Undefined handler for queue " << worker.queuename);
 
         if (worker.handler(msgStr, worker.queuename))
-          session.acknowledge(msg);
+          itsSession.acknowledge(msg);
         else // todo: define a proper fail over mechanism with proper handling
-          session.reject(msg); // broker can be configured for this
+          itsSession.reject(msg); // broker can be configured for this
      }
+#endif
   }
 
+#ifdef HAVE_QPID
   bool MultiBus::getMessage(Message &msg, double timeout)
   {
-    Receiver nrec = session.nextReceiver();
-    return nrec.get(msg,TimeOutSecs(timeout));
+    Receiver nrec = itsSession.nextReceiver();
+    return nrec.get(msg, TimeOutDuration(timeout));
   }
+#endif
 
   bool MultiBus::getString(std::string &str, double timeout)
   {
+#ifdef HAVE_QPID
     Message msg;
     bool ret = getMessage(msg, timeout);
 
     if (ret) 
       str = msg.getContent();
     return ret;
+#else
+    return false;
+#endif
   }
 
 } // namespace LOFAR

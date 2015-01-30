@@ -23,12 +23,14 @@
 #ifndef LOFAR_MESSAGEBUS_MSGBUS_H
 #define LOFAR_MESSAGEBUS_MSGBUS_H
 
+#ifdef HAVE_QPID
 #include <qpid/messaging/Connection.h>
 #include <qpid/messaging/Message.h>
 #include <qpid/messaging/Receiver.h>
 #include <qpid/messaging/Sender.h>
 #include <qpid/messaging/Session.h>
 #include <qpid/messaging/Address.h>
+#endif
 
 #include <Common/Exception.h>
 
@@ -40,32 +42,40 @@ EXCEPTION_CLASS(MessageBusException, LOFAR::Exception);
 
 class FromBus
 {
-  std::string queuename,brokername;
+  const std::string itsBrokerName;
+  const std::string itsQueueName;
 
-  qpid::messaging::Connection connection;
-  qpid::messaging::Session session;
+#ifdef HAVE_QPID
+  qpid::messaging::Connection itsConnection;
+  qpid::messaging::Session itsSession;
   qpid::messaging::Receiver receiver;
+#endif
 
-  int DiffNumAck;
+  int itsNrMissingACKs;
 
 public:
   FromBus(const std::string &address="testqueue" , const std::string &options="; {create: always}", const std::string &broker = "amqp:tcp:127.0.0.1:5672") ;
   ~FromBus(void);
 
   bool getString(std::string &str,double timeout = 0.0); // timeout 0.0 means blocking
+
+#ifdef HAVE_QPID
   bool getMessage(qpid::messaging::Message &msg, double timeout = 0.0); // timeout 0.0 means blocking
+#endif
+
   void ack(void);
 };
 
 class ToBus
 {
-  std::string queuename,brokername;
+  const std::string itsBrokerName;
+  const std::string itsQueueName;
 
-  qpid::messaging::Connection connection;
-  qpid::messaging::Session session;
+#ifdef HAVE_QPID
+  qpid::messaging::Connection itsConnection;
+  qpid::messaging::Session itsSession;
   qpid::messaging::Sender sender;
-
-  int DiffNumAck;
+#endif
   
 public:
   ToBus(const std::string &address="testqueue" , const std::string &options="; {create: always}", const std::string &broker = "amqp:tcp:127.0.0.1:5672") ;
@@ -80,19 +90,22 @@ public:
   typedef bool (* MsgHandler)(const std::string &, const std::string &);
 
 private:
+  const std::string itsBrokerName;
+
   typedef struct
   {
     MsgHandler handler;
     std::string queuename;
   } MsgWorker;
 
-  std::map<qpid::messaging::Receiver, MsgWorker> handlers;
-  std::string brokername;
+#ifdef HAVE_QPID
+  std::map<qpid::messaging::Receiver, MsgWorker> itsHandlers;
 
-  qpid::messaging::Connection connection;
-  qpid::messaging::Session session;
+  qpid::messaging::Connection itsConnection;
+  qpid::messaging::Session itsSession;
+#endif
 
-  int DiffNumAck;
+  int itsNrMissingACKs;
 
 public:
   MultiBus(const std::string &broker = "amqp:tcp:127.0.0.1:5672");
@@ -101,7 +114,10 @@ public:
   void addQueue(MsgHandler handler, const std::string &address="testqueue", const std::string &options="; {create: always}");
   void handleMessages(void);
    
+#ifdef HAVE_QPID
   bool getMessage(qpid::messaging::Message &msg, double timeout = 0.0); // timeout 0.0 means blocking
+#endif
+
   bool getString(std::string &str, double timeout = 0.0); // timeout 0.0 means blocking
 
 };
