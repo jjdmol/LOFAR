@@ -2,26 +2,18 @@
 # Usage:
 #   find_package(Casacore [REQUIRED] [COMPONENTS components...])
 # Valid components are:
-#   casa, scimath_f, scimath, tables, measures, measures_f, lattices,
-#   fits, ms, coordinates, msfits, components, mirlib, images
+#   casa, components, coordinates, derivedmscal, fits, images, lattices,
+#   meas, measures, mirlib, ms, msfits, scimath, scimath_f, tables
 #
 # Note that most components are dependent on other (more basic) components.
 # In that case, it suffices to specify the "top-level" components; dependent
 # components will be searched for automatically.
 #
-# Here's the dependency tree:
-#   scimath_f    ->  casa
-#   scimath      ->  scimath_f
-#   tables       ->  casa
-#   measures     ->  scimath, tables
-#   measures_f   ->  scimath, tables
-#   lattices     ->  scimath, tables
-#   fits         ->  measures
-#   ms           ->  measures
-#   coordinates  ->  fits
-#   msfits       ->  fits, ms
-#   components   ->  coordinates
-#   images       ->  components, mirlib, lattices
+# The dependency tree can be generated using the script get_casacore_deps.sh.
+# For this, you need to have a complete casacore installation, built with shared
+# libraries, at your disposal.
+#
+# The dependencies in this macro were generated against casacore release 1.7.0.
 #
 # Variables used by this module:
 #  CASACORE_ROOT_DIR         - Casacore root directory. 
@@ -148,17 +140,17 @@ macro(casacore_find_package _name)
   endif(${_name}_FOUND)
 endmacro(casacore_find_package _name)
 
-
 # Define the Casacore components.
 set(Casacore_components
   casa
   components
   coordinates
+  derivedmscal
   fits
   images
   lattices
+  meas
   measures
-  measures_f
   mirlib
   ms
   msfits
@@ -168,18 +160,21 @@ set(Casacore_components
 )
 
 # Define the Casacore components' inter-dependencies.
-set(Casacore_components_DEPENDENCIES  coordinates)
-set(Casacore_coordinates_DEPENDENCIES fits)
-set(Casacore_fits_DEPENDENCIES        measures)
-set(Casacore_images_DEPENDENCIES      components lattices mirlib)
-set(Casacore_lattices_DEPENDENCIES    scimath tables)
-set(Casacore_measures_DEPENDENCIES    scimath tables)
-set(Casacore_measures_f_DEPENDENCIES  scimath tables)
-set(Casacore_ms_DEPENDENCIES          measures)
-set(Casacore_msfits_DEPENDENCIES      fits ms)
-set(Casacore_scimath_DEPENDENCIES     scimath_f)
-set(Casacore_scimath_f_DEPENDENCIES   casa)
-set(Casacore_tables_DEPENDENCIES      casa)
+set(Casacore_casa_DEPENDENCIES)
+set(Casacore_components_DEPENDENCIES    coordinates measures scimath tables casa)
+set(Casacore_coordinates_DEPENDENCIES   fits measures casa)
+set(Casacore_derivedmscal_DEPENDENCIES  ms measures tables casa)
+set(Casacore_fits_DEPENDENCIES          measures tables casa)
+set(Casacore_images_DEPENDENCIES        mirlib components lattices coordinates fits measures scimath tables casa)
+set(Casacore_lattices_DEPENDENCIES      tables scimath casa)
+set(Casacore_meas_DEPENDENCIES          measures tables casa)
+set(Casacore_measures_DEPENDENCIES      tables casa)
+set(Casacore_mirlib_DEPENDENCIES)
+set(Casacore_ms_DEPENDENCIES            measures scimath tables casa)
+set(Casacore_msfits_DEPENDENCIES        ms fits measures tables casa)
+set(Casacore_scimath_DEPENDENCIES       scimath_f casa)
+set(Casacore_scimath_f_DEPENDENCIES)
+set(Casacore_tables_DEPENDENCIES        casa)
 
 # Initialize variables.
 set(CASACORE_FOUND FALSE)
