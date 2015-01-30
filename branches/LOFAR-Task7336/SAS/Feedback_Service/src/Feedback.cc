@@ -22,13 +22,26 @@
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
+#include <signal.h>
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <Feedback/Feedback.h>
+#include <Common/LofarLocators.h>
+#include <Common/ParameterSet.h>
+#include <Common/ParameterRecord.h>
+#include <Common/Version.h>
+#include <GCF/TM/GCF_Control.h>
+#include <OTDB/TreeValue.h>
+#include "Feedback.h"
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+using namespace boost::posix_time;
+
+using namespace qpid::messaging;
 namespace LOFAR {
-  namespace Feedback {
+  using namespace OTDB;
+  using namespace GCF::TM;
+  namespace SAS {
 
 static Feedback*	thisFeedback = 0;
 
@@ -37,11 +50,12 @@ static Feedback*	thisFeedback = 0;
 //
 Feedback::Feedback() :
 	GCFTask		((State)&Feedback::connect2OTDB_state, "FeedbackService"),
-	itsTimerPort(0),
-	itsOTDBConn (0)
+	itsTimer	(0),
+	itsOTDBconn (0),
+	itsMsgQueue (0)
 {
 	// Log who we are.
-	LOG_INFO(Version::getInfo<@@@Version>("FeedbackService"));
+	LOG_INFO(Version::getInfo<SAS_FeedbackVersion>("FeedbackService"));
 
 	// attach timer
 	itsTimer = new GCFTimerPort(*this, "TimerPort");
@@ -52,9 +66,9 @@ Feedback::Feedback() :
 	ASSERTSTR(!queuenames.empty(), "Queuenames not specified in label 'FeedbackQueuenames'");
 
 	// connect to bussystem
-	itsMultiBus = MultiBus(queuenames[0]);
-	for (int i = 1; i < queuenames.size(); ++i) {
-		itsMultibus.add(queuenames[i]);
+	itsMsgQueue = new FromBus();
+	for (size_t i = 0; i < queuenames.size(); ++i) {
+		itsMsgQueue->addQueue(queuenames[i]);
 	}
 
 	// redirect signal handlers
@@ -67,7 +81,11 @@ Feedback::Feedback() :
 // ~Feedback()
 //
 Feedback::~Feedback()
-{}
+{
+	delete itsTimer;
+	delete itsMsgQueue;
+	delete itsOTDBconn;
+}
 
 //
 // sigintHandler(signum)
@@ -119,7 +137,7 @@ GCFEvent::TResult Feedback::connect2OTDB_state(GCFEvent& event, GCFPortInterface
 			return (GCFEvent::HANDLED);
 		}
 		LOG_INFO_STR("Connected to database " << database << " on machine " << dbhost);
-		TRAN(Feedback::operational_state):
+		TRAN(Feedback::operational_state);
 	} break;
 
 	default:
@@ -141,27 +159,29 @@ GCFEvent::TResult Feedback::operational_state(GCFEvent& event, GCFPortInterface&
 	case F_ENTRY: 
 	case F_TIMER:  {
 		// wait (blocking) for next message
-		Message msg = itsMultiBus.getMessage();
-		LOG_DEBUG_STR(..);
+		Message	msg;
+		if (!itsMsgQueue->getMessage(msg)) {
+			LOG_FATAL_STR("Wow, lost connection with message bus");
+			GCFScheduler::instance()->stop();		// TODO better solution
+		}
 
 		if (!itsOTDBconn->connect()) {
 			LOG_ERROR("Lost connection with OTDB, starting reconnect cycle");
 			delete itsOTDBconn;
 			itsOTDBconn = 0;
-			itsMultiBus.nack();
+			itsMsgQueue->nack(msg);
 			TRAN (Feedback::connect2OTDB_state);
 			return (GCFEvent::HANDLED);
 		}
 
 		// Yeah, still connected.
-		string	content = msg.content();
-		if (passKVpairsToOTDB(content)) {
-			itsMultiBus.ack();
-			LOG_DEBUG_STR(...);
+		if (passKVpairsToOTDB(msg.getContent())) {
+			itsMsgQueue->ack(msg);
+			LOG_DEBUG_STR("@@@");
 		}
 		else {
-			itsMultibus.reject();
-			LOG_ERROR_STR(...);
+			itsMsgQueue->reject(msg);
+			LOG_ERROR_STR("@@@");
 		}
 		itsTimer->setTimer(0.0);
 	} break;
@@ -182,12 +202,12 @@ GCFEvent::TResult Feedback::operational_state(GCFEvent& event, GCFPortInterface&
 //
 bool Feedback::passKVpairsToOTDB(const string&	content)
 {
-	int			obsID(getObservationNr(getName()));	// TODO
+	int			obsID; // (getObservationNr(getName()));	// TODO
 	TreeValue   tv(itsOTDBconn, obsID);
 
 	// read parameterset
 	ParameterSet	metadata;
-	metadata.adoptString(content);
+	metadata.adoptBuffer(content);
 
 	// Loop over the parameterset and send the information to the SAS database
 	// During the transition phase from parameter-based to record-based storage in OTDB the
@@ -234,5 +254,5 @@ bool Feedback::passKVpairsToOTDB(const string&	content)
 
 
 
-  } // namespace Feedback
+  } // namespace SAS
 } // namespace LOFAR

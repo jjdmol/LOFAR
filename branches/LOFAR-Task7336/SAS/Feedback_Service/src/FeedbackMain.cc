@@ -23,12 +23,13 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
+#include <GCF/TM/GCF_Control.h>
 
 #include "Feedback.h"
 
 using namespace LOFAR::GCF::TM;
-using namespace LOFAR::CEPCU;
 using namespace LOFAR;
+using namespace LOFAR::SAS;
 
 // Use a terminate handler that can produce a backtrace.
 Exception::TerminateHandler t(Exception::terminate);
@@ -38,7 +39,7 @@ int main(int argc, char* argv[])
 	try {
 		GCFScheduler::instance()->init(argc, argv, argv[1]);
 
-		Feedback	fbTask(argv[1]);
+		Feedback	fbTask;
 		fbTask.start(); 					// make initial transition
 
 		GCFScheduler::instance()->run();	// until stop was called.

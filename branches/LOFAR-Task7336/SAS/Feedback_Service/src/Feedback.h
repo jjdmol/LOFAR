@@ -1,4 +1,4 @@
-//#  FeedbackService.h: Pass key-value pairs to the database.
+//#  Feedback.h: Pass key-value pairs to the database.
 //#
 //#  Copyright (C) 2015
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,36 +23,37 @@
 #ifndef FEEDBACK_SERVICE_H_
 #define FEEDBACK_SERVICE_H_
 
-// \file FeedbackService.h
+// \file Feedback.h
 // Pass key-value pairs to the database.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Control.h>
+#include <OTDB/OTDBconnection.h>
 #include <MessageBus/MsgBus.h>
 
 // Avoid 'using namespace' in headerfiles
 
 namespace LOFAR {
-  namespace Feedback {
+  namespace SAS {
 
 using   MACIO::GCFEvent;
 using   GCF::TM::GCFTimerPort;
 using   GCF::TM::GCFPort;
 using   GCF::TM::GCFPortInterface;
 using   GCF::TM::GCFTask;
+using   OTDB::OTDBconnection;
 
 // \addtogroup package
 // @{
 
 
-class FeedbackService : public GCFTask;
+class Feedback : public GCFTask
 {
 public:
-	FeedbackService();
-	explicit FeedbackService (one_parameter);
-	virtual/*?*/ ~FeedbackService();
+	Feedback();
+	~Feedback();
 
 	// Interrupthandler for switching to finishingstate when exiting the program.
 	static void sigintHandler (int signum);
@@ -61,32 +62,21 @@ public:
 private:
 	GCFEvent::TResult	connect2OTDB_state(GCFEvent& e, GCFPortInterface& p);
 	GCFEvent::TResult	operational_state (GCFEvent& e, GCFPortInterface& p);
+	bool passKVpairsToOTDB(const string&	content);
 
 	// Copying is not allowed
-	FeedbackService(const FeedbackService&	that) {};
-	FeedbackService& operator=(const FeedbackService& that) {};
+	Feedback(const Feedback&	that);
+	Feedback& operator=(const Feedback& that);
 
 	//# --- Datamembers ---
 	GCFTimerPort*		itsTimer;			// generic timer
-	OTDBConnection*		itsOTDBconn;		// connection with OTDB
-	MultiBus			itsMultiBus;		// session with Qpid.
+	OTDBconnection*		itsOTDBconn;		// connection with OTDB
+	FromBus*			itsMsgQueue;		// session with Qpid.
 
 };
 
-//# --- Inline functions ---
-
-// ... example
-//#
-//# operator<<
-//#
-inline ostream& operator<< (ostream& os, const FeedbackService& aFeedbackService)
-{	
-	return (c.print(os));
-}
-
-
 // @}
-  } // namespace Feedback
+  } // namespace SAS
 } // namespace LOFAR
 
 #endif
