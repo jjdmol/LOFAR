@@ -44,14 +44,14 @@ class FromBus
 
   int DiffNumAck;
   int state;
-  void cleanup(void);
 
 public:
   FromBus(const std::string &address="testqueue" , const std::string &options="; {create: always}", const std::string &broker = "amqp:tcp:127.0.0.1:5672") ;
-  bool GetStr(std::string &str,double timeout =0.0); // timeout 0.0 means blocking
-  bool GetMsg(qpid::messaging::Message &msg, double timeout =0.0); // timeout 0.0 means blocking
-  void Ack(void);
   ~FromBus(void);
+
+  bool getString(std::string &str,double timeout = 0.0); // timeout 0.0 means blocking
+  bool getMessage(qpid::messaging::Message &msg, double timeout = 0.0); // timeout 0.0 means blocking
+  void ack(void);
 };
 
 class ToBus
@@ -63,25 +63,26 @@ class ToBus
   qpid::messaging::Sender sender;
 
   int state,DiffNumAck;
-  void cleanup(void);
   
 public:
   ToBus(const std::string &address="testqueue" , const std::string &options="; {create: always}", const std::string &broker = "amqp:tcp:127.0.0.1:5672") ;
-
-  void Send( std::string & m);
   ~ToBus(void);
+
+  void send(const std::string &msg);
 };
-
-typedef int (* MsgHandler)(std::string &,std::string &);
-
-typedef struct
-{
-  MsgHandler handler;
-  std::string queuename;
-} MsgWorker;
 
 class MultiBus
 {
+public:
+  typedef int (* MsgHandler)(std::string &,std::string &);
+
+private:
+  typedef struct
+  {
+    MsgHandler handler;
+    std::string queuename;
+  } MsgWorker;
+
   std::map<qpid::messaging::Receiver, MsgWorker*> handlers;
   std::string brokername;
 
@@ -90,17 +91,17 @@ class MultiBus
 
   int state;
   int DiffNumAck;
-  void cleanup(void);
 
 public:
   MultiBus(MsgHandler handler, const std::string &address="testqueue", const std::string &options="; {create: always}", const std::string &broker = "amqp:tcp:127.0.0.1:5672") ;
-  void add(MsgHandler handler, const std::string &address="testqueue", const std::string &options="; {create: always}");
-  void HandleMessages(void);
-   
-  bool GetMsg(qpid::messaging::Message &msg, double timeout =0.0); // timeout 0.0 means blocking
- bool GetStr(std::string &str, double timeout =0.0); // timeout 0.0 means blocking
-
   ~MultiBus();
+
+  void add(MsgHandler handler, const std::string &address="testqueue", const std::string &options="; {create: always}");
+  void handleMessages(void);
+   
+  bool getMessage(qpid::messaging::Message &msg, double timeout = 0.0); // timeout 0.0 means blocking
+  bool getString(std::string &str, double timeout = 0.0); // timeout 0.0 means blocking
+
 };
 
 } // namespace LOFAR

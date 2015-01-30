@@ -14,19 +14,12 @@ namespace LOFAR {
 #define S_SENDER 4
 #define S_RECEIVER 8
 
-static Duration TimeOutSecs(double secs)
-{
-        Duration timeout=Duration::FOREVER;
-        if (secs>0.0) timeout = (Duration) (1000.0 * secs);
-        return timeout;
-}
-
-
-  void FromBus::cleanup(void)
+  static Duration TimeOutSecs(double secs)
   {
-//        if (state&S_SENDER) { sender = 0; state &= ~S_SENDER;}
-//       if (state&S_SESSION) { session = 0 ; state &= ~S_SESSION;}
-//        if (state&S_OPEN) { this.close(); state &= ~S_OPEN;}
+    if (secs > 0.0)
+      return (Duration)(1000.0 * secs);
+
+    return Duration::FOREVER;
   }
 
 
@@ -45,7 +38,14 @@ static Duration TimeOutSecs(double secs)
         connection.close();
     }
   }
-  bool FromBus::GetStr( std::string & Str, double timeout) // timeout 0.0 means blocking
+ 
+  FromBus::~FromBus(void)
+  {
+    if (DiffNumAck) { std::cout << "Queue " << queuename << " on broker " << brokername << " has " << DiffNumAck << " messages not ack'ed " << std::endl;};
+    connection.close();
+  }
+
+  bool FromBus::getString( std::string & Str, double timeout) // timeout 0.0 means blocking
   {
         Message incoming;
         bool ret = receiver.fetch(incoming,TimeOutSecs(timeout));
@@ -56,30 +56,17 @@ static Duration TimeOutSecs(double secs)
         return ret;
   }
 
-  bool FromBus::GetMsg(Message & msg, double timeout) // timeout 0.0 means blocking
+  bool FromBus::getMessage(Message & msg, double timeout) // timeout 0.0 means blocking
   {
         bool ret= receiver.fetch(msg,TimeOutSecs(timeout));
         if (ret) DiffNumAck++;
         return ret;
   }
 
-  void FromBus::Ack(void)
+  void FromBus::ack(void)
   {
      session.acknowledge();
      DiffNumAck --;
-  }
- 
-  FromBus::~FromBus(void)
-  {
-    if (DiffNumAck) { std::cout << "Queue " << queuename << " on broker " << brokername << " has " << DiffNumAck << " messages not ack'ed " << std::endl;};
-    connection.close();
-  }
-
- void ToBus::cleanup(void)
-  {
-//        if (state&S_SENDER) { sender = 0; state &= ~S_SENDER;}
-//        if (state&S_SESSION) { session = 0 ; state &= ~S_SESSION;}
-//        if (state&S_OPEN) { this.close(); state &= ~S_OPEN;}
   }
   
  ToBus::ToBus(const std::string &address, const std::string &options, const std::string &broker) 
@@ -91,33 +78,27 @@ static Duration TimeOutSecs(double secs)
      brokername = string( broker);
      state = 0;
      try {
-            connection.open();
-            state |= S_OPEN;
-            session = connection.createSession();
-            state |= S_SESSION;
-            Address addr(address+options);
-            sender = session.createSender(addr);
-            state |= S_SENDER;
+       connection.open();
+       state |= S_OPEN;
+       session = connection.createSession();
+       state |= S_SESSION;
+       Address addr(address+options);
+       sender = session.createSender(addr);
+       state |= S_SENDER;
      } catch (const std::exception& error) {
-        std::cout << error.what() << std::endl;
-        cleanup();
+       std::cout << error.what() << std::endl;
     }
   }
 
-  void ToBus::Send( std::string & m)
+  void ToBus::send(const std::string &msg)
   {
-        Message tosend(m);
-        sender.send(tosend,true);
-        DiffNumAck ++;
+    Message tosend(msg);
+    sender.send(tosend,true);
+    DiffNumAck ++;
   }
- ToBus::~ToBus(void)
+
+  ToBus::~ToBus(void)
   {
-    cleanup();
-  }
- void MultiBus::cleanup(void)
-  {
-//        if (state&S_SESSION) { session = 0 ; state &= ~S_SESSION;}
-//        if (state&S_OPEN) { this.close(); state &= ~S_OPEN;}
   }
 
   MultiBus::MultiBus(MsgHandler handler, const std::string &address, const std::string &options, const std::string &broker) 
@@ -129,37 +110,36 @@ static Duration TimeOutSecs(double secs)
      brokername = string(broker);
      state = 0;
      try {
-            connection.open();
-            state |= S_OPEN;
-            session = connection.createSession();
-            state |= S_SESSION;
-            Address addr(address+options);
-            Receiver receiver = session.createReceiver(addr);
-            receiver.setCapacity(1);
-            MsgWorker *worker=new MsgWorker;
-            worker->handler=handler;
-            worker->queuename=queuename;
-            handlers[receiver]=worker;
-            state |= S_RECEIVER;
+       connection.open();
+       state |= S_OPEN;
+       session = connection.createSession();
+       state |= S_SESSION;
+       Address addr(address+options);
+       Receiver receiver = session.createReceiver(addr);
+       receiver.setCapacity(1);
+       MsgWorker *worker=new MsgWorker;
+       worker->handler=handler;
+       worker->queuename=queuename;
+       handlers[receiver]=worker;
+       state |= S_RECEIVER;
      } catch (const std::exception& error) {
-        std::cout << error.what() << std::endl;
-        cleanup();
+       std::cout << error.what() << std::endl;
     }
   }
 
   void MultiBus::add(MsgHandler handler, const std::string &address, const std::string &options)
   {
-            Address addr(address+options);
-            Receiver receiver = session.createReceiver(addr);
-            receiver.setCapacity(1);
-            MsgWorker * worker = new MsgWorker;
-            worker->handler=handler;
-            worker->queuename=string(address);
-            handlers[receiver]=worker;
-            state |= S_RECEIVER;
+    Address addr(address+options);
+    Receiver receiver = session.createReceiver(addr);
+    receiver.setCapacity(1);
+    MsgWorker * worker = new MsgWorker;
+    worker->handler=handler;
+    worker->queuename=string(address);
+    handlers[receiver]=worker;
+    state |= S_RECEIVER;
   }
 
-  void MultiBus::HandleMessages(void)
+  void MultiBus::handleMessages(void)
   {
      while (1)
      {
@@ -183,25 +163,25 @@ static Duration TimeOutSecs(double secs)
      }
   }
 
-  bool MultiBus::GetMsg(Message & msg ,double timeout)
+  bool MultiBus::getMessage(Message &msg, double timeout)
   {
-   Receiver nrec = session.nextReceiver();
-   return nrec.get(msg,TimeOutSecs(timeout));
+    Receiver nrec = session.nextReceiver();
+    return nrec.get(msg,TimeOutSecs(timeout));
   }
 
-  bool MultiBus::GetStr(std::string & Str ,double timeout)
+  bool MultiBus::getString(std::string &str, double timeout)
   {
-   Message msg;
-   Receiver nrec = session.nextReceiver();
-   bool ret=nrec.get(msg,TimeOutSecs(timeout));
-   if (ret) 
-      Str = msg.getContent();
-   return ret;
+    Message msg;
+    Receiver nrec = session.nextReceiver();
+    bool ret = nrec.get(msg,TimeOutSecs(timeout));
+
+    if (ret) 
+      str = msg.getContent();
+    return ret;
   }
 
   MultiBus::~MultiBus()
   {
-    cleanup();
     // fixme: memory leak for workers. Also infinite loop needs a fix.
   }
 
