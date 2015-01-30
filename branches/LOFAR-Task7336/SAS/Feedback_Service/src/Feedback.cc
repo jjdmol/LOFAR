@@ -141,7 +141,7 @@ GCFEvent::TResult Feedback::operational_state(GCFEvent& event, GCFPortInterface&
 	case F_ENTRY: 
 	case F_TIMER:  {
 		// wait (blocking) for next message
-		Message msg = itsMultiBus.get();
+		Message msg = itsMultiBus.getMessage();
 		LOG_DEBUG_STR(..);
 
 		if (!itsOTDBconn->connect()) {

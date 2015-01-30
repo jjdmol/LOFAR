@@ -2,7 +2,8 @@
 
 include(LofarPackageVersion)
 
-#@lofar_add_bin_program(FeedbackService Package__Version.cc Feedback.cc FeedbackMain.cc)
+#lofar_add_bin_program(FeedbackService Feedback.cc FeedbackMain.cc)
+#lofar_add_bin_program(FeedbackService Package__Version.cc Feedback.cc FeedbackMain.cc)
 #lofar_add_bin_program(versionfeedback versionfeedback.cc)
 
 install(FILES FeedbackService.conf DESTINATION etc)
