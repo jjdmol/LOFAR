@@ -31,7 +31,7 @@ using namespace LOFAR::CEPCU;
 using namespace LOFAR;
 
 // Use a terminate handler that can produce a backtrace.
-Exception::TerminateHandler t(Exception::terminate);
+LOFAR::Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char* argv[])
 {
@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
 		pc->quit();		// let tasks quit nicely.
 		pyc.quit();
 		GCFScheduler::instance()->run(0.3); // let tasks die.
-	} catch( Exception &ex ) {
+	} catch( LOFAR::Exception &ex ) {
 		LOG_FATAL_STR("Caught exception: " << ex);
 		return 1;
 	}
