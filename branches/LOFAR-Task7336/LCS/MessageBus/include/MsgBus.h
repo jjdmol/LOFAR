@@ -43,7 +43,6 @@ class FromBus
   qpid::messaging::Receiver receiver;
 
   int DiffNumAck;
-  int state;
 
 public:
   FromBus(const std::string &address="testqueue" , const std::string &options="; {create: always}", const std::string &broker = "amqp:tcp:127.0.0.1:5672") ;
@@ -62,7 +61,7 @@ class ToBus
   qpid::messaging::Session session;
   qpid::messaging::Sender sender;
 
-  int state,DiffNumAck;
+  int DiffNumAck;
   
 public:
   ToBus(const std::string &address="testqueue" , const std::string &options="; {create: always}", const std::string &broker = "amqp:tcp:127.0.0.1:5672") ;
@@ -89,7 +88,6 @@ private:
   qpid::messaging::Connection connection;
   qpid::messaging::Session session;
 
-  int state;
   int DiffNumAck;
 
 public:

@@ -29,13 +29,13 @@ namespace LOFAR {
     DiffNumAck(0)
   {
      try {
-            connection.open();
-            session = connection.createSession();
-            Address addr(address+options);
-            receiver = session.createReceiver(addr);
+       connection.open();
+       session = connection.createSession();
+       Address addr(address+options);
+       receiver = session.createReceiver(addr);
      } catch (const std::exception& error) {
-        std::cout << error.what() << std::endl;
-        connection.close();
+       std::cout << error.what() << std::endl;
+       connection.close();
     }
   }
  
@@ -45,22 +45,24 @@ namespace LOFAR {
     connection.close();
   }
 
-  bool FromBus::getString( std::string & Str, double timeout) // timeout 0.0 means blocking
+  bool FromBus::getString( std::string &str, double timeout) // timeout 0.0 means blocking
   {
-        Message incoming;
-        bool ret = receiver.fetch(incoming,TimeOutSecs(timeout));
-        if (ret) {
-            DiffNumAck ++;
-            Str= incoming.getContent();
-        }
-        return ret;
+    Message incoming;
+
+    bool ret = receiver.fetch(incoming, TimeOutSecs(timeout));
+    if (ret) {
+        DiffNumAck ++;
+        str = incoming.getContent();
+    }
+
+    return ret;
   }
 
   bool FromBus::getMessage(Message & msg, double timeout) // timeout 0.0 means blocking
   {
-        bool ret= receiver.fetch(msg,TimeOutSecs(timeout));
-        if (ret) DiffNumAck++;
-        return ret;
+    bool ret= receiver.fetch(msg, TimeOutSecs(timeout));
+    if (ret) DiffNumAck++;
+    return ret;
   }
 
   void FromBus::ack(void)
@@ -76,15 +78,11 @@ namespace LOFAR {
   {
      queuename = string(address);
      brokername = string( broker);
-     state = 0;
      try {
        connection.open();
-       state |= S_OPEN;
        session = connection.createSession();
-       state |= S_SESSION;
        Address addr(address+options);
        sender = session.createSender(addr);
-       state |= S_SENDER;
      } catch (const std::exception& error) {
        std::cout << error.what() << std::endl;
     }
@@ -108,12 +106,9 @@ namespace LOFAR {
   {
      string queuename = string(address);
      brokername = string(broker);
-     state = 0;
      try {
        connection.open();
-       state |= S_OPEN;
        session = connection.createSession();
-       state |= S_SESSION;
        Address addr(address+options);
        Receiver receiver = session.createReceiver(addr);
        receiver.setCapacity(1);
@@ -121,7 +116,6 @@ namespace LOFAR {
        worker->handler=handler;
        worker->queuename=queuename;
        handlers[receiver]=worker;
-       state |= S_RECEIVER;
      } catch (const std::exception& error) {
        std::cout << error.what() << std::endl;
     }
@@ -136,7 +130,6 @@ namespace LOFAR {
     worker->handler=handler;
     worker->queuename=string(address);
     handlers[receiver]=worker;
-    state |= S_RECEIVER;
   }
 
   void MultiBus::handleMessages(void)
