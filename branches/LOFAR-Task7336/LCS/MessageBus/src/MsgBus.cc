@@ -1,3 +1,4 @@
+#include "lofar_config.h"
 #include <MessageBus/MsgBus.h>
 
 #include <iostream>
@@ -5,6 +6,8 @@
 using namespace qpid::messaging;
 
 using std::string;
+
+namespace LOFAR {
 
 #define S_OPEN 1
 #define S_SESSION 2
@@ -28,17 +31,18 @@ static Duration TimeOutSecs(double secs)
 
 
   FromBus::FromBus(const std::string &address, const std::string &options, const std::string &broker)
-  :Connection(broker),
-  DiffNumAck(0)
+  :
+    connection(broker),
+    DiffNumAck(0)
   {
      try {
-            open();
-            session = createSession();
+            connection.open();
+            session = connection.createSession();
             Address addr(address+options);
             receiver = session.createReceiver(addr);
      } catch (const std::exception& error) {
         std::cout << error.what() << std::endl;
-        close();
+        connection.close();
     }
   }
   bool FromBus::GetStr( std::string & Str, double timeout) // timeout 0.0 means blocking
@@ -68,7 +72,7 @@ static Duration TimeOutSecs(double secs)
   FromBus::~FromBus(void)
   {
     if (DiffNumAck) { std::cout << "Queue " << queuename << " on broker " << brokername << " has " << DiffNumAck << " messages not ack'ed " << std::endl;};
-    close();
+    connection.close();
   }
 
  void ToBus::cleanup(void)
@@ -79,16 +83,17 @@ static Duration TimeOutSecs(double secs)
   }
   
  ToBus::ToBus(const std::string &address, const std::string &options, const std::string &broker) 
-  : Connection(broker)
+  :
+    connection(broker),
+    DiffNumAck(0)
   {
      queuename = string(address);
      brokername = string( broker);
      state = 0;
-     DiffNumAck= 0;
      try {
-            open();
+            connection.open();
             state |= S_OPEN;
-            session = createSession();
+            session = connection.createSession();
             state |= S_SESSION;
             Address addr(address+options);
             sender = session.createSender(addr);
@@ -116,16 +121,17 @@ static Duration TimeOutSecs(double secs)
   }
 
   MultiBus::MultiBus(MsgHandler handler, const std::string &address, const std::string &options, const std::string &broker) 
-  : Connection(broker),
-  DiffNumAck(0)
+  : 
+    connection(broker),
+    DiffNumAck(0)
   {
      string queuename = string(address);
      brokername = string(broker);
      state = 0;
      try {
-            open();
+            connection.open();
             state |= S_OPEN;
-            session = createSession();
+            session = connection.createSession();
             state |= S_SESSION;
             Address addr(address+options);
             Receiver receiver = session.createReceiver(addr);
@@ -198,4 +204,6 @@ static Duration TimeOutSecs(double secs)
     cleanup();
     // fixme: memory leak for workers. Also infinite loop needs a fix.
   }
+
+} // namespace LOFAR
 

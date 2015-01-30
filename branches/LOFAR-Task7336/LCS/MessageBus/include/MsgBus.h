@@ -32,11 +32,16 @@
 
 #include <map>
 
-class FromBus: private qpid::messaging::Connection 
+namespace LOFAR {
+
+class FromBus
 {
   std::string queuename,brokername;
+
+  qpid::messaging::Connection connection;
   qpid::messaging::Session session;
   qpid::messaging::Receiver receiver;
+
   int DiffNumAck;
   int state;
   void cleanup(void);
@@ -49,11 +54,14 @@ public:
   ~FromBus(void);
 };
 
-class ToBus: private qpid::messaging::Connection 
+class ToBus
 {
   std::string queuename,brokername;
+
+  qpid::messaging::Connection connection;
   qpid::messaging::Session session;
   qpid::messaging::Sender sender;
+
   int state,DiffNumAck;
   void cleanup(void);
   
@@ -72,11 +80,14 @@ typedef struct
   std::string queuename;
 } MsgWorker;
 
-class MultiBus: private qpid::messaging::Connection 
+class MultiBus
 {
   std::map<qpid::messaging::Receiver, MsgWorker*> handlers;
   std::string brokername;
+
+  qpid::messaging::Connection connection;
   qpid::messaging::Session session;
+
   int state;
   int DiffNumAck;
   void cleanup(void);
@@ -91,6 +102,8 @@ public:
 
   ~MultiBus();
 };
+
+} // namespace LOFAR
 
 #endif
 
