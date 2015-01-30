@@ -1,7 +1,9 @@
 #include "lofar_config.h"
-#include <MessageBus/MsgBus.h>
 
-#include <iostream>
+#include <MessageBus/MsgBus.h>
+#include <Common/LofarLogger.h>
+
+#include <qpid/types/Exception.h>
 
 using namespace qpid::messaging;
 
@@ -24,25 +26,24 @@ namespace LOFAR {
 
 
   FromBus::FromBus(const std::string &address, const std::string &options, const std::string &broker)
-  :
+  try:
     connection(broker),
     DiffNumAck(0)
   {
-     try {
-       connection.open();
-       session = connection.createSession();
-       Address addr(address+options);
-       receiver = session.createReceiver(addr);
-     } catch (const std::exception& error) {
-       std::cout << error.what() << std::endl;
-       connection.close();
-    }
+    connection.open();
+
+    session = connection.createSession();
+
+    Address addr(address+options);
+    receiver = session.createReceiver(addr);
+  } catch(const qpid::types::Exception &ex) {
+    THROW(MessageBusException, ex.what());
   }
+
  
   FromBus::~FromBus(void)
   {
     if (DiffNumAck) { std::cout << "Queue " << queuename << " on broker " << brokername << " has " << DiffNumAck << " messages not ack'ed " << std::endl;};
-    connection.close();
   }
 
   bool FromBus::getString( std::string &str, double timeout) // timeout 0.0 means blocking
@@ -72,20 +73,19 @@ namespace LOFAR {
   }
   
  ToBus::ToBus(const std::string &address, const std::string &options, const std::string &broker) 
-  :
+  try:
     connection(broker),
     DiffNumAck(0)
   {
      queuename = string(address);
      brokername = string( broker);
-     try {
-       connection.open();
-       session = connection.createSession();
-       Address addr(address+options);
-       sender = session.createSender(addr);
-     } catch (const std::exception& error) {
-       std::cout << error.what() << std::endl;
-    }
+
+     connection.open();
+     session = connection.createSession();
+     Address addr(address+options);
+     sender = session.createSender(addr);
+  } catch(const qpid::types::Exception &ex) {
+    THROW(MessageBusException, ex.what());
   }
 
   void ToBus::send(const std::string &msg)
@@ -100,25 +100,24 @@ namespace LOFAR {
   }
 
   MultiBus::MultiBus(MsgHandler handler, const std::string &address, const std::string &options, const std::string &broker) 
-  : 
+  try: 
     connection(broker),
     DiffNumAck(0)
   {
      string queuename = string(address);
      brokername = string(broker);
-     try {
-       connection.open();
-       session = connection.createSession();
-       Address addr(address+options);
-       Receiver receiver = session.createReceiver(addr);
-       receiver.setCapacity(1);
-       MsgWorker *worker=new MsgWorker;
-       worker->handler=handler;
-       worker->queuename=queuename;
-       handlers[receiver]=worker;
-     } catch (const std::exception& error) {
-       std::cout << error.what() << std::endl;
-    }
+
+     connection.open();
+     session = connection.createSession();
+     Address addr(address+options);
+     Receiver receiver = session.createReceiver(addr);
+     receiver.setCapacity(1);
+     MsgWorker *worker=new MsgWorker;
+     worker->handler=handler;
+     worker->queuename=queuename;
+     handlers[receiver]=worker;
+  } catch(const qpid::types::Exception &ex) {
+    THROW(MessageBusException, ex.what());
   }
 
   void MultiBus::add(MsgHandler handler, const std::string &address, const std::string &options)

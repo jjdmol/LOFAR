@@ -30,9 +30,13 @@
 #include <qpid/messaging/Session.h>
 #include <qpid/messaging/Address.h>
 
+#include <Common/Exception.h>
+
 #include <map>
 
 namespace LOFAR {
+
+EXCEPTION_CLASS(MessageBusException, LOFAR::Exception);
 
 class FromBus
 {
