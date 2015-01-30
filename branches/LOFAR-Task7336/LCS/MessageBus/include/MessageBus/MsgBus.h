@@ -61,6 +61,8 @@ public:
 
 #ifdef HAVE_QPID
   bool getMessage(qpid::messaging::Message &msg, double timeout = 0.0); // timeout 0.0 means blocking
+
+  void nack(qpid::messaging::Message &msg);
 #endif
 
   void ack(void);
@@ -92,14 +94,8 @@ public:
 private:
   const std::string itsBrokerName;
 
-  typedef struct
-  {
-    MsgHandler handler;
-    std::string queuename;
-  } MsgWorker;
-
 #ifdef HAVE_QPID
-  std::map<qpid::messaging::Receiver, MsgWorker> itsHandlers;
+  std::map<std::string, qpid::messaging::Receiver> itsReceivers;
 
   qpid::messaging::Connection itsConnection;
   qpid::messaging::Session itsSession;
@@ -111,12 +107,16 @@ public:
   MultiBus(const std::string &broker = "amqp:tcp:127.0.0.1:5672");
   ~MultiBus();
 
-  void addQueue(MsgHandler handler, const std::string &address="testqueue", const std::string &options="; {create: always}");
+  void addQueue(const std::string &address="testqueue", const std::string &options="; {create: always}");
   void handleMessages(void);
    
 #ifdef HAVE_QPID
   bool getMessage(qpid::messaging::Message &msg, double timeout = 0.0); // timeout 0.0 means blocking
+
+  void nack(qpid::messaging::Message &msg);
 #endif
+
+  void ack(void);
 
   bool getString(std::string &str, double timeout = 0.0); // timeout 0.0 means blocking
 
