@@ -1,12 +1,12 @@
 #include "lofar_config.h"
 
 #include <MessageBus/MsgBus.h>
-#include <Common/LofarLogger.h>
+//#include <Common/LofarLogger.h>
 
 #ifdef HAVE_QPID
 #include <qpid/types/Exception.h>
 #include <qpid/messaging/exceptions.h>
-#include <qpid/messaging/Logger.h>
+//#include <qpid/messaging/Logger.h>
 
 using namespace qpid::messaging;
 
@@ -38,14 +38,14 @@ namespace LOFAR {
  
   FromBus::~FromBus(void)
   {
-    if (itsNrMissingACKs)
-      LOG_ERROR_STR("Queue " << itsQueueName << " on broker " << itsBrokerName << " has " << itsNrMissingACKs << " messages not ACK'ed ");
+//    if (itsNrMissingACKs)
+//      LOG_ERROR_STR("Queue " << itsQueueName << " on broker " << itsBrokerName << " has " << itsNrMissingACKs << " messages not ACK'ed ");
   }
 
   bool FromBus::getMessage(Message &msg, double timeout) // timeout 0.0 means blocking
   {
     Receiver next;
-    if (session.nextReceiver(next,TimeOutDuration(timeout)))
+    if (itsSession.nextReceiver(next,TimeOutDuration(timeout)))
     {
         itsNrMissingACKs++;
         return next.get(msg);
@@ -91,7 +91,7 @@ namespace LOFAR {
      itsConnection.open();
      itsSession = itsConnection.createSession();
      Address addr(address+options);
-     sender = itsSession.createSender(addr);
+     Sender itsSender = itsSession.createSender(addr);
   } catch(const qpid::types::Exception &ex) {
     THROW(MessageBusException, ex.what());
   }
@@ -102,7 +102,7 @@ namespace LOFAR {
   void ToBus::send(const std::string &msg)
   {
     Message tosend(msg);
-    sender.send(tosend,true);
+    itsSender.send(tosend,true);
   }
 
 } // namespace LOFAR

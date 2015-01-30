@@ -56,7 +56,7 @@ public:
 
   void ack(qpid::messaging::Message &msg);
   void reject(qpid::messaging::Message &msg);
-  void addQueue(const std::string &address="testqueue", const std::string &options="; {create: always}");
+  bool addQueue(const std::string &address="testqueue", const std::string &options="; {create: always}");
 };
 
 class ToBus
@@ -72,5 +72,6 @@ public:
   void send(const std::string &msg);
 };
 #endif
+}
 #endif
 
