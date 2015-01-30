@@ -77,7 +77,7 @@ public:
 class MultiBus
 {
 public:
-  typedef int (* MsgHandler)(std::string &,std::string &);
+  typedef bool (* MsgHandler)(const std::string &, const std::string &);
 
 private:
   typedef struct
@@ -86,7 +86,7 @@ private:
     std::string queuename;
   } MsgWorker;
 
-  std::map<qpid::messaging::Receiver, MsgWorker*> handlers;
+  std::map<qpid::messaging::Receiver, MsgWorker> handlers;
   std::string brokername;
 
   qpid::messaging::Connection connection;
@@ -95,10 +95,10 @@ private:
   int DiffNumAck;
 
 public:
-  MultiBus(MsgHandler handler, const std::string &address="testqueue", const std::string &options="; {create: always}", const std::string &broker = "amqp:tcp:127.0.0.1:5672") ;
+  MultiBus(const std::string &broker = "amqp:tcp:127.0.0.1:5672");
   ~MultiBus();
 
-  void add(MsgHandler handler, const std::string &address="testqueue", const std::string &options="; {create: always}");
+  void addQueue(MsgHandler handler, const std::string &address="testqueue", const std::string &options="; {create: always}");
   void handleMessages(void);
    
   bool getMessage(qpid::messaging::Message &msg, double timeout = 0.0); // timeout 0.0 means blocking

@@ -48,12 +48,12 @@ namespace LOFAR {
 
   bool FromBus::getString( std::string &str, double timeout) // timeout 0.0 means blocking
   {
-    Message incoming;
+    Message msg;
 
-    bool ret = receiver.fetch(incoming, TimeOutSecs(timeout));
+    bool ret = getMessage(msg, timeout);
     if (ret) {
         DiffNumAck ++;
-        str = incoming.getContent();
+        str = msg.getContent();
     }
 
     return ret;
@@ -88,6 +88,10 @@ namespace LOFAR {
     THROW(MessageBusException, ex.what());
   }
 
+  ToBus::~ToBus(void)
+  {
+  }
+
   void ToBus::send(const std::string &msg)
   {
     Message tosend(msg);
@@ -95,40 +99,34 @@ namespace LOFAR {
     DiffNumAck ++;
   }
 
-  ToBus::~ToBus(void)
-  {
-  }
-
-  MultiBus::MultiBus(MsgHandler handler, const std::string &address, const std::string &options, const std::string &broker) 
+  MultiBus::MultiBus(const std::string &broker) 
   try: 
     connection(broker),
     DiffNumAck(0)
   {
-     string queuename = string(address);
      brokername = string(broker);
 
      connection.open();
      session = connection.createSession();
-     Address addr(address+options);
-     Receiver receiver = session.createReceiver(addr);
-     receiver.setCapacity(1);
-     MsgWorker *worker=new MsgWorker;
-     worker->handler=handler;
-     worker->queuename=queuename;
-     handlers[receiver]=worker;
   } catch(const qpid::types::Exception &ex) {
     THROW(MessageBusException, ex.what());
   }
 
-  void MultiBus::add(MsgHandler handler, const std::string &address, const std::string &options)
+  MultiBus::~MultiBus()
+  {
+    // fixme: memory leak for workers. Also infinite loop needs a fix.
+  }
+
+  void MultiBus::addQueue(MsgHandler handler, const std::string &address, const std::string &options)
   {
     Address addr(address+options);
     Receiver receiver = session.createReceiver(addr);
     receiver.setCapacity(1);
-    MsgWorker * worker = new MsgWorker;
-    worker->handler=handler;
-    worker->queuename=string(address);
-    handlers[receiver]=worker;
+
+    MsgWorker worker;
+    worker.handler = handler;
+    worker.queuename = string(address);
+    handlers[receiver] = worker;
   }
 
   void MultiBus::handleMessages(void)
@@ -136,22 +134,18 @@ namespace LOFAR {
      while (1)
      {
         Receiver nrec = session.nextReceiver();
-        MsgWorker *worker = handlers[nrec];
+        MsgWorker worker = handlers[nrec];
         Message msg;
         nrec.get(msg);
-        std::string tmp= msg.getContent();
-        if (worker)
-        {
-           if (worker->handler)
-              if (worker->handler(tmp,worker->queuename)) session.acknowledge(msg);
-              else // todo: define a proper fail over mechanism with proper handling
-                       session.reject(msg); // broker can be configured for this
-           else
-              std::cout << "Error: undefined handler" << std::endl;
-        } else {
-           std::cout << "Error: incoming message but receiver not properly configured" << std::endl;
-        }
 
+        const std::string msgStr = msg.getContent();
+
+        ASSERTSTR(worker.handler, "Undefined handler for queue " << worker.queuename);
+
+        if (worker.handler(msgStr, worker.queuename))
+          session.acknowledge(msg);
+        else // todo: define a proper fail over mechanism with proper handling
+          session.reject(msg); // broker can be configured for this
      }
   }
 
@@ -164,17 +158,11 @@ namespace LOFAR {
   bool MultiBus::getString(std::string &str, double timeout)
   {
     Message msg;
-    Receiver nrec = session.nextReceiver();
-    bool ret = nrec.get(msg,TimeOutSecs(timeout));
+    bool ret = getMessage(msg, timeout);
 
     if (ret) 
       str = msg.getContent();
     return ret;
-  }
-
-  MultiBus::~MultiBus()
-  {
-    // fixme: memory leak for workers. Also infinite loop needs a fix.
   }
 
 } // namespace LOFAR
