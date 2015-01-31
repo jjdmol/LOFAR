@@ -32,6 +32,7 @@
 #include <Common/Version.h>
 #include <GCF/TM/GCF_Control.h>
 #include <OTDB/TreeValue.h>
+#include <SAS_Feedback/Package__Version.h>
 #include "Feedback.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>

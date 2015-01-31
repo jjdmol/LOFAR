@@ -2,7 +2,7 @@
 
 include(LofarPackageVersion)
 
-lofar_add_library(feedbackservice Package__Version.cc)
+lofar_add_library(sas_feedback Package__Version.cc)
 
 lofar_add_bin_program(versionsas_feedback versionsas_feedback.cc)
 lofar_add_bin_program(FeedbackService Feedback.cc FeedbackMain.cc)
