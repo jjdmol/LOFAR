@@ -31,6 +31,7 @@ namespace LOFAR {
 
     Address addr(address+options);
     Receiver receiver = itsSession.createReceiver(addr);
+    receiver.setCapacity(1);
   } catch(const qpid::types::Exception &ex) {
     THROW(MessageBusException, ex.what());
   }
@@ -80,6 +81,7 @@ namespace LOFAR {
      {
         Address addr(address+options);
         Receiver receiver = itsSession.createReceiver(addr);
+        receiver.setCapacity(1);
      } catch(const qpid::types::Exception &ex) {
        //THROW(MessageBusException, ex.what());
        return false;
