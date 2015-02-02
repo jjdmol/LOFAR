@@ -4,10 +4,10 @@
 #[ "`whoami`" == "lofarbuild" ]
 
 # Download location for the latest QPID source
-PROTON_SOURCE="http://svn.apache.org/repos/asf/qpid/proton/trunk/"
-QPID_SOURCE="http://svn.apache.org/repos/asf/qpid/trunk/qpid/"
+PROTON_SOURCE="http://svn.apache.org/repos/asf/qpid/proton/branches/0.8"
+QPID_SOURCE="http://svn.apache.org/repos/asf/qpid/branches/0.30/qpid/"
 
-QPID_INSTALLDIR=$HOME/src/qpid
+QPID_INSTALLDIR=/localhome/lofar/qpid
 
 # ********************************************
 #  Install latest PROTON & QPID
@@ -21,7 +21,7 @@ QPIDDIR=`mktemp -d`
 pushd $QPIDDIR >/dev/null
 
 echo "  Downloading PROTON..."
-svn co http://svn.apache.org/repos/asf/qpid/proton/branches/0.8 proton >/dev/null
+svn co $PROTON_SOURCE proton >/dev/null
 
 echo "  Configuring PROTON..."
 pushd proton >/dev/null
@@ -39,7 +39,7 @@ make -j 8 install > make_install.log
 popd >/dev/null
 
 echo "  Downloading QPID..."
-svn co http://svn.apache.org/repos/asf/qpid/branches/0.30/qpid/ qpid >/dev/null
+svn co $QPID_SOURCE qpid >/dev/null
 
 echo "  Configuring QPID C bindings..."
 pushd qpid/cpp >/dev/null
