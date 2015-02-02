@@ -26,12 +26,14 @@ namespace LOFAR {
     itsNrMissingACKs(0)
   {
     itsConnection.open();
+	cout << "Connected to: " << itsConnection.getUrl() << endl;
 
     itsSession = itsConnection.createSession();
 
     Address addr(address+options);
     Receiver receiver = itsSession.createReceiver(addr);
     receiver.setCapacity(1);
+	cout << "Receiver started at queue: " << receiver.getName() << endl;
   } catch(const qpid::types::Exception &ex) {
     THROW(MessageBusException, ex.what());
   }
@@ -50,7 +52,7 @@ namespace LOFAR {
 	cout << "waiting for message..." << endl;
     if (itsSession.nextReceiver(next,TimeOutDuration(timeout)))
     {
-		cout << "message available..." << endl;
+		cout << "message available on queue: " << next.getName() << endl;
         itsNrMissingACKs++;
         return next.get(msg);
     }
@@ -82,6 +84,7 @@ namespace LOFAR {
         Address addr(address+options);
         Receiver receiver = itsSession.createReceiver(addr);
         receiver.setCapacity(1);
+		cout << "Receiver started at queue: " << receiver.getName() << endl;
      } catch(const qpid::types::Exception &ex) {
        //THROW(MessageBusException, ex.what());
        return false;
@@ -94,9 +97,12 @@ namespace LOFAR {
     itsConnection(broker)
   {
      itsConnection.open();
+	 cout << "Connected to: " << itsConnection.getUrl() << endl;
+
      itsSession = itsConnection.createSession();
      Address addr(address+options);
      itsSender = itsSession.createSender(addr);
+ 	 cout << "Sender created: " << itsSender.getName() << endl;
   } catch(const qpid::types::Exception &ex) {
     THROW(MessageBusException, ex.what());
   }
