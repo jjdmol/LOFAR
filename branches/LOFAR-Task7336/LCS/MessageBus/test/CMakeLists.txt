@@ -2,4 +2,4 @@
 
 include(LofarCTest)
 
-lofar_add_executable(tMsgBus tMsgBus.cc)
+lofar_add_test(tMsgBus tMsgBus.cc)
