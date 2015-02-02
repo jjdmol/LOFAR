@@ -71,7 +71,7 @@ class FromBus():
         msg=None
 	try:
                 receiver = self.session.next_receiver(timeout)
-        	if (receiver != None) msg = self.receiver.get()
+        	if receiver != None: msg = self.receiver.get()
 	except exceptions.Empty, e:
 		return "None" , "None"
         return msg
