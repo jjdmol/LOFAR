@@ -96,7 +96,7 @@ namespace LOFAR {
      itsConnection.open();
      itsSession = itsConnection.createSession();
      Address addr(address+options);
-     Sender itsSender = itsSession.createSender(addr);
+     itsSender = itsSession.createSender(addr);
   } catch(const qpid::types::Exception &ex) {
     THROW(MessageBusException, ex.what());
   }
