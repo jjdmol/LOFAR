@@ -34,8 +34,13 @@ if(NOT QPID_FOUND)
 
   find_path(QPID_INCLUDE_DIR qpid/messaging/Connection.h
     HINTS ${QPID_ROOT_DIR} PATH_SUFFIXES include)
-  find_library(QPID_LIBRARY qpidmessaging
+  find_library(QPID_MESSAGING_LIBRARY qpidmessaging
     HINTS ${QPID_ROOT_DIR} PATH_SUFFIXES lib)
+  find_library(QPID_TYPES_LIBRARY qpidtypes
+    HINTS ${QPID_ROOT_DIR} PATH_SUFFIXES lib)
+
+  set(QPID_LIBRARY ${QPID_MESSAGING_LIBRARY} ${QPID_TYPES_LIBRARY})
+
   mark_as_advanced(QPID_INCLUDE_DIR QPID_LIBRARY)
 
   include(FindPackageHandleStandardArgs)
