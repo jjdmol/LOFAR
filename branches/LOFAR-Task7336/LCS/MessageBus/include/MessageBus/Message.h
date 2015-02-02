@@ -42,11 +42,19 @@ class Message
 
   // Construct a message
   Message(
+    // Name of the service or process producing this message
     const std::string &from,
+
+    // End-user responsible for this request (if applicable)
     const std::string &forUser,
+
+    // Human-readable summary describing this request
     const std::string &summary,
 
+    // Service to send this message to
     const std::string &toService,
+
+    // Version of the protocol we're using to describe the payload
     const std::string &toVersion
   );
 
