@@ -32,14 +32,15 @@
 
 namespace LOFAR {
 
+// Name of the system sending these messages
+static const std::string system = "LOFAR";
+
+// Version of the header we write
+static const std::string headerVersion = "1.0.0";
+
 class Message
 {
-  // Name of the system sending these messages
-  static const std::string system = "LOFAR";
-
-  // Version of the header we write
-  static const std::string headerVersion = "1.0.0";
-
+public:
   // Construct a message
   Message(
     // Name of the service or process producing this message
@@ -59,36 +60,37 @@ class Message
   );
 
   // Parse a message
-  Message(const qpid::message::Message &qpidMsg);
+  Message(const qpid::messaging::Message &qpidMsg);
 
   // Read a message from disk (header + payload)
   Message(const std::string &rawContent);
 
   // Set the payload, supporting various types
-  void setXMLPayload(const std::string &payload);
-  void setTXTPayload(const std::string &payload);
-  void setMapPayload(const qpid::Variant::Map &payload);
-  void setListPayload(const qpid::Variant::List &payload);
+  void setXMLPayload (const std::string                &payload);
+  void setTXTPayload (const std::string                &payload);
+  void setMapPayload (const qpid::types::Variant::Map  &payload);
+  void setListPayload(const qpid::types::Variant::List &payload);
 
   virtual ~Message();
 
   // Return properties of the constructed or received message
-  std::string getSystem() const;
-  std::string getHeaderVersion() const;
-  std::string getPayload() const;
-  std::string getFrom() const;
-  std::string getForUser() const;
-  std::string getSummary() const;
-  std::string getToService() const;
-  std::string getToVersion() const;
+  std::string system() const;
+  std::string headerVersion() const;
+  std::string payload() const;
+  std::string from() const;
+  std::string forUser() const;
+  std::string summary() const;
+  std::string toService() const;
+  std::string toVersion() const;
 
   // Construct the given fields as a QPID message
-  qpid::messaging::Message getQpidMsg() const;
+  qpid::messaging::Message getQpidMsg() const { return (itsQpidMsg); }
 
   // Return the raw message (header + payload)
-  std::string getRawContent() const;
+  std::string getRawContent() const { return (itsQpidMsg.getContent()); }
 
 private:
+  // datamembers
   qpid::messaging::Message itsQpidMsg;
 };
 

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<message>
+   <header>
+      <system>LOFAR</system>
+      <version>1.0.0</version>
+      <service>
+         <name>%s</name>
+         <version>%s</version>
+      </service>
+      <request>
+         <source>%s</source>
+         <user>%s</user>
+         <uuid>%s</uuid>
+         <timestamp>%s</timestamp>
+         <summary>%s</summary>
+      </request>
+   </header>
+   <payload>
+%s
+   </payload>
+</message>

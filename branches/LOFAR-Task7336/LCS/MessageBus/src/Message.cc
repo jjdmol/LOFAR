@@ -1,0 +1,148 @@
+//#  Message.cc: one_line_description
+//#
+//#  Copyright (C) 2002-2004
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//#  This program is free software; you can redistribute it and/or modify
+//#  it under the terms of the GNU General Public License as published by
+//#  the Free Software Foundation; either version 2 of the License, or
+//#  (at your option) any later version.
+//#
+//#  This program is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//#  GNU General Public License for more details.
+//#
+//#  You should have received a copy of the GNU General Public License
+//#  along with this program; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
+//#  $Id: $
+
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
+//# Includes
+#include <Common/LofarLogger.h>
+#include <Common/lofar_string.h>
+#include <MessageBus/Message.h>
+
+namespace LOFAR {
+
+const string LOFAR_MSG_TEMPLATE = "\
+<message>\n\
+   <header>\n\
+      <system>LOFAR</system>\n\
+      <version>1.0.0</version>\n\
+      <service>\n\
+         <name>%s</name>\n\
+         <version>%s</version>\n\
+      </service>\n\
+      <request>\n\
+         <source>%s</source>\n\
+         <user>%s</user>\n\
+         <uuid>%s</uuid>\n\
+         <timestamp>%s</timestamp>\n\
+         <summary>%s</summary>\n\
+      </request>\n\
+   </header>\n\
+   <payload>\n\
+%s\n\
+   </payload>\n\
+</message>";
+
+Message::Message(const std::string &from,
+				 const std::string &forUser,
+				 const std::string &summary,
+				 const std::string &toService,
+				 const std::string &toVersion) 
+{	
+	itsQpidMsg.setContent(formatString(LOFAR_MSG_TEMPLATE.c_str(), toService.c_str(), toVersion.c_str(),
+										from.c_str(), forUser.c_str(), "", "", summary.c_str(), "%s"));
+
+	cout << itsQpidMsg.getContent() << endl;
+}
+
+Message::Message(const qpid::messaging::Message &qpidMsg)
+{
+	itsQpidMsg.setContent(formatString(LOFAR_MSG_TEMPLATE.c_str(), "", "",
+										"", "", "", "", "", qpidMsg.getContent().c_str()));
+	cout << itsQpidMsg.getContent() << endl;
+}
+
+
+// Read a message from disk (header + payload)
+Message::Message(const std::string &rawContent)
+{
+	itsQpidMsg.setContent(rawContent);
+	cout << itsQpidMsg.getContent() << endl;
+}
+
+Message::~Message()
+{}
+
+void Message::setXMLPayload (const std::string         &payload)
+{
+
+}
+
+void Message::setTXTPayload (const std::string         &payload)
+{
+	itsQpidMsg.setContent(formatString(itsQpidMsg.getContent().c_str(), payload.c_str()));
+	cout << itsQpidMsg.getContent() << endl;
+}
+
+void Message::setMapPayload (const qpid::types::Variant::Map  &payload)
+{
+
+}
+
+void Message::setListPayload(const qpid::types::Variant::List &payload)
+{
+
+}
+
+// Return properties of the constructed or received message
+std::string Message::system() const
+{
+	return "???";
+}
+
+std::string Message::headerVersion() const
+{
+	return "???";
+}
+
+std::string Message::payload() const
+{
+	return "???";
+}
+
+std::string Message::from() const
+{
+	return "???";
+}
+
+std::string Message::forUser() const
+{
+	return "???";
+}
+
+std::string Message::summary() const
+{
+	return "???";
+}
+
+std::string Message::toService() const
+{
+	return "???";
+}
+
+std::string Message::toVersion() const
+{
+	return "???";
+}
+
+
+} // namespace LOFAR

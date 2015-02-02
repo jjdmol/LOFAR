@@ -4,7 +4,8 @@ include(LofarPackageVersion)
 
 set(messagebus_LIB_SRCS
   Package__Version.cc
-  MsgBus.cc)
+  MsgBus.cc
+  Message.cc)
 
 set(messagebus_PROGRAMS
 )
