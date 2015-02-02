@@ -71,7 +71,10 @@ public:
 
   void send(const std::string &msg);
 };
+
+} // namespace LOFAR
+
 #endif
-}
+
 #endif
 
