@@ -110,6 +110,11 @@ namespace LOFAR {
     itsSender.send(tosend,true);
   }
 
+  void ToBus::send(const Message& msg)
+  {
+    itsSender.send(msg,true);
+  }
+
 } // namespace LOFAR
 
 #endif

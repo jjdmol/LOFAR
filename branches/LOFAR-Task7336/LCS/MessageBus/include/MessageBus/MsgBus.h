@@ -70,6 +70,7 @@ public:
   ~ToBus(void);
 
   void send(const std::string &msg);
+  void send(const qpid::messaging::Message &msg);
 };
 
 } // namespace LOFAR
