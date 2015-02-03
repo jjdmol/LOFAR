@@ -56,8 +56,11 @@ public:
     "1.0.0")
   {
     setXMLPayload(formatString(
-      "<task>%s</task>",
-      success ? "FINISHED" : "ABORT"));
+      "<task>
+        <type>observation</type>
+        <state>%s</state>
+      </task>",
+      success ? "finished" : "aborted"));
   }
 
   // Parse a message
