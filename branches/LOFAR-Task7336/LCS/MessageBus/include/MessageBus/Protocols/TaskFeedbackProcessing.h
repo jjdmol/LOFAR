@@ -1,4 +1,4 @@
-//# TaskFeedbackDataproducts.h: Protocol for emission of dataproducts feedback information
+//# TaskFeedbackProcessing.h: Protocol for emission of processing feedback information
 //#
 //# Copyright (C) 2015
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MESSAGEBUS_TASK_FEEDBACK_DATAPRODUCTS_H
-#define LOFAR_MESSAGEBUS_TASK_FEEDBACK_DATAPRODUCTS_H
+#ifndef LOFAR_MESSAGEBUS_TASK_FEEDBACK_PROCESSING_H
+#define LOFAR_MESSAGEBUS_TASK_FEEDBACK_PROCESSING_H
 
 #ifdef HAVE_QPID
 #include <MessageBus/Message.h>
@@ -31,10 +31,10 @@ namespace LOFAR {
 
 namespace Protocols {
 
-class TaskFeedbackDataproducts: public Message
+class TaskFeedbackProcessing: public Message
 {
 public:
-  TaskFeedbackDataproducts(
+  TaskFeedbackProcessing(
     // Name of the service or process producing this message
     const std::string &from,
 
@@ -51,7 +51,7 @@ public:
     from,
     forUser,
     summary,
-    "lofar.task.feedback.dataproducts",
+    "lofar.task.feedback.processing",
     "1.0.0")
   {
     std::string buffer;
@@ -61,14 +61,14 @@ public:
   }
 
   // Parse a message
-  TaskFeedbackDataproducts(const qpid::messaging::Message qpidMsg)
+  TaskFeedbackProcessing(const qpid::messaging::Message qpidMsg)
   :
     Message(qpidMsg)
   {
   }
 
   // Read a message from disk (header + payload)
-  TaskFeedbackDataproducts(const std::string &rawContent)
+  TaskFeedbackProcessing(const std::string &rawContent)
   :
     Message(rawContent)
   {

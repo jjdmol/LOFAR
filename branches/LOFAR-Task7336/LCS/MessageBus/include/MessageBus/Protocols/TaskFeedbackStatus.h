@@ -1,4 +1,4 @@
-//# TaskFeedbackDataproducts.h: Protocol for emission of dataproducts feedback information
+//# TaskFeedbackStatus.h: Protocol for emission of status feedback information
 //#
 //# Copyright (C) 2015
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -20,21 +20,22 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MESSAGEBUS_TASK_FEEDBACK_DATAPRODUCTS_H
-#define LOFAR_MESSAGEBUS_TASK_FEEDBACK_DATAPRODUCTS_H
+#ifndef LOFAR_MESSAGEBUS_TASK_FEEDBACK_STATUS_H
+#define LOFAR_MESSAGEBUS_TASK_FEEDBACK_STATUS_H
 
 #ifdef HAVE_QPID
 #include <MessageBus/Message.h>
 #include <Common/ParameterSet.h>
+#include <Common/StringUtil.h>
 
 namespace LOFAR {
 
 namespace Protocols {
 
-class TaskFeedbackDataproducts: public Message
+class TaskFeedbackStatus: public Message
 {
 public:
-  TaskFeedbackDataproducts(
+  TaskFeedbackStatus(
     // Name of the service or process producing this message
     const std::string &from,
 
@@ -44,31 +45,30 @@ public:
     // Human-readable summary describing this request
     const std::string &summary,
 
-    // Payload: a parset containing the generated feedback
-    const ParameterSet &feedback
+    // Payload: a boolean indicating success
+    bool success;
   ):
   Message(
     from,
     forUser,
     summary,
-    "lofar.task.feedback.dataproducts",
+    "lofar.task.feedback.status",
     "1.0.0")
   {
-    std::string buffer;
-
-    feedback.writeBuffer(buffer);
-    setTXTPayload(buffer);
+    setXMLPayload(formatString(
+      "<task>%s</task>",
+      status ? "FINISHED" : "ABORT");
   }
 
   // Parse a message
-  TaskFeedbackDataproducts(const qpid::messaging::Message qpidMsg)
+  TaskFeedbackStatus(const qpid::messaging::Message qpidMsg)
   :
     Message(qpidMsg)
   {
   }
 
   // Read a message from disk (header + payload)
-  TaskFeedbackDataproducts(const std::string &rawContent)
+  TaskFeedbackStatus(const std::string &rawContent)
   :
     Message(rawContent)
   {
