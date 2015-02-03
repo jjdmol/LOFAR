@@ -15,26 +15,9 @@
       </request>
    </header>
    <payload>
-<task>ABORT</task>
-   </payload>
-</message>
-<message>
-   <header>
-      <system>LOFAR</system>
-      <version>1.0.0</version>
-      <service>
-         <name>lofar.task.feedback.status</name>
-         <version>1.0.0</version>
-      </service>
-      <request>
-         <source>Cobalt/GPUProc/sendStatus</source>
-         <user></user>
-         <uuid></uuid>
-         <timestamp></timestamp>
-         <summary>Status feedback</summary>
-      </request>
-   </header>
-   <payload>
-<task>ABORT</task>
+<task>
+  <type>observation</type>
+  <state>finished</state>
+</task>
    </payload>
 </message>
