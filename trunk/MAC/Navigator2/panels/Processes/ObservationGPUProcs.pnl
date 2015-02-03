@@ -18,10 +18,10 @@ PANEL,-1 -1 1200 7500 N "_3DFace" 0
   if (dpExists(activeObsDP)) {
     if (dpConnect(\"updateActiveObservations\", activeObsDP+\":_online.._value\",
                                              activeObsDP+\":_online.._invalid\") == -1) {
-      LOG_ERROR(\"ObservationFlow_cobaltNodeProcesses.pnl:main|Couldn't connect to: \"+activeObsDP);
+      LOG_ERROR(\"ObservationGPUProcs.pnl:main|Couldn't connect to: \"+activeObsDP);
     }
   } else {
-    if (!isStandalone()) LOG_ERROR(\"ObservationFlow_cobaltInputStreams.pnl:main|Couldn't find DP to connect to: \"+activeObsDP);
+    if (!isStandalone()) LOG_ERROR(\"ObservationGPUProcs.pnl:main|Couldn't find DP to connect to: \"+activeObsDP);
   }
 }
 
@@ -53,7 +53,7 @@ void updateActiveObservations(string dp1, dyn_string obs,
   // because CobaltProcesses claim their datapoints when the observation is actually running we need to connect to all these observations
   // and give a signal when the runstate of one of them changes to running to trigger the Cobalt point collection
   
-  LOG_DEBUG(\"ObservationFlow_cobaltInputStreams.pnl:updateActiveObservations|observationList: \"+observationsList);
+  LOG_DEBUG(\"ObservationGPUProcs.pnl:updateActiveObservations|observationList: \"+observationsList);
 
   obsConnections = makeDynString();  
   for (int i = 1; i <= dynlen(observationsList) ; i++) {
@@ -75,7 +75,7 @@ void updateActiveObservations(string dp1, dyn_string obs,
   
   // connect to runState for all active observations  
   if (dynlen(obsConnections) > 0 && dpConnect(\"monitorRunStates\",obsConnections) == -1) {
-    LOG_ERROR(\"ObservationFlow_cobaltInputStreams.pnl:updateActiveObservations|ERROR: couldn't connect to : \"+obsConnections+ \" \" + getLastError());
+    LOG_ERROR(\"ObservationGPUProcs.pnl:updateActiveObservations|ERROR: couldn't connect to : \"+obsConnections+ \" \" + getLastError());
   } else if (dynlen(obsConnections) > 0) {
     oldObsConnections = obsConnections;
   }     
@@ -90,25 +90,15 @@ void monitorRunStates(dyn_string dpList,dyn_string runStates) {
   }
 }
 
-
-
-
 void prepareProcesses() {
   dyn_string result;
-  string connectTo=\"LOFAR_PermSW\";
-  dynAppend(result,\",PermSW,\"+connectTo);    
 
-  for  (int i=1; i<= dynlen(inputBuffers); i++) {
-    dyn_string splitted = strsplit(inputBuffers[i],\"_\");
-    dynAppend(result,\"LOFAR_PermSW,\"+splitted[3]+\",\"+connectTo+\"_\"+splitted[3]);
-    dynAppend(result,connectTo+\"_\"+splitted[3]+\",CobaltStationInput,\"+connectTo+\"_\"+splitted[3]+\"_CobaltStationInput\");
-    dynAppend(g_processesList,inputBuffers[i]);
-  }  
+  g_processesList = gpuProcs;
   
   // write result to the db so various panels can reset themselves  
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",result);
   
-  LOG_DEBUG(\"ObservationInputBuffers.pnl:prepareProcesses|processList found: \"+ result);      
+  LOG_DEBUG(\"ObservationGPUProcs.pnl:prepareProcesses|processList found: \"+ g_processesList);      
 }
 
 //
@@ -116,14 +106,14 @@ void prepareProcesses() {
 // If there is an action required this point will tell so
 //
 void doAction(string aDP, string anAction) {
-  LOG_DEBUG(\"ObservationInputBuffers.pnl:doAction| Action required. found: \" + anAction);
+  LOG_DEBUG(\"ObservationGPUProcs.pnl:doAction| Action required. found: \" + anAction);
   // split action into essentials
   dyn_string actionString;
   if (!navFunct_splitAction(anAction,actionString)) {
     return;
   }
   
-  LOG_DEBUG(\"ObservationInputBuffers.pnl:doAction|found actionString: \" + actionString);
+  LOG_DEBUG(\"ObservationGPUProcs.pnl:doAction|found actionString: \" + actionString);
   
   // Reload
   if (actionString[1] == \"Reload\") {
@@ -135,7 +125,7 @@ void reload() {
   
   navFunct_clearGlobalLists();
  
-  addInputBuffers();
+  addGPUProcs();
  
   // set the observation selectable items
   prepareProcesses();
@@ -146,23 +136,25 @@ void reload() {
   g_objectReady=true;
   
   // trigger that the panel values are calculated and ready
-  navPanel_setEvent(\"ObservationInputBuffers.pnl\",\"Update\");
+  navPanel_setEvent(\"ObservationGPUProcs.pnl\",\"Update\");
 }
 
-void addInputBuffers() {
+void addGPUProcs() {
 
-  // get all the InputBuffers used for all active observations
-  dynClear(inputBuffers);
+  // get all the GPUProcs used for all active observations
+  dynClear(gpuProcs);
   for (int i =1; i <= dynlen(obsConnections); i++) {
   
     string observation = claimManager_realNameToName(obsConnections[i]);
     
-    dyn_string ib = navFunct_getStationInputForObservation(navFunct_observationNameToNumber(observation));  
+    dyn_string ib = navFunct_getGPUProcsForObservation(navFunct_observationNameToNumber(observation));  
   
-    dynAppend(inputBuffers,ib);
+    dynAppend(gpuProcs,ib);
   }
-  dynSort(inputBuffers);
-}" 0
+  dynSort(gpuProcs);
+}
+
+" 0
  E E E E 1 -1 -1 0  0 0
 ""0  1
 E "#uses \"navPanel.ctl\"
@@ -172,64 +164,62 @@ dyn_string observationsList;
 dyn_string obsConnections;   
 dyn_string oldObsConnections;   // keep copy latest observations to be disconnected when the list changes
 dyn_string activeObservations;
-dyn_string inputBuffers;
 
 string activeObsDP = \"\";
 string database;
 bool selectedObservations=false;
 
+dyn_string gpuProcs;
 bool connected = false;
-dyn_string IBRefNames;
+dyn_string GPURefNames;
 string strModuleName;
 
 
-void clearIBRefNames() {
+void clearGPURefNames() {
   // remove all symbols because new ones will be added
-  for (int i=1; i <= dynlen(IBRefNames); i++) {
-    removeSymbol(strModuleName,\"\",IBRefNames[i]);
+  for (int i=1; i <= dynlen(GPURefNames); i++) {
+    removeSymbol(strModuleName,\"\",GPURefNames[i]);
   }
-  dynClear(IBRefNames);
+  dynClear(GPURefNames);
 }
 
 void redraw() {
   string barColor = \"_3DFace\";
-  if (dynlen(IBRefNames) > 0) {
-    clearIBRefNames();
+  if (dynlen(GPURefNames) > 0) {
+    clearGPURefNames();
   }    
   int xPos_AddSymbol = 0; 
   int yPos_AddSymbol = 0; 
   int ref = 1;
-  string addPanelName    = \"objects/Processes/inputBuffer.pnl\";
-  //loop over list and prepare panel with all inputBuffer objects   
-  for (int i=1; i<= dynlen(inputBuffers); i++) {
+  string addPanelName    = \"objects/Processes/GPUProcDetail.pnl\";
+  //loop over list and prepare panel with all gpuProc objects   
+  for (int i=1; i<= dynlen(gpuProcs); i++) {
     if ((float)i/2. != floor(i/2.)) {
       barColor = \"lightgrey\";
     } else {
       barColor = \"_3DFace\";
     }
-    IBRefNames[ref]=\"IB\"+(ref);
+    GPURefNames[ref]=\"GPU\"+(ref);
       
     if (  addSymbol(  strModuleName,                   // Stay in this modul
                       \"\",                              // Name of this panel
                       addPanelName,                    // Panel to add
-                      IBRefNames[ref],            // Ref of the addedPanel
-                      makeDynString( \"$inputBuffer:\" + inputBuffers[i],
+                      GPURefNames[ref],               // Ref of the addedPanel
+                      makeDynString( \"$gpuProc:\" + gpuProcs[i],
+                                     \"$yPos_AddSymbol:\" + yPos_AddSymbol,
                                      \"$barColor:\"    + barColor) ,     // Define all $values
                       xPos_AddSymbol,                  // Xpos of the AddedSymbol
                       yPos_AddSymbol,                  // Ypos of the AddedSymbol
                       0,                               // angle
                       1    ,1                          // zoomX , zoomY
         ) < 0 ) {
-	  LOG_ERROR(\"ObservationInputBuffers.pnl:redraw|Error Appending inputBuffer for: \" + inputBuffers[i] + \" in this panel.\");
+	  LOG_ERROR(\"ObservationGPUProcs.pnl:redraw|Error Appending inputBuffer for: \" + gpuProcs[i] + \" in this panel.\");
           }
     yPos_AddSymbol += 14;
     ref++;
   }
 
-}
-  
-  
-" 0
+}" 0
  2
 "CBRef" "1"
 "EClose" E

@@ -760,12 +760,12 @@ dyn_string navFunct_dpGetFullPathAsTypes(string aDp){
       
   
   dyn_string splitted = strsplit(dp,"_");
-
   string start;  
   for (int i=1; i <= dynlen(splitted); i++)  {
     start+=splitted[i];
     typePath[i+index] = dpTypeName(systemName+start);
     start+="_";
+    
   }
   
   return typePath;
@@ -1256,6 +1256,8 @@ void navFunct_fillObservationsList() {
     
     // check all available observations
     for (int i = 1; i <= dynlen(g_observations["NAME"]); i++) {
+      // only observations!!
+      if (g_observations["STATIONLIST"][i] == "[]") continue;
       bool found=false;
       string shortObs=g_observations["NAME"][i];
       strreplace(shortObs,"LOFAR_ObsSW_","");
@@ -1715,6 +1717,11 @@ void navFunct_fillProcessesTree() {
     string fullProcessPath=connectTo;
     for (int j=1; j <= dynlen(pathList); j++) {
       fullProcessPath+="_"+pathList[j];
+      if (strpos(pathList[j],"TempObs") > -1) {
+        // Observation found, get real name in stead of Tempname
+        string observation = strsplit(claimManager_realNameToName("LOFAR_ObsSW_"+pathList[j]),"_")[3];
+        pathList[j] = observation;
+      }
       if (!dynContains(result,connectTo+","+pathList[j]+","+fullProcessPath)) {
        dynAppend(result,connectTo+","+pathList[j]+","+fullProcessPath);
       }
@@ -1722,7 +1729,7 @@ void navFunct_fillProcessesTree() {
     }
   }
   
-  LOG_DEBUG("navFunct.ctl:navFunct_fillProcessesTree|result: "+ result);  
+  LOG_DEBUG("navFunct.ctl:navFunct_fillProcessesTree|result: "+ result); 
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".processesList",result);  
 }
 
