@@ -117,7 +117,7 @@ std::ostream& Message::print (std::ostream& os) const
     os << "user           : " << forUser() << endl;
     os << "uuid           : " << uuid() << endl;
     os << "momid          : " << momid() << endl;
-    os << "sasid          : " << sasis() << endl;
+    os << "sasid          : " << sasid() << endl;
     os << "payload        : " << payload() << endl;
 	return (os);
 }

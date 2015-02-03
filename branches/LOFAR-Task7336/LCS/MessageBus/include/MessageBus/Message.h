@@ -93,7 +93,7 @@ public:
   std::string summary() const		  { return (getXMLvalue("message.header.source.summary")); }
   std::string timestamp() const		  { return (getXMLvalue("message.header.source.timestamp")); }
   std::string momid() const			  { return (getXMLvalue("message.header.ids.momid")); }
-  std::string sasis() const			  { return (getXMLvalue("message.header.ids.sasid")); }
+  std::string sasid() const			  { return (getXMLvalue("message.header.ids.sasid")); }
   std::string payload() const		  { return (getXMLvalue("message.payload")); }
   std::string header() const		  { return (getXMLvalue("message.header")); }
 
