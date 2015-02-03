@@ -33,6 +33,7 @@
 #include <DPPP/Simulate.h>
 #include <DPPP/SourceDBUtil.h>
 #include <DPPP/SubtractMixed.h>
+#include <DPPP/MSReader.h>
 
 #include <ParmDB/Axis.h>
 #include <ParmDB/SourceDB.h>
@@ -345,6 +346,8 @@ namespace LOFAR {
         *it++ = itsDefaultGain;
         *it++ = 0.0;
       }
+      // Initialize the flag counters.
+      itsFlagCounter.init (getInfo());
     }
 
     void Demixer::show (std::ostream& os) const
@@ -433,7 +436,8 @@ namespace LOFAR {
       // Update the count.
       itsNTimeIn++;
       // Make sure all required data arrays are filled in.
-      itsBufTmp.referenceFilled (buf);
+      ///      itsBufTmp.referenceFilled (buf);
+      itsBufTmp.copy (buf);
       itsInput->fetchUVW (buf, itsBufTmp, itsTimer);
       itsInput->fetchWeights (buf, itsBufTmp, itsTimer);
       itsInput->fetchFullResFlags (buf, itsBufTmp, itsTimer);
@@ -560,11 +564,15 @@ namespace LOFAR {
       // Let the next step process the data.
       for (uint i=0; i<itsNTimeOutSubtr; ++i) {
         itsTimer.stop();
+        DPBuffer* bufptr;
         if (itsSelBL.hasSelection()) {
-          getNextStep()->process (itsAvgResultFull->get()[i]);
+          bufptr = &(itsAvgResultFull->get()[i]);
         } else {
-          getNextStep()->process (itsAvgResultSubtr->get()[i]);
+          bufptr = &(itsAvgResultSubtr->get()[i]);
         }
+        MSReader::flagInfNaN (bufptr->getData(), bufptr->getFlags(),
+                              itsFlagCounter);
+        getNextStep()->process (*bufptr);
         itsTimer.start();
       }
 
@@ -719,7 +727,7 @@ namespace LOFAR {
           dirnr++;
         }
       }
-      //cout<<"makefactors "<<weightSums<<bufOut;
+      ///cout<<"makefactors "<<weightSums<<bufOut;
     }
 
     void Demixer::deproject (Array<DComplex>& factors,
@@ -834,8 +842,8 @@ namespace LOFAR {
     void Demixer::demix()
     {
       const size_t nThread = OpenMP::maxThreads();
-      const size_t nTime = itsAvgResults[0]->get().size();
-      const size_t nTimeSubtr = itsAvgResultSubtr->get().size();
+      const size_t nTime = itsAvgResults[0]->size();
+      const size_t nTimeSubtr = itsAvgResultSubtr->size();
       const size_t multiplier = itsNTimeAvg / itsNTimeAvgSubtr;
       const size_t nDr = itsNModel;
       const size_t nDrSubtr = itsSubtrSources.size();
@@ -894,14 +902,14 @@ namespace LOFAR {
           const_cursor<double> cr_uvw =
             casa_const_cursor(itsAvgResults[dr]->get()[ts].getUVW());
           splitUVW(nSt, nBl, cr_baseline, cr_uvw, cr_uvw_split);
-          //cout<<"uvw"<<dr<<'='<<storage.uvw<<endl;
+          ///cout<<"uvw"<<dr<<'='<<storage.uvw<<endl;
 
           cursor<dcomplex> cr_model(&(storage.model[dr * nSamples]), 3,
             stride_model);
           simulate(itsPatchList[dr]->position(), itsPatchList[dr], nSt,
             nBl, nCh, cr_baseline, cr_freq, cr_uvw_split, cr_model);
         }
-        //cout<<"modelvis="<<storage.model<<endl;
+        ///cout<<"modelvis="<<storage.model<<endl;
 
         // Estimate Jones matrices.
         //
@@ -917,7 +925,7 @@ namespace LOFAR {
         const_cursor<float> cr_weight =
           casa_const_cursor(itsAvgResults[0]->get()[ts].getWeights());
         const_cursor<dcomplex> cr_mix = casa_const_cursor(itsFactors[ts]);
-        //cout << "demixfactor "<<ts<<" = "<<itsFactors[ts]<<endl;
+        ///cout << "demixfactor "<<ts<<" = "<<itsFactors[ts]<<endl;
 
         vector<const_cursor<fcomplex> > cr_data(nDr);
         vector<const_cursor<dcomplex> > cr_model(nDr);

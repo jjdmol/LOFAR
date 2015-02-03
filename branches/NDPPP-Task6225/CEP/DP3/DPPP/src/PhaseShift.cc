@@ -119,7 +119,8 @@ namespace LOFAR {
     bool PhaseShift::process (const DPBuffer& buf)
     {
       itsTimer.start();
-      itsBuf.referenceFilled (buf);
+      ///itsBuf.referenceFilled (buf);
+      itsBuf.copy (buf);
       itsInput->fetchUVW (buf, itsBuf, itsTimer);
       int ncorr  = itsBuf.getData().shape()[0];
       int nchan  = itsBuf.getData().shape()[1];

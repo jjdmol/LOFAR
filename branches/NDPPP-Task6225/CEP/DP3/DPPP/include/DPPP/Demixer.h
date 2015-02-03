@@ -199,6 +199,7 @@ namespace LOFAR {
       vector<double>                        itsPrevSolution;
       uint                                  itsTimeIndex;
       uint                                  itsNConverged;
+      FlagCounter                           itsFlagCounter;
 
       //# Timers.
       NSTimer                               itsTimer;

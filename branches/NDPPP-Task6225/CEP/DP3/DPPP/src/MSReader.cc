@@ -336,7 +336,8 @@ namespace LOFAR {
     }
 
     void MSReader::flagInfNaN(const casa::Cube<casa::Complex>& dataCube,
-                          casa::Cube<bool>& flagsCube, FlagCounter& flagCounter) {
+                              casa::Cube<bool>& flagsCube,
+                              FlagCounter& flagCounter) {
       int ncorr=dataCube.shape()[0];
       const Complex* dataPtr = dataCube.data();
       bool* flagPtr = flagsCube.data();
