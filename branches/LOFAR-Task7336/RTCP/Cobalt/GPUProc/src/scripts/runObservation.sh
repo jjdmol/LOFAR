@@ -104,9 +104,7 @@ function sendback_status {
     SUCCESS=0
   fi
 
-  send_status $SUCCESS
-
-  return 1
+  send_status "$PARSET" $SUCCESS
 }
 
 #############################

@@ -44,6 +44,10 @@ public:
     // Human-readable summary describing this request
     const std::string &summary,
 
+    // Identifiers for the context of this message
+    const std::string &momID,
+    const std::string &sasID,
+
     // Payload: a parset containing the generated feedback
     const ParameterSet &feedback
   ):
@@ -52,7 +56,9 @@ public:
     forUser,
     summary,
     "lofar.task.feedback.dataproducts",
-    "1.0.0")
+    "1.0.0",
+    momID,
+    sasID)
   {
     std::string buffer;
 

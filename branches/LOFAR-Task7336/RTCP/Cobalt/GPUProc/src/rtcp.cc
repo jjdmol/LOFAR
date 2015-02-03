@@ -604,6 +604,8 @@ int main(int argc, char **argv)
       "Cobalt/GPUProc/rtcp",
       "",
       "Processing feedback",
+      str(format("%s") % ps.settings.momID),
+      str(format("%s") % ps.settings.observationID),
       fb.processingFeedback());
 
     bus.send(msg);

@@ -262,6 +262,8 @@ bool process(Stream &controlStream, unsigned myRank)
         myName,
         "",
         str(boost::format("Feedback for Correlated Data, subband %s") % subbandWriters[i]->streamNr()),
+        str(format("%s") % parset.settings.momID),
+        str(format("%s") % parset.settings.observationID),
         subbandWriters[i]->feedbackLTA());
 
       bus.send(msg);
@@ -272,6 +274,8 @@ bool process(Stream &controlStream, unsigned myRank)
         myName,
         "",
         str(boost::format("Feedback for Beamformed Data, file nr %s") % tabWriters[i]->streamNr()),
+        str(format("%s") % parset.settings.momID),
+        str(format("%s") % parset.settings.observationID),
         tabWriters[i]->feedbackLTA());
 
       bus.send(msg);

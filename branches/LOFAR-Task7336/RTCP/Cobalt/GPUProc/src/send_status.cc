@@ -20,6 +20,7 @@
 
 #include <lofar_config.h>
 
+#include <CoInterface/Parset.h>
 #include <MessageBus/MsgBus.h>
 #include <MessageBus/Protocols/TaskFeedbackStatus.h>
 
@@ -28,12 +29,13 @@
 #include <unistd.h>
 
 using namespace LOFAR;
+using namespace LOFAR::Cobalt;
 using namespace std;
 using boost::format;
 
 static void usage(const char *argv0)
 {
-  cerr << "Usage: " << argv0 << " success" << endl;
+  cerr << "Usage: " << argv0 << " parset success" << endl;
   cerr << endl;
   cerr << "  -h: print this message" << endl;
 }
@@ -58,13 +60,14 @@ int main(int argc, char **argv)
     }
   }
 
-  // we expect a parset filename as an additional parameter
-  if (optind >= argc) {
+  // we expect a parset filename and a success indicator as an additional parameter
+  if (optind + 1 >= argc) {
     usage(argv[0]);
     return EXIT_FAILURE;
   }
 
-  int success = atoi(argv[optind]);
+  Parset parset(argv[optind]);
+  int success = atoi(argv[optind+1]);
 
   // send status feedback
   ToBus bus("lofar.task.feedback.status");
@@ -73,6 +76,8 @@ int main(int argc, char **argv)
     "Cobalt/GPUProc/sendStatus",
     "",
     "Status feedback",
+    str(format("%s") % parset.settings.momID),
+    str(format("%s") % parset.settings.observationID),
     success);
 
   bus.send(msg);

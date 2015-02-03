@@ -80,6 +80,8 @@ namespace LOFAR
                 myName,
                 "",
                 str(boost::format("Feedback for Correlated Data, subband %s") % i),
+                str(format("%s") % itsParset.settings.momID),
+                str(format("%s") % itsParset.settings.observationID),
                 feedback.correlatedFeedback(i));
 
               bus.send(msg);
@@ -93,6 +95,8 @@ namespace LOFAR
                 myName,
                 "",
                 str(boost::format("Feedback for Beamformed Data, file nr %s") % i),
+                str(format("%s") % itsParset.settings.momID),
+                str(format("%s") % itsParset.settings.observationID),
                 feedback.beamFormedFeedback(i));
 
               bus.send(msg);

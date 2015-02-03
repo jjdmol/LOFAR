@@ -45,6 +45,10 @@ public:
     // Human-readable summary describing this request
     const std::string &summary,
 
+    // Identifiers for the context of this message
+    const std::string &momID,
+    const std::string &sasID,
+
     // Payload: a boolean indicating success
     bool success
   ):
@@ -53,7 +57,9 @@ public:
     forUser,
     summary,
     "lofar.task.feedback.status",
-    "1.0.0")
+    "1.0.0",
+    momID,
+    sasID)
   {
     setXMLPayload(formatString(
       "<task>\n"
