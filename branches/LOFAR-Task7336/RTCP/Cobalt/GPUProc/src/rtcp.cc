@@ -52,6 +52,8 @@
 #include <Common/SystemUtil.h>
 #include <Common/StringUtil.h>
 #include <Common/Thread/Trigger.h>
+#include <MessageBus/MsgBus.h>
+#include <MessageBus/Protocols/TaskFeedbackProcessing.h>
 #include <ApplCommon/PVSSDatapointDefs.h>
 #include <ApplCommon/StationInfo.h>
 #include <MACIO/RTmetadata.h>
@@ -593,31 +595,18 @@ int main(int argc, char **argv)
     // graceful exit
     storageProcesses->stop(time(0) + outputProcTimeout);
 
-    LOG_INFO("Writing LTA feedback to disk");
+    // send processing feedback
+    ToBus bus("lofar.task.feedback.processing");
 
-    // obtain LTA feedback
     LTAFeedback fb(ps.settings);
-    Parset feedbackLTA;
 
-    // augment LTA feedback with global information
-    feedbackLTA.adoptCollection(fb.allFeedback());
+    Protocols::TaskFeedbackProcessing msg(
+      "Cobalt/GPUProc/rtcp",
+      "",
+      "Processing feedback",
+      fb.processingFeedback());
 
-    // process updates from outputProc
-    feedbackLTA.adoptCollection(storageProcesses->feedbackLTA());
-
-    // write LTA feedback to disk
-    const char *LOFARROOT = getenv("LOFARROOT");
-    if (LOFARROOT != NULL) {
-      string feedbackFilename = str(format("%s/var/run/Observation%s_feedback") % LOFARROOT % ps.settings.observationID);
-
-      try {
-        feedbackLTA.writeFile(feedbackFilename, false);
-      } catch (APSException &ex) {
-        LOG_ERROR_STR("Could not write feedback file " << feedbackFilename << ": " << ex);
-      }
-    } else {
-      LOG_WARN("Could not write feedback file: $LOFARROOT not set.");
-    }
+    bus.send(msg);
 
     // final cleanup
     storageProcesses = 0;

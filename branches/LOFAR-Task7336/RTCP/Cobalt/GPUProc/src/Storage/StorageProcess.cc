@@ -28,8 +28,11 @@
 
 #include <Common/LofarLogger.h>
 #include <Common/Thread/Thread.h>
+#include <MessageBus/MsgBus.h>
+#include <MessageBus/Protocols/TaskFeedbackDataproducts.h>
 #include <Stream/PortBroker.h>
 #include <CoInterface/Stream.h>
+#include <CoInterface/LTAFeedback.h>
 
 namespace LOFAR
 {
@@ -45,7 +48,9 @@ namespace LOFAR
       itsParset(parset),
       itsLogPrefix(str(boost::format("%s [StorageWriter rank %2d host %s] ") % logPrefix % rank % hostname)),
       itsRank(rank),
-      itsHostname(hostname)
+      itsHostname(hostname),
+      itsSentFeedback(false),
+      itsSuccessful(false)
     {
     }
 
@@ -57,6 +62,42 @@ namespace LOFAR
       // stop immediately
       struct timespec immediately = { 0, 0 };
       stop(immediately);
+
+      if (!itsSentFeedback) {
+        // send default LTA feedback for this host
+        ToBus bus("lofar.task.feedback.dataproducts");
+
+        const std::string myName = "Cobalt/GPUProc/Storage/StorageProcess";
+
+        LTAFeedback feedback(itsParset.settings);
+
+        if (itsParset.settings.correlator.enabled)
+          for (size_t i = 0; i < itsParset.settings.correlator.files.size(); ++i) {
+            LOG_INFO_STR(itsParset.settings.correlator.files[i].location.host << " == " << itsHostname);
+
+            if (itsParset.settings.correlator.files[i].location.host == itsHostname) {
+              Protocols::TaskFeedbackDataproducts msg(
+                myName,
+                "",
+                str(boost::format("Feedback for Correlated Data, subband %s") % i),
+                feedback.correlatedFeedback(i));
+
+              bus.send(msg);
+            }
+        }
+
+        if (itsParset.settings.beamFormer.enabled)
+          for (size_t i = 0; i < itsParset.settings.beamFormer.files.size(); ++i)
+            if (itsParset.settings.beamFormer.files[i].location.host == itsHostname) {
+              Protocols::TaskFeedbackDataproducts msg(
+                myName,
+                "",
+                str(boost::format("Feedback for Beamformed Data, file nr %s") % i),
+                feedback.beamFormedFeedback(i));
+
+              bus.send(msg);
+            }
+      }
     }
 
 
@@ -82,6 +123,12 @@ namespace LOFAR
     }
 
 
+    bool StorageProcess::isSuccesful() const
+    {
+      return itsSuccessful;
+    }
+
+
     bool StorageProcess::isDone() const
     {
       return itsThread->isDone();
@@ -92,15 +139,6 @@ namespace LOFAR
     {
       itsFinalMetaData = finalMetaData;
       itsFinalMetaDataAvailable.up();
-    }
-
-
-    ParameterSet StorageProcess::feedbackLTA() const
-    {
-      // Prevent read/write conflicts
-      ASSERT(isDone());
-
-      return itsFeedbackLTA;
     }
 
 
@@ -123,12 +161,11 @@ namespace LOFAR
       itsFinalMetaData.write(stream);
       LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sent final meta data");
 
-      // Wait for LTA feedback
-      LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] reading LTA feedback");
-      ParameterSet feedbackLTA;
-      readParameterSet(stream, feedbackLTA);
-      itsFeedbackLTA.adoptCollection(feedbackLTA);
-      LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] read LTA feedback");
+      // Wait for OutputProc to finish
+      LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] waiting to finish");
+      stream.read(&itsSentFeedback, sizeof itsSentFeedback);
+      stream.read(&itsSuccessful, sizeof itsSuccessful);
+      LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] finished");
     }
 
   }

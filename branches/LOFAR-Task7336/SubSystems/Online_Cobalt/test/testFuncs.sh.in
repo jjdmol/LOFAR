@@ -13,9 +13,23 @@ error()
 # Set LOFARROOT and other LOFAR env vars into install directory (var is always set).
 . "@CMAKE_INSTALL_PREFIX@/lofarinit.sh" || error "Could not load our lofarinit.sh -- did you run 'make install'?"
 
+HAVE_QPID="@HAVE_QPID@"
+
 # Create runtime output directories if not exists.
 # Not done at build, because it is a post-install setting. Different in production.
 mkdir -p "$LOFARROOT/var/log" "$LOFARROOT/var/run" || error "Failed to create runtime output directories"
 
 # Set all locales to "C" to avoid problems with, e.g., perl.
 export LC_ALL="C"
+
+# Clear all used QPID queues to prevent leakage from previous tests
+echo "Clearing QPID queues (if they exist, so ignore any errors regarding that)..."
+
+QUEUES="
+  lofar.task.feedback.status
+  lofar.task.feedback.dataproducts
+  lofar.task.feedback.processing"
+for Q in $QUEUES; do
+  qpid-receive --print-content no --ignore-reply-to -b 127.0.0.1 -a $Q >/dev/null 2>&1
+done
+
