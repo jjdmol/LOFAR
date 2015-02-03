@@ -46,7 +46,7 @@ public:
     const std::string &summary,
 
     // Payload: a boolean indicating success
-    bool success;
+    bool success
   ):
   Message(
     from,
@@ -57,7 +57,7 @@ public:
   {
     setXMLPayload(formatString(
       "<task>%s</task>",
-      status ? "FINISHED" : "ABORT");
+      success ? "FINISHED" : "ABORT"));
   }
 
   // Parse a message
