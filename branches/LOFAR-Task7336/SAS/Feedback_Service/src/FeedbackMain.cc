@@ -37,7 +37,7 @@ Exception::TerminateHandler t(Exception::terminate);
 int main(int argc, char* argv[])
 {
 	try {
-		GCFScheduler::instance()->init(argc, argv, argv[1]);
+		GCFScheduler::instance()->init(argc, argv, "FeedbackService");
 
 		Feedback	fbTask;
 		fbTask.start(); 					// make initial transition

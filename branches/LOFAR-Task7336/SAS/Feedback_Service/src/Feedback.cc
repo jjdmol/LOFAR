@@ -38,7 +38,6 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 using namespace boost::posix_time;
 
-using namespace qpid::messaging;
 namespace LOFAR {
   using namespace OTDB;
   using namespace GCF::TM;
@@ -67,8 +66,8 @@ Feedback::Feedback() :
 	ASSERTSTR(!queuenames.empty(), "Queuenames not specified in label 'FeedbackQueuenames'");
 
 	// connect to bussystem
-	itsMsgQueue = new FromBus();
-	for (size_t i = 0; i < queuenames.size(); ++i) {
+	itsMsgQueue = new FromBus(queuenames[0]);
+	for (size_t i = 1; i < queuenames.size(); ++i) {
 		itsMsgQueue->addQueue(queuenames[i]);
 	}
 
@@ -176,13 +175,13 @@ GCFEvent::TResult Feedback::operational_state(GCFEvent& event, GCFPortInterface&
 		}
 
 		// Yeah, still connected.
-		if (passKVpairsToOTDB(msg.getContent())) {
+		if (passKVpairsToOTDB(atoi(msg.sasid().c_str()), msg.payload())) {
 			itsMsgQueue->ack(msg);
-			LOG_DEBUG_STR("@@@");
+			LOG_DEBUG("Message processed successful");
 		}
 		else {
 			itsMsgQueue->reject(msg);
-			LOG_ERROR_STR("@@@");
+			LOG_DEBUG("Message rejected");
 		}
 		itsTimer->setTimer(0.0);
 	} break;
@@ -201,56 +200,61 @@ GCFEvent::TResult Feedback::operational_state(GCFEvent& event, GCFPortInterface&
 //
 // Handler for procssing the messages that are received on the bus.
 //
-bool Feedback::passKVpairsToOTDB(const string&	content)
+bool Feedback::passKVpairsToOTDB(int	obsID, const string&	content)
 {
-	int			obsID; // (getObservationNr(getName()));	// TODO
-	TreeValue   tv(itsOTDBconn, obsID);
+	try {
+		TreeValue   tv(itsOTDBconn, obsID);
 
-	// read parameterset
-	ParameterSet	metadata;
-	metadata.adoptBuffer(content);
+		// read parameterset
+		ParameterSet	metadata;
+		metadata.adoptBuffer(content);
 
-	// Loop over the parameterset and send the information to the SAS database
-	// During the transition phase from parameter-based to record-based storage in OTDB the
-	// nodenames ending in '_' are implemented both as parameter and as record.
-	ParameterSet::iterator		iter = metadata.begin();
-	ParameterSet::iterator		end  = metadata.end();
-	while (iter != end) {
-		string	key(iter->first);	// make destoyable copy
-		rtrim(key, "[]0123456789");
-//		bool	doubleStorage(key[key.size()-1] == '_');
-		bool	isRecord(iter->second.isRecord());
-		//   isRecord  doubleStorage
-		// --------------------------------------------------------------
-		//      Y          Y           store as record and as parameters
-		//      Y          N           store as parameters
-		//      N          *           store parameter
-		if (!isRecord) {
-			LOG_DEBUG_STR("BASIC: " << iter->first << " = " << iter->second);
-			tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
-		}
-		else {
-//			if (doubleStorage) {
-//				LOG_DEBUG_STR("RECORD: " << iter->first << " = " << iter->second);
-//				tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
-//			}
-			// to store is a node/param values the last _ should be stipped of
-			key = iter->first;		// destroyable copy
-//			string::size_type pos = key.find_last_of('_');
-//			key.erase(pos,1);
-			ParameterRecord	pr(iter->second.getRecord());
-			ParameterRecord::const_iterator	prIter = pr.begin();
-			ParameterRecord::const_iterator	prEnd  = pr.end();
-			while (prIter != prEnd) {
-				LOG_DEBUG_STR("ELEMENT: " << key+"."+prIter->first << " = " << prIter->second);
-				tv.addKVT(key+"."+prIter->first, prIter->second, ptime(microsec_clock::local_time()));
-				prIter++;
+		// Loop over the parameterset and send the information to the SAS database
+		// During the transition phase from parameter-based to record-based storage in OTDB the
+		// nodenames ending in '_' are implemented both as parameter and as record.
+		ParameterSet::iterator		iter = metadata.begin();
+		ParameterSet::iterator		end  = metadata.end();
+		while (iter != end) {
+			string	key(iter->first);	// make destoyable copy
+			rtrim(key, "[]0123456789");
+	//		bool	doubleStorage(key[key.size()-1] == '_');
+			bool	isRecord(iter->second.isRecord());
+			//   isRecord  doubleStorage
+			// --------------------------------------------------------------
+			//      Y          Y           store as record and as parameters
+			//      Y          N           store as parameters
+			//      N          *           store parameter
+			if (!isRecord) {
+				LOG_DEBUG_STR("BASIC: " << iter->first << " = " << iter->second);
+				tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
 			}
+			else {
+	//			if (doubleStorage) {
+	//				LOG_DEBUG_STR("RECORD: " << iter->first << " = " << iter->second);
+	//				tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
+	//			}
+				// to store is a node/param values the last _ should be stipped of
+				key = iter->first;		// destroyable copy
+	//			string::size_type pos = key.find_last_of('_');
+	//			key.erase(pos,1);
+				ParameterRecord	pr(iter->second.getRecord());
+				ParameterRecord::const_iterator	prIter = pr.begin();
+				ParameterRecord::const_iterator	prEnd  = pr.end();
+				while (prIter != prEnd) {
+					LOG_DEBUG_STR("ELEMENT: " << key+"."+prIter->first << " = " << prIter->second);
+					tv.addKVT(key+"."+prIter->first, prIter->second, ptime(microsec_clock::local_time()));
+					prIter++;
+				}
+			}
+			iter++;
 		}
-		iter++;
+		LOG_INFO_STR(metadata.size() << " metadata values send to SAS");
+		return (true);
 	}
-	LOG_INFO_STR(metadata.size() << " metadata values send to SAS");
-	return (true);
+	catch (Exception &ex) {
+		LOG_FATAL_STR(ex.what());
+	}
+	return (false);
 }
 
 

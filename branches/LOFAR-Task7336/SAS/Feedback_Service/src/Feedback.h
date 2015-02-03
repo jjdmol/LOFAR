@@ -62,7 +62,7 @@ public:
 private:
 	GCFEvent::TResult	connect2OTDB_state(GCFEvent& e, GCFPortInterface& p);
 	GCFEvent::TResult	operational_state (GCFEvent& e, GCFPortInterface& p);
-	bool passKVpairsToOTDB(const string&	content);
+	bool passKVpairsToOTDB(int obsID, const string&	content);
 
 	// Copying is not allowed
 	Feedback(const Feedback&	that);
