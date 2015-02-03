@@ -56,10 +56,10 @@ public:
     "1.0.0")
   {
     setXMLPayload(formatString(
-      "<task>
-        <type>observation</type>
-        <state>%s</state>
-      </task>",
+      "<task>\n"
+      "  <type>observation</type>\n"
+      "  <state>%s</state>\n"
+      "</task>",
       success ? "finished" : "aborted"));
   }
 
