@@ -78,6 +78,17 @@ int main(int argc, char* argv[]) {
 	string	KVmapje("abc=[aap,noot,mies]\nmyInteger=5\nmyDouble=3.14");
 	msg1.setTXTPayload(KVmapje);
 
+	cout << "system         : " << msg1.system() << endl;
+	cout << "systemversion  : " << msg1.headerVersion() << endl;
+	cout << "serviceName    : " << msg1.toService() << endl;
+	cout << "serviceVersion : " << msg1.toVersion() << endl;
+	cout << "summary        : " << msg1.summary() << endl;
+	cout << "timestamp      : " << msg1.timestamp() << endl;
+	cout << "source         : " << msg1.from() << endl;
+	cout << "user           : " << msg1.forUser() << endl;
+	cout << "uuid           : " << msg1.uuid() << endl;
+	cout << "payload        : " << msg1.payload() << endl;
+
 
 
 	return (0);

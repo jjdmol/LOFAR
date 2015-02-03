@@ -26,9 +26,11 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_string.h>
+#include <Common/StringUtil.h>
 #include <MessageBus/Message.h>
 
 namespace LOFAR {
+  using namespace StringUtil;
 
 const string LOFAR_MSG_TEMPLATE = "\
 <message>\n\
@@ -64,10 +66,9 @@ Message::Message(const std::string &from,
 	cout << itsQpidMsg.getContent() << endl;
 }
 
-Message::Message(const qpid::messaging::Message &qpidMsg)
+Message::Message(const qpid::messaging::Message &qpidMsg) :
+	itsQpidMsg(qpidMsg)
 {
-	itsQpidMsg.setContent(formatString(LOFAR_MSG_TEMPLATE.c_str(), "", "",
-										"", "", "", "", "", qpidMsg.getContent().c_str()));
 	cout << itsQpidMsg.getContent() << endl;
 }
 
@@ -103,45 +104,33 @@ void Message::setListPayload(const qpid::types::Variant::List &payload)
 
 }
 
-// Return properties of the constructed or received message
-std::string Message::system() const
+string Message::getXMLvalue(const string& key) const
 {
-	return "???";
-}
+	// get copy of content
+	vector<string>	labels = split(key, '.');
+	string			content(itsQpidMsg.getContent());
 
-std::string Message::headerVersion() const
-{
-	return "???";
-}
-
-std::string Message::payload() const
-{
-	return "???";
-}
-
-std::string Message::from() const
-{
-	return "???";
-}
-
-std::string Message::forUser() const
-{
-	return "???";
-}
-
-std::string Message::summary() const
-{
-	return "???";
-}
-
-std::string Message::toService() const
-{
-	return "???";
-}
-
-std::string Message::toVersion() const
-{
-	return "???";
+	// loop over subkeys
+	string::size_type	offset = 0;
+	string::size_type	begin;
+	string::size_type	end;
+	for (size_t i = 0; i <  labels.size(); ++i) {
+		// define tags to find
+		string startTag("<"+labels[i]+">");
+		string stopTag ("</"+labels[i]+">");
+		// search begin tag
+		begin  = content.find(startTag, offset);
+		if (begin == string::npos) {
+			return ("???");
+		}
+		// search end tag
+		begin+=startTag.size();
+		end = content.find(stopTag, begin);
+		if (end == string::npos) {
+			return ("???");
+		}
+	}
+	return (content.substr(begin, end - begin));
 }
 
 

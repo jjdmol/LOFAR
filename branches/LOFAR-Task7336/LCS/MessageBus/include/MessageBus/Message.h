@@ -74,14 +74,16 @@ public:
   virtual ~Message();
 
   // Return properties of the constructed or received message
-  std::string system() const;
-  std::string headerVersion() const;
-  std::string payload() const;
-  std::string from() const;
-  std::string forUser() const;
-  std::string summary() const;
-  std::string toService() const;
-  std::string toVersion() const;
+  std::string system() const		{ return (getXMLvalue("message.header.system")); }
+  std::string headerVersion() const { return (getXMLvalue("message.header.version")); }
+  std::string payload() const		{ return (getXMLvalue("message.payload")); }
+  std::string from() const			{ return (getXMLvalue("message.header.request.source")); }
+  std::string forUser() const		{ return (getXMLvalue("message.header.request.user")); }
+  std::string uuid() const			{ return (getXMLvalue("message.header.request.uuid")); }
+  std::string summary() const		{ return (getXMLvalue("message.header.request.summary")); }
+  std::string timestamp() const		{ return (getXMLvalue("message.header.request.timestamp")); }
+  std::string toService() const		{ return (getXMLvalue("message.header.service.name")); }
+  std::string toVersion() const		{ return (getXMLvalue("message.header.service.version")); }
 
   // Construct the given fields as a QPID message
   qpid::messaging::Message getQpidMsg() const { return (itsQpidMsg); }
@@ -90,6 +92,9 @@ public:
   std::string getRawContent() const { return (itsQpidMsg.getContent()); }
 
 private:
+  // Internal very simple XML parser to get a key from the XML content.
+  string getXMLvalue(const string& key) const;
+
   // datamembers
   qpid::messaging::Message itsQpidMsg;
 };
