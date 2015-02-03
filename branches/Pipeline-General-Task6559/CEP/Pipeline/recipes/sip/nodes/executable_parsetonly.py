@@ -27,28 +27,18 @@ class executable_parsetonly(LOFARnodeTCP):
     Call an executable with a parset augmented with locally calculate parameters:
     """
 
-    def run(self, infile, outfile,
-            parsetfile, executable, inputkey, outputkey, environment):
+    def run(self, infile, executable, parset, parsetname, work_dir, environment):
         """
         This function contains all the needed functionality
         """
         # Debugging info
         self.logger.debug("infile          = %s" % infile)
-        self.logger.debug("outfile         = %s" % outfile)
-        self.logger.debug("parsetfile      = %s" % parsetfile)
-        self.logger.debug("inputkey        = %s" % inputkey)
-        self.logger.debug("outputkey       = %s" % outputkey)
         self.logger.debug("executable      = %s" % executable)
+        self.logger.debug("parsetname      = %s" % parsetname)
+        self.logger.debug("working directory = %s" % work_dir)
         self.logger.debug("environment     = %s" % environment)
 
         self.environment.update(environment)
-
-        # ********************************************************************
-        # preparations. Validate input, clean workspace
-        #
-        if not outfile:
-            outfile = infile
-        tmpfile = outfile + '.tmp'
 
         # Time execution of this job
         with log_time(self.logger):
@@ -63,96 +53,39 @@ class executable_parsetonly(LOFARnodeTCP):
                 self.logger.error("Executable %s not found" % executable)
                 return 1
 
-            # Make sure that we start with a clean slate
-            shutil.rmtree(tmpfile, ignore_errors=True)
+            if not os.path.isdir(work_dir):
+                os.mkdir(work_dir)
+            nodeparset = Parset()
+            for k, v in parset.items():
+                #print k,' node ',v
+                nodeparset.add(k, v)
+            #print parsetname
+            nodeparset.writeFile(parsetname)
 
-            # *****************************************************************
-            # Perform house keeping, test if work is already done
-            # If input and output files are different, and if output file
-            # already exists, then we're done.
-            if outfile != infile and os.path.exists(outfile):
-                self.logger.info(
-                    "Output file %s already exists. We're done." % outfile
-                )
-                self.outputs['ok'] = True
-                return 0
-
-            # Create a working copy if input and output are identical, to
-            # avoid corrupting the original file if things go awry.
-            if outfile == infile:
-                self.logger.info(
-                    "Creating working copy: %s --> %s" % (infile, tmpfile)
-                )
-                shutil.copytree(infile, tmpfile)
-
-            # *****************************************************************
-            # 3. Update the parset with locally calculate information
-
-            # Put arguments we need to pass to some private methods in a dict
-            kwargs = {
-                'infile': infile,
-                #'tmpfile': tmpfile,
-                'tmpfile': outfile,
-                'parsetfile': parsetfile,
-                'inputkey': inputkey,
-                'outputkey': outputkey
-            }
-
-            # Prepare for the actual run.
-            with patched_parset(
-            # *****************************************************************
-            # 4. Add ms names to the parset, start/end times if availabe, etc.
-                parsetfile, self._prepare_steps(**kwargs)
-            ) as temp_parset_filename:
-                self.logger.debug("Created temporary parset file: %s" %
-                    temp_parset_filename
-                )
-                try:
-                    # Create output directory for output MS.
-                    create_directory(os.path.dirname(outfile))
-                    #working_dir = tempfile.mkdtemp()
-                    working_dir = os.path.dirname(outfile)
+            try:
             # ****************************************************************
-            # 5. Run
-                    cmd = [executable, temp_parset_filename]# + ' '+os.environ.get('HOME')]# +' > ' + tmpfile]
-                    with CatchLog4CPlus(
-                        working_dir,
-                        self.logger.name + "." + os.path.basename(infile),
-                        os.path.basename(executable),
-                    ) as logger:
-                        # Catch segfaults and retry
-
-                        catch_segfaults(
-                            cmd, working_dir, self.environment, logger,
-                            cleanup=lambda : shutil.rmtree(tmpfile, ignore_errors=True)
-                        )
-                        # Rename tmpfile to outfile with the updated working copy
-                        #os.rename(tmpfile, outfile)
-                except CalledProcessError, err:
-                    # CalledProcessError isn't properly propagated by IPython
-                    self.logger.error(str(err))
-                    return 1
-                except Exception, err:
-                    self.logger.error(str(err))
-                    return 1
-                #finally:
-                #    print 'FINALLY'
-                    #shutil.rmtree(working_dir)
+            # Run
+                cmd = [executable, parsetname]
+                with CatchLog4CPlus(
+                    work_dir,
+                    self.logger.name + "." + os.path.basename(infile),
+                    os.path.basename(executable),
+                ) as logger:
+                    # Catch segfaults and retry
+                    catch_segfaults(
+                        cmd, work_dir, self.environment, logger
+                    )
+            except CalledProcessError, err:
+                # CalledProcessError isn't properly propagated by IPython
+                self.logger.error(str(err))
+                return 1
+            except Exception, err:
+                self.logger.error(str(err))
+                return 1
 
         # We need some signal to the master script that the script ran ok.
         self.outputs['ok'] = True
         return 0
-
-    def _prepare_steps(self, **kwargs):
-        patch_dictionary = {'uselogger': 'True'}
-        if kwargs['inputkey']:
-            patch_dictionary[kwargs['inputkey']] = kwargs['infile']
-
-        if kwargs['outputkey']:
-            patch_dictionary[kwargs['outputkey']] = kwargs['tmpfile']
-
-        # Return the patch dictionary that must be applied to the parset.
-        return patch_dictionary
 
 
 if __name__ == "__main__":

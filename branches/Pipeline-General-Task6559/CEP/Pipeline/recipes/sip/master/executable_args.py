@@ -71,6 +71,28 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
             help="Dont give the input file to the executable.",
             default=False,
             optional=True
+        ),
+        'skip_outfile': ingredient.BoolField(
+            '--skip-outfile',
+            help="Dont produce an output file",
+            default=False,
+            optional=True
+        ),
+        'inplace': ingredient.BoolField(
+            '--inplace',
+            help="Manipulate input files inplace",
+            default=False,
+            optional=True
+        ),
+        'outputsuffixes': ingredient.ListField(
+            '--outputsuffixes',
+            help="Suffixes for the outputfiles",
+            default=[]
+        ),
+        'parsetasfile': ingredient.BoolField(
+            '--parsetasfile',
+            help="Will the argument be a parsetfile or --opt=var",
+            default=False
         )
     }
 
@@ -92,7 +114,7 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
         except Exception:
             self.logger.error('Could not load input Mapfile %s' % self.inputs['mapfile_in'])
             return 1
-        if self.inputs['mapfile_out'] is not '':
+        if self.inputs['mapfile_out']:
             try:
                 outdata = DataMap.load(self.inputs['mapfile_out'])
             except Exception:
@@ -103,13 +125,16 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
         else:
             # ouput will be directed in the working directory if no output mapfile is specified
             outdata = copy.deepcopy(indata)
-            for item in outdata:
-                item.file = os.path.join(
-                    self.inputs['working_directory'],
-                    self.inputs['job_name'],
-                    os.path.basename(item.file) + '.' + os.path.split(str(self.inputs['executable']))[1]
-                )
-            self.inputs['mapfile_out'] = os.path.join(os.path.dirname(self.inputs['mapfile_in']), os.path.basename(self.inputs['executable']) + '.' + 'mapfile')
+            if not self.inputs['inplace']:
+                for item in outdata:
+                    item.file = os.path.join(
+                        self.inputs['working_directory'],
+                        self.inputs['job_name'],
+                        os.path.basename(item.file) + '.' + os.path.split(str(self.inputs['executable']))[1]
+                    )
+                self.inputs['mapfile_out'] = os.path.join(os.path.dirname(self.inputs['mapfile_in']), os.path.basename(self.inputs['executable']) + '.' + 'mapfile')
+            else:
+                self.inputs['mapfile_out'] = self.inputs['mapfile_in']
 
         if not validate_data_maps(indata, outdata):
             self.logger.error(
@@ -117,13 +142,30 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
             )
             return 1
 
+        # Handle multiple outputfiles
+        outputsuffix = self.inputs['outputsuffixes']
+        outputmapfiles = []
+        prefix = os.path.join(self.inputs['working_directory'], self.inputs['job_name'])
+        for name in outputsuffix:
+            outputmapfiles.append(copy.deepcopy(indata))
+            for item in outputmapfiles[-1]:
+                item.file = os.path.join(
+                    prefix,
+                    os.path.basename(item.file) + '.' + os.path.split(str(self.inputs['executable']))[1] + '.' + name
+                )
+
         # prepare arguments
         arglist = self.inputs['arguments']
         parset = Parset()
         parset.adoptFile(self.inputs['parset'])
+        parsetdict = {}
         for k in parset.keys:
-            arglist.append('--' + k + '=' + parset.getString(k))
+            parsetdict[k] = str(parset[k])
 
+        #for k in parset.keys:
+        #    arglist.append('--' + k + '=' + parset.getString(k))
+        if not self.inputs['inputkey'] and not self.inputs['skip_infile']:
+            arglist.insert(0, None)
         # ********************************************************************
         # Call the node side of the recipe
         # Create and schedule the compute jobs
@@ -133,21 +175,33 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
         for inp, outp in zip(
             indata, outdata
         ):
+            #args = copy.deepcopy(arglist)
+            #if self.inputs['inputkey'] and not self.inputs['skip_infile']:
+            #    args.append('--' + self.inputs['inputkey'] + '=' + inp.file)
+            #if self.inputs['outputkey'] and not self.inputs['skip_infile']:
+            #    args.append('--' + self.inputs['outputkey'] + '=' + outp.file)
+            #if not self.inputs['inputkey'] and not self.inputs['skip_infile']:
+            #    args.insert(0, inp.file)
             if self.inputs['inputkey'] and not self.inputs['skip_infile']:
-                arglist.append('--' + self.inputs['inputkey'] + '=' + inp.file)
+                parsetdict[self.inputs['inputkey']] = inp.file
             if self.inputs['outputkey'] and not self.inputs['skip_infile']:
-                arglist.append('--' + self.inputs['outputkey'] + '=' + outp.file)
+                parsetdict[self.inputs['outputkey']] = outp.file
             if not self.inputs['inputkey'] and not self.inputs['skip_infile']:
-                arglist.insert(0, inp.file)
+                arglist[0] = inp.file
+
+            nopointer = copy.deepcopy(parsetdict)
             jobs.append(
                 ComputeJob(
                     inp.host, command,
                     arguments=[
                         inp.file,
-                        outp.file,
                         self.inputs['executable'],
+                        #args,
                         arglist,
-                        self.inputs['working_directory'],
+                        nopointer,
+                        prefix,
+                        self.inputs['parsetasfile'],
+                        #self.inputs['working_directory'],
                         self.environment
                     ]
                 )
@@ -169,8 +223,19 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
                     "Some jobs failed, continuing with succeeded runs"
                 )
         self.logger.debug("Writing data map file: %s" % self.inputs['mapfile_out'])
-        outdata.save(self.inputs['mapfile_out'])
-        self.outputs['mapfile'] = self.inputs['mapfile_out']
+        #outdata.save(self.inputs['mapfile_out'])
+        #self.outputs['mapfile'] = self.inputs['mapfile_out']
+        mapdict = {}
+        for item, name in zip(outputmapfiles, outputsuffix):
+            item.save(os.path.join(prefix, name + '.' + 'mapfile'))
+            mapdict[name] = os.path.join(prefix, name + '.' + 'mapfile')
+            #self.outputs[name] = name + '.' + 'mapfile'
+        if not outputsuffix:
+            outdata.save(self.inputs['mapfile_out'])
+            self.outputs['mapfile'] = self.inputs['mapfile_out']
+        else:
+            self.outputs.update(mapdict)
+            self.outputs['mapfile'] = os.path.join(prefix, outputsuffix[0] + '.' + 'mapfile')
         return 0
 
 if __name__ == '__main__':
