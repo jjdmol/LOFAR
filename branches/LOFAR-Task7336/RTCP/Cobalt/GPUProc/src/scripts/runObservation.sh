@@ -97,14 +97,14 @@ function sendback_status {
   if [ $OBSRESULT -eq 0 ]
   then
     echo "Signalling success"
-    STATUS=0
+    SUCCESS=1
   else
     # ***** Observation or sending feedback failed for some reason
     echo "Signalling failure"
-    STATUS=1
+    SUCCESS=0
   fi
 
-  send_status $STATUS
+  send_status $SUCCESS
 
   return 1
 }
