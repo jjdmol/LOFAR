@@ -33,7 +33,7 @@ using boost::format;
 
 static void usage(const char *argv0)
 {
-  cerr << "Usage: " << argv0 << " status" << endl;
+  cerr << "Usage: " << argv0 << " success" << endl;
   cerr << endl;
   cerr << "  -h: print this message" << endl;
 }
@@ -64,7 +64,7 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  int status = atoi(argv[optind]);
+  int success = atoi(argv[optind]);
 
   // send status feedback
   ToBus bus("lofar.task.feedback.status");
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
     "Cobalt/GPUProc/sendStatus",
     "",
     "Status feedback",
-    status);
+    success);
 
   bus.send(msg);
 
