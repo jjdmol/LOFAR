@@ -3,17 +3,21 @@
    <header>
       <system>LOFAR</system>
       <version>1.0.0</version>
-      <service>
+      <protocol>
          <name>%s</name>
          <version>%s</version>
-      </service>
-      <request>
-         <source>%s</source>
+      </protocol>
+      <source>
+         <name>%s</name>
          <user>%s</user>
          <uuid>%s</uuid>
          <timestamp>%s</timestamp>
          <summary>%s</summary>
-      </request>
+      </source>
+      <ids>
+         <momid>%s</momid>
+         <sasid>%s</sasid>
+      </ids>
    </header>
    <payload>
 %s

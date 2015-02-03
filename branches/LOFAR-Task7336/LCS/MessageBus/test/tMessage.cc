@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
 		return (1);
 	}
 
-	Message	msg1("mySubSystem", "user", "some test message", "lofar.observation.start", "1.0");
+	Message	msg1("mySubSystem", "user", "some test message", "lofar.observation.start", "1.0", "12345", "54321");
 
 	qpid::messaging::Message	qpMsg("Qpid message");
 	Message		msg2(qpMsg);

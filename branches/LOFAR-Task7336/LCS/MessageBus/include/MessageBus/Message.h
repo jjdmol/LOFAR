@@ -55,11 +55,17 @@ public:
     // Human-readable summary describing this request
     const std::string &summary,
 
-    // Service to send this message to
-    const std::string &toService,
+    // Protocol of the contents of the message
+    const std::string &protocol,
 
     // Version of the protocol we're using to describe the payload
-    const std::string &toVersion
+    const std::string &protocolVersion,
+
+    // momID of the information (if available)
+    const std::string &momID,
+
+    // sasID of the information (if available)
+    const std::string &sasID
   );
 
   // Parse a message
@@ -77,16 +83,19 @@ public:
   virtual ~Message();
 
   // Return properties of the constructed or received message
-  std::string system() const		{ return (getXMLvalue("message.header.system")); }
-  std::string headerVersion() const { return (getXMLvalue("message.header.version")); }
-  std::string payload() const		{ return (getXMLvalue("message.payload")); }
-  std::string from() const			{ return (getXMLvalue("message.header.request.source")); }
-  std::string forUser() const		{ return (getXMLvalue("message.header.request.user")); }
-  std::string uuid() const			{ return (getXMLvalue("message.header.request.uuid")); }
-  std::string summary() const		{ return (getXMLvalue("message.header.request.summary")); }
-  std::string timestamp() const		{ return (getXMLvalue("message.header.request.timestamp")); }
-  std::string toService() const		{ return (getXMLvalue("message.header.service.name")); }
-  std::string toVersion() const		{ return (getXMLvalue("message.header.service.version")); }
+  std::string system() const		  { return (getXMLvalue("message.header.system")); }
+  std::string headerVersion() const   { return (getXMLvalue("message.header.version")); }
+  std::string protocol() const		  { return (getXMLvalue("message.header.protocol.name")); }
+  std::string protocolVersion() const { return (getXMLvalue("message.header.protocol.version")); }
+  std::string from() const			  { return (getXMLvalue("message.header.source.name")); }
+  std::string forUser() const		  { return (getXMLvalue("message.header.source.user")); }
+  std::string uuid() const			  { return (getXMLvalue("message.header.source.uuid")); }
+  std::string summary() const		  { return (getXMLvalue("message.header.source.summary")); }
+  std::string timestamp() const		  { return (getXMLvalue("message.header.source.timestamp")); }
+  std::string momid() const			  { return (getXMLvalue("message.header.ids.momid")); }
+  std::string sasis() const			  { return (getXMLvalue("message.header.ids.sasid")); }
+  std::string payload() const		  { return (getXMLvalue("message.payload")); }
+  std::string header() const		  { return (getXMLvalue("message.header")); }
 
   // Construct the given fields as a QPID message
   qpid::messaging::Message& qpidMsg() { return (itsQpidMsg); }
@@ -97,10 +106,10 @@ public:
   // function for printing
   std::ostream& print (std::ostream& os) const;
 
-private:
-  // Internal very simple XML parser to get a key from the XML content.
+  // Very simple XML parser to get a key from the XML content.
   std::string getXMLvalue(const std::string& key) const;
 
+private:
   // -- datamembers -- 
   qpid::messaging::Message itsQpidMsg;
 };

@@ -37,17 +37,21 @@ const string LOFAR_MSG_TEMPLATE = "\
    <header>\n\
       <system>LOFAR</system>\n\
       <version>1.0.0</version>\n\
-      <service>\n\
+      <protocol>\n\
          <name>%s</name>\n\
          <version>%s</version>\n\
-      </service>\n\
-      <request>\n\
-         <source>%s</source>\n\
+      </protocol>\n\
+      <source>\n\
+         <name>%s</name>\n\
          <user>%s</user>\n\
          <uuid>%s</uuid>\n\
          <timestamp>%s</timestamp>\n\
          <summary>%s</summary>\n\
-      </request>\n\
+      </source>\n\
+      <ids>\n\
+         <momid>%s</momid>\n\
+         <sasid>%s</sasid>\n\
+      </ids>\n\
    </header>\n\
    <payload>\n\
 %s\n\
@@ -57,11 +61,14 @@ const string LOFAR_MSG_TEMPLATE = "\
 Message::Message(const std::string &from,
 				 const std::string &forUser,
 				 const std::string &summary,
-				 const std::string &toService,
-				 const std::string &toVersion) 
+				 const std::string &protocol,
+				 const std::string &protocolVersion,
+				 const std::string &momid,
+				 const std::string &sasid) 
 {	
-	itsQpidMsg.setContent(formatString(LOFAR_MSG_TEMPLATE.c_str(), toService.c_str(), toVersion.c_str(),
-										from.c_str(), forUser.c_str(), "", "", summary.c_str(), "%s"));
+	itsQpidMsg.setContent(formatString(LOFAR_MSG_TEMPLATE.c_str(), protocol.c_str(), protocolVersion.c_str(),
+										from.c_str(), forUser.c_str(), "", "", summary.c_str(), 
+										momid.c_str(), sasid.c_str(), "%s"));
 
 	cout << itsQpidMsg.getContent() << endl;
 }
@@ -102,13 +109,15 @@ std::ostream& Message::print (std::ostream& os) const
 {
 	os << "system         : " << system() << endl;
     os << "systemversion  : " << headerVersion() << endl;
-    os << "serviceName    : " << toService() << endl;
-    os << "serviceVersion : " << toVersion() << endl;
+    os << "protocolName   : " << protocol() << endl;
+    os << "protocolVersion: " << protocolVersion() << endl;
     os << "summary        : " << summary() << endl;
     os << "timestamp      : " << timestamp() << endl;
     os << "source         : " << from() << endl;
     os << "user           : " << forUser() << endl;
     os << "uuid           : " << uuid() << endl;
+    os << "momid          : " << momid() << endl;
+    os << "sasid          : " << sasis() << endl;
     os << "payload        : " << payload() << endl;
 	return (os);
 }
