@@ -25,6 +25,7 @@
 
 #ifdef HAVE_QPID
 #include <MessageBus/Message.h>
+#include <Common/ParameterSet.h>
 
 namespace LOFAR {
 
