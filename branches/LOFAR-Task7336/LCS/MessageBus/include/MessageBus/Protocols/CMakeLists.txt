@@ -3,11 +3,9 @@
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
   ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_BINARY_DIR}/include/${PACKAGE_NAME})
+  ${CMAKE_BINARY_DIR}/include/${PACKAGE_NAME}/Protocols)
 
 # Install header files.
 install(FILES
-  MsgBus.h
-  DESTINATION include/${PACKAGE_NAME})
-
-add_subdirectory(Protocols)
+  TaskFeedbackDataproducts.h
+  DESTINATION include/${PACKAGE_NAME}/Protocols)
