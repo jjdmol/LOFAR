@@ -46,34 +46,37 @@ namespace LOFAR {
 	}
   }
 
-  bool FromBus::getMessage(Message &msg, double timeout) // timeout 0.0 means blocking
+  bool FromBus::getMessage(LOFAR::Message &msg, double timeout) // timeout 0.0 means blocking
   {
     Receiver next;
+	qpid::messaging::Message	qmsg;
 	cout << "waiting for message..." << endl;
-    if (itsSession.nextReceiver(next,TimeOutDuration(timeout)))
-    {
+    if (itsSession.nextReceiver(next,TimeOutDuration(timeout))) {
 		cout << "message available on queue: " << next.getName() << endl;
         itsNrMissingACKs++;
-        return next.get(msg);
+        if (next.get(qmsg)) {
+			msg = LOFAR::Message(qmsg);
+			return true;
+		}
     }
     return false;
   }
 
-  void FromBus::nack(Message &msg)
+  void FromBus::ack(LOFAR::Message &msg)
   {
-     itsSession.release(msg);
-     itsNrMissingACKs--;
-  }
-
-  void FromBus::ack(Message &msg)
-  {
-     itsSession.acknowledge(msg);
+     itsSession.acknowledge(msg.qpidMsg());
      itsNrMissingACKs --;
   }
 
-  void FromBus::reject(Message &msg)
+  void FromBus::nack(LOFAR::Message &msg)
   {
-     itsSession.reject(msg);
+     itsSession.release(msg.qpidMsg());
+     itsNrMissingACKs--;
+  }
+
+  void FromBus::reject(LOFAR::Message &msg)
+  {
+     itsSession.reject(msg.qpidMsg());
      itsNrMissingACKs --;
   }
 
@@ -112,13 +115,13 @@ namespace LOFAR {
 
   void ToBus::send(const std::string &msg)
   {
-    Message tosend(msg);
-    itsSender.send(tosend,true);
+    LOFAR::Message tosend(msg);
+    itsSender.send(tosend.qpidMsg(), true);
   }
 
-  void ToBus::send(const Message& msg)
+  void ToBus::send(LOFAR::Message& msg)
   {
-    itsSender.send(msg,true);
+    itsSender.send(msg.qpidMsg(), true);
   }
 
 } // namespace LOFAR

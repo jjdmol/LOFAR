@@ -29,7 +29,7 @@ using namespace qpid::messaging;
 using namespace LOFAR;
 
 
-void showMessage(Message&	msg)
+void showMessage(qpid::messaging::Message&	msg)
 {
 	cout << "Message ID    : " << msg.getMessageId() << endl;
 	cout << "User ID       : " << msg.getUserId() << endl;
@@ -46,7 +46,7 @@ void showMessage(Message&	msg)
 	cout << "Content       : " << msg.getContent() << endl;
 }
 
-void compareMessages(Message&	lhm, Message& rhm)
+void compareMessages(qpid::messaging::Message&	lhm, qpid::messaging::Message& rhm)
 {
 	ASSERTSTR(lhm.getMessageId()     == rhm.getMessageId(),     "messageIDs differ");
 	ASSERTSTR(lhm.getUserId()        == rhm.getUserId(),        "UserIDs differ");
@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
 
 	cout << "--- Drain the queue ---" << endl;
 	FromBus	fb(argv[1]);
-	Message	receivedMsg;
+	LOFAR::Message	receivedMsg;
 	while (fb.getMessage(receivedMsg, 0.01)) {
 		fb.ack(receivedMsg);
 	}
@@ -83,16 +83,16 @@ int main(int argc, char* argv[]) {
 	tb.send(someText);
 	fb.getMessage(receivedMsg);
 	fb.ack(receivedMsg);
-	showMessage(receivedMsg);
+	showMessage(receivedMsg.qpidMsg());
 
 	cout << "--- TEST 2: create a message by hand, send it, receive it, print it, compare them. --- " << endl;
-	Message		msg2Send;
-	msg2Send.setContent("Manually constructed message");
+	LOFAR::Message		msg2Send;
+	msg2Send.setTXTPayload("Manually constructed message");
 	tb.send(msg2Send);
 	fb.getMessage(receivedMsg);
 	fb.ack(receivedMsg);
-	showMessage(receivedMsg);
-	compareMessages(msg2Send, receivedMsg);
+	showMessage(receivedMsg.qpidMsg());
+	compareMessages(msg2Send.qpidMsg(), receivedMsg.qpidMsg());
 
 	cout << "--- TEST 3: add an extra queue, send messages to both queues, receive them. --- " << endl;
 	ToBus	tbExtra("extraTestQ");
@@ -102,10 +102,10 @@ int main(int argc, char* argv[]) {
 	fb.addQueue("extraTestQ");
 	fb.getMessage(receivedMsg);
     fb.ack(receivedMsg);
-    showMessage(receivedMsg);
+    showMessage(receivedMsg.qpidMsg());
     fb.getMessage(receivedMsg);
     fb.ack(receivedMsg);
-    showMessage(receivedMsg);
+    showMessage(receivedMsg.qpidMsg());
 
 	cout << "--- All test successful! ---" << endl;
 	return (0);

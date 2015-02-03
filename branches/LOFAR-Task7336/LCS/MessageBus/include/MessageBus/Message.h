@@ -42,6 +42,9 @@ class Message
 {
 public:
   // Construct a message
+  Message() {};
+
+  // With header info
   Message(
     // Name of the service or process producing this message
     const std::string &from,
@@ -60,7 +63,7 @@ public:
   );
 
   // Parse a message
-  Message(const qpid::messaging::Message &qpidMsg);
+  Message(const qpid::messaging::Message qpidMsg) : itsQpidMsg(qpidMsg) {};
 
   // Read a message from disk (header + payload)
   Message(const std::string &rawContent);
@@ -86,20 +89,26 @@ public:
   std::string toVersion() const		{ return (getXMLvalue("message.header.service.version")); }
 
   // Construct the given fields as a QPID message
-  qpid::messaging::Message getQpidMsg() const { return (itsQpidMsg); }
+  qpid::messaging::Message& qpidMsg() { return (itsQpidMsg); }
 
   // Return the raw message (header + payload)
-  std::string getRawContent() const { return (itsQpidMsg.getContent()); }
+  std::string rawContent() const { return (itsQpidMsg.getContent()); }
+
+  // function for printing
+  std::ostream& print (std::ostream& os) const;
 
 private:
   // Internal very simple XML parser to get a key from the XML content.
-  string getXMLvalue(const string& key) const;
+  std::string getXMLvalue(const std::string& key) const;
 
-  // datamembers
+  // -- datamembers -- 
   qpid::messaging::Message itsQpidMsg;
 };
 
-std::ostream &operator<<(std::ostream &s, const Message &msg);
+inline std::ostream &operator<<(std::ostream &os, const Message &msg)
+{	
+	return (msg.print(os));
+}
 
 } // namespace LOFAR
 

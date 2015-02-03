@@ -66,18 +66,10 @@ Message::Message(const std::string &from,
 	cout << itsQpidMsg.getContent() << endl;
 }
 
-Message::Message(const qpid::messaging::Message &qpidMsg) :
-	itsQpidMsg(qpidMsg)
-{
-	cout << itsQpidMsg.getContent() << endl;
-}
-
-
 // Read a message from disk (header + payload)
 Message::Message(const std::string &rawContent)
 {
 	itsQpidMsg.setContent(rawContent);
-	cout << itsQpidMsg.getContent() << endl;
 }
 
 Message::~Message()
@@ -85,13 +77,12 @@ Message::~Message()
 
 void Message::setXMLPayload (const std::string         &payload)
 {
-
+	itsQpidMsg.setContent(formatString(itsQpidMsg.getContent().c_str(), payload.c_str()));
 }
 
 void Message::setTXTPayload (const std::string         &payload)
 {
 	itsQpidMsg.setContent(formatString(itsQpidMsg.getContent().c_str(), payload.c_str()));
-	cout << itsQpidMsg.getContent() << endl;
 }
 
 void Message::setMapPayload (const qpid::types::Variant::Map  &payload)
@@ -104,6 +95,27 @@ void Message::setListPayload(const qpid::types::Variant::List &payload)
 
 }
 
+//
+// print
+//
+std::ostream& Message::print (std::ostream& os) const
+{
+	os << "system         : " << system() << endl;
+    os << "systemversion  : " << headerVersion() << endl;
+    os << "serviceName    : " << toService() << endl;
+    os << "serviceVersion : " << toVersion() << endl;
+    os << "summary        : " << summary() << endl;
+    os << "timestamp      : " << timestamp() << endl;
+    os << "source         : " << from() << endl;
+    os << "user           : " << forUser() << endl;
+    os << "uuid           : " << uuid() << endl;
+    os << "payload        : " << payload() << endl;
+	return (os);
+}
+
+//
+// getXMLvalue(tag)
+//
 string Message::getXMLvalue(const string& key) const
 {
 	// get copy of content

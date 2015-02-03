@@ -65,8 +65,8 @@ void compareMessages(Message&	lhm, Message& rhm)
 #endif
 
 int main(int argc, char* argv[]) {
-	if (argc != 2) {
-		cout << "Syntax: " << argv[0] << " messagebus" << endl;
+	if (argc != 1) {
+		cout << "Syntax: " << argv[0] << endl;
 		return (1);
 	}
 
@@ -78,18 +78,7 @@ int main(int argc, char* argv[]) {
 	string	KVmapje("abc=[aap,noot,mies]\nmyInteger=5\nmyDouble=3.14");
 	msg1.setTXTPayload(KVmapje);
 
-	cout << "system         : " << msg1.system() << endl;
-	cout << "systemversion  : " << msg1.headerVersion() << endl;
-	cout << "serviceName    : " << msg1.toService() << endl;
-	cout << "serviceVersion : " << msg1.toVersion() << endl;
-	cout << "summary        : " << msg1.summary() << endl;
-	cout << "timestamp      : " << msg1.timestamp() << endl;
-	cout << "source         : " << msg1.from() << endl;
-	cout << "user           : " << msg1.forUser() << endl;
-	cout << "uuid           : " << msg1.uuid() << endl;
-	cout << "payload        : " << msg1.payload() << endl;
-
-
+	cout << msg1;
 
 	return (0);
 }

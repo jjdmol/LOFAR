@@ -32,6 +32,7 @@
 #include <qpid/messaging/Address.h>
 
 #include <Common/Exception.h>
+#include <MessageBus/Message.h>
 
 #include <map>
 
@@ -41,36 +42,40 @@ EXCEPTION_CLASS(MessageBusException, LOFAR::Exception);
 
 class FromBus
 {
-  qpid::messaging::Connection itsConnection;
-  qpid::messaging::Session itsSession;
-
-  int itsNrMissingACKs;
-
 public:
   FromBus(const std::string &address="testqueue" , const std::string &options="; {create: always}", const std::string &broker = "amqp:tcp:127.0.0.1:5672") ;
   ~FromBus(void);
-
-  bool getMessage(qpid::messaging::Message &msg, double timeout = 0.0); // timeout 0.0 means blocking
-
-  void nack(qpid::messaging::Message &msg);
-
-  void ack(qpid::messaging::Message &msg);
-  void reject(qpid::messaging::Message &msg);
   bool addQueue(const std::string &address="testqueue", const std::string &options="; {create: always}");
+
+  bool getMessage(LOFAR::Message &msg, double timeout = 0.0); // timeout 0.0 means blocking
+
+  void ack   (LOFAR::Message &msg);
+  void nack  (LOFAR::Message &msg);
+  void reject(LOFAR::Message &msg);
+
+private:
+  qpid::messaging::Connection itsConnection;
+  qpid::messaging::Session    itsSession;
+
+  int itsNrMissingACKs;
+
 };
 
 class ToBus
 {
-  qpid::messaging::Connection itsConnection;
-  qpid::messaging::Session itsSession;
-  qpid::messaging::Sender itsSender;
-
 public:
   ToBus(const std::string &address="testqueue" , const std::string &options="; {create: always}", const std::string &broker = "amqp:tcp:127.0.0.1:5672") ;
   ~ToBus(void);
 
   void send(const std::string &msg);
-  void send(const qpid::messaging::Message &msg);
+  void send(LOFAR::Message &msg);
+
+private:
+  // -- datamambers --
+  qpid::messaging::Connection itsConnection;
+  qpid::messaging::Session itsSession;
+  qpid::messaging::Sender itsSender;
+
 };
 
 } // namespace LOFAR
