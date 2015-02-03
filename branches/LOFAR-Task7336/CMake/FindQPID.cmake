@@ -9,6 +9,9 @@
 #  QPID_LIBRARY      - the QPID library (cached)
 #  QPID_LIBRARIES    - the QPID libraries
 #                        (identical to QPID_LIBRARY)
+#  QPID_RECEIVE_EXECUTABLE - the full path of qpid-receive
+#  QPID_SEND_EXECUTABLE    - the full path of qpid-send
+#  QPID_STAT_EXECUTABLE    - the full path of qpid-stat
 
 # Copyright (C) 2015
 # ASTRON (Netherlands Institute for Radio Astronomy)
@@ -38,6 +41,13 @@ if(NOT QPID_FOUND)
     HINTS ${QPID_ROOT_DIR} PATH_SUFFIXES lib)
   find_library(QPID_TYPES_LIBRARY qpidtypes
     HINTS ${QPID_ROOT_DIR} PATH_SUFFIXES lib)
+
+  find_program(QPID_RECEIVE_EXECUTABLE qpid-receive
+    HINTS ${QPID_ROOT_DIR} PATH_SUFFIXES bin)
+  find_program(QPID_SEND_EXECUTABLE qpid-send
+    HINTS ${QPID_ROOT_DIR} PATH_SUFFIXES bin)
+  find_program(QPID_STAT_EXECUTABLE qpid-stat
+    HINTS ${QPID_ROOT_DIR} PATH_SUFFIXES bin)
 
   set(QPID_LIBRARY ${QPID_MESSAGING_LIBRARY} ${QPID_TYPES_LIBRARY})
 
