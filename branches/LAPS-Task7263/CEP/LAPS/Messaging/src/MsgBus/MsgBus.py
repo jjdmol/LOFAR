@@ -46,7 +46,7 @@ class ToBus():
            msg.reply_to=reply_to
         self.sender.send(msg)
 
-    def sendmsg(self,msg)
+    def sendmsg(self,msg):
         self.sender.send(msg)
 
 class FromBus():
@@ -95,7 +95,7 @@ class FromBus():
                     msg = self.receiver.get()
                     handler=handlers[receiver]
                     if (handler):
-                        handler(msg)
+                        handler(self,msg)
                     else
                         self.default_handler(msg)
         except exceptions.Empty, e:
