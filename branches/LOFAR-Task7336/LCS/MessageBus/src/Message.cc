@@ -69,8 +69,6 @@ Message::Message(const std::string &from,
 	itsQpidMsg.setContent(formatString(LOFAR_MSG_TEMPLATE.c_str(), protocol.c_str(), protocolVersion.c_str(),
 										from.c_str(), forUser.c_str(), "", "", summary.c_str(), 
 										momid.c_str(), sasid.c_str(), "%s"));
-
-	cout << itsQpidMsg.getContent() << endl;
 }
 
 // Read a message from disk (header + payload)
@@ -84,12 +82,12 @@ Message::~Message()
 
 void Message::setXMLPayload (const std::string         &payload)
 {
-	itsQpidMsg.setContent(formatString(itsQpidMsg.getContent().c_str(), payload.c_str()));
+	itsQpidMsg.setContent(formatlString(itsQpidMsg.getContent().c_str(), payload.c_str()));
 }
 
 void Message::setTXTPayload (const std::string         &payload)
 {
-	itsQpidMsg.setContent(formatString(itsQpidMsg.getContent().c_str(), payload.c_str()));
+	itsQpidMsg.setContent(formatlString(itsQpidMsg.getContent().c_str(), payload.c_str()));
 }
 
 void Message::setMapPayload (const qpid::types::Variant::Map  &payload)
@@ -135,21 +133,23 @@ string Message::getXMLvalue(const string& key) const
 	string::size_type	offset = 0;
 	string::size_type	begin;
 	string::size_type	end;
+	string				startTag;
 	for (size_t i = 0; i <  labels.size(); ++i) {
 		// define tags to find
-		string startTag("<"+labels[i]+">");
-		string stopTag ("</"+labels[i]+">");
+		startTag = string("<"+labels[i]+">");
 		// search begin tag
 		begin  = content.find(startTag, offset);
 		if (begin == string::npos) {
 			return ("???");
 		}
-		// search end tag
-		begin+=startTag.size();
-		end = content.find(stopTag, begin);
-		if (end == string::npos) {
-			return ("???");
-		}
+		offset = begin;
+	}
+	// search end tag
+	string stopTag ("</"+labels[labels.size()-1]+">");
+	begin+=startTag.size();
+	end = content.find(stopTag, begin);
+	if (end == string::npos) {
+		return ("???");
 	}
 	return (content.substr(begin, end - begin));
 }
