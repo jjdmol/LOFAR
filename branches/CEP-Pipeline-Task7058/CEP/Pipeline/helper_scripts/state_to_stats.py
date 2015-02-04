@@ -53,7 +53,15 @@ if __name__ == '__main__':
     local_document = xml.Document()
     xml_node = local_document.createElement("active_stack")  
     xml_node.setAttribute("duration", "0")
-    xml_node.setAttribute("type", "Manual_Created_statistics")    
+    xml_node.setAttribute("type", "Manual_Created_statistics")   
+    
+    # add a fake active stack (needed for later processing steps)
+    # This allows us to use the visualization script without
+    # aditional arguments
+    local_document = xml.Document()                
+    step_node = local_document.createElement("active_stack")
+    step_node.setAttribute("type", "active_stack") 
+    xml_node.appendChild(step_node)
 
     for entry in data[1]:
         # parse the name and create a xml_node with this name
@@ -74,7 +82,6 @@ if __name__ == '__main__':
         # Save to the 'large' xml tree
         xml_node.appendChild(step_node)
         #print step_xml_string.toprettyxml()
-
 
     
     f = open(xml_stats_path, 'w')

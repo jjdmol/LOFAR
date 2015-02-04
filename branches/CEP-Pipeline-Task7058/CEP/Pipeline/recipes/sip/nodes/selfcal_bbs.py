@@ -48,6 +48,9 @@ class selfcal_bbs(LOFARnodeTCP):
         source_db = sky_list[0].file[0] # the sourcedb is the first file entry
       
         try:
+            # TODO: The number of bbs groups is currently not limmited.
+            # this could lead to crowding of the node. Subprocess group has
+            # a limitter argument
             bbs_process_group = SubProcessGroup(self.logger,
                                   self.resourceMonitor)
             # *****************************************************************

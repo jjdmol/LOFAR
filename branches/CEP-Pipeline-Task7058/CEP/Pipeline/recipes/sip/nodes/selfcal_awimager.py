@@ -175,8 +175,9 @@ class selfcal_awimager(LOFARnodeTCP):
             # 5. Run the awimager with the parameterset
 
             # TODO: FIXME: manually Limit number of threads used.
-            self.environment['OMP_NUM_THREADS'] = str(4)
-            self.logger.debug("Using %s threads for swimager" % 4)
+            omp_num_threads = 8
+            self.environment['OMP_NUM_THREADS'] = str(omp_num_threads)
+            self.logger.debug("Using %s threads for swimager" % omp_num_threads)
 
             cmd = [executable, calculated_parset_path]
             self.logger.debug("Parset used for awimager run:")

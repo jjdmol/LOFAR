@@ -392,7 +392,7 @@ def create_toplevel_pipeline_visualizations(duration_list, step_name_list):
                                  dataset, data_orders, colors)
 
 
-def create_trace_plot_information(step_dict):   
+def create_trace_plot_information(step_dict, plot_debug):   
     """
     Creates statistics timelines for all executables on all jobs
     For this the min and max timestep are found
@@ -406,6 +406,7 @@ def create_trace_plot_information(step_dict):
     A lot of information is lost in this parse step.
     This is an example what you could do with the data
     """
+    poll_step_ms = 10000 * 60
     # structures to be filled in this function
     aggregate_traces = {}
     aggregate_traces['cpu'] = []
@@ -428,10 +429,7 @@ def create_trace_plot_information(step_dict):
         time_stamps = []
         return time_stamps, all_traces, aggregate_traces
 
-
-
-    for id, node_dict in step_dict['jobs'].items():      # the node level information
-        for id, pid_dict in node_dict['traces'].items(): # traces of the actual executables
+    for id, node_dict in step_dict['jobs'].items():      # the node level information        for id, pid_dict in node_dict['traces'].items(): # traces of the actual executables
              if len(pid_dict['trace']['timestamp']) == 0:
                 continue
                 
@@ -442,15 +440,16 @@ def create_trace_plot_information(step_dict):
              if pid_dict['trace']['timestamp'][0] < min_time_stamp:
                   min_time_stamp = pid_dict['trace']['timestamp'][0]
 
-    # floor all the timestamps to the nearest whole 10 second mark 
+
+    # floor all the timestamps to the nearest whole 10 min  mark 
     #( the exact time does not matter for the stats)
     # this allows us to create additional step inserts if needed
     # first the min and max to allow us to pad
-    min_time_stamp = (min_time_stamp / 10000) * 10000   
-    max_time_stamp = (max_time_stamp / 10000) * 10000
+    min_time_stamp = (min_time_stamp / poll_step_ms) * poll_step_ms   
+    max_time_stamp = (max_time_stamp / poll_step_ms) * poll_step_ms
 
     # the time line for all data traces returned by this function
-    time_stamps = [x for x in range(min_time_stamp, max_time_stamp + 10000, 10000)] # we also need the last bin range() is exclusive
+    time_stamps = [x for x in range(min_time_stamp, max_time_stamp + poll_step_ms, poll_step_ms)] # we also need the last bin range() is exclusive
 
     # loop the data, clean and pad.     
     for id, node_dict in step_dict['jobs'].items():      # the nodes
@@ -472,16 +471,16 @@ def create_trace_plot_information(step_dict):
 
             # A executable call might be that short that not a single trace was recorded
             if len(pid_dict['trace']['timestamp']) == 0: 
-                n_missing_stamps_start = (max_time_stamp - min_time_stamp ) / 10000 + 1
+                n_missing_stamps_start = (max_time_stamp - min_time_stamp ) / poll_step_ms + 1
             else:
                 # only take the first timestamp and expand after. Rounding might
                 # put neighbouring samples with an additional bin between them
-                first_timestamp_floored = (pid_dict['trace']['timestamp'][0] / 10000) * 10000
-                binned_time_stamps = [first_timestamp_floored + idx * 10000  for idx 
+                first_timestamp_floored = (pid_dict['trace']['timestamp'][0] / poll_step_ms) * poll_step_ms
+                binned_time_stamps = [first_timestamp_floored + idx * poll_step_ms  for idx 
                                   in range(len(pid_dict['trace']['timestamp']))]
 
-                n_missing_stamps_start = (binned_time_stamps[0] - min_time_stamp) / 10000
-                n_missing_stamps_end = (max_time_stamp - binned_time_stamps[-1]) / 10000
+                n_missing_stamps_start = (binned_time_stamps[0] - min_time_stamp) / poll_step_ms
+                n_missing_stamps_end = (max_time_stamp - binned_time_stamps[-1]) / poll_step_ms
              
             # Now we create the time lines with padding
             cpu = []    
@@ -500,7 +499,7 @@ def create_trace_plot_information(step_dict):
              
             # add the recorded timelines   
             for cpu_value in pid_dict['trace']['cpu']:
-                if cpu_value > 10000:
+                if cpu_value > 10000:    # TODO: Why this if statement?
                     print  pid_dict['trace']['cpu']
                     raise Exception
 
@@ -640,9 +639,19 @@ def create_pipeline_traces_and_stat(pipeline_information):
              'write_bytes':{'max_max':0.0},
              'cancelled_bytes':{'max_max':0.0}}
     traces = {}
+    idx = 0
     for key, entrie in pipeline_information.items()[1:]:  # skip first entry not a step
         # First create the traces
-        time_stamps, all_traces, aggregate_traces = create_trace_plot_information(entrie) 
+
+        if idx == 2:
+            plot_debug = True
+        else:
+            plot_debug = False
+
+        idx = idx + 1
+
+
+        time_stamps, all_traces, aggregate_traces = create_trace_plot_information(entrie, plot_debug) 
         traces[key] = {'time_stamps':time_stamps, 
                        'all_traces':all_traces,
                        'aggregate_traces':aggregate_traces}
@@ -691,7 +700,8 @@ def create_pipeline_traces_and_stat(pipeline_information):
     return traces, stats
 
 
-def create_plot_of_full_pipeline(pipeline_information, stats, step_name_list):
+def create_plot_of_full_pipeline(pipeline_information, stats, 
+                                 step_name_list, label_list):
 
 
     first_loop = True
@@ -734,30 +744,31 @@ def create_plot_of_full_pipeline(pipeline_information, stats, step_name_list):
                 line1 = ax.plot(time_stamps, trace, color='y') 
 
             #plot the max in red, the mean in black and the std in black dotted
-            line2 = ax.plot(time_stamps, statistical['max'], color='r') 
-            line3 = ax.plot(time_stamps, statistical['min'], color='g') 
-            line4 = ax.plot(time_stamps, statistical['mean'], color='k') 
-            line5 = ax.plot(time_stamps, statistical['std_top'], color='k', linestyle='--' ) 
-            line5 = ax.plot(time_stamps, statistical['std_bot'], color='k', linestyle='--' ) 
+            #line2 = ax.plot(time_stamps, statistical['max'], color='r') 
+            #line3 = ax.plot(time_stamps, statistical['min'], color='g') 
+            line4 = ax.plot(time_stamps, statistical['mean'], color='k', linewidth=2.0) 
+            #line5 = ax.plot(time_stamps, statistical['std_top'], color='k', linestyle='--' ) 
+            #line5 = ax.plot(time_stamps, statistical['std_bot'], color='k', linestyle='--' ) 
             
 
             # plot lines demarking the start of the individual step names
             plt.plot([time_stamps[0], time_stamps[0]],[0, max_max], color='k', linestyle='--')
-            if idx == 0:        # only print labels above the top trace
-                if label_flip_flop:
-                    ax.text(time_stamps[0], max_max, '\n' + step_name)     
-                    label_flip_flop = not label_flip_flop
-                else:
-                    ax.text(time_stamps[0], max_max,  step_name + '\n ')     
-                    label_flip_flop = not label_flip_flop
+            if idx == 0:                    # only print labels above the top trace
+                if step_name in label_list:  # Only print names in the list  
+                    if label_flip_flop:
+                        ax.text(time_stamps[0], max_max, '\n\n' + step_name)     
+                        label_flip_flop = not label_flip_flop
+                    else:
+                        ax.text(time_stamps[0], max_max,  step_name + '\n\n')     
+                        label_flip_flop = not label_flip_flop
             
             # print the legend only once
             if create_legend and idx == 4:  # 4 is the botom plot. Used for cancelled bytes. Should not happen that often. Is the least important plot
                 line1[0].set_label('Node traces')
-                line2[0].set_label('Max utilization')
-                line3[0].set_label('Min utilization')
+               # line2[0].set_label('Max utilization')
+               # line3[0].set_label('Min utilization')
                 line4[0].set_label('Mean utilization')
-                line5[0].set_label('Mean +- 1 std')
+                #line5[0].set_label('Mean +- 1 std')
                 create_legend = False
 
     # make up the plot 
@@ -773,13 +784,37 @@ def create_plot_of_full_pipeline(pipeline_information, stats, step_name_list):
     ax4 = plt.subplot(5,1,4)
     ax4.yaxis.get_major_formatter().set_powerlimits((1, 4))
     ax4.yaxis.tick_right()
+    
     ax5 = plt.subplot(5,1,5)
     ax5.yaxis.get_major_formatter().set_powerlimits((1, 4))
     ax5.xaxis.get_major_formatter().set_powerlimits((1, 4))
-    plt.xlabel('Time (sec)')
+    min_max_x = ax5.xaxis.get_data_interval()
+    # plot ticks at hours
+    #print min_max_x
+    #print type(min_max_x)
+    #print min_max_x.shape
+
+    #print min_max_x[0]
+    #print min_max_x[1]
+    #raise Exception
+
+    # create x-axis labels: print each hours mark
+    tick_step = 7200.0
+    hr_multi =  round(7200.0 / 3600)
+    xtick_range = np.arange(min_max_x[0], min_max_x[1] + 1, tick_step)
+    xtick_labels = []
+    for tick_value in xtick_range:
+        xtick_labels.append(str((tick_value / tick_step) * hr_multi))
+
+    ax5.xaxis.set_ticks(xtick_range)
+    ax5.xaxis.set_ticklabels(xtick_labels)
+
+    plt.xlabel('Time (Hrs)')
     #ax5.legend()  # The legend is only created for the bottom plot
     ax5.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),
           fancybox=True, shadow=True, ncol=5)
+
+
 
     # remove xlabel of the first 4 plots
     xticklabels = plt.subplot(5,1,1).get_xticklabels()+plt.subplot(5,1,2).get_xticklabels()+ \
@@ -811,8 +846,12 @@ if __name__ == '__main__':
     # Create all the traces including statistical traces of all the staps
     traces, stats = create_pipeline_traces_and_stat(pipeline_information)
 
+    
+    # list of labels to print: THe label is cluttered, only plot
+    # the interesting ones
+    label_list = ['selfcal_prepare', 'selfcal_prepare', 'selfcal_bbs', 'selfcal_awimager']
     # create and plot
-    create_plot_of_full_pipeline(traces, stats, step_name_list)
+    create_plot_of_full_pipeline(traces, stats, step_name_list, label_list)
     exit(0)
 
     
