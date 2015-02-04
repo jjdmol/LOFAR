@@ -122,6 +122,7 @@ namespace LOFAR {
 
     try {
       // Make sure all requests are finished
+      istSender.close();
       itsConnection.close();
     } catch(const qpid::types::Exception &ex) {
       LOG_FATAL_STR("Exception in destructor, cannot guarantee message delivery: " << ex.what());
