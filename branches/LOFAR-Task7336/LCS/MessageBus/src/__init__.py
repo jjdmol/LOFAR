@@ -16,4 +16,3 @@
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
 # $Id: __init__.py 29911 2014-08-12 14:45:14Z klijn $
-all
