@@ -24,15 +24,17 @@ import LAPS.MsgBus
 
 print " setup connection "
 
-msgbus = laps.MsgBus.Bus()
+msgbus = laps.MsgBus.FromBus("LAPS.Pipeline.incoming")
 workdir="/data/scratch/lofarsys/regression_test_runner/"
 worker="msss_calibrator_pipeline"
 workspace="/cep/lofar_build/lofar/release/"
 
 # get the Parset and the filename
-message, filename = msgbus.get()
+msg = msgbus.getmsg()
 
-while message:
+while msg:
+    message = msg.content
+    filename = msg.subject
     print "received :"
     f = open(filename,"wr")
     f.write(message).close() 
@@ -51,5 +53,5 @@ while message:
     os.system('python "%s/bin/%s.py" "%s/%s.parset" -c "%s/pipeline.cfg" -d' %( 
                         workspace,pythonprogram,workdir,pythonprogram,workdir))
     #os.system("startPython.sh %s %s >> logfile.txt 2>&1" %(pythonprogram,filename))
-    msgbus.ack()
-    message, subject = msgbus.get()
+    msgbus.ack(msg)
+    msg = msgbus.getmsg()

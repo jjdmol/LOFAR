@@ -37,10 +37,12 @@ class ToBus():
             print " OMG!!"
             print m
 
-    def sendstr(self,Str):
+    def sendstr(self,Str,subject=None,reply_to=None):
         msg = Message(Str)
         msg.durable=True
-        if (reply_to != ""):
+        if (subject)
+           msg.subject=subject
+        if (reply_to):
            msg.reply_to=reply_to
         self.sender.send(msg)
 

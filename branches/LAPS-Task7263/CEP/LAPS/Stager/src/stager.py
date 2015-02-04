@@ -3,12 +3,12 @@
 import laps.MsgBus
 
 
-incoming = laps.MsgBus.Bus("laps.staging.request")
-outgoing = laps.MsgBus.Bus("laps.staging.staged")
+incoming = laps.MsgBus.FromBus("laps.staging.request")
+outgoing = laps.MsgBus.ToBus("laps.staging.staged")
 
 while True:
-    msg, subject = incoming.get()
-
-    outgoing.send(msg,subject)
-    incoming.ack()
-
+    msg = incoming.getmsg()
+    # msg.content is message body
+    # msg.subject is message subject
+    outgoing.sendmsg(msg)
+    incoming.ack(msg)

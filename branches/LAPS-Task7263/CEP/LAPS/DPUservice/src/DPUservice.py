@@ -3,12 +3,11 @@
 import laps.MsgBus
 
 
-incoming = laps.MsgBus.Bus("laps.DPUservice.incoming")
-outgoing = laps.MsgBus.Bus("laps.MetaInfoservice.incoming")
+incoming = laps.MsgBus.FromBus("laps.DPUservice.incoming")
+outgoing = laps.MsgBus.ToBus("laps.MetaInfoservice.incoming")
 
 while True:
-    msg, subject = incoming.get()
-
-    outgoing.send(msg,subject)
-    incoming.ack()
+    msg = incoming.getmsg()
+    outgoing.sendmsg(msg)
+    incoming.ack(msg)
 

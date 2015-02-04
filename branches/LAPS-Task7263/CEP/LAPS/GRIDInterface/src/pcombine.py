@@ -108,19 +108,23 @@ def write_output_xml(dom ):
 
 def main(argv):
 
-    parsetqueue = LAPS.MsgBus.Bus("LAPS.resolved.parsets")
-    xmlqueue = LAPS.MsgBus.Bus("LAPS.DPUservice.incoming")
+    parsetqueue = LAPS.MsgBus.FromBus("LAPS.resolved.parsets")
+    xmlqueue = LAPS.MsgBus.ToBus("LAPS.DPUservice.incoming")
     while True:
        parsets=[]
 
-       parsets.append( parsetqueue.get() )
-       parsets.append( parsetqueue.get() )
+       msg1 = parsetqueue.getmsg()
+       msg2 = parsetqueue.getmsg()
+
+       parsets.append( msg1.content,msg1.subject )
+       parsets.append( msg2.content,msg2.subject )
 
        dom = create_xml(parsets)
        xmlout = write_output_xml(dom)
 
-       xmlqueue.send(xmlout,"XMLout")
-       parsetqueue.ack()
+       xmlqueue.sendstr(xmlout,"XMLout")
+       parsetqueue.ack(msg1)
+       parsetqueue.ack(msg2)
 
 
 if __name__ == "__main__":
