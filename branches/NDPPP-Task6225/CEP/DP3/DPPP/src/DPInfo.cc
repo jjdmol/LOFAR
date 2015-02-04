@@ -395,24 +395,24 @@ namespace LOFAR {
       if (rec.isDefined ("AntDiam")) {
         rec.get ("AntDiam", itsAntDiam);
       }
-      if (rec.isDefined ("AntUsed")) {
-        itsAntUsed = rec.toArrayInt("AntUsed").tovector();
-      }
-      if (rec.isDefined ("AntMap")) {
-        itsAntMap = rec.toArrayInt("AntMap").tovector();
-      }
+      ///if (rec.isDefined ("AntUsed")) {
+      ///itsAntUsed = rec.toArrayInt("AntUsed").tovector();
+      ///}
+      ///if (rec.isDefined ("AntMap")) {
+      ///  itsAntMap = rec.toArrayInt("AntMap").tovector();
+      ///}
       if (rec.isDefined ("Ant1")) {
         rec.get ("Ant1", itsAnt1);
       }
       if (rec.isDefined ("Ant2")) {
         rec.get ("Ant2", itsAnt2);
       }
-      if (rec.isDefined ("BLength")) {
-        itsBLength = rec.toArrayDouble("BLength").tovector();
-      }
-      if (rec.isDefined ("AutoCorrIndex")) {
-        itsAutoCorrIndex = rec.toArrayInt("AutoCorrIndex").tovector();
-      }
+      ///if (rec.isDefined ("BLength")) {
+      ///  itsBLength = rec.toArrayDouble("BLength").tovector();
+      ///}
+      ///if (rec.isDefined ("AutoCorrIndex")) {
+      ///  itsAutoCorrIndex = rec.toArrayInt("AutoCorrIndex").tovector();
+      ///}
     }
 
   } //# end namespace
