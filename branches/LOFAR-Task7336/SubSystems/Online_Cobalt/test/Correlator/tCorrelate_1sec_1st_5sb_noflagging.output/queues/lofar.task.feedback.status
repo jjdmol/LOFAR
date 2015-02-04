@@ -2,17 +2,21 @@
    <header>
       <system>LOFAR</system>
       <version>1.0.0</version>
-      <service>
+      <protocol>
          <name>lofar.task.feedback.status</name>
          <version>1.0.0</version>
-      </service>
-      <request>
-         <source>Cobalt/GPUProc/sendStatus</source>
+      </protocol>
+      <source>
+         <name>Cobalt/GPUProc/sendStatus</name>
          <user></user>
          <uuid></uuid>
          <timestamp></timestamp>
          <summary>Status feedback</summary>
-      </request>
+      </source>
+      <ids>
+         <momid>0</momid>
+         <sasid>76966</sasid>
+      </ids>
    </header>
    <payload>
 <task>
