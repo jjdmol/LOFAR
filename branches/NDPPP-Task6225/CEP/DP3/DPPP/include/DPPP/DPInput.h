@@ -103,7 +103,7 @@ namespace LOFAR {
       // Otherwise there are read from the input.
       // If not defined in the input, they are filled using the flags in the
       // buffer assuming that no averaging has been done so far.
-      // If defined, they can be merged with the buffer's flags which means
+      // <src>If desired, they can be merged with the buffer's FLAG which means
       // that if an averaged channel is flagged, the corresponding FullRes
       // flags are set.
       // <br>It does a stop/start of the timer when actually reading the data.
@@ -115,6 +115,8 @@ namespace LOFAR {
       // Fetch the weights.
       // If defined in the buffer, they are taken from there.
       // Otherwise there are read from the input.
+      // If they have to be read and if autoweighting is in effect, the buffer
+      // must contain DATA to calculate the weights.
       // <br>It does a stop/start of the timer when actually reading the data.
       const casa::Cube<float>& fetchWeights (const DPBuffer& bufin,
                                              DPBuffer& bufout,

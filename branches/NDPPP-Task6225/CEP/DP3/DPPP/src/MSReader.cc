@@ -75,6 +75,7 @@ namespace LOFAR {
       itsNrChanStr        = parset.getString (prefix+"nchan", "0");
       string startTimeStr = parset.getString (prefix+"starttime", "");
       string endTimeStr   = parset.getString (prefix+"endtime", "");
+      itsTimeTolerance    = parset.getDouble (prefix+"timetolerance", 1e-2);
       itsUseFlags         = parset.getBool   (prefix+"useflag", true);
       itsDataColName      = parset.getString (prefix+"datacolumn", "DATA");
       itsWeightColName    = parset.getString (prefix+"weightcolumn",
@@ -235,8 +236,10 @@ namespace LOFAR {
           } else {
             // Use the time slot if near or < nexttime, but > starttime.
             // In this way we cater for irregular times in some WSRT MSs.
-            if (near(mstime, itsNextTime)  ||
-                (mstime > itsFirstTime  &&  mstime < itsNextTime)) {
+            if (nearAbs(mstime, itsNextTime, itsTimeTolerance)) {
+              useIter = true;
+              break;
+            } else if (mstime > itsFirstTime  &&  mstime < itsNextTime) {
               itsFirstTime -= itsNextTime-mstime;
               itsNextTime = mstime;
               useIter = true;

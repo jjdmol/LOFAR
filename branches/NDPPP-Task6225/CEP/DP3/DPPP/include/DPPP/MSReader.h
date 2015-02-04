@@ -167,12 +167,14 @@ namespace LOFAR {
                            DPBuffer&);
 
       // Read the weights at the given row numbers into the buffer.
+      // Note: the buffer must contain DATA if autoweighting is in effect.
       virtual void getWeights (const casa::RefRows& rowNrs,
                                DPBuffer&);
 
       // Read the fullRes flags (LOFAR_FULL_RES_FLAG) at the given row numbers
       // into the buffer.
-      // If undefined, false is returned.
+      // If there is no such column, the flags are set to false and false is
+      // returned.
       virtual bool getFullResFlags (const casa::RefRows& rowNrs,
                                     DPBuffer&);
 
@@ -299,6 +301,7 @@ namespace LOFAR {
       uint                itsNrCorr;
       uint                itsNrChan;
       uint                itsStartChan;
+      double              itsTimeTolerance; //# tolerance for time comparison
       double              itsTimeInterval;
       double              itsStartTime;
       double              itsFirstTime;

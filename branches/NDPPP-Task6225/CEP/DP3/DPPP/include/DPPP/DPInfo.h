@@ -212,6 +212,14 @@ namespace LOFAR {
       // Get the lengths of the baselines (in meters).
       const vector<double>& getBaselineLengths() const;
 
+      // Convert to a Record.
+      // The names of the fields in the record are the data names without 'its'.
+      casa::Record toRecord() const;
+
+      // Update the DPInfo object from a Record.
+      // It is possible that only a few fields are defined in the record.
+      void fromRecord (const casa::Record& rec);
+
     private:
       // Set which antennae are actually used.
       void setAntUsed();
