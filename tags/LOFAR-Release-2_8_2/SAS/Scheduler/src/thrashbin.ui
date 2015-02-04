@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ThrashbinClass</class>
+ <widget class="QDialog" name="ThrashbinClass">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>552</width>
+    <height>284</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Scheduler Thrash Bin</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="1" column="1">
+    <widget class="QPushButton" name="pushButtonDelete">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string>Delete</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="3">
+    <widget class="QPushButton" name="pushButtonClose">
+     <property name="text">
+      <string>Close</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2">
+    <widget class="QPushButton" name="pushButtonRestore">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string>Restore</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <spacer name="horizontalSpacer">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>40</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="0" column="0" colspan="4">
+    <widget class="QTableWidget" name="tableWidgetThrash">
+     <property name="selectionMode">
+      <enum>QAbstractItemView::MultiSelection</enum>
+     </property>
+     <property name="selectionBehavior">
+      <enum>QAbstractItemView::SelectRows</enum>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <tabstops>
+  <tabstop>tableWidgetThrash</tabstop>
+  <tabstop>pushButtonDelete</tabstop>
+  <tabstop>pushButtonRestore</tabstop>
+  <tabstop>pushButtonClose</tabstop>
+ </tabstops>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>pushButtonClose</sender>
+   <signal>clicked()</signal>
+   <receiver>ThrashbinClass</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>575</x>
+     <y>372</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>586</x>
+     <y>385</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButtonDelete</sender>
+   <signal>clicked()</signal>
+   <receiver>ThrashbinClass</receiver>
+   <slot>deleteTasks()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>383</x>
+     <y>363</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>363</x>
+     <y>363</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButtonRestore</sender>
+   <signal>clicked()</signal>
+   <receiver>ThrashbinClass</receiver>
+   <slot>restoreTasks()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>492</x>
+     <y>368</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>491</x>
+     <y>381</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>tableWidgetThrash</sender>
+   <signal>itemSelectionChanged()</signal>
+   <receiver>ThrashbinClass</receiver>
+   <slot>checkSelection()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>140</x>
+     <y>302</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>124</x>
+     <y>366</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>deleteTasks()</slot>
+  <slot>restoreTasks()</slot>
+  <slot>checkSelection()</slot>
+ </slots>
+</ui>
