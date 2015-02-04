@@ -30,6 +30,6 @@ QUEUES="
   lofar.task.feedback.dataproducts
   lofar.task.feedback.processing"
 for Q in $QUEUES; do
-  qpid-receive --print-content no --ignore-reply-to -b 127.0.0.1 -a $Q >/dev/null 2>&1
+  @QPID_RECEIVE_EXECUTABLE@ --print-content no --ignore-reply-to -b 127.0.0.1 -a $Q >/dev/null 2>&1
 done
 
