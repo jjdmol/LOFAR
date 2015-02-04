@@ -23,7 +23,7 @@ mkdir -p "$LOFARROOT/var/log" "$LOFARROOT/var/run" || error "Failed to create ru
 export LC_ALL="C"
 
 # Clear all used QPID queues to prevent leakage from previous tests
-echo "Clearing QPID queues (if they exist, so ignore any errors regarding that)..."
+# (if they exist, so ignore any errors regarding that)
 
 QUEUES="
   lofar.task.feedback.status
