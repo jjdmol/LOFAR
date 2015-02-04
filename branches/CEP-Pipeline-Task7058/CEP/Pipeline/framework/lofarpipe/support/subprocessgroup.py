@@ -7,10 +7,44 @@ class SubProcessGroup(object):
         A wrapper class for the subprocess module: allows fire and forget
         insertion of commands with a an optional sync/ barrier/ return
         """
-        def __init__(self, logger=None, usageStats = None):
+        def __init__(self, logger=None, usageStats = None,
+                     max_concurrent_processes = 8):
             self.process_group = []
             self.logger = logger
             self.usageStats = usageStats
+            self.running_process_count = 0
+            self.max_concurrent_processes = max_concurrent_processes
+
+            # list of command vdw pairs not started because the maximum
+            # number of processes was reached
+            self.processes_waiting_for_execution = []
+
+        def _start_process(self, cmd, cwd):
+            """
+            Helper function collection all the steps needed to start a process
+            """
+            # About to start a process, increase the counter
+            self.running_process_count += 1
+
+            # Run subprocess
+            process = subprocess.Popen(
+                        cmd,
+                        cwd=cwd,
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE)
+            
+            # save the process
+            self.process_group.append((False, (cmd, process)))
+
+            # add to resource monitor if available
+            if self.usageStats:
+                self.usageStats.addPID(process.pid)
+
+            if self.logger == None:
+                print "Subprocess started: {0}".format(cmd)
+            else:
+                self.logger.info("Subprocess started: {0}".format(cmd))
 
 
         def run(self, cmd_in, unsave=False, cwd=None):
@@ -29,35 +63,12 @@ class SubProcessGroup(object):
                 raise Exception("SubProcessGroup.run() expects a string or" +
                     "list[string] as arguments suplied: {0}".format(type(cmd)))
 
-            # Run subprocess
-            process = subprocess.Popen(
-                        cmd,
-                        cwd=cwd,
-                        stdin=subprocess.PIPE,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE)
-            
-            # save the process
-            self.process_group.append((cmd, process))
-
-            # add to resource monitor if available
-            if self.usageStats:
-                self.usageStats.addPID(process.pid)
-
-
-            # TODO: SubProcessGroup could saturate a system with to much 
-            # concurent calss: artifical limit to 20 subprocesses
-            if not unsave and (len(self.process_group) > 20):
-                self.logger.error("Subprocessgroup could hang with more"
-                    "then 20 concurent calls, call with unsave = True to run"
-                     "with more than 20 subprocesses")
-                raise PipelineException("Subprocessgroup could hang with more"
-                    "then 20 concurent calls. Aborting")
-
-            if self.logger == None:
-                print "Subprocess started: {0}".format(cmd)
+            # We need to be able to limit the maximum number of processes
+            if running_process_count >= max_concurrent_processes: 
+                # Save the command string and cwd
+                self.processes_waiting_for_execution.append((cmd, cwd))
             else:
-                self.logger.info("Subprocess started: {0}".format(cmd))
+                self._start_process(cmd, cwd)
 
 
         def wait_for_finish(self):
@@ -69,28 +80,50 @@ class SubProcessGroup(object):
             std out and error will be suplied to the logger
             """
             collected_exit_status = []
-            for cmd, process in self.process_group:
-                # communicate with the process
-                # TODO: This would be the best place to create a
-                # non mem caching interaction with the processes!
-                # TODO: should a timeout be introduced here to prevent never ending
-                # runs?
-                (stdoutdata, stderrdata) = process.communicate()
-                exit_status = process.returncode
+            while (true):
+                for idx, (completed, (cmd, process)) in \
+                                enumerate(self.process_group):
+                    # this process is complete continue
+                    if completed:
+                        continue
 
-                # get the exit status
-                if  exit_status != 0:
-                    collected_exit_status.append((cmd, exit_status))
+                    # poll returns null if the process is not completed
+                    if process.poll() == None:
+                        continue
 
-                # log the std out and err
-                if self.logger != None:
-                    self.logger.info(cmd)
-                    self.logger.debug(stdoutdata)
-                    self.logger.warn(stderrdata)
-                else:
-                    print cmd
-                    print stdoutdata
-                    print stderrdata
+                    # We have a completed process
+                    # communicate with the process
+                    # TODO: This would be the best place to create a
+                    # non mem caching interaction with the processes!
+                    # TODO: should a timeout be introduced here to prevent never ending
+                    # runs?
+                    (stdoutdata, stderrdata) = process.communicate()
+                    exit_status = process.returncode
+
+                    # get the exit status
+                    if  exit_status != 0:
+                        collected_exit_status.append((cmd, exit_status))
+
+                    # log the std out and err
+                    if self.logger != None:
+                        self.logger.info(cmd)
+                        self.logger.debug(stdoutdata)
+                        self.logger.warn(stderrdata)
+                    else:
+                        print cmd
+                        print stdoutdata
+                        print stderrdata
+
+                    # Now update the state of the internal state
+                    self.process_group[idx] = (True, (cmd, process))
+                    self.running_process_count -= 1
+                    # Finished process, decrease check if there are pending
+                    # subprocesses, empthy string evaluates to False
+                    if not self.processes_waiting_for_execution:  
+                        # Get the last process
+                        cmd , cwd = self.processes_waiting_for_execution.pop()
+                        # start it
+                        self._start_process(cmd, cwd)
 
             if len(collected_exit_status) == 0:
                 collected_exit_status = None
