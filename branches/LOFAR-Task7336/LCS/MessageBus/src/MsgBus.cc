@@ -22,7 +22,7 @@ namespace LOFAR {
 
   FromBus::FromBus(const std::string &address, const std::string &options, const std::string &broker)
   try:
-    itsConnection(broker),
+    itsConnection(broker,"{reconnect:true}"),
     itsNrMissingACKs(0)
   {
     itsConnection.open();
@@ -104,7 +104,7 @@ namespace LOFAR {
 
   ToBus::ToBus(const std::string &address, const std::string &options, const std::string &broker) 
   try:
-    itsConnection(broker)
+    itsConnection(broker,"{reconnect:true}")
   {
      itsConnection.open();
 	 cout << "Connected to: " << itsConnection.getUrl() << endl;
