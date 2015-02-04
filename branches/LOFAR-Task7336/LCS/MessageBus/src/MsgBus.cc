@@ -44,6 +44,13 @@ namespace LOFAR {
     if (itsNrMissingACKs) {
 //      LOG_ERROR_STR("Queue " << itsQueueName << " on broker " << itsBrokerName << " has " << itsNrMissingACKs << " messages not ACK'ed ");
 	}
+
+    try {
+      // Make sure all requests are finished
+      itsConnection.close();
+    } catch(const qpid::types::Exception &ex) {
+      LOG_FATAL_STR("Exception in destructor, cannot guarantee message delivery: " << ex.what());
+    }
   }
 
   bool FromBus::getMessage(LOFAR::Message &msg, double timeout) // timeout 0.0 means blocking
@@ -109,8 +116,16 @@ namespace LOFAR {
   } catch(const qpid::types::Exception &ex) {
     THROW(MessageBusException, ex.what());
   }
+
   ToBus::~ToBus(void)
   {
+
+    try {
+      // Make sure all requests are finished
+      itsConnection.close();
+    } catch(const qpid::types::Exception &ex) {
+      LOG_FATAL_STR("Exception in destructor, cannot guarantee message delivery: " << ex.what());
+    }
   }
 
   void ToBus::send(const std::string &msg)
