@@ -65,20 +65,19 @@ void compareMessages(qpid::messaging::Message&	lhm, qpid::messaging::Message& rh
 
 
 int main(int argc, char* argv[]) {
-	if (argc != 2) {
-		cout << "Syntax: " << argv[0] << " messagebus" << endl;
-		return (1);
-	}
+  std::string queue(argc == 2 ? argv[1] : "tMsgBus-test-queue");
+
+  cout << "Using queue " << queue << " (Syntax: " << argv[0] << " messagebus)" << endl;
 
 	cout << "--- Drain the queue ---" << endl;
-	FromBus	fb(argv[1]);
+	FromBus	fb(queue);
 	LOFAR::Message	receivedMsg;
 	while (fb.getMessage(receivedMsg, 0.01)) {
 		fb.ack(receivedMsg);
 	}
 
 	cout << "--- TEST 1: create a message from a string, send it, receive it, print it. --- " << endl;
-	ToBus	tb(argv[1]);
+	ToBus	tb(queue);
 	string	someText("An example message constructed from text");
 	tb.send(someText);
 	fb.getMessage(receivedMsg);
