@@ -467,7 +467,7 @@ class selfcal_awimager(LOFARnodeTCP):
       # ********************************************************************        
       # 7. Threshold determination from the previous cycle 
       if major_cycle == 0:
-          threshold = '0.010Jy'	
+          threshold = '0.075Jy'	
       else:
         fits_image_path_list	= measurement_set.split('concat.ms')
         fits_image_path			= fits_image_path_list[0] +\
@@ -493,7 +493,7 @@ class selfcal_awimager(LOFARnodeTCP):
         dataPercent		= int(fitsImage[0].shape[2] * 0.05)
 
         fiveSigmaData	= sum(sortedData[0:dataPercent]) / dataPercent	
-        threshold		= abs(fiveSigmaData) / 5.0 * 2.335 / 2.0
+        threshold		= (abs(fiveSigmaData) / 5.0) * (2.335 / 2.0) * 15
 
       return pixsize, str(nbpixel), str(wmax), str(w_proj_planes), \
              str(UVmin), str(UVmax), str(robust), str(threshold)
