@@ -45,24 +45,30 @@ class ToBus():
         self.sender.send(msg)
 
     def sendmsg(self,msg)
-	self.sender.send(msg)
+        self.sender.send(msg)
 
 class FromBus():
-    def __init__(self, address, options=options, broker=broker):
+    def default_handler(self,msg):
+        print msg
+        self.session.acknowledge(msg)
+
+    def __init__(self, address, options=options, broker=broker, handler=self.default_handler):
         self.connection = Connection(broker)
         self.connection.reconnect = True
-        
+
         try:
             self.connection.open()
             self.session = self.connection.session()
             receiver = self.session.receiver("%s;{%s}" %(address,options))
             receiver.capacity = 1 #32
-            
+            self.handlers={}
+            self.handlers[receiver]=handler;
+
         except MessagingError,m:
             print " OMG!!"
             print m
 
-    def add(self,address,options=options):
+    def add(self,address,options=options,handler=None):
         try:
             receiver=self.session.receiver("%s;{%s}" %(address,options))
             receiver.capacity = 1 #32
@@ -72,13 +78,26 @@ class FromBus():
 
     def getmsg(self,timeout=None):
         msg=None
-	try:
+        try:
                 receiver = self.session.next_receiver(timeout)
-        	if receiver != None: msg = self.receiver.get()
-	except exceptions.Empty, e:
-		return "None" , "None"
+                if receiver != None: msg = self.receiver.get()
+        except exceptions.Empty, e:
+                return "None" , "None"
         return msg
+
+    def handleOne(self,timeout=None):
+        msg=None
+        try:
+                receiver = self.session.next_receiver(timeout)
+                if receiver != None:
+                    msg = self.receiver.get()
+                    handler=handlers[receiver]
+                    if (handler):
+                        handler(msg)
+                    else
+                        self.default_handler(msg)
+        except exceptions.Empty, e:
+                print " Error during handleOne() "
 
     def ack(self,msg):
           self.session.acknowledge(msg)
-
