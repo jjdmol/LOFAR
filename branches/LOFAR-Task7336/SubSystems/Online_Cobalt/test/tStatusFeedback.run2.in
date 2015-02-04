@@ -28,8 +28,8 @@ function test_parset {
   # <TODO>
 }
 
-test_parset $PWD/tMACfeedback.in_parset_success_1 0 ""
-test_parset $PWD/tMACfeedback.in_parset_failure_1 1 "-o Cobalt.Nodes=[unreachable]"
+test_parset $PWD/tStatusFeedback.in_parset_success_1 0 ""
+test_parset $PWD/tStatusFeedback.in_parset_failure_1 1 "-o Cobalt.Nodes=[unreachable]"
 
 # Everything went ok
 exit 0
