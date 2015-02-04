@@ -21,4 +21,5 @@ endforeach(prog ${messagebus_PROGRAMS})
 python_install(
   __init__.py
   MsgBus.py
-  DESTINATION MessageBus/)
+  DESTINATION lofar/messagebus)
+
