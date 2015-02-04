@@ -24,7 +24,7 @@ broker="localhost"
 options="create:always, node: { type: queue, durable: True}"
 
 class ToBus():
-    def __init__(self, address=address, options=options, broker=broker):
+    def __init__(self, address, options=options, broker=broker):
         self.connection = Connection(broker)
         self.connection.reconnect = True
 
@@ -43,6 +43,9 @@ class ToBus():
         if (reply_to != ""):
            msg.reply_to=reply_to
         self.sender.send(msg)
+
+    def sendmsg(self,msg)
+	self.sender.send(msg)
 
 class FromBus():
     def __init__(self, address, options=options, broker=broker):
