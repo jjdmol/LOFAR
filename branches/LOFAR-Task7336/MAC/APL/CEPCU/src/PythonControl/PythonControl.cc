@@ -30,7 +30,6 @@
 #include <Common/Exceptions.h>
 #include <Common/SystemUtil.h>
 #include <Common/hexdump.h>
-#include <MessageBus/MsgBus.h>
 #include <ApplCommon/LofarDirs.h>
 #include <ApplCommon/StationInfo.h>
 #include <MACIO/MACServiceInfo.h>
@@ -79,7 +78,7 @@ PythonControl::PythonControl(const string&	cntlrName) :
 	itsForcedQuitTimer  (0),
 	itsListener			(0),
 	itsMsgQueue			(0),
-	itsFeedbackResult	(CT_RESULT_NO_ERROR),	// QUICK FIX #3633
+	itsFeedbackResult	(CT_RESULT_NO_ERROR),
 	itsPythonPort		(0),
 	itsState			(CTState::NOSTATE),
 	itsForceTimeout		(3600.0)
@@ -106,6 +105,8 @@ PythonControl::PythonControl(const string&	cntlrName) :
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
 	ASSERTSTR(itsTimerPort, "Cannot allocate the timer");
+	itsQueueTimer = new GCFTimerPort(*this, "MsgQTimer");
+	ASSERTSTR(itsQueueTimer, "Cannot allocate queue timer");
 
 	// for debugging purposes
 	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
@@ -124,6 +125,8 @@ PythonControl::~PythonControl()
 		delete itsListener; 
 	}
 
+	delete itsTimerPort;
+	delete itsQueueTimer;
 	delete itsMsgQueue;
 }
 
@@ -349,7 +352,6 @@ GCFEvent::TResult PythonControl::initial_state(GCFEvent& event, GCFPortInterface
 		string	pythonHost      (thePS->getString(myPrefix+"pythonHost",     "@pythonHost@"));
 		itsChildCanCommunicate = thePS->getBool  (myPrefix+"canCommunicate", true);
 		// START PYTHON
-		// QUICK FIX #3633: if-else nesting was different
 		if (itsChildCanCommunicate) {
 			bool startOK = _startPython(pythonProg, getObservationNr(getName()), realHostname(pythonHost), 
 										itsListener->makeServiceName());
@@ -517,30 +519,6 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 		}
 	} break;
 	
-	// QUICK FIX #3633
-#if 0
-	case F_DATAIN: {
-		ASSERTSTR(&port == itsFeedbackPort, "Didn't expect raw data on port " << port.getName());
-		char	buf[1024];
-		ssize_t	btsRead = port.recv((void*)&buf[0], 1023);
-		buf[btsRead] = '\0';
-		string	s;
-		hexdump(s, buf, btsRead);
-		LOG_INFO_STR("Received command on feedback port: " << s);
-
-		if (!strcmp(buf, "ABORT")) {
-			itsFeedbackResult = CT_RESULT_PIPELINE_FAILED;
-			TRAN(PythonControl::finishing_state);
-		}
-		else if (!strcmp(buf, "FINISHED")) {
-			TRAN(PythonControl::finishing_state);
-		}
-		else {
-			LOG_ERROR_STR("Received command on feedback port unrecognized");
-		}
-	} break;
-#endif
-
 	case F_TIMER: {
 		if (&port == itsForcedQuitTimer) {
 			LOG_WARN("Aborting program on emergency timer!");
@@ -549,7 +527,14 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 		if (&port == itsQueueTimer) {
 			Message		msg;
 			if (itsMsgQueue->getMessage(msg, 0.1)) {
-//				itsFeedbackResult = msg.content.task.state;	// @@@@
+				string	result = msg.getXMLvalue("message.payload.task.state");
+				if (result == "ABORT") {
+					itsFeedbackResult = CT_RESULT_PIPELINE_FAILED;
+				}
+				else if (result != "FINISHED") {
+					LOG_FATAL_STR("Unknown result received from pipeline: " << result << " assuming failure!");
+					itsFeedbackResult = CT_RESULT_PIPELINE_FAILED;
+				}
 				LOG_INFO_STR("Received finish result on messagebus: " << itsFeedbackResult);
 				TRAN(PythonControl::finishing_state);
 				break;
@@ -609,7 +594,6 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 			itsPythonPort->send(msg);
 		}
 		else {
-			// QUICK FIX #3633
 			LOG_INFO("Trying to start the Python environment");
 			ParameterSet*   thePS  = globalParameterSet();      // shortcut to global PS.
 			string  myPrefix        (thePS->locateModule("PythonControl")+"PythonControl.");
@@ -626,7 +610,6 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 				finish(CT_RESULT_PIPELINE_FAILED);
 				break;
 			}
-			// QUICK FIX #3633 END
 			LOG_WARN("Start of Python environment looks OK, sending FAKE Resume response");
 			sendControlResult(*itsParentPort, event.signal, itsMyName, CT_RESULT_NO_ERROR);
 		}

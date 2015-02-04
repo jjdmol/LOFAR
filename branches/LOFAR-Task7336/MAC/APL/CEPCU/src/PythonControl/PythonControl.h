@@ -88,7 +88,6 @@ private:
 	bool 	_stopPython  ( int			obsID,
 						  const string&	pythonHost);
 	void	_databaseEventHandler(GCFEvent&				event);
-	void	_passMetadatToOTDB();
 
 	// ----- datamembers -----
    	RTDBPropertySet*           	itsPropertySet;
@@ -106,7 +105,6 @@ private:
 
 	GCFTCPPort*				itsListener;
 
-	// QUICK FIX #3633
 	FromBus*				itsMsgQueue;
 	int						itsFeedbackResult;
 
