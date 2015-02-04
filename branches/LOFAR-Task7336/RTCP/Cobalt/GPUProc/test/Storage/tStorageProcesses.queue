@@ -2,17 +2,21 @@
    <header>
       <system>LOFAR</system>
       <version>1.0.0</version>
-      <service>
+      <protocol>
          <name>lofar.task.feedback.dataproducts</name>
          <version>1.0.0</version>
-      </service>
-      <request>
-         <source>lofar.task.feedback.dataproducts</source>
+      </protocol>
+      <source>
+         <name>Cobalt/GPUProc/Storage/StorageProcess</name>
          <user></user>
          <uuid></uuid>
          <timestamp></timestamp>
          <summary>Feedback for Correlated Data, subband 0</summary>
-      </request>
+      </source>
+      <ids>
+         <momid>0</momid>
+         <sasid>12345</sasid>
+      </ids>
    </header>
    <payload>
 Observation.DataProducts.Output_Correlated_[0].SAP=0
