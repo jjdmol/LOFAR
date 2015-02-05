@@ -19,27 +19,25 @@
 import qpid.messaging
 import xml.dom.minidom as xml
 
-__slots__ = ["Message"]
-
 LOFAR_MSG_TEMPLATE = """
 <message>
    <header>
-      <system></system>
-      <version></version>
+      <system/>
+      <version/>
       <protocol>
-         <name></name>
-         <version></version>
+         <name/>
+         <version/>
       </protocol>
       <source>
-         <name></name>
-         <user></user>
-         <uuid></uuid>
-         <timestamp></timestamp>
-         <summary></summary>
+         <name/>
+         <user/>
+         <uuid/>
+         <timestamp/>
+         <summary/>
       </source>
       <ids>
-         <momid></momid>
-         <sasid></sasid>
+         <momid/>
+         <sasid/>
       </ids>
    </header>
    <payload>
@@ -48,7 +46,6 @@ LOFAR_MSG_TEMPLATE = """
 
 class Message(object):
     def __init__(self, from_, forUser, summary, protocol, protocolVersion, momid, sasid):
-      self.qpidMsg = qpid.messaging.Message()
       self.document = xml.parseString(LOFAR_MSG_TEMPLATE)
 
       for name, element in self._property_list().iteritems():
@@ -94,11 +91,6 @@ class Message(object):
       }
 
     """ API (apart from properties). """
-
-    def setXMLPayload(self, payload):
-      self.qpidMsg.setContent(self.content_template % (payload,))
-
-    setTXTPayload = setXMLPayload
 
     def __repr__(self):
       return "Message(%s %s)" % (self.protocol, self.protocolVersion)
@@ -171,7 +163,11 @@ class Message(object):
     def _setXMLdata(self, name, data):
       return self._set_data(self._getXMLnode(name), data)
 
+    def qpidMsg(self):
+      qpidMsg = qpid.messaging.Message(self.document.toxml())
+
 if __name__ == "__main__":
   m = Message("FROM", "FORUSER", "SUMMARY", "PROTOCOL", "1.2.3", "11111", "22222")
   print str(m)
+  print m.document.toxml()
 

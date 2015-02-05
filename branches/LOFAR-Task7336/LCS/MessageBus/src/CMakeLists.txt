@@ -24,3 +24,4 @@ python_install(
   Message.py
   DESTINATION lofar/messagebus)
 
+add_subdirectory(Protocols)
