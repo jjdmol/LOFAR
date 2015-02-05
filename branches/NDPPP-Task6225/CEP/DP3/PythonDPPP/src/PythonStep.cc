@@ -25,6 +25,7 @@
 #include <PythonDPPP/PythonStep.h>
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
+#include <DPPP/DPRun.h>
 #include <Common/ParameterSet.h>
 
 #include <python/Converters/PycExcp.h>
@@ -33,8 +34,9 @@
 #include <python/Converters/PycRecord.h>
 #include <python/Converters/PycArray.h>
 
+#include <unistd.h>
+
 using namespace casa;
-using namespace LOFAR::BBS;
 
 namespace LOFAR {
   namespace DPPP {
@@ -42,40 +44,39 @@ namespace LOFAR {
     PythonStep::PythonStep (DPInput* input,
                             const ParameterSet& parset,
                             const string& prefix)
-      : itsInput       (input),
-        itsName        (prefix),
-        itsParset      (parset.makeSubset (prefix)),
-        itsPythonName  (itsParset.getString ("python.module"))
+      : itsInput        (input),
+        itsName         (prefix),
+        itsParset       (parset.makeSubset (prefix)),
+        itsPythonClass  (itsParset.getString ("python.class")),
+        itsPythonModule (itsParset.getString ("python.module", itsPythonClass))
     {
-      // Initialize Python interpreter
+      // Initialize Python interpreter.
+      // Note: a second call is a no-op.
       Py_Initialize();
         // Register converters for casa types from/to python types
-      casa::pyrap::register_convert_excp();
-      casa::pyrap::register_convert_basicdata();
-      casa::pyrap::register_convert_casa_valueholder();
-      casa::pyrap::register_convert_casa_record();
+      casa::python::register_convert_excp();
+      casa::python::register_convert_basicdata();
+      casa::python::register_convert_casa_valueholder();
+      casa::python::register_convert_casa_record();
       try {
         // First import main
-        boost::python::object main_module = boost::python::import
+        boost::python::object mainModule = boost::python::import
           ("__main__");
         // Import the given module
-        boost::python::object embedded_module = boost::python::import
-          (parameters.getString(itsPythonName + ".module").c_str());
+        boost::python::object dpppModule = boost::python::import
+          (itsPythonModule.c_str());
         // Get the python class object from the imported module
-        boost::python::object pyAttr = embedded_module.attr
-          (parameters.getString(itsPythonName + ".class").c_str());
+        boost::python::object dpppAttr = dpppModule.attr
+          (itsPythonClass.c_str());
 
-        // Import the lofar.parameterset module
-        boost::python::object lofar_parameterset_module = boost::python::import
-          ("lofar.parameterset");
-        boost::python::object pyparameterset = lofar_parameterset_module.attr
-          ("parameterset")();
-        ParameterSet ps = boost::python::extract<ParameterSet>(pyparameterset);
-        
-        ps.adoptCollection(parameters);
-    
-        // Create an instance of the python class
-        itsPyObject = pyAttr(pyparameterset); 
+        // Convert the ParameterSet to a Record (using its string values).
+        Record rec;
+        for (ParameterSet::const_iterator iter=itsParset.begin();
+             iter!=itsParset.end(); ++iter) {
+          rec.define (iter->first, iter->second.get());
+        }
+        // Create an instance of the python class passing the record.
+        itsPyObject = dpppAttr(rec);
       } catch (boost::python::error_already_set const &) {
         // handle the exception in some way
         PyErr_Print();
@@ -95,17 +96,24 @@ namespace LOFAR {
 
     bool PythonStep::process (const DPBuffer& buf)
     {
+      cout<<"process"<<endl;
       itsTimer.start();
       itsBuf.referenceFilled (buf);
       if (itsNeedWeights) {
-        itsInput.fetchWeights (buf, itsBuf, itsTimer);
+        itsInput->fetchWeights (buf, itsBuf, itsTimer);
       }
       if (itsNeedUVW) {
-        itsInput.fetchUVW (buf, itsBuf, itsTimer);
+        itsInput->fetchUVW (buf, itsBuf, itsTimer);
       }
       if (itsNeedFullResFlags) {
-        itsInput.fetchFullResFlags (buf, itsBuf, itsTimer);
+        itsInput->fetchFullResFlags (buf, itsBuf, itsTimer);
       }
+      cout<<"process1"<<endl;
+      boost::python::object result =
+        itsPyObject.attr("process")();
+      cout<<"process2"<<endl;
+      Record rec = boost::python::extract<Record> (result);
+      cout<<"process3"<<endl;
       itsTimer.stop();
       getNextStep()->process(itsBuf);
       return false;
@@ -114,12 +122,14 @@ namespace LOFAR {
     void PythonStep::finish()
     {
       itsPyObject.attr("finish")();
-      getNextStep.finish();
+      getNextStep()->finish();
     }
 
     void PythonStep::updateInfo (const DPInfo& infoIn)
     {
-      Record rec = itsPyObject.attr("updateInfo")(infoIn.toRecord());
+      boost::python::object result =
+        itsPyObject.attr("updateInfo")(infoIn.toRecord());
+      Record rec = boost::python::extract<Record>(result);
       info() = infoIn;
       // Merge possible result back in DPInfo object.
       info().fromRecord (rec);
@@ -137,26 +147,33 @@ namespace LOFAR {
 
     void PythonStep::addToMS (const string& msName)
     {
-      itsPyObject.attr("addToMS")();
+      itsPyObject.attr("addToMS")(msName);
     }
 
     void PythonStep::show (std::ostream& os) const
     {
-      string result = itsPyObject.attr("show")();
-      os << result;
+      boost::python::object result = itsPyObject.attr("show")();
+      string str = boost::python::extract<string>(result);
+      os << "PythonStep " << itsName << " class=" << itsPythonClass << endl;
+      if (! str.empty()) {
+        os << str;
+      }
     }
 
     void PythonStep::showCounts (std::ostream& os) const
     {
-      string result = itsPyObject.attr("showCounts")();
-      os << result;
+      boost::python::object result = itsPyObject.attr("showCounts")();
+      string str = boost::python::extract<string>(result);
+      if (! str.empty()) {
+        os << str;
+      }
     }
 
-    void PythonStep::showTimings (std::ostream&, double duration) const
+    void PythonStep::showTimings (std::ostream& os, double duration) const
     {
       os << "  ";
       FlagCounter::showPerc1 (os, itsTimer.getElapsed(), duration);
-      os << " PythonStep " << itsPythonName << endl;
+      os << " PythonStep " << itsName << " class=" << itsPythonClass << endl;
     }
 
 

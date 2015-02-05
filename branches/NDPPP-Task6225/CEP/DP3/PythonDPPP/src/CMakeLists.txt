@@ -9,3 +9,6 @@ lofar_add_library(pythondppp
 )
 
 lofar_add_bin_program(versionpythondppp versionpythondppp.cc)
+
+# Install Python modules
+python_install(__init__.py DESTINATION lofar/PythonDPPP)

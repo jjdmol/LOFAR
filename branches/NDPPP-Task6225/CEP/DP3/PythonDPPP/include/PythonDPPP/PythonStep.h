@@ -104,14 +104,18 @@ namespace LOFAR {
 
     private:
       //# Data members.
+      DPInput*     itsInput;
+      std::string  itsName;
       ParameterSet itsParset;
       DPBuffer     itsBuf;
-      std::string  itsPythonName;
+      std::string  itsPythonClass;
+      std::string  itsPythonModule;
       bool         itsNeedWeights;
       bool         itsNeedUVW;
       bool         itsNeedFullResFlags;
       NSTimer      itsTimer;
       boost::python::object itsPyObject;
+      boost::python::object itsPyParSet;
     };
 
   } //# end namespace

@@ -3,9 +3,10 @@
 lofar_package(PythonDPPP 0.1 DEPENDS DPPP)
 
 include(LofarFindPackage)
+lofar_find_package(Casacore COMPONENTS casa ms tables python REQUIRED)
 lofar_find_package(Boost REQUIRED COMPONENTS python)
 lofar_find_package(Python 2.6 REQUIRED)
 
 add_subdirectory(include/PythonDPPP)
 add_subdirectory(src)
-#add_subdirectory(test)
+add_subdirectory(test)
