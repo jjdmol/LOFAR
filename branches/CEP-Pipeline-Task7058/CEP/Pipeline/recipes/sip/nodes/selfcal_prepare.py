@@ -242,12 +242,25 @@ class selfcal_prepare(LOFARnodeTCP):
             # ndppp needs the incorrect files there to allow filling with zeros
             ndppp_input_ms = [item.file for item in input_map_subgroup]
 
+            # Automatically average the number of channels in the output to 1
+            # open the dataset
+            table = pyrap.tables.table("concat.ms")
+            
+            # get the data column, get description, get the shape, first index 
+            # returns the number of channels
+            nchan_input = str(pt.tablecolumn(
+                                       table, 'DATA').getdesc()["shape"][0])            
+            ndppp_nchan_key = "avg1.freqstep"  # TODO/FIXME: dependency on the step name!!!!
+            
             # Join into a single list of paths.
             msin = "['{0}']".format("', '".join(ndppp_input_ms))
             # Update the parset with computed parameters
             patch_dictionary = {'uselogger': 'True',  # enables log4cplus
                                'msin': msin,
-                               'msout': time_slice_path}
+                               'msout': time_slice_path,
+                               ndppp_nchan_key:nchan_input}
+
+
             nddd_parset_path = time_slice_path + ".ndppp.par"
             try:
                 temp_parset_filename = patch_parset(parset, patch_dictionary)

@@ -26,7 +26,7 @@ def open_file_and_parse_to_python_data(path):
 
     """
     try:
-        import pickle
+
         f = open(path)
         data = pickle.load(f)
 

@@ -429,7 +429,8 @@ def create_trace_plot_information(step_dict, plot_debug):
         time_stamps = []
         return time_stamps, all_traces, aggregate_traces
 
-    for id, node_dict in step_dict['jobs'].items():      # the node level information        for id, pid_dict in node_dict['traces'].items(): # traces of the actual executables
+    for id, node_dict in step_dict['jobs'].items():      # the node level information        
+        for id, pid_dict in node_dict['traces'].items(): # traces of the actual executables
              if len(pid_dict['trace']['timestamp']) == 0:
                 continue
                 
