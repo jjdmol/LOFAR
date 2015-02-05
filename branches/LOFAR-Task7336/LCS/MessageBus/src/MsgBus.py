@@ -23,7 +23,7 @@ from qpid.messaging import *
 broker="localhost" 
 options="create:always, node: { type: queue, durable: True}"
 
-class ToBus():
+class ToBus:
     def __init__(self, address, options=options, broker=broker):
         self.connection = Connection(broker)
         self.connection.reconnect = True
@@ -47,7 +47,7 @@ class ToBus():
     def sendmsg(self,msg):
 	self.sender.send(msg)
 
-class FromBus():
+class FromBus:
     def __init__(self, address, options=options, broker=broker):
         self.connection = Connection(broker)
         self.connection.reconnect = True
