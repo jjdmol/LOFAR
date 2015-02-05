@@ -19,10 +19,11 @@
 //#
 //# $Id: ApplyCal.cc 21598 2012-07-16 08:07:34Z diepen $
 //#
-//# @author Tammo Jan Dijkema
+//# @author Ger van Diepen
 
 #include <lofar_config.h>
 #include <PythonDPPP/PythonStep.h>
+#include <PythonDPPP/DPStepBase.h>
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
 #include <DPPP/DPRun.h>
@@ -77,6 +78,8 @@ namespace LOFAR {
         }
         // Create an instance of the python class passing the record.
         itsPyObject = dpppAttr(rec);
+        // Set the pointer to this object in the DPStepBase object.
+        DPStepBase::theirPtr->setStep (this);
       } catch (boost::python::error_already_set const &) {
         // handle the exception in some way
         PyErr_Print();
@@ -133,6 +136,13 @@ namespace LOFAR {
       info() = infoIn;
       // Merge possible result back in DPInfo object.
       info().fromRecord (rec);
+      // See if data needs to be read or written.
+      boost::python::object resrd = itsPyObject.attr("needVisData")();
+      bool rd = boost::python::extract<bool>(resrd);
+      boost::python::object reswr = itsPyObject.attr("needWrite")();
+      bool wr = boost::python::extract<bool>(reswr);
+      if (rd) info().setNeedVisData();
+      if (wr) info().setNeedWrite();
       // See which data parts are needed (to avoid sending too much to python).
       if (rec.isDefined("NeedWeights")) {
         rec.get ("NeedWeights", itsNeedWeights);
@@ -186,3 +196,9 @@ void register_pythondppp()
   LOFAR::DPPP::DPRun::registerStepCtor ("pythondppp",
                                         LOFAR::DPPP::PythonStep::makeStep);
 }
+
+
+/*
+Note:
+let python step allocate numpy arrays for data, etc, so C++ can copy directly into them.
+*/

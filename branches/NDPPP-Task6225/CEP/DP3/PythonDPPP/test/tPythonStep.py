@@ -20,11 +20,12 @@
 # $Id: __init__.py 23074 2012-12-03 07:51:29Z diepen $
 
 
-from lofar.PythonDPPP import DPStepBase
+from lofar.pythondppp import DPStepBase
 from lofar.parameterset import parameterset
 
 class tPythonStep(DPStepBase):
     def __init__(self, parsetName):
+        DPStepBase.__init__(self)
         print parsetName
         itsParset = parameterset(parsetName)
         print itsParset.dict()

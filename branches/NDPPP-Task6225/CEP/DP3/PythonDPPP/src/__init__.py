@@ -19,18 +19,25 @@
 #
 # $Id: __init__.py 23074 2012-12-03 07:51:29Z diepen $
 
+from lofar.pythondppp._pythondppp import _DPStepBase
 
-class DPStepBase(object):
+class DPStepBase(_DPStepBase):
     """
     The base class for a python DPPP step
     """
 
     def __init__(self):
-        None
+        _DPStepBase.__init__(self)
 
     def updateInfo(self, dpinfo):
         itsInfo = dpinfo
         return {}
+
+    def needVisData(self):
+        return False
+
+    def needWrite(self):
+        return False
 
     def show(self):
         return ""
@@ -40,12 +47,3 @@ class DPStepBase(object):
 
     def addToMS(name):
         None
-
-    def needWeights(self, dpinfo):
-        dpinfo["NeedWeights"] = True
-
-    def needUVW(self, dpinfo):
-        dpinfo["NeedUVW"] = True
-
-    def needFullResFlags(self, dpinfo):
-        dpinfo["NeedFullResFlags"] = True

@@ -19,8 +19,11 @@
 //#
 //# $Id: pyparameterset.cc 23074 2012-12-03 07:51:29Z diepen $
 
-#include <lofar_config.h>
-#include <PythonDPPP/DPStepBase.h>
+#ifndef DPPP_DPSTEPBASE_H
+#define DPPP_DPSTEPBASE_H
+
+#include <DPPP/DPInfo.h>
+#include <DPPP/DPStep.h>
 
 // The C++ PythonStep must be able to call functions in Python.
 // But the Python functions must be able to call the C++ functions
@@ -33,8 +36,35 @@
 namespace LOFAR {
   namespace DPPP {
 
-    // Define the static.
-    DPStepBase* DPStepBase::theirPtr=0;
+    class DPStepBase
+    {
+    public:
+      // Keep the this pointer in a static. It is used by PythonStep.cc
+      // to call setStep to have a pointer from the python interface
+      // to the C++ code.
+      DPStepBase()
+        { theirPtr = this; }
+
+      void updateInfo (const DPInfo& info)
+      {
+        theirPtr = this;
+      }
+
+      void setNeedData()
+      ///        { itsStep->setNeedData() }
+      {}
+
+      void setStep (DPStep* step)
+      { cout<<"set the step "<<this<<' '<<theirPtr<<' '<<step<<endl; itsStep = step; }
+
+      // Temporarily keep the pointer to this object.
+      static DPStepBase* theirPtr;
+
+    private:
+      DPStep* itsStep;
+    };
 
   }
 }
+
+#endif

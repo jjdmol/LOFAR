@@ -1,4 +1,4 @@
-//# DPStepBase.cc: Python base class for a DPStep in python
+//# PythonDPPP.cc: Python base class for a DPStep in python
 //# Copyright (C) 2015
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -22,6 +22,13 @@
 #include <lofar_config.h>
 #include <PythonDPPP/DPStepBase.h>
 
+#include <python/Converters/PycExcp.h>
+#include <python/Converters/PycBasicData.h>
+#include <boost/python.hpp>
+#include <boost/python/args.hpp>
+
+using namespace boost::python;
+
 // The C++ PythonStep must be able to call functions in Python.
 // But the Python functions must be able to call the C++ functions
 // (e.g., to get data, flags, etc.)
@@ -33,8 +40,27 @@
 namespace LOFAR {
   namespace DPPP {
 
-    // Define the static.
-    DPStepBase* DPStepBase::theirPtr=0;
+    // Define the python interface to PythonStep
+    void dpstepbase()
+    {
+      class_<DPStepBase> ("_DPStepBase")
+        .def (init<>())
+        .def ("setNeedData", &DPStepBase::setNeedData,
+              "Tell DPPP that it needs to read the data column.")
+        ///.def ("setWriteData", &DPStepBase::setWriteData,
+        ///   "Tell DPPP that it needs to write the data column.")
+        ;
+    }
 
   }
+}
+
+
+// Define the python module itself.
+BOOST_PYTHON_MODULE(_pythondppp)
+{
+  casa::python::register_convert_excp();
+  casa::python::register_convert_basicdata();
+
+  LOFAR::DPPP::dpstepbase();
 }
