@@ -39,6 +39,7 @@
     <Content Include="test\CMakeLists.txt" />
     <Compile Include="helper_scripts\aggregate_stats.py" />
     <Compile Include="helper_scripts\create_selfcal_parset.py" />
+    <Compile Include="helper_scripts\state_to_stats.py" />
     <Compile Include="recipes\sip\bin\long_baseline_pipeline.py" />
     <Compile Include="recipes\sip\bin\selfcal_imager_pipeline.py" />
     <Compile Include="recipes\sip\master\long_baseline.py" />
@@ -55,6 +56,7 @@
     <Compile Include="recipes\sip\nodes\selfcal_prepare.py" />
     <Compile Include="test\helper_scripts\create_selfcal_parset.py" />
     <Compile Include="test\regression_tests\regression_test_runner.py" />
+    <Compile Include="test\support\subprocessgroup_test.py" />
     <Compile Include="test\__init__.py" />
     <Compile Include="deploy\deprecated\fabfile.py" />
     <Compile Include="deploy\deprecated\start_cluster.py" />

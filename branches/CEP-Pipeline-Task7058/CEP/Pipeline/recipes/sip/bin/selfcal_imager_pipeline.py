@@ -582,6 +582,7 @@ class selfcal_imager_pipeline(control):
         processed_ms_dir = os.path.join(self.scratch_directory, "subbands")
 
         # get the parameters, create a subset for ndppp, save
+        # Aditional parameters are added runtime on the node, based on data
         ndppp_parset = self.parset.makeSubset("DPPP.")
         ndppp_parset_path = self._write_parset_to_file(ndppp_parset,
                     "prepare_imager_ndppp", "parset for ndpp recipe")

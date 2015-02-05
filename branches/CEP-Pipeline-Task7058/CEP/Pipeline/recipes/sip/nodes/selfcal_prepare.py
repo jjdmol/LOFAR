@@ -244,7 +244,7 @@ class selfcal_prepare(LOFARnodeTCP):
 
             # Automatically average the number of channels in the output to 1
             # open the dataset
-            table = pyrap.tables.table("concat.ms")
+            table = pt.table(ndppp_input_ms)  # assume same nchan for all sb
             
             # get the data column, get description, get the shape, first index 
             # returns the number of channels
