@@ -52,7 +52,7 @@ class msss_imager_pipeline(control):
        single large measurement set and perform flagging, RFI and bad station
        exclusion.
 
-    2. Generate meta information feedback files based on dataproduct information
+    2. Generate meta information feedback based on dataproduct information
        and parset/configuration data
 
     **Per subband-group, the following output products will be delivered:**
@@ -69,7 +69,6 @@ class msss_imager_pipeline(control):
         self.target_data = DataMap()
         self.output_data = DataMap()
         self.scratch_directory = None
-        self.parset_feedback_file = None
         self.parset_dir = None
         self.mapfile_dir = None
 
@@ -90,7 +89,6 @@ class msss_imager_pipeline(control):
         except IndexError:
             return self.usage()
         self.parset.adoptFile(parset_file)
-        self.parset_feedback_file = parset_file + "_feedback"
         # Set job-name to basename of parset-file w/o extension, if it's not
         # set on the command-line with '-j' or '--job-name'
         if not 'job_name' in self.inputs:
@@ -194,14 +192,16 @@ class msss_imager_pipeline(control):
 
         
         # Create a parset-file containing the metadata for MAC/SAS at nodes
-        self.run_task("get_metadata", output_ms_mapfile,
-            parset_file = self.parset_feedback_file,
+        metadata = self.run_task("get_metadata", output_ms_mapfile,
             parset_prefix = (
                 full_parset.getString('prefix') +
                 full_parset.fullModuleName('DataProducts')
             ),
             toplevel_meta_data_path=toplevel_meta_data_path, 
-            product_type = "Correlated")
+            product_type = "Correlated")["metadata"]
+
+        self.send_feedback_processing(parameterset())
+        self.send_feedback_dataproducts(metadata)
 
         return 0
 

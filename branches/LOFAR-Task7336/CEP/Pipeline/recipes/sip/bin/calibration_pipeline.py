@@ -31,7 +31,7 @@ class calibration_pipeline(control):
     4. Create a sourcedb from the user-supplied sky model, and an empty parmdb.
     5. Run BBS to calibrate the data.
     6. Copy the MS's to their final output destination.
-    7. Create feedback file for further processing by the LOFAR framework (MAC)
+    7. Create feedback for further processing by the LOFAR framework
     """
 
     def __init__(self):
@@ -39,7 +39,6 @@ class calibration_pipeline(control):
         self.parset = parameterset()
         self.input_data = {}
         self.output_data = {}
-        self.parset_feedback_file = None
 
 
     def usage(self):
@@ -108,7 +107,6 @@ class calibration_pipeline(control):
         except IndexError:
             return self.usage()
         self.parset.adoptFile(parset_file)
-        self.parset_feedback_file = parset_file + "_feedback"
 
         # Set job-name to basename of parset-file w/o extension, if it's not
         # set on the command-line with '-j' or '--job-name'
@@ -294,31 +292,27 @@ class calibration_pipeline(control):
             )
 
         # *********************************************************************
-        # 7. Create feedback file for further processing by the LOFAR framework
+        # 7. Create feedback for further processing by the LOFAR framework
         #    a. get metadata of the measurement sets
         #    b. get metadata of the instrument models
-        #    c. join the two files and write the final feedback file
-        correlated_metadata = os.path.join(parset_dir, "correlated.metadata")
-        instrument_metadata = os.path.join(parset_dir, "instrument.metadata")
+        #    c. join the two and write the final feedback
         with duration(self, "get_metadata"):
-            self.run_task("get_metadata", output_correlated_mapfile,
-                parset_file=correlated_metadata,
+            correlated_metadata = self.run_task("get_metadata", output_correlated_mapfile,
                 parset_prefix=(
                     self.parset.getString('prefix') +
                     self.parset.fullModuleName('DataProducts')),
-                product_type="Correlated")
+                product_type="Correlated")["metadata"]
 
         with duration(self, "get_metadata"):
-            self.run_task("get_metadata", output_instrument_mapfile,
-                parset_file=instrument_metadata,
+            instrument_metadata = self.run_task("get_metadata", output_instrument_mapfile,
                 parset_prefix=(
                     self.parset.getString('prefix') +
                     self.parset.fullModuleName('DataProducts')),
-                product_type="InstrumentModel")
+                product_type="InstrumentModel")["metadata"]
 
-        parset = parameterset(correlated_metadata)
-        parset.adoptFile(instrument_metadata)
-        parset.writeFile(self.parset_feedback_file)
+        self.send_feedback_processing(parameterset())
+        self.send_feedback_dataproducts(correlated_metadata)
+        self.send_feedback_dataproducts(instrument_metadata)
 
         return 0
 

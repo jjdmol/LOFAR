@@ -37,7 +37,6 @@ class pulsar_pipeline(control):
         self.parset = parameterset()
         self.input_data = {}
         self.output_data = {}
-        self.parset_feedback_file = None
 
 
     def go(self):
@@ -51,7 +50,6 @@ class pulsar_pipeline(control):
         except IndexError:
             return self.usage()
         self.parset.adoptFile(parset_file)
-        self.parset_feedback_file = parset_file + "_feedback"
 
         # Set job-name to basename of parset-file w/o extension, if it's not
         # set on the command-line with '-j' or '--job-name'
@@ -168,7 +166,25 @@ class pulsar_pipeline(control):
         # Run the pulsar pipeline
         self.logger.debug("Starting pulp with: " + join(sys.argv))
         p = pulp.pulp(self)
-        return p.go()
+
+        if not p.go()
+          self.logger.error("PULP did not succeed. Bailing out!")
+          return 0
+
+        # PULP puts the feedback in ObservationXXXXX_feedback, where XXXXX is the SAS ID.
+        # Note that the input parset is called ObservationXXXXX
+        metadata_file = "%s_feedback" % (parset_file,)
+
+        # Read and forward the feedback
+        try:
+          metadata = parameterset(metadata_file)
+        except IOError, e:
+          self.logger.error("Could not read feedback from %s: %s" % (metadata_file,e))
+          return 0
+
+        send_feedback_dataproduct(metadata)
+
+        return 1
 
     
 if __name__ == '__main__':

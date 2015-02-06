@@ -38,7 +38,7 @@ class msss_target_pipeline(control):
     5. Run BBS using the instrument file from the target observation, to
        correct for instrumental effects
     6. Copy the MS's to their final output destination.
-    7. Create feedback file for further processing by the LOFAR framework (MAC)
+    7. Create feedback for further processing by the LOFAR framework
 
     **Per subband-group, the following output products will be delivered:**
 
@@ -51,7 +51,6 @@ class msss_target_pipeline(control):
         self.parset = parameterset()
         self.input_data = {}
         self.output_data = {}
-        self.parset_feedback_file = None
 
 
     def usage(self):
@@ -181,7 +180,6 @@ class msss_target_pipeline(control):
         except IndexError:
             return self.usage()
         self.parset.adoptFile(parset_file)
-        self.parset_feedback_file = parset_file + "_feedback"
         
         # Set job-name to basename of parset-file w/o extension, if it's not
         # set on the command-line with '-j' or '--job-name'
@@ -345,17 +343,17 @@ class msss_target_pipeline(control):
             )
 
         # *********************************************************************
-        # 7. Create feedback file for further processing by the LOFAR framework
-        # (MAC)
-        # Create a parset-file containing the metadata for MAC/SAS
+        # 7. Create feedback for further processing by the LOFAR framework
         with duration(self, "get_metadata"):
-            self.run_task("get_metadata", corrected_mapfile,
-                parset_file=self.parset_feedback_file,
+            metadata = self.run_task("get_metadata", corrected_mapfile,
                 parset_prefix=(
                     self.parset.getString('prefix') +
                     self.parset.fullModuleName('DataProducts')
                 ),
-                product_type="Correlated")
+                product_type="Correlated")["metadata"]
+
+        self.send_feedback_processing(parameterset())
+        self.send_feedback_dataproducts(metadata)
 
         return 0
 
