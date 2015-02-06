@@ -34,31 +34,8 @@ class pulsar_pipeline(control):
 
     def __init__(self):
         super(pulsar_pipeline, self).__init__()
-        self.parset = parameterset()
         self.input_data = {}
         self.output_data = {}
-
-
-    def go(self):
-        """
-        Read the parset-file that was given as input argument;
-        set jobname, and input/output data products before calling the
-        base-class's `go()` method.
-        """
-        try:
-            parset_file = os.path.abspath(self.inputs['args'][0])
-        except IndexError:
-            return self.usage()
-        self.parset.adoptFile(parset_file)
-
-        # Set job-name to basename of parset-file w/o extension, if it's not
-        # set on the command-line with '-j' or '--job-name'
-        if not self.inputs.has_key('job_name'):
-            self.inputs['job_name'] = (
-                os.path.splitext(os.path.basename(parset_file))[0])
-                
-        # Call the base-class's `go()` method.
-        return super(pulsar_pipeline, self).go()
   
 
     def _get_io_product_specs(self):

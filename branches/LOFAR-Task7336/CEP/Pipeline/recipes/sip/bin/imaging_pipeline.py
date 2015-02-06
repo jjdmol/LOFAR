@@ -97,38 +97,12 @@ class imaging_pipeline(control):
         Initialize member variables and call superclass init function
         """
         control.__init__(self)
-        self.parset = parameterset()
         self.input_data = DataMap()
         self.target_data = DataMap()
         self.output_data = DataMap()
         self.scratch_directory = None
         self.parset_dir = None
         self.mapfile_dir = None
-
-    def usage(self):
-        """
-        Display usage information
-        """
-        print >> sys.stderr, "Usage: %s <parset-file>  [options]" % sys.argv[0]
-        return 1
-
-    def go(self):
-        """
-        Read the parset-file that was given as input argument, and set the
-        jobname before calling the base-class's `go()` method.
-        """
-        try:
-            parset_file = os.path.abspath(self.inputs['args'][0])
-        except IndexError:
-            return self.usage()
-        self.parset.adoptFile(parset_file)
-        # Set job-name to basename of parset-file w/o extension, if it's not
-        # set on the command-line with '-j' or '--job-name'
-        if not 'job_name' in self.inputs:
-            self.inputs['job_name'] = (
-                os.path.splitext(os.path.basename(parset_file))[0]
-            )
-        return super(imaging_pipeline, self).go()
 
     @mail_log_on_exception
     def pipeline_logic(self):

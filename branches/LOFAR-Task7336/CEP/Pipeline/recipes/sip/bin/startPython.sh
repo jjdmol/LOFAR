@@ -27,8 +27,7 @@ logFile=/opt/lofar/var/log/startPython.log
 
 usage()
 {
-  echo "Usage: $0 <pythonProgram> <parsetname> <MAC-Python-control-host> \\"
-  echo "         <MAC-Python-control-listener> <MAC-Python-control-server>"
+  echo "Usage: $0 <pythonProgram> <parsetname>"
   exit 1
 }
 

@@ -48,17 +48,8 @@ class msss_calibrator_pipeline(control):
 
     def __init__(self):
         control.__init__(self)
-        self.parset = parameterset()
         self.input_data = {}
         self.output_data = {}
-
-
-    def usage(self):
-        """
-        Display usage
-        """
-        print >> sys.stderr, "Usage: %s [options] <parset-file>" % sys.argv[0]
-        return 1
 
 
     def _get_io_product_specs(self):
@@ -107,27 +98,6 @@ class msss_calibrator_pipeline(control):
             raise PipelineException(
                 "Validation of input/output data product specification failed!"
             )
-
-
-    def go(self):
-        """
-        Read the parset-file that was given as input argument, and set the
-        jobname before calling the base-class's `go()` method.
-        """
-        try:
-            parset_file = os.path.abspath(self.inputs['args'][0])
-        except IndexError:
-            return self.usage()
-        self.parset.adoptFile(parset_file)
-
-        # Set job-name to basename of parset-file w/o extension, if it's not
-        # set on the command-line with '-j' or '--job-name'
-        if not self.inputs.has_key('job_name'):
-            self.inputs['job_name'] = (
-                os.path.splitext(os.path.basename(parset_file))[0])
-
-        # Call the base-class's `go()` method.
-        return super(msss_calibrator_pipeline, self).go()
 
 
     @mail_log_on_exception

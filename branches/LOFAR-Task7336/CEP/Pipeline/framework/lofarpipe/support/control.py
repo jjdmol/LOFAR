@@ -34,6 +34,18 @@ class control(StatefulRecipe):
     """
     inputs = {}
 
+    def __init__(self):
+      self.parset = parameterset()
+      self.momID = 0
+      self.sasID = 0
+
+    def usage(self):
+        """
+        Display usage information
+        """
+        print >> sys.stderr, "Usage: %s <parset-file>  [options]" % sys.argv[0]
+        return 1
+
     def send_feedback_processing(self, feedback):
         """
         Send processing feedback information back to LOFAR.
@@ -46,8 +58,8 @@ class control(StatefulRecipe):
           "lofarpipe.support.control",
           "",
           "Processing feedback from the pipeline framework",
-          momID,
-          sasID,
+          self.momID,
+          self.sasID,
           feedback)
 
         bus.sendmsg(msg.qpidMsg())
@@ -64,13 +76,13 @@ class control(StatefulRecipe):
           "lofarpipe.support.control",
           "",
           "Dataproduct feedback from the pipeline framework",
-          momID,
-          sasID,
+          self.momID,
+          self.sasID,
           feedback)
 
         bus.sendmsg(msg.qpidMsg())
 
-    def _send_feedback_status(self, status):
+    def _send_feedback_status(self, momID, sasID, status):
         """
         Send status information back to LOFAR.
 
@@ -83,8 +95,8 @@ class control(StatefulRecipe):
           "lofarpipe.support.control",
           "",
           "Status feedback from the pipeline framework",
-          momID,
-          sasID,
+          self.momID,
+          self.sasID,
           status == 0)
 
         bus.sendmsg(msg.qpidMsg())
@@ -97,6 +109,25 @@ class control(StatefulRecipe):
 
     def go(self):
         super(control, self).go()
+
+        # Read the parset-file that was given as input argument
+        try:
+            parset_file = os.path.abspath(self.inputs['args'][0])
+        except IndexError:
+            return self.usage()
+        self.parset.adoptFile(parset_file)
+        # Set job-name to basename of parset-file w/o extension, if it's not
+        # set on the command-line with '-j' or '--job-name'
+        if not 'job_name' in self.inputs:
+            self.inputs['job_name'] = (
+                os.path.splitext(os.path.basename(parset_file))[0]
+            )
+
+        # Pull several parameters from the parset
+        self.momID = self.parset.getString("Observation.momID", "")
+        self.sasID = self.parset.getString("Observation.ObsID", "")
+
+        # Start the pipeline
         self.logger.info("LOFAR Pipeline (%s) starting." % self.name)
         try:
             self.pipeline_logic()
