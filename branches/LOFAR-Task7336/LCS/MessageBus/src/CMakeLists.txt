@@ -20,8 +20,8 @@ endforeach(prog ${messagebus_PROGRAMS})
 
 python_install(
   __init__.py
-  MsgBus.py
-  Message.py
+  msgbus.py
+  message.py
   DESTINATION lofar/messagebus)
 
-add_subdirectory(Protocols)
+add_subdirectory(protocols)

@@ -110,6 +110,16 @@ class Message(object):
               "payload        : %s\n" % (self.payload,)
              )
 
+    def qpidMsg(self):
+      """ Return a QPID message with the configured content. """
+
+      qpidMsg = qpid.messaging.Message(self.document.toxml())
+
+    def setQpidMsg(self, msg):
+      """ Use a QPID message to set the content. """
+
+      self.document = xml.parseString(msg.getContent())
+
     """ XML support functions. See also lofarpipe/support/xmllogging.py. """
 
     def _get_child(self, node, name):
@@ -162,9 +172,6 @@ class Message(object):
 
     def _setXMLdata(self, name, data):
       return self._set_data(self._getXMLnode(name), data)
-
-    def qpidMsg(self):
-      qpidMsg = qpid.messaging.Message(self.document.toxml())
 
 if __name__ == "__main__":
   m = Message("FROM", "FORUSER", "SUMMARY", "PROTOCOL", "1.2.3", "11111", "22222")
