@@ -87,6 +87,9 @@ namespace LOFAR {
     void adoptCollection (const PyParameterSet& parset, const string& prefix)
       { return ParameterSet::adoptCollection (parset, prefix); }
 
+    string toString() const
+      { string buffer; writeBuffer(buffer); return buffer; }
+
     PyParameterValue get (const string& key) const
       { return ParameterSet::get (key); }
 
@@ -252,6 +255,8 @@ namespace LOFAR {
  	    (boost::python::arg("filename"),
              boost::python::arg("append")=false),
             "Write the parameterset into a parset file with the given name.")
+      .def ("toString", &PyParameterSet::toString,
+            "Return the full parset as a string")
       .def ("add", fadd,
  	    (boost::python::arg("key"),
              boost::python::arg("value")),
