@@ -67,9 +67,10 @@ if __name__ == "__main__":
     threadList = []
     for dest in destlist:
       print source, "->", dest.strip()
-      t = oneBusDistribute(source , destlist)
-      t.start()
-      threadlist.append(t)
+
+    t = oneBusDistribute(source , destlist)
+    t.start()
+    threadlist.append(t)
 
   infile.close()
 
