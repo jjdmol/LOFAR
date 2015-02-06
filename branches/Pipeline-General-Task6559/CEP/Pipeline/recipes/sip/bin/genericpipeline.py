@@ -92,7 +92,7 @@ class GenericPipeline(control):
         step_name_list = pipeline_args.getStringVector('steps')
         step_control_dict = {}
         step_parset_files = {}
-        activeloop = ''
+        activeloop = ['']
         # construct the list of step names and controls
         self._construct_steps(step_name_list, step_control_dict, step_parset_files, parset_dir)
         # initial parameters to be saved in resultsdict so that recipes have access to this step0
@@ -124,12 +124,13 @@ class GenericPipeline(control):
             # loop
             if step.getString('kind') == 'loop':
                 # remember what loop is running to stop it from a conditional step
-                activeloop = stepname
+                if activeloop[0] is not stepname:
+                    activeloop.insert(0, stepname)
                 # prepare
                 counter = 0
                 breakloop = False
                 if stepname in resultdicts:
-                    counter = resultdicts[stepname]['counter'] + 1
+                    counter = int(resultdicts[stepname]['counter']) + 1
                     breakloop = resultdicts[stepname]['break']
                 loopsteps = step.getStringVector('loopsteps')
 
@@ -139,11 +140,17 @@ class GenericPipeline(control):
                 if not breakloop:
                     # add loop steps to the pipeline including the loop itself
                     step_name_list.insert(0, stepname)
-                    if not loopsteps[0] + stepname + str(counter) in step_control_dict:
-                        self._construct_steps(loopsteps, step_control_dict, step_parset_files, parset_dir)
+                    #if not loopsteps[0] + stepname + str(counter) in step_control_dict:
+                    #    self._construct_steps(loopsteps, step_control_dict, step_parset_files, parset_dir)
+                    self._construct_steps(loopsteps, step_control_dict, step_parset_files, parset_dir)
                     for j in reversed(loopsteps):
-                        step_control_dict[j + stepname + str(counter)] = step_control_dict[j]
-                        step_name_list.insert(0, j + stepname + str(counter))
+                        name = j
+                        #if step_control_dict[j].getString('kind') == 'loop':
+                        #    name = j
+                        #else:
+                        #    name = j + stepname + str(counter)
+                        step_control_dict[name] = step_control_dict[j]
+                        step_name_list.insert(0, name)
                     # results for other steps to check and write states
                     resultdict = {'counter': counter, 'break': breakloop}
                 else:
@@ -166,11 +173,15 @@ class GenericPipeline(control):
                                                     inputargs,
                                                     **inputdict)
             resultdicts[stepname] = resultdict
+            print 'RESULTDICT: ', resultdict
+            #print 'RESULTDICTS: ', resultdicts
 
             # breaking the loopstep
             # if the step has the keyword for loopbreaks assign the value
             if resultdict is not None and 'break' in resultdict:
-                resultdicts[activeloop]['break'] = resultdict['break']
+                if resultdict['break']:
+                    resultdicts[activeloop[0]]['break'] = resultdict['break']
+                    activeloop.pop(0)
 
     # *********************************************************************
     # build the inputs for the master recipes.

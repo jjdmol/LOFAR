@@ -34,6 +34,12 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
             default='',
             optional=True
         ),
+        'nodescript': ingredient.StringField(
+            '--nodescript',
+            help="Name of the node script to execute",
+            default='executable_args',
+            optional=True
+        ),
         'parset': ingredient.FileField(
             '-p', '--parset',
             help="Path to the arguments for this executable. Will be converted to --key=value",
@@ -169,7 +175,7 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
         # ********************************************************************
         # Call the node side of the recipe
         # Create and schedule the compute jobs
-        command = "python %s" % (self.__file__.replace('master', 'nodes'))
+        command = "python %s" % (self.__file__.replace('master', 'nodes')).replace('executable_args', self.inputs['nodescript'])
         indata.iterator = outdata.iterator = DataMap.SkipIterator
         jobs = []
         for inp, outp in zip(
