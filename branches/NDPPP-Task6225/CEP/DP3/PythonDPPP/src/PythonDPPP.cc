@@ -49,6 +49,12 @@ namespace LOFAR {
               "Tell DPPP that it needs to read the data column.")
         ///.def ("setWriteData", &DPStepBase::setWriteData,
         ///   "Tell DPPP that it needs to write the data column.")
+        .def ("_getData", &DPStepBase::_getData,
+              "Get the data array")
+        .def ("_getFlags", &DPStepBase::_getFlags,
+              "Get the flags array")
+        .def ("_getWeights", &DPStepBase::_getWeights,
+              "Get the weights array")
         ;
     }
 

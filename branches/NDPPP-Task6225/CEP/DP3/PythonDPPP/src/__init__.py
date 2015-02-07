@@ -20,6 +20,8 @@
 # $Id: __init__.py 23074 2012-12-03 07:51:29Z diepen $
 
 from lofar.pythondppp._pythondppp import _DPStepBase
+import numpy as np
+
 
 class DPStepBase(_DPStepBase):
     """
@@ -30,20 +32,55 @@ class DPStepBase(_DPStepBase):
         _DPStepBase.__init__(self)
 
     def updateInfo(self, dpinfo):
-        itsInfo = dpinfo
+        print 'other upd'
         return {}
 
+    def _updateInfo(self, dpinfo):
+        self.itsNCorr = dpinfo['NCorr']
+        self.itsNChan = dpinfo['NChan']
+        self.itsNBl   = len(dpinfo['Ant1'])
+        print 'n=',self.itsNCorr,self.itsNChan,self.itsNBl
+        return self.updateInfo(dpinfo);
+
     def needVisData(self):
-        return False
+        return True
 
     def needWrite(self):
         return False
 
     def show(self):
-        return ""
+        return ''
 
     def showCounts(self):
-        return ""
+        return ''
 
-    def addToMS(name):
+    def addToMS(self, name):
         None
+
+    def getData(self, nparray):
+        if not nparray.flags.c_contiguous  or  nparray.size == 0:
+            raise ValueError("Argument 'nparray' has to be a contiguous numpy a\
+rray")
+        return self._getData (nparray)
+
+    def getFlags(self, nparray):
+        if not nparray.flags.c_contiguous  or  nparray.size == 0:
+            raise ValueError("Argument 'nparray' has to be a contiguous numpy a\
+rray")
+        return self._getFlags (nparray)
+
+    def getWeights(self, nparray):
+        if not nparray.flags.c_contiguous  or  nparray.size == 0:
+            raise ValueError("Argument 'nparray' has to be a contiguous numpy a\
+rray")
+        return self._getWeights (nparray)
+
+    def makeArrayData(self):
+        return np.zeros([self.itsNBl, self.itsNChan, self.itsNCorr], dtype='complex64')
+
+    def makeArrayFlags(self):
+        return np.zeros([self.itsNBl, self.itsNChan, self.itsNCorr], dtype='bool')
+
+    def makeArrayWeights(self):
+        return np.zeros([self.itsNBl, self.itsNChan, self.itsNCorr], dtype='float32')
+

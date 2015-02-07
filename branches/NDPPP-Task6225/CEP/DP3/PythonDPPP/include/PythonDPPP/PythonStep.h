@@ -33,6 +33,7 @@
 #include <Common/ParameterSet.h>
 #include <Common/Timer.h>
 
+#include <casa/Containers/ValueHolder.h>
 #include <boost/python.hpp>
 
 namespace LOFAR {
@@ -102,11 +103,19 @@ namespace LOFAR {
       // Show the timings.
       virtual void showTimings (std::ostream&, double duration) const;
 
+      // Get the data into the given DComplex array.
+      void getData (const casa::ValueHolder&);
+      // Get the flags into the given bool array.
+      void getFlags (const casa::ValueHolder&);
+      // Get the weights into the given float array.
+      void getWeights (const casa::ValueHolder&);
+
     private:
       //# Data members.
       DPInput*     itsInput;
       std::string  itsName;
       ParameterSet itsParset;
+      DPBuffer     itsBufIn;
       DPBuffer     itsBuf;
       std::string  itsPythonClass;
       std::string  itsPythonModule;

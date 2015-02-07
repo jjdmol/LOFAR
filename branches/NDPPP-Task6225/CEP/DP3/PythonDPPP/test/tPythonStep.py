@@ -26,23 +26,25 @@ from lofar.parameterset import parameterset
 class tPythonStep(DPStepBase):
     def __init__(self, parsetName):
         DPStepBase.__init__(self)
-        print parsetName
         itsParset = parameterset(parsetName)
-        print itsParset.dict()
+
+    #def _updateInfo(self, dpinfo):
+     #   DPStepBase._updateInfo(self, dpinfo)
 
     def updateInfo(self, dpinfo):
-        print "updateinfo"
-        print dpinfo
-        itsInfo = dpinfo
+        print "did update"
+        self.itsInfo = dpinfo
         res = {}
-        #needWeights (res);
-        print itsInfo
-        print "res="
-        print res
+        self.itsData = self.makeArrayData()
+        self.itsFlags = self.makeArrayFlags()
+        self.itsWeights = self.makeArrayWeights()
         return res;
 
     def process(self):
-        print "process tPythonStep"
+        self.getData (self.itsData);
+        self.getFlags (self.itsFlags);
+        self.getWeights (self.itsWeights);
+        print "process tPythonStep", self.itsData.sum(), self.itsFlags.sum(), self.itsWeights.sum()
         return {}
 
     def finish(self):

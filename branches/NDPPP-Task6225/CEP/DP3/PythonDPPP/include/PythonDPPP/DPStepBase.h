@@ -22,8 +22,8 @@
 #ifndef DPPP_DPSTEPBASE_H
 #define DPPP_DPSTEPBASE_H
 
+#include <PythonDPPP/PythonStep.h>
 #include <DPPP/DPInfo.h>
-#include <DPPP/DPStep.h>
 
 // The C++ PythonStep must be able to call functions in Python.
 // But the Python functions must be able to call the C++ functions
@@ -47,21 +47,35 @@ namespace LOFAR {
 
       void updateInfo (const DPInfo& info)
       {
-        theirPtr = this;
       }
 
       void setNeedData()
       ///        { itsStep->setNeedData() }
       {}
 
-      void setStep (DPStep* step)
+      void setStep (PythonStep* step)
       { cout<<"set the step "<<this<<' '<<theirPtr<<' '<<step<<endl; itsStep = step; }
+
+      void _getData (const casa::ValueHolder& vh)
+      {
+        itsStep->getData (vh);
+      }
+
+      void _getFlags (const casa::ValueHolder& vh)
+      {
+        itsStep->getFlags (vh);
+      }
+
+      void _getWeights (const casa::ValueHolder& vh)
+      {
+        itsStep->getWeights (vh);
+      }
 
       // Temporarily keep the pointer to this object.
       static DPStepBase* theirPtr;
 
     private:
-      DPStep* itsStep;
+      PythonStep* itsStep;
     };
 
   }

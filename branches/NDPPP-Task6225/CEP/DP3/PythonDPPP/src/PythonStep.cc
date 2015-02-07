@@ -83,6 +83,7 @@ namespace LOFAR {
       } catch (boost::python::error_already_set const &) {
         // handle the exception in some way
         PyErr_Print();
+        throw;
       }
     }
 
@@ -99,83 +100,107 @@ namespace LOFAR {
 
     bool PythonStep::process (const DPBuffer& buf)
     {
-      cout<<"process"<<endl;
-      itsTimer.start();
-      itsBuf.referenceFilled (buf);
-      if (itsNeedWeights) {
-        itsInput->fetchWeights (buf, itsBuf, itsTimer);
+      try {
+        itsTimer.start();
+        itsBufIn.referenceFilled (buf);
+        itsBuf.referenceFilled (buf);
+        boost::python::object result =
+          itsPyObject.attr("process")();
+        Record rec = boost::python::extract<Record> (result);
+        itsTimer.stop();
+        getNextStep()->process(itsBuf);
+        return false;
+      } catch (boost::python::error_already_set const &) {
+        // handle the exception in some way
+        PyErr_Print();
+        throw;
       }
-      if (itsNeedUVW) {
-        itsInput->fetchUVW (buf, itsBuf, itsTimer);
-      }
-      if (itsNeedFullResFlags) {
-        itsInput->fetchFullResFlags (buf, itsBuf, itsTimer);
-      }
-      cout<<"process1"<<endl;
-      boost::python::object result =
-        itsPyObject.attr("process")();
-      cout<<"process2"<<endl;
-      Record rec = boost::python::extract<Record> (result);
-      cout<<"process3"<<endl;
-      itsTimer.stop();
-      getNextStep()->process(itsBuf);
-      return false;
     }
 
     void PythonStep::finish()
     {
-      itsPyObject.attr("finish")();
-      getNextStep()->finish();
+      try {
+        itsPyObject.attr("finish")();
+        getNextStep()->finish();
+      } catch (boost::python::error_already_set const &) {
+        // handle the exception in some way
+        PyErr_Print();
+        throw;
+      }
     }
 
     void PythonStep::updateInfo (const DPInfo& infoIn)
     {
-      boost::python::object result =
-        itsPyObject.attr("updateInfo")(infoIn.toRecord());
-      Record rec = boost::python::extract<Record>(result);
-      info() = infoIn;
-      // Merge possible result back in DPInfo object.
-      info().fromRecord (rec);
-      // See if data needs to be read or written.
-      boost::python::object resrd = itsPyObject.attr("needVisData")();
-      bool rd = boost::python::extract<bool>(resrd);
-      boost::python::object reswr = itsPyObject.attr("needWrite")();
-      bool wr = boost::python::extract<bool>(reswr);
-      if (rd) info().setNeedVisData();
-      if (wr) info().setNeedWrite();
-      // See which data parts are needed (to avoid sending too much to python).
-      if (rec.isDefined("NeedWeights")) {
-        rec.get ("NeedWeights", itsNeedWeights);
-      }
-      if (rec.isDefined("NeedUVW")) {
-        rec.get ("NeedUVW", itsNeedUVW);
-      }
-      if (rec.isDefined("NeedFullResFlags")) {
-        rec.get ("NeedFullresFlags", itsNeedFullResFlags);
+      try {
+        boost::python::object result =
+          itsPyObject.attr("_updateInfo")(infoIn.toRecord());
+        Record rec = boost::python::extract<Record>(result);
+        info() = infoIn;
+        // Merge possible result back in DPInfo object.
+        info().fromRecord (rec);
+        // See if data needs to be read or written.
+        boost::python::object resrd = itsPyObject.attr("needVisData")();
+        bool rd = boost::python::extract<bool>(resrd);
+        boost::python::object reswr = itsPyObject.attr("needWrite")();
+        bool wr = boost::python::extract<bool>(reswr);
+        if (rd) info().setNeedVisData();
+        if (wr) info().setNeedWrite();
+        // See which data parts are needed (to avoid sending too much to python).
+        if (rec.isDefined("NeedWeights")) {
+          rec.get ("NeedWeights", itsNeedWeights);
+        }
+        if (rec.isDefined("NeedUVW")) {
+          rec.get ("NeedUVW", itsNeedUVW);
+        }
+        if (rec.isDefined("NeedFullResFlags")) {
+          rec.get ("NeedFullresFlags", itsNeedFullResFlags);
+        }
+      } catch (boost::python::error_already_set const &) {
+        // handle the exception in some way
+        PyErr_Print();
+        throw;
       }
     }
 
     void PythonStep::addToMS (const string& msName)
     {
-      itsPyObject.attr("addToMS")(msName);
+      try {
+        itsPyObject.attr("addToMS")(msName);
+      } catch (boost::python::error_already_set const &) {
+        // handle the exception in some way
+        PyErr_Print();
+        throw;
+      }
     }
 
     void PythonStep::show (std::ostream& os) const
     {
-      boost::python::object result = itsPyObject.attr("show")();
-      string str = boost::python::extract<string>(result);
-      os << "PythonStep " << itsName << " class=" << itsPythonClass << endl;
-      if (! str.empty()) {
-        os << str;
+      try {
+        boost::python::object result = itsPyObject.attr("show")();
+        string str = boost::python::extract<string>(result);
+        os << "PythonStep " << itsName << " class=" << itsPythonClass << endl;
+        if (! str.empty()) {
+          os << str;
+        }
+      } catch (boost::python::error_already_set const &) {
+        // handle the exception in some way
+        PyErr_Print();
+        throw;
       }
     }
 
     void PythonStep::showCounts (std::ostream& os) const
     {
-      boost::python::object result = itsPyObject.attr("showCounts")();
-      string str = boost::python::extract<string>(result);
-      if (! str.empty()) {
-        os << str;
+      try {
+        boost::python::object result = itsPyObject.attr("showCounts")();
+        string str = boost::python::extract<string>(result);
+        if (! str.empty()) {
+          os << str;
+        }
+      } catch (boost::python::error_already_set const &) {
+        // handle the exception in some way
+        PyErr_Print();
+        throw;
       }
     }
 
@@ -186,6 +211,26 @@ namespace LOFAR {
       os << " PythonStep " << itsName << " class=" << itsPythonClass << endl;
     }
 
+    void PythonStep::getData (const ValueHolder& vh)
+    {
+      ASSERT (vh.dataType() == TpArrayComplex);
+      Array<Complex> arr(vh.asArrayComplex());
+      arr = itsBuf.getData();   // operator= checks if shape matches
+    }
+
+    void PythonStep::getFlags (const ValueHolder& vh)
+    {
+      ASSERT (vh.dataType() == TpArrayBool);
+      Array<Bool> arr(vh.asArrayBool());
+      arr = itsBuf.getFlags();
+    }
+
+    void PythonStep::getWeights (const ValueHolder& vh)
+    {
+      ASSERT (vh.dataType() == TpArrayFloat);
+      Array<Float> arr(vh.asArrayFloat());
+      arr = itsInput->fetchWeights (itsBufIn, itsBuf, itsTimer);
+    }
 
   } //# end namespace
 }
