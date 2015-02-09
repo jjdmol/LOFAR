@@ -48,6 +48,8 @@ namespace LOFAR {
       : itsInput        (input),
         itsName         (prefix),
         itsParset       (parset.makeSubset (prefix)),
+        itsNChanChg     (false),
+        itsNBlChg       (false),
         itsPythonClass  (itsParset.getString ("python.class")),
         itsPythonModule (itsParset.getString ("python.module", itsPythonClass))
     {
@@ -98,18 +100,42 @@ namespace LOFAR {
       return DPStep::ShPtr(new PythonStep(input, pset, prefix));
     }
 
+    void PythonStep::updateInfo (const DPInfo& infoIn)
+    {
+      try {
+        boost::python::object result =
+          itsPyObject.attr("_updateInfo")(infoIn.toRecord());
+        Record rec = boost::python::extract<Record>(result);
+        info() = infoIn;
+        // Merge possible result back in DPInfo object.
+        info().fromRecord (rec);
+        // Check if nr of channels has changed.
+        // Note: currently a change in antennae/baselines is not supported
+        // because the antenna positions are not passed yet.
+        if (infoIn.nchan() != info().nchan()) {
+          itsNChanChg = true;
+        }
+        ASSERT (infoIn.getAnt1().size() == info().getAnt1().size()  &&
+                infoIn.getAnt2().size() == info().getAnt2().size()  &&
+                allEQ(infoIn.getAnt1(), info().getAnt1())  &&
+                allEQ(infoIn.getAnt2(), info().getAnt2()));
+      } catch (boost::python::error_already_set const &) {
+        // handle the exception in some way
+        PyErr_Print();
+        throw;
+      }
+    }
+
     bool PythonStep::process (const DPBuffer& buf)
     {
       try {
         itsTimer.start();
         itsBufIn.referenceFilled (buf);
-        itsBuf.referenceFilled (buf);
         boost::python::object result =
           itsPyObject.attr("process")();
-        Record rec = boost::python::extract<Record> (result);
+        bool res = boost::python::extract<bool> (result);
         itsTimer.stop();
-        getNextStep()->process(itsBuf);
-        return false;
+        return res;
       } catch (boost::python::error_already_set const &) {
         // handle the exception in some way
         PyErr_Print();
@@ -122,39 +148,6 @@ namespace LOFAR {
       try {
         itsPyObject.attr("finish")();
         getNextStep()->finish();
-      } catch (boost::python::error_already_set const &) {
-        // handle the exception in some way
-        PyErr_Print();
-        throw;
-      }
-    }
-
-    void PythonStep::updateInfo (const DPInfo& infoIn)
-    {
-      try {
-        boost::python::object result =
-          itsPyObject.attr("_updateInfo")(infoIn.toRecord());
-        Record rec = boost::python::extract<Record>(result);
-        info() = infoIn;
-        // Merge possible result back in DPInfo object.
-        info().fromRecord (rec);
-        // See if data needs to be read or written.
-        boost::python::object resrd = itsPyObject.attr("needVisData")();
-        bool rd = boost::python::extract<bool>(resrd);
-        boost::python::object reswr = itsPyObject.attr("needWrite")();
-        bool wr = boost::python::extract<bool>(reswr);
-        if (rd) info().setNeedVisData();
-        if (wr) info().setNeedWrite();
-        // See which data parts are needed (to avoid sending too much to python).
-        if (rec.isDefined("NeedWeights")) {
-          rec.get ("NeedWeights", itsNeedWeights);
-        }
-        if (rec.isDefined("NeedUVW")) {
-          rec.get ("NeedUVW", itsNeedUVW);
-        }
-        if (rec.isDefined("NeedFullResFlags")) {
-          rec.get ("NeedFullresFlags", itsNeedFullResFlags);
-        }
       } catch (boost::python::error_already_set const &) {
         // handle the exception in some way
         PyErr_Print();
@@ -211,25 +204,107 @@ namespace LOFAR {
       os << " PythonStep " << itsName << " class=" << itsPythonClass << endl;
     }
 
+    // Implement all functions to communicate with python.
+    void PythonStep::setNeedVisData()
+    {
+      info().setNeedVisData();
+    }
+    void PythonStep::setNeedWrite()
+    {
+      info().setNeedWrite();
+    }
+
     void PythonStep::getData (const ValueHolder& vh)
     {
       ASSERT (vh.dataType() == TpArrayComplex);
       Array<Complex> arr(vh.asArrayComplex());
-      arr = itsBuf.getData();   // operator= checks if shape matches
+      arr = itsBufIn.getData();   // operator= checks if shape matches
     }
 
     void PythonStep::getFlags (const ValueHolder& vh)
     {
       ASSERT (vh.dataType() == TpArrayBool);
       Array<Bool> arr(vh.asArrayBool());
-      arr = itsBuf.getFlags();
+      arr = itsBufIn.getFlags();
     }
 
     void PythonStep::getWeights (const ValueHolder& vh)
     {
       ASSERT (vh.dataType() == TpArrayFloat);
       Array<Float> arr(vh.asArrayFloat());
-      arr = itsInput->fetchWeights (itsBufIn, itsBuf, itsTimer);
+      arr = itsInput->fetchWeights (itsBufIn, itsBufTmp, itsTimer);
+    }
+
+    void PythonStep::getUVW (const ValueHolder& vh)
+    {
+      ASSERT (vh.dataType() == TpArrayDouble);
+      Array<Double> arr(vh.asArrayDouble());
+      arr = itsInput->fetchUVW (itsBufIn, itsBufTmp, itsTimer);
+    }
+
+    void PythonStep::getModelData (const ValueHolder& vh)
+    {
+      ASSERT (vh.dataType() == TpArrayComplex);
+      Cube<Complex> arr(vh.asArrayComplex());
+      itsInput->getModelData (RefRows(itsBufIn.getRowNrs()), arr);
+    }
+
+    bool PythonStep::processNext (const Record& rec)
+    {
+      uint nproc = 0;
+      uint narr  = 0;
+      if (rec.isDefined("TIME")) {
+        itsBufOut.setTime (rec.asDouble("TIME"));
+        nproc++;
+      } else {
+        itsBufOut.setTime (itsBufIn.getTime());
+      }
+      if (rec.isDefined("EXPOSURE")) {
+        itsBufOut.setExposure (rec.asDouble("EXPOSURE"));
+        nproc++;
+      } else {
+        itsBufOut.setExposure (itsBufIn.getExposure());
+      }
+      itsBufOut.setRowNrs (itsBufIn.getRowNrs());
+      if (rec.isDefined("DATA")) {
+        itsBufOut.getData().assign (rec.toArrayComplex("DATA"));
+        narr++;
+      } else if (! itsNChanChg  &&  ! itsNBlChg) {
+        itsBufOut.getData().assign (itsBufIn.getData());
+      }
+      if (rec.isDefined("FLAG")) {
+        itsBufOut.getFlags().assign (rec.toArrayBool("FLAG"));
+        narr++;
+      } else if (! itsNChanChg  &&  ! itsNBlChg) {
+        itsBufOut.getFlags().assign (itsBufIn.getFlags());
+      }
+      if (rec.isDefined("WEIGHTS")) {
+        itsBufOut.getWeights().assign (rec.toArrayFloat("WEIGHTS"));
+        narr++;
+      } else if (! itsNChanChg  &&  ! itsNBlChg) {
+        if (! itsBufIn.getWeights().empty()) {
+          itsBufOut.getWeights().assign (itsBufIn.getWeights());
+        }
+      }
+      if (rec.isDefined("UVW")) {
+        itsBufOut.getUVW().assign (rec.toArrayDouble("UVW"));
+        narr++;
+      } else if (! itsNChanChg  &&  ! itsNBlChg) {
+        if (! itsBufIn.getUVW().empty()) {
+          itsBufOut.getUVW().assign (itsBufIn.getUVW());
+        }
+      }
+      nproc += narr;
+      if (nproc != rec.nfields()) {
+        THROW (Exception,
+               "Record/dict given to processNext() contains unknown fields");
+      }
+      if ((itsNChanChg  ||  itsNBlChg)  &&  narr != 4) {
+        THROW (Exception,
+               "Record/dict given to processNext() must contain DATA, FLAGS, "
+               "WEIGHTS, and UVW if the nr of channels or baselines changes");
+      }
+      return getNextStep()->process (itsBufOut);
     }
 
   } //# end namespace
@@ -241,9 +316,3 @@ void register_pythondppp()
   LOFAR::DPPP::DPRun::registerStepCtor ("pythondppp",
                                         LOFAR::DPPP::PythonStep::makeStep);
 }
-
-
-/*
-Note:
-let python step allocate numpy arrays for data, etc, so C++ can copy directly into them.
-*/

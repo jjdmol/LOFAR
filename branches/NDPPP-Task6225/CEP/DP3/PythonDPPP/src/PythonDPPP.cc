@@ -24,6 +24,8 @@
 
 #include <python/Converters/PycExcp.h>
 #include <python/Converters/PycBasicData.h>
+#include <python/Converters/PycValueHolder.h>
+#include <python/Converters/PycRecord.h>
 #include <boost/python.hpp>
 #include <boost/python/args.hpp>
 
@@ -45,16 +47,25 @@ namespace LOFAR {
     {
       class_<DPStepBase> ("_DPStepBase")
         .def (init<>())
-        .def ("setNeedData", &DPStepBase::setNeedData,
-              "Tell DPPP that it needs to read the data column.")
-        ///.def ("setWriteData", &DPStepBase::setWriteData,
-        ///   "Tell DPPP that it needs to write the data column.")
+        .def ("setNeedVisData", &DPStepBase::setNeedVisData,
+              "Tell DPPP that it needs to read the visibility data column.")
+        .def ("setNeedWrite", &DPStepBase::setNeedWrite,
+              "Tell DPPP that it needs to write data.")
         .def ("_getData", &DPStepBase::_getData,
-              "Get the data array")
+              "Get the visibility data into the given array",
+              (boost::python::arg("value")))
         .def ("_getFlags", &DPStepBase::_getFlags,
-              "Get the flags array")
+              "Get the flags into the given array",
+              (boost::python::arg("value")))
         .def ("_getWeights", &DPStepBase::_getWeights,
-              "Get the weights array")
+              "Get the weights into the given array",
+              (boost::python::arg("value")))
+        .def ("_getUVW", &DPStepBase::_getUVW,
+              "Get the UVW coordinates into the given array",
+              (boost::python::arg("value")))
+        .def ("_processNext", &DPStepBase::_processNext,
+              "Process the next step in the DPPP run",
+              (boost::python::arg("values")))
         ;
     }
 
@@ -67,6 +78,8 @@ BOOST_PYTHON_MODULE(_pythondppp)
 {
   casa::python::register_convert_excp();
   casa::python::register_convert_basicdata();
+  casa::python::register_convert_casa_valueholder();
+  casa::python::register_convert_casa_record();
 
   LOFAR::DPPP::dpstepbase();
 }

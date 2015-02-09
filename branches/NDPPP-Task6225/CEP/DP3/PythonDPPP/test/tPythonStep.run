@@ -15,17 +15,8 @@ DYLD_LIBRARY_PATH=../src:$DYLD_LIBRARYPATH
 export LD_LIBRARY_PATH
 export DYLD_LIBRARY_PATH
 
-# Define the path for the python modules.
-#mkdir -p tPythonStep_xtmp.python/lofar/PythonDPPP
-#mkdir -p tPythonStep_xtmp.python/lofar/parameterset
-#touch tPythonStep_xtmp.python/lofar/__init__.py
-#cp ../../../../../../LOFAR/CEP/DP3/PythonDPPP/src/__init__.py tPythonStep_xtmp.python/lofar/PythonDPPP
-#cp ../../../../../../LOFAR/LCS/pyparameterset/src/__init__.py tPythonStep_xtmp.python/lofar/parameterset
-#cp ../../../../LCS/pyparameterset/src/_pyparameterset tPythonStep_xtmp.python/lofar/parameterset
-#PYTHONPATH=.:`pwd`/tPythonStep_xtmp.python
 PYTHONPATH=.:$PYTHONPATH
 export PYTHONPATH
-echo $PYTHONPATH
 
 # Run NDPPP with the test python step.
 ../../DPPP/src/NDPPP msin=tPythonStep_tmp.MS msout=tPythonStep_tmp.msout steps=pystep pystep.type=PythonDPPP pystep.python.module=tPythonStep pystep.python.class=tPythonStep 

@@ -31,16 +31,25 @@ class DPStepBase(_DPStepBase):
     def __init__(self):
         _DPStepBase.__init__(self)
 
-    def updateInfo(self, dpinfo):
-        print 'other upd'
-        return {}
-
     def _updateInfo(self, dpinfo):
-        self.itsNCorr = dpinfo['NCorr']
-        self.itsNChan = dpinfo['NChan']
-        self.itsNBl   = len(dpinfo['Ant1'])
-        print 'n=',self.itsNCorr,self.itsNChan,self.itsNBl
-        return self.updateInfo(dpinfo);
+        self.itsNCorrIn = dpinfo['NCorr']
+        self.itsNChanIn = dpinfo['NChan']
+        self.itsNBlIn   = len(dpinfo['Ant1'])
+        self.itsNCorrOut = self.itsNCorrIn
+        self.itsNChanOut = self.itsNChanIn
+        self.itsNBlOut   = self.itsNBlIn
+        infoOut = self.updateInfo(dpinfo)
+        if 'NCorr' in infoOut:
+            self.itsNCorrOut = infoOut['NCorr']
+        if 'NChan' in infoOut:
+            self.itsNChanOut = infoOut['NChan']
+        if 'Ant1' in infoOut:
+            self.itsNBlOut   = len(infoOut['Ant1'])
+        return infoOut
+
+    # The following functions can be overwritten in a derived class.
+    def updateInfo(self, dpinfo):
+        raise ValueError("A class derived from DPStepBase must implement updateInfo")
 
     def needVisData(self):
         return True
@@ -57,30 +66,44 @@ class DPStepBase(_DPStepBase):
     def addToMS(self, name):
         None
 
+
+    # The following functions are to be called from Python.
+    def processNext(self, arrs):
+        return self._processNext(arrs)
+
     def getData(self, nparray):
         if not nparray.flags.c_contiguous  or  nparray.size == 0:
-            raise ValueError("Argument 'nparray' has to be a contiguous numpy a\
+            raise ValueError("getData argument 'nparray' has to be a contiguous numpy a\
 rray")
         return self._getData (nparray)
 
     def getFlags(self, nparray):
         if not nparray.flags.c_contiguous  or  nparray.size == 0:
-            raise ValueError("Argument 'nparray' has to be a contiguous numpy a\
+            raise ValueError("getFlags argument 'nparray' has to be a contiguous numpy a\
 rray")
         return self._getFlags (nparray)
 
     def getWeights(self, nparray):
         if not nparray.flags.c_contiguous  or  nparray.size == 0:
-            raise ValueError("Argument 'nparray' has to be a contiguous numpy a\
+            raise ValueError("getWeights argument 'nparray' has to be a contiguous numpy a\
 rray")
         return self._getWeights (nparray)
 
-    def makeArrayData(self):
-        return np.zeros([self.itsNBl, self.itsNChan, self.itsNCorr], dtype='complex64')
+    def getUVW(self, nparray):
+        if not nparray.flags.c_contiguous  or  nparray.size == 0:
+            raise ValueError("getUVW argument 'nparray' has to be a contiguous numpy a\
+rray")
+        return self._getUVW (nparray)
 
-    def makeArrayFlags(self):
-        return np.zeros([self.itsNBl, self.itsNChan, self.itsNCorr], dtype='bool')
+    def makeArrayDataIn(self):
+        return np.zeros([self.itsNBlIn, self.itsNChanIn, self.itsNCorrIn], dtype='complex64')
 
-    def makeArrayWeights(self):
-        return np.zeros([self.itsNBl, self.itsNChan, self.itsNCorr], dtype='float32')
+    def makeArrayFlagsIn(self):
+        return np.zeros([self.itsNBlIn, self.itsNChanIn, self.itsNCorrIn], dtype='bool')
+
+    def makeArrayWeightsIn(self):
+        return np.zeros([self.itsNBlIn, self.itsNChanIn, self.itsNCorrIn], dtype='float32')
+
+    def makeArrayUVWIn(self):
+        return np.zeros([self.itsNBlIn, 3], dtype='float64')
 

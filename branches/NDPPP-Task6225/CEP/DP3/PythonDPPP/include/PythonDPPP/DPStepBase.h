@@ -28,10 +28,7 @@
 // The C++ PythonStep must be able to call functions in Python.
 // But the Python functions must be able to call the C++ functions
 // (e.g., to get data, flags, etc.)
-// All communication goes through DPStepBase
-// Let a python step be created by a static function creating a
-// PythonWorker doing the actual work. Its pointer is kept in a static
-// and thereafter used to create a PythonStep.
+// All communication goes through DPStepBase.
 
 namespace LOFAR {
   namespace DPPP {
@@ -43,18 +40,28 @@ namespace LOFAR {
       // to call setStep to have a pointer from the python interface
       // to the C++ code.
       DPStepBase()
-        { theirPtr = this; }
-
-      void updateInfo (const DPInfo& info)
+        : itsStep(0)
       {
+        theirPtr = this;
       }
 
-      void setNeedData()
-      ///        { itsStep->setNeedData() }
+      void updateInfo (const DPInfo&)
       {}
 
+      void setNeedVisData()
+      {
+        itsStep->setNeedVisData();
+      }
+
+      void setNeedWrite()
+      {
+        itsStep->setNeedWrite();
+      }
+
       void setStep (PythonStep* step)
-      { cout<<"set the step "<<this<<' '<<theirPtr<<' '<<step<<endl; itsStep = step; }
+      {
+        itsStep = step;
+      }
 
       void _getData (const casa::ValueHolder& vh)
       {
@@ -69,6 +76,16 @@ namespace LOFAR {
       void _getWeights (const casa::ValueHolder& vh)
       {
         itsStep->getWeights (vh);
+      }
+
+      void _getUVW (const casa::ValueHolder& vh)
+      {
+        itsStep->getUVW (vh);
+      }
+
+      bool _processNext (const casa::Record& rec)
+      {
+        return itsStep->processNext (rec);
       }
 
       // Temporarily keep the pointer to this object.

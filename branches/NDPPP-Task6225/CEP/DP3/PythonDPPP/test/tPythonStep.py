@@ -28,24 +28,23 @@ class tPythonStep(DPStepBase):
         DPStepBase.__init__(self)
         itsParset = parameterset(parsetName)
 
-    #def _updateInfo(self, dpinfo):
-     #   DPStepBase._updateInfo(self, dpinfo)
-
     def updateInfo(self, dpinfo):
         print "did update"
         self.itsInfo = dpinfo
         res = {}
-        self.itsData = self.makeArrayData()
-        self.itsFlags = self.makeArrayFlags()
-        self.itsWeights = self.makeArrayWeights()
+        self.itsData = self.makeArrayDataIn()
+        self.itsFlags = self.makeArrayFlagsIn()
+        self.itsWeights = self.makeArrayWeightsIn()
+        self.itsUVW = self.makeArrayUVWIn()
         return res;
 
     def process(self):
         self.getData (self.itsData);
         self.getFlags (self.itsFlags);
         self.getWeights (self.itsWeights);
-        print "process tPythonStep", self.itsData.sum(), self.itsFlags.sum(), self.itsWeights.sum()
-        return {}
+        self.getUVW (self.itsUVW);
+        print "process tPythonStep", self.itsData.sum(), self.itsFlags.sum(), self.itsWeights.sum(), self.itsUVW.sum()
+        return self.processNext ({})
 
     def finish(self):
         print "finish tPythonStep"

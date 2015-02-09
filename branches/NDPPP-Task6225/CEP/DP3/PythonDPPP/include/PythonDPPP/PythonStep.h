@@ -34,6 +34,7 @@
 #include <Common/Timer.h>
 
 #include <casa/Containers/ValueHolder.h>
+#include <casa/Containers/Record.h>
 #include <boost/python.hpp>
 
 namespace LOFAR {
@@ -103,12 +104,23 @@ namespace LOFAR {
       // Show the timings.
       virtual void showTimings (std::ostream&, double duration) const;
 
-      // Get the data into the given DComplex array.
+      // Tell that the Python step needs the visibility data.
+      void setNeedVisData();
+      // Tell that the Python step needs data to be written.
+      void setNeedWrite();
+      // Get the data into the given Complex array.
       void getData (const casa::ValueHolder&);
       // Get the flags into the given bool array.
       void getFlags (const casa::ValueHolder&);
       // Get the weights into the given float array.
       void getWeights (const casa::ValueHolder&);
+      // Get the UVWs into the given double array.
+      void getUVW (const casa::ValueHolder&);
+      // Get the model data into the given Complex array.
+      void getModelData (const casa::ValueHolder&);
+      // Execute the process function of the next step.
+      // The record should contain the changed buffer fields.
+      bool processNext (const casa::Record&);
 
     private:
       //# Data members.
@@ -116,15 +128,14 @@ namespace LOFAR {
       std::string  itsName;
       ParameterSet itsParset;
       DPBuffer     itsBufIn;
-      DPBuffer     itsBuf;
+      DPBuffer     itsBufTmp;
+      DPBuffer     itsBufOut;
+      bool         itsNChanChg;
+      bool         itsNBlChg;
       std::string  itsPythonClass;
       std::string  itsPythonModule;
-      bool         itsNeedWeights;
-      bool         itsNeedUVW;
-      bool         itsNeedFullResFlags;
       NSTimer      itsTimer;
       boost::python::object itsPyObject;
-      boost::python::object itsPyParSet;
     };
 
   } //# end namespace
