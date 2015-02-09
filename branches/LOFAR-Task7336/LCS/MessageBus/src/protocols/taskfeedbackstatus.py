@@ -27,7 +27,7 @@ LOFAR_STATUS_MSG_TEMPLATE = """
   <state/>
 </task>"""
 
-class TaskFeedbackStatus(lofar.messaging.message.Message):
+class TaskFeedbackStatus(lofar.messagebus.message.Message):
   def __init__(self, from_, forUser, summary, momID, sasID, status):
     super(TaskFeedbackStatus, self).__init__(
       from_,
