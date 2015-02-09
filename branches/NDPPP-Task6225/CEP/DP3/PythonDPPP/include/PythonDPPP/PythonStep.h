@@ -42,32 +42,40 @@ namespace LOFAR {
 
     // @ingroup NDPPP
 
-    // This class defines a step in the DPPP pipeline that can be executed in
+    // This class defines a step in the DPPP pipeline to be executed in
     // Python.
-    // It is not directly part of the DPPP program, but is loaded on demand
-    // from a shared library.
+    // the PythonStep functionality is not directly part of the DPPP program,
+    // but is automatically loaded on demand from a shared library.
 
-    // It is an abstract class from which all steps should be derived.
-    // A few functions can or must be implemented. They are called by
-    // the NDPPP program in the following order.
-    // <ul>
-    //  <li> 'updateInfo' should update its DPInfo object with the specific
-    //        step information. For example, in this way it is known
-    //       in all steps how the data are averaged and what the shape is.
-    //  <li> 'show' can be used to show the attributes.
-    //  <li> 'process' is called continuously to process the next time slot.
-    //        When processed, it should call 'process' of the next step.
-    //        When done (i.e. at the end of the input), it should return False.
-    //  <li> 'finish' finishes the processing which could mean that 'process'
-    //       of the next step has to be called several times. When done,
-    //       it should call 'finish' of the next step.
-    //  <li> 'addToMS' is called after 'finish'. It gives a step the opportunity
-    //       to add some data to the MS written/updated. It is, for example,
-    //       used by AOFlagger to write its statistics.
-    //  <li> 'showCounts' can be used to show possible counts of flags, etc.
-    // </ul>
-    // A DPStep object contains a DPInfo object telling the data settings for
-    // a step (like channel info, baseline info, etc.).
+    // The control flow of a python step is as follows:
+    // <ol>
+    //  <li> PythonStep derives from DPStep as all other DPPP steps do.
+    //   Its constructor initializes Python, opens the module given in
+    //   the parset key 'python.module' and creates an instance of the
+    //   class given in 'python.class'.
+    //   That class must derive from the Python class DPStepBase defined
+    //   in __init.py__. The C++ class DPStepBase is the interface for
+    //   callbacks from Python to C++.
+    //  <li> The updateInfo function calls its Python counterpart. The
+    //   DPInfo object is encoded in a dict. Currently, Measure objects
+    //   in DPInfo are not handled yet.
+    //  <li> The process function calls its Python counterpart with the
+    //   time and exposure in the DPBuffer object. The Python class can
+    //   obtain the other dats (visibilities, flags, weights, UVW, modeldata)
+    //   by means of explicit callbacks. This was done for 2 reasons:
+    //   <br>- it makes it possible to directly fill a numpy array.
+    //   <br>- only data really needed is sent.
+    //  <li> When the Python step has output ready, it needs to call the
+    //   processNext function with the data that has changed. Note that
+    //   (as in e.g. class Averager) it is possible that only every N
+    //   input buffers result in an output buffer.
+    //  <li> The finish, show, showCounts, showTimings, and addToMS
+    //   functions call their Python counterparts. The Python base class
+    //   offers default implementations, so they do not need to be
+    //   implemented in a derived Python step class.
+    // </ol>
+    // The class also contains several functions that are basically the
+    // callback function for Python.
 
     class PythonStep: public DPStep
     {
@@ -79,6 +87,7 @@ namespace LOFAR {
       virtual ~PythonStep();
 
       // The 'constructor' for dynamically loaded steps.
+      // It is registered when the shared library is loaded.
       static DPStep::ShPtr makeStep (DPInput*, const ParameterSet&,
                                      const std::string&);
 
@@ -104,6 +113,8 @@ namespace LOFAR {
       // Show the timings.
       virtual void showTimings (std::ostream&, double duration) const;
 
+      // Callback functions for Python.
+      // <group>
       // Tell that the Python step needs the visibility data.
       void setNeedVisData();
       // Tell that the Python step needs data to be written.
@@ -121,6 +132,7 @@ namespace LOFAR {
       // Execute the process function of the next step.
       // The record should contain the changed buffer fields.
       bool processNext (const casa::Record&);
+      // </group>
 
     private:
       //# Data members.

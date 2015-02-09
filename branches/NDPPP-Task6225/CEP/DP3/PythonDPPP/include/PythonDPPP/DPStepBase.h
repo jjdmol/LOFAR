@@ -25,13 +25,16 @@
 #include <PythonDPPP/PythonStep.h>
 #include <DPPP/DPInfo.h>
 
-// The C++ PythonStep must be able to call functions in Python.
-// But the Python functions must be able to call the C++ functions
-// (e.g., to get data, flags, etc.)
-// All communication goes through DPStepBase.
 
 namespace LOFAR {
   namespace DPPP {
+
+    // DPStepBase is the interface for callbacks from the DPPP PythonStep
+    // class (and its derivations) to C++. Note it is not used for calls
+    // from C++ to Python, which are done in PythonStep.cc using the
+    // Boost::Python functionality.
+    // DPStepBase is bound to the Python interface by PythonDPPP.cc.
+    // See class PythonStep and __init.py__ for more information.
 
     class DPStepBase
     {
@@ -45,50 +48,59 @@ namespace LOFAR {
         theirPtr = this;
       }
 
-      void updateInfo (const DPInfo&)
-      {}
-
-      void setNeedVisData()
-      {
-        itsStep->setNeedVisData();
-      }
-
-      void setNeedWrite()
-      {
-        itsStep->setNeedWrite();
-      }
-
+      // Create the link for callbacks from Python to C++.
+      // It is used by the PythonStep constructor.
       void setStep (PythonStep* step)
       {
         itsStep = step;
       }
 
+      // Get the visibility data into the ValueHolder array.
+      // The array must have the correct type and shape.
       void _getData (const casa::ValueHolder& vh)
       {
         itsStep->getData (vh);
       }
 
+      // Get the flags into the ValueHolder array.
+      // The array must have the correct type and shape.
       void _getFlags (const casa::ValueHolder& vh)
       {
         itsStep->getFlags (vh);
       }
 
+      // Get the weights into the ValueHolder array.
+      // The array must have the correct type and shape.
       void _getWeights (const casa::ValueHolder& vh)
       {
         itsStep->getWeights (vh);
       }
 
+      // Get the UVW coordinates data into the ValueHolder array.
+      // The array must have the correct type and shape.
       void _getUVW (const casa::ValueHolder& vh)
       {
         itsStep->getUVW (vh);
       }
 
+      // Get the model data into the ValueHolder array.
+      // The array must have the correct type and shape.
+      void _getModelData (const casa::ValueHolder& vh)
+      {
+        itsStep->getModelData (vh);
+      }
+
+      // Call the process function in the next DPPP step.
+      // The record must contain the changed data fields which will be
+      // stored in the output buffer before calling the next step.
       bool _processNext (const casa::Record& rec)
       {
         return itsStep->processNext (rec);
       }
 
-      // Temporarily keep the pointer to this object.
+      // Keep the pointer to this object.
+      // It is filled by the constructor and used shortly thereafter
+      // in the PythonStep constructor.
       static DPStepBase* theirPtr;
 
     private:

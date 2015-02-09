@@ -142,6 +142,17 @@ class DPStepBase(_DPStepBase):
         """
         return ''
 
+    def showTimings(self, elapsedDuration):
+        """ Show possible timings.
+
+        It should return a string (with newlines) that will be
+        printed by the C++ layer.
+        An empty string is not printed.
+
+        This function does not need to be implemented.
+        """
+        return ''
+
     def addToMS(self, name):
         """ Add information to the output MeasurementSet.
 
@@ -217,6 +228,19 @@ rray")
             raise ValueError("getUVW argument 'nparray' has to be a contiguous numpy a\
 rray")
         return self._getUVW (nparray)
+
+    def getModelData(self, nparray):
+        """ Get the model data into the given numpy array.
+
+        The array must be a contiguous array of the complex64 data type and
+        the correct shape.
+        The array can be created with the makeDataArrayIn function.
+
+        """
+        if not nparray.flags.c_contiguous  or  nparray.size == 0:
+            raise ValueError("getModelData argument 'nparray' has to be a contiguous numpy a\
+rray")
+        return self._getModelData (nparray)
 
     def makeArrayDataIn(self):
         """ Make a numpy array for the visibility input data. """

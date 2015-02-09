@@ -208,11 +208,23 @@ namespace LOFAR {
 
     void PythonStep::showTimings (std::ostream& os, double duration) const
     {
-      os << "  ";
-      FlagCounter::showPerc1 (os, itsTimer.getElapsed(), duration);
-      os << " PythonStep " << itsName << " class=" << itsPythonClass << endl;
+      try {
+        os << "  ";
+        FlagCounter::showPerc1 (os, itsTimer.getElapsed(), duration);
+        os << " PythonStep " << itsName << " class=" << itsPythonClass << endl;
+        boost::python::object result =
+          itsPyObject.attr("showTimings")(itsTimer.getElapsed());
+        string str = boost::python::extract<string>(result);
+        if (! str.empty()) {
+          os << str;
+        }
+      } catch (boost::python::error_already_set const &) {
+        // handle the exception in some way
+        PyErr_Print();
+        throw;
+      }
     }
-
+      
     // Implement all functions to communicate with python.
     void PythonStep::setNeedVisData()
     {
