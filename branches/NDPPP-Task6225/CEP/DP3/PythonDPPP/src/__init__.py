@@ -25,20 +25,40 @@ import numpy as np
 
 class DPStepBase(_DPStepBase):
     """
-    The base class for a python DPPP step
+    The base class for a python DPPP step.
+    An DPPP step implemented in Python must derive from this class.
+    An example can be seen in CEP/DP3/PythonDPPP/test/tPythonStep.py.
     """
 
-    def __init__(self):
+    def __init__(self, parset):
+        """ This constructor must be called by the derived class """
         _DPStepBase.__init__(self)
+        self.itsParset = parset
 
     def _updateInfo(self, dpinfo):
+        """ Private function (called by C++ layer) to update the info.
+
+        The dpinfo argument is a dict containing all fields in the
+        C++ DPInfo object. The names of the keys in the dict are the
+        DPInfo member names without their 'its' prefix.
+
+        This function extracts the information telling the buffer sizes.
+        Thereafter it calls updateInfo to let a derived class extract and
+        optionally set the info.
+        Finally it extracts the information again to get the output sizes.
+
+        """
+        # Get the input sizes.
         self.itsNCorrIn = dpinfo['NCorr']
         self.itsNChanIn = dpinfo['NChan']
         self.itsNBlIn   = len(dpinfo['Ant1'])
+        # Default output size is the input size.
         self.itsNCorrOut = self.itsNCorrIn
         self.itsNChanOut = self.itsNChanIn
         self.itsNBlOut   = self.itsNBlIn
+        # Let the derived class extract and set info.
         infoOut = self.updateInfo(dpinfo)
+        # Extract the output sizes (if defined).
         if 'NCorr' in infoOut:
             self.itsNCorrOut = infoOut['NCorr']
         if 'NChan' in infoOut:
@@ -49,61 +69,168 @@ class DPStepBase(_DPStepBase):
 
     # The following functions can be overwritten in a derived class.
     def updateInfo(self, dpinfo):
+        """ Extract and optionally set the DPInfo fields.
+
+        This function must be implemented in a derived class.
+
+        The dpinfo argument is a dict containing all fields in the
+        C++ DPInfo object. The names of the keys in the dict are the
+        DPInfo member names without their 'its' prefix.
+
+        It must return a (possibly empty) dict containing values of the
+        same keys. Only the keys that have changed must be part of the
+        dict; other keys can be part of it.
+
+        """
         raise ValueError("A class derived from DPStepBase must implement updateInfo")
 
     def needVisData(self):
+        """ Does the derived class need the visibility data?
+
+        This function only needs to be implemented in a derived class
+        if it does not need the visibility data.
+
+        """
         return True
 
     def needWrite(self):
+        """ Does the derived class change data to be written by DPPP?
+
+        This function needs to be implemented in a derived class
+        if it changes data (visibility data, flags, weights, and/or UVW)
+        that needs to be written (or possibly updated) in the MS.
+
+        """
         return False
 
+    def process(self, time, exposure):
+        """ Process the data of the given time slot.
+
+        This function must be implemented in a derived class.
+        it will need the functions getData, etc. to get the visibility data,
+        flags, etc..
+        It should call processNext to process the next DPPP step on the
+        output of this step.
+
+        """        
+        raise ValueError("A class derived from DPStepBase must implement process")
+
     def show(self):
-        return ''
+        """ Show the parset parameters.
+ 
+        It should return a string (with newlines) that will be
+        printed by the C++ layer.
+        An empty string is not printed.
+
+        This function does not need to be implemented.
+        The default implementation shows all parset keys.
+        """
+        s = ''
+        for k,v in self.itsParset.iteritems():
+            if k not in ['type', 'python.class', 'python.module']:
+                s += '  %-24s %s\n' % (k+':', v)
+        return s
 
     def showCounts(self):
+        """ Show possible counts (e.g., nr of flags set).
+
+        It should return a string (with newlines) that will be
+        printed by the C++ layer.
+        An empty string is not printed.
+
+        This function does not need to be implemented.
+        """
         return ''
 
     def addToMS(self, name):
+        """ Add information to the output MeasurementSet.
+
+        This function will only be needed in very special cases
+        where dedicated info needs to be added to the MS.
+        
+        """
         None
 
 
     # The following functions are to be called from Python.
-    def processNext(self, arrs):
-        return self._processNext(arrs)
+    def processNext(self, arraysDict):
+        """ Let the next step in the DPPP pipeline execute its process.
+
+        If data (time, exposure, visibility, flags, weights, and/or UVW)
+        have been changed by the process function, they should be passed
+        using the arraysDict argument.
+        This is a dict that can contain 6 fields: TIME, EXPOSURE, DATA,
+        FLAGS, WEIGHTS, and UVW.
+
+        Suppose that 
+        """
+        return self._processNext(arraysDict)
 
     def getData(self, nparray):
+        """ Get the visibility data into the given numpy array.
+
+        The array must be a contiguous array of the complex64 data type and
+        the correct shape.
+        The array can be created with the makeDataArrayIn function.
+
+        """
         if not nparray.flags.c_contiguous  or  nparray.size == 0:
             raise ValueError("getData argument 'nparray' has to be a contiguous numpy a\
 rray")
         return self._getData (nparray)
 
     def getFlags(self, nparray):
+        """ Get the flags into the given numpy array.
+
+        The array must be a contiguous array of the boolean data type and
+        the correct shape.
+        The array can be created with the makeFlagsArrayIn function.
+
+        """
         if not nparray.flags.c_contiguous  or  nparray.size == 0:
             raise ValueError("getFlags argument 'nparray' has to be a contiguous numpy a\
 rray")
         return self._getFlags (nparray)
 
     def getWeights(self, nparray):
+        """ Get the weights into the given numpy array.
+
+        The array must be a contiguous array of the float32 data type and
+        the correct shape.
+        The array can be created with the makeWeightsArrayIn function.
+
+        """
         if not nparray.flags.c_contiguous  or  nparray.size == 0:
             raise ValueError("getWeights argument 'nparray' has to be a contiguous numpy a\
 rray")
         return self._getWeights (nparray)
 
     def getUVW(self, nparray):
+        """ Get the UVW coordinates into the given numpy array.
+
+        The array must be a contiguous array of the float64 data type and
+        the correct shape.
+        The array can be created with the makeUVWArrayIn function.
+
+        """
         if not nparray.flags.c_contiguous  or  nparray.size == 0:
             raise ValueError("getUVW argument 'nparray' has to be a contiguous numpy a\
 rray")
         return self._getUVW (nparray)
 
     def makeArrayDataIn(self):
+        """ Make a numpy array for the visibility input data. """
         return np.zeros([self.itsNBlIn, self.itsNChanIn, self.itsNCorrIn], dtype='complex64')
 
     def makeArrayFlagsIn(self):
+        """ Make a numpy array for the input flags. """
         return np.zeros([self.itsNBlIn, self.itsNChanIn, self.itsNCorrIn], dtype='bool')
 
     def makeArrayWeightsIn(self):
+        """ Make a numpy array for the input weights. """
         return np.zeros([self.itsNBlIn, self.itsNChanIn, self.itsNCorrIn], dtype='float32')
 
     def makeArrayUVWIn(self):
+        """ Make a numpy array for the input UVW coordinates. """
         return np.zeros([self.itsNBlIn, 3], dtype='float64')
 

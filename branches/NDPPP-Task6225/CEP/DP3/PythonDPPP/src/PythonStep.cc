@@ -119,6 +119,14 @@ namespace LOFAR {
                 infoIn.getAnt2().size() == info().getAnt2().size()  &&
                 allEQ(infoIn.getAnt1(), info().getAnt1())  &&
                 allEQ(infoIn.getAnt2(), info().getAnt2()));
+        boost::python::object res1 = itsPyObject.attr("needVisData")();
+        if (boost::python::extract<bool>(res1)) {
+          info().setNeedVisData();
+        }
+        boost::python::object res2 = itsPyObject.attr("needWrite")();
+        if (boost::python::extract<bool>(res2)) {
+          info().setNeedWrite();
+        }
       } catch (boost::python::error_already_set const &) {
         // handle the exception in some way
         PyErr_Print();
@@ -132,7 +140,8 @@ namespace LOFAR {
         itsTimer.start();
         itsBufIn.referenceFilled (buf);
         boost::python::object result =
-          itsPyObject.attr("process")();
+          itsPyObject.attr("process")(itsBufIn.getTime(),
+                                      itsBufIn.getExposure());
         bool res = boost::python::extract<bool> (result);
         itsTimer.stop();
         return res;
@@ -251,6 +260,7 @@ namespace LOFAR {
 
     bool PythonStep::processNext (const Record& rec)
     {
+      itsTimer.stop();
       uint nproc = 0;
       uint narr  = 0;
       if (rec.isDefined("TIME")) {
@@ -304,7 +314,9 @@ namespace LOFAR {
                "Record/dict given to processNext() must contain DATA, FLAGS, "
                "WEIGHTS, and UVW if the nr of channels or baselines changes");
       }
-      return getNextStep()->process (itsBufOut);
+      bool res = getNextStep()->process (itsBufOut);
+      itsTimer.start();
+      return res;
     }
 
   } //# end namespace

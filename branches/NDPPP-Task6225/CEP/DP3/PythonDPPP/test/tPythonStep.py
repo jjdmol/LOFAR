@@ -24,33 +24,49 @@ from lofar.pythondppp import DPStepBase
 from lofar.parameterset import parameterset
 
 class tPythonStep(DPStepBase):
-    def __init__(self, parsetName):
-        DPStepBase.__init__(self)
-        itsParset = parameterset(parsetName)
+    def __init__(self, parsetDict):
+        # The constructor gets the subset of the NDPPP parset containing
+        # all keys-value pairs for this step.
+        # Note: the base class constructor MUST be called.
+        DPStepBase.__init__(self, parsetDict)
+        itsParset = parameterset(parsetDict)
 
     def updateInfo(self, dpinfo):
-        print "did update"
+        # This function must be implemented.
         self.itsInfo = dpinfo
-        res = {}
+        # Make the arrays that will get the input buffer data from
+        # the getData, etc. calls in the process function.
         self.itsData = self.makeArrayDataIn()
         self.itsFlags = self.makeArrayFlagsIn()
         self.itsWeights = self.makeArrayWeightsIn()
         self.itsUVW = self.makeArrayUVWIn()
-        return res;
+        # Return the dict with info fields that change in this step.
+        return {};
 
-    def process(self):
+    def process(self, time, exposure):
+        # This function must be implemented.
+        # First get the data arrays needed by this step.
         self.getData (self.itsData);
         self.getFlags (self.itsFlags);
         self.getWeights (self.itsWeights);
         self.getUVW (self.itsUVW);
-        print "process tPythonStep", self.itsData.sum(), self.itsFlags.sum(), self.itsWeights.sum(), self.itsUVW.sum()
-        return self.processNext ({})
+        # Process the data.
+        print "process tPythonStep", time, exposure, self.itsData.sum(), self.itsFlags.sum(), self.itsWeights.sum(), self.itsUVW.sum()
+        # Execute the next step in the DPPP pipeline.
+        return self.processNext ({'TIME': time+1})
 
     def finish(self):
+        # Finish the step as needed.
+        # This function does not need to be implemented.
+        # Note: finish of the next step is called by the C++ layer.
         print "finish tPythonStep"
 
-    def show(self):
-        return "   **showtest**"
+    def showCounts(self):
+        # Show the counts of this test.
+        # This function does not need to be implemented.
+        return "   **showcounttest**"
 
     def addToMS(self, msname):
+        # Add some info the the output MeasurementSet.
+        # This function does not need to be implemented.
         print "addToMS tPythonStep", msname

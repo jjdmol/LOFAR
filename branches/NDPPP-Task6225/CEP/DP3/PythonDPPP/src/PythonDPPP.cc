@@ -42,15 +42,14 @@ using namespace boost::python;
 namespace LOFAR {
   namespace DPPP {
 
-    // Define the python interface to PythonStep
+    // Define the interface for the PythonStep C++ functions callable
+    // from python.
+    // Note that the python functions called from C++ are done using
+    // the boost::python attr function.
     void dpstepbase()
     {
       class_<DPStepBase> ("_DPStepBase")
         .def (init<>())
-        .def ("setNeedVisData", &DPStepBase::setNeedVisData,
-              "Tell DPPP that it needs to read the visibility data column.")
-        .def ("setNeedWrite", &DPStepBase::setNeedWrite,
-              "Tell DPPP that it needs to write data.")
         .def ("_getData", &DPStepBase::_getData,
               "Get the visibility data into the given array",
               (boost::python::arg("value")))
