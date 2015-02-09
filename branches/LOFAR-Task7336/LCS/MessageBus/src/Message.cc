@@ -131,8 +131,8 @@ string Message::getXMLvalue(const string& key) const
 
 	// loop over subkeys
 	string::size_type	offset = 0;
-	string::size_type	begin;
-	string::size_type	end;
+	string::size_type	begin = string::npos;
+	string::size_type	end = string::npos;
 	string				startTag;
 	for (size_t i = 0; i <  labels.size(); ++i) {
 		// define tags to find
