@@ -64,7 +64,7 @@ class FromBus:
         except qpid.messaging.MessagingError, m:
             raise BusException(m)
 
-        self.add(address, options)
+        self.add_queue(address, options)
 
     def __del__(self):
         self.connection.close()
