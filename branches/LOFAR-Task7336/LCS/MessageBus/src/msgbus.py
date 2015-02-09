@@ -39,13 +39,16 @@ class ToBus:
         except qpid.messaging.MessagingError, m:
             raise BusException(m)
 
+    def __del__(self):
+        self.connection.close()
+
     def sendstr(self,Str):
         msg = qpid.messaging.Message(Str)
         msg.durable = True
         if (reply_to != ""):
            msg.reply_to = reply_to
 
-        self.sender.send(msg)
+        self.sendmsg(msg)
 
     def sendmsg(self,msg):
         self.sender.send(msg)
@@ -58,14 +61,19 @@ class FromBus:
         try:
             self.connection.open()
             self.session = self.connection.session()
-            receiver = self.session.receiver("%s;{%s}" % (address,options))
-            receiver.capacity = 1 #32
         except qpid.messaging.MessagingError, m:
             raise BusException(m)
 
-    def add(self,address,options=options):
+        self.add(address, options)
+
+    def __del__(self):
+        self.connection.close()
+
+    def add_queue(self,address,options=options):
         try:
             receiver = self.session.receiver("%s;{%s}" % (address,options))
+
+            # Need capacity >=1 for 'self.session.next_receiver' to function across multiple queues
             receiver.capacity = 1 #32
         except qpid.messaging.MessagingError, m:
             raise BusException(m)
