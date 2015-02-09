@@ -17,9 +17,9 @@
 # You should have received a copy of the GNU General Public License along
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 
-import lofar.messagebus.msgbus
+import lofar.messagebus.message
 
-class TaskFeedbackDataproducts(lofar.messagebus.msgbus.Message):
+class TaskFeedbackDataproducts(lofar.messagebus.message.Message):
   def __init__(self, from_, forUser, summary, momID, sasID, feedback):
     super(TaskFeedbackDataproducts, self).__init__(
       from_,

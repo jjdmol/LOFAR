@@ -18,7 +18,7 @@
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 
 #import lofar.messagebus.Message
-import lofar.messaging.msgbus
+import lofar.messaging.message
 import xml.dom.minidom as xml
 
 LOFAR_STATUS_MSG_TEMPLATE = """
@@ -27,7 +27,7 @@ LOFAR_STATUS_MSG_TEMPLATE = """
   <state/>
 </task>"""
 
-class TaskFeedbackStatus(lofar.messaging.msgbus.Message):
+class TaskFeedbackStatus(lofar.messaging.message.Message):
   def __init__(self, from_, forUser, summary, momID, sasID, status):
     super(TaskFeedbackStatus, self).__init__(
       from_,
