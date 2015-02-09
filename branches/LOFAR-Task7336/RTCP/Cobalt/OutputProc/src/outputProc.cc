@@ -38,6 +38,7 @@
 #include <CoInterface/Stream.h>
 #include <CoInterface/OMPThread.h>
 #include <OutputProc/Package__Version.h>
+#include <MessageBus/MsgBus.h>
 #include "GPUProcIO.h"
 #include "IOPriority.h"
 
@@ -96,6 +97,8 @@ int main(int argc, char *argv[])
   }
 
   INIT_LOGGER("outputProc"); // also attaches to CasaLogSink
+
+  MessageBus::init();
 
   LOG_DEBUG_STR("Started: " << argv[0] << ' ' << argv[1] << ' ' << argv[2]);
   LOG_INFO_STR("OutputProc version " << OutputProcVersion::getVersion() << " r" << OutputProcVersion::getRevision());

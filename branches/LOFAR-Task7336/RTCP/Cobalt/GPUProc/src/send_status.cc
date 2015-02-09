@@ -20,6 +20,7 @@
 
 #include <lofar_config.h>
 
+#include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
 #include <MessageBus/MsgBus.h>
 #include <MessageBus/Protocols/TaskFeedbackStatus.h>
@@ -65,6 +66,9 @@ int main(int argc, char **argv)
     usage(argv[0]);
     return EXIT_FAILURE;
   }
+
+  INIT_LOGGER("send_status");
+  MessageBus::init();
 
   Parset parset(argv[optind]);
   int success = atoi(argv[optind+1]);

@@ -1,6 +1,7 @@
 #include "lofar_config.h"
 
 #include <MessageBus/MsgBus.h>
+#include "LogSink.h"
 #include <Common/LofarLogger.h>
 
 #ifdef HAVE_QPID
@@ -18,6 +19,12 @@ namespace LOFAR {
       return (Duration)(1000.0 * secs);
 
     return Duration::FOREVER;
+  }
+
+  namespace MessageBus {
+    void init() {
+      qpidlogsink_init();
+    }
   }
 
   FromBus::FromBus(const std::string &address, const std::string &options, const std::string &broker)

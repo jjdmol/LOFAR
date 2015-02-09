@@ -40,6 +40,11 @@ namespace LOFAR {
 
 EXCEPTION_CLASS(MessageBusException, LOFAR::Exception);
 
+namespace MessageBus {
+  // Generic initialisation of the Messaging framework
+  void init();
+}
+
 class FromBus
 {
 public:
@@ -75,7 +80,6 @@ private:
   qpid::messaging::Connection itsConnection;
   qpid::messaging::Session itsSession;
   qpid::messaging::Sender itsSender;
-
 };
 
 } // namespace LOFAR

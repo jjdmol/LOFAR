@@ -6,6 +6,7 @@ include(PythonInstall)
 
 set(messagebus_LIB_SRCS
   Package__Version.cc
+  LogSink.cc
   MsgBus.cc
   Message.cc)
 

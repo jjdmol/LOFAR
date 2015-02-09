@@ -170,6 +170,10 @@ int main(int argc, char **argv)
 
   LOG_INFO("===== INIT =====");
 
+  // Initialise message bus
+  LOG_INFO("----- Initialising MessageBus");
+  MessageBus::init();
+
   // Create a parameters set object based on the inputs
   LOG_INFO("----- Reading Parset");
   Parset ps(argv[optind]);

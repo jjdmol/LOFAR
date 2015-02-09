@@ -65,6 +65,10 @@ void compareMessages(qpid::messaging::Message&	lhm, qpid::messaging::Message& rh
 
 
 int main(int argc, char* argv[]) {
+  INIT_LOGGER("tMsgBus");
+
+  MessageBus::init();
+
   std::string queue(argc == 2 ? argv[1] : "tMsgBus-test-queue");
 
   cout << "Using queue " << queue << " (Syntax: " << argv[0] << " messagebus)" << endl;
@@ -107,6 +111,7 @@ int main(int argc, char* argv[]) {
     showMessage(receivedMsg.qpidMsg());
 
 	cout << "--- All test successful! ---" << endl;
+
 	return (0);
 }
 

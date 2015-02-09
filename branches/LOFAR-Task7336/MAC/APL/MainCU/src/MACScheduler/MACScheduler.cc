@@ -28,6 +28,7 @@
 #include <Common/ParameterSet.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <MACIO/MACServiceInfo.h>
+#include <MessageBus/MsgBus.h>
 #include <MessageBus/Protocols/TaskSpecificationSystem.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <APL/APLCommon/APL_Defines.h>
