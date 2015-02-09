@@ -10,4 +10,5 @@ install(FILES
   TaskFeedbackDataproducts.h
   TaskFeedbackProcessing.h
   TaskFeedbackStatus.h
+  TaskSpecificationSystem.h
   DESTINATION include/${PACKAGE_NAME}/Protocols)

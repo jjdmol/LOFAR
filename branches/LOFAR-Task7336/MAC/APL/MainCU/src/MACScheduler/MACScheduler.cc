@@ -28,6 +28,7 @@
 #include <Common/ParameterSet.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <MACIO/MACServiceInfo.h>
+#include <MessageBus/Protocols/TaskSpecificationSystem.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/ControllerDefines.h>
@@ -47,6 +48,7 @@ using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::RTDB;
 using namespace LOFAR::OTDB;
+using namespace LOFAR::Protocols;
 using namespace boost::posix_time;
 using namespace std;
 
@@ -834,10 +836,14 @@ void MACScheduler::_setParsetOnMsgBus(const string&	filename) const
 	string			sasID = obsSpecs.getString(obsPrefix + ".otdbID");
 
     //                      from, forUser, summary, protocol, protocolVersion, momID, sasID
+#if 1	
+	TaskSpecificationSystem	outMsg("LOFAR.MACScheduler", "", "", momID, sasID, obsSpecs);
+#else
 	Message			outMsg("LOFAR.MACScheduler", "", "", "task.specification.system", "1.0", momID, sasID);
 	stringstream	ss;
 	obsSpecs.writeStream(ss);
 	outMsg.setTXTPayload(ss.str());
+#endif
 	cout << outMsg << endl;
 	itsMsgQueue->send(outMsg);
 }
