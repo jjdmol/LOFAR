@@ -20,10 +20,11 @@
 """Very basic messagebus router that routs the messages according to the settings in Routing.conf
 """
 
-from MsgBus import *
+import msgbus
 import threading
+from ConfigParser import SafeConfigParser
 
-class oneBusDistribute(threading.Thread):
+class BusMulticast(threading.Thread):
   """
   Sets up the routing from one inbus to several outbusses
   """
@@ -33,48 +34,56 @@ class oneBusDistribute(threading.Thread):
     self.destlist = destlist
 
   def run(self):
-    inbus = FromBus(self.source)
-    outbusses = [ ToBus(dest) for dest in self.destlist]
+    inbus = msgbus.FromBus(self.source)
+    outbusses = [msgbus.ToBus(dest) for dest in self.destlist]
+
     print "Listening at: ", self.source
-    while 1:
+
+    while True:
+      # TODO: Use a transaction
       msg = inbus.getmsg()
       print "Msg received at: ", self.source
+
       for outbus in outbusses:
         outbus.send(msg)
       print "forwarded message to ", self.destlist
+
       inbus.ack(msg)
+
+class RoutingConfig(SafeConfigParser):
+  def __init__(self, filename):
+    SafeConfigParser.__init__(self)
+
+    # set defaults
+    self.add_section('routing')
+
+    # read configuration
+    self.read(filename)
+
+  def sources(self):
+    return self.options('routing')
+
+  def destinations(self, source):
+    return [field.strip() for field in self.get('routing', source).split(',')]
 
 if __name__ == "__main__":
   # read config file and process lines
-  infile =  open("Routing.conf", 'r')
-  for line in infile:
-    # skip comment
-    hashpos = line.find('#')
-    if hashpos >= 0:
-      line = line[0:hashpos]
-    if len(line) == 0:
-      continue
+  config = RoutingConfig('Routing.conf')
 
-    # split in source and destinations
-    fields = [ field.strip() for field in line.split(":")]
-    if len(fields) < 2 or len(fields[1].strip()) == 0:
-      print "SYNTAX ERROR IN LINE: ", line
-      continue
-    source = fields[0].strip()
-    destlist = [ field.strip() for field in fields[1].split(',')]
+  threadlist = []
 
-    # set up routing
-    threadList = []
+  # set up routing
+  for source in config.sources():
+    destlist = config.destinations(source)
+
     for dest in destlist:
-      print source, "->", dest.strip()
+      print source, "->", dest
 
-    t = oneBusDistribute(source , destlist)
+    t = BusMulticast(source, destlist)
     t.start()
     threadlist.append(t)
 
-  infile.close()
-
-  # wait for join (forver)
-  for t in threadList:
+  # wait for join (forever)
+  for t in threadlist:
     t.join()
-    
+

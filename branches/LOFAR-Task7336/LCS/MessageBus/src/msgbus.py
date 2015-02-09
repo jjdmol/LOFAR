@@ -17,68 +17,70 @@
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
 # id.. TDB
-from qpid.messaging import *
+
+import qpid.messaging
 
 # Candidate for a config file
-broker="localhost" 
-options="create:always, node: { type: queue, durable: True}"
+broker="127.0.0.1" 
+options="create:always, node: { type: queue, durable: True }"
+
+class BusException(Exception):
+    pass
 
 class ToBus:
     def __init__(self, address, options=options, broker=broker):
-        self.connection = Connection(broker)
+        self.connection = qpid.messaging.Connection(broker)
         self.connection.reconnect = True
 
         try:
             self.connection.open()
             self.session = self.connection.session() 
             self.sender = self.session.sender(address)
-
-        except MessagingError,m:
-            print " OMG!!"
-            print m
+        except qpid.messaging.MessagingError, m:
+            raise BusException(m)
 
     def sendstr(self,Str):
-        msg = Message(Str)
-        msg.durable=True
+        msg = qpid.messaging.Message(Str)
+        msg.durable = True
         if (reply_to != ""):
-           msg.reply_to=reply_to
+           msg.reply_to = reply_to
+
         self.sender.send(msg)
 
     def sendmsg(self,msg):
-	self.sender.send(msg)
+        self.sender.send(msg)
 
 class FromBus:
     def __init__(self, address, options=options, broker=broker):
-        self.connection = Connection(broker)
+        self.connection = qpid.messaging.Connection(broker)
         self.connection.reconnect = True
         
         try:
             self.connection.open()
             self.session = self.connection.session()
-            receiver = self.session.receiver("%s;{%s}" %(address,options))
+            receiver = self.session.receiver("%s;{%s}" % (address,options))
             receiver.capacity = 1 #32
-            
-        except MessagingError,m:
-            print " OMG!!"
-            print m
+        except qpid.messaging.MessagingError, m:
+            raise BusException(m)
 
     def add(self,address,options=options):
         try:
-            receiver=self.session.receiver("%s;{%s}" %(address,options))
+            receiver = self.session.receiver("%s;{%s}" % (address,options))
             receiver.capacity = 1 #32
-        except MessagingError,m:
-            print "Error adding receiver"
-            print m
+        except qpid.messaging.MessagingError, m:
+            raise BusException(m)
 
-    def getmsg(self,timeout=None):
-        msg=None
-	try:
-                receiver = self.session.next_receiver(timeout)
-        	if receiver != None: msg = self.receiver.get()
-	except exceptions.Empty, e:
-		return "None" , "None"
+    def getmsg(self, timeout=None):
+        msg = None
+
+        try:
+            receiver = self.session.next_receiver(timeout)
+            if receiver != None: msg = self.receiver.get()
+        except qpid.messaging.exceptions.Empty, e:
+            return None
+
         return msg
 
-    def ack(self,msg):
-          self.session.acknowledge(msg)
+    def ack(self, msg):
+        self.session.acknowledge(msg)
 
