@@ -68,7 +68,7 @@ class RoutingConfig(SafeConfigParser):
 
 if __name__ == "__main__":
   # read config file and process lines
-  config = RoutingConfig('Routing.conf')
+  config = RoutingConfig('routing.conf')
 
   threadlist = []
 
