@@ -88,6 +88,7 @@ mkdir -p $"$WORKSPACE/installed/var/run/pipeline"
 use Lofar               # this is a weak point in the script we should be able to run without
 use Pythonlibs
 . $"$WORKSPACE/lofarinit.sh"  
+. /data/qpid/.profile
 
 # *****************************************************
 # 3) Clear old data:
