@@ -42,7 +42,7 @@ class BusMulticast(threading.Thread):
     print "Listening at: ", self.source
 
     while True:
-      # TODO: Use a transaction
+      # TODO: Use a transaction (not supported yet in qpid 0.30)
       msg = inbus.getmsg()
       print "Msg received at: ", self.source
 
@@ -75,6 +75,7 @@ class RouterConfig(SafeConfigParser):
     if os.path.isfile(filename):
       return False
 
+    print "Reading ",filename
     SafeConfigParser.read(self, filename)
     return True
 
@@ -86,7 +87,9 @@ class RouterConfig(SafeConfigParser):
 
 if __name__ == "__main__":
   """
-    Apply the routing specified in router.conf and router-`hostname`.conf.
+    Apply the routing specified in router.conf and router.conf.`hostname`;
+    both configration files are found in $LOFARROOT/etc, or . if $LOFARROOT is
+    not set.
 
     Application runs forever, regardless of the number of routes. Also runs
     forever if no routing is required, to keep behaviour consistent across
@@ -96,11 +99,13 @@ if __name__ == "__main__":
   import platform
   import time
 
+  path = os.path.expandvars("$LOFARROOT/etc") if "LOFARROOT" in os.environ else "."
+
   # read default config file
-  config = RouterConfig('router.conf')
+  config = RouterConfig('%s/MessageRouter.conf' % path)
 
   # read host-specific config file
-  my_configfile = 'router-%s.conf' % platform.node() # = hostname
+  my_configfile = '%s/MessageRouter.conf.%s' % (path, platform.node()) # = hostname
   config.read(my_configfile)
 
   threadlist = []

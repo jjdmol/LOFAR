@@ -26,3 +26,16 @@ python_install(
   DESTINATION lofar/messagebus)
 
 add_subdirectory(protocols)
+
+install(FILES
+  MessageRouter
+  DESTINATION bin)
+
+file(GLOB MessageRouterConfs
+  MessageRouter.conf*
+  )
+
+install(FILES
+  ${MessageRouterConfs}
+  DESTINATION etc)
+
