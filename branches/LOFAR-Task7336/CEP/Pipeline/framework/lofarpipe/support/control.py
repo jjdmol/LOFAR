@@ -14,7 +14,7 @@ from lofarpipe.support.stateful import StatefulRecipe
 from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.xmllogging import get_active_stack
 from lofar.parameterset import parameterset
-from lofar.messagebus import ToBus
+from lofar.messagebus.msgbus import ToBus
 from lofar.messagebus.protocols.taskfeedbackdataproducts import TaskFeedbackDataproducts
 from lofar.messagebus.protocols.taskfeedbackprocessing import TaskFeedbackProcessing
 from lofar.messagebus.protocols.taskfeedbackstatus import TaskFeedbackStatus
