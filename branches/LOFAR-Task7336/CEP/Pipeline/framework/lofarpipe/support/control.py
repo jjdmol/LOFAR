@@ -110,8 +110,6 @@ class control(StatefulRecipe):
         raise NotImplementedError
 
     def go(self):
-        super(control, self).go()
-
         # Read the parset-file that was given as input argument
         try:
             parset_file = os.path.abspath(self.inputs['args'][0])
@@ -125,12 +123,16 @@ class control(StatefulRecipe):
                 os.path.splitext(os.path.basename(parset_file))[0]
             )
 
+        # we can call our parent now that we have a job_name
+        super(control, self).go()
+
         # Pull several parameters from the parset
         self.momID = self.parset.getString("Observation.momID", "")
         self.sasID = self.parset.getString("Observation.ObsID", "")
 
         # Start the pipeline
         self.logger.info("LOFAR Pipeline (%s) starting." % self.name)
+
         try:
             self.pipeline_logic()
         except Exception, message:
