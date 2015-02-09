@@ -6,6 +6,7 @@
 #                                                             Marcel Loose, 2012
 #                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
+import os
 import sys
 import re
 import traceback
