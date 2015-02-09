@@ -35,6 +35,8 @@ class control(StatefulRecipe):
     inputs = {}
 
     def __init__(self):
+      super(control, self).__init__()
+      
       self.parset = parameterset()
       self.momID = 0
       self.sasID = 0
