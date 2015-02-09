@@ -17,16 +17,18 @@
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
 # id.. TDB
-"""Very basic messagebus router that routs the messages according to the settings in Routing.conf
+"""Very basic messagebus router that routs the messages according to the settings in Router.conf
 """
 
 import msgbus
+
 import threading
 from ConfigParser import SafeConfigParser
+import os.path
 
 class BusMulticast(threading.Thread):
   """
-  Sets up the routing from one inbus to several outbusses
+  Sets up the router from one inbus to several outbusses
   """
   def __init__(self, source, destlist):
     threading.Thread.__init__(self)
@@ -46,33 +48,64 @@ class BusMulticast(threading.Thread):
 
       for outbus in outbusses:
         outbus.send(msg)
-      print "forwarded message to ", self.destlist
+      print "Forwarded message to ", self.destlist
 
       inbus.ack(msg)
 
-class RoutingConfig(SafeConfigParser):
-  def __init__(self, filename):
+class RouterConfig(SafeConfigParser):
+  """
+    Router configuration. Example:
+
+    [multicast]
+    source-queue-1: dest-queue-1, dest-queue2
+    source-queue-2: dest-queue-3
+
+  """
+  def __init__(self, filename=None):
     SafeConfigParser.__init__(self)
 
     # set defaults
-    self.add_section('routing')
+    self.add_section('multicast')
 
     # read configuration
-    self.read(filename)
+    if filename is not None:
+      self.read(filename)
+
+  def read(self, filename):
+    if os.path.isfile(filename):
+      return False
+
+    SafeConfigParser.read(self, filename)
+    return True
 
   def sources(self):
-    return self.options('routing')
+    return self.options('multicast')
 
   def destinations(self, source):
-    return [field.strip() for field in self.get('routing', source).split(',')]
+    return [field.strip() for field in self.get('router', source).split(',')]
 
 if __name__ == "__main__":
-  # read config file and process lines
-  config = RoutingConfig('routing.conf')
+  """
+    Apply the routing specified in router.conf and router-`hostname`.conf.
+
+    Application runs forever, regardless of the number of routes. Also runs
+    forever if no routing is required, to keep behaviour consistent across
+    nodes.
+  """
+  import os
+  import platform
+  import time
+
+  # read default config file
+  config = RouterConfig('router.conf')
+
+  # read host-specific config file
+  my_configfile = 'router-%s.conf' % platform.node() # = hostname
+  config.read(my_configfile)
 
   threadlist = []
 
-  # set up routing
+  # set up router
   for source in config.sources():
     destlist = config.destinations(source)
 
@@ -83,7 +116,14 @@ if __name__ == "__main__":
     t.start()
     threadlist.append(t)
 
-  # wait for join (forever)
-  for t in threadlist:
-    t.join()
+  print len(threadlist), "threads"
+
+  if not threadlist:
+    # stall forever (future: allow rereading config from config file? command queue?)
+    while True:
+      time.sleep(60)
+  else:
+    # wait for join (forever)
+    for t in threadlist:
+      t.join()
 
