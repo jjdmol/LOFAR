@@ -18,7 +18,7 @@
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 
 #import lofar.messagebus.Message
-import lofar.messaging.message
+import lofar.messagebus.message
 import xml.dom.minidom as xml
 
 LOFAR_STATUS_MSG_TEMPLATE = """
