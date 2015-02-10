@@ -101,7 +101,7 @@ if __name__ == "__main__":
 
   if "LOFARROOT" in os.environ:
     path = os.path.expandvars("$LOFARROOT/etc")
-  else
+  else:
     path = "."
 
   # read default config file
