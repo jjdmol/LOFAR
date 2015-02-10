@@ -85,7 +85,7 @@ class control(StatefulRecipe):
 
         bus.sendmsg(msg.qpidMsg())
 
-    def _send_feedback_status(self, momID, sasID, status):
+    def _send_feedback_status(self, status):
         """
         Send status information back to LOFAR.
 
