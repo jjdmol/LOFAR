@@ -151,20 +151,6 @@ class msss_imager_pipeline(control):
                                            str(subbands_per_subbandgroup))
         toplevel_meta_data.replace("subbandGroupsPerMS", 
                                            str(subbandgroups_per_ms))
-
-        toplevel_meta_data_path = os.path.join(
-                self.parset_dir, "toplevel_meta_data.parset")
-
-        try:
-            toplevel_meta_data.writeFile(toplevel_meta_data_path)
-            self.logger.info("Wrote meta data to: " + 
-                    toplevel_meta_data_path)
-        except RuntimeError, err:
-            self.logger.error(
-              "Failed to write toplevel meta information parset: %s" % str(
-                                    toplevel_meta_data_path))
-            return 1
-
         
         # Create a parset-file containing the metadata for MAC/SAS at nodes
         metadata = self.run_task("get_metadata", output_ms_mapfile,
@@ -172,10 +158,9 @@ class msss_imager_pipeline(control):
                 full_parset.getString('prefix') +
                 full_parset.fullModuleName('DataProducts')
             ),
-            toplevel_meta_data_path=toplevel_meta_data_path, 
             product_type = "Correlated")["metadata"]
 
-        self.send_feedback_processing(parameterset())
+        self.send_feedback_processing(toplevel_meta_data)
         self.send_feedback_dataproducts(metadata)
 
         return 0
