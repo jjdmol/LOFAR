@@ -244,17 +244,17 @@ rray")
 
     def makeArrayDataIn(self):
         """ Make a numpy array for the visibility input data. """
-        return np.zeros([self.itsNBlIn, self.itsNChanIn, self.itsNCorrIn], dtype='complex64')
+        return np.empty([self.itsNBlIn, self.itsNChanIn, self.itsNCorrIn], dtype='complex64')
 
     def makeArrayFlagsIn(self):
         """ Make a numpy array for the input flags. """
-        return np.zeros([self.itsNBlIn, self.itsNChanIn, self.itsNCorrIn], dtype='bool')
+        return np.empty([self.itsNBlIn, self.itsNChanIn, self.itsNCorrIn], dtype='bool')
 
     def makeArrayWeightsIn(self):
         """ Make a numpy array for the input weights. """
-        return np.zeros([self.itsNBlIn, self.itsNChanIn, self.itsNCorrIn], dtype='float32')
+        return np.empty([self.itsNBlIn, self.itsNChanIn, self.itsNCorrIn], dtype='float32')
 
     def makeArrayUVWIn(self):
         """ Make a numpy array for the input UVW coordinates. """
-        return np.zeros([self.itsNBlIn, 3], dtype='float64')
+        return np.empty([self.itsNBlIn, 3], dtype='float64')
 
