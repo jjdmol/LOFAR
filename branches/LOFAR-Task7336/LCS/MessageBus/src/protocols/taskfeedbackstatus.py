@@ -43,7 +43,10 @@ class TaskFeedbackStatus(lofar.messagebus.message.Message):
     self._getXMLnode("message.payload").appendChild(payload_document.firstChild)
 
     self.type_ = "pipeline"
-    self.state = "finished" if status else "aborted"
+    if status:
+      self.state = "finished"
+    else:
+      self.state = "aborted"
 
   def _property_list(self):
      properties = super(TaskFeedbackStatus, self)._property_list()
