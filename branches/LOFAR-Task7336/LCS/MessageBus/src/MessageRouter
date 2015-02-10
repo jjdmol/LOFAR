@@ -99,7 +99,10 @@ if __name__ == "__main__":
   import platform
   import time
 
-  path = os.path.expandvars("$LOFARROOT/etc") if "LOFARROOT" in os.environ else "."
+  if "LOFARROOT" in os.environ:
+    path = os.path.expandvars("$LOFARROOT/etc")
+  else
+    path = "."
 
   # read default config file
   config = RouterConfig('%s/MessageRouter.conf' % path)
