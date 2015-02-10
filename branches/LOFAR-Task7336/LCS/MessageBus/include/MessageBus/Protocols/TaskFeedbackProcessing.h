@@ -55,7 +55,7 @@ public:
     from,
     forUser,
     summary,
-    "lofar.task.feedback.processing",
+    "task.feedback.processing",
     "1.0.0",
     momID,
     sasID)

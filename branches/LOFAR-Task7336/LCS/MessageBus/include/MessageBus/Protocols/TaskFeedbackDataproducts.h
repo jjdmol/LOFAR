@@ -55,7 +55,7 @@ public:
     from,
     forUser,
     summary,
-    "lofar.task.feedback.dataproducts",
+    "task.feedback.dataproducts",
     "1.0.0",
     momID,
     sasID)

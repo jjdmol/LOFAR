@@ -56,7 +56,7 @@ public:
     from,
     forUser,
     summary,
-    "lofar.task.feedback.status",
+    "task.feedback.status",
     "1.0.0",
     momID,
     sasID)

@@ -25,7 +25,7 @@ class TaskFeedbackProcessing(lofar.messagebus.message.Message):
       from_,
       forUser,
       summary,
-      "lofar.task.feedback.processing",
+      "task.feedback.processing",
       "1.0.0",
       momID,
       sasID)
