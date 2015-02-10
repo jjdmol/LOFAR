@@ -87,8 +87,14 @@ namespace LOFAR {
     void adoptCollection (const PyParameterSet& parset, const string& prefix)
       { return ParameterSet::adoptCollection (parset, prefix); }
 
-    string toString() const
+    string __str__() const
       { string buffer; writeBuffer(buffer); return buffer; }
+
+    string __getstate__() const
+      { return __str__(); }
+
+    void __setstate__(const string& state)
+      { adoptBuffer(state); }
 
     PyParameterValue get (const string& key) const
       { return ParameterSet::get (key); }
@@ -177,6 +183,58 @@ namespace LOFAR {
   vector<string> (ParameterSet::*fgetvecstring2)(const string&, const vector<string>&, bool) const =
     &ParameterSet::getStringVector;
 
+  // Define pickling/unpickling information
+  struct pyparameterset_pickle_suite : boost::python::pickle_suite
+  {
+    /*
+    static
+    boost::python::tuple
+    gtinitargs(const world& w)
+    {
+        return boost::python::make_tuple(w.get_country());
+    }
+    */
+
+    static
+    boost::python::tuple
+    getstate(boost::python::object obj)
+    {
+        PyParameterSet const& ps = boost::python::extract<PyParameterSet const&>(obj)();
+
+        return boost::python::make_tuple(
+            obj.attr("__dict__"),
+            ps.__str__());
+    }
+
+    static
+    void
+    setstate(boost::python::object obj, boost::python::tuple state)
+    {
+        using namespace boost::python;
+        PyParameterSet& ps = extract<PyParameterSet&>(obj)();
+
+        if (len(state) != 2)
+        {
+          PyErr_SetObject(PyExc_ValueError,
+                          ("expected 2-item tuple in call to __setstate__; got %s"
+                           % state).ptr()
+              );
+          throw_error_already_set();
+        }
+
+        // restore the object's __dict__
+        dict d = extract<dict>(obj.attr("__dict__"))();
+        d.update(state[0]);
+
+        // restore the internal state of the C++ object
+        string parsetStr = extract<string>(state[1]);
+        ps.adoptBuffer(parsetStr);
+    }
+
+    static bool getstate_manages_dict() { return true; }
+  };
+
+
 
   // Define the python interface to ParameterValue.
   void pyparametervalue()
@@ -229,6 +287,7 @@ namespace LOFAR {
       .def (init<PyParameterSet>())
       .def (init<bool, int, int>())
       .def (init<std::string, bool>())
+      .def_pickle(pyparameterset_pickle_suite())
       .def ("version", &PyParameterSet::version,
             (boost::python::arg("type")="other"),
             "Get the software version.")
@@ -255,7 +314,7 @@ namespace LOFAR {
  	    (boost::python::arg("filename"),
              boost::python::arg("append")=false),
             "Write the parameterset into a parset file with the given name.")
-      .def ("toString", &PyParameterSet::toString,
+      .def ("__str__", &PyParameterSet::__str__,
             "Return the full parset as a string")
       .def ("add", fadd,
  	    (boost::python::arg("key"),

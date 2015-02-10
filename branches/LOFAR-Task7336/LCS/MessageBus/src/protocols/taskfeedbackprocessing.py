@@ -30,4 +30,4 @@ class TaskFeedbackProcessing(lofar.messagebus.message.Message):
       momID,
       sasID)
 
-    self.payload = feedback.toString()
+    self.payload = str(feedback)
