@@ -330,10 +330,10 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 			Message	msg;
 			if (itsMsgQueue->getMessage(msg, 0.1)) {
 				string	result = msg.getXMLvalue("message.payload.task.state");
-				if (result == "ABORT") {
+				if (result == "aborted") {
 					itsFeedbackResult = CT_RESULT_PIPELINE_FAILED;
 				}
-				else if (result != "FINISHED") {
+				else if (result != "finished") {
 					LOG_FATAL_STR("Unknown result received from correlator: " << result << " assuming failure!");
 					itsFeedbackResult = CT_RESULT_PIPELINE_FAILED;
 				}
