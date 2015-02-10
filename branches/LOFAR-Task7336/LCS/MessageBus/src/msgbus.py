@@ -27,15 +27,26 @@ options="create:always, node: { type: queue, durable: True }"
 class BusException(Exception):
     pass
 
-class ToBus:
-    def __init__(self, address, options=options, broker=broker):
+class Session:
+    def __init__(self, broker):
         self.connection = qpid.messaging.Connection(broker)
         self.connection.reconnect = True
 
         try:
             self.connection.open()
             self.session = self.connection.session() 
-            self.sender = self.session.sender(address)
+        except qpid.messaging.MessagingError, m:
+            raise BusException(m)
+
+    def __del__(self):
+        self.connection.close()
+
+class ToBus(Session):
+    def __init__(self, queue, options=options, broker=broker):
+        Session.__init__(broker)
+
+        try:
+            self.sender = self.session.sender("%s;{%s}" % (queue, options))
         except qpid.messaging.MessagingError, m:
             raise BusException(m)
 
@@ -53,25 +64,15 @@ class ToBus:
     def sendmsg(self,msg):
         self.sender.send(msg)
 
-class FromBus:
-    def __init__(self, address, options=options, broker=broker):
-        self.connection = qpid.messaging.Connection(broker)
-        self.connection.reconnect = True
-        
+class FromBus(Session):
+    def __init__(self, queue, options=options, broker=broker):
+        Session.__init__(broker)
+
+        self.add_queue(queue, options)
+
+    def add_queue(self, queue, options=options):
         try:
-            self.connection.open()
-            self.session = self.connection.session()
-        except qpid.messaging.MessagingError, m:
-            raise BusException(m)
-
-        self.add_queue(address, options)
-
-    def __del__(self):
-        self.connection.close()
-
-    def add_queue(self,address,options=options):
-        try:
-            receiver = self.session.receiver("%s;{%s}" % (address,options))
+            receiver = self.session.receiver("%s;{%s}" % (queue, options))
 
             # Need capacity >=1 for 'self.session.next_receiver' to function across multiple queues
             receiver.capacity = 1 #32
