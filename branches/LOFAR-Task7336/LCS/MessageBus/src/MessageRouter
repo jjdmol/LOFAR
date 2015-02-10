@@ -20,7 +20,7 @@
 """Very basic messagebus router that routs the messages according to the settings in Router.conf
 """
 
-import msgbus
+import lofar.messagebus.msgbus as msgbus
 
 import threading
 from ConfigParser import SafeConfigParser
