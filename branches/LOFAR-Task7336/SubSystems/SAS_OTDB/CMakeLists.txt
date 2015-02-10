@@ -1,4 +1,4 @@
 # $Id$
 
 lofar_package(SAS_OTDB 
-  DEPENDS Deployment OTDB_Comps OTDB_SQL StaticMetaData PVSS_Datapoints APLCommon SAS_Feedback CURTDBDaemons)
+  DEPENDS Deployment OTDB_Comps OTDB_SQL StaticMetaData PVSS_Datapoints)
