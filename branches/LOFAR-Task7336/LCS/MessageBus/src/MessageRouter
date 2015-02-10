@@ -72,7 +72,8 @@ class RouterConfig(SafeConfigParser):
       self.read(filename)
 
   def read(self, filename):
-    if os.path.isfile(filename):
+    print "Considering reading ",filename
+    if not os.path.isfile(filename):
       return False
 
     print "Reading ",filename
@@ -83,7 +84,7 @@ class RouterConfig(SafeConfigParser):
     return self.options('multicast')
 
   def destinations(self, source):
-    return [field.strip() for field in self.get('router', source).split(',')]
+    return [field.strip() for field in self.get('multicast', source).split(',')]
 
 if __name__ == "__main__":
   """
