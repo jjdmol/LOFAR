@@ -19,5 +19,5 @@ PYTHONPATH=.:$PYTHONPATH
 export PYTHONPATH
 
 # Run NDPPP with the test python step.
-../../DPPP/src/NDPPP msin=tPythonStep_tmp.MS msout=tPythonStep_xtmp.msout msout.overwrite=T steps=pystep pystep.type=PythonDPPP pystep.python.module=tPythonStep pystep.python.class=tPythonStep pystep.somekey=somevalue
+../../DPPP/src/NDPPP msin=tPythonStep_tmp.MS msout=tPythonStep_xtmp.msout msout.overwrite=T steps='[pystep,pystep2]' pystep.type=PythonDPPP pystep.python.module=tPythonStep pystep.python.class=tPythonStep pystep.somekey=somevalue pystep2.type=pythondppp pystep2.python.class=tPythonStep pystep2.incr=3.5
 

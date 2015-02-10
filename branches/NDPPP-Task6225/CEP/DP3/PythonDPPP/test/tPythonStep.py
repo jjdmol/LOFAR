@@ -29,7 +29,8 @@ class tPythonStep(DPStepBase):
         # all keys-value pairs for this step.
         # Note: the base class constructor MUST be called.
         DPStepBase.__init__(self, parsetDict)
-        itsParset = parameterset(parsetDict)
+        parset = parameterset(parsetDict)
+        self.itsIncr = parset.getDouble('incr', 1)
 
     def updateInfo(self, dpinfo):
         # This function must be implemented.
@@ -51,9 +52,9 @@ class tPythonStep(DPStepBase):
         self.getWeights (self.itsWeights);
         self.getUVW (self.itsUVW);
         # Process the data.
-        print "process tPythonStep", time, exposure, self.itsData.sum(), self.itsFlags.sum(), self.itsWeights.sum(), self.itsUVW.sum()
-        # Execute the next step in the DPPP pipeline.
-        return self.processNext ({'TIME': time+1})
+        print "process tPythonStep", time-4.47203e9, exposure, self.itsData.sum(), self.itsFlags.sum(), self.itsWeights.sum(), self.itsUVW.sum()
+        # Execute the next step in the DPPP pipeline. TIME,UVW are changed.
+        return self.processNext ({'TIME': time+self.itsIncr, 'UVW': self.itsUVW+self.itsIncr})
 
     def finish(self):
         # Finish the step as needed.
