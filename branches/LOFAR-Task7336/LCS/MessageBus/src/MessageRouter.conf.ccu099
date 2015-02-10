@@ -3,7 +3,7 @@
 # Routing tables
 #
 # source                             destinations
-lofar.task.feedback.dataproduct:	 mom.task.feedback.dataproduct, mac.task.feedback.dataproduct 
-lofar.task.feedback.processing:		 mom.task.feedback.processing,  mac.task.feedback.processing 
-lofar.task.feedback.taskstate:		 mom.task.feedback.taskstate,   mac.task.feedback.taskstate 
-lofar.task.specification.system:	 mom.task.specification.system
+lofar.task.feedback.dataproducts:  mom.feedback.dataproducts, mac.task.feedback.dataproducts
+lofar.task.feedback.processing:    mom.feedback.processing,  mac.task.feedback.processing 
+lofar.task.feedback.status:        mom.feedback.taskstate,   mac.task.feedback.taskstate 
+lofar.task.specification.system:   mom.task.specification.system

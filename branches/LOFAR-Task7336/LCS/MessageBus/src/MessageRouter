@@ -108,7 +108,7 @@ if __name__ == "__main__":
   config = RouterConfig('%s/MessageRouter.conf' % path)
 
   # read host-specific config file
-  my_configfile = '%s/MessageRouter.conf.%s' % (path, platform.node()) # = hostname
+  my_configfile = '%s/MessageRouter.conf.%s' % (path, platform.node().lower()) # = hostname
   config.read(my_configfile)
 
   threadlist = []

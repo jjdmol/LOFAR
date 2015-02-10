@@ -43,7 +43,7 @@ class Session:
 
 class ToBus(Session):
     def __init__(self, queue, options=options, broker=broker):
-        Session.__init__(broker)
+        Session.__init__(self, broker)
 
         try:
             self.sender = self.session.sender("%s;{%s}" % (queue, options))
@@ -66,7 +66,7 @@ class ToBus(Session):
 
 class FromBus(Session):
     def __init__(self, queue, options=options, broker=broker):
-        Session.__init__(broker)
+        Session.__init__(self, broker)
 
         self.add_queue(queue, options)
 
