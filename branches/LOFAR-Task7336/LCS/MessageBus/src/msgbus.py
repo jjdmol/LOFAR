@@ -19,6 +19,7 @@
 # id.. TDB
 
 import qpid.messaging
+import os.environ
 
 # Candidate for a config file
 broker="127.0.0.1" 
@@ -41,12 +42,18 @@ class Session:
     def __del__(self):
         self.connection.close()
 
+    def address(self, queue, options):
+        return "%s%s; {%s}" % (self._queue_prefix(), queue, options)
+
+    def _queue_prefix():
+      return os.environ.get("QUEUE_PREFIX", "")
+
 class ToBus(Session):
     def __init__(self, queue, options=options, broker=broker):
         Session.__init__(self, broker)
 
         try:
-            self.sender = self.session.sender("%s;{%s}" % (queue, options))
+            self.sender = self.session.sender(self.address(queue, options))
         except qpid.messaging.MessagingError, m:
             raise BusException(m)
 
@@ -72,7 +79,7 @@ class FromBus(Session):
 
     def add_queue(self, queue, options=options):
         try:
-            receiver = self.session.receiver("%s;{%s}" % (queue, options))
+            receiver = self.session.receiver(self.address(queue, options))
 
             # Need capacity >=1 for 'self.session.next_receiver' to function across multiple queues
             receiver.capacity = 1 #32
@@ -84,7 +91,7 @@ class FromBus(Session):
 
         try:
             receiver = self.session.next_receiver(timeout)
-            if receiver != None: msg = self.receiver.get()
+            if receiver != None: msg = receiver.get()
         except qpid.messaging.exceptions.Empty, e:
             return None
 

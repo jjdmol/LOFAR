@@ -7,7 +7,7 @@
 #ifdef HAVE_QPID
 #include <qpid/types/Exception.h>
 #include <qpid/messaging/exceptions.h>
-//#include <qpid/messaging/Logger.h>
+#include <stdlib.h>
 
 using namespace qpid::messaging;
 
@@ -19,6 +19,16 @@ namespace LOFAR {
       return (Duration)(1000.0 * secs);
 
     return Duration::FOREVER;
+  }
+
+  static std::string queue_prefix()
+  {
+    char *prefix = getenv("QUEUE_PREFIX");
+
+    if (!prefix)
+      return "";
+
+    return prefix;
   }
 
   namespace MessageBus {
@@ -37,7 +47,7 @@ namespace LOFAR {
 
     itsSession = itsConnection.createSession();
 
-    Address addr(address+options);
+    Address addr(queue_prefix()+address+options);
     Receiver receiver = itsSession.createReceiver(addr);
     receiver.setCapacity(1);
 	cout << "Receiver started at queue: " << receiver.getName() << endl;
@@ -100,7 +110,7 @@ namespace LOFAR {
   {
      try
      {
-        Address addr(address+options);
+        Address addr(queue_prefix()+address+options);
         Receiver receiver = itsSession.createReceiver(addr);
         receiver.setCapacity(1);
 		cout << "Receiver started at queue: " << receiver.getName() << endl;
@@ -119,7 +129,7 @@ namespace LOFAR {
 	 cout << "Connected to: " << itsConnection.getUrl() << endl;
 
      itsSession = itsConnection.createSession();
-     Address addr(address+options);
+     Address addr(queue_prefix()+address+options);
      itsSender = itsSession.createSender(addr);
  	 cout << "Sender created: " << itsSender.getName() << endl;
   } catch(const qpid::types::Exception &ex) {
