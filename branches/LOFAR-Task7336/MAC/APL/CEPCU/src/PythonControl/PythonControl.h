@@ -94,6 +94,7 @@ private:
 	bool					  	itsPropertySetInitialized;
 
 	string					itsMyName;
+	int						itsObsID;
 
 	// pointer to parent control task
 	ParentControl*			itsParentControl;

@@ -97,6 +97,7 @@ private:
 
 	// ----- datamembers -----
 	string						itsMyName;
+	int							itsObsID;
    	RTDBPropertySet*           	itsPropertySet;
 	bool					  	itsPropertySetInitialized;
 	PVSSservice*				itsPVSSService;

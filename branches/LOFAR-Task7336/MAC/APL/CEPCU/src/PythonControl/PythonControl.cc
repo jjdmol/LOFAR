@@ -344,6 +344,7 @@ GCFEvent::TResult PythonControl::initial_state(GCFEvent& event, GCFPortInterface
 	case CONTROL_CONNECT: {
 		CONTROLConnectEvent		msg(event);
 		itsMyName  = msg.cntlrName;
+		itsObsID   = getObservationNr(getName());
 
 		// request from parent task to start up the child side.
 		ParameterSet*   thePS  = globalParameterSet();      // shortcut to global PS.
@@ -353,7 +354,7 @@ GCFEvent::TResult PythonControl::initial_state(GCFEvent& event, GCFPortInterface
 		itsChildCanCommunicate = thePS->getBool  (myPrefix+"canCommunicate", true);
 		// START PYTHON
 		if (itsChildCanCommunicate) {
-			bool startOK = _startPython(pythonProg, getObservationNr(getName()), realHostname(pythonHost), 
+			bool startOK = _startPython(pythonProg, itsObsID, realHostname(pythonHost), 
 										itsListener->makeServiceName());
 			if (!startOK) {
 				LOG_ERROR("Failed to start the Python environment.");
@@ -527,18 +528,22 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 		if (&port == itsQueueTimer) {
 			Message		msg;
 			if (itsMsgQueue->getMessage(msg, 0.1)) {
-				string	result = msg.getXMLvalue("message.payload.task.state");
-				if (result == "aborted") {
-					itsFeedbackResult = CT_RESULT_PIPELINE_FAILED;
-				}
-				else if (result != "finished") {
-					LOG_FATAL_STR("Unknown result received from pipeline: " << result << " assuming failure!");
-					itsFeedbackResult = CT_RESULT_PIPELINE_FAILED;
-				}
-				LOG_INFO_STR("Received finish result on messagebus: " << itsFeedbackResult);
-				TRAN(PythonControl::finishing_state);
-				break;
-			}
+				string	obsIDstr = msg.getXMLvalue("message.header.ids.sasid");
+				if (atoi(obsIDstr.c_str()) == itsObsID) {
+					string	result = msg.getXMLvalue("message.payload.task.state");
+					if (result == "aborted") {
+						itsFeedbackResult = CT_RESULT_PIPELINE_FAILED;
+					}
+					else if (result != "finished") {
+						LOG_FATAL_STR("Unknown result received from pipeline: " << result << " assuming failure!");
+						itsFeedbackResult = CT_RESULT_PIPELINE_FAILED;
+					}
+					LOG_INFO_STR("Received finish result on messagebus: " << itsFeedbackResult);
+					itsMsgQueue->ack(msg);
+					TRAN(PythonControl::finishing_state);
+					break;
+				} // ID matches?
+			} // getMsg
 			itsQueueTimer->setTimer(QUEUE_POLL_TIMEOUT);
 		}
 	} break;
@@ -599,7 +604,7 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 			string  myPrefix        (thePS->locateModule("PythonControl")+"PythonControl.");
 			string	pythonProg      (thePS->getString(myPrefix+"pythonProgram",  "@pythonProgram@"));
 			string	pythonHost      (thePS->getString(myPrefix+"pythonHost",     "@pythonHost@"));
-			bool startOK = _startPython(pythonProg, getObservationNr(getName()), realHostname(pythonHost), 
+			bool startOK = _startPython(pythonProg, itsObsID, realHostname(pythonHost), 
 										itsListener->makeServiceName());
 			if (!startOK) {
 				LOG_ERROR("Failed to start the Python environment, ABORTING.");
@@ -654,7 +659,7 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 			ParameterSet*   thePS  = globalParameterSet();      // shortcut to global PS.
 			string  myPrefix  (thePS->locateModule("PythonControl")+"PythonControl.");
 			string	pythonHost(thePS->getString(myPrefix+"pythonHost","@pythonHost@"));
-			bool stopOK = _stopPython(getObservationNr(getName()), realHostname(pythonHost));
+			bool stopOK = _stopPython(itsObsID, realHostname(pythonHost));
 			if (!stopOK) {
 				LOG_ERROR("Failed to stop the Python environment.");
 				finish(CT_RESULT_PIPELINE_FAILED);

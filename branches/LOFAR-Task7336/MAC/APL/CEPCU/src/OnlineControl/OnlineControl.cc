@@ -329,18 +329,22 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 		if (&port == itsQueueTimer) {
 			Message	msg;
 			if (itsMsgQueue->getMessage(msg, 0.1)) {
-				string	result = msg.getXMLvalue("message.payload.task.state");
-				if (result == "aborted") {
-					itsFeedbackResult = CT_RESULT_PIPELINE_FAILED;
-				}
-				else if (result != "finished") {
-					LOG_FATAL_STR("Unknown result received from correlator: " << result << " assuming failure!");
-					itsFeedbackResult = CT_RESULT_PIPELINE_FAILED;
-				}
-				LOG_INFO_STR("Received finish result on messagebus: " << itsFeedbackResult);
-				TRAN(OnlineControl::finishing_state);
-				break;
-			}
+				string	obsIDstr = msg.getXMLvalue("message.header.ids.sasid");
+				if (atoi(obsIDstr.c_str()) == itsObsID) {
+					string	result = msg.getXMLvalue("message.payload.task.state");
+					if (result == "aborted") {
+						itsFeedbackResult = CT_RESULT_PIPELINE_FAILED;
+					}
+					else if (result != "finished") {
+						LOG_FATAL_STR("Unknown result received from correlator: " << result << " assuming failure!");
+						itsFeedbackResult = CT_RESULT_PIPELINE_FAILED;
+					}
+					LOG_INFO_STR("Received finish result on messagebus: " << itsFeedbackResult);
+					itsMsgQueue->ack(msg);
+					TRAN(OnlineControl::finishing_state);
+					break;
+				} // my obsid
+			} // getMsg
 			itsQueueTimer->setTimer(QUEUE_POLL_TIMEOUT);
 		}
 		else if (timerEvent.id == itsStopTimerID) {
@@ -366,9 +370,10 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 		CONTROLConnectEvent		msg(event);
 		LOG_DEBUG_STR("Received CONNECT(" << msg.cntlrName << ")");
 		itsMyName = msg.cntlrName;
+		itsObsID  = getObservationNr(msg.cntlrName);
 		// first inform CEPlogProcessor
 		CONTROLAnnounceEvent		announce;
-		announce.observationID = toString(getObservationNr(msg.cntlrName));
+		announce.observationID = toString(itsObsID);
 		itsLogControlPort->send(announce);
 		// execute this state
 		_setState(CTState::CONNECT);
