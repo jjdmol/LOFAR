@@ -47,7 +47,7 @@ class BusMulticast(threading.Thread):
       print "Msg received at: ", self.source
 
       for outbus in outbusses:
-        outbus.send(msg)
+        outbus.sendmsg(msg)
       print "Forwarded message to ", self.destlist
 
       inbus.ack(msg)
