@@ -91,7 +91,7 @@ class FromBus(Session):
 
         try:
             receiver = self.session.next_receiver(timeout)
-            if receiver != None: msg = receiver.get()
+            if receiver != None: msg = receiver.fetch() # receiver.get() is better, but requires qpid 0.31+
         except qpid.messaging.exceptions.Empty, e:
             return None
 
