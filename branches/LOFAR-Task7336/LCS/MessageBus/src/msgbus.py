@@ -45,7 +45,7 @@ class Session:
     def address(self, queue, options):
         return "%s%s; {%s}" % (self._queue_prefix(), queue, options)
 
-    def _queue_prefix():
+    def _queue_prefix(self):
       return os.environ.get("QUEUE_PREFIX", "")
 
 class ToBus(Session):
