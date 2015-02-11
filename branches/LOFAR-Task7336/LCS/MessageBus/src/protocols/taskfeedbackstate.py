@@ -27,13 +27,13 @@ LOFAR_STATUS_MSG_TEMPLATE = """
   <state/>
 </task>"""
 
-class TaskFeedbackStatus(lofar.messagebus.message.Message):
+class TaskFeedbackState(lofar.messagebus.message.Message):
   def __init__(self, from_, forUser, summary, momID, sasID, status):
-    super(TaskFeedbackStatus, self).__init__(
+    super(TaskFeedbackState, self).__init__(
       from_,
       forUser,
       summary,
-      "task.feedback.status",
+      "task.feedback.state",
       "1.0.0",
       momID,
       sasID)
@@ -49,7 +49,7 @@ class TaskFeedbackStatus(lofar.messagebus.message.Message):
       self.state = "aborted"
 
   def _property_list(self):
-     properties = super(TaskFeedbackStatus, self)._property_list()
+     properties = super(TaskFeedbackState, self)._property_list()
      
      properties.update( {
        "type_": "message.payload.task.type",
@@ -59,6 +59,6 @@ class TaskFeedbackStatus(lofar.messagebus.message.Message):
      return properties
 
 if __name__ == "__main__":
-    msg = TaskFeedbackStatus("FROM", "FORUSER", "SUMMARY", "11111", "22222", True)
+    msg = TaskFeedbackState("FROM", "FORUSER", "SUMMARY", "11111", "22222", True)
     print msg.document.toxml()
 

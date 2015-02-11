@@ -18,7 +18,7 @@ from lofar.parameterset import parameterset
 from lofar.messagebus.msgbus import ToBus
 from lofar.messagebus.protocols.taskfeedbackdataproducts import TaskFeedbackDataproducts
 from lofar.messagebus.protocols.taskfeedbackprocessing import TaskFeedbackProcessing
-from lofar.messagebus.protocols.taskfeedbackstatus import TaskFeedbackStatus
+from lofar.messagebus.protocols.taskfeedbackstate import TaskFeedbackState
 
 #                                             Standalone Pipeline Control System
 # ------------------------------------------------------------------------------
@@ -93,8 +93,8 @@ class control(StatefulRecipe):
         indicates failure.
         """
 
-        bus = ToBus("lofar.task.feedback.status")
-        msg = TaskFeedbackStatus(
+        bus = ToBus("lofar.task.feedback.state")
+        msg = TaskFeedbackState(
           "lofarpipe.support.control",
           "",
           "Status feedback from the pipeline framework",

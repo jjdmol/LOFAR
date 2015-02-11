@@ -12,7 +12,7 @@
 
 function error {
   echo -e "$@" >&2
-  sendback_status 1
+  sendback_state 1
   exit 1
 }
 
@@ -85,13 +85,13 @@ function command_retry {
   done
 }
 
-# Send the result status back to LOFAR (MAC, MoM)
+# Send the result state back to LOFAR (MAC, MoM)
 #
 # to report success:
 #   sendback_status 0
 # to report failure:
 #   sendback_status 1
-function sendback_status {
+function sendback_state {
   OBSRESULT="$1"
 
   if [ $OBSRESULT -eq 0 ]
@@ -104,7 +104,7 @@ function sendback_status {
     SUCCESS=0
   fi
 
-  send_status "$PARSET" $SUCCESS
+  send_state "$PARSET" $SUCCESS
 }
 
 #############################
@@ -438,7 +438,7 @@ fi
 # Post-process the observation
 # ******************************
 
-sendback_status "$OBSRESULT"
+sendback_state "$OBSRESULT"
 
 # clean up outputProc children
 echo "Allowing 120 second for normal end of outputProc"

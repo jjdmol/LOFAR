@@ -1,9 +1,0 @@
-[multicast]
-#
-# Routing tables
-#
-# source                             destinations
-lofar.task.feedback.dataproducts:  mom.feedback.dataproducts, otdb.task.feedback.dataproducts
-lofar.task.feedback.processing:    mom.feedback.processing,  otdb.task.feedback.processing 
-lofar.task.feedback.status:        mom.feedback.taskstate,   otdb.task.feedback.taskstate 
-lofar.task.specification.system:   mom.task.specification.system

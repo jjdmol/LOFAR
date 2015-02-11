@@ -9,6 +9,6 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 install(FILES
   TaskFeedbackDataproducts.h
   TaskFeedbackProcessing.h
-  TaskFeedbackStatus.h
+  TaskFeedbackState.h
   TaskSpecificationSystem.h
   DESTINATION include/${PACKAGE_NAME}/Protocols)

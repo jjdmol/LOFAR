@@ -3,7 +3,6 @@
 include(LofarPackageVersion)
 include(PythonInstall)
 
-
 set(messagebus_LIB_SRCS
   Package__Version.cc
   LogSink.cc
@@ -26,16 +25,3 @@ python_install(
   DESTINATION lofar/messagebus)
 
 add_subdirectory(protocols)
-
-install(FILES
-  MessageRouter
-  DESTINATION bin)
-
-file(GLOB MessageRouterConfs
-  MessageRouter.conf*
-  )
-
-install(FILES
-  ${MessageRouterConfs}
-  DESTINATION etc)
-

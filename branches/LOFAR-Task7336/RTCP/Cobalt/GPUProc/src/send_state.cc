@@ -1,4 +1,4 @@
-//# send_status.cc: Send lofar.task.feedback.status information
+//# send_state.cc: Send lofar.task.feedback.status information
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -23,7 +23,7 @@
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
 #include <MessageBus/MsgBus.h>
-#include <MessageBus/Protocols/TaskFeedbackStatus.h>
+#include <MessageBus/Protocols/TaskFeedbackState.h>
 
 #include <boost/format.hpp>
 
@@ -74,12 +74,12 @@ int main(int argc, char **argv)
   int success = atoi(argv[optind+1]);
 
   // send status feedback
-  ToBus bus("lofar.task.feedback.status");
+  ToBus bus("lofar.task.feedback.state");
 
-  Protocols::TaskFeedbackStatus msg(
-    "Cobalt/GPUProc/sendStatus",
+  Protocols::TaskFeedbackState msg(
+    "Cobalt/GPUProc/send_state",
     "",
-    "Status feedback",
+    "State feedback",
     str(format("%s") % parset.settings.momID),
     str(format("%s") % parset.settings.observationID),
     success);

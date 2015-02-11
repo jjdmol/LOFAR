@@ -1,4 +1,4 @@
-//# TaskFeedbackStatus.h: Protocol for emission of status feedback information
+//# TaskFeedbackState.h: Protocol for emission of status feedback information
 //#
 //# Copyright (C) 2015
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -32,10 +32,10 @@ namespace LOFAR {
 
 namespace Protocols {
 
-class TaskFeedbackStatus: public Message
+class TaskFeedbackState: public Message
 {
 public:
-  TaskFeedbackStatus(
+  TaskFeedbackState(
     // Name of the service or process producing this message
     const std::string &from,
 
@@ -56,7 +56,7 @@ public:
     from,
     forUser,
     summary,
-    "task.feedback.status",
+    "task.feedback.state",
     "1.0.0",
     momID,
     sasID)
@@ -70,14 +70,14 @@ public:
   }
 
   // Parse a message
-  TaskFeedbackStatus(const qpid::messaging::Message qpidMsg)
+  TaskFeedbackState(const qpid::messaging::Message qpidMsg)
   :
     Message(qpidMsg)
   {
   }
 
   // Read a message from disk (header + payload)
-  TaskFeedbackStatus(const std::string &rawContent)
+  TaskFeedbackState(const std::string &rawContent)
   :
     Message(rawContent)
   {
