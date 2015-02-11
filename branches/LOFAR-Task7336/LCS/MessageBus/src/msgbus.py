@@ -19,7 +19,7 @@
 # id.. TDB
 
 import qpid.messaging
-import os.environ
+import os
 
 # Candidate for a config file
 broker="127.0.0.1" 
