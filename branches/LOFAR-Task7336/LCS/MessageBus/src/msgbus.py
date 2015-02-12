@@ -23,7 +23,7 @@ import os
 
 # Candidate for a config file
 broker="127.0.0.1" 
-options="create:always, node: { type: queue, durable: True }"
+options="create:always"
 
 class BusException(Exception):
     pass
