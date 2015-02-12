@@ -330,6 +330,7 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 			Message	msg;
 			if (itsMsgQueue->getMessage(msg, 0.1)) {
 				string	obsIDstr = msg.getXMLvalue("message.header.ids.sasid");
+				LOG_INFO_STR("Received message from task " << obsIDstr);
 				if (atoi(obsIDstr.c_str()) == itsObsID) {
 					string	result = msg.getXMLvalue("message.payload.task.state");
 					if (result == "aborted") {
@@ -339,7 +340,7 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 						LOG_FATAL_STR("Unknown result received from correlator: " << result << " assuming failure!");
 						itsFeedbackResult = CT_RESULT_PIPELINE_FAILED;
 					}
-					LOG_INFO_STR("Received finish result on messagebus: " << itsFeedbackResult);
+					LOG_INFO_STR("Received '" << result << "' on the messagebus");
 					itsMsgQueue->ack(msg);
 					TRAN(OnlineControl::finishing_state);
 					break;
