@@ -182,7 +182,7 @@ namespace LOFAR {
 
             ///            cout << "in grid"<<endl;
             // Get pointer to data and flags for this channel.
-            Int doff = (irow * nVisChan + visChan) * nVisPol;
+            size_t doff = (size_t(irow) * nVisChan + visChan) * nVisPol;
             const Complex* __restrict__ visPtr  = vbs.visCube_p.data()  + doff;
             const Bool*    __restrict__ flagPtr = vbs.flagCube_p.data() + doff;
             if (dopsf) {
@@ -199,7 +199,7 @@ namespace LOFAR {
 
   		  //cout<<"ipol: "<<ipol<<endl;
                   // Get the offset in the grid data array.
-                  Int goff = (gridChan*nGridPol + gridPol) * nGridX * nGridY;
+                  size_t goff = (size_t(gridChan)*nGridPol + gridPol) * nGridX * nGridY;
                   // Loop over the scaled support.
                   for (Int sy=-fsupy; sy<=fsupy; ++sy) {
                     // Get the pointer in the grid for the first x in this y.
@@ -212,7 +212,7 @@ namespace LOFAR {
 		    // Fast version
 
                     const Complex* __restrict__ cf[1];
-                    Int cfoff = (offy + sy*fsampy)*nConvX + offx - fsupx*fsampx;
+                    size_t cfoff = (size_t(offy) + sy*fsampy)*nConvX + offx - fsupx*fsampx;
 		    cf[0] = (*cfs.vdata)[CFChan][0][0].data() + cfoff;
                     for (Int sx=-fsupx; sx<=fsupx; ++sx) {
                       // Loop over polarizations to correct for leakage.
@@ -350,7 +350,7 @@ namespace LOFAR {
               locy-supy >= 0  &&  locy+supy < nGridY) {
             ///            cout << "in grid"<<endl;
             // Get pointer to data and flags for this channel.
-            Int doff = (irow * nVisChan + visChan) * nVisPol;
+            size_t doff = (size_t(irow) * nVisChan + visChan) * nVisPol;
             Complex* __restrict__ visPtr  = vbs.visCube_p.data()  + doff;
             const Bool*    __restrict__ flagPtr = vbs.flagCube_p.data() + doff;
             // Handle a visibility if not flagged.
@@ -368,7 +368,7 @@ namespace LOFAR {
                 if (gridPol >= 0  &&  gridPol < nGridPol) {
                   /// Complex norm(0,0);
                   // Get the offset in the grid data array.
-                  Int goff = (gridChan*nGridPol + gridPol) * nGridX * nGridY;
+                  size_t goff = (size_t(gridChan)*nGridPol + gridPol) * nGridX * nGridY;
                   // Loop over the scaled support.
                   for (Int sy=-fsupy; sy<=fsupy; ++sy) {
                     // Get the pointer in the grid for the first x in this y.
@@ -379,7 +379,7 @@ namespace LOFAR {
 
 		    // fast version
                     const Complex* __restrict__ cf[1];
-                    Int cfoff = (offy + sy*fsampy)*nConvX + offx - fsupx*fsampx;
+                    size_t cfoff = (size_t(offy) + sy*fsampy)*nConvX + offx - fsupx*fsampx;
  		    cf[0] = (*cfs.vdata)[CFChan][0][0].data() + cfoff;
                     for (Int sx=-fsupx; sx<=fsupx; ++sx) {
 		      //outFile<<irow <<" "<<ipol<<" "<<posx<<" "<<posy<<" "<<(offx+ sx*fsampx-(nConvX-1.)/2.)/float(fsampx)<<" "<<(offy + sy*fsampy-(nConvX-1)/2.)/float(fsampy)
@@ -516,7 +516,7 @@ namespace LOFAR {
               locy-supy >= 0  &&  locy+supy < nGridY) {
             ///            cout << "in grid"<<endl;
             // Get pointer to data and flags for this channel.
-            Int doff = (irow * nVisChan + visChan) * nVisPol;
+            size_t doff = (size_t(irow) * nVisChan + visChan) * nVisPol;
             Complex* __restrict__ visPtr  = vbs.visCube_p.data()  + doff;
             const Bool*    __restrict__ flagPtr = vbs.flagCube_p.data() + doff;
             // Handle a visibility if not flagged.
@@ -534,7 +534,7 @@ namespace LOFAR {
                 if (gridPol >= 0  &&  gridPol < nGridPol) {
                   /// Complex norm(0,0);
                   // Get the offset in the grid data array.
-                  Int goff = (gridChan*nGridPol + gridPol) * nGridX * nGridY;
+                  size_t goff = (size_t(gridChan)*nGridPol + gridPol) * nGridX * nGridY;
                   // Loop over the scaled support.
                   for (Int sy=-fsupy; sy<=fsupy; ++sy) {
                     // Get the pointer in the grid for the first x in this y.
@@ -546,7 +546,7 @@ namespace LOFAR {
 		    // fast version
                     const Complex* __restrict__ cf0[1];
                     const Complex* __restrict__ cf1[1];
-                    Int cfoff = (offy + sy*fsampy)*nConvX + offx - fsupx*fsampx;
+                    size_t cfoff = (size_t(offy) + sy*fsampy)*nConvX + offx - fsupx*fsampx;
  		    cf0[0] = (*cfs0.vdata)[gridChan][0][0].data() + cfoff;
  		    cf1[0] = (*cfs1.vdata)[gridChan][0][0].data() + cfoff;
                     for (Int sx=-fsupx; sx<=fsupx; ++sx) {
@@ -696,7 +696,7 @@ namespace LOFAR {
 
             ///            cout << "in grid"<<endl;
             // Get pointer to data and flags for this channel.
-            Int doff = (irow * nVisChan + visChan) * nVisPol;
+            size_t doff = (size_t(irow) * nVisChan + visChan) * nVisPol;
             const Complex* __restrict__ visPtr  = vbs.visCube_p.data()  + doff;
             const Bool*    __restrict__ flagPtr = vbs.flagCube_p.data() + doff;
             if (dopsf) {
@@ -712,7 +712,7 @@ namespace LOFAR {
 
   		  //cout<<"ipol: "<<ipol<<endl;
                   // Get the offset in the grid data array.
-                  Int goff = (gridChan*nGridPol + gridPol) * nGridX * nGridY;
+                  size_t goff = (size_t(gridChan)*nGridPol + gridPol) * nGridX * nGridY;
                   // Loop over the scaled support.
                   for (Int sy=-fsupy; sy<=fsupy; ++sy) {
                     // Get the pointer in the grid for the first x in this y.
@@ -725,7 +725,7 @@ namespace LOFAR {
 		    // Fast version
 
                     const Complex* __restrict__ cf[1];
-                    Int cfoff = (offy + sy*fsampy)*nConvX + offx - fsupx*fsampx;
+                    size_t cfoff = (size_t(offy) + sy*fsampy)*nConvX + offx - fsupx*fsampx;
 		    cf[0] = (*cfs.vdata)[gridChan][0][0].data() + cfoff;
                     for (Int sx=-fsupx; sx<=fsupx; ++sx) {
                       // Loop over polarizations to correct for leakage.
@@ -1059,7 +1059,7 @@ namespace LOFAR {
               locy-supy >= 0  &&  locy+supy < nGridY) {
             ///            cout << "in grid"<<endl;
             // Get pointer to data and flags for this channel.
-            Int doff = (irow * nVisChan + visChan) * nVisPol;
+            size_t doff = (size_t(irow) * nVisChan + visChan) * nVisPol;
             Complex* __restrict__ visPtr  = vbs.visCube_p.data()  + doff;
             const Bool*    __restrict__ flagPtr = vbs.flagCube_p.data() + doff;
             // Handle a visibility if not flagged.
@@ -1077,7 +1077,7 @@ namespace LOFAR {
                 if (gridPol >= 0  &&  gridPol < nGridPol) {
                   /// Complex norm(0,0);
                   // Get the offset in the grid data array.
-                  Int goff = (gridChan*nGridPol + gridPol) * nGridX * nGridY;
+                  size_t goff = (size_t(gridChan)*nGridPol + gridPol) * nGridX * nGridY;
                   // Loop over the scaled support.
                   for (Int sy=-fsupy; sy<=fsupy; ++sy) {
                     // Get the pointer in the grid for the first x in this y.
@@ -1088,7 +1088,7 @@ namespace LOFAR {
 
 		    // fast version
                     const Complex* __restrict__ cf[1];
-                    Int cfoff = (offy + sy*fsampy)*nConvX + offx - fsupx*fsampx;
+                    size_t cfoff = (size_t(offy) + sy*fsampy)*nConvX + offx - fsupx*fsampx;
  		    cf[0] = (*cfs.vdata)[gridChan][0][0].data() + cfoff;
                     for (Int sx=-fsupx; sx<=fsupx; ++sx) {
 		      //outFile<<irow <<" "<<ipol<<" "<<posx<<" "<<posy<<" "<<(offx+ sx*fsampx-(nConvX-1.)/2.)/float(fsampx)<<" "<<(offy + sy*fsampy-(nConvX-1)/2.)/float(fsampy)
