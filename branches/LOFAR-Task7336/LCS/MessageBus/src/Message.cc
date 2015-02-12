@@ -29,6 +29,11 @@
 #include <Common/StringUtil.h>
 #include <MessageBus/Message.h>
 
+#include <qpid/types/Uuid.h>
+
+#include <time.h>
+
+
 namespace LOFAR {
   using namespace StringUtil;
 
@@ -58,6 +63,27 @@ const string LOFAR_MSG_TEMPLATE = "\
    </payload>\n\
 </message>";
 
+static string _timestamp() {
+  // Get now (in seconds since epoch)
+  time_t now = time(NULL);
+
+  // Dissect into components (year, month, etc)
+  struct tm now_tm;
+  gmtime_r(&now, &now_tm);
+
+  // Convert to string
+  char buffer[64];
+  if (strftime(buffer, sizeof buffer, "%FT%T", &now_tm) == 0)
+    buffer[0] = 0;
+
+  return buffer;
+}
+
+static string _uuid() {
+  qpid::types::Uuid uuid(true);
+  return uuid.str();
+}
+
 Message::Message(const std::string &from,
 				 const std::string &forUser,
 				 const std::string &summary,
@@ -67,7 +93,7 @@ Message::Message(const std::string &from,
 				 const std::string &sasid) 
 {	
 	itsQpidMsg.setContent(formatString(LOFAR_MSG_TEMPLATE.c_str(), protocol.c_str(), protocolVersion.c_str(),
-										from.c_str(), forUser.c_str(), "", "", summary.c_str(), 
+										from.c_str(), forUser.c_str(), _uuid().c_str(), _timestamp().c_str(), summary.c_str(), 
 										momid.c_str(), sasid.c_str(), "%s"));
 }
 
@@ -117,6 +143,9 @@ std::ostream& Message::print (std::ostream& os) const
     os << "momid          : " << momid() << endl;
     os << "sasid          : " << sasid() << endl;
     os << "payload        : " << payload() << endl;
+  os << "BEGIN FULL PACKET" << endl;
+  os << itsQpidMsg.getContent() << endl;
+  os << "END FULL PACKET" << endl;
 	return (os);
 }
 

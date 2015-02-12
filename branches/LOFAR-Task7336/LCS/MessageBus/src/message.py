@@ -18,6 +18,7 @@
 
 import qpid.messaging
 import xml.dom.minidom as xml
+import datetime
 
 LOFAR_MSG_TEMPLATE = """
 <message>
@@ -44,6 +45,19 @@ LOFAR_MSG_TEMPLATE = """
    </payload>
 </message>"""
 
+def _timestamp():
+  """
+    Return the current time as YYYY-MM-DDTHH:MM:SS
+  """
+  now = datetime.datetime.now()
+  return now.strftime("%FT%T")
+
+def _uuid():
+  """
+    Return an UUID
+  """
+  return str(qpid.messaging.uuid4())
+
 class Message(object):
     def __init__(self, from_, forUser, summary, protocol, protocolVersion, momid, sasid):
       self.document = xml.parseString(LOFAR_MSG_TEMPLATE)
@@ -59,8 +73,8 @@ class Message(object):
       self.from_           = from_
       self.forUser         = forUser
       self.summary         = summary
-      self.uuid            = ""
-      self.timestamp       = ""
+      self.uuid            = _uuid()
+      self.timestamp       = _timestamp()
       self.momid           = momid
       self.sasid           = sasid
 

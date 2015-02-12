@@ -165,6 +165,9 @@
 /* Defined if shared memory is used */
 #cmakedefine HAVE_SHMEM 1
 
+/* Defined if uuid is installed */
+#cmakedefine HAVE_UUID 1
+
 /* Define if WCSLIB is installed */
 #cmakedefine HAVE_WCSLIB 1
 
