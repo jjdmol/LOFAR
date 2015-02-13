@@ -59,7 +59,7 @@ def _uuid():
   return str(qpid.messaging.uuid4())
 
 class Message(object):
-    def __init__(self, from_, forUser, summary, protocol, protocolVersion, momid, sasid):
+    def __init__(self, from_="", forUser="", summary="", protocol="", protocolVersion="", momid="", sasid="", qpidMsg=None):
       self.document = xml.parseString(LOFAR_MSG_TEMPLATE)
 
       for name, element in self._property_list().iteritems():
@@ -78,11 +78,14 @@ class Message(object):
       self.momid           = momid
       self.sasid           = sasid
 
+      if qpidMsg is not None:
+        self.setQpidMsg(qpidMsg)
+
     def _add_property(self, name, element):
       def getter(self):
         return self._getXMLdata(element)
       def setter(self, value):
-        self._setXMLdata(element, value)
+        self._setXMLdata(element, str(value))
 
       setattr(self.__class__, name, property(getter, setter))
 
@@ -127,7 +130,9 @@ class Message(object):
     def qpidMsg(self):
       """ Return a QPID message with the configured content. """
 
-      qpidMsg = qpid.messaging.Message(self.document.toxml())
+      msg = qpid.messaging.Message(content=self.document.toxml(), content_type="text/plain", durable=True)
+
+      return msg
 
     def setQpidMsg(self, msg):
       """ Use a QPID message to set the content. """

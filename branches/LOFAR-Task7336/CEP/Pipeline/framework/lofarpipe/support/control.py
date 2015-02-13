@@ -65,7 +65,7 @@ class control(StatefulRecipe):
           self.sasID,
           feedback)
 
-        bus.sendmsg(msg.qpidMsg())
+        bus.send(msg)
 
     def send_feedback_dataproducts(self, feedback):
         """
@@ -83,7 +83,7 @@ class control(StatefulRecipe):
           self.sasID,
           feedback)
 
-        bus.sendmsg(msg.qpidMsg())
+        bus.send(msg)
 
     def _send_feedback_status(self, status):
         """
@@ -102,7 +102,7 @@ class control(StatefulRecipe):
           self.sasID,
           status == 0)
 
-        bus.sendmsg(msg.qpidMsg())
+        bus.send(msg)
 
     def pipeline_logic(self):
         """

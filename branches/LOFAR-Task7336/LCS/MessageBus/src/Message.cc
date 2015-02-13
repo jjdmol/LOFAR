@@ -95,6 +95,8 @@ Message::Message(const std::string &from,
 	itsQpidMsg.setContent(formatString(LOFAR_MSG_TEMPLATE.c_str(), protocol.c_str(), protocolVersion.c_str(),
 										from.c_str(), forUser.c_str(), _uuid().c_str(), _timestamp().c_str(), summary.c_str(), 
 										momid.c_str(), sasid.c_str(), "%s"));
+  itsQpidMsg.setContentType("text/plain");
+  itsQpidMsg.setDurable(true);
 }
 
 // Read a message from disk (header + payload)

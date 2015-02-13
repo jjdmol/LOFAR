@@ -21,10 +21,15 @@
 """
 
 import lofar.messagebus.msgbus as msgbus
+import lofar.messagebus.message as message
 
 import threading
 from ConfigParser import SafeConfigParser
 import os.path
+from datetime import datetime
+
+def log(level, msg):
+  print "%s %-5s %s" % (datetime.now(), level, msg)
 
 class BusMulticast(threading.Thread):
   """
@@ -39,18 +44,20 @@ class BusMulticast(threading.Thread):
     inbus = msgbus.FromBus(self.source)
     outbusses = [msgbus.ToBus(dest) for dest in self.destlist]
 
-    print "Listening at: ", self.source
+    log("INFO","Forwarding %s -> %s" % (self.source,self.destlist))
 
     while True:
       # TODO: Use a transaction (not supported yet in qpid 0.30)
-      msg = inbus.getmsg()
-      print "Msg received at: ", self.source
+
+      msg = inbus.get()
+      log("INFO","[%s] Msg received from %s: %s; TIME = %s" % (msg.uuid(),self.source,msg.summary(),msg.timestamp()))
 
       for outbus in outbusses:
-        outbus.sendmsg(msg)
-      print "Forwarded message to ", self.destlist
+        outbus.send(msg)
 
       inbus.ack(msg)
+
+      log("INFO","[%s] Forwarded %s -> %s" % (msg.uuid(),self.source,self.destlist,))
 
 class RouterConfig(SafeConfigParser):
   """
@@ -72,11 +79,11 @@ class RouterConfig(SafeConfigParser):
       self.read(filename)
 
   def read(self, filename):
-    print "Considering reading ",filename
+    log("INFO","[RouterConfig] Considering reading %s" % (filename,))
     if not os.path.isfile(filename):
       return False
 
-    print "Reading ",filename
+    log("INFO","[RouterConfig] Reading %s" % (filename,))
     SafeConfigParser.read(self, filename)
     return True
 
@@ -118,17 +125,15 @@ if __name__ == "__main__":
   for source in config.sources():
     destlist = config.destinations(source)
 
-    for dest in destlist:
-      print source, "->", dest
-
     t = BusMulticast(source, destlist)
     t.start()
     threadlist.append(t)
 
-  print len(threadlist), "threads"
+  log("INFO","[main] Running %s threads" % (len(threadlist),))
 
   if not threadlist:
     # stall forever (future: allow rereading config from config file? command queue?)
+    log("INFO","[main] Nothing to do. Sleeping forever.");
     while True:
       time.sleep(60)
   else:
