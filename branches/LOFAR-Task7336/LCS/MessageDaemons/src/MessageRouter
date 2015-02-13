@@ -54,13 +54,13 @@ class BusMulticast(threading.Thread):
         log("ERROR","Received no message from %s" % (self.source,))
         continue
 
-      log("INFO","[%s] Msg received from %s: %s; TIME = %s" % (msg.uuid(),self.source,msg.summary(),msg.timestamp()))
+      log("INFO","[%s] Msg received from %s: %s; TIME = %s" % (msg.uuid,self.source,msg.summary,msg.timestamp))
 
       for outbus in outbusses:
         outbus.send(msg)
       inbus.ack(msg)
 
-      log("INFO","[%s] Forwarded %s -> %s" % (msg.uuid(),self.source,self.destlist,))
+      log("INFO","[%s] Forwarded %s -> %s" % (msg.uuid,self.source,self.destlist,))
 
 class RouterConfig(SafeConfigParser):
   """
