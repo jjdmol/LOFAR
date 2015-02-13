@@ -62,8 +62,11 @@ class ToBus(Session):
         self.connection.close()
 
     def send(self, msg):
+        # (Re)generate the QPID message body
+        msg.generate_message()
+
         try:
-            self.sender.send(msg.qpidMsg())
+            self.sender.send(msg.qpidMsg)
         except qpid.messaging.SessionError, m:
             raise BusException(m)
 
@@ -97,5 +100,5 @@ class FromBus(Session):
           return Message(qpidMsg=msg)
 
     def ack(self, msg):
-        self.session.acknowledge(msg.qpidMsg())
+        self.session.acknowledge(msg.qpidMsg)
 

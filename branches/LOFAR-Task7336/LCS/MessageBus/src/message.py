@@ -18,6 +18,7 @@
 
 import qpid.messaging
 import xml.dom.minidom as xml
+import xml.parsets.expat as expat
 import datetime
 
 LOFAR_MSG_TEMPLATE = """
@@ -58,28 +59,42 @@ def _uuid():
   """
   return str(qpid.messaging.uuid4())
 
+class MessageException(Exception):
+    pass
+
 class Message(object):
     def __init__(self, from_="", forUser="", summary="", protocol="", protocolVersion="", momid="", sasid="", qpidMsg=None):
-      self.document = xml.parseString(LOFAR_MSG_TEMPLATE)
 
       for name, element in self._property_list().iteritems():
         self._add_property(name, element)
 
-      # Set properties provided by constructor
-      self.system          = "LOFAR"
-      self.headerVersion   = "1.0.0"
-      self.protocol        = protocol
-      self.protocolVersion = protocolVersion
-      self.from_           = from_
-      self.forUser         = forUser
-      self.summary         = summary
-      self.uuid            = _uuid()
-      self.timestamp       = _timestamp()
-      self.momid           = momid
-      self.sasid           = sasid
+      if qpidMsg is None:
+        self.document = xml.parseString(LOFAR_MSG_TEMPLATE)
+        self.qpidMsg  = qpid.messaging.Message(content_type="text/plain", durable=True)
 
-      if qpidMsg is not None:
-        self.setQpidMsg(qpidMsg)
+        # Set properties provided by constructor
+        self.system          = "LOFAR"
+        self.headerVersion   = "1.0.0"
+        self.protocol        = protocol
+        self.protocolVersion = protocolVersion
+        self.from_           = from_
+        self.forUser         = forUser
+        self.summary         = summary
+        self.uuid            = _uuid()
+        self.timestamp       = _timestamp()
+        self.momid           = momid
+        self.sasid           = sasid
+      else:
+        self.qpidMsg  = qpidMsg
+
+        # Set properties by provided qpidMsg
+        try:
+          # Replace literal << in the content, which is occasionally inserted by the C++
+          # code as part of the Parset ("Observation.Clock=<<Clock200")
+          self.document = xml.parseString(qpidMsg.content.replace("<<","&lt;&lt;"))
+        except expat.ExpatError, e:
+          print "Could not parse XML message content: ", e, msg.content
+          raise MessageException(e)
 
     def _add_property(self, name, element):
       def getter(self):
@@ -127,17 +142,10 @@ class Message(object):
               "payload        : %s\n" % (self.payload,)
              )
 
-    def qpidMsg(self):
-      """ Return a QPID message with the configured content. """
+    def generate_message(self):
+      """ Construct the QPID message content. """
 
-      msg = qpid.messaging.Message(content=self.document.toxml(), content_type="text/plain", durable=True)
-
-      return msg
-
-    def setQpidMsg(self, msg):
-      """ Use a QPID message to set the content. """
-
-      self.document = xml.parseString(msg.getContent())
+      self.qpidMsg.content = self.document.toxml()
 
     """ XML support functions. See also lofarpipe/support/xmllogging.py. """
 
