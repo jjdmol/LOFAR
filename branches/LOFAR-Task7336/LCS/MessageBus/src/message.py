@@ -18,7 +18,7 @@
 
 import qpid.messaging
 import xml.dom.minidom as xml
-import xml.parsets.expat as expat
+import xml.parser.expat as expat
 import datetime
 
 LOFAR_MSG_TEMPLATE = """
