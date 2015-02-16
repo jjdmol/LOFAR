@@ -252,8 +252,12 @@ class selfcal_prepare(LOFARnodeTCP):
                                        table, 'DATA').getdesc()["shape"][0])            
             ndppp_nchan_key = "avg1.freqstep"  # TODO/FIXME: dependency on the step name!!!!
             
+            # TODO: Corrupt subbands should be skipped here with 
+            # NONEXISTINGSKIPPEDSUBBAND as a subband name (NDPPP will fill 0s)
             # Join into a single list of paths.
             msin = "['{0}']".format("', '".join(ndppp_input_ms))
+            
+
             # Update the parset with computed parameters
             patch_dictionary = {'uselogger': 'True',  # enables log4cplus
                                'msin': msin,
