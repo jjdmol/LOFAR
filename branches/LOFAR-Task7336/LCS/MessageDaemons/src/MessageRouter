@@ -57,7 +57,7 @@ class BusMulticast(threading.Thread):
       log("INFO","[%s] Msg received from %s: %s; TIME = %s" % (msg.uuid,self.source,msg.summary,msg.timestamp))
 
       for outbus in outbusses:
-        outbus.send(msg)
+        outbus.send(msg, True)
       inbus.ack(msg)
 
       log("INFO","[%s] Forwarded %s -> %s" % (msg.uuid,self.source,self.destlist,))

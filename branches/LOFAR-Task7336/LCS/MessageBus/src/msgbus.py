@@ -20,7 +20,7 @@
 
 import qpid.messaging
 import os
-import lofar.messagebus.message
+import lofar.messagebus.message as message
 
 # Candidate for a config file
 broker="127.0.0.1" 
@@ -61,9 +61,10 @@ class ToBus(Session):
     def __del__(self):
         self.connection.close()
 
-    def send(self, msg):
+    def send(self, msg, verbatim=False):
         # (Re)generate the QPID message body
-        msg.generate_message()
+        if not verbatim:
+            msg.generate_message()
 
         try:
             self.sender.send(msg.qpidMsg)
@@ -97,7 +98,7 @@ class FromBus(Session):
         if msg is None:
           return None
         else:
-          return Message(qpidMsg=msg)
+          return message.Message(qpidMsg=msg)
 
     def ack(self, msg):
         self.session.acknowledge(msg.qpidMsg)

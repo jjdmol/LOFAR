@@ -70,7 +70,7 @@ class Message(object):
 
       if qpidMsg is None:
         self.document = xml.parseString(LOFAR_MSG_TEMPLATE)
-        self.qpidMsg  = qpid.messaging.Message(content_type="text/plain", durable=True)
+        self._qpidMsg = qpid.messaging.Message(content_type="text/plain", durable=True)
 
         # Set properties provided by constructor
         self.system          = "LOFAR"
@@ -85,7 +85,7 @@ class Message(object):
         self.momid           = momid
         self.sasid           = sasid
       else:
-        self.qpidMsg  = qpidMsg
+        self._qpidMsg        = qpidMsg
 
         # Set properties by provided qpidMsg
         try:
@@ -142,10 +142,11 @@ class Message(object):
               "payload        : %s\n" % (self.payload,)
              )
 
-    def generate_message(self):
+    def qpidMsg(self):
       """ Construct the QPID message content. """
 
-      self.qpidMsg.content = self.document.toxml()
+      if self.dirty:
+        self._qpidMsg.content = self.document.toxml()
 
     """ XML support functions. See also lofarpipe/support/xmllogging.py. """
 
