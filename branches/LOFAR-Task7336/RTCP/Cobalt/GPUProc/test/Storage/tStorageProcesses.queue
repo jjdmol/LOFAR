@@ -3,7 +3,7 @@
       <system>LOFAR</system>
       <version>1.0.0</version>
       <protocol>
-         <name>lofar.task.feedback.dataproducts</name>
+         <name>task.feedback.dataproducts</name>
          <version>1.0.0</version>
       </protocol>
       <source>

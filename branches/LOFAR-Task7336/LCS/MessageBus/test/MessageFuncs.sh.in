@@ -1,0 +1,149 @@
+#!/bin/bash
+#
+# Usage: source MessageFuncs.sh
+#
+
+function _on_exit() {
+  # Calls $1 on exit, while preserving existing EXIT traps
+
+  # Get existing EXIT traps
+  TRAPLINE=`trap -p EXIT`
+  ONEXITS=`echo $TRAPLINE | perl -ne 'print "$1\n" if /trap -- .(.*). EXIT/;'`
+
+  # Expand traps
+  trap -- "$1;$ONEXITS" EXIT
+}
+
+function _generate_prefix() {
+  # Generate a unique prefix for this test
+  NOW=`date +"%FT%T"`
+  mktemp -u test-$NOW-XXXXXXXXXX.
+}
+
+# Generate an unique prefix for all queues in this test
+export QUEUE_PREFIX=`_generate_prefix`
+
+function have_qpid() {
+  [ "@HAVE_QPID@" == "TRUE" ]
+}
+
+# A list of all queues we created
+CREATED_QUEUES=""
+
+function create_queue() {
+  # Creates an empty queue
+  #
+  # Usage:
+  #   create_queue queue
+  QUEUE_NAME="$1"
+
+  if have_qpid; then
+    @QPID_RECEIVE_EXECUTABLE@ \
+      -b 127.0.0.1 \
+      -a "$QUEUE_PREFIX$QUEUE_NAME; { create: always }" \
+      --print-content no --ignore-reply-to
+  fi
+
+  # Update the list of queues we created
+  CREATED_QUEUES="$CREATED_QUEUES $QUEUE_NAME"
+}
+
+function delete_queue() {
+  # Empties and deletes a queue
+  #
+  # Usage:
+  #   delete_queue queue
+  #
+  # Will not remove non-empty or used queues
+  QUEUE_NAME="$1"
+
+  if have_qpid; then
+    @QPID_RECEIVE_EXECUTABLE@ \
+      -b 127.0.0.1 \
+      -a "$QUEUE_PREFIX$QUEUE_NAME; { delete: always }" \
+      --print-content no --ignore-reply-to
+  fi
+}
+
+function delete_all_queues() {
+  # Empties and deletes all queues created by create_queue
+  #
+  # Usage:
+  #   delete_all_queues
+
+  for QUEUE_NAME in $CREATED_QUEUES; do
+    delete_queue "$QUEUE_NAME"
+  done
+}
+
+# Automatically delete all empty, non-used queues on EXIT
+_on_exit delete_all_queues
+
+function recv_msg() {
+  # Retrieves one message from a queue
+  #
+  # Usage:
+  #   recv_msg queue > message
+  #
+  # Returns an empty message if none was available
+  QUEUE_NAME="$1"
+
+  if have_qpid; then
+    @QPID_RECEIVE_EXECUTABLE@ \
+      -b 127.0.0.1 \
+      -a "$QUEUE_PREFIX$QUEUE_NAME" \
+      --ignore-reply-to \
+      -m 1
+  fi
+}
+
+function recv_all_msgs() {
+  # Retrieves all messages from a queue
+  #
+  # Usage:
+  #   recv_all_msgs queue > messages
+  #
+  # Returns an empty message if none was available
+  QUEUE_NAME="$1"
+
+  if have_qpid; then
+    @QPID_RECEIVE_EXECUTABLE@ \
+      -b 127.0.0.1 \
+      -a "$QUEUE_PREFIX$QUEUE_NAME" \
+      --ignore-reply-to \
+      -m 0
+  fi
+}
+
+function send_msg() {
+  # Send one message to a queue
+  #
+  # Usage:
+  #   send_msg queue message
+  QUEUE_NAME="$1"
+  MESSAGE="$2"
+
+  if have_qpid; then
+    @QPID_SEND_EXECUTABLE@ \
+      -b 127.0.0.1 \
+      -a "$QUEUE_PREFIX$QUEUE_NAME" \
+      --content-string "$MESSAGE" 
+  fi
+}
+
+function compare_msg() {
+  # Compare two messages, ignoring uncontrollable fields (UUID, timestamp).
+  # Both messages are expected to be in files (or filedescriptors).
+  #
+  # Usage:
+  #   compare_msg reference_message.txt generated_message.txt
+  REFERENCE="$1"
+  GENERATED="$2"
+
+  function compare_msg_filter() {
+    fgrep -v '<uuid>' | fgrep -v '<timestamp>'
+  }
+
+  diff -w <(<"$REFERENCE" compare_msg_filter) <(<"$GENERATED" compare_msg_filter)
+}
+

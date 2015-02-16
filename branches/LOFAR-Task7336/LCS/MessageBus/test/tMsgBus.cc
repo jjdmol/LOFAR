@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
 
   MessageBus::init();
 
-  std::string queue(argc == 2 ? argv[1] : "tMsgBus-test-queue");
+  std::string queue(argc == 2 ? argv[1] : "tMsgBus");
 
   cout << "Using queue " << queue << " (Syntax: " << argv[0] << " messagebus)" << endl;
 
@@ -98,11 +98,11 @@ int main(int argc, char* argv[]) {
 	compareMessages(msg2Send.qpidMsg(), receivedMsg.qpidMsg());
 
 	cout << "--- TEST 3: add an extra queue, send messages to both queues, receive them. --- " << endl;
-	ToBus	tbExtra("extraTestQ");
+	ToBus	tbExtra("tMsgBus-extraTestQ");
 	tbExtra.send("Message send to extra queue");
 	tb.send("Message send to original queue");
 
-	fb.addQueue("extraTestQ");
+	fb.addQueue("tMsgBus-extraTestQ");
 	fb.getMessage(receivedMsg);
     fb.ack(receivedMsg);
     showMessage(receivedMsg.qpidMsg());

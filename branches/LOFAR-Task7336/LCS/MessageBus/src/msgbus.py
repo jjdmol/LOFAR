@@ -24,7 +24,7 @@ import lofar.messagebus.message as message
 
 # Candidate for a config file
 broker="127.0.0.1" 
-options="create:always"
+options="create:never"
 
 class BusException(Exception):
     pass

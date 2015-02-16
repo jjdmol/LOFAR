@@ -60,7 +60,7 @@ echo "  in directory $(pwd)"
     done
   done
 
-  if [ $HAVE_QPID == "TRUE" ]; then
+  if have_qpid; then
     # validate the contents of the queues
     mkdir "queues" || error "Failed to create temporary directory ${OUTDIR}/queues"
     echo "[ -d ${PWD}/queues ] && cp -r ${PWD}/queues ${REFDIR}" >> accept_output
@@ -68,8 +68,8 @@ echo "  in directory $(pwd)"
     INCORRECT_QUEUES=""
     for Q in $QUEUES; do
       echo "Comparing output of queue $Q"
-      @QPID_RECEIVE_EXECUTABLE@ -b 127.0.0.1 -a $Q --ignore-reply-to > queues/$Q || error "Could not read output of queue $Q"
-      diff ${REFDIR}/queues/$Q queues/$Q || INCORRECT_QUEUES+="$Q " 
+      recv_all_msgs "$Q" > queues/$Q
+      compare_msg ${REFDIR}/queues/$Q queues/$Q || INCORRECT_QUEUES+="$Q " 
     done
 
     if [ "$INCORRECT_QUEUES" != "" ]; then

@@ -5,20 +5,22 @@
 DummyStorage 12345 0&                  # Run the command
 PID_ID=$!                              # get the PID
 
+source MessageFuncs.sh
+
 # Empty queues (if any)
-if [ "@HAVE_QPID@" == "TRUE" ]; then
-  @QPID_RECEIVE_EXECUTABLE@ -b 127.0.0.1 -a lofar.task.feedback.dataproducts --print-content no --ignore-reply-to >/dev/null 2>&1 || true
-fi
+create_queue lofar.task.feedback.dataproducts
 
 # Start the test
 tStorageProcesses || exit 1
 wait $PID_ID
 
 # Validate queues
-if [ "@HAVE_QPID@" == "TRUE" ]; then
-  @QPID_RECEIVE_EXECUTABLE@ -b 127.0.0.1 -a lofar.task.feedback.dataproducts --ignore-reply-to > tStorageProcesses.queue || exit 1
+if have_qpid; then
+  recv_msg lofar.task.feedback.dataproducts > tStorageProcesses.queue
 
-  diff $srcdir/tStorageProcesses.queue tStorageProcesses.queue || exit 1
+  compare_msg $srcdir/tStorageProcesses.queue tStorageProcesses.queue || exit 1
 fi
 
-exit 0  # do not exit with DymmyStorage exit. If we are waiting the test should succeed
+# Signal success to parent
+exit 0
+
