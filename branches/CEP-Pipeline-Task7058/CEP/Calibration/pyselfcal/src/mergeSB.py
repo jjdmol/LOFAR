@@ -20,7 +20,9 @@ import numpy as np
 ########################################################################
 from lofar.selfcal import class_obspar
 from lofar.selfcal import class_mergesubbands
-    
+
+#import class_obspar
+#import class_mergesubbands    
 
 ########################################################################
 #							OVERVIEW
@@ -43,11 +45,11 @@ from lofar.selfcal import class_mergesubbands
 def main(initparameterlist):
 
 	try:
-	      opts, args = getopt.getopt(sys.argv[1:], "hoocn:",     ["help", "obsDir=", "outputDir=", "column2Merge=", "nofChannel2Merge=", "checkNames="])
+	      opts, args = getopt.getopt(sys.argv[1:], "hoocn:",     ["help", "obsDir=", "outputDir=", "column2Merge=", "nofChannelPerSubband=", "checkNames="])
       
 	except getopt.GetoptError as err:
 	      print ''
-	      print "ERROR: Usage: mergeSB.py --obsDir= --outputDir= --column2Merge= [Optionnal: --nofChannel2Merge= --checkNames]"
+	      print "ERROR: Usage: mergeSB.py --obsDir= --outputDir= --column2Merge= [Optionnal: --nofChannelPerSubband= --checkNames]"
 	      print 'If nofChannel2Merge is not provided, by default it is merged in 1 channel per subband'
 	      print 'If checkNames is not provided, by default checkNames is set to yes'
 	      print ''
@@ -58,7 +60,7 @@ def main(initparameterlist):
 		
 		if par1 in ("--help"):
 			  print ''
-			  print "Usage: mergeSB.py --obsDir= --outputDir= --column2Merge= [Optionnal: --nofChannel2Merge= --checkNames]"
+			  print "Usage: mergeSB.py --obsDir= --outputDir= --column2Merge= [Optionnal: --nofChannelPerSubband= --checkNames]"
 			  print 'If nofChannel2Merge is not provide, by default it is merged in 1 channel per subband'
 			  print 'If checkNames is not provided, by default checkNames is set to yes'
 			  print """
@@ -76,7 +78,7 @@ Full path must be provided.
 ******************************************************************************
 mergeSB OPTIONS:
 
-*  --nofChannel2Merge(int, default: All subbands): This is the number of channel per subbands required after the Subbands concatenation.
+*  --nofChannelPerSubband(int, default: All subbands): This is the number of channel per subbands required after the Subbands concatenation.
 By default, mergeSB concatenate subbands doing at the end 1 channel per subband.
  
 * [OPTION NOT ACTIVATED AT THE MOMENT] --checkNames(string,default:yes): mergeSB checks names of MS (intermediate or final data products, see documentation). 
@@ -93,7 +95,7 @@ If checkNames set to no, a waring appears (in case MS names do not respect the n
 			initparameterlist[1]=par2		
 		elif par1 in ("--column2Merge"):
 			initparameterlist[2]=par2	
-		elif par1 in ("--nofChannel2Merge"):
+		elif par1 in ("--nofChannelPerSubband"):
 			initparameterlist[3]=par2	
 		elif par1 in ("-- --checkNames"):
 			initparameterlist[4]=par2												
@@ -108,7 +110,7 @@ If checkNames set to no, a waring appears (in case MS names do not respect the n
 		print ""
 		print "MISSING Parameters"	
 		print ''
-		print "Usage: mergeSB.py --obsDir= --outputDir= --column2Merge= [Optionnal: --nofChannel2Merge=  --checkNames]"
+		print "Usage: mergeSB.py --obsDir= --outputDir= --column2Merge= [Optionnal: --nofChannelPerSubband=  --checkNames]"
 		print 'If nofChannel2Merge is not provide, by default it is merged in 1 channel per subband'
 		print 'If checkNames is not provided, by default checkNames is set to yes'
 		print ''

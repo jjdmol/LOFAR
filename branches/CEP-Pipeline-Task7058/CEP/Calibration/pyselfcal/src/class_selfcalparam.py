@@ -22,6 +22,8 @@ import numpy as np
 
 from lofar.selfcal import class_obsPreprocessing
 
+#import class_obsPreprocessing
+
 ########################################################################
 ## Define selfcalibration Parameters for cycles & prepare parsets
 ########################################################################
@@ -168,7 +170,10 @@ class selfCalParam:
 				if self.robust != "none":
 					robust[i]	= self.robust
 				else:	
-					robust[i]	= float(fpformat.fix(1.0-(i*3.0/(self.nbCycle-1)),2))
+					if self.nbCycle > 1:
+						robust[i]	= float(fpformat.fix(1.0-(i*3.0/(self.nbCycle-1)),2))
+					else:
+						robust[i] = -2	
 							
 				UVmax[i]	= float(fpformat.fix((3E8/self.frequency)/(pixPerBeam*pixsize[i]/3600.*3.14/180.)/(1E3*3E8/self.frequency),3))
 				wmax[i]		= float(fpformat.fix(UVmax[i]*(3E8/self.frequency)*1E3,3))
@@ -199,7 +204,10 @@ class selfCalParam:
 				if self.robust != "none":
 					robust[i]	= self.robust
 				else:	
-					robust[i]	= float(fpformat.fix(1.0-(i*3.0/(self.nbCycle-1)),2))
+					if self.nbCycle > 1:
+						robust[i]	= float(fpformat.fix(1.0-(i*3.0/(self.nbCycle-1)),2))
+					else:
+						robust[i] = -2	
 							
 				UVmax[i]	= float(fpformat.fix((3E8/self.frequency)/(pixPerBeam*pixsize[i]/3600.*3.14/180.)/(1E3*3E8/self.frequency),3))
 				wmax[i]		= float(fpformat.fix(UVmax[i]*(3E8/self.frequency)*1E3,3))		
@@ -226,7 +234,10 @@ class selfCalParam:
 				if self.robust != "none":
 					robust[i]	= self.robust
 				else:	
-					robust[i]	= float(fpformat.fix(1.0-(i*3.0/(self.nbCycle-1)),2))
+					if self.nbCycle > 1:
+						robust[i]	= float(fpformat.fix(1.0-(i*3.0/(self.nbCycle-1)),2))
+					else:
+						robust[i] = -2	
 							
 				UVmax[i]	= float(fpformat.fix((3E8/self.frequency)/(pixPerBeam*pixsize[i]/3600.*3.14/180.)/(1E3*3E8/self.frequency),3))
 				wmax[i]		= float(fpformat.fix(UVmax[i]*(3E8/self.frequency)*1E3,3))		
@@ -252,7 +263,10 @@ class selfCalParam:
 				if self.robust != "none":
 					robust[i]	= self.robust
 				else:	
-					robust[i]	= float(fpformat.fix(1.0-(i*3.0/(self.nbCycle-1)),2))
+					if self.nbCycle > 1:
+						robust[i]	= float(fpformat.fix(1.0-(i*3.0/(self.nbCycle-1)),2))
+					else:
+						robust[i] = -2		
 							
 				UVmax[i]	= float(fpformat.fix((3E8/self.frequency)/(pixPerBeam*pixsize[i]/3600.*3.14/180.)/(1E3*3E8/self.frequency),3))
 				wmax[i]		= float(fpformat.fix(UVmax[i]*(3E8/self.frequency)*1E3,3))	

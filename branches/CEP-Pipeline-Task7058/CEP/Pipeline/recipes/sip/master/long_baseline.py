@@ -45,6 +45,12 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
     """
 
     inputs = {
+        'nproc': ingredient.IntField(
+            '--nproc',
+            default=1,   # More then one might cause issues when ndppp shares 
+                         # temp files between runs
+            help="Maximum number of simultaneous processes per output node"
+        ),
         'ndppp_exec': ingredient.ExecField(
             '--ndppp-exec',
             help="The full path to the ndppp executable"
@@ -109,6 +115,10 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
             default=False,
             help="Developer option, adds beamtables to ms"
         ),
+        'output_ms_mapfile': ingredient.StringField(
+            '--output-ms-mapfile',
+            help="Path to mapfile which contains the the final output locations"
+        )
     }
 
     outputs = {
@@ -137,6 +147,7 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
         output_map = DataMap.load(self.inputs['target_mapfile'])
         subbandgroups_per_ms = self.inputs['subbandgroups_per_ms']
         subbands_per_subbandgroup = self.inputs['subbands_per_subbandgroup']
+        final_output_map = DataMap.load(self.inputs['output_ms_mapfile'])
         # Validate input
         if not self._validate_input_map(input_map, output_map, subbandgroups_per_ms,
                             subbands_per_subbandgroup):
@@ -154,10 +165,12 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
         jobs = []
         paths_to_image_mapfiles = []
         n_subband_groups = len(output_map)
-        for idx_sb_group, item in enumerate(output_map):
+
+        output_map.iterator = final_output_map.iterator = DataMap.SkipIterator
+        for idx_sb_group, (output_item, final_item) in enumerate(zip(output_map, final_output_map)):
             #create the input files for this node
             self.logger.debug("Creating input data subset for processing"
-                              "on: {0}".format(item.host))
+                              "on: {0}".format(output_item.host))
             inputs_for_image_map = \
                 self._create_input_map_for_sbgroup(
                                 subbandgroups_per_ms, n_subband_groups,
@@ -174,14 +187,14 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
 
             #save the (input) ms, as a list of  mapfiles
             paths_to_image_mapfiles.append(
-                tuple([item.host, inputs_for_image_mapfile_path, False]))
+                tuple([output_item.host, inputs_for_image_mapfile_path, False]))
 
             arguments = [self.environment,
                          self.inputs['parset'],
                          self.inputs['working_directory'],
                          self.inputs['processed_ms_dir'],
                          self.inputs['ndppp_exec'],
-                         item.file,
+                         output_item.file,
                          subbandgroups_per_ms,
                          subbands_per_subbandgroup,
                          inputs_for_image_mapfile_path,
@@ -189,12 +202,13 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
                          self.inputs['statplot_executable'],
                          self.inputs['msselect_executable'],
                          self.inputs['rficonsole_executable'],
-                         self.inputs['add_beam_tables']]
+                         self.inputs['add_beam_tables'],
+                         final_item.file]
 
-            jobs.append(ComputeJob(item.host, node_command, arguments))
+            jobs.append(ComputeJob(output_item.host, node_command, arguments))
 
         # Hand over the job(s) to the pipeline scheduler
-        self._schedule_jobs(jobs)
+        self._schedule_jobs(jobs, max_per_node=self.inputs['nproc'])
 
         # *********************************************************************
         # validate the output, cleanup, return output

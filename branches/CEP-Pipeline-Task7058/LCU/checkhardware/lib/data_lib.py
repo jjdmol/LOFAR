@@ -102,7 +102,7 @@ class cRCUdata:
     def readFiles(self):
         files_in_dir = sorted(os.listdir(dataDir()))
         data_shape = self.readFile(os.path.join(dataDir(),files_in_dir[0])).shape
-        ssdata = np.zeros((96,data_shape[0],data_shape[1]), dtype=np.float64)
+        ssdata = np.zeros((self.n_rcus, data_shape[0],data_shape[1]), dtype=np.float64)
         for file_name in files_in_dir:
             #path, filename = os.split(file_name)
             rcu = int(file_name.split('.')[0][-3:])

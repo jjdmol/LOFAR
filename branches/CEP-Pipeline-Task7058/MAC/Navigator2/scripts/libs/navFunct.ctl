@@ -2,7 +2,7 @@
 //
 //  Copyright (C) 2002-2004
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -760,12 +760,12 @@ dyn_string navFunct_dpGetFullPathAsTypes(string aDp){
       
   
   dyn_string splitted = strsplit(dp,"_");
-
   string start;  
   for (int i=1; i <= dynlen(splitted); i++)  {
     start+=splitted[i];
     typePath[i+index] = dpTypeName(systemName+start);
     start+="_";
+    
   }
   
   return typePath;
@@ -1256,6 +1256,8 @@ void navFunct_fillObservationsList() {
     
     // check all available observations
     for (int i = 1; i <= dynlen(g_observations["NAME"]); i++) {
+      // only observations!!
+      if (g_observations["STATIONLIST"][i] == "[]") continue;
       bool found=false;
       string shortObs=g_observations["NAME"][i];
       strreplace(shortObs,"LOFAR_ObsSW_","");
@@ -1715,6 +1717,11 @@ void navFunct_fillProcessesTree() {
     string fullProcessPath=connectTo;
     for (int j=1; j <= dynlen(pathList); j++) {
       fullProcessPath+="_"+pathList[j];
+      if (strpos(pathList[j],"TempObs") > -1) {
+        // Observation found, get real name in stead of Tempname
+        string observation = strsplit(claimManager_realNameToName("LOFAR_ObsSW_"+pathList[j]),"_")[3];
+        pathList[j] = observation;
+      }
       if (!dynContains(result,connectTo+","+pathList[j]+","+fullProcessPath)) {
        dynAppend(result,connectTo+","+pathList[j]+","+fullProcessPath);
       }
@@ -1722,7 +1729,7 @@ void navFunct_fillProcessesTree() {
     }
   }
   
-  LOG_DEBUG("navFunct.ctl:navFunct_fillProcessesTree|result: "+ result);  
+  LOG_DEBUG("navFunct.ctl:navFunct_fillProcessesTree|result: "+ result); 
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".processesList",result);  
 }
 
@@ -1886,8 +1893,8 @@ void navFunct_fillStationLists() {
 //                                 "RS306","RS307","RS308","RS309","RS310","RS311",
 //                                 "RS404","RS406","RS407","RS408","RS409","RS410","RS411","RS412","RS413",
 //                                 "RS503","RS506","RS507","RS508","RS509");
-//  europeStations = makeDynString("DE601","DE602","DE603","DE604","DE605","FR606","SE607","UK608","FI609");
-  europeStations = makeDynString("DE601","DE602","DE603","DE604","DE605","FR606","SE607","UK608");
+//  europeStations = makeDynString("DE601","DE602","DE603","DE604","DE605",,"DE609""FR606","SE607","UK608");
+  europeStations = makeDynString("DE601","DE602","DE603","DE604","DE605","DE609","FR606","SE607","UK608");
   superTerpStations = makeDynString("CS002","CS003","CS004","CS005","CS006","CS007");
   cs0nnCoreStations = makeDynString("CS001",
                                     "CS011","CS013","CS017",

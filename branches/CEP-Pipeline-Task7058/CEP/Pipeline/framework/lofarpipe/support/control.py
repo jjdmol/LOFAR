@@ -51,7 +51,7 @@ class control(StatefulRecipe):
         # Determine port number to use.
         match = re.findall(r'^Observation(\d+)$', self.inputs['job_name'])
         if match:
-            port = 22000 + int(match[0]) % 1000
+            port = 25000 + int(match[0]) % 7000
             self.logger.info(
                 "Sending status feedback to MAC [%s:%s] (status: %s)" %
                 (host, port, status)
