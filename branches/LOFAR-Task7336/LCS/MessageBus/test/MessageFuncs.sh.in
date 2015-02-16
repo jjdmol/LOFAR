@@ -16,8 +16,9 @@ function _on_exit() {
 
 function _generate_prefix() {
   # Generate a unique prefix for this test
-  NOW=`date +"%FT%T"`
-  mktemp -u test-$NOW-XXXXXXXXXX.
+  NOW=`date +"%FT%T.%N"`
+
+  echo test-$NOW.
 }
 
 # Generate an unique prefix for all queues in this test
@@ -54,7 +55,7 @@ function delete_queue() {
   # Usage:
   #   delete_queue queue
   #
-  # Will not remove non-empty or used queues
+  # Will not remove used queues
   QUEUE_NAME="$1"
 
   if have_qpid; then
@@ -76,7 +77,7 @@ function delete_all_queues() {
   done
 }
 
-# Automatically delete all empty, non-used queues on EXIT
+# Automatically delete all unused queues (created by create_queue) on EXIT
 _on_exit delete_all_queues
 
 function recv_msg() {

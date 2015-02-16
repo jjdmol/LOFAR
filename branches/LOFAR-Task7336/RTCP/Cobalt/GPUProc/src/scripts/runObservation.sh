@@ -376,11 +376,13 @@ touch $PID_LIST_FILE
 
 LIST_OF_HOSTS=$(getOutputProcHosts $PARSET)
 RANK=0
+VARS="QUEUE_PREFIX=$QUEUE_PREFIX" # Variables to forward to outputProc
 for HOST in $LIST_OF_HOSTS
 do
-  COMMAND="ssh -tt -l $SSH_USER_NAME $KEY_STRING $SSH_USER_NAME@$HOST $OUTPUT_PROC_EXECUTABLE $OBSERVATIONID $RANK"
+  COMMAND="ssh -tt -l $SSH_USER_NAME $KEY_STRING $SSH_USER_NAME@$HOST $VARS $OUTPUT_PROC_EXECUTABLE $OBSERVATIONID $RANK"
+  echo "Starting $COMMAND"
   # keep a counter to allow determination of the rank (needed for binding to rtcp)
-  RANK=$(($RANK + 1))   
+  RANK=$(($RANK + 1))
   
   command_retry "$COMMAND" &  # Start retrying function in the background
   PID=$!                      # get the pid 
@@ -395,8 +397,10 @@ done
 # Run in the background to allow signals to propagate
 #
 # -x LOFARROOT    Propagate $LOFARROOT for rtcp to find GPU kernels, config files, etc.
+# -x QUEUE_PREFIX Propagate $QUEUE_PREFIX for test-specific interaction over the message bus
 # -H              The host list to run on, derived earlier.
 mpirun.sh -x LOFARROOT="$LOFARROOT" \
+          -x QUEUE_PREFIX="$QUEUE_PREFIX" \
           -H "$HOSTS" \
           $MPIRUN_PARAMS \
           $CHECK_TOOL \
