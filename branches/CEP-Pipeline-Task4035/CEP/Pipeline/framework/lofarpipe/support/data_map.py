@@ -183,18 +183,7 @@ class DataMap(object):
         except TypeError:
             raise DataMapError("Failed to append item: %s" % repr(data))
 
-
-class MultiDataMap(DataMap):
-    """
-    Class representing a specialization of data-map, a collection of data
-    products located on the same node, skippable as a set and individually
-    """
-    @DataMap.data.setter
-    def data(self, data):
-        self._set_data(data, dtype=MultiDataProduct)
-
-
-
+          
 class MultiDataProduct(object):
     """
     Class representing a single data product.
@@ -248,6 +237,23 @@ class MultiDataProduct(object):
         """Compare for non-equality"""
         return not self.__eq__(other)
 
+
+class MultiDataMap(DataMap):
+    """
+    Class representing a specialization of data-map, a collection of data
+    products located on the same node, skippable as a set and individually
+    """
+    @DataMap.data.setter
+    def data(self, data):
+        self._set_data(data, dtype=MultiDataProduct)
+
+    def append(self, data, dtype=MultiDataProduct):
+        """
+        Append a MultiDataProduct
+        """
+        raise NotImplementedError
+
+      
 @deprecated
 def load_data_map(filename):
     """
