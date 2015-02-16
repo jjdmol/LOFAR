@@ -168,14 +168,16 @@ class DataMap(object):
                 self._data.append(data)
 
             # tuple or argument input
-            elif isinstance(item, tuple):  
-                if len(tuple) == 3:
+            elif isinstance(data, tuple):  
+                item = None
+                if len(data) == 3:
                     # use the DataProduct validation to assure correct types
-                    item = DataProduct(tuple[0], tuple[1], tuple[2])
-                elif len(tuple) == 2:
-                    item = DataProduct(tuple[0], tuple[1], False)
+                    item = DataProduct(data[0], data[1], data[2])
+                elif len(data) == 2:
+                    item = DataProduct(data[0], data[1], False)
                 else:
-                    raise TypeError
+                    raise TypeError("asdf.kjghdfgljkh")
+                self._data.append(item)
             else:
                 raise TypeError
         except TypeError:
