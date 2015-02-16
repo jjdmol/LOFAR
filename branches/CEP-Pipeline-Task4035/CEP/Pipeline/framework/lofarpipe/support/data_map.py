@@ -48,6 +48,7 @@ class DataProduct(object):
         return not self.__eq__(other)
 
 
+
 class DataMap(object):
     """
     Class representing a data-map, which basically is a collection of data
@@ -156,6 +157,30 @@ class DataMap(object):
                 raise TypeError
         except TypeError:
             raise DataMapError("Failed to validate data map: %s" % repr(data))
+
+    def append(self, data, dtype=DataProduct):
+        """
+        Append an item to the end of the internal storage, allows appending
+        of DataProduct, tuple or as seperate arguments. Default skip=False
+        """
+        try:
+            if isinstance(data, dtype):                
+                self._data.append(data)
+
+            # tuple or argument input
+            elif isinstance(item, tuple):  
+                if len(tuple) == 3:
+                    # use the DataProduct validation to assure correct types
+                    item = DataProduct(tuple[0], tuple[1], tuple[2])
+                elif len(tuple) == 2:
+                    item = DataProduct(tuple[0], tuple[1], False)
+                else:
+                    raise TypeError
+            else:
+                raise TypeError
+        except TypeError:
+            raise DataMapError("Failed to append item: %s" % repr(data))
+
 
 class MultiDataMap(DataMap):
     """
