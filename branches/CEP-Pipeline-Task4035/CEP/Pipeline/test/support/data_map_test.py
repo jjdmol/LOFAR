@@ -144,14 +144,21 @@ class DataMapTest(unittest.TestCase):
 
         data_map.iterator = DataMap.SkipIterator
         dataProducts = [item for item in data_map]
-        self.assertEqual(len(dataProducts), 2) # default contains 2 nonskipped items
-        self.assertTrue(all(isinstance(item, DataProduct) for item in dataProducts))
+        # default contains 2 nonskipped items
+        self.assertEqual(len(dataProducts), 2) 
+        self.assertTrue(all(isinstance(item, DataProduct) 
+                        for item in dataProducts))
         # The map already contains 2 skipped items, the final item is tested 
         # here
         self.assertEqual(dataProducts[-1].host, 'locus004')
         self.assertEqual(dataProducts[-1].file, 'L12345_SB104.MS')
         
+    def test_append_item_invalid(self):
+        data_map = DataMap(self.new_style_map)
 
+        self.assertRaises(DataMapError, data_map.append,
+                         ("host","file", True, "bwaaa"))
+        
 
 class MultiDataMapTest(unittest.TestCase):
     """
