@@ -23,15 +23,15 @@ from lofar.pythondppp._pythondppp import _DPStepBase
 import numpy as np
 
 
-class DPStepBase(_DPStepBase):
+class DPStep(_DPStepBase):
     """
-    The base class for a python DPPP step.
+    The superclass for a python DPPP step.
     An DPPP step implemented in Python must derive from this class.
     An example can be seen in CEP/DP3/PythonDPPP/test/tPythonStep.py.
     """
 
     def __init__(self, parset):
-        """ This constructor must be called by the derived class """
+        """ This constructor must be called by the subclass """
         _DPStepBase.__init__(self)
         self.itsParset = parset
 
@@ -43,7 +43,7 @@ class DPStepBase(_DPStepBase):
         DPInfo member names without their 'its' prefix.
 
         This function extracts the information telling the buffer sizes.
-        Thereafter it calls updateInfo to let a derived class extract and
+        Thereafter it calls updateInfo to let a subclass extract and
         optionally set the info.
         Finally it extracts the information again to get the output sizes.
 
@@ -56,7 +56,7 @@ class DPStepBase(_DPStepBase):
         self.itsNCorrOut = self.itsNCorrIn
         self.itsNChanOut = self.itsNChanIn
         self.itsNBlOut   = self.itsNBlIn
-        # Let the derived class extract and set info.
+        # Let the subclass extract and set info.
         infoOut = self.updateInfo(dpinfo)
         # Extract the output sizes (if defined).
         if 'NCorr' in infoOut:
@@ -67,11 +67,11 @@ class DPStepBase(_DPStepBase):
             self.itsNBlOut   = len(infoOut['Ant1'])
         return infoOut
 
-    # The following functions can be overwritten in a derived class.
+    # The following functions can be overwritten in a subclass.
     def updateInfo(self, dpinfo):
         """ Extract and optionally set the DPInfo fields.
 
-        This function must be implemented in a derived class.
+        This function must be implemented in a subclass.
 
         The dpinfo argument is a dict containing all fields in the
         C++ DPInfo object. The names of the keys in the dict are the
@@ -82,21 +82,21 @@ class DPStepBase(_DPStepBase):
         dict; other keys can be part of it.
 
         """
-        raise ValueError("A class derived from DPStepBase must implement updateInfo")
+        raise ValueError("A class derived from DPStep must implement updateInfo")
 
     def needVisData(self):
-        """ Does the derived class need the visibility data?
+        """ Does the subclass need the visibility data?
 
-        This function only needs to be implemented in a derived class
+        This function only needs to be implemented in a subclass
         if it does not need the visibility data.
 
         """
         return True
 
     def needWrite(self):
-        """ Does the derived class change data to be written by DPPP?
+        """ Does the subclass change data to be written by DPPP?
 
-        This function needs to be implemented in a derived class
+        This function needs to be implemented in a subclass
         if it changes data (visibility data, flags, weights, and/or UVW)
         that needs to be written (or possibly updated) in the MS.
 
@@ -106,15 +106,25 @@ class DPStepBase(_DPStepBase):
     def process(self, time, exposure):
         """ Process the data of the given time slot.
 
-        This function must be implemented in a derived class.
+        This function must be implemented in a subclass.
         it will need the functions getData, etc. to get the visibility data,
         flags, etc..
         It should call processNext to process the next DPPP step on the
         output of this step.
 
         """        
-        raise ValueError("A class derived from DPStepBase must implement process")
+        raise ValueError("A class derived from DPStep must implement process")
 
+    def finish(self):
+        """ Finish the processing.
+
+        This function must be implemented in a subclass if data were
+        buffered and the last buffers have not been (fully) processed yet.
+        In that case finish also has to call processNext.
+
+        """        
+        pass
+    
     def show(self):
         """ Show the parset parameters.
  
@@ -153,14 +163,14 @@ class DPStepBase(_DPStepBase):
         """
         return ''
 
-    def addToMS(self, name):
+    def addToMS(self, msname):
         """ Add information to the output MeasurementSet.
 
         This function will only be needed in very special cases
         where dedicated info needs to be added to the MS.
         
         """
-        None
+        pass
 
 
     # The following functions are to be called from Python.

@@ -20,15 +20,15 @@
 # $Id: __init__.py 23074 2012-12-03 07:51:29Z diepen $
 
 
-from lofar.pythondppp import DPStepBase
+from lofar.pythondppp import DPStep
 from lofar.parameterset import parameterset
 
-class tPythonStep(DPStepBase):
+class tPythonStep(DPStep):
     def __init__(self, parsetDict):
         # The constructor gets the subset of the NDPPP parset containing
         # all keys-value pairs for this step.
-        # Note: the base class constructor MUST be called.
-        DPStepBase.__init__(self, parsetDict)
+        # Note: the superclass constructor MUST be called.
+        DPStep.__init__(self, parsetDict)
         parset = parameterset(parsetDict)
         self.itsIncr = parset.getDouble('incr', 1)
 

@@ -294,8 +294,8 @@ namespace LOFAR {
       } else if (! itsNChanChg  &&  ! itsNBlChg) {
         itsBufOut.getData().assign (itsBufIn.getData());
       }
-      if (rec.isDefined("FLAG")) {
-        itsBufOut.getFlags().assign (rec.toArrayBool("FLAG"));
+      if (rec.isDefined("FLAGS")) {
+        itsBufOut.getFlags().assign (rec.toArrayBool("FLAGS"));
         narr++;
       } else if (! itsNChanChg  &&  ! itsNBlChg) {
         itsBufOut.getFlags().assign (itsBufIn.getFlags());

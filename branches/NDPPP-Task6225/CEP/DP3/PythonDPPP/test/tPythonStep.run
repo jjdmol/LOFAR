@@ -1,12 +1,17 @@
 #!/bin/sh
 
-if test ! -f ../../../../../../LOFAR/CEP/DP3/DPPP/test/tNDPPP.in_MS.tgz; then
+# Set srcdir if not defined (in case run by hand).
+if test "$srcdir" = ""; then
+  srcdir=`find ../../../../../.. -name PythonDPPP | grep -v build/ | grep -v /include/`/test
+fi
+echo $srcdir
+
+if test ! -f $srcdir/../../DPPP/test/tNDPPP.in_MS.tgz; then
   return 3   # untested
 fi
 
 # Get the test MS and rename it to be deleted automatically.
-rm -rf tPythonStep_tmp.MS
-tar zxf ../../../../../../LOFAR/CEP/DP3/DPPP/test/tNDPPP.in_MS.tgz
+tar zxf $srcdir/../../DPPP/test/tNDPPP.in_MS.tgz
 mv tNDPPP_tmp.MS tPythonStep_tmp.MS
 
 # Define the path for finding the library.
@@ -19,5 +24,5 @@ PYTHONPATH=.:$PYTHONPATH
 export PYTHONPATH
 
 # Run NDPPP with the test python step.
-../../DPPP/src/NDPPP msin=tPythonStep_tmp.MS msout=tPythonStep_xtmp.msout msout.overwrite=T steps='[pystep,pystep2]' pystep.type=PythonDPPP pystep.python.module=tPythonStep pystep.python.class=tPythonStep pystep.somekey=somevalue pystep2.type=pythondppp pystep2.python.class=tPythonStep pystep2.incr=3.5
+../../DPPP/src/NDPPP msin=tPythonStep_tmp.MS msout=tPythonStep_tmp.msout msout.overwrite=T steps='[pystep,pystep2]' pystep.type=PythonDPPP pystep.python.module=tPythonStep pystep.python.class=tPythonStep pystep.somekey=somevalue pystep2.type=pythondppp pystep2.python.class=tPythonStep pystep2.incr=3.5
 
