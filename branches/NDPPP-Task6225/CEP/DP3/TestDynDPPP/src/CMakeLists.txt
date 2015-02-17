@@ -3,3 +3,5 @@
 add_library(testdyndppp
   TestDynStep.cc
 )
+
+target_link_libraries (testdyndppp dppp)
