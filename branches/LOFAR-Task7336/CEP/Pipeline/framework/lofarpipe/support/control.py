@@ -128,8 +128,8 @@ class control(StatefulRecipe):
         super(control, self).go()
 
         # Pull several parameters from the parset
-        self.momID = self.parset.getString("Observation.momID", "")  # Note: 0 if obs was copied in Scheduler
-        self.sasID = self.parset.getString("Observation.otdbID", "") # SAS ID
+        self.momID = self.parset.getString("ObsSW.Observation.momID", "")  # Note: 0 if obs was copied in Scheduler
+        self.sasID = self.parset.getString("ObsSW.Observation.otdbID", "") # SAS ID
 
         # Start the pipeline
         self.logger.info("LOFAR Pipeline (%s) starting." % self.name)
