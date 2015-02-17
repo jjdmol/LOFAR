@@ -35,6 +35,7 @@
 #include <python/Converters/PycRecord.h>
 #include <python/Converters/PycArray.h>
 
+#include <casa/OS/Path.h>
 #include <unistd.h>
 
 using namespace casa;
@@ -56,7 +57,14 @@ namespace LOFAR {
       // Initialize Python interpreter.
       // Note: a second call is a no-op.
       Py_Initialize();
-        // Register converters for casa types from/to python types
+      // Insert the current working directory into the python path.
+      // (from http://stackoverflow.com/questions/9285384/
+      //   how-does-import-work-with-boost-python-from-inside-python-files)
+      string workingDir = Path(".").absoluteName();
+      char path[] = "path";    // needed to avoid warning if "path" used below
+      PyObject* sysPath = PySys_GetObject(path);
+      PyList_Insert (sysPath, 0, PyString_FromString(workingDir.c_str()));
+      // Register converters for casa types from/to python types
       casa::python::register_convert_excp();
       casa::python::register_convert_basicdata();
       casa::python::register_convert_casa_valueholder();

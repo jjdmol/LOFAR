@@ -138,7 +138,7 @@ class DPStep(_DPStepBase):
         s = ''
         for k,v in self.itsParset.iteritems():
             if k not in ['type', 'python.class', 'python.module']:
-                s += '  %-24s %s\n' % (k+':', v)
+                s += '  %-15s %s\n' % (k+':', v)
         return s
 
     def showCounts(self):
@@ -183,7 +183,9 @@ class DPStep(_DPStepBase):
         This is a dict that can contain 6 fields: TIME, EXPOSURE, DATA,
         FLAGS, WEIGHTS, and UVW.
 
-        Suppose that 
+        If process does not buffer data, the dict only needs to contain
+        the changed data items. But if buffered and pocessNext is called
+        later, all data items have to be part of the dict.
         """
         return self._processNext(arraysDict)
 
