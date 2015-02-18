@@ -103,6 +103,9 @@ public:
   // Return the raw message (header + payload)
   std::string rawContent() const { return (itsQpidMsg.getContent()); }
 
+  // Return a short (one line) description of the message
+  std::string short_desc() const;
+
   // function for printing
   std::ostream& print (std::ostream& os) const;
 

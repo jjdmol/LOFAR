@@ -42,15 +42,13 @@ namespace LOFAR {
     itsConnection(broker,"{reconnect:true}"),
     itsNrMissingACKs(0)
   {
+    LOG_DEBUG_STR("[FromBus] Connecting to broker " << broker);
     itsConnection.open();
-	cout << "Connected to: " << itsConnection.getUrl() << endl;
+    LOG_INFO_STR("[FromBus] Connected to broker " << itsConnection.getUrl());
 
     itsSession = itsConnection.createSession();
 
-    Address addr(queue_prefix()+address+options);
-    Receiver receiver = itsSession.createReceiver(addr);
-    receiver.setCapacity(1);
-	cout << "Receiver started at queue: " << receiver.getName() << endl;
+    addQueue(address, options);
   } catch(const qpid::types::Exception &ex) {
     THROW(MessageBusException, ex.what());
   }
@@ -59,7 +57,7 @@ namespace LOFAR {
   FromBus::~FromBus(void)
   {
     if (itsNrMissingACKs) {
-//      LOG_ERROR_STR("Queue " << itsQueueName << " on broker " << itsBrokerName << " has " << itsNrMissingACKs << " messages not ACK'ed ");
+      LOG_ERROR_STR("[FromBus] " << itsNrMissingACKs << " messages not ACK'ed");
 	}
 
     try {
@@ -75,15 +73,19 @@ namespace LOFAR {
   bool FromBus::getMessage(LOFAR::Message &msg, double timeout) // timeout 0.0 means blocking
   {
     Receiver next;
-	qpid::messaging::Message	qmsg;
-	cout << "waiting for message..." << endl;
+	qpid::messaging::Message qmsg;
+
+    LOG_DEBUG_STR("[FromBus] Waiting for message");
     if (itsSession.nextReceiver(next,TimeOutDuration(timeout))) {
-		cout << "message available on queue: " << next.getName() << endl;
+        LOG_DEBUG_STR("[FromBus] Message available on queue " << next.getName());
         itsNrMissingACKs++;
         if (next.get(qmsg)) {
 			msg = LOFAR::Message(qmsg);
+            LOG_INFO_STR("[FromBus] Message received on queue " << next.getName() << ": " << msg.short_desc());
 			return true;
-		}
+		} else {
+          LOG_ERROR_STR("[FromBus] Could not retrieve available message on queue " << next.getName());
+        }
     }
     return false;
   }
@@ -92,18 +94,24 @@ namespace LOFAR {
   {
      itsSession.acknowledge(msg.qpidMsg());
      itsNrMissingACKs --;
+
+     LOG_INFO_STR("[FromBus] Message ACK'ed: " << msg.short_desc());
   }
 
   void FromBus::nack(LOFAR::Message &msg)
   {
      itsSession.release(msg.qpidMsg());
      itsNrMissingACKs--;
+
+     LOG_ERROR_STR("[FromBus] Message NACK'ed: " << msg.short_desc());
   }
 
   void FromBus::reject(LOFAR::Message &msg)
   {
      itsSession.reject(msg.qpidMsg());
      itsNrMissingACKs --;
+
+     LOG_ERROR_STR("[FromBus] Message rejected: " << msg.short_desc());
   }
 
   bool FromBus::addQueue(const std::string &address, const std::string &options)
@@ -113,7 +121,8 @@ namespace LOFAR {
         Address addr(queue_prefix()+address+options);
         Receiver receiver = itsSession.createReceiver(addr);
         receiver.setCapacity(1);
-		cout << "Receiver started at queue: " << receiver.getName() << endl;
+
+        LOG_INFO_STR("[FromBus] Receiver started at queue " << receiver.getName());
      } catch(const qpid::types::Exception &ex) {
        //THROW(MessageBusException, ex.what());
        return false;
@@ -125,13 +134,14 @@ namespace LOFAR {
   try:
     itsConnection(broker,"{reconnect:true}")
   {
-     itsConnection.open();
-	 cout << "Connected to: " << itsConnection.getUrl() << endl;
+    LOG_DEBUG_STR("[ToBus] Connecting to broker " << broker);
+    itsConnection.open();
+    LOG_INFO_STR("[ToBus] Connected to broker " << itsConnection.getUrl());
 
-     itsSession = itsConnection.createSession();
-     Address addr(queue_prefix()+address+options);
-     itsSender = itsSession.createSender(addr);
- 	 cout << "Sender created: " << itsSender.getName() << endl;
+    itsSession = itsConnection.createSession();
+    Address addr(queue_prefix()+address+options);
+    itsSender = itsSession.createSender(addr);
+    LOG_INFO_STR("[ToBus] Sender created at queue " << itsSender.getName());
   } catch(const qpid::types::Exception &ex) {
     THROW(MessageBusException, ex.what());
   }
@@ -153,11 +163,13 @@ namespace LOFAR {
   {
     LOFAR::Message tosend(msg);
     itsSender.send(tosend.qpidMsg(), true);
+    LOG_INFO_STR("[ToBus] Message sent to queue " << itsSender.getName() << ": " << msg.short_desc());
   }
 
   void ToBus::send(LOFAR::Message& msg)
   {
     itsSender.send(msg.qpidMsg(), true);
+    LOG_INFO_STR("[ToBus] Message sent to queue " << itsSender.getName() << ": " << msg.short_desc());
   }
 
 } // namespace LOFAR

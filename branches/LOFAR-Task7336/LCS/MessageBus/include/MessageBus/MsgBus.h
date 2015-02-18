@@ -35,6 +35,7 @@
 #include <MessageBus/Message.h>
 
 #include <map>
+#include <string>
 
 namespace LOFAR {
 
@@ -63,7 +64,6 @@ private:
   qpid::messaging::Session    itsSession;
 
   int itsNrMissingACKs;
-
 };
 
 class ToBus
