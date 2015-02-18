@@ -18,7 +18,12 @@
 #
 # id.. TDB
 
-import qpid.messaging
+try:
+  import qpid.messaging
+  enabled = True
+except ImportError:
+  enabled = False
+
 import os
 import lofar.messagebus.message as message
 
