@@ -31,39 +31,83 @@ function have_qpid() {
 # A list of all queues we created
 CREATED_QUEUES=""
 
+function _get_host() {
+  #  input = host:queue -> output = host
+  #  input = queue      -> output = ''
+  HOSTQUEUE="$1"
+
+  echo "$HOSTQUEUE" | perl -ne 'print $1 if /(.*):/;'
+}
+function _get_queue() {
+  #  input = host:queue -> output = queue
+  #  input = queue      -> output = queue
+  HOSTQUEUE="$1"
+
+  echo "$HOSTQUEUE" | perl -ne 'print "$1$2" if /:(.*)|^([^:\n]*)$/;'
+}
+
+function _qpid_receive() {
+  HOSTQUEUE="$1"
+  OPTIONS="$2"
+  shift 2
+
+  QUEUE="`_get_queue "$HOSTQUEUE"`"
+  HOST="`_get_host "$HOSTQUEUE"`"
+
+  if [ "$HOST" == "" ]; then
+    HOST=127.0.0.1
+  fi
+
+  if have_qpid; then
+    @QPID_RECEIVE_EXECUTABLE@ \
+        -b "$HOST" \
+        -a "$QUEUE_PREFIX$QUEUE$OPTIONS" "$@"
+  fi
+}
+
+function _qpid_send() {
+  HOSTQUEUE="$1"
+  OPTIONS="$2"
+  shift 2
+
+  QUEUE="`_get_queue "$HOSTQUEUE"`"
+  HOST="`_get_host "$HOSTQUEUE"`"
+
+  if [ "$HOST" == "" ]; then
+    HOST=127.0.0.1
+  fi
+
+  if have_qpid; then
+    @QPID_SEND_EXECUTABLE@ \
+        -b "$HOST" \
+        -a "$QUEUE_PREFIX$QUEUE$OPTIONS" "$@"
+  fi
+}
+
+
 function create_queue() {
   # Creates an empty queue
   #
   # Usage:
-  #   create_queue queue
-  QUEUE_NAME="$1"
+  #   create_queue [host:]queue
+  HOSTQUEUE="$1"
 
-  if have_qpid; then
-    @QPID_RECEIVE_EXECUTABLE@ \
-      -b 127.0.0.1 \
-      -a "$QUEUE_PREFIX$QUEUE_NAME; { create: always }" \
-      --print-content no --ignore-reply-to
-  fi
+  _qpid_receive "$HOSTQUEUE" "; { create: always }" --print-content no --ignore-reply-to
 
   # Update the list of queues we created
-  CREATED_QUEUES="$CREATED_QUEUES $QUEUE_NAME"
+  CREATED_QUEUES="$CREATED_QUEUES $HOSTQUEUE"
 }
 
 function delete_queue() {
   # Empties and deletes a queue
   #
   # Usage:
-  #   delete_queue queue
+  #   delete_queue [host:]queue
   #
   # Will not remove used queues
-  QUEUE_NAME="$1"
+  HOSTQUEUE="$1"
 
-  if have_qpid; then
-    @QPID_RECEIVE_EXECUTABLE@ \
-      -b 127.0.0.1 \
-      -a "$QUEUE_PREFIX$QUEUE_NAME; { delete: always }" \
-      --print-content no --ignore-reply-to
-  fi
+  _qpid_receive "$HOSTQUEUE" "; { delete: always }" --print-content no --ignore-reply-to
 }
 
 function delete_all_queues() {
@@ -84,52 +128,35 @@ function recv_msg() {
   # Retrieves one message from a queue
   #
   # Usage:
-  #   recv_msg queue > message
+  #   recv_msg [host:]queue > message
   #
   # Returns an empty message if none was available
-  QUEUE_NAME="$1"
+  HOSTQUEUE="$1"
 
-  if have_qpid; then
-    @QPID_RECEIVE_EXECUTABLE@ \
-      -b 127.0.0.1 \
-      -a "$QUEUE_PREFIX$QUEUE_NAME" \
-      --ignore-reply-to \
-      -m 1
-  fi
+  _qpid_receive "$HOSTQUEUE" "" --ignore-reply-to -m 1
 }
 
 function recv_all_msgs() {
   # Retrieves all messages from a queue
   #
   # Usage:
-  #   recv_all_msgs queue > messages
+  #   recv_all_msgs [host:]queue > messages
   #
   # Returns an empty message if none was available
-  QUEUE_NAME="$1"
+  HOSTQUEUE="$1"
 
-  if have_qpid; then
-    @QPID_RECEIVE_EXECUTABLE@ \
-      -b 127.0.0.1 \
-      -a "$QUEUE_PREFIX$QUEUE_NAME" \
-      --ignore-reply-to \
-      -m 0
-  fi
+  _qpid_receive "$HOSTQUEUE" "" --ignore-reply-to -m 0
 }
 
 function send_msg() {
   # Send one message to a queue
   #
   # Usage:
-  #   send_msg queue message
-  QUEUE_NAME="$1"
+  #   send_msg [host:]queue message
+  HOSTQUEUE="$1"
   MESSAGE="$2"
 
-  if have_qpid; then
-    @QPID_SEND_EXECUTABLE@ \
-      -b 127.0.0.1 \
-      -a "$QUEUE_PREFIX$QUEUE_NAME" \
-      --content-string "$MESSAGE" 
-  fi
+  _qpid_send "$HOSTQUEUE" "" --content-string "$MESSAGE"
 }
 
 function compare_msg() {
