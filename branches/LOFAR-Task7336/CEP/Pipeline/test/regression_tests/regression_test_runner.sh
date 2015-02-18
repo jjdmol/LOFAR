@@ -188,6 +188,12 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 REGRESSION_TEST_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
+# setup the qpid environment (is a no-op if qpid is not installed)
+source $WORKSPACE/bin/MessageFuncs.sh
+create_queue lofar.task.feedback.dataproducts
+create_queue lofar.task.feedback.processing
+create_queue lofar.task.feedback.state
+
 # run the regression test for the pipeline: provide all the files in the directory
 DELTA=0.0001
 python $"$REGRESSION_TEST_DIR/$PIPELINE"_test.py $WORKING_DIR/target_data/host1/* $WORKING_DIR/output_data/host1/* $DELTA || { echo $"regressiontest failed on data in dir $WORKING_DIR/output_data/host1" ; exit 1; }

@@ -15,7 +15,7 @@ from lofarpipe.support.stateful import StatefulRecipe
 from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.xmllogging import get_active_stack
 from lofar.parameterset import parameterset
-from lofar.messagebus.msgbus import ToBus
+import lofar.messagebus.msgbus
 from lofar.messagebus.protocols.taskfeedbackdataproducts import TaskFeedbackDataproducts
 from lofar.messagebus.protocols.taskfeedbackprocessing import TaskFeedbackProcessing
 from lofar.messagebus.protocols.taskfeedbackstate import TaskFeedbackState
@@ -56,16 +56,17 @@ class control(StatefulRecipe):
         `feedback` must be a parameterset
         """
 
-        bus = ToBus("lofar.task.feedback.processing")
-        msg = TaskFeedbackProcessing(
-          "lofarpipe.support.control",
-          "",
-          "Processing feedback from the pipeline framework",
-          self.momID,
-          self.sasID,
-          feedback)
+        if self.feedback_method == "messagebus":
+          bus = lofar.messagebus.msgbus.ToBus("lofar.task.feedback.processing")
+          msg = TaskFeedbackProcessing(
+            "lofarpipe.support.control",
+            "",
+            "Processing feedback from the pipeline framework",
+            self.momID,
+            self.sasID,
+            feedback)
 
-        bus.send(msg)
+          bus.send(msg)
 
     def send_feedback_dataproducts(self, feedback):
         """
@@ -74,16 +75,17 @@ class control(StatefulRecipe):
         `feedback` must be a parameterset
         """
 
-        bus = ToBus("lofar.task.feedback.dataproduct")
-        msg = TaskFeedbackDataproducts(
-          "lofarpipe.support.control",
-          "",
-          "Dataproduct feedback from the pipeline framework",
-          self.momID,
-          self.sasID,
-          feedback)
+        if self.feedback_method == "messagebus":
+          bus = lofar.messagebus.msgbus.ToBus("lofar.task.feedback.dataproduct")
+          msg = TaskFeedbackDataproducts(
+            "lofarpipe.support.control",
+            "",
+            "Dataproduct feedback from the pipeline framework",
+            self.momID,
+            self.sasID,
+            feedback)
 
-        bus.send(msg)
+          bus.send(msg)
 
     def _send_feedback_status(self, status):
         """
@@ -93,16 +95,17 @@ class control(StatefulRecipe):
         indicates failure.
         """
 
-        bus = ToBus("lofar.task.feedback.state")
-        msg = TaskFeedbackState(
-          "lofarpipe.support.control",
-          "",
-          "Status feedback from the pipeline framework",
-          self.momID,
-          self.sasID,
-          status == 0)
+        if self.feedback_method == "messagebus":
+          bus = lofar.messagebus.msgbus.ToBus("lofar.task.feedback.state")
+          msg = TaskFeedbackState(
+            "lofarpipe.support.control",
+            "",
+            "Status feedback from the pipeline framework",
+            self.momID,
+            self.sasID,
+            status == 0)
 
-        bus.send(msg)
+          bus.send(msg)
 
     def pipeline_logic(self):
         """
@@ -127,12 +130,23 @@ class control(StatefulRecipe):
         # we can call our parent now that we have a job_name
         super(control, self).go()
 
+        # we now have a self.config -- read our settings
+        try:
+          self.feedback_method = self.config.get('feedback', 'method')
+        except:
+          self.feedback_method = "messagebus"
+
+        if self.feedback_method == "messagebus" and not lofar.messagebus.msgbus.enabled:
+          self.logger.error("Feedback over messagebus requested, but messagebus support is not enabled or functional")
+          return 1
+
         # Pull several parameters from the parset
         self.momID = self.parset.getString("ObsSW.Observation.momID", "")  # Note: 0 if obs was copied in Scheduler
         self.sasID = self.parset.getString("ObsSW.Observation.otdbID", "") # SAS ID
 
         # Start the pipeline
         self.logger.info("LOFAR Pipeline (%s) starting." % self.name)
+        self.logger.info("SASID = %s, MOMID = %s, Feedback method = %s" % (self.sasID, self.momID, self.feedback_method))
 
         try:
             self.pipeline_logic()
