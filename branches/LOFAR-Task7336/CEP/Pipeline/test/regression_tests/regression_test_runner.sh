@@ -190,9 +190,13 @@ REGRESSION_TEST_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 # setup the qpid environment (is a no-op if qpid is not installed)
 source $WORKSPACE/bin/MessageFuncs.sh
-create_queue lofar.task.feedback.dataproducts
-create_queue lofar.task.feedback.processing
 create_queue lofar.task.feedback.state
+create_queue $HOST1:lofar.task.feedback.dataproducts
+create_queue $HOST1:lofar.task.feedback.processing
+if [ $SECONDHOST == true ]; then
+  create_queue $HOST2:lofar.task.feedback.dataproducts
+  create_queue $HOST2:lofar.task.feedback.processing
+fi
 
 # run the regression test for the pipeline: provide all the files in the directory
 DELTA=0.0001
