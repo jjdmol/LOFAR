@@ -51,6 +51,9 @@ if [ "${use_pulp}" == "Pulsar Pipeline" ]; then
 fi
 echo "Initializing Lofar" >> ${logFile}
 use Lofar
+echo "Initializing QPID" >> ${logFile}
+# TODO: implement 'use Qpid'
+source /data/qpid/.profile || source /opt/cep/qpid/.profile || echo "Could NOT load qpid .profile" >> ${logFile}
 
 # Try to reset the environment based on a parset software version value
 
