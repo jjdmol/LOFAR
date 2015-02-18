@@ -163,7 +163,7 @@ namespace LOFAR {
   {
     LOFAR::Message tosend(msg);
     itsSender.send(tosend.qpidMsg(), true);
-    LOG_INFO_STR("[ToBus] Message sent to queue " << itsSender.getName() << ": " << msg.short_desc());
+    LOG_INFO_STR("[ToBus] Message sent to queue " << itsSender.getName() << ": " << tosend.short_desc());
   }
 
   void ToBus::send(LOFAR::Message& msg)
