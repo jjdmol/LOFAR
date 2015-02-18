@@ -66,11 +66,7 @@ class ToBus(Session):
     def __del__(self):
         self.connection.close()
 
-    def send(self, msg, verbatim=False):
-        # (Re)generate the QPID message body
-        if not verbatim:
-            msg.generate_message()
-
+    def send(self, msg):
         try:
             self.sender.send(msg.qpidMsg)
         except qpid.messaging.SessionError, m:

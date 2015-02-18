@@ -71,6 +71,7 @@ class Message(object):
       if qpidMsg is None:
         self.document = xml.parseString(LOFAR_MSG_TEMPLATE)
         self._qpidMsg = qpid.messaging.Message(content_type="text/plain", durable=True)
+        self.dirty    = True
 
         # Set properties provided by constructor
         self.system          = "LOFAR"
@@ -85,7 +86,8 @@ class Message(object):
         self.momid           = momid
         self.sasid           = sasid
       else:
-        self._qpidMsg        = qpidMsg
+        self._qpidMsg = qpidMsg
+        self.dirty    = False
 
         # Set properties by provided qpidMsg
         try:
@@ -180,6 +182,8 @@ class Message(object):
           break;
       else:
         node.appendChild(newchild)
+
+      self.dirty = True
 
     def _getXMLnode(self, name):
       """ Return a node given by its dot-separated path name.
