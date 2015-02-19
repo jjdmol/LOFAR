@@ -151,6 +151,16 @@ sed -i  $"s|input_path2_placeholder|$WORKING_DIR/input_data|g" $"$WORKING_DIR/$P
 sed -i  $"s|output_path1_placeholder|$WORKING_DIR/output_data|g" $"$WORKING_DIR/$PIPELINE.parset"
 sed -i  $"s|output_path2_placeholder|$WORKING_DIR/output_data|g" $"$WORKING_DIR/$PIPELINE.parset"
 
+# setup the qpid environment (is a no-op if qpid is not installed)
+source $WORKSPACE/bin/MessageFuncs.sh
+create_queue lofar.task.feedback.state
+create_queue $HOST1:lofar.task.feedback.dataproducts
+create_queue $HOST1:lofar.task.feedback.processing
+if [ $SECONDHOST == true ]; then
+  create_queue $HOST2:lofar.task.feedback.dataproducts
+  create_queue $HOST2:lofar.task.feedback.processing
+fi
+
 # *********************************************************************
 # 5) Run the pipeline
 echo "Run the pipeline"
@@ -187,16 +197,6 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
   [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
 done
 REGRESSION_TEST_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-
-# setup the qpid environment (is a no-op if qpid is not installed)
-source $WORKSPACE/bin/MessageFuncs.sh
-create_queue lofar.task.feedback.state
-create_queue $HOST1:lofar.task.feedback.dataproducts
-create_queue $HOST1:lofar.task.feedback.processing
-if [ $SECONDHOST == true ]; then
-  create_queue $HOST2:lofar.task.feedback.dataproducts
-  create_queue $HOST2:lofar.task.feedback.processing
-fi
 
 # run the regression test for the pipeline: provide all the files in the directory
 DELTA=0.0001
