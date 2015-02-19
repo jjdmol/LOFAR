@@ -53,19 +53,56 @@ updateBuffer(string dp1, dyn_int node,
       outputProcObject.toolTipText = \"\";
       return;
     }
+
+    // to keep totals    
+    int totdropped = 0;
+    int totwritten = 0;
+    string nodes = \"\";
+    string dpts = \"\";
+    string dirs = \"\";
+    string files = \"\";
+    string writestr = \"\";
+    string droppedstr = \"\";
+    bool totdropping = false;
+    
+    
+    // since the same locusnode might can be used for multiple files 
+    // we need to collect the info for this node in total
+    for (int i = index; i <= dynlen(node); i++) {
+      
+      if (node[i] == locusNode) {
+        if (i <= dynlen(dropped)) {
+          totdropped  += dropped[i];
+          droppedstr  += \" \" + dropped[i];
+        }
+        if (i <= dynlen(written)) {
+          totwritten  += written[i];
+          writestr    += \" \" + written[i];
+        }
+        if (i <= dynlen(dataProductType)) dpts        += \" \" + dataProductType[i];
+        if (i <= dynlen(directory)) dirs        += \" \" + directory[i];
+        if (i <= dynlen(fileName)) files       += \" \" + fileName[i];
+        if (i <= dynlen(dropping)) if (dropping[i]) totdropping = true;
+      }
+    }
+    
     string tooltext = \"Locusnode        : \" + node[index] + 
-                      \"<br>DataproductType  : \" + dataProductType[index] +
-                      \"<br>Directory        : \" + directory[index] + 
-                      \"<br>Filename         : \" + fileName[index] + 
-                      \"<br>Written          : \" + written[index] + 
-                      \"<br>Dropped          : \" + dropped[index];
+                      \"<br>DataproductType  : \" + dpts +
+                      \"<br>Directory        : \" + dirs + 
+                      \"<br>Filename         : \" + files + 
+                      \"<br>Written          : \" + writestr + 
+                      \"<br>Dropped          : \" + droppedstr;
     
     outputProcObject.toolTipText = tooltext;
-                      
+    
     // calc % dropped
-    float percdropped = dropped[index] / (written[index] + dropped[index]) * 100;
+    float percdropped = 0;
+    float total = totwritten + totdropped;
+    if (total > 0.0) { 
+      percdropped = totdropped / (totwritten + totdropped) * 100;
+    }
     outputProcObject.backCol(getColor(percdropped));
-    if (dropping[index]) {
+    if (totdropping) {
       droppingObject.backCol=\"Lofar_broken\";
     } else {
       droppingObject.backCol=\"Lofar_operational\";

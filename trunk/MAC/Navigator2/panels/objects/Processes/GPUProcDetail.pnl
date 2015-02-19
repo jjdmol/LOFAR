@@ -148,7 +148,7 @@ void addSubbands(dyn_int subbands, dyn_float written, dyn_float dropped, bool in
    if (dynlen(oldSubbandRefNames) > 0) {
     clearOldSubbandRefNames();
   }    
-  int xPos_AddSymbol = 220; 
+  int xPos_AddSymbol = 265; 
   int ref = 1;
   string addPanelName    = \"objects/Processes/GPUProcSubbandInfo.pnl\";
   //loop over list and prepare panel with all subband objects   
@@ -207,7 +207,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 0 3 214 17
+E E 0 1 1 2 1 E U  1 E 0 3 259 17
 1 25 0 "" 1
 0
 6 18
@@ -223,7 +223,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 110 -25 1 E 90 30 100 40
+E E 0 1 1 2 1 E 1 0 1 155 -25 1 E 90 30 100 40
 2 20
 "observationName"
 ""
@@ -294,12 +294,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 102 4 162 17
+E E 0 1 1 2 1 E U  0 E 102 4 222 17
 0 2 2 "0s" 0 0 0 192 0 0  102 4 1
 1
 LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
 0 1
-LANG:1 10 beamformed
+LANG:1 23 correlated & beamformer
 0
 LAYER, 1 
 1
