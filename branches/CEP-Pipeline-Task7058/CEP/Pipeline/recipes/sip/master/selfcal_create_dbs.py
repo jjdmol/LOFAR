@@ -11,7 +11,8 @@ import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.data_map import DataMap, MultiDataMap, validate_data_maps
+from lofarpipe.support.data_map import DataMap, MultiDataMap, \
+                                       validate_data_maps, align_data_maps
 
 
 class selfcal_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
@@ -183,11 +184,13 @@ class selfcal_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # Update the skip fields of the four maps. If 'skip' is True in any of
         # these maps, then 'skip' must be set to True in all maps.
-        for w, x, y, s in zip(input_map, output_map, slice_paths_map, source_list_map ):
-            w.skip = x.skip = y.skip = s.skip = ( w.skip or x.skip or
-                                                 y.skip or s.skip )
-        slice_paths_map.iterator = input_map.iterator = DataMap.SkipIterator
-        for (input_item, slice_item, source_list_item) in zip(input_map, slice_paths_map,source_list_map):
+        align_data_maps(input_map, output_map, slice_paths_map, 
+                        source_list_map)
+
+        source_list_map.iterator = slice_paths_map.iterator = \
+               input_map.iterator = DataMap.SkipIterator
+        for (input_item, slice_item, source_list_item) in zip(
+                                  input_map, slice_paths_map,source_list_map):
             host_ms, concat_ms = input_item.host, input_item.file
             host_slice, slice_paths = slice_item.host, slice_item.file
 
