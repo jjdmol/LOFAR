@@ -142,7 +142,7 @@ class dppp(LOFARnodeTCP):
                     temp_parset_filename
                 )
                 try:
-                    working_dir = tempfile.mkdtemp()
+                    working_dir = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
             # ****************************************************************
             # 6. Run ndppp
                     cmd = [executable, temp_parset_filename, '1']

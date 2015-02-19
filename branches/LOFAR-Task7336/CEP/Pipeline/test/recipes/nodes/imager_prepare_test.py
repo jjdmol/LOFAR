@@ -40,9 +40,10 @@ class ImagerPrepareTest(unittest.TestCase):
 
     def setUp(self):
         self.ImagerPrepareTestWrapper = ImagerPrepareTestWrapper()
-        self.test_path = tempfile.mkdtemp()
+        self.test_path = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
 
     def tearDown(self):
+        shutil.rmtree(self.test_path)
         pass
 
     def test__copy_input_files_multi_file(self):
@@ -97,7 +98,7 @@ class ImagerPrepareTest(unittest.TestCase):
         """
         working_dir = ""
 
-        time_slice_dir_path = tempfile.mkdtemp()
+        time_slice_dir_path = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
         slices_per_image = 2
         input_map = [("lce072", "test_file_path1"),
                          ("lce072", "test_file_path2"),
@@ -145,6 +146,8 @@ class ImagerPrepareTest(unittest.TestCase):
                 "time_slice_1.dppp.ms.ndppp.par")).read())
         self.assertTrue(parset_2_output == parset_2_content_expected,
                 "\n{0} != \n{1}".format(parset_2_output, parset_2_content_expected))
+        
+        shutil.rmtree(time_slice_dir_path)
 
 
 if __name__ == "__main__":

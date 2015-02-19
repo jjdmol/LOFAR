@@ -46,9 +46,10 @@ class ImagerCreateDBsTest(unittest.TestCase):
 
     def setUp(self):
         self.imager_create_dbs = ImagerCreateDBsTestWrapper()
-        self.test_path = tempfile.mkdtemp()
+        self.test_path = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
 
     def tearDown(self):
+        shutil.rmtree(self.test_path)
         pass
 
 # New version of gsm: Quick fix to allow tests to succeed
