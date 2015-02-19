@@ -1,10 +1,11 @@
-#                                                       LOFAR PIPELINE FRAMEWORK
+#                                                      LOFAR PIPELINE FRAMEWORK
 #
 #                     Handle data-map file containing Data Product descriptions
-#                                                             Marcel Loose, 2012
-#                                                                loose@astron.nl
-# ------------------------------------------------------------------------------
-
+#                                                            Marcel Loose, 2012
+#                                                               loose@astron.nl
+#                                                            Wouter Klijn, 2015
+#                                                               klijn@astron.nl
+# -----------------------------------------------------------------------------
 """
 This module contains methods to load and store so-called data-map file and
 to iterate over these maps. Data-map file contain a description of the
@@ -96,7 +97,6 @@ class DataMap(object):
                     return value
 
     def __init__(self, data=list(), iterator=iter):
-
         self._data = list()
         self.data = data
         self.iterator = iterator
@@ -157,20 +157,37 @@ class DataMap(object):
         except TypeError:
             raise DataMapError("Failed to validate data map: %s" % repr(data))
 
-class MultiDataMap(DataMap):
-    """
-    Class representing a specialization of data-map, a collection of data
-    products located on the same node, skippable as a set and individually
-    """
-    @DataMap.data.setter
-    def data(self, data):
-        self._set_data(data, dtype=MultiDataProduct)
+    def append(self, data, dtype=DataProduct):
+        """
+        Append an item to the end of the internal storage, allows appending
+        of DataProduct or tuple. Default skip=False
+        """
+        try:
+            if isinstance(data, dtype):                
+                self._data.append(data)
 
+            # tuple
+            elif isinstance(data, tuple):  
+                item = None
+                if len(data) == 3:
+                    # use the DataProduct validation to assure correct types
+                    item = DataProduct(data[0], data[1], data[2])
+                elif len(data) == 2:
+                    item = DataProduct(data[0], data[1], False)
+                else:
+                    raise TypeError("Incorrect size tuple")
+                self._data.append(item)
+            else:
+                raise TypeError
+        except TypeError:
+            raise DataMapError("Failed to append item: %s" % repr(data))
 
-
+          
 class MultiDataProduct(object):
     """
-    Class representing a single data product.
+    Class representing a multi data product. A structure respresenting a list
+    of files on a node with both the node and each file a skip field.
+    'file' skip fields are based on node skip value
     """
     def __init__(self, host, file, skip=True, file_skip=None):
         self.host = str(host)
@@ -221,6 +238,47 @@ class MultiDataProduct(object):
         """Compare for non-equality"""
         return not self.__eq__(other)
 
+
+class MultiDataMap(DataMap):
+    """
+    Class representing a specialization of data-map, a collection of data
+    products located on the same node, skippable as a set and individually
+    """
+    @DataMap.data.setter
+    def data(self, data):
+        self._set_data(data, dtype=MultiDataProduct)
+
+    def append(self, data, dtype=MultiDataProduct):
+        """
+        Append an item to the end of the internal storage, allows appending
+        of DataProduct or tuple. Default skip=True
+        """
+        try:
+            if isinstance(data, dtype):                
+                self._data.append(data)
+
+            # tuple or argument input
+            elif isinstance(data, tuple):  
+                # use the DataProduct validation to assure correct types
+                item = None
+                if len(data) < 2:
+                    raise TypeError("Incorrect number of argument (< 2)")
+                elif len(data) == 2:
+                    item = MultiDataProduct(data[0], data[1])
+                elif len(data) == 3:
+                    item = MultiDataProduct(data[0], data[1], data[2])
+                elif len(data) == 4:
+                    item = MultiDataProduct(data[0], data[1], data[2], data[3])
+                else:
+                    raise TypeError("Incorrect number of argument (> 4)")
+
+                self._data.append(item)
+            else:
+                raise TypeError
+        except TypeError:
+            raise DataMapError("Failed to append item: %s" % repr(data))
+
+      
 @deprecated
 def load_data_map(filename):
     """
@@ -307,7 +365,6 @@ def align_data_maps(*args):
         # Assign the resulting skip field to all the entries
         for entrie in entries:
             entrie.skip = skip
-
 
 
 @deprecated

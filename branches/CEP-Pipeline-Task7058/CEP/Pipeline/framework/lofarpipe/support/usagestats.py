@@ -89,6 +89,7 @@ class UsageStats(threading.Thread):
         self.pid_tracked = []
         self.pid_stats = {}
         self.poll_interval = poll_interval
+        self.poll_counter = poll_interval
         self.temp_path = None
 
         # Write a bash file which will retrieve the needed info from proc
@@ -115,6 +116,15 @@ class UsageStats(threading.Thread):
         Remove the bash script 
         sleep for poll_interval
         """
+        # If the timer waits for the full 10 minutes using scripts
+        # appear halting for lnog durations after ending
+        # poll in a tight wait loop to allow quick stop
+        if self.poll_counter < self.poll_interval:
+            self.poll_counter += 1
+            sleep(1)
+            return
+
+        self.poll_counter = 0
         while not self.stopFlag.isSet():
             # *************************************
             # first add new to track pids to the active list
@@ -154,8 +164,6 @@ class UsageStats(threading.Thread):
                 except ValueError:  # key does not exist (should not happen)
                     pass
             self.pid_out = []  # reset the outlist
-
-            time.sleep(self.poll_interval)
 
     def addPID(self, pid):
         """

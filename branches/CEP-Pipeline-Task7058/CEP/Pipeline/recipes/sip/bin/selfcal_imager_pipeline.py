@@ -16,7 +16,8 @@ import copy
 from lofarpipe.support.control import control
 from lofarpipe.support.utilities import create_directory
 from lofarpipe.support.lofarexceptions import PipelineException
-from lofarpipe.support.data_map import DataMap, validate_data_maps, MultiDataMap
+from lofarpipe.support.data_map import DataMap, validate_data_maps,\
+                                       MultiDataMap, align_data_maps
 from lofarpipe.support.utilities import patch_parset, get_parset
 from lofarpipe.support.loggingdecorators import xml_node, mail_log_on_exception
 
@@ -356,6 +357,10 @@ class selfcal_imager_pipeline(control):
                     dps.getStringVector('Output_Correlated.filenames'),
                     dps.getBoolVector('Output_Correlated.skip'))
         ])
+
+        # assure that the two output maps contain the same skip fields
+        align_data_maps( self.output_data, self.output_correlated_data)
+
         self.logger.debug("%d Output_Correlated data products specified" %
                           len(self.output_correlated_data))
 

@@ -130,6 +130,7 @@ class selfcal_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         """
         super(selfcal_prepare, self).go()
         self.logger.info("Starting selfcal_prepare run")
+        job_directory = self.config.get("layout", "job_directory")
         # *********************************************************************
         # input data     
         input_map = DataMap.load(self.inputs['args'][0])
@@ -152,7 +153,8 @@ class selfcal_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
 
         jobs = []
         paths_to_image_mapfiles = []
-        n_subband_groups = len(output_map)
+        n_subband_groups = len(output_map)  # needed for subsets in sb list
+
         for idx_sb_group, item in enumerate(output_map):
             #create the input files for this node
             self.logger.debug("Creating input data subset for processing"
@@ -163,13 +165,20 @@ class selfcal_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
                                 subbands_per_image, idx_sb_group, input_map)
 
             # Save the mapfile
-            job_directory = self.config.get(
-                            "layout", "job_directory")
             inputs_for_image_mapfile_path = os.path.join(
                job_directory, "mapfiles",
                "ms_per_image_{0}".format(idx_sb_group))
+
             self._store_data_map(inputs_for_image_mapfile_path,
                                 inputs_for_image_map, "inputmap for location")
+
+            # skip the current step if skip is set, cannot use skip due to 
+            # the enumerate: dependency on the index in the map
+            if item.skip == True:
+                # assure that the mapfile is correct
+                paths_to_image_mapfiles.append(
+                    tuple([item.host, inputs_for_image_mapfile_path, True]))
+                continue
 
             #save the (input) ms, as a list of  mapfiles
             paths_to_image_mapfiles.append(
@@ -206,6 +215,8 @@ class selfcal_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         slices = []
         finished_runs = 0
         #scan the return dict for completed key
+        # Remember that jobs were skipped
+        concat_ms.iterator = DataMap.SkipIterator
         for (item, job) in zip(concat_ms, jobs):
             # only save the slices if the node has completed succesfull
             if job.results["returncode"] == 0:
