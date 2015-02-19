@@ -150,6 +150,8 @@ class Message(object):
       if self.dirty:
         self._qpidMsg.content = self.document.toxml()
 
+      return self._qpidMsg
+
     """ XML support functions. See also lofarpipe/support/xmllogging.py. """
 
     def _get_child(self, node, name):

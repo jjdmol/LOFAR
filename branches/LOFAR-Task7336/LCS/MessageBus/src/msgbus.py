@@ -68,7 +68,7 @@ class ToBus(Session):
 
     def send(self, msg):
         try:
-            self.sender.send(msg.qpidMsg)
+            self.sender.send(msg.qpidMsg())
         except qpid.messaging.SessionError, m:
             raise BusException(m)
 
