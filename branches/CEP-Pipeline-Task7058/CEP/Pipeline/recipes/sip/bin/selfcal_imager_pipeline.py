@@ -221,8 +221,6 @@ class selfcal_imager_pipeline(control):
             item.file = ""             # set all to empty string
         source_list_map.save(source_list_map_path)
 
-
-        
         for idx_loop in range(number_of_major_cycles):
             # *****************************************************************
             # (2) Create dbs and sky model

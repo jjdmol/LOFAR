@@ -238,23 +238,39 @@ class selfcal_prepare(LOFARnodeTCP):
             time_slice_path = os.path.join(time_slice_dir_path,
                                          output_ms_name)
 
-            # convert the datamap to a file list: Do not remove skipped files:
-            # ndppp needs the incorrect files there to allow filling with zeros
-            ndppp_input_ms = [item.file for item in input_map_subgroup]
-
-            # Automatically average the number of channels in the output to 1
-            # open the dataset
-            table = pt.table(ndppp_input_ms)  # assume same nchan for all sb
+            # convert the datamap to a file list: Add nonfalid entry for
+            # skipped files: ndppp needs the incorrect files there to allow 
+            # filling with zeros           
+            ndppp_input_ms = []
+            nchan_known = False
+            for item in input_map_subgroup:
+                if item.skip:
+                    ndppp_input_ms.append("SKIPPEDSUBBAND")
+                else:
+                    ndppp_input_ms.append(item.file)
+                    
+                    # From the first non skipped filed get the nchan
+                    if not nchan_known:
+                        # Automatically average the number of channels in 
+                        # the output to 1
+                        # open the datasetassume same nchan for all sb
+                        table = pt.table(item.file)  # 
             
-            # get the data column, get description, get the shape, first index 
-            # returns the number of channels
-            nchan_input = str(pt.tablecolumn(
-                                       table, 'DATA').getdesc()["shape"][0])            
+                        # get the data column, get description, get the shape,
+                        # first index returns the number of channels
+                        nchan_input = str(pt.tablecolumn(
+                                       table, 'DATA').getdesc()["shape"][0])
+                        nchan_known = True
+            
+            # if none of the input files was valid, skip the creation of the 
+            # timeslice all together, it will not show up in the timeslice 
+            # mapfile
+            if not nchan_known:
+                continue
+        
             ndppp_nchan_key = "avg1.freqstep"  # TODO/FIXME: dependency on the step name!!!!
             
-            # TODO: Corrupt subbands should be skipped here with 
-            # NONEXISTINGSKIPPEDSUBBAND as a subband name (NDPPP will fill 0s)
-            # Join into a single list of paths.
+            # Join into a single string list of paths.
             msin = "['{0}']".format("', '".join(ndppp_input_ms))
             
             # Update the parset with computed parameters

@@ -215,9 +215,20 @@ class selfcal_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         slices = []
         finished_runs = 0
         #scan the return dict for completed key
-        # Remember that jobs were skipped
-        concat_ms.iterator = DataMap.SkipIterator
-        for (item, job) in zip(concat_ms, jobs):
+        # loop over the potential jobs including the skipped
+        # If we have a skipped item, add the item to the slices with skip set
+        jobs_idx = 0
+        for item in concat_ms: 
+            # If this is an item that is skipped via the skip parameter in 
+            # the parset, append a skipped             
+            if item.skip:    
+                slices.append(tuple([item.host, ["/skipped"], True]))
+                continue
+
+            # we cannot use the skip iterator so we need to manually get the
+            # current job from the list
+            job = jobs[jobs_idx]
+
             # only save the slices if the node has completed succesfull
             if job.results["returncode"] == 0:
                 finished_runs += 1
@@ -230,6 +241,9 @@ class selfcal_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
                 msg = "Failed run on {0}. NOT Created: {1} ".format(
                     item.host, item.file)
                 self.logger.warn(msg)
+
+            # we have a non skipped workitem, increase the job idx
+            jobs_idx += 1
 
         if finished_runs == 0:
             self.logger.error("None of the started compute node finished:"
