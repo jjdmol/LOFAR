@@ -23,6 +23,7 @@ function _generate_prefix() {
 
 # Generate an unique prefix for all queues in this test
 export QUEUE_PREFIX=`_generate_prefix`
+echo "MessageBus: QUEUE_PREFIX=$QUEUE_PREFIX"
 
 function have_qpid() {
   [ "@HAVE_QPID@" == "TRUE" ]
@@ -92,6 +93,8 @@ function create_queue() {
   #   create_queue [host:]queue
   HOSTQUEUE="$1"
 
+  echo "MessageBus: Creating queue $HOSTQUEUE"
+
   _qpid_receive "$HOSTQUEUE" "; { create: always }" --print-content no --ignore-reply-to
 
   # Update the list of queues we created
@@ -106,6 +109,8 @@ function delete_queue() {
   #
   # Will not remove used queues
   HOSTQUEUE="$1"
+
+  echo "MessageBus: Deleting queue $HOSTQUEUE"
 
   _qpid_receive "$HOSTQUEUE" "; { delete: always }" --print-content no --ignore-reply-to
 }
