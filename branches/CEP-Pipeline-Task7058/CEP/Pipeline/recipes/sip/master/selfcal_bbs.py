@@ -146,13 +146,23 @@ class selfcal_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
         # **********************************************************************
         # 3. validate the node output and construct the output mapfile.
         if self.error.isSet():   #if one of the nodes failed
-            self.logger.error("One of the nodes failed while performing"
-                              "a BBS run. Aborting: concat.ms corruption")
-            return 1
+            self.logger.warn("Failed bbs node run detected, skipping work"
+                             "on this work item for further computations")
+
+        # find failed job and set the skip field
+        for (ms_item, concat_item, job) in zip(ms_map, concat_ms_map, jobs):
+            if job.results["returncode"] == 0:
+                continue
+            else:
+                ms_item.skip = True
+                concat_item.skip = True
+                self.logger.warn("bbs failed on item: {0}".format(ms_item.file))
 
         # return the output: The measurement set that are calibrated:
-        # calibrated data is placed in the ms sets
+        # calibrated data is placed in the ms sets        
         MultiDataMap(ms_map).save(self.inputs['mapfile'])
+        # also save the concat_ms map with possible skips
+        DataMap(concat_ms_map).save(self.inputs['concat_ms_map_path'])
         self.logger.info("Wrote file with  calibrated data")
 
         self.outputs['mapfile'] = self.inputs['mapfile']
