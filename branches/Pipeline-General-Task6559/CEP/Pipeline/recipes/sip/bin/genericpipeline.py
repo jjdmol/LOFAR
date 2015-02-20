@@ -173,9 +173,7 @@ class GenericPipeline(control):
                                                     inputargs,
                                                     **inputdict)
             resultdicts[stepname] = resultdict
-            print 'RESULTDICT: ', resultdict
-            #print 'RESULTDICTS: ', resultdicts
-
+            #print 'RESULTDICT: ', resultdict
             # breaking the loopstep
             # if the step has the keyword for loopbreaks assign the value
             if resultdict is not None and 'break' in resultdict:
@@ -193,13 +191,33 @@ class GenericPipeline(control):
     # that value gets assigned to 'sky_mapfile' of step with the name bbsreducer
     # code is somewhat double... need to think of some fancy method with reusabilty
     def _construct_input(self, inoutdict, controlparset, resdicts):
+        import array
+        import copy
         argsparset = controlparset.makeSubset(controlparset.fullModuleName('opts') + '.')
         for k in argsparset.keys():
-            if argsparset.getString(k).__contains__('.output.'):
-                step, outvar = argsparset.getString(k).split('.output.')
-                inoutdict[k] = resdicts[step][outvar]
+            keystring = argsparset.getString(k)
+            if keystring.__contains__('.output.'):
+                if keystring.__contains__(','):
+                    keystring = keystring.rstrip(']')
+                    keystring = keystring.lstrip('[')
+                    vec = []
+                    for item in keystring.split(','):
+                        if item.__contains__('.output.'):
+                            step, outvar = item.split('.output.')
+                            vec.append(resdicts[step][outvar])
+                    inoutdict[k] = vec
+                else:
+                    step, outvar = argsparset.getString(k).split('.output.')
+                    inoutdict[k] = resdicts[step][outvar]
             else:
                 inoutdict[k] = argsparset.getString(k)
+
+            # if argsparset.getString(k).__contains__('.output.'):
+            #     print argsparset.getString(k).split('.output.')
+            #     step, outvar = argsparset.getString(k).split('.output.')
+            #     inoutdict[k] = resdicts[step][outvar]
+            # else:
+            #     inoutdict[k] = argsparset.getString(k)
 
     def _construct_cmdline(self, inoutargs, controlparset, resdicts):
         argsparset = controlparset.makeSubset(controlparset.fullModuleName('cmdline') + '.')

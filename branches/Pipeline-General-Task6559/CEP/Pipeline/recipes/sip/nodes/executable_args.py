@@ -62,7 +62,6 @@ class executable_args(LOFARnodeTCP):
                     else:
                         raise
 
-            print 'KWARGS: ', kwargs
             if not parsetasfile:
                 for k, v in kwargs.items():
                     args.append('--' + k + '=' + v)
@@ -73,11 +72,6 @@ class executable_args(LOFARnodeTCP):
                     nodeparset.add(k, v)
                 nodeparset.writeFile(parsetname)
                 args.insert(0, parsetname)
-                #subpar = Parset()
-                subpar = nodeparset.makeSubset(nodeparset.fullModuleName('casa') + '.')
-                print 'SUBPAR: ',subpar.keys()
-                for k in subpar.keys():
-                    print 'SUBPARSET: ',k ,' ',subpar[k]
 
             try:
             # ****************************************************************

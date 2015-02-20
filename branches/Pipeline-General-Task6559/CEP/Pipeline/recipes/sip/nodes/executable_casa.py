@@ -11,6 +11,7 @@ import os
 import shutil
 import sys
 import errno
+import tempfile
 
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.pipelinelogging import log_time
@@ -101,6 +102,12 @@ class executable_casa(LOFARnodeTCP):
                     casastring += ')\n'
                 #print 'CASASTRING:'
                 #print casastring
+                # 1) return code of a casapy is not properly recognized by the pipeline
+                # wrapping in shellscript works for succesful runs.
+                # failed runs seem to hang the pipeline...
+                # 2) casapy can not have two instances running from the same directory.
+                # create tmp dirs
+                casapydir = tempfile.mkdtemp(dir=work_dir)
                 casafilename = os.path.join(work_dir, os.path.basename(infile) + '.casacommand.py')
                 casacommandfile = open(casafilename, 'w')
                 casacommandfile.write(casastring)
@@ -132,13 +139,13 @@ class executable_casa(LOFARnodeTCP):
                 #cmd = [executable] + args
                 cmd = [somename]
                 with CatchLog4CPlus(
-                    work_dir,
+                    casapydir,
                     self.logger.name + "." + os.path.basename(infile),
                     os.path.basename(executable),
                 ) as logger:
                     # Catch segfaults and retry
                     catch_segfaults(
-                        cmd, work_dir, self.environment, logger
+                        cmd, casapydir, self.environment, logger
                     )
             except CalledProcessError, err:
                 # CalledProcessError isn't properly propagated by IPython
