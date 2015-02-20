@@ -25,6 +25,7 @@ except ImportError:
   enabled = False
 
 import os
+import signal
 import lofar.messagebus.message as message
 
 # Candidate for a config file
@@ -46,7 +47,17 @@ class Session:
             raise BusException(m)
 
     def __del__(self):
-        self.connection.close()
+        # NOTE: session.close() freezes under certain error conditions,
+        # f.e. opening a receiver on a non-existing queue.
+        # This seems to happen whenever a Python exception was thrown
+        # by the qpid wrapper.
+        #
+        # We set a timeout to prevent freezing, which obviously leads
+        # to data loss if the stall was legit.
+        try:
+          self.connection.close(5.0)
+        except qpid.messaging.exceptions.Timeout, t:
+          raise BusException(t)
 
     def address(self, queue, options):
         return "%s%s; {%s}" % (self._queue_prefix(), queue, options)
