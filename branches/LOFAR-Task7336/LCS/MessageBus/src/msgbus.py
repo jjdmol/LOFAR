@@ -63,9 +63,6 @@ class ToBus(Session):
         except qpid.messaging.MessagingError, m:
             raise BusException(m)
 
-    def __del__(self):
-        self.connection.close()
-
     def send(self, msg):
         try:
             self.sender.send(msg.qpidMsg())
