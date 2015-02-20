@@ -1,7 +1,10 @@
 #!/bin/bash -eu
 
+# Note: this script is derived from the QPID build procedure
+# described on http://www.lofar.org/wiki/doku.php?id=qpid:build
+
 # We need to be lofarbuild to have the proper writing rights
-#[ "`whoami`" == "lofarbuild" ]
+[ "`whoami`" == "lofarbuild" ]
 
 # Download location for the latest QPID source
 PROTON_SOURCE="http://svn.apache.org/repos/asf/qpid/proton/branches/0.8"
@@ -17,8 +20,8 @@ QPID_INSTALLDIR=/localhome/lofar/qpid
 echo "Configuring PROTON and QPID..."
 mkdir -p $QPID_INSTALLDIR
 
-QPIDDIR=`mktemp -d`
-pushd $QPIDDIR >/dev/null
+QPID_BUILDDIR=`mktemp -d`
+pushd $QPID_BUILDDIR >/dev/null
 
 echo "  Downloading PROTON..."
 svn co $PROTON_SOURCE proton >/dev/null
@@ -27,7 +30,7 @@ echo "  Configuring PROTON..."
 pushd proton >/dev/null
 mkdir build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX=$QPID_INSTALLDIR .. > cmake.log
+cmake -DCMAKE_INSTALL_PREFIX=$QPID_INSTALLDIR -DBUILD_PERL=OFF .. > cmake.log
 
 echo "  Building PROTON..."
 make -j 8 > make.log
@@ -35,7 +38,7 @@ make -j 8 > make.log
 echo "  Installing PROTON..."
 make -j 8 install > make_install.log
 
-# back to QPIDDIR
+# back to QPID_BUILDDIR
 popd >/dev/null
 
 echo "  Downloading QPID..."
@@ -53,7 +56,7 @@ make -j 8 > make.log
 echo "  Installing QPID C bindings..."
 make -j 8 install > make_install.log
 
-# back to QPIDDIR
+# back to QPID_BUILDDIR
 popd >/dev/null
 
 echo "  Building and installing QPID Python bindings..."
@@ -83,5 +86,5 @@ EOF
 
 echo "  Cleaning up..."
 popd >/dev/null
-rm -rf "$QPIDDIR"
+rm -rf "$QPID_BUILDDIR"
 
