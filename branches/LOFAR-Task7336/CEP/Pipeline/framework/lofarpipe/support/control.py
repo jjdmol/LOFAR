@@ -76,7 +76,7 @@ class control(StatefulRecipe):
         """
 
         if self.feedback_method == "messagebus":
-          bus = lofar.messagebus.msgbus.ToBus("lofar.task.feedback.dataproduct")
+          bus = lofar.messagebus.msgbus.ToBus("lofar.task.feedback.dataproducts")
           msg = TaskFeedbackDataproducts(
             "lofarpipe.support.control",
             "",
