@@ -116,16 +116,18 @@ class UsageStats(threading.Thread):
         Remove the bash script 
         sleep for poll_interval
         """
-        # If the timer waits for the full 10 minutes using scripts
-        # appear halting for lnog durations after ending
-        # poll in a tight wait loop to allow quick stop
-        if self.poll_counter < self.poll_interval:
-            self.poll_counter += 1
-            time.sleep(1)
-            return
-
-        self.poll_counter = 0
         while not self.stopFlag.isSet():
+            # If the timer waits for the full 10 minutes using scripts
+            # appear halting for lnog durations after ending
+            # poll in a tight wait loop to allow quick stop
+            if self.poll_counter < self.poll_interval:
+                self.poll_counter += 1
+                time.sleep(1)
+                continue
+
+            # reset the counter to zero
+            self.poll_counter = 0           
+
             # *************************************
             # first add new to track pids to the active list
             # in a lock to assure correct functioning
