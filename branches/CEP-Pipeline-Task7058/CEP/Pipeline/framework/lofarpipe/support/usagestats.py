@@ -121,7 +121,7 @@ class UsageStats(threading.Thread):
         # poll in a tight wait loop to allow quick stop
         if self.poll_counter < self.poll_interval:
             self.poll_counter += 1
-            sleep(1)
+            time.sleep(1)
             return
 
         self.poll_counter = 0
