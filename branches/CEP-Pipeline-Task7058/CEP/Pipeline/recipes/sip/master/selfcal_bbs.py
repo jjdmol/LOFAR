@@ -9,7 +9,8 @@ import os
 
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.baserecipe import BaseRecipe
-from lofarpipe.support.data_map import DataMap, MultiDataMap, validate_data_maps
+from lofarpipe.support.data_map import DataMap, MultiDataMap, \
+                                      validate_data_maps, align_data_maps
 import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.remotecommand import ComputeJob
 
@@ -99,9 +100,7 @@ class selfcal_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # Update the skip fields of the four maps. If 'skip' is True in any of
         # these maps, then 'skip' must be set to True in all maps.
-        for w, x, y, c in zip(ms_map, parmdb_map, sourcedb_map, concat_ms_map):
-            w.skip = x.skip = y.skip = c.skip = (
-                w.skip or x.skip or y.skip or c.skip )
+        align_data_maps(ms_map, parmdb_map, sourcedb_map, concat_ms_map)
 
         ms_map.iterator = parmdb_map.iterator = sourcedb_map.iterator = \
             concat_ms_map.iterator = DataMap.SkipIterator

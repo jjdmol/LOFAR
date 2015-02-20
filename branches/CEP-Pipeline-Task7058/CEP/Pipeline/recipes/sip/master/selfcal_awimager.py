@@ -12,7 +12,8 @@ import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.data_map import DataMap, validate_data_maps
+from lofarpipe.support.data_map import DataMap, validate_data_maps,\
+                                       align_data_maps
 
 class selfcal_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
     """
@@ -127,10 +128,7 @@ class selfcal_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         jobs = []
 
         output_map = copy.deepcopy(input_map)        
-        for w, x, y in zip(input_map, output_map, sourcedb_map):
-            w.skip = x.skip = y.skip = (
-                w.skip or x.skip or y.skip
-            )
+        align_data_maps(input_map, output_map, sourcedb_map)
 
         sourcedb_map.iterator = input_map.iterator = output_map.iterator = \
             DataMap.SkipIterator
@@ -186,7 +184,7 @@ class selfcal_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
 
         if not succesfull_runs:
             self.logger.error(
-                    "None of the starter awimager run finished correct")
+                    "None of the started awimager run finished correct")
             self.logger.error(
                     "No work left to be done: exiting with error status")
             return 1
