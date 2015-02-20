@@ -154,12 +154,8 @@ sed -i  $"s|output_path2_placeholder|$WORKING_DIR/output_data|g" $"$WORKING_DIR/
 # setup the qpid environment (is a no-op if qpid is not installed)
 source $WORKSPACE/bin/MessageFuncs.sh
 create_queue lofar.task.feedback.state
-create_queue $HOST1:lofar.task.feedback.dataproducts
-create_queue $HOST1:lofar.task.feedback.processing
-if [ $SECONDHOST == true ]; then
-  create_queue $HOST2:lofar.task.feedback.dataproducts
-  create_queue $HOST2:lofar.task.feedback.processing
-fi
+create_queue lofar.task.feedback.dataproducts
+create_queue lofar.task.feedback.processing
 
 # *********************************************************************
 # 5) Run the pipeline
