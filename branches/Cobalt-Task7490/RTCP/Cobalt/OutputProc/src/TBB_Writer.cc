@@ -52,9 +52,8 @@
 #include <Common/StringUtil.h>
 #include <Common/StreamUtil.h>
 #include <ApplCommon/AntField.h>
-#include <Stream/SocketStream.h>
+#include <Stream/StreamFactory.h>
 #include <CoInterface/Exceptions.h>
-#include <CoInterface/Stream.h>
 
 #include <dal/lofar/StationNames.h>
 
@@ -1061,7 +1060,7 @@ namespace LOFAR
           } catch (exception& exc) {
             LOG_WARN_STR(itsLogPrefix << "may have lost a frame buffer (1): " << exc.what());
           }
-        } catch (Stream::EndOfStreamException& ) { // after end of stream, for input from file or pipe
+        } catch (EndOfStreamException& ) { // after end of stream, for input from file or pipe
           break;
         } catch (exception& exc) {
           LOG_FATAL_STR(itsLogPrefix << exc.what());
