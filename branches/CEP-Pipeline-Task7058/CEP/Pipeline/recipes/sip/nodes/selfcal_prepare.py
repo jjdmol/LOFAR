@@ -42,7 +42,7 @@ class selfcal_prepare(LOFARnodeTCP):
     """
     def run(self, environment, parset, working_dir, processed_ms_dir,
              ndppp_executable, output_measurement_set,
-            time_slices_per_image, subbands_per_group, raw_ms_mapfile,
+            time_slices_per_image, subbands_per_group, input_ms_mapfile,
             asciistat_executable, statplot_executable, msselect_executable,
             rficonsole_executable, add_beam_tables):
         """
@@ -50,7 +50,7 @@ class selfcal_prepare(LOFARnodeTCP):
         """
         self.environment.update(environment)
         with log_time(self.logger):
-            input_map = DataMap.load(raw_ms_mapfile)
+            input_map = DataMap.load(input_ms_mapfile)
 
             #******************************************************************
             # I. Create the directories used in this recipe
@@ -70,14 +70,16 @@ class selfcal_prepare(LOFARnodeTCP):
 
             #******************************************************************
             # 1. Copy the input files
-            copied_ms_map = self._copy_input_files(
+            # processed_ms_map will be the map containing all the 'valid'
+            # input ms
+            processed_ms_map = self._copy_input_files(
                             processed_ms_dir, input_map)
 
             #******************************************************************
             # 2. run dppp: collect frequencies into larger group
             time_slices_path_list = \
                 self._run_dppp(working_dir, time_slice_dir,
-                    time_slices_per_image, copied_ms_map, subbands_per_group,
+                    time_slices_per_image, processed_ms_map, subbands_per_group,
                     processed_ms_dir, parset, ndppp_executable)
 
 
@@ -120,10 +122,18 @@ class selfcal_prepare(LOFARnodeTCP):
             self._concat_timeslices(time_slice_filtered_path_list,
                                     output_measurement_set)
 
+            # *****************************************************************
+            # Write the actually used ms for the created dataset to the input 
+            # mapfile
+            processed_ms_map.save(input_ms_mapfile)
+
             #******************************************************************
             # return
             self.outputs["time_slices"] = \
                 time_slices_path_list
+
+
+
 
         return 0
 
@@ -147,46 +157,47 @@ class selfcal_prepare(LOFARnodeTCP):
         This function collects all the file in the input map in the
         processed_ms_dir Return value is a set of missing files
         """
-        copied_ms_map = copy.deepcopy(input_map)
+        processed_ms_map = copy.deepcopy(input_map)
         # loop all measurement sets
-        for input_item, copied_item in zip(input_map, copied_ms_map):
+        for input_item, copied_item in zip(input_map, processed_ms_map):
             # fill the copied item with the correct data
             copied_item.host = self.host
             copied_item.file = os.path.join(
                     processed_ms_dir, os.path.basename(input_item.file))
 
+            stderrdata = None
             # If we have to skip this ms
             if input_item.skip == True:
-                exit_status = 1  #
+                exit_status = 1  
+                stderrdata = "SKIPPED_FILE"
 
-            # skip the copy if machine is the same (execution on localhost) 
-            # make sure data is in the correct directory. for now: working_dir/[jobname]/subbands
-            #if input_item.host == "localhost":           
-            #    continue
-            # construct copy command
-            command = ["rsync", "-r", "{0}:{1}".format(
-                            input_item.host, input_item.file),
-                               "{0}".format(processed_ms_dir)]
-            if input_item.host == "localhost":
-                command = ["cp", "-r", "{0}".format(input_item.file),
-                                       "{0}".format(processed_ms_dir)]
+            else:
+                # use cp the copy if machine is the same (execution on localhost) 
+                # make sure data is in the correct directory. for now: working_dir/[jobname]/subbands
+                # construct copy command
+                command = ["rsync", "-r", "{0}:{1}".format(
+                                input_item.host, input_item.file),
+                                   "{0}".format(processed_ms_dir)]
+                if input_item.host == "localhost":
+                    command = ["cp", "-r", "{0}".format(input_item.file),
+                                           "{0}".format(processed_ms_dir)]
 
-            self.logger.debug("executing: " + " ".join(command))
+                self.logger.debug("executing: " + " ".join(command))
 
-            # Spawn a subprocess and connect the pipes
-            # The copy step is performed 720 at once in that case which might
-            # saturate the cluster.
-            copy_process = subprocess.Popen(
-                        command,
-                        stdin = subprocess.PIPE,
-                        stdout = subprocess.PIPE,
-                        stderr = subprocess.PIPE)
+                # Spawn a subprocess and connect the pipes
+                # The copy step is performed 720 at once in that case which might
+                # saturate the cluster.
+                copy_process = subprocess.Popen(
+                            command,
+                            stdin = subprocess.PIPE,
+                            stdout = subprocess.PIPE,
+                            stderr = subprocess.PIPE)
 
-            # Wait for finish of copy inside the loop: enforce single tread
-            # copy
-            (stdoutdata, stderrdata) = copy_process.communicate()
+                # Wait for finish of copy inside the loop: enforce single tread
+                # copy
+                (stdoutdata, stderrdata) = copy_process.communicate()
 
-            exit_status = copy_process.returncode
+                exit_status = copy_process.returncode
 
             # if copy failed log the missing file and update the skip fields
             if  exit_status != 0:
@@ -198,7 +209,7 @@ class selfcal_prepare(LOFARnodeTCP):
 
             self.logger.debug(stdoutdata)
 
-        return copied_ms_map
+        return processed_ms_map
 
 
     def _dppp_call(self, working_dir, ndppp, cmd, environment):
@@ -215,7 +226,7 @@ class selfcal_prepare(LOFARnodeTCP):
                    logger, cleanup = None, usageStats=self.resourceMonitor)
 
     def _run_dppp(self, working_dir, time_slice_dir_path, slices_per_image,
-                  copied_ms_map, subbands_per_image, collected_ms_dir_name, parset,
+                  processed_ms_map, subbands_per_image, collected_ms_dir_name, parset,
                   ndppp):
         """
         Run NDPPP:
@@ -227,11 +238,6 @@ class selfcal_prepare(LOFARnodeTCP):
         for idx_time_slice in range(slices_per_image):
             start_slice_range = idx_time_slice * subbands_per_image
             end_slice_range = (idx_time_slice + 1) * subbands_per_image
-            # Get the subset of ms that are part of the current timeslice,
-            # cast to datamap
-            input_map_subgroup = DataMap(
-                            copied_ms_map[start_slice_range:end_slice_range])
-
             output_ms_name = "time_slice_{0}.dppp.ms".format(idx_time_slice)
 
             # construct time slice name
@@ -243,24 +249,31 @@ class selfcal_prepare(LOFARnodeTCP):
             # filling with zeros           
             ndppp_input_ms = []
             nchan_known = False
-            for item in input_map_subgroup:
+            for item in processed_ms_map[start_slice_range:end_slice_range]:
                 if item.skip:
                     ndppp_input_ms.append("SKIPPEDSUBBAND")
                 else:
-                    ndppp_input_ms.append(item.file)
-                    
                     # From the first non skipped filed get the nchan
                     if not nchan_known:
-                        # Automatically average the number of channels in 
-                        # the output to 1
-                        # open the datasetassume same nchan for all sb
-                        table = pt.table(item.file)  # 
+                        try:
+                            # Automatically average the number of channels in 
+                            # the output to 1
+                            # open the datasetassume same nchan for all sb
+                            table = pt.table(item.file)  # 
             
-                        # get the data column, get description, get the shape,
-                        # first index returns the number of channels
-                        nchan_input = str(pt.tablecolumn(
-                                       table, 'DATA').getdesc()["shape"][0])
-                        nchan_known = True
+                            # get the data column, get description, get the shape,
+                            # first index returns the number of channels
+                            nchan_input = str(pt.tablecolumn(
+                                           table, 'DATA').getdesc()["shape"][0])
+                            nchan_known = True
+
+                        # corrupt input measurement set
+                        except:
+                            item.skip = True
+                            ndppp_input_ms.append("SKIPPEDSUBBAND")
+                            continue
+
+                    ndppp_input_ms.append(item.file)
             
             # if none of the input files was valid, skip the creation of the 
             # timeslice all together, it will not show up in the timeslice 
@@ -314,11 +327,10 @@ class selfcal_prepare(LOFARnodeTCP):
                 time_slice_path_list.append(time_slice_path)
 
             # On error the current timeslice should be skipped
-            except subprocess.CalledProcessError, exception:
-                self.logger.warning(str(exception))
-                continue
-
+            # and the input ms should have the skip  set
             except Exception, exception:
+                for item in processed_ms_map[start_slice_range:end_slice_range]:
+                    item.skip = True
                 self.logger.warning(str(exception))
                 continue
 

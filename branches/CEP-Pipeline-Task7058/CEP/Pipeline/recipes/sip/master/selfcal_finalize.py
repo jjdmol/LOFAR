@@ -24,8 +24,8 @@ class selfcal_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
             help="""Mapfile containing (host, path) pairs of created sky
                    images """
         ),
-        'raw_ms_per_image_map': ingredient.FileField(
-            '--raw-ms-per-image-map',
+        'ms_per_image_map': ingredient.FileField(
+            '--ms-per-image-map',
             help='''Mapfile containing (host, path) pairs of mapfiles used
             to create image on that node'''
         ),
@@ -107,8 +107,8 @@ class selfcal_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
         # 1. Load the datamaps
         awimager_output_map = DataMap.load(
                                 self.inputs["awimager_output_map"])
-        raw_ms_per_image_map = DataMap.load(
-                                    self.inputs["raw_ms_per_image_map"])
+        ms_per_image_map = DataMap.load(
+                                    self.inputs["ms_per_image_map"])
         sourcelist_map = DataMap.load(self.inputs["sourcelist_map"])
         sourcedb_map = DataMap.load(self.inputs["sourcedb_map"])
         target_mapfile = DataMap.load(self.inputs["target_mapfile"])
@@ -122,13 +122,13 @@ class selfcal_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
         fillrootimagegroup_exec = self.inputs["fillrootimagegroup_exec"]
 
         # Align the skip fields
-        align_data_maps(awimager_output_map, raw_ms_per_image_map,
+        align_data_maps(awimager_output_map, ms_per_image_map,
                 sourcelist_map, target_mapfile, output_image_mapfile,
                 sourcedb_map, concat_ms_mapfile, output_correlated_map)
 
         # Set the correct iterator
         sourcelist_map.iterator = awimager_output_map.iterator = \
-            raw_ms_per_image_map.iterator = target_mapfile.iterator = \
+            ms_per_image_map.iterator = target_mapfile.iterator = \
             output_image_mapfile.iterator = sourcedb_map.iterator = \
             concat_ms_mapfile.iterator = output_correlated_map.iterator = \
             DataMap.SkipIterator
@@ -137,15 +137,15 @@ class selfcal_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
         # 2. Run the node side of the recupe
         command = " python %s" % (self.__file__.replace("master", "nodes"))
         jobs = []
-        for  (awimager_output_item, raw_ms_per_image_item, sourcelist_item,
+        for  (awimager_output_item, ms_per_image_item, sourcelist_item,
               target_item, output_image_item, sourcedb_item, 
               concat_ms_item, correlated_item) in zip(
-                  awimager_output_map, raw_ms_per_image_map, sourcelist_map,
+                  awimager_output_map, ms_per_image_map, sourcelist_map,
                   target_mapfile, output_image_mapfile, sourcedb_map,
                   concat_ms_mapfile, output_correlated_map):
             # collect the files as argument
             arguments = [awimager_output_item.file,
-                         raw_ms_per_image_item.file,
+                         ms_per_image_item.file,
                          sourcelist_item.file,
                          target_item.file,
                          output_image_item.file,

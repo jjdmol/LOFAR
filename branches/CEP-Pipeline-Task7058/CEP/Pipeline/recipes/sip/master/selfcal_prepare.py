@@ -95,8 +95,8 @@ class selfcal_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             '--slices-mapfile',
             help="Path to mapfile containing the produced subband groups"
         ),
-        'raw_ms_per_image_mapfile': ingredient.StringField(
-            '--raw-ms-per-image-mapfile',
+        'ms_per_image_mapfile': ingredient.StringField(
+            '--ms-per-image-mapfile',
             help="Path to mapfile containing the raw ms for each produced"
                 "image"
         ),
@@ -119,8 +119,8 @@ class selfcal_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         'slices_mapfile': ingredient.FileField(
             help="Path to mapfile containing the produced subband groups"),
 
-        'raw_ms_per_image_mapfile': ingredient.FileField(
-            help="Path to mapfile containing the raw ms for each produced"
+        'ms_per_image_mapfile': ingredient.FileField(
+            help="Path to mapfile containing the used ms for each produced"
                 "image")
     }
 
@@ -222,7 +222,7 @@ class selfcal_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             # If this is an item that is skipped via the skip parameter in 
             # the parset, append a skipped             
             if item.skip:    
-                slices.append(tuple([item.host, ["/skipped"], True]))
+                slices.append(tuple([item.host, "/skipped", True]))
                 continue
 
             # we cannot use the skip iterator so we need to manually get the
@@ -264,7 +264,7 @@ class selfcal_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         #map with actual input mss.
         self._store_data_map(self.inputs["raw_ms_per_image_mapfile"],
             DataMap(paths_to_image_mapfiles),
-                "mapfile containing (raw) input ms per image:")
+                "mapfile containing (used) input ms per image:")
 
         # Set the return values
         self.outputs['mapfile'] = output_ms_mapfile_path
