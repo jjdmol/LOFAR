@@ -62,17 +62,13 @@ class selfcal_finalize(LOFARnodeTCP):
             # 1. add image info                      
             # Get all the files in the processed measurement dir
             file_list = os.listdir(processed_ms_dir)
-            # TODO: BUG!! the meta data might contain files that were copied
-            # but failed in imager_bbs 
+
             processed_ms_paths = []
+            ms_per_image_map.iterator = DataMap.SkipIterator
             for item in ms_per_image_map:
-                path = item.file
-                ms_file_name = os.path.split(path)[1]
-                #if the raw ms is in the processed dir (additional check)
-                if (ms_file_name in file_list):
-                    # save the path
-                    processed_ms_paths.append(os.path.join(processed_ms_dir,
-                                                            ms_file_name))
+                ms_path = item.file
+                processed_ms_paths.append(ms_path)
+
             #add the information the image
             try:
                 self.logger.debug("Start addImage Info")

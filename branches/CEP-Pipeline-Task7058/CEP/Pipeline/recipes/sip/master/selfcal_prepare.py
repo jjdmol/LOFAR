@@ -97,7 +97,7 @@ class selfcal_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'ms_per_image_mapfile': ingredient.StringField(
             '--ms-per-image-mapfile',
-            help="Path to mapfile containing the raw ms for each produced"
+            help="Path to mapfile containing the ms for each produced"
                 "image"
         ),
         'processed_ms_dir': ingredient.StringField(
@@ -262,15 +262,15 @@ class selfcal_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
                 self.inputs['slices_mapfile']))
 
         #map with actual input mss.
-        self._store_data_map(self.inputs["raw_ms_per_image_mapfile"],
+        self._store_data_map(self.inputs["ms_per_image_mapfile"],
             DataMap(paths_to_image_mapfiles),
                 "mapfile containing (used) input ms per image:")
 
         # Set the return values
         self.outputs['mapfile'] = output_ms_mapfile_path
         self.outputs['slices_mapfile'] = self.inputs['slices_mapfile']
-        self.outputs['raw_ms_per_image_mapfile'] = \
-            self.inputs["raw_ms_per_image_mapfile"]
+        self.outputs['ms_per_image_mapfile'] = \
+            self.inputs["ms_per_image_mapfile"]
         return 0
 
     def _create_input_map_for_sbgroup(self, slices_per_image,
@@ -310,7 +310,7 @@ class selfcal_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         """
         # The output_map contains a number of path/node pairs. The final data 
         # dataproduct of the prepare phase: The 'input' for each of these pairs
-        # is a number of raw measurement sets: The number of time slices times
+        # is a number of measurement sets: The number of time slices times
         # the number of subbands collected into each of these time slices.
         # The total length of the input map should match this.
         if len(input_map) != len(output_map) * \
