@@ -177,7 +177,7 @@ class selfcal_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             if item.skip == True:
                 # assure that the mapfile is correct
                 paths_to_image_mapfiles.append(
-                    tuple([item.host, ["/skipped"], True]))
+                    tuple([item.host, [], True]))
                 continue
 
             #save the (input) ms, as a list of  mapfiles
