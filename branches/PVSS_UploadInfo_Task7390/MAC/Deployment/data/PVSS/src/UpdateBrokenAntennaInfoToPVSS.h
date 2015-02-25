@@ -73,11 +73,11 @@ namespace LOFAR {
       UpdateBrokenAntennaInfoToPVSS();
       ~UpdateBrokenAntennaInfoToPVSS();
 
+      vector<OTDBvalue> getBrokenAntennaInfo();
       
     private:
       vector<OTDBvalue> getHardwareTree(OTDBconnection &conn, const string &timeNow);
       void parseBrokenHardware (const vector<OTDBvalue> &hardware);
-      void getBrokenAntennaInfo();
     };
   };
 };

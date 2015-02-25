@@ -27,6 +27,7 @@
 #include <Common/StringUtil.h>    // needed for split
 #include <Common/Exception.h>     // THROW macro for exceptions
 #include <Common/Exceptions.h>
+#include <ApplCommon/StationInfo.h>
 
 // SAS
 #include <OTDB/OTDBconstants.h>
@@ -66,6 +67,7 @@ using namespace LOFAR::OTDB;
 using namespace std;
 using namespace casa;
 using namespace boost::posix_time;
+using boost::format;
 
 namespace LOFAR {
   namespace PVSS {
@@ -119,8 +121,8 @@ namespace LOFAR {
 
       // Get list of all broken hardware from SAS for timestamp
       LOG_DEBUG_STR("Searching for a Hardware tree");
-
-      valueList = tv.getBrokenHardware(time_from_string(timeNow));
+      LOG_DEBUG_STR("Using Time: " << from_iso_string(timeNow));
+      valueList = tv.getBrokenHardware(from_iso_string(timeNow));
 
       return valueList;
     }
@@ -183,7 +185,7 @@ namespace LOFAR {
     }
 
     
-    void UpdateBrokenAntennaInfoToPVSS::getBrokenAntennaInfo()
+    vector<OTDBvalue> UpdateBrokenAntennaInfoToPVSS::getBrokenAntennaInfo()
     {
       string host = "sasdb";
       string db   = "LOFAR_4";
@@ -208,8 +210,64 @@ namespace LOFAR {
 //        THROW(Exception, "PostGreSQL error: " << ex.base().what());
 //      }
 
-      return;
+      return hardwareBrokenAtBegin;
     }
   }
 }
+
+using namespace LOFAR::PVSS;
+
+int main(int argc, char *argv[])
+{
+  INIT_LOGGER("UpdateBrokenAntennaInfoToPVSS");
+
+  if (argc != 1) {
+    cout << str(format("usage: %s ") % argv[0]) << endl;
+    cout << endl;
+    return 1;
+  }
+
+  UpdateBrokenAntennaInfoToPVSS* mainObject=new UpdateBrokenAntennaInfoToPVSS();
+
+  // TODO: make this safe
+  string thisUser = getenv("USER");
+
+  // Substring to remove from returned hardware status strings
+  string removePart = ".status_state";
+
+  vector<OTDBvalue> itsBrokenAntennaInfo;
+  itsBrokenAntennaInfo = mainObject->getBrokenAntennaInfo();
+
+  // Extract setObjectState commands from returned list of broken antenna info
+  for (vector<OTDBvalue>::iterator it = itsBrokenAntennaInfo.begin() ; it != itsBrokenAntennaInfo.end(); ++it)
+  {
+    OTDBvalue tmp = *it;
+    // Find hardware object name and remove trailing ".status_state"
+    string OTDBname = tmp.name;
+    string::size_type i = OTDBname.find(removePart);
+    if (i != string::npos)
+       OTDBname.erase(i, removePart.length());
+    // Convert OTDB name to PVSS name
+    string PVSSname = SAS2PVSSname(OTDBname);
+    // setObjectState requires different status numbers (0,1,2,3,4,5) than OTDB gives (0, 10, 20, .. , 50)
+    int OTDBstatus = strToInt(tmp.value);
+    int setObjectStatestatus = OTDBstatus/10;
+    LOG_DEBUG_STR(OTDBname << ":" << OTDBstatus << "  " << PVSSname << ":" << setObjectStatestatus);
+    // Construct setObjectState command to execute
+    string PVSSUpdateCmd = "/opt/lofar/sbin/setObjectState " + thisUser+ ' ' + PVSSname + ' ' + toString(setObjectStatestatus);
+    cout << "Will now execute: " << PVSSUpdateCmd << endl;
+    // Run command, check return code 
+    // TODO: try..catch or something
+    int result = system("ls -1 >& /dev/null");
+    // int result = system(PVSSUpdateCmd.c_str());
+    if (result != 0) {
+      cout << "Problem executing command; return code: " << result << endl;
+    }
+  }
+
+  delete mainObject;
+  return 0;
+
+}
+
 

@@ -7,6 +7,6 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_BINARY_DIR}/include/${PACKAGE_NAME})
 
-lofar_add_library(
+lofar_add_sbin_program(
 UpdateBrokenAntennaInfoToPVSS 
 UpdateBrokenAntennaInfoToPVSS.cc)
