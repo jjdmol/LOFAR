@@ -10,7 +10,8 @@ import shutil
 import os
 import subprocess
 import copy
-import pyrap.tables as pt   # order of pyrap import influences the type conversion binding
+import pyrap.tables as pt   # order of pyrap import influences the type
+                            # conversion binding
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.pipelinelogging import log_time
 from lofarpipe.support.utilities import patch_parset
@@ -19,29 +20,26 @@ from lofarpipe.support.lofarnode import  LOFARnodeTCP
 from lofarpipe.support.utilities import create_directory
 from lofarpipe.support.data_map import DataMap
 from lofarpipe.support.subprocessgroup import SubProcessGroup
+from lofarpipe.support.data_quality import run_rficonsole, filter_bad_stations
 
 
 # Some constant settings for the recipe
 _time_slice_dir_name = "time_slices"
 
-
 class selfcal_prepare(LOFARnodeTCP):
     """
     Steps perform on the node:
     
-    0. Create directories and assure that they are empty.
-    1. Collect the Measurement Sets (MSs): copy to the current node.
-    2. Start dppp: Combines the data from subgroups into single timeslice.
-    3. Flag rfi.
+    1. Create directories and assure that they are empty.
+    2. Collect the Measurement Sets (MSs): copy to the current node.
+    3. Start dppp: Combines the data from subgroups into single timeslice.
     4. Add addImagingColumns to the casa ms.
+    5. filter bad stations (asciistat and -plot)
     5. Concatenate the time slice measurment sets, to a single virtual ms.
-    6. Filter bad stations. Find station with repeated bad measurement and
-       remove these completely from the dataset.
-
-    **Members:**
+    6. Add measurmentset tables
     """
     def run(self, environment, parset, working_dir, processed_ms_dir,
-             ndppp_executable, output_measurement_set,
+            ndppp_executable, output_measurement_set,
             time_slices_per_image, subbands_per_group, input_ms_mapfile,
             asciistat_executable, statplot_executable, msselect_executable,
             rficonsole_executable, add_beam_tables):
@@ -53,7 +51,7 @@ class selfcal_prepare(LOFARnodeTCP):
             input_map = DataMap.load(input_ms_mapfile)
 
             #******************************************************************
-            # I. Create the directories used in this recipe
+            # 1. Create the directories used in this recipe
             create_directory(processed_ms_dir)
 
             # time slice dir_to_remove: assure empty directory: Stale data
@@ -69,14 +67,14 @@ class selfcal_prepare(LOFARnodeTCP):
             self.logger.debug("and assured it is empty")
 
             #******************************************************************
-            # 1. Copy the input files
+            # 2. Copy the input files
             # processed_ms_map will be the map containing all the 'valid'
             # input ms
             processed_ms_map = self._copy_input_files(
                             processed_ms_dir, input_map)
 
             #******************************************************************
-            # 2. run dppp: collect frequencies into larger group
+            # 3. run dppp: collect frequencies into larger group
             time_slices_path_list = \
                 self._run_dppp(working_dir, time_slice_dir,
                     time_slices_per_image, processed_ms_map, subbands_per_group,
@@ -89,13 +87,8 @@ class selfcal_prepare(LOFARnodeTCP):
                 self.logger.error("Exiting with error state 1")
                 return 1
 
-
             self.logger.debug(
                     "Produced time slices: {0}".format(time_slices_path_list))
-            ##***********************************************************
-            ## 3. run rfi_concole: flag datapoints which are corrupted
-            #self._run_rficonsole(rficonsole_executable, time_slice_dir,
-            #                     time_slices_path_list)
 
             #******************************************************************
             # 4. Add imaging columns to each timeslice
@@ -113,9 +106,9 @@ class selfcal_prepare(LOFARnodeTCP):
                 statplot_executable, msselect_executable)
 
             #*****************************************************************
-            # Add measurmenttables
+            # 6. Add measurementtables
             if add_beam_tables:
-                self.add_beam_tables(time_slice_filtered_path_list)
+                self._add_beam_tables(time_slice_filtered_path_list)
 
             #******************************************************************
             # 6. Perform the (virtual) concatenation of the timeslices
@@ -127,17 +120,13 @@ class selfcal_prepare(LOFARnodeTCP):
             # mapfile
             processed_ms_map.save(input_ms_mapfile)
 
-            #******************************************************************
             # return
             self.outputs["time_slices"] = \
                 time_slices_path_list
 
-
-
-
         return 0
 
-    def add_beam_tables(self, time_slices_path_list):
+    def _add_beam_tables(self, time_slices_path_list):
         beamtable_proc_group = SubProcessGroup(self.logger)
         for ms_path in time_slices_path_list:
             self.logger.debug("makebeamtables start")
@@ -146,6 +135,7 @@ class selfcal_prepare(LOFARnodeTCP):
             beamtable_proc_group.run(cmd_string)
 
         if beamtable_proc_group.wait_for_finish() != None:
+            # TODO: Exception on error: make time_slices_path_list a mapfile
             raise Exception("an makebeamtables run failed!")
 
         self.logger.debug("makebeamtables finished")
@@ -172,8 +162,9 @@ class selfcal_prepare(LOFARnodeTCP):
                 stderrdata = "SKIPPED_FILE"
 
             else:
-                # use cp the copy if machine is the same (execution on localhost) 
-                # make sure data is in the correct directory. for now: working_dir/[jobname]/subbands
+                # use cp the copy if machine is the same ( localhost) 
+                # make sure data is in the correct directory. for now:
+                # working_dir/[jobname]/subbands
                 # construct copy command
                 command = ["rsync", "-r", "{0}:{1}".format(
                                 input_item.host, input_item.file),
@@ -185,8 +176,8 @@ class selfcal_prepare(LOFARnodeTCP):
                 self.logger.debug("executing: " + " ".join(command))
 
                 # Spawn a subprocess and connect the pipes
-                # The copy step is performed 720 at once in that case which might
-                # saturate the cluster.
+                # The copy step is performed 720 at once in that case which 
+                # might saturate the cluster.
                 copy_process = subprocess.Popen(
                             command,
                             stdin = subprocess.PIPE,
@@ -226,8 +217,8 @@ class selfcal_prepare(LOFARnodeTCP):
                    logger, cleanup = None, usageStats=self.resourceMonitor)
 
     def _run_dppp(self, working_dir, time_slice_dir_path, slices_per_image,
-                  processed_ms_map, subbands_per_image, collected_ms_dir_name, parset,
-                  ndppp):
+                  processed_ms_map, subbands_per_image, collected_ms_dir_name, 
+                  parset, ndppp):
         """
         Run NDPPP:
         Create dir for grouped measurements, assure clean workspace
@@ -261,10 +252,11 @@ class selfcal_prepare(LOFARnodeTCP):
                             # open the datasetassume same nchan for all sb
                             table = pt.table(item.file)  # 
             
-                            # get the data column, get description, get the shape,
-                            # first index returns the number of channels
-                            nchan_input = str(pt.tablecolumn(
-                                           table, 'DATA').getdesc()["shape"][0])
+                            # get the data column, get description, get the 
+                            # shape, first index returns the number of channels
+                            nchan_input = str(
+                                pt.tablecolumn(table, 
+                                               'DATA').getdesc()["shape"][0])
                             nchan_known = True
 
                         # corrupt input measurement set
@@ -280,8 +272,9 @@ class selfcal_prepare(LOFARnodeTCP):
             # mapfile
             if not nchan_known:
                 continue
-        
-            ndppp_nchan_key = "avg1.freqstep"  # TODO/FIXME: dependency on the step name!!!!
+           
+            # TODO/FIXME: dependency on the step name!!!!
+            ndppp_nchan_key = "avg1.freqstep"  
             
             # Join into a single string list of paths.
             msin = "['{0}']".format("', '".join(ndppp_input_ms))
@@ -347,140 +340,6 @@ class selfcal_prepare(LOFARnodeTCP):
         self.logger.debug("Concatenated the files: {0} into the single measure"
             "mentset: {1}".format(
                 ", ".join(group_measurements_collected), output_file_path))
-
-    def _run_rficonsole(self, rficonsole_executable, time_slice_dir,
-                        time_slices):
-        """
-        _run_rficonsole runs the rficonsole application on the supplied
-        timeslices in time_slices.
-
-        """
-
-        # loop all measurement sets
-        rfi_temp_dir = os.path.join(time_slice_dir, "rfi_temp_dir")
-        create_directory(rfi_temp_dir)
-
-        try:
-            rfi_console_proc_group = SubProcessGroup(self.logger,
-                                                self.resourceMonitor)
-            for time_slice in time_slices:
-                # Each rfi console needs own working space for temp files
-                temp_slice_path = os.path.join(rfi_temp_dir,
-                    os.path.basename(time_slice))
-                create_directory(temp_slice_path)
-
-                # construct copy command
-                self.logger.info(time_slice)
-                command = [rficonsole_executable, "-indirect-read",
-                            time_slice]
-                self.logger.info("executing rficonsole command: {0}".format(
-                            " ".join(command)))
-
-                # Add the command to the process group
-                rfi_console_proc_group.run(command, cwd = temp_slice_path)
-                
-
-            # wait for all to finish
-            if rfi_console_proc_group.wait_for_finish() != None:
-                raise Exception("an rfi_console_proc_group run failed!")
-
-        finally:
-            shutil.rmtree(rfi_temp_dir)
-
-    def _filter_bad_stations(self, time_slice_path_list,
-            asciistat_executable, statplot_executable, msselect_executable):
-        """
-        A Collection of scripts for finding and filtering of bad stations:
-
-        1. First a number of statistics with regards to the spread of the data
-           is collected using the asciistat_executable.
-        2. Secondly these statistics are consumed by the statplot_executable
-           which produces a set of bad stations.
-        3. In the final step the bad stations are removed from the dataset 
-           using ms select
-
-        REF: http://www.lofar.org/wiki/lib/exe/fetch.php?media=msss:pandeymartinez-week9-v1p2.pdf
-        """
-        # run asciistat to collect statistics about the ms
-        self.logger.info("Filtering bad stations")
-        self.logger.debug("Collecting statistical properties of input data")
-        asciistat_output = []
-        asciistat_proc_group = SubProcessGroup(self.logger)
-        for ms in time_slice_path_list:
-            output_dir = ms + ".filter_temp"
-            create_directory(output_dir)
-            asciistat_output.append((ms, output_dir))
-
-            cmd_string = "{0} -i {1} -r {2}".format(asciistat_executable,
-                            ms, output_dir)
-            asciistat_proc_group.run(cmd_string)
-
-        if asciistat_proc_group.wait_for_finish() != None:
-            raise Exception("an ASCIIStats run failed!")
-
-        # Determine the station to remove
-        self.logger.debug("Select bad stations depending on collected stats")
-        asciiplot_output = []
-        asciiplot_proc_group = SubProcessGroup(self.logger)
-        for (ms, output_dir) in asciistat_output:
-            ms_stats = os.path.join(
-                            output_dir, os.path.split(ms)[1] + ".stats")
-
-            cmd_string = "{0} -i {1} -o {2}".format(statplot_executable,
-                                                     ms_stats, ms_stats)
-            asciiplot_output.append((ms, ms_stats))
-            asciiplot_proc_group.run(cmd_string)
-
-        if asciiplot_proc_group.wait_for_finish() != None:
-            raise Exception("an ASCIIplot run failed!")
-
-        # remove the bad stations
-        self.logger.debug("Use ms select to remove bad stations")
-        msselect_output = {}
-        msselect_proc_group = SubProcessGroup(self.logger)
-        for ms, ms_stats  in asciiplot_output:
-            # parse the .tab file containing the bad stations
-            station_to_filter = []
-            file_pointer = open(ms_stats + ".tab")
-
-            for line in file_pointer.readlines():
-                # skip headed line
-                if line[0] == "#":
-                    continue
-
-                entries = line.split()
-                # if the current station is bad (the last entry on the line)
-                if entries[-1] == "True":
-                    # add the name of station
-                    station_to_filter.append(entries[1])
-
-            # if this measurement does not contain baselines to skip do not
-            # filter and provide the original ms as output
-            if len(station_to_filter) == 0:
-                msselect_output[ms] = ms
-                continue
-
-            ms_output_path = ms + ".filtered"
-            msselect_output[ms] = ms_output_path
-
-            # use msselect to remove the stations from the ms
-            msselect_baseline = "!{0}".format(",".join(station_to_filter))
-            cmd_string = "{0} in={1} out={2} baseline={3} deep={4}".format(
-                            msselect_executable, ms, ms_output_path,
-                            msselect_baseline, "False")
-            msselect_proc_group.run(cmd_string)
-
-        if msselect_proc_group.wait_for_finish() != None:
-            raise Exception("an MSselect run failed!")
-
-        filtered_list_of_ms = []
-        # The order of the inputs needs to be preserved when producing the
-        # filtered output!
-        for input_ms in time_slice_path_list:
-            filtered_list_of_ms.append(msselect_output[input_ms])
-
-        return filtered_list_of_ms
-
 
 if __name__ == "__main__":
     _jobid, _jobhost, _jobport = sys.argv[1:4]

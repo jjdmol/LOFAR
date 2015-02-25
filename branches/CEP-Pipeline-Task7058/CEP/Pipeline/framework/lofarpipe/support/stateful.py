@@ -1,9 +1,9 @@
-#                                                       LOFAR PIPELINE FRAMEWORK
+#                                                      LOFAR PIPELINE FRAMEWORK
 #
-#                                                          Stateful LOFAR Recipe
-#                                                            John Swinbank, 2010
-#                                                      swinbank@transientskp.org
-# ------------------------------------------------------------------------------
+#                                                         Stateful LOFAR Recipe
+#                                                            Wouter Klijn, 2015
+#                                                               klijn@astron.nl
+# -----------------------------------------------------------------------------
 
 from functools import wraps
 
@@ -37,14 +37,16 @@ def stateful(run_task):
                                 my_state[1]['return_xml']).documentElement
               
                add_child_to_active_stack_head(self, return_node)
-               # If no active stack, fail silently.
+               # If no active stack, do nothing
 
             return my_state[1]
 
         elif my_state[0] != '':
             # There is a stored task, but it doesn't match this one, or...
-            self.logger.error("Stored state does not match pipeline definition; bailing out")
-            raise PipelineException("Stored state does not match pipeline definition")
+            self.logger.error(
+                "Stored state does not match pipeline definition; bailing out")
+            raise PipelineException(
+                "Stored state does not match pipeline definition")
         else:
             # We need to run this task now.
             outputs = run_task(self, configblock, datafiles, **kwargs)
@@ -52,7 +54,6 @@ def stateful(run_task):
             self._save_state()
             return outputs
     return wrapper
-
 
 
 class StatefulRecipe(BaseRecipe):

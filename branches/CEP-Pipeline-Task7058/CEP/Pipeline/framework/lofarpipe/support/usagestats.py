@@ -155,11 +155,12 @@ class UsageStats(threading.Thread):
                     self.pid_out.append(pid)
                     continue                    # nothing to store continue
                     
-                parset_output = eval(out.rstrip()) # remove trailing white space
+                # remove trailing white space
+                parset_output = eval(out.rstrip()) 
                 self.pid_stats[pid].append(parset_output)
                 
-            # in the previous loop we stored al the pid that are involid and can
-            # be cleared
+            # in the previous loop we stored al the pid that are involid and 
+            # can be cleared
             for pid in self.pid_out:
                 try:
                     self.pid_tracked.remove(pid)
@@ -200,22 +201,25 @@ class UsageStats(threading.Thread):
             # TODO: The returned values are not in order and the owner PID
             # might not be printed with idx 0. Maybee print seperately
             for idx,(key,value) in enumerate(self.pid_stats.iteritems()):
-                #if there are entries
+                # if there are entries
                 if value:  
                     child_pid = add_child(resource_stat_xml, "process")
                     child_pid.setAttribute("idx", str(idx))          
-                    #The first entry should contain the exec name. only needed once
+                    # The first entry should contain the exec name.
+                    #  only needed once
                     child_pid.setAttribute("executable", str(value[0][0]))
                     child_pid.setAttribute("pid", str(key))
                     for entry in value:
-                        # TODO: probably no longer needed with updated bash script
+                        # TODO: probably no longer needed with updated bash 
+                        # script
                         if "MEM" in str(entry[6]):  # this is the default value
                             continue
                         data_point = add_child(child_pid, "data_point")
                         data_point.setAttribute("timestamp", str(entry[1]))
                         data_point.setAttribute("read_bytes", str(entry[2]))
                         data_point.setAttribute("write_bytes", str(entry[3]))
-                        data_point.setAttribute("cancelled_bytes", str(entry[4]))
+                        data_point.setAttribute("cancelled_bytes", 
+                                                str(entry[4]))
                         data_point.setAttribute("cpu", str(entry[5]))
                         data_point.setAttribute("mem", str(entry[6]))
         except:

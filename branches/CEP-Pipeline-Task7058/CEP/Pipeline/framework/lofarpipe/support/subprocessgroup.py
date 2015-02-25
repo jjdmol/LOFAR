@@ -10,8 +10,11 @@ class SubProcessGroup(object):
         """
         def __init__(self, logger=None, 
                      usageStats = None,
-                     max_concurrent_processes = 8,  # Default CEP is max 8 cpu used
-                     polling_interval = 60):        # poll each minute: we have long running processes
+                     # Default CEP2 is max 8 cpu used
+                     max_concurrent_processes = 8,  
+                     # poll each 10 seconds: we have a mix of short and long 
+                     # running processes
+                     polling_interval = 10):        
             self.process_group = []
             self.logger = logger
             self.usageStats = usageStats
@@ -80,7 +83,7 @@ class SubProcessGroup(object):
             Wait for all the processes started in the current group to end.
             Return the return status of a processes in an dict (None of no 
             processes failed 
-            This is a Pipeline component: Of an logger is supplied the 
+            This is a Pipeline component: If an logger is supplied the 
             std out and error will be suplied to the logger
             """
             collected_exit_status = []
@@ -117,7 +120,8 @@ class SubProcessGroup(object):
 
                     # log the std out and err
                     if self.logger != None:
-                        self.logger.info("Subprocesses group, completed command: ")
+                        self.logger.info(
+                             "Subprocesses group, completed command: ")
                         self.logger.info(cmd)
                         self.logger.debug(stdoutdata)
                         self.logger.warn(stderrdata)

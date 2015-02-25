@@ -160,7 +160,8 @@ class DataMap(object):
     def append(self, data, dtype=DataProduct):
         """
         Append an item to the end of the internal storage, allows appending
-        of DataProduct or tuple. Default skip=False
+        of DataProduct or tuple. Default skip=False when only (host, file) is
+        supplied
         """
         try:
             if isinstance(data, dtype):                
@@ -175,7 +176,9 @@ class DataMap(object):
                 elif len(data) == 2:
                     item = DataProduct(data[0], data[1], False)
                 else:
-                    raise TypeError("Incorrect size tuple")
+                    raise TypeError(
+                        "DataMap, Suplied tuple is not valid: {0}".format(
+                                                                repr(tuple)))
                 self._data.append(item)
             else:
                 raise TypeError
@@ -262,7 +265,9 @@ class MultiDataMap(DataMap):
                 # use the DataProduct validation to assure correct types
                 item = None
                 if len(data) < 2:
-                    raise TypeError("Incorrect number of argument (< 2)")
+                    raise TypeError(
+                  "MultiDataMap: Incorrect tuple size (< 2): {0}".format(
+                                          repr(tuple)))
                 elif len(data) == 2:
                     item = MultiDataProduct(data[0], data[1])
                 elif len(data) == 3:
@@ -270,7 +275,9 @@ class MultiDataMap(DataMap):
                 elif len(data) == 4:
                     item = MultiDataProduct(data[0], data[1], data[2], data[3])
                 else:
-                    raise TypeError("Incorrect number of argument (> 4)")
+                    raise TypeError(
+                       "MultiDataMap: Incorrect tuple size (> 4): {0}".format(
+                                          repr(tuple)))
 
                 self._data.append(item)
             else:
@@ -349,7 +356,8 @@ def align_data_maps(*args):
     alignment is not possible.
     """
     if len(args) < 2:
-        raise DataMapError("At least two datamaps are needed to perform align.")
+        raise DataMapError(
+                        "At least two datamaps are needed to perform align.")
 
     if not validate_data_maps(*args):
         raise DataMapError(
