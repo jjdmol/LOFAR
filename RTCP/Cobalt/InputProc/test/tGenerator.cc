@@ -26,7 +26,7 @@
 #include <omp.h>
 
 #include <Common/LofarLogger.h>
-#include <CoInterface/Stream.h>
+#include <Stream/StreamFactory.h>
 #include <CoInterface/OMPThread.h>
 
 #include <InputProc/Station/PacketFactory.h>

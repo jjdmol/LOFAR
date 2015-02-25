@@ -1,8 +1,6 @@
-//# Stream.h: 
-//#
-//# Copyright (C) 2008
-//# ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+//# StreamFactory.h: class/functions to construct streams
+//# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
 //# The LOFAR software suite is free software: you can redistribute it and/or
@@ -20,35 +18,21 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_LCS_STREAM_STREAM_H
-#define LOFAR_LCS_STREAM_STREAM_H
+#ifndef LOFAR_STREAM_STREAMFACTORY_H
+#define LOFAR_STREAM_STREAMFACTORY_H
 
-#include <cstddef>
+#include <ctime>
 #include <string>
+#include <Stream/Stream.h>
 
-#include <Common/Exception.h>
-
-
-namespace LOFAR {
-
-class Stream
+namespace LOFAR
 {
-  public:
-    virtual	   ~Stream();
 
-    virtual size_t tryRead(void *ptr, size_t size) = 0;
-    void	   read(void *ptr, size_t size); // does not return until all bytes are read
-
-    virtual size_t tryWrite(const void *ptr, size_t size) = 0;
-    void	   write(const void *ptr, size_t size); // does not return until all bytes are written
-
-    std::string    readLine(); // excludes '\n'
-
-    virtual void   sync();
-};
-
-EXCEPTION_CLASS(EndOfStreamException, LOFAR::Exception);
+  // Create a stream from a descriptor.
+  // Caller should wrap the returned pointer in some smart ptr type. 
+  Stream *createStream(const std::string &descriptor, bool asReader, time_t deadline = 0);
 
 } // namespace LOFAR
 
 #endif
+

@@ -30,8 +30,8 @@
 #include <Common/Thread/Queue.h>
 #include <Common/Thread/Thread.h>
 #include <Common/LofarLogger.h>
+#include <Stream/StreamFactory.h>
 #include <ApplCommon/PosixTime.h>
-#include <CoInterface/Stream.h>
 #include <CoInterface/SmartPtr.h>
 #include "RSP.h"
 #include "PacketReader.h"
@@ -171,7 +171,7 @@ int main(int argc, char **argv)
           reader.readPackets(p->packets);
           writeQueue.append(p);
         }
-      } catch(Stream::EndOfStreamException&) {
+      } catch(EndOfStreamException&) {
       }
 
       writeQueue.append(NULL);

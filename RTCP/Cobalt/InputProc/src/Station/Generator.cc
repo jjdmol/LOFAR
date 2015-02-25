@@ -85,7 +85,7 @@ namespace LOFAR
 
           current += packet.header.nrBlocks;
         }
-      } catch (Stream::EndOfStreamException &ex) {
+      } catch (EndOfStreamException &ex) {
         LOG_INFO_STR( logPrefix << "End of stream");
       } catch (SystemCallException &ex) {
         if (ex.error == EINTR)

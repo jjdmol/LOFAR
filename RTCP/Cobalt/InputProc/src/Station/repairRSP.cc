@@ -31,7 +31,7 @@
 #include <Common/Thread/Thread.h>
 #include <Common/LofarLogger.h>
 #include <ApplCommon/PosixTime.h>
-#include <CoInterface/Stream.h>
+#include <Stream/StreamFactory.h>
 #include <CoInterface/SmartPtr.h>
 #include "RSP.h"
 #include "PacketReader.h"
@@ -144,7 +144,7 @@ int main(int argc, char **argv)
       // Write packet
       outputStream->write(&packet, packet.packetSize());
     }
-  } catch(Stream::EndOfStreamException&) {
+  } catch(EndOfStreamException&) {
   }
 }
 
