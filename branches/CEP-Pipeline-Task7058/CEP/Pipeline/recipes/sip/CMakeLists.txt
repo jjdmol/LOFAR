@@ -8,6 +8,7 @@ python_install(
   helpers/WritableParmDB.py
   helpers/ComplexArray.py
   helpers/MultipartPostHandler.py
+  helpers/data_quality.py
   master/__init__.py
   master/bbs_reducer.py
   master/copier.py
