@@ -183,7 +183,7 @@ class imaging_pipeline(control):
 
         # ******************************************************************
         # (1) prepare phase: copy and collect the ms
-        concat_ms_map_path, timeslice_map_path, raw_ms_per_image_map_path, \
+        concat_ms_map_path, timeslice_map_path, ms_per_image_map_path, \
             processed_ms_dir = self._prepare_phase(input_mapfile,
                                     target_mapfile)
 
@@ -225,7 +225,7 @@ class imaging_pipeline(control):
         # *********************************************************************
         # (6) Finalize:
         placed_data_image_map = self._finalize(aw_image_mapfile,
-            processed_ms_dir, raw_ms_per_image_map_path, sourcelist_map,
+            processed_ms_dir, ms_per_image_map_path, sourcelist_map,
             minbaseline, maxbaseline, target_mapfile, output_image_mapfile,
             found_sourcedb_path)
 
@@ -287,7 +287,7 @@ class imaging_pipeline(control):
 
     @xml_node
     def _finalize(self, awimager_output_map, processed_ms_dir,
-                  raw_ms_per_image_map, sourcelist_map, minbaseline,
+                  ms_per_image_map, sourcelist_map, minbaseline,
                   maxbaseline, target_mapfile,
                   output_image_mapfile, sourcedb_map, skip = False):
         """
@@ -307,7 +307,7 @@ class imaging_pipeline(control):
             # run the awimager recipe
             placed_image_mapfile = self.run_task("imager_finalize",
                 target_mapfile, awimager_output_map = awimager_output_map,
-                    raw_ms_per_image_map = raw_ms_per_image_map,
+                    ms_per_image_map = ms_per_image_map,
                     sourcelist_map = sourcelist_map,
                     sourcedb_map = sourcedb_map,
                     minbaseline = minbaseline,
@@ -470,7 +470,7 @@ class imaging_pipeline(control):
         the time slices into a large virtual measurement set
         """
         # Create the dir where found and processed ms are placed
-        # raw_ms_per_image_map_path contains all the original ms locations:
+        # ms_per_image_map_path contains all the original ms locations:
         # this list contains possible missing files
         processed_ms_dir = os.path.join(self.scratch_directory, "subbands")
 
@@ -484,8 +484,8 @@ class imaging_pipeline(control):
         output_mapfile = self._write_datamap_to_file(None, "prepare_output")
         time_slices_mapfile = self._write_datamap_to_file(None,
                                                     "prepare_time_slices")
-        raw_ms_per_image_mapfile = self._write_datamap_to_file(None,
-                                                         "raw_ms_per_image")
+        ms_per_image_mapfile = self._write_datamap_to_file(None,
+                                                         "ms_per_image")
 
         # get some parameters from the imaging pipeline parset:
         slices_per_image = self.parset.getInt("Imaging.slices_per_image")
@@ -498,7 +498,7 @@ class imaging_pipeline(control):
                 subbands_per_image = subbands_per_image,
                 mapfile = output_mapfile,
                 slices_mapfile = time_slices_mapfile,
-                raw_ms_per_image_mapfile = raw_ms_per_image_mapfile,
+                ms_per_image_mapfile = ms_per_image_mapfile,
                 working_directory = self.scratch_directory,
                 processed_ms_dir = processed_ms_dir)
 
@@ -515,15 +515,15 @@ class imaging_pipeline(control):
                                                         'slices_mapfile')
             self.logger.error(error_msg)
             raise PipelineException(error_msg)
-        if not ('raw_ms_per_image_mapfile' in output_keys):
+        if not ('ms_per_image_mapfile' in output_keys):
             error_msg = "The imager_prepare master script did not"\
                     "return correct data. missing: {0}".format(
-                                                'raw_ms_per_image_mapfile')
+                                                'ms_per_image_mapfile')
             self.logger.error(error_msg)
             raise PipelineException(error_msg)
 
         # Return the mapfiles paths with processed data
-        return output_mapfile, outputs["slices_mapfile"], raw_ms_per_image_mapfile, \
+        return output_mapfile, outputs["slices_mapfile"], ms_per_image_mapfile, \
             processed_ms_dir
 
     @xml_node

@@ -20,8 +20,7 @@ from lofarpipe.support.lofarnode import  LOFARnodeTCP
 from lofarpipe.support.utilities import create_directory
 from lofarpipe.support.data_map import DataMap
 from lofarpipe.support.subprocessgroup import SubProcessGroup
-from lofarpipe.support.data_quality import run_rficonsole, filter_bad_stations
-
+from lofarpipe.recipes.helpers.data_quality import run_rficonsole, filter_bad_stations
 
 # Some constant settings for the recipe
 _time_slice_dir_name = "time_slices"
@@ -33,16 +32,18 @@ class selfcal_prepare(LOFARnodeTCP):
     1. Create directories and assure that they are empty.
     2. Collect the Measurement Sets (MSs): copy to the current node.
     3. Start dppp: Combines the data from subgroups into single timeslice.
-    4. Add addImagingColumns to the casa ms.
-    5. filter bad stations (asciistat and -plot)
-    5. Concatenate the time slice measurment sets, to a single virtual ms.
-    6. Add measurmentset tables
+    4. Flag rfi (toggle by parameter)
+    5. Add addImagingColumns to the casa ms.
+    6. Filter bad stations. Find station with repeated bad measurement and
+       remove these completely from the dataset.
+    7. Add measurmentset tables
+    8. Perform the (virtual) concatenation of the timeslices
     """
     def run(self, environment, parset, working_dir, processed_ms_dir,
             ndppp_executable, output_measurement_set,
             time_slices_per_image, subbands_per_group, input_ms_mapfile,
             asciistat_executable, statplot_executable, msselect_executable,
-            rficonsole_executable, add_beam_tables):
+            rficonsole_executable, do_rficonsole, add_beam_tables):
         """
         Entry point for the node recipe
         """
@@ -90,8 +91,15 @@ class selfcal_prepare(LOFARnodeTCP):
             self.logger.debug(
                     "Produced time slices: {0}".format(time_slices_path_list))
 
+            #***********************************************************
+            # 4. run rfi_concole: flag datapoints which are corrupted
+            if (do_rficonsole):
+                run_rficonsole(rficonsole_executable, time_slice_dir,
+                                 time_slices_path_list, self.logger,
+                                self.resourceMonitor )
+
             #******************************************************************
-            # 4. Add imaging columns to each timeslice
+            # 5. Add imaging columns to each timeslice
             # ndppp_executable fails if not present
             for time_slice_path in time_slices_path_list:
                 pt.addImagingColumns(time_slice_path)
@@ -100,18 +108,19 @@ class selfcal_prepare(LOFARnodeTCP):
                                                             time_slice_path))
 
             #*****************************************************************
-            # 5. Filter bad stations
-            time_slice_filtered_path_list = self._filter_bad_stations(
+            # 6. Filter bad stations
+            time_slice_filtered_path_list = filter_bad_stations(
                 time_slices_path_list, asciistat_executable,
-                statplot_executable, msselect_executable)
+                statplot_executable, msselect_executable,
+                self.logger, self.resourceMonitor)
 
             #*****************************************************************
-            # 6. Add measurementtables
+            # 7. Add measurementtables
             if add_beam_tables:
                 self._add_beam_tables(time_slice_filtered_path_list)
 
             #******************************************************************
-            # 6. Perform the (virtual) concatenation of the timeslices
+            # 8. Perform the (virtual) concatenation of the timeslices
             self._concat_timeslices(time_slice_filtered_path_list,
                                     output_measurement_set)
 
@@ -149,10 +158,10 @@ class selfcal_prepare(LOFARnodeTCP):
         """
         processed_ms_map = copy.deepcopy(input_map)
         # loop all measurement sets
-        for input_item, copied_item in zip(input_map, processed_ms_map):
+        for input_item, processed_item in zip(input_map, processed_ms_map):
             # fill the copied item with the correct data
-            copied_item.host = self.host
-            copied_item.file = os.path.join(
+            processed_item.host = self.host
+            processed_item.file = os.path.join(
                     processed_ms_dir, os.path.basename(input_item.file))
 
             stderrdata = None
@@ -193,7 +202,7 @@ class selfcal_prepare(LOFARnodeTCP):
             # if copy failed log the missing file and update the skip fields
             if  exit_status != 0:
                 input_item.skip = True
-                copied_item.skip = True
+                processed_item.skip = True
                 self.logger.warning(
                             "Failed loading file: {0}".format(input_item.file))
                 self.logger.warning(stderrdata)
@@ -340,6 +349,8 @@ class selfcal_prepare(LOFARnodeTCP):
         self.logger.debug("Concatenated the files: {0} into the single measure"
             "mentset: {1}".format(
                 ", ".join(group_measurements_collected), output_file_path))
+
+
 
 if __name__ == "__main__":
     _jobid, _jobhost, _jobport = sys.argv[1:4]

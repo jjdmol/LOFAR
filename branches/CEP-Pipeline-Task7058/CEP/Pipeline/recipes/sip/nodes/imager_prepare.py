@@ -10,7 +10,8 @@ import shutil
 import os
 import subprocess
 import copy
-import pyrap.tables as pt   # order of pyrap import influences the type conversion binding
+import pyrap.tables as pt   # order of pyrap import influences the type
+                            # conversion binding
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.pipelinelogging import log_time
 from lofarpipe.support.utilities import patch_parset
@@ -19,7 +20,7 @@ from lofarpipe.support.lofarnode import  LOFARnodeTCP
 from lofarpipe.support.utilities import create_directory
 from lofarpipe.support.data_map import DataMap
 from lofarpipe.support.subprocessgroup import SubProcessGroup
-from lofarpipe.support.data_quality import run_rficonsole, filter_bad_stations
+from lofarpipe.recipes.helpers.data_quality import run_rficonsole, filter_bad_stations
 
 # Some constant settings for the recipe
 _time_slice_dir_name = "time_slices"
@@ -29,31 +30,30 @@ class imager_prepare(LOFARnodeTCP):
     """
     Steps perform on the node:
     
-    0. Create directories and assure that they are empty.
-    1. Collect the Measurement Sets (MSs): copy to the current node.
-    2. Start dppp: Combines the data from subgroups into single timeslice.
-    3. Flag rfi.
-    4. Add addImagingColumns to the casa ms.
-    5. Concatenate the time slice measurment sets, to a single virtual ms.
+    1. Create directories and assure that they are empty.
+    2. Collect the Measurement Sets (MSs): copy to the current node.
+    3. Start dppp: Combines the data from subgroups into single timeslice.
+    4. Flag rfi (toggle by parameter)
+    5. Add addImagingColumns to the casa ms.
     6. Filter bad stations. Find station with repeated bad measurement and
        remove these completely from the dataset.
-
-    **Members:**
+    7. Add measurmentset tables
+    8. Perform the (virtual) concatenation of the timeslices
     """
     def run(self, environment, parset, working_dir, processed_ms_dir,
-             ndppp_executable, output_measurement_set,
-            time_slices_per_image, subbands_per_group, raw_ms_mapfile,
+            ndppp_executable, output_measurement_set,
+            time_slices_per_image, subbands_per_group, input_ms_mapfile,
             asciistat_executable, statplot_executable, msselect_executable,
-            rficonsole_executable, add_beam_tables):
+            rficonsole_executable, do_rficonsole, add_beam_tables):
         """
         Entry point for the node recipe
         """
         self.environment.update(environment)
         with log_time(self.logger):
-            input_map = DataMap.load(raw_ms_mapfile)
+            input_map = DataMap.load(input_ms_mapfile)
 
             #******************************************************************
-            # I. Create the directories used in this recipe
+            # 1. Create the directories used in this recipe
             create_directory(processed_ms_dir)
 
             # time slice dir_to_remove: assure empty directory: Stale data
@@ -69,16 +69,19 @@ class imager_prepare(LOFARnodeTCP):
             self.logger.debug("and assured it is empty")
 
             #******************************************************************
-            # 1. Copy the input files
-            copied_ms_map = self._copy_input_files(
+            # 2. Copy the input files
+            # processed_ms_map will be the map containing all the 'valid'
+            # input ms
+            processed_ms_map = self._copy_input_files(
                             processed_ms_dir, input_map)
 
             #******************************************************************
-            # 2. run dppp: collect frequencies into larger group
+            # 3. run dppp: collect frequencies into larger group
             time_slices_path_list = \
                 self._run_dppp(working_dir, time_slice_dir,
-                    time_slices_per_image, copied_ms_map, subbands_per_group,
+                    time_slices_per_image, processed_ms_map, subbands_per_group,
                     processed_ms_dir, parset, ndppp_executable)
+
 
             # If no timeslices were created, bail out with exit status 1
             if len(time_slices_path_list) == 0:
@@ -88,13 +91,16 @@ class imager_prepare(LOFARnodeTCP):
 
             self.logger.debug(
                     "Produced time slices: {0}".format(time_slices_path_list))
+
             #***********************************************************
-            # 3. run rfi_concole: flag datapoints which are corrupted
-            self._run_rficonsole(rficonsole_executable, time_slice_dir,
-                                 time_slices_path_list)
+            # 4. run rfi_concole: flag datapoints which are corrupted
+            if (do_rficonsole):
+                run_rficonsole(rficonsole_executable, time_slice_dir,
+                                 time_slices_path_list, self.logger,
+                                self.resourceMonitor )
 
             #******************************************************************
-            # 4. Add imaging columns to each timeslice
+            # 5. Add imaging columns to each timeslice
             # ndppp_executable fails if not present
             for time_slice_path in time_slices_path_list:
                 pt.addImagingColumns(time_slice_path)
@@ -103,29 +109,34 @@ class imager_prepare(LOFARnodeTCP):
                                                             time_slice_path))
 
             #*****************************************************************
-            # 5. Filter bad stations
-            time_slice_filtered_path_list = self._filter_bad_stations(
+            # 6. Filter bad stations
+            time_slice_filtered_path_list = filter_bad_stations(
                 time_slices_path_list, asciistat_executable,
-                statplot_executable, msselect_executable)
+                statplot_executable, msselect_executable,
+                self.logger, self.resourceMonitor)
 
             #*****************************************************************
-            # Add measurmenttables
+            # 7. Add measurementtables
             if add_beam_tables:
-                self.add_beam_tables(time_slice_filtered_path_list)
+                self._add_beam_tables(time_slice_filtered_path_list)
 
             #******************************************************************
-            # 6. Perform the (virtual) concatenation of the timeslices
+            # 8. Perform the (virtual) concatenation of the timeslices
             self._concat_timeslices(time_slice_filtered_path_list,
                                     output_measurement_set)
 
-            #******************************************************************
+            # *****************************************************************
+            # Write the actually used ms for the created dataset to the input 
+            # mapfile
+            processed_ms_map.save(input_ms_mapfile)
+
             # return
             self.outputs["time_slices"] = \
                 time_slices_path_list
 
         return 0
 
-    def add_beam_tables(self, time_slices_path_list):
+    def _add_beam_tables(self, time_slices_path_list):
         beamtable_proc_group = SubProcessGroup(self.logger)
         for ms_path in time_slices_path_list:
             self.logger.debug("makebeamtables start")
@@ -134,6 +145,7 @@ class imager_prepare(LOFARnodeTCP):
             beamtable_proc_group.run(cmd_string)
 
         if beamtable_proc_group.wait_for_finish() != None:
+            # TODO: Exception on error: make time_slices_path_list a mapfile
             raise Exception("an makebeamtables run failed!")
 
         self.logger.debug("makebeamtables finished")
@@ -145,58 +157,60 @@ class imager_prepare(LOFARnodeTCP):
         This function collects all the file in the input map in the
         processed_ms_dir Return value is a set of missing files
         """
-        copied_ms_map = copy.deepcopy(input_map)
+        processed_ms_map = copy.deepcopy(input_map)
         # loop all measurement sets
-        for input_item, copied_item in zip(input_map, copied_ms_map):
+        for input_item, processed_item in zip(input_map, processed_ms_map):
             # fill the copied item with the correct data
-            copied_item.host = self.host
-            copied_item.file = os.path.join(
+            processed_item.host = self.host
+            processed_item.file = os.path.join(
                     processed_ms_dir, os.path.basename(input_item.file))
 
+            stderrdata = None
             # If we have to skip this ms
             if input_item.skip == True:
-                exit_status = 1  #
+                exit_status = 1  
+                stderrdata = "SKIPPED_FILE"
 
-            # skip the copy if machine is the same (execution on localhost) 
-            # make sure data is in the correct directory. for now: working_dir/[jobname]/subbands
-            #if input_item.host == "localhost":           
-            #    continue
-            # construct copy command
-            command = ["rsync", "-r", "{0}:{1}".format(
-                            input_item.host, input_item.file),
-                               "{0}".format(processed_ms_dir)]
-            if input_item.host == "localhost":
-                command = ["cp", "-r", "{0}".format(input_item.file),
-                                       "{0}".format(processed_ms_dir)]
+            else:
+                # use cp the copy if machine is the same ( localhost) 
+                # make sure data is in the correct directory. for now:
+                # working_dir/[jobname]/subbands
+                # construct copy command
+                command = ["rsync", "-r", "{0}:{1}".format(
+                                input_item.host, input_item.file),
+                                   "{0}".format(processed_ms_dir)]
+                if input_item.host == "localhost":
+                    command = ["cp", "-r", "{0}".format(input_item.file),
+                                           "{0}".format(processed_ms_dir)]
 
-            self.logger.debug("executing: " + " ".join(command))
+                self.logger.debug("executing: " + " ".join(command))
 
-            # Spawn a subprocess and connect the pipes
-            # The copy step is performed 720 at once in that case which might
-            # saturate the cluster.
-            copy_process = subprocess.Popen(
-                        command,
-                        stdin = subprocess.PIPE,
-                        stdout = subprocess.PIPE,
-                        stderr = subprocess.PIPE)
+                # Spawn a subprocess and connect the pipes
+                # The copy step is performed 720 at once in that case which 
+                # might saturate the cluster.
+                copy_process = subprocess.Popen(
+                            command,
+                            stdin = subprocess.PIPE,
+                            stdout = subprocess.PIPE,
+                            stderr = subprocess.PIPE)
 
-            # Wait for finish of copy inside the loop: enforce single tread
-            # copy
-            (stdoutdata, stderrdata) = copy_process.communicate()
+                # Wait for finish of copy inside the loop: enforce single tread
+                # copy
+                (stdoutdata, stderrdata) = copy_process.communicate()
 
-            exit_status = copy_process.returncode
+                exit_status = copy_process.returncode
 
             # if copy failed log the missing file and update the skip fields
             if  exit_status != 0:
                 input_item.skip = True
-                copied_item.skip = True
+                processed_item.skip = True
                 self.logger.warning(
                             "Failed loading file: {0}".format(input_item.file))
                 self.logger.warning(stderrdata)
 
             self.logger.debug(stdoutdata)
 
-        return copied_ms_map
+        return processed_ms_map
 
 
     def _dppp_call(self, working_dir, ndppp, cmd, environment):
@@ -204,6 +218,8 @@ class imager_prepare(LOFARnodeTCP):
         Muckable function running the dppp executable.
         Wraps dppp with catchLog4CPLus and catch_segfaults
         """
+        environment['OMP_NUM_THREADS'] = str(8)
+        self.logger.debug("Using %s threads for ndppp" % 8)
         with CatchLog4CPlus(working_dir, self.logger.name +
              "." + os.path.basename("imager_prepare_ndppp"),
                   os.path.basename(ndppp)) as logger:
@@ -211,8 +227,8 @@ class imager_prepare(LOFARnodeTCP):
                    logger, cleanup = None, usageStats=self.resourceMonitor)
 
     def _run_dppp(self, working_dir, time_slice_dir_path, slices_per_image,
-                  copied_ms_map, subbands_per_image, collected_ms_dir_name, parset,
-                  ndppp):
+                  processed_ms_map, subbands_per_image, collected_ms_dir_name, 
+                  parset, ndppp):
         """
         Run NDPPP:
         Create dir for grouped measurements, assure clean workspace
@@ -223,27 +239,63 @@ class imager_prepare(LOFARnodeTCP):
         for idx_time_slice in range(slices_per_image):
             start_slice_range = idx_time_slice * subbands_per_image
             end_slice_range = (idx_time_slice + 1) * subbands_per_image
-            # Get the subset of ms that are part of the current timeslice,
-            # cast to datamap
-            input_map_subgroup = DataMap(
-                            copied_ms_map[start_slice_range:end_slice_range])
-
             output_ms_name = "time_slice_{0}.dppp.ms".format(idx_time_slice)
 
             # construct time slice name
             time_slice_path = os.path.join(time_slice_dir_path,
                                          output_ms_name)
 
-            # convert the datamap to a file list: Do not remove skipped files:
-            # ndppp needs the incorrect files there to allow filling with zeros
-            ndppp_input_ms = [item.file for item in input_map_subgroup]
+            # convert the datamap to a file list: Add nonfalid entry for
+            # skipped files: ndppp needs the incorrect files there to allow 
+            # filling with zeros           
+            ndppp_input_ms = []
+            nchan_known = False
+            for item in processed_ms_map[start_slice_range:end_slice_range]:
+                if item.skip:
+                    ndppp_input_ms.append("SKIPPEDSUBBAND")
+                else:
+                    # From the first non skipped filed get the nchan
+                    if not nchan_known:
+                        try:
+                            # Automatically average the number of channels in 
+                            # the output to 1
+                            # open the datasetassume same nchan for all sb
+                            table = pt.table(item.file)  # 
+            
+                            # get the data column, get description, get the 
+                            # shape, first index returns the number of channels
+                            nchan_input = str(
+                                pt.tablecolumn(table, 
+                                               'DATA').getdesc()["shape"][0])
+                            nchan_known = True
 
-            # Join into a single list of paths.
+                        # corrupt input measurement set
+                        except:
+                            item.skip = True
+                            ndppp_input_ms.append("SKIPPEDSUBBAND")
+                            continue
+
+                    ndppp_input_ms.append(item.file)
+            
+            # if none of the input files was valid, skip the creation of the 
+            # timeslice all together, it will not show up in the timeslice 
+            # mapfile
+            if not nchan_known:
+                continue
+           
+            # TODO/FIXME: dependency on the step name!!!!
+            ndppp_nchan_key = "avg1.freqstep"  
+            
+            # Join into a single string list of paths.
             msin = "['{0}']".format("', '".join(ndppp_input_ms))
+            
             # Update the parset with computed parameters
             patch_dictionary = {'uselogger': 'True',  # enables log4cplus
                                'msin': msin,
-                               'msout': time_slice_path}
+                               'msout': time_slice_path,
+                               ndppp_nchan_key:nchan_input}
+
+
             nddd_parset_path = time_slice_path + ".ndppp.par"
             try:
                 temp_parset_filename = patch_parset(parset, patch_dictionary)
@@ -278,11 +330,10 @@ class imager_prepare(LOFARnodeTCP):
                 time_slice_path_list.append(time_slice_path)
 
             # On error the current timeslice should be skipped
-            except subprocess.CalledProcessError, exception:
-                self.logger.warning(str(exception))
-                continue
-
+            # and the input ms should have the skip  set
             except Exception, exception:
+                for item in processed_ms_map[start_slice_range:end_slice_range]:
+                    item.skip = True
                 self.logger.warning(str(exception))
                 continue
 

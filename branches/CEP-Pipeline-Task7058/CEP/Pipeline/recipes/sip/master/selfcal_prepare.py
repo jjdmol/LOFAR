@@ -86,6 +86,11 @@ class selfcal_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             '--rficonsole-executable',
             help="The full path to the rficonsole executable "
         ),
+        'do_rficonsole': ingredient.BoolField(
+            '--do_rficonsole',
+            default=True,
+            help="toggle the rficonsole step in preprocessing (default True)"
+        ),
         'mapfile': ingredient.StringField(
             '--mapfile',
             help="Full path of mapfile; contains a list of the "
@@ -197,6 +202,7 @@ class selfcal_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
                          self.inputs['statplot_executable'],
                          self.inputs['msselect_executable'],
                          self.inputs['rficonsole_executable'],
+                         self.inputs['do_rficonsole'],
                          self.inputs['add_beam_tables']]
 
             jobs.append(ComputeJob(item.host, node_command, arguments))

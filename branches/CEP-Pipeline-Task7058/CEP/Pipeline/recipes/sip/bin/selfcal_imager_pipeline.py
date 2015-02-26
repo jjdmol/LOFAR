@@ -602,7 +602,7 @@ class selfcal_imager_pipeline(control):
         slices_per_image = self.parset.getInt("Imaging.slices_per_image")
         subbands_per_image = self.parset.getInt("Imaging.subbands_per_image")
 
-        outputs = self.run_task("selfcal_prepare", input_ms_map_path,
+        outputs = self.run_task("imager_prepare", input_ms_map_path,
                 parset = ndppp_parset_path,
                 target_mapfile = target_mapfile,
                 slices_per_image = slices_per_image,
@@ -612,7 +612,8 @@ class selfcal_imager_pipeline(control):
                 ms_per_image_mapfile = ms_per_image_mapfile,
                 working_directory = self.scratch_directory,
                 processed_ms_dir = processed_ms_dir,
-                add_beam_tables = add_beam_tables)
+                add_beam_tables = add_beam_tables,
+                do_rficonsole = False)
 
         # validate that the prepare phase produced the correct data
         output_keys = outputs.keys()
