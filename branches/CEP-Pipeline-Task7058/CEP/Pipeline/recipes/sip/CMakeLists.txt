@@ -39,15 +39,15 @@ python_install(
   nodes/get_metadata.py
   nodes/imager_awimager.py
   nodes/imager_bbs.py
+  nodes/imager_create_dbs.py
   nodes/imager_finalize.py
+  nodes/imager_prepare.py
   nodes/imager_source_finding.py
   nodes/new_bbs.py
   nodes/rficonsole.py
   nodes/setupparmdb.py
   nodes/setupsourcedb.py
   nodes/vdsmaker.py
-  nodes/selfcal_prepare.py
-  nodes/selfcal_create_dbs.py
   nodes/selfcal_awimager.py
   nodes/selfcal_bbs.py
   nodes/selfcal_finalize.py
