@@ -95,6 +95,17 @@ class pulsar_pipeline(control):
         """
         # *********************************************************************
         # 1. Prepare phase, collect data from parset and input mapfiles.
+        #
+        # Note that PULP will read many of these fields directly. That makes
+        # the following fields, and possibly others, part of the API towards
+        # PULP:
+        #
+        # self.config
+        # self.logger
+        # self.input_data
+        # self.output_data
+        # self.parset_feedback_file
+        # self.job_dir
 
         # Get input/output-data products specifications.
         self._get_io_product_specs()
@@ -139,6 +150,9 @@ class pulsar_pipeline(control):
           
         if (not self.incoherentStokesEnabled):
           sys.argv.append("--noIS")       
+
+        # Tell PULP where to write the feedback to
+        self.parset_feedback_file =  "%s_feedback" % (parset_file,)
        
         # Run the pulsar pipeline
         self.logger.debug("Starting pulp with: " + join(sys.argv))
@@ -148,13 +162,9 @@ class pulsar_pipeline(control):
           self.logger.error("PULP did not succeed. Bailing out!")
           return 0
 
-        # PULP puts the feedback in ObservationXXXXX_feedback, where XXXXX is the SAS ID.
-        # Note that the input parset is called ObservationXXXXX
-        metadata_file = "%s_feedback" % (parset_file,)
-
         # Read and forward the feedback
         try:
-          metadata = parameterset(metadata_file)
+          metadata = parameterset(self.parset_feedback_file)
         except IOError, e:
           self.logger.error("Could not read feedback from %s: %s" % (metadata_file,e))
           return 0
