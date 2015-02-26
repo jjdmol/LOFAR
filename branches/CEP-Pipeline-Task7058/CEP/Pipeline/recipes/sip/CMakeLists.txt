@@ -27,8 +27,6 @@ python_install(
   master/setupsourcedb.py
   master/vdsmaker.py
   master/vdsreader.py
-  master/selfcal_prepare.py
-  master/selfcal_create_dbs.py
   master/selfcal_awimager.py
   master/selfcal_bbs.py
   master/selfcal_finalize.py
@@ -41,9 +39,7 @@ python_install(
   nodes/get_metadata.py
   nodes/imager_awimager.py
   nodes/imager_bbs.py
-  nodes/imager_create_dbs.py
   nodes/imager_finalize.py
-  nodes/imager_prepare.py
   nodes/imager_source_finding.py
   nodes/new_bbs.py
   nodes/rficonsole.py
