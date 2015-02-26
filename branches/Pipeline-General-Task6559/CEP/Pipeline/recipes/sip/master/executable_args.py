@@ -240,26 +240,28 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
         for i, (outp, inp,) in enumerate(zip(
             outdata, indatas[0])
         ):
+            arglist_copy = copy.deepcopy(arglist)
+            parsetdict_copy = copy.deepcopy(parsetdict)
+
             if self.inputs['inputkeys'] and not self.inputs['skip_infile']:
                 for name, value in zip(self.inputs['inputkeys'], inputlist):
-                    if arglist and name in arglist:
-                        ind = arglist.index(name)
-                        arglist[ind] = value[i]
+                    if arglist_copy and name in arglist_copy:
+                        ind = arglist_copy.index(name)
+                        arglist_copy[ind] = value[i]
                     else:
-                        parsetdict[name] = value[i]
+                        parsetdict_copy[name] = value[i]
 
             if self.inputs['outputkey'] and not self.inputs['skip_infile']:
-                parsetdict[self.inputs['outputkey']] = outp.file
+                parsetdict_copy[self.inputs['outputkey']] = outp.file
 
-            nopointer = copy.deepcopy(parsetdict)
             jobs.append(
                 ComputeJob(
                     inp.host, command,
                     arguments=[
                         inp.file,
                         executable,
-                        arglist,
-                        nopointer,
+                        arglist_copy,
+                        parsetdict_copy,
                         prefix,
                         self.inputs['parsetasfile'],
                         #self.inputs['working_directory'],
