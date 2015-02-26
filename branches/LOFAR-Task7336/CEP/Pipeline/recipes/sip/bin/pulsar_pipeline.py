@@ -144,7 +144,7 @@ class pulsar_pipeline(control):
         self.logger.debug("Starting pulp with: " + join(sys.argv))
         p = pulp.pulp(self)
 
-        if not p.go()
+        if not p.go():
           self.logger.error("PULP did not succeed. Bailing out!")
           return 0
 
