@@ -264,10 +264,10 @@ int32 CTStartDaemon::startController(uint16			cntlrType,
 									parentService.c_str());
 	LOG_INFO_STR("About to start: " << startCmd);
 
-	int32	result = system (startCmd.c_str());
+	int	result = system (startCmd.c_str());
 	LOG_INFO_STR ("Result of start = " << result);
 
-	if (result == -1) {
+	if (result != 0) {
 		return (SD_RESULT_START_FAILED);
 	}
 	
