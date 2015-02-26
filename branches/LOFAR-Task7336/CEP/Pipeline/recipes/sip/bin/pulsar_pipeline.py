@@ -152,11 +152,11 @@ class pulsar_pipeline(control):
           sys.argv.append("--noIS")       
 
         # Tell PULP where to write the feedback to
-        self.parset_feedback_file =  "%s_feedback" % (parset_file,)
+        self.parset_feedback_file =  "%s_feedback" % (self.parset_file,)
        
         # Run the pulsar pipeline
         self.logger.debug("Starting pulp with: " + join(sys.argv))
-        p = pulp.pulp(self)
+        p = pulp.pulp(self) # TODO: MUCK self to capture the API
 
         if not p.go():
           self.logger.error("PULP did not succeed. Bailing out!")
