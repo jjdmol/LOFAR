@@ -99,6 +99,7 @@ class selfcal_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'major_cycle': ingredient.IntField(
             '--major_cycle',
+            default=0,
             help = "The number of the current cycle"
         ),
     }

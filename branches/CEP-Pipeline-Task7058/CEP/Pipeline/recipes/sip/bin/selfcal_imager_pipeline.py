@@ -661,7 +661,7 @@ class selfcal_imager_pipeline(control):
         if skip_create_dbs:
             pass
         else:
-            self.run_task("selfcal_create_dbs", input_map_path,
+            self.run_task("imager_create_dbs", input_map_path,
                         monetdb_hostname = parset.getString("monetdb_hostname"),
                         monetdb_port = parset.getInt("monetdb_port"),
                         monetdb_name = parset.getString("monetdb_name"),
