@@ -34,13 +34,13 @@ class imager_finalize(LOFARnodeTCP):
     5. Export sourcelist to msss server, copy the sourcelist to hdf5 location
     6. Return the outputs
     """
-    def run(self, awimager_output, raw_ms_per_image, sourcelist, target,
+    def run(self, awimager_output, ms_per_image, sourcelist, target,
             output_image, minbaseline, maxbaseline, processed_ms_dir,
             fillrootimagegroup_exec, environment, sourcedb):
         self.environment.update(environment)
         """
         :param awimager_output: Path to the casa image produced by awimager 
-        :param raw_ms_per_image: The X (90) measurements set scheduled to 
+        :param ms_per_image: The X (90) measurements set scheduled to 
             create the image
         :param sourcelist: list of sources found in the image 
         :param target: <unused>
@@ -55,7 +55,7 @@ class imager_finalize(LOFARnodeTCP):
         :rtype: self.outputs['image'] path to the produced hdf5 image
         """
         with log_time(self.logger):
-            raw_ms_per_image_map = DataMap.load(raw_ms_per_image)
+            ms_per_image_map = DataMap.load(ms_per_image)
 
             # *****************************************************************
             # 1. add image info                      
@@ -64,14 +64,14 @@ class imager_finalize(LOFARnodeTCP):
             # TODO: BUG!! the meta data might contain files that were copied
             # but failed in imager_bbs 
             processed_ms_paths = []
-            for item in raw_ms_per_image_map:
+            for item in ms_per_image_map:
                 path = item.file
-                raw_ms_file_name = os.path.split(path)[1]
-                #if the raw ms is in the processed dir (additional check)
-                if (raw_ms_file_name in file_list):
+                ms_file_name = os.path.split(path)[1]
+                #if the ms is in the processed dir (additional check)
+                if (ms_file_name in file_list):
                     # save the path
                     processed_ms_paths.append(os.path.join(processed_ms_dir,
-                                                            raw_ms_file_name))
+                                                            ms_file_name))
             #add the information the image
             try:
                 addimg.addImagingInfo(awimager_output, processed_ms_paths,

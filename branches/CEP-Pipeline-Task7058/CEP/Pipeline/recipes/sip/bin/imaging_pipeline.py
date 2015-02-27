@@ -187,16 +187,24 @@ class imaging_pipeline(control):
             processed_ms_dir = self._prepare_phase(input_mapfile,
                                     target_mapfile)
 
-        # We start with an empty source_list
-        source_list = ""  # path to local sky model (list of 'found' sources)
         number_of_major_cycles = self.parset.getInt(
                                     "Imaging.number_of_major_cycles")
+
+        # We start with an empty source_list map. It should contain n_output
+        # entries all set to empty strings
+        source_list_map_path = os.path.join(self.mapfile_dir,
+                                        "initial_sourcelist.mapfile")
+        source_list_map = DataMap.load(target_mapfile) # copy the output map
+        for item in source_list_map:
+            item.file = ""             # set all to empty string
+        source_list_map.save(source_list_map_path)
+
         for idx_loop in range(number_of_major_cycles):
             # *****************************************************************
             # (2) Create dbs and sky model
             parmdbs_path, sourcedb_map_path = self._create_dbs(
                         concat_ms_map_path, timeslice_map_path,
-                        source_list = source_list,
+                        source_list_map_path = source_list_map_path,
                         skip_create_dbs = False)
 
             # *****************************************************************
@@ -527,7 +535,7 @@ class imaging_pipeline(control):
             processed_ms_dir
 
     @xml_node
-    def _create_dbs(self, input_map_path, timeslice_map_path, source_list = "",
+    def _create_dbs(self, input_map_path, timeslice_map_path, source_list_map_path,
                     skip_create_dbs = False):
         """
         Create for each of the concatenated input measurement sets
@@ -558,7 +566,7 @@ class imaging_pipeline(control):
                         parmdb_suffix = ".parmdb",
                         parmdbs_map_path = parmdbs_map_path,
                         sourcedb_map_path = sourcedb_map_path,
-                        source_list_path = source_list,
+                        source_list_map_path = source_list_map_path,
                         working_directory = self.scratch_directory)
 
         return parmdbs_map_path, sourcedb_map_path
