@@ -157,6 +157,8 @@ def normalize(phase):
     # Convert to range [-2*pi, 2*pi].
     out = numpy.fmod(phase, 2.0 * numpy.pi)
 
+    # Remove nans
+    numpy.putmask(out, out!=out, 0)
     # Convert to range [-pi, pi]
     out[out < -numpy.pi] += 2.0 * numpy.pi
     out[out > numpy.pi] -= 2.0 * numpy.pi
@@ -776,6 +778,9 @@ class PlotWindow(QFrame):
 
 
         if double:
+            # put nans to 0
+            [numpy.putmask(amp[i], amp[i]!=amp[i], 0) for i in xrange(len(amp))]
+            [numpy.putmask(phase[i], phase[i]!=phase[i], 0) for i in xrange(len(phase))]
             if self.polar:
                     self.valminmax[0] = plot(self.fig, amp, x=xvalues, sub="211", labels=labels, show_legend=legend, xlabel=xlabel, ylabel="Amplitude",scatter=self.use_points)
                     self.valminmax[1] = plot(self.fig, phase, x=xvalues, clf=False, sub="212", stack=True, scatter=True, labels=labels, show_legend=legend, xlabel=xlabel, ylabel=phaselabel)
@@ -783,6 +788,8 @@ class PlotWindow(QFrame):
                     self.valminmax[0] = plot(self.fig, amp, x=xvalues, sub="211", labels=labels, show_legend=legend, xlabel=xlabel, ylabel="Real",scatter=self.use_points)
                     self.valminmax[1] = plot(self.fig, phase, x=xvalues, clf=False, sub="212", labels=labels, show_legend=legend, xlabel=xlabel, ylabel="Imaginary",scatter=self.use_points)
         else:
+            # put nans to 0
+            [numpy.putmask(phase[i], phase[i]!=phase[i], 0) for i in xrange(len(phase))]
             self.valminmax[0] = plot(self.fig, phase, x=xvalues, sub="111", stack=True, scatter=True, labels=labels, show_legend=legend, xlabel=xlabel, ylabel=phaselabel)
 
         self.resize_plot()
