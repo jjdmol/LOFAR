@@ -12,6 +12,7 @@
 import os
 import sys
 import copy
+import shutil
 
 from lofarpipe.support.control import control
 from lofarpipe.support.utilities import create_directory
@@ -188,6 +189,7 @@ class selfcal_imager_pipeline(control):
         self.logger.debug(
             "Wrote output correlated mapfile: {0}".format(output_correlated_mapfile))
 
+        # Get pipeline parameters from the toplevel recipe
         # TODO: This is a backdoor option to manually add beamtables when these
         # are missing on the provided ms. There is NO use case for users of the
         # pipeline
@@ -197,6 +199,11 @@ class selfcal_imager_pipeline(control):
 
         number_of_major_cycles = self.parset.getInt(
                                     "Imaging.number_of_major_cycles")
+
+        # Almost always a users wants a partial succes above a failed pipeline
+        output_result_of_last_succesfull_cycle = self.parset.getBool(
+                            "Imaging.output_on_error", True)
+
 
         if number_of_major_cycles < 3:
             self.logger.error(
@@ -221,36 +228,79 @@ class selfcal_imager_pipeline(control):
             item.file = ""             # set all to empty string
         source_list_map.save(source_list_map_path)
 
-        for idx_loop in range(number_of_major_cycles):
-            # *****************************************************************
-            # (2) Create dbs and sky model
-            parmdbs_path, sourcedb_map_path = self._create_dbs(
-                        concat_ms_map_path, timeslice_map_path, idx_loop,
-                        source_list_map_path = source_list_map_path,
-                        skip_create_dbs = False)
+        succesfull_cycle_mapfiles_dict = None
+        for idx_cycle in range(number_of_major_cycles):
+            try:
+                # *****************************************************************
+                # (2) Create dbs and sky model
+                parmdbs_path, sourcedb_map_path = self._create_dbs(
+                            concat_ms_map_path, timeslice_map_path, idx_cycle,
+                            source_list_map_path = source_list_map_path,
+                            skip_create_dbs = False)
 
 
-            # *****************************************************************
-            # (3)  bbs_imager recipe.
-            bbs_output = self._bbs(concat_ms_map_path, timeslice_map_path, 
-                    parmdbs_path, sourcedb_map_path, idx_loop, skip = False)
+                # *****************************************************************
+                # (3)  bbs_imager recipe.
+                bbs_output = self._bbs(concat_ms_map_path, timeslice_map_path, 
+                        parmdbs_path, sourcedb_map_path, idx_cycle, skip = False)
 
             
-            # TODO: Extra recipe: concat timeslices using pyrap.concatms
-            # (see prepare) redmine issue #6021
-            # Done in imager_bbs.p at the node level after calibration 
+                # TODO: Extra recipe: concat timeslices using pyrap.concatms
+                # (see prepare) redmine issue #6021
+                # Done in imager_bbs.p at the node level after calibration 
 
-            # *****************************************************************
-            # (4) Get parameters awimager from the prepare_parset and inputs
-            aw_image_mapfile, maxbaseline = self._aw_imager(concat_ms_map_path,
-                        idx_loop, sourcedb_map_path, number_of_major_cycles,
-                        skip = False)
+                # *****************************************************************
+                # (4) Get parameters awimager from the prepare_parset and inputs
+                aw_image_mapfile, maxbaseline = self._aw_imager(concat_ms_map_path,
+                            idx_cycle, sourcedb_map_path, number_of_major_cycles,
+                            skip = False)
 
-            # *****************************************************************
-            # (5) Source finding
-            source_list_map_path, found_sourcedb_path = self._source_finding(
-                    aw_image_mapfile, idx_loop, skip = False)
-            # should the output be a sourcedb? instead of a sourcelist
+                # *****************************************************************
+                # (5) Source finding
+                source_list_map_path, found_sourcedb_path = self._source_finding(
+                        aw_image_mapfile, idx_cycle, skip = False)
+                # should the output be a sourcedb? instead of a sourcelist
+
+                # save the active mapfiles: locations and content
+                # Used to output last succesfull cycle on error
+                mapfiles_to_save = {'aw_image_mapfile':aw_image_mapfile,
+                                    'source_list_map_path':source_list_map_path,
+                                    'found_sourcedb_path':found_sourcedb_path,
+                                    'concat_ms_map_path':concat_ms_map_path}
+                succesfull_cycle_mapfiles_dict = self._save_active_mapfiles(idx_cycle, 
+                                      self.mapfile_dir, mapfiles_to_save)
+
+            # On exception there is the option to output the results of the 
+            # last cycle without errors
+            except KeyboardInterrupt, ex:
+                raise ex
+
+            except Exception, ex:
+                self.logger.error("Encountered an fatal exception during self"
+                                  "calibration. Aborting processing and return"
+                                  " the last succesfull cycle results")
+                self.logger.error(str(ex))
+
+                # if we are in the first cycle always exit with exception
+                if idx_cycle == 0:
+                    raise ex
+
+                if not output_result_of_last_succesfull_cycle:
+                    raise ex
+                
+                # restore the mapfile variables
+                aw_image_mapfile = succesfull_cycle_mapfiles_dict['aw_image_mapfile']
+                source_list_map_path = succesfull_cycle_mapfiles_dict['source_list_map_path']
+                found_sourcedb_path = succesfull_cycle_mapfiles_dict['found_sourcedb_path']
+                concat_ms_map_path = succesfull_cycle_mapfiles_dict['concat_ms_map_path']
+
+                # set the number_of_major_cycles to the correct number
+                number_of_major_cycles = idx_cycle - 1
+                max_cycles_reached = False
+                break
+            else:
+                max_cycles_reached = True
+
 
         # TODO: minbaseline should be a parset value as is maxbaseline..
         minbaseline = 0
@@ -268,13 +318,37 @@ class selfcal_imager_pipeline(control):
         # create a parset with information that is available on the toplevel
 
         self._get_meta_data(number_of_major_cycles, placed_data_image_map,
-                       placed_correlated_map, full_parset)
+                       placed_correlated_map, full_parset, 
+                       max_cycles_reached)
 
 
         return 0
 
+    def _save_active_mapfiles(self, cycle_idx, mapfile_dir, mapfiles = {}):
+        """
+        receives a dict with active mapfiles, var name to path
+        Each mapfile is copier to a seperate directory and saved
+        THis allows us to exit the last succesfull run
+        """
+        # create a directory for storing the saved mapfiles, use cycle idx
+        mapfile_for_cycle_dir = os.path.join(mapfile_dir, "cycle_" + str(cycle_idx))
+        create_directory(mapfile_for_cycle_dir)
+
+        saved_mapfiles = {}
+        for (var_name,mapfile_path) in mapfiles.items():
+            shutil.copy(mapfile_path, mapfile_for_cycle_dir)
+            # save the newly created file, get the filename, and append it
+            # to the directory name
+            saved_mapfiles[var_name] = os.path.join(mapfile_for_cycle_dir,
+                                          os.path.basename(mapfile_path))
+
+        return saved_mapfiles
+            
+            
+
+
     def _get_meta_data(self, number_of_major_cycles, placed_data_image_map,
-                       placed_correlated_map, full_parset):
+                       placed_correlated_map, full_parset, max_cycles_reached):
         """
         Function combining all the meta data collection steps of the processing
         """
@@ -287,6 +361,9 @@ class selfcal_imager_pipeline(control):
                                            str(number_of_major_cycles))
         toplevel_meta_data_path = os.path.join(
                 self.parset_dir, "toplevel_meta_data.parset")
+
+        toplevel_meta_data.replace(parset_prefix + ".max_cycles_reached",
+                                  str(max_cycles_reached))
 
         try:
             toplevel_meta_data.writeFile(toplevel_meta_data_path)
