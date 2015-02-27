@@ -107,10 +107,11 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	itsProcessType   = globalParameterSet()->getString("Observation.processType", "Observation");
 
 	// Values from my conf file
-	itsLateLimit     = globalParameterSet()->getTime  ("ObservationControl.lateLimit", 15);
-	itsFailedLimit   = globalParameterSet()->getTime  ("ObservationControl.failedLimit", 30);
-	itsHeartBeatItv	 = globalParameterSet()->getTime  ("ObservationControl.heartbeatInterval", 10);
-	string reportType= globalParameterSet()->getString("ObservationControl.reportType", "Full");
+	itsLateLimit       = globalParameterSet()->getTime  ("ObservationControl.lateLimit", 15);
+	itsFailedLimit     = globalParameterSet()->getTime  ("ObservationControl.failedLimit", 30);
+	itsHeartBeatItv	   = globalParameterSet()->getTime  ("ObservationControl.heartbeatInterval", 10);
+	itsFinalStateDelay = globalParameterSet()->getTime  ("ObservationControl.finalStateDelay", 10);
+	string reportType  = globalParameterSet()->getString("ObservationControl.reportType", "Full");
 	if 		(reportType == "Full")		itsFullReport = true;
 	else if (reportType == "Changes")	itsChangeReport = true;
 
@@ -655,6 +656,8 @@ GCFEvent::TResult ObservationControl::finishing_state(GCFEvent& 		event,
 		setState(CTState::QUITED);
 
 		// inform MACScheduler we are going down
+		LOG_INFO_STR("Waiting " << itsFinalStateDelay << " seconds before reporting final state...");
+		sleep (itsFinalStateDelay);
 		CONTROLQuitedEvent	msg;
 		msg.cntlrName = getName();
 		msg.result 	  = itsQuitReason;
