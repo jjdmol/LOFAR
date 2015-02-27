@@ -76,11 +76,12 @@ class selfcal_finalize(LOFARnodeTCP):
                     sourcedb, minbaseline, maxbaseline)
 
             except Exception, error:
-                self.logger.error("addImagingInfo Threw Exception:")
-                self.logger.error(error)
+                self.logger.warn("addImagingInfo Threw Exception:")
+                self.logger.warn(error)
                 # Catch raising of already done error: allows for rerunning
                 # of the recipe
                 if "addImagingInfo already done" in str(error):
+                    self.logger.warn("addImagingInfo already done, continue")
                     pass
                 else:
                     raise Exception(error) 

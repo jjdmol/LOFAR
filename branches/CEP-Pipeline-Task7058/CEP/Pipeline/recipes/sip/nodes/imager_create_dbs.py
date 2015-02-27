@@ -505,8 +505,8 @@ class imager_create_dbs(LOFARnodeTCP):
                     shutil.rmtree(parmdb_directory)
                 shutil.copytree(parmdb_entry, parmdb_directory)
             except:
-                self.logger.error("Failed copying parmdb:")
-                self.logger.error(parmdb_entry)
+                self.logger.warn("Failed copying parmdb:")
+                self.logger.warn(parmdb_entry)
                 continue    # slices might be missing, not an exit error
 
 

@@ -78,8 +78,8 @@ class imager_finalize(LOFARnodeTCP):
                     sourcedb, minbaseline, maxbaseline)
 
             except Exception, error:
-                self.logger.error("addImagingInfo Threw Exception:")
-                self.logger.error(error)
+                self.logger.warn("addImagingInfo Threw Exception:")
+                self.logger.warn(error)
                 # Catch raising of already done error: allows for rerunning
                 # of the recipe
                 if "addImagingInfo already done" in str(error):
@@ -143,8 +143,8 @@ class imager_finalize(LOFARnodeTCP):
             (stdoutdata, stderrdata) = proc.communicate()
 
             exit_status = proc.returncode
-            self.logger.error(stdoutdata)
-            self.logger.error(stderrdata)
+            self.logger.info(stdoutdata)
+            self.logger.info(stderrdata)
 
             #if copy failed log the missing file
             if  exit_status != 0:

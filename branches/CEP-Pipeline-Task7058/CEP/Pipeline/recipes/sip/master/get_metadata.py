@@ -71,7 +71,7 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
             global_prefix += '.'
 
         if not product_type in self.valid_product_types:
-            self.logger.error(
+            self.logger.warn(
                 "Unknown product type: %s\n\tValid product types are: %s" %
                 (product_type, ', '.join(self.valid_product_types))
         )

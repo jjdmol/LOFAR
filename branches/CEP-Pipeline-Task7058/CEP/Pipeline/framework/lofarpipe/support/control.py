@@ -112,7 +112,7 @@ class control(StatefulRecipe):
                     fp.write(get_active_stack(self).toxml(encoding='ascii'))
                     fp.close()
                 except Exception, except_object:
-                    self.logger.error("Failed opening xml stat file:")
-                    self.logger.error(except_object)
+                    self.logger.warn("Failed opening xml stat file:")
+                    self.logger.warn(except_object)
 
         return 0

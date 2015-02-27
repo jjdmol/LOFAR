@@ -223,7 +223,7 @@ class UsageStats(threading.Thread):
                         data_point.setAttribute("cpu", str(entry[5]))
                         data_point.setAttribute("mem", str(entry[6]))
         except:
-            self.logger.error("monitoring statistic recording failed")
+            self.logger.warn("monitoring statistic recording failed")
             resource_stat_xml.setAttribute("noStatsRecorded", "Exception")
             # TODO: coalesce these two returns in one "finally:"
             return resource_stat_xml.toxml(encoding = "ascii")

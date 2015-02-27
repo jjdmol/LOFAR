@@ -125,7 +125,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
             assoc_theta = None
 
         # Load mapfile data from files
-        self.logger.error(self.inputs["slice_paths_mapfile"])
+        self.logger.info(self.inputs["slice_paths_mapfile"])
         slice_paths_map = MultiDataMap.load(self.inputs["slice_paths_mapfile"])
         input_map = DataMap.load(self.inputs['args'][0])
         source_list_map = DataMap.load(self.inputs['source_list_map_path'])

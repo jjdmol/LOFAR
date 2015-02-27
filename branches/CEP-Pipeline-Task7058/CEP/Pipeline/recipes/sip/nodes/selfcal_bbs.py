@@ -106,7 +106,7 @@ class selfcal_bbs(LOFARnodeTCP):
             cmd = "cp -r {0} {1}".format(time_slice_dir, time_slice_copy_dir) 
             os.system(cmd)     
         except:
-          self.logger.error(
+          self.logger.warn(
                "Debug copy of temporary files failed: continue operations")
           pass # Do nothing       
 
