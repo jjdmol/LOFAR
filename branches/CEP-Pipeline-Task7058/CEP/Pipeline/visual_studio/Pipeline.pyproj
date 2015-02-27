@@ -30,10 +30,6 @@
     <Content Include="framework\lofarpipe\process_monitoring\example\poll_execute.sh" />
     <Content Include="framework\lofarpipe\process_monitoring\example\testfile" />
     <Content Include="helper_scripts\pipeline_commisioning.txt" />
-    <Content Include="helper_scripts\selfcal.parset" />
-    <Content Include="helper_scripts\selfcal.settings" />
-    <Content Include="helper_scripts\selfcal.settings.bak" />
-    <Content Include="helper_scripts\statistics.xml" />
     <Content Include="mac\CMakeLists.txt" />
     <Content Include="recipes\CMakeLists.txt" />
     <Content Include="test\CMakeLists.txt" />
@@ -42,6 +38,7 @@
     <Compile Include="helper_scripts\state_to_stats.py" />
     <Compile Include="recipes\sip\bin\long_baseline_pipeline.py" />
     <Compile Include="recipes\sip\bin\selfcal_imager_pipeline.py" />
+    <Compile Include="recipes\sip\helpers\data_quality.py" />
     <Compile Include="recipes\sip\master\long_baseline.py" />
     <Compile Include="recipes\sip\master\selfcal_awimager.py" />
     <Compile Include="recipes\sip\master\selfcal_bbs.py" />
@@ -54,7 +51,7 @@
     <Compile Include="recipes\sip\nodes\selfcal_create_dbs.py" />
     <Compile Include="recipes\sip\nodes\selfcal_finalize.py" />
     <Compile Include="recipes\sip\nodes\selfcal_prepare.py" />
-    <Compile Include="test\helper_scripts\create_selfcal_parset.py" />
+    <Compile Include="test\recipes\master\selfcal_prepare_test.py" />
     <Compile Include="test\regression_tests\regression_test_runner.py" />
     <Compile Include="test\support\subprocessgroup_test.py" />
     <Compile Include="test\__init__.py" />
@@ -293,7 +290,6 @@
     <Folder Include="recipes\sip\nodes\deprecated\demix" />
     <Folder Include="test" />
     <Folder Include="test\cuisine" />
-    <Folder Include="test\helper_scripts\" />
     <Folder Include="test\recipes" />
     <Folder Include="test\recipes\helpers" />
     <Folder Include="test\recipes\master" />
