@@ -27,6 +27,7 @@ python_install(
   master/setupsourcedb.py
   master/vdsmaker.py
   master/vdsreader.py
+  master/virtual_concat.py
   master/selfcal_awimager.py
   master/selfcal_bbs.py
   master/selfcal_finalize.py
@@ -48,6 +49,7 @@ python_install(
   nodes/setupparmdb.py
   nodes/setupsourcedb.py
   nodes/vdsmaker.py
+  nodes/virtual_concat.py
   nodes/selfcal_awimager.py
   nodes/selfcal_bbs.py
   nodes/selfcal_finalize.py
