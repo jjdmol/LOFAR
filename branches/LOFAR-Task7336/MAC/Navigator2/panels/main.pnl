@@ -162,7 +162,7 @@ void addBackLines() {
           }
     yPos_AddSymbol += 12;
     ref++;
-    addProcesses(stationList[i]+\":\");
+//    addProcesses(stationList[i]+\":\");
   }
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",station_result);
 }
@@ -779,13 +779,17 @@ LANG:1 5 AardF
 0
 1 182 4 "" 3
 0
-1 183 5 "" 0
+1 183 4 "" 4
 0
-1 184 6 "" 1
+1 184 5 "" 0
 0
-1 185 6 "" 2
+1 185 5 "" 1
 0
-1 186 7 "" 0
+1 186 6 "" 1
+0
+1 187 6 "" 2
+0
+1 188 7 "" 0
 0
 0
 LAYER, 1 

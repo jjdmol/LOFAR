@@ -33,6 +33,7 @@
 #include <Stream/Stream.h>
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
+#include <Stream/StreamFactory.h>
 
 #include <CoInterface/Align.h>
 #include <CoInterface/BudgetTimer.h>

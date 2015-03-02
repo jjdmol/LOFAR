@@ -37,8 +37,6 @@ namespace LOFAR {
 class SocketStream : public FileDescriptorBasedStream
 {
   public:
-    EXCEPTION_CLASS(TimeOutException, LOFAR::Exception);
-
     enum Protocol {
       TCP, UDP
     };
@@ -77,6 +75,8 @@ class SocketStream : public FileDescriptorBasedStream
     static void writekey(const std::string &nfskey, uint16 port);
     static void deletekey(const std::string &nfskey);
 };
+
+EXCEPTION_CLASS(TimeOutException, LOFAR::Exception);
 
 } // namespace LOFAR
 

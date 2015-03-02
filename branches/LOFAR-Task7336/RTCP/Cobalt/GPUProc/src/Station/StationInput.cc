@@ -39,6 +39,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
 #include <Stream/FileStream.h>
+#include <Stream/StreamFactory.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/OMPThread.h>
 #include <CoInterface/TimeFuncs.h>
@@ -289,7 +290,7 @@ namespace LOFAR {
 
           outputQueue.append(rspData);
         }
-      } catch (Stream::EndOfStreamException &ex) {
+      } catch (EndOfStreamException &ex) {
         // Ran out of data
         LOG_INFO_STR( logPrefix << "End of stream");
 
@@ -404,7 +405,7 @@ namespace LOFAR {
             // Retry until we have a valid packet
             while (!readers[board]->readPacket(last_packets[board]))
               ;
-          } catch (Stream::EndOfStreamException &ex) {
+          } catch (EndOfStreamException &ex) {
             // Ran out of data
             LOG_INFO_STR( logPrefix << "End of stream");
 

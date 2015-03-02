@@ -40,7 +40,11 @@ if(NOT PYRAP_FOUND)
 
   # Pyrap also depends on Casacore
   include(LofarFindPackage)
-  lofar_find_package(Casacore REQUIRED COMPONENTS casa)
+  if(Pyrap_FIND_REQUIRED)
+    lofar_find_package(Casacore REQUIRED COMPONENTS casa)
+  else(Pyrap_FIND_REQUIRED)
+    lofar_find_package(Casacore COMPONENTS casa)
+  endif(Pyrap_FIND_REQUIRED)
 
   include(FindPackageHandleStandardArgs)
   find_package_handle_standard_args(Pyrap DEFAULT_MSG 
