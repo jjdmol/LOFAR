@@ -1,7 +1,0 @@
-# Writer
-written		int
-dropped		int
-fileName	string
-dataRate	float
-dataProductType	string
-observationName	string
