@@ -20,8 +20,8 @@
 """Very basic messagebus router that routs the messages according to the settings in Router.conf
 """
 
-import lofar.messagebus.msgbus as msgbus
-import lofar.messagebus.message as message
+import lofar.messagebus.basemsgbus as msgbus
+#import lofar.messagebus.message as message
 
 import threading
 from ConfigParser import SafeConfigParser
@@ -51,16 +51,16 @@ class BusMulticast(threading.Thread):
 
       msg = inbus.get()
       if msg is None:
-        log("ERROR","Received no message from %s" % (self.source,))
+        log("ERROR","Received 'None' message from %s" % (self.source,))
         continue
 
-      log("INFO","[%s] Msg received from %s: %s; TIME = %s" % (msg.uuid,self.source,msg.summary,msg.timestamp))
+      log("INFO","Msg received from %s" % (self.source))
 
       for outbus in outbusses:
-        outbus.send(msg, True)
+        outbus.send(msg)
       inbus.ack(msg)
 
-      log("INFO","[%s] Forwarded %s -> %s" % (msg.uuid,self.source,self.destlist,))
+      log("INFO","Forwarded %s -> %s" % (self.source,self.destlist))
 
 class RouterConfig(SafeConfigParser):
   """
