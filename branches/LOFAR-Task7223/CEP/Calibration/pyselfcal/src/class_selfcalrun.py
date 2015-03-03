@@ -610,7 +610,7 @@ class selfCalRun:
 							print ''		
 					
 							#extract the source model with pybdsm
-							img	=  bdsm.process_image("""%sTemporary_Image_%sarcsec_Iter%s.restored.corr"""%(self.ImagePathDir,self.pixsize[self.i],self.i),adaptive_rms_box='True',advanced_opts='True',detection_image="""%sTemporary_Image_%sarcsec_Iter%s.restored"""%(self.ImagePathDir,self.pixsize[self.i],self.i),thresh_isl='%s'%(self.thresh_isl),thresh_pix='%s'%(self.thresh_pix),rms_box=(self.RMS_BOX[0],self.RMS_BOX[1]),rms_box_bright=(self.RMS_BOX_Bright[0],self.RMS_BOX_Bright[1]),adaptive_thresh=30,blank_limit=1E-4,atrous_do='True',ini_method='curvature',psf_vary_do='True',psf_stype_only='False',psf_snrcut=5,psf_snrcutstack=5,psf_snrtop=0.3) 
+							img	=  bdsm.process_image("""%sTemporary_Image_%sarcsec_Iter%s.restored.corr"""%(self.ImagePathDir,self.pixsize[self.i],self.i),adaptive_rms_box='True',advanced_opts='True',detection_image="""%sTemporary_Image_%sarcsec_Iter%s.restored"""%(self.ImagePathDir,self.pixsize[self.i],self.i),thresh_isl='%s'%(self.thresh_isl),thresh_pix='%s'%(self.thresh_pix),rms_box=(self.RMS_BOX[0],self.RMS_BOX[1]),rms_box_bright=(self.RMS_BOX_Bright[0],self.RMS_BOX_Bright[1]),adaptive_thresh=30,blank_limit=1E-4,atrous_do='True',ini_method='curvature')#,psf_vary_do='True',psf_stype_only='False',psf_snrcut=5,psf_snrcutstack=5,psf_snrtop=0.3) 
 							
 							#write bbs catalog
 							img.write_catalog(outfile="""%sTemporary_Skymodel_Iter%s"""%(self.SkymodelPath,self.i+1),catalog_type='gaul',format='bbs',correct_proj='True')
@@ -635,7 +635,7 @@ class selfCalRun:
 					  
 
 							#extract the source model with pybdsm
-							img	=  bdsm.process_image("""%sTemporary_Final_Image_%sarcsec_Iter%s.restored.corr"""%(self.ImagePathDir,self.pixsize[self.i-1],self.i),adaptive_rms_box='True',advanced_opts='True',detection_image="""%sTemporary_Final_Image_%sarcsec_Iter%s.restored"""%(self.ImagePathDir,self.pixsize[self.i-1],self.i),thresh_isl='%s'%(self.thresh_isl),thresh_pix='%s'%(self.thresh_pix),rms_box=(self.RMS_BOX[0],self.RMS_BOX[1]),rms_box_bright=(self.RMS_BOX_Bright[0],self.RMS_BOX_Bright[1]),adaptive_thresh=30,blank_limit=1E-4,atrous_do='True',ini_method='curvature',psf_vary_do='True',psf_stype_only='False',psf_snrcut=5,psf_snrcutstack=5,psf_snrtop=0.3) 
+							img	=  bdsm.process_image("""%sTemporary_Final_Image_%sarcsec_Iter%s.restored.corr"""%(self.ImagePathDir,self.pixsize[self.i-1],self.i),adaptive_rms_box='True',advanced_opts='True',detection_image="""%sTemporary_Final_Image_%sarcsec_Iter%s.restored"""%(self.ImagePathDir,self.pixsize[self.i-1],self.i),thresh_isl='%s'%(self.thresh_isl),thresh_pix='%s'%(self.thresh_pix),rms_box=(self.RMS_BOX[0],self.RMS_BOX[1]),rms_box_bright=(self.RMS_BOX_Bright[0],self.RMS_BOX_Bright[1]),adaptive_thresh=30,blank_limit=1E-4,atrous_do='True',ini_method='curvature')#,psf_vary_do='True',psf_stype_only='False',psf_snrcut=5,psf_snrcutstack=5,psf_snrtop=0.3) 
 							
 							#write bbs catalog
 							img.write_catalog(outfile="""%sTemporary_Final_Skymodel_Iter%s"""%(self.SkymodelPath,self.i+1),catalog_type='gaul',format='bbs',correct_proj='True')
@@ -663,7 +663,7 @@ class selfCalRun:
 						print ''		
 				
 						#extract the source model with pybdsm
-						img	=  bdsm.process_image("""%sImage_%sarcsec_Iter%s.restored.corr"""%(self.ImagePathDir,self.pixsize[self.i],self.i),adaptive_rms_box='True',advanced_opts='True',detection_image="""%sImage_%sarcsec_Iter%s.restored"""%(self.ImagePathDir,self.pixsize[self.i],self.i),thresh_isl='%s'%(self.thresh_isl),thresh_pix='%s'%(self.thresh_pix),rms_box=(self.RMS_BOX[0],self.RMS_BOX[1]),rms_box_bright=(self.RMS_BOX_Bright[0],self.RMS_BOX_Bright[1]),adaptive_thresh=30,blank_limit=1E-4,atrous_do='True',ini_method='curvature',psf_vary_do='True',psf_stype_only='False',psf_snrcut=5,psf_snrcutstack=5,psf_snrtop=0.3) 
+						img	=  bdsm.process_image("""%sImage_%sarcsec_Iter%s.restored.corr"""%(self.ImagePathDir,self.pixsize[self.i],self.i),adaptive_rms_box='True',advanced_opts='True',detection_image="""%sImage_%sarcsec_Iter%s.restored"""%(self.ImagePathDir,self.pixsize[self.i],self.i),thresh_isl='%s'%(self.thresh_isl),thresh_pix='%s'%(self.thresh_pix),rms_box=(self.RMS_BOX[0],self.RMS_BOX[1]),rms_box_bright=(self.RMS_BOX_Bright[0],self.RMS_BOX_Bright[1]),adaptive_thresh=30,blank_limit=1E-4,atrous_do='True',ini_method='curvature')#,psf_vary_do='True',psf_stype_only='False',psf_snrcut=5,psf_snrcutstack=5,psf_snrtop=0.3) 
 						
 						#write bbs catalog
 						img.write_catalog(outfile="""%sSkymodel_Iter%s"""%(self.SkymodelPath,self.i+1),catalog_type='gaul',format='bbs',correct_proj='True')
@@ -686,7 +686,7 @@ class selfCalRun:
 				  
 
 						#extract the source model with pybdsm
-						img	=  bdsm.process_image("""%sFinal_Image_%sarcsec_Iter%s.restored.corr"""%(self.ImagePathDir,self.pixsize[self.i-1],self.i),adaptive_rms_box='True',advanced_opts='True',detection_image="""%sFinal_Image_%sarcsec_Iter%s.restored"""%(self.ImagePathDir,self.pixsize[self.i-1],self.i),thresh_isl='%s'%(self.thresh_isl),thresh_pix='%s'%(self.thresh_pix),rms_box=(self.RMS_BOX[0],self.RMS_BOX[1]),rms_box_bright=(self.RMS_BOX_Bright[0],self.RMS_BOX_Bright[1]),adaptive_thresh=30,blank_limit=1E-4,atrous_do='True',ini_method='curvature',psf_vary_do='True',psf_stype_only='False',psf_snrcut=5,psf_snrcutstack=5,psf_snrtop=0.3) 
+						img	=  bdsm.process_image("""%sFinal_Image_%sarcsec_Iter%s.restored.corr"""%(self.ImagePathDir,self.pixsize[self.i-1],self.i),adaptive_rms_box='True',advanced_opts='True',detection_image="""%sFinal_Image_%sarcsec_Iter%s.restored"""%(self.ImagePathDir,self.pixsize[self.i-1],self.i),thresh_isl='%s'%(self.thresh_isl),thresh_pix='%s'%(self.thresh_pix),rms_box=(self.RMS_BOX[0],self.RMS_BOX[1]),rms_box_bright=(self.RMS_BOX_Bright[0],self.RMS_BOX_Bright[1]),adaptive_thresh=30,blank_limit=1E-4,atrous_do='True',ini_method='curvature')#,psf_vary_do='True',psf_stype_only='False',psf_snrcut=5,psf_snrcutstack=5,psf_snrtop=0.3) 
 						
 						#write bbs catalog
 						img.write_catalog(outfile="""%sFinal_Skymodel_Iter%s"""%(self.SkymodelPath,self.i+1),catalog_type='gaul',format='bbs',correct_proj='True')
@@ -713,7 +713,7 @@ class selfCalRun:
 						print ''		
 				
 						#extract the source model with pybdsm
-						img	=  bdsm.process_image("""%sImage_%sarcsec_Iter%s.restored.corr"""%(self.ImagePathDir,self.pixsize[self.i],self.i),adaptive_rms_box='True',advanced_opts='True',detection_image="""%sImage_%sarcsec_Iter%s.restored"""%(self.ImagePathDir,self.pixsize[self.i],self.i),thresh_isl='%s'%(self.thresh_isl),thresh_pix='%s'%(self.thresh_pix),rms_box=(self.RMS_BOX[0],self.RMS_BOX[1]),rms_box_bright=(self.RMS_BOX_Bright[0],self.RMS_BOX_Bright[1]),adaptive_thresh=30,blank_limit=1E-4,atrous_do='True',ini_method='curvature',psf_vary_do='True',psf_stype_only='False',psf_snrcut=5,psf_snrcutstack=5,psf_snrtop=0.3) 
+						img	=  bdsm.process_image("""%sImage_%sarcsec_Iter%s.restored.corr"""%(self.ImagePathDir,self.pixsize[self.i],self.i),adaptive_rms_box='True',advanced_opts='True',detection_image="""%sImage_%sarcsec_Iter%s.restored"""%(self.ImagePathDir,self.pixsize[self.i],self.i),thresh_isl='%s'%(self.thresh_isl),thresh_pix='%s'%(self.thresh_pix),rms_box=(self.RMS_BOX[0],self.RMS_BOX[1]),rms_box_bright=(self.RMS_BOX_Bright[0],self.RMS_BOX_Bright[1]),adaptive_thresh=30,blank_limit=1E-4,atrous_do='True',ini_method='curvature')#,psf_vary_do='True',psf_stype_only='False',psf_snrcut=5,psf_snrcutstack=5,psf_snrtop=0.3) 
 						
 						#write bbs catalog
 						img.write_catalog(outfile="""%sSkymodel_Iter%s"""%(self.SkymodelPath,self.i+1),catalog_type='gaul',format='bbs',correct_proj='True')
@@ -736,7 +736,7 @@ class selfCalRun:
 				  
 
 						#extract the source model with pybdsm
-						img	=  bdsm.process_image("""%sFinal_Image_%sarcsec_Iter%s.restored.corr"""%(self.ImagePathDir,self.pixsize[self.i-1],self.i),adaptive_rms_box='True',advanced_opts='True',detection_image="""%sFinal_Image_%sarcsec_Iter%s.restored"""%(self.ImagePathDir,self.pixsize[self.i-1],self.i),thresh_isl='%s'%(self.thresh_isl),thresh_pix='%s'%(self.thresh_pix),rms_box=(self.RMS_BOX[0],self.RMS_BOX[1]),rms_box_bright=(self.RMS_BOX_Bright[0],self.RMS_BOX_Bright[1]),adaptive_thresh=30,blank_limit=1E-4,atrous_do='True',ini_method='curvature',psf_vary_do='True',psf_stype_only='False',psf_snrcut=5,psf_snrcutstack=5,psf_snrtop=0.3) 
+						img	=  bdsm.process_image("""%sFinal_Image_%sarcsec_Iter%s.restored.corr"""%(self.ImagePathDir,self.pixsize[self.i-1],self.i),adaptive_rms_box='True',advanced_opts='True',detection_image="""%sFinal_Image_%sarcsec_Iter%s.restored"""%(self.ImagePathDir,self.pixsize[self.i-1],self.i),thresh_isl='%s'%(self.thresh_isl),thresh_pix='%s'%(self.thresh_pix),rms_box=(self.RMS_BOX[0],self.RMS_BOX[1]),rms_box_bright=(self.RMS_BOX_Bright[0],self.RMS_BOX_Bright[1]),adaptive_thresh=30,blank_limit=1E-4,atrous_do='True',ini_method='curvature')#,psf_vary_do='True',psf_stype_only='False',psf_snrcut=5,psf_snrcutstack=5,psf_snrtop=0.3) 
 						
 						#write bbs catalog
 						img.write_catalog(outfile="""%sFinal_Skymodel_Iter%s"""%(self.SkymodelPath,self.i+1),catalog_type='gaul',format='bbs',correct_proj='True')

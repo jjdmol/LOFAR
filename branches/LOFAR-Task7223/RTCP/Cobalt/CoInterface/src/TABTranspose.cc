@@ -490,7 +490,7 @@ void Receiver::receiveLoop()
 
       collectors.at(fileIdx)->addSubband(subband);
     }
-  } catch (Stream::EndOfStreamException &) {
+  } catch (EndOfStreamException &) {
   }
 }
 
@@ -552,7 +552,7 @@ void MultiReceiver::listenLoop()
    
     try {
       stream = new PortBroker::ServerStream(servicePrefix, true);
-    } catch(SocketStream::TimeOutException &) {
+    } catch(TimeOutException &) {
       // fail silently if no client connected
       LOG_DEBUG_STR("TABTranspose::MultiReceiver: Timed out");
       break;

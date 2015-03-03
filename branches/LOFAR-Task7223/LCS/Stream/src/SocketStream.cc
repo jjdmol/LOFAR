@@ -1,6 +1,6 @@
 //# SocketStream.cc: 
 //#
-//# Copyright (C) 2008
+//# Copyright (C) 2008, 2015
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -22,26 +22,26 @@
 
 #include <lofar_config.h>
 
-#include <Common/LofarLogger.h>
-#include <Common/Thread/Cancellation.h>
-#include <Common/Thread/Mutex.h>
 #include <Stream/SocketStream.h>
 
+#include <cstdlib>
 #include <cstring>
 #include <cstdio>
-
-#include <dirent.h>
-#include <errno.h>
-#include <netdb.h>
+#include <cerrno>
+#include <sys/types.h>
+#include <unistd.h>
+#include <time.h>
 #include <sys/select.h>
 #include <sys/socket.h>
-#include <sys/types.h>
-#include <time.h>
-#include <unistd.h>
-#include <cstdlib>
+#include <netdb.h>
+#include <dirent.h>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
+
+#include <Common/Thread/Mutex.h>
+#include <Common/Thread/Cancellation.h>
+#include <Common/LofarLogger.h>
 
 //# AI_NUMERICSERV is not defined on OS-X
 #ifndef AI_NUMERICSERV
@@ -59,7 +59,7 @@ const int MAXPORT = 30000;
 
 
 static struct RandomState {
-  RandomState() { 
+  RandomState() {
     xsubi[0] = getpid();
     xsubi[1] = time(0);
     xsubi[2] = time(0) >> 16;
@@ -87,7 +87,7 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
       % _port);
 
   struct addrinfo hints;
-  bool            autoPort = (port == 0);
+  const bool autoPort = (port == 0);
 
   // use getaddrinfo, because gethostbyname is not thread safe
   memset(&hints, 0, sizeof(struct addrinfo));
@@ -105,6 +105,11 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
   for(;;) {
     try {
       try {
+        // Not all potentially blocking calls below have a timeout arg.
+        // So check early every round. It may abort hanging tests early (=good).
+        if (deadline > 0 && deadline <= time(0))
+          THROW(TimeOutException, "SocketStream");
+
         char portStr[16];
         int  retval;
         struct addrinfo *result;
@@ -149,7 +154,7 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
               if (deadline > 0 && time(0) >= deadline)
                 throw TimeOutException("client socket", THROW_ARGS);
 
-              if (usleep(999999) < 0) {
+              if (usleep(999999) < 0) { // near 1 sec; max portably safe arg val
                 // interrupted by a signal handler -- abort to allow this thread to
                 // be forced to continue after receiving a SIGINT, as with any other
                 // system call in this constructor 
@@ -158,7 +163,7 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
             } else
               THROW_SYSCALL(str(boost::format("connect [%s]") % description));
         } else {
-          int on = 1;
+          const int on = 1;
 
           if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof on) < 0)
             THROW_SYSCALL("setsockopt(SO_REUSEADDR)");
@@ -170,7 +175,7 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
             listen_sk = fd;
             fd	= -1;
 
-            int listenBacklog = 15;
+            const int listenBacklog = 15;
             if (listen(listen_sk, listenBacklog) < 0)
               THROW_SYSCALL(str(boost::format("listen [%s]") % description));
 
@@ -309,8 +314,10 @@ void SocketStream::syncNFS()
   if (!dir)
     THROW_SYSCALL("opendir");
 
-  if (!readdir(dir))
-    THROW_SYSCALL("readdir");
+  struct dirent entry;
+  struct dirent *result;
+  if (readdir_r(dir, &entry, &result) != 0 || !result)
+    THROW_SYSCALL("readdir_r");
 
   if (closedir(dir) != 0)
     THROW_SYSCALL("closedir");
@@ -335,11 +342,11 @@ std::string SocketStream::readkey(const std::string &nfskey, time_t deadline)
     if (deadline > 0 && deadline <= time(0))
       THROW(TimeOutException, "client socket");
 
-    if (usleep(999999) > 0) {
+    if (usleep(999999) < 0) { // near 1 sec; max portably safe arg val
       // interrupted by a signal handler -- abort to allow this thread to
       // be forced to continue after receiving a SIGINT, as with any other
       // system call
-      THROW_SYSCALL("sleep");
+      THROW_SYSCALL("usleep");
     }
   }
 }

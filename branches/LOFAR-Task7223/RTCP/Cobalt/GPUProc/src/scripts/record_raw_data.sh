@@ -178,13 +178,22 @@ do
         DESTPORT=$((LOCUS_FIRST_PORT + LOCUSIDX))
         LOCUSIDX=$((LOCUSIDX + 1))
 
+        # The interface Cobalt uses to connect to the given locus node:
+        # locus001..025 -> 10GB01
+        # locus026..050 -> 10GB02
+        # locus051..075 -> 10GB03
+        # locus076..100 -> 10GB04
+        LOCUS_COBALT_IFACE_NR=`echo "(${LOCUS_NODES[$DESTNODENR]}-1) / 25 + 1" | bc`
+        COBALT_NODE=`echo $IFACE | cut -d- -f 1`
+        LOCUS_COBALT_IFACE="${COBALT_NODE}-10GB0${LOCUS_COBALT_IFACE_NR}"
+
         OUTSTREAM="tcp:$DESTNODE:$DESTPORT"
         FILESTREAM="file:/data/raw-$NAME-$NOW-$s-$b.udp"
 
         echo "# stream $s board $b [$OUTSTREAM -> $FILESTREAM]" >> record-locus.sh
         echo ssh $DESTNODE \"/globalhome/romein/bin.x86_64/udp-copy tcp:0:$DESTPORT $FILESTREAM\" "&" >> record-locus.sh
 
-        OBS_INSTREAM="tcp:$IFACE:$DESTPORT"
+        OBS_INSTREAM="tcp:$LOCUS_COBALT_IFACE:$DESTPORT"
         echo "ssh $DESTNODE \"/globalhome/romein/bin.x86_64/udp-copy $FILESTREAM $OBS_INSTREAM \"" "&" >> replay.sh
         ;;
     esac

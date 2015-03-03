@@ -34,8 +34,6 @@ namespace LOFAR {
 class Stream
 {
   public:
-    EXCEPTION_CLASS(EndOfStreamException, LOFAR::Exception);
-
     virtual	   ~Stream();
 
     virtual size_t tryRead(void *ptr, size_t size) = 0;
@@ -48,6 +46,8 @@ class Stream
 
     virtual void   sync();
 };
+
+EXCEPTION_CLASS(EndOfStreamException, LOFAR::Exception);
 
 } // namespace LOFAR
 
