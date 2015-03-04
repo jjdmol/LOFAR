@@ -115,6 +115,14 @@ public:
 private:
   // -- datamembers -- 
   qpid::messaging::Message itsQpidMsg;
+
+  // set when xml content has been parsed, used to prevent multiple parses
+  bool xml_content_parsed;
+
+  // -- Members --
+
+  // parse the message to internal xml storage
+  void parse_xml();
 };
 
 inline std::ostream &operator<<(std::ostream &os, const Message &msg)
