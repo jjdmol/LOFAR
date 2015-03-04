@@ -129,6 +129,9 @@
 /* Define if libssh2 is installed */
 #cmakedefine HAVE_LIBSSH2 1
 
+/* Define if libxml2 is installed */
+#cmakedefine HAVE_LIBXML2 1
+
 /* Define if LOG4CPLUS is installed */
 #cmakedefine HAVE_LOG4CPLUS 1
 
