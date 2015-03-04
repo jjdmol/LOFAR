@@ -29,4 +29,4 @@ set(srcdir "${CMAKE_CURRENT_SOURCE_DIR}")
 ## Configure the LOFAR CTest wrapper script in the current binary directory
 ## ----------------------------------------------------------------------------
 configure_file(${LOFAR_ROOT}/CMake/testscripts/runctest.sh.in
-               ${CMAKE_CURRENT_BINARY_DIR}/runctest.sh)
+               ${CMAKE_CURRENT_BINARY_DIR}/runctest.sh @ONLY)
