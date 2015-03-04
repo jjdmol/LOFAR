@@ -97,13 +97,13 @@ int main( int, char **argv )
       // Read and verify the generated packets
 
       try {
-        PacketReader reader("", *inputStreams[0]);
+        PacketReader reader("", *inputStreams[0], 1); // batch of 1 pkt
 
         for(size_t nr = 0; nr < NUMPACKETS; ++nr) {
           struct RSP packet;
 
           if (!reader.readPacket(packet)) {
-            const unsigned boardNr = 0; // irrel, for logStats only
+            const unsigned boardNr = 0;
             reader.logStatistics(boardNr, rtmd, "rtmd key prefix");
 
             ASSERT(false);

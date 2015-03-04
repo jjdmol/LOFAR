@@ -27,10 +27,10 @@
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
+#include <ctime>
 #include <cerrno>
 #include <sys/types.h>
 #include <unistd.h>
-#include <time.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -39,6 +39,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
 
+#include <Common/SystemCallException.h>
 #include <Common/Thread/Mutex.h>
 #include <Common/Thread/Cancellation.h>
 #include <Common/LofarLogger.h>
@@ -72,7 +73,8 @@ namespace {
   Mutex getAddrInfoMutex;
 };
 
-SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol protocol, Mode mode, time_t deadline, const std::string &nfskey, bool doAccept)
+SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol protocol,
+                           Mode mode, time_t deadline, const std::string &nfskey, bool doAccept)
 :
   protocol(protocol),
   mode(mode),
@@ -302,7 +304,7 @@ void SocketStream::accept(time_t deadline)
 void SocketStream::setReadBufferSize(size_t size)
 {
   if (fd >= 0 && setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &size, sizeof size) < 0)
-    perror("setsockopt(SO_RCVBUF)");
+    THROW_SYSCALL("setsockopt(SO_RCVBUF)");
 }
 
 
@@ -362,6 +364,7 @@ void SocketStream::writekey(const std::string &nfskey, uint16 port)
     THROW_SYSCALL("symlink");
 }
 
+
 void SocketStream::deletekey(const std::string &nfskey)
 {
   syncNFS();
@@ -384,6 +387,64 @@ void SocketStream::setTimeout(double timeout)
 
   if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, (char *)&tv, sizeof tv) < 0)
     THROW_SYSCALL("setsockopt(SO_SNDTIMEO)");
+}
+
+
+#if defined __linux__ && __GLIBC_PREREQ(2,12)
+// Actually, recvmmsg is supported by Linux 2.6.32+ using glibc 2.12+
+#define HAVE_RECVMMSG
+#else
+// Equalize data structures to share more code. Declared within LOFAR namespace.
+// Need it as vector template arg, so cannot be locally declared (ok w/ C++11).
+struct mmsghdr {
+  struct msghdr msg_hdr;
+};
+#endif
+
+unsigned SocketStream::recvmmsg( std::vector<struct iovec> &buffers,
+                                 std::vector<unsigned> &recvdMsgSizes )
+{
+  ASSERT(protocol == UDP);
+  ASSERT(mode == Server);
+
+  // If recvmmsg() is not available, then use recvmsg() (1 call) as fall-back.
+#ifdef HAVE_RECVMMSG
+  const unsigned numBufs = buffers.size();
+#else
+  const unsigned numBufs = 1;
+#endif
+  ASSERT(recvdMsgSizes.size() >= numBufs);
+
+  // register our receive buffer(s)
+  std::vector<struct mmsghdr> msgs(numBufs);
+  for (unsigned i = 0; i < numBufs; ++i) {
+    msgs[i].msg_hdr.msg_name    = NULL; // we don't need to know who sent the data
+    msgs[i].msg_hdr.msg_iov     = &buffers[i];
+    msgs[i].msg_hdr.msg_iovlen  = 1;
+    msgs[i].msg_hdr.msg_control = NULL; // we're not interested in OoB data
+  }
+
+  int numRead;
+#ifdef HAVE_RECVMMSG
+  // Note: the timeout parameter doesn't work as expected: only between datagrams
+  // is the timeout checked, not when waiting for one (i.e. numBufs=1 or MSG_WAITFORONE).
+  numRead = ::recvmmsg(fd, &msgs[0], numBufs, 0, NULL);
+  if (numRead < 0)
+    THROW_SYSCALL("recvmmsg");
+
+  for (int i = 0; i < numRead; ++i) {
+    recvdMsgSizes[i] = msgs[i].msg_len; // num bytes received is stored in msg_len by recvmmsg()
+  }
+#else
+  numRead = ::recvmsg(fd, &msgs[0].msg_hdr, 0);
+  if (numRead < 0)
+    THROW_SYSCALL("recvmsg");
+
+  recvdMsgSizes[0] = static_cast<unsigned>(numRead); // num bytes received is returned by recvmsg()
+  numRead = 1; // equalize return val semantics to num msgs received
+#endif
+
+  return static_cast<unsigned>(numRead);
 }
 
 } // namespace LOFAR

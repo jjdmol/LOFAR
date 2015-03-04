@@ -133,7 +133,8 @@ int main(int argc, char **argv)
   // create in- and output streams
   SmartPtr<Stream> inputStream = createStream(inputStreamDesc, true);
   SmartPtr<Stream> outputStream = createStream(outputStreamDesc, false);
-  PacketReader reader("", *inputStream);
+  const unsigned packetBatchLen = 256;
+  PacketReader reader("", *inputStream, packetBatchLen);
 
   // create packet queues between reader and writer
   Queue< SmartPtr<packetSet> > readQueue;
@@ -141,7 +142,7 @@ int main(int argc, char **argv)
 
   for (size_t i = 0; i < 256; ++i) {
     SmartPtr<packetSet> p = new packetSet;
-    p->packets.resize(256);
+    p->packets.resize(packetBatchLen);
 
     readQueue.append(p);
   }

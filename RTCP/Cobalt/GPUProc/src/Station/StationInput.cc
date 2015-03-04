@@ -269,7 +269,8 @@ namespace LOFAR {
 
       try {
         SmartPtr<Stream> stream = inputStream(board);
-        PacketReader reader(str(format("%s[board %s] ") % logPrefix % board), *stream, mode);
+        PacketReader reader(str(format("%s[board %s] ") % logPrefix % board), *stream,
+            ps.settings.realTime ? RT_PACKET_BATCH_SIZE : (const unsigned)NONRT_PACKET_BATCH_SIZE, mode);
 
         Queue< SmartPtr<RSPData> > &inputQueue = rspDataPool[board]->free;
         Queue< SmartPtr<RSPData> > &outputQueue = rspDataPool[board]->filled;
@@ -380,7 +381,8 @@ namespace LOFAR {
 
       for (size_t i = 0; i < nrBoards; ++i) {
         streams[i] = inputStream(i);
-        readers[i] = new PacketReader(logPrefix, *streams[i], mode);
+        readers[i] = new PacketReader(logPrefix, *streams[i],
+                                      NONRT_PACKET_BATCH_SIZE, mode);
       }
 
       /* Since the boards will be read at different speeds, we need to
@@ -522,7 +524,7 @@ namespace LOFAR {
       } else {
         // We just process one packet at a time, merging all the streams into rspDataPool[0].
         for (size_t i = 0; i < 16; ++i)
-          rspDataPool[0]->free.append(new RSPData(1), false);
+          rspDataPool[0]->free.append(new RSPData(NONRT_PACKET_BATCH_SIZE), false);
       }
 
       // Make sure we only read RSP packets when we're ready to actually process them. Otherwise,
