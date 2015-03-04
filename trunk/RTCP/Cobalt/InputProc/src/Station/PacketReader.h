@@ -24,7 +24,7 @@
 #include <string>
 
 #include <Common/Exception.h>
-#include <Stream/Stream.h>
+#include <Stream/SocketStream.h>
 #include <MACIO/RTmetadata.h>
 #include <InputProc/Buffer/BoardMode.h>
 
@@ -45,7 +45,8 @@ namespace LOFAR
     public:
       static const BoardMode MODE_ANY;
 
-      PacketReader( const std::string &logPrefix, Stream &inputStream, const BoardMode &mode = MODE_ANY );
+      PacketReader( const std::string &logPrefix, Stream &inputStream,
+                    unsigned packetBatchSize, const BoardMode &mode = MODE_ANY );
 
       // Reads a set of packets from the input stream. Sets the payloadError
       // flag for all invalid packets.
@@ -66,6 +67,10 @@ namespace LOFAR
       // The stream from which packets are read.
       Stream &inputStream;
 
+      // The data structures used to drive (our wrapper of) recvmmsg().
+      std::vector<struct iovec> msgIOVecs;
+      std::vector<unsigned> recvdMsgSizes;
+
       // The mode against which to validate (ignored if mode == MODE_ANY)
       const BoardMode mode;
 
@@ -84,7 +89,8 @@ namespace LOFAR
 
       double lastLogTime; // time since last log print, to monitor data rates
 
-      bool validatePacket(const struct RSP &packet);
+      // numbytes is the actually received size, as indicated by the kernel
+      bool validatePacket(const struct RSP &packet, size_t numbytes);
     };
 
 
