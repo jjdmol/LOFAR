@@ -24,6 +24,8 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <MessageBus/Message.h>
+#include <UnitTest++.h>
+
 
 //using namespace qpid::messaging;
 using namespace LOFAR;

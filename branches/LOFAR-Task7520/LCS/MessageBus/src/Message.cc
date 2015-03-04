@@ -31,7 +31,11 @@
 
 #include <qpid/types/Uuid.h>
 
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+
 #include <time.h>
+
 
 
 namespace LOFAR {
@@ -92,9 +96,10 @@ Message::Message(const std::string &from,
 				 const std::string &momid,
 				 const std::string &sasid) 
 {	
-	itsQpidMsg.setContent(formatString(LOFAR_MSG_TEMPLATE.c_str(), protocol.c_str(), protocolVersion.c_str(),
-										from.c_str(), forUser.c_str(), _uuid().c_str(), _timestamp().c_str(), summary.c_str(), 
-										momid.c_str(), sasid.c_str(), "%s"));
+	itsQpidMsg.setContent(formatString(LOFAR_MSG_TEMPLATE.c_str(),
+        protocol.c_str(), protocolVersion.c_str(), from.c_str(), 
+        forUser.c_str(), _uuid().c_str(), _timestamp().c_str(), 
+        summary.c_str(), 	momid.c_str(), sasid.c_str(), "%s"));
   itsQpidMsg.setContentType("text/plain");
   itsQpidMsg.setDurable(true);
 }
@@ -108,24 +113,26 @@ Message::Message(const std::string &rawContent)
 Message::~Message()
 {}
 
-void Message::setXMLPayload (const std::string         &payload)
+void Message::setXMLPayload (const std::string &payload)
 {
-	itsQpidMsg.setContent(formatlString(itsQpidMsg.getContent().c_str(), payload.c_str()));
+	itsQpidMsg.setContent(formatlString(itsQpidMsg.getContent().c_str(),
+                                      payload.c_str()));
 }
 
-void Message::setTXTPayload (const std::string         &payload)
+void Message::setTXTPayload (const std::string &payload)
 {
-	itsQpidMsg.setContent(formatlString(itsQpidMsg.getContent().c_str(), payload.c_str()));
+	itsQpidMsg.setContent(formatlString(itsQpidMsg.getContent().c_str(), 
+                                      payload.c_str()));
 }
 
 void Message::setMapPayload (const qpid::types::Variant::Map  &payload)
 {
-
+  (void)payload;
 }
 
 void Message::setListPayload(const qpid::types::Variant::List &payload)
 {
-
+  (void)payload;
 }
 
 std::string Message::short_desc() const
@@ -155,6 +162,7 @@ std::ostream& Message::print (std::ostream& os) const
   os << "END FULL PACKET" << endl;
 	return (os);
 }
+
 
 //
 // getXMLvalue(tag)
