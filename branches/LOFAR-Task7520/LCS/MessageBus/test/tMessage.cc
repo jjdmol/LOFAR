@@ -22,13 +22,16 @@
 #include <lofar_config.h>
 
 //# Includes
+#include <string>
+
 #include <Common/LofarLogger.h>
 #include <MessageBus/Message.h>
-#include <UnitTest++.h>
+//#include <UnitTest++.h>
 
 
 //using namespace qpid::messaging;
 using namespace LOFAR;
+using namespace std;
 
 #if 0
 void showMessage(Message&	msg)
@@ -66,12 +69,84 @@ void compareMessages(Message&	lhm, Message& rhm)
 }
 #endif
 
-int main(int argc, char* argv[]) {
+//**********************
+// Creates a valid xml message to test against
+
+string VALID_LOFAR_XML = \
+"<message>"
+"  <header>"
+"    <system>LOFAR< / system>"
+"    <version>1.0.0< / version>"
+"    <protocol>"
+"      <name>lofar.observation.start< / name>"
+"      <version>1.0< / version>"
+"    < / protocol>"
+"    <source>"
+"      <name>mySubSystem< / name>"
+"      <user>user< / user>"
+"      <uuid>< / uuid>"
+"      <timestamp>< / timestamp>"
+"      <summary>some test message< / summary>"
+"    < / source>"
+"    <ids>"
+"      <momid>12345< / momid>"
+"      <sasid>44883< / sasid>"
+"    < / ids>"
+"  < / header>"
+"  <payload>"
+"Observation.Correlator.channelWidth = 3051.7578125"
+"Observation.Correlator.channelsPerSubband = 64"
+"Observation.Correlator.integrationInterval = 1.00139008"
+"Observation.DataProducts.Output_Correlated_[0].SAP = 0"
+"Observation.DataProducts.Output_Correlated_[0].centralFrequency = 115039062.500000"
+"Observation.DataProducts.Output_Correlated_[0].channelWidth = 3051.757812"
+"Observation.DataProducts.Output_Correlated_[0].channelsPerSubband = 64"
+"Observation.DataProducts.Output_Correlated_[0].duration = 119.165420"
+"Observation.DataProducts.Output_Correlated_[0].fileFormat = AIPS++ / CASA"
+"Observation.DataProducts.Output_Correlated_[0].filename = L257915_SAP000_SB000_uv.MS"
+"Observation.DataProducts.Output_Correlated_[0].integrationInterval = 1.001390"
+"Observation.DataProducts.Output_Correlated_[0].location = locus001: / data / L257915 /"
+"Observation.DataProducts.Output_Correlated_[0].percentageWritten = 100"
+"Observation.DataProducts.Output_Correlated_[0].size = 268083200"
+"Observation.DataProducts.Output_Correlated_[0].startTime = 2015 - 01 - 15 09 : 32 : 09"
+"Observation.DataProducts.Output_Correlated_[0].stationSubband = 77"
+"Observation.DataProducts.Output_Correlated_[0].subband = 0"
+"  < / payload>"
+"< / message>";
+
+
+struct ValidXMLFixture
+{
+  Message msg;
+
+  ValidXMLFixture()
+  :
+  msg(VALID_LOFAR_XML)
+  {
+  }
+
+  ~ValidXMLFixture() {}
+};
+
+
+int main(int argc, char* argv[]) 
+{
 	if (argc != 1) {
 		cout << "Syntax: " << argv[0] << endl;
 		return (1);
 	}
 
+  ValidXMLFixture fixture;
+
+  cout << fixture.msg ;
+
+#if HAVE_LIBXML2
+  cout << "We have libxml installed" << endl;
+#endif
+
+
+
+/*
 	Message	msg1("mySubSystem", "user", "some test message", "lofar.observation.start", "1.0", "12345", "54321");
 
 	qpid::messaging::Message	qpMsg("Qpid message");
@@ -80,7 +155,7 @@ int main(int argc, char* argv[]) {
 	string	KVmapje("abc=[aap,noot,mies]\nmyInteger=5\nmyDouble=3.14");
 	msg1.setTXTPayload(KVmapje);
 
-	cout << msg1;
+	cout << msg1;*/
 
 	return (0);
 }
