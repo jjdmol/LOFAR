@@ -11,6 +11,7 @@ from UserDict import DictMixin
 
 from lofarpipe.cuisine.ingredient import WSRTingredient
 from lofarpipe.support.utilities import string_to_list, is_iterable
+from lofarpipe.support.data_map import DataMap, MultiDataMap
 
 #       These are currently only used by lofarrecipe.run_task to provide default
 #              input and output dicts based on copying metadata from the parent.
@@ -204,6 +205,32 @@ class FileList(ListField):
             return True
         else:
             return False
+
+class DataMapField(Field):
+    """
+    A Field which accepts a path to an existing mapfile
+    """
+    def is_valid(self, value):
+        # try to parse as DataMap
+        try:
+            DataMap.load(value)
+        except:
+            return False
+
+        return True
+
+class MultiDataMapField(Field):
+    """
+    A Field which accepts a path to an existing multimapfile
+    """
+    def is_valid(self, value):
+        # try to parse as DataMap
+        try:
+            MultiDataMap.load(value)
+        except:
+            return False
+
+        return True
 
 #                                            The magic that makes it all work...
 #                      RecipeIngredients should be mixed in to any recipes which
