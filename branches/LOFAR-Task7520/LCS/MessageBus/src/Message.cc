@@ -27,6 +27,8 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_string.h>
 #include <Common/StringUtil.h>
+#include <Common/Exception.h>
+#include <Common/Exceptions.h>
 #include <MessageBus/Message.h>
 
 #include <qpid/types/Uuid.h>
@@ -35,6 +37,9 @@
 #include <libxml/tree.h>
 
 #include <time.h>
+
+// TODO; Debugging
+#include <iostream>
 
 
 
@@ -95,6 +100,9 @@ Message::Message(const std::string &from,
 				 const std::string &protocolVersion,
 				 const std::string &momid,
 				 const std::string &sasid) 
+:
+  content_as_xml_tree(NULL),
+  xml_content_parsed(false)
 {	
 	itsQpidMsg.setContent(formatString(LOFAR_MSG_TEMPLATE.c_str(),
         protocol.c_str(), protocolVersion.c_str(), from.c_str(), 
@@ -106,12 +114,17 @@ Message::Message(const std::string &from,
 
 // Read a message from disk (header + payload)
 Message::Message(const std::string &rawContent)
+:
+  content_as_xml_tree(NULL),
+  xml_content_parsed(false)
 {
 	itsQpidMsg.setContent(rawContent);
 }
 
 Message::~Message()
-{}
+{
+  //xmlFreeDoc(xmlDocPtr);
+}
 
 void Message::setXMLPayload (const std::string &payload)
 {
@@ -164,11 +177,40 @@ std::ostream& Message::print (std::ostream& os) const
 }
 
 
+
+
+//
+// parseXMLString(tag)
+//
+xmlDocPtr Message::parseXMLString(const std::string& xml_string)
+{
+  xmlDocPtr doc;
+
+  // TODO: unicode?
+  unsigned length = xml_string.length();
+
+  doc = xmlReadMemory(xml_string.c_str(), length,
+                      "document", NULL, 0);
+  if (doc == NULL) 
+  {
+    std::string error_msg = "failed to parse string to xml document";
+    LOG_ERROR(error_msg);
+    THROW(Exception, error_msg);
+  }
+
+  return doc;
+}
+
+
+
+
 //
 // getXMLvalue(tag)
 //
 string Message::getXMLvalue(const string& key) const
 {
+
+
 	// get copy of content
 	vector<string>	labels = split(key, '.');
 	string			content(itsQpidMsg.getContent());
@@ -195,6 +237,7 @@ string Message::getXMLvalue(const string& key) const
 	if (end == string::npos) {
 		return ("???");
 	}
+ 
 	return (content.substr(begin, end - begin));
 }
 

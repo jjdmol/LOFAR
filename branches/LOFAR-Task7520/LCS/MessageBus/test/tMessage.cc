@@ -26,7 +26,10 @@
 
 #include <Common/LofarLogger.h>
 #include <MessageBus/Message.h>
-//#include <UnitTest++.h>
+#include <UnitTest++.h>
+
+#include <libxml/parser.h>
+#include <libxml/tree.h>
 
 
 //using namespace qpid::messaging;
@@ -75,24 +78,24 @@ void compareMessages(Message&	lhm, Message& rhm)
 string VALID_LOFAR_XML = \
 "<message>"
 "  <header>"
-"    <system>LOFAR< / system>"
-"    <version>1.0.0< / version>"
+"    <system>LOFAR</system>"
+"    <version>1.0.0</version>"
 "    <protocol>"
-"      <name>lofar.observation.start< / name>"
-"      <version>1.0< / version>"
-"    < / protocol>"
+"      <name>lofar.observation.start</name>"
+"      <version>1.0</version>"
+"    </protocol>"
 "    <source>"
-"      <name>mySubSystem< / name>"
-"      <user>user< / user>"
-"      <uuid>< / uuid>"
-"      <timestamp>< / timestamp>"
-"      <summary>some test message< / summary>"
-"    < / source>"
+"      <name>mySubSystem</name>"
+"      <user>user</user>"
+"      <uuid></uuid>"
+"      <timestamp></timestamp>"
+"      <summary>some test message</summary>"
+"    </source>"
 "    <ids>"
-"      <momid>12345< / momid>"
-"      <sasid>44883< / sasid>"
-"    < / ids>"
-"  < / header>"
+"      <momid>12345</momid>"
+"      <sasid>44883</sasid>"
+"    </ids>"
+"  </header>"
 "  <payload>"
 "Observation.Correlator.channelWidth = 3051.7578125"
 "Observation.Correlator.channelsPerSubband = 64"
@@ -111,40 +114,79 @@ string VALID_LOFAR_XML = \
 "Observation.DataProducts.Output_Correlated_[0].startTime = 2015 - 01 - 15 09 : 32 : 09"
 "Observation.DataProducts.Output_Correlated_[0].stationSubband = 77"
 "Observation.DataProducts.Output_Correlated_[0].subband = 0"
-"  < / payload>"
-"< / message>";
+"  </payload>"
+"</message>";
 
-
-struct ValidXMLFixture
+// Set up the message busses if needed.
+struct busFixture
 {
-  Message msg;
-
-  ValidXMLFixture()
-  :
-  msg(VALID_LOFAR_XML)
+  busFixture()
   {
   }
 
-  ~ValidXMLFixture() {}
+  ~busFixture() {}
 };
 
+TEST(parseXMLString)
+{
+  Message msg;
+
+  xmlDocPtr doc = msg.parseXMLString(VALID_LOFAR_XML);
+  (void)doc; // suppress warning
+
+}
+
+TEST(parseIncorrectXMLString)
+{
+  Message msg;
+  string invalid_xml_string = VALID_LOFAR_XML + "<kjsdfhsdfhkjh <!!";
+  CHECK_THROW(msg.parseXMLString(invalid_xml_string),
+              LOFAR::Exception);
+
+}
+
+TEST(parse_xml)
+{
+  Message msg(VALID_LOFAR_XML);
+
+  CHECK_EQUAL("LOFAR", msg.system());
+  CHECK_EQUAL("1.0.0", msg.headerVersion());
+
+  cout << "*****************" << endl;
+  cout << msg.protocol() << endl;  // Failure van de bestaande code
+  cout << "*****************" << endl;
+  CHECK_EQUAL("LOFAR", msg.protocol());
+  //CHECK_EQUAL(protocolVersion(), "LOFAR");
+  //CHECK_EQUAL(from(), "LOFAR");
+  //CHECK_EQUAL(forUser(), "LOFAR");
+  //CHECK_EQUAL(uuid(), "LOFAR");
+  //CHECK_EQUAL(summary(), "LOFAR");
+  //CHECK_EQUAL(timestamp(), "LOFAR");
+  //CHECK_EQUAL(momid(), "LOFAR");
+  //CHECK_EQUAL(sasid(), "LOFAR");
+
+  //CHECK_EQUAL(payload
+  //CHECK_EQUAL(header
+}
 
 int main(int argc, char* argv[]) 
 {
+  INIT_LOGGER("tMessage.cc");
 	if (argc != 1) {
 		cout << "Syntax: " << argv[0] << endl;
 		return (1);
+
 	}
 
-  ValidXMLFixture fixture;
 
-  cout << fixture.msg ;
+  return UnitTest::RunAllTests() > 0;
 
-#if HAVE_LIBXML2
-  cout << "We have libxml installed" << endl;
-#endif
 
-  
+  //ValidXMLFixture fixture;
+
+  //cout << fixture.msg ;
+
+
 /*
 	Message	msg1("mySubSystem", "user", "some test message", "lofar.observation.start", "1.0", "12345", "54321");
 

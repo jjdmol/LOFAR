@@ -27,6 +27,9 @@
 #include <qpid/messaging/Message.h>
 #include <qpid/types/Variant.h>
 
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+
 #include <string>
 #include <ostream>
 
@@ -112,9 +115,17 @@ public:
   // Very simple XML parser to get a key from the XML content.
   std::string getXMLvalue(const std::string& key) const;
 
+  // Parses the provided string and return an xml doc
+  // return xml is owned by the caller, does not change the state
+  // of the msg object
+  xmlDocPtr parseXMLString(const std::string& xml_string);
+
 private:
   // -- datamembers -- 
   qpid::messaging::Message itsQpidMsg;
+
+  // xml representation of the msg head+payload
+  xmlDocPtr content_as_xml_tree;
 
   // set when xml content has been parsed, used to prevent multiple parses
   bool xml_content_parsed;
@@ -123,6 +134,12 @@ private:
 
   // parse the message to internal xml storage
   void parse_xml();
+
+  
+
+
+  // -- Members --
+
 };
 
 inline std::ostream &operator<<(std::ostream &os, const Message &msg)
