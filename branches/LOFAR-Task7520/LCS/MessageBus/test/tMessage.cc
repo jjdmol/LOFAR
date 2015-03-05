@@ -144,8 +144,7 @@ int main(int argc, char* argv[])
   cout << "We have libxml installed" << endl;
 #endif
 
-
-
+  
 /*
 	Message	msg1("mySubSystem", "user", "some test message", "lofar.observation.start", "1.0", "12345", "54321");
 
