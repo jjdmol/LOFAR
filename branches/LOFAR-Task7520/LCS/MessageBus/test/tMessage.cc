@@ -234,8 +234,6 @@ TEST(ShortDescription)
 
 
   CHECK_EQUAL("some test message", constant_part_of_desc);
-
-
 }
 
 
@@ -254,7 +252,12 @@ int main(int argc, char* argv[])
 
   }
 
-  return UnitTest::RunAllTests() > 0;
+#ifdef HAVE_LIBXML
+  cout << "we are here" << endl;
+
+#endif
+
+  //return UnitTest::RunAllTests() > 0;
 
 
   //ValidXMLFixture fixture;

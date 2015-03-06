@@ -97,9 +97,6 @@ Message::Message(const std::string &from,
          const std::string &protocolVersion,
          const std::string &momid,
          const std::string &sasid) 
-:
-  content_as_xml_tree(NULL),
-  xml_content_parsed(false)
 {	
   itsQpidMsg.setContent(formatString(LOFAR_MSG_TEMPLATE.c_str(),
         protocol.c_str(), protocolVersion.c_str(), from.c_str(), 
@@ -107,16 +104,32 @@ Message::Message(const std::string &from,
         summary.c_str(), 	momid.c_str(), sasid.c_str(), "%s"));
   itsQpidMsg.setContentType("text/plain");
   itsQpidMsg.setDurable(true);
+
+#ifdef HAVE_LIBXML
+  content_as_xml_document = parseXMLString(itsQpidMsg.getContent());
+#endif
 }
 
 // Read a message from disk (header + payload)
 Message::Message(const std::string &rawContent)
-:
-  content_as_xml_tree(NULL),
-  xml_content_parsed(false)
 {
   itsQpidMsg.setContent(rawContent);
+
+#ifdef HAVE_LIBXML
+  content_as_xml_document = parseXMLString(itsQpidMsg.getContent());
+#endif
 }
+
+
+
+Message::Message(const qpid::messaging::Message qpidMsg) 
+: 
+  itsQpidMsg(qpidMsg)
+{
+#ifdef HAVE_LIBXML
+  content_as_xml_document = parseXMLString(itsQpidMsg.getContent());
+#endif
+};
 
 Message::~Message()
 {
@@ -127,12 +140,19 @@ void Message::setXMLPayload (const std::string &payload)
 {
   itsQpidMsg.setContent(formatlString(itsQpidMsg.getContent().c_str(),
                                       payload.c_str()));
+
+#ifdef HAVE_LIBXML
+  content_as_xml_document = parseXMLString(itsQpidMsg.getContent());
+#endif
 }
 
 void Message::setTXTPayload (const std::string &payload)
 {
   itsQpidMsg.setContent(formatlString(itsQpidMsg.getContent().c_str(), 
                                       payload.c_str()));
+#ifdef HAVE_LIBXML
+  content_as_xml_document = parseXMLString(itsQpidMsg.getContent());
+#endif
 }
 
 void Message::setMapPayload (const qpid::types::Variant::Map  &payload)
@@ -189,7 +209,9 @@ xmlDocPtr Message::parseXMLString(const std::string& xml_string)
   unsigned length = xml_string.length();
 
   doc = xmlReadMemory(xml_string.c_str(), length,
-                      "document", NULL, 0);
+    "document", NULL, XML_PARSE_NOBLANKS);
+
+
   if (doc == NULL) 
   {
     std::string error_msg = "failed to parse string to xml document";
@@ -201,14 +223,75 @@ xmlDocPtr Message::parseXMLString(const std::string& xml_string)
 }
 
 
+#ifdef HAVE_LIBXML
 
+xmlNodePtr find_first_element_by_name(xmlNodePtr node, std::string name) 
+{
+  xmlNodePtr cur_node = NULL;
 
+  // Loop over all the siblings in the 
+  for (cur_node = node; cur_node; cur_node = cur_node->next) 
+  {
+    // If we are at a node
+    if (cur_node->type == XML_ELEMENT_NODE) 
+    {
+      // And it has the correct name
+      if (!xmlStrcmp(cur_node->name, (const xmlChar *)name.c_str()))
+      {
+        return cur_node;
+      }
+    }
+    // Look in the children
+    xmlNodePtr child_node = find_first_element_by_name(cur_node->children,
+                                                       name);
+
+    // If a child was found
+    if (child_node)
+    {
+      return child_node; 
+    }
+  }
+
+  // still noting found? return NULL ptr
+  return NULL;
+}
+
+std::string Message::getXMLvalue(const std::string& key) const
+{
+  // get the root element
+  xmlNodePtr current_node = xmlDocGetRootElement(content_as_xml_document);
+  
+  cout << "*******************" << endl;
+  cout << current_node->content << endl;
+  cout << "*******************" << endl;
+  vector<std::string>	labels = split(key, '.');
+  for(vector<string>::const_iterator label = labels.begin();
+    label != labels.end(); ++label)
+  {
+    //Recursively look in the children for the label
+    current_node = find_first_element_by_name(current_node->children,
+                                              *label);
+    // If not found, raise Exception
+    if (!current_node)
+    {
+      // No child with the correct name was found return NULL
+      THROW(MessageParseException, 
+        std::string("Could not find tag in xml: ") + *label);
+    }
+  }
+  // If we get here the finding of the correctly named nodes succeeded
+  return string((char *)(current_node->content));
+
+}
+#else //We dont have HAVE_LIBXML
+
+#warning "Compiling Message without LibXML2 support."
 //
-// getXMLvalue(tag)
+// rawParseXMLString(tag)
 // Function attempts to retrieve tag(key) from the message.
 // THe first entry is returned.
 //
-string Message::getXMLvalue(const string& key) const
+std::string Message::getXMLvalue(const std::string& key) const
 {
   // get copy of content
   vector<string>	labels = split(key, '.');
@@ -249,6 +332,6 @@ string Message::getXMLvalue(const string& key) const
  
   return (content.substr(begin, end - begin));
 }
-
+#endif
 
 } // namespace LOFAR

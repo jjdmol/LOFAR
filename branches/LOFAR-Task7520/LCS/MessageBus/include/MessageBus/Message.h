@@ -41,6 +41,7 @@ static const std::string system = "LOFAR";
 // Version of the header we write
 static const std::string headerVersion = "1.0.0";
 
+
 class Message
 {
 public:
@@ -72,7 +73,7 @@ public:
   );
 
   // Parse a message
-  Message(const qpid::messaging::Message qpidMsg) : itsQpidMsg(qpidMsg) {};
+  Message(const qpid::messaging::Message qpidMsg);
 
   // Read a message from disk (header + payload)
   Message(const std::string &rawContent);
@@ -115,7 +116,7 @@ public:
   // function for printing
   std::ostream& print (std::ostream& os) const;
 
-  // Very simple XML parser to get a key from the XML content.
+  // Parse internal xml representation
   std::string getXMLvalue(const std::string& key) const;
 
   // Parses the provided string and return an xml doc
@@ -123,23 +124,19 @@ public:
   // of the msg object
   xmlDocPtr parseXMLString(const std::string& xml_string);
 
+
+
 private:
   // -- datamembers -- 
   qpid::messaging::Message itsQpidMsg;
 
   // xml representation of the msg head+payload
-  xmlDocPtr content_as_xml_tree;
-
-  // set when xml content has been parsed, used to prevent multiple parses
-  bool xml_content_parsed;
+  xmlDocPtr content_as_xml_document;
 
   // -- Members --
 
   // parse the message to internal xml storage
   void parse_xml();
-
-  
-
 
   // -- Members --
 
