@@ -91,17 +91,17 @@ static string _uuid() {
 }
 
 Message::Message(const std::string &from,
-				 const std::string &forUser,
-				 const std::string &summary,
-				 const std::string &protocol,
-				 const std::string &protocolVersion,
-				 const std::string &momid,
-				 const std::string &sasid) 
+         const std::string &forUser,
+         const std::string &summary,
+         const std::string &protocol,
+         const std::string &protocolVersion,
+         const std::string &momid,
+         const std::string &sasid) 
 :
   content_as_xml_tree(NULL),
   xml_content_parsed(false)
 {	
-	itsQpidMsg.setContent(formatString(LOFAR_MSG_TEMPLATE.c_str(),
+  itsQpidMsg.setContent(formatString(LOFAR_MSG_TEMPLATE.c_str(),
         protocol.c_str(), protocolVersion.c_str(), from.c_str(), 
         forUser.c_str(), _uuid().c_str(), _timestamp().c_str(), 
         summary.c_str(), 	momid.c_str(), sasid.c_str(), "%s"));
@@ -115,7 +115,7 @@ Message::Message(const std::string &rawContent)
   content_as_xml_tree(NULL),
   xml_content_parsed(false)
 {
-	itsQpidMsg.setContent(rawContent);
+  itsQpidMsg.setContent(rawContent);
 }
 
 Message::~Message()
@@ -125,13 +125,13 @@ Message::~Message()
 
 void Message::setXMLPayload (const std::string &payload)
 {
-	itsQpidMsg.setContent(formatlString(itsQpidMsg.getContent().c_str(),
+  itsQpidMsg.setContent(formatlString(itsQpidMsg.getContent().c_str(),
                                       payload.c_str()));
 }
 
 void Message::setTXTPayload (const std::string &payload)
 {
-	itsQpidMsg.setContent(formatlString(itsQpidMsg.getContent().c_str(), 
+  itsQpidMsg.setContent(formatlString(itsQpidMsg.getContent().c_str(), 
                                       payload.c_str()));
 }
 
@@ -157,7 +157,7 @@ std::string Message::short_desc() const
 //
 std::ostream& Message::print (std::ostream& os) const
 {
-	os << "system         : " << system() << endl;
+  os << "system         : " << system() << endl;
     os << "systemversion  : " << headerVersion() << endl;
     os << "protocolName   : " << protocol() << endl;
     os << "protocolVersion: " << protocolVersion() << endl;
@@ -172,7 +172,7 @@ std::ostream& Message::print (std::ostream& os) const
   os << "BEGIN FULL PACKET" << endl;
   os << itsQpidMsg.getContent() << endl;
   os << "END FULL PACKET" << endl;
-	return (os);
+  return (os);
 }
 
 
@@ -210,44 +210,44 @@ xmlDocPtr Message::parseXMLString(const std::string& xml_string)
 //
 string Message::getXMLvalue(const string& key) const
 {
-	// get copy of content
-	vector<string>	labels = split(key, '.');
-	string			content(itsQpidMsg.getContent());
+  // get copy of content
+  vector<string>	labels = split(key, '.');
+  string			content(itsQpidMsg.getContent());
 
-	// loop over subkeys
-	string::size_type	offset = 0;
-	string::size_type	begin = string::npos;
-	string::size_type	end = string::npos;
-	string				startTag;
+  // loop over subkeys
+  string::size_type	offset = 0;
+  string::size_type	begin = string::npos;
+  string::size_type	end = string::npos;
+  string				startTag;
 
 
-	for (size_t i = 0; i <  labels.size(); ++i) 
+  for (size_t i = 0; i <  labels.size(); ++i) 
   {
-		// define tags to find
-		startTag = string("<"+labels[i]+">");
-		// search begin tag
-		begin  = content.find(startTag, offset);
-		if (begin == string::npos) 
+    // define tags to find
+    startTag = string("<"+labels[i]+">");
+    // search begin tag
+    begin  = content.find(startTag, offset);
+    if (begin == string::npos) 
     {
       THROW(MessageParseException, 
             std::string("Could not find start tag for: '") + key + 
             std::string("' in message header"));
-		}
-		offset = begin;
-	}
+    }
+    offset = begin;
+  }
 
-	// search end tag
-	string stopTag ("</"+labels[labels.size()-1]+">");
-	begin+=startTag.size();
-	end = content.find(stopTag, begin);
-	if (end == string::npos) 
+  // search end tag
+  string stopTag ("</"+labels[labels.size()-1]+">");
+  begin+=startTag.size();
+  end = content.find(stopTag, begin);
+  if (end == string::npos) 
   {
     THROW(MessageParseException,
       std::string("Could not find end tag for: '") + key +
       std::string("' in message header"));
-	}
+  }
  
-	return (content.substr(begin, end - begin));
+  return (content.substr(begin, end - begin));
 }
 
 

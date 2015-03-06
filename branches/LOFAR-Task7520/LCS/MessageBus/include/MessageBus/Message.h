@@ -147,7 +147,7 @@ private:
 
 inline std::ostream &operator<<(std::ostream &os, const Message &msg)
 {	
-	return (msg.print(os));
+  return (msg.print(os));
 }
 
 } // namespace LOFAR
