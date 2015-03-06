@@ -101,20 +101,21 @@ public:
           if (correlatedEnabled) {
             // Add required multiples for the Correlator
 
-            // 16 is number of PPF taps
+            // 16 is number of PPF taps (FIR_Filter.cu)
             factor = lcm(factor, 16 * correlatorChannelsPerSubband);
 
-            // each subblock needs at least 16 samples
-            factor = lcm(factor, 16 * _nrSubblocks(requestedIntegrationTime));
+            // each subblock needs at least 16 samples per channel (Correlator.cu)
+            factor = lcm(factor, 16 * correlatorChannelsPerSubband * _nrSubblocks(requestedIntegrationTime));
           }
 
           if (coherentStokesEnabled) {
             // Add required multiples for the CS Beamformer
 
-            // 16 * 64 is required by the Cobalt DelayAndBandPassKernel
+            // 16 * 64 (DelayAndBandPass.cu)
             factor = lcm(factor, 16 * 64);
 
-            // 1024 is the maxNrThreadsPerBlock, required by the CoherentStokesKernel
+            // 1024 is the maxNrThreadsPerBlock (CoherentStokesKernel.cc)
+            // Note that coherenthannelsPerSubband is always a power of 2 < 1024
             factor = lcm(factor, 1024 * coherentTimeIntegrationFactor);
 
 	    (void)coherentChannelsPerSubband;
@@ -123,9 +124,10 @@ public:
           if (incoherentStokesEnabled) {
             // Add required multiples for the IS Beamformer
 
-            // 16 * 64 is required by the Cobalt DelayAndBandPassKernel
+            // 16 * 64 (DelayAndBandPass.cu)
             factor = lcm(factor, 16 * 64);
 
+            // integration should fit (IncoherentStokes.cu)
             factor = lcm(factor, incoherentTimeIntegrationFactor * incoherentChannelsPerSubband);
           }
 
