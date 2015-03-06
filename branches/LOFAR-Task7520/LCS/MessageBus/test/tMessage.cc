@@ -30,6 +30,7 @@
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <MessageBus/Exceptions.h>
 
 
 //using namespace qpid::messaging;
@@ -127,47 +128,122 @@ struct busFixture
   ~busFixture() {}
 };
 
-TEST(parseXMLString)
-{
+TEST(parseXMLString){
   Message msg;
 
   xmlDocPtr doc = msg.parseXMLString(VALID_LOFAR_XML);
   (void)doc; // suppress warning
-
 }
 
-TEST(parseIncorrectXMLString)
-{
+TEST(parseIncorrectXMLString){
   Message msg;
   string invalid_xml_string = VALID_LOFAR_XML + "<kjsdfhsdfhkjh <!!";
   CHECK_THROW(msg.parseXMLString(invalid_xml_string),
-              LOFAR::Exception);
-
+    LOFAR::MessageParseException);
 }
 
-TEST(parse_xml)
-{
+TEST(ConstructMsgFromRawContent){
   Message msg(VALID_LOFAR_XML);
+
+  CHECK_EQUAL("LOFAR",                   msg.system());
+  CHECK_EQUAL("1.0.0",                   msg.headerVersion());
+  CHECK_EQUAL("lofar.observation.start", msg.protocol());
+  CHECK_EQUAL("1.0",                     msg.protocolVersion());
+  CHECK_EQUAL("mySubSystem",             msg.from());
+  CHECK_EQUAL("user",                    msg.forUser());
+  CHECK_EQUAL("",                        msg.uuid());
+  CHECK_EQUAL("some test message",       msg.summary());
+  CHECK_EQUAL("",                        msg.timestamp());
+  CHECK_EQUAL("12345",                   msg.momid());
+  CHECK_EQUAL("44883",                   msg.sasid());
+}
+
+TEST(GetUnknownTagFromMessageContent){
+  Message msg(VALID_LOFAR_XML);
+
+  CHECK_THROW(msg.getXMLvalue("Unexisting.tagname"),
+              LOFAR::MessageParseException);
+}
+
+TEST(ConstructMsgFromArguments)
+{
+  Message	msg("mySubSystem", 
+               "user", 
+               "some test message", 
+               "lofar.observation.start", 
+               "1.0", 
+               "12345", 
+               "54321");
 
   CHECK_EQUAL("LOFAR", msg.system());
   CHECK_EQUAL("1.0.0", msg.headerVersion());
+  CHECK_EQUAL("lofar.observation.start", msg.protocol());
+  CHECK_EQUAL("1.0", msg.protocolVersion());
+  CHECK_EQUAL("mySubSystem", msg.from());
+  CHECK_EQUAL("user", msg.forUser());
+  CHECK_EQUAL("some test message", msg.summary()); 
+  CHECK_EQUAL("12345", msg.momid());
+  CHECK_EQUAL("54321", msg.sasid());
 
-  cout << "*****************" << endl;
-  cout << msg.protocol() << endl;  // Failure van de bestaande code
-  cout << "*****************" << endl;
-  CHECK_EQUAL("LOFAR", msg.protocol());
-  //CHECK_EQUAL(protocolVersion(), "LOFAR");
-  //CHECK_EQUAL(from(), "LOFAR");
-  //CHECK_EQUAL(forUser(), "LOFAR");
-  //CHECK_EQUAL(uuid(), "LOFAR");
-  //CHECK_EQUAL(summary(), "LOFAR");
-  //CHECK_EQUAL(timestamp(), "LOFAR");
-  //CHECK_EQUAL(momid(), "LOFAR");
-  //CHECK_EQUAL(sasid(), "LOFAR");
+  // These are runtime created and cannot be tested, they should be set
+  // test for empthy string
+  CHECK_EQUAL(false, "" == msg.uuid());
+  CHECK_EQUAL(false, "" == msg.timestamp());
 
-  //CHECK_EQUAL(payload
-  //CHECK_EQUAL(header
 }
+
+TEST(SetPayloadOnExistingMsg)
+{
+  Message	msg("mySubSystem",
+    "user",
+    "some test message",
+    "lofar.observation.start",
+    "1.0",
+    "12345",
+    "54321");
+
+  // TODO: This is an awfull default value for a parameter, leakage of
+  // implementation details
+  CHECK_EQUAL("%s", msg.payload());
+
+  msg.setTXTPayload("text");
+  CHECK_EQUAL("text", msg.payload());
+
+  // TODO: This fails!!!
+  //msg.setXMLPayload("BLABLA");
+  //CHECK_EQUAL("BLABLA", msg.payload());
+}
+
+TEST(ShortDescription)
+{
+  Message	msg("mySubSystem",
+    "user",
+    "some test message",
+    "lofar.observation.start",
+    "1.0",
+    "12345",
+    "54321");
+
+  string uuid(msg.uuid());
+  
+  string desc(msg.short_desc());
+  // add two for the obligatory characters
+  string::size_type	end_of_list = desc.find("] ", 0) + 2;
+  string constant_part_of_desc(desc.substr(end_of_list, 
+                                           desc.length() - end_of_list));
+
+
+  CHECK_EQUAL("some test message", constant_part_of_desc);
+
+
+}
+
+
+
+
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char* argv[]) 
 {
@@ -177,7 +253,6 @@ int main(int argc, char* argv[])
 		return (1);
 
 	}
-
 
   return UnitTest::RunAllTests() > 0;
 

@@ -29,9 +29,15 @@
 namespace LOFAR
 {
   //
-  // This exception will be thrown when an assertion fails.
+  // Basic Exception for errors in the MessageBus context
   //
   EXCEPTION_CLASS(MessageBusException, Exception);
+
+  //
+  // This exception will be thrown when an assertion fails.
+  //
+  EXCEPTION_CLASS(MessageParseException, Exception);
+
 
 
 } // namespace LOFAR

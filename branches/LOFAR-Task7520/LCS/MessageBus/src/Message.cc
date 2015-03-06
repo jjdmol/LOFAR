@@ -66,9 +66,7 @@ const string LOFAR_MSG_TEMPLATE = "\
          <sasid>%s</sasid>\n\
       </ids>\n\
    </header>\n\
-   <payload>\n\
-%s\n\
-   </payload>\n\
+   <payload>%s</payload>\n\
 </message>";
 
 static string _timestamp() {
@@ -139,11 +137,13 @@ void Message::setTXTPayload (const std::string &payload)
 
 void Message::setMapPayload (const qpid::types::Variant::Map  &payload)
 {
+  //TODO: Not implemented
   (void)payload;
 }
 
 void Message::setListPayload(const qpid::types::Variant::List &payload)
 {
+  //TODO: Not implemented
   (void)payload;
 }
 
@@ -194,7 +194,7 @@ xmlDocPtr Message::parseXMLString(const std::string& xml_string)
   {
     std::string error_msg = "failed to parse string to xml document";
     LOG_ERROR(error_msg);
-    THROW(MessageBusException, error_msg);
+    THROW(MessageParseException, error_msg);
   }
 
   return doc;
@@ -205,11 +205,11 @@ xmlDocPtr Message::parseXMLString(const std::string& xml_string)
 
 //
 // getXMLvalue(tag)
+// Function attempts to retrieve tag(key) from the message.
+// THe first entry is returned.
 //
 string Message::getXMLvalue(const string& key) const
 {
-
-
 	// get copy of content
 	vector<string>	labels = split(key, '.');
 	string			content(itsQpidMsg.getContent());
@@ -219,22 +219,32 @@ string Message::getXMLvalue(const string& key) const
 	string::size_type	begin = string::npos;
 	string::size_type	end = string::npos;
 	string				startTag;
-	for (size_t i = 0; i <  labels.size(); ++i) {
+
+
+	for (size_t i = 0; i <  labels.size(); ++i) 
+  {
 		// define tags to find
 		startTag = string("<"+labels[i]+">");
 		// search begin tag
 		begin  = content.find(startTag, offset);
-		if (begin == string::npos) {
-			return ("???");
+		if (begin == string::npos) 
+    {
+      THROW(MessageParseException, 
+            std::string("Could not find start tag for: '") + key + 
+            std::string("' in message header"));
 		}
 		offset = begin;
 	}
+
 	// search end tag
 	string stopTag ("</"+labels[labels.size()-1]+">");
 	begin+=startTag.size();
 	end = content.find(stopTag, begin);
-	if (end == string::npos) {
-		return ("???");
+	if (end == string::npos) 
+  {
+    THROW(MessageParseException,
+      std::string("Could not find end tag for: '") + key +
+      std::string("' in message header"));
 	}
  
 	return (content.substr(begin, end - begin));

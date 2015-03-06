@@ -80,7 +80,10 @@ public:
   // Set the payload, supporting various types
   void setXMLPayload (const std::string                &payload);
   void setTXTPayload (const std::string                &payload);
+
+  //TODO: Not implemented
   void setMapPayload (const qpid::types::Variant::Map  &payload);
+  //TODO: Not implemented
   void setListPayload(const qpid::types::Variant::List &payload);
 
   virtual ~Message();
