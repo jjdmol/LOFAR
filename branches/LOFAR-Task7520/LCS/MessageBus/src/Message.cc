@@ -27,8 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_string.h>
 #include <Common/StringUtil.h>
-#include <Common/Exception.h>
-#include <Common/Exceptions.h>
+#include <MessageBus/Exceptions.h>
 #include <MessageBus/Message.h>
 
 #include <qpid/types/Uuid.h>
@@ -195,7 +194,7 @@ xmlDocPtr Message::parseXMLString(const std::string& xml_string)
   {
     std::string error_msg = "failed to parse string to xml document";
     LOG_ERROR(error_msg);
-    THROW(Exception, error_msg);
+    THROW(MessageBusException, error_msg);
   }
 
   return doc;
