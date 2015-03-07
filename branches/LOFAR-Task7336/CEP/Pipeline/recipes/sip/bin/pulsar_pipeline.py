@@ -170,7 +170,7 @@ class pulsar_pipeline(control):
           self.logger.error("Could not read feedback from %s: %s" % (metadata_file,e))
           return 0
 
-        send_feedback_dataproduct(metadata)
+        self.send_feedback_dataproducts(metadata)
 
         return 1
 
