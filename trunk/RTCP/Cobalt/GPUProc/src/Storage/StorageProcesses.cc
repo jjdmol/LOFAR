@@ -58,12 +58,6 @@ namespace LOFAR
     }
 
 
-    ParameterSet StorageProcesses::feedbackLTA() const
-    {
-      return itsFeedbackLTA;
-    }
-
-
     void StorageProcesses::start()
     {
       const vector<string> &hostnames = itsParset.settings.outputProcHosts;
@@ -90,9 +84,6 @@ namespace LOFAR
       for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank++) {
         // stop storage process
         itsStorageProcesses[rank]->stop(deadline_ts);
-
-        // obtain feedback for LTA
-        itsFeedbackLTA.adoptCollection(itsStorageProcesses[rank]->feedbackLTA());
 
         // free the StorageProcess object
         itsStorageProcesses[rank] = 0;

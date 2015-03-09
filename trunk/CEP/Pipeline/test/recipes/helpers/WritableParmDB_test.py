@@ -28,7 +28,7 @@ class writableParmdbTest(unittest.TestCase):
         super(writableParmdbTest, self).__init__(arg)
 
     def setUp(self):
-        self.tempDir = tempfile.mkdtemp()
+        self.tempDir = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
         self.tempParmDB = os.path.join(self.tempDir, "parmDB")
         self.writable_parmdb = writableParmdbWrapper(self.tempParmDB)
 

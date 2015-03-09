@@ -1,0 +1,146 @@
+#!/usr/bin/python
+# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+#
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# The LOFAR software suite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+#
+# id.. TDB
+"""Very basic messagebus router that routs the messages according to the settings in Router.conf
+"""
+
+import lofar.messagebus.basemsgbus as msgbus
+#import lofar.messagebus.message as message
+
+import threading
+from ConfigParser import SafeConfigParser
+import os.path
+from datetime import datetime
+
+def log(level, msg):
+  print "%s %-5s %s" % (datetime.now(), level, msg)
+
+class BusMulticast(threading.Thread):
+  """
+  Sets up the router from one inbus to several outbusses
+  """
+  def __init__(self, source, destlist):
+    threading.Thread.__init__(self)
+    self.source   = source
+    self.destlist = destlist
+
+  def run(self):
+    inbus = msgbus.FromBus(self.source)
+    outbusses = [msgbus.ToBus(dest) for dest in self.destlist]
+
+    log("INFO","Forwarding %s -> %s" % (self.source,self.destlist))
+
+    while True:
+      # TODO: Use a transaction (not supported yet in qpid 0.30)
+
+      msg = inbus.get()
+      if msg is None:
+        log("ERROR","Received 'None' message from %s" % (self.source,))
+        continue
+
+      log("INFO","Msg received from %s" % (self.source))
+
+      for outbus in outbusses:
+        outbus.send(msg)
+      inbus.ack(msg)
+
+      log("INFO","Forwarded %s -> %s" % (self.source,self.destlist))
+
+class RouterConfig(SafeConfigParser):
+  """
+    Router configuration. Example:
+
+    [multicast]
+    source-queue-1: dest-queue-1, dest-queue2
+    source-queue-2: dest-queue-3
+
+  """
+  def __init__(self, filename=None):
+    SafeConfigParser.__init__(self)
+
+    # set defaults
+    self.add_section('multicast')
+
+    # read configuration
+    if filename is not None:
+      self.read(filename)
+
+  def read(self, filename):
+    log("INFO","[RouterConfig] Considering reading %s" % (filename,))
+    if not os.path.isfile(filename):
+      return False
+
+    log("INFO","[RouterConfig] Reading %s" % (filename,))
+    SafeConfigParser.read(self, filename)
+    return True
+
+  def sources(self):
+    return self.options('multicast')
+
+  def destinations(self, source):
+    return [field.strip() for field in self.get('multicast', source).split(',')]
+
+if __name__ == "__main__":
+  """
+    Apply the routing specified in router.conf and router.conf.`hostname`;
+    both configration files are found in $LOFARROOT/etc, or . if $LOFARROOT is
+    not set.
+
+    Application runs forever, regardless of the number of routes. Also runs
+    forever if no routing is required, to keep behaviour consistent across
+    nodes.
+  """
+  import os
+  import platform
+  import time
+
+  if "LOFARROOT" in os.environ:
+    path = os.path.expandvars("$LOFARROOT/etc")
+  else:
+    path = "."
+
+  # read default config file
+  config = RouterConfig('%s/MessageRouter.conf' % path)
+
+  # read host-specific config file
+  my_configfile = '%s/MessageRouter.conf.%s' % (path, platform.node().lower()) # = hostname
+  config.read(my_configfile)
+
+  threadlist = []
+
+  # set up router
+  for source in config.sources():
+    destlist = config.destinations(source)
+
+    t = BusMulticast(source, destlist)
+    t.start()
+    threadlist.append(t)
+
+  log("INFO","[main] Running %s threads" % (len(threadlist),))
+
+  if not threadlist:
+    # stall forever (future: allow rereading config from config file? command queue?)
+    log("INFO","[main] Nothing to do. Sleeping forever.");
+    while True:
+      time.sleep(60)
+  else:
+    # wait for join (forever)
+    for t in threadlist:
+      t.join()
+

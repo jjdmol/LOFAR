@@ -49,7 +49,7 @@ class setupsourcedb(LOFARnodeTCP):
             shutil.rmtree(skydb, ignore_errors=True)
 
             self.logger.info("Creating skymodel: %s" % (skydb))
-            scratch_dir = tempfile.mkdtemp()
+            scratch_dir = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
             try:
                 cmd = [executable,
                        "in=%s" % catalogue,

@@ -12,7 +12,7 @@
 
 function error {
   echo -e "$@" >&2
-  sendback_status 1
+  sendback_state 1
   exit 1
 }
 
@@ -51,7 +51,7 @@ function usage {
     "\n    -B: do NOT add broken antenna information"\
     "\n    -C: run with check tool specified in environment variable"\
     "LOFAR_CHECKTOOL"\
-    "\n    -F: do NOT send feedback to OnlineControl and do NOT send data points to a PVSS gateway"\
+    "\n    -F: do NOT send data points to a PVSS gateway"\
     "\n    -P: create PID file"\
     "\n    -l: run solely on localhost using 'nprocs' MPI processes (isolated test)"\
     "\n    -p: enable profiling" \
@@ -85,66 +85,26 @@ function command_retry {
   done
 }
 
-# Send the result status back to OnlineControl.
+# Send the result state back to LOFAR (MAC, MoM)
 #
 # to report success:
 #   sendback_status 0
 # to report failure:
 #   sendback_status 1
-function sendback_status {
+function sendback_state {
   OBSRESULT="$1"
 
-  if [ -z "$PARSET" ]
+  if [ $OBSRESULT -eq 0 ]
   then
-    echo "Not communicating back to OnlineControl (no parset)"
-    return 0
+    echo "Signalling success"
+    SUCCESS=1
+  else
+    # ***** Observation or sending feedback failed for some reason
+    echo "Signalling failure"
+    SUCCESS=0
   fi
 
-  if [ "$ONLINECONTROL_FEEDBACK" -eq "0" ]
-  then
-    echo "Not communicating back to OnlineControl (disabled on command line)"
-    return 0
-  fi
-
-  if [ "$ONLINECONTROL_FEEDBACK" -eq "1" ]
-  then
-    ONLINECONTROL_USER=`getkey Cobalt.Feedback.userName $USER`
-    ONLINECONTROL_HOST=`getkey Cobalt.Feedback.host`
-
-    if [ $OBSRESULT -eq 0 ]
-    then
-      # ***** Observation ran successfully
-
-      # Copy LTA feedback file to ccu001
-      FEEDBACK_DEST="$ONLINECONTROL_USER@$ONLINECONTROL_HOST:`getkey Cobalt.Feedback.remotePath`"
-
-      echo "Copying feedback to $FEEDBACK_DEST"
-      timeout $KILLOPT 30s scp "$FEEDBACK_FILE" "$FEEDBACK_DEST"
-      FEEDBACK_RESULT=$?
-      if [ $FEEDBACK_RESULT -ne 0 ]
-      then
-        echo "Failed to copy file $FEEDBACK_FILE to $FEEDBACK_DEST (status: $FEEDBACK_RESULT)"
-        OBSRESULT=$FEEDBACK_RESULT
-      fi
-    fi
-
-    # Communicate result back to OnlineControl
-    ONLINECONTROL_RESULT_PORT=$((21000 + $OBSID % 1000))
-
-    if [ $OBSRESULT -eq 0 ]
-    then
-      # Signal success to OnlineControl
-      echo "Signalling success to $ONLINECONTROL_HOST"
-      echo -n "FINISHED" > /dev/tcp/$ONLINECONTROL_HOST/$ONLINECONTROL_RESULT_PORT
-    else
-      # ***** Observation or sending feedback failed for some reason
-      # Signal failure to OnlineControl
-      echo "Signalling failure to $ONLINECONTROL_HOST"
-      echo -n "ABORT" > /dev/tcp/$ONLINECONTROL_HOST/$ONLINECONTROL_RESULT_PORT
-    fi
-  fi
-
-  return 1
+  send_state "$PARSET" $SUCCESS
 }
 
 #############################
@@ -155,8 +115,8 @@ echo "Called as: $0 $@"
 # Set default options
 # ******************************
 
-# Provide feedback to OnlineControl and data points to PVSS?
-ONLINECONTROL_FEEDBACK=1
+# Provide data points to PVSS?
+STATUS_FEEDBACK=1
 
 # Augment the parset with etc/parset-additions.d/* ?
 AUGMENT_PARSET=1
@@ -192,7 +152,7 @@ while getopts ":ABCFP:l:o:p" opt; do
           ;;
       C)  CHECK_TOOL="$LOFAR_CHECKTOOL"
           ;;
-      F)  ONLINECONTROL_FEEDBACK=0
+      F)  STATUS_FEEDBACK=0
           ;;
       P)  PIDFILE="$OPTARG"
           ;;
@@ -295,8 +255,6 @@ then
     setkey Cobalt.OutputProc.executable               "$LOFARROOT/bin/outputProc"
     setkey Cobalt.OutputProc.StaticMetaDataDirectory  "$LOFARROOT/etc"
     setkey Cobalt.FinalMetaDataGatherer.database.host localhost
-    setkey Cobalt.Feedback.host                       localhost
-    setkey Cobalt.Feedback.remotePath                 "$LOFARROOT/var/run"
     setkey Cobalt.PVSSGateway.host                    ""
 
     # Redirect UDP/TCP input streams to any interface on the local machine
@@ -309,7 +267,7 @@ then
     setkey Cobalt.FinalMetaDataGatherer.enabled       false
   fi
 
-  if [ "$ONLINECONTROL_FEEDBACK" -eq "0" ]
+  if [ "$STATUS_FEEDBACK" -eq "0" ]
   then
     setkey Cobalt.PVSSGateway.host                    ""
   fi
@@ -418,11 +376,13 @@ touch $PID_LIST_FILE
 
 LIST_OF_HOSTS=$(getOutputProcHosts $PARSET)
 RANK=0
+VARS="QUEUE_PREFIX=$QUEUE_PREFIX" # Variables to forward to outputProc
 for HOST in $LIST_OF_HOSTS
 do
-  COMMAND="ssh -tt -l $SSH_USER_NAME $KEY_STRING $SSH_USER_NAME@$HOST $OUTPUT_PROC_EXECUTABLE $OBSERVATIONID $RANK"
+  COMMAND="ssh -tt -l $SSH_USER_NAME $KEY_STRING $SSH_USER_NAME@$HOST $VARS $OUTPUT_PROC_EXECUTABLE $OBSERVATIONID $RANK"
+  echo "Starting $COMMAND"
   # keep a counter to allow determination of the rank (needed for binding to rtcp)
-  RANK=$(($RANK + 1))   
+  RANK=$(($RANK + 1))
   
   command_retry "$COMMAND" &  # Start retrying function in the background
   PID=$!                      # get the pid 
@@ -437,8 +397,10 @@ done
 # Run in the background to allow signals to propagate
 #
 # -x LOFARROOT    Propagate $LOFARROOT for rtcp to find GPU kernels, config files, etc.
+# -x QUEUE_PREFIX Propagate $QUEUE_PREFIX for test-specific interaction over the message bus
 # -H              The host list to run on, derived earlier.
 mpirun.sh -x LOFARROOT="$LOFARROOT" \
+          -x QUEUE_PREFIX="$QUEUE_PREFIX" \
           -H "$HOSTS" \
           $MPIRUN_PARAMS \
           $CHECK_TOOL \
@@ -480,7 +442,7 @@ fi
 # Post-process the observation
 # ******************************
 
-sendback_status "$OBSRESULT"
+sendback_state "$OBSRESULT"
 
 # clean up outputProc children
 echo "Allowing 120 second for normal end of outputProc"

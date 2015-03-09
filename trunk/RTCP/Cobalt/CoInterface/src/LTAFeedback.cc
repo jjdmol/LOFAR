@@ -192,7 +192,7 @@ namespace LOFAR
     }
 
 
-    ParameterSet LTAFeedback::allFeedback() const
+    ParameterSet LTAFeedback::processingFeedback() const
     {
       ParameterSet ps;
 
@@ -209,11 +209,6 @@ namespace LOFAR
                str(format("%u") % settings.correlator.nrChannels));
         ps.add("Observation.Correlator.channelWidth",
                str(format("%.16g") % (settings.subbandWidth() / settings.correlator.nrChannels)));
-
-        // add the feedback for the individual files
-        for (size_t i = 0; i < settings.correlator.files.size(); ++i) {
-          ps.adoptCollection(correlatedFeedback(i));
-        }
       }
 
       ps.add("Observation.DataProducts.nrOfOutput_Beamformed_", 
@@ -314,9 +309,25 @@ namespace LOFAR
         ps.add("Observation.IncoherentStokes.stationList",
                settings.rawStationList);
       }
+
+      return ps;
+    }
+
+
+    ParameterSet LTAFeedback::allFeedback() const
+    {
+      ParameterSet ps;
+
+      ps.adoptCollection(processingFeedback());
+
+      // add the feedback for the individual files
+      if (settings.correlator.enabled) {
+        for (size_t i = 0; i < settings.correlator.files.size(); ++i) {
+          ps.adoptCollection(correlatedFeedback(i));
+        }
+      }
       
       if (settings.beamFormer.enabled) {
-        // add the feedback for the individual files
         for (size_t i = 0; i < settings.beamFormer.files.size(); ++i) {
           ps.adoptCollection(beamFormedFeedback(i));
         }
