@@ -126,6 +126,11 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
             help="Will the argument be a parsetfile or --opt=var",
             default=False
         ),
+        'args_format': ingredient.StringField(
+            '--args_format',
+            help="Will change the format of the arguments",
+            default='gnu'
+        ),
         'max_per_node': ingredient.IntField(
             '--max_per_node',
             help="Sets the number of jobs per node",
@@ -252,7 +257,11 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
                         parsetdict_copy[name] = value[i]
 
             if self.inputs['outputkey'] and not self.inputs['skip_infile']:
-                parsetdict_copy[self.inputs['outputkey']] = outp.file
+                if arglist_copy and self.inputs['outputkey'] in arglist_copy:
+                    ind = arglist_copy.index(self.inputs['outputkey'])
+                    arglist_copy[ind] = outp.file
+                else:
+                    parsetdict_copy[self.inputs['outputkey']] = outp.file
 
             jobs.append(
                 ComputeJob(
@@ -264,6 +273,7 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
                         parsetdict_copy,
                         prefix,
                         self.inputs['parsetasfile'],
+                        self.inputs['args_format'],
                         #self.inputs['working_directory'],
                         self.environment
                     ]

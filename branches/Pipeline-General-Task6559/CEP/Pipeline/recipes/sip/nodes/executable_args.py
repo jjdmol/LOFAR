@@ -25,7 +25,7 @@ class executable_args(LOFARnodeTCP):
     Basic script for running an executable with arguments.
     """
 
-    def run(self, infile, executable, args, kwargs, work_dir, parsetasfile, environment):
+    def run(self, infile, executable, args, kwargs, work_dir, parsetasfile, args_format, environment):
         """
         This function contains all the needed functionality
         """
@@ -41,11 +41,11 @@ class executable_args(LOFARnodeTCP):
 
         # Time execution of this job
         with log_time(self.logger):
-            if os.path.exists(infile):
-                self.logger.info("Processing %s" % infile)
-            else:
-                self.logger.error("Dataset %s does not exist" % infile)
-                return 1
+            #if os.path.exists(infile):
+            self.logger.info("Processing %s" % infile)
+           # else:
+           #     self.logger.error("Dataset %s does not exist" % infile)
+           #     return 1
 
             # Check if executable is present
             if not os.access(executable, os.X_OK):
@@ -63,8 +63,12 @@ class executable_args(LOFARnodeTCP):
                         raise
 
             if not parsetasfile:
-                for k, v in kwargs.items():
-                    args.append('--' + k + '=' + v)
+                if args_format == 'gnu':
+                    for k, v in kwargs.items():
+                        args.append('--' + k + '=' + v)
+                if args_format == 'lofar':
+                    for k, v in kwargs.items():
+                        args.append(k + '=' + v)
             else:
                 nodeparset = Parset()
                 parsetname = os.path.join(work_dir, os.path.basename(infile) + '.parset')

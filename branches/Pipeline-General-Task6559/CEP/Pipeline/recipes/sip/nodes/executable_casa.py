@@ -26,7 +26,7 @@ class executable_casa(LOFARnodeTCP):
     Basic script for running an executable with arguments.
     """
 
-    def run(self, infile, executable, args, kwargs, work_dir, parsetasfile, environment):
+    def run(self, infile, executable, args, kwargs, work_dir, parsetasfile, args_format, environment):
         """
         This function contains all the needed functionality
         """
@@ -108,11 +108,12 @@ class executable_casa(LOFARnodeTCP):
                 # 2) casapy can not have two instances running from the same directory.
                 # create tmp dirs
                 casapydir = tempfile.mkdtemp(dir=work_dir)
-                casafilename = os.path.join(work_dir, os.path.basename(infile) + '.casacommand.py')
-                casacommandfile = open(casafilename, 'w')
-                casacommandfile.write(casastring)
-                casacommandfile.close()
-                args.append(casafilename)
+                if casastring != '':
+                    casafilename = os.path.join(work_dir, os.path.basename(infile) + '.casacommand.py')
+                    casacommandfile = open(casafilename, 'w')
+                    casacommandfile.write(casastring)
+                    casacommandfile.close()
+                    args.append(casafilename)
                 somename = os.path.join(work_dir, os.path.basename(infile) + '.casashell.sh')
                 commandstring = ''
                 commandstring += executable

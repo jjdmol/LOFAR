@@ -2,7 +2,6 @@ import os
 from lofarpipe.support.data_map import DataMap
 from lofarpipe.support.data_map import DataProduct
 
-
 # mandatory arguments:
 # cmdline for type of mapfile creation
 # options: mapfile-dir, filename, identifier(name in parsetparset)
