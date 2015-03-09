@@ -28,13 +28,13 @@
 
 # Get the LOFAR source directory root
 script_dir=$(cd $(dirname $0) && pwd)
-lofar_root=$(echo $script_dir | sed -e "s|\(.*/LOFAR\)/.*|\1|")
+lofar_root=$script_dir/..
 
 # Just a safety net; this script must be inside the LOFAR tree.
-if test "$script_dir" = "$lofar_root"; then
-  echo "ERROR: $(basename $0) MUST be inside the LOFAR source tree!"
-  exit 1
-fi
+#if test "$script_dir" = "$lofar_root"; then
+#  echo "ERROR: $(basename $0) MUST be inside the LOFAR source tree!"
+#  exit 1
+#fi
 
 # Open the output file
 exec 3> $script_dir/LofarPackageList.cmake

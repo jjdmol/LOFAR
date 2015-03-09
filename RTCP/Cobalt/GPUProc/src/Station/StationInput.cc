@@ -558,12 +558,16 @@ namespace LOFAR {
           if (ps.settings.realTime) {
             #pragma omp parallel for num_threads(nrBoards)
             for(size_t board = 0; board < nrBoards; board++) {
-              OMPThreadSet::ScopedRun sr(packetReaderThreads);
-              OMPThread::ScopedName sn(str(format("%s rd %u") % ps.settings.antennaFields.at(stationIdx).name % board));
+              try {
+                OMPThreadSet::ScopedRun sr(packetReaderThreads);
+                OMPThread::ScopedName sn(str(format("%s rd %u") % ps.settings.antennaFields.at(stationIdx).name % board));
 
-              Thread::ScopedPriority sp(SCHED_FIFO, 10);
+                Thread::ScopedPriority sp(SCHED_FIFO, 10);
 
-              readRSPRealTime(board, mdLogger, mdKeyPrefix);
+                readRSPRealTime(board, mdLogger, mdKeyPrefix);
+              } catch(OMPThreadSet::CannotStartException &ex) {
+                LOG_INFO_STR( logPrefix << "Stopped");
+              }
             }
           } else {
             readRSPNonRealTime(mdLogger, mdKeyPrefix);

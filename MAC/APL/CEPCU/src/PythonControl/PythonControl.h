@@ -27,9 +27,10 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/LofarLogger.h>
-
-//# ACC Includes
 #include <Common/ParameterSet.h>
+
+//# MsgBus Includes
+#include <MessageBus/MsgBus.h>
 
 //# GCF Includes
 #include <GCF/TM/GCF_Control.h>
@@ -67,8 +68,6 @@ public:
    	GCFEvent::TResult waitForConnection_state(GCFEvent& event, GCFPortInterface& port);
 	// Normal control mode. 
 	GCFEvent::TResult operational_state		 (GCFEvent& event, GCFPortInterface& port);
-	// Completing mode. 
-	GCFEvent::TResult completing_state		 (GCFEvent& event, GCFPortInterface& port);
 	// Finishing mode. 
 	GCFEvent::TResult finishing_state		 (GCFEvent& event, GCFPortInterface& port);
 	
@@ -89,26 +88,25 @@ private:
 	bool 	_stopPython  ( int			obsID,
 						  const string&	pythonHost);
 	void	_databaseEventHandler(GCFEvent&				event);
-	void	_passMetadatToOTDB();
 
 	// ----- datamembers -----
    	RTDBPropertySet*           	itsPropertySet;
 	bool					  	itsPropertySetInitialized;
 
 	string					itsMyName;
+	int						itsObsID;
 
 	// pointer to parent control task
 	ParentControl*			itsParentControl;
 	GCFITCPort*				itsParentPort;
 
 	GCFTimerPort*			itsTimerPort;
+	GCFTimerPort*			itsQueueTimer;
 	GCFTimerPort*			itsForcedQuitTimer;
 
 	GCFTCPPort*				itsListener;
 
-	// QUICK FIX #3633
-	GCFTCPPort*				itsFeedbackListener;
-	GCFTCPPort*				itsFeedbackPort;
+	FromBus*				itsMsgQueue;
 	int						itsFeedbackResult;
 
 	GCFTCPPort*				itsPythonPort;
@@ -119,7 +117,6 @@ private:
 	CTState::CTstateNr		itsState;
 
 	// conf-file variables
-	string					itsFeedbackFile;
 	double					itsForceTimeout;
 };
 

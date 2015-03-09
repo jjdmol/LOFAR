@@ -56,6 +56,8 @@ void test_protocol()
     THROW_SYSCALL("getcwd");
 
   p.add("Observation.ObsID",                 "12345");
+  p.add("Observation.startTime",             "2015-01-01 00:00:00");
+  p.add("Observation.stopTime",              "2015-01-01 00:01:00");
   p.add("Cobalt.OutputProc.userName",        USER);
   p.add("Cobalt.OutputProc.sshPublicKey",    pubkey);
   p.add("Cobalt.OutputProc.sshPrivateKey",   privkey);
@@ -90,11 +92,6 @@ void test_protocol()
 	
 	    // Give 10 seconds to wrap up
 	    sp.stop(time(0) + 10);
-	
-	    // Obtain LTA feedback
-	    ParameterSet feedbackLTA(sp.feedbackLTA());
-	
-	    ASSERT(feedbackLTA.getString("foo","") == "bar");
   }
 }
 

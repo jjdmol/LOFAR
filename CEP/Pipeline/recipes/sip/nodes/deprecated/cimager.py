@@ -47,7 +47,7 @@ class cimager(LOFARnodeTCP):
                     self.logger.info("Image already exists: aborting.")
                     return 0
             try:
-                working_dir = mkdtemp()
+                working_dir = mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
 
                 #   If a time range has been specified, copy that section of the
                 #                                  input MS and only image that.

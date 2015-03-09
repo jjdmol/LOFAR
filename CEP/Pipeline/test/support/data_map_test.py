@@ -33,7 +33,7 @@ class DataMapTest(unittest.TestCase):
         """
         Create scratch directory and create required input files in there.
         """
-        self.tmpdir = tempfile.mkdtemp()
+        self.tmpdir = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
         self.old_style_map_file = self._create_old_style_map_file()
         self.new_style_map_file = self._create_new_style_map_file()
         self.syntax_error_map_file = self._create_syntax_error_map_file()
@@ -155,7 +155,7 @@ class MultiDataMapTest(unittest.TestCase):
         """
         Create scratch directory and create required input files in there.
         """
-        self.tmpdir = tempfile.mkdtemp()
+        self.tmpdir = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
         self.old_style_map_file = self._create_old_style_map_file()
         self.new_style_map_file = self._create_new_style_map_file()
         self.syntax_error_map_file = self._create_syntax_error_map_file()
@@ -290,7 +290,7 @@ class HelperFunctionDataMapTest(unittest.TestCase):
         """
         Create scratch directory and create required input files in there.
         """
-        self.tmpdir = tempfile.mkdtemp()
+        self.tmpdir = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
         self.old_style_map_file = self._create_old_style_map_file()
         self.new_style_map_file = self._create_new_style_map_file()
         self.syntax_error_map_file = self._create_syntax_error_map_file()
