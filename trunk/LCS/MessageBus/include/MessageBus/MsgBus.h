@@ -30,6 +30,9 @@
 #include <qpid/messaging/Sender.h>
 #include <qpid/messaging/Session.h>
 #include <qpid/messaging/Address.h>
+#else
+#include <MessageBus/QpidMock.h>
+#endif
 
 #include <Common/Exception.h>
 #include <MessageBus/Message.h>
@@ -83,8 +86,6 @@ private:
 };
 
 } // namespace LOFAR
-
-#endif
 
 #endif
 

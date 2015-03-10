@@ -8,12 +8,12 @@
 #include <string>
 #include <sstream>
 
+namespace LOFAR {
+
 #ifdef HAVE_QPID
 #include <qpid/messaging/Logger.h>
 
 using namespace qpid::messaging;
-
-namespace LOFAR {
 
   class QpidLogSink: public LoggerOutput {
   public:
@@ -85,6 +85,11 @@ namespace LOFAR {
     Logger::setOutput(qpidLogSink);
   }
 
+#else
+  void qpidlogsink_init() {
+    LOG_WARN("QPID support NOT enabled! Messaging will NOT be functional!");
+  }
+#endif
+
 } // namespace LOFAR
 
-#endif

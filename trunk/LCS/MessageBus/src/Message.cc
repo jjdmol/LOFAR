@@ -29,7 +29,9 @@
 #include <Common/StringUtil.h>
 #include <MessageBus/Message.h>
 
+#ifdef HAVE_QPID
 #include <qpid/types/Uuid.h>
+#endif
 
 #include <time.h>
 
