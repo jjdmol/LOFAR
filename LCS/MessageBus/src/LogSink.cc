@@ -8,13 +8,15 @@
 #include <string>
 #include <sstream>
 
-namespace LOFAR {
-
 #ifdef HAVE_QPID
 #include <qpid/messaging/Logger.h>
 
 using namespace qpid::messaging;
+#endif
 
+namespace LOFAR {
+
+#ifdef HAVE_QPID
   class QpidLogSink: public LoggerOutput {
   public:
     QpidLogSink() {
