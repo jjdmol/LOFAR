@@ -92,6 +92,8 @@ class pulsar_pipeline(control):
         """
         Define the individual tasks that comprise the current pipeline.
         This method will be invoked by the base-class's `go()` method.
+
+        Note: return 0 on success, 1 on failure.
         """
         # *********************************************************************
         # 1. Prepare phase, collect data from parset and input mapfiles.
@@ -161,18 +163,17 @@ class pulsar_pipeline(control):
 	# NOTE: PULP returns 0 on SUCCESS!!
         if p.go():
           self.logger.error("PULP did not succeed. Bailing out!")
-          return 0
+          return 1
 
         # Read and forward the feedback
         try:
           metadata = parameterset(self.parset_feedback_file)
         except IOError, e:
           self.logger.error("Could not read feedback from %s: %s" % (metadata_file,e))
-          return 0
+          return 1
 
         self.send_feedback_dataproducts(metadata)
-
-        return 1
+        return 0
 
     
 if __name__ == '__main__':
