@@ -26,6 +26,7 @@
 #include <pytools/PycBasicData.h>
 #include <boost/python.hpp>
 #include <boost/python/args.hpp>
+#include <boost/python/detail/api_placeholder.hpp> // for len() in old boost libs
 
 #include "Package__Version.cc"
 //#include <pyparameterset/Package__Version.h>
