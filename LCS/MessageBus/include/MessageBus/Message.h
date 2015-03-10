@@ -26,6 +26,9 @@
 #ifdef HAVE_QPID
 #include <qpid/messaging/Message.h>
 #include <qpid/types/Variant.h>
+#else
+#include <MessageBus/QpidMock.h>
+#endif
 
 #include <string>
 #include <ostream>
@@ -123,8 +126,6 @@ inline std::ostream &operator<<(std::ostream &os, const Message &msg)
 }
 
 } // namespace LOFAR
-
-#endif
 
 #endif
 

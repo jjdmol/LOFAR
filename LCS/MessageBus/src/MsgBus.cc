@@ -7,6 +7,8 @@
 #ifdef HAVE_QPID
 #include <qpid/types/Exception.h>
 #include <qpid/messaging/exceptions.h>
+#endif
+
 #include <stdlib.h>
 
 using namespace qpid::messaging;
@@ -174,4 +176,3 @@ namespace LOFAR {
 
 } // namespace LOFAR
 
-#endif
