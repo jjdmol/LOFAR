@@ -59,12 +59,13 @@ class SocketStream : public FileDescriptorBasedStream
 
     /*
      * Receive message(s). Note: only for UDP server socket!
-     *   @buffers contains ptrs + sizes wrt the (max) nr of messages to receive
-     *   @recvdMsgSizes will be populated with the received message sizes.
-     *     Note: @recvdMsgSizes must be (at least) the size of buffers!
+     *   @bufBase is large enough to store all to be received messages
+     *   @maxMsgSize indicates the max size of _each_ (i.e. 1) message
+     *   @recvdMsgSizes is passed in with a size indicating the max number of
+     *     messages to receive. Actually received sizes will be written therein.
      * Returns the number of messages received if ok, or throws on syscall error
      */
-    unsigned recvmmsg( std::vector<struct iovec> &buffers,
+    unsigned recvmmsg( void *bufBase, unsigned maxMsgSize,
                        std::vector<unsigned> &recvdMsgSizes );
 
     // Allow individual recv()/send() calls to last for 'timeout' seconds before returning EWOULDBLOCK

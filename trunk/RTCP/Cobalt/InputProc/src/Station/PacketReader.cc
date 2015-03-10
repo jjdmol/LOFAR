@@ -39,12 +39,10 @@ namespace LOFAR
     const BoardMode PacketReader::MODE_ANY(0, 0);
 
     PacketReader::PacketReader( const std::string &logPrefix, Stream &inputStream,
-                                unsigned packetBatchSize, const BoardMode &mode )
+                                const BoardMode &mode )
       :
       logPrefix(str(boost::format("%s [PacketReader] ") % logPrefix)),
       inputStream(inputStream),
-      msgIOVecs(packetBatchSize),
-      recvdMsgSizes(packetBatchSize),
       mode(mode),
 
       nrReceived(0),
@@ -76,13 +74,14 @@ namespace LOFAR
       if (inputIsUDP) {
         SocketStream &sstream = dynamic_cast<SocketStream&>(inputStream);
 
-        numRead = sstream.recvmmsg(msgIOVecs, recvdMsgSizes);
+        vector<unsigned> recvdSizes(packets.size());
+        numRead = sstream.recvmmsg(&packets[0], sizeof(struct RSP), recvdSizes);
 
         nrReceived += numRead;
 
         // validate received packets
         for (size_t i = 0; i < numRead; ++i) {
-          packets[i].payloadError(!validatePacket(packets[i], recvdMsgSizes[i]));
+          packets[i].payloadError(!validatePacket(packets[i], recvdSizes[i]));
         }
       } else {
         // fall-back for non-UDP streams, emit packets

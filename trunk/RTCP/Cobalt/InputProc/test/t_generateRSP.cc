@@ -65,7 +65,7 @@ void generate_input(ostream& os, unsigned bitMode,
 
 void read_rsp(Stream& is, ostream& os, unsigned bitMode, unsigned nrSubbands)
 {
-  PacketReader reader("", is, 1);
+  PacketReader reader("", is);
   RSP packet;
   complex<int> sample;
   try {
