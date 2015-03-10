@@ -269,7 +269,7 @@ void SocketStream::accept(time_t deadline)
       }  
     }
 
-    const std::string &nfskey;
+    const std::string nfskey;
   } onDestruct = { nfskey };
   (void)onDestruct;
 
