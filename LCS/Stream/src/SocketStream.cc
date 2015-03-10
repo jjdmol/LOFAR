@@ -74,13 +74,12 @@ namespace {
 };
 
 SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol protocol,
-                           Mode mode, time_t deadline, const std::string &nfskey, bool doAccept)
+                           Mode mode, time_t deadline, bool doAccept)
 :
   protocol(protocol),
   mode(mode),
   hostname(hostname),
   port(_port),
-  nfskey(nfskey),
   listen_sk(-1)
 {  
   const std::string description = str(boost::format("%s:%s:%s")
@@ -115,9 +114,6 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
         char portStr[16];
         int  retval;
         struct addrinfo *result;
-
-        if (mode == Client && nfskey != "")
-          port = boost::lexical_cast<uint16>(readkey(nfskey, deadline));
 
         if (mode == Server && autoPort)
           port = MINPORT + static_cast<unsigned short>((MAXPORT - MINPORT) * erand48(randomState.xsubi)); // erand48() not thread safe, but not a problem.
@@ -252,27 +248,6 @@ void SocketStream::reaccept(time_t deadline)
 
 void SocketStream::accept(time_t deadline)
 {
-  if (nfskey != "")
-    writekey(nfskey, port);
-
-  // make sure the key will be deleted
-  struct D {
-    ~D() {
-      if (nfskey != "") {
-        ScopedDelayCancellation dc; // unlink is a cancellation point
-
-        try {
-          deletekey(nfskey);
-        } catch (Exception &ex) {
-          LOG_ERROR_STR("Exception in destructor: " << ex);
-        }
-      }  
-    }
-
-    const std::string nfskey;
-  } onDestruct = { nfskey };
-  (void)onDestruct;
-
   if (deadline > 0) {
     fd_set fds;
 
@@ -305,72 +280,6 @@ void SocketStream::setReadBufferSize(size_t size)
 {
   if (fd >= 0 && setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &size, sizeof size) < 0)
     THROW_SYSCALL("setsockopt(SO_RCVBUF)");
-}
-
-
-void SocketStream::syncNFS()
-{
-  // sync NFS
-  DIR *dir = opendir(".");
-
-  if (!dir)
-    THROW_SYSCALL("opendir");
-
-  struct dirent entry;
-  struct dirent *result;
-  if (readdir_r(dir, &entry, &result) != 0 || !result)
-    THROW_SYSCALL("readdir_r");
-
-  if (closedir(dir) != 0)
-    THROW_SYSCALL("closedir");
-}
-
-
-std::string SocketStream::readkey(const std::string &nfskey, time_t deadline)
-{
-  for(;;) {
-    char portStr[16];
-    ssize_t len;
-
-    syncNFS();
-
-    len = readlink(nfskey.c_str(), portStr, sizeof portStr - 1); // reserve 1 character to insert \0 below
-
-    if (len >= 0) {
-      portStr[len] = 0;
-      return std::string(portStr);
-    }
-
-    if (deadline > 0 && deadline <= time(0))
-      THROW(TimeOutException, "client socket");
-
-    if (usleep(999999) < 0) { // near 1 sec; max portably safe arg val
-      // interrupted by a signal handler -- abort to allow this thread to
-      // be forced to continue after receiving a SIGINT, as with any other
-      // system call
-      THROW_SYSCALL("usleep");
-    }
-  }
-}
-
-void SocketStream::writekey(const std::string &nfskey, uint16 port)
-{
-  char portStr[16];
-
-  snprintf(portStr, sizeof portStr, "%hu", port);
-
-  // Symlinks can be atomically created over NFS
-  if (symlink(portStr, nfskey.c_str()) < 0)
-    THROW_SYSCALL("symlink");
-}
-
-
-void SocketStream::deletekey(const std::string &nfskey)
-{
-  syncNFS();
-
-  if (unlink(nfskey.c_str()) < 0)
-    THROW_SYSCALL("unlink");
 }
 
 

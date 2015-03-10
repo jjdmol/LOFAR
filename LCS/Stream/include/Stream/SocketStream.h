@@ -46,7 +46,7 @@ class SocketStream : public FileDescriptorBasedStream
     };
 
     SocketStream(const std::string &hostname, uint16 _port, Protocol, Mode,
-                 time_t deadline = 0, const std::string &nfskey = "", bool doAccept = true);
+                 time_t deadline = 0, bool doAccept = true);
     virtual ~SocketStream();
 
     FileDescriptorBasedStream *detach();
@@ -73,16 +73,9 @@ class SocketStream : public FileDescriptorBasedStream
   private:
     const std::string hostname;
     uint16 port;
-    const std::string nfskey;
     int listen_sk;
 
     void accept(time_t timeout);
-
-    static void syncNFS();
-
-    static std::string readkey(const std::string &nfskey, time_t deadline);
-    static void writekey(const std::string &nfskey, uint16 port);
-    static void deletekey(const std::string &nfskey);
 };
 
 EXCEPTION_CLASS(TimeOutException, LOFAR::Exception);
