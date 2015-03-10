@@ -1,4 +1,4 @@
-//# LogSink.h: Wrapper to initialise the QPID library
+//# QpidMock.cc: A fake implementation of the QPID API
 //#
 //# Copyright (C) 2015
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -20,14 +20,25 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MESSAGEBUS_LOGSINK_H
-#define LOFAR_MESSAGEBUS_LOGSINK_H
+#include <lofar_config.h>
 
-namespace LOFAR {
+#ifndef HAVE_QPID
+#include <MessageBus/QpidMock.h>
 
-void qpidlogsink_init();
+std::ostream& operator<<(std::ostream& out, const qpid::types::Variant& value) {
+  (void)value;
+  return out;
+}
 
-} // namespace LOFAR
+std::ostream& operator<<(std::ostream& out, const qpid::types::Variant::Map& map) {
+  (void)map;
+  return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const qpid::types::Variant::List& list) {
+  (void)list;
+  return out;
+}
 
 #endif
 

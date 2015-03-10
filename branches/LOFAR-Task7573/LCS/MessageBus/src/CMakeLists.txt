@@ -7,7 +7,8 @@ set(messagebus_LIB_SRCS
   Package__Version.cc
   LogSink.cc
   MsgBus.cc
-  Message.cc)
+  Message.cc
+  QpidMock.cc)
 
 set(messagebus_PROGRAMS
 )
