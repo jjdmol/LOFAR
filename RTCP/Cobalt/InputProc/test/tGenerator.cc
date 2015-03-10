@@ -97,7 +97,7 @@ int main( int, char **argv )
       // Read and verify the generated packets
 
       try {
-        PacketReader reader("", *inputStreams[0], 1); // batch of 1 pkt
+        PacketReader reader("", *inputStreams[0]);
 
         for(size_t nr = 0; nr < NUMPACKETS; ++nr) {
           struct RSP packet;

@@ -310,7 +310,7 @@ struct mmsghdr {
 };
 #endif
 
-unsigned SocketStream::recvmmsg( std::vector<struct iovec> &buffers,
+unsigned SocketStream::recvmmsg( void *bufBase, unsigned maxMsgSize,
                                  std::vector<unsigned> &recvdMsgSizes )
 {
   ASSERT(protocol == UDP);
@@ -318,17 +318,22 @@ unsigned SocketStream::recvmmsg( std::vector<struct iovec> &buffers,
 
   // If recvmmsg() is not available, then use recvmsg() (1 call) as fall-back.
 #ifdef HAVE_RECVMMSG
-  const unsigned numBufs = buffers.size();
+  const unsigned numBufs = recvdMsgSizes.size();
 #else
   const unsigned numBufs = 1;
 #endif
-  ASSERT(recvdMsgSizes.size() >= numBufs);
 
   // register our receive buffer(s)
+  std::vector<struct iovec> iov(numBufs);
+  for (unsigned i = 0; i < numBufs; i++) {
+    iov[i].iov_base = (char*)bufBase + i * maxMsgSize;
+    iov[i].iov_len  = maxMsgSize;
+  }
+
   std::vector<struct mmsghdr> msgs(numBufs);
   for (unsigned i = 0; i < numBufs; ++i) {
     msgs[i].msg_hdr.msg_name    = NULL; // we don't need to know who sent the data
-    msgs[i].msg_hdr.msg_iov     = &buffers[i];
+    msgs[i].msg_hdr.msg_iov     = &iov[i];
     msgs[i].msg_hdr.msg_iovlen  = 1;
     msgs[i].msg_hdr.msg_control = NULL; // we're not interested in OoB data
   }
