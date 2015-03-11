@@ -8,12 +8,12 @@ def load_and_compare_data_sets(ms1, ms2):
     ms2 = pt.table(ms2)
 
     #get the amount of rows in the dataset
-    n_row = len(ms1.getcol('DATA'))
+    n_row = len(ms1.getcol('CORRECTED_DATA'))
     n_complex_vis = 4
 
     # create a target array with the same length as the datacolumn
     div_array = numpy.zeros((n_row, 1, n_complex_vis), dtype=numpy.complex64)
-    ms1_array = ms1.getcol('DATA')
+    ms1_array = ms1.getcol('CORRECTED_DATA')
     ms2_array = ms2.getcol('CORRECTED_DATA')
 
     div_max = 0
