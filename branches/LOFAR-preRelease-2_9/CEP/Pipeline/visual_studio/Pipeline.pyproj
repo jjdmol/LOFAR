@@ -32,6 +32,9 @@
     <Content Include="mac\CMakeLists.txt" />
     <Content Include="recipes\CMakeLists.txt" />
     <Content Include="test\CMakeLists.txt" />
+    <Compile Include="recipes\sip\bin\long_baseline_pipeline.py" />
+    <Compile Include="recipes\sip\master\long_baseline.py" />
+    <Compile Include="recipes\sip\nodes\long_baseline.py" />
     <Compile Include="test\__init__.py" />
     <Compile Include="deploy\deprecated\fabfile.py" />
     <Compile Include="deploy\deprecated\start_cluster.py" />
