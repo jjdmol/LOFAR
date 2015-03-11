@@ -32,15 +32,15 @@
 
 #include <qpid/types/Uuid.h>
 
-#include <libxml/parser.h>
-#include <libxml/tree.h>
+//#include <libxml/parser.h>
+//#include <libxml/tree.h>
 
 #include <time.h>
 
 // TODO; Debugging
 #include <iostream>
 
-
+#undef HAVE_LIBXML
 
 namespace LOFAR {
   using namespace StringUtil;
@@ -198,29 +198,29 @@ std::ostream& Message::print (std::ostream& os) const
 
 
 
+////
+//// parseXMLString(tag)
+////
+//xmlDocPtr Message::parseXMLString(const std::string& xml_string)
+//{
+//  xmlDocPtr doc;
 //
-// parseXMLString(tag)
+//  // TODO: unicode?
+//  unsigned length = xml_string.length();
 //
-xmlDocPtr Message::parseXMLString(const std::string& xml_string)
-{
-  xmlDocPtr doc;
-
-  // TODO: unicode?
-  unsigned length = xml_string.length();
-
-  doc = xmlReadMemory(xml_string.c_str(), length,
-    "document", NULL, XML_PARSE_NOBLANKS);
-
-
-  if (doc == NULL) 
-  {
-    std::string error_msg = "failed to parse string to xml document";
-    LOG_ERROR(error_msg);
-    THROW(MessageParseException, error_msg);
-  }
-
-  return doc;
-}
+//  doc = xmlReadMemory(xml_string.c_str(), length,
+//    "document", NULL, XML_PARSE_NOBLANKS);
+//
+//
+//  if (doc == NULL) 
+//  {
+//    std::string error_msg = "failed to parse string to xml document";
+//    LOG_ERROR(error_msg);
+//    THROW(MessageParseException, error_msg);
+//  }
+//
+//  return doc;
+//}
 
 
 #ifdef HAVE_LIBXML

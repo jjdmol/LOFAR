@@ -19,6 +19,7 @@
     <Text Include="..\..\test\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\MessageBus\Exceptions.h" />
     <ClInclude Include="..\..\include\MessageBus\Message.h" />
     <ClInclude Include="..\..\include\MessageBus\MsgBus.h" />
     <ClInclude Include="..\..\include\MessageBus\Protocols\TaskFeedbackDataproducts.h" />
@@ -81,6 +82,10 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
+      <UndefinePreprocessorDefinitions>
+      </UndefinePreprocessorDefinitions>
+      <PreprocessorDefinitions>HAVE_QPID;HAVE_LIBXML2;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\Users\klijn\Code\Cluster\SVNsubdirs\TaskCurrent\LCS\Common\include\Common;..\..\..\Common\include\Common;..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>

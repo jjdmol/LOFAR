@@ -73,6 +73,9 @@
     <ClInclude Include="..\..\src\LogSink.h">
       <Filter>Source Files\src</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\MessageBus\Exceptions.h">
+      <Filter>Source Files\include\MessageBus</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\LogSink.cc">

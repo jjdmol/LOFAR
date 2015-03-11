@@ -7,7 +7,7 @@ lofar_find_package(QPID)
 lofar_find_package(LibXml++)
 lofar_find_package(UnitTest++)
 
-if(HAVE_LIBXML2)
+if(HAVE_LIBXML)
   add_definitions(-DHAVE_LIBXML)
 endif(HAVE_LIBXML)
 

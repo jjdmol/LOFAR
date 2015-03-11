@@ -27,8 +27,8 @@
 #include <qpid/messaging/Message.h>
 #include <qpid/types/Variant.h>
 
-#include <libxml/parser.h>
-#include <libxml/tree.h>
+//#include <libxml/parser.h>
+//#include <libxml/tree.h>
 
 #include <string>
 #include <ostream>
@@ -122,7 +122,7 @@ public:
   // Parses the provided string and return an xml doc
   // return xml is owned by the caller, does not change the state
   // of the msg object
-  xmlDocPtr parseXMLString(const std::string& xml_string);
+  //xmlDocPtr parseXMLString(const std::string& xml_string);
 
 
 
@@ -131,7 +131,7 @@ private:
   qpid::messaging::Message itsQpidMsg;
 
   // xml representation of the msg head+payload
-  xmlDocPtr content_as_xml_document;
+  //xmlDocPtr content_as_xml_document;
 
   // -- Members --
 
