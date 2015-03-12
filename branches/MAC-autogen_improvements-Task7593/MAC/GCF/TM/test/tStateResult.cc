@@ -30,8 +30,9 @@
 #include "tServer.h"
 
 namespace LOFAR {
- namespace GCF {
-  namespace TM {
+  using namespace Echo_Protocol;
+  namespace GCF {
+    namespace TM {
 
 
 // Constructors of both classes

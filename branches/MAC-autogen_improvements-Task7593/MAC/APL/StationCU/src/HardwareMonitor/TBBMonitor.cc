@@ -42,6 +42,8 @@
 using namespace boost::posix_time;
 
 namespace LOFAR {
+	using namespace TBB_Protocol;
+	using namespace DP_Protocol;
 	using namespace GCF::TM;
 	using namespace GCF::PVSS;
 	using namespace GCF::RTDB;

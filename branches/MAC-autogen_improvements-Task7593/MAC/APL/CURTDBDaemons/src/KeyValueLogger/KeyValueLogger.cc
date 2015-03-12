@@ -39,6 +39,8 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace LOFAR {
+  using namespace KVT_Protocol;
+  using namespace DP_Protocol;
   using namespace MACIO;
   using namespace OTDB;
   namespace GCF {

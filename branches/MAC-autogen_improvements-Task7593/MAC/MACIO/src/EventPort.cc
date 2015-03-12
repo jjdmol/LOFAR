@@ -35,6 +35,7 @@
 //#include "GSB_Defines.h"
 
 namespace LOFAR {
+  using namespace SB_Protocol;
   namespace MACIO {
 
 // Note: the difference with GCF-ports is that this port is only based on the

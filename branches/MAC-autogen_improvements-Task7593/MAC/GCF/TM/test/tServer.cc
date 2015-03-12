@@ -28,8 +28,9 @@
 #include "Echo_Protocol.ph"
 
 namespace LOFAR {
- namespace GCF {
-  namespace TM {
+  using namespace Echo_Protocol;
+  namespace GCF {
+    namespace TM {
 
 tServer::tServer(string name, uint	startupDelay) : 
 	GCFTask((State)&tServer::initial, name),

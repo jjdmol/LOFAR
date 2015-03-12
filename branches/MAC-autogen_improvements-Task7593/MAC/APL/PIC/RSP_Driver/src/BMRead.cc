@@ -33,9 +33,11 @@
 #include "Cache.h"
 
 using namespace blitz;
-using namespace LOFAR;
-using namespace RSP;
-using namespace RTC;
+namespace LOFAR {
+  using namespace RSP_Protocol;
+  using namespace EPA_Protocol;
+  using namespace RTC;
+  namespace RSP {
 
 BMRead::BMRead(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, 1)
@@ -106,3 +108,5 @@ GCFEvent::TResult BMRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
   LOG_DEBUG_STR("BMRead::handleack() done");
   return GCFEvent::HANDLED;
 }
+  } // namespace RSP
+} // namespace LOFAR

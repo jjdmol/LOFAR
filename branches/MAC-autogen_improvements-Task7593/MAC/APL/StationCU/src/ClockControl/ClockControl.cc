@@ -48,6 +48,10 @@ using namespace std;
 
 namespace LOFAR {
 	using namespace APLCommon;
+	using namespace Controller_Protocol;
+	using namespace RSP_Protocol;
+	using namespace DP_Protocol;
+	using namespace Clock_Protocol;
 	namespace StationCU {
 	
 

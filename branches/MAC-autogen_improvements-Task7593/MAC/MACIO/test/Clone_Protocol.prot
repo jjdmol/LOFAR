@@ -8,7 +8,6 @@ prefix = "Clone"; // for the signal names
 id = "LOFAR::MACIO::F_APL_PROTOCOL";
 // specify extra include files
 // e.g.
-include = '<MACIO/StringVector.h>';
 include = '<sys/time.h>';
 
 //
@@ -52,9 +51,7 @@ event = {
 	dir = IN;
 	param = {
 		name = "SV";
-		type = "MACIO::StringVector";
-		userdefined;
-		printable;
+		type = "vector<string>";
 	};
 };
 

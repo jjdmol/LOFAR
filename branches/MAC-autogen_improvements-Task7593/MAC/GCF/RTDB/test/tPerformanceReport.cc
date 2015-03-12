@@ -36,6 +36,7 @@ int		NR_OF_ACTIONS(1000);
 bool	gReadMode;
 
 namespace LOFAR {
+  using namespace DP_Protocol;
   namespace GCF {
   using namespace TM;
   using namespace PVSS;

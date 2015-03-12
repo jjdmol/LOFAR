@@ -32,6 +32,7 @@
 #include "calinfo.h" 
 
 namespace LOFAR {
+  using namespace CAL_Protocol;
   using namespace GCF;
   using namespace GCF::TM;
   namespace CAL {

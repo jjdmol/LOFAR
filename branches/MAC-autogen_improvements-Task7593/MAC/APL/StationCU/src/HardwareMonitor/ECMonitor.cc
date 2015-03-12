@@ -54,6 +54,8 @@ namespace LOFAR {
 	using namespace GCF::RTDB;
 	using namespace APLCommon;
 	using namespace APL::RTDBCommon;
+	using namespace EC_Protocol;
+	using namespace DP_Protocol;
 	namespace StationCU {
 
 //
