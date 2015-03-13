@@ -845,7 +845,6 @@ void MACScheduler::_setParsetOnMsgBus(const string&	filename) const
 	obsSpecs.writeStream(ss);
 	outMsg.setTXTPayload(ss.str());
 #endif
-	cout << outMsg << endl;
 	itsMsgQueue->send(outMsg);
 }
 
