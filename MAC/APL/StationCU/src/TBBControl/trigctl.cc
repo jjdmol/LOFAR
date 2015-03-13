@@ -57,6 +57,7 @@ using namespace std;
 using namespace LOFAR;
 using namespace GCF::TM;
 using namespace CR_Protocol;
+using namespace TBB_Protocol;
 using namespace TrigCtl;
 
 // Use a terminate handler that can produce a backtrace.

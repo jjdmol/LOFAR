@@ -30,6 +30,7 @@
 #include "Clone_Protocol.ph"
 
 using namespace LOFAR;
+using namespace LOFAR::Clone_Protocol;
 using namespace LOFAR::MACIO;
 
 int main (int	/*argc*/, char* argv[]) 
@@ -68,12 +69,12 @@ int main (int	/*argc*/, char* argv[])
 
 	LOG_INFO("Cloning an event with a stringVector");
 	CloneVectorEvent	theOrgVector;
-	theOrgVector.SV().push_back("aap");
-	theOrgVector.SV().push_back("noot");
-	theOrgVector.SV().push_back("mies");
-	theOrgVector.SV().push_back("wim");
-	theOrgVector.SV().push_back("zus");
-	theOrgVector.SV().push_back("jet");
+	theOrgVector.SV.push_back("aap");
+	theOrgVector.SV.push_back("noot");
+	theOrgVector.SV.push_back("mies");
+	theOrgVector.SV.push_back("wim");
+	theOrgVector.SV.push_back("zus");
+	theOrgVector.SV.push_back("jet");
 	LOG_INFO_STR(theOrgVector);
 
 	CloneVectorEvent*	theClonedVector = theOrgVector.clone();

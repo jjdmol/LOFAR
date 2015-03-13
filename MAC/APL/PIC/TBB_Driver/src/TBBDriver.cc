@@ -83,6 +83,9 @@ using namespace LOFAR;
 using namespace GCF::TM;
 using namespace MACIO;
 using namespace TBB;
+using namespace TBB_Protocol;
+using namespace RSP_Protocol;
+using namespace TP_Protocol;
 using namespace std;
 
 // Use a terminate handler that can produce a backtrace.

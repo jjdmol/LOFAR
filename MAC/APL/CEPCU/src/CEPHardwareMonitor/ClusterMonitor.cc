@@ -45,6 +45,7 @@
 #define MAX2(a,b)	((a) > (b)) ? (a) : (b)
 
 namespace LOFAR {
+	using namespace DP_Protocol;
 	using namespace APL::RTDBCommon;
 	using namespace GCF::TM;
 	using namespace GCF::PVSS;

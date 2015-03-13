@@ -36,6 +36,7 @@
 // forward declaration
 
 namespace LOFAR {
+    using namespace TBB_Protocol;
 	namespace StationCU {
 
 using	MACIO::GCFEvent;

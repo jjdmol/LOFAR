@@ -36,6 +36,8 @@ using namespace LOFAR;
 using namespace LOFAR::GCF;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::StationCU;
+using namespace LOFAR::RSP_Protocol;
+using namespace LOFAR::DP_Protocol;
 
 // Use a terminate handler that can produce a backtrace.
 Exception::TerminateHandler t(Exception::terminate);

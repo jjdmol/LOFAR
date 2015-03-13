@@ -45,6 +45,7 @@ using namespace blitz;
 using namespace LOFAR;
 using namespace BS;
 using namespace IBS_Protocol;
+using namespace RSP_Protocol;
 using namespace std;
 using namespace RTC;
 using namespace CASATools;

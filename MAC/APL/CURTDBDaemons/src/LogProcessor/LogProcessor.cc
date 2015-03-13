@@ -37,6 +37,8 @@
 using namespace log4cplus;
 using namespace log4cplus::helpers;
 namespace LOFAR {
+  using namespace LOG_Protocol;
+  using namespace DP_Protocol;
   using namespace MACIO;
   namespace GCF {
     using namespace TM;
