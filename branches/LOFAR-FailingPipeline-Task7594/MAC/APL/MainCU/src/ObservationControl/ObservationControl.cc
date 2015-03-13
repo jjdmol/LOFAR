@@ -814,7 +814,7 @@ void  ObservationControl::doHeartBeatTask()
 
 		if (!nrChilds || (now < stop && ((itsProcessType == "Observation" && !nrStations) || !centralControllerOk))) {
             // while not yet in shutdown sequence this situation is wrong!
-            if (itsState < CTState::SUSPEND) {
+            if (itsState < CTState::RESUMED) {
                 LOG_FATAL("Too less stations left or no central controller, FORCING QUIT OF OBSERVATION");
                 itsQuitReason = CT_RESULT_LOST_CONNECTION;
             }
