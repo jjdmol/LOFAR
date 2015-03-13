@@ -29,6 +29,7 @@
 #include <GCF/TM/GCF_Control.h>
 
 namespace LOFAR {
+  using namespace EPA_Protocol;
   using GCF::TM::GCFTask;
   using GCF::TM::GCFPortInterface;
   using GCF::TM::GCFTimerPort;

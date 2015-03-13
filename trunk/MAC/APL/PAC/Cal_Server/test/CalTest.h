@@ -77,7 +77,7 @@ namespace LOFAR {
 	  // ports
 	  GCFPort m_server;
 
-	  memptr_t	m_handle; // subscription handle
+	  void*		m_handle; // subscription handle
 	  int 		m_counter1; // general purpose test counter, semantics assigned per test
 
 	  string  m_name;        // name of the current array

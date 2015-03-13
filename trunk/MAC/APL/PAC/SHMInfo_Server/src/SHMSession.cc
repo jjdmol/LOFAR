@@ -39,6 +39,7 @@ using namespace blitz;
 
 
 namespace LOFAR {
+	using namespace SHM_Protocol;
 	using namespace GCF::TM;
 	using namespace RTC;
 	using namespace APL::RTDBCommon;

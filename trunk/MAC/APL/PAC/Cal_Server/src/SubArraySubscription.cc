@@ -30,6 +30,7 @@
 using namespace LOFAR;
 using namespace CAL;
 using namespace RTC;
+using namespace CAL_Protocol;
 
 void SubArraySubscription::update(Subject* subject)
 {

@@ -36,6 +36,7 @@
 #include <signal.h>
 
 namespace LOFAR {
+  using namespace KVT_Protocol;
   using namespace MACIO;
   namespace GCF {
     using namespace TM;
