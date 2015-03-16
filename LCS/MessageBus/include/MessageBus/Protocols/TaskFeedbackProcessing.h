@@ -23,6 +23,7 @@
 #ifndef LOFAR_MESSAGEBUS_TASK_FEEDBACK_PROCESSING_H
 #define LOFAR_MESSAGEBUS_TASK_FEEDBACK_PROCESSING_H
 
+#ifdef HAVE_QPID
 #include <MessageBus/Message.h>
 #include <Common/ParameterSet.h>
 
@@ -90,6 +91,8 @@ public:
 } // namespace Protocols
 
 } // namespace LOFAR
+
+#endif
 
 #endif
 

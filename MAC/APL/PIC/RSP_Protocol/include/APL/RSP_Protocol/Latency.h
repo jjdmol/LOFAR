@@ -33,7 +33,6 @@
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 
 namespace LOFAR {
-  using namespace EPA_Protocol;
   namespace RSP_Protocol {
 
     class Latency

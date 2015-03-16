@@ -64,8 +64,6 @@ const int	MAX_PROCMAP_ERRORS = 3;
 
 using namespace boost::posix_time;
 namespace LOFAR {
-	using namespace DP_Protocol;
-	using namespace CM_Protocol;
 	using namespace APLCommon;
 	using namespace APL::RTDBCommon;
 	using namespace GCF::TM;

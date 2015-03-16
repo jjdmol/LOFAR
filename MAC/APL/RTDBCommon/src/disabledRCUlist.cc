@@ -36,7 +36,6 @@
 string	gResult;
 
 namespace LOFAR {
-  using namespace DP_Protocol;
   using namespace GCF;
   using namespace GCF::TM;
   using namespace GCF::PVSS;

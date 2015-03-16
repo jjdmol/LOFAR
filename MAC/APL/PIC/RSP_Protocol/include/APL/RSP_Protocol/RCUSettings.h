@@ -34,7 +34,6 @@
 #include <Common/StringUtil.h>
 
 namespace LOFAR {
-  using namespace EPA_Protocol;
   namespace RSP_Protocol {
 
 // Note: The rcucontrol value is presented in the user interface as an uint32 value.

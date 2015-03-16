@@ -43,7 +43,6 @@
 #include <boost/dynamic_bitset.hpp>
 
 namespace LOFAR {
-	using namespace RSP_Protocol;
 	using GCF::TM::GCFTask;
 	using GCF::TM::GCFPort;
 	using GCF::TM::GCFTCPPort;

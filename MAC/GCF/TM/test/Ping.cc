@@ -28,10 +28,12 @@
 #include "Echo_Protocol.ph"
 
 
-namespace LOFAR {
-  using namespace Echo_Protocol;
-  namespace GCF {
-    namespace TM {
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
 
 /**
  * Function to calculate the elapsed time between two tiemval's.

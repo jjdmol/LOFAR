@@ -37,10 +37,13 @@ using std::ifstream;
 
 #define ASCII_LINE_SIZE 1024
 
-namespace LOFAR {
-  using namespace GCF::Common;
-  using namespace SHM_Protocol;
- namespace AMI {
+namespace LOFAR 
+{
+using namespace GCF::Common;
+//using namespace APLCommon;
+
+ namespace AMI
+ {
 
 string trim(string source)
 {  

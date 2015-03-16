@@ -31,7 +31,6 @@
 #include "tPropertySet.h"
 
 namespace LOFAR {
-  using namespace DP_Protocol;
   namespace GCF {
   using namespace TM;
   using namespace PVSS;
