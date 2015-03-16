@@ -1,0 +1,18 @@
+# add your custom loggers and appenders here
+#
+
+log4cplus.rootLogger=DEBUG, STDOUT, MACCLP
+
+log4cplus.logger.TRC=DEBUG
+log4cplus.additivity.TRC=FALSE
+
+log4cplus.appender.STDOUT=log4cplus::ConsoleAppender
+log4cplus.appender.STDOUT.layout=log4cplus::PatternLayout
+log4cplus.appender.STDOUT.layout.ConversionPattern=%x %D{%d-%m-%y %H:%M:%S.%q} %-5p %c{9} - %m [%.25l]%n
+log4cplus.appender.STDOUT.logToStdErr=true
+
+log4cplus.appender.MACCLP=log4cplus::SocketAppender
+log4cplus.appender.MACCLP.port=23999
+log4cplus.appender.MACCLP.host=localhost
+log4cplus.appender.MACCLP.Threshold=INFO
+
