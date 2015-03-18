@@ -195,13 +195,6 @@ class DictField(Field):
     def is_valid(self, value):
         return isinstance(value, dict)
 
-class ParsetField(Field):
-    """
-    A Field which accepts a parameterset object.
-    """
-    def is_valid(self, value):
-        return isinstance(value, parameterset)
-
 class FileList(ListField):
     """
     A Field which accepts a list of extant filenames.
