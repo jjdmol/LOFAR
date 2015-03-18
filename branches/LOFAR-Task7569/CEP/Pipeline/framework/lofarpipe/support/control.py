@@ -166,10 +166,12 @@ class control(StatefulRecipe):
 
             # Emit process status
             self._send_feedback_status(1)
+            self.logger.error("LOFAR Pipeline finished unsuccesfully.");
             return 1
         else:
             # Emit process status
             self._send_feedback_status(0)
+            self.logger.info("LOFAR Pipeline finished succesfully.");
             return 0
         finally:
             # always print a xml stats file
