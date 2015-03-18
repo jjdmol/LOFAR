@@ -16,3 +16,8 @@
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
 # $Id$
+
+# Import all classes to our name space
+from taskfeedbackdataproducts import TaskFeedbackDataproducts
+from taskfeedbackprocessing import TaskFeedbackProcessing
+from taskfeedbackstate import TaskFeedbackState
