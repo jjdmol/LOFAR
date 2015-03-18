@@ -160,7 +160,7 @@ class pulsar_pipeline(control):
         self.logger.debug("Starting pulp with: " + join(sys.argv))
         p = pulp.pulp(self) # TODO: MUCK self to capture the API
 
-	# NOTE: PULP returns 0 on SUCCESS!!
+        # NOTE: PULP returns 0 on SUCCESS!!
         if p.go():
           self.logger.error("PULP did not succeed. Bailing out!")
           return 1
