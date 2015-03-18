@@ -116,15 +116,15 @@ class control(StatefulRecipe):
     def go(self):
         # Read the parset-file that was given as input argument
         try:
-            parset_file = os.path.abspath(self.inputs['args'][0])
+            self.parset_file = os.path.abspath(self.inputs['args'][0])
         except IndexError:
             return self.usage()
-        self.parset.adoptFile(parset_file)
+        self.parset.adoptFile(self.parset_file)
         # Set job-name to basename of parset-file w/o extension, if it's not
         # set on the command-line with '-j' or '--job-name'
         if not 'job_name' in self.inputs:
             self.inputs['job_name'] = (
-                os.path.splitext(os.path.basename(parset_file))[0]
+                os.path.splitext(os.path.basename(self.parset_file))[0]
             )
 
         # we can call our parent now that we have a job_name
