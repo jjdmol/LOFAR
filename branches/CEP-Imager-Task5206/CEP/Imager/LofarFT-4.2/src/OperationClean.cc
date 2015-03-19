@@ -132,8 +132,8 @@ void OperationClean::init()
       itsModelNames_normalized(i) = imgName + ".model.tt" + String::toString(i) + ".flatgain";
       itsResidualNames(i) = imgName + ".residual.tt" + String::toString(i)  + ".flatnoise";
       itsResidualNames_normalized(i) = imgName + ".residual.tt" + String::toString(i)  + ".flatgain";
-      itsResidualNames(i) = imgName + ".residual.tt" + String::toString(i)  + ".flatnoise";
-      itsResidualNames_normalized(i) = imgName + ".residual.tt" + String::toString(i)  + ".flatgain";
+      itsRestoredNames(i) = imgName + ".restored.tt" + String::toString(i)  + ".flatnoise";
+      itsRestoredNames_normalized(i) = imgName + ".restored.tt" + String::toString(i)  + ".flatgain";
     }
     for(Int i=0;i<((nterms*(nterms+1))/2);++i)
     {
