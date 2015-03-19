@@ -8,3 +8,6 @@ configure_file(
 
 lofar_add_test(tMsgBus tMsgBus.cc)
 lofar_add_test(tMessage tMessage.cc)
+
+lofar_add_test(tPyMsgBus)
+lofar_add_test(tPyProtocols)

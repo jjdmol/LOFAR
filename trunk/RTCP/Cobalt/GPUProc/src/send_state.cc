@@ -38,6 +38,9 @@ static void usage(const char *argv0)
 {
   cerr << "Usage: " << argv0 << " parset success" << endl;
   cerr << endl;
+  cerr << "  parset:  filename of parset describing the observation" << endl;
+  cerr << "  success: obs status: 1 = ok, 0 = failure" << endl;
+  cerr << endl;
   cerr << "  -h: print this message" << endl;
 }
 

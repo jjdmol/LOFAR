@@ -281,23 +281,27 @@ class msss_calibrator_pipeline(control):
         #    a. get metadata of the measurement sets
         #    b. get metadata of the instrument models
         #    c. join the two and write the final feedback
+        correlated_metadata_file = "%s_feedback_Correlated" % (self.parset_file,)
         with duration(self, "get_metadata"):
-            correlated_metadata = self.run_task("get_metadata", output_correlated_mapfile,
+            self.run_task("get_metadata", output_correlated_mapfile,
                 parset_prefix=(
                     self.parset.getString('prefix') +
                     self.parset.fullModuleName('DataProducts')),
-                product_type="Correlated")["metadata"]
+                product_type="Correlated",
+                metadata_file=correlated_metadata_file)
 
+        instrument_metadata_file = "%s_feedback_InstrumentModel" % (self.parset_file,)
         with duration(self, "get_metadata"):
-            instrument_metadata = self.run_task("get_metadata", output_instrument_mapfile,
+            self.run_task("get_metadata", output_instrument_mapfile,
                 parset_prefix=(
                     self.parset.getString('prefix') +
                     self.parset.fullModuleName('DataProducts')),
-                product_type="InstrumentModel")["metadata"]
+                product_type="InstrumentModel",
+                metadata_file=instrument_metadata_file)
 
         self.send_feedback_processing(parameterset())
-        self.send_feedback_dataproducts(correlated_metadata)
-        self.send_feedback_dataproducts(instrument_metadata)
+        self.send_feedback_dataproducts(parameterset(correlated_metadata_file))
+        self.send_feedback_dataproducts(parameterset(instrument_metadata_file))
 
         return 0
 

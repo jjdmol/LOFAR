@@ -313,16 +313,18 @@ class msss_target_pipeline(control):
 
         # *********************************************************************
         # 7. Create feedback for further processing by the LOFAR framework
+        metadata_file = "%s_feedback_Correlated" % (self.parset_file,)
         with duration(self, "get_metadata"):
-            metadata = self.run_task("get_metadata", corrected_mapfile,
+            self.run_task("get_metadata", corrected_mapfile,
                 parset_prefix=(
                     self.parset.getString('prefix') +
                     self.parset.fullModuleName('DataProducts')
                 ),
-                product_type="Correlated")["metadata"]
+                product_type="Correlated",
+                metadata_file=metadata_file)
 
         self.send_feedback_processing(parameterset())
-        self.send_feedback_dataproducts(metadata)
+        self.send_feedback_dataproducts(parameterset(metadata_file))
 
         return 0
 
