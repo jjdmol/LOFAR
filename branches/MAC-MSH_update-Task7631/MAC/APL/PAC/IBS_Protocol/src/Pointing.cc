@@ -102,7 +102,7 @@ size_t Pointing::getSize() const
 //
 size_t Pointing::pack  (char* buffer) const
 {
-	uint32 offset = 0;
+	size_t offset = 0;
 
 	memcpy(buffer + offset, &itsAngle2Pi, sizeof(double));
 	offset += sizeof(double);
@@ -121,7 +121,7 @@ size_t Pointing::pack  (char* buffer) const
 //
 size_t Pointing::unpack(const char *buffer)
 {
-	uint32 offset = 0;
+	size_t offset = 0;
 
 	memcpy(&itsAngle2Pi, buffer + offset, sizeof(double));
 	offset += sizeof(double);

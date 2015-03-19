@@ -88,8 +88,8 @@ size_t AntennaGains::pack(char* buffer) const
   size_t offset = 0;
 
   lock();
-  MSH_pack(buffer, offset, m_gains);
-  MSH_pack(buffer, offset, m_quality);
+  offset = MSH_pack(buffer, offset, m_gains);
+  offset = MSH_pack(buffer, offset, m_quality);
   memcpy((char*)buffer + offset, &m_done, sizeof(bool));
   offset += sizeof(bool);
   unlock();
@@ -102,8 +102,8 @@ size_t AntennaGains::unpack(const char* buffer)
   size_t offset = 0;
 
   lock();
-  MSH_unpack(buffer, offset, m_gains);
-  MSH_unpack(buffer, offset, m_quality);
+  offset = MSH_unpack(buffer, offset, m_gains);
+  offset = MSH_unpack(buffer, offset, m_quality);
   memcpy(&m_done, (char*)buffer + offset, sizeof(bool));
   offset += sizeof(bool);
   unlock();

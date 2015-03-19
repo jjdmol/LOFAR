@@ -39,17 +39,11 @@ size_t BitmodeInfo::getSize() const
 size_t BitmodeInfo::pack  (char* buffer) const
 {
   size_t offset = 0;
-
-  MSH_pack(buffer, offset, itsBitmodeInfo);
-
-  return offset;
+  return MSH_pack(buffer, offset, itsBitmodeInfo);
 }
 
 size_t BitmodeInfo::unpack(const char *buffer)
 {
   size_t offset = 0;
-
-  MSH_unpack(buffer, offset, itsBitmodeInfo);
-
-  return offset;
+  return MSH_unpack(buffer, offset, itsBitmodeInfo);
 }

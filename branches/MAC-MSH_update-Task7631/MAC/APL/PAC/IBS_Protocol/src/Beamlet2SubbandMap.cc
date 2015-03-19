@@ -58,9 +58,7 @@ size_t Beamlet2SubbandMap::pack  (char* buffer) const
 		maparray(i+1) = iter->second;
 	}
 
-	MSH_pack(buffer, offset, maparray);
-
-	return offset;
+	return MSH_pack(buffer, offset, maparray);
 }
 
 size_t Beamlet2SubbandMap::unpack(const char *buffer)
@@ -69,7 +67,7 @@ size_t Beamlet2SubbandMap::unpack(const char *buffer)
 	blitz::Array<uint16, 1> maparray;
 
 	size_t offset = 0;
-	MSH_unpack(buffer, offset, maparray);
+	offset = MSH_unpack(buffer, offset, maparray);
 	ASSERT(maparray.extent(firstDim) % 2 == 0);
 
 	// convert Blitz array to map
