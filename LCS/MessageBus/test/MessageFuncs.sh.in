@@ -29,6 +29,13 @@ function have_qpid() {
   [ "@HAVE_QPID@" == "TRUE" ]
 }
 
+if have_qpid; then
+  # QPID_ROOT_DIR is set for LOFAR, which also contains the .profile needed to set the PYTHON_PATH.
+  QPID_ROOT_DIR="@QPID_ROOT_DIR@"
+
+  source $QPID_ROOT_DIR/.profile || echo "MessageBus: .profile not loaded, using default PATHs to find qpid stuff." >&2
+fi
+
 # A list of all queues we created
 CREATED_QUEUES=""
 

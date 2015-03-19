@@ -153,15 +153,17 @@ class msss_imager_pipeline(control):
                                            str(subbandgroups_per_ms))
         
         # Create a parset-file containing the metadata for MAC/SAS at nodes
-        metadata = self.run_task("get_metadata", output_ms_mapfile,
+        metadata_file = "%s_feedback_Correlated" % (self.parset_file,)
+        self.run_task("get_metadata", output_ms_mapfile,
             parset_prefix = (
                 full_parset.getString('prefix') +
                 full_parset.fullModuleName('DataProducts')
             ),
-            product_type = "Correlated")["metadata"]
+            product_type = "Correlated",
+            metadata_file = metadata_file)
 
         self.send_feedback_processing(toplevel_meta_data)
-        self.send_feedback_dataproducts(metadata)
+        self.send_feedback_dataproducts(parameterset(metadata_file))
 
         return 0
 

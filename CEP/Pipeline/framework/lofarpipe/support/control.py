@@ -16,9 +16,7 @@ from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.xmllogging import get_active_stack
 from lofar.parameterset import parameterset
 import lofar.messagebus.msgbus
-from lofar.messagebus.protocols.taskfeedbackdataproducts import TaskFeedbackDataproducts
-from lofar.messagebus.protocols.taskfeedbackprocessing import TaskFeedbackProcessing
-from lofar.messagebus.protocols.taskfeedbackstate import TaskFeedbackState
+from lofar.messagebus.protocols import TaskFeedbackDataproducts, TaskFeedbackProcessing, TaskFeedbackState
 
 #                                             Standalone Pipeline Control System
 # ------------------------------------------------------------------------------
@@ -168,10 +166,12 @@ class control(StatefulRecipe):
 
             # Emit process status
             self._send_feedback_status(1)
+            self.logger.error("LOFAR Pipeline finished unsuccesfully.");
             return 1
         else:
             # Emit process status
             self._send_feedback_status(0)
+            self.logger.info("LOFAR Pipeline finished succesfully.");
             return 0
         finally:
             # always print a xml stats file

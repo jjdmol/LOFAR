@@ -214,15 +214,17 @@ class msss_imager_pipeline(control):
                                            str(number_of_major_cycles))
 
         # Create a parset containing the metadata for MAC/SAS at nodes
-        metadata = self.run_task("get_metadata", placed_data_image_map,
+        metadata_file = "%s_feedback_SkyImage" % (self.parset_file,)
+        self.run_task("get_metadata", placed_data_image_map,
             parset_prefix = (
                 full_parset.getString('prefix') +
                 full_parset.fullModuleName('DataProducts')
             ),
-            product_type = "SkyImage")["metadata"]
+            product_type = "SkyImage",
+            metadata_file = metadata_file)
 
         self.send_feedback_processing(toplevel_meta_data)
-        self.send_feedback_dataproducts(metadata)
+        self.send_feedback_dataproducts(parameterset(metadata_file))
 
         return 0
 
