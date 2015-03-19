@@ -67,8 +67,8 @@ size_t Beamlet2SubbandMap::unpack(const char *buffer)
 {
 	// the map is received as a blitz array
 	blitz::Array<uint16, 1> maparray;
-	size_t offset = 0;
 
+	size_t offset = 0;
 	MSH_unpack(buffer, offset, maparray);
 	ASSERT(maparray.extent(firstDim) % 2 == 0);
 

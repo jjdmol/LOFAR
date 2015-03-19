@@ -111,7 +111,7 @@ size_t Pointing::pack  (char* buffer) const
 	offset += itsTime.pack(buffer + offset);
 	memcpy(buffer + offset, &itsDuration, sizeof(uint));
 	offset += sizeof(uint);
-	MSH_pack(buffer, offset, itsType);
+	offset = MSH_pack(buffer, offset, itsType);
 
 	return (offset);
 }
@@ -130,7 +130,7 @@ size_t Pointing::unpack(const char *buffer)
 	offset += itsTime.unpack(buffer + offset);
 	memcpy(&itsDuration, buffer + offset, sizeof(uint));
 	offset += sizeof(uint);
-	MSH_unpack(buffer , offset, itsType);
+	offset = MSH_unpack(buffer , offset, itsType);
 
 	return (offset);
 }
