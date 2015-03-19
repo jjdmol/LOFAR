@@ -16,7 +16,12 @@
 # You should have received a copy of the GNU General Public License along
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 
-import qpid.messaging
+try:
+  import qpid.messaging
+  enabled = True
+except ImportError:
+  enabled = False
+
 import xml.dom.minidom as xml
 import xml.parsers.expat as expat
 import datetime
