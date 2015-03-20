@@ -268,8 +268,12 @@ def catch_segfaults(cmd, cwd, env, logger, max = 1, cleanup = lambda: None,
         if usageStats:
             usageStats.addPID(process.pid)
 
-        sout, serr = process.communicate()
-        log_process_output(cmd[0], sout, serr, logger)
+        while process.returncode == None:
+            process.poll()
+            sleep(5)
+        sout = process.stdout
+        serr = process.stderr
+        log_process_output(cmd[0], sout.read(), serr.read(), logger)
         if process.returncode == 0:
             break
         elif process.returncode == -11:
