@@ -30,7 +30,7 @@ class GainOutlierDetectionTest(unittest.TestCase):
         super(GainOutlierDetectionTest, self).__init__(arg)
 
     def setUp(self):
-        self.tempDir = tempfile.mkdtemp()
+        self.tempDir = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
 
 
     def tearDown(self):

@@ -77,7 +77,7 @@ class msss_imager_pipeline(control):
        and results are collected an added to the casa image. The images created
        are converted from casa to HDF5 and copied to the correct output
        location.
-    7. Export meta data: An outputfile with meta data is generated ready for
+    7. Export meta data: meta data is generated ready for
        consumption by the LTA and/or the LOFAR framework.
 
 
@@ -93,40 +93,13 @@ class msss_imager_pipeline(control):
         Initialize member variables and call superclass init function
         """
         control.__init__(self)
-        self.parset = parameterset()
         self.input_data = DataMap()
         self.target_data = DataMap()
         self.output_data = DataMap()
         self.scratch_directory = None
-        self.parset_feedback_file = None
         self.parset_dir = None
         self.mapfile_dir = None
 
-    def usage(self):
-        """
-        Display usage information
-        """
-        print >> sys.stderr, "Usage: %s <parset-file>  [options]" % sys.argv[0]
-        return 1
-
-    def go(self):
-        """
-        Read the parset-file that was given as input argument, and set the
-        jobname before calling the base-class's `go()` method.
-        """
-        try:
-            parset_file = os.path.abspath(self.inputs['args'][0])
-        except IndexError:
-            return self.usage()
-        self.parset.adoptFile(parset_file)
-        self.parset_feedback_file = parset_file + "_feedback"
-        # Set job-name to basename of parset-file w/o extension, if it's not
-        # set on the command-line with '-j' or '--job-name'
-        if not 'job_name' in self.inputs:
-            self.inputs['job_name'] = (
-                os.path.splitext(os.path.basename(parset_file))[0]
-            )
-        return super(msss_imager_pipeline, self).go()
 
     @mail_log_on_exception
     def pipeline_logic(self):
@@ -245,29 +218,19 @@ class msss_imager_pipeline(control):
         toplevel_meta_data = parameterset()
         toplevel_meta_data.replace("numberOfMajorCycles", 
                                            str(number_of_major_cycles))
-        toplevel_meta_data_path = os.path.join(
-                self.parset_dir, "toplevel_meta_data.parset")
 
-        try:
-            toplevel_meta_data.writeFile(toplevel_meta_data_path)
-            self.logger.info("Wrote meta data to: " + 
-                    toplevel_meta_data_path)
-        except RuntimeError, err:
-            self.logger.error(
-              "Failed to write toplevel meta information parset: %s" % str(
-                                    toplevel_meta_data_path))
-            return 1
-
-        
-        # Create a parset-file containing the metadata for MAC/SAS at nodes
+        # Create a parset containing the metadata for MAC/SAS at nodes
+        metadata_file = "%s_feedback_SkyImage" % (self.parset_file,)
         self.run_task("get_metadata", placed_data_image_map,
-            parset_file = self.parset_feedback_file,
             parset_prefix = (
                 full_parset.getString('prefix') +
                 full_parset.fullModuleName('DataProducts')
             ),
-            toplevel_meta_data_path=toplevel_meta_data_path, 
-            product_type = "SkyImage")
+            product_type = "SkyImage",
+            metadata_file = metadata_file)
+
+        self.send_feedback_processing(toplevel_meta_data)
+        self.send_feedback_dataproducts(parameterset(metadata_file))
 
         return 0
 
