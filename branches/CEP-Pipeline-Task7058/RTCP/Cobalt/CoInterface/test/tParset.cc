@@ -96,12 +96,6 @@ TEST(observationID) {
   CHECK_EQUAL(12345U, ps.settings.observationID);
 }
 
-TEST(momID) {
-  Parset ps = makeDefaultTestParset("Observation.momID", "12345");
-
-  CHECK_EQUAL(12345U, ps.settings.momID);
-}
-
 TEST(startTime) {
   Parset ps = makeDefaultTestParset("Observation.startTime", "2013-03-17 10:55:08");
 

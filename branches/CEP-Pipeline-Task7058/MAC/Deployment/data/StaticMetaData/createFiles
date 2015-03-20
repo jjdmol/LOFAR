@@ -289,7 +289,7 @@ def createRSPDriverFile(resultDir, stationName, dataDir,int_local,is_Cobalt):
         dstip_mac_alias = findIPandMAC_local(stationName,dataDir)
         # International stations still need old (BG) portnumbers
         basePort = 0x10FA
-        for rspNr in range(len(dstip_mac_alias)):  
+        for rspNr in range(len(ip_mac_alias)):  
             blet_out = find_Blets(stationName, dataDir)[1+rspNr];
 
             RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_BLET@", blet_out) 

@@ -40,7 +40,6 @@
 #include <Common/StreamUtil.h>
 #include <Common/Thread/Mutex.h>
 #include <CoInterface/StreamableData.h>
-#include <CoInterface/LTAFeedback.h>
 #include <OutputProc/Package__Version.h>
 
 #include <dal/lofar/BF_File.h>
@@ -111,11 +110,6 @@ namespace LOFAR
       itsNextSeqNr(0),
       itsFileNr(fileno)
     {
-      // Add file-specific processing feedback
-      LTAFeedback fb(itsParset.settings);
-      itsConfiguration.adoptCollection(fb.beamFormedFeedback(itsFileNr));
-      itsConfigurationPrefix = fb.beamFormedPrefix(itsFileNr);
-
       itsNrExpectedBlocks = itsParset.settings.nrBlocks();
 
       string h5filename = forceextension(string(filename),".h5");
@@ -558,8 +552,8 @@ namespace LOFAR
       itsNextSeqNr = seqNr + 1;
       itsNrBlocksWritten++;
 
-      itsConfiguration.replace(itsConfigurationPrefix + "size",              str(format("%u") % getDataSize()));
-      itsConfiguration.replace(itsConfigurationPrefix + "percentageWritten", str(format("%u") % percentageWritten()));
+      itsConfiguration.replace("size",              str(format("%u") % getDataSize()));
+      itsConfiguration.replace("percentageWritten", str(format("%u") % percentageWritten()));
     }
 
     // specialisation for FinalBeamFormedData

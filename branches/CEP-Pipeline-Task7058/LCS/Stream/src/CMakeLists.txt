@@ -13,7 +13,6 @@ lofar_add_library(stream
   SharedMemoryStream.cc
   SocketStream.cc
   Stream.cc
-  StringStream.cc
-  StreamFactory.cc)
+  StringStream.cc)
 
 lofar_add_bin_program(versionstream versionstream.cc)

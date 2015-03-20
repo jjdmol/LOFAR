@@ -39,7 +39,6 @@
 #include <Common/lofar_vector.h>
 #include <Common/LofarLogger.h>
 #include <ApplCommon/Observation.h>
-#include <MessageBus/MsgBus.h>
 
 //# ACC Includes
 #include <OTDB/OTDBconnection.h>
@@ -108,7 +107,6 @@ private:
 	void _updatePlannedList();
 	void _updateActiveList();
 	void _updateFinishedList();
-	void _setParsetOnMsgBus(const string&	filename) const;
 
 	// ----- DATA MEMBERS -----
 	// Our own propertySet in PVSS to inform the operator
@@ -132,9 +130,8 @@ private:
 	public:
 		ptime	modTime;
 		bool	prepReady;
-		bool	parsetDistributed;
-		schedInfo(ptime t, bool p) : modTime(t), prepReady(p), parsetDistributed(false) {};
-		schedInfo() : modTime(min_date_time), prepReady(false), parsetDistributed(false) {};
+		schedInfo(ptime t, bool p) : modTime(t), prepReady(p) {};
+		schedInfo() : modTime(min_date_time), prepReady(false) {};
 	};
 	typedef map<int /*obsID*/, schedInfo /*prepReady*/>	ObsList;
 	typedef map<int ,schedInfo>::iterator				OLiter;
@@ -166,10 +163,8 @@ private:
 	uint32				itsQueuePeriod;			// period between queueing and start
       
 	// OTDB related variables.
-   	OTDB::OTDBconnection*	itsOTDBconnection;	// connection to the database
+   	OTDB::OTDBconnection*	itsOTDBconnection;		// connection to the database
 
-	// Messagebus related variables
-	ToBus*					itsMsgQueue;		// Bus used for sending
 };
 
   };//MainCU

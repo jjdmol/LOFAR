@@ -35,7 +35,6 @@ function postinstall_lofarbuild {
   ./install_IERS.sh
   ./install_DAL.sh
   ./install_casacore.sh
-  ./install_qpid.sh
 }
 
 case "`whoami`" in

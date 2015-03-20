@@ -36,7 +36,6 @@ namespace LOFAR {
   using GCF::TM::GCFPort;
   using GCF::TM::GCFTCPPort;
   using GCF::TM::GCFPortInterface;
-  using IBS_Protocol::Pointing;
   namespace BS {
 
 class beamctl : public GCFTask

@@ -28,9 +28,8 @@
 #include "tClient.h"
 
 namespace LOFAR {
-  using namespace Echo_Protocol;
-  namespace GCF {
-    namespace TM {
+ namespace GCF {
+  namespace TM {
 
 
 // Constructors of both classes

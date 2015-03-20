@@ -52,7 +52,7 @@ class msss_imager_pipeline(control):
        single large measurement set and perform flagging, RFI and bad station
        exclusion.
 
-    2. Generate meta information feedback based on dataproduct information
+    2. Generate meta information feedback files based on dataproduct information
        and parset/configuration data
 
     **Per subband-group, the following output products will be delivered:**
@@ -64,13 +64,40 @@ class msss_imager_pipeline(control):
         Initialize member variables and call superclass init function
         """
         control.__init__(self)
+        self.parset = parameterset()
         self.input_data = DataMap()
         self.target_data = DataMap()
         self.output_data = DataMap()
         self.scratch_directory = None
+        self.parset_feedback_file = None
         self.parset_dir = None
         self.mapfile_dir = None
 
+    def usage(self):
+        """
+        Display usage information
+        """
+        print >> sys.stderr, "Usage: %s <parset-file>  [options]" % sys.argv[0]
+        return 1
+
+    def go(self):
+        """
+        Read the parset-file that was given as input argument, and set the
+        jobname before calling the base-class's `go()` method.
+        """
+        try:
+            parset_file = os.path.abspath(self.inputs['args'][0])
+        except IndexError:
+            return self.usage()
+        self.parset.adoptFile(parset_file)
+        self.parset_feedback_file = parset_file + "_feedback"
+        # Set job-name to basename of parset-file w/o extension, if it's not
+        # set on the command-line with '-j' or '--job-name'
+        if not 'job_name' in self.inputs:
+            self.inputs['job_name'] = (
+                os.path.splitext(os.path.basename(parset_file))[0]
+            )
+        return super(msss_imager_pipeline, self).go()
 
     @mail_log_on_exception
     def pipeline_logic(self):
@@ -134,7 +161,7 @@ class msss_imager_pipeline(control):
 
         # ******************************************************************
         # (1) prepare phase: copy and collect the ms
-        concat_ms_map_path, timeslice_map_path, ms_per_image_map_path, \
+        concat_ms_map_path, timeslice_map_path, raw_ms_per_image_map_path, \
             processed_ms_dir = self._long_baseline(input_mapfile,
                          target_mapfile, add_beam_tables, output_ms_mapfile)
 
@@ -151,19 +178,30 @@ class msss_imager_pipeline(control):
                                            str(subbands_per_subbandgroup))
         toplevel_meta_data.replace("subbandGroupsPerMS", 
                                            str(subbandgroups_per_ms))
+
+        toplevel_meta_data_path = os.path.join(
+                self.parset_dir, "toplevel_meta_data.parset")
+
+        try:
+            toplevel_meta_data.writeFile(toplevel_meta_data_path)
+            self.logger.info("Wrote meta data to: " + 
+                    toplevel_meta_data_path)
+        except RuntimeError, err:
+            self.logger.error(
+              "Failed to write toplevel meta information parset: %s" % str(
+                                    toplevel_meta_data_path))
+            return 1
+
         
         # Create a parset-file containing the metadata for MAC/SAS at nodes
-        metadata_file = "%s_feedback_Correlated" % (self.parset_file,)
         self.run_task("get_metadata", output_ms_mapfile,
+            parset_file = self.parset_feedback_file,
             parset_prefix = (
                 full_parset.getString('prefix') +
                 full_parset.fullModuleName('DataProducts')
             ),
-            product_type = "Correlated",
-            metadata_file = metadata_file)
-
-        self.send_feedback_processing(toplevel_meta_data)
-        self.send_feedback_dataproducts(parameterset(metadata_file))
+            toplevel_meta_data_path=toplevel_meta_data_path, 
+            product_type = "Correlated")
 
         return 0
 
@@ -212,7 +250,7 @@ class msss_imager_pipeline(control):
 
     @xml_node
     def _finalize(self, awimager_output_map, processed_ms_dir,
-                  ms_per_image_map, sourcelist_map, minbaseline,
+                  raw_ms_per_image_map, sourcelist_map, minbaseline,
                   maxbaseline, target_mapfile,
                   output_ms_mapfile, sourcedb_map, skip = False):
         """
@@ -231,7 +269,7 @@ class msss_imager_pipeline(control):
         else:
             placed_image_mapfile = self.run_task("imager_finalize",
                 target_mapfile, awimager_output_map = awimager_output_map,
-                    ms_per_image_map = ms_per_image_map,
+                    raw_ms_per_image_map = raw_ms_per_image_map,
                     sourcelist_map = sourcelist_map,
                     sourcedb_map = sourcedb_map,
                     minbaseline = minbaseline,
@@ -253,7 +291,7 @@ class msss_imager_pipeline(control):
         the time slices into a large virtual measurement set
         """
         # Create the dir where found and processed ms are placed
-        # ms_per_image_map_path contains all the original ms locations:
+        # raw_ms_per_image_map_path contains all the original ms locations:
         # this list contains possible missing files
         processed_ms_dir = os.path.join(self.scratch_directory, "subbands")
 
@@ -267,8 +305,8 @@ class msss_imager_pipeline(control):
         output_mapfile = self._write_datamap_to_file(None, "prepare_output")
         time_slices_mapfile = self._write_datamap_to_file(None,
                                                     "prepare_time_slices")
-        ms_per_image_mapfile = self._write_datamap_to_file(None,
-                                                         "ms_per_image")
+        raw_ms_per_image_mapfile = self._write_datamap_to_file(None,
+                                                         "raw_ms_per_image")
 
         # get some parameters from the imaging pipeline parset:
         subbandgroups_per_ms = self.parset.getInt("LongBaseline.subbandgroups_per_ms")
@@ -282,7 +320,7 @@ class msss_imager_pipeline(control):
                 subbands_per_subbandgroup = subbands_per_subbandgroup,
                 mapfile = output_mapfile,
                 slices_mapfile = time_slices_mapfile,
-                ms_per_image_mapfile = ms_per_image_mapfile,
+                raw_ms_per_image_mapfile = raw_ms_per_image_mapfile,
                 working_directory = self.scratch_directory,
                 processed_ms_dir = processed_ms_dir,
                 add_beam_tables = add_beam_tables,
@@ -301,15 +339,15 @@ class msss_imager_pipeline(control):
                                                         'slices_mapfile')
             self.logger.error(error_msg)
             raise PipelineException(error_msg)
-        if not ('ms_per_image_mapfile' in output_keys):
+        if not ('raw_ms_per_image_mapfile' in output_keys):
             error_msg = "The imager_prepare master script did not"\
                     "return correct data. missing: {0}".format(
-                                                'ms_per_image_mapfile')
+                                                'raw_ms_per_image_mapfile')
             self.logger.error(error_msg)
             raise PipelineException(error_msg)
 
         # Return the mapfiles paths with processed data
-        return output_mapfile, outputs["slices_mapfile"], ms_per_image_mapfile, \
+        return output_mapfile, outputs["slices_mapfile"], raw_ms_per_image_mapfile, \
             processed_ms_dir
 
 

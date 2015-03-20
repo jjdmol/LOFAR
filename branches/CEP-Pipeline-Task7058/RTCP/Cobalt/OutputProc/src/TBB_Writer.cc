@@ -52,8 +52,9 @@
 #include <Common/StringUtil.h>
 #include <Common/StreamUtil.h>
 #include <ApplCommon/AntField.h>
-#include <Stream/StreamFactory.h>
+#include <Stream/SocketStream.h>
 #include <CoInterface/Exceptions.h>
+#include <CoInterface/Stream.h>
 
 #include <dal/lofar/StationNames.h>
 
@@ -928,7 +929,7 @@ namespace LOFAR
 
       // It is also possible to process header->crc16 and see if checksum() equals 0.
       uint16_t crc16val = header->crc16;
-#if __BYTE_ORDER == __BIG_ENDIAN
+#if __BYTE_ORDER == __BIG_ENDIAN || defined WORDS_BIGENDIAN // for cross-compilation on little endian; fails for big->little
       crc16val = __bswap_16(crc16val);
 #endif
       return itsCrc16gen.checksum() == crc16val;
@@ -953,7 +954,7 @@ namespace LOFAR
       // It is also possible to process crc32val and see if checksum() equals 0.
       uint32_t crc32val;
       memcpy(&crc32val, &ptr[nTrSamples * sizeof(int16_t)], sizeof crc32val); // idem
-#if __BYTE_ORDER == __BIG_ENDIAN
+#if __BYTE_ORDER == __BIG_ENDIAN || defined WORDS_BIGENDIAN // for cross-compilation on little endian; fails for big->little
       crc32val = __bswap_32(crc32val);
 #endif
       return itsCrc32gen.checksum() == crc32val;
@@ -1060,7 +1061,7 @@ namespace LOFAR
           } catch (exception& exc) {
             LOG_WARN_STR(itsLogPrefix << "may have lost a frame buffer (1): " << exc.what());
           }
-        } catch (EndOfStreamException& ) { // after end of stream, for input from file or pipe
+        } catch (Stream::EndOfStreamException& ) { // after end of stream, for input from file or pipe
           break;
         } catch (exception& exc) {
           LOG_FATAL_STR(itsLogPrefix << exc.what());

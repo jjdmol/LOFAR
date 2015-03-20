@@ -173,8 +173,6 @@
 #define PPS_FETCH_TIMEOUT { 3, 0 }
 
 namespace LOFAR {
-	using namespace EPA_Protocol;
-	using namespace RSP_Protocol;
 	using namespace GCF::TM;
 	namespace RSP {
 	using namespace blitz;

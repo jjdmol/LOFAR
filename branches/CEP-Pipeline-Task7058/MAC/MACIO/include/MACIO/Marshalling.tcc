@@ -34,12 +34,7 @@
 #include <boost/dynamic_bitset.hpp>
 #include <sstream>
 
-using LOFAR::int32;
-using LOFAR::uint32;
-using LOFAR::map;
-using LOFAR::stringstream;
-using LOFAR::vector;
-using LOFAR::KVpair;
+using namespace LOFAR;
 
 // Basic template
 template<typename T> inline uint32 MSH_size(const T	&tVar)

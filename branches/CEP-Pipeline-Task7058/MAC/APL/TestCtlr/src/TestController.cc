@@ -36,7 +36,6 @@ using namespace LOFAR::GCF::TM;
 
 namespace LOFAR {
 	using namespace APLCommon;
-	using namespace Controller_Protocol;
 	namespace Test {
 	
 //

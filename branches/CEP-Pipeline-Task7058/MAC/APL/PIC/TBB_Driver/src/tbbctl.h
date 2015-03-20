@@ -37,7 +37,6 @@
 
 
 namespace LOFAR {
-  using namespace TBB_Protocol;
   using GCF::TM::GCFTask;
   using GCF::TM::GCFPort;
   using GCF::TM::GCFTimerPort;

@@ -52,8 +52,6 @@
 #include <Common/SystemUtil.h>
 #include <Common/StringUtil.h>
 #include <Common/Thread/Trigger.h>
-#include <MessageBus/MsgBus.h>
-#include <MessageBus/Protocols/TaskFeedbackProcessing.h>
 #include <ApplCommon/PVSSDatapointDefs.h>
 #include <ApplCommon/StationInfo.h>
 #include <MACIO/RTmetadata.h>
@@ -169,10 +167,6 @@ int main(int argc, char **argv)
   LOG_INFO_STR("GPUProc version " << GPUProcVersion::getVersion() << " r" << GPUProcVersion::getRevision());
 
   LOG_INFO("===== INIT =====");
-
-  // Initialise message bus
-  LOG_INFO("----- Initialising MessageBus");
-  MessageBus::init();
 
   // Create a parameters set object based on the inputs
   LOG_INFO("----- Reading Parset");
@@ -599,20 +593,31 @@ int main(int argc, char **argv)
     // graceful exit
     storageProcesses->stop(time(0) + outputProcTimeout);
 
-    // send processing feedback
-    ToBus bus("lofar.task.feedback.processing");
+    LOG_INFO("Writing LTA feedback to disk");
 
+    // obtain LTA feedback
     LTAFeedback fb(ps.settings);
+    Parset feedbackLTA;
 
-    Protocols::TaskFeedbackProcessing msg(
-      "Cobalt/GPUProc/rtcp",
-      "",
-      "Processing feedback",
-      str(format("%s") % ps.settings.momID),
-      str(format("%s") % ps.settings.observationID),
-      fb.processingFeedback());
+    // augment LTA feedback with global information
+    feedbackLTA.adoptCollection(fb.allFeedback());
 
-    bus.send(msg);
+    // process updates from outputProc
+    feedbackLTA.adoptCollection(storageProcesses->feedbackLTA());
+
+    // write LTA feedback to disk
+    const char *LOFARROOT = getenv("LOFARROOT");
+    if (LOFARROOT != NULL) {
+      string feedbackFilename = str(format("%s/var/run/Observation%s_feedback") % LOFARROOT % ps.settings.observationID);
+
+      try {
+        feedbackLTA.writeFile(feedbackFilename, false);
+      } catch (APSException &ex) {
+        LOG_ERROR_STR("Could not write feedback file " << feedbackFilename << ": " << ex);
+      }
+    } else {
+      LOG_WARN("Could not write feedback file: $LOFARROOT not set.");
+    }
 
     // final cleanup
     storageProcesses = 0;

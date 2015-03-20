@@ -22,17 +22,14 @@
 
 #include <string>
 #include <cstdlib>
-#include <string>
 #include <omp.h>
-
+#include <UnitTest++.h>
 #include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
 
-#include <Stream/StreamFactory.h>
-#include <Stream/PortBroker.h>
 #include <CoInterface/CorrelatedData.h>
 #include <CoInterface/Stream.h>
 #include <OutputProc/SubbandWriter.h>
+#include <Stream/PortBroker.h>
 
 #include <MSLofar/FailedTileInfo.h>
 #include <tables/Tables/Table.h>
@@ -40,7 +37,8 @@
 #include <tables/Tables/ArrayColumn.h>
 #include <casa/Quanta/MVTime.h>
 
-#include <UnitTest++.h>
+#include <boost/lexical_cast.hpp>
+#include <string>
 
 using namespace std;
 using namespace LOFAR;

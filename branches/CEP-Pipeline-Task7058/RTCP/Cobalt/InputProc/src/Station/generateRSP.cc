@@ -31,8 +31,8 @@
 
 #include <Common/LofarLogger.h>
 #include <ApplCommon/PosixTime.h>
-#include <Stream/StreamFactory.h>
 #include <CoInterface/SmartPtr.h>
+#include <CoInterface/Stream.h>
 #include <InputProc/Buffer/BoardMode.h>
 #include <InputProc/RSPTimeStamp.h>
 #include <InputProc/Station/RSP.h>

@@ -321,7 +321,6 @@ namespace LOFAR
       // Generic information
       settings.realTime = getBool("Cobalt.realTime", false);
       settings.observationID = getUint32("Observation.ObsID", 0);
-      settings.momID         = getUint32("Observation.momID", 0);
       settings.commandStream = getString("Cobalt.commandStream", "null:");
       settings.startTime = getTime("Observation.startTime", "2013-01-01 00:00:00");
       settings.stopTime  = getTime("Observation.stopTime",  "2013-01-01 00:01:00");

@@ -23,7 +23,6 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
-#include <MessageBus/MsgBus.h>
 
 #include "OnlineControl.h"
 
@@ -44,8 +43,6 @@ int main(int argc, char* argv[])
 	}
 
 	GCFScheduler::instance()->init(argc, argv, argv[1]);
-
-  MessageBus::init();
 
 	ParentControl*	pc = ParentControl::instance();
 	pc->start();	// make initial transition

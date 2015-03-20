@@ -70,11 +70,6 @@ namespace LOFAR
       // key: Observation.ObsID
       unsigned observationID;
 
-      // The MoM observation number
-      //
-      // key: Observation.momID
-      unsigned momID;
-
       // Command stream, or null: if not used
       //
       // key: Cobalt.commandStream

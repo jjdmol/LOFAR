@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
     for(;; ) {
       try {
         data->read(&datafile, true, 512);
-      } catch (EndOfStreamException &) {
+      } catch (Stream::EndOfStreamException &) {
         break;
       }
       //data->peerMagicNumber = 0xda7a0000; // fake wrong endianness to circumvent bug

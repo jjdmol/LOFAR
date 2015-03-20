@@ -41,8 +41,6 @@ using namespace LOFAR::GCF::RTDB;
 using namespace std;
 
 namespace LOFAR {
-	using namespace CM_Protocol;
-	using namespace DP_Protocol;
 	using namespace APLCommon;
 	namespace MainCU {
 

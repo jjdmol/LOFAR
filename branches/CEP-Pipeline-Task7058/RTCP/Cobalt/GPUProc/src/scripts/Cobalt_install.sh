@@ -19,7 +19,7 @@ if [ "${RELEASE_NAME}" = "" ]; then
   exit 1
 fi
 
-for HOST in ${HOSTS:-cbm001 cbm002 cbm003 cbm004 cbm005 cbm006 cbm007 cbm008 cbm009 cbm010}; do
+for HOST in ${HOSTS:-cbm001 cbm002 cbm003 cbm004 cbm005 cbm006 cbm007 cbm008 cbm009}; do
   echo "ssh-ing to node $HOST"
 
   # Escape double quotes below the following line!

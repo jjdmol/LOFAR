@@ -23,7 +23,6 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
-#include <MessageBus/MsgBus.h>
 
 #include "MACScheduler.h"
 
@@ -38,8 +37,6 @@ Exception::TerminateHandler t(Exception::terminate);
 int main(int argc, char* argv[])
 {
 	GCFScheduler::instance()->init(argc, argv, "MACScheduler");
-
-  MessageBus::init();
 
 	ChildControl*	cc = ChildControl::instance();
 	cc->start();	// make initial transition

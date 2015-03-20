@@ -55,9 +55,6 @@ using namespace std;
 
 namespace LOFAR {
 	using namespace APLCommon;
-	using namespace DP_Protocol;
-	using namespace Controller_Protocol;
-	using namespace IBS_Protocol;
 	namespace StationCU {
 
 #define MAX2(a,b)	((a)>(b)?(a):(b))

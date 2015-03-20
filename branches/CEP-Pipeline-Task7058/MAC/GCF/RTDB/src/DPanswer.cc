@@ -29,7 +29,6 @@
 #include "DPanswer.h"
 
 namespace LOFAR {
-  using namespace DP_Protocol;
   using namespace MACIO;
   namespace GCF {
     namespace RTDB {

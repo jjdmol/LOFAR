@@ -40,7 +40,6 @@ namespace blitz {
 
 namespace LOFAR {
 	using MACIO::GCFEvent;
-	using namespace RSP_Protocol;
 	namespace AMI {  
 
 class SHMInfoServer;

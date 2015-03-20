@@ -35,7 +35,6 @@
 #include "SerdesBuffer.h"
 
 namespace LOFAR {
-  using namespace RSP_Protocol;
   namespace RSP {
 
 class Cache; // forward declaration

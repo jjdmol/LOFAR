@@ -32,8 +32,6 @@
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <Common/Exceptions.h>
-#include <MessageBus/MsgBus.h>
-#include <MessageBus/Protocols/TaskFeedbackDataproducts.h>
 #include <Stream/PortBroker.h>
 #include <ApplCommon/PVSSDatapointDefs.h>
 #include <ApplCommon/StationInfo.h>
@@ -251,44 +249,21 @@ bool process(Stream &controlStream, unsigned myRank)
      * LTA FEEDBACK
      */
 
+    LOG_DEBUG_STR("Retrieving LTA feedback");
+    Parset feedbackLTA;
+
+    for (size_t i = 0; i < subbandWriters.size(); ++i)
+      feedbackLTA.adoptCollection(subbandWriters[i]->feedbackLTA());
+    for (size_t i = 0; i < tabWriters.size(); ++i)
+      feedbackLTA.adoptCollection(tabWriters[i]->feedbackLTA());
+
     LOG_DEBUG_STR("Forwarding LTA feedback");
-
-    ToBus bus("lofar.task.feedback.dataproducts");
-
-    const std::string myName = str(boost::format("Cobalt/OutputProc on %s") % myHostName);
-
-    for (size_t i = 0; i < subbandWriters.size(); ++i) {
-      Protocols::TaskFeedbackDataproducts msg(
-        myName,
-        "",
-        str(boost::format("Feedback for Correlated Data, subband %s") % subbandWriters[i]->streamNr()),
-        str(format("%s") % parset.settings.momID),
-        str(format("%s") % parset.settings.observationID),
-        subbandWriters[i]->feedbackLTA());
-
-      bus.send(msg);
+    try {
+      feedbackLTA.write(&controlStream);
+    } catch (LOFAR::Exception &err) {
+      success = false;
+      LOG_ERROR_STR("Failed to forward LTA feedback information: " << err);
     }
-
-    for (size_t i = 0; i < tabWriters.size(); ++i) {
-      Protocols::TaskFeedbackDataproducts msg(
-        myName,
-        "",
-        str(boost::format("Feedback for Beamformed Data, file nr %s") % tabWriters[i]->streamNr()),
-        str(format("%s") % parset.settings.momID),
-        str(format("%s") % parset.settings.observationID),
-        tabWriters[i]->feedbackLTA());
-
-      bus.send(msg);
-    }
-
-    /*
-     * SIGN OFF
-     */
-
-    bool sentFeedback = true;
-
-    controlStream.write(&sentFeedback, sizeof sentFeedback);
-    controlStream.write(&success, sizeof success);
 
     return success;
   }

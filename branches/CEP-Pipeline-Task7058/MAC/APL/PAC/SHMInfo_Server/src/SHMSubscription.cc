@@ -28,11 +28,14 @@
 #include <GCF/PVSS/PVSSInfo.h>
 #include <GCF/PVSS/GCF_PValue.h>
 
-namespace LOFAR {
-  using namespace GCF::Common;
-  using namespace GCF::PAL;
-  using namespace SHM_Protocol;
-  namespace AMI {
+namespace LOFAR
+{
+
+using namespace GCF::Common;
+using namespace GCF::PAL;
+  
+  namespace AMI
+  {
     
 INIT_TRACER_CONTEXT(SHMSubscription, LOFARLOGGER_PACKAGE);
 

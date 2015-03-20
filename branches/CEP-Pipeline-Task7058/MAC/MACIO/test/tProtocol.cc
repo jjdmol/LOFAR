@@ -30,8 +30,6 @@
 #include "Echo_Protocol.ph"
 
 using namespace LOFAR;
-using namespace LOFAR::testprotocol;
-using namespace LOFAR::Echo_Protocol;
 using namespace LOFAR::MACIO;
 
 int main (int	/*argc*/, char* argv[]) 

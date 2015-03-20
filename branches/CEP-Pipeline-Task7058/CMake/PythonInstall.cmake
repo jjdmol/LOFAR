@@ -83,15 +83,14 @@ macro(python_install)
     install(FILES ${_py} DESTINATION ${_inst_dir}/${_py_path})
     if(USE_PYTHON_COMPILATION)
       set(_py_code
-        "import py_compile, os"
-        "destdir = os.environ.get('DESTDIR','')"
-        "print('-- Byte-compiling: %s${_inst_dir}/${_py}' % destdir)"
-        "py_compile.compile('%s${DESTDIR}${_inst_dir}/${_py}' % destdir, doraise=True)")
+        "import py_compile"
+        "print('-- Byte-compiling: ${_inst_dir}/${_py}')"
+        "py_compile.compile('${_inst_dir}/${_py}', doraise=True)")
       install(CODE 
         "execute_process(COMMAND ${PYTHON_EXECUTABLE} -c \"${_py_code}\"
                        RESULT_VARIABLE _result)
        if(NOT _result EQUAL 0)
-         message(FATAL_ERROR \"Byte-compilation FAILED: \$ENV{DESTDIR}${_inst_dir}/${_py}\")
+         message(FATAL_ERROR \"Byte-compilation FAILED: ${_inst_dir}/${_py}\")
        endif(NOT _result EQUAL 0)")
     endif(USE_PYTHON_COMPILATION)
   endforeach(_py ${_py_files})
@@ -105,7 +104,7 @@ macro(python_install)
       "${PYTHON_BUILD_DIR}${_init_dir}/__init__.py")
     install(CODE 
       "execute_process(COMMAND ${CMAKE_COMMAND} -E touch 
-        \"\$ENV{DESTDIR}${PYTHON_INSTALL_DIR}${_init_dir}/__init__.py\")")
+        \"${PYTHON_INSTALL_DIR}${_init_dir}/__init__.py\")")
   endforeach(_dir ${_dir_list})
 
 endmacro(python_install)

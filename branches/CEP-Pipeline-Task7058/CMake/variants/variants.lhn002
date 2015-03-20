@@ -1,1 +1,1 @@
-variants.lhn001
+set(CASACORE_ROOT_DIR /opt/cep/casacore)
