@@ -24,8 +24,8 @@ SignalHandler::SignalHandler(QApplication *app, Controller *c)
     itsController = c;
     // Create the connection between the SignalHandler class and the possible
     // items to action upon.
-    connect(itsController->gui->getSchedulerGUIClass().action_DownloadSASSchedule,
-            SIGNAL(triggered()), itsController, SLOT(downloadSASSchedule()));
+    //connect(itsController->gui->getSchedulerGUIClass().action_DownloadSASSchedule,
+    //       SIGNAL(triggered()), itsController, SLOT(downloadSASSchedule()));
 }
 
 int SignalHandler::signalForward(std::string action, std::string /*parameter*/)

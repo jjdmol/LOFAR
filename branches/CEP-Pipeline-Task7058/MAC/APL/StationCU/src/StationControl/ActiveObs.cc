@@ -42,6 +42,8 @@
 #include "ActiveObs.h"
 
 namespace LOFAR {
+	using namespace Controller_Protocol;
+	using namespace DP_Protocol;
 	using namespace APLCommon;
 	using namespace MACIO;
 	using namespace GCF::TM;

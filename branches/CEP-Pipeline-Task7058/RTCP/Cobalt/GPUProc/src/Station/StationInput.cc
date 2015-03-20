@@ -39,6 +39,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
 #include <Stream/FileStream.h>
+#include <Stream/StreamFactory.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/OMPThread.h>
 #include <CoInterface/TimeFuncs.h>
@@ -268,7 +269,8 @@ namespace LOFAR {
 
       try {
         SmartPtr<Stream> stream = inputStream(board);
-        PacketReader reader(str(format("%s[board %s] ") % logPrefix % board), *stream, mode);
+        PacketReader reader(str(format("%s[board %s] ") % logPrefix % board),
+                            *stream, mode);
 
         Queue< SmartPtr<RSPData> > &inputQueue = rspDataPool[board]->free;
         Queue< SmartPtr<RSPData> > &outputQueue = rspDataPool[board]->filled;
@@ -289,7 +291,7 @@ namespace LOFAR {
 
           outputQueue.append(rspData);
         }
-      } catch (Stream::EndOfStreamException &ex) {
+      } catch (EndOfStreamException &ex) {
         // Ran out of data
         LOG_INFO_STR( logPrefix << "End of stream");
 
@@ -404,7 +406,7 @@ namespace LOFAR {
             // Retry until we have a valid packet
             while (!readers[board]->readPacket(last_packets[board]))
               ;
-          } catch (Stream::EndOfStreamException &ex) {
+          } catch (EndOfStreamException &ex) {
             // Ran out of data
             LOG_INFO_STR( logPrefix << "End of stream");
 
@@ -521,7 +523,7 @@ namespace LOFAR {
       } else {
         // We just process one packet at a time, merging all the streams into rspDataPool[0].
         for (size_t i = 0; i < 16; ++i)
-          rspDataPool[0]->free.append(new RSPData(1), false);
+          rspDataPool[0]->free.append(new RSPData(NONRT_PACKET_BATCH_SIZE), false);
       }
 
       // Make sure we only read RSP packets when we're ready to actually process them. Otherwise,
@@ -555,12 +557,16 @@ namespace LOFAR {
           if (ps.settings.realTime) {
             #pragma omp parallel for num_threads(nrBoards)
             for(size_t board = 0; board < nrBoards; board++) {
-              OMPThreadSet::ScopedRun sr(packetReaderThreads);
-              OMPThread::ScopedName sn(str(format("%s rd %u") % ps.settings.antennaFields.at(stationIdx).name % board));
+              try {
+                OMPThreadSet::ScopedRun sr(packetReaderThreads);
+                OMPThread::ScopedName sn(str(format("%s rd %u") % ps.settings.antennaFields.at(stationIdx).name % board));
 
-              Thread::ScopedPriority sp(SCHED_FIFO, 10);
+                Thread::ScopedPriority sp(SCHED_FIFO, 10);
 
-              readRSPRealTime(board, mdLogger, mdKeyPrefix);
+                readRSPRealTime(board, mdLogger, mdKeyPrefix);
+              } catch(OMPThreadSet::CannotStartException &ex) {
+                LOG_INFO_STR( logPrefix << "Stopped");
+              }
             }
           } else {
             readRSPNonRealTime(mdLogger, mdKeyPrefix);

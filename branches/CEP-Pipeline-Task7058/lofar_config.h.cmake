@@ -129,6 +129,9 @@
 /* Define if libssh2 is installed */
 #cmakedefine HAVE_LIBSSH2 1
 
+/* Define if libxml2 is installed */
+#cmakedefine HAVE_LIBXML2 1
+
 /* Define if LOG4CPLUS is installed */
 #cmakedefine HAVE_LOG4CPLUS 1
 
@@ -153,6 +156,9 @@
 /* Define if using Rational Purify */
 #cmakedefine HAVE_PURIFY 1
 
+/* Define if QPID is installed */
+#cmakedefine HAVE_QPID 1
+
 /* Define if readline is installed */
 #cmakedefine HAVE_READLINE 1
 
@@ -161,6 +167,9 @@
 
 /* Defined if shared memory is used */
 #cmakedefine HAVE_SHMEM 1
+
+/* Defined if uuid is installed */
+#cmakedefine HAVE_UUID 1
 
 /* Define if WCSLIB is installed */
 #cmakedefine HAVE_WCSLIB 1

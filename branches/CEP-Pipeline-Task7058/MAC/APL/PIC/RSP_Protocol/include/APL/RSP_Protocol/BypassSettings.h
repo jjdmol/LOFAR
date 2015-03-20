@@ -33,6 +33,7 @@
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 
 namespace LOFAR {
+  using namespace EPA_Protocol;
   namespace RSP_Protocol {
 
 // Note: Bypass registers are per BP, so each register has info for the X

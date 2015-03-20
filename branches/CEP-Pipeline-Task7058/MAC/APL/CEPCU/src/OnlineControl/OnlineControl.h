@@ -27,9 +27,10 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/LofarLogger.h>
-
-//# ACC Includes
 #include <Common/ParameterSet.h>
+
+//# MsgBus Includes
+#include <MessageBus/MsgBus.h>
 
 //# GCF Includes
 #include <GCF/TM/GCF_Control.h>
@@ -90,15 +91,13 @@ private:
 	void	_stopApplications();
 	void   	_finishController	 (uint16_t 				result);
    	void	_handleDisconnect	 (GCFPortInterface& 	port);
-   	void	_handleAcceptRequest (GCFPortInterface& 	port);
-   	void	_handleDataIn		 (GCFPortInterface& 	port);
 	void	_setState	  		 (CTState::CTstateNr	newState);
 	void	_databaseEventHandler(GCFEvent&				event);
-	void	_passMetadatToOTDB   ();
 	void	_clearCobaltDatapoints();
 
 	// ----- datamembers -----
 	string						itsMyName;
+	int							itsObsID;
    	RTDBPropertySet*           	itsPropertySet;
 	bool					  	itsPropertySetInitialized;
 	PVSSservice*				itsPVSSService;
@@ -115,9 +114,8 @@ private:
 
 	CTState::CTstateNr		itsState;
 
-	// QUICK FIX #4022
-	GCFTCPPort*				itsFeedbackListener;
-	GCFTCPPort*				itsFeedbackPort;
+	FromBus*				itsMsgQueue;
+	GCFTimerPort*			itsQueueTimer;
 	int						itsFeedbackResult;
 
 	// ParameterSet variables

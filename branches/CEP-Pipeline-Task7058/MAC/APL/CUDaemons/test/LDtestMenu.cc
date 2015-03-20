@@ -32,6 +32,7 @@
 using namespace LOFAR;
 using namespace LOFAR::APLCommon;
 using namespace LOFAR::CUdaemons;
+using namespace LOFAR::StartDaemon_protocol;
 
 static	EventPort*		SDport = 0;
 

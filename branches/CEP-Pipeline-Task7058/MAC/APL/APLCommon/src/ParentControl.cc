@@ -36,6 +36,8 @@
 #include <StartDaemon_Protocol.ph>
 
 namespace LOFAR {
+  using namespace Controller_Protocol;
+  using namespace StartDaemon_Protocol;
   using namespace GCF::TM;
   using namespace boost::posix_time;
   namespace APLCommon {

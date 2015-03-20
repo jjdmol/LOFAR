@@ -5,14 +5,8 @@ LANG:6 0
 PANEL,-1 -1 838 396 N "_3DFace" 0
 "main()
 {
-  DebugN(\"MainPanel started\");
-  dyn_mapping t1,t2;
-  t1 = getUsersInGroupPVSS(0);
-  DebugN(t1);
-  DebugN(\"mapping len: \", dynlen(t1));
-  t2 = getUsersInGroupPVSS(5);
-  DebugN(t2);
-  DebugN(\"mapping len: \", dynlen(t2));
+  dyn_string aS = makeDynString(\"A\",\"B\",\"kjbdkbdsk\",\"TempObs0123\",\"kjbndkbna\");
+  DebugN(dynPatternMatch(\"TempObs*\", aS));
 }" 0
  E E E E 1 -1 -1 0  50 30
 ""0  1
