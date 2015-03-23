@@ -85,7 +85,7 @@ class DataProduct(object):
     """
     Base class for data product metadata.
     """
-    def __init__(self):
+    def __init__(self, logger):
         self._data = {
             'size' : 0,
             'fileFormat' : "",
@@ -93,6 +93,7 @@ class DataProduct(object):
             'location' : "",
             'percentageWritten' : 0
         }
+        self.logger = logger
 
 
     def data(self):
@@ -128,8 +129,8 @@ class Correlated(DataProduct):
     Class representing the metadata associated with UV-correlated data.
     The optional argument `filename` is the name of the Measurement Set.
     """
-    def __init__(self, filename=None):
-        super(Correlated, self).__init__()
+    def __init__(self, logger, filename=None):
+        super(Correlated, self).__init__(logger)
         self._data.update({
             'startTime' : "not-a-datetime",
             'duration' : 0.0,
@@ -186,12 +187,12 @@ class InstrumentModel(DataProduct):
     """
     Class representing the metadata associated with an instrument model.
     """
-    def __init__(self, filename=None):
+    def __init__(self, logger, filename=None):
         """
         Constructor. The optional argument `filename` is the name of the
         Measurement Set containing the instrument model.
         """
-        DataProduct.__init__(self)
+        DataProduct.__init__(self, logger)
         if filename: 
             self.collect(filename)
 
@@ -210,12 +211,12 @@ class SkyImage(DataProduct):
     """
     Class representing the metadata associated with a sky image.
     """
-    def __init__(self, filename=None):
+    def __init__(self, logger,  filename=None):
         """
         Constructor. The optional argument `filename` is the name of the
         CASA Image containing the sky image.
         """
-        DataProduct.__init__(self)
+        DataProduct.__init__(self, logger)
         self._data.update({
             'numberOfAxes' : 0,
             'nrOfDirectionCoordinates' : 0,
@@ -291,6 +292,7 @@ class SkyImage(DataProduct):
             self._data.update({
                 'imagerIntegrationTime':imagerIntegrationTime
             })
+            self.logger.info("Succes fully collecting meta data for skyimage")
         except Exception, error:
             print >> sys.stderr, (
                 "%s: %s\n\twhile processing file %s" % 
