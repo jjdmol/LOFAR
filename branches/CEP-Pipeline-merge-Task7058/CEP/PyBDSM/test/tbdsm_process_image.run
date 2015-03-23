@@ -1,7 +1,0 @@
-#!/bin/bash
-
-# Set-up the Python environment for running the PyBDSM source finder.
-source /opt/cep/login/loadpackage.bash Pythonlibs
-
-# Fire off the test script.
-python tbdsm_process_image.py
