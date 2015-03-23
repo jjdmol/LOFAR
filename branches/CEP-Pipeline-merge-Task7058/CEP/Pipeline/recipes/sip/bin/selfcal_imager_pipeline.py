@@ -1,29 +1,33 @@
 #!/usr/bin/env python
 #                                                        LOFAR IMAGING PIPELINE
 #
-#                                                        Imager Pipeline recipe
+#                                                      selfcal Pipeline recipe
 #                                                            Marcel Loose, 2012
 #                                                               loose@astron.nl
 #                                                            Wouter Klijn, 2012
 #                                                               klijn@astron.nl
+#                                                         Nicolas Vilchez, 2014
+#                                                             vilchez@astron.nl
 # -----------------------------------------------------------------------------
 import os
 import sys
 import copy
+import shutil
 
 from lofarpipe.support.control import control
 from lofarpipe.support.utilities import create_directory
 from lofarpipe.support.lofarexceptions import PipelineException
-from lofarpipe.support.data_map import DataMap, validate_data_maps, MultiDataMap
+from lofarpipe.support.data_map import DataMap, validate_data_maps,\
+                                       MultiDataMap, align_data_maps
 from lofarpipe.support.utilities import patch_parset, get_parset
 from lofarpipe.support.loggingdecorators import xml_node, mail_log_on_exception
 
 from lofar.parameterset import parameterset
 
 
-class msss_imager_pipeline(control):
+class selfcal_imager_pipeline(control):
     """
-    The Automatic MSSS imager pipeline is used to generate MSSS images and find
+    The self calibration pipeline is used to generate images and find
     sources in the generated images. Generated images and lists of found
     sources are complemented with meta data and thus ready for consumption by
     the Long Term Storage (LTA)
@@ -35,7 +39,7 @@ class msss_imager_pipeline(control):
     (typically 8, because ten subband groups are combined).
 
     *Time Slices*
-    MSSS images are compiled from a number of so-called (time) slices. Each
+    selfcal images are compiled from a number of so-called (time) slices. Each
     slice comprises a short (approx. 10 min) observation of a field (an area on
     the sky) containing typically 80 subbands. The number of slices will be
     different for LBA observations (typically 9) and HBA observations
@@ -77,7 +81,7 @@ class msss_imager_pipeline(control):
        and results are collected an added to the casa image. The images created
        are converted from casa to HDF5 and copied to the correct output
        location.
-    7. Export meta data: meta data is generated ready for
+    7. Export meta data: An outputfile with meta data is generated ready for
        consumption by the LTA and/or the LOFAR framework.
 
 
@@ -93,13 +97,41 @@ class msss_imager_pipeline(control):
         Initialize member variables and call superclass init function
         """
         control.__init__(self)
+        self.parset = parameterset()
         self.input_data = DataMap()
         self.target_data = DataMap()
         self.output_data = DataMap()
+        self.output_correlated_data = DataMap()
         self.scratch_directory = None
+        self.parset_feedback_file = None
         self.parset_dir = None
         self.mapfile_dir = None
 
+    def usage(self):
+        """
+        Display usage information
+        """
+        print >> sys.stderr, "Usage: %s <parset-file>  [options]" % sys.argv[0]
+        return 1
+
+    def go(self):
+        """
+        Read the parset-file that was given as input argument, and set the
+        jobname before calling the base-class's `go()` method.
+        """
+        try:
+            parset_file = os.path.abspath(self.inputs['args'][0])
+        except IndexError:
+            return self.usage()
+        self.parset.adoptFile(parset_file)
+        self.parset_feedback_file = parset_file + "_feedback"
+        # Set job-name to basename of parset-file w/o extension, if it's not
+        # set on the command-line with '-j' or '--job-name'
+        if not 'job_name' in self.inputs:
+            self.inputs['job_name'] = (
+                os.path.splitext(os.path.basename(parset_file))[0]
+            )
+        return super(selfcal_imager_pipeline, self).go()
 
     @mail_log_on_exception
     def pipeline_logic(self):
@@ -150,20 +182,42 @@ class msss_imager_pipeline(control):
         self.logger.debug(
             "Wrote output sky-image mapfile: {0}".format(output_image_mapfile))
 
+        # Location of the output measurement set
+        output_correlated_mapfile = os.path.join(self.mapfile_dir, 
+                                                 "correlated.mapfile")
+        self.output_correlated_data.save(output_correlated_mapfile)
+        self.logger.debug(
+            "Wrote output correlated mapfile: {0}".format(output_correlated_mapfile))
+
+        # Get pipeline parameters from the toplevel recipe
         # TODO: This is a backdoor option to manually add beamtables when these
         # are missing on the provided ms. There is NO use case for users of the
         # pipeline
         add_beam_tables = self.parset.getBool(
                                     "Imaging.addBeamTables", False)
 
+
+        number_of_major_cycles = self.parset.getInt(
+                                    "Imaging.number_of_major_cycles")
+
+        # Almost always a users wants a partial succes above a failed pipeline
+        output_result_of_last_succesfull_cycle = self.parset.getBool(
+                            "Imaging.output_on_error", True)
+
+
+        if number_of_major_cycles < 3:
+            self.logger.error(
+                "The number of major cycles must be 3 or higher, correct"
+                " the key: Imaging.number_of_major_cycles")
+            raise PipelineException(
+                     "Incorrect number_of_major_cycles in the parset")
+
+
         # ******************************************************************
         # (1) prepare phase: copy and collect the ms
         concat_ms_map_path, timeslice_map_path, ms_per_image_map_path, \
             processed_ms_dir = self._prepare_phase(input_mapfile,
                                     target_mapfile, add_beam_tables)
-
-        number_of_major_cycles = self.parset.getInt(
-                                    "Imaging.number_of_major_cycles")
 
         # We start with an empty source_list map. It should contain n_output
         # entries all set to empty strings
@@ -174,65 +228,173 @@ class msss_imager_pipeline(control):
             item.file = ""             # set all to empty string
         source_list_map.save(source_list_map_path)
 
-        for idx_loop in range(number_of_major_cycles):
-            # *****************************************************************
-            # (2) Create dbs and sky model
-            parmdbs_path, sourcedb_map_path = self._create_dbs(
-                        concat_ms_map_path, timeslice_map_path,
-                        source_list_map_path = source_list_map_path,
-                        skip_create_dbs = False)
+        succesfull_cycle_mapfiles_dict = None
+        for idx_cycle in range(number_of_major_cycles):
+            try:
+                # *****************************************************************
+                # (2) Create dbs and sky model
+                parmdbs_path, sourcedb_map_path = self._create_dbs(
+                            concat_ms_map_path, timeslice_map_path, idx_cycle,
+                            source_list_map_path = source_list_map_path,
+                            skip_create_dbs = False)
 
-            # *****************************************************************
-            # (3)  bbs_imager recipe.
-            bbs_output = self._bbs(timeslice_map_path, parmdbs_path,
-                        sourcedb_map_path, skip = False)
 
-            # TODO: Extra recipe: concat timeslices using pyrap.concatms
-            # (see prepare)
+                # *****************************************************************
+                # (3)  bbs_imager recipe.
+                bbs_output = self._bbs(concat_ms_map_path, timeslice_map_path, 
+                        parmdbs_path, sourcedb_map_path, idx_cycle, skip = False)
 
-            # *****************************************************************
-            # (4) Get parameters awimager from the prepare_parset and inputs
-            aw_image_mapfile, maxbaseline = self._aw_imager(concat_ms_map_path,
-                        idx_loop, sourcedb_map_path,
-                        skip = False)
+            
+                # TODO: Extra recipe: concat timeslices using pyrap.concatms
+                # (see prepare) redmine issue #6021
+                # Done in imager_bbs.p at the node level after calibration 
 
-            # *****************************************************************
-            # (5) Source finding
-            sourcelist_map, found_sourcedb_path = self._source_finding(
-                    aw_image_mapfile, idx_loop, skip = False)
-            # should the output be a sourcedb? instead of a sourcelist
+                # *****************************************************************
+                # (4) Get parameters awimager from the prepare_parset and inputs
+                aw_image_mapfile, maxbaseline = self._aw_imager(concat_ms_map_path,
+                            idx_cycle, sourcedb_map_path, number_of_major_cycles,
+                            skip = False)
+
+                # *****************************************************************
+                # (5) Source finding
+                source_list_map_path, found_sourcedb_path = self._source_finding(
+                        aw_image_mapfile, idx_cycle, skip = False)
+                # should the output be a sourcedb? instead of a sourcelist
+
+                # save the active mapfiles: locations and content
+                # Used to output last succesfull cycle on error
+                mapfiles_to_save = {'aw_image_mapfile':aw_image_mapfile,
+                                    'source_list_map_path':source_list_map_path,
+                                    'found_sourcedb_path':found_sourcedb_path,
+                                    'concat_ms_map_path':concat_ms_map_path}
+                succesfull_cycle_mapfiles_dict = self._save_active_mapfiles(idx_cycle, 
+                                      self.mapfile_dir, mapfiles_to_save)
+
+            # On exception there is the option to output the results of the 
+            # last cycle without errors
+            except KeyboardInterrupt, ex:
+                raise ex
+
+            except Exception, ex:
+                self.logger.error("Encountered an fatal exception during self"
+                                  "calibration. Aborting processing and return"
+                                  " the last succesfull cycle results")
+                self.logger.error(str(ex))
+
+                # if we are in the first cycle always exit with exception
+                if idx_cycle == 0:
+                    raise ex
+
+                if not output_result_of_last_succesfull_cycle:
+                    raise ex
+                
+                # restore the mapfile variables
+                aw_image_mapfile = succesfull_cycle_mapfiles_dict['aw_image_mapfile']
+                source_list_map_path = succesfull_cycle_mapfiles_dict['source_list_map_path']
+                found_sourcedb_path = succesfull_cycle_mapfiles_dict['found_sourcedb_path']
+                concat_ms_map_path = succesfull_cycle_mapfiles_dict['concat_ms_map_path']
+
+                # set the number_of_major_cycles to the correct number
+                number_of_major_cycles = idx_cycle - 1
+                max_cycles_reached = False
+                break
+            else:
+                max_cycles_reached = True
+
 
         # TODO: minbaseline should be a parset value as is maxbaseline..
         minbaseline = 0
 
         # *********************************************************************
         # (6) Finalize:
-        placed_data_image_map = self._finalize(aw_image_mapfile,
-            processed_ms_dir, ms_per_image_map_path, sourcelist_map,
+        placed_data_image_map, placed_correlated_map =  \
+                                        self._finalize(aw_image_mapfile, 
+            processed_ms_dir, ms_per_image_map_path, source_list_map_path,
             minbaseline, maxbaseline, target_mapfile, output_image_mapfile,
-            found_sourcedb_path)
+            found_sourcedb_path, concat_ms_map_path, output_correlated_mapfile)
 
         # *********************************************************************
         # (7) Get metadata
         # create a parset with information that is available on the toplevel
-        toplevel_meta_data = parameterset()
-        toplevel_meta_data.replace("numberOfMajorCycles", 
-                                           str(number_of_major_cycles))
 
-        # Create a parset containing the metadata for MAC/SAS at nodes
-        metadata_file = "%s_feedback_SkyImage" % (self.parset_file,)
-        self.run_task("get_metadata", placed_data_image_map,
-            parset_prefix = (
-                full_parset.getString('prefix') +
-                full_parset.fullModuleName('DataProducts')
-            ),
-            product_type = "SkyImage",
-            metadata_file = metadata_file)
+        self._get_meta_data(number_of_major_cycles, placed_data_image_map,
+                       placed_correlated_map, full_parset, 
+                       max_cycles_reached)
 
-        self.send_feedback_processing(toplevel_meta_data)
-        self.send_feedback_dataproducts(parameterset(metadata_file))
 
         return 0
+
+    def _save_active_mapfiles(self, cycle_idx, mapfile_dir, mapfiles = {}):
+        """
+        receives a dict with active mapfiles, var name to path
+        Each mapfile is copier to a seperate directory and saved
+        THis allows us to exit the last succesfull run
+        """
+        # create a directory for storing the saved mapfiles, use cycle idx
+        mapfile_for_cycle_dir = os.path.join(mapfile_dir, "cycle_" + str(cycle_idx))
+        create_directory(mapfile_for_cycle_dir)
+
+        saved_mapfiles = {}
+        for (var_name,mapfile_path) in mapfiles.items():
+            shutil.copy(mapfile_path, mapfile_for_cycle_dir)
+            # save the newly created file, get the filename, and append it
+            # to the directory name
+            saved_mapfiles[var_name] = os.path.join(mapfile_for_cycle_dir,
+                                          os.path.basename(mapfile_path))
+
+        return saved_mapfiles
+            
+            
+
+
+    def _get_meta_data(self, number_of_major_cycles, placed_data_image_map,
+                       placed_correlated_map, full_parset, max_cycles_reached):
+        """
+        Function combining all the meta data collection steps of the processing
+        """
+        parset_prefix = full_parset.getString('prefix') + \
+                full_parset.fullModuleName('DataProducts')
+                    
+        toplevel_meta_data = parameterset()
+        toplevel_meta_data.replace(
+             parset_prefix + ".numberOfMajorCycles", 
+                                           str(number_of_major_cycles))
+        toplevel_meta_data_path = os.path.join(
+                self.parset_dir, "toplevel_meta_data.parset")
+
+        toplevel_meta_data.replace(parset_prefix + ".max_cycles_reached",
+                                  str(max_cycles_reached))
+
+        try:
+            toplevel_meta_data.writeFile(toplevel_meta_data_path)
+            self.logger.info("Wrote meta data to: " + 
+                    toplevel_meta_data_path)
+        except RuntimeError, err:
+            self.logger.error(
+              "Failed to write toplevel meta information parset: %s" % str(
+                                    toplevel_meta_data_path))
+            return 1
+
+        skyimage_metadata = os.path.join(self.parset_dir, "skyimage.metadata")
+        correlated_metadata = os.path.join(self.parset_dir, 
+                                           "correlated.metadata")
+
+        # Create a parset-file containing the metadata for MAC/SAS at nodes
+        self.run_task("get_metadata", placed_data_image_map,
+            parset_file = skyimage_metadata,
+            parset_prefix = parset_prefix,
+            toplevel_meta_data_path=toplevel_meta_data_path, # only add once
+            product_type = "SkyImage")
+
+        self.run_task("get_metadata", placed_correlated_map,
+            parset_file = correlated_metadata,
+            parset_prefix = parset_prefix,
+            product_type = "Correlated")
+
+        parset = parameterset(skyimage_metadata)
+        parset.adoptFile(correlated_metadata)
+        parset.writeFile(self.parset_feedback_file)
+
 
     def _get_io_product_specs(self):
         """
@@ -263,6 +425,20 @@ class msss_imager_pipeline(control):
         self.logger.debug("%d Output_SkyImage data products specified" %
                           len(self.output_data))
 
+        self.output_correlated_data = DataMap([
+            tuple(os.path.join(location, filename).split(':')) + (skip,)
+                for location, filename, skip in zip(
+                    dps.getStringVector('Output_Correlated.locations'),
+                    dps.getStringVector('Output_Correlated.filenames'),
+                    dps.getBoolVector('Output_Correlated.skip'))
+        ])
+
+        # assure that the two output maps contain the same skip fields
+        align_data_maps( self.output_data, self.output_correlated_data)
+
+        self.logger.debug("%d Output_Correlated data products specified" %
+                          len(self.output_correlated_data))
+
         # # Sanity checks on input- and output data product specifications
         # if not validate_data_maps(self.input_data, self.output_data):
         #    raise PipelineException(
@@ -281,7 +457,8 @@ class msss_imager_pipeline(control):
     def _finalize(self, awimager_output_map, processed_ms_dir,
                   ms_per_image_map, sourcelist_map, minbaseline,
                   maxbaseline, target_mapfile,
-                  output_image_mapfile, sourcedb_map, skip = False):
+                  output_image_mapfile, sourcedb_map, concat_ms_map_path,
+                  output_correlated_mapfile, skip = False):
         """
         Perform the final step of the imager:
         Convert the output image to hdf5 and copy to output location
@@ -293,11 +470,16 @@ class msss_imager_pipeline(control):
         self.logger.debug("Touched mapfile for correctly placed"
                         " hdf images: {0}".format(placed_image_mapfile))
 
+        placed_correlated_mapfile = self._write_datamap_to_file(None,
+             "placed_correlated")
+        self.logger.debug("Touched mapfile for correctly placed"
+                        " correlated datasets: {0}".format(placed_correlated_mapfile))
+
         if skip:
-            return placed_image_mapfile
+            return placed_image_mapfile, placed_correlated_mapfile
         else:
             # run the awimager recipe
-            placed_image_mapfile = self.run_task("imager_finalize",
+            outputs = self.run_task("selfcal_finalize",
                 target_mapfile, awimager_output_map = awimager_output_map,
                     ms_per_image_map = ms_per_image_map,
                     sourcelist_map = sourcelist_map,
@@ -307,10 +489,14 @@ class msss_imager_pipeline(control):
                     target_mapfile = target_mapfile,
                     output_image_mapfile = output_image_mapfile,
                     processed_ms_dir = processed_ms_dir,
-                    placed_image_mapfile = placed_image_mapfile
-                    )["placed_image_mapfile"]
+                    placed_image_mapfile = placed_image_mapfile,
+                    placed_correlated_mapfile = placed_correlated_mapfile,
+                    concat_ms_map_path = concat_ms_map_path,
+                    output_correlated_mapfile = output_correlated_mapfile
+                    )
 
-        return placed_image_mapfile
+        return outputs["placed_image_mapfile"], \
+                outputs["placed_correlated_mapfile"]
 
     @xml_node
     def _source_finding(self, image_map_path, major_cycle, skip = True):
@@ -319,10 +505,13 @@ class msss_imager_pipeline(control):
         """
         # Create the parsets for the different sourcefinder runs
         bdsm_parset_pass_1 = self.parset.makeSubset("BDSM[0].")
+
+        self._selfcal_modify_parset(bdsm_parset_pass_1, "pybdsm_first_pass.par")
         parset_path_pass_1 = self._write_parset_to_file(bdsm_parset_pass_1,
                 "pybdsm_first_pass.par", "Sourcefinder first pass parset.")
 
         bdsm_parset_pass_2 = self.parset.makeSubset("BDSM[1].")
+        self._selfcal_modify_parset(bdsm_parset_pass_2, "pybdsm_second_pass.par")
         parset_path_pass_2 = self._write_parset_to_file(bdsm_parset_pass_2,
                 "pybdsm_second_pass.par", "sourcefinder second pass parset")
 
@@ -358,14 +547,15 @@ class msss_imager_pipeline(control):
             return source_list_map, sourcedb_map_path
 
     @xml_node
-    def _bbs(self, timeslice_map_path, parmdbs_map_path, sourcedb_map_path,
-              skip = False):
+    def _bbs(self, concat_ms_map_path, timeslice_map_path, parmdbs_map_path, sourcedb_map_path,
+              major_cycle, skip = False):
         """
         Perform a calibration step. First with a set of sources from the
         gsm and in later iterations also on the found sources
         """
         # create parset for bbs run
         parset = self.parset.makeSubset("BBS.")
+        self._selfcal_modify_parset(parset, "bbs")
         parset_path = self._write_parset_to_file(parset, "bbs",
                         "Parset for calibration with a local sky model")
 
@@ -395,19 +585,21 @@ class msss_imager_pipeline(control):
             self.logger.error(repr(parmdbs_map))
             raise PipelineException("Invalid input data for imager_bbs recipe")
 
-        self.run_task("imager_bbs",
+        self.run_task("selfcal_bbs",
                       timeslice_map_path,
                       parset = parset_path,
                       instrument_mapfile = parmdbs_map_path,
                       sourcedb_mapfile = sourcedb_map_path,
                       mapfile = output_mapfile,
-                      working_directory = self.scratch_directory)
+                      working_directory = self.scratch_directory,
+                      concat_ms_map_path=concat_ms_map_path,
+                      major_cycle=major_cycle)
 
         return output_mapfile
 
     @xml_node
     def _aw_imager(self, prepare_phase_output, major_cycle, sky_path,
-                   skip = False):
+                  number_of_major_cycles,   skip = False):
         """
         Create an image based on the calibrated, filtered and combined data.
         """
@@ -443,7 +635,7 @@ class msss_imager_pipeline(control):
             pass
         else:
             # run the awimager recipe
-            self.run_task("imager_awimager", prepare_phase_output,
+            self.run_task("selfcal_awimager", prepare_phase_output,
                           parset = aw_image_parset_path,
                           mapfile = output_mapfile,
                           output_image = intermediate_image_path,
@@ -451,7 +643,9 @@ class msss_imager_pipeline(control):
                           sourcedb_path = sky_path,
                           working_directory = self.scratch_directory,
                           autogenerate_parameters = autogenerate_parameters,
-                          specify_fov = specify_fov)
+                          specify_fov = specify_fov, major_cycle = major_cycle,
+                          nr_cycles = number_of_major_cycles,
+                          perform_self_cal = True)
 
         return output_mapfile, max_baseline
 
@@ -468,6 +662,7 @@ class msss_imager_pipeline(control):
         processed_ms_dir = os.path.join(self.scratch_directory, "subbands")
 
         # get the parameters, create a subset for ndppp, save
+        # Aditional parameters are added runtime on the node, based on data
         ndppp_parset = self.parset.makeSubset("DPPP.")
         ndppp_parset_path = self._write_parset_to_file(ndppp_parset,
                     "prepare_imager_ndppp", "parset for ndpp recipe")
@@ -494,7 +689,8 @@ class msss_imager_pipeline(control):
                 ms_per_image_mapfile = ms_per_image_mapfile,
                 working_directory = self.scratch_directory,
                 processed_ms_dir = processed_ms_dir,
-                add_beam_tables = add_beam_tables)
+                add_beam_tables = add_beam_tables,
+                do_rficonsole = False)
 
         # validate that the prepare phase produced the correct data
         output_keys = outputs.keys()
@@ -509,6 +705,7 @@ class msss_imager_pipeline(control):
                                                         'slices_mapfile')
             self.logger.error(error_msg)
             raise PipelineException(error_msg)
+
         if not ('ms_per_image_mapfile' in output_keys):
             error_msg = "The imager_prepare master script did not"\
                     "return correct data. missing: {0}".format(
@@ -521,7 +718,8 @@ class msss_imager_pipeline(control):
             processed_ms_dir
 
     @xml_node
-    def _create_dbs(self, input_map_path, timeslice_map_path, source_list_map_path,
+    def _create_dbs(self, input_map_path, timeslice_map_path, 
+                    major_cycle, source_list_map_path , 
                     skip_create_dbs = False):
         """
         Create for each of the concatenated input measurement sets
@@ -553,7 +751,8 @@ class msss_imager_pipeline(control):
                         parmdbs_map_path = parmdbs_map_path,
                         sourcedb_map_path = sourcedb_map_path,
                         source_list_map_path = source_list_map_path,
-                        working_directory = self.scratch_directory)
+                        working_directory = self.scratch_directory,
+                        major_cycle = major_cycle)
 
         return parmdbs_map_path, sourcedb_map_path
 
@@ -614,5 +813,61 @@ class msss_imager_pipeline(control):
         return mapfile_path
 
 
+    # This functionality should be moved outside into MOM/ default template.
+    # This is now a static we should be able to control this.
+    def _selfcal_modify_parset(self, parset, parset_name):    
+        """ 
+        Modification of the BBS parset for selfcal implementation, add, 
+        remove, modify some values in bbs parset, done by 
+        done by Nicolas Vilchez
+        """            
+        
+        if parset_name == "bbs":			
+        
+             parset.replace('Step.solve.Model.Beam.UseChannelFreq', 'True')
+             parset.replace('Step.solve.Model.Ionosphere.Enable', 'F')
+             parset.replace('Step.solve.Model.TEC.Enable', 'F')
+             parset.replace('Step.correct.Model.Beam.UseChannelFreq', 'True')
+             parset.replace('Step.correct.Model.TEC.Enable', 'F')
+             parset.replace('Step.correct.Model.Phasors.Enable', 'T')
+             parset.replace('Step.correct.Output.WriteCovariance', 'T')             
+                         
+             #must be erased, by default I replace to the default value
+             parset.replace('Step.solve.Baselines', '*&')
+             
+             parset.replace('Step.solve.Solve.Mode', 'COMPLEX')
+             parset.replace('Step.solve.Solve.CellChunkSize', '100')                             
+             parset.replace('Step.solve.Solve.PropagateSolutions', 'F')                    
+             parset.replace('Step.solve.Solve.Options.MaxIter', '100')  
+                   
+
+        if parset_name == "pybdsm_first_pass.par":
+             
+             parset.replace('advanced_opts', 'True')
+             parset.replace('atrous_do', 'True')
+             parset.replace('rms_box', '(80.0,15.0)')
+             parset.replace('thresh_isl', '5')
+             parset.replace('thresh_pix', '5')
+             parset.replace('adaptive_rms_box', 'True')
+             parset.replace('blank_limit', '1E-4')
+             parset.replace('ini_method', 'curvature')
+             parset.replace('atrous_do', 'True')
+             parset.replace('thresh', 'hard')              
+             
+
+        if parset_name == "pybdsm_second_pass.par":
+             
+             parset.replace('advanced_opts', 'True')
+             parset.replace('atrous_do', 'True')
+             parset.replace('rms_box', '(80.0,15.0)')
+             parset.replace('thresh_isl', '5')
+             parset.replace('thresh_pix', '5')
+             parset.replace('adaptive_rms_box', 'True')
+             parset.replace('blank_limit', '1E-4')
+             parset.replace('ini_method', 'curvature')
+             parset.replace('atrous_do', 'True')
+             parset.replace('thresh', 'hard')              
+
+
 if __name__ == '__main__':
-    sys.exit(msss_imager_pipeline().main())
+    sys.exit(selfcal_imager_pipeline().main())
