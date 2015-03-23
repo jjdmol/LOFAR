@@ -356,21 +356,19 @@ if __name__ == "__main__":
     except:
         max_delta = 0.0001
 
-    sys.exit(0)
-    # todo: Add delta test when we have validate test data
-    #print "using max delta: {0}".format(max_delta)
+    print "using max delta: {0}".format(max_delta)
 
-    #if not error:
-    #    image_equality = validate_image_equality(image_1, image_2, max_delta)
-    #    # sourcelist comparison is still unstable default to true
-    #    sourcelist_equality = True #validate_source_list_files(source_list_1, source_list_2, max_delta)
-    #    if not (image_equality and sourcelist_equality):
-    #        print "Regression test failed: exiting with exitstatus 1"
-    #        print " image_equality: {0}".format(image_equality)
-    #        print " sourcelist_equality: {0}".format(sourcelist_equality)
-    #        sys.exit(1)
+    if not error:
+        image_equality = validate_image_equality(image_1, image_2, max_delta)
+        # sourcelist comparison is still unstable default to true
+        sourcelist_equality = True #validate_source_list_files(source_list_1, source_list_2, max_delta)
+        if not (image_equality and sourcelist_equality):
+            print "Regression test failed: exiting with exitstatus 1"
+            print " image_equality: {0}".format(image_equality)
+            print " sourcelist_equality: {0}".format(sourcelist_equality)
+            sys.exit(1)
 
-    #    print "Regression test Succeed!!"
-    #    sys.exit(0)
+        print "Regression test Succeed!!"
+        sys.exit(0)
 
 
