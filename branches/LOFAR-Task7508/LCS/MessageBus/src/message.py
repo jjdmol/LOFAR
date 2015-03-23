@@ -47,8 +47,7 @@ LOFAR_MSG_TEMPLATE = """
          <sasid/>
       </ids>
    </header>
-   <payload>
-   </payload>
+   <payload/>
 </message>"""
 
 def _timestamp():
