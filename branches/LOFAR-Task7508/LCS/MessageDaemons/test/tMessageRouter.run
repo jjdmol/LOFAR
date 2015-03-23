@@ -1,0 +1,75 @@
+#!/bin/bash -e
+
+source MessageFuncs.sh
+
+unset LOFARROOT # Make sure MessageRouter reads ./MessageRouter.conf
+
+#
+# ---- TEST: normal configuration -----
+#
+
+# Create a routing configuration
+create_queue in1
+create_queue in2
+create_queue out1
+create_queue out2
+create_queue out3
+
+echo '
+[multicast]
+in1: out1, out2
+in2: out3
+' > MessageRouter.conf
+
+# Start MessageRouter
+python $srcdir/../src/MessageRouter >&2 &
+PID=$!
+
+# Inject messages into all input queues
+send_msg in1 "test1"
+send_msg in2 "test2"
+
+# Check output queues, we only want ONE message in each!
+[ "`wait_msg 1 out1`" == "test1" ]
+wait_msg 0 out1 && exit 1
+[ "`wait_msg 1 out2`" == "test1" ]
+wait_msg 0 out2 && exit 1
+[ "`wait_msg 1 out3`" == "test2" ]
+wait_msg 0 out3 && exit 1
+
+# Check whether input queues have been emptied
+wait_msg 0 in1 && exit 1
+wait_msg 0 in2 && exit 1
+
+# Stop MessageRouter
+send_msg messagerouter.command "stop"
+wait $PID
+
+#
+# ---- TEST: non-existing input queue ----
+#
+
+echo '
+[multicast]
+in.notexist: out1
+' > MessageRouter.conf
+
+# Start MessageRouter -- should crash
+python $srcdir/../src/MessageRouter >&2
+wait $PID || true
+
+#
+# ---- TEST: non-existing output queue ----
+#
+
+echo '
+[multicast]
+in1: out.notexist
+' > MessageRouter.conf
+
+# Start MessageRouter -- should crash
+python $srcdir/../src/MessageRouter >&2
+wait $PID || true
+
+# Technically unnecessary with "bash -e"
+exit 0

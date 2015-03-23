@@ -86,7 +86,12 @@ class ToBus(Session):
     def send(self, msg):
         try:
             logger.info("[ToBus] Sending message to queue %s", self.queue)
-            self.sender.send(msg.qpidMsg())
+
+            try:
+              self.sender.send(msg.qpidMsg)
+            except AttributeError:
+              self.sender.send(msg)
+
             logger.info("[ToBus] Message sent to queue %s", self.queue)
         except qpid.messaging.SessionError, m:
             raise BusException(m)

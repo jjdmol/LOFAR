@@ -148,6 +148,31 @@ function recv_msg() {
   _qpid_receive "$HOSTQUEUE" "" --ignore-reply-to -m 1
 }
 
+function wait_msg() {
+  # Waits for one message from a queue, with a timeout
+  #
+  # Usage:
+  #   wait_msg timeout [host:]queue > message
+  #
+  # Returns 0 if a message was received, 1 if not.
+  # The received message is emitted on stdout.
+  TIMEOUT="$1"
+  HOSTQUEUE="$2"
+
+  while [ $TIMEOUT -ge 0 ]; do
+    MSG=`_qpid_receive "$HOSTQUEUE" "" --ignore-reply-to -m 1`
+    if [ -n "$MSG" ]; then
+      echo "$MSG"
+      return 0
+    elif [ $TIMEOUT -gt 0 ]; then
+      sleep 1
+    fi
+    TIMEOUT=$((TIMEOUT - 1))
+  done
+
+  return 1
+}
+
 function recv_all_msgs() {
   # Retrieves all messages from a queue
   #
