@@ -136,7 +136,7 @@ class MessageContent(object):
       return "MessageContent(%s %s)" % (self.protocol, self.protocolVersion)
 
     def __str__(self):
-      return "[%s] %s" % (self.uuid, self.summary)
+      return "[%s] [sasid %s] %s" % (self.uuid, self.sasid, self.summary)
 
     def content(self):
       """ Construct the literal message content. """
