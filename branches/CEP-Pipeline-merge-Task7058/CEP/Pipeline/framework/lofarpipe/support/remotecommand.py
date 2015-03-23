@@ -222,7 +222,9 @@ class ComputeJob(object):
         self.arguments = arguments
         self.results = {}
         self.results['returncode'] = 123456  # Default to obscure code to allow
-        # test of failing ssh connections
+        # test of failing ssh connections 
+        # TODO: This could be done nicer!!! THis error is shown in the logfile
+        # and tends to confuse users
 
     def dispatch(self, logger, config, limiter, id, jobhost, jobport,
                   error, killswitch):
