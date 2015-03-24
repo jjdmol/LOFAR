@@ -24,12 +24,14 @@
 
 #include <LofarFT/ScopedTimer.h>
 
+#include <Common/OpenMP.h>
+
 namespace LOFAR {
 namespace LofarFT {
   
 ScopedTimer::ScopedTimer(casa::String id)
 {
-  #pragma omp ScopedTimer critical
+  #pragma omp critical(ScopedTimer)
   itsTime = &ScopedTimer::timings()[id];
   itsPrecTimer.start();
 }

@@ -554,14 +554,19 @@ void FTMachine::normalize(ImageInterface<Complex> &image, Bool do_beam, Bool do_
 
   // Iterate over channels and polarizations
 
+  int i_max = image.shape()[3];
+  int j_max = image.shape()[2];
+  int k_max = image.shape()[1];
+  int l_max = image.shape()[0];
+  
   #pragma omp parallel for collapse(4)
-  for(Int i = 0; i < image.shape()[3]; ++i)
+  for(Int i = 0; i < i_max; ++i)
   {
-    for(Int j = 0; j < image.shape()[2]; ++j)
+    for(Int j = 0; j < j_max; ++j)
     {
-      for(Int k = 0; k < image.shape()[1]; ++k)
+      for(Int k = 0; k < k_max; ++k)
       {
-        for(Int l = 0; l < image.shape()[0]; ++l)
+        for(Int l = 0; l < l_max; ++l)
         {
           IPosition pos(4,l,k,j,i);
           

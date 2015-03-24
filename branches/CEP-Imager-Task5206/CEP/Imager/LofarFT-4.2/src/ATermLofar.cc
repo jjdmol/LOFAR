@@ -434,7 +434,7 @@ vector<Matrix<Complex> > ATermLofar::evaluateStationScalarFactor(
           diag22c_t AF = station->arrayFactor(map.time0, freq(idx),
             map.directions(x, y), freq0(idx), map.station0, map.tile0);
 
-          slice(x, y) *= AF[idPolarization];
+          slice(x, y) *= DComplex(AF[idPolarization]);
         }
       }
     }
