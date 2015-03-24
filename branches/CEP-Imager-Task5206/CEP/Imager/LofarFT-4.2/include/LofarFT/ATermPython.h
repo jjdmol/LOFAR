@@ -28,7 +28,6 @@
 #include <Common/LofarTypes.h>
 #include <Common/lofar_vector.h>
 #include <Common/ParameterSet.h>
-#include <BBSKernel/Instrument.h>
 #include <ParmDB/ParmFacade.h>
 
 #include <casa/Arrays/Array.h>

@@ -49,7 +49,8 @@ namespace LofarFT {
 ATermPython::ATermPython(const MeasurementSet& ms, const ParameterSet& parameters) :
   ATermLofar(ms, parameters)
 {
-  
+
+  cout << "==============" << endl;  
   #pragma omp critical
   {
   // Initialize Python interpreter
@@ -100,29 +101,30 @@ vector<casa::Cube<casa::Complex> > ATermPython::evaluate(
   bool normalize) const
 {
   // call the evaluta method of the python ATerm instance
-  boost::python::object result;
-  #pragma omp critical
-  try
-  {
-    result = itsPyaterm.attr("evaluate")(idStation, freq, reference, normalize);
-  }
-  catch(boost::python::error_already_set const &)
-  {
-    // handle the exception in some way
-    PyErr_Print();
-  }
-  ValueHolder v = boost::python::extract<ValueHolder>(result);
-  Array<Complex> result_array = v.asArrayComplex();
-  
   vector<Cube<Complex> > result_vector;
-  for(ArrayIterator<Complex> it(result_array, 3); !it.pastEnd(); it.next())
+  #pragma omp critical
   {
-    Cube<Complex> slice(it.array().shape());
-    convertArray(slice, it.array());
-    result_vector.push_back(slice);
+    boost::python::object result;
+    try
+    {
+      result = itsPyaterm.attr("evaluate")(idStation, freq, reference, normalize);
+    }
+    catch(boost::python::error_already_set const &)
+    {
+      // handle the exception in some way
+      PyErr_Print();
+    }
+    ValueHolder v = boost::python::extract<ValueHolder>(result);
+    Array<Complex> result_array = v.asArrayComplex();
+    
+    for(ArrayIterator<Complex> it(result_array, 3); !it.pastEnd(); it.next())
+    {
+      Cube<Complex> slice(it.array().shape());
+      convertArray(slice, it.array());
+      result_vector.push_back(slice);
+    }
   }
   return result_vector;
-  
 }
 
 void ATermPython::setDirection(
@@ -132,7 +134,19 @@ void ATermPython::setDirection(
   Record r;
   coordinates.save(r, "");
   Record r1 = r.asRecord(0);
-  itsPyaterm.attr("setDirection")(r1, shape);
+  
+  #pragma omp critical
+  {
+    try
+    {
+      itsPyaterm.attr("setDirection")(r1, shape);
+    }
+    catch(boost::python::error_already_set const &)
+    {
+      // handle the exception in some way
+      PyErr_Print();
+    }
+  }  
 }
 
 void ATermPython::setEpoch( const MEpoch &epoch )
@@ -140,16 +154,17 @@ void ATermPython::setEpoch( const MEpoch &epoch )
   Double time = epoch.get(casa::Unit("s")).getValue();
   
   #pragma omp critical
-  try
   {
-    itsPyaterm.attr("setEpoch")(time);
-  }
-  catch(boost::python::error_already_set const &)
-  {
-    // handle the exception in some way
-    PyErr_Print();
-  }
-  
+    try
+    {
+      itsPyaterm.attr("setEpoch")(time);
+    }
+    catch(boost::python::error_already_set const &)
+    {
+      // handle the exception in some way
+      PyErr_Print();
+    }
+  }  
 }
 
 } // end namespace LofarFT
