@@ -24,7 +24,7 @@ from lofarpipe.support.loggingdecorators import xml_node, mail_log_on_exception
 from lofar.parameterset import parameterset
 
 
-class msss_imager_pipeline(control):
+class longbaseline_pipeline(control):
     """
     The Automatic MSSS long baselione pipeline is used to generate MSSS 
     measurement sets combining information of multiple subbands and or 
@@ -78,7 +78,7 @@ class msss_imager_pipeline(control):
         Define the individual tasks that comprise the current pipeline.
         This method will be invoked by the base-class's `go()` method.
         """
-        self.logger.info("Starting imager pipeline")
+        self.logger.info("Starting longbaseline pipeline")
 
         # Define scratch directory to be used by the compute nodes.
         self.scratch_directory = os.path.join(

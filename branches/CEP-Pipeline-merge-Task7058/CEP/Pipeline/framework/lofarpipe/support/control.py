@@ -114,7 +114,7 @@ class control(StatefulRecipe):
     def go(self):
         # Read the parset-file that was given as input argument
         try:
-            parset_file = os.path.abspath(self.inputs['args'][0])
+            self.parset_file = os.path.abspath(self.inputs['args'][0])
         except IndexError:
             return self.usage()
         self.parset.adoptFile(parset_file)
