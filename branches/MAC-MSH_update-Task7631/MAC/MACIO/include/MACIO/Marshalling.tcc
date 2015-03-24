@@ -26,6 +26,7 @@
 #define MACIO_MARSHALLING_TCC_
 
 #include <Common/LofarTypes.h>
+#include <Common/KVpair.h>
 #include <boost/dynamic_bitset.hpp>
 #include <cstring>
 #include <map>
@@ -35,6 +36,7 @@
 
 using LOFAR::int32;
 using LOFAR::uint32;
+using LOFAR::KVpair;
 
 // Basic template
 template<typename T> inline uint32 MSH_size(const T	&tVar)
@@ -83,6 +85,31 @@ template<> inline uint32 MSH_unpack<std::string>(const char *bufPtr, uint32 offs
 	offset += (nrChars + 1);
 	return (offset);
 }
+
+// Specialistion for KVpair
+template<> inline uint32 MSH_size<KVpair>(const KVpair &tVar)
+{
+	return (sizeof(tVar.valueType) + sizeof(tVar.timestamp) + MSH_size(tVar.first) + MSH_size(tVar.second));
+}
+
+template <> inline uint32 MSH_pack<KVpair>(char *bufPtr, uint32 offset, const KVpair &tVar)
+{
+	offset = MSH_pack(bufPtr, offset, tVar.valueType);
+	offset = MSH_pack(bufPtr, offset, tVar.timestamp);
+	offset = MSH_pack(bufPtr, offset, tVar.first);
+	offset = MSH_pack(bufPtr, offset, tVar.second);
+	return (offset);
+}
+
+template<> inline uint32 MSH_unpack<KVpair>(const char *bufPtr, uint32 offset, KVpair &tVar)
+{
+	offset = MSH_unpack(bufPtr, offset, tVar.valueType);
+	offset = MSH_unpack(bufPtr, offset, tVar.timestamp);
+	offset = MSH_unpack(bufPtr, offset, tVar.first);
+	offset = MSH_unpack(bufPtr, offset, tVar.second);
+	return (offset);
+}
+
 
 // Specialistion for boost::dynamic_bitset
 template<> inline uint32 MSH_size<boost::dynamic_bitset<> >(const boost::dynamic_bitset<> &tVar)
