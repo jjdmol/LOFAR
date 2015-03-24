@@ -51,13 +51,13 @@ int main (int, char*	argv[])
 
 	bzero(buf, 4096);
 	offset = 0;
-	MSH_pack(buf, offset, ba1);
+	offset = MSH_pack(buf, offset, ba1);
 	cout << "packed:" << endl;
 	hexdump(buf, offset);
 
 	blitz::Array<double, 2>		ba2(2,4);
 	offset = 0;
-	MSH_unpack(buf, offset, ba2);
+	offset = MSH_unpack(buf, offset, ba2);
 	cout << "unpacked: " << ba2 << endl;
 
 	// blitz array <int>
@@ -68,13 +68,13 @@ int main (int, char*	argv[])
 
 	bzero(buf, 4096);
 	offset = 0;
-	MSH_pack(buf, offset, emptyArr);
+	offset = MSH_pack(buf, offset, emptyArr);
 	cout << "packed:" << endl;
 	hexdump(buf, offset);
 
 	blitz::Array<int, 2>		empty2;
 	offset = 0;
-	MSH_unpack(buf, offset, empty2);
+	offset = MSH_unpack(buf, offset, empty2);
 	cout << "unpacked: " << empty2 << endl;
 
 	return (0);

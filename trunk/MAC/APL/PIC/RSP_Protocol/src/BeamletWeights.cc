@@ -39,13 +39,11 @@ size_t BeamletWeights::getSize() const
 size_t BeamletWeights::pack  (char* buffer) const
 {
   size_t offset = 0;
-  MSH_pack(buffer, offset, m_weights);
-  return offset;
+  return MSH_pack(buffer, offset, m_weights);
 }
 
 size_t BeamletWeights::unpack(const char *buffer)
 {
   size_t offset = 0;
-  MSH_unpack(buffer, offset, m_weights);
-  return offset;
+  return MSH_unpack(buffer, offset, m_weights);
 }
