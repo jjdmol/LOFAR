@@ -39,17 +39,11 @@ size_t XCStatistics::getSize() const
 size_t XCStatistics::pack  (char* buffer) const
 {
   size_t offset = 0;
-
-  MSH_pack(buffer, offset, m_xstatistics);
-
-  return offset;
+  return MSH_pack(buffer, offset, m_xstatistics);
 }
 
 size_t XCStatistics::unpack(const char *buffer)
 {
   size_t offset = 0;
-
-  MSH_unpack(buffer, offset, m_xstatistics);
-
-  return offset;
+  return MSH_unpack(buffer, offset, m_xstatistics);
 }

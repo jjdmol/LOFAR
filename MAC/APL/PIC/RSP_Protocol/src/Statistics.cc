@@ -39,17 +39,11 @@ size_t Statistics::getSize() const
 size_t Statistics::pack  (char* buffer) const
 {
   size_t offset = 0;
-
-  MSH_pack(buffer, offset, m_statistics);
-
-  return offset;
+  return MSH_pack(buffer, offset, m_statistics);
 }
 
 size_t Statistics::unpack(const char*buffer)
 {
   size_t offset = 0;
-
-  MSH_unpack(buffer, offset, m_statistics);
-
-  return offset;
+  return MSH_unpack(buffer, offset, m_statistics);
 }

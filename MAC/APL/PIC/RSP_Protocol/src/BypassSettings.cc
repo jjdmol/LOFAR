@@ -40,15 +40,13 @@ size_t BypassSettings::getSize() const
 size_t BypassSettings::pack  (char* buffer) const
 {
   size_t offset = 0;
-  MSH_pack(buffer, offset, m_registers);
-  return offset;
+  return MSH_pack(buffer, offset, m_registers);
 }
 
 size_t BypassSettings::unpack(const char *buffer)
 {
   size_t offset = 0;
-  MSH_unpack(buffer, offset, m_registers);
-  return offset;
+  return MSH_unpack(buffer, offset, m_registers);
 }
 
   } // namespace RSP_Protocol
