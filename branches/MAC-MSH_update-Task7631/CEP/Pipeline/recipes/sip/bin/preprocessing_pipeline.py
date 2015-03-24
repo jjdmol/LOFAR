@@ -201,14 +201,17 @@ class preprocessing_pipeline(control):
         # *********************************************************************
         # 6. Create feedback file for further processing by the LOFAR framework
         # Create a parset containing the metadata
+        metadata_file = "%s_feedback_Correlated" % (self.parset_file,)
         with duration(self, "get_metadata"):
-            metadata = self.run_task("get_metadata", output_data_mapfile,
+            self.run_task("get_metadata", output_data_mapfile,
                 parset_prefix=(
                     self.parset.getString('prefix') +
                     self.parset.fullModuleName('DataProducts')),
-                product_type="Correlated")["metadata"]
+                product_type="Correlated",
+                metadata_file=metadata_file)
 
-        self.send_feedback_dataproducts(metadata)
+        self.send_feedback_processing(parameterset())
+        self.send_feedback_dataproducts(parameterset(metadata_file))
 
         return 0
 

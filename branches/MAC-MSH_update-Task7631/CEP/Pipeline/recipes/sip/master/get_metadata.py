@@ -41,12 +41,12 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
             help="Prefix for each key in the output parset file",
             default=''
         ),
+        'metadata_file': ingredient.StringField(
+            help="filename of parset to put obtained metadata in"
+        )
     }
 
     outputs = {
-        'metadata': ingredient.ParsetField(
-            help="parset containing obtained metadata"
-        )
     }
     
     # List of valid data product types.
@@ -129,7 +129,7 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
                                    '%s[%d].' % (prefix, idx))
 
         # Return result to caller
-        self.outputs["metadata"] = parset
+        parset.writeFile(self.inputs["metadata_file"])
         return 0
 
 

@@ -164,12 +164,15 @@ namespace LOFAR {
   void ToBus::send(const std::string &msg)
   {
     LOFAR::Message tosend(msg);
+
+    LOG_INFO_STR("[ToBus] Sending message to queue " << itsSender.getName() << ": " << tosend.short_desc());
     itsSender.send(tosend.qpidMsg(), true);
     LOG_INFO_STR("[ToBus] Message sent to queue " << itsSender.getName() << ": " << tosend.short_desc());
   }
 
   void ToBus::send(LOFAR::Message& msg)
   {
+    LOG_INFO_STR("[ToBus] Sending message to queue " << itsSender.getName() << ": " << msg.short_desc());
     itsSender.send(msg.qpidMsg(), true);
     LOG_INFO_STR("[ToBus] Message sent to queue " << itsSender.getName() << ": " << msg.short_desc());
   }

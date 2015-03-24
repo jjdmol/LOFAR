@@ -26,19 +26,27 @@ except ImportError:
 
 import os
 import signal
+import logging
 import lofar.messagebus.message as message
 
 # Candidate for a config file
 broker="127.0.0.1" 
 options="create:never"
 
+# Define logging. Until we have a python loging framework, we'll have
+# to do any initialising here
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
+logger=logging.getLogger("MessageBus")
+
 class BusException(Exception):
     pass
 
 class Session:
     def __init__(self, broker):
+        logger.info("[Bus] Connecting to broker %s", broker)
         self.connection = qpid.messaging.Connection(broker)
         self.connection.reconnect = True
+        logger.info("[Bus] Connected to broker %s", broker)
 
         try:
             self.connection.open()
@@ -55,9 +63,9 @@ class Session:
         # We set a timeout to prevent freezing, which obviously leads
         # to data loss if the stall was legit.
         try:
-          self.connection.close(5.0)
+            self.connection.close(5.0)
         except qpid.messaging.exceptions.Timeout, t:
-          raise BusException(t)
+            logger.error("[Bus] Could not close connection: %s", t)
 
     def address(self, queue, options):
         return "%s%s; {%s}" % (self._queue_prefix(), queue, options)
@@ -68,6 +76,7 @@ class Session:
 class ToBus(Session):
     def __init__(self, queue, options=options, broker=broker):
         Session.__init__(self, broker)
+        self.queue = queue
 
         try:
             self.sender = self.session.sender(self.address(queue, options))
@@ -76,7 +85,9 @@ class ToBus(Session):
 
     def send(self, msg):
         try:
+            logger.info("[ToBus] Sending message to queue %s", self.queue)
             self.sender.send(msg.qpidMsg())
+            logger.info("[ToBus] Message sent to queue %s", self.queue)
         except qpid.messaging.SessionError, m:
             raise BusException(m)
 
@@ -98,9 +109,16 @@ class FromBus(Session):
     def get(self, timeout=None):
         msg = None
 
+        logger.info("[FromBus] Waiting for message")
         try:
             receiver = self.session.next_receiver(timeout)
-            if receiver != None: msg = receiver.fetch() # receiver.get() is better, but requires qpid 0.31+
+            if receiver != None:
+                logger.info("[FromBus] Message available on queue %s", receiver.source)
+                msg = receiver.fetch() # receiver.get() is better, but requires qpid 0.31+
+                if msg is None:
+                    logger.error("[FromBus] Could not retrieve available message on queue %s", receiver.source)
+                else:
+                    logger.info("[FromBus] Message received on queue %s", receiver.source)
         except qpid.messaging.exceptions.Empty, e:
             return None
 
@@ -111,4 +129,5 @@ class FromBus(Session):
 
     def ack(self, msg):
         self.session.acknowledge(msg.qpidMsg)
+        logging.info("[FromBus] Message ACK'ed");
 
