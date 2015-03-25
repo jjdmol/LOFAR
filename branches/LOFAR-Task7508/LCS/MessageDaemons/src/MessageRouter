@@ -90,6 +90,8 @@ class RouterConfig(SafeConfigParser):
     source-queue-1: dest-queue-1, dest-queue2
     source-queue-2: dest-queue-3
 
+    NOTE: Once we have python 2.6+ on ccu001 and ccu099, we could override the dict_type in the RawConfigParser
+    and allow multiple source: dest lines to accumulate.
   """
   def __init__(self, filename=None):
     SafeConfigParser.__init__(self)
