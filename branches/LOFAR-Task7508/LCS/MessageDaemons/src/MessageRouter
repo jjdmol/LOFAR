@@ -67,6 +67,7 @@ class BusMulticast(threading.Thread):
 
         log("INFO","[%s] [%s] Message received" % (self.source, content))
 
+        outdump.send(msg)
         for outbus in outbusses:
           outbus.send(msg)
         inbus.ack(msg)
