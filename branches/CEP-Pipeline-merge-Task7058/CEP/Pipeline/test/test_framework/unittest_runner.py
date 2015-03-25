@@ -39,10 +39,10 @@ class Discover():
                     continue
 
                 #try loading as a module
-                #try: 
-                module = self.import_path(root, fileNameParts[0])  #use import including path
-                #except BaseException:
-                #    continue          
+                try: 
+                    module = self.import_path(root, fileNameParts[0])  #use import including path
+                except :
+                    continue          
 
                 #the expression mechanism
                 testMatcher = None
