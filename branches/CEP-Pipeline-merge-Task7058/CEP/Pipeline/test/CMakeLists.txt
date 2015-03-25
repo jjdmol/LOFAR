@@ -2,5 +2,5 @@
 include(LofarCTest)
 
 lofar_add_test(pipeline_test)
-
+add_subdirectory(bus_functionality)
 
