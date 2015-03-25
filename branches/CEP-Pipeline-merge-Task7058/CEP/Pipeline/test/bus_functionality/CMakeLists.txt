@@ -7,6 +7,6 @@ configure_file(
   ${CMAKE_BINARY_DIR}/bin/MessageFuncs.sh @ONLY)
 
 if(HAVE_QPID)
-  #lofar_add_test(tPyMsgBus)
+  lofar_add_test(tPyMsgBusPipeline)
 
 endif(HAVE_QPID)
