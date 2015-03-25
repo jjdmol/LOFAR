@@ -3,4 +3,4 @@
 source MessageFuncs.sh
 create_queue test
 
-python tPyMsgBus.py
+python tPyMsgBusPipeline.py
