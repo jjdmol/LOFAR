@@ -24,6 +24,7 @@ python_install(
   support/lofarexceptions.py
   support/lofaringredient.py
   support/lofarnode.py
+  support/lofarnodeservice.py
   support/loggingdecorators.py
   support/mac.py
   support/parset.py
