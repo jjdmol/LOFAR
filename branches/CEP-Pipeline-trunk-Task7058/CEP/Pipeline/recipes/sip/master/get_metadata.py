@@ -42,7 +42,7 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
             default=''
         ),
         'metadata_file': ingredient.StringField(
-            'metadata_file',
+            '--metadata-file',
             help="filename of parset to put obtained metadata in"
         )
     }
