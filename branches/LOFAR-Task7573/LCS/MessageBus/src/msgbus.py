@@ -19,7 +19,7 @@
 # id.. TDB
 
 try:
-  import qpid.messaging
+  import qpid.messaging as messaging
   enabled = True
 except ImportError:
   enabled = False
@@ -44,14 +44,14 @@ class BusException(Exception):
 class Session:
     def __init__(self, broker):
         logger.info("[Bus] Connecting to broker %s", broker)
-        self.connection = qpid.messaging.Connection(broker)
+        self.connection = messaging.Connection(broker)
         self.connection.reconnect = True
         logger.info("[Bus] Connected to broker %s", broker)
 
         try:
             self.connection.open()
             self.session = self.connection.session() 
-        except qpid.messaging.MessagingError, m:
+        except messaging.MessagingError, m:
             raise BusException(m)
 
     def __del__(self):
@@ -66,7 +66,7 @@ class Session:
         # to data loss if the stall was legit.
         try:
             self.connection.close(5.0)
-        except qpid.messaging.exceptions.Timeout, t:
+        except messaging.exceptions.Timeout, t:
             logger.error("[Bus] Could not close connection: %s", t)
 
     def address(self, queue, options):
@@ -82,7 +82,7 @@ class ToBus(Session):
 
         try:
             self.sender = self.session.sender(self.address(queue, options))
-        except qpid.messaging.MessagingError, m:
+        except messaging.MessagingError, m:
             raise BusException(m)
 
     def send(self, msg):
@@ -93,11 +93,11 @@ class ToBus(Session):
               # Send Message or MessageContent object
               self.sender.send(msg.qpidMsg())
             except AttributeError:
-              # Send string or qpid.messaging.Message object
+              # Send string or messaging.Message object
               self.sender.send(msg)
 
             logger.info("[ToBus] Message sent to queue %s", self.queue)
-        except qpid.messaging.SessionError, m:
+        except messaging.SessionError, m:
             raise BusException(m)
 
 class FromBus(Session):
@@ -112,7 +112,7 @@ class FromBus(Session):
 
             # Need capacity >=1 for 'self.session.next_receiver' to function across multiple queues
             receiver.capacity = 1 #32
-        except qpid.messaging.MessagingError, m:
+        except messaging.MessagingError, m:
             raise BusException(m)
 
     def get(self, timeout=None):
@@ -128,7 +128,7 @@ class FromBus(Session):
                     logger.error("[FromBus] Could not retrieve available message on queue %s", receiver.source)
                 else:
                     logger.info("[FromBus] Message received on queue %s", receiver.source)
-        except qpid.messaging.exceptions.Empty, e:
+        except messaging.exceptions.Empty, e:
             return None
 
         if msg is None:
