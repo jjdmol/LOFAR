@@ -1,17 +1,25 @@
 #!/usr/bin/python
 from lofar.messagebus.msgbus import FromBus, ToBus
-from lofar.messagebus.message import Message
+from lofar.messagebus.message import Message, MessageContent
 
-# Send a message
+# Send a message (send MessageContent)
 tbus = ToBus("test")
-tmsg = Message()
+tmsg = MessageContent()
 tmsg.payload = "foo"
 tbus.send(tmsg)
 
 # Receive it
 fbus = FromBus("test")
 fmsg = fbus.get(1)
-assert fmsg != None
 
 # Verify the content
-assert fmsg.payload == "foo"
+assert fmsg != None
+assert fmsg.content().payload == "foo"
+
+# Resend it! (send Message)
+tbus.send(fmsg)
+rmsg = fbus.get(1)
+
+# Verify the content
+assert rmsg != None
+assert rmsg.content().payload == "foo"
