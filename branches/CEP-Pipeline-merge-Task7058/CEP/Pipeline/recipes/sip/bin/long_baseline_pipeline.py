@@ -371,4 +371,4 @@ class longbaseline_pipeline(control):
 
 
 if __name__ == '__main__':
-    sys.exit(msss_imager_pipeline().main())
+    sys.exit(longbaseline_pipeline().main())
