@@ -4,6 +4,9 @@ source MessageFuncs.sh
 
 unset LOFARROOT # Make sure MessageRouter reads ./MessageRouter.conf
 
+# Allow timeouts on commands. Use: alarm <timeout> <cmd> <args>
+alarm() { perl -e 'alarm shift; exec @ARGV' "$@"; }
+
 #
 # ---- TEST: normal configuration -----
 #
@@ -22,7 +25,7 @@ in2: out3
 ' > MessageRouter.conf
 
 # Start MessageRouter
-python $srcdir/../src/MessageRouter >&2 &
+alarm 60 python $srcdir/../src/MessageRouter >&2 &
 PID=$!
 
 # Inject messages into all input queues
