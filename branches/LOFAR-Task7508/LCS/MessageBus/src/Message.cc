@@ -132,7 +132,7 @@ void Message::setListPayload(const qpid::types::Variant::List &payload)
 
 std::string Message::short_desc() const
 {
-  return formatString("[%s] [sasid %s] %s", uuid().c_str(), sasid.c_str(), summary().c_str());
+  return formatString("[%s] [sasid %s] %s", uuid().c_str(), sasid().c_str(), summary().c_str());
 }
 
 //

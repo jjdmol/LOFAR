@@ -159,18 +159,15 @@ function wait_msg() {
   TIMEOUT="$1"
   HOSTQUEUE="$2"
 
-  while [ $TIMEOUT -ge 0 ]; do
-    MSG=`_qpid_receive "$HOSTQUEUE" "" --ignore-reply-to -m 1`
-    if [ -n "$MSG" ]; then
-      echo "$MSG"
-      return 0
-    elif [ $TIMEOUT -gt 0 ]; then
-      sleep 1
-    fi
-    TIMEOUT=$((TIMEOUT - 1))
-  done
+  MSG=`_qpid_receive "$HOSTQUEUE" "" --ignore-reply-to -m 1 --timeout $TIMEOUT`
 
-  return 1
+  # Fix return code (qpid_receive will almost always return success)
+  if [ -z "$MSG" ]; then
+    return 1
+  fi
+
+  echo "$MSG"
+  return 0
 }
 
 function recv_all_msgs() {

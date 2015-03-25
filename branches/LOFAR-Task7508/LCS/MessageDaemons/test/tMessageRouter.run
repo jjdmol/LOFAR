@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ev
 
 source MessageFuncs.sh
 
@@ -58,8 +58,7 @@ in.notexist: out1
 ' > MessageRouter.conf
 
 # Start MessageRouter -- should crash
-python $srcdir/../src/MessageRouter >&2
-wait $PID || true
+python $srcdir/../src/MessageRouter >&2 || true
 
 #
 # ---- TEST: non-existing output queue ----
@@ -71,8 +70,39 @@ in1: out.notexist
 ' > MessageRouter.conf
 
 # Start MessageRouter -- should crash
-python $srcdir/../src/MessageRouter >&2
-wait $PID || true
+python $srcdir/../src/MessageRouter >&2 || true
+
+#
+# ---- TEST: fowarding to dump.<inputqueue> topic -----
+#
+
+echo '
+[multicast]
+in1: out1
+' > MessageRouter.conf
+
+# Start MessageRouter
+python $srcdir/../src/MessageRouter >&2 &
+PID=$!
+
+# Wait for topic to become available
+sleep 1
+
+# Start listening already, since topics are not persistent!
+wait_msg 1 dump.in1 > tMessageRouter.out &
+MSGPID=$!
+
+# Inject a message
+send_msg in1 "test1"
+
+# Receive the message and verify the content
+wait $MSGPID
+diff <(echo "test1") tMessageRouter.out
+
+# Stop MessageRouter
+send_msg messagerouter.command "stop"
+wait $PID
 
 # Technically unnecessary with "bash -e"
 exit 0
+

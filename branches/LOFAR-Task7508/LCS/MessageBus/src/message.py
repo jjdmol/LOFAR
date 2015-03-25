@@ -142,8 +142,8 @@ class MessageContent(object):
 
       return self.document.toxml()
 
-    def newMessage(self):
-      """ Construct a new QPID message. """
+    def qpidMsg(self):
+      """ Construct a NEW QPID message. """
 
       msg = qpid.messaging.Message(content_type="text/plain", durable=True)
       msg.content = self.content()
@@ -209,15 +209,18 @@ class Message(object):
     """
 
     def __init__(self, qpidMsg=None):
-      self.qpidMsg = qpidMsg
+      self._qpidMsg = qpidMsg
 
     """ API (apart from properties). """
 
+    def qpidMsg(self):
+      return self._qpidMsg
+
     def content(self):
-      return MessageContent(qpidMsg=self.qpidMsg)
+      return MessageContent(qpidMsg=self._qpidMsg)
 
     def raw_content(self):
-      return self.qpidMsg.content
+      return self._qpidMsg.content
 
     def __repr__(self):
       msg = self.content()

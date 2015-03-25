@@ -60,6 +60,8 @@ class Session:
         # This seems to happen whenever a Python exception was thrown
         # by the qpid wrapper.
         #
+        # See https://issues.apache.org/jira/browse/QPID-6402
+        #
         # We set a timeout to prevent freezing, which obviously leads
         # to data loss if the stall was legit.
         try:
@@ -88,8 +90,10 @@ class ToBus(Session):
             logger.info("[ToBus] Sending message to queue %s", self.queue)
 
             try:
-              self.sender.send(msg.qpidMsg)
+              # Send Message or MessageContent object
+              self.sender.send(msg.qpidMsg())
             except AttributeError:
+              # Send string or qpid.messaging.Message object
               self.sender.send(msg)
 
             logger.info("[ToBus] Message sent to queue %s", self.queue)
@@ -133,6 +137,6 @@ class FromBus(Session):
           return message.Message(qpidMsg=msg)
 
     def ack(self, msg):
-        self.session.acknowledge(msg.qpidMsg)
+        self.session.acknowledge(msg.qpidMsg())
         logging.info("[FromBus] Message ACK'ed");
 
