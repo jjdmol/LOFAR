@@ -128,6 +128,6 @@ class FromBus(Session):
           return message.Message(qpidMsg=msg)
 
     def ack(self, msg):
-        self.session.acknowledge(msg.qpidMsg)
+        self.session.acknowledge(msg._qpidMsg)
         logging.info("[FromBus] Message ACK'ed");
 
