@@ -71,6 +71,9 @@ class Connection(object):
   def open(self):
     pass
 
+  def close(self, timeout=0):
+    pass
+
   def session(self):
     return Session()
 
