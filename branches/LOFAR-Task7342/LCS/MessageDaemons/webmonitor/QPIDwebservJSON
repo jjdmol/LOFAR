@@ -50,7 +50,7 @@ import time
 
 
 if "LOFARROOT" in os.environ:
-    path = os.path.expandvars("$LOFARROOT/etc")
+    path = os.path.expandvars("$LOFARROOT/share/www")
 else:
     path = "."
 

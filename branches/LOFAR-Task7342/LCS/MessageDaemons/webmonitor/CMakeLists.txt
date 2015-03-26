@@ -12,4 +12,4 @@ file(GLOB WebMonitorFiles
 
 install(FILES
   ${WebMonitorFiles}
-  DESTINATION etc)
+  DESTINATION share/www)
