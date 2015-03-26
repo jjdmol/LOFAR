@@ -227,6 +227,22 @@ class imager_prepare(LOFARnodeTCP):
             catch_segfaults(cmd, working_dir, environment,
                    logger, cleanup = None, usageStats=self.resourceMonitor)
 
+    def _get_nchan_from_ms(self, file):
+        """
+        Wrapper for pt call to retrieve the number of channels in a ms
+
+        Uses Pyrap functionality throws 'random' exceptions.
+        """
+
+        # open the datasetassume same nchan for all sb
+        table = pt.table(file)  # 
+           
+        # get the data column, get description, get the 
+        # shape, first index returns the number of channels
+        nchan = str(pt.tablecolumn(table, 'DATA').getdesc()["shape"][0])
+
+        return nchan
+
     def _run_dppp(self, working_dir, time_slice_dir_path, slices_per_image,
                   processed_ms_map, subbands_per_image, collected_ms_dir_name, 
                   parset, ndppp):
@@ -251,6 +267,7 @@ class imager_prepare(LOFARnodeTCP):
             # filling with zeros           
             ndppp_input_ms = []
             nchan_known = False
+
             for item in processed_ms_map[start_slice_range:end_slice_range]:
                 if item.skip:
                     ndppp_input_ms.append("SKIPPEDSUBBAND")
@@ -258,16 +275,10 @@ class imager_prepare(LOFARnodeTCP):
                     # From the first non skipped filed get the nchan
                     if not nchan_known:
                         try:
-                            # Automatically average the number of channels in 
-                            # the output to 1
-                            # open the datasetassume same nchan for all sb
-                            table = pt.table(item.file)  # 
-            
-                            # get the data column, get description, get the 
-                            # shape, first index returns the number of channels
-                            nchan_input = str(
-                                pt.tablecolumn(table, 
-                                               'DATA').getdesc()["shape"][0])
+                            # We want toAutomatically average the number 
+                            # of channels in the output to 1, get the current
+                            # nr of channels
+                            nchan_input = self._get_nchan_from_ms(item.file)
                             nchan_known = True
 
                         # corrupt input measurement set
