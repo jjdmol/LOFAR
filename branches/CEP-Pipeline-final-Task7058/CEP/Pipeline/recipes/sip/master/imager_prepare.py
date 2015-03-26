@@ -182,7 +182,7 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             if item.skip == True:
                 # assure that the mapfile is correct
                 paths_to_image_mapfiles.append(
-                    tuple([item.host, [], True]))
+                    tuple(item.host, [], True))
                 continue
 
             #save the (input) ms, as a list of  mapfiles
@@ -228,7 +228,7 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             # If this is an item that is skipped via the skip parameter in 
             # the parset, append a skipped             
             if item.skip:    
-                slices.append(tuple([item.host, [], True]))
+                slices.append(tuple(item.host, [], True))
                 continue
 
             # we cannot use the skip iterator so we need to manually get the
@@ -243,7 +243,7 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             else:
                 # Set the dataproduct to skipped!!
                 item.skip = True
-                slices.append(tuple([item.host, [], True]))
+                slices.append(tuple(item.host, [], True))
                 msg = "Failed run on {0}. NOT Created: {1} ".format(
                     item.host, item.file)
                 self.logger.warn(msg)
