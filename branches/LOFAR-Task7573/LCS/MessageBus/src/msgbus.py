@@ -22,6 +22,7 @@ try:
   import qpid.messaging as messaging
   enabled = True
 except ImportError:
+  import qpidmock as messaging
   enabled = False
 
 import os

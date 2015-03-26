@@ -23,6 +23,7 @@ python_install(
   __init__.py
   msgbus.py
   message.py
+  qpidmock.py
   DESTINATION lofar/messagebus)
 
 add_subdirectory(protocols)
