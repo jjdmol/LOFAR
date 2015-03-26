@@ -28,6 +28,7 @@
 #include "tClaimManager.h"
 
 namespace LOFAR {
+  using namespace CM_Protocol;
   using namespace GCF;
   using namespace GCF::TM;
   namespace APL {

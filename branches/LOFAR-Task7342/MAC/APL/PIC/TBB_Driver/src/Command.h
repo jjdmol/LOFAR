@@ -31,6 +31,7 @@
 #include "DriverSettings.h"
 
 namespace LOFAR {
+    using namespace TBB_Protocol;
 	namespace TBB {
 
 

@@ -48,6 +48,9 @@
 using namespace boost::posix_time;
 
 namespace LOFAR {
+	using namespace Controller_Protocol;
+	using namespace DP_Protocol;
+	using namespace CM_Protocol;
 	using namespace APLCommon;
 	using namespace GCF::TM;
 	using namespace GCF::PVSS;
@@ -813,24 +816,26 @@ void  ObservationControl::doHeartBeatTask()
 		time_t	stop  = to_time_t(itsStopTime);
 
 		if (!nrChilds || (now < stop && ((itsProcessType == "Observation" && !nrStations) || !centralControllerOk))) {
-			if (!nrChilds) {
-				LOG_INFO("Lost connection with last childcontroller, quiting...");
-			}
-			else {
-				LOG_FATAL("Too less stations left or no central controller, FORCING QUIT OF OBSERVATION");
-				if (itsState < CTState::RESUME) {
-					itsQuitReason = CT_RESULT_LOST_CONNECTION;
-				}
-			}
-			if (itsState < CTState::RESUME) {
-				itsTimerPort->cancelTimer(itsStopTimer);
-				itsStopTimer = itsTimerPort->setTimer(0.0);
-			}
-			else {
-				TRAN(ObservationControl::finishing_state);
-			}
-			return;
-		}
+            // while not yet in shutdown sequence this situation is wrong!
+            if (itsState < CTState::RESUMED) {
+                LOG_FATAL("Too less stations left or no central controller, FORCING QUIT OF OBSERVATION");
+                itsQuitReason = CT_RESULT_LOST_CONNECTION;
+            }
+            else { // we are in the shutdown sequence
+                if (!nrChilds) {
+                    LOG_INFO("Lost connection with last childcontroller, quiting...");
+                }
+            }
+            // start shutdown sequence if not already in it
+            if (itsState < CTState::SUSPEND) {
+                itsTimerPort->cancelTimer(itsStopTimer);
+                itsStopTimer = itsTimerPort->setTimer(0.0);
+            }
+            else {
+                TRAN(ObservationControl::finishing_state);
+            }
+            return;
+        }
 	}
 
 	LOG_TRACE_FLOW_STR("itsBusyControllers=" << itsBusyControllers);

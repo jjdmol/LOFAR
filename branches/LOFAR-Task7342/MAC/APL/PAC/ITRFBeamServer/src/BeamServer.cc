@@ -59,6 +59,7 @@ namespace LOFAR {
   using namespace RTC;
   using namespace IBS_Protocol;
   using namespace RSP_Protocol;
+  using namespace CAL_Protocol;
   using namespace GCF::TM;
   namespace BS {
 

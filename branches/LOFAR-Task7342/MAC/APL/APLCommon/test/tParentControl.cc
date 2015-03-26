@@ -27,7 +27,6 @@
 #include <Common/ParameterSet.h>
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>
-//#include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/ParentControl.h>
 #include <Controller_Protocol.ph>
@@ -38,6 +37,8 @@
 using namespace LOFAR::GCF::TM;
 
 namespace LOFAR {
+	using namespace Controller_Protocol;
+	using namespace StartDaemon_Protocol;
 	namespace APLCommon {
 
 #define FAKEPARENTCTRLSERVICENAME	"FakeParentController:v1.0"

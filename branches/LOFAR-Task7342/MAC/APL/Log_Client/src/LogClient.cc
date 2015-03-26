@@ -37,6 +37,7 @@ using namespace log4cplus;
 using namespace log4cplus::helpers;
 namespace LOFAR {
 	using namespace GCF::TM;
+	using namespace LOG_Protocol;
     namespace Log_Client {
 
 #define		MAX_ADMINLINE_LEN	1024

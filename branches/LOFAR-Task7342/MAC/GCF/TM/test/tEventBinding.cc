@@ -29,8 +29,9 @@
 #include "tServer.h"
 
 namespace LOFAR {
- namespace GCF {
-  namespace TM {
+  using namespace Echo_Protocol;
+  namespace GCF {
+    namespace TM {
 
 static int	gCounter1;
 static int	gCounter2;

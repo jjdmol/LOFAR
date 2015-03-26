@@ -41,6 +41,7 @@ using namespace std;
 namespace LOFAR {
 	using namespace APLCommon;
 	using namespace GCF::TM;
+	using namespace Controller_Protocol;
 	namespace Test {
 	
 //

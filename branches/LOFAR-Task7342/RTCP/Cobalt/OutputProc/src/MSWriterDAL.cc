@@ -114,6 +114,7 @@ namespace LOFAR
       // Add file-specific processing feedback
       LTAFeedback fb(itsParset.settings);
       itsConfiguration.adoptCollection(fb.beamFormedFeedback(itsFileNr));
+      itsConfigurationPrefix = fb.beamFormedPrefix(itsFileNr);
 
       itsNrExpectedBlocks = itsParset.settings.nrBlocks();
 
@@ -557,8 +558,8 @@ namespace LOFAR
       itsNextSeqNr = seqNr + 1;
       itsNrBlocksWritten++;
 
-      itsConfiguration.replace("size",              str(format("%u") % getDataSize()));
-      itsConfiguration.replace("percentageWritten", str(format("%u") % percentageWritten()));
+      itsConfiguration.replace(itsConfigurationPrefix + "size",              str(format("%u") % getDataSize()));
+      itsConfiguration.replace(itsConfigurationPrefix + "percentageWritten", str(format("%u") % percentageWritten()));
     }
 
     // specialisation for FinalBeamFormedData

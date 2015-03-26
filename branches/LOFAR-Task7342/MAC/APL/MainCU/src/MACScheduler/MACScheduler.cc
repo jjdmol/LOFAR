@@ -54,6 +54,9 @@ using namespace boost::posix_time;
 using namespace std;
 
 namespace LOFAR {
+	using namespace Controller_Protocol;
+	using namespace DP_Protocol;
+	using namespace CM_Protocol;
 	using namespace APLCommon;
 	namespace MainCU {
 
@@ -845,7 +848,6 @@ void MACScheduler::_setParsetOnMsgBus(const string&	filename) const
 	obsSpecs.writeStream(ss);
 	outMsg.setTXTPayload(ss.str());
 #endif
-	cout << outMsg << endl;
 	itsMsgQueue->send(outMsg);
 }
 

@@ -36,6 +36,7 @@
 using namespace boost;
 
 namespace LOFAR {
+  using namespace Controller_Protocol;
   namespace APLCommon {
 
 typedef struct cntlrDefinition {

@@ -31,9 +31,10 @@
 #include <unistd.h>
 
 namespace LOFAR {
- namespace GCF {
-  using namespace TM;
-  namespace SB {
+  using namespace SB_Protocol;
+  namespace GCF {
+    using namespace TM;
+    namespace SB {
 
 //
 // Initialize static elements

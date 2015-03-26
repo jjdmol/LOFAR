@@ -114,9 +114,9 @@ size_t SpectralWindow::getSize() const
 
 size_t SpectralWindow::pack(char* buffer) const
 {
-  uint32 offset = 0;
+  size_t offset = 0;
 
-  MSH_pack(buffer, offset, itsName);
+  offset = MSH_pack(buffer, offset, itsName);
   memcpy(buffer + offset, &itsSamplingFreq, sizeof(itsSamplingFreq));
   offset += sizeof(itsSamplingFreq);
   memcpy(buffer + offset, &itsNyquistZone, sizeof(itsNyquistZone));
@@ -129,9 +129,9 @@ size_t SpectralWindow::pack(char* buffer) const
 
 size_t SpectralWindow::unpack(const char* buffer)
 {
-  uint32 offset = 0;
+  size_t offset = 0;
 
-  MSH_unpack(buffer, offset, itsName);
+  offset = MSH_unpack(buffer, offset, itsName);
   memcpy(&itsSamplingFreq, buffer + offset, sizeof(itsSamplingFreq));
   offset += sizeof(itsSamplingFreq);
   memcpy(&itsNyquistZone, buffer + offset, sizeof(itsNyquistZone));

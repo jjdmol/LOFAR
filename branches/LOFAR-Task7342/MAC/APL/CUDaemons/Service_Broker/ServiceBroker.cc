@@ -35,6 +35,7 @@
 #include <Service_Broker/Package__Version.h>
 
 namespace LOFAR {
+    using namespace SB_Protocol;
     using namespace MACIO;
     using namespace GCF::TM;
 	namespace CUDaemons {

@@ -35,7 +35,7 @@ void test(const std::string &filename, unsigned bitmode, unsigned nrPackets)
 {
   FileStream fs(filename);
 
-  PacketReader reader("", fs, 1); // not udp, so it does 1 pkt at a time anyway
+  PacketReader reader("", fs);
 
   struct RSP packet;
 

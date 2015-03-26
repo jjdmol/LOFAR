@@ -41,6 +41,7 @@
 using namespace LOFAR::GCF::TM;
 
 namespace LOFAR {
+  using namespace StartDaemon_Protocol;
   namespace CUDaemons {
 
 //

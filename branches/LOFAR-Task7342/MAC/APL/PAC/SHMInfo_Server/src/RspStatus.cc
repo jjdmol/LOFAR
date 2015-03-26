@@ -47,19 +47,13 @@ namespace LOFAR {
     size_t RspStatus::pack  (char* buffer) const
     {
       size_t offset = 0;
-      
-      MSH_pack(buffer, offset, m_board_status);
-      
-      return offset;
+      return MSH_pack(buffer, offset, m_board_status);
     }
     
     size_t RspStatus::unpack(const char *buffer)
     {
       size_t offset = 0;
-      
-      MSH_unpack(buffer, offset, m_board_status);
-      
-      return offset;
+      return MSH_unpack(buffer, offset, m_board_status);
     }
   }
 }

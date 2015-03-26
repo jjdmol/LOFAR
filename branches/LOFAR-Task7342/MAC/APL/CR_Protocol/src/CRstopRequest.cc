@@ -47,18 +47,18 @@ size_t CRstopRequest::getSize()
 
 size_t CRstopRequest::pack  (char* buffer) const
 {
-	uint32 offset = 0;
-	MSH_pack(buffer, offset, stationList);	
-	MSH_pack(buffer, offset, rcuList);	
+	size_t offset = 0;
+	offset = MSH_pack(buffer, offset, stationList);	
+	offset = MSH_pack(buffer, offset, rcuList);	
 	offset += stopTime.pack(buffer + offset);
 	return (offset);
 }
  
 size_t CRstopRequest::unpack(const char *buffer)
 {
-	uint32 offset = 0;
-	MSH_unpack(buffer, offset, stationList);	
-	MSH_unpack(buffer, offset, rcuList);	
+	size_t offset = 0;
+	offset = MSH_unpack(buffer, offset, stationList);	
+	offset = MSH_unpack(buffer, offset, rcuList);	
 	offset += stopTime.unpack(buffer + offset);
 	return (offset);
 }

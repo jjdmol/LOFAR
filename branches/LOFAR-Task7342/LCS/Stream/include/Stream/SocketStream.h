@@ -46,7 +46,7 @@ class SocketStream : public FileDescriptorBasedStream
     };
 
     SocketStream(const std::string &hostname, uint16 _port, Protocol, Mode,
-                 time_t deadline = 0, const std::string &nfskey = "", bool doAccept = true);
+                 time_t deadline = 0, bool doAccept = true);
     virtual ~SocketStream();
 
     FileDescriptorBasedStream *detach();
@@ -59,13 +59,14 @@ class SocketStream : public FileDescriptorBasedStream
 
     /*
      * Receive message(s). Note: only for UDP server socket!
-     *   @buffers contains ptrs + sizes wrt the (max) nr of messages to receive
-     *   @recvdMsgSizes will be populated with the received message sizes.
-     *     Note: @recvdMsgSizes must be (at least) the size of buffers!
+     *   @bufBase is large enough to store all to be received messages
+     *   @maxMsgSize indicates the max size of _each_ (i.e. 1) message
+     *   @recvdMsgSizes is passed in with a size indicating the max number of
+     *     messages to receive. Actually received sizes will be written therein.
      * Returns the number of messages received if ok, or throws on syscall error
      */
-    unsigned recvmmsg( std::vector<struct iovec> &buffers,
-                       std::vector<unsigned> &recvdMsgSizes );
+    unsigned recvmmsg( void *bufBase, unsigned maxMsgSize,
+                       std::vector<unsigned> &recvdMsgSizes ) const;
 
     // Allow individual recv()/send() calls to last for 'timeout' seconds before returning EWOULDBLOCK
     void setTimeout(double timeout);
@@ -73,16 +74,9 @@ class SocketStream : public FileDescriptorBasedStream
   private:
     const std::string hostname;
     uint16 port;
-    const std::string nfskey;
     int listen_sk;
 
     void accept(time_t timeout);
-
-    static void syncNFS();
-
-    static std::string readkey(const std::string &nfskey, time_t deadline);
-    static void writekey(const std::string &nfskey, uint16 port);
-    static void deletekey(const std::string &nfskey);
 };
 
 EXCEPTION_CLASS(TimeOutException, LOFAR::Exception);

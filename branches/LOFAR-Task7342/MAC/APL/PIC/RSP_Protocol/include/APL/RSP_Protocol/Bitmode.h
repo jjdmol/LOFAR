@@ -34,6 +34,7 @@
 #include <Common/LofarTypes.h>
 
 namespace LOFAR {
+  using namespace EPA_Protocol;
   namespace RSP_Protocol {
 
     class BitmodeInfo

@@ -16,9 +16,7 @@ from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.xmllogging import get_active_stack
 from lofar.parameterset import parameterset
 import lofar.messagebus.msgbus
-from lofar.messagebus.protocols.taskfeedbackdataproducts import TaskFeedbackDataproducts
-from lofar.messagebus.protocols.taskfeedbackprocessing import TaskFeedbackProcessing
-from lofar.messagebus.protocols.taskfeedbackstate import TaskFeedbackState
+from lofar.messagebus.protocols import TaskFeedbackDataproducts, TaskFeedbackProcessing, TaskFeedbackState
 
 #                                             Standalone Pipeline Control System
 # ------------------------------------------------------------------------------
@@ -116,15 +114,15 @@ class control(StatefulRecipe):
     def go(self):
         # Read the parset-file that was given as input argument
         try:
-            parset_file = os.path.abspath(self.inputs['args'][0])
+            self.parset_file = os.path.abspath(self.inputs['args'][0])
         except IndexError:
             return self.usage()
-        self.parset.adoptFile(parset_file)
+        self.parset.adoptFile(self.parset_file)
         # Set job-name to basename of parset-file w/o extension, if it's not
         # set on the command-line with '-j' or '--job-name'
         if not 'job_name' in self.inputs:
             self.inputs['job_name'] = (
-                os.path.splitext(os.path.basename(parset_file))[0]
+                os.path.splitext(os.path.basename(self.parset_file))[0]
             )
 
         # we can call our parent now that we have a job_name
@@ -168,10 +166,12 @@ class control(StatefulRecipe):
 
             # Emit process status
             self._send_feedback_status(1)
+            self.logger.error("LOFAR Pipeline finished unsuccesfully.");
             return 1
         else:
             # Emit process status
             self._send_feedback_status(0)
+            self.logger.info("LOFAR Pipeline finished succesfully.");
             return 0
         finally:
             # always print a xml stats file
