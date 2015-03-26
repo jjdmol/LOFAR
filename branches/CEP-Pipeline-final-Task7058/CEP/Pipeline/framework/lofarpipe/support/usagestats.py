@@ -159,7 +159,7 @@ class UsageStats(threading.Thread):
                 parset_output = eval(out.rstrip()) 
                 self.pid_stats[pid].append(parset_output)
                 
-            # in the previous loop we stored al the pid that are involid and 
+            # in the previous loop we stored al the pid that are invalid and 
             # can be cleared
             for pid in self.pid_out:
                 try:

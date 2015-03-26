@@ -138,7 +138,7 @@ class SubProcessGroup(object):
                    
                 # if there are less then the allowed processes running and
                 # we have waiting processes start another on
-                if (self.running_process_count < self.max_concurrent_processes 
+                while (self.running_process_count < self.max_concurrent_processes 
                     and
                     len(self.processes_waiting_for_execution) != 0): 
                     # Get the last process
