@@ -18,10 +18,10 @@
 
 try:
   import qpid.messaging as messaging
-  enabled = True
+  MESSAGING_ENABLED = True
 except ImportError:
-  import qpidmock as messaging
-  enabled = False
+  import noqpidfallback as messaging
+  MESSAGING_ENABLED = False
 
 import xml.dom.minidom as xml
 import xml.parsers.expat as expat

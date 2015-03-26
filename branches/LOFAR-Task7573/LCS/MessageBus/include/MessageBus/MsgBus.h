@@ -31,7 +31,7 @@
 #include <qpid/messaging/Session.h>
 #include <qpid/messaging/Address.h>
 #else
-#include <MessageBus/QpidMock.h>
+#include <MessageBus/NoQpidFallback.h>
 #endif
 
 #include <Common/Exception.h>

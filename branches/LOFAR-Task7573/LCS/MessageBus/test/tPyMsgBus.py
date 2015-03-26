@@ -7,7 +7,7 @@
 # but messages won't arrive. We consider that case also in this test.
 #
 
-from lofar.messagebus.msgbus import FromBus, ToBus, enabled
+from lofar.messagebus.msgbus import FromBus, ToBus, MESSAGING_ENABLED
 from lofar.messagebus.message import Message, MessageContent
 
 # Send a message (send MessageContent)
@@ -21,7 +21,7 @@ fbus = FromBus("test")
 fmsg = fbus.get(1)
 
 # Verify the content (only if QPID support is enabled)
-if enabled:
+if MESSAGING_ENABLED:
   assert fmsg != None
   assert fmsg.content().payload == "foo"
 
@@ -30,6 +30,6 @@ tbus.send(fmsg)
 rmsg = fbus.get(1)
 
 # Verify the content (only if QPID support is enabled)
-if enabled:
+if MESSAGING_ENABLED:
   assert rmsg != None
   assert rmsg.content().payload == "foo"

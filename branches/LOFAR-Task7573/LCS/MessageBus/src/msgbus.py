@@ -20,10 +20,10 @@
 
 try:
   import qpid.messaging as messaging
-  enabled = True
+  MESSAGING_ENABLED = True
 except ImportError:
-  import qpidmock as messaging
-  enabled = False
+  import noqpidfallback as messaging
+  MESSAGING_ENABLED = False
 
 import os
 import signal
