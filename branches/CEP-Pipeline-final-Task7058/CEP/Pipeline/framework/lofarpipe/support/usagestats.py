@@ -85,7 +85,6 @@ class UsageStats(threading.Thread):
         self.lock = threading.Lock()
         self.owner_pid = os.getpid()
         self.pid_in = [self.owner_pid]
-        self.pid_out = []
         self.pid_tracked = []
         self.pid_stats = {}
         self.poll_interval = poll_interval
@@ -145,6 +144,7 @@ class UsageStats(threading.Thread):
             self.lock.release()
            
             # now get stats for each tracked pid           
+            pid_out = []
             for pid in self.pid_tracked:
                 pps = subprocess.Popen(["bash", self.temp_path, str(pid)],
                             stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -152,7 +152,7 @@ class UsageStats(threading.Thread):
                 out, err = pps.communicate()
                 # Store pids that are not active anymore (process has closed)
                 if not pps.returncode == 0:
-                    self.pid_out.append(pid)
+                    pid_out.append(pid)
                     continue                    # nothing to store continue
                     
                 # remove trailing white space
@@ -161,12 +161,11 @@ class UsageStats(threading.Thread):
                 
             # in the previous loop we stored al the pid that are invalid and 
             # can be cleared
-            for pid in self.pid_out:
+            for pid in pid_out:
                 try:
                     self.pid_tracked.remove(pid)
                 except ValueError:  # key does not exist (should not happen)
                     pass
-            self.pid_out = []  # reset the outlist
 
     def addPID(self, pid):
         """

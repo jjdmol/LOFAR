@@ -375,26 +375,23 @@ class selfcal_imager_pipeline(control):
                                     toplevel_meta_data_path))
             return 1
 
-        skyimage_metadata = os.path.join(self.parset_dir, "skyimage.metadata")
-        correlated_metadata = os.path.join(self.parset_dir, 
-                                           "correlated.metadata")
+        skyimage_metadata = "%s_feedback_SkyImage" % (self.parset_file,)
+        correlated_metadata = "%s_feedback_Correlated" % (self.parset_file,)
 
         # Create a parset-file containing the metadata for MAC/SAS at nodes
-        self.run_task("get_metadata", placed_data_image_map,
-            parset_file = skyimage_metadata,
+        self.run_task("get_metadata", placed_data_image_map,           
             parset_prefix = parset_prefix,
-            toplevel_meta_data_path=toplevel_meta_data_path, # only add once
-            product_type = "SkyImage")
+            product_type = "SkyImage",
+            metadata_file = skyimage_metadata)
 
         self.run_task("get_metadata", placed_correlated_map,
-            parset_file = correlated_metadata,
             parset_prefix = parset_prefix,
-            product_type = "Correlated")
+            product_type = "Correlated",
+            metadata_file = correlated_metadata)
 
-        parset = parameterset(skyimage_metadata)
-        parset.adoptFile(correlated_metadata)
-        parset.writeFile(self.parset_feedback_file)
-
+        self.send_feedback_processing(toplevel_meta_data)
+        self.send_feedback_dataproducts(parameterset(skyimage_metadata))
+        self.send_feedback_dataproducts(parameterset(correlated_metadata))
 
     def _get_io_product_specs(self):
         """

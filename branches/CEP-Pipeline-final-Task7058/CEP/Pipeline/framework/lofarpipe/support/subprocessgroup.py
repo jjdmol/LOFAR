@@ -62,9 +62,9 @@ class SubProcessGroup(object):
             or as a list of strings
             """
 
-            if type(cmd_in) == type(""): #todo ugly
+            if isinstance(cmd_in, str): 
                 cmd = cmd_in.split()
-            elif type(cmd_in) == type([]):
+            elif isinstance(cmd_in, list):
                 cmd = cmd_in
             else:
                 raise Exception("SubProcessGroup.run() expects a string or" +

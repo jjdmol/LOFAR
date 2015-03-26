@@ -281,7 +281,8 @@ class imager_prepare(LOFARnodeTCP):
                             nchan_known = True
 
                         # corrupt input measurement set
-                        except:
+                        except Exception, e:
+                            self.logger.warn(str(e))
                             item.skip = True
                             ndppp_input_ms.append("SKIPPEDSUBBAND")
                             continue
