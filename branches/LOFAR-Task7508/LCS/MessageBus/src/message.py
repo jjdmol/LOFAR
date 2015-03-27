@@ -17,10 +17,11 @@
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 
 try:
-  import qpid.messaging
-  enabled = True
+  import qpid.messaging as messaging
+  MESSAGING_ENABLED = True
 except ImportError:
-  enabled = False
+  import noqpidfallback as messaging
+  MESSAGING_ENABLED = False
 
 import xml.dom.minidom as xml
 import xml.parsers.expat as expat
@@ -61,7 +62,7 @@ def _uuid():
   """
     Return an UUID
   """
-  return str(qpid.messaging.uuid4())
+  return str(messaging.uuid4())
 
 class MessageException(Exception):
     pass
@@ -145,7 +146,7 @@ class MessageContent(object):
     def qpidMsg(self):
       """ Construct a NEW QPID message. """
 
-      msg = qpid.messaging.Message(content_type="text/plain", durable=True)
+      msg = messaging.Message(content_type="text/plain", durable=True)
       msg.content = self.content()
 
       return msg

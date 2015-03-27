@@ -8,7 +8,7 @@ set(messagebus_LIB_SRCS
   LogSink.cc
   MsgBus.cc
   Message.cc
-  QpidMock.cc)
+  NoQpidFallback.cc)
 
 set(messagebus_PROGRAMS
 )
@@ -23,6 +23,7 @@ python_install(
   __init__.py
   msgbus.py
   message.py
+  noqpidfallback.py
   DESTINATION lofar/messagebus)
 
 add_subdirectory(protocols)
