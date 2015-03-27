@@ -1,9 +1,0 @@
-John W. Romein is a senior system researcher high-performance
-computing at ASTRON, where he is responsible for the central,
-real-time data processing of LOFAR.  He obtained his Ph.D. on
-distributed search algorithms for board-game playing at the Vrije
-Universiteit, Amsterdam.  As a postdoc, he solved the game of Awari
-using a large computer cluster, and did research on parallel
-algorithms for bio-informatics.  His research interests include
-high-performance computing, parallel algorithms, networks, programming
-languages, and compiler construction.
