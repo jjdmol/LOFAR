@@ -1,4 +1,4 @@
-//# QpidMock.cc: A fake implementation of the QPID API
+//# NoQpidFallback.cc: A fake implementation of the QPID API in case QPID is not installed
 //#
 //# Copyright (C) 2015
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 
 #ifndef HAVE_QPID
-#include <MessageBus/QpidMock.h>
+#include <MessageBus/NoQpidFallback.h>
 
 std::ostream& operator<<(std::ostream& out, const qpid::types::Variant& value) {
   (void)value;

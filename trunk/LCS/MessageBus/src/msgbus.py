@@ -19,15 +19,17 @@
 # id.. TDB
 
 try:
-  import qpid.messaging
-  enabled = True
+  import qpid.messaging as messaging
+  MESSAGING_ENABLED = True
 except ImportError:
-  enabled = False
+  import noqpidfallback as messaging
+  MESSAGING_ENABLED = False
 
 import os
 import signal
 import logging
 import lofar.messagebus.message as message
+import atexit
 
 # Candidate for a config file
 broker="127.0.0.1" 
@@ -43,29 +45,58 @@ class BusException(Exception):
 
 class Session:
     def __init__(self, broker):
+        self.closed = False
+
         logger.info("[Bus] Connecting to broker %s", broker)
-        self.connection = qpid.messaging.Connection(broker)
+        self.connection = messaging.Connection(broker)
         self.connection.reconnect = True
         logger.info("[Bus] Connected to broker %s", broker)
 
         try:
             self.connection.open()
             self.session = self.connection.session() 
-        except qpid.messaging.MessagingError, m:
+        except messaging.MessagingError, m:
             raise BusException(m)
 
-    def __del__(self):
+        # NOTE: We cannuot use:
+        #  __del__: its broken (does not always get called, destruction order is unpredictable)
+        #  with:    not supported in python 2.4, does not work well on arrays of objects
+        #  weakref: dpes not guarantee to be called (depends on gc)
+        #
+        # Note that this atexit call will prevent self from being destructed until the end of the program,
+        # since a reference will be retained
+        atexit.register(self.close)
+
+    def close(self):
+        if self.closed:
+            return
+
+        self.closed = True
+
         # NOTE: session.close() freezes under certain error conditions,
         # f.e. opening a receiver on a non-existing queue.
         # This seems to happen whenever a Python exception was thrown
         # by the qpid wrapper.
         #
+        # This especially happens if we would put this code in __del__.
+        # Note that we cannot use __enter__ and __exit__ either due to
+        # ccu001/ccu099 still carrying python 2.4.
+        #
+        # See https://issues.apache.org/jira/browse/QPID-6402
+        #
         # We set a timeout to prevent freezing, which obviously leads
         # to data loss if the stall was legit.
         try:
             self.connection.close(5.0)
-        except qpid.messaging.exceptions.Timeout, t:
+        except messaging.exceptions.Timeout, t:
             logger.error("[Bus] Could not close connection: %s", t)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
+        return False
 
     def address(self, queue, options):
         return "%s%s; {%s}" % (self._queue_prefix(), queue, options)
@@ -80,15 +111,22 @@ class ToBus(Session):
 
         try:
             self.sender = self.session.sender(self.address(queue, options))
-        except qpid.messaging.MessagingError, m:
+        except messaging.MessagingError, m:
             raise BusException(m)
 
     def send(self, msg):
         try:
             logger.info("[ToBus] Sending message to queue %s", self.queue)
-            self.sender.send(msg.qpidMsg())
+
+            try:
+              # Send Message or MessageContent object
+              self.sender.send(msg.qpidMsg())
+            except AttributeError:
+              # Send string or messaging.Message object
+              self.sender.send(msg)
+
             logger.info("[ToBus] Message sent to queue %s", self.queue)
-        except qpid.messaging.SessionError, m:
+        except messaging.SessionError, m:
             raise BusException(m)
 
 class FromBus(Session):
@@ -103,7 +141,7 @@ class FromBus(Session):
 
             # Need capacity >=1 for 'self.session.next_receiver' to function across multiple queues
             receiver.capacity = 1 #32
-        except qpid.messaging.MessagingError, m:
+        except messaging.MessagingError, m:
             raise BusException(m)
 
     def get(self, timeout=None):
@@ -119,7 +157,7 @@ class FromBus(Session):
                     logger.error("[FromBus] Could not retrieve available message on queue %s", receiver.source)
                 else:
                     logger.info("[FromBus] Message received on queue %s", receiver.source)
-        except qpid.messaging.exceptions.Empty, e:
+        except messaging.exceptions.Empty, e:
             return None
 
         if msg is None:
@@ -128,6 +166,6 @@ class FromBus(Session):
           return message.Message(qpidMsg=msg)
 
     def ack(self, msg):
-        self.session.acknowledge(msg.qpidMsg)
+        self.session.acknowledge(msg.qpidMsg())
         logging.info("[FromBus] Message ACK'ed");
 
