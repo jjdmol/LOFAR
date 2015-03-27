@@ -66,7 +66,7 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
             global_prefix += '.'
 
         if not product_type in self.valid_product_types:
-            self.logger.error(
+            self.logger.warn(
                 "Unknown product type: %s\n\tValid product types are: %s" %
                 (product_type, ', '.join(self.valid_product_types))
         )
@@ -114,7 +114,8 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
         # ********************************************************************
         # 5. Create the parset-file and return it to the caller
         parset = parameterset()
-        prefix = "Output_%s_" % product_type
+        prefix = "Output_%s_" % product_type  #Underscore is needed because
+                             # Mom / LTA cannot differentiate input and output
         parset.replace('%snrOf%s' % (global_prefix, prefix), str(len(jobs)))
 
         prefix = global_prefix + prefix
@@ -124,7 +125,10 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
             # the Master/node communication adds a monitor_stats entry,
             # this must be remove manually here 
             meta_data_parset = metadata.to_parset(job.results)
-            meta_data_parset.remove("monitor_stats")
+            try:
+                meta_data_parset.remove("monitor_stats")
+            except:
+                pass
 
             parset.adoptCollection(meta_data_parset,
                                    '%s[%d].' % (prefix, idx))

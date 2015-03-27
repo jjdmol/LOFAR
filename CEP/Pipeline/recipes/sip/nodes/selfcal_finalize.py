@@ -1,6 +1,6 @@
 #                                                         LOFAR IMAGING PIPELINE
 #
-#                                                           imager_finalize
+#                                                           selfcal_finalize
 #                                                            Wouter Klijn 2012
 #                                                           klijn@astron.nl
 # ------------------------------------------------------------------------------
@@ -18,11 +18,12 @@ import pyrap.images as pim
 from lofarpipe.support.utilities import catch_segfaults
 from lofarpipe.support.data_map import DataMap
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
+from lofarpipe.support.subprocessgroup import SubProcessGroup
 
 import urllib2
 import lofarpipe.recipes.helpers.MultipartPostHandler as mph
 
-class imager_finalize(LOFARnodeTCP):
+class selfcal_finalize(LOFARnodeTCP):
     """
     This script performs the folowing functions:
     
@@ -30,13 +31,13 @@ class imager_finalize(LOFARnodeTCP):
        addimg.addImagingInfo (imageName, msNames, sourcedbName, minbl, maxbl)
     2. Convert the image to hdf5 and fits image
     3. Filling of the HDF5 root group
-    4. Export fits image to msss image server
-    5. Export sourcelist to msss server, copy the sourcelist to hdf5 location
-    6. Return the outputs
+    4. Move meta data of selfcal to correct dir in ms
+    5. Deepcopy ms to output location
     """
     def run(self, awimager_output, ms_per_image, sourcelist, target,
             output_image, minbaseline, maxbaseline, processed_ms_dir,
-            fillrootimagegroup_exec, environment, sourcedb):
+            fillrootimagegroup_exec, environment, sourcedb, concat_ms, 
+            correlated_output_location, msselect_executable):
         self.environment.update(environment)
         """
         :param awimager_output: Path to the casa image produced by awimager 
@@ -61,19 +62,16 @@ class imager_finalize(LOFARnodeTCP):
             # 1. add image info                      
             # Get all the files in the processed measurement dir
             file_list = os.listdir(processed_ms_dir)
-            # TODO: BUG!! the meta data might contain files that were copied
-            # but failed in imager_bbs 
+
             processed_ms_paths = []
+            ms_per_image_map.iterator = DataMap.SkipIterator
             for item in ms_per_image_map:
-                path = item.file
-                ms_file_name = os.path.split(path)[1]
-                #if the ms is in the processed dir (additional check)
-                if (ms_file_name in file_list):
-                    # save the path
-                    processed_ms_paths.append(os.path.join(processed_ms_dir,
-                                                            ms_file_name))
+                ms_path = item.file
+                processed_ms_paths.append(ms_path)
+
             #add the information the image
             try:
+                self.logger.debug("Start addImage Info")
                 addimg.addImagingInfo(awimager_output, processed_ms_paths,
                     sourcedb, minbaseline, maxbaseline)
 
@@ -83,6 +81,7 @@ class imager_finalize(LOFARnodeTCP):
                 # Catch raising of already done error: allows for rerunning
                 # of the recipe
                 if "addImagingInfo already done" in str(error):
+                    self.logger.warn("addImagingInfo already done, continue")
                     pass
                 else:
                     raise Exception(error) 
@@ -116,7 +115,8 @@ class imager_finalize(LOFARnodeTCP):
                 os.unlink(fits_output)
 
             try:
-                temp_dir = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
+                self.logger.debug("Start convert to fits")
+                temp_dir = tempfile.mkdtemp()
                 with CatchLog4CPlus(temp_dir,
                     self.logger.name + '.' + os.path.basename(awimager_output),
                             "image2fits") as logger:
@@ -143,77 +143,54 @@ class imager_finalize(LOFARnodeTCP):
             (stdoutdata, stderrdata) = proc.communicate()
 
             exit_status = proc.returncode
-            self.logger.info(stdoutdata)
-            self.logger.info(stderrdata)
+
 
             #if copy failed log the missing file
             if  exit_status != 0:
                 self.logger.error("Error using the fillRootImageGroup command"
-                    "see above lines. Exit status: {0}".format(exit_status))
+                    ". Exit status: {0}".format(exit_status))
+                self.logger.error(stdoutdata)
+                self.logger.error(stderrdata)
 
                 return 1
 
             # *****************************************************************
-            # 4 Export the fits image to the msss server
-            url = "http://tanelorn.astron.nl:8000/upload"
-            try:
-                self.logger.info("Starting upload of fits image data to server!")
-                opener = urllib2.build_opener(mph.MultipartPostHandler)
-                filedata = {"file": open(fits_output, "rb")}
-                opener.open(url, filedata, timeout=2)
+            # 4. Move the meta information to the correct directory next to the
+            #    concat.ms
+            self.logger.info("Save-ing selfcal parameters to file:")
+            meta_dir =  concat_ms + "_selfcal_information"
+            meta_dir_target =  os.path.join(concat_ms, "selfcal_information")
+            if os.path.exists(meta_dir) and os.path.exists(concat_ms):
+                self.logger.info("Copy meta information to output measurementset")
 
-                # HTTPError needs to be caught first.
-            except urllib2.HTTPError as httpe:
-                self.logger.warn("HTTP status is: {0}".format(httpe.code))
-                self.logger.warn("failed exporting fits image to server")
-
-            except urllib2.URLError as urle:
-                self.logger.warn(str(urle.reason))
-                self.logger.warn("failed exporting fits image to server")
-
-            except Exception, exc:
-                self.logger.warn(str(exc))
-                self.logger.warn("failed exporting fits image to server")
-
-
+                # Clear possible old data, allows for rerun of the pipeline
+                # if needed.
+                if os.path.exists(meta_dir_target):
+                      shutil.rmtree(meta_dir_target)
+                shutil.copytree(meta_dir, meta_dir_target)
+                
             # *****************************************************************
-            # 5. export the sourcelist to the msss server
-            url = "http://tanelorn.astron.nl:8000/upload_srcs"
-            try:
-                # Copy file to output location
-                new_sourcelist_path = output_image + ".sourcelist"
-                if os.path.exists(new_sourcelist_path):
-                    os.unlink(new_sourcelist_path)
-
-                shutil.copy(sourcelist, new_sourcelist_path)
-                self.logger.info(
-                            "Starting upload of sourcelist data to server!")
-                opener = urllib2.build_opener(mph.MultipartPostHandler)
-                filedata = {"file": open(new_sourcelist_path, "rb")}
-                opener.open(url, filedata, timeout=2)
-
-                # HTTPError needs to be caught first.
-            except urllib2.HTTPError as httpe:
-                self.logger.warn("HTTP status is: {0}".format(httpe.code))
-                self.logger.warn("failed exporting sourcelist to server")
-
-            except urllib2.URLError as urle:
-                self.logger.warn(str(urle.reason))
-                self.logger.warn("failed exporting sourcelist image to server")
-
-            except Exception, exc:
-                self.logger.warn(str(exc))
-                self.logger.warn("failed exporting sourcelist image to serve")
-
+            # 4 Copy the measurement set to the output directory
+            # use msselect to copy all the data in the measurement sets
+            
+            cmd_string = "{0} in={1} out={2} baseline=* deep=True".format(
+                   msselect_executable, concat_ms, correlated_output_location)
+            msselect_proc_group = SubProcessGroup(self.logger)
+            msselect_proc_group.run(cmd_string)
+            if msselect_proc_group.wait_for_finish() != None:
+                self.logger.error("failed copy of measurmentset to output dir")
+                raise Exception("an MSselect run failed!")
 
             self.outputs["hdf5"] = "succes"
             self.outputs["image"] = output_image
+            self.outputs["correlated"] = correlated_output_location
 
+        
         return 0
 
 
 if __name__ == "__main__":
 
     _JOBID, _JOBHOST, _JOBPORT = sys.argv[1:4]
-    sys.exit(imager_finalize(_JOBID, _JOBHOST,
+    sys.exit(selfcal_finalize(_JOBID, _JOBHOST,
                              _JOBPORT).run_with_stored_arguments())

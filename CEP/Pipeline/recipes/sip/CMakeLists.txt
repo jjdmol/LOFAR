@@ -8,6 +8,7 @@ python_install(
   helpers/WritableParmDB.py
   helpers/ComplexArray.py
   helpers/MultipartPostHandler.py
+  helpers/data_quality.py
   master/__init__.py
   master/bbs_reducer.py
   master/copier.py
@@ -20,13 +21,16 @@ python_install(
   master/imager_finalize.py
   master/imager_prepare.py
   master/imager_source_finding.py
+  master/long_baseline.py
   master/new_bbs.py
   master/rficonsole.py
   master/setupparmdb.py
   master/setupsourcedb.py
   master/vdsmaker.py
   master/vdsreader.py
-  master/long_baseline.py
+  master/selfcal_awimager.py
+  master/selfcal_bbs.py
+  master/selfcal_finalize.py
   nodes/__init__.py
   nodes/bbs_reducer.py
   nodes/copier.py
@@ -40,12 +44,15 @@ python_install(
   nodes/imager_finalize.py
   nodes/imager_prepare.py
   nodes/imager_source_finding.py
+  nodes/long_baseline.py
   nodes/new_bbs.py
   nodes/rficonsole.py
   nodes/setupparmdb.py
   nodes/setupsourcedb.py
   nodes/vdsmaker.py
-  nodes/long_baseline.py
+  nodes/selfcal_awimager.py
+  nodes/selfcal_bbs.py
+  nodes/selfcal_finalize.py
   DESTINATION lofarpipe/recipes)
 
 install(PROGRAMS
@@ -57,6 +64,7 @@ install(PROGRAMS
   bin/imaging_pipeline.py
   bin/pulsar_pipeline.py
   bin/long_baseline_pipeline.py
+  bin/selfcal_imager_pipeline.py
   bin/startPython.sh
   bin/startPythonVersion.sh
   bin/stopPython.sh

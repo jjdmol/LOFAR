@@ -8,7 +8,7 @@ from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.data_map import DataMap, validate_data_maps, \
                                        align_data_maps
 
-class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
+class selfcal_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
     """
     The Imager_finalizer performs a number of steps needed for integrating the
     msss_imager_pipeline in the LOFAR framework: It places the image on the
@@ -67,13 +67,31 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'placed_image_mapfile': ingredient.FileField(
             '--placed-image-mapfile',
-            help="location of mapfile with proced and correctly placed,"
+            help="location of mapfile with processed and correctly placed,"
                 " hdf5 images"
-        )
+        ),
+        'placed_correlated_mapfile': ingredient.FileField(
+            '--placed-correlated-mapfile',
+            help="location of mapfile with processedd and correctly placed,"
+                " correlated ms"
+        ),
+        'concat_ms_map_path': ingredient.FileField(
+            '--concat-ms-map-path',
+            help="Output of the concat MS file"
+        ),
+        'output_correlated_mapfile': ingredient.FileField(
+            '--output-correlated-mapfile',
+            help="location of mapfile where output paths for mss are located"
+        ),
+        'msselect_executable': ingredient.ExecField(
+            '--msselect-executable',
+            help="The full path to the msselect executable "
+        ),
     }
 
     outputs = {
-        'placed_image_mapfile': ingredient.StringField()
+        'placed_image_mapfile': ingredient.StringField(),
+        'placed_correlated_mapfile': ingredient.StringField(),
     }
 
     def go(self):
@@ -84,7 +102,7 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
         2. Run the node parts of the recipe  
         3. Validate node output and format the recipe output   
         """
-        super(imager_finalize, self).go()
+        super(selfcal_finalize, self).go()
         # *********************************************************************
         # 1. Load the datamaps
         awimager_output_map = DataMap.load(
@@ -96,28 +114,35 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
         target_mapfile = DataMap.load(self.inputs["target_mapfile"])
         output_image_mapfile = DataMap.load(
                                     self.inputs["output_image_mapfile"])
+        concat_ms_mapfile = DataMap.load(
+                                    self.inputs["concat_ms_map_path"])
+        output_correlated_map = DataMap.load(
+                                    self.inputs["output_correlated_mapfile"])
         processed_ms_dir = self.inputs["processed_ms_dir"]
         fillrootimagegroup_exec = self.inputs["fillrootimagegroup_exec"]
 
         # Align the skip fields
         align_data_maps(awimager_output_map, ms_per_image_map,
                 sourcelist_map, target_mapfile, output_image_mapfile,
-                sourcedb_map)
+                sourcedb_map, concat_ms_mapfile, output_correlated_map)
 
         # Set the correct iterator
         sourcelist_map.iterator = awimager_output_map.iterator = \
             ms_per_image_map.iterator = target_mapfile.iterator = \
             output_image_mapfile.iterator = sourcedb_map.iterator = \
-                DataMap.SkipIterator
+            concat_ms_mapfile.iterator = output_correlated_map.iterator = \
+            DataMap.SkipIterator
 
         # *********************************************************************
         # 2. Run the node side of the recupe
         command = " python %s" % (self.__file__.replace("master", "nodes"))
         jobs = []
         for  (awimager_output_item, ms_per_image_item, sourcelist_item,
-              target_item, output_image_item, sourcedb_item) in zip(
+              target_item, output_image_item, sourcedb_item, 
+              concat_ms_item, correlated_item) in zip(
                   awimager_output_map, ms_per_image_map, sourcelist_map,
-                  target_mapfile, output_image_mapfile, sourcedb_map):
+                  target_mapfile, output_image_mapfile, sourcedb_map,
+                  concat_ms_mapfile, output_correlated_map):
             # collect the files as argument
             arguments = [awimager_output_item.file,
                          ms_per_image_item.file,
@@ -129,7 +154,10 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
                          processed_ms_dir,
                          fillrootimagegroup_exec,
                          self.environment,
-                         sourcedb_item.file]
+                         sourcedb_item.file,
+                         concat_ms_item.file,
+                         correlated_item.file,
+                         self.inputs["msselect_executable"],]
 
             self.logger.info(
                 "Starting finalize with the folowing args: {0}".format(
@@ -141,28 +169,40 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
         # *********************************************************************
         # 3. Validate the performance of the node script and assign output
         succesful_run = False
-        for (job, output_image_item) in  zip(jobs, output_image_mapfile):
+        for (job, output_image_item, output_correlated_item) in  zip(jobs, 
+                                output_image_mapfile, output_correlated_map):
             if not "hdf5" in job.results:
                 # If the output failed set the skip to True
                 output_image_item.skip = True
+                output_correlated_item = True
             else:
                 succesful_run = True
                 # signal that we have at least a single run finished ok.
                 # No need to set skip in this case
 
         if not succesful_run:
-            self.logger.warn("Failed finalizer node run detected")
+            self.logger.warn("Not a single finalizer succeeded")
             return 1
-
+       
+        # Save the location of the output images
         output_image_mapfile.save(self.inputs['placed_image_mapfile'])
         self.logger.debug(
            "Wrote mapfile containing placed hdf5 images: {0}".format(
                            self.inputs['placed_image_mapfile']))
+
+        # save the location of measurements sets
+        output_correlated_map.save(self.inputs['placed_correlated_mapfile'])
+        self.logger.debug(
+           "Wrote mapfile containing placed mss: {0}".format(
+                           self.inputs['placed_correlated_mapfile']))
+
         self.outputs["placed_image_mapfile"] = self.inputs[
                                                     'placed_image_mapfile']
+        self.outputs["placed_correlated_mapfile"] = self.inputs[
+                                             'placed_correlated_mapfile']       
 
         return 0
 
 
 if __name__ == '__main__':
-    sys.exit(imager_finalize().main())
+    sys.exit(selfcal_finalize().main())
