@@ -7,12 +7,11 @@ from BaseHTTPServer import BaseHTTPRequestHandler
 import urlparse
 from mimetypes import MimeTypes
 from threading import Timer,Thread,Event
-import socket
-
+import platform
 
 mime=MimeTypes()
 
-MyHostname=socket.gethostname();
+MyHostname=platform.node()
 
 class perpetualTimer:
 
@@ -37,20 +36,24 @@ class perpetualTimer:
 
 brokerlist= []
 
-if  MyHostname == 'CCU099' :
+if  MyHostname.lower() == 'ccu099' :
    brokerlist = [ "amqp://CCU001","amqp://sas001","amqp://lcs023","amqp://cbm001","amqp://cbm002","amqp://cbm003","amqp://cbm004","amqp://cbm005","amqp://cbm006","amqp://cbm007","amqp://cbm008","amqp://mcu001","amqp://lhn001.cep2.lofar","amqp://lhn002.cep2.lofar"]
 else:
     brokerlist = [ "amqp://ccu099","amqp://SAS099","amqp://lcs028","amqp://cbt009","amqp://locus098","amqp://locus099","amqp://locus102","amqp://mcu099"]
 
-filelist=["/index.html","/Schema.svg","/lib/draggable.js","/lib/svg.clock.min.js","/lib/svg.draggable.min.js","/lib/svg.easing.min.js","/lib/svg.import.min.js","/lib/svg.js","/lib/svg.parser.min.js","/list.html"]
-
-import os
-import platform
-import time
+# hosted files
+filelist=[
+  "/index.html",
+  "/lib/draggable.js","/lib/svg.clock.min.js","/lib/svg.draggable.min.js","/lib/svg.easing.min.js","/lib/svg.import.min.js","/lib/svg.js","/lib/svg.parser.min.js",
+  "/list.html"]
+# hosted files with a different name on disk
+redirect_filelist = {
+  "/Schema.svg": "/Schema.svg.%s" % (MyHostname.lower(),),
+}
 
 
 if "LOFARROOT" in os.environ:
-    path = os.path.expandvars("$LOFARROOT/share/www")
+    path = os.path.expandvars("$LOFARROOT/srv/www")
 else:
     path = "."
 
@@ -59,18 +62,19 @@ mimedict={}
 filedict={}
 def retrieve_file(myfile):
         f = open(path + '/' + myfile,'rb')
-        m=f.read();
+        m = f.read();
         f.close()
         return m
 
-def add_file_to_list(filename):
-    mimedict[filename]=mime.guess_type(filename)[0]
-    filedict[filename]=retrieve_file(filename)
-
+def add_file_to_list(url,filename):
+    mimedict[url]=mime.guess_type(filename)[0]
+    filedict[url]=retrieve_file(filename)
 
 #cache all listed files
-for item in filelist:
-    add_file_to_list(item)
+for filename in filelist:
+    add_file_to_list(filename,filename)
+for url,filename in redirect_filelist:
+    add_file_to_list(url,filename)
 
 last_status="NOTCONNECTED"
 
