@@ -104,6 +104,13 @@ install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/tasks.cfg
   DESTINATION share/pipeline)
 
+# PIPELINE_FEEDBACK_METHOD is used in pipeline.cfg.in to enable/disable qpid feedback
+if(HAVE_QPID)
+  set(PIPELINE_FEEDBACK_METHOD "messagebus")
+else(HAVE_QPID)
+  set(PIPELINE_FEEDBACK_METHOD "none")
+endif(HAVE_QPID)
+
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/pipeline.cfg.in
   ${CMAKE_CURRENT_BINARY_DIR}/pipeline.cfg)
