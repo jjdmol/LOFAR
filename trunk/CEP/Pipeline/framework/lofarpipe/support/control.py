@@ -134,7 +134,7 @@ class control(StatefulRecipe):
         except:
           self.feedback_method = "messagebus"
 
-        if self.feedback_method == "messagebus" and not lofar.messagebus.msgbus.enabled:
+        if self.feedback_method == "messagebus" and not lofar.messagebus.msgbus.MESSAGING_ENABLED:
           self.logger.error("Feedback over messagebus requested, but messagebus support is not enabled or functional")
           return 1
 
