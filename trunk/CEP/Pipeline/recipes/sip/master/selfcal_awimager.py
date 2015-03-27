@@ -3,6 +3,8 @@
 #                                    Example recipe with simple job distribution
 #                                                          Wouter Klijn, 2010
 #                                                      swinbank@transientskp.org
+#                                                         Nicolas Vilchez, 2014
+#                                                             vilchez@astron.nl
 # ------------------------------------------------------------------------------
 import sys
 import copy
@@ -10,9 +12,10 @@ import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.data_map import DataMap, validate_data_maps
+from lofarpipe.support.data_map import DataMap, validate_data_maps,\
+                                       align_data_maps
 
-class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
+class selfcal_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
     """
     Master script for the awimager. Collects arguments from command line and
     pipeline inputs.
@@ -65,7 +68,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
             help = "Turns on the autogeneration of: cellsize, image-size, fov."
             " MSSS 'type' functionality"
         ),
-        'specify_fov': ingredient.FloatField(
+        'specify_fov': ingredient.BoolField(
             '--specify-fov',
             default = False,
             help = "calculated Image parameters are relative to fov, parameter"
@@ -77,6 +80,19 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
             help = "calculated Image parameters are relative to this"
             " Field Of View in arcSec. This parameter is obligatory when"
             " specify_fov is True"
+        ),
+        'major_cycle': ingredient.IntField(
+            '--major_cycle',
+            help = "The number of the current cycle to modify the parset."
+        ),
+        'nr_cycles': ingredient.IntField(
+            '--nr-cycles',
+            help = "The number major cycles."
+        ) ,
+        'perform_self_cal': ingredient.BoolField(
+            '--perform-self-cal',
+            default=False,          
+            help = "Control the usage of the self callibartion functionality"
         )
     }
 
@@ -89,7 +105,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         This member contains all the functionality of the imager_awimager.
         Functionality is all located at the node side of the script.
         """
-        super(imager_awimager, self).go()
+        super(selfcal_awimager, self).go()
         self.logger.info("Starting imager_awimager run")
 
         # *********************************************************************
@@ -112,10 +128,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         jobs = []
 
         output_map = copy.deepcopy(input_map)        
-        for w, x, y in zip(input_map, output_map, sourcedb_map):
-            w.skip = x.skip = y.skip = (
-                w.skip or x.skip or y.skip
-            )
+        align_data_maps(input_map, output_map, sourcedb_map)
 
         sourcedb_map.iterator = input_map.iterator = output_map.iterator = \
             DataMap.SkipIterator
@@ -141,6 +154,9 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
                          self.inputs['autogenerate_parameters'],
                          self.inputs['specify_fov'],
                          self.inputs['fov'],
+                         self.inputs['major_cycle'],
+                         self.inputs['nr_cycles'],
+                         self.inputs['perform_self_cal']
                          ]
 
             jobs.append(ComputeJob(host, node_command, arguments))
@@ -168,14 +184,14 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
 
         if not succesfull_runs:
             self.logger.error(
-                    "None of the starter awimager run finished correct")
+                    "None of the started awimager run finished correct")
             self.logger.error(
                     "No work left to be done: exiting with error status")
             return 1
 
         # If partial succes
         if self.error.isSet():
-            self.logger.warn("Failed awimager node run detected. continue with"
+            self.logger.error("Failed awimager node run detected. continue with"
                               "successful tasks.")
 
         self._store_data_map(self.inputs['mapfile'], output_map,
@@ -186,5 +202,5 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
 
 
 if __name__ == "__main__":
-    sys.exit(imager_awimager().main())
+    sys.exit(selfcal_awimager().main())
 

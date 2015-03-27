@@ -86,6 +86,11 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             '--rficonsole-executable',
             help="The full path to the rficonsole executable "
         ),
+        'do_rficonsole': ingredient.BoolField(
+            '--do_rficonsole',
+            default=True,
+            help="toggle the rficonsole step in preprocessing (default True)"
+        ),
         'mapfile': ingredient.StringField(
             '--mapfile',
             help="Full path of mapfile; contains a list of the "
@@ -95,9 +100,9 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             '--slices-mapfile',
             help="Path to mapfile containing the produced subband groups"
         ),
-        'raw_ms_per_image_mapfile': ingredient.StringField(
-            '--raw-ms-per-image-mapfile',
-            help="Path to mapfile containing the raw ms for each produced"
+        'ms_per_image_mapfile': ingredient.StringField(
+            '--ms-per-image-mapfile',
+            help="Path to mapfile containing the ms for each produced"
                 "image"
         ),
         'processed_ms_dir': ingredient.StringField(
@@ -119,8 +124,8 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         'slices_mapfile': ingredient.FileField(
             help="Path to mapfile containing the produced subband groups"),
 
-        'raw_ms_per_image_mapfile': ingredient.FileField(
-            help="Path to mapfile containing the raw ms for each produced"
+        'ms_per_image_mapfile': ingredient.FileField(
+            help="Path to mapfile containing the used ms for each produced"
                 "image")
     }
 
@@ -130,6 +135,7 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         """
         super(imager_prepare, self).go()
         self.logger.info("Starting imager_prepare run")
+        job_directory = self.config.get("layout", "job_directory")
         # *********************************************************************
         # input data     
         input_map = DataMap.load(self.inputs['args'][0])
@@ -152,7 +158,8 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
 
         jobs = []
         paths_to_image_mapfiles = []
-        n_subband_groups = len(output_map)
+        n_subband_groups = len(output_map)  # needed for subsets in sb list
+
         for idx_sb_group, item in enumerate(output_map):
             #create the input files for this node
             self.logger.debug("Creating input data subset for processing"
@@ -163,13 +170,20 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
                                 subbands_per_image, idx_sb_group, input_map)
 
             # Save the mapfile
-            job_directory = self.config.get(
-                            "layout", "job_directory")
             inputs_for_image_mapfile_path = os.path.join(
                job_directory, "mapfiles",
                "ms_per_image_{0}".format(idx_sb_group))
+
             self._store_data_map(inputs_for_image_mapfile_path,
                                 inputs_for_image_map, "inputmap for location")
+
+            # skip the current step if skip is set, cannot use skip due to 
+            # the enumerate: dependency on the index in the map
+            if item.skip == True:
+                # assure that the mapfile is correct
+                paths_to_image_mapfiles.append(
+                    tuple([item.host, [], True]))
+                continue
 
             #save the (input) ms, as a list of  mapfiles
             paths_to_image_mapfiles.append(
@@ -188,6 +202,7 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
                          self.inputs['statplot_executable'],
                          self.inputs['msselect_executable'],
                          self.inputs['rficonsole_executable'],
+                         self.inputs['do_rficonsole'],
                          self.inputs['add_beam_tables']]
 
             jobs.append(ComputeJob(item.host, node_command, arguments))
@@ -206,7 +221,20 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         slices = []
         finished_runs = 0
         #scan the return dict for completed key
-        for (item, job) in zip(concat_ms, jobs):
+        # loop over the potential jobs including the skipped
+        # If we have a skipped item, add the item to the slices with skip set
+        jobs_idx = 0
+        for item in concat_ms: 
+            # If this is an item that is skipped via the skip parameter in 
+            # the parset, append a skipped             
+            if item.skip:    
+                slices.append(tuple([item.host, [], True]))
+                continue
+
+            # we cannot use the skip iterator so we need to manually get the
+            # current job from the list
+            job = jobs[jobs_idx]
+
             # only save the slices if the node has completed succesfull
             if job.results["returncode"] == 0:
                 finished_runs += 1
@@ -215,10 +243,13 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             else:
                 # Set the dataproduct to skipped!!
                 item.skip = True
-                slices.append(tuple([item.host, ["/Failed"], True]))
+                slices.append(tuple([item.host, [], True]))
                 msg = "Failed run on {0}. NOT Created: {1} ".format(
                     item.host, item.file)
                 self.logger.warn(msg)
+
+            # we have a non skipped workitem, increase the job idx
+            jobs_idx += 1
 
         if finished_runs == 0:
             self.logger.error("None of the started compute node finished:"
@@ -237,15 +268,15 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
                 self.inputs['slices_mapfile']))
 
         #map with actual input mss.
-        self._store_data_map(self.inputs["raw_ms_per_image_mapfile"],
+        self._store_data_map(self.inputs["ms_per_image_mapfile"],
             DataMap(paths_to_image_mapfiles),
-                "mapfile containing (raw) input ms per image:")
+                "mapfile containing (used) input ms per image:")
 
         # Set the return values
         self.outputs['mapfile'] = output_ms_mapfile_path
         self.outputs['slices_mapfile'] = self.inputs['slices_mapfile']
-        self.outputs['raw_ms_per_image_mapfile'] = \
-            self.inputs["raw_ms_per_image_mapfile"]
+        self.outputs['ms_per_image_mapfile'] = \
+            self.inputs["ms_per_image_mapfile"]
         return 0
 
     def _create_input_map_for_sbgroup(self, slices_per_image,
@@ -285,7 +316,7 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         """
         # The output_map contains a number of path/node pairs. The final data 
         # dataproduct of the prepare phase: The 'input' for each of these pairs
-        # is a number of raw measurement sets: The number of time slices times
+        # is a number of measurement sets: The number of time slices times
         # the number of subbands collected into each of these time slices.
         # The total length of the input map should match this.
         if len(input_map) != len(output_map) * \
