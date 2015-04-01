@@ -79,11 +79,6 @@ namespace LOFAR {
       // Show the timings.
       virtual void showTimings (std::ostream&, double duration) const;
 
-      // Test if output data column differs from input column.
-      static bool isNewDataColumn (MSReader* reader,
-                                   const ParameterSet& parset,
-                                   const string& prefix);
-
       // Tests if an update of the buffer described in info to the MS msName
       // is possible. When throwError is true, it will throw an error with a
       // descriptive string before returning false
@@ -110,21 +105,23 @@ namespace LOFAR {
           const casa::ColumnDesc& cd);
 
       //# Data members
-      MSReader*   itsReader;
+      MSReader*    itsReader;
+      string       itsName;
       casa::String itsMSName;
       casa::Table  itsMS;
       const ParameterSet& itsParset;
+      DPBuffer     itsBuffer;
       casa::String itsDataColName;
       casa::String itsWeightColName;
-      uint        itsNrTimesFlush; //# flush every N time slots (0=no flush)
-      bool        itsWriteData;
-      bool        itsWriteWeight;
-      bool        itsWriteFlags;
-      uint        itsNrDone;       //# nr of time slots written
-      bool        itsDataColAdded; //# has data column been added?
-      bool        itsWeightColAdded; //# has weight column been added?
-      bool        itsWriteHistory; //# Should history be written?
-      NSTimer     itsTimer;
+      uint         itsNrTimesFlush; //# flush every N time slots (0=no flush)
+      bool         itsWriteData;
+      bool         itsWriteWeights;
+      bool         itsWriteFlags;
+      uint         itsNrDone;       //# nr of time slots written
+      bool         itsDataColAdded; //# has data column been added?
+      bool         itsWeightColAdded; //# has weight column been added?
+      bool         itsWriteHistory; //# Should history be written?
+      NSTimer      itsTimer;
     };
 
   } //# end namespace

@@ -47,6 +47,17 @@ namespace LOFAR {
 #endif
     }
 
+    // Set the number of threads to use. Note it can be overridden
+    // for a parallel section by 'omp parallel num_threads(n)'.
+    // Nothing is done if OpenMP is not used.
+#ifdef _OPENMP
+    inline void setNumThreads (uint n)
+      { omp_set_num_threads (n); }
+#else
+    inline void setNumThreads (uint)
+    {}
+#endif
+
     // Get the number of threads used in a parallel piece of code.
     // If OpenMP is not used, 1 is returned.
     inline uint numThreads()
@@ -66,6 +77,27 @@ namespace LOFAR {
       return omp_get_thread_num();
 #else
       return 0;
+#endif
+    }
+
+    // Set if nested parallel sections are possible or not.
+    // Nothing is done if OpenMP is not used.
+#ifdef _OPENMP
+    inline void setNested (bool nest)
+      { omp_set_nested (nest); }
+#else
+    inline void setNested (bool)
+    {}
+#endif
+
+    // Test if nested parallel sections are possible.
+    // If OpenMP is not used, false is returned.
+    inline bool nested()
+    {
+#ifdef _OPENMP
+      return omp_get_nested();
+#else
+      return false;
 #endif
     }
 

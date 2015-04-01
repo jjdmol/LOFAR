@@ -286,8 +286,8 @@ namespace BBS {
       itsDomainGrid = solveGrid;
       const Axis& xaxis = *itsDomainGrid[0];
       const Axis& yaxis = *itsDomainGrid[1];
-      uint nrx = itsDomainGrid.ny();
-      uint nry = itsDomainGrid.nx();
+      uint nrx = itsDomainGrid.nx();
+      uint nry = itsDomainGrid.ny();
       itsValues.reserve (nrx*nry);
       for (uint iy=0; iy<nry; ++iy) {
         for (uint ix=0; ix<nrx; ++ix) {

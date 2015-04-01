@@ -1,6 +1,6 @@
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id: Mutex.h 15519 2010-04-22 10:00:35Z romein $
+//#  $Id$
 
 #ifndef LOFAR_LCS_COMMON_MUTEX_H
 #define LOFAR_LCS_COMMON_MUTEX_H
@@ -70,7 +70,11 @@ class Mutex
 class ScopedLock
 {
   public:
-    ScopedLock(Mutex &);
+    // Locks a mutex while this objects exists.
+    //
+    // If unlock = true, the working is reversed:
+    // the mutex is unlocked while this object exists.
+    ScopedLock(Mutex &, bool unlock = false);
     ~ScopedLock();
 
   private:
@@ -78,6 +82,7 @@ class ScopedLock
     ScopedLock& operator=(const ScopedLock&);
 
     Mutex &itsMutex;
+    const bool itsUnlock;
 };
 
 
@@ -159,18 +164,19 @@ inline bool Mutex::trylock()
 }
 
 
-inline ScopedLock::ScopedLock(Mutex &mutex)
+inline ScopedLock::ScopedLock(Mutex &mutex, bool unlock)
 :
-  itsMutex(mutex)
+  itsMutex(mutex),
+  itsUnlock(unlock)
 {
-  itsMutex.lock();
+  itsUnlock ? itsMutex.unlock() : itsMutex.lock();
 }
 
 
 inline ScopedLock::~ScopedLock()
 {
   try {
-    itsMutex.unlock();
+    itsUnlock ? itsMutex.lock() : itsMutex.unlock();
   } catch (std::exception &) {}
 }
 

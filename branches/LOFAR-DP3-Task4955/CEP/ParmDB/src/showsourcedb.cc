@@ -51,17 +51,17 @@ using namespace BBS;
 Exception::TerminateHandler t(Exception::terminate);
 
 
-void show (const string& name, const string& mode)
+void show (const string& name, const string& mode, const string& patt)
 {
   // Open the input SourceDB.
   SourceDB in ((ParmDBMeta(string(), name)));
   // Read all patches from the SourceDB and write them.
-  vector<PatchInfo> patch (in.getPatchInfo());
+  vector<PatchInfo> patch (in.getPatchInfo(-1, patt));
   for (size_t i=0; i<patch.size(); ++i) {
-    if (mode != "showsource") {
+    if (mode != "source") {
       cout << patch[i] << endl;
     }
-    if (mode != "showpatch") {
+    if (mode != "patch") {
       vector<SourceData> sources(in.getPatchSourceData (patch[i].getName()));
       for (vector<SourceData>::const_iterator iter=sources.begin();
            iter!=sources.end(); ++iter) {
@@ -87,6 +87,8 @@ int main (int argc, char* argv[])
                    "source=show all sources, "
                    "all=show patches and sources",
                    "string");
+    inputs.create ("patches", "*",
+                   "Pattern for names of patches to show", "string");
     // Read and check the input parameters.
     inputs.readArguments(argc, argv);
     string in = inputs.getString("in");
@@ -94,7 +96,8 @@ int main (int argc, char* argv[])
     string mode = toLower(inputs.getString("mode"));
     ASSERTSTR (mode=="patch" || mode=="source" || mode=="all",
                "incorrect mode given");
-    show (in, mode);
+    string patt = inputs.getString("patches");
+    show (in, mode, patt);
   } catch (Exception& x) {
     cerr << "Caught LOFAR exception: " << x << endl;
     return 1;

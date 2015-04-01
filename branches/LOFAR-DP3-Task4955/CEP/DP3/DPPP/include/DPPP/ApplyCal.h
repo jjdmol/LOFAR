@@ -87,12 +87,14 @@ namespace LOFAR {
 
       //# Data members.
       DPInput*         itsInput;
+      DPBuffer         itsBuffer;
       string           itsName;
       string           itsParmDBName;
       boost::shared_ptr<BBS::ParmFacade> itsParmDB;
       string           itsCorrectType;
       uint             itsTimeSlotsPerParmUpdate;
       double           itsSigmaMMSE;
+      bool             itsUpdateWeights;
 
       // Expressions to search for in itsParmDB
       vector<casa::String>   itsParmExprs;

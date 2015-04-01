@@ -295,7 +295,8 @@ string FileLocator::resolveInput(const string&	input)
 	string::size_type		startPos = 0;
 	string		result;
 	do {
-		result   = input.substr(startPos, dollarPos);	// add part till $
+    result.append(input.substr(startPos, dollarPos-startPos)); // add part till $
+
 		startPos = dollarPos+1;
 		string::size_type	slashPos = input.find("/", dollarPos);
 		string::size_type	colonPos = input.find(":", dollarPos);
@@ -314,7 +315,7 @@ string FileLocator::resolveInput(const string&	input)
 			if (!valPtr) {
 				LOG_WARN_STR("Environment variable " << \
 						input.substr(startPos, endPos-startPos) <<  \
-						" can not be solved, excluding it from search path!");
+						" cannot be resolved, excluding it from search path!");
 			}
 			else {
 				result.append(valPtr);
@@ -327,7 +328,7 @@ string FileLocator::resolveInput(const string&	input)
 					getenv(input.substr(startPos, slashPos-startPos).c_str());
 			if (!valPtr) {
 				LOG_WARN_STR("Environment variable " <<
-						input.substr(startPos, endPos-startPos) <<
+						input.substr(startPos, slashPos-startPos) <<
 						" can not be solved, excluding it from search path!");
 			}
 			else {

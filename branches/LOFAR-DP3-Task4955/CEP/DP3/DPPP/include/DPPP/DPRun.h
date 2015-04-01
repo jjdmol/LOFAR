@@ -32,6 +32,8 @@
 #include <DPPP/MSReader.h>
 #include <Common/ParameterSet.h>
 
+#include <map>
+
 namespace LOFAR {
   namespace DPPP {
 
@@ -44,8 +46,23 @@ namespace LOFAR {
     class DPRun
     {
     public:
-      // Execute the stps defined in the parset file.
-      static void execute (const std::string& parsetName);
+      // Define the function to create a step from the given parameterset.
+      typedef DPStep::ShPtr StepCtor (DPInput*, const ParameterSet&,
+                                      const std::string& prefix);
+
+      // Add a function creating a DPStep to the map.
+      static void registerStepCtor (const std::string&, StepCtor*);
+
+      // Create a step object from the given parameters.
+      // It looks up the step type in theirStepMap. If not found, it will
+      // try to load a shared library with that name and execute the
+      // register function in it.
+      static StepCtor* findStepCtor (const std::string& type);
+
+      // Execute the steps defined in the parset file.
+      // Possible parameters given at the command line are taken into account.
+      static void execute (const std::string& parsetName,
+                           int argc=0, char* argv[] = 0);
 
     private:
       // Create the step objects.
@@ -64,6 +81,9 @@ namespace LOFAR {
       static DPStep::ShPtr makeOutputStep(MSReader* reader,
           const ParameterSet& parset, const string& prefix, bool multipleInputs,
           casa::String& currentMSName);
+
+      // The map to create a step object from its type name.
+      static std::map<std::string, StepCtor*> theirStepMap;
     };
 
   } //# end namespace

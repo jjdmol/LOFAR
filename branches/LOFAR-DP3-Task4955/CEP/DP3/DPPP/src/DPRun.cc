@@ -36,9 +36,11 @@
 #include <DPPP/UVWFlagger.h>
 #include <DPPP/PhaseShift.h>
 #include <DPPP/Demixer.h>
+#include <DPPP/DemixerNew.h>
 #include <DPPP/StationAdder.h>
 #include <DPPP/ScaleData.h>
 #include <DPPP/ApplyCal.h>
+#include <DPPP/GainCal.h>
 #include <DPPP/Filter.h>
 #include <DPPP/Counter.h>
 #include <DPPP/ProgressMeter.h>
@@ -49,16 +51,60 @@
 #include <casa/OS/Path.h>
 #include <casa/OS/DirectoryIterator.h>
 #include <casa/OS/Timer.h>
+#include <casa/OS/DynLib.h>
 
 namespace LOFAR {
   namespace DPPP {
 
-    void DPRun::execute (const string& parsetName)
+    // Initialize the statics.
+    std::map<std::string, DPRun::StepCtor*> DPRun::theirStepMap;
+
+    void DPRun::registerStepCtor (const std::string& type, StepCtor* func)
+    {
+      theirStepMap[type] = func;
+    }
+
+    DPRun::StepCtor* DPRun::findStepCtor (const std::string& type)
+    {
+      std::map<std::string,StepCtor*>::const_iterator iter =
+        theirStepMap.find (type);
+      if (iter != theirStepMap.end()) {
+        return iter->second;
+      }
+      // Try to load the step from a dynamic library with that name
+      // (in lowercase).
+      // A dot can be used to have a specific library name (so multiple
+      // steps can use the same shared library).
+      std::string libname(toLower(type));
+      string::size_type pos = libname.find_first_of (".");
+      if (pos != string::npos) {
+        libname = libname.substr (0, pos);
+      }
+      // Try to load and initialize the dynamic library.
+      casa::DynLib dl(libname, string(), "register_"+libname, false);
+      if (dl.getHandle()) {
+        // See if registered now.
+        iter = theirStepMap.find (type);
+        if (iter != theirStepMap.end()) {
+          return iter->second;
+        }
+      }
+      THROW(Exception, "Step type " + type +
+            " is unknown and no such shared library found");
+    }
+
+
+    void DPRun::execute (const string& parsetName, int argc, char* argv[])
     {
       casa::Timer timer;
       NSTimer nstimer;
       nstimer.start();
-      ParameterSet parset (parsetName);
+      ParameterSet parset;
+      if (parsetName!="") {
+        parset.adoptFile(parsetName);
+      }
+      // Adopt possible parameters given at the command line.
+      parset.adoptArgv (argc, argv); //# works fine if argc==0 and argv==0
       DPLogger::useLogger = parset.getBool ("uselogger", false);
       bool showProgress   = parset.getBool ("showprogress", true);
       bool showTimings    = parset.getBool ("showtimings", true);
@@ -212,11 +258,11 @@ namespace LOFAR {
         reader = new MultiMSReader (inNames, parset, "msin.");
       }
       casa::Path pathIn (reader->msName());
-      casa::String currentMSName=pathIn.absoluteName();
+      casa::String currentMSName (pathIn.absoluteName());
 
+      // Create the other steps.
       firstStep = DPStep::ShPtr (reader);
       lastStep = firstStep;
-      // Create the other steps.
       DPStep::ShPtr step;
       for (vector<string>::const_iterator iter = steps.begin();
            iter != steps.end(); ++iter) {
@@ -240,6 +286,8 @@ namespace LOFAR {
           step = DPStep::ShPtr(new PhaseShift (reader, parset, prefix));
         } else if (type == "demixer"  ||  type == "demix") {
           step = DPStep::ShPtr(new Demixer (reader, parset, prefix));
+        } else if (type == "smartdemixer"  ||  type == "smartdemix") {
+          step = DPStep::ShPtr(new DemixerNew (reader, parset, prefix));
         } else if (type == "stationadder"  ||  type == "stationadd") {
           step = DPStep::ShPtr(new StationAdder (reader, parset, prefix));
         } else if (type == "scaledata") {
@@ -248,12 +296,14 @@ namespace LOFAR {
           step = DPStep::ShPtr(new Filter (reader, parset, prefix));
         } else if (type == "applycal"  ||  type == "correct") {
           step = DPStep::ShPtr(new ApplyCal (reader, parset, prefix));
+        } else if (type == "gaincal"  ||  type == "calibrate") {
+          step = DPStep::ShPtr(new GainCal (reader, parset, prefix));
         } else if (type == "out" || type=="output") {
           step = makeOutputStep(reader, parset, prefix,
-              inNames.size()>1,currentMSName);
-        }
-          else {
-          THROW (LOFAR::Exception, "DPPP step type " << type << " is unknown");
+                                inNames.size()>1, currentMSName);
+        } else {
+          // Maybe the step is defined in a dynamic library.
+          step = findStepCtor(type) (reader, parset, prefix);
         }
         lastStep->setNextStep (step);
         lastStep = step;
@@ -262,8 +312,8 @@ namespace LOFAR {
           firstStep = step;
         }
       }
-      step = makeOutputStep(reader, parset, "msout.", inNames.size()>1,
-          currentMSName);
+      step = makeOutputStep(reader, parset, "msout.",
+                            inNames.size()>1, currentMSName);
       lastStep->setNextStep (step);
       lastStep = step;
 
@@ -280,56 +330,56 @@ namespace LOFAR {
       return firstStep;
     }
 
-
-    DPStep::ShPtr DPRun::makeOutputStep(MSReader* reader,
-      const ParameterSet& parset, const string& prefix, bool multipleInputs,
-      casa::String& currentMSName) {
+    DPStep::ShPtr DPRun::makeOutputStep (MSReader* reader,
+                                         const ParameterSet& parset,
+                                         const string& prefix,
+                                         bool multipleInputs,
+                                         casa::String& currentMSName)
+    {
       DPStep::ShPtr step;
       casa::String outName;
       bool doUpdate = false;
-
-      if (prefix=="msout.") { // We are handling the last step
+      bool lastOut  = false;
+      if (prefix == "msout.") {
+        // The last output step.
+        lastOut = true;
         outName = parset.getString ("msout.name", "");
         if (outName.empty()) {
           outName = parset.getString ("msout");
         }
-      } else {                // We are handling a DPOut step
-        outName = parset.getString(prefix + "name", "");
-      }
-
-      // A write should always be done if an output name is given.
-      // A name equal to . or input name means an update of original reader,
-      // so clear outname.
-      casa::Path pathIn (reader->msName());
-      if (! outName.empty()) {
-        if (outName == ".") {
-          outName = currentMSName;
-          doUpdate = true;
-        } else {
-          casa::Path pathOut(outName);
-          if (currentMSName == pathOut.absoluteName()) {
-            doUpdate = true;
-            outName=pathOut.absoluteName();
-          }
-        }
       } else {
-        outName = currentMSName;
-        doUpdate = true;
+        // An intermediate output step.
+        outName = parset.getString(prefix + "name");
       }
 
-      if (doUpdate) { // Create MSUpdater
+      // A name equal to . or the last name means an update of the last MS.
+      if (outName.empty()  ||  outName == ".") {
+        outName  = currentMSName;
+        doUpdate = true;
+      } else {
+        casa::Path pathOut(outName);
+        if (currentMSName == pathOut.absoluteName()) {
+          outName  = currentMSName;
+          doUpdate = true;
+        }
+      }
+      if (doUpdate) {
+        // Create MSUpdater.
+        // Take care the history is not written twice.
+        // Note that if there is nothing to write, the updater won't do anything.
         ASSERTSTR (! multipleInputs,
                    "No update can be done if multiple input MSs are used");
         step = DPStep::ShPtr(new MSUpdater(reader, outName, parset, prefix,
-            !(currentMSName==outName))); // do not write history twice
+                                           outName!=currentMSName));
       } else {
         step = DPStep::ShPtr(new MSWriter (reader, outName, parset, prefix));
         reader->setReadVisData (true);
       }
-
-      currentMSName = outName;
+      casa::Path pathOut(outName);
+      currentMSName = pathOut.absoluteName();
       return step;
     }
+
 
   } //# end namespace
 }

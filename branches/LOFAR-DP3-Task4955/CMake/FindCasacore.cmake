@@ -2,26 +2,18 @@
 # Usage:
 #   find_package(Casacore [REQUIRED] [COMPONENTS components...])
 # Valid components are:
-#   casa, scimath_f, scimath, tables, measures, measures_f, lattices,
-#   fits, ms, coordinates, msfits, components, mirlib, images
+#   casa, coordinates, derivedmscal, fits, images, lattices,
+#   meas, measures, mirlib, ms, msfits, scimath, scimath_f, tables
 #
 # Note that most components are dependent on other (more basic) components.
 # In that case, it suffices to specify the "top-level" components; dependent
 # components will be searched for automatically.
 #
-# Here's the dependency tree:
-#   scimath_f    ->  casa
-#   scimath      ->  scimath_f
-#   tables       ->  casa
-#   measures     ->  scimath, tables
-#   measures_f   ->  scimath, tables
-#   lattices     ->  scimath, tables
-#   fits         ->  measures
-#   ms           ->  measures
-#   coordinates  ->  fits
-#   msfits       ->  fits, ms
-#   components   ->  coordinates
-#   images       ->  components, mirlib, lattices
+# The dependency tree can be generated using the script get_casacore_deps.sh.
+# For this, you need to have a complete casacore installation, built with shared
+# libraries, at your disposal.
+#
+# The dependencies in this macro were generated against casacore release 1.7.0.
 #
 # Variables used by this module:
 #  CASACORE_ROOT_DIR         - Casacore root directory. 
@@ -40,6 +32,8 @@
 #                              for backward compatibility with AIPS++
 #  HAVE_CASACORE             - True if system has Casacore (cached)
 #                              identical to CASACORE_FOUND
+#  TAQL_EXECUTABLE           - The absolute path of the TaQL executable
+#                              (cached)
 #
 # ATTENTION: The component names need to be in lower case, just as the
 # casacore library names. However, the CMake variables use all upper case.
@@ -146,17 +140,16 @@ macro(casacore_find_package _name)
   endif(${_name}_FOUND)
 endmacro(casacore_find_package _name)
 
-
 # Define the Casacore components.
 set(Casacore_components
   casa
-  components
   coordinates
+  derivedmscal
   fits
   images
   lattices
+  meas
   measures
-  measures_f
   mirlib
   ms
   msfits
@@ -166,18 +159,20 @@ set(Casacore_components
 )
 
 # Define the Casacore components' inter-dependencies.
-set(Casacore_components_DEPENDENCIES  coordinates)
-set(Casacore_coordinates_DEPENDENCIES fits)
-set(Casacore_fits_DEPENDENCIES        measures)
-set(Casacore_images_DEPENDENCIES      components lattices mirlib)
-set(Casacore_lattices_DEPENDENCIES    scimath tables)
-set(Casacore_measures_DEPENDENCIES    scimath tables)
-set(Casacore_measures_f_DEPENDENCIES  scimath tables)
-set(Casacore_ms_DEPENDENCIES          measures)
-set(Casacore_msfits_DEPENDENCIES      fits ms)
-set(Casacore_scimath_DEPENDENCIES     scimath_f)
-set(Casacore_scimath_f_DEPENDENCIES   casa)
-set(Casacore_tables_DEPENDENCIES      casa)
+set(Casacore_casa_DEPENDENCIES)
+set(Casacore_coordinates_DEPENDENCIES   fits measures casa)
+set(Casacore_derivedmscal_DEPENDENCIES  ms measures tables casa)
+set(Casacore_fits_DEPENDENCIES          measures tables casa)
+set(Casacore_images_DEPENDENCIES        mirlib lattices coordinates fits measures scimath tables casa)
+set(Casacore_lattices_DEPENDENCIES      tables scimath casa)
+set(Casacore_meas_DEPENDENCIES          measures tables casa)
+set(Casacore_measures_DEPENDENCIES      tables casa)
+set(Casacore_mirlib_DEPENDENCIES)
+set(Casacore_ms_DEPENDENCIES            measures scimath tables casa)
+set(Casacore_msfits_DEPENDENCIES        ms fits measures tables casa)
+set(Casacore_scimath_DEPENDENCIES       scimath_f casa)
+set(Casacore_scimath_f_DEPENDENCIES)
+set(Casacore_tables_DEPENDENCIES        casa)
 
 # Initialize variables.
 set(CASACORE_FOUND FALSE)
@@ -185,11 +180,10 @@ set(CASACORE_DEFINITIONS)
 set(CASACORE_LIBRARIES)
 set(CASACORE_MISSING_COMPONENTS)
 
-# Search for the header file first. Note that casacore installs the header
-# files in ${prefix}/include/casacore, instead of ${prefix}/include.
+# Search for the header file first.
 if(NOT CASACORE_INCLUDE_DIR)
-  find_path(CASACORE_INCLUDE_DIR casa/aips.h
-    HINTS ${CASACORE_ROOT_DIR} PATH_SUFFIXES include/casacore)
+  find_path(CASACORE_INCLUDE_DIR casacore/casa/aips.h
+    HINTS ${CASACORE_ROOT_DIR} PATH_SUFFIXES include)
   mark_as_advanced(CASACORE_INCLUDE_DIR)
 endif(NOT CASACORE_INCLUDE_DIR)
 
@@ -198,7 +192,14 @@ if(NOT CASACORE_INCLUDE_DIR)
 else(NOT CASACORE_INCLUDE_DIR)
   # We've found the header file; let's continue.
   set(CASACORE_FOUND TRUE)
-  set(CASACORE_INCLUDE_DIRS ${CASACORE_INCLUDE_DIR})
+  # Note that new Casacore uses #include<casacore/casa/...>, while
+  # LOFAR still uses #include<casa/...>. Hence use both in -I path.
+  set(CASACORE_INCLUDE_DIRS ${CASACORE_INCLUDE_DIR} ${CASACORE_INCLUDE_DIR}/casacore)
+
+  # Search for some often used binaries.
+  find_program(TAQL_EXECUTABLE taql
+    HINTS ${CASACORE_ROOT_DIR}/bin)
+  mark_as_advanced(TAQL_EXECUTABLE)
 
   # If the user specified components explicity, use that list; otherwise we'll
   # assume that the user wants to use all components.
@@ -241,9 +242,10 @@ endif(CASACORE_MISSING_COMPONENTS)
 if(CASACORE_FOUND)
   if(NOT Casacore_FIND_QUIETLY)
     message(STATUS "Found the following Casacore components: ")
-    foreach(comp ${_find_components})
-      message(STATUS "  ${comp}")
-    endforeach(comp ${_find_components})
+    foreach(_comp ${_find_components})
+      string(TOUPPER casa_${_comp} _COMP)
+      message(STATUS "  ${_comp}: ${${_COMP}_LIBRARY}")
+    endforeach(_comp ${_find_components})
   endif(NOT Casacore_FIND_QUIETLY)
 else(CASACORE_FOUND)
   if(Casacore_FIND_REQUIRED)

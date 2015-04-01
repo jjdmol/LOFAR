@@ -27,12 +27,16 @@
 if test "$srcdir" = ""; then
   srcdir=../../../../../LOFAR/CEP/ParmDB/test
 fi
+curdir=`pwd`
+srcdir=`cd $srcdir/../src > /dev/null && pwd`
+exedir=`cd ../src > /dev/null && pwd`
+mwsdir=`cd $srcdir/../../LMWCommon/src > /dev/null && pwd`
+mwedir=`cd ../../LMWCommon/src > /dev/null && pwd`
+gpvdir=`cd ../../../LCS/Common/src > /dev/null && pwd`
 
-# Add src and LMWCommon directory to PATH (to find parmdbm).
-PATH="../src:$srcdir/../src:$PATH"
+# Extend PATH.
+PATH=$curdir:$srcdir:$exedir:$mwsdir:$mwedir:$gpvdir:$PATH
 export PATH
-which parmdbm
-which startdistproc
 
 # Create directories to create the parmdb-s in.
 # They must match the FileName in in_ms*.vds.
@@ -47,7 +51,7 @@ mkdir tsetupparmdb_tmp.ms2
 # Use _tmp name for the gds, so the resulting parmdb also gets a _tmp name.
 cp tsetupparmdb.in_gds tsetupparmdb_tmp.gds
 echo ">>>"
-"$srcdir/../src/setupparmdb" -overwrite tsetupparmdb_tmp.gds "" "" "" tsetupparmdb_tmp.log 0 tsetupparmdb_tmp.hfn "`pwd`"  ||  exit 1
+setupparmdb -overwrite tsetupparmdb_tmp.gds "" "" "" tsetupparmdb_tmp.log 0 tsetupparmdb_tmp.hfn "`pwd`"  ||  exit 1
 echo "<<<"
 
 # Append the three log files to the output.

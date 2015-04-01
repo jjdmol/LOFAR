@@ -26,6 +26,7 @@
 #include <DPPP/GaussianSource.h>
 #include <DPPP/PointSource.h>
 #include <casa/BasicSL/Constants.h>
+#include <Common/StreamUtil.h> ///
 
 namespace LOFAR
 {
@@ -81,6 +82,8 @@ void Simulator::visit(const PointSource &component)
     // Compute LMN coordinates.
     double lmn[3];
     radec2lmn(itsReference, component.position(), cursor<double>(lmn));
+    ///    cout<<"pos="<<itsReference[0]<<' '<<itsReference[1]<<' '<<component.position()[0]<<' '<<component.position()[1]<<endl;
+    ///    cout<<"lmn="<<lmn[0]<<' '<<lmn[1]<<' '<<lmn[2]<<endl;
 
     // Compute station phase shifts.
     phases(itsNStation, itsNChannel, const_cursor<double>(lmn),
@@ -156,7 +159,7 @@ void Simulator::visit(const GaussianSource &component)
     // Convert position angle from North over East to the angle used to
     // rotate the right-handed UV-plane.
     // TODO: Can probably optimize by changing the rotation matrix instead.
-    const double phi = casa::C::pi_2 - component.positionAngle();
+    const double phi = casa::C::pi_2 + component.positionAngle() + casa::C::pi;
     const double cosPhi = cos(phi);
     const double sinPhi = sin(phi);
 

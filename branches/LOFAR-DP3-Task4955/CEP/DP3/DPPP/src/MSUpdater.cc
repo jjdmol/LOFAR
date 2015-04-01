@@ -42,69 +42,32 @@ using namespace casa;
 namespace LOFAR {
   namespace DPPP {
 
-    MSUpdater::MSUpdater (MSReader* reader, String msName, const ParameterSet& parset,
+    MSUpdater::MSUpdater (MSReader* reader, String msName,
+                          const ParameterSet& parset,
                           const string& prefix, bool writeHistory)
       : itsReader         (reader),
+        itsName           (prefix),
         itsMSName         (msName),
         itsParset         (parset),
         itsWriteData      (false),
-        itsWriteWeight    (false),
+        itsWriteWeights   (false),
         itsWriteFlags     (false),
         itsNrDone         (0),
         itsDataColAdded   (false),
         itsWeightColAdded (false),
         itsWriteHistory   (writeHistory)
     {
-      itsDataColName  = parset.getString (prefix+"datacolumn",  "");
-      itsWeightColName  = parset.getString (prefix+"weightcolumn","");
-      itsNrTimesFlush = parset.getUint (prefix+"flush", 0);
+      itsDataColName   = parset.getString (prefix+"datacolumn",  "");
+      itsWeightColName = parset.getString (prefix+"weightcolumn","");
+      itsNrTimesFlush  = parset.getUint (prefix+"flush", 0);
     }
 
     MSUpdater::~MSUpdater()
     {}
 
-    bool MSUpdater::isNewDataColumn (MSReader* reader,
-                                     const ParameterSet& parset,
-                                     const string& prefix)
+    bool MSUpdater::addColumn (const string& colName, const casa::DataType
+                               dataType, const ColumnDesc& cd)
     {
-      // Only test if the output column name is given.
-      String colName = parset.getString (prefix+"datacolumn",
-                                         reader->dataColumnName());
-      return colName != reader->dataColumnName();
-    }
-
-    bool MSUpdater::updateAllowed (const DPInfo& info, String msName,
-                                    bool throwError) {
-      if (info.nchanAvg() != 1 || info.ntimeAvg() != 1) {
-        if (throwError) {
-          THROW(Exception, "A new MS has to be given in msout if averaging is done");
-        }
-        return false;
-      }
-      if (!info.phaseCenterIsOriginal()) {
-        if (throwError) {
-          THROW(Exception, "A new MS has to be given in msout if a phase shift is done");
-        }
-        return false;
-      }
-
-      MeasurementSet ms(msName, TableLock::AutoNoReadLocking);
-      Table anttab(ms.keywordSet().asTable("ANTENNA"));
-      ROScalarColumn<String> nameCol (anttab, "NAME");
-      Vector<String> antNames = nameCol.getColumn();
-      if (info.antennaNames().size() != antNames.size() ||
-          ! allEQ(info.antennaNames(), antNames)) {
-        if (throwError) {
-          THROW(Exception, "A new MS has to be given if antennas are added or removed");
-        }
-        return false;
-      }
-      return true;
-    }
-
-    bool MSUpdater::addColumn(const string& colName, const casa::DataType
-        dataType, const ColumnDesc& cd) {
-
       if (itsMS.tableDesc().isColumn(colName)) {
         const ColumnDesc& cd = itsMS.tableDesc().columnDesc(colName);
         ASSERTSTR (cd.dataType() == dataType  &&  cd.isArray(),
@@ -143,17 +106,14 @@ namespace LOFAR {
       if (itsWriteData) {
         putData (buf.getRowNrs(), buf.getData());
       }
-      if (itsWriteWeight) {
-        if (!buf.getWeights().empty()) { // Read weights from buffer
+      if (itsWriteWeights) {
+        if (!buf.getWeights().empty()) {
+          // Use weights from buffer
           putWeights (buf.getRowNrs(), buf.getWeights());
-        }
-        else {     // Read weights from reader, if possible
-          if (!MSUpdater::updateAllowed(info(),itsMSName,false)) {
-            THROW(Exception, "Copying weights column can only be done for the original MS");
-          } else {
-            putWeights (buf.getRowNrs(),
-              itsReader->fetchWeights(buf, buf.getRowNrs(), itsTimer));
-          }
+        } else {
+          itsBuffer.referenceFilled (buf);
+          putWeights (buf.getRowNrs(),
+                      itsReader->fetchWeights(buf, itsBuffer, itsTimer));
         }
       }
       itsNrDone++;
@@ -169,70 +129,66 @@ namespace LOFAR {
 
     void MSUpdater::updateInfo (const DPInfo& infoIn)
     {
-      info()=infoIn;
+      info() = infoIn;
+      itsWriteFlags  = getInfo().writeFlags();
 
-      itsWriteFlags=( (info().needWrite()&&DPInfo::NeedWriteFlags) != 0);
-
-      String origDataColName=info().getDataColName();
-      if (itsDataColName=="") {
-        itsDataColName=origDataColName;
+      String origDataColName = getInfo().getDataColName();
+      if (itsDataColName.empty()) {
+        itsDataColName = origDataColName;
+      } else if (itsDataColName != origDataColName) {
+        info().setNeedVisData();
+        info().setWriteData();
       }
+      itsWriteData = getInfo().writeData();
 
-      String origWeightColName=info().getWeightColName();
-      if (itsWeightColName=="") {
+      String origWeightColName = getInfo().getWeightColName();
+      if (itsWeightColName.empty()) {
         if (origWeightColName == "WEIGHT") {
           itsWeightColName = "WEIGHT_SPECTRUM";
         } else {
           itsWeightColName = origWeightColName;
         }
       }
-      ASSERT(itsWeightColName!="WEIGHT");
+      ASSERT(itsWeightColName != "WEIGHT");
       if (itsWeightColName != origWeightColName) {
-        itsWriteWeight = true;
+        info().setWriteWeights();
+      }
+      itsWriteWeights = getInfo().writeWeights();
+
+      if (getInfo().metaChanged()) {
+        THROW(Exception, "Update step " + itsName + 
+              " is not possible because meta data changes"
+              " (by averaging, adding/removing stations, etc.)");
       }
 
-      itsWriteData    = (info().needWrite() & DPInfo::NeedWriteData) != 0;
-      itsWriteWeight  = itsWriteWeight || (info().needWrite() & DPInfo::NeedWriteWeight) != 0;
-
-      // If another output column, but no output MS is given the data
-      // need to be read and written.
-      if (itsDataColName != origDataColName) {
-        info().setNeedVisData();
-        info().setNeedWrite (DPInfo::NeedWriteData);
-        itsWriteData=true;
+      if (itsWriteData || itsWriteFlags || itsWriteWeights) {
+        NSTimer::StartStop sstime(itsTimer);
+        itsMS = MeasurementSet (itsMSName, TableLock::AutoNoReadLocking,
+                                Table::Update);
+        // Add the data + weight column if needed and if it does not exist yet.
+        if (itsWriteData) {
+          // use same layout as DATA column
+          ColumnDesc cd = itsMS.tableDesc().columnDesc("DATA");
+          itsDataColAdded = addColumn(itsDataColName, TpComplex, cd);
+        }
+        if (itsWriteWeights) {
+          IPosition dataShape =
+            itsMS.tableDesc().columnDesc("DATA").shape();
+          ArrayColumnDesc<float> cd("WEIGHT_SPECTRUM", "weight per corr/chan",
+                                    dataShape, ColumnDesc::FixedShape);
+          itsWeightColAdded = addColumn(itsWeightColName, TpFloat, cd);
+        }
       }
-
-      if (!MSUpdater::updateAllowed(info(),itsMSName)) {
-        THROW(Exception, "Updating an existing MS is not possible with the current operations");
-      }
-
+      // Subsequent steps have to set again if writes need to be done.
+      info().clearWrites();
+      info().clearMetaChanged();
       // Tell the reader if visibility data needs to be read.
       itsReader->setReadVisData (info().needVisData());
-
-      // Todo: do not open MS if no writing is necessary (e.g. when only count is done)
-      itsMS = MeasurementSet (itsMSName, TableLock::AutoNoReadLocking);
-      NSTimer::StartStop sstime(itsTimer);
-      // Reopen the MS for read/write.
-      itsMS.reopenRW();
-      // Add the data + weight column if needed and if it does not exist yet.
-      if (itsWriteData) {
-        // use same layout as DATA column
-        ColumnDesc cd = itsMS.tableDesc().columnDesc("DATA");
-        itsDataColAdded = addColumn(itsDataColName, TpComplex, cd);
-      }
-      if (itsWriteWeight) {
-        IPosition dataShape =
-            itsMS.tableDesc().columnDesc("DATA").shape();
-        ArrayColumnDesc<float> cd("WEIGHT_SPECTRUM", "weight per corr/chan",
-            dataShape, ColumnDesc::FixedShape);
-        itsWeightColAdded = addColumn(itsWeightColName, TpFloat, cd);
-      }
-
-      info().setNeedWrite(0);
     }
-
-    void MSUpdater::addToMS (const string&) {
-      getPrevStep()->addToMS(itsMSName);
+      
+    void MSUpdater::addToMS (const string&)
+    {
+      getPrevStep()->addToMS (itsMSName);
       if (itsWriteHistory) {
         MSWriter::writeHistory (itsMS, itsParset);
       }
@@ -240,7 +196,7 @@ namespace LOFAR {
 
     void MSUpdater::show (std::ostream& os) const
     {
-      os << "MSUpdater" << std::endl;
+      os << "MSUpdater " << itsName << std::endl;
       os << "  MS:             " << itsMSName << std::endl;
       os << "  datacolumn:     " << itsDataColName;
       if (itsDataColAdded) {
@@ -252,6 +208,14 @@ namespace LOFAR {
         os << "  (has been added to the MS)";
       }
       os << std::endl;
+      if (itsWriteData || itsWriteFlags || itsWriteWeights) {
+        os << "  writing:       ";
+        if (itsWriteData)    os << " data";
+        if (itsWriteFlags)   os << " flags";
+        if (itsWriteWeights) os << " weights";
+        os << std::endl;
+      }
+      os << std::endl;
       os << "  flush:          " << itsNrTimesFlush << std::endl;
     }
 
@@ -259,7 +223,7 @@ namespace LOFAR {
     {
       os << "  ";
       FlagCounter::showPerc1 (os, itsTimer.getElapsed(), duration);
-      os << " MSUpdater" << endl;
+      os << " MSUpdater " << itsName << endl;
     }
 
     void MSUpdater::putFlags (const RefRows& rowNrs,

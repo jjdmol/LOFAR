@@ -1,4 +1,6 @@
-//# Copyright (C) 2006-8
+//# compiler.h:
+//#
+//# Copyright (C) 2014
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -17,37 +19,21 @@
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
 //# $Id$
-//#
-//# @author Adriaan Renting
 
-#include <lofar_config.h>
-#include <libgen.h>
-#include <PLC/ACCmain.h>
-#include <casa/Exceptions.h>
-#include <DPPP/PipelineProcessControl.h>
-#include <Common/LofarLogger.h>
+#ifndef LOFAR_COMMON_COMPILER_H
+#define LOFAR_COMMON_COMPILER_H
 
-// IDPPP is under control of ACC.
-// It can be run outside ACC as:
-//      IDPPP parsetfile 1
-// where 1 is the nr of runs.
+// \file
+// Compiler hints for branch prediction (and code layout).
+// Use only after profiling performance critical code,
+// or on checks for exceptional conditions.
+#if defined __GNUC__ || defined __clang__
+#define LIKELY(x)   __builtin_expect(!!(x), 1)
+#define UNLIKELY(x) __builtin_expect(!!(x), 0)
+#else
+#define LIKELY(x)   (x)
+#define UNLIKELY(x) (x)
+#endif
 
-int main(int argc, char *argv[])
-{
-  try
-  {
-    INIT_LOGGER(basename(argv[0]));
-    LOFAR::CS1::PipelineProcessControl myProcess;
-    return LOFAR::ACC::PLC::ACCmain(argc, argv, &myProcess);
-  } //try
-  catch(casa::AipsError& err)
-  {
-    std::cerr << "AIPS++/Casa(core) error detected: " << err.getMesg() << std::endl;
-    return -2;
-  }
-  catch(...)
-  {
-    std::cerr << "** PROBLEM **: Unhandled exception caught." << std::endl;
-    return -3;
-  }
-}
+#endif
+

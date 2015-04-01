@@ -58,7 +58,8 @@ namespace LOFAR {
     Record ParmFacade::getValues (const string& parmNamePattern,
                                   double freqv1, double freqv2,
                                   double timev1, double timev2,
-                                  bool asStartEnd)
+                                  bool asStartEnd,
+                                  bool includeDefaults)
     {
       double sfreq = freqv1;
       double efreq = freqv2;
@@ -80,7 +81,7 @@ namespace LOFAR {
       if (stime < rng[2]) stime = rng[2];
       if (etime > rng[3]) etime = rng[3];
       return itsRep->getValues (parmNamePattern, sfreq, efreq, 0,
-                                stime, etime, 0, true);
+                                stime, etime, 0, true, includeDefaults);
     }
 
     // Get the parameter values for the given parameters and domain.
@@ -88,12 +89,12 @@ namespace LOFAR {
     ParmFacade::getValuesMap (const string& parmNamePattern,
                               double freqv1, double freqv2, double freqStep,
                               double timev1, double timev2, double timeStep,
-                              bool asStartEnd)
+                              bool asStartEnd, bool includeDefaults)
     {
       return record2Map (getValues (parmNamePattern,
                                     freqv1, freqv2, freqStep,
                                     timev1, timev2, timeStep,
-                                    asStartEnd));
+                                    asStartEnd, includeDefaults));
     }
 
     map<string,vector<double> >

@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: tSingleton.cc 14057 2009-09-18 12:26:29Z diepen $
+//# $Id$
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -57,6 +57,13 @@ void test_simple(Mutex::Type type) {
 
   {
     ScopedLock sl(mutex);
+  }
+
+  {
+    // scoped locking and unlocking should be stackable
+    ScopedLock sl1(mutex, false);
+    ScopedLock sl2(mutex, true);
+    ScopedLock sl3(mutex, false);
   }
 }
 

@@ -570,7 +570,7 @@ namespace BBS {
     pertCol.put (rownr, pset.getPerturbation());
     prelCol.put (rownr, pset.getPertRel());
     maskCol.put (rownr, pset.getSolvableMask());
-    table.flush();
+    //   table.flush();   // Why this flush? Makes things slow.
     return id;
   }
 

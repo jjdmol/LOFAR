@@ -46,6 +46,12 @@ namespace DPPP
   vector<Patch::ConstPtr> makePatches(BBS::SourceDB &sourceDB,
                                       const vector<string> &patchNames,
                                       uint nModel);
+
+  // From a given PatchList, create a new one with one patch per component
+  vector<Patch::ConstPtr> makeOnePatchPerComponent(vector<Patch::ConstPtr>);
+
+  vector<string>  makePatchList(BBS::SourceDB &sourceDB, vector<string> patterns);
+
 // @}
 
 } //# namespace DPPP

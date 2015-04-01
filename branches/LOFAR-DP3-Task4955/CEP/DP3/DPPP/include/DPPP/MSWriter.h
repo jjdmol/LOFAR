@@ -164,7 +164,9 @@ namespace LOFAR {
 
       //# Data items.
       MSReader*       itsReader;
-      std::string itsOutName;
+      string          itsName;
+      string          itsOutName;
+      DPBuffer        itsBuffer;
       casa::Table     itsMS;
       const ParameterSet&   itsParset; //# parset for writing history
       casa::String    itsDataColName;

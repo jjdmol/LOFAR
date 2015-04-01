@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: tSingleton.cc 14057 2009-09-18 12:26:29Z diepen $
+//# $Id$
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -179,6 +179,26 @@ void test_mt() {
 }
 
 
+void test_prio()
+{
+  /*
+   * Note: Failure to set thread priority
+   * merely results in a warning, so there
+   * isn't really anything to test except
+   * not freezing or crashing.
+   */
+  {
+    // normal priority
+    Thread::ScopedPriority sp(SCHED_OTHER, 0);
+  }
+
+  {
+    // real-time priority
+    Thread::ScopedPriority sp(SCHED_FIFO, 1);
+  }
+}
+
+
 int main()
 {
   INIT_LOGGER("tThread");
@@ -189,6 +209,7 @@ int main()
 
   test_simple();
   test_mt();
+  test_prio();
 
   LOG_INFO("Program terminated successfully");
   return 0;
