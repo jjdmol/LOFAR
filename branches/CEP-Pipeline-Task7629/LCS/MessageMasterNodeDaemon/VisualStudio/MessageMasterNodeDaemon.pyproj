@@ -22,6 +22,8 @@
     <Folder Include="src\NCQLib\" />
     <Folder Include="test\" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Compile Include="src\MCQDaemon\MCQDaemon.py" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>
