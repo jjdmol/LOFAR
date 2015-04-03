@@ -7,7 +7,7 @@ lofar_add_package(Blob)           # Binary Large Objects
 lofar_add_package(Common)         # Common stuff
 lofar_add_package(MessageBus)     # Support for QPID message exchange
 lofar_add_package(MessageDaemons) # Daemons to do message routing and handling
-lofar_add_package(MessageMasterNodeMaemons)  # Daemons for master node routing and handling
+lofar_add_package(MessageMasterNodeMaemon)  # Daemons for master node routing and handling
 lofar_add_package(MSLofar)        # MS for LOFAR based on ICD
 lofar_add_package(pyparameterset) # Python ParameterSet bindings
 lofar_add_package(pytools)        # Python tools
