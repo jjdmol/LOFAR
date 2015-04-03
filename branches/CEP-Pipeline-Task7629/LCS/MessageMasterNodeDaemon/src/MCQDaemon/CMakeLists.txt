@@ -1,6 +1,4 @@
 # $Id$
-
-include(LofarPackageVersion)
 include(PythonInstall)
 
 
