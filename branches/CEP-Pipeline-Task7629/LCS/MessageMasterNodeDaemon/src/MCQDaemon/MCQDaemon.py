@@ -4,8 +4,11 @@ import pickle
 import os
 
 
+
+
 class MCQDaemon(object):
   def __init__(self, state_file_path, loop_interval=10, init_delay=10):
+
     self._statefilepath = None
     self._loop_interval = loop_interval  # perform loop max once per loop_interval
     self._init_delay    = init_delay     # how many loop polls te wait before
