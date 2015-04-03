@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{56f3f6bf-509d-4ff5-92a9-b68095cc4a61}</ProjectGuid>
     <ProjectHome>..\</ProjectHome>
-    <StartupFile />
+    <StartupFile>src\MCQDaemon\MCQDaemon.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
