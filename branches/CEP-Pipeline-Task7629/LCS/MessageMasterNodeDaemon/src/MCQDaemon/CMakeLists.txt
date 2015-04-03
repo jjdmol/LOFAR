@@ -2,7 +2,7 @@
 include(PythonInstall)
 
 
-python_install(
+install(PROGRAMS
   MCQDaemon.py
   DESTINATION bin)
 
