@@ -1,19 +1,24 @@
 from datetime import datetime   # needed for duration 
 import time
+import pickle
+import os
+
 
 class MCQDaemon(object):
-  def __init__(self, loop_interval=10, init_delay=10):
+  def __init__(self, state_file_path, loop_interval=10, init_delay=10):
     self._statefilepath = None
     self._loop_interval = loop_interval  # perform loop max once per loop_interval
     self._init_delay    = init_delay     # how many loop polls te wait before
                                          # it is asumed that the pipeline that called init has died before registering as a consumer
 
+    self._state_file_path = state_file_path  # where to store the statefile
     self._registered_pipelines = {}      # dict of uuid -> (ResultQName, 
                                          #                  LogTopic)
 
     self._commandQueue = []              # place holder command queue
 
     # check for existing statefile
+    self._init_state_from_file_if_possible()
 
 
   def run(self):
@@ -26,9 +31,7 @@ class MCQDaemon(object):
 
     2. Process all incomming commands
 
-    3. Save current statefile
-
-    4. Wait for x seconds
+    3. Wait for x seconds
 
     """
     while(True):   
@@ -42,13 +45,8 @@ class MCQDaemon(object):
       # 2. Process all incomming commands
       quit_command_received = self._process_commands()
       if (quit_command_received):
-          print "*************** recveived quit command **************"
-
-
-          break
-
-      # 3. Save current statefile
-      self._save_state_to_file()
+        print "*************** recveived quit command **************"
+        break
       
       end_tick = datetime.now()   
       # ************** Main loop ***********************
@@ -71,24 +69,39 @@ class MCQDaemon(object):
 
 
   def _check_and_clear_known_queues(self):
+    """
+    Check all registered session queue for listeners
+    If this is zero, the queues will not be read anymore and the process died
 
+    Clear the messages in the queues and delete these
+    """
     print "  _check_and_clear_queue()"
-
-
     # Using items() as iterater allows deletion on the go
     for uuid in self._registered_pipelines.keys():
-      # first check if the bus has registered listeners. None means the pipeline
+      # A queue might be in the init period (a grace period which allows an
+      # pipelie some time to connect to the bus before the queues are removed)
+      if self._registered_pipelines[uuid]["init_wait"] > 0:
+        print "    init phase detected"
+        self._registered_pipelines[uuid]["init_wait"] -= 1  
+        continue
+      
+      # no listeners means the pipeline
       # died
-
       nr_listeners = self._get_number_of_queue_listener(uuid)
 
       # If the number of listeners is 0 there is no consumer of data anymore.
-      # The results in the queue have no place to be stored. We could use
-
+      # The results in the queue have no place to be stored. 
       if (nr_listeners == 0):
           self._delete_queues_and_session(uuid)
 
+      # the state has changed, save it
+      self._save_state_to_file()
+
   def _delete_queues_and_session(self, uuid):
+    """
+    Deletes the queue and topic for this uuid and removes it from the
+    internal storage
+    """
     # clear the q of msg
     self._clear_queue(uuid)
   
@@ -100,19 +113,12 @@ class MCQDaemon(object):
 
   def _get_number_of_queue_listener(self, uuid):
     """
-    Check the result queue for the number us listeners and returns it
+    get from the result queue the number of listeners
     """
     print "    check number of consumers"
 
-    # check if we are still in the wait for consumer phase
-    # this is the place were disappeared queue should be checked for.
-    # could happen if daemon crashed between del of queue and save state in
-    if self._registered_pipelines[uuid]["init_wait"] > 0:
-      print "    init phase detected"
-      self._registered_pipelines[uuid]["init_wait"] -= 1
-      return 1
-
-    # else return the number of registered users
+    # return the number of registered users
+    # TODO: currently faked
     return self._registered_pipelines[uuid]['nr_consumers']
 
   def _clear_queue(self, uuid):
@@ -185,18 +191,30 @@ class MCQDaemon(object):
         self._process_start_job(msg)
         msg['command'] = 'ack'
 
-      elif command == 'quit':        
+      elif command == 'quit':
+        self._process_quit_msg(msg)
+                
         msg['command'] = 'ack'
-        return True
+        return True  # do NOT save the current state, might be cleared due to
+        # this command
 
       else:
-        raise Exception("unknown command")
+        msg['command'] = 'ack'
+        print " ***** warning **** encountered unknown command"
 
       # After each command we need to save the new state.
+      # If the deamon goes down between the processing of the command
+      # and this save we have an indetermined state.
       self._save_state_to_file()
 
         
-       
+  def _process_quit_msg(self, msg):
+    """
+
+    """
+    if msg['clear_state'] == "true":
+      os.remove(self._state_file_path)
+
 
   def _process_init_msg(self, msg):
     """
@@ -241,14 +259,32 @@ class MCQDaemon(object):
     self._delete_queues_and_session(uuid)
 
   def _save_state_to_file(self):
+    file = open(self._state_file_path, 'w')
 
-    print "  _save_state_to_file()"
+    pickle.dump(self._registered_pipelines, file)
 
-  
+    file.flush()  # force write to disk
+    file.close()
+
+    print "  _saved_state_to_file()"
+
+  def _init_state_from_file_if_possible(self):
+
+    # if no statefile exist do nothing
+    if not os.path.exists(self._state_file_path):
+      return
+
+    # Open the statefile 
+    file = open(self._state_file_path, 'r')
+
+    state = pickle.load(file)
+
+    # TODO: do not check for correct state or anything, simple assign
+    self._registered_pipelines = state
       
 
 if __name__ == "__main__":
-    daemon = MCQDaemon(1, 2)
+    daemon = MCQDaemon("c:\daemon_files\daemon_state_file.pkl", 1, 2)
 
 
     # we are testing
@@ -265,6 +301,11 @@ if __name__ == "__main__":
     daemon._commandQueue.append({'command':'add_consumer', 'uuid':"uuid_001"})
 
     daemon._commandQueue.append({'command':'no_msg'})
+    daemon._commandQueue.append({'command':'no_msg'})
+    daemon._commandQueue.append({'command':'no_msg'})
+    daemon._commandQueue.append({'command':'no_msg'})
+    daemon._commandQueue.append({'command':'no_msg'})
+    daemon._commandQueue.append({'command':'no_msg'})
     # delete the consumer on the session
     daemon._commandQueue.append({'command':'del_consumer', 'uuid':"uuid_001"})
     # This results in the session to be removed 
@@ -278,7 +319,7 @@ if __name__ == "__main__":
     daemon._commandQueue.append({'command':'stop_session', 'uuid':"uuid_002"})
     daemon._commandQueue.append({'command':'no_msg'})
 
-    daemon._commandQueue.append({'command':'quit'})
+    daemon._commandQueue.append({'command':'quit',"clear_state":"true"})
 
 
 
