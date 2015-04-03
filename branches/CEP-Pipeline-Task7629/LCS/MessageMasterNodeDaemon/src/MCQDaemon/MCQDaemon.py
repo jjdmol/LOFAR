@@ -4,8 +4,6 @@ import pickle
 import os
 
 
-
-
 class MCQDaemon(object):
   def __init__(self, state_file_path, loop_interval=10, init_delay=10):
 
@@ -287,7 +285,7 @@ class MCQDaemon(object):
       
 
 if __name__ == "__main__":
-    daemon = MCQDaemon("c:\daemon_files\daemon_state_file.pkl", 1, 2)
+    daemon = MCQDaemon("daemon_state_file.pkl", 1, 2)
 
 
     # we are testing
