@@ -73,7 +73,7 @@ def add_file_to_list(url,filename):
 #cache all listed files
 for filename in filelist:
     add_file_to_list(filename,filename)
-for url,filename in redirect_filelist:
+for url,filename in redirect_filelist.items():
     add_file_to_list(url,filename)
 
 last_status="NOTCONNECTED"
