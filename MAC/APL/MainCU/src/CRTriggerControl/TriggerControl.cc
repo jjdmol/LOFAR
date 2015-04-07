@@ -60,9 +60,6 @@ using namespace std;
 using namespace LOFAR::StringUtil;
 
 namespace LOFAR {
-    using namespace DP_Protocol;
-    using namespace Controller_Protocol;
-    using namespace CR_Protocol;
     using namespace APLCommon;
     namespace MainCU {
 

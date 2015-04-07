@@ -1,4 +1,4 @@
-//# NoQpidFallback.h: A fake implementation of the QPID API in case QPID is not installed
+//# QpidMock.h: A fake implementation of the QPID API
 //#
 //# Copyright (C) 2015
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MESSAGEBUS_NO_QPID_FALLBACK_H
-#define LOFAR_MESSAGEBUS_NO_QPID_FALLBACK_H
+#ifndef LOFAR_MESSAGEBUS_QPIDMUCK_H
+#define LOFAR_MESSAGEBUS_QPIDMUCK_H
 
 #ifndef HAVE_QPID
 #include <Common/LofarLogger.h>

@@ -55,20 +55,9 @@ namespace LOFAR {
     }
   }
 
-  void BlobAipsIO::write (Int64 size, const void* buf)
-  {
-    itsOBuf->put (static_cast<const uchar*>(buf), size);
-  }
-
   void BlobAipsIO::write (uInt size, const void* buf)
   {
     itsOBuf->put (static_cast<const uchar*>(buf), size);
-  }
-
-  Int64 BlobAipsIO::read (Int64 size, void* buf, Bool)
-  {
-    itsIBuf->get (static_cast<uchar*>(buf), size);
-    return size;
   }
 
   Int BlobAipsIO::read (uInt size, void* buf, Bool)

@@ -27,7 +27,7 @@
 #include <qpid/messaging/Message.h>
 #include <qpid/types/Variant.h>
 #else
-#include <MessageBus/NoQpidFallback.h>
+#include <MessageBus/QpidMock.h>
 #endif
 
 #include <string>

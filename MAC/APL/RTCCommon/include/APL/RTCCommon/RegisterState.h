@@ -135,12 +135,14 @@ public:
 
 	size_t pack(char* buffer) const {
 		size_t offset = 0;
-		return MSH_pack(buffer, offset, m_state);
+		MSH_pack(buffer, offset, m_state);
+		return offset;
 	}
 
 	size_t unpack(const char* buffer) {
 		size_t offset = 0;
-		return MSH_unpack(buffer, offset, m_state);
+		MSH_unpack(buffer, offset, m_state);
+		return offset;
 	}
 
 private:

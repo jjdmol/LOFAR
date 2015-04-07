@@ -311,7 +311,7 @@ struct mmsghdr {
 #endif
 
 unsigned SocketStream::recvmmsg( void *bufBase, unsigned maxMsgSize,
-                                 std::vector<unsigned> &recvdMsgSizes ) const
+                                 std::vector<unsigned> &recvdMsgSizes )
 {
   ASSERT(protocol == UDP);
   ASSERT(mode == Server);

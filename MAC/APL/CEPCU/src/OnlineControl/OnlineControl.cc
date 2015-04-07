@@ -59,8 +59,6 @@ using namespace boost::posix_time;
 using namespace std;
 
 namespace LOFAR {
-	using namespace DP_Protocol;
-	using namespace Controller_Protocol;
 	using namespace APLCommon;
 	using namespace OTDB;
 	namespace CEPCU {

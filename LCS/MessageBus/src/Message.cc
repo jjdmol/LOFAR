@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -132,7 +132,7 @@ void Message::setListPayload(const qpid::types::Variant::List &payload)
 
 std::string Message::short_desc() const
 {
-  return formatString("[%s] [sasid %s] %s", uuid().c_str(), sasid().c_str(), summary().c_str());
+  return formatString("[%s] %s", uuid().c_str(), summary().c_str());
 }
 
 //

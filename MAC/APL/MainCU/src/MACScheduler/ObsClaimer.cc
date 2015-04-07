@@ -52,8 +52,6 @@ using namespace boost::posix_time;
 using namespace std;
 
 namespace LOFAR {
-	using namespace DP_Protocol;
-	using namespace CM_Protocol;
 	using namespace APLCommon;
 	namespace MainCU {
 

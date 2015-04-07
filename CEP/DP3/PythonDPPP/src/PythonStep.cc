@@ -133,7 +133,7 @@ namespace LOFAR {
         }
         boost::python::object res2 = itsPyObject.attr("needWrite")();
         if (boost::python::extract<bool>(res2)) {
-          info().setWriteData();
+          info().setNeedWrite();
         }
       } catch (boost::python::error_already_set const &) {
         // handle the exception in some way
@@ -240,7 +240,7 @@ namespace LOFAR {
     }
     void PythonStep::setNeedWrite()
     {
-      info().setWriteData();
+      info().setNeedWrite();
     }
 
     void PythonStep::getData (const ValueHolder& vh)

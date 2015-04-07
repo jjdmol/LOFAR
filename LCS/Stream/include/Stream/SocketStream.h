@@ -66,7 +66,7 @@ class SocketStream : public FileDescriptorBasedStream
      * Returns the number of messages received if ok, or throws on syscall error
      */
     unsigned recvmmsg( void *bufBase, unsigned maxMsgSize,
-                       std::vector<unsigned> &recvdMsgSizes ) const;
+                       std::vector<unsigned> &recvdMsgSizes );
 
     // Allow individual recv()/send() calls to last for 'timeout' seconds before returning EWOULDBLOCK
     void setTimeout(double timeout);

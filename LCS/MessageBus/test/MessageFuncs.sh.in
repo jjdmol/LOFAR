@@ -23,18 +23,11 @@ function _generate_prefix() {
 
 # Generate an unique prefix for all queues in this test
 export QUEUE_PREFIX=`_generate_prefix`
-echo "MessageBus: QUEUE_PREFIX=$QUEUE_PREFIX" >&2
+echo "MessageBus: QUEUE_PREFIX=$QUEUE_PREFIX"
 
 function have_qpid() {
   [ "@HAVE_QPID@" == "TRUE" ]
 }
-
-if have_qpid; then
-  # QPID_ROOT_DIR is set for LOFAR, which also contains the .profile needed to set the PYTHON_PATH.
-  QPID_ROOT_DIR="@QPID_ROOT_DIR@"
-
-  source $QPID_ROOT_DIR/.profile || echo "MessageBus: .profile not loaded, using default PATHs to find qpid stuff." >&2
-fi
 
 # A list of all queues we created
 CREATED_QUEUES=""
@@ -100,7 +93,7 @@ function create_queue() {
   #   create_queue [host:]queue
   HOSTQUEUE="$1"
 
-  echo "MessageBus: Creating queue $QUEUE_PREFIX$HOSTQUEUE" >&2
+  echo "MessageBus: Creating queue $HOSTQUEUE"
 
   _qpid_receive "$HOSTQUEUE" "; { create: always }" --print-content no --ignore-reply-to
 
@@ -117,7 +110,7 @@ function delete_queue() {
   # Will not remove used queues
   HOSTQUEUE="$1"
 
-  echo "MessageBus: Deleting queue $QUEUE_PREFIX$HOSTQUEUE" >&2
+  echo "MessageBus: Deleting queue $HOSTQUEUE"
 
   _qpid_receive "$HOSTQUEUE" "; { delete: always }" --print-content no --ignore-reply-to
 }
@@ -146,28 +139,6 @@ function recv_msg() {
   HOSTQUEUE="$1"
 
   _qpid_receive "$HOSTQUEUE" "" --ignore-reply-to -m 1
-}
-
-function wait_msg() {
-  # Waits for one message from a queue, with a timeout
-  #
-  # Usage:
-  #   wait_msg timeout [host:]queue > message
-  #
-  # Returns 0 if a message was received, 1 if not.
-  # The received message is emitted on stdout.
-  TIMEOUT="$1"
-  HOSTQUEUE="$2"
-
-  MSG=`_qpid_receive "$HOSTQUEUE" "" --ignore-reply-to -m 1 --timeout $TIMEOUT`
-
-  # Fix return code (qpid_receive will almost always return success)
-  if [ -z "$MSG" ]; then
-    return 1
-  fi
-
-  echo "$MSG"
-  return 0
 }
 
 function recv_all_msgs() {

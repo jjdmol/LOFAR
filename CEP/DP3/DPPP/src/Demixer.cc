@@ -307,8 +307,7 @@ namespace LOFAR {
       itsAvgStepSubtr->setInfo (infoIn);
       // Update the info of this object.
       info().setNeedVisData();
-      info().setWriteData();
-      info().setWriteFlags();
+      info().setNeedWrite();
       itsNTimeAvgSubtr = std::min (itsNTimeAvgSubtr, infoSel.ntime());
       itsNChanAvgSubtr = info().update (itsNChanAvgSubtr, itsNTimeAvgSubtr);
       itsNChanOutSubtr = info().nchan();

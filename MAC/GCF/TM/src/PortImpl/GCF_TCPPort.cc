@@ -38,7 +38,6 @@
 const uint UDP_BUFFER_SIZE = 1600;
 
 namespace LOFAR {
-  using namespace SB_Protocol;
   namespace GCF {
     using namespace SB;
     namespace TM {

@@ -60,8 +60,6 @@
 								c-'A'+10 : ((c>='a' && c<='f') ? c-'a'+10 : 0)))
 
 namespace LOFAR {
-	using namespace RSP_Protocol;
-	using namespace EPA_Protocol;
 	using namespace GCF::TM;
 	namespace rspctl {
 	using namespace std;

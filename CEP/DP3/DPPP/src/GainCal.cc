@@ -118,8 +118,7 @@ namespace LOFAR {
     {
       info() = infoIn;
       info().setNeedVisData();
-      info().setWriteData();
-      info().setWriteFlags();
+      info().setNeedWrite();
 
       uint nBl=info().nbaselines();
       for (uint i=0; i<nBl; ++i) {

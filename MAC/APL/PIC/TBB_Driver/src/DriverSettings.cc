@@ -33,7 +33,7 @@
 #include <fstream>
 
 using namespace LOFAR;
-using namespace TBB_Protocol;
+	//using namespace GCFCommon;
 using namespace TBB;
 
 // rcu to channel conversion, rcu-0 is on channel-2

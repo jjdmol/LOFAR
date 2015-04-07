@@ -53,8 +53,6 @@ using namespace boost::posix_time;
 using qpid::messaging::Message;
 
 namespace LOFAR {
-	using namespace DP_Protocol;
-	using namespace Controller_Protocol;
 	using namespace APLCommon;
 	using namespace GCF::TM;
 	using namespace GCF::PVSS;

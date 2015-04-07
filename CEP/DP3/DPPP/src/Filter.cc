@@ -67,11 +67,7 @@ namespace LOFAR {
     {
       info() = infoIn;
       info().setNeedVisData();
-      info().setWriteData();
-      info().setWriteFlags();
-      if (itsRemoveAnt) {
-        info().setMetaChanged();
-      }
+      info().setNeedWrite();
       // Parse the chan expressions.
       // Nr of channels can be used as 'nchan' in the expressions.
       Record rec;

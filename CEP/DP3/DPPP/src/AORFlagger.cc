@@ -121,7 +121,7 @@ namespace LOFAR {
     {
       info() = infoIn;
       info().setNeedVisData();
-      info().setWriteFlags();
+      info().setNeedWrite (DPInfo::NeedWriteFlags);
       // Get nr of threads.
       uint nthread = OpenMP::maxThreads();
       // Determine available memory.
