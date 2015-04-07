@@ -1,0 +1,23 @@
+<message>
+   <header>
+      <system>LOFAR</system>
+      <version>1.0.0</version>
+      <protocol>
+         <name>task.specification.system</name>
+         <version>1.0</version>
+      </protocol>
+      <source>
+         <name>LOFAR.MACScheduler</name>
+         <user></user>
+         <uuid></uuid>
+         <timestamp></timestamp>
+         <summary></summary>
+      </source>
+      <ids>
+         <momid>180785</momid>
+         <sasid>78958</sasid>
+      </ids>
+   </header>
+   <payload>
+   </payload>
+</message>
