@@ -52,10 +52,12 @@ cd `dirname $0`
 echo "Running on `hostname`:`pwd`"
 echo ""
 
+LOGSUFFIX="`hostname`.log.`date +%FT%T`"
+
 # Run all tests
 for TEST in `find $TESTSETS -name '*.test' -type f -a -executable`
 do
-  LOGFILE="$TEST.`hostname`.log"
+  LOGFILE="$TEST.$LOGSUFFIX"
 
   printf "%40s: " "$TEST"
   (cd `dirname $TEST` && runTest ./`basename $TEST`) > $LOGFILE 2>&1
