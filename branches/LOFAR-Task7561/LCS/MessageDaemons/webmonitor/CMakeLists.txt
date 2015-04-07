@@ -4,12 +4,20 @@ install(FILES
   QPIDWebserverJSON
   DESTINATION bin)
 
-file(GLOB WebMonitorFiles
+file(GLOB StaticFiles
   lib/*
   Schema.svg.*
   *.html
   )
 
+file(GLOB LibFiles
+  lib/*
+  )
+
 install(FILES
-  ${WebMonitorFiles}
+  ${StaticFiles}
   DESTINATION srv/www)
+
+install(FILES
+  ${LibFiles}
+  DESTINATION srv/www/lib)
