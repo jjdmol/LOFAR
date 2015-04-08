@@ -29,6 +29,7 @@ install(PROGRAMS
 
 install(FILES
   outputProc.log_prop
+  TBB_Writer.log_prop
   DESTINATION etc)
 
 lofar_add_bin_program(outputProc outputProc.cc)
