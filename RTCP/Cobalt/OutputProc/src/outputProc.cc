@@ -40,7 +40,6 @@
 #include <OutputProc/Package__Version.h>
 #include <MessageBus/MsgBus.h>
 #include "GPUProcIO.h"
-#include "IOPriority.h"
 
 #define STDLOG_BUFFER_SIZE     1024
 
@@ -109,10 +108,6 @@ int main(int argc, char *argv[])
   omp_set_nested(true);
 
   OMPThread::init();
-
-  setIOpriority();
-  setRTpriority();
-  lockInMemory(16UL * 1024UL * 1024UL * 1024UL); // limit memory to 16 GB
 
   PortBroker::createInstance(storageBrokerPort(observationID));
 
