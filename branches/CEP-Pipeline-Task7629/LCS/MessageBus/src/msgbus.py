@@ -145,6 +145,13 @@ class FromBus(Session):
             raise BusException(m)
 
     def get(self, timeout=None):
+        """
+        Get a message from the bus. Timeout is in second, fractions are supported
+
+        Returns None after timeout if no msg are available
+
+        Might throw messaging.exceptions from 
+        """
         msg = None
 
         logger.info("[FromBus] Waiting for message")

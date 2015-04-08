@@ -1,52 +1,131 @@
-import lofar.messagebus.MCQDaemon as MCQ
+# import lofar.messagebus.MCQDaemon as MCQ  # communicate using the lib
+
+import uuid
+
+import lofar.messagebus.msgbus as msgbus
+import lofar.messagebus.message as message
+
+from qmf.console import Session as QMFSession
+
+import logging
+# Define logging. Until we have a python loging framework, we'll have
+# to do any initialising here
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
+logger=logging.getLogger("MessageBus")
 
 
+class MCQDaemonLib(object):
+    """
+    Interface lib connecting to a local MCQDaemon command queue.
+    Hides all queue interactions behind function specific functions.
+
+    1. Connect to the command queue
+
+    2. Init session
+      a. Establish connection with the headnode CommandQueue
+      a. Send command to create temp queues
+      b. Connect to queues 
+
+    """
+    def __init__(self):
+        # Each MCQDaemonLib triggers a session with a uuid, generate and store
+        self._sessionUUID = uuid.uuid4()
+
+        # should be moved to a config file
+        self.broker="127.0.0.1" 
+        self.queueName = "username.LOCUS102.MCQueueDaemon.CommandQueue"
 
 
+        # Connect to the HCQDaemon
+        self._sendCommandQueue = msgbus.ToBus(self.queueName, 
+            options = "create:always, node: { type: queue, durable: True}",
+            broker = self.broker)
 
+        self._check_queue_and_daemon_state()
+
+  
+    def _check_queue_and_daemon_state(self):
+        """
+        Helper function for the __init__ member
+
+        Checks if the connect with the commandqueue has been established
+        Checks if there is a MAster daemon listening (by checking the number
+        of consumers of the command queue.)
+
+        Raise Exceptions on errors
+        else returns with void
+        """
+        # Check for consumers: We need to know if the deamon is active before
+        # we can send commands
+        session=QMFSession()
+        session.addBroker(self.broker)  # is the assignment needed?
+        queues = session.getObjects(_class="queue",
+                                    _package="org.apache.qpid.broker")
+
+        nr_consumers_of_CQ = None
+        for queue_item in queues:
+            if self.queueName in queue_item.name :
+                nr_consumers_of_CQ = queue_item.consumerCount
+
+        if nr_consumers_of_CQ == None:
+            raise Exception("Could not find command queue, is QPID enabled?")
+
+        if nr_consumers_of_CQ == 0:
+            raise Exception("No HeadNodeCommandQueueDaemon detected, aborting")
+
+
+    def _add_consumer():
+        """
+    
+
+        """
+        pass
 
 
 if __name__ == "__main__":
     print "Hello world"
 
-    if __name__ == "__main__":
-        daemon = MCQ.MCQDaemon("daemon_state_file.pkl", 1, 2)
+    MCQLib = MCQDaemonLib()
 
 
-    # we are testing
-    # put some commands in the queue
-
-    # skip one loop
-    daemon._commandQueue.append({'command':'no_msg'})  
-
-    # add a new pipeline session
-    daemon._commandQueue.append({'command':'start_session', 'uuid':"uuid_001"})
-
-    # skip one loop
-    daemon._commandQueue.append({'command':'no_msg'})
-    daemon._commandQueue.append({'command':'add_consumer', 'uuid':"uuid_001"})
-
-    daemon._commandQueue.append({'command':'no_msg'})
-    daemon._commandQueue.append({'command':'no_msg'})
-    daemon._commandQueue.append({'command':'no_msg'})
-    daemon._commandQueue.append({'command':'no_msg'})
-    daemon._commandQueue.append({'command':'no_msg'})
-    daemon._commandQueue.append({'command':'no_msg'})
-    # delete the consumer on the session
-    daemon._commandQueue.append({'command':'del_consumer', 'uuid':"uuid_001"})
-    # This results in the session to be removed 
-    daemon._commandQueue.append({'command':'no_msg'})
-    # Create a second session: What happens if a queue is deleted when there are consumers???
-    # interesting
-    daemon._commandQueue.append({'command':'start_session', 'uuid':"uuid_002"})
-    daemon._commandQueue.append({'command':'no_msg'})
-    daemon._commandQueue.append({'command':'add_consumer', 'uuid':"uuid_002"})
-    daemon._commandQueue.append({'command':'no_msg'})
-    daemon._commandQueue.append({'command':'stop_session', 'uuid':"uuid_002"})
-    daemon._commandQueue.append({'command':'no_msg'})
-
-    daemon._commandQueue.append({'command':'quit',"clear_state":"true"})
+    #if __name__ == "__main__":
+    #    daemon = MCQ.MCQDaemon("daemon_state_file.pkl", 1, 2)
 
 
+    ## we are testing
+    ## put some commands in the queue
 
-    daemon.run()
+    ## skip one loop
+    #daemon._commandQueue.append({'command':'no_msg'})  
+
+    ## add a new pipeline session
+    #daemon._commandQueue.append({'command':'start_session', 'uuid':"uuid_001"})
+
+    ## skip one loop
+    #daemon._commandQueue.append({'command':'no_msg'})
+    #daemon._commandQueue.append({'command':'add_consumer', 'uuid':"uuid_001"})
+
+    #daemon._commandQueue.append({'command':'no_msg'})
+    #daemon._commandQueue.append({'command':'no_msg'})
+    #daemon._commandQueue.append({'command':'no_msg'})
+    #daemon._commandQueue.append({'command':'no_msg'})
+    #daemon._commandQueue.append({'command':'no_msg'})
+    #daemon._commandQueue.append({'command':'no_msg'})
+    ## delete the consumer on the session
+    #daemon._commandQueue.append({'command':'del_consumer', 'uuid':"uuid_001"})
+    ## This results in the session to be removed 
+    #daemon._commandQueue.append({'command':'no_msg'})
+    ## Create a second session: What happens if a queue is deleted when there are consumers???
+    ## interesting
+    #daemon._commandQueue.append({'command':'start_session', 'uuid':"uuid_002"})
+    #daemon._commandQueue.append({'command':'no_msg'})
+    #daemon._commandQueue.append({'command':'add_consumer', 'uuid':"uuid_002"})
+    #daemon._commandQueue.append({'command':'no_msg'})
+    #daemon._commandQueue.append({'command':'stop_session', 'uuid':"uuid_002"})
+    #daemon._commandQueue.append({'command':'no_msg'})
+
+    #daemon._commandQueue.append({'command':'quit',"clear_state":"true"})
+
+
+
+    #daemon.run()

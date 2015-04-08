@@ -35,7 +35,6 @@ logger=logging.getLogger("MessageBus")
 
 class MCQDaemon(object):
   def __init__(self, state_file_path, loop_interval=10, init_delay=10):
-
     self._statefilepath = None
     self._loop_interval = loop_interval  # perform loop max once per loop_interval
     self._init_delay    = init_delay     # how many loop polls te wait before
@@ -56,9 +55,9 @@ class MCQDaemon(object):
           options = "create:always, node: { type: queue, durable: True}",
           broker = self.broker)
 
-    self.CommandQueueTemp = msgbus.ToBus("username.LOCUS102.MCQueueDaemon.CommandQueue", 
-          options = "create:always, node: { type: queue, durable: True}",
-          broker = self.broker)
+    #self.CommandQueueTemp = msgbus.ToBus("username.LOCUS102.MCQueueDaemon.CommandQueue", 
+    #      options = "create:always, node: { type: queue, durable: True}",
+    #      broker = self.broker)
 
 
   def run(self):
@@ -75,17 +74,17 @@ class MCQDaemon(object):
 
     """
 
-    msgTemp = message.MessageContent(from_="USERRNAME.LOCUS102.MSQDaemon",
-                      forUser="SERRNAME.LOCUS102.MSQDaemon.test",
-                      summary="First msg to be send",
-                      protocol="CommandQUeueMsg",
-                      protocolVersion="0.0.1", 
-                      #momid="",
-                      #sasid="", 
-                      #qpidMsg=None
-                      )
+    #msgTemp = message.MessageContent(from_="USERRNAME.LOCUS102.MSQDaemon",
+    #                  forUser="SERRNAME.LOCUS102.MSQDaemon.test",
+    #                  summary="First msg to be send",
+    #                  protocol="CommandQUeueMsg",
+    #                  protocolVersion="0.0.1", 
+    #                  #momid="",
+    #                  #sasid="", 
+    #                  #qpidMsg=None
+    #                  )
 
-    self.CommandQueueTemp.send(msgTemp)
+    #self.CommandQueueTemp.send(msgTemp)
 
 
     msgTemp2 = self.CommandQueue.get(1)  # get is blocking, always use timeout.
@@ -204,7 +203,19 @@ class MCQDaemon(object):
     Process in order all commands in the command queue
     """
     print "  _process_commands()"
-    for msg in self._commandQueue:
+
+        
+    while True:
+
+      # Test if the timeout is in milli seconds or second
+      msg = self.CommandQueue.get(0.1)  # get is blocking, always use timeout.  
+
+      if msg == None:
+        break
+
+      self.CommandQueue.ack(msg)
+
+      continue
 
       # ****** test/temp code needs qpid implementation ******************
       # for test we add a temporary ack command to allow ack
@@ -352,42 +363,40 @@ if __name__ == "__main__":
     daemon = MCQDaemon("daemon_state_file.pkl", 1, 2)
 
 
-    # we are testing
-    # put some commands in the queue
+    ## we are testing
+    ## put some commands in the queue
 
-    # skip one loop
-    daemon._commandQueue.append({'command':'no_msg'})  
+    ## skip one loop
+    #daemon._commandQueue.append({'command':'no_msg'})  
 
-    # add a new pipeline session
-    daemon._commandQueue.append({'command':'start_session', 'uuid':"uuid_001"})
+    ## add a new pipeline session
+    #daemon._commandQueue.append({'command':'start_session', 'uuid':"uuid_001"})
 
-    # skip one loop
-    daemon._commandQueue.append({'command':'no_msg'})
-    daemon._commandQueue.append({'command':'add_consumer', 'uuid':"uuid_001"})
+    ## skip one loop
+    #daemon._commandQueue.append({'command':'no_msg'})
+    #daemon._commandQueue.append({'command':'add_consumer', 'uuid':"uuid_001"})
 
-    daemon._commandQueue.append({'command':'no_msg'})
-    daemon._commandQueue.append({'command':'no_msg'})
-    daemon._commandQueue.append({'command':'no_msg'})
-    daemon._commandQueue.append({'command':'no_msg'})
-    daemon._commandQueue.append({'command':'no_msg'})
-    daemon._commandQueue.append({'command':'no_msg'})
-    # delete the consumer on the session
-    daemon._commandQueue.append({'command':'del_consumer', 'uuid':"uuid_001"})
-    # This results in the session to be removed 
-    daemon._commandQueue.append({'command':'no_msg'})
-    # Create a second session: What happens if a queue is deleted when there are consumers???
-    # interesting
-    daemon._commandQueue.append({'command':'start_session', 'uuid':"uuid_002"})
-    daemon._commandQueue.append({'command':'no_msg'})
-    daemon._commandQueue.append({'command':'add_consumer', 'uuid':"uuid_002"})
-    daemon._commandQueue.append({'command':'no_msg'})
-    daemon._commandQueue.append({'command':'stop_session', 'uuid':"uuid_002"})
-    daemon._commandQueue.append({'command':'no_msg'})
+    #daemon._commandQueue.append({'command':'no_msg'})
+    #daemon._commandQueue.append({'command':'no_msg'})
+    #daemon._commandQueue.append({'command':'no_msg'})
+    #daemon._commandQueue.append({'command':'no_msg'})
+    #daemon._commandQueue.append({'command':'no_msg'})
+    #daemon._commandQueue.append({'command':'no_msg'})
+    ## delete the consumer on the session
+    #daemon._commandQueue.append({'command':'del_consumer', 'uuid':"uuid_001"})
+    ## This results in the session to be removed 
+    #daemon._commandQueue.append({'command':'no_msg'})
+    ## Create a second session: What happens if a queue is deleted when there are consumers???
+    ## interesting
+    #daemon._commandQueue.append({'command':'start_session', 'uuid':"uuid_002"})
+    #daemon._commandQueue.append({'command':'no_msg'})
+    #daemon._commandQueue.append({'command':'add_consumer', 'uuid':"uuid_002"})
+    #daemon._commandQueue.append({'command':'no_msg'})
+    #daemon._commandQueue.append({'command':'stop_session', 'uuid':"uuid_002"})
+    #daemon._commandQueue.append({'command':'no_msg'})
 
-    daemon._commandQueue.append({'command':'quit',"clear_state":"true"})
-
-
-
+    #daemon._commandQueue.append({'command':'quit',"clear_state":"true"})
+    
     daemon.run()
 
     

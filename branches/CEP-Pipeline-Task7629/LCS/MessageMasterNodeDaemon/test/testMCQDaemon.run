@@ -2,4 +2,8 @@
 
 #source MessageFuncs.sh
 
+
+#export PYTHONPATH
+echo $PYTHONPATH
+
 python testMCQDaemon.py
