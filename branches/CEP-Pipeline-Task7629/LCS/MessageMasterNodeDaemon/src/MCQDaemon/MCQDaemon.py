@@ -27,6 +27,8 @@ import os
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
 
+from qmf.console import Session as QMFSession
+
 import logging
 # Define logging. Until we have a python loging framework, we'll have
 # to do any initialising here
@@ -47,6 +49,8 @@ class MCQDaemon(object):
     self._commandQueue = []              # place holder command queue
 
     self.broker="127.0.0.1" 
+    self._returnQueueTemplate = "MCQDaemon.return.{0}"
+    self._logTopicTemplete = "MCQDaemon.log.{0}"
 
     # check for existing statefile
     self._init_state_from_file_if_possible()
@@ -73,24 +77,6 @@ class MCQDaemon(object):
     3. Wait for x seconds
 
     """
-
-    #msgTemp = message.MessageContent(from_="USERRNAME.LOCUS102.MSQDaemon",
-    #                  forUser="SERRNAME.LOCUS102.MSQDaemon.test",
-    #                  summary="First msg to be send",
-    #                  protocol="CommandQUeueMsg",
-    #                  protocolVersion="0.0.1", 
-    #                  #momid="",
-    #                  #sasid="", 
-    #                  #qpidMsg=None
-    #                  )
-
-    #self.CommandQueueTemp.send(msgTemp)
-
-
-    msgTemp2 = self.CommandQueue.get(1)  # get is blocking, always use timeout.
-
-
-
     while(True):   
       # ************** Main loop ***********************
       begin_tick = datetime.now()
@@ -133,6 +119,21 @@ class MCQDaemon(object):
     Clear the messages in the queues and delete these
     """
     print "  _check_and_clear_queue()"
+
+    # First get al the registered queues on the broker
+    print "--------------session------------"
+    session=QMFSession()
+    session.addBroker(self.broker)  # is the assignment needed?
+    queues = session.getObjects(_class="queue",
+                                _package="org.apache.qpid.broker")
+    print "--------------end------------"
+    queues_dict = {}
+    
+    # loop the queues and put the names in a list
+    for queue_item in queues:
+      queues_dict[queue_item.name] = queue_item
+
+
     # Using items() as iterater allows deletion on the go
     for uuid in self._registered_pipelines.keys():
       # A queue might be in the init period (a grace period which allows an
@@ -144,39 +145,51 @@ class MCQDaemon(object):
       
       # no listeners means the pipeline
       # died
-      nr_listeners = self._get_number_of_queue_listener(uuid)
+      queue, nr_listeners = self._get_queue_and_nr_listener(queues_dict, uuid)
 
       # If the number of listeners is 0 there is no consumer of data anymore.
       # The results in the queue have no place to be stored. 
       if (nr_listeners == 0):
-          self._delete_queues_and_session(uuid)
+          self._delete_queues_and_session(queue, uuid)
 
       # the state has changed, save it
       self._save_state_to_file()
 
-  def _delete_queues_and_session(self, uuid):
+  def _delete_queues_and_session(self, queue, uuid):
     """
     Deletes the queue and topic for this uuid and removes it from the
     internal storage
     """
     # clear the q of msg
-    self._clear_queue(uuid)
+
+    #print queue.getMethods()
+    # [purge(request, filter), reroute(request, useAltExchange, exchange, filter)]
+
+    exit(1)
+
+    self._clear_queue(queue)
   
     # remove the q and topic
-    self._delete_queue_and_topic(uuid)
+    self._delete_queue_and_topic(queue, uuid)
   
     # delete the entry from the actual dict
     del self._registered_pipelines[uuid]
 
-  def _get_number_of_queue_listener(self, uuid):
+  def _get_queue_and_nr_listener(self, queues_dict, uuid):
     """
     get from the result queue the number of listeners
     """
-    print "    check number of consumers"
+    #  match the queue name with the uuid
+    for queue_name, queue in queues_dict.items():
+        if uuid in queue_name:
+            print "#################nr listeners {0} #############".format(queue.consumerCount)
+            return queue, queue.consumerCount
 
-    # return the number of registered users
-    # TODO: currently faked
-    return self._registered_pipelines[uuid]['nr_consumers']
+
+    print "Warning, _get_number_of_queue_listener called on an unknown" \
+          "Queue uuid!!"
+    return None, None
+
 
   def _clear_queue(self, uuid):
     """ 
@@ -185,7 +198,7 @@ class MCQDaemon(object):
     # Get the correct queue based on the    
     print  "    _clear_and_delete_queue()"
 
-  def _delete_queue_and_topic(self, uuid):
+  def _delete_queue_and_topic(self, queue, uuid):
     """
     Remove and empty queue and topic from the msg router
     """
@@ -202,42 +215,31 @@ class MCQDaemon(object):
     """
     Process in order all commands in the command queue
     """
-    print "  _process_commands()"
-
-        
+       
     while True:
-
       # Test if the timeout is in milli seconds or second
       msg = self.CommandQueue.get(0.1)  # get is blocking, always use timeout.  
 
       if msg == None:
         break
 
-      self.CommandQueue.ack(msg)
+      msg_content = eval(msg.content().payload)
 
-      continue
-
+ 
       # ****** test/temp code needs qpid implementation ******************
       # for test we add a temporary ack command to allow ack
      
-      if msg['command'] == 'ack':
+      if msg_content['command'] == 'ack':
         # already processed: ack set, continue with next command
         continue
 
-      if msg['command'] == 'no_msg':
+      if msg_content['command'] == 'no_msg':
         # no msg for this loop: ack and break loop
         msg['command'] = 'ack'
         print "    no msg in queue, wait"  # there are more msg, but this is testing
         break
 
-      if msg['command'] == 'add_consumer':
-        msg['command'] = 'ack'
-        self._registered_pipelines[msg['uuid']]['nr_consumers'] = 1
-        self._registered_pipelines[msg['uuid']]['init_wait'] = 0
-        print "    adding consumer to session"
-        continue
-
-      if msg['command'] == 'del_consumer':
+      if msg_content['command'] == 'del_consumer':
         msg['command'] = 'ack'
         self._registered_pipelines[msg['uuid']]['init_wait'] = 0
         self._registered_pipelines[msg['uuid']]['nr_consumers'] = 0
@@ -246,10 +248,10 @@ class MCQDaemon(object):
 
       # ****** test/temp code needs qpid implementation ******************
 
-      command = msg['command'] 
+      command = msg_content['command'] 
       if command == "start_session":
-        self._process_init_msg(msg)
-        msg['command'] = 'ack'
+        self._process_start_session_msg(msg_content)
+        self.CommandQueue.ack(msg)
 
       elif command == "stop_session":
         print "      receive stop command _ deleting all queues"
@@ -292,21 +294,23 @@ class MCQDaemon(object):
 
 
 
-  def _process_init_msg(self, msg):
+  def _process_start_session_msg(self, msg_content):
     """
 
     """
-    print "    _process_init_msg start command with uuid: {0}".format(msg['uuid'])
+    print "    _process_init_msg start command with uuid: {0}".format(msg_content['uuid'])
         
     # create the needed
-    resultq_name, topic_name = self._create_resultq_and_topic(msg['uuid'])
+    resultq_name, topic_name = self._create_resultq_and_topic(msg_content['uuid'])
     
     # store them in the internal pipeline storage
-    self._registered_pipelines[msg['uuid']] = {
+    self._registered_pipelines[msg_content['uuid']] = {
               'resultq':resultq_name,
               'topic':topic_name,
               'init_wait':self._init_delay,      # wait decreasing idx: wait for consumers
-              'nr_consumers':0}    # test_option:other option is a time out
+              'nr_consumers':0}   
+   
+    # test_option:other option is a time out
     # the problem is that the pipeline can only connect to an existing q
     # so after creating the it is not emediately 'used'.
     # its either a wait or a state.
@@ -318,12 +322,18 @@ class MCQDaemon(object):
     """
     # create the queues using qpid
 
-    resultq_name = "{0}.que.name".format(uuid)
-    topic_name = "{0}.topic.name".format(uuid)
+    resultq_name = self._returnQueueTemplate.format(uuid)
+    topic_name = self._logTopicTemplete.format(uuid)
+    
 
+    resultQueue = msgbus.ToBus(resultq_name, 
+          options = "create:always, node: { type: queue, durable: True}",
+          broker = self.broker)
 
-    print "      created resultsq: {0}".format(resultq_name)
-    print "      created topic: {0}".format(topic_name)
+    # To see topics: qpid-stat -e
+    logTopic = msgbus.ToBus(topic_name, 
+          options = "create:always, node: { type: topic, durable: True}",
+          broker = self.broker)
 
     return resultq_name, topic_name
   
@@ -360,7 +370,7 @@ class MCQDaemon(object):
       
 
 if __name__ == "__main__":
-    daemon = MCQDaemon("daemon_state_file.pkl", 1, 2)
+    daemon = MCQDaemon("daemon_state_file.pkl", 1, 4)
 
 
     ## we are testing
@@ -400,4 +410,5 @@ if __name__ == "__main__":
     daemon.run()
 
     
+
 

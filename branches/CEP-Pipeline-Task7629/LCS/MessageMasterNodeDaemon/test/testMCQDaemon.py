@@ -29,7 +29,8 @@ class MCQDaemonLib(object):
     """
     def __init__(self):
         # Each MCQDaemonLib triggers a session with a uuid, generate and store
-        self._sessionUUID = uuid.uuid4()
+        # as a hex
+        self._sessionUUID = uuid.uuid4().hex
 
         # should be moved to a config file
         self.broker="127.0.0.1" 
@@ -41,7 +42,11 @@ class MCQDaemonLib(object):
             options = "create:always, node: { type: queue, durable: True}",
             broker = self.broker)
 
+        # Check state, raise exception if incorrect
         self._check_queue_and_daemon_state()
+
+        # Add a master node session
+        self._register_session()
 
   
     def _check_queue_and_daemon_state(self):
@@ -74,12 +79,23 @@ class MCQDaemonLib(object):
             raise Exception("No HeadNodeCommandQueueDaemon detected, aborting")
 
 
-    def _add_consumer():
+    def _register_session(self):
         """
-    
-
+        Send a register session command to the MCQDaemon
         """
-        pass
+        msg = message.MessageContent(
+                from_="USERNAME.LOCUS102.MCQDaemonLib.{0}".format(
+                                                            self._sessionUUID),
+                forUser="USERRNAME.LOCUS102.MSQDaemon",
+                summary="First msg to be send",
+                protocol="CommandQUeueMsg",
+                protocolVersion="0.0.1", 
+                #momid="",
+                #sasid="", 
+                #qpidMsg=None
+                      )
+        msg.payload = {"command":"start_session", "uuid":self._sessionUUID}
+        self._sendCommandQueue.send(msg)
 
 
 if __name__ == "__main__":
