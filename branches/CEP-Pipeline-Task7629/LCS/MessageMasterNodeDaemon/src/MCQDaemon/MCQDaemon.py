@@ -1,8 +1,37 @@
+#!/usr/bin/python
+# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+#
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# The LOFAR software suite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+#
+# id.. TDB
+
 from datetime import datetime   # needed for duration 
 import time
 import pickle
 import os
 
+
+import lofar.messagebus.msgbus as msgbus
+import lofar.messagebus.message as message
+
+import logging
+# Define logging. Until we have a python loging framework, we'll have
+# to do any initialising here
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
+logger=logging.getLogger("MessageBus")
 
 class MCQDaemon(object):
   def __init__(self, state_file_path, loop_interval=10, init_delay=10):
@@ -18,8 +47,18 @@ class MCQDaemon(object):
 
     self._commandQueue = []              # place holder command queue
 
+    self.broker="127.0.0.1" 
+
     # check for existing statefile
     self._init_state_from_file_if_possible()
+
+    self.CommandQueue = msgbus.FromBus("username.LOCUS102.MCQueueDaemon.CommandQueue", 
+          options = "create:always, node: { type: queue, durable: True}",
+          broker = self.broker)
+
+    self.CommandQueueTemp = msgbus.ToBus("username.LOCUS102.MCQueueDaemon.CommandQueue", 
+          options = "create:always, node: { type: queue, durable: True}",
+          broker = self.broker)
 
 
   def run(self):
@@ -35,6 +74,24 @@ class MCQDaemon(object):
     3. Wait for x seconds
 
     """
+
+    msgTemp = message.MessageContent(from_="USERRNAME.LOCUS102.MSQDaemon",
+                      forUser="SERRNAME.LOCUS102.MSQDaemon.test",
+                      summary="First msg to be send",
+                      protocol="CommandQUeueMsg",
+                      protocolVersion="0.0.1", 
+                      #momid="",
+                      #sasid="", 
+                      #qpidMsg=None
+                      )
+
+    self.CommandQueueTemp.send(msgTemp)
+
+
+    msgTemp2 = self.CommandQueue.get(1)  # get is blocking, always use timeout.
+
+
+
     while(True):   
       # ************** Main loop ***********************
       begin_tick = datetime.now()
@@ -213,8 +270,15 @@ class MCQDaemon(object):
     """
 
     """
-    if msg['clear_state'] == "true":
-      os.remove(self._state_file_path)
+    try:
+      if msg['clear_state'] == "true":
+        os.remove(self._state_file_path)
+
+    except:
+      # The daemon could be in a state where the file has not been written
+      # eg. in the init phase. If the delete fails just skip and continue
+      pass
+
 
 
   def _process_init_msg(self, msg):

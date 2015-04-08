@@ -2,4 +2,10 @@
 
 #source MessageFuncs.sh
 
-python tMCQDaemonKillRestart.py
+python tMCQDaemonKillRestart.py &        # Run the command
+PROC_PID=$!                              # get the PID
+
+sleep 6									 # Kill the process
+
+# restart the process
+python tMCQDaemonKillRestart.py 
