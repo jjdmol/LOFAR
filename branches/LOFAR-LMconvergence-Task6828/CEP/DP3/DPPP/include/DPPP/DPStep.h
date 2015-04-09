@@ -67,6 +67,7 @@ namespace LOFAR {
       // Define the shared pointer for this type.
       typedef shared_ptr<DPStep> ShPtr;
 
+      // Destructor.
       virtual ~DPStep();
 
       // Process the data.
@@ -87,7 +88,7 @@ namespace LOFAR {
         { return itsInfo; }
 
       // Add some data to the MeasurementSet written/updated.
-      // The default implementation does nothing.
+      // The default implementation only calls addToMS from the previous step
       virtual void addToMS (const string& msName);
 
       // Show the step parameters.
@@ -101,9 +102,19 @@ namespace LOFAR {
       // The default implementation does nothing.
       virtual void showTimings (std::ostream&, double duration) const;
 
+      // Set the previous step.
+      void setPrevStep (DPStep* prevStep)
+      { itsPrevStep = prevStep; }
+
+      // Get the previous step.
+      DPStep* getPrevStep () const
+      { return itsPrevStep; }
+
       // Set the next step.
-      void setNextStep (const DPStep::ShPtr& nextStep)
-        { itsNextStep = nextStep; }
+      void setNextStep (DPStep::ShPtr nextStep)
+        { itsNextStep = nextStep;
+          nextStep->setPrevStep(this);
+        }
 
       // Get the next step.
       const DPStep::ShPtr& getNextStep() const
@@ -120,6 +131,8 @@ namespace LOFAR {
 
       //# Data members.
       DPStep::ShPtr itsNextStep;
+      DPStep*       itsPrevStep; // Normal pointer for back links, prevent
+                                 // two shared pointers to same object
       DPInfo        itsInfo;
     };
 
@@ -182,7 +195,7 @@ namespace LOFAR {
 
       // Clear the buffer.
       void clear()
-        { itsBuffer.clear(); }
+      { itsBuffer = DPBuffer(); }
 
     private:
       DPBuffer itsBuffer;
@@ -201,7 +214,7 @@ namespace LOFAR {
     {
     public:
       // Create the object. By default it sets its next step to the NullStep.
-      MultiResultStep (uint reserveSize);
+      MultiResultStep (uint size);
 
       virtual ~MultiResultStep();
 
@@ -221,12 +234,17 @@ namespace LOFAR {
       vector<DPBuffer>& get()
         { return itsBuffers; }
 
+      // Get the size of the result.
+      size_t size() const
+        { return itsSize; }
+
       // Clear the buffers.
       void clear()
-        { itsBuffers.clear(); }
+        { itsSize = 0; }
 
     private:
       vector<DPBuffer> itsBuffers;
+      size_t           itsSize;
     };
 
   } //# end namespace

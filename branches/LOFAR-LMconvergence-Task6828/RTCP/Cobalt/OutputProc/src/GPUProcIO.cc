@@ -32,6 +32,8 @@
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <Common/Exceptions.h>
+#include <MessageBus/MsgBus.h>
+#include <MessageBus/Protocols/TaskFeedbackDataproducts.h>
 #include <Stream/PortBroker.h>
 #include <ApplCommon/PVSSDatapointDefs.h>
 #include <ApplCommon/StationInfo.h>
@@ -44,6 +46,7 @@
 #include <CoInterface/SmartPtr.h>
 #include "SubbandWriter.h"
 #include "OutputThread.h"
+#include "IOPriority.h"
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -76,6 +79,12 @@ bool process(Stream &controlStream, unsigned myRank)
   const vector<string> &hostnames = parset.settings.outputProcHosts;
   ASSERT(myRank < hostnames.size());
   string myHostName = hostnames[myRank];
+
+  if (parset.settings.realTime) {
+    setIOpriority();
+    setRTpriority();
+    lockInMemory(16UL * 1024UL * 1024UL * 1024UL); // limit memory to 16 GB
+  }
 
   // Send id string to the MAC Log Processor as context for further LOGs.
   // Also use it for MAC/PVSS data point logging as a key name prefix.
@@ -249,21 +258,44 @@ bool process(Stream &controlStream, unsigned myRank)
      * LTA FEEDBACK
      */
 
-    LOG_DEBUG_STR("Retrieving LTA feedback");
-    Parset feedbackLTA;
-
-    for (size_t i = 0; i < subbandWriters.size(); ++i)
-      feedbackLTA.adoptCollection(subbandWriters[i]->feedbackLTA());
-    for (size_t i = 0; i < tabWriters.size(); ++i)
-      feedbackLTA.adoptCollection(tabWriters[i]->feedbackLTA());
-
     LOG_DEBUG_STR("Forwarding LTA feedback");
-    try {
-      feedbackLTA.write(&controlStream);
-    } catch (LOFAR::Exception &err) {
-      success = false;
-      LOG_ERROR_STR("Failed to forward LTA feedback information: " << err);
+
+    ToBus bus("lofar.task.feedback.dataproducts");
+
+    const std::string myName = str(boost::format("Cobalt/OutputProc on %s") % myHostName);
+
+    for (size_t i = 0; i < subbandWriters.size(); ++i) {
+      Protocols::TaskFeedbackDataproducts msg(
+        myName,
+        "",
+        str(boost::format("Feedback for Correlated Data, subband %s") % subbandWriters[i]->streamNr()),
+        str(format("%s") % parset.settings.momID),
+        str(format("%s") % parset.settings.observationID),
+        subbandWriters[i]->feedbackLTA());
+
+      bus.send(msg);
     }
+
+    for (size_t i = 0; i < tabWriters.size(); ++i) {
+      Protocols::TaskFeedbackDataproducts msg(
+        myName,
+        "",
+        str(boost::format("Feedback for Beamformed Data, file nr %s") % tabWriters[i]->streamNr()),
+        str(format("%s") % parset.settings.momID),
+        str(format("%s") % parset.settings.observationID),
+        tabWriters[i]->feedbackLTA());
+
+      bus.send(msg);
+    }
+
+    /*
+     * SIGN OFF
+     */
+
+    bool sentFeedback = true;
+
+    controlStream.write(&sentFeedback, sizeof sentFeedback);
+    controlStream.write(&success, sizeof success);
 
     return success;
   }

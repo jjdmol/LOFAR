@@ -70,7 +70,7 @@ namespace LOFAR
 
     void CorrelatorStep::Flagger::convertFlagsToChannelFlags(Parset const &ps,
       MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
-      MultiDimArray<SparseSet<unsigned>, 2>& flagsPerChannel)
+      MultiDimArray<SparseSet<unsigned>, 1>& flagsPerChannel)
     {
       unsigned numberOfChannels = ps.settings.correlator.nrChannels;
       unsigned log2NrChannels = log2(numberOfChannels);
@@ -122,9 +122,7 @@ namespace LOFAR
           }
 
           // Now copy the transformed ranges to the channelflags
-          for (unsigned ch = 0; ch < numberOfChannels; ch++) {
-            flagsPerChannel[ch][station].include(begin_idx, end_idx);
-          }
+          flagsPerChannel[station].include(begin_idx, end_idx);
         }
       }
     }
@@ -136,8 +134,8 @@ namespace LOFAR
       SubbandProcOutputData::CorrelatedData &output)
     {   
       // Object for storing transformed flags
-      MultiDimArray<SparseSet<unsigned>, 2> flagsPerChannel(
-        boost::extents[parset.settings.correlator.nrChannels][parset.settings.antennaFields.size()]);
+      MultiDimArray<SparseSet<unsigned>, 1> flagsPerChannel(
+        boost::extents[parset.settings.antennaFields.size()]);
 
       // First transform the flags to channel flags: taking in account 
       // reduced resolution in time and the size of the filter
@@ -161,9 +159,14 @@ namespace LOFAR
 
     template<typename T> void CorrelatorStep::Flagger::calcNrValidSamples(
       Parset const &parset,
-      MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
+      MultiDimArray<SparseSet<unsigned>, 1>const & flagsPerChannel,
       SubbandProcOutputData::CorrelatedData &output)
     {
+      /*
+       * NOTE: This routine is performance critical. This is called as part
+       *       of processCPU(). The tCorrelatorStep test validates its performance.
+       */
+
       // The number of samples per integration within this block.
       const unsigned nrSamples =
           parset.settings.correlator.nrSamplesPerBlock /
@@ -174,29 +177,27 @@ namespace LOFAR
         for (unsigned stat2 = 0; stat2 <= stat1; stat2 ++) {
           const unsigned bl = baseline(stat1, stat2);
 
-          for(unsigned ch = 0; ch < parset.settings.correlator.nrChannels; ch ++) {
-            // The number of invalid (flagged) samples is the union of the
-            // flagged samples in the two stations
-            const SparseSet<unsigned> flags =
-              flagsPerChannel[ch][stat1] | flagsPerChannel[ch][stat2];
+          // The number of invalid (flagged) samples is the union of the
+          // flagged samples in the two stations
+          const SparseSet<unsigned> flags =
+            flagsPerChannel[stat1] | flagsPerChannel[stat2];
 
-            for (size_t i = 0; i < parset.settings.correlator.nrIntegrationsPerBlock; ++i) {
-              LOFAR::Cobalt::CorrelatedData &correlatedData = *output.subblocks[i];
+          for (size_t i = 0; i < parset.settings.correlator.nrIntegrationsPerBlock; ++i) {
+            LOFAR::Cobalt::CorrelatedData &correlatedData = *output.subblocks[i];
 
-              // Channel zero is invalid, unless we have only one channel
-              if (parset.settings.correlator.nrChannels > 1 && ch == 0) {
-                correlatedData.nrValidSamples<T>(bl, 0) = 0;
-                continue;
-              }
+            // Count the flags for this subblock
+            const T nrValidSamples =
+              nrSamples - flags.count(i * nrSamples, (i+1) * nrSamples);
 
-              // Extract the flags for this subblock
-              const SparseSet<unsigned> subBlockFlags = flags.subset(
-                      i * nrSamples,
-                + (i+1) * nrSamples);
+            // Channel zero is invalid, unless we have only one channel
+            if (parset.settings.correlator.nrChannels > 1) {
+              correlatedData.nrValidSamples<T>(bl, 0) = 0;
+            } else {
+              correlatedData.nrValidSamples<T>(bl, 0) = nrValidSamples;
+            }
 
-              const T nrValidSamples =
-                nrSamples - subBlockFlags.count();
-
+            // Set the channels from 1 onward
+            for(unsigned ch = 1; ch < parset.settings.correlator.nrChannels; ch ++) {
               correlatedData.nrValidSamples<T>(bl, ch) = nrValidSamples;
             }
           }
@@ -207,7 +208,7 @@ namespace LOFAR
 
     void CorrelatorStep::Flagger::calcNrValidSamples(
       Parset const &parset,
-      MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
+      MultiDimArray<SparseSet<unsigned>, 1>const & flagsPerChannel,
       SubbandProcOutputData::CorrelatedData &output)
     {
       switch (output.subblocks[0]->itsNrBytesPerNrValidSamples) {
@@ -227,56 +228,68 @@ namespace LOFAR
 
 
     void CorrelatorStep::Flagger::applyWeight(unsigned baseline, 
-      unsigned channel, float weight, LOFAR::Cobalt::CorrelatedData &output)
+      unsigned nrChannels, float weight, LOFAR::Cobalt::CorrelatedData &output)
     {
-      for(unsigned pol1 = 0; pol1 < NR_POLARIZATIONS; ++pol1)
-        for(unsigned pol2 = 0; pol2 < NR_POLARIZATIONS; ++pol2)
-          output.visibilities[baseline][channel][pol1][pol2] *= weight;
+      /*
+       * All channels and polarisations are stored consecutively, so
+       * we can just grab a pointer to the first sample and walk over
+       * all samples in the baseline.
+       */
+      fcomplex *s = &output.visibilities[baseline][0][0][0];
+
+      unsigned i = 0;
+
+      if (nrChannels > 1) {
+        // Channel 0 has weight 0.0 (unless it's the only channel)
+        for(; i < NR_POLARIZATIONS * NR_POLARIZATIONS; ++i)
+          *(s++) = 0.0;
+      }
+
+      // Remaining channels are adjusted by the provided weight
+      for(; i < nrChannels * NR_POLARIZATIONS * NR_POLARIZATIONS; ++i)
+        *(s++) *= weight;
     }
 
 
     template<typename T> void 
-    CorrelatorStep::Flagger::applyNrValidSampless(Parset const &parset,
+    CorrelatorStep::Flagger::applyNrValidSamples(Parset const &parset,
                                                  LOFAR::Cobalt::CorrelatedData &output)
     {
+      const bool singleChannel = parset.settings.correlator.nrChannels == 1;
+
       for (unsigned bl = 0; bl < output.itsNrBaselines; ++bl)
       {
         // Calculate the weights for the channels
         //
-        // Channel 0 is already flagged according to specs, so we can simply
-        // include it both for 1 and >1 channels/subband.
-        for (unsigned ch = 0; ch < parset.settings.correlator.nrChannels; ch++) 
-        {
-          const T nrValidSamples = output.nrValidSamples<T>(bl, ch);
+        // NOTE: We assume all channels to have the same nrValidSamples (except possibly channel 0).
+        const T nrValidSamples = output.nrValidSamples<T>(bl, singleChannel ? 0 : 1);
 
-          // If all samples flagged, weights is zero.
-          // TODO: make a lookup table for the expensive division; measure first
-          float weight = nrValidSamples ? 1.0f / nrValidSamples : 0;  
+        // If all samples flagged, weights is zero.
+        const float weight = nrValidSamples ? 1.0f / nrValidSamples : 0;  
 
-          // Apply the weight to this sample, turning the visibilities into the
-          // average visibility over the non-flagged samples.
-          //
-          // This step thus normalises the visibilities for any integration time.
-          applyWeight(bl, ch, weight, output);
-        }
+        // Apply the weight to this sample, turning the visibilities into the
+        // average visibility over the non-flagged samples.
+        //
+        // This step thus normalises the visibilities for any integration time.
+        applyWeight(bl, parset.settings.correlator.nrChannels, weight, output);
       }
     }
 
 
-    void CorrelatorStep::Flagger::applyNrValidSampless(Parset const &parset,
+    void CorrelatorStep::Flagger::applyNrValidSamples(Parset const &parset,
                                                  LOFAR::Cobalt::CorrelatedData &output)
     {
       switch (output.itsNrBytesPerNrValidSamples) {
         case 4:
-          applyNrValidSampless<uint32_t>(parset, output);  
+          applyNrValidSamples<uint32_t>(parset, output);  
           break;
 
         case 2:
-          applyNrValidSampless<uint16_t>(parset, output);  
+          applyNrValidSamples<uint16_t>(parset, output);  
           break;
 
         case 1:
-          applyNrValidSampless<uint8_t>(parset, output);  
+          applyNrValidSamples<uint8_t>(parset, output);  
           break;
       }
     }
@@ -428,7 +441,7 @@ namespace LOFAR
       // The flags are already copied to the correct location
       // now the flagged amount should be applied to the visibilities
       for (size_t i = 0; i < ps.settings.correlator.nrIntegrationsPerBlock; ++i) {
-        Flagger::applyNrValidSampless(ps, *output.correlatedData.subblocks[i]);  
+        Flagger::applyNrValidSamples(ps, *output.correlatedData.subblocks[i]);  
       }
 
       return true;

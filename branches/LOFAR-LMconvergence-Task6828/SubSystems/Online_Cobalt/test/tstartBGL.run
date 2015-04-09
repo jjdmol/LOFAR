@@ -59,8 +59,6 @@ echo "Test 5: normal run"
 echo "        (expects success)"
 echo "***************************"
 # Add the connection information for this test
-echo "Cobalt.Feedback.host=localhost" >> tstartBGL.in_parset
-echo "Cobalt.Feedback.remotePath=$LOFARROOT/var/run" >> tstartBGL.in_parset
 echo "Cobalt.FinalMetaDataGatherer.host=localhost" >> tstartBGL.in_parset
 startBGL.sh 1 2 3 tstartBGL.in_parset 1000 || error "startBGL.sh failed"
 
@@ -88,8 +86,6 @@ echo "Test 6: stop a run"
 echo "        (expects success)"
 echo "***************************"
 # Add the connection information for this test
-echo "Cobalt.Feedback.host=localhost" >> tstartBGL.in_parset
-echo "Cobalt.Feedback.remotePath=$LOFARROOT/var/run" >> tstartBGL.in_parset
 echo "Cobalt.FinalMetaDataGatherer.host=localhost" >> tstartBGL.in_parset
 
 # Run forever

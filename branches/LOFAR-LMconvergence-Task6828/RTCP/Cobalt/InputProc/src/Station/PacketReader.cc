@@ -23,12 +23,11 @@
 #include "PacketReader.h"
 
 #include <cmath>
-#include <typeinfo>
 #include <sys/time.h>
+#include <typeinfo>
 #include <boost/format.hpp>
 
 #include <Common/LofarLogger.h>
-#include <Stream/SocketStream.h>
 #include <CoInterface/Stream.h>
 
 
@@ -39,7 +38,8 @@ namespace LOFAR
     // Create an 'invalid' mode to make it unique and not match any actually used mode.
     const BoardMode PacketReader::MODE_ANY(0, 0);
 
-    PacketReader::PacketReader( const std::string &logPrefix, Stream &inputStream, const BoardMode &mode )
+    PacketReader::PacketReader( const std::string &logPrefix, Stream &inputStream,
+                                const BoardMode &mode )
       :
       logPrefix(str(boost::format("%s [PacketReader] ") % logPrefix)),
       inputStream(inputStream),
@@ -69,70 +69,70 @@ namespace LOFAR
 
     void PacketReader::readPackets( std::vector<struct RSP> &packets )
     {
+      size_t numRead;
+
       if (inputIsUDP) {
         SocketStream &sstream = dynamic_cast<SocketStream&>(inputStream);
 
-        size_t numRead = sstream.recvmmsg( packets, false );
+        vector<unsigned> recvdSizes(packets.size());
+        numRead = sstream.recvmmsg(&packets[0], sizeof(struct RSP), recvdSizes);
 
         nrReceived += numRead;
 
         // validate received packets
         for (size_t i = 0; i < numRead; ++i) {
-          packets[i].payloadError(!validatePacket(packets[i]));
-        }
-
-        // mark not-received packets as invalid
-        for (size_t i = numRead; i < packets.size(); ++i) {
-          packets[i].payloadError(true);
+          packets[i].payloadError(!validatePacket(packets[i], recvdSizes[i]));
         }
       } else {
         // fall-back for non-UDP streams, emit packets
         // one at a time to avoid data loss on EndOfStream.
         packets[0].payloadError(!readPacket(packets[0]));
+        numRead = 1;
+      }
 
-        nrReceived++;
-
-        for (size_t i = 1; i < packets.size(); ++i) {
-          packets[i].payloadError(true);
-        }
+      // mark unused packet buffers as invalid
+      for (size_t i = numRead; i < packets.size(); ++i) {
+        packets[i].payloadError(true);
       }
     }
 
 
     bool PacketReader::readPacket( struct RSP &packet )
     {
+      size_t numbytes;
+
       if (inputIsUDP) {
-        // read full packet at once -- numbytes will tell us how much we've actually read
-        size_t numbytes = inputStream.tryRead(&packet, sizeof packet);
-
-        ++nrReceived;
-
-        if( numbytes < sizeof(struct RSP::Header)
-            || numbytes != packet.packetSize() ) {
-
-          if (!hadSizeError) {
-            LOG_ERROR_STR( logPrefix << "Packet is " << numbytes << " bytes, but should be " << packet.packetSize() << " bytes" );
-            hadSizeError = true;
-          }
-
-          ++nrBadOther;
-          return false;
-        }
+        numbytes = inputStream.tryRead(&packet, sizeof packet);
       } else {
-        // read header first
+        // read header first to determine actual packet size
         inputStream.read(&packet.header, sizeof packet.header);
+        size_t pktSize = packet.packetSize();
 
         // read rest of packet
-        inputStream.read(&packet.payload.data, packet.packetSize() - sizeof packet.header);
-
-        ++nrReceived;
+        inputStream.read(&packet.payload.data, pktSize - sizeof packet.header);
+        numbytes = pktSize;
       }
 
-      return validatePacket(packet);
+      ++nrReceived;
+
+      return validatePacket(packet, numbytes);
     }
 
-    bool PacketReader::validatePacket( const struct RSP &packet )
+    bool PacketReader::validatePacket( const struct RSP &packet, size_t numbytes )
     {
+      // illegal size means illegal packet; don't touch
+      if ( numbytes < sizeof(struct RSP::Header) 
+            || numbytes != packet.packetSize() ) {
+        if (!hadSizeError) {
+          LOG_ERROR_STR( logPrefix << "Packet is " << numbytes <<
+                         " bytes, but should be " << packet.packetSize() << " bytes" );
+          hadSizeError = true;
+        }
+
+        ++nrBadOther;
+        return false;
+      }
+
       // illegal version means illegal packet
       if (packet.header.version < 2) {
         // This mainly catches packets that are all zero (f.e. /dev/zero or

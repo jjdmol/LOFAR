@@ -27,7 +27,7 @@ class rficonsole(LOFARnodeTCP):
                 if not os.access(executable, os.X_OK):
                     raise ExecutableMissing(executable)
 
-                working_dir = tempfile.mkdtemp(dir=wd)
+                working_dir = tempfile.mkdtemp(dir=wd,suffix=".%s" % (os.path.basename(__file__),))
                 cmd = [executable, "-j", str(nthreads)]
                 if strategy:
                     if os.path.exists(strategy):

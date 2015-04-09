@@ -39,7 +39,6 @@
 
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
-#include <Common/NewHandler.h>
 #include <ApplCommon/StationConfig.h>
 #include <ApplCommon/AntField.h>
 #include <CoInterface/Exceptions.h>
@@ -63,18 +62,13 @@ using namespace std;
 struct progArgs {
   string parsetFilename;
   string stCalTablesDir;
-  string antFieldDir;
+  string staticMetaDataDir;
   string outputDir;
   string input;
   uint16_t port;
   struct timeval timeoutVal;
   bool keepRunning;
 };
-
-static char stdoutbuf[STDLOG_BUFFER_SIZE];
-static char stderrbuf[STDLOG_BUFFER_SIZE];
-
-LOFAR::NewHandler badAllocExcHandler(LOFAR::BadAllocException::newHandler);
 
 static volatile sig_atomic_t sigint_seen;
 
@@ -151,7 +145,7 @@ static vector<string> getTBB_InputStreamNames(const string& input, uint16_t port
   return allInputStreamNames;
 }
 
-static void retrieveStationCalTables(string& stCalTablesDir)
+static void retrieveStationCalTables(string& /*stCalTablesDir*/)
 {
   /*
    * Users need the station calibration tables included. This is a major pain, because
@@ -209,35 +203,34 @@ static int antSetName2AntFieldIndex(const string& antSetName)
   return idx;
 }
 
-static LOFAR::Cobalt::StationMetaDataMap getExternalStationMetaData(const LOFAR::Cobalt::Parset& parset, const string& antFieldDir)
+static LOFAR::Cobalt::StationMetaDataMap getExternalStationMetaData(const LOFAR::Cobalt::Parset& parset, const string& staticMetaDataDir)
 {
   LOFAR::Cobalt::StationMetaDataMap stMdMap;
 
   try {
     // Find path to antenna field files. If not a prog arg, try via $LOFARROOT, else via parset.
-    // LOFAR repos location: MAC/Deployment/data/StaticMetaData/AntennaFields/
-    string antFieldPath(antFieldDir);
-    if (antFieldPath.empty()) {
-      char* lrpath = getenv("LOFARROOT");
-      if (lrpath != NULL) {
-        antFieldPath = string(lrpath) + "/etc/StaticMetaData/";
-      } else { // parset typically gives "/data/home/lofarsys/production/lofar/etc/StaticMetaData"
-        antFieldPath = parset.AntennaFieldsDir(); // doesn't quite do what its name suggests, so append a component
-        if (!antFieldPath.empty()) {
-          antFieldPath.push_back('/');
-        }
+    // LOFAR repos location: MAC/Deployment/data/StaticMetaData
+    string staticMetaDataPath(staticMetaDataDir);
+    if (staticMetaDataPath.empty()) {
+      char* lrPath = getenv("LOFARROOT");
+      if (lrPath == NULL) {
+        throw LOFAR::APSException("StaticMetaData dir unknown: LOFARROOT not set and command line option not used");
       }
-      antFieldPath.append("AntennaFields/");
+      staticMetaDataPath = lrPath;
+      if (!staticMetaDataPath[0] != '\0' && staticMetaDataPath[staticMetaDataDir.size() - 1] != '/') {
+        staticMetaDataPath.push_back('/');
+      }
+      staticMetaDataPath.append("etc/StaticMetaData/");
     }
 
-    int fieldIdx = antSetName2AntFieldIndex(parset.antennaSet());
+    int fieldIdx = antSetName2AntFieldIndex(parset.settings.antennaSet);
 
     vector<string> stationNames(parset.allStationNames());
     for (vector<string>::const_iterator it(stationNames.begin());
          it != stationNames.end(); ++it) {
 
       string stName(it->substr(0, sizeof("CS001") - 1)); // drop any "HBA0"-like suffix
-      string antFieldFilename(antFieldPath + stName + "-AntennaField.conf");
+      string antFieldFilename(staticMetaDataPath + stName + "-AntennaField.conf");
 
       // Tries to locate the filename if no abs path is given, else throws AssertError exc.
       LOFAR::AntField antField(antFieldFilename);
@@ -358,7 +351,7 @@ static void printUsage(const char* progname)
 {
   cout << "LOFAR TBB_Writer version: ";
 #ifndef TBB_WRITER_VERSION
-  cout << LOFAR::StorageVersion::getVersion();
+  cout << LOFAR::OutputProcVersion::getVersion();
 #else
   cout << TBB_WRITER_VERSION;
 #endif
@@ -390,8 +383,8 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args)
 
   // Default values
   args->parsetFilename = "";    // there is no default parset filename, so not passing it is fatal
-  args->stCalTablesDir = "";    // idem, but otherwise, retrieve from svn and not fatal
-  args->antFieldDir = "";       // idem, but otherwise, detect and not fatal
+  args->stCalTablesDir = "";
+  args->staticMetaDataDir = "";
 
   args->outputDir = "";
   args->input = "udp";
@@ -403,25 +396,24 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args)
   static const struct option long_opts[] = {
     // NOTE: If you change this, then also change the code below AND the printUsage() code above!
     // {const char *name, int has_arg, int *flag, int val}
-    {"parset",         required_argument, NULL, 'p'},
-    {"stcaltablesdir", required_argument, NULL, 'c'}, // station calibration tables
-    {"antfielddir",    required_argument, NULL, 'a'}, // antenna field info
-    {"outputdir",      required_argument, NULL, 'o'},
-    {"input",          required_argument, NULL, 'i'},
-    {"portbase",       required_argument, NULL, 'b'}, // port (b)ase
-    {"timeout",        required_argument, NULL, 't'},
+    {"parset",            required_argument, NULL, 'p'},
+    {"stcaltablesdir",    required_argument, NULL, 'c'}, // station calibration tables
+    {"staticmetadatadir", required_argument, NULL, 'm'}, // for antenna field info
+    {"outputdir",         required_argument, NULL, 'o'},
+    {"input",             required_argument, NULL, 'i'},
+    {"portbase",          required_argument, NULL, 'b'}, // port (b)ase
+    {"timeout",           required_argument, NULL, 't'},
 
-    {"keeprunning",    optional_argument, NULL, 'k'},
+    {"keeprunning",       optional_argument, NULL, 'k'},
 
-    {"help",           no_argument,       NULL, 'h'},
-    {"version",        no_argument,       NULL, 'v'},
+    {"help",              no_argument,       NULL, 'h'},
+    {"version",           no_argument,       NULL, 'v'},
 
-    {NULL, 0, NULL, 0}
-  };
+    {NULL, 0, NULL, 0}}; // terminating NULL entry
 
   opterr = 0; // prevent error printing to stderr by getopt_long()
   int opt, err;
-  while ((opt = getopt_long(argc, argv, "hvs:a:o:p:b:t:k::", long_opts, NULL)) != -1) {
+  while ((opt = getopt_long(argc, argv, "p:c:m:o:i:b:t:k::hv", long_opts, NULL)) != -1) {
     switch (opt) {
     case 'p':
       args->parsetFilename = optarg;
@@ -436,12 +428,12 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args)
         status = 1;
       }
       break;
-    case 'a':
-      args->antFieldDir = optarg;
-      if (args->antFieldDir[0] != '\0' && args->antFieldDir[args->antFieldDir.size() - 1] != '/') {
-        args->antFieldDir.push_back('/');
+    case 'm':
+      args->staticMetaDataDir = optarg;
+      if (args->staticMetaDataDir[0] != '\0' && args->staticMetaDataDir[args->staticMetaDataDir.size() - 1] != '/') {
+        args->staticMetaDataDir.push_back('/');
       }
-      if ((err = isExistingDirname(args->antFieldDir)) != 0) {
+      if ((err = isExistingDirname(args->staticMetaDataDir)) != 0) {
         LOG_FATAL_STR("TBB: antenna field dir argument value " << optarg << ": " << strerror(err));
         status = 1;
       }
@@ -524,35 +516,16 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args)
 
 int main(int argc, char* argv[])
 {
+  LOFAR::Exception::TerminateHandler termHandler(LOFAR::Exception::terminate);
+
   struct progArgs args;
   int err;
 
-#if defined HAVE_LOG4CPLUS || defined HAVE_LOG4CXX
-  struct Log {
-    Log(const char* argv0)
-    {
-      char *dirc = strdup(argv0); // dirname() may clobber its arg
-      if (dirc != NULL) {
-        INIT_LOGGER(string(getenv("LOFARROOT") ? : dirname(dirc)) + "/../etc/outputProc.log_prop");
-        free(dirc);
-      }
-    }
-
-    ~Log()
-    {
-      LOGGER_EXIT_THREAD(); // destroys NDC created by INIT_LOGGER()
-    }
-  } logger(argv[0]);
-#endif
-
-  err = setvbuf(stdout, stdoutbuf, _IOLBF, sizeof stdoutbuf);
-  err |= setvbuf(stderr, stderrbuf, _IOLBF, sizeof stderrbuf);
-  if (err != 0) {
-    LOG_WARN("TBB: failed to change stdout and/or stderr output buffers");
-  }
+  INIT_LOGGER("TBB_Writer");
 
   if ((err = parseArgs(argc, argv, &args)) != 0) {
-    if (err == 2) err = 0;
+    if (err == 2)
+      err = 0;
     printUsage(argv[0]);
     return err;
   }
@@ -568,14 +541,18 @@ int main(int argc, char* argv[])
   retrieveStationCalTables(args.stCalTablesDir);
 
   // We don't run alone, so try to increase the QoS we get from the OS to decrease the chance of data loss.
-  setIOpriority(); // reqs CAP_SYS_NICE or CAP_SYS_ADMIN
-  setRTpriority(); // reqs CAP_SYS_NICE
-  lockInMemory();  // reqs CAP_IPC_LOCK
+  // As for Linux capabilities, it is complicated, but CAP_SYS_NICE + CAP_IPC_LOCK is enough and seems safe. See e.g.:
+  // "False Boundaries and Arbitrary Code Execution" @ https://forums.grsecurity.net/viewtopic.php?f=7&t=2522
+  if (parset.settings.realTime) {
+    setIOpriority(); // reqs CAP_SYS_ADMIN
+    setRTpriority(); // reqs CAP_SYS_NICE
+    lockInMemory();  // reqs CAP_IPC_LOCK
+  }
 
   err = 1;
   try {
     LOFAR::Cobalt::Parset parset(args.parsetFilename);
-    LOFAR::Cobalt::StationMetaDataMap stMdMap(getExternalStationMetaData(parset, args.antFieldDir));
+    LOFAR::Cobalt::StationMetaDataMap stMdMap(getExternalStationMetaData(parset, args.staticMetaDataDir));
 
     err = 0;
     do {
@@ -594,6 +571,6 @@ int main(int argc, char* argv[])
     LOG_FATAL_STR("TBB: Antenna field files: " << exc);
   }
 
-  return err == 0 ? 0 : 1;
+  return err;
 }
 

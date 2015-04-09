@@ -2,7 +2,7 @@
 //#
 //# Copyright (C) 2002-2003
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //# This program is free software; you can redistribute it and/or modify
 //# it under the terms of the GNU General Public License as published by
@@ -863,7 +863,7 @@ PVSSresult PVSSservice::dpeSet(const string& 	dpeName,
 	ASSERT(itsSCADAHandler);
 	// DB must be active
 	if ((result = itsSCADAHandler->isOperational()) != SA_NO_ERROR) {
-		LOG_FATAL(formatString("Unable to set value of property: '%s'", dpeName.c_str()));
+		LOG_FATAL(formatString("Unable to set value of property: '%s' -> database down", dpeName.c_str()));
 	}
 	// Property must exist
 	else if (!PVSSinfo::propExists(dpeName)) {
@@ -871,10 +871,10 @@ PVSSresult PVSSservice::dpeSet(const string& 	dpeName,
 		result = SA_PROP_DOES_NOT_EXIST;
 	}
 	else if ((result = getDpId(pvssDpName, dpId)) != SA_NO_ERROR) {
-		LOG_ERROR(formatString("Unable to set value of property: '%s'", dpeName.c_str()));
+		LOG_ERROR(formatString("Unable to set value of property: '%s' -> DP unknown", dpeName.c_str()));
 	}
 	else if ((result = convertMACToPVSS(value, &pVar, dpId)) != SA_NO_ERROR) {
-		LOG_ERROR(formatString("Unable to set value of property: '%s'", dpeName.c_str()));
+		LOG_ERROR_STR("Unable to set value of property: '" << dpeName << "' -> " << PVSSerrstr(result));
 	}
 	else {
 		GSAWaitForAnswer* pWFA(0);
@@ -1378,7 +1378,7 @@ PVSSresult PVSSservice::convertMACToPVSS(const GCFPValue& macValue,
 			Variable* pItemValue(0);
 			VariableType type(NOTYPE_VAR);
 			// the type for the new FPValue must be determined 
-			// separat, because the array could be empty
+			// separate, because the array could be empty
 			switch (macValue.getType()) {
 			case LPT_DYNBOOL:
 				if (elTypeId == DPELEMENT_DYNBIT) type = BIT_VAR;
@@ -1408,6 +1408,7 @@ PVSSresult PVSSservice::convertMACToPVSS(const GCFPValue& macValue,
 				break;
 			}
 			if (type == NOTYPE_VAR) {
+				LOG_ERROR_STR("Conversion of dyn_type " << macValue.getType() << " not implemented");
 				// type mismatch so stop with converting data
 				break;
 			}
@@ -1446,10 +1447,12 @@ PVSSresult PVSSservice::convertMACToPVSS(const GCFPValue& macValue,
 					delete pItemValue;
 					pItemValue = 0;
 				}
-			}
-		}
-		else
+			} // for
+		} // in DYN_ARR range
+		else {
+			LOG_ERROR_STR("Conversion of variable type " << macValue.getType() << " not implemented");
 			result = SA_MACTYPE_UNKNOWN;
+		}
 		break;
 	}
 	if (result == SA_NO_ERROR && *pVar == 0) {

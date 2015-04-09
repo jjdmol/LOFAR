@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -88,8 +88,8 @@ size_t AntennaGains::pack(char* buffer) const
   size_t offset = 0;
 
   lock();
-  MSH_pack(buffer, offset, m_gains);
-  MSH_pack(buffer, offset, m_quality);
+  offset = MSH_pack(buffer, offset, m_gains);
+  offset = MSH_pack(buffer, offset, m_quality);
   memcpy((char*)buffer + offset, &m_done, sizeof(bool));
   offset += sizeof(bool);
   unlock();
@@ -102,8 +102,8 @@ size_t AntennaGains::unpack(const char* buffer)
   size_t offset = 0;
 
   lock();
-  MSH_unpack(buffer, offset, m_gains);
-  MSH_unpack(buffer, offset, m_quality);
+  offset = MSH_unpack(buffer, offset, m_gains);
+  offset = MSH_unpack(buffer, offset, m_quality);
   memcpy(&m_done, (char*)buffer + offset, sizeof(bool));
   offset += sizeof(bool);
   unlock();

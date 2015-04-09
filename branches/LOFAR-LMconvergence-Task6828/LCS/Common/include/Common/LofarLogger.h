@@ -68,6 +68,17 @@ namespace LOFAR
 # define LOFARLOGGER_FULLPACKAGE LOFARLOGGER_PACKAGE
 #endif
 
+// The class/struct used per thread to (partially) re- and de-init the logger.
+struct ThreadLogger {
+  ThreadLogger() {
+    LOGGER_ENTER_THREAD();
+  }
+
+  ~ThreadLogger() {
+    LOGGER_EXIT_THREAD();
+  }
+};
+
 // @}
 
 //#------------------------ Assert and FailWhen -------------------------------

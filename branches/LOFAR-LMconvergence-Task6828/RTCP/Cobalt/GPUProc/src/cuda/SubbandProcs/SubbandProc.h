@@ -28,6 +28,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <Common/LofarLogger.h>
+#include <CoInterface/BudgetTimer.h>
 #include <CoInterface/CorrelatedData.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/Pool.h>
@@ -139,6 +140,7 @@ namespace LOFAR
       // @}
 
       PerformanceCounter inputCounter;
+      BudgetTimer processCPUTimer;
 
       std::auto_ptr<CorrelatorStep> correlatorStep;
       std::auto_ptr<BeamFormerPreprocessingStep> preprocessingStep;

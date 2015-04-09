@@ -88,6 +88,7 @@ mkdir -p $"$WORKSPACE/installed/var/run/pipeline"
 use Lofar               # this is a weak point in the script we should be able to run without
 use Pythonlibs
 . $"$WORKSPACE/lofarinit.sh"  
+. /data/qpid/.profile
 
 # *****************************************************
 # 3) Clear old data:
@@ -149,6 +150,12 @@ sed -i  $"s|input_path2_placeholder|$WORKING_DIR/input_data|g" $"$WORKING_DIR/$P
 # output data paths will find all output paths
 sed -i  $"s|output_path1_placeholder|$WORKING_DIR/output_data|g" $"$WORKING_DIR/$PIPELINE.parset"
 sed -i  $"s|output_path2_placeholder|$WORKING_DIR/output_data|g" $"$WORKING_DIR/$PIPELINE.parset"
+
+# setup the qpid environment (is a no-op if qpid is not installed)
+source $WORKSPACE/bin/MessageFuncs.sh
+create_queue lofar.task.feedback.state
+create_queue lofar.task.feedback.dataproducts
+create_queue lofar.task.feedback.processing
 
 # *********************************************************************
 # 5) Run the pipeline

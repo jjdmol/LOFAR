@@ -33,10 +33,10 @@ class imager_prepareTest(unittest.TestCase):
         super(imager_prepareTest, self).__init__(arg)
 
     def setUp(self):
-        self.test_path = temp_path = tempfile.mkdtemp()
+        self.test_path = temp_path = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
 
     def tearDown(self):
-        #shutil.rmtree(self.test_path)
+        shutil.rmtree(self.test_path)
         pass
 
     def test_create_input_map_for_sbgroup_single_ms(self):

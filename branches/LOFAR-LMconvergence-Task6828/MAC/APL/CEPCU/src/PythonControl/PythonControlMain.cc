@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ using namespace LOFAR::CEPCU;
 using namespace LOFAR;
 
 // Use a terminate handler that can produce a backtrace.
-Exception::TerminateHandler t(Exception::terminate);
+LOFAR::Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char* argv[])
 {
@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
 		pc->quit();		// let tasks quit nicely.
 		pyc.quit();
 		GCFScheduler::instance()->run(0.3); // let tasks die.
-	} catch( Exception &ex ) {
+	} catch( LOFAR::Exception &ex ) {
 		LOG_FATAL_STR("Caught exception: " << ex);
 		return 1;
 	}

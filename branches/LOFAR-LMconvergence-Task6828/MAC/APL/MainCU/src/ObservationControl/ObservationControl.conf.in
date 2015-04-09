@@ -28,3 +28,7 @@ ObservationControl.reportType = Full
 #
 ObservationControl.emergencyTimeout = 1h
 
+#
+# Delay before reporting FINAL state to MACScheduler
+#
+ObservationControl.finalStateDelay = 10s

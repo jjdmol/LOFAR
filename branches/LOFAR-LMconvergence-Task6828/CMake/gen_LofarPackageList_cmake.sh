@@ -4,7 +4,7 @@
 #
 #  Copyright (C) 2009
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
-#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -28,13 +28,13 @@
 
 # Get the LOFAR source directory root
 script_dir=$(cd $(dirname $0) && pwd)
-lofar_root=$(echo $script_dir | sed -e "s|\(.*/LOFAR\)/.*|\1|")
+lofar_root=$script_dir/..
 
 # Just a safety net; this script must be inside the LOFAR tree.
-if test "$script_dir" = "$lofar_root"; then
-  echo "ERROR: $(basename $0) MUST be inside the LOFAR source tree!"
-  exit 1
-fi
+#if test "$script_dir" = "$lofar_root"; then
+#  echo "ERROR: $(basename $0) MUST be inside the LOFAR source tree!"
+#  exit 1
+#fi
 
 # Open the output file
 exec 3> $script_dir/LofarPackageList.cmake

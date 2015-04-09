@@ -175,7 +175,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # If partial succes
         if self.error.isSet():
-            self.logger.error("Failed awimager node run detected. continue with"
+            self.logger.warn("Failed awimager node run detected. continue with"
                               "successful tasks.")
 
         self._store_data_map(self.inputs['mapfile'], output_map,

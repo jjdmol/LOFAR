@@ -107,7 +107,8 @@ namespace LOFAR {
     {
       info() = infoIn;
       info().setNeedVisData();
-      info().setNeedWrite();
+      info().setWriteData();
+      info().setMetaChanged();
       // Check the superstation definition(s).
       // They are specified as a ParameterRecord like:
       //    stations = {new1:[s1,s2,s3], new2:[s4,s5,s6]}
@@ -292,13 +293,16 @@ namespace LOFAR {
     bool StationAdder::process (const DPBuffer& buf)
     {
       itsTimer.start();
-      RefRows rowNrs(buf.getRowNrs());
       // Get the various data arrays.
+      itsBufTmp.referenceFilled (buf);
       const Array<Complex>& data = buf.getData();
       const Array<Bool>& flags = buf.getFlags();
-      Array<Float> weights(itsInput->fetchWeights (buf, rowNrs, itsTimer));
-      Array<Double> uvws(itsInput->fetchUVW (buf, rowNrs, itsTimer));
-      Array<Bool> frFlags(itsInput->fetchFullResFlags(buf, rowNrs, itsTimer));
+      const Array<Float>& weights =
+        itsInput->fetchWeights (buf, itsBufTmp, itsTimer);
+      const Array<Double>& uvws =
+        itsInput->fetchUVW (buf, itsBufTmp, itsTimer);
+      const Array<Bool>& frFlags =
+        itsInput->fetchFullResFlags (buf, itsBufTmp, itsTimer);
       // Size fullResFlags if not done yet.
       if (itsBuf.getFullResFlags().empty()) {
         IPosition frfShp = frFlags.shape();

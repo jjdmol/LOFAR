@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
+#include <MessageBus/MsgBus.h>
 
 #include "MACScheduler.h"
 
@@ -37,6 +38,8 @@ Exception::TerminateHandler t(Exception::terminate);
 int main(int argc, char* argv[])
 {
 	GCFScheduler::instance()->init(argc, argv, "MACScheduler");
+
+  MessageBus::init();
 
 	ChildControl*	cc = ChildControl::instance();
 	cc->start();	// make initial transition

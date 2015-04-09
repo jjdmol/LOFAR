@@ -196,7 +196,7 @@ class bbs(BaseRecipe):
             #                                         already available on disk.
             # ------------------------------------------------------------------
             self.logger.debug("Building VDS file describing data for BBS run")
-            vds_dir = tempfile.mkdtemp()
+            vds_dir = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
             vds_file = os.path.join(vds_dir, "bbs.gvds")
             combineproc = utilities.spawn_process(
                 [
@@ -344,7 +344,7 @@ class bbs(BaseRecipe):
         """
         env = utilities.read_initscript(self.logger, self.inputs['initscript'])
         self.logger.info("Running BBS GlobalControl")
-        working_dir = tempfile.mkdtemp()
+        working_dir = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
         with CatchLog4CPlus(
             working_dir,
             self.logger.name + ".GlobalControl",

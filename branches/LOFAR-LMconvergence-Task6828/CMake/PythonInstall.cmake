@@ -5,7 +5,7 @@
 
 # Copyright (C) 2008-2009
 # ASTRON (Netherlands Foundation for Research in Astronomy)
-# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -81,16 +81,19 @@ macro(python_install)
     execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
       ${_py_abs} ${_build_dir}/${_py})
     install(FILES ${_py} DESTINATION ${_inst_dir}/${_py_path})
-    set(_py_code
-      "import py_compile"
-      "print('-- Byte-compiling: ${_inst_dir}/${_py}')"
-      "py_compile.compile('${_inst_dir}/${_py}', doraise=True)")
-    install(CODE 
-      "execute_process(COMMAND ${PYTHON_EXECUTABLE} -c \"${_py_code}\"
+    if(USE_PYTHON_COMPILATION)
+      set(_py_code
+        "import py_compile, os"
+        "destdir = os.environ.get('DESTDIR','')"
+        "print('-- Byte-compiling: %s${_inst_dir}/${_py}' % destdir)"
+        "py_compile.compile('%s${DESTDIR}${_inst_dir}/${_py}' % destdir, doraise=True)")
+      install(CODE 
+        "execute_process(COMMAND ${PYTHON_EXECUTABLE} -c \"${_py_code}\"
                        RESULT_VARIABLE _result)
        if(NOT _result EQUAL 0)
-         message(FATAL_ERROR \"Byte-compilation FAILED: ${_inst_dir}/${_py}\")
+         message(FATAL_ERROR \"Byte-compilation FAILED: \$ENV{DESTDIR}${_inst_dir}/${_py}\")
        endif(NOT _result EQUAL 0)")
+    endif(USE_PYTHON_COMPILATION)
   endforeach(_py ${_py_files})
 
   # Make sure that there's a __init__.py file in each build/install directory.
@@ -102,7 +105,7 @@ macro(python_install)
       "${PYTHON_BUILD_DIR}${_init_dir}/__init__.py")
     install(CODE 
       "execute_process(COMMAND ${CMAKE_COMMAND} -E touch 
-        \"${PYTHON_INSTALL_DIR}${_init_dir}/__init__.py\")")
+        \"\$ENV{DESTDIR}${PYTHON_INSTALL_DIR}${_init_dir}/__init__.py\")")
   endforeach(_dir ${_dir_list})
 
 endmacro(python_install)

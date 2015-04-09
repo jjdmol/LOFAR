@@ -1,10 +1,9 @@
 # $Id$
 
-include(PythonInstall)
 
-python_install(
+install(PROGRAMS
   dpu_xml_interface.py
   pcombine.py
   pipeline_job.py
 
-  DESTINATION LAPS/GridInterface)
+  DESTINATION bin)
