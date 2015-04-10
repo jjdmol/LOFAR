@@ -1,0 +1,13 @@
+# -- PreProcessing--
+#
+# $Id$
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  PreProcessing  4.0.0  development 'node constraint'  "Settings for the pre-processing pipelines"
+
+#    name                    dir. type   unit   prun. vm   value                constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  demix_always            I    vtext   -	100   0    []                   -        "List of sources that must always be demixed"
+par  demix_if_needed         I    vtext   -     100   0    []                   -        "List of sources that will only be demixed if needed, based on some heuristics"
+par  SkyModel                I    text    -     100   0    ''                   -        "Sky model to be used for demixing"
