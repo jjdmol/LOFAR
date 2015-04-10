@@ -55,8 +55,6 @@
 #define TBB_DEFAULT_BASE_PORT   0x7bb0  // i.e. tbb0
 #define TBB_DEFAULT_LAST_PORT   0x7bbb  // 0x7bbf for NL, 0x7bbb for int'l stations
 
-#define STDLOG_BUFFER_SIZE      1024
-
 using namespace std;
 
 struct progArgs {
@@ -147,41 +145,7 @@ static vector<string> getTBB_InputStreamNames(const string& input, uint16_t port
 
 static void retrieveStationCalTables(string& /*stCalTablesDir*/)
 {
-  /*
-   * Users need the station calibration tables included. This is a major pain, because
-   * we figure out which station(s) we receive from at runtime (relying on the static
-   * mapping is a disaster waiting to happen), we cannot ask the stations and the
-   * alternative, from svn, is unreliable and races with (few) Science Support updates.
-   * Not all users care about the race, a few do. Also, auth, and this exposes an internal
-   * interface (cal tables) to users... Still do it: TBB is too low prio to get stuff nice.
-   *
-   * Get tables from all stations for the right cal mode (i.e. usually only verifies svn local copy),
-   * Run 'svn cleanup' and 'svn upgrade' when needed, otherwise remove the local copies and re-retrieve.
-   *
-
-   */
-
-  //svn checkout https://svn.astron.nl/Station/trunk/CalTables
-  //but only the needed files
-  //svn update
-  //Ctrl-C doesn't seem to kill svn co/up (only pause/halt), so use Ctrl-\ (QUIT), then svn cleanup
-
-  //svn: Working copy '.' locked
-  //svn: run 'svn cleanup' to remove locks (type 'svn help cleanup' for details)
-  //svn cleanup
-
-  //rm -rf CalTables
-
-  // Note: include the entire cal table as-is, because that easily allows users to just resort to the raw files
-
-  //	- if stCalTablesDir.empty():
-
-  //	- get station names, st cal mode
-  //	- fork process (sh script), do data writes
-  //	- sh script does svn checkout/update on req files only into ~/TBB_Writer-Station-CalTabs-localcopy/Station/CalTables/*
-  //	- listen for tbb data. When data writes done, do timed wait() on script pid, and if ok, add cal tables.
-  //	- if not ok: if timeout { signal script to abort and run svn cleanup, wait()}. Skip writing cal tabs, log warning + script output.
-
+  // TODO: implement via the qpid messaging middleware
 }
 
 static int antSetName2AntFieldIndex(const string& antSetName)
@@ -269,16 +233,17 @@ static int doTBB_Run(const vector<string>& inputStreamNames, const LOFAR::Cobalt
 {
   string logPrefix("TBB obs " + LOFAR::formatString("%u", parset.settings.observationID) + ": ");
 
-  vector<int> thrExitStatus(2 * inputStreamNames.size(), 0);
-  int err = 1;
+  vector<int> thrExitStatus(2 * inputStreamNames.size(), 1);
+  int status = 1;
   try {
-#ifdef HAVE_DAL
+#ifndef HAVE_DAL
+    // Allow building without DAL (some users don't need TBB_Writer), but bail if run.
+    (void)stMdMap; // silence compiler warning
+    (void)args; // idem
+    throw LOFAR::APSException("TBB_Writer needs but was not built with DAL");
+#else
     // When this obj goes out of scope, worker threads are cancelled and joined with.
     LOFAR::Cobalt::TBB_Writer writer(inputStreamNames, parset, stMdMap, args.outputDir, logPrefix, thrExitStatus);
-#else
-    // Allow building without DAL (some users don't need TBB_Writer), but bail if run.
-    throw LOFAR::APSException("TBB_Writer needs but was not built with DAL");
-#endif
 
     /*
      * We don't know how much data comes in, so cancel workers when all are idle for a while (timeoutVal).
@@ -313,7 +278,9 @@ static int doTBB_Run(const vector<string>& inputStreamNames, const LOFAR::Cobalt
         }
       }
     } while (nrWorkersDone < inputStreamNames.size());
-    err = 0;
+
+    status = 0;
+#endif
   } catch (LOFAR::Exception& exc) {
     LOG_FATAL_STR(logPrefix << "LOFAR::Exception: " << exc);
   } catch (exception& exc) {
@@ -323,12 +290,12 @@ static int doTBB_Run(const vector<string>& inputStreamNames, const LOFAR::Cobalt
   // Propagate exit status != 0 from any input or output worker thread.
   for (unsigned i = 0; i < thrExitStatus.size(); ++i) {
     if (thrExitStatus[i] != 0) {
-      err = 1;
+      status = 1;
       break;
     }
   }
 
-  return err;
+  return status;
 }
 
 static int isExistingDirname(const string& dirname)
@@ -362,14 +329,14 @@ static void printUsage(const char* progname)
   cout << "Options:" << endl;
   cout << "  -p, --parset=L12345.parset          path to file with observation settings (mandatory)" << endl;
   cout << endl;
-  cout << "  -c, --stcaltablesdir=/c/CalTables   path to override SVN retrieval of station calibration tables (like CS001/CalTable_001_mode1.dat)" << endl;
-  cout << "  -a, --antfielddir=/a/AntennaFields  path to override $LOFARROOT and parset path for antenna field files (like CS001-AntennaField.conf)" << endl;
+  cout << "  -c, --stcaltablesdir=/c/CalTables   path to override retrieval of station calibration tables (like CS001/CalTable_001_mode1.dat) (NOTE: st cal tables retrieval currently not performed, even with this option!)" << endl; // TODO: remove NOTE when implemented
+  cout << "  -m, --staticmetadatadir=/a/StaticMetaData  path to override $LOFARROOT for antenna field files (like CS001-AntennaField.conf)" << endl;
   cout << "  -o, --outputdir=tbbout              existing output directory" << endl;
-  cout << "  -i, --input=tcp|udp                 input stream(s) or type (default: udp)" << endl;
-  cout << "              file:raw.dat                if file or pipe name has a '%'," << endl;
-  cout << "              pipe:named-%.pipe           then the last '%' is replaced by 0, 1, ..., 11" << endl;
+  cout << "  -i, --input=tcp|udp|                input stream(s) or type (default: udp)" << endl;
+  cout << "              file:raw.dat|               if file or pipe name has a '%'," << endl;
+  cout << "              pipe:named-%.pipe           then the last '%' is replaced by numbers of available stream files/pipes (i.e. 0, 1, ..., 11)" << endl;
   cout << "  -b, --portbase=31665                start of range of 12 consecutive udp/tcp ports to receive from" << endl;
-  cout << "  -t, --timeout=10                    seconds of input inactivity until dump is considered completed" << endl;
+  cout << "  -t, --timeout=10                    seconds of input inactivity until dump is considered complete" << endl;
   cout << endl;
   cout << "  -k, --keeprunning[=true|false]      accept new input after a dump completed (default: true)" << endl;
   cout << endl;
@@ -381,8 +348,9 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args)
 {
   int status = 0;
 
+  bool parsetFilenameSpecified = false; // there is no default parset filename, so not passing it is fatal 
   // Default values
-  args->parsetFilename = "";    // there is no default parset filename, so not passing it is fatal
+  args->parsetFilename = "";
   args->stCalTablesDir = "";
   args->staticMetaDataDir = "";
 
@@ -417,6 +385,7 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args)
     switch (opt) {
     case 'p':
       args->parsetFilename = optarg;
+      parsetFilenameSpecified = true;
       break;
     case 'c':
       args->stCalTablesDir = optarg;
@@ -424,7 +393,7 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args)
         args->stCalTablesDir.push_back('/');
       }
       if ((err = isExistingDirname(args->stCalTablesDir)) != 0) {
-        LOG_FATAL_STR("TBB: station cal tab dir argument value " << optarg << ": " << strerror(err));
+        cerr << "TBB: station cal tab dir argument value " << optarg << ": " << strerror(err);
         status = 1;
       }
       break;
@@ -434,7 +403,7 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args)
         args->staticMetaDataDir.push_back('/');
       }
       if ((err = isExistingDirname(args->staticMetaDataDir)) != 0) {
-        LOG_FATAL_STR("TBB: antenna field dir argument value " << optarg << ": " << strerror(err));
+        cerr << "TBB: antenna field dir argument value " << optarg << ": " << strerror(err);
         status = 1;
       }
       break;
@@ -444,7 +413,7 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args)
         args->outputDir.push_back('/');
       }
       if ((err = isExistingDirname(args->outputDir)) != 0) {
-        LOG_FATAL_STR("TBB: output dir argument value " << optarg << ": " << strerror(err));
+        cerr << "TBB: output dir argument value " << optarg << ": " << strerror(err);
         status = 1;
       }
       break;
@@ -454,7 +423,7 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args)
           strncmp(optarg, "pipe:", sizeof("pipe:") - 1) == 0) {
         args->input = optarg;
       } else {
-        LOG_FATAL_STR("TBB: Invalid input argument value: " << optarg);
+        cerr << "TBB: Invalid input argument value: " << optarg;
         status = 1;
       }
       break;
@@ -465,7 +434,7 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args)
           throw boost::bad_lexical_cast(); // abuse exc type to have single catch
         }
       } catch (boost::bad_lexical_cast& /*exc*/) {
-        LOG_FATAL_STR("TBB: Invalid port argument value: " << optarg);
+        cerr << "TBB: Invalid port argument value: " << optarg;
         status = 1;
       }
       break;
@@ -473,7 +442,7 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args)
       try {
         args->timeoutVal.tv_sec = boost::lexical_cast<unsigned long>(optarg);
       } catch (boost::bad_lexical_cast& /*exc*/) {
-        LOG_FATAL_STR("TBB: Invalid timeout argument value: " << optarg);
+        cerr << "TBB: Invalid timeout argument value: " << optarg;
         status = 1;
       }
       break;
@@ -485,19 +454,17 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args)
       try {
         args->keepRunning = boost::lexical_cast<bool>(optarg);
       } catch (boost::bad_lexical_cast& /*exc*/) {
-        LOG_FATAL_STR("TBB: Invalid keeprunning argument value: " << optarg);
+        cerr << "TBB: Invalid keeprunning argument value: " << optarg;
         status = 1;
       }
       break;
     case 'h':
     case 'v':
-      if (status == 0) {
-        status = 2;
-      }
-      break;
+      return 2;
     default: // '?'
-      LOG_FATAL_STR("TBB: Invalid program argument or missing argument value: " << argv[optind - 1]);
+      cerr << "TBB: Invalid program argument or missing argument value: " << argv[optind - 1];
       status = 1;
+      break;
     }
   }
 
@@ -507,7 +474,12 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args)
     while (optind < argc) {
       oss << " " << argv[optind++]; // good enough
     }
-    LOG_FATAL_STR(oss.str());
+    cerr << oss.str();
+    status = 1;
+  }
+
+  if (!parsetFilenameSpecified) {
+    cerr << "TBB: parameter set file must be specified on command-line";
     status = 1;
   }
 
@@ -521,14 +493,15 @@ int main(int argc, char* argv[])
   struct progArgs args;
   int err;
 
-  INIT_LOGGER("TBB_Writer");
-
   if ((err = parseArgs(argc, argv, &args)) != 0) {
-    if (err == 2)
+    if (err == 2) {
       err = 0;
+    }
     printUsage(argv[0]);
     return err;
   }
+
+  INIT_LOGGER("TBB_Writer");
 
   setTermSigsHandler();
 
@@ -538,27 +511,26 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  retrieveStationCalTables(args.stCalTablesDir);
-
-  // We don't run alone, so try to increase the QoS we get from the OS to decrease the chance of data loss.
-  // As for Linux capabilities, it is complicated, but CAP_SYS_NICE + CAP_IPC_LOCK is enough and seems safe. See e.g.:
-  // "False Boundaries and Arbitrary Code Execution" @ https://forums.grsecurity.net/viewtopic.php?f=7&t=2522
-  if (parset.settings.realTime) {
-    setIOpriority(); // reqs CAP_SYS_ADMIN
-    setRTpriority(); // reqs CAP_SYS_NICE
-    lockInMemory();  // reqs CAP_IPC_LOCK
-  }
-
   err = 1;
   try {
     LOFAR::Cobalt::Parset parset(args.parsetFilename);
+
+    // We don't run alone, so try to increase the QoS we get from the OS to decrease the chance of data loss.
+    if (parset.settings.realTime) {
+      setIOpriority(); // reqs CAP_SYS_NICE
+      setRTpriority(); // reqs CAP_SYS_ADMIN
+      lockInMemory();  // reqs CAP_IPC_LOCK
+    }
+
     LOFAR::Cobalt::StationMetaDataMap stMdMap(getExternalStationMetaData(parset, args.staticMetaDataDir));
+
+    retrieveStationCalTables(args.stCalTablesDir);
 
     err = 0;
     do {
       err += doTBB_Run(inputStreamNames, parset, stMdMap, args);
-    } while (args.keepRunning && err < 1000);
-    if (err == 1000) { // Nr of dumps per obs was estimated to fit in 3 digits.
+    } while (args.keepRunning && err < 100);
+    if (err == 100) { // Nr of dumps per obs was estimated to fit in 3 digits.
       LOG_FATAL("TBB: Reached max nr of errors seen. Shutting down to avoid filling up storage with logging crap.");
     }
 
@@ -567,10 +539,12 @@ int main(int argc, char* argv[])
     LOG_FATAL_STR("TBB: Required parset key/values missing: " << exc);
   } catch (LOFAR::APSException& exc) {
     LOG_FATAL_STR("TBB: Parameterset error: " << exc);
+  } catch (LOFAR::AssertError& exc) {
+    LOG_FATAL_STR("TBB: Assert error: " << exc);
   } catch (LOFAR::Cobalt::StorageException& exc) {
     LOG_FATAL_STR("TBB: Antenna field files: " << exc);
   }
 
-  return err;
+  return err != 0;
 }
 
