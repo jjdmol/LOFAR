@@ -8,6 +8,7 @@ import lofar.messagebus.message as message
 from qmf.console import Session as QMFSession
 
 import logging
+import time
 # Define logging. Until we have a python loging framework, we'll have
 # to do any initialising here
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
@@ -34,6 +35,11 @@ class MCQDaemonLib(object):
 
         # should be moved to a config file
         self.broker="127.0.0.1" 
+        self._returnQueueTemplate = "MCQDaemon.return.{0}"
+        self._logTopicTemplate = "MCQDaemon.log.{0}"
+        
+        self._returnQueueName = self._returnQueueTemplate.format(self._sessionUUID)
+        self._logTopicName = self._logTopicTemplate.format(self._sessionUUID)
         self.queueName = "username.LOCUS102.MCQueueDaemon.CommandQueue"
 
 
@@ -45,9 +51,12 @@ class MCQDaemonLib(object):
         # Check state, raise exception if incorrect
         self._check_queue_and_daemon_state()
 
-        # Add a master node session
-        self._register_session()
+        # Send a start session command with the correct details to the
+        # HCQDaemon
+        self._start_session()
 
+        # Now connect to the created topic and resultQ
+        self._connect_to_queue_and_topic()
   
     def _check_queue_and_daemon_state(self):
         """
@@ -79,7 +88,7 @@ class MCQDaemonLib(object):
             raise Exception("No HeadNodeCommandQueueDaemon detected, aborting")
 
 
-    def _register_session(self):
+    def _start_session(self):
         """
         Send a register session command to the MCQDaemon
         """
@@ -97,12 +106,64 @@ class MCQDaemonLib(object):
         msg.payload = {"command":"start_session", "uuid":self._sessionUUID}
         self._sendCommandQueue.send(msg)
 
+    def _connect_to_queue_and_topic(self):
+        """ 
+        Connect the topic and command queue that have been created by send
+        session command to the daemon
+        """
+        self._resultQueue = msgbus.FromBus(self._returnQueueName, 
+            options = "create:always, node: { type: queue, durable: True}",
+            broker = self.broker)
+
+        self._logTopic = msgbus.FromBus(self._logTopicTemplate, 
+            options = "create:always, node: { type: topic, durable: True}",
+            broker = self.broker)
+
+    #def __del__(self)
+
+    def _release(self):
+        """
+        delete the attached queue and topic
+        Send to msg to the HCQDaemon command queue to remove the registered
+        session uuid 
+        """
+        # First disconnect from the queues
+        self._resultQueue.close()
+        self._logTopic.close()
+         
+        # create the header for the stop command
+        msg = message.MessageContent(
+                from_="USERNAME.LOCUS102.MCQDaemonLib.{0}".format(
+                                                            self._sessionUUID),
+                forUser="USERRNAME.LOCUS102.MSQDaemon",
+                summary="First msg to be send",
+                protocol="CommandQUeueMsg",
+                protocolVersion="0.0.1", 
+                #momid="",
+                #sasid="", 
+                #qpidMsg=None
+                      )
+        # the content
+        msg.payload = {"command":"stop_session", "uuid":self._sessionUUID}
+        self._sendCommandQueue.send(msg)
+
+    def __del__():
+        """
+
+        """
+        self._release()
+        
 
 if __name__ == "__main__":
     print "Hello world"
 
     MCQLib = MCQDaemonLib()
 
+    # Connect to the HCQDaemon
+    time.sleep(10)
+    MCQLib._release()
+
+    time.sleep(10)
 
     #if __name__ == "__main__":
     #    daemon = MCQ.MCQDaemon("daemon_state_file.pkl", 1, 2)
