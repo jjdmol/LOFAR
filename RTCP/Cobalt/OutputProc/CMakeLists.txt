@@ -15,3 +15,4 @@ lofar_find_package(UnitTest++)
 
 add_subdirectory(src)
 add_subdirectory(test)
+add_subdirectory(scripts)
