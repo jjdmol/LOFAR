@@ -147,6 +147,30 @@ class MCQDaemonLib(object):
         msg.payload = {"command":"stop_session", "uuid":self._sessionUUID}
         self._sendCommandQueue.send(msg)
 
+
+    def run_job(self, parameters):
+        """
+
+        """
+        msg = message.MessageContent(
+                from_="USERNAME.LOCUS102.MCQDaemonLib.{0}".format(
+                                                            self._sessionUUID),
+                forUser="USERRNAME.LOCUS102.MSQDaemon",
+                summary="First msg to be send",
+                protocol="CommandQUeueMsg",
+                protocolVersion="0.0.1", 
+                #momid="",
+                #sasid="", 
+                #qpidMsg=None
+                      )
+        msg.payload = {"command":"run_job", 
+                       "uuid":self._sessionUUID,
+                       "parameters":parameters}
+
+        self._sendCommandQueue.send(msg)
+
+
+
     def __del__():
         """
 
@@ -158,12 +182,26 @@ if __name__ == "__main__":
     print "Hello world"
 
     MCQLib = MCQDaemonLib()
+    time.sleep(1)
 
+    parameters = {'node':'locus102',
+                  'cmd': 'ls',
+                  'job_parameters':{'par1':'par1'}}
+
+
+
+    MCQLib.run_job(parameters)
+    MCQLib.run_job(parameters)
+    MCQLib.run_job(parameters)
+    MCQLib.run_job(parameters)
+    MCQLib.run_job(parameters)
+    MCQLib.run_job(parameters)
+    MCQLib.run_job(parameters)
     # Connect to the HCQDaemon
-    time.sleep(10)
+    time.sleep(3)
     MCQLib._release()
 
-    time.sleep(10)
+    time.sleep(1)
 
     #if __name__ == "__main__":
     #    daemon = MCQ.MCQDaemon("daemon_state_file.pkl", 1, 2)

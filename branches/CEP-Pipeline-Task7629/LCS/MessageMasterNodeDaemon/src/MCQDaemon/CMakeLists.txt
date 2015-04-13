@@ -4,6 +4,7 @@ include(PythonInstall)
 
 install(PROGRAMS
   MCQDaemon.py
+  NCQDaemon.py
   DESTINATION bin)
 
 

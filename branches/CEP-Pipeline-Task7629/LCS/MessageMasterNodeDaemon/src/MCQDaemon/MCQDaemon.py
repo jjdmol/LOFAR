@@ -38,32 +38,40 @@ import logging
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
 class MCQDaemon(object):
-    def __init__(self, state_file_path, loop_interval=10, init_delay=10):
+    def __init__(self, loop_interval=10, state_file_path=None, init_delay=10):
         self.logger = logging.getLogger("MCQDaemon")
-        self._statefilepath = None
         self._loop_interval = loop_interval  # perform loop max once per 
                                              #loop_interval
-        self._init_delay = init_delay        # how many loop polls te wait 
-        # before it is asumed that the pipeline that called init has died before
-        # registering as a consumer
-
-        self._state_file_path = state_file_path  # where to store the statefile
+     
         self._registered_pipelines = {}          # dict of uuid ->(ResultQName,
                                                  #                 LogTopic)
-
         self.broker = "127.0.0.1" 
         self._returnQueueTemplate = "MCQDaemon.return.{0}"
         self._logTopicTemplete = "MCQDaemon.log.{0}"
+        self._nodeCommandQueueTemplate = "username.{0}.NCQueueDaemon.CommandQueue"
 
-        # check for existing statefile
 
-
-        self.CommandQueue = msgbus.FromBus("username.LOCUS102.MCQueueDaemon.CommandQueue", 
+        self._CommandQueue = msgbus.FromBus("username.LOCUS102.MCQueueDaemon.CommandQueue", 
               options = "create:always, node: { type: queue, durable: True}",
               broker = self.broker)
 
+
+        self._init_delay = init_delay        # how many loop polls te wait 
+        # check for existing statefile
+        # before it is asumed that the pipeline that called init has died before
+        # registering as a consumer
+        self._state_file_path = state_file_path  # where to store the statefile
+        self._init_state_from_file_if_possible()
+
         self._connection = Connection.establish(self.broker)
         self._brokerAgent = BrokerAgent(self._connection)
+
+        # A dictionary with node to queue names, used for state validation 
+        # and queue retrieval of queue names
+        self._registered_nodes = {}
+
+        self._registered_nodes_queues = {}
+
 
     def run(self):
       """
@@ -103,6 +111,180 @@ class MCQDaemon(object):
 
         self.logger.info("Starting sleep for {0} seconds".format(sleep_time))
         time.sleep(sleep_time)
+
+
+    def _process_commands(self):
+        """
+        Process in order all commands in the command queue
+        """     
+        while True:
+            # Test if the timeout is in milli seconds or second
+            msg = self._CommandQueue.get(0.1)  # get is blocking, always use timeout.
+            if msg == None:
+               break    # Break the loop, we will wait on a other location
+
+            # currently the expected payload is a list
+            msg_content = eval(msg.content().payload)
+
+            # now process the commands
+            command = msg_content['command'] 
+            if command == "start_session":
+                self._process_start_session_msg(msg_content)
+                self._CommandQueue.ack(msg)
+
+            elif command == "stop_session":
+                self._process_stop_msg(msg_content)
+                self._CommandQueue.ack(msg)        
+
+            elif command == 'run_job':
+                #try:
+                self._process_start_job(msg_content)
+
+                #except:
+                self.logger.info("received an invalid job msg:")
+                self.logger.info(msg_content)
+
+                self._CommandQueue.ack(msg)      
+
+            elif command == 'quit':
+                self._process_quit_msg(msg_content)
+                self._CommandQueue.ack(msg)                         
+                return True  # do NOT save the current state, might be cleared due to
+              # this command
+
+            else:
+                self.logger.warn("***** warning **** encountered unknown command")
+                self.logger.warn(msg_content)
+
+            # After each command we need to save the new state.
+            # If the deamon goes down between the processing of the command
+            # and this save we have an indetermined state.
+            self._save_state_to_file()
+        
+    def _process_quit_msg(self, msg_content):
+        """
+        Perform actions done on receiveing quit msg
+
+        1. If clear_state is set the state_file is removed
+        """
+        try:
+            if msg_content['clear_state'] == "true":
+                os.remove(self._state_file_path)
+
+        except:
+            # The daemon could be in a state where the file has not been written
+            # eg.  in the init phase.  If the delete fails just skip and continue
+            pass
+
+
+    def _process_start_job(self, msg_content):
+        """
+        The meat of the Master node Daemon functionality.
+
+        The starting of a job on one of the node servers.
+        """
+        self.logger.info(msg_content)
+
+        # extract the job parameters from the msg
+        # Should be stored in the internal storage
+        node = msg_content['parameters']['node']
+        cmd = msg_content['parameters']['cmd']
+        cmd_parameters = msg_content['parameters']['job_parameters']
+        nodeQueueName = None
+
+        if node in self._registered_nodes:
+            nodeQueueName = self._registered_nodes[node]['CQName']
+        else:
+            nodeQueueName = self._nodeCommandQueueTemplate.format(node)
+            self._registered_nodes[node]={'CQName':nodeQueueName}
+            self._registered_nodes_queues[node] = msgbus.ToBus(nodeQueueName, 
+                options = "create:always, node: { type: queue, durable: True}",
+                broker = self.broker)
+
+
+
+        msg = message.MessageContent(
+                from_="USERNAME.LOCUS102.MCQDaemon",
+                forUser="USERRNAME.{0}.NSQDaemon".format(node),
+                summary="First msg to be send",
+                protocol="CommandQUeueMsg",
+                protocolVersion="0.0.1", 
+                #momid="",
+                #sasid="", 
+                #qpidMsg=None
+                      )
+        msg.payload = {'command':'run_job',
+                       "cmd":cmd, 
+                       "cmd_parameters":cmd_parameters}
+        self.logger.info("send job to: {0}".format(
+                                self._registered_nodes[node]['CQName']))
+        self._registered_nodes_queues[node].send(msg)
+
+
+        
+
+    def _process_start_session_msg(self, msg_content):
+        """
+        _process_start_session_msg called when a new session is requested.
+        This function creates the needed queue and topic based on the uuid.
+        It is also responsible to for storing the details of the created objects
+        in the internal storage of the Deamon object
+        """      
+        # create the needed topic and resultq
+        resultq_name, topic_name = self._create_resultq_and_topic(msg_content['uuid'])
+    
+        # store them in the internal pipeline storage
+        self._registered_pipelines[msg_content['uuid']] = {
+                  'resultq':resultq_name,
+                  'topic':topic_name,
+                  'init_wait':self._init_delay}
+        # init_wait:other option is a time out
+        # the problem is that the pipeline can only connect to an existing q
+        # so after creating the q is not emediately 'used'.
+        # its either a wait or a state or we have a countdown to allow late
+        #connections
+
+    def _create_resultq_and_topic(self, uuid):
+        """
+        Creates a temporary named result queue and a topic based on the uuid
+        Return the create queue and topic name
+
+        Both the queue and topic are created durable, they stay even when 
+        there are no listeners
+        """
+        # create the queues names based on the template
+        resultq_name = self._returnQueueTemplate.format(uuid)
+        topic_name = self._logTopicTemplete.format(uuid)
+
+        # now register the queue
+        resultQueue = msgbus.ToBus(resultq_name, 
+              options = "create:always, node: { type: queue, durable: True}",
+              broker = self.broker)
+
+        # and topic s: qpid-stat -e for example and source of this code
+        logTopic = msgbus.ToBus(topic_name, 
+              options = "create:always, node: { type: topic, durable: True}",
+              broker = self.broker)
+
+        return resultq_name, topic_name
+  
+    def _process_stop_msg(self, msg):
+        """
+         Stop the current session.
+        """
+        self._delete_queues_and_session(msg['uuid'])
+
+    def _save_state_to_file(self):
+        """
+        Save the internal session information to disk     
+        """      
+        file = open(self._state_file_path, 'w')
+
+        pickle.dump(self._registered_pipelines, file)
+
+        file.flush()  # force write to disk
+        file.close()
+
 
     def _get_queue_and_topic_from_broker(self):
         """
@@ -225,130 +407,13 @@ class MCQDaemon(object):
         # anymore, It is a topic so no need to force the remova;
         self._brokerAgent.delExchange(topicname)
 
-    def _process_commands(self):
-        """
-        Process in order all commands in the command queue
-        """     
-        while True:
-            # Test if the timeout is in milli seconds or second
-            msg = self.CommandQueue.get(0.1)  # get is blocking, always use timeout.
-            if msg == None:
-               break    # Break the loop, we will wait on a other location
-
-            # currently the expected payload is a list
-            msg_content = eval(msg.content().payload)
-
-            # now process the commands
-            command = msg_content['command'] 
-            if command == "start_session":
-                self._process_start_session_msg(msg_content)
-                self.CommandQueue.ack(msg)
-
-            elif command == "stop_session":
-                self._process_stop_msg(msg_content)
-                self.CommandQueue.ack(msg)        
-
-            #elif command == 'run_session_job':
-            #    self._process_start_job(msg)
-
-            elif command == 'quit':
-                self._process_quit_msg(msg_content)
-                self.CommandQueue.ack(msg)                         
-                return True  # do NOT save the current state, might be cleared due to
-              # this command
-
-            else:
-                self.logger.warn("***** warning **** encountered unknown command")
-                self.logger.warn(msg_content)
-
-            # After each command we need to save the new state.
-            # If the deamon goes down between the processing of the command
-            # and this save we have an indetermined state.
-            self._save_state_to_file()
-        
-    def _process_quit_msg(self, msg_content):
-        """
-        Perform actions done on receiveing quit msg
-
-        1. If clear_state is set the state_file is removed
-        """
-        try:
-            if msg_content['clear_state'] == "true":
-                os.remove(self._state_file_path)
-
-        except:
-            # The daemon could be in a state where the file has not been written
-            # eg.  in the init phase.  If the delete fails just skip and continue
-            pass
-
-    def _process_start_session_msg(self, msg_content):
-        """
-        _process_start_session_msg called when a new session is requested.
-        This function creates the needed queue and topic based on the uuid.
-        It is also responsible to for storing the details of the created objects
-        in the internal storage of the Deamon object
-        """      
-        # create the needed topic and resultq
-        resultq_name, topic_name = self._create_resultq_and_topic(msg_content['uuid'])
-    
-        # store them in the internal pipeline storage
-        self._registered_pipelines[msg_content['uuid']] = {
-                  'resultq':resultq_name,
-                  'topic':topic_name,
-                  'init_wait':self._init_delay}
-        # init_wait:other option is a time out
-        # the problem is that the pipeline can only connect to an existing q
-        # so after creating the q is not emediately 'used'.
-        # its either a wait or a state or we have a countdown to allow late
-        #connections
-
-    def _create_resultq_and_topic(self, uuid):
-        """
-        Creates a temporary named result queue and a topic based on the uuid
-        Return the create queue and topic name
-
-        Both the queue and topic are created durable, they stay even when 
-        there are no listeners
-        """
-        # create the queues names based on the template
-        resultq_name = self._returnQueueTemplate.format(uuid)
-        topic_name = self._logTopicTemplete.format(uuid)
-
-        # now register the queue
-        resultQueue = msgbus.ToBus(resultq_name, 
-              options = "create:always, node: { type: queue, durable: True}",
-              broker = self.broker)
-
-        # and topic s: qpid-stat -e for example and source of this code
-        logTopic = msgbus.ToBus(topic_name, 
-              options = "create:always, node: { type: topic, durable: True}",
-              broker = self.broker)
-
-        return resultq_name, topic_name
-  
-    def _process_stop_msg(self, msg):
-        """
-         Stop the current session.
-        """
-        self._delete_queues_and_session(msg['uuid'])
-
-    def _save_state_to_file(self):
-        """
-        Save the internal session information to disk     
-        """      
-        file = open(self._state_file_path, 'w')
-
-        pickle.dump(self._registered_pipelines, file)
-
-        file.flush()  # force write to disk
-        file.close()
-
     def _init_state_from_file_if_possible(self):
         """
         If a statefile exists, load the stae from this file
         """
         # if no statefile exist do nothing
         if not os.path.exists(self._state_file_path):
+            self.logger.info("No Statefile found. Starting with a clear state")
             return
 
         # Open the statefile
@@ -358,13 +423,19 @@ class MCQDaemon(object):
 
         # TODO: do not check for correct state or anything, simple assign
         self._registered_pipelines = state
+        self.logger.info("succesfully loaded the Deamon state from statefile")
+        self.logger.info("--- List of reloaded uuid:     ---")
 
-        self.logger.debug("succesfully loaded the Deamon state for statefile")
-      
+
+        for key, value in self._registered_pipelines.items():
+
+            self.logger.info(key)
+        self.logger.info("--- End List of reloaded uuid ---")  
 
 if __name__ == "__main__":
-    daemon = MCQDaemon("daemon_state_file.pkl", 1, 4)
+    daemon = MCQDaemon( 1, "daemon_state_file.pkl",4)
     
     daemon.run()
         
+
 
