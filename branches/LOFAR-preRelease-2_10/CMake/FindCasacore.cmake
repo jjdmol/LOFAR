@@ -143,7 +143,6 @@ endmacro(casacore_find_package _name)
 # Define the Casacore components.
 set(Casacore_components
   casa
-  components
   coordinates
   derivedmscal
   fits
@@ -153,7 +152,7 @@ set(Casacore_components
   measures
   mirlib
   ms
-  msfits
+  python
   scimath
   scimath_f
   tables
@@ -161,17 +160,17 @@ set(Casacore_components
 
 # Define the Casacore components' inter-dependencies.
 set(Casacore_casa_DEPENDENCIES)
-set(Casacore_components_DEPENDENCIES    coordinates measures scimath tables casa)
+#set(Casacore_components_DEPENDENCIES    coordinates measures scimath tables casa)
 set(Casacore_coordinates_DEPENDENCIES   fits measures casa)
 set(Casacore_derivedmscal_DEPENDENCIES  ms measures tables casa)
 set(Casacore_fits_DEPENDENCIES          measures tables casa)
-set(Casacore_images_DEPENDENCIES        mirlib components lattices coordinates fits measures scimath tables casa)
+set(Casacore_images_DEPENDENCIES        mirlib lattices coordinates fits measures scimath tables casa)
 set(Casacore_lattices_DEPENDENCIES      tables scimath casa)
 set(Casacore_meas_DEPENDENCIES          measures tables casa)
 set(Casacore_measures_DEPENDENCIES      tables casa)
 set(Casacore_mirlib_DEPENDENCIES)
 set(Casacore_ms_DEPENDENCIES            measures scimath tables casa)
-set(Casacore_msfits_DEPENDENCIES        ms fits measures tables casa)
+#set(Casacore_msfits_DEPENDENCIES        ms fits measures tables casa)
 set(Casacore_scimath_DEPENDENCIES       scimath_f casa)
 set(Casacore_scimath_f_DEPENDENCIES)
 set(Casacore_tables_DEPENDENCIES        casa)
@@ -256,4 +255,6 @@ else(CASACORE_FOUND)
     message(STATUS "${CASACORE_ERROR_MESSAGE}")
   endif(Casacore_FIND_REQUIRED)
 endif(CASACORE_FOUND)
+
+
 
