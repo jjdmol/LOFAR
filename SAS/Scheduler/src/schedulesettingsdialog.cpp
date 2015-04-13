@@ -847,7 +847,9 @@ void ScheduleSettingsDialog::scheduleStartDateChanged(QDate start) {
 	int dur_months = ui.sb_ScheduleDurationMonths->value();
 	ui.dateEdit_Latest->setMinimumDate(start.addDays(1));
 	// always set to first day of the week (monday)
-	ui.dateEdit_Earliest->setDate(ui.dateEdit_Earliest->date().addDays(-ui.dateEdit_Earliest->date().dayOfWeek() + 1));
+	ui.dateEdit_Earliest->setDate(ui.dateEdit_Earliest->date());
+        // Removed restriction for mondays (next line) [AS]
+        // .addDays(-ui.dateEdit_Earliest->date().dayOfWeek() + 1));
 	QDate endDate(start.addMonths(dur_months));
 	endDate = endDate.addDays(7-endDate.dayOfWeek());
 	ui.dateEdit_Latest->setDate(endDate);
