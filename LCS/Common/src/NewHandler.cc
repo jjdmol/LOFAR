@@ -25,8 +25,7 @@
 #include <lofar_config.h>
 
 #include <Common/NewHandler.h>
-#include <new>
-#include <iostream>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR {
 
