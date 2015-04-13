@@ -26,7 +26,7 @@
 // \file
 // Abstract base class for %LOFAR memory (de)allocator
 
-#include <unistd.h>
+#include <cstddef>
 
 namespace LOFAR {
 

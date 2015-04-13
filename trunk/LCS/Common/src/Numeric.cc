@@ -25,7 +25,6 @@
 
 //# Includes
 #include <Common/Numeric.h>
-#include <Common/LofarLogger.h>
 #include <cstdlib>
 
 namespace LOFAR
