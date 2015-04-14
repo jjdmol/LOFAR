@@ -32,25 +32,46 @@
 
 if(NOT PYRAP_FOUND)
 
-  find_path(PYRAP_INCLUDE_DIR pyrap/Converters.h
-    HINTS ${PYRAP_ROOT_DIR} PATH_SUFFIXES include)
-  find_library(PYRAP_LIBRARY pyrap
-    HINTS ${PYRAP_ROOT_DIR} PATH_SUFFIXES lib)
-  mark_as_advanced(PYRAP_INCLUDE_DIR PYRAP_LIBRARY)
+  # First try to find python-casacore.
+  find_path(PYRAP_INCLUDE_DIR casacore/python/Converters.h
+    HINTS ${CASACORE_ROOT_DIR} PATH_SUFFIXES include)
+  if (PYRAP_INCLUDE_DIR)
 
-  # Pyrap also depends on Casacore
-  include(LofarFindPackage)
-  if(Pyrap_FIND_REQUIRED)
-    lofar_find_package(Casacore REQUIRED COMPONENTS casa)
-  else(Pyrap_FIND_REQUIRED)
-    lofar_find_package(Casacore COMPONENTS casa)
-  endif(Pyrap_FIND_REQUIRED)
+    # Found python-casacore.
+    mark_as_advanced(PYRAP_INCLUDE_DIR)
+    include(LofarFindPackage)
+    lofar_find_package(Casacore COMPONENTS casa python)
 
-  include(FindPackageHandleStandardArgs)
-  find_package_handle_standard_args(Pyrap DEFAULT_MSG 
-    PYRAP_LIBRARY PYRAP_INCLUDE_DIR)
+    include(FindPackageHandleStandardArgs)
+    find_package_handle_standard_args(Pyrap DEFAULT_MSG 
+      PYRAP_INCLUDE_DIR)
 
-  set(PYRAP_INCLUDE_DIRS ${PYRAP_INCLUDE_DIR} ${CASACORE_INCLUDE_DIRS})
-  set(PYRAP_LIBRARIES ${PYRAP_LIBRARY} ${CASACORE_LIBRARIES})
+    set(PYRAP_INCLUDE_DIRS ${CASACORE_INCLUDE_DIRS})
+    set(PYRAP_LIBRARIES ${CASACORE_LIBRARIES})
+
+  else()
+
+    find_path(PYRAP_INCLUDE_DIR pyrap/Converters.h
+      HINTS ${PYRAP_ROOT_DIR} PATH_SUFFIXES include)
+    find_library(PYRAP_LIBRARY pyrap
+      HINTS ${PYRAP_ROOT_DIR} PATH_SUFFIXES lib)
+    mark_as_advanced(PYRAP_INCLUDE_DIR PYRAP_LIBRARY)
+
+    # Pyrap also depends on Casacore
+    include(LofarFindPackage)
+    if(Pyrap_FIND_REQUIRED)
+      lofar_find_package(Casacore REQUIRED COMPONENTS casa)
+    else(Pyrap_FIND_REQUIRED)
+      lofar_find_package(Casacore COMPONENTS casa)
+    endif(Pyrap_FIND_REQUIRED)
+
+    include(FindPackageHandleStandardArgs)
+    find_package_handle_standard_args(Pyrap DEFAULT_MSG 
+      PYRAP_LIBRARY PYRAP_INCLUDE_DIR)
+
+    set(PYRAP_INCLUDE_DIRS ${PYRAP_INCLUDE_DIR} ${CASACORE_INCLUDE_DIRS})
+    set(PYRAP_LIBRARIES ${PYRAP_LIBRARY} ${CASACORE_LIBRARIES})
+
+  endif(PYRAP_INCLUDE_DIR)
 
 endif(NOT PYRAP_FOUND)
