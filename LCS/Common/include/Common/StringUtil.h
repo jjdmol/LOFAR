@@ -31,7 +31,6 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_algorithm.h>
-#include <algorithm>
 #include <Common/Exception.h>
 
 namespace LOFAR
