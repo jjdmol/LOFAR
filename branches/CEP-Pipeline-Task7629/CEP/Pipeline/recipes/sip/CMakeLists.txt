@@ -53,6 +53,7 @@ python_install(
   nodes/selfcal_awimager.py
   nodes/selfcal_bbs.py
   nodes/selfcal_finalize.py
+  nodes/test_recipe.py
   DESTINATION lofarpipe/recipes)
 
 install(PROGRAMS
