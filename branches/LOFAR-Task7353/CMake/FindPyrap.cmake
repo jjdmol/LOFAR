@@ -33,45 +33,46 @@
 if(NOT PYRAP_FOUND)
 
   # First try to find python-casacore.
-  find_path(PYRAP_INCLUDE_DIR casacore/python/Converters.h
+  find_path(PYCASACORE_INCLUDE_DIR casacore/python/Converters.h
     HINTS ${CASACORE_ROOT_DIR} PATH_SUFFIXES include)
-  if (PYRAP_INCLUDE_DIR)
+  if (PYCASACORE_INCLUDE_DIR)
 
     # Found python-casacore.
-    mark_as_advanced(PYRAP_INCLUDE_DIR)
+    mark_as_advanced(PYCASACORE_INCLUDE_DIR)
     include(LofarFindPackage)
-    lofar_find_package(Casacore COMPONENTS casa python)
+    lofar_find_package(Casacore REQUIRED COMPONENTS casa python)
 
     include(FindPackageHandleStandardArgs)
     find_package_handle_standard_args(Pyrap DEFAULT_MSG 
-      PYRAP_INCLUDE_DIR)
+      PYCASACORE_INCLUDE_DIR)
 
     set(PYRAP_INCLUDE_DIRS ${CASACORE_INCLUDE_DIRS})
     set(PYRAP_LIBRARIES ${CASACORE_LIBRARIES})
+  endif()
+endif(NOT PYRAP_FOUND)
 
-  else()
 
-    find_path(PYRAP_INCLUDE_DIR pyrap/Converters.h
-      HINTS ${PYRAP_ROOT_DIR} PATH_SUFFIXES include)
-    find_library(PYRAP_LIBRARY pyrap
-      HINTS ${PYRAP_ROOT_DIR} PATH_SUFFIXES lib)
-    mark_as_advanced(PYRAP_INCLUDE_DIR PYRAP_LIBRARY)
+if(NOT PYRAP_FOUND)
 
-    # Pyrap also depends on Casacore
-    include(LofarFindPackage)
-    if(Pyrap_FIND_REQUIRED)
-      lofar_find_package(Casacore REQUIRED COMPONENTS casa)
-    else(Pyrap_FIND_REQUIRED)
-      lofar_find_package(Casacore COMPONENTS casa)
-    endif(Pyrap_FIND_REQUIRED)
+  find_path(PYRAP_INCLUDE_DIR pyrap/Converters.h
+    HINTS ${PYRAP_ROOT_DIR} PATH_SUFFIXES include)
+  find_library(PYRAP_LIBRARY pyrap
+    HINTS ${PYRAP_ROOT_DIR} PATH_SUFFIXES lib)
+  mark_as_advanced(PYRAP_INCLUDE_DIR PYRAP_LIBRARY)
 
-    include(FindPackageHandleStandardArgs)
-    find_package_handle_standard_args(Pyrap DEFAULT_MSG 
-      PYRAP_LIBRARY PYRAP_INCLUDE_DIR)
+  # Pyrap also depends on Casacore
+  include(LofarFindPackage)
+  if(Pyrap_FIND_REQUIRED)
+    lofar_find_package(Casacore REQUIRED COMPONENTS casa)
+  else(Pyrap_FIND_REQUIRED)
+    lofar_find_package(Casacore COMPONENTS casa)
+  endif(Pyrap_FIND_REQUIRED)
 
-    set(PYRAP_INCLUDE_DIRS ${PYRAP_INCLUDE_DIR} ${CASACORE_INCLUDE_DIRS})
-    set(PYRAP_LIBRARIES ${PYRAP_LIBRARY} ${CASACORE_LIBRARIES})
+  include(FindPackageHandleStandardArgs)
+  find_package_handle_standard_args(Pyrap DEFAULT_MSG 
+    PYRAP_LIBRARY PYRAP_INCLUDE_DIR)
 
-  endif(PYRAP_INCLUDE_DIR)
+  set(PYRAP_INCLUDE_DIRS ${PYRAP_INCLUDE_DIR} ${CASACORE_INCLUDE_DIRS})
+  set(PYRAP_LIBRARIES ${PYRAP_LIBRARY} ${CASACORE_LIBRARIES})
 
 endif(NOT PYRAP_FOUND)
