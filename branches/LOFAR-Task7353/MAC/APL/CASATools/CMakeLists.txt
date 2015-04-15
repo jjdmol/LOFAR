@@ -4,7 +4,7 @@
 lofar_package(CASATools 1.0 DEPENDS Common RTCCommon)
 
 include(LofarFindPackage)
-lofar_find_package(Casacore COMPONENTS casa measures)
+lofar_find_package(Casacore COMPONENTS casa measures REQUIRED)
 lofar_find_package(Blitz REQUIRED)
 
 add_subdirectory(include/CASATools)
