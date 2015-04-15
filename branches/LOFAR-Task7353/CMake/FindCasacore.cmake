@@ -189,6 +189,14 @@ if(NOT CASACORE_INCLUDE_DIR)
   mark_as_advanced(CASACORE_INCLUDE_DIR)
 endif(NOT CASACORE_INCLUDE_DIR)
 
+# Fallback for systems that have old casacore installed in directory not called 'casacore'
+# This fallback can be removed once we move to casacore 2.0 which always puts headers in 'casacore'
+if(NOT CASACORE_INCLUDE_DIR)
+  find_path(CASACORE_INCLUDE_DIR casa/aips.h
+    HINTS ${CASACORE_ROOT_DIR} PATH_SUFFIXES include)
+  mark_as_advanced(CASACORE_INCLUDE_DIR)
+endif(NOT CASACORE_INCLUDE_DIR)
+
 if(NOT CASACORE_INCLUDE_DIR)
   set(CASACORE_ERROR_MESSAGE "Casacore: unable to find the header file casa/aips.h.\nPlease set CASACORE_ROOT_DIR to the root directory containing Casacore.")
 else(NOT CASACORE_INCLUDE_DIR)
