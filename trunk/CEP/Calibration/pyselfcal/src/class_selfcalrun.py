@@ -379,12 +379,11 @@ class selfCalRun:
 		cmd3  	="""msin.autoweight = false\n"""
 		cmd4  	="""msin.forceautoweight = false\n"""
 		cmd5  	="""msin.datacolumn = CORRECTED_DATA\n"""
-		cmd6  	="""steps=[preflag,count,flag1]\n"""
+		cmd6  	="""steps=[preflag,count]\n"""
 		cmd7 	="""preflag.type=preflagger\n"""
 		cmd8 	="""preflag.corrtype=auto\n"""
 		cmd9 	="""preflag.baseline= [DE*, FR*, SE*, UK*]\n"""
 		cmd10 	="""preflag.amplmin = 1e-30 \n"""
-		cmd11  	="""flag1.type=aoflagger\n"""
 
 		
 		fileFlag1.write(cmd1)
@@ -397,7 +396,6 @@ class selfCalRun:
 		fileFlag1.write(cmd8)
 		fileFlag1.write(cmd9)
 		fileFlag1.write(cmd10)
-		fileFlag1.write(cmd11)
 
 		fileFlag1.close()			
 	

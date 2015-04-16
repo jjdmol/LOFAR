@@ -621,17 +621,12 @@ class obsPreprocessing:
 		cmd3  ="""msin.autoweight = false\n"""
 		cmd4  ="""msin.forceautoweight = false\n"""
 		cmd5  ="""msin.datacolumn = CORRECTED_DATA\n"""
-		cmd6  ="""steps=[preflag,count,flag1]\n"""
+		cmd6  ="""steps=[preflag,count]\n"""
 		cmd6a ="""preflag.type=preflagger\n"""
 		cmd6b ="""preflag.corrtype=auto\n"""
 		cmd6c ="""preflag.baseline= [DE*, FR*, SE*, UK*]\n"""
 		cmd6d ="""preflag.amplmin = 1e-30 \n"""		
 		
-		cmd7  ="""flag1.type=aoflagger\n"""
-		cmd8  ="""flag1.threshold=1\n"""
-		cmd9  ="""flag1.freqwindow=1\n"""
-		cmd10 ="""flag1.timewindow=1\n"""
-		cmd11 ="""flag1.correlations=[0,1,2,3]   # only flag on XX and YY [0,3]"""
 
 		
 		file.write(cmd1)
@@ -644,12 +639,7 @@ class obsPreprocessing:
 		file.write(cmd6b)
 		file.write(cmd6c)
 		file.write(cmd6d)		
-		file.write(cmd7)
-		#file.write(cmd8)
-		#file.write(cmd9)
-		#file.write(cmd10)
-		#file.write(cmd11)
-		
+
 		file.close()			
 		
 		#Run NDPPP
