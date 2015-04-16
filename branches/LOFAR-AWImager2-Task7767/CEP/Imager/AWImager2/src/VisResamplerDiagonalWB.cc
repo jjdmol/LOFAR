@@ -89,7 +89,7 @@ void VisResamplerDiagonalWB::DataToGridImpl_p(
 
 
   // Loop over all visibility rows to process.
-  omp_set_nested(1);
+  OpenMP::setNested(1);
   #pragma omp parallel num_threads(4)
   for (Int inx=rbeg; inx<=rend; ++inx) 
   {

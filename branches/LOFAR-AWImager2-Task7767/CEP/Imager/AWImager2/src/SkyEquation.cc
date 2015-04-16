@@ -41,7 +41,7 @@
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
-#include <lattices/Lattices/LatticeExpr.h>
+#include <lattices/LEL/LatticeExpr.h>
 
 #include <AWImager2/VisBuffer.h>
 #include <AWImager2/VisibilityIterator.h>

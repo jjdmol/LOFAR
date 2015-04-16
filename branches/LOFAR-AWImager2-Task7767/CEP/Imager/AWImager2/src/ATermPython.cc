@@ -22,11 +22,11 @@
 
 #include <lofar_config.h>
 #include <AWImager2/ATermPython.h>
-#include <pyrap/Converters/PycExcp.h>
-#include <pyrap/Converters/PycBasicData.h>
-#include <pyrap/Converters/PycValueHolder.h>
-#include <pyrap/Converters/PycRecord.h>
-#include <pyrap/Converters/PycArray.h>
+#include <casacore/python/Converters/PycExcp.h>
+#include <casacore/python/Converters/PycBasicData.h>
+#include <casacore/python/Converters/PycValueHolder.h>
+#include <casacore/python/Converters/PycRecord.h>
+#include <casacore/python/Converters/PycArray.h>
 
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
@@ -60,10 +60,10 @@ ATermPython::ATermPython(const MeasurementSet& ms, const ParameterSet& parameter
   boost::python::class_<casa::MEpoch>("MEpoch", "Mepoch");
   
   // Register converters for casa types from/to python types
-  casa::pyrap::register_convert_excp();
-  casa::pyrap::register_convert_basicdata();
-  casa::pyrap::register_convert_casa_valueholder();
-  casa::pyrap::register_convert_casa_record();
+  casa::python::register_convert_excp();
+  casa::python::register_convert_basicdata();
+  casa::python::register_convert_casa_valueholder();
+  casa::python::register_convert_casa_record();
   try {
     // First import main
     boost::python::object main_module = boost::python::import("__main__");

@@ -84,7 +84,7 @@ namespace LOFAR
 }
 
 #    define BOOST_PP_ITERATION_LIMITS (0, OBJECT_FACTORY_MAX_CTOR_ARG)
-#    define BOOST_PP_FILENAME_1 <LofarFT/DynamicObjectFactory.h>
+#    define BOOST_PP_FILENAME_1 <AWImager2/DynamicObjectFactory.h>
 #    include BOOST_PP_ITERATE()
 #  endif
 

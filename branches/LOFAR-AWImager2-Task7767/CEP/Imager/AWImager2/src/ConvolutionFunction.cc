@@ -39,7 +39,7 @@
 #include <measures/Measures/MCDirection.h>
 #include <measures/Measures/MCPosition.h>
 #include <ms/MeasurementSets/MSAntenna.h>
-#include <ms/MeasurementSets/MSAntennaParse.h>
+#include <ms/MSSel/MSAntennaParse.h>
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <ms/MeasurementSets/MSDataDescription.h>
 #include <ms/MeasurementSets/MSDataDescColumns.h>
@@ -51,7 +51,7 @@
 #include <ms/MeasurementSets/MSPolColumns.h>
 #include <ms/MeasurementSets/MSSpectralWindow.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
-#include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MSSel/MSSelection.h>
 #include <measures/Measures/MeasTable.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>

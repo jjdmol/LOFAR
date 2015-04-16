@@ -62,9 +62,9 @@
 #include <images/Images/PagedImage.h>
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/SubLattice.h>
-#include <lattices/Lattices/LCBox.h>
+#include <lattices/LRegions/LCBox.h>
 #include <lattices/Lattices/LatticeCache.h>
-#include <lattices/Lattices/LatticeFFT.h>
+#include <lattices/LatticeMath/LatticeFFT.h>
 #include <lattices/Lattices/LatticeIterator.h>
 #include <lattices/Lattices/LatticeStepper.h>
 #include <measures/Measures/UVWMachine.h>

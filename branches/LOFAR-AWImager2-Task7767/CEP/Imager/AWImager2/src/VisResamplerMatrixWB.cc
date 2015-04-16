@@ -162,7 +162,7 @@ void VisResamplerMatrixWB::DataToGridImpl_p(
         sumWtPtr[ipol+gridChan*4] += imgWtPtr[ipol];
       }
 
-      Int start = (locy*4) % omp_get_num_threads();
+      Int start = (locy*4) % OpenMP::numThreads();
       
       #pragma omp for schedule(static,1) nowait
       

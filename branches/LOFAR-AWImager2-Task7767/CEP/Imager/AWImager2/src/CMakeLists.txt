@@ -3,7 +3,7 @@
 include(LofarPackageVersion)
 include(PythonInstall)
 
-lofar_add_library(lofarft
+lofar_add_library(awimager2lib
   Package__Version.cc
   FFTCMatrix.cc
   ATerm.cc
@@ -30,9 +30,9 @@ lofar_add_library(lofarft
   ScopedTimer.cc
 )
 
-lofar_add_bin_program(awimager 
+lofar_add_bin_program(awimager2 
   Package__Version.cc
-  awimager.cc 
+  awimager2.cc 
   Operation.cc 
   OperationImage.cc 
   OperationClean.cc 
@@ -50,36 +50,14 @@ endif(IDG_FOUND)
 #   FTMachineSimple.cc
 # )
 
-lofar_add_bin_program(versionlofarft versionlofarft.cc)
+lofar_add_bin_program(versionawimager2 versionawimager2.cc)
 
-
-# set_source_files_properties(
-#   FTMachineSimple.cc
-#   PROPERTIES COMPILE_FLAGS
-#     "-fno-implicit-templates"
-# )
-
-# lofar_add_bin_program(versionlofarft versionlofarft.cc)
-# lofar_add_bin_program(makefftwisdom2d makefftwisdom2d.cc)
-# lofar_add_bin_program(fillRootImageGroup fillRootImageGroup.cc)
-# lofar_add_bin_program(makebeamimage makebeamimage.cc)
-
-install(PROGRAMS
-  addImagingInfo
-  DESTINATION bin)
-
-# Python modules.
-python_install(
-  addImagingInfo.py 
-  get_rms_noise.py
-  DESTINATION lofar)
 
 python_install(
   __init__.py 
   myaterm.py
   atermimages.py
   DESTINATION lofar/imager)
-
   
   
 # Suppress compiler warnings from casarest by disabling them for some sources

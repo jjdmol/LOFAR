@@ -77,22 +77,22 @@ int main (Int argc, char** argv)
 {
   vector<string> operations = LOFAR::LofarFT::OperationFactory::instance().registeredClassIds();
   
-  LOFAR::Version version_info = LOFAR::LofarFTVersion().getInfo();
-  string version = version_info.version() + " revision=" + version_info.packageRevision();
-  if (version_info.nrChangedFiles() != "0") 
-  {
-    if (version_info.nrChangedFiles() == "1") 
-    {
-       version += " (1 locally modified file)";
-    }
-    else
-    {
-      version += " (" + version_info.nrChangedFiles() + " locally modified files)";
-    }
-  }
+  //LOFAR::Version version_info = LOFAR::AWImager2Version().getInfo(); //TODO TJD
+  //string version = version_info.version() + " revision=" + version_info.packageRevision();
+  //if (version_info.nrChangedFiles() != "0") 
+  //{
+  //  if (version_info.nrChangedFiles() == "1") 
+  //  {
+  //     version += " (1 locally modified file)";
+  //  }
+  //  else
+  //  {
+  //    version += " (" + version_info.nrChangedFiles() + " locally modified files)";
+  //  }
+  //}
 
   if (argc>1 && (string(argv[1])=="--version" || string(argv[1])=="version")) {
-    cerr<<"awimager version: "<<version<<endl;
+  //  cerr<<"awimager version: "<<version<<endl;
     exit(0);
   }
 
