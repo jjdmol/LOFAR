@@ -20,9 +20,9 @@ import numpy as np
 # Extra modules
 ########################################################################
 
-from lofar.selfcal import class_obsPreprocessing
+#from lofar.selfcal import class_obsPreprocessing
 
-#import class_obsPreprocessing
+import class_obsPreprocessing
 
 ########################################################################
 ## Define selfcalibration Parameters for cycles & prepare parsets
@@ -32,13 +32,13 @@ from lofar.selfcal import class_obsPreprocessing
 
 class selfCalParam:
 
-    def __init__(self,obsDir,outputDir,listFiles,Files,NbFiles,nbChan,frequency,maxBaseline,integTimeOnechunk,observationIntegTime,nbCycle,ra_target,dec_target,outerfovclean,VLSSuse,preprocessIndex,FOV,nofPixelPerBeam,startResolution,endResolution,resolutionVector,startingFactor,robust,skyModel,UVmin,annulusRadius):
+    def __init__(self,dataDir,outputDir,listFiles,Files,NbFiles,nbChan,frequency,maxBaseline,integTimeOnechunk,observationIntegTime,nbCycle,ra_target,dec_target,outerfovclean,VLSSuse,preprocessIndex,FOV,nofPixelPerBeam,startResolution,endResolution,resolutionVector,startingFactor,robust,skyModel,UVmin,annulusRadius):
 
 		################################################################	    
 		# Initialization
 		################################################################	
   
-		self.obsDir					= obsDir
+		self.dataDir				= dataDir
 		self.outputDir				= outputDir
 		self.listFiles 				= listFiles
 		self.Files 					= Files
@@ -359,7 +359,7 @@ class selfCalParam:
 				else:
 					# VLSS skymodel for LBA/HBA		
 					if os.path.isfile(GSMSkymodel) != True:	
-						cmd="""gsm.py %s %s %s 10 0.5 0.01"""%(GSMSkymodel,self.ra_target,self.dec_target)
+						cmd="""gsm.py %s %s %s %s 0.5 0.01"""%(GSMSkymodel,self.ra_target,self.dec_target,self.FOV)
 						print ''
 						print cmd
 						print ''
@@ -427,7 +427,7 @@ class selfCalParam:
 							UVmin = self.UVmin
 							
 						
-						obsPreprocess_Obj									= class_obsPreprocessing.obsPreprocessing(self.obsDir,preprocessDir,preprocessImageDir,preprocessSkymodelDir,preprocessBBSDir,i,self.listFiles,self.Files,self.NbFiles,self.frequency,UVmin,nIteration,self.ra_target,self.dec_target,initNofAnnulusSources,self.annulusRadius,self.FOV)
+						obsPreprocess_Obj									= class_obsPreprocessing.obsPreprocessing(self.dataDir,preprocessDir,preprocessImageDir,preprocessSkymodelDir,preprocessBBSDir,i,self.listFiles,self.Files,self.NbFiles,self.frequency,UVmin,nIteration,self.ra_target,self.dec_target,initNofAnnulusSources,self.annulusRadius,self.FOV)
 						obsPreprocess_Obj.obsPreprocessImagingFunc() 
 						obsPreprocess_Obj.obsPreprocessSrcExtractionFunc()	
 						initNofAnnulusSources,nb_annulus					= obsPreprocess_Obj.obsPreprocessAnnulusExtractionFunc()
@@ -470,101 +470,7 @@ class selfCalParam:
 			cmd="""mkdir %s"""%(ImagePathDir)
 			os.system(cmd)	
 		
-		
-		################################################################	    
-		# Create the BBS Parset file for Phase calibration only 
-		################################################################	    
-		
-		
-		BBSDir		= self.outputDir+'BBS-Dir/'
-		BBSParset	= BBSDir+'BBS-Parset-Phase-Only'
-		
-		if os.path.isdir(BBSDir) != True:
-			cmd="""mkdir %s"""%(BBSDir)
-			os.system(cmd)
-		
-		
-		if os.path.isfile(BBSParset) != True:	
-		
-			fileBBS = open(BBSParset,'w')
-		
-			cmd1	= """Strategy.ChunkSize = 100\n"""
-			cmd2	= """Strategy.Steps = [solve, correct]\n"""
-			cmd3	= """Strategy.InputColumn = DATA\n"""
-			cmd4	= '\n'
-			cmd5	= """Step.solve.Operation = SOLVE\n"""
-			cmd6	= """Step.solve.Model.Sources = []\n"""
-			cmd7	= """Step.solve.Model.Gain.Enable = T\n"""
-			cmd8	= """Step.solve.Model.Cache.Enable = T\n"""
-			cmd9	= """Step.solve.Model.Beam.Enable = T\n"""
-			cmd10	= """Step.solve.Model.Beam.UseChannelFreq = True\n"""
-			cmd11	= """Step.solve.Model.Beam.Mode = ARRAY_FACTOR\n"""
-			cmd12	= """Step.solve.Model.Ionosphere.Enable = F\n"""
-			cmd13	= """Step.solve.Model.TEC.Enable = F\n"""
-			cmd14	= """Step.solve.Model.Phasors.Enable = T # If solving for AMP or PHASE, or if in addition TEC is enabled. For TEC only, it's F.\n"""
-			cmd15	= """Step.solve.Solve.Mode = COMPLEX  #Step.solve.Solve.Mode = COMPLEX\n"""
-			cmd16	= """Step.solve.Solve.Parms = ["Gain:0:0:Phase:*", "Gain:1:1:Phase:*"]\n"""
-			cmd17	= """Step.solve.Solve.CellSize.Freq = 0 # If not enough SNR, phase solve over entire band of concatenated data\n"""
-			cmd18	= """Step.solve.Solve.CellSize.Time = 1\n"""
-			cmd19	= """Step.solve.Solve.CellChunkSize = 100\n"""
-			cmd20	= """Step.solve.Solve.PropagateSolutions = T\n"""
-			cmd21	= """Step.solve.Solve.Options.MaxIter = 100\n"""
-			cmd22	= """Step.solve.Solve.Options.EpsValue = 1e-9\n"""
-			cmd23	= """Step.solve.Solve.Options.EpsDerivative = 1e-9\n"""
-			cmd24	= """Step.solve.Solve.Options.ColFactor = 1e-9\n"""
-			cmd25	= """Step.solve.Solve.Options.LMFactor = 1.0\n"""
-			cmd26	= """Step.solve.Solve.Options.BalancedEqs = F\n"""
-			cmd27	= """Step.solve.Solve.Options.UseSVD = T\n"""
-			cmd28	= '\n'
-			cmd29	= """Step.correct.Operation = CORRECT\n"""
-			cmd30	= """Step.correct.Model.Sources = []\n"""
-			cmd31	= """Step.correct.Model.Gain.Enable = T\n"""
-			cmd32	= """Step.correct.Model.Beam.Enable = F\n"""
-			cmd33	= """Step.correct.Model.Beam.UseChannelFreq = True\n"""
-			cmd34	= """Step.correct.Model.TEC.Enable = F\n"""
-			cmd35	= """Step.correct.Model.Phasors.Enable = T\n"""
-			cmd36	= """Step.correct.Output.Column = CORRECTED_DATA\n"""
-			cmd37	= """Step.correct.Output.WriteCovariance = T"""
-			
-			fileBBS.write(cmd1)
-			fileBBS.write(cmd2)
-			fileBBS.write(cmd3)
-			fileBBS.write(cmd4)
-			fileBBS.write(cmd5)
-			fileBBS.write(cmd6)
-			fileBBS.write(cmd7)
-			fileBBS.write(cmd8)
-			fileBBS.write(cmd9)
-			fileBBS.write(cmd10)
-			fileBBS.write(cmd11)
-			fileBBS.write(cmd12)
-			fileBBS.write(cmd13)
-			fileBBS.write(cmd14)
-			fileBBS.write(cmd15)
-			fileBBS.write(cmd16)
-			fileBBS.write(cmd17)
-			fileBBS.write(cmd18)
-			fileBBS.write(cmd19)
-			fileBBS.write(cmd20)
-			fileBBS.write(cmd21)
-			fileBBS.write(cmd22)
-			fileBBS.write(cmd23)
-			fileBBS.write(cmd24)
-			fileBBS.write(cmd25)
-			fileBBS.write(cmd26)
-			fileBBS.write(cmd27)
-			fileBBS.write(cmd28)
-			fileBBS.write(cmd29)
-			fileBBS.write(cmd30)
-			fileBBS.write(cmd31)
-			fileBBS.write(cmd32)
-			fileBBS.write(cmd33)
-			fileBBS.write(cmd34)
-			fileBBS.write(cmd35)
-			fileBBS.write(cmd36)
-			fileBBS.write(cmd37)
-		
-			fileBBS.close()
+
 		
 		################################################################
 		# Print an overview of global parameters
@@ -579,7 +485,7 @@ class selfCalParam:
 		
 				
 			
-		return ImagePathDir,pixsize,nbpixel,robust,UVmax,wmax,SkymodelPath,GSMSkymodel,RMS_BOX,RMS_BOX_Bright,BBSParset,thresh_isl,thresh_pix
+		return ImagePathDir,pixsize,nbpixel,robust,UVmax,wmax,SkymodelPath,GSMSkymodel,RMS_BOX,RMS_BOX_Bright,thresh_isl,thresh_pix
 		 
 		
 		

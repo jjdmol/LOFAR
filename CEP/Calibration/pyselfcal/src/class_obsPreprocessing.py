@@ -34,14 +34,14 @@ import lofar.bdsm as bdsm
 
 class obsPreprocessing:
 
-    def __init__(self,obsDir,preprocessDir,preprocessImageDir,preprocessSkymodelDir,preprocessBBSDir,i,listFiles,Files,NbFiles,frequency,UVmin,nIteration,ra_target,dec_target,initNofAnnulusSources,annulusRadius,FOV):
+    def __init__(self,dataDir,preprocessDir,preprocessImageDir,preprocessSkymodelDir,preprocessBBSDir,i,listFiles,Files,NbFiles,frequency,UVmin,nIteration,ra_target,dec_target,initNofAnnulusSources,annulusRadius,FOV):
 
 		################################################################	    
 		# Initialization
 		################################################################	
 
     
-		self.obsDir					= obsDir
+		self.dataDir				= dataDir
 		self.preprocessDir			= preprocessDir
 		self.preprocessImageDir		= preprocessImageDir
 		self.preprocessSkymodelDir	= preprocessSkymodelDir
@@ -80,31 +80,12 @@ class obsPreprocessing:
 					
 		#Copy data from observation directory
 		if self.i==0:
-			cmd=""" cp -r %s* %s"""%(self.obsDir,self.IterDir)
-			
+			cmd=""" cp -r %s* %s"""%(self.dataDir,self.IterDir)
 			print ''
 			print cmd
 			os.system(cmd)	
 			print ''
 					
-			# check if CORRECTED_DATA column exists, if not take DATA 
-			# column, and anyway copy CORRECTED_DATA column to DATA 
-			# column
-					
-			for MS in self.Files:		
-					# Copy CORRECTED DATA Column to DATA column		
-					try:											
-							t = pt.table("""%s%s"""%(self.IterDir,MS), readonly=False, ack=True)
-							data = t.getcol('CORRECTED_DATA')
-							t.close()								
-					except:
-							print ''
-							print 'There are no CORRECTED DATA COLUMN !!'
-							print 'Selfcal will copy by default your DATA column to the CORRECTED_DATA column'
-							self.copy_data("""%s%s"""%(self.IterDir,MS))
-							print ''
-								
-					self.copy_data_invert("""%s%s"""%(self.IterDir,MS))
 													
 		else:
 			cmd=""" cp -r %s %s"""%(self.preprocessDir+'Iter%s/*sub%s'%(self.i-1,self.i-1),self.IterDir)
@@ -184,7 +165,7 @@ class obsPreprocessing:
 		################################################################	    
 		
 		self.pixPerBeam	= 4
-		self.pixsize 	= 22.5
+		self.pixsize 	= 15.0
 		self.UVmax		= float(fpformat.fix((3E8/self.frequency)/(self.pixPerBeam*self.pixsize/3600.*3.14/180.)/(1E3*3E8/self.frequency),3))
 		self.wmax		= float(fpformat.fix(self.UVmax*(3E8/self.frequency)*1E3,3))
 		
@@ -235,14 +216,14 @@ class obsPreprocessing:
     def obsPreprocessImagingFunc(self):
     
 
-		threshold = 0.005
+		threshold = 0.03
 		if self.nbpixel%2 ==1:
 				self.nbpixel = self.nbpixel+1
 				
 				
 					
 		#Imaging now with the image 
-		cmd_image='awimager ms=%s image=%sImage_substraction%s weight=briggs robust=1 npix=%s cellsize=%sarcsec data=CORRECTED_DATA padding=1.18 niter=%s stokes=I operation=mfclark timewindow=300 UVmin=%s UVmax=%s wmax=%s fits="" threshold=%sJy'%(self.initialConcatMS,self.preprocessImageDir,self.i,self.nbpixel,self.pixsize,self.nIteration,self.UVmin,self.UVmax,self.wmax,threshold) 
+		cmd_image='awimager ms=%s image=%sImage_substraction%s weight=briggs robust=0 npix=%s cellsize=%sarcsec data=CORRECTED_DATA padding=1.18 niter=%s stokes=I operation=mfclark timewindow=300 UVmin=%s UVmax=%s wmax=%s fits="" threshold=%sJy'%(self.initialConcatMS,self.preprocessImageDir,self.i,self.nbpixel,self.pixsize,self.nIteration,self.UVmin,self.UVmax,self.wmax,threshold) 
 		
 		print ''
 		print cmd_image
@@ -266,7 +247,7 @@ class obsPreprocessing:
 		print ''		
 		
 		#extract the source model with pybdsm
-		img	=  bdsm.process_image('%sImage_substraction%s.restored.corr'%(self.preprocessImageDir,self.i),adaptive_rms_box='True',advanced_opts='True',detection_image='%sImage_substraction%s.restored'%(self.preprocessImageDir,self.i),thresh_isl='%s'%(self.thresh_isl),thresh_pix='%s'%(self.thresh_pix),rms_box=(80,10),rms_box_bright=(40,10),adaptive_thresh=30,blank_limit=1E-4,atrous_do='True',ini_method='curvature',psf_vary_do='True',psf_stype_only='False',psf_snrcut=5,psf_snrcutstack=5,psf_snrtop=0.3) 
+		img	=  bdsm.process_image('%sImage_substraction%s.restored.corr'%(self.preprocessImageDir,self.i),adaptive_rms_box='True',advanced_opts='True',detection_image='%sImage_substraction%s.restored'%(self.preprocessImageDir,self.i),thresh_isl='%s'%(self.thresh_isl),thresh_pix='%s'%(self.thresh_pix),rms_box=(80,10),rms_box_bright=(40,10),adaptive_thresh=30,blank_limit=1E-4,atrous_do='True',ini_method='curvature')#,psf_vary_do='True',psf_stype_only='False',psf_snrcut=5,psf_snrcutstack=5,psf_snrtop=0.3) 
 				
 		#write bbs catalog
 		img.write_catalog(outfile="""%sSkymodel_substraction%s"""%(self.preprocessSkymodelDir,self.i),catalog_type='gaul',format='bbs',correct_proj='True',srcroot='source')
@@ -664,10 +645,10 @@ class obsPreprocessing:
 		file.write(cmd6c)
 		file.write(cmd6d)		
 		file.write(cmd7)
-		file.write(cmd8)
-		file.write(cmd9)
-		file.write(cmd10)
-		file.write(cmd11)
+		#file.write(cmd8)
+		#file.write(cmd9)
+		#file.write(cmd10)
+		#file.write(cmd11)
 		
 		file.close()			
 		
