@@ -149,7 +149,7 @@ set(CASA_MISSING_COMPONENTS)
 # Search for the header file first. Note that casa installs the header
 # files in ${prefix}/include/casacode, instead of ${prefix}/include.
 if(NOT CASA_INCLUDE_DIR)
-  find_path(CASA_INCLUDE_DIR synthesis/MSVis/VisSet.h
+  find_path(CASA_INCLUDE_DIR msvis/MSVis/VisSet.h
     HINTS ${CASA_ROOT_DIR} PATH_SUFFIXES include/casacode)
   mark_as_advanced(CASA_INCLUDE_DIR)
 endif(NOT CASA_INCLUDE_DIR)

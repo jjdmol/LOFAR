@@ -33,7 +33,7 @@
 #include <LofarFT/ConvolutionFunction.h>
 #include <LofarFT/CFStore.h>
 #include <synthesis/TransformMachines/FTMachine.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer.h>
 #include <casa/Containers/Block.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>

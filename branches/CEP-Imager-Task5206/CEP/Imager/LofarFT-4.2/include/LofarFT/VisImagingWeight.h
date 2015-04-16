@@ -29,7 +29,7 @@
 #ifndef LOFAR_LOFARFT_VISIMAGINGWEIGHT_H
 #define LOFAR_LOFARFT_VISIMAGINGWEIGHT_H
 
-#include <synthesis/MSVis/VisImagingWeight.h>
+#include <msvis/MSVis/VisImagingWeight.h>
 #include <casa/aips.h>
 #include <casa/BasicSL/Complex.h>
 #include <casa/Quanta/Quantum.h>

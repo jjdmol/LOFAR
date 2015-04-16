@@ -40,7 +40,7 @@
 #include <lattices/Lattices/ArrayLattice.h>
 #include <scimath/Mathematics/FFTServer.h>
 #include <scimath/Mathematics/ConvolveGridder.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer.h>
 #include <synthesis/TransformMachines/FTMachine.h>
 
 #include <LofarFT/VisResampler.h>

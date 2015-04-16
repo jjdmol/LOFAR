@@ -54,29 +54,30 @@ namespace LOFAR {
 
     virtual ~BlobAipsIO();
 
-    // Write the number of bytes.
-    // When needed it expands the buffer.
-    // An exception is thrown when the buffer is not writable or
-    // when buffer expansion fails or is not possible.
+    // Write the number of bytes to the Blob stream.
+    // An exception is thrown if the stream is not writable.
+    //# The 2nd write and read function are defined for the read/write signatures
+    //# in older casacore versions (pre v2.0).
+    virtual void write (casa::Int64 size, const void* buf);
     virtual void write (casa::uInt size, const void* buf);
 
-    // Read \a size bytes from the memory buffer. Returns the number of
+    // Read \a size bytes from the Blob stream. Returns the number of
     // bytes actually read. Will throw an Exception (AipsError) if the
     // requested number of bytes could not be read unless throwException is set
-    // to False. Will always throw an exception if the buffer is not readable
-    // or the buffer pointer is at an invalid position.
+    // to False.
+    virtual casa::Int64 read (casa::Int64 size, void* buf, bool throwException);
     virtual casa::Int read (casa::uInt size, void* buf, bool throwException);
 
-    // Get the length of the data in the buffer.
+    // Get the length of the Blob stream. Returns 0 if the stream is not seekable.
     virtual casa::Int64 length();
 
-    // Is the byte stream readable?
+    // Is the Blob stream readable?
     virtual bool isReadable() const;
 
-    // Is the byte stream writable?
+    // Is the Blob stream writable?
     virtual bool isWritable() const;
 
-    // Is the byte stream seekable?
+    // Is the Blob stream seekable?
     virtual bool isSeekable() const;
 
 private:
@@ -89,10 +90,6 @@ private:
 
     // Reset the position pointer to the given value. It returns the
     // new position.
-    // An exception is thrown when seeking before the start of the
-    // buffer or when seeking past the end of a readonly buffer.
-    // When seeking past the end of a writable buffer, the required
-    // amount of bytes is added and initialized to zero.
     virtual casa::Int64 doSeek (casa::Int64 offset, casa::ByteIO::SeekOption);
 
     BlobOStream* itsOBuf;

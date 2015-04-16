@@ -5,7 +5,7 @@ lofar_package(LofarFT 0.1 DEPENDS Common ParmDB StationResponse)
 include(LofarFindPackage)
 
 lofar_find_package(Casa REQUIRED COMPONENTS synthesis)
-lofar_find_package(Casacore REQUIRED COMPONENTS images msfits)
+lofar_find_package(Casacore REQUIRED COMPONENTS images msfits coordinates)
 lofar_find_package(Boost REQUIRED COMPONENTS thread python system)
 lofar_find_package(FFTW3 REQUIRED COMPONENTS single double threads)
 lofar_find_package(Python REQUIRED)

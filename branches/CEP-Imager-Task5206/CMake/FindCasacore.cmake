@@ -150,7 +150,6 @@ endmacro(casacore_find_package _name)
 # Define the Casacore components.
 set(Casacore_components
   casa
-  components
   coordinates
   fits
   images
@@ -166,10 +165,9 @@ set(Casacore_components
 )
 
 # Define the Casacore components' inter-dependencies.
-set(Casacore_components_DEPENDENCIES  coordinates)
 set(Casacore_coordinates_DEPENDENCIES fits)
 set(Casacore_fits_DEPENDENCIES        measures)
-set(Casacore_images_DEPENDENCIES      components lattices mirlib)
+set(Casacore_images_DEPENDENCIES      lattices mirlib)
 set(Casacore_lattices_DEPENDENCIES    scimath tables)
 set(Casacore_measures_DEPENDENCIES    scimath tables)
 set(Casacore_measures_f_DEPENDENCIES  scimath tables)
@@ -189,7 +187,7 @@ set(CASACORE_MISSING_COMPONENTS)
 # files in ${prefix}/include/casacore, instead of ${prefix}/include.
 if(NOT CASACORE_INCLUDE_DIR)
   find_path(CASACORE_INCLUDE_DIR casa/aips.h
-    HINTS ${CASACORE_ROOT_DIR} PATH_SUFFIXES include/casacore)
+    HINTS ${CASACORE_ROOT_DIR} PATH_SUFFIXES include)
   mark_as_advanced(CASACORE_INCLUDE_DIR)
 endif(NOT CASACORE_INCLUDE_DIR)
 

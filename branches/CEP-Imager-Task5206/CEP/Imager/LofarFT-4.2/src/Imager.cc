@@ -27,7 +27,7 @@
 #include <casa/Utilities/CountedPtr.h>
 #include <synthesis/MeasurementComponents/WBCleanImageSkyModel.h>
 #include <synthesis/TransformMachines/SimpleComponentFTMachine.h>
-#include <synthesis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisSet.h>
 #include <LofarFT/SkyEquation.h>
 #include <LofarFT/VisImagingWeight.h>
 #include <LofarFT/VisImagingWeightRobust.h>

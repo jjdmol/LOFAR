@@ -468,7 +468,7 @@ bool FTMachineSplitBeamWStackWB::put_on_w_plane(
   bool dopsf)
 {
 //       Get the convolution function.
-  omp_set_nested(1);
+  OpenMP::setNested(1);
 
   bool any_match = false;
   int i = 0;

@@ -29,7 +29,7 @@
 #ifndef LOFAR_LOFARFT_VISIBILITYITERATOR_H
 #define LOFAR_LOFARFT_VISIBILITYITERATOR_H
 
-#include <synthesis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/VisibilityIterator.h>
 #include <LofarFT/VisImagingWeight.h>
 #include <casa/aips.h>
 #include <casa/BasicSL/Complex.h>

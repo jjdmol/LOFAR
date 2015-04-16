@@ -55,6 +55,7 @@
 #include <boost/algorithm/string/join.hpp>
 
 using namespace casa;
+using LOFAR::operator<<;
 
 // Use a terminate handler that can produce a backtrace.
 LOFAR::Exception::TerminateHandler t(LOFAR::Exception::terminate);
@@ -132,7 +133,7 @@ int main (Int argc, char** argv)
     return 1;
   }
 
-  vector<string> unused = parset.unusedKeys();
+  std::vector<std::string> unused = parset.unusedKeys();
   if (! unused.empty()) {
      cout<< "*** WARNING: the following parset keywords were not used ***"<<endl;
      cout<< "             maybe they are misspelled"<<endl;

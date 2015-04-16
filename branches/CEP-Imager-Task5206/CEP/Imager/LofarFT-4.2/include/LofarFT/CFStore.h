@@ -31,7 +31,7 @@
 #include <casa/Logging/LogOrigin.h>
 #include <casa/Utilities/CountedPtr.h>
 #include <images/Images/ImageInterface.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Matrix.h>
 
 namespace LOFAR {

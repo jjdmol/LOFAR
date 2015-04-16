@@ -74,11 +74,11 @@
 #include <scimath/Mathematics/Interpolate2D.h>
 #include <synthesis/TransformMachines/Utils.h>
 #include <synthesis/TransformMachines/CFStore.h>
-#include <synthesis/MSVis/VisibilityIterator.h>
-#include <synthesis/MSVis/StokesVector.h>
+#include <msvis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/StokesVector.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
-#include <synthesis/MSVis/VisBuffer.h>
-#include <synthesis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisSet.h>
 
 #include <LofarFT/FFTCMatrix.h>
 #include <LofarFT/LofarCFStore.h>

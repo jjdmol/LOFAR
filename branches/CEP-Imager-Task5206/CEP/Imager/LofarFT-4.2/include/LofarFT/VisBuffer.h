@@ -28,7 +28,7 @@
 #ifndef LOFAR_LOFARFT_VISBUFFER_H
 #define LOFAR_LOFARFT_VISBUFFER_H
 
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Matrix.h>
 #include <LofarFT/VisibilityIterator.h>
 #include <LofarFT/VisImagingWeight.h>
