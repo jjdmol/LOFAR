@@ -30,8 +30,10 @@
 #
 # $Id$
 
+
 if(NOT PYRAP_FOUND)
 
+  # First try to find pyrap
   find_path(PYRAP_INCLUDE_DIR pyrap/Converters.h
     HINTS ${PYRAP_ROOT_DIR} PATH_SUFFIXES include)
   find_library(PYRAP_LIBRARY pyrap
@@ -53,4 +55,25 @@ if(NOT PYRAP_FOUND)
   set(PYRAP_INCLUDE_DIRS ${PYRAP_INCLUDE_DIR} ${CASACORE_INCLUDE_DIRS})
   set(PYRAP_LIBRARIES ${PYRAP_LIBRARY} ${CASACORE_LIBRARIES})
 
+endif(NOT PYRAP_FOUND)
+
+
+if(NOT PYRAP_FOUND)
+
+  find_path(PYCASACORE_INCLUDE_DIR casacore/python/Converters.h
+    HINTS ${CASACORE_ROOT_DIR} PATH_SUFFIXES include)
+  if (PYCASACORE_INCLUDE_DIR)
+
+    # Found python-casacore.
+    mark_as_advanced(PYCASACORE_INCLUDE_DIR)
+    include(LofarFindPackage)
+    lofar_find_package(Casacore REQUIRED COMPONENTS casa python)
+
+    include(FindPackageHandleStandardArgs)
+    find_package_handle_standard_args(Pyrap DEFAULT_MSG 
+      PYCASACORE_INCLUDE_DIR)
+
+    set(PYRAP_INCLUDE_DIRS ${CASACORE_INCLUDE_DIRS})
+    set(PYRAP_LIBRARIES ${CASACORE_LIBRARIES})
+  endif()
 endif(NOT PYRAP_FOUND)
