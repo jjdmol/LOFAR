@@ -31,12 +31,12 @@ import lofar.bdsm as bdsm
 #import Statistics modules
 ########################################################################
 
-#from lofar.selfcal import LSM_module.pyvo.pyvo
-#from lofar.selfcal import module.lsmtool as lsmtool
+from lofar.selfcal import LSM_module.pyvo.pyvo
+from lofar.selfcal import LSM_module.module.lsmtool as lsmtool
 
 #LSM Tools
-import LSM_module.pyvo.pyvo
-from LSM_module.module import lsmtool as lsmtool
+#import LSM_module.pyvo.pyvo
+#from LSM_module.module import lsmtool as lsmtool
 
 #Sarrvesh tool
 import optparse

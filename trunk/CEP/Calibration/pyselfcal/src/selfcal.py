@@ -19,19 +19,19 @@ import getopt
 # Import local modules (classes)
 ########################################################################
 
-#from lofar.selfcal import class_obsparMergedData
-#from lofar.selfcal import class_obsPreprocessing
-#from lofar.selfcal import class_selfcalPeeling
-#from lofar.selfcal import class_selfcalparam
-#from lofar.selfcal import class_selfcalrun 
-#from lofar.selfcal import class_dataInit 
+from lofar.selfcal import class_obsparMergedData
+from lofar.selfcal import class_obsPreprocessing
+from lofar.selfcal import class_selfcalPeeling
+from lofar.selfcal import class_selfcalparam
+from lofar.selfcal import class_selfcalrun 
+from lofar.selfcal import class_dataInit 
 
-import class_obsparMergedData
-import class_obsPreprocessing
-import class_selfcalPeeling
-import class_selfcalparam
-import class_selfcalrun  
-import class_dataInit
+#import class_obsparMergedData
+#import class_obsPreprocessing
+#import class_selfcalPeeling
+#import class_selfcalparam
+#import class_selfcalrun  
+#import class_dataInit
 
 ########################################################################
 #							OVERVIEW
