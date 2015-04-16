@@ -19,15 +19,19 @@ import getopt
 # Import local modules (classes)
 ########################################################################
 
-from lofar.selfcal import class_obsparMergedData
-from lofar.selfcal import class_obsPreprocessing
-from lofar.selfcal import class_selfcalparam
-from lofar.selfcal import class_selfcalrun  
+#from lofar.selfcal import class_obsparMergedData
+#from lofar.selfcal import class_obsPreprocessing
+#from lofar.selfcal import class_selfcalPeeling
+#from lofar.selfcal import class_selfcalparam
+#from lofar.selfcal import class_selfcalrun 
+#from lofar.selfcal import class_dataInit 
 
-#import class_obsparMergedData
-#import class_obsPreprocessing
-#import class_selfcalparam
-#import class_selfcalrun  
+import class_obsparMergedData
+import class_obsPreprocessing
+import class_selfcalPeeling
+import class_selfcalparam
+import class_selfcalrun  
+import class_dataInit
 
 ########################################################################
 #							OVERVIEW
@@ -48,11 +52,13 @@ from lofar.selfcal import class_selfcalrun
 #
 # 7b) Paramters Overview
 #
-# 8) Main code started Now !!!!
+# 8) Extract global observation characteristics and check data integrity 
 #
-# 9) Extract global observation characteristics and check data integrity 
+# 9) Data Initialization 
 #
 # 10) Pre-processing phase (if required: outerfovclean=yes)
+#
+# 10b) Peeling phase (if required: peeling=yes)
 #
 # 11) Global parameters determination (preparation phase)
 #
@@ -78,12 +84,12 @@ def main(initparameterlist):
 
 	try:
 
-	      opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "obsDir=", "outputDir=", "skyModel=", "nbCycle=", "outerfovclean=", "VLSSuse=", "annulusRadius=", "startResolution=", "endResolution=", "resolutionVector=", "mask=", "UVmin=", "startingFactor=", "FOV=", "nofPixelPerBeam=", "robust=", "maskDilation="])
+	      opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "obsDir=", "outputDir=", "skyModel=", "nbCycle=", "outerfovclean=", "VLSSuse=", "annulusRadius=", "startResolution=", "endResolution=", "resolutionVector=", "mask=", "UVmin=", "startingFactor=", "FOV=", "nofPixelPerBeam=", "robust=", "maskDilation=", "peeling=", "skymodel2Peel="])
 
       
 	except getopt.GetoptError as err:
 	      print ""		
-	      print "Usage: selfcal.py --obsDir= --outputDir= [Options: --skyModel= --nbCycle= --outerfovclean= --VLSSuse= --annulusRadius= --startResolution= --endResolution= --resolutionVector= --mask= --UVmin= --startingFactor= --FOV= --nofPixelPerBeam= --robust= --maskDilation=]"
+	      print "Usage: selfcal.py --obsDir= --outputDir= [Options: --skyModel= --nbCycle= --outerfovclean= --VLSSuse= --annulusRadius= --startResolution= --endResolution= --resolutionVector= --mask= --UVmin= --startingFactor= --FOV= --nofPixelPerBeam= --robust= --maskDilation= --peeling= --skymodel2Peel=]"
 	      print ""
 	      print "For more details: type selfcal.py -h"
 	      print ""
@@ -104,7 +110,7 @@ def main(initparameterlist):
 						print ""
 						print "Usage: selfcal.py PATH/parsetFile"
 						print 'OR'
-						print "Usage: selfcal.py --obsDir= --outputDir= [Options: --skyModel= --nbCycle= --outerfovclean= --VLSSuse= --annulusRadius= --startResolution= --endResolution= --resolutionVector= --mask= --UVmin= --startingFactor= --FOV= --nofPixelPerBeam= --robust= --maskDilation=]\n"
+						print "Usage: selfcal.py --obsDir= --outputDir= [Options: --skyModel= --nbCycle= --outerfovclean= --VLSSuse= --annulusRadius= --startResolution= --endResolution= --resolutionVector= --mask= --UVmin= --startingFactor= --FOV= --nofPixelPerBeam= --robust= --maskDilation= --peeling= --skymodel2Peel=]\n"
 						
 						print """
 ******************************************************************************
@@ -169,15 +175,15 @@ For more details see pybdsm export_image documentation.
 
 *  --robust(float, default:none): If robust parameter is set, it will be kept constant for all cycles. If unset, the robust parameter varies iteratively from 1 to -2. Must be in the interval: [2;-2] 
 
-*   --catalogType(string, default:none): catalogType is used for peeling or DDC option. It is required to be able to select in the initial catalog the brightest source to peel (or sources).
-It must be equal to "GSM" or "PYBDSM"
-
 *  --peeling(string, default:no): If peeling=yes, the brightest source in the initial catalog will be peeled (or brightest sources)
  *** NB:  peeling and DDC options are in conflict. no use both at the same time"
 
 *  --DDC(string, default:no): Same as peeling option, except that the subtraction is not applied, just the Direction Dependant Calibration.
 
 *  --nofDirections=(int, default:1): Number of direct6ion (brightest sources) required to peel or to apply the Direction Dependant Calibration.
+
+*   --skymodel2Peel(string, default:none): catalogType is used for peeling or DDC option. 
+
 
 ******************************************************************************
 CAUTION:
@@ -239,7 +245,10 @@ nofPixelPerBeam  =  3
 					initparameterlist[15]=strcompress(par2)		
 				elif par1 in ("--maskDilation"):
 					initparameterlist[16]=strcompress(par2)				
-																																																	
+				elif par1 in ("--peeling"):
+					initparameterlist[17]=strcompress(par2)	
+				elif par1 in ("--skymodel2Peel"):
+					initparameterlist[18]=strcompress(par2)																																																												
 				else:
 						print("Option {} Unknown".format(par1))
 						sys.exit(2)
@@ -253,7 +262,7 @@ nofPixelPerBeam  =  3
 				print ""
 				print "Usage: selfcal.py PATH/parsetFile"
 				print 'OR'
-				print "Usage: selfcal.py --obsDir= --outputDir= [Options: --skyModel= --nbCycle= --outerfovclean= --VLSSuse= --annulusRadius= --startResolution= --endResolution= --resolutionVector= --mask= --UVmin= --startingFactor= --FOV= --nofPixelPerBeam= --robust= --maskDilation=]\n"
+				print "Usage: selfcal.py --obsDir= --outputDir= [Options: --skyModel= --nbCycle= --outerfovclean= --VLSSuse= --annulusRadius= --startResolution= --endResolution= --resolutionVector= --mask= --UVmin= --startingFactor= --FOV= --nofPixelPerBeam= --robust= --maskDilation= --peeling= --skymodel2Peel=]\n"
 				print ""
 				sys.exit(2)       	
  
@@ -304,7 +313,7 @@ nofPixelPerBeam  =  3
 								print ""
 								print "Usage: selfcal.py PATH/parsetFile"
 								print 'OR'
-								print "Usage: selfcal.py --obsDir= --outputDir= [Options: --skyModel= --nbCycle= --outerfovclean= --VLSSuse= --annulusRadius= --startResolution= --endResolution= --resolutionVector= --mask= --UVmin= --startingFactor= --FOV= --nofPixelPerBeam= --robust= --maskDilation=]\n"							
+								print "Usage: selfcal.py --obsDir= --outputDir= [Options: --skyModel= --nbCycle= --outerfovclean= --VLSSuse= --annulusRadius= --startResolution= --endResolution= --resolutionVector= --mask= --UVmin= --startingFactor= --FOV= --nofPixelPerBeam= --robust= --maskDilation= --peeling= --skymodel2Peel=]\n"							
 								
 								print """
 ******************************************************************************
@@ -369,15 +378,15 @@ For more details see pybdsm export_image documentation.
 
 *  --robust(float, default:none): If robust parameter is set, it will be kept constant for all cycles. If unset, the robust parameter varies iteratively from 1 to -2. Must be in the interval: [2;-2] 
 
-*   --catalogType(string, default:none): catalogType is used for peeling or DDC option. It is required to be able to select in the initial catalog the brightest source to peel (or sources).
-It must be equal to "GSM" or "PYBDSM"
-
 *  --peeling(string, default:no): If peeling=yes, the brightest source in the initial catalog will be peeled (or brightest sources)
  *** NB:  peeling and DDC options are in conflict. no use both at the same time"
 
 *  --DDC(string, default:no): Same as peeling option, except that the subtraction is not applied, just the Direction Dependant Calibration.
 
 *  --nofDirections=(int, default:1): Number of direct6ion (brightest sources) required to peel or to apply the Direction Dependant Calibration.
+
+*   --skymodel2Peel(string, default:none): catalogType is used for peeling or DDC option. 
+
 
 ******************************************************************************
 CAUTION:
@@ -439,7 +448,10 @@ nofPixelPerBeam  =  3
 							initparameterlist[15]=strcompress(par2)		
 						elif strcompress(par1)	 in ("maskDilation"):
 							initparameterlist[16]=strcompress(par2)				
-																																																			
+						elif strcompress(par1)	 in ("peeling"):
+							initparameterlist[17]=strcompress(par2)
+						elif strcompress(par1)	 in ("skymodel2Peel"):
+							initparameterlist[18]=strcompress(par2)																																					
 						else:
 								print("Option {} Unknown".format(par1))
 								sys.exit(2)
@@ -452,7 +464,7 @@ nofPixelPerBeam  =  3
 					print ""
 					print "Usage: selfcal.py PATH/parsetFile"
 					print 'OR'
-					print "Usage: selfcal.py --obsDir= --outputDir= [Options: --skyModel= --nbCycle= --outerfovclean= --VLSSuse= --annulusRadius= --startResolution= --endResolution= --resolutionVector= --mask= --UVmin= --startingFactor= --FOV= --nofPixelPerBeam= --robust= --maskDilation=]\n"				
+					print "Usage: selfcal.py --obsDir= --outputDir= [Options: --skyModel= --nbCycle= --outerfovclean= --VLSSuse= --annulusRadius= --startResolution= --endResolution= --resolutionVector= --mask= --UVmin= --startingFactor= --FOV= --nofPixelPerBeam= --robust= --maskDilation= --peeling= --skymodel2Peel=]\n"				
 					print ""
 					sys.exit(2)       	
 						
@@ -465,7 +477,7 @@ nofPixelPerBeam  =  3
 						print ""
 						print "Usage: selfcal.py PATH/parsetFile"
 						print 'OR'
-						print "Usage: selfcal.py --obsDir= --outputDir= [Options: --skyModel= --nbCycle= --outerfovclean= --VLSSuse= --annulusRadius= --startResolution= --endResolution= --resolutionVector= --mask= --UVmin= --startingFactor= --FOV= --nofPixelPerBeam= --robust= --maskDilation=  --catalogType= --peeling= --DDC= --nofDirections=]\n"
+						print "Usage: selfcal.py --obsDir= --outputDir= [Options: --skyModel= --nbCycle= --outerfovclean= --VLSSuse= --annulusRadius= --startResolution= --endResolution= --resolutionVector= --mask= --UVmin= --startingFactor= --FOV= --nofPixelPerBeam= --robust= --maskDilation=  --peeling= --skymodel2Peel=]\n"
 						
 						print """
 ******************************************************************************
@@ -530,8 +542,6 @@ For more details see pybdsm export_image documentation.
 
 *  --robust(float, default:none): If robust parameter is set, it will be kept constant for all cycles. If unset, the robust parameter varies iteratively from 1 to -2. Must be in the interval: [2;-2] 
 
-*   --catalogType(string, default:none): catalogType is used for peeling or DDC option. It is required to be able to select in the initial catalog the brightest source to peel (or sources).
-It must be equal to "GSM" or "PYBDSM"
 
 *  --peeling(string, default:no): If peeling=yes, the brightest source in the initial catalog will be peeled (or brightest sources)
  *** NB:  peeling and DDC options are in conflict. no use both at the same time"
@@ -539,6 +549,9 @@ It must be equal to "GSM" or "PYBDSM"
 *  --DDC(string, default:no): Same as peeling option, except that the subtraction is not applied, just the Direction Dependant Calibration.
 
 *  --nofDirections=(int, default:1): Number of direct6ion (brightest sources) required to peel or to apply the Direction Dependant Calibration.
+
+*   --skymodel2peel(string, default:none): catalogType is used for peeling or DDC option. 
+
 
 ******************************************************************************
 CAUTION:
@@ -599,7 +612,7 @@ if __name__=='__main__':
 	####################################################################
 
 	
-    initparameterlist=range(17)
+    initparameterlist=range(19)
     
     initparameterlist[0]	= "none"	# Observation Directory
     initparameterlist[1]	= "none"	# Output Directory
@@ -618,7 +631,8 @@ if __name__=='__main__':
     initparameterlist[14]	= "none"	# nofPixelPerBeam
     initparameterlist[15]	= "none"	# robust param   
     initparameterlist[16]	= "none"	# mask Dilatation param  
-     
+    initparameterlist[17]	= "none"	# peeling       
+    initparameterlist[18]	= "none"	# skymodel2Peel
         
     # Read and check parameters	
     initparameterlist = main(initparameterlist)
@@ -645,7 +659,8 @@ if __name__=='__main__':
     nofPixelPerBeam	= initparameterlist[14]
     robust			= initparameterlist[15]
     maskDilation	= initparameterlist[16]
-
+    peeling			= initparameterlist[17]
+    skymodel2Peel	= initparameterlist[18]
 
     
 	####################################################################
@@ -821,7 +836,9 @@ if __name__=='__main__':
     if nofPixelPerBeam == 'none':
 		nofPixelPerBeam=4.0
 
-
+    if peeling == 'none':
+		peeling='no'
+		
 
 	####################################################################
 	# 4) Check parameters values (check contradiction between parameters)
@@ -862,6 +879,12 @@ if __name__=='__main__':
  		print ""
 		sys.exit(2)
 	
+
+    if peeling != 'yes' and peeling != 'no' and   peeling!= 'none': 
+		print ''
+		print 'peeling parameter must be equal to yes or no or not provided !' 
+ 		print ""
+		sys.exit(2) 
 		
 				
 	####################################################################
@@ -894,7 +917,7 @@ if __name__=='__main__':
 	      print "VLSSuse parameter must be a string or not provided !"
 	      print ""
 	      sys.exit(2)
-
+	      
 
     try:
 	      annulusRadius = float(annulusRadius)     
@@ -961,7 +984,7 @@ if __name__=='__main__':
 			  print ""
 			  sys.exit(2)
 	      
-		if float(robust) <= -2.0 or float(robust) >= 2.0:
+		if float(robust) < -2.0 or float(robust) > 2.0:
 			  print ""
 			  print "robust parameter must be in the interval: [-2;2]"
 			  print ""
@@ -969,8 +992,26 @@ if __name__=='__main__':
 			  
 		else:
 			  robust = float(robust)						 	      
+
+
+    try:
+	      peeling = str(peeling)     
+    except:
+	      print ""
+	      print "peeling parameter must be a string or not provided !"
+	      print ""
+	      sys.exit(2)
 	      
 	
+    try:
+	      skymodel2Peel = str(skymodel2Peel)     
+    except:
+	      print ""
+	      print "skymodel2Peel parameter must be a string or not provided !"
+	      print ""
+	      sys.exit(2)
+
+
 	      	      
 	####################################################################
     # 6) Check values 
@@ -1011,24 +1052,38 @@ if __name__=='__main__':
     if os.path.isdir(obsDir) != True:
 		print ''
 		print "The observation directory do not exists ! Check it Please."
-		print ""
+		print ''
 		sys.exit(2)  
    
    
     # WARNINGS on the outputDir 
     if outputDir[-1] != '/':
 		outputDir = outputDir+'/'
-	
-    if os.path.isdir(outputDir) != True:
-		cmd="""mkdir -p %s"""%(outputDir)
-		os.system(cmd)
-		print ""
+    
+    if os.path.isdir(outputDir) == True:
+		cmd1	="""rm -r  %s"""%(outputDir)
+		cmd2	="""mkdir -p %s"""%(outputDir)
+		os.system(cmd1)
+		os.system(cmd2)
+    else:
+		cmd2	="""mkdir -p %s"""%(outputDir)
+		os.system(cmd2)		
+		print ''
 		print "The output directory do not exists !\n%s has been created"%(outputDir)
-		print ""
+		print ''
+    	
+		
+    # Creation of DATA Directory for input data initalization	
+    dataDir	= outputDir + 'DATA/'
+    cmd="""mkdir %s"""%(dataDir)
+    os.system(cmd)
+    print ""
+    print "The DATA directory %s has been created"%(dataDir)
+    print ""	
 		
 
-
-    # WARNINGS on the outputDir 
+    preprocessDir = 'none'
+    # WARNINGS on the preprocessDir 
     if outerfovclean == 'yes':
 		preprocessDir	= '%sPreprocessDir/'%(outputDir)
 		cmd="""mkdir -p %s"""%(preprocessDir)
@@ -1058,6 +1113,55 @@ if __name__=='__main__':
 		print 'The PreProcess BBS directory: %s\nhas been created'%(preprocessSkymodelDir)
 		print ''
 	
+	
+    # WARNINGS on the peelingDir 
+    if peeling == 'yes':
+		peelingDir	= '%sPeeling/'%(outputDir)
+		cmd="""mkdir -p %s"""%(peelingDir)
+		os.system(cmd)
+		
+		print ''
+		print 'The Peeling directory: %s\nhas been created'%(peelingDir)
+		print ''
+
+		peelingDataDir	= '%sData/'%(peelingDir)
+		cmd="""mkdir -p %s"""%(peelingDataDir)
+		os.system(cmd)
+		print ''
+		print 'The Peeling Image directory: %s\nhas been created'%(peelingDataDir)
+		print ''
+
+		peelingImageDir	= '%sImage/'%(peelingDir)
+		cmd="""mkdir -p %s"""%(peelingImageDir)
+		os.system(cmd)
+		print ''
+		print 'The Peeling Image directory: %s\nhas been created'%(peelingImageDir)
+		print ''
+	
+		peelingSkymodelDir	= '%sSkymodel/'%(peelingDir)
+		cmd="""mkdir -p %s"""%(peelingSkymodelDir)
+		os.system(cmd)
+		print ''
+		print 'The Peeling Skymodel directory: %s\nhas been created'%(peelingSkymodelDir)
+		print ''	
+	
+		peelingBBSDir	= '%sBBS-Dir/'%(peelingDir)
+		cmd="""mkdir -p %s"""%(peelingBBSDir)
+		os.system(cmd)
+		print ''
+		print 'The Peeling BBS directory: %s\nhas been created'%(peelingBBSDir)
+		print ''	
+	
+
+		peelingNDPPPDir	= '%sNDPPP-Dir/'%(peelingDir)
+		cmd="""mkdir -p %s"""%(peelingNDPPPDir)
+		os.system(cmd)
+		print ''
+		print 'The Peeling NDPPPDir directory: %s\nhas been created'%(peelingNDPPPDir)
+		print ''	
+	
+	
+	
 		
     # WARNINGS on the Skymodel file
     if skyModel != 'none':    
@@ -1067,6 +1171,14 @@ if __name__=='__main__':
 			print ""
 			sys.exit(2)     
 	
+    # WARNINGS on the Skymodel file
+    if skymodel2Peel != 'none':    
+		if os.path.isfile(skymodel2Peel) != True:
+			print ''
+			print "The path to the skymodel2Peel parameter do not exists ! Check it Please."
+			print ""
+			sys.exit(2)   
+
 	
 	####################################################################
     ## End of parameters initialization and checks up
@@ -1114,15 +1226,15 @@ if __name__=='__main__':
     print ''
     print 'maskDilation = %s'%(maskDilation)    
     print ''        
+    print 'peeling = %s'%(peeling)    
+    print ''
+    print 'skymodel2Peel = %s'%(skymodel2Peel)    
+    print ''                
     print '############################################################'
+	
 
 	####################################################################
-    # 8) Main code started Now !!!!
-	####################################################################
-
-
-	####################################################################
-	# 9) Extract global observation characteristics and check data integrity 
+	# 8) Extract global observation characteristics and check data integrity 
 	####################################################################
  
     
@@ -1147,6 +1259,16 @@ if __name__=='__main__':
     print 'Time ellapsed: %s seconds'%(timeDuration)
     print '############################################################'
     
+
+
+    ####################################################################
+    # 9) Data Initialization 
+    ####################################################################
+
+    dataInitialization_obj	= class_dataInit.dataInit(obsDir, outputDir,dataDir, Files,NbFiles)
+    obsDir					= dataInitialization_obj.dataInitFunc()
+	
+
 
  
 	####################################################################
@@ -1179,7 +1301,7 @@ if __name__=='__main__':
 			while (nb_annulus > 0.1*initNofAnnulusSources):
 				
 					# Observation Directory Parameter determination
-					obsPreprocess_Obj	= class_obsPreprocessing.obsPreprocessing(obsDir,preprocessDir,preprocessImageDir,preprocessSkymodelDir,preprocessBBSDir,i,listFiles,Files,NbFiles,frequency,UVmin,nIteration,ra_target,dec_target,initNofAnnulusSources,annulusRadius,FOV)
+					obsPreprocess_Obj	= class_obsPreprocessing.obsPreprocessing(dataDir,preprocessDir,preprocessImageDir,preprocessSkymodelDir,preprocessBBSDir,i,listFiles,Files,NbFiles,frequency,UVmin,nIteration,ra_target,dec_target,initNofAnnulusSources,annulusRadius,FOV)
 
 
 					print '############################################'
@@ -1265,6 +1387,45 @@ if __name__=='__main__':
 
 
 
+
+	####################################################################
+	# 10b) Peeling phase (if required: peeling=yes)
+	####################################################################
+
+
+    if peeling == 'yes':
+
+			tstop=time.time()
+			timeDuration=tstop-tstart
+			print ''
+			print '####################################################'
+			print 'Start Peeling'
+			print 'Time ellapsed: %s seconds'%(timeDuration)	
+			print '####################################################'
+			print ''
+
+			# Observation Directory Parameter determination
+			obsPeeling_Obj	= class_selfcalPeeling.selfcalPeeling(obsDir,outputDir,preprocessDir,preprocessIndex,peelingDir,peelingDataDir,peelingImageDir,peelingSkymodelDir,peelingBBSDir,peelingNDPPPDir,listFiles,Files,NbFiles,frequency,UVmin,nIteration,ra_target,dec_target,outerfovclean,skymodel2Peel,FOV)
+
+
+			if skymodel2Peel == 'none':
+			
+				obsPeeling_Obj.selfCalPeelingVLSS()
+
+
+
+			tstop=time.time()
+			timeDuration=tstop-tstart
+			print ''
+			print '####################################################'
+			print 'End of Peeling'
+			print 'Time ellapsed: %s seconds'%(timeDuration)	
+			print '####################################################'
+			print ''
+
+ 
+
+
 	####################################################################
 	# 11) Global parameters determination (preparation phase)
 	####################################################################
@@ -1278,8 +1439,8 @@ if __name__=='__main__':
 	
 
     # selfcal parameters determination
-    selfCalParam_Obj																								= class_selfcalparam.selfCalParam(obsDir,outputDir,listFiles,Files,NbFiles,nbChan,frequency,maxBaseline,integTimeOnechunk,observationIntegTime,nbCycle,ra_target,dec_target,outerfovclean,VLSSuse,preprocessIndex,FOV,nofPixelPerBeam,startResolution,endResolution,resolutionVector,startingFactor,robust,skyModel,UVmin,annulusRadius)
-    ImagePathDir,pixsize,nbpixel,robust,UVmax,wmax,SkymodelPath,GSMSkymodel,RMS_BOX,RMS_BOX_Bright,BBSParset,thresh_isl,thresh_pix	= selfCalParam_Obj.selfCalParamFunc()
+    selfCalParam_Obj																								= class_selfcalparam.selfCalParam(dataDir,outputDir,listFiles,Files,NbFiles,nbChan,frequency,maxBaseline,integTimeOnechunk,observationIntegTime,nbCycle,ra_target,dec_target,outerfovclean,VLSSuse,preprocessIndex,FOV,nofPixelPerBeam,startResolution,endResolution,resolutionVector,startingFactor,robust,skyModel,UVmin,annulusRadius)
+    ImagePathDir,pixsize,nbpixel,robust,UVmax,wmax,SkymodelPath,GSMSkymodel,RMS_BOX,RMS_BOX_Bright,thresh_isl,thresh_pix	= selfCalParam_Obj.selfCalParamFunc()
 	
     tstop=time.time()
     timeDuration=tstop-tstart	
@@ -1330,11 +1491,12 @@ if __name__=='__main__':
 			 
 			
 			# Selfcal Initialization
-			selfCalRun_Obj	= class_selfcalrun.selfCalRun(i,obsDir,outputDir,nbCycle,listFiles,Files,NbFiles,BBSParset,SkymodelPath,GSMSkymodel,ImagePathDir,UVmin,UVmax,wmax,pixsize,nbpixel,robust,nIteration,RMS_BOX,RMS_BOX_Bright,thresh_isl,thresh_pix,outerfovclean,VLSSuse,preprocessIndex,mask,maskDilation)
+			selfCalRun_Obj	= class_selfcalrun.selfCalRun(i,dataDir,outputDir,nbCycle,listFiles,Files,NbFiles,SkymodelPath,GSMSkymodel,ImagePathDir,UVmin,UVmax,wmax,pixsize,nbpixel,robust,nIteration,RMS_BOX,RMS_BOX_Bright,thresh_isl,thresh_pix,outerfovclean,VLSSuse,preprocessIndex,mask,maskDilation,ra_target,dec_target,FOV)
 			
 			
 			# Run the BBS-cal on each Time chunks
 			selfCalRun_Obj.selfCalRunFuncCalibBBSNDPPP()
+			
 			
 			
 			tstop=time.time()
@@ -1412,11 +1574,14 @@ if __name__=='__main__':
 					
 					
 					# Extract the skymodel
-					selfCalRun_Obj.selfCalRunFuncSrcExtraction(stepProcess)
-
+					selfCalRun_Obj.selfCalRunFuncSrcExtraction(stepProcess)	
+					
 
 					tstop=time.time()
 					timeDuration=tstop-tstart
+					
+					
+					
 					
 					print ''
 					print '############################################'
@@ -1425,6 +1590,10 @@ if __name__=='__main__':
 					print '############################################'
 					print ''										
 				
+			
+			# Extract Statistics from the skymodel
+			#selfCalRun_Obj.selfCalRunFuncStatistics()
+
 			
 
     tstop=time.time()
@@ -1453,12 +1622,11 @@ if __name__=='__main__':
       
     # Iniatialization (Object creation)
     i=nbCycle	
-    selfCalRun_Obj	= class_selfcalrun.selfCalRun(i,obsDir,outputDir,nbCycle,listFiles,Files,NbFiles,BBSParset,SkymodelPath,GSMSkymodel,ImagePathDir,UVmin,UVmax,wmax,pixsize,nbpixel,robust,nIteration,RMS_BOX,RMS_BOX_Bright,thresh_isl,thresh_pix,outerfovclean,VLSSuse,preprocessIndex,mask,maskDilation)
+    selfCalRun_Obj	= class_selfcalrun.selfCalRun(i,dataDir,outputDir,nbCycle,listFiles,Files,NbFiles,SkymodelPath,GSMSkymodel,ImagePathDir,UVmin,UVmax,wmax,pixsize,nbpixel,robust,nIteration,RMS_BOX,RMS_BOX_Bright,thresh_isl,thresh_pix,outerfovclean,VLSSuse,preprocessIndex,mask,maskDilation,ra_target,dec_target,FOV)
 	
     
     # Run the BBS-cal on each Time chunks
     selfCalRun_Obj.selfCalRunFuncCalibBBSNDPPP()	
-    
     
     tstop=time.time()
     timeDuration=tstop-tstart		
@@ -1537,10 +1705,14 @@ if __name__=='__main__':
 					
 			print ''
 			print '####################################################'
-			print 'End Selfcal (with mask) Cycle %s on %s, model extraction is done'%(i,nbCycle-1)
+			print 'End Selfcal (with mask) Final Cycle %s, model extraction is done'%(nbCycle)
 			print 'Time ellapsed: %s seconds'%(timeDuration)		
 			print '####################################################'
 
+
+
+    # Extract Statistics from the skymodel
+    #selfCalRun_Obj.selfCalRunFuncStatistics()
 
 
 	####################################################################
