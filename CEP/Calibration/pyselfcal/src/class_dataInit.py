@@ -168,12 +168,11 @@ class dataInit:
 			cmd3  	="""msin.autoweight = false\n"""
 			cmd4  	="""msin.forceautoweight = false\n"""
 			cmd5  	="""msin.datacolumn = CORRECTED_DATA\n"""
-			cmd6  	="""steps=[preflag,count,flag1]\n"""
+			cmd6  	="""steps=[preflag,count]\n"""
 			cmd7 	="""preflag.type=preflagger\n"""
 			cmd8 	="""preflag.corrtype=auto\n"""
 			cmd9 	="""preflag.baseline= [DE*, FR*, SE*, UK*]\n"""
 			cmd10 	="""preflag.amplmin = 1e-30 \n"""
-			cmd11  	="""flag1.type=aoflagger\n"""
 			
 			InitFlagfile.write(cmd1)
 			InitFlagfile.write(cmd2)
@@ -185,7 +184,6 @@ class dataInit:
 			InitFlagfile.write(cmd8)
 			InitFlagfile.write(cmd9)
 			InitFlagfile.write(cmd10)
-			InitFlagfile.write(cmd11)
 
 			
 			InitFlagfile.close()			
