@@ -135,6 +135,11 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
             '--max_per_node',
             help="Sets the number of jobs per node",
             default=0
+        ),
+        'stepname': ingredient.StringField(
+            '--stepname',
+            help="stepname for individual naming of results",
+            optional=True
         )
     }
 
@@ -185,7 +190,8 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
                     item.file = os.path.join(
                         self.inputs['working_directory'],
                         self.inputs['job_name'],
-                        os.path.basename(item.file) + '.' + os.path.split(str(executable))[1]
+                        #os.path.basename(item.file) + '.' + os.path.split(str(executable))[1]
+                        os.path.splitext(os.path.basename(item.file))[0] + '.' + self.inputs['stepname']
                     )
                 self.inputs['mapfile_out'] = os.path.join(os.path.dirname(self.inputs['mapfile_in']), os.path.basename(executable) + '.' + 'mapfile')
             else:
@@ -206,7 +212,8 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
             for item in outputmapfiles[-1]:
                 item.file = os.path.join(
                     prefix,
-                    os.path.basename(item.file) + '.' + os.path.split(str(executable))[1] + '.' + name
+                    #os.path.basename(item.file) + '.' + os.path.split(str(executable))[1] + '.' + name
+                    os.path.splitext(os.path.basename(item.file))[0] + '.' + self.inputs['stepname'] + '.' + name
                 )
 
         # prepare arguments

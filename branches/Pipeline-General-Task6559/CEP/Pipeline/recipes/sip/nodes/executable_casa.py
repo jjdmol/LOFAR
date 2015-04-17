@@ -114,6 +114,7 @@ class executable_casa(LOFARnodeTCP):
                     casacommandfile.write(casastring)
                     casacommandfile.close()
                     args.append(casafilename)
+
                 somename = os.path.join(work_dir, os.path.basename(infile) + '.casashell.sh')
                 commandstring = ''
                 commandstring += executable
@@ -137,8 +138,8 @@ class executable_casa(LOFARnodeTCP):
             try:
             # ****************************************************************
             # Run
-                #cmd = [executable] + args
-                cmd = [somename]
+                cmd = [executable] + args
+                #cmd = [somename]
                 with CatchLog4CPlus(
                     casapydir,
                     self.logger.name + "." + os.path.basename(infile),

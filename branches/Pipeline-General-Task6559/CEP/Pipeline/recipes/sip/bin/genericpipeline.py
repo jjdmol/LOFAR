@@ -110,7 +110,7 @@ class GenericPipeline(control):
         while step_name_list:
             stepname = step_name_list.pop(0)
             step = step_control_dict[stepname]
-            inputdict = {}
+            inputdict = {'stepname': stepname}
             inputargs = []
             resultdict = {}
 
