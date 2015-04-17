@@ -1,6 +1,6 @@
 # $Id$
 
-lofar_package(casaimwrap 0.1 DEPENDS LofarFT)
+lofar_package(casaimwrap DEPENDS AWImager2)
 
 include(LofarFindPackage)
 

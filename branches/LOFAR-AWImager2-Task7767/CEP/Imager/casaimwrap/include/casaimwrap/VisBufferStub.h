@@ -28,8 +28,8 @@
 // Hacked VisBuffer implementation that can be used to pass visibility data
 // between Python and CASA FTMachines.
 
-#include <LofarFT/VisBuffer.h>
-#include <ms/MeasurementSets/MSColumns.h>
+#include <AWImager2/VisBuffer.h>
+#include <casacore/ms/MeasurementSets/MSColumns.h>
 
 namespace LOFAR
 {

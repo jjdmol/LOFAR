@@ -25,23 +25,23 @@
 
 #include <casaimwrap/VisBufferStub.h>
 
-#include <casa/Containers/ValueHolder.h>
-#include <casa/Containers/Record.h>
-#include <casa/Utilities/CountedPtr.h>
-#include <casa/OS/HostInfo.h>
+#include <casacore/casa/Containers/ValueHolder.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Utilities/CountedPtr.h>
+#include <casacore/casa/OS/HostInfo.h>
 
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <coordinates/Coordinates/StokesCoordinate.h>
-#include <coordinates/Coordinates/SpectralCoordinate.h>
-#include <coordinates/Coordinates/Projection.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/coordinates/Coordinates/DirectionCoordinate.h>
+#include <casacore/coordinates/Coordinates/StokesCoordinate.h>
+#include <casacore/coordinates/Coordinates/SpectralCoordinate.h>
+#include <casacore/coordinates/Coordinates/Projection.h>
 
-#include <measures/Measures/MDirection.h>
-#include <measures/Measures/MPosition.h>
-#include <measures/Measures/MeasConvert.h>
-#include <measures/Measures/MCDirection.h>
-#include <measures/Measures/MCPosition.h>
-#include <measures/Measures/MeasTable.h>
+#include <casacore/measures/Measures/MDirection.h>
+#include <casacore/measures/Measures/MPosition.h>
+#include <casacore/measures/Measures/MeasConvert.h>
+#include <casacore/measures/Measures/MCDirection.h>
+#include <casacore/measures/Measures/MCPosition.h>
+#include <casacore/measures/Measures/MeasTable.h>
 
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <synthesis/TransformMachines/SimpleComponentFTMachine.h>
@@ -51,36 +51,36 @@
 
 #include <Common/ParameterSet.h>
 
-#include <LofarFT/CubeSkyEquation.h>
-#include <LofarFT/FTMachine.h>
-#include <LofarFT/FTMachineSimple.h>
-#include <LofarFT/VisResampler.h>
-#include <LofarFT/Imager.h>
+#include <AWImager2/CubeSkyEquation.h>
+#include <AWImager2/FTMachine.h>
+#include <AWImager2/FTMachineSimple.h>
+#include <AWImager2/VisResampler.h>
+#include <AWImager2/Imager.h>
 
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSAntenna.h>
-#include <ms/MeasurementSets/MSAntennaParse.h>
-#include <ms/MeasurementSets/MSAntennaColumns.h>
-#include <ms/MeasurementSets/MSDataDescription.h>
-#include <ms/MeasurementSets/MSDataDescColumns.h>
-#include <ms/MeasurementSets/MSField.h>
-#include <ms/MeasurementSets/MSFieldColumns.h>
-#include <ms/MeasurementSets/MSObservation.h>
-#include <ms/MeasurementSets/MSObsColumns.h>
-#include <ms/MeasurementSets/MSPolarization.h>
-#include <ms/MeasurementSets/MSPolColumns.h>
-#include <ms/MeasurementSets/MSSpectralWindow.h>
-#include <ms/MeasurementSets/MSSpWindowColumns.h>
-#include <ms/MeasurementSets/MSSelection.h>
-#include <ms/MeasurementSets/MSDopplerUtil.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSAntenna.h>
+#include <casacore/ms/MSSel/MSAntennaParse.h>
+#include <casacore/ms/MeasurementSets/MSAntennaColumns.h>
+#include <casacore/ms/MeasurementSets/MSDataDescription.h>
+#include <casacore/ms/MeasurementSets/MSDataDescColumns.h>
+#include <casacore/ms/MeasurementSets/MSField.h>
+#include <casacore/ms/MeasurementSets/MSFieldColumns.h>
+#include <casacore/ms/MeasurementSets/MSObservation.h>
+#include <casacore/ms/MeasurementSets/MSObsColumns.h>
+#include <casacore/ms/MeasurementSets/MSPolarization.h>
+#include <casacore/ms/MeasurementSets/MSPolColumns.h>
+#include <casacore/ms/MeasurementSets/MSSpectralWindow.h>
+#include <casacore/ms/MeasurementSets/MSSpWindowColumns.h>
+#include <casacore/ms/MSSel/MSSelection.h>
+#include <casacore/ms/MeasurementSets/MSDopplerUtil.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <msvis/MSVis/VisBuffer.h>
-#include <tables/Tables/TableIter.h>
+#include <casacore/tables/Tables/TableIter.h>
 
-#include <pyrap/Converters/PycExcp.h>
-#include <pyrap/Converters/PycBasicData.h>
-#include <pyrap/Converters/PycValueHolder.h>
-#include <pyrap/Converters/PycRecord.h>
+#include <casacore/python/Converters/PycExcp.h>
+#include <casacore/python/Converters/PycBasicData.h>
+#include <casacore/python/Converters/PycValueHolder.h>
+#include <casacore/python/Converters/PycRecord.h>
 
 #include <boost/python.hpp>
 #include <boost/python/args.hpp>
@@ -88,7 +88,7 @@
 #include <setjmp.h>
 
 using namespace casa;
-using namespace casa::pyrap;
+using namespace casa::python;
 using namespace boost::python;
 
 namespace LOFAR
@@ -825,13 +825,13 @@ Record end_grid(CASAContext &context, bool normalize)
 
 BOOST_PYTHON_MODULE(_casaimwrap)
 {
-    casa::pyrap::register_convert_excp();
-    casa::pyrap::register_convert_basicdata();
-    casa::pyrap::register_convert_casa_valueholder();
-    casa::pyrap::register_convert_casa_record();
+    casa::python::register_convert_excp();
+    casa::python::register_convert_basicdata();
+    casa::python::register_convert_casa_valueholder();
+    casa::python::register_convert_casa_record();
 
     // For degrid_reimplemented().
-    casa::pyrap::register_convert_casa_vector<casa::uInt>();
+    casa::python::register_convert_casa_vector<casa::uInt>();
 
     class_<LOFAR::casaimwrap::CASAContext>("CASAContext");
 
