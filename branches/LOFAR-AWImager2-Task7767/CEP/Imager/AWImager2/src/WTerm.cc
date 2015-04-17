@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 #include <AWImager2/WTerm.h>
-#include <casa/BasicSL/Constants.h>
+#include <casacore/casa/BasicSL/Constants.h>
 #include <algorithm>
 
 using namespace casa;

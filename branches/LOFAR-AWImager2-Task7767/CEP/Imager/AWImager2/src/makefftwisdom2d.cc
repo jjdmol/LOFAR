@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 #include <AWImager2/FFTCMatrix.h>
 #include <Common/lofar_iostream.h>
-#include <casa/OS/Path.h>
+#include <casacore/casa/OS/Path.h>
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>     //# for strerror

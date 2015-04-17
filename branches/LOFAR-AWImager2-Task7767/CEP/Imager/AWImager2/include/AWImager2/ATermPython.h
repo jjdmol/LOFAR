@@ -30,10 +30,10 @@
 #include <Common/ParameterSet.h>
 #include <ParmDB/ParmFacade.h>
 
-#include <casa/Arrays/Array.h>
-#include <casa/Containers/Record.h>
-#include <measures/Measures/MDirection.h>
-#include <measures/Measures/MEpoch.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/measures/Measures/MDirection.h>
+#include <casacore/measures/Measures/MEpoch.h>
 
 #include <boost/python.hpp>
 

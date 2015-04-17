@@ -25,8 +25,8 @@
 
 #include <AWImager2/FFTCMatrix.h>
 #include <Common/LofarLogger.h>
-#include <casa/Utilities/Copy.h>
-#include <casa/OS/Path.h>
+#include <casacore/casa/Utilities/Copy.h>
+#include <casacore/casa/OS/Path.h>
 #include <vector>
 #include <algorithm>
 #include <stdio.h>

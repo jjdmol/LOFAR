@@ -27,12 +27,12 @@
 
 #include <lofar_config.h>
 
-#include <casa/Containers/Record.h>
-#include <casa/HDF5/HDF5File.h>
-#include <casa/HDF5/HDF5Group.h>
-#include <casa/HDF5/HDF5Record.h>
-#include <casa/Quanta/MVTime.h>
-#include <casa/Quanta/Quantum.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/HDF5/HDF5File.h>
+#include <casacore/casa/HDF5/HDF5Group.h>
+#include <casacore/casa/HDF5/HDF5Record.h>
+#include <casacore/casa/Quanta/MVTime.h>
+#include <casacore/casa/Quanta/Quantum.h>
 
 #include <Common/SystemUtil.h>
 #include <Common/LofarLogger.h>

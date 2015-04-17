@@ -29,7 +29,7 @@
 #define LOFAR_LOFARFT_VISBUFFER_H
 
 #include <msvis/MSVis/VisBuffer.h>
-#include <casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/Matrix.h>
 #include <AWImager2/VisibilityIterator.h>
 #include <AWImager2/VisImagingWeight.h>
 

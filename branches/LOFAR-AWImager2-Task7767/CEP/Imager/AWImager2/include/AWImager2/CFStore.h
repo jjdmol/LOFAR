@@ -25,14 +25,14 @@
 
 #include <AWImager2/CFDefs.h>
 #include <synthesis/TransformMachines/SynthesisError.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/Logging/LogSink.h>
-#include <casa/Logging/LogOrigin.h>
-#include <casa/Utilities/CountedPtr.h>
-#include <images/Images/ImageInterface.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/Logging/LogSink.h>
+#include <casacore/casa/Logging/LogOrigin.h>
+#include <casacore/casa/Utilities/CountedPtr.h>
+#include <casacore/images/Images/ImageInterface.h>
 #include <msvis/MSVis/VisBuffer.h>
-#include <casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/Matrix.h>
 
 namespace LOFAR {
 namespace LofarFT {

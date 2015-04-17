@@ -24,7 +24,7 @@
 
 #include <lofar_config.h>
 #include <AWImager2/Imager.h>
-#include <casa/Utilities/CountedPtr.h>
+#include <casacore/casa/Utilities/CountedPtr.h>
 #include <synthesis/MeasurementComponents/WBCleanImageSkyModel.h>
 #include <synthesis/TransformMachines/SimpleComponentFTMachine.h>
 #include <msvis/MSVis/VisSet.h>
@@ -32,7 +32,7 @@
 #include <AWImager2/VisImagingWeight.h>
 #include <AWImager2/VisImagingWeightRobust.h>
 
-#include <tables/Tables/TableIter.h>
+#include <casacore/tables/Tables/TableIter.h>
 #include <assert.h>
 
 using namespace casa;

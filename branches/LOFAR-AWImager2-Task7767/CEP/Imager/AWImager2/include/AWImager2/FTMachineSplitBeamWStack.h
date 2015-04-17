@@ -23,23 +23,23 @@
 #ifndef LOFARFT_LOFARFTMACHINEWSPLIT_H
 #define LOFARFT_LOFARFTMACHINEWSPLIT_H
 
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/BasicSL/Complex.h>
-#include <casa/Containers/Block.h>
-#include <casa/OS/File.h>
-#include <casa/OS/PrecTimer.h>
-#include <casa/OS/Timer.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/OS/File.h>
+#include <casacore/casa/OS/PrecTimer.h>
+#include <casacore/casa/OS/Timer.h>
 
-#include <images/Images/ImageInterface.h>
-#include <lattices/Lattices/LatticeCache.h>
-#include <lattices/Lattices/ArrayLattice.h>
-#include <scimath/Mathematics/FFTServer.h>
-#include <scimath/Mathematics/ConvolveGridder.h>
+#include <casacore/images/Images/ImageInterface.h>
+#include <casacore/lattices/Lattices/LatticeCache.h>
+#include <casacore/lattices/Lattices/ArrayLattice.h>
+#include <casacore/scimath/Mathematics/FFTServer.h>
+#include <casacore/scimath/Mathematics/ConvolveGridder.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <synthesis/TransformMachines/FTMachine.h>
 

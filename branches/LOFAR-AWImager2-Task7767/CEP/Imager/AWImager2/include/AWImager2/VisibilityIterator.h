@@ -31,9 +31,9 @@
 
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <AWImager2/VisImagingWeight.h>
-#include <casa/aips.h>
-#include <casa/BasicSL/Complex.h>
-#include <casa/Quanta/Quantum.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/Quanta/Quantum.h>
 
 
 namespace LOFAR { //# NAMESPACE LOFAR - BEGIN

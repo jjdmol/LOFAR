@@ -25,7 +25,7 @@
 #include <Common/lofar_iostream.h>
 #include <AWImager2/Operation.h>
 #include <AWImager2/util.h>
-#include <casa/OS/Directory.h>
+#include <casacore/casa/OS/Directory.h>
 
 using namespace casa;
 

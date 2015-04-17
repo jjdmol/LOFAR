@@ -35,7 +35,7 @@
 #include <AWImager2/util.h>
 
 #include <Common/OpenMP.h>
-#include <lattices/LatticeMath/LatticeFFT.h>
+#include <casacore/lattices/LatticeMath/LatticeFFT.h>
 
 #include "helper_functions.tcc"
 

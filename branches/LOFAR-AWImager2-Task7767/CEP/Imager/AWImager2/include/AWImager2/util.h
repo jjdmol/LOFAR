@@ -23,7 +23,7 @@
 #ifndef LOFAR_LOFARFT_UTIL_H
 #define LOFAR_LOFARFT_UTIL_H
 
-#include <ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
 #include <Common/ParameterSet.h>
 
 

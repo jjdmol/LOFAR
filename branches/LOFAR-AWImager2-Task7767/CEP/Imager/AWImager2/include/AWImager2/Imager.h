@@ -30,7 +30,7 @@
 #include <AWImager2/VisImagingWeight.h>
 #include <synthesis/MeasurementEquations/Imager.h>
 #include <Common/ParameterSet.h>
-#include <casa/Containers/Record.h>
+#include <casacore/casa/Containers/Record.h>
 
 
 namespace LOFAR {

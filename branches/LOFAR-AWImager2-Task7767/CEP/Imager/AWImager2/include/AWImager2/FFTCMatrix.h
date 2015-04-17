@@ -26,8 +26,8 @@
 #include <complex>
 #include <fftw3.h>
 #include <Common/LofarTypes.h>
-#include <casa/BasicSL/Complex.h>
-#include <casa/Arrays/Matrix.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/Arrays/Matrix.h>
 
 namespace LOFAR {
 

@@ -28,8 +28,8 @@
 #include <casacore/python/Converters/PycRecord.h>
 #include <casacore/python/Converters/PycArray.h>
 
-#include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/coordinates/Coordinates/DirectionCoordinate.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
 
 using namespace casa;
 

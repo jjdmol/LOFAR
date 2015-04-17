@@ -24,8 +24,8 @@
 #include <AWImager2/VisResamplerMatrixWB.h>
 #include <AWImager2/ScopedTimer.h>
 #include <synthesis/TransformMachines/Utils.h>
-#include <coordinates/Coordinates/SpectralCoordinate.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/coordinates/Coordinates/SpectralCoordinate.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
 #include <cassert>
 #include <Common/OpenMP.h>
 

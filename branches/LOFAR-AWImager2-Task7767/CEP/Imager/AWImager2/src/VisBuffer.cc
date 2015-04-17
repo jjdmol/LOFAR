@@ -27,7 +27,7 @@
 //# $Id$
 #include <lofar_config.h>
 #include <AWImager2/VisBuffer.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 namespace LOFAR{
 namespace LofarFT {

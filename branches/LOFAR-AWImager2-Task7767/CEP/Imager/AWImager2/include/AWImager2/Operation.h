@@ -29,9 +29,9 @@
 #include <Common/Singleton.h>
 #include <Common/lofar_string.h>
 
-#include <casa/BasicSL/String.h>
-#include <casa/Containers/Record.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
 
 
 // Define color codes for help text

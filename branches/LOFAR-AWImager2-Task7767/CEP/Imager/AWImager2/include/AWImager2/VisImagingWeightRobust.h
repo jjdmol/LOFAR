@@ -29,10 +29,10 @@
 #ifndef LOFAR_LOFARFT_VISIMAGINGWEIGHTROBUST_H
 #define LOFAR_LOFARFT_VISIMAGINGWEIGHTROBUST_H
 
-#include <casa/aips.h>
-#include <casa/BasicSL/Complex.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/Arrays/Matrix.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Arrays/Matrix.h>
 #include <AWImager2/VisImagingWeight.h>
 
 namespace casa

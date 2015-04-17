@@ -61,9 +61,9 @@
 #    include <Common/lofar_map.h>
 #    include <Common/lofar_string.h>
 #    include <Common/lofar_vector.h>
-#    include <casa/OS/DynLib.h>
-#    include <casa/OS/Mutex.h>
-#    include <casa/BasicSL/String.h>
+#    include <casacore/casa/OS/DynLib.h>
+#    include <casacore/casa/OS/Mutex.h>
+#    include <casacore/casa/BasicSL/String.h>
 #    include <boost/preprocessor/repetition.hpp>
 #    include <boost/preprocessor/iteration/iterate.hpp>
 #    include <iostream>

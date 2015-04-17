@@ -36,20 +36,20 @@
 #include <AWImager2/Package__Version.h>
 #include <Common/Version.h>
 
-#include <images/Images/PagedImage.h>
-#include <images/Images/HDF5Image.h>
-#include <images/Images/ImageFITSConverter.h>
-#include <casa/Arrays/ArrayUtil.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayIter.h>
-#include <casa/Utilities/Regex.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/OS/Directory.h>
-#include <casa/OS/File.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/OS/Timer.h>
-#include <casa/iostream.h>
-#include <casa/sstream.h>
+#include <casacore/images/Images/PagedImage.h>
+#include <casacore/images/Images/HDF5Image.h>
+#include <casacore/images/Images/ImageFITSConverter.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayIter.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/OS/Directory.h>
+#include <casacore/casa/OS/File.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/OS/Timer.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/sstream.h>
 
 #include <Common/OpenMP.h>
 #include <boost/algorithm/string/join.hpp>

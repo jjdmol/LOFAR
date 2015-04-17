@@ -22,9 +22,9 @@
 
 #ifndef LOFAR_LOFARFT_CFDEFS_H
 #define LOFAR_LOFARFT_CFDEFS_H
-#include <casa/Arrays/Array.h>
-#include <casa/aips.h>
-#include <casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Matrix.h>
 
 namespace LOFAR {
 namespace LofarFT {

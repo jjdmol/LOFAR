@@ -24,7 +24,7 @@
 
 #include <Common/lofar_iostream.h>
 #include <AWImager2/OperationEmpty.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
 
 using namespace casa;
 

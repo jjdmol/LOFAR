@@ -23,9 +23,9 @@
 #ifndef LOFAR_LOFARFT_SCOPEDTIMER_H
 #define LOFAR_LOFARFT_SCOPEDTIMER_H
 
-#include <casa/aips.h>
-#include <casa/BasicSL/String.h>
-#include <casa/OS/PrecTimer.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/OS/PrecTimer.h>
 #include <map>
 
 namespace LOFAR {

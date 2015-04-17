@@ -29,7 +29,7 @@
 #include <AWImager2/ConvolutionFunction.h>
 #include <AWImager2/VisResamplerMatrixWB.h>
 #include <Common/OpenMP.h>
-#include <lattices/Lattices/LatticeFFT.h>
+#include <casacore/lattices/LatticeMath/LatticeFFT.h>
 
 
 using namespace casa;

@@ -29,24 +29,24 @@
 #include <AWImager2/FFTCMatrix.h>
 #include <Common/Timer.h>
 
-#include <casa/Arrays/Cube.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/MatrixMath.h>
-#include <casa/Arrays/ArrayIter.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <images/Images/PagedImage.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/sstream.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <measures/Measures/MDirection.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <coordinates/Coordinates/SpectralCoordinate.h>
-#include <coordinates/Coordinates/StokesCoordinate.h>
-#include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <casa/OS/PrecTimer.h>
+#include <casacore/casa/Arrays/Cube.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/MatrixMath.h>
+#include <casacore/casa/Arrays/ArrayIter.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/images/Images/PagedImage.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/sstream.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/measures/Measures/MDirection.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/coordinates/Coordinates/SpectralCoordinate.h>
+#include <casacore/coordinates/Coordinates/StokesCoordinate.h>
+#include <casacore/coordinates/Coordinates/DirectionCoordinate.h>
+#include <casacore/casa/OS/PrecTimer.h>
 
-#include <lattices/Lattices/ArrayLattice.h>
-#include <lattices/Lattices/LatticeFFT.h>
+#include <casacore/lattices/Lattices/ArrayLattice.h>
+#include <casacore/lattices/LatticeMath/LatticeFFT.h>
 
 namespace LOFAR
 {

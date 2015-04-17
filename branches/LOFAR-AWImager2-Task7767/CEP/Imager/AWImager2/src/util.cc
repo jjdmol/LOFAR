@@ -26,8 +26,8 @@
 
 #include <Common/LofarLogger.h>
 
-#include <ms/MeasurementSets/MSDataDescColumns.h>
-#include <ms/MeasurementSets/MSSpWindowColumns.h>
+#include <casacore/ms/MeasurementSets/MSDataDescColumns.h>
+#include <casacore/ms/MeasurementSets/MSSpWindowColumns.h>
 
 namespace LOFAR {
 namespace LofarFT {  
