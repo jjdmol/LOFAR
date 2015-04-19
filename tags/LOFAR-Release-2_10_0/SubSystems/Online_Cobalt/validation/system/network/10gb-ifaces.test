@@ -1,0 +1,12 @@
+#!/bin/bash
+
+for IFACE in eth2 eth3 eth4 eth5
+do
+  echo Testing interface $IFACE...
+
+  # Interface should exist
+  ip link show $IFACE || exit 1
+
+  # Interface should be up
+  ip link show $IFACE | grep -q "state UP" || exit 1
+done
