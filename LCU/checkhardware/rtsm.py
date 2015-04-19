@@ -192,16 +192,18 @@ def getRcuMode():
     rcu_info = {}
     answer = rspctl("--rcu")
     for line in answer.splitlines():
-        rcu   = int(line[4:6].strip())
-        state = line[30:33].strip()
-        mode  = int(line[40])
-        rcu_info[rcu] = (state, mode)
+        rcu   = line[line.find('[')+1 : line.find(']')].strip()
+        state = line[line.find('=>')+2 : line.find(',')].strip()
+        mode  = line[line.find('mode:')+5]
+        if rcu.isdigit() and state in ("OFF", "ON") and mode.isdigit():
+            rcu_info[int(rcu)] = (state, int(mode))
 
     for mode in range(8):
         mode_cnt = answer.count("mode:%d" %(mode))
         if mode == 0:
             if mode_cnt == 96:
                 logger.debug("Not observing")
+                ERR.setLastStage()
                 return (rcumode)
         elif (mode_cnt > 32) and answer.count("mode:0") == (96 - mode_cnt):
             logger.debug("Now observing in rcumode %d" %(mode))
@@ -455,11 +457,13 @@ def checkForDown(data, rcumode, error_list, subband):
                    (rcumode, rcu, (rcu+1), ant, max_x_offset, max_y_offset))
         if rcu not in error_list:
             error_list.append(rcu)
+            error_list.append(rcu+1)
             CSV.writeSpectra(data, rcu, "DOWN")
             CSV.writeSpectra(data, rcu+1, "DOWN")
 
+    """
     for msg in shifted:
-        rcu, max_sb, mean_max_sb = i
+        rcu, max_sb, mean_max_sb = msg
         offset = max_sb - mean_max_sb
         ant, pol = getAntPol(rcumode, rcu)
         logger.info("Mode-%d RCU-%02d Ant-%02d Shifted, offset=%d" %\
@@ -467,6 +471,21 @@ def checkForDown(data, rcumode, error_list, subband):
         if rcu not in error_list:
             error_list.append(rcu)
             CSV.writeSpectra(data, rcu, "SHIFT")
+    """
+    return
+
+def checkForFlat(data, rcumode, error_list):
+    ERR.setStage("checkForFlat")
+    logger.debug("start flat check")
+    flat = searchFlat(data)
+    for msg in flat:
+        rcu, mean_val = msg
+        ant, pol = getAntPol(rcumode, rcu)
+        logger.info("Mode-%d RCU-%02d Ant-%02d Flat, value=%5.1fdB" %\
+                   (rcumode, rcu, ant, mean_val))
+        if rcu not in error_list:
+            error_list.append(rcu)
+            CSV.writeSpectra(data, rcu, "FLAT")
     return
 
 def closeAllOpenFiles():
@@ -711,6 +730,7 @@ def main():
                 if lbaMode(rcumode):
                     checkForDown(data, rcumode, error_list,
                                   conf.getInt('lbh-test-sb',301))
+                    checkForFlat(data, rcumode, error_list)
                     checkForOscillation(data, rcumode, error_list, 6.0)
                     checkForNoise(data, rcumode, error_list,
                                   conf.getFloat('lba-noise-min-deviation', -3.0),

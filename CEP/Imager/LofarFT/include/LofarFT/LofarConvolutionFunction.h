@@ -46,11 +46,7 @@
 #include <casa/OS/PrecTimer.h>
 
 #include <lattices/Lattices/ArrayLattice.h>
-#if defined(casacore)
-#include <lattices/LatticeMath/LatticeFFT.h>
-#else
 #include <lattices/Lattices/LatticeFFT.h>
-#endif
 
 
 
