@@ -27,7 +27,7 @@ while i < len(sys.argv):
         if valpos != -1:
             optval = sys.argv[i][valpos+1:]
         args[opt] = optval
-        i += 1       
+        i += 1
 
 if args.has_key('H'):
     printHelp()
@@ -35,7 +35,7 @@ if args.has_key('H'):
 
 runPath = r'/opt/stationtest'
 if args.has_key('P'):
-	runPath = args.get('P')
+    runPath = args.get('P')
 libPath = runPath+r'/lib'
 sys.path.insert(0, libPath)
 
@@ -50,8 +50,8 @@ def main():
     f.close()
     for line in data:
         if line.find('log-dir-local') != -1:
-            key, logdir = line.strip().split('=')    
-    
+            key, logdir = line.strip().split('=')
+
     if args.has_key('F'):
         fullFilename = args.get('F')
     else:
@@ -59,13 +59,13 @@ def main():
             testfilename = '%s_StationTestHistory.csv' %(StID)
         else:
             testfilename = '%s_StationTest.csv' %(StID)
-    
+
         if os.path.exists(logdir):
             fullFilename = os.path.join(logdir, testfilename)
         else:
             print "not a valid log dir"
             sys.exit(-1)
-        
+
     try:
         f = open(fullFilename, 'r')
         data = f.readlines()
@@ -73,10 +73,10 @@ def main():
     except:
         print "%s not found in %s" %(testfilename, logdir)
         sys.exit(-1)
-        
+
     RCUx = RCUy = 0
-    
-    
+
+
     print "\n"+"-"*103
     print ">"*36+"   LAST STATION-CHECK RESULT   "+"<"*36
     print "-"*103
@@ -85,7 +85,7 @@ def main():
     _part_nr = -1
     _element_nr = -1
     _c_summator_defect = -1
-    
+
     first_date = 0
     if args.has_key('D'):
         days = int(args.get('D'))
@@ -95,9 +95,9 @@ def main():
         #start_date = dt - datetime.timedelta(days-1)
         #first_date = int(getShortDateStr(tm=start_date.timetuple()))
         #print first_date
-        
+
         days_cnt = 1
-        
+
         first_date = data[-1].strip().split(',')[0]
         print first_date
         for i in range(len(data)-1,-1,-1):
@@ -112,26 +112,26 @@ def main():
                 break
         print first_date
 
-        
+
     last_date = first_date
     for line in data:
         partnumber = -1
         if line[0] == '#':
             continue
-            
+
         d = line.strip().split(',')
         if len(d) < 4:
             continue
         date = d[0]
-        
+
         if args.has_key('D'):
             if last_date != date:
                 print '\n'+'#'*103
             last_date = date
-        
+
         if first_date != 0 and int(date) < int(first_date):
             continue
-            
+
         part = d[1]
         if d[2] != '---':
             partnumber = int(d[2])
@@ -145,8 +145,8 @@ def main():
                     RCUy = (partnumber - 48) * 2 + 1
             if part in ('LBH', 'HBA'):
                 RCUx = partnumber * 2
-                RCUy = partnumber * 2 + 1    
-        
+                RCUy = partnumber * 2 + 1
+
         msg = d[3].strip()
         kv = dict()
         for i in range(4,len(d)):
@@ -159,26 +159,26 @@ def main():
                     kv[key] = vallist
             else:
                 kv[d[i]] = '-'
-                
+
         if part == 'NFO':
             #if args.has_key('D'):
-            #	print
-            #	print '-'*103
+            #   print
+            #   print '-'*103
             #    print "   NEW TEST  "*8
             #    print '-'*103
-            #    
+            #
             if msg == 'VERSIONS':
                 print "Used script versions: checkHardware=%s, test_db=%s, test_lib=%s, search_lib=%s\n" %(kv.get('CHECK'), kv.get('DB'), kv.get('TEST'), kv.get('SEARCH'))
-                
+
             if msg == 'STATION':
                 print "-- Station name     : %s" %(kv.get('NAME'))
-            
+
             if msg == 'RUNTIME':
                 print "-- Check runtime    : %s .. %s" %(kv.get('START').replace('T',' '), kv.get('STOP').replace('T',' '))
-            
+
             if msg == 'DRIVER':
                 if kv.has_key('RSPDRIVER'):
-                    print "-- RSPDriver        : DOWN" 
+                    print "-- RSPDriver        : DOWN"
                 if kv.has_key('TBBDRIVER'):
                     print "-- TBBDriver        : DOWN"
             if msg == 'BOARD':
@@ -186,10 +186,10 @@ def main():
                 for i in range(24):
                     if kv.has_key('RSP-%d' %(i)):
                         boardstr += "%d, " %(i)
-                print "-- RSP board DOWN   : %s" %(boardstr[:-2]) 
+                print "-- RSP board DOWN   : %s" %(boardstr[:-2])
             if msg == 'CHECKS':
-                print "-- Checks done      : %s" %(string.join(d[4:],', ')) 
-            
+                print "-- Checks done      : %s" %(string.join(d[4:],', '))
+
             if msg == 'STATISTICS':
                 print "-- Bad antennas     :",
                 if kv.get('BAD_LBL') != '-1':
@@ -201,55 +201,73 @@ def main():
                 if kv.get('BAD_HBA0') != '-1':
                     print "HBA0=%s  " %(kv.get('BAD_HBA0')),
                 if kv.get('BAD_HBA1') != '-1':
-                    print "HBA1=%s  " %(kv.get('BAD_HBA1')),    
+                    print "HBA1=%s  " %(kv.get('BAD_HBA1')),
                 print
-                
+
             if msg == 'BADLIST':
                 bad_ant_str = string.join(d[4:],';').replace('=','(').replace(' ',',').replace(';',')   ')+')'
-                print "-- bad-antenna-list : %s" %(bad_ant_str)  
-                    
+                print "-- bad-antenna-list : %s" %(bad_ant_str)
+
+        if part == 'SPU':
+            if part != _part:
+                _part = part
+                hdr = "\n== SPU "
+                print hdr + "="*(104-len(hdr))
+            if msg == 'VOLTAGE':
+                print "    Subrack %1d wrong voltage: RCU-5.0V=%s LBA-8.0V=%s HBA-48V=%s SPU-3.3V=%s" %\
+                      (partnumber, kv.get('RCU5.0V'), kv.get('LBA8.0V'), kv.get('HBA48V'), kv.get('SPU3.3V'))
+            if msg == 'TEMPERATURE':
+                print "    Subrack %1d high temperature: PCB=%s" %\
+                      (partnumber, kv.get('PCB'))
+
         if part == 'RSP':
             if part != _part:
                 _part = part
                 hdr = "\n== RSP "
-                print hdr + "="*(104-len(hdr))    
+                print hdr + "="*(104-len(hdr))
 
             if msg == 'VERSION':
                 if kv.has_key('RSPDRIVER'):
                     print "    Wrong RSPDriver version, %s" %(kv.get('RSPDRIVER'))
                 if kv.has_key('RSPCTL'):
-                    print "    Wrong rspctl version, %s" %(kv.get('RSPCTL'))    
+                    print "    Wrong rspctl version, %s" %(kv.get('RSPCTL'))
                 if kv.has_key('AP') or kv.has_key('BP'):
                     print "    Board %2d wrong firmware version: AP=%s BP=%s" %(partnumber, kv.get('AP'), kv.get('BP'))
-        
+            if msg == 'VOLTAGE':
+                print "    Board %2d wrong voltage: 1.2V=%3.1f 2.5V=%3.1f 3.3V=%3.1f" %\
+                      (partnumber, kv.get('1.2V'), kv.get('2.5V'), kv.get('3.3V'))
+            if msg == 'TEMPERATURE':
+                print "    Board %2d high temperature: PCB=%3.1f BP=%3.1f AP0=%3.1f AP1=%3.1f AP2=%3.1f AP3=%3.1f" %\
+                      (partnumber, kv.get('PCB'), kv.get('BP'), kv.get('AP0'), kv.get('AP1'), kv.get('AP2'), kv.get('AP3'))
+
         if part == 'TBB':
             if part != _part:
                 _part = part
-                
+
                 hdr = "\n== TBB "
-                print hdr + "="*(104-len(hdr))    
-            
+                print hdr + "="*(104-len(hdr))
+
             if msg == 'VERSION':
                 if kv.has_key('TBBDRIVER'):
                     print "    Wrong TBBDriver version, %s" %(kv.get('TBBDRIVER'))
                 if kv.has_key('TBBCTL'):
-                    print "    Wrong tbbctl version, %s" %(kv.get('TBBCTL'))    
+                    print "    Wrong tbbctl version, %s" %(kv.get('TBBCTL'))
                 if kv.has_key('TP') or kv.has_key('MP'):
                     print "    Board %2d wrong firmware version: TP=%s MP=%s" %(partnumber, kv.get('TP'), kv.get('MP'))
-            
+
             if msg == 'MEMORY':
                 print "    Board %2d Memory address or dataline error" %(partnumber)
-        
+
         if part == 'RCU':
             if part != _part:
                 _part = part
                 hdr = "\n== RCU "
-                print hdr + "="*(104-len(hdr))    
-                
+                print hdr + "="*(104-len(hdr))
+
             if msg == 'BROKEN':
                 print "    RCU %d Broken" %(partnumber)
-        
-        
+
+
         if part in ('LBL','LBH'):
             if part != _part:
                 _part = part
@@ -257,36 +275,42 @@ def main():
                     hdr = "\n== LBA Low "
                 else:
                     hdr = "\n== LBA High "
-                print hdr + "="*(104-len(hdr))    
-            
+                print hdr + "="*(104-len(hdr))
+
             lbaNumber = partnumber
             #if part == 'LBL':
             #    lbaNumber += 48
-            
+
             if msg == 'NOSIGNAL':
                 print "   NO test signal found"
-            
+
             if msg == 'TESTSIGNAL':
                 print
                 print " X test done with subband=%s and ref.signal=%sdB" %\
                       (kv.get('SUBBANDX'), kv.get('SIGNALX'))
                 print " Y test done with subband=%s and ref.signal=%sdB" %\
-                      (kv.get('SUBBANDY'), kv.get('SIGNALY'))       
-            
+                      (kv.get('SUBBANDY'), kv.get('SIGNALY'))
+
             if msg == 'TOOLOW':
                 print "   Average signal strenght Too Low  AVG %sdB" %\
                       (kv.get('AVG'))
-            
+
             if msg == 'DOWN':
                     print "   Antenna %2d, %-11s, has Fallen: X=%sdB Xoffset=%s  Y=%sdB Yoffset=%s" %\
                       (lbaNumber, 'RCU %d/%d' %(RCUx, RCUy), kv.get('X',('?',)), kv.get('Xoff',('?',)), kv.get('Y',('?',)), kv.get('Yoff',('?',)))
             
+            if msg == 'FLAT':
+                if kv.has_key('Xmean'):
+                    print "   Antenna %2d, %-7s, X Flat, value=%s" %(lbaNumber, 'RCU %d' %(RCUx), kv.get('Xmean'))
+                if kv.has_key('Ymean'):
+                    print "   Antenna %2d, %-7s, Y Flat, value=%s" %(lbaNumber, 'RCU %d' %(RCUy), kv.get('Ymean'))
+
             if msg == 'OSCILLATION':
                 if kv.has_key('X')  or kv.has_key('Xbands'):
                     print "   Antenna %2d, %-7s, X Oscillation" %(lbaNumber, 'RCU %d' %(RCUx))
                 if kv.has_key('Y')  or kv.has_key('Ybands'):
                     print "   Antenna %2d, %-7s, Y Oscillation" %(lbaNumber, 'RCU %d' %(RCUy))
-            
+
             if msg == 'LOW_NOISE':
                 if kv.has_key('Xproc'):
                     print "   Antenna %2d, %-7s, X Low Noise:  %s%% bad, signal=%sdB, fluctuation=%sdB, limit=%sdB" %\
@@ -294,7 +318,7 @@ def main():
                 if kv.has_key('Yproc'):
                     print "   Antenna %2d, %-7s, Y Low Noise:  %s%% bad, signal=%sdB, fluctuation=%sdB, limit=%sdB" %\
                           (lbaNumber, 'RCU %d' %(RCUy), kv.get('Yproc'), kv.get('Yval'), kv.get('Ydiff','-'), kv.get('Yref'))
-                    
+
             if msg == 'HIGH_NOISE':
                 if kv.has_key('Xproc'):
                     print "   Antenna %2d, %-7s, X High Noise: %s%% bad, signal=%sdB, fluctuation=%sdB, limit=%sdB" %\
@@ -302,7 +326,7 @@ def main():
                 if kv.has_key('Yproc'):
                     print "   Antenna %2d, %-7s, Y High Noise: %s%% bad, signal=%sdB, fluctuation=%sdB, limit=%sdB" %\
                           (lbaNumber, 'RCU %d' %(RCUy), kv.get('Yproc'), kv.get('Yval'), kv.get('Ydiff','-'), kv.get('Yref'))
-            
+
             if msg == 'JITTER':
                 if kv.has_key('Xdiff'):
                     print "   Antenna %2d, %-7s, X Jitter:     %s%% bad, fluctuation=%sdB, normal=%sdB" %\
@@ -310,85 +334,85 @@ def main():
                 if kv.has_key('Ydiff'):
                     print "   Antenna %2d, %-7s, Y Jitter:     %s%% bad, fluctuation=%sdB, normal=%sdB" %\
                           (lbaNumber, 'RCU %d' %(RCUy), kv.get('Yproc','-'), kv.get('Ydiff'), kv.get('Yref'))
-                          
+
             if msg == 'SPURIOUS':
-                if kv.has_key('X'): 
+                if kv.has_key('X'):
                     print "   Antenna %2d, %-7s, X Spurious signals found" %(lbaNumber, 'RCU %d' %(RCUx))
-                if kv.has_key('Y'): 
+                if kv.has_key('Y'):
                     print "   Antenna %2d, %-7s, Y Spurious signals found" %(lbaNumber, 'RCU %d' %(RCUy))
-                    
+
             if msg == 'FAIL' or msg == 'RF_FAIL':
                 if kv.has_key('X'):
                     print "   Antenna %2d, %-7s, X RF fail:    signal=%sdB" %\
                           (lbaNumber, 'RCU %d' %(RCUx), kv.get('X'))
                 if kv.has_key('Y'):
                     print "   Antenna %2d, %-7s, Y RF fail:    signal=%sdB" %\
-                          (lbaNumber, 'RCU %d' %(RCUy), kv.get('Y'))    
-        
+                          (lbaNumber, 'RCU %d' %(RCUy), kv.get('Y'))
+
         if part == 'HBA':
             if part != _part:
                 _part = part
                 hdr = "\n== HBA "
-                print hdr + "="*(104-len(hdr))    
-            
+                print hdr + "="*(104-len(hdr))
+
             if partnumber != -1 and partnumber != _part_nr:
                 _part_nr = partnumber
                 _c_summator_defect = 0
                 header = "Tile %d (RCU %d/%d)" %(partnumber, RCUx, RCUy)
                 print "\n-- %s %s" %(header, '-'*(99-len(header)))
-                
+
             if msg == 'NOSIGNAL':
                 print "   NO test signal found"
-                
+
             if msg == 'MODEM':
                 for i in range(1,17,1):
                     key = "E%02d" %(i)
                     if key in kv:
-                        print "   E%02d modem fault (%s)" %(i, kv[key]) 
-            
+                        print "   E%02d modem fault (%s)" %(i, kv[key])
+
             if msg == 'OSCILLATION':
                 if kv.has_key('X') or kv.has_key('Xbands'):
                     print "   X Oscillation"
                 if kv.has_key('Y') or kv.has_key('Ybands'):
                     print "   Y Oscillation"
-                        
+
             if msg == 'C_SUMMATOR':
                 _c_summator_defect = 1
                 print "   Modem errors (all elements)"
-            
+
             if msg == 'P_SUMMATOR':
-                print "   No RF all elements" 
-            
+                print "   No RF all elements"
+
             if msg == 'SUMMATOR_NOISE':
                 if kv.has_key('X'):
                     print "   X Summator noise"
                 if kv.has_key('Y'):
                     print "   Y Summator noise"
-                    
+
             if msg == 'SPURIOUS':
                 if kv.has_key('X'):
                     print "   X Spurious signals"
                 if kv.has_key('Y'):
                     print "   Y Spurious signals"
-                            
+
             if msg == 'LOW_NOISE':
                 if kv.has_key('Xproc'):
                     print "   X Low Noise:  %s%% bad, signal=%sdB, fluctuation=%sdB, limit=%sdB" %(kv.get('Xproc'), kv.get('Xval'), kv.get('Xdiff','-'), kv.get('Xref'))
                 if kv.has_key('Yproc'):
                     print "   Y Low Noise:  %s%% bad, signal=%sdB, fluctuation=%sdB, limit=%sdB" %(kv.get('Yproc'), kv.get('Yval'), kv.get('Ydiff','-'), kv.get('Yref'))
-                    
+
             if msg == 'HIGH_NOISE':
                 if kv.has_key('Xproc'):
                     print "   X High Noise: %s%% bad, signal=%sdB, fluctuation=%sdB, limit=%sdB" %(kv.get('Xproc'), kv.get('Xval'), kv.get('Xdiff','-'), kv.get('Xref'))
                 if kv.has_key('Yproc'):
                     print "   Y High Noise: %s%% bad, signal=%sdB, fluctuation=%sdB, limit=%sdB" %(kv.get('Yproc'), kv.get('Yval'), kv.get('Ydiff','-'), kv.get('Yref'))
-            
+
             if msg == 'JITTER':
                 if kv.has_key('Xdiff'):
                     print "   X Jitter:     %s%% bad, fluctuation=%sdB, normal=%sdB" %(kv.get('Xproc'), kv.get('Xdiff'), kv.get('Xref'))
                 if kv.has_key('Ydiff'):
                     print "   Y Jitter:     %s%% bad, fluctuation=%sdB, normal=%sdB" %(kv.get('Yproc'), kv.get('Ydiff'), kv.get('Yref'))
-            
+
             if msg == 'RF_FAIL' or msg == 'RF_TILE_FAIL':
                 if kv.has_key('X'):
                     signal_128, sb_128, ref_128, signal_253, sb_253, ref_253 = kv.get('X')
@@ -398,13 +422,13 @@ def main():
                     signal_128, sb_128, ref_128, signal_253, sb_253, ref_253 = kv.get('Y')
                     print "   Y RF Fail:    no-delay(test=%5.1fdB ref=%5.1fdB sb=%d)  full-delay(test=%5.1fdB ref=%5.1fdB sb=%d)" %\
                           (float(signal_128), float(ref_128), int(sb_128), float(signal_253), float(ref_253), int(sb_253))
-            
+
             if msg == 'E_FAIL':
                 # loop over number of elements
                 for i in range(1,17,1):
                     if _c_summator_defect:
                         continue
-                        
+
                     if kv.has_key('M%d' %(i)) or kv.has_key('X%d' %(i)) or kv.has_key('Y%d' %(i)) \
                        or kv.has_key('OX%d' %(i)) or kv.has_key('OY%d' %(i)) \
                        or kv.has_key('SPX%d' %(i)) or kv.has_key('SPY%d' %(i)) \
@@ -420,40 +444,40 @@ def main():
                             print "       No modem communication"
                     else:
                         if kv.has_key('OX%d' %(i)):
-                            print "      X Oscillating" 
-                        
+                            print "      X Oscillating"
+
                         if kv.has_key('OY%d' %(i)):
-                            print "      Y Oscillating" 
-                        
+                            print "      Y Oscillating"
+
                         if kv.has_key('SPX%d' %(i)):
-                            print "      X Spurious" 
-                        
+                            print "      X Spurious"
+
                         if kv.has_key('SPY%d' %(i)):
-                            print "      Y Spurious" 
-                                
+                            print "      Y Spurious"
+
                         if kv.has_key('LNX%d' %(i)):
                             print "      X Low Noise, signal=%sdB fluctuation=%sdB" %(kv.get('LNX%d' %(i))[0], kv.get('LNX%d' %(i))[1])
-                        
+
                         if kv.has_key('HNX%d' %(i)):
                             print "      X High Noise, signal=%sdB fluctuation=%sdB" %(kv.get('HNX%d' %(i))[0], kv.get('HNX%d' %(i))[1])
-                        
+
                         if kv.has_key('JX%d' %(i)):
-                            print "      X Jitter, fluctuation=%sdB" %(kv.get('JX%d' %(i)))    
-                            
+                            print "      X Jitter, fluctuation=%sdB" %(kv.get('JX%d' %(i)))
+
                         if kv.has_key('LNY%d' %(i)):
                             print "      Y Low Noise, signal=%sdB fluctuation=%sdB" %(kv.get('LNY%d' %(i))[0], kv.get('LNY%d' %(i))[1])
-                        
+
                         if kv.has_key('HNY%d' %(i)):
                             print "      Y High Noise, signal=%sdB fluctuation=%sdB" %(kv.get('HNY%d' %(i))[0], kv.get('HNY%d' %(i))[1])
-                        
+
                         if kv.has_key('JY%d' %(i)):
-                            print "      Y Jitter, fluctuation=%sdB" %(kv.get('JY%d' %(i)))    
-                                  
+                            print "      Y Jitter, fluctuation=%sdB" %(kv.get('JY%d' %(i)))
+
                         if kv.has_key('X%d' %(i)):
                             signal_128, sb_128, ref_128, signal_253, sb_253, ref_253 = kv.get('X%d' %(i))
                             print "      X RF Fail:  no-delay(test=%5.1fdB ref=%5.1fdB sb=%d)  full-delay(test=%5.1fdB ref=%5.1fdB sb=%d)" %\
-                                  (float(signal_128), float(ref_128), int(sb_128), float(signal_253), float(ref_253), int(sb_253))          
-                        
+                                  (float(signal_128), float(ref_128), int(sb_128), float(signal_253), float(ref_253), int(sb_253))
+
                         if kv.has_key('Y%d' %(i)):
                             signal_128, sb_128, ref_128, signal_253, sb_253, ref_253 = kv.get('Y%d' %(i))
                             print "      Y RF Fail:  no-delay(test=%5.1fdB ref=%5.1fdB sb=%d)  full-delay(test=%5.1fdB ref=%5.1fdB sb=%d)" %\
