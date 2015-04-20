@@ -18,7 +18,8 @@ using namespace std;
 using namespace casa;
 
 // Convert ra-dec (j2000) to itrf through casacore directly
-vector<double> j2000_to_itrf(vector<double> &vec_j2000) {
+vector<double> j2000_to_itrf(vector<double> &vec_pos,
+                             vector<double> &vec_j2000) {
   MDirection dir_radec(
                MVDirection(
                  Quantity(vec_j2000[0], "rad"),
@@ -34,8 +35,8 @@ vector<double> j2000_to_itrf(vector<double> &vec_j2000) {
   MPosition pos(
                MVPosition(
                  Quantity(0,"m"), 
-                 Quantity(52.911392,"deg"), 
-                 Quantity(6.867630, "deg")),
+                 Quantity(vec_pos[0],"deg"), 
+                 Quantity(vec_pos[1], "deg")),
                MPosition::WGS84);
 
   cout<<"pos: "<<pos<<endl;
@@ -60,14 +61,14 @@ vector<double> j2000_to_itrf(vector<double> &vec_j2000) {
 }
 
 // Convert itrf to azel through casacore directly
-vector<double> itrf_to_azel(vector<double> itrfvector) {
-  MDirection dir_itrf(MVDirection(itrfvector[0], itrfvector[1], itrfvector[2]), MDirection::ITRF);
+vector<double> itrf_to_azel(vector<double> vec_pos, vector<double> vec_itrf) {
+  MDirection dir_itrf(MVDirection(vec_itrf[0], vec_itrf[1], vec_itrf[2]), MDirection::ITRF);
 
   MPosition pos(
                MVPosition(
                  Quantity(0,"m"), 
-                 Quantity(52.911392,"deg"), 
-                 Quantity(6.867630, "deg")),
+                 Quantity(vec_pos[0],"deg"), 
+                 Quantity(vec_pos[1], "deg")),
                MPosition::WGS84);
 
   cout<<"pos: "<<pos<<endl;
@@ -90,19 +91,23 @@ vector<double> itrf_to_azel(vector<double> itrfvector) {
 
 int main(int, char **)
 {
+  vector<double> pos_vec(2);
+  pos_vec[0]=52.911392;
+  pos_vec[1]=6.867630;
+
   vector<double> j2000_dir(2);
   j2000_dir[0]=2.7574313416009946;
   j2000_dir[1]=0.12522052767963945;
  
   vector<double> itrf_dir;
  
-  itrf_dir=j2000_to_itrf(j2000_dir);
+  itrf_dir=j2000_to_itrf(pos_vec, j2000_dir);
 
   cout<<"ITRF vector: "<<itrf_dir[0]<<", "<<itrf_dir[1]<<", "<<itrf_dir[2]<<endl;
 
   vector<double> azel_dir;
 
-  azel_dir=itrf_to_azel(itrf_dir);
+  azel_dir=itrf_to_azel(pos_vec,itrf_dir);
 
   cout<<"AZ-EL vector: "<<azel_dir[0]<<", "<<azel_dir[1]<<endl;
 
