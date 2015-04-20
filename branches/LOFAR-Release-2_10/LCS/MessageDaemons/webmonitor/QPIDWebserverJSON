@@ -36,7 +36,7 @@ class perpetualTimer:
 
 brokerlist= []
 
-if  MyHostname.lower() == 'ccu099' :
+if MyHostname.lower() == 'ccu001' :
    brokerlist = [ "amqp://CCU001","amqp://sas001","amqp://lcs023","amqp://cbm001","amqp://cbm002","amqp://cbm003","amqp://cbm004","amqp://cbm005","amqp://cbm006","amqp://cbm007","amqp://cbm008","amqp://mcu001","amqp://lhn001.cep2.lofar","amqp://lhn002.cep2.lofar"]
 else:
     brokerlist = [ "amqp://ccu099","amqp://SAS099","amqp://lcs028","amqp://cbt009","amqp://locus098","amqp://locus099","amqp://locus102","amqp://mcu099"]
