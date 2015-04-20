@@ -1,0 +1,78 @@
+Index: CMakeLists.txt
+===================================================================
+733a734
+>     PREFIX_HINTS ${WCSLIB_ROOT_DIR}
+804c805
+<            VERSION 2.0.2
+---
+>            VERSION 2.0.0
+1092,1099c1093,1100
+< casa_find( LIBSAKURA
+<   VERSION 0.1
+<   INCLUDES libsakura/sakura.h libsakura/config.h
+<   LIBS sakura
+<   PREFIX_HINTS ${LIBSAKURA_ROOT_DIR} ${LIBSAKURA_ROOT_DIR}/lib/libsakura/default
+<   CPP_VERSION "LIBSAKURA_VERSION_MAJOR << '.' << LIBSAKURA_VERSION_MINOR"
+<   NO_LINK    # The library may depend on newer gcc. Skip generating executable.
+< )
+---
+> #casa_find( LIBSAKURA
+> #  VERSION 0.1
+> #  INCLUDES libsakura/sakura.h libsakura/config.h
+> #  LIBS sakura
+> #  PREFIX_HINTS ${LIBSAKURA_ROOT_DIR} ${LIBSAKURA_ROOT_DIR}/lib/libsakura/default
+> #  CPP_VERSION "LIBSAKURA_VERSION_MAJOR << '.' << LIBSAKURA_VERSION_MINOR"
+> #  NO_LINK    # The library may depend on newer gcc. Skip generating executable.
+> #)
+1140,1141c1141,1142
+< casa_add_module( casa_sakura CASACORE LIBSAKURA)
+< casa_add_module( singledish CASACORE casa_sakura msvis mstransform)
+---
+> #casa_add_module( casa_sakura CASACORE LIBSAKURA)
+> #casa_add_module( singledish CASACORE casa_sakura msvis mstransform)
+Index: synthesis/CMakeLists.txt
+===================================================================
+598a599
+>         TransformMachines/SetJyGridFT.h
+654a656
+>         Utilities/SigHandler.h
+Index: synthesis/MeasurementEquations/Imager.h
+===================================================================
+765c765
+<   Bool createFTMachine();
+---
+>   virtual Bool createFTMachine();
+Index: synthesis/TransformMachines/VisModelData.cc
+===================================================================
+210,217c210,217
+< 	if(newTab.source().rwKeywordSet().isDefined(elkey))
+< 	  newTab.source().rwKeywordSet().removeField(elkey);
+< 	if(newTab.rwKeywordSet().isDefined(elkey))
+< 	  newTab.rwKeywordSet().removeField(elkey);
+< 	if(newTab.source().rwKeywordSet().isDefined("definedmodel_field_"+String::toString(fields[k])))
+< 	  newTab.source().rwKeywordSet().removeField("definedmodel_field_"+String::toString(fields[k]));
+< 	if(newTab.rwKeywordSet().isDefined("definedmodel_field_"+String::toString(fields[k])))
+< 	   newTab.rwKeywordSet().removeField("definedmodel_field_"+String::toString(fields[k]));
+---
+> //	if(newTab.source().rwKeywordSet().isDefined(elkey))
+> //	  newTab.source().rwKeywordSet().removeField(elkey);
+> //	if(newTab.rwKeywordSet().isDefined(elkey))
+> //	  newTab.rwKeywordSet().removeField(elkey);
+> //	if(newTab.source().rwKeywordSet().isDefined("definedmodel_field_"+String::toString(fields[k])))
+> //	  newTab.source().rwKeywordSet().removeField("definedmodel_field_"+String::toString(fields[k]));
+> //	if(newTab.rwKeywordSet().isDefined("definedmodel_field_"+String::toString(fields[k])))
+> //	   newTab.rwKeywordSet().removeField("definedmodel_field_"+String::toString(fields[k]));
+226,231c226,231
+<   Vector<String> ftmods=Directory::shellExpand(possibleFT);
+<   for (uInt kk=0; kk < ftmods.nelements(); ++kk){
+<     if(Table::canDeleteTable(ftmods[kk])){
+<       Table::deleteTable(ftmods[kk]);
+<     }
+<   }
+---
+> //  Vector<String> ftmods=Directory::shellExpand(possibleFT);
+> //  for (uInt kk=0; kk < ftmods.nelements(); ++kk){
+> //    if(Table::canDeleteTable(ftmods[kk])){
+> //      Table::deleteTable(ftmods[kk]);
+> //    }
+> //  }
