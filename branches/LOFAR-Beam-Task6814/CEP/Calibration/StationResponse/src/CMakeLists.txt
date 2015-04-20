@@ -20,3 +20,4 @@ lofar_add_library(stationresponse
 
 lofar_add_bin_program(makeresponseimage makeresponseimage.cc)
 lofar_add_bin_program(testFITS testFITS.cc)
+lofar_add_bin_program(testConvert testConvert.cc)
