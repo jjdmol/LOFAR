@@ -75,6 +75,7 @@ bool estimate(size_t nDirection, size_t nStation, size_t nBaseline,
 {
     ASSERT(data.size() == nDirection && model.size() == nDirection);
     bool sh=false;
+    bool plotRes=true;
 
     // Initialize LSQ solver.
     const size_t nUnknowns = nDirection * nStation * 4 * 2;
@@ -96,9 +97,23 @@ bool estimate(size_t nDirection, size_t nStation, size_t nBaseline,
 
     // Iterate until convergence.
     size_t nIterations = 0;
+    double prevmaxresidual=0;
+    double maxresidual=1;
+    uint nStall=0;
+
     while(!solver.isReady() && nIterations < maxiter)
     {
+      if (nIterations>15 && maxresidual > 0.999*prevmaxresidual) {
+        nStall++;
+        if (nStall>5) {
+          break;
+        }
+      } else {
+        nStall=0; 
+      }
       if (sh) cout<<endl<<"iteration " << nIterations << endl;
+      prevmaxresidual=maxresidual;
+      maxresidual=0;
         for(size_t bl = 0; bl < nBaseline; ++bl)
         {
             const size_t p = baselines->first;
@@ -238,7 +253,11 @@ bool estimate(size_t nDirection, size_t nStation, size_t nBaseline,
                                 dcomplex residual =
                                   static_cast<dcomplex>(data[tg][cr])
                                   - visibility;
-
+ 
+                                if (norm(residual)>maxresidual) {
+                                  maxresidual=norm(residual);
+                                }
+ 
                                 // Update the normal equations.
                                 solver.makeNorm(nPartial,
                                     &(dIndex[cr * nPartial]), &(dR[0]),
@@ -328,6 +347,10 @@ bool estimate(size_t nDirection, size_t nStation, size_t nBaseline,
           cout<<endl;
         }
 
+        if (plotRes) {
+          cout<<maxresidual<<", ";
+          cout.flush();
+        }
         // Update iteration count.
         ++nIterations;
     }
