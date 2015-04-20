@@ -10,16 +10,19 @@
 #include <casacore/measures/Measures/MCDirection.h>
 #include <casacore/measures/Measures/MeasConvert.h>
 
+#include <StationResponse/AntennaFieldHBA.h>
+
+#include <vector>
 
 using namespace std;
 using namespace casa;
 
-int main(int, char **)
-{
+// Convert ra-dec (j2000) to itrf through casacore directly
+vector<double> j2000_to_itrf(vector<double> &vec_j2000) {
   MDirection dir_radec(
                MVDirection(
-                 Quantity(2.7574313416009946, "rad"),
-                 Quantity(0.12522052767963945,"rad")),
+                 Quantity(vec_j2000[0], "rad"),
+                 Quantity(vec_j2000[1],"rad")),
                MDirection::J2000);
 
   cout<<"dir_radec: "<<dir_radec<<endl;
@@ -49,6 +52,26 @@ int main(int, char **)
 
   cout<<"dir_itrf: "<<dir_itrf<<endl;
 
+  vector<double> vec_itrf(3);
+  vec_itrf[0]=dir_itrf.getValue()(0);
+  vec_itrf[1]=dir_itrf.getValue()(1);
+  vec_itrf[2]=dir_itrf.getValue()(2);
+  return vec_itrf;
+}
+
+// Convert itrf to azel through casacore directly
+vector<double> itrf_to_azel(vector<double> itrfvector) {
+  MDirection dir_itrf(MVDirection(itrfvector[0], itrfvector[1], itrfvector[2]), MDirection::ITRF);
+
+  MPosition pos(
+               MVPosition(
+                 Quantity(0,"m"), 
+                 Quantity(52.911392,"deg"), 
+                 Quantity(6.867630, "deg")),
+               MPosition::WGS84);
+
+  cout<<"pos: "<<pos<<endl;
+
   MeasFrame frame2(pos);
 
   MDirection::Convert itrf2azel(
@@ -58,6 +81,30 @@ int main(int, char **)
   MDirection dir_azel = itrf2azel();
 
   cout<<"dir_azel: "<<dir_azel.getAngle()<<endl;
+  vector<double> vec_azel(2);
+  vec_azel[0]=dir_azel.getAngle().getValue()[0];
+  vec_azel[1]=dir_azel.getAngle().getValue()[1]; 
+  return vec_azel;
+}
+
+
+int main(int, char **)
+{
+  vector<double> j2000_dir(2);
+  j2000_dir[0]=2.7574313416009946;
+  j2000_dir[1]=0.12522052767963945;
+ 
+  vector<double> itrf_dir;
+ 
+  itrf_dir=j2000_to_itrf(j2000_dir);
+
+  cout<<"ITRF vector: "<<itrf_dir[0]<<", "<<itrf_dir[1]<<", "<<itrf_dir[2]<<endl;
+
+  vector<double> azel_dir;
+
+  azel_dir=itrf_to_azel(itrf_dir);
+
+  cout<<"AZ-EL vector: "<<azel_dir[0]<<", "<<azel_dir[1]<<endl;
 
   return 0;
 }
