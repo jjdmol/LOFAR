@@ -162,7 +162,7 @@ void readAntennae(const Table &table, unsigned int id,
     }
 }
 
-AntennaField::Ptr readAntennaField(const Table &table, unsigned int id)
+AntennaField::Ptr readAntennaField(const Table &table, unsigned int id, const string &prefix)
 {
     AntennaField::Ptr field;
     AntennaField::CoordinateSystem system = readCoordinateSystem(table, id);
@@ -181,7 +181,7 @@ AntennaField::Ptr readAntennaField(const Table &table, unsigned int id)
         transformToFieldCoordinates(config, system.axes);
 
         TileAntenna::Ptr model(new TileAntenna(config));
-        field = AntennaField::Ptr(new AntennaFieldHBA(name, system, model));
+        field = AntennaField::Ptr(new AntennaFieldHBA(prefix, system, model));
     }
 
     readAntennae(table, id, field);
@@ -231,7 +231,7 @@ Station::Ptr readStation(const MeasurementSet &ms, unsigned int id)
 
     for(size_t i = 0; i < tab_field.nrow(); ++i)
     {
-        station->addField(readAntennaField(tab_field, i));
+        station->addField(readAntennaField(tab_field, i, station->name()));
     }
 
     return station;

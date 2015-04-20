@@ -28,6 +28,7 @@
 
 #include <StationResponse/AntennaField.h>
 #include <StationResponse/AntennaModelHBA.h>
+#include <casa/Arrays/Array.h>
 
 namespace LOFAR
 {
@@ -62,7 +63,11 @@ public:
         const vector3r_t &direction) const;
 
 private:
+    static std::pair<double,double> getAzEl(const vector3r_t &direction,
+                                            const casa::MeasFrame &frame);
+
     AntennaModelHBA::ConstPtr   itsAntennaModel;
+    casa::Array<casa::Float>    itsIntegrals;
 };
 
 // @}
