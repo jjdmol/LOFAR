@@ -45,7 +45,6 @@ class MCQDaemon(object):
      
         self._registered_pipelines = {}          # dict of uuid ->(ResultQName,
                                                  #                 LogTopic)
-        self._registered_NCQueues = {}
         self._broker = "127.0.0.1" 
         self._returnQueueTemplate = "MCQDaemon.return.{0}"
         self._logTopicTemplete = "MCQDaemon.log.{0}"
@@ -138,14 +137,14 @@ class MCQDaemon(object):
                 self._CommandQueue.ack(msg)        
 
             elif command == 'run_job':
-                try:
+                #try:
                     self._process_start_job(msg_content)
 
-                except:
+                #except:
                     self.logger.info("received an invalid job msg:")
                     self.logger.info(msg_content)
 
-                self._CommandQueue.ack(msg)      
+                    self._CommandQueue.ack(msg)      
 
             elif command == 'quit':
                 self._process_quit_msg(msg_content)
@@ -203,8 +202,8 @@ class MCQDaemon(object):
         else:
             # TODO: Het maken van deze queueu moet ergens anders
             nodeQueueName = self._nodeCommandQueueTemplate.format(node)
-            registered_nodes[node]={'CQName':nodeQueueName}
-            self._registered_NCQueues[node] = msgbus.ToBus(nodeQueueName, 
+            self._registered_nodes[node]={'CQName':nodeQueueName}
+            self._registered_nodes_queues[node] = msgbus.ToBus(nodeQueueName, 
                 options = "create:always, node: { type: queue, durable: True}",
                 broker = self._broker)
 
