@@ -21,7 +21,7 @@
 from datetime import datetime   # needed for duration
 import time
 import os
-
+import subprocess
 
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
@@ -36,12 +36,12 @@ class NCQDaemon(object):
         self.logger = logging.getLogger("NCQDaemon")
         self._loop_interval = loop_interval  # perform loop max once per 
                                              #loop_interval
-        self._registered_pipelines = {} 
+
+        self._registered_pipelines = {'jobs':[]} 
 
         self._broker = "127.0.0.1" 
         self._returnQueueTemplate = "MCQDaemon.return.{0}"
         self._logTopicTemplete = "MCQDaemon.log.{0}"
-        self._registered_pipelines = {}
         #TODO: THe name should be depending on the locus node currently running
         # maybee the hostname should be used?
         # TOdo: this name is static!!
@@ -143,6 +143,32 @@ class NCQDaemon(object):
         self.logger.info("WOOOOOT WE have received a msg")
         self.logger.info(msg_content)
 
+        command     = msg_content['parameters']['cmd']
+        working_dir = msg_content['parameters']['cdw']
+
+        uuid = msg_content['uuid']
+
+        # this should not happen but check anyways.
+        if uuid not in self._registered_pipelines:
+            self.logger.warn("------------------Major error -----------")
+            self.logger.warn("A job was requested on this deamon for an unknown")
+            self.logger.warn("Pipeline id. There is a sync error between the")
+            self.logger.warn("Master and Node Daemon.")
+            self.logger.warn(uuid)
+            self.logger.warn(self._registered_pipelines)
+            self.logger.warn("------------------Major error -----------")
+
+        # Run subprocess
+        process = subprocess.Popen(
+                        command,
+                        cwd=working_dir,
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE)
+
+        # store the now created job in the list of jobs for this pipeline
+        self._registered_pipelines['jobs'].append(process)
+
 
 
     def _process_quit_msg(self, msg_content):
@@ -152,6 +178,7 @@ class NCQDaemon(object):
         1. If clear_state is set the state_file is removed
         """
         try:
+            # forward a quit to all jobs
             pass
 
         except:
@@ -165,7 +192,9 @@ class NCQDaemon(object):
         It is responsible to for storing the details of the queue names
         in the internal storage of the Deamon object
         """      
-        
+        self.logger.info("*****************")
+        self.logger.info("We got a new session started: {0}".format(msg_content['uuid']))
+        self.logger.info("*****************")
         resultq_name, topic_name = self._connect_resultq_and_topic(
                                                            msg_content['uuid'])
 

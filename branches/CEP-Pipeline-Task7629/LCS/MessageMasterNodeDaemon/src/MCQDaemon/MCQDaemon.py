@@ -45,7 +45,8 @@ class MCQDaemon(object):
      
         self._registered_pipelines = {}          # dict of uuid ->(ResultQName,
                                                  #                 LogTopic)
-        self.broker = "127.0.0.1" 
+        self._registered_NCQueues = {}
+        self._broker = "127.0.0.1" 
         self._returnQueueTemplate = "MCQDaemon.return.{0}"
         self._logTopicTemplete = "MCQDaemon.log.{0}"
         self._nodeCommandQueueTemplate = "username.{0}.NCQueueDaemon.CommandQueue"
@@ -53,7 +54,7 @@ class MCQDaemon(object):
 
         self._CommandQueue = msgbus.FromBus("username.LOCUS102.MCQueueDaemon.CommandQueue", 
               options = "create:always, node: { type: queue, durable: True}",
-              broker = self.broker)
+              broker = self._broker)
 
 
         self._init_delay = init_delay        # how many loop polls te wait 
@@ -63,7 +64,7 @@ class MCQDaemon(object):
         self._state_file_path = state_file_path  # where to store the statefile
         self._init_state_from_file_if_possible()
 
-        self._connection = Connection.establish(self.broker)
+        self._connection = Connection.establish(self._broker)
         self._brokerAgent = BrokerAgent(self._connection)
 
         # A dictionary with node to queue names, used for state validation 
@@ -137,12 +138,12 @@ class MCQDaemon(object):
                 self._CommandQueue.ack(msg)        
 
             elif command == 'run_job':
-                #try:
-                self._process_start_job(msg_content)
+                try:
+                    self._process_start_job(msg_content)
 
-                #except:
-                self.logger.info("received an invalid job msg:")
-                self.logger.info(msg_content)
+                except:
+                    self.logger.info("received an invalid job msg:")
+                    self.logger.info(msg_content)
 
                 self._CommandQueue.ack(msg)      
 
@@ -184,22 +185,46 @@ class MCQDaemon(object):
         The starting of a job on one of the node servers.
         """
         self.logger.info(msg_content)
+        
+
+        registered_nodes = self._registered_pipelines[
+              msg_content['uuid']]['registered_nodes']
+        self.logger.info(registered_nodes)
+
 
         # extract the job parameters from the msg
         # Should be stored in the internal storage
         node = msg_content['parameters']['node']
-        cmd = msg_content['parameters']['cmd']
-        cmd_parameters = msg_content['parameters']['job_parameters']
+        parameters = msg_content['parameters']
         nodeQueueName = None
-
-        if node in self._registered_nodes:
-            nodeQueueName = self._registered_nodes[node]['CQName']
+        # Hier zit ergens een bug!!!!
+        if node in registered_nodes:
+            nodeQueueName = registered_nodes[node]['CQName']
         else:
+            # TODO: Het maken van deze queueu moet ergens anders
             nodeQueueName = self._nodeCommandQueueTemplate.format(node)
-            self._registered_nodes[node]={'CQName':nodeQueueName}
-            self._registered_nodes_queues[node] = msgbus.ToBus(nodeQueueName, 
+            registered_nodes[node]={'CQName':nodeQueueName}
+            self._registered_NCQueues[node] = msgbus.ToBus(nodeQueueName, 
                 options = "create:always, node: { type: queue, durable: True}",
-                broker = self.broker)
+                broker = self._broker)
+
+            # Send the node the start_session command
+
+            msg = message.MessageContent(
+                from_="USERNAME.LOCUS102.MCQDaemon",
+                forUser="USERRNAME.{0}.NSQDaemon".format(node),
+                summary="First msg to be send",
+                protocol="CommandQUeueMsg",
+                protocolVersion="0.0.1", 
+                #momid="",
+                #sasid="", 
+                #qpidMsg=None
+                      )
+            start_msg_content = {'command': 'start_session',
+                                 'uuid':msg_content['uuid']}
+            msg.payload = start_msg_content
+            self.logger.info("Starting node session on: {0}".format(node))
+            self._registered_nodes_queues[node].send(msg)
 
 
 
@@ -213,9 +238,7 @@ class MCQDaemon(object):
                 #sasid="", 
                 #qpidMsg=None
                       )
-        msg.payload = {'command':'run_job',
-                       "cmd":cmd, 
-                       "cmd_parameters":cmd_parameters}
+        msg.payload = msg_content
         self.logger.info("send job to: {0}".format(
                                 self._registered_nodes[node]['CQName']))
         self._registered_nodes_queues[node].send(msg)
@@ -237,7 +260,8 @@ class MCQDaemon(object):
         self._registered_pipelines[msg_content['uuid']] = {
                   'resultq':resultq_name,
                   'topic':topic_name,
-                  'init_wait':self._init_delay}
+                  'init_wait':self._init_delay,
+                  'registered_nodes':{}}
         # init_wait:other option is a time out
         # the problem is that the pipeline can only connect to an existing q
         # so after creating the q is not emediately 'used'.
@@ -259,12 +283,12 @@ class MCQDaemon(object):
         # now register the queue
         resultQueue = msgbus.ToBus(resultq_name, 
               options = "create:always, node: { type: queue, durable: True}",
-              broker = self.broker)
+              broker = self._broker)
 
         # and topic s: qpid-stat -e for example and source of this code
         logTopic = msgbus.ToBus(topic_name, 
               options = "create:always, node: { type: topic, durable: True}",
-              broker = self.broker)
+              broker = self._broker)
 
         return resultq_name, topic_name
   
@@ -418,8 +442,14 @@ class MCQDaemon(object):
 
         # Open the statefile
         file = open(self._state_file_path, 'r')
+        try:
+            state = pickle.load(file)
+        except:
+             self.logger.error("Failed loading existing statefile, creating"
+                               " bak version and restart from a fresh state")
 
-        state = pickle.load(file)
+             os.rename(self._state_file_path, self._state_file_path + "_bak")
+             return
 
         # TODO: do not check for correct state or anything, simple assign
         self._registered_pipelines = state

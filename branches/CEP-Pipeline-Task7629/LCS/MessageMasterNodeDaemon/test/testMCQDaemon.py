@@ -34,19 +34,21 @@ class MCQDaemonLib(object):
         self._sessionUUID = uuid.uuid4().hex
 
         # should be moved to a config file
-        self.broker="127.0.0.1" 
+        self._broker="127.0.0.1" 
         self._returnQueueTemplate = "MCQDaemon.return.{0}"
         self._logTopicTemplate = "MCQDaemon.log.{0}"
         
         self._returnQueueName = self._returnQueueTemplate.format(self._sessionUUID)
         self._logTopicName = self._logTopicTemplate.format(self._sessionUUID)
-        self.queueName = "username.LOCUS102.MCQueueDaemon.CommandQueue"
+        self._queueName = "username.LOCUS102.MCQueueDaemon.CommandQueue"
 
+        # It is the lib that 'owns' the session and 
+        self._nodes_with_started_sessions = []
 
         # Connect to the HCQDaemon
-        self._sendCommandQueue = msgbus.ToBus(self.queueName, 
+        self._sendCommandQueue = msgbus.ToBus(self._queueName, 
             options = "create:always, node: { type: queue, durable: True}",
-            broker = self.broker)
+            broker = self._broker)
 
         # Check state, raise exception if incorrect
         self._check_queue_and_daemon_state()
@@ -72,13 +74,13 @@ class MCQDaemonLib(object):
         # Check for consumers: We need to know if the deamon is active before
         # we can send commands
         session=QMFSession()
-        session.addBroker(self.broker)  # is the assignment needed?
+        session.addBroker(self._broker) 
         queues = session.getObjects(_class="queue",
                                     _package="org.apache.qpid.broker")
 
         nr_consumers_of_CQ = None
         for queue_item in queues:
-            if self.queueName in queue_item.name :
+            if self._queueName in queue_item.name :
                 nr_consumers_of_CQ = queue_item.consumerCount
 
         if nr_consumers_of_CQ == None:
@@ -113,11 +115,11 @@ class MCQDaemonLib(object):
         """
         self._resultQueue = msgbus.FromBus(self._returnQueueName, 
             options = "create:always, node: { type: queue, durable: True}",
-            broker = self.broker)
+            broker = self._broker)
 
         self._logTopic = msgbus.FromBus(self._logTopicTemplate, 
             options = "create:always, node: { type: topic, durable: True}",
-            broker = self.broker)
+            broker = self._broker)
 
     #def __del__(self)
 
@@ -152,6 +154,9 @@ class MCQDaemonLib(object):
         """
 
         """
+            
+
+
         msg = message.MessageContent(
                 from_="USERNAME.LOCUS102.MCQDaemonLib.{0}".format(
                                                             self._sessionUUID),
@@ -182,20 +187,19 @@ if __name__ == "__main__":
     print "Hello world"
 
     MCQLib = MCQDaemonLib()
-    time.sleep(1)
 
     parameters = {'node':'locus102',
+                  #'cmd': '/home/klijn/build/7629/gnu_debug/installed/lib/python2.6/dist-packages/lofarpipe/recipes/nodes/test_recipe.py',
                   'cmd': 'ls',
+                  #'cmd': """echo 'print "test"' | python """,
+
+                  'cdw': '/home/klijn',
                   'job_parameters':{'par1':'par1'}}
 
 
 
     MCQLib.run_job(parameters)
-    MCQLib.run_job(parameters)
-    MCQLib.run_job(parameters)
-    MCQLib.run_job(parameters)
-    MCQLib.run_job(parameters)
-    MCQLib.run_job(parameters)
+
     MCQLib.run_job(parameters)
     # Connect to the HCQDaemon
     time.sleep(3)
