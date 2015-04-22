@@ -2,18 +2,74 @@
 
 import uuid
 import copy
+import os
+import logging
+import time
+import threading 
 
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
-
 from qmf.console import Session as QMFSession
 
-import logging
-import time
+
 # Define logging. Until we have a python loging framework, we'll have
 # to do any initialising here
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 logger=logging.getLogger("MessageBus")
+
+class logTopicForwarder(threading.Thread):
+    """
+    Class used for listening a emptying a log topic
+
+    usage:
+    After initiation it must be started using the start() method
+    setStopFlag() stops the forwarder
+    """
+    def __init__(self, logTopic, logger=None,  poll_interval=1.0):
+        """
+        Create the usage stat object. Create events for starting and stopping.
+        By default the Process creating the object is tracked.
+        Default polling interval is 10 seconds
+        """
+        threading.Thread.__init__(self)
+        self.logger = logger
+        self.stopFlag = threading.Event()
+        self.lock = threading.Lock()
+        self.poll_interval = poll_interval
+        self.poll_counter = 0
+            
+    def __del__(self):
+        """
+        Clean up the temp file after the file is not in use anymore
+        """
+        pass
+            
+
+    def run(self):
+        """
+        Run function. 
+
+        While no stopflag is set:
+        sleep for poll_interval
+        """
+        while not self.stopFlag.isSet():
+            # If the timer waits for the full 10 minutes using scripts
+            # appear halting for lnog durations after ending
+            # poll in a tight wait loop to allow quick stop
+            if self.poll_counter < self.poll_interval:
+                self.poll_counter += 0.1
+                time.sleep(0.1)
+                continue
+
+            # reset the counter to zero
+            self.poll_counter = 0           
+ 
+    def setStopFlag(self):
+        """
+        Stop the monitor
+        """
+        self.stopFlag.set()
+     
 
 
 class MCQDaemonLib(object):
@@ -29,9 +85,10 @@ class MCQDaemonLib(object):
       b. Connect to queues 
 
     """
-    def __init__(self):
+    def __init__(self, logger):
         # Each MCQDaemonLib triggers a session with a uuid, generate and store
         # as a hex
+        self.logger = logger
         self._sessionUUID = uuid.uuid4().hex
 
         # should be moved to a config file
@@ -42,6 +99,9 @@ class MCQDaemonLib(object):
         self._returnQueueName = self._returnQueueTemplate.format(self._sessionUUID)
         self._logTopicName = self._logTopicTemplate.format(self._sessionUUID)
         self._queueName = "username.LOCUS102.MCQueueDaemon.CommandQueue"
+
+        self._resultQueue = None
+        self._logTopic    = None
 
         # It is the lib that 'owns' the session and 
         self._running_jobs = {}
@@ -60,6 +120,11 @@ class MCQDaemonLib(object):
 
         # Now connect to the created topic and resultQ
         self._connect_to_queue_and_topic()
+
+        # Start the log poller in a seperate thread.
+        self._logTopicForwarder = logTopicForwarder(self._logTopic, self.logger)
+        self._logTopicForwarder.start()
+
   
     def _check_queue_and_daemon_state(self):
         """
@@ -135,7 +200,9 @@ class MCQDaemonLib(object):
         # First disconnect from the queues
         self._resultQueue.close()
         self._logTopic.close()
-         
+        
+        self._logTopicForwarder.setStopFlag()
+
         # create the header for the stop command
         msg = message.MessageContent(
                 from_="USERNAME.LOCUS102.MCQDaemonLib.{0}".format(
@@ -184,23 +251,22 @@ class MCQDaemonLib(object):
 
 
 
-
-
-
-    def __del__():
-        """
-
-        """
-        self._release()
         
 
 if __name__ == "__main__":
     print "Hello world"
 
-    MCQLib = MCQDaemonLib()
+    MCQLib = MCQDaemonLib(logger)
+
+    environment = dict(
+            (k, v) for (k, v) in os.environ.iteritems()
+                if k.endswith('PATH') or k.endswith('ROOT') or k == 'QUEUE_PREFIX'
+        )
+
 
     parameters = {'node':'locus102',
                   #'cmd': '/home/klijn/build/7629/gnu_debug/installed/lib/python2.6/dist-packages/lofarpipe/recipes/nodes/test_recipe.py',
+                  'environment':environment,
                   'cmd': 'ls',
                   #'cmd': """echo 'print "test"' | python """,
                   #'cmd':""" echo  "test" """,
@@ -213,7 +279,7 @@ if __name__ == "__main__":
 
     MCQLib.run_job(parameters)
     # Connect to the HCQDaemon
-    time.sleep(10)
+    time.sleep(2)
     MCQLib._release()
 
     time.sleep(1)

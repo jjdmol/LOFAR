@@ -123,9 +123,9 @@ class NCQDaemon(object):
                 #try:
                     self._process_start_job(msg_content)
 
-                #except Exception, ex:
-                    self.logger.info("received an invalid job msg:")
-                    self.logger.info(msg_content)
+                ##except Exception, ex:
+                #    self.logger.info("received an invalid job msg:")
+                #    self.logger.info(msg_content)
                     
                 
                     self._CommandQueue.ack(msg)     
@@ -150,7 +150,7 @@ class NCQDaemon(object):
 
         command     = msg_content['parameters']['cmd']
         working_dir = msg_content['parameters']['cdw']
-
+        environment = msg_content['parameters']['environment']
         uuid = msg_content['uuid']
         job_uuid = msg_content['job_uuid']
 
@@ -173,6 +173,7 @@ class NCQDaemon(object):
             process = subprocess.Popen(
                         command,
                         cwd=working_dir,
+                        env=environment,               # where to get this?
                         stdin=subprocess.PIPE,
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE)
