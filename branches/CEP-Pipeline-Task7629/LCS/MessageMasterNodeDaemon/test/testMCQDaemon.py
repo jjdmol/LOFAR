@@ -1,6 +1,7 @@
 # import lofar.messagebus.MCQDaemon as MCQ  # communicate using the lib
 
 import uuid
+import copy
 
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
@@ -43,7 +44,7 @@ class MCQDaemonLib(object):
         self._queueName = "username.LOCUS102.MCQueueDaemon.CommandQueue"
 
         # It is the lib that 'owns' the session and 
-        self._nodes_with_started_sessions = []
+        self._running_jobs = {}
 
         # Connect to the HCQDaemon
         self._sendCommandQueue = msgbus.ToBus(self._queueName, 
@@ -129,6 +130,8 @@ class MCQDaemonLib(object):
         Send to msg to the HCQDaemon command queue to remove the registered
         session uuid 
         """
+        #
+        print "we have received a quit command!!!!!!!"
         # First disconnect from the queues
         self._resultQueue.close()
         self._logTopic.close()
@@ -154,9 +157,7 @@ class MCQDaemonLib(object):
         """
 
         """
-            
-
-
+        job_uuid = uuid.uuid4().hex
         msg = message.MessageContent(
                 from_="USERNAME.LOCUS102.MCQDaemonLib.{0}".format(
                                                             self._sessionUUID),
@@ -170,9 +171,19 @@ class MCQDaemonLib(object):
                       )
         msg.payload = {"command":"run_job", 
                        "uuid":self._sessionUUID,
+                       'job_uuid':job_uuid,
                        "parameters":parameters}
 
         self._sendCommandQueue.send(msg)
+
+        self._running_jobs[job_uuid] = {'payload':copy.deepcopy(msg.payload),
+                                        'completed':False}
+
+        # wait until the job returns then return, this needs a lock around the
+        # running jobs object.
+
+
+
 
 
 
@@ -192,7 +203,7 @@ if __name__ == "__main__":
                   #'cmd': '/home/klijn/build/7629/gnu_debug/installed/lib/python2.6/dist-packages/lofarpipe/recipes/nodes/test_recipe.py',
                   'cmd': 'ls',
                   #'cmd': """echo 'print "test"' | python """,
-
+                  #'cmd':""" echo  "test" """,
                   'cdw': '/home/klijn',
                   'job_parameters':{'par1':'par1'}}
 
@@ -202,7 +213,7 @@ if __name__ == "__main__":
 
     MCQLib.run_job(parameters)
     # Connect to the HCQDaemon
-    time.sleep(3)
+    time.sleep(10)
     MCQLib._release()
 
     time.sleep(1)

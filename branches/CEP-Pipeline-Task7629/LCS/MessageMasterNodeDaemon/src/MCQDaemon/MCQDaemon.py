@@ -22,7 +22,7 @@ from datetime import datetime   # needed for duration
 import time
 import pickle
 import os
-
+import uuid
 
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
@@ -133,6 +133,7 @@ class MCQDaemon(object):
                 self._CommandQueue.ack(msg)
 
             elif command == "stop_session":
+                self.logger.warn("We received a stop_session command!!!")
                 self._process_stop_msg(msg_content)
                 self._CommandQueue.ack(msg)        
 
@@ -194,7 +195,6 @@ class MCQDaemon(object):
         # extract the job parameters from the msg
         # Should be stored in the internal storage
         node = msg_content['parameters']['node']
-        parameters = msg_content['parameters']
         nodeQueueName = None
         # Hier zit ergens een bug!!!!
         if node in registered_nodes:
@@ -225,8 +225,6 @@ class MCQDaemon(object):
             self.logger.info("Starting node session on: {0}".format(node))
             self._registered_nodes_queues[node].send(msg)
 
-
-
         msg = message.MessageContent(
                 from_="USERNAME.LOCUS102.MCQDaemon",
                 forUser="USERRNAME.{0}.NSQDaemon".format(node),
@@ -240,6 +238,7 @@ class MCQDaemon(object):
         msg.payload = msg_content
         self.logger.info("send job to: {0}".format(
                                 self._registered_nodes[node]['CQName']))
+
         self._registered_nodes_queues[node].send(msg)
 
 
@@ -291,11 +290,14 @@ class MCQDaemon(object):
 
         return resultq_name, topic_name
   
-    def _process_stop_msg(self, msg):
+    def _process_stop_msg(self, msg_content):
         """
-         Stop the current session.
+        Stop the current session.
         """
-        self._delete_queues_and_session(msg['uuid'])
+        
+        self.logger.info("deleting session with uuid: {0}".format(uuid))
+
+        self._delete_queues_and_session(msg_content['uuid'])
 
     def _save_state_to_file(self):
         """
@@ -406,10 +408,27 @@ class MCQDaemon(object):
         """
         # first check if the the queues might have been removed:
         # dueue to the nature of message, the delete might be called a second time
-        if uuid not in self._registered_pipelines:
+        if uuid not in self._registered_pipelines.keys():
             return
 
-        self.logger.info("deleting session with uuid: {0}".format(uuid))
+        # send the quit msg to NodeDaemons
+        for node in self._registered_nodes_queues.keys():
+            msg = message.MessageContent(
+                from_="USERNAME.LOCUS102.MCQDaemon",
+                forUser="USERRNAME.{0}.NSQDaemon".format(node),
+                summary="First msg to be send",
+                protocol="CommandQUeueMsg",
+                protocolVersion="0.0.1", 
+                #momid="",
+                #sasid="", 
+                #qpidMsg=None
+                      )
+            start_msg_content = {'command': 'stop_session',
+                             'uuid':uuid}
+            msg.payload = start_msg_content
+            self.logger.info("sending stopped_job to nodes")
+            self._registered_nodes_queues[node].send(msg)
+
         # remove the q and topic
         self._delete_queue_and_topic(uuid)
   
@@ -419,7 +438,7 @@ class MCQDaemon(object):
     def _delete_queue_and_topic(self, uuid):
         """
         Remove and empty queue and topic from the msg router
-        """
+        """        
         # First the queue is removed, True, True forces del even when there are
         # listeners or messages left in the queue
         qname = self._registered_pipelines[uuid]['resultq']
