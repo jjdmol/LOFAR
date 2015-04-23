@@ -1,0 +1,10 @@
+
+--This line, and those below, will be ignored--
+
+M    CEP/Calibration/pyselfcal/src/class_selfcalparam.py
+A    CEP/Calibration/pyselfcal/src/class_dataInit.py
+M    CEP/Calibration/pyselfcal/src/class_selfcalrun.py
+M    CEP/Calibration/pyselfcal/src/CMakeLists.txt
+A    CEP/Calibration/pyselfcal/src/class_selfcalPeeling.py
+M    CEP/Calibration/pyselfcal/src/selfcal.py
+M    CEP/Calibration/pyselfcal/src/class_obsPreprocessing.py
