@@ -23,6 +23,8 @@ import time
 import pickle
 import os
 import uuid
+import pwd
+import socket
 
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
@@ -39,19 +41,26 @@ logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=loggin
 
 class MCQDaemon(object):
     def __init__(self, loop_interval=10, state_file_path=None, init_delay=10):
+        self._hostname = socket.gethostname()
+        self._username = pwd.getpwuid(os.getuid()).pw_name
+
         self.logger = logging.getLogger("MCQDaemon")
         self._loop_interval = loop_interval  # perform loop max once per 
                                              #loop_interval
      
         self._registered_pipelines = {}          # dict of uuid ->(ResultQName,
                                                  #                 LogTopic)
+        self._session_queueus = None             # will contain a current
+                                                 # dict of sessions and queueus
         self._broker = "127.0.0.1" 
-        self._returnQueueTemplate = "MCQDaemon.return.{0}"
-        self._logTopicTemplete = "MCQDaemon.log.{0}"
-        self._nodeCommandQueueTemplate = "username.{0}.NCQueueDaemon.CommandQueue"
+        self._returnQueueTemplate = "MCQDaemon.{0}.return.{1}"
+        self._logTopicTemplate = "MCQDaemon.{0}.log.{1}"
+        self._nodeCommandQueueTemplate = "{0}.{1}.NCQueueDaemon.CommandQueue"
 
 
-        self._CommandQueue = msgbus.FromBus("username.LOCUS102.MCQueueDaemon.CommandQueue", 
+        self._CommandQueue = msgbus.FromBus(
+              "{0}.{1}.MCQueueDaemon.CommandQueue".format(self._username,
+                                                          self._hostname), 
               options = "create:always, node: { type: queue, durable: True}",
               broker = self._broker)
 
@@ -87,7 +96,7 @@ class MCQDaemon(object):
       while(True):   
           begin_tick = datetime.now()
           # 1.  check all registered pipeline queues for disconnects
-          self._check_and_clear_known_queues()
+          self._get_check_and_clear_known_queues()
 
           # 2.  Process all incomming commands
           quit_command_received = self._process_commands()
@@ -201,7 +210,8 @@ class MCQDaemon(object):
             nodeQueueName = registered_nodes[node]['CQName']
         else:
             # TODO: Het maken van deze queueu moet ergens anders
-            nodeQueueName = self._nodeCommandQueueTemplate.format(node)
+            nodeQueueName = self._nodeCommandQueueTemplate.format(
+                                                  self._username, node)
             self._registered_nodes[node]={'CQName':nodeQueueName}
             self._registered_nodes_queues[node] = msgbus.ToBus(nodeQueueName, 
                 options = "create:always, node: { type: queue, durable: True}",
@@ -251,13 +261,14 @@ class MCQDaemon(object):
         It is also responsible to for storing the details of the created objects
         in the internal storage of the Deamon object
         """      
+        uuid = msg_content['uuid']
         # create the needed topic and resultq
-        resultq_name, topic_name = self._create_resultq_and_topic(msg_content['uuid'])
+        session_queue_dict = self._create_resultq_and_topic(uuid)
     
         # store them in the internal pipeline storage
-        self._registered_pipelines[msg_content['uuid']] = {
-                  'resultq':resultq_name,
-                  'topic':topic_name,
+        self._registered_pipelines[uuid] = {
+                  'resultq':session_queue_dict['queue_name'],
+                  'topic':session_queue_dict['topic_name'],
                   'init_wait':self._init_delay,
                   'registered_nodes':{}}
         # init_wait:other option is a time out
@@ -265,6 +276,9 @@ class MCQDaemon(object):
         # so after creating the q is not emediately 'used'.
         # its either a wait or a state or we have a countdown to allow late
         #connections
+
+        self._session_queueus[uuid] = session_queue_dict
+
 
     def _create_resultq_and_topic(self, uuid):
         """
@@ -275,8 +289,8 @@ class MCQDaemon(object):
         there are no listeners
         """
         # create the queues names based on the template
-        resultq_name = self._returnQueueTemplate.format(uuid)
-        topic_name = self._logTopicTemplete.format(uuid)
+        resultq_name = self._returnQueueTemplate.format(self._username, uuid)
+        topic_name = self._logTopicTemplate.format(self._username, uuid)
 
         # now register the queue
         resultQueue = msgbus.ToBus(resultq_name, 
@@ -288,7 +302,13 @@ class MCQDaemon(object):
               options = "create:always, node: { type: topic, durable: True}",
               broker = self._broker)
 
-        return resultq_name, topic_name
+        session_queue_dict = {
+                    'queue_name':resultq_name,
+                    'queue_object':resultQueue,
+                    'topic_name':topic_name,
+                    'topic_object':logTopic}
+
+        return session_queue_dict
   
     def _process_stop_msg(self, msg_content):
         """
@@ -377,16 +397,16 @@ class MCQDaemon(object):
 
         return uuid_dict
 
-    def _check_and_clear_known_queues(self):
+    def _get_check_and_clear_known_queues(self):
         """
         Check all registered session queue for listeners
         If this is zero, the queues will not be read anymore and the process died
 
         Clear the messages in the queues and delete these
         """
-        collect_session_queueus = self._get_queue_and_topic_from_broker()
+        self._session_queueus = self._get_queue_and_topic_from_broker()
 
-        for (uuid, session_dict) in collect_session_queueus.items():
+        for (uuid, session_dict) in self._session_queueus.items():
             # A queue might be in the init period (a grace period which allows an
             # pipelie some time to connect to the bus before the queues are
             # removed)
@@ -430,20 +450,25 @@ class MCQDaemon(object):
             self._registered_nodes_queues[node].send(msg)
 
         # remove the q and topic
-        self._delete_queue_and_topic(uuid)
-  
+        qname = self._registered_pipelines[uuid]['resultq']
+        topicname = self._registered_pipelines[uuid]['topic']
+ 
+        self.logger.error(self._registered_pipelines)
+        self.logger.error(self._session_queueus)
         # delete the entry from the actual dict
+        del self._session_queueus[uuid]
         del self._registered_pipelines[uuid]
 
-    def _delete_queue_and_topic(self, uuid):
+        self._delete_queue_and_topic(qname, topicname)
+
+        
+
+    def _delete_queue_and_topic(self, qname, topicname):
         """
         Remove and empty queue and topic from the msg router
         """        
-        # First the queue is removed, True, True forces del even when there are
-        # listeners or messages left in the queue
-        qname = self._registered_pipelines[uuid]['resultq']
-        topicname = self._registered_pipelines[uuid]['topic']
-        self._brokerAgent.delQueue(qname, True, True)
+        # delete the command queue
+        self._brokerAgent.delQueue(qname, False, False)
 
         # then the topic, there is no pipeline anymore logging does not have target
         # anymore, It is a topic so no need to force the remova;

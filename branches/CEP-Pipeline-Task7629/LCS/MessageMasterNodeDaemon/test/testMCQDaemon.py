@@ -6,6 +6,8 @@ import os
 import logging
 import time
 import threading 
+import pwd
+import socket
 
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
@@ -19,7 +21,7 @@ logger=logging.getLogger("MessageBus")
 
 class logTopicForwarder(threading.Thread):
     """
-    Class used for listening a emptying a log topic
+    Class used for listening to a log topic
 
     usage:
     After initiation it must be started using the start() method
@@ -88,17 +90,22 @@ class MCQDaemonLib(object):
     def __init__(self, logger):
         # Each MCQDaemonLib triggers a session with a uuid, generate and store
         # as a hex
+        self._hostname = socket.gethostname()
+        self._username = pwd.getpwuid(os.getuid()).pw_name
         self.logger = logger
         self._sessionUUID = uuid.uuid4().hex
 
         # should be moved to a config file
         self._broker="127.0.0.1" 
-        self._returnQueueTemplate = "MCQDaemon.return.{0}"
-        self._logTopicTemplate = "MCQDaemon.log.{0}"
+        self._returnQueueTemplate = "MCQDaemon.{0}.return.{1}"
+        self._logTopicTemplate = "MCQDaemon.{0}.log.{1}"
         
-        self._returnQueueName = self._returnQueueTemplate.format(self._sessionUUID)
-        self._logTopicName = self._logTopicTemplate.format(self._sessionUUID)
-        self._queueName = "username.LOCUS102.MCQueueDaemon.CommandQueue"
+        self._returnQueueName = self._returnQueueTemplate.format(self._username,
+                                                            self._sessionUUID)
+        self._logTopicName = self._logTopicTemplate.format(self._username, 
+                                                           self._sessionUUID)
+        self._queueName = "{0}.{1}.MCQueueDaemon.CommandQueue".format(self._username,
+                                                          self._hostname) 
 
         self._resultQueue = None
         self._logTopic    = None
@@ -183,7 +190,7 @@ class MCQDaemonLib(object):
             options = "create:always, node: { type: queue, durable: True}",
             broker = self._broker)
 
-        self._logTopic = msgbus.FromBus(self._logTopicTemplate, 
+        self._logTopic = msgbus.FromBus(self._logTopicName, 
             options = "create:always, node: { type: topic, durable: True}",
             broker = self._broker)
 

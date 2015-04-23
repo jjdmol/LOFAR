@@ -35,7 +35,7 @@ import logging
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
 class NCQDaemon(object):
-    def __init__(self,  loop_interval=10):
+    def __init__(self,  loop_interval=10, clearCOmmandQueue=True):
         self.logger = logging.getLogger("NCQDaemon")
         self._hostname = socket.gethostname()
         self._username = pwd.getpwuid(os.getuid()).pw_name
@@ -44,15 +44,24 @@ class NCQDaemon(object):
                                              #loop_interval
 
         self._broker = "127.0.0.1" 
-        self._returnQueueTemplate = "MCQDaemon.return.{0}"  # they are owned by
-        self._logTopicTemplete = "MCQDaemon.log.{0}"        # the master daemon
+        self._returnQueueTemplate = "MCQDaemon.{0}.return.{1}" # they are owned by
+        self._logTopicTemplate = "MCQDaemon.{0}.log.{1}"       # the master daemon
 
         # create a NON durable queue: We cannot have old msg hanging in this
         # command queue
         self._CommandQueue = msgbus.FromBus(
-              "username.{0}.NCQueueDaemon.CommandQueue".format(self._hostname), 
+              "{0}.{1}.NCQueueDaemon.CommandQueue".format(self._username,
+                                                               self._hostname), 
               options = "create:always, node: { type: queue, durable: False}",
               broker = self._broker)
+
+        # receive and clear command queue on init once.
+        if clearCOmmandQueue:
+            while True:
+                msg = self._CommandQueue.get(0.1)
+                if msg == None:
+                    break
+                self._CommandQueue.ack(msg) 
 
         # The main state holding object: contains session_uuid dict
         # with information about the runs and the registered pipelines
@@ -174,6 +183,7 @@ class NCQDaemon(object):
                         command,
                         cwd=working_dir,
                         env=environment,               # where to get this?
+                        shell=True,
                         stdin=subprocess.PIPE,
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE)
@@ -236,8 +246,8 @@ class NCQDaemon(object):
         might arrive before the pipeline actually connected to the queueus
         """
         # create the queues names based on the template
-        resultq_name = self._returnQueueTemplate.format(uuid)
-        topic_name = self._logTopicTemplete.format(uuid)
+        resultq_name = self._returnQueueTemplate.format(self._username, uuid)
+        topic_name = self._logTopicTemplate.format(self._username, uuid)
 
         # now register to the queues, remember, the pipeline might not have
         # connected so create and make durable. Deleting is done by the 
@@ -274,7 +284,8 @@ class NCQDaemon(object):
         
 
         for job_uuid in self._registered_pipelines[uuid]['jobs'].keys():
-            (process, msg_content) = session_dict['jobs'][job_uuid]
+            (process, msg_content) = self._registered_pipelines[uuid][
+                                                             'jobs'][job_uuid]
 
             # first kill the child:
             process.terminate()
@@ -351,7 +362,7 @@ class NCQDaemon(object):
                                'uuid':uuid,
                                'job_uuid':msg_content['job_uuid']}
 
-                logTopic.send(msg)
+                resultQueue.send(msg)
 
                 del session_dict['jobs'][job_uuid]
 
