@@ -116,7 +116,7 @@ class ToBus(Session):
 
     def send(self, msg):
         try:
-            logger.info("[ToBus] Sending message to queue %s", self.queue)
+            logger.trace("[ToBus] Sending message to queue %s", self.queue)
 
             try:
               # Send Message or MessageContent object
@@ -125,7 +125,7 @@ class ToBus(Session):
               # Send string or messaging.Message object
               self.sender.send(msg)
 
-            logger.info("[ToBus] Message sent to queue %s", self.queue)
+            logger.trace("[ToBus] Message sent to queue %s", self.queue)
         except messaging.SessionError, m:
             raise BusException(m)
 
@@ -147,16 +147,16 @@ class FromBus(Session):
     def get(self, timeout=None):
         msg = None
 
-        logger.info("[FromBus] Waiting for message")
+        logger.trace("[FromBus] Waiting for message")
         try:
             receiver = self.session.next_receiver(timeout)
             if receiver != None:
-                logger.info("[FromBus] Message available on queue %s", receiver.source)
+                logger.trace("[FromBus] Message available on queue %s", receiver.source)
                 msg = receiver.fetch() # receiver.get() is better, but requires qpid 0.31+
                 if msg is None:
-                    logger.error("[FromBus] Could not retrieve available message on queue %s", receiver.source)
+                    logger.trace("[FromBus] Could not retrieve available message on queue %s", receiver.source)
                 else:
-                    logger.info("[FromBus] Message received on queue %s", receiver.source)
+                    logger.trace("[FromBus] Message received on queue %s", receiver.source)
         except messaging.exceptions.Empty, e:
             return None
 
@@ -167,5 +167,5 @@ class FromBus(Session):
 
     def ack(self, msg):
         self.session.acknowledge(msg.qpidMsg())
-        logging.info("[FromBus] Message ACK'ed");
+        logging.trace("[FromBus] Message ACK'ed");
 
