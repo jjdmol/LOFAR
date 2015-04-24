@@ -404,12 +404,23 @@ void FTMachine::initialize_model_grids(Bool normalize_model)
     // Now do the FFT2D in place
     // LatticeFFT::cfft2d takes the 2D FFT over the first two dimensions, and iterates over the rest
     cout << "fft..." << flush;
-    LatticeFFT::cfft2d(*itsComplexModelImages[model]);
-    cout << "done." << endl;
     
+//     LatticeFFT::cfft2d(*itsComplexModelImages[model]);
     itsModelGrids[model].reference(itsComplexModelImages[model]->get());
-    cout << itsComplexModelImages[model]->get().data() << endl;
-    cout << itsModelGrids[model].data() << endl;
+    
+    Complex* ptr = itsModelGrids[model].data();
+    
+    FFTCMatrix fft;
+    for (int ii = 0; ii<itsModelGrids[model].shape()(3); ii++)
+    {
+      for (int jj = 0; jj<itsModelGrids[model].shape()(2); jj++)
+      {
+        cout << ii << "," << jj << " " << ptr << endl;
+        fft.forward (itsPaddedNX, ptr, OpenMP::maxThreads());
+        ptr += itsPaddedNX*itsPaddedNY;
+      }
+    }
+    cout << "done." << endl;
 
   }
   
@@ -516,7 +527,9 @@ void FTMachine::getImages(Matrix<Float>& weights, Bool normalize_image)
 
     CountedPtr<ImageInterface<Complex> > complex_subimage = new SubImage<Complex>(*itsComplexImages[i], Slicer(blc, shape), True);
 
-    normalize(*complex_subimage, True, True);
+    cout << "==========================" << endl;
+    normalize(*complex_subimage, False, True);
+    cout << "==========================" << endl;
 
     
     StokesImageUtil::To(*itsImages[i], *complex_subimage);
@@ -525,7 +538,7 @@ void FTMachine::getImages(Matrix<Float>& weights, Bool normalize_image)
 
 void FTMachine::normalize(ImageInterface<Complex> &image, Bool do_beam, Bool do_spheroidal)
 {
-  cout << "normalize..." << flush;
+  cout << "normalize....." << do_beam << " " << do_spheroidal << endl;
   
   Array<Float> spheroidal;
   
@@ -538,6 +551,7 @@ void FTMachine::normalize(ImageInterface<Complex> &image, Bool do_beam, Bool do_
     IPosition shape(2, itsNX, itsNY, itsNPol, itsNChan);
     
     Slicer slicer(blc, shape);
+    cout << "itsConvFunc->getSpheroidal()" << endl;
     spheroidal.reference(itsConvFunc->getSpheroidal()(slicer));
     cout << "spheroidal shape: " << spheroidal.shape() << endl;
   }
