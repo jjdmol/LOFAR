@@ -77,7 +77,6 @@ class NCQDaemon(object):
 
       """
       while(True):   
-          print self._registered_pipelines
           begin_tick = datetime.now()
           # 1.  Process the stored work items
           self._process_registered_sessions()
@@ -296,6 +295,56 @@ class NCQDaemon(object):
         del self._registered_pipelines[uuid]
 
 
+    def _send_log_message(self, logTopic, log_data, level='info'):
+        """
+        Send a logging msg  with log_data to the logTOpic at the level
+
+        msg_details:
+        {'level'=level, 'log_data':log_data}
+        """
+        
+        msg = message.MessageContent(
+                from_="{0}.{1}.NCQDaemon".format(
+                        self._username, self._hostname),
+                forUser="{0}.MSQDaemon".format(self._username),
+                summary="NCQDaemon log message",
+                protocol="CommandQUeueLogMsg",
+                protocolVersion="0.0.1", 
+                #momid="",
+                #sasid="", 
+                #qpidMsg=None
+                      )
+        msg.payload = {'level':   level,
+                       'log_data':log_data}
+
+        logTopic.send(msg)
+
+    def _send_job_exit_message(self, resultQueue, exit_dict):
+        """
+        Send a job exit information msg
+
+        msg_details:
+                    {'exit_value':exit_status,
+                     'uuid':uuid,
+                     'job_uuid':msg_content['job_uuid']}
+        """
+        
+        msg = message.MessageContent(
+                from_="{0}.{1}.NCQDaemon".format(
+                        self._username, self._hostname),
+                forUser="{0}.MSQDaemon".format(self._username),
+                summary="NCQDaemon job exit message",
+                protocol="CommandQUeueExitMsg",
+                protocolVersion="0.0.1", 
+                #momid="",
+                #sasid="", 
+                #qpidMsg=None
+                      )
+        msg.payload = exit_dict
+        resultQueue.send(msg)  
+        
+             
+
     def _process_registered_sessions(self):
         """
         process the internally stored session items.
@@ -318,51 +367,17 @@ class NCQDaemon(object):
                 (stdoutdata, stderrdata) = process.communicate()
                 exit_status = process.returncode
 
-                
+                # Send the logging information not created using the default
+                # lofar logger
+                self._send_log_message(logTopic, stdoutdata, level='info')
+                self._send_log_message(logTopic, stderrdata, level='error')
 
-                msg = message.MessageContent(
-                from_="USERNAME.LOCUS102.MCQDaemonLib",
-                forUser="USERRNAME.LOCUS102.MSQDaemon",
-                summary="First msg to be send",
-                protocol="CommandQUeueMsg",
-                protocolVersion="0.0.1", 
-                #momid="",
-                #sasid="", 
-                #qpidMsg=None
-                      )
-                msg.payload = stdoutdata
-                logTopic.send(msg)
-
-                msg = message.MessageContent(
-                from_="USERNAME.LOCUS102.MCQDaemonLib",
-                forUser="USERRNAME.LOCUS102.MSQDaemon",
-                summary="First msg to be send",
-                protocol="CommandQUeueMsg",
-                protocolVersion="0.0.1", 
-                #momid="",
-                #sasid="", 
-                #qpidMsg=None
-                      )
-                msg.payload = stderrdata
-                logTopic.send(msg)
-
-
-
-                msg = message.MessageContent(
-                from_="USERNAME.LOCUS102.MCQDaemonLib",
-                forUser="USERRNAME.LOCUS102.MSQDaemon",
-                summary="First msg to be send",
-                protocol="CommandQUeueMsg",
-                protocolVersion="0.0.1", 
-                #momid="",
-                #sasid="", 
-                #qpidMsg=None
-                      )
-                msg.payload = {'exit_value':exit_status,
+                # send the exit state to the resultsQueue
+                payload = {'exit_value':exit_status,
                                'uuid':uuid,
                                'job_uuid':msg_content['job_uuid']}
 
-                resultQueue.send(msg)
+                self._send_job_exit_message(resultQueue, payload )
 
                 del session_dict['jobs'][job_uuid]
 

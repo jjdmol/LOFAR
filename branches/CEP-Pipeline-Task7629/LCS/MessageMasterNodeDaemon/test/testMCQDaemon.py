@@ -27,7 +27,7 @@ class logTopicForwarder(threading.Thread):
     After initiation it must be started using the start() method
     setStopFlag() stops the forwarder
     """
-    def __init__(self, logTopic, logger=None,  poll_interval=1.0):
+    def __init__(self, logTopicName, logger=None,  poll_interval=1.0,):
         """
         Create the usage stat object. Create events for starting and stopping.
         By default the Process creating the object is tracked.
@@ -39,13 +39,38 @@ class logTopicForwarder(threading.Thread):
         self.lock = threading.Lock()
         self.poll_interval = poll_interval
         self.poll_counter = 0
+        self._broker="127.0.0.1" 
+        self._logTopicName = logTopicName
+        self._logTopic = msgbus.FromBus(self._logTopicName, 
+            options = "create:always, node: { type: topic, durable: True}",
+            broker = self._broker)
             
     def __del__(self):
         """
         Clean up the temp file after the file is not in use anymore
         """
         pass
-            
+
+
+    def _process_log_message(self, msg_content):
+        """
+        Parse log message and send it to the logger at the correct level
+        """
+        level = msg_content['level']
+        log_data = msg_content['log_data'].strip()  #remove trailing whitespace
+        if level == 'critical':
+            self.logger.critical(log_data)
+        elif level == 'error':
+            self.logger.error(log_data)
+        elif level == 'warning':
+            self.logger.warning(log_data)
+        elif level == 'info':
+            self.logger.info(log_data)
+        elif level == 'debug':
+            self.logger.debug(log_data)
+        else:
+            self.logger.debug(log_data)
+
 
     def run(self):
         """
@@ -55,16 +80,21 @@ class logTopicForwarder(threading.Thread):
         sleep for poll_interval
         """
         while not self.stopFlag.isSet():
-            # If the timer waits for the full 10 minutes using scripts
-            # appear halting for lnog durations after ending
-            # poll in a tight wait loop to allow quick stop
+            # timer
+            
             if self.poll_counter < self.poll_interval:
                 self.poll_counter += 0.1
                 time.sleep(0.1)
                 continue
 
             # reset the counter to zero
-            self.poll_counter = 0           
+            self.poll_counter = 0       
+            msg = self._logTopic.get(0.1)  # get is blocking, always use timeout.
+            if msg == None:
+               continue    # Break the loop, we will wait on a other location
+            # currently the expected payload is a list
+            msg_content = eval(msg.content().payload)
+            self._process_log_message(msg_content)
  
     def setStopFlag(self):
         """
@@ -106,7 +136,7 @@ class MCQDaemonLib(object):
                                                            self._sessionUUID)
         self._queueName = "{0}.{1}.MCQueueDaemon.CommandQueue".format(self._username,
                                                           self._hostname) 
-
+        print self._logTopicName
         self._resultQueue = None
         self._logTopic    = None
 
@@ -129,7 +159,8 @@ class MCQDaemonLib(object):
         self._connect_to_queue_and_topic()
 
         # Start the log poller in a seperate thread.
-        self._logTopicForwarder = logTopicForwarder(self._logTopic, self.logger)
+        self._logTopicForwarder = logTopicForwarder(self._logTopicName,
+                   self.logger)
         self._logTopicForwarder.start()
 
   
@@ -205,6 +236,8 @@ class MCQDaemonLib(object):
         #
         print "we have received a quit command!!!!!!!"
         # First disconnect from the queues
+
+        self._logTopicForwarder.setStopFlag()
         self._resultQueue.close()
         self._logTopic.close()
         
@@ -274,7 +307,7 @@ if __name__ == "__main__":
     parameters = {'node':'locus102',
                   #'cmd': '/home/klijn/build/7629/gnu_debug/installed/lib/python2.6/dist-packages/lofarpipe/recipes/nodes/test_recipe.py',
                   'environment':environment,
-                  'cmd': 'ls',
+                  'cmd': 'echo test',
                   #'cmd': """echo 'print "test"' | python """,
                   #'cmd':""" echo  "test" """,
                   'cdw': '/home/klijn',
@@ -286,10 +319,10 @@ if __name__ == "__main__":
 
     MCQLib.run_job(parameters)
     # Connect to the HCQDaemon
-    time.sleep(2)
+    time.sleep(5)
     MCQLib._release()
 
-    time.sleep(1)
+    time.sleep(3)
 
     #if __name__ == "__main__":
     #    daemon = MCQ.MCQDaemon("daemon_state_file.pkl", 1, 2)
