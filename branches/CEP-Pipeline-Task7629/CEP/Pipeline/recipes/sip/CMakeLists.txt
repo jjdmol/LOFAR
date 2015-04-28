@@ -31,6 +31,7 @@ python_install(
   master/selfcal_awimager.py
   master/selfcal_bbs.py
   master/selfcal_finalize.py
+  master/test_recipe.py
   nodes/__init__.py
   nodes/bbs_reducer.py
   nodes/copier.py

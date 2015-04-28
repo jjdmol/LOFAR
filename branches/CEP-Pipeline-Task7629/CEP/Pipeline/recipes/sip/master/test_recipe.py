@@ -17,7 +17,7 @@ class test_recipe(BaseRecipe, RemoteCommandRecipeMixIn):
  
     """
     inputs = {
-        'executable': ingredient.ExecField(
+        'executable': ingredient.StringField(
             '--executable',
             help = "The full path to the  awimager executable"
         )
@@ -32,20 +32,17 @@ class test_recipe(BaseRecipe, RemoteCommandRecipeMixIn):
         This member contains all the functionality of the imager_awimager.
         Functionality is all located at the node side of the script.
         """
-        super(imager_awimager, self).go()
-        self.logger.info("Starting imager_awimager run")
+        super(test_recipe, self).go()
+        self.logger.info("Starting test_recipe run")
 
         # *********************************************************************
         # 1. collect the inputs and validate
         input_map = DataMap.load(self.inputs['args'][0])
-        sourcedb_map = DataMap.load(self.inputs['sourcedb_path'])
 
-        if not validate_data_maps(input_map, sourcedb_map):
+        if not validate_data_maps(input_map):
             self.logger.error(
-                        "the supplied input_ms mapfile and sourcedb mapfile"
-                        "are incorrect. Aborting")
+                        "the supplied input_ms mapfile is corrupt")
             self.logger.error(repr(input_map))
-            self.logger.error(repr(sourcedb_map))
             return 1
 
         # *********************************************************************
@@ -55,35 +52,25 @@ class test_recipe(BaseRecipe, RemoteCommandRecipeMixIn):
         jobs = []
 
         output_map = copy.deepcopy(input_map)        
-        for w, x, y in zip(input_map, output_map, sourcedb_map):
-            w.skip = x.skip = y.skip = (
-                w.skip or x.skip or y.skip
+        for w, x, y in zip(input_map, output_map):
+            w.skip = x.skip = (
+                w.skip or x.skip 
             )
 
-        sourcedb_map.iterator = input_map.iterator = output_map.iterator = \
+        input_map.iterator = output_map.iterator = \
             DataMap.SkipIterator
 
-        for measurement_item, source_item in zip(input_map, sourcedb_map):
-            if measurement_item.skip or source_item.skip:
+        for measurement_item in input_map:
+            if measurement_item.skip:
                 jobs.append(None)
                 continue
             # both the sourcedb and the measurement are in a map
             # unpack both
             host , measurement_path = measurement_item.host, measurement_item.file
-            host2 , sourcedb_path = source_item.host, source_item.file
 
             # construct and save the output name
             arguments = [self.inputs['executable'],
                          self.environment,
-                         self.inputs['parset'],
-                         self.inputs['working_directory'],
-                         self.inputs['output_image'],
-                         measurement_path,
-                         sourcedb_path,
-                         self.inputs['mask_patch_size'],
-                         self.inputs['autogenerate_parameters'],
-                         self.inputs['specify_fov'],
-                         self.inputs['fov'],
                          ]
 
             jobs.append(ComputeJob(host, node_command, arguments))
@@ -129,5 +116,5 @@ class test_recipe(BaseRecipe, RemoteCommandRecipeMixIn):
 
 
 if __name__ == "__main__":
-    sys.exit(imager_awimager().main())
+    sys.exit(test_recipe().main())
 

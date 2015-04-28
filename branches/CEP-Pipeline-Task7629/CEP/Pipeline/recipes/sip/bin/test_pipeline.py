@@ -71,48 +71,56 @@ class test_pipeline(control):
         # *********************************************************************
         # (INPUT) Get the input from external sources and create pipeline types
         # Input measure ment sets
-        input_mapfile = os.path.join(self.mapfile_dir, "uvdata.mapfile")
+        input_mapfile = os.path.join(self.mapfile_dir, "input.mapfile")
         self.input_data.save(input_mapfile)
 
         # storedata_map(input_mapfile, self.input_data)
         self.logger.debug(
-            "Wrote input UV-data mapfile: {0}".format(input_mapfile))
+            "Wrote input  mapfile: {0}".format(input_mapfile))
 
         # images datafiles
-        output_image_mapfile = os.path.join(self.mapfile_dir, "images.mapfile")
-        self.output_data.save(output_image_mapfile)
+        output_mapfile = os.path.join(self.mapfile_dir, "output.mapfile")
+        self.output_data.save(output_mapfile)
         self.logger.debug(
-            "Wrote output sky-image mapfile: {0}".format(output_image_mapfile))
+            "Wrote output mapfile: {0}".format(output_mapfile))
 
 
         # ******************************************************************
-        # (1) prepare phase: copy and collect the ms
-        concat_ms_map_path, timeslice_map_path, ms_per_image_map_path, \
-            processed_ms_dir = self._prepare_phase(input_mapfile,
-                                    target_mapfile, add_beam_tables)
+        # (1) Start the test recipe
+        output_mapfile_testphase = self._test_phase(input_mapfile,
+                                                    output_mapfile)
 
 
-        # *********************************************************************
-        # (7) Get metadata
-        # create a parset with information that is available on the toplevel
-        toplevel_meta_data = parameterset()
-        toplevel_meta_data.replace("numberOfMajorCycles", 
-                                           str(number_of_major_cycles))
+        ## *********************************************************************
+        ## (7) Get metadata
+        ## create a parset with information that is available on the toplevel
 
-        # Create a parset containing the metadata for MAC/SAS at nodes
-        metadata_file = "%s_feedback_SkyImage" % (self.parset_file,)
-        self.run_task("get_metadata", placed_data_image_map,
-            parset_prefix = (
-                full_parset.getString('prefix') +
-                full_parset.fullModuleName('DataProducts')
-            ),
-            product_type = "SkyImage",
-            metadata_file = metadata_file)
+        ## Create a parset containing the metadata for MAC/SAS at nodes
+        #metadata_file = "%s_feedback_SkyImage" % (self.parset_file,)
+        #self.run_task("get_metadata", placed_data_image_map,
+        #    parset_prefix = (
+        #        full_parset.getString('prefix') +
+        #        full_parset.fullModuleName('DataProducts')
+        #    ),
+        #    product_type = "SkyImage",
+        #    metadata_file = metadata_file)
 
-        self.send_feedback_processing(toplevel_meta_data)
-        self.send_feedback_dataproducts(parameterset(metadata_file))
+        #self.send_feedback_processing(toplevel_meta_data)
+        #self.send_feedback_dataproducts(parameterset(metadata_file))
 
         return 0
+
+    @xml_node
+    def _test_phase(self, input_map_path, output_mapfile):
+        """
+        """
+
+
+        outputs = self.run_task("test_recipe", input_map_path,
+                executable = "ls")
+
+        # Return the mapfiles paths with processed data
+        return output_mapfile
 
     def _get_io_product_specs(self):
         """
