@@ -128,14 +128,7 @@ class NCQDaemon(object):
                 
                  
             elif command == 'run_job':
-                #try:
-                    self._process_start_job(msg_content)
-
-                ##except Exception, ex:
-                #    self.logger.info("received an invalid job msg:")
-                #    self.logger.info(msg_content)
-                    
-                
+                    self._process_start_job(msg_content)       
                     self._CommandQueue.ack(msg)     
 
             elif command == 'quit':
@@ -153,9 +146,6 @@ class NCQDaemon(object):
         """
 
         """
-        self.logger.info("WOOOOOT WE have received a msg")
-        self.logger.info(msg_content)
-
         command     = msg_content['parameters']['cmd']
         working_dir = msg_content['parameters']['cdw']
         environment = msg_content['parameters']['environment']
@@ -190,7 +180,7 @@ class NCQDaemon(object):
             self.logger.error("Received an command that failed in subprocesses:")
             self.logger.error(command)
             self.logger.error(str(ex))
-            return    # exit, do not store the job
+            raise ex    # exit, do not store the job
 
 
         # store the now created job in the list of jobs for this pipeline
@@ -266,10 +256,12 @@ class NCQDaemon(object):
         """
          Stop the current session.
         """
+        uuid = msg['uuid']
+        self.logger.info("Received stop command for uuid: {0}".format(uuid))
         # Send stop msg the subprocesses that are part of this run 
         # TODO: Still te be implemented
         # After killing the jobs. Remove the uuid from the internal storage
-        self._kill_session_jobs(msg['uuid'])
+        self._kill_session_jobs(uuid)
 
 
     def _kill_session_jobs(self, uuid):

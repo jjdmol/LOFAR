@@ -147,14 +147,8 @@ class MCQDaemon(object):
                 self._CommandQueue.ack(msg)        
 
             elif command == 'run_job':
-                #try:
-                    self._process_start_job(msg_content)
-
-                #except:
-                    self.logger.info("received an invalid job msg:")
-                    self.logger.info(msg_content)
-
-                    self._CommandQueue.ack(msg)      
+                self._process_start_job(msg_content)
+                self._CommandQueue.ack(msg)      
 
             elif command == 'quit':
                 self._process_quit_msg(msg_content)
@@ -187,28 +181,16 @@ class MCQDaemon(object):
             pass
 
 
-    def _process_start_job(self, msg_content):
+    def _check_slave_and_connect(self, node):
         """
-        The meat of the Master node Daemon functionality.
-
-        The starting of a job on one of the node servers.
+        Checks if a node is connect and created a msg queue connect if needed
         """
-        self.logger.info(msg_content)
-        
-
-        registered_nodes = self._registered_pipelines[
-              msg_content['uuid']]['registered_nodes']
-        self.logger.info(registered_nodes)
-
-
-        # extract the job parameters from the msg
-        # Should be stored in the internal storage
-        node = msg_content['parameters']['node']
-        nodeQueueName = None
-        # Hier zit ergens een bug!!!!
-        if node in registered_nodes:
-            nodeQueueName = registered_nodes[node]['CQName']
+        if node in self._registered_nodes.keys():
+            nodeQueueName = self._registered_nodes[node]['CQName']
         else:
+            self.logger.debug(
+                "received job for unconnected slave: {0}".format(node))
+
             # TODO: Het maken van deze queueu moet ergens anders
             nodeQueueName = self._nodeCommandQueueTemplate.format(
                                                   self._username, node)
@@ -217,8 +199,15 @@ class MCQDaemon(object):
                 options = "create:always, node: { type: queue, durable: True}",
                 broker = self._broker)
 
-            # Send the node the start_session command
 
+    def _check_session_and_start(self, node, uuid):
+        """
+        Checks if a node is connect and created a msg queue connect if needed
+        """
+        if uuid not in self._registered_pipelines.keys():
+            return
+        if node not in self._registered_pipelines[uuid]['session_nodes']:
+            # Send the node the start_session command
             msg = message.MessageContent(
                 from_="USERNAME.LOCUS102.MCQDaemon",
                 forUser="USERRNAME.{0}.NSQDaemon".format(node),
@@ -230,10 +219,27 @@ class MCQDaemon(object):
                 #qpidMsg=None
                       )
             start_msg_content = {'command': 'start_session',
-                                 'uuid':msg_content['uuid']}
+                                 'uuid':uuid}
             msg.payload = start_msg_content
             self.logger.info("Starting node session on: {0}".format(node))
             self._registered_nodes_queues[node].send(msg)
+            self._registered_pipelines[uuid]['session_nodes'].append(node)
+
+
+    def _process_start_job(self, msg_content):
+        """
+        The meat of the Master node Daemon functionality.
+
+        The starting of a job on one of the node servers.
+        """
+        # extract the job parameters from the msg
+        # Should be stored in the internal storag2
+        uuid = msg_content['uuid']
+        node = msg_content['parameters']['node']
+
+        self._check_slave_and_connect(node)
+
+        self._check_session_and_start(node, uuid)
 
         msg = message.MessageContent(
                 from_="USERNAME.LOCUS102.MCQDaemon",
@@ -251,8 +257,7 @@ class MCQDaemon(object):
 
         self._registered_nodes_queues[node].send(msg)
 
-
-        
+    
 
     def _process_start_session_msg(self, msg_content):
         """
@@ -262,6 +267,7 @@ class MCQDaemon(object):
         in the internal storage of the Deamon object
         """      
         uuid = msg_content['uuid']
+        self.logger.info("started session with uuid: {0}".format(uuid))
         # create the needed topic and resultq
         session_queue_dict = self._create_resultq_and_topic(uuid)
     
@@ -270,7 +276,7 @@ class MCQDaemon(object):
                   'resultq':session_queue_dict['queue_name'],
                   'topic':session_queue_dict['topic_name'],
                   'init_wait':self._init_delay,
-                  'registered_nodes':{}}
+                  'session_nodes':[]}
         # init_wait:other option is a time out
         # the problem is that the pipeline can only connect to an existing q
         # so after creating the q is not emediately 'used'.
@@ -446,15 +452,14 @@ class MCQDaemon(object):
             start_msg_content = {'command': 'stop_session',
                              'uuid':uuid}
             msg.payload = start_msg_content
-            self.logger.info("sending stopped_job to nodes")
+            self.logger.info("sending stop_session to nodes")
             self._registered_nodes_queues[node].send(msg)
 
         # remove the q and topic
         qname = self._registered_pipelines[uuid]['resultq']
         topicname = self._registered_pipelines[uuid]['topic']
  
-        self.logger.error(self._registered_pipelines)
-        self.logger.error(self._session_queueus)
+        self.logger.info("Deleted queues for session uuid: {0}".format(uuid))
         # delete the entry from the actual dict
         del self._session_queueus[uuid]
         del self._registered_pipelines[uuid]

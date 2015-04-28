@@ -9,5 +9,5 @@ install(PROGRAMS
 
 
 python_install(
-  MCQDaemon.py
+  MCQLib.py
   DESTINATION lofar/messagebus)
