@@ -7,7 +7,8 @@ import logging
 import time
 import threading 
 import pwd
-import socket
+import socket  # needed for username TODO: is misschien een betere manier os.environ['USER']
+import signal
 
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
@@ -19,7 +20,13 @@ from qmf.console import Session as QMFSession
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 logger=logging.getLogger("MessageBus")
 
-class logTopicForwarder(threading.Thread):
+#Handler for stopping the logTopicHandler
+logTopicStopFlag = threading.Event()
+def logTopicStopHandler(signum, stack):
+    logTopicStopFlag.set()
+    exit(signum)
+
+class logTopicHandler(threading.Thread):
     """
     Class used for listening to a log topic
 
@@ -35,22 +42,19 @@ class logTopicForwarder(threading.Thread):
         """
         threading.Thread.__init__(self)
         self.logger = logger
-        self.stopFlag = threading.Event()
-        self.lock = threading.Lock()
+        self.stopFlag = logTopicStopFlag    # from 'global' scope
         self.poll_interval = poll_interval
         self.poll_counter = 0
+
         self._broker="127.0.0.1" 
         self._logTopicName = logTopicName
+        self.logger.info(
+              "Connecting to session specific logTopic: {0}".format(
+                                                           self._logTopicName))
         self._logTopic = msgbus.FromBus(self._logTopicName, 
             options = "create:always, node: { type: topic, durable: True}",
             broker = self._broker)
-            
-    def __del__(self):
-        """
-        Clean up the temp file after the file is not in use anymore
-        """
-        pass
-
+        self.logger.info("COnnection with logTopic established")
 
     def _process_log_message(self, msg_content):
         """
@@ -71,43 +75,53 @@ class logTopicForwarder(threading.Thread):
         else:
             self.logger.debug(log_data)
 
-
     def run(self):
         """
-        Run function. 
+        Run function, the work horse of the handler
 
         While no stopflag is set:
         sleep for poll_interval
         """
         while not self.stopFlag.isSet():
-            # timer
-            
+            self.logger.info("Polling logTopic")
+            # We do not want to listen in a tight loop. read the msg each 
+            # pollinterval           
             if self.poll_counter < self.poll_interval:
                 self.poll_counter += 0.1
                 time.sleep(0.1)
                 continue
 
-            # reset the counter to zero
+            # reset the counter to zero, and restart the wait period
             self.poll_counter = 0       
-            msg = self._logTopic.get(0.1)  # get is blocking, always use timeout.
-            if msg == None:
-               continue    # Break the loop, we will wait on a other location
-            # currently the expected payload is a list
-            msg_content = eval(msg.content().payload)
-            self._process_log_message(msg_content)
+
+            # now empty the queue
+            while True:
+                # get is blocking, always use timeout.
+                msg = self._logTopic.get(0.1)  
+                if msg == None:
+                    break   # break the loop
+
+                # process the log data
+                msg_content = eval(msg.content().payload)
+                self._process_log_message(msg_content)
  
     def setStopFlag(self):
         """
         Stop the monitor
         """
         self.stopFlag.set()
-     
+
+    def __del__(self):
+        """
+        Clean up the temp file after the file is not in use anymore
+        """
+        self._logTopic.close()
 
 
 class MCQDaemonLib(object):
     """
     Interface lib connecting to a local MCQDaemon command queue.
-    Hides all queue interactions behind function specific functions.
+    Hides all queue interactions behind functions
 
     1. Connect to the command queue
 
@@ -120,12 +134,20 @@ class MCQDaemonLib(object):
     def __init__(self, logger):
         # Each MCQDaemonLib triggers a session with a uuid, generate and store
         # as a hex
-        self._hostname = socket.gethostname()
-        self._username = pwd.getpwuid(os.getuid()).pw_name
         self.logger = logger
+
+        # It is the dict that 'owns' the session information, the container
+        # for state information
+        self._running_jobs = {}
+        self._running_jobs_lock = threading.Lock()
+        # some static information for this session
+        self._hostname = socket.gethostname()
+        self._username = pwd.getpwuid(os.getuid()).pw_name       
         self._sessionUUID = uuid.uuid4().hex
 
-        # should be moved to a config file
+        # Create the queue names based on the static information. 
+        # TODO: This should be moved to a config file, shared between
+        # the components of the MasterNodeCommandQueue Framework
         self._broker="127.0.0.1" 
         self._returnQueueTemplate = "MCQDaemon.{0}.return.{1}"
         self._logTopicTemplate = "MCQDaemon.{0}.log.{1}"
@@ -134,22 +156,16 @@ class MCQDaemonLib(object):
                                                             self._sessionUUID)
         self._logTopicName = self._logTopicTemplate.format(self._username, 
                                                            self._sessionUUID)
-        self._queueName = "{0}.{1}.MCQueueDaemon.CommandQueue".format(self._username,
-                                                          self._hostname) 
-        print self._logTopicName
+        self._masterCommandQueueName = \
+                "{0}.{1}.MCQueueDaemon.CommandQueue".format(self._username,
+                                                            self._hostname) 
+
+        # Place holders of the queues owned by the lib
         self._resultQueue = None
         self._logTopic    = None
 
-        # It is the lib that 'owns' the session and 
-        self._running_jobs = {}
-
-        # Connect to the HCQDaemon
-        self._sendCommandQueue = msgbus.ToBus(self._queueName, 
-            options = "create:always, node: { type: queue, durable: True}",
-            broker = self._broker)
-
         # Check state, raise exception if incorrect
-        self._check_queue_and_daemon_state()
+        self._connect_to_master(self._masterCommandQueueName)
 
         # Send a start session command with the correct details to the
         # HCQDaemon
@@ -158,13 +174,19 @@ class MCQDaemonLib(object):
         # Now connect to the created topic and resultQ
         self._connect_to_queue_and_topic()
 
-        # Start the log poller in a seperate thread.
-        self._logTopicForwarder = logTopicForwarder(self._logTopicName,
+        # Start the log poller (in a seperate thread).
+            # If we receive a SIGTERM, shut down processing.
+        
+        self._logTopicForwarder = logTopicHandler(self._logTopicName,
                    self.logger)
+        signal.signal(signal.SIGTERM, 
+                      logTopicStopHandler)   # from 'global' scope
+        signal.signal(signal.SIGINT, 
+                      logTopicStopHandler)
         self._logTopicForwarder.start()
 
   
-    def _check_queue_and_daemon_state(self):
+    def _connect_to_master(self, masterCommandQueueName):
         """
         Helper function for the __init__ member
 
@@ -175,6 +197,13 @@ class MCQDaemonLib(object):
         Raise Exceptions on errors
         else returns with void
         """
+        # Connect to the master queue
+        self.logger.info("Connection to masterCommandQueue:{0}".format(
+                                       masterCommandQueueName))
+        self._masterCommandQueue = msgbus.ToBus(masterCommandQueueName, 
+            options = "create:always, node: { type: queue, durable: True}",
+            broker = self._broker)
+
         # Check for consumers: We need to know if the deamon is active before
         # we can send commands
         session=QMFSession()
@@ -184,14 +213,18 @@ class MCQDaemonLib(object):
 
         nr_consumers_of_CQ = None
         for queue_item in queues:
-            if self._queueName in queue_item.name :
+            if self._masterCommandQueueName in queue_item.name :
                 nr_consumers_of_CQ = queue_item.consumerCount
+                break # We have the info we need, break the loop over all queues
 
         if nr_consumers_of_CQ == None:
             raise Exception("Could not find command queue, is QPID enabled?")
 
         if nr_consumers_of_CQ == 0:
-            raise Exception("No HeadNodeCommandQueueDaemon detected, aborting")
+            raise Exception("No HeadNodeCommandQueueDaemon detected, aborting"
+                            " A MasterDaemon should be active.")
+
+        self.logger.info("Connection established and Master is active")
 
 
     def _start_session(self):
@@ -210,22 +243,21 @@ class MCQDaemonLib(object):
                 #qpidMsg=None
                       )
         msg.payload = {"command":"start_session", "uuid":self._sessionUUID}
-        self._sendCommandQueue.send(msg)
+        self._masterCommandQueue.send(msg)
 
     def _connect_to_queue_and_topic(self):
         """ 
         Connect the topic and command queue that have been created by send
         session command to the daemon
         """
+        self.logger.info("Connecting to returnQueue.")
         self._resultQueue = msgbus.FromBus(self._returnQueueName, 
             options = "create:always, node: { type: queue, durable: True}",
             broker = self._broker)
+        self.logger.info("Connecting to returnQueue and logTopic. Done")
 
-        self._logTopic = msgbus.FromBus(self._logTopicName, 
-            options = "create:always, node: { type: topic, durable: True}",
-            broker = self._broker)
-
-    #def __del__(self)
+    def __del__(self):
+        self._release()
 
     def _release(self):
         """
@@ -234,14 +266,12 @@ class MCQDaemonLib(object):
         session uuid 
         """
         #
-        print "we have received a quit command!!!!!!!"
-        # First disconnect from the queues
-
-        self._logTopicForwarder.setStopFlag()
-        self._resultQueue.close()
-        self._logTopic.close()
+        self.logger.info(
+                   "End of session. Sending stop_session command to master")
         
+        # First disconnect from the queues
         self._logTopicForwarder.setStopFlag()
+        self._resultQueue.close()        
 
         # create the header for the stop command
         msg = message.MessageContent(
@@ -257,7 +287,7 @@ class MCQDaemonLib(object):
                       )
         # the content
         msg.payload = {"command":"stop_session", "uuid":self._sessionUUID}
-        self._sendCommandQueue.send(msg)
+        self._masterCommandQueue.send(msg)
 
 
     def run_job(self, parameters):
@@ -280,29 +310,35 @@ class MCQDaemonLib(object):
                        "uuid":self._sessionUUID,
                        'job_uuid':job_uuid,
                        "parameters":parameters}
-
-        self._sendCommandQueue.send(msg)
-
-        self._running_jobs[job_uuid] = {'payload':copy.deepcopy(msg.payload),
+        self.logger.info("Starting job: {0}".format(msg.payload))
+        self._masterCommandQueue.send(msg)
+        with self._running_jobs_lock:
+            self._running_jobs[job_uuid] = {'payload':copy.deepcopy(msg.payload),
                                         'completed':False}
 
         # wait until the job returns then return, this needs a lock around the
         # running jobs object.
+        poll_interval = 1  # check for results each second
+        while True:
+            time.sleep(poll_interval)
+
+            with self._running_jobs_lock:
+                if self._running_jobs[job_uuid]['completed']:     
+                      return self._running_jobs[job_uuid]['return_value']
 
 
+            
 
-        
+    
+       
 
 if __name__ == "__main__":
-    print "Hello world"
-
     MCQLib = MCQDaemonLib(logger)
 
     environment = dict(
             (k, v) for (k, v) in os.environ.iteritems()
                 if k.endswith('PATH') or k.endswith('ROOT') or k == 'QUEUE_PREFIX'
         )
-
 
     parameters = {'node':'locus102',
                   #'cmd': '/home/klijn/build/7629/gnu_debug/installed/lib/python2.6/dist-packages/lofarpipe/recipes/nodes/test_recipe.py',
@@ -322,7 +358,7 @@ if __name__ == "__main__":
     time.sleep(5)
     MCQLib._release()
 
-    time.sleep(3)
+    time.sleep(1)
 
     #if __name__ == "__main__":
     #    daemon = MCQ.MCQDaemon("daemon_state_file.pkl", 1, 2)
