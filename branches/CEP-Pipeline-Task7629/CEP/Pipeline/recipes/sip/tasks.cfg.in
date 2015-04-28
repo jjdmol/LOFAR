@@ -117,3 +117,7 @@ bbs_executable = %(lofarroot)s/bin/bbs-reducer
 recipe = selfcal_finalize
 fillrootimagegroup_exec = %(lofarroot)s/bin/fillRootImageGroup
 msselect_executable = %(lofarroot)s/bin/msselect
+
+[test]
+recipe = test
+
