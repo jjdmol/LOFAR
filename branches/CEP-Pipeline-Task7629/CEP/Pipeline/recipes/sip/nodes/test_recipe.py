@@ -14,11 +14,13 @@ from lofarpipe.support.lofarnode import LOFARnodeTCP
 class test_recipe(LOFARnodeTCP):
     """
     """
-    def run(self, files, executable, parset, environment):
+    def run(self, files, executable,  environment):
         """
         """
 
         self.environment.update(environment)
+
+        self.outputs["output"] = "output"
         # Time execution of this job
         return 0
 

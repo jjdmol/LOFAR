@@ -117,6 +117,7 @@ class test_pipeline(control):
 
 
         outputs = self.run_task("test_recipe", input_map_path,
+                output_map_path = output_mapfile,
                 executable = "ls")
 
         # Return the mapfiles paths with processed data

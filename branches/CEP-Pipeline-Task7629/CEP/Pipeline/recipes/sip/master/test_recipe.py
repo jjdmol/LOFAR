@@ -19,7 +19,11 @@ class test_recipe(BaseRecipe, RemoteCommandRecipeMixIn):
     inputs = {
         'executable': ingredient.StringField(
             '--executable',
-            help = "The full path to the  awimager executable"
+            help = "A parameter"
+        ),
+        'output_map_path': ingredient.StringField(
+            '--output-map-path',
+            help = "The path for the output mapfile"
         )
     }
 
@@ -52,7 +56,7 @@ class test_recipe(BaseRecipe, RemoteCommandRecipeMixIn):
         jobs = []
 
         output_map = copy.deepcopy(input_map)        
-        for w, x, y in zip(input_map, output_map):
+        for w, x in zip(input_map, output_map):
             w.skip = x.skip = (
                 w.skip or x.skip 
             )
@@ -69,8 +73,10 @@ class test_recipe(BaseRecipe, RemoteCommandRecipeMixIn):
             host , measurement_path = measurement_item.host, measurement_item.file
 
             # construct and save the output name
-            arguments = [self.inputs['executable'],
-                         self.environment,
+            arguments = [[measurement_path],
+                         self.inputs['executable'],
+                         self.environment
+
                          ]
 
             jobs.append(ComputeJob(host, node_command, arguments))
@@ -81,12 +87,12 @@ class test_recipe(BaseRecipe, RemoteCommandRecipeMixIn):
 
         for job, output_item in  zip(jobs, output_map):
             # job ==  None on skipped job
-            if not "image" in job.results:
+            if not "output" in job.results:
                 output_item.file = "failed"
                 output_item.skip = True
 
             else:
-                output_item.file = job.results["image"]
+                output_item.file = job.results["output"]
                 output_item.skip = False
 
         # Check if there are finished runs
@@ -108,10 +114,10 @@ class test_recipe(BaseRecipe, RemoteCommandRecipeMixIn):
             self.logger.warn("Failed awimager node run detected. continue with"
                               "successful tasks.")
 
-        self._store_data_map(self.inputs['mapfile'], output_map,
+        self._store_data_map(self.inputs['output_map_path'], output_map,
                              "mapfile containing produces awimages")
 
-        self.outputs["mapfile"] = self.inputs['mapfile']
+        self.outputs["mapfile"] = self.inputs['output_map_path']
         return 0
 
 
