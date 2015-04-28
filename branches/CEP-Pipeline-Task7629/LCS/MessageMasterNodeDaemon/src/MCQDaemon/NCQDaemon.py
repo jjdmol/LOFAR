@@ -316,11 +316,12 @@ class NCQDaemon(object):
         Send a job exit information msg
 
         msg_details:
-                    {'exit_value':exit_status,
+                    {'type':'exit_value'
+                     'exit_value':exit_status,
                      'uuid':uuid,
                      'job_uuid':msg_content['job_uuid']}
         """
-        
+        self.logger.error(exit_dict)
         msg = message.MessageContent(
                 from_="{0}.{1}.NCQDaemon".format(
                         self._username, self._hostname),
@@ -334,6 +335,7 @@ class NCQDaemon(object):
                       )
         msg.payload = exit_dict
         resultQueue.send(msg)  
+
         
              
 
@@ -365,11 +367,13 @@ class NCQDaemon(object):
                 self._send_log_message(logTopic, stderrdata, level='error')
 
                 # send the exit state to the resultsQueue
-                payload = {'exit_value':exit_status,
-                               'uuid':uuid,
-                               'job_uuid':msg_content['job_uuid']}
+                payload = {'type':"exit_value",
+                           'exit_value':exit_status,
+                           'uuid':uuid,
+                           'job_uuid':msg_content['job_uuid']}
 
                 self._send_job_exit_message(resultQueue, payload )
+                self.logger.error(queueName)
 
                 del session_dict['jobs'][job_uuid]
 

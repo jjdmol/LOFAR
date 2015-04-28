@@ -13,16 +13,32 @@ import lofar.messagebus.message as message
 from qmf.console import Session as QMFSession
 
 
-# Define logging. Until we have a python loging framework, we'll have
-# to do any initialising here
-logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
-logger=logging.getLogger("MessageBus")
 
 #Handler for stopping the logTopicHandler
 logTopicStopFlag = threading.Event()
-def logTopicStopHandler(signum, stack):
+resultQueueStopFlag = threading.Event()
+
+def treadStopHandler(signum, stack):
     logTopicStopFlag.set()
+    resultQueueStopFlag.set()
     exit(signum)
+
+    #print "***************************************"
+    #signals_to_names = {}
+    #for n in dir(signal):
+    #    if n.startswith('SIG') and not n.startswith('SIG_'):
+    #        signals_to_names[getattr(signal, n)] = n
+
+    #for s, name in sorted(signals_to_names.items()):
+    #    handler = signal.getsignal(s)
+    #    if handler is signal.SIG_DFL:
+    #        handler = 'SIG_DFL'
+    #    elif handler is signal.SIG_IGN:
+    #        handler = 'SIG_IGN'
+    #    print '%-10s (%2d):' % (name, s), handler
+    #print "***************************************"
+
+
 
 class logTopicHandler(threading.Thread):
     """
@@ -80,8 +96,7 @@ class logTopicHandler(threading.Thread):
         While no stopflag is set:
         sleep for poll_interval
         """
-        while not self.stopFlag.isSet():
-            self.logger.info("Polling logTopic")
+        while not self.stopFlag.isSet():            
             # We do not want to listen in a tight loop. read the msg each 
             # pollinterval           
             if self.poll_counter < self.poll_interval:
@@ -91,7 +106,7 @@ class logTopicHandler(threading.Thread):
 
             # reset the counter to zero, and restart the wait period
             self.poll_counter = 0       
-
+            self.logger.info("Polling logTopic")
             # now empty the queue
             while True:
                 # get is blocking, always use timeout.
@@ -111,9 +126,110 @@ class logTopicHandler(threading.Thread):
 
     def __del__(self):
         """
-        Clean up the temp file after the file is not in use anymore
         """
         self._logTopic.close()
+
+class resultQueueHandler(threading.Thread):
+    """
+    Class used for listening to a log topic
+
+    usage:
+    After initiation it must be started using the start() method
+    setStopFlag() stops the forwarder
+    """
+    def __init__(self, resultQueueName, 
+                 running_jobs , 
+                 running_jobs_lock, 
+                 logger=None, 
+                 poll_interval=1.0):
+        """
+        Create the usage stat object. Create events for starting and stopping.
+        By default the Process creating the object is tracked.
+        Default polling interval is 10 seconds
+        """
+        threading.Thread.__init__(self)
+        self.logger = logger
+        self.stopFlag = resultQueueStopFlag    # from 'global' scope
+        self.poll_interval = poll_interval
+        self.poll_counter = 0
+
+        self._broker="127.0.0.1" 
+        self._resultQueueName = resultQueueName
+        self.logger.info(
+              "Connecting to session specific resultQueue: {0}".format(
+                                         self._resultQueueName))
+        self._resultQueue = msgbus.FromBus(self._resultQueueName, 
+            options = "create:always, node: { type: queue, durable: True}",
+            broker = self._broker)
+        self.logger.info("COnnection with resultQueue established")
+
+        # Unique for the result queue handler
+        self._running_jobs = running_jobs
+        self._running_jobs_lock = running_jobs_lock
+
+    def _process_queue_message(self, msg_content):
+        """
+        Parse return messages 
+        """
+        # get the data from the msg
+        type = msg_content['type']
+        # TODO: For now assume only exit_value msg: the results should
+        # be added also!!!!!!
+
+        exit_value = msg_content['exit_value']
+        uuid = msg_content['uuid']
+        job_uuid = msg_content['job_uuid']
+
+        with self._running_jobs_lock:
+            self._running_jobs[job_uuid]['exit_value']=exit_value
+            self._running_jobs[job_uuid]['completed']=True
+
+
+
+    def run(self):
+        """
+        Run function, the work horse of the handler
+
+        While no stopflag is set:
+        sleep for poll_interval
+        """
+        while not self.stopFlag.isSet():
+
+            # We do not want to listen in a tight loop. read the msg each 
+            # pollinterval           
+            if self.poll_counter < self.poll_interval:
+                self.poll_counter += 0.1
+                time.sleep(0.1)
+                continue
+            self.logger.info("Polling resultQueue: {0}".format(
+                                                   self._resultQueueName))
+
+            # reset the counter to zero, and restart the wait period
+            self.poll_counter = 0       
+            # now empty the queue
+            while True:
+                # get is blocking, always use timeout.
+                msg = self._resultQueue.get(2)  
+                self.logger.error(msg)
+
+                if msg == None:
+                    break   # break the loop
+
+                # process the log data
+                msg_content = eval(msg.content().payload)
+                self._process_queue_message(msg_content)
+                self._resultQueue.ack(msg)
+ 
+    def setStopFlag(self):
+        """
+        Stop the monitor
+        """
+        self.stopFlag.set()
+
+    def __del__(self):
+        """
+        """
+        self._resultQueue.close()
 
 
 class MCQLib(object):
@@ -177,11 +293,18 @@ class MCQLib(object):
         
         self._logTopicForwarder = logTopicHandler(self._logTopicName,
                    self.logger)
+
+        self._resultQueueForwarder = resultQueueHandler(self._returnQueueName,
+                   self._running_jobs , self._running_jobs_lock, self.logger)
+
+
         signal.signal(signal.SIGTERM, 
-                      logTopicStopHandler)   # from 'global' scope
+                      treadStopHandler)   # from 'global' scope
         signal.signal(signal.SIGINT, 
-                      logTopicStopHandler)
+                      treadStopHandler)   # from 'global' scope
+
         self._logTopicForwarder.start()
+        self._resultQueueForwarder.start()
 
   
     def _connect_to_master(self, masterCommandQueueName):
@@ -249,13 +372,15 @@ class MCQLib(object):
         session command to the daemon
         """
         self.logger.info("Connecting to returnQueue.")
-        self._resultQueue = msgbus.FromBus(self._returnQueueName, 
-            options = "create:always, node: { type: queue, durable: True}",
-            broker = self._broker)
+        #self._resultQueue = msgbus.FromBus(self._returnQueueName, 
+        #    options = "create:always, node: { type: queue, durable: True}",
+        #    broker = self._broker)
         self.logger.info("Connecting to returnQueue and logTopic. Done")
 
     def __del__(self):
-        self._release()
+        #self._release()
+        pass
+
 
     def _release(self):
         """
@@ -269,7 +394,8 @@ class MCQLib(object):
         
         # First disconnect from the queues
         self._logTopicForwarder.setStopFlag()
-        self._resultQueue.close()        
+        self._resultQueueForwarder.setStopFlag()
+        #self._resultQueue.close()        
 
         # create the header for the stop command
         msg = message.MessageContent(
@@ -308,6 +434,7 @@ class MCQLib(object):
                        "uuid":self._sessionUUID,
                        'job_uuid':job_uuid,
                        "parameters":parameters}
+
         self.logger.info("Starting job: {0}".format(msg.payload))
         self._masterCommandQueue.send(msg)
         with self._running_jobs_lock:
@@ -322,4 +449,4 @@ class MCQLib(object):
 
             with self._running_jobs_lock:
                 if self._running_jobs[job_uuid]['completed']:     
-                      return self._running_jobs[job_uuid]['return_value']
+                      return self._running_jobs[job_uuid]['exit_value']
