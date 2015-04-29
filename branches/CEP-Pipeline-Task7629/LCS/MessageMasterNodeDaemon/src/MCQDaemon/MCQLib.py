@@ -24,6 +24,7 @@ def treadStopHandler(signum, stack):
     exit(signum)
 
     #print "***************************************"
+    # code snipped to display registered signal handlers
     #signals_to_names = {}
     #for n in dir(signal):
     #    if n.startswith('SIG') and not n.startswith('SIG_'):
@@ -210,8 +211,6 @@ class resultQueueHandler(threading.Thread):
             while True:
                 # get is blocking, always use timeout.
                 msg = self._resultQueue.get(2)  
-                self.logger.error(msg)
-
                 if msg == None:
                     break   # break the loop
 
@@ -301,7 +300,7 @@ class MCQLib(object):
         signal.signal(signal.SIGTERM, 
                       treadStopHandler)   # from 'global' scope
         signal.signal(signal.SIGINT, 
-                      treadStopHandler)   # from 'global' scope
+                      treadStopHandler)   
 
         self._logTopicForwarder.start()
         self._resultQueueForwarder.start()
@@ -418,6 +417,14 @@ class MCQLib(object):
         """
 
         """
+        #TODO: THIS APPENDING OF QUEUE NAMES SHOULD BE MOVED TO THE RUN
+        # COMMAND IN  THE FRAMEWORK
+        parameters['cmd'] = " ".join([parameters['cmd'], self._returnQueueName,
+                            self._broker, self._logTopicName])
+
+
+
+        #/END TODO
         job_uuid = uuid.uuid4().hex
         msg = message.MessageContent(
                 from_="USERNAME.LOCUS102.MCQDaemonLib.{0}".format(
@@ -448,5 +455,7 @@ class MCQLib(object):
             time.sleep(poll_interval)
 
             with self._running_jobs_lock:
-                if self._running_jobs[job_uuid]['completed']:     
+                if self._running_jobs[job_uuid]['completed']: 
+                      self.logger.info("Exit value: {0}".format(
+                                  self._running_jobs[job_uuid]['exit_value']))    
                       return self._running_jobs[job_uuid]['exit_value']

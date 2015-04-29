@@ -46,13 +46,14 @@ class NCQDaemon(object):
         self._broker = "127.0.0.1" 
         self._returnQueueTemplate = "MCQDaemon.{0}.return.{1}" # they are owned by
         self._logTopicTemplate = "MCQDaemon.{0}.log.{1}"       # the master daemon
+        self._parameterQueueTemplate ="NCQDaemon.{0}.parameters.{1}" #Node daemon
 
         # create a NON durable queue: We cannot have old msg hanging in this
         # command queue
         self._CommandQueue = msgbus.FromBus(
               "{0}.{1}.NCQueueDaemon.CommandQueue".format(self._username,
                                                                self._hostname), 
-              options = "create:always, node: { type: queue, durable: False}",
+              options = "create:always, node: { type: queue, durable: True}",
               broker = self._broker)
 
         # receive and clear command queue on init once.
@@ -146,10 +147,13 @@ class NCQDaemon(object):
         """
 
         """
+        uuid = msg_content['uuid']
         command     = msg_content['parameters']['cmd']
+        # Append the the command with the parameter queue name!
+        command += " {0}".format(self._registered_pipelines[uuid]['parameterq'][0])
         working_dir = msg_content['parameters']['cdw']
         environment = msg_content['parameters']['environment']
-        uuid = msg_content['uuid']
+        
         job_uuid = msg_content['job_uuid']
 
         # this should not happen but check anyways.
@@ -215,14 +219,17 @@ class NCQDaemon(object):
         self.logger.info("New (pipeline) session started: {0}".format(
                                                           msg_content['uuid']))
         # Connect to the queue and topic, use the uuid of the session
-        (resultq_name, resultQueue), (topic_name, logTopic) = \
+        (resultq_name, resultQueue), (topic_name, logTopic), (parameterq_name, 
+                                                           parameterQueue) = \
             self._connect_resultq_and_topic(msg_content['uuid'])
 
         # store them in the internal pipeline storage
         self._registered_pipelines[msg_content['uuid']] = {
                   'resultq':(resultq_name, resultQueue),
                   'topic':(topic_name, logTopic),
+                  'parameterq':(parameterq_name, parameterQueue),
                   'jobs':{}}
+        self.logger.error(self._registered_pipelines[msg_content['uuid']])
 
 
     def _connect_resultq_and_topic(self, uuid):
@@ -237,6 +244,7 @@ class NCQDaemon(object):
         # create the queues names based on the template
         resultq_name = self._returnQueueTemplate.format(self._username, uuid)
         topic_name = self._logTopicTemplate.format(self._username, uuid)
+        parameterq_name = self._parameterQueueTemplate.format(self._username, uuid)
 
         # now register to the queues, remember, the pipeline might not have
         # connected so create and make durable. Deleting is done by the 
@@ -250,7 +258,13 @@ class NCQDaemon(object):
               options = "create:always, node: { type: topic, durable: True}",
               broker = self._broker)
 
-        return (resultq_name, resultQueue), (topic_name, logTopic)
+        parameterQueue = msgbus.ToBus(parameterq_name, 
+              options = "create:always, node: { type: queue, durable: False}",
+              broker = self._broker)   # Created NON durable: delete when not
+                                       # needed anymore
+
+        return (resultq_name, resultQueue), (topic_name, logTopic), \
+               (parameterq_name, parameterQueue)
   
     def _process_stop_msg(self, msg):
         """
@@ -335,9 +349,7 @@ class NCQDaemon(object):
                       )
         msg.payload = exit_dict
         resultQueue.send(msg)  
-
-        
-             
+           
 
     def _process_registered_sessions(self):
         """

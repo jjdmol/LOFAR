@@ -33,7 +33,7 @@ if __name__ == "__main__":
     parameters = {'node':'locus102',
                   #'cmd': '/home/klijn/build/7629/gnu_debug/installed/lib/python2.6/dist-packages/lofarpipe/recipes/nodes/test_recipe.py',
                   'environment':environment,
-                  'cmd': 'echo test',
+                  'cmd': 'python /home/klijn/build/7629/gnu_debug/installed/lib/python2.6/dist-packages/lofarpipe/recipes/nodes/test_recipe.py',
                   #'cmd': """echo 'print "test"' | python """,
                   #'cmd':""" echo  "test" """,
                   'cdw': '/home/klijn',

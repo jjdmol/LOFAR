@@ -15,7 +15,19 @@ import logging
 import logging.handlers
 import cPickle as pickle
 
+
+
 from lofarpipe.support.usagestats import UsageStats
+
+# Includes for QPID framework, might not be available. Set status flag 
+_QPID_ENABLED = False
+try:
+    import lofar.messagebus.msgbus as msgbus
+    import lofar.messagebus.message as message
+    _QPID_ENABLED = True
+except:
+    pass
+# End QPID include 
 
 def run_node(*args):
     """
@@ -29,23 +41,109 @@ def run_node(*args):
     )
     return control_script(loghost=loghost, logport=logport).run_with_logging(*args)
 
+
+class QPIDLoggerHandler(logging.Handler):
+    def __init__(self, logTopicName, broker):
+        """
+        INit function connects to the QPID logging topic supplied
+        """
+        logging.Handler.__init__(self)
+        #super(QPIDLoggerHandler, self).__init__()
+
+        self._logTopicName = logTopicName
+        self._logTOpic = msgbus.ToBus(self._logTopicName, 
+              options = "create:always, node: { type: topic, durable: False}",
+              broker = broker)
+
+    def flush(self):
+        """
+        Not needed for this handler
+        """
+        pass
+
+    def emit(self, record):
+        """
+        Called upon receiving a log record.
+        """
+        self._send_log_message(self._logTOpic, record.message,
+                               record.levelname)
+
+            
+    def _send_log_message(self, logTopic, log_data, level='info'):
+        """
+        Send a logging msg  with log_data to the logTOpic at the level
+
+        msg_details:
+        {'level'=level, 'log_data':log_data}
+        """
+        
+        msg = message.MessageContent(
+                from_="{0}.{1}.NCQDaemon".format(
+                        self._username, self._hostname),
+                forUser="{0}.MSQDaemon".format(self._username),
+                summary="NCQDaemon log message",
+                protocol="CommandQUeueLogMsg",
+                protocolVersion="0.0.1", 
+                #momid="",
+                #sasid="", 
+                #qpidMsg=None
+                      )
+        msg.payload = {'level':   level,
+                       'log_data':log_data}
+
+        logTopic.send(msg)
+
+class NCQDaemonLib(object):
+    """
+    class combining objects and function needed for communication via QPID,
+    using the NCQDaemon framework.
+    """
+    def __init__(self, broker, logTopicName, resultQueueName):
+        """
+        Init function, connects to the logtopic and resultQueue.
+
+        Registers the log handler and performs the integration with the 
+        framework. Exit state is retrieved by the NCQDaemon, using the exit 
+        value of the script
+        """
+        self._broker = broker
+        self._logTopicName = logTopicName
+        self._resultQueueName = resultQueueName
+
+        self._resultQueue = msgbus.ToBus(self._resultQueueName, 
+              options = "create:always, node: { type: queue, durable: True}",
+              broker = self._broker)
+
+        self.QPIDLoggerHandler = QPIDLoggerHandler(self._logTopicName, 
+                                                   self._broker)
+
+    def getArguments(self):
+        """
+        Retrieves the arguments for the current run from the command queue and
+        returns them as a new dict.
+        """
+
+
 class LOFARnode(object):
     """
     Base class for node jobs called through IPython or directly via SSH.
 
     Sets up TCP based logging.
     """
-    def __init__(
-        self,
-        loghost=None,
-        logport=logging.handlers.DEFAULT_TCP_LOGGING_PORT
-    ):
-        self.logger = logging.getLogger(
-            'node.%s.%s' % (platform.node(), self.__class__.__name__)
-        )
-        self.logger.setLevel(logging.DEBUG)
-        self.loghost = loghost
-        self.logport = int(logport)
+    def __init__( self, loghost=None,
+                 logport=logging.handlers.DEFAULT_TCP_LOGGING_PORT):
+        if not _QPID_ENABLED:
+            self.logger = logging.getLogger(
+              'node.%s.%s' % (platform.node(), self.__class__.__name__))
+            self.logger.setLevel(logging.DEBUG)
+            self.loghost = loghost
+            self.logport = int(logport)
+        else:
+            self.logger = logging.getLogger(
+              'node.%s.%s' % (platform.node(), self.__class__.__name__))            
+            self.logger.setLevel(logging.DEBUG)
+
+        self.logger.error("#################################### WOOOT LOGGING USING CUSTOM HANDLER ##################")
         self.outputs = {}
         self.environment = os.environ
         self.resourceMonitor = UsageStats(self.logger, 10.0 * 60.0)  # collect stats each 10 minutes      
@@ -55,9 +153,12 @@ class LOFARnode(object):
         Calls the run() method, ensuring that the logging handler is added
         and removed properly.
         """
-        if self.loghost:
+        if _QPID_ENABLED:
+            self.logger.addHandler(self._NCQDaemonLib.QPIDLoggerHandler)
+        elif self.loghost:
             my_tcp_handler = logging.handlers.SocketHandler(self.loghost, self.logport)
             self.logger.addHandler(my_tcp_handler)
+
         try:
             self.resourceMonitor.start()
             return_value = self.run(*args)
@@ -66,13 +167,16 @@ class LOFARnode(object):
             return return_value
         finally:
             self.resourceMonitor.setStopFlag()
-            if self.loghost:
+            if _QPID_ENABLED:
+                self.logger.removeHandler(self._NCQDaemonLib.QPIDLoggerHandler)
+            elif self.loghost:
                 my_tcp_handler.close()
                 self.logger.removeHandler(my_tcp_handler)
 
     def run(self):
         # Override in subclass.
         raise NotImplementedError
+
 
 class LOFARnodeTCP(LOFARnode):
     """
@@ -81,7 +185,24 @@ class LOFARnodeTCP(LOFARnode):
     :class:`~lofarpipe.support.jobserver.JobSocketReceiver`.
     """
     def __init__(self, job_id, host, port):
-        self.job_id, self.host, self.port = int(job_id), host, int(port)
+        # Entrie point for QPID version of the internode communication at
+        # the node recipe. If parsing of the ports as int fails
+        # try connecting using QPID
+        # Reuse the job_id and port to send the name of the queues
+        # THis is not pretty but we need to be backwards compatible
+        self._NCQDaemonLib = None
+        try:
+            self.job_id, self.host, self.port = int(job_id), host, int(port)
+
+        except Exception, ex:  # TODO checking for the correct names is not 
+                               # really needed. THe object should throw
+            if _QPID_ENABLED and "MCQDaemon" in job_id and "MCQDaemon" in port:
+                self._NCQDaemonLib = NCQDaemonLib(host, job_id, port)
+
+                exit(33)
+            else:
+                raise ex
+            
         self.__fetch_arguments()
         super(LOFARnodeTCP, self).__init__(self.host, self.port)
 
@@ -124,33 +245,38 @@ class LOFARnodeTCP(LOFARnode):
         Connect to a remote job dispatch server (an instance of
         jobserver.JobSocketReceive) and obtain all the details necessary to
         run this job.
+        -OR-
+        When Qpid is enabled retrieve the parameters from the NodeCommandQueue
         """
-        while True:
-            tries -= 1
-            try:
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                self.__try_connect(s)
-                message = "GET %d" % self.job_id
-                s.sendall(struct.pack(">L", len(message)) + message)
-                chunk = s.recv(4)
-                slen = struct.unpack(">L", chunk)[0]
-                chunk = s.recv(slen)
-                while len(chunk) < slen:
-                    chunk += s.recv(slen - len(chunk))
-                self.arguments = pickle.loads(chunk)
-            except socket.error, e:
-                print "Failed to get recipe arguments from server"
-                if tries > 0:
-                    timeout = random.uniform(min_timeout, max_timeout)
-                    print("Retrying in %f seconds (%d more %s)." %
-                          (timeout, tries, "try" if tries == 1 else "tries"))
-                    time.sleep(timeout)
+        if _QPID_ENABLED:
+            self.arguments = self._NCQDaemonLib.getArguments()
+        else:
+            while True:
+                tries -= 1
+                try:
+                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    self.__try_connect(s)
+                    message = "GET %d" % self.job_id
+                    s.sendall(struct.pack(">L", len(message)) + message)
+                    chunk = s.recv(4)
+                    slen = struct.unpack(">L", chunk)[0]
+                    chunk = s.recv(slen)
+                    while len(chunk) < slen:
+                        chunk += s.recv(slen - len(chunk))
+                    self.arguments = pickle.loads(chunk)
+                except socket.error, e:
+                    print "Failed to get recipe arguments from server"
+                    if tries > 0:
+                        timeout = random.uniform(min_timeout, max_timeout)
+                        print("Retrying in %f seconds (%d more %s)." %
+                              (timeout, tries, "try" if tries == 1 else "tries"))
+                        time.sleep(timeout)
+                    else:
+                        # we tried 5 times, abort with original exception
+                        raise 
                 else:
-                    # we tried 5 times, abort with original exception
-                    raise 
-            else:
-                # no error, thus break the loop
-                break  #
+                    # no error, thus break the loop
+                    break  #
 
     def __send_results(self):
         """
