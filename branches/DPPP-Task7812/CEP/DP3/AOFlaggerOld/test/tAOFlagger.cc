@@ -1,4 +1,4 @@
-//# tAORFlagger.cc: Test program for class AORFlagger
+//# tAOFlagger.cc: Test program for class AORFlagger
 //# Copyright (C) 2010
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -22,7 +22,8 @@
 //# @author Ger van Diepen
 
 #include <lofar_config.h>
-#include <DPPP/AORFlagger.h>
+#include <AOFlaggerOld/AORFlagger.h>
+#include <DPPP/DPRun.h>
 #include <DPPP/DPInput.h>
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
@@ -213,7 +214,7 @@ void test1(int ntime, int nant, int nchan, int ncorr, bool flag, int threshold)
   DPStep::ShPtr step1(in);
   ParameterSet parset;
   parset.add ("timewindow", "1");
-  DPStep::ShPtr step2(new AORFlagger(in, parset, ""));
+  DPStep::ShPtr step2 = DPRun::findStepCtor("AOFlaggerOld")(in, parset, "");
   DPStep::ShPtr step3(new TestOutput(ntime, nant, nchan, ncorr));
   step1->setNextStep (step2);
   step2->setNextStep (step3);
@@ -232,7 +233,7 @@ void test2(int ntime, int nant, int nchan, int ncorr, bool flag, int threshold)
   ParameterSet parset;
   parset.add ("timewindow", "4");
   parset.add ("overlapmax", "1");
-  DPStep::ShPtr step2(new AORFlagger(in, parset, ""));
+  DPStep::ShPtr step2 = DPRun::findStepCtor("AOFlaggerOld")(in, parset, "");
   DPStep::ShPtr step3(new TestOutput(ntime, nant, nchan, ncorr));
   step1->setNextStep (step2);
   step2->setNextStep (step3);
@@ -242,8 +243,10 @@ void test2(int ntime, int nant, int nchan, int ncorr, bool flag, int threshold)
 
 int main()
 {
-  INIT_LOGGER ("tAORFlagger");
+  INIT_LOGGER ("tAOFlagger");
   try {
+    // Register the step type.
+    register_aoflaggerold();
 
     for (uint i=0; i<2; ++i) {
       test1(10, 2, 32, 4, false, 1);

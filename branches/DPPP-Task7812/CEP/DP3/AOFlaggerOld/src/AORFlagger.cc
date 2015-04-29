@@ -22,7 +22,8 @@
 //# @author Ger van Diepen
 
 #include <lofar_config.h>
-#include <DPPP/AORFlagger.h>
+#include <AOFlaggerOld/AORFlagger.h>
+#include <DPPP/DPRun.h>
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
 #include <Common/ParameterSet.h>
@@ -102,6 +103,13 @@ namespace LOFAR {
 
     AORFlagger::~AORFlagger()
     {}
+
+    DPStep::ShPtr AORFlagger::makeStep (DPInput* input,
+                                        const ParameterSet& parset,
+                                        const std::string& prefix)
+    {
+      return DPStep::ShPtr(new AORFlagger(input, parset, prefix));
+    }
 
     void AORFlagger::show (std::ostream& os) const
     {
@@ -607,6 +615,16 @@ namespace LOFAR {
     }
 
   } //# end namespace
+}
+
+
+
+// Define the function to make the AOFlaggerStep 'constructor' known.
+// Its suffix must be the (lowercase) name of the package (library).
+void register_aoflaggerold()
+{
+  LOFAR::DPPP::DPRun::registerStepCtor ("AOFlaggerOld",
+                                        LOFAR::DPPP::AORFlagger::makeStep);
 }
 
 /*

@@ -233,7 +233,7 @@ void test2(int ntime, int nant, int nchan, int ncorr, bool flag, int threshold)
   ParameterSet parset;
   parset.add ("timewindow", "4");
   parset.add ("overlapmax", "1");
-  DPStep::ShPtr step2 = DPRun::findStepCtor("NewAOFlagger")(in, parset, "");
+  DPStep::ShPtr step2 = DPRun::findStepCtor("AOFlaggerStep")(in, parset, "");
   DPStep::ShPtr step3(new TestOutput(ntime, nant, nchan, ncorr));
   step1->setNextStep (step2);
   step2->setNextStep (step3);

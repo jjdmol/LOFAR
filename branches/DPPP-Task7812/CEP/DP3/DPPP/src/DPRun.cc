@@ -31,7 +31,6 @@
 #include <DPPP/MSUpdater.h>
 #include <DPPP/Averager.h>
 #include <DPPP/MedFlagger.h>
-#include <DPPP/AORFlagger.h>
 #include <DPPP/PreFlagger.h>
 #include <DPPP/UVWFlagger.h>
 #include <DPPP/PhaseShift.h>
@@ -271,14 +270,14 @@ namespace LOFAR {
         string type = toLower(parset.getString (prefix+"type", *iter));
         if (type == "newaoflagger"  ||  type == "newaoflag") {
           type = "aoflaggerstep";
+        } else if (type == "aoflagger"  ||  type == "aoflag"
+                   ||  type == "rficonsole") {
+          type = "aoflaggerold";
         }
         if (type == "averager"  ||  type == "average"  ||  type == "squash") {
           step = DPStep::ShPtr(new Averager (reader, parset, prefix));
         } else if (type == "madflagger"  ||  type == "madflag") {
           step = DPStep::ShPtr(new MedFlagger (reader, parset, prefix));
-        } else if (type == "aoflagger"  ||  type == "aoflag"
-                   ||  type == "rficonsole") {
-          step = DPStep::ShPtr(new AORFlagger (reader, parset, prefix));
         } else if (type == "preflagger"  ||  type == "preflag") {
           step = DPStep::ShPtr(new PreFlagger (reader, parset, prefix));
         } else if (type == "uvwflagger"  ||  type == "uvwflag") {

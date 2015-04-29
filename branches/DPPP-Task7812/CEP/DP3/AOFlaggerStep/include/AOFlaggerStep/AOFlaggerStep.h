@@ -74,7 +74,7 @@ namespace LOFAR {
 
       virtual ~AOFlaggerStep();
 
-      // Create a AOFlaggerStep object using the given parset.
+      // Create an AOFlaggerStep object using the given parset.
       static DPStep::ShPtr makeStep (DPInput*, const ParameterSet&,
                                      const std::string&);
 

@@ -75,6 +75,10 @@ namespace LOFAR {
 
       virtual ~AORFlagger();
 
+      // Create an AORFlagger object using the given parset.
+      static DPStep::ShPtr makeStep (DPInput*, const ParameterSet&,
+                                     const std::string&);
+
       // Process the data.
       // When processed, it invokes the process function of the next step.
       virtual bool process (const DPBuffer&);
@@ -150,6 +154,14 @@ namespace LOFAR {
     };
 
   } //# end namespace
+}
+
+
+
+// Define the function (without name mangling) to register the 'constructor'.
+extern "C"
+{
+  void register_aoflaggerold();
 }
 
 #endif
