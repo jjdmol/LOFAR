@@ -22,26 +22,19 @@
 //# @author Andre Offringa, Ger van Diepen
 
 #include <lofar_config.h>
-#include <AOFlaggerStep/AOFlaggerStep.h>
+#include <DPPP_AOFlag/AOFlaggerStep.h>
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
-#include <DPPP/DPRun.h>
 #include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
+#include <Common/StreamUtil.h>
+#include <Common/OpenMP.h>
 
 #include <casa/OS/HostInfo.h>
 #include <casa/OS/File.h>
 
 #include <aoflagger.h>
 
-#include <Common/StreamUtil.h>
-#include <Common/LofarLogger.h>
-#include <Common/OpenMP.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Containers/Record.h>
-#include <casa/Containers/RecordField.h>
-#include <tables/TaQL/ExprNode.h>
-#include <tables/TaQL/RecordGram.h>
 #include <iostream>
 #include <algorithm>
 
@@ -174,6 +167,10 @@ namespace LOFAR {
       // Initialize the flag counters.
       itsFlagCounter.init (getInfo());
       itsFreqs = infoIn.chanFreqs();
+      // Fill the strategy (used by all threads)
+      // (A thread does not need a private strategy; it is
+      // safe to share one among different threads.)
+      fillStrategy();
     }
 
     void AOFlaggerStep::showCounts (std::ostream& os) const
@@ -258,12 +255,6 @@ namespace LOFAR {
 
     void AOFlaggerStep::flag (uint rightOverlap)
     {
-      // Fill the strategy (used by all threads)
-      // (A thread does not need a private strategy; it is
-      // safe to share one among different threads.)
-      if (itsStrategy == 0) {
-        fillStrategy();
-      }
       // Get the sizes of the axes.
       // Note: OpenMP 2.5 needs signed iteration variables.
       int  nrbl   = itsBuf[0].getData().shape()[2];
@@ -283,7 +274,7 @@ namespace LOFAR {
 	
         // Create a statistics object for all polarizations.
 	std::vector<double> scanTimes(itsBuf.size());
-	for (size_t i=0; i!=itsBuf.size(); ++i) {
+	for (size_t i=0; i<itsBuf.size(); ++i) {
 	  scanTimes[i] = itsBuf[i].getTime();
         }
 	aoflagger::QualityStatistics rfiStats =
@@ -291,7 +282,7 @@ namespace LOFAR {
                                               scanTimes.size(),
                                               itsFreqs.data(),
                                               itsFreqs.size(),
-                                              4, false /*= don't calculate histograms*/);
+                                              4, false);   // no histograms
 
         // The for loop can be parallellized. This must be done dynamically,
         // because the execution times of iterations can vary.
@@ -381,8 +372,7 @@ namespace LOFAR {
       // Execute the strategy to do the flagging.
       moveTimer.stop();
       flagTimer.start();
-      aoflagger::FlagMask rfiMask =
-	itsAOFlagger.Run(*itsStrategy, imageSet);
+      aoflagger::FlagMask rfiMask = itsAOFlagger.Run(*itsStrategy, imageSet);
       flagTimer.stop();
       // Put back the true flags and count newly set flags.
       moveTimer.start();
@@ -447,10 +437,9 @@ namespace LOFAR {
             THROW (Exception, "Unknown rfistrategy file " << itsStrategyName);
           }
         }
-	
-	itsStrategy.reset(new aoflagger::Strategy( itsAOFlagger.LoadStrategy(file.path().absoluteName())));
-      }
-      else {
+	itsStrategy.reset(new aoflagger::Strategy
+                          (itsAOFlagger.LoadStrategy(file.path().absoluteName())));
+      } else {
         double centralFrequency = 0.5*(itsFreqs[0] + itsFreqs[itsFreqs.size()-1]);
         double timeRes;
         if (itsBuf.size() >=2 ) {
@@ -465,8 +454,7 @@ namespace LOFAR {
                           itsFreqs[0]) / (itsFreqs.size()-1);
         } else {
           frequencyRes = 0.0;
-        }
-				
+        }				
         itsStrategy.reset(new aoflagger::Strategy
                           (itsAOFlagger.MakeStrategy(aoflagger::LOFAR_TELESCOPE,
                                                      aoflagger::StrategyFlags::NONE,

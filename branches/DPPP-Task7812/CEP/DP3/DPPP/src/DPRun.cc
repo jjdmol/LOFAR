@@ -80,7 +80,7 @@ namespace LOFAR {
         libname = libname.substr (0, pos);
       }
       // Try to load and initialize the dynamic library.
-      casa::DynLib dl(libname, string(), "register_"+libname, false);
+      casa::DynLib dl(libname, string("libdppp_"), "register_"+libname, false);
       if (dl.getHandle()) {
         // See if registered now.
         iter = theirStepMap.find (type);
@@ -89,7 +89,8 @@ namespace LOFAR {
         }
       }
       THROW(Exception, "Step type " + type +
-            " is unknown and no such shared library found");
+            " is unknown and no shared library lib" + libname + " or libdppp_" +
+            libname + " found in (DY)LD_LIBRARY_PATH");
     }
 
 
@@ -268,8 +269,9 @@ namespace LOFAR {
         string prefix(*iter + '.');
         // The name is the default step type.
         string type = toLower(parset.getString (prefix+"type", *iter));
+        // Temporary define correct names for AOFlagger old and new.
         if (type == "newaoflagger"  ||  type == "newaoflag") {
-          type = "aoflaggerstep";
+          type = "aoflag";
         } else if (type == "aoflagger"  ||  type == "aoflag"
                    ||  type == "rficonsole") {
           type = "aoflaggerold";

@@ -75,7 +75,6 @@ namespace LOFAR {
       : itsName        (prefix),
         itsBufIndex    (0),
         itsNTimes      (0),
-        itsNTimesToDo  (0),
         itsMemoryNeeded(0),
         itsFlagCounter (input->msName(), parset, prefix+"count."),
         itsMoveTime    (0),
@@ -195,7 +194,6 @@ namespace LOFAR {
       itsBuf.resize (itsWindowSize + 2*itsOverlap);
       // Initialize the flag counters.
       itsFlagCounter.init (getInfo());
-      itsNTimesToDo = infoIn.ntime();
       // Size the RFI statistics.
       itsFreqs = infoIn.chanFreqs();
       if (itsDoRfiStats) {
