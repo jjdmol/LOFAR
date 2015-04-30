@@ -621,7 +621,7 @@ namespace LOFAR {
 // Its suffix must be the (lowercase) name of the package (library).
 void register_aoflaggerold()
 {
-  LOFAR::DPPP::DPRun::registerStepCtor ("AOFlaggerOld",
+ LOFAR::DPPP::DPRun::registerStepCtor ("aoflaggerold",
                                         LOFAR::DPPP::AORFlagger::makeStep);
 }
 
