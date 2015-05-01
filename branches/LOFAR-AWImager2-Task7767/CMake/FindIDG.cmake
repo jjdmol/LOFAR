@@ -12,7 +12,7 @@ include(LibFindMacros)
 
 # Include dir
 find_path(IDG_INCLUDE_DIR
-  NAMES idg/Proxies.h
+  NAMES idg/XEON/Proxies.h
 )
 
 # Finally the library itself

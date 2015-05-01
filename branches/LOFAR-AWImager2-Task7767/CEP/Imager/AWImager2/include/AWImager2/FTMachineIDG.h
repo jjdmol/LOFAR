@@ -32,7 +32,7 @@
 #include <AWImager2/FTMachine.h>
 #include <AWImager2/VisResamplerWB.h>
 
-#include <idg/Proxies.h>
+#include <idg/XEON/Proxies.h>
 
 namespace LOFAR {
 namespace LofarFT {

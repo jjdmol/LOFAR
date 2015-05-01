@@ -17,7 +17,7 @@ void taper (casa::Matrix<T> &function)
 {
   ASSERT(function.shape()[0] == function.shape()[1]);
   casa::uInt size = function.shape()[0];
-  casa::Double halfSize = (size-1) / 2.0;
+  casa::Double halfSize = floor(size / 2.0);
   casa::Vector<casa::Double> x(size);
   for (casa::uInt i=0; i<size; ++i) {
     x[i] = spheroidal(abs(i - halfSize) / halfSize);
