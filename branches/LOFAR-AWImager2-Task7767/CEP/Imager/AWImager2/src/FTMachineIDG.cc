@@ -314,7 +314,7 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
   Int N_stations = 1 + max(max(vb.antenna1()), max(vb.antenna2()));
   Int blocksize = 32;
 
-  itsProxy = new Xeon ("g++", "-fopenmp -march=native",  N_stations, N_chunks, N_time, N_chan,
+  itsProxy = new Xeon ("g++", "-fopenmp -march=native -O3 -ffast-math -DUSE_VML=0",  N_stations, N_chunks, N_time, N_chan,
       itsNPol, blocksize, itsPaddedNX, itsUVScale(0));
 //   itsProxy = new Xeon ("icpc", "-O3 -xAVX -fopenmp -mkl -lmkl_vml_avx -lmkl_avx",  N_stations, N_chunks, N_time, N_chan,
 //       itsNPol, blocksize, itsPaddedNX, itsUVScale(0));
@@ -600,7 +600,7 @@ void FTMachineIDG::get(VisBuffer& vb, Int row)
   Int N_stations = 1 + max(max(vb.antenna1()), max(vb.antenna2()));
   Int blocksize = 32;
 
-  itsProxy = new Xeon ("g++", "-fopenmp -march=native -O3 -ffast-math",  N_stations, N_chunks, N_time, N_chan,
+  itsProxy = new Xeon ("g++", "-fopenmp -march=native -O3 -ffast-math -DUSE_VML=0",  N_stations, N_chunks, N_time, N_chan,
       itsNPol, blocksize, itsPaddedNX, itsUVScale(0));
 //   itsProxy = new Xeon ("icpc", "-O3 -xAVX -fopenmp -mkl -lmkl_vml_avx -lmkl_avx",  N_stations, N_chunks, N_time, N_chan,
 //       itsNPol, blocksize, itsPaddedNX, itsUVScale(0));
