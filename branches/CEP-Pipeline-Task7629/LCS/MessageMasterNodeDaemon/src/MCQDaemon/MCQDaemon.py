@@ -40,7 +40,7 @@ import logging
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
 class MCQDaemon(object):
-    def __init__(self, loop_interval=10, state_file_path=None, init_delay=10):
+    def __init__(self, loop_interval=10, state_file_path=None, init_delay=40):
         self._hostname = socket.gethostname()
         self._username = pwd.getpwuid(os.getuid()).pw_name
 
@@ -423,7 +423,9 @@ class MCQDaemon(object):
             # If the number of listeners is 0 there is no consumer of data anymore.
             # The results in the queue have no place to be stored.
             nr_listeners = session_dict['queue_object'].consumerCount
+            # TODO / BUG: The consumerCount is NOT CORRECT!!!
             if (nr_listeners == 0):
+                self.logger.error("Number of listeners: {0}".format(nr_listeners))
                 self._delete_queues_and_session(uuid)
                 self._save_state_to_file()
 
@@ -511,7 +513,7 @@ class MCQDaemon(object):
         self.logger.info("--- End List of reloaded uuid ---")  
 
 if __name__ == "__main__":
-    daemon = MCQDaemon( 1, "daemon_state_file.pkl",4)
+    daemon = MCQDaemon( 1, "daemon_state_file.pkl",40)
     
     daemon.run()
         

@@ -14,14 +14,17 @@ from lofarpipe.support.lofarnode import LOFARnodeTCP
 class test_recipe(LOFARnodeTCP):
     """
     """
-    def run(self, files, executable,  environment):
+    def run(self, argument):
         """
         """
+        self.logger.error("We are in the test recipe and we are going good")
 
-        self.environment.update(environment)
 
-        self.outputs["output"] = "output"
-        # Time execution of this job
+        #self.logger.error(argument)
+        ##self.environment.update(environment)
+
+        #self.outputs["output"] = "output"
+        ## Time execution of this job
         return 0
 
 
@@ -29,6 +32,7 @@ if __name__ == "__main__":
     #   If invoked directly, parse command line arguments for logger information
     #                        and pass the rest to the run() method defined above
     # --------------------------------------------------------------------------
+
     jobid, jobhost, jobport = sys.argv[1:4]
     sys.exit(test_recipe(jobid, jobhost, jobport).run_with_stored_arguments())
 

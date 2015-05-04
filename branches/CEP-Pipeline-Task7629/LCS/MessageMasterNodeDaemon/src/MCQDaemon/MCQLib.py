@@ -14,13 +14,20 @@ from qmf.console import Session as QMFSession
 
 
 
-#Handler for stopping the logTopicHandler
+# Handler for stopping the logTopicHandler and signalling the master that the
+# session has ended
 logTopicStopFlag = threading.Event()
 resultQueueStopFlag = threading.Event()
+stopFunction = None
 
 def treadStopHandler(signum, stack):
+    # stop the threads
     logTopicStopFlag.set()
     resultQueueStopFlag.set()
+    # now signal the master
+    if not stopFunction is None:
+      stopFunction()
+
     exit(signum)
 
     #print "***************************************"
@@ -118,6 +125,8 @@ class logTopicHandler(threading.Thread):
                 # process the log data
                 msg_content = eval(msg.content().payload)
                 self._process_log_message(msg_content)
+                self._logTopic.ack(msg)
+
  
     def setStopFlag(self):
         """
@@ -210,7 +219,7 @@ class resultQueueHandler(threading.Thread):
             # now empty the queue
             while True:
                 # get is blocking, always use timeout.
-                msg = self._resultQueue.get(2)  
+                msg = self._resultQueue.get(0.2)  
                 if msg == None:
                     break   # break the loop
 
@@ -304,6 +313,8 @@ class MCQLib(object):
 
         self._logTopicForwarder.start()
         self._resultQueueForwarder.start()
+        global stopFunction
+        stopFunction = self._release
 
   
     def _connect_to_master(self, masterCommandQueueName):
@@ -420,7 +431,7 @@ class MCQLib(object):
         #TODO: THIS APPENDING OF QUEUE NAMES SHOULD BE MOVED TO THE RUN
         # COMMAND IN  THE FRAMEWORK
         parameters['cmd'] = " ".join([parameters['cmd'], self._returnQueueName,
-                            self._broker, self._logTopicName])
+                            self._logTopicName])
 
 
 

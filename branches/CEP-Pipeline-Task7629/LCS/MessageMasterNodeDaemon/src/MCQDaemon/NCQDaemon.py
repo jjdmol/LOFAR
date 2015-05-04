@@ -153,7 +153,8 @@ class NCQDaemon(object):
         command += " {0}".format(self._registered_pipelines[uuid]['parameterq'][0])
         working_dir = msg_content['parameters']['cdw']
         environment = msg_content['parameters']['environment']
-        
+        parameter_dict = msg_content['parameters']['job_parameters']
+
         job_uuid = msg_content['job_uuid']
 
         # this should not happen but check anyways.
@@ -172,6 +173,13 @@ class NCQDaemon(object):
         # Run subprocess
         process = None
         try:
+            # First send the a parameter msg on the queue
+           
+            self._send_job_parameter_message(
+                  self._registered_pipelines[uuid]['parameterq'][1],
+                  msg_content)
+            time.sleep(1)   # Otherwise the msg is not yet evailable on the other
+                            # side
             process = subprocess.Popen(
                         command,
                         cwd=working_dir,
@@ -297,6 +305,9 @@ class NCQDaemon(object):
             # delete the job entry
             del self._registered_pipelines[uuid]['jobs'][job_uuid]
 
+        # close the the results queue (owned by us)
+        self._registered_pipelines[uuid]['parameterq'][1].close()
+
         # delete the session entry
         del self._registered_pipelines[uuid]
 
@@ -323,8 +334,14 @@ class NCQDaemon(object):
         msg.payload = {'level':   level,
                        'log_data':log_data}
 
+        self.logger.error(dir())
+        #if not logTopic.connection.check_closed():
+        #    # we cannot send to non existing queue, so.. return
+        #    return
         logTopic.send(msg)
 
+
+    # TODO: HERE is something wrong
     def _send_job_exit_message(self, resultQueue, exit_dict):
         """
         Send a job exit information msg
@@ -349,6 +366,28 @@ class NCQDaemon(object):
                       )
         msg.payload = exit_dict
         resultQueue.send(msg)  
+
+    def _send_job_parameter_message(self, parameterQueue, job_dict):
+        """
+        Send a job exit information msg
+
+        msg_details:
+
+        """
+        self.logger.error(job_dict)
+        msg = message.MessageContent(
+                from_="{0}.{1}.NCQDaemon".format(
+                        self._username, self._hostname),
+                forUser="{0}.NSQLib".format(self._username),
+                summary="NCQDaemon job parameter message",
+                protocol="NCQLib",
+                protocolVersion="0.0.1", 
+                #momid="",
+                #sasid="", 
+                #qpidMsg=None
+                      )
+        msg.payload = job_dict
+        parameterQueue.send(msg)  
            
 
     def _process_registered_sessions(self):
@@ -368,6 +407,7 @@ class NCQDaemon(object):
                 (process, msg_content) = session_dict['jobs'][job_uuid]
                 # CHeck if the process has ended, continue of not
                 if process.poll() == None:
+                    self.logger.error("still running: {0}".format(job_uuid))
                     continue
 
                 (stdoutdata, stderrdata) = process.communicate()
@@ -385,7 +425,7 @@ class NCQDaemon(object):
                            'job_uuid':msg_content['job_uuid']}
 
                 self._send_job_exit_message(resultQueue, payload )
-                self.logger.error(queueName)
+                self.logger.error(payload)
 
                 del session_dict['jobs'][job_uuid]
 
