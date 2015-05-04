@@ -128,8 +128,28 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'args_format': ingredient.StringField(
             '--args_format',
-            help="Will change the format of the arguments",
+            help="Will change the format of the arguments. Standard definitions are...dont know yet",
             default='gnu'
+        ),
+        'args_format_argument': ingredient.StringField(
+            '--args_format_argument',
+            help="Will change the format of the arguments without option fields.",
+            default=''
+        ),
+        'args_format_option': ingredient.StringField(
+            '--args_format_option',
+            help="Will change the format of option fields.",
+            default='-'
+        ),
+        'args_format_longoption': ingredient.StringField(
+            '--args_format_longoption',
+            help="Will change the format of long option fields. Typically '--'",
+            default='--'
+        ),
+        'args_format_option_argument': ingredient.StringField(
+            '--args_format_option_argument',
+            help="Will change the format of the arguments without option fields.",
+            default='='
         ),
         'max_per_node': ingredient.IntField(
             '--max_per_node',
@@ -155,6 +175,13 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
 
         self.logger.info("Starting %s run" % executable)
         super(executable_args, self).go()
+
+        # args format stuff
+        args_format = {'args_format': self.inputs['args_format'],
+                       'args_format_argument': self.inputs['args_format_argument'],
+                       'args_format_option': self.inputs['args_format_option'],
+                       'args_formatlongoption': self.inputs['args_format_longoption'],
+                       'args_format_option_argument': self.inputs['args_format_option_argument']}
 
         # *********************************************************************
         # try loading input/output data file, validate output vs the input location if
@@ -213,7 +240,7 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
                 item.file = os.path.join(
                     prefix,
                     #os.path.basename(item.file) + '.' + os.path.split(str(executable))[1] + '.' + name
-                    os.path.splitext(os.path.basename(item.file))[0] + '.' + self.inputs['stepname'] + '.' + name
+                    os.path.splitext(os.path.basename(item.file))[0] + '.' + self.inputs['stepname'] + name
                 )
 
         # prepare arguments
@@ -280,7 +307,7 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
                         parsetdict_copy,
                         prefix,
                         self.inputs['parsetasfile'],
-                        self.inputs['args_format'],
+                        args_format,
                         #self.inputs['working_directory'],
                         self.environment
                     ]
@@ -308,15 +335,16 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
         #self.outputs['mapfile'] = self.inputs['mapfile_out']
         mapdict = {}
         for item, name in zip(outputmapfiles, outputsuffix):
-            item.save(os.path.join(prefix, name + '.' + 'mapfile'))
-            mapdict[name] = os.path.join(prefix, name + '.' + 'mapfile')
+            maploc = os.path.join(prefix, self.inputs['stepname'] + name + '.' + 'mapfile')
+            item.save(maploc)
+            mapdict[self.inputs['stepname'] + name] = maploc
             #self.outputs[name] = name + '.' + 'mapfile'
-        if not outputsuffix:
-            outdata.save(self.inputs['mapfile_out'])
-            self.outputs['mapfile'] = self.inputs['mapfile_out']
-        else:
+
+        outdata.save(self.inputs['mapfile_out'])
+        self.outputs['mapfile'] = self.inputs['mapfile_out']
+        if outputsuffix:
             self.outputs.update(mapdict)
-            self.outputs['mapfile'] = os.path.join(prefix, outputsuffix[0] + '.' + 'mapfile')
+            #self.outputs['mapfile'] = os.path.join(prefix, outputsuffix[0] + '.' + 'mapfile')
         return 0
 
 if __name__ == '__main__':
