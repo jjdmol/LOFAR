@@ -1,0 +1,80 @@
+# Example of LSMTool parset
+# Includes all possible options
+
+LSMTool.Steps = [select, remove, transfer, group, ungroup, merge, move, concatenate, compare, add, plot]
+
+
+LSMTool.Steps.select.Operation = SELECT # Select sources by source or patch properties
+LSMTool.Steps.select.FilterExpression = I > 10.0 Jy # any valid column name can be used
+LSMTool.Steps.select.Aggregate = sum # Filter by aggregated patch property instead of by source property
+LSMTool.Steps.select.ApplyBeam = True # If true, apparent fluxes will be used (a beam MS must be given to the beamMS parameter of lsmtool.py)
+LSMTool.Steps.select.OutFile = out_sky_model.sky
+
+LSMTool.Steps.remove.Operation = REMOVE # Remove sources by source or patch properties
+LSMTool.Steps.remove.FilterExpression = I > 10.0 Jy # any valid column name can be used
+LSMTool.Steps.remove.Aggregate = sum # Filter by aggregated patch property instead of by source property
+LSMTool.Steps.remove.ApplyBeam = True # If true, apparent fluxes will be used (a beam MS must be given to the beamMS parameter of lsmtool.py)
+LSMTool.Steps.remove.OutFile = out_sky_model.sky
+
+LSMTool.Steps.transfer.Operation = TRANSFER # Transfer a patch scheme from one sky model to another
+LSMTool.Steps.transfer.PatchFile = sky_model_with_patches.sky
+LSMTool.Steps.transfer.OutFile = out_sky_model.sky
+
+LSMTool.Steps.group.Operation = GROUP # Group sources into patches
+LSMTool.Steps.group.Algorithm = tessellate # one of tessellate, cluster, threshold, single, every
+LSMTool.Steps.group.TargetFlux = 10.0 Jy # target total flux of patches (tessellate only)
+LSMTool.Steps.group.Threshold = 0.1 # island threshold from 0 to 1 (threshold only)
+LSMTool.Steps.group.FWHM = 60.0 arcsec # FWHM of Gaussian for smoothing before thresholding (threshold only)
+LSMTool.Steps.group.Root = Patch # root to use for patch names
+LSMTool.Steps.group.ApplyBeam = True # If true, apparent fluxes will be used (a beam MS must be given to the beamMS parameter of lsmtool.py)
+LSMTool.Steps.setpos.Method = mid # set patch positions by one of mid, mean, or wmean
+LSMTool.Steps.group.OutFile = out_sky_model.sky
+
+LSMTool.Steps.ungroup.Operation = UNGROUP # Remove patches
+LSMTool.Steps.ungroup.OutFile = out_sky_model.sky
+
+LSMTool.Steps.move.Operation = MOVE # Move a source or patch position
+LSMTool.Steps.move.Name = src1 # Name of source or patch to move. If empty, all sources are used (only applies to a shift)
+LSMTool.Steps.move.Position = [12.3, 23.4] # RA and Dec in degrees to move source or patch to
+LSMTool.Steps.move.Shift = [0.001, 0.0] # RA and Dec in degrees to shift source or sources by
+LSMTool.Steps.move.OutFile = out_sky_model.sky
+
+LSMTool.Steps.merge.Operation = MERGE # Merge two or more patches into one
+LSMTool.Steps.merge.Patches = [bin1, bin2, bin3] # Patch names to merge
+LSMTool.Steps.merge.Name = merged_patch # Name of new merged patch
+LSMTool.Steps.merge.OutFile = out_sky_model.sky
+
+LSMTool.Steps.concatenate.Operation = CONCATENATE # Concatenate two sky models
+LSMTool.Steps.concatenate.Skymodel2 = in_sky_model2.sky
+LSMTool.Steps.concatenate.MatchBy = position # one of position or name: identify duplicates by matching on radius or source name
+LSMTool.Steps.concatenate.Radius = 30 arcsec # radius within which matches are identified (radius only)
+LSMTool.Steps.concatenate.Keep = all # if two sources match then keep all, from1, or from2
+LSMTool.Steps.concatenate.InheritPatches = True # matches inherit patches from parent sky model
+LSMTool.Steps.concatenate.OutFile = out_sky_model.sky
+
+LSMTool.Steps.compare.Operation = COMPARE # Compare fluxes and positions between two sky models
+LSMTool.Steps.compare.OutDir = comparison_plots/ # Output directory for plots
+LSMTool.Steps.compare.SkyModel2 = in_sky_model2.sky
+LSMTool.Steps.compare.Radius = 10 arcsec # radius within which matches are identified
+LSMTool.Steps.compare.LabelBy = patch # label plot points by source or patch
+LSMTool.Steps.compare.ExcludeMultiple = True # Exclude sources with multiple matches
+LSMTool.Steps.compare.IgnoreSpec = -0.7 # Ignore any source in SkyModel2 with this spectra index
+
+LSMTool.Steps.add.Operation = ADD # Add a source
+LSMTool.Steps.add.Name = src1 # required
+LSMTool.Steps.add.Type = POINT # required
+LSMTool.Steps.add.Patch = new_patch # required only if sky model has patches
+LSMTool.Steps.add.RA = 12:45:30.4 # required
+LSMTool.Steps.add.Dec = +76.45.02.48 # required
+LSMTool.Steps.add.I = 0.69 # required
+LSMTool.Steps.add.AnyValidColumnName = value # Any valid column name can be specified
+LSMTool.Steps.add.OutFile = out_sky_model.sky
+
+LSMTool.Steps.setpos.Operation = SETPATCHPOSITIONS # Set patch positions
+LSMTool.Steps.setpos.Method = mid # one of mid, mean, or wmean
+LSMTool.Steps.setpos.ApplyBeam = True # If true, apparent fluxes will be used (a beam MS must be given to the beamMS parameter of lsmtool.py)
+LSMTool.Steps.setpos.OutFile = out_sky_model.sky
+
+LSMTool.Steps.plot.Operation = PLOT # Plot sky model
+LSMTool.Steps.plot.OutFile = out_sky_model.pdf
+LSMTool.Steps.plot.LabelBy = patch # label plot points by source or patch

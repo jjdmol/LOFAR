@@ -1,0 +1,4 @@
+.. automodule:: lsmtool
+    :members:
+.. autoclass:: SkyModel
+    :members:
