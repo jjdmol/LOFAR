@@ -40,7 +40,7 @@ import logging
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
 class MCQDaemon(object):
-    def __init__(self, loop_interval=10, state_file_path=None, init_delay=40):
+    def __init__(self, loop_interval=10, state_file_path=None, init_delay=5):
         self._hostname = socket.gethostname()
         self._username = pwd.getpwuid(os.getuid()).pw_name
 
@@ -358,6 +358,8 @@ class MCQDaemon(object):
         queues = self._brokerAgent.getAllQueues()
         topics = self._brokerAgent.getAllExchanges()
 
+
+
         # Covert to name to queue object lists
         raw_name_to_queue_dict = {}
         for queue in queues:
@@ -371,15 +373,17 @@ class MCQDaemon(object):
         # queue on the broker
         uuid_dict = {}
         for uuid in self._registered_pipelines.keys():
+            
             session_dict = {}
             # first match the uuid with the queue
             queue_found = False
-            for name, queue in raw_name_to_queue_dict.items():
-                if uuid in name:
+            for name, queue in raw_name_to_queue_dict.items():               
+                if uuid in name and "return" in name:
                     session_dict['queue_name'] = name
                     session_dict['queue_object'] = queue
                     queue_found = True
                     break
+
             if not queue_found:
                 # Could not find a registered session as queue on the broker
                 raise Exception("Could not find a registered pipeline session queue on"

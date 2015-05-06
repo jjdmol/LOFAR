@@ -129,8 +129,8 @@ class LOFARnodeTCP(LOFARnode):
         except Exception, ex:  # TODO checking for the correct names is not 
                                # really needed. THe object should throw
 
-            returnQueueName = host
-            logTopicName = job_id
+            returnQueueName = job_id 
+            logTopicName = host
             parameterQueueName = port
 
             print returnQueueName,  logTopicName, parameterQueueName

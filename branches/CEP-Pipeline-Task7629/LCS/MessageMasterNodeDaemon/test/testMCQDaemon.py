@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
     #MCQLib.run_job(parameters)
     # Connect to the HCQDaemon
-    time.sleep(5)
+    time.sleep(7)
     MCQLib._release()
     time.sleep(1)
 

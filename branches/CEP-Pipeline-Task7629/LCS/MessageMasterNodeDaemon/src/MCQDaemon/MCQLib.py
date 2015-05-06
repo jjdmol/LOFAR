@@ -169,7 +169,7 @@ class resultQueueHandler(threading.Thread):
               "Connecting to session specific resultQueue: {0}".format(
                                          self._resultQueueName))
         self._resultQueue = msgbus.FromBus(self._resultQueueName, 
-            options = "create:always, node: { type: queue, durable: True}",
+            options = "create:always, node: { type: queue, durable: False}",
             broker = self._broker)
         self.logger.info("COnnection with resultQueue established")
 

@@ -14,14 +14,9 @@ import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
 from qmf.console import Session as QMFSession
 
-import lofar.messagebus.NCQLib as NCQLib
-
-
-## Define logging. Until we have a python loging framework, we'll have
-## to do any initialising here
-#logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
-#logger=logging.getLogger("MessageBus")
-#logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
+import lofar.messagebus.MCQLib as MCQLib
+import logging
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
 
 if __name__ == "__main__":
@@ -29,44 +24,55 @@ if __name__ == "__main__":
     topicName = "Test.NCQLib.{0}".format(username)
     broker = "127.0.0.1" 
     hostname = "localhost"
-    fromTopic = msgbus.FromBus(topicName, 
-              options = "create:always, node: { type: topic, durable: False}",
-              broker = broker)
+    logger = logging.getLogger("MCQLib")
 
-    NCQLibObject = NCQLib.NCQLib("TempReturnQueueForTest",
-          topicName,
-          "NCQDaemon.klijn.parameters.b6008d4888d7437aa13d5c2e7237343c")
 
-    print dir(fromTopic.connection)
-    print fromTopic.connection.check_closed()
-    print str(fromTopic.connection.sessions)
+    running_jobs = {}
+    running_jobs_lock = threading.Lock()
+    queuHandler = MCQLib.resultQueueHandler("testQueue",running_jobs,
+                                     running_jobs_lock, logger)
 
-    qpidLoggerHandler = NCQLib.QPIDLoggerHandler(topicName)
 
-    logger = logging.getLogger("NCQDaemon")
-    logger.propagate = False
-    # remove the default handler
-    loghandlers = logger.handlers[:]
-    print loghandlers
-    for hdlr in loghandlers:  
-        logger.removeHandler(hdlr) 
 
-    logger.addHandler(NCQLibObject.QPIDLoggerHandler)
-    logger.propagate = False
-    print "before logging"
 
-    logger.error("Send using qpid")
+    #fromTopic = msgbus.FromBus(topicName, 
+    #          options = "create:always, node: { type: topic, durable: False}",
+    #          broker = broker)
 
-    print "after logging"
+    #NCQLibObject = NCQLib.NCQLib("TempReturnQueueForTest",
+    #      topicName,
+    #      "NCQDaemon.klijn.parameters.b6008d4888d7437aa13d5c2e7237343c")
 
-    msg = fromTopic.get(2)
-    if not msg == None:
-        msg_content = eval(msg.content().payload)
+    #print dir(fromTopic.connection)
+    #print fromTopic.connection.check_closed()
+    #print str(fromTopic.connection.sessions)
 
-        print msg_content
-    else:
-        print 'queue failed'
+    #qpidLoggerHandler = NCQLib.QPIDLoggerHandler(topicName)
 
-    msg = NCQLibObject._parameterQueue.get(0.1) 
+    #logger = logging.getLogger("NCQDaemon")
+    #logger.propagate = False
+    ## remove the default handler
+    #loghandlers = logger.handlers[:]
+    #print loghandlers
+    #for hdlr in loghandlers:  
+    #    logger.removeHandler(hdlr) 
 
-    print msg.content().payload
+    #logger.addHandler(NCQLibObject.QPIDLoggerHandler)
+    #logger.propagate = False
+    #print "before logging"
+
+    #logger.error("Send using qpid")
+
+    #print "after logging"
+
+    #msg = fromTopic.get(2)
+    #if not msg == None:
+    #    msg_content = eval(msg.content().payload)
+
+    #    print msg_content
+    #else:
+    #    print 'queue failed'
+
+    #msg = NCQLibObject._parameterQueue.get(0.1) 
+
+    #print msg.content().payload

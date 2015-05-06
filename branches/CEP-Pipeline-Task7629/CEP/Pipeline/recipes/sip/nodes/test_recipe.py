@@ -11,6 +11,16 @@ import sys
 
 from lofarpipe.support.lofarnode import LOFARnodeTCP
 
+# Includes for QPID framework, might not be available. Set status flag 
+_QPID_ENABLED = False
+try:
+    import lofar.messagebus.NCQLib as NCQLib
+    import lofar.messagebus.NCQLib.QPIDNode as  LOFARnodeTCP
+    _QPID_ENABLED = True
+except:
+    pass
+# End QPID include 
+
 class test_recipe(LOFARnodeTCP):
     """
     """
@@ -32,6 +42,8 @@ if __name__ == "__main__":
     #   If invoked directly, parse command line arguments for logger information
     #                        and pass the rest to the run() method defined above
     # --------------------------------------------------------------------------
+
+
 
     jobid, jobhost, jobport = sys.argv[1:4]
     sys.exit(test_recipe(jobid, jobhost, jobport).run_with_stored_arguments())

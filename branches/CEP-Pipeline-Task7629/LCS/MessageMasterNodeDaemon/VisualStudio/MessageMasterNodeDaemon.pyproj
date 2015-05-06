@@ -24,6 +24,22 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="src\MCQDaemon\MCQDaemon.py" />
+    <Compile Include="test\testBrokerConsumercount.py" />
+    <Compile Include="test\testMCQDaemon.py" />
+    <Compile Include="test\testNCQLib.py" />
+    <Compile Include="test\tMCQDaemonKillRestart.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="test\CMakeLists.txt" />
+    <Content Include="test\MessageFuncs.sh.in" />
+    <Content Include="test\testBrokerConsumercount.run" />
+    <Content Include="test\testBrokerConsumercount.sh" />
+    <Content Include="test\testMCQDaemon.run" />
+    <Content Include="test\testMCQDaemon.sh" />
+    <Content Include="test\testNCQLib.run" />
+    <Content Include="test\testNCQLib.sh" />
+    <Content Include="test\tMCQDaemonKillRestart.run" />
+    <Content Include="test\tMCQDaemonKillRestart.sh" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>
