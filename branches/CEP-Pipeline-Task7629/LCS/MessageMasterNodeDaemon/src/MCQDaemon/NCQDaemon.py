@@ -267,7 +267,7 @@ class NCQDaemon(object):
               broker = self._broker)
 
         parameterQueue = msgbus.ToBus(parameterq_name, 
-              options = "create:always, node: { type: queue, durable: False}",
+              options = "create:always, delete:always, node: { type: queue, durable: False}",
               broker = self._broker)   # Created NON durable: delete when not
                                        # needed anymore
 
@@ -307,6 +307,8 @@ class NCQDaemon(object):
 
         # close the the results queue (owned by us)
         self._registered_pipelines[uuid]['parameterq'][1].close()
+        self._registered_pipelines[uuid]['resultq'][1].close()
+        self._registered_pipelines[uuid]['topic'][1].close()
 
         # delete the session entry
         del self._registered_pipelines[uuid]

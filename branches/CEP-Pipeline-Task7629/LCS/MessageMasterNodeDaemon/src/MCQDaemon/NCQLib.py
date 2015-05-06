@@ -84,7 +84,7 @@ class NCQLib(object):
               broker = self._broker)
 
         self._parameterQueue = msgbus.FromBus(self._parameterQueueName, 
-              options = "create:always, node: { type: queue, durable: False}",
+              options = "create:always, delete:always, node: { type: queue, durable: False}",
               broker = self._broker)
 
         self.QPIDLoggerHandler = QPIDLoggerHandler(self._logTopicName)
