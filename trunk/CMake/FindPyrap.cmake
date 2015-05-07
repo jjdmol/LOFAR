@@ -1,14 +1,23 @@
 # - Try to find Pyrap.
+#
+# Find module(s) used by this module:
+#  FindCasacore
+#
 # Variables used by this module:
-#  PYRAP_ROOT_DIR     - Pyrap root directory
+#  PYRAP_ROOT_DIR         - Pyrap root directory     (Pyrap 1.x)
+#  CASACORE_ROOT_DIR      - Casacore root directory  (Pyrap 2.x)
+#
 # Variables defined by this module:
-#  PYRAP_FOUND        - system has Pyrap
-#  PYRAP_INCLUDE_DIR  - the Pyrap include directory (cached)
-#  PYRAP_INCLUDE_DIRS - the Pyrap include directories
-#                       (identical to PYRAP_INCLUDE_DIR)
-#  PYRAP_LIBRARY      - the Pyrap library (cached)
-#  PYRAP_LIBRARIES    - the Pyrap libraries
-#                       (identical to PYRAP_LIBRARY)
+#  PYRAP_FOUND            - system has Pyrap
+#  PYRAP_INCLUDE_DIR      - the Pyrap 1.x include directory (cached)
+#  PYCASACORE_INCLUDE_DIR - the Pyrap 2.x include directory (cached)
+#  PYRAP_INCLUDE_DIRS     - the Pyrap include directories
+#                           (identical to PYRAP_INCLUDE_DIR (pyrap 1.x); or
+#                            identical to CASACORE_INCLUDE_DIRS (pyrap 2.x))
+#  PYRAP_LIBRARY          - the Pyrap 1.x library (cached)
+#  PYRAP_LIBRARIES        - the Pyrap libraries
+#                           (identical to PYRAP_LIBRARY (pyrap 1.x only), 
+#                            plus CASACORE_LIBRARIES)
 
 # Copyright (C) 2009
 # ASTRON (Netherlands Institute for Radio Astronomy)
