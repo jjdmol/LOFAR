@@ -101,7 +101,6 @@ class NCQLib(object):
         returns them as a new dict.
         """
         msg = None
-        self.QPIDLoggerHandler._send_log_message("debug1","ERROR")
         
         # wait for the parameters: do this for max 10 seconds
         wait_counter = 0

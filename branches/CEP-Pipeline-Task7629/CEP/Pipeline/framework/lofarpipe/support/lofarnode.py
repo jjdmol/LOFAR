@@ -86,12 +86,10 @@ class LOFARnode(object):
         try:
             self.resourceMonitor.start()
 
-            self.logger.error("debug 1")
-                        
             return_value = self.run(*args)
-            #self.outputs["monitor_stats"] = \
-            #        self.resourceMonitor.getStatsAsXmlString()
-            self.logger.error("debug 2")
+            self.outputs["monitor_stats"] = \
+                    self.resourceMonitor.getStatsAsXmlString()
+
 
             return return_value
         finally:
@@ -228,8 +226,6 @@ class LOFARnodeTCP(LOFARnode):
 
         if _QPID_ENABLED:               
             self._NCQLib.send_results(self.outputs)
-            self.logger.debug("Placed a output msg on the return queue")
-
             return
         #else:
         message = "PUT %d %s" % (self.job_id, pickle.dumps(self.outputs))

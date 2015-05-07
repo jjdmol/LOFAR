@@ -84,9 +84,10 @@ class NCQDaemon(object):
 
           # 2.  Process all incomming commands
           quit_command_received = self._process_commands()
-          if (quit_command_received):
+          if quit_command_received:
               self.logger.warn("Recveived quit command. stopping daemon")
-              break     
+              break
+                 
           end_tick = datetime.now()   
 
           # 3.  perform a sleep,
@@ -101,8 +102,8 @@ class NCQDaemon(object):
         Perform a sleep with the duration loop_interval - duration last loop
         """
         sleep_time = self._loop_interval - duration_loop_seconds
-
-        self.logger.info("Starting sleep for {0} seconds".format(sleep_time))
+        self.logger.info("NCQDaemon: Starting sleep for {0} seconds".format(
+                                                                  sleep_time))
         time.sleep(sleep_time)
 
     def _process_commands(self):
@@ -111,11 +112,11 @@ class NCQDaemon(object):
         """     
         while True:
             # Test if the timeout is in milli seconds or second
-            msg = self._CommandQueue.get(0.1)  # get is blocking, always use timeout.
+            msg = self._CommandQueue.get(0.1)  # blocking, use timeout.
             if msg == None:
-               break    # Break the loop, we will wait on a other location
+               break    # We wait on a other location
 
-            # currently the expected payload is a list
+            # currently the expected payload is a dict
             msg_content = eval(msg.content().payload)
             # now process the commands
             command = msg_content['command'] 
@@ -135,40 +136,52 @@ class NCQDaemon(object):
             elif command == 'quit':
                 self._process_quit_msg(msg_content)
                 self._CommandQueue.ack(msg)                         
-                return True  # do NOT save the current state, might be cleared due to
-              # this command
+                return True  # do NOT save the current state, might be
+                             # cleared due to this command
 
             else:
-                self.logger.warn("***** warning **** encountered unknown command")
+                self.logger.warn(
+                  "NCQDaemon: ***** warning **** encountered unknown command")
                 self.logger.warn(msg_content)
 
+
+    def _unknown_uuid_msg(self, uuid, keys):
+        """
+        print log msg with detailed state information, used when unknown uuid
+        is encountered
+        """
+        self.logger.warn("------------------Major error -----------")
+        self.logger.warn("A job was requested on this deamon for an unknown")
+        self.logger.warn("Pipeline id. There is a sync error between the")
+        self.logger.warn("Master and Node Daemon.")
+        self.logger.warn('uuid:')
+        self.logger.warn(uuid)
+        self.logger.warn('keys()')
+        self.logger.warn(self._registered_pipelines.keys())
+        self.logger.warn("------------------Major error -----------")
         
     def _process_start_job(self, msg_content):
         """
 
         """
         uuid = msg_content['uuid']
+
+        # this should not happen but check anyways, does the received uuid
+        # exist?
+        if uuid not in self._registered_pipelines.keys():
+            self._unknown_uuid_msg(uuid, self._registered_pipelines.keys())
+            return
+
+
         command     = msg_content['parameters']['cmd']
         # Append the the command with the parameter queue name!
         command += " {0}".format(self._registered_pipelines[uuid]['parameterq'][0])
         working_dir = msg_content['parameters']['cdw']
         environment = msg_content['parameters']['environment']
         parameter_dict = msg_content['parameters']['job_parameters']
-
         job_uuid = msg_content['job_uuid']
 
-        # this should not happen but check anyways.
-        if uuid not in self._registered_pipelines.keys():
-            self.logger.warn("------------------Major error -----------")
-            self.logger.warn("A job was requested on this deamon for an unknown")
-            self.logger.warn("Pipeline id. There is a sync error between the")
-            self.logger.warn("Master and Node Daemon.")
-            self.logger.warn('uuid:')
-            self.logger.warn(uuid)
-            self.logger.warn('keys()')
-            self.logger.warn(self._registered_pipelines.keys())
-            self.logger.warn("------------------Major error -----------")
-            return
+
 
         # Run subprocess
         process = None
@@ -237,7 +250,7 @@ class NCQDaemon(object):
                   'topic':(topic_name, logTopic),
                   'parameterq':(parameterq_name, parameterQueue),
                   'jobs':{}}
-        self.logger.error(self._registered_pipelines[msg_content['uuid']])
+        #self.logger.error(self._registered_pipelines[msg_content['uuid']])
 
 
     def _connect_resultq_and_topic(self, uuid):
@@ -336,7 +349,6 @@ class NCQDaemon(object):
         msg.payload = {'level':   level,
                        'log_data':log_data}
 
-        self.logger.error(dir())
         #if not logTopic.connection.check_closed():
         #    # we cannot send to non existing queue, so.. return
         #    return
@@ -354,7 +366,6 @@ class NCQDaemon(object):
                      'uuid':uuid,
                      'job_uuid':msg_content['job_uuid']}
         """
-        self.logger.error(exit_dict)
         msg = message.MessageContent(
                 from_="{0}.{1}.NCQDaemon".format(
                         self._username, self._hostname),
@@ -376,7 +387,6 @@ class NCQDaemon(object):
         msg_details:
 
         """
-        self.logger.error(job_dict)
         msg = message.MessageContent(
                 from_="{0}.{1}.NCQDaemon".format(
                         self._username, self._hostname),

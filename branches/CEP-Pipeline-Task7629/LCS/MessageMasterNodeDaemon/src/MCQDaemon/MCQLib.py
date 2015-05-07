@@ -82,20 +82,17 @@ class logTopicHandler(threading.Thread):
         """
         Parse log message and send it to the logger at the correct level
         """
-        self.logger.error("Received a log msg:")
-        self.logger.error(str(msg_content))
-        self.logger.error("****************************")
         level = msg_content['level']
         log_data = msg_content['log_data'].strip()  #remove trailing whitespace
-        if level == 'critical':
+        if level == 'CRITICAL':
             self.logger.critical(log_data)
-        elif level == 'error':
+        elif level == 'ERROR':
             self.logger.error(log_data)
-        elif level == 'warning':
+        elif level == 'WARNING':
             self.logger.warning(log_data)
-        elif level == 'info':
+        elif level == 'INFO':
             self.logger.info(log_data)
-        elif level == 'debug':
+        elif level == 'DEBUG':
             self.logger.debug(log_data)
         else:
             self.logger.debug(log_data)
@@ -202,8 +199,6 @@ class resultQueueHandler(threading.Thread):
 
             with self._running_jobs_lock:
                 self._running_jobs[job_uuid]['output']=output
-
-        self.logger.error(self._running_jobs)        
 
 
     def run(self):
@@ -477,6 +472,5 @@ class MCQLib(object):
 
             with self._running_jobs_lock:
                 if self._running_jobs[job_uuid]['completed']: 
-                      self.logger.info("Exit value: {0}".format(
-                                  self._running_jobs[job_uuid]['exit_value']))    
+
                       return self._running_jobs[job_uuid]['exit_value']
