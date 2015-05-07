@@ -7,6 +7,8 @@ import time
 
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
+import lofar.messagebus.CQConfig as CQConfig
+
 
 class QPIDLoggerHandler(logging.Handler):
     def __init__(self, logTopicName):

@@ -28,6 +28,8 @@ import socket
 
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
+import lofar.messagebus.CQConfig as CQConfig
+
 
 # Define logging.  Until we have a python loging framework, we'll have
 # to do any initialising here
@@ -37,22 +39,20 @@ logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=loggin
 class NCQDaemon(object):
     def __init__(self,  loop_interval=10, clearCOmmandQueue=True):
         self.logger = logging.getLogger("NCQDaemon")
-        self._hostname = socket.gethostname()
-        self._username = pwd.getpwuid(os.getuid()).pw_name
+        self.logger.error(dir(CQConfig))
 
         self._loop_interval = loop_interval  # perform loop max once per 
                                              #loop_interval
 
-        self._broker = "127.0.0.1" 
-        self._returnQueueTemplate = "MCQDaemon.{0}.return.{1}" # they are owned by
-        self._logTopicTemplate = "MCQDaemon.{0}.log.{1}"       # the master daemon
-        self._parameterQueueTemplate ="NCQDaemon.{0}.parameters.{1}" #Node daemon
+        self._hostname = CQConfig.hostname
+        self._username = CQConfig.username
+
+        self._broker = CQConfig.broker 
 
         # create a NON durable queue: We cannot have old msg hanging in this
         # command queue
         self._CommandQueue = msgbus.FromBus(
-              "{0}.{1}.NCQueueDaemon.CommandQueue".format(self._username,
-                                                               self._hostname), 
+              CQConfig.create_nodeCommandQueue_name(), 
               options = "create:always, node: { type: queue, durable: True}",
               broker = self._broker)
 
@@ -263,9 +263,9 @@ class NCQDaemon(object):
         might arrive before the pipeline actually connected to the queueus
         """
         # create the queues names based on the template
-        resultq_name = self._returnQueueTemplate.format(self._username, uuid)
-        topic_name = self._logTopicTemplate.format(self._username, uuid)
-        parameterq_name = self._parameterQueueTemplate.format(self._username, uuid)
+        resultq_name = CQConfig.create_returnQueue_name(uuid)
+        topic_name = CQConfig.create_logTopic_name(uuid)
+        parameterq_name = CQConfig.create_parameterQueue_name(uuid)
 
         # now register to the queues, remember, the pipeline might not have
         # connected so create and make durable. Deleting is done by the 
@@ -326,32 +326,15 @@ class NCQDaemon(object):
         # delete the session entry
         del self._registered_pipelines[uuid]
 
-
-    def _send_log_message(self, logTopic, log_data, level='info'):
+    def _send_log_message(self, logTopic, log_data, level='INFO'):
         """
         Send a logging msg  with log_data to the logTOpic at the level
 
         msg_details:
         {'level'=level, 'log_data':log_data}
         """
-        
-        msg = message.MessageContent(
-                from_="{0}.{1}.NCQDaemon".format(
-                        self._username, self._hostname),
-                forUser="{0}.MSQDaemon".format(self._username),
-                summary="NCQDaemon log message",
-                protocol="CommandQUeueLogMsg",
-                protocolVersion="0.0.1", 
-                #momid="",
-                #sasid="", 
-                #qpidMsg=None
-                      )
-        msg.payload = {'level':   level,
-                       'log_data':log_data}
-
-        #if not logTopic.connection.check_closed():
-        #    # we cannot send to non existing queue, so.. return
-        #    return
+        msg = CQConfig.create_validated_log_msg(level, 
+                                          log_data,"NCQDaemon")
         logTopic.send(msg)
 
 
@@ -378,6 +361,8 @@ class NCQDaemon(object):
                 #qpidMsg=None
                       )
         msg.payload = exit_dict
+
+        msg = CQConfig.create_validated_return_msg(exit_dict, "NCQDaemon")
         resultQueue.send(msg)  
 
     def _send_job_parameter_message(self, parameterQueue, job_dict):

@@ -121,6 +121,10 @@ class logTopicHandler(threading.Thread):
                 msg = self._logTopic.get(0.1)  
                 if msg == None:
                     break   # break the loop
+                self.logger.error("**************************")
+                self.logger.error(msg.content().payload)
+                self.logger.error("**************************")
+
 
                 # process the log data
                 msg_content = eval(msg.content().payload)
