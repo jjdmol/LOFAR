@@ -121,7 +121,7 @@ def create_validated_log_msg(level, log_data, sender):
 
     return msg
 
-# Log msg
+# Return msg
 return_msg_protocol_name_template = "{0}ReturnMsg"
 return_msg_summary_template       = "{0} return message"
 return_msg_types                  = ['exit_value']
@@ -179,6 +179,7 @@ def create_validated_return_msg(exit_dict, sender):
 
     return msg
 
+# parameter msg
 parameter_msg_protocol_name_template = "{0}ParameterMsg"
 parameter_msg_summary_template       = "{0} parameter message"
 
@@ -189,30 +190,22 @@ def _validate_parameter_dict(payload):
     # First the correct msg type
     keys = payload.keys()
     if 'uuid' not in keys:
-         raise Exception("1")
          return False
     if 'job_uuid' not in keys:
-         raise Exception("2")
          return False
     if 'parameters' not in keys:
-         raise Exception("3")
          return False
     else:    # Check content of the parameters dict()
         parameter_keys = payload['parameters'].keys()
         if 'node' not in parameter_keys:
-             raise Exception("4")
              return False
         if 'environment' not in parameter_keys:
-             raise Exception("5")
              return False
         if 'cmd' not in parameter_keys:
-             raise Exception("6")
              return False
         if 'job_parameters' not in parameter_keys:
-             raise Exception("7")
              return False
         if 'cdw' not in parameter_keys:
-             raise Exception("8")
              return False
 
     return True

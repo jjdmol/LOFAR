@@ -12,4 +12,5 @@ python_install(
   MCQLib.py
   NCQLib.py
   CQConfig.py
+  CQCOmmon.py
   DESTINATION lofar/messagebus)

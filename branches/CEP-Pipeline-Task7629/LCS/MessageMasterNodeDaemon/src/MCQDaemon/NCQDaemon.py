@@ -279,7 +279,6 @@ class NCQDaemon(object):
         uuid = msg['uuid']
         self.logger.info("Received stop command for uuid: {0}".format(uuid))
         # Send stop msg the subprocesses that are part of this run 
-        # TODO: Still te be implemented
         # After killing the jobs. Remove the uuid from the internal storage
         # first check if the the queues might have been removed:
         # dueue to the nature of message, the delete might be called a second time
@@ -296,7 +295,7 @@ class NCQDaemon(object):
             # delete the job entry
             del self._registered_pipelines[uuid]['jobs'][job_uuid]
 
-        # close the the results queue (owned by us)
+        # close the queues
         self._registered_pipelines[uuid]['parameterq'][1].close()
         self._registered_pipelines[uuid]['resultq'][1].close()
         self._registered_pipelines[uuid]['topic'][1].close()
