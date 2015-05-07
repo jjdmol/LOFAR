@@ -40,6 +40,18 @@
 # $Id$
 
 
+# Helper macro to find casacore components that pyrap depends on.
+macro(_pyrap_find_casacore)
+  message(STATUS "Looking for Pyrap casacore dependencies")
+  include(LofarFindPackage)
+  if(Pyrap_FIND_REQUIRED)
+    lofar_find_package(Casacore REQUIRED COMPONENTS ${ARGN})
+  else(Pyrap_FIND_REQUIRED)
+    lofar_find_package(Casacore COMPONENTS ${ARGN})
+  endif(Pyrap_FIND_REQUIRED)
+endmacro(_pyrap_find_casacore)
+
+
 if(NOT PYRAP_FOUND)
 
   # First try to find pyrap
@@ -53,13 +65,7 @@ if(NOT PYRAP_FOUND)
       HINTS ${PYRAP_ROOT_DIR} PATH_SUFFIXES lib)
     mark_as_advanced(PYRAP_INCLUDE_DIR PYRAP_LIBRARY)
 
-    # Pyrap also depends on Casacore
-    include(LofarFindPackage)
-    if(Pyrap_FIND_REQUIRED)
-      lofar_find_package(Casacore REQUIRED COMPONENTS casa)
-    else(Pyrap_FIND_REQUIRED)
-      lofar_find_package(Casacore COMPONENTS casa)
-    endif(Pyrap_FIND_REQUIRED)
+    _pyrap_find_casacore(casa)
 
     include(FindPackageHandleStandardArgs)
     find_package_handle_standard_args(Pyrap DEFAULT_MSG 
@@ -75,13 +81,12 @@ endif(NOT PYRAP_FOUND)
 
 if(NOT PYRAP_FOUND)
 
-  find_path(PYCASACORE_INCLUDE_DIR casacore/python/Converters.h
-    HINTS ${CASACORE_ROOT_DIR} PATH_SUFFIXES include)
+  _pyrap_find_casacore(casa python)
 
-  # Found python-casacore.
+  find_path(PYCASACORE_INCLUDE_DIR casacore/python/Converters.h
+    HINTS ${CASACORE_INCLUDE_DIR} PATH_SUFFIXES include)
+
   mark_as_advanced(PYCASACORE_INCLUDE_DIR)
-  include(LofarFindPackage)
-  lofar_find_package(Casacore REQUIRED COMPONENTS casa python)
 
   include(FindPackageHandleStandardArgs)
   find_package_handle_standard_args(Pyrap DEFAULT_MSG 
