@@ -19,7 +19,7 @@
 #                           (identical to PYRAP_LIBRARY (pyrap 1.x only), 
 #                            plus CASACORE_LIBRARIES)
 
-# Copyright (C) 2009
+# Copyright (C) 2009-2015
 # ASTRON (Netherlands Institute for Radio Astronomy)
 # P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 #
