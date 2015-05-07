@@ -33,7 +33,7 @@ class test_recipe(LOFARnodeTCP):
         #self.logger.error(argument)
         ##self.environment.update(environment)
 
-        #self.outputs["output"] = "output"
+        self.outputs["output"] = "output"
         ## Time execution of this job
         return 0
 

@@ -75,6 +75,8 @@ class NCQLib(object):
         value of the script
         """
         self._broker = "127.0.0.1" 
+        self._hostname = socket.gethostname()
+        self._username = pwd.getpwuid(os.getuid()).pw_name
         self._parameterQueueName = parameterQueueName
         self._logTopicName = logTopicName
         self._returnQueueName = returnQueueName
@@ -119,3 +121,30 @@ class NCQLib(object):
 
 
         return self._job_dict['parameters']['job_parameters']
+
+    def send_results(self, output):
+        """
+        Send the received outputs to the results queue
+        """
+
+        msg = message.MessageContent(
+                from_="{0}.{1}.NCQlib".format(
+                        self._username, self._hostname),
+                forUser="{0}.MSQDaemon".format(self._username),
+                summary="NCQDaemon results message",
+                protocol="CommandQUeueLogMsg",
+                protocolVersion="0.0.1", 
+                #momid="",
+                #sasid="", 
+                #qpidMsg=None
+                      )
+        # Create the output dict
+        msg_dict = {'type': 'output',
+                    'output': output}
+
+        # add the job specific information
+        msg_dict.update(self._job_dict)
+
+        msg.payload = msg_dict
+        self._resultQueue.send(msg)
+

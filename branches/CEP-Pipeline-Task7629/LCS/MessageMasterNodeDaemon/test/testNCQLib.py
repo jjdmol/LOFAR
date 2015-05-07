@@ -30,7 +30,7 @@ if __name__ == "__main__":
     broker = "127.0.0.1" 
     hostname = "localhost"
     fromTopic = msgbus.FromBus(topicName, 
-              options = "create:always, node: { type: topic, durable: False}",
+              options = "create:always, delete:always, node: { type: topic, durable: False}",
               broker = broker)
 
     NCQLibObject = NCQLib.NCQLib("TempReturnQueueForTest",

@@ -82,6 +82,9 @@ class logTopicHandler(threading.Thread):
         """
         Parse log message and send it to the logger at the correct level
         """
+        self.logger.error("Received a log msg:")
+        self.logger.error(str(msg_content))
+        self.logger.error("****************************")
         level = msg_content['level']
         log_data = msg_content['log_data'].strip()  #remove trailing whitespace
         if level == 'critical':
@@ -183,17 +186,24 @@ class resultQueueHandler(threading.Thread):
         """
         # get the data from the msg
         type = msg_content['type']
-        # TODO: For now assume only exit_value msg: the results should
-        # be added also!!!!!!
+        if type == 'exit_value':
+            exit_value = msg_content['exit_value']
+            uuid = msg_content['uuid']
+            job_uuid = msg_content['job_uuid']
 
-        exit_value = msg_content['exit_value']
-        uuid = msg_content['uuid']
-        job_uuid = msg_content['job_uuid']
+            with self._running_jobs_lock:
+                self._running_jobs[job_uuid]['exit_value']=exit_value
+                self._running_jobs[job_uuid]['completed']=True
 
-        with self._running_jobs_lock:
-            self._running_jobs[job_uuid]['exit_value']=exit_value
-            self._running_jobs[job_uuid]['completed']=True
+        elif type == 'output':
+            output = msg_content['output']
+            uuid = msg_content['uuid']
+            job_uuid = msg_content['job_uuid']
 
+            with self._running_jobs_lock:
+                self._running_jobs[job_uuid]['output']=output
+
+        self.logger.error(self._running_jobs)        
 
 
     def run(self):

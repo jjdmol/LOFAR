@@ -73,14 +73,12 @@ class LOFARnode(object):
         Calls the run() method, ensuring that the logging handler is added
         and removed properly.
         """
-        
+
+        # Add the correct handler depending on the comm method.
         if _QPID_ENABLED:
             self.logger.addHandler(self._NCQLib.QPIDLoggerHandler)
-
-            self.logger.propagate = False    # stop printing to stdout
-            self.logger.error("#################################### WOOOT LOGGING USING CUSTOM HANDLER ##################")
-
             
+            self.logger.propagate = False    # stop printing to stdout           
         elif self.loghost:
             my_tcp_handler = logging.handlers.SocketHandler(self.loghost, self.logport)
             self.logger.addHandler(my_tcp_handler)
@@ -88,13 +86,13 @@ class LOFARnode(object):
         try:
             self.resourceMonitor.start()
 
-            
+            self.logger.error("debug 1")
+                        
             return_value = self.run(*args)
             #self.outputs["monitor_stats"] = \
             #        self.resourceMonitor.getStatsAsXmlString()
+            self.logger.error("debug 2")
 
-            if return_value != 0 :
-                sys.exit(88)
             return return_value
         finally:
             self.resourceMonitor.setStopFlag()
@@ -135,11 +133,13 @@ class LOFARnodeTCP(LOFARnode):
 
             print returnQueueName,  logTopicName, parameterQueueName
             if _QPID_ENABLED:
-
+                
                 self._NCQLib = NCQLib.NCQLib(returnQueueName, logTopicName,
                                              parameterQueueName)
+               
                 self.host = None
                 self.port = None
+
             else:
                 raise ex
             
@@ -225,6 +225,13 @@ class LOFARnodeTCP(LOFARnode):
         Send the contents of self.outputs to the originating job dispatch
         server.
         """
+
+        if _QPID_ENABLED:               
+            self._NCQLib.send_results(self.outputs)
+            self.logger.debug("Placed a output msg on the return queue")
+
+            return
+        #else:
         message = "PUT %d %s" % (self.job_id, pickle.dumps(self.outputs))
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
