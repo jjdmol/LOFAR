@@ -151,7 +151,6 @@ def _validate_return_exit_dict(payload):
 
     return True
 
-
 def create_validated_return_msg(exit_dict, sender):
     """
     Creates a fully instantiated log msg.
@@ -180,7 +179,63 @@ def create_validated_return_msg(exit_dict, sender):
 
     return msg
 
-                
+parameter_msg_protocol_name_template = "{0}ParameterMsg"
+parameter_msg_summary_template       = "{0} parameter message"
+
+def _validate_parameter_dict(payload):
+    """
+    Checks if the return payload is correct according to the protocol
+    """
+    # First the correct msg type
+    keys = payload.keys()
+    if 'uuid' not in keys:
+         raise Exception("1")
+         return False
+    if 'job_uuid' not in keys:
+         raise Exception("2")
+         return False
+    if 'parameters' not in keys:
+         raise Exception("3")
+         return False
+    else:    # Check content of the parameters dict()
+        parameter_keys = payload['parameters'].keys()
+        if 'node' not in parameter_keys:
+             raise Exception("4")
+             return False
+        if 'environment' not in parameter_keys:
+             raise Exception("5")
+             return False
+        if 'cmd' not in parameter_keys:
+             raise Exception("6")
+             return False
+        if 'job_parameters' not in parameter_keys:
+             raise Exception("7")
+             return False
+        if 'cdw' not in parameter_keys:
+             raise Exception("8")
+             return False
+
+    return True
+              
+def create_validated_parameter_msg(payload, sender):
+    """
+    Creates a fully instantiated log msg.
+    """
+    # First check if msg type is correct
+    if not _validate_parameter_dict(payload):
+        raise Exception("Incorrect parameter msg payload received: {0}".format(
+                        repr(payload)))
+
+    # Create the header
+    msg = create_msg_header(msg_fromNCQDaemon_template,
+                msg_forMCQDaemon_template,
+                parameter_msg_summary_template.format(sender),
+                parameter_msg_protocol_name_template.format(sender))
+
+    # add the data to send
+    msg.payload = payload
+
+    return msg
 
 
-
+ 

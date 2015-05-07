@@ -43,10 +43,6 @@ class NCQDaemon(object):
 
         self._loop_interval = loop_interval  # perform loop max once per 
                                              #loop_interval
-
-        self._hostname = CQConfig.hostname
-        self._username = CQConfig.username
-
         self._broker = CQConfig.broker 
 
         # create a NON durable queue: We cannot have old msg hanging in this
@@ -172,7 +168,6 @@ class NCQDaemon(object):
             self._unknown_uuid_msg(uuid, self._registered_pipelines.keys())
             return
 
-
         command     = msg_content['parameters']['cmd']
         # Append the the command with the parameter queue name!
         command += " {0}".format(self._registered_pipelines[uuid]['parameterq'][0])
@@ -181,16 +176,13 @@ class NCQDaemon(object):
         parameter_dict = msg_content['parameters']['job_parameters']
         job_uuid = msg_content['job_uuid']
 
-
-
+        # First send the a parameter msg on the queue
+        self._send_job_parameter_message(
+                  self._registered_pipelines[uuid]['parameterq'][1],
+                  msg_content)
         # Run subprocess
         process = None
         try:
-            # First send the a parameter msg on the queue
-           
-            self._send_job_parameter_message(
-                  self._registered_pipelines[uuid]['parameterq'][1],
-                  msg_content)
             time.sleep(1)   # Otherwise the msg is not yet evailable on the other
                             # side
             process = subprocess.Popen(
@@ -213,8 +205,6 @@ class NCQDaemon(object):
                                                   copy.deepcopy(msg_content))
 
         self.logger.info("Started a new job: {0}".format(command))
-
-
 
     def _process_quit_msg(self, msg_content):
         """
@@ -240,18 +230,10 @@ class NCQDaemon(object):
         self.logger.info("New (pipeline) session started: {0}".format(
                                                           msg_content['uuid']))
         # Connect to the queue and topic, use the uuid of the session
-        (resultq_name, resultQueue), (topic_name, logTopic), (parameterq_name, 
-                                                           parameterQueue) = \
-            self._connect_resultq_and_topic(msg_content['uuid'])
-
+        queues_dict = self._connect_resultq_and_topic(msg_content['uuid'])
+        queues_dict['jobs'] = {}
         # store them in the internal pipeline storage
-        self._registered_pipelines[msg_content['uuid']] = {
-                  'resultq':(resultq_name, resultQueue),
-                  'topic':(topic_name, logTopic),
-                  'parameterq':(parameterq_name, parameterQueue),
-                  'jobs':{}}
-        #self.logger.error(self._registered_pipelines[msg_content['uuid']])
-
+        self._registered_pipelines[msg_content['uuid']] = queues_dict
 
     def _connect_resultq_and_topic(self, uuid):
         """
@@ -284,8 +266,11 @@ class NCQDaemon(object):
               broker = self._broker)   # Created NON durable: delete when not
                                        # needed anymore
 
-        return (resultq_name, resultQueue), (topic_name, logTopic), \
-               (parameterq_name, parameterQueue)
+        queues_dict = {'resultq':(resultq_name, resultQueue),
+                       'topic':(topic_name, logTopic),
+                       'parameterq':(parameterq_name, parameterQueue)}
+
+        return queues_dict
   
     def _process_stop_msg(self, msg):
         """
@@ -296,13 +281,6 @@ class NCQDaemon(object):
         # Send stop msg the subprocesses that are part of this run 
         # TODO: Still te be implemented
         # After killing the jobs. Remove the uuid from the internal storage
-        self._kill_session_jobs(uuid)
-
-
-    def _kill_session_jobs(self, uuid):
-        """
-
-        """
         # first check if the the queues might have been removed:
         # dueue to the nature of message, the delete might be called a second time
         if uuid not in self._registered_pipelines.keys():
@@ -326,64 +304,28 @@ class NCQDaemon(object):
         # delete the session entry
         del self._registered_pipelines[uuid]
 
+
     def _send_log_message(self, logTopic, log_data, level='INFO'):
         """
         Send a logging msg  with log_data to the logTOpic at the level
-
-        msg_details:
-        {'level'=level, 'log_data':log_data}
         """
         msg = CQConfig.create_validated_log_msg(level, 
                                           log_data,"NCQDaemon")
         logTopic.send(msg)
 
-
-    # TODO: HERE is something wrong
     def _send_job_exit_message(self, resultQueue, exit_dict):
         """
         Send a job exit information msg
-
-        msg_details:
-                    {'type':'exit_value'
-                     'exit_value':exit_status,
-                     'uuid':uuid,
-                     'job_uuid':msg_content['job_uuid']}
         """
-        msg = message.MessageContent(
-                from_="{0}.{1}.NCQDaemon".format(
-                        self._username, self._hostname),
-                forUser="{0}.MSQDaemon".format(self._username),
-                summary="NCQDaemon job exit message",
-                protocol="CommandQUeueExitMsg",
-                protocolVersion="0.0.1", 
-                #momid="",
-                #sasid="", 
-                #qpidMsg=None
-                      )
-        msg.payload = exit_dict
-
         msg = CQConfig.create_validated_return_msg(exit_dict, "NCQDaemon")
         resultQueue.send(msg)  
 
     def _send_job_parameter_message(self, parameterQueue, job_dict):
         """
         Send a job exit information msg
-
-        msg_details:
-
         """
-        msg = message.MessageContent(
-                from_="{0}.{1}.NCQDaemon".format(
-                        self._username, self._hostname),
-                forUser="{0}.NSQLib".format(self._username),
-                summary="NCQDaemon job parameter message",
-                protocol="NCQLib",
-                protocolVersion="0.0.1", 
-                #momid="",
-                #sasid="", 
-                #qpidMsg=None
-                      )
-        msg.payload = job_dict
+
+        msg = CQConfig.create_validated_parameter_msg(job_dict, "NCQDaemon")
         parameterQueue.send(msg)  
            
 
@@ -431,5 +373,4 @@ if __name__ == "__main__":
     daemon = NCQDaemon(1)
     
     daemon.run()
-        
-
+    
