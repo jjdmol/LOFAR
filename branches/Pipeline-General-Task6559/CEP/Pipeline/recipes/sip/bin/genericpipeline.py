@@ -8,11 +8,22 @@ from lofarpipe.support.loggingdecorators import duration
 from lofarpipe.support.data_map import DataMap, DataProduct, validate_data_maps
 from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.utilities import create_directory
-
+import logging
+from lofarpipe.support.pipelinelogging import getSearchingLogger
+import lofarpipe.support.lofaringredient as ingredient
 import loader
 
 
 class GenericPipeline(control):
+
+    inputs = {
+        'loglevel': ingredient.StringField(
+            '--loglevel',
+            help="loglevel",
+            default='INFO',
+            optional=True
+        )
+    }
 
     def __init__(self):
         control.__init__(self)
@@ -20,6 +31,8 @@ class GenericPipeline(control):
         self.input_data = {}
         self.output_data = {}
         self.parset_feedback_file = None
+        #self.logger = None#logging.RootLogger('DEBUG')
+        self.name = ''
 
     def usage(self):
         """
@@ -45,7 +58,12 @@ class GenericPipeline(control):
         if not 'job_name' in self.inputs:
             self.inputs['job_name'] = (
                 os.path.splitext(os.path.basename(parset_file))[0])
-
+            self.name = self.inputs['job_name']
+        try:
+            self.logger
+        except:
+            self.logger = getSearchingLogger(self.name)
+            self.logger.setLevel(self.inputs['loglevel'])
         # Call the base-class's `go()` method.
         return super(GenericPipeline, self).go()
 
