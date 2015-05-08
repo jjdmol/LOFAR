@@ -1,23 +1,23 @@
 # - Try to find Pyrap.
 #
+# Pyrap provides python bindings to the casacore radio astronomy libraries.
+# With the release of casacore 2.0, pyrap has been superseded by 
+# python-casacore. This find module remains for backward compatibility.
+#
 # Find module(s) used by this module:
 #  FindCasacore
 #
 # Variables used by this module:
-#  PYRAP_ROOT_DIR         - Pyrap root directory     (Pyrap 1.x)
-#  CASACORE_ROOT_DIR      - Casacore root directory  (Pyrap 2.x)
+#  PYRAP_ROOT_DIR     - Pyrap root directory
 #
 # Variables defined by this module:
-#  PYRAP_FOUND            - system has Pyrap
-#  PYRAP_INCLUDE_DIR      - the Pyrap 1.x include directory (cached)
-#  PYCASACORE_INCLUDE_DIR - the Pyrap 2.x include directory (cached)
-#  PYRAP_INCLUDE_DIRS     - the Pyrap include directories
-#                           (identical to PYRAP_INCLUDE_DIR (pyrap 1.x); or
-#                            identical to CASACORE_INCLUDE_DIRS (pyrap 2.x))
-#  PYRAP_LIBRARY          - the Pyrap 1.x library (cached)
-#  PYRAP_LIBRARIES        - the Pyrap libraries
-#                           (identical to PYRAP_LIBRARY (pyrap 1.x only), 
-#                            plus CASACORE_LIBRARIES)
+#  PYRAP_FOUND        - system has Pyrap
+#  PYRAP_INCLUDE_DIR  - the Pyrap include directory (cached)
+#  PYRAP_INCLUDE_DIRS - the Pyrap include directories
+#                       (identical to PYRAP_INCLUDE_DIR)
+#  PYRAP_LIBRARY      - the Pyrap library (cached)
+#  PYRAP_LIBRARIES    - the Pyrap libraries
+#                       (identical to PYRAP_LIBRARY)
 
 # Copyright (C) 2009-2015
 # ASTRON (Netherlands Institute for Radio Astronomy)
@@ -39,60 +39,39 @@
 #
 # $Id$
 
-
-# Helper macro to find casacore components that pyrap depends on.
-macro(_pyrap_find_casacore)
-  message(STATUS "Looking for Pyrap casacore dependencies")
-  include(LofarFindPackage)
-  if(Pyrap_FIND_REQUIRED)
-    lofar_find_package(Casacore REQUIRED COMPONENTS ${ARGN})
-  else(Pyrap_FIND_REQUIRED)
-    lofar_find_package(Casacore COMPONENTS ${ARGN})
-  endif(Pyrap_FIND_REQUIRED)
-endmacro(_pyrap_find_casacore)
-
+include(LofarFindPackage)
 
 if(NOT PYRAP_FOUND)
+  # Casacore 2.x has the Python converters built-in; try this first.
+  lofar_find_package(Casacore COMPONENTS python)
 
-  # First try to find pyrap
-  find_path(PYRAP_INCLUDE_DIR pyrap/Converters.h
-    HINTS ${PYRAP_ROOT_DIR} PATH_SUFFIXES include)
-
-  if (PYRAP_INCLUDE_DIR)
-  
-    # Found old pyrap
+  if(CASA_PYTHON_LIBRARY)
+    # We found the cascore python component. 
+    # Set PYRAP_INCLUDE_DIR and PYRAP_LIBRARY for backward compatibility.
+    set(PYRAP_INCLUDE_DIR ${CASACORE_INCLUDE_DIR}
+      CACHE PATH "Path to a file.")
+    set(PYRAP_LIBRARY ${CASA_PYTHON_LIBRARY}
+      CACHE FILEPATH "Path to a library.")
+  else()
+    # Try to find the old pyrap.
+    find_path(PYRAP_INCLUDE_DIR pyrap/Converters.h
+      HINTS ${PYRAP_ROOT_DIR} PATH_SUFFIXES include)
     find_library(PYRAP_LIBRARY pyrap
       HINTS ${PYRAP_ROOT_DIR} PATH_SUFFIXES lib)
-    mark_as_advanced(PYRAP_INCLUDE_DIR PYRAP_LIBRARY)
-
-    _pyrap_find_casacore(casa)
-
-    include(FindPackageHandleStandardArgs)
-    find_package_handle_standard_args(Pyrap DEFAULT_MSG 
-      PYRAP_LIBRARY PYRAP_INCLUDE_DIR)
-
-    set(PYRAP_INCLUDE_DIRS ${PYRAP_INCLUDE_DIR} ${CASACORE_INCLUDE_DIRS})
-    set(PYRAP_LIBRARIES ${PYRAP_LIBRARY} ${CASACORE_LIBRARIES})
-
-  endif(PYRAP_INCLUDE_DIR)
-
-endif(NOT PYRAP_FOUND)
-
-
-if(NOT PYRAP_FOUND)
-
-  _pyrap_find_casacore(casa python)
-
-  find_path(PYCASACORE_INCLUDE_DIR casacore/python/Converters.h
-    HINTS ${CASACORE_INCLUDE_DIR} PATH_SUFFIXES include)
-
-  mark_as_advanced(PYCASACORE_INCLUDE_DIR)
+    # Pyrap also depends on the casa library in casacore.
+    if(Pyrap_FIND_REQUIRED)
+      lofar_find_package(Casacore REQUIRED COMPONENTS casa)
+    else()
+      lofar_find_package(Casacore COMPONENTS casa)
+    endif()
+  endif()
+  mark_as_advanced(PYRAP_INCLUDE_DIR PYRAP_LIBRARY)
 
   include(FindPackageHandleStandardArgs)
   find_package_handle_standard_args(Pyrap DEFAULT_MSG 
-    PYCASACORE_INCLUDE_DIR)
+    PYRAP_LIBRARY PYRAP_INCLUDE_DIR)
 
-  set(PYRAP_INCLUDE_DIRS ${CASACORE_INCLUDE_DIRS})
-  set(PYRAP_LIBRARIES ${CASACORE_LIBRARIES})
+  set(PYRAP_INCLUDE_DIRS ${PYRAP_INCLUDE_DIR} ${CASACORE_INCLUDE_DIRS})
+  set(PYRAP_LIBRARIES ${PYRAP_LIBRARY} ${CASACORE_LIBRARIES})
 
-endif(NOT PYRAP_FOUND)
+endif()
