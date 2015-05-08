@@ -49,7 +49,6 @@ class MCQDaemon(object):
                                              #loop_interval
         
         self._registered_pipelines = {}          
-        self._session_queueus = None             
 
         self._registered_nodes = {}
 
@@ -211,18 +210,15 @@ class MCQDaemon(object):
         # its either a wait or a state or we have a countdown to allow late
         #connections
 
-        self._session_queueus[uuid] = session_queue_dict
-
   
     def _process_stop_msg(self, msg_content):
         """
         Stop the current session.
-        """
-        
-        self.logger.info("deleting session with uuid: {0}".format(uuid))
+        """       
+        self.logger.info("Receive stop msg "
+                         "deleting session with uuid: {0}".format(uuid))
 
         self._delete_queues_and_session(msg_content['uuid'])
-
 
 
     def _create_resultq_and_topic(self, uuid):
@@ -280,9 +276,8 @@ class MCQDaemon(object):
         throws Exception if the queue or topic for a stored session uuid is not 
         found 
         """
-        # TODO: Warning!!!!  With a large amount if queues and topic this might
-        # get slow!!!!!
-
+        # Warning  With a large amount if queues and topic this might get slow!!!!!
+        # TODO: This function feels smells. Might need some cleanup
         # First get al the registered queues and topics on the broker
         queues = self._brokerAgent.getAllQueues()
         topics = self._brokerAgent.getAllExchanges()
@@ -298,7 +293,7 @@ class MCQDaemon(object):
 
         # Loop all the session uuid on the broker, find the accompanying topic or
         # queue on the broker
-        uuid_dict = {}
+        broker_sessions_data = {}
         for uuid in self._registered_pipelines.keys():
             
             session_dict = {}
@@ -337,9 +332,9 @@ class MCQDaemon(object):
                                 " the broker, the internal daemon state is corrupt!")
 
             # Now store all our collected information in an easy dict
-            uuid_dict[uuid] = session_dict
+            broker_sessions_data[uuid] = session_dict
 
-        return uuid_dict
+        return broker_sessions_data
 
     def _get_check_and_clear_known_queues(self):
         """
@@ -348,9 +343,9 @@ class MCQDaemon(object):
 
         Clear the messages in the queues and delete these
         """
-        self._session_queueus = self._get_queue_and_topic_from_broker()
+        broker_queueus = self._get_queue_and_topic_from_broker()
 
-        for (uuid, session_dict) in self._session_queueus.items():
+        for (uuid, session_dict) in broker_queueus.items():
             # A queue might be in the init period (a grace period which allows an
             # pipelie some time to connect to the bus before the queues are
             # removed)
@@ -401,7 +396,6 @@ class MCQDaemon(object):
  
         self.logger.info("Deleted queues for session uuid: {0}".format(uuid))
         # delete the entry from the actual dict
-        del self._session_queueus[uuid]
         del self._registered_pipelines[uuid]
 
         self._delete_queue_and_topic(qname, topicname)
