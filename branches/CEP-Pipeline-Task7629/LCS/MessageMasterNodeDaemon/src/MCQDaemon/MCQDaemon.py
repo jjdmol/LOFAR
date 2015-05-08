@@ -52,7 +52,6 @@ class MCQDaemon(object):
         self._session_queueus = None             
 
         self._registered_nodes = {}
-        self._registered_nodes_queues = {}
 
         # Connect to the command queue
         self._broker = CQConfig.broker
@@ -172,30 +171,21 @@ class MCQDaemon(object):
         The starting of a job on one of the node servers.
         """
         # extract the job parameters from the msg
-        # Should be stored in the internal storag2
+        # This information is need to perform local work and to know where
+        # to send the information 
         uuid = msg_content['uuid']
         node = msg_content['parameters']['node']
 
-        self._check_slave_and_connect(node)
-        self._check_session_and_start(node, uuid)
+        # perform the master functionality before starting a job:
+        self._check_slave_and_connect(node)    
+        self._check_session_and_start(node, uuid)  # start session on the slave
 
-        msg = message.MessageContent(
-                from_="USERNAME.LOCUS102.MCQDaemon",
-                forUser="USERRNAME.{0}.NSQDaemon".format(node),
-                summary="First msg to be send",
-                protocol="CommandQUeueMsg",
-                protocolVersion="0.0.1", 
-                #momid="",
-                #sasid="", 
-                #qpidMsg=None
-                      )
-        msg.payload = msg_content
+        msg = CQConfig.create_MCQDaemon_to_NCQDaemon_start_job_msg(msg_content,
+                            "MCQDaemon", node)
+
+        self._registered_nodes[node]['CQObject'].send(msg)
         self.logger.info("send job to: {0}".format(
-                                self._registered_nodes[node]['CQName']))
-
-        self._registered_nodes_queues[node].send(msg)
-
-    
+                                self._registered_nodes[node]['CQName']))   
 
     def _process_start_session_msg(self, msg_content):
         """
@@ -223,6 +213,17 @@ class MCQDaemon(object):
 
         self._session_queueus[uuid] = session_queue_dict
 
+  
+    def _process_stop_msg(self, msg_content):
+        """
+        Stop the current session.
+        """
+        
+        self.logger.info("deleting session with uuid: {0}".format(uuid))
+
+        self._delete_queues_and_session(msg_content['uuid'])
+
+
 
     def _create_resultq_and_topic(self, uuid):
         """
@@ -230,7 +231,19 @@ class MCQDaemon(object):
         Return the create queue and topic name
 
         Both the queue and topic are created durable, they stay even when 
-        there are no listeners
+        there are no listeners. These queues are owned by the master and
+        are deleted when a quit msg received, -or-, when the master senses
+        that there are no more listeners on the results queue (pipeline crash)
+
+        There is a grace period before the testing of listeneres is started.
+        This allows some spare time for the pipeline between starting a session
+        and connecting to it.
+
+        Returns the created bus objects in a dict:
+        {'queue_name':resultq_name,
+         'queue_object':resultQueue,
+         'topic_name':topic_name,
+         'topic_object':logTopic}
         """
         # create the queues names based on the template
         resultq_name = CQConfig.create_returnQueue_name(uuid)
@@ -241,7 +254,7 @@ class MCQDaemon(object):
               options = "create:always, node: { type: queue, durable: True}",
               broker = self._broker)
 
-        # and topic s: qpid-stat -e for example and source of this code
+        # and topic 
         logTopic = msgbus.ToBus(topic_name, 
               options = "create:always, node: { type: topic, durable: True}",
               broker = self._broker)
@@ -253,27 +266,6 @@ class MCQDaemon(object):
                     'topic_object':logTopic}
 
         return session_queue_dict
-  
-    def _process_stop_msg(self, msg_content):
-        """
-        Stop the current session.
-        """
-        
-        self.logger.info("deleting session with uuid: {0}".format(uuid))
-
-        self._delete_queues_and_session(msg_content['uuid'])
-
-    def _save_state_to_file(self):
-        """
-        Save the internal session information to disk     
-        """      
-        file = open(self._state_file_path, 'w')
-
-        pickle.dump(self._registered_pipelines, file)
-
-        file.flush()  # force write to disk
-        file.close()
-
 
     def _get_queue_and_topic_from_broker(self):
         """
@@ -382,7 +374,7 @@ class MCQDaemon(object):
             return
 
         # send the quit msg to NodeDaemons
-        for node in self._registered_nodes_queues.keys():
+        for node in self._registered_nodes.keys():
             msg = message.MessageContent(
                 from_="USERNAME.LOCUS102.MCQDaemon",
                 forUser="USERRNAME.{0}.NSQDaemon".format(node),
@@ -397,7 +389,7 @@ class MCQDaemon(object):
                              'uuid':uuid}
             msg.payload = start_msg_content
             self.logger.info("sending stop_session to nodes")
-            self._registered_nodes_queues[node].send(msg)
+            self._registered_nodes[node]['CQObject'].send(msg)
 
         # remove the q and topic
         qname = self._registered_pipelines[uuid]['resultq']
@@ -413,21 +405,20 @@ class MCQDaemon(object):
 
     def _check_slave_and_connect(self, node):
         """
-        Checks if a node is connect and created a msg queue connect if needed
+        Checks if a node is known and created a msg queue connect if needed
         """
-        if node in self._registered_nodes.keys():
-            nodeQueueName = self._registered_nodes[node]['CQName']
-        else:
+        if node not in self._registered_nodes.keys():
             self.logger.debug(
                 "received job for unconnected slave: {0}".format(node))
 
             # TODO: Het maken van deze queueu moet ergens anders
             nodeQueueName = CQConfig.create_nodeCommandQueue_name(node)
 
-            self._registered_nodes[node]={'CQName':nodeQueueName}
-            self._registered_nodes_queues[node] = msgbus.ToBus(nodeQueueName, 
+            bus = msgbus.ToBus(nodeQueueName, 
                 options = "create:always, node: { type: queue, durable: True}",
                 broker = self._broker)
+            self._registered_nodes[node]={'CQName': nodeQueueName,
+                                          'CQObject': bus}
 
 
     def _check_session_and_start(self, node, uuid):
@@ -435,7 +426,8 @@ class MCQDaemon(object):
         Checks if a node is connect and created a msg queue connect if needed
         """
         if uuid not in self._registered_pipelines.keys():
-            return
+            return  # TODO: THis is an error state!!! This should be handled
+
         if node not in self._registered_pipelines[uuid]['session_nodes']:
             # Send the node the start_session command
             msg = message.MessageContent(
@@ -452,7 +444,8 @@ class MCQDaemon(object):
                                  'uuid':uuid}
             msg.payload = start_msg_content
             self.logger.info("Starting node session on: {0}".format(node))
-            self._registered_nodes_queues[node].send(msg)
+            self._registered_nodes[node]['CQObject'].send(msg)
+
             self._registered_pipelines[uuid]['session_nodes'].append(node)        
 
     def _delete_queue_and_topic(self, qname, topicname):
@@ -465,6 +458,17 @@ class MCQDaemon(object):
         # then the topic, there is no pipeline anymore logging does not have target
         # anymore, It is a topic so no need to force the remova;
         self._brokerAgent.delExchange(topicname)
+
+
+    def _save_state_to_file(self):
+        """
+        Save the internal session information to disk     
+        """      
+        file = open(self._state_file_path, 'w')
+        pickle.dump(self._registered_pipelines, file)
+
+        file.flush()  # force write to disk
+        file.close()
 
     def _init_state_from_file_if_possible(self):
         """

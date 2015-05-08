@@ -77,16 +77,21 @@ def create_masterCommandQueue_name():
     """
     return masterCommandQueueTemplate.format(username, hostname)
 
-
-def create_msg_header(from_template, for_template, summary,
-                      protocol):
+def create_msg_header(from_template, for_template, summary, protocol, 
+                      i_hostname = None):
     """
     create a msg header from supplied template parameters
 
 
     """
+    lhostname = None
+    if i_hostname == None:
+        lhostname = hostname
+    else:
+        lhostname = i_hostname
+
     msg = message.MessageContent(
-                from_=from_template.format(username, hostname),
+                from_=from_template.format(username, lhostname),
                 forUser=for_template.format(username),
                 summary=summary,
                 protocol=protocol,
@@ -244,4 +249,21 @@ def create_validated_parameter_msg(payload, sender):
     return msg
 
 
- 
+msg_fromMCQDaemon_template  = "{0}.{1}.MCQDaemon"
+msg_forNCQDaemon_template   = "{0}.MSQDaemon"
+
+# parameter msg
+start_job_msg_protocol_name_template = "{0}StartJobMsg"
+start_job_msg_summary_template       = "{0} start job on node message"
+def create_MCQDaemon_to_NCQDaemon_start_job_msg(payload, sender, target):
+
+    msg = create_msg_header(msg_fromMCQDaemon_template,
+                msg_forNCQDaemon_template,
+                start_job_msg_summary_template.format(sender),
+                start_job_msg_protocol_name_template.format(sender),
+                target)
+
+    # just forward the msg_content as is.
+    msg.payload = payload
+
+    return msg
