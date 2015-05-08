@@ -3,6 +3,7 @@
 include(LofarCTest)
 
 if(UNITTEST++_FOUND)
+  lofar_add_test(tGPUProcIO tGPUProcIO.cc)
   lofar_add_test(tSubbandWriter tSubbandWriter.cc)
   lofar_add_test(tOutputThread tOutputThread.cc)
 endif()
