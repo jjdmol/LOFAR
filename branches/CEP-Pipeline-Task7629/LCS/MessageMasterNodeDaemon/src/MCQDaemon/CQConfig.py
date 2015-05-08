@@ -39,6 +39,7 @@ parameterQueueTemplate  = "NCQDaemon.{0}.parameters.{1}"
 
 # Config for the master/node framework
 nodeCommandQueueTemplate= "{0}.{1}.NCQueueDaemon.CommandQueue"
+masterCommandQueueTemplate="{0}.{1}.MCQueueDaemon.CommandQueue"
 
 def create_returnQueue_name(uuid):
     """
@@ -58,11 +59,23 @@ def create_parameterQueue_name(uuid):
     """
     return  parameterQueueTemplate.format(username, uuid)
 
-def create_nodeCommandQueue_name():
+def create_nodeCommandQueue_name(i_hostname=None):
     """
     Returns a fully constructed name for a unique returnQueue unique
     """
-    return  nodeCommandQueueTemplate.format(username, hostname)
+    l_hostname = None
+    if i_hostname is None:
+        l_hostname = hostname
+    else:
+        l_hostname = i_hostname
+    return  nodeCommandQueueTemplate.format(username, 
+                                            l_hostname)
+
+def create_masterCommandQueue_name():
+    """
+    Returns a fully constructed name for the master command queue name
+    """
+    return masterCommandQueueTemplate.format(username, hostname)
 
 
 def create_msg_header(from_template, for_template, summary,

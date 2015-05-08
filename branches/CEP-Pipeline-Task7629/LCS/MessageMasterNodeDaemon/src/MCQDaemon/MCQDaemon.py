@@ -28,6 +28,7 @@ import socket
 
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
+import lofar.messagebus.CQConfig as CQConfig
 
 # programmatically interact with the qpid broker
 from qpid.messaging import Connection	
@@ -41,45 +42,34 @@ logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=loggin
 
 class MCQDaemon(object):
     def __init__(self, loop_interval=10, state_file_path=None, init_delay=5):
-        self._hostname = socket.gethostname()
-        self._username = pwd.getpwuid(os.getuid()).pw_name
-
         self.logger = logging.getLogger("MCQDaemon")
+
+        self._init_delay = init_delay        # how many loop polls te wait 
         self._loop_interval = loop_interval  # perform loop max once per 
                                              #loop_interval
-     
-        self._registered_pipelines = {}          # dict of uuid ->(ResultQName,
-                                                 #                 LogTopic)
-        self._session_queueus = None             # will contain a current
-                                                 # dict of sessions and queueus
-        self._broker = "127.0.0.1" 
-        self._returnQueueTemplate = "MCQDaemon.{0}.return.{1}"
-        self._logTopicTemplate = "MCQDaemon.{0}.log.{1}"
-        self._nodeCommandQueueTemplate = "{0}.{1}.NCQueueDaemon.CommandQueue"
+        
+        self._registered_pipelines = {}          
+        self._session_queueus = None             
 
+        self._registered_nodes = {}
+        self._registered_nodes_queues = {}
 
+        # Connect to the command queue
+        self._broker = CQConfig.broker
         self._CommandQueue = msgbus.FromBus(
-              "{0}.{1}.MCQueueDaemon.CommandQueue".format(self._username,
-                                                          self._hostname), 
+                   CQConfig.create_masterCommandQueue_name(),
               options = "create:always, node: { type: queue, durable: True}",
               broker = self._broker)
 
-
-        self._init_delay = init_delay        # how many loop polls te wait 
         # check for existing statefile
         # before it is asumed that the pipeline that called init has died before
         # registering as a consumer
-        self._state_file_path = state_file_path  # where to store the statefile
+        self._state_file_path = state_file_path  
         self._init_state_from_file_if_possible()
 
+        # Needed for getting information on queues 
         self._connection = Connection.establish(self._broker)
         self._brokerAgent = BrokerAgent(self._connection)
-
-        # A dictionary with node to queue names, used for state validation 
-        # and queue retrieval of queue names
-        self._registered_nodes = {}
-
-        self._registered_nodes_queues = {}
 
 
     def run(self):
@@ -112,27 +102,17 @@ class MCQDaemon(object):
       
           self._sleep(duration_loop_seconds)
 
-    def _sleep(self, duration_loop_seconds):
-        """
-        Perform a sleep with the duration loop_interval - duration last loop
-        """
-        sleep_time = self._loop_interval - duration_loop_seconds
-
-        self.logger.info("Starting sleep for {0} seconds".format(sleep_time))
-        time.sleep(sleep_time)
-
-
     def _process_commands(self):
         """
         Process in order all commands in the command queue
         """     
         while True:
             # Test if the timeout is in milli seconds or second
-            msg = self._CommandQueue.get(0.1)  # get is blocking, always use timeout.
+            msg = self._CommandQueue.get(0.1)  # get is blocking, use timeout.
             if msg == None:
-               break    # Break the loop, we will wait on a other location
+               break    # exit msg processing
 
-            # currently the expected payload is a list
+            # currently the expected payload is a dict
             msg_content = eval(msg.content().payload)
 
             # now process the commands
@@ -159,12 +139,17 @@ class MCQDaemon(object):
             else:
                 self.logger.warn("***** warning **** encountered unknown command")
                 self.logger.warn(msg_content)
+                self._CommandQueue.ack(msg)  # ack but not do anything
 
+            # **********************************************************
             # After each command we need to save the new state.
             # If the deamon goes down between the processing of the command
-            # and this save we have an indetermined state.
+            # and this save we have an indetermined state, this cannot be
+            # prevented
             self._save_state_to_file()
-        
+            # **********************************************************
+
+    # TODO: Quit msg to all the slaves.        
     def _process_quit_msg(self, msg_content):
         """
         Perform actions done on receiveing quit msg
@@ -180,52 +165,6 @@ class MCQDaemon(object):
             # eg.  in the init phase.  If the delete fails just skip and continue
             pass
 
-
-    def _check_slave_and_connect(self, node):
-        """
-        Checks if a node is connect and created a msg queue connect if needed
-        """
-        if node in self._registered_nodes.keys():
-            nodeQueueName = self._registered_nodes[node]['CQName']
-        else:
-            self.logger.debug(
-                "received job for unconnected slave: {0}".format(node))
-
-            # TODO: Het maken van deze queueu moet ergens anders
-            nodeQueueName = self._nodeCommandQueueTemplate.format(
-                                                  self._username, node)
-            self._registered_nodes[node]={'CQName':nodeQueueName}
-            self._registered_nodes_queues[node] = msgbus.ToBus(nodeQueueName, 
-                options = "create:always, node: { type: queue, durable: True}",
-                broker = self._broker)
-
-
-    def _check_session_and_start(self, node, uuid):
-        """
-        Checks if a node is connect and created a msg queue connect if needed
-        """
-        if uuid not in self._registered_pipelines.keys():
-            return
-        if node not in self._registered_pipelines[uuid]['session_nodes']:
-            # Send the node the start_session command
-            msg = message.MessageContent(
-                from_="USERNAME.LOCUS102.MCQDaemon",
-                forUser="USERRNAME.{0}.NSQDaemon".format(node),
-                summary="First msg to be send",
-                protocol="CommandQUeueMsg",
-                protocolVersion="0.0.1", 
-                #momid="",
-                #sasid="", 
-                #qpidMsg=None
-                      )
-            start_msg_content = {'command': 'start_session',
-                                 'uuid':uuid}
-            msg.payload = start_msg_content
-            self.logger.info("Starting node session on: {0}".format(node))
-            self._registered_nodes_queues[node].send(msg)
-            self._registered_pipelines[uuid]['session_nodes'].append(node)
-
-
     def _process_start_job(self, msg_content):
         """
         The meat of the Master node Daemon functionality.
@@ -238,7 +177,6 @@ class MCQDaemon(object):
         node = msg_content['parameters']['node']
 
         self._check_slave_and_connect(node)
-
         self._check_session_and_start(node, uuid)
 
         msg = message.MessageContent(
@@ -295,8 +233,8 @@ class MCQDaemon(object):
         there are no listeners
         """
         # create the queues names based on the template
-        resultq_name = self._returnQueueTemplate.format(self._username, uuid)
-        topic_name = self._logTopicTemplate.format(self._username, uuid)
+        resultq_name = CQConfig.create_returnQueue_name(uuid)
+        topic_name = CQConfig.create_logTopic_name(uuid)
 
         # now register the queue
         resultQueue = msgbus.ToBus(resultq_name, 
@@ -472,7 +410,50 @@ class MCQDaemon(object):
 
         self._delete_queue_and_topic(qname, topicname)
 
-        
+
+    def _check_slave_and_connect(self, node):
+        """
+        Checks if a node is connect and created a msg queue connect if needed
+        """
+        if node in self._registered_nodes.keys():
+            nodeQueueName = self._registered_nodes[node]['CQName']
+        else:
+            self.logger.debug(
+                "received job for unconnected slave: {0}".format(node))
+
+            # TODO: Het maken van deze queueu moet ergens anders
+            nodeQueueName = CQConfig.create_nodeCommandQueue_name(node)
+
+            self._registered_nodes[node]={'CQName':nodeQueueName}
+            self._registered_nodes_queues[node] = msgbus.ToBus(nodeQueueName, 
+                options = "create:always, node: { type: queue, durable: True}",
+                broker = self._broker)
+
+
+    def _check_session_and_start(self, node, uuid):
+        """
+        Checks if a node is connect and created a msg queue connect if needed
+        """
+        if uuid not in self._registered_pipelines.keys():
+            return
+        if node not in self._registered_pipelines[uuid]['session_nodes']:
+            # Send the node the start_session command
+            msg = message.MessageContent(
+                from_="USERNAME.LOCUS102.MCQDaemon",
+                forUser="USERRNAME.{0}.NSQDaemon".format(node),
+                summary="First msg to be send",
+                protocol="CommandQUeueMsg",
+                protocolVersion="0.0.1", 
+                #momid="",
+                #sasid="", 
+                #qpidMsg=None
+                      )
+            start_msg_content = {'command': 'start_session',
+                                 'uuid':uuid}
+            msg.payload = start_msg_content
+            self.logger.info("Starting node session on: {0}".format(node))
+            self._registered_nodes_queues[node].send(msg)
+            self._registered_pipelines[uuid]['session_nodes'].append(node)        
 
     def _delete_queue_and_topic(self, qname, topicname):
         """
@@ -515,6 +496,16 @@ class MCQDaemon(object):
 
             self.logger.info(key)
         self.logger.info("--- End List of reloaded uuid ---")  
+
+
+    def _sleep(self, duration_loop_seconds):
+        """
+        Perform a sleep with the duration loop_interval - duration last loop
+        """
+        sleep_time = self._loop_interval - duration_loop_seconds
+
+        self.logger.info("Starting sleep for {0} seconds".format(sleep_time))
+        time.sleep(sleep_time)
 
 if __name__ == "__main__":
     daemon = MCQDaemon( 1, "daemon_state_file.pkl",40)

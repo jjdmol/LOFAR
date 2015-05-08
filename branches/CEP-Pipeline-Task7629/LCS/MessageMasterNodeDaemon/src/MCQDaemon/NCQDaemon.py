@@ -21,10 +21,9 @@
 from datetime import datetime   # needed for duration
 import time
 import os
-import pwd
 import subprocess
 import copy
-import socket
+
 
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
@@ -37,22 +36,48 @@ import logging
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
 class NCQDaemon(object):
-    def __init__(self,  loop_interval=10, clearCOmmandQueue=True):
-        self.logger = logging.getLogger("NCQDaemon")
-        self.logger.error(dir(CQConfig))
+    """
+    NCQDaemon listens to a command queue and is responcible for starting
+    commands received in this queue on the local host in a sub process.
 
+    Started jobs have access to a parameter queue on which they the 
+    actual paraemters for the job (limiting the command line arguments)
+
+    The jobs are part of a session which is started based on a command.
+
+    Available commands:
+    1. Start session based on a uuid, received from the outside world
+       Creates connection to session specic log and return queue
+    2. Stop session, eg. when the master requests this. Kills the jobs,
+       send a report of this on the log and result queu
+    3. start job, based on a job_uuid is related to a session uuid
+       Create a unique parameter queue and forwards this to the job together
+       with the log and results queue
+    4. Quit. Stop all running session, reporting this on the logqueues
+       stops the daemon
+
+    The Daemon does store its state between instantations. And by default
+    the command queue is cleared at construction
+    """
+    def __init__(self,  loop_interval=10, clearCOmmandQueue=True):
+        """
+        Init function.
+        Creates the logger
+        Creates the connection to the commandQueue
+        Clears depending on argument the waiting msgs.
+        """
+        self.logger = logging.getLogger("NCQDaemon")
         self._loop_interval = loop_interval  # perform loop max once per 
                                              #loop_interval
         self._broker = CQConfig.broker 
 
-        # create a NON durable queue: We cannot have old msg hanging in this
-        # command queue
+        # Connect to the command queue
         self._CommandQueue = msgbus.FromBus(
               CQConfig.create_nodeCommandQueue_name(), 
               options = "create:always, node: { type: queue, durable: True}",
               broker = self._broker)
 
-        # receive and clear command queue on init once.
+        # receive and clear command queue on init. We do not process 'old' msg
         if clearCOmmandQueue:
             while True:
                 msg = self._CommandQueue.get(0.1)
@@ -68,9 +93,9 @@ class NCQDaemon(object):
       """
       Main loop of the daemon.
       while(True):
-        1. For all sessions check if the jobs are done
+        1. For all sessions (active pipelines) check if there is work to do
         2. Process all incomming commands
-        3. Wait for x seconds
+        3. Wait for x seconds (depending on the polling rate)
 
       """
       while(True):   
@@ -93,15 +118,6 @@ class NCQDaemon(object):
       
           self._sleep(duration_loop_seconds)
 
-    def _sleep(self, duration_loop_seconds):
-        """
-        Perform a sleep with the duration loop_interval - duration last loop
-        """
-        sleep_time = self._loop_interval - duration_loop_seconds
-        self.logger.info("NCQDaemon: Starting sleep for {0} seconds".format(
-                                                                  sleep_time))
-        time.sleep(sleep_time)
-
     def _process_commands(self):
         """
         Process in order all commands in the command queue
@@ -114,6 +130,7 @@ class NCQDaemon(object):
 
             # currently the expected payload is a dict
             msg_content = eval(msg.content().payload)
+
             # now process the commands
             command = msg_content['command'] 
             if command == "start_session":
@@ -121,7 +138,8 @@ class NCQDaemon(object):
                 self._CommandQueue.ack(msg)
 
             elif command == "stop_session":
-                self._process_stop_msg(msg_content)
+                uuid = msg_content['uuid']
+                self._stop_session(uuid)
                 self._CommandQueue.ack(msg)       
                 
                  
@@ -137,89 +155,77 @@ class NCQDaemon(object):
 
             else:
                 self.logger.warn(
-                  "NCQDaemon: ***** warning **** encountered unknown command")
+                  "NCQDaemon: ***** warning **** encountered unknown command," 
+                  "ignoring msg")
                 self.logger.warn(msg_content)
+                self._CommandQueue.ack(msg)    
 
 
-    def _unknown_uuid_msg(self, uuid, keys):
-        """
-        print log msg with detailed state information, used when unknown uuid
-        is encountered
-        """
-        self.logger.warn("------------------Major error -----------")
-        self.logger.warn("A job was requested on this deamon for an unknown")
-        self.logger.warn("Pipeline id. There is a sync error between the")
-        self.logger.warn("Master and Node Daemon.")
-        self.logger.warn('uuid:')
-        self.logger.warn(uuid)
-        self.logger.warn('keys()')
-        self.logger.warn(self._registered_pipelines.keys())
-        self.logger.warn("------------------Major error -----------")
-        
     def _process_start_job(self, msg_content):
         """
-
+        Performs the work done on receiving a valid start job msg
         """
-        uuid = msg_content['uuid']
+        uuid = msg_content['uuid']   # All work centers around the uuid for 
+                                     # the pipeline
 
         # this should not happen but check anyways, does the received uuid
-        # exist?
+        # exist? A job msg should always follow after a start session msg
         if uuid not in self._registered_pipelines.keys():
             self._unknown_uuid_msg(uuid, self._registered_pipelines.keys())
             return
 
-        command     = msg_content['parameters']['cmd']
-        # Append the the command with the parameter queue name!
+        # Get all the variables needed to start the job
+        command     = msg_content['parameters']['cmd']    # Command line cmd 
+
+                          # Add the parameter queue to the command, used
+                          # by the pipeline script to receive the parameters
         command += " {0}".format(self._registered_pipelines[uuid]['parameterq'][0])
         working_dir = msg_content['parameters']['cdw']
         environment = msg_content['parameters']['environment']
         parameter_dict = msg_content['parameters']['job_parameters']
         job_uuid = msg_content['job_uuid']
 
-        # First send the a parameter msg on the queue
+        # First send the a parameter msg on the parameter queue
         self._send_job_parameter_message(
                   self._registered_pipelines[uuid]['parameterq'][1],
                   msg_content)
+
         # Run subprocess
         process = None
         try:
-            time.sleep(1)   # Otherwise the msg is not yet evailable on the other
-                            # side
             process = subprocess.Popen(
                         command,
                         cwd=working_dir,
-                        env=environment,               # where to get this?
+                        env=environment, 
                         shell=True,
                         stdin=subprocess.PIPE,
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE)
+            self.logger.info("Started a new job: {0}".format(command))
+
         except Exception, ex:
-            self.logger.error("Received an command that failed in subprocesses:")
+            self.logger.error("Received an command that failed in Popen:")
             self.logger.error(command)
             self.logger.error(str(ex))
-            raise ex    # exit, do not store the job
-
-
+            process = None         # Popen failed, signal the failure of the 
+                                   # command. Mostly due to file not found errors
+            
         # store the now created job in the list of jobs for this pipeline
         self._registered_pipelines[uuid]['jobs'][job_uuid] = (process, 
-                                                  copy.deepcopy(msg_content))
-
-        self.logger.info("Started a new job: {0}".format(command))
+                                                  copy.deepcopy(msg_content))       
 
     def _process_quit_msg(self, msg_content):
         """
-        Perform actions done on receiveing quit msg
-
-        1. If clear_state is set the state_file is removed
+        Perform actions done on receiveing quit msg: Loop all registered 
+        sessions, kill the subprocess cleanly (with msg on the log)
+        and thats it.
         """
-        try:
-            # forward a quit to all jobs
-            pass
-
-        except:
-            # The daemon could be in a state where the file has not been written
-            # eg.  in the init phase.  If the delete fails just skip and continue
-            pass
+        for uuid in self._registered_pipelines.keys():
+            try:            
+                self._stop_session(uuid)
+            except:
+                # We tried a clean kill, continue
+                pass
 
     def _process_start_session_msg(self, msg_content):
         """
@@ -229,13 +235,77 @@ class NCQDaemon(object):
         """      
         self.logger.info("New (pipeline) session started: {0}".format(
                                                           msg_content['uuid']))
+
         # Connect to the queue and topic, use the uuid of the session
-        queues_dict = self._connect_resultq_and_topic(msg_content['uuid'])
+        queues_dict = self._connect_result_log_parameter_queues(msg_content['uuid'])
         queues_dict['jobs'] = {}
-        # store them in the internal pipeline storage
+
+        # store them in the internal state
         self._registered_pipelines[msg_content['uuid']] = queues_dict
 
-    def _connect_resultq_and_topic(self, uuid):
+    def _process_registered_sessions(self):
+        """
+        process the internally stored session items.
+
+        This is basically the work that needs to be done for all the
+        pipelines that are registed at this daemon. 
+
+        1. If the starting of a job failed in the int state (Popen) send
+           a failed job_exit msg. Remove job from internal state
+
+        2. Continue if the job is running
+
+        3. If the job is done, communicate with the subprocess streams and
+           forward the exit state to the master. Remove job from internal state
+        """
+        # For all sessions
+        for uuid  in self._registered_pipelines.keys():
+            session_dict = self._registered_pipelines[uuid]
+            (topicName, logTopic) = session_dict['topic']
+            (queueName, resultQueue) = session_dict['resultq']
+
+            # for all jobs in this session (typically one, but future proof)
+            for job_uuid in session_dict['jobs'].keys():            
+                (process, msg_content) = session_dict['jobs'][job_uuid]
+
+                # 1. If process is None, the Popen command failed
+                if process is None:
+                     # send the exit state to the resultsQueue
+                     payload = {'type':"exit_value",
+                           'exit_value':-1,
+                           'uuid':uuid,
+                           'job_uuid':msg_content['job_uuid']}
+
+                     self._send_job_exit_message(resultQueue, payload )
+                     del session_dict['jobs'][job_uuid]  # remove from state
+                     continue
+
+
+                # 2. CHeck if the process has ended, continue of not
+                if process.poll() == None:
+                    self.logger.error("still running: {0}".format(job_uuid))
+                    continue
+
+                # 3. We have a valid subprocess that has now ended
+                (stdoutdata, stderrdata) = process.communicate()
+                exit_status = process.returncode
+
+                # Send the logging information not created using the default
+                # lofar logger
+                self._send_log_message(logTopic, stdoutdata, level='info')
+                self._send_log_message(logTopic, stderrdata, level='error')
+
+                # send the exit state to the resultsQueue
+                payload = {'type':"exit_value",
+                           'exit_value':exit_status,
+                           'uuid':uuid,
+                           'job_uuid':msg_content['job_uuid']}
+
+                self._send_job_exit_message(resultQueue, payload )
+
+                del session_dict['jobs'][job_uuid]
+
+    def _connect_result_log_parameter_queues(self, uuid):
         """
         Creates a temporary named result queue and a topic based on the uuid
         Return the create queue and topic name
@@ -272,19 +342,17 @@ class NCQDaemon(object):
 
         return queues_dict
   
-    def _process_stop_msg(self, msg):
+    def _stop_session(self, uuid):
         """
-         Stop the current session.
+         Stop the current session, registered on this uuid
         """
-        uuid = msg['uuid']
         self.logger.info("Received stop command for uuid: {0}".format(uuid))
         # Send stop msg the subprocesses that are part of this run 
         # After killing the jobs. Remove the uuid from the internal storage
         # first check if the the queues might have been removed:
         # dueue to the nature of message, the delete might be called a second time
         if uuid not in self._registered_pipelines.keys():
-            return
-        
+            return      
 
         for job_uuid in self._registered_pipelines[uuid]['jobs'].keys():
             (process, msg_content) = self._registered_pipelines[uuid][
@@ -303,7 +371,18 @@ class NCQDaemon(object):
         # delete the session entry
         del self._registered_pipelines[uuid]
 
-
+    def _sleep(self, duration_loop_seconds):
+        """
+        Perform a sleep with the duration loop_interval - duration last loop
+        """
+        sleep_time = self._loop_interval - duration_loop_seconds
+        self.logger.info("NCQDaemon: Starting sleep for {0} seconds".format(
+                                                                  sleep_time))
+        time.sleep(sleep_time)
+          
+    # ************************************************************************
+    # Set of easy pretty print functions sending information to the diverse 
+    # queues
     def _send_log_message(self, logTopic, log_data, level='INFO'):
         """
         Send a logging msg  with log_data to the logTOpic at the level
@@ -326,50 +405,26 @@ class NCQDaemon(object):
 
         msg = CQConfig.create_validated_parameter_msg(job_dict, "NCQDaemon")
         parameterQueue.send(msg)  
-           
 
-    def _process_registered_sessions(self):
+    def _unknown_uuid_msg(self, uuid, keys):
         """
-        process the internally stored session items.
-
-        This is basically the work that needs to be done for all the
-        pipelines that are registed at this daemon. 
+        print log msg with detailed state information, used when unknown uuid
+        is encountered
         """
-        # For all sessions
-        for uuid  in self._registered_pipelines.keys():
-            session_dict = self._registered_pipelines[uuid]
-            (topicName, logTopic) = session_dict['topic']
-            (queueName, resultQueue) = session_dict['resultq']
-            # for all jobs in this session
-            for job_uuid in session_dict['jobs'].keys():            
-                (process, msg_content) = session_dict['jobs'][job_uuid]
-                # CHeck if the process has ended, continue of not
-                if process.poll() == None:
-                    self.logger.error("still running: {0}".format(job_uuid))
-                    continue
-
-                (stdoutdata, stderrdata) = process.communicate()
-                exit_status = process.returncode
-
-                # Send the logging information not created using the default
-                # lofar logger
-                self._send_log_message(logTopic, stdoutdata, level='info')
-                self._send_log_message(logTopic, stderrdata, level='error')
-
-                # send the exit state to the resultsQueue
-                payload = {'type':"exit_value",
-                           'exit_value':exit_status,
-                           'uuid':uuid,
-                           'job_uuid':msg_content['job_uuid']}
-
-                self._send_job_exit_message(resultQueue, payload )
-                self.logger.error(payload)
-
-                del session_dict['jobs'][job_uuid]
+        self.logger.warn("------------------Major error -----------")
+        self.logger.warn("A job was requested on this deamon for an unknown")
+        self.logger.warn("Pipeline id. There is a sync error between the")
+        self.logger.warn("Master and Node Daemon.")
+        self.logger.warn('uuid:')
+        self.logger.warn(uuid)
+        self.logger.warn('keys()')
+        self.logger.warn(self._registered_pipelines.keys())
+        self.logger.warn("------------------Major error -----------")
+        
 
 
 if __name__ == "__main__":
-    daemon = NCQDaemon(1)
+    daemon = NCQDaemon(1)   # TODO: change to slower heart beat?
     
     daemon.run()
     
