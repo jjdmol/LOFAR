@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if test ! -f tDirtyImage2.in_MS.tgz; then
+  return 3   # untested
+fi
+
+tar zxf tDirtyImage2.in_MS.tgz
+../src/awimager2 data.ms=tDirtyImage2.MS operation=image output.imagename=tDirtyImage2_tmp image.cellsize=40arcsec image.npix=128
