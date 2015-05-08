@@ -1,0 +1,89 @@
+<ui version="4.0" >
+ <class>PublishDialogClass</class>
+ <widget class="QDialog" name="PublishDialogClass" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>285</width>
+    <height>224</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Publish schedule</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout" >
+   <item row="0" column="0" colspan="3" >
+    <widget class="QLabel" name="label" >
+     <property name="text" >
+      <string>Please select the weeks to publish</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0" colspan="3" >
+    <widget class="QListWidget" name="listWidget_Weeks" >
+     <property name="selectionMode" >
+      <enum>QAbstractItemView::MultiSelection</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0" >
+    <widget class="QPushButton" name="pushButton_select" >
+     <property name="text" >
+      <string>Select all</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1" >
+    <widget class="QPushButton" name="pushButton_Cancel" >
+     <property name="text" >
+      <string>Cancel</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="2" >
+    <widget class="QPushButton" name="pushButton_Ok" >
+     <property name="text" >
+      <string>Ok</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <layoutdefault spacing="6" margin="11" />
+ <resources/>
+ <connections>
+  <connection>
+   <sender>pushButton_Cancel</sender>
+   <signal>clicked()</signal>
+   <receiver>PublishDialogClass</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>158</x>
+     <y>200</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>100</x>
+     <y>193</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_Ok</sender>
+   <signal>clicked()</signal>
+   <receiver>PublishDialogClass</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>266</x>
+     <y>197</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>278</x>
+     <y>189</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>
