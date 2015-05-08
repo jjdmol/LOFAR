@@ -270,7 +270,6 @@ class MCQDaemon(object):
     def _get_queue_and_topic_from_broker(self):
         """
         Returns a dictionary uuid to queue and topic names and objects
-
         For this a connection is made with the broker.
         All queues and topics are retrieved.
         These are then matched with the internally stored session uuid
@@ -287,8 +286,6 @@ class MCQDaemon(object):
         # First get al the registered queues and topics on the broker
         queues = self._brokerAgent.getAllQueues()
         topics = self._brokerAgent.getAllExchanges()
-
-
 
         # Covert to name to queue object lists
         raw_name_to_queue_dict = {}
@@ -307,8 +304,9 @@ class MCQDaemon(object):
             session_dict = {}
             # first match the uuid with the queue
             queue_found = False
-            for name, queue in raw_name_to_queue_dict.items():               
-                if uuid in name and "return" in name:
+            for name, queue in raw_name_to_queue_dict.items(): 
+                return_queue_name = CQConfig.create_returnQueue_name(uuid)
+                if return_queue_name in name:
                     session_dict['queue_name'] = name
                     session_dict['queue_object'] = queue
                     queue_found = True
@@ -316,18 +314,24 @@ class MCQDaemon(object):
 
             if not queue_found:
                 # Could not find a registered session as queue on the broker
-                raise Exception("Could not find a registered pipeline session queue on"
-                              " the broker, the internal daemon state is corrupt!")
+                # TODO: Just remove the session from internal storage.
+                # this could happen when all a queue is manually removed.
+                raise Exception(
+                     "Could not find a registered pipeline session queue on"
+                     " the broker, the internal daemon state is corrupt!")
 
             # next the topic
             topic_found = False
             for name, topic in  raw_name_to_topic_dict.items():
-                if uuid in name:
+                log_topic_name = CQConfig.create_logTopic_name(uuid)
+                if log_topic_name in name:
                      session_dict['topic_name'] = name
                      session_dict['topic_object'] = topic
                      topic_found = True
                      break
+
             if not topic_found:
+                # TODO: THis is not correct, just remove the session???
                 # Could not find a registered session as topic on the broker
                 raise Exception("Could not find a registered pipeline session topic on"
                                 " the broker, the internal daemon state is corrupt!")
