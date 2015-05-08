@@ -267,3 +267,20 @@ def create_MCQDaemon_to_NCQDaemon_start_job_msg(payload, sender, target):
     msg.payload = payload
 
     return msg
+
+# parameter msg
+start_node_session_protocol_name_template = "{0}StartJobMsg"
+start_node_session_summary_template       = "{0} start job on node message"
+def create_MCQDaemon_to_NCQDaemon_start_session_msg(payload, 
+                                             sender, target):
+
+    msg = create_msg_header(msg_fromMCQDaemon_template,
+                msg_forNCQDaemon_template,
+                start_node_session_summary_template.format(sender),
+                start_node_session_protocol_name_template.format(sender),
+                target)
+
+    # just forward the msg_content as is.
+    msg.payload = payload
+
+    return msg

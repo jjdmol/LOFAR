@@ -8,6 +8,7 @@
 import os
 import shutil
 import sys
+import time
 
 from lofarpipe.support.lofarnode import LOFARnodeTCP
 
@@ -35,6 +36,7 @@ class test_recipe(LOFARnodeTCP):
 
         self.outputs["output"] = "*********************************This is output created on the local node ***************************"
         self.outputs["status"] = True
+        time.sleep(6)
         ## Time execution of this job
         return 0
 

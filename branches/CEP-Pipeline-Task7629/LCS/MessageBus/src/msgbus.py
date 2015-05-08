@@ -35,6 +35,31 @@ import atexit
 broker="127.0.0.1" 
 options="create:never"
 
+
+connection = None
+def get_connection(broker):
+    global connection
+    if connection == None:
+        connection = messaging.Connection(broker)
+
+    return connection
+    
+    #if broker in broker_to_connection.keys():
+    #    return broker_to_connection[broker]
+
+    #broker_to_connection[broker] = messaging.Connection(broker)
+    #return broker_to_connection[broker]
+
+session = None
+def get_session(connection):
+    global session
+    if session == None:
+        session = connection.session() 
+
+    return session
+        
+
+
 # Define logging. Until we have a python loging framework, we'll have
 # to do any initialising here
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
@@ -48,13 +73,15 @@ class Session:
         self.closed = False
 
         logger.info("[Bus] Connecting to broker %s", broker)
-        self.connection = messaging.Connection(broker)
+        self.connection = get_connection(broker)
         self.connection.reconnect = True
         logger.info("[Bus] Connected to broker %s", broker)
 
         try:
-            self.connection.open()
-            self.session = self.connection.session() 
+            if not self.connection.opened():
+                self.connection.open()
+            self.session = connection.session() 
+
         except messaging.MessagingError, m:
             raise BusException(m)
 
@@ -93,10 +120,10 @@ class Session:
             logger.error("[Bus] Could not close session: %s", t)
 
 
-        try:
-            self.connection.close(5.0)
-        except messaging.exceptions.Timeout, t:
-            logger.error("[Bus] Could not close connection: %s", t)
+        #try:
+        #    self.connection.close(5.0)
+        #except messaging.exceptions.Timeout, t:
+        #    logger.error("[Bus] Could not close connection: %s", t)
 
 
 
