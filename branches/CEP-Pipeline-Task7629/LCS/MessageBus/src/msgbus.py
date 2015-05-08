@@ -86,10 +86,19 @@ class Session:
         #
         # We set a timeout to prevent freezing, which obviously leads
         # to data loss if the stall was legit.
+
+        try:
+            self.session.close(5.0)
+        except messaging.exceptions.Timeout, t:
+            logger.error("[Bus] Could not close session: %s", t)
+
+
         try:
             self.connection.close(5.0)
         except messaging.exceptions.Timeout, t:
             logger.error("[Bus] Could not close connection: %s", t)
+
+
 
     def __enter__(self):
         return self
