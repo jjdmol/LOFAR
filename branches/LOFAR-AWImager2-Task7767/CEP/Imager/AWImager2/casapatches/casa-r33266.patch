@@ -1,6 +1,6 @@
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 33269)
+--- CMakeLists.txt	(revision 33266)
 +++ CMakeLists.txt	(working copy)
 @@ -731,6 +731,7 @@
  else()
@@ -55,7 +55,7 @@ Index: CMakeLists.txt
  
 Index: synthesis/CMakeLists.txt
 ===================================================================
---- synthesis/CMakeLists.txt	(revision 33269)
+--- synthesis/CMakeLists.txt	(revision 33266)
 +++ synthesis/CMakeLists.txt	(working copy)
 @@ -596,6 +596,7 @@
  	TransformMachines/WTerm.h
@@ -75,7 +75,7 @@ Index: synthesis/CMakeLists.txt
  casa_add_executable( synthesis casasplit apps/casasplit/casasplit.cc )
 Index: synthesis/MeasurementEquations/Imager.h
 ===================================================================
---- synthesis/MeasurementEquations/Imager.h	(revision 33269)
+--- synthesis/MeasurementEquations/Imager.h	(revision 33266)
 +++ synthesis/MeasurementEquations/Imager.h	(working copy)
 @@ -762,7 +762,7 @@
  
