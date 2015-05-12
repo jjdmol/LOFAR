@@ -81,18 +81,25 @@ last_status="NOTCONNECTED"
 class GetHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
-        self.send_response(200)
-        message=""
-	if self.path == '/qpid'  :
-               message = last_status
-               self.send_header('Content-type','application/json')
-               self.end_headers()
+	if self.path == '/':
+	    self.path = '/index.html'
+
+	if self.path == '/qpid':
+            self.send_response(200)
+            message = last_status
+            self.send_header('Content-type','application/json')
+            self.end_headers()
+            self.wfile.write(message)
+	elif self.path in filedict:
+            self.send_response(200)
+            self.send_header('Content-type',mimedict[self.path])
+	    message = filedict[self.path]
+            self.end_headers()
+            self.wfile.write(message)
 	else:
-	       if self.path in filedict:
-                     self.send_header('Content-type',mimedict[self.path])
-	             message = filedict[self.path]
-                     self.end_headers()	       
-        self.wfile.write(message)
+	    self.send_error(404)
+	    return
+
         return
 
     def log_message(self, format, *args):
@@ -157,5 +164,5 @@ if __name__ == '__main__':
         server.serve_forever()
     except KeyboardInterrupt:
         pass
-    server.close()
+    server.socket.close()
 
