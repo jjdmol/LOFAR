@@ -7,15 +7,17 @@ import re
 def findnewestpatch(rev, branch='trunk', patchdir='.'):
   os.chdir(patchdir)
   patches=[]
+  patchfiles={}
   for file in glob.glob("*.patch"):
     m = re.search('r([0-9]+)', file)
     if m:
       patches+=[int(m.group(1))]
+      patchfiles[int(m.group(1))]=file 
 
   patches=[patchrev for patchrev in patches if patchrev<=rev]
   patches=sorted(patches)
 
-  return patches[-1]
+  return patchfiles[patches[-1]]
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description = "Find most recent patch for a casa repository")
