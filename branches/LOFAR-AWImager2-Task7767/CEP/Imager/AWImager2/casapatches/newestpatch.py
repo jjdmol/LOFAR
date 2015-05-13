@@ -8,7 +8,8 @@ def findnewestpatch(rev, branch='trunk', patchdir='.'):
   os.chdir(patchdir)
   patches=[]
   patchfiles={}
-  for file in glob.glob("*.patch"):
+  branchname=branch.rstrip('/').split('/')[-1]
+  for file in glob.glob("*"+branchname+"*.patch"):
     m = re.search('r([0-9]+)', file)
     if m:
       patches+=[int(m.group(1))]
