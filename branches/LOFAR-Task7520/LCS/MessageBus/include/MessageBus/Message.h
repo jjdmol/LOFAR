@@ -1,4 +1,4 @@
-//# Message.h: Wrapper for messages to be exchanged using QPID.
+//# MessageContent.h: Wrapper for messages to be exchanged using QPID.
 //#
 //# Copyright (C) 2015
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -41,14 +41,14 @@ static const std::string system = "LOFAR";
 // Version of the header we write
 static const std::string headerVersion = "1.0.0";
 
-class Message
+class MessageContent
 {
 public:
   // Construct a message
-  Message() {};
+  MessageContent() {};
 
   // With header info
-  Message(
+  MessageContent(
     // Name of the service or process producing this message
     const std::string &from,
 
@@ -72,18 +72,13 @@ public:
   );
 
   // Parse a message
-  Message(const qpid::messaging::Message qpidMsg) : itsQpidMsg(qpidMsg) {};
-
-  // Read a message from disk (header + payload)
-  Message(const std::string &rawContent);
+  MessageContent(const qpid::messaging::Message &qpidMsg);
 
   // Set the payload, supporting various types
   void setXMLPayload (const std::string                &payload);
   void setTXTPayload (const std::string                &payload);
-  void setMapPayload (const qpid::types::Variant::Map  &payload);
-  void setListPayload(const qpid::types::Variant::List &payload);
 
-  virtual ~Message();
+  virtual ~MessageContent();
 
   // Return properties of the constructed or received message
   std::string system() const		  { return (getXMLvalue("message.header.system")); }
@@ -100,11 +95,11 @@ public:
   std::string payload() const		  { return (getXMLvalue("message.payload")); }
   std::string header() const		  { return (getXMLvalue("message.header")); }
 
-  // Construct the given fields as a QPID message
-  qpid::messaging::Message& qpidMsg() { return (itsQpidMsg); }
+  // Return a QPID message with our content
+  qpid::messaging::Message qpidMsg() const;
 
   // Return the raw message (header + payload)
-  std::string rawContent() const { return (itsQpidMsg.getContent()); }
+  std::string rawContent() const { return itsContent; }
 
   // Return a short (one line) description of the message
   std::string short_desc() const;
@@ -112,8 +107,48 @@ public:
   // function for printing
   std::ostream& print (std::ostream& os) const;
 
-  // Very simple XML parser to get a key from the XML content.
+  // Return a value from the XML content.
   std::string getXMLvalue(const std::string& key) const;
+
+  // Set a value in the XML content.
+  void setXMLvalue(const std::string& key, const std::string& data);
+
+private:
+  // -- datamembers -- 
+  std::string itsContent;
+};
+
+inline std::ostream &operator<<(std::ostream &os, const MessageContent &msg)
+{	
+	return (msg.print(os));
+}
+
+class Message
+{
+public:
+  Message() {}
+
+  // Wrap a received meessage
+  Message(const qpid::messaging::Message &qpidMsg) : itsQpidMsg(qpidMsg) {}
+
+  // Create a new message
+  Message(const MessageContent &content);
+
+  // Return the wrapped QPID message
+  qpid::messaging::Message& qpidMsg()       { return (itsQpidMsg); }
+  const qpid::messaging::Message& qpidMsg() const { return (itsQpidMsg); }
+
+  // Return the content
+  MessageContent content() const { return MessageContent(itsQpidMsg); }
+  
+  // Return the raw message content
+  std::string rawContent() const { return itsQpidMsg.getContent(); }
+
+  // Return a short (one line) description of the message
+  std::string short_desc() const { return content().short_desc(); }
+
+  // function for printing
+  std::ostream& print (std::ostream& os) const { return content().print(os); }
 
 private:
   // -- datamembers -- 
@@ -124,6 +159,7 @@ inline std::ostream &operator<<(std::ostream &os, const Message &msg)
 {	
 	return (msg.print(os));
 }
+
 
 } // namespace LOFAR
 

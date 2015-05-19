@@ -1,4 +1,4 @@
-//#  Message.cc: one_line_description
+//#  MessageContent.cc: one_line_description
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -42,27 +42,25 @@ namespace LOFAR {
 const string LOFAR_MSG_TEMPLATE = "\
 <message>\n\
    <header>\n\
-      <system>LOFAR</system>\n\
-      <version>1.0.0</version>\n\
+      <system></system>\n\
+      <version></version>\n\
       <protocol>\n\
-         <name>%s</name>\n\
-         <version>%s</version>\n\
+         <name></name>\n\
+         <version></version>\n\
       </protocol>\n\
       <source>\n\
-         <name>%s</name>\n\
-         <user>%s</user>\n\
-         <uuid>%s</uuid>\n\
-         <timestamp>%s</timestamp>\n\
-         <summary>%s</summary>\n\
+         <name></name>\n\
+         <user></user>\n\
+         <uuid></uuid>\n\
+         <timestamp></timestamp>\n\
+         <summary></summary>\n\
       </source>\n\
       <ids>\n\
          <momid>%s</momid>\n\
          <sasid>%s</sasid>\n\
       </ids>\n\
    </header>\n\
-   <payload>\n\
-%s\n\
-   </payload>\n\
+   <payload></payload>\n\
 </message>";
 
 static string _timestamp() {
@@ -86,59 +84,65 @@ static string _uuid() {
   return uuid.str();
 }
 
-Message::Message(const std::string &from,
+MessageContent::MessageContent(const std::string &from,
 				 const std::string &forUser,
 				 const std::string &summary,
 				 const std::string &protocol,
 				 const std::string &protocolVersion,
 				 const std::string &momid,
-				 const std::string &sasid) 
-{	
-	itsQpidMsg.setContent(formatString(LOFAR_MSG_TEMPLATE.c_str(), protocol.c_str(), protocolVersion.c_str(),
-										from.c_str(), forUser.c_str(), _uuid().c_str(), _timestamp().c_str(), summary.c_str(), 
-										momid.c_str(), sasid.c_str(), "%s"));
-  itsQpidMsg.setContentType("text/plain");
-  itsQpidMsg.setDurable(true);
-}
-
-// Read a message from disk (header + payload)
-Message::Message(const std::string &rawContent)
+				 const std::string &sasid)
+:
+  itsContent(LOFAR_MSG_TEMPLATE)
 {
-	itsQpidMsg.setContent(rawContent);
+  setXMLvalue("message.header.system", LOFAR::system);
+  setXMLvalue("message.header.version", LOFAR::headerVersion);
+  setXMLvalue("message.header.protocol.name", protocol);
+  setXMLvalue("message.header.protocol.version", protocolVersion);
+  setXMLvalue("message.header.source.name", from);
+  setXMLvalue("message.header.source.user", forUser);
+  setXMLvalue("message.header.source.uuid", _uuid());
+  setXMLvalue("message.header.source.summary", summary);
+  setXMLvalue("message.header.source.timestamp", _timestamp());
+  setXMLvalue("message.header.ids.momid", momid);
+  setXMLvalue("message.header.ids.sasid", sasid);
 }
 
-Message::~Message()
-{}
-
-void Message::setXMLPayload (const std::string         &payload)
+MessageContent::MessageContent(const qpid::messaging::Message &qpidMsg)
+:
+  itsContent(qpidMsg.getContent())
 {
-	itsQpidMsg.setContent(formatlString(itsQpidMsg.getContent().c_str(), payload.c_str()));
 }
 
-void Message::setTXTPayload (const std::string         &payload)
+MessageContent::~MessageContent()
 {
-	itsQpidMsg.setContent(formatlString(itsQpidMsg.getContent().c_str(), payload.c_str()));
 }
 
-void Message::setMapPayload (const qpid::types::Variant::Map  &payload)
+qpid::messaging::Message MessageContent::qpidMsg() const {
+  qpid::messaging::Message qpidMsg;
+
+  qpidMsg.setContent(rawContent());
+  qpidMsg.setContentType("text/plain");
+  qpidMsg.setDurable(true);
+
+  return qpidMsg;
+}
+
+void MessageContent::setXMLPayload (const std::string         &payload)
 {
-
+  setXMLvalue("message.payload", payload);
 }
 
-void Message::setListPayload(const qpid::types::Variant::List &payload)
+void MessageContent::setTXTPayload (const std::string         &payload)
 {
-
+  setXMLvalue("message.payload", payload);
 }
 
-std::string Message::short_desc() const
+std::string MessageContent::short_desc() const
 {
   return formatString("[%s] [sasid %s] %s", uuid().c_str(), sasid().c_str(), summary().c_str());
 }
 
-//
-// print
-//
-std::ostream& Message::print (std::ostream& os) const
+std::ostream& MessageContent::print (std::ostream& os) const
 {
 	os << "system         : " << system() << endl;
     os << "systemversion  : " << headerVersion() << endl;
@@ -153,19 +157,15 @@ std::ostream& Message::print (std::ostream& os) const
     os << "sasid          : " << sasid() << endl;
     os << "payload        : " << payload() << endl;
   os << "BEGIN FULL PACKET" << endl;
-  os << itsQpidMsg.getContent() << endl;
+  os << itsContent << endl;
   os << "END FULL PACKET" << endl;
 	return (os);
 }
 
-//
-// getXMLvalue(tag)
-//
-string Message::getXMLvalue(const string& key) const
+string MessageContent::getXMLvalue(const string& key) const
 {
 	// get copy of content
 	vector<string>	labels = split(key, '.');
-	string			content(itsQpidMsg.getContent());
 
 	// loop over subkeys
 	string::size_type	offset = 0;
@@ -176,7 +176,7 @@ string Message::getXMLvalue(const string& key) const
 		// define tags to find
 		startTag = string("<"+labels[i]+">");
 		// search begin tag
-		begin  = content.find(startTag, offset);
+		begin  = itsContent.find(startTag, offset);
 		if (begin == string::npos) {
 			return ("???");
 		}
@@ -185,11 +185,48 @@ string Message::getXMLvalue(const string& key) const
 	// search end tag
 	string stopTag ("</"+labels[labels.size()-1]+">");
 	begin+=startTag.size();
-	end = content.find(stopTag, begin);
+	end = itsContent.find(stopTag, begin);
 	if (end == string::npos) {
 		return ("???");
 	}
-	return (content.substr(begin, end - begin));
+	return (itsContent.substr(begin, end - begin));
+}
+
+void MessageContent::setXMLvalue(const string& key, const string &data)
+{
+	// get copy of content
+	vector<string>	labels = split(key, '.');
+
+	// loop over subkeys
+	string::size_type	offset = 0;
+	string::size_type	begin = string::npos;
+	string::size_type	end = string::npos;
+	string				startTag;
+	for (size_t i = 0; i <  labels.size(); ++i) {
+		// define tags to find
+		startTag = string("<"+labels[i]+">");
+		// search begin tag
+		begin  = itsContent.find(startTag, offset);
+		if (begin == string::npos) {
+			return;
+		}
+		offset = begin;
+	}
+	// search end tag
+	string stopTag ("</"+labels[labels.size()-1]+">");
+	begin+=startTag.size();
+	end = itsContent.find(stopTag, begin);
+	if (end == string::npos) {
+		return;
+	}
+
+	itsContent.replace(begin, end - begin, data);
+}
+
+Message::Message(const MessageContent &content)
+:
+  itsQpidMsg(content.qpidMsg())
+{
 }
 
 

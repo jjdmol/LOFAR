@@ -89,8 +89,9 @@ int main(int argc, char* argv[]) {
 	showMessage(receivedMsg.qpidMsg());
 
 	cout << "--- TEST 2: create a message by hand, send it, receive it, print it, compare them. --- " << endl;
-	LOFAR::Message		msg2Send;
-	msg2Send.setTXTPayload("Manually constructed message");
+	LOFAR::MessageContent	content;
+	content.setTXTPayload("Manually constructed message");
+	LOFAR::Message		msg2Send(content);
 	tb.send(msg2Send);
 	fb.getMessage(receivedMsg);
 	fb.ack(receivedMsg);
