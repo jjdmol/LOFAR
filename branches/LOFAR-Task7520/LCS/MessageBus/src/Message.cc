@@ -94,17 +94,17 @@ MessageContent::MessageContent(const std::string &from,
 :
   itsContent(LOFAR_MSG_TEMPLATE)
 {
-  setXMLvalue("message.header.system", LOFAR::system);
-  setXMLvalue("message.header.version", LOFAR::headerVersion);
-  setXMLvalue("message.header.protocol.name", protocol);
-  setXMLvalue("message.header.protocol.version", protocolVersion);
-  setXMLvalue("message.header.source.name", from);
-  setXMLvalue("message.header.source.user", forUser);
-  setXMLvalue("message.header.source.uuid", _uuid());
-  setXMLvalue("message.header.source.summary", summary);
-  setXMLvalue("message.header.source.timestamp", _timestamp());
-  setXMLvalue("message.header.ids.momid", momid);
-  setXMLvalue("message.header.ids.sasid", sasid);
+  setXMLvalue("message/header/system", LOFAR::system);
+  setXMLvalue("message/header/version", LOFAR::headerVersion);
+  setXMLvalue("message/header/protocol/name", protocol);
+  setXMLvalue("message/header/protocol/version", protocolVersion);
+  setXMLvalue("message/header/source/name", from);
+  setXMLvalue("message/header/source/user", forUser);
+  setXMLvalue("message/header/source/uuid", _uuid());
+  setXMLvalue("message/header/source/summary", summary);
+  setXMLvalue("message/header/source/timestamp", _timestamp());
+  setXMLvalue("message/header/ids/momid", momid);
+  setXMLvalue("message/header/ids/sasid", sasid);
 }
 
 MessageContent::MessageContent(const qpid::messaging::Message &qpidMsg)
@@ -120,7 +120,7 @@ MessageContent::~MessageContent()
 qpid::messaging::Message MessageContent::qpidMsg() const {
   qpid::messaging::Message qpidMsg;
 
-  qpidMsg.setContent(rawContent());
+  qpidMsg.setContent(itsContent);
   qpidMsg.setContentType("text/plain");
   qpidMsg.setDurable(true);
 
@@ -129,12 +129,12 @@ qpid::messaging::Message MessageContent::qpidMsg() const {
 
 void MessageContent::setXMLPayload (const std::string         &payload)
 {
-  setXMLvalue("message.payload", payload);
+  setXMLvalue("message/payload", payload);
 }
 
 void MessageContent::setTXTPayload (const std::string         &payload)
 {
-  setXMLvalue("message.payload", payload);
+  setXMLvalue("message/payload", payload);
 }
 
 std::string MessageContent::short_desc() const
@@ -165,7 +165,7 @@ std::ostream& MessageContent::print (std::ostream& os) const
 string MessageContent::getXMLvalue(const string& key) const
 {
 	// get copy of content
-	vector<string>	labels = split(key, '.');
+	vector<string>	labels = split(key, '/');
 
 	// loop over subkeys
 	string::size_type	offset = 0;
@@ -195,7 +195,7 @@ string MessageContent::getXMLvalue(const string& key) const
 void MessageContent::setXMLvalue(const string& key, const string &data)
 {
 	// get copy of content
-	vector<string>	labels = split(key, '.');
+	vector<string>	labels = split(key, '/');
 
 	// loop over subkeys
 	string::size_type	offset = 0;

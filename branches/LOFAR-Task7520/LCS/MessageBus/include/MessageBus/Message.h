@@ -81,25 +81,22 @@ public:
   virtual ~MessageContent();
 
   // Return properties of the constructed or received message
-  std::string system() const		  { return (getXMLvalue("message.header.system")); }
-  std::string headerVersion() const   { return (getXMLvalue("message.header.version")); }
-  std::string protocol() const		  { return (getXMLvalue("message.header.protocol.name")); }
-  std::string protocolVersion() const { return (getXMLvalue("message.header.protocol.version")); }
-  std::string from() const			  { return (getXMLvalue("message.header.source.name")); }
-  std::string forUser() const		  { return (getXMLvalue("message.header.source.user")); }
-  std::string uuid() const			  { return (getXMLvalue("message.header.source.uuid")); }
-  std::string summary() const		  { return (getXMLvalue("message.header.source.summary")); }
-  std::string timestamp() const		  { return (getXMLvalue("message.header.source.timestamp")); }
-  std::string momid() const			  { return (getXMLvalue("message.header.ids.momid")); }
-  std::string sasid() const			  { return (getXMLvalue("message.header.ids.sasid")); }
-  std::string payload() const		  { return (getXMLvalue("message.payload")); }
-  std::string header() const		  { return (getXMLvalue("message.header")); }
+  std::string system() const		  { return (getXMLvalue("message/header/system")); }
+  std::string headerVersion() const       { return (getXMLvalue("message/header/version")); }
+  std::string protocol() const		  { return (getXMLvalue("message/header/protocol/name")); }
+  std::string protocolVersion() const     { return (getXMLvalue("message/header/protocol/version")); }
+  std::string from() const		  { return (getXMLvalue("message/header/source/name")); }
+  std::string forUser() const		  { return (getXMLvalue("message/header/source/user")); }
+  std::string uuid() const		  { return (getXMLvalue("message/header/source/uuid")); }
+  std::string summary() const		  { return (getXMLvalue("message/header/source/summary")); }
+  std::string timestamp() const		  { return (getXMLvalue("message/header/source/timestamp")); }
+  std::string momid() const		  { return (getXMLvalue("message/header/ids/momid")); }
+  std::string sasid() const		  { return (getXMLvalue("message/header/ids/sasid")); }
+  std::string payload() const		  { return (getXMLvalue("message/payload")); }
+  std::string header() const		  { return (getXMLvalue("message/header")); }
 
   // Return a QPID message with our content
   qpid::messaging::Message qpidMsg() const;
-
-  // Return the raw message (header + payload)
-  std::string rawContent() const { return itsContent; }
 
   // Return a short (one line) description of the message
   std::string short_desc() const;
@@ -135,7 +132,7 @@ public:
   Message(const MessageContent &content);
 
   // Return the wrapped QPID message
-  qpid::messaging::Message& qpidMsg()       { return (itsQpidMsg); }
+  qpid::messaging::Message& qpidMsg()             { return (itsQpidMsg); }
   const qpid::messaging::Message& qpidMsg() const { return (itsQpidMsg); }
 
   // Return the content
