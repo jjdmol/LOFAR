@@ -56,8 +56,8 @@ const string LOFAR_MSG_TEMPLATE = "\
          <summary></summary>\n\
       </source>\n\
       <ids>\n\
-         <momid>%s</momid>\n\
-         <sasid>%s</sasid>\n\
+         <momid></momid>\n\
+         <sasid></sasid>\n\
       </ids>\n\
    </header>\n\
    <payload></payload>\n\
