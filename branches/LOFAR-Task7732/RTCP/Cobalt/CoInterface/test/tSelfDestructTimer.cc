@@ -61,7 +61,7 @@ TEST(RT_TimeOutPastObs)
   par.add("Cobalt.realTime",       "true");
   par.updateSettings();
 
-  CHECK_EQUAL(0UL, getMaxRunTime(par));
+  CHECK_EQUAL(0UL, getMaxRunTime(par, 60));
 }
 
 TEST(RT_TimeOutFutureObs)
@@ -71,11 +71,10 @@ TEST(RT_TimeOutFutureObs)
   par.add("Observation.startTime", timeStr(10));
   par.add("Observation.stopTime",  timeStr(20));
   par.add("Cobalt.realTime",       "true");
-  par.add("Cobalt.Tuning.outputProcTimeout", "40");
   par.updateSettings();
 
-  CHECK(getMaxRunTime(par) > 0UL);
-  CHECK(getMaxRunTime(par) <= 60UL);
+  CHECK(getMaxRunTime(par, 40) > 0UL);
+  CHECK(getMaxRunTime(par, 40) <= 60UL);
 }
 
 TEST(NonRT_TimeOutPastObs)
@@ -86,7 +85,7 @@ TEST(NonRT_TimeOutPastObs)
   par.add("Cobalt.realTime",       "false");
   par.updateSettings();
 
-  CHECK_EQUAL(0UL, getMaxRunTime(par));
+  CHECK_EQUAL(0UL, getMaxRunTime(par, 60));
 }
 
 TEST(NonRT_TimeOutFutureObs)
@@ -98,7 +97,7 @@ TEST(NonRT_TimeOutFutureObs)
   par.add("Cobalt.realTime",       "false");
   par.updateSettings();
 
-  CHECK_EQUAL(0UL, getMaxRunTime(par));
+  CHECK_EQUAL(0UL, getMaxRunTime(par, 60));
 }
 
 int main()
