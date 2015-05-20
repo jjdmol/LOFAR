@@ -30,26 +30,30 @@ if __name__ == "__main__":
                 if k.endswith('PATH') or k.endswith('ROOT') or k == 'QUEUE_PREFIX'
         )
 
-    parameters = {'node':'locus102',
+    parameters = {'node':'dop282',
                   #'cmd': '/home/klijn/build/7629/gnu_debug/installed/lib/python2.6/dist-packages/lofarpipe/recipes/nodes/test_recipe.py',
                   'environment':environment,
                   'cmd': 'python /home/klijn/build/7629/gnu_debug/installed/lib/python2.6/dist-packages/lofarpipe/recipes/nodes/test_recipe.py',
                   #'cmd': """echo 'print "test"' | python """,
                   #'cmd':""" echo  "test" """,
-                  'cdw': '/home/klijn',
+                  'cdw': '/home/wouter',
                   'job_parameters':{'par1':'par1'}}
 
 
     MCQLib.run_job(parameters)
 
     for key in MCQLib._running_jobs.keys():
+        print MCQLib._running_jobs[key]
+        if MCQLib._running_jobs[key]['exit_value'] != 0:
+            break
+
+
         print MCQLib._running_jobs[key]['output']['output']
-        if not MCQLib._running_jobs[key]['output']['status']:
+        if not MCQLib._runningtest_jobs[key]['output']['status']:
             print "*******************************************************"
             print "We did not have a correct responce from the node recipe"
             MCQLib._release()
             sys.exit(1)
 
     MCQLib._release()
-
 

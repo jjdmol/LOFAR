@@ -155,8 +155,6 @@ class MCQDaemon(object):
         for uuid in self._registered_pipelines.keys():
             self._delete_queues_and_session(uuid)
 
-        
-
         if msg_content['clear_state'] == "true":
             # Send a stop msg to all registered slaves
             for uuid in self._registered_pipelines.keys():

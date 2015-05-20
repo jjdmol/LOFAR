@@ -31,7 +31,7 @@ def treadStopHandler(signum, stack):
     exit(signum)
 
     #print "***************************************"
-    # code snipped to display registered signal handlers
+    ##code snipped to display registered signal handlers
     #signals_to_names = {}
     #for n in dir(signal):
     #    if n.startswith('SIG') and not n.startswith('SIG_'):
@@ -227,6 +227,7 @@ class resultQueueHandler(threading.Thread):
             self.poll_counter = 0       
             # now empty the queue
             while True:
+              try:
                 # get is blocking, always use timeout.
                 msg = self._resultQueue.get(0.2)  
                 if msg == None:
@@ -236,6 +237,8 @@ class resultQueueHandler(threading.Thread):
                 msg_content = eval(msg.content().payload)
                 self._process_queue_message(msg_content)
                 self._resultQueue.ack(msg)
+              except:
+                pass
  
     def setStopFlag(self):
         """
@@ -320,7 +323,9 @@ class MCQLib(object):
         signal.signal(signal.SIGINT, 
                       treadStopHandler)   
 
+        self._logTopicForwarder.daemon = True
         self._logTopicForwarder.start()
+        self._resultQueueForwarder.daemon = True
         self._resultQueueForwarder.start()
         global stopFunction
         stopFunction = self._release
@@ -397,7 +402,10 @@ class MCQLib(object):
         self.logger.info("Connecting to returnQueue and logTopic. Done")
 
     def __del__(self):
+
         #self._release()
+        logTopicStopFlag.set()
+        resultQueueStopFlag.set()
         pass
 
 
@@ -407,6 +415,9 @@ class MCQLib(object):
         Send to msg to the HCQDaemon command queue to remove the registered
         session uuid 
         """
+
+        logTopicStopFlag.set()
+        resultQueueStopFlag.set()
         #
         self.logger.info(
                    "End of session. Sending stop_session command to master")
