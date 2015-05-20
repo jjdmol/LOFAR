@@ -46,6 +46,7 @@
 #include <CoInterface/FinalMetaData.h>
 #include <CoInterface/Stream.h>
 #include <CoInterface/SmartPtr.h>
+#include <CoInterface/SelfDestructTimer.h>
 #include "SubbandWriter.h"
 #include "OutputThread.h"
 #include "IOPriority.h"
@@ -116,16 +117,12 @@ bool process(Stream &controlStream, unsigned myRank)
     // Prevent swapping of our buffers
     lockInMemory(16UL * 1024UL * 1024UL * 1024UL); // limit memory to 16 GB
 
-    if (getenv("COBALT_NO_ALARM") == NULL) {
-      size_t maxRunTime = getMaxRunTime(parset);
-      if (maxRunTime > 0) {
-        LOG_INFO_STR("OutputProc will self-destruct in " << maxRunTime << " seconds");
-        alarm(maxRunTime);
-      } else {
-        LOG_WARN_STR("Observation.stopTime has passed long ago, but observation is real time. Nothing to do. Bye bye.");
-        return false;
-      }
-    }
+    // Deadline for outputProc, in seconds.
+    const time_t outputProcTimeout = 
+      parset.ParameterSet::getTime("Cobalt.Tuning.outputProcTimeout",
+             defaultOutputProcTimeout);
+
+    setSelfDestructTimer(parset, outputProcTimeout);
   }
 
   // Send id string to the MAC Log Processor as context for further LOGs.
