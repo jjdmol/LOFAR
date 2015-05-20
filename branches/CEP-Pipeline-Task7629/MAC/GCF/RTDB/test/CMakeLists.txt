@@ -14,9 +14,11 @@ lofar_add_test(tRTDBPerformance tRTDBPerformance.cc RTDBPerfResp.cc)
 lofar_add_test(tDPservice tDPservice.cc DPresponse.cc)
 lofar_add_test(tRTDBPort tRTDBPort.cc)
 
-set_tests_properties(
-  tPropertySet tRTDBPerformance tDPservice tRTDBPort
-  PROPERTIES RUN_SERIAL ON)
+if(BUILD_TESTING)
+  set_tests_properties(
+    tPropertySet tRTDBPerformance tDPservice tRTDBPort
+    PROPERTIES RUN_SERIAL ON)
+endif(BUILD_TESTING)
 
 # The following tests can only be run interactively. Here we only build them.
 lofar_add_executable(testQuery testQuery.cc)

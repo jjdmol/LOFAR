@@ -46,6 +46,7 @@
 #include <CoInterface/SmartPtr.h>
 #include "SubbandWriter.h"
 #include "OutputThread.h"
+#include "IOPriority.h"
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -78,6 +79,12 @@ bool process(Stream &controlStream, unsigned myRank)
   const vector<string> &hostnames = parset.settings.outputProcHosts;
   ASSERT(myRank < hostnames.size());
   string myHostName = hostnames[myRank];
+
+  if (parset.settings.realTime) {
+    setIOpriority();
+    setRTpriority();
+    lockInMemory(16UL * 1024UL * 1024UL * 1024UL); // limit memory to 16 GB
+  }
 
   // Send id string to the MAC Log Processor as context for further LOGs.
   // Also use it for MAC/PVSS data point logging as a key name prefix.

@@ -111,6 +111,7 @@ namespace LOFAR
 
     static ostream& operator<<(ostream& out, const TBB_Header& h)
     {
+      // TODO: swap some header fields on big endian hosts
       out << (unsigned)h.stationID << " " << (unsigned)h.rspID << " " << (unsigned)h.rcuID << " " << (unsigned)h.sampleFreq <<
       " " << h.seqNr << " " << h.time << " " << (h.nOfFreqBands == 0 ? h.sampleNr : h.bandSliceNr) << " " << h.nOfSamplesPerFrame <<
       " " << h.nOfFreqBands << " " << h.spare << " " << h.crc16; // casts uin8_t to unsigned to avoid printing as char
@@ -126,7 +127,7 @@ namespace LOFAR
       , itsSampleFreq(0)
       , itsNrSubbands(0)
       , itsTime(0)
-      , itsExpSampleNr(0)
+      , itsExpSampleNr(0) // also inits itsExpSliceNr
       , itsDatasetLen(0)
     {
     }
@@ -332,7 +333,7 @@ namespace LOFAR
        * Except that it looks invalid for the first spectral frame each second, so skip checking those. // TODO: enable 'sliceNr != 0 && ' below after verifying with recent real data
        */
       unsigned nSamplesPerSubband = frame.header.nOfSamplesPerFrame / itsNrSubbands; // any remainder is zeroed until the crc32
-      if (/*sliceNr != 0 && */ !crc32tbb(&frame.payload, 2 * MAX_TBB_SPECTRAL_NSAMPLES)) {
+      if (0/*sliceNr != 0 && */ /*!crc32tbb(&frame.payload, 2 * MAX_TBB_SPECTRAL_NSAMPLES)*/) {
         appendFlags(offset, nSamplesPerSubband);
         uint32_t crc32;
         memcpy(&crc32, &frame.payload.data[2 * MAX_TBB_SPECTRAL_NSAMPLES], sizeof crc32); // strict-aliasing safe
@@ -369,17 +370,24 @@ namespace LOFAR
                                            const SubbandInfo& subbandInfo,
                                            const string& rawFilename, dal::TBB_Station& station)
     {
+      itsDataset = new dal::TBB_DipoleDataset(station.dipole(header.stationID, header.rspID, header.rcuID)); // TODO: remove with new DAL version (see below)
+
       // Override endianess. TBB data is always stored little endian and also received as such, so written as-is on any platform.
       if (subbandInfo.centralFreqs.empty()) { // transient mode
+/* TODO: enable with new DAL version
         dal::TBB_DipoleDataset* dpDataset = new dal::TBB_DipoleDataset(station.dipole(header.stationID, header.rspID, header.rcuID));
         itsDataset = static_cast<dal::TBB_Dataset<short>*>(dpDataset);
+*/
 
         itsDataset->create1D(0, -1, LOFAR::basename(rawFilename), itsDataset->LITTLE);
 
-        dpDataset->sampleNumber().value = header.sampleNr;
+/*        dpDataset->sampleNumber().value = header.sampleNr; TODO: enable with new DAL version */
+        itsDataset->sampleNumber().value = header.sampleNr;
       } else { // spectral mode
+/* TODO: enable with new DAL version
         dal::TBB_SubbandsDataset* sbDataset = new dal::TBB_SubbandsDataset(station.subbands(header.stationID, header.rspID, header.rcuID));
         itsDataset = reinterpret_cast<dal::TBB_Dataset<short>*>(sbDataset); // not so nice
+*/
 
         vector<ssize_t> dims(2), maxdims(2);
         dims[0] = 0;
@@ -388,10 +396,12 @@ namespace LOFAR
         maxdims[1] = itsNrSubbands;
         itsDataset->create(dims, maxdims, LOFAR::basename(rawFilename), itsDataset->LITTLE);
 
+/* TODO: enable with new DAL version
         sbDataset->sliceNumber().value = header.bandSliceNr >> TBB_SLICE_NR_SHIFT;
         sbDataset->spectralNofBands().value = itsNrSubbands;
         sbDataset->spectralBands().create(itsNrSubbands).set(subbandInfo.centralFreqs);
         sbDataset->spectralBandsUnit().value = "MHz";
+*/
       }
 
       itsDataset->groupType().value = "DipoleDataset";
@@ -407,7 +417,7 @@ namespace LOFAR
       itsDataset->samplesPerFrame().value = header.nOfSamplesPerFrame; // possibly sanitized
       //itsDataset->dataLength().value is set at the end (destr)
       //itsDataset->flagOffsets().value is set at the end (destr) // TODO: attrib -> 1D dataset
-      itsDataset->nyquistZone().value = parset.nyquistZone();
+      itsDataset->nyquistZone().value = parset.settings.nyquistZone();
 
       //#include "MAC/APL/PIC/RSP_Driver/src/CableSettings.h" or "RCUCables.h"
       // Cable delays (optional) from static meta data.
@@ -465,11 +475,13 @@ namespace LOFAR
       }
 
       // Tile beam is the analog beam. Only HBA can have one analog beam; optional.
-      if (parset.haveAnaBeam()) {
-        vector<double> anaBeamDir(parset.getAnaBeamDirection());
-        itsDataset->tileBeam().create(anaBeamDir.size()).set(anaBeamDir); // always for beam 0
+      if (parset.settings.anaBeam.enabled) {
+        vector<double> anaBeamDir(2);
+        anaBeamDir[0] = parset.settings.anaBeam.direction.angle1;
+        anaBeamDir[1] = parset.settings.anaBeam.direction.angle2;
+        itsDataset->tileBeam().create(anaBeamDir.size()).set(anaBeamDir);
         itsDataset->tileBeamUnit().value = "m";
-        itsDataset->tileBeamFrame().value = parset.getAnaBeamDirectionType(); // idem
+        itsDataset->tileBeamFrame().value = parset.settings.anaBeam.direction.type;
 
         //itsDataset->tileBeamDipoles().create(???.size()).set(???);
 
@@ -482,7 +494,26 @@ namespace LOFAR
         //itsDataset->tileDipolePositionFrame().value = ???;
       }
 
-      itsDataset->dispersionMeasure().value = parset.dispersionMeasure(0, 0); // beam, pencil TODO: adapt too if >1 beam?
+      // TODO: TABs: support >1 TABS and add coh/incoh (this is for SAP 0, coh TAB 0), direction (incl type)
+      double dpMeas;
+      if (!parset.settings.beamFormer.anyCoherentTABs()) {
+        dpMeas = 0.0;
+      } else {
+        dpMeas = -1.0;
+        for (unsigned sap = 0; sap < parset.settings.beamFormer.SAPs.size(); sap++) {
+          for (unsigned tab = 0; tab < parset.settings.beamFormer.SAPs[sap].TABs.size(); tab++) {
+            const ObservationSettings::BeamFormer::TAB &t = parset.settings.beamFormer.SAPs[sap].TABs[tab];
+            if (t.coherent) {
+              dpMeas = t.dispersionMeasure;
+              break;
+            }
+          }
+          if (dpMeas != -1.0) {
+            break;
+          }
+        }
+      }
+      itsDataset->dispersionMeasure().value = dpMeas;
       itsDataset->dispersionMeasureUnit().value = "pc/cm^3";
     }
 
@@ -550,8 +581,8 @@ namespace LOFAR
         }
         sort(tbbSubbandList.begin(), tbbSubbandList.end());
 
-        unsigned nyquistZone = parset.nyquistZone();
-        unsigned sampleFreq = parset.clockSpeed() / 1000000;
+        unsigned nyquistZone = parset.settings.nyquistZone();
+        unsigned sampleFreq = parset.settings.clockMHz;
         info.centralFreqs.reserve(tbbSubbandList.size());
         for (size_t i = 0; i < tbbSubbandList.size(); ++i) {
           info.centralFreqs.push_back(getSubbandCentralFreq(tbbSubbandList[i], nyquistZone, sampleFreq));
@@ -641,14 +672,14 @@ namespace LOFAR
       itsH5File.projectCOI().value = oss.str();
       itsH5File.projectContact().value = itsParset.getString("Observation.Campaign.contact", "");
 
-      itsH5File.settings.observationID.value = formatString("%u", itsParset.settings.observationID);
+      itsH5File.observationID().value = formatString("%u", itsParset.settings.observationID);
 
-      itsH5File.observationStartUTC().value = utcTimeStr(itsParset.startTime());
-      itsH5File.observationStartMJD().value = toMJD(itsParset.startTime());
+      itsH5File.observationStartUTC().value = utcTimeStr(itsParset.settings.startTime);
+      itsH5File.observationStartMJD().value = toMJD(itsParset.settings.startTime);
 
       // The stop time can be a bit further than the one actually specified, because we process in blocks.
-      unsigned nrBlocks = floor((itsParset.stopTime() - itsParset.startTime()) / itsParset.CNintegrationTime()); // TODO: check vs bf: unsigned nrBlocks = parset.nrBeamFormedBlocks();
-      double stopTime = itsParset.startTime() + nrBlocks * itsParset.CNintegrationTime();
+      unsigned nrExpectedBlocks = itsParset.settings.nrBlocks();
+      double stopTime = itsParset.settings.startTime + nrExpectedBlocks * itsParset.settings.blockDuration();
 
       itsH5File.observationEndUTC().value = utcTimeStr(stopTime);
       itsH5File.observationEndMJD().value = toMJD(stopTime);
@@ -659,15 +690,23 @@ namespace LOFAR
       vector<string> allStNames(itsParset.allStationNames());
       itsH5File.observationStationsList().create(allStNames.size()).set(allStNames); // TODO: SS beamformer?
 
-      double subbandBandwidth = itsParset.subbandBandwidth();
-      double channelBandwidth = itsParset.channelWidth();
+      unsigned fileno = 0; // TODO: which nr channels to use for CLA metadata w/ TBB?!?
+      const struct ObservationSettings::BeamFormer::File &f = itsParset.settings.beamFormer.files[fileno];
+      const struct ObservationSettings::BeamFormer::StokesSettings &stokesSet =
+        f.coherent ? itsParset.settings.beamFormer.coherentSettings
+                   : itsParset.settings.beamFormer.incoherentSettings;
+      double subbandBandwidth = itsParset.settings.subbandWidth();
+      double channelBandwidth = subbandBandwidth / stokesSet.nrChannels;
 
       // if PPF is used, the frequencies are shifted down by half a channel
       // We'll annotate channel 0 to be below channel 1, but in reality it will
       // contain frequencies from both the top and the bottom half-channel.
-      double frequencyOffsetPPF = itsParset.nrChannelsPerSubband() > 1 ? 0.5 * channelBandwidth : 0.0;
+      double frequencyOffsetPPF = stokesSet.nrChannels > 1 ? 0.5 * channelBandwidth : 0.0; // TODO: cover both CS and IS!
 
-      const vector<double> subbandCenterFrequencies(itsParset.subbandToFrequencyMapping());
+      // For the whole obs, regardless which SAP and subbands (parts) this file contains.
+      vector<double> subbandCenterFrequencies(itsParset.settings.subbands.size());
+      for(size_t sb = 0; sb < itsParset.settings.subbands.size(); ++sb)
+        subbandCenterFrequencies[sb] = itsParset.settings.subbands[sb].centralFrequency;
 
       double min_centerfrequency = *min_element( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end() );
       double max_centerfrequency = *max_element( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end() );
@@ -678,24 +717,23 @@ namespace LOFAR
       itsH5File.observationFrequencyCenter().value = (sum_centerfrequencies / subbandCenterFrequencies.size() - frequencyOffsetPPF) / 1e6;
       itsH5File.observationFrequencyUnit().value = "MHz";
 
-      itsH5File.observationNofBitsPerSample().value = itsParset.nrBitsPerSample();
-      itsH5File.clockFrequency().value = itsParset.clockSpeed() / 1e6;
+      itsH5File.observationNofBitsPerSample().value = itsParset.settings.nrBitsPerSample;
+      itsH5File.clockFrequency().value = itsParset.settings.clockMHz;
       itsH5File.clockFrequencyUnit().value = "MHz";
 
-      itsH5File.antennaSet().value = itsParset.antennaSet();
-      itsH5File.filterSelection().value = itsParset.getString("Observation.bandFilter", "");
+      itsH5File.antennaSet().value = itsParset.settings.antennaSet;
+      itsH5File.filterSelection().value = itsParset.settings.bandFilter;
 
-      unsigned nrSAPs = itsParset.nrBeams();
+      size_t nrSAPs = itsParset.settings.SAPs.size();
       vector<string> targets(nrSAPs);
 
-      for (unsigned sap = 0; sap < nrSAPs; sap++) {
-        targets[sap] = itsParset.beamTarget(sap);
-      }
+      for (size_t sap = 0; sap < nrSAPs; sap++)
+        targets[sap] = itsParset.settings.SAPs[sap].target;
 
       itsH5File.targets().create(targets.size()).set(targets);
 
 #ifndef TBB_WRITER_VERSION
-      itsH5File.systemVersion().value = LOFAR::StorageVersion::getVersion();
+      itsH5File.systemVersion().value = LOFAR::OutputProcVersion::getVersion();   // LOFAR version
 #else
       itsH5File.systemVersion().value = TBB_WRITER_VERSION;
 #endif
@@ -712,35 +750,15 @@ namespace LOFAR
       int operatingMode = itsParset.getInt("Observation.TBB.TBBsetting.operatingMode", 0);
       if (operatingMode == TBB_SPECTRAL_MODE) {
         itsH5File.operatingMode().value = "spectral";
-        itsH5File.spectralTransformSize().value = SPECTRAL_TRANSFORM_SIZE;
+/*        itsH5File.spectralTransformSize().value = SPECTRAL_TRANSFORM_SIZE; TODO: enable with new DAL version */
       } else {
         itsH5File.operatingMode().value = "transient";
       }
 
-      itsH5File.nofStations().value = 1u;
-
-      // Find the station name we are looking for and retrieve its pos using the found idx.
-      vector<double> stPos;
-
-      vector<string> obsStationNames(itsParset.allStationNames());
-      vector<string>::const_iterator nameIt(obsStationNames.begin());
-
-      vector<double> stationPositions(itsParset.positions()); // len must be (is generated as) 3x #stations
-      vector<double>::const_iterator posIt(stationPositions.begin());
-      string stFullName;
-      for (; nameIt != obsStationNames.end(); ++nameIt, posIt += 3) {
-        stFullName = *nameIt;
-        if (stName == stFullName.substr(0, stName.size())) { // for TBB, consider "CS001" == "CS001HBA0" etc
-          break;
-        }
-      }
-      if (nameIt != obsStationNames.end() && posIt < stationPositions.end()) { // found?
-        stPos.assign(posIt, posIt + 3);
-      } else { // N/A, but create the group anyway to be able to store incoming data.
-        stFullName.clear();
-      }
       itsStation.create();
-      initStationGroup(itsStation, stName, stFullName, stPos);
+      itsH5File.nofStations().value = 1u;
+      vector<double> stPos = itsParset.position(stName);
+      initStationGroup(itsStation, stName, itsParset.settings.antennaSet, stPos);
 
       // Trigger Group
       dal::TBB_Trigger tg(itsH5File.trigger());
@@ -749,7 +767,7 @@ namespace LOFAR
     }
 
     void TBB_Station::initStationGroup(dal::TBB_Station& st, const string& stName,
-                                       const string& stFullName, const vector<double>& stPosition)
+                                       const string& antSet, const vector<double>& stPosition)
     {
       st.groupType().value = "StationGroup";
       st.stationName().value = stName;
@@ -761,16 +779,19 @@ namespace LOFAR
       }
 
       // digital beam(s)
-      if (itsParset.nrBeams() > 0) { // TODO: adapt DAL, so we can write all digital beams, analog too if tiles (HBA)
-        vector<double> beamDir(itsParset.getBeamDirection(0));
+      if (itsParset.settings.SAPs.size() > 0) { // TODO: adapt DAL, so we can write all digital beams instead of only SAP 0, analog too if tiles (HBA)
+        vector<double> beamDir(2);
+        beamDir[0] = itsParset.settings.SAPs[0].direction.angle1;
+        beamDir[1] = itsParset.settings.SAPs[0].direction.angle2;
         st.beamDirection().create(beamDir.size()).set(beamDir);
         st.beamDirectionUnit().value = "m";
-        st.beamDirectionFrame().value = itsParset.getBeamDirectionType(0);
+        st.beamDirectionFrame().value = itsParset.settings.SAPs[0].direction.type;
       }
 
-      // Parset clockCorrectionTime() also returns 0.0 if stFullName is unknown. Avoid this ambiguity.
       try {
-        double clockCorr = itsParset.getDouble(string("PIC.Core.") + stFullName + ".clockCorrectionTime");
+        // We don't have clock corr vals for e.g. CS001; only CS001HBA and CS001LBA. Strip HBA ear number.
+        string antFieldNameNoEarNr = stName + antSet.substr(0, sizeof("HBA")-1);
+        double clockCorr = itsParset.getDouble(string("PIC.Core.") + antFieldNameNoEarNr + ".clockCorrectionTime");
         st.clockOffset().value = clockCorr;
         st.clockOffsetUnit().value = "s";
       } catch (APSException& exc) {
@@ -971,7 +992,7 @@ namespace LOFAR
          * The TBB spec states that each frame has the same fixed length, so the previous values are a good base guess if the header crc fails.
          * But it is not clear if it is worth the effort to try to guess to fix something up. For now, drop and log.
          */
-        THROW(TBB_MalformedFrameException, "crc16: " << header); // header not yet bswapped on _big_ endian
+        THROW(TBB_MalformedFrameException, "crc16: " << header);
       }
 
       /*
@@ -1024,7 +1045,6 @@ namespace LOFAR
         stream = createStream(itsInputStreamName, true);
       } catch (Exception& exc) { // SystemCallException or CoInterfaceException (or TimeOutException)
         LOG_WARN_STR(itsLogPrefix << exc);
-        itsInExitStatus = 1;
         return;
       }
       LOG_INFO_STR(itsLogPrefix << "reading incoming data from " << itsInputStreamName);
@@ -1061,13 +1081,14 @@ namespace LOFAR
             LOG_WARN_STR(itsLogPrefix << "may have lost a frame buffer (1): " << exc.what());
           }
         } catch (EndOfStreamException& ) { // after end of stream, for input from file or pipe
+          itsInExitStatus = 0;
           break;
         } catch (exception& exc) {
           LOG_FATAL_STR(itsLogPrefix << exc.what());
-          itsInExitStatus = 1;
           break;
         } catch (...) { // thread cancellation exc induced after timeout, for input from udp
           delete stream;
+          itsInExitStatus = 0;
           throw; // mandatory
         }
       }
@@ -1084,6 +1105,7 @@ namespace LOFAR
           frame = NULL;
           frame = itsReceiveQueue.remove();
           if (frame == NULL) {
+            itsOutExitStatus = 0;
             break;
           }
 
@@ -1103,11 +1125,9 @@ namespace LOFAR
           LOG_WARN_STR(itsLogPrefix << exc.what());
         } catch (out_of_range& exc) {
           LOG_WARN_STR(itsLogPrefix << exc.what());
-
-          // Config/parset and other errors are fatal.
         } catch (exception& exc) {
+          // Config/parset and other errors are fatal.
           LOG_FATAL_STR(itsLogPrefix << exc.what());
-          itsOutExitStatus = 1;
           running = false;
         }
 

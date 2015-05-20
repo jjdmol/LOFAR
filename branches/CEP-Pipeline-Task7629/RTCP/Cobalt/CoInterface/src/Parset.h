@@ -678,6 +678,7 @@ namespace LOFAR
       double                      sampleDuration() const;
       unsigned                    nrBitsPerSample() const;
       size_t                      nrBytesPerComplexSample() const;
+      std::vector<double>         position(const string &name) const;
       MultiDimArray<double,2>     positions() const;
       std::string                 positionType() const;
       unsigned                    dedispersionFFTsize() const;
@@ -708,7 +709,6 @@ namespace LOFAR
       void                        addPosition(string stName);
       double                      getTime(const std::string &name, const std::string &defaultValue) const;
 
-      std::vector<double>         position(const string &name) const;
       std::vector<double>         centroidPos(const string &stations) const;
 
       std::vector<struct ObservationSettings::FileLocation> getFileLocations(const std::string outputType) const;

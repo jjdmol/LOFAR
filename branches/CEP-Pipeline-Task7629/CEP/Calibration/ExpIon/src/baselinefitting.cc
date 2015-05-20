@@ -29,16 +29,23 @@
 #include <casa/Utilities/CountedPtr.h>
 #include <scimath/Fitting/LSQFit.h>
 
+#if defined(casacore)
+#include <python/Converters/PycExcp.h>
+#include <python/Converters/PycBasicData.h>
+#include <python/Converters/PycValueHolder.h>
+#include <python/Converters/PycRecord.h>
+#define pyrap python
+#else
 #include <pyrap/Converters/PycExcp.h>
 #include <pyrap/Converters/PycBasicData.h>
 #include <pyrap/Converters/PycValueHolder.h>
 #include <pyrap/Converters/PycRecord.h>
+#endif
 
 #include <boost/python.hpp>
 #include <boost/python/args.hpp>
 
 using namespace casa;
-using namespace casa::pyrap;
 using namespace boost::python;
 
 namespace LOFAR

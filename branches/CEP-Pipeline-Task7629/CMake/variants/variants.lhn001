@@ -4,7 +4,7 @@ set(DAL_ROOT_DIR /opt/cep/dal/current)
 
 set(PYRAP_ROOT_DIR /opt/cep/pyrap)
 
-set(QPID_ROOT_DIR /opt/cep/qpid)
+set(QPID_ROOT_DIR /opt/qpid)
 
 set(WCSLIB_ROOT_DIR /opt/cep/wcslib)
 

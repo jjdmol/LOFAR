@@ -22,10 +22,19 @@
 #include <lofar_config.h>
 #include <ParmDB/ParmFacade.h>
 
+#include <casa/aips.h>
+#if defined(casacore)
+#include <python/Converters/PycExcp.h>
+#include <python/Converters/PycBasicData.h>
+#include <python/Converters/PycRecord.h>
+#include <python/Converters/PycBasicData.h>
+#define pyrap python
+#else
 #include <pyrap/Converters/PycExcp.h>
 #include <pyrap/Converters/PycBasicData.h>
 #include <pyrap/Converters/PycRecord.h>
 #include <pyrap/Converters/PycBasicData.h>
+#endif
 #include <boost/python.hpp>
 #include <boost/python/args.hpp>
 
@@ -33,7 +42,6 @@
 
 using namespace boost::python;
 using namespace casa;
-using namespace casa::pyrap;
 
 namespace LOFAR { namespace BBS  {
 

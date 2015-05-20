@@ -29,11 +29,12 @@ install(PROGRAMS
 
 install(FILES
   outputProc.log_prop
+  TBB_Writer.log_prop
   DESTINATION etc)
 
 lofar_add_bin_program(outputProc outputProc.cc)
 lofar_add_bin_program(versionoutputproc versionoutputproc.cc)
-#lofar_add_bin_program(TBB_Writer TBB_Writer_main.cc TBB_Writer.cc)
+lofar_add_bin_program(TBB_Writer TBB_Writer_main.cc TBB_Writer.cc)
 
 lofar_add_sbin_program(createHeaders createHeaders.cc)
 lofar_add_sbin_program(plotMS plotMS.cc)
