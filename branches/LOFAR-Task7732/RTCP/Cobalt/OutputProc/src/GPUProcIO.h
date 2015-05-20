@@ -31,11 +31,6 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-
-    // Determine the alarm for this observation, in seconds from now.
-    // Returns 0 if the alarm is in the past.
-    size_t getMaxRunTime(const Parset &parset);
-
     // Receive and process a full observation, being rank 'myRank'. Will:
     //   * Receive a Parset over the controlStream
     //   * Fulfill roles for parset.settings.outputProcHosts[myRank]:

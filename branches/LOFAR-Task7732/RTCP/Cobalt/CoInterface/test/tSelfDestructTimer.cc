@@ -1,4 +1,4 @@
-//# tGPUProcIO.cc: Test wrapper class for main functionality
+//# tSelfDestructTimer.cc: Test wrapper class for main functionality
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include <OutputProc/GPUProcIO.h>
+#include <CoInterface/SelfDestructTimer.h>
 
 #include <UnitTest++.h>
 #include <time.h>
