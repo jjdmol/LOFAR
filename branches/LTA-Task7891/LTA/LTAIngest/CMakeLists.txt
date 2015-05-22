@@ -12,7 +12,6 @@ python_install(
 	ClientForm-0.1.17/test.py
 	ClientForm-0.1.17/ClientForm.py
 	ClientForm-0.1.17/setup.py
-	.ropeproject/config.py
 	ingestpipeline_test.py
 	mechanize-0.2.5/examples/hack21.py
 	mechanize-0.2.5/examples/pypi.py
