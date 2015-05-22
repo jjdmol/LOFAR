@@ -1,6 +1,0 @@
-include(UseLATEX)
-
-ADD_LATEX_DOCUMENT(release-notes.tex DEFAULT_PDF)
-
-INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/release-notes.pdf
-  DESTINATION doc)
