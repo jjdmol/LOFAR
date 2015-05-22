@@ -424,45 +424,6 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
       uvw1 (0, k, i) = vb.uvw()(idx)(0);
       uvw1 (1, k, i) = vb.uvw()(idx)(1);
       uvw1 (2, k, i) = vb.uvw()(idx)(2);
-
-      if (dopsf)
-      {
-        for (int idx_chan = 0; idx_chan < N_chan; idx_chan++)
-        {
-          for (int idx_pol = 0; idx_pol < itsNPol; idx_pol++)
-          {
-            if (vb.flagCube()(idx_pol, idx_chan, idx))
-            {
-              visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = Complex(0);
-            }
-            else
-            {
-//               visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = imagingWeightCube(idx_pol, idx_chan, idx) * ((idx_pol==0) ||( idx_pol==3));
-//               itsSumWeight[0](idx_pol,0) += imagingWeightCube(idx_pol, idx_chan, idx)*blocksize*blocksize*2;
-              visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = 1.0 * ((idx_pol==0) ||( idx_pol==3));
-              itsSumWeight[0](idx_pol,0) += 1.0*blocksize*blocksize*2;
-            }
-          }
-        }
-      }
-      else
-      {
-        for (int idx_chan = 0; idx_chan < N_chan; idx_chan++)
-        {
-          for (int idx_pol = 0; idx_pol < itsNPol; idx_pol++)
-          {
-            if (vb.flagCube()(idx_pol, idx_chan, idx))
-            {
-              visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = Complex(0);
-            }
-            else
-            {
-              visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = data(idx_pol, idx_chan, idx)*imagingWeightCube(idx_pol, idx_chan, idx);
-              itsSumWeight[0](idx_pol,0) += imagingWeightCube(idx_pol, idx_chan, idx)*blocksize*blocksize*2;
-            }
-          }
-        }
-      }
     }
     
     int idx_start = v.baseline_index_map[chunk->start];
@@ -521,11 +482,52 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
     {
       continue;
     }
-    else
+    
+    for (int j = chunk->start; j<=chunk->end; j++)
     {
-      i++;
-    }
+      int k = j - chunk->start;
       
+      int idx = v.baseline_index_map[j];
+
+      if (dopsf)
+      {
+        for (int idx_chan = 0; idx_chan < N_chan; idx_chan++)
+        {
+          for (int idx_pol = 0; idx_pol < itsNPol; idx_pol++)
+          {
+            if (vb.flagCube()(idx_pol, idx_chan, idx))
+            {
+              visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = Complex(0);
+            }
+            else
+            {
+              visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = 1.0 * ((idx_pol==0) ||( idx_pol==3));
+              itsSumWeight[0](idx_pol,0) += 1.0*blocksize*blocksize*2;
+            }
+          }
+        }
+      }
+      else
+      {
+        for (int idx_chan = 0; idx_chan < N_chan; idx_chan++)
+        {
+          for (int idx_pol = 0; idx_pol < itsNPol; idx_pol++)
+          {
+            if (vb.flagCube()(idx_pol, idx_chan, idx))
+            {
+              visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = Complex(0);
+            }
+            else
+            {
+              visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = data(idx_pol, idx_chan, idx)*imagingWeightCube(idx_pol, idx_chan, idx);
+              itsSumWeight[0](idx_pol,0) += imagingWeightCube(idx_pol, idx_chan, idx)*blocksize*blocksize*2;
+            }
+          }
+        }
+      }
+    }
+    
+    i++;
     if ((i == N_chunks) || ((chunk+1) == v.chunks.end()))
     {
 //       cout << "N_chunks: " << N_chunks << endl;      
