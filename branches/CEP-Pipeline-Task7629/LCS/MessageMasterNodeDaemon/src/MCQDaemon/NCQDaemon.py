@@ -292,8 +292,8 @@ class NCQDaemon(object):
 
                 # Send the logging information not created using the default
                 # lofar logger
-                self._send_log_message(logTopic, stdoutdata, level='info')
-                self._send_log_message(logTopic, stderrdata, level='error')
+                self._send_log_message(logTopic, stdoutdata, level='INFO')
+                self._send_log_message(logTopic, stderrdata, level='ERROR')
 
                 # send the exit state to the resultsQueue
                 payload = {'type':"exit_value",
@@ -388,7 +388,7 @@ class NCQDaemon(object):
         Send a logging msg  with log_data to the logTOpic at the level
         """
         msg = CQConfig.create_validated_log_msg(level, 
-                                          log_data,"NCQDaemon")
+                               log_data,"NCQDaemon:" + CQConfig.hostname)
         logTopic.send(msg)
 
     def _send_job_exit_message(self, resultQueue, exit_dict):

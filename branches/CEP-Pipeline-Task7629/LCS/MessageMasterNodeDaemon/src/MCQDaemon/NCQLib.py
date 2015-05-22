@@ -16,14 +16,12 @@ class QPIDLoggerHandler(logging.Handler):
         INit function connects to the QPID logging topic supplied
         """
         logging.Handler.__init__(self)
-        #super(QPIDLoggerHandler, self).__init__()
-        self._hostname = socket.gethostname()
-        self._username = pwd.getpwuid(os.getuid()).pw_name
-        broker =  "127.0.0.1" 
+        self._hostname = CQConfig.hostname 
+        self._username = CQConfig.username 
         self._logTopicName = logTopicName
         self._logTOpic = msgbus.ToBus(self._logTopicName, 
               options = "create:always, node: { type: topic, durable: False}",
-              broker = broker)
+              broker = CQConfig.broker)
 
     def flush(self):
         """
@@ -38,28 +36,14 @@ class QPIDLoggerHandler(logging.Handler):
         self._send_log_message(record.getMessage(),
                                record.levelname)
            
-    def _send_log_message(self, log_data, level='info'):
+    def _send_log_message(self, log_data, level='INFO'):
         """
         Send a logging msg  with log_data to the logTOpic at the level
 
         msg_details:
         {'level'=level, 'log_data':log_data}
         """
-        
-        msg = message.MessageContent(
-                from_="{0}.{1}.NCQlib".format(
-                        self._username, self._hostname),
-                forUser="{0}.MSQDaemon".format(self._username),
-                summary="NCQDaemon log message",
-                protocol="CommandQUeueLogMsg",
-                protocolVersion="0.0.1", 
-                #momid="",
-                #sasid="", 
-                #qpidMsg=None
-                      )
-        msg.payload = {'level':   level,
-                       'log_data':log_data}
-
+        msg = CQConfig.create_validated_log_msg(level, log_data, self._hostname)
         self._logTOpic.send(msg)
 
 class NCQLib(object):
@@ -76,9 +60,9 @@ class NCQLib(object):
         framework. Exit state is retrieved by the NCQDaemon, using the exit 
         value of the script
         """
-        self._broker = "127.0.0.1" 
-        self._hostname = socket.gethostname()
-        self._username = pwd.getpwuid(os.getuid()).pw_name
+        self._broker = CQConfig.broker
+        self._hostname = CQConfig.hostname 
+        self._username = CQConfig.username 
         self._parameterQueueName = parameterQueueName
         self._logTopicName = logTopicName
         self._returnQueueName = returnQueueName
@@ -127,24 +111,14 @@ class NCQLib(object):
         """
         Send the received outputs to the results queue
         """
-
-        msg = message.MessageContent(
-                from_="{0}.{1}.NCQlib".format(
-                        self._username, self._hostname),
-                forUser="{0}.MSQDaemon".format(self._username),
-                summary="NCQDaemon results message",
-                protocol="CommandQUeueLogMsg",
-                protocolVersion="0.0.1", 
-                #momid="",
-                #sasid="", 
-                #qpidMsg=None
-                      )
         # Create the output dict
         msg_dict = {'type': 'output',
                     'output': output}
 
         # add the job specific information
         msg_dict.update(self._job_dict)
+
+        msg = CQConfig.create_validated_output_msg(msg_dict, self._hostname)
 
         msg.payload = msg_dict
         self._resultQueue.send(msg)

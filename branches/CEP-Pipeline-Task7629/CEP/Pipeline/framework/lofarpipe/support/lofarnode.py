@@ -76,6 +76,12 @@ class LOFARnode(object):
 
         # Add the correct handler depending on the comm method.
         if _QPID_ENABLED:
+
+            format = "%(asctime)s %(levelname)-7s %(name)s: %(message)s"
+            datefmt = "%Y-%m-%d %H:%M:%S"
+            formatter = logging.Formatter(format, datefmt)
+
+            self._NCQLib.QPIDLoggerHandler.setFormatter(formatter)
             self.logger.addHandler(self._NCQLib.QPIDLoggerHandler)
             
             self.logger.propagate = False    # stop printing to stdout           

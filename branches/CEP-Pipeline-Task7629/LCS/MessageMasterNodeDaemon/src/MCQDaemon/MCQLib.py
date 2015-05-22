@@ -7,6 +7,7 @@ import threading
 import pwd
 import socket  # needed for username TODO: is misschien een betere manier os.environ['USER']
 import signal
+import pickle
 
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
@@ -82,20 +83,24 @@ class logTopicHandler(threading.Thread):
         """
         Parse log message and send it to the logger at the correct level
         """
-        level = msg_content['level']
+        level = msg_content['level']       
         log_data = msg_content['log_data'].strip()  #remove trailing whitespace
+        sender = msg_content['sender']
+
+
+
         if level == 'CRITICAL':
-            self.logger.critical(log_data)
+            self.logger.critical(sender + ": " + log_data)
         elif level == 'ERROR':
-            self.logger.error(log_data)
+            self.logger.error(sender + ": " + log_data)
         elif level == 'WARNING':
-            self.logger.warning(log_data)
+            self.logger.warning(sender + ": " + log_data)
         elif level == 'INFO':
-            self.logger.info(log_data)
+            self.logger.info(sender + ": " + log_data)
         elif level == 'DEBUG':
-            self.logger.debug(log_data)
+            self.logger.debug(sender + ": " + log_data)
         else:
-            self.logger.debug(log_data)
+            self.logger.debug(sender + ": " + log_data)
 
     def run(self):
         """

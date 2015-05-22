@@ -113,6 +113,7 @@ log_msg_protocol_name_template = "{0}LogMsg"
 log_msg_summary_template       = "{0} log message"
 log_msg_levels        = ['CRITICAL','ERROR', 'WARNING', 'INFO', 'DEBUG']
 
+
 def create_validated_log_msg(level, log_data, sender):
     """
     Creates a fully instantiated log msg.
@@ -122,8 +123,9 @@ def create_validated_log_msg(level, log_data, sender):
     """
     # First check if the level is known, if not, set to warning and
     # prepent the log line with an error
+
     if level not in log_msg_levels:        
-        prefix = "Uknown Error Level<{0}>: ".format(level)
+        prefix = "Unknown Error Level<{0}>: ".format(level)
         level = 'WARNING'
         log_data = prefix + log_data
 
@@ -135,17 +137,18 @@ def create_validated_log_msg(level, log_data, sender):
 
     # add the data to send
     msg.payload = {'level':   level,
-                   'log_data':log_data}
+                   'log_data':log_data,
+                   'sender':sender}
 
     return msg
 
 # Return msg
 return_msg_protocol_name_template = "{0}ReturnMsg"
 return_msg_summary_template       = "{0} return message"
-return_msg_types                  = ['exit_value']
+return_msg_types                  = ['exit_value', 'output']
 
 
-def _validate_return_exit_dict(payload):
+def _validate_return_dict(payload):
     """
     Checks if the return payload is correct according to the protocol
     """
@@ -158,7 +161,11 @@ def _validate_return_exit_dict(payload):
          return False
 
     # Then check the other keys
-    if 'exit_value' not in keys:
+    if payload['type'] == 'exit_value' and 'exit_value' not in keys:
+         return False
+
+     # Then check the other keys
+    if payload['type'] == 'output' and 'output' not in keys:
          return False
 
     if 'uuid' not in keys:
@@ -182,7 +189,7 @@ def create_validated_return_msg(exit_dict, sender):
                 'job_uuid':job_uuid}
     """
     # First check if msg type is correct
-    if not _validate_return_exit_dict(exit_dict):
+    if not _validate_return_dict(exit_dict):
         raise Exception("Incorrect return msg payload received: {0}".format(
                         repr(payload)))
 
@@ -194,6 +201,34 @@ def create_validated_return_msg(exit_dict, sender):
 
     # add the data to send
     msg.payload = exit_dict
+
+    return msg
+
+def create_validated_output_msg(output_dict, sender):
+    """
+    Creates a fully instantiated log msg.
+
+    It performs a check of the supplied arguments, sets the correct msg
+    fields
+
+     payload = {'type':"exit_value",
+                'output':output,
+                'uuid':uuid,
+                'job_uuid':job_uuid}
+    """
+    ## First check if msg type is correct
+    if not _validate_return_dict(output_dict):
+        raise Exception("Incorrect return msg payload received: {0}".format(
+                        repr(payload)))
+
+    # Create the header
+    msg = create_msg_header(msg_fromNCQDaemon_template,
+                msg_forMCQDaemon_template,
+                return_msg_summary_template.format(sender),
+                return_msg_protocol_name_template.format(sender))
+
+    # add the data to send
+    msg.payload = output_dict
 
     return msg
 
@@ -278,6 +313,23 @@ def create_MCQDaemon_to_NCQDaemon_start_session_msg(payload,
                 msg_forNCQDaemon_template,
                 start_node_session_summary_template.format(sender),
                 start_node_session_protocol_name_template.format(sender),
+                target)
+
+    # just forward the msg_content as is.
+    msg.payload = payload
+
+    return msg
+
+# parameter msg
+stop_node_session_protocol_name_template = "{0}stopMsg"
+stop_node_session_summary_template       = "{0} Stop session on node"
+def create_MCQDaemon_to_NCQDaemon_stop_session_msg(payload, 
+                                             sender, target):
+
+    msg = create_msg_header(msg_fromMCQDaemon_template,
+                msg_forNCQDaemon_template,
+                stop_node_session_summary_template.format(sender),
+                stop_node_session_protocol_name_template.format(sender),
                 target)
 
     # just forward the msg_content as is.

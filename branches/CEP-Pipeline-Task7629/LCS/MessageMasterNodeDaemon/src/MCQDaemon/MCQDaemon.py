@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
-# id.. TDB
+# $Id$
 
 from datetime import datetime   # needed for duration
 import time
@@ -326,20 +326,18 @@ class MCQDaemon(object):
                 self._save_state_to_file()
 
     def _send_quit_msg_to_slave(self, uuid, node):
-        msg = message.MessageContent(
-                from_="USERNAME.LOCUS102.MCQDaemon",
-                forUser="USERRNAME.{0}.NSQDaemon".format(node),
-                summary="First msg to be send",
-                protocol="CommandQUeueMsg",
-                protocolVersion="0.0.1", 
-                #momid="",
-                #sasid="", 
-                #qpidMsg=None
-                      )
-        start_msg_content = {'command': 'stop_session',
+        """
+        Send a stop command for session uuid on node.
+
+        This will result in all jobs for this session to be stopped
+        """
+        stop_msg_content = {'command': 'stop_session',
                              'uuid':uuid}
-        msg.payload = start_msg_content
-        self.logger.info("sending stop_session to nodes")
+        # Create the msg based on some template in the CQConfig
+        msg = CQConfig.create_MCQDaemon_to_NCQDaemon_stop_session_msg(
+              stop_msg_content, "MCQDaemon", node)
+
+        self.logger.info("sending stop_session to node")
         self._registered_nodes[node]['CQObject'].send(msg)
 
     def _delete_queues_and_session(self, uuid):
@@ -348,7 +346,7 @@ class MCQDaemon(object):
         internal storage
         """
         # first check if the the queues might have been removed:
-        # dueue to the nature of message, the delete might be called a second time
+        # due to the nature of message, the delete might be called a second time
         if uuid not in self._registered_pipelines.keys():
             return
 
@@ -366,7 +364,6 @@ class MCQDaemon(object):
 
         self._delete_queue_and_topic(qname, topicname)
 
-
     def _check_slave_and_connect(self, node):
         """
         Checks if a node is known and created a msg queue connect if needed
@@ -375,7 +372,6 @@ class MCQDaemon(object):
             self.logger.debug(
                 "received job for unconnected slave: {0}".format(node))
 
-            # TODO: Het maken van deze queueu moet ergens anders
             nodeQueueName = CQConfig.create_nodeCommandQueue_name(node)
 
             bus = msgbus.ToBus(nodeQueueName, 
@@ -398,8 +394,8 @@ class MCQDaemon(object):
             # Tell the node to be ready to receive jobs for this uuid
             msg_content = {'command': 'start_session',
                                  'uuid':uuid}
-            msg = CQConfig.create_MCQDaemon_to_NCQDaemon_start_session_msg(msg_content,
-                            "MCQDaemon", node)                      
+            msg = CQConfig.create_MCQDaemon_to_NCQDaemon_start_session_msg(
+                msg_content, "MCQDaemon", node)                      
             self._registered_nodes[node]['CQObject'].send(msg)
 
             # store that the node is active
@@ -417,7 +413,9 @@ class MCQDaemon(object):
         self._brokerAgent.delExchange(topicname)
 
 
-
+    # ***********************************************************************
+    # Some helper functions. Could be refactored, but the statefile loading
+    # is currently tightly bound to the internals of the class 
     def _save_state_to_file(self):
         """
         Save the internal session information to disk     
@@ -458,7 +456,6 @@ class MCQDaemon(object):
 
             self.logger.info(key)
         self.logger.info("--- End List of reloaded uuid ---")  
-
 
     def _sleep(self, duration_loop_seconds):
         """

@@ -33,7 +33,7 @@ if __name__ == "__main__":
     parameters = {'node':'dop282',
                   #'cmd': '/home/klijn/build/7629/gnu_debug/installed/lib/python2.6/dist-packages/lofarpipe/recipes/nodes/test_recipe.py',
                   'environment':environment,
-                  'cmd': 'python /home/klijn/build/7629/gnu_debug/installed/lib/python2.6/dist-packages/lofarpipe/recipes/nodes/test_recipe.py',
+                  'cmd': 'python /home/wouter/build/7629/gnu_debug/installed/lib/python2.7/dist-packages/lofarpipe/recipes/nodes/test_recipe.py',
                   #'cmd': """echo 'print "test"' | python """,
                   #'cmd':""" echo  "test" """,
                   'cdw': '/home/wouter',
@@ -42,6 +42,8 @@ if __name__ == "__main__":
 
     MCQLib.run_job(parameters)
 
+    time.sleep(2)
+
     for key in MCQLib._running_jobs.keys():
         print MCQLib._running_jobs[key]
         if MCQLib._running_jobs[key]['exit_value'] != 0:
@@ -49,7 +51,7 @@ if __name__ == "__main__":
 
 
         print MCQLib._running_jobs[key]['output']['output']
-        if not MCQLib._runningtest_jobs[key]['output']['status']:
+        if not MCQLib._running_jobs[key]['output']['status']:
             print "*******************************************************"
             print "We did not have a correct responce from the node recipe"
             MCQLib._release()
