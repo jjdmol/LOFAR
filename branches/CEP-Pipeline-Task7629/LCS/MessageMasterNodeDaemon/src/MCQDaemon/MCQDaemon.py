@@ -22,12 +22,8 @@ from datetime import datetime   # needed for duration
 import time
 import pickle
 import os
-import uuid
-import pwd
-import socket
 
 import lofar.messagebus.msgbus as msgbus
-import lofar.messagebus.message as message
 import lofar.messagebus.CQConfig as CQConfig
 
 # programmatically interact with the qpid broker
@@ -334,7 +330,7 @@ class MCQDaemon(object):
         stop_msg_content = {'command': 'stop_session',
                              'uuid':uuid}
         # Create the msg based on some template in the CQConfig
-        msg = CQConfig.create_MCQDaemon_to_NCQDaemon_stop_session_msg(
+        msg = CQConfig.create_stop_session_msg(
               stop_msg_content, "MCQDaemon", node)
 
         self.logger.info("sending stop_session to node")
@@ -394,7 +390,7 @@ class MCQDaemon(object):
             # Tell the node to be ready to receive jobs for this uuid
             msg_content = {'command': 'start_session',
                                  'uuid':uuid}
-            msg = CQConfig.create_MCQDaemon_to_NCQDaemon_start_session_msg(
+            msg = CQConfig.create_start_session_msg(
                 msg_content, "MCQDaemon", node)                      
             self._registered_nodes[node]['CQObject'].send(msg)
 

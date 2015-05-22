@@ -16,19 +16,15 @@
 # You should have received a copy of the GNU General Public License along
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
-# id.. TDB
+# $Id$
 
 from datetime import datetime   # needed for duration
 import time
-import os
 import subprocess
 import copy
 
-
 import lofar.messagebus.msgbus as msgbus
-import lofar.messagebus.message as message
 import lofar.messagebus.CQConfig as CQConfig
-
 
 # Define logging.  Until we have a python loging framework, we'll have
 # to do any initialising here
@@ -283,7 +279,7 @@ class NCQDaemon(object):
 
                 # 2. CHeck if the process has ended, continue of not
                 if process.poll() == None:
-                    self.logger.error("still running: {0}".format(job_uuid))
+                    self.logger.info("still running: {0}".format(job_uuid))
                     continue
 
                 # 3. We have a valid subprocess that has now ended

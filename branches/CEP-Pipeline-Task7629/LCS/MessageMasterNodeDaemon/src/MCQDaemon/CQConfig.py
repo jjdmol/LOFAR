@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
+# $Id$
 
 import os
 import socket
@@ -61,7 +62,7 @@ def create_parameterQueue_name(uuid):
 
 def create_nodeCommandQueue_name(i_hostname=None):
     """
-    Returns a fully constructed name for a unique returnQueue unique
+    Returns a fully constructed name for a unique returnQueue
     """
     l_hostname = None
     if i_hostname is None:
@@ -78,21 +79,21 @@ def create_masterCommandQueue_name():
     return masterCommandQueueTemplate.format(username, hostname)
 
 def create_msg_header(from_template, for_template, summary, protocol, 
-                      i_hostname = None):
+                      sender = None, target = None):
     """
     create a msg header from supplied template parameters
 
 
     """
     lhostname = None
-    if i_hostname == None:
+    if target == None:
         lhostname = hostname
     else:
-        lhostname = i_hostname
+        lhostname = target
 
     msg = message.MessageContent(
-                from_=from_template.format(username, lhostname),
-                forUser=for_template.format(username),
+                from_=from_template.format(username, lhostname, sender),
+                forUser=for_template.format(username, target),
                 summary=summary,
                 protocol=protocol,
                 protocolVersion=protocolVersion, 
@@ -104,8 +105,8 @@ def create_msg_header(from_template, for_template, summary, protocol,
     return msg
 
 # Protocol details
-msg_fromNCQDaemon_template  = "{0}.{1}.NCQDaemon"
-msg_forMCQDaemon_template   = "{0}.MSQDaemon"
+msg_from_template = "{0}.{1}.{2}"
+msg_for_template   = "{0}.{1}"
 msg_forNCQLib_template      = "{0}.NCQDaemon"
 
 # Log msg
@@ -130,10 +131,11 @@ def create_validated_log_msg(level, log_data, sender):
         log_data = prefix + log_data
 
     # Create the header
-    msg = create_msg_header(msg_fromNCQDaemon_template,
-                msg_forMCQDaemon_template,
+    msg = create_msg_header(msg_from_template,
+                msg_for_template,
                 log_msg_summary_template.format(sender),
-                log_msg_protocol_name_template.format(sender))
+                log_msg_protocol_name_template.format(sender),
+                sender, "MCQLib")
 
     # add the data to send
     msg.payload = {'level':   level,
@@ -194,10 +196,11 @@ def create_validated_return_msg(exit_dict, sender):
                         repr(payload)))
 
     # Create the header
-    msg = create_msg_header(msg_fromNCQDaemon_template,
-                msg_forMCQDaemon_template,
+    msg = create_msg_header(msg_from_template,
+                msg_for_template,
                 return_msg_summary_template.format(sender),
-                return_msg_protocol_name_template.format(sender))
+                return_msg_protocol_name_template.format(sender),
+                sender, "MCQLib")
 
     # add the data to send
     msg.payload = exit_dict
@@ -222,10 +225,11 @@ def create_validated_output_msg(output_dict, sender):
                         repr(payload)))
 
     # Create the header
-    msg = create_msg_header(msg_fromNCQDaemon_template,
-                msg_forMCQDaemon_template,
+    msg = create_msg_header(msg_from_template,
+                msg_for_template,
                 return_msg_summary_template.format(sender),
-                return_msg_protocol_name_template.format(sender))
+                return_msg_protocol_name_template.format(sender),
+                sender, 'MCQLib')
 
     # add the data to send
     msg.payload = output_dict
@@ -273,30 +277,27 @@ def create_validated_parameter_msg(payload, sender):
                         repr(payload)))
 
     # Create the header
-    msg = create_msg_header(msg_fromNCQDaemon_template,
-                msg_forMCQDaemon_template,
+    msg = create_msg_header(msg_from_template,
+                msg_for_template,
                 parameter_msg_summary_template.format(sender),
-                parameter_msg_protocol_name_template.format(sender))
+                parameter_msg_protocol_name_template.format(sender),
+                sender, 'NCQLib')
 
     # add the data to send
     msg.payload = payload
 
     return msg
 
-
-msg_fromMCQDaemon_template  = "{0}.{1}.MCQDaemon"
-msg_forNCQDaemon_template   = "{0}.MSQDaemon"
-
 # parameter msg
 start_job_msg_protocol_name_template = "{0}StartJobMsg"
 start_job_msg_summary_template       = "{0} start job on node message"
 def create_MCQDaemon_to_NCQDaemon_start_job_msg(payload, sender, target):
 
-    msg = create_msg_header(msg_fromMCQDaemon_template,
-                msg_forNCQDaemon_template,
+    msg = create_msg_header(msg_from_template,
+                msg_for_template,
                 start_job_msg_summary_template.format(sender),
                 start_job_msg_protocol_name_template.format(sender),
-                target)
+                sender, target)
 
     # just forward the msg_content as is.
     msg.payload = payload
@@ -306,13 +307,13 @@ def create_MCQDaemon_to_NCQDaemon_start_job_msg(payload, sender, target):
 # parameter msg
 start_node_session_protocol_name_template = "{0}StartJobMsg"
 start_node_session_summary_template       = "{0} start job on node message"
-def create_MCQDaemon_to_NCQDaemon_start_session_msg(payload, 
-                                             sender, target):
+def create_start_session_msg(payload, sender, target):
 
-    msg = create_msg_header(msg_fromMCQDaemon_template,
-                msg_forNCQDaemon_template,
+    msg = create_msg_header(msg_from_template,
+                msg_for_template,
                 start_node_session_summary_template.format(sender),
                 start_node_session_protocol_name_template.format(sender),
+                sender,
                 target)
 
     # just forward the msg_content as is.
@@ -323,13 +324,14 @@ def create_MCQDaemon_to_NCQDaemon_start_session_msg(payload,
 # parameter msg
 stop_node_session_protocol_name_template = "{0}stopMsg"
 stop_node_session_summary_template       = "{0} Stop session on node"
-def create_MCQDaemon_to_NCQDaemon_stop_session_msg(payload, 
+def create_stop_session_msg(payload, 
                                              sender, target):
 
-    msg = create_msg_header(msg_fromMCQDaemon_template,
-                msg_forNCQDaemon_template,
+    msg = create_msg_header(msg_from_template,
+                msg_for_template,
                 stop_node_session_summary_template.format(sender),
                 stop_node_session_protocol_name_template.format(sender),
+                sender,
                 target)
 
     # just forward the msg_content as is.

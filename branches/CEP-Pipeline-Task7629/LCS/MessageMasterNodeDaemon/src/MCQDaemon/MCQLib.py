@@ -1,3 +1,23 @@
+#!/usr/bin/python
+# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+#
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# The LOFAR software suite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+#
+# $Id$
+
 import uuid
 import copy
 import os
@@ -12,6 +32,7 @@ import pickle
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
 from qmf.console import Session as QMFSession
+import lofar.messagebus.CQConfig as CQConfig
 
 
 
@@ -69,7 +90,7 @@ class logTopicHandler(threading.Thread):
         self.poll_interval = poll_interval
         self.poll_counter = 0
 
-        self._broker="127.0.0.1" 
+        self._broker=CQConfig.broker
         self._logTopicName = logTopicName
         self.logger.info(
               "Connecting to session specific logTopic: {0}".format(
@@ -126,16 +147,11 @@ class logTopicHandler(threading.Thread):
                 msg = self._logTopic.get(0.1)  
                 if msg == None:
                     break   # break the loop
-                self.logger.error("**************************")
-                self.logger.error(msg.content().payload)
-                self.logger.error("**************************")
-
 
                 # process the log data
                 msg_content = eval(msg.content().payload)
                 self._process_log_message(msg_content)
                 self._logTopic.ack(msg)
-
  
     def setStopFlag(self):
         """
@@ -172,7 +188,7 @@ class resultQueueHandler(threading.Thread):
         self.poll_interval = poll_interval
         self.poll_counter = 0
 
-        self._broker="127.0.0.1" 
+        self._broker=CQConfig.broker
         self._resultQueueName = resultQueueName
         self.logger.info(
               "Connecting to session specific resultQueue: {0}".format(
@@ -279,25 +295,15 @@ class MCQLib(object):
         # for state information
         self._running_jobs = {}
         self._running_jobs_lock = threading.Lock()
-        # some static information for this session
-        self._hostname = socket.gethostname()
-        self._username = pwd.getpwuid(os.getuid()).pw_name       
-        self._sessionUUID = uuid.uuid4().hex
 
-        # Create the queue names based on the static information. 
-        # TODO: This should be moved to a config file, shared between
-        # the components of the MasterNodeCommandQueue Framework
-        self._broker="127.0.0.1" 
-        self._returnQueueTemplate = "MCQDaemon.{0}.return.{1}"
-        self._logTopicTemplate = "MCQDaemon.{0}.log.{1}"
-        
-        self._returnQueueName = self._returnQueueTemplate.format(self._username,
-                                                            self._sessionUUID)
-        self._logTopicName = self._logTopicTemplate.format(self._username, 
-                                                           self._sessionUUID)
+        # some static information for this session
+        self._sessionUUID = uuid.uuid4().hex
+        self._broker=CQConfig.broker
+        self._returnQueueName = CQConfig.create_returnQueue_name(
+                                                          self._sessionUUID)
+        self._logTopicName = CQConfig.create_logTopic_name(self._sessionUUID)
         self._masterCommandQueueName = \
-                "{0}.{1}.MCQueueDaemon.CommandQueue".format(self._username,
-                                                            self._hostname) 
+                      CQConfig.create_masterCommandQueue_name()
 
         # Place holders of the queues owned by the lib
         self._resultQueue = None
@@ -310,12 +316,9 @@ class MCQLib(object):
         # HCQDaemon
         self._start_session()
 
-        # Now connect to the created topic and resultQ
-        self._connect_to_queue_and_topic()
 
         # Start the log poller (in a seperate thread).
-            # If we receive a SIGTERM, shut down processing.
-        
+        # If we receive a SIGTERM, shut down processing.       
         self._logTopicForwarder = logTopicHandler(self._logTopicName,
                    self.logger)
 
@@ -381,30 +384,11 @@ class MCQLib(object):
         """
         Send a register session command to the MCQDaemon
         """
-        msg = message.MessageContent(
-                from_="USERNAME.LOCUS102.MCQDaemonLib.{0}".format(
-                                                            self._sessionUUID),
-                forUser="USERRNAME.LOCUS102.MSQDaemon",
-                summary="First msg to be send",
-                protocol="CommandQUeueMsg",
-                protocolVersion="0.0.1", 
-                #momid="",
-                #sasid="", 
-                #qpidMsg=None
-                      )
-        msg.payload = {"command":"start_session", "uuid":self._sessionUUID}
+        payload = {"command":"start_session", "uuid":self._sessionUUID}
+        msg = CQConfig.create_start_session_msg(
+                payload, "MCQLib", 'MCQDaemon')  
         self._masterCommandQueue.send(msg)
 
-    def _connect_to_queue_and_topic(self):
-        """ 
-        Connect the topic and command queue that have been created by send
-        session command to the daemon
-        """
-        self.logger.info("Connecting to returnQueue.")
-        #self._resultQueue = msgbus.FromBus(self._returnQueueName, 
-        #    options = "create:always, node: { type: queue, durable: True}",
-        #    broker = self._broker)
-        self.logger.info("Connecting to returnQueue and logTopic. Done")
 
     def __del__(self):
 
@@ -430,22 +414,10 @@ class MCQLib(object):
         # First disconnect from the queues
         self._logTopicForwarder.setStopFlag()
         self._resultQueueForwarder.setStopFlag()
-        #self._resultQueue.close()        
 
-        # create the header for the stop command
-        msg = message.MessageContent(
-                from_="USERNAME.LOCUS102.MCQDaemonLib.{0}".format(
-                                                            self._sessionUUID),
-                forUser="USERRNAME.LOCUS102.MSQDaemon",
-                summary="First msg to be send",
-                protocol="CommandQUeueMsg",
-                protocolVersion="0.0.1", 
-                #momid="",
-                #sasid="", 
-                #qpidMsg=None
-                      )
-        # the content
-        msg.payload = {"command":"stop_session", "uuid":self._sessionUUID}
+        payload = {"command":"stop_session", "uuid":self._sessionUUID}
+        msg =CQConfig.create_stop_session_msg(payload, 'MCQLib','MCQDaemon')
+       
         self._masterCommandQueue.send(msg)
 
 
