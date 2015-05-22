@@ -119,7 +119,7 @@ class MCQDaemon(object):
                 self._CommandQueue.ack(msg)        
 
             elif command == 'run_job':
-                self._process_start_job(msg_content)
+                self._process_run_job(msg_content)
                 self._CommandQueue.ack(msg)      
 
             elif command == 'quit':
@@ -162,7 +162,7 @@ class MCQDaemon(object):
                 # eg.  in the init phase.  If the delete fails just skip and continue
                 pass
 
-    def _process_start_job(self, msg_content):
+    def _process_run_job(self, msg_content):
         """
         The meat of the Master node Daemon functionality.
 
@@ -178,7 +178,7 @@ class MCQDaemon(object):
         self._check_slave_and_connect(node)    
         self._check_session_and_start(node, uuid)  # start session on the slave
 
-        msg = CQConfig.create_MCQDaemon_to_NCQDaemon_start_job_msg(msg_content,
+        msg = CQConfig.create_run_job_msg(msg_content,
                             "MCQDaemon", node)
 
         self._registered_nodes[node]['CQObject'].send(msg)

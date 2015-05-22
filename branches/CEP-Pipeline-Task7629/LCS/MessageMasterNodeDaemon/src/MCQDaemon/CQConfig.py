@@ -291,7 +291,7 @@ def create_validated_parameter_msg(payload, sender):
 # parameter msg
 start_job_msg_protocol_name_template = "{0}StartJobMsg"
 start_job_msg_summary_template       = "{0} start job on node message"
-def create_MCQDaemon_to_NCQDaemon_start_job_msg(payload, sender, target):
+def create_run_job_msg(payload, sender, target):
 
     msg = create_msg_header(msg_from_template,
                 msg_for_template,

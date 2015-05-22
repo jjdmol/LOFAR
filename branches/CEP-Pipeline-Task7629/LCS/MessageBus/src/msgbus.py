@@ -72,10 +72,10 @@ class Session:
     def __init__(self, broker):
         self.closed = False
 
-        logger.info("[Bus] Connecting to broker %s", broker)
+        logger.debug("[Bus] Connecting to broker %s", broker)
         self.connection = get_connection(broker)
         self.connection.reconnect = True
-        logger.info("[Bus] Connected to broker %s", broker)
+        logger.debug("[Bus] Connected to broker %s", broker)
 
         try:
             if not self.connection.opened():
