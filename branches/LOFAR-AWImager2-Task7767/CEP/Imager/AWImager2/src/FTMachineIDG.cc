@@ -56,6 +56,7 @@ public:
     {
       int nn = n;
       if (s[nn-1] == '\n') nn--;
+      #pragma omp critical
       LOG_DEBUG_STR(std::string(s,nn));
       return n;
     }
@@ -92,6 +93,8 @@ const Matrix<Float>& FTMachineIDG::getAveragePB() const
   {
     itsAveragePB.resize(itsNX, itsNY);
     itsAveragePB = 1.0;
+    // Make it persistent.
+    store(itsAveragePB, itsImageName + ".avgpb");
   }
   store(itsAveragePB, itsImageName + ".avgpb");
   return itsAveragePB;
@@ -501,8 +504,8 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
 //       cout << "uv_support: " << uv_support << endl;
     }
     
-    coordinates(0,i) = offsets(0,i)/2/casa::C::pi*itsUVScale(0) + itsUVOffset(0) - blocksize/2;
-    coordinates(1,i) = offsets(1,i)/2/casa::C::pi*itsUVScale(1) + itsUVOffset(1) - blocksize/2;
+    coordinates(0,i) = round(offsets(0,i)/2/casa::C::pi*itsUVScale(0)) + itsUVOffset(0) - blocksize/2;
+    coordinates(1,i) = round(offsets(1,i)/2/casa::C::pi*itsUVScale(1)) + itsUVOffset(1) - blocksize/2;
     
     // baselines
     int idx = v.baseline_index_map[chunk->start];
@@ -781,8 +784,8 @@ void FTMachineIDG::get(VisBuffer& vb, Int row)
 //       cout << "uv_support: " << uv_support << endl;
 //     }
     
-    coordinates(0,i) = offsets(0,i)/2/casa::C::pi*itsUVScale(0) + itsUVOffset(0) - blocksize/2;
-    coordinates(1,i) = offsets(1,i)/2/casa::C::pi*itsUVScale(1) + itsUVOffset(1) - blocksize/2;
+    coordinates(0,i) = round(offsets(0,i)/2/casa::C::pi*itsUVScale(0)) + itsUVOffset(0) - blocksize/2;
+    coordinates(1,i) = round(offsets(1,i)/2/casa::C::pi*itsUVScale(1)) + itsUVOffset(1) - blocksize/2;
     
     // baselines
     int idx = v.baseline_index_map[chunk->start];
