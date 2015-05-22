@@ -113,6 +113,9 @@ protected:
 
 private:
   
+  std::string itsCompiler;
+  std::string itsCompilerFlags;
+  
   struct Chunk
   {
     int start;

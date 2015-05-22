@@ -120,7 +120,7 @@ ConvolutionFunction::ConvolutionFunction
     itsAveragePB(),
     itsSpheroidal(),
     itsSpheroidalCF(),
-    itsSupportCF(15)
+    itsSupportCF(32)
 {
   itsFFTMachines.resize (OpenMP::maxThreads());
 
@@ -144,7 +144,7 @@ ConvolutionFunction::ConvolutionFunction
   for(int i=0; i<OpenMP::maxThreads(); i++)
   {
     itsFFTMachines[i].reserve(itsSupportCF * itsOversampling);
-    itsFFTMachines[i].init_padding(itsSupportCF, itsOversampling);
+//     itsFFTMachines[i].init_padding(itsSupportCF, itsOversampling);
   }
   
 
@@ -237,11 +237,6 @@ void ConvolutionFunction::store_all_W_images()
                                   estimateWResolution(itsShape,
                                                       pixelSize, w));
       Int nPixelsConv = imageDiameter / wPixelAngSize;
-      if (itsVerbose > 1) 
-      {
-        cout<<"Number of pixel in the "<<i<<"-wplane: "<<nPixelsConv
-            <<"  (w="<<w<<")"<<endl;
-      }
       
       if (nPixelsConv > itsMaxSupport) 
       {
@@ -308,7 +303,6 @@ void ConvolutionFunction::FindNWplanes()
       };
     }
     itsNWPlanes = int(itsMaxW/wmax_plane)+2;
-    cout << " Number of w-planes set to: " << itsNWPlanes << endl;
   } // end omp parallel
 
 }
@@ -326,7 +320,6 @@ void ConvolutionFunction::computeAterm (Double time)
     return;
   }
   
-//   cout << endl << "aterm " << setprecision(15) << time << endl;
 
   
   PrecTimer aTimer;
@@ -350,12 +343,6 @@ void ConvolutionFunction::computeAterm (Double time)
   nPixelsConv = FFTCMatrix::optimalOddFFTSize (nPixelsConv);
   nPixelsConv = itsSupportCF;
   aPixelAngSize = imageDiameter / nPixelsConv;
-  if (itsVerbose > 1) 
-  {
-    cout.precision(20);
-    cout << "Number of pixels in the Aplane: " << nPixelsConv
-         << ", time=" << fixed << time << endl;
-  }
   IPosition shape(2, nPixelsConv, nPixelsConv);
   Vector<Double> increment_old(coordinate.increment());
   Vector<Double> increment(2);
@@ -387,7 +374,6 @@ void ConvolutionFunction::computeAterm (Double time)
 // void ConvolutionFunction::computeElementBeam (const DirectionCoordinate &coordinates, const IPosition &shape,  Double time)
 void ConvolutionFunction::computeElementBeam (Double time)
 {
-  cout << "Computing element beam..." << flush;
   
   DirectionCoordinate coordinate = itsCoordinates;
   
@@ -447,7 +433,6 @@ void ConvolutionFunction::computeElementBeam (Double time)
     }
   }
   
-  cout << "done." << endl;
   
 }
 
@@ -715,19 +700,11 @@ Matrix<Float> ConvolutionFunction::give_avg_pb()
   // Only read if not available.
   if (itsIm_Stack_PB_CF0.empty()) 
   {
-    if (itsVerbose > 0) 
-    {
-      cout<<"==============Give_avg_pb()"<<endl;
-    }
     String PBFile_name(itsImgName + ".avgpb");
     File PBFile(PBFile_name);
     if (! PBFile.exists()) 
     {
       throw casa::SynthesisError (PBFile_name + " not found");
-    }
-    if (itsVerbose > 0) 
-    {
-      cout<<"..... loading Primary Beam image from disk ....."<<endl;
     }
     PagedImage<Float> tmp(PBFile_name);
     IPosition shape(tmp.shape());
@@ -776,11 +753,6 @@ Matrix<Float> ConvolutionFunction::getAveragePB()
   // Only calculate if not done yet.
   if (itsAveragePB.empty()) 
   {
-    if (itsVerbose > 0) 
-    {
-      cout<<"..... Compute average PB"<<endl;
-    }
-    
     // divide out the sum of weights and take square root
     Matrix<Complex> avgpb(itsSumCF.shape());
     convertArray(avgpb, sqrt(itsSumCF/itsSumWeight));
@@ -970,7 +942,6 @@ void ConvolutionFunction::normalized_fft(
   Matrix<Complex> &im, 
   bool toFreq)
 {
-  cout << im.ncolumn() << " " << im.nrow() << " " << im.size() << " " << im.contiguousStorage() << endl;
   ASSERT (im.ncolumn() == im.nrow()  &&  im.size() > 0  &&
                 im.contiguousStorage());
   int tnr = OpenMP::threadNum();

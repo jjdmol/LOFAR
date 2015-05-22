@@ -30,6 +30,9 @@
 #include <AWImager2/VisResamplerMatrixWB.h>
 #include <Common/OpenMP.h>
 #include <casacore/lattices/LatticeMath/LatticeFFT.h>
+#include <boost/iostreams/stream.hpp>
+#include <boost/iostreams/stream_buffer.hpp>
+#include <boost/iostreams/concepts.hpp>  // sink
 #include "helper_functions.tcc"
 
 using namespace casa;
@@ -46,14 +49,51 @@ namespace
 namespace LOFAR {
 namespace LofarFT {
 
+class LogDebugSink : public boost::iostreams::sink {
+public:
+  
+    std::streamsize write(const char* s, std::streamsize n)
+    {
+      int nn = n;
+      if (s[nn-1] == '\n') nn--;
+      LOG_DEBUG_STR(std::string(s,nn));
+      return n;
+    }
+};
+  
+template <typename SinkClass> class  ScopedRedirect
+{
+public:
+  
+  ScopedRedirect(std::ostream &source) :
+    itsSource(source)
+  {
+    itsLogDebugStream.open(itsSink);
+    itsOldBuffer = clog.rdbuf(itsLogDebugStream.rdbuf());
+  }
+  
+  ~ScopedRedirect() 
+  {
+    clog.rdbuf(itsOldBuffer);
+  }
+  
+private:
+  std::ostream &itsSource;
+  SinkClass itsSink;
+  boost::iostreams::stream<SinkClass> itsLogDebugStream;
+  std::streambuf * itsOldBuffer;
+};
+
+  
   
 const Matrix<Float>& FTMachineIDG::getAveragePB() const
 {
   if (itsAveragePB.empty()) 
   {
-    itsAveragePB.resize(itsPaddedNX, itsPaddedNY);
+    itsAveragePB.resize(itsNX, itsNY);
     itsAveragePB = 1.0;
   }
+  store(itsAveragePB, itsImageName + ".avgpb");
   return itsAveragePB;
 }
   
@@ -145,9 +185,27 @@ FTMachineIDG::FTMachineIDG(
   : FTMachine( ms, parset),
     itsNThread(OpenMP::maxThreads()),
     itsProxy(0)
-
 {
   itsMachineName = theirName;
+  
+  // TODO use popen() to capture output stream
+  // TODO check for VML library separately
+  
+  if (!(system("exec &>/dev/null; icpc --version")))
+  {
+    itsCompiler = "icpc";
+    itsCompilerFlags = "-O3 -xAVX -fopenmp -mkl -lmkl_vml_avx -lmkl_avx -DUSE_VML=1";
+  }
+  else if (!(system("exec &>/dev/null; g++ --version")))
+  {
+    itsCompiler = "g++";
+    itsCompilerFlags = "-fopenmp -march=native -O3 -ffast-math -DUSE_VML=0";
+  }
+  else
+  {
+    throw(AipsError("No compiler found."));
+  }
+  
   itsNGrid = itsNThread;
   AlwaysAssert (itsNThread>0, AipsError);
   itsGriddedData.resize (itsNGrid);
@@ -211,11 +269,8 @@ void FTMachineIDG::put(const casa::VisBuffer& vb, Int row, Bool dopsf,
 void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
                          FTMachine::Type type) 
 {
-  if (itsVerbose > 0) {
-    logIO() << LogOrigin(theirName, "put") << LogIO::NORMAL
-            << "I am gridding " << vb.nRow() << " row(s)."  << LogIO::POST;
-    logIO() << LogIO::NORMAL << "Padding is " << itsPadding  << LogIO::POST;
-  }
+  // within this scope redirect messages written to clog to LofarLogger with loglevel DEBUG
+  ScopedRedirect<LogDebugSink> scoped_redirect(std::clog); 
   
   // Match data channels to images channels
   // chan_map is filled by match_channel with a mapping of the data channels
@@ -314,10 +369,8 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
   Int N_stations = 1 + max(max(vb.antenna1()), max(vb.antenna2()));
   Int blocksize = 32;
 
-  itsProxy = new Xeon ("g++", "-fopenmp -march=native -O3 -ffast-math -DUSE_VML=0",  N_stations, N_chunks, N_time, N_chan,
+  itsProxy = new Xeon (itsCompiler.c_str(), itsCompilerFlags.c_str(),  N_stations, N_chunks, N_time, N_chan,
       itsNPol, blocksize, itsPaddedNX, itsUVScale(0));
-//   itsProxy = new Xeon ("icpc", "-O3 -xAVX -fopenmp -mkl -lmkl_vml_avx -lmkl_avx",  N_stations, N_chunks, N_time, N_chan,
-//       itsNPol, blocksize, itsPaddedNX, itsUVScale(0));
   
   Array<Complex> visibilities(IPosition(4, itsNPol, N_chan, N_time, N_chunks), Complex(0.0,0.0));
   Cube<Float> uvw1(3, N_time, N_chunks, 0.0); 
@@ -328,7 +381,8 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
   aterm(Slicer(IPosition(4,0,0,0,0), IPosition(4,blocksize,blocksize,1,N_stations))) = 1.0;
   aterm(Slicer(IPosition(4,0,0,3,0), IPosition(4,blocksize,blocksize,1,N_stations))) = 1.0;
   Matrix<Float> spheroidal(blocksize,blocksize, 1.0);
-  Array<Complex> subgrids(IPosition(4, itsNPol, blocksize, blocksize, N_chunks), Complex(0.0, 0.0));
+  Matrix<Complex> cspheroidal(blocksize,blocksize, 1.0);
+  Array<Complex> subgrids(IPosition(4, blocksize, blocksize, itsNPol, N_chunks), Complex(0.0, 0.0));
   
   Cube<Complex> grid(itsPaddedNX, itsPaddedNY, itsNPol, Complex(0.0, 0.0));
   
@@ -336,6 +390,17 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
   
   // spheroidal
   taper(spheroidal);
+//   convertArray(cspheroidal, spheroidal);
+//   ArrayLattice<Complex> lattice(cspheroidal);
+//   LatticeFFT::cfft2d(lattice);
+//   for(int i = 0; i<blocksize; i++)
+//     for(int j = 0; j<blocksize; j++)
+//       cspheroidal(i,j) = cspheroidal(i,j) * (abs(i-blocksize/2)<=4) * (abs(i-blocksize/2)<=4);
+//     
+//   LatticeFFT::cfft2d(lattice, False);
+//   spheroidal = real(cspheroidal);
+//   spheroidal = 1.0;
+  
   
   // wavenumbers
   for(int i = 0; i<N_chan; i++)
@@ -353,22 +418,45 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
       
       int idx = v.baseline_index_map[j];
 
-      uvw1 (0, k, i) = uvw(0, idx);
-      uvw1 (1, k, i) = uvw(1, idx);
-      uvw1 (2, k, i) = uvw(2, idx);
-      
-      for (int idx_chan = 0; idx_chan < N_chan; idx_chan++)
+      uvw1 (0, k, i) = vb.uvw()(idx)(0);
+      uvw1 (1, k, i) = vb.uvw()(idx)(1);
+      uvw1 (2, k, i) = vb.uvw()(idx)(2);
+
+      if (dopsf)
       {
-        for (int idx_pol = 0; idx_pol < itsNPol; idx_pol++)
+        for (int idx_chan = 0; idx_chan < N_chan; idx_chan++)
         {
-          if (vb.flagCube()(idx_pol, idx_chan, idx))
+          for (int idx_pol = 0; idx_pol < itsNPol; idx_pol++)
           {
-            visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = Complex(0);
+            if (vb.flagCube()(idx_pol, idx_chan, idx))
+            {
+              visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = Complex(0);
+            }
+            else
+            {
+//               visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = imagingWeightCube(idx_pol, idx_chan, idx) * ((idx_pol==0) ||( idx_pol==3));
+//               itsSumWeight[0](idx_pol,0) += imagingWeightCube(idx_pol, idx_chan, idx)*blocksize*blocksize*2;
+              visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = 1.0 * ((idx_pol==0) ||( idx_pol==3));
+              itsSumWeight[0](idx_pol,0) += 1.0*blocksize*blocksize*2;
+            }
           }
-          else
+        }
+      }
+      else
+      {
+        for (int idx_chan = 0; idx_chan < N_chan; idx_chan++)
+        {
+          for (int idx_pol = 0; idx_pol < itsNPol; idx_pol++)
           {
-            visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = data(idx_pol, idx_chan, idx)*imagingWeightCube(idx_pol, idx_chan, idx);
-            itsSumWeight[0](idx_pol,0) += imagingWeightCube(idx_pol, idx_chan, idx);
+            if (vb.flagCube()(idx_pol, idx_chan, idx))
+            {
+              visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = Complex(0);
+            }
+            else
+            {
+              visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = data(idx_pol, idx_chan, idx)*imagingWeightCube(idx_pol, idx_chan, idx);
+              itsSumWeight[0](idx_pol,0) += imagingWeightCube(idx_pol, idx_chan, idx)*blocksize*blocksize*2;
+            }
           }
         }
       }
@@ -450,7 +538,12 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
         subgrids.data() //      void    *uvgrid,
       );
       
-      itsProxy->adder(N_chunks, coordinates.data(), subgrids.data(), itsGriddedData[0].data());
+//       itsProxy->adder(N_chunks, coordinates.data(), subgrids.data(), itsGriddedData[0].data());
+      for(int i=0; i<N_chunks; i++) 
+        for(int pol=0; pol<itsNPol; pol++) 
+          for(int j=0; j<blocksize; j++) 
+            for(int k=0; k<blocksize; k++) 
+              itsGriddedData[0](IPosition(4,j+coordinates(0,i),k+coordinates(1,i),pol,0)) += subgrids(IPosition(4, j, k, pol, i));
 
       i = 0;
       visibilities = Complex(0);
@@ -551,13 +644,15 @@ void FTMachineIDG::get(casa::VisBuffer& vb, Int row)
 // Degrid
 void FTMachineIDG::get(VisBuffer& vb, Int row)
 {
+  // within this scope redirect messages written to clog to LofarLogger with loglevel DEBUG
+  ScopedRedirect<LogDebugSink> scoped_redirect(std::clog); 
+  
 //   gridOk(itsGridder->cSupport()(0));
   // If row is -1 then we pass through all rows
   Int startRow, endRow, nRow;
   if (row < 0) { nRow=vb.nRow(); startRow=0; endRow=nRow-1;}
   else         { nRow=1; startRow=row; endRow=row; }
 
-  Matrix<Double> uvw(3, vb.uvw().nelements());  uvw=0.0;
   Vector<Double> dphase(vb.uvw().nelements());  dphase=0.0;
   
   Vector<Int> chan_map(vb.frequency().size(), 0);
@@ -600,11 +695,9 @@ void FTMachineIDG::get(VisBuffer& vb, Int row)
   Int N_stations = 1 + max(max(vb.antenna1()), max(vb.antenna2()));
   Int blocksize = 32;
 
-  itsProxy = new Xeon ("g++", "-fopenmp -march=native -O3 -ffast-math -DUSE_VML=0",  N_stations, N_chunks, N_time, N_chan,
+  itsProxy = new Xeon (itsCompiler.c_str(), itsCompilerFlags.c_str(),  N_stations, N_chunks, N_time, N_chan,
       itsNPol, blocksize, itsPaddedNX, itsUVScale(0));
-//   itsProxy = new Xeon ("icpc", "-O3 -xAVX -fopenmp -mkl -lmkl_vml_avx -lmkl_avx",  N_stations, N_chunks, N_time, N_chan,
-//       itsNPol, blocksize, itsPaddedNX, itsUVScale(0));
-  
+
   Array<Complex> visibilities(IPosition(4, itsNPol, N_chan, N_time, N_chunks), Complex(0.0,0.0));
   Cube<Float> uvw1(3, N_time, N_chunks, 0.0); 
   Matrix<Int> idx1(N_time, N_chunks, -1); 

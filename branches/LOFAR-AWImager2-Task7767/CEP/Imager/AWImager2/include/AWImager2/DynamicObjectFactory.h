@@ -48,6 +48,7 @@
 // Metaprogramming</em>, by David Abrahams and Aleksey Gurtovoy -- available
 // online at http://boost-consulting.com/tmpbook/preprocessor.html
 
+#include <Common/LofarLogger.h>
 
 #ifndef BOOST_PP_IS_ITERATING
 
@@ -193,15 +194,15 @@ namespace LOFAR
         
         casa::String libname(id);
         libname.downcase();
-        std::cout << "Trying to load dynamic library " << libname << "..." << std::endl;
+        LOG_DEBUG_STR("Trying to load dynamic library " << libname << "...");
         casa::DynLib dl(libname, string(""), string(""), casa::False);
         if (dl.getHandle())
         {
-          std::cout << "Loading dynamic library " << libname << " was successful" << std::endl;
+          LOG_DEBUG_STR("Loading dynamic library " << libname << " was successful");
         }
         else
         {
-          std::cout << "Loading dynamic library " << libname << " not was successful" << std::endl;
+          LOG_DEBUG_STR("Loading dynamic library " << libname << " not was successful");
           return 0;
         }
         iter = itsCreatorMap.find(id);

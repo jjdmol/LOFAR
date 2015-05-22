@@ -25,6 +25,7 @@
 #include <AWImager2/ScopedTimer.h>
 
 #include <Common/OpenMP.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR {
 namespace LofarFT {
@@ -54,7 +55,7 @@ void ScopedTimer::show()
 {
   // show content:
   for (std::map<casa::String,casa::Double>::iterator it=timings().begin(); it!=timings().end(); ++it)
-    std::cout << it->first << " => " << it->second << '\n';
+    LOG_DEBUG_STR(it->first << " => " << it->second);
 }
 
   

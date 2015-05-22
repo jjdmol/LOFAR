@@ -51,7 +51,8 @@ void OperationImage::init()
 
 void OperationImage::run()
 {
-  itsImager->makeimage ("corrected", itsImageName + ".flatnoise");
+  String type = itsParset.getString("image.type","corrected");
+  itsImager->makeimage (type, itsImageName + ".flatnoise");
   normalize(itsImageName + ".flatnoise", itsImageName + ".avgpb", itsImageName + ".flatgain");
 }
 
@@ -59,8 +60,11 @@ void OperationImage::showHelp (ostream& os, const std::string& name)
 {
 
   os<< COLOR_OPERATION << 
-  "Operation \"image\": create a dirty image" << COLOR_RESET << endl <<
-  "  There are no parameters specific for operation \"image\""<<endl << endl;
+  "Operation \"image\": create a dirty image" << endl
+  << COLOR_RESET << endl <<
+  "Parameters:                                                         "<<endl<<
+  "  " << COLOR_PARAMETER << "image.type" << COLOR_RESET << "       : corrected, model, residual, psf"<<endl<<
+  "                      string,  " << COLOR_DEFAULT << "default corrected" << COLOR_RESET <<endl;
 
   Operation::showHelp(os,name);
 };

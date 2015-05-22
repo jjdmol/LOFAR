@@ -35,6 +35,7 @@
 #include <Common/Exception.h>
 #include <AWImager2/Package__Version.h>
 #include <Common/Version.h>
+#include <Common/LofarLogger.h>
 
 #include <casacore/images/Images/PagedImage.h>
 #include <casacore/images/Images/HDF5Image.h>
@@ -135,9 +136,9 @@ int main (Int argc, char** argv)
 
   std::vector<std::string> unused = parset.unusedKeys();
   if (! unused.empty()) {
-     cout<< "*** WARNING: the following parset keywords were not used ***"<<endl;
-     cout<< "             maybe they are misspelled"<<endl;
-     cout<< "    " << unused << endl;
+     LOG_WARN_STR("The following parset keywords were not used");
+     LOG_WARN_STR("maybe they are misspelled");
+     LOG_WARN_STR(unused);
   }
   
   try 
@@ -153,7 +154,7 @@ int main (Int argc, char** argv)
   
   LOFAR::LofarFT::ScopedTimer::show();
   
-  cout << "awimager normally ended" << endl;
+  LOG_INFO_STR("awimager2 normally ended");
   return 0;
 }
 

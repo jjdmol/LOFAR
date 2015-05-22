@@ -225,12 +225,8 @@ void FTMachine::init(const ImageInterface<Float> &image) {
   itsPaddedShape(0) = itsPaddedNX;
   itsPaddedShape(1) = itsPaddedNY;
   
-  if (itsVerbose > 0) {
-    cout << "Original shape " << image.shape()(0) << ","
-         << image.shape()(1) << endl;
-    cout << "Padded shape " << itsPaddedShape(0) << ","
-         << itsPaddedShape(1) << endl;
-  }
+  LOG_DEBUG_STR("Original shape " << image.shape()(0) << "," << image.shape()(1));
+  LOG_DEBUG_STR("Padded shape " << itsPaddedShape(0) << ","  << itsPaddedShape(1));
   
   itsConvFunc->init(
     itsPaddedShape,
@@ -288,9 +284,6 @@ void FTMachine::initializeToVis(
 
 void FTMachine::finalizeToVis()
 {
-  if (itsVerbose > 0) {
-    cout<<"---------------------------> finalizeToVis"<<endl;
-  }
   // destroy model grids
   finalize_model_grids();
 }
@@ -313,9 +306,6 @@ void FTMachine::initializeToSky(
 
 void FTMachine::finalizeToSky()
 {
-  if (itsVerbose > 0) {
-    cout<<"---------------------------> finalizeToSky" << endl;
-  }
 }
 
 
@@ -377,13 +367,11 @@ void FTMachine::initialize_model_grids(Bool normalize_model)
       0);
     IPosition shape(4, itsNX, itsNY, itsNPol, itsNChan);
     
-    cout << itsComplexModelImages[model]->shape() << " " << blc << " " << shape << endl;
     CountedPtr<ImageInterface<Complex> > complex_model_subimage = new SubImage<Complex>(*itsComplexModelImages[model], Slicer(blc, shape), True);
     
     // convert float IQUV model image to complex image
     StokesImageUtil::From(*complex_model_subimage, *itsModelImages[model]);
     
-    cout << complex_model_subimage->shape() << " " << IPosition(4,itsNX, itsNY, 4, itsNChan) << endl;
 //     Array<Complex> slice;
 //     slice = complex_model_subimage->getSlice(IPosition(4,0,0,0,0), IPosition(4,itsNX, itsNY, 4, itsNChan) );
 //     convertArray(slice, itsModelImages[model]->get());
@@ -402,17 +390,21 @@ void FTMachine::initialize_model_grids(Bool normalize_model)
     
     
     // Now do the FFT2D in place
-    // LatticeFFT::cfft2d takes the 2D FFT over the first two dimensions, and iterates over the rest
-    cout << "fft..." << flush;
-    LatticeFFT::cfft2d(*itsComplexModelImages[model]);
-    cout << "done." << endl;
     
     itsModelGrids[model].reference(itsComplexModelImages[model]->get());
-    cout << itsComplexModelImages[model]->get().data() << endl;
-    cout << itsModelGrids[model].data() << endl;
-
+    
+    Complex* ptr = itsModelGrids[model].data();
+    
+    FFTCMatrix fft;
+    for (int ii = 0; ii<itsModelGrids[model].shape()(3); ii++)
+    {
+      for (int jj = 0; jj<itsModelGrids[model].shape()(2); jj++)
+      {
+        fft.forward (itsPaddedNX, ptr, OpenMP::maxThreads());
+        ptr += itsPaddedNX*itsPaddedNY;
+      }
+    }
   }
-  
 }
 
 
@@ -426,7 +418,6 @@ void FTMachine::initialize_grids()
   
 // TODO:   itsNGrid = ngrid();
   itsNGrid = itsImages.nelements();
-  cout << "itsNGrid: " << itsNGrid << endl;
   
   Matrix<Float> weight;
   itsComplexImages.resize (itsNGrid);
@@ -447,20 +438,12 @@ void FTMachine::initialize_grids()
     // create complex images
     // Force in memory, allow 1e6 MB memory usage
     itsComplexImages[i] = new TempImage<Complex> (gridShape, coords, 1e6); 
-    if (itsComplexImages[i]->get(itsGriddedData[i]))
-    {
-      cout << "OK, it is a reference." << endl;
-    }
-    else
-    {
-      cout << "THIS IS NOT OK, not a reference." << endl;
-    }
+    itsComplexImages[i]->get(itsGriddedData[i]);
     
     itsGriddedData[i] = Complex();
     itsSumPB[i].resize (itsPaddedShape[0], itsPaddedShape[1]);
     itsSumPB[i] = Complex();
     itsSumCFWeight[i] = 0.;
-    cout << "itsNPol: " << itsNPol << endl;
     itsSumWeight[i].resize (itsNPol, itsNChan);
     itsSumWeight[i] = 0.;
   }
@@ -469,7 +452,6 @@ void FTMachine::initialize_grids()
 void FTMachine::put(const casa::VisBuffer& vb, Int row, Bool dopsf,
                          FTMachine::Type type) 
 {
-  cout << "static cast!" << endl;
   put( *static_cast<const VisBuffer*>(&vb), row, dopsf, type);
 }
 
@@ -477,18 +459,11 @@ void FTMachine::put(const casa::VisBuffer& vb, Int row, Bool dopsf,
 // return the resulting image
 void FTMachine::getImages(Matrix<Float>& weights, Bool normalize_image)
 {
-  cout << "FTMachineSimpleWB::getImages" << endl;
-  
-  logIO() << LogOrigin("FTMachine", "getImages") << LogIO::NORMAL;
-
   for(Int i=0; i<itsImages.nelements(); i++)
   {
     
     IPosition start(4,0);
     IPosition end = itsGriddedData[i].shape() - 1; // end index is inclusive, need to subtract 1
-    
-    cout << "itsSumWeight[" << i << "]: " << itsSumWeight[i] << endl;
-    
     
     for(Int chan=0; chan < itsNChan; chan++)
     {
@@ -496,7 +471,6 @@ void FTMachine::getImages(Matrix<Float>& weights, Bool normalize_image)
       for(Int pol=0; pol < itsNPol; pol++)
       {
         start(2) = end(2) = pol;
-        cout << start << " " << end << " " << itsGriddedData[i]. shape() << endl;
         Array<Complex> slice(itsGriddedData[i](start,end));
         slice /= Complex(itsSumWeight[i](IPosition(2,pol,chan)));
       }
@@ -525,7 +499,7 @@ void FTMachine::getImages(Matrix<Float>& weights, Bool normalize_image)
 
 void FTMachine::normalize(ImageInterface<Complex> &image, Bool do_beam, Bool do_spheroidal)
 {
-  cout << "normalize..." << flush;
+  return;
   
   Array<Float> spheroidal;
   
@@ -539,7 +513,6 @@ void FTMachine::normalize(ImageInterface<Complex> &image, Bool do_beam, Bool do_
     
     Slicer slicer(blc, shape);
     spheroidal.reference(itsConvFunc->getSpheroidal()(slicer));
-    cout << "spheroidal shape: " << spheroidal.shape() << endl;
   }
   
   Array<Float> beam;
@@ -547,7 +520,6 @@ void FTMachine::normalize(ImageInterface<Complex> &image, Bool do_beam, Bool do_
   if (do_beam)
   {
     beam.reference(getAveragePB());
-    cout << "beam shape: " << beam.shape() << endl;
   }
 
   IPosition slice_shape(4, itsNX, itsNY, 1, 1);
@@ -586,7 +558,6 @@ void FTMachine::normalize(ImageInterface<Complex> &image, Bool do_beam, Bool do_
       }
     }
   }
-  cout << "done." << endl;
 }
 //           Array<Complex> slice;
 //           IPosition pos(4,0);
@@ -781,29 +752,24 @@ void FTMachine::makeImage(
       switch(type) 
       {
       case FTMachine::RESIDUAL:
-        if (itsVerbose > 0) cout<<"FTMachine::RESIDUAL"<<endl;
         vb.visCube()=vb.correctedVisCube();
         vb.visCube()-=vb.modelVisCube();
         put(vb, -1, False);
         break;
       case FTMachine::MODEL:
-        if (itsVerbose > 0) cout<<"FTMachine::MODEL"<<endl;
         vb.visCube()=vb.modelVisCube();
         put(vb, -1, False);
         break;
       case FTMachine::CORRECTED:
-        if (itsVerbose > 0) cout<<"FTMachine::CORRECTED"<<endl;
         vb.visCube()=vb.correctedVisCube();
         put(vb, -1, False);
         break;
       case FTMachine::PSF:
-        if (itsVerbose > 0) cout<<"FTMachine::PSF"<<endl;
         vb.visCube()=Complex(1.0,0.0);
         put(vb, -1, True);
         break;
       case FTMachine::OBSERVED:
       default:
-        if (itsVerbose > 0) cout<<"FTMachine::OBSERVED"<<endl;
         put(vb, -1, False);
         break;
       }
@@ -863,25 +829,21 @@ StokesCoordinate FTMachine::get_stokes_coordinates()
 {
   Vector<Int> stokes(4);
   
-  cout << "Convolution function wants image polarization: ";
   switch (itsConvFunc->image_polarization())
   {
     case ConvolutionFunction::Polarization::STOKES :
-      cout << "STOKES";
       stokes(0) = Stokes::I;
       stokes(1) = Stokes::Q;
       stokes(2) = Stokes::U;
       stokes(3) = Stokes::V;
       break;
     case ConvolutionFunction::Polarization::CIRCULAR :
-      cout << "CIRCULAR";
       stokes(0) = Stokes::RR;
       stokes(1) = Stokes::RL;
       stokes(2) = Stokes::LR;
       stokes(3) = Stokes::LL;
       break;
     case ConvolutionFunction::Polarization::LINEAR :
-      cout << "LINEAR";
       stokes(0) = Stokes::XX;
       stokes(1) = Stokes::XY;
       stokes(2) = Stokes::YX;

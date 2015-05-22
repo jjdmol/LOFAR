@@ -87,8 +87,6 @@ SkyEquation::~SkyEquation()
 void  SkyEquation::predict(Bool incremental, MS::PredefinedColumns col) 
 {
   
-  cout << "I am SkyEquation->predict" << endl;
-
   VisibilityIterator::DataColumn visCol = VisibilityIterator::Model;
   
   if(col==MS::DATA)
@@ -151,7 +149,6 @@ void  SkyEquation::predict(Bool incremental, MS::PredefinedColumns col)
         // Model visibilities are put in the modelVisCube of vb
         itsFTMachine->get(* vb, -1);
 //         cout << vb->modelVisCube() << endl;
-        cout << "visCol: " << visCol << " " << VisibilityIterator::Model << endl;
         vi.setVis(vb->modelVisCube(),visCol);
       }
     }
