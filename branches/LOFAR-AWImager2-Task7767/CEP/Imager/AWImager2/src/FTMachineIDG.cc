@@ -96,7 +96,6 @@ const Matrix<Float>& FTMachineIDG::getAveragePB() const
     // Make it persistent.
     store(itsAveragePB, itsImageName + ".avgpb");
   }
-  store(itsAveragePB, itsImageName + ".avgpb");
   return itsAveragePB;
 }
   
@@ -197,7 +196,7 @@ FTMachineIDG::FTMachineIDG(
   if (!(system("exec &>/dev/null; icpc --version")))
   {
     itsCompiler = "icpc";
-    itsCompilerFlags = "-O3 -xAVX -fopenmp -mkl -lmkl_vml_avx -lmkl_avx -DUSE_VML=1";
+    itsCompilerFlags = "-O3 -xAVX -openmp -mkl -lmkl_vml_avx -lmkl_avx -DUSE_VML=1";
   }
   else if (!(system("exec &>/dev/null; g++ --version")))
   {
@@ -501,8 +500,8 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
             }
             else
             {
-              visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = 1.0 * ((idx_pol==0) ||( idx_pol==3));
-              itsSumWeight[0](idx_pol,0) += 1.0*blocksize*blocksize*2;
+              visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = imagingWeightCube(idx_pol, idx_chan, idx) * ((idx_pol==0) ||( idx_pol==3));
+              itsSumWeight[0](idx_pol,0) += imagingWeightCube(idx_pol, idx_chan, idx)*blocksize*blocksize*2;
             }
           }
         }

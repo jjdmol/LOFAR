@@ -499,8 +499,6 @@ void FTMachine::getImages(Matrix<Float>& weights, Bool normalize_image)
 
 void FTMachine::normalize(ImageInterface<Complex> &image, Bool do_beam, Bool do_spheroidal)
 {
-  return;
-  
   Array<Float> spheroidal;
   
   if (do_spheroidal)
