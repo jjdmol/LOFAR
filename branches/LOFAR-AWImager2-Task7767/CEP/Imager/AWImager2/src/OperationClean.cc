@@ -175,7 +175,7 @@ void OperationClean::run()
   itsImager->doClean();
   
   // make flat gain images
-  for(Int i; i<itsModelNames.shape()(0); ++i)
+  for(Int i=0; i<itsModelNames.shape()(0); ++i)
   {
     normalize(itsModelNames(i), itsAvgpbName, itsModelNames_normalized(i));
     normalize(itsResidualNames(i), itsAvgpbName, itsResidualNames_normalized(i));
