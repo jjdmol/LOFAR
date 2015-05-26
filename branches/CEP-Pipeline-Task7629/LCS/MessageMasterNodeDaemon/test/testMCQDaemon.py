@@ -24,7 +24,6 @@ logger=logging.getLogger("MessageBus")
 
 if __name__ == "__main__":
     MCQLib = MCQLib.MCQLib(logger)
-
     environment = dict(
             (k, v) for (k, v) in os.environ.iteritems()
                 if k.endswith('PATH') or k.endswith('ROOT') or k == 'QUEUE_PREFIX'

@@ -91,7 +91,7 @@ def create_parameterQueue_name(uuid):
     """
     Returns a fully constructed name for a unique returnQueue unique
     """
-    return  parameterQueueTempythonplate.format(username, uuid)
+    return  parameterQueueTemplate.format(username, uuid)
 
 def create_nodeCommandQueue_name(i_hostname=None):
     """

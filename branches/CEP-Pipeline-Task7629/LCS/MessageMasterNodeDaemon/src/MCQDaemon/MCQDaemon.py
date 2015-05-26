@@ -401,12 +401,15 @@ class MCQDaemon(object):
         """
         Remove and empty queue and topic from the msg router
         """        
-        # delete the command queue
-        self._brokerAgent.delQueue(qname, False, False)
+        # If a queue prefix is used prepend this for the queue names
+        # delete the command queue        
+        self._brokerAgent.delQueue(os.environ.get("QUEUE_PREFIX", "") + qname,
+                                   False, False)
 
         # then the topic, there is no pipeline anymore logging does not have target
         # anymore, It is a topic so no need to force the remova;
-        self._brokerAgent.delExchange(topicname)
+        self._brokerAgent.delExchange(os.environ.get("QUEUE_PREFIX", "") + 
+                                      topicname)
 
 
     # ***********************************************************************

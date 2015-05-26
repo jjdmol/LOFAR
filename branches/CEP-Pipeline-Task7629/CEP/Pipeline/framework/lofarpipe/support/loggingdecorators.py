@@ -218,7 +218,7 @@ def _mail_msg_to(adr_from, adr_to, subject, msg):
     # Send the message via our own SMTP server, but don't include the
     # envelope header.
     try:
-        s = smtplib.SMTP('smtp.lofar.eu')
+        s = smtplib.SMTP('smtp.lofar.eu', timeout=1)
         s.sendmail(adr_from, [adr_to], msg.as_string())
         s.quit()
     except:
