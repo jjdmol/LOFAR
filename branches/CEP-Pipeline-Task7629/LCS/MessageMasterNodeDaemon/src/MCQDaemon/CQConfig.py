@@ -42,6 +42,39 @@ parameterQueueTemplate  = "NCQDaemon.{0}.parameters.{1}"
 nodeCommandQueueTemplate= "{0}.{1}.NCQueueDaemon.CommandQueue"
 masterCommandQueueTemplate="{0}.{1}.MCQueueDaemon.CommandQueue"
 
+# Protocol details
+msg_from_template = "{0}.{1}.{2}"
+msg_for_template   = "{0}.{1}"
+msg_forNCQLib_template      = "{0}.NCQDaemon"
+
+# Log msg
+log_msg_protocol_name_template = "{0}LogMsg"
+log_msg_summary_template       = "{0} log message"
+log_msg_levels        = ['CRITICAL','ERROR', 'WARNING', 'INFO', 'DEBUG']
+
+# Return msg
+return_msg_protocol_name_template = "{0}ReturnMsg"
+return_msg_summary_template       = "{0} return message"
+return_msg_types                  = ['exit_value', 'output']
+
+# parameter msg
+parameter_msg_protocol_name_template = "{0}ParameterMsg"
+parameter_msg_summary_template       = "{0} parameter message"
+
+# parameter msg
+start_job_msg_protocol_name_template = "{0}StartJobMsg"
+start_job_msg_summary_template       = "{0} start job on node message"
+
+# parameter msg
+start_node_session_protocol_name_template = "{0}StartJobMsg"
+start_node_session_summary_template       = "{0} start job on node message"
+
+# parameter msg
+stop_node_session_protocol_name_template = "{0}stopMsg"
+stop_node_session_summary_template       = "{0} Stop session on node"
+
+# **********************************************************************
+# Functions creating queue names
 def create_returnQueue_name(uuid):
     """
     Returns a fully constructed name for a unique returnQueue unique
@@ -58,7 +91,7 @@ def create_parameterQueue_name(uuid):
     """
     Returns a fully constructed name for a unique returnQueue unique
     """
-    return  parameterQueueTemplate.format(username, uuid)
+    return  parameterQueueTempythonplate.format(username, uuid)
 
 def create_nodeCommandQueue_name(i_hostname=None):
     """
@@ -69,8 +102,7 @@ def create_nodeCommandQueue_name(i_hostname=None):
         l_hostname = hostname
     else:
         l_hostname = i_hostname
-    return  nodeCommandQueueTemplate.format(username, 
-                                            l_hostname)
+    return  nodeCommandQueueTemplate.format(username, l_hostname)
 
 def create_masterCommandQueue_name():
     """
@@ -78,12 +110,12 @@ def create_masterCommandQueue_name():
     """
     return masterCommandQueueTemplate.format(username, hostname)
 
+
+
 def create_msg_header(from_template, for_template, summary, protocol, 
                       sender = None, target = None):
     """
     create a msg header from supplied template parameters
-
-
     """
     lhostname = None
     if target == None:
@@ -103,16 +135,6 @@ def create_msg_header(from_template, for_template, summary, protocol,
                       )
 
     return msg
-
-# Protocol details
-msg_from_template = "{0}.{1}.{2}"
-msg_for_template   = "{0}.{1}"
-msg_forNCQLib_template      = "{0}.NCQDaemon"
-
-# Log msg
-log_msg_protocol_name_template = "{0}LogMsg"
-log_msg_summary_template       = "{0} log message"
-log_msg_levels        = ['CRITICAL','ERROR', 'WARNING', 'INFO', 'DEBUG']
 
 
 def create_validated_log_msg(level, log_data, sender):
@@ -143,12 +165,6 @@ def create_validated_log_msg(level, log_data, sender):
                    'sender':sender}
 
     return msg
-
-# Return msg
-return_msg_protocol_name_template = "{0}ReturnMsg"
-return_msg_summary_template       = "{0} return message"
-return_msg_types                  = ['exit_value', 'output']
-
 
 def _validate_return_dict(payload):
     """
@@ -236,9 +252,6 @@ def create_validated_output_msg(output_dict, sender):
 
     return msg
 
-# parameter msg
-parameter_msg_protocol_name_template = "{0}ParameterMsg"
-parameter_msg_summary_template       = "{0} parameter message"
 
 def _validate_parameter_dict(payload):
     """
@@ -288,9 +301,6 @@ def create_validated_parameter_msg(payload, sender):
 
     return msg
 
-# parameter msg
-start_job_msg_protocol_name_template = "{0}StartJobMsg"
-start_job_msg_summary_template       = "{0} start job on node message"
 def create_run_job_msg(payload, sender, target):
 
     msg = create_msg_header(msg_from_template,
@@ -304,9 +314,6 @@ def create_run_job_msg(payload, sender, target):
 
     return msg
 
-# parameter msg
-start_node_session_protocol_name_template = "{0}StartJobMsg"
-start_node_session_summary_template       = "{0} start job on node message"
 def create_start_session_msg(payload, sender, target):
 
     msg = create_msg_header(msg_from_template,
@@ -321,12 +328,7 @@ def create_start_session_msg(payload, sender, target):
 
     return msg
 
-# parameter msg
-stop_node_session_protocol_name_template = "{0}stopMsg"
-stop_node_session_summary_template       = "{0} Stop session on node"
-def create_stop_session_msg(payload, 
-                                             sender, target):
-
+def create_stop_session_msg(payload, sender, target):
     msg = create_msg_header(msg_from_template,
                 msg_for_template,
                 stop_node_session_summary_template.format(sender),

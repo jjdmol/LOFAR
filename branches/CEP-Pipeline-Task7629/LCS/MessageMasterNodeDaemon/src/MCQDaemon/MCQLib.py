@@ -17,7 +17,6 @@
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
 # $Id$
-
 import uuid
 import copy
 import time
@@ -30,8 +29,6 @@ import lofar.messagebus.message as message   # thread stop handlers break if
                                              # this line is removed.. TODO
 from qmf.console import Session as QMFSession
 import lofar.messagebus.CQConfig as CQConfig
-
-
 
 # Handler for stopping the logTopicHandler and signalling the master that the
 # session has ended
@@ -64,7 +61,6 @@ def treadStopHandler(signum, stack):
     #        handler = 'SIG_IGN'
     #    print '%-10s (%2d):' % (name, s), handler
     #print "***************************************"
-
 
 class logTopicHandler(threading.Thread):
     """
@@ -393,22 +389,16 @@ class MCQLib(object):
         Send to msg to the HCQDaemon command queue to remove the registered
         session uuid 
         """
-
-        logTopicStopFlag.set()
-        resultQueueStopFlag.set()
-        #
-        self.logger.info(
-                   "End of session. Sending stop_session command to master")
+        self.logger.debug("Sending stop_session command to master")
         
-        # First disconnect from the queues
+        # stop the handlers
         self._logTopicForwarder.setStopFlag()
         self._resultQueueForwarder.setStopFlag()
 
+        # Send MCQDaemon that we are stopping
         payload = {"command":"stop_session", "uuid":self._sessionUUID}
-        msg =CQConfig.create_stop_session_msg(payload, 'MCQLib','MCQDaemon')
-       
+        msg =CQConfig.create_stop_session_msg(payload, 'MCQLib','MCQDaemon')      
         self._masterCommandQueue.send(msg)
-
 
     def run_job(self, parameters):
         """
