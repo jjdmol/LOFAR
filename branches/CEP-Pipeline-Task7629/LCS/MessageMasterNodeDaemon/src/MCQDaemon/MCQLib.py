@@ -200,7 +200,6 @@ class resultQueueHandler(threading.Thread):
 
             with self._running_jobs_lock:
                 self._running_jobs[job_uuid]['exit_value']=exit_value
-                self._running_jobs[job_uuid]['completed']=True
 
         elif type == 'output':
             output = msg_content['output']
@@ -445,7 +444,11 @@ class MCQLib(object):
                 time.sleep(poll_interval)
 
                 with self._running_jobs_lock:
-                    if self._running_jobs[job_uuid]['completed']: 
+                    # If both the exit_value (of the recipe executable)
+                    # and the output (generated in the recipe and send there)
+                    # are present we are done with the job
+                    if 'exit_value' in self._running_jobs[job_uuid] and \
+                       'output'     in self._running_jobs[job_uuid]:
                         break
         finally:
             limiter[job.host].release()  # always release the node lock
