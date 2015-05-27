@@ -164,10 +164,20 @@ def searchFlat(data):
     flat_info = list()
     for rcu in data.active_rcus:
         mean_signal = ma.mean(_data[rcu,:])
-        if mean_signal > 62.0 and mean_signal < 64.5:
+        if mean_signal > 61.0 and mean_signal < 64.5:
             logger.info("rcu=%d: cable probable off" %(rcu))
             flat_info.append((rcu, mean_signal))
     return(flat_info)
+
+def searchShort(data):
+    _data = data.getAll().mean(axis=1)
+    short_info = list()
+    for rcu in data.active_rcus:
+        mean_signal = ma.mean(_data[rcu,:])
+        if mean_signal > 55.0 and mean_signal < 61.0:
+            logger.info("rcu=%d: cable shorted" %(rcu))
+            short_info.append((rcu, mean_signal))
+    return(short_info)
     
 def searchDown(data, subband):
     _data = data.getAll().mean(axis=1)
@@ -242,7 +252,12 @@ def searchDown(data, subband):
             if ((peaks_bw_array[y_rcu] > 20) and (abs(peaks_array[y_rcu] - median_max_sb) > 10)):
                 logger.debug("rcu=%d: Y-top shifted normal=%d, now=%d" %(y_rcu, median_max_sb, peaks_array[y_rcu]))
                 shifted_info.append((y_rcu, peaks_array[y_rcu], median_max_sb))
-
+    
+    # if more than half de antennes down or shifted, skip test
+    if len(down_info) > (_data.shape[0] / 2):
+        down_info = list()
+    if len(shifted_info) > (_data.shape[0] / 2):
+        shifted_info = list()    
     return (down_info, shifted_info)
 
 
@@ -417,13 +432,22 @@ def search_noise(data, pol, low_deviation, high_deviation, max_diff):
                 logger.debug("rcu_bin=%d: min-noise=%5.3f %d of %d seconds bad" %(rcu_bin, spec_min[rcu_bin], n_bad_low_secs, n_secs))
 
             if (n_bad_high_secs == 0) and (n_bad_low_secs == 0):
+                max_cnt = 0
+                min_cnt = 0
                 if rcu_bin_max_diff > (ref_diff + max_diff):
                     check_high_value = ref_value + (ref_diff / 2.0)
                     check_low_value  = ref_value - (ref_diff / 2.0)
                     for val in spec_median[rcu_bin,:]:
-                        if val > check_high_value or val < check_low_value:
-                            n_bad_jitter_secs += 1
-                    jitter_info.append((rcu_bin, rcu_bin_max_diff, ref_diff, n_bad_jitter_secs))
+                        if val > check_high_value:
+                            max_cnt += 1
+                        if val < check_low_value:
+                            min_cnt += 1
+                            
+                    # minimal 20% of the values must be out of the check band
+                    secs = _data.shape[1]
+                    if max_cnt > (secs * 0.10) and min_cnt > (secs * 0.10):
+                        n_bad_jitter_secs = max_cnt + min_cnt
+                        jitter_info.append((rcu_bin, rcu_bin_max_diff, ref_diff, n_bad_jitter_secs))
                     logger.debug("rcu_bin=%d: max spectrum fluctuation %5.3f dB" %(rcu_bin, rcu_bin_max_diff))
     return (low_info, high_info, jitter_info)
 

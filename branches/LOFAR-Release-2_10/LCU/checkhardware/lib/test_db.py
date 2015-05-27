@@ -100,6 +100,11 @@ class cDB:
         if self.tbbdriver_version != "ok" or self.tbbctl_version != "ok":
             self.station_error = 1
 
+        for _spu in self.spu:
+            ok = _spu.test()
+            if not ok:
+                self.station_error = 1
+            
         for _rsp in self.rsp:
             ok = _rsp.test()
             if not ok:
@@ -196,8 +201,14 @@ class cDB:
         for spu in self.spu:
             spu.test()
             if not spu.voltage_ok:
-                log.addLine("%s,SPU,%03d,VOLTAGE,RCU5.0V=%3.1f,LBA8.0V=%3.1f,HBA48V=%3.1f,SPU3.3V=%3.1f" %\
-                           (date, spu.nr, spu.rcu_5_0V, spu.lba_8_0V, spu.hba_48V, spu.spu_3_3V))
+                valstr = ''
+                if not spu.rcu_ok: valstr += ",RCU-5.0V=%3.1f" %(spu.rcu_5_0V)
+                if not spu.lba_ok: valstr += ",LBA-8.0V=%3.1f" %(spu.lba_8_0V)
+                if not spu.hba_ok: valstr += ",HBA-48V=%3.1f" %(spu.hba_48V)
+                if not spu.spu_ok: valstr += ",SPU-3.3V=%3.1f" %(spu.spu_3_3V)
+                if len(valstr):
+                    log.addLine("%s,SPU,%03d,VOLTAGE%s" %(date, spu.nr, valstr))
+                
             if not spu.temp_ok:
                 log.addLine("%s,SPU,%03d,TEMPERATURE,PCB=%3.1f" %\
                            (date, spu.nr, spu.temp))
@@ -238,7 +249,7 @@ class cDB:
                     log.addLine("%s,%s,---,NOSIGNAL" %(date, lba.label))
 
                 elif lba.avg_2_low:
-                    log.addLine("%s,%s,---,TOOLOW ,AVGX=%3.1f,AVGY=%3.1f" %(date, lba.label, lba.avg_x, lba.avg_y))
+                    log.addLine("%s,%s,---,TOOLOW,AVGX=%3.1f,AVGY=%3.1f" %(date, lba.label, lba.avg_x, lba.avg_y))
 
                 else:
                     if lba.error:
@@ -249,7 +260,7 @@ class cDB:
             if lba.noise_check_done or lba.oscillation_check_done or lba.spurious_check_done or lba.signal_check_done:
                 for ant in lba.ant:
                     if ant.down:
-                            log.addLine("%s,%s,%03d,DOWN  ,X=%3.1f,Y=%3.1f,Xoff=%d,Yoff=%d" %\
+                            log.addLine("%s,%s,%03d,DOWN,X=%3.1f,Y=%3.1f,Xoff=%d,Yoff=%d" %\
                                        (date, lba.label, ant.nr_pvss, ant.x.test_signal, ant.y.test_signal, ant.x.offset, ant.y.offset))
                     else:
                         if lba.signal_check_done:
@@ -264,6 +275,12 @@ class cDB:
                             if ant.y.flat: valstr += ",Ymean=%3.1f" %(ant.y.flat_val)
                             if len(valstr):
                                 log.addLine("%s,%s,%03d,FLAT%s" %(date, lba.label, ant.nr_pvss, valstr))
+                            
+                            valstr = ''
+                            if ant.x.short: valstr += ",Xmean=%3.1f" %(ant.x.short_val)
+                            if ant.y.short: valstr += ",Ymean=%3.1f" %(ant.y.short_val)
+                            if len(valstr):
+                                log.addLine("%s,%s,%03d,SHORT%s" %(date, lba.label, ant.nr_pvss, valstr))    
 
                         if lba.oscillation_check_done:
                             valstr = ''
@@ -493,13 +510,19 @@ class cDB:
             self.lba_8_0V   = 0.0
             self.hba_48V    = 0.0
             self.spu_3_3V   = 0.0
+            self.rcu_ok     = 1
+            self.lba_ok     = 1
+            self.hba_ok     = 1
+            self.spu_ok     = 1
             self.voltage_ok = 1
             self.temp       = 0.0
             self.temp_ok    = 1
 
         def test(self):
-            spu_ok = True
-            return(spu_ok)
+            self.voltage_ok = 0
+            if self.rcu_ok and self.lba_ok and self.hba_ok and self.spu_ok:
+                self.voltage_ok = 1
+            return(self.voltage_ok)
 
 
     class cRSP:
@@ -548,6 +571,7 @@ class cDB:
             self.summator_noise = 0    #
             self.spurious       = 0    #
             self.flat           = 0    #
+            self.short          = 0    #
 
             # test result of signal test,
             # only for HBA element test, firt value ctrl=129 second value ctrl=253
@@ -577,6 +601,7 @@ class cDB:
             self.jitter_ref         = 0.0
             
             self.flat_val           = 0.0
+            self.short_val          = 0.0
 
     class cLBA_DB:
         def __init__(self, label, nr_antennas, nr_offset=0):
@@ -652,8 +677,10 @@ class cDB:
                 return
 
             def test(self):
-                self.x.error = max(self.x.too_low, self.x.too_high, self.x.osc, self.x.high_noise, self.x.low_noise, self.x.jitter, self.x.spurious, self.down)
-                self.y.error = max(self.y.too_low, self.y.too_high, self.y.osc, self.y.high_noise, self.y.low_noise, self.y.jitter, self.y.spurious, self.down)
+                self.x.error = max(self.x.too_low, self.x.too_high, self.x.osc, self.x.high_noise, self.x.low_noise, 
+                                   self.x.jitter, self.x.spurious, self.down, self.x.flat, self.x.short)
+                self.y.error = max(self.y.too_low, self.y.too_high, self.y.osc, self.y.high_noise, self.y.low_noise, 
+                                   self.y.jitter, self.y.spurious, self.down, self.y.flat, self.y.short)
                 return
 
     class cHBA_DB:
