@@ -158,7 +158,7 @@ class resultQueueHandler(threading.Thread):
     setStopFlag() stops the forwarder
     """
     def __init__(self, resultQueueName, 
-                 running_jobs , 
+                 running_jobs, 
                  running_jobs_lock, 
                  logger=None, 
                  poll_interval=1.0):
@@ -191,8 +191,10 @@ class resultQueueHandler(threading.Thread):
         """
         # get the data from the msg
         type = msg_content['type']
+        self.logger.debug("Result for: {0}".format(msg_content['job_uuid']))
         if type == 'exit_value':
             exit_value = msg_content['exit_value']
+            self.logger.debug("exit_value: {0}".format(exit_value))
             uuid = msg_content['uuid']
             job_uuid = msg_content['job_uuid']
 
@@ -202,6 +204,7 @@ class resultQueueHandler(threading.Thread):
 
         elif type == 'output':
             output = msg_content['output']
+            self.logger.debug("output: {0}".format(output))
             uuid = msg_content['uuid']
             job_uuid = msg_content['job_uuid']
 
@@ -410,9 +413,9 @@ class MCQLib(object):
                             self._logTopicName])
         job_uuid = uuid.uuid4().hex
         payload = {"command":"run_job", 
-                       "uuid":self._sessionUUID,
-                       'job_uuid':job_uuid,
-                       "parameters":parameters}
+                   "uuid":self._sessionUUID,
+                   'job_uuid':job_uuid,
+                   "parameters":parameters}
 
         msg = CQConfig.create_run_job_msg(payload, 'MCQLib','MCQDaemon')       
         self._masterCommandQueue.send(msg)

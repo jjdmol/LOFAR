@@ -19,7 +19,6 @@
 # $Id$
 import logging
 import time
-
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.CQConfig as CQConfig
 
@@ -78,18 +77,17 @@ class NCQLib(object):
         self._returnQueueName = returnQueueName
         
         self._resultQueue = msgbus.ToBus(self._returnQueueName, 
-              options = "create:always, node: { type: queue, durable: False}",
+              options = "create:never, node: { type: queue, durable: False}",
               broker = CQConfig.broker)
 
         self._parameterQueue = msgbus.FromBus(self._parameterQueueName, 
-              options = "create:always, delete:always, node: { type: queue, durable: False}",
+              options = "create:never, delete:always, node: { type: queue, durable: False}",
               broker = CQConfig.broker)
 
         self.QPIDLoggerHandler = QPIDLoggerHandler(self._logTopicName)
 
         self._job_dict = None
         self.environment = None
-
 
     def getArguments(self):
         """
@@ -98,16 +96,20 @@ class NCQLib(object):
         """
         # wait for the parameters: do this for max 10 seconds
         wait_counter = 0
+        msg = None
         while True:
             if wait_counter == 10:
                 raise Exception(
-                      "Did not receive any arguments from the Daemon")
+                  "Did not receive any arguments from the Daemon: {0}".format(
+                   self._parameterQueueName))
 
             msg = self._parameterQueue.get(0.1)
-            if msg != None:                
-                wait_counter += 1
-                time.sleep(1)
+            if not msg is None:
                 break
+            
+            wait_counter += 1
+            time.sleep(1)
+            
 
         self._job_dict =  eval(msg.content().payload)  # raises on parse error
         self._parameterQueue.ack(msg)
@@ -128,3 +130,18 @@ class NCQLib(object):
         msg = CQConfig.create_validated_output_msg(msg_dict, CQConfig.hostname)
         msg.payload = msg_dict
         self._resultQueue.send(msg)
+
+#def validParameterQueueName(queueName):
+#      """
+#      The parameter queue name is profided on the command line.
+#      This interface is also used by the old framework. In these instances 
+#      port numbers are used.
+
+#      We need a function to check if the queuename is correct. And validate that
+#      we are in a correct state. (you can have qpid enabled on a node) but
+#      state the recipe on the old socked manner.
+#      """
+#      if "NCQDaemon" in queueName and "parameters" in queueName:
+#          return True
+
+#      return False

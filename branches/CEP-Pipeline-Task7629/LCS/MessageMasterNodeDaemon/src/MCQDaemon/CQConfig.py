@@ -39,8 +39,8 @@ logTopicTemplate        = "MCQDaemon.{0}.log.{1}"
 parameterQueueTemplate  = "NCQDaemon.{0}.parameters.{1}"
 
 # Config for the master/node framework
-nodeCommandQueueTemplate= "{0}.{1}.NCQueueDaemon.CommandQueue"
-masterCommandQueueTemplate="{0}.{1}.MCQueueDaemon.CommandQueue"
+nodeCommandQueueTemplate   =  "{0}.{1}.NCQueueDaemon.CommandQueue"
+masterCommandQueueTemplate =  "{0}.{1}.MCQueueDaemon.CommandQueue"
 
 # Protocol details
 msg_from_template = "{0}.{1}.{2}"

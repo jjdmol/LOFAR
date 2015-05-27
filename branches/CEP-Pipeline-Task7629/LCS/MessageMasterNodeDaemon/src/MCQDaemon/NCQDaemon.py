@@ -22,6 +22,7 @@ from datetime import datetime   # needed for duration
 import time
 import subprocess
 import copy
+import os
 
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.CQConfig as CQConfig
@@ -178,10 +179,17 @@ class NCQDaemon(object):
         command += " {0}".format(self._registered_pipelines[uuid]['parameterq'][0])
         working_dir = msg_content['parameters']['cdw']
         environment = msg_content['parameters']['environment']
+        # Append the environment with the possible queue prefix
+        prefix = os.environ.get("QUEUE_PREFIX", "")
+        if prefix != "":
+              environment["QUEUE_PREFIX"] = prefix
         parameter_dict = msg_content['parameters']['job_parameters']
         job_uuid = msg_content['job_uuid']
 
         # First send the a parameter msg on the parameter queue
+        # TODO: is this correct? should we not have a parameter queue per
+        # Job?? This class is single threaded. We could have race issues
+        # if multiple jobs are started in succession. 
         self._send_job_parameter_message(
                   self._registered_pipelines[uuid]['parameterq'][1],
                   msg_content)
@@ -291,6 +299,7 @@ class NCQDaemon(object):
                 self._send_log_message(logTopic, stdoutdata, level='INFO')
                 self._send_log_message(logTopic, stderrdata, level='ERROR')
 
+                self.logger.info("sending job result for: {0}".format(uuid))
                 # send the exit state to the resultsQueue
                 payload = {'type':"exit_value",
                            'exit_value':exit_status,
