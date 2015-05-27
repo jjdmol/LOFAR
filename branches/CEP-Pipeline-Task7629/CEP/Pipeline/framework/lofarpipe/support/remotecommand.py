@@ -361,7 +361,6 @@ class RemoteCommandRecipeMixIn(object):
 
         if _QPID_ENABLED:
             mcqlib = MCQLib.MCQLib(self.logger)
-            self.logger.error("############### Created a MCQLIB@@@@@@@@@@@@@@@@@@@@@")
 
         threadpool = []
         jobpool = {}
@@ -446,4 +445,5 @@ class RemoteCommandRecipeMixIn(object):
                                                 help = "XML return data.")
         self.outputs["return_xml"] = node_durations.toxml(encoding = "ascii")
 
+        mcqlib._release()  # Cleanup of the queues etc.
         return jobpool

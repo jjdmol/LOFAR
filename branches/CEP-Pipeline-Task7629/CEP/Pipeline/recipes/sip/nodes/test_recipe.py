@@ -28,13 +28,13 @@ class test_recipe(LOFARnodeTCP):
     def run(self, argument):
         """
         """
-        self.logger.critical("##########################We are in the test recipe and we are going good#####################")
+        self.logger.critical("#####We are in the test recipe and we are going good#####")
 
 
         #self.logger.error(argument)
         ##self.environment.update(environment)
 
-        self.outputs["output"] = "*********************************This is output created on the local node ***************************"
+        self.outputs["output"] = "****This is output created on the local node ****"
         self.outputs["status"] = True
         time.sleep(6)
         ## Time execution of this job

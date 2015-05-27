@@ -65,7 +65,7 @@ class LOFARnode(object):
         
         self.outputs = {}
         self.environment = os.environ
-        self.resourceMonitor = UsageStats(self.logger, 1.0) # TODO: DO not commit10.0 * 60.0)  # collect stats each 10 minutes      
+        self.resourceMonitor = UsageStats(self.logger, 10.0 * 60.0)  # collect stats each 10 minutes      
 
 
     def run_with_logging(self, *args):
