@@ -452,10 +452,10 @@ class MCQLib(object):
 
         time_info_end = time.time()
 
+        # Now retrieve all the results and set correct values on the job
         job.results["job_duration"] = str(time_info_end - time_info_start)
         job.results['returncode'] = self._running_jobs[job_uuid]['exit_value']
+        job.results.update(self._running_jobs[job_uuid]['output'])
 
-        job.results = self._running_jobs[job_uuid]['output']
-        # Now retrieve all the results and set correct values on the job
 
         return self._running_jobs[job_uuid]['exit_value']
