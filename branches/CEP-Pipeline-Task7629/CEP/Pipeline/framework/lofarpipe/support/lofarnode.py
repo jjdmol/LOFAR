@@ -65,7 +65,7 @@ class LOFARnode(object):
         
         self.outputs = {}
         self.environment = os.environ
-        self.resourceMonitor = UsageStats(self.logger, 10.0 * 60.0)  # collect stats each 10 minutes      
+        self.resourceMonitor = UsageStats(self.logger, 1.0) # TODO: DO not commit10.0 * 60.0)  # collect stats each 10 minutes      
 
 
     def run_with_logging(self, *args):
@@ -125,24 +125,26 @@ class LOFARnodeTCP(LOFARnode):
         # Reuse the job_id and port to send the name of the queues
         # THis is not pretty but we need to be backwards compatible
         self._NCQLib = None
-        try:
-            self.job_id, self.host, self.port = int(job_id), host, int(port)
 
-        except Exception, ex:  # TODO checking for the correct names is not 
-                               # really needed. THe object should throw
+        if not _QPID_ENABLED:
+            self.job_id, self.host, self.port = int(job_id), host, int(port)
+        else:
 
             returnQueueName = job_id 
             logTopicName = host
             parameterQueueName = port
 
-            print returnQueueName,  logTopicName, parameterQueueName
+            if not NCQLib.validParameterQueueName(parameterQueueName):
+                raise Exception("Incorrect parameterQueue name. This happens "
+                         "when the toplevel uses sockets and the slave qpid")
+
             if _QPID_ENABLED:
                 
                 self._NCQLib = NCQLib.NCQLib(returnQueueName, logTopicName,
                                              parameterQueueName)
-               
                 self.host = None
                 self.port = None
+
 
             else:
                 raise ex
@@ -195,7 +197,6 @@ class LOFARnodeTCP(LOFARnode):
         if _QPID_ENABLED:
             
             self.arguments = self._NCQLib.getArguments()
-
         else:
             while True:
                 tries -= 1

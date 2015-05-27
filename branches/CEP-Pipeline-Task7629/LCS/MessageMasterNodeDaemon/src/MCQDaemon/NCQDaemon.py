@@ -171,12 +171,22 @@ class NCQDaemon(object):
             self._unknown_uuid_msg(uuid, self._registered_pipelines.keys())
             return
 
+        # Create a temporary parameter queue
+        job_uuid = msg_content['job_uuid']
+        parameterq_name = CQConfig.create_parameterQueue_name(job_uuid)
+        parameterQueue = msgbus.ToBus(parameterq_name, 
+              options = "create:always, delete:always, node: { type: queue, durable: False}",
+              broker = self._broker)   # Created NON durable: delete when not
+                                       # needed anymore
+        self.logger.error("Created resultsqueue: {0}".format(parameterQueue))
+
+
         # Get all the variables needed to start the job
         command     = msg_content['parameters']['cmd']    # Command line cmd 
 
                           # Add the parameter queue to the command, used
                           # by the pipeline script to receive the parameters
-        command += " {0}".format(self._registered_pipelines[uuid]['parameterq'][0])
+        command += " {0}".format(parameterq_name)
         working_dir = msg_content['parameters']['cdw']
         environment = msg_content['parameters']['environment']
         # Append the environment with the possible queue prefix
@@ -184,15 +194,16 @@ class NCQDaemon(object):
         if prefix != "":
               environment["QUEUE_PREFIX"] = prefix
         parameter_dict = msg_content['parameters']['job_parameters']
-        job_uuid = msg_content['job_uuid']
+        
 
         # First send the a parameter msg on the parameter queue
         # TODO: is this correct? should we not have a parameter queue per
         # Job?? This class is single threaded. We could have race issues
         # if multiple jobs are started in succession. 
+
+
         self._send_job_parameter_message(
-                  self._registered_pipelines[uuid]['parameterq'][1],
-                  msg_content)
+                  parameterQueue, msg_content)
 
         # Run subprocess
         process = None
@@ -322,7 +333,7 @@ class NCQDaemon(object):
         # create the queues names based on the template
         resultq_name = CQConfig.create_returnQueue_name(uuid)
         topic_name = CQConfig.create_logTopic_name(uuid)
-        parameterq_name = CQConfig.create_parameterQueue_name(uuid)
+
 
         # now register to the queues, remember, the pipeline might not have
         # connected so create and make durable. Deleting is done by the 
@@ -336,14 +347,8 @@ class NCQDaemon(object):
               options = "create:always, node: { type: topic, durable: True}",
               broker = self._broker)
 
-        parameterQueue = msgbus.ToBus(parameterq_name, 
-              options = "create:always, delete:always, node: { type: queue, durable: False}",
-              broker = self._broker)   # Created NON durable: delete when not
-                                       # needed anymore
-
         queues_dict = {'resultq':(resultq_name, resultQueue),
-                       'topic':(topic_name, logTopic),
-                       'parameterq':(parameterq_name, parameterQueue)}
+                       'topic':(topic_name, logTopic)}
 
         return queues_dict
   
@@ -369,7 +374,6 @@ class NCQDaemon(object):
             del self._registered_pipelines[uuid]['jobs'][job_uuid]
 
         # close the queues
-        self._registered_pipelines[uuid]['parameterq'][1].close()
         self._registered_pipelines[uuid]['resultq'][1].close()
         self._registered_pipelines[uuid]['topic'][1].close()
 

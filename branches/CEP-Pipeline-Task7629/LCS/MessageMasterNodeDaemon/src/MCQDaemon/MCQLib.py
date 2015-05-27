@@ -204,7 +204,7 @@ class resultQueueHandler(threading.Thread):
 
         elif type == 'output':
             output = msg_content['output']
-            self.logger.debug("output: {0}".format(output))
+            self.logger.info("output: {0}".format(output))
             uuid = msg_content['uuid']
             job_uuid = msg_content['job_uuid']
 
@@ -403,33 +403,59 @@ class MCQLib(object):
         msg =CQConfig.create_stop_session_msg(payload, 'MCQLib','MCQDaemon')      
         self._masterCommandQueue.send(msg)
 
-    def run_job(self, parameters):
+    def run_job(self, job_parameters, job, limiter, killswitch):
         """
 
         """
         #TODO: THIS APPENDING OF QUEUE NAMES SHOULD BE MOVED TO THE RUN
         # COMMAND IN  THE FRAMEWORK
-        parameters['cmd'] = " ".join([parameters['cmd'], self._returnQueueName,
-                            self._logTopicName])
-        job_uuid = uuid.uuid4().hex
-        payload = {"command":"run_job", 
-                   "uuid":self._sessionUUID,
-                   'job_uuid':job_uuid,
-                   "parameters":parameters}
 
-        msg = CQConfig.create_run_job_msg(payload, 'MCQLib','MCQDaemon')       
-        self._masterCommandQueue.send(msg)
-        with self._running_jobs_lock:
-            self._running_jobs[job_uuid] = {'payload':copy.deepcopy(msg.payload),
-                                        'completed':False}
+        host = job_parameters['node']
+        limiter[job.host].acquire()
+        time_info_start = time.time()
+        job_uuid = None
+        try:
+            # We could have received a stop (ctrl-c) so check here if it is set
+            if killswitch.isSet():
+                self.logger.debug("Shutdown in progress: not starting remote job")
+                self.results['returncode'] = 1
+                error.set()
+                return 1
 
-        # wait until the job returns then return, this needs a lock around the
-        # running jobs object.
-        poll_interval = 1  # check for results each second
-        while True:
-            time.sleep(poll_interval)
 
+            job_parameters['cmd'] = " ".join([job_parameters['cmd'], self._returnQueueName,
+                                self._logTopicName])
+            job_uuid = uuid.uuid4().hex
+
+            payload = {"command":"run_job", 
+                       "uuid":self._sessionUUID,
+                       'job_uuid':job_uuid,
+                       "parameters":job_parameters}
+
+            msg = CQConfig.create_run_job_msg(payload, 'MCQLib','MCQDaemon')       
+            self._masterCommandQueue.send(msg)
             with self._running_jobs_lock:
-                if self._running_jobs[job_uuid]['completed']: 
+                self._running_jobs[job_uuid] = {'payload':copy.deepcopy(msg.payload),
+                                            'completed':False}
 
-                      return self._running_jobs[job_uuid]['exit_value']
+            # wait until the job returns then return, this needs a lock around the
+            # running jobs object.
+            poll_interval = 1  # check for results each second
+            while True:
+                time.sleep(poll_interval)
+
+                with self._running_jobs_lock:
+                    if self._running_jobs[job_uuid]['completed']: 
+                        break
+        finally:
+            limiter[job.host].release()  # always release the node lock
+
+        time_info_end = time.time()
+
+        job.results["job_duration"] = str(time_info_end - time_info_start)
+        job.results['returncode'] = self._running_jobs[job_uuid]['exit_value']
+
+        job.results = self._running_jobs[job_uuid]['output']
+        # Now retrieve all the results and set correct values on the job
+
+        return self._running_jobs[job_uuid]['exit_value']

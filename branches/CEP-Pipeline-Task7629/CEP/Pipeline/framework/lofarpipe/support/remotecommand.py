@@ -27,6 +27,16 @@ from lofarpipe.support.xmllogging import add_child
 # frame. When multiplexing lots of threads, that will cause memory issues.
 threading.stack_size(1048576)
 
+# Includes for QPID framework, might not be available. Set status flag 
+_QPID_ENABLED = False
+try:
+    import lofar.messagebus.MCQLib as MCQLib
+    _QPID_ENABLED = True
+except:
+    pass
+# End QPID include 
+
+
 class ParamikoWrapper(object):
     """
     Sends an SSH command to a host using paramiko, then emulates a Popen-like
@@ -348,6 +358,11 @@ class RemoteCommandRecipeMixIn(object):
         :type max_per_node: integer or none
         :rtype: dict mapping integer job id to :class:`~lofarpipe.support.remotecommand.ComputeJob`
         """
+
+        if _QPID_ENABLED:
+            mcqlib = MCQLib.MCQLib(self.logger)
+            self.logger.error("############### Created a MCQLIB@@@@@@@@@@@@@@@@@@@@@")
+
         threadpool = []
         jobpool = {}
         if not max_per_node and self.config.has_option('remote', 'max_per_node'):
@@ -362,15 +377,33 @@ class RemoteCommandRecipeMixIn(object):
             self.logger.debug("Job dispatcher at %s:%d" % (jobhost, jobport))
             for job_id, job in enumerate(jobs):
                 jobpool[job_id] = job
-                threadpool.append(
-                    threading.Thread(
-                        target = job.dispatch,
-                        args = (
-                            self.logger, self.config, limiter, job_id,
-                            jobhost, jobport, self.error, killswitch
+                if _QPID_ENABLED:
+                    environment = dict(
+                        (k, v) for (k, v) in os.environ.iteritems()
+                        if k.endswith('PATH') or k.endswith('ROOT') or k == 'QUEUE_PREFIX'
+                        )
+
+                    job_parameters = {'node':job.host,
+                                  'environment':environment,
+                                  'cmd':job.command,
+                                  'cdw':'/home/wouter',
+                                  'job_parameters':{'par1':'par1'}}
+
+                    threadpool.append(
+                        threading.Thread(
+                            target = mcqlib.run_job
+                            ,args = [job_parameters, job, limiter, killswitch])
+                        )
+                else:
+                    threadpool.append(
+                        threading.Thread(
+                            target = job.dispatch,
+                            args = (
+                                self.logger, self.config, limiter, job_id,
+                                jobhost, jobport, self.error, killswitch)
                         )
                     )
-                )
+
             threadwatcher(threadpool, self.logger, killswitch)
 
         if killswitch.isSet():

@@ -131,17 +131,17 @@ class NCQLib(object):
         msg.payload = msg_dict
         self._resultQueue.send(msg)
 
-#def validParameterQueueName(queueName):
-#      """
-#      The parameter queue name is profided on the command line.
-#      This interface is also used by the old framework. In these instances 
-#      port numbers are used.
+def validParameterQueueName(queueName):
+      """
+      The parameter queue name is profided on the command line.
+      This interface is also used by the old framework. In these instances 
+      port numbers are used.
 
-#      We need a function to check if the queuename is correct. And validate that
-#      we are in a correct state. (you can have qpid enabled on a node) but
-#      state the recipe on the old socked manner.
-#      """
-#      if "NCQDaemon" in queueName and "parameters" in queueName:
-#          return True
+      We need a function to check if the queuename is correct. And validate that
+      we are in a correct state. (you can have qpid enabled on a node) but
+      state the recipe on the old socked manner.
+      """
+      if "NCQDaemon" in queueName and "parameters" in queueName:
+          return True
 
-#      return False
+      return False
