@@ -21,15 +21,19 @@
 import os
 import socket
 import pwd
-
+import imp
 import lofar.messagebus.message as message
 
 # TODO: should this be increased each commit??
 # First set the protocol version 
 protocolVersion="0.0.1"
+qpid_config_path = "/opt/qpid/bin/qpid-config"
+qpid_route_path = "/opt/qpid/bin/qpid-route"
+#qpid_route_path = "/home/klijn/build/7629/gnu_debug/qpid_route.py"
 
 # Session parameters
 broker = "127.0.0.1"                             # Localhost 
+head_node = "locus102"
 hostname = socket.gethostname()
 username = pwd.getpwuid(os.getuid()).pw_name
 
@@ -340,3 +344,68 @@ def create_stop_session_msg(payload, sender, target):
     msg.payload = payload
 
     return msg
+
+def create_queue_on_node(node, queue_name, is_topic=False):
+    qpid_config = imp.load_source('', qpid_config_path)
+    make_queue_args = None
+    if is_topic:
+        make_queue_args = ['-b', node, 'add', 'exchange', 'topic', queue_name]
+    else:
+        make_queue_args = ['-b', node, 'add', 'queue', queue_name]
+
+    return qpid_config.main(argv=make_queue_args)
+
+def delete_queue_on_node(node, queue_name, is_topic=False):
+    qpid_config = imp.load_source('', qpid_config_path)
+    type = None
+    if is_topic:
+        type = 'exchange'
+    else:
+        type = 'queue'
+    make_queue_args = ['-b', node, 'del', type, queue_name]
+    return qpid_config.main(argv=make_queue_args)
+
+def create_queue_forward(node_from, node_to, queue_name, is_topic=False):
+    qpid_route = imp.load_source('', qpid_route_path)
+    #args = ['-d', 'queue', 'add', node_to, node_from, '', queue_name]
+    args = None
+    if is_topic:
+        args = ['route' ,'add', node_to, node_from, '', queue_name]
+    else:
+        args = ['queue', 'add', node_to, node_from,  queue_name, '']
+    print is_topic
+    print args
+    ret = None
+    try:
+        ret = qpid_route.main(argv=args)
+    except SystemExit, ex:
+        if ex == 0:
+            return 0
+        else: 
+            return ex.code
+
+    return ret
+
+def delete_queue_forward(node_from, node_to, queue_name, is_topic=False):
+    qpid_route = imp.load_source('', qpid_route_path)
+    if is_topic:
+        type = 'route'
+    else:
+        type = 'queue'
+
+    args = [type,  'del', node_to, node_from, '', queue_name]   
+    
+    print args 
+    try:
+        ret = qpid_route.main(argv=args)
+    except SystemExit, ex:
+        if ex == 0:
+            return 0
+        else: 
+            return ex.code
+
+    return ret
+
+
+
+

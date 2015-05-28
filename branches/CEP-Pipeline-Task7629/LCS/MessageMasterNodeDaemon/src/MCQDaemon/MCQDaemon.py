@@ -205,6 +205,8 @@ class MCQDaemon(object):
                   'topic':topic_name,
                   'init_wait':self._init_delay,
                   'session_nodes':[]}
+
+
         # init_wait:other option is a time out
         # the problem is that the pipeline can only connect to an existing q
         # so after creating the q is not emediately 'used'.
@@ -346,13 +348,17 @@ class MCQDaemon(object):
         if uuid not in self._registered_pipelines.keys():
             return
 
-        # send the quit msg to NodeDaemons
-        for node in self._registered_pipelines[uuid]['session_nodes']:
-            self._send_quit_msg_to_slave(uuid, node)
-
         # remove the q and topic
         qname = self._registered_pipelines[uuid]['resultq']
         topicname = self._registered_pipelines[uuid]['topic']
+
+        # send the quit msg to NodeDaemons
+        for node in self._registered_pipelines[uuid]['session_nodes']:
+            self._send_quit_msg_to_slave(uuid, node)
+            CQConfig.delete_queue_on_node(node, qname)
+            CQConfig.delete_queue_on_node(node, topicname, is_topic=True)
+
+
  
         self.logger.info("Deleted queues for session uuid: {0}".format(uuid))
         # delete the entry from the actual dict
@@ -360,22 +366,49 @@ class MCQDaemon(object):
 
         self._delete_queue_and_topic(qname, topicname)
 
+
+    def _create_to_from_and_link(self, from_node, to_node, 
+                                 queue_name, is_topic=False):
+        """
+        Creates nodes on both from and to node, and add a forwarding rule/link
+        """
+        # Create the queue on the from_node
+        self.logger.info("Creating from_node queue")
+        CQConfig.create_queue_on_node(from_node, queue_name,is_topic)
+
+        # Create the queue on the to node
+        self.logger.info("Creating to_node queue")
+        CQConfig.create_queue_on_node(to_node, queue_name, is_topic)
+
+        # now link between the nodes
+        self.logger.info("Creating link")
+        CQConfig.create_queue_forward(from_node, to_node, queue_name, is_topic)
+
+
     def _check_slave_and_connect(self, node):
         """
-        Checks if a node is known and created a msg queue connect if needed
+        Checks if a node is known and created a msg queue pair between
+        master and node if needed
+
         """
+        self.logger.info("Check slave state: {0}".format(node))
         if node not in self._registered_nodes.keys():
             self.logger.debug(
                 "received job for unconnected slave: {0}".format(node))
 
+            # Create the queue on the local host
             nodeQueueName = CQConfig.create_nodeCommandQueue_name(node)
+
+            # create a connection between master and node.
+            self._create_to_from_and_link(CQConfig.head_node,
+                                    node, nodeQueueName)
 
             bus = msgbus.ToBus(nodeQueueName, 
                 options = "create:always, node: { type: queue, durable: True}",
                 broker = self._broker)
+
             self._registered_nodes[node]={'CQName': nodeQueueName,
                                           'CQObject': bus}
-
 
     def _check_session_and_start(self, node, uuid):
         """
@@ -387,11 +420,21 @@ class MCQDaemon(object):
         if node not in self._registered_pipelines[uuid]['session_nodes']:
             self.logger.info("Starting node session on: {0}".format(node))
             
+            # Create a return queue pair on node to master
+            self._create_to_from_and_link(node, CQConfig.head_node,
+                    CQConfig.create_returnQueue_name(uuid))
+
+            # Create a return queue pair on node to master
+            self._create_to_from_and_link(node, CQConfig.head_node,
+                    CQConfig.create_logTopic_name(uuid), True)
+
+
             # Tell the node to be ready to receive jobs for this uuid
             msg_content = {'command': 'start_session',
-                                 'uuid':uuid}
+                           'uuid':uuid}
             msg = CQConfig.create_start_session_msg(
-                msg_content, "MCQDaemon", node)                      
+                msg_content, "MCQDaemon", node)
+                                  
             self._registered_nodes[node]['CQObject'].send(msg)
 
             # store that the node is active

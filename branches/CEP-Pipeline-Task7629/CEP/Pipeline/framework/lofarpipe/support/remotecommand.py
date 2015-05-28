@@ -385,14 +385,15 @@ class RemoteCommandRecipeMixIn(object):
                     job_parameters = {'node':job.host,
                                   'environment':environment,
                                   'cmd':job.command,
-                                  'cdw':'/home/wouter',
+                                  'cdw':'/home/klijn',  # TODO: FIXME!!!!
                                   'job_parameters':{'par1':'par1'}}
 
-                    threadpool.append(
-                        threading.Thread(
+                    thread = threading.Thread(
                             target = mcqlib.run_job
                             ,args = [job_parameters, job, limiter, killswitch])
-                        )
+                    thread.daemon = True  # shut down thread of owner dies
+                    threadpool.append(thread)
+                    
                 else:
                     threadpool.append(
                         threading.Thread(

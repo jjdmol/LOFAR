@@ -408,7 +408,6 @@ class MCQLib(object):
         """
         #TODO: THIS APPENDING OF QUEUE NAMES SHOULD BE MOVED TO THE RUN
         # COMMAND IN  THE FRAMEWORK
-
         host = job_parameters['node']
         limiter[job.host].acquire()
         time_info_start = time.time()
