@@ -370,10 +370,11 @@ def create_queue_forward(node_from, node_to, queue_name, is_topic=False):
     #args = ['-d', 'queue', 'add', node_to, node_from, '', queue_name]
     args = None
     if is_topic:
-        args = ['route' ,'add', node_to, node_from, '', queue_name]
+        args = ['route' ,'add', node_to, node_from, queue_name, '']
     else:
-        args = ['queue', 'add', node_to, node_from,  queue_name, '']
+        args = ['queue', 'add', node_to, node_from, '', queue_name]
     print is_topic
+
     print args
     ret = None
     try:
