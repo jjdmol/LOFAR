@@ -346,6 +346,16 @@ def threadwatcher(threadpool, logger, killswitch):
 
 
 class RemoteCommandRecipeMixIn(object):
+    def add_mcqlib(mcqlib):
+        """
+        Explicit adder for mcqlib which controls qpid enabled communication
+        between master and node recipes. 
+        It should be created once for each pipeline run thus be added from
+        the toplevel recipe
+        """
+        self.mcqlib = mcqlib
+
+
     """
     Mix-in for recipes to dispatch jobs using the remote command mechanism.
     """
@@ -358,9 +368,6 @@ class RemoteCommandRecipeMixIn(object):
         :type max_per_node: integer or none
         :rtype: dict mapping integer job id to :class:`~lofarpipe.support.remotecommand.ComputeJob`
         """
-
-        if _QPID_ENABLED:
-            mcqlib = MCQLib.MCQLib(self.logger)
 
         threadpool = []
         jobpool = {}
@@ -389,7 +396,7 @@ class RemoteCommandRecipeMixIn(object):
                                   'job_parameters':{'par1':'par1'}}
 
                     thread = threading.Thread(
-                            target = mcqlib.run_job
+                            target = self.mcqlib.run_job
                             ,args = [job_parameters, job, limiter, killswitch])
                     thread.daemon = True  # shut down thread of owner dies
                     threadpool.append(thread)
@@ -445,6 +452,4 @@ class RemoteCommandRecipeMixIn(object):
         self.outputs._fields["return_xml"] = ingredient.StringField(
                                                 help = "XML return data.")
         self.outputs["return_xml"] = node_durations.toxml(encoding = "ascii")
-
-        mcqlib._release()  # Cleanup of the queues etc.
         return jobpool

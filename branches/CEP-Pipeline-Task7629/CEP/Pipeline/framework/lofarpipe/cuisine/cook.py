@@ -33,10 +33,10 @@ class PipelineCook(WSRTCook):
             module = imp.load_module(task, *module_details)
             self.recipe = None
             try:
-                self.recipe = getattr(module, task)()
+                self.recipe = getattr(module, task)()  # The init
             except AttributeError:
                 # Try with first letter capital (python type nameconvention)
-                self.recipe = getattr(module, task.capitalize())()
+                self.recipe = getattr(module, task.capitalize())() # The init
             self.recipe.logger = getSearchingLogger("%s.%s" % (self.logger.name, task))
             self.recipe.logger.setLevel(self.logger.level)
         except Exception, e:

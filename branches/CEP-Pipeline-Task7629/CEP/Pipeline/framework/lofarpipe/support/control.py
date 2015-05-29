@@ -18,6 +18,14 @@ from lofar.parameterset import parameterset
 import lofar.messagebus.msgbus
 from lofar.messagebus.protocols import TaskFeedbackDataproducts, TaskFeedbackProcessing, TaskFeedbackState
 
+# Includes for QPID framework, might not be available. Set status flag 
+_QPID_ENABLED = False
+try:
+    import lofar.messagebus.MCQLib as MCQLib
+    _QPID_ENABLED = True
+except:
+    pass
+# End QPID include 
 #                                             Standalone Pipeline Control System
 # ------------------------------------------------------------------------------
 
@@ -39,6 +47,8 @@ class control(StatefulRecipe):
       self.parset = parameterset()
       self.momID = 0
       self.sasID = 0
+      if _QPID_ENABLED:
+            self.mcqlib  = MCQLib.MCQLib(self.logger)
 
     def usage(self):
         """
@@ -184,5 +194,9 @@ class control(StatefulRecipe):
                 except Exception, except_object:
                     self.logger.error("Failed opening xml stat file:")
                     self.logger.error(except_object)
+
+            # 'destruct' the daemon 
+            if _QPID_ENABLED:
+                mcqlib._release()  # Cleanup of the queues etc.
 
         return 0
