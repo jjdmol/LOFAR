@@ -119,8 +119,6 @@ python_install(
 	fpconst-0.7.0/fpconst-0.7.0/setup.py
 	fpconst-0.7.0/fpconst.py
 	fpconst-0.7.0/setup.py
-	test/test_ingest_logging.py
-	test/__init__.py
 	unspecifiedSIP.py
 	h5_check.py
 	mom_http.py
@@ -241,3 +239,6 @@ python_install(
 	simple_server.py
 	__init__.py
   DESTINATION LTAIngest)
+
+add_subdirectory(test)
+  
