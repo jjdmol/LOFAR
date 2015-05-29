@@ -34,12 +34,15 @@ import lofar.messagebus.CQConfig as CQConfig
 # session has ended
 logTopicStopFlag = threading.Event()
 resultQueueStopFlag = threading.Event()
+workerThreadKillswitch = threading.Event()  # will be overwritten in 
+                                            # MCQLib.set_killswitch
 stopFunction = None
 
 def treadStopHandler(signum, stack):
     # stop the threads
     logTopicStopFlag.set()
     resultQueueStopFlag.set()
+    workerThreadKillswitch.set()
     # now signal the master
     if not stopFunction is None:
       stopFunction()
@@ -402,6 +405,16 @@ class MCQLib(object):
         msg =CQConfig.create_stop_session_msg(payload, 'MCQLib','MCQDaemon')      
         self._masterCommandQueue.send(msg)
 
+    def set_killswitch(self, killswitch):
+        """
+        The threads are managed outside of this object. The main comm method
+        is via the killswith
+        """
+        global workerThreadKillswitch
+        workerThreadKillswitch = killswitch
+
+
+
     def run_job(self, job_parameters, job, limiter, killswitch):
         """
 
@@ -416,8 +429,8 @@ class MCQLib(object):
             # We could have received a stop (ctrl-c) so check here if it is set
             if killswitch.isSet():
                 self.logger.debug("Shutdown in progress: not starting remote job")
+                self.results = {}
                 self.results['returncode'] = 1
-                error.set()
                 return 1
 
 
@@ -441,6 +454,11 @@ class MCQLib(object):
             poll_interval = 1  # check for results each second
             while True:
                 time.sleep(poll_interval)
+                if killswitch.isSet():
+                    self.logger.debug("Shutdown in progress: not starting remote job")
+                    self.results = {}
+                    self.results['returncode'] = 1
+                    return 1
 
                 with self._running_jobs_lock:
                     # If both the exit_value (of the recipe executable)

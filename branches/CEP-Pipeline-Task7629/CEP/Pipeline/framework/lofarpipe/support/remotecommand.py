@@ -375,7 +375,9 @@ class RemoteCommandRecipeMixIn(object):
             max_per_node = self.config.getint('remote', 'max_per_node')
         limiter = ProcessLimiter(max_per_node)
         killswitch = threading.Event()
-
+        if _QPID_ENABLED:
+            self.mcqlib.set_killswitch(killswitch) # forward the killswitch 
+                                          # to the mcqlib
         if max_per_node:
             self.logger.info("Limiting to %d simultaneous jobs/node" % max_per_node)
 
@@ -395,6 +397,7 @@ class RemoteCommandRecipeMixIn(object):
                                   'cdw':'/home/klijn',  # TODO: FIXME!!!!
                                   'job_parameters':{'par1':'par1'}}
 
+                    
                     thread = threading.Thread(
                             target = self.mcqlib.run_job
                             ,args = [job_parameters, job, limiter, killswitch])
