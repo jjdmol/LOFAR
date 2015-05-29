@@ -84,6 +84,27 @@ class test_pipeline(control):
         self.logger.debug(
             "Wrote output mapfile: {0}".format(output_mapfile))
 
+        # ******************************************************************
+        # (1) Start the test recipe
+        output_mapfile_testphase = self._test_phase(input_mapfile,
+                                                    output_mapfile)
+
+
+        # ******************************************************************
+        # (1) Start the test recipe
+        output_mapfile_testphase = self._test_phase(input_mapfile,
+                                                    output_mapfile)
+
+
+        # ******************************************************************
+        # (1) Start the test recipe
+        output_mapfile_testphase = self._test_phase(input_mapfile,
+                                                    output_mapfile)
+
+        # ******************************************************************
+        # (1) Start the test recipe
+        output_mapfile_testphase = self._test_phase(input_mapfile,
+                                                    output_mapfile)
 
         # ******************************************************************
         # (1) Start the test recipe

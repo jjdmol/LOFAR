@@ -47,8 +47,6 @@ class control(StatefulRecipe):
       self.parset = parameterset()
       self.momID = 0
       self.sasID = 0
-      if _QPID_ENABLED:
-            self.mcqlib  = MCQLib.MCQLib(self.logger)
 
     def usage(self):
         """
@@ -156,6 +154,9 @@ class control(StatefulRecipe):
         self.logger.info("LOFAR Pipeline (%s) starting." % self.name)
         self.logger.info("SASID = %s, MOMID = %s, Feedback method = %s" % (self.sasID, self.momID, self.feedback_method))
 
+        if _QPID_ENABLED:
+            self.logger.info("Using QPid based communication")
+            self.mcqlib  = MCQLib.MCQLib(self.logger)
         try:
             self.pipeline_logic()
         except Exception, message:
@@ -197,6 +198,6 @@ class control(StatefulRecipe):
 
             # 'destruct' the daemon 
             if _QPID_ENABLED:
-                mcqlib._release()  # Cleanup of the queues etc.
+                self.mcqlib._release()  # Cleanup of the queues etc.
 
         return 0

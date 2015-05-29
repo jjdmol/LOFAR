@@ -44,6 +44,15 @@ class PipelineCook(WSRTCook):
             self.recipe = None
             raise CookError (task + ' can not be loaded')
 
+    def add_mcqlib(self, mcqlib):
+        """
+        Explicit adder for mcqlib which controls qpid enabled communication
+        between master and node recipes. 
+        It should be created once for each pipeline run thus be added from
+        the toplevel recipe
+        """
+        self.recipe.add_mcqlib(mcqlib)
+
     def try_running(self):
         """Run the recipe, inputs should already have been checked."""
         self.recipe.name = self.task

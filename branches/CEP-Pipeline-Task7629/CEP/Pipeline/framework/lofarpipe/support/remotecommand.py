@@ -346,7 +346,7 @@ def threadwatcher(threadpool, logger, killswitch):
 
 
 class RemoteCommandRecipeMixIn(object):
-    def add_mcqlib(mcqlib):
+    def add_mcqlib(self, mcqlib):
         """
         Explicit adder for mcqlib which controls qpid enabled communication
         between master and node recipes. 
