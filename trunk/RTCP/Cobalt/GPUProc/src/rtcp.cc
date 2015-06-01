@@ -63,6 +63,7 @@
 #include <CoInterface/OMPThread.h>
 #include <CoInterface/Pool.h>
 #include <CoInterface/Stream.h>
+#include <CoInterface/SelfDestructTimer.h>
 #include <InputProc/SampleType.h>
 #include <InputProc/WallClockTime.h>
 #include <InputProc/Buffer/StationID.h>
@@ -243,24 +244,7 @@ int main(int argc, char **argv)
     "\n  outputProcTimeout    : " << outputProcTimeout << "s" <<
     "\n  rtcpTimeout          : " << rtcpTimeout << "s");
 
-  if (ps.settings.realTime && getenv("COBALT_NO_ALARM") == NULL) {
-    // First of all, make sure we can't freeze for too long
-    // by scheduling an alarm() some time after the observation
-    // ends.
-
-    const time_t now = time(0);
-    const double stopTime = ps.settings.stopTime;
-
-    if (now < stopTime + rtcpTimeout) {
-      size_t maxRunTime = stopTime + rtcpTimeout - now;
-
-      LOG_INFO_STR("RTCP will self-destruct in " << maxRunTime << " seconds");
-      alarm(maxRunTime);
-    } else {
-      LOG_WARN_STR("Observation.stopTime has passed more than " << rtcpTimeout << " seconds ago, but observation is real time. Nothing to do. Bye bye.");
-      return EXIT_SUCCESS;
-    }
-  }
+  setSelfDestructTimer(ps, rtcpTimeout);
 
   // Remove limits on pinned (locked) memory
   struct rlimit unlimited = { RLIM_INFINITY, RLIM_INFINITY };
