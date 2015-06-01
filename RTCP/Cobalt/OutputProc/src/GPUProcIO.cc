@@ -25,6 +25,8 @@
 
 #include <cstring>
 #include <vector>
+#include <time.h>    // for time()
+#include <unistd.h>  // for alarm()
 #include <omp.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
@@ -44,6 +46,7 @@
 #include <CoInterface/FinalMetaData.h>
 #include <CoInterface/Stream.h>
 #include <CoInterface/SmartPtr.h>
+#include <CoInterface/SelfDestructTimer.h>
 #include "SubbandWriter.h"
 #include "OutputThread.h"
 #include "IOPriority.h"
@@ -56,6 +59,9 @@ using boost::lexical_cast;
 
 namespace LOFAR {
   namespace Cobalt {
+
+// Deadline for the wrap up after the obs end, in seconds.
+const time_t defaultOutputProcTimeout = 300;
 
 static string formatDataPointLocusName(const string& hostname)
 {
@@ -71,6 +77,25 @@ static string formatDataPointLocusName(const string& hostname)
   return nodeValue;
 }
 
+size_t getMaxRunTime(const Parset &parset)
+{
+  if (!parset.settings.realTime)
+    return 0;
+
+  // Deadline for outputProc, in seconds.
+  const time_t outputProcTimeout = 
+    parset.ParameterSet::getTime("Cobalt.Tuning.outputProcTimeout",
+           defaultOutputProcTimeout);
+
+  const time_t now = time(0);
+  const double stopTime = parset.settings.stopTime;
+
+  if (now < stopTime + outputProcTimeout)
+    return stopTime + outputProcTimeout - now;
+  else
+    return 0;
+}
+
 bool process(Stream &controlStream, unsigned myRank)
 {
   bool success(true);
@@ -81,9 +106,23 @@ bool process(Stream &controlStream, unsigned myRank)
   string myHostName = hostnames[myRank];
 
   if (parset.settings.realTime) {
+    /*
+     * Real-time observation
+     */
+
+    // Acquire elevated IO and CPU priorities
     setIOpriority();
     setRTpriority();
+
+    // Prevent swapping of our buffers
     lockInMemory(16UL * 1024UL * 1024UL * 1024UL); // limit memory to 16 GB
+
+    // Deadline for outputProc, in seconds.
+    const time_t outputProcTimeout = 
+      parset.ParameterSet::getTime("Cobalt.Tuning.outputProcTimeout",
+             defaultOutputProcTimeout);
+
+    setSelfDestructTimer(parset, outputProcTimeout);
   }
 
   // Send id string to the MAC Log Processor as context for further LOGs.
