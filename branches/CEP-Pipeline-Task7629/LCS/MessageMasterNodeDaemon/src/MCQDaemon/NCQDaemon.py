@@ -164,22 +164,25 @@ class NCQDaemon(object):
         """
         uuid = msg_content['uuid']   # All work centers around the uuid for 
                                      # the pipeline
-
+        t0 = time.time()
         # this should not happen but check anyways, does the received uuid
         # exist? A job msg should always follow after a start session msg
         if uuid not in self._registered_pipelines.keys():
             self._unknown_uuid_msg(uuid, self._registered_pipelines.keys())
             return
-
+        self.logger.error("Size registered pipelines: {0}".format(
+              len(self._registered_pipelines)))
         # Create a temporary parameter queue
         job_uuid = msg_content['job_uuid']
+        t1= time.time()
         parameterq_name = CQConfig.create_parameterQueue_name(job_uuid)
         parameterQueue = msgbus.ToBus(parameterq_name, 
               options = "create:always, delete:always, node: { type: queue, durable: False}",
               broker = self._broker)   # Created NON durable: delete when not
                                        # needed anymore
-        self.logger.error("Created resultsqueue: {0}".format(parameterQueue))
 
+        self.logger.error("Created resultsqueue: {0}".format(parameterQueue))
+        t2= time.time()
 
         # Get all the variables needed to start the job
         command     = msg_content['parameters']['cmd']    # Command line cmd 
@@ -201,10 +204,10 @@ class NCQDaemon(object):
         # Job?? This class is single threaded. We could have race issues
         # if multiple jobs are started in succession. 
 
-
+        t3 = time.time()
         self._send_job_parameter_message(
                   parameterQueue, msg_content)
-
+        t4 = time.time()
         # Run subprocess
         process = None
         try:
@@ -227,7 +230,11 @@ class NCQDaemon(object):
             
         # store the now created job in the list of jobs for this pipeline
         self._registered_pipelines[uuid]['jobs'][job_uuid] = (process, 
-                                                  copy.deepcopy(msg_content))       
+                               copy.deepcopy(msg_content), parameterQueue )       
+        t5 = time.time()
+
+        self.logger.error("Timings: P: {0}, Q: {1}, P: {2}, Q: {3}, P: {4} total: {5}".format(
+              t1 -t0, t2 -t1, t3 - t2, t4 - t3, t5 - t4, t5 - t0))
 
     def _process_quit_msg(self, msg_content):
         """
@@ -281,7 +288,7 @@ class NCQDaemon(object):
 
             # for all jobs in this session (typically one, but future proof)
             for job_uuid in session_dict['jobs'].keys():            
-                (process, msg_content) = session_dict['jobs'][job_uuid]
+                (process, msg_content, parameterq) = session_dict['jobs'][job_uuid]
 
                 # 1. If process is None, the Popen command failed
                 if process is None:
@@ -318,7 +325,7 @@ class NCQDaemon(object):
                            'job_uuid':msg_content['job_uuid']}
 
                 self._send_job_exit_message(resultQueue, payload )
-
+                parameterq.close()
                 del session_dict['jobs'][job_uuid]
 
     def _connect_result_log_parameter_queues(self, uuid):
@@ -365,7 +372,7 @@ class NCQDaemon(object):
             return      
 
         for job_uuid in self._registered_pipelines[uuid]['jobs'].keys():
-            (process, msg_content) = self._registered_pipelines[uuid][
+            (process, msg_content, parameterq) = self._registered_pipelines[uuid][
                                                              'jobs'][job_uuid]
 
             # first kill the child:

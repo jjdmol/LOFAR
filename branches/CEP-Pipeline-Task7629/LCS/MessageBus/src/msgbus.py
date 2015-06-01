@@ -37,28 +37,21 @@ options="create:never"
 
 
 connection = None
+connection_used_counter = 0
 def get_connection(broker):
     global connection
-    if connection == None:
-        connection = messaging.Connection(broker)
+    global connection_used_counter
 
+    # THe connection cannot be used without a penalty. reset after 200 uses
+    if connection_used_counter > 200:
+        connection_used_counter = 0
+        Connection = messaging.Connection(broker)
+
+    elif connection == None:
+        connection = messaging.Connection(broker)
+    connection_used_counter += 1
     return connection
     
-    #if broker in broker_to_connection.keys():
-    #    return broker_to_connection[broker]
-
-    #broker_to_connection[broker] = messaging.Connection(broker)
-    #return broker_to_connection[broker]
-
-session = None
-def get_session(connection):
-    global session
-    if session == None:
-        session = connection.session() 
-
-    return session
-        
-
 
 # Define logging. Until we have a python loging framework, we'll have
 # to do any initialising here
@@ -85,13 +78,13 @@ class Session:
         except messaging.MessagingError, m:
             raise BusException(m)
 
-        # NOTE: We cannuot use:
-        #  __del__: its broken (does not always get called, destruction order is unpredictable)
-        #  with:    not supported in python 2.4, does not work well on arrays of objects
-        #  weakref: dpes not guarantee to be called (depends on gc)
-        #
-        # Note that this atexit call will prevent self from being destructed until the end of the program,
-        # since a reference will be retained
+        ## NOTE: We cannuot use:
+        ##  __del__: its broken (does not always get called, destruction order is unpredictable)
+        ##  with:    not supported in python 2.4, does not work well on arrays of objects
+        ##  weakref: dpes not guarantee to be called (depends on gc)
+        ##
+        ## Note that this atexit call will prevent self from being destructed until the end of the program,
+        ## since a reference will be retained
         atexit.register(self.close)
 
     def close(self):

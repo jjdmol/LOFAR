@@ -90,26 +90,26 @@ class test_pipeline(control):
                                                     output_mapfile)
 
 
-        # ******************************************************************
-        # (1) Start the test recipe
-        output_mapfile_testphase = self._test_phase(input_mapfile,
-                                                    output_mapfile)
+        ## ******************************************************************
+        ## (1) Start the test recipe
+        #output_mapfile_testphase = self._test_phase(input_mapfile,
+        #                                            output_mapfile)
 
 
-        # ******************************************************************
-        # (1) Start the test recipe
-        output_mapfile_testphase = self._test_phase(input_mapfile,
-                                                    output_mapfile)
+        ## ******************************************************************
+        ## (1) Start the test recipe
+        #output_mapfile_testphase = self._test_phase(input_mapfile,
+        #                                            output_mapfile)
 
-        # ******************************************************************
-        # (1) Start the test recipe
-        output_mapfile_testphase = self._test_phase(input_mapfile,
-                                                    output_mapfile)
+        ## ******************************************************************
+        ## (1) Start the test recipe
+        #output_mapfile_testphase = self._test_phase(input_mapfile,
+        #                                            output_mapfile)
 
-        # ******************************************************************
-        # (1) Start the test recipe
-        output_mapfile_testphase = self._test_phase(input_mapfile,
-                                                    output_mapfile)
+        ## ******************************************************************
+        ## (1) Start the test recipe
+        #output_mapfile_testphase = self._test_phase(input_mapfile,
+        #                                            output_mapfile)
 
 
         ## *********************************************************************
