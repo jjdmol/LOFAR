@@ -1,54 +1,14 @@
 #!/bin/bash -eu
 
-function postinstall_lofarsys {
-  # ********************************************
-  #  Populate ~/.ssh directory
-  #
-  #  We draw a copy from /globalhome/lofarsystem
-  #  to stay in sync with the rest of LOFAR.
-  # ********************************************
-  echo "Configuring ssh..."
-  cp -a /globalhome/lofarsystem/.ssh ~
+sudo -n true >&/dev/null || error "Need to be root or have sudo rights active (run 'sudo true' first)."
 
-  echo "  Testing..."
-  ssh localhost true >/dev/null
+echo "[Postinstall as root]"
+sudo -u root ./postinstall_root
 
-  # ********************************************
-  #  Install bash initialisation scripts
-  # ********************************************
-  echo "Configuring bash..."
-  cp lofarsys/bashrc ~/.bashrc
-  cp lofarsys/bash_profile ~/.bash_profile
+echo "[Postinstall as lofarbuild]"
+sudo -u lofarbuild ./postinstall_lofarbuild
 
-  echo "  Validating login..."
-  ssh localhost true
+echo "[Postinstall as lofarsys]"
+sudo -u lofarsys ./postinstall_lofarsys
 
-  # ********************************************
-  #  Create directories for LOFAR's
-  #  temporary files
-  # ********************************************
-  echo "Configuring /opt/lofar/var..."
-  mkdir -p ~/lofar/var/{log,run}
-}
-
-function postinstall_lofarbuild {
-  ./install_IERS.sh
-  ./install_DAL.sh
-  ./install_casacore.sh
-  ./install_qpid.sh
-}
-
-case "`whoami`" in
-  lofarsys)
-    postinstall_lofarsys
-    ;;
-  lofarbuild)
-    postinstall_lofarbuild
-    ;;
-  *)
-    error "Need to be either lofarsys or lofarbuild!"
-    ;;
-esac
-
-echo "Done!"
-
+echo "[Done]"
