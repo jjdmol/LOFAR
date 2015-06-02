@@ -38,7 +38,7 @@ mkdir build
 cd build
 # Note that the -DDATA_DIR option does not fully override the measures tables search paths.
 # In fact, some of ., ./data, $HOME/aips++/data, $HOME/data, $HOME/casacore/data are still searched first.
-cmake .. -DCMAKE_INSTALL_PREFIX=/localhome/lofar/$CASACOREVERSION \
+cmake .. -DCMAKE_INSTALL_PREFIX=/opt/$CASACOREVERSION \
   -DUSE_HDF5=ON -DUSE_FFTW3=ON -DFFTW3_DISABLE_THREADS=OFF \
   -DUSE_THREADS=ON -DUSE_OPENMP=ON \
   -DDATA_DIR=/localhome/lofar/IERS/current/data > cmake.log
@@ -51,6 +51,9 @@ make -j 8 install > make_install.log
 
 echo "  Validating measures tables..."
 /localhome/lofar/$CASACOREVERSION/bin/findmeastable >/dev/null
+
+echo "  Creating softlink /opt/casacore..."
+ln -sfT /opt/$CASACOREVERSION /opt/casacore
 
 echo "  Cleaning up..."
 popd >/dev/null

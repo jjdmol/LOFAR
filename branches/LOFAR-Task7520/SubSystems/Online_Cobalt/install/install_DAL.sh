@@ -22,7 +22,7 @@ cd DAL
 echo "  Configuring..."
 mkdir build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX=/localhome/lofar/DAL .. > cmake.log
+cmake -DCMAKE_INSTALL_PREFIX=/opt/DAL .. > cmake.log
 
 echo "  Building..."
 make -j 8 > make.log
