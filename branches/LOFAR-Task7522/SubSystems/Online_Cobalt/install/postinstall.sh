@@ -11,4 +11,7 @@ sudo -u lofarbuild ./postinstall_lofarbuild
 echo "[Postinstall as lofarsys]"
 sudo -u lofarsys ./postinstall_lofarsys
 
+echo "[Postinstall (final) as root]"
+sudo -u root ./postinstall_root_final
+
 echo "[Done]"
