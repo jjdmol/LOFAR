@@ -27,7 +27,7 @@ function test_parset {
   fi
 
   # Pull the message from the status queue
-  recv_msg lofar.task.feedback.status || error 'Could not pull status message from bus'
+  recv_msg lofar.task.feedback.state || error 'Could not pull status message from bus'
 
   # Check the message against the expected result
   # <TODO>
