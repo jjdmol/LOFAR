@@ -2,6 +2,11 @@
 
 . ./testFuncs.sh
 
+if ! have_qpid; then
+  # No use testing QPID feedback without QPID
+  exit 0
+fi
+
 function test_parset {
   PARSET="$1" 
   EXPECTED_OBSRESULT="$2"
@@ -22,7 +27,7 @@ function test_parset {
   fi
 
   # Pull the message from the status queue
-  @QPID_RECEIVE_EXECUTABLE@ -b 127.0.0.1 -q lofar.task.feedback.status || error 'Could not pull status message from bus'
+  recv_msg lofar.task.feedback.status || error 'Could not pull status message from bus'
 
   # Check the message against the expected result
   # <TODO>
