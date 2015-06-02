@@ -5,6 +5,7 @@ include(PythonInstall)
 install(PROGRAMS
   MCQDaemon.py
   NCQDaemon.py
+  createbus.sh
   DESTINATION bin)
 
 
