@@ -1,10 +1,8 @@
 /* Copyright 2008, John W. Romein, Stichting ASTRON
- * Copyright 2009, Andreas Horneffer, RU Nijmegen
- * Copyright 2015, Alexander S. van Amesfoort, ASTRON
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 3 of the License, or
+ *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
  *
  *  This program is distributed in the hope that it will be useful,
@@ -15,16 +13,14 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- *  $Id$
  */
 
+
 #define  _GNU_SOURCE
+#include "common.h"
 
 // allow opening >2GB files on 32-bit architectures
 #define _FILE_OFFSET_BITS 64
-
-#include "common.h"
 
 #include <features.h>
 #include <sched.h>
@@ -49,27 +45,24 @@
 #include <time.h>
 #include <unistd.h>
 
-#define MAXBLOCKSIZE (1024 * 1024)
 
-static enum proto input_proto, output_proto;
+enum proto input_proto, output_proto;
+char	   source[64], destination[64];
 
-static char      source[64], destination[64];
-static int       blocksize, delay;
-
-static int       sk_in, sk_out;
-static long long nr_packets = 0, nr_bytes = 0;
+int	   sk_in, sk_out;
+size_t     nr_packets = 0, nr_bytes = 0;
 
 struct speed {
   struct timeval current_time;
   struct timeval previous_time;
 };
 
-static void init_speed( struct speed *s ) {
+void init_speed( struct speed *s ) {
   gettimeofday(&s->current_time, NULL);
   s->previous_time = s->current_time;
 }
 
-static void update_speed( struct speed *s, double *speedptr, const char **suffixptr, size_t bytes ) {
+void update_speed( struct speed *s, double *speedptr, const char **suffixptr, size_t bytes ) {
   gettimeofday(&s->current_time, NULL);
 
   double current = 1.0 * s->current_time.tv_sec + s->current_time.tv_usec / 1.0e6;
@@ -98,7 +91,7 @@ static void update_speed( struct speed *s, double *speedptr, const char **suffix
 }
 
 
-static void *log_thread(void *arg)
+void *log_thread(void *arg)
 {
   struct speed speed;
   double speedval;
@@ -128,59 +121,23 @@ static void *log_thread(void *arg)
 }
 
 
-static void usage_exit(const char *argv0)
+void init(int argc, char **argv)
 {
-  fprintf(stderr, "Usage: \"%s [-r] src-addr dest-addr [blocksize [delay]]\", where -r sets RT priority and addr is [tcp:|udp:]ip-addr:port or [file:]filename\n", argv0);
-  exit(1);
-}
+  int arg;
 
-
-static void init(int argc, char **argv)
-{
-  int argi;
-  for (argi = 1; argi < argc; argi++) {
-    if (argv[argi][0] != '-') {
-      break;
-    } else if (!strcmp(argv[argi], "-r")) {
-      set_real_time_priority();
-    } else if (!strcmp(argv[argi], "--")) { // end-of-options option
-      argi++;
-      break;
-    } else {
-      fprintf(stderr, "Error: unknown option: %s\n", argv[argi]);
-      usage_exit(argv[0]);
-    }
-  }
-
-  if (argi + 1 >= argc) {
-    fprintf(stderr, "Error: not enough arguments to parse src-addr and dest-addr\n");
-    usage_exit(argv[0]);
-  }
-  sk_in  = create_fd(argv[argi++], 0, &input_proto, source, sizeof source);
-  sk_out = create_fd(argv[argi++], 1, &output_proto, destination, sizeof destination);
-
-  blocksize = delay = 0;
-  if (argi < argc) {
-    blocksize = atoi(argv[argi++]);
-    if ( (blocksize < 0) || (blocksize > MAXBLOCKSIZE) ) {
-      fprintf(stderr, "Error: Unsupported blocksize: %d; must be non-negative and at most %d\n", blocksize, MAXBLOCKSIZE);
-      usage_exit(argv[0]);
+  for (arg = 1; arg < argc && argv[arg][0] == '-' && argv[arg][1] != '\0'; arg ++)
+    switch (argv[arg][1]) {
+      case 'r': set_real_time_priority();
+		break;
     }
 
-    if (argi < argc) {
-      delay = atoi(argv[argi++]);
-      if (delay < 0) {
-        fprintf(stderr, "Error: Unsupported delay: %d; must be non-negative\n", delay);
-        usage_exit(argv[0]);
-      }
-    }
+  if (arg + 2 != argc) {
+    fprintf(stderr, "Usage: \"%s [-r] src-addr dest-addr\", where -r sets RT priority and addr is [tcp:|udp:]ip-addr:port or [file:]filename\n", argv[0]);
+    exit(1);
   }
 
-
-  if (argi < argc) {
-    fprintf(stderr, "Error: Unused argument(s) starting at argument: '%s'\n", argv[argi]);
-    usage_exit(argv[0]);
-  }
+  sk_in  = create_fd(argv[arg], 0, &input_proto, source, sizeof source);
+  sk_out = create_fd(argv[arg + 1], 1, &output_proto, destination, sizeof destination);
 
   setlinebuf(stdout);
   if_BGP_set_default_affinity();
@@ -189,7 +146,7 @@ static void init(int argc, char **argv)
 
 int main(int argc, char **argv)
 {
-  char	   buffer[MAXBLOCKSIZE] __attribute__ ((aligned(16)));
+  char	   buffer[1024 * 1024] __attribute__ ((aligned(16)));
   size_t   read_size, write_size;
 
   init(argc, argv);
@@ -261,10 +218,7 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  size_t max_size = blocksize;
-  if (output_proto == UDP && blocksize > 8960) {
-    max_size = 8960;
-  }
+  size_t max_size = output_proto == UDP ? 8960 : sizeof buffer;
 
   while ((read_size = read(sk_in, buffer, max_size)) != 0) {
     if (read_size < 0) {
@@ -284,9 +238,6 @@ int main(int argc, char **argv)
 
     ++ nr_packets;
 
-    if (delay) {
-      usleep(delay);
-    }
   }
 
   return 0;

@@ -269,9 +269,6 @@ namespace LOFAR {
         string prefix(*iter + '.');
         // The name is the default step type.
         string type = toLower(parset.getString (prefix+"type", *iter));
-        if (type == "newaoflagger"  ||  type == "newaoflag") {
-          type = "aoflaggerstep";
-        }
         if (type == "averager"  ||  type == "average"  ||  type == "squash") {
           step = DPStep::ShPtr(new Averager (reader, parset, prefix));
         } else if (type == "madflagger"  ||  type == "madflag") {
@@ -342,8 +339,10 @@ namespace LOFAR {
       DPStep::ShPtr step;
       casa::String outName;
       bool doUpdate = false;
+      bool lastOut  = false;
       if (prefix == "msout.") {
         // The last output step.
+        lastOut = true;
         outName = parset.getString ("msout.name", "");
         if (outName.empty()) {
           outName = parset.getString ("msout");
