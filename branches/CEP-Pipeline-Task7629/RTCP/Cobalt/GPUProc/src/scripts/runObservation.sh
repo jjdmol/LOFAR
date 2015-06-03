@@ -43,7 +43,7 @@ function setkey {
 
 function usage {
   echo -e \
-    "\nUsage: $0 [-A] [-B] [-C] [-F] [-P pidfile] [-l nprocs] [-p] [-o KEY=VALUE] PARSET"\
+    "\nUsage: $0 [-A] [-B] [-C] [-F] [-P pidfile] [-l nprocs] [-p] [-o KEY=VALUE] [-x KEY=VALUE] PARSET"\
     "\n"\
     "\n  Run the observation specified by PARSET"\
     "\n"\
@@ -56,6 +56,7 @@ function usage {
     "\n    -l: run solely on localhost using 'nprocs' MPI processes (isolated test)"\
     "\n    -p: enable profiling" \
     "\n    -o: add option KEY=VALUE to the parset" \
+    "\n    -x: propagate environment variable KEY=VALUE"\
     "\n" >&2
   exit 1
 }
@@ -144,7 +145,7 @@ RTCP_PARAMS=""
 # ******************************
 # Parse command-line options
 # ******************************
-while getopts ":ABCFP:l:o:p" opt; do
+while getopts ":ABCFP:l:o:px:" opt; do
   case $opt in
       A)  AUGMENT_PARSET=0
           ;;
@@ -162,6 +163,8 @@ while getopts ":ABCFP:l:o:p" opt; do
       o)  EXTRA_PARSET_KEYS="${EXTRA_PARSET_KEYS}${OPTARG}\n"
           ;;
       p)  RTCP_PARAMS="$RTCP_PARAMS -p"
+          ;;
+      x)  MPIRUN_PARAMS="-x $OPTARG"
           ;;
       \?) echo "Invalid option: -$OPTARG" >&2
           exit 1
