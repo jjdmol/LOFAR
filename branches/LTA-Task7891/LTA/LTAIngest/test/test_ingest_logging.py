@@ -58,4 +58,4 @@ class TestIngestLogging(unittest.TestCase):
 
 #run tests if main
 if __name__ == '__main__':
-    unittest.main(verbosity=2)
+    unittest.main()
