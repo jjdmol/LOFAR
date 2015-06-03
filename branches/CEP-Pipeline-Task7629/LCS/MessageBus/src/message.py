@@ -204,6 +204,12 @@ class MessageContent(object):
     def _setXMLdata(self, name, data):
       return self._set_data(self._getXMLnode(name), data)
 
+    def set_subject(self, subject):
+        """
+        Sets the subject on the QPID msg
+        """
+        self._qpidMsg.subject = subject
+
 class Message(object):
     """
       Describes a QPID message, which can be received or sent.
@@ -223,11 +229,6 @@ class Message(object):
     def raw_content(self):
       return self._qpidMsg.content
 
-    def set_subject(self, subject):
-        """
-        Sets the subject on the QPID msg
-        """
-        self._qpidMsg.subject = subject
 
     def __repr__(self):
       msg = self.content()
