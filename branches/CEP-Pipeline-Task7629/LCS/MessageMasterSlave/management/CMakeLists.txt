@@ -2,7 +2,7 @@
 
 install(PROGRAMS
 
-  createbys.sh
+  createbus.sh
   DESTINATION bin)
 
 

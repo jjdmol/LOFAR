@@ -1,4 +1,4 @@
-#!/bin/sh 
+#!/bin/bash 
 
 function usage {
     echo "'createbus' creates or deletes a dynamic routing bus between two nodes." 

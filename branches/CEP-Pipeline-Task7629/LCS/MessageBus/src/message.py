@@ -75,6 +75,7 @@ class MessageContent(object):
 
     def __init__(self, from_="", forUser="", summary="", protocol="", protocolVersion="", momid="", sasid="", qpidMsg=None):
       # Add properties to get/set header fields
+      self._subject = None
       for name, element in self._property_list().iteritems():
         self._add_property(name, element)
 
@@ -149,6 +150,9 @@ class MessageContent(object):
       msg = messaging.Message(content_type="text/plain", durable=True)
       msg.content = self.content()
 
+      if self._subject != None:
+          msg.subject = self._subject
+
       return msg
 
     """ XML support functions. See also lofarpipe/support/xmllogging.py. """
@@ -208,7 +212,7 @@ class MessageContent(object):
         """
         Sets the subject on the QPID msg
         """
-        self._qpidMsg.subject = subject
+        self._subject = subject
 
 class Message(object):
     """
