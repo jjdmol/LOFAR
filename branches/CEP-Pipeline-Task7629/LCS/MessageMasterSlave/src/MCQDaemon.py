@@ -31,13 +31,54 @@ logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=loggin
 
 
 """
-Abstract class containing the core functionality of a master slave structure
+Abstract class command queue classs containing the core functionality 
+for a master slave infra-structure.
 
-Listens on a queue, send jobs to slaves.
-Declares a 'abstract' process dead letter function. throwing a not implemented
-exception, when called. This functionality should be added to the
+This deamon is implemented stateless: It only work when msg are received on 
+its one (or two in default setting) queues: the command queue and its 
+deadletter queue
 
-subclass
+1. Two commands are support (more can be user defined in subclasses)
+   (a) msg with content {'command':'quit') 
+   will result in the main processing loop
+   to end and the owned queues to be released
+   (b) msg with content {'command':'run_job',
+                       'node':job_node,
+                       'job':{}} 
+  will result in a msg being send to the command queue for job_node with the 
+  copied content.
+2. additional command can be defined in a subclass:
+class subclassedMCQDaemontestcommand(MCQDaemon.MCQDaemon):
+    def __init__(self, *args, **kwargs):
+        # call super init
+        super(subclassedMCQDaemontestcommand, self).__init__(*args, **kwargs)
+    
+    # this is the n
+    def process_commands(self, command, unpacked_msg_content, msg):
+        # return false # minimal implementation no other commands
+        if command == "testcommand":
+            adapted_content = unpacked_msg_content
+            adapted_content['testcommand']="received"
+
+            self._process_run_job(adapted_content)
+            return True
+
+        return false
+
+3. The program is typically started as a daemon: Created the object and
+then call run() it will continuesly check for new msg to process.
+It is possible to increase or decrease the polling interval (default is 10 sec)
+
+4. msg send on the bus used by this daemon are also received by the default 
+   implementation of this class. It prints the content in the logfile and 
+   then 'removes' then. It is possible to override this in a subclass
+
+WARNING: The daemon expects an instantiated bus environment.
+this can be done using the script management/createbus.sh (TODO: correct name)
+
+TODO:
+    1. Initiation with config file
+    2. send msg with correct LOFAR header
 
 """
 class MCQDaemon(object):
@@ -51,20 +92,21 @@ class MCQDaemon(object):
         self._loop_interval = loop_interval  # perform loop max once per 
                                              #loop_interval
         self._masterCommandQueueName = masterCommandQueueName
+        self._deadLetterQueueName = deadLetterQueueName
 
         # Connect to the command queue
         self._CommandQueue = msgbus.FromBus(self._masterCommandQueueName,
                                             broker = self._broker)
 
-        # Connect to bus
+        # Connect to bus ( used for sending job msg to slaves)
         self._toSlaveBus = msgbus.ToBus(self._busname, broker = self._broker)
 
         ## Connect tobus for the deadletter queue
-        self._toDeadletterBus = msgbus.ToBus(deadLetterQueueName,
+        self._toDeadletterBus = msgbus.ToBus(self._deadLetterQueueName,
                broker = self._broker)
 
         ## Connect frombus to the deadletter queue
-        self._fromDeadletterBus = msgbus.FromBus(deadLetterQueueName,
+        self._fromDeadletterBus = msgbus.FromBus(self._deadLetterQueueName,
                broker = self._broker)
 
     def close(self):
@@ -74,6 +116,7 @@ class MCQDaemon(object):
         self._CommandQueue.close()
         self._toSlaveBus.close()
         self._toDeadletterBus.close()
+        self._fromDeadletterBus.close()
 
     def run(self):
         """
@@ -201,7 +244,7 @@ class MCQDaemon(object):
                 self._logger.warn("***** warning **** encountered unknown command")
                 self._logger.warn(unpacked_msg_content)
                 self._toDeadletterBus.send(msg)
-                self._CommandQueue.ack(msg)  # ack but not do anything
+                self._CommandQueue.ack(msg)  
 
             continue
     
@@ -221,7 +264,7 @@ class MCQDaemon(object):
         """
         node = unpacked_msg_content['node']        
         # create new msg
-        # TODO: FOrwarding of the received msg in stead of creating new one.
+        # TODO: FOrwarding of the received msg instead of creating a new one.
         msg = message.MessageContent()
         # set content
         msg.payload = unpacked_msg_content
@@ -252,12 +295,3 @@ class MCQDaemon(object):
                 return None
 
         return (msg_content, command)
-
-
-if __name__ == "__main__":
-    daemon = MCQDaemon( 1, 40)
-    
-    daemon.run()
-        
-
-

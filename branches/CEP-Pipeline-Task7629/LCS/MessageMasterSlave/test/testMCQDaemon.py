@@ -74,7 +74,7 @@ def test_subclass_processing():
     Test if the subclass process_commands is called  
     """
     job_node = 'locus102'
-    daemon, commandQueueBus, slaveCommandQueueBus,deadletterQueue = \
+    daemon, commandQueueBus, slaveCommandQueueBus,deadletterQueue, deadletterToQueue = \
         prepare_test(job_node, subclassedMCQDaemontestcommand)
 
     # Test1: Create a test job payuoad
@@ -92,7 +92,7 @@ def test_subclass_processing():
     # validate that a job is received on the slave queue
 
     # wait on the slave command queue
-    msg_received = try_10_sec_to_get_msg(slaveCommandQueueBus)
+    msg_received = try_get_msg(slaveCommandQueueBus)
 
     # unpack received data
     received_payload = eval(msg_received.content().payload)
@@ -108,6 +108,7 @@ def test_subclass_processing():
     # Cleanup sut
     commandQueueBus.close()
     slaveCommandQueueBus.close()
+    deadletterQueue.close()
     daemon.close()
 
 def test_not_implemented_exception_when_calling_superclass():
@@ -116,7 +117,7 @@ def test_not_implemented_exception_when_calling_superclass():
     a not implemented exception when used
     """
     job_node = 'locus102'
-    daemon, commandQueueBus, slaveCommandQueueBus,deadletterQueue = \
+    daemon, commandQueueBus, slaveCommandQueueBus,deadletterQueue,deadletterToQueue = \
         prepare_test(job_node, MCQDaemon.MCQDaemon)
 
 
@@ -139,6 +140,7 @@ def test_not_implemented_exception_when_calling_superclass():
     # Cleanup sut
     commandQueueBus.close()
     slaveCommandQueueBus.close()
+    deadletterQueue.close()
     daemon.close()
            
 def test_silent_eating_of_incorrect_commands():
@@ -148,7 +150,7 @@ def test_silent_eating_of_incorrect_commands():
     Send a number of broken msg to the command queue
     """
     job_node = 'locus102'
-    daemon, commandQueueBus, slaveCommandQueueBus,deadletterQueue = \
+    daemon, commandQueueBus, slaveCommandQueueBus,deadletterQueue, deadletterToQueue = \
         prepare_test(job_node, subclassedMCQDaemonFalse)
 
     # Excercise the SUT 
@@ -165,7 +167,7 @@ def test_silent_eating_of_incorrect_commands():
 
     # We expect a deadletter on the 
     idx = 0
-    msg_received = try_10_sec_to_get_msg(deadletterQueue)
+    msg_received = try_get_msg(deadletterQueue)
     
     received_payload = eval(msg_received.content().payload)
     if payload != received_payload:
@@ -181,7 +183,7 @@ def test_silent_eating_of_incorrect_commands():
     daemon._process_commands()
 
     # check the deadletter queue
-    msg_received = try_10_sec_to_get_msg(deadletterQueue)
+    msg_received = try_get_msg(deadletterQueue)
 
     # validate the content
     received_payload = msg_received.content().payload
@@ -198,7 +200,7 @@ def test_forwarding_of_job_msg_to_queue():
     A msg with the command run_job should be forwarded to jobnode
     """
     job_node = 'locus102'
-    daemon, commandQueueBus, slaveCommandQueueBus,deadletterQueue = \
+    daemon, commandQueueBus, slaveCommandQueueBus,deadletterQueue, deadletterToQueue = \
         prepare_test(job_node, subclassedMCQDaemonFalse)
 
 
@@ -216,7 +218,7 @@ def test_forwarding_of_job_msg_to_queue():
 
     # validate that a job is received on the slave queue
     # wait on the slave command queue
-    msg_received = try_10_sec_to_get_msg(slaveCommandQueueBus)
+    msg_received = try_get_msg(slaveCommandQueueBus)
 
     # unpack received data
     received_payload = eval(msg_received.content().payload)
@@ -228,6 +230,7 @@ def test_forwarding_of_job_msg_to_queue():
     # Cleanup sut
     commandQueueBus.close()
     slaveCommandQueueBus.close()
+    deadletterQueue.close()
     daemon.close()
 
 
@@ -238,8 +241,24 @@ def test_default_process_deadletter_queue():
     Send a number of broken msg to the command queue
     """
     job_node = 'locus102'
-    daemon, commandQueueBus, slaveCommandQueueBus,deadletterQueue = \
-        prepare_test(job_node, subclassedMCQDaemonFalse)
+    broker =  "locus102"
+    busname = "testmcqdaemon"
+
+    masterCommandQueueName = busname + "/" + "masterCommandQueueName"
+    slaveCommandQueueName = busname + "/" + job_node 
+    deadLetterQueueName = busname + ".proxy.deadletter"
+    # create the sut
+    daemon = subclassedMCQDaemonFalse(broker, busname, masterCommandQueueName,
+                                deadLetterQueueName, 1, False)
+
+    # connect to the queueus
+    commandQueueBus =get_to_bus(masterCommandQueueName, broker)
+    slaveCommandQueueBus = get_from_bus(slaveCommandQueueName,
+                                                 broker)
+
+    deadletterToQueue = get_to_bus(deadLetterQueueName,
+                                                 broker)
+
 
     # Excercise the SUT 
     # ****************************************
@@ -250,16 +269,22 @@ def test_default_process_deadletter_queue():
 
 
     msg = create_test_msg(payload)
-    deadlettertoqueue.send(msg)
+    deadletterToQueue.send(msg)
 
     # Exercise sut
+    # first close the deadletterqueue otherwise it is received also
+
     daemon._process_deadletter_queue() # Start the processing on the sut
 
     # check the deadletter queue
-    try:
-        msg_received = try_10_sec_to_get_msg(deadletterQueue)
+    #Connect to the deadletter queue to check for unread msg
+    deadletterQueue = get_from_bus(deadLetterQueueName,
+                                                 broker)
 
-    except Exception:  # we expect an exception!!
+    try:
+        msg_received = try_get_msg(deadletterQueue, wait_period=2)
+        print eval(msg_received.content().payload)
+    except IOError:  # we expect an IO exception!!
         pass
     else:
         raise Exception("received an unexpected msg on the deadletter queue")
@@ -267,6 +292,7 @@ def test_default_process_deadletter_queue():
     # clear the queueus
     commandQueueBus.close()
     deadletterQueue.close()
+    deadletterToQueue.close()
     daemon.close()
 
 # ******************** helper function ******************
@@ -295,7 +321,11 @@ def prepare_test(job_node, subclass):
     deadletterQueue = get_from_bus(deadLetterQueueName,
                                                  broker)
 
-    return daemon, commandQueueBus, slaveCommandQueueBus, deadletterQueue
+    deadletterToQueue = get_to_bus(deadLetterQueueName,
+                                                 broker)
+
+
+    return daemon, commandQueueBus, slaveCommandQueueBus, deadletterQueue, deadletterToQueue
 
 
 
@@ -344,7 +374,7 @@ def get_from_bus(slaveCommandQueueName, broker):
 
     return slaveCommandQueueBus
 
-def try_10_sec_to_get_msg(queue):
+def try_get_msg(queue, wait_period=10):
     """
     Helper function, try to get msg from queue. raise exception if not gotten
     after 10 sec. return msg if received
@@ -355,12 +385,15 @@ def try_10_sec_to_get_msg(queue):
     msg_received = None
     while (True):
         print "Waiting for msg"
-        if idx >= 10:
-            raise Exception("Did not receive a msg after 10 seconds!!")
+        if idx >= wait_period:
+            print "Did not receive a msg after {0} seconds!!".format(
+                      wait_period)
+
+            raise IOError("Did not receive a msg after 10 seconds!!")
 
         msg_received = queue.get(1)
         if msg_received is None:
-            print "Did not receive a msg on the slave command queue"
+            print "Did not receive a msg on  queue"
             idx += 1
             time.sleep(1)
             continue
@@ -373,11 +406,16 @@ def try_10_sec_to_get_msg(queue):
 
 
 if __name__ == "__main__":
+    print "test_not_implemented_exception_when_calling_superclass"
     test_not_implemented_exception_when_calling_superclass()
+    print "test_silent_eating_of_incorrect_commands()"
     test_silent_eating_of_incorrect_commands()
+    print "test_forwarding_of_job_msg_to_queue()"    
     test_forwarding_of_job_msg_to_queue()
+    print "test_subclass_processing()"
     test_subclass_processing()
-    test_default_process_deadletter_queue
+    print "test_default_process_deadletter_queue()"
+    test_default_process_deadletter_queue()
 
 
 
