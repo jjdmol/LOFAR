@@ -169,7 +169,7 @@ class FromBus(Session):
             receiver = self.session.receiver(self.address(queue, options))
 
             # Need capacity >=1 for 'self.session.next_receiver' to function across multiple queues
-            receiver.capacity = 1 #32
+            receiver.capacity = 1
         except messaging.MessagingError, m:
             raise BusException(m)
 

@@ -22,6 +22,7 @@ from datetime import datetime   # needed for duration
 import time
 
 import os
+import copy
 
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
@@ -58,17 +59,13 @@ class MCQDaemon(object):
                                              #loop_interval
         
         # Connect to the command queue
-        self._CommandQueue = msgbus.FromBus(
-                   self._masterCommandQueueName,
-              options = "create:always, node: { type: queue, durable: True}",
-              broker = self._broker)
+        self._CommandQueue = msgbus.FromBus(self._masterCommandQueueName,
+                                            broker = self._broker)
 
         self._daemon = daemon
 
         # Connect to bus
-        self._toBus = msgbus.ToBus(
-                   self._busname,
-              broker = self._broker)
+        self._toBus = msgbus.ToBus(self._busname, broker = self._broker)
 
         # Connect to the deadletter queue
                 # Connect to bus
@@ -158,6 +155,7 @@ class MCQDaemon(object):
             msg_content, command = unpacked_msg_data           
 
             if command == 'run_job':
+                
                 self._process_run_job(msg_content)               
                 self._CommandQueue.ack(msg)      
 
@@ -191,7 +189,7 @@ class MCQDaemon(object):
         # This information is need to perform local work and to know where
         # to send the information 
         node = msg_content['node']
-
+        
         msg = message.MessageContent(
                 from_="test",
                 forUser="MCQDaemon",
@@ -202,18 +200,11 @@ class MCQDaemon(object):
                 #sasid="", 
                 #qpidMsg=None
                       )
+
         msg.payload = msg_content
         msg.set_subject(node)
-        print "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-        print msg_content
-        print msg.payload
+
         self._toBus.send(msg)
-        print "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-
-
-
- 
-
 
 if __name__ == "__main__":
     daemon = MCQDaemon( 1, 40)

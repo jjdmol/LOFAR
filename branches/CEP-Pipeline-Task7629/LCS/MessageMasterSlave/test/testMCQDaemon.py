@@ -50,9 +50,8 @@ def get_slave_command_bus(slaveCommandQueueName, broker):
 
     slaveCommandQueueBus = None
     try:
-        slaveCommandQueueBus = msgbus.FromBus(
-                  slaveCommandQueueName,
-              broker = broker)
+        slaveCommandQueueBus = msgbus.FromBus(slaveCommandQueueName,
+                                              broker = broker)
 
     except Exception, ex:
         logger.error("Exception thrown by FromBus, this is probably caused"
@@ -70,7 +69,7 @@ def test_silent_eating_of_incorrect_commands():
     """
     # Some settings
     broker =  "locus102"
-    busname = "testbus"
+    busname = "testing9"
     #masterCommandQueueName = busname + "/" + "masterCommandQueueName"
     masterCommandQueueName = "masterCommandQueueName"
     # Create the sut
@@ -85,7 +84,7 @@ def test_silent_eating_of_incorrect_commands():
 
     # Test 1: incorrect command
     payload = {'command':'incorrect',  
-                   'node':'locus12',
+                   'node':'locus102',
                    'job':{}}
     msg = create_test_msg(payload)
     commandQueueBus.send(msg)
@@ -97,6 +96,9 @@ def test_silent_eating_of_incorrect_commands():
     commandQueueBus.send(msg)
     daemon._process_commands()
 
+    # Cleanup sut
+    commandQueueBus.close()
+
 
 
 def test_forwarding_of_job_msg_to_queue():
@@ -106,9 +108,10 @@ def test_forwarding_of_job_msg_to_queue():
     # config
     broker =  "locus102"
     job_node = 'locus102'
-    busname = "testbus10"
-    #masterCommandQueueName = busname + "/" + "masterCommandQueueName"
-    masterCommandQueueName =  "masterCommandQueueName"
+    busname = "testing9"
+    #busname = "testbus"
+    masterCommandQueueName = busname + "/" + "masterCommandQueueName"
+    #masterCommandQueueName = "masterCommandQueueName"
     slaveCommandQueueName = busname + "/" + job_node 
 
     # create the sut
@@ -126,12 +129,12 @@ def test_forwarding_of_job_msg_to_queue():
                    'node':job_node,
                    'job':{}}
 
+    time.sleep(1)
     msg = create_test_msg(send_payload)
     commandQueueBus.send(msg)
 
     # start the daemon processing
     daemon._process_commands()
-
   
 
     # validate that a job is received on the slave queue
@@ -141,6 +144,7 @@ def test_forwarding_of_job_msg_to_queue():
     msg_received = None
 
     while (True):
+        print "receiving on: {0}".format(slaveCommandQueueName)
         if idx >= 10:
             raise Exception("Did not receive a job command after 10 seconds!!")
 
@@ -159,6 +163,11 @@ def test_forwarding_of_job_msg_to_queue():
     # validate correct content
     if received_payload != send_payload:
         raise Exception("Send data not the same as received data")
+
+    # Cleanup sut
+    commandQueueBus.close()
+    slaveCommandQueueBus.close()
+
 
 
 
