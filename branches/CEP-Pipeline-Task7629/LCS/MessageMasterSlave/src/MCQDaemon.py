@@ -72,39 +72,47 @@ class MCQDaemon(object):
         self._toDeadletterBus = msgbus.ToBus(deadLetterQueueName,
                broker = self._broker)
 
+    def close(self):
+        """
+        close all owned connections.
+        """
+        self._CommandQueue.close()
+        self._toSlaveBus.close()
+        self._toDeadletterBus.close()
+
 
     def run(self):
-      """
-      Main loop of the daemon.
-      While(True)
+        """
+        Main loop of the daemon.
+        While(True)
 
-      1. Check all the 'connected' pipeline session ques for listeners
-        a. Clear queues with no listeners
-      2. Process all incomming commands
-      3. Call the process deadletter msg function with 
-      3. Wait for x seconds
+        1. Check all the 'connected' pipeline session ques for listeners
+          a. Clear queues with no listeners
+        2. Process all incomming commands
+        3. Call the process deadletter msg function with 
+        3. Wait for x seconds
 
-      """
-      while(True):   
-          begin_tick = datetime.now()
-          # 1.  check all registered pipeline queues for disconnects
+        """
+        while(True):   
+            begin_tick = datetime.now()
+            # 1.  check all registered pipeline queues for disconnects
 
-          # 2.  Process all incomming commands
-          quit_command_received = self._process_commands()
-          if (quit_command_received):
-              self._logger.warn("Recveived quit command. stopping daemon")
-              break     
-          end_tick = datetime.now()   
+            # 2.  Process all incomming commands
+            quit_command_received = self._process_commands()
+            if (quit_command_received):
+                self._logger.warn("Recveived quit command. stopping daemon")
+                break     
+            end_tick = datetime.now()   
 
-          #3. call deadletter process function with the deadletter queue
+            #3. call deadletter process function with the deadletter queue
 
 
-          # 4.  perform a sleep,
-          microseconds_per_second = 10e6
-          duration_loop_seconds = (end_tick - begin_tick).microseconds \
-                                  / microseconds_per_second
+            # 4.  perform a sleep,
+            microseconds_per_second = 10e6
+            duration_loop_seconds = (end_tick - begin_tick).microseconds \
+                                    / microseconds_per_second
       
-          self._sleep(duration_loop_seconds)
+            self._sleep(duration_loop_seconds)
 
 
     def _unpack_msg(self, msg):
@@ -143,16 +151,16 @@ class MCQDaemon(object):
             # Get the needed information from the msg
             unpacked_msg_data = self._unpack_msg(msg)
             if not unpacked_msg_data:
+                # Forward the msg to the deadletter queue
                 self._toDeadletterBus.send(msg)
                 self._CommandQueue.ack(msg) 
                 break
-                # TODO: Forward to the deadleter queue?
 
             unpacked_msg_content, command = unpacked_msg_data           
 
             if command == 'run_job':
                 
-                self._process_run_job(msg, unpacked_msg_content)               
+                self._process_run_job(unpacked_msg_content)               
                 self._CommandQueue.ack(msg)      
 
             elif command == 'quit':
@@ -176,32 +184,22 @@ class MCQDaemon(object):
         """
         pass
 
-    def _process_run_job(self, msg_in, unpacked_msg_content):
+    def _process_run_job(self, unpacked_msg_content):
         """
         The starting of a job on one of the node servers.
         """
+        node = unpacked_msg_content['node']        
+        # create new msg
 
-
-        # extract the job parameters from the msg
-        # This information is need to perform local work and to know where
-        # to send the information 
-        node = unpacked_msg_content['node']
-        
-        msg = message.MessageContent(
-                from_="test",
-                forUser="MCQDaemon",
-                summary="summary",
-                protocol="protocol",
-                protocolVersion="test", 
-                #momid="",
-                #sasid="", 
-                #qpidMsg=None
-                      )
-
+        msg = message.MessageContent()
+        # set content
         msg.payload = unpacked_msg_content
+        # set subject needed for dynamic routing
         msg.set_subject(node)
 
+        # send to bus using the slave as msg name allows for dynamic routing
         self._toSlaveBus.send(msg)
+
 
 if __name__ == "__main__":
     daemon = MCQDaemon( 1, 40)

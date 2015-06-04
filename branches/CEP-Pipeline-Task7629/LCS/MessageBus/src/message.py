@@ -214,6 +214,7 @@ class MessageContent(object):
         """
         self._subject = subject
 
+
 class Message(object):
     """
       Describes a QPID message, which can be received or sent.

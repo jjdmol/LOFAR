@@ -94,12 +94,17 @@ def test_silent_eating_of_incorrect_commands():
     """
     # Some settings
     broker =  "locus102"
-    busname = "testing9"
+    busname = "testmcqdaemon"
     masterCommandQueueName = busname + "/" + "masterCommandQueueName"
-    deadLetterQueueName = "testing9.proxy.deadletter"
+    deadLetterQueueName = busname + ".proxy.deadletter"
     # Create the sut
-    daemon = MCQDaemon.MCQDaemon(broker, busname, masterCommandQueueName,
-                                deadLetterQueueName, 1, False)
+    try:
+        daemon = MCQDaemon.MCQDaemon(broker, busname, masterCommandQueueName,
+                                    deadLetterQueueName, 1, False)
+    except Exception, ex:
+        print "         ******* Did you create the bus structure?? **********"
+        raise ex
+
 
     # connect to the bus
     commandQueueBus =get_command_queue_bus(masterCommandQueueName, broker)
@@ -149,7 +154,7 @@ def test_silent_eating_of_incorrect_commands():
     # clear the queueus
     commandQueueBus.close()
     deadletterQueue.close()
-
+    daemon.close()
 
 
 
@@ -160,12 +165,12 @@ def test_forwarding_of_job_msg_to_queue():
     # config
     broker =  "locus102"
     job_node = 'locus102'
-    busname = "testing9"
+    busname = "testmcqdaemon"
     #busname = "testbus"
     masterCommandQueueName = busname + "/" + "masterCommandQueueName"
     #masterCommandQueueName = "masterCommandQueueName"
     slaveCommandQueueName = busname + "/" + job_node 
-    deadLetterQueueName = busname + "." + "deadletter"
+    deadLetterQueueName = busname + ".proxy.deadletter"
     # create the sut
     daemon = MCQDaemon.MCQDaemon(broker, busname, masterCommandQueueName,
                                 deadLetterQueueName, 1, False)
@@ -203,7 +208,7 @@ def test_forwarding_of_job_msg_to_queue():
     # Cleanup sut
     commandQueueBus.close()
     slaveCommandQueueBus.close()
-
+    daemon.close()
 
 
 
