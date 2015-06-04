@@ -1,0 +1,8 @@
+/**
+
+\ingroup RTCP
+\defgroup Cobalt Cobalt
+
+The Cobalt package contains the correlation and beam-forming software that runs on the COBALT CPU/GPU cluster.
+
+*/
