@@ -1,4 +1,22 @@
-# import lofar.messagebus.MCQDaemon as MCQ  # communicate using the lib
+#!usr/bin/python
+# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+#
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# The LOFAR software suite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+#
+# $Id$
 
 import logging
 import time
@@ -11,81 +29,11 @@ import lofar.messagebus.MCQDaemon as MCQDaemon
 # Define logging. Until we have a python loging framework, we'll have
 # to do any initialising here
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
-logger=logging.getLogger("MessageBus")
+logger=logging.getLogger("testMCQDaemon")
 
 
-def create_test_msg(payload):
-    """
-    Creates a minimal valid msg with payload
-    """
-    msg = message.MessageContent(
-                from_="test",
-                forUser="MCQDaemon",
-                summary="summary",
-                protocol="protocol",
-                protocolVersion="test", 
-                #momid="",
-                #sasid="", 
-                #qpidMsg=None
-                      )
-    msg.payload = payload
-    return msg
-
-def get_command_queue_bus(masterCommandQueueName, broker):
-    """
-    Creates a command queue to bus
-    """
-    commandQueueBus = msgbus.ToBus(
-                   masterCommandQueueName,
-              options = "create:never, node: { type: queue, durable: True}",
-              broker = broker)
-
-    return commandQueueBus
-
-def get_slave_command_bus(slaveCommandQueueName, broker):
-    """
-    Helper function, creates validated frombus connected on the expected
-    slave bus name
-    """
-
-    slaveCommandQueueBus = None
-    try:
-        slaveCommandQueueBus = msgbus.FromBus(slaveCommandQueueName,
-                                              broker = broker)
-
-    except Exception, ex:
-        logger.error("Exception thrown by FromBus, this is probably caused"
-                     " by the msgbus routing not been set up correctly.")
-        raise ex
-
-    return slaveCommandQueueBus
-
-def try_10_sec_to_get_msg(queue):
-    """
-    Helper function, try to get msg from queue. raise exception if not gotten
-    after 10 sec. return msg if received
-
-    """
-    # We expect a deadletter on the 
-    idx = 0
-    msg_received = None
-    while (True):
-        print "Waiting for msg"
-        if idx >= 10:
-            raise Exception("Did not receive a msg after 10 seconds!!")
-
-        msg_received = queue.get(1)
-        if msg_received is None:
-            print "Did not receive a msg on the slave command queue"
-            idx += 1
-            time.sleep(1)
-            continue
-
-        queue.ack(msg_received)
-        break
-
-    return msg_received
- 
+# **********************************
+# MCQDaemon is a template class for testing we need to instantiate it
 class subclassedMCQDaemonFalse(MCQDaemon.MCQDaemon):
     """
     Shallow wrapper around the MCQDaemon.
@@ -119,29 +67,15 @@ class subclassedMCQDaemontestcommand(MCQDaemon.MCQDaemon):
             return True
         return false
 
-
+# **********************************************************
+# from here the test function
 def test_subclass_processing():
     """
-
+    Test if the subclass process_commands is called  
     """
-    # config
-    broker =  "locus102"
     job_node = 'locus102'
-    busname = "testmcqdaemon"
-    #busname = "testbus"
-    masterCommandQueueName = busname + "/" + "masterCommandQueueName"
-    #masterCommandQueueName = "masterCommandQueueName"
-    slaveCommandQueueName = busname + "/" + job_node 
-    deadLetterQueueName = busname + ".proxy.deadletter"
-    # create the sut
-    daemon = subclassedMCQDaemontestcommand(broker, busname, masterCommandQueueName,
-                                deadLetterQueueName, 1, False)
-
-    # connect to the queueus
-    commandQueueBus =get_command_queue_bus(masterCommandQueueName, broker)
-    slaveCommandQueueBus = get_slave_command_bus(slaveCommandQueueName,
-                                                 broker)
-
+    daemon, commandQueueBus, slaveCommandQueueBus,deadletterQueue = \
+        prepare_test(job_node, subclassedMCQDaemontestcommand)
 
     # Test1: Create a test job payuoad
     send_payload =  {'command':'testcommand',
@@ -176,31 +110,14 @@ def test_subclass_processing():
     slaveCommandQueueBus.close()
     daemon.close()
 
-
-
-
 def test_not_implemented_exception_when_calling_superclass():
     """
     The daemon should always be subclasses. The process command should raise
     a not implemented exception when used
     """
-    # config
-    broker =  "locus102"
     job_node = 'locus102'
-    busname = "testmcqdaemon"
-    #busname = "testbus"
-    masterCommandQueueName = busname + "/" + "masterCommandQueueName"
-    #masterCommandQueueName = "masterCommandQueueName"
-    slaveCommandQueueName = busname + "/" + job_node 
-    deadLetterQueueName = busname + ".proxy.deadletter"
-    # create the sut
-    daemon = MCQDaemon.MCQDaemon(broker, busname, masterCommandQueueName,
-                                deadLetterQueueName, 1, False)
-
-    # connect to the queueus
-    commandQueueBus =get_command_queue_bus(masterCommandQueueName, broker)
-    slaveCommandQueueBus = get_slave_command_bus(slaveCommandQueueName,
-                                                 broker)
+    daemon, commandQueueBus, slaveCommandQueueBus,deadletterQueue = \
+        prepare_test(job_node, MCQDaemon.MCQDaemon)
 
 
     # Test1: Create a test job payuoad
@@ -223,37 +140,16 @@ def test_not_implemented_exception_when_calling_superclass():
     commandQueueBus.close()
     slaveCommandQueueBus.close()
     daemon.close()
-    
-
-
-         
+           
 def test_silent_eating_of_incorrect_commands():
     """
     The Command queue daemon should always continue working, even in the case 
     of unknown of incorrect commands
     Send a number of broken msg to the command queue
     """
-    # Some settings
-    broker =  "locus102"
-    busname = "testmcqdaemon"
-    masterCommandQueueName = busname + "/" + "masterCommandQueueName"
-    deadLetterQueueName = busname + ".proxy.deadletter"
-    # Create the sut
-    try:
-        daemon = subclassedMCQDaemonFalse(broker, busname, masterCommandQueueName,
-                                    deadLetterQueueName, 1, False)
-    except Exception, ex:
-        print "         ******* Did you create the bus structure?? **********"
-        raise ex
-
-
-    # connect to the bus
-    commandQueueBus =get_command_queue_bus(masterCommandQueueName, broker)
-    
-    # connet to dead letter queue
-    deadletterQueue = get_slave_command_bus(deadLetterQueueName,
-                                                 broker)
-
+    job_node = 'locus102'
+    daemon, commandQueueBus, slaveCommandQueueBus,deadletterQueue = \
+        prepare_test(job_node, subclassedMCQDaemonFalse)
 
     # Excercise the SUT 
     # ****************************************
@@ -297,29 +193,13 @@ def test_silent_eating_of_incorrect_commands():
     deadletterQueue.close()
     daemon.close()
 
-
-
 def test_forwarding_of_job_msg_to_queue():
     """
-
+    A msg with the command run_job should be forwarded to jobnode
     """
-    # config
-    broker =  "locus102"
     job_node = 'locus102'
-    busname = "testmcqdaemon"
-    #busname = "testbus"
-    masterCommandQueueName = busname + "/" + "masterCommandQueueName"
-    #masterCommandQueueName = "masterCommandQueueName"
-    slaveCommandQueueName = busname + "/" + job_node 
-    deadLetterQueueName = busname + ".proxy.deadletter"
-    # create the sut
-    daemon = subclassedMCQDaemonFalse(broker, busname, masterCommandQueueName,
-                                deadLetterQueueName, 1, False)
-
-    # connect to the queueus
-    commandQueueBus =get_command_queue_bus(masterCommandQueueName, broker)
-    slaveCommandQueueBus = get_slave_command_bus(slaveCommandQueueName,
-                                                 broker)
+    daemon, commandQueueBus, slaveCommandQueueBus,deadletterQueue = \
+        prepare_test(job_node, subclassedMCQDaemonFalse)
 
 
     # Test1: Create a test job payuoad
@@ -335,7 +215,6 @@ def test_forwarding_of_job_msg_to_queue():
   
 
     # validate that a job is received on the slave queue
-
     # wait on the slave command queue
     msg_received = try_10_sec_to_get_msg(slaveCommandQueueBus)
 
@@ -352,6 +231,145 @@ def test_forwarding_of_job_msg_to_queue():
     daemon.close()
 
 
+def test_default_process_deadletter_queue():
+    """
+    The Command queue daemon should always continue working, even in the case 
+    of unknown of incorrect commands
+    Send a number of broken msg to the command queue
+    """
+    job_node = 'locus102'
+    daemon, commandQueueBus, slaveCommandQueueBus,deadletterQueue = \
+        prepare_test(job_node, subclassedMCQDaemonFalse)
+
+    # Excercise the SUT 
+    # ****************************************
+    # Test 1: incorrect command
+    payload = {'command':'incorrect',  
+                   'node':'locus102',
+                   'job':{}}
+
+
+    msg = create_test_msg(payload)
+    deadlettertoqueue.send(msg)
+
+    # Exercise sut
+    daemon._process_deadletter_queue() # Start the processing on the sut
+
+    # check the deadletter queue
+    try:
+        msg_received = try_10_sec_to_get_msg(deadletterQueue)
+
+    except Exception:  # we expect an exception!!
+        pass
+    else:
+        raise Exception("received an unexpected msg on the deadletter queue")
+
+    # clear the queueus
+    commandQueueBus.close()
+    deadletterQueue.close()
+    daemon.close()
+
+# ******************** helper function ******************
+def prepare_test(job_node, subclass):
+    """
+    Hides boiler plate code
+
+    return the deamon and needed
+    """
+        # config
+    broker =  "locus102"
+    busname = "testmcqdaemon"
+    #busname = "testbus"
+    masterCommandQueueName = busname + "/" + "masterCommandQueueName"
+    #masterCommandQueueName = "masterCommandQueueName"
+    slaveCommandQueueName = busname + "/" + job_node 
+    deadLetterQueueName = busname + ".proxy.deadletter"
+    # create the sut
+    daemon = subclass(broker, busname, masterCommandQueueName,
+                                deadLetterQueueName, 1, False)
+
+    # connect to the queueus
+    commandQueueBus =get_to_bus(masterCommandQueueName, broker)
+    slaveCommandQueueBus = get_from_bus(slaveCommandQueueName,
+                                                 broker)
+    deadletterQueue = get_from_bus(deadLetterQueueName,
+                                                 broker)
+
+    return daemon, commandQueueBus, slaveCommandQueueBus, deadletterQueue
+
+
+
+def create_test_msg(payload):
+    """
+    Creates a minimal valid msg with payload
+    """
+    msg = message.MessageContent(
+                from_="test",
+                forUser="MCQDaemon",
+                summary="summary",
+                protocol="protocol",
+                protocolVersion="test", 
+                #momid="",
+                #sasid="", 
+                #qpidMsg=None
+                      )
+    msg.payload = payload
+    return msg
+
+def get_to_bus(masterCommandQueueName, broker):
+    """
+    Creates a command queue to bus
+    """
+    commandQueueBus = msgbus.ToBus(
+                   masterCommandQueueName,
+              broker = broker)
+
+    return commandQueueBus
+
+def get_from_bus(slaveCommandQueueName, broker):
+    """
+    Helper function, creates validated frombus connected on the expected
+    slave bus name
+    """
+
+    slaveCommandQueueBus = None
+    try:
+        slaveCommandQueueBus = msgbus.FromBus(slaveCommandQueueName,
+                                              broker = broker)
+
+    except Exception, ex:
+        logger.error("Exception thrown by FromBus, this is probably caused"
+                     " by the msgbus routing not been set up correctly.")
+        raise ex
+
+    return slaveCommandQueueBus
+
+def try_10_sec_to_get_msg(queue):
+    """
+    Helper function, try to get msg from queue. raise exception if not gotten
+    after 10 sec. return msg if received
+
+    """
+    # We expect a deadletter on the 
+    idx = 0
+    msg_received = None
+    while (True):
+        print "Waiting for msg"
+        if idx >= 10:
+            raise Exception("Did not receive a msg after 10 seconds!!")
+
+        msg_received = queue.get(1)
+        if msg_received is None:
+            print "Did not receive a msg on the slave command queue"
+            idx += 1
+            time.sleep(1)
+            continue
+
+        queue.ack(msg_received)
+        break
+
+    return msg_received
+ 
 
 
 if __name__ == "__main__":
@@ -359,6 +377,7 @@ if __name__ == "__main__":
     test_silent_eating_of_incorrect_commands()
     test_forwarding_of_job_msg_to_queue()
     test_subclass_processing()
+    test_default_process_deadletter_queue
 
 
 

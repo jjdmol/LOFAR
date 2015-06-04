@@ -21,15 +21,8 @@
 from datetime import datetime   # needed for duration
 import time
 
-import os
-import copy
-
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
-
-# programmatically interact with the qpid broker
-from qpid.messaging import Connection	
-from qpidtoollibs import BrokerAgent
 
 # Define logging.  Until we have a python loging framework, we'll have
 # to do any initialising here
@@ -58,9 +51,7 @@ class MCQDaemon(object):
         self._loop_interval = loop_interval  # perform loop max once per 
                                              #loop_interval
         self._masterCommandQueueName = masterCommandQueueName
-        
 
-        
         # Connect to the command queue
         self._CommandQueue = msgbus.FromBus(self._masterCommandQueueName,
                                             broker = self._broker)
@@ -68,8 +59,12 @@ class MCQDaemon(object):
         # Connect to bus
         self._toSlaveBus = msgbus.ToBus(self._busname, broker = self._broker)
 
-        ## Connect to the deadletter queue
+        ## Connect tobus for the deadletter queue
         self._toDeadletterBus = msgbus.ToBus(deadLetterQueueName,
+               broker = self._broker)
+
+        ## Connect frombus to the deadletter queue
+        self._fromDeadletterBus = msgbus.FromBus(deadLetterQueueName,
                broker = self._broker)
 
     def close(self):
@@ -79,7 +74,6 @@ class MCQDaemon(object):
         self._CommandQueue.close()
         self._toSlaveBus.close()
         self._toDeadletterBus.close()
-
 
     def run(self):
         """
@@ -102,57 +96,67 @@ class MCQDaemon(object):
             if (quit_command_received):
                 self._logger.warn("Recveived quit command. stopping daemon")
                 break     
+            #3. call deadletter process function with the deadletter queue
+            self._process_deadletter_queue()
             end_tick = datetime.now()   
 
-            #3. call deadletter process function with the deadletter queue
-
-
-            # 4.  perform a sleep,
+            # 4.  TODO: I think there is something wrong with the sleep behaviour
+            # perform a sleep,
             microseconds_per_second = 10e6
             duration_loop_seconds = (end_tick - begin_tick).microseconds \
                                     / microseconds_per_second
       
             self._sleep(duration_loop_seconds)
 
-
-    def _unpack_msg(self, msg):
+    def _process_deadletter_queue(self):
         """
-        Private helper function unpacks a received msg and casts it to 
-        a msg_Content dict, the command string is also extracted
-        content and command are returned as a pair
-        returns None if an error was encountered
-        """
-        msg_content = None
-        command = None
-        try:
-                # currently the expected payload is a dict
-                msg_content = eval(msg.content().payload)
+        Process deadletters queue
 
-                command = msg_content['command'] 
-        except:
-                self._logger.warn(
-                   "***** warning **** encountered incorrect structured msg:")
-                self._logger.warn(msg.content())
-                return None
+        Default behaviour is printing the content and acking the msg
+        Create your own version of you want to handle the msg differently
 
-        return (msg_content, command)
+        eg. You could not remove them from the queue but 
+        do this in a different process
+        """     
+        while True:
+            # Test if the timeout is in milli seconds or second
+            msg = self._fromDeadletterBus.get(0.1)  #  use timeout.
+
+            if msg == None:
+               break    # exit msg processing
+
+            # Get the needed information from the msg
+            unpacked_msg_data = self._unpack_msg(msg)
+            if not unpacked_msg_data:  # if unpacking failed
+                self._logger.error(
+                    "Could not process deadletter, incorrect content")
+                self._logger.warn(msg)
+                self._fromDeadletterBus.ack(msg) 
+                break
+            # default implementation, report the deadletter and report
+            unpacked_msg_content, command = unpacked_msg_data   
+            self._logger.info(
+               "Received on deadletterqueue command: {0}".format(command))
+            self._logger.info("msg content: {0}".format(unpacked_msg_content))
+            self._logger.info("ignoring msg")
+            self._fromDeadletterBus.ack(msg) 
 
     def process_commands(self, command, unpacked_msg_content, msg):
         """
         Abstract interface definition.
 
         Allows extending of the class with additional commands
-
         should return True of the command is processed in the called function
-
         The received massaged should NOT be acked!!!!
         """
         raise NotImplementedError("MCQDaemon should always be inherited from")
 
-
     def _process_commands(self):
         """
         Process in order all commands in the command queue
+
+        If a quit command is received exit value is True
+        else None
         """     
         while True:
             # Test if the timeout is in milli seconds or second
@@ -191,7 +195,7 @@ class MCQDaemon(object):
             elif command == 'quit':
                 self._process_quit_msg(unpacked_msg_content)
                 self._CommandQueue.ack(msg)                         
-                return True  
+                return True  # TODO: test if true is returned on quit command
 
             else:
                 self._logger.warn("***** warning **** encountered unknown command")
@@ -205,9 +209,11 @@ class MCQDaemon(object):
         """
         Perform actions done on receiveing quit msg
 
-        1. For now do nothing
+        1. For now only close the connection and leave the major run loop 
+        this will probably result in the end of a calling programm
+        close
         """
-        pass
+        self.close()
 
     def _process_run_job(self, unpacked_msg_content):
         """
@@ -215,7 +221,7 @@ class MCQDaemon(object):
         """
         node = unpacked_msg_content['node']        
         # create new msg
-
+        # TODO: FOrwarding of the received msg in stead of creating new one.
         msg = message.MessageContent()
         # set content
         msg.payload = unpacked_msg_content
@@ -224,6 +230,28 @@ class MCQDaemon(object):
 
         # send to bus using the slave as msg name allows for dynamic routing
         self._toSlaveBus.send(msg)
+
+    def _unpack_msg(self, msg):
+        """
+        Private helper function unpacks a received msg and casts it to 
+        a msg_Content dict, the command string is also extracted
+        content and command are returned as a pair
+        returns None if an error was encountered
+        """
+        msg_content = None
+        command = None
+        try:
+                # currently the expected payload is a dict
+                msg_content = eval(msg.content().payload)
+
+                command = msg_content['command'] 
+        except:
+                self._logger.warn(
+                   "***** warning **** encountered incorrect structured msg:")
+                self._logger.warn(msg.content())
+                return None
+
+        return (msg_content, command)
 
 
 if __name__ == "__main__":
