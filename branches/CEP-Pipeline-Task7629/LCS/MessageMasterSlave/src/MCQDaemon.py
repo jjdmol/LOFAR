@@ -49,30 +49,28 @@ subclass
 """
 class MCQDaemon(object):
     def __init__(self, broker, busname, masterCommandQueueName,
+                 deadLetterQueueName,
                  loop_interval=10, daemon=True):
         self._logger = logging.getLogger("MCQDaemon")
-        self._broker = broker
-        self._masterCommandQueueName = masterCommandQueueName
-        self._busname = busname
 
+        self._broker = broker
+        self._busname = busname
         self._loop_interval = loop_interval  # perform loop max once per 
                                              #loop_interval
+        self._masterCommandQueueName = masterCommandQueueName
+        
+
         
         # Connect to the command queue
         self._CommandQueue = msgbus.FromBus(self._masterCommandQueueName,
                                             broker = self._broker)
 
-        self._daemon = daemon
-
         # Connect to bus
-        self._toBus = msgbus.ToBus(self._busname, broker = self._broker)
+        self._toSlaveBus = msgbus.ToBus(self._busname, broker = self._broker)
 
-        # Connect to the deadletter queue
-                # Connect to bus
-        #self._toBus = msgbus.ToBus(
-        #           self._busname,
-        #      options = "create:always, node: { type: queue, durable: True}",
-        #      broker = self._broker)
+        ## Connect to the deadletter queue
+        self._toDeadletterBus = msgbus.ToBus(deadLetterQueueName,
+               broker = self._broker)
 
 
     def run(self):
@@ -108,9 +106,6 @@ class MCQDaemon(object):
       
           self._sleep(duration_loop_seconds)
 
-          if not self._daemon:
-              break
-
 
     def _unpack_msg(self, msg):
         """
@@ -128,8 +123,8 @@ class MCQDaemon(object):
                 command = msg_content['command'] 
         except:
                 self._logger.warn(
-                   "***** warning **** encountered incorrect structure msg")
-                self._logger.error(msg.content())
+                   "***** warning **** encountered incorrect structured msg:")
+                self._logger.warn(msg.content())
                 return None
 
         return (msg_content, command)
@@ -148,25 +143,27 @@ class MCQDaemon(object):
             # Get the needed information from the msg
             unpacked_msg_data = self._unpack_msg(msg)
             if not unpacked_msg_data:
+                self._toDeadletterBus.send(msg)
                 self._CommandQueue.ack(msg) 
                 break
                 # TODO: Forward to the deadleter queue?
 
-            msg_content, command = unpacked_msg_data           
+            unpacked_msg_content, command = unpacked_msg_data           
 
             if command == 'run_job':
                 
-                self._process_run_job(msg_content)               
+                self._process_run_job(msg, unpacked_msg_content)               
                 self._CommandQueue.ack(msg)      
 
             elif command == 'quit':
-                self._process_quit_msg(msg_content)
+                self._process_quit_msg(unpacked_msg_content)
                 self._CommandQueue.ack(msg)                         
                 return True  
 
             else:
                 self._logger.warn("***** warning **** encountered unknown command")
-                self._logger.warn(msg_content)
+                self._logger.warn(unpacked_msg_content)
+                self._toDeadletterBus.send(msg)
                 self._CommandQueue.ack(msg)  # ack but not do anything
 
             continue
@@ -179,7 +176,7 @@ class MCQDaemon(object):
         """
         pass
 
-    def _process_run_job(self, msg_content):
+    def _process_run_job(self, msg_in, unpacked_msg_content):
         """
         The starting of a job on one of the node servers.
         """
@@ -188,7 +185,7 @@ class MCQDaemon(object):
         # extract the job parameters from the msg
         # This information is need to perform local work and to know where
         # to send the information 
-        node = msg_content['node']
+        node = unpacked_msg_content['node']
         
         msg = message.MessageContent(
                 from_="test",
@@ -201,10 +198,10 @@ class MCQDaemon(object):
                 #qpidMsg=None
                       )
 
-        msg.payload = msg_content
+        msg.payload = unpacked_msg_content
         msg.set_subject(node)
 
-        self._toBus.send(msg)
+        self._toSlaveBus.send(msg)
 
 if __name__ == "__main__":
     daemon = MCQDaemon( 1, 40)

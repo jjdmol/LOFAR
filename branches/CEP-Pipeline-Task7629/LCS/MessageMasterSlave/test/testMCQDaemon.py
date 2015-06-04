@@ -60,7 +60,32 @@ def get_slave_command_bus(slaveCommandQueueName, broker):
 
     return slaveCommandQueueBus
 
+def try_10_sec_to_get_msg(queue):
+    """
+    Helper function, try to get msg from queue. raise exception if not gotten
+    after 10 sec. return msg if received
 
+    """
+    # We expect a deadletter on the 
+    idx = 0
+    msg_received = None
+    while (True):
+        print "Waiting for msg"
+        if idx >= 10:
+            raise Exception("Did not receive a msg after 10 seconds!!")
+
+        msg_received = queue.get(1)
+        if msg_received is None:
+            print "Did not receive a msg on the slave command queue"
+            idx += 1
+            time.sleep(1)
+            continue
+
+        queue.ack(msg_received)
+        break
+
+    return msg_received
+    
 def test_silent_eating_of_incorrect_commands():
     """
     The Command queue daemon should always continue working, even in the case 
@@ -70,34 +95,61 @@ def test_silent_eating_of_incorrect_commands():
     # Some settings
     broker =  "locus102"
     busname = "testing9"
-    #masterCommandQueueName = busname + "/" + "masterCommandQueueName"
-    masterCommandQueueName = "masterCommandQueueName"
+    masterCommandQueueName = busname + "/" + "masterCommandQueueName"
+    deadLetterQueueName = "testing9.proxy.deadletter"
     # Create the sut
-    daemon = MCQDaemon.MCQDaemon(broker, busname, masterCommandQueueName, 1,
-                                 False)
+    daemon = MCQDaemon.MCQDaemon(broker, busname, masterCommandQueueName,
+                                deadLetterQueueName, 1, False)
 
     # connect to the bus
     commandQueueBus =get_command_queue_bus(masterCommandQueueName, broker)
+    
+    # connet to dead letter queue
+    deadletterQueue = get_slave_command_bus(deadLetterQueueName,
+                                                 broker)
 
 
     # Excercise the SUT 
-
+    # ****************************************
     # Test 1: incorrect command
     payload = {'command':'incorrect',  
                    'node':'locus102',
                    'job':{}}
     msg = create_test_msg(payload)
     commandQueueBus.send(msg)
+
+    # Exercise sut
     daemon._process_commands() # Start the processing on the sut
+
+    # We expect a deadletter on the 
+    idx = 0
+    msg_received = try_10_sec_to_get_msg(deadletterQueue)
     
+    received_payload = eval(msg_received.content().payload)
+    if payload != received_payload:
+        raise Exception("Did not receive the correct msg on the deadletterq")
     
+    # ****************************************
     # test 2: No payload
-    msg.payload = None
+    send_payload = "Some text"
+    msg = create_test_msg(send_payload)
     commandQueueBus.send(msg)
+
+    # Exercise sut
     daemon._process_commands()
 
-    # Cleanup sut
+    # check the deadletter queue
+    msg_received = try_10_sec_to_get_msg(deadletterQueue)
+
+    # validate the content
+    received_payload = msg_received.content().payload
+    if send_payload != received_payload:
+         raise Exception("Did not receive the correct msg on the deadletterq")
+
+    # clear the queueus
     commandQueueBus.close()
+    deadletterQueue.close()
+
 
 
 
@@ -113,10 +165,10 @@ def test_forwarding_of_job_msg_to_queue():
     masterCommandQueueName = busname + "/" + "masterCommandQueueName"
     #masterCommandQueueName = "masterCommandQueueName"
     slaveCommandQueueName = busname + "/" + job_node 
-
+    deadLetterQueueName = busname + "." + "deadletter"
     # create the sut
-    daemon = MCQDaemon.MCQDaemon(broker, busname, masterCommandQueueName, 1,
-                                 False)
+    daemon = MCQDaemon.MCQDaemon(broker, busname, masterCommandQueueName,
+                                deadLetterQueueName, 1, False)
 
     # connect to the queueus
     commandQueueBus =get_command_queue_bus(masterCommandQueueName, broker)
@@ -129,7 +181,6 @@ def test_forwarding_of_job_msg_to_queue():
                    'node':job_node,
                    'job':{}}
 
-    time.sleep(1)
     msg = create_test_msg(send_payload)
     commandQueueBus.send(msg)
 
@@ -140,23 +191,8 @@ def test_forwarding_of_job_msg_to_queue():
     # validate that a job is received on the slave queue
 
     # wait on the slave command queue
-    idx = 0
-    msg_received = None
+    msg_received = try_10_sec_to_get_msg(slaveCommandQueueBus)
 
-    while (True):
-        print "receiving on: {0}".format(slaveCommandQueueName)
-        if idx >= 10:
-            raise Exception("Did not receive a job command after 10 seconds!!")
-
-        msg_received = slaveCommandQueueBus.get(1)
-        if msg_received is None:
-            print "Did not receive a msg on the slave command queue"
-            idx += 1
-            time.sleep(1)
-            continue
-
-        slaveCommandQueueBus.ack(msg_received)
-        break
     # unpack received data
     received_payload = eval(msg_received.content().payload)
 
