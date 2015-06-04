@@ -115,6 +115,29 @@ class MCQDaemon(object):
               break
 
 
+    def _unpack_msg(self, msg):
+        """
+        Private helper function unpacks a received msg and casts it to 
+        a msg_Content dict, the command string is also extracted
+        content and command are returned as a pair
+        returns None if an error was encountered
+        """
+        msg_content = None
+        command = None
+        try:
+                # currently the expected payload is a dict
+                msg_content = eval(msg.content().payload)
+
+                command = msg_content['command'] 
+        except:
+                self._logger.warn(
+                   "***** warning **** encountered incorrect structure msg")
+                self._logger.error(msg.content())
+                return None
+
+        return (msg_content, command)
+
+
     def _process_commands(self):
         """
         Process in order all commands in the command queue
@@ -125,38 +148,30 @@ class MCQDaemon(object):
             if msg == None:
                break    # exit msg processing
 
-            msg_content = None
-            command     = None
-            try:
-                # currently the expected payload is a dict
-                msg_content = eval(msg.content().payload)
+            # Get the needed information from the msg
+            unpacked_msg_data = self._unpack_msg(msg)
+            if not unpacked_msg_data:
+                self._CommandQueue.ack(msg) 
+                break
+                # TODO: Forward to the deadleter queue?
 
-                # now process the commands
-                command = msg_content['command'] 
-            except:
-                self._logger.warn(
-                   "***** warning **** encountered incorrect structure msg")
-                self._logger.error(msg.content())
-                self._CommandQueue.ack(msg)  
-                continue
-
+            msg_content, command = unpacked_msg_data           
 
             if command == 'run_job':
-                self._process_run_job(msg_content)
+                self._process_run_job(msg_content)               
                 self._CommandQueue.ack(msg)      
 
             elif command == 'quit':
                 self._process_quit_msg(msg_content)
                 self._CommandQueue.ack(msg)                         
-                return True  # do NOT save the current state, might be cleared due to
-              # this command
+                return True  
 
             else:
                 self._logger.warn("***** warning **** encountered unknown command")
                 self._logger.warn(msg_content)
                 self._CommandQueue.ack(msg)  # ack but not do anything
 
-
+            continue
     
     def _process_quit_msg(self, msg_content):
         """
@@ -193,13 +208,9 @@ class MCQDaemon(object):
         print msg_content
         print msg.payload
         self._toBus.send(msg)
-
         print "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
 
 
-        #        raise Exception("Received job msg")
-
-        # send job on to the slave
 
  
 

@@ -14,28 +14,10 @@ logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=loggin
 logger=logging.getLogger("MessageBus")
 
 
-
-def test_silent_eating_of_unknown_commands():
+def create_test_msg(payload):
     """
-    The Command queue daemon should always continue working, even in the case 
-    of unknown of incorrect commands
-    Send a number of broken msg to the command queue
+    Creates a minimal valid msg with payload
     """
-    broker =  "locus102"
-    busname = "testbus"
-    masterCommandQueueName = "masterCommandQueueName"
-    daemon = MCQDaemon.MCQDaemon(broker, busname, masterCommandQueueName, 1,
-                                 False)
-
-    # create a connection to the command queue
-
-    # Connect to the command queue
-    commandQueueBus = msgbus.ToBus(
-                   masterCommandQueueName,
-              options = "create:never, node: { type: queue, durable: True}",
-              broker = broker)
-
-
     msg = message.MessageContent(
                 from_="test",
                 forUser="MCQDaemon",
@@ -46,15 +28,71 @@ def test_silent_eating_of_unknown_commands():
                 #sasid="", 
                 #qpidMsg=None
                       )
+    msg.payload = payload
+    return msg
 
-    # Unknown command
-    msg.payload = {'command':'incorrect',
+def get_command_queue_bus(masterCommandQueueName, broker):
+    """
+    Creates a command queue to bus
+    """
+    commandQueueBus = msgbus.ToBus(
+                   masterCommandQueueName,
+              options = "create:never, node: { type: queue, durable: True}",
+              broker = broker)
+
+    return commandQueueBus
+
+def get_slave_command_bus(slaveCommandQueueName, broker):
+    """
+    Helper function, creates validated frombus connected on the expected
+    slave bus name
+    """
+
+    slaveCommandQueueBus = None
+    try:
+        slaveCommandQueueBus = msgbus.FromBus(
+                  slaveCommandQueueName,
+              broker = broker)
+
+    except Exception, ex:
+        logger.error("Exception thrown by FromBus, this is probably caused"
+                     " by the msgbus routing not been set up correctly.")
+        raise ex
+
+    return slaveCommandQueueBus
+
+
+def test_silent_eating_of_incorrect_commands():
+    """
+    The Command queue daemon should always continue working, even in the case 
+    of unknown of incorrect commands
+    Send a number of broken msg to the command queue
+    """
+    # Some settings
+    broker =  "locus102"
+    busname = "testbus"
+    #masterCommandQueueName = busname + "/" + "masterCommandQueueName"
+    masterCommandQueueName = "masterCommandQueueName"
+    # Create the sut
+    daemon = MCQDaemon.MCQDaemon(broker, busname, masterCommandQueueName, 1,
+                                 False)
+
+    # connect to the bus
+    commandQueueBus =get_command_queue_bus(masterCommandQueueName, broker)
+
+
+    # Excercise the SUT 
+
+    # Test 1: incorrect command
+    payload = {'command':'incorrect',  
                    'node':'locus12',
                    'job':{}}
+    msg = create_test_msg(payload)
     commandQueueBus.send(msg)
-    daemon._process_commands()
-
-    # No payload
+    daemon._process_commands() # Start the processing on the sut
+    
+    
+    # test 2: No payload
     msg.payload = None
     commandQueueBus.send(msg)
     daemon._process_commands()
@@ -65,75 +103,60 @@ def test_forwarding_of_job_msg_to_queue():
     """
 
     """
+    # config
     broker =  "locus102"
+    job_node = 'locus102'
     busname = "testbus10"
-    masterCommandQueueName = "masterCommandQueueName2"
+    #masterCommandQueueName = busname + "/" + "masterCommandQueueName"
+    masterCommandQueueName =  "masterCommandQueueName"
+    slaveCommandQueueName = busname + "/" + job_node 
+
+    # create the sut
     daemon = MCQDaemon.MCQDaemon(broker, busname, masterCommandQueueName, 1,
                                  False)
 
-    job_node = 'locus102'
-    # create a connection to the command queue
+    # connect to the queueus
+    commandQueueBus =get_command_queue_bus(masterCommandQueueName, broker)
+    slaveCommandQueueBus = get_slave_command_bus(slaveCommandQueueName,
+                                                 broker)
 
-    # Connect to the command queue
-    commandQueueBus = msgbus.ToBus(
-                   masterCommandQueueName,
-              options = "create:never, node: { type: queue, durable: True}",
-              broker = broker)
 
-    slaveCommandQueueName = busname + "/" + job_node 
-    # connect to the receive bus for the node
-    slaveCommandQueueBus = None
-    try:
-        print 
-        slaveCommandQueueBus = msgbus.FromBus(
-                  slaveCommandQueueName,
-              broker = broker)
-
-    except Exception, ex:
-        logger.error("Exception thrown by FromBus, this is probably caused"
-                     " by the msgbus routing not been set up correctly.")
-        raise ex
-
-    msg = message.MessageContent(
-                from_="test",
-                forUser="MCQDaemon",
-                summary="summary",
-                protocol="protocol",
-                protocolVersion="test", 
-                #momid="",
-                #sasid="", 
-                #qpidMsg=None
-                      )
-
+    # Test1: Create a test job payuoad
     send_payload =  {'command':'run_job',
                    'node':job_node,
                    'job':{}}
-    msg.payload = send_payload
-    print "sending msg on {0}".format(masterCommandQueueName)
+
+    msg = create_test_msg(send_payload)
     commandQueueBus.send(msg)
 
+    # start the daemon processing
     daemon._process_commands()
+
+  
+
+    # validate that a job is received on the slave queue
+
+    # wait on the slave command queue
+    idx = 0
     msg_received = None
+
     while (True):
+        if idx >= 10:
+            raise Exception("Did not receive a job command after 10 seconds!!")
+
         msg_received = slaveCommandQueueBus.get(1)
         if msg_received is None:
-            print "get none from queue"
+            print "Did not receive a msg on the slave command queue"
+            idx += 1
             time.sleep(1)
             continue
 
-
-        print "we received a msg"
         slaveCommandQueueBus.ack(msg_received)
         break
-
-    print "***********************"
-    print msg_received.content()
-    print "***********************"
-
-
+    # unpack received data
     received_payload = eval(msg_received.content().payload)
-    print received_payload
 
+    # validate correct content
     if received_payload != send_payload:
         raise Exception("Send data not the same as received data")
 
@@ -141,7 +164,7 @@ def test_forwarding_of_job_msg_to_queue():
 
 
 if __name__ == "__main__":
-    #test_silent_eating_of_unknown_commands()
+    test_silent_eating_of_incorrect_commands()
     test_forwarding_of_job_msg_to_queue()
 
 
