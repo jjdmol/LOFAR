@@ -85,7 +85,148 @@ def try_10_sec_to_get_msg(queue):
         break
 
     return msg_received
+ 
+class subclassedMCQDaemonFalse(MCQDaemon.MCQDaemon):
+    """
+    Shallow wrapper around the MCQDaemon.
+
+    MCQDaemon is an abstract class and should always ben subclassed.
+    Only a two function MUST be implemented process_commands 
+    """
+    def __init__(self, *args, **kwargs):
+        super(subclassedMCQDaemonFalse, self).__init__(*args, **kwargs)
     
+    def process_commands(self, command, unpacked_msg_content, msg):
+        return False
+
+class subclassedMCQDaemontestcommand(MCQDaemon.MCQDaemon):
+    """
+    Shallow wrapper around the MCQDaemon.
+
+    if the received command is testcommand forward adapted msg to slave queue
+    return true
+    """
+    def __init__(self, *args, **kwargs):
+        super(subclassedMCQDaemontestcommand, self).__init__(*args, **kwargs)
+    
+    def process_commands(self, command, unpacked_msg_content, msg):
+
+        if command == "testcommand":
+            adapted_content = unpacked_msg_content
+            adapted_content['testcommand']="received"
+
+            self._process_run_job(adapted_content)
+            return True
+        return false
+
+
+def test_subclass_processing():
+    """
+
+    """
+    # config
+    broker =  "locus102"
+    job_node = 'locus102'
+    busname = "testmcqdaemon"
+    #busname = "testbus"
+    masterCommandQueueName = busname + "/" + "masterCommandQueueName"
+    #masterCommandQueueName = "masterCommandQueueName"
+    slaveCommandQueueName = busname + "/" + job_node 
+    deadLetterQueueName = busname + ".proxy.deadletter"
+    # create the sut
+    daemon = subclassedMCQDaemontestcommand(broker, busname, masterCommandQueueName,
+                                deadLetterQueueName, 1, False)
+
+    # connect to the queueus
+    commandQueueBus =get_command_queue_bus(masterCommandQueueName, broker)
+    slaveCommandQueueBus = get_slave_command_bus(slaveCommandQueueName,
+                                                 broker)
+
+
+    # Test1: Create a test job payuoad
+    send_payload =  {'command':'testcommand',
+                   'node':job_node,
+                   'job':{}}
+
+    msg = create_test_msg(send_payload)
+    commandQueueBus.send(msg)
+
+    # start the daemon processing
+    daemon._process_commands()
+  
+
+    # validate that a job is received on the slave queue
+
+    # wait on the slave command queue
+    msg_received = try_10_sec_to_get_msg(slaveCommandQueueBus)
+
+    # unpack received data
+    received_payload = eval(msg_received.content().payload)
+
+    expected_payload = {'testcommand':"received",
+                   'command':'testcommand',
+                   'node':job_node,
+                   'job':{}}
+    # validate correct content
+    if expected_payload != received_payload:
+        raise Exception("Send data not the same as received data")
+
+    # Cleanup sut
+    commandQueueBus.close()
+    slaveCommandQueueBus.close()
+    daemon.close()
+
+
+
+
+def test_not_implemented_exception_when_calling_superclass():
+    """
+    The daemon should always be subclasses. The process command should raise
+    a not implemented exception when used
+    """
+    # config
+    broker =  "locus102"
+    job_node = 'locus102'
+    busname = "testmcqdaemon"
+    #busname = "testbus"
+    masterCommandQueueName = busname + "/" + "masterCommandQueueName"
+    #masterCommandQueueName = "masterCommandQueueName"
+    slaveCommandQueueName = busname + "/" + job_node 
+    deadLetterQueueName = busname + ".proxy.deadletter"
+    # create the sut
+    daemon = MCQDaemon.MCQDaemon(broker, busname, masterCommandQueueName,
+                                deadLetterQueueName, 1, False)
+
+    # connect to the queueus
+    commandQueueBus =get_command_queue_bus(masterCommandQueueName, broker)
+    slaveCommandQueueBus = get_slave_command_bus(slaveCommandQueueName,
+                                                 broker)
+
+
+    # Test1: Create a test job payuoad
+    send_payload =  {'command':'run_job',
+                   'node':job_node,
+                   'job':{}}
+
+    msg = create_test_msg(send_payload)
+    commandQueueBus.send(msg)
+
+    # start the daemon processing
+    try:
+        daemon._process_commands()
+    except NotImplementedError, Exception:
+        pass
+    else:
+        raise Exception("The daemon should throw an exception when not subclassed")
+  
+    # Cleanup sut
+    commandQueueBus.close()
+    slaveCommandQueueBus.close()
+    daemon.close()
+    
+
+
+         
 def test_silent_eating_of_incorrect_commands():
     """
     The Command queue daemon should always continue working, even in the case 
@@ -99,7 +240,7 @@ def test_silent_eating_of_incorrect_commands():
     deadLetterQueueName = busname + ".proxy.deadletter"
     # Create the sut
     try:
-        daemon = MCQDaemon.MCQDaemon(broker, busname, masterCommandQueueName,
+        daemon = subclassedMCQDaemonFalse(broker, busname, masterCommandQueueName,
                                     deadLetterQueueName, 1, False)
     except Exception, ex:
         print "         ******* Did you create the bus structure?? **********"
@@ -172,7 +313,7 @@ def test_forwarding_of_job_msg_to_queue():
     slaveCommandQueueName = busname + "/" + job_node 
     deadLetterQueueName = busname + ".proxy.deadletter"
     # create the sut
-    daemon = MCQDaemon.MCQDaemon(broker, busname, masterCommandQueueName,
+    daemon = subclassedMCQDaemonFalse(broker, busname, masterCommandQueueName,
                                 deadLetterQueueName, 1, False)
 
     # connect to the queueus
@@ -214,8 +355,10 @@ def test_forwarding_of_job_msg_to_queue():
 
 
 if __name__ == "__main__":
+    test_not_implemented_exception_when_calling_superclass()
     test_silent_eating_of_incorrect_commands()
     test_forwarding_of_job_msg_to_queue()
+    test_subclass_processing()
 
 
 

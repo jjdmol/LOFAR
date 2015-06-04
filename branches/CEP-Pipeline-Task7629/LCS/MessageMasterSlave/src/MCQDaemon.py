@@ -137,6 +137,18 @@ class MCQDaemon(object):
 
         return (msg_content, command)
 
+    def process_commands(self, command, unpacked_msg_content, msg):
+        """
+        Abstract interface definition.
+
+        Allows extending of the class with additional commands
+
+        should return True of the command is processed in the called function
+
+        The received massaged should NOT be acked!!!!
+        """
+        raise NotImplementedError("MCQDaemon should always be inherited from")
+
 
     def _process_commands(self):
         """
@@ -145,6 +157,7 @@ class MCQDaemon(object):
         while True:
             # Test if the timeout is in milli seconds or second
             msg = self._CommandQueue.get(0.1)  # get is blocking, use timeout.
+
             if msg == None:
                break    # exit msg processing
 
@@ -158,6 +171,18 @@ class MCQDaemon(object):
 
             unpacked_msg_content, command = unpacked_msg_data           
 
+            # Send the command and msg to the process_command function
+            # of the sub class
+            if self.process_commands(command, unpacked_msg_content, msg):
+                try:
+                    self._CommandQueue.ack(msg)  
+                except Exception, ex:
+                    self._logger.error("Failed to ack a msg for subclass")
+                    self._logger.error("Did you ack the msg yourselve?")
+
+                continue   # command is processed by the subclass
+
+            # Default behaviour:
             if command == 'run_job':
                 
                 self._process_run_job(unpacked_msg_content)               
