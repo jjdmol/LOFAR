@@ -42,14 +42,7 @@ And a run_job member function performing the actual posting.
 The default deadletter queue functionality is currently used (print and ignore)
 """
 
-
-class PipelineMCQDaemon(MCQDaemon.MCQDaemon):
-    def __init__(self, broker, busname, masterCommandQueueName,
-                 deadLetterQueueName, loop_interval=10, daemon=True):
-        super(PipelineMCQDaemon, self).__init__(broker, busname, masterCommandQueueName,
-                 deadLetterQueueName, loop_interval, daemon)
-        pass
-
+import lofarpipe.daemons.pipelineMCQDaemonImp as pipelineMCQDaemon
 
 
 if __name__ == "__main__":
@@ -61,7 +54,7 @@ if __name__ == "__main__":
     deadLetterQueueName = busname + "/" + ".proxy.deadletter"
 
 
-    daemon = PipelineMCQDaemon(broker, busname, masterCommandQueueName,
+    daemon = pipelineMCQDaemon.PipelineMCQDaemon(broker, busname, masterCommandQueueName,
                                deadLetterQueueName, 1, True)
 
     daemon.run()
