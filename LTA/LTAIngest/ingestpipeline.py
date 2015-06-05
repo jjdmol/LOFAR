@@ -88,8 +88,7 @@ class IngestPipeline():
     self.status          = IngestStarted
 
     ## Set logger
-    logging.basicConfig(filename=logdir + self.ExportID + '.log', level=logging.DEBUG, format="%(asctime)-15s %(levelname)s %(message)s")
-    self.logger =logging.getLogger()
+    self.logger =logging.getLogger('Slave')
     self.logger.info('--------- Job logger initialized ---------')
 
   def GetStorageTicket(self):

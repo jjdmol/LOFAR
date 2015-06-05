@@ -3,6 +3,7 @@
 lofar_package(LTAIngest 0.1) # DEPENDS Common)
 
 include(PythonInstall)
+set(USE_PYTHON_COMPILATION Off)
 
 python_install(
 	ingestpipeline.py
@@ -233,12 +234,49 @@ python_install(
 	SOAPpy-0.12.0/validate/silabserver.py
 	job_group.py
 	master.py
-	ingest_config.py
 	user_ingest.py
 	do_ltacp.py
 	simple_server.py
 	__init__.py
   DESTINATION LTAIngest)
+
+#determine LTAINGEST_LOG_ROOT_DIR for various build hosts (used in ingest_config.py.in)
+if(NOT DEFINED LTAINGEST_LOG_ROOT_DIR)
+  set(LTAINGEST_LOG_ROOT_DIR "/tmp/ingest/")
+endif()
+
+#settings dir for ingest
+set(LTAINGEST_CFG_DIR "${CMAKE_INSTALL_PREFIX}/.ltaingest")
+
+#configure ingest_config.py.in with the various host and environment specific variables.
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/ingest_config.py.in
+  ${CMAKE_CURRENT_BINARY_DIR}/ingest_config.py @ONLY)
+
+#include configured ingest_config.py in python install.
+python_install(
+  ${CMAKE_CURRENT_BINARY_DIR}/ingest_config.py
+  DESTINATION LTAIngest)
+
+#configure ingest_logrotate.conf.in with @LTAINGEST_LOG_ROOT_DIR@
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/ingest_logrotate.conf.in
+  ${CMAKE_CURRENT_BINARY_DIR}/ingest_logrotate.conf @ONLY)
+
+#install ingest_logrotate.conf in LTAINGEST_CFG_DIR
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/ingest_logrotate.conf
+  DESTINATION ${LTAINGEST_CFG_DIR})
+
+#configure ingest_install_logrotate_crontab.sh.in with @LTAINGEST_CFG_DIR@
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/ingest_install_logrotate_crontab.sh.in
+  ${CMAKE_CURRENT_BINARY_DIR}/ingest_install_logrotate_crontab.sh @ONLY)
+
+#install ingest_install_logrotate_crontab.sh in bin
+install(PROGRAMS
+  ${CMAKE_CURRENT_BINARY_DIR}/ingest_install_logrotate_crontab.sh
+  DESTINATION bin)
 
 add_subdirectory(test)
   
