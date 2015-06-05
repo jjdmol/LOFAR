@@ -8,6 +8,7 @@ include(LofarCTest)
   
 lofar_add_test(testMCQDaemon)
 lofar_add_test(testSCQDaemon)
+lofar_add_test(testCQDaemon)
 #lofar_add_test(testNCQLib)
 #lofar_add_test(testBrokerConsumercount)
 # if(HAVE_QPID)
