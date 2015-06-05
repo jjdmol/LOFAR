@@ -25,6 +25,27 @@ import lofarpipe.daemons.pipelineSCQDaemonImp as pipelineSCQDaemon
 
 import unittest
 
+
+# Wraps the actual slave implementation, allows to catch calls to internal 
+# function we need to validate.
+class testForwardOfJobMsgToQueueuSlaveWrapper(
+            pipelineSCQDaemon.PipelineSCQDaemon):
+    def __init__(self, broker, busname, masterCommandQueueName,
+                 deadLetterQueueName, loop_interval, daemon):
+        super(testForwardOfJobMsgToQueueuSlaveWrapper, self).__init__(
+           broker, busname, 
+           masterCommandQueueName, deadLetterQueueName,
+           loop_interval, daemon)
+        pass
+        self._start_subprocess_called = False
+
+    def _start_subprocess(self):
+
+        self._start_subprocess_called = True
+        
+
+
+
 class testForwardOfJobMsgToQueueuSlave(unittest.TestCase):
 
     def __init__(self, arg):  
@@ -44,7 +65,7 @@ class testForwardOfJobMsgToQueueuSlave(unittest.TestCase):
         """
         job_node = 'locus102'
         daemon, commandQueueBus, deadletterQueue, deadletterToQueue = \
-            testFunctions.prepare_test( pipelineSCQDaemon.PipelineSCQDaemon)
+            testFunctions.prepare_test( testForwardOfJobMsgToQueueuSlaveWrapper)
 
         slaveCommandQueueBusName = "testmcqdaemon" + "/" + job_node
         slaveCommandQueueBus = testFunctions.get_from_bus( 
@@ -62,15 +83,9 @@ class testForwardOfJobMsgToQueueuSlave(unittest.TestCase):
         daemon._process_commands()
   
 
-        # validate that a job is received on the slave queue
-        # wait on the slave command queue
-        msg_received = testFunctions.try_get_msg(slaveCommandQueueBus)
-
-        # unpack received data
-        received_payload = eval(msg_received.content().payload)
-
         # validate correct content
-        self.assertTrue(received_payload == send_payload, "Send data not the same as received data")
+        self.assertTrue(daemon._start_subprocess_called,
+             "Sending a valid job msg did not result in a start_subproces call")
 
         # Cleanup sut
         commandQueueBus.close()
