@@ -34,6 +34,7 @@ python_install(
   support/utilities.py
   support/xmllogging.py
   support/usagestats.py
+  daemons/__init__.py
   daemons/pipelineMCQDaemonImp.py
   DESTINATION lofarpipe)
 

@@ -21,7 +21,7 @@ import logging
 
 import lofar.messagebus.MCQDaemon as MCQDaemon
 import CQDaemonTestFunctions as testFunctions
-import lofarpipeline.daemons.pipelineMCQDaemon as pipelineMCQDaemon
+import lofarpipe.daemons.pipelineMCQDaemonImp as pipelineMCQDaemon
 
 
 # Define logging. Until we have a python loging framework, we'll have

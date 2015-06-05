@@ -271,3 +271,11 @@ class CQDaemon(object):
 
         return (msg_content, command)
 
+    def _sleep(self, duration_loop_seconds):
+        """
+        Perform a sleep with the duration loop_interval - duration last loop
+        """
+        sleep_time = self._loop_interval - duration_loop_seconds
+
+        self._logger.info("Starting sleep for {0} seconds".format(sleep_time))
+        time.sleep(sleep_time)

@@ -17,33 +17,7 @@
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
 # $Id$
-
-import lofar.messagebus.MCQDaemon as MCQDaemon
-
-import lofar.
-# Define logging.  Until we have a python loging framework, we'll have
-# to do any initialising here
-import logging
-logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
-
-"""
-Master command queue. Extends the command queue interface with the 
-start job message and functionality
-1. A single commands is support 
-   (b) msg with content {'command':'run_job',
-                       'node':job_node,
-                       'job':{}} 
-  will result in a msg being send to the command queue for job_node with the 
-  copied content.
-
-It add a bus to object where to send the job msg to
-And a run_job member function performing the actual posting.
-
-The default deadletter queue functionality is currently used (print and ignore)
-"""
-
 import lofarpipe.daemons.pipelineMCQDaemonImp as pipelineMCQDaemon
-
 
 if __name__ == "__main__":
     # TODO: Read these parameters from a config file
