@@ -1,5 +1,8 @@
 #!/bin/bash
 
+source MessageFuncs.sh
+create_queue lofar.task.feedback.dataproducts
+
 # remove any output files from prev runs
 rm -f tMultiPartTABOutput-L123881_SAP000_B000_P00?_bf.h5 tMultiPartTABOutput-L123881_SAP000_B000_P00?_bf.raw
 
