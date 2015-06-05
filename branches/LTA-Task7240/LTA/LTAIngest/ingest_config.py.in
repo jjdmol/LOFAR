@@ -1,5 +1,10 @@
 #!/usr/bin/env python
-import xmlrpclib, socket, os, logging, logging.handlers, time
+import xmlrpclib
+import socket
+import os
+import logging
+import logging.handlers
+import time
 import sitecustomize
 try:
   #from wsrt_webdavlib import wsrt_webdavlib # just in here so we can test it exists
@@ -50,21 +55,13 @@ if ipaddress == masterAddress:
 else:
   master = False
 
-## Make directories if needed, should include trailing /
-#default (local) logroot
-logroot = '/tmp/ingest/'
-
-#special cases for production lexar and lotart systems
-if 'lexar' in host:
-  logroot = '/log/ingest/'
-if 'lotar' in host:
-  logroot = '/home/lofarlocal/log/ingest'
-
-jobsdir   = logroot + '/jobs/'
-retrydir  = logroot + '/jobs_retry/'
-faileddir = logroot + '/log/failed/'
-logdir    = logroot + '/log/'
-donedir   = logroot + '/log/done/'
+## Make directories if needed
+logroot = '@LTAINGEST_LOG_ROOT_DIR@'
+jobsdir   = os.path.join(logroot, '/jobs/')
+retrydir  = os.path.join(logroot, '/jobs_retry/')
+faileddir = os.path.join(logroot, '/log/failed/')
+logdir    = os.path.join(logroot, '/log/')
+donedir   = os.path.join(logroot, '/log/done/')
 
 if not os.path.exists(jobsdir):
   os.makedirs(jobsdir)
@@ -79,7 +76,8 @@ if not os.path.exists(donedir):
 
 ## Set logger
 #use WatchedFileHandler which creates a new log file if the OS moves it with logrotate
-log_handler = logging.handlers.WatchedFileHandler(logdir + host + '_' + ('master' if master else 'slave') + '.log')
+logfilename = host + '_' + ('master' if master else 'slave') + '.log'
+log_handler = logging.handlers.WatchedFileHandler(os.path.join(logdir, logfilename))
 formatter = logging.Formatter("%(asctime)-15s %(levelname)s %(message)s")
 formatter.converter = time.gmtime
 log_handler.setFormatter(formatter)
