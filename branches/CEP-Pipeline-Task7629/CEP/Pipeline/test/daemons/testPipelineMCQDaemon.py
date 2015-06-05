@@ -35,7 +35,7 @@ def test_forwarding_of_job_msg_to_queue():
     """
     job_node = 'locus102'
     daemon, commandQueueBus, deadletterQueue, deadletterToQueue = \
-        testFunctions.prepare_test( pipelineMCQDaemon.pipelineMCQDaemon)
+        testFunctions.prepare_test( pipelineMCQDaemon.PipelineMCQDaemon)
 
     slaveCommandQueueBusName = "testmcqdaemon" + "/" + job_node
     slaveCommandQueueBus = testFunctions.get_from_bus( 
