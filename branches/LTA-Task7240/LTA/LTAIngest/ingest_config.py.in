@@ -54,14 +54,14 @@ if ipaddress == masterAddress:
     master = False
 else:
   master = False
-
+    
 ## Make directories if needed
 logroot = '@LTAINGEST_LOG_ROOT_DIR@'
-jobsdir   = os.path.join(logroot, '/jobs/')
-retrydir  = os.path.join(logroot, '/jobs_retry/')
-faileddir = os.path.join(logroot, '/log/failed/')
-logdir    = os.path.join(logroot, '/log/')
-donedir   = os.path.join(logroot, '/log/done/')
+jobsdir   = os.path.join(logroot, 'jobs/')
+retrydir  = os.path.join(logroot, 'jobs_retry/')
+faileddir = os.path.join(logroot, 'log/failed/')
+logdir    = os.path.join(logroot, 'log/')
+donedir   = os.path.join(logroot, 'log/done/')
 
 if not os.path.exists(jobsdir):
   os.makedirs(jobsdir)
