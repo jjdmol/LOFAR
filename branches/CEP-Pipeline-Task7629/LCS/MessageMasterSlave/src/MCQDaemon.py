@@ -18,9 +18,6 @@
 #
 # $Id$
 
-from datetime import datetime   # needed for duration
-import time
-
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
 import lofar.messagebus.CQDaemon as CQDaemon
