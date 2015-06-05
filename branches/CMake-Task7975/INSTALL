@@ -1,0 +1,69 @@
+LOFAR (LOw Frequency ARray) Software Repository - INSTALL
+=========================================================
+
+Installation instructions for LOFAR software.
+
+
+Supported Systems
+-----------------
+
+- Linux (distributions in use at ASTRON are Ubuntu, Mint, CentOS)
+- Mac OS X (reasonably recent should work, also with LLVM/Clang)
+
+
+Install from OS Packages
+------------------------
+
+Somewhere in 2015, there will be Debian/Ubuntu binary packages of various LOFAR
+software packages and their dependencies (including casacore).
+
+This is so much easier to do and support than the manual way described below
+that we *strongly advise* all users to try this first. If this fails, ask for
+help (see README) instead of resorting to a manual build from source.
+
+	<ppa link + apt-get install, once it's in place, add pkg >
+
+
+Dependencies
+------------
+
+If you install pre-built Debian/Ubuntu/... packages (highly advised),
+all dependencies will come along automatically.
+
+If you build manually from source (disadvised, unless you are a developer),
+CMake needs to be able to find all dependencies. Please first try to install
+dependencies using your OS package manager. Only if unavailable or out-of-date,
+try to build from source.
+
+The most prominent dependency you likely need and may need to build from source
+is casacore (casacore, casacore-data-update, and possibly python-casacore), from
+
+	https://github.com/casacore
+
+
+Manual Build and Install from Source (quick summary)
+------------------------------------
+
+- SVN checkout a release or trunk from https://svn.astron.nl/LOFAR/ into
+  e.g. $HOME/LOFAR/
+- To install the usual offline data reduction packages into e.g. $HOME/local/,
+  try the following command.
+  This only ends succesfully once CMake can find all required dependencies.
+
+	mkdir -p LOFAR-build/gnu_opt  # last directory must be {gnu|clang}_{debug|opt}
+	cd LOFAR-build/gnu_opt
+	cmake -DCMAKE_INSTALL_PREFIX="$HOME/local" -DBUILD_PACKAGES="DP3 Calibration Imager PyBDSM" -DUSE_OPENMP=ON "$HOME/LOFAR"
+
+- Build and install by running:
+
+	make -j 4
+	make install  # with sufficient privileges
+
+- Optionally, run the regression tests:
+
+	ctest -j 4
+
+  All tests should pass, however, some packages require certain hardware or
+  software (e.g. RTCP needs CUDA GPUs) to pass.
+- You may want to add the installation path bin/ to your $PATH
+
