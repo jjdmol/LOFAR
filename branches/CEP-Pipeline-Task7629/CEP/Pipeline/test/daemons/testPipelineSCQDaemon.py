@@ -21,14 +21,14 @@ import logging
 
 import lofar.messagebus.MCQDaemon as MCQDaemon
 import CQDaemonTestFunctions as testFunctions
-import lofarpipe.daemons.pipelineMCQDaemonImp as pipelineMCQDaemon
+import lofarpipe.daemons.pipelineSCQDaemonImp as pipelineSCQDaemon
 
 import unittest
 
-class testForwardOfJobMsgToQueueu(unittest.TestCase):
+class testForwardOfJobMsgToQueueuSlave(unittest.TestCase):
 
     def __init__(self, arg):  
-        super(testForwardOfJobMsgToQueueu, self).__init__(arg)
+        super(testForwardOfJobMsgToQueueuSlave, self).__init__(arg)
 
     # For now leave the setup and tearDown empty: single test
     # when the number of test increased it is an idea to implement them
@@ -44,7 +44,7 @@ class testForwardOfJobMsgToQueueu(unittest.TestCase):
         """
         job_node = 'locus102'
         daemon, commandQueueBus, deadletterQueue, deadletterToQueue = \
-            testFunctions.prepare_test( pipelineMCQDaemon.PipelineMCQDaemon)
+            testFunctions.prepare_test( pipelineSCQDaemon.PipelineSCQDaemon)
 
         slaveCommandQueueBusName = "testmcqdaemon" + "/" + job_node
         slaveCommandQueueBus = testFunctions.get_from_bus( 

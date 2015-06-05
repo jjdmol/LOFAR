@@ -36,8 +36,10 @@ python_install(
   support/usagestats.py
   daemons/__init__.py
   daemons/pipelineMCQDaemonImp.py
+  daemons/pipelineSCQDaemonImp.py
   DESTINATION lofarpipe)
 
   install(PROGRAMS
   daemons/pipelineMCQDaemon.py
+  daemons/pipelineSCQDaemon.py
   DESTINATION bin)
