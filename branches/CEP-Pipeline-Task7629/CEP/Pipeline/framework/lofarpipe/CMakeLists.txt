@@ -35,3 +35,7 @@ python_install(
   support/xmllogging.py
   support/usagestats.py
   DESTINATION lofarpipe)
+
+  install(PROGRAMS
+  daemons/pipelineMCQDaemon.py
+  DESTINATION bin)
