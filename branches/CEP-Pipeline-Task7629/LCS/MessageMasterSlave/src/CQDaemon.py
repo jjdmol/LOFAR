@@ -78,6 +78,9 @@ TODO:
 class CQDaemon(object):
     def __init__(self, broker, busname, commandQueueName,
                  deadLetterQueueName, loop_interval=10, daemon=True):
+        if type(self) == CQDaemon:
+            raise NotImplementedError("CQDaemon should always be subtyped")
+        
         self._logger = logging.getLogger("MCQDaemon")
 
         self._broker = broker
