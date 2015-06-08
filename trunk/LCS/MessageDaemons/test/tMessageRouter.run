@@ -89,7 +89,7 @@ PID=$!
 sleep 1
 
 # Start listening already, since topics are not persistent!
-wait_msg 1 dump.in1 > tMessageRouter.out &
+wait_msg 3 dump.in1 > tMessageRouter.out &
 MSGPID=$!
 
 # Wait for listener to attach to topic
