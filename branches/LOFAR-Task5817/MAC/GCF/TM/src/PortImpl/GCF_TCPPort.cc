@@ -74,6 +74,7 @@ GCFTCPPort::GCFTCPPort(GCFTask& 	 task,
 	}
 	else if (SAP == getType()) {
 		_pSocket = new GTMTCPSocket(*this, itsUseUDP);
+		_pSocket->setBlocking(false);
 	}  
 }
 
