@@ -92,6 +92,9 @@ sleep 1
 wait_msg 1 dump.in1 > tMessageRouter.out &
 MSGPID=$!
 
+# Wait for listener to attach to topic
+sleep 1
+
 # Inject a message
 send_msg in1 "test1"
 
