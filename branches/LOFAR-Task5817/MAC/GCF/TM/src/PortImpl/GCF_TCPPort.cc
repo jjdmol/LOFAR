@@ -74,7 +74,6 @@ GCFTCPPort::GCFTCPPort(GCFTask& 	 task,
 	}
 	else if (SAP == getType()) {
 		_pSocket = new GTMTCPSocket(*this, itsUseUDP);
-		_pSocket->setBlocking(false);
 	}  
 }
 
@@ -174,7 +173,6 @@ bool GCFTCPPort::open()
 			ASSERTSTR (SAP == getType(), "Unknown TPCsocket type " << getType());
 			_pSocket = new GTMTCPSocket(*this, itsUseUDP);
 			ASSERTSTR(_pSocket, "Could not create GTMTCPSocket for port " << getName());
-			_pSocket->setBlocking(false);
 		}
 	}
 

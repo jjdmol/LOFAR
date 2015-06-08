@@ -69,7 +69,6 @@ bool GTMSBTCPPort::open()
 	if (!_pSocket) {
 		_pSocket = new GTMTCPSocket(*this);
 		ASSERTSTR(_pSocket, "Could not create GTMTCPSocket for SBtask");
-		_pSocket->setBlocking(false);
 	}
 
 	uint32	sbPortNumber(MAC_SERVICEBROKER_PORT);
@@ -79,6 +78,9 @@ bool GTMSBTCPPort::open()
 		_handleDisconnect();
 		return (false);
 	}
+
+    // set to non-blocking 
+	_pSocket->setBlocking(false);
 
 	switch (_pSocket->connect(sbPortNumber, getHostName())) {
 	case -1: _handleDisconnect();  break; 
