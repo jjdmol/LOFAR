@@ -43,7 +43,8 @@ GTMSBTCPPort::GTMSBTCPPort(GCFTask& 	 task,
 						   TPortType 	 type, 
 						   int 			 protocol, 
 						   bool 		 transportRawData) 
-  : GCFTCPPort(task, name, type, protocol, transportRawData)
+  : GCFTCPPort(task, name, type, protocol, transportRawData),
+    itsConnectTimer(0)
 {
 }
 
@@ -69,18 +70,18 @@ bool GTMSBTCPPort::open()
 	if (!_pSocket) {
 		_pSocket = new GTMTCPSocket(*this);
 		ASSERTSTR(_pSocket, "Could not create GTMTCPSocket for SBtask");
-	}
 
-	uint32	sbPortNumber(MAC_SERVICEBROKER_PORT);
+    uint32	sbPortNumber(MAC_SERVICEBROKER_PORT);
 
-	setState(S_CONNECTING);
-	if (!_pSocket->open(sbPortNumber)) { 
-		_handleDisconnect();
-		return (false);
-	}
+    setState(S_CONNECTING);
+    if (!_pSocket->open(sbPortNumber)) { 
+      _handleDisconnect();
+      return (false);
+    }
 
     // set to non-blocking 
-	_pSocket->setBlocking(false);
+    _pSocket->setBlocking(false);
+  }
 
 	switch (_pSocket->connect(sbPortNumber, getHostName())) {
 	case -1: _handleDisconnect();  break; 
