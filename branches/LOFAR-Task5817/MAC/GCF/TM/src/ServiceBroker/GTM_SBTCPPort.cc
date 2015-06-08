@@ -67,11 +67,11 @@ bool GTMSBTCPPort::open()
 		return (false);
 	}
 
+  uint32	sbPortNumber(MAC_SERVICEBROKER_PORT);
+
 	if (!_pSocket) {
 		_pSocket = new GTMTCPSocket(*this);
 		ASSERTSTR(_pSocket, "Could not create GTMTCPSocket for SBtask");
-
-    uint32	sbPortNumber(MAC_SERVICEBROKER_PORT);
 
     setState(S_CONNECTING);
     if (!_pSocket->open(sbPortNumber)) { 
