@@ -67,21 +67,21 @@ bool GTMSBTCPPort::open()
 		return (false);
 	}
 
-  uint32	sbPortNumber(MAC_SERVICEBROKER_PORT);
+    uint32	sbPortNumber(MAC_SERVICEBROKER_PORT);
 
 	if (!_pSocket) {
 		_pSocket = new GTMTCPSocket(*this);
 		ASSERTSTR(_pSocket, "Could not create GTMTCPSocket for SBtask");
+    }
 
     setState(S_CONNECTING);
     if (!_pSocket->open(sbPortNumber)) { 
-      _handleDisconnect();
-      return (false);
+        _handleDisconnect();
+        return (false);
     }
 
     // set to non-blocking 
     _pSocket->setBlocking(false);
-  }
 
 	switch (_pSocket->connect(sbPortNumber, getHostName())) {
 	case -1: _handleDisconnect();  break; 
