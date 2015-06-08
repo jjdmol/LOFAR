@@ -129,6 +129,8 @@ void GTMFile::setBlocking(bool	blocking) const
 	} else {
 		fcntl(_fd, F_SETFL, flags & ~O_NONBLOCK);
 	}
+
+	LOG_DEBUG_STR("FD " << _fd << " set to " << (blocking ? "blocking" : "non blocking"));
 }
 
 //
