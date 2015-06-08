@@ -12,6 +12,7 @@ include(PythonInstall)
 python_install(
   MCQDaemon.py
   CQDaemon.py
+  CQDaemon
 #  MCQLib.py
 #  NCQLib.py
 #  CQConfig.py
