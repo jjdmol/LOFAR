@@ -1,4 +1,4 @@
-//# TBB_Writer.h
+//# TBB_Writer.h: Data structures and defs to write TBB data into an HDF5 file
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,8 +18,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_STORAGE_TBB_WRITER_H
-#define LOFAR_STORAGE_TBB_WRITER_H 1
+#ifndef LOFAR_COBALT_OUTPUTPROC_TBBWRITER_H
+#define LOFAR_COBALT_OUTPUTPROC_TBBWRITER_H 1
 
 #include <stdint.h>
 
@@ -151,12 +151,12 @@ namespace LOFAR
       std::vector<unsigned> storageIndices; // idem
     };
 
-
 #ifdef HAVE_DAL
     class TBB_Dipole
     {
       LOFAR::FileStream*       itsRawOut;
-      dal::TBB_Dataset<short>* itsDataset;
+/*      dal::TBB_Dataset<short>* itsDataset;  TODO: enable with new DAL version */
+      dal::TBB_DipoleDataset*  itsDataset;
       std::vector<dal::Range>  itsFlagOffsets;
 
       uint32_t itsSampleFreq; // Hz
@@ -239,7 +239,7 @@ namespace LOFAR
       void initCommonLofarAttributes();
       void initTBB_RootAttributesAndGroups(const std::string& stName);
       void initStationGroup(dal::TBB_Station& st, const std::string& stName,
-                            const std::string& stFullName, const std::vector<double>& stPosition);
+                            const std::string& antSet, const std::vector<double>& stPosition);
       void initTriggerGroup(dal::TBB_Trigger& tg);
     };
 
@@ -357,10 +357,10 @@ namespace LOFAR
       time_t getTimeoutStampSec(unsigned streamWriterNr) const;
     };
 
+#endif // HAVE_DAL
+
   } // namespace Cobalt
 } // namespace LOFAR
 
-#endif // HAVE_DAL
-
-#endif // LOFAR_STORAGE_TBB_WRITER_H
+#endif // LOFAR_COBALT_OUTPUTPROC_TBBWRITER_H
 

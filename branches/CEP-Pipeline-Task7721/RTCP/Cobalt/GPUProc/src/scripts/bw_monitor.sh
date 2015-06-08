@@ -11,10 +11,11 @@ function transfer_balance {
   ssh cbm00"$CBMNR" ifconfig 2>/dev/null | perl -ne '
     # monitor eth2..5
     $eth = $1 if /^eth([2345])/;
+    next if not $eth;
 
     # section ends on empty line
     $eth = -1 if /^\s+$/;
-    continue if $eth == -1;
+    next if $eth == -1;
 
     # process RX/TX bytes
     if (/RX bytes:([0-9]+).*TX bytes:([0-9]+)/) {
@@ -27,6 +28,10 @@ function transfer_balance {
 function full_balance {
   # The Cobalt nodes to monitor
   CBMNRS="1 2 3 4 5 6 7 8"
+
+  echo "# ----------------------------------------------------------------"
+  echo "# cobalt-nr eth-nr timestamp rx-bytes tx-bytes"
+  echo "# 0 0 = subsums for total transfer rates"
 
   for CBMNR in $CBMNRS; do
     BALANCE=`transfer_balance "$CBMNR"`

@@ -29,11 +29,20 @@
 #include <DPPP/DPRun.h>
 #include <Common/ParameterSet.h>
 
+#if defined(casacore)
+#include <python/Converters/PycExcp.h>
+#include <python/Converters/PycBasicData.h>
+#include <python/Converters/PycValueHolder.h>
+#include <python/Converters/PycRecord.h>
+#include <python/Converters/PycArray.h>
+#define pyrap python
+#else
 #include <pyrap/Converters/PycExcp.h>
 #include <pyrap/Converters/PycBasicData.h>
 #include <pyrap/Converters/PycValueHolder.h>
 #include <pyrap/Converters/PycRecord.h>
 #include <pyrap/Converters/PycArray.h>
+#endif
 
 #include <casa/OS/Path.h>
 #include <unistd.h>
@@ -133,7 +142,7 @@ namespace LOFAR {
         }
         boost::python::object res2 = itsPyObject.attr("needWrite")();
         if (boost::python::extract<bool>(res2)) {
-          info().setNeedWrite();
+          info().setWriteData();
         }
       } catch (boost::python::error_already_set const &) {
         // handle the exception in some way
@@ -240,7 +249,7 @@ namespace LOFAR {
     }
     void PythonStep::setNeedWrite()
     {
-      info().setNeedWrite();
+      info().setWriteData();
     }
 
     void PythonStep::getData (const ValueHolder& vh)
