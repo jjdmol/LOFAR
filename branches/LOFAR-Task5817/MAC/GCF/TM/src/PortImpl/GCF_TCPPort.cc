@@ -358,7 +358,7 @@ GCFEvent::TResult	GCFTCPPort::dispatch(GCFEvent&	event)
 		}
 		if (TEptr->arg == &itsConnectTimer) {
 		    LOG_INFO_STR("GCFTCPPort:connect(" << _portNumber << "@" << _host << ") still in progress");
-			_pSocket->connect(_portNumber, _host);
+			_connect(_portNumber, _host);
 			return (GCFEvent::HANDLED);
 		}
 	}
@@ -458,7 +458,6 @@ void GCFTCPPort::serviceInfo(unsigned int result, unsigned int portNumber, const
 	LOG_DEBUG(formatString ("Can now connect '%s' to remote SPP [%s:%s@%s:%d].",
 							makeServiceName().c_str(), _addr.taskname.c_str(), _addr.portname.c_str(),
 							host.c_str(), portNumber));
-
 	// Note: _pSocket is of type GTMTCPSocket
 	if (!_pSocket->open(portNumber)) {
 		_handleDisconnect();
@@ -467,6 +466,14 @@ void GCFTCPPort::serviceInfo(unsigned int result, unsigned int portNumber, const
     // Set socket to non-blocking to prevent stalls
     _pSocket->setBlocking(false);
 
+    // Start connect sequence
+    _connect(portNumber, host);
+}
+
+// Try once again to connect, and make sure itsConnectTimer is active if
+// the connection is still pending.
+void GCFTCPPort::_connect(unsigned int portNumber, const string& host)
+{
 	switch (_pSocket->connect(portNumber, host)) {
 	case -1: _handleDisconnect(); break;	// error
 	case 0:  
