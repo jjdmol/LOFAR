@@ -488,12 +488,16 @@ void FTMachine::getImages(Matrix<Float>& weights, Bool normalize_image)
     
     IPosition shape(4, itsNX, itsNY, itsNPol, itsNChan);
 
+    
+    LOG_DEBUG_STR("Get subimage...");    
     CountedPtr<ImageInterface<Complex> > complex_subimage = new SubImage<Complex>(*itsComplexImages[i], Slicer(blc, shape), True);
+    LOG_DEBUG_STR("done.");    
 
     normalize(*complex_subimage, True, True);
 
-    
+    LOG_DEBUG_STR("Converting to Stokes...");    
     StokesImageUtil::To(*itsImages[i], *complex_subimage);
+    LOG_DEBUG_STR("done.");    
   }
 }  
 

@@ -56,7 +56,6 @@ public:
     {
       int nn = n;
       if (s[nn-1] == '\n') nn--;
-      #pragma omp critical
       LOG_DEBUG_STR(std::string(s,nn));
       return n;
     }
@@ -94,7 +93,12 @@ const Matrix<Float>& FTMachineIDG::getAveragePB() const
     itsAveragePB.resize(itsNX, itsNY);
     itsAveragePB = 1.0;
     // Make it persistent.
-    store(itsAveragePB, itsImageName + ".avgpb");
+    LOG_DEBUG_STR("Storing average beam...");
+    
+    //DEBUG store does not work anymore, somthing to do with coordinates and wcs
+//     store(itsAveragePB, itsImageName + ".avgpb");
+    
+    LOG_DEBUG_STR("done.");
   }
   return itsAveragePB;
 }
@@ -193,12 +197,13 @@ FTMachineIDG::FTMachineIDG(
   // TODO use popen() to capture output stream
   // TODO check for VML library separately
   
-  if (!(system("exec &>/dev/null; icpc --version")))
+//   if (!(system("exec &>/dev/null; icpc --version ")))
+  if (!(system("exec &>/dev/null; icpc --version  >/dev/null 2>&1")))
   {
     itsCompiler = "icpc";
     itsCompilerFlags = "-O3 -xAVX -openmp -mkl -lmkl_vml_avx -lmkl_avx -DUSE_VML=1";
   }
-  else if (!(system("exec &>/dev/null; g++ --version")))
+  else if (!(system("g++ --version >/dev/null 2>&1")))
   {
     itsCompiler = "g++";
     itsCompilerFlags = "-fopenmp -march=native -O3 -ffast-math -DUSE_VML=0";
@@ -215,7 +220,6 @@ FTMachineIDG::FTMachineIDG(
   itsSumPB.resize (itsNGrid);
   itsSumCFWeight.resize (itsNGrid);
   itsSumWeight.resize (itsNGrid);
-  itsVisResampler = new VisResamplerMatrixWB();
   itsGriddedDataDomain = UV;
   double msRefFreq=0; //TODO: put some useful reference frequency here
   itsRefFreq=parset.getDouble("image.refFreq",msRefFreq),
@@ -284,7 +288,6 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
   // Wide band imager has multiple terms but only a single channel
   // All visibility channels map to image channel 0
   Vector<Int> chan_map(vb.frequency().size(), 0);;
-  itsVisResampler->set_chan_map(chan_map);
   
   Vector<Double> lsr_frequency;
   
@@ -299,7 +302,6 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
   // convolution function channels
   Vector<Int> chan_map_CF;
   chan_map_CF = itsConvFunc->set_frequency(vb.frequency());
-  itsVisResampler->set_chan_map_CF(chan_map_CF);
   
   if(dopsf) {type=FTMachine::PSF;}
   
@@ -350,7 +352,6 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
 
   // Set up VBStore object to point to the relevant info of the VB.
 
-  itsVisResampler->setParams(itsUVScale, itsUVOffset, dphase);
 
   const casa::Vector< casa::Double > &frequency_list_CF = itsConvFunc->get_frequency_list();
 
@@ -371,8 +372,10 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
   Int N_stations = 1 + max(max(vb.antenna1()), max(vb.antenna2()));
   Int blocksize = 32;
 
+  LOG_DEBUG_STR("Creating proxy...");
   itsProxy = new Xeon (itsCompiler.c_str(), itsCompilerFlags.c_str(),  N_stations, N_chunks, N_time, N_chan,
       itsNPol, blocksize, itsPaddedNX, itsUVScale(0));
+  LOG_DEBUG_STR("done.");
   
   Array<Complex> visibilities(IPosition(4, itsNPol, N_chan, N_time, N_chunks), Complex(0.0,0.0));
   Cube<Float> uvw1(3, N_time, N_chunks, 0.0); 
@@ -530,6 +533,7 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
     if ((i == N_chunks) || ((chunk+1) == v.chunks.end()))
     {
 //       cout << "N_chunks: " << N_chunks << endl;      
+      LOG_DEBUG_STR("gridder...");
       itsProxy->gridder(
         N_chunks,
         visibilities.data(), //      void    *visibilities
@@ -541,14 +545,16 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
         baselines.data(),
         subgrids.data() //      void    *uvgrid,
       );
+      LOG_DEBUG_STR("done.");
       
-//       itsProxy->adder(N_chunks, coordinates.data(), subgrids.data(), itsGriddedData[0].data());
-      for(int i=0; i<N_chunks; i++) 
-        for(int pol=0; pol<itsNPol; pol++) 
-          for(int j=0; j<blocksize; j++) 
-            for(int k=0; k<blocksize; k++) 
-              itsGriddedData[0](IPosition(4,j+coordinates(0,i),k+coordinates(1,i),pol,0)) += subgrids(IPosition(4, j, k, pol, i));
-
+      LOG_DEBUG_STR("adder...");
+      itsProxy->adder(N_chunks, coordinates.data(), subgrids.data(), itsGriddedData[0].data());
+//       for(int i=0; i<N_chunks; i++) 
+//         for(int pol=0; pol<itsNPol; pol++) 
+//           for(int j=0; j<blocksize; j++) 
+//             for(int k=0; k<blocksize; k++) 
+//               itsGriddedData[0](IPosition(4,j+coordinates(0,i),k+coordinates(1,i),pol,0)) += subgrids(IPosition(4, j, k, pol, i));
+      LOG_DEBUG_STR("done.");
       i = 0;
       visibilities = Complex(0);
     }
@@ -621,16 +627,16 @@ bool FTMachineIDG::put_on_w_plane(
           {
             taylor_weights(j) = pow((lsr_frequency(j) - itsRefFreq)/itsRefFreq, taylor_idx);
           }
-          itsVisResampler->DataToGrid(
-            w_plane_grids[taylor_idx], 
-            vbs, 
-            v.baseline_index_map, 
-            chunk->start,
-            chunk->end, 
-            itsSumWeight[taylor_idx], 
-            dopsf, 
-            cfStore,
-            taylor_weights);
+//           itsVisResampler->DataToGrid(
+//             w_plane_grids[taylor_idx], 
+//             vbs, 
+//             v.baseline_index_map, 
+//             chunk->start,
+//             chunk->end, 
+//             itsSumWeight[taylor_idx], 
+//             dopsf, 
+//             cfStore,
+//             taylor_weights);
         }
       }
     }
@@ -660,7 +666,6 @@ void FTMachineIDG::get(VisBuffer& vb, Int row)
   Vector<Double> dphase(vb.uvw().nelements());  dphase=0.0;
   
   Vector<Int> chan_map(vb.frequency().size(), 0);
-  itsVisResampler->set_chan_map(chan_map);
   
   // Set the frequencies for which the convolution function will be evaluated.
   // set_frequency groups the frequncies found in vb according to the number of
@@ -669,7 +674,6 @@ void FTMachineIDG::get(VisBuffer& vb, Int row)
   // convolution function channels
   Vector<Int> chan_map_CF;
   chan_map_CF = itsConvFunc->set_frequency(vb.frequency());
-  itsVisResampler->set_chan_map_CF(chan_map_CF);
   
   Vector<Double> lsr_frequency;
   
@@ -679,9 +683,6 @@ void FTMachineIDG::get(VisBuffer& vb, Int row)
 
   Cube<Complex> data(vb.modelVisCube());
   
-  itsVisResampler->setParams(itsUVScale, itsUVOffset, dphase);
-  itsVisResampler->setMaps(chanMap, polMap);
-
   const casa::Vector< casa::Double > &frequency_list_CF = itsConvFunc->get_frequency_list();
 
   double w_step = itsConvFunc->get_w_from_support();
@@ -699,8 +700,10 @@ void FTMachineIDG::get(VisBuffer& vb, Int row)
   Int N_stations = 1 + max(max(vb.antenna1()), max(vb.antenna2()));
   Int blocksize = 32;
 
+  LOG_DEBUG_STR("Creating proxy...");
   itsProxy = new Xeon (itsCompiler.c_str(), itsCompilerFlags.c_str(),  N_stations, N_chunks, N_time, N_chan,
       itsNPol, blocksize, itsPaddedNX, itsUVScale(0));
+  LOG_DEBUG_STR("done.");
 
   Array<Complex> visibilities(IPosition(4, itsNPol, N_chan, N_time, N_chunks), Complex(0.0,0.0));
   Cube<Float> uvw1(3, N_time, N_chunks, 0.0); 
@@ -832,7 +835,7 @@ void FTMachineIDG::get(VisBuffer& vb, Int row)
         spheroidal.data(),
         subgrids.data() //      void    *uvgrid,
       );
-      
+
       // move predicted data to data colun
 
       for(int j = 0; j<N_chunks; j++)
@@ -852,7 +855,7 @@ void FTMachineIDG::get(VisBuffer& vb, Int row)
           }
         }
       }
-    
+
       idx1 = -1;      
       i = 0;
     }

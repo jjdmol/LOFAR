@@ -30,7 +30,6 @@
 #define LOFAR_LOFARFT_FTMACHINEIDG_H
 
 #include <AWImager2/FTMachine.h>
-#include <AWImager2/VisResamplerWB.h>
 
 #include <idg/XEON/Proxies.h>
 
@@ -107,9 +106,6 @@ protected:
   int itsNThread;
   casa::Int itsRefFreq;
   casa::Float itsTimeWindow;
-  
-  casa::CountedPtr<VisResamplerWB> itsVisResampler;
-  virtual VisResampler* visresampler() {return &*itsVisResampler;}
 
 private:
   

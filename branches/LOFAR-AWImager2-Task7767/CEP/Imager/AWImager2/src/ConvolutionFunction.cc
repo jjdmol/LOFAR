@@ -120,7 +120,7 @@ ConvolutionFunction::ConvolutionFunction
     itsAveragePB(),
     itsSpheroidal(),
     itsSpheroidalCF(),
-    itsSupportCF(32)
+    itsSupportCF(15)
 {
   itsFFTMachines.resize (OpenMP::maxThreads());
 
@@ -144,7 +144,7 @@ ConvolutionFunction::ConvolutionFunction
   for(int i=0; i<OpenMP::maxThreads(); i++)
   {
     itsFFTMachines[i].reserve(itsSupportCF * itsOversampling);
-//     itsFFTMachines[i].init_padding(itsSupportCF, itsOversampling);
+    itsFFTMachines[i].init_padding(itsSupportCF, itsOversampling);
   }
   
 
