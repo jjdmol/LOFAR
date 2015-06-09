@@ -46,6 +46,10 @@
  #define M_PI 3.1415927
  #endif
 
+ #ifndef NCOLORS
+ #define NCOLORS 200
+ #endif
+
  #include "pieview.h"
 
  PieView::PieView(QWidget *parent)
@@ -62,8 +66,9 @@
      totalValue = 0.0;
      rubberBand = 0;
 
-     for ( int i=0; i<200; i++ )           // init color list
-         colors << QColor( rand()&255, rand()&255, rand()&255 );
+     // Initializing here, so colours will not change with events.
+     for ( int i=0; i<NCOLORS; i++ )           // init color list
+       colors << QColor( rand()&255, rand()&255, rand()&255 );
  }
 
  void PieView::dataChanged(const QModelIndex &topLeft,
@@ -343,16 +348,7 @@
 
              if (value > 0.0) {
                  double angle = 360*value/totalValue;
-
-//                 if (row >= colors.size()) {
-//                     for ( int i=0; i<500; i++ ) // increase color list
-//                         colors << QColor( rand()&255, rand()&255, rand()&255 );
-//                 }
-                 const QColor &color(colors.at(row));
-
-//                 if (currentIndex() == index)
-//                     painter.setBrush(QBrush(color, Qt::Dense4Pattern));
-//                 else
+                 const QColor &color(colors.at(row%NCOLORS));
                  if (selections->isSelected(index))
                      painter.setBrush(QBrush(color, Qt::Dense3Pattern));
                  else
@@ -369,7 +365,7 @@
 
              QModelIndex index = model()->index(row, 1, rootIndex());
              double value = model()->data(index).toDouble();
-             model()->setData(model()->index(row, 0, QModelIndex()), colors.at(row), Qt::DecorationRole);
+             model()->setData(model()->index(row, 0, QModelIndex()), colors.at(row%NCOLORS), Qt::DecorationRole);
              if (value > 0.0) {
                  QModelIndex labelIndex = model()->index(row, 0, rootIndex());
 
