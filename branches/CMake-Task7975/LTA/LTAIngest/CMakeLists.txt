@@ -2,6 +2,14 @@
 
 lofar_package(LTAIngest 0.1) # DEPENDS Common)
 
+if(BUILD_LTAIngest)
+  set(LTAINGEST_BUILD_TARGET "" CACHE STRING "Specify for which specific destination host you want to build LTAIngest.")
+
+  if(LTAINGEST_BUILD_TARGET STREQUAL "")
+    message(SEND_ERROR "No LTAINGEST_BUILD_TARGET given.")
+  endif()
+endif()
+
 include(PythonInstall)
 
 python_install(
