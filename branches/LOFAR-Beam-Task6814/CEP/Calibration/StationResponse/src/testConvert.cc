@@ -1,14 +1,14 @@
 #include <lofar_config.h>
 #include <iostream>
 
-#include <casacore/casa/aips.h>
-#include <casacore/measures/Measures.h>
-#include <casacore/measures/Measures/MDirection.h>
-#include <casacore/measures/Measures/MEpoch.h>
-#include <casacore/measures/Measures/MPosition.h>
-#include <casacore/measures/Measures/MeasFrame.h>
-#include <casacore/measures/Measures/MCDirection.h>
-#include <casacore/measures/Measures/MeasConvert.h>
+#include <casa/aips.h>
+#include <measures/Measures.h>
+#include <measures/Measures/MDirection.h>
+#include <measures/Measures/MEpoch.h>
+#include <measures/Measures/MPosition.h>
+#include <measures/Measures/MeasFrame.h>
+#include <measures/Measures/MCDirection.h>
+#include <measures/Measures/MeasConvert.h>
 
 #include <StationResponse/AntennaFieldHBA.h>
 

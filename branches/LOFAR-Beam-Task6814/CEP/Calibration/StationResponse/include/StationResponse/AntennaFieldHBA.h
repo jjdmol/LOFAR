@@ -63,8 +63,10 @@ public:
         const vector3r_t &direction) const;
 
 private:
-    static std::pair<double,double> getAzEl(const vector3r_t &direction,
-                                            const casa::MeasFrame &frame);
+    static std::pair<double,double> getAzEl(const vector3r_t &position,
+                                            const vector3r_t &direction);
+
+    real_t getNormalization(real_t freq, const vector3r_t &direction);
 
     AntennaModelHBA::ConstPtr   itsAntennaModel;
     casa::Array<casa::Float>    itsIntegrals;

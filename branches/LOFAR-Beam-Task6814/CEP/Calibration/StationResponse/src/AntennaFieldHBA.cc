@@ -77,25 +77,9 @@ raw_response_t AntennaFieldHBA::rawResponse(real_t time, real_t freq,
 
     cout<<"Position: "<<position()<<endl;
     cout<<"Direction: "<<direction<<endl;
-    casa::MeasFrame frame(casa::MPosition(casa::MVPosition(position()[0],
-                                                           position()[1],
-                                                           position()[2])));
-    frame.set(casa::MEpoch(casa::MVEpoch(time/86400), casa::MEpoch::UTC));
 
-    std::pair<double,double> azel=getAzEl(direction, frame);
-    cout<<"1. az="<<azel.first<<", el="<<azel.second<<endl;
-    frame.resetEpoch(casa::MEpoch(casa::MVEpoch((time+3600)/86400), casa::MEpoch::UTC));
-
-    azel=getAzEl(direction, frame);
+    std::pair<double,double> azel=getAzEl(position(), direction);
     cout<<"2. az="<<azel.first<<", el="<<azel.second<<endl;
-
-    casa::MeasFrame frame2(casa::MPosition(casa::MVPosition(position()[0],
-                                                           position()[1],
-                                                           position()[2])));
-    frame2.set(casa::MEpoch(casa::MVEpoch((time+3600)/86400), casa::MEpoch::UTC));
-
-    azel=getAzEl(direction, frame2);
-    cout<<"3. az="<<azel.first<<", el="<<azel.second<<endl;
 
     result.response = result.response * rotation(time, direction);
     return result;
@@ -115,23 +99,34 @@ matrix22c_t AntennaFieldHBA::elementResponse(real_t time, real_t freq,
         * rotation(time, direction);
 }
 
-std::pair<double,double> AntennaFieldHBA::getAzEl(const vector3r_t &direction,
-                                                  const casa::MeasFrame &frame)
+real_t getNormalization(real_t freq, const vector3r_t &direction)
 {
-     // Ik wil van ITRF (direction) naar AZEL
-     // Nodig: *alleen maar* station position, toch?
-     casa::MDirection::Convert mconv(
-         casa::MDirection::ITRF,
-         casa::MDirection::Ref(casa::MDirection::AZELGEO, frame));
+  return 1.;
+}
 
-     casa::MDirection itrfdir(casa::MVDirection(direction[0],direction[1],direction[2]));
 
-     casa::MDirection azeldir=mconv(itrfdir);
+std::pair<double,double> AntennaFieldHBA::getAzEl(const vector3r_t &position,
+                                                  const vector3r_t &direction)
+{
+     using namespace casa;
+     MDirection dir_itrf(MVDirection(direction[0],direction[1],direction[2]),
+                         MDirection::ITRF);
+
+     casa::MVPosition mvPosition(position[0], position[1], position[2]);
+     casa::MPosition pos(mvPosition, casa::MPosition::ITRF);
+
+     MeasFrame frame(pos);
+
+     MDirection::Convert itrf2azel(
+         dir_itrf,
+         MDirection::Ref(MDirection::AZEL, frame));
+
+     MDirection dir_azel = itrf2azel();
 
      std::pair<double,double> azel;
 
-     azel.first=azeldir.getAngle().getValue()[0];
-     azel.second=azeldir.getAngle().getValue()[1];
+     azel.first =dir_azel.getAngle().getValue()[0];
+     azel.second=dir_azel.getAngle().getValue()[1];
      return azel;
 }
 
