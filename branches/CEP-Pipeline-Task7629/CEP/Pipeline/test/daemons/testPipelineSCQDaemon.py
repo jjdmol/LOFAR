@@ -19,12 +19,11 @@
 # $Id$
 import logging
 
-import lofar.messagebus.MCQDaemon as MCQDaemon
 import CQDaemonTestFunctions as testFunctions
 import lofarpipe.daemons.pipelineSCQDaemonImp as pipelineSCQDaemon
 
 import unittest
-
+import time
 
 # Wraps the actual slave implementation, allows to catch calls to internal 
 # function we need to validate.
@@ -38,15 +37,24 @@ class testForwardOfJobMsgToQueueuSlaveWrapper(
            loop_interval, daemon)
         pass
         self._start_subprocess_called = False
+        self._process_deadletter_run_job_called = False
 
     def _start_subprocess(self):
-
+        """
+        This function hides the actual run subprocess module
+        """
         self._start_subprocess_called = True
-        
+
+    def _process_deadletter_run_job(self, unpacked_msg_content):
+        """
+
+        """
+        self._process_deadletter_run_job_called = True
 
 
 
-class testForwardOfJobMsgToQueueuSlave(unittest.TestCase):
+class testForwardOfJobMsgToQueueuSlave(
+                unittest.TestCase):
 
     def __init__(self, arg):  
         super(testForwardOfJobMsgToQueueuSlave, self).__init__(arg)
@@ -59,40 +67,75 @@ class testForwardOfJobMsgToQueueuSlave(unittest.TestCase):
     def tearDown(self):
         pass
   
-    def test_forwarding_of_job_msg_to_queue(self):
+    def test_run_job_results_in_start_subprocess_call(self):
         """
         A msg with the command run_job should be forwarded to jobnode
         """
+        # Create the daemon and get all the default queues
         job_node = 'locus102'
         daemon, commandQueueBus, deadletterQueue, deadletterToQueue = \
             testFunctions.prepare_test( testForwardOfJobMsgToQueueuSlaveWrapper)
 
-        slaveCommandQueueBusName = "testmcqdaemon" + "/" + job_node
-        slaveCommandQueueBus = testFunctions.get_from_bus( 
-                slaveCommandQueueBusName, "locus102")
-
-        # Test1: Create a test job payuoad
+        # Test1: Create a test job payload
         send_payload =  {'command':'run_job',
+                         'session_uuid':"123456321654",
                          'node':job_node,
                          'job':{}}
-
         msg = testFunctions.create_test_msg(send_payload)
         commandQueueBus.send(msg)
 
-        # start the daemon processing
+        # Run the process loop, The job will be send to a bus adress that does
+        # not exist, it should end up in the deadletter queue
         daemon._process_commands()
-  
 
-        # validate correct content
-        self.assertTrue(daemon._start_subprocess_called,
-             "Sending a valid job msg did not result in a start_subproces call")
+        # read from the deadletter queue
+        msg = testFunctions.try_get_msg(deadletterQueue, 10) 
+        if msg == None:
+            raise Exception(
+                 "Did not receive the expect msg on the deadletter queue")
+        deadletterQueue.ack(msg) 
 
-        # Cleanup sut
+        # check that the correct msg is receive in the deadletter queue        
+        unpacked_msg_data = eval(msg.content().payload)
+        self.assertEqual(unpacked_msg_data, send_payload)
+        
+        
+        ## Cleanup sut
         commandQueueBus.close()
-        slaveCommandQueueBus.close()
         deadletterQueue.close()
         daemon.close()
 
+    def test_deadletterQueue_startjob_processing(self):
+        """
+        A msg with the command run_job should be forwarded to jobnode
+        """
+        # Create the daemon and get all the default queues
+        job_node = 'locus102'
+        daemon, commandQueueBus, deadletterQueue, deadletterToQueue = \
+            testFunctions.prepare_test( testForwardOfJobMsgToQueueuSlaveWrapper)
+
+        # Test1: Create a test job payload
+        send_payload =  {'command':'run_job',
+                         'session_uuid':"123456321654",
+                         'node':job_node,
+                         'job':{}}
+        msg = testFunctions.create_test_msg(send_payload)
+        commandQueueBus.send(msg)
+
+        # Run the process loop, The job will be send to a bus adress that does
+        # not exist, it should end up in the deadletter queue
+        daemon._process_commands()
+
+        # Run the deadletter processer
+        daemon._process_deadletter_queue()
+
+        self.assertTrue(daemon._process_deadletter_run_job_called)
+        
+        
+        ## Cleanup sut
+        commandQueueBus.close()
+        deadletterQueue.close()
+        daemon.close()
 
 
 

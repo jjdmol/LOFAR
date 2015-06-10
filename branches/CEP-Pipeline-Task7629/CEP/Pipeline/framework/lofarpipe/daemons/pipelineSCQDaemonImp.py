@@ -28,12 +28,14 @@ class PipelineSCQDaemon(CQDaemon.CQDaemon):
                  deadLetterQueueName, loop_interval=10, daemon=True):
         super(PipelineSCQDaemon, self).__init__(broker, busname, masterCommandQueueName,
                  deadLetterQueueName, loop_interval, daemon)
-        pass
+
+        self._toBus = msgbus.ToBus(self._busname, broker = self._broker)
 
     def process_commands(self, command, unpacked_msg_content, msg):
         """
         Process_commands, add the run_job command
         """
+                
         # Default behaviour:
         if command == 'run_job':
             self._process_run_job(unpacked_msg_content)
@@ -46,23 +48,62 @@ class PipelineSCQDaemon(CQDaemon.CQDaemon):
         The starting of a job on one of the node servers.
         """
         node = unpacked_msg_content['node']        
+        session_uuid = unpacked_msg_content['session_uuid']
         # create new msg
         # TODO: FOrwarding of the received msg instead of creating a new one.
         msg = message.MessageContent()
         # set content
         msg.payload = unpacked_msg_content
         # set subject needed for dynamic routing
-        msg.set_subject(node)
+        subject = session_uuid + '_' + node
+        msg.set_subject(subject)
+        
+        # send to bus using the slave as msg name allows for dynamic routing
+        self._toBus.send(msg)
 
 
-        # Start a subprocess
-        self._start_subprocess()
-
-
-    def _start_subprocess(self):
+    def _process_deadletter_queue(self):
         """
-        Called when a subprocess should be started.
-        TODO: better description
-        """
-        pass
+        Process deadletters queue
 
+        We are only expected to receive deadletter
+        """     
+        while True:
+            # Test if the timeout is in milli seconds or second
+            msg = self._fromDeadletterBus.get(0.1)  #  use timeout.
+
+            if msg == None:
+               break    # exit msg processing
+
+            # Get the needed information from the msg
+            unpacked_msg_data, command = self._unpack_msg(msg)
+            if not unpacked_msg_data:  # if unpacking failed
+                self._logger.error(
+                    "Could not process deadletter, incorrect content")
+                self._logger.warn(msg)
+                self._fromDeadletterBus.ack(msg) 
+                break
+
+            elif command == 'run_job':
+                self._process_deadletter_run_job(unpacked_msg_data)
+                self._fromDeadletterBus.ack(msg)                         
+                continue
+
+            self._logger.info(
+               "Received on deadletterqueue command: {0}".format(command))
+            self._logger.info("msg content: {0}".format(unpacked_msg_content))
+            self._logger.info("ignoring msg")
+            self._fromDeadletterBus.ack(msg) 
+    
+    def _process_deadletter_run_job(self, unpacked_msg_content):
+        """
+        Called when a run_job msg ends up in the dead letter queue
+
+        This means that we have to start a subprocess which is able to receive
+        jobs to start.
+        """
+
+
+        node = unpacked_msg_content['node']        
+        session_uuid = unpacked_msg_content['session_uuid']
+        queuename = self._busname + " /" + node + "." + session_uuid

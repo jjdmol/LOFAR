@@ -36,13 +36,13 @@ def prepare_test(subclass):
     #busname = "testbus"
     masterCommandQueueName = busname + "/" + "masterCommandQueueName"
     #masterCommandQueueName = "masterCommandQueueName"
-    deadLetterQueueName = busname + ".proxy.deadletter"
+    deadLetterQueueName = busname + ".deadletter"
     # create the sut
     daemon = subclass(broker, busname, masterCommandQueueName,
                                 deadLetterQueueName, 1, False)
 
     # connect to the queueus
-    commandQueueBus =get_to_bus(masterCommandQueueName, broker)
+    commandQueueBus = get_to_bus(masterCommandQueueName, broker)
 
     deadletterQueue = get_from_bus(deadLetterQueueName,
                                                  broker)
@@ -123,8 +123,6 @@ def try_get_msg(queue, wait_period=10):
             idx += 1
             time.sleep(1)
             continue
-
-        queue.ack(msg_received)
         break
 
     return msg_received
