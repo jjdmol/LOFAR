@@ -48,8 +48,7 @@ AntennaFieldHBA::AntennaFieldHBA(const string &name,
   casa::String message;
 
   FileLocator locator("$LOFARROOT/share/beamnorms");
-  string fitsFile=locator.locate("beamintmap-"+name+".fits");\
-  cout<<"fitsFile="<<fitsFile<<endl;
+  string fitsFile=locator.locate("beamintmap-"+name+".fits");
   itsIntegrals = casa::ReadFITS(fitsFile.c_str(),ok,message);
   if (!ok) {
     LOG_WARN_STR("Could not read beam normalization fits file: " << message);
@@ -128,10 +127,10 @@ real_t AntennaFieldHBA::getNormalization(real_t freq,
   // Round to int, so add 0.5 and then truncate
   freq_index=int((freq-freq_min)/(freq_max-freq_min)*numfreqs+0.5);
 
-  cout<<"Name="<<name()<<", itsIntegrals.shape="<<itsIntegrals.shape()<<endl;
-  cout<<"Name="<<name()<<", freq="<<freq<<", az="<<az<<", el="<<el
-      <<", index=["<<x_index<<", "<<y_index<<", "<<freq_index<<"], norm="
-      <<itsIntegrals(casa::IPosition(3,x_index,y_index,freq_index))<<endl;
+  //cout<<"Name="<<name()<<", itsIntegrals.shape="<<itsIntegrals.shape()<<endl;
+  //cout<<"Name="<<name()<<", freq="<<freq<<", az="<<az<<", el="<<el
+  //    <<", index=["<<x_index<<", "<<y_index<<", "<<freq_index<<"], norm="
+  //    <<itsIntegrals(casa::IPosition(3,x_index,y_index,freq_index))<<endl;
 
   // Todo: interpolation for frequency
   return real_t(itsIntegrals(casa::IPosition(3,x_index,y_index,freq_index)));
