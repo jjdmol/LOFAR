@@ -24,6 +24,7 @@
 #include <StationResponse/AntennaFieldHBA.h>
 #include <StationResponse/MathUtil.h>
 #include <StationResponse/MathUtil.h>
+#include <Common/LofarLogger.h>
 #include <fits/FITS/BasicFITS.h>
 #include <measures/Measures.h>
 #include <measures/Measures/MEpoch.h>
@@ -45,9 +46,9 @@ AntennaFieldHBA::AntennaFieldHBA(const string &name,
   casa::Bool ok=true;
   casa::String message;
 
-  itsIntegrals = casa::ReadFITS(("~/Prog/LOFAR-Beam-Task6814/testdir/beamnorm/beamintmap-"+name+".fits").c_str(),ok,message);
+  itsIntegrals = casa::ReadFITS(("~dijkema/opt/lofar/LOFAR-Beam-Task6814/testdir/beamnorm/beamintmap-"+name+".fits").c_str(),ok,message);
   if (!ok) {
-    cout << "Read failed: " << message << endl;
+    LOG_WARN_STR("Could not read beam normalization fits file: " << message);
   }
 }
 
@@ -123,6 +124,7 @@ real_t AntennaFieldHBA::getNormalization(real_t freq,
   // Round to int, so add 0.5 and then truncate
   freq_index=int((freq-freq_min)/(freq_max-freq_min)*numfreqs+0.5);
 
+  cout<<"Name="<<name()<<", itsIntegrals.shape="<<itsIntegrals.shape()<<endl;
   cout<<"Name="<<name()<<", freq="<<freq<<", az="<<az<<", el="<<el
       <<", index=["<<x_index<<", "<<y_index<<", "<<freq_index<<"], norm="
       <<itsIntegrals(casa::IPosition(3,x_index,y_index,freq_index))<<endl;
