@@ -1,13 +1,21 @@
 # $Id$
 
-lofar_package(LTAIngest 0.1) # DEPENDS Common)
+lofar_package(LTAIngest 0.1 DEPENDS MessageBus)
 
-if(BUILD_LTAIngest)
-  set(LTAINGEST_BUILD_TARGET "" CACHE STRING "Specify for which specific destination host you want to build LTAIngest.")
+#by default use LTAINGEST_BUILD_TARGET="test" unless overridden on the command line, or by variants files
+set(LTAINGEST_BUILD_TARGET "test" CACHE STRING "Specify for which specific destination host you want to build LTAIngest.")
 
-  if(LTAINGEST_BUILD_TARGET STREQUAL "")
-    message(SEND_ERROR "No LTAINGEST_BUILD_TARGET given.")
-  endif()
+message(STATUS "Using LTAINGEST_BUILD_TARGET \"${LTAINGEST_BUILD_TARGET}\".")
+  
+#switch with config variables for the various build targets.
+if(LTAINGEST_BUILD_TARGET STREQUAL "lexar")
+  set(LTAINGEST_LOG_ROOT_DIR "/log/ingest/")
+elseif(LTAINGEST_BUILD_TARGET STREQUAL "lotar")
+  set(LTAINGEST_LOG_ROOT_DIR "/home/lofarlocal/log/ingest/")
+elseif(LTAINGEST_BUILD_TARGET STREQUAL "test")
+  set(LTAINGEST_LOG_ROOT_DIR "/tmp/ingest/")
+else()
+  message(SEND_ERROR "Unknown LTAINGEST_BUILD_TARGET given: '${LTAINGEST_BUILD_TARGET}'.")
 endif()
 
 include(PythonInstall)
