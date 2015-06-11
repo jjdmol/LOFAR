@@ -1,1 +1,1 @@
-set(LTAINGEST_LOG_ROOT_DIR "/home/lofarlocal/log/ingest/")
+set(LTAINGEST_BUILD_TARGET "lotar")
