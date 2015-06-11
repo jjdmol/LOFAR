@@ -26,6 +26,7 @@
 #include <StationResponse/MathUtil.h>
 #include <Common/LofarLogger.h>
 #include <fits/FITS/BasicFITS.h>
+#include <Common/LofarLocators.h>
 #include <measures/Measures.h>
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MPosition.h>
@@ -46,7 +47,10 @@ AntennaFieldHBA::AntennaFieldHBA(const string &name,
   casa::Bool ok=true;
   casa::String message;
 
-  itsIntegrals = casa::ReadFITS(("~dijkema/opt/lofar/LOFAR-Beam-Task6814/testdir/beamnorm/beamintmap-"+name+".fits").c_str(),ok,message);
+  FileLocator locator("$LOFARROOT/share/beamnorms");
+  string fitsFile=locator.locate("beamintmap-"+name+".fits");\
+  cout<<"fitsFile="<<fitsFile<<endl;
+  itsIntegrals = casa::ReadFITS(fitsFile.c_str(),ok,message);
   if (!ok) {
     LOG_WARN_STR("Could not read beam normalization fits file: " << message);
   }
