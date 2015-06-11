@@ -1,4 +1,4 @@
-#!usr/bin/python
+#!/usr/bin/python
 # Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 # P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 #

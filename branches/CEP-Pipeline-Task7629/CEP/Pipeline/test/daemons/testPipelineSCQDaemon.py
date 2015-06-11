@@ -1,4 +1,4 @@
-#!usr/bin/python
+#!/usr/bin/python
 # Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 # P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 #
@@ -20,7 +20,7 @@
 import logging
 
 import CQDaemonTestFunctions as testFunctions
-import lofarpipe.daemons.pipelineSCQDaemonImp as pipelineSCQDaemon
+import lofarpipe.daemons.pipelineSCQDaemonImp as PipelineSCQDaemonImp
 
 import unittest
 import time
@@ -28,12 +28,15 @@ import time
 # Wraps the actual slave implementation, allows to catch calls to internal 
 # function we need to validate.
 class testForwardOfJobMsgToQueueuSlaveWrapper(
-            pipelineSCQDaemon.PipelineSCQDaemon):
+            PipelineSCQDaemonImp.PipelineSCQDaemonImp):
     def __init__(self, broker, busname, masterCommandQueueName,
-                 deadLetterQueueName, loop_interval, daemon):
+                 deadLetterQueueName,
+                 subprocessStartedExec,
+                 loop_interval, daemon):
         super(testForwardOfJobMsgToQueueuSlaveWrapper, self).__init__(
            broker, busname, 
            masterCommandQueueName, deadLetterQueueName,
+           subprocessStartedExec,
            loop_interval, daemon)
         pass
         self._start_subprocess_called = False

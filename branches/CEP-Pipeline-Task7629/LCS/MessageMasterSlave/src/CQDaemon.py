@@ -212,9 +212,18 @@ class CQDaemon(object):
             unpacked_msg_content, command = unpacked_msg_data           
             # Send the command and msg to the process_command function
             # of the sub class
-
+            processed_in_subclass = True
+            #try:
             processed_in_subclass = self.process_commands(
                         command, unpacked_msg_content, msg)
+            ## Catch all exception, (excluding signals)
+            #except Exception, ex:
+            #    # We could also send to deadletter queue, but it will fail there
+            #    # also i suspect
+            #    self._logger.error("Processing failed in CQDaemon subclass")
+            #    self._logger.error(
+            #        "Deleting msg from queue and continue, error:")               
+            #    self._logger.error(ex)
 
 
             if processed_in_subclass:

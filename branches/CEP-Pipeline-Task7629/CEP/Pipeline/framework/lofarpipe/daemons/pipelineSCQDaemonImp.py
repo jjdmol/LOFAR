@@ -22,14 +22,24 @@ import lofar.messagebus.CQDaemon as CQDaemon
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
 
+import subprocess
 
-class PipelineSCQDaemon(CQDaemon.CQDaemon):
+
+class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
     def __init__(self, broker, busname, masterCommandQueueName,
-                 deadLetterQueueName, loop_interval=10, daemon=True):
-        super(PipelineSCQDaemon, self).__init__(broker, busname, masterCommandQueueName,
+                 deadLetterQueueName, subprocessStartedExec,
+                 loop_interval=10, daemon=True):
+        super(PipelineSCQDaemonImp, self).__init__(
+                 broker, busname, masterCommandQueueName,
                  deadLetterQueueName, loop_interval, daemon)
 
+        # we for ward jobs to the generic bus
         self._toBus = msgbus.ToBus(self._busname, broker = self._broker)
+
+        # If we discover that there is no consumer, create a subprocess
+        # with a consumer. this is all the state in this class
+        self._subprocessStartedExec = subprocessStartedExec
+        self._job_starter_subprocess = None
 
     def process_commands(self, command, unpacked_msg_content, msg):
         """
@@ -66,7 +76,7 @@ class PipelineSCQDaemon(CQDaemon.CQDaemon):
         """
         Process deadletters queue
 
-        We are only expected to receive deadletter
+        TODO: This function still feels clutchy. Might be refactored
         """     
         while True:
             # Test if the timeout is in milli seconds or second
@@ -103,7 +113,7 @@ class PipelineSCQDaemon(CQDaemon.CQDaemon):
         jobs to start.
         """
 
-
+        self._job_starter_subprocess = subprocess
         node = unpacked_msg_content['node']        
         session_uuid = unpacked_msg_content['session_uuid']
         queuename = self._busname + " /" + node + "." + session_uuid
