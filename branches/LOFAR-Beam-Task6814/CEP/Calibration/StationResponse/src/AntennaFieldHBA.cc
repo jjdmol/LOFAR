@@ -116,8 +116,10 @@ real_t AntennaFieldHBA::getNormalization(real_t freq,
 
   double xx_pix=sin(az)*gridsize*(.5-el/casa::C::pi);
   double yy_pix=cos(az)*gridsize*(.5-el/casa::C::pi);
-  x_index=xx_pix+.5*gridsize;
-  y_index=yy_pix+.5*gridsize;
+
+  // Round to int, so add 0.5 and then truncate
+  x_index=int(xx_pix+.5*gridsize+0.5);
+  y_index=int(yy_pix+.5*gridsize+0.5);
 
   // Get index for frequency
   const double freq_min=100.e6;
