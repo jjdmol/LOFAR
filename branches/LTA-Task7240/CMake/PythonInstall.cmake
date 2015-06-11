@@ -39,13 +39,20 @@ if(PYTHON_EXECUTABLE)
   if(_pyerr)
     message(FATAL_ERROR "Python command failed:\n${_pyerr}")
   endif(_pyerr)
+  
+  if(NOT DEFINED PYTHON_BUILD_DIR)
+    set(_PRINT_PYTHON_DIRS TRUE)
+  endif()
+  
   set(PYTHON_BUILD_DIR "${CMAKE_BINARY_DIR}/${_pydir}" CACHE PATH 
     "Build directory for Python extensions" FORCE)
   set(PYTHON_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${_pydir}" CACHE PATH 
     "Installation directory for Python extensions" FORCE)
 
-  message(STATUS "Build directory for Python extensions:        ${PYTHON_BUILD_DIR}")
-  message(STATUS "Installation directory for Python extensions: ${PYTHON_INSTALL_DIR}")
+  if(_PRINT_PYTHON_DIRS)
+    message(STATUS "Build directory for Python extensions:        ${PYTHON_BUILD_DIR}")
+    message(STATUS "Installation directory for Python extensions: ${PYTHON_INSTALL_DIR}")
+  endif()
 endif(PYTHON_EXECUTABLE)
 
 
