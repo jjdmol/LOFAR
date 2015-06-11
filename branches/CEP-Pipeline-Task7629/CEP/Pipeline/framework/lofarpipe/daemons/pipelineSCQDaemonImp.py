@@ -36,10 +36,6 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
         # we for ward jobs to the generic bus
         self._toBus = msgbus.ToBus(self._busname, broker = self._broker)
 
-        # If we discover that there is no consumer, create a subprocess
-        # with a consumer. this is all the state in this class
-        self._subprocessStartedExec = subprocessStartedExec
-        self._job_starter_subprocess = None
 
     def process_commands(self, command, unpacked_msg_content, msg):
         """
