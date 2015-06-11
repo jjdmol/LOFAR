@@ -75,13 +75,10 @@ raw_response_t AntennaFieldHBA::rawResponse(real_t time, real_t freq,
     raw_response_t result = itsAntennaModel->rawResponse(freq,
         itrf2field(direction), itrf2field(direction0));
 
-    cout<<"Position: "<<position()<<endl;
-    cout<<"Direction: "<<direction<<endl;
-
-    std::pair<double,double> azel=getAzEl(position(), direction);
-    cout<<"2. az="<<azel.first<<", el="<<azel.second<<endl;
-
+    real_t norm=getNormalization(freq, direction);
     result.response = result.response * rotation(time, direction);
+    result.response[0][0]/=norm; result.response[1][0]/=norm;
+    result.response[0][1]/=norm; result.response[1][1]/=norm;
     return result;
 }
 
@@ -99,9 +96,39 @@ matrix22c_t AntennaFieldHBA::elementResponse(real_t time, real_t freq,
         * rotation(time, direction);
 }
 
-real_t getNormalization(real_t freq, const vector3r_t &direction)
+real_t AntennaFieldHBA::getNormalization(real_t freq,
+                                         const vector3r_t &direction) const
 {
-  return 1.;
+  // Get indices for azimuth and elevation
+  const uint gridsize=50;
+
+  std::pair<double,double> azel=getAzEl(position(), direction);
+  double az=azel.first;
+  double el=azel.second;
+
+  uint x_index=0;
+  uint y_index=0;
+  uint freq_index=0;
+
+  double xx_pix=sin(az)*gridsize*(.5-el/casa::C::pi);
+  double yy_pix=cos(az)*gridsize*(.5-el/casa::C::pi);
+  x_index=xx_pix+.5*gridsize;
+  y_index=yy_pix+.5*gridsize;
+
+  // Get index for frequency
+  const double freq_min=100.e6;
+  const double freq_max=250.e6;
+  const uint numfreqs=16;
+
+  // Round to int, so add 0.5 and then truncate
+  freq_index=int((freq-freq_min)/(freq_max-freq_min)*numfreqs+0.5);
+
+  cout<<"Name="<<name()<<", freq="<<freq<<", az="<<az<<", el="<<el
+      <<", index=["<<x_index<<", "<<y_index<<", "<<freq_index<<"], norm="
+      <<itsIntegrals(casa::IPosition(3,x_index,y_index,freq_index))<<endl;
+
+  // Todo: interpolation for frequency
+  return real_t(itsIntegrals(casa::IPosition(3,x_index,y_index,freq_index)));
 }
 
 
