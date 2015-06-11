@@ -134,10 +134,10 @@ real_t AntennaFieldHBA::getNormalization(real_t freq,
   //cout<<"Name="<<name()<<", itsIntegrals.shape="<<itsIntegrals.shape()<<endl;
   //cout<<"Name="<<name()<<", freq="<<freq<<", az="<<az<<", el="<<el
   //    <<", index=["<<x_index<<", "<<y_index<<", "<<freq_index<<"], norm="
-  //    <<itsIntegrals(casa::IPosition(3,x_index,y_index,freq_index))<<endl;
+  //    <<itsIntegrals(casa::IPosition(3,y_index,x_index,freq_index))<<endl;
 
   // Todo: interpolation for frequency
-  return real_t(itsIntegrals(casa::IPosition(3,x_index,y_index,freq_index)));
+  return real_t(itsIntegrals(casa::IPosition(3,y_index,x_index,freq_index)));
 }
 
 
