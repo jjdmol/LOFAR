@@ -73,10 +73,6 @@ rfi detector by André Offringa (offringa@astro.rug.nl).
           </action>
         </children>
       </action>
-      <action type="PlotAction">
-        <plot-kind>5</plot-kind>
-        <logarithmic-y-axis>0</logarithmic-y-axis>
-      </action>
       <action type="SetFlaggingAction">
         <new-flagging>4</new-flagging>
       </action>
@@ -97,18 +93,9 @@ rfi detector by André Offringa (offringa@astro.rug.nl).
         <threshold>8</threshold>
         <smoothing-sigma>0.6</smoothing-sigma>
         <abs-threshold>0.4</abs-threshold>
-        <make-plot>0</make-plot>
       </action>
       <action type="SetFlaggingAction">
         <new-flagging>6</new-flagging>
-      </action>
-      <action type="PlotAction">
-        <plot-kind>0</plot-kind>
-        <logarithmic-y-axis>0</logarithmic-y-axis>
-      </action>
-      <action type="PlotAction">
-        <plot-kind>1</plot-kind>
-        <logarithmic-y-axis>0</logarithmic-y-axis>
       </action>
     </children>
   </action>
