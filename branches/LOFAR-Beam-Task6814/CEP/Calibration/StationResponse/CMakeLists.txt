@@ -12,3 +12,6 @@ lofar_find_package(Casacore REQUIRED COMPONENTS casa measures ms tables images c
 
 add_subdirectory(include/StationResponse)
 add_subdirectory(src)
+
+install(DIRECTORY beamnorms/ DESTINATION share/beamnorms
+        FILES_MATCHING PATTERN "*.fits")
