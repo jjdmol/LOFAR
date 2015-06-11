@@ -127,6 +127,8 @@ real_t AntennaFieldHBA::getNormalization(real_t freq,
   // Round to int, so add 0.5 and then truncate
   freq_index=int((freq-freq_min)/(freq_max-freq_min)*numfreqs+0.5);
 
+  ASSERTSTR(!itsIntegrals.empty(), "No beamnorms found for station "<<name());
+
   //cout<<"Name="<<name()<<", itsIntegrals.shape="<<itsIntegrals.shape()<<endl;
   //cout<<"Name="<<name()<<", freq="<<freq<<", az="<<az<<", el="<<el
   //    <<", index=["<<x_index<<", "<<y_index<<", "<<freq_index<<"], norm="
