@@ -99,8 +99,10 @@ class CQDaemon(object):
                broker = self._broker)
 
         ## Connect frombus to the deadletter queue
-        self._fromDeadletterBus = msgbus.FromBus(self._deadLetterQueueName,
+        self._deadletterFromBus = msgbus.FromBus(self._deadLetterQueueName,
                broker = self._broker)
+
+
 
     def close(self):
         """
@@ -108,7 +110,7 @@ class CQDaemon(object):
         """
         self._CommandQueue.close()
         self._toDeadletterBus.close()
-        self._fromDeadletterBus.close()
+        self._deadletterFromBus.close()
 
     def run(self):
         """
@@ -153,9 +155,11 @@ class CQDaemon(object):
         eg. You could not remove them from the queue but 
         do this in a different process
         """     
+        raise BaseException()
+
         while True:
             # Test if the timeout is in milli seconds or second
-            msg = self._fromDeadletterBus.get(0.1)  #  use timeout.
+            msg = self._deadletterFromBus.get(0.1)  #  use timeout.
 
             if msg == None:
                break    # exit msg processing
@@ -166,7 +170,7 @@ class CQDaemon(object):
                 self._logger.error(
                     "Could not process deadletter, incorrect content")
                 self._logger.warn(msg)
-                self._fromDeadletterBus.ack(msg) 
+                self._deadletterFromBus.ack(msg) 
                 break
 
             # default implementation, report the deadletter and report
@@ -175,7 +179,7 @@ class CQDaemon(object):
                "Received on deadletterqueue command: {0}".format(command))
             self._logger.info("msg content: {0}".format(unpacked_msg_content))
             self._logger.info("ignoring msg")
-            self._fromDeadletterBus.ack(msg) 
+            self._deadletterFromBus.ack(msg) 
 
     def process_commands(self, command, unpacked_msg_content, msg):
         """

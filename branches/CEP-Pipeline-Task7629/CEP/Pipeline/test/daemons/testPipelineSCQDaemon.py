@@ -31,12 +31,10 @@ class testForwardOfJobMsgToQueueuSlaveWrapper(
             PipelineSCQDaemonImp.PipelineSCQDaemonImp):
     def __init__(self, broker, busname, masterCommandQueueName,
                  deadLetterQueueName,
-                 subprocessStartedExec,
                  loop_interval, daemon):
         super(testForwardOfJobMsgToQueueuSlaveWrapper, self).__init__(
            broker, busname, 
            masterCommandQueueName, deadLetterQueueName,
-           subprocessStartedExec,
            loop_interval, daemon)
         pass
         self._start_subprocess_called = False
@@ -76,7 +74,7 @@ class testForwardOfJobMsgToQueueuSlave(
         """
         # Create the daemon and get all the default queues
         job_node = 'locus102'
-        daemon, commandQueueBus, deadletterQueue, deadletterToQueue = \
+        daemon, commandQueueBus = \
             testFunctions.prepare_test( testForwardOfJobMsgToQueueuSlaveWrapper)
 
         # Test1: Create a test job payload
@@ -91,12 +89,13 @@ class testForwardOfJobMsgToQueueuSlave(
         # not exist, it should end up in the deadletter queue
         daemon._process_commands()
 
+
         # read from the deadletter queue
-        msg = testFunctions.try_get_msg(deadletterQueue, 10) 
+        msg = testFunctions.try_get_msg(daemon._deadletterFromBus, 10) 
         if msg == None:
             raise Exception(
                  "Did not receive the expect msg on the deadletter queue")
-        deadletterQueue.ack(msg) 
+        daemon._deadletterFromBus.ack(msg) 
 
         # check that the correct msg is receive in the deadletter queue        
         unpacked_msg_data = eval(msg.content().payload)
@@ -105,7 +104,6 @@ class testForwardOfJobMsgToQueueuSlave(
         
         ## Cleanup sut
         commandQueueBus.close()
-        deadletterQueue.close()
         daemon.close()
 
     def test_deadletterQueue_startjob_processing(self):
@@ -114,7 +112,7 @@ class testForwardOfJobMsgToQueueuSlave(
         """
         # Create the daemon and get all the default queues
         job_node = 'locus102'
-        daemon, commandQueueBus, deadletterQueue, deadletterToQueue = \
+        daemon, commandQueueBus = \
             testFunctions.prepare_test( testForwardOfJobMsgToQueueuSlaveWrapper)
 
         # Test1: Create a test job payload
@@ -137,7 +135,6 @@ class testForwardOfJobMsgToQueueuSlave(
         
         ## Cleanup sut
         commandQueueBus.close()
-        deadletterQueue.close()
         daemon.close()
 
 

@@ -44,14 +44,7 @@ def prepare_test(subclass):
     # connect to the queueus
     commandQueueBus = get_to_bus(masterCommandQueueName, broker)
 
-    deadletterQueue = get_from_bus(deadLetterQueueName,
-                                                 broker)
-
-    deadletterToQueue = get_to_bus(deadLetterQueueName,
-                                                 broker)
-
-
-    return daemon, commandQueueBus,  deadletterQueue, deadletterToQueue
+    return daemon, commandQueueBus  
 
 
 

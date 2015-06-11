@@ -80,7 +80,7 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
         """     
         while True:
             # Test if the timeout is in milli seconds or second
-            msg = self._fromDeadletterBus.get(0.1)  #  use timeout.
+            msg = self._deadletterFromBus.get(0.1)  #  use timeout.
 
             if msg == None:
                break    # exit msg processing
@@ -91,19 +91,19 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
                 self._logger.error(
                     "Could not process deadletter, incorrect content")
                 self._logger.warn(msg)
-                self._fromDeadletterBus.ack(msg) 
+                self._deadletterFromBus.ack(msg) 
                 break
 
             elif command == 'run_job':
                 self._process_deadletter_run_job(unpacked_msg_data)
-                self._fromDeadletterBus.ack(msg)                         
+                self._deadletterFromBus.ack(msg)                         
                 continue
 
             self._logger.info(
                "Received on deadletterqueue command: {0}".format(command))
             self._logger.info("msg content: {0}".format(unpacked_msg_content))
             self._logger.info("ignoring msg")
-            self._fromDeadletterBus.ack(msg) 
+            self._deadletterFromBus.ack(msg) 
     
     def _process_deadletter_run_job(self, unpacked_msg_content):
         """
