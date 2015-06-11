@@ -79,7 +79,8 @@ class testForwardOfJobMsgToQueueuSlave(
 
         # Test1: Create a test job payload
         send_payload =  {'command':'run_job',
-                         'session_uuid':"123456321654",
+                         'session_uuid':"123456",
+                         'job_uuid':"654321",
                          'node':job_node,
                          'job':{}}
         msg = testFunctions.create_test_msg(send_payload)
