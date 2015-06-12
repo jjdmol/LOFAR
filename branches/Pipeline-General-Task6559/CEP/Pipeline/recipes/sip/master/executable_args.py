@@ -343,6 +343,8 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
                 if not k in jobresultdict:
                     jobresultdict[k] = []
                 jobresultdict[k].append(DataProduct(job.host, job.results[k], outp.skip))
+                if k == 'break':
+                    self.outputs.update({'break': v})
 
         # temp solution. write all output dict entries to a mapfile
         mapfile_dir = os.path.join(self.config.get("layout", "job_directory"), "mapfiles")
