@@ -239,9 +239,17 @@ Total Failed: %(failed)i""" % {'done': self.done['Total'], 'corr': self.corr, 'b
     return message
 
   def send_mail(self):
-    self.get_db_info()
-    message = self.make_report()
-    os.system('echo "%s"|mailx -s "Ingest job of %s, %s(%i) has ended" ' % (message, self.job_info['user'], self.job_info['name'], self.Id) + self.mailCommand)
+    user = "<unknown user>"
+    job_name = "<unknown job name>"
+    message = "<unknown message>"
+    try:
+      self.get_db_info()
+      user = self.job_info['user']
+      job_name = self.job_info['name']
+      message = self.make_report()
+    except Exception as e:
+      self.logger.error('Could not construct mail message for job_group %i' % (self.Id))
+    os.system('echo "%s"|mailx -s "Ingest job of %s, %s(%i) has ended" ' % (message, user, job_name, self.Id) + self.mailCommand)
     self.logger.info('job_group %i sent an email to %s' % (self.Id, self.mailCommand))
 
   
@@ -254,7 +262,7 @@ if __name__ == '__main__':
   l = logging.getLogger()
   l.setLevel(10)
   Id = 476
-  standalone = job_group(l, Id, 'MoM', 'renting@astron.nl')
+  standalone = job_group(l, Id, 'MoM', 'schaap@astron.nl')
   jobs = []
   for i in range(2):
     k = {'Status': JobScheduled, 'ExportID': 'jA_%s_%s_%i_L12345_SAP000_SB000_uv.MS' % (Id, Id, i), 'ObservationId': 12345, 'MoMId': 654321, 'DataProduct': 'L12345_SAP000_SB000_uv.MS', 'Location': 'locus123:/data/L12345/L12345_SAP000_SB000_uv.MS', 'errors': []}
@@ -268,3 +276,4 @@ if __name__ == '__main__':
   standalone.get_db_info()
   message = standalone.make_report()
   print(message)
+  standalone.send_mail()
