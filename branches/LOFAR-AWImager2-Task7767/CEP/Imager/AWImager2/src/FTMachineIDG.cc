@@ -85,6 +85,7 @@ private:
   std::streambuf * itsOldBuffer;
 };
 
+bool compare_size(vector<int> a, vector<int> b) { return a.size()<b.size(); }
   
   
 Matrix<Float> FTMachineIDG::getAveragePB()
@@ -329,34 +330,65 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
   
   
   // find the maximum uv baseline length on grid
-  LOG_DEBUG_STR("Find longest baseline...");
-  
-  double max_uv = 0;
-  double max_u = 1e6;
-  double max_v = 1e6;
+  double max_u = 0;
+  double max_u_;
+  double max_v = 0;
+  double max_v_;
+  #pragma omp parallel private(max_u_, max_v_)
   {
-    ScopedTimer st("longest baseline");
-    double max_uv_;
-    #pragma omp parallel private(max_uv_)
+    max_u_ = 0;
+    max_v_ = 0;
+    #pragma omp for nowait
+    for(int i = 0; i < vb.nRow(); i++)
     {
-      max_uv_ = 0;
-      #pragma omp for nowait
-      for(int i = 0; i < vb.nRow(); i++)
-      {
-        double u = vb.uvw()(i)(0);
-        double v = vb.uvw()(i)(1);
-        double uv2 = u*u + v*v;
-        if ((abs(u) < max_u) && (abs(v) < max_v) && (max_uv_ < uv2)) max_uv_ = uv2;
-      }
-      #pragma omp critical
-      if (max_uv < max_uv_) max_uv = max_uv_;
+      double u = abs(vb.uvw()(i)(0));
+      double v = abs(vb.uvw()(i)(1));
+      if (u < max_u_) max_u_ = u;
+      if (v < max_v_) max_v_ = v;
+    }
+    #pragma omp critical
+    {
+      if (max_u < max_u_) max_u = max_u_;
+      if (max_v < max_v_) max_v = max_v_;
     }
   }
-  LOG_DEBUG_STR("done.");
-  LOFAR::LofarFT::ScopedTimer::show();
+  
+  double wavelength = casa::C::c / vb.frequency()(0);
+  double max_u_grid = itsPaddedNX/(2 * itsUVScale(0)) * wavelength;
+  double max_v_grid = itsPaddedNY/(2 * itsUVScale(1)) * wavelength;
+  
+  max_u = min(max_u, max_u_grid);
+  max_v = min(max_v, max_v_grid);
+  
+  #define MAX_SUPPORT_FREQ 16
+  
+  // find the maximum frequency window to stay within maximum support
+  double max_bw_u = MAX_SUPPORT_FREQ / (max_u / casa::C::c * itsUVScale(0));
+  double max_bw_v = MAX_SUPPORT_FREQ / (max_v / casa::C::c * itsUVScale(1));
+  double max_bw = min(max_bw_u, max_bw_v);
   
     
-
+  // create a channel mapping
+  // count number of channels per group
+  vector<vector<int> > channel_map(1, vector<int>(1,0));
+  for(int i = 1; i<vb.nChannel(); i++)
+  {
+    if ((vb.frequency()(i) - vb.frequency()(channel_map.back().front())) < max_bw)
+    {
+      channel_map.back().push_back(i);
+    }
+    else
+    {
+      channel_map.push_back(vector<int>(1, i));
+    }
+  }
+  
+  int N_chan = max_element(channel_map.begin(), channel_map.end(), compare_size)->size();
+  int N_chan_group = channel_map.size();
+  
+  LOG_DEBUG_STR("N_chan: " << N_chan);
+  
+  
   
   
   
@@ -366,11 +398,8 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
   
   
   
-  // find the maximum frequency window to stay within maximum support
-  // max freqwindow = max support / (max baseline (m) / speed of light * uvscale)
   
-  // create a channel mapping
-  // count number of channels per group
+  
   
   // W stack 
   
@@ -391,11 +420,6 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
     N_time = max(N_time, chunk->end - chunk->start + 1);
   }
 
-  Int N_chan = 4; 
-  
-  Int N_chan_group = (vb.nChannel()-1)/N_chan + 1;
-  
-  
   Int N_chunks = 100000;
   Int N_stations = 1 + max(max(vb.antenna1()), max(vb.antenna2()));
   Int blocksize = 48;
@@ -425,13 +449,15 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
   
   //iterate over channel groups
   
-  for(int chan_group = 0; chan_group < N_chan_group; chan_group++)
+  for(std::vector<vector<int> >::iterator chan_group = channel_map.begin(); chan_group != channel_map.end(); ++chan_group)
   {
-    // wavenumbers
-    for(int i = 0; i<N_chan; i++)
+    // set wavenumbers for this chan_group
+    int chan;
+    vector<int>::iterator chan_it;
+    for(chan_it = chan_group->begin(), chan=0; chan_it != chan_group->end(); ++chan_it, ++chan)
     {
-      double wavelength = casa::C::c / vb.frequency()(i+chan_group*N_chan);
-      wavenumbers(i) = 2 * casa::C::pi / wavelength;
+      double wavelength = casa::C::c / vb.frequency()(*chan_it);
+      wavenumbers(chan) = 2 * casa::C::pi / wavelength;
     }
 
     int i = 0;    
@@ -440,7 +466,7 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
       int idx_start = v.baseline_index_map[chunk->start];
       int idx_end = v.baseline_index_map[chunk->end];
       
-      double f = (vb.frequency()(0) + vb.frequency()(N_chan-1)) / 2;
+      double f = (vb.frequency()(chan_group->front()) + vb.frequency()(chan_group->back())) / 2;
       double wavelength = casa::C::c / f;
       
       double center_u = floor((vb.uvw()(idx_start)(0) + vb.uvw()(idx_end)(0))/2/wavelength * itsUVScale(0));
@@ -524,36 +550,36 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
 
         if (dopsf)
         {
-          for (int idx_chan = 0; idx_chan < N_chan; idx_chan++)
+          for(chan_it = chan_group->begin(), chan=0; chan_it != chan_group->end(); ++chan_it, ++chan)
           {
             for (int idx_pol = 0; idx_pol < itsNPol; idx_pol++)
             {
-              if (vb.flagCube()(idx_pol, idx_chan, idx))
+              if (vb.flagCube()(idx_pol, *chan_it, idx))
               {
-                visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = Complex(0);
+                visibilities( IPosition(4, idx_pol, chan, k, i)) = Complex(0);
               }
               else
               {
-                visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = imagingWeightCube(idx_pol, idx_chan, idx) * ((idx_pol==0) ||( idx_pol==3));
-                itsSumWeight[0](idx_pol,0) += imagingWeightCube(idx_pol, idx_chan, idx)*blocksize*blocksize*2;
+                visibilities( IPosition(4, idx_pol, chan, k, i)) = imagingWeightCube(idx_pol, *chan_it, idx) * ((idx_pol==0) ||( idx_pol==3));
+                itsSumWeight[0](idx_pol,0) += imagingWeightCube(idx_pol, *chan_it, idx)*blocksize*blocksize*2;
               }
             }
           }
         }
         else
         {
-          for (int idx_chan = 0; idx_chan < N_chan; idx_chan++)
+          for(chan_it = chan_group->begin(), chan=0; chan_it != chan_group->end(); ++chan_it, ++chan)
           {
             for (int idx_pol = 0; idx_pol < itsNPol; idx_pol++)
             {
-              if (vb.flagCube()(idx_pol, idx_chan, idx))
+              if (vb.flagCube()(idx_pol, *chan_it, idx))
               {
-                visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = Complex(0);
+                visibilities( IPosition(4, idx_pol, chan, k, i)) = Complex(0);
               }
               else
               {
-                visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = data(idx_pol, idx_chan+chan_group*N_chan, idx)*imagingWeightCube(idx_pol, idx_chan+chan_group*N_chan, idx);
-                itsSumWeight[0](idx_pol,0) += imagingWeightCube(idx_pol, idx_chan+chan_group*N_chan, idx)*blocksize*blocksize*2;
+                visibilities( IPosition(4, idx_pol, chan, k, i)) = data(idx_pol, *chan_it, idx)*imagingWeightCube(idx_pol, *chan_it, idx);
+                itsSumWeight[0](idx_pol,0) += imagingWeightCube(idx_pol, *chan_it, idx)*blocksize*blocksize*2;
               }
             }
           }
