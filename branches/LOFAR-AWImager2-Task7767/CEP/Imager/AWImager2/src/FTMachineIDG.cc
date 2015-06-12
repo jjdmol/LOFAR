@@ -28,6 +28,7 @@
 #include <AWImager2/VisBuffer.h>
 #include <AWImager2/ConvolutionFunction.h>
 #include <AWImager2/VisResamplerMatrixWB.h>
+#include <AWImager2/ScopedTimer.h>
 #include <Common/OpenMP.h>
 #include <casacore/lattices/LatticeMath/LatticeFFT.h>
 #include <boost/iostreams/stream.hpp>
@@ -86,7 +87,7 @@ private:
 
   
   
-const Matrix<Float>& FTMachineIDG::getAveragePB() const
+Matrix<Float> FTMachineIDG::getAveragePB()
 {
   if (itsAveragePB.empty()) 
   {
@@ -96,20 +97,27 @@ const Matrix<Float>& FTMachineIDG::getAveragePB() const
     LOG_DEBUG_STR("Storing average beam...");
     
     //DEBUG store does not work anymore, somthing to do with coordinates and wcs
-//     store(itsAveragePB, itsImageName + ".avgpb");
+    store(itsAveragePB, itsImageName + ".avgpb");
     
     LOG_DEBUG_STR("done.");
   }
   return itsAveragePB;
 }
   
+// Matrix<Float> FTMachineIDG::getSpheroidal()
+// {
+//   if (itsSpheroidal.empty()) 
+//   {
+//     itsSpheroidal.resize(itsNX, itsNY);
+//     itsAveragePB = 1.0;
+//   }
+//   return itsSpheroidal;
+// }
 
   // Partition the visbuffer according to baseline number and time
 FTMachineIDG::VisibilityMap FTMachineIDG::make_mapping(
   const VisBuffer& vb, 
-  const casa::Vector< casa::Double > &frequency_list_CF,
-  double dtime,
-  double w_step
+  double dtime
 )
 {
   
@@ -152,17 +160,6 @@ FTMachineIDG::VisibilityMap FTMachineIDG::make_mapping(
         chunk.time = 0.5 * (times[start_idx] + times[end_idx]);
         chunk.w = 0.5 * (abs(uvw(start_idx)(2)) + abs(uvw(end_idx)(2)));
         
-        int N_CF_chan = frequency_list_CF.nelements();
-        chunk.wplane_map.resize(N_CF_chan);
-        for (int ch=0; ch<N_CF_chan; ch++)
-        {
-          double freq = frequency_list_CF(ch);
-          double wavelength = casa::C::c / freq;
-          double w_lambda = chunk.w/wavelength;
-          int w_plane = floor(abs(w_lambda)/w_step);
-          chunk.wplane_map[ch] = w_plane;
-          if (w_plane>v.max_w_plane) v.max_w_plane = w_plane;
-        }
         v.chunks.push_back(chunk);
         
         allFlagged = true;
@@ -295,14 +292,6 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
   Bool convert = True;
   vb.lsrFrequency(spwid, lsr_frequency, convert);
   
-  // Set the frequencies for which the convolution function will be evaluated.
-  // set_frequency groups the frequncies found in vb according to the number of
-  // data channels in a convolution function channel.
-  // chan_map_CF is a mapping of the data channels to the 
-  // convolution function channels
-  Vector<Int> chan_map_CF;
-  chan_map_CF = itsConvFunc->set_frequency(vb.frequency());
-  
   if(dopsf) {type=FTMachine::PSF;}
   
   Cube<Complex> data;
@@ -336,29 +325,65 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
     endRow=row; 
   }
 
-  Matrix<Double> uvw(3, vb.uvw().nelements());  uvw=0.0;
-  Vector<Double> dphase(vb.uvw().nelements());  dphase=0.0;
+  // TODO
   
-  for (Int i=startRow;i<=endRow;i++) 
+  
+  // find the maximum uv baseline length on grid
+  LOG_DEBUG_STR("Find longest baseline...");
+  
+  double max_uv = 0;
+  double max_u = 1e6;
+  double max_v = 1e6;
   {
-    for (Int idim = 0; idim<3; idim++) 
+    ScopedTimer st("longest baseline");
+    double max_uv_;
+    #pragma omp parallel private(max_uv_)
     {
-      uvw(idim,i) = vb.uvw()(i)(idim);
+      max_uv_ = 0;
+      #pragma omp for nowait
+      for(int i = 0; i < vb.nRow(); i++)
+      {
+        double u = vb.uvw()(i)(0);
+        double v = vb.uvw()(i)(1);
+        double uv2 = u*u + v*v;
+        if ((abs(u) < max_u) && (abs(v) < max_v) && (max_uv_ < uv2)) max_uv_ = uv2;
+      }
+      #pragma omp critical
+      if (max_uv < max_uv_) max_uv = max_uv_;
     }
   }
+  LOG_DEBUG_STR("done.");
+  LOFAR::LofarFT::ScopedTimer::show();
   
-//   rotateUVW(uvw, dphase, vb);
-//   refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
+    
 
-  // Set up VBStore object to point to the relevant info of the VB.
+  
+  
+  
+  // find the maximum timewindow to stay within maximum support
+  // max time = max support / (max baseline (pixels) * earth_rotation_rate (rad/s))
+  // min(itsTimeWindow, max time)
+  
+  
+  
+  // find the maximum frequency window to stay within maximum support
+  // max freqwindow = max support / (max baseline (m) / speed of light * uvscale)
+  
+  // create a channel mapping
+  // count number of channels per group
+  
+  // W stack 
+  
 
-
-  const casa::Vector< casa::Double > &frequency_list_CF = itsConvFunc->get_frequency_list();
-
-  double w_step = itsConvFunc->get_w_from_support();
-//   cout << "w_step: " << w_step << endl;
-
-  VisibilityMap v = make_mapping(vb, frequency_list_CF, itsTimeWindow, w_step);
+  // TODO 
+  // this mapping should include a range of possible w values to which the block can be projected
+  
+  VisibilityMap v = make_mapping(vb, itsTimeWindow);
+  
+  // TODO
+  // now find the lowest w_max, and make a w-layer there
+  // grid all blocks within range to this layer
+  
   
   Int N_time = 0;
   for (std::vector<Chunk>::iterator chunk = v.chunks.begin() ; chunk != v.chunks.end(); ++chunk)
@@ -366,11 +391,14 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
     N_time = max(N_time, chunk->end - chunk->start + 1);
   }
 
-  Int N_chan = vb.nChannel();
+  Int N_chan = 4; 
+  
+  Int N_chan_group = (vb.nChannel()-1)/N_chan + 1;
+  
   
   Int N_chunks = 100000;
   Int N_stations = 1 + max(max(vb.antenna1()), max(vb.antenna2()));
-  Int blocksize = 32;
+  Int blocksize = 48;
 
   LOG_DEBUG_STR("Creating proxy...");
   itsProxy = new Xeon (itsCompiler.c_str(), itsCompilerFlags.c_str(),  N_stations, N_chunks, N_time, N_chan,
@@ -378,7 +406,7 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
   LOG_DEBUG_STR("done.");
   
   Array<Complex> visibilities(IPosition(4, itsNPol, N_chan, N_time, N_chunks), Complex(0.0,0.0));
-  Cube<Float> uvw1(3, N_time, N_chunks, 0.0); 
+  Cube<Float> uvw(3, N_time, N_chunks, 0.0); 
   Matrix<Float> offsets(3, N_chunks, 0.0);
   Matrix<Int> coordinates(2, N_chunks, 0.0);
   Vector<Float> wavenumbers(N_chan, 0.0);
@@ -386,7 +414,6 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
   aterm(Slicer(IPosition(4,0,0,0,0), IPosition(4,blocksize,blocksize,1,N_stations))) = 1.0;
   aterm(Slicer(IPosition(4,0,0,3,0), IPosition(4,blocksize,blocksize,1,N_stations))) = 1.0;
   Matrix<Float> spheroidal(blocksize,blocksize, 1.0);
-  Matrix<Complex> cspheroidal(blocksize,blocksize, 1.0);
   Array<Complex> subgrids(IPosition(4, blocksize, blocksize, itsNPol, N_chunks), Complex(0.0, 0.0));
   
   Cube<Complex> grid(itsPaddedNX, itsPaddedNY, itsNPol, Complex(0.0, 0.0));
@@ -395,256 +422,174 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
   
   // spheroidal
   taper(spheroidal);
-//   convertArray(cspheroidal, spheroidal);
-//   ArrayLattice<Complex> lattice(cspheroidal);
-//   LatticeFFT::cfft2d(lattice);
-//   for(int i = 0; i<blocksize; i++)
-//     for(int j = 0; j<blocksize; j++)
-//       cspheroidal(i,j) = cspheroidal(i,j) * (abs(i-blocksize/2)<=4) * (abs(i-blocksize/2)<=4);
-//     
-//   LatticeFFT::cfft2d(lattice, False);
-//   spheroidal = real(cspheroidal);
-//   spheroidal = 1.0;
   
+  //iterate over channel groups
   
-  // wavenumbers
-  for(int i = 0; i<N_chan; i++)
+  for(int chan_group = 0; chan_group < N_chan_group; chan_group++)
   {
-    double wavelength = casa::C::c / vb.frequency()(i);
-    wavenumbers(i) = 2 * casa::C::pi / wavelength;
-  }
-
-  int i = 0;    
-  for (std::vector<Chunk>::iterator chunk = v.chunks.begin() ; chunk != v.chunks.end(); ++chunk)
-  {
-    for (int j = chunk->start; j<=chunk->end; j++)
+    // wavenumbers
+    for(int i = 0; i<N_chan; i++)
     {
-      int k = j - chunk->start;
+      double wavelength = casa::C::c / vb.frequency()(i+chan_group*N_chan);
+      wavenumbers(i) = 2 * casa::C::pi / wavelength;
+    }
+
+    int i = 0;    
+    for (std::vector<Chunk>::iterator chunk = v.chunks.begin() ; chunk != v.chunks.end(); ++chunk)
+    {
+      int idx_start = v.baseline_index_map[chunk->start];
+      int idx_end = v.baseline_index_map[chunk->end];
       
-      int idx = v.baseline_index_map[j];
-
-      uvw1 (0, k, i) = vb.uvw()(idx)(0);
-      uvw1 (1, k, i) = vb.uvw()(idx)(1);
-      uvw1 (2, k, i) = vb.uvw()(idx)(2);
-    }
-    
-    int idx_start = v.baseline_index_map[chunk->start];
-    int idx_end = v.baseline_index_map[chunk->end];
-    
-    double wavelength = casa::C::c / vb.frequency()(N_chan/2);
-    
-    offsets (0, i) = int((uvw(0, idx_start) + uvw(0, idx_end))/2/wavelength * itsUVScale(0)) / itsUVScale(0) * 2 * casa::C::pi;
-    offsets (1, i) = int((uvw(1, idx_start) + uvw(1, idx_end))/2/wavelength * itsUVScale(1)) / itsUVScale(1) * 2 * casa::C::pi;
-    offsets (2, i) = 0;
-    
-    double w_support = abs(max(uvw(2, idx_start),uvw(2, idx_end))/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0)*itsUVScale(0));
-    
-    double min_u = uvw(0, idx_start)/casa::C::c*vb.frequency()(0)*itsUVScale(0);
-    min_u = min(min_u, uvw(0, idx_start)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
-    min_u = min(min_u, uvw(0, idx_end)/casa::C::c*vb.frequency()(0)*itsUVScale(0));
-    min_u = min(min_u, uvw(0, idx_end)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
-
-    double min_v = uvw(1, idx_start)/casa::C::c*vb.frequency()(0)*itsUVScale(0);
-    min_v = min(min_v, uvw(1, idx_start)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
-    min_v = min(min_v, uvw(1, idx_end)/casa::C::c*vb.frequency()(0)*itsUVScale(0));
-    min_v = min(min_v, uvw(1, idx_end)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
-    
-    double max_u = uvw(0, idx_start)/casa::C::c*vb.frequency()(0)*itsUVScale(0);
-    max_u = max(max_u, uvw(0, idx_start)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
-    max_u = max(max_u, uvw(0, idx_end)/casa::C::c*vb.frequency()(0)*itsUVScale(0));
-    max_u = max(max_u, uvw(0, idx_end)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
-
-    double max_v = uvw(1, idx_start)/casa::C::c*vb.frequency()(0)*itsUVScale(0);
-    max_v = max(max_v, uvw(1, idx_start)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
-    max_v = max(max_v, uvw(1, idx_end)/casa::C::c*vb.frequency()(0)*itsUVScale(0));
-    max_v = max(max_v, uvw(1, idx_end)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
-    
-    double uv_support = max(abs(max_u-min_u), abs(max_v-min_v));
-    
-    if ((uv_support + w_support) > 30)
-    {
-//       cout << "w_support: " << w_support << endl;
-//       cout << "uv_support: " << uv_support << endl;
-    }
-    
-    coordinates(0,i) = round(offsets(0,i)/2/casa::C::pi*itsUVScale(0)) + itsUVOffset(0) - blocksize/2;
-    coordinates(1,i) = round(offsets(1,i)/2/casa::C::pi*itsUVScale(1)) + itsUVOffset(1) - blocksize/2;
-    
-    // baselines
-    int idx = v.baseline_index_map[chunk->start];
-    int ant1 = vb.antenna1()[idx];
-    int ant2 = vb.antenna2()[idx];
-    baselines(0,i) = ant1;
-    baselines(1,i) = ant2;
-    
-    if ((coordinates(0,i) < 0) ||
-      (coordinates(1,i) < 0) ||
-      ((coordinates(0,i)+blocksize) >= itsPaddedNX) ||
-      ((coordinates(1,i)+blocksize) >= itsPaddedNY))
-    {
-      continue;
-    }
-    
-    for (int j = chunk->start; j<=chunk->end; j++)
-    {
-      int k = j - chunk->start;
+      double f = (vb.frequency()(0) + vb.frequency()(N_chan-1)) / 2;
+      double wavelength = casa::C::c / f;
       
-      int idx = v.baseline_index_map[j];
-
-      if (dopsf)
+      double center_u = floor((vb.uvw()(idx_start)(0) + vb.uvw()(idx_end)(0))/2/wavelength * itsUVScale(0));
+      double center_v = floor((vb.uvw()(idx_start)(1) + vb.uvw()(idx_end)(1))/2/wavelength * itsUVScale(1));
+      
+      coordinates(0,i) = center_u + itsUVOffset(0) - blocksize/2;
+      coordinates(1,i) = center_v + itsUVOffset(1) - blocksize/2;
+      
+      //check whether block falls within grid
+      if ((coordinates(0,i) < 0) ||
+        (coordinates(1,i) < 0) ||
+        ((coordinates(0,i)+blocksize) >= itsPaddedNX) ||
+        ((coordinates(1,i)+blocksize) >= itsPaddedNY))
       {
-        for (int idx_chan = 0; idx_chan < N_chan; idx_chan++)
-        {
-          for (int idx_pol = 0; idx_pol < itsNPol; idx_pol++)
-          {
-            if (vb.flagCube()(idx_pol, idx_chan, idx))
-            {
-              visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = Complex(0);
-            }
-            else
-            {
-              visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = imagingWeightCube(idx_pol, idx_chan, idx) * ((idx_pol==0) ||( idx_pol==3));
-              itsSumWeight[0](idx_pol,0) += imagingWeightCube(idx_pol, idx_chan, idx)*blocksize*blocksize*2;
-            }
-          }
-        }
+        continue;
       }
-      else
-      {
-        for (int idx_chan = 0; idx_chan < N_chan; idx_chan++)
-        {
-          for (int idx_pol = 0; idx_pol < itsNPol; idx_pol++)
-          {
-            if (vb.flagCube()(idx_pol, idx_chan, idx))
-            {
-              visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = Complex(0);
-            }
-            else
-            {
-              visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = data(idx_pol, idx_chan, idx)*imagingWeightCube(idx_pol, idx_chan, idx);
-              itsSumWeight[0](idx_pol,0) += imagingWeightCube(idx_pol, idx_chan, idx)*blocksize*blocksize*2;
-            }
-          }
-        }
-      }
-    }
-    
-    i++;
-    if ((i == N_chunks) || ((chunk+1) == v.chunks.end()))
-    {
-//       cout << "N_chunks: " << N_chunks << endl;      
-      LOG_DEBUG_STR("gridder...");
-      itsProxy->gridder(
-        N_chunks,
-        visibilities.data(), //      void    *visibilities
-        uvw1.data(), //      void    *uvw,
-        offsets.data(), //      void    *offset,
-        wavenumbers.data(), //      void    *wavenumbers,
-        aterm.data(),                 
-        spheroidal.data(),
-        baselines.data(),
-        subgrids.data() //      void    *uvgrid,
-      );
-      LOG_DEBUG_STR("done.");
       
-      LOG_DEBUG_STR("adder...");
-      itsProxy->adder(N_chunks, coordinates.data(), subgrids.data(), itsGriddedData[0].data());
-//       for(int i=0; i<N_chunks; i++) 
-//         for(int pol=0; pol<itsNPol; pol++) 
-//           for(int j=0; j<blocksize; j++) 
-//             for(int k=0; k<blocksize; k++) 
-//               itsGriddedData[0](IPosition(4,j+coordinates(0,i),k+coordinates(1,i),pol,0)) += subgrids(IPosition(4, j, k, pol, i));
-      LOG_DEBUG_STR("done.");
-      i = 0;
-      visibilities = Complex(0);
-    }
-  }
- 
-}
+      offsets (0, i) = center_u / itsUVScale(0) * 2 * casa::C::pi;
+      offsets (1, i) = center_v / itsUVScale(1) * 2 * casa::C::pi;
+      offsets (2, i) = 0;
 
-bool FTMachineIDG::put_on_w_plane(
-  const VisBuffer &vb,
-  const VBStore &vbs,
-  const Vector<Double> &lsr_frequency,
-  vector< casa::Array<casa::Complex> >  &w_plane_grids,
-  const VisibilityMap &v,
-  int w_plane,
-  double w_offset,
-  bool dopsf)
-{
-//       Get the convolution function.
 
-  bool any_match = false;
-  int i = 0;
-  for (std::vector<Chunk>::const_iterator chunk = v.chunks.begin() ; chunk != v.chunks.end(); ++chunk)
-  {
-    bool any_channel_match = false;
-    vector<bool> channel_selection;
-    channel_selection.reserve(chunk->wplane_map.size());
-    for (std::vector<int>::const_iterator w_idx = chunk->wplane_map.begin() ; w_idx != chunk->wplane_map.end(); ++w_idx)
-    {
-      bool match = (*w_idx == w_plane);
-      channel_selection.push_back(match);
-      any_channel_match = any_channel_match || match;
-    }
-    if (any_channel_match)
-    {
-      any_match = true;
+      // copy data to buffer
+      
+      for (int j = chunk->start; j<=chunk->end; j++)
+      {
+        int k = j - chunk->start;
+        
+        int idx = v.baseline_index_map[j];
+
+        uvw (0, k, i) = vb.uvw()(idx)(0);
+        uvw (1, k, i) = vb.uvw()(idx)(1);
+        uvw (2, k, i) = vb.uvw()(idx)(2);
+      }
+      
+      
+  //     double w_support = abs(max(uvw(2, idx_start),uvw(2, idx_end))/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0)*itsUVScale(0));
+  //     
+  //     double min_u = uvw(0, idx_start)/casa::C::c*vb.frequency()(0)*itsUVScale(0);
+  //     min_u = min(min_u, uvw(0, idx_start)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
+  //     min_u = min(min_u, uvw(0, idx_end)/casa::C::c*vb.frequency()(0)*itsUVScale(0));
+  //     min_u = min(min_u, uvw(0, idx_end)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
+  // 
+  //     double min_v = uvw(1, idx_start)/casa::C::c*vb.frequency()(0)*itsUVScale(0);
+  //     min_v = min(min_v, uvw(1, idx_start)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
+  //     min_v = min(min_v, uvw(1, idx_end)/casa::C::c*vb.frequency()(0)*itsUVScale(0));
+  //     min_v = min(min_v, uvw(1, idx_end)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
+  //     
+  //     double max_u = uvw(0, idx_start)/casa::C::c*vb.frequency()(0)*itsUVScale(0);
+  //     max_u = max(max_u, uvw(0, idx_start)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
+  //     max_u = max(max_u, uvw(0, idx_end)/casa::C::c*vb.frequency()(0)*itsUVScale(0));
+  //     max_u = max(max_u, uvw(0, idx_end)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
+  // 
+  //     double max_v = uvw(1, idx_start)/casa::C::c*vb.frequency()(0)*itsUVScale(0);
+  //     max_v = max(max_v, uvw(1, idx_start)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
+  //     max_v = max(max_v, uvw(1, idx_end)/casa::C::c*vb.frequency()(0)*itsUVScale(0));
+  //     max_v = max(max_v, uvw(1, idx_end)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
+  //     
+  //     double uv_support = max(abs(max_u-min_u), abs(max_v-min_v));
+      
+  //     if ((uv_support + w_support) > 30)
+  //     {
+  //       cout << "w_support: " << w_support << endl;
+  //       cout << "uv_support: " << uv_support << endl;
+  //     }
+      
+      
+      // baselines
       int idx = v.baseline_index_map[chunk->start];
       int ant1 = vb.antenna1()[idx];
       int ant2 = vb.antenna2()[idx];
+      baselines(0,i) = ant1;
+      baselines(1,i) = ant2;
       
-      itsConvFunc->computeAterm (chunk->time);
-      CFStore cfStore = itsConvFunc->makeConvolutionFunction (
-        ant1, 
-        ant2, 
-        chunk->time,
-        chunk->w,
-        chunk->sum_weight,
-        channel_selection, 
-        w_offset);
       
-      if (itsUseDoubleGrid) 
+      for (int j = chunk->start; j<=chunk->end; j++)
       {
-    //       TODO: support for double precision grids
-    //       itsVisResampler->DataToGrid(
-    //         itsGriddedData2[threadNum], 
-    //         vbs, 
-    //         blIndex,
-    //         blStart[i], 
-    //         blEnd[i],
-    //         itsSumWeight[threadNum], 
-    //         dopsf, 
-    //         cfStore);
-      } 
-      else 
-      {
-        #pragma omp parallel for num_threads(itsNGrid)
-        for (int taylor_idx = 0; taylor_idx<itsNGrid; taylor_idx++)
+        int k = j - chunk->start;
+        
+        int idx = v.baseline_index_map[j];
+
+        if (dopsf)
         {
-          Vector<Double> taylor_weights(lsr_frequency.nelements(), 1.0);
-          for (int j=0; j<lsr_frequency.nelements(); j++)
+          for (int idx_chan = 0; idx_chan < N_chan; idx_chan++)
           {
-            taylor_weights(j) = pow((lsr_frequency(j) - itsRefFreq)/itsRefFreq, taylor_idx);
+            for (int idx_pol = 0; idx_pol < itsNPol; idx_pol++)
+            {
+              if (vb.flagCube()(idx_pol, idx_chan, idx))
+              {
+                visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = Complex(0);
+              }
+              else
+              {
+                visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = imagingWeightCube(idx_pol, idx_chan, idx) * ((idx_pol==0) ||( idx_pol==3));
+                itsSumWeight[0](idx_pol,0) += imagingWeightCube(idx_pol, idx_chan, idx)*blocksize*blocksize*2;
+              }
+            }
           }
-//           itsVisResampler->DataToGrid(
-//             w_plane_grids[taylor_idx], 
-//             vbs, 
-//             v.baseline_index_map, 
-//             chunk->start,
-//             chunk->end, 
-//             itsSumWeight[taylor_idx], 
-//             dopsf, 
-//             cfStore,
-//             taylor_weights);
+        }
+        else
+        {
+          for (int idx_chan = 0; idx_chan < N_chan; idx_chan++)
+          {
+            for (int idx_pol = 0; idx_pol < itsNPol; idx_pol++)
+            {
+              if (vb.flagCube()(idx_pol, idx_chan, idx))
+              {
+                visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = Complex(0);
+              }
+              else
+              {
+                visibilities( IPosition(4, idx_pol, idx_chan, k, i)) = data(idx_pol, idx_chan+chan_group*N_chan, idx)*imagingWeightCube(idx_pol, idx_chan+chan_group*N_chan, idx);
+                itsSumWeight[0](idx_pol,0) += imagingWeightCube(idx_pol, idx_chan+chan_group*N_chan, idx)*blocksize*blocksize*2;
+              }
+            }
+          }
         }
       }
+      
+      i++;
+      
+      // if buffer is full or no more chunks then process buffer
+      
+      if ((i == N_chunks) || ((chunk+1) == v.chunks.end()))
+      {
+  //       cout << "N_chunks: " << N_chunks << endl;      
+        LOG_DEBUG_STR("gridder...");
+        itsProxy->gridder(
+          N_chunks,
+          visibilities.data(), //      void    *visibilities
+          uvw.data(), //      void    *uvw,
+          offsets.data(), //      void    *offset,
+          wavenumbers.data(), //      void    *wavenumbers,
+          aterm.data(),                 
+          spheroidal.data(),
+          baselines.data(),
+          subgrids.data() //      void    *uvgrid,
+        );
+        LOG_DEBUG_STR("done.");
+        
+        LOG_DEBUG_STR("adder...");
+        itsProxy->adder(N_chunks, coordinates.data(), subgrids.data(), itsGriddedData[0].data());
+        LOG_DEBUG_STR("done.");
+        i = 0;
+        visibilities = Complex(0);
+      }
     }
-  }
-  return any_match;
+  } 
 }
-
-
 
 void FTMachineIDG::get(casa::VisBuffer& vb, Int row)
 {
@@ -663,17 +608,7 @@ void FTMachineIDG::get(VisBuffer& vb, Int row)
   if (row < 0) { nRow=vb.nRow(); startRow=0; endRow=nRow-1;}
   else         { nRow=1; startRow=row; endRow=row; }
 
-  Vector<Double> dphase(vb.uvw().nelements());  dphase=0.0;
-  
   Vector<Int> chan_map(vb.frequency().size(), 0);
-  
-  // Set the frequencies for which the convolution function will be evaluated.
-  // set_frequency groups the frequncies found in vb according to the number of
-  // data channels in a convolution function channel.
-  // chan_map_CF is a mapping of the data channels to the 
-  // convolution function channels
-  Vector<Int> chan_map_CF;
-  chan_map_CF = itsConvFunc->set_frequency(vb.frequency());
   
   Vector<Double> lsr_frequency;
   
@@ -683,11 +618,7 @@ void FTMachineIDG::get(VisBuffer& vb, Int row)
 
   Cube<Complex> data(vb.modelVisCube());
   
-  const casa::Vector< casa::Double > &frequency_list_CF = itsConvFunc->get_frequency_list();
-
-  double w_step = itsConvFunc->get_w_from_support();
-
-  VisibilityMap v = make_mapping(vb, frequency_list_CF, itsTimeWindow, w_step);
+  VisibilityMap v = make_mapping(vb, itsTimeWindow);
   Int N_time = 0;
   for (std::vector<Chunk>::iterator chunk = v.chunks.begin() ; chunk != v.chunks.end(); ++chunk)
   {
@@ -698,7 +629,7 @@ void FTMachineIDG::get(VisBuffer& vb, Int row)
   
   Int N_chunks = 100000;
   Int N_stations = 1 + max(max(vb.antenna1()), max(vb.antenna2()));
-  Int blocksize = 32;
+  Int blocksize = 48;
 
   LOG_DEBUG_STR("Creating proxy...");
   itsProxy = new Xeon (itsCompiler.c_str(), itsCompilerFlags.c_str(),  N_stations, N_chunks, N_time, N_chan,
@@ -706,7 +637,7 @@ void FTMachineIDG::get(VisBuffer& vb, Int row)
   LOG_DEBUG_STR("done.");
 
   Array<Complex> visibilities(IPosition(4, itsNPol, N_chan, N_time, N_chunks), Complex(0.0,0.0));
-  Cube<Float> uvw1(3, N_time, N_chunks, 0.0); 
+  Cube<Float> uvw(3, N_time, N_chunks, 0.0); 
   Matrix<Int> idx1(N_time, N_chunks, -1); 
   Matrix<Float> offsets(3, N_chunks, 0.0);
   Matrix<Int> coordinates(2, N_chunks, 0.0);
@@ -741,9 +672,9 @@ void FTMachineIDG::get(VisBuffer& vb, Int row)
       
       int idx = v.baseline_index_map[j];
 
-      uvw1 (0, k, i) = vb.uvw()(idx)(0);
-      uvw1 (1, k, i) = vb.uvw()(idx)(1);
-      uvw1 (2, k, i) = vb.uvw()(idx)(2);
+      uvw (0, k, i) = vb.uvw()(idx)(0);
+      uvw (1, k, i) = vb.uvw()(idx)(1);
+      uvw (2, k, i) = vb.uvw()(idx)(2);
       
       idx1(k,i) = idx;
       
@@ -831,12 +762,12 @@ void FTMachineIDG::get(VisBuffer& vb, Int row)
         aterm.data(),                 
         baselines.data(),
         visibilities.data(), //      void    *visibilities
-        uvw1.data(), //      void    *uvw,
+        uvw.data(), //      void    *uvw,
         spheroidal.data(),
         subgrids.data() //      void    *uvgrid,
       );
 
-      // move predicted data to data colun
+      // move predicted data to data column
 
       for(int j = 0; j<N_chunks; j++)
       {

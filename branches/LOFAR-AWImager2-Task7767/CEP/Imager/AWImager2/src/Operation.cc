@@ -317,6 +317,9 @@ void Operation::normalize(String imagename_in, String avgpb_name, String imagena
   PagedImage<Float> image_out(imagename_out);
   PagedImage<Float> avgpb(avgpb_name);
 
+//   #pragma omp parallel for collapse(3)
+// TODO omp causes segfault, code below is not thread safe
+  
   for(Int i = 0; i < image_in.shape()[3]; ++i)
   {
     for(Int j = 0; j < image_in.shape()[2]; ++j)

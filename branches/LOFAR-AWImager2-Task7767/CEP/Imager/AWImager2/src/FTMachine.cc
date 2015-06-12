@@ -238,7 +238,7 @@ FTMachine::~FTMachine()
 {
 }
 
-const Matrix<Float>& FTMachine::getAveragePB() const
+Matrix<Float> FTMachine::getAveragePB()
 {
   if (itsAveragePB.empty()) {
     
@@ -256,6 +256,26 @@ const Matrix<Float>& FTMachine::getAveragePB() const
   }
   return itsAveragePB;
 }
+
+Matrix<Float> FTMachine::getSpheroidal()
+{
+  if (itsSpheroidal.empty()) {
+    
+    IPosition blc(
+      2, 
+      (itsPaddedNX - itsNX + (itsPaddedNX % 2 == 0)) / 2,
+      (itsPaddedNY - itsNY + (itsPaddedNY % 2 == 0)) / 2);
+    IPosition shape(2, itsNX, itsNY);
+    Slicer slicer(blc, shape);
+    
+    itsSpheroidal.reference(itsConvFunc->getSpheroidal()(slicer));
+
+  }
+  return itsSpheroidal;
+}
+
+
+
 
 // Initialize for a transform from the Sky domain. This means that
 // we grid-correct, and FFT the image
@@ -477,7 +497,10 @@ void FTMachine::getImages(Matrix<Float>& weights, Bool normalize_image)
     }
     
     ArrayLattice<Complex> lattice(itsGriddedData[i]);
-    if (itsGriddedDataDomain == UV) LatticeFFT::cfft2d(lattice, True);
+    if (itsGriddedDataDomain == UV)
+    {
+      LatticeFFT::cfft2d(lattice, True);
+    }
     
     IPosition blc(
       4, 
@@ -507,14 +530,7 @@ void FTMachine::normalize(ImageInterface<Complex> &image, Bool do_beam, Bool do_
   
   if (do_spheroidal)
   {
-    IPosition blc(
-      2, 
-      (itsPaddedNX - itsNX + (itsPaddedNX % 2 == 0)) / 2,
-      (itsPaddedNY - itsNY + (itsPaddedNY % 2 == 0)) / 2);
-    IPosition shape(2, itsNX, itsNY, itsNPol, itsNChan);
-    
-    Slicer slicer(blc, shape);
-    spheroidal.reference(itsConvFunc->getSpheroidal()(slicer));
+    spheroidal.reference(getSpheroidal());
   }
   
   Array<Float> beam;

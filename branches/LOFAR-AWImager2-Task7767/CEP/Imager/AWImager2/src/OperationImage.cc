@@ -53,7 +53,9 @@ void OperationImage::run()
 {
   String type = itsParset.getString("image.type","corrected");
   itsImager->makeimage (type, itsImageName + ".flatnoise");
+  LOG_DEBUG_STR("Normalizing...");
   normalize(itsImageName + ".flatnoise", itsImageName + ".avgpb", itsImageName + ".flatgain");
+  LOG_DEBUG_STR("done.");
 }
 
 void OperationImage::showHelp (ostream& os, const std::string& name)

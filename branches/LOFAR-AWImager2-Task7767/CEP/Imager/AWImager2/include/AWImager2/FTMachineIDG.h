@@ -59,7 +59,8 @@ public:
 
   virtual casa::String name() const { return theirName;}
 
-  virtual const casa::Matrix<casa::Float>& getAveragePB() const;
+  virtual casa::Matrix<casa::Float> getAveragePB();
+//   virtual casa::Matrix<casa::Float> getSpheroidal();
   
   // Get actual coherence from grid by degridding
   virtual void get(casa::VisBuffer& vb, casa::Int row=-1);
@@ -84,6 +85,7 @@ public:
 protected:
   
   casa::CountedPtr<Xeon> itsProxy;
+
 
   // Get the appropriate data pointer
   casa::Array<casa::Complex>* getDataPointer(const casa::IPosition&, casa::Bool);
@@ -132,9 +134,7 @@ private:
 
   VisibilityMap make_mapping(
     const VisBuffer& vb, 
-    const casa::Vector< casa::Double > &frequency_list_CF,
-    double dtime,
-    double w_step);
+    double dtime);
 
   bool put_on_w_plane(
     const VisBuffer &vb,
