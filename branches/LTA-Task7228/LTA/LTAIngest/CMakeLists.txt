@@ -248,7 +248,6 @@ python_install(
 	SOAPpy-0.12.0/validate/silabclient.py
 	SOAPpy-0.12.0/validate/soapware.py
 	SOAPpy-0.12.0/validate/silabserver.py
-	job_group.py
 	master.py
 	user_ingest.py
 	do_ltacp.py
@@ -260,6 +259,10 @@ python_install(
 if(NOT DEFINED LTAINGEST_LOG_ROOT_DIR)
   set(LTAINGEST_LOG_ROOT_DIR "/tmp/ingest/")
 endif()
+
+#get momreadonly account settings from environment
+set(MOMREADONLY_USER $ENV{MOMREADONLY_USER}) 
+set(MOMREADONLY_PASSWORD $ENV{MOMREADONLY_PASSWORD})
 
 #settings dir for ingest
 set(LTAINGEST_CFG_DIR "${CMAKE_INSTALL_PREFIX}/.ltaingest")
@@ -274,6 +277,18 @@ python_install(
   ${CMAKE_CURRENT_BINARY_DIR}/ingest_config.py
   DESTINATION LTAIngest)
 
+#configure job_group.py.in with the various host and environment specific variables.
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/job_group.py.in
+  ${CMAKE_CURRENT_BINARY_DIR}/job_group.py @ONLY)
+
+#include configured job_group.py in python install.
+python_install(
+  ${CMAKE_CURRENT_BINARY_DIR}/job_group.py
+  DESTINATION LTAIngest)
+  
+  
+  
 #configure ingest_logrotate.conf.in with @LTAINGEST_LOG_ROOT_DIR@
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/ingest_logrotate.conf.in
@@ -294,5 +309,6 @@ install(PROGRAMS
   ${CMAKE_CURRENT_BINARY_DIR}/ingest_install_logrotate_crontab.sh
   DESTINATION bin)
 
+  
 add_subdirectory(test)
   

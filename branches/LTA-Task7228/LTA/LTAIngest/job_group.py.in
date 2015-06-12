@@ -153,7 +153,7 @@ class job_group():
         m = "lofar_mom3"
         #e = "lofartest_sas099_export"
         e = "lofar_export"
-        db = MySQLdb.connect(host="mysql1.control.lofar", user="momreadonly", passwd="daub673(ming", db=m)
+        db = MySQLdb.connect(host="mysql1.control.lofar", user="@MOMREADONLY_USER@", passwd="@MOMREADONLY_PASSWORD@", db=m)
         c = db.cursor()
         c.execute("SELECT a.id,toexportdate as started,a.status_date as last_update,a.exportername,b.name as state,d.name,e.name as projectname,g.name as location,a.data_location,d.mom2id FROM %s.exports AS a, %s.status AS b, %s.mom_references AS c, %s.mom2object AS d, %s.mom2object AS e, %s.resource AS f, %s.resourcetype AS g WHERE status_id=b.id AND a.mom_reference_id = c.id AND c.mom_id=d.mom2id AND d.ownerprojectid = e.id AND e.id=f.projectid AND f.resourcetypeid > 1 AND f.resourcetypeid = g.id and a.id = %i;" % (e,e,e,m,m,m,m,self.Id))
         db_job = c.fetchone()
