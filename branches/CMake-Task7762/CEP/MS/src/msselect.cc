@@ -20,13 +20,17 @@
 //#
 //# $Id$
 
-#include <ms/MeasurementSets/MSSelection.h>
 #include <tables/Tables/TableRecord.h>
 #include <casa/Inputs/Input.h>
 #include <casa/OS/DirectoryIterator.h>
 #include <casa/OS/File.h>
 #include <casa/OS/SymLink.h>
 #include <casa/Arrays/ArrayMath.h>
+#if defined(casacore)
+#include <ms/MSSel/MSSelection.h>
+#else
+#include <ms/MeasurementSets/MSSelection.h>
+#endif
 #include <iostream>
 
 using namespace casa;

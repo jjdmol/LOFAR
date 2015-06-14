@@ -19,8 +19,8 @@
 //#
 //# $Id$
 
-#ifndef TBB_STATIC_MAPPING_H
-#define TBB_STATIC_MAPPING_H 1
+#ifndef TBBSTATICMAPPING_H
+#define TBBSTATICMAPPING_H 1
 
 #include <string>
 #include <vector>
@@ -59,5 +59,5 @@ namespace Cobalt
 } // namespace Cobalt
 } // namespace LOFAR
 
-#endif // TBB_CONNECTIONS_H
+#endif
 
