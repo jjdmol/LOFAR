@@ -204,6 +204,14 @@ class MessageContent(object):
     def _setXMLdata(self, name, data):
       return self._set_data(self._getXMLnode(name), data)
 
+    def _insertXML(self, parent, xml):
+      """ Insert XML into the current message. """
+
+      doc = xml.parseString(xml)
+
+      self._getXMLnode(parent).appendChild(doc.firstChild)
+
+
 class Message(object):
     """
       Describes a QPID message, which can be received or sent.
