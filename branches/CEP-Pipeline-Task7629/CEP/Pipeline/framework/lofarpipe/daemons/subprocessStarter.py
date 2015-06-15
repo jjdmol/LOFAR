@@ -21,12 +21,8 @@
 import time
 import subprocess
 
-
-
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
-
-
 
 class SubprocessStarter(object):
     """
