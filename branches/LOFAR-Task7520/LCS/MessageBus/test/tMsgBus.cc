@@ -38,8 +38,24 @@ void sendFOO() {
   tb.send(content);
 }
 
+// Receive a message containing FOO (and ACK  it)
+LOFAR::Message receiveFOO() {
+  LOFAR::Message msg;
+
+  FromBus fb("tMsgBus");
+  CHECK(fb.getMessage(msg, 1.0));
+
+  MessageContent content(msg.qpidMsg());
+  CHECK_EQUAL("FOO", content.payload.get());
+
+  fb.ack(msg);
+
+  return msg;
+}
+
 TEST(BrokerRunning) {
-  Connection conn("amqp:tcp:127.0.0.1:5672");
+  // Need low-level routines to prevent the use of reconnect
+  Connection conn("amqp:tcp:127.0.0.1:5672", "{reconnect: false}");
 
   conn.open();
   conn.close();
@@ -54,19 +70,29 @@ TEST(ConstructSender) {
 }
 
 TEST(SendReceive) {
+  sendFOO();
+  receiveFOO();
+}
+
+TEST(Forward) {
   // Send
   sendFOO();
 
   // Receive
-  LOFAR::Message msgReceived;
+  LOFAR::Message msgReceived = receiveFOO();
 
-  FromBus fb("tMsgBus");
-  CHECK(fb.getMessage(msgReceived, 1.0));
+  // Forward
+  ToBus tb("tMsgBus-extraTestQ");
+  tb.send(msgReceived);
 
-  MessageContent content(msgReceived.qpidMsg());
+  // Receive again
+  LOFAR::Message msgReceived2;
+  FromBus fb2("tMsgBus-extraTestQ");
+  CHECK(fb2.getMessage(msgReceived2, 1.0));
+  fb2.ack(msgReceived2);
+
+  MessageContent content(msgReceived2.qpidMsg());
   CHECK_EQUAL("FOO", content.payload.get());
-
-  fb.ack(msgReceived);
 }
 
 TEST(Ack) {
@@ -74,15 +100,12 @@ TEST(Ack) {
   sendFOO();
 
   // Reeive
-  LOFAR::Message msgReceived;
-
-  FromBus fb("tMsgBus");
-  CHECK(fb.getMessage(msgReceived, 0.2));
-
-  fb.ack(msgReceived);
+  receiveFOO();
 
   // ACK = Accept, do NOT send again
-  CHECK(!fb.getMessage(msgReceived, 0.2));
+  FromBus fb("tMsgBus");
+  LOFAR::Message msg;
+  CHECK(!fb.getMessage(msg, 0.1));
 }
 
 TEST(NAck) {
@@ -90,18 +113,34 @@ TEST(NAck) {
   sendFOO();
 
   // Reeive
-  LOFAR::Message msgReceived;
+  LOFAR::Message msg;
 
   FromBus fb("tMsgBus");
-  CHECK(fb.getMessage(msgReceived, 0.2));
+  CHECK(fb.getMessage(msg, 1.0));
 
-  fb.nack(msgReceived);
+  fb.nack(msg);
 
   // NACK = Send again
-  CHECK(fb.getMessage(msgReceived, 0.2));
+  CHECK(fb.getMessage(msg, 1.0));
 
   // Keep queue clean
-  fb.ack(msgReceived);
+  fb.ack(msg);
+}
+
+TEST(Reject) {
+  // Send
+  sendFOO();
+
+  // Reeive
+  LOFAR::Message msg;
+
+  FromBus fb("tMsgBus");
+  CHECK(fb.getMessage(msg, 1.0));
+
+  fb.reject(msg);
+
+  // Reject = DONT Send again
+  CHECK(!fb.getMessage(msg, 0.1));
 }
 
 int main() {
