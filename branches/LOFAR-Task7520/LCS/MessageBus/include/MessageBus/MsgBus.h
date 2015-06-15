@@ -36,7 +36,6 @@
 
 #include <Common/Exception.h>
 #include <MessageBus/Message.h>
-#include <MessageBus/MessageContent.h>
 
 #include <map>
 #include <string>
