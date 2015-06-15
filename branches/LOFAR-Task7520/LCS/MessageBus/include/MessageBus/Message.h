@@ -107,15 +107,13 @@ public:
     bool operator!=(const std::string &other) const { return this->get() != other; }
     bool operator!=(const char *other) const        { return this->get() != other; }
 
-  private:
+    // To be used only by MessageContent and its subclasses
     Property(): itsContent(0), itsKey("") {}
-
     void attach(MessageContent *content, const std::string &key) { itsContent = content; itsKey = key; }
 
+  private:
     MessageContent *itsContent;
     std::string itsKey;
-
-    friend class MessageContent;
   };
 
   // Return properties of the constructed or received message
