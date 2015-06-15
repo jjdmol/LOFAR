@@ -130,7 +130,7 @@
 #cmakedefine HAVE_LIBSSH2 1
 
 /* Define if libxml++ is installed */
-#cmakedefine HAVE_LIBXML_CPP 1
+#cmakedefine HAVE_LIBXMLXX 1
 
 /* Define if LOG4CPLUS is installed */
 #cmakedefine HAVE_LOG4CPLUS 1

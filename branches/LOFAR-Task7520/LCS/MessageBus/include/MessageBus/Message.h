@@ -30,6 +30,10 @@
 #include <MessageBus/NoQpidFallback.h>
 #endif
 
+#ifdef HAVE_LIBXMLXX
+#include <libxml++/parsers/domparser.h>
+#endif
+
 #include <string>
 #include <ostream>
 
@@ -91,13 +95,17 @@ public:
     void set(const std::string &value) { itsContent->setXMLvalue(itsKey, value); }
     std::string get() const { return itsContent->getXMLvalue(itsKey); }
 
-    // C++ operator overloading
-    void operator=(const std::string &value) { set(value); }
+    // C++ operator overloading (syntactic sugar)
+    Property &operator=(const std::string &value) { set(value); return *this; }
     operator std::string () const { return get(); }
 
-    bool operator==(const Property &other) const    { return (std::string)*this == (std::string)other; }
-    bool operator==(const std::string &other) const { return (std::string)*this == other; }
-    bool operator==(const char *other) const        { return (std::string)*this == std::string(other); }
+    bool operator==(const Property &other) const    { return this->get() == other.get(); }
+    bool operator==(const std::string &other) const { return this->get() == other; }
+    bool operator==(const char *other) const        { return this->get() == other; }
+
+    bool operator!=(const Property &other) const    { return this->get() != other.get(); }
+    bool operator!=(const std::string &other) const { return this->get() != other; }
+    bool operator!=(const char *other) const        { return this->get() != other; }
 
   private:
     Property(): itsContent(0), itsKey("") {}
@@ -142,11 +150,26 @@ public:
   // Set a value in the XML content.
   void setXMLvalue(const std::string& key, const std::string& data);
 
+protected:
+  // Import an XML subdocument under the given key.
+  void insertXML(const std::string& key, const std::string& xml);
+
+#ifdef HAVE_LIBXMLXX
+  // Locates and returns a node given by its XPATH key ("/a/b/c")
+  xmlpp::Element *getXMLnode(const std::string &name) const;
+#endif
+
 private:
+  void initContent(const std::string&);
   void addProperties();
 
   // -- datamembers -- 
+#ifdef HAVE_LIBXMLXX
+  xmlpp::DomParser itsParser; // NOTE: non-copyable
+  xmlpp::Document *itsDocument;
+#else
   std::string itsContent;
+#endif
 };
 
 inline std::ostream &operator<<(std::ostream &os, const MessageContent &msg)
@@ -175,17 +198,14 @@ public:
   qpid::messaging::Message& qpidMsg()             { return (itsQpidMsg); }
   const qpid::messaging::Message& qpidMsg() const { return (itsQpidMsg); }
 
-  // Return the content
-  MessageContent content() const { return MessageContent(itsQpidMsg); }
-  
   // Return the raw message content
   std::string rawContent() const { return itsQpidMsg.getContent(); }
 
   // Return a short (one line) description of the message
-  std::string short_desc() const { return content().short_desc(); }
+  std::string short_desc() const { MessageContent content(itsQpidMsg); return content.short_desc(); }
 
   // function for printing
-  std::ostream& print (std::ostream& os) const { return content().print(os); }
+  std::ostream& print (std::ostream& os) const { MessageContent content(itsQpidMsg); return content.print(os); }
 
 private:
   // -- datamembers -- 

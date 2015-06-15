@@ -30,4 +30,12 @@ if(NOT LIBXMLXX_FOUND)
   include(FindPkgConfig)
   pkg_search_module(LIBXMLXX REQUIRED libxml++-2.8 libxml++-2.7 libxml++-2.6 libxml++-2.5)
   mark_as_advanced(LIBXMLXX_INCLUDE_DIRS LIBXMLXX_LIBRARIES)
+
+  include(FindPackageHandleStandardArgs)
+  find_package_handle_standard_args(LIBXMLXX DEFAULT_MSG
+    LIBXMLXX_LIBRARIES LIBXMLXX_INCLUDE_DIRS)
+
+  set(LIBXMLXX_LIBRARY     "${LIBXMLXX_LIBRARIES}"    CACHE LIST "LibXML++ libraries")
+  set(LIBXMLXX_INCLUDE_DIR "${LIBXMLXX_INCLUDE_DIRS}" CACHE LIST "LibXML++ include dirs")
+
 endif(NOT LIBXMLXX_FOUND)

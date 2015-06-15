@@ -26,6 +26,8 @@
 #include <UnitTest++.h>
 #include <MessageBus/Message.h>
 
+#include <iostream>
+
 using namespace LOFAR;
 using namespace std;
 
@@ -45,6 +47,9 @@ SUITE(MessageContent) {
     CHECK_EQUAL("1.2",      msg.protocolVersion.get());
     CHECK_EQUAL("MOMID",    msg.momid.get());
     CHECK_EQUAL("SASID",    msg.sasid.get());
+
+    std::cout << msg << std::endl;
+    std::cout << msg.qpidMsg().getContent() << std::endl;
   }
 
   TEST(existingmsg) {
@@ -60,6 +65,14 @@ SUITE(MessageContent) {
     CHECK_EQUAL(orig.protocolVersion, copy.protocolVersion);
     CHECK_EQUAL(orig.momid,           copy.momid);
     CHECK_EQUAL(orig.sasid,           copy.sasid);
+  }
+
+  TEST(modifymsg) {
+    MessageContent orig("NAME", "USER", "SUMMARY", "PROTOCOL", "1.2", "MOMID", "SASID");
+
+    orig.protocolVersion = "1.3";
+
+    CHECK_EQUAL("1.3", orig.protocolVersion.get());
   }
 }
 
