@@ -36,6 +36,7 @@
 
 #include <Common/Exception.h>
 #include <MessageBus/Message.h>
+#include <MessageBus/MessageContent.h>
 
 #include <map>
 #include <string>
@@ -75,8 +76,8 @@ public:
   ToBus(const std::string &address="testqueue" , const std::string &options="; {create: never}", const std::string &broker = "amqp:tcp:127.0.0.1:5672") ;
   ~ToBus(void);
 
-  void send(const std::string &msg);
   void send(LOFAR::Message &msg);
+  void send(const LOFAR::MessageContent &msg);
 
 private:
   // -- datamambers --
