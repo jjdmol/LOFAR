@@ -80,14 +80,6 @@ int main(int argc, char* argv[]) {
 		fb.ack(receivedMsg);
 	}
 
-	cout << "--- TEST 1: create a message from a string, send it, receive it, print it. --- " << endl;
-	ToBus	tb(queue);
-	string	someText("An example message constructed from text");
-	tb.send(someText);
-	fb.getMessage(receivedMsg);
-	fb.ack(receivedMsg);
-	showMessage(receivedMsg.qpidMsg());
-
 	cout << "--- TEST 2: create a message by hand, send it, receive it, print it, compare them. --- " << endl;
 	LOFAR::MessageContent	content;
 	content.setTXTPayload("Manually constructed message");
