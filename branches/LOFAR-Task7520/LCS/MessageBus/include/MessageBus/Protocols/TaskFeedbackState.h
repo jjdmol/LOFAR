@@ -54,7 +54,7 @@ public:
     // Payload: a boolean indicating success
     bool success
   ):
-  Message(
+  MessageContent(
     from,
     forUser,
     summary,

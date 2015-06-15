@@ -50,7 +50,7 @@ public:
 						// Payload: a parset containing the generated feedback
 						const ParameterSet &feedback
 					  ): 
-		Message( from, forUser, summary, "task.specification.system", "1.0.0", momID, sasID)
+		MessageContent( from, forUser, summary, "task.specification.system", "1.0.0", momID, sasID)
 	{
    		std::string buffer;
 		feedback.writeBuffer(buffer);
