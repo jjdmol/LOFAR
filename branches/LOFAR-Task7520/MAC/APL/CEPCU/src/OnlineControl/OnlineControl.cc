@@ -331,7 +331,7 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 		if (&port == itsQueueTimer) {
 			Message	msg;
 			if (itsMsgQueue->getMessage(msg, 0.1)) {
-				TaskFeedbackState content(msg.qpidMsg());
+				Protocols::TaskFeedbackState content(msg.qpidMsg());
 				string	obsIDstr = content.sasid.get();
 				LOG_INFO_STR("Received message from task " << obsIDstr);
 				if (atoi(obsIDstr.c_str()) == itsObsID) {
@@ -348,6 +348,9 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 					TRAN(OnlineControl::finishing_state);
 					break;
 				} // my obsid
+				else {
+					itsMsgQueue->reject(msg);
+				}
 			} // getMsg
 			itsQueueTimer->setTimer(QUEUE_POLL_TIMEOUT);
 		}
