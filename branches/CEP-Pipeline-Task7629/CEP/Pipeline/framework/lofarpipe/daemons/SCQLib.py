@@ -20,18 +20,37 @@
 import logging
 import time
 import lofar.messagebus.msgbus as msgbus
-import lofar.messagebus.CQConfig as CQConfig
+import lofar.messagebus.message as message
 
+
+def create_msg(payload):
+        """
+        TODO: should be moved into a shared code lib
+        Creates a minimal valid msg with payload
+        """
+        msg = message.MessageContent(
+                    from_="test",
+                    forUser="",
+                    summary="summary",
+                    protocol="protocol",
+                    protocolVersion="test", 
+                    #momid="",
+                    #sasid="", 
+                    #qpidMsg=None
+                          )
+        msg.payload = payload
+        return msg
 
 class QPIDLoggerHandler(logging.Handler):
-    def __init__(self, logTopicName):
+    def __init__(self, broker, logTopicName):
         """
         INit function connects to the QPID logging topic supplied
         """
         logging.Handler.__init__(self)
+        self._broker = broker
         self._logTopicName = logTopicName
         self._logTOpic = msgbus.ToBus(self._logTopicName, 
-              broker = CQConfig.broker)
+              broker = self._broker)
 
     def flush(self):
         """
@@ -53,8 +72,12 @@ class QPIDLoggerHandler(logging.Handler):
         msg_details:
         {'level'=level, 'log_data':log_data}
         """
-        msg = CQConfig.create_validated_log_msg(level, log_data,
-                                                CQConfig.hostname )
+        # add the data to send
+        payload = {'level':   level,
+                   'log_data':log_data,
+                   'sender':"STATIC HOSTNAME" }  #TODO USE CORRECT HOSTNAME
+
+        msg = create_msg(payload)
         self._logTOpic.send(msg)
 
 class SCQLib(object):
@@ -62,8 +85,7 @@ class SCQLib(object):
     class combining objects and function needed for communication via QPID,
     using the NCQDaemon framework.
     """
-    def __init__(self, returnQueueName, logTopicName,
-                      parameterQueueName):
+    def __init__(self, broker, busname, session_uuid, job_uuid):
         """
         Init function, connects to the logtopic and resultQueue.
 
@@ -71,17 +93,19 @@ class SCQLib(object):
         framework. Exit state is retrieved by the NCQDaemon, using the exit 
         value of the script
         """
-        self._parameterQueueName = parameterQueueName
-        self._logTopicName = logTopicName
-        self._returnQueueName = returnQueueName
+        self._broker = broker
+        self._parameterQueueName = busname + "/parameters" + session_uuid + "_" + job_uuid
+        self._logTopicName = busname + "/logging_" + session_uuid
+        self._returnQueueName = busname + "/results_" + session_uuid
         
         self._resultQueue = msgbus.ToBus(self._returnQueueName, 
-              broker = CQConfig.broker)
+              broker = self._broker )
 
         self._parameterQueue = msgbus.FromBus(self._parameterQueueName, 
-              broker = CQConfig.broker)
+              broker = self._broker)
 
-        self.QPIDLoggerHandler = QPIDLoggerHandler(self._logTopicName)
+        self.QPIDLoggerHandler = QPIDLoggerHandler(self._broker,
+                                                   self._logTopicName)
 
         self._job_dict = None
         self.environment = None
@@ -142,3 +166,4 @@ def validParameterQueueName(queueName):
           return True
 
       return False
+

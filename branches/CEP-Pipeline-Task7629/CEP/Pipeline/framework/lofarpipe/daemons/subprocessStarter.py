@@ -214,7 +214,7 @@ class SubprocessStarter(object):
         THe session uuid allows the deadletter queue to resend it.
         """
         msg = self.create_msg(msg_content)
-        subject = self._broker + "/" + session_uuid + "_" + job_uuid
+        subject = session_uuid + "_" + job_uuid
         msg.set_subject(subject)
 
         self._toBus.send(msg)

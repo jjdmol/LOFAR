@@ -1,71 +1,69 @@
 # import lofar.messagebus.MCQDaemon as MCQ  # communicate using the lib
 
-import uuid
-import copy
-import os
 import logging
-import time
-import threading 
-import pwd
-import socket  # needed for username TODO: is misschien een betere manier os.environ['USER']
-import signal
+import unittest
 
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
 
 import lofarpipe.daemons.SCQLib as SCQLib
 
+class testForwardOfJobMsgToQueueuSlave(
+                unittest.TestCase):
 
-## Define logging. Until we have a python loging framework, we'll have
-## to do any initialising here
-#logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
-#logger=logging.getLogger("MessageBus")
-#logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
+    def __init__(self, arg):  
+        super(testForwardOfJobMsgToQueueuSlave, self).__init__(arg)
+
+    # For now leave the setup and tearDown empty: single test
+    # when the number of test increased it is an idea to implement them
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+  
+    def test_use_logging_handler_to_queue(self):
+        broker = "locus102" 
+        job_uuid = "123456"
+        session_uuid = "654321"
+        busname = "testmcqdaemon"
+        topicName =busname + "/logging_" + session_uuid
+
+        # Queue where logmsg will be send to
+        fromTopic = msgbus.FromBus(topicName, broker = broker)
+
+        # THe SCQLib object
+        sCQLibObject = SCQLib.SCQLib(broker, "testmcqdaemon",
+                                    session_uuid,  job_uuid)
+
+        # We will be adapting the logger handler
+        logger = logging.getLogger("NCQDaemon")
+
+        # remove the default handler
+        loghandlers = logger.handlers[:]
+        for hdlr in loghandlers:  
+            logger.removeHandler(hdlr) 
+        # Insert our own
+        logger.addHandler(sCQLibObject.QPIDLoggerHandler)
+        logger.propagate = False
+
+        # Send a msg on the logger
+        logger.error("Send using qpid")
+
+        # Now read a msg from the topic
+        msg = fromTopic.get(2)
+        if not msg == None:
+            msg_content = eval(msg.content().payload)
+        else:
+            print 'Did not receive a log msg on the logging topic'
+
+        # validate that the content is correct
+        expected_msg_content= {'level': 'ERROR', 'sender': 'STATIC HOSTNAME',
+                               'log_data': 'Send using qpid'}
+        if msg_content != expected_msg_content:
+              raise Exception("did not receive correct msg content")
+
 
 
 if __name__ == "__main__":
-    username = pwd.getpwuid(os.getuid()).pw_name
-    topicName = "Test.NCQLib.{0}".format(username)
-    broker = "127.0.0.1" 
-    hostname = "localhost"
-    fromTopic = msgbus.FromBus(topicName, 
-              options = "create:always, delete:always, node: { type: topic, durable: False}",
-              broker = broker)
-
-    NCQLibObject = NCQLib.NCQLib("TempReturnQueueForTest",
-          topicName,
-          "NCQDaemon.klijn.parameters.b6008d4888d7437aa13d5c2e7237343c")
-
-    print dir(fromTopic.connection)
-    print fromTopic.connection.check_closed()
-    print str(fromTopic.connection.sessions)
-
-    qpidLoggerHandler = NCQLib.QPIDLoggerHandler(topicName)
-
-    logger = logging.getLogger("NCQDaemon")
-    logger.propagate = False
-    # remove the default handler
-    loghandlers = logger.handlers[:]
-    print loghandlers
-    for hdlr in loghandlers:  
-        logger.removeHandler(hdlr) 
-
-    logger.addHandler(NCQLibObject.QPIDLoggerHandler)
-    logger.propagate = False
-    print "before logging"
-
-    logger.error("Send using qpid")
-
-    print "after logging"
-
-    msg = fromTopic.get(2)
-    if not msg == None:
-        msg_content = eval(msg.content().payload)
-
-        print msg_content
-    else:
-        print 'queue failed'
-
-    msg = NCQLibObject._parameterQueue.get(0.1) 
-
-    print msg.content().payload
+    unittest.main()
