@@ -175,7 +175,7 @@ GCFEvent::TResult Feedback::operational_state(GCFEvent& event, GCFPortInterface&
 		}
 
 		// Yeah, still connected.
-		if (passKVpairsToOTDB(atoi(msg.sasid().c_str()), msg.payload())) {
+		if (passKVpairsToOTDB(atoi(msg.sasid.get().c_str()), msg.payload.get())) {
 			itsMsgQueue->ack(msg);
 			LOG_DEBUG("Message processed successful");
 		}
