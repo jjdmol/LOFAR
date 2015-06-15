@@ -11,7 +11,9 @@ if(HAVE_UNITTEST++)
 endif(HAVE_UNITTEST++)
 
 if(HAVE_QPID)
-  lofar_add_test(tMsgBus tMsgBus.cc)
+  if(HAVE_UNITTEST++)
+    lofar_add_test(tMsgBus tMsgBus.cc)
+  endif(HAVE_UNITTEST++)
 
   lofar_add_test(tPyMsgBus)
   lofar_add_test(tPyProtocols)

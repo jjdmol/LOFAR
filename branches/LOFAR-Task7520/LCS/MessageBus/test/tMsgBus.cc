@@ -23,89 +23,92 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <UnitTest++.h>
 #include <MessageBus/MsgBus.h>
 
 using namespace qpid::messaging;
 using namespace LOFAR;
 
+// Send a message containing FOO
+void sendFOO() {
+  LOFAR::MessageContent content;
+  content.payload = "FOO";
 
-void showMessage(qpid::messaging::Message&	msg)
-{
-	cout << "Message ID    : " << msg.getMessageId() << endl;
-	cout << "User ID       : " << msg.getUserId() << endl;
-	cout << "Correlation ID: " << msg.getCorrelationId() << endl;
-	cout << "Subject       : " << msg.getSubject() << endl;
-	cout << "Reply to      : " << msg.getReplyTo() << endl;
-	cout << "Content type  : " << msg.getContentType() << endl;
-	cout << "Priority      : " << msg.getPriority() << endl;
-//	cout << "TTL           : " << msg.getTtl() << endl;
-	cout << "Durable       : " << (msg.getDurable() ? "Yes" : "No") << endl;
-	cout << "Redelivered   : " << (msg.getRedelivered() ? "Yes" : "No")  << endl;
-	cout << "Properties    : " << msg.getProperties() << endl;
-	cout << "Content size  : " << msg.getContentSize() << endl;
-	cout << "Content       : " << msg.getContent() << endl;
+  ToBus tb("tMsgBus");
+  tb.send(content);
 }
 
-void compareMessages(qpid::messaging::Message&	lhm, qpid::messaging::Message& rhm)
-{
-	ASSERTSTR(lhm.getMessageId()     == rhm.getMessageId(),     "messageIDs differ");
-	ASSERTSTR(lhm.getUserId()        == rhm.getUserId(),        "UserIDs differ");
-	ASSERTSTR(lhm.getCorrelationId() == rhm.getCorrelationId(), "CorrelationIDs differ");
-	ASSERTSTR(lhm.getSubject()       == rhm.getSubject(),       "Subjects differ");
-	ASSERTSTR(lhm.getReplyTo()       == rhm.getReplyTo(),       "ReplyTos differ");
-	ASSERTSTR(lhm.getContentType()   == rhm.getContentType(),   "ContentTypes differ");
-	ASSERTSTR(lhm.getPriority()      == rhm.getPriority(),      "Priorities differ");
-	ASSERTSTR(lhm.getTtl()           == rhm.getTtl(),           "TTLs differ");
-	ASSERTSTR(lhm.getDurable()       == rhm.getDurable(),       "Durability differs");
-	ASSERTSTR(lhm.getRedelivered()   == rhm.getRedelivered(),   "Redelivered differs");
-//	ASSERTSTR(lhm.getProperties()    == rhm.getProperties(),    "Properties differ");
-	ASSERTSTR(lhm.getContentSize()   == rhm.getContentSize(),   "ContentSize differs");
-	ASSERTSTR(lhm.getContent()       == rhm.getContent(),       "Content differs");
+TEST(BrokerRunning) {
+  Connection conn("amqp:tcp:127.0.0.1:5672");
+
+  conn.open();
+  conn.close();
 }
 
+TEST(ConstructReceiver) {
+  FromBus fb("tMsgBus");
+}
 
-int main(int argc, char* argv[]) {
+TEST(ConstructSender) {
+  ToBus tb("tMsgBus");
+}
+
+TEST(SendReceive) {
+  // Send
+  sendFOO();
+
+  // Receive
+  LOFAR::Message msgReceived;
+
+  FromBus fb("tMsgBus");
+  CHECK(fb.getMessage(msgReceived, 1.0));
+
+  MessageContent content(msgReceived.qpidMsg());
+  CHECK_EQUAL("FOO", content.payload.get());
+
+  fb.ack(msgReceived);
+}
+
+TEST(Ack) {
+  // Send
+  sendFOO();
+
+  // Reeive
+  LOFAR::Message msgReceived;
+
+  FromBus fb("tMsgBus");
+  CHECK(fb.getMessage(msgReceived, 0.2));
+
+  fb.ack(msgReceived);
+
+  // ACK = Accept, do NOT send again
+  CHECK(!fb.getMessage(msgReceived, 0.2));
+}
+
+TEST(NAck) {
+  // Send
+  sendFOO();
+
+  // Reeive
+  LOFAR::Message msgReceived;
+
+  FromBus fb("tMsgBus");
+  CHECK(fb.getMessage(msgReceived, 0.2));
+
+  fb.nack(msgReceived);
+
+  // NACK = Send again
+  CHECK(fb.getMessage(msgReceived, 0.2));
+
+  // Keep queue clean
+  fb.ack(msgReceived);
+}
+
+int main() {
   INIT_LOGGER("tMsgBus");
 
   MessageBus::init();
 
-  std::string queue(argc == 2 ? argv[1] : "tMsgBus");
-
-  cout << "Using queue " << queue << " (Syntax: " << argv[0] << " messagebus)" << endl;
-
-	cout << "--- Drain the queue ---" << endl;
-	FromBus	fb(queue);
-	LOFAR::Message	receivedMsg;
-	while (fb.getMessage(receivedMsg, 0.01)) {
-		fb.ack(receivedMsg);
-	}
-
-	cout << "--- TEST 2: create a message by hand, send it, receive it, print it, compare them. --- " << endl;
-	ToBus tb(queue);
-	LOFAR::MessageContent	content;
-	content.setTXTPayload("Manually constructed message");
-	LOFAR::Message		msg2Send(content);
-	tb.send(msg2Send);
-	fb.getMessage(receivedMsg);
-	fb.ack(receivedMsg);
-	showMessage(receivedMsg.qpidMsg());
-	compareMessages(msg2Send.qpidMsg(), receivedMsg.qpidMsg());
-
-	cout << "--- TEST 3: add an extra queue, send messages to both queues, receive them. --- " << endl;
-	ToBus	tbExtra("tMsgBus-extraTestQ");
-	tbExtra.send("Message send to extra queue");
-	tb.send("Message send to original queue");
-
-	fb.addQueue("tMsgBus-extraTestQ");
-	fb.getMessage(receivedMsg);
-    fb.ack(receivedMsg);
-    showMessage(receivedMsg.qpidMsg());
-    fb.getMessage(receivedMsg);
-    fb.ack(receivedMsg);
-    showMessage(receivedMsg.qpidMsg());
-
-	cout << "--- All test successful! ---" << endl;
-
-	return (0);
+  return UnitTest::RunAllTests() > 0;
 }
 
