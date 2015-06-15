@@ -30,7 +30,7 @@
 namespace LOFAR {
 namespace Protocols {
 
-class TaskSpecificationSystem: public Message
+class TaskSpecificationSystem: public MessageContent
 {
 public:
     TaskSpecificationSystem(
@@ -59,17 +59,12 @@ public:
 
 	// Parse a message
 	TaskSpecificationSystem(const qpid::messaging::Message qpidMsg) :
-	    Message(qpidMsg)
-	{ }
-
-	// Read a message from disk (header + payload)
-	TaskSpecificationSystem(const std::string &rawContent) :
-		Message(rawContent)
+	    MessageContent(qpidMsg)
 	{ }
 
 	ParameterSet specfications() const {
 		ParameterSet result;
-		result.adoptBuffer(payload());
+		result.adoptBuffer(payload.get());
 		return result;
 	}
 };

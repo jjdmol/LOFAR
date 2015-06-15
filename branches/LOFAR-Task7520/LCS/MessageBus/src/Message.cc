@@ -182,7 +182,7 @@ qpid::messaging::Message MessageContent::qpidMsg() const {
 
 void MessageContent::setXMLPayload (const std::string         &payload)
 {
-  setXMLvalue("message/payload", payload);
+  insertXML("message/payload", payload);
 }
 
 void MessageContent::setTXTPayload (const std::string         &payload)
