@@ -46,32 +46,8 @@ import lofarpipe.daemons.subprocessStarter as subprocessStarter
 import unittest
 import time
 
-## Wraps the actual slave implementation, allows to catch calls to internal 
-## function we need to validate.
-#class testForwardOfJobMsgToQueueuSlaveWrapper(
-#            PipelineSCQDaemonImp.PipelineSCQDaemonImp):
-#    def __init__(self, broker, busname, masterCommandQueueName,
-#                 deadLetterQueueName,
-#                 loop_interval, daemon):
-#        super(testForwardOfJobMsgToQueueuSlaveWrapper, self).__init__(
-#           broker, busname, 
-#           masterCommandQueueName, deadLetterQueueName,
-#           loop_interval, daemon)
-#        pass
-#        self._start_subprocess_called = False
-#        self._process_deadletter_run_job_called = False
-
-#    def _start_subprocess(self):
-#        """
-#        This function hides the actual run subprocess module
-#        """
-#        self._start_subprocess_called = True
-
-#    def _process_deadletter_run_job(self, unpacked_msg_content):
-#        """
-
-#        """
-#        self._process_deadletter_run_job_called = True
+# Only the bigger functions are tested: Most implementation are shallow
+# functions
 
 class BusMuck(object):
     def __init__(self, busname, broker):
@@ -123,7 +99,7 @@ class TestSubprocessStarter(unittest.TestCase):
 
         functionality
         """
-        # small wrapper class mucking member connect_result_log_parameter_queues
+        # small wrapper class mucking members
         class SubprocessStarterWrapper(
             subprocessStarter.SubprocessStarter):
             def __init__(self, broker, busname, toBus, logger):
@@ -172,7 +148,7 @@ class TestSubprocessStarter(unittest.TestCase):
 
         functionality
         """
-        # small wrapper class mucking member connect_result_log_parameter_queues
+        # small wrapper class mucking members
         class SubprocessStarterWrapper(
             subprocessStarter.SubprocessStarter):
             def __init__(self, broker, busname, toBus, logger):
