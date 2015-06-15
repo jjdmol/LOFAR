@@ -204,10 +204,10 @@ class MessageContent(object):
     def _setXMLdata(self, name, data):
       return self._set_data(self._getXMLnode(name), data)
 
-    def _insertXML(self, parent, xml):
+    def _insertXML(self, parent, xmlStr):
       """ Insert XML into the current message. """
 
-      doc = xml.parseString(xml)
+      doc = xml.parseString(xmlStr)
 
       self._getXMLnode(parent).appendChild(doc.firstChild)
 
