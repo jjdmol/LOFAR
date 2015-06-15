@@ -33,10 +33,11 @@ class SubprocessStarter(object):
     toplevel recipe
     """
 
-    def __init__(self, broker, busname, toBus):
+    def __init__(self, broker, busname, toBus, logger):
         self._broker = broker
         self._busname = busname
         self._toBus = toBus
+        self._logger = logger
         # The main state holding object: contains session_uuid dict
         # with information about the runs and the registered pipelines
         self._registered_sessions = {} 
@@ -71,7 +72,7 @@ class SubprocessStarter(object):
 
         # The needed queues are present, the job is unique. Send the paramters
         # on the parameter queue
-        self._send_job_parameters(job_uuid, msg_content)
+        self._send_job_parameters(session_uuid, job_uuid, msg_content)
 
         # to start a process we first append the job_uuid after the cmd
         # this is backward compatibility issue from the pipeline framework
@@ -79,12 +80,14 @@ class SubprocessStarter(object):
         # new start a subprocess
         process, error_str =  self._start_subprocess(
           command, working_dir, environment)
+
         # if the starting of the subprocess failed, send the result to the
         # the results queue
         # else store the process
-
         if process == None:  # error state
-            self._send_job_start_failed_msg(job_uuid, error_str)
+            self._send_process_cout_cerr(session_uuid, job_uuid,
+                                         "", error_str)
+            self._send_results(session_uuid, job_uuid,"-1")
         else:                # store the process
             self._registered_sessions[session_uuid]['jobs'][job_uuid] = process
 
@@ -126,13 +129,13 @@ class SubprocessStarter(object):
                         stdin=subprocess.PIPE,
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE)
-            self.logger.info("Started a new job: {0}".format(command))
+            self._logger.info("Started a new job: {0}".format(command))
 
         except Exception, ex:
-            self.logger.error("Received an command that failed in Popen:")
-            self.logger.error(command)
+            self._logger.error("Received an command that failed in Popen:")
+            self._logger.error(command)
             error_str = str(ex)
-            self.logger.error(error_str)            
+            self._logger.error(error_str)            
             process = None         # Popen failed, signal the failure of the 
                                    # command. Mostly due to file not found errors
 
@@ -146,7 +149,8 @@ class SubprocessStarter(object):
         """
         process = self._registered_sessions[session_uuid]['jobs'][job_uuid]
 
-        # kill the process
+        # kill the process // TODO: find out of kill can be called on a stopped
+        # process
         process.kill()
         # Get the stout en sterr, could contain information of the reason for
         # failure
@@ -155,7 +159,7 @@ class SubprocessStarter(object):
                                      stdoutdata, stderrdata)
 
         # Send error results to
-        self._send_results(session_uuid, job_uuid, -1)
+        self._send_results(session_uuid, job_uuid, "-1")
 
     def _connect_result_log_parameter_queues(self, session_uuid):
         """
@@ -170,11 +174,11 @@ class SubprocessStarter(object):
         # now register to the queues, remember, the pipeline might not have
         # connected so create and make durable. Deleting is done by the 
         # master Daemon
-        resultQueue = msgbus.ToBus(busname + "/" + "result_" + session_uuid,
+        resultQueue = msgbus.ToBus(self._busname + "/" + "result_" + session_uuid,
               broker = self._broker)
 
         # and topic s: qpid-stat -e for example and source of this code
-        logTopic = msgbus.ToBus(busname + "/" + "log_" + session_uuid,
+        logTopic = msgbus.ToBus(self._busname + "/" + "log_" + session_uuid,
               broker = self._broker)
 
         queues_dict = {'result': resultQueue,
@@ -201,6 +205,32 @@ class SubprocessStarter(object):
         msg = self.create_msg(payload)
         self._registered_sessions[session_uuid]['queues']['log'].send(msg)
 
+
+    def _send_job_parameters(self, session_uuid, job_uuid, msg_content):
+        """
+        Sends a job parameter msg on the bus.
+
+        Both the session and job uuid are used to adress it.
+        THe session uuid allows the deadletter queue to resend it.
+        """
+        msg = self.create_msg(msg_content)
+        subject = self._broker + "/" + session_uuid + "_" + job_uuid
+        msg.set_subject(subject)
+
+        self._toBus.send(msg)
+
+
+    def _send_results(self, session_uuid, job_uuid, exit_status):
+        """
+        Send a results msg to the results queue
+        """
+        payload = {'type':"exit_value",
+                   'exit_value':exit_status,
+                   'uuid':session_uuid,
+                   'job_uuid':job_uuid}
+        msg = self.create_msg(payload)
+        
+        self._registered_sessions[session_uuid]['queues']['result'].send(msg)
 
 
     def create_msg(self, payload):

@@ -23,6 +23,7 @@ import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
 
 import subprocess
+import lofarpipe.daemons.subprocessStarter as subprocessStarter
 
 
 class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
@@ -35,6 +36,11 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
 
         # we for ward jobs to the generic bus
         self._toBus = msgbus.ToBus(self._busname, broker = self._broker)
+
+
+        self._subprocessStarter = subprocessStarter.SubprocessStarter(
+               self._broker, self._busname, self._toBus, self._logger)
+
 
 
     def process_commands(self, command, unpacked_msg_content, msg):
@@ -53,20 +59,7 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
         """
         The starting of a job on one of the node servers.
         """
-        node = unpacked_msg_content['node']        
-        session_uuid = unpacked_msg_content['session_uuid']
-        # create new msg
-        # TODO: FOrwarding of the received msg instead of creating a new one.
-        msg = message.MessageContent()
-        # set content
-        msg.payload = unpacked_msg_content
-        # set subject needed for dynamic routing
-        subject = session_uuid + '_' + node
-        msg.set_subject(subject)
-        
-        # send to bus using the slave as msg name allows for dynamic routing
-        self._toBus.send(msg)
-
+        self._subprocessStarter.start_job_from_msg(unpacked_msg_content)
 
     def _process_deadletter_queue(self):
         """

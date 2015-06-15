@@ -46,40 +46,56 @@ import lofarpipe.daemons.subprocessStarter as subprocessStarter
 import unittest
 import time
 
-# Wraps the actual slave implementation, allows to catch calls to internal 
-# function we need to validate.
-class testForwardOfJobMsgToQueueuSlaveWrapper(
-            PipelineSCQDaemonImp.PipelineSCQDaemonImp):
-    def __init__(self, broker, busname, masterCommandQueueName,
-                 deadLetterQueueName,
-                 loop_interval, daemon):
-        super(testForwardOfJobMsgToQueueuSlaveWrapper, self).__init__(
-           broker, busname, 
-           masterCommandQueueName, deadLetterQueueName,
-           loop_interval, daemon)
-        pass
-        self._start_subprocess_called = False
-        self._process_deadletter_run_job_called = False
+## Wraps the actual slave implementation, allows to catch calls to internal 
+## function we need to validate.
+#class testForwardOfJobMsgToQueueuSlaveWrapper(
+#            PipelineSCQDaemonImp.PipelineSCQDaemonImp):
+#    def __init__(self, broker, busname, masterCommandQueueName,
+#                 deadLetterQueueName,
+#                 loop_interval, daemon):
+#        super(testForwardOfJobMsgToQueueuSlaveWrapper, self).__init__(
+#           broker, busname, 
+#           masterCommandQueueName, deadLetterQueueName,
+#           loop_interval, daemon)
+#        pass
+#        self._start_subprocess_called = False
+#        self._process_deadletter_run_job_called = False
 
-    def _start_subprocess(self):
-        """
-        This function hides the actual run subprocess module
-        """
-        self._start_subprocess_called = True
+#    def _start_subprocess(self):
+#        """
+#        This function hides the actual run subprocess module
+#        """
+#        self._start_subprocess_called = True
 
-    def _process_deadletter_run_job(self, unpacked_msg_content):
-        """
+#    def _process_deadletter_run_job(self, unpacked_msg_content):
+#        """
 
-        """
-        self._process_deadletter_run_job_called = True
+#        """
+#        self._process_deadletter_run_job_called = True
+
+class BusMuck(object):
+    def __init__(self, busname, broker):
+        self._busname = busname
+        self._broker = broker
+
+        self._send_calls = {}
+
+    def send(self, msg):
+        nr_entries = len(self._send_calls)
+        self._send_calls[nr_entries] = eval(msg.payload)  # msg is content here
+
+        
+
+# Define logging.  Until we have a python loging framework, we'll have
+# to do any initialising here
+import logging
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
 
-
-class testForwardOfJobMsgToQueueuSlave(
-                unittest.TestCase):
+class TestSubprocessStarter(unittest.TestCase):
 
     def __init__(self, arg):  
-        super(testForwardOfJobMsgToQueueuSlave, self).__init__(arg)
+        super(TestSubprocessStarter, self).__init__(arg)
 
     # For now leave the setup and tearDown empty: single test
     # when the number of test increased it is an idea to implement them
@@ -89,12 +105,134 @@ class testForwardOfJobMsgToQueueuSlave(
     def tearDown(self):
         pass
   
-    def test_run_job_results_in_start_subprocess_call(self):
+    def test_construction(self):
         """
-        A msg with the command run_job should be forwarded to jobnode
+        basic test, create the object and expect no exception etc.
+
         """
-        # Create the daemon and get all the default queues
-        pass
+        broker = "locus102"
+        busname = "testmcqdaemon"
+        toBus = None
+        logger = logging.getLogger("subProcessStarter")
+        starter = subprocessStarter.SubprocessStarter(broker, busname, toBus,
+                                                      logger)
+
+    def test_start_job_from_msg_succes(self):
+        """
+        Main function of the class, creates the state and calls all the needed
+
+        functionality
+        """
+        # small wrapper class mucking member connect_result_log_parameter_queues
+        class SubprocessStarterWrapper(
+            subprocessStarter.SubprocessStarter):
+            def __init__(self, broker, busname, toBus, logger):
+                  super(SubprocessStarterWrapper, self).__init__(
+                                                broker, busname, toBus, logger)
+                  self._connect_called = None
+                  self._start_subprocess_called = None
+
+            def _connect_result_log_parameter_queues(self, session_uuid):
+
+                self._connect_called = session_uuid
+
+            def _start_subprocess(self, command, working_dir, environment):
+                self._start_subprocess_called = True
+                return "Just a string", "Not an error"
+
+
+        broker = "locus102"
+        busname = "testmcqdaemon"
+        toBus = BusMuck(broker, busname)
+        logger = logging.getLogger("subProcessStarter")
+        starter = SubprocessStarterWrapper(broker, busname, toBus,
+                                                      logger)
+
+        # A fake msg content
+        msg_content = {}
+        msg_content['session_uuid'] = "123456"
+        msg_content['job_uuid'] = "654321"
+        msg_content['parameters'] = {}
+        msg_content['parameters']['cdw'] = "/home"
+        msg_content['parameters']['environment'] = {"ENV":"Value"}
+        msg_content['parameters']['cmd'] = "ls"
+
+        starter.start_job_from_msg(msg_content)
+
+        # Should result in a parameter msg on the toBus
+        self.assertEqual(toBus._send_calls, {0:msg_content})
+        # _connect_result_log_parameter_queues called with the session_uuid
+        self.assertEqual(starter._connect_called, msg_content['session_uuid'] )
+        # subprocess called
+        self.assertTrue(starter._start_subprocess_called)
+
+    def test_start_job_from_msg_fail(self):
+        """
+        Main function of the class, creates the state and calls all the needed
+
+        functionality
+        """
+        # small wrapper class mucking member connect_result_log_parameter_queues
+        class SubprocessStarterWrapper(
+            subprocessStarter.SubprocessStarter):
+            def __init__(self, broker, busname, toBus, logger):
+                  super(SubprocessStarterWrapper, self).__init__(
+                                                broker, busname, toBus, logger)
+                  self._connect_called = None
+                  self._start_subprocess_called = None
+                  self._send_process_cout_cerr_called =None
+                  self.__send_results_called = None
+
+            def _connect_result_log_parameter_queues(self, session_uuid):
+
+                self._connect_called = session_uuid
+
+            def _start_subprocess(self, command, working_dir, environment):
+                self._start_subprocess_called = True
+                return None, "ERROR"
+
+            def _send_process_cout_cerr(self, session_uuid, job_uuid,
+                                         std_str, error_st):
+                self._send_process_cout_cerr_called = True
+
+            def _send_results(self, session_uuid, job_uuid, exit_status):
+                self._send_results_called =  exit_status
+                
+
+
+        broker = "locus102"
+        busname = "testmcqdaemon"
+        toBus = BusMuck(broker, busname)
+        logger = logging.getLogger("subProcessStarter")
+        starter = SubprocessStarterWrapper(broker, busname, toBus,
+                                                      logger)
+
+        # A fake msg content
+        msg_content = {}
+        msg_content['session_uuid'] = "123456"
+        msg_content['job_uuid'] = "654321"
+        msg_content['parameters'] = {}
+        msg_content['parameters']['cdw'] = "/home"
+        msg_content['parameters']['environment'] = {"ENV":"Value"}
+        msg_content['parameters']['cmd'] = "notavalidexecutablename"
+
+        starter.start_job_from_msg(msg_content)
+
+        # Should result in a parameter msg on the toBus
+        self.assertEqual(toBus._send_calls, {0:msg_content})
+        # _connect_result_log_parameter_queues called with the session_uuid
+        self.assertEqual(starter._connect_called, msg_content['session_uuid'] )
+        # subprocess called
+        self.assertTrue(starter._start_subprocess_called)
+
+        # Failure should result in sending of log info
+        self.assertTrue(starter._send_process_cout_cerr_called)
+        # and a status msg
+        self.assertEqual(starter._send_results_called, "-1")
+
+
+        
+
 
 
 

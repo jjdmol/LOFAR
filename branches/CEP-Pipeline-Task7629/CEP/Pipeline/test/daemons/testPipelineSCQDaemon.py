@@ -79,10 +79,14 @@ class testForwardOfJobMsgToQueueuSlave(
 
         # Test1: Create a test job payload
         send_payload =  {'command':'run_job',
-                         'session_uuid':"123456",
-                         'job_uuid':"654321",
+                         'session_uuid':"123456321654",
+                         'job_uuid': "654321",
                          'node':job_node,
-                         'job':{}}
+                         'parameters':{
+                           'cdw': "/home",
+                           'environment':  {"ENV":"Value"},
+                           'cmd': "ls"}}
+
         msg = testFunctions.create_test_msg(send_payload)
         commandQueueBus.send(msg)
 
@@ -100,6 +104,7 @@ class testForwardOfJobMsgToQueueuSlave(
 
         # check that the correct msg is receive in the deadletter queue        
         unpacked_msg_data = eval(msg.content().payload)
+
         self.assertEqual(unpacked_msg_data, send_payload)
         
         
@@ -116,11 +121,17 @@ class testForwardOfJobMsgToQueueuSlave(
         daemon, commandQueueBus = \
             testFunctions.prepare_test( testForwardOfJobMsgToQueueuSlaveWrapper)
 
+
         # Test1: Create a test job payload
         send_payload =  {'command':'run_job',
                          'session_uuid':"123456321654",
+                         'job_uuid': "654321",
                          'node':job_node,
-                         'job':{}}
+                         'parameters':{
+                           'cdw': "/home",
+                           'environment':  {"ENV":"Value"},
+                           'cmd': "ls"}}
+
         msg = testFunctions.create_test_msg(send_payload)
         commandQueueBus.send(msg)
 
