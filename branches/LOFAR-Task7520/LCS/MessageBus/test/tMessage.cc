@@ -36,30 +36,30 @@ SUITE(MessageContent) {
 
   TEST(newmsg) {
     // Create a message from scratch
-    MessageContent msg("FROM", "FORUSER", "SUMMARY", "PROTOCOL", "1.2", "MOMID", "SASID");
+    MessageContent msg("NAME", "USER", "SUMMARY", "PROTOCOL", "1.2", "MOMID", "SASID");
 
-    CHECK_EQUAL("FROM",     msg.from());
-    CHECK_EQUAL("FORUSER",  msg.forUser());
-    CHECK_EQUAL("SUMMARY",  msg.summary());
-    CHECK_EQUAL("PROTOCOL", msg.protocol());
-    CHECK_EQUAL("1.2",      msg.protocolVersion());
-    CHECK_EQUAL("MOMID",    msg.momid());
-    CHECK_EQUAL("SASID",    msg.sasid());
+    CHECK_EQUAL("NAME",     msg.name.get());
+    CHECK_EQUAL("USER",     msg.user.get());
+    CHECK_EQUAL("SUMMARY",  msg.summary.get());
+    CHECK_EQUAL("PROTOCOL", msg.protocol.get());
+    CHECK_EQUAL("1.2",      msg.protocolVersion.get());
+    CHECK_EQUAL("MOMID",    msg.momid.get());
+    CHECK_EQUAL("SASID",    msg.sasid.get());
   }
 
   TEST(existingmsg) {
-    MessageContent orig("FROM", "FORUSER", "SUMMARY", "PROTOCOL", "1.2", "MOMID", "SASID");
+    MessageContent orig("NAME", "USER", "SUMMARY", "PROTOCOL", "1.2", "MOMID", "SASID");
 
     // Create a qpid message and parse it again
     MessageContent copy(orig.qpidMsg());
 
-    CHECK_EQUAL(orig.from(),            copy.from());
-    CHECK_EQUAL(orig.forUser(),         copy.forUser());
-    CHECK_EQUAL(orig.summary(),         copy.summary());
-    CHECK_EQUAL(orig.protocol(),        copy.protocol());
-    CHECK_EQUAL(orig.protocolVersion(), copy.protocolVersion());
-    CHECK_EQUAL(orig.momid(),           copy.momid());
-    CHECK_EQUAL(orig.sasid(),           copy.sasid());
+    CHECK_EQUAL(orig.name,            copy.name);
+    CHECK_EQUAL(orig.user,            copy.user);
+    CHECK_EQUAL(orig.summary,         copy.summary);
+    CHECK_EQUAL(orig.protocol,        copy.protocol);
+    CHECK_EQUAL(orig.protocolVersion, copy.protocolVersion);
+    CHECK_EQUAL(orig.momid,           copy.momid);
+    CHECK_EQUAL(orig.sasid,           copy.sasid);
   }
 }
 

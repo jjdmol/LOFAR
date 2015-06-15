@@ -84,6 +84,11 @@ static string _uuid() {
   return uuid.str();
 }
 
+MessageContent::MessageContent()
+{
+  addProperties();
+}
+
 MessageContent::MessageContent(const std::string &from,
 				 const std::string &forUser,
 				 const std::string &summary,
@@ -94,27 +99,53 @@ MessageContent::MessageContent(const std::string &from,
 :
   itsContent(LOFAR_MSG_TEMPLATE)
 {
-  setXMLvalue("message/header/system", LOFAR::system);
-  setXMLvalue("message/header/version", LOFAR::headerVersion);
-  setXMLvalue("message/header/protocol/name", protocol);
-  setXMLvalue("message/header/protocol/version", protocolVersion);
-  setXMLvalue("message/header/source/name", from);
-  setXMLvalue("message/header/source/user", forUser);
-  setXMLvalue("message/header/source/uuid", _uuid());
-  setXMLvalue("message/header/source/summary", summary);
-  setXMLvalue("message/header/source/timestamp", _timestamp());
-  setXMLvalue("message/header/ids/momid", momid);
-  setXMLvalue("message/header/ids/sasid", sasid);
+  addProperties();
+
+  this->system          = LOFAR::system;
+  this->headerVersion   = LOFAR::headerVersion;
+
+  this->protocol        = protocol;
+  this->protocolVersion = protocolVersion;
+  this->name            = from;
+  this->user            = forUser;
+  this->uuid            = _uuid();
+  this->summary         = summary;
+  this->timestamp       = _timestamp();
+  this->momid           = momid;
+  this->sasid           = sasid;
 }
 
 MessageContent::MessageContent(const qpid::messaging::Message &qpidMsg)
 :
   itsContent(qpidMsg.getContent())
 {
+  addProperties();
 }
 
 MessageContent::~MessageContent()
 {
+}
+
+void MessageContent::addProperties()
+{
+  system         .attach(this, "message/header/system");
+  headerVersion  .attach(this, "message/header/version");
+
+  protocol       .attach(this, "message/header/protocol/name");
+  protocolVersion.attach(this, "message/header/protocol/version");
+
+  name           .attach(this, "message/header/source/name");
+  user           .attach(this, "message/header/source/user");
+  uuid           .attach(this, "message/header/source/uuid");
+
+  summary        .attach(this, "message/header/source/summary");
+  timestamp      .attach(this, "message/header/source/timestamp");
+
+  momid          .attach(this, "message/header/ids/momid");
+  sasid          .attach(this, "message/header/ids/sasid");
+
+  payload        .attach(this, "message/payload");
+  header         .attach(this, "message/header");
 }
 
 qpid::messaging::Message MessageContent::qpidMsg() const {
@@ -139,27 +170,24 @@ void MessageContent::setTXTPayload (const std::string         &payload)
 
 std::string MessageContent::short_desc() const
 {
-  return formatString("[%s] [sasid %s] %s", uuid().c_str(), sasid().c_str(), summary().c_str());
+  return formatString("[%s] [sasid %s] %s", uuid.get().c_str(), sasid.get().c_str(), summary.get().c_str());
 }
 
 std::ostream& MessageContent::print (std::ostream& os) const
 {
-	os << "system         : " << system() << endl;
-    os << "systemversion  : " << headerVersion() << endl;
-    os << "protocolName   : " << protocol() << endl;
-    os << "protocolVersion: " << protocolVersion() << endl;
-    os << "summary        : " << summary() << endl;
-    os << "timestamp      : " << timestamp() << endl;
-    os << "source         : " << from() << endl;
-    os << "user           : " << forUser() << endl;
-    os << "uuid           : " << uuid() << endl;
-    os << "momid          : " << momid() << endl;
-    os << "sasid          : " << sasid() << endl;
-    os << "payload        : " << payload() << endl;
-  os << "BEGIN FULL PACKET" << endl;
-  os << itsContent << endl;
-  os << "END FULL PACKET" << endl;
-	return (os);
+    os << "system         : " << system << endl;
+    os << "systemversion  : " << headerVersion << endl;
+    os << "protocolName   : " << protocol << endl;
+    os << "protocolVersion: " << protocolVersion << endl;
+    os << "summary        : " << summary << endl;
+    os << "timestamp      : " << timestamp << endl;
+    os << "source (name)  : " << name << endl;
+    os << "user           : " << user << endl;
+    os << "uuid           : " << uuid << endl;
+    os << "momid          : " << momid << endl;
+    os << "sasid          : " << sasid << endl;
+    os << "payload        : " << payload << endl;
+    return (os);
 }
 
 string MessageContent::getXMLvalue(const string& key) const

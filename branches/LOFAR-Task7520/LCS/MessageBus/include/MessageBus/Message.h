@@ -45,7 +45,7 @@ class MessageContent
 {
 public:
   // Construct a message
-  MessageContent() {};
+  MessageContent();
 
   // With header info
   MessageContent(
@@ -80,20 +80,52 @@ public:
 
   virtual ~MessageContent();
 
+  /*
+   * A 'Property' is getter/setter for a part of the message content.
+   *
+   * It provides a string interface.
+   */
+  class Property {
+  public:
+    // normal getters and setters
+    void set(const std::string &value) { itsContent->setXMLvalue(itsKey, value); }
+    std::string get() const { return itsContent->getXMLvalue(itsKey); }
+
+    // C++ operator overloading
+    void operator=(const std::string &value) { set(value); }
+    operator std::string () const { return get(); }
+
+    bool operator==(const Property &other) const    { return (std::string)*this == (std::string)other; }
+    bool operator==(const std::string &other) const { return (std::string)*this == other; }
+    bool operator==(const char *other) const        { return (std::string)*this == std::string(other); }
+
+  private:
+    Property(): itsContent(0), itsKey("") {}
+
+    void attach(MessageContent *content, const std::string &key) { itsContent = content; itsKey = key; }
+
+    MessageContent *itsContent;
+    std::string itsKey;
+
+    friend class MessageContent;
+  };
+
   // Return properties of the constructed or received message
-  std::string system() const		  { return (getXMLvalue("message/header/system")); }
-  std::string headerVersion() const       { return (getXMLvalue("message/header/version")); }
-  std::string protocol() const		  { return (getXMLvalue("message/header/protocol/name")); }
-  std::string protocolVersion() const     { return (getXMLvalue("message/header/protocol/version")); }
-  std::string from() const		  { return (getXMLvalue("message/header/source/name")); }
-  std::string forUser() const		  { return (getXMLvalue("message/header/source/user")); }
-  std::string uuid() const		  { return (getXMLvalue("message/header/source/uuid")); }
-  std::string summary() const		  { return (getXMLvalue("message/header/source/summary")); }
-  std::string timestamp() const		  { return (getXMLvalue("message/header/source/timestamp")); }
-  std::string momid() const		  { return (getXMLvalue("message/header/ids/momid")); }
-  std::string sasid() const		  { return (getXMLvalue("message/header/ids/sasid")); }
-  std::string payload() const		  { return (getXMLvalue("message/payload")); }
-  std::string header() const		  { return (getXMLvalue("message/header")); }
+  Property system;
+  Property headerVersion;
+  Property protocol;
+  Property protocolVersion;
+
+  Property name;
+  Property user;
+  Property uuid;
+  Property summary;
+  Property timestamp;
+  Property momid;
+  Property sasid;
+
+  Property payload;
+  Property header;
 
   // Return a QPID message with our content
   qpid::messaging::Message qpidMsg() const;
@@ -111,13 +143,21 @@ public:
   void setXMLvalue(const std::string& key, const std::string& data);
 
 private:
+  void addProperties();
+
   // -- datamembers -- 
   std::string itsContent;
 };
 
 inline std::ostream &operator<<(std::ostream &os, const MessageContent &msg)
-{	
+{
 	return (msg.print(os));
+}
+
+inline std::ostream &operator<<(std::ostream &os, const MessageContent::Property &prop)
+{
+	os << (std::string)prop;
+	return os;
 }
 
 class Message
