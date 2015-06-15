@@ -81,6 +81,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	cout << "--- TEST 2: create a message by hand, send it, receive it, print it, compare them. --- " << endl;
+	ToBus tb(queue);
 	LOFAR::MessageContent	content;
 	content.setTXTPayload("Manually constructed message");
 	LOFAR::Message		msg2Send(content);
