@@ -33,7 +33,7 @@ if(NOT LIBXMLXX_FOUND)
   mark_as_advanced(LIBXMLXX_INCLUDE_DIRS LIBXMLXX_LIBRARIES)
 
   include(FindPackageHandleStandardArgs)
-  find_package_handle_standard_args(LIBXMLXX DEFAULT_MSG
+  find_package_handle_standard_args(LibXMLxx DEFAULT_MSG
     LIBXMLXX_LIBRARIES LIBXMLXX_INCLUDE_DIRS)
 
   set(LIBXMLXX_LIBRARY     "${LIBXMLXX_LIBRARIES}"    CACHE LIST "LibXML++ libraries")
