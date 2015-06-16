@@ -155,8 +155,6 @@ class CQDaemon(object):
         eg. You could not remove them from the queue but 
         do this in a different process
         """     
-        raise BaseException()
-
         while True:
             # Test if the timeout is in milli seconds or second
             msg = self._deadletterFromBus.get(0.1)  #  use timeout.
@@ -171,7 +169,7 @@ class CQDaemon(object):
                     "Could not process deadletter, incorrect content")
                 self._logger.warn(msg)
                 self._deadletterFromBus.ack(msg) 
-                break
+                continue
 
             # default implementation, report the deadletter and report
             unpacked_msg_content, command = unpacked_msg_data   

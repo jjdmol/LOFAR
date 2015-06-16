@@ -46,6 +46,9 @@ if __name__ == "__main__":
     #                        and pass the rest to the run() method defined above
     # --------------------------------------------------------------------------
 
+    fp = file("/home/klijn/recipe.txt", 'w')
+
+    fp.write("We are here")
 
 
     jobid, jobhost, jobport = sys.argv[1:4]

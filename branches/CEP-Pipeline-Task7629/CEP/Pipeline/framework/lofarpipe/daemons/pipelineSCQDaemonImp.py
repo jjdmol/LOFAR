@@ -68,31 +68,46 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
         TODO: This function still feels clutchy. Might be refactored
         """     
         while True:
-            # Test if the timeout is in milli seconds or second
             msg = self._deadletterFromBus.get(0.1)  #  use timeout.
-
             if msg == None:
                break    # exit msg processing
 
             # Get the needed information from the msg
-            unpacked_msg_data, command = self._unpack_msg(msg)
-            if not unpacked_msg_data:  # if unpacking failed
+            unpacked_msg_data  = self._save_unpack_msg(msg)           
+            if not unpacked_msg_data:  # if unpacking did not work
                 self._logger.error(
                     "Could not process deadletter, incorrect content")
                 self._logger.warn(msg)
                 self._deadletterFromBus.ack(msg) 
-                break
+                continue
 
-            elif command == 'run_job':
-                self._process_deadletter_run_job(unpacked_msg_data)
-                self._deadletterFromBus.ack(msg)                         
+            # Check if it is a command msg
+            if 'command' in unpacked_msg_data:
+                self._process_deadletter_command_msg(unpacked_msg_data)
+                self._deadletterFromBus.ack(msg) 
                 continue
 
             self._logger.info(
-               "Received on deadletterqueue command: {0}".format(command))
-            self._logger.info("msg content: {0}".format(unpacked_msg_content))
+               "Received a unknown msg on deadletterqueue")
+            self._logger.info("msg content: {0}".format(unpacked_msg_data))
             self._logger.info("ignoring msg")
             self._deadletterFromBus.ack(msg) 
+
+
+    def _process_deadletter_command_msg(self, unpacked_msg_data):
+         command = unpacked_msg_data['command']
+
+         if command == 'run_job':
+            self._process_deadletter_run_job(unpacked_msg_data)
+            return
+
+         else:
+            self._logger.warn(
+              "Received a unknown command msg in the deadletter queue:")
+            self.logger.warn(unpacked_msg_data)
+            return
+
+
     
     def _process_deadletter_run_job(self, unpacked_msg_content):
         """
@@ -106,3 +121,24 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
         node = unpacked_msg_content['node']        
         session_uuid = unpacked_msg_content['session_uuid']
         queuename = self._busname + " /" + node + "." + session_uuid
+
+
+    def _save_unpack_msg(self, msg):
+        """
+        Private helper function unpacks a received msg and casts it to 
+        a msg_Content dict, the command string is also extracted
+        content and command are returned as a pair
+        returns None if an error was encountered
+        """
+        msg_content = None
+        command = None
+        try:
+                # currently the expected payload is a dict
+                msg_content = eval(msg.content().payload)
+        except:
+                self._logger.warn(
+                   "***** warning **** encountered incorrect structured msg:")
+                self._logger.warn(msg.content().payload)
+                return None
+
+        return msg_content
