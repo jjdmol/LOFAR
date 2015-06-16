@@ -171,7 +171,7 @@ bool GTMTCPSocket::open(unsigned int /*portNumber*/)
 		close();
 	}
 
-    // close socket on execve
+  // close socket on execve
 	if (::fcntl(_fd, F_SETFD, FD_CLOEXEC) != 0) {
 		close();
 	}
@@ -215,8 +215,8 @@ int GTMTCPSocket::connect(unsigned int portNumber, const string& host)
 			return (-1);	
 		}
 
+    // socket is non-blocking, and still connecting
 		itsConnecting = true;
-
 	} else {
 		// poll an existing connection
 		fd_set fds;

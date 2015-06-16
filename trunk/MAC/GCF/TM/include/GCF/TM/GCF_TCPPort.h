@@ -122,6 +122,8 @@ private:
     void serviceInfo(unsigned int result, unsigned int portNumber, const string& host);
     void serviceGone();
 
+    void _connect(unsigned int portNumber, const string& host);
+
 	void _handleConnect();
 	void _handleDisconnect();
 	GCFEvent::TResult _recvUDPevent();
