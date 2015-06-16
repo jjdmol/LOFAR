@@ -94,7 +94,7 @@ class SCQLib(object):
         value of the script
         """
         self._broker = broker
-        self._parameterQueueName = busname + "/parameters" + session_uuid + "_" + job_uuid
+        self._parameterQueueName = busname + "/parameters_" + session_uuid + "_" + job_uuid
         self._logTopicName = busname + "/logging_" + session_uuid
         self._returnQueueName = busname + "/results_" + session_uuid
         

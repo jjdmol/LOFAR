@@ -213,6 +213,8 @@ class SubprocessStarter(object):
         Both the session and job uuid are used to adress it.
         THe session uuid allows the deadletter queue to resend it.
         """
+        msg_content['info'] = {"sender":"subprocessStarter",
+                               "target":"SCQLib"}
         msg = self.create_msg(msg_content)
         subject = session_uuid + "_" + job_uuid
         msg.set_subject(subject)

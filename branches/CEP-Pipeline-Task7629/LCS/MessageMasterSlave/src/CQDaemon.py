@@ -280,7 +280,7 @@ class CQDaemon(object):
                 self._logger.warn(
                    "***** warning **** encountered incorrect structured msg:")
                 self._logger.warn(msg.content())
-                return None
+                return (None, None)
 
         return (msg_content, command)
 
