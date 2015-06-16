@@ -37,17 +37,6 @@ NAME="qpidd"
 # Depend on lsb-base (>= 3.0-6) to ensure that this file is present.
 . /lib/lsb/init-functions
  
- 
-MYID=$( id -u )
- 
-SUCMD=""
- 
-case "$MYID" in
-   0) SUCMD="su -l qpid -c "
-      ;;
-   *)
-      ;;
-esac
 #
 # Function that starts the daemon/service
 #
@@ -152,7 +141,6 @@ case "$1" in
   esac
   ;;
   *)
-  #echo "Usage: $SCRIPTNAME {start|stop|restart|reload|force-reload}" >&2
   echo "Usage: $SCRIPTNAME {start|stop|status|restart|force-reload}" >&2
   exit 3
   ;;
