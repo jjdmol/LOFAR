@@ -29,10 +29,11 @@ pushd $CASACOREDIR >/dev/null
 echo "  Downloading..."
 wget -q -N --tries=3 "$CASACORE_SOURCE"
 echo "  Analyzing..."
-CASACORE_VERSION=`tar tf "$CASACORE_SOURCE" | head -n 1 | cut -d/ -f1`
+TARBALL_FILENAME=`basename $CASACORE_SOURCE`
+CASACORE_VERSION=`tar tf "$TARBALL_FILENAME" | head -n 1 | cut -d/ -f1`
 echo "  Version is $CASACORE_VERSION"
 echo "  Extracting..."
-tar xf `basename $CASACORE_SOURCE`
+tar xf "$TARBALL_FILENAME"
 cd $CASACORE_VERSION
 
 echo "  Configuring..."
@@ -52,7 +53,7 @@ echo "  Installing..."
 make -j 8 install > make_install.log
 
 echo "  Validating measures tables..."
-/localhome/lofar/$CASACORE_VERSION/bin/findmeastable >/dev/null
+/opt/$CASACORE_VERSION/bin/findmeastable >/dev/null
 
 echo "  Creating softlink /opt/casacore..."
 ln -sfT /opt/$CASACORE_VERSION /opt/casacore

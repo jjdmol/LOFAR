@@ -15,9 +15,10 @@ rm -rf /opt/casacore
 echo "Creating /data symlink..."
 ln -sfT /localhome /data
 
-echo "Creating qpid datadir..."
-mkdir -p /localhome/qpid
-chown qpid.qpid /localhome/qpid
+echo "Creating qpid user..."
+adduser qpid --system --home /localhome/qpid --disabled-password --disabled-login
+#mkdir -p /localhome/qpid
+#chown qpid.qpid /localhome/qpid
 
 echo "Installing /etc/init.d/qpidd..."
 cp init.d-qpidd.sh /etc/init.d/qpidd
