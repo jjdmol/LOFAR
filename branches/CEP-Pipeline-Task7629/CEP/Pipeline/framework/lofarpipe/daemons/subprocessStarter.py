@@ -193,13 +193,15 @@ class SubprocessStarter(object):
         Sends the two supplied string as log to the correct session_uuid topic
         """
 
-        payload = {'level':   "INFO",
+        payload = {'type':'log',
+                   'level':   "INFO",
                    'log_data':stdoutdata,
                    'job_uuid':job_uuid}
         msg = self.create_msg(payload)
         self._registered_sessions[session_uuid]['queues']['log'].send(msg)
 
-        payload = {'level':   "ERROR",
+        payload = {'type':'log',
+                   'level':   "ERROR",
                    'log_data':stderrdata,
                    'job_uuid':job_uuid}
         msg = self.create_msg(payload)
@@ -213,6 +215,7 @@ class SubprocessStarter(object):
         Both the session and job uuid are used to adress it.
         THe session uuid allows the deadletter queue to resend it.
         """
+        msg_content['type'] = 'parameters'
         msg_content['info'] = {"sender":"subprocessStarter",
                                "target":"SCQLib"}
         msg = self.create_msg(msg_content)

@@ -70,7 +70,7 @@ class testForwardOfJobMsgToQueueuSlave(
     def tearDown(self):
         pass
   
-    def test_run_job_results_in_start_subprocess_call(self):
+    def test_run_job_results_in_parameters_msg_on_bus(self):
         """
         A msg with the command run_job should be forwarded to jobnode
         """
@@ -80,7 +80,8 @@ class testForwardOfJobMsgToQueueuSlave(
             testFunctions.prepare_test( testForwardOfJobMsgToQueueuSlaveWrapper)
 
         # Test1: Create a test job payload
-        send_payload =  {'command':'run_job',
+        send_payload =  {'type': 'parameters',
+                         'command':'run_job',
                          'session_uuid':"123456321654",
                          'job_uuid': "654321",
                          'node':job_node,
@@ -93,7 +94,7 @@ class testForwardOfJobMsgToQueueuSlave(
         msg = testFunctions.create_test_msg(send_payload)
         commandQueueBus.send(msg)
 
-        # Run the process loop, The job will be send to a bus adress that does
+        # Run the process loop, parameters will be send to a bus adress that does
         # not exist, it should end up in the deadletter queue
         daemon._process_commands()
 
@@ -126,7 +127,8 @@ class testForwardOfJobMsgToQueueuSlave(
 
 
         # Test1: Create a test job payload
-        send_payload =  {'command':'run_job',
+        send_payload =  {'type':'command',
+                         'command':'run_job',
                          'session_uuid':"123456321654",
                          'job_uuid': "654321",
                          'node':job_node,
@@ -169,7 +171,8 @@ class testForwardOfJobMsgToQueueuSlave(
         )
 
         # Test1: Create a test job payload
-        send_payload =  {'command':'run_job',
+        send_payload =  {'type':'command',
+                         'command':'run_job',
                          'session_uuid':"123456321654",
                          'job_uuid': "654321",
                          'node':job_node,
@@ -218,7 +221,8 @@ class testForwardOfJobMsgToQueueuSlave(
         )
 
         # Test1: Create a test job payload
-        send_payload =  {'command':'run_job',
+        send_payload =  {'type':'command',
+                         'command':'run_job',
                          'session_uuid':"123456321654",
                          'job_uuid': "654321",
                          'node':job_node,

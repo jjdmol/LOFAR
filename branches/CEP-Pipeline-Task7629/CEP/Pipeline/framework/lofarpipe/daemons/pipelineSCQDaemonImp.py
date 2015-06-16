@@ -80,7 +80,7 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
                 self._logger.warn(msg)
                 self._deadletterFromBus.ack(msg) 
                 continue
-
+            
             # Check if it is a command msg
             if 'command' in unpacked_msg_data:
                 self._process_deadletter_command_msg(unpacked_msg_data)
