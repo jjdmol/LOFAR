@@ -17,8 +17,8 @@ ln -sfT /localhome /data
 
 echo "Creating qpid user..."
 adduser qpid --system --home /localhome/qpid --disabled-password --disabled-login
-#mkdir -p /localhome/qpid
-#chown qpid.qpid /localhome/qpid
+mkdir -p /localhome/qpid
+chown qpid.qpid /localhome/qpid
 
 echo "Installing /etc/init.d/qpidd..."
 cp init.d-qpidd.sh /etc/init.d/qpidd

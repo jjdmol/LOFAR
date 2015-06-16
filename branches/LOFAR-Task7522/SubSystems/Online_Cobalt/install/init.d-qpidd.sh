@@ -57,7 +57,7 @@ do_start()
   #   0 if daemon has been started
   #   1 if daemon was already running
   #   2 if daemon could not be started
-        $SUCMD start-qpid
+  start-stop-daemon --start --quiet --oknodo --exec $DAEMON --chuid qpid:qpid -- -d --pid-dir /localhome/qpid --data-dir /localhome/qpid/.qpidd --config /opt/qpid/etc/qpid/qpidd.conf --auth no --log-to-file /localhome/qpid/qpid.log
   return "$?"
   # Add code here, if necessary, that waits for the process to be ready
   # to handle requests from services started subsequently which depend
@@ -74,7 +74,7 @@ do_stop()
   #   1 if daemon was already stopped
   #   2 if daemon could not be stopped
   #   other if a failure occurred
-        $SUCMD stop-qpid
+  start-stop-daemon --stop --quiet --oknodo --exec $DAEMON --user qpid
   RETVAL="$?"
   [ "$RETVAL" = 2 ] && return 2
   # Wait for children to finish too if this is a daemon that forks
