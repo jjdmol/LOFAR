@@ -40,7 +40,7 @@ class testForwardOfJobMsgToQueueuSlaveWrapper(
            loop_interval, daemon)
         pass
         self._start_subprocess_called = False
-        self._process_deadletter_run_job_called = False
+        self._process_deadletter_parameters_msg_called = False
 
     def _start_subprocess(self):
         """
@@ -48,11 +48,11 @@ class testForwardOfJobMsgToQueueuSlaveWrapper(
         """
         self._start_subprocess_called = True
 
-    def _process_deadletter_run_job(self, unpacked_msg_content):
+    def _process_deadletter_parameters_msg(self, unpacked_msg_content):
         """
 
         """
-        self._process_deadletter_run_job_called = True
+        self._process_deadletter_parameters_msg_called = True
 
 
 
@@ -147,7 +147,7 @@ class testForwardOfJobMsgToQueueuSlave(
         # Run the deadletter processer
         daemon._process_deadletter_queue()
 
-        self.assertTrue(daemon._process_deadletter_run_job_called)
+        self.assertTrue(daemon._process_deadletter_parameters_msg_called)
         
         
         ## Cleanup sut
@@ -195,15 +195,15 @@ class testForwardOfJobMsgToQueueuSlave(
         # not exist, it should end up in the deadletter queue
         daemon._process_commands()
 
-        ## Run the deadletter processer
-        #daemon._process_deadletter_queue()
+        # Run the deadletter processer
+        daemon._process_deadletter_queue()
 
-        #self.assertTrue(daemon._process_deadletter_run_job_called)
+        self.assertTrue(daemon._process_deadletter_parameters_msg_called)
         
         
-        ### Cleanup sut
-        #commandQueueBus.close()
-        #daemon.close()
+        ## Cleanup sut
+        commandQueueBus.close()
+        daemon.close()
 
 
     def test_start_failing_node_recipe(self):
@@ -248,7 +248,7 @@ class testForwardOfJobMsgToQueueuSlave(
         ## Run the deadletter processer
         daemon._process_deadletter_queue()
 
-        self.assertTrue(daemon._process_deadletter_run_job_called)
+        self.assertTrue(daemon._process_deadletter_parameters_msg_called)
         
         
         ### Cleanup sut

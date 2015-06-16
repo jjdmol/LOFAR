@@ -73,7 +73,7 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
                break    # exit msg processing
 
             # Get the needed information from the msg
-            unpacked_msg_data  = self._save_unpack_msg(msg)           
+            unpacked_msg_data, msg_type  = self._save_unpack_msg(msg)           
             if not unpacked_msg_data:  # if unpacking did not work
                 self._logger.error(
                     "Could not process deadletter, incorrect content")
@@ -81,11 +81,18 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
                 self._deadletterFromBus.ack(msg) 
                 continue
             
+            self._logger.error(unpacked_msg_data)
             # Check if it is a command msg
-            if 'command' in unpacked_msg_data:
-                self._process_deadletter_command_msg(unpacked_msg_data)
+            if msg_type == 'command':
+                raise Exception("THIS SHOULD NOT HAPPEND")
+                self._process_deadletter_parameters_msg(unpacked_msg_data)
                 self._deadletterFromBus.ack(msg) 
                 continue
+            elif msg_type == 'parameters':
+                self._process_deadletter_parameters_msg(unpacked_msg_data)
+                self._deadletterFromBus.ack(msg) 
+                continue
+
 
             self._logger.info(
                "Received a unknown msg on deadletterqueue")
@@ -94,33 +101,11 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
             self._deadletterFromBus.ack(msg) 
 
 
-    def _process_deadletter_command_msg(self, unpacked_msg_data):
-         command = unpacked_msg_data['command']
-
-         if command == 'run_job':
-            self._process_deadletter_run_job(unpacked_msg_data)
-            return
-
-         else:
-            self._logger.warn(
-              "Received a unknown command msg in the deadletter queue:")
-            self.logger.warn(unpacked_msg_data)
-            return
-
-
-    
-    def _process_deadletter_run_job(self, unpacked_msg_content):
-        """
-        Called when a run_job msg ends up in the dead letter queue
-
-        This means that we have to start a subprocess which is able to receive
-        jobs to start.
-        """
-
-        self._job_starter_subprocess = subprocess
-        node = unpacked_msg_content['node']        
-        session_uuid = unpacked_msg_content['session_uuid']
-        queuename = self._busname + " /" + node + "." + session_uuid
+    def _process_deadletter_parameters_msg(self, unpacked_msg_data):
+        pass
+        #node = unpacked_msg_content['node']        
+        #session_uuid = unpacked_msg_content['session_uuid']
+        #queuename = self._busname + " /" + node + "." + session_uuid
 
 
     def _save_unpack_msg(self, msg):
@@ -131,14 +116,15 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
         returns None if an error was encountered
         """
         msg_content = None
-        command = None
+        msg_type = None
         try:
                 # currently the expected payload is a dict
                 msg_content = eval(msg.content().payload)
+                msg_type =  msg_content['type']
         except:
                 self._logger.warn(
                    "***** warning **** encountered incorrect structured msg:")
                 self._logger.warn(msg.content().payload)
                 return None
 
-        return msg_content
+        return msg_content, msg_type

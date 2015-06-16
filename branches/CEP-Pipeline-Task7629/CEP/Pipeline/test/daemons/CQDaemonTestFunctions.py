@@ -93,7 +93,7 @@ def get_from_bus(queueName, broker):
 
     return slaveCommandQueueBus
 
-def try_get_msg(queue, wait_period=10):
+def try_get_msg(queue, wait_period=2):
     """
     Helper function, try to get msg from queue. raise exception if not gotten
     after 10 sec. return msg if received
