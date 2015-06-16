@@ -82,9 +82,10 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
                 continue
             
             self._logger.error(unpacked_msg_data)
-            # Check if it is a command msg
+            # Select what to do based on the msg type
             if msg_type == 'command':
-                raise Exception("THIS SHOULD NOT HAPPEND")
+                raise Exception(
+                    "Major error, why is a command send on this bus?") # TODO: 
                 self._process_deadletter_parameters_msg(unpacked_msg_data)
                 self._deadletterFromBus.ack(msg) 
                 continue
@@ -122,9 +123,6 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
                 msg_content = eval(msg.content().payload)
                 msg_type =  msg_content['type']
         except:
-                self._logger.warn(
-                   "***** warning **** encountered incorrect structured msg:")
-                self._logger.warn(msg.content().payload)
-                return None
+                return None, None
 
         return msg_content, msg_type
