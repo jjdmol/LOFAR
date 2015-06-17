@@ -28,14 +28,18 @@
 
 if(NOT LIBXMLXX_FOUND)
   include(FindPkgConfig)
+
+  # pkg_search_module puts LIBXMLXX_FOUND, LIBXMLXX_INCLUDE_DIRS, LIBXMLXX_LIBRARIES into the cache
   pkg_search_module(LIBXMLXX libxml++-2.8 libxml++-2.7 libxml++-2.6 libxml++-2.5)
 
-  mark_as_advanced(LIBXMLXX_INCLUDE_DIRS LIBXMLXX_LIBRARIES)
+  # Remove LIBXMLXX_FOUND from cache, to stay compatible with fphsa (LofarFindPackage depends on this)
+  unset(LIBXMLXX_FOUND CACHE)
 
+  # run fphsa to:
+  #   1. Report "Found" or "Could NOT find" message,
+  #   2. Set LIBXMLXX_FOUND (not cached!)
   include(FindPackageHandleStandardArgs)
   find_package_handle_standard_args(LibXMLxx DEFAULT_MSG
     LIBXMLXX_LIBRARIES LIBXMLXX_INCLUDE_DIRS)
 
-  set(LIBXMLXX_LIBRARY     "${LIBXMLXX_LIBRARIES}"    CACHE LIST "LibXML++ libraries")
-  set(LIBXMLXX_INCLUDE_DIR "${LIBXMLXX_INCLUDE_DIRS}" CACHE LIST "LibXML++ include dirs")
 endif(NOT LIBXMLXX_FOUND)
