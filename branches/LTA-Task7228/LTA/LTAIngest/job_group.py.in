@@ -156,7 +156,7 @@ class job_group():
         e = "lofar_export"
         db = MySQLdb.connect(host="mysql1.control.lofar", user="@MOMREADONLY_USER@", passwd="@MOMREADONLY_PASSWORD@", db=m)
         c = db.cursor()
-        c.execute("SELECT a.id,toexportdate as started,a.status_date as last_update,a.exportername,b.name as state,d.name,e.name as projectname,g.name as location,a.data_location,d.mom2id FROM %s.exports AS a, %s.status AS b, %s.mom_references AS c, %s.mom2object AS d, %s.mom2object AS e, %s.resource AS f, %s.resourcetype AS g WHERE status_id=b.id AND a.mom_reference_id = c.id AND c.mom_id=d.mom2id AND d.ownerprojectid = e.id AND e.id=f.projectid AND f.resourcetypeid > 1 AND f.resourcetypeid = g.id and a.id = %i;" % (e,e,e,m,m,m,m,self.Id))
+        c.execute("SELECT a.id,toexportdate as started,a.status_date as last_update,a.exportername,b.name as state,d.name,e.name as projectname,g.name as location,a.data_location,d.mom2id FROM %s.exports AS a, %s.status AS b, %s.mom_references AS c, %s.mom2object AS d, %s.mom2object AS e, %s.resource AS f, %s.resourcetype AS g WHERE status_id=b.id AND a.mom_reference_id = c.id AND c.mom_id=d.mom2id AND d.ownerprojectid = e.id AND e.id=f.projectid AND g.type = \"LTA_STORAGE\" AND f.resourcetypeid = g.id and a.id = %i;" % (e,e,e,m,m,m,m,self.Id))
         db_job = c.fetchone()
         ## (1137L, datetime.datetime(2014, 2, 6, 8, 30, 34), datetime.datetime(2014, 2, 8, 18, 41, 2), 'toribio', 'running', 'Orion', 'LC1_055', 'Lofar Storage (J\xfclich)', 'LC1_055/358795', 358795L)
         self.job_info = {'id': db_job[0], 'start_time': db_job[1], 'update_time': db_job[2],
