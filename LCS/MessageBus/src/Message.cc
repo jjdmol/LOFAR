@@ -1,4 +1,4 @@
-//#  Message.cc: one_line_description
+//#  MessageContent.cc: one_line_description
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -33,6 +33,14 @@
 #include <qpid/types/Uuid.h>
 #endif
 
+#ifdef HAVE_LIBXMLXX
+#include <sstream>
+#include <libxml++/parsers/domparser.h>
+#include <libxml++/nodes/textnode.h>
+
+using namespace xmlpp;
+#endif
+
 #include <time.h>
 
 
@@ -42,27 +50,25 @@ namespace LOFAR {
 const string LOFAR_MSG_TEMPLATE = "\
 <message>\n\
    <header>\n\
-      <system>LOFAR</system>\n\
-      <version>1.0.0</version>\n\
+      <system></system>\n\
+      <version></version>\n\
       <protocol>\n\
-         <name>%s</name>\n\
-         <version>%s</version>\n\
+         <name></name>\n\
+         <version></version>\n\
       </protocol>\n\
       <source>\n\
-         <name>%s</name>\n\
-         <user>%s</user>\n\
-         <uuid>%s</uuid>\n\
-         <timestamp>%s</timestamp>\n\
-         <summary>%s</summary>\n\
+         <name></name>\n\
+         <user></user>\n\
+         <uuid></uuid>\n\
+         <timestamp></timestamp>\n\
+         <summary></summary>\n\
       </source>\n\
       <ids>\n\
-         <momid>%s</momid>\n\
-         <sasid>%s</sasid>\n\
+         <momid></momid>\n\
+         <sasid></sasid>\n\
       </ids>\n\
    </header>\n\
-   <payload>\n\
-%s\n\
-   </payload>\n\
+   <payload></payload>\n\
 </message>";
 
 static string _timestamp() {
@@ -86,110 +92,267 @@ static string _uuid() {
   return uuid.str();
 }
 
-Message::Message(const std::string &from,
+MessageContent::MessageContent()
+{
+  initContent(LOFAR_MSG_TEMPLATE);
+  addProperties();
+}
+
+MessageContent::MessageContent(const std::string &from,
 				 const std::string &forUser,
 				 const std::string &summary,
 				 const std::string &protocol,
 				 const std::string &protocolVersion,
 				 const std::string &momid,
-				 const std::string &sasid) 
-{	
-	itsQpidMsg.setContent(formatString(LOFAR_MSG_TEMPLATE.c_str(), protocol.c_str(), protocolVersion.c_str(),
-										from.c_str(), forUser.c_str(), _uuid().c_str(), _timestamp().c_str(), summary.c_str(), 
-										momid.c_str(), sasid.c_str(), "%s"));
-  itsQpidMsg.setContentType("text/plain");
-  itsQpidMsg.setDurable(true);
+				 const std::string &sasid)
+{
+  initContent(LOFAR_MSG_TEMPLATE);
+  addProperties();
+
+  this->system          = LOFAR::system;
+  this->headerVersion   = LOFAR::headerVersion;
+
+  this->protocol        = protocol;
+  this->protocolVersion = protocolVersion;
+  this->name            = from;
+  this->user            = forUser;
+  this->uuid            = _uuid();
+  this->summary         = summary;
+  this->timestamp       = _timestamp();
+  this->momid           = momid;
+  this->sasid           = sasid;
 }
 
-// Read a message from disk (header + payload)
-Message::Message(const std::string &rawContent)
+MessageContent::MessageContent(const qpid::messaging::Message &qpidMsg)
 {
-	itsQpidMsg.setContent(rawContent);
+  initContent(qpidMsg.getContent());
+  addProperties();
 }
 
-Message::~Message()
-{}
-
-void Message::setXMLPayload (const std::string         &payload)
+MessageContent::~MessageContent()
 {
-	itsQpidMsg.setContent(formatlString(itsQpidMsg.getContent().c_str(), payload.c_str()));
 }
 
-void Message::setTXTPayload (const std::string         &payload)
+MessageContent::MessageContent(const MessageContent &other)
 {
-	itsQpidMsg.setContent(formatlString(itsQpidMsg.getContent().c_str(), payload.c_str()));
+  initContent(other.getContent());
+  addProperties();
 }
 
-void Message::setMapPayload (const qpid::types::Variant::Map  &payload)
+void MessageContent::initContent(const std::string &content)
 {
-
+#ifdef HAVE_LIBXMLXX
+  itsParser.parse_memory(content);
+  itsDocument = itsParser.get_document();
+#else
+  itsContent = content;
+#endif
 }
 
-void Message::setListPayload(const qpid::types::Variant::List &payload)
+std::string MessageContent::getContent() const
 {
-
+#ifdef HAVE_LIBXMLXX
+  return itsDocument->write_to_string_formatted();
+#else
+  return itsContent;
+#endif
 }
 
-std::string Message::short_desc() const
+void MessageContent::addProperties()
 {
-  return formatString("[%s] [sasid %s] %s", uuid().c_str(), sasid().c_str(), summary().c_str());
+  system         .attach(this, "message/header/system");
+  headerVersion  .attach(this, "message/header/version");
+
+  protocol       .attach(this, "message/header/protocol/name");
+  protocolVersion.attach(this, "message/header/protocol/version");
+
+  name           .attach(this, "message/header/source/name");
+  user           .attach(this, "message/header/source/user");
+  uuid           .attach(this, "message/header/source/uuid");
+
+  summary        .attach(this, "message/header/source/summary");
+  timestamp      .attach(this, "message/header/source/timestamp");
+
+  momid          .attach(this, "message/header/ids/momid");
+  sasid          .attach(this, "message/header/ids/sasid");
+
+  payload        .attach(this, "message/payload");
+  header         .attach(this, "message/header");
 }
 
-//
-// print
-//
-std::ostream& Message::print (std::ostream& os) const
-{
-	os << "system         : " << system() << endl;
-    os << "systemversion  : " << headerVersion() << endl;
-    os << "protocolName   : " << protocol() << endl;
-    os << "protocolVersion: " << protocolVersion() << endl;
-    os << "summary        : " << summary() << endl;
-    os << "timestamp      : " << timestamp() << endl;
-    os << "source         : " << from() << endl;
-    os << "user           : " << forUser() << endl;
-    os << "uuid           : " << uuid() << endl;
-    os << "momid          : " << momid() << endl;
-    os << "sasid          : " << sasid() << endl;
-    os << "payload        : " << payload() << endl;
-  os << "BEGIN FULL PACKET" << endl;
-  os << itsQpidMsg.getContent() << endl;
-  os << "END FULL PACKET" << endl;
-	return (os);
+qpid::messaging::Message MessageContent::qpidMsg() const {
+  qpid::messaging::Message qpidMsg;
+
+  qpidMsg.setContent(getContent());
+  qpidMsg.setContentType("text/plain"); // Don't use text/xml, to prevent QPID from nosing in our message and possibly complaining
+  qpidMsg.setDurable(true);
+
+  return qpidMsg;
 }
 
-//
-// getXMLvalue(tag)
-//
-string Message::getXMLvalue(const string& key) const
+void MessageContent::setXMLPayload (const std::string         &payload)
 {
-	// get copy of content
-	vector<string>	labels = split(key, '.');
-	string			content(itsQpidMsg.getContent());
+  insertXML("message/payload", payload);
+}
 
-	// loop over subkeys
-	string::size_type	offset = 0;
-	string::size_type	begin = string::npos;
-	string::size_type	end = string::npos;
-	string				startTag;
-	for (size_t i = 0; i <  labels.size(); ++i) {
-		// define tags to find
-		startTag = string("<"+labels[i]+">");
-		// search begin tag
-		begin  = content.find(startTag, offset);
-		if (begin == string::npos) {
-			return ("???");
-		}
-		offset = begin;
-	}
-	// search end tag
-	string stopTag ("</"+labels[labels.size()-1]+">");
-	begin+=startTag.size();
-	end = content.find(stopTag, begin);
-	if (end == string::npos) {
-		return ("???");
-	}
-	return (content.substr(begin, end - begin));
+void MessageContent::setTXTPayload (const std::string         &payload)
+{
+  setXMLvalue("message/payload", payload);
+}
+
+std::string MessageContent::short_desc() const
+{
+  return formatString("[%s] [sasid %s] %s", uuid.get().c_str(), sasid.get().c_str(), summary.get().c_str());
+}
+
+std::ostream& MessageContent::print (std::ostream& os) const
+{
+    os << "system         : " << system << " " << headerVersion << endl;
+    os << "protocol       : " << protocol << " " << protocolVersion << endl;
+    os << "summary        : " << summary << endl;
+    os << "timestamp      : " << timestamp << endl;
+    os << "source (name)  : " << name << endl;
+    os << "user           : " << user << endl;
+    os << "uuid           : " << uuid << endl;
+    os << "momid          : " << momid << endl;
+    os << "sasid          : " << sasid << endl;
+    os << "payload        : " << payload << endl;
+    return (os);
+}
+
+string MessageContent::getXMLvalue(const string& key) const
+{
+#ifdef HAVE_LIBXMLXX
+  Element *e = getXMLnode(key);
+
+  // Extract the text, if any
+  TextNode *t = e->get_child_text();
+  if (!t) return "";
+
+  return t->get_content();
+#else
+  // get copy of content
+  vector<string>  labels = split(key, '/');
+
+  // loop over subkeys
+  string::size_type  offset = 0;
+  string::size_type  begin = string::npos;
+  string::size_type  end = string::npos;
+  string        startTag;
+  for (size_t i = 0; i <  labels.size(); ++i) {
+    // define tags to find
+    startTag = string("<"+labels[i]+">");
+    // search begin tag
+    begin  = itsContent.find(startTag, offset);
+    if (begin == string::npos) {
+      return ("???");
+    }
+    offset = begin;
+  }
+  // search end tag
+  string stopTag ("</"+labels[labels.size()-1]+">");
+  begin+=startTag.size();
+  end = itsContent.find(stopTag, begin);
+  if (end == string::npos) {
+    return ("???");
+  }
+  return (itsContent.substr(begin, end - begin));
+#endif
+}
+
+void MessageContent::setXMLvalue(const string& key, const string &data)
+{
+#ifdef HAVE_LIBXMLXX
+  Element *e = getXMLnode(key);
+
+  e->set_child_text(data);
+#else
+  // get copy of content
+  vector<string>  labels = split(key, '/');
+
+  // loop over subkeys
+  string::size_type  offset = 0;
+  string::size_type  begin = string::npos;
+  string::size_type  end = string::npos;
+  string        startTag;
+  for (size_t i = 0; i <  labels.size(); ++i) {
+    // define tags to find
+    startTag = string("<"+labels[i]+">");
+    // search begin tag
+    begin  = itsContent.find(startTag, offset);
+    if (begin == string::npos) {
+      THROW(MessageContentException, "XML element not found (could not find begin tag): " << key);
+    }
+    offset = begin;
+  }
+  // search end tag
+  string stopTag ("</"+labels[labels.size()-1]+">");
+  begin+=startTag.size();
+  end = itsContent.find(stopTag, begin);
+  if (end == string::npos) {
+    THROW(MessageContentException, "XML element not found (could not find end tag): " << key);
+  }
+
+  itsContent.replace(begin, end - begin, data);
+#endif
+}
+
+void MessageContent::insertXML(const string &key, const string &xml)
+{
+#ifdef HAVE_LIBXMLXX
+  // Find insert spot
+  Element *e = getXMLnode(key);
+  if (!e) return;
+
+  // Parse provided XML
+  DomParser parser;
+  parser.parse_memory(xml);
+
+  Document *document = parser.get_document();
+  if (!document) return;
+
+  Element *root = document->get_root_node();
+  if (!root) return;
+
+  // Insert the XML into our document
+  e->import_node(root);
+#else
+  setXMLvalue(key, xml);
+#endif
+}
+
+#ifdef HAVE_LIBXMLXX
+Element *MessageContent::getXMLnode(const string &name) const
+{
+  Element *root = itsDocument->get_root_node();
+
+  if (!root) {
+    // Document is broken
+    THROW(MessageContentException, "Document is broken");
+  }
+
+  // assume key is an XPath relative to root, see http://www.w3schools.com/xpath/xpath_syntax.asp
+  NodeSet nodeset = root->find("/"+name);
+  if (nodeset.empty()) {
+    // Element not found
+    THROW(MessageContentException, "XML element not found: /" << name);
+  }
+
+  Element *e = dynamic_cast<Element*>(nodeset[0]);
+
+  if (!e) {
+    // Key points to a special element
+    THROW(MessageContentException, "XML element not a text element: /" << name);
+  }
+
+  return e;
+}
+#endif
+
+Message::Message(const MessageContent &content)
+:
+  itsQpidMsg(content.qpidMsg())
+{
 }
 
 

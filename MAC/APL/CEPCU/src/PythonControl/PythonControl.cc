@@ -42,6 +42,7 @@
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/CTState.h>
 #include <OTDB/TreeValue.h>
+#include <MessageBus/Protocols/TaskFeedbackState.h>
 
 #include "PythonControl.h"
 #include "PVSSDatapointDefs.h"
@@ -530,10 +531,11 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 		if (&port == itsQueueTimer) {
 			Message		msg;
 			if (itsMsgQueue->getMessage(msg, 0.1)) {
-				string	obsIDstr = msg.getXMLvalue("message.header.ids.sasid");
+				Protocols::TaskFeedbackState content(msg.qpidMsg());
+				string	obsIDstr = content.sasid.get();
 				LOG_INFO_STR("Received message from task " << obsIDstr);
 				if (atoi(obsIDstr.c_str()) == itsObsID) {
-					string	result = msg.getXMLvalue("message.payload.task.state");
+					string	result = content.state.get();
 					if (result == "aborted") {
 						itsFeedbackResult = CT_RESULT_PIPELINE_FAILED;
 					}
@@ -546,6 +548,9 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 					TRAN(PythonControl::finishing_state);
 					break;
 				} // ID matches?
+				else {
+					itsMsgQueue->reject(msg);
+				}
 			} // getMsg
 			itsQueueTimer->setTimer(QUEUE_POLL_TIMEOUT);
 		}
