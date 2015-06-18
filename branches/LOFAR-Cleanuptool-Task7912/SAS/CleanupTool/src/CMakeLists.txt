@@ -69,8 +69,7 @@ filterdatadialog.ui
 parsettreeviewer.ui
 sasconnectdialog.ui
 sasprogressdialog.ui
-schedulesettingsdialog.ui
-
+schedulesettingsdialog.ui)
 
 #set(cleanuptool_RCS
 #  )
