@@ -1196,7 +1196,7 @@ namespace LOFAR
 
     double Parset::getTime(const std::string &name, const std::string &defaultValue) const
     {
-      return to_time_t(boost::posix_time::time_from_string(getString(name, defaultValue)));
+      return LOFAR::to_time_t(boost::posix_time::time_from_string(getString(name, defaultValue)));
     }
 
     std::string Parset::name() const
