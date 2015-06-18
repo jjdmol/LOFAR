@@ -62,7 +62,7 @@ public:
 	    MessageContent(qpidMsg)
 	{ }
 
-	ParameterSet specfications() const {
+	ParameterSet specifications() const {
 		ParameterSet result;
 		result.adoptBuffer(payload.get());
 		return result;
