@@ -1,6 +1,7 @@
 # $Id: CMakeLists.txt 31203 2015-03-13 13:41:45Z schoenmakers $
 
 # Create symbolic link to include directory.
+
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_BINARY_DIR}/include/${PACKAGE_NAME})
@@ -34,6 +35,7 @@ schedulersettings.cpp
 schedulesettingsdialog.cpp
 TaskDataProducts.cpp)
 
+
 set(cleanuptool_MOC_HDRS
 astrodate.h
 astrodatetime.h
@@ -61,6 +63,7 @@ schedulersettings.h
 schedulesettingsdialog.h
 TaskDataProducts.h)
 
+
 set(cleanuptool_UIS 
 cepcleanmainwindow.ui
 cepdeletedialog.ui
@@ -71,12 +74,8 @@ sasconnectdialog.ui
 sasprogressdialog.ui
 schedulesettingsdialog.ui)
 
-#set(cleanuptool_RCS
-#  )
-
 qt4_wrap_cpp(cleanuptool_MOC_SRCS ${cleanuptool_MOC_HDRS})
 qt4_wrap_ui(cleanuptool_UI_HDRS ${cleanuptool_UIS})
-#qt4_add_resources(cleanuptool_RC_SRCS ${cleanuptool_RCS})
 
 lofar_add_library(lofar_cleanuptool
   ${cleanuptool_SRCS} 
@@ -87,5 +86,5 @@ target_link_libraries(lofar_cleanuptool ${QT_LIBRARIES})
 
 lofar_add_bin_program(cleanuptool
   main.cpp)
-#  ${cleanuptool_RC_SRCS})
+
 
