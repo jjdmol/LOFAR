@@ -1,5 +1,8 @@
 #!/bin/bash -eu
 
+# NOTE: '~' may belong to a different user, due to intricacies of sudo.
+# So use '~lofarsys' instead.
+
 # ********************************************
 #  Populate ~/.ssh directory
 #
@@ -7,7 +10,7 @@
 #  to stay in sync with the rest of LOFAR.
 # ********************************************
 echo "Configuring ssh..."
-cp -a /globalhome/lofarsystem/.ssh ~
+cp -a /globalhome/lofarsystem/.ssh ~lofarsys
 
 echo "  Testing..."
 ssh localhost true >/dev/null
@@ -16,8 +19,8 @@ ssh localhost true >/dev/null
 #  Install bash initialisation scripts
 # ********************************************
 echo "Configuring bash..."
-cp lofarsys/bashrc ~/.bashrc
-cp lofarsys/bash_profile ~/.bash_profile
+cp lofarsys/bashrc ~lofarsys/.bashrc
+cp lofarsys/bash_profile ~lofarsys/.bash_profile
 
 echo "  Validating login..."
 ssh localhost true
