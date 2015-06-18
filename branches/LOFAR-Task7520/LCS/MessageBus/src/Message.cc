@@ -184,7 +184,7 @@ qpid::messaging::Message MessageContent::qpidMsg() const {
   qpid::messaging::Message qpidMsg;
 
   qpidMsg.setContent(getContent());
-  qpidMsg.setContentType("text/plain");
+  qpidMsg.setContentType("text/plain"); // Don't use text/xml, to prevent QPID from nosing in our message and possibly complaining
   qpidMsg.setDurable(true);
 
   return qpidMsg;
@@ -224,8 +224,8 @@ string MessageContent::getXMLvalue(const string& key) const
 {
 #ifdef HAVE_LIBXMLXX
   Element *e = getXMLnode(key);
-  if (!e) return "???";
 
+  // Extract the text, if any
   TextNode *t = e->get_child_text();
   if (!t) return "";
 
@@ -264,7 +264,6 @@ void MessageContent::setXMLvalue(const string& key, const string &data)
 {
 #ifdef HAVE_LIBXMLXX
   Element *e = getXMLnode(key);
-  if (!e) return;
 
   e->set_child_text(data);
 #else
@@ -282,7 +281,7 @@ void MessageContent::setXMLvalue(const string& key, const string &data)
     // search begin tag
     begin  = itsContent.find(startTag, offset);
     if (begin == string::npos) {
-      return;
+      THROW(MessageContentException, "XML element not found (could not find begin tag): " << key);
     }
     offset = begin;
   }
@@ -291,7 +290,7 @@ void MessageContent::setXMLvalue(const string& key, const string &data)
   begin+=startTag.size();
   end = itsContent.find(stopTag, begin);
   if (end == string::npos) {
-    return;
+    THROW(MessageContentException, "XML element not found (could not find end tag): " << key);
   }
 
   itsContent.replace(begin, end - begin, data);
@@ -329,21 +328,21 @@ Element *MessageContent::getXMLnode(const string &name) const
 
   if (!root) {
     // Document is broken
-    return NULL;
+    THROW(MessageContentException, "Document is broken");
   }
 
   // assume key is an XPath relative to root, see http://www.w3schools.com/xpath/xpath_syntax.asp
   NodeSet nodeset = root->find("/"+name);
   if (nodeset.empty()) {
     // Element not found
-    return NULL;
+    THROW(MessageContentException, "XML element not found: /" << name);
   }
 
   Element *e = dynamic_cast<Element*>(nodeset[0]);
 
   if (!e) {
     // Key points to a special element
-    return NULL;
+    THROW(MessageContentException, "XML element not a text element: /" << name);
   }
 
   return e;

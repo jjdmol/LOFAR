@@ -36,6 +36,7 @@
 
 #include <string>
 #include <ostream>
+#include <Common/Exception.h>
 
 namespace LOFAR {
 
@@ -44,6 +45,10 @@ static const std::string system = "LOFAR";
 
 // Version of the header we write
 static const std::string headerVersion = "1.0.0";
+
+// Exception thrown when there's illegal access to the content of a message.
+// for example when an XML element is accessed that does not exist.
+EXCEPTION_CLASS(MessageContentException, Exception);
 
 /*
  * Encode the CONTENT of a message, that is sent to or received from a Message Bus.
@@ -187,6 +192,9 @@ private:
 
   // -- datamembers -- 
 #ifdef HAVE_LIBXMLXX
+  // itsParser is the owner of the XML Document and Elements that
+  // will be accessed. It takes care of the memory management and
+  // thus free all elements at destruction.
   xmlpp::DomParser itsParser;   // NOTE: non-copyable
   xmlpp::Document *itsDocument; // NOTE: non-copyable
 #else
