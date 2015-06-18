@@ -3,6 +3,7 @@
 check_version = '0714'
 
 import sys
+import traceback
 import os
 import numpy as np
 import time
@@ -35,25 +36,6 @@ if not os.access(rtsmPath, os.F_OK):
     os.mkdir(rtsmPath)
 
 logger = None
-
-# class holding active function (stage)
-class ERR:
-    stage = ""
-    last_stage = ""
-    @staticmethod
-    def setStage(stage):
-        ERR.last_stage = ERR.stage
-        ERR.stage = stage
-        return
-    @staticmethod
-    def setLastStage():
-        ERR.stage = ERR.last_stage
-        return
-    @staticmethod
-    def log():
-        if logger != None:
-            logger.warn("program error(%s) in stage %s" %(sys.exc_value, ERR.stage))
-        return
 
 def lbaMode(mode):
     if mode in (1, 2, 3, 4):
@@ -187,15 +169,15 @@ def init_logging(args):
     return (_logger)
 
 def getRcuMode():
-    ERR.setStage("getRcuMode")
     rcumode = -1
     rcu_info = {}
     answer = rspctl("--rcu")
     for line in answer.splitlines():
-        rcu   = int(line[4:6].strip())
-        state = line[30:33].strip()
-        mode  = int(line[40])
-        rcu_info[rcu] = (state, mode)
+        rcu   = line[line.find('[')+1 : line.find(']')].strip()
+        state = line[line.find('=>')+2 : line.find(',')].strip()
+        mode  = line[line.find('mode:')+5]
+        if rcu.isdigit() and state in ("OFF", "ON") and mode.isdigit():
+            rcu_info[int(rcu)] = (state, int(mode))
 
     for mode in range(8):
         mode_cnt = answer.count("mode:%d" %(mode))
@@ -206,18 +188,15 @@ def getRcuMode():
         elif (mode_cnt > 32) and answer.count("mode:0") == (96 - mode_cnt):
             logger.debug("Now observing in rcumode %d" %(mode))
             rcumode = mode
-    ERR.setLastStage()
     return (rcumode, rcu_info)
 
 def getAntPol(rcumode, rcu):
-    ERR.setStage("getAntPol")
     pol_str = ('X','Y')
     ant = rcu / 2
     if rcumode == 1:
         pol_str = ('Y','X')
         ant += 48
     pol = pol_str[rcu % 2]
-    ERR.setLastStage()
     return (ant, pol)
 
 class CSV:
@@ -228,30 +207,23 @@ class CSV:
     record_timestamp = 0
     @staticmethod
     def setObsID(obs_id):
-        ERR.setStage("CSV.setObsID")
         CSV.station  = getHostName()
         CSV.obs_id   = obs_id
         CSV.filename = "%s_%s_open.dat" %(CSV.station, CSV.obs_id)
         CSV.rcu_mode = 0
         CSV.rec_timestamp = 0
         CSV.writeHeader()
-        ERR.setLastStage()
         return
     @staticmethod
     def setRcuMode(rcumode):
-        ERR.setStage("CSV.setRcuMode")
         CSV.rcu_mode = rcumode
-        ERR.setLastStage()
         return
     @staticmethod
     def setRecordTimestamp(timestamp):
-        ERR.setStage("CSV.setRecordTimestamp")
         CSV.record_timestamp = timestamp
-        ERR.setLastStage()
         return
     @staticmethod
     def writeHeader():
-        ERR.setStage("CSV.writeHeader")
         full_filename = os.path.join(rtsmPath, CSV.filename)
         # write only if new file
         if not os.path.exists(full_filename):
@@ -260,11 +232,9 @@ class CSV:
             f.write('#\n')
             f.flush()
             f.close()
-        ERR.setLastStage()
         return
     @staticmethod
     def writeSpectra(data, rcu, check):
-        ERR.setStage("CSV.writeSpectra")
         dumpTime = time.gmtime(CSV.record_timestamp)
         date_str = time.strftime("%Y%m%d", dumpTime)
 
@@ -301,11 +271,9 @@ class CSV:
         f.write(bad_spectra)
 
         f.close()
-        ERR.setLastStage()
         return
     @staticmethod
     def writeInfo(start_time, stop_time, obsid_samples):
-        ERR.setStage("CSV.writeInfo")
         full_filename = os.path.join(rtsmPath, CSV.filename)
         logger.debug("add obs_info to %s" %(full_filename))
         f = open(full_filename, 'a')
@@ -313,11 +281,9 @@ class CSV:
         f.write('OBS-ID-INFO=%s,%5.3f,%5.3f,%d\n\n' %(CSV.obs_id, start_time, stop_time, obsid_samples))
         f.flush()
         f.close()
-        ERR.setLastStage()
         return
     @staticmethod
     def closeFile():
-        ERR.setStage("CSV.closeFile")
         full_filename = os.path.join(rtsmPath, CSV.filename)
         filename_new = CSV.filename.replace('open','closed')
         full_filename_new = os.path.join(rtsmPath, filename_new)
@@ -325,11 +291,9 @@ class CSV:
         os.rename(full_filename, full_filename_new)
         CSV.obs_id = ""
         CSV.filename = ""
-        ERR.setLastStage()
         return
 
 def checkForOscillation(data, rcumode, error_list, delta):
-    ERR.setStage("checkForOscillation")
     logger.debug("start oscillation check")
     for pol_nr, pol in enumerate(('X', 'Y')):
         #test_data = data.getAll()[:,:1,:]
@@ -373,7 +337,6 @@ def checkForOscillation(data, rcumode, error_list, delta):
     return
 
 def checkForNoise(data, rcumode, error_list, low_deviation, high_deviation, max_diff):
-    ERR.setStage("checkForNoise")
     logger.debug("start noise check")
     for pol_nr, pol in enumerate(('X', 'Y')):
         low_noise, high_noise, jitter = search_noise(data, pol, low_deviation, high_deviation*1.5, max_diff)
@@ -416,7 +379,6 @@ def checkForNoise(data, rcumode, error_list, low_deviation, high_deviation, max_
     return
 
 def checkForSummatorNoise(data, rcumode, error_list):
-    ERR.setStage("checkForSummatorNoise")
     logger.debug("start summator-noise check")
     for pol_nr, pol in enumerate(('X', 'Y')):
         # sn=SummatorNoise  cr=CableReflections
@@ -442,7 +404,6 @@ def checkForSummatorNoise(data, rcumode, error_list):
     return
 
 def checkForDown(data, rcumode, error_list, subband):
-    ERR.setStage("checkForDown")
     logger.debug("start down check")
     down, shifted = searchDown(data, subband)
     for msg in down:
@@ -455,22 +416,38 @@ def checkForDown(data, rcumode, error_list, subband):
                    (rcumode, rcu, (rcu+1), ant, max_x_offset, max_y_offset))
         if rcu not in error_list:
             error_list.append(rcu)
+            error_list.append(rcu+1)
             CSV.writeSpectra(data, rcu, "DOWN")
             CSV.writeSpectra(data, rcu+1, "DOWN")
+    return
 
-    for msg in shifted:
-        rcu, max_sb, mean_max_sb = i
-        offset = max_sb - mean_max_sb
+def checkForFlat(data, rcumode, error_list):
+    logger.debug("start flat check")
+    flat = searchFlat(data)
+    for msg in flat:
+        rcu, mean_val = msg
         ant, pol = getAntPol(rcumode, rcu)
-        logger.info("Mode-%d RCU-%02d Ant-%02d Shifted, offset=%d" %\
-                   (rcumode, rcu, ant, offset))
+        logger.info("Mode-%d RCU-%02d Ant-%02d Flat, value=%5.1fdB" %\
+                   (rcumode, rcu, ant, mean_val))
         if rcu not in error_list:
             error_list.append(rcu)
-            CSV.writeSpectra(data, rcu, "SHIFT")
+            CSV.writeSpectra(data, rcu, "FLAT")
+    return
+
+def checkForShort(data, rcumode, error_list):
+    logger.debug("start short check")
+    short = searchShort(data)
+    for msg in short:
+        rcu, mean_val = msg
+        ant, pol = getAntPol(rcumode, rcu)
+        logger.info("Mode-%d RCU-%02d Ant-%02d Short, value=%5.1fdB" %\
+                   (rcumode, rcu, ant, mean_val))
+        if rcu not in error_list:
+            error_list.append(rcu)
+            CSV.writeSpectra(data, rcu, "SHORT")
     return
 
 def closeAllOpenFiles():
-    ERR.setStage("closeAllOpenFiles")
     files = os.listdir(rtsmPath)
     for filename in files:
         if filename.find('open') > -1:
@@ -478,7 +455,6 @@ def closeAllOpenFiles():
             filename_new = filename.replace('open','closed')
             full_filename_new = os.path.join(rtsmPath, filename_new)
             os.rename(full_filename, full_filename_new)
-    ERR.setLastStage()
     return
 
 class cDayInfo:
@@ -491,7 +467,6 @@ class cDayInfo:
         self.readFile()
 
     def addSample(self, rcumode=-1):
-        ERR.setStage("cDayInfo.addSample")
         date = time.strftime("%Y%m%d", time.gmtime(time.time()))
         # new day reset data and set new filename
         if self.date != date:
@@ -500,24 +475,18 @@ class cDayInfo:
         if rcumode in range(1,8,1):
             self.samples[rcumode-1] += 1
             self.writeFile()
-        ERR.setLastStage()
 
     def addObsInfo(self, obs_id, start_time, stop_time, rcu_mode, samples):
-        ERR.setStage("cDayInfo.addObsInfo")
         self.obs_info.append([obs_id, start_time, stop_time, rcu_mode, samples])
-        ERR.setLastStage()
 
     def reset(self):
-        ERR.setStage("cDayInfo.reset")
         self.filename = "%s_%s_dayinfo.dat" %(getHostName(), self.date)
         self.samples = [0,0,0,0,0,0,0] # RCU-mode 1..7
         self.obs_info = list()
         self.deleteOldDays()
-        ERR.setLastStage()
 
     # after a restart, earlier data is imported
     def readFile(self):
-        ERR.setStage("cDayInfo.readFile")
         full_filename = os.path.join(rtsmPath, self.filename)
         if os.path.exists(full_filename):
             f = open(full_filename, 'r')
@@ -532,11 +501,9 @@ class cDayInfo:
                 if key == 'OBSID-INFO':
                     d = data.split(',')
                     self.obs_info.append([d[0],float(d[1]),float(d[2]),int(d[3]), int(d[4])])
-        ERR.setLastStage()
 
     # rewrite file every sample
     def writeFile(self):
-        ERR.setStage("cDayInfo.writeFile")
         full_filename = os.path.join(rtsmPath, self.filename)
         f = open(full_filename, 'w')
         f.write('#DAY-INFO date,M1,M2,M3,M4,M5,M6,M7\n')
@@ -547,10 +514,8 @@ class cDayInfo:
             f.write('OBS-ID-INFO=%s,%5.3f,%5.3f,%d,%d\n' %\
                    (i[0],i[1],i[2],i[3],i[4]))
         f.close()
-        ERR.setLastStage()
 
     def deleteOldDays(self):
-        ERR.setStage("cDayInfo.deleteOldDayInfo")
         files = os.listdir(rtsmPath)
         backup = True
         for filename in files:
@@ -562,7 +527,6 @@ class cDayInfo:
                     if filename.split('.')[0].split('_')[1] != self.date:
                         full_filename = os.path.join(rtsmPath, filename)
                         os.remove(full_filename)
-        ERR.setLastStage()
 
         
 def getObsId():
@@ -601,7 +565,6 @@ def getObsIdInfo(obsid):
     
 def main():
     global logger
-    ERR.setStage("main")
     obs_id   = ""
     active_obs_id  = ""
     rcumode  = 0
@@ -691,11 +654,9 @@ def main():
                 data.setActiveRcus(active_rcus)
 
                 rec_timestamp  = time.time()+3.0
-                ERR.setStage("record")
                 data.record(rec_time=1, read=True, slow=True)
                 #data.fetch()
 
-                ERR.setStage("main")
                 CSV.setRcuMode(rcumode)
                 CSV.setRecordTimestamp(rec_timestamp)
                 DI.addSample(rcumode)
@@ -711,6 +672,8 @@ def main():
                 if lbaMode(rcumode):
                     checkForDown(data, rcumode, error_list,
                                   conf.getInt('lbh-test-sb',301))
+                    checkForShort(data, rcumode, error_list)
+                    checkForFlat(data, rcumode, error_list)
                     checkForOscillation(data, rcumode, error_list, 6.0)
                     checkForNoise(data, rcumode, error_list,
                                   conf.getFloat('lba-noise-min-deviation', -3.0),
@@ -744,7 +707,12 @@ def main():
             logger.info("stopped by user")
             sys.exit()
         except:
-            ERR.log()
+            logger.error('Caught %s', str(sys.exc_info()[0]))
+            logger.error(str(sys.exc_info()[1]))
+            logger.error('TRACEBACK:\n%s', traceback.format_exc())
+            logger.error('Aborting NOW')
+            sys.exit(0)
+            
 
     # do test and write result files to log directory
     log_dir = conf.getStr('log-dir-local')
