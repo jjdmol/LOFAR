@@ -83,7 +83,7 @@ namespace LOFAR {
         itsNrMissingACKs++;
         if (next.get(qmsg)) {
 			msg = LOFAR::Message(qmsg);
-            LOG_INFO_STR("[FromBus] Message received on queue " << next.getName() << ": " << msg.short_desc());
+            LOG_DEBUG_STR("[FromBus] Message received on queue " << next.getName() << ": " << msg.short_desc());
 			return true;
 		} else {
           LOG_ERROR_STR("[FromBus] Could not retrieve available message on queue " << next.getName());
@@ -161,20 +161,18 @@ namespace LOFAR {
     }
   }
 
-  void ToBus::send(const std::string &msg)
+  void ToBus::send(const LOFAR::MessageContent &msg)
   {
-    LOFAR::Message tosend(msg);
+    LOFAR::Message tosend(msg.qpidMsg());
 
-    LOG_INFO_STR("[ToBus] Sending message to queue " << itsSender.getName() << ": " << tosend.short_desc());
-    itsSender.send(tosend.qpidMsg(), true);
-    LOG_INFO_STR("[ToBus] Message sent to queue " << itsSender.getName() << ": " << tosend.short_desc());
+    send(tosend);
   }
 
   void ToBus::send(LOFAR::Message& msg)
   {
-    LOG_INFO_STR("[ToBus] Sending message to queue " << itsSender.getName() << ": " << msg.short_desc());
+    LOG_DEBUG_STR("[ToBus] Sending message to queue " << itsSender.getName() << ": " << msg.short_desc());
     itsSender.send(msg.qpidMsg(), true);
-    LOG_INFO_STR("[ToBus] Message sent to queue " << itsSender.getName() << ": " << msg.short_desc());
+    LOG_DEBUG_STR("[ToBus] Message sent to queue " << itsSender.getName() << ": " << msg.short_desc());
   }
 
 } // namespace LOFAR

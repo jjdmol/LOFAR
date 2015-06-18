@@ -840,14 +840,7 @@ void MACScheduler::_setParsetOnMsgBus(const string&	filename) const
 	string			sasID = obsSpecs.getString(obsPrefix + ".otdbID");
 
     //                      from, forUser, summary, protocol, protocolVersion, momID, sasID
-#if 1	
 	TaskSpecificationSystem	outMsg("LOFAR.MACScheduler", "", "", momID, sasID, obsSpecs);
-#else
-	Message			outMsg("LOFAR.MACScheduler", "", "", "task.specification.system", "1.0", momID, sasID);
-	stringstream	ss;
-	obsSpecs.writeStream(ss);
-	outMsg.setTXTPayload(ss.str());
-#endif
 	itsMsgQueue->send(outMsg);
 }
 

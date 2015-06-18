@@ -10,7 +10,8 @@
 PROTON_SOURCE="http://svn.apache.org/repos/asf/qpid/proton/branches/0.8"
 QPID_SOURCE="http://svn.apache.org/repos/asf/qpid/branches/0.30/qpid/"
 
-QPID_INSTALLDIR=/localhome/lofar/qpid
+QPID_INSTALLDIR=/opt/qpid-0.30
+QPID_SYMLINK=/opt/qpid
 
 # ********************************************
 #  Install latest PROTON & QPID
@@ -83,6 +84,9 @@ export PATH=\$PATH:$QPID_INSTALLDIR/sbin/:$QPID_INSTALLDIR/bin/:$QPID_INSTALLDIR
 export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:$QPID_INSTALLDIR/lib:$QPID_INSTALLDIR/local/lib/
 export PYTHONPATH=\$PYTHONPATH:$QPID_INSTALLDIR/lib/python/:$QPID_INSTALLDIR/lib/python$PYTHONVERSION/site-packages/
 EOF
+
+echo "  Creating symlink $QPID_SYMLINK..."
+ln -sfT $QPID_INSTALLDIR $QPID_SYMLINK
 
 echo "  Cleaning up..."
 popd >/dev/null

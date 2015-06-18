@@ -52,9 +52,9 @@ namespace MessageBus {
 class FromBus
 {
 public:
-  FromBus(const std::string &address="testqueue" , const std::string &options="; {create: never}", const std::string &broker = "amqp:tcp:127.0.0.1:5672") ;
+  FromBus(const std::string &address, const std::string &options="; {create: never}", const std::string &broker = "amqp:tcp:127.0.0.1:5672") ;
   ~FromBus(void);
-  bool addQueue(const std::string &address="testqueue", const std::string &options="; {create: never}");
+  bool addQueue(const std::string &address, const std::string &options="; {create: never}");
 
   bool getMessage(LOFAR::Message &msg, double timeout = 0.0); // timeout 0.0 means blocking
 
@@ -72,11 +72,11 @@ private:
 class ToBus
 {
 public:
-  ToBus(const std::string &address="testqueue" , const std::string &options="; {create: never}", const std::string &broker = "amqp:tcp:127.0.0.1:5672") ;
+  ToBus(const std::string &address, const std::string &options="; {create: never}", const std::string &broker = "amqp:tcp:127.0.0.1:5672") ;
   ~ToBus(void);
 
-  void send(const std::string &msg);
   void send(LOFAR::Message &msg);
+  void send(const LOFAR::MessageContent &msg);
 
 private:
   // -- datamambers --
