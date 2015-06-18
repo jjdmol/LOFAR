@@ -160,6 +160,11 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
             '--stepname',
             help="stepname for individual naming of results",
             optional=True
+        ),
+        'environment': ingredient.DictField(
+            '--environment',
+            help="Update environment variables for this step.",
+            optional=True
         )
     }
 
@@ -172,6 +177,9 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
     def go(self):
         if 'executable' in self.inputs:
             executable = self.inputs['executable']
+
+        if 'environment' in self.inputs:
+            self.environment.update(self.inputs['environment'])
 
         self.logger.info("Starting %s run" % executable)
         super(executable_args, self).go()
