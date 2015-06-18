@@ -34,6 +34,7 @@
 #endif
 
 #ifdef HAVE_LIBXMLXX
+#include <sstream>
 #include <libxml++/parsers/domparser.h>
 #include <libxml++/nodes/textnode.h>
 
@@ -132,6 +133,12 @@ MessageContent::~MessageContent()
 {
 }
 
+MessageContent::MessageContent(const MessageContent &other)
+{
+  initContent(other.getContent());
+  addProperties();
+}
+
 void MessageContent::initContent(const std::string &content)
 {
 #ifdef HAVE_LIBXMLXX
@@ -139,6 +146,15 @@ void MessageContent::initContent(const std::string &content)
   itsDocument = itsParser.get_document();
 #else
   itsContent = content;
+#endif
+}
+
+std::string MessageContent::getContent() const
+{
+#ifdef HAVE_LIBXMLXX
+  return itsDocument->write_to_string_formatted();
+#else
+  return itsContent;
 #endif
 }
 
@@ -167,13 +183,7 @@ void MessageContent::addProperties()
 qpid::messaging::Message MessageContent::qpidMsg() const {
   qpid::messaging::Message qpidMsg;
 
-#ifdef HAVE_LIBXMLXX
-  std::string content = itsDocument->write_to_string_formatted();
-  qpidMsg.setContent(content);
-#else
-  qpidMsg.setContent(itsContent);
-#endif
-
+  qpidMsg.setContent(getContent());
   qpidMsg.setContentType("text/plain");
   qpidMsg.setDurable(true);
 

@@ -45,6 +45,12 @@ static const std::string system = "LOFAR";
 // Version of the header we write
 static const std::string headerVersion = "1.0.0";
 
+/*
+ * Encode the CONTENT of a message, that is sent to or received from a Message Bus.
+ *
+ * This is the base class that represents the LOFAR message protocol. Derived classes
+ * can implement specific protocols. See the Protocols/ directory for examples.
+ */
 class MessageContent
 {
 public:
@@ -78,6 +84,9 @@ public:
   // Parse a message
   MessageContent(const qpid::messaging::Message &qpidMsg);
 
+  // Create a copy
+  MessageContent(const MessageContent &);
+
   // Set the payload, supporting various types
   void setXMLPayload (const std::string                &payload);
   void setTXTPayload (const std::string                &payload);
@@ -87,7 +96,15 @@ public:
   /*
    * A 'Property' is getter/setter for a part of the message content.
    *
-   * It provides a string interface.
+   * It provides a string interface. Example usage (MessageContent::system is a property):
+   *
+   *   MessageContent content;
+   *   content.system = "foo";                 // set the property to 'foo'
+   *   content.system.set("foo");              // set the property to 'foo'
+   *   cout << content.system.get() << endl;   // print the property
+   *   cout << (string)content.system << endl; // print the property
+   *   ASSERT(content.system == "foo");        // compare the property
+   *   ASSERT(content.system != "bar");        // compare the property
    */
   class Property {
   public:
@@ -133,8 +150,15 @@ public:
   Property payload;
   Property header;
 
-  // Return a QPID message with our content
+  // Return a NEW QPID message with our content
   qpid::messaging::Message qpidMsg() const;
+
+  // Return the message content. Note that the content string
+  // is possibly generated, and may not be an exact copy
+  // of what was provided in the constructor. For a raw
+  // copy of the exact message content, please use the
+  // getContent() method of the QPID message itself.
+  std::string getContent() const;
 
   // Return a short (one line) description of the message
   std::string short_desc() const;
@@ -163,8 +187,8 @@ private:
 
   // -- datamembers -- 
 #ifdef HAVE_LIBXMLXX
-  xmlpp::DomParser itsParser; // NOTE: non-copyable
-  xmlpp::Document *itsDocument;
+  xmlpp::DomParser itsParser;   // NOTE: non-copyable
+  xmlpp::Document *itsDocument; // NOTE: non-copyable
 #else
   std::string itsContent;
 #endif
