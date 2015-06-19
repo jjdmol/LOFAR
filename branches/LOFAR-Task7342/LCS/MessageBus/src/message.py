@@ -76,6 +76,10 @@ class MessageContent(object):
       an existing QPID message.
     """
 
+    class Defaults(object):
+      system = "LOFAR"
+      headerVersion = "1.0.0"
+
     def __init__(self, from_="", forUser="", summary="", protocol="", protocolVersion="", momid="", sasid="", qpidMsg=None):
       # Add properties to get/set header fields
       for name, element in self._property_list().iteritems():
@@ -86,8 +90,8 @@ class MessageContent(object):
         self.document = xml.parseString(LOFAR_MSG_TEMPLATE)
 
         # Set properties provided by constructor
-        self.system          = "LOFAR"
-        self.headerVersion   = "1.0.0"
+        self.system          = self.Defaults.system
+        self.headerVersion   = self.Defaults.headerVersion
         self.protocol        = protocol
         self.protocolVersion = protocolVersion
         self.from_           = from_

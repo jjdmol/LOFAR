@@ -40,12 +40,6 @@
 
 namespace LOFAR {
 
-// Name of the system sending these messages
-static const std::string system = "LOFAR";
-
-// Version of the header we write
-static const std::string headerVersion = "1.0.0";
-
 // Exception thrown when there's illegal access to the content of a message.
 // for example when an XML element is accessed that does not exist.
 EXCEPTION_CLASS(MessageContentException, Exception);
@@ -59,6 +53,14 @@ EXCEPTION_CLASS(MessageContentException, Exception);
 class MessageContent
 {
 public:
+  struct Defaults {
+    // Name of the system sending these messages
+    static const std::string system;
+
+    // Version of the header we write
+    static const std::string headerVersion;
+  };
+
   // Construct a message
   MessageContent();
 

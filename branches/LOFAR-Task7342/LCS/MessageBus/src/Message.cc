@@ -74,6 +74,15 @@ const string LOFAR_MSG_TEMPLATE = "\
    <payload></payload>\n\
 </message>";
 
+/*
+ * Default settings (for this release)
+ */
+const std::string MessageContent::Defaults::system = "LOFAR";
+const std::string MessageContent::Defaults::headerVersion = "1.0.0";
+
+/*
+ * Generated settings
+ */
 static string _timestamp() {
   // Get now (in seconds since epoch)
   time_t now = time(NULL);
@@ -112,8 +121,8 @@ MessageContent::MessageContent(const std::string &from,
   initContent(LOFAR_MSG_TEMPLATE);
   addProperties();
 
-  this->system          = LOFAR::system;
-  this->headerVersion   = LOFAR::headerVersion;
+  this->system          = Defaults::system;
+  this->headerVersion   = Defaults::headerVersion;
 
   this->protocol        = protocol;
   this->protocolVersion = protocolVersion;
