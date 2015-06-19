@@ -94,7 +94,9 @@ class SCQLib(object):
         value of the script
         """
         self._broker = broker
+
         self._parameterQueueName = busname + "/parameters_" + session_uuid + "_" + job_uuid
+
         self._logTopicName = busname + "/logging_" + session_uuid
         self._returnQueueName = busname + "/results_" + session_uuid
         
@@ -118,6 +120,7 @@ class SCQLib(object):
         # wait for the parameters: do this for max 10 seconds
         wait_counter = 0
         msg = None
+
         while True:
             if wait_counter == 10:
                 raise Exception(
@@ -162,8 +165,7 @@ def validParameterQueueName(queueName):
       we are in a correct state. (you can have qpid enabled on a node) but
       state the recipe on the old socked manner.
       """
-      if "NCQDaemon" in queueName and "parameters" in queueName:
-          return True
+      # TODO: Implement
+      return True
 
-      return False
 

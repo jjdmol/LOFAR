@@ -133,11 +133,17 @@ class CQDaemon(object):
             if (quit_command_received):
                 self._logger.warn("Recveived quit command. stopping daemon")
                 break     
+
             #3. call deadletter process function with the deadletter queue
             self._process_deadletter_queue()
+
+            #4. Do whatever internal houskeeping on a possible state
+            self.process_state()
+
             end_tick = datetime.now()   
 
-            # 4.  TODO: I think there is something wrong with the sleep behaviour
+
+            # 5.  TODO: I think there is something wrong with the sleep behaviour
             # perform a sleep,
             microseconds_per_second = 10e6
             duration_loop_seconds = (end_tick - begin_tick).microseconds \
@@ -249,6 +255,15 @@ class CQDaemon(object):
                 self._CommandQueue.ack(msg)  
 
             continue
+
+    def process_state(self):
+        """
+        Member which allows a user of the class to perform actions based on
+        internal state. This is part of the run loop
+
+        Does nothing in the CQDaemon
+        """
+        pass
     
     def _process_quit_msg(self, msg_content):
         """

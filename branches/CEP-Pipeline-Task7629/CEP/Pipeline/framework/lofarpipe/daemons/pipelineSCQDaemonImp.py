@@ -45,7 +45,6 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
                              # 20 second (should be enough)
 
 
-
     def process_commands(self, command, unpacked_msg_content, msg):
         """
         Process_commands, add the run_job command
@@ -57,6 +56,15 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
             return True
 
         return False
+
+    def process_state(self):
+        """
+        The pipeline Daemon should test the available jobs for finish states
+        """
+        # All the state is stored in the subprocess manager
+
+        self._subprocessManager.check_managed_processed()
+
   
     def _process_run_job(self, unpacked_msg_content):
         """
@@ -124,7 +132,6 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
         job_uuid = unpacked_msg_data['job_uuid']
         n_repost = None
 
-        
         if 'n_repost' in unpacked_msg_data:
             n_repost = unpacked_msg_data['n_repost'] 
         else:
@@ -136,7 +143,7 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
         session_uuid = unpacked_msg_data['session_uuid']
         job_uuid = unpacked_msg_data['job_uuid']
 
-
+        
         if n_repost >= self._max_repost:
             # If we tried enough times, kill the job
             self._subprocessManager.kill_job_send_results(
@@ -147,7 +154,6 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
                session_uuid, job_uuid, unpacked_msg_data)
         
         return
-
 
 
     def _save_unpack_msg(self, msg):

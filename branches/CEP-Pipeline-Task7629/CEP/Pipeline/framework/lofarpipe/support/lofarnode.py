@@ -22,11 +22,11 @@ from lofarpipe.support.usagestats import UsageStats
 # Includes for QPID framework, might not be available. Set status flag 
 _QPID_ENABLED = False
 try:
-    import lofar.messagebus.NCQLib as NCQLib
+    import lofarpipe.daemons.SCQLib as SCQLib
     _QPID_ENABLED = True
 except:
     pass
-# End QPID include 
+
 
 def run_node(*args):
     """
@@ -81,8 +81,8 @@ class LOFARnode(object):
             datefmt = "%Y-%m-%d %H:%M:%S"
             formatter = logging.Formatter(format, datefmt)
 
-            self._NCQLib.QPIDLoggerHandler.setFormatter(formatter)
-            self.logger.addHandler(self._NCQLib.QPIDLoggerHandler)
+            self._SCQLib.QPIDLoggerHandler.setFormatter(formatter)
+            self.logger.addHandler(self._SCQLib.QPIDLoggerHandler)
             
             self.logger.propagate = False    # stop printing to stdout           
         elif self.loghost:
@@ -101,7 +101,7 @@ class LOFARnode(object):
         finally:
             self.resourceMonitor.setStopFlag()
             if _QPID_ENABLED:
-                self.logger.removeHandler(self._NCQLib.QPIDLoggerHandler)
+                self.logger.removeHandler(self._SCQLib.QPIDLoggerHandler)
             elif self.loghost:
                 my_tcp_handler.close()
                 self.logger.removeHandler(my_tcp_handler)
@@ -124,30 +124,25 @@ class LOFARnodeTCP(LOFARnode):
         # try connecting using QPID
         # Reuse the job_id and port to send the name of the queues
         # THis is not pretty but we need to be backwards compatible
-        self._NCQLib = None
+        self._SCQLib = None
 
         if not _QPID_ENABLED:
             self.job_id, self.host, self.port = int(job_id), host, int(port)
         else:
-
             returnQueueName = job_id 
-            logTopicName = host
-            parameterQueueName = port
+            session_uuid = host
+            job_uuid = port
+            hostname = socket.gethostname()
 
-            if not NCQLib.validParameterQueueName(parameterQueueName):
+            if not SCQLib.validParameterQueueName(job_uuid):
                 raise Exception("Incorrect parameterQueue name. This happens "
                          "when the toplevel uses sockets and the slave qpid")
+               
+            self._SCQLib = SCQLib.SCQLib(hostname, returnQueueName,
+                                         session_uuid, job_uuid)
+            self.host = None
+            self.port = None
 
-            if _QPID_ENABLED:
-                
-                self._NCQLib = NCQLib.NCQLib(returnQueueName, logTopicName,
-                                             parameterQueueName)
-                self.host = None
-                self.port = None
-
-
-            else:
-                raise ex
             
         self.__fetch_arguments()
         super(LOFARnodeTCP, self).__init__(self.host, self.port)
@@ -196,7 +191,7 @@ class LOFARnodeTCP(LOFARnode):
         """
         if _QPID_ENABLED:
             
-            self.arguments = self._NCQLib.getArguments()
+            self.arguments = self._SCQLib.getArguments()
         else:
             while True:
                 tries -= 1
@@ -232,7 +227,7 @@ class LOFARnodeTCP(LOFARnode):
         """
 
         if _QPID_ENABLED:               
-            self._NCQLib.send_results(self.outputs)
+            self._SCQLib.send_results(self.outputs)
             return
         #else:
         message = "PUT %d %s" % (self.job_id, pickle.dumps(self.outputs))

@@ -74,7 +74,8 @@ class SubprocessManager(object):
         # this is backward compatibility issue from the pipeline framework
         # prepending exec allows us to send a kill() to the process
         # https://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
-        cmd_with_uuid = "exec " + command + " " + self._busname + " " + job_uuid 
+        cmd_with_uuid = "exec " + command + " " + self._busname + \
+                  " " + session_uuid + " " + job_uuid 
 
         # new start a subprocess
         process, error_str =  self._start_subprocess(
@@ -90,7 +91,8 @@ class SubprocessManager(object):
         else:                # store the process
             # Send the paramters on the parameter queue
             self.send_job_parameters(session_uuid, job_uuid, msg_content)
-            self._registered_sessions[session_uuid]['jobs'][job_uuid] = process
+            self._registered_sessions[session_uuid]['jobs'][job_uuid] = \
+            (process, msg_content)
 
     def failed_job_parameter_msg(self, msg_content):
         """
@@ -100,7 +102,6 @@ class SubprocessManager(object):
         job_uuid     = msg_content['job_uuid']
         session_uuid = msg_content['session_uuid']
         self.kill_job_send_results(session_uuid, job_uuid)
-
 
     def quit_session(self, msg_content):
         """
@@ -113,7 +114,6 @@ class SubprocessManager(object):
 
         # delete the whole session_uuid dictionary 
         del self._registered_sessions[session_uuid]
-
 
     def _start_subprocess(self, command, working_dir, environment):
         """
@@ -142,13 +142,16 @@ class SubprocessManager(object):
 
         return process, error_str
     
-
     def kill_job_send_results(self,  session_uuid, job_uuid):
         """
         Helper function for killing a job. The output is send on the 
         results and log queue
         """
-        process = self._registered_sessions[session_uuid]['jobs'][job_uuid]
+        if not job_uuid in self._registered_sessions[session_uuid]['jobs']:
+            return # Received msg on the deadletter queue for removed job
+
+        (process, job_msg) = \
+                  self._registered_sessions[session_uuid]['jobs'][job_uuid]
 
         # kill the process // TODO: find out of kill can be called on a stopped
         # process
@@ -162,6 +165,8 @@ class SubprocessManager(object):
 
         # Send error results to
         self.send_results(session_uuid, job_uuid, -1, "Job killed")
+
+        del self._registered_sessions[session_uuid]['jobs'][job_uuid]
 
     def _connect_result_log_parameter_queues(self, session_uuid):
         """
@@ -188,7 +193,6 @@ class SubprocessManager(object):
 
         return queues_dict
 
-
     def send_process_cout_cerr(self, session_uuid, job_uuid,
                                 stdoutdata, stderrdata):
         """
@@ -208,7 +212,6 @@ class SubprocessManager(object):
         msg = self.create_msg(payload)
         self._registered_sessions[session_uuid]['queues']['log'].send(msg)
 
-
     def send_job_parameters(self, session_uuid, job_uuid, msg_content):
         """
         Sends a job parameter msg on the bus.
@@ -216,15 +219,15 @@ class SubprocessManager(object):
         Both the session and job uuid are used to adress it.
         THe session uuid allows the deadletter queue to resend it.
         """
+        subject = "parameters_" + session_uuid + "_" + job_uuid
         msg_content['type'] = 'parameters'
         msg_content['info'] = {"sender":"subprocessStarter",
-                               "target":"SCQLib"}
+                               "target":"SCQLib",
+                               'subject':subject}
         msg = self.create_msg(msg_content)
-        subject = session_uuid + "_" + job_uuid
+        
         msg.set_subject(subject)
-
         self._toBus.send(msg)
-
 
     def send_results(self, session_uuid, job_uuid, exit_status, info_str=""):
         """
@@ -238,6 +241,44 @@ class SubprocessManager(object):
         msg = self.create_msg(payload)
         
         self._registered_sessions[session_uuid]['queues']['result'].send(msg)
+
+    def check_managed_processed(self):
+        """
+
+        """
+        for session_uuid  in self._registered_sessions.keys():
+            jobs = self._registered_sessions[session_uuid]['jobs']
+
+            for job_uuid in jobs.keys():    
+                (process, msg) = jobs[job_uuid]
+
+                #1. CHeck if the process has ended, continue of not
+                if process.poll() == None:
+                    self._logger.info("still running: {0}".format(job_uuid))
+                    continue
+
+
+                # 3. We have a valid subprocess that has now ended
+                (stdoutdata, stderrdata) = process.communicate()
+                exit_status = process.returncode
+
+                self.send_process_cout_cerr(session_uuid, job_uuid,
+                                            stdoutdata, stderrdata)
+                # Send the logging information not created using the default
+                # lofar logger                    
+                self._logger.info("sending job result for: {0}".format(session_uuid))
+
+                # send the exit state to the resultsQueue
+                payload = {'type':"exit_value",
+                            'exit_value':exit_status,
+                            'uuid':session_uuid,
+                            'job_uuid':job_uuid}
+
+                self.send_results(session_uuid, job_uuid, exit_status,
+                                  "Subprocess Results")
+                del jobs[job_uuid]
+
+
 
 
     def create_msg(self, payload):

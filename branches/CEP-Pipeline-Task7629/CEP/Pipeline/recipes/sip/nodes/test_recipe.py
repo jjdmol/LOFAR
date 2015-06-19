@@ -11,7 +11,8 @@ import sys
 import time
 
 from lofarpipe.support.lofarnode import LOFARnodeTCP
-
+import lofar.messagebus.msgbus as msgbus
+import lofar.messagebus.message as message
 
 class test_recipe(LOFARnodeTCP):
     """
@@ -36,7 +37,7 @@ if __name__ == "__main__":
     #   If invoked directly, parse command line arguments for logger information
     #                        and pass the rest to the run() method defined above
     # --------------------------------------------------------------------------
-    print "*****************we are here*********************"
     jobid, jobhost, jobport = sys.argv[1:4]
+    
     sys.exit(test_recipe(jobid, jobhost, jobport).run_with_stored_arguments())
 
