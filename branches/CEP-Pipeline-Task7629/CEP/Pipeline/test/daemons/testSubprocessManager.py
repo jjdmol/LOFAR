@@ -17,31 +17,10 @@
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
 # $Id$
-
-
-#!/usr/bin/python
-# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-#
-# This file is part of the LOFAR software suite.
-# The LOFAR software suite is free software: you can redistribute it and/or
-# modify it under the terms of the GNU General Public License as published
-# by the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# The LOFAR software suite is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-#
-# $Id$
 import logging
 
 import CQDaemonTestFunctions as testFunctions
-import lofarpipe.daemons.subprocessStarter as subprocessStarter
+import lofarpipe.daemons.subprocessManager as subprocessManager
 
 import unittest
 import time
@@ -68,10 +47,10 @@ import logging
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
 
-class TestSubprocessStarter(unittest.TestCase):
+class TestSubprocessManager(unittest.TestCase):
 
     def __init__(self, arg):  
-        super(TestSubprocessStarter, self).__init__(arg)
+        super(TestSubprocessManager, self).__init__(arg)
 
     # For now leave the setup and tearDown empty: single test
     # when the number of test increased it is an idea to implement them
@@ -89,8 +68,8 @@ class TestSubprocessStarter(unittest.TestCase):
         broker = "locus102"
         busname = "testmcqdaemon"
         toBus = None
-        logger = logging.getLogger("subProcessStarter")
-        starter = subprocessStarter.SubprocessStarter(broker, busname, toBus,
+        logger = logging.getLogger("subprocessManager")
+        starter = subprocessManager.subprocessManager(broker, busname, toBus,
                                                       logger)
 
     def test_start_job_from_msg_succes(self):
@@ -100,10 +79,10 @@ class TestSubprocessStarter(unittest.TestCase):
         functionality
         """
         # small wrapper class mucking members
-        class SubprocessStarterWrapper(
-            subprocessStarter.SubprocessStarter):
+        class subprocessManagerWrapper(
+            subprocessManager.subprocessManager):
             def __init__(self, broker, busname, toBus, logger):
-                  super(SubprocessStarterWrapper, self).__init__(
+                  super(subprocessManagerWrapper, self).__init__(
                                                 broker, busname, toBus, logger)
                   self._connect_called = None
                   self._start_subprocess_called = None
@@ -120,8 +99,8 @@ class TestSubprocessStarter(unittest.TestCase):
         broker = "locus102"
         busname = "testmcqdaemon"
         toBus = BusMuck(broker, busname)
-        logger = logging.getLogger("subProcessStarter")
-        starter = SubprocessStarterWrapper(broker, busname, toBus,
+        logger = logging.getLogger("subprocessManager")
+        starter = subprocessManagerWrapper(broker, busname, toBus,
                                                       logger)
 
         # A fake msg content
@@ -149,10 +128,10 @@ class TestSubprocessStarter(unittest.TestCase):
         functionality
         """
         # small wrapper class mucking members
-        class SubprocessStarterWrapper(
-            subprocessStarter.SubprocessStarter):
+        class subprocessManagerWrapper(
+            subprocessManager.subprocessManager):
             def __init__(self, broker, busname, toBus, logger):
-                  super(SubprocessStarterWrapper, self).__init__(
+                  super(subprocessManagerWrapper, self).__init__(
                                                 broker, busname, toBus, logger)
                   self._connect_called = None
                   self._start_subprocess_called = None
@@ -179,8 +158,8 @@ class TestSubprocessStarter(unittest.TestCase):
         broker = "locus102"
         busname = "testmcqdaemon"
         toBus = BusMuck(broker, busname)
-        logger = logging.getLogger("subProcessStarter")
-        starter = SubprocessStarterWrapper(broker, busname, toBus,
+        logger = logging.getLogger("subprocessManager")
+        starter = subprocessManagerWrapper(broker, busname, toBus,
                                                       logger)
 
         # A fake msg content

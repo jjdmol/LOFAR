@@ -23,7 +23,7 @@ import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
 
 import subprocess
-import lofarpipe.daemons.subprocessStarter as subprocessStarter
+import lofarpipe.daemons.subprocessManager as subprocessManager
 
 
 class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
@@ -38,7 +38,7 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
         self._toBus = msgbus.ToBus(self._busname, broker = self._broker)
 
 
-        self._subprocessStarter = subprocessStarter.SubprocessStarter(
+        self._subprocessManager = subprocessManager.SubprocessManager(
                self._broker, self._busname, self._toBus, self._logger)
 
         self._max_repost = 2 # Depending on the loop_interval this is normally
@@ -62,7 +62,7 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
         """
         The starting of a job on one of the node servers.
         """
-        self._subprocessStarter.start_job_from_msg(unpacked_msg_content)
+        self._subprocessManager.start_job_from_msg(unpacked_msg_content)
 
     def _process_deadletter_queue(self):
         """
@@ -129,7 +129,7 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
             n_repost = unpacked_msg_data['n_repost'] 
         else:
             unpacked_msg_data['n_repost'] = 1
-            self._subprocessStarter.send_job_parameters(
+            self._subprocessManager.send_job_parameters(
               session_uuid, job_uuid, unpacked_msg_data)
             return
 
@@ -139,11 +139,11 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
 
         if n_repost >= self._max_repost:
             # If we tried enough times, kill the job
-            self._subprocessStarter.kill_job_send_results(
+            self._subprocessManager.kill_job_send_results(
               session_uuid, job_uuid)
         else:
             unpacked_msg_data['n_repost'] += 1
-            self._subprocessStarter.send_job_parameters(
+            self._subprocessManager.send_job_parameters(
                session_uuid, job_uuid, unpacked_msg_data)
         
         return

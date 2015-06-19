@@ -24,7 +24,7 @@ import subprocess
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
 
-class SubprocessStarter(object):
+class SubprocessManager(object):
     """
     Class responsible for starting subprocessing.
     creating the environment
