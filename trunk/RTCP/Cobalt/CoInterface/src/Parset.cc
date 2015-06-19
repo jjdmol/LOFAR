@@ -677,6 +677,10 @@ namespace LOFAR
           struct ObservationSettings::BeamFormer::SAP &sap = settings.beamFormer.SAPs[i];
           struct ObservationSettings::SAP &obsSap = settings.SAPs[i];
 
+          // Clear counters
+          sap.nrCoherent = 0;
+          sap.nrIncoherent = 0;
+
           size_t nrTABs    = getUint32(str(format("Observation.Beam[%u].nrTiedArrayBeams") % i), 0);
           size_t nrTABSParset = nrTABs;
           size_t nrRings   = getUint32(str(format("Observation.Beam[%u].nrTabRings") % i), 0);
