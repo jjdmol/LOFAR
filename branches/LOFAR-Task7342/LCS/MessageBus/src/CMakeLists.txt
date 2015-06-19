@@ -11,7 +11,8 @@ set(messagebus_LIB_SRCS
   MessageBus.cc
   NoQpidFallback.cc
   ToBus.cc
-  Util.cc)
+  Util.cc
+  XMLDoc.cc)
 
 set(messagebus_PROGRAMS
 )

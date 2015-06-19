@@ -13,6 +13,7 @@ install(FILES
   MessageBus.h
   NoQpidFallback.h
   ToBus.h
+  XMLDoc.h
   DESTINATION include/${PACKAGE_NAME})
 
 add_subdirectory(Protocols)

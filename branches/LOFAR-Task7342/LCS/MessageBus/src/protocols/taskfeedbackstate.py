@@ -37,7 +37,7 @@ class TaskFeedbackState(MessageContent):
       momID,
       sasID)
 
-    self._insertXML("message.payload", LOFAR_STATUS_MSG_TEMPLATE)
+    self.document.insertXML("message.payload", LOFAR_STATUS_MSG_TEMPLATE)
 
     self.type_ = "pipeline"
     if status:

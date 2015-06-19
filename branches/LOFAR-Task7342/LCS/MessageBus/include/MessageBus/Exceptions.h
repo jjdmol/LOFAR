@@ -29,6 +29,10 @@ namespace LOFAR {
 
 EXCEPTION_CLASS(MessageBusException, LOFAR::Exception);
 
+// Exception thrown when there's illegal access to the content of a message.
+// for example when an XML element is accessed that does not exist.
+EXCEPTION_CLASS(MessageContentException, MessageBusException);
+
 EXCEPTION_CLASS(XMLException, MessageBusException);
 
 } // namespace LOFAR

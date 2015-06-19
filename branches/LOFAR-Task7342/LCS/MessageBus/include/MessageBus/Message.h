@@ -38,11 +38,9 @@
 #include <ostream>
 #include <Common/Exception.h>
 
-namespace LOFAR {
+#include <MessageBus/XMLDoc.h>
 
-// Exception thrown when there's illegal access to the content of a message.
-// for example when an XML element is accessed that does not exist.
-EXCEPTION_CLASS(MessageContentException, Exception);
+namespace LOFAR {
 
 /*
  * Encode the CONTENT of a message, that is sent to or received from a Message Bus.
@@ -133,10 +131,10 @@ public:
 
     // To be used only by MessageContent and its subclasses
     Property(): itsContent(0), itsKey("") {}
-    void attach(MessageContent *content, const std::string &key) { itsContent = content; itsKey = key; }
+    void attach(XMLDoc *content, const std::string &key) { itsContent = content; itsKey = key; }
 
   private:
-    MessageContent *itsContent;
+    XMLDoc *itsContent;
     std::string itsKey;
   };
 
@@ -173,46 +171,22 @@ public:
   // function for printing
   std::ostream& print (std::ostream& os) const;
 
-  // Return a value from the XML content.
-  std::string getXMLvalue(const std::string& key) const;
-
-  // Set a value in the XML content.
-  void setXMLvalue(const std::string& key, const std::string& data);
-
-protected:
-  // Import an XML subdocument under the given key.
-  void insertXML(const std::string& key, const std::string& xml);
-
-#ifdef HAVE_LIBXMLXX
-  // Locates and returns a node given by its XPATH key ("/a/b/c")
-  xmlpp::Element *getXMLnode(const std::string &name) const;
-#endif
-
 private:
-  void initContent(const std::string&);
   void addProperties();
 
-  // -- datamembers -- 
-#ifdef HAVE_LIBXMLXX
-  // itsParser is the owner of the XML Document and Elements that
-  // will be accessed. It takes care of the memory management and
-  // thus free all elements at destruction.
-  xmlpp::DomParser itsParser;   // NOTE: non-copyable
-  xmlpp::Document *itsDocument; // NOTE: non-copyable
-#else
-  std::string itsContent;
-#endif
+protected:
+  XMLDoc itsContent;
 };
 
 inline std::ostream &operator<<(std::ostream &os, const MessageContent &msg)
 {
-    return (msg.print(os));
+  return (msg.print(os));
 }
 
 inline std::ostream &operator<<(std::ostream &os, const MessageContent::Property &prop)
 {
-    os << (std::string)prop;
-    return os;
+  os << (std::string)prop;
+  return os;
 }
 
 class Message
@@ -246,7 +220,7 @@ private:
 
 inline std::ostream &operator<<(std::ostream &os, const Message &msg)
 {    
-    return (msg.print(os));
+  return (msg.print(os));
 }
 
 
