@@ -24,7 +24,7 @@ endforeach(prog ${messagebus_PROGRAMS})
 
 python_install(
   __init__.py
-  msgbus.py
+  messagebus.py
   message.py
   noqpidfallback.py
   DESTINATION lofar/messagebus)

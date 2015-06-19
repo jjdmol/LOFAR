@@ -206,13 +206,13 @@ private:
 
 inline std::ostream &operator<<(std::ostream &os, const MessageContent &msg)
 {
-	return (msg.print(os));
+    return (msg.print(os));
 }
 
 inline std::ostream &operator<<(std::ostream &os, const MessageContent::Property &prop)
 {
-	os << (std::string)prop;
-	return os;
+    os << (std::string)prop;
+    return os;
 }
 
 class Message
@@ -245,8 +245,8 @@ private:
 };
 
 inline std::ostream &operator<<(std::ostream &os, const Message &msg)
-{	
-	return (msg.print(os));
+{    
+    return (msg.print(os));
 }
 
 

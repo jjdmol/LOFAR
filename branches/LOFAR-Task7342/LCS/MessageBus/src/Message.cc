@@ -111,12 +111,12 @@ MessageContent::MessageContent()
 }
 
 MessageContent::MessageContent(const std::string &from,
-				 const std::string &forUser,
-				 const std::string &summary,
-				 const std::string &protocol,
-				 const std::string &protocolVersion,
-				 const std::string &momid,
-				 const std::string &sasid)
+                 const std::string &forUser,
+                 const std::string &summary,
+                 const std::string &protocol,
+                 const std::string &protocolVersion,
+                 const std::string &momid,
+                 const std::string &sasid)
 {
   initContent(LOFAR_MSG_TEMPLATE);
   addProperties();

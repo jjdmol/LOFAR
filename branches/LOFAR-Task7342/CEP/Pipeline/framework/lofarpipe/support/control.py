@@ -15,7 +15,7 @@ from lofarpipe.support.stateful import StatefulRecipe
 from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.xmllogging import get_active_stack
 from lofar.parameterset import parameterset
-import lofar.messagebus.msgbus
+import lofar.messagebus.messagebus as massagebus
 from lofar.messagebus.protocols import TaskFeedbackDataproducts, TaskFeedbackProcessing, TaskFeedbackState
 
 #                                             Standalone Pipeline Control System
@@ -55,7 +55,7 @@ class control(StatefulRecipe):
         """
 
         if self.feedback_method == "messagebus":
-          bus = lofar.messagebus.msgbus.ToBus("lofar.task.feedback.processing")
+          bus = messagebus.ToBus("lofar.task.feedback.processing")
           msg = TaskFeedbackProcessing(
             "lofarpipe.support.control",
             "",
@@ -74,7 +74,7 @@ class control(StatefulRecipe):
         """
 
         if self.feedback_method == "messagebus":
-          bus = lofar.messagebus.msgbus.ToBus("lofar.task.feedback.dataproducts")
+          bus = messagebus.ToBus("lofar.task.feedback.dataproducts")
           msg = TaskFeedbackDataproducts(
             "lofarpipe.support.control",
             "",
@@ -94,7 +94,7 @@ class control(StatefulRecipe):
         """
 
         if self.feedback_method == "messagebus":
-          bus = lofar.messagebus.msgbus.ToBus("lofar.task.feedback.state")
+          bus = messagebus.ToBus("lofar.task.feedback.state")
           msg = TaskFeedbackState(
             "lofarpipe.support.control",
             "",
@@ -134,7 +134,7 @@ class control(StatefulRecipe):
         except:
           self.feedback_method = "messagebus"
 
-        if self.feedback_method == "messagebus" and not lofar.messagebus.msgbus.MESSAGING_ENABLED:
+        if self.feedback_method == "messagebus" and not messagebus.MESSAGING_ENABLED:
           self.logger.error("Feedback over messagebus requested, but messagebus support is not enabled or functional")
           return 1
 

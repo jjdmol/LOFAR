@@ -35,7 +35,7 @@ namespace LOFAR {
   {
     if (itsNrMissingACKs) {
       LOG_ERROR_STR("[FromBus] " << itsNrMissingACKs << " messages not ACK'ed");
-	}
+    }
 
     try {
       // Make sure all requests are finished
@@ -50,17 +50,17 @@ namespace LOFAR {
   bool FromBus::getMessage(LOFAR::Message &msg, double timeout) // timeout 0.0 means blocking
   {
     Receiver next;
-	qpid::messaging::Message qmsg;
+    qpid::messaging::Message qmsg;
 
     LOG_DEBUG_STR("[FromBus] Waiting for message");
     if (itsSession.nextReceiver(next,TimeOutDuration(timeout))) {
         LOG_DEBUG_STR("[FromBus] Message available on queue " << next.getName());
         itsNrMissingACKs++;
         if (next.get(qmsg)) {
-			msg = LOFAR::Message(qmsg);
+            msg = LOFAR::Message(qmsg);
             LOG_DEBUG_STR("[FromBus] Message received on queue " << next.getName() << ": " << msg.short_desc());
-			return true;
-		} else {
+            return true;
+        } else {
           LOG_ERROR_STR("[FromBus] Could not retrieve available message on queue " << next.getName());
         }
     }
