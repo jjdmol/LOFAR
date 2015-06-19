@@ -1,4 +1,4 @@
-//# MsgBus.h: Wrapper for QPID clients to send and receive AMQP messages.
+//# FromBus.h: Wrapper for QPID clients to receive AMQP messages.
 //#
 //# Copyright (C) 2015
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -20,14 +20,13 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MESSAGEBUS_MSGBUS_H
-#define LOFAR_MESSAGEBUS_MSGBUS_H
+#ifndef LOFAR_MESSAGEBUS_FROMBUS_H
+#define LOFAR_MESSAGEBUS_FROMBUS_H
 
 #ifdef HAVE_QPID
 #include <qpid/messaging/Connection.h>
 #include <qpid/messaging/Message.h>
 #include <qpid/messaging/Receiver.h>
-#include <qpid/messaging/Sender.h>
 #include <qpid/messaging/Session.h>
 #include <qpid/messaging/Address.h>
 #else
@@ -42,12 +41,6 @@
 
 namespace LOFAR {
 
-EXCEPTION_CLASS(MessageBusException, LOFAR::Exception);
-
-namespace MessageBus {
-  // Generic initialisation of the Messaging framework
-  void init();
-}
 
 class FromBus
 {
@@ -67,22 +60,6 @@ private:
   qpid::messaging::Session    itsSession;
 
   int itsNrMissingACKs;
-};
-
-class ToBus
-{
-public:
-  ToBus(const std::string &address, const std::string &options="; {create: never}", const std::string &broker = "amqp:tcp:127.0.0.1:5672") ;
-  ~ToBus(void);
-
-  void send(LOFAR::Message &msg);
-  void send(const LOFAR::MessageContent &msg);
-
-private:
-  // -- datamambers --
-  qpid::messaging::Connection itsConnection;
-  qpid::messaging::Session itsSession;
-  qpid::messaging::Sender itsSender;
 };
 
 } // namespace LOFAR

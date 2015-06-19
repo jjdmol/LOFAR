@@ -24,7 +24,9 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <UnitTest++.h>
-#include <MessageBus/MsgBus.h>
+#include <MessageBus/MessageBus.h>
+#include <MessageBus/FromBus.h>
+#include <MessageBus/ToBus.h>
 
 using namespace qpid::messaging;
 using namespace LOFAR;
@@ -34,7 +36,7 @@ void sendFOO() {
   LOFAR::MessageContent content;
   content.payload = "FOO";
 
-  ToBus tb("tMsgBus");
+  ToBus tb("tMessageBus");
   tb.send(content);
 }
 
@@ -42,7 +44,7 @@ void sendFOO() {
 LOFAR::Message receiveFOO() {
   LOFAR::Message msg;
 
-  FromBus fb("tMsgBus");
+  FromBus fb("tMessageBus");
   CHECK(fb.getMessage(msg, 1.0));
 
   MessageContent content(msg.qpidMsg());
@@ -53,20 +55,12 @@ LOFAR::Message receiveFOO() {
   return msg;
 }
 
-TEST(BrokerRunning) {
-  // Need low-level routines to prevent the use of reconnect
-  Connection conn("amqp:tcp:127.0.0.1:5672", "{reconnect: false}");
-
-  conn.open();
-  conn.close();
-}
-
 TEST(ConstructReceiver) {
-  FromBus fb("tMsgBus");
+  FromBus fb("tMessageBus");
 }
 
 TEST(ConstructSender) {
-  ToBus tb("tMsgBus");
+  ToBus tb("tMessageBus");
 }
 
 TEST(SendReceive) {
@@ -82,12 +76,12 @@ TEST(Forward) {
   LOFAR::Message msgReceived = receiveFOO();
 
   // Forward
-  ToBus tb("tMsgBus-extraTestQ");
+  ToBus tb("tMessageBus-extraTestQ");
   tb.send(msgReceived);
 
   // Receive again
   LOFAR::Message msgReceived2;
-  FromBus fb2("tMsgBus-extraTestQ");
+  FromBus fb2("tMessageBus-extraTestQ");
   CHECK(fb2.getMessage(msgReceived2, 1.0));
   fb2.ack(msgReceived2);
 
@@ -103,7 +97,7 @@ TEST(Ack) {
   receiveFOO();
 
   // ACK = Accept, do NOT send again
-  FromBus fb("tMsgBus");
+  FromBus fb("tMessageBus");
   LOFAR::Message msg;
   CHECK(!fb.getMessage(msg, 0.1));
 }
@@ -115,7 +109,7 @@ TEST(NAck) {
   // Reeive
   LOFAR::Message msg;
 
-  FromBus fb("tMsgBus");
+  FromBus fb("tMessageBus");
   CHECK(fb.getMessage(msg, 1.0));
 
   fb.nack(msg);
@@ -134,7 +128,7 @@ TEST(Reject) {
   // Reeive
   LOFAR::Message msg;
 
-  FromBus fb("tMsgBus");
+  FromBus fb("tMessageBus");
   CHECK(fb.getMessage(msg, 1.0));
 
   fb.reject(msg);
@@ -144,10 +138,22 @@ TEST(Reject) {
 }
 
 int main() {
-  INIT_LOGGER("tMsgBus");
+  INIT_LOGGER("tMessageBus");
 
   MessageBus::init();
 
+  /*
+   * Test if the broker is running. If not, other tests will
+   * block indefinitely, waiting for a broker.
+   */
+
+  // Need low-level routines to prevent the use of reconnect
+  Connection conn("amqp:tcp:127.0.0.1:5672", "{reconnect: false}");
+
+  conn.open();
+  conn.close();
+
+  // Run the tests
   return UnitTest::RunAllTests() > 0;
 }
 

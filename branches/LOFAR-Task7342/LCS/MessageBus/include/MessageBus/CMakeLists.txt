@@ -7,7 +7,11 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 
 # Install header files.
 install(FILES
-  MsgBus.h
+  FromBus.h
+  Message.h
+  MessageBus.h
+  NoQpidFallback.h
+  ToBus.h
   DESTINATION include/${PACKAGE_NAME})
 
 add_subdirectory(Protocols)
