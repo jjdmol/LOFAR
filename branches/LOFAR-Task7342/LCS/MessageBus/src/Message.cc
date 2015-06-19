@@ -47,6 +47,9 @@ using namespace xmlpp;
 namespace LOFAR {
   using namespace StringUtil;
 
+/*
+ * The template for the LOFAR message format.
+ */
 const string LOFAR_MSG_TEMPLATE = "\
 <message>\n\
    <header>\n\

@@ -27,6 +27,9 @@ import xml.dom.minidom as xml
 import xml.parsers.expat as expat
 import datetime
 
+#
+# The template for the LOFAR message format.
+#
 LOFAR_MSG_TEMPLATE = """
 <message>
    <header>
