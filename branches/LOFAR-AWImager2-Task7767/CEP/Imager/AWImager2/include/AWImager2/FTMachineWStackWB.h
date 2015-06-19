@@ -1,4 +1,4 @@
-//# FTMachineSimpleWB.h: Definition for FTMachineSimple
+//# FTMachineWStackWB.h: Definition for FTMachineSimple
 //# Copyright (C) 1996,1997,1998,1999,2000,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -26,8 +26,8 @@
 //#
 //# $Id: FTMachineSimpleWB.h 28512 2014-03-05 01:07:53Z vdtol $
 
-#ifndef LOFAR_LOFARFT_FTMACHINESPLITBEAMWSTACKWB_H
-#define LOFAR_LOFARFT_FTMACHINESPLITBEAMWSTACKWB_H
+#ifndef LOFAR_LOFARFT_FTMACHINEWSTACKWB_H
+#define LOFAR_LOFARFT_FTMACHINEWSTACKWB_H
 
 #include <AWImager2/FTMachine.h>
 #include <AWImager2/VisResamplerWB.h>
@@ -37,24 +37,24 @@ namespace LofarFT {
 
 class VisBuffer;  
   
-class FTMachineSplitBeamWStackWB : public FTMachine {
+class FTMachineWStackWB : public FTMachine {
 public:
   static const casa::String theirName;
 
-  FTMachineSplitBeamWStackWB(
+  FTMachineWStackWB(
     const casa::MeasurementSet& ms, 
     const ParameterSet& parset);
 
-  virtual ~FTMachineSplitBeamWStackWB();
+  virtual ~FTMachineWStackWB();
   
   // Copy constructor
-  FTMachineSplitBeamWStackWB(const FTMachineSplitBeamWStackWB &other);
+  FTMachineWStackWB(const FTMachineWStackWB &other);
 
   // Assignment operator
-  FTMachineSplitBeamWStackWB &operator=(const FTMachineSplitBeamWStackWB &other);
+  FTMachineWStackWB &operator=(const FTMachineWStackWB &other);
 
   // Clone
-  FTMachineSplitBeamWStackWB* clone() const;
+  FTMachineWStackWB* clone() const;
 
   virtual casa::String name() const { return theirName;}
   

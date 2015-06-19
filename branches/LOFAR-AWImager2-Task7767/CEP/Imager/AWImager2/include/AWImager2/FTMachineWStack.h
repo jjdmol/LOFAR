@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: FTMachineSplitBeamWStack.h 31506 2015-04-17 13:42:47Z dijkema $
 
 #ifndef LOFARFT_LOFARFTMACHINEWSPLIT_H
 #define LOFARFT_LOFARFTMACHINEWSPLIT_H

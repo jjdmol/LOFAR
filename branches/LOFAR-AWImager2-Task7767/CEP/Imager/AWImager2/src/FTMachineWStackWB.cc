@@ -1,4 +1,4 @@
-//# FTMachineSplitBeamWStackWB.cc: Gridder for LOFAR data correcting for DD effects
+//# FTMachineWStackWB.cc: Gridder for LOFAR data correcting for DD effects
 //#
 //# Copyright (C) 2011
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -18,11 +18,11 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: FTMachineSplitBeamWStackWB.cc 28512 2014-03-05 01:07:53Z vdtol $
+//# $Id: FTMachineWStackWB.cc 28512 2014-03-05 01:07:53Z vdtol $
 
 #include <lofar_config.h>
 
-#include <AWImager2/FTMachineSplitBeamWStackWB.h>
+#include <AWImager2/FTMachineWStackWB.h>
 #include <AWImager2/ScopedTimer.h>
 #include <AWImager2/FFTCMatrix.h>
 #include <AWImager2/VBStore.h>
@@ -41,19 +41,19 @@
 
 using namespace casa;
 
-const String LOFAR::LofarFT::FTMachineSplitBeamWStackWB::theirName("FTMachineSplitBeamWStackWB");
+const String LOFAR::LofarFT::FTMachineWStackWB::theirName("FTMachineWStackWB");
 
 namespace
 {
   bool dummy = LOFAR::LofarFT::FTMachineFactory::instance().
-    registerClass<LOFAR::LofarFT::FTMachineSplitBeamWStackWB>(
-      LOFAR::LofarFT::FTMachineSplitBeamWStackWB::theirName);
+    registerClass<LOFAR::LofarFT::FTMachineWStackWB>(
+      LOFAR::LofarFT::FTMachineWStackWB::theirName);
 }
 
 namespace LOFAR {
 namespace LofarFT {
 
-FTMachineSplitBeamWStackWB::FTMachineSplitBeamWStackWB(
+FTMachineWStackWB::FTMachineWStackWB(
   const MeasurementSet& ms,
   const ParameterSet& parset)
   : FTMachine( ms, parset),
@@ -91,12 +91,12 @@ FTMachineSplitBeamWStackWB::FTMachineSplitBeamWStackWB(
   
 }
 
-FTMachineSplitBeamWStackWB::~FTMachineSplitBeamWStackWB()
+FTMachineWStackWB::~FTMachineWStackWB()
 {
 }
 
   //----------------------------------------------------------------------
-FTMachineSplitBeamWStackWB& FTMachineSplitBeamWStackWB::operator=(const FTMachineSplitBeamWStackWB& other)
+FTMachineWStackWB& FTMachineWStackWB::operator=(const FTMachineWStackWB& other)
 {
   if(this!=&other) 
   {
@@ -115,23 +115,23 @@ FTMachineSplitBeamWStackWB& FTMachineSplitBeamWStackWB::operator=(const FTMachin
 }
 
 //----------------------------------------------------------------------
-  FTMachineSplitBeamWStackWB::FTMachineSplitBeamWStackWB(const FTMachineSplitBeamWStackWB& other) : 
+  FTMachineWStackWB::FTMachineWStackWB(const FTMachineWStackWB& other) : 
     FTMachine(other)
   {
     operator=(other);
   }
 
 //----------------------------------------------------------------------
-  FTMachineSplitBeamWStackWB* FTMachineSplitBeamWStackWB::clone() const
+  FTMachineWStackWB* FTMachineWStackWB::clone() const
   {
-    FTMachineSplitBeamWStackWB* newftm = new FTMachineSplitBeamWStackWB(*this);
+    FTMachineWStackWB* newftm = new FTMachineWStackWB(*this);
     return newftm;
   }
 
 //----------------------------------------------------------------------
 
   
-void FTMachineSplitBeamWStackWB::initialize_model_grids(Bool normalize_model)
+void FTMachineWStackWB::initialize_model_grids(Bool normalize_model)
 {
   // Create model grids but do not initialize here
   // because that will happen in the loop over w-planes
@@ -163,7 +163,7 @@ void FTMachineSplitBeamWStackWB::initialize_model_grids(Bool normalize_model)
 }
   
   // Partition the visbuffer according to baseline number and time
-FTMachineSplitBeamWStackWB::VisibilityMap FTMachineSplitBeamWStackWB::make_mapping(
+FTMachineWStackWB::VisibilityMap FTMachineWStackWB::make_mapping(
   const VisBuffer& vb, 
   const casa::Vector< casa::Double > &frequency_list_CF,
   double dtime,
@@ -263,11 +263,11 @@ FTMachineSplitBeamWStackWB::VisibilityMap FTMachineSplitBeamWStackWB::make_mappi
   return v;  
 }
 
-void FTMachineSplitBeamWStackWB::put(const VisBuffer& vb, Int row, Bool dopsf,
+void FTMachineWStackWB::put(const VisBuffer& vb, Int row, Bool dopsf,
                          FTMachine::Type type) 
 {
   
-  ScopedTimer _t("FTMachineSplitBeamWStackWB::put");
+  ScopedTimer _t("FTMachineWStackWB::put");
   
   if (itsVerbose > 0) {
     logIO() << LogOrigin(theirName, "put") << LogIO::NORMAL
@@ -407,18 +407,12 @@ void FTMachineSplitBeamWStackWB::put(const VisBuffer& vb, Int row, Bool dopsf,
     double w_offset = (w_plane+0.5) * w_step;
     
     if (put_on_w_plane(vb, vbs, lsr_frequency, w_plane_grids, v, w_plane, w_offset, dopsf))
-    // returns true if anything was put on this plane
+    // put_on_w_plane returns true if anything was put on this plane
     {
-//       store(Matrix<Complex>(w_plane_grids[0][0][0]), "grid1");
-//       throw AipsError("stop");
-      
       cout << "w_plane: " << w_plane << endl;
       for (int i=0; i<itsNGrid; i++)
       {
         // transform to image domain
-//         ArrayLattice<Complex> lattice(w_plane_grids[i]);
-//         LatticeFFT::cfft2d(lattice, True);
-        
         {
           ScopedTimer t("W plane fft");
           Array<Complex> w_plane_grid(w_plane_grids[i]);
@@ -439,12 +433,6 @@ void FTMachineSplitBeamWStackWB::put(const VisBuffer& vb, Int row, Bool dopsf,
           itsConvFunc->applyWterm(w_plane_grids[i], -w_offset);
         }
         
-        
-        if (itsSplitBeam)
-        {
-//            itsConvFunc->applyElementBeam(w_plane_grids[i], True);
-        }
-        
         // Add image to master grid
         itsGriddedData[i] += w_plane_grids[i];
         // reset the grid
@@ -457,7 +445,7 @@ void FTMachineSplitBeamWStackWB::put(const VisBuffer& vb, Int row, Bool dopsf,
   
 }
 
-bool FTMachineSplitBeamWStackWB::put_on_w_plane(
+bool FTMachineWStackWB::put_on_w_plane(
   const VisBuffer &vb,
   const VBStore &vbs,
   const Vector<Double> &lsr_frequency,
@@ -551,13 +539,13 @@ bool FTMachineSplitBeamWStackWB::put_on_w_plane(
 
 
 
-void FTMachineSplitBeamWStackWB::get(casa::VisBuffer& vb, Int row)
+void FTMachineWStackWB::get(casa::VisBuffer& vb, Int row)
 {
   get(*static_cast<VisBuffer*>(&vb), row);
 }
 
 // Degrid
-void FTMachineSplitBeamWStackWB::get(VisBuffer& vb, Int row)
+void FTMachineWStackWB::get(VisBuffer& vb, Int row)
 {
 //   gridOk(itsGridder->cSupport()(0));
   // If row is -1 then we pass through all rows

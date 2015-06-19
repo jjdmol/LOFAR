@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: FTMachineSplitBeamWStack.cc 31506 2015-04-17 13:42:47Z dijkema $
 
 #include <lofar_config.h>
 
