@@ -57,7 +57,7 @@ Bool Imager::createFTMachine()
   Double RefFreq = 0.0;
   if (sm_p) RefFreq = Double((*sm_p).getReferenceFrequency());
   
-  string FTMachineName=itsParset.getString("gridding.FTMachine","FTMachineSplitBeamWStackWB");
+  string FTMachineName=itsParset.getString("gridding.FTMachine","FTMachineWStackWB");
 
   itsFTMachine = FTMachineFactory::instance().create(FTMachineName, *ms_p, itsParset);
 

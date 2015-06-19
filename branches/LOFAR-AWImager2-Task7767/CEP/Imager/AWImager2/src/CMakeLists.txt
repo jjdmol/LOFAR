@@ -16,7 +16,8 @@ lofar_add_library(awimager2lib
   FTMachine.cc
 #   FTMachineSimple.cc
 #   FTMachineSimpleWB.cc
-  FTMachineSplitBeamWStackWB.cc
+  FTMachineWStackWB.cc
+#   FTMachineIDG.cc
   WTerm.cc
   VisBuffer.cc
   VisibilityIterator.cc

@@ -36,6 +36,13 @@
 #include <boost/iostreams/concepts.hpp>  // sink
 #include "helper_functions.tcc"
 
+#define MAX_SUPPORT_FREQ 16
+#define MAX_SUPPORT_TIME 16
+#define MAX_SUPPORT_W 16
+#define MAX_SUPPORT_A 1
+#define SUPPORT_SPHEROIDAL 7
+  
+
 using namespace casa;
 
 const String LOFAR::LofarFT::FTMachineIDG::theirName("FTMachineIDG");
@@ -98,7 +105,7 @@ Matrix<Float> FTMachineIDG::getAveragePB()
     LOG_DEBUG_STR("Storing average beam...");
     
     //DEBUG store does not work anymore, somthing to do with coordinates and wcs
-    store(itsAveragePB, itsImageName + ".avgpb");
+//     store(itsAveragePB, itsImageName + ".avgpb");
     
     LOG_DEBUG_STR("done.");
   }
@@ -116,13 +123,37 @@ Matrix<Float> FTMachineIDG::getAveragePB()
 // }
 
   // Partition the visbuffer according to baseline number and time
-FTMachineIDG::VisibilityMap FTMachineIDG::make_mapping(
-  const VisBuffer& vb, 
-  double dtime
-)
-{
   
+  
+struct Chunk
+{
+  int start;
+  int end;
+  double time;
+  std::vector<float> support;
+  std::vector<float> w_min;
+  std::vector<float> w_max;
+  std::vector<bool> has_been_processed;
+  casa::Matrix<casa::Float> sum_weight;
+};
+
+struct VisibilityMap
+{
+  vector<Chunk> chunks;
+  casa::Vector<casa::uInt> baseline_index_map;
+  int blocksize;
+  float min_w_max;
+};
+
+VisibilityMap make_mapping(
+  const VisBuffer& vb, 
+  double dtime,
+  vector<vector<int> > channel_map,
+  casa::Vector<casa::Double> uvscale)
+{
   VisibilityMap v;
+  
+  int N_chan_group = channel_map.size();
   
   // Determine the baselines in the VisBuffer.
   const Vector<Int>& ant1 = vb.antenna1();
@@ -144,6 +175,7 @@ FTMachineIDG::VisibilityMap FTMachineIDG::make_mapping(
   const Vector<Bool>& flagRow = vb.flagRow();
   
   Double time0 = times[0];
+  float max_time_frequency_support = 0.0;
   for (uint i=0; i<=blnr.size(); ++i) 
   {
     if ((i == blnr.size()) || (blnr[blIndex[i]] != lastbl) || ((times[blIndex[i]] - time0) > dtime))
@@ -159,7 +191,61 @@ FTMachineIDG::VisibilityMap FTMachineIDG::make_mapping(
         Int end_idx = blIndex[chunk.end];
         
         chunk.time = 0.5 * (times[start_idx] + times[end_idx]);
-        chunk.w = 0.5 * (abs(uvw(start_idx)(2)) + abs(uvw(end_idx)(2)));
+        chunk.support.reserve(N_chan_group);
+        chunk.w_min.reserve(N_chan_group);
+        chunk.w_max.reserve(N_chan_group);
+        chunk.has_been_processed.resize(N_chan_group, false);
+        // iterate over channel groups
+        for(std::vector<vector<int> >::iterator chan_group = channel_map.begin(); chan_group != channel_map.end(); ++chan_group)
+        {
+          // in pixels, so scale with uvscale
+          float min_u = float(uvw(start_idx)(0))/(float)casa::C::c*float(vb.frequency()(chan_group->front()))*(float)uvscale(0);
+          min_u = min(min_u, float(uvw(start_idx)(0))/(float)casa::C::c*float(vb.frequency()(chan_group->back()))*(float)uvscale(0));
+          min_u = min(min_u, float(uvw(end_idx)(0))/(float)casa::C::c*float(vb.frequency()(chan_group->front()))*(float)uvscale(0));
+          min_u = min(min_u, float(uvw(end_idx)(0))/(float)casa::C::c*float(vb.frequency()(chan_group->back()))*(float)uvscale(0));
+      
+          // in pixels, so scale with uvscale
+          float min_v = float(uvw(start_idx)(1))/(float)casa::C::c*float(vb.frequency()(chan_group->front()))*(float)uvscale(1);
+          min_v = min(min_v, float(uvw(start_idx)(1))/(float)casa::C::c*float(vb.frequency()(chan_group->back()))*(float)uvscale(1));
+          min_v = min(min_v, float(uvw(end_idx)(1))/(float)casa::C::c*float(vb.frequency()(chan_group->front()))*(float)uvscale(1));
+          min_v = min(min_v, float(uvw(end_idx)(1))/(float)casa::C::c*float(vb.frequency()(chan_group->back()))*(float)uvscale(1));
+          
+          // in wavelengths, so no scaling with uvscale
+          float min_w = float(uvw(start_idx)(2))/(float)casa::C::c*float(vb.frequency()(chan_group->front()));
+          min_w = min(min_w, float(uvw(end_idx)(2))/(float)casa::C::c*float(vb.frequency()(chan_group->front())));
+          
+          float max_u = float(uvw(start_idx)(0))/(float)casa::C::c*float(vb.frequency()(chan_group->front()))*(float)uvscale(0);
+          max_u = max(max_u, float(uvw(start_idx)(0))/(float)casa::C::c*float(vb.frequency()(chan_group->back()))*(float)uvscale(0));
+          max_u = max(max_u, float(uvw(end_idx)(0))/(float)casa::C::c*float(vb.frequency()(chan_group->front()))*(float)uvscale(0));
+          max_u = max(max_u, float(uvw(end_idx)(0))/(float)casa::C::c*float(vb.frequency()(chan_group->back()))*(float)uvscale(0));
+      
+          float max_v = float(uvw(start_idx)(1))/(float)casa::C::c*float(vb.frequency()(chan_group->front()))*(float)uvscale(1);
+          max_v = max(max_v, float(uvw(start_idx)(1))/(float)casa::C::c*float(vb.frequency()(chan_group->back()))*(float)uvscale(1));
+          max_v = max(max_v, float(uvw(end_idx)(1))/(float)casa::C::c*float(vb.frequency()(chan_group->front()))*(float)uvscale(1));
+          max_v = max(max_v, float(uvw(end_idx)(1))/(float)casa::C::c*float(vb.frequency()(chan_group->back()))*(float)uvscale(1));
+          
+          float max_w = float(uvw(start_idx)(2))/(float)casa::C::c*float(vb.frequency()(chan_group->back()));
+          max_w = max(max_w, float(uvw(end_idx)(2))/(float)casa::C::c*float(vb.frequency()(chan_group->back())));
+          
+          
+//           LOG_DEBUG_STR("max_u-min_u: " << (max_u-min_u));
+//           LOG_DEBUG_STR("max_v-min_v: " << (max_v-min_v));
+          float time_frequency_support = max(max_u-min_u, max_v-min_v);
+//           LOG_DEBUG_STR("time_frequency_support: " << time_frequency_support);
+
+            
+          chunk.support.push_back(time_frequency_support);
+          chunk.w_min.push_back(min_w);
+          chunk.w_max.push_back(max_w);
+          
+          max_time_frequency_support = max(max_time_frequency_support, time_frequency_support);
+//           LOG_DEBUG_STR("max_time_frequency_support: " << max_time_frequency_support);
+//           double w_support = abs(max(uvw(2, idx_start),uvw(2, idx_end))/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0)*itsUVScale(0));
+        
+          // find time and frequency support used
+          // assign remaining support to w
+          // compute w_min and w_max plane this chunk can be gridded to
+        }
         
         v.chunks.push_back(chunk);
         
@@ -178,6 +264,26 @@ FTMachineIDG::VisibilityMap FTMachineIDG::make_mapping(
       allFlagged = false;
     }
   }
+  LOG_DEBUG_STR("Max time frequency support: " << max_time_frequency_support);
+  v.blocksize = ceil((max_time_frequency_support + SUPPORT_SPHEROIDAL + MAX_SUPPORT_A + MAX_SUPPORT_W) / 8 ) * 8;
+  LOG_DEBUG_STR("blocksize: " << v.blocksize);
+
+  // iterate over all chunks and set w_min and w_max
+  v.min_w_max = std::numeric_limits<float>::infinity();
+  for (std::vector<Chunk>::iterator chunk = v.chunks.begin() ; chunk != v.chunks.end(); ++chunk)
+  {
+    for (int i = 0; i<N_chan_group; ++i)
+    {
+      float w_support = v.blocksize - SUPPORT_SPHEROIDAL - MAX_SUPPORT_A - chunk->support[i];
+      float w_range = w_support/(uvscale(0)*uvscale(0));
+      float w_max = chunk->w_min[i] + w_range;
+      float w_min = chunk->w_max[i] - w_range;
+      chunk->w_min[i] = w_min;
+      chunk->w_max[i] = w_max;
+      v.min_w_max = min(v.min_w_max, w_max);
+    }
+  }
+  
   return v;  
 }
 
@@ -218,7 +324,7 @@ FTMachineIDG::FTMachineIDG(
   itsSumPB.resize (itsNGrid);
   itsSumCFWeight.resize (itsNGrid);
   itsSumWeight.resize (itsNGrid);
-  itsGriddedDataDomain = UV;
+  itsGriddedDataDomain = IMAGE;
   double msRefFreq=0; //TODO: put some useful reference frequency here
   itsRefFreq=parset.getDouble("image.refFreq",msRefFreq),
   itsTimeWindow=parset.getDouble("gridding.timewindow",300);
@@ -263,12 +369,6 @@ FTMachineIDG& FTMachineIDG::operator=(const FTMachineIDG& other)
   }
 
 //----------------------------------------------------------------------
-
-void FTMachineIDG::put(const casa::VisBuffer& vb, Int row, Bool dopsf,
-                         FTMachine::Type type) 
-{
-  put( *static_cast<const VisBuffer*>(&vb), row, dopsf, type);
-}
 
 void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
                          FTMachine::Type type) 
@@ -326,46 +426,69 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
     endRow=row; 
   }
 
-  // TODO
+  Vector<RigidVector<Double, 3> > uvw_ = vb.uvw();
+  
+  // TODO : find negative w, swap antennas and conjugate data
+  
+  Vector<Int> antenna1 = vb.antenna1();
+  Vector<Int> antenna2 = vb.antenna2();
+  
+  for(int i = 0; i < vb.nRow(); i++)
+  {
+     if (uvw_(i)(2) < 0)
+     {
+       uvw_(i) = -uvw_(i);
+       swap(antenna1(i), antenna2(i));
+       //TODO transpose
+       data[i] = conj(data[i]);
+     }
+  }
   
   
   // find the maximum uv baseline length on grid
-  double max_u = 0;
-  double max_u_;
-  double max_v = 0;
-  double max_v_;
-  #pragma omp parallel private(max_u_, max_v_)
+  float max_u = 0;
+  float max_u_;
+  float max_v = 0;
+  float max_v_;
+  float max_l2 = 0;
+  float max_l2_;
+  
+  
+  #pragma omp parallel private(max_u_, max_v_, max_l2_)
   {
     max_u_ = 0;
     max_v_ = 0;
+    max_l2_ = 0;
     #pragma omp for nowait
     for(int i = 0; i < vb.nRow(); i++)
     {
-      double u = abs(vb.uvw()(i)(0));
-      double v = abs(vb.uvw()(i)(1));
-      if (u < max_u_) max_u_ = u;
-      if (v < max_v_) max_v_ = v;
+      float u = abs(uvw_(i)(0));
+      float v = abs(uvw_(i)(1));
+      float w = abs(uvw_(i)(2));
+      float l2 = u*u + v*v + w*w;
+      max_u_ = max(max_u_, u);
+      max_v_ = max(max_v_, v);
+      max_l2_ = max(max_l2_, l2);
     }
     #pragma omp critical
     {
-      if (max_u < max_u_) max_u = max_u_;
-      if (max_v < max_v_) max_v = max_v_;
+      max_u = max(max_u, max_u_);
+      max_v = max(max_v_, max_v_);
+      max_l2 = max(max_l2, max_l2_);
     }
   }
   
-  double wavelength = casa::C::c / vb.frequency()(0);
-  double max_u_grid = itsPaddedNX/(2 * itsUVScale(0)) * wavelength;
-  double max_v_grid = itsPaddedNY/(2 * itsUVScale(1)) * wavelength;
+  float wavelength = casa::C::c / vb.frequency()(0);
+  float max_u_grid = itsPaddedNX/(2 * itsUVScale(0)) * wavelength;
+  float max_v_grid = itsPaddedNY/(2 * itsUVScale(1)) * wavelength;
   
   max_u = min(max_u, max_u_grid);
   max_v = min(max_v, max_v_grid);
   
-  #define MAX_SUPPORT_FREQ 16
-  
   // find the maximum frequency window to stay within maximum support
-  double max_bw_u = MAX_SUPPORT_FREQ / (max_u / casa::C::c * itsUVScale(0));
-  double max_bw_v = MAX_SUPPORT_FREQ / (max_v / casa::C::c * itsUVScale(1));
-  double max_bw = min(max_bw_u, max_bw_v);
+  float max_bw_u = MAX_SUPPORT_FREQ / (max_u / casa::C::c * itsUVScale(0));
+  float max_bw_v = MAX_SUPPORT_FREQ / (max_v / casa::C::c * itsUVScale(1));
+  float max_bw = min(max_bw_u, max_bw_v);
   
     
   // create a channel mapping
@@ -390,24 +513,28 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
   
   
   
-  
-  
   // find the maximum timewindow to stay within maximum support
   // max time = max support / (max baseline (pixels) * earth_rotation_rate (rad/s))
   // min(itsTimeWindow, max time)
   
+  float min_wavelength = casa::C::c / vb.frequency()(vb.nChannel()-1);
+  float max_l = sqrt(max_l2)/min_wavelength * abs(itsUVScale(0));
+  float earth_rotation_rate = 7.2921150e-5; 
+  float max_time = MAX_SUPPORT_TIME / (max_l * earth_rotation_rate);
   
+  LOG_DEBUG_STR("min_wavelength: " << min_wavelength);
+  LOG_DEBUG_STR("max_l2: " << max_l2);
+  LOG_DEBUG_STR("max_l: " << max_l);
+  LOG_DEBUG_STR("Max time: " << max_time);  // W stack 
   
+  float timewindow = min(itsTimeWindow, max_time);
   
-  
-  
-  // W stack 
-  
-
   // TODO 
   // this mapping should include a range of possible w values to which the block can be projected
   
-  VisibilityMap v = make_mapping(vb, itsTimeWindow);
+  VisibilityMap v = make_mapping(vb, timewindow, channel_map, itsUVScale);
+  
+  LOG_DEBUG_STR("min_w_max: " << v.min_w_max);
   
   // TODO
   // now find the lowest w_max, and make a w-layer there
@@ -420,9 +547,9 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
     N_time = max(N_time, chunk->end - chunk->start + 1);
   }
 
-  Int N_chunks = 100000;
+  Int N_chunks = 10000;
   Int N_stations = 1 + max(max(vb.antenna1()), max(vb.antenna2()));
-  Int blocksize = 48;
+  Int blocksize = v.blocksize;
 
   LOG_DEBUG_STR("Creating proxy...");
   itsProxy = new Xeon (itsCompiler.c_str(), itsCompilerFlags.c_str(),  N_stations, N_chunks, N_time, N_chan,
@@ -447,152 +574,162 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
   // spheroidal
   taper(spheroidal);
   
-  //iterate over channel groups
-  
-  for(std::vector<vector<int> >::iterator chan_group = channel_map.begin(); chan_group != channel_map.end(); ++chan_group)
+  float min_w_max = v.min_w_max;
+  // iterate over w-planes
+  while (min_w_max < std::numeric_limits<float>::infinity())
   {
-    // set wavenumbers for this chan_group
-    int chan;
-    vector<int>::iterator chan_it;
-    for(chan_it = chan_group->begin(), chan=0; chan_it != chan_group->end(); ++chan_it, ++chan)
+    double w_offset = min_w_max;
+    LOG_DEBUG_STR("W plane offset: " << w_offset);
+    min_w_max = std::numeric_limits<float>::infinity();
+    casa::Array<casa::Complex>  w_plane_grid(itsGriddedData[0].shape(), casa::Complex(0));
+  
+    //iterate over channel groups
+    
+    int chan_group_idx = 0;
+    std::vector<vector<int> >::iterator chan_group;
+    for(chan_group = channel_map.begin(); chan_group != channel_map.end(); ++chan_group, ++chan_group_idx)
     {
-      double wavelength = casa::C::c / vb.frequency()(*chan_it);
-      wavenumbers(chan) = 2 * casa::C::pi / wavelength;
-    }
-
-    int i = 0;    
-    for (std::vector<Chunk>::iterator chunk = v.chunks.begin() ; chunk != v.chunks.end(); ++chunk)
-    {
-      int idx_start = v.baseline_index_map[chunk->start];
-      int idx_end = v.baseline_index_map[chunk->end];
-      
-      double f = (vb.frequency()(chan_group->front()) + vb.frequency()(chan_group->back())) / 2;
-      double wavelength = casa::C::c / f;
-      
-      double center_u = floor((vb.uvw()(idx_start)(0) + vb.uvw()(idx_end)(0))/2/wavelength * itsUVScale(0));
-      double center_v = floor((vb.uvw()(idx_start)(1) + vb.uvw()(idx_end)(1))/2/wavelength * itsUVScale(1));
-      
-      coordinates(0,i) = center_u + itsUVOffset(0) - blocksize/2;
-      coordinates(1,i) = center_v + itsUVOffset(1) - blocksize/2;
-      
-      //check whether block falls within grid
-      if ((coordinates(0,i) < 0) ||
-        (coordinates(1,i) < 0) ||
-        ((coordinates(0,i)+blocksize) >= itsPaddedNX) ||
-        ((coordinates(1,i)+blocksize) >= itsPaddedNY))
+      // set wavenumbers for this chan_group
+      int chan;
+      vector<int>::iterator chan_it;
+      for(chan_it = chan_group->begin(), chan=0; chan_it != chan_group->end(); ++chan_it, ++chan)
       {
-        continue;
+        double wavelength = casa::C::c / vb.frequency()(*chan_it);
+        wavenumbers(chan) = 2 * casa::C::pi / wavelength;
       }
-      
-      offsets (0, i) = center_u / itsUVScale(0) * 2 * casa::C::pi;
-      offsets (1, i) = center_v / itsUVScale(1) * 2 * casa::C::pi;
-      offsets (2, i) = 0;
 
-
-      // copy data to buffer
-      
-      for (int j = chunk->start; j<=chunk->end; j++)
+      int i = 0;    
+      for (std::vector<Chunk>::iterator chunk = v.chunks.begin() ; chunk != v.chunks.end(); ++chunk)
       {
-        int k = j - chunk->start;
-        
-        int idx = v.baseline_index_map[j];
-
-        uvw (0, k, i) = vb.uvw()(idx)(0);
-        uvw (1, k, i) = vb.uvw()(idx)(1);
-        uvw (2, k, i) = vb.uvw()(idx)(2);
-      }
-      
-      
-  //     double w_support = abs(max(uvw(2, idx_start),uvw(2, idx_end))/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0)*itsUVScale(0));
-  //     
-  //     double min_u = uvw(0, idx_start)/casa::C::c*vb.frequency()(0)*itsUVScale(0);
-  //     min_u = min(min_u, uvw(0, idx_start)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
-  //     min_u = min(min_u, uvw(0, idx_end)/casa::C::c*vb.frequency()(0)*itsUVScale(0));
-  //     min_u = min(min_u, uvw(0, idx_end)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
-  // 
-  //     double min_v = uvw(1, idx_start)/casa::C::c*vb.frequency()(0)*itsUVScale(0);
-  //     min_v = min(min_v, uvw(1, idx_start)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
-  //     min_v = min(min_v, uvw(1, idx_end)/casa::C::c*vb.frequency()(0)*itsUVScale(0));
-  //     min_v = min(min_v, uvw(1, idx_end)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
-  //     
-  //     double max_u = uvw(0, idx_start)/casa::C::c*vb.frequency()(0)*itsUVScale(0);
-  //     max_u = max(max_u, uvw(0, idx_start)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
-  //     max_u = max(max_u, uvw(0, idx_end)/casa::C::c*vb.frequency()(0)*itsUVScale(0));
-  //     max_u = max(max_u, uvw(0, idx_end)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
-  // 
-  //     double max_v = uvw(1, idx_start)/casa::C::c*vb.frequency()(0)*itsUVScale(0);
-  //     max_v = max(max_v, uvw(1, idx_start)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
-  //     max_v = max(max_v, uvw(1, idx_end)/casa::C::c*vb.frequency()(0)*itsUVScale(0));
-  //     max_v = max(max_v, uvw(1, idx_end)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
-  //     
-  //     double uv_support = max(abs(max_u-min_u), abs(max_v-min_v));
-      
-  //     if ((uv_support + w_support) > 30)
-  //     {
-  //       cout << "w_support: " << w_support << endl;
-  //       cout << "uv_support: " << uv_support << endl;
-  //     }
-      
-      
-      // baselines
-      int idx = v.baseline_index_map[chunk->start];
-      int ant1 = vb.antenna1()[idx];
-      int ant2 = vb.antenna2()[idx];
-      baselines(0,i) = ant1;
-      baselines(1,i) = ant2;
-      
-      
-      for (int j = chunk->start; j<=chunk->end; j++)
-      {
-        int k = j - chunk->start;
-        
-        int idx = v.baseline_index_map[j];
-
-        if (dopsf)
+        if (chunk->has_been_processed[chan_group_idx]) continue;
+        if (chunk->w_min[chan_group_idx] > w_offset) 
         {
-          for(chan_it = chan_group->begin(), chan=0; chan_it != chan_group->end(); ++chan_it, ++chan)
+          min_w_max = min(min_w_max, chunk->w_max[chan_group_idx]);
+          continue;
+        }
+        chunk->has_been_processed[chan_group_idx] = true;
+        
+        int idx_start = v.baseline_index_map[chunk->start];
+        int idx_end = v.baseline_index_map[chunk->end];
+        
+        double f = (vb.frequency()(chan_group->front()) + vb.frequency()(chan_group->back())) / 2;
+        double wavelength = casa::C::c / f;
+        
+        double center_u = floor((vb.uvw()(idx_start)(0) + vb.uvw()(idx_end)(0))/2/wavelength * itsUVScale(0));
+        double center_v = floor((vb.uvw()(idx_start)(1) + vb.uvw()(idx_end)(1))/2/wavelength * itsUVScale(1));
+        
+        coordinates(0,i) = center_u + itsUVOffset(0) - blocksize/2;
+        coordinates(1,i) = center_v + itsUVOffset(1) - blocksize/2;
+        
+        //check whether block falls within grid
+        if ((coordinates(0,i) < 0) ||
+          (coordinates(1,i) < 0) ||
+          ((coordinates(0,i)+blocksize) >= itsPaddedNX) ||
+          ((coordinates(1,i)+blocksize) >= itsPaddedNY))
+        {
+          continue;
+        }
+        
+        offsets (0, i) = center_u / itsUVScale(0) * 2 * casa::C::pi;
+        offsets (1, i) = center_v / itsUVScale(1) * 2 * casa::C::pi;
+        offsets (2, i) = w_offset * 2 * casa::C::pi;
+
+
+        // copy data to buffer
+        
+        for (int j = chunk->start; j<=chunk->end; j++)
+        {
+          int k = j - chunk->start;
+          
+          int idx = v.baseline_index_map[j];
+
+          uvw (0, k, i) = vb.uvw()(idx)(0);
+          uvw (1, k, i) = vb.uvw()(idx)(1);
+          uvw (2, k, i) = vb.uvw()(idx)(2);
+        }
+        
+        // baselines
+        int idx = v.baseline_index_map[chunk->start];
+        int ant1 = vb.antenna1()[idx];
+        int ant2 = vb.antenna2()[idx];
+        baselines(0,i) = ant1;
+        baselines(1,i) = ant2;
+        
+        for (int j = chunk->start; j<=chunk->end; j++)
+        {
+          int k = j - chunk->start;
+          
+          int idx = v.baseline_index_map[j];
+
+          if (dopsf)
           {
-            for (int idx_pol = 0; idx_pol < itsNPol; idx_pol++)
+            for(chan_it = chan_group->begin(), chan=0; chan_it != chan_group->end(); ++chan_it, ++chan)
             {
-              if (vb.flagCube()(idx_pol, *chan_it, idx))
+              for (int idx_pol = 0; idx_pol < itsNPol; idx_pol++)
               {
-                visibilities( IPosition(4, idx_pol, chan, k, i)) = Complex(0);
+                if (vb.flagCube()(idx_pol, *chan_it, idx))
+                {
+                  visibilities( IPosition(4, idx_pol, chan, k, i)) = Complex(0);
+                }
+                else
+                {
+                  visibilities( IPosition(4, idx_pol, chan, k, i)) = imagingWeightCube(idx_pol, *chan_it, idx) * ((idx_pol==0) ||( idx_pol==3));
+                  itsSumWeight[0](idx_pol,0) += imagingWeightCube(idx_pol, *chan_it, idx)*blocksize*blocksize*2;
+                }
               }
-              else
+            }
+          }
+          else
+          {
+            for(chan_it = chan_group->begin(), chan=0; chan_it != chan_group->end(); ++chan_it, ++chan)
+            {
+              for (int idx_pol = 0; idx_pol < itsNPol; idx_pol++)
               {
-                visibilities( IPosition(4, idx_pol, chan, k, i)) = imagingWeightCube(idx_pol, *chan_it, idx) * ((idx_pol==0) ||( idx_pol==3));
-                itsSumWeight[0](idx_pol,0) += imagingWeightCube(idx_pol, *chan_it, idx)*blocksize*blocksize*2;
+                if (vb.flagCube()(idx_pol, *chan_it, idx))
+                {
+                  visibilities( IPosition(4, idx_pol, chan, k, i)) = Complex(0);
+                }
+                else
+                {
+                  visibilities( IPosition(4, idx_pol, chan, k, i)) = data(idx_pol, *chan_it, idx)*imagingWeightCube(idx_pol, *chan_it, idx);
+                  itsSumWeight[0](idx_pol,0) += imagingWeightCube(idx_pol, *chan_it, idx)*blocksize*blocksize*2;
+                }
               }
             }
           }
         }
-        else
+        
+        i++;
+        
+        // if buffer is full or no more chunks then process buffer
+        
+        if (i == N_chunks)
         {
-          for(chan_it = chan_group->begin(), chan=0; chan_it != chan_group->end(); ++chan_it, ++chan)
-          {
-            for (int idx_pol = 0; idx_pol < itsNPol; idx_pol++)
-            {
-              if (vb.flagCube()(idx_pol, *chan_it, idx))
-              {
-                visibilities( IPosition(4, idx_pol, chan, k, i)) = Complex(0);
-              }
-              else
-              {
-                visibilities( IPosition(4, idx_pol, chan, k, i)) = data(idx_pol, *chan_it, idx)*imagingWeightCube(idx_pol, *chan_it, idx);
-                itsSumWeight[0](idx_pol,0) += imagingWeightCube(idx_pol, *chan_it, idx)*blocksize*blocksize*2;
-              }
-            }
-          }
+    //       cout << "N_chunks: " << N_chunks << endl;      
+          LOG_DEBUG_STR("gridder...");
+          itsProxy->gridder(
+            N_chunks,
+            visibilities.data(), //      void    *visibilities
+            uvw.data(), //      void    *uvw,
+            offsets.data(), //      void    *offset,
+            wavenumbers.data(), //      void    *wavenumbers,
+            aterm.data(),                 
+            spheroidal.data(),
+            baselines.data(),
+            subgrids.data() //      void    *uvgrid,
+          );
+          LOG_DEBUG_STR("done.");
+          
+          LOG_DEBUG_STR("adder...");
+          itsProxy->adder(N_chunks, coordinates.data(), subgrids.data(), w_plane_grid.data());
+          LOG_DEBUG_STR("done.");
+          i = 0;
+          visibilities = Complex(0);
         }
       }
-      
-      i++;
-      
-      // if buffer is full or no more chunks then process buffer
-      
-      if ((i == N_chunks) || ((chunk+1) == v.chunks.end()))
+      if (i > 0)
       {
-  //       cout << "N_chunks: " << N_chunks << endl;      
+        LOG_DEBUG_STR("partially filled block: " << i << "/" << N_chunks);
         LOG_DEBUG_STR("gridder...");
         itsProxy->gridder(
           N_chunks,
@@ -608,13 +745,39 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
         LOG_DEBUG_STR("done.");
         
         LOG_DEBUG_STR("adder...");
-        itsProxy->adder(N_chunks, coordinates.data(), subgrids.data(), itsGriddedData[0].data());
+        itsProxy->adder(N_chunks, coordinates.data(), subgrids.data(), w_plane_grid.data());
         LOG_DEBUG_STR("done.");
         i = 0;
         visibilities = Complex(0);
       }
     }
-  } 
+    // transform to image domain
+    LOG_DEBUG_STR("W plane fft...");
+    {
+      ScopedTimer t("W plane fft");
+      FFTCMatrix fft;
+      for (int ii = 0; ii<w_plane_grid.shape()(3); ii++)
+      {
+        for (int jj = 0; jj<w_plane_grid.shape()(2); jj++)
+        {
+          Matrix<Complex> im(w_plane_grid[ii][jj]);
+          fft.forward (im.nrow(), im.data(), OpenMP::maxThreads());
+        }
+      }
+    }
+    LOG_DEBUG_STR("done.");
+    
+    // Apply W term in image domain
+    LOG_DEBUG_STR("W plane apply...");
+    {
+      ScopedTimer t("W plane apply");
+      itsConvFunc->applyWterm(w_plane_grid, -w_offset);
+    }
+    LOG_DEBUG_STR("done.");
+    
+    // Add image to master grid
+    itsGriddedData[0] += w_plane_grid;
+  }
 }
 
 void FTMachineIDG::get(casa::VisBuffer& vb, Int row)
@@ -644,7 +807,7 @@ void FTMachineIDG::get(VisBuffer& vb, Int row)
 
   Cube<Complex> data(vb.modelVisCube());
   
-  VisibilityMap v = make_mapping(vb, itsTimeWindow);
+  VisibilityMap v = make_mapping(vb, itsTimeWindow, std::vector<std::vector<int> >(), itsUVScale);
   Int N_time = 0;
   for (std::vector<Chunk>::iterator chunk = v.chunks.begin() ; chunk != v.chunks.end(); ++chunk)
   {
