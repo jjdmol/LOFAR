@@ -1,7 +1,7 @@
 #include "lofar_config.h"
 
 #include <MessageBus/ToBus.h>
-#include <MessageBus/MessageBus.h>
+#include <MessageBus/Exceptions.h>
 #include "Util.h"
 
 #include <Common/LofarLogger.h>

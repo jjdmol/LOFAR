@@ -7,6 +7,7 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 
 # Install header files.
 install(FILES
+  Exceptions.h
   FromBus.h
   Message.h
   MessageBus.h

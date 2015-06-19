@@ -1,4 +1,4 @@
-//# MessageBus.h: Wrapper for generic QPID tooling (initialisation, teardown, helper functions, etc)
+//# Exceptions.h: Exceptions that can be raised by the MessageBus package
 //#
 //# Copyright (C) 2015
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -20,15 +20,16 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_MESSAGEBUS_MESSAGEBUS_H
-#define LOFAR_MESSAGEBUS_MESSAGEBUS_H
+#ifndef LOFAR_MESSAGEBUS_EXCEPTIONS_H
+#define LOFAR_MESSAGEBUS_EXCEPTIONS_H
+
+#include <Common/Exception.h>
 
 namespace LOFAR {
 
-namespace MessageBus {
-  // Generic initialisation of the Messaging framework
-  void init();
-}
+EXCEPTION_CLASS(MessageBusException, LOFAR::Exception);
+
+EXCEPTION_CLASS(XMLException, MessageBusException);
 
 } // namespace LOFAR
 
