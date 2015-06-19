@@ -3,6 +3,10 @@
 echo "Giving /opt to lofarbuild..."
 chown lofarbuild.lofarbuild /opt
 
+echo "Giving /localhome/lofar to lofarbuild..."
+mkdir /localhome/lofar
+chown lofarbuild.lofarbuild /localhome/lofar
+
 #
 # Casacore
 #
@@ -12,9 +16,6 @@ rm -rf /opt/casacore
 #
 # QPID
 #
-echo "Creating /data symlink..."
-ln -sfT /localhome /data
-
 echo "Creating qpid user..."
 adduser qpid --system --home /localhome/qpid --disabled-password --disabled-login
 mkdir -p /localhome/qpid
