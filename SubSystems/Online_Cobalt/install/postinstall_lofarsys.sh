@@ -30,4 +30,4 @@ ssh localhost true
 #  temporary files
 # ********************************************
 echo "Configuring /opt/lofar/var..."
-mkdir -p ~/lofar/var/{log,run}
+mkdir -p ~lofarsys/lofar/var/{log,run}
