@@ -108,13 +108,12 @@ class testForwardOfJobMsgToQueueuSlave(
 
         # check that the correct msg is receive in the deadletter queue        
         unpacked_msg_data = eval(msg.content().payload)
+        commandQueueBus.close()
+        daemon.close()
 
         self.assertEqual(unpacked_msg_data, send_payload)
         
         
-        ## Cleanup sut
-        commandQueueBus.close()
-        daemon.close()
 
     def test_deadletterQueue_startjob_processing(self):
         """
@@ -146,21 +145,22 @@ class testForwardOfJobMsgToQueueuSlave(
 
         # Run the deadletter processer
         daemon._process_deadletter_queue()
+        ## Cleanup sut
+        commandQueueBus.close()
+        daemon.close()
 
         self.assertTrue(daemon._process_deadletter_parameters_msg_called)
         
         
-        ## Cleanup sut
-        commandQueueBus.close()
-        daemon.close()
+
 
 
     def test_start_node_recipe(self):
         """
         A msg with the command run_job should be forwarded to jobnode
         """
-        return
         # Create the daemon and get all the default queues
+        print "debug 2"
         job_node = 'locus102'
         daemon, commandQueueBus = \
             testFunctions.prepare_test( testForwardOfJobMsgToQueueuSlaveWrapper)
@@ -173,18 +173,16 @@ class testForwardOfJobMsgToQueueuSlave(
         # Test1: Create a test job payload
         send_payload =  {'type':'command',
                          'command':'run_job',
-                         'session_uuid':"123456321654",
+                         'session_uuid':"123456",
                          'job_uuid': "654321",
                          'node':job_node,
+                         'info':"test_start_node_recipe",
                          'parameters':
                          {'node':'dop282',
-                  #'cmd': '/home/klijn/build/7629/gnu_debug/installed/lib/python2.6/dist-packages/lofarpipe/recipes/nodes/test_recipe.py',
-                  'environment':environment,
-                  'cmd': 'python /home/klijn/build/7629/gnu_debug/installed/lib/python2.7/dist-packages/lofarpipe/recipes/nodes/test_recipe.py',
-                  #'cmd': """echo 'print "test"' | python """,
-                  #'cmd':""" echo  "test" """,
-                  'cdw': '/home/klijn',
-                  'job_parameters':{'par1':'par1'}}
+                          'environment':environment,
+                          'cmd': 'python /home/klijn/build/7629/gnu_debug/installed/lib/python2.6/dist-packages/lofarpipe/recipes/nodes/test_recipe.py',
+                          'cdw': '/home/klijn',
+                          'job_parameters':{'par1':'par1'}}
                          
                          }
 
@@ -198,12 +196,14 @@ class testForwardOfJobMsgToQueueuSlave(
         # Run the deadletter processer
         daemon._process_deadletter_queue()
 
-        self.assertTrue(daemon._process_deadletter_parameters_msg_called)
-        
-        
         ## Cleanup sut
         commandQueueBus.close()
         daemon.close()
+
+        self.assertTrue(daemon._process_deadletter_parameters_msg_called)
+        
+        
+
 
 
     def test_start_failing_node_recipe(self):
@@ -213,7 +213,7 @@ class testForwardOfJobMsgToQueueuSlave(
         # Create the daemon and get all the default queues
         job_node = 'locus102'
         daemon, commandQueueBus = \
-            testFunctions.prepare_test( testForwardOfJobMsgToQueueuSlaveWrapper)
+            testFunctions.prepare_test(  testForwardOfJobMsgToQueueuSlaveWrapper)
 
         environment = dict(
             (k, v) for (k, v) in os.environ.iteritems()
@@ -226,13 +226,11 @@ class testForwardOfJobMsgToQueueuSlave(
                          'session_uuid':"123456321654",
                          'job_uuid': "654321",
                          'node':job_node,
+                         'info':"test_start_failing_node_recipe",
                          'parameters':
                          {'node':'dop282',
-                  #'cmd': '/home/klijn/build/7629/gnu_debug/installed/lib/python2.6/dist-packages/lofarpipe/recipes/nodes/test_recipe.py',
                   'environment':environment,
-                  'cmd': 'python noexistingexecutable',
-                  #'cmd': """echo 'print "test"' | python """,
-                  #'cmd':""" echo  "test" """,
+                  'cmd': 'noexistingexecutable',
                   'cdw': '/home/wouter',
                   'job_parameters':{'par1':'par1'}}
                          
@@ -247,14 +245,267 @@ class testForwardOfJobMsgToQueueuSlave(
 
         ## Run the deadletter processer
         daemon._process_deadletter_queue()
-
-        self.assertTrue(daemon._process_deadletter_parameters_msg_called)
-        
-        
         ### Cleanup sut
+        commandQueueBus.close()
+        daemon.close()
+        self.assertFalse(daemon._process_deadletter_parameters_msg_called)
+        
+        
+    def test_start_node_recipe_no_connection_with_lib_2times(self):
+        """
+        A msg with the command run_job should be forwarded to jobnode
+        If the recipe does not receive the parameter msg it should be resend
+
+        """
+        # Create the daemon and get all the default queues
+        job_node = 'locus102'
+        daemon, commandQueueBus = \
+            testFunctions.prepare_test(PipelineSCQDaemonImp.PipelineSCQDaemonImp)
+
+        environment = dict(
+            (k, v) for (k, v) in os.environ.iteritems()
+                if k.endswith('PATH') or k.endswith('ROOT') or k == 'QUEUE_PREFIX'
+        )
+
+        # Test1: Create a test job payload
+        send_payload =  {'type':'command',
+                         'command':'run_job',
+                         'session_uuid':"123456",
+                         'job_uuid': "654321",
+                         'node':job_node,
+                         'info':"test_start_node_recipe",
+                         'parameters':
+                         {'node':'dop282',
+                          'environment':environment,
+                          'cmd': "sleep 5;",
+                          'cdw': '/home/klijn',
+                          'job_parameters':{'par1':'par1'}}
+                         
+                         }
+
+        msg = testFunctions.create_test_msg(send_payload)
+        commandQueueBus.send(msg)
+
+        # Run the process loop, The job will be send to a bus adress that does
+        # not exist, it should end up in the deadletter queue
+        daemon._process_commands()
+
+        # Run the deadletter processer twice
+        daemon._process_deadletter_queue()
+        daemon._process_deadletter_queue()
+
+        # Now check if deadletter contains a msg with n_repost = 2
+        msg = testFunctions.try_get_msg(daemon._deadletterFromBus, 10) 
+        if msg == None:
+            commandQueueBus.close()
+            daemon.close()
+            raise Exception(
+                 "Did not receive the expect msg on the deadletter queue")
+
+        daemon._deadletterFromBus.ack(msg)         
+
+        commandQueueBus.close()
+        daemon.close()
+
+        self.assertTrue(eval(msg.content().payload)['n_repost'] == 2)
+
+
+    def test_start_node_recipe_no_connection_with_lib_3times(self):
+        """
+        A msg with the command run_job should be forwarded to jobnode
+        If the recipe does not receive the parameter msg it should be resend
+
+        after 2 attempts the job should be killed and a log and result msg
+        send
+
+        """
+        # Create the daemon and get all the default queues
+        job_node = 'locus102'
+        daemon, commandQueueBus = \
+            testFunctions.prepare_test(PipelineSCQDaemonImp.PipelineSCQDaemonImp)
+
+        environment = dict(
+            (k, v) for (k, v) in os.environ.iteritems()
+                if k.endswith('PATH') or k.endswith('ROOT') or k == 'QUEUE_PREFIX'
+        )
+
+        # Test1: Create a test job payload
+        send_payload =  {'type':'command',
+                         'command':'run_job',
+                         'session_uuid':"123456",
+                         'job_uuid': "654321",
+                         'node':job_node,
+                         'info':"test_start_node_recipe",
+                         'parameters':
+                         {'node':'dop282',
+                          'environment':environment,
+                          'cmd': "sleep 5;",
+                          'cdw': '/home/klijn',
+                          'job_parameters':{'par1':'par1'}}
+                         
+                         }
+
+        msg = testFunctions.create_test_msg(send_payload)
+        commandQueueBus.send(msg)
+
+        # Run the process loop, The job will be send to a bus adress that does
+        # not exist, it should end up in the deadletter queue
+        daemon._process_commands()
+
+        # Run the deadletter processer twice
+        daemon._process_deadletter_queue()
+        daemon._process_deadletter_queue()
+        daemon._process_deadletter_queue()
+
+        # THe deadletter processing has been called three times.
+        # this should result in a kill job action in the dameon
+        
+        # FIrst a info log msg
+        msg = testFunctions.try_get_msg(daemon._deadletterFromBus, 10) 
+        if msg == None:
+            commandQueueBus.close()
+            daemon.close()
+            raise Exception(
+                 "Did not receive the expect msg on the deadletter queue")
+        daemon._deadletterFromBus.ack(msg)         
+        expected_content =  {'job_uuid': '654321', 
+                             'type': 'log', 
+                             'log_data': '',
+                             'level': 'INFO'}
+        self.assertEqual(eval(msg.content().payload), expected_content)
+
+        # Then a error log msg
+        msg = testFunctions.try_get_msg(daemon._deadletterFromBus, 10) 
+        if msg == None:
+            commandQueueBus.close()
+            daemon.close()
+            raise Exception(
+                 "Did not receive the expect msg on the deadletter queue")
+        daemon._deadletterFromBus.ack(msg)         
+        expected_content =  {'job_uuid': '654321', 
+                             'type': 'log', 
+                             'log_data': '',
+                             'level': 'ERROR'}
+        self.assertEqual(eval(msg.content().payload), expected_content)
+
+        # Then a results msg
+        msg = testFunctions.try_get_msg(daemon._deadletterFromBus, 10) 
+        if msg == None:
+            commandQueueBus.close()
+            daemon.close()
+            raise Exception(
+                 "Did not receive the expect msg on the deadletter queue")
+        daemon._deadletterFromBus.ack(msg)         
+        expected_content = {'info': 'Job killed',
+                            'exit_value': -1,
+                            'type': 'exit_value', 
+                            'uuid': '123456', 
+                            'job_uuid': '654321'}
+        self.assertEqual(eval(msg.content().payload), expected_content)
+
+
+        commandQueueBus.close()
+        daemon.close()
+
+    def test_start_node_recipe_full(self):
+        """
+        A msg with the command run_job should be forwarded to jobnode
+        If the recipe does not receive the parameter msg it should be resend
+
+        after 2 attempts the job should be killed and a log and result msg
+        send
+
+        """
+        return
+        # Create the daemon and get all the default queues
+        job_node = 'locus102'
+        daemon, commandQueueBus = \
+            testFunctions.prepare_test(PipelineSCQDaemonImp.PipelineSCQDaemonImp)
+
+        environment = dict(
+            (k, v) for (k, v) in os.environ.iteritems()
+                if k.endswith('PATH') or k.endswith('ROOT') or k == 'QUEUE_PREFIX'
+        )
+
+        # Test1: Create a test job payload
+        send_payload =  {'type':'command',
+                         'command':'run_job',
+                         'session_uuid':"123456",
+                         'job_uuid': "test_start_node_recipe_full",
+                         'node':job_node,
+                         'info':"test_start_node_recipe",
+                         'parameters':
+                         {'node':'dop282',
+                          'environment':environment,
+                          'cmd': 'python /home/klijn/build/7629/gnu_debug/installed/lib/python2.6/dist-packages/lofarpipe/recipes/nodes/test_recipe.py',
+                          'cdw': '/home/klijn',
+                          'job_parameters':{'par1':'par1'}}
+                         
+                         }
+
+        msg = testFunctions.create_test_msg(send_payload)
+        commandQueueBus.send(msg)
+
+        # Run the process loop, The job will be send to a bus adress that does
+        # not exist, it should end up in the deadletter queue
+        daemon._process_commands()
+
+
+
+        ## Run the deadletter processer twice
+        #daemon._process_deadletter_queue()
+        #daemon._process_deadletter_queue()
+        #daemon._process_deadletter_queue()
+
+        ## THe deadletter processing has been called three times.
+        ## this should result in a kill job action in the dameon
+        
+        ## FIrst a info log msg
+        #msg = testFunctions.try_get_msg(daemon._deadletterFromBus, 10) 
+        #if msg == None:
+        #    commandQueueBus.close()
+        #    daemon.close()
+        #    raise Exception(
+        #         "Did not receive the expect msg on the deadletter queue")
+        #daemon._deadletterFromBus.ack(msg)         
+        #expected_content =  {'job_uuid': '654321', 
+        #                     'type': 'log', 
+        #                     'log_data': '',
+        #                     'level': 'INFO'}
+        #self.assertEqual(eval(msg.content().payload), expected_content)
+
+        ## Then a error log msg
+        #msg = testFunctions.try_get_msg(daemon._deadletterFromBus, 10) 
+        #if msg == None:
+        #    commandQueueBus.close()
+        #    daemon.close()
+        #    raise Exception(
+        #         "Did not receive the expect msg on the deadletter queue")
+        #daemon._deadletterFromBus.ack(msg)         
+        #expected_content =  {'job_uuid': '654321', 
+        #                     'type': 'log', 
+        #                     'log_data': '',
+        #                     'level': 'ERROR'}
+        #self.assertEqual(eval(msg.content().payload), expected_content)
+
+        ## Then a results msg
+        #msg = testFunctions.try_get_msg(daemon._deadletterFromBus, 10) 
+        #if msg == None:
+        #    commandQueueBus.close()
+        #    daemon.close()
+        #    raise Exception(
+        #         "Did not receive the expect msg on the deadletter queue")
+        #daemon._deadletterFromBus.ack(msg)         
+        #expected_content = {'info': 'Job killed',
+        #                    'exit_value': -1,
+        #                    'type': 'exit_value', 
+        #                    'uuid': '123456', 
+        #                    'job_uuid': '654321'}
+        #self.assertEqual(eval(msg.content().payload), expected_content)
+
+
         #commandQueueBus.close()
         #daemon.close()
-
 
 
 if __name__ == "__main__":

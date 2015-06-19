@@ -52,6 +52,8 @@ function deadletter_queue {
 	local option=""
 	if [ "$action" == "add" ]; then
 	    option="--durable"
+	else
+	    qpid-receive -b $hostname -a $busname".deadletter"
 	fi
 			
     echo "qpid-config -b $hostname $action queue $busname\".deadletter\" $option" 

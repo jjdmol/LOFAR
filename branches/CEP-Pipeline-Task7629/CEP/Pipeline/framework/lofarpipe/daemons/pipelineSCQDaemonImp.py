@@ -41,6 +41,9 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
         self._subprocessStarter = subprocessStarter.SubprocessStarter(
                self._broker, self._busname, self._toBus, self._logger)
 
+        self._max_repost = 2 # Depending on the loop_interval this is normally
+                             # 20 second (should be enough)
+
 
 
     def process_commands(self, command, unpacked_msg_content, msg):
@@ -67,7 +70,14 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
 
         TODO: This function still feels clutchy. Might be refactored
         """     
+        # First we add a msg on the queue as a stopper:
+        # We should only process the queue once per loop
+        msg = self.create_msg({"type":"deadletter_stop"})
+        msg.set_subject("deadletter")
+        self._toBus.send(msg)
+
         while True:
+
             msg = self._deadletterFromBus.get(0.1)  #  use timeout.
             if msg == None:
                break    # exit msg processing
@@ -80,20 +90,23 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
                 self._logger.warn(msg)
                 self._deadletterFromBus.ack(msg) 
                 continue
-            
-            self._logger.error(unpacked_msg_data)
+
             # Select what to do based on the msg type
+            if msg_type == "deadletter_stop":
+                # we have processed the complete deadletter queue
+                self._deadletterFromBus.ack(msg) 
+                break
+            
             if msg_type == 'command':
                 raise Exception(
                     "Major error, why is a command send on this bus?") # TODO: 
-                self._process_deadletter_parameters_msg(unpacked_msg_data)
                 self._deadletterFromBus.ack(msg) 
                 continue
+
             elif msg_type == 'parameters':
                 self._process_deadletter_parameters_msg(unpacked_msg_data)
                 self._deadletterFromBus.ack(msg) 
                 continue
-
 
             self._logger.info(
                "Received a unknown msg on deadletterqueue")
@@ -103,10 +116,38 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
 
 
     def _process_deadletter_parameters_msg(self, unpacked_msg_data):
-        pass
-        #node = unpacked_msg_content['node']        
-        #session_uuid = unpacked_msg_content['session_uuid']
-        #queuename = self._busname + " /" + node + "." + session_uuid
+        """
+        We try to send a parameter msg a couple of times. After it still fails,
+        send results msg to the results q of the session
+        """
+        session_uuid = unpacked_msg_data['session_uuid']
+        job_uuid = unpacked_msg_data['job_uuid']
+        n_repost = None
+
+        
+        if 'n_repost' in unpacked_msg_data:
+            n_repost = unpacked_msg_data['n_repost'] 
+        else:
+            unpacked_msg_data['n_repost'] = 1
+            self._subprocessStarter.send_job_parameters(
+              session_uuid, job_uuid, unpacked_msg_data)
+            return
+
+        session_uuid = unpacked_msg_data['session_uuid']
+        job_uuid = unpacked_msg_data['job_uuid']
+
+
+        if n_repost >= self._max_repost:
+            # If we tried enough times, kill the job
+            self._subprocessStarter.kill_job_send_results(
+              session_uuid, job_uuid)
+        else:
+            unpacked_msg_data['n_repost'] += 1
+            self._subprocessStarter.send_job_parameters(
+               session_uuid, job_uuid, unpacked_msg_data)
+        
+        return
+
 
 
     def _save_unpack_msg(self, msg):
@@ -126,3 +167,22 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
                 return None, None
 
         return msg_content, msg_type
+
+
+    def create_msg(self, payload):
+        """
+        TODO: should be moved into a shared code lib
+        Creates a minimal valid msg with payload
+        """
+        msg = message.MessageContent(
+                    from_="test",
+                    forUser="",
+                    summary="summary",
+                    protocol="protocol",
+                    protocolVersion="test", 
+                    #momid="",
+                    #sasid="", 
+                    #qpidMsg=None
+                          )
+        msg.payload = payload
+        return msg

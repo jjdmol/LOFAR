@@ -70,25 +70,26 @@ class SubprocessStarter(object):
             # Alternative send a.. results msg to the logger?
             # pythonic: fail early fail hard: This is a major error state
 
-        # The needed queues are present, the job is unique. Send the paramters
-        # on the parameter queue
-        self._send_job_parameters(session_uuid, job_uuid, msg_content)
-
         # to start a process we first append the job_uuid after the cmd
         # this is backward compatibility issue from the pipeline framework
-        append_cmd = command + " " + job_uuid
+        # prepending exec allows us to send a kill() to the process
+        # https://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
+        cmd_with_uuid = "exec " + command + " " + self._busname + " " + job_uuid 
+
         # new start a subprocess
         process, error_str =  self._start_subprocess(
-          command, working_dir, environment)
+          cmd_with_uuid, working_dir, environment)
 
         # if the starting of the subprocess failed, send the result to the
         # the results queue
         # else store the process
         if process == None:  # error state
-            self._send_process_cout_cerr(session_uuid, job_uuid,
+            self.send_process_cout_cerr(session_uuid, job_uuid,
                                          "", error_str)
-            self._send_results(session_uuid, job_uuid,"-1")
+            self.send_results(session_uuid, job_uuid,"-1")
         else:                # store the process
+            # Send the paramters on the parameter queue
+            self.send_job_parameters(session_uuid, job_uuid, msg_content)
             self._registered_sessions[session_uuid]['jobs'][job_uuid] = process
 
     def failed_job_parameter_msg(self, msg_content):
@@ -98,7 +99,7 @@ class SubprocessStarter(object):
         """
         job_uuid     = msg_content['job_uuid']
         session_uuid = msg_content['session_uuid']
-        self._kill_job_send_results(session_uuid, job_uuid)
+        self.kill_job_send_results(session_uuid, job_uuid)
 
 
     def quit_session(self, msg_content):
@@ -108,7 +109,7 @@ class SubprocessStarter(object):
         session_uuid = msg_content['session_uuid']
 
         for job_uuid in self._registered_sessions[session_uuid]['jobs'].keys():
-            self._kill_job_send_results(session_uuid, job_uuid)
+            self.kill_job_send_results(session_uuid, job_uuid)
 
         # delete the whole session_uuid dictionary 
         del self._registered_sessions[session_uuid]
@@ -142,7 +143,7 @@ class SubprocessStarter(object):
         return process, error_str
     
 
-    def _kill_job_send_results(self,  session_uuid, job_uuid):
+    def kill_job_send_results(self,  session_uuid, job_uuid):
         """
         Helper function for killing a job. The output is send on the 
         results and log queue
@@ -152,14 +153,15 @@ class SubprocessStarter(object):
         # kill the process // TODO: find out of kill can be called on a stopped
         # process
         process.kill()
+
         # Get the stout en sterr, could contain information of the reason for
         # failure
         stdoutdata, stderrdata = process.communicate()
-        self._send_process_cout_cerr(session_uuid, job_uuid, 
+        self.send_process_cout_cerr(session_uuid, job_uuid, 
                                      stdoutdata, stderrdata)
 
         # Send error results to
-        self._send_results(session_uuid, job_uuid, "-1")
+        self.send_results(session_uuid, job_uuid, -1, "Job killed")
 
     def _connect_result_log_parameter_queues(self, session_uuid):
         """
@@ -187,12 +189,11 @@ class SubprocessStarter(object):
         return queues_dict
 
 
-    def _send_process_cout_cerr(self, session_uuid, job_uuid,
+    def send_process_cout_cerr(self, session_uuid, job_uuid,
                                 stdoutdata, stderrdata):
         """
         Sends the two supplied string as log to the correct session_uuid topic
         """
-
         payload = {'type':'log',
                    'level':   "INFO",
                    'log_data':stdoutdata,
@@ -208,7 +209,7 @@ class SubprocessStarter(object):
         self._registered_sessions[session_uuid]['queues']['log'].send(msg)
 
 
-    def _send_job_parameters(self, session_uuid, job_uuid, msg_content):
+    def send_job_parameters(self, session_uuid, job_uuid, msg_content):
         """
         Sends a job parameter msg on the bus.
 
@@ -225,14 +226,15 @@ class SubprocessStarter(object):
         self._toBus.send(msg)
 
 
-    def _send_results(self, session_uuid, job_uuid, exit_status):
+    def send_results(self, session_uuid, job_uuid, exit_status, info_str=""):
         """
         Send a results msg to the results queue
         """
         payload = {'type':"exit_value",
                    'exit_value':exit_status,
                    'uuid':session_uuid,
-                   'job_uuid':job_uuid}
+                   'job_uuid':job_uuid,
+                   'info':info_str}
         msg = self.create_msg(payload)
         
         self._registered_sessions[session_uuid]['queues']['result'].send(msg)
