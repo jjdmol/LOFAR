@@ -27,6 +27,8 @@
 #include <MessageBus/Exceptions.h>
 #include <MessageBus/XMLDoc.h>
 
+#include <Common/LofarLogger.h>
+
 #ifdef HAVE_LIBXMLXX
 #include <sstream>
 #include <libxml++/parsers/domparser.h>
@@ -42,8 +44,12 @@ namespace LOFAR {
 XMLDoc::XMLDoc(const std::string &content)
 {
 #ifdef HAVE_LIBXMLXX
-  itsParser.parse_memory(content);
-  itsDocument = itsParser.get_document();
+  try {
+    itsParser.parse_memory(content);
+    itsDocument = itsParser.get_document();
+  } catch(xmlpp::exception &e) {
+    THROW(XMLException, "Could not parse XML: " << e.what());
+  }
 #else
   itsContent = content;
 #endif
@@ -52,18 +58,26 @@ XMLDoc::XMLDoc(const std::string &content)
 #ifdef HAVE_LIBXMLXX
 XMLDoc::XMLDoc(const XMLDoc &other)
 {
-  itsParser.parse_memory(other.getContent());
-  itsDocument = itsParser.get_document();
+  try {
+    itsParser.parse_memory(other.getContent());
+    itsDocument = itsParser.get_document();
+  } catch(xmlpp::exception &e) {
+    THROW(XMLException, "Could not parse XML: " << e.what());
+  }
 }
 #endif
 
 XMLDoc::XMLDoc(const XMLDoc &other, const std::string &key)
 {
 #ifdef HAVE_LIBXMLXX
-  itsParser.parse_memory("");
-  itsDocument = itsParser.get_document();
+  try {
+    itsParser.parse_memory("<foo />");
+    itsDocument = itsParser.get_document();
 
-  itsDocument->create_root_node_by_import(other.getXMLnode(key));
+    itsDocument->create_root_node_by_import(other.getXMLnode(key));
+  } catch(xmlpp::exception &e) {
+    THROW(XMLException, "Could not parse XML: " << e.what());
+  }
 #else
   itsDocument = other.getXMLvalue(key);
 #endif
@@ -160,20 +174,23 @@ void XMLDoc::insertXML(const string &key, const string &xml)
 #ifdef HAVE_LIBXMLXX
   // Find insert spot
   Element *e = getXMLnode(key);
-  if (!e) return;
 
-  // Parse provided XML
-  DomParser parser;
-  parser.parse_memory(xml);
+  try {
+    // Parse provided XML
+    DomParser parser;
+    parser.parse_memory(xml);
 
-  Document *document = parser.get_document();
-  if (!document) return;
+    Document *document = parser.get_document();
+    ASSERT(document);
 
-  Element *root = document->get_root_node();
-  if (!root) return;
+    Element *root = document->get_root_node();
+    ASSERT(root);
 
-  // Insert the XML into our document
-  e->import_node(root);
+    // Insert the XML into our document
+    e->import_node(root);
+  } catch(xmlpp::exception &e) {
+    THROW(XMLException, "Could not parse XML: " << e.what());
+  }
 #else
   setXMLvalue(key, xml);
 #endif
@@ -183,11 +200,7 @@ void XMLDoc::insertXML(const string &key, const string &xml)
 Element *XMLDoc::getXMLnode(const string &name) const
 {
   Element *root = itsDocument->get_root_node();
-
-  if (!root) {
-    // Document is broken
-    THROW(XMLException, "Document is broken");
-  }
+  ASSERT(root);
 
   // assume key is an XPath relative to root, see http://www.w3schools.com/xpath/xpath_syntax.asp
   NodeSet nodeset = root->find("/"+name);

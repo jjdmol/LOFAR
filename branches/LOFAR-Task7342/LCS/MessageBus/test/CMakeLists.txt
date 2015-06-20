@@ -9,6 +9,7 @@ configure_file(
 if(HAVE_UNITTEST++)
   lofar_add_test(tMessage tMessage.cc)
   lofar_add_test(tProtocols tProtocols.cc)
+  lofar_add_test(tXMLDoc tXMLDoc.cc)
 endif(HAVE_UNITTEST++)
 
 if(HAVE_QPID)
