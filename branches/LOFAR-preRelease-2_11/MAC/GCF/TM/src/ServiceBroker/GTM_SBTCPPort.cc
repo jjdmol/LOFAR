@@ -81,7 +81,7 @@ bool GTMSBTCPPort::open()
     }
 
     // set to non-blocking 
-    //_pSocket->setBlocking(false); // DISABLED TO TEST RSPDriver <-> ppstune
+    _pSocket->setBlocking(false);
 
 	switch (_pSocket->connect(sbPortNumber, getHostName())) {
 	case -1: _handleDisconnect();  break; 
