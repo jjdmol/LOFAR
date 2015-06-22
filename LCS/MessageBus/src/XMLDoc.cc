@@ -28,6 +28,7 @@
 #include <MessageBus/XMLDoc.h>
 
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
 
 #ifdef HAVE_LIBXMLXX
 #include <sstream>
@@ -38,6 +39,7 @@ using namespace xmlpp;
 #endif
 
 using namespace std;
+using namespace LOFAR::StringUtil;
 
 namespace LOFAR {
 
@@ -91,7 +93,7 @@ XMLDoc::XMLDoc(const XMLDoc &other, const std::string &key)
     THROW(XMLException, "Could not parse XML: " << e.what());
   }
 #else
-  itsDocument = other.getXMLvalue(key);
+  itsContent = other.getXMLvalue(key);
 #endif
 }
 
