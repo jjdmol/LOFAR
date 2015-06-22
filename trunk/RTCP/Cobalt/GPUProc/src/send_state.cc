@@ -22,7 +22,8 @@
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
-#include <MessageBus/MsgBus.h>
+#include <MessageBus/MessagBus.h>
+#include <MessageBus/ToBus.h>
 #include <MessageBus/Protocols/TaskFeedbackState.h>
 
 #include <boost/format.hpp>

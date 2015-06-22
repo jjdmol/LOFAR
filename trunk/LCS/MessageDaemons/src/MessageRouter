@@ -20,7 +20,7 @@
 """Very basic messagebus router that routs the messages according to the settings in Router.conf
 """
 
-import lofar.messagebus.msgbus as msgbus
+import lofar.messagebus.messagebus as messagebus
 import lofar.messagebus.message as message
 
 import threading
@@ -47,9 +47,9 @@ class BusMulticast(threading.Thread):
 
   def run(self):
     try:
-      inbus = msgbus.FromBus(self.source)
-      outbusses = [msgbus.ToBus(dest) for dest in self.destlist]
-      outdump = msgbus.ToBus("dump.%s" % (self.source,), "create:always,delete:always,node:{type:topic}")
+      inbus = messagebus.FromBus(self.source)
+      outbusses = [messagebus.ToBus(dest) for dest in self.destlist]
+      outdump = messagebus.ToBus("dump.%s" % (self.source,), "create:always,delete:always,node:{type:topic}")
 
       log("INFO","[%s] Forwarding to %s" % (self.source,self.destlist))
 
@@ -79,7 +79,7 @@ class BusMulticast(threading.Thread):
       log("FATAL", "[%s] Caught exception: %s" % (self.source, e))
 
       # Abort everything, to avoid half-broken situations
-      cmdbus = msgbus.ToBus("messagerouter.command")
+      cmdbus = messagebus.ToBus("messagerouter.command")
       cmdbus.send("stop")
 
     log("INFO", "[%s] Done" % (self.source,))
@@ -132,7 +132,7 @@ def process_command_queue(command_queue):
 
   log("INFO","[main] Listening for commands on %s" % (command_queue,))
 
-  cmdq = msgbus.FromBus(command_queue, "create: always, delete: always")
+  cmdq = messagebus.FromBus(command_queue, "create: always, delete: always")
   while True:
     msg = cmdq.get(1.0)
     if msg is None:
