@@ -448,6 +448,7 @@ class testForwardOfJobMsgToQueueuSlave(
 
 
         commandQueueBus.close()
+        resultQueue.close()
         daemon.close()
 
 
