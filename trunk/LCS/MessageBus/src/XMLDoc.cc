@@ -93,7 +93,14 @@ XMLDoc::XMLDoc(const XMLDoc &other, const std::string &key)
     THROW(XMLException, "Could not parse XML: " << e.what());
   }
 #else
-  itsContent = other.getXMLvalue(key);
+  const string content = other.getXMLvalue(key);
+
+  // Extract root element (last element in 'key')
+  const vector<string> labels = split(key, '/');
+  ASSERT(!labels.empty());
+  const string root_element = labels[labels.size()-1];
+
+  itsContent = formatString("<%s>%s</%s>", root_element.c_str(), other.getXMLvalue(key).c_str(), root_element.c_str());
 #endif
 }
 
@@ -144,7 +151,7 @@ string XMLDoc::getXMLvalue(const string& key) const
     // search begin tag
     begin  = itsContent.find(startTag, offset);
     if (begin == string::npos) {
-      return ("???");
+      THROW(XMLException, "XML element not found (could not find begin tag): " << key);
     }
     offset = begin;
   }
@@ -153,7 +160,7 @@ string XMLDoc::getXMLvalue(const string& key) const
   begin+=startTag.size();
   end = itsContent.find(stopTag, begin);
   if (end == string::npos) {
-    return ("???");
+    THROW(XMLException, "XML element not found (could not find end tag): " << key);
   }
   return (itsContent.substr(begin, end - begin));
 #endif
