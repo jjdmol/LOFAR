@@ -252,6 +252,7 @@ python_install(
 	do_ltacp.py
 	simple_server.py
 	__init__.py
+	doc/LTA-SIP.xsd #not a py file, but needed by ingest in python ingest lib dir
   DESTINATION LTAIngest)
 
 #determine LTAINGEST_LOG_ROOT_DIR for various build hosts (used in ingest_config.py.in)
