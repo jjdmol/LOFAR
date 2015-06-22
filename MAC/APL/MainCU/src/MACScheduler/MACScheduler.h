@@ -39,7 +39,7 @@
 #include <Common/lofar_vector.h>
 #include <Common/LofarLogger.h>
 #include <ApplCommon/Observation.h>
-#include <MessageBus/MsgBus.h>
+#include <MessageBus/ToBus.h>
 
 //# ACC Includes
 #include <OTDB/OTDBconnection.h>
