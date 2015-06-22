@@ -22,7 +22,7 @@
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
-#include <MessageBus/MessagBus.h>
+#include <MessageBus/MessageBus.h>
 #include <MessageBus/ToBus.h>
 #include <MessageBus/Protocols/TaskFeedbackState.h>
 
@@ -74,7 +74,9 @@ int main(int argc, char **argv)
   INIT_LOGGER("send_status");
   MessageBus::init();
 
-  Parset parset(argv[optind]);
+  // Parse parset RAW to prevent exceptions caused by broken parsets.
+  // We just need the sasID and momID.
+  ParameterSet parset(argv[optind]);
   int success = atoi(argv[optind+1]);
 
   // send status feedback
@@ -84,8 +86,8 @@ int main(int argc, char **argv)
     "Cobalt/GPUProc/send_state",
     "",
     "State feedback",
-    str(format("%s") % parset.settings.momID),
-    str(format("%s") % parset.settings.observationID),
+    str(format("%s") % parset.getString("Observation.momID")),
+    str(format("%s") % parset.getString("Observation.ObsID")),
     success);
 
   bus.send(msg);

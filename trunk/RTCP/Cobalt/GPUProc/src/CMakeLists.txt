@@ -120,6 +120,7 @@ endif()
 lofar_add_bin_program(mpi_node_list Station/mpi_node_list.cc)
 lofar_add_bin_program(station_stream Station/station_stream.cc)
 lofar_add_bin_program(send_state send_state.cc)
+lofar_add_bin_program(gpu_load gpu_load.cc)
 
 # install scripts used to run an observation under bin
 install(PROGRAMS
