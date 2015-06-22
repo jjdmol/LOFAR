@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import logging, os, time, xmlrpclib, subprocess, random, unspecifiedSIP
+import socket
 from lxml import etree
 from cStringIO import StringIO
 from job_group import corr_type, bf_type, img_type, unspec_type, pulp_type
@@ -167,10 +168,17 @@ class IngestPipeline():
 
   def TransferFile(self):
     self.logger.debug('Starting file transfer')
+    hostname = socket.getfqdn()
+    javacmd = "java"
+    if "lexar" in hostname:
+      javacmd = "/data/java7/jdk1.7.0_55/bin/java"
+
+    ltacppath = "/globalhome/%s/ltacp" % ("ingesttest" if self.ltacpport == 8801 else "ingest")
+    
     if self.PrimaryUri:
-      cmd = ["ssh",  "-T", "ingest@" +self.HostLocation, "cd %s;java -Xmx256m -jar /globalhome/ingest/ltacp/ltacp.jar %s %s %s %s" % (self.LocationDir, self.ltacphost, self.ltacpport, self.PrimaryUri, self.Source)]
+      cmd = ["ssh",  "-T", "ingest@" +self.HostLocation, "cd %s;%s -Xmx256m -cp %s/qpid-properties/lexar001.offline.lofar:%s/ltacp.jar nl.astron.ltacp.client.LtaCp %s %s %s %s" % (self.LocationDir, javacmd, ltacppath, ltacppath, hostname, self.ltacpport, self.PrimaryUri, self.Source)]
     else:
-      cmd = ["ssh",  "-T", "ingest@" + self.HostLocation, "cd %s;java -Xmx256m -jar /globalhome/ingest/ltacp/ltacp.jar %s %s %s/%s %s" % (self.LocationDir, self.ltacphost, self.ltacpport, self.tempPrimary, self.FileName, self.Source)]
+      cmd = ["ssh",  "-T", "ingest@" + self.HostLocation, "cd %s;%s -Xmx256m -cp %s/qpid-properties/lexar001.offline.lofar:%s/ltacp.jar nl.astron.ltacp.client.LtaCp %s %s %s/%s %s" % (self.LocationDir, javacmd, ltacppath, ltacppath, hostname, self.ltacpport, self.tempPrimary, self.FileName, self.Source)]
     ## SecondaryUri handling not implemented
     self.logger.debug(cmd)
     start = time.time()

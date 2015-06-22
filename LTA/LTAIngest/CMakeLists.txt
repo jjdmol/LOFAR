@@ -6,7 +6,7 @@ lofar_package(LTAIngest 0.1) #DEPENDS MessageBus)
 set(LTAINGEST_BUILD_TARGET "test" CACHE STRING "Specify for which specific destination host you want to build LTAIngest.")
 
 message(STATUS "Using LTAINGEST_BUILD_TARGET \"${LTAINGEST_BUILD_TARGET}\".")
-  
+
 #switch with config variables for the various build targets.
 if(LTAINGEST_BUILD_TARGET STREQUAL "lexar")
   set(LTAINGEST_LOG_ROOT_DIR "/log/ingest/")
@@ -165,7 +165,6 @@ python_install(
 	dav/qp_xml.py
 	job_parser.py
 	find_files.py
-	ingest_config_test.py
 	multiprocessing/reduction.py
 	multiprocessing/process.py
 	multiprocessing/queues.py
@@ -267,6 +266,17 @@ set(MOMREADONLY_PASSWORD $ENV{MOMREADONLY_PASSWORD})
 #settings dir for ingest
 set(LTAINGEST_CFG_DIR "${CMAKE_INSTALL_PREFIX}/.ltaingest")
 
+#set various user/passwords from environment
+#mail schaap@astron.nl for a shell script which sets up your build environment with these secret variables
+set(MOMREADONLY_USER $ENV{MOMREADONLY_USER})
+set(MOMREADONLY_PASSWORD $ENV{MOMREADONLY_PASSWORD})
+set(EXPORTCLIENT_USERNAME $ENV{EXPORTCLIENT_USERNAME})
+set(EXPORTCLIENT_PASSWORD $ENV{EXPORTCLIENT_PASSWORD})
+set(MOMCLIENT_USERNAME $ENV{MOMCLIENT_USERNAME})
+set(MOMCLIENT_PASSWORD $ENV{MOMCLIENT_PASSWORD})
+set(LTAURL_USERNAME $ENV{LTAURL_USERNAME})
+set(LTAURL_PASSWORD $ENV{LTAURL_PASSWORD}) 
+
 #configure ingest_config.py.in with the various host and environment specific variables.
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/ingest_config.py.in
@@ -287,8 +297,16 @@ python_install(
   ${CMAKE_CURRENT_BINARY_DIR}/job_group.py
   DESTINATION LTAIngest)
   
-  
-  
+#configure ingest_config_test.py.in with the various host and environment specific variables.
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/ingest_config_test.py.in
+  ${CMAKE_CURRENT_BINARY_DIR}/ingest_config_test.py @ONLY)
+
+#include configured ingest_config_test.py in python install.
+python_install(
+  ${CMAKE_CURRENT_BINARY_DIR}/ingest_config_test.py
+  DESTINATION LTAIngest)
+
 #configure ingest_logrotate.conf.in with @LTAINGEST_LOG_ROOT_DIR@
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/ingest_logrotate.conf.in
