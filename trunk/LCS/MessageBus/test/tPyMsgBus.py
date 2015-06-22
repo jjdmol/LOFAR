@@ -7,7 +7,7 @@
 # but messages won't arrive. We consider that case also in this test.
 #
 
-from lofar.messagebus.msgbus import FromBus, ToBus, MESSAGING_ENABLED
+from lofar.messagebus.messagebus import FromBus, ToBus, MESSAGING_ENABLED
 from lofar.messagebus.message import Message, MessageContent
 
 # Send a message (send MessageContent)
