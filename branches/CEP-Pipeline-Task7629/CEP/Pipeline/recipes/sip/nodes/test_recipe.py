@@ -26,9 +26,8 @@ class test_recipe(LOFARnodeTCP):
         #self.logger.error(argument)
         ##self.environment.update(environment)
 
-        self.outputs["output"] = "****This is output created on the local node ****"
+        self.outputs["output"] = "OUPUT FROM TEST RECIPE"
         self.outputs["status"] = True
-        time.sleep(6)
         ## Time execution of this job
         return 0
 
@@ -38,6 +37,8 @@ if __name__ == "__main__":
     #                        and pass the rest to the run() method defined above
     # --------------------------------------------------------------------------
     jobid, jobhost, jobport = sys.argv[1:4]
-    
     sys.exit(test_recipe(jobid, jobhost, jobport).run_with_stored_arguments())
+
+
+    
 

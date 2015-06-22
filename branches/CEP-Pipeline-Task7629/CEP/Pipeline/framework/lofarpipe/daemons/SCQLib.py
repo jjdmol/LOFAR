@@ -97,8 +97,8 @@ class SCQLib(object):
 
         self._parameterQueueName = busname + "/parameters_" + session_uuid + "_" + job_uuid
 
-        self._logTopicName = busname + "/logging_" + session_uuid
-        self._returnQueueName = busname + "/results_" + session_uuid
+        self._logTopicName = busname + "/log_" + session_uuid
+        self._returnQueueName = busname + "/result_" + session_uuid
         
         self._resultQueue = msgbus.ToBus(self._returnQueueName, 
               broker = self._broker )
@@ -147,13 +147,32 @@ class SCQLib(object):
         include the job dict containing the uuid and job_uuid
         """
         # Create the output dict
-        msg_dict = {'type': 'output',
-                    'output': output}       
-        msg_dict.update(self._job_dict) # add the _job_dict contains uuid etc.
+        payload = {'type': 'output',
+                    'output': output,
+                    'job_msg': self._job_dict}
 
-        msg = CQConfig.create_validated_output_msg(msg_dict, CQConfig.hostname)
-        msg.payload = msg_dict
+
+        msg = self.create_msg(payload)
+
         self._resultQueue.send(msg)
+
+    def create_msg(self, payload):
+        """
+        TODO: should be moved into a shared code lib
+        Creates a minimal valid msg with payload
+        """
+        msg = message.MessageContent(
+                    from_="test",
+                    forUser="",
+                    summary="summary",
+                    protocol="protocol",
+                    protocolVersion="test", 
+                    #momid="",
+                    #sasid="", 
+                    #qpidMsg=None
+                          )
+        msg.payload = payload
+        return msg
 
 def validParameterQueueName(queueName):
       """

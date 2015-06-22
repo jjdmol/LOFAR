@@ -61,7 +61,7 @@ class SubprocessManager(object):
             self._registered_sessions[session_uuid]['jobs'] = {}
 
             # create the queues
-            queues = self._connect_result_log_parameter_queues(session_uuid)
+            queues = self._connect_result_and_log_queues(session_uuid)
             self._registered_sessions[session_uuid]['queues'] = queues
 
         # TODO: WHat happens if the same job_uuid is retrieved twice??
@@ -168,7 +168,7 @@ class SubprocessManager(object):
 
         del self._registered_sessions[session_uuid]['jobs'][job_uuid]
 
-    def _connect_result_log_parameter_queues(self, session_uuid):
+    def _connect_result_and_log_queues(self, session_uuid):
         """
         Creates a temporary named result queue and a topic based on the uuid
         Return the create queue and topic name
@@ -198,19 +198,22 @@ class SubprocessManager(object):
         """
         Sends the two supplied string as log to the correct session_uuid topic
         """
-        payload = {'type':'log',
-                   'level':   "INFO",
-                   'log_data':stdoutdata,
-                   'job_uuid':job_uuid}
-        msg = self.create_msg(payload)
-        self._registered_sessions[session_uuid]['queues']['log'].send(msg)
 
-        payload = {'type':'log',
-                   'level':   "ERROR",
-                   'log_data':stderrdata,
-                   'job_uuid':job_uuid}
-        msg = self.create_msg(payload)
-        self._registered_sessions[session_uuid]['queues']['log'].send(msg)
+        if stdoutdata != "":  # If there is a logline to send
+            payload = {'type':'log',
+                       'level':   "INFO",
+                       'log_data':stdoutdata,
+                       'job_uuid':job_uuid}
+            msg = self.create_msg(payload)
+            self._registered_sessions[session_uuid]['queues']['log'].send(msg)
+
+        if stderrdata != "":  # If there is a logline to send
+            payload = {'type':'log',
+                       'level':   "ERROR",
+                       'log_data':stderrdata,
+                       'job_uuid':job_uuid}
+            msg = self.create_msg(payload)
+            self._registered_sessions[session_uuid]['queues']['log'].send(msg)
 
     def send_job_parameters(self, session_uuid, job_uuid, msg_content):
         """
@@ -246,6 +249,7 @@ class SubprocessManager(object):
         """
 
         """
+
         for session_uuid  in self._registered_sessions.keys():
             jobs = self._registered_sessions[session_uuid]['jobs']
 

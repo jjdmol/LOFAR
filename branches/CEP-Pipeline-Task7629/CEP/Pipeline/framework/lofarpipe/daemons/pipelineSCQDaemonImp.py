@@ -92,6 +92,7 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
 
             # Get the needed information from the msg
             unpacked_msg_data, msg_type  = self._save_unpack_msg(msg)           
+            print unpacked_msg_data
             if not unpacked_msg_data:  # if unpacking did not work
                 self._logger.error(
                     "Could not process deadletter, incorrect content")

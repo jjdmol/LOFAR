@@ -152,7 +152,9 @@ class LOFARnodeTCP(LOFARnode):
         After fetching arguments remotely, use them to run the standard
         run_with_logging() method.
         """
+
         returnvalue = self.run_with_logging(*self.arguments)
+
         self.__send_results()
         return returnvalue
 
@@ -227,6 +229,7 @@ class LOFARnodeTCP(LOFARnode):
         """
 
         if _QPID_ENABLED:               
+
             self._SCQLib.send_results(self.outputs)
             return
         #else:
