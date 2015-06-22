@@ -10,7 +10,7 @@ namespace LOFAR {
   Duration TimeOutDuration(double secs)
   {
     if (secs > 0.0)
-      return (Duration)(1000.0 * secs);
+      return (Duration)(static_cast<uint64_t>(1000.0 * secs));
 
     return Duration::FOREVER;
   }
