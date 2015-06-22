@@ -44,10 +44,14 @@ namespace LOFAR {
 XMLDoc::XMLDoc(const std::string &content)
 {
 #ifdef HAVE_LIBXMLXX
+  itsParser = new DomParser;
+
   try {
-    itsParser.parse_memory(content);
-    itsDocument = itsParser.get_document();
+    itsParser->parse_memory(content);
+    itsDocument = itsParser->get_document();
   } catch(xmlpp::exception &e) {
+    delete itsParser;
+
     THROW(XMLException, "Could not parse XML: " << e.what());
   }
 #else
@@ -58,10 +62,14 @@ XMLDoc::XMLDoc(const std::string &content)
 #ifdef HAVE_LIBXMLXX
 XMLDoc::XMLDoc(const XMLDoc &other)
 {
+  itsParser = new DomParser;
+
   try {
-    itsParser.parse_memory(other.getContent());
-    itsDocument = itsParser.get_document();
+    itsParser->parse_memory(other.getContent());
+    itsDocument = itsParser->get_document();
   } catch(xmlpp::exception &e) {
+    delete itsParser;
+
     THROW(XMLException, "Could not parse XML: " << e.what());
   }
 }
@@ -70,16 +78,33 @@ XMLDoc::XMLDoc(const XMLDoc &other)
 XMLDoc::XMLDoc(const XMLDoc &other, const std::string &key)
 {
 #ifdef HAVE_LIBXMLXX
+  itsParser = 0; 
+  itsDocument = 0;
+
   try {
-    itsParser.parse_memory("<foo />");
-    itsDocument = itsParser.get_document();
+    itsDocument = new Document;
 
     itsDocument->create_root_node_by_import(other.getXMLnode(key));
   } catch(xmlpp::exception &e) {
+    delete itsDocument;
+
     THROW(XMLException, "Could not parse XML: " << e.what());
   }
 #else
   itsDocument = other.getXMLvalue(key);
+#endif
+}
+
+XMLDoc::~XMLDoc()
+{
+#ifdef HAVE_LIBXMLXX
+  if (itsParser != NULL) {
+    // We used a parser, it owns the document
+    delete itsParser;
+  } else {
+    // We own the document
+    delete itsDocument;
+  }
 #endif
 }
 
@@ -203,7 +228,7 @@ Element *XMLDoc::getXMLnode(const string &name) const
   ASSERT(root);
 
   // assume key is an XPath relative to root, see http://www.w3schools.com/xpath/xpath_syntax.asp
-  NodeSet nodeset = root->find("/"+name);
+  NodeSet nodeset = root->find("/" + name);
   if (nodeset.empty()) {
     // Element not found
     THROW(XMLException, "XML element not found: /" << name);

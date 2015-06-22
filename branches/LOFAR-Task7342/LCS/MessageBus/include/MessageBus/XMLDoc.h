@@ -48,6 +48,8 @@ public:
   // Extract a subset from another XML document
   XMLDoc(const XMLDoc &other, const std::string &key);
 
+  ~XMLDoc();
+
   // Return the full document. Note that the content string
   // is possibly generated, and may not be an exact copy
   // of what was provided in the constructor.
@@ -73,7 +75,9 @@ protected:
   // itsParser is the owner of the XML Document and Elements that
   // will be accessed. It takes care of the memory management and
   // thus free all elements at destruction.
-  xmlpp::DomParser itsParser;   // NOTE: non-copyable
+  //
+  // If itsParser == 0, we did not use a parser, and we own itsDocument.
+  xmlpp::DomParser *itsParser;   // NOTE: non-copyable
   xmlpp::Document *itsDocument; // NOTE: non-copyable
 #else
   std::string itsContent;
