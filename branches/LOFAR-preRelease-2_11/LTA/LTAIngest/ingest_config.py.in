@@ -103,7 +103,7 @@ pipelineRetry = 3
 #      lofar-ingest.target.rug.nl:9443
 #      lofar-ingest-test.target.rug.nl:19443
 #
-LTAurl = 'https://@lofar-ingest.target.rug.nl:9443/'
+LTAurl = 'https://@LTAURL_USERNAME@:@LTAURL_PASSWORD@@lofar-ingest.target.rug.nl:9443/'
 try:
   ltaClient = xmlrpclib.ServerProxy(LTAurl)
 except:
@@ -130,11 +130,11 @@ if 'lotar' in host:
 
 try:
   exportClient= mom_http.client(exportLogin, exportStatus, exportLogout)
-  exportClient.username = '' #fill in during build/install
-  exportClient.password = '' #fill in during build/install
+  exportClient.username = '@EXPORTCLIENT_USERNAME@' #fill in during build/install
+  exportClient.password = '@EXPORTCLIENT_PASSWORD@' #fill in during build/install
   momClient = mom_http.client(momURLlogin, momURLgetSIP, momURLlogout)
-  momClient.username = '' #fill in during build/install
-  momClient.password = '' #fill in during build/install
+  momClient.username = '@MOMCLIENT_USERNAME@' #fill in during build/install
+  momClient.password = '@MOMCLIENT_PASSWORD@' #fill in during build/install
 except:
   momClient    = None
   exportClient = None
