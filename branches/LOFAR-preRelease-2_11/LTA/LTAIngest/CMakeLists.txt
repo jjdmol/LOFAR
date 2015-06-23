@@ -265,7 +265,7 @@ set(MOMREADONLY_USER $ENV{MOMREADONLY_USER})
 set(MOMREADONLY_PASSWORD $ENV{MOMREADONLY_PASSWORD})
 
 #settings dir for ingest
-set(LTAINGEST_CFG_DIR "${CMAKE_INSTALL_PREFIX}/.ltaingest")
+set(LTAINGEST_CFG_DIR "${CMAKE_INSTALL_PREFIX}/etc/ltaingest")
 
 #set various user/passwords from environment
 #mail schaap@astron.nl for a shell script which sets up your build environment with these secret variables
