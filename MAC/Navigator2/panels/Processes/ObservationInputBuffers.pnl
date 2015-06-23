@@ -29,6 +29,7 @@ void updateActiveObservations(string dp1, dyn_string obs,
                               string dp2, bool invalid)
 {
 
+  LOG_TRACE(\"ObservationFlow_cobaltInputStreams.pnl:updateActiveObservations| entered\");
   // remove pipelines from the list
   for (int i=dynlen(obs);i > 0;  i--) if (!navFunct_isObservation(obs[i])) dynRemove(obs,i);
   
@@ -82,6 +83,7 @@ void updateActiveObservations(string dp1, dyn_string obs,
 }
 
 void monitorRunStates(dyn_string dpList,dyn_string runStates) {
+  LOG_TRACE(\"ObservationFlow_cobaltInputStreams.pnl:monitorrunstates| entered\");
   for (int i=1; i<= dynlen(runStates); i++) {
     if (runStates[i] == \"Running\" || runStates[i] == \"Quiting\") {
       reload();
@@ -184,6 +186,7 @@ string strModuleName;
 
 
 void clearIBRefNames() {
+  LOG_TRACE(\"ObservationInputBuffers.pnl:clearIBRefNames| entered with nr entries: \"+dynlen(IBRefNames));
   // remove all symbols because new ones will be added
   for (int i=1; i <= dynlen(IBRefNames); i++) {
     removeSymbol(strModuleName,\"\",IBRefNames[i]);
@@ -192,6 +195,7 @@ void clearIBRefNames() {
 }
 
 void redraw() {
+  LOG_TRACE(\"ObservationInputBuffers.pnl:redraw|entered with nr inputBuffers: \"+ dynlen(inputBuffers));
   string barColor = \"_3DFace\";
   if (dynlen(IBRefNames) > 0) {
     clearIBRefNames();
