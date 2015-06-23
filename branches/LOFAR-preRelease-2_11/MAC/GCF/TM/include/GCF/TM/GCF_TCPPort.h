@@ -172,7 +172,7 @@ inline string GCFTCPPort::getHostName()
 	return _host;
 }
 
-inline bool GCFTCPPort::isLocalhost()
+inline bool GCFTCPPort::isLocalhost() const
 {
   // Note: setHostname converts 'localhost' and '' to myHostname(false)
 	return _host == myHostname(false) || _host == myHostname(true);
