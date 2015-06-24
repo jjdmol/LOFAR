@@ -255,14 +255,20 @@ python_install(
 	doc/LTA-SIP.xsd #not a py file, but needed by ingest in python ingest lib dir
   DESTINATION LTAIngest)
 
+#deploy startup scripts in same python ingest lib dir
+#TODO: should be moved to LOFARROOT/bin. Currently probably not possible yet due to unknown dependencies.
+set(STARTUP_SCRIPTS 
+      startup.csh
+      startup_slave.csh
+      startup_target.csh
+      startup_target_test.csh
+      startup_test.csh)
+install(PROGRAMS ${STARTUP_SCRIPTS} DESTINATION ${PYTHON_INSTALL_DIR}/LTAIngest)
+
 #determine LTAINGEST_LOG_ROOT_DIR for various build hosts (used in ingest_config.py.in)
 if(NOT DEFINED LTAINGEST_LOG_ROOT_DIR)
   set(LTAINGEST_LOG_ROOT_DIR "/tmp/ingest/")
 endif()
-
-#get momreadonly account settings from environment
-set(MOMREADONLY_USER $ENV{MOMREADONLY_USER}) 
-set(MOMREADONLY_PASSWORD $ENV{MOMREADONLY_PASSWORD})
 
 #settings dir for ingest
 set(LTAINGEST_CFG_DIR "${CMAKE_INSTALL_PREFIX}/etc/ltaingest")
