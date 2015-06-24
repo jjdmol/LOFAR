@@ -16,6 +16,7 @@ set(ms_PROGRAMS
   combinevds
   makems
   msplay
+  msselect
   msoverview
 )
 
