@@ -280,6 +280,9 @@ set(LTAINGEST_CFG_DIR "${CMAKE_INSTALL_PREFIX}/etc/ltaingest")
 
 #set various user/passwords from environment
 #mail schaap@astron.nl for a shell script which sets up your build environment with these secret variables
+if ("$ENV{MOMREADONLY_USER}" STREQUAL "")
+  message(WARNING "MOMREADONLY_USER not found in environment. Did you source your build environment file?")
+endif()
 set(MOMREADONLY_USER $ENV{MOMREADONLY_USER})
 set(MOMREADONLY_PASSWORD $ENV{MOMREADONLY_PASSWORD})
 set(EXPORTCLIENT_USERNAME $ENV{EXPORTCLIENT_USERNAME})
