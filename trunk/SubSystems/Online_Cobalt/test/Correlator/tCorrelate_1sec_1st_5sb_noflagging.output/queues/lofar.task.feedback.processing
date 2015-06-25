@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <message>
    <header>
       <system>LOFAR</system>
@@ -9,8 +10,8 @@
       <source>
          <name>Cobalt/GPUProc/rtcp</name>
          <user></user>
-         <uuid></uuid>
-         <timestamp></timestamp>
+         <uuid>75fbde01-0ce0-4abd-b45c-72d1aec44c42</uuid>
+         <timestamp>2015-06-25T09:30:21</timestamp>
          <summary>Processing feedback</summary>
       </source>
       <ids>
@@ -18,13 +19,12 @@
          <sasid>76966</sasid>
       </ids>
    </header>
-   <payload>
-Observation.Correlator.channelWidth=12207.03125
+   <payload>Observation.Correlator.channelWidth=12207.03125
 Observation.Correlator.channelsPerSubband=16
 Observation.Correlator.integrationInterval=0.25165824
 Observation.DataProducts.nrOfOutput_Beamformed_=0
 Observation.DataProducts.nrOfOutput_Correlated_=5
 _isCobalt=T
-
-   </payload>
+</payload>
 </message>
+
