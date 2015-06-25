@@ -42,6 +42,7 @@ namespace LOFAR {
  * The template for the LOFAR message format.
  */
 const string LOFAR_MSG_TEMPLATE = "\
+<?xml version=\"1.0\"?>\n\
 <message>\n\
    <header>\n\
       <system></system>\n\
@@ -63,7 +64,8 @@ const string LOFAR_MSG_TEMPLATE = "\
       </ids>\n\
    </header>\n\
    <payload></payload>\n\
-</message>";
+</message>\n\
+";
 
 /*
  * Default settings (for this release)
