@@ -1,4 +1,5 @@
 #include "lofar_config.h"
+#include <Common/LofarTypes.h>
 
 #include "Util.h"
 
@@ -10,7 +11,7 @@ namespace LOFAR {
   Duration TimeOutDuration(double secs)
   {
     if (secs > 0.0)
-      return (Duration)(static_cast<uint64_t>(1000.0 * secs));
+      return (Duration)(static_cast<uint64>(1000.0 * secs));
 
     return Duration::FOREVER;
   }
