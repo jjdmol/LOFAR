@@ -80,10 +80,13 @@ class logTopicHandler(threading.Thread):
         Default polling interval is 10 seconds
         """
         threading.Thread.__init__(self)
+
         self.daemon = True  # run as daemon: thread dies on owner death
         self._broker = broker
         self.logger = logger
         self.stopFlag = logTopicStopFlag    # from 'global' scope
+        # Set it to working (allows re entrant usage of this class)
+        self.stopFlag.clear()
         self._poll_interval = poll_interval       
         self._logTopicName = logTopicName
 
@@ -144,7 +147,6 @@ class logTopicHandler(threading.Thread):
                 self.logger.warning("LogTopic handler received uncaught exception:")
                 self.logger.warning(str(ex))
                 self.logger.warning("Expected behaviour on manual abort")
-                self.logger.warning("Continue with braking loop")
                 
             # sleep
             time.sleep(self._poll_interval)
@@ -184,9 +186,12 @@ class resultQueueHandler(threading.Thread):
         Default polling interval is 10 seconds
         """
         threading.Thread.__init__(self)
+        self.daemon = True  # Kill thread when the owned dies
         self._broker = broker
         self.logger = logger
         self.stopFlag = resultQueueStopFlag    # from 'global' scope
+        # unset the stopflag, allows re entrant usage of the class
+        self.stopFlag.clear()
         self.poll_interval = poll_interval
 
         self._resultQueueName = resultQueueName
@@ -205,13 +210,14 @@ class resultQueueHandler(threading.Thread):
         """
         Parse return messages 
         """
+
+
         # get the data from the msg
         type = msg_content['type']
         self.logger.debug("Result for: {0}".format(msg_content['job_uuid']))
         if type == 'exit_value':
             exit_value = msg_content['exit_value']
             self.logger.debug("exit_value: {0}".format(exit_value))
-            uuid = msg_content['uuid']
             job_uuid = msg_content['job_uuid']
 
             with self._running_jobs_lock:
@@ -220,7 +226,6 @@ class resultQueueHandler(threading.Thread):
         elif type == 'output':
             output = msg_content['output']
             self.logger.info("output: {0}".format(output))
-            uuid = msg_content['uuid']
             job_uuid = msg_content['job_uuid']
 
             with self._running_jobs_lock:
@@ -234,15 +239,18 @@ class resultQueueHandler(threading.Thread):
         While no stopflag is set:
         sleep for poll_interval
         """
+        
         while not self.stopFlag.isSet():
-            self.logger.debug("Polling resultQueue: {0}".format(
-                                                   self._resultQueueName))
 
-            # reset the counter to zero, and restart the wait period
-            self.poll_counter = 0       
-            # now empty the queue
-            while True:
-                try:
+            try:
+                self.logger.debug("Polling resultQueue: {0}".format(
+                                                       self._resultQueueName))
+
+                # reset the counter to zero, and restart the wait period
+                self.poll_counter = 0       
+                # now empty the queue
+                while True:
+
                     # get is blocking, always use timeout.
                     msg = self._resultQueue.get(0.2)  
                     if msg == None:
@@ -252,21 +260,26 @@ class resultQueueHandler(threading.Thread):
                     msg_content = eval(msg.content().payload)
                     self._process_queue_message(msg_content)
                     self._resultQueue.ack(msg)
-                except:
-                    pass
 
-            time.sleep(self.poll_interval)
+            except Exception, ex:
+                self.logger.warning("Results handler received uncaught exception:")
+                self.logger.warning(str(ex))
+                self.logger.warning("Expected behaviour on manual abort")
+
+                time.sleep(self.poll_interval)
  
     def setStopFlag(self):
         """
         Stop the monitor
         """
         self.stopFlag.set()
+        self._resultQueue.close()
 
     def __del__(self):
         """
         """
-        self._resultQueue.close()
+        pass
+
 
 
 class MCQLib(object):

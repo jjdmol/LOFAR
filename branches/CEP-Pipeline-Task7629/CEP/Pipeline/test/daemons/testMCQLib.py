@@ -5,12 +5,13 @@
 #import os
 #import logging
 #import time
-#import threading 
+
 #import pwd
 #import socket  # needed for username TODO: is misschien een betere manier os.environ['USER']
 #import signal
 import time
 import unittest
+import threading 
 
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
@@ -99,52 +100,112 @@ class testMCQLib(unittest.TestCase):
         logHandler.setStopFlag()
 
 
-    #def test_logtopic_handler(self):
-    #    # TODO: Add test that the loglines are send to logging:
-    #    #      test the _process_log_message member
-    #    busname = "testmcqdaemon"
-    #    broker = "locus102"
-    #    logger = logging.getLogger("testMCQLib")
-    #    logTopicName = busname + "/resultsqueuehandler"
+    def test_results_handler(self):
+        # TODO: Add test that the loglines are send to logging:
+        #      test the _process_log_message member
+        busname = "testmcqdaemon"
+        broker = "locus102"
+        logger = logging.getLogger("testMCQLib")
+        resultsQueueName = busname + "/resultsqueuehandler1"
         
-    #    #Wrapper to catch the call to the handler functioinality
-    #    class resultQueueHandlerrWrapper(MCQLib.logTopicHandler):
-    #        def __init__(self,broker, resultQueueName, 
-    #             running_jobs, 
-    #             running_jobs_lock, 
-    #             logger=None, 
-    #             poll_interval=1.0):
-    #            super(resultQueueHandlerrWrapper, self).__init__(
-    #                      broker,resultQueueName,
-    #                      running_jobs, running_jobs_lock,
-    #                      logger,  poll_interval)
+        #Wrapper to catch the call to the handler functioinality
+        class resultQueueHandlerrWrapper(MCQLib.resultQueueHandler):
+            def __init__(self,broker, resultQueueName, 
+                 running_jobs, 
+                 running_jobs_lock, 
+                 logger=None, 
+                 poll_interval=1.0):
+                super(resultQueueHandlerrWrapper, self).__init__(
+                          broker,resultQueueName,
+                          running_jobs, running_jobs_lock,
+                          logger,  poll_interval)
 
-    #            self._process_queue_message_called = False
-    #            self._msg_payload = None
+                self._process_queue_message_called = False
+                self._msg_payload = None
 
-    #        def _process_queue_message(self, msg_content):
-    #            self._process_queue_message_called = True
-    #            self._msg_payload = msg_content
+            def _process_queue_message(self, msg_content):
+                self._process_queue_message_called = True
+                self._msg_payload = msg_content
 
+        # We need a jobs dict and the lock
+        running_jobs = {}
+        running_jobs_lock = threading.Lock()
         
-    #     # create wrapped handler
-    #    logHandler = logTopicHandlerWrapper(broker, logTopicName, logger,1.0)
+         # create wrapped handler
+        resulthandler = resultQueueHandlerrWrapper(broker, resultsQueueName,
+                            running_jobs, running_jobs_lock,
+                            logger,1.0)
         
-    #    logHandler.start()  # start the thread
+        resulthandler.start()  # start the thread
         
-    #    # create a to bus and send log msg        
-    #    logToBus = msgbus.ToBus(logTopicName, broker = broker)
+        # create a to bus and send log msg        
+        resultsQueue= msgbus.ToBus(resultsQueueName, broker = broker)
 
-    #    payload = {'level': 'ERROR',
-    #               'sender': 'STATIC HOSTNAME',
-    #               'log_data': 'Send using qpid'}
-    #    msg = create_msg(payload)
-    #    logToBus.send(msg)
+        payload = {'type': 'exit_value',
+                   'exit_value': -1,
+                   'job_uuid': '123456'}
 
-    #    # allow some time for the msg to arrive
-    #    time.sleep(0.1)  
-    #    self.assertEqual(logHandler._log_payload, payload)
-    #    logHandler.setStopFlag()
+        msg = create_msg(payload)
+        resultsQueue.send(msg)
+
+        ### allow some time for the msg to arrive
+        time.sleep(0.1)  
+        self.assertEqual(resulthandler._msg_payload, payload)
+        resulthandler.setStopFlag()
+
+
+    def test_results_handler_exit_output(self):
+        # TODO: Add test that the loglines are send to logging:
+        #      test the _process_log_message member
+        busname = "testmcqdaemon"
+        broker = "locus102"
+        logger = logging.getLogger("testMCQLib")
+        resultsQueueName = busname + "/resultsqueuehandler"
+       
+        # We need a jobs dict and the lock
+        
+        job_uuid = "123456"
+
+        running_jobs = {job_uuid:{}}
+        running_jobs_lock = threading.Lock()
+        
+         # create wrapped handler
+        resulthandler = MCQLib.resultQueueHandler(broker, resultsQueueName,
+                            running_jobs, running_jobs_lock,
+                            logger,0.5)
+        
+        resulthandler.start()  # start the thread
+
+        # we need to send msgs to the handler        
+        resultsQueue= msgbus.ToBus(resultsQueueName, broker = broker)
+
+        payload = {'type': 'exit_value',
+                   'exit_value': -1,
+                   'job_uuid': job_uuid}
+
+        msg = create_msg(payload)
+        resultsQueue.send(msg)
+        time.sleep(2)
+
+        # THe exit value should have been added to the running jobs dict
+
+        self.assertEqual({job_uuid:{"exit_value":-1}}, running_jobs)
+
+        ## allow some time for the msg to arrive
+        payload = {'type': 'output',
+                   'output': "some data",
+                   'job_uuid': job_uuid}
+
+        msg = create_msg(payload)
+        resultsQueue.send(msg)
+        time.sleep(2)          
+        self.assertEqual({job_uuid:{
+                            "exit_value":-1,
+                            "output":"some data"}},
+                         running_jobs)
+
+
+        resulthandler.setStopFlag()
 
 
 if __name__ == "__main__":
