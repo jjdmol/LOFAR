@@ -20,11 +20,15 @@
   <ItemGroup>
     <Content Include="CMakeLists.txt" />
     <Content Include="framework\CMakeLists.txt" />
+    <Compile Include="framework\lofarpipe\daemons\MCQLib.py" />
     <Compile Include="framework\lofarpipe\daemons\pipelineMCQDaemon.py" />
     <Compile Include="framework\lofarpipe\daemons\pipelineMCQDaemonImp.py" />
     <Compile Include="framework\lofarpipe\daemons\pipelineSCQDaemon.py" />
     <Compile Include="framework\lofarpipe\daemons\pipelineSCQDaemonImp.py" />
-    <Compile Include="framework\lofarpipe\daemons\subprocessStarter.py" />
+    <Compile Include="framework\lofarpipe\daemons\SCQLib.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="framework\lofarpipe\daemons\subprocessManager.py" />
     <Compile Include="framework\lofarpipe\daemons\__init__.py" />
     <Compile Include="framework\lofarpipe\process_monitoring\example\example.py" />
     <Compile Include="framework\lofarpipe\process_monitoring\example\script.py" />
@@ -48,8 +52,18 @@
     <Compile Include="recipes\sip\nodes\long_baseline.py" />
     <Compile Include="recipes\sip\nodes\test_recipe.py" />
     <Compile Include="test\daemons\CQDaemonTestFunctions.py" />
+    <Compile Include="test\daemons\testMCQLib.py" />
+    <Compile Include="test\daemons\testSCQLib.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="test\daemons\testNodeRecipeStart.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="test\daemons\testPipelineMCQDaemon.py" />
     <Compile Include="test\daemons\testPipelineSCQDaemon.py" />
+    <Compile Include="test\daemons\testSubprocessManager.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="test\daemons\__init__.py" />
     <Compile Include="test\__init__.py" />
     <Compile Include="deploy\deprecated\fabfile.py" />

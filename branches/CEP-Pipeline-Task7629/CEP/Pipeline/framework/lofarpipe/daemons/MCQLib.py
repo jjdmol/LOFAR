@@ -27,8 +27,6 @@ import pickle
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message   # thread stop handlers break if
                                              # this line is removed.. TODO
-from qmf.console import Session as QMFSession
-import lofar.messagebus.CQConfig as CQConfig
 
 # Handler for stopping the logTopicHandler and signalling the master that the
 # session has ended
@@ -72,25 +70,27 @@ class logTopicHandler(threading.Thread):
     usage:
     After initiation it must be started using the start() method
     setStopFlag() stops the forwarder
+
+    TODO: Candidate to move to LCS
     """
-    def __init__(self, logTopicName, logger=None,  poll_interval=1.0):
+    def __init__(self, broker,logTopicName, logger=None,  poll_interval=1.0):
         """
         Create the usage stat object. Create events for starting and stopping.
         By default the Process creating the object is tracked.
         Default polling interval is 10 seconds
         """
         threading.Thread.__init__(self)
+        self.daemon = True  # run as daemon: thread dies on owner death
+        self._broker = broker
         self.logger = logger
         self.stopFlag = logTopicStopFlag    # from 'global' scope
         self._poll_interval = poll_interval       
         self._logTopicName = logTopicName
 
         self.logger.debug(
-              "Connecting to session specific logTopic: {0}".format(
-                                                           self._logTopicName))
+              "Connecting to logTopic: {0}".format(self._logTopicName))
         self._logTopic = msgbus.FromBus(self._logTopicName, 
-            options = "create:always, node: { type: topic, durable: True}",
-            broker = CQConfig.broker)
+            broker = self._broker)
 
     def _process_log_message(self, msg_content):
         """
@@ -122,22 +122,30 @@ class logTopicHandler(threading.Thread):
         a. Listen for log lines, process and ack
         b. sleep for poll_interval
         """
-        while not self.stopFlag.isSet():            
-            # reset the counter to zero, and restart the wait period
-            self.logger.debug("Polling logTopic")
+        while not self.stopFlag.isSet():           
+            try: 
+              # reset the counter to zero, and restart the wait period
+              self.logger.debug("Polling logTopic")
 
-            # now empty the queue
-            while True:
-                # get is blocking, always use timeout.
-                msg = self._logTopic.get(0.1)  
-                if msg == None:
-                    break   # break the loop
+              # now empty the queue
+              while True:
+                  # get is blocking, always use timeout.
+                  msg = self._logTopic.get(0.1)  
+                  if msg == None:
+                      break   # break the loop
 
-                # process the log data
-                msg_content = eval(msg.content().payload)
-                self._process_log_message(msg_content)
-                self._logTopic.ack(msg)
+                  # process the log data
+                  msg_content = eval(msg.content().payload)
+                  self._process_log_message(msg_content)
+                  self._logTopic.ack(msg)
 
+            # Catch all exception!!!!!
+            except Exception, ex:
+                self.logger.warning("LogTopic handler received uncaught exception:")
+                self.logger.warning(str(ex))
+                self.logger.warning("Expected behaviour on manual abort")
+                self.logger.warning("Continue with braking loop")
+                
             # sleep
             time.sleep(self._poll_interval)
  
@@ -146,31 +154,37 @@ class logTopicHandler(threading.Thread):
         Stop the monitor
         """
         self.stopFlag.set()
+        self._logTopic.close()
 
     def __del__(self):
         """
         """
-        self._logTopic.close()
+        pass
+        #self._logTopic.close()
 
 class resultQueueHandler(threading.Thread):
     """
-    Class used for listening to a log topic
+    Class used for listening to a results queue
+
+    It retrieves the job id from the msg and inserts the results msg details
+    in running_jobs dict. Inserts are performed in a lock
 
     usage:
     After initiation it must be started using the start() method
     setStopFlag() stops the forwarder
     """
-    def __init__(self, resultQueueName, 
+    def __init__(self,broker, resultQueueName, 
                  running_jobs, 
                  running_jobs_lock, 
                  logger=None, 
                  poll_interval=1.0):
         """
-        Create the usage stat object. Create events for starting and stopping.
+        Create the results handler. Create events for starting and stopping.
         By default the Process creating the object is tracked.
         Default polling interval is 10 seconds
         """
         threading.Thread.__init__(self)
+        self._broker = broker
         self.logger = logger
         self.stopFlag = resultQueueStopFlag    # from 'global' scope
         self.poll_interval = poll_interval
@@ -180,8 +194,7 @@ class resultQueueHandler(threading.Thread):
               "Connecting to session specific resultQueue: {0}".format(
                                          self._resultQueueName))
         self._resultQueue = msgbus.FromBus(self._resultQueueName, 
-            options = "create:always, node: { type: queue, durable: False}",
-            broker = CQConfig.broker)
+            broker = self._broker)
         self.logger.debug("COnnection with resultQueue established")
 
         # Unique for the result queue handler
@@ -269,11 +282,12 @@ class MCQLib(object):
       b. Connect to queues 
 
     """
-    def __init__(self, logger):
+    def __init__(self, logger, broker, busname):
         # Each MCQDaemonLib triggers a session with a uuid, generate and store
         # as a hex
         self.logger = logger
-
+        self._broker = broker
+        self._busname = busname
         # It is the dict that 'owns' the session information, the container
         # for state information
         self._running_jobs = {}
@@ -281,11 +295,9 @@ class MCQLib(object):
 
         # some static information for this session
         self._sessionUUID = uuid.uuid4().hex
-        self._returnQueueName = CQConfig.create_returnQueue_name(
-                                                          self._sessionUUID)
-        self._logTopicName = CQConfig.create_logTopic_name(self._sessionUUID)
-        self._masterCommandQueueName = \
-                      CQConfig.create_masterCommandQueue_name()
+        self._returnQueueName = self._busname + "/result_" + self._sessionUUID
+        self._logTopicName = self._busname +"/log_" + self._sessionUUID
+        self._masterCommandQueueName = self._busname + "/pipelineMasterCommandQueue"
 
         # Place holders of the queues owned by the lib
         self._resultQueue = None
@@ -296,7 +308,7 @@ class MCQLib(object):
 
         # Send a start session command with the correct details to the
         # HCQDaemon
-        self._send_start_session_to_daemon()
+        #self._send_start_session_to_daemon()
 
         self._start_log_and_result_handlers()
 
@@ -307,10 +319,11 @@ class MCQLib(object):
         """
         # Start the log poller (in a seperate thread).
         # If we receive a SIGTERM, shut down processing.       
-        self._logTopicForwarder = logTopicHandler(self._logTopicName,
+        self._logTopicForwarder = logTopicHandler(self._broker, self._logTopicName,
                    self.logger)
 
-        self._resultQueueForwarder = resultQueueHandler(self._returnQueueName,
+        self._resultQueueForwarder = resultQueueHandler(
+                   self._broker, self._returnQueueName,
                    self._running_jobs , self._running_jobs_lock, self.logger)
 
         # Register correct handlers for killing the threads
@@ -344,40 +357,13 @@ class MCQLib(object):
         self.logger.info("Connection to masterCommandQueue:{0}".format(
                                        masterCommandQueueName))
         self._masterCommandQueue = msgbus.ToBus(masterCommandQueueName, 
-            options = "create:always, node: { type: queue, durable: True}",
-            broker = CQConfig.broker)
+            broker = self._broker)
 
+        # Send and wait for acknoledge on a connection msg
         # Check for consumers: We need to know if the deamon is active before
         # we can send commands
-        session=QMFSession()
-        session.addBroker(CQConfig.broker) 
-        queues = session.getObjects(_class="queue",
-                                    _package="org.apache.qpid.broker")
-
-        nr_consumers_of_CQ = None
-        for queue_item in queues:
-            if self._masterCommandQueueName in queue_item.name :
-                nr_consumers_of_CQ = queue_item.consumerCount
-                break # We have the info we need, break the loop over all queues
-
-        if nr_consumers_of_CQ == None:
-            raise Exception("Could not find command queue, is QPID enabled?")
-
-        if nr_consumers_of_CQ == 0:
-            raise Exception("No HeadNodeCommandQueueDaemon detected, aborting"
-                            " A MasterDaemon should be active.")
-
+        # TODO Implement
         self.logger.debug("Connection established and Master is active")
-
-
-    def _send_start_session_to_daemon(self):
-        """
-        Send a register session command to the MCQDaemon
-        """
-        payload = {"command":"start_session", "uuid":self._sessionUUID}
-        msg = CQConfig.create_start_session_msg(
-                payload, "MCQLib", 'MCQDaemon')  
-        self._masterCommandQueue.send(msg)
 
 
     def __del__(self):
@@ -402,7 +388,7 @@ class MCQLib(object):
 
         # Send MCQDaemon that we are stopping
         payload = {"command":"stop_session", "uuid":self._sessionUUID}
-        msg =CQConfig.create_stop_session_msg(payload, 'MCQLib','MCQDaemon')      
+        msg =self.create_msg(payload)      
         self._masterCommandQueue.send(msg)
 
     def set_killswitch(self, killswitch):
@@ -443,7 +429,7 @@ class MCQLib(object):
                        'job_uuid':job_uuid,
                        "parameters":job_parameters}
 
-            msg = CQConfig.create_run_job_msg(payload, 'MCQLib','MCQDaemon')       
+            msg = self.create_msg(payload)       
             self._masterCommandQueue.send(msg)
             with self._running_jobs_lock:
                 self._running_jobs[job_uuid] = {'payload':copy.deepcopy(msg.payload),
@@ -479,3 +465,21 @@ class MCQLib(object):
 
 
         return self._running_jobs[job_uuid]['exit_value']
+
+    def create_msg(self, payload):
+        """
+        TODO: should be moved into a shared code lib
+        Creates a minimal valid msg with payload
+        """
+        msg = message.MessageContent(
+                    from_="test",
+                    forUser="",
+                    summary="summary",
+                    protocol="protocol",
+                    protocolVersion="test", 
+                    #momid="",
+                    #sasid="", 
+                    #qpidMsg=None
+                          )
+        msg.payload = payload
+        return msg

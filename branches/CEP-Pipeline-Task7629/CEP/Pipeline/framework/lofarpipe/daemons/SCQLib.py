@@ -42,6 +42,9 @@ def create_msg(payload):
         return msg
 
 class QPIDLoggerHandler(logging.Handler):
+    """
+    TODO: Candidate to move to LCS
+    """
     def __init__(self, broker, logTopicName):
         """
         INit function connects to the QPID logging topic supplied
