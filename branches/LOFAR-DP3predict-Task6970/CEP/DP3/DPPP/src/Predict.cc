@@ -102,7 +102,7 @@ namespace LOFAR {
     {
       info() = infoIn;
       info().setNeedVisData();
-      info().setNeedWrite();
+      info().setWriteData();
 
       uint nBl=info().nbaselines();
       for (uint i=0; i<nBl; ++i) {
@@ -175,8 +175,8 @@ namespace LOFAR {
       itsBuffer.copy (bufin);
       Complex* data=itsBuffer.getData().data();
       itsInput->fetchUVW(bufin, itsBuffer, itsTimer);
-      itsInput->fetchWeights(bufin, itsBuffer, itsTimer);
-      itsInput->fetchFullResFlags(bufin, itsBuffer, itsTimer);
+      ///??      itsInput->fetchWeights(bufin, itsBuffer, itsTimer);
+      ///??itsInput->fetchFullResFlags(bufin, itsBuffer, itsTimer);
 
       // Determine the various sizes.
       //const size_t nDr = itsPatchList.size();

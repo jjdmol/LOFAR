@@ -123,7 +123,8 @@ namespace LOFAR {
       } else {
         itsPredictStep.updateInfo(infoIn);
       }
-      info().setNeedWrite();
+      info().setWriteData();
+      info().setWriteFlags();
 
       for (uint i=0; i<nBl; ++i) {
         itsBaselines.push_back (Baseline(info().getAnt1()[i],

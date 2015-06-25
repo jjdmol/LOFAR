@@ -1,5 +1,5 @@
-//# GainCal.cc: DPPP step class to ApplyBeam visibilities
-//# Copyright (C) 2013
+//# ApplyBeam.cc: DPPP step class to ApplyBeam visibilities
+//# Copyright (C) 2015
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -29,25 +29,16 @@
 #include <Common/ParameterSet.h>
 #include <Common/Timer.h>
 #include <Common/OpenMP.h>
-#include <ParmDB/ParmDBMeta.h>
-#include <ParmDB/PatchInfo.h>
 #include <DPPP/DPInfo.h>
 #include <DPPP/FlagCounter.h>
 #include <DPPP/Position.h>
-#include <DPPP/Simulator.h>
-#include <DPPP/Simulate.h>
-
-#include <DPPP/Stokes.h>
-#include <DPPP/PointSource.h>
-#include <DPPP/GaussianSource.h>
-#include <ParmDB/SourceDB.h>
 
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
+#include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MeasConvert.h>
-#include <tables/Tables/RefRows.h>
 
 #include <stddef.h>
 #include <string>
@@ -84,13 +75,7 @@ namespace LOFAR {
     {
       info() = infoIn;
       info().setNeedVisData();
-      info().setNeedWrite();
-
-      uint nBl = info().nbaselines();
-      for (uint i = 0; i < nBl; ++i) {
-        itsBaselines.push_back(
-            Baseline(info().getAnt1()[i], info().getAnt2()[i]));
-      }
+      info().setWriteData();
 
       MDirection dirJ2000(
           MDirection::Convert(infoIn.phaseCenter(), MDirection::J2000)());
@@ -100,10 +85,6 @@ namespace LOFAR {
 
       const size_t nSt = info().nantenna();
       const size_t nCh = info().nchan();
-
-      itsUVW.resize(3, nSt);
-      itsUVWSplitIndex = nsetupSplitUVW(info().nantenna(), info().getAnt1(),
-                                        info().getAnt2());
 
       itsBeamValues.resize(OpenMP::maxThreads());
 
@@ -129,7 +110,7 @@ namespace LOFAR {
     {
       os << "ApplyBeam " << itsName << endl;
       os << "  use channelfreq:   " << boolalpha << itsUseChannelFreq << endl;
-      os << "  threads:            " << OpenMP::maxThreads() << endl;
+      os << "  invert:            " << boolalpha << itsInvert << endl;
     }
 
     void ApplyBeam::showTimings(std::ostream& os, double duration) const
@@ -144,14 +125,8 @@ namespace LOFAR {
       itsTimer.start();
       itsBuffer.copy (bufin);
       Complex* data=itsBuffer.getData().data();
-      itsInput->fetchUVW(bufin, itsBuffer, itsTimer);
-
 
       double time = itsBuffer.getTime();
-
-      itsTimer.start();
-
-      nsplitUVW(itsUVWSplitIndex, itsBaselines, itsBuffer.getUVW(), itsUVW);
 
       //Set up directions for beam evaluation
       StationResponse::vector3r_t refdir, tiledir;
@@ -167,13 +142,10 @@ namespace LOFAR {
 
       uint thread = OpenMP::threadNum();
 
-      //Apply beam for a patch, add result to itsModelVis
       StationResponse::vector3r_t srcdir = refdir;
       applyBeam(info(), time, data, srcdir, refdir, tiledir,
                 itsAntBeamInfo[thread], itsBeamValues[thread],
                 itsUseChannelFreq, itsInvert);
-
-      itsTimer.stop();
 
       itsTimer.stop();
       getNextStep()->process(itsBuffer);
