@@ -39,6 +39,7 @@ python_install(
   daemons/pipelineSCQDaemonImp.py
   daemons/subprocessManager.py
   daemons/SCQLib.py
+  daemons/MCQLib.py
   DESTINATION lofarpipe)
 
   install(PROGRAMS
