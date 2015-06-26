@@ -86,7 +86,7 @@ int main(int argc, char **argv)
     "Cobalt/GPUProc/send_state",
     "",
     "State feedback",
-    str(format("%s") % parset.getString("Observation.momID")),
+    str(format("%s") % parset.getString("Observation.momID", "-1")),
     str(format("%s") % parset.getString("Observation.ObsID")),
     success);
 
