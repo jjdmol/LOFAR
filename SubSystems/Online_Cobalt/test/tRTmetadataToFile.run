@@ -14,7 +14,6 @@ trap 'kill -9 $gwPid $sbPid; mv "$LOFARROOT/etc/PVSSGatewayStub.conf.backup" "$L
   SIGTERM SIGINT SIGQUIT SIGHUP
 
 # Start ServiceBroker (if not already running) and PVSSGatewayStub.
-# They need time to (re)connect, but the necessary sleep time is in ~RTmetadata().
 if ps -e | grep [S]erviceBroker > /dev/null; then
   echo 'WARNING: Did not attempt to start ServiceBroker: already running. Hopefully it works and does not suddenly exit.' >&2
   sbPid=0  # don't try to kill it afterwards
@@ -25,6 +24,10 @@ fi
 
 PVSSGatewayStub &
 gwPid=$!
+
+# Wait until both services allow connections. This is faster than delaying ~RTmetadata(),
+# since we do binary backoff connection attempts. This also keeps the delay in testing only.
+sleep 2  # often 2 is enough, but when idle, even 5 may not be enough :((((
 
 ../../../MAC/MACIO/test/tRTmetadata > /dev/null  # logging disrupts output verif
 
