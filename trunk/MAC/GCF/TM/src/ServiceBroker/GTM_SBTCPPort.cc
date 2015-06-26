@@ -80,16 +80,21 @@ bool GTMSBTCPPort::open()
         return (false);
     }
 
-    // set to non-blocking 
-    _pSocket->setBlocking(false);
+    // set to non-blocking
+    //
+    // BLOCK on localhost, to speed up connecting. The polling timers are quite slow,
+    // and some scripts need many connections in sequence.
+    if (!isLocalhost()) {
+      _pSocket->setBlocking(false);
+    }
 
 	switch (_pSocket->connect(sbPortNumber, getHostName())) {
 	case -1: _handleDisconnect();  break; 
 	case 0:		// in progress
-		LOG_INFO_STR("GTMSBTCPPort:connect(" << getHostName() << ") still in progress");
+		LOG_DEBUG_STR("GTMSBTCPPort:connect(" << getHostName() << ") still in progress");
 		if (!itsConnectTimer) {
 //			itsConnectTimer = setTimer(*this, (uint64)(1000000.0), (uint64)(1000000.0), &itsConnectTimer);
-			itsConnectTimer = setTimer(1.0, 1.0, &itsConnectTimer);
+			itsConnectTimer = setTimer(0.2, 0.2, &itsConnectTimer);
 		}
 		break;
 	case 1: 
