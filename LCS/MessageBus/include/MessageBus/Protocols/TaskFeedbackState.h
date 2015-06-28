@@ -83,8 +83,8 @@ public:
 
   void addPayloadProperties()
   {
-    type.attach (&itsContent, "message/payload/task/type");
-    state.attach(&itsContent, "message/payload/task/state");
+    type.attach (this, "message/payload/task/type");
+    state.attach(this, "message/payload/task/state");
   }
 };
 

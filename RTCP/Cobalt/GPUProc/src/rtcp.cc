@@ -52,8 +52,7 @@
 #include <Common/SystemUtil.h>
 #include <Common/StringUtil.h>
 #include <Common/Thread/Trigger.h>
-#include <MessageBus/MessageBus.h>
-#include <MessageBus/ToBus.h>
+#include <MessageBus/MsgBus.h>
 #include <MessageBus/Protocols/TaskFeedbackProcessing.h>
 #include <ApplCommon/PVSSDatapointDefs.h>
 #include <ApplCommon/StationInfo.h>

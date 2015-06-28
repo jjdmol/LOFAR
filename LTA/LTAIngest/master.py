@@ -264,19 +264,24 @@ class queueHandler(Process):
   
   def run(self):
     while True: 
-      sleep = True
       try:
-        msg   = self.update_job_msg.get_nowait()
-        sleep = False
-        self.update_job(msg[0], msg[1], msg[2], msg[3])
-      except Empty: pass
-      try:
-        fileName = self.incomming.get_nowait()
-        sleep    = False
-        self.newJob(fileName)
-      except Empty: pass
-      if sleep: ## nothing to do, time for a nap.
-        time.sleep(10)
+        sleep = True
+        try:
+          msg   = self.update_job_msg.get_nowait()
+          sleep = False
+          self.update_job(msg[0], msg[1], msg[2], msg[3])
+        except Empty: pass
+        try:
+          fileName = self.incomming.get_nowait()
+          sleep    = False
+          self.newJob(fileName)
+        except Empty: pass
+        if sleep: ## nothing to do, time for a nap.
+          time.sleep(10)
+      except Exception as e:
+        self.logger.error("Exception in queueHandler main loop: %s" % e)
+        time.sleep(250)
+
 
 
 ## Startup ----------------------------------------------------------

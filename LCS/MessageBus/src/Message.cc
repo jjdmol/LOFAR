@@ -33,16 +33,21 @@
 #include <qpid/types/Uuid.h>
 #endif
 
+#ifdef HAVE_LIBXMLXX
+#include <sstream>
+#include <libxml++/parsers/domparser.h>
+#include <libxml++/nodes/textnode.h>
+
+using namespace xmlpp;
+#endif
+
 #include <time.h>
+
 
 namespace LOFAR {
   using namespace StringUtil;
 
-/*
- * The template for the LOFAR message format.
- */
 const string LOFAR_MSG_TEMPLATE = "\
-<?xml version=\"1.0\"?>\n\
 <message>\n\
    <header>\n\
       <system></system>\n\
@@ -64,18 +69,8 @@ const string LOFAR_MSG_TEMPLATE = "\
       </ids>\n\
    </header>\n\
    <payload></payload>\n\
-</message>\n\
-";
+</message>";
 
-/*
- * Default settings (for this release)
- */
-const std::string MessageContent::Defaults::system = "LOFAR";
-const std::string MessageContent::Defaults::headerVersion = "1.0.0";
-
-/*
- * Generated settings
- */
 static string _timestamp() {
   // Get now (in seconds since epoch)
   time_t now = time(NULL);
@@ -98,26 +93,24 @@ static string _uuid() {
 }
 
 MessageContent::MessageContent()
-:
-  itsContent(LOFAR_MSG_TEMPLATE)
 {
+  initContent(LOFAR_MSG_TEMPLATE);
   addProperties();
 }
 
 MessageContent::MessageContent(const std::string &from,
-                 const std::string &forUser,
-                 const std::string &summary,
-                 const std::string &protocol,
-                 const std::string &protocolVersion,
-                 const std::string &momid,
-                 const std::string &sasid)
-:
-  itsContent(LOFAR_MSG_TEMPLATE)
+				 const std::string &forUser,
+				 const std::string &summary,
+				 const std::string &protocol,
+				 const std::string &protocolVersion,
+				 const std::string &momid,
+				 const std::string &sasid)
 {
+  initContent(LOFAR_MSG_TEMPLATE);
   addProperties();
 
-  this->system          = Defaults::system;
-  this->headerVersion   = Defaults::headerVersion;
+  this->system          = LOFAR::system;
+  this->headerVersion   = LOFAR::headerVersion;
 
   this->protocol        = protocol;
   this->protocolVersion = protocolVersion;
@@ -131,9 +124,8 @@ MessageContent::MessageContent(const std::string &from,
 }
 
 MessageContent::MessageContent(const qpid::messaging::Message &qpidMsg)
-:
-  itsContent(qpidMsg.getContent())
 {
+  initContent(qpidMsg.getContent());
   addProperties();
 }
 
@@ -142,37 +134,50 @@ MessageContent::~MessageContent()
 }
 
 MessageContent::MessageContent(const MessageContent &other)
-:
-  itsContent(other.itsContent)
 {
+  initContent(other.getContent());
   addProperties();
+}
+
+void MessageContent::initContent(const std::string &content)
+{
+#ifdef HAVE_LIBXMLXX
+  itsParser.parse_memory(content);
+  itsDocument = itsParser.get_document();
+#else
+  itsContent = content;
+#endif
 }
 
 std::string MessageContent::getContent() const
 {
-  return itsContent.getContent();
+#ifdef HAVE_LIBXMLXX
+  return itsDocument->write_to_string_formatted();
+#else
+  return itsContent;
+#endif
 }
 
 void MessageContent::addProperties()
 {
-  system         .attach(&itsContent, "message/header/system");
-  headerVersion  .attach(&itsContent, "message/header/version");
+  system         .attach(this, "message/header/system");
+  headerVersion  .attach(this, "message/header/version");
 
-  protocol       .attach(&itsContent, "message/header/protocol/name");
-  protocolVersion.attach(&itsContent, "message/header/protocol/version");
+  protocol       .attach(this, "message/header/protocol/name");
+  protocolVersion.attach(this, "message/header/protocol/version");
 
-  name           .attach(&itsContent, "message/header/source/name");
-  user           .attach(&itsContent, "message/header/source/user");
-  uuid           .attach(&itsContent, "message/header/source/uuid");
+  name           .attach(this, "message/header/source/name");
+  user           .attach(this, "message/header/source/user");
+  uuid           .attach(this, "message/header/source/uuid");
 
-  summary        .attach(&itsContent, "message/header/source/summary");
-  timestamp      .attach(&itsContent, "message/header/source/timestamp");
+  summary        .attach(this, "message/header/source/summary");
+  timestamp      .attach(this, "message/header/source/timestamp");
 
-  momid          .attach(&itsContent, "message/header/ids/momid");
-  sasid          .attach(&itsContent, "message/header/ids/sasid");
+  momid          .attach(this, "message/header/ids/momid");
+  sasid          .attach(this, "message/header/ids/sasid");
 
-  payload        .attach(&itsContent, "message/payload");
-  header         .attach(&itsContent, "message/header");
+  payload        .attach(this, "message/payload");
+  header         .attach(this, "message/header");
 }
 
 qpid::messaging::Message MessageContent::qpidMsg() const {
@@ -187,12 +192,12 @@ qpid::messaging::Message MessageContent::qpidMsg() const {
 
 void MessageContent::setXMLPayload (const std::string         &payload)
 {
-  itsContent.insertXML("message/payload", payload);
+  insertXML("message/payload", payload);
 }
 
 void MessageContent::setTXTPayload (const std::string         &payload)
 {
-  itsContent.setXMLvalue("message/payload", payload);
+  setXMLvalue("message/payload", payload);
 }
 
 std::string MessageContent::short_desc() const
@@ -214,6 +219,135 @@ std::ostream& MessageContent::print (std::ostream& os) const
     os << "payload        : " << payload << endl;
     return (os);
 }
+
+string MessageContent::getXMLvalue(const string& key) const
+{
+#ifdef HAVE_LIBXMLXX
+  Element *e = getXMLnode(key);
+
+  // Extract the text, if any
+  TextNode *t = e->get_child_text();
+  if (!t) return "";
+
+  return t->get_content();
+#else
+  // get copy of content
+  vector<string>  labels = split(key, '/');
+
+  // loop over subkeys
+  string::size_type  offset = 0;
+  string::size_type  begin = string::npos;
+  string::size_type  end = string::npos;
+  string        startTag;
+  for (size_t i = 0; i <  labels.size(); ++i) {
+    // define tags to find
+    startTag = string("<"+labels[i]+">");
+    // search begin tag
+    begin  = itsContent.find(startTag, offset);
+    if (begin == string::npos) {
+      return ("???");
+    }
+    offset = begin;
+  }
+  // search end tag
+  string stopTag ("</"+labels[labels.size()-1]+">");
+  begin+=startTag.size();
+  end = itsContent.find(stopTag, begin);
+  if (end == string::npos) {
+    return ("???");
+  }
+  return (itsContent.substr(begin, end - begin));
+#endif
+}
+
+void MessageContent::setXMLvalue(const string& key, const string &data)
+{
+#ifdef HAVE_LIBXMLXX
+  Element *e = getXMLnode(key);
+
+  e->set_child_text(data);
+#else
+  // get copy of content
+  vector<string>  labels = split(key, '/');
+
+  // loop over subkeys
+  string::size_type  offset = 0;
+  string::size_type  begin = string::npos;
+  string::size_type  end = string::npos;
+  string        startTag;
+  for (size_t i = 0; i <  labels.size(); ++i) {
+    // define tags to find
+    startTag = string("<"+labels[i]+">");
+    // search begin tag
+    begin  = itsContent.find(startTag, offset);
+    if (begin == string::npos) {
+      THROW(MessageContentException, "XML element not found (could not find begin tag): " << key);
+    }
+    offset = begin;
+  }
+  // search end tag
+  string stopTag ("</"+labels[labels.size()-1]+">");
+  begin+=startTag.size();
+  end = itsContent.find(stopTag, begin);
+  if (end == string::npos) {
+    THROW(MessageContentException, "XML element not found (could not find end tag): " << key);
+  }
+
+  itsContent.replace(begin, end - begin, data);
+#endif
+}
+
+void MessageContent::insertXML(const string &key, const string &xml)
+{
+#ifdef HAVE_LIBXMLXX
+  // Find insert spot
+  Element *e = getXMLnode(key);
+  if (!e) return;
+
+  // Parse provided XML
+  DomParser parser;
+  parser.parse_memory(xml);
+
+  Document *document = parser.get_document();
+  if (!document) return;
+
+  Element *root = document->get_root_node();
+  if (!root) return;
+
+  // Insert the XML into our document
+  e->import_node(root);
+#else
+  setXMLvalue(key, xml);
+#endif
+}
+
+#ifdef HAVE_LIBXMLXX
+Element *MessageContent::getXMLnode(const string &name) const
+{
+  Element *root = itsDocument->get_root_node();
+
+  if (!root) {
+    // Document is broken
+    THROW(MessageContentException, "Document is broken");
+  }
+
+  // assume key is an XPath relative to root, see http://www.w3schools.com/xpath/xpath_syntax.asp
+  NodeSet nodeset = root->find("/"+name);
+  if (nodeset.empty()) {
+    // Element not found
+    THROW(MessageContentException, "XML element not found: /" << name);
+  }
+
+  Element *e = dynamic_cast<Element*>(nodeset[0]);
+
+  if (!e) {
+    // Key points to a special element
+    THROW(MessageContentException, "XML element not a text element: /" << name);
+  }
+
+  return e;
+}
+#endif
 
 Message::Message(const MessageContent &content)
 :

@@ -145,8 +145,8 @@ if master:
     raise
 
 # Used by Master to send error and (re) start messages
-mailCommand = ' renting@astron.nl'
+mailCommand = ' schaap@astron.nl'
 # Used by Slave to send SendStatus warnings
-mailSlCommand = ' renting@astron.nl'
+mailSlCommand = ' schaap@astron.nl'
 
 logger.info("Configuration complete")

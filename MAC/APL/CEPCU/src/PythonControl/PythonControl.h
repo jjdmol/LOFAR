@@ -30,7 +30,7 @@
 #include <Common/ParameterSet.h>
 
 //# MsgBus Includes
-#include <MessageBus/FromBus.h>
+#include <MessageBus/MsgBus.h>
 
 //# GCF Includes
 #include <GCF/TM/GCF_Control.h>
