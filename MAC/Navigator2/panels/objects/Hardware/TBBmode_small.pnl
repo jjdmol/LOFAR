@@ -36,6 +36,7 @@ updateTBBrecording(string dp1, string mode,
   
   string color =  \"Lofar_broken\";
   if (strtolower(mode) == \"recording\" ) color = \"Lofar_operational\";
+  if (strtolower(mode) == \"stopped\" ) color = \"Lofar_suspicious\";
   
   setValue(\"TBBrecording\",\"toolTipText\",station+\" TBBmode: \"+mode );
   setValue(\"TBBrecording\", \"backCol\", color);
