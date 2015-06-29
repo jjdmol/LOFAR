@@ -196,21 +196,32 @@ class selfcal_imager_pipeline(control):
         add_beam_tables = self.parset.getBool(
                                     "Imaging.addBeamTables", False)
 
-
-        number_of_major_cycles = self.parset.getInt(
-                                    "Imaging.number_of_major_cycles")
-
         # Almost always a users wants a partial succes above a failed pipeline
         output_result_of_last_succesfull_cycle = self.parset.getBool(
                             "Imaging.output_on_error", True)
 
 
-        if number_of_major_cycles < 3:
-            self.logger.error(
-                "The number of major cycles must be 3 or higher, correct"
-                " the key: Imaging.number_of_major_cycles")
-            raise PipelineException(
-                     "Incorrect number_of_major_cycles in the parset")
+
+		# Number of cycles is now frozen to 7 cycles:
+		# Resolution is not automatically computed (depending on 
+		# frequency and the longuest baselines) anymore.
+		
+		# Resolution vector is frozen to: 
+		# [90,70,60,45,30,30,20,20] arcsec corresponding to:
+		#[ MSSS, VLSS  
+		 
+        #number_of_major_cycles = self.parset.getInt(
+        #                            "Imaging.number_of_major_cycles")
+                                    
+        #if number_of_major_cycles < 3:
+        #    self.logger.error(
+        #        "The number of major cycles must be 3 or higher, correct"
+        #        " the key: Imaging.number_of_major_cycles")
+        #    raise PipelineException(
+        #             "Incorrect number_of_major_cycles in the parset")
+
+        number_of_major_cycles = 7
+
 
 
         # ******************************************************************
@@ -817,35 +828,41 @@ class selfcal_imager_pipeline(control):
         Modification of the BBS parset for selfcal implementation, add, 
         remove, modify some values in bbs parset, done by 
         done by Nicolas Vilchez
+        
+        N.B: BBS parset modifications implemented finally directly in 
+        the global parset
+        
         """            
         
-        if parset_name == "bbs":			
+        #if parset_name == "bbs":			
         
-             parset.replace('Step.solve.Model.Beam.UseChannelFreq', 'True')
-             parset.replace('Step.solve.Model.Ionosphere.Enable', 'F')
-             parset.replace('Step.solve.Model.TEC.Enable', 'F')
-             parset.replace('Step.correct.Model.Beam.UseChannelFreq', 'True')
-             parset.replace('Step.correct.Model.TEC.Enable', 'F')
-             parset.replace('Step.correct.Model.Phasors.Enable', 'T')
-             parset.replace('Step.correct.Output.WriteCovariance', 'T')             
+        #     parset.replace('Step.solve.Model.Beam.UseChannelFreq', 'True')
+        #     parset.replace('Step.solve.Model.Ionosphere.Enable', 'F')
+        #     parset.replace('Step.solve.Model.TEC.Enable', 'F')
+        #     parset.replace('Step.correct.Model.Beam.UseChannelFreq', 'True')
+        #     parset.replace('Step.correct.Model.TEC.Enable', 'F')
+        #     parset.replace('Step.correct.Model.Phasors.Enable', 'T')
+        #     parset.replace('Step.correct.Output.WriteCovariance', 'T')             
                          
-             #must be erased, by default I replace to the default value
-             parset.replace('Step.solve.Baselines', '*&')
+        #     #must be erased, by default I replace to the default value
+        #     parset.replace('Step.solve.Baselines', '*&')
              
-             parset.replace('Step.solve.Solve.Mode', 'COMPLEX')
-             parset.replace('Step.solve.Solve.CellChunkSize', '100')                             
-             parset.replace('Step.solve.Solve.PropagateSolutions', 'F')                    
-             parset.replace('Step.solve.Solve.Options.MaxIter', '100')  
+        #     parset.replace('Step.solve.Solve.Mode', 'COMPLEX')
+        #     parset.replace('Step.solve.Solve.CellChunkSize', '100')                             
+        #     parset.replace('Step.solve.Solve.PropagateSolutions', 'F')                    
+        #     parset.replace('Step.solve.Solve.Options.MaxIter', '100')  
                    
+
 
         if parset_name == "pybdsm_first_pass.par":
              
              parset.replace('advanced_opts', 'True')
+             parset.replace('adaptive_rms_box', 'True') 
+             parset.replace('rms_box', '(80.0,10.0)')
+             parset.replace('rms_box_bright', '(40.0,10.0)')                         
              parset.replace('atrous_do', 'True')
-             parset.replace('rms_box', '(80.0,15.0)')
              parset.replace('thresh_isl', '5')
              parset.replace('thresh_pix', '5')
-             parset.replace('adaptive_rms_box', 'True')
              parset.replace('blank_limit', '1E-4')
              parset.replace('ini_method', 'curvature')
              parset.replace('atrous_do', 'True')
@@ -855,15 +872,16 @@ class selfcal_imager_pipeline(control):
         if parset_name == "pybdsm_second_pass.par":
              
              parset.replace('advanced_opts', 'True')
+             parset.replace('adaptive_rms_box', 'True') 
+             parset.replace('rms_box', '(80.0,10.0)')
+             parset.replace('rms_box_bright', '(40.0,10.0)')                         
              parset.replace('atrous_do', 'True')
-             parset.replace('rms_box', '(80.0,15.0)')
              parset.replace('thresh_isl', '5')
              parset.replace('thresh_pix', '5')
-             parset.replace('adaptive_rms_box', 'True')
              parset.replace('blank_limit', '1E-4')
              parset.replace('ini_method', 'curvature')
              parset.replace('atrous_do', 'True')
-             parset.replace('thresh', 'hard')              
+             parset.replace('thresh', 'hard')                 
 
 
 if __name__ == '__main__':

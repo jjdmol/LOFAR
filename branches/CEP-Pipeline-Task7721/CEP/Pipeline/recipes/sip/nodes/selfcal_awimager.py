@@ -336,6 +336,7 @@ class selfcal_awimager(LOFARnodeTCP):
     def _get_selfcal_parameters(self, measurement_set, parset, major_cycle,
                                 nr_cycles): 
       """
+      [OBSOLETE]
       0. modify the nof cycle to have a final step at the same resolution 
       as the previous last cycle
       1. Determine target coordinates especially declinaison, because 
@@ -343,22 +344,33 @@ class selfcal_awimager(LOFARnodeTCP):
       2. Determine the frequency and the wavelenght
       3. Determine the longuest baseline and the best resolution avaible
       4. Estimate all imaging parameters
+      [OBSOLETE]      
+      
+      
+      1bis. Determine target coordinates especially declinaison, because 
+      for low dec (<35 deg) UVmin = 0.1 to excluse very short baseline
+      2bis. Determine the frequency for FOV determination      
+      3bis. Estimate FOV
+      4bis. Estimate all imaging parameters      
       5. Calculate number of projection planes
       6. Pixelsize must be a string number : number +arcsec
 
       # Nicolas Vilchez, 2014
       # vilchez@astron.nl
       """		
-      
-      
+ 
+    
+      """ 
+      [OBSOLETE]     
       # ********************************************************************
       #0. modify the nof cycle to have a final step at the same resolution 
       #as the previous last cycle
 
-      if major_cycle < nr_cycles-1:          
-           nr_cycles = nr_cycles-1
-
-      scaling_factor = float(major_cycle) / float(nr_cycles - 1)
+      # Resolution is frozen, no scaling factor anymore   
+      #if major_cycle < nr_cycles-1:          
+      #     nr_cycles = nr_cycles-1
+      #scaling_factor = float(major_cycle) / float(nr_cycles - 1)
+    
     
       # ********************************************************************
       #1. Determine Target coordinates for UVmin
@@ -366,13 +378,16 @@ class selfcal_awimager(LOFARnodeTCP):
       tabfield	= pt.table(tabtarget.getkeyword('FIELD'))
       coords		= tabfield.getcell('REFERENCE_DIR',0)
       target		= coords[0] * 180.0 / math.pi  # Why
-
+      
+      
+      # If dec < 35 degree, short baselines are crappy (due to the low 
+      # elevation of the source). Empirically, we found under 35 degree, 
+      # baselines <0.1 klambda must be cut => UVmin=0.1
       UVmin=0
-      if target[1] <= 35:  # WHy?
+      if target[1] <= 35:  
           UVmin = 0.1		    
-
-      ra_target	= target[0] + 360.0  # Why
-      dec_target	= target[1]    
+ 
+   
 
       # ********************************************************************        
       # 2. Determine the frequency and the wavelenght
@@ -380,22 +395,23 @@ class selfcal_awimager(LOFARnodeTCP):
       table_spectral_window 	= pt.table(tabfreq.getkeyword("SPECTRAL_WINDOW"))
       frequency				= table_spectral_window.getcell('REF_FREQUENCY', 0)   
 
-      wavelenght  = 3.0E8 / frequency  # Why
+      # frequency = c/lambda (with c the light speed = 3E8 m/s, frequency in Hz)
+      wavelenght  = 3.0E8 / frequency  
 
       # ********************************************************************        
       # 3. Determine the longuest baseline and the best resolution avaible	
 
-      tabbaseline 	= pt.table(measurement_set, readonly=False, ack=True)
-      posbaseline 	= tabbaseline.getcol('UVW')
-      maxBaseline 	= max(posbaseline[:, 0] ** 2 + 
-                          posbaseline[:, 1] ** 2) ** 0.5 
+      #tabbaseline 	= pt.table(measurement_set, readonly=False, ack=True)
+      #posbaseline 	= tabbaseline.getcol('UVW')
+      #maxBaseline 	= max(posbaseline[:, 0] ** 2 + 
+      #                    posbaseline[:, 1] ** 2) ** 0.5 
 
-      bestBeamresol	= round((wavelenght / maxBaseline) * 
-                            (180.0 / math.pi) * 3600.0, 0)
+      #bestBeamresol	= round((wavelenght / maxBaseline) * 
+      #                      (180.0 / math.pi) * 3600.0, 0)
 
       # Beam resolution limitation to 10arcsec to avoid too large images
-      if bestBeamresol < 10.0:
-          bestBeamresol = 10.0	
+      #if bestBeamresol < 10.0:
+      #    bestBeamresol = 10.0	
 
       # ********************************************************************        
       # 4. Estimate all imaging parameters
@@ -408,14 +424,14 @@ class selfcal_awimager(LOFARnodeTCP):
           fov	= 5.0	    
 
       # we need 4 pixel/beam to have enough sampling
-      pixPerBeam	= 4.0 
+      # We decided to have al least 6 pixel/beam 
+      pixPerBeam	= 6.0 
 
+      
       # best resolution pixel size (i.e final pixel size for selfcal)
       bestPixelResol  = round(bestBeamresol / pixPerBeam, 2) 
-
       # factor to estimate the starting resolution (9 times in this case)
-      badResolFactor	= 9
-      
+      badResolFactor	= 9      
       pixsize	= round((badResolFactor * bestPixelResol) - 
           (badResolFactor * bestPixelResol - bestPixelResol) *
            scaling_factor , 3)
@@ -426,13 +442,88 @@ class selfcal_awimager(LOFARnodeTCP):
       if nbpixel % 2 ==1:
           nbpixel = nbpixel + 1		
       
-      robust	= 0 #round(1.0 - (3.0 * scaling_factor), 2)
+      # Fix the robust parameter to -0.3 to get 
+      # => real resolution ~ theoritical resolution
+      
+      robust	= -0.3  #round(1.0 - (3.0 * scaling_factor), 2)
 
       UVmax	= round((wavelenght) / 
                        (pixPerBeam * pixsize / 3600.0 * math.pi / 180.0 ) / 
                        (1E3 * wavelenght), 3)
 
-      wmax	= round(UVmax * (wavelenght) * 1E3, 3)		
+      wmax	= round(UVmax * (wavelenght) * 1E3, 3)
+      [OBSOLETE]		
+      """
+
+
+
+
+      # ********************************************************************
+      #1.bis Determine Target coordinates for UVmin
+      tabtarget	= pt.table(measurement_set)
+      tabfield	= pt.table(tabtarget.getkeyword('FIELD'))
+      coords		= tabfield.getcell('REFERENCE_DIR',0)
+      target		= coords[0] * 180.0 / math.pi  # Why
+      
+      
+      # If dec < 35 degree, short baselines are crappy (due to the low 
+      # elevation of the source). Empirically, we found under 35 degree, 
+      # baselines <0.1 klambda must be cut => UVmin=0.1
+      UVmin=0
+      if target[1] <= 35:  
+          UVmin = 0.1	
+
+      # ********************************************************************        
+      # 2. Determine the frequency for FOV determination
+      tabfreq					= pt.table(measurement_set)
+      table_spectral_window 	= pt.table(tabfreq.getkeyword("SPECTRAL_WINDOW"))
+      frequency				= table_spectral_window.getcell('REF_FREQUENCY', 0)   
+
+      # frequency = c/lambda (with c the light speed = 3E8 m/s, frequency in Hz)
+      wavelenght  = 3.0E8 / frequency 
+
+      # ********************************************************************   
+      # 3bis Estimate all imaging parameters
+ 
+      # estimate fov
+      # fov = 5 degree, except for High HBA Observation => 1.5 degree
+      if frequency > 1.9E8:
+          fov	= 1.5				
+      else:
+          fov	= 5.0	    
+
+      # ********************************************************************   
+      # 4bis Estimate all imaging parameters
+      # we need 4 pixel/beam to have enough sampling
+      # We decided to have al least 6 pixel/beam 
+      pixPerBeam	= 6.0 
+      
+      # Fix the Resolution vector to:
+      # 90, 70, 60, 45, 30 ,20, 20 Arcsec
+      # Corresponding to : MSSS, VLSS, WENSS, NVSS, 30'',20'', and 
+      # final cycle at 20''
+     
+      
+      resolutionVector=[90.0,70.0,60.0,45.0,30.0,20.0,20.0]  
+      currentResolution = resolutionVector[int(major_cycle)]          
+      pixsize	= round(currentResolution/pixPerBeam, 3)
+                   
+      # number of pixel must be a multiple of 2 !!
+      nbpixel	= int(fov * 3600.0 / pixsize)
+      if nbpixel % 2 ==1:
+          nbpixel = nbpixel + 1		
+      
+      # Fix the robust parameter to -0.3 to get 
+      # => real resolution ~ theoritical resolution
+      
+      robust	= -0.3  #round(1.0 - (3.0 * scaling_factor), 2)
+
+      UVmax	= round((wavelenght) / 
+                       (pixPerBeam * pixsize / 3600.0 * math.pi / 180.0 ) / 
+                       (1E3 * wavelenght), 3)
+
+      wmax	= round(UVmax * (wavelenght) * 1E3, 3)
+
 
       # ********************************************************************        
       # 5. Calculate number of projection planes
@@ -467,33 +558,38 @@ class selfcal_awimager(LOFARnodeTCP):
       # ********************************************************************        
       # 7. Threshold determination from the previous cycle 
       if major_cycle == 0:
-          threshold = '0.075Jy'	
+          threshold = '0.05Jy'	
       else:
         fits_image_path_list	= measurement_set.split('concat.ms')
         fits_image_path			= fits_image_path_list[0] +\
                 'awimage_cycle_%s/image.fits'%(major_cycle-1)
 
 
-        # open a FITS file 
-        fitsImage	= pyfits.open(fits_image_path) 
-        scidata 	= fitsImage[0].data 
-
-        dataRange	= range(fitsImage[0].shape[2])
-        sortedData	=  range(fitsImage[0].shape[2] ** 2)
-
-        # FIXME We have the sneaking suspicion that this takes very long
-        # due to bad coding style... (double for loop with compute in inner loop)
-        for i in dataRange:
-            for j in dataRange:
-                sortedData[i * fitsImage[0].shape[2] + j]	=  scidata[0,0,i,j]
-
-        sortedData 		= sorted(sortedData)
-
-        # Percent of faintest data to use to determine 5sigma value : use 5%			
-        dataPercent		= int(fitsImage[0].shape[2] * 0.05)
-
-        fiveSigmaData	= sum(sortedData[0:dataPercent]) / dataPercent	
-        threshold		= (abs(fiveSigmaData) / 5.0) * (2.335 / 2.0) * 15
+        # open a FITS file 	=> Estimate the awimager threshold		
+        fitsImage = pyfits.open(fits_image_path)
+        
+        #=> load data         
+        scidata   = fitsImage[0].data
+        
+        #=> flat the data in 1D array (before it was 4D array : 
+        #freq,stokes, nx, ny)                      
+        scidata   = scidata.reshape((scidata.size,))
+        
+        #=> flat the data in 1D array (before it was 4D array : 
+        #freq,stokes, nx, ny)       
+        scidata   = scidata.ravel()
+        
+        #=> select negative values (left part of the noise gaussian 
+        #centered on 0)						   
+        scidata   = scidata[scidata<0] 
+        
+        #=> found sigma of that: square root on the variance                    
+        sigma     = math.sqrt(scidata.var())
+        
+        # threshold = 2.35 sigma (i.e FWHM) to avoid
+        # cleaning residuals                
+        cleanLevel = sigma*2.35                     
+        threshold = '%sJy'%(cleanLevel)
 
       return pixsize, str(nbpixel), str(wmax), str(w_proj_planes), \
              str(UVmin), str(UVmax), str(robust), str(threshold)
