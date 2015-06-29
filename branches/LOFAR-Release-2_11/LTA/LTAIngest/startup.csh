@@ -15,14 +15,14 @@ echo "PYTHONPATH=$PYTHONPATH"
 
 if (! `ps uxf | grep -v grep | grep -c master.py` ) then
   echo "Starting Master"
-  nohup python ./master.py ingest_test >& nohup.out &
+  nohup python ./master.py ingest_config >& nohup.out &
 else
   echo "Master running already"
 endif
 sleep 1
 if (! `ps uxf | grep -v grep | grep -c slave.py` ) then
   echo "Starting Slave"
-  nohup python ./slave.py ingest_test >& nohup_slave.out &
+  nohup python ./slave.py ingest_config >& nohup_slave.out &
 else
   echo "Slave is running already"
 endif

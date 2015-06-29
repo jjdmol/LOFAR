@@ -15,7 +15,7 @@ echo "PYTHONPATH=$PYTHONPATH"
 
 if (! `ps uxf | grep -v grep | grep -c slave.py` ) then
   echo "Starting Slave"
-  nohup python ./slave.py ingest_test >& nohup_slave.out &
+  nohup python ./slave.py ingest_config >& nohup_slave.out &
 else
   echo "Slave is running already"
 endif
