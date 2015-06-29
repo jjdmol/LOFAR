@@ -9,7 +9,7 @@ DAL_SOURCE="https://github.com/nextgen-astrodata/DAL.git"
 # ********************************************
 #  Install latest DAL
 #
-#  into /opt/DAL
+#  into /localhome/lofar/DAL
 # ********************************************
 echo "Configuring DAL..."
 DALDIR=`mktemp -d`

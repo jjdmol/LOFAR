@@ -38,7 +38,7 @@
 #include <CoInterface/Stream.h>
 #include <CoInterface/OMPThread.h>
 #include <OutputProc/Package__Version.h>
-#include <MessageBus/MessageBus.h>
+#include <MessageBus/MsgBus.h>
 #include "GPUProcIO.h"
 
 #define STDLOG_BUFFER_SIZE     1024
