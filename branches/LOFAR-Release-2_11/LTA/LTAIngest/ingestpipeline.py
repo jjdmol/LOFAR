@@ -5,6 +5,15 @@ from lxml import etree
 from cStringIO import StringIO
 from job_group import corr_type, bf_type, img_type, unspec_type, pulp_type
 
+def humanreadablesize(num, suffix='B'):
+  """ converts the given size (number) to a human readable string in powers of 1024
+  """
+  for unit in ['','K','M','G','T','P','E','Z']:
+    if abs(num) < 1024.0:
+      return "%3.1f%s%s" % (num, unit, suffix)
+    num /= 1024.0
+  return "%.1f%s%s" % (num, 'Y', suffix)
+  
 IngestStarted     = 10
 ## 20 not used
 IngestSIPComplete = 30
@@ -184,7 +193,8 @@ class IngestPipeline():
     start = time.time()
     p       = subprocess.Popen(cmd, stdin=open('/dev/null'), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     logs    = p.communicate()
-    self.logger.debug("File transfer for %s took %ds" % (self.JobId, time.time() - start))
+    elapsed = time.time() - start
+    self.logger.debug("File transfer for %s took %d sec" % (self.JobId, elapsed))
 ##    time.sleep(10)
 ##    logs = ("hoeba","bla")
     log     = logs[0].split('\n')
@@ -197,6 +207,11 @@ class IngestPipeline():
             self.logger.error("Parsing ltacp result failed for %s" % self.JobId)
             raise Exception('File transfer failed of %s' % self.JobId)
         else:
+            try:
+              avgSpeed = self.FileSize / elapsed
+              self.logger.debug("File transfer for %s had average speed of %s for %s including ltacp overhead" % (self.JobId, humanreadablesize(avgSpeed, 'Bps')), humanreadablesize(self.FileSize, 'B')))
+            except Exception:
+              pass
             self.CheckChecksums()
     else: # need to communicate that LTA transaction is to be rolled back but ingest not to be set to "hold"
         #os.system('echo "Dataproduct for %s not found on %s.\nConsidering dataproduct to be non existent"|mailx -s "Warning: Dataproduct not found on CEP host" ' % (self.JobId, self.HostLocation) + self.mailCommand)
@@ -207,7 +222,7 @@ class IngestPipeline():
   def CheckChecksums(self):
     if self.MD5Checksum and self.Adler32Checksum and self.FileSize:
       try:
-        self.logger.debug('Valid checksums found for %s with filesize %s' % (self.JobId, self.FileSize))
+        self.logger.debug('Valid checksums found for %s with filesize %sB (%s)' % (self.JobId, self.FileSize, humanreadablesize(self.FileSize, 'B')))
       except:
         self.logger.debug('Valid checksums found for %s' % (self.JobId))
     else:
@@ -372,7 +387,13 @@ class IngestPipeline():
       self.RetryRun(self.GetSIP, self.momRetry, 'Get SIP from MoM')
       self.RetryRun(self.SendSIP, self.ltaRetry, 'Sending SIP')
       self.RetryRun(self.SendStatus, self.ltaRetry, 'Setting LTA status', IngestSuccessful)
-      self.logger.debug("Ingest Pipeline finished for %s in %d" % (self.JobId, time.time() - start))
+      elapsed = time.time() - start
+      try:
+        avgSpeed = self.FileSize / elapsed
+        self.logger.debug("Ingest Pipeline finished for %s in %d sec with average speed of %s for %s including all overhead" % (self.JobId, elapsed, humanreadablesize(avgSpeed, 'Bps')), humanreadablesize(self.FileSize, 'B')))
+      except Exception:
+        self.logger.debug("Ingest Pipeline finished for %s in %d sec" % (self.JobId, elapsed))
+      
     except PipelineError as pe:
       self.logger.debug('Encountered PipelineError for %s' % (self.JobId))
       ## roll back transfer if necessary
