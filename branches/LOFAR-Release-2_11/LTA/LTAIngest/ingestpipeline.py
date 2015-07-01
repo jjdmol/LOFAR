@@ -208,8 +208,8 @@ class IngestPipeline():
             raise Exception('File transfer failed of %s' % self.JobId)
         else:
             try:
-              avgSpeed = self.FileSize / elapsed
-              self.logger.debug("File transfer for %s had average speed of %s for %s including ltacp overhead" % (self.JobId, humanreadablesize(avgSpeed, 'Bps'), humanreadablesize(self.FileSize, 'B')))
+              avgSpeed = float(self.FileSize) / elapsed
+              self.logger.debug("File transfer for %s had average speed of %s for %s including ltacp overhead" % (self.JobId, humanreadablesize(avgSpeed, 'Bps'), humanreadablesize(float(self.FileSize), 'B')))
             except Exception:
               pass
             self.CheckChecksums()
@@ -222,7 +222,7 @@ class IngestPipeline():
   def CheckChecksums(self):
     if self.MD5Checksum and self.Adler32Checksum and self.FileSize:
       try:
-        self.logger.debug('Valid checksums found for %s with filesize %sB (%s)' % (self.JobId, self.FileSize, humanreadablesize(self.FileSize, 'B')))
+        self.logger.debug('Valid checksums found for %s with filesize %sB (%s)' % (self.JobId, self.FileSize, humanreadablesize(float(self.FileSize), 'B')))
       except:
         self.logger.debug('Valid checksums found for %s' % (self.JobId))
     else:
@@ -389,8 +389,8 @@ class IngestPipeline():
       self.RetryRun(self.SendStatus, self.ltaRetry, 'Setting LTA status', IngestSuccessful)
       elapsed = time.time() - start
       try:
-        avgSpeed = self.FileSize / elapsed
-        self.logger.debug("Ingest Pipeline finished for %s in %d sec with average speed of %s for %s including all overhead" % (self.JobId, elapsed, humanreadablesize(avgSpeed, 'Bps'), humanreadablesize(self.FileSize, 'B')))
+        avgSpeed = float(self.FileSize) / elapsed
+        self.logger.debug("Ingest Pipeline finished for %s in %d sec with average speed of %s for %s including all overhead" % (self.JobId, elapsed, humanreadablesize(avgSpeed, 'Bps'), humanreadablesize(float(self.FileSize), 'B')))
       except Exception:
         self.logger.debug("Ingest Pipeline finished for %s in %d sec" % (self.JobId, elapsed))
       
