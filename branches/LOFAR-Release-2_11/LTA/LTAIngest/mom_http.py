@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import urllib, urllib2, cookielib, os.path, ClientForm, socket
+from job_parser import jobState2String
 
 class client:
     """This is an HTTP client that knows how to use the Single Sign On of Mom2. 
@@ -47,7 +48,7 @@ class client:
             response = self.opener.open(request) ## We tell what we want
             reply = response.readlines()
             if reply == ['ok']:
-                result = (0, 'http_login updated ' + str(exportID) + ' to ' + str(status))
+                result = (0, 'http_login updated ' + str(exportID) + ' to ' + jobState2String(int(status)))
             else:    
                 result = (1, 'http_login for ' + str(exportID) + ' failed on: ' + str(reply))
         except Exception, e:
