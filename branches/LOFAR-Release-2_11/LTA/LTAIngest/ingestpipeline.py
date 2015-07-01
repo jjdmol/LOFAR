@@ -209,7 +209,7 @@ class IngestPipeline():
         else:
             try:
               avgSpeed = self.FileSize / elapsed
-              self.logger.debug("File transfer for %s had average speed of %s for %s including ltacp overhead" % (self.JobId, humanreadablesize(avgSpeed, 'Bps')), humanreadablesize(self.FileSize, 'B')))
+              self.logger.debug("File transfer for %s had average speed of %s for %s including ltacp overhead" % (self.JobId, humanreadablesize(avgSpeed, 'Bps'), humanreadablesize(self.FileSize, 'B')))
             except Exception:
               pass
             self.CheckChecksums()
@@ -390,7 +390,7 @@ class IngestPipeline():
       elapsed = time.time() - start
       try:
         avgSpeed = self.FileSize / elapsed
-        self.logger.debug("Ingest Pipeline finished for %s in %d sec with average speed of %s for %s including all overhead" % (self.JobId, elapsed, humanreadablesize(avgSpeed, 'Bps')), humanreadablesize(self.FileSize, 'B')))
+        self.logger.debug("Ingest Pipeline finished for %s in %d sec with average speed of %s for %s including all overhead" % (self.JobId, elapsed, humanreadablesize(avgSpeed, 'Bps'), humanreadablesize(self.FileSize, 'B')))
       except Exception:
         self.logger.debug("Ingest Pipeline finished for %s in %d sec" % (self.JobId, elapsed))
       
