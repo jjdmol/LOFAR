@@ -3,6 +3,7 @@ from multiprocessing import Process, Queue, Value
 from Queue import Empty as QueueEmpty
 from multiprocessing.managers import SyncManager
 from job_parser import JobRetry, JobError, JobHold, JobScheduled, JobProducing, JobProduced
+from job_parser import jobState2String
 import os, time, sys
 from ingestpipeline import IngestPipeline, PipelineError, PipelineJobFailedError
 from ingestpipeline import PipelineNoSourceError, PipelineAlreadyInLTAError, PipelineAlreadyInLTAError, PipelineNoProjectInLTAError
@@ -48,7 +49,7 @@ class momTalker(Process):
             self.logger.warning(message)
       self.logger.info(message)
     except:
-      self.logger.exception('Could not update job %s status to %s.' % (str(job['ExportID']), str(job['Status'])))
+      self.logger.exception('Could not update job %s status to %s.' % (str(job['ExportID']), jobState2String(job['Status'])))
 
   def run(self):
     self.logger.info('momTalker started')

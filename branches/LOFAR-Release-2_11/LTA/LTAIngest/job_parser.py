@@ -9,6 +9,21 @@ JobScheduled =  1
 JobProducing =  2
 JobProduced  =  3
 
+def jobState2String(jobstate):
+  if jobstate == JobRetry:
+    return "%d (JobRetry)" % jobstate
+  elif jobstate == JobError:
+    return "%d (JobError)" % jobstate
+  elif jobstate == JobHold:
+    return "%d (JobHold)" % jobstate
+  elif jobstate == JobScheduled:
+    return "%d (JobScheduled)" % jobstate
+  elif jobstate == JobProducing:
+    return "%d (JobProducing)" % jobstate
+  elif jobstate == JobProduced:
+    return "%d (JobProduced)" % jobstate
+  return str(jobstate)
+
 ## Job should probably be refactored into a class at some point.
 ## Right now it's just a big dict.
 

@@ -5,6 +5,7 @@ from Queue import Empty
 from job_group import job_group
 import job_parser as parser
 from job_parser import JobRetry, JobError, JobHold, JobScheduled, JobProducing, JobProduced
+from job_parser import jobState2String
 import os, time, sys, shutil
 
 
@@ -90,7 +91,7 @@ class momTalker(Process):
             self.logger.warning(message)
       self.logger.info(message)
     except:
-      self.logger.exception('Could not update job %s status to %s.' % (str(job['ExportID']), str(job['Status'])))
+      self.logger.exception('Could not update job %s status to %s.' % (str(job['ExportID']), jobState2String(job['Status'])))
 
   def run(self):
     self.logger.info('momTalker started')
@@ -163,7 +164,7 @@ class jobHandler(Process):
     self.update_file(job)
     if job['Status'] == JobRetry:
       self.scheduled.put(job) ## We need to try it again
-    self.logger.debug("Job %s no longer active because of state %s" % (job['ExportID'], job['Status']))
+    self.logger.debug("Job %s no longer active because of state %s" % (job['ExportID'], jobState2String(job['Status'])))
 
   def run(self):
     ## ====== Waiting for slaves ======
@@ -381,7 +382,7 @@ class ltaMaster():
       job['errors'].append(result)
     self.update_job_msg.put((job, JobProducing, job['Status'], fileType))
     self.job_done_msg.put(job)
-    self.logger.debug('Slave reported done with %s, status %s' % (job['ExportID'], job['Status']))
+    self.logger.debug('Slave reported done with %s, status %s' % (job['ExportID'], jobState2String(job['Status'])))
 
   def serve(self):
     class manager(SyncManager): pass
