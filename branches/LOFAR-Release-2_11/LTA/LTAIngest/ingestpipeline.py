@@ -8,11 +8,14 @@ from job_group import corr_type, bf_type, img_type, unspec_type, pulp_type
 def humanreadablesize(num, suffix='B'):
   """ converts the given size (number) to a human readable string in powers of 1024
   """
-  for unit in ['','K','M','G','T','P','E','Z']:
-    if abs(num) < 1024.0:
-      return "%3.1f%s%s" % (num, unit, suffix)
-    num /= 1024.0
-  return "%.1f%s%s" % (num, 'Y', suffix)
+  try:
+    for unit in ['','K','M','G','T','P','E','Z']:
+      if abs(num) < 1024.0:
+        return "%3.1f%s%s" % (num, unit, suffix)
+      num /= 1024.0
+    return "%.1f%s%s" % (num, 'Y', suffix)
+  except TypeError:
+    return str(num)
   
 IngestStarted     = 10
 ## 20 not used
