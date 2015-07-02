@@ -316,7 +316,7 @@ class IngestPipeline():
       if len(dataProductIdentifierNames) != 1:
         self.logger.error("CheckSIPContent for %s could not find single dataProductIdentifier/name in SIP dataProduct" % (self.JobId))
         return False
-      if dataProductIdentifierNames[0].text != self.FileName:
+      if not dataProductIdentifierNames[0].text in self.FileName:
         self.logger.error("CheckSIPContent for %s dataProductIdentifier/name %s does not match expected %s" % (self.JobId, dataProductIdentifierNames[0].text, self.FileName))
         return False
       storageTickets = dataProducts[0].xpath('storageTicket')
