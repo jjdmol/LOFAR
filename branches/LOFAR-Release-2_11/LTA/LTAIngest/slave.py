@@ -86,6 +86,8 @@ class executer(Process):
     logger.info('Executer initialzed for %s (pid: %i)' % (job['ExportID'], os.getpid()))
 
   def run(self):
+    start = time.time()
+    self.logger.debug("Slave Pipeline executer starting for %s" % (self.job['ExportID']))
     self.job['Status'] = JobProducing
     self.talker.put(self.job)
     pipeline = IngestPipeline(self.logdir, self.job, self.momClient, self.ltaClient, self.host, self.ltacpport, self.mailCommand, self.momRetry, self.ltaRetry, self.srmRetry, self.srmInit)
@@ -131,6 +133,7 @@ class executer(Process):
     self.manager.slave_done(self.job, self.result, pipeline.FileType)
     with self.jobs.get_lock():
       self.jobs.value -= 1
+    self.logger.debug("Slave Pipeline executer finished for %s in %d sec" % (self.job['ExportID'], time.time() - start))
 
 ## ---------------- LTA Slave --------------------------------------------
 class ltaSlave():
