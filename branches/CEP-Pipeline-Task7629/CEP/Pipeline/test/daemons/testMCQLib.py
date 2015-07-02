@@ -17,6 +17,9 @@ import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
 
 import lofarpipe.daemons.MCQLib as MCQLib
+import CQDaemonTestFunctions as testFunctions
+from lofarpipe.support.remotecommand import ProcessLimiter 
+
 import logging
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
@@ -208,62 +211,82 @@ class testMCQLib(unittest.TestCase):
         resulthandler.setStopFlag()
 
 
+    def test_run_job(self):
+        # Create sut
+        busname = "testmcqdaemon"
+        broker = "locus102"
+        logger = logging.getLogger("testMCQLib")
+        mcqobj = MCQLib.MCQLib(logger, broker, busname)
+
+        # parameters
+        class job:
+            def __init__(self):
+              self.host = "locus102"
+              self.results = {}
+
+        limiter = ProcessLimiter(nproc=1)
+        parameters = {
+                      "node":"locus102",
+                      "cmd":"ls"}
+        jobObject = job()
+        killswitch = threading.Event()
+        
+        # Start the run_job as a thread
+        thread = threading.Thread(
+                            target = mcqobj.run_job,
+                     args = [parameters, jobObject, limiter, killswitch])
+        thread.daemon = True  
+        thread.start() 
+
+        # We expect a job msg on the deadletterqueue
+        #masterCommandQueueName = "masterCommandQueueName"
+        deadLetterQueueName = busname + ".deadletter"
+        deadLetterQueue = msgbus.FromBus(deadLetterQueueName)
+
+        msg = testFunctions.try_get_msg(deadLetterQueue, 2) 
+        if msg == None:
+            commandQueueBus.close()
+            daemon.close()
+            raise Exception(
+                 "Did not receive the expect msg on the deadletter queue")
+
+        deadLetterQueue.ack(msg)         
+        content = eval(msg.content().payload)
+
+        # Queue test if the received msg is a run_job command
+        self.assertTrue(content["command"] == 'run_job')
+
+        # some data from the sent msg:
+        uuid = content['uuid']
+        job_uuid = content['job_uuid']
+
+
+        #now send a results msg to the correct temp queue
+        toBus = msgbus.ToBus(busname, broker=broker)
+        payload = {'type': 'exit_value',
+                   'exit_value': -1,
+                   'job_uuid': job_uuid}
+
+        msg = create_msg(payload)
+        msg.set_subject("result_" +uuid)  # use subbject to get the correct temp queue
+        toBus.send(msg)
+
+
+        payload = {'type': 'output',
+                   'output': {"some":"data"},
+                   'job_uuid': job_uuid}
+        msg = create_msg(payload)
+        msg.set_subject("result_" +uuid)  # use subbject to get the correct temp queue
+        toBus.send(msg)
+        time.sleep(2) # results queue is emptied each 1 second
+        
+        # a duration should have been added
+        self.assertTrue('job_duration' in jobObject.results)
+        # an exit code
+        self.assertEqual(jobObject.results['returncode'], -1)
+        # results data
+        self.assertEqual(jobObject.results['some'], 'data')
+
+
 if __name__ == "__main__":
     unittest.main()  
-
-    #username = pwd.getpwuid(os.getuid()).pw_name
-    #topicName = "Test.NCQLib.{0}".format(username)
-    #broker = "127.0.0.1" 
-    #hostname = "localhost"
-    #logger = logging.getLogger("MCQLib")
-
-
-    #running_jobs = {}
-    #running_jobs_lock = threading.Lock()
-    #queuHandler = MCQLib.resultQueueHandler("testQueue",running_jobs,
-    #                                 running_jobs_lock, logger)
-
-
-
-
-    ##fromTopic = msgbus.FromBus(topicName, 
-    #          options = "create:always, node: { type: topic, durable: False}",
-    #          broker = broker)
-
-    #NCQLibObject = NCQLib.NCQLib("TempReturnQueueForTest",
-    #      topicName,
-    #      "NCQDaemon.klijn.parameters.b6008d4888d7437aa13d5c2e7237343c")
-
-    #print dir(fromTopic.connection)
-    #print fromTopic.connection.check_closed()
-    #print str(fromTopic.connection.sessions)
-
-    #qpidLoggerHandler = NCQLib.QPIDLoggerHandler(topicName)
-
-    #logger = logging.getLogger("NCQDaemon")
-    #logger.propagate = False
-    ## remove the default handler
-    #loghandlers = logger.handlers[:]
-    #print loghandlers
-    #for hdlr in loghandlers:  
-    #    logger.removeHandler(hdlr) 
-
-    #logger.addHandler(NCQLibObject.QPIDLoggerHandler)
-    #logger.propagate = False
-    #print "before logging"
-
-    #logger.error("Send using qpid")
-
-    #print "after logging"
-
-    #msg = fromTopic.get(2)
-    #if not msg == None:
-    #    msg_content = eval(msg.content().payload)
-
-    #    print msg_content
-    #else:
-    #    print 'queue failed'
-
-    #msg = NCQLibObject._parameterQueue.get(0.1) 
-
-    #print msg.content().payload

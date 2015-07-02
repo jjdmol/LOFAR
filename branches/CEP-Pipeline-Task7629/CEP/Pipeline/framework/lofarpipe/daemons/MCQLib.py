@@ -217,7 +217,6 @@ class resultQueueHandler(threading.Thread):
         self.logger.debug("Result for: {0}".format(msg_content['job_uuid']))
         if type == 'exit_value':
             exit_value = msg_content['exit_value']
-            self.logger.debug("exit_value: {0}".format(exit_value))
             job_uuid = msg_content['job_uuid']
 
             with self._running_jobs_lock:
@@ -225,7 +224,6 @@ class resultQueueHandler(threading.Thread):
 
         elif type == 'output':
             output = msg_content['output']
-            self.logger.info("output: {0}".format(output))
             job_uuid = msg_content['job_uuid']
 
             with self._running_jobs_lock:
@@ -424,6 +422,7 @@ class MCQLib(object):
         limiter[job.host].acquire()
         time_info_start = time.time()
         job_uuid = None
+
         try:
             # We could have received a stop (ctrl-c) so check here if it is set
             if killswitch.isSet():

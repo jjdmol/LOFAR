@@ -32,8 +32,13 @@
     <Folder Include="test\" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="src\CQConfig.py" />
+    <Compile Include="src\CQDaemon.py" />
     <Compile Include="src\MCQDaemon.py" />
+    <Compile Include="test\CQDaemonTestFunctions.py" />
+    <Compile Include="test\testCQDaemon.py" />
     <Compile Include="test\testMCQDaemon.py" />
+    <Compile Include="test\testTempQueueDisconnect.py" />
   </ItemGroup>
   <Import Condition="Exists($(PtvsTargetsFile))" Project="$(PtvsTargetsFile)" />
   <Import Condition="!Exists($(PtvsTargetsFile))" Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
