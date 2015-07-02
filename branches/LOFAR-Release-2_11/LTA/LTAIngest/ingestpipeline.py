@@ -295,6 +295,43 @@ class IngestPipeline():
       self.logger.error('CheckSIP failed: ' + str(e))
       return False
 
+  def CheckSIPContent(self):
+    try:
+      start = time.time()
+      sip   = StringIO(self.SIP)
+      tree   = etree.parse(sip)
+      root   = tree.getroot()
+      dataProducts = root.xpath('dataProduct')
+      if len(dataProducts) != 1:
+        self.logger.error("CheckSIPContent for %s could not find single dataProduct in SIP" % (self.JobId))
+        return False
+      dataProductIdentifierIDs = dataProducts[0].xpath('dataProductIdentifier/identifier')
+      if len(dataProductIdentifierIDs) != 1:
+        self.logger.error("CheckSIPContent for %s could not find single dataProductIdentifier/identifier in SIP dataProduct" % (self.JobId))
+        return False
+      if dataProductIdentifierIDs[0].text != str(self.MomId):
+        self.logger.error("CheckSIPContent for %s dataProductIdentifier/identifier %s does not match expected %s" % (self.JobId, dataProductIdentifierIDs[0].text, self.MomId))
+        return False
+      dataProductIdentifierNames = dataProducts[0].xpath('dataProductIdentifier/name')
+      if len(dataProductIdentifierNames) != 1:
+        self.logger.error("CheckSIPContent for %s could not find single dataProductIdentifier/name in SIP dataProduct" % (self.JobId))
+        return False
+      if dataProductIdentifierNames[0].text != self.FileName:
+        self.logger.error("CheckSIPContent for %s dataProductIdentifier/name %s does not match expected %s" % (self.JobId, dataProductIdentifierNames[0].text, self.FileName))
+        return False
+      storageTickets = dataProducts[0].xpath('storageTicket')
+      if len(storageTickets) != 1:
+        self.logger.error("CheckSIPContent for %s could not find single storageTickets in SIP dataProduct" % (self.JobId))
+        return False
+      if storageTickets[0].text != str(self.ticket):
+        self.logger.error("CheckSIPContent for %s storageTicket %s does not match expected %s" % (self.JobId, storageTickets[0].text, self.ticket))
+        return False
+        
+      return True
+    except Exception as e:
+      self.logger.error('CheckSIPContent failed: ' + str(e))
+      return False
+
   def GetSIP(self):
     if self.Type == "MoM":
       try:
@@ -320,6 +357,8 @@ class IngestPipeline():
          raise
       self.logger.debug('Unspecified SIP created for %s: %s' % (self.JobId, self.SIP[0:400]))
       ###raise Exception('Got a malformed SIP from MoM: %s' % self.SIP[0:50])
+    if not self.CheckSIPContent():
+      raise PipelineError('Got a SIP with wrong contents from MoM for %s : %s' % (self.JobId, self.SIP), func.__name__)
 
   def SendSIP(self):
     try:
@@ -399,7 +438,7 @@ class IngestPipeline():
         self.logger.debug("Ingest Pipeline finished for %s in %d sec" % (self.JobId, elapsed))
       
     except PipelineError as pe:
-      self.logger.debug('Encountered PipelineError for %s' % (self.JobId))
+      self.logger.debug('Encountered PipelineError for %s : %s' % (self.JobId, str(pe)))
       ## roll back transfer if necessary
       if self.PrimaryUri or self.tempPrimary:
         if not (pe.type == PipelineNoSourceError):
