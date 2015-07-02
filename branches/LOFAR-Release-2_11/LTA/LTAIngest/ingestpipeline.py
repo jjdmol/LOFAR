@@ -299,13 +299,14 @@ class IngestPipeline():
     if self.Type == "MoM":
       try:
         start = time.time()
+        self.logger.debug("GetSIP for %s with mom2DPId %s - StorageTicket %s - FileName %s - Uri %s" % (self.JobId, self.MomId, self.ticket, self.FileName, self.PrimaryUri))
         sip = self.momClient.getSIP(self.MomId, self.ticket, self.FileName, self.PrimaryUri, self.FileSize, self.MD5Checksum, self.Adler32Checksum)
         self.SIP = sip.replace('<stationType>Europe</stationType>','<stationType>International</stationType>')
         self.logger.debug("GetSIP for %s took %ds" % (self.JobId, time.time() - start))
       except:
         self.logger.exception('Getting SIP from MoM failed')
         raise
-      self.logger.debug('SIP received for %s from MoM with size %d: %s' % (self.JobId, len(self.SIP), self.SIP[0:400]))
+      self.logger.debug('SIP received for %s from MoM with size %d (%s): %s' % (self.JobId, len(self.SIP), humanreadablesize(len(self.SIP)), self.SIP[0:1024]))
     else:
       self.SIP = unspecifiedSIP.makeSIP(self.Project, self.ObsId, self.MomId, self.ticket, self.FileName, self.FileSize, self.MD5Checksum, self.Adler32Checksum, self.Type)
       self.FileType = unspec_type
