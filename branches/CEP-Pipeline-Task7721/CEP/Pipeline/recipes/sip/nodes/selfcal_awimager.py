@@ -349,7 +349,8 @@ class selfcal_awimager(LOFARnodeTCP):
       
       1bis. Determine target coordinates especially declinaison, because 
       for low dec (<35 deg) UVmin = 0.1 to excluse very short baseline
-      2bis. Determine the frequency for FOV determination      
+      2bis. Determine the frequency for FOV determination 
+      3. Determine the longuest baseline      
       3bis. Estimate FOV
       4bis. Estimate all imaging parameters      
       5. Calculate number of projection planes
@@ -453,10 +454,7 @@ class selfcal_awimager(LOFARnodeTCP):
 
       wmax	= round(UVmax * (wavelenght) * 1E3, 3)
       [OBSOLETE]		
-      """
-
-
-
+      """          
 
       # ********************************************************************
       #1.bis Determine Target coordinates for UVmin
@@ -481,6 +479,18 @@ class selfcal_awimager(LOFARnodeTCP):
 
       # frequency = c/lambda (with c the light speed = 3E8 m/s, frequency in Hz)
       wavelenght  = 3.0E8 / frequency 
+
+
+      # ********************************************************************        
+      # 3. Determine the longuest baseline 	
+
+      tabbaseline 	= pt.table(measurement_set, readonly=False, ack=True)
+      posbaseline 	= tabbaseline.getcol('UVW')
+      maxBaseline 	= max(posbaseline[:, 0] ** 2 + 
+                          posbaseline[:, 1] ** 2) ** 0.5 
+
+
+
 
       # ********************************************************************   
       # 3bis Estimate all imaging parameters
