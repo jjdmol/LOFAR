@@ -84,6 +84,7 @@ class CQDaemon(object):
         self._logger = logging.getLogger("MCQDaemon")
 
         self._broker = broker
+
         self._busname = busname
         self._loop_interval = loop_interval  # perform loop max once per 
                                              #loop_interval
@@ -91,16 +92,27 @@ class CQDaemon(object):
         self._deadLetterQueueName = deadLetterQueueName
 
         # Connect to the command queue
+        self._logger.info("Creating bus connections on broker: {0}".format(
+                    self._broker))
+        self._logger.info("Connecting to command queue: {0}".format(
+                        self.commandQueueName))
         self._CommandQueue = msgbus.FromBus(self.commandQueueName,
                                             broker = self._broker)
+        self._logger.info("Connected")
 
         ## Connect tobus for the deadletter queue
+        self._logger.info("Connecting toBus deadletter: {0}".format(
+                        self._deadLetterQueueName))
         self._toDeadletterBus = msgbus.ToBus(self._deadLetterQueueName,
                broker = self._broker)
+        self._logger.info("Connected")
 
         ## Connect frombus to the deadletter queue
+        self._logger.info("Connecting fromBus deadletter: {0}".format(
+                        self._deadLetterQueueName))
         self._deadletterFromBus = msgbus.FromBus(self._deadLetterQueueName,
                broker = self._broker)
+        self._logger.info("Connected")
 
 
 
@@ -250,11 +262,21 @@ class CQDaemon(object):
 
             else:
                 self._logger.warn("***** warning **** encountered unknown command")
-                self._logger.warn(unpacked_msg_content)
-                self._toDeadletterBus.send(msg)
+                self._logger.warn(unpacked_msg_content)                
                 self._CommandQueue.ack(msg)  
+                msg = message.MessageContent(
+                    from_="test",
+                    forUser="",
+                    summary="summary",
+                    protocol="protocol",
+                    protocolVersion="test", 
+                    #momid="",
+                    #sasid="", 
+                    #qpidMsg=None
+                          )
+                msg.payload = {"some":"content"}
+                self._toDeadletterBus.send(msg) # you cannot forward a msg
 
-            continue
 
     def process_state(self):
         """

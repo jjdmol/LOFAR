@@ -17,19 +17,20 @@
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
 # $Id$
-import lofarpipe.daemons.pipelineSCQDaemonImp as pipelineSCQDaemon
+import lofarpipe.daemons.pipelineSCQDaemonImp as PipelineSCQDaemonImp
 
 if __name__ == "__main__":
     # TODO: Read these parameters from a config file
     # TODO: Daemon parameter in the init should be removed
-    broker = "locus102"
+    broker = "locus098"
+    node = broker 
     busname = "testmcqdaemon"
-    masterCommandQueueName = busname + "/" + "pipelineMasterCommandQueue"
-    deadLetterQueueName = busname + "/" + ".proxy.deadletter"
+    slaveCommandQueueName = busname + "/" + "slaveCommandQueue" + "_" + node
+    deadLetterQueueName = "testmcqdaemon.deadletter"
 
 
-    daemon = pipelineSCQDaemon.PipelineSCQDaemon(broker, busname, masterCommandQueueName,
-                               deadLetterQueueName, 1, True)
+    daemon = PipelineSCQDaemonImp.PipelineSCQDaemonImp(broker, busname, 
+               slaveCommandQueueName, deadLetterQueueName, 1, True)
 
     daemon.run()
-
+    

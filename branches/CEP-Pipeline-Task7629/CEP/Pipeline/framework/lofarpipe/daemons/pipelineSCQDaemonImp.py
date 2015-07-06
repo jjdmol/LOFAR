@@ -33,7 +33,6 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
         super(PipelineSCQDaemonImp, self).__init__(
                  broker, busname, masterCommandQueueName,
                  deadLetterQueueName, loop_interval, daemon)
-
         # we for ward jobs to the generic bus
         self._toBus = msgbus.ToBus(self._busname, broker = self._broker)
 
@@ -88,11 +87,12 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
 
             msg = self._deadletterFromBus.get(0.1)  #  use timeout.
             if msg == None:
+               self._logger.error("Nothing on deadletter byus")
                break    # exit msg processing
 
             # Get the needed information from the msg
             unpacked_msg_data, msg_type  = self._save_unpack_msg(msg)           
-            print unpacked_msg_data
+
             if not unpacked_msg_data:  # if unpacking did not work
                 self._logger.error(
                     "Could not process deadletter, incorrect content")
@@ -103,6 +103,7 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
             # Select what to do based on the msg type
             if msg_type == "deadletter_stop":
                 # we have processed the complete deadletter queue
+
                 self._deadletterFromBus.ack(msg) 
                 break
             
@@ -143,10 +144,12 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
 
         session_uuid = unpacked_msg_data['session_uuid']
         job_uuid = unpacked_msg_data['job_uuid']
-
         
         if n_repost >= self._max_repost:
             # If we tried enough times, kill the job
+            self._logger.warn(
+                  "SubProcess did not retrieve parameter msg:\n {0}".format(
+                     unpacked_msg_data))
             self._subprocessManager.kill_job_send_results(
               session_uuid, job_uuid)
         else:

@@ -25,7 +25,7 @@ if __name__ == "__main__":
     broker = "locus102"
     busname = "testmcqdaemon"
     masterCommandQueueName = busname + "/" + "pipelineMasterCommandQueue"
-    deadLetterQueueName = busname + "/" + ".proxy.deadletter"
+    deadLetterQueueName = "testmcqdaemon.deadletter"
 
 
     daemon = pipelineMCQDaemon.PipelineMCQDaemon(broker, busname, masterCommandQueueName,

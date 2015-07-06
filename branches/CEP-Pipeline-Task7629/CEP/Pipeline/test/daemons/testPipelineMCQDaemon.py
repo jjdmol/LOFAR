@@ -22,6 +22,7 @@ import logging
 import lofar.messagebus.MCQDaemon as MCQDaemon
 import CQDaemonTestFunctions as testFunctions
 import lofarpipe.daemons.pipelineMCQDaemonImp as pipelineMCQDaemon
+import lofar.messagebus.msgbus as msgbus
 
 import unittest
 
@@ -43,12 +44,11 @@ class testForwardOfJobMsgToQueueu(unittest.TestCase):
         A msg with the command run_job should be forwarded to jobnode
         """
         job_node = 'locus102'
-        daemon, commandQueueBus, deadletterQueue, deadletterToQueue = \
-            testFunctions.prepare_test( pipelineMCQDaemon.PipelineMCQDaemon)
 
-        slaveCommandQueueBusName = "testmcqdaemon" + "/" + job_node
-        slaveCommandQueueBus = testFunctions.get_from_bus( 
-                slaveCommandQueueBusName, "locus102")
+        busname = "testmcqdaemon"
+        slaveCommandQueueBusName = "testmcqdaemon/slaveCommandQueue_locus098"
+        slaveCommandQueueBus = msgbus.ToBus(slaveCommandQueueBusName,
+                                              broker = job_node)
 
         # Test1: Create a test job payuoad
         send_payload =  {'command':'run_job',
@@ -56,27 +56,9 @@ class testForwardOfJobMsgToQueueu(unittest.TestCase):
                          'job':{}}
 
         msg = testFunctions.create_test_msg(send_payload)
-        commandQueueBus.send(msg)
+        slaveCommandQueueBus.send(msg)
 
-        # start the daemon processing
-        daemon._process_commands()
-  
-
-        # validate that a job is received on the slave queue
-        # wait on the slave command queue
-        msg_received = testFunctions.try_get_msg(slaveCommandQueueBus)
-
-        # unpack received data
-        received_payload = eval(msg_received.content().payload)
-
-        # validate correct content
-        self.assertTrue(received_payload == send_payload, "Send data not the same as received data")
-
-        # Cleanup sut
-        commandQueueBus.close()
-        slaveCommandQueueBus.close()
-        deadletterQueue.close()
-        daemon.close()
+     
 
 
 

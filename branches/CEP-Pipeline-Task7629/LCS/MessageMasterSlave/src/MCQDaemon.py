@@ -51,6 +51,8 @@ class MCQDaemon(CQDaemon.CQDaemon):
         # Connect to bus ( used for sending job msg to slaves)
         self._toSlaveBus = msgbus.ToBus(self._busname, broker = self._broker)
 
+        self._toSlaveSubjectTemplate = "slaveCommandQueue_{0}"
+
 
     def close(self):
         """
@@ -75,14 +77,31 @@ class MCQDaemon(CQDaemon.CQDaemon):
         """
         The starting of a job on one of the node servers.
         """
-        node = unpacked_msg_content['node']        
-        # create new msg
-        # TODO: FOrwarding of the received msg instead of creating a new one.
-        msg = message.MessageContent()
-        # set content
-        msg.payload = unpacked_msg_content
-        # set subject needed for dynamic routing
-        msg.set_subject(node)
+        try:        
+            node = unpacked_msg_content['parameters']['node']   
+            slave_commandqueue_topic_subject = \
+                               self._toSlaveSubjectTemplate.format(node)
+            self._logger.info("forwarding job to node: {0}".format(node))    
+            self._logger.info("qith subject: {0}".format(
+                        slave_commandqueue_topic_subject))
 
-        # send to bus using the slave as msg name allows for dynamic routing
-        self._toSlaveBus.send(msg)
+            # create new msg
+            # TODO: FOrwarding of the received msg instead of creating a new one.
+            msg = message.MessageContent()
+
+            # set content
+            unpacked_msg_content['subject'] = slave_commandqueue_topic_subject
+            msg.payload = unpacked_msg_content
+
+            # set subject needed for dynamic routing
+            msg.set_subject(slave_commandqueue_topic_subject)
+
+            # send to bus using the slave as msg name allows for dynamic routing
+            self._toSlaveBus.send(msg)
+        except Exception, ex:
+            # Always catch all exceptions, we need to assure that the daemon
+            # keeps running, grad exception and print the problem
+
+            self._logger.warn(str(ex))
+            self._logger.warn(unpacked_msg_content)
+

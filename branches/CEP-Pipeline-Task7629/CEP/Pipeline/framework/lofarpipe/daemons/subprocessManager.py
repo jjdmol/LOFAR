@@ -60,10 +60,6 @@ class SubprocessManager(object):
             self._registered_sessions[session_uuid] = {}
             self._registered_sessions[session_uuid]['jobs'] = {}
 
-            # create the queues
-            queues = self._connect_result_and_log_queues(session_uuid)
-            self._registered_sessions[session_uuid]['queues'] = queues
-
         # TODO: WHat happens if the same job_uuid is retrieved twice??
         if job_uuid in self._registered_sessions[session_uuid]['jobs'] :
             raise Exception("received the same Job_uuid twice, error state")
@@ -123,7 +119,8 @@ class SubprocessManager(object):
         error_str = None
         try:
             process = subprocess.Popen(
-                        command,
+                        #command,
+                        "ls",
                         cwd=working_dir,
                         env=environment, 
                         shell=True,
@@ -147,8 +144,13 @@ class SubprocessManager(object):
         Helper function for killing a job. The output is send on the 
         results and log queue
         """
+        # Received msg on the deadletter queue for removed sessions
+        if not session_uuid in self._registered_sessions:
+            return
+
+        # Received msg on the deadletter queue for removed job
         if not job_uuid in self._registered_sessions[session_uuid]['jobs']:
-            return # Received msg on the deadletter queue for removed job
+            return 
 
         (process, job_msg) = \
                   self._registered_sessions[session_uuid]['jobs'][job_uuid]
@@ -168,52 +170,30 @@ class SubprocessManager(object):
 
         del self._registered_sessions[session_uuid]['jobs'][job_uuid]
 
-    def _connect_result_and_log_queues(self, session_uuid):
-        """
-        Creates a temporary named result queue and a topic based on the uuid
-        Return the create queue and topic name
-
-        Both the queue and topic are created durable, they stay even when 
-        there are no listeners, altough not expected. The start of the session
-        might arrive before the pipeline actually connected to the queueus
-        """
-
-        # now register to the queues, remember, the pipeline might not have
-        # connected so create and make durable. Deleting is done by the 
-        # master Daemon
-        resultQueue = msgbus.ToBus(self._busname + "/" + "result_" + session_uuid,
-              broker = self._broker)
-
-        # and topic s: qpid-stat -e for example and source of this code
-        logTopic = msgbus.ToBus(self._busname + "/" + "log_" + session_uuid,
-              broker = self._broker)
-
-        queues_dict = {'result': resultQueue,
-                       'log': logTopic}
-
-        return queues_dict
-
     def send_process_cout_cerr(self, session_uuid, job_uuid,
                                 stdoutdata, stderrdata):
         """
         Sends the two supplied string as log to the correct session_uuid topic
         """
 
-        if stdoutdata != "":  # If there is a logline to send
-            payload = {'type':'log',
-                       'level':   "INFO",
-                       'log_data':stdoutdata,
-                       'job_uuid':job_uuid}
-            msg = self.create_msg(payload)
-            self._registered_sessions[session_uuid]['queues']['log'].send(msg)
+        with msgbus.ToBus(self._busname + "/" + "log_" + session_uuid,
+                          broker = self._broker) as logTopic:
+            if stdoutdata != "":  # If there is a logline to send
+                payload = {'type':'log',
+                           'level':   "INFO",
+                           'log_data':stdoutdata,
+                           'job_uuid':job_uuid}
+                msg = self.create_msg(payload)
+                logTopic.send(msg)
 
-        if stderrdata != "":  # If there is a logline to send
-            payload = {'type':'log',
-                       'level':   "ERROR",
-                       'log_data':stderrdata,
-                       'job_uuid':job_uuid}
-            msg = self.create_msg(payload)
-            self._registered_sessions[session_uuid]['queues']['log'].send(msg)
+            if stderrdata != "":  # If there is a logline to send
+                payload = {'type':'log',
+                           'level':   "ERROR",
+                           'log_data':stderrdata,
+                           'job_uuid':job_uuid}
+                msg = self.create_msg(payload)
+                logTopic.send(msg)
+
 
     def send_job_parameters(self, session_uuid, job_uuid, msg_content):
         """
@@ -242,8 +222,11 @@ class SubprocessManager(object):
                    'job_uuid':job_uuid,
                    'info':info_str}
         msg = self.create_msg(payload)
-        
-        self._registered_sessions[session_uuid]['queues']['result'].send(msg)
+
+        with msgbus.ToBus(self._busname + "/" + "result_" + session_uuid,
+                          broker = self._broker) as resultQueue:
+               resultQueue.send(msg)
+
 
     def check_managed_processed(self):
         """
@@ -253,6 +236,12 @@ class SubprocessManager(object):
         for session_uuid  in self._registered_sessions.keys():
             jobs = self._registered_sessions[session_uuid]['jobs']
 
+            # If no more jobs are present for this session_id remove 
+            # the jobs dict
+            if len(self._registered_sessions[session_uuid]['jobs']) == 0:
+                del self._registered_sessions[session_uuid]
+                continue
+
             for job_uuid in jobs.keys():    
                 (process, msg) = jobs[job_uuid]
 
@@ -260,7 +249,6 @@ class SubprocessManager(object):
                 if process.poll() == None:
                     self._logger.info("still running: {0}".format(job_uuid))
                     continue
-
 
                 # 3. We have a valid subprocess that has now ended
                 (stdoutdata, stderrdata) = process.communicate()
@@ -270,7 +258,8 @@ class SubprocessManager(object):
                                             stdoutdata, stderrdata)
                 # Send the logging information not created using the default
                 # lofar logger                    
-                self._logger.info("sending job result for: {0}".format(session_uuid))
+                self._logger.info("sending job result for: {0}".format(
+                        session_uuid))
 
                 # send the exit state to the resultsQueue
                 payload = {'type':"exit_value",
@@ -280,10 +269,8 @@ class SubprocessManager(object):
 
                 self.send_results(session_uuid, job_uuid, exit_status,
                                   "Subprocess Results")
+
                 del jobs[job_uuid]
-
-
-
 
     def create_msg(self, payload):
         """

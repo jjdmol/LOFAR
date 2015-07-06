@@ -30,7 +30,8 @@ threading.stack_size(1048576)
 # Includes for QPID framework, might not be available. Set status flag 
 _QPID_ENABLED = False
 try:
-    import lofar.messagebus.MCQLib as MCQLib
+
+    import lofarpipe.daemons.MCQLib as MCQLib
     _QPID_ENABLED = True
 except:
     pass

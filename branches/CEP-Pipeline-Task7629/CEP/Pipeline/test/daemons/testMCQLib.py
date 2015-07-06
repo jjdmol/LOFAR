@@ -226,8 +226,8 @@ class testMCQLib(unittest.TestCase):
 
         limiter = ProcessLimiter(nproc=1)
         parameters = {
-                      "node":"locus102",
-                      "cmd":"ls"}
+                      "node":"locus102",  # must be valid
+                      "cmd":"ls"}         # must exist
         jobObject = job()
         killswitch = threading.Event()
         
@@ -253,7 +253,7 @@ class testMCQLib(unittest.TestCase):
         deadLetterQueue.ack(msg)         
         content = eval(msg.content().payload)
 
-        # Queue test if the received msg is a run_job command
+        # quick test if the received msg is a run_job command
         self.assertTrue(content["command"] == 'run_job')
 
         # some data from the sent msg:

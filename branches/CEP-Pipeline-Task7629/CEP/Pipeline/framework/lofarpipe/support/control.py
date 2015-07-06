@@ -21,7 +21,7 @@ from lofar.messagebus.protocols import TaskFeedbackDataproducts, TaskFeedbackPro
 # Includes for QPID framework, might not be available. Set status flag 
 _QPID_ENABLED = False
 try:
-    import lofar.messagebus.MCQLib as MCQLib
+    import lofarpipe.daemons.MCQLib as MCQLib
     _QPID_ENABLED = True
 except:
     pass
@@ -156,7 +156,7 @@ class control(StatefulRecipe):
 
         if _QPID_ENABLED:
             self.logger.info("Using QPid based communication")
-            self.mcqlib  = MCQLib.MCQLib(self.logger)
+            self.mcqlib  = MCQLib.MCQLib(self.logger, "locus102", "testmcqdaemon")
         try:
             self.pipeline_logic()
         except Exception, message:

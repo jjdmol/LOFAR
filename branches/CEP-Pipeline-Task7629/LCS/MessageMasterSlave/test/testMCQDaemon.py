@@ -36,14 +36,19 @@ def test_forwarding_of_job_msg_to_queue():
     daemon, commandQueueBus, deadletterQueue, deadletterToQueue = \
         testFunctions.prepare_test( MCQDaemon.MCQDaemon)
 
-    slaveCommandQueueBusName = "testmcqdaemon" + "/" + job_node
+    slaveCommandQueue_topic_name = "slaveCommandQueue_{0}".format(job_node)
+    slaveCommandQueueBusName = "testmcqdaemon" + "/" + \
+                              slaveCommandQueue_topic_name
     slaveCommandQueueBus = testFunctions.get_from_bus( 
             slaveCommandQueueBusName, "locus102")
 
     # Test1: Create a test job payuoad
     send_payload =  {'command':'run_job',
+                     'parameters':{
                      'node':job_node,
-                     'job':{}}
+                     'job':{}},
+                     'subject':slaveCommandQueue_topic_name
+                     }
 
     msg = testFunctions.create_test_msg(send_payload)
     commandQueueBus.send(msg)
@@ -58,7 +63,9 @@ def test_forwarding_of_job_msg_to_queue():
 
     # unpack received data
     received_payload = eval(msg_received.content().payload)
-
+    expected_payload = send_payload
+    # not a deepcopy so send is also change, mhe
+    expected_payload['subject'] = slaveCommandQueue_topic_name 
     # validate correct content
     if received_payload != send_payload:
         raise Exception("Send data not the same as received data")

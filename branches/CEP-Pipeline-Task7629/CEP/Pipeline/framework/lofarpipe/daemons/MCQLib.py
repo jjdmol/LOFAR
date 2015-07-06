@@ -136,11 +136,16 @@ class logTopicHandler(threading.Thread):
                   msg = self._logTopic.get(0.1)  
                   if msg == None:
                       break   # break the loop
-
+                  
+                  
                   # process the log data
+                  #self.logger.error("******************************")
+                  #self.logger.error(msg.content())
+                  #self.logger.error("******************************")
                   msg_content = eval(msg.content().payload)
+                  
                   self._process_log_message(msg_content)
-                  self._logTopic.ack(msg)
+                  self._logTopic.ack(msg.content())
 
             # Catch all exception!!!!!
             except Exception, ex:
@@ -222,6 +227,11 @@ class resultQueueHandler(threading.Thread):
             with self._running_jobs_lock:
                 self._running_jobs[job_uuid]['exit_value']=exit_value
 
+                # if the exit value is invalid (different then 0)
+                # do not expect any output
+                self._running_jobs[job_uuid]['output']=[]
+
+
         elif type == 'output':
             output = msg_content['output']
             job_uuid = msg_content['job_uuid']
@@ -237,9 +247,7 @@ class resultQueueHandler(threading.Thread):
         While no stopflag is set:
         sleep for poll_interval
         """
-        
         while not self.stopFlag.isSet():
-
             try:
                 self.logger.debug("Polling resultQueue: {0}".format(
                                                        self._resultQueueName))
@@ -264,7 +272,8 @@ class resultQueueHandler(threading.Thread):
                 self.logger.warning(str(ex))
                 self.logger.warning("Expected behaviour on manual abort")
 
-                time.sleep(self.poll_interval)
+            #self.logger.error(self._running_jobs)
+            time.sleep(self.poll_interval)
  
     def setStopFlag(self):
         """
@@ -437,7 +446,7 @@ class MCQLib(object):
             job_uuid = uuid.uuid4().hex
 
             payload = {"command":"run_job", 
-                       "uuid":self._sessionUUID,
+                       "session_uuid":self._sessionUUID,
                        'job_uuid':job_uuid,
                        "parameters":job_parameters}
 
