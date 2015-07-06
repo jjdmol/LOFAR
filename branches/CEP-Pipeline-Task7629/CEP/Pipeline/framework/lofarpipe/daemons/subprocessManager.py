@@ -70,9 +70,13 @@ class SubprocessManager(object):
         # this is backward compatibility issue from the pipeline framework
         # prepending exec allows us to send a kill() to the process
         # https://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
+
+        
         cmd_with_uuid = "exec " + command + " " + self._busname + \
                   " " + session_uuid + " " + job_uuid 
-
+        self._logger.error("***********************")
+        self._logger.error(cmd_with_uuid)
+        self._logger.error("***********************")
         # new start a subprocess
         process, error_str =  self._start_subprocess(
           cmd_with_uuid, working_dir, environment)
@@ -117,10 +121,10 @@ class SubprocessManager(object):
         """
         process = None
         error_str = None
+        self._logger.error(command)
         try:
             process = subprocess.Popen(
-                        #command,
-                        "ls",
+                        command,
                         cwd=working_dir,
                         env=environment, 
                         shell=True,
@@ -182,7 +186,8 @@ class SubprocessManager(object):
                 payload = {'type':'log',
                            'level':   "INFO",
                            'log_data':stdoutdata,
-                           'job_uuid':job_uuid}
+                           'job_uuid':job_uuid,
+                           'sender': self._broker}
                 msg = self.create_msg(payload)
                 logTopic.send(msg)
 
@@ -190,7 +195,8 @@ class SubprocessManager(object):
                 payload = {'type':'log',
                            'level':   "ERROR",
                            'log_data':stderrdata,
-                           'job_uuid':job_uuid}
+                           'job_uuid':job_uuid,
+                           'sender': self._broker}
                 msg = self.create_msg(payload)
                 logTopic.send(msg)
 

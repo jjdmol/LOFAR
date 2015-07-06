@@ -40,7 +40,7 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
         self._subprocessManager = subprocessManager.SubprocessManager(
                self._broker, self._busname, self._toBus, self._logger)
 
-        self._max_repost = 2 # Depending on the loop_interval this is normally
+        self._max_repost = 5 # Depending on the loop_interval this is normally
                              # 20 second (should be enough)
 
 

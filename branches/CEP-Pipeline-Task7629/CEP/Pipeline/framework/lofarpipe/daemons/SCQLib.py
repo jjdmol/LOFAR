@@ -97,6 +97,9 @@ class SCQLib(object):
         value of the script
         """
         self._broker = broker
+        self._busname = busname
+        self._session_uuid = session_uuid
+        self._job_uuid = job_uuid
 
         self._parameterQueueName = busname + "/parameters_" + session_uuid + "_" + job_uuid
 
@@ -152,7 +155,8 @@ class SCQLib(object):
         # Create the output dict
         payload = {'type': 'output',
                     'output': output,
-                    'job_msg': self._job_dict}
+                    'job_msg': self._job_dict,
+                    'job_uuid':self._job_uuid}
 
 
         msg = self.create_msg(payload)

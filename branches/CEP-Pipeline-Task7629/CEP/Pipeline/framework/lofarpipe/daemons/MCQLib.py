@@ -229,7 +229,8 @@ class resultQueueHandler(threading.Thread):
 
                 # if the exit value is invalid (different then 0)
                 # do not expect any output
-                self._running_jobs[job_uuid]['output']=[]
+                if exit_value != 0:
+                    self._running_jobs[job_uuid]['output']=[]
 
 
         elif type == 'output':
@@ -440,9 +441,6 @@ class MCQLib(object):
                 self.results['returncode'] = 1
                 return 1
 
-
-            job_parameters['cmd'] = " ".join([job_parameters['cmd'], self._returnQueueName,
-                                self._logTopicName])
             job_uuid = uuid.uuid4().hex
 
             payload = {"command":"run_job", 

@@ -129,16 +129,18 @@ class LOFARnodeTCP(LOFARnode):
         if not _QPID_ENABLED:
             self.job_id, self.host, self.port = int(job_id), host, int(port)
         else:
-            returnQueueName = job_id 
+            bus_name = job_id 
             session_uuid = host
             job_uuid = port
+
+
             hostname = socket.gethostname()
 
             if not SCQLib.validParameterQueueName(job_uuid):
                 raise Exception("Incorrect parameterQueue name. This happens "
                          "when the toplevel uses sockets and the slave qpid")
                
-            self._SCQLib = SCQLib.SCQLib(hostname, returnQueueName,
+            self._SCQLib = SCQLib.SCQLib(hostname, bus_name,
                                          session_uuid, job_uuid)
             self.host = None
             self.port = None
