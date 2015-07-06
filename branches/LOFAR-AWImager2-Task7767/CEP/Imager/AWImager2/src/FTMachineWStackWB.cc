@@ -60,15 +60,8 @@ FTMachineWStackWB::FTMachineWStackWB(
     itsSplitBeam(parset.getBool("gridding.splitbeam", False)),
     itsNThread(OpenMP::maxThreads())
 {
-  //TODO 
   itsMachineName = theirName;
-  itsNGrid = itsNThread;
   AlwaysAssert (itsNThread>0, AipsError);
-  itsGriddedData.resize (itsNGrid);
-  itsGriddedData2.resize (itsNGrid);
-  itsSumPB.resize (itsNGrid);
-  itsSumCFWeight.resize (itsNGrid);
-  itsSumWeight.resize (itsNGrid);
   itsGriddedDataDomain = IMAGE;
   double msRefFreq=0; //TODO: put some useful reference frequency here
   itsRefFreq = get_reference_frequency(itsParset, itsMS);

@@ -275,7 +275,9 @@ VisibilityMap make_mapping(
     for (int i = 0; i<N_chan_group; ++i)
     {
       float w_support = v.blocksize - SUPPORT_SPHEROIDAL - MAX_SUPPORT_A - chunk->support[i];
-      float w_range = w_support/(uvscale(0)*uvscale(0));
+      //TODO find correct value of factor
+      float factor = 2.0;
+      float w_range = w_support/(uvscale(0)*uvscale(0))/factor;
       float w_max = chunk->w_min[i] + w_range;
       float w_min = chunk->w_max[i] - w_range;
       chunk->w_min[i] = w_min;
@@ -305,7 +307,7 @@ FTMachineIDG::FTMachineIDG(
   if (!(system("exec &>/dev/null; icpc --version  >/dev/null 2>&1")))
   {
     itsCompiler = "icpc";
-    itsCompilerFlags = "-O3 -xAVX -openmp -mkl -lmkl_vml_avx -lmkl_avx -DUSE_VML=1";
+    itsCompilerFlags = "-O3 -xAVX -openmp -mkl -lmkl_vml_avx -lmkl_avx -DUSE_VML=1 -g";
   }
   else if (!(system("g++ --version >/dev/null 2>&1")))
   {
@@ -317,13 +319,7 @@ FTMachineIDG::FTMachineIDG(
     throw(AipsError("No compiler found."));
   }
   
-  itsNGrid = itsNThread;
   AlwaysAssert (itsNThread>0, AipsError);
-  itsGriddedData.resize (itsNGrid);
-  itsGriddedData2.resize (itsNGrid);
-  itsSumPB.resize (itsNGrid);
-  itsSumCFWeight.resize (itsNGrid);
-  itsSumWeight.resize (itsNGrid);
   itsGriddedDataDomain = IMAGE;
   double msRefFreq=0; //TODO: put some useful reference frequency here
   itsRefFreq=parset.getDouble("image.refFreq",msRefFreq),
@@ -355,23 +351,66 @@ FTMachineIDG& FTMachineIDG::operator=(const FTMachineIDG& other)
 }
 
 //----------------------------------------------------------------------
-  FTMachineIDG::FTMachineIDG(const FTMachineIDG& other) : 
-    FTMachine(other)
-  {
-    operator=(other);
-  }
+FTMachineIDG::FTMachineIDG(const FTMachineIDG& other) : 
+  FTMachine(other)
+{
+  operator=(other);
+}
 
 //----------------------------------------------------------------------
-  FTMachineIDG* FTMachineIDG::clone() const
-  {
-    FTMachineIDG* newftm = new FTMachineIDG(*this);
-    return newftm;
-  }
+FTMachineIDG* FTMachineIDG::clone() const
+{
+  FTMachineIDG* newftm = new FTMachineIDG(*this);
+  return newftm;
+}
 
 //----------------------------------------------------------------------
 
-void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
-                         FTMachine::Type type) 
+
+void FTMachineIDG::initialize_model_grids(Bool normalize_model)
+{
+  // Create model grids but do not initialize here
+  // because that will happen in the loop over w-planes
+    
+  uInt nmodels = itsModelImages.nelements();
+  
+  itsNGrid = nmodels;
+
+  itsComplexModelImages.resize(nmodels);
+  itsModelGrids.resize(nmodels);
+
+  CoordinateSystem coords = itsModelImages[0]->coordinates();
+
+  IPosition gridShape(4, itsPaddedNX, itsPaddedNY, itsNPol, itsNChan);
+  
+  StokesCoordinate stokes_coordinate = get_stokes_coordinates();
+  
+  Int stokes_index = coords.findCoordinate(Coordinate::STOKES);
+  coords.replaceCoordinate(stokes_coordinate, stokes_index);
+  
+  for (uInt model = 0; model<nmodels; model++)
+  {
+    // create complex model images
+    // Force in memory, allow 1e6 MB memory usage
+    itsComplexModelImages[model] = new TempImage<Complex> (gridShape, coords, 1e6); 
+    itsModelGrids[model].reference(itsComplexModelImages[model]->get());
+
+  }
+}
+
+void FTMachineIDG::residual(VisBuffer& vb, casa::Int row, casa::FTMachine::Type type) 
+{
+   getput(vb, row, True, True, False, type);
+}
+
+
+void FTMachineIDG::getput(
+  VisBuffer& vb, 
+  casa::Int row, 
+  casa::Bool doget,
+  casa::Bool doput,    
+  casa::Bool dopsf,
+  casa::FTMachine::Type type)
 {
   // within this scope redirect messages written to clog to LofarLogger with loglevel DEBUG
   ScopedRedirect<LogDebugSink> scoped_redirect(std::clog); 
@@ -428,22 +467,41 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
 
   Vector<RigidVector<Double, 3> > uvw_ = vb.uvw();
   
-  // TODO : find negative w, swap antennas and conjugate data
   
   Vector<Int> antenna1 = vb.antenna1();
   Vector<Int> antenna2 = vb.antenna2();
   
-  for(int i = 0; i < vb.nRow(); i++)
-  {
-     if (uvw_(i)(2) < 0)
-     {
-       uvw_(i) = -uvw_(i);
-       swap(antenna1(i), antenna2(i));
-       //TODO transpose
-       data[i] = conj(data[i]);
-     }
-  }
+  // find negative w, swap antennas and conjugate data
+  Vector<Bool> swapped(vb.nRow(), False);
   
+  if (data.empty() || !doput)
+  {
+//     #pragma omp parallel
+    for(int i = 0; i < vb.nRow(); i++)
+    {
+      if (uvw_(i)(2) < 0)
+      {
+        uvw_(i) = -uvw_(i);
+        swap(antenna1(i), antenna2(i));
+        swapped(i) = True;
+      }
+    }
+  }
+  else
+  {
+//     #pragma omp parallel
+    for(int i = 0; i < vb.nRow(); i++)
+    {
+      if (uvw_(i)(2) < 0)
+      {
+        uvw_(i) = -uvw_(i);
+        swap(antenna1(i), antenna2(i));
+        //TODO transpose
+        data[i] = conj(data[i]);
+        swapped(i) = True;
+      }
+    }
+  }
   
   // find the maximum uv baseline length on grid
   float max_u = 0;
@@ -507,7 +565,7 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
   }
   
   int N_chan = max_element(channel_map.begin(), channel_map.end(), compare_size)->size();
-  int N_chan_group = channel_map.size();
+//   int N_chan_group = channel_map.size();
   
   LOG_DEBUG_STR("N_chan: " << N_chan);
   
@@ -529,17 +587,9 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
   
   float timewindow = min(itsTimeWindow, max_time);
   
-  // TODO 
-  // this mapping should include a range of possible w values to which the block can be projected
-  
   VisibilityMap v = make_mapping(vb, timewindow, channel_map, itsUVScale);
   
   LOG_DEBUG_STR("min_w_max: " << v.min_w_max);
-  
-  // TODO
-  // now find the lowest w_max, and make a w-layer there
-  // grid all blocks within range to this layer
-  
   
   Int N_time = 0;
   for (std::vector<Chunk>::iterator chunk = v.chunks.begin() ; chunk != v.chunks.end(); ++chunk)
@@ -557,9 +607,10 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
   LOG_DEBUG_STR("done.");
   
   Array<Complex> visibilities(IPosition(4, itsNPol, N_chan, N_time, N_chunks), Complex(0.0,0.0));
+  Matrix<Int> idx1(N_time, N_chunks, -1); 
   Cube<Float> uvw(3, N_time, N_chunks, 0.0); 
   Matrix<Float> offsets(3, N_chunks, 0.0);
-  Matrix<Int> coordinates(2, N_chunks, 0.0);
+  Matrix<Int> coordinates(2, N_chunks, 0);
   Vector<Float> wavenumbers(N_chan, 0.0);
   Array<Complex> aterm(IPosition(4, blocksize, blocksize, itsNPol, N_stations), 0.0);
   aterm(Slicer(IPosition(4,0,0,0,0), IPosition(4,blocksize,blocksize,1,N_stations))) = 1.0;
@@ -567,21 +618,64 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
   Matrix<Float> spheroidal(blocksize,blocksize, 1.0);
   Array<Complex> subgrids(IPosition(4, blocksize, blocksize, itsNPol, N_chunks), Complex(0.0, 0.0));
   
-  Cube<Complex> grid(itsPaddedNX, itsPaddedNY, itsNPol, Complex(0.0, 0.0));
-  
   Matrix<Int> baselines(2, N_chunks, 0);
   
   // spheroidal
   taper(spheroidal);
   
   float min_w_max = v.min_w_max;
+  
+  //DEBUG
+//   min_w_max = 0.0;
+  
   // iterate over w-planes
   while (min_w_max < std::numeric_limits<float>::infinity())
   {
     double w_offset = min_w_max;
     LOG_DEBUG_STR("W plane offset: " << w_offset);
+    
+    if (doget)
+    {
+      itsComplexModelImages[0]->set(Complex(0.0));
+
+//             fill complex sub image from model image
+      IPosition blc(
+        4, 
+        (itsPaddedNX - itsModelImages[0]->shape()(0) + (itsPaddedNX % 2 == 0)) / 2,
+        (itsPaddedNY - itsModelImages[0]->shape()(1) + (itsPaddedNY % 2 == 0)) / 2,
+        0, 
+        0);
+      IPosition shape(4, itsNX, itsNY, itsNPol, itsNChan);
+      SubImage<Complex> complex_model_subimage(*itsComplexModelImages[0], Slicer(blc, shape), True);
+      
+      // convert float IQUV model image to complex image
+      StokesImageUtil::From(complex_model_subimage, *itsModelImages[0]);
+      
+      normalize(complex_model_subimage, itsNormalizeModel, True);
+
+      // Apply W term in image domain
+      Array<Complex> complex_model_subimage_data;
+      complex_model_subimage.get(complex_model_subimage_data);
+      itsConvFunc->applyWterm(complex_model_subimage_data, -w_offset);
+      
+      // transform to uv domain
+      
+      itsModelGrids[0].reference(itsComplexModelImages[0]->get());
+      
+      FFTCMatrix f;
+      for(Int pol=0; pol<itsNPol; ++pol)
+      {
+        Complex* ptr = itsModelGrids[0].data() + pol*itsPaddedNX*itsPaddedNY;
+        f.forward(itsPaddedNX, ptr, OpenMP::maxThreads());
+      }
+    }
+    
     min_w_max = std::numeric_limits<float>::infinity();
-    casa::Array<casa::Complex>  w_plane_grid(itsGriddedData[0].shape(), casa::Complex(0));
+    casa::Array<casa::Complex>  w_plane_grid;
+    if (doput)
+    {
+      w_plane_grid = casa::Array<casa::Complex>(itsGriddedData[0].shape(), casa::Complex(0));
+    }
   
     //iterate over channel groups
     
@@ -598,114 +692,195 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
         wavenumbers(chan) = 2 * casa::C::pi / wavelength;
       }
 
-      int i = 0;    
-      for (std::vector<Chunk>::iterator chunk = v.chunks.begin() ; chunk != v.chunks.end(); ++chunk)
+      std::vector<Chunk>::iterator chunk = v.chunks.begin();
+      while (chunk != v.chunks.end())
       {
-        if (chunk->has_been_processed[chan_group_idx]) continue;
-        if (chunk->w_min[chan_group_idx] > w_offset) 
+        for(int i = 0; ((i < N_chunks) && (chunk != v.chunks.end())); ++chunk)
         {
-          min_w_max = min(min_w_max, chunk->w_max[chan_group_idx]);
-          continue;
-        }
-        chunk->has_been_processed[chan_group_idx] = true;
-        
-        int idx_start = v.baseline_index_map[chunk->start];
-        int idx_end = v.baseline_index_map[chunk->end];
-        
-        double f = (vb.frequency()(chan_group->front()) + vb.frequency()(chan_group->back())) / 2;
-        double wavelength = casa::C::c / f;
-        
-        double center_u = floor((vb.uvw()(idx_start)(0) + vb.uvw()(idx_end)(0))/2/wavelength * itsUVScale(0));
-        double center_v = floor((vb.uvw()(idx_start)(1) + vb.uvw()(idx_end)(1))/2/wavelength * itsUVScale(1));
-        
-        coordinates(0,i) = center_u + itsUVOffset(0) - blocksize/2;
-        coordinates(1,i) = center_v + itsUVOffset(1) - blocksize/2;
-        
-        //check whether block falls within grid
-        if ((coordinates(0,i) < 0) ||
-          (coordinates(1,i) < 0) ||
-          ((coordinates(0,i)+blocksize) >= itsPaddedNX) ||
-          ((coordinates(1,i)+blocksize) >= itsPaddedNY))
-        {
-          continue;
-        }
-        
-        offsets (0, i) = center_u / itsUVScale(0) * 2 * casa::C::pi;
-        offsets (1, i) = center_v / itsUVScale(1) * 2 * casa::C::pi;
-        offsets (2, i) = w_offset * 2 * casa::C::pi;
-
-
-        // copy data to buffer
-        
-        for (int j = chunk->start; j<=chunk->end; j++)
-        {
-          int k = j - chunk->start;
-          
-          int idx = v.baseline_index_map[j];
-
-          uvw (0, k, i) = vb.uvw()(idx)(0);
-          uvw (1, k, i) = vb.uvw()(idx)(1);
-          uvw (2, k, i) = vb.uvw()(idx)(2);
-        }
-        
-        // baselines
-        int idx = v.baseline_index_map[chunk->start];
-        int ant1 = vb.antenna1()[idx];
-        int ant2 = vb.antenna2()[idx];
-        baselines(0,i) = ant1;
-        baselines(1,i) = ant2;
-        
-        for (int j = chunk->start; j<=chunk->end; j++)
-        {
-          int k = j - chunk->start;
-          
-          int idx = v.baseline_index_map[j];
-
-          if (dopsf)
+          if (chunk->has_been_processed[chan_group_idx]) continue;
+          if (chunk->w_min[chan_group_idx] > w_offset) 
           {
-            for(chan_it = chan_group->begin(), chan=0; chan_it != chan_group->end(); ++chan_it, ++chan)
+            min_w_max = min(min_w_max, chunk->w_max[chan_group_idx]);
+            continue;
+          }
+          chunk->has_been_processed[chan_group_idx] = true;
+          
+          int idx_start = v.baseline_index_map[chunk->start];
+          int idx_end = v.baseline_index_map[chunk->end];
+          
+          double f = (vb.frequency()(chan_group->front()) + vb.frequency()(chan_group->back())) / 2;
+          double wavelength = casa::C::c / f;
+          
+          int center_u = floor((vb.uvw()(idx_start)(0) + vb.uvw()(idx_end)(0))/2/wavelength * itsUVScale(0));
+          int center_v = floor((vb.uvw()(idx_start)(1) + vb.uvw()(idx_end)(1))/2/wavelength * itsUVScale(1));
+          
+          coordinates(0,i) = center_u + itsUVOffset(0) - blocksize/2;
+          coordinates(1,i) = center_v + itsUVOffset(1) - blocksize/2;
+
+          //check whether block falls within grid
+          //TODO use extra margin when w_offset>0
+          if ((coordinates(0,i) < 0) ||
+            (coordinates(1,i) < 0) ||
+            ((coordinates(0,i)+blocksize) >= itsPaddedNX) ||
+            ((coordinates(1,i)+blocksize) >= itsPaddedNY))
+          {
+            continue;
+          }
+          
+          offsets (0, i) = double(center_u) / itsUVScale(0) * 2 * casa::C::pi;
+          offsets (1, i) = double(center_v) / itsUVScale(1) * 2 * casa::C::pi;
+          offsets (2, i) = w_offset * 2 * casa::C::pi;
+
+          for (int j = chunk->start; j<=chunk->end; j++)
+          {
+            int k = j - chunk->start;
+            
+            int idx = v.baseline_index_map[j];
+
+            uvw (0, k, i) = vb.uvw()(idx)(0);
+            uvw (1, k, i) = vb.uvw()(idx)(1);
+            uvw (2, k, i) = vb.uvw()(idx)(2);
+            idx1(k,i) = idx;
+          }
+          
+          // baselines
+          int idx = v.baseline_index_map[chunk->start];
+          int ant1 = vb.antenna1()[idx];
+          int ant2 = vb.antenna2()[idx];
+          baselines(0,i) = ant1;
+          baselines(1,i) = ant2;
+
+          if (doput)
+          {
+            // copy data to buffer
+            for (int j = chunk->start; j<=chunk->end; j++)
             {
-              for (int idx_pol = 0; idx_pol < itsNPol; idx_pol++)
+              int k = j - chunk->start;
+              int idx = v.baseline_index_map[j];
+              if (dopsf)
               {
-                if (vb.flagCube()(idx_pol, *chan_it, idx))
+                for(chan_it = chan_group->begin(), chan=0; chan_it != chan_group->end(); ++chan_it, ++chan)
                 {
-                  visibilities( IPosition(4, idx_pol, chan, k, i)) = Complex(0);
+                  for (int idx_pol = 0; idx_pol < itsNPol; idx_pol++)
+                  {
+                    if (vb.flagCube()(idx_pol, *chan_it, idx))
+                    {
+                      visibilities( IPosition(4, idx_pol, chan, k, i)) = Complex(0);
+                    }
+                    else
+                    {
+                      visibilities( IPosition(4, idx_pol, chan, k, i)) = -((idx_pol==0) ||( idx_pol==3));
+                      itsSumWeight[0](idx_pol,0) += imagingWeightCube(idx_pol, *chan_it, idx)*blocksize*blocksize*2;
+                    }
+                  }
                 }
-                else
+              }
+              else
+              {
+                for(chan_it = chan_group->begin(), chan=0; chan_it != chan_group->end(); ++chan_it, ++chan)
                 {
-                  visibilities( IPosition(4, idx_pol, chan, k, i)) = imagingWeightCube(idx_pol, *chan_it, idx) * ((idx_pol==0) ||( idx_pol==3));
-                  itsSumWeight[0](idx_pol,0) += imagingWeightCube(idx_pol, *chan_it, idx)*blocksize*blocksize*2;
+                  for (int idx_pol = 0; idx_pol < itsNPol; idx_pol++)
+                  {
+                    if (vb.flagCube()(idx_pol, *chan_it, idx))
+                    {
+                      visibilities( IPosition(4, idx_pol, chan, k, i)) = Complex(0);
+                    }
+                    else
+                    {
+                      visibilities( IPosition(4, idx_pol, chan, k, i)) = -data(idx_pol, *chan_it, idx);
+                      itsSumWeight[0](idx_pol,0) += imagingWeightCube(idx_pol, *chan_it, idx)*blocksize*blocksize*2;
+                    }
+                  }
                 }
               }
             }
           }
-          else
+          if (doget)
           {
-            for(chan_it = chan_group->begin(), chan=0; chan_it != chan_group->end(); ++chan_it, ++chan)
+            #pragma omp parallel for num_threads(4)
+            for(int pol=0; pol<itsNPol; pol++) 
             {
-              for (int idx_pol = 0; idx_pol < itsNPol; idx_pol++)
+              for(int j=0; j<blocksize; j++) 
               {
-                if (vb.flagCube()(idx_pol, *chan_it, idx))
+                for(int k=0; k<blocksize; k++) 
                 {
-                  visibilities( IPosition(4, idx_pol, chan, k, i)) = Complex(0);
-                }
-                else
-                {
-                  visibilities( IPosition(4, idx_pol, chan, k, i)) = data(idx_pol, *chan_it, idx)*imagingWeightCube(idx_pol, *chan_it, idx);
-                  itsSumWeight[0](idx_pol,0) += imagingWeightCube(idx_pol, *chan_it, idx)*blocksize*blocksize*2;
+                  subgrids(IPosition(4, j, k, pol, i)) = itsModelGrids[0](IPosition(4,j+coordinates(0,i),k+coordinates(1,i),pol,0));
                 }
               }
             }
           }
+          i++;
         }
         
-        i++;
-        
-        // if buffer is full or no more chunks then process buffer
-        
-        if (i == N_chunks)
+        if (doget)
         {
-    //       cout << "N_chunks: " << N_chunks << endl;      
+          LOG_DEBUG_STR("degridder...");
+          itsProxy->degridder(
+            N_chunks,
+            offsets.data(), //      void    *offset,
+            wavenumbers.data(), //      void    *wavenumbers,
+            aterm.data(),                 
+            baselines.data(),
+            visibilities.data(), //      void    *visibilities
+            uvw.data(), //      void    *uvw,
+            spheroidal.data(),
+            subgrids.data()); //      void    *uvgrid,
+          LOG_DEBUG_STR("done.");
+        }
+        // TODO make docommit a parameter of getput
+        Bool docommit = !data.empty();
+        if (docommit)
+        {
+          // move predicted data to data column
+
+          for(int j = 0; j<N_chunks; j++)
+          {
+            for(int k = 0; k<N_time; k++)
+            {
+              int idx = idx1(k,j);
+              if (idx > -1)
+              {
+                for(int pol = 0; pol < itsNPol; pol++)
+                {
+                  for(chan_it = chan_group->begin(), chan=0; chan_it != chan_group->end(); ++chan_it, ++chan)
+                  {
+                    if (swapped(idx))
+                    {
+                      data(pol, *chan_it, idx) = conj(visibilities(IPosition(4,pol, chan, k,j)));
+                    }
+                    else
+                    {
+                      data(pol, *chan_it, idx) = visibilities(IPosition(4,pol, chan, k,j));
+                    }
+                  }
+                }
+              }
+            }
+          }
+        } 
+        
+        if (doput)
+        {
+          for(int j = 0; j<N_chunks; j++)
+          {
+            for(int k = 0; k<N_time; k++)
+            {
+              int idx = idx1(k,j);
+              if (idx > -1)
+              {
+                for(int pol = 0; pol < itsNPol; pol++)
+                {
+                  for(chan_it = chan_group->begin(), chan=0; chan_it != chan_group->end(); ++chan_it, ++chan)
+                  {
+                    visibilities(IPosition(4,pol, chan, k,j)) *= 
+                      -imagingWeightCube(pol, *chan_it, idx) * 
+                      (!vb.flagCube()(pol, *chan_it, idx));
+                  }
+                }
+              }
+            }
+          }
+          
           LOG_DEBUG_STR("gridder...");
           itsProxy->gridder(
             N_chunks,
@@ -723,266 +898,251 @@ void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
           LOG_DEBUG_STR("adder...");
           itsProxy->adder(N_chunks, coordinates.data(), subgrids.data(), w_plane_grid.data());
           LOG_DEBUG_STR("done.");
-          i = 0;
-          visibilities = Complex(0);
         }
-      }
-      if (i > 0)
-      {
-        LOG_DEBUG_STR("partially filled block: " << i << "/" << N_chunks);
-        LOG_DEBUG_STR("gridder...");
-        itsProxy->gridder(
-          N_chunks,
-          visibilities.data(), //      void    *visibilities
-          uvw.data(), //      void    *uvw,
-          offsets.data(), //      void    *offset,
-          wavenumbers.data(), //      void    *wavenumbers,
-          aterm.data(),                 
-          spheroidal.data(),
-          baselines.data(),
-          subgrids.data() //      void    *uvgrid,
-        );
-        LOG_DEBUG_STR("done.");
-        
-        LOG_DEBUG_STR("adder...");
-        itsProxy->adder(N_chunks, coordinates.data(), subgrids.data(), w_plane_grid.data());
-        LOG_DEBUG_STR("done.");
-        i = 0;
         visibilities = Complex(0);
+        subgrids = Complex(0);
+        idx1 = -1;      
       }
     }
-    // transform to image domain
-    LOG_DEBUG_STR("W plane fft...");
+    if (doput)
     {
-      ScopedTimer t("W plane fft");
-      FFTCMatrix fft;
-      for (int ii = 0; ii<w_plane_grid.shape()(3); ii++)
+      // transform to image domain
+      LOG_DEBUG_STR("W plane fft...");
       {
-        for (int jj = 0; jj<w_plane_grid.shape()(2); jj++)
+        ScopedTimer t("W plane fft");
+        FFTCMatrix fft;
+        for (int ii = 0; ii<w_plane_grid.shape()(3); ii++)
         {
-          Matrix<Complex> im(w_plane_grid[ii][jj]);
-          fft.forward (im.nrow(), im.data(), OpenMP::maxThreads());
-        }
-      }
-    }
-    LOG_DEBUG_STR("done.");
-    
-    // Apply W term in image domain
-    LOG_DEBUG_STR("W plane apply...");
-    {
-      ScopedTimer t("W plane apply");
-      itsConvFunc->applyWterm(w_plane_grid, -w_offset);
-    }
-    LOG_DEBUG_STR("done.");
-    
-    // Add image to master grid
-    itsGriddedData[0] += w_plane_grid;
-  }
-}
-
-void FTMachineIDG::get(casa::VisBuffer& vb, Int row)
-{
-  get(*static_cast<VisBuffer*>(&vb), row);
-}
-
-// Degrid
-void FTMachineIDG::get(VisBuffer& vb, Int row)
-{
-  // within this scope redirect messages written to clog to LofarLogger with loglevel DEBUG
-  ScopedRedirect<LogDebugSink> scoped_redirect(std::clog); 
-  
-//   gridOk(itsGridder->cSupport()(0));
-  // If row is -1 then we pass through all rows
-  Int startRow, endRow, nRow;
-  if (row < 0) { nRow=vb.nRow(); startRow=0; endRow=nRow-1;}
-  else         { nRow=1; startRow=row; endRow=row; }
-
-  Vector<Int> chan_map(vb.frequency().size(), 0);
-  
-  Vector<Double> lsr_frequency;
-  
-  Int spwid = 0;
-  Bool convert = True;
-  vb.lsrFrequency(spwid, lsr_frequency, convert);
-
-  Cube<Complex> data(vb.modelVisCube());
-  
-  VisibilityMap v = make_mapping(vb, itsTimeWindow, std::vector<std::vector<int> >(), itsUVScale);
-  Int N_time = 0;
-  for (std::vector<Chunk>::iterator chunk = v.chunks.begin() ; chunk != v.chunks.end(); ++chunk)
-  {
-    N_time = max(N_time, chunk->end - chunk->start + 1);
-  }
-
-  Int N_chan = vb.nChannel();
-  
-  Int N_chunks = 100000;
-  Int N_stations = 1 + max(max(vb.antenna1()), max(vb.antenna2()));
-  Int blocksize = 48;
-
-  LOG_DEBUG_STR("Creating proxy...");
-  itsProxy = new Xeon (itsCompiler.c_str(), itsCompilerFlags.c_str(),  N_stations, N_chunks, N_time, N_chan,
-      itsNPol, blocksize, itsPaddedNX, itsUVScale(0));
-  LOG_DEBUG_STR("done.");
-
-  Array<Complex> visibilities(IPosition(4, itsNPol, N_chan, N_time, N_chunks), Complex(0.0,0.0));
-  Cube<Float> uvw(3, N_time, N_chunks, 0.0); 
-  Matrix<Int> idx1(N_time, N_chunks, -1); 
-  Matrix<Float> offsets(3, N_chunks, 0.0);
-  Matrix<Int> coordinates(2, N_chunks, 0.0);
-  Vector<Float> wavenumbers(N_chan, 0.0);
-  Array<Complex> aterm(IPosition(4, blocksize, blocksize, itsNPol, N_stations), 0.0);
-  aterm(Slicer(IPosition(4,0,0,0,0), IPosition(4,blocksize,blocksize,1,N_stations))) = 1.0;
-  aterm(Slicer(IPosition(4,0,0,3,0), IPosition(4,blocksize,blocksize,1,N_stations))) = 1.0;
-
-  Matrix<Float> spheroidal(blocksize,blocksize, 1.0);
-  Array<Complex> subgrids(IPosition(4, blocksize, blocksize, itsNPol, N_chunks), Complex(0.0, 0.0));
-  
-  Cube<Complex> grid(itsNPol, itsPaddedNX, itsPaddedNY, Complex(0.0, 0.0));
-  
-  Matrix<Int> baselines(2, N_chunks, 0);
-  
-  // spheroidal
-  taper(spheroidal);
-
-  // wavenumbers
-  for(int i = 0; i<N_chan; i++)
-  {
-    double wavelength = casa::C::c / vb.frequency()(i);
-    wavenumbers(i) = 2 * casa::C::pi / wavelength;
-  }
-
-  int i = 0;    
-  for (std::vector<Chunk>::iterator chunk = v.chunks.begin() ; chunk != v.chunks.end(); ++chunk)
-  {
-    for (int j = chunk->start; j<=chunk->end; j++)
-    {
-      int k = j - chunk->start;
-      
-      int idx = v.baseline_index_map[j];
-
-      uvw (0, k, i) = vb.uvw()(idx)(0);
-      uvw (1, k, i) = vb.uvw()(idx)(1);
-      uvw (2, k, i) = vb.uvw()(idx)(2);
-      
-      idx1(k,i) = idx;
-      
-    }
-    
-    int idx_start = v.baseline_index_map[chunk->start];
-    int idx_end = v.baseline_index_map[chunk->end];
-    
-    double wavelength = casa::C::c / vb.frequency()(N_chan/2);
-    
-    offsets (0, i) = double(floor((vb.uvw()(idx_start)(0) + vb.uvw()(idx_end)(0))/2/wavelength * itsUVScale(0))) / itsUVScale(0) * 2 * casa::C::pi;
-    offsets (1, i) = double(floor((vb.uvw()(idx_start)(1) + vb.uvw()(idx_end)(1))/2/wavelength * itsUVScale(1))) / itsUVScale(1) * 2 * casa::C::pi;
-    offsets (2, i) = 0;
-    
-//     double w_support = abs(max(vb.uvw()(idx_start)(2),vb.uvw()(idx_start)(2))/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0)*itsUVScale(0));
-//     
-//     double min_u = vb.uvw()(idx_start)(0)/casa::C::c*vb.frequency()(0)*itsUVScale(0);
-//     min_u = min(min_u, vb.uvw()(idx_start)(0)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
-//     min_u = min(min_u, vb.uvw()(idx_end)(0)/casa::C::c*vb.frequency()(0)*itsUVScale(0));
-//     min_u = min(min_u, vb.uvw()(idx_end)(0)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
-// 
-//     double min_v = vb.uvw()(idx_start)(1)/casa::C::c*vb.frequency()(0)*itsUVScale(0);
-//     min_v = min(min_v, vb.uvw()(idx_start)(1)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
-//     min_v = min(min_v, vb.uvw()(idx_end)(1)/casa::C::c*vb.frequency()(0)*itsUVScale(0));
-//     min_v = min(min_v, vb.uvw()(idx_end)(1)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
-//     
-//     double max_u = vb.uvw()(idx_start)(0)/casa::C::c*vb.frequency()(0)*itsUVScale(0);
-//     max_u = max(max_u, vb.uvw()(idx_start)(0)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
-//     max_u = max(max_u, vb.uvw()(idx_end)(0)/casa::C::c*vb.frequency()(0)*itsUVScale(0));
-//     max_u = max(max_u, vb.uvw()(idx_end)(0)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
-// 
-//     double max_v = vb.uvw()(idx_start)(1)/casa::C::c*vb.frequency()(0)*itsUVScale(0);
-//     max_v = max(max_v, vb.uvw()(idx_start)(1)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
-//     max_v = max(max_v, vb.uvw()(idx_end)(1)/casa::C::c*vb.frequency()(0)*itsUVScale(0));
-//     max_v = max(max_v, vb.uvw()(idx_end)(1)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
-//     
-//     double uv_support = max(abs(max_u-min_u), abs(max_v-min_v));
-//     
-//     if ((uv_support + w_support) > 30)
-//     {
-//       cout << "w_support: " << w_support << endl;
-//       cout << "uv_support: " << uv_support << endl;
-//     }
-    
-    coordinates(0,i) = round(offsets(0,i)/2/casa::C::pi*itsUVScale(0)) + itsUVOffset(0) - blocksize/2;
-    coordinates(1,i) = round(offsets(1,i)/2/casa::C::pi*itsUVScale(1)) + itsUVOffset(1) - blocksize/2;
-    
-    // baselines
-    int idx = v.baseline_index_map[chunk->start];
-    int ant1 = vb.antenna1()[idx];
-    int ant2 = vb.antenna2()[idx];
-    baselines(0,i) = ant1;
-    baselines(1,i) = ant2;
-    
-    if ((coordinates(0,i) < 0) ||
-      (coordinates(1,i) < 0) ||
-      ((coordinates(0,i)+blocksize) >= itsPaddedNX) ||
-      ((coordinates(1,i)+blocksize) >= itsPaddedNY))
-    {
-      continue;
-    }
-    
-    // subgrids
-    
-    #pragma omp parallel for collapse(3)
-    for(int pol=0; pol<itsNPol; pol++) 
-    {
-      for(int j=0; j<blocksize; j++) 
-      {
-        for(int k=0; k<blocksize; k++) 
-        {
-          subgrids(IPosition(4, j, k, pol, i)) = itsModelGrids[0](IPosition(4,j+coordinates(0,i),k+coordinates(1,i),pol,0));
-        }
-      }
-    }
-    
-    i++;
-    
-    if ((i == N_chunks) || ((chunk+1) == v.chunks.end()))
-    {
-      itsProxy->degridder(
-        N_chunks,
-        offsets.data(), //      void    *offset,
-        wavenumbers.data(), //      void    *wavenumbers,
-        aterm.data(),                 
-        baselines.data(),
-        visibilities.data(), //      void    *visibilities
-        uvw.data(), //      void    *uvw,
-        spheroidal.data(),
-        subgrids.data() //      void    *uvgrid,
-      );
-
-      // move predicted data to data column
-
-      for(int j = 0; j<N_chunks; j++)
-      {
-        for(int k = 0; k<N_time; k++)
-        {
-          int idx = idx1(k,j);
-          if (idx > -1)
+          for (int jj = 0; jj<w_plane_grid.shape()(2); jj++)
           {
-            for(int pol = 0; pol < itsNPol; pol++)
-            {
-              for(int chan = 0; chan < N_chan; chan++)
-              {
-                data(pol, chan, idx) = conj(visibilities(IPosition(4,pol, chan, k,j)))/(blocksize*blocksize)/2;
-              }
-            }
+            Matrix<Complex> im(w_plane_grid[ii][jj]);
+            fft.forward (im.nrow(), im.data(), OpenMP::maxThreads());
           }
         }
       }
-
-      idx1 = -1;      
-      i = 0;
+      LOG_DEBUG_STR("done.");
+      
+      // Apply W term in image domain
+      LOG_DEBUG_STR("W plane apply...");
+      {
+        ScopedTimer t("W plane apply");
+        itsConvFunc->applyWterm(w_plane_grid, -w_offset);
+      }
+      LOG_DEBUG_STR("done.");
+      
+      // Add image to master grid
+      itsGriddedData[0] += w_plane_grid;
     }
   }
-  
-  
 }
+
+void FTMachineIDG::put(const VisBuffer& vb, Int row, Bool dopsf,
+                         FTMachine::Type type) 
+{
+  getput(*const_cast<VisBuffer*>(&vb), row, False, True, dopsf, type);
+}
+
+void FTMachineIDG::get(VisBuffer& vb, Int row) 
+{
+  getput(vb, row, True, False, False, FTMachine::MODEL);
+}
+
+// Degrid
+// void FTMachineIDG::get(VisBuffer& vb, Int row)
+// {
+//   // within this scope redirect messages written to clog to LofarLogger with loglevel DEBUG
+//   ScopedRedirect<LogDebugSink> scoped_redirect(std::clog); 
+//   
+// //   gridOk(itsGridder->cSupport()(0));
+//   // If row is -1 then we pass through all rows
+//   Int startRow, endRow, nRow;
+//   if (row < 0) { nRow=vb.nRow(); startRow=0; endRow=nRow-1;}
+//   else         { nRow=1; startRow=row; endRow=row; }
+// 
+//   Vector<Int> chan_map(vb.frequency().size(), 0);
+//   
+//   Vector<Double> lsr_frequency;
+//   
+//   Int spwid = 0;
+//   Bool convert = True;
+//   vb.lsrFrequency(spwid, lsr_frequency, convert);
+// 
+//   Cube<Complex> data(vb.modelVisCube());
+//   
+//   VisibilityMap v = make_mapping(vb, itsTimeWindow, std::vector<std::vector<int> >(), itsUVScale);
+//   Int N_time = 0;
+//   for (std::vector<Chunk>::iterator chunk = v.chunks.begin() ; chunk != v.chunks.end(); ++chunk)
+//   {
+//     N_time = max(N_time, chunk->end - chunk->start + 1);
+//   }
+// 
+//   Int N_chan = vb.nChannel();
+//   
+//   Int N_chunks = 100000;
+//   Int N_stations = 1 + max(max(vb.antenna1()), max(vb.antenna2()));
+//   Int blocksize = 48;
+// 
+//   LOG_DEBUG_STR("Creating proxy...");
+//   itsProxy = new Xeon (itsCompiler.c_str(), itsCompilerFlags.c_str(),  N_stations, N_chunks, N_time, N_chan,
+//       itsNPol, blocksize, itsPaddedNX, itsUVScale(0));
+//   LOG_DEBUG_STR("done.");
+// 
+//   Array<Complex> visibilities(IPosition(4, itsNPol, N_chan, N_time, N_chunks), Complex(0.0,0.0));
+//   Cube<Float> uvw(3, N_time, N_chunks, 0.0); 
+//   Matrix<Int> idx1(N_time, N_chunks, -1); 
+//   Matrix<Float> offsets(3, N_chunks, 0.0);
+//   Matrix<Int> coordinates(2, N_chunks, 0.0);
+//   Vector<Float> wavenumbers(N_chan, 0.0);
+//   Array<Complex> aterm(IPosition(4, blocksize, blocksize, itsNPol, N_stations), 0.0);
+//   aterm(Slicer(IPosition(4,0,0,0,0), IPosition(4,blocksize,blocksize,1,N_stations))) = 1.0;
+//   aterm(Slicer(IPosition(4,0,0,3,0), IPosition(4,blocksize,blocksize,1,N_stations))) = 1.0;
+// 
+//   Matrix<Float> spheroidal(blocksize,blocksize, 1.0);
+//   Array<Complex> subgrids(IPosition(4, blocksize, blocksize, itsNPol, N_chunks), Complex(0.0, 0.0));
+//   
+//   Cube<Complex> grid(itsNPol, itsPaddedNX, itsPaddedNY, Complex(0.0, 0.0));
+//   
+//   Matrix<Int> baselines(2, N_chunks, 0);
+//   
+//   // spheroidal
+//   taper(spheroidal);
+// 
+//   // wavenumbers
+//   for(int i = 0; i<N_chan; i++)
+//   {
+//     double wavelength = casa::C::c / vb.frequency()(i);
+//     wavenumbers(i) = 2 * casa::C::pi / wavelength;
+//   }
+// 
+//   int i = 0;    
+//   for (std::vector<Chunk>::iterator chunk = v.chunks.begin() ; chunk != v.chunks.end(); ++chunk)
+//   {
+//     for (int j = chunk->start; j<=chunk->end; j++)
+//     {
+//       int k = j - chunk->start;
+//       
+//       int idx = v.baseline_index_map[j];
+// 
+//       uvw (0, k, i) = vb.uvw()(idx)(0);
+//       uvw (1, k, i) = vb.uvw()(idx)(1);
+//       uvw (2, k, i) = vb.uvw()(idx)(2);
+//       
+//       idx1(k,i) = idx;
+//       
+//     }
+//     
+//     int idx_start = v.baseline_index_map[chunk->start];
+//     int idx_end = v.baseline_index_map[chunk->end];
+//     
+//     double wavelength = casa::C::c / vb.frequency()(N_chan/2);
+//     
+//     offsets (0, i) = double(floor((vb.uvw()(idx_start)(0) + vb.uvw()(idx_end)(0))/2/wavelength * itsUVScale(0))) / itsUVScale(0) * 2 * casa::C::pi;
+//     offsets (1, i) = double(floor((vb.uvw()(idx_start)(1) + vb.uvw()(idx_end)(1))/2/wavelength * itsUVScale(1))) / itsUVScale(1) * 2 * casa::C::pi;
+//     offsets (2, i) = 0;
+//     
+// //     double w_support = abs(max(vb.uvw()(idx_start)(2),vb.uvw()(idx_start)(2))/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0)*itsUVScale(0));
+// //     
+// //     double min_u = vb.uvw()(idx_start)(0)/casa::C::c*vb.frequency()(0)*itsUVScale(0);
+// //     min_u = min(min_u, vb.uvw()(idx_start)(0)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
+// //     min_u = min(min_u, vb.uvw()(idx_end)(0)/casa::C::c*vb.frequency()(0)*itsUVScale(0));
+// //     min_u = min(min_u, vb.uvw()(idx_end)(0)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
+// // 
+// //     double min_v = vb.uvw()(idx_start)(1)/casa::C::c*vb.frequency()(0)*itsUVScale(0);
+// //     min_v = min(min_v, vb.uvw()(idx_start)(1)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
+// //     min_v = min(min_v, vb.uvw()(idx_end)(1)/casa::C::c*vb.frequency()(0)*itsUVScale(0));
+// //     min_v = min(min_v, vb.uvw()(idx_end)(1)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
+// //     
+// //     double max_u = vb.uvw()(idx_start)(0)/casa::C::c*vb.frequency()(0)*itsUVScale(0);
+// //     max_u = max(max_u, vb.uvw()(idx_start)(0)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
+// //     max_u = max(max_u, vb.uvw()(idx_end)(0)/casa::C::c*vb.frequency()(0)*itsUVScale(0));
+// //     max_u = max(max_u, vb.uvw()(idx_end)(0)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
+// // 
+// //     double max_v = vb.uvw()(idx_start)(1)/casa::C::c*vb.frequency()(0)*itsUVScale(0);
+// //     max_v = max(max_v, vb.uvw()(idx_start)(1)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
+// //     max_v = max(max_v, vb.uvw()(idx_end)(1)/casa::C::c*vb.frequency()(0)*itsUVScale(0));
+// //     max_v = max(max_v, vb.uvw()(idx_end)(1)/casa::C::c*vb.frequency()(N_chan-1)*itsUVScale(0));
+// //     
+// //     double uv_support = max(abs(max_u-min_u), abs(max_v-min_v));
+// //     
+// //     if ((uv_support + w_support) > 30)
+// //     {
+// //       cout << "w_support: " << w_support << endl;
+// //       cout << "uv_support: " << uv_support << endl;
+// //     }
+//     
+//     coordinates(0,i) = round(offsets(0,i)/2/casa::C::pi*itsUVScale(0)) + itsUVOffset(0) - blocksize/2;
+//     coordinates(1,i) = round(offsets(1,i)/2/casa::C::pi*itsUVScale(1)) + itsUVOffset(1) - blocksize/2;
+//     
+//     // baselines
+//     int idx = v.baseline_index_map[chunk->start];
+//     int ant1 = vb.antenna1()[idx];
+//     int ant2 = vb.antenna2()[idx];
+//     baselines(0,i) = ant1;
+//     baselines(1,i) = ant2;
+//     
+//     if ((coordinates(0,i) < 0) ||
+//       (coordinates(1,i) < 0) ||
+//       ((coordinates(0,i)+blocksize) >= itsPaddedNX) ||
+//       ((coordinates(1,i)+blocksize) >= itsPaddedNY))
+//     {
+//       continue;
+//     }
+//     
+//     // subgrids
+//     
+//     #pragma omp parallel for collapse(3)
+//     for(int pol=0; pol<itsNPol; pol++) 
+//     {
+//       for(int j=0; j<blocksize; j++) 
+//       {
+//         for(int k=0; k<blocksize; k++) 
+//         {
+//           subgrids(IPosition(4, j, k, pol, i)) = itsModelGrids[0](IPosition(4,j+coordinates(0,i),k+coordinates(1,i),pol,0));
+//         }
+//       }
+//     }
+//     
+//     i++;
+//     
+//     if ((i == N_chunks) || ((chunk+1) == v.chunks.end()))
+//     {
+//       itsProxy->degridder(
+//         N_chunks,
+//         offsets.data(), //      void    *offset,
+//         wavenumbers.data(), //      void    *wavenumbers,
+//         aterm.data(),                 
+//         baselines.data(),
+//         visibilities.data(), //      void    *visibilities
+//         uvw.data(), //      void    *uvw,
+//         spheroidal.data(),
+//         subgrids.data() //      void    *uvgrid,
+//       );
+// 
+//       // move predicted data to data column
+// 
+//       for(int j = 0; j<N_chunks; j++)
+//       {
+//         for(int k = 0; k<N_time; k++)
+//         {
+//           int idx = idx1(k,j);
+//           if (idx > -1)
+//           {
+//             for(int pol = 0; pol < itsNPol; pol++)
+//             {
+//               for(int chan = 0; chan < N_chan; chan++)
+//               {
+//                 data(pol, chan, idx) = conj(visibilities(IPosition(4,pol, chan, k,j)))/(blocksize*blocksize)/2;
+//               }
+//             }
+//           }
+//         }
+//       }
+// 
+//       idx1 = -1;      
+//       i = 0;
+//     }
+//   }
+// }
   
 } //# end namespace LofarFT
 } //# end namespace LOFAR

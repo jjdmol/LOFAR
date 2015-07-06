@@ -63,18 +63,32 @@ public:
 //   virtual casa::Matrix<casa::Float> getSpheroidal();
   
   // Get actual coherence from grid by degridding
-  virtual void get(casa::VisBuffer& vb, casa::Int row=-1);
   virtual void get(VisBuffer& vb, casa::Int row=-1);
-
+  
   // Put coherence to grid by gridding.
   virtual void put(
     const VisBuffer& vb, 
     casa::Int row = -1, 
     casa::Bool dopsf = casa::False,
     casa::FTMachine::Type type = casa::FTMachine::OBSERVED);
+
+  virtual void residual(
+    VisBuffer& vb, 
+    casa::Int row = -1, 
+    casa::FTMachine::Type type = casa::FTMachine::OBSERVED);
   
 protected:
-  
+
+  virtual void initialize_model_grids(casa::Bool normalize);
+
+  virtual void getput(
+    VisBuffer& vb, 
+    casa::Int row=-1, 
+    casa::Bool doget = casa::True,
+    casa::Bool doput = casa::True,    
+    casa::Bool dopsf = casa::False,
+    casa::FTMachine::Type type = casa::FTMachine::OBSERVED);
+    
   casa::CountedPtr<Xeon> itsProxy;
 
 

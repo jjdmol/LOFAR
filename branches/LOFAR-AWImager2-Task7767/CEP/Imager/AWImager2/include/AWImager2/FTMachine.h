@@ -202,6 +202,9 @@ public:
     casa::Bool normalize);
 
   virtual void finalizeResidual();
+  
+  virtual void get(casa::VisBuffer& vb, casa::Int row=-1);
+  virtual void get(VisBuffer& vb, casa::Int row=-1)=0;
 
   virtual void put(
     const casa::VisBuffer& vb, 
@@ -214,7 +217,11 @@ public:
     casa::Int row = -1, 
     casa::Bool dopsf = casa::False,
     casa::FTMachine::Type type = casa::FTMachine::OBSERVED)=0;
-  
+
+  virtual void residual(
+    VisBuffer& vb, 
+    casa::Int row = -1, 
+    casa::FTMachine::Type type = casa::FTMachine::OBSERVED) {}
   
   // Make the entire image
   using casa::FTMachine::makeImage;

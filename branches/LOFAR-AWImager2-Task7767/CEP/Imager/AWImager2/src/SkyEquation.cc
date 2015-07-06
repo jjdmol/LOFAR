@@ -297,15 +297,18 @@ void SkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
    
         // Get the model visibilities -> degridding
         // Model visibilities are put in the modelVisCube of vb
-        itsFTMachine->get(* vb, -1);
+//         itsFTMachine->get(* vb, -1);
+//         
+//         //TODO: optionally write model visibilities to MS
+//         
+//         // Compute residual 
+//         vb->modelVisCube() = vb->correctedVisCube() - vb->modelVisCube();
+//         
+//         // Put residual on grid -> gridding
+//         itsFTMachine->put(* vb, -1, doPSF, FTMachine::MODEL);
         
-        //TODO: optionally write model visibilities to MS
+        itsFTMachine->residual(* vb, -1, FTMachine::CORRECTED);
         
-        // Compute residual 
-        vb->modelVisCube() = vb->correctedVisCube() - vb->modelVisCube();
-        
-        // Put residual on grid -> gridding
-        itsFTMachine->put(* vb, -1, doPSF, FTMachine::MODEL);
       }
     }
     itsFTMachine->finalizeResidual();

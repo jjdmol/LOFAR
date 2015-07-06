@@ -469,6 +469,11 @@ void FTMachine::initialize_grids()
   }
 }
 
+void FTMachine::get(casa::VisBuffer& vb, Int row) 
+{
+  put( *static_cast<VisBuffer*>(&vb), row);
+}
+
 void FTMachine::put(const casa::VisBuffer& vb, Int row, Bool dopsf,
                          FTMachine::Type type) 
 {
@@ -526,14 +531,21 @@ void FTMachine::getImages(Matrix<Float>& weights, Bool normalize_image)
 
 void FTMachine::normalize(ImageInterface<Complex> &image, Bool do_beam, Bool do_spheroidal)
 {
-  Array<Float> spheroidal;
-  
-  if (do_spheroidal)
-  {
-    spheroidal.reference(getSpheroidal());
-  }
   
   Array<Float> beam;
+  
+  casa::Vector<casa::Double> x;
+
+  if (do_spheroidal)
+  {
+    x.resize(itsNX);
+    double halfsize = floor(itsNX / 2.0);
+    double paddedhalfsize = floor(itsPaddedNX / 2.0);
+    for (casa::uInt i=0; i<itsNX; ++i) 
+    {
+      x[i] = spheroidal(abs(i - halfsize) / paddedhalfsize);
+    }
+  }
   
   if (do_beam)
   {
@@ -562,9 +574,9 @@ void FTMachine::normalize(ImageInterface<Complex> &image, Bool do_beam, Bool do_
           
           Complex v = image.getAt(pos);
           Float f = 1.0;
-          if (do_spheroidal) f *= spheroidal(IPosition(2,l,k));
+          if (do_spheroidal) f *= x[l] * x[k];
           if (do_beam) f *= beam(IPosition(2,l,k));
-          if (f>0.02)
+          if (f>1.0e-5)
           {
             image.putAt(v/f, pos);
           }
