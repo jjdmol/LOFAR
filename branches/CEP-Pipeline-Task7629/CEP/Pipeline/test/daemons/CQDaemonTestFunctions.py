@@ -22,6 +22,7 @@
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
 import time
+import socket
 
 # ******************** helper function ******************
 def prepare_test(subclass):
@@ -31,7 +32,7 @@ def prepare_test(subclass):
     return the deamon and needed
     """
         # config
-    broker =  "locus102"
+    broker = socket.gethostname()
     busname = "testmcqdaemon"  # TODO: Use a different name
     #busname = "testbus"
     masterCommandQueueName = busname + "/" + "masterCommandQueueName"

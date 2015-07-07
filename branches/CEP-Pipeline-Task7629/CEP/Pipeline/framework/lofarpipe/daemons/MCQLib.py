@@ -73,24 +73,25 @@ class logTopicHandler(threading.Thread):
 
     TODO: Candidate to move to LCS
     """
-    def __init__(self, broker,logTopicName, logger=None,  poll_interval=1.0):
+    def __init__(self, broker,logTopicName, logger, poll_interval=1.0):
         """
         Create the usage stat object. Create events for starting and stopping.
         By default the Process creating the object is tracked.
         Default polling interval is 10 seconds
         """
         threading.Thread.__init__(self)
-
         self.daemon = True  # run as daemon: thread dies on owner death
+
         self._broker = broker
-        self.logger = logger
+        self._logger = logger
         self.stopFlag = logTopicStopFlag    # from 'global' scope
+
         # Set it to working (allows re entrant usage of this class)
         self.stopFlag.clear()
         self._poll_interval = poll_interval       
         self._logTopicName = logTopicName
 
-        self.logger.debug(
+        self._logger.debug(
               "Connecting to logTopic: {0}".format(self._logTopicName))
         self._logTopic = msgbus.FromBus(self._logTopicName, 
             broker = self._broker)
@@ -105,17 +106,17 @@ class logTopicHandler(threading.Thread):
 
         formatted_line = sender + ": " + log_data
         if level == 'CRITICAL':
-            self.logger.critical(formatted_line)
+            self._logger.critical(formatted_line)
         elif level == 'ERROR':
-            self.logger.error(formatted_line)
+            self._logger.error(formatted_line)
         elif level == 'WARNING':
-            self.logger.warning(formatted_line)
+            self._logger.warning(formatted_line)
         elif level == 'INFO':
-            self.logger.info(formatted_line)
+            self._logger.info(formatted_line)
         elif level == 'DEBUG':
-            self.logger.debug(formatted_line)
+            self._logger.debug(formatted_line)
         else:
-            self.logger.debug(formatted_line)
+            self._logger.debug(formatted_line)
 
     def run(self):
         """
@@ -127,31 +128,25 @@ class logTopicHandler(threading.Thread):
         """
         while not self.stopFlag.isSet():           
             try: 
-              # reset the counter to zero, and restart the wait period
-              self.logger.debug("Polling logTopic")
+                while not self.stopFlag.isSet():
+                    # get is blocking, use timeout.
+                    msg = self._logTopic.get(0.1)  
+                    if msg == None:
+                        break   # break the loop
 
-              # now empty the queue
-              while True:
-                  # get is blocking, always use timeout.
-                  msg = self._logTopic.get(0.1)  
-                  if msg == None:
-                      break   # break the loop
-                  
-                  
-                  # process the log data
-                  #self.logger.error("******************************")
-                  #self.logger.error(msg.content())
-                  #self.logger.error("******************************")
-                  msg_content = eval(msg.content().payload)
-                  
-                  self._process_log_message(msg_content)
-                  self._logTopic.ack(msg.content())
+                    # process the log data
+                    msg_content = eval(msg.content().payload)
+                    self._process_log_message(msg_content)
+
+                    # ack the msg
+                    self._logTopic.ack(msg)
 
             # Catch all exception!!!!!
             except Exception, ex:
-                self.logger.warning("LogTopic handler received uncaught exception:")
-                self.logger.warning(str(ex))
-                self.logger.warning("Expected behaviour on manual abort")
+                self._logger.warning("LogTopic handler received uncaught exception:")
+                self._logger.warning(type(ex))
+                self._logger.warning(str(ex))
+                self._logger.warning("Expected behaviour on manual abort")
                 
             # sleep
             time.sleep(self._poll_interval)
@@ -162,12 +157,6 @@ class logTopicHandler(threading.Thread):
         """
         self.stopFlag.set()
         self._logTopic.close()
-
-    def __del__(self):
-        """
-        """
-        pass
-        #self._logTopic.close()
 
 class resultQueueHandler(threading.Thread):
     """
@@ -270,6 +259,7 @@ class resultQueueHandler(threading.Thread):
 
             except Exception, ex:
                 self.logger.warning("Results handler received uncaught exception:")
+                self.logger.warning(type(ex))
                 self.logger.warning(str(ex))
                 self.logger.warning("Expected behaviour on manual abort")
 
@@ -282,12 +272,6 @@ class resultQueueHandler(threading.Thread):
         """
         self.stopFlag.set()
         self._resultQueue.close()
-
-    def __del__(self):
-        """
-        """
-        pass
-
 
 
 class MCQLib(object):
@@ -327,10 +311,6 @@ class MCQLib(object):
         # Check state, raise exception if incorrect
         self._connect_to_master(self._masterCommandQueueName)
 
-        # Send a start session command with the correct details to the
-        # HCQDaemon
-        #self._send_start_session_to_daemon()
-
         self._start_log_and_result_handlers()
 
     def _start_log_and_result_handlers(self):
@@ -353,11 +333,8 @@ class MCQLib(object):
         signal.signal(signal.SIGINT, 
                       treadStopHandler)   
 
-        self._logTopicForwarder.daemon = True
         self._logTopicForwarder.start()
-        self._resultQueueForwarder.daemon = True
         self._resultQueueForwarder.start()
-
 
         global stopFunction
         stopFunction = self._release
@@ -390,9 +367,12 @@ class MCQLib(object):
     def __del__(self):
 
         #self._release()
-        logTopicStopFlag.set()
-        resultQueueStopFlag.set()
-        pass
+        if logTopicStopFlag:
+            logTopicStopFlag.set()
+
+        if resultQueueStopFlag:
+          resultQueueStopFlag.set()
+
 
 
     def _release(self):

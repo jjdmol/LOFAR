@@ -74,9 +74,6 @@ class SubprocessManager(object):
         
         cmd_with_uuid = "exec " + command + " " + self._busname + \
                   " " + session_uuid + " " + job_uuid 
-        self._logger.error("***********************")
-        self._logger.error(cmd_with_uuid)
-        self._logger.error("***********************")
         # new start a subprocess
         process, error_str =  self._start_subprocess(
           cmd_with_uuid, working_dir, environment)

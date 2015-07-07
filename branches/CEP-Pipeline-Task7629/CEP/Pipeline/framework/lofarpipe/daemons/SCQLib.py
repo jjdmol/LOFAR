@@ -78,7 +78,7 @@ class QPIDLoggerHandler(logging.Handler):
         # add the data to send
         payload = {'level':   level,
                    'log_data':log_data,
-                   'sender':"STATIC HOSTNAME" }  #TODO USE CORRECT HOSTNAME
+                   'sender':self._broker }  #TODO USE CORRECT HOSTNAME
 
         msg = create_msg(payload)
         self._logTOpic.send(msg)

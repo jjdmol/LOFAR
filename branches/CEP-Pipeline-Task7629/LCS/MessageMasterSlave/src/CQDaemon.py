@@ -114,7 +114,12 @@ class CQDaemon(object):
                broker = self._broker)
         self._logger.info("Connected")
 
+    def __enter__(self):
+        return self
 
+    def __exit__(self, type, value, traceback):
+        self.close()
+        return False # 'reraises' original exception
 
     def close(self):
         """
