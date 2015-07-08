@@ -2,9 +2,13 @@
 
 #directory for various ltaingest config and state files
 LTAINGEST_CFG_DIR=@LTAINGEST_CFG_DIR@
+LTAINGEST_DATA_DIR=@LTAINGEST_DATA_DIR@
+
+mkdir -p $LTAINGEST_CFG_DIR
+mkdir -p $LTAINGEST_DATA_DIR
 
 #logrotate command to be executed for ingest
-command="logrotate $LTAINGEST_CFG_DIR/ingest_logrotate.conf -s $LTAINGEST_CFG_DIR/ingest_logrotate.state >& /dev/null"
+command="logrotate $LTAINGEST_CFG_DIR/ingest_logrotate.conf -s $LTAINGEST_DATA_DIR/ingest_logrotate.state >& /dev/null"
 
 #ingest logrotate line for crontab 
 job="0 0 * * * $command"
