@@ -234,6 +234,9 @@ class Message(object):
     def raw_content(self):
       return self._qpidMsg.content
 
+    def getSubject(self):
+        return self._qpidMsg.subject
+
 
     def __repr__(self):
       msg = self.content()

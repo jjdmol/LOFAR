@@ -45,7 +45,7 @@ class SubprocessManager(object):
 
     def start_job_from_msg(self, msg_content):
         """
-        Start a job enz enz.
+        Start a job 
         """
         session_uuid    = msg_content['session_uuid']
         job_uuid        = msg_content['job_uuid']
@@ -61,10 +61,10 @@ class SubprocessManager(object):
             self._registered_sessions[session_uuid]['jobs'] = {}
 
         # TODO: WHat happens if the same job_uuid is retrieved twice??
-        if job_uuid in self._registered_sessions[session_uuid]['jobs'] :
-            raise Exception("received the same Job_uuid twice, error state")
-            # Alternative send a.. results msg to the logger?
-            # pythonic: fail early fail hard: This is a major error state
+        assert not job_uuid in self._registered_sessions[session_uuid]['jobs'], \
+               "received the same Job_uuid twice, error state"
+        # Alternative send a.. results msg to the logger?
+        # pythonic: fail early fail hard: This is a major error state
 
         # to start a process we first append the job_uuid after the cmd
         # this is backward compatibility issue from the pipeline framework
@@ -100,14 +100,28 @@ class SubprocessManager(object):
         session_uuid = msg_content['session_uuid']
         self.kill_job_send_results(session_uuid, job_uuid)
 
-    def quit_session(self, msg_content):
+    def quit_session(self, session_uuid, send_cout = False):
         """
         Kills all jobs connected to a queue
+        This 
+
         """
-        session_uuid = msg_content['session_uuid']
+        self._logger.info("Killing all jobs for session: \n {0}".format(
+          session_uuid))
+
+        # Due to the permanent nature of the queue. It is possible that an unexisting
+        # session_uuid is asked to be killed. return without error.
+        if session_uuid not in self._registered_sessions:
+            return
 
         for job_uuid in self._registered_sessions[session_uuid]['jobs'].keys():
-            self.kill_job_send_results(session_uuid, job_uuid)
+            # kill the job
+            process  = self.kill_job(session_uuid, job_uuid) 
+
+            # send a msg to the pipeline if needed
+            if send_cout:
+                self.send_results_to_killed_job(process, session_uuid, 
+                                                job_uuid)
 
         # delete the whole session_uuid dictionary 
         del self._registered_sessions[session_uuid]
@@ -140,10 +154,11 @@ class SubprocessManager(object):
 
         return process, error_str
     
-    def kill_job_send_results(self,  session_uuid, job_uuid):
+    def kill_job(self,  session_uuid, job_uuid):
         """
-        Helper function for killing a job. The output is send on the 
-        results and log queue
+        Helper function for killing a job.
+        returns the killed process for further processing
+        or none of the job could not be found
         """
         # Received msg on the deadletter queue for removed sessions
         if not session_uuid in self._registered_sessions:
@@ -160,6 +175,25 @@ class SubprocessManager(object):
         # process
         process.kill()
 
+        return process
+
+
+    def kill_job_send_results(self,  session_uuid, job_uuid):
+        """
+        Helper function for killing a job. The output is send on the 
+        results and log queue
+        """
+        process = self.kill_job(session_uuid, job_uuid)
+
+        if not process:
+            return
+
+        del self._registered_sessions[session_uuid]['jobs'][job_uuid]
+
+        self.send_results_to_killed_job(process, session_uuid, job_uuid)
+
+
+    def send_results_to_killed_job(self, process, session_uuid, job_uuid): 
         # Get the stout en sterr, could contain information of the reason for
         # failure
         stdoutdata, stderrdata = process.communicate()
@@ -168,8 +202,6 @@ class SubprocessManager(object):
 
         # Send error results to
         self.send_results(session_uuid, job_uuid, -1, "Job killed")
-
-        del self._registered_sessions[session_uuid]['jobs'][job_uuid]
 
     def send_process_cout_cerr(self, session_uuid, job_uuid,
                                 stdoutdata, stderrdata):
@@ -183,6 +215,7 @@ class SubprocessManager(object):
                 payload = {'type':'log',
                            'level':   "INFO",
                            'log_data':stdoutdata,
+                           'session_uuid':session_uuid,
                            'job_uuid':job_uuid,
                            'sender': self._broker}
                 msg = self.create_msg(payload)
@@ -192,6 +225,7 @@ class SubprocessManager(object):
                 payload = {'type':'log',
                            'level':   "ERROR",
                            'log_data':stderrdata,
+                           'session_uuid':session_uuid,
                            'job_uuid':job_uuid,
                            'sender': self._broker}
                 msg = self.create_msg(payload)
@@ -221,7 +255,7 @@ class SubprocessManager(object):
         """
         payload = {'type':"exit_value",
                    'exit_value':exit_status,
-                   'uuid':session_uuid,
+                   'session_uuid':session_uuid,
                    'job_uuid':job_uuid,
                    'info':info_str}
         msg = self.create_msg(payload)

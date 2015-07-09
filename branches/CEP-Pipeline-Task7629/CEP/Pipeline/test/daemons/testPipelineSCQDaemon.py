@@ -89,48 +89,48 @@ class testForwardOfJobMsgToQueueuSlave(
 
         #deadletterQueue.close()
   
-    #def test_run_job_results_in_parameters_msg_on_bus(self):
-    #    """
-    #    A msg with the command run_job should be forwarded to jobnode
-    #    """
-    #    # Create the daemon and get all the default queues
-    #    job_node = 'locus102'
-    #    daemon, commandQueueBus = \
-    #        testFunctions.prepare_test( testForwardOfJobMsgToQueueuSlaveWrapper)
+    def test_run_job_results_in_parameters_msg_on_bus(self):
+        """
+        A msg with the command run_job should be forwarded to jobnode
+        """
+        # Create the daemon and get all the default queues
+        job_node = 'locus102'
+        daemon, commandQueueBus = \
+            testFunctions.prepare_test( testForwardOfJobMsgToQueueuSlaveWrapper)
 
-    #    # Test1: Create a test job payload
-    #    send_payload =  {'type': 'parameters',
-    #                     'command':'run_job',
-    #                     'session_uuid':"123456321654",
-    #                     'job_uuid': "654321",
-    #                     'node':job_node,
-    #                      'info': {'sender': 'subprocessStarter', 'target': 'SCQLib'},
-    #                     'parameters':{
-    #                       'cdw': "/home",
-    #                       'environment':  {"ENV":"Value"},
-    #                       'cmd': "ls"}}
+        # Test1: Create a test job payload
+        send_payload =  {'type': 'parameters',
+                         'command':'run_job',
+                         'session_uuid':"123456321654",
+                         'job_uuid': "654321",
+                         'node':job_node,
+                          'info': {'sender': 'subprocessStarter', 'target': 'SCQLib'},
+                         'parameters':{
+                           'cdw': "/home",
+                           'environment':  {"ENV":"Value"},
+                           'cmd': "ls"}}
 
-    #    msg = testFunctions.create_test_msg(send_payload)
-    #    commandQueueBus.send(msg)
+        msg = testFunctions.create_test_msg(send_payload)
+        commandQueueBus.send(msg)
 
-    #    # Run the process loop, parameters will be send to a bus adress that does
-    #    # not exist, it should end up in the deadletter queue
-    #    daemon._process_commands()
+        # Run the process loop, parameters will be send to a bus adress that does
+        # not exist, it should end up in the deadletter queue
+        daemon._process_commands()
 
 
-    #    # read from the deadletter queue
-    #    msg = testFunctions.try_get_msg(daemon._deadletterFromBus, 2) 
-    #    if msg == None:
-    #        raise Exception(
-    #             "Did not receive the expect msg on the deadletter queue")
-    #    daemon._deadletterFromBus.ack(msg) 
-    #    send_payload['info']['subject'] ='parameters_123456321654_654321'
-    #    # check that the correct msg is receive in the deadletter queue        
-    #    unpacked_msg_data = eval(msg.content().payload)
-    #    commandQueueBus.close()
-    #    daemon.close()
+        # read from the deadletter queue
+        msg = testFunctions.try_get_msg(daemon._deadletterFromBus, 2) 
+        if msg == None:
+            raise Exception(
+                 "Did not receive the expect msg on the deadletter queue")
+        daemon._deadletterFromBus.ack(msg) 
+        send_payload['info']['subject'] ='parameters_123456321654_654321'
+        # check that the correct msg is receive in the deadletter queue        
+        unpacked_msg_data = eval(msg.content().payload)
+        commandQueueBus.close()
+        daemon.close()
 
-    #    self.assertEqual(unpacked_msg_data, send_payload)
+        self.assertEqual(unpacked_msg_data, send_payload)
         
         
 
@@ -209,6 +209,18 @@ class testForwardOfJobMsgToQueueuSlave(
             daemon._process_deadletter_queue()
 
             self.assertFalse(daemon._process_deadletter_parameters_msg_called)
+            
+            # Clean up deadletter queue
+            while True:
+              try:
+                  msg = testFunctions.try_get_msg(daemon._deadletterFromBus,1)
+              except:
+                  break
+              daemon._deadletterFromBus.ack(msg)
+
+
+
+
         
         
     def test_start_node_recipe_no_connection_with_lib_2times(self):
@@ -330,7 +342,7 @@ class testForwardOfJobMsgToQueueuSlave(
             expected_content = {'info': 'Job killed',
                                 'exit_value': -1,
                                 'type': 'exit_value', 
-                                'uuid': '123456', 
+                                'session_uuid': '123456', 
                                 'job_uuid': '654321'}
             self.assertEqual(eval(msg.content().payload), expected_content)
 
@@ -416,7 +428,7 @@ class testForwardOfJobMsgToQueueuSlave(
                                {'info': 'Subprocess Results',
                                 'type': 'exit_value', 
                                 'exit_value': 0,
-                                'uuid': '123456',
+                                'session_uuid': '123456',
                                 'job_uuid': 'test_start_node_recipe_full'} 
 
             # There could be two diffent msg on the results queue
@@ -431,6 +443,7 @@ class testForwardOfJobMsgToQueueuSlave(
                 resultQueue.ack(msg)    
 
                 payload_parsed = eval(msg.content().payload)
+                print payload_parsed
                 if payload_parsed == expected_content_sub_proces_exit_value:
                     exit_received = True
                 elif payload_parsed['output']['output'] == "OUPUT FROM TEST RECIPE":

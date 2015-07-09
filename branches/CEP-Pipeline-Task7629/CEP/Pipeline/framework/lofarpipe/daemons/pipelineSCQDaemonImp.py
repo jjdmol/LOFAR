@@ -42,7 +42,7 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
         self._subprocessManager = subprocessManager.SubprocessManager(
                self._broker, self._busname, self._toBus, self._logger)
 
-        self._max_repost = 3 # We attempt 5 times to send parameters to a job
+        self._max_repost = 3 # We attempt 3 times to resend a msg
 
     def process_commands(self, command, unpacked_msg_content, msg):
         """
@@ -105,9 +105,46 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
                 self._process_deadletter_parameters_msg(unpacked_msg_data)
                 continue
 
+            elif msg_type == "exit_value" or msg_type == 'output':
+                subject = msg.getSubject()
+                self._process_deadletter_exit_or_output_msg(unpacked_msg_data,
+                                                            subject)
+                continue
+
             self._logger.info("Received a unknown msg on deadletterqueue:")
             self._logger.info("msg content: {0}".format(unpacked_msg_data))
             self._logger.info("ignoring msg")
+
+    def _process_deadletter_exit_or_output_msg(self, unpacked_msg_data,
+                                           subject):
+        """
+        We try to send a parameter msg a couple of times. After it still fails,
+        send results msg to the results q of the session
+        """
+        n_repost = None
+
+        if 'n_repost' in unpacked_msg_data:
+            n_repost = unpacked_msg_data['n_repost'] 
+        else:
+            unpacked_msg_data['n_repost'] = 0
+            n_repost = unpacked_msg_data['n_repost'] 
+        
+        if n_repost >= self._max_repost:
+            # If we tried enough times, kill the job
+            self._logger.warn(
+              "Failed deliver results or exit msg to" 
+              " pipeline, assume its down")
+            session_uuid = unpacked_msg_data['session_uuid']
+
+            self._subprocessManager.quit_session(
+              session_uuid, send_cout=False)
+        else:
+            # Else resend the msg, increase the resend count
+            unpacked_msg_data['n_repost'] += 1
+            msg = self.create_msg(unpacked_msg_data, subject)
+            self._toBus.send(msg)
+        
+        return
 
     def _process_deadletter_parameters_msg(self, unpacked_msg_data):
         """
@@ -157,7 +194,7 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
 
         return msg_content, msg_type
 
-    def create_msg(self, payload):
+    def create_msg(self, payload, subject=None):
         """
         TODO: should be moved into a shared code lib
         Creates a minimal valid msg with payload
@@ -169,4 +206,8 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
                     protocol="protocol",
                     protocolVersion="test")
         msg.payload = payload
+
+        if subject:
+            msg.set_subject(subject)
+
         return msg
