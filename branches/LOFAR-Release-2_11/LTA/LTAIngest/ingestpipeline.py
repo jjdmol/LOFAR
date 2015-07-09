@@ -211,8 +211,9 @@ class IngestPipeline():
             raise Exception('File transfer failed of %s' % self.JobId)
         else:
             try:
-              avgSpeed = float(self.FileSize) / elapsed
-              self.logger.debug("File transfer for %s had average speed of %s for %s including ltacp overhead" % (self.JobId, humanreadablesize(avgSpeed, 'Bps'), humanreadablesize(float(self.FileSize), 'B')))
+              if int(self.FileSize) > 0:
+                avgSpeed = float(self.FileSize) / elapsed
+                self.logger.debug("File transfer for %s  took %d sec with an average speed of %s for %s including ltacp overhead" % (self.JobId, elapsed, humanreadablesize(avgSpeed, 'Bps'), humanreadablesize(float(self.FileSize), 'B')))
             except Exception:
               pass
             self.CheckChecksums()
@@ -432,8 +433,9 @@ class IngestPipeline():
       self.RetryRun(self.SendStatus, self.ltaRetry, 'Setting LTA status', IngestSuccessful)
       elapsed = time.time() - start
       try:
-        avgSpeed = float(self.FileSize) / elapsed
-        self.logger.debug("Ingest Pipeline finished for %s in %d sec with average speed of %s for %s including all overhead" % (self.JobId, elapsed, humanreadablesize(avgSpeed, 'Bps'), humanreadablesize(float(self.FileSize), 'B')))
+        if int(self.FileSize) > 0:
+          avgSpeed = float(self.FileSize) / elapsed
+          self.logger.debug("Ingest Pipeline finished for %s in %d sec with average speed of %s for %s including all overhead" % (self.JobId, elapsed, humanreadablesize(avgSpeed, 'Bps'), humanreadablesize(float(self.FileSize), 'B')))
       except Exception:
         self.logger.debug("Ingest Pipeline finished for %s in %d sec" % (self.JobId, elapsed))
       
