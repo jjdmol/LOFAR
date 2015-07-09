@@ -261,9 +261,14 @@ class CQDaemon(object):
                 continue   # command is processed by the subclass
 
             elif command == 'quit':
+                print "debug1"
                 self._process_quit_msg(unpacked_msg_content)
                 self._CommandQueue.ack(msg)                         
                 return True  # TODO: test if true is returned on quit command
+
+            elif command == 'echo':
+                self._process_echo_msg(unpacked_msg_content)
+                self._CommandQueue.ack(msg)
 
             else:
                 self._logger.warn("***** warning **** encountered unknown command")
@@ -281,6 +286,40 @@ class CQDaemon(object):
                           )
                 msg.payload = {"some":"content"}
                 self._toDeadletterBus.send(msg) # you cannot forward a msg
+
+        
+            
+
+        return False
+
+
+    def _process_echo_msg(self, unpacked_msg_content):
+        """
+        Private function implements an echo command. Can be used to assess the
+        health of a daemon.
+        """
+        try:
+            return_queue = unpacked_msg_content['return_queue']
+
+            unpacked_msg_content['receive']=True
+            msg = message.MessageContent(
+                        from_="test",
+                        forUser="",
+                        summary="summary",
+                        protocol="protocol",
+                        protocolVersion="test", 
+                        #momid="",
+                        #sasid="", 
+                        #qpidMsg=None
+                              )
+            msg.payload = unpacked_msg_content
+            with msgbus.ToBus(return_queue, broker = self._broker) as return_queue:
+                return_queue.send(msg)
+
+        # catch everything!!!
+        except Exception, ex:
+            pass
+
 
 
     def process_state(self):

@@ -170,8 +170,8 @@ class resultQueueHandler(threading.Thread):
     setStopFlag() stops the forwarder
     """
     def __init__(self,broker, resultQueueName, 
-                 running_jobs, 
-                 running_jobs_lock, 
+                 pipeline_data, 
+                 pipeline_data_lock, 
                  logger=None, 
                  poll_interval=1.0):
         """
@@ -196,39 +196,48 @@ class resultQueueHandler(threading.Thread):
             broker = self._broker)
         self.logger.debug("COnnection with resultQueue established")
 
-        # Unique for the result queue handler
-        self._running_jobs = running_jobs
-        self._running_jobs_lock = running_jobs_lock
+        # access to data of the MCQLib
+        self._pipeline_data = pipeline_data
+        self._pipeline_data_lock = pipeline_data_lock
 
     def _process_queue_message(self, msg_content):
         """
         Parse return messages 
         """
-
-
         # get the data from the msg
         type = msg_content['type']
-        self.logger.debug("Result for: {0}".format(msg_content['job_uuid']))
+        
         if type == 'exit_value':
+            self.logger.debug("exit_value for: {0}".format(msg_content['job_uuid']))
             exit_value = msg_content['exit_value']
             job_uuid = msg_content['job_uuid']
 
-            with self._running_jobs_lock:
-                self._running_jobs[job_uuid]['exit_value']=exit_value
+            with self._pipeline_data_lock:
+                self._pipeline_data[job_uuid]['exit_value']=exit_value
 
                 # if the exit value is invalid (different then 0)
                 # do not expect any output
                 if exit_value != 0:
-                    self._running_jobs[job_uuid]['output']=[]
+                    self._pipeline_data[job_uuid]['output']=[]
 
 
         elif type == 'output':
+            self.logger.debug("output for: {0}".format(msg_content['job_uuid']))
             output = msg_content['output']
             job_uuid = msg_content['job_uuid']
 
-            with self._running_jobs_lock:
-                self._running_jobs[job_uuid]['output']=output
+            with self._pipeline_data_lock:
+                self._pipeline_data[job_uuid]['output']=output
 
+        elif type == "echo":
+            with self._pipeline_data_lock:
+                # TODO: What if the echo is received from a different
+                self.logger.error(msg_content)
+                if msg_content['echo_type'] == "master_echo":
+                    self.logger.debug("Received an Master echo")
+                    self._pipeline_data["master_echo_received"] = True
+
+        # ignore other types!!!!! this is very save
 
     def run(self):
         """
@@ -263,7 +272,7 @@ class resultQueueHandler(threading.Thread):
                 self.logger.warning(str(ex))
                 self.logger.warning("Expected behaviour on manual abort")
 
-            #self.logger.error(self._running_jobs)
+
             time.sleep(self.poll_interval)
  
     def setStopFlag(self):
@@ -295,8 +304,8 @@ class MCQLib(object):
         self._busname = busname
         # It is the dict that 'owns' the session information, the container
         # for state information
-        self._running_jobs = {}
-        self._running_jobs_lock = threading.Lock()
+        self._pipeline_data = {}  # TODO: Rename, also master connection is stored
+        self._pipeline_data_lock = threading.Lock()
 
         # some static information for this session
         self._sessionUUID = uuid.uuid4().hex
@@ -308,10 +317,13 @@ class MCQLib(object):
         self._resultQueue = None
         self._logTopic    = None
 
+        # start threads needed for receiving msg, both results and log
+        self._start_log_and_result_handlers()
+
         # Check state, raise exception if incorrect
         self._connect_to_master(self._masterCommandQueueName)
 
-        self._start_log_and_result_handlers()
+        
 
     def _start_log_and_result_handlers(self):
         """
@@ -325,7 +337,7 @@ class MCQLib(object):
 
         self._resultQueueForwarder = resultQueueHandler(
                    self._broker, self._returnQueueName,
-                   self._running_jobs , self._running_jobs_lock, self.logger)
+                   self._pipeline_data , self._pipeline_data_lock, self.logger)
 
         # Register correct handlers for killing the threads
         signal.signal(signal.SIGTERM, 
@@ -357,10 +369,31 @@ class MCQLib(object):
         self._masterCommandQueue = msgbus.ToBus(masterCommandQueueName, 
             broker = self._broker)
 
-        # Send and wait for acknoledge on a connection msg
+
         # Check for consumers: We need to know if the deamon is active before
         # we can send commands
-        # TODO Implement
+        self._pipeline_data["master_echo_received"] =False
+        payload = {'command':"echo",                      # echo msg
+                   'type':'echo',
+                   'echo_type':"master_echo",
+                   'return_queue':self._returnQueueName}  # send echo to this q
+
+
+        msg = self.create_msg(payload)
+        self._masterCommandQueue.send(msg)
+
+        # now attempt 10 times to receive a responce from the master 
+        master_up = False
+        for idx in range(10):
+            with self._pipeline_data_lock:
+                if self._pipeline_data["master_echo_received"]:
+                    master_up = True
+                    break
+            # Now sleep and retry in a second
+            time.sleep(1)  
+                                
+        if not master_up:
+            raise Exception("could net get contact with the master!!!")
         self.logger.debug("Connection established and Master is active")
 
 
@@ -400,19 +433,18 @@ class MCQLib(object):
         global workerThreadKillswitch
         workerThreadKillswitch = killswitch
 
-
-
     def run_job(self, job_parameters, job, limiter, killswitch):
         """
 
         """
-        #TODO: THIS APPENDING OF QUEUE NAMES SHOULD BE MOVED TO THE RUN
-        # COMMAND IN  THE FRAMEWORK
         host = job_parameters['node']
+        # limits the amount of jobs that can run on a single node 
+        # (pipeline functionality)
         limiter[job.host].acquire()
         time_info_start = time.time()
-        job_uuid = None
 
+        # Create unique uuid for this specific job        
+        job_uuid = uuid.uuid4().hex
         try:
             # We could have received a stop (ctrl-c) so check here if it is set
             if killswitch.isSet():
@@ -421,18 +453,20 @@ class MCQLib(object):
                 self.results['returncode'] = 1
                 return 1
 
-            job_uuid = uuid.uuid4().hex
-
+            # Constuct the rung_job msg
             payload = {"command":"run_job", 
                        "session_uuid":self._sessionUUID,
                        'job_uuid':job_uuid,
                        "parameters":job_parameters}
-
             msg = self.create_msg(payload)       
+            # and send
             self._masterCommandQueue.send(msg)
-            with self._running_jobs_lock:
-                self._running_jobs[job_uuid] = {'payload':copy.deepcopy(msg.payload),
-                                            'completed':False}
+
+
+            with self._pipeline_data_lock:
+                self._pipeline_data[job_uuid] = {
+                                  'payload':copy.deepcopy(msg.payload),
+                                  'completed':False}
 
             # wait until the job returns then return, this needs a lock around the
             # running jobs object.
@@ -445,12 +479,12 @@ class MCQLib(object):
                     self.results['returncode'] = 1
                     return 1
 
-                with self._running_jobs_lock:
+                with self._pipeline_data_lock:
                     # If both the exit_value (of the recipe executable)
                     # and the output (generated in the recipe and send there)
                     # are present we are done with the job
-                    if 'exit_value' in self._running_jobs[job_uuid] and \
-                       'output'     in self._running_jobs[job_uuid]:
+                    if 'exit_value' in self._pipeline_data[job_uuid] and \
+                       'output'     in self._pipeline_data[job_uuid]:
                         break
         finally:
             limiter[job.host].release()  # always release the node lock
@@ -459,11 +493,11 @@ class MCQLib(object):
 
         # Now retrieve all the results and set correct values on the job
         job.results["job_duration"] = str(time_info_end - time_info_start)
-        job.results['returncode'] = self._running_jobs[job_uuid]['exit_value']
-        job.results.update(self._running_jobs[job_uuid]['output'])
+        job.results['returncode'] = self._pipeline_data[job_uuid]['exit_value']
+        job.results.update(self._pipeline_data[job_uuid]['output'])
 
 
-        return self._running_jobs[job_uuid]['exit_value']
+        return self._pipeline_data[job_uuid]['exit_value']
 
     def create_msg(self, payload):
         """
