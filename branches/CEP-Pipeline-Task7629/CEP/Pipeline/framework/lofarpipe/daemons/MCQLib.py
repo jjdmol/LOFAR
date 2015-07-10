@@ -80,14 +80,15 @@ class logTopicHandler(threading.Thread):
         Default polling interval is 10 seconds
         """
         threading.Thread.__init__(self)
-        self.daemon = True  # run as daemon: thread dies on owner death
+        # run as daemon: thread dies on owner death
+        self.daemon = True  
 
         self._broker = broker
         self._logger = logger
-        self.stopFlag = logTopicStopFlag    # from 'global' scope
 
-        # Set it to working (allows re entrant usage of this class)
-        self.stopFlag.clear()
+        self.stopFlag = logTopicStopFlag    # needed for stopping on ctrl-c       
+        self.stopFlag.clear() # Set it to working (allows re entrant usage)
+
         self._poll_interval = poll_interval       
         self._logTopicName = logTopicName
 
@@ -126,9 +127,10 @@ class logTopicHandler(threading.Thread):
         a. Listen for log lines, process and ack
         b. sleep for poll_interval
         """
-        while not self.stopFlag.isSet():           
-            try: 
-                while not self.stopFlag.isSet():
+        while not self.stopFlag.isSet():                       
+            while not self.stopFlag.isSet():
+                msg = None
+                try:
                     # get is blocking, use timeout.
                     msg = self._logTopic.get(0.1)  
                     if msg == None:
@@ -138,17 +140,17 @@ class logTopicHandler(threading.Thread):
                     msg_content = eval(msg.content().payload)
                     self._process_log_message(msg_content)
 
-                    # ack the msg
-                    self._logTopic.ack(msg)
+                # Catch all exception, daemon!!!!!
+                except Exception, ex:
+                    self._logger.warning("LogTopic handler received uncaught exception:")
+                    self._logger.warning(type(ex))
+                    self._logger.warning(str(ex))
+                    self._logger.warning("Expected behaviour on manual abort")
 
-            # Catch all exception!!!!!
-            except Exception, ex:
-                self._logger.warning("LogTopic handler received uncaught exception:")
-                self._logger.warning(type(ex))
-                self._logger.warning(str(ex))
-                self._logger.warning("Expected behaviour on manual abort")
+                finally:
+                    if msg:
+                        self._logTopic.ack(msg)
                 
-            # sleep
             time.sleep(self._poll_interval)
  
     def setStopFlag(self):
@@ -247,15 +249,11 @@ class resultQueueHandler(threading.Thread):
         sleep for poll_interval
         """
         while not self.stopFlag.isSet():
-            try:
-                self.logger.debug("Polling resultQueue: {0}".format(
-                                                       self._resultQueueName))
-
-                # reset the counter to zero, and restart the wait period
-                self.poll_counter = 0       
-                # now empty the queue
-                while True:
-
+            while not self.stopFlag.isSet():
+                msg = None
+                try:
+                    self.logger.debug("Polling resultQueue: {0}".format(
+                                                           self._resultQueueName))
                     # get is blocking, always use timeout.
                     msg = self._resultQueue.get(0.2)  
                     if msg == None:
@@ -264,14 +262,16 @@ class resultQueueHandler(threading.Thread):
                     # process the log data
                     msg_content = eval(msg.content().payload)
                     self._process_queue_message(msg_content)
-                    self._resultQueue.ack(msg)
 
-            except Exception, ex:
-                self.logger.warning("Results handler received uncaught exception:")
-                self.logger.warning(type(ex))
-                self.logger.warning(str(ex))
-                self.logger.warning("Expected behaviour on manual abort")
+                except Exception, ex:
+                    self.logger.warning("Results handler received uncaught exception:")
+                    self.logger.warning(type(ex))
+                    self.logger.warning(str(ex))
+                    self.logger.warning("Expected behaviour on manual abort")
 
+                finally:
+                    if msg:
+                        self._resultQueue.ack(msg)
 
             time.sleep(self.poll_interval)
  
@@ -449,7 +449,7 @@ class MCQLib(object):
             # We could have received a stop (ctrl-c) so check here if it is set
             if killswitch.isSet():
                 self.logger.debug("Shutdown in progress: not starting remote job")
-                self.results = {}
+                self.results = {}  
                 self.results['returncode'] = 1
                 return 1
 
@@ -464,15 +464,15 @@ class MCQLib(object):
 
 
             with self._pipeline_data_lock:
-                self._pipeline_data[job_uuid] = {
-                                  'payload':copy.deepcopy(msg.payload),
-                                  'completed':False}
+                self._pipeline_data[job_uuid] = {'payload':msg.payload,
+                                                 'completed':False}
 
             # wait until the job returns then return, this needs a lock around the
             # running jobs object.
             poll_interval = 1  # check for results each second
             while True:
                 time.sleep(poll_interval)
+                 # We could have received a stop (ctrl-c) so check here if it is set
                 if killswitch.isSet():
                     self.logger.debug("Shutdown in progress: not starting remote job")
                     self.results = {}
@@ -495,7 +495,6 @@ class MCQLib(object):
         job.results["job_duration"] = str(time_info_end - time_info_start)
         job.results['returncode'] = self._pipeline_data[job_uuid]['exit_value']
         job.results.update(self._pipeline_data[job_uuid]['output'])
-
 
         return self._pipeline_data[job_uuid]['exit_value']
 
