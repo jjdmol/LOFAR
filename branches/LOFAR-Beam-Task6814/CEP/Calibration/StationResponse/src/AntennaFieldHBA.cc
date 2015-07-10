@@ -166,5 +166,25 @@ std::pair<double,double> AntennaFieldHBA::getAzEl(const vector3r_t &position,
      return azel;
 }
 
+casa::Array<casa::Float> AntennaFieldHBA::readFITS(const string &filename)
+{
+  casa::Bool ok=true;
+  casa::String message;
+
+  casa::Array<casa::Float> tmp;
+
+  FileLocator locator("$LOFARROOT/share/beamnorms");
+  string fitsFile=locator.locate(filename);
+  tmp = casa::ReadFITS(fitsFile.c_str(),ok,message);
+  if (!ok) {
+    LOG_WARN_STR("Could not read beam normalization fits file: " << message);
+  }
+  return tmp;
+}
+
+
+casa::Array<casa::Float>AntennaFieldHBA::theirIntegrals=readFITS("cs002hba1mode5.fits");
+
+
 } //# namespace StationResponse
 } //# namespace LOFAR
