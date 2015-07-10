@@ -81,37 +81,27 @@ class CQDaemon(object):
         if type(self) == CQDaemon:
             raise NotImplementedError("CQDaemon should always be subtyped")
         
-        self._logger = logging.getLogger("MCQDaemon")
-
+        self._logger = logging.getLogger("CQDaemon")
         self._broker = broker
-
         self._busname = busname
-        self._loop_interval = loop_interval  # perform loop max once per 
-                                             #loop_interval
-        self.commandQueueName = commandQueueName
-        self._deadLetterQueueName = deadLetterQueueName
 
-        # Connect to the command queue
+        self._loop_interval = loop_interval  
+
+        
         self._logger.info("Creating bus connections on broker: {0}".format(
                     self._broker))
+        # Connect to the command queue
         self._logger.info("Connecting to command queue: {0}".format(
-                        self.commandQueueName))
-        self._CommandQueue = msgbus.FromBus(self.commandQueueName,
+                                                             commandQueueName))
+        self._CommandQueue = msgbus.FromBus(commandQueueName,
                                             broker = self._broker)
         self._logger.info("Connected")
 
-        ## Connect tobus for the deadletter queue
-        self._logger.info("Connecting toBus deadletter: {0}".format(
-                        self._deadLetterQueueName))
-        self._toDeadletterBus = msgbus.ToBus(self._deadLetterQueueName,
-               broker = self._broker)
-        self._logger.info("Connected")
-
-        ## Connect frombus to the deadletter queue
+        ## Connect to the deadletter queue
         self._logger.info("Connecting fromBus deadletter: {0}".format(
-                        self._deadLetterQueueName))
-        self._deadletterFromBus = msgbus.FromBus(self._deadLetterQueueName,
-               broker = self._broker)
+                                                          deadLetterQueueName))
+        self._deadletterFromBus = msgbus.FromBus(deadLetterQueueName,
+                                               broker = self._broker)
         self._logger.info("Connected")
 
     def __enter__(self):
@@ -126,7 +116,6 @@ class CQDaemon(object):
         close all owned connections.
         """
         self._CommandQueue.close()
-        self._toDeadletterBus.close()
         self._deadletterFromBus.close()
 
     def run(self):
@@ -143,15 +132,13 @@ class CQDaemon(object):
         """
         while(True):   
             begin_tick = datetime.now()
-            # 1.  check all registered pipeline queues for disconnects
-
-            # 2.  Process all incomming commands
-            quit_command_received = self._process_commands()
+            # Process all incomming commands
+            quit_command_received = self._process_command_queue()
             if (quit_command_received):
                 self._logger.warn("Recveived quit command. stopping daemon")
                 break     
 
-            #3. call deadletter process function with the deadletter queue
+            # process deadletters 
             self._process_deadletter_queue()
 
             #4. Do whatever internal houskeeping on a possible state
@@ -168,6 +155,51 @@ class CQDaemon(object):
       
             self._sleep(duration_loop_seconds)
 
+    def _process_command_queue(self):
+        """
+        Process in order all commands in the command queue
+
+        If a quit command is received exit value is True
+        else None
+        """     
+        while True:
+            # Try to get a new msg from the command queue
+            msg_available, msg_data = self._get_next_valid_msg_and_content(
+                              self._CommandQueue)
+            if not msg_available:
+                break
+                        
+            (msg, unpacked_msg_content, msg_type) = msg_data
+            if msg_type != "command":
+                self._logger.error(
+                  "Received non command msg on the command queue")
+                self._logger.error(unpacked_msg_content)
+                self._logger.error(msg_type)
+
+            command = unpacked_msg_content['command']
+
+            # First call the Subclass process command
+            processed_by_subclass = self.process_command(
+                    msg, unpacked_msg_content, command)
+
+            # Try to process the command we allow
+            if processed_by_subclass:
+                  continue # with next msg on the queue
+
+            elif command == 'quit':
+                self._process_quit_msg(unpacked_msg_content)
+                return True  
+
+            elif command == 'echo':
+                self._logger.error("Received echo command")
+                self._process_echo_msg(unpacked_msg_content)
+
+            else:
+                self._logger.warn("***** encountered unknown command *****")
+                self._logger.warn(unpacked_msg_content)                
+
+        return False
+
     def _process_deadletter_queue(self):
         """
         Process deadletters queue
@@ -179,30 +211,31 @@ class CQDaemon(object):
         do this in a different process
         """     
         while True:
-            # Test if the timeout is in milli seconds or second
-            msg = self._deadletterFromBus.get(0.1)  #  use timeout.
+            # Try to get a new msg from the deadletterbus
+            msg_available, msg_data = self._get_next_valid_msg_and_content(
+                              self._deadletterFromBus)
 
-            if msg == None:
-               break    # exit msg processing
+            # break on none available
+            if not msg_available:
+                break
+            
+            (msg, unpacked_msg_content, msg_type) = msg_data
 
-            # Get the needed information from the msg
-            unpacked_msg_data = self._unpack_msg(msg)
-            if not unpacked_msg_data:  # if unpacking failed
-                self._logger.error(
-                    "Could not process deadletter, incorrect content")
-                self._logger.warn(msg)
-                self._deadletterFromBus.ack(msg) 
-                continue
+            # First call the Subclass deadletter processing!!!
+            processed_by_subclass = self.process_deadletter(
+                    msg, unpacked_msg_content, msg_type)
+
+            if processed_by_subclass:
+                  continue      # Continue with the next msg on the queue
 
             # default implementation, report the deadletter and report
-            unpacked_msg_content, command = unpacked_msg_data   
             self._logger.info(
-               "Received on deadletterqueue command: {0}".format(command))
+               "Received on deadletterqueue type: {0}".format(msg_type))
             self._logger.info("msg content: {0}".format(unpacked_msg_content))
             self._logger.info("ignoring msg")
-            self._deadletterFromBus.ack(msg) 
 
-    def process_commands(self, command, unpacked_msg_content, msg):
+
+    def process_command(self, msg, unpacked_msg_content, command):
         """
         Abstract interface definition.
 
@@ -210,95 +243,48 @@ class CQDaemon(object):
         should return True of the command is processed in the called function
         The received massaged should NOT be acked!!!!
         """
-        raise NotImplementedError("MCQDaemon should always be inherited from")
+        return False
 
-    def _process_commands(self):
+    def process_deadletter(self, msg, unpacked_msg_content, type):
         """
-        Process in order all commands in the command queue
+        Abstract interface definition.
 
-        If a quit command is received exit value is True
-        else None
-        """     
-        while True:
-            # Test if the timeout is in milli seconds or second
-            msg = self._CommandQueue.get(0.1)  # get is blocking, use timeout.
-
-            if msg == None:
-               break    # exit msg processing
-
-            # Get the needed information from the msg
-            unpacked_msg_data = self._unpack_msg(msg)
-            if not unpacked_msg_data:
-                # Forward the msg to the deadletter queue
-                self._toDeadletterBus.send(msg)
-                self._CommandQueue.ack(msg) 
-                break
-
-            unpacked_msg_content, command = unpacked_msg_data           
-            # Send the command and msg to the process_command function
-            # of the sub class
-            processed_in_subclass = True
-            #try:
-            processed_in_subclass = self.process_commands(
-                        command, unpacked_msg_content, msg)
-            ## Catch all exception, (excluding signals)
-            #except Exception, ex:
-            #    # We could also send to deadletter queue, but it will fail there
-            #    # also i suspect
-            #    self._logger.error("Processing failed in CQDaemon subclass")
-            #    self._logger.error(
-            #        "Deleting msg from queue and continue, error:")               
-            #    self._logger.error(ex)
-
-
-            if processed_in_subclass:
-                try:
-                    self._CommandQueue.ack(msg)  
-                except Exception, ex:
-                    self._logger.error("Failed to ack a msg for subclass")
-                    self._logger.error("Did you ack the msg yourselve?")
-
-                continue   # command is processed by the subclass
-
-            elif command == 'quit':
-                print "debug1"
-                self._process_quit_msg(unpacked_msg_content)
-                self._CommandQueue.ack(msg)                         
-                return True  # TODO: test if true is returned on quit command
-
-            elif command == 'echo':
-                self._process_echo_msg(unpacked_msg_content)
-                self._CommandQueue.ack(msg)
-
-            else:
-                self._logger.warn("***** warning **** encountered unknown command")
-                self._logger.warn(unpacked_msg_content)                
-                self._CommandQueue.ack(msg)  
-                msg = message.MessageContent(
-                    from_="test",
-                    forUser="",
-                    summary="summary",
-                    protocol="protocol",
-                    protocolVersion="test", 
-                    #momid="",
-                    #sasid="", 
-                    #qpidMsg=None
-                          )
-                msg.payload = {"some":"content"}
-                self._toDeadletterBus.send(msg) # you cannot forward a msg
-
-        
-            
-
+        Default return False, for we did not process the command
+        """
         return False
 
 
+    def _get_next_valid_msg_and_content(self, aFromBus):
+        """
+
+        """
+        # Test if the timeout is in milli seconds or second
+        while True:
+            msg = aFromBus.get(0.1)  #  use timeout.
+
+            if msg == None:
+                return False, None
+
+            # Get the needed information from the msg
+            unpacked_msg_content, msg_type  = self._save_unpack_msg(msg)
+            if not unpacked_msg_content:  # if unpacking failed
+                self._logger.error(
+                    "Could not process msg, incorrect content")
+                self._logger.warn(msg)
+                aFromBus.ack(msg) 
+                continue
+
+            aFromBus.ack(msg)
+            return True, (msg, unpacked_msg_content, msg_type) 
+
+
     def _process_echo_msg(self, unpacked_msg_content):
-        """
-        Private function implements an echo command. Can be used to assess the
-        health of a daemon.
-        """
-        try:
+            """
+            Private function implements an echo command. Can be used to assess the
+            health of a daemon.
+            """
+            
+        #try:
             return_queue = unpacked_msg_content['return_queue']
 
             unpacked_msg_content['receive']=True
@@ -312,14 +298,14 @@ class CQDaemon(object):
                         #sasid="", 
                         #qpidMsg=None
                               )
+            unpacked_msg_content['type'] = 'echo'
             msg.payload = unpacked_msg_content
             with msgbus.ToBus(return_queue, broker = self._broker) as return_queue:
                 return_queue.send(msg)
 
         # catch everything!!!
-        except Exception, ex:
-            pass
-
+        #except Exception, ex:
+        #    pass
 
 
     def process_state(self):
@@ -341,7 +327,7 @@ class CQDaemon(object):
         """
         self.close()
 
-    def _unpack_msg(self, msg):
+    def _save_unpack_msg(self, msg):
         """
         Private helper function unpacks a received msg and casts it to 
         a msg_Content dict, the command string is also extracted
@@ -349,19 +335,20 @@ class CQDaemon(object):
         returns None if an error was encountered
         """
         msg_content = None
-        command = None
+        msg_type = None
         try:
-                # currently the expected payload is a dict
-                msg_content = eval(msg.content().payload)
+            
+            # currently the expected payload is a dict
+            msg_content = eval(msg.content().payload)
+            msg_type =  msg_content['type']
 
-                command = msg_content['command'] 
-        except:
-                self._logger.warn(
+        except Exception, ex:
+            self._logger.warn(
                    "***** warning **** encountered incorrect structured msg:")
-                self._logger.warn(msg.content())
-                return (None, None)
+            self._logger.warn(msg.content())  # TODO: can we print the msg here??
+            return None, None
 
-        return (msg_content, command)
+        return msg_content, msg_type
 
     def _sleep(self, duration_loop_seconds):
         """

@@ -242,6 +242,7 @@ class MCQDaemon(object):
         # First get al the registered queues and topics on the broker
         queues = self._brokerAgent.getAllQueues()
         topics = self._brokerAgent.getAllExchanges()
+        binding = self._brokerAgent.getAllBindings()
 
         # Covert to name to queue object lists
         raw_name_to_queue_dict = {}

@@ -208,6 +208,7 @@ class resultQueueHandler(threading.Thread):
         """
         # get the data from the msg
         type = msg_content['type']
+        self.logger.error("type")
         
         if type == 'exit_value':
             self.logger.debug("exit_value for: {0}".format(msg_content['job_uuid']))
@@ -374,7 +375,7 @@ class MCQLib(object):
         # we can send commands
         self._pipeline_data["master_echo_received"] =False
         payload = {'command':"echo",                      # echo msg
-                   'type':'echo',
+                   'type':'command',
                    'echo_type':"master_echo",
                    'return_queue':self._returnQueueName}  # send echo to this q
 
@@ -455,6 +456,7 @@ class MCQLib(object):
 
             # Constuct the rung_job msg
             payload = {"command":"run_job", 
+                       'type':"command",
                        "session_uuid":self._sessionUUID,
                        'job_uuid':job_uuid,
                        "parameters":job_parameters}

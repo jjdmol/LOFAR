@@ -44,7 +44,7 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
 
         self._max_repost = 3 # We attempt 3 times to resend a msg
 
-    def process_commands(self, command, unpacked_msg_content, msg):
+    def process_command(self, msg, unpacked_msg_content, command):
         """
         Process_commands, add the run_job command
         """               

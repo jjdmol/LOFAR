@@ -62,7 +62,7 @@ class MCQDaemon(CQDaemon.CQDaemon):
         super(MCQDaemon, self).close() # then the superclass
 
 
-    def process_commands(self, command, unpacked_msg_content, msg):
+    def process_command(self, msg, unpacked_msg_content, command):
         """
         Process_commands, add the run_job command
         """
@@ -71,7 +71,6 @@ class MCQDaemon(CQDaemon.CQDaemon):
             self._process_run_job(unpacked_msg_content)
             return True
 
-        return False
   
     def _process_run_job(self, unpacked_msg_content):
         """
@@ -100,8 +99,7 @@ class MCQDaemon(CQDaemon.CQDaemon):
             self._toSlaveBus.send(msg)
         except Exception, ex:
             # Always catch all exceptions, we need to assure that the daemon
-            # keeps running, grad exception and print the problem
-
+            # keeps running
             self._logger.warn(str(ex))
             self._logger.warn(unpacked_msg_content)
 
