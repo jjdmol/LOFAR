@@ -276,13 +276,25 @@ private:
   void addData (Cube<Complex>& to, const Cube<Complex>& from,
                 Cube<Float>& tow, const Cube<Float>& weights, int bl)
   {
-    to += from(IPosition(3,0,0,bl), IPosition(3,to.nrow()-1,to.ncolumn()-1,bl));
+    Cube<Complex> tmp=from.copy();
+    Cube<Complex>::iterator tmpit=tmp.begin();
+    Cube<Float>::const_iterator weightit=weights.begin();
+    for (; tmpit!=to.end() && weightit!=weights.end(); tmpit++, weightit++) {
+      *tmpit *= *weightit;
+    }
+    to += tmp(IPosition(3,0,0,bl), IPosition(3,to.nrow()-1,to.ncolumn()-1,bl));
     tow += weights(IPosition(3,0,0,bl), IPosition(3,to.nrow()-1,to.ncolumn()-1,bl));
   }
   void addConjData (Cube<Complex>& to, const Cube<Complex>& from,
                     Cube<Float>& tow, const Cube<Float>& weights, int bl)
   {
-    to += conj(from(IPosition(3,0,0,bl), IPosition(3,to.nrow()-1,to.ncolumn()-1,bl)));
+    Cube<Complex> tmp=from.copy();
+    Cube<Complex>::iterator tmpit=tmp.begin();
+    Cube<Float>::const_iterator weightit=weights.begin();
+    for (; tmpit!=to.end() && weightit!=weights.end(); tmpit++, weightit++) {
+      *tmpit *= *weightit;
+    }
+    to += conj(tmp(IPosition(3,0,0,bl), IPosition(3,to.nrow()-1,to.ncolumn()-1,bl)));
     tow += weights(IPosition(3,0,0,bl), IPosition(3,to.nrow()-1,to.ncolumn()-1,bl));
   }
   virtual bool process (const DPBuffer& buf)

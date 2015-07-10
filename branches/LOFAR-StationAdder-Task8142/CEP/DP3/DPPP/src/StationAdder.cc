@@ -368,7 +368,7 @@ namespace LOFAR {
               for (uint k=0; k<nrcc; ++k) {
                 if (!inFlagPtr[k]) {
                   npoints[k]++;
-                  dataPtr[k] += conj(inDataPtr[k]);
+                  dataPtr[k] += inWghtPtr[k]*conj(inDataPtr[k]);
                   wghtPtr[k] += inWghtPtr[k];
                 }
               }
@@ -386,7 +386,7 @@ namespace LOFAR {
               for (uint k=0; k<nrcc; ++k) {
                 if (!inFlagPtr[k]) {
                   npoints[k]++;
-                  dataPtr[k] += inDataPtr[k];
+                  dataPtr[k] += inWghtPtr[k]*inDataPtr[k];
                   wghtPtr[k] += inWghtPtr[k];
                 }
               }
