@@ -71,6 +71,9 @@ class MCQDaemon(CQDaemon.CQDaemon):
             self._process_run_job(unpacked_msg_content)
             return True
 
+        if command == "stop_session":
+            self._process_stop_session(unpacked_msg_content)
+            return True
   
     def _process_run_job(self, unpacked_msg_content):
         """
@@ -81,9 +84,6 @@ class MCQDaemon(CQDaemon.CQDaemon):
             slave_commandqueue_topic_subject = \
                                self._toSlaveSubjectTemplate.format(node)
             self._logger.info("forwarding job to node: {0}".format(node))    
-            self._logger.info("qith subject: {0}".format(
-                        slave_commandqueue_topic_subject))
-
             # create new msg
             # TODO: FOrwarding of the received msg instead of creating a new one.
             msg = message.MessageContent()
@@ -103,3 +103,29 @@ class MCQDaemon(CQDaemon.CQDaemon):
             self._logger.warn(str(ex))
             self._logger.warn(unpacked_msg_content)
 
+    def _process_stop_session(self, unpacked_msg_content):
+        """
+        The stop jobs on slaves
+        """
+        try:        
+            node = unpacked_msg_content['node']   
+            slave_commandqueue_topic_subject = \
+                               self._toSlaveSubjectTemplate.format(node)
+
+            self._logger.info("forwarding stop command to node: {0}".format(node))    
+
+            # create new msg
+            msg = message.MessageContent()
+
+            # set content
+            msg.payload = unpacked_msg_content
+            msg.set_subject(slave_commandqueue_topic_subject)
+
+            # send to bus using the slave as msg name allows for dynamic routing
+            self._toSlaveBus.send(msg)
+
+        except Exception, ex:
+            # Always catch all exceptions, we need to assure that the daemon
+            # keeps running
+            self._logger.warn(str(ex))
+            self._logger.warn(unpacked_msg_content)

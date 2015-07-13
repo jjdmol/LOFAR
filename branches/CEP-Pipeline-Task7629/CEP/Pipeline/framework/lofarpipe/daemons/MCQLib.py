@@ -450,8 +450,9 @@ class MCQLib(object):
             if node in stop_send:
                 continue
 
-            payload = {"command":"stop_session",
-                       "uuid":self._sessionUUID,
+            payload = {"type":"command",
+                       "command":"stop_session",
+                       "session_uuid":self._sessionUUID,
                        "node":node}
             msg =self.create_msg(payload)      
             self._masterCommandQueue.send(msg)

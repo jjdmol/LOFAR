@@ -132,7 +132,6 @@ class SubprocessManager(object):
         """
         process = None
         error_str = None
-        self._logger.error(command)
         try:
             process = subprocess.Popen(
                         command,
@@ -145,10 +144,10 @@ class SubprocessManager(object):
             self._logger.info("Started a new job: {0}".format(command))
 
         except Exception, ex:
-            self._logger.error("Received an command that failed in Popen:")
-            self._logger.error(command)
+            self._logger.warn("Received an command that failed in Popen:")
+            self._logger.warn(command)
             error_str = str(ex)
-            self._logger.error(error_str)            
+            self._logger.warn(error_str)            
             process = None         # Popen failed, signal the failure of the 
                                    # command. Mostly due to file not found errors
 

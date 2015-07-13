@@ -52,6 +52,10 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
             self._process_run_job(unpacked_msg_content)
             return True
 
+        if command == 'stop_session':
+            self._process_stop_session(unpacked_msg_content)
+            return True
+
         return False
 
     def process_state(self):
@@ -67,7 +71,17 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
         The starting of a job on one of the node servers.
         """
         # Forward the content
+        # TODO: unpack the all the needed info and call direct functions
+        # with out any msg_content??
         self._subprocessManager.start_job_from_msg(unpacked_msg_content)
+
+
+    def _process_stop_session(self, unpacked_msg_content):
+        """
+        Forward the stop session to the subprocess manager
+        """
+        session_uuid = unpacked_msg_content['session_uuid']
+        self._subprocessManager.quit_session(session_uuid)
 
     def _process_deadletter_queue(self):
         """
@@ -92,7 +106,7 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
             self._deadletterFromBus.ack(msg)
 
             if not unpacked_msg_data:  # if unpacking did not work
-                self._logger.error("unknown msg on deadletter bus:")
+                self._logger.warn("unknown msg on deadletter bus:")
                 self._logger.warn(msg)                
                 continue
 
