@@ -58,76 +58,22 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
 
         return False
 
-    def process_state(self):
+    def process_deadletter(self, msg, unpacked_msg_content, msg_type):
         """
-        Called by superclass run loop. Performs all the state based 
-        functionality
-        """
-        # All the state is stored in the subprocess manager
-        self._subprocessManager.check_managed_processed()
-  
-    def _process_run_job(self, unpacked_msg_content):
-        """
-        The starting of a job on one of the node servers.
-        """
-        # Forward the content
-        # TODO: unpack the all the needed info and call direct functions
-        # with out any msg_content??
-        self._subprocessManager.start_job_from_msg(unpacked_msg_content)
-
-
-    def _process_stop_session(self, unpacked_msg_content):
-        """
-        Forward the stop session to the subprocess manager
-        """
-        session_uuid = unpacked_msg_content['session_uuid']
-        self._subprocessManager.quit_session(session_uuid)
-
-    def _process_deadletter_queue(self):
-        """
-        Process deadletters queue
-
-        TODO: This function still feels clutchy. Might be refactored
+        Process deadletters queue msg
         """     
-        # First we add a msg on the queue as a stopper:
-        # We should only process the queue once.  
-        msg = self.create_msg({"type":"deadletter_stop"})
-        msg.set_subject("deadletter")
-        self._toBus.send(msg)
+        if msg_type == 'parameters':
+            self._process_deadletter_parameters_msg(unpacked_msg_content)
+            return True
 
-        # Now read msg from the deadletter queue
-        while True:   # The loop exits when a deadletter_stop msg is received
-            msg = self._deadletterFromBus.get(0.1)  #  use timeout.
-            if msg == None:
-               break    # exit loop, should not happen but to be sure
-
-            # Get the needed information from the msg
-            unpacked_msg_data, msg_type  = self._save_unpack_msg(msg)           
-            self._deadletterFromBus.ack(msg)
-
-            if not unpacked_msg_data:  # if unpacking did not work
-                self._logger.warn("unknown msg on deadletter bus:")
-                self._logger.warn(msg)                
-                continue
-
-            # Select what to do based on the msg type
-            if msg_type == "deadletter_stop":
-                # we have processed the complete deadletter queue
-                break # exit the while loop
-            
-            elif msg_type == 'parameters':
-                self._process_deadletter_parameters_msg(unpacked_msg_data)
-                continue
-
-            elif msg_type == "exit_value" or msg_type == 'output':
-                subject = msg.getSubject()
-                self._process_deadletter_exit_or_output_msg(unpacked_msg_data,
+        if msg_type == "exit_value" or msg_type == 'output':
+            subject = msg.getSubject()
+            self._process_deadletter_exit_or_output_msg(unpacked_msg_content,
                                                             subject)
-                continue
+            return True
 
-            self._logger.info("Received a unknown msg on deadletterqueue:")
-            self._logger.info("msg content: {0}".format(unpacked_msg_data))
-            self._logger.info("ignoring msg")
+        # Not processed  gerereturn False
+        return False
 
     def _process_deadletter_exit_or_output_msg(self, unpacked_msg_data,
                                            subject):
@@ -159,6 +105,31 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
             self._toBus.send(msg)
         
         return
+
+    def process_state(self):
+        """
+        Called by superclass run loop. Performs all the state based 
+        functionality
+        """
+        # All the state is stored in the subprocess manager
+        self._subprocessManager.check_managed_processed()
+  
+    def _process_run_job(self, unpacked_msg_content):
+        """
+        The starting of a job on one of the node servers.
+        """
+        # Forward the content
+        # TODO: unpack the all the needed info and call direct functions
+        # with out any msg_content??
+        self._subprocessManager.start_job_from_msg(unpacked_msg_content)
+
+
+    def _process_stop_session(self, unpacked_msg_content):
+        """
+        Forward the stop session to the subprocess manager
+        """
+        session_uuid = unpacked_msg_content['session_uuid']
+        self._subprocessManager.quit_session(session_uuid)
 
     def _process_deadletter_parameters_msg(self, unpacked_msg_data):
         """
@@ -225,3 +196,4 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
             msg.set_subject(subject)
 
         return msg
+

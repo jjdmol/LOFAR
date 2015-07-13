@@ -212,6 +212,13 @@ class CQDaemon(object):
         eg. You could not remove them from the queue but 
         do this in a different process
         """     
+
+        # First we add a msg on the queue as a stopper:
+        # We should only process the queue once.  
+        msg = self.create_msg({"type":"deadletter_stop"})
+        msg.set_subject("deadletter")
+        self._toBus.send(msg)
+
         while True:
             # Try to get a new msg from the deadletterbus
             msg_available, msg_data = self._get_next_msg_and_content(
@@ -223,7 +230,11 @@ class CQDaemon(object):
             
             (msg, unpacked_msg_content, msg_type) = msg_data
 
-            # First call the Subclass deadletter processing!!!
+             # we have processed the complete deadletter queue
+            if msg_type == "deadletter_stop":            
+                break # exit the while loop
+
+            # Call the Subclass deadletter processing.
             processed_by_subclass = self.process_deadletter(
                     msg, unpacked_msg_content, msg_type)
 

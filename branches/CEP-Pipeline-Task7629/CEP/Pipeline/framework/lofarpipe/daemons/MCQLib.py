@@ -444,19 +444,18 @@ class MCQLib(object):
         self._resultQueueForwarder.setStopFlag()
 
         # Send MCQDaemon for each node that we are stopping 
-        stop_send = []      
+        # Send each job a stop command (multiple per node is possible)
+        # This allows rerouting in the master
         for job_uuid in self._pipeline_data:
             node =self._pipeline_data[job_uuid]['node']
-            if node in stop_send:
-                continue
-
             payload = {"type":"command",
                        "command":"stop_session",
                        "session_uuid":self._sessionUUID,
+                       'job_uuid':job_uuid,           # Jobs might be routed
                        "node":node}
             msg =self.create_msg(payload)      
             self._masterCommandQueue.send(msg)
-            stop_send.append(node)
+
 
     def set_killswitch(self, killswitch):
         """
@@ -492,6 +491,7 @@ class MCQLib(object):
                        'type':"command",
                        "session_uuid":self._sessionUUID,
                        'job_uuid':job_uuid,
+                       'result_topic':"result_"+self._sessionUUID,
                        "parameters":job_parameters}
             msg = self.create_msg(payload)       
             # and send

@@ -49,16 +49,17 @@ class MCQDaemon(CQDaemon.CQDaemon):
                  deadLetterQueueName, loop_interval, daemon)
 
         # Connect to bus ( used for sending job msg to slaves)
-        self._toSlaveBus = msgbus.ToBus(self._busname, broker = self._broker)
+        self._toBus = msgbus.ToBus(self._busname, broker = self._broker)
 
         self._toSlaveSubjectTemplate = "slaveCommandQueue_{0}"
+        self._max_repost = 5
 
 
     def close(self):
         """
         close all  connections owned by subclass
         """
-        self._toSlaveBus.close()       # First our own bus
+        self._toBus.close()       # First our own bus
         super(MCQDaemon, self).close() # then the superclass
 
 
@@ -75,6 +76,41 @@ class MCQDaemon(CQDaemon.CQDaemon):
             self._process_stop_session(unpacked_msg_content)
             return True
   
+    def process_deadletter(self, msg, unpacked_msg_content, msg_type):
+        """
+        Process possible deadletter
+        """
+        # MCQDaemon can only receive dead command msg on its dlqueue
+        if not msg_type is "command":
+            return False
+
+        command = unpacked_msg_content['command']
+        if command == "run_job":
+            self._deadletter_process_run_job( 
+                                  msg, unpacked_msg_content, msg_type)
+            return True
+
+    def _deadletter_process_run_job(self, msg, unpacked_msg_content, msg_type):
+        """
+        This daemon has single command it supports on this level
+        When the job cannot deliver a job. Send a failure state to the sender
+        """       
+        if 'n_repost' in unpacked_msg_content:
+            n_repost = unpacked_msg_content['n_repost'] 
+        else:
+            unpacked_msg_content['n_repost'] = 0
+            n_repost = unpacked_msg_content['n_repost'] 
+
+        # Test if we tried enough
+        if n_repost >= self._max_repost:
+            self.send_results( unpacked_msg_content, 
+                     "-1", info_str="Could not deliver job to slave daemon")
+        else:
+            # Else resend the msg, increase the resend count
+            unpacked_msg_content['n_repost'] += 1
+            self._process_run_job(unpacked_msg_content)
+
+
     def _process_run_job(self, unpacked_msg_content):
         """
         The starting of a job on one of the node servers.
@@ -96,7 +132,7 @@ class MCQDaemon(CQDaemon.CQDaemon):
             msg.set_subject(slave_commandqueue_topic_subject)
 
             # send to bus using the slave as msg name allows for dynamic routing
-            self._toSlaveBus.send(msg)
+            self._toBus.send(msg)
         except Exception, ex:
             # Always catch all exceptions, we need to assure that the daemon
             # keeps running
@@ -122,10 +158,47 @@ class MCQDaemon(CQDaemon.CQDaemon):
             msg.set_subject(slave_commandqueue_topic_subject)
 
             # send to bus using the slave as msg name allows for dynamic routing
-            self._toSlaveBus.send(msg)
+            self._toBus.send(msg)
 
         except Exception, ex:
             # Always catch all exceptions, we need to assure that the daemon
             # keeps running
             self._logger.warn(str(ex))
             self._logger.warn(unpacked_msg_content)
+
+
+
+    def send_results(self, unpacked_msg_data, 
+                     exit_status, info_str=""):
+        """
+        Send a results msg to the results queue
+        """
+        payload = {'type':"exit_value",
+                   'exit_value':exit_status,
+                   'session_uuid':unpacked_msg_data['session_uuid'],
+                   'job_uuid':unpacked_msg_data['job_uuid'],
+                   'info':info_str}
+
+        msg = self.create_msg(payload)
+        msg.set_subject(unpacked_msg_data['result_topic'])
+        self._toBus.send(msg)
+
+
+    def create_msg(self, payload):
+        """
+        TODO: should be moved into a shared code lib
+        Creates a minimal valid msg with payload
+        """
+        msg = message.MessageContent(
+                    from_="test",
+                    forUser="",
+                    summary="summary",
+                    protocol="protocol",
+                    protocolVersion="test", 
+                    #momid="",
+                    #sasid="", 
+                    #qpidMsg=None
+                          )
+        msg.payload = payload
+        return msg
+    

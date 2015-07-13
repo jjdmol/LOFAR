@@ -106,13 +106,13 @@ class SubprocessManager(object):
         This 
 
         """
-        self._logger.info("Killing all jobs for session: \n {0}".format(
-          session_uuid))
-
         # Due to the permanent nature of the queue. It is possible that an unexisting
         # session_uuid is asked to be killed. return without error.
         if session_uuid not in self._registered_sessions:
             return
+
+        self._logger.info("Killing all jobs for session: \n {0}".format(
+          session_uuid))
 
         for job_uuid in self._registered_sessions[session_uuid]['jobs'].keys():
             # kill the job
@@ -120,7 +120,7 @@ class SubprocessManager(object):
 
             # send a msg to the pipeline if needed
             if send_cout:
-                self.send_results_to_killed_job(process, session_uuid, 
+                self.send_results_of_killed_job(process, session_uuid, 
                                                 job_uuid)
 
         # delete the whole session_uuid dictionary 
@@ -189,10 +189,10 @@ class SubprocessManager(object):
 
         del self._registered_sessions[session_uuid]['jobs'][job_uuid]
 
-        self.send_results_to_killed_job(process, session_uuid, job_uuid)
+        self.send_results_of_killed_job(process, session_uuid, job_uuid)
 
 
-    def send_results_to_killed_job(self, process, session_uuid, job_uuid): 
+    def send_results_of_killed_job(self, process, session_uuid, job_uuid): 
         # Get the stout en sterr, could contain information of the reason for
         # failure
         stdoutdata, stderrdata = process.communicate()
