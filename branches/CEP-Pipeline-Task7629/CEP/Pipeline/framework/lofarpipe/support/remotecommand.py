@@ -37,7 +37,6 @@ except:
     pass
 # End QPID include 
 
-
 class ParamikoWrapper(object):
     """
     Sends an SSH command to a host using paramiko, then emulates a Popen-like
