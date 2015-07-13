@@ -96,8 +96,6 @@ class SCQLib(object):
         framework. Exit state is retrieved by the NCQDaemon, using the exit 
         value of the script
         """
-        self._broker = broker
-        self._busname = busname
         self._session_uuid = session_uuid
         self._job_uuid = job_uuid
 
@@ -107,12 +105,12 @@ class SCQLib(object):
         self._returnQueueName = busname + "/result_" + session_uuid
         
         self._resultQueue = msgbus.ToBus(self._returnQueueName, 
-              broker = self._broker )
+              broker = broker)
 
         self._parameterQueue = msgbus.FromBus(self._parameterQueueName, 
-              broker = self._broker)
+              broker = broker)
 
-        self.QPIDLoggerHandler = QPIDLoggerHandler(self._broker,
+        self.QPIDLoggerHandler = QPIDLoggerHandler(broker,
                                                    self._logTopicName)
 
         self._job_dict = None

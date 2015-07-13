@@ -79,6 +79,15 @@ TODO:
 class CQDaemon(object):
     def __init__(self, broker, busname, commandQueueName,
                  deadLetterQueueName, loop_interval=10, daemon=True):
+        """
+        broker:              The broker to connect to
+        busname:             The bus we are communicating on
+        commandQueueName:    Name of the command queue to listen to
+        deadLetterQueueName: Name of the deadletter to listen to
+        loop_interval:       Max wait period between functionality loop (10sec)
+        daemon:              If true run loops infinitely until stop msg is 
+                             received (default = True)
+        """
         if type(self) == CQDaemon:
             raise NotImplementedError("CQDaemon should always be subtyped")
         
@@ -86,6 +95,7 @@ class CQDaemon(object):
         self._broker = broker
         self._busname = busname
         self._loop_interval = loop_interval  
+        self._daemon = daemon
 
         self._connect_queues( busname, commandQueueName, deadLetterQueueName)
 
@@ -115,7 +125,7 @@ class CQDaemon(object):
         3. process state
 
         """
-        while(True):   
+        while(self._daemon):   
             begin_tick = datetime.now()
 
             # 1. Process all incomming commands
@@ -140,8 +150,7 @@ class CQDaemon(object):
         """
         Process in order all commands in the command queue
 
-        If a quit command is received exit value is True
-        else None
+        If a quit command is received exit value is True else None
         """ 
         while True:
             # Try to get a new msg from the command queue
@@ -157,10 +166,11 @@ class CQDaemon(object):
                   "Received non command msg on the command queue: {0}".format(
                       selfunpacked_msg_content))
                 continue
+            
 
+            # Process the commands
             command = unpacked_msg_content['command']
-
-            # First call the Subclass process command
+            # First try the subclass
             try:
                 processed_by_subclass = self.process_command(
                     msg, unpacked_msg_content, command)
@@ -172,7 +182,8 @@ class CQDaemon(object):
             if processed_by_subclass:
                   continue # with next msg on the queue
 
-            # The commands known by CQDaemon
+
+            # The commands known by CQDaemon  itselve
             if command == 'quit':
                 self._process_quit_msg(unpacked_msg_content)
                 return True  
@@ -192,7 +203,7 @@ class CQDaemon(object):
         Process deadletters queue
         """     
         # First we add a msg on the queue as a stopper:
-        # We should only process the queue once.  
+        # We should only process the queue once per loop  
         msg = CQCommon.create_msg({"type":"deadletter_stop"})
         msg.set_subject("deadletter")
         self._toBus.send(msg)
@@ -222,7 +233,7 @@ class CQDaemon(object):
             if processed_by_subclass:
                   continue      # Continue with the next msg on the queue
 
-            # default implementation, report the deadletter and report
+            # default implementation, report the deadletter and... ignore
             self._logger.info(
                "Ignore msg on deadletterqueue".format(unpacked_msg_content))
 
@@ -342,7 +353,6 @@ class CQDaemon(object):
 # ****************************************************************************
 # Candidate functions for external lib.
 # **************************************************************************
-
 def get_next_msg_and_content(aFromBus, logger):
         """
         Helper function attempts to get the next msg from a bus

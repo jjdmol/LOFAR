@@ -49,14 +49,12 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
         super(PipelineSCQDaemonImp, self).__init__(
                  broker, busname, masterCommandQueueName,
                  deadLetterQueueName, loop_interval, daemon)
-        # we for ward jobs to the generic bus
-        self._toBus = msgbus.ToBus(self._busname, broker = self._broker)
 
         # Object responcible for starting jobs, contains the state 
         self._subprocessManager = subprocessManager.SubprocessManager(
                self._broker, self._busname, self._toBus, self._logger)
 
-        self._max_repost = 3 # We attempt 3 times to resend a msg
+        self._max_repost = 5 # We attempt 3 times to resend a msg
 
     # ****************************************************************
     # The three overload process functions: command, deadletter and state

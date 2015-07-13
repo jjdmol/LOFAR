@@ -18,15 +18,13 @@
 #
 # $Id$
 import uuid
-import copy
 import time
 import threading 
 import signal
-import pickle
 
 import lofar.messagebus.msgbus as msgbus
-import lofar.messagebus.message as message   # thread stop handlers break if
-                                             # this line is removed.. TODO
+import lofar.messagebus.message as message   
+import lofar.messagebus.CQCommon as CQCommon
 import lofar.messagebus.CQExceptions as CQExceptions
 
 # Handler for stopping the logTopicHandler and signalling the master that the
@@ -50,6 +48,7 @@ def treadStopHandler(signum, stack):
 
     #print "***************************************"
     ##code snipped to display registered signal handlers
+    #
     #signals_to_names = {}
     #for n in dir(signal):
     #    if n.startswith('SIG') and not n.startswith('SIG_'):
@@ -83,8 +82,6 @@ class logTopicHandler(threading.Thread):
         threading.Thread.__init__(self)
         # run as daemon: thread dies on owner death
         self.daemon = True  
-
-        self._broker = broker
         self._logger = logger
 
         self.stopFlag = logTopicStopFlag    # needed for stopping on ctrl-c       
@@ -96,7 +93,7 @@ class logTopicHandler(threading.Thread):
         self._logger.debug(
               "Connecting to logTopic: {0}".format(self._logTopicName))
         self._logTopic = msgbus.FromBus(self._logTopicName, 
-            broker = self._broker)
+            broker = broker)
 
     def _process_log_message(self, msg_content):
         """
@@ -141,22 +138,15 @@ class logTopicHandler(threading.Thread):
                     msg_content = eval(msg.content().payload)
                     self._process_log_message(msg_content)
               
-                except message.messaging.exceptions.SessionClosed, msgex:
-                    # If thrown when the thread is active reraise
-                    if not self.stopFlag.isSet():
+                # Catch all exception, daemon!!!!!
+                except Exception, ex:
+                    if type(ex) is message.messaging.exceptions.SessionClosed \
+                      and self.stopFlag.isSet():
+                        pass  # This except is sometime throw when in destruction
+                    else:
                         self._logger.warning("LogTopic handler received uncaught exception:")
                         self._logger.warning(type(ex))
                         self._logger.warning(str(ex))
-
-                    # Else silently eat it, expected behaviour
-                    pass
-
-                # Catch all exception, daemon!!!!!
-                except Exception, ex:
-                    self._logger.warning("LogTopic handler received uncaught exception:")
-                    self._logger.warning(type(ex))
-                    self._logger.warning(str(ex))
-
                 finally:
                     if msg:
                         self._logTopic.ack(msg)
@@ -194,7 +184,7 @@ class resultQueueHandler(threading.Thread):
         """
         threading.Thread.__init__(self)
         self.daemon = True  # Kill thread when the owned dies
-        self._broker = broker
+
         self._logger = logger
         self.stopFlag = resultQueueStopFlag    # from 'global' scope
         # unset the stopflag, allows re entrant usage of the class
@@ -206,13 +196,12 @@ class resultQueueHandler(threading.Thread):
               "Connecting to session specific resultQueue: {0}".format(
                                          self._resultQueueName))
         self._resultQueue = msgbus.FromBus(self._resultQueueName, 
-            broker = self._broker)
-        self._logger.debug("COnnection with resultQueue established")
+            broker = broker)
 
         # access to data of the MCQLib
         self._pipeline_data = pipeline_data
         self._pipeline_data_lock = pipeline_data_lock
-        self._master_echo = master_echo
+        self._master_echo = master_echo   #TODO: Not the nicest solution
 
     def _process_queue_message(self, msg_content):
         """
@@ -221,7 +210,8 @@ class resultQueueHandler(threading.Thread):
         # get the data from the msg
         type = msg_content['type']      
         if type == 'exit_value':
-            self._logger.debug("exit_value for: {0}".format(msg_content['job_uuid']))
+            self._logger.debug("exit_value for: {0}".format(
+                                                      msg_content['job_uuid']))
             exit_value = msg_content['exit_value']
             job_uuid = msg_content['job_uuid']
 
@@ -233,9 +223,9 @@ class resultQueueHandler(threading.Thread):
                 if exit_value != 0:
                     self._pipeline_data[job_uuid]['output']=[]
 
-
         elif type == 'output':
-            self._logger.debug("output for: {0}".format(msg_content['job_uuid']))
+            self._logger.debug("output for: {0}".format(
+                                                      msg_content['job_uuid']))
             output = msg_content['output']
             job_uuid = msg_content['job_uuid']
 
@@ -267,23 +257,17 @@ class resultQueueHandler(threading.Thread):
                     if msg == None:
                         break   # break the loop
 
-                    # process the log data
+                    # process the result msg
                     msg_content = eval(msg.content().payload)
                     self._process_queue_message(msg_content)
 
-                except message.messaging.exceptions.SessionClosed, msgex:
-                    # If thrown when the thread is active reraise
-                    if not self.stopFlag.isSet():
-                        self._logger.warning(
-                          "Results handler uncaught exception: {0} {1}".format(
-                            type(ex), str(ex)))
-
-                    # Else silently eat it, expected behaviour
-                    pass
-
                 # Catch all exception, daemon
                 except Exception, ex:
-                    self._logger.warning(
+                    if type(ex) is message.messaging.exceptions.SessionClosed \
+                      and self.stopFlag.isSet():
+                        pass  # This except is sometime thrown when in destr.
+                    else:
+                        self._logger.warning(
                           "Results handler uncaught exception: {0} {1}".format(
                             type(ex), str(ex)))
 
@@ -343,9 +327,7 @@ class MCQLib(object):
         # Check state, raise exception if incorrect
         
         self._connect_to_master(self._masterCommandQueueName)
-
-        
-
+     
     def _start_log_and_result_handlers(self):
         """
         Helper function used for collecting the starting of the handler
@@ -373,7 +355,6 @@ class MCQLib(object):
         global stopFunction
         stopFunction = self._release
 
-  
     def _connect_to_master(self, masterCommandQueueName):
         """
         Helper function for the __init__ member
@@ -391,17 +372,14 @@ class MCQLib(object):
         self._masterCommandQueue = msgbus.ToBus(masterCommandQueueName, 
             broker = self._broker)
 
-
         # Check for consumers: We need to know if the deamon is active before
-        # we can send commands
-        
+        # we can send commands       
         payload = {'command':"echo",                      # echo msg
                    'type':'command',
                    'echo_type':"master_echo",
                    'return_subject':self._returnQueueSubject}  # send echo to this q
 
-
-        msg = self.create_msg(payload)
+        msg = CQCommon.create_msg(payload)
         self._masterCommandQueue.send(msg)
 
         # now attempt 10 times to receive a responce from the master 
@@ -418,7 +396,6 @@ class MCQLib(object):
             raise CQExceptions.ExecutableMasterUnreachable(
                   "could net get contact with the master!!!")
         self.logger.debug("Connection established and Master is active")
-
 
     def __del__(self):
         """
@@ -451,9 +428,8 @@ class MCQLib(object):
                        "session_uuid":self._sessionUUID,
                        'job_uuid':job_uuid,           # Jobs might be routed
                        "node":node}
-            msg =self.create_msg(payload)      
+            msg = CQCommon.create_msg(payload)      
             self._masterCommandQueue.send(msg)
-
 
     def set_killswitch(self, killswitch):
         """
@@ -491,7 +467,7 @@ class MCQLib(object):
                        'job_uuid':job_uuid,
                        'result_topic':"result_"+self._sessionUUID,
                        "parameters":job_parameters}
-            msg = self.create_msg(payload)       
+            msg = CQCommon.create_msg(payload)       
             # and send
             self._masterCommandQueue.send(msg)
 
@@ -532,20 +508,3 @@ class MCQLib(object):
 
         return self._pipeline_data[job_uuid]['exit_value']
 
-    def create_msg(self, payload):
-        """
-        TODO: should be moved into a shared code lib
-        Creates a minimal valid msg with payload
-        """
-        msg = message.MessageContent(
-                    from_="test",
-                    forUser="",
-                    summary="summary",
-                    protocol="protocol",
-                    protocolVersion="test", 
-                    #momid="",
-                    #sasid="", 
-                    #qpidMsg=None
-                          )
-        msg.payload = payload
-        return msg

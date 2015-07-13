@@ -49,21 +49,14 @@ class PipelineMCQDaemon(CQDaemon.CQDaemon):
         super(PipelineMCQDaemon, self).__init__(broker, busname, masterCommandQueueName,
                  deadLetterQueueName, loop_interval, daemon)
 
-        # Connect to bus ( used for sending job msg to slaves)
-        self._toBus = msgbus.ToBus(self._busname, broker = self._broker)
-
         self._toSlaveSubjectTemplate = "slaveCommandQueue_{0}"
         self._max_repost = 5
 
 
-    def close(self):
-        """
-        close all  connections owned by subclass
-        """
-        self._toBus.close()       # First our own bus
-        super(MCQDaemon, self).close() # then the superclass
-
-
+    # ****************************************************************
+    # The two overload process functions: command, deadletter
+    # Master does not contain state
+    # ****************************************************************
     def process_command(self, msg, unpacked_msg_content, command):
         """
         Process_commands, add the run_job command
@@ -87,31 +80,13 @@ class PipelineMCQDaemon(CQDaemon.CQDaemon):
 
         command = unpacked_msg_content['command']
         if command == "run_job":
-            self._deadletter_process_run_job( 
+            self._deadletter_run_job( 
                                   msg, unpacked_msg_content, msg_type)
             return True
 
-    def _deadletter_process_run_job(self, msg, unpacked_msg_content, msg_type):
-        """
-        This daemon has single command it supports on this level
-        When the job cannot deliver a job. Send a failure state to the sender
-        """       
-        if 'n_repost' in unpacked_msg_content:
-            n_repost = unpacked_msg_content['n_repost'] 
-        else:
-            unpacked_msg_content['n_repost'] = 0
-            n_repost = unpacked_msg_content['n_repost'] 
-
-        # Test if we tried enough
-        if n_repost >= self._max_repost:
-            self.send_results( unpacked_msg_content, 
-                     "-1", info_str="Could not deliver job to slave daemon")
-        else:
-            # Else resend the msg, increase the resend count
-            unpacked_msg_content['n_repost'] += 1
-            self._process_run_job(unpacked_msg_content)
-
-
+    # ****************************************************************
+    # Private helper functions
+    # ****************************************************************
     def _process_run_job(self, unpacked_msg_content):
         """
         The starting of a job on one of the node servers.
@@ -150,15 +125,9 @@ class PipelineMCQDaemon(CQDaemon.CQDaemon):
                                self._toSlaveSubjectTemplate.format(node)
 
             self._logger.info("forwarding stop command to node: {0}".format(node))    
-
             # create new msg
-            msg = message.MessageContent()
-
-            # set content
-            msg.payload = unpacked_msg_content
-            msg.set_subject(slave_commandqueue_topic_subject)
-
-            # send to bus using the slave as msg name allows for dynamic routing
+            msg = CQCommon.create_msg(unpacked_msg_content, 
+                            slave_commandqueue_topic_subject)
             self._toBus.send(msg)
 
         except Exception, ex:
@@ -167,19 +136,40 @@ class PipelineMCQDaemon(CQDaemon.CQDaemon):
             self._logger.warn(str(ex))
             self._logger.warn(unpacked_msg_content)
 
-
-
-    def send_results(self, unpacked_msg_data, 
-                     exit_status, info_str=""):
+    def _deadletter_run_job(self, msg, unpacked_msg_content, msg_type):
         """
-        Send a results msg to the results queue
-        """
-        payload = {'type':"exit_value",
-                   'exit_value':exit_status,
-                   'session_uuid':unpacked_msg_data['session_uuid'],
-                   'job_uuid':unpacked_msg_data['job_uuid'],
-                   'info':info_str}
+        When the job cannot deliver a job. 
+        Send a failure state to the sender
+        """       
+        if 'n_repost' in unpacked_msg_content:
+            n_repost = unpacked_msg_content['n_repost'] 
+        else:
+            unpacked_msg_content['n_repost'] = 0
+            n_repost = unpacked_msg_content['n_repost'] 
 
-        msg = CQCommon.create_msg(payload)
-        msg.set_subject(unpacked_msg_data['result_topic'])
-        self._toBus.send(msg)
+        # Test if we tried enough
+        if n_repost >= self._max_repost:
+            send_results(unpacked_msg_content, 
+                     "-1", info_str="Could not deliver job to slave daemon")
+        else:
+            # Else resend the msg, increase the resend count
+            unpacked_msg_content['n_repost'] += 1
+            self._process_run_job(unpacked_msg_content)
+
+# ****************************************************************************
+# Candidate functions for external lib.
+# **************************************************************************
+def send_results(unpacked_msg_data, 
+                   exit_status, info_str=""):
+    """
+    Send a results msg to the results queue
+    """
+    payload = {'type':"exit_value",
+               'exit_value':exit_status,
+               'session_uuid':unpacked_msg_data['session_uuid'],
+               'job_uuid':unpacked_msg_data['job_uuid'],
+               'info':info_str}
+
+    msg = CQCommon.create_msg(payload)
+    msg.set_subject(unpacked_msg_data['result_topic'])
+    self._toBus.send(msg)
