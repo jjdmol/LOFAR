@@ -36,13 +36,14 @@ Abstract class command queue classs containing the core functionality
 for a command queue listener
 
 This deamon is implemented stateless: It only work when msg are received on 
-its one (or two in default setting) queues: the command queue and its 
-deadletter queue
+its two queues: the command queue and its deadletter queue
 
 1. A single commands is support (more can be user defined in subclasses)
    (a) msg with content {'command':'quit') 
    will result in the main processing loop
    to end and the owned queues to be released
+   (b) msg with content echo
+   Implements a basic health check: It send a responce to a supplied queue
 
 2. additional command can be defined in a subclass eg::
 class subclassedMCQDaemontestcommand(MCQDaemon.MCQDaemon):
@@ -50,7 +51,6 @@ class subclassedMCQDaemontestcommand(MCQDaemon.MCQDaemon):
         # call super init
         super(subclassedMCQDaemontestcommand, self).__init__(*args, **kwargs)
     
-    # this is the n
     def process_commands(self, command, unpacked_msg_content, msg):
         # return false # minimal implementation no other commands
         if command == "testcommand":
@@ -89,6 +89,7 @@ class CQDaemon(object):
 
         self._connect_queues( busname, commandQueueName, deadLetterQueueName)
 
+    # Implement the with functionality
     def __enter__(self):
         return self
 
@@ -102,17 +103,16 @@ class CQDaemon(object):
         """
         self._CommandQueue.close()
         self._deadletterFromBus.close()
-    
+        self._toBus.close()
+
     def run(self):
         """
         Main loop of the daemon.
         While(True)
 
-        1. Check all the 'connected' pipeline session ques for listeners
-          a. Clear queues with no listeners
-        2. Process all incomming commands
-        3. Call the process deadletter msg function with 
-        3. Wait for x seconds
+        1. Process all incomming commands
+        2. Process deadletters
+        3. process state
 
         """
         while(True):   
@@ -161,12 +161,18 @@ class CQDaemon(object):
             command = unpacked_msg_content['command']
 
             # First call the Subclass process command
-            processed_by_subclass = self.process_command(
+            try:
+                processed_by_subclass = self.process_command(
                     msg, unpacked_msg_content, command)
+            except Exception, ex:
+                # Catch all: subclasses should never cause the daemon to break
+                self._logger.warn(
+                    "Subclass of CQDaemon threw exception in process")
+                self._logger.warn(str(ex))
             if processed_by_subclass:
                   continue # with next msg on the queue
 
-            # The command known by CQDaemon
+            # The commands known by CQDaemon
             if command == 'quit':
                 self._process_quit_msg(unpacked_msg_content)
                 return True  
@@ -205,8 +211,14 @@ class CQDaemon(object):
                 break # exit the while loop
 
             # Call the Subclass deadletter processing.
-            processed_by_subclass = self.process_deadletter(
+            try:
+                processed_by_subclass = self.process_deadletter(
                     msg, unpacked_msg_content, msg_type)
+            except Exception, ex:
+                # Catch all
+                self._logger.warn(
+                    "Subclass of CQDaemon threw exception in process deadletter")
+                self._logger.warn(str(ex))
             if processed_by_subclass:
                   continue      # Continue with the next msg on the queue
 
@@ -220,7 +232,13 @@ class CQDaemon(object):
         internal state. This is part of the run loop
         """
         # Call a possible implementation in subclass class
-        self.process_state();
+        try:
+            self.process_state();
+        except Exception, ex:
+                # Catch all
+            self._logger.warn(
+                  "Subclass of CQDaemon threw exception in process state")
+            self._logger.warn(str(ex))
         
         # The CQDaemon does not have state yet.
 
@@ -260,7 +278,6 @@ class CQDaemon(object):
     # ************************************************************************
     # Private implementation members
     # **********************************************************************
-
     def _connect_queues(self, busname, commandQueueName, deadLetterQueueName):
         """
         Helper function, seperates all connections in a class. Not realy 

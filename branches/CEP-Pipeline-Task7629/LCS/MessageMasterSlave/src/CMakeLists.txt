@@ -9,8 +9,7 @@ include(PythonInstall)
   # DESTINATION bin)
 
 
-python_install(
-  MCQDaemon.py
+python_install( 
   CQDaemon.py
   CQExceptions.py
   CQCommon.py
