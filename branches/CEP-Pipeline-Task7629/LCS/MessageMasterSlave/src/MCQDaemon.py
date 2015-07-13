@@ -21,6 +21,7 @@
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
 import lofar.messagebus.CQDaemon as CQDaemon
+import lofar.messagebus.CQCommon as CQCommon
 
 # Define logging.  Until we have a python loging framework, we'll have
 # to do any initialising here
@@ -179,26 +180,7 @@ class MCQDaemon(CQDaemon.CQDaemon):
                    'job_uuid':unpacked_msg_data['job_uuid'],
                    'info':info_str}
 
-        msg = self.create_msg(payload)
+        msg = CQCommon.create_msg(payload)
         msg.set_subject(unpacked_msg_data['result_topic'])
         self._toBus.send(msg)
 
-
-    def create_msg(self, payload):
-        """
-        TODO: should be moved into a shared code lib
-        Creates a minimal valid msg with payload
-        """
-        msg = message.MessageContent(
-                    from_="test",
-                    forUser="",
-                    summary="summary",
-                    protocol="protocol",
-                    protocolVersion="test", 
-                    #momid="",
-                    #sasid="", 
-                    #qpidMsg=None
-                          )
-        msg.payload = payload
-        return msg
-    
