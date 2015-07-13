@@ -77,7 +77,7 @@ class MCQDaemon(CQDaemon.CQDaemon):
         The starting of a job on one of the node servers.
         """
         try:        
-            node = unpacked_msg_content['parameters']['node']   
+            node = unpacked_msg_content['node']   
             slave_commandqueue_topic_subject = \
                                self._toSlaveSubjectTemplate.format(node)
             self._logger.info("forwarding job to node: {0}".format(node))    

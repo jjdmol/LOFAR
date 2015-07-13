@@ -5,7 +5,7 @@
 #                                                      swinbank@transientskp.org
 # ------------------------------------------------------------------------------
 
-class ExecutableMasterUnreachable(Exception):
+class ExceptionMasterUnreachable(Exception):
     pass
 
 

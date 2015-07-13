@@ -27,6 +27,7 @@ import pickle
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message   # thread stop handlers break if
                                              # this line is removed.. TODO
+import lofar.messagebus.CQExceptions as CQExceptions
 
 # Handler for stopping the logTopicHandler and signalling the master that the
 # session has ended
@@ -139,13 +140,22 @@ class logTopicHandler(threading.Thread):
                     # process the log data
                     msg_content = eval(msg.content().payload)
                     self._process_log_message(msg_content)
+              
+                except message.messaging.exceptions.SessionClosed, msgex:
+                    # If thrown when the thread is active reraise
+                    if not self.stopFlag.isSet():
+                        self._logger.warning("LogTopic handler received uncaught exception:")
+                        self._logger.warning(type(ex))
+                        self._logger.warning(str(ex))
+
+                    # Else silently eat it, expected behaviour
+                    pass
 
                 # Catch all exception, daemon!!!!!
                 except Exception, ex:
                     self._logger.warning("LogTopic handler received uncaught exception:")
                     self._logger.warning(type(ex))
                     self._logger.warning(str(ex))
-                    self._logger.warning("Expected behaviour on manual abort")
 
                 finally:
                     if msg:
@@ -174,6 +184,7 @@ class resultQueueHandler(threading.Thread):
     def __init__(self,broker, resultQueueName, 
                  pipeline_data, 
                  pipeline_data_lock, 
+                 master_echo,
                  logger=None, 
                  poll_interval=1.0):
         """
@@ -184,34 +195,33 @@ class resultQueueHandler(threading.Thread):
         threading.Thread.__init__(self)
         self.daemon = True  # Kill thread when the owned dies
         self._broker = broker
-        self.logger = logger
+        self._logger = logger
         self.stopFlag = resultQueueStopFlag    # from 'global' scope
         # unset the stopflag, allows re entrant usage of the class
         self.stopFlag.clear()
         self.poll_interval = poll_interval
 
         self._resultQueueName = resultQueueName
-        self.logger.debug(
+        self._logger.debug(
               "Connecting to session specific resultQueue: {0}".format(
                                          self._resultQueueName))
         self._resultQueue = msgbus.FromBus(self._resultQueueName, 
             broker = self._broker)
-        self.logger.debug("COnnection with resultQueue established")
+        self._logger.debug("COnnection with resultQueue established")
 
         # access to data of the MCQLib
         self._pipeline_data = pipeline_data
         self._pipeline_data_lock = pipeline_data_lock
+        self._master_echo = master_echo
 
     def _process_queue_message(self, msg_content):
         """
         Parse return messages 
         """
         # get the data from the msg
-        type = msg_content['type']
-        self.logger.error("type")
-        
+        type = msg_content['type']      
         if type == 'exit_value':
-            self.logger.debug("exit_value for: {0}".format(msg_content['job_uuid']))
+            self._logger.debug("exit_value for: {0}".format(msg_content['job_uuid']))
             exit_value = msg_content['exit_value']
             job_uuid = msg_content['job_uuid']
 
@@ -225,7 +235,7 @@ class resultQueueHandler(threading.Thread):
 
 
         elif type == 'output':
-            self.logger.debug("output for: {0}".format(msg_content['job_uuid']))
+            self._logger.debug("output for: {0}".format(msg_content['job_uuid']))
             output = msg_content['output']
             job_uuid = msg_content['job_uuid']
 
@@ -235,10 +245,9 @@ class resultQueueHandler(threading.Thread):
         elif type == "echo":
             with self._pipeline_data_lock:
                 # TODO: What if the echo is received from a different
-                self.logger.error(msg_content)
                 if msg_content['echo_type'] == "master_echo":
-                    self.logger.debug("Received an Master echo")
-                    self._pipeline_data["master_echo_received"] = True
+                    self._logger.debug("Received a Master echo")
+                    self._master_echo["received"] = True
 
         # ignore other types!!!!! this is very save
 
@@ -253,7 +262,7 @@ class resultQueueHandler(threading.Thread):
             while not self.stopFlag.isSet():
                 msg = None
                 try:
-                    self.logger.debug("Polling resultQueue: {0}".format(
+                    self._logger.debug("Polling resultQueue: {0}".format(
                                                            self._resultQueueName))
                     # get is blocking, always use timeout.
                     msg = self._resultQueue.get(0.2)  
@@ -264,11 +273,21 @@ class resultQueueHandler(threading.Thread):
                     msg_content = eval(msg.content().payload)
                     self._process_queue_message(msg_content)
 
+                except message.messaging.exceptions.SessionClosed, msgex:
+                    # If thrown when the thread is active reraise
+                    if not self.stopFlag.isSet():
+                        self._logger.warning("Results handler received uncaught exception:")
+                        self._logger.warning(type(ex))
+                        self._logger.warning(str(ex))
+
+                    # Else silently eat it, expected behaviour
+                    pass
+
+                # Catch all exception, daemon
                 except Exception, ex:
-                    self.logger.warning("Results handler received uncaught exception:")
-                    self.logger.warning(type(ex))
-                    self.logger.warning(str(ex))
-                    self.logger.warning("Expected behaviour on manual abort")
+                    self._logger.warning("Results handler received uncaught exception:")
+                    self._logger.warning(type(ex))
+                    self._logger.warning(str(ex))
 
                 finally:
                     if msg:
@@ -310,18 +329,21 @@ class MCQLib(object):
 
         # some static information for this session
         self._sessionUUID = uuid.uuid4().hex
-        self._returnQueueName = self._busname + "/result_" + self._sessionUUID
+        self._returnQueueSubject = "result_" + self._sessionUUID
+        self._returnQueueName = self._busname + "/" + self._returnQueueSubject
         self._logTopicName = self._busname +"/log_" + self._sessionUUID
         self._masterCommandQueueName = self._busname + "/pipelineMasterCommandQueue"
 
         # Place holders of the queues owned by the lib
         self._resultQueue = None
         self._logTopic    = None
+        self._master_echo= {"received":False}  # TODO: UGLY
 
         # start threads needed for receiving msg, both results and log
         self._start_log_and_result_handlers()
 
         # Check state, raise exception if incorrect
+        
         self._connect_to_master(self._masterCommandQueueName)
 
         
@@ -338,7 +360,8 @@ class MCQLib(object):
 
         self._resultQueueForwarder = resultQueueHandler(
                    self._broker, self._returnQueueName,
-                   self._pipeline_data , self._pipeline_data_lock, self.logger)
+                   self._pipeline_data , self._pipeline_data_lock, 
+                   self._master_echo, self.logger)
 
         # Register correct handlers for killing the threads
         signal.signal(signal.SIGTERM, 
@@ -373,11 +396,11 @@ class MCQLib(object):
 
         # Check for consumers: We need to know if the deamon is active before
         # we can send commands
-        self._pipeline_data["master_echo_received"] =False
+        
         payload = {'command':"echo",                      # echo msg
                    'type':'command',
                    'echo_type':"master_echo",
-                   'return_queue':self._returnQueueName}  # send echo to this q
+                   'return_subject':self._returnQueueSubject}  # send echo to this q
 
 
         msg = self.create_msg(payload)
@@ -387,27 +410,27 @@ class MCQLib(object):
         master_up = False
         for idx in range(10):
             with self._pipeline_data_lock:
-                if self._pipeline_data["master_echo_received"]:
+                if self._master_echo["received"]:
                     master_up = True
                     break
             # Now sleep and retry in a second
             time.sleep(1)  
                                 
         if not master_up:
-            raise Exception("could net get contact with the master!!!")
+            raise CQExceptions.ExecutableMasterUnreachable(
+                  "could net get contact with the master!!!")
         self.logger.debug("Connection established and Master is active")
 
 
     def __del__(self):
+        """
 
-        #self._release()
+        """
         if logTopicStopFlag:
             logTopicStopFlag.set()
 
         if resultQueueStopFlag:
           resultQueueStopFlag.set()
-
-
 
     def _release(self):
         """
@@ -416,15 +439,23 @@ class MCQLib(object):
         session uuid 
         """
         self.logger.debug("Sending stop_session command to master")
-        
         # stop the handlers
         self._logTopicForwarder.setStopFlag()
         self._resultQueueForwarder.setStopFlag()
 
-        # Send MCQDaemon that we are stopping
-        payload = {"command":"stop_session", "uuid":self._sessionUUID}
-        msg =self.create_msg(payload)      
-        self._masterCommandQueue.send(msg)
+        # Send MCQDaemon for each node that we are stopping 
+        stop_send = []      
+        for job_uuid in self._pipeline_data:
+            node =self._pipeline_data[job_uuid]['node']
+            if node in stop_send:
+                continue
+
+            payload = {"command":"stop_session",
+                       "uuid":self._sessionUUID,
+                       "node":node}
+            msg =self.create_msg(payload)      
+            self._masterCommandQueue.send(msg)
+            stop_send.append(node)
 
     def set_killswitch(self, killswitch):
         """
@@ -438,7 +469,7 @@ class MCQLib(object):
         """
 
         """
-        host = job_parameters['node']
+        node = job_parameters['node']
         # limits the amount of jobs that can run on a single node 
         # (pipeline functionality)
         limiter[job.host].acquire()
@@ -455,7 +486,8 @@ class MCQLib(object):
                 return 1
 
             # Constuct the rung_job msg
-            payload = {"command":"run_job", 
+            payload = {"node":node,
+                        "command":"run_job", 
                        'type':"command",
                        "session_uuid":self._sessionUUID,
                        'job_uuid':job_uuid,
@@ -466,7 +498,8 @@ class MCQLib(object):
 
 
             with self._pipeline_data_lock:
-                self._pipeline_data[job_uuid] = {'payload':msg.payload,
+                self._pipeline_data[job_uuid] = {'node':node,
+                                                 'payload':msg.payload,
                                                  'completed':False}
 
             # wait until the job returns then return, this needs a lock around the
