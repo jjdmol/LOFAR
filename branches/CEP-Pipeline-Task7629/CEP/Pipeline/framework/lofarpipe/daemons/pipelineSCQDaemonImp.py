@@ -27,6 +27,20 @@ import lofarpipe.daemons.subprocessManager as subprocessManager
 
 class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
     """
+    Pipeline Slave deamon, start and stops subprocess received as jobs
+    State is stored in the subprocess manager
+
+    Accepted command:
+       run_job: Start a subprocess
+
+       stop_session: Kills all jobs part of the suplied session
+
+    Processed deadletters:
+       parameters: The started subprocess did not retrieve its paramters
+                    Effect: kill the job
+       exit_value or
+          output: The results send by the job are not retrieved by the pipeline
+                  Effect: Kill all jobs of this session, none will deliver data
 
     """
     def __init__(self, broker, busname, masterCommandQueueName,
@@ -44,6 +58,9 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
 
         self._max_repost = 3 # We attempt 3 times to resend a msg
 
+    # ****************************************************************
+    # The three overload process functions: command, deadletter and state
+    # ****************************************************************
     def process_command(self, msg, unpacked_msg_content, command):
         """
         Process_commands, add the run_job command
@@ -75,20 +92,39 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
         # Not processed  gerereturn False
         return False
 
+    def process_state(self):
+        """
+        Called by superclass run loop. Performs all the state based 
+        functionality
+        """
+        # All the state is stored in the subprocess manager
+        self._subprocessManager.check_managed_processed()
+
+
+    # ****************************************************************
+    # Private helper functions
+    # ****************************************************************
+    def _process_run_job(self, unpacked_msg_content):
+        """
+        The starting of a job on one of the node servers.
+        """
+        # Forward the content
+        self._subprocessManager.start_job_from_msg(unpacked_msg_content)
+
+    def _process_stop_session(self, unpacked_msg_content):
+        """
+        Forward the stop session to the subprocess manager
+        """
+        self._subprocessManager.quit_session(
+                          unpacked_msg_content['session_uuid'])
+   
     def _process_deadletter_exit_or_output_msg(self, unpacked_msg_data,
                                            subject):
         """
         We try to send a parameter msg a couple of times. After it still fails,
         send results msg to the results q of the session
         """
-        n_repost = None
-
-        if 'n_repost' in unpacked_msg_data:
-            n_repost = unpacked_msg_data['n_repost'] 
-        else:
-            unpacked_msg_data['n_repost'] = 0
-            n_repost = unpacked_msg_data['n_repost'] 
-        
+        n_repost = self._deadletter_get_or_set_nrepost(unpacked_msg_data)       
         if n_repost >= self._max_repost:
             # If we tried enough times, kill the job
             self._logger.warn(
@@ -102,34 +138,7 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
             # Else resend the msg, increase the resend count
             unpacked_msg_data['n_repost'] += 1
             msg = self.create_msg(unpacked_msg_data, subject)
-            self._toBus.send(msg)
-        
-        return
-
-    def process_state(self):
-        """
-        Called by superclass run loop. Performs all the state based 
-        functionality
-        """
-        # All the state is stored in the subprocess manager
-        self._subprocessManager.check_managed_processed()
-  
-    def _process_run_job(self, unpacked_msg_content):
-        """
-        The starting of a job on one of the node servers.
-        """
-        # Forward the content
-        # TODO: unpack the all the needed info and call direct functions
-        # with out any msg_content??
-        self._subprocessManager.start_job_from_msg(unpacked_msg_content)
-
-
-    def _process_stop_session(self, unpacked_msg_content):
-        """
-        Forward the stop session to the subprocess manager
-        """
-        session_uuid = unpacked_msg_content['session_uuid']
-        self._subprocessManager.quit_session(session_uuid)
+            self._toBus.send(msg)      
 
     def _process_deadletter_parameters_msg(self, unpacked_msg_data):
         """
@@ -138,14 +147,8 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
         """
         session_uuid = unpacked_msg_data['session_uuid']
         job_uuid = unpacked_msg_data['job_uuid']
-        n_repost = None
 
-        if 'n_repost' in unpacked_msg_data:
-            n_repost = unpacked_msg_data['n_repost'] 
-        else:
-            unpacked_msg_data['n_repost'] = 0
-            n_repost = unpacked_msg_data['n_repost'] 
-        
+        n_repost = self._deadletter_get_or_set_nrepost(unpacked_msg_data)        
         if n_repost >= self._max_repost:
             # If we tried enough times, kill the job
             self._logger.warn(
@@ -159,41 +162,17 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
             self._subprocessManager.send_job_parameters(
                session_uuid, job_uuid, unpacked_msg_data)
         
-        return
-
-    def _save_unpack_msg(self, msg):
+    def _deadletter_get_or_set_nrepost(self, unpacked_msg_data):
         """
-        Private helper function unpacks a received msg and casts it to 
-        a msg_Content dict, the command string is also extracted
-        content and command are returned as a pair
-        returns None if an error was encountered
+        Small helper function. Searches for n_repost entry in the unpacked msg
+        data. Sets it to zero of not found.
+        Return the n_repost
         """
-        msg_content = None
-        msg_type = None
-        try:
-                # currently the expected payload is a dict
-                msg_content = eval(msg.content().payload)
-                msg_type =  msg_content['type']
-        except:
-                return None, None
+        n_repost = None
+        if 'n_repost' in unpacked_msg_data:
+            n_repost = unpacked_msg_data['n_repost'] 
+        else:
+            n_repost = unpacked_msg_data['n_repost'] = 0
 
-        return msg_content, msg_type
-
-    def create_msg(self, payload, subject=None):
-        """
-        TODO: should be moved into a shared code lib
-        Creates a minimal valid msg with payload
-        """
-        msg = message.MessageContent(
-                    from_="test",
-                    forUser="",
-                    summary="summary",
-                    protocol="protocol",
-                    protocolVersion="test")
-        msg.payload = payload
-
-        if subject:
-            msg.set_subject(subject)
-
-        return msg
+        return n_repost
 

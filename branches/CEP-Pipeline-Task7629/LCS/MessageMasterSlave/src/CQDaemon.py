@@ -243,9 +243,8 @@ class CQDaemon(object):
 
             # default implementation, report the deadletter and report
             self._logger.info(
-               "Received on deadletterqueue type: {0}".format(msg_type))
-            self._logger.info("msg content: {0}".format(unpacked_msg_content))
-            self._logger.info("ignoring msg")
+               "Ignore msg on deadletterqueue".format(unpacked_msg_content))
+
 
 
     def process_command(self, msg, unpacked_msg_content, command):
@@ -377,3 +376,22 @@ class CQDaemon(object):
         self._logger.info(
             "Run loop complete sleep for{0} seconds".format(sleep_time))
         time.sleep(sleep_time)
+
+
+    def create_msg(self, payload, subject=None):
+        """
+        TODO: should be moved into a shared code lib
+        Creates a minimal valid msg with payload
+        """
+        msg = message.MessageContent(
+                    from_="test",
+                    forUser="",
+                    summary="summary",
+                    protocol="protocol",
+                    protocolVersion="test")
+        msg.payload = payload
+
+        if subject:
+            msg.set_subject(subject)
+
+        return msg

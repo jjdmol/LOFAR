@@ -262,8 +262,6 @@ class resultQueueHandler(threading.Thread):
             while not self.stopFlag.isSet():
                 msg = None
                 try:
-                    self._logger.debug("Polling resultQueue: {0}".format(
-                                                           self._resultQueueName))
                     # get is blocking, always use timeout.
                     msg = self._resultQueue.get(0.2)  
                     if msg == None:
@@ -276,18 +274,18 @@ class resultQueueHandler(threading.Thread):
                 except message.messaging.exceptions.SessionClosed, msgex:
                     # If thrown when the thread is active reraise
                     if not self.stopFlag.isSet():
-                        self._logger.warning("Results handler received uncaught exception:")
-                        self._logger.warning(type(ex))
-                        self._logger.warning(str(ex))
+                        self._logger.warning(
+                          "Results handler uncaught exception: {0} {1}".format(
+                            type(ex), str(ex)))
 
                     # Else silently eat it, expected behaviour
                     pass
 
                 # Catch all exception, daemon
                 except Exception, ex:
-                    self._logger.warning("Results handler received uncaught exception:")
-                    self._logger.warning(type(ex))
-                    self._logger.warning(str(ex))
+                    self._logger.warning(
+                          "Results handler uncaught exception: {0} {1}".format(
+                            type(ex), str(ex)))
 
                 finally:
                     if msg:
