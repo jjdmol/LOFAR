@@ -34,6 +34,8 @@
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MeasConvert.h>
 
+#include <wcslib/wcslib.h>
+
 namespace LOFAR
 {
 namespace StationResponse
@@ -42,7 +44,8 @@ namespace StationResponse
 AntennaFieldHBA::AntennaFieldHBA(const string &name,
     const CoordinateSystem &coordinates, const AntennaModelHBA::ConstPtr &model)
     :   AntennaField(name, coordinates),
-        itsAntennaModel(model)
+        itsAntennaModel(model),
+        itsRotation(theirRotationMap.find(name)->second)
 {
   casa::Bool ok=true;
   casa::String message;
@@ -166,25 +169,166 @@ std::pair<double,double> AntennaFieldHBA::getAzEl(const vector3r_t &position,
      return azel;
 }
 
-casa::Array<casa::Float> AntennaFieldHBA::readFITS(const string &filename)
+casa::CountedPtr<fitsfile> AntennaFieldHBA::readFITS(const string &filename)
 {
-  casa::Bool ok=true;
-  casa::String message;
-
-  casa::Array<casa::Float> tmp;
+  int status=0;
+  fitsfile *fptr;
 
   FileLocator locator("$LOFARROOT/share/beamnorms");
   string fitsFile=locator.locate(filename);
-  tmp = casa::ReadFITS(fitsFile.c_str(),ok,message);
-  if (!ok) {
-    LOG_WARN_STR("Could not read beam normalization fits file: " << message);
+
+  /* Open the FITS test file */
+  fits_open_file(&fptr, fitsFile.c_str(), READONLY, &status);
+  if (status!=0) {
+    fits_report_error(stderr, status);
+    ASSERT(1==0);
   }
-  return tmp;
+
+  return casa::CountedPtr<fitsfile>(fptr);
+}
+
+map<string,double> AntennaFieldHBA::readRotationMap()
+{
+  map<string,double> tmpMap;
+  tmpMap.insert(pair<string,double>("CS001HBA0", 24.));
+  tmpMap.insert(pair<string,double>("CS001HBA1", 24.));
+  tmpMap.insert(pair<string,double>("CS002HBA0", 52.));
+  tmpMap.insert(pair<string,double>("CS002HBA1",  0.));
+  tmpMap.insert(pair<string,double>("CS003HBA0", 30.));
+  tmpMap.insert(pair<string,double>("CS003HBA1", 52.));
+  tmpMap.insert(pair<string,double>("CS004HBA0", 36.));
+  tmpMap.insert(pair<string,double>("CS004HBA1", 60.));
+  tmpMap.insert(pair<string,double>("CS005HBA0", 66.));
+  tmpMap.insert(pair<string,double>("CS005HBA1", 46.));
+  tmpMap.insert(pair<string,double>("CS006HBA0", 76.));
+  tmpMap.insert(pair<string,double>("CS006HBA1", 52.));
+  tmpMap.insert(pair<string,double>("CS007HBA0", 82.));
+  tmpMap.insert(pair<string,double>("CS007HBA1", 16.));
+  tmpMap.insert(pair<string,double>("CS011HBA0",  8.));
+  tmpMap.insert(pair<string,double>("CS011HBA1",  8.));
+  tmpMap.insert(pair<string,double>("CS012HBA0",  4.));
+  tmpMap.insert(pair<string,double>("CS012HBA1",  4.));
+  tmpMap.insert(pair<string,double>("CS013HBA0", 54.));
+  tmpMap.insert(pair<string,double>("CS013HBA1", 54.));
+  tmpMap.insert(pair<string,double>("CS016HBA0", 54.));
+  tmpMap.insert(pair<string,double>("CS016HBA1", 54.));
+  tmpMap.insert(pair<string,double>("CS017HBA0", 38.));
+  tmpMap.insert(pair<string,double>("CS017HBA1", 38.));
+  tmpMap.insert(pair<string,double>("CS018HBA0", 86.));
+  tmpMap.insert(pair<string,double>("CS018HBA1", 86.));
+  tmpMap.insert(pair<string,double>("CS020HBA0", 84.));
+  tmpMap.insert(pair<string,double>("CS020HBA1", 84.));
+  tmpMap.insert(pair<string,double>("CS021HBA0", 68.));
+  tmpMap.insert(pair<string,double>("CS021HBA1", 68.));
+  tmpMap.insert(pair<string,double>("CS023HBA0",  4.));
+  tmpMap.insert(pair<string,double>("CS023HBA1",  4.));
+  tmpMap.insert(pair<string,double>("CS024HBA0", 20.));
+  tmpMap.insert(pair<string,double>("CS024HBA1", 20.));
+  tmpMap.insert(pair<string,double>("CS026HBA0", 50.));
+  tmpMap.insert(pair<string,double>("CS026HBA1", 50.));
+  tmpMap.insert(pair<string,double>("CS028HBA0", 64.));
+  tmpMap.insert(pair<string,double>("CS028HBA1", 64.));
+  tmpMap.insert(pair<string,double>("CS030HBA0", 28.));
+  tmpMap.insert(pair<string,double>("CS030HBA1", 28.));
+  tmpMap.insert(pair<string,double>("CS031HBA0", 34.));
+  tmpMap.insert(pair<string,double>("CS031HBA1", 34.));
+  tmpMap.insert(pair<string,double>("CS032HBA0", 80.));
+  tmpMap.insert(pair<string,double>("CS032HBA1", 80.));
+  tmpMap.insert(pair<string,double>("CS101HBA0", 12.));
+  tmpMap.insert(pair<string,double>("CS101HBA1", 12.));
+  tmpMap.insert(pair<string,double>("CS201HBA0", 42.));
+  tmpMap.insert(pair<string,double>("CS201HBA1", 42.));
+  tmpMap.insert(pair<string,double>("CS301HBA0", 58.));
+  tmpMap.insert(pair<string,double>("CS301HBA1", 58.));
+  tmpMap.insert(pair<string,double>("CS401HBA0", 72.));
+  tmpMap.insert(pair<string,double>("CS401HBA1", 72.));
+  tmpMap.insert(pair<string,double>("CS501HBA0", 88.));
+  tmpMap.insert(pair<string,double>("CS501HBA1", 88.));
+  tmpMap.insert(pair<string,double>("CS302HBA0", 48.));
+  tmpMap.insert(pair<string,double>("CS302HBA1", 48.));
+  tmpMap.insert(pair<string,double>("CS103HBA0",  2.));
+  tmpMap.insert(pair<string,double>("CS103HBA1",  2.));
+  tmpMap.insert(pair<string,double>("RS104HBA",  22.));
+  tmpMap.insert(pair<string,double>("RS106HBA",  36.));
+  tmpMap.insert(pair<string,double>("RS205HBA",  32.));
+  tmpMap.insert(pair<string,double>("RS208HBA",  18.));
+  tmpMap.insert(pair<string,double>("RS210HBA",  56.));
+  tmpMap.insert(pair<string,double>("RS305HBA",  22.));
+  tmpMap.insert(pair<string,double>("RS306HBA",  70.));
+  tmpMap.insert(pair<string,double>("RS307HBA",  10.));
+  tmpMap.insert(pair<string,double>("RS310HBA",  74.));
+  tmpMap.insert(pair<string,double>("RS404HBA",  68.));
+  tmpMap.insert(pair<string,double>("RS406HBA",  82.));
+  tmpMap.insert(pair<string,double>("RS407HBA",   6.));
+  tmpMap.insert(pair<string,double>("RS409HBA",  14.));
+  tmpMap.insert(pair<string,double>("RS410HBA",  44.));
+  tmpMap.insert(pair<string,double>("RS503HBA",  78.));
+  tmpMap.insert(pair<string,double>("RS508HBA",  26.));
+  tmpMap.insert(pair<string,double>("RS509HBA",  40.));
+  tmpMap.insert(pair<string,double>("DE601HBA",  16.));
+  tmpMap.insert(pair<string,double>("DE602HBA",  60.));
+  tmpMap.insert(pair<string,double>("DE603HBA", 120.));
+  tmpMap.insert(pair<string,double>("DE604HBA", 180.));
+  tmpMap.insert(pair<string,double>("DE605HBA",  46.));
+  tmpMap.insert(pair<string,double>("DE609HBA",  44.));
+  tmpMap.insert(pair<string,double>("FR606HBA",  80.));
+  tmpMap.insert(pair<string,double>("SE607HBA",  20.));
+  tmpMap.insert(pair<string,double>("UK608HBA",  50.));
+  tmpMap.insert(pair<string,double>("FI609HBA",  31.));
+
+
+  return tmpMap;
+}
+
+casa::CountedPtr<wcsprm> AntennaFieldHBA::readWCS(casa::CountedPtr<fitsfile> fitsPtr)
+{
+  int status=0, nkeyrec, nreject, nwcs, stat[NWCSFIX];
+  char *header;
+  struct wcsprm *wcs;
+
+  /* Read the primary header. */
+  if ((status = fits_hdr2str(fitsPtr.get(), 1, NULL, 0, &header, &nkeyrec,
+                             &status))) {
+    fits_report_error(stderr, status);
+    THROW (Exception, "Error reading primary header of FITS file");
+  }
+
+  /* Parse the primary header of the FITS file. */
+  if ((status = wcspih(header, nkeyrec, WCSHDR_all, 2, &nreject, &nwcs,
+                       &wcs))) {
+    fprintf(stderr, "wcspih ERROR %d: %s.\n", status,wcshdr_errmsg[status]);
+    THROW (Exception, "Error parsing primary header in FITS file");
+  }
+
+  /* Read coordinate arrays from the binary table extension. */
+  if ((status = fits_read_wcstab(fitsPtr.get(), wcs->nwtb, (wtbarr *)wcs->wtb,
+                                 &status))) {
+    fits_report_error(stderr, status);
+    THROW (Exception, "Error reading coordinate arrays from FITS file");
+  }
+  /* Translate non-standard WCS keyvalues. */
+  /*
+  if ((status = wcsfix(7, 0, wcs, stat))) {
+    for (uint i = 0; i < NWCSFIX; i++) {
+      if (stat[i] > 0) {
+        fprintf(stderr, "wcsfix ERROR %d: %s.\n", status,
+                wcsfix_errmsg[stat[i]]);
+      }
+    }
+
+    THROW (Exception, "Error translating non-standard WCS keyvalues");
+  }
+*/
+  return casa::CountedPtr<wcsprm>(wcs);
 }
 
 
-casa::Array<casa::Float>AntennaFieldHBA::theirIntegrals=readFITS("cs002hba1mode5.fits");
-
+casa::CountedPtr<fitsfile> AntennaFieldHBA::theirFitsFile_p =
+    AntennaFieldHBA::readFITS("cs002hba1mode5.fits");
+map<string,double> AntennaFieldHBA::theirRotationMap =
+    AntennaFieldHBA::readRotationMap();
+casa::CountedPtr<wcsprm> AntennaFieldHBA::theirWCS_p =
+    AntennaFieldHBA::readWCS(theirFitsFile_p);
 
 } //# namespace StationResponse
 } //# namespace LOFAR

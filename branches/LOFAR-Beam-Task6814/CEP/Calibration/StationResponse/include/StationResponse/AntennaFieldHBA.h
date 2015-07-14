@@ -29,6 +29,10 @@
 #include <StationResponse/AntennaField.h>
 #include <StationResponse/AntennaModelHBA.h>
 #include <casa/Arrays/Array.h>
+#include <casacore/casa/Utilities/CountedPtr.h>
+
+#include <fitsio.h>
+#include <wcslib/wcslib.h>
 
 namespace LOFAR
 {
@@ -67,11 +71,16 @@ public:
 
 private:
     real_t getNormalization(real_t freq, const vector3r_t &direction) const;
-    static casa::Array<casa::Float> readFITS(const string &filename);
+    static casa::CountedPtr<fitsfile> readFITS(const string &filename);
+    static std::map<string,double> readRotationMap();
+    static casa::CountedPtr<wcsprm> readWCS(casa::CountedPtr<fitsfile>);
 
     AntennaModelHBA::ConstPtr   itsAntennaModel;
     casa::Array<casa::Float>    itsIntegrals;
-    static casa::Array<casa::Float>    theirIntegrals;
+    double                      itsRotation;
+    static casa::CountedPtr<fitsfile> theirFitsFile_p;
+    static std::map<string,double>    theirRotationMap;
+    static casa::CountedPtr<wcsprm>   theirWCS_p;;
 };
 
 
