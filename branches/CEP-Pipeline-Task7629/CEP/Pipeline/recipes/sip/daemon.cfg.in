@@ -3,14 +3,16 @@ lofarroot 			= @CMAKE_INSTALL_PREFIX@
 pythonpath 			= @PYTHON_INSTALL_DIR@
 working_directory 	= /data/scratch/$ENV{USER}
 
-busname 			= "testmcqdaemon"
-deadletter 			= "deadletter"
+busname 			= testmcqdaemon
+deadletter 			= %(busname)s.deadletter
 
 
 [slave_cqdaemon]
-command_queue_template 	= %(busname)s/pipelineSlaveCommandQueue_
-deadletter_log_path 	= %(lofarroot)s/var/run/pipelineSlaveDeadletter.log
-logfile 				= %(lofarroot)s/var/run/pipelineSCQDaemon.log
+command_queue_topic_template = pipelineSlaveCommandQueue_{0}
+command_queue_template 	= %(busname)s/pipelineSlaveCommandQueue_{0}
+deadletter_log_path 	= %(lofarroot)s/var/log/pipelineSlaveDeadletter.log
+# Logfiles are currently located on a network disk!!!!
+logfile 				= %(lofarroot)s/var/log/pipelineSlaveCQDaemon.log   
 
 # Control the how long between loops of the daemon (rate limitter) in seconds.
 # actual processing time is substracted from this duration 
@@ -20,5 +22,10 @@ loop_interval 					= 1
 #( max_repost * loop_interval 	= time services can be unconnected before failure is asumed)
 max_repost = 5
 
-[logging]
-log_file 				= %(lofarroot)s/var/run/pipelineSlave.log
+[master_cqdaemon]
+command_queue 	= %(busname)s/pipelineMasterCommandQueue
+deadletter_log_path 	= %(lofarroot)s/var/log/pipelineMasterDeadletter.log
+logfile 				= %(lofarroot)s/var/log/pipelineMasterCQDaemon.log
+
+loop_interval 			= 1
+max_repost 				= 5

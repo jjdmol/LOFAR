@@ -27,16 +27,6 @@ from lofarpipe.support.xmllogging import add_child
 # frame. When multiplexing lots of threads, that will cause memory issues.
 threading.stack_size(1048576)
 
-# Includes for QPID framework, might not be available. Set status flag 
-_QPID_ENABLED = False
-try:
-
-    import lofarpipe.daemons.MCQLib as MCQLib
-    _QPID_ENABLED = True
-except:
-    pass
-# End QPID include 
-
 class ParamikoWrapper(object):
     """
     Sends an SSH command to a host using paramiko, then emulates a Popen-like
@@ -375,7 +365,10 @@ class RemoteCommandRecipeMixIn(object):
             max_per_node = self.config.getint('remote', 'max_per_node')
         limiter = ProcessLimiter(max_per_node)
         killswitch = threading.Event()
-        if _QPID_ENABLED:
+
+        use_daemon_communication = self.config.getboolean("daemon", 
+                                                          "use_daemon")
+        if use_daemon_communication:
             self.mcqlib.set_killswitch(killswitch) # forward the killswitch 
                                           # to the mcqlib
         if max_per_node:
@@ -385,12 +378,12 @@ class RemoteCommandRecipeMixIn(object):
             self.logger.debug("Job dispatcher at %s:%d" % (jobhost, jobport))
             for job_id, job in enumerate(jobs):
                 jobpool[job_id] = job
-                if _QPID_ENABLED:
+                if use_daemon_communication:
                     environment = dict(
                         (k, v) for (k, v) in os.environ.iteritems()
                         if k.endswith('PATH') or k.endswith('ROOT') or k == 'QUEUE_PREFIX'
                         )
-
+                    environment["USE_QPID_DAEMON"] = "True"                   
                     job_parameters = {'node':job.host,
                                   'environment':environment,
                                   'cmd':job.command,

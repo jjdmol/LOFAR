@@ -105,6 +105,7 @@ install(FILES
 install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/pipeline.cfg
   ${CMAKE_CURRENT_BINARY_DIR}/tasks.cfg
+  ${CMAKE_CURRENT_BINARY_DIR}/daemon.cfg
   DESTINATION share/pipeline)
 
 # PIPELINE_FEEDBACK_METHOD is used in pipeline.cfg.in to enable/disable qpid feedback

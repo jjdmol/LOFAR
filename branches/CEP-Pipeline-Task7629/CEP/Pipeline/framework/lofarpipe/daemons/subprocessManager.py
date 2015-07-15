@@ -207,7 +207,7 @@ class SubprocessManager(object):
         """
         Sends the two supplied string as log to the correct session_uuid topic
         """
-
+        # TODO: Use msg_subject in stead of a bus
         with msgbus.ToBus(self._busname + "/" + "log_" + session_uuid,
                           broker = self._broker) as logTopic:
             if stdoutdata != "":  # If there is a logline to send

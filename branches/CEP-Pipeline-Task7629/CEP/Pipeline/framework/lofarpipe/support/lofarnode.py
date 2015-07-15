@@ -18,15 +18,7 @@ import sys
 
 
 from lofarpipe.support.usagestats import UsageStats
-
-# Includes for QPID framework, might not be available. Set status flag 
-_QPID_ENABLED = False
-try:
-    import lofarpipe.daemons.SCQLib as SCQLib
-    _QPID_ENABLED = True
-except:
-    pass
-
+import lofarpipe.daemons.SCQLib as SCQLib
 
 def run_node(*args):
     """
@@ -49,9 +41,12 @@ class LOFARnode(object):
     """
     def __init__( self, loghost=None,
                  logport=logging.handlers.DEFAULT_TCP_LOGGING_PORT):
-
         
-        if not _QPID_ENABLED:
+        self.use_daemon_communication = False
+        if os.environ.get('USE_QPID_DAEMON') == "True":
+            self.use_daemon_communication = True
+
+        if not self.use_daemon_communication:
             self.logger = logging.getLogger(
               'node.%s.%s' % (platform.node(), self.__class__.__name__))
             self.logger.setLevel(logging.DEBUG)
@@ -75,7 +70,7 @@ class LOFARnode(object):
         """
 
         # Add the correct handler depending on the comm method.
-        if _QPID_ENABLED:
+        if self.use_daemon_communication:
 
             format = "%(asctime)s %(levelname)-7s %(name)s: %(message)s"
             datefmt = "%Y-%m-%d %H:%M:%S"
@@ -100,7 +95,7 @@ class LOFARnode(object):
             return return_value
         finally:
             self.resourceMonitor.setStopFlag()
-            if _QPID_ENABLED:
+            if self.use_daemon_communication:
                 self.logger.removeHandler(self._SCQLib.QPIDLoggerHandler)
             elif self.loghost:
                 my_tcp_handler.close()
@@ -124,9 +119,14 @@ class LOFARnodeTCP(LOFARnode):
         # try connecting using QPID
         # Reuse the job_id and port to send the name of the queues
         # THis is not pretty but we need to be backwards compatible
-        self._SCQLib = None
+        self.use_daemon_communication = False
 
-        if not _QPID_ENABLED:
+        if os.environ.get('USE_QPID_DAEMON') == "True":
+            self.use_daemon_communication = True
+
+
+        self._SCQLib = None
+        if not self.use_daemon_communication:
             self.job_id, self.host, self.port = int(job_id), host, int(port)
         else:
             bus_name = job_id 
@@ -193,7 +193,7 @@ class LOFARnodeTCP(LOFARnode):
         -OR-
         When Qpid is enabled retrieve the parameters from the NodeCommandQueue
         """
-        if _QPID_ENABLED:
+        if self.use_daemon_communication:
             
             self.arguments = self._SCQLib.getArguments()
         else:
@@ -230,7 +230,7 @@ class LOFARnodeTCP(LOFARnode):
         server.
         """
 
-        if _QPID_ENABLED:               
+        if self.use_daemon_communication:               
 
             self._SCQLib.send_results(self.outputs)
             return

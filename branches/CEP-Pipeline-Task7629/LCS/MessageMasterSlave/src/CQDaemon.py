@@ -81,7 +81,7 @@ TODO:
 
 class CQDaemon(object):
     def __init__(self, broker, busname, commandQueueName,
-                 deadLetterQueueName, deadletter_log_location, 
+                 deadLetterQueueName, deadletterfile, 
                  logfile, loop_interval=10, daemon=True):
         """
         broker:              The broker to connect to
@@ -101,7 +101,7 @@ class CQDaemon(object):
         self._busname = busname
         self._loop_interval = loop_interval  
         self._daemon = daemon
-        self._deadletter_log_location = deadletter_log_location
+        self._deadletterfile = deadletterfile
 
         self._connect_queues( busname, commandQueueName, deadLetterQueueName)
 
@@ -217,6 +217,7 @@ class CQDaemon(object):
                 break # exit the while loop
 
             # Call the Subclass deadletter processing.
+            processed_by_subclass = False
             try:
                 processed_by_subclass = self.process_deadletter(
                     msg, unpacked_msg_content, msg_type)
@@ -407,7 +408,7 @@ class CQDaemon(object):
         TODO: What happens on network issues (still write to net disk?)
         """
         try:
-            f = open(self._deadletter_log_location, "a+")  # Open for writing append create 
+            f = open(self._deadletterfile, "a+")  # Open for writing append create 
 
             subclass_name = type(self)
             current_time = datetime.now()

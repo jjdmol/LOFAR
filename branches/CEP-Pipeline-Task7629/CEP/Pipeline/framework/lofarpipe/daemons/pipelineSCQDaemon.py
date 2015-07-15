@@ -20,8 +20,9 @@
 import sys
 import os
 import socket
-import lofarpipe.daemons.pipelineSCQDaemonImp as PipelineSCQDaemonImp
 import ConfigParser
+
+import lofarpipe.daemons.pipelineSCQDaemonImp as PipelineSCQDaemonImp
 
 if __name__ == "__main__":
     # Read the config file, fail of not supplied
@@ -37,24 +38,24 @@ if __name__ == "__main__":
     # create or get parameters 
     hostname = socket.gethostname()
     broker = hostname
-    busname = config.get("DEFAULT", "busname")
-    slaveCommandQueueName = busname + "/" + config.get("slave_cqdaemon",
-                                          "command_queue_template") + hostname
-    
-    deadLetterQueueName = busname + "." + config.get("DEFAULT", "deadletter")
-    deadletter_log_location = config.get("slave_cqdaemon", 
-                                         "deadletter_log_path")
-    logfile = config.get("slave_cqdaemon", "logfile")
-    loop_interval = config.getfloat("slave_cqdaemon", "loop_interval")
-    max_repost =  config.getfloat("slave_cqdaemon", "max_repost")
+    busname = config.get(               "DEFAULT", "busname")
+    slaveCommandQueueNameTemplate = config.get( "slave_cqdaemon",
+                             "command_queue_template").format(hostname)
+    deadLetterQueueName = config.get(   "DEFAULT", "deadletter")
+    deadletterfile = config.get(        "slave_cqdaemon", "deadletter_log_path")
+    logfile = config.get(               "slave_cqdaemon", "logfile")
+    loop_interval = config.getfloat(    "slave_cqdaemon", "loop_interval")
+    max_repost =  config.getfloat(      "slave_cqdaemon", "max_repost")
 
-    daemon = PipelineSCQDaemonImp.PipelineSCQDaemonImp(broker, busname, 
-               slaveCommandQueueName, 
-               deadLetterQueueName, 
-               deadletter_log_location,
-               logfile,
-               loop_interval=loop_interval,
-               max_repost=max_repost)
+    daemon = PipelineSCQDaemonImp.PipelineSCQDaemonImp(
+                broker, 
+                busname, 
+                slaveCommandQueueNameTemplate, 
+                deadLetterQueueName, 
+                deadletterfile,
+                logfile,
+                loop_interval=loop_interval,
+                max_repost=max_repost)
 
     daemon.run()
 

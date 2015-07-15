@@ -10,6 +10,7 @@ import os
 import sys
 import re
 import traceback
+import socket
 
 from lofarpipe.support.stateful import StatefulRecipe
 from lofarpipe.support.lofarexceptions import PipelineException
@@ -17,15 +18,10 @@ from lofarpipe.support.xmllogging import get_active_stack
 from lofar.parameterset import parameterset
 import lofar.messagebus.msgbus
 from lofar.messagebus.protocols import TaskFeedbackDataproducts, TaskFeedbackProcessing, TaskFeedbackState
+import lofarpipe.daemons.MCQLib as MCQLib
 
 # Includes for QPID framework, might not be available. Set status flag 
-_QPID_ENABLED = False
-try:
-    import lofarpipe.daemons.MCQLib as MCQLib
-    _QPID_ENABLED = True
-except:
-    pass
-# End QPID include 
+
 #                                             Standalone Pipeline Control System
 # ------------------------------------------------------------------------------
 
@@ -154,9 +150,15 @@ class control(StatefulRecipe):
         self.logger.info("LOFAR Pipeline (%s) starting." % self.name)
         self.logger.info("SASID = %s, MOMID = %s, Feedback method = %s" % (self.sasID, self.momID, self.feedback_method))
 
-        if _QPID_ENABLED:
+        use_daemon_communication = self.config.getboolean("daemon", 
+                                                          "use_daemon")
+        if use_daemon_communication:
             self.logger.info("Using QPid based communication")
-            self.mcqlib  = MCQLib.MCQLib(self.logger, "locus102", "testmcqdaemon")
+            broker = socket.gethostname()
+            self.mcqlib  = MCQLib.MCQLib(self.logger, 
+                                         broker,
+                                         "testmcqdaemon")
+
         try:
             self.pipeline_logic()
         except Exception, message:
@@ -197,7 +199,7 @@ class control(StatefulRecipe):
                     self.logger.error(except_object)
 
             # 'destruct' the daemon 
-            if _QPID_ENABLED:
+            if use_daemon_communication:
                 self.mcqlib._release()  # Cleanup of the queues etc.
 
         return 0

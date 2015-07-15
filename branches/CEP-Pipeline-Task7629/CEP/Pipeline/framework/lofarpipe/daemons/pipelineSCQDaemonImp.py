@@ -43,14 +43,25 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
                   Effect: Kill all jobs of this session, none will deliver data
 
     """
-    def __init__(self, broker, busname, commandQueueName,
-                 deadLetterQueueName, deadletter_log_location,logfile ,
-                 loop_interval=10, daemon=True, max_repost=5):
+    def __init__(self, 
+                 broker, 
+                 busname, 
+                 commandQueueName,
+                 deadLetterQueueName, 
+                 deadletterfile,
+                 logfile ,
+                 loop_interval=10, 
+                 daemon=True,
+                 max_repost=5):
         super(PipelineSCQDaemonImp, self).__init__(
-                 broker, busname, commandQueueName,
-                 deadLetterQueueName, deadletter_log_location,logfile,
-                 loop_interval, daemon)
-
+                   broker,
+                   busname, 
+                   commandQueueName,
+                   deadLetterQueueName, 
+                   deadletterfile,
+                   logfile,
+                   loop_interval, 
+                   daemon)
         # Object responcible for starting jobs, contains the state 
         self._subprocessManager = subprocessManager.SubprocessManager(
                self._broker, self._busname, self._toBus, self._logger)

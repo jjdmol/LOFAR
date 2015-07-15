@@ -43,16 +43,30 @@ And a run_job member function performing the actual posting.
 
 The default deadletter queue functionality is currently used (print and ignore)
 """
-class PipelineMCQDaemon(CQDaemon.CQDaemon):
-    def __init__(self, broker, busname, masterCommandQueueName,
-                 deadLetterQueueName, deadletter_log_location,
-                 loop_interval=10, daemon=True):
-        super(PipelineMCQDaemon, self).__init__(broker, busname,
-                 masterCommandQueueName, deadLetterQueueName, 
-                 deadletter_log_location,loop_interval, daemon)
+class pipelineMCQDaemonImp(CQDaemon.CQDaemon):
+    def __init__(self, 
+                 broker, 
+                 busname, 
+                 masterCommandQueueName,
+                 deadLetterQueueName, 
+                 deadletter_log_location,
+                 logfile,
+                 slaveCommandQueueNameTemplate,
+                 loop_interval=10, 
+                 daemon=True,
+                 max_repost=5):
+        super(pipelineMCQDaemonImp, self).__init__(
+                    broker, 
+                    busname,
+                    masterCommandQueueName,
+                    deadLetterQueueName, 
+                    deadletter_log_location,
+                    logfile,
+                    loop_interval,
+                    daemon)
 
-        self._toSlaveSubjectTemplate = "slaveCommandQueue_{0}"
-        self._max_repost = 5
+        self._toSlaveSubjectTemplate = slaveCommandQueueNameTemplate
+        self._max_repost = max_repost
 
 
     # ****************************************************************
@@ -97,7 +111,8 @@ class PipelineMCQDaemon(CQDaemon.CQDaemon):
             node = unpacked_msg_content['node']   
             slave_commandqueue_topic_subject = \
                                self._toSlaveSubjectTemplate.format(node)
-            self._logger.info("forwarding job to node: {0}".format(node))    
+            self._logger.info("forwarding job to subject: {0}".format(
+                          slave_commandqueue_topic_subject))    
             # create new msg
             # TODO: FOrwarding of the received msg instead of creating a new one.
             msg = message.MessageContent()
