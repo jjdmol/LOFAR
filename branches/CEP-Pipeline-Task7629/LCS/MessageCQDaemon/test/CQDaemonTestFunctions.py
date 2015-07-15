@@ -24,7 +24,7 @@ import lofar.messagebus.message as message
 import time
 
 # ******************** helper function ******************
-def prepare_test(subclass):
+def prepare_test(subclass, logfile, deadletterfile):
     """
     Hides boiler plate code
 
@@ -36,10 +36,11 @@ def prepare_test(subclass):
     #busname = "testbus"
     masterCommandQueueName = busname + "/" + "masterCommandQueueName"
     #masterCommandQueueName = "masterCommandQueueName"
-    deadLetterQueueName = busname + ".proxy.deadletter"
+    deadLetterQueueName = busname + ".deadletter"
     # create the sut
     daemon = subclass(broker, busname, masterCommandQueueName,
-                                deadLetterQueueName, 1, False)
+                      deadLetterQueueName, logfile,deadletterfile,
+                      1, False)
 
     # connect to the queueus
     commandQueueBus =get_to_bus(masterCommandQueueName, broker)

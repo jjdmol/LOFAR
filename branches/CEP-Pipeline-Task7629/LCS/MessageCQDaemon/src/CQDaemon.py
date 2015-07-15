@@ -26,12 +26,6 @@ import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
 import lofar.messagebus.CQCommon as CQCommon
 
-# Define logging.  Until we have a python loging framework, we'll have
-# to do any initialising here
-import logging
-logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
-
-
 """
 Abstract class command queue classs containing the core functionality 
 for a command queue listener
@@ -121,7 +115,7 @@ class CQDaemon(object):
             # 1. Process all incomming commands
             quit_command_received = self._process_command_queue()           
             if (quit_command_received):
-                self._logger.warn("Recveived quit command. stopping daemon")
+                self._logger.warn("Received quit command. stopping daemon")
                 break     
 
             # 2. process deadletters 
