@@ -17,20 +17,45 @@
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
 # $Id$
+import sys
+import os
+import socket
 import lofarpipe.daemons.pipelineSCQDaemonImp as PipelineSCQDaemonImp
+import ConfigParser
 
 if __name__ == "__main__":
-    # TODO: Read these parameters from a config file
-    # TODO: Daemon parameter in the init should be removed
-    broker = "locus098"
-    node = broker 
-    busname = "testmcqdaemon"
-    slaveCommandQueueName = busname + "/" + "slaveCommandQueue" + "_" + node
-    deadLetterQueueName = "testmcqdaemon.deadletter"
+    # Read the config file, fail of not supplied
+    if len(sys.argv) != 2:
+        "Usage: pipelineSCQDaemon config.cfg"
+    config_path = sys.argv[1]
+    if not os.path.isfile(config_path):
+        print "supplied config file {0} does not exist".format(config_path)
+        sys.exit(-1)
+    config = ConfigParser.ConfigParser()
+    config.read(config_path)
 
+    # create or get parameters 
+    hostname = socket.gethostname()
+    broker = hostname
+    busname = config.get("DEFAULT", "busname")
+    slaveCommandQueueName = busname + "/" + config.get("slave_cqdaemon",
+                                          "command_queue_template") + hostname
+    
+    deadLetterQueueName = busname + "." + config.get("DEFAULT", "deadletter")
+    deadletter_log_location = config.get("slave_cqdaemon", 
+                                         "deadletter_log_path")
+    logfile = config.get("slave_cqdaemon", "logfile")
+    loop_interval = config.getfloat("slave_cqdaemon", "loop_interval")
+    max_repost =  config.getfloat("slave_cqdaemon", "max_repost")
 
     daemon = PipelineSCQDaemonImp.PipelineSCQDaemonImp(broker, busname, 
-               slaveCommandQueueName, deadLetterQueueName, 1, True)
+               slaveCommandQueueName, 
+               deadLetterQueueName, 
+               deadletter_log_location,
+               logfile,
+               loop_interval=loop_interval,
+               max_repost=max_repost)
 
     daemon.run()
+
     

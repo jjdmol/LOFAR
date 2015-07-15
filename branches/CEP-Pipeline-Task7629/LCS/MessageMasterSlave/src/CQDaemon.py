@@ -20,6 +20,7 @@
 
 from datetime import datetime   # needed for duration
 import time
+import sys
 
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
@@ -76,9 +77,12 @@ TODO:
     1. Initiation with config file
     2. send msg with correct LOFAR header
 """
+
+
 class CQDaemon(object):
     def __init__(self, broker, busname, commandQueueName,
-                 deadLetterQueueName, loop_interval=10, daemon=True):
+                 deadLetterQueueName, deadletter_log_location, 
+                 logfile, loop_interval=10, daemon=True):
         """
         broker:              The broker to connect to
         busname:             The bus we are communicating on
@@ -91,29 +95,15 @@ class CQDaemon(object):
         if type(self) == CQDaemon:
             raise NotImplementedError("CQDaemon should always be subtyped")
         
-        self._logger = logging.getLogger("CQDaemon")
+        self._add_logger(logfile)
+
         self._broker = broker
         self._busname = busname
         self._loop_interval = loop_interval  
         self._daemon = daemon
+        self._deadletter_log_location = deadletter_log_location
 
         self._connect_queues( busname, commandQueueName, deadLetterQueueName)
-
-    # Implement the with functionality
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.close()
-        return False # 'reraises' original exception
-
-    def close(self):
-        """
-        close all owned connections.
-        """
-        self._CommandQueue.close()
-        self._deadletterFromBus.close()
-        self._toBus.close()
 
     def run(self):
         """
@@ -125,7 +115,7 @@ class CQDaemon(object):
         3. process state
 
         """
-        while(self._daemon):   
+        while True:   
             begin_tick = datetime.now()
 
             # 1. Process all incomming commands
@@ -142,6 +132,10 @@ class CQDaemon(object):
 
             end_tick = datetime.now()   
             self._logged_sleep(end_tick -begin_tick)
+
+            # If we started in non deamon mode (test), do the loop only once. 
+            if not self._daemon:
+                break
     
     # ***********************************************************************
     # The three main functions: commands, deadletter and state
@@ -195,6 +189,7 @@ class CQDaemon(object):
                 self._logger.warn(
                   "***** encountered unknown command *****: \n{0}".format(
                     unpacked_msg_content))
+                self._send_to_deadletter(msg, unpacked_msg_content)
 
         return None
 
@@ -235,7 +230,9 @@ class CQDaemon(object):
 
             # default implementation, report the deadletter and... ignore
             self._logger.info(
-               "Ignore msg on deadletterqueue".format(unpacked_msg_content))
+               "Ignored msg on deadletterqueue".format(unpacked_msg_content))
+
+            self._write_to_deadletter_log(msg, unpacked_msg_content)
 
     def _process_state(self):
         """
@@ -287,8 +284,49 @@ class CQDaemon(object):
         pass
 
     # ************************************************************************
+    # Members needed for the pythonic "with xx as xx:" functionality
+    # **********************************************************************
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
+        return False # 'reraises' original exception
+
+    def close(self):
+        """
+        close all owned connections.
+        """
+        self._CommandQueue.close()
+        self._deadletterFromBus.close()
+        self._toBus.close()
+
+
+    # ************************************************************************
     # Private implementation members
     # **********************************************************************
+    def _add_logger(self, logfile):
+        self._logger = logging.getLogger(self.__class__.__name__)
+
+        # How to format the log msgs 
+        # TODO: candidate for a config parameter
+        format = "%(asctime)s %(levelname)-7s %(message)s"  #%(name)s:
+        datefmt = "%Y-%m-%d %H:%M:%S"
+        formatter = logging.Formatter(format, datefmt)
+
+        # Create two handlers
+        file_handler = logging.FileHandler(logfile)
+        stream_handler = logging.StreamHandler(sys.stdout)
+        # apply the formatters
+        stream_handler.setFormatter(formatter)
+        file_handler.setFormatter(formatter)
+
+        self._logger.addHandler(file_handler)
+        self._logger.addHandler(stream_handler)
+        self._logger.propagate = False    # do not propagate to root logger
+                                         # stops double printing to stdout  
+
+
     def _connect_queues(self, busname, commandQueueName, deadLetterQueueName):
         """
         Helper function, seperates all connections in a class. Not realy 
@@ -348,6 +386,42 @@ class CQDaemon(object):
         self._logger.info(
             "Run loop complete sleep for {0} seconds".format(sleep_time))
         time.sleep(sleep_time)
+
+    def _send_to_deadletter(self, msg, unpacked_msg_content):
+        """
+        Forward a msg to the deadletter queue, typically done when a command
+        is not known and not consumed by subclasses
+        """
+        msg = CQCommon.create_msg(unpacked_msg_content, "deadletter")
+
+        self._toBus.send(msg)
+
+
+
+    def _write_to_deadletter_log(self, msg, unpacked_msg_content):
+        """
+        Writes the unknown deadletter to the deadletter permanent log
+
+        TODO: Could use some cleanup
+
+        TODO: What happens on network issues (still write to net disk?)
+        """
+        try:
+            f = open(self._deadletter_log_location, "a+")  # Open for writing append create 
+
+            subclass_name = type(self)
+            current_time = datetime.now()
+
+            f.write("START DEADLETTER\n")
+            f.write("{0} {1}\n".format(current_time, subclass_name))
+            f.write("{0}\n".format(str(msg.content())))
+            f.write("{0}\n".format(unpacked_msg_content))
+            f.write("END DEADLETTER\n")
+            f.close()
+        except Exception, ex:            
+            # Writing to file might fail if on network disk. Catch all and
+            # continue
+            pass
 
 
 # ****************************************************************************

@@ -45,9 +45,11 @@ The default deadletter queue functionality is currently used (print and ignore)
 """
 class PipelineMCQDaemon(CQDaemon.CQDaemon):
     def __init__(self, broker, busname, masterCommandQueueName,
-                 deadLetterQueueName, loop_interval=10, daemon=True):
-        super(PipelineMCQDaemon, self).__init__(broker, busname, masterCommandQueueName,
-                 deadLetterQueueName, loop_interval, daemon)
+                 deadLetterQueueName, deadletter_log_location,
+                 loop_interval=10, daemon=True):
+        super(PipelineMCQDaemon, self).__init__(broker, busname,
+                 masterCommandQueueName, deadLetterQueueName, 
+                 deadletter_log_location,loop_interval, daemon)
 
         self._toSlaveSubjectTemplate = "slaveCommandQueue_{0}"
         self._max_repost = 5
