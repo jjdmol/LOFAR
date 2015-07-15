@@ -122,3 +122,6 @@ configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/tasks.cfg.in
   ${CMAKE_CURRENT_BINARY_DIR}/tasks.cfg)
 
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/daemon.cfg.in
+  ${CMAKE_CURRENT_BINARY_DIR}/daemon.cfg)  

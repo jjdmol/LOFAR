@@ -1,0 +1,24 @@
+[DEFAULT]
+lofarroot 			= @CMAKE_INSTALL_PREFIX@
+pythonpath 			= @PYTHON_INSTALL_DIR@
+working_directory 	= /data/scratch/$ENV{USER}
+
+busname 			= "testmcqdaemon"
+deadletter 			= "deadletter"
+
+
+[slave_cqdaemon]
+command_queue_template 	= %(busname)s/pipelineSlaveCommandQueue_
+deadletter_log_path 	= %(lofarroot)s/var/run/pipelineSlaveDeadletter.log
+logfile 				= %(lofarroot)s/var/run/pipelineSCQDaemon.log
+
+# Control the how long between loops of the daemon (rate limitter) in seconds.
+# actual processing time is substracted from this duration 
+loop_interval 					= 1
+
+# How often msg received on a deadletterqueue are attempted 
+#( max_repost * loop_interval 	= time services can be unconnected before failure is asumed)
+max_repost = 5
+
+[logging]
+log_file 				= %(lofarroot)s/var/run/pipelineSlave.log
