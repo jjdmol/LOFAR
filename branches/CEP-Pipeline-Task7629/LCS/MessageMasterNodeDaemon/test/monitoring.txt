@@ -1,7 +1,0 @@
-
-#Get all open connections of qpid, filter for established, count and print the result to a test file
-for i in {1..200}; do netstat -an | grep 5672 | grep ESTABLISHED| wc | awk '{print $1}' >> file.txt ; sleep 1 ; done
-
-for i in {1..200}; do netstat -an | grep 5672 | grep ESTABLISHED| wc | awk '{print $1}' >> file_locus102.txt ; sleep 1 ; done
-
-

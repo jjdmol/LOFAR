@@ -1,1 +1,0 @@
-The design document is located in the pipeline documentation.
