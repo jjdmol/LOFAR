@@ -6,7 +6,7 @@ include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED)
 lofar_find_package(WCSLIB REQUIRED)
 lofar_find_package(CFITSIO REQUIRED)
-lofar_find_package(Casacore REQUIRED COMPONENTS casa lattices measures ms tables coordinates)
+lofar_find_package(Casacore REQUIRED COMPONENTS casa lattices measures ms tables coordinates images)
 
 # Uncomment to check for unsafe conversions (gcc), for example conversion of
 # size_t to unsigned int (truncation).

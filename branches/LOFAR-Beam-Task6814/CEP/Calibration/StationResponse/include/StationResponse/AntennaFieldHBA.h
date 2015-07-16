@@ -31,8 +31,11 @@
 #include <casa/Arrays/Array.h>
 #include <casacore/casa/Utilities/CountedPtr.h>
 
-#include <fitsio.h>
 #include <wcslib/wcslib.h>
+// Need to include getwcstab.h from wcslib, since cfitsio does not 
+// declare it as extern C
+#include <wcslib/getwcstab.h>
+#include <fitsio.h>
 
 namespace LOFAR
 {

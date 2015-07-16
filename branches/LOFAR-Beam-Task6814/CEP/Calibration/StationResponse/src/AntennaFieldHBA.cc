@@ -306,6 +306,7 @@ casa::CountedPtr<wcsprm> AntennaFieldHBA::readWCS(casa::CountedPtr<fitsfile> fit
     fits_report_error(stderr, status);
     THROW (Exception, "Error reading coordinate arrays from FITS file");
   }
+
   /* Translate non-standard WCS keyvalues. */
   /*
   if ((status = wcsfix(7, 0, wcs, stat))) {
