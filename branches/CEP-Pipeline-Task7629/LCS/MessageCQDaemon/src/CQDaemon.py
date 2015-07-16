@@ -21,6 +21,7 @@
 from datetime import datetime   # needed for duration
 import time
 import sys
+import logging
 
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
@@ -142,8 +143,7 @@ class CQDaemon(object):
         """ 
         while True:
             # Try to get a new msg from the command queue
-            msg_available, msg_data = get_next_msg_and_content(
-                              self._CommandQueue, self._logger)
+            msg_available, msg_data = self._get_next_msg_and_content()
             if not msg_available:
                 break
                         
@@ -418,38 +418,42 @@ class CQDaemon(object):
             # continue
             pass
 
+    def _get_next_msg_and_content(self):
+            """
+            Helper function attempts to get the next msg from the command queue
+
+            Unpacks the data and assign data to the second return value.
+            Returns false and none if no valid msg is available
+
+            Invalid msg are printed to logged and stored in the deadletter log
+            """
+            # Test if the timeout is in milli seconds or second
+            while True:
+                msg = self._CommandQueue.get(0.01)  #  use timeout, very short, well get 
+                # there next time if more time is needed
+
+                if msg == None:
+                    return False, None
+
+                # Get the needed information from the msg
+                unpacked_msg_content, msg_type  = _save_unpack_msg(msg,
+                                                                   self._logger)
+                if not msg_type:  # if unpacking failed
+                    self._logger.warn(
+                      "Could not process msg, incorrect content: {0}".format(
+                        unpacked_msg_content))
+                    self._CommandQueue.ack(msg) 
+                    # send the incorrect msg to the deadletter log
+                    self._write_to_deadletter_log(msg, unpacked_msg_content)
+                    continue
+
+                self._CommandQueue.ack(msg)
+
+                return True, (msg, unpacked_msg_content, msg_type) 
 
 # ****************************************************************************
 # Candidate functions for external lib.
 # **************************************************************************
-def get_next_msg_and_content(aFromBus, logger):
-        """
-        Helper function attempts to get the next msg from a bus
-
-        Unpacks the data and assign data to the second return value.
-        Returns false and none if no valid msg is available
-
-        Invalid msg are printed and droped without any additional action
-        """
-        # Test if the timeout is in milli seconds or second
-        while True:
-            msg = aFromBus.get(0.01)  #  use timeout, very short, well get 
-            # there next time if more time is needed
-
-            if msg == None:
-                return False, None
-
-            # Get the needed information from the msg
-            unpacked_msg_content, msg_type  = _save_unpack_msg(msg, logger)
-            if not unpacked_msg_content:  # if unpacking failed
-                logger.warn(
-                  "Could not process msg, incorrect content: {0}".format(
-                    unpacked_msg_content))
-                aFromBus.ack(msg) 
-                continue
-
-            aFromBus.ack(msg)
-            return True, (msg, unpacked_msg_content, msg_type) 
 
 def _save_unpack_msg(msg, logger):
         """
@@ -467,10 +471,10 @@ def _save_unpack_msg(msg, logger):
             msg_type =  msg_content['type']
 
         except Exception, ex:
-            logger.warn(
-                   "warning: encountered incorrect structured msg: {0}".format(
-                    msg.content().payload))
-            return None, None
+            logger.warn("Failed evaluating msg data")
+            # TODO: return 'type' is not the same in error case..
+            # tight coupling with calling function.
+            return msg.content().payload, False  
 
         return msg_content, msg_type
 

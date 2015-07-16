@@ -105,10 +105,9 @@ class testCQDaemon(unittest.TestCase):
             # start the daemon processing
             daemon._process_command_queue()
   
-
-            # validate that a job is processed on the subclass
+            # validate that a job is processed o
             expected_payload = { 'type':'command',
-                        'testcommand':"received",
+                          'testcommand':"received",
                            'command':'testcommand',
                            'node':"locus102",
                            'job':{}}
@@ -126,123 +125,53 @@ class testCQDaemon(unittest.TestCase):
                           *[None]*8   # Just pass a list with 8 none s as args
                           )
             
-        
-
-
           
-    #def test_silent_eating_of_incorrect_commands(self):
-    #    """
-    #    The Command queue daemon should always continue working, even in the case 
-    #    of unknown of incorrect commands
-    #    Send a number of broken msg to the command queue
-    #    """
-    #    daemon, commandQueueBus, deadletterQueue, deadletterToQueue = \
-    #        testFunctions.prepare_test( subclassedMCQDaemonFalse,
-    #                         self.logfile, self.deadletterfile )
+    def test_silent_eating_of_incorrect_commands(self):
+        """
+        The Command queue daemon should always continue working, even in the case 
+        of unknown of incorrect commands
+        Send a number of broken msg to the command queue
+        """
+        daemon, commandQueueBus, deadletterQueue, deadletterToQueue = \
+            testFunctions.prepare_test(subclassedMCQDaemonFalse,
+                             self.logfile, self.deadletterfile )
 
-    #    # Excercise the SUT 
-    #    # ****************************************
-    #    # Test 1: incorrect command
-    #    payload = {'command':'incorrect',  
-    #                   'node':'locus102',
-    #                   'job':{}}
-    #    msg = testFunctions.create_test_msg(payload)
-    #    commandQueueBus.send(msg)
+        with nested(daemon, commandQueueBus, 
+                    deadletterQueue, deadletterToQueue) as (
+                      daemon, commandQueueBus, deadletterQueue, deadletterToQueue):
 
-    #    # Exercise sut
-    #    daemon._process_commands() # Start the processing on the sut
+            # Excercise the SUT 
+            # ****************************************
+            # Test 1: incorrect command
+            payload = {'command':'incorrect',  
+                           'node':'locus102',
+                           'job':{}}
+            msg = testFunctions.create_test_msg(payload)
+            commandQueueBus.send(msg)
 
-    #    # We expect a deadletter on the 
-    #    idx = 0
-    #    msg_received = testFunctions.try_get_msg(deadletterQueue)
-    
-    #    received_payload = eval(msg_received.content().payload)
-    #    if payload != received_payload:
-    #        raise Exception("Did not receive the correct msg on the deadletterq")
-    
-    #    # ****************************************
-    #    # test 2: No payload
-    #    send_payload = "Some text"
-    #    msg = testFunctions.create_test_msg(send_payload)
-    #    commandQueueBus.send(msg)
+            # Exercise sut
+            daemon._process_command_queue() # Start the processing on the sut
 
-    #    # Exercise sut
-    #    daemon._process_commands()
+            # Deadletter content example:
+            #START DEADLETTER
+            #2015-07-16 09:57:29.334901 <class '__main__.subclassedMCQDaemonFalse'>
+            #[67b103d3-5f4e-49a8-b8a1-071366aecc97] [sasid ] summary
+            #{'node': 'locus102', 'job': {}, 'command': 'incorrect'}
+            #END DEADLETTER
 
-    #    # check the deadletter queue
-    #    msg_received = testFunctions.try_get_msg(deadletterQueue)
+            # We expect a deadletter on the 
+            content = None
+            with open( self.deadletterfile , 'r') as file:
+                content = file.readlines()
 
-    #    # validate the content
-    #    received_payload = msg_received.content().payload
-    #    if send_payload != received_payload:
-    #         raise Exception("Did not receive the correct msg on the deadletterq")
+            self.assertEqual(content[0],"START DEADLETTER\n")
+            self.assertTrue("subclassedMCQDaemonFalse" in content[1] )
+            self.assertEqual(content[3],
+                      "{'node': 'locus102', 'job': {}, 'command': 'incorrect'}\n")
+            self.assertEqual(content[4],"END DEADLETTER\n")
+            return 
 
-    #    # clear the queueus
-    #    commandQueueBus.close()
-    #    deadletterQueue.close()
-    #    daemon.close()
-
-
-    #def test_default_process_deadletter_queue(self):
-    #    """
-    #    The Command queue daemon should always continue working, even in the case 
-    #    of unknown of incorrect commands
-    #    Send a number of broken msg to the command queue
-    #    """
-    #    broker =  "locus102"
-    #    busname = "testmcqdaemon"
-
-    #    masterCommandQueueName = busname + "/" + "masterCommandQueueName"
-    #    deadLetterQueueName = busname + ".proxy.deadletter"
-
-    #    # create the sut
-    #    daemon = subclassedMCQDaemonFalse(broker, busname, masterCommandQueueName,
-    #                     deadLetterQueueName, self.logfile,self.deadletterfile, 
-    #                                1, False)
-
-    #    # connect to the queueus
-    #    commandQueueBus = testFunctions.get_to_bus(masterCommandQueueName, broker)
-
-    #    deadletterToQueue = testFunctions.get_to_bus(deadLetterQueueName,
-    #                                                 broker)
-
-
-    #    # Excercise the SUT 
-    #    # ****************************************
-    #    # Test 1: incorrect command
-    #    payload = {'command':'incorrect',  
-    #                   'node':'locus102',
-    #                   'job':{}}
-
-
-    #    msg = testFunctions.create_test_msg(payload)
-    #    deadletterToQueue.send(msg)
-
-    #    # Exercise sut: In this instance we want the daemon to process the deadletter
-    #    # queue
-    #    daemon._process_deadletter_queue() 
-
-    #    # check the deadletter queue, this should now be empty!!!
-    #    #Connect to the deadletter queue to check for unread msg
-    #    deadletterQueue = testFunctions.get_from_bus(deadLetterQueueName,
-    #                                                 broker)
-
-    #    try:
-    #        msg_received = testFunctions.try_get_msg(deadletterQueue, wait_period=2)
-    #        print eval(msg_received.content().payload)
-    #    except IOError:  # we expect an IO exception!!
-    #        pass
-    #    else:
-    #        raise Exception("received an unexpected msg on the deadletter queue")
-
-    #    # clear the queueus
-    #    commandQueueBus.close()
-    #    deadletterQueue.close()
-    #    deadletterToQueue.close()
-    #    daemon.close()
-
-
-
+# TODO: Add test of additional functionality
 
 if __name__ == "__main__":
     unittest.main()

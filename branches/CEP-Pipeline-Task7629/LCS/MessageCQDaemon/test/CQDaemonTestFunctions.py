@@ -39,7 +39,7 @@ def prepare_test(subclass, logfile, deadletterfile):
     deadLetterQueueName = busname + ".deadletter"
     # create the sut
     daemon = subclass(broker, busname, masterCommandQueueName,
-                      deadLetterQueueName, logfile,deadletterfile,
+                      deadLetterQueueName, deadletterfile,logfile,
                       1, False)
 
     # connect to the queueus
