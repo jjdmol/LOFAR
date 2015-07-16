@@ -44,27 +44,6 @@ class testForwardOfJobMsgToQueueu(unittest.TestCase):
         os.remove(self.logfile)
         os.remove(self.deadletterfile)
 
-  
-    #def test_forwarding_of_job_msg_to_queue(self):
-    #    """
-    #    A msg with the command run_job should be forwarded to jobnode
-    #    """
-    #    job_node = 'locus102'
-
-    #    busname = "testmcqdaemon"
-    #    slaveCommandQueueBusName = "testmcqdaemon/slaveCommandQueue_locus098"
-    #    slaveCommandQueueBus = msgbus.ToBus(slaveCommandQueueBusName,
-    #                                          broker = job_node)
-
-    #    # Test1: Create a test job payuoad
-    #    send_payload =  {'command':'run_job',
-    #                     'node':job_node,
-    #                     'job':{}}
-
-    #    msg = testFunctions.create_test_msg(send_payload)
-    #    slaveCommandQueueBus.send(msg)
-
-   
     def test_forwarding_of_job_msg_to_queue(self):
         """
         A msg with the command run_job should be forwarded to jobnode
@@ -72,7 +51,7 @@ class testForwardOfJobMsgToQueueu(unittest.TestCase):
 
         slaveCommandQueueNameTemplate = "slaveCommandQueue_{0}"
         daemon, commandQueueBus, deadletterQueue, deadletterToQueue = \
-            testFunctions.prepare_test(pipelineMCQDaemonImp.pipelineMCQDaemonImp,
+            testFunctions.prepare_test_MCQ(pipelineMCQDaemonImp.pipelineMCQDaemonImp,
                              self.logfile, self.deadletterfile, slaveCommandQueueNameTemplate )
 
         with nested(daemon, commandQueueBus, 
@@ -123,7 +102,7 @@ class testForwardOfJobMsgToQueueu(unittest.TestCase):
 
         slaveCommandQueueNameTemplate = "slaveCommandQueue_{0}"
         daemon, commandQueueBus, deadletterQueue, deadletterToQueue = \
-            testFunctions.prepare_test(pipelineMCQDaemonImp.pipelineMCQDaemonImp,
+            testFunctions.prepare_test_MCQ(pipelineMCQDaemonImp.pipelineMCQDaemonImp,
                              self.logfile, self.deadletterfile, slaveCommandQueueNameTemplate )
 
         with nested(daemon, commandQueueBus, 

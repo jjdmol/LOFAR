@@ -24,7 +24,7 @@ import lofar.messagebus.message as message
 import time
 
 # ******************** helper function ******************
-def prepare_test(subclass, logfile, deadletterfile, slaveCommandQueueNameTemplate):
+def prepare_test_MCQ(subclass, logfile, deadletterfile, slaveCommandQueueNameTemplate):
     """
     Hides boiler plate code
 
@@ -34,13 +34,13 @@ def prepare_test(subclass, logfile, deadletterfile, slaveCommandQueueNameTemplat
     broker =  "locus102"
     busname = "testmcqdaemon"  # TODO: Use a different name
     #busname = "testbus"
-    masterCommandQueueName = busname + "/" + "masterCommandQueueName"
+    commandQueueName = busname + "/" + "masterCommandQueueName"
     #masterCommandQueueName = "masterCommandQueueName"
     deadLetterQueueName = busname + ".deadletter"
     # create the sut
     daemon = subclass(broker, 
                       busname, 
-                      masterCommandQueueName,
+                      commandQueueName,
                       deadLetterQueueName, 
                       deadletterfile,
                       logfile,
@@ -49,7 +49,7 @@ def prepare_test(subclass, logfile, deadletterfile, slaveCommandQueueNameTemplat
                       False)
 
     # connect to the queueus
-    commandQueueBus =get_to_bus(masterCommandQueueName, broker)
+    commandQueueBus =get_to_bus(commandQueueName, broker)
 
     deadletterQueue = get_from_bus(deadLetterQueueName,
                                                  broker)
@@ -60,7 +60,39 @@ def prepare_test(subclass, logfile, deadletterfile, slaveCommandQueueNameTemplat
 
     return daemon, commandQueueBus,  deadletterQueue, deadletterToQueue
 
+def prepare_test_SCQ(subclass, logfile, deadletterfile):
+    """
+    Hides boiler plate code
 
+    return the deamon and needed
+    """
+        # config
+    broker =  "locus102"
+    busname = "testmcqdaemon"  # TODO: Use a different name
+    #busname = "testbus"
+    commandQueueName = busname + "/" + "masterCommandQueueName"
+    #masterCommandQueueName = "masterCommandQueueName"
+    deadLetterQueueName = busname + ".deadletter"
+    # create the sut
+    daemon = subclass(broker, 
+                      busname, 
+                      commandQueueName,
+                      deadLetterQueueName, 
+                      deadletterfile,
+                      logfile,
+                      1, 
+                      False,
+                      2)
+
+    # connect to the queueus
+    commandQueueBus =get_to_bus(commandQueueName, broker)
+
+
+    deadletterToQueue = get_to_bus(deadLetterQueueName,
+                                                 broker)
+
+
+    return daemon, commandQueueBus,  deadletterToQueue
 
 def create_test_msg(payload):
     """

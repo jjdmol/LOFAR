@@ -22,21 +22,6 @@ class test_recipe(LOFARnodeTCP):
         """
         self.logger.critical("#####We are in the test recipe and we are going good#####")
 
-        self.logger.critical("debug1")
-
-        time.sleep(0.5)
-        self.logger.critical("debug2")
-        time.sleep(0.5)
-        self.logger.error("debug3")
-        time.sleep(0.5)
-        self.logger.info("debug4")
-        time.sleep(0.5)
-        self.logger.debug("debug5")
-        time.sleep(0.5)
-        self.logger.critical("debug6")
-        time.sleep(0.5)
-        #self.logger.error(argument)
-        ##self.environment.update(environment)
 
         self.outputs["output"] = "OUPUT FROM TEST RECIPE"
         self.outputs["status"] = True

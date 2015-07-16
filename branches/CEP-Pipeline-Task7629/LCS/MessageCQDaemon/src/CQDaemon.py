@@ -98,6 +98,9 @@ class CQDaemon(object):
         self._daemon = daemon
         self._deadletterfile = deadletterfile
 
+        self._CommandQueue = None
+        self._deadletterFromBus = None
+        self._toBus = None
         self._connect_queues( busname, commandQueueName, deadLetterQueueName)
 
     def run(self):
@@ -143,7 +146,8 @@ class CQDaemon(object):
         """ 
         while True:
             # Try to get a new msg from the command queue
-            msg_available, msg_data = self._get_next_msg_and_content()
+            msg_available, msg_data = self._get_next_msg_and_content(
+              self._CommandQueue)
             if not msg_available:
                 break
                         
@@ -152,7 +156,7 @@ class CQDaemon(object):
             if not msg_type is "command":
                 self._logger.warn(
                   "Received non command msg on the command queue: {0}".format(
-                      self.unpacked_msg_content))
+                     unpacked_msg_content))
                 continue
             
 
@@ -196,14 +200,12 @@ class CQDaemon(object):
         msg = CQCommon.create_msg({"type":"deadletter_stop"})
         msg.set_subject("deadletter")
         self._toBus.send(msg)
-
         while True:
             # Try to get a new msg from the deadletterbus
-            msg_available, msg_data = get_next_msg_and_content(
-                              self._deadletterFromBus, self._logger)
+            msg_available, msg_data = self._get_next_msg_and_content(
+             self._deadletterFromBus)
             if not msg_available:
                 break
-            
             (msg, unpacked_msg_content, msg_type) = msg_data
 
              # we have processed the complete deadletter queue
@@ -213,6 +215,7 @@ class CQDaemon(object):
             # Call the Subclass deadletter processing.
             processed_by_subclass = False
             try:
+                
                 processed_by_subclass = self.process_deadletter(
                     msg, unpacked_msg_content, msg_type)
             except Exception, ex:
@@ -220,6 +223,7 @@ class CQDaemon(object):
                 self._logger.warn(
                     "Subclass of CQDaemon threw exception in process deadletter")
                 self._logger.warn(str(ex))
+
             if processed_by_subclass:
                   continue      # Continue with the next msg on the queue
 
@@ -418,7 +422,7 @@ class CQDaemon(object):
             # continue
             pass
 
-    def _get_next_msg_and_content(self):
+    def _get_next_msg_and_content(self, toBus):
             """
             Helper function attempts to get the next msg from the command queue
 
@@ -429,9 +433,8 @@ class CQDaemon(object):
             """
             # Test if the timeout is in milli seconds or second
             while True:
-                msg = self._CommandQueue.get(0.01)  #  use timeout, very short, well get 
+                msg = toBus.get(0.1)  #  use timeout, very short, well get 
                 # there next time if more time is needed
-
                 if msg == None:
                     return False, None
 
@@ -442,12 +445,13 @@ class CQDaemon(object):
                     self._logger.warn(
                       "Could not process msg, incorrect content: {0}".format(
                         unpacked_msg_content))
-                    self._CommandQueue.ack(msg) 
+                    toBus.ack(msg) 
                     # send the incorrect msg to the deadletter log
                     self._write_to_deadletter_log(msg, unpacked_msg_content)
                     continue
+                
 
-                self._CommandQueue.ack(msg)
+                toBus.ack(msg)
 
                 return True, (msg, unpacked_msg_content, msg_type) 
 

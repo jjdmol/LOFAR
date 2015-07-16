@@ -162,7 +162,7 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
         if n_repost >= self._max_repost:
             # If we tried enough times, kill the job
             self._logger.warn(
-                  "SubProcess did not retrieve parameter msg:\n {0}".format(
+                  "SubProcess did not retrieve parameters:\n {0}".format(
                      unpacked_msg_data))
             self._subprocessManager.kill_job_send_results(
               session_uuid, job_uuid)

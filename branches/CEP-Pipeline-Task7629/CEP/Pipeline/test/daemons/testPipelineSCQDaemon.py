@@ -37,13 +37,26 @@ HOST_NAME = socket.gethostname()
 # function we need to validate.
 class testForwardOfJobMsgToQueueuSlaveWrapper(
             PipelineSCQDaemonImp.PipelineSCQDaemonImp):
-    def __init__(self, broker, busname, masterCommandQueueName,
+    def __init__(self, 
+                 broker,
+                 busname, 
+                 commandQueueName,
                  deadLetterQueueName,
-                 loop_interval, daemon):
+                 deadletterfile,
+                 logfile,
+                 loop_interval,
+                 daemon,
+                 n_repost):
         super(testForwardOfJobMsgToQueueuSlaveWrapper, self).__init__(
-           broker, busname, 
-           masterCommandQueueName, deadLetterQueueName,
-           loop_interval, daemon)
+           broker,
+           busname, 
+           commandQueueName,
+           deadLetterQueueName,
+           deadletterfile, 
+           logfile,
+           loop_interval, 
+           daemon,
+           n_repost)
         pass
         self._start_subprocess_called = False
         self._process_deadletter_parameters_msg_called = False
@@ -54,11 +67,12 @@ class testForwardOfJobMsgToQueueuSlaveWrapper(
         """
         self._start_subprocess_called = True
 
-    def _process_deadletter_parameters_msg(self, unpacked_msg_content):
+    def process_deadletter(self, msg, unpacked_msg_content, msg_type):
         """
 
         """
         self._process_deadletter_parameters_msg_called = True
+        #return True
 
 
 
@@ -68,84 +82,37 @@ class testForwardOfJobMsgToQueueuSlave(
     def __init__(self, arg):  
         super(testForwardOfJobMsgToQueueuSlave, self).__init__(arg)
 
-    # For now leave the setup and tearDown empty: single test
-    # when the number of test increased it is an idea to implement them
     def setUp(self):
-        pass
-
+        self.logfile = "/tmp/testPipelineSCQDaemon.log"
+        open( self.logfile , 'a').close()
+        self.deadletterfile = "/tmp/testPipelineSCQDaemonDeadletter.log"
+        open( self.deadletterfile , 'a').close()
+        job_node = 'locus102'
 
     def tearDown(self):
         pass
-        #deadletterQueue = msgbus.FromBus("testmcqdaemon/deadletter",
-        #                                 broker = "locus102")
-        
-        #while True:
-            
-        #    msg = deadletterQueue.get(0.1)
-        #    if msg == None:
-        #        break
-        #    print msg
-        #    deadletterQueue.ack(msg)
+        os.remove(self.logfile)
+        os.remove(self.deadletterfile)
 
-        #deadletterQueue.close()
   
     def test_run_job_results_in_parameters_msg_on_bus(self):
         """
         A msg with the command run_job should be forwarded to jobnode
         """
-        # Create the daemon and get all the default queues
-        job_node = 'locus102'
-        daemon, commandQueueBus = \
-            testFunctions.prepare_test( testForwardOfJobMsgToQueueuSlaveWrapper)
+        slaveCommandQueueNameTemplate = "slaveCommandQueue_{0}"
+        daemon, commandQueueBus,  deadletterToQueue = \
+            testFunctions.prepare_test_SCQ(testForwardOfJobMsgToQueueuSlaveWrapper,
+                             self.logfile, self.deadletterfile )
 
-        # Test1: Create a test job payload
-        send_payload =  {'type': 'parameters',
-                         'command':'run_job',
-                         'session_uuid':"123456321654",
-                         'job_uuid': "654321",
-                         'node':job_node,
-                          'info': {'sender': 'subprocessStarter', 'target': 'SCQLib'},
-                         'parameters':{
-                           'cdw': "/home",
-                           'environment':  {"ENV":"Value"},
-                           'cmd': "ls"}}
+        with nested(daemon, commandQueueBus, 
+                     deadletterToQueue) as (
+                      daemon, commandQueueBus, deadletterToQueue):
 
-        msg = testFunctions.create_test_msg(send_payload)
-        commandQueueBus.send(msg)
+            # Create the daemon and get all the default queues
+            job_node = 'locus102'
 
-        # Run the process loop, parameters will be send to a bus adress that does
-        # not exist, it should end up in the deadletter queue
-        daemon._process_commands()
-
-
-        # read from the deadletter queue
-        msg = testFunctions.try_get_msg(daemon._deadletterFromBus, 2) 
-        if msg == None:
-            raise Exception(
-                 "Did not receive the expect msg on the deadletter queue")
-        daemon._deadletterFromBus.ack(msg) 
-        send_payload['info']['subject'] ='parameters_123456321654_654321'
-        # check that the correct msg is receive in the deadletter queue        
-        unpacked_msg_data = eval(msg.content().payload)
-        commandQueueBus.close()
-        daemon.close()
-
-        self.assertEqual(unpacked_msg_data, send_payload)
-        
-        
-
-    def test_deadletterQueue_startjob_processing(self):
-        """
-        A msg with the command run_job should be forwarded to jobnode
-        """
-        # Create the daemon and get all the default queues
-        job_node = 'locus102'
-        daemon, commandQueueBus = \
-            testFunctions.prepare_test( testForwardOfJobMsgToQueueuSlaveWrapper)
-
-        with nested(daemon, commandQueueBus) as (deamon, commandQueueBus):
             # Test1: Create a test job payload
-            send_payload =  {'type':'command',
+            send_payload =  {'type': 'command',
                              'command':'run_job',
                              'session_uuid':"123456321654",
                              'job_uuid': "654321",
@@ -158,70 +125,64 @@ class testForwardOfJobMsgToQueueuSlave(
             msg = testFunctions.create_test_msg(send_payload)
             commandQueueBus.send(msg)
 
-            # Run the process loop, The job will be send to a bus adress that does
+            # Run the process loop, parameters will be send to a bus adress that does
             # not exist, it should end up in the deadletter queue
-            daemon._process_commands()
+            daemon._process_command_queue()
 
-            # Run the deadletter processer
-            daemon._process_deadletter_queue()
+            # read from the deadletter queue
+            msg = testFunctions.try_get_msg(daemon._deadletterFromBus, 2) 
+            if msg == None:
+                raise Exception(
+                     "Did not receive the expect msg on the deadletter queue")
+            #daemon._deadletterFromBus.ack(msg) 
+            #send_payload['info']['subject'] ='parameters_123456321654_654321'
+            # check that the correct msg is receive in the deadletter queue 
+            
+            target_payload = send_payload
+            target_payload['type'] = 'parameters'    # the msg is of type parameters
+                                      # Added info by starter
+            target_payload['info']= {'target': 'SCQLib', 'sender': 'subprocessStarter', 'subject': 'parameters_123456321654_654321'}
+                   
+            unpacked_msg_data = eval(msg.content().payload)
 
-            self.assertTrue(daemon._process_deadletter_parameters_msg_called)
+            self.assertEqual(unpacked_msg_data, send_payload)
+        
         
 
-    def test_start_failing_node_recipe(self):
+    def test_deadletterQueue_startjob_processing(self):
         """
         A msg with the command run_job should be forwarded to jobnode
         """
-        # Create the daemon and get all the default queues
-        job_node = 'locus102'
-        daemon, commandQueueBus = \
-            testFunctions.prepare_test(  testForwardOfJobMsgToQueueuSlaveWrapper)
-        with nested(daemon, commandQueueBus) as (deamon, commandQueueBus):
-            environment = dict(
-                (k, v) for (k, v) in os.environ.iteritems()
-                    if k.endswith('PATH') or k.endswith('ROOT') or k == 'QUEUE_PREFIX'
-            )
+        slaveCommandQueueNameTemplate = "slaveCommandQueue_{0}"
+        daemon, commandQueueBus, deadletterToQueue = \
+            testFunctions.prepare_test_SCQ(testForwardOfJobMsgToQueueuSlaveWrapper,
+                             self.logfile, self.deadletterfile )
 
+        with nested(daemon, commandQueueBus, 
+                    deadletterToQueue) as (
+                      daemon, commandQueueBus,  deadletterToQueue):
             # Test1: Create a test job payload
             send_payload =  {'type':'command',
                              'command':'run_job',
                              'session_uuid':"123456321654",
                              'job_uuid': "654321",
-                             'node':job_node,
-                             'info':"test_start_failing_node_recipe",
-                             'parameters':
-                             {'node':'dop282',
-                      'environment':environment,
-                      'cmd': 'noexistingexecutable',
-                      'cdw': '/home/wouter',
-                      'job_parameters':{'par1':'par1'}}
-                         
-                             }
+                             'node':HOST_NAME,
+                             'parameters':{
+                               'cdw': "/home",
+                               'environment':  {"ENV":"Value"},
+                               'cmd': "ls"}}
 
             msg = testFunctions.create_test_msg(send_payload)
             commandQueueBus.send(msg)
 
             # Run the process loop, The job will be send to a bus adress that does
             # not exist, it should end up in the deadletter queue
-            daemon._process_commands()
+            daemon._process_command_queue()
 
-            ## Run the deadletter processer
+            # Run the deadletter processer
             daemon._process_deadletter_queue()
 
-            self.assertFalse(daemon._process_deadletter_parameters_msg_called)
-            
-            # Clean up deadletter queue
-            while True:
-              try:
-                  msg = testFunctions.try_get_msg(daemon._deadletterFromBus,1)
-              except:
-                  break
-              daemon._deadletterFromBus.ack(msg)
-
-
-
-
-        
+            self.assertTrue(daemon._process_deadletter_parameters_msg_called)
         
     def test_start_node_recipe_no_connection_with_lib_2times(self):
         """
@@ -229,11 +190,16 @@ class testForwardOfJobMsgToQueueuSlave(
         If the recipe does not receive the parameter msg it should be resend
         """
         # Create the daemon and get all the default queues
-        job_node = 'locus102'
-        daemon, commandQueueBus = \
-            testFunctions.prepare_test(PipelineSCQDaemonImp.PipelineSCQDaemonImp)
 
-        with nested(daemon, commandQueueBus) as (deamon, commandQueueBus):
+        slaveCommandQueueNameTemplate = "slaveCommandQueue_{0}"
+        daemon, commandQueueBus, deadletterToQueue = \
+            testFunctions.prepare_test_SCQ(PipelineSCQDaemonImp.PipelineSCQDaemonImp,
+                             self.logfile, self.deadletterfile )
+
+        with nested(daemon, commandQueueBus, 
+                    deadletterToQueue) as (
+                      daemon, commandQueueBus,  deadletterToQueue):
+            job_node = HOST_NAME
             environment = dict(
                 (k, v) for (k, v) in os.environ.iteritems()
                     if k.endswith('PATH') or k.endswith('ROOT') or k == 'QUEUE_PREFIX'
@@ -258,9 +224,8 @@ class testForwardOfJobMsgToQueueuSlave(
             msg = testFunctions.create_test_msg(send_payload)
             commandQueueBus.send(msg)
 
-            # Run the process loop, The job will be send to a bus adress that does
-            # not exist, it should end up in the deadletter queue
-            daemon._process_commands()
+
+            daemon._process_command_queue()
 
             # Run the deadletter processer twice
             daemon._process_deadletter_queue()
@@ -274,7 +239,7 @@ class testForwardOfJobMsgToQueueuSlave(
                 raise Exception(
                      "Did not receive the expect msg on the deadletter queue")
 
-            daemon._deadletterFromBus.ack(msg)         
+      
             self.assertTrue(eval(msg.content().payload)['n_repost'] == 2)
 
 
@@ -288,11 +253,15 @@ class testForwardOfJobMsgToQueueuSlave(
 
         """
         # Create the daemon and get all the default queues
-        job_node = 'locus102'
-        daemon, commandQueueBus = \
-            testFunctions.prepare_test(PipelineSCQDaemonImp.PipelineSCQDaemonImp)
+        job_node = HOST_NAME
+        slaveCommandQueueNameTemplate = "slaveCommandQueue_{0}"
+        daemon, commandQueueBus, deadletterToQueue = \
+            testFunctions.prepare_test_SCQ(PipelineSCQDaemonImp.PipelineSCQDaemonImp,
+                             self.logfile, self.deadletterfile )
 
-        with nested(daemon, commandQueueBus) as (deamon, commandQueueBus):
+        with nested(daemon, commandQueueBus, 
+                    deadletterToQueue) as (
+                      daemon, commandQueueBus,  deadletterToQueue):
             environment = dict(
                 (k, v) for (k, v) in os.environ.iteritems()
                     if k.endswith('PATH') or k.endswith('ROOT') or k == 'QUEUE_PREFIX'
@@ -319,10 +288,9 @@ class testForwardOfJobMsgToQueueuSlave(
 
             # Run the process loop, The job will be send to a bus adress that does
             # not exist, it should end up in the deadletter queue
-            daemon._process_commands()
+            daemon._process_command_queue()
 
             # Run the deadletter processer twice
-            daemon._process_deadletter_queue()
             daemon._process_deadletter_queue()
             daemon._process_deadletter_queue()
             daemon._process_deadletter_queue()
@@ -338,7 +306,7 @@ class testForwardOfJobMsgToQueueuSlave(
                 daemon.close()
                 raise Exception(
                      "Did not receive the expect msg on the deadletter queue")
-            daemon._deadletterFromBus.ack(msg)         
+    
             expected_content = {'info': 'Job killed',
                                 'exit_value': -1,
                                 'type': 'exit_value', 
@@ -358,20 +326,25 @@ class testForwardOfJobMsgToQueueuSlave(
         """
 
         # Create the daemon and get all the default queues
-        job_node = 'locus102'
-        daemon, commandQueueBus = \
-            testFunctions.prepare_test(PipelineSCQDaemonImp.PipelineSCQDaemonImp)
+        job_node = HOST_NAME
+
         ## Connect to the results bus for this session id
         resultQueue = msgbus.FromBus("testmcqdaemon" + "/" + "result_" + "123456",
                   broker = job_node)
-        with nested(daemon, commandQueueBus, resultQueue) as (
-                    deamon, commandQueueBus, resultQueue):
+        daemon, commandQueueBus, deadletterToQueue = \
+            testFunctions.prepare_test_SCQ(PipelineSCQDaemonImp.PipelineSCQDaemonImp,
+                             self.logfile, self.deadletterfile )
+
+        with nested(daemon, commandQueueBus, 
+                    deadletterToQueue, resultQueue) as (
+                      daemon, commandQueueBus,  deadletterToQueue, resultQueue):
 
             environment = dict(
                 (k, v) for (k, v) in os.environ.iteritems()
                     if k.endswith('PATH') or k.endswith('ROOT') or k == 'QUEUE_PREFIX'
             )
-
+            # This env variable is needed for the slave to start
+            environment["USE_QPID_DAEMON"] = "True"  
             # Test1: Create a test job payload
             send_payload =  {'type':'command',
                              'command':'run_job',
@@ -394,11 +367,9 @@ class testForwardOfJobMsgToQueueuSlave(
 
             # Run the process loop, The job will be send to a bus adress that does
             # not exist, it should end up in the deadletter queue
-            daemon._process_commands()
+            daemon._process_command_queue()
             time.sleep(.5)  # Allow some time for the process to start
             daemon._process_deadletter_queue()  # force resend of the parameters
-
-
 
             # The script should send a logline on critical
             msg = testFunctions.try_get_msg(daemon._deadletterFromBus, 2) 
@@ -408,7 +379,7 @@ class testForwardOfJobMsgToQueueuSlave(
                 raise Exception(
                      "Did not receive the expect msg on the deadletter queue")
 
-            daemon._deadletterFromBus.ack(msg)         
+  
             expected_content_sub_proces_exit_value = {'level': 'CRITICAL', 
                                 'sender': HOST_NAME, 
                  'log_data': '#####We are in the test recipe and we are going good#####'} 
@@ -439,8 +410,6 @@ class testForwardOfJobMsgToQueueuSlave(
                     daemon.close()
                     raise Exception(
                          "Did not receive the expect msg on the deadletter queue")
-
-                resultQueue.ack(msg)    
 
                 payload_parsed = eval(msg.content().payload)
                 print payload_parsed
