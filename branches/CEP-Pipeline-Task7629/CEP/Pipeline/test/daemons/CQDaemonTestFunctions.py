@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!usr/bin/python
 # Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 # P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 #
@@ -22,30 +22,43 @@
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
 import time
-import socket
 
 # ******************** helper function ******************
-def prepare_test(subclass):
+def prepare_test(subclass, logfile, deadletterfile, slaveCommandQueueNameTemplate):
     """
     Hides boiler plate code
 
     return the deamon and needed
     """
         # config
-    broker = socket.gethostname()
+    broker =  "locus102"
     busname = "testmcqdaemon"  # TODO: Use a different name
     #busname = "testbus"
     masterCommandQueueName = busname + "/" + "masterCommandQueueName"
     #masterCommandQueueName = "masterCommandQueueName"
     deadLetterQueueName = busname + ".deadletter"
     # create the sut
-    daemon = subclass(broker, busname, masterCommandQueueName,
-                                deadLetterQueueName, 1, False)
+    daemon = subclass(broker, 
+                      busname, 
+                      masterCommandQueueName,
+                      deadLetterQueueName, 
+                      deadletterfile,
+                      logfile,
+                      slaveCommandQueueNameTemplate,
+                      1, 
+                      False)
 
     # connect to the queueus
-    commandQueueBus = get_to_bus(masterCommandQueueName, broker)
+    commandQueueBus =get_to_bus(masterCommandQueueName, broker)
 
-    return daemon, commandQueueBus  
+    deadletterQueue = get_from_bus(deadLetterQueueName,
+                                                 broker)
+
+    deadletterToQueue = get_to_bus(deadLetterQueueName,
+                                                 broker)
+
+
+    return daemon, commandQueueBus,  deadletterQueue, deadletterToQueue
 
 
 
@@ -94,7 +107,7 @@ def get_from_bus(queueName, broker):
 
     return slaveCommandQueueBus
 
-def try_get_msg(queue, wait_period=2):
+def try_get_msg(queue, wait_period=10):
     """
     Helper function, try to get msg from queue. raise exception if not gotten
     after 10 sec. return msg if received
@@ -117,6 +130,8 @@ def try_get_msg(queue, wait_period=2):
             idx += 1
             time.sleep(1)
             continue
+
+        queue.ack(msg_received)
         break
 
     return msg_received

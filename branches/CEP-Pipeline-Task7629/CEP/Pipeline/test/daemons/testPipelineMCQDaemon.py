@@ -17,101 +17,150 @@
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
 # $Id$
-import logging
-
-import lofar.messagebus.MCQDaemon as MCQDaemon
-import CQDaemonTestFunctions as testFunctions
-import lofarpipe.daemons.pipelineMCQDaemonImp as pipelineMCQDaemon
-import lofar.messagebus.msgbus as msgbus
 
 import unittest
+import os
+from contextlib import nested   #>2.7 allows nesting out of the box
+import socket
+
+import CQDaemonTestFunctions as testFunctions
+import lofarpipe.daemons.pipelineMCQDaemonImp as pipelineMCQDaemonImp
+import lofar.messagebus.msgbus as msgbus
+
+
 
 class testForwardOfJobMsgToQueueu(unittest.TestCase):
 
     def __init__(self, arg):  
         super(testForwardOfJobMsgToQueueu, self).__init__(arg)
 
-    # For now leave the setup and tearDown empty: single test
-    # when the number of test increased it is an idea to implement them
     def setUp(self):
-        pass
+        self.logfile = "/tmp/testPipelineMCQDaemon.log"
+        open( self.logfile , 'a').close()
+        self.deadletterfile = "/tmp/testPipelineMCQDaemonDeadletter.log"
+        open( self.deadletterfile , 'a').close()
 
     def tearDown(self):
-        pass
+        os.remove(self.logfile)
+        os.remove(self.deadletterfile)
+
   
+    #def test_forwarding_of_job_msg_to_queue(self):
+    #    """
+    #    A msg with the command run_job should be forwarded to jobnode
+    #    """
+    #    job_node = 'locus102'
+
+    #    busname = "testmcqdaemon"
+    #    slaveCommandQueueBusName = "testmcqdaemon/slaveCommandQueue_locus098"
+    #    slaveCommandQueueBus = msgbus.ToBus(slaveCommandQueueBusName,
+    #                                          broker = job_node)
+
+    #    # Test1: Create a test job payuoad
+    #    send_payload =  {'command':'run_job',
+    #                     'node':job_node,
+    #                     'job':{}}
+
+    #    msg = testFunctions.create_test_msg(send_payload)
+    #    slaveCommandQueueBus.send(msg)
+
+   
     def test_forwarding_of_job_msg_to_queue(self):
         """
         A msg with the command run_job should be forwarded to jobnode
         """
-        job_node = 'locus102'
 
-        busname = "testmcqdaemon"
-        slaveCommandQueueBusName = "testmcqdaemon/slaveCommandQueue_locus098"
-        slaveCommandQueueBus = msgbus.ToBus(slaveCommandQueueBusName,
-                                              broker = job_node)
+        slaveCommandQueueNameTemplate = "slaveCommandQueue_{0}"
+        daemon, commandQueueBus, deadletterQueue, deadletterToQueue = \
+            testFunctions.prepare_test(pipelineMCQDaemonImp.pipelineMCQDaemonImp,
+                             self.logfile, self.deadletterfile, slaveCommandQueueNameTemplate )
 
-        # Test1: Create a test job payuoad
-        send_payload =  {'command':'run_job',
-                         'node':job_node,
-                         'job':{}}
+        with nested(daemon, commandQueueBus, 
+                    deadletterQueue, deadletterToQueue) as (
+                      daemon, commandQueueBus, deadletterQueue, deadletterToQueue):
 
-        msg = testFunctions.create_test_msg(send_payload)
-        slaveCommandQueueBus.send(msg)
 
-     
-def test_forwarding_of_job_msg_to_queue():
-    """
-    A msg with the command run_job should be forwarded to jobnode
-    """
-    job_node = 'locus102'
-    daemon, commandQueueBus, deadletterQueue, deadletterToQueue = \
-        testFunctions.prepare_test( MCQDaemon.MCQDaemon)
 
-    slaveCommandQueue_topic_name = "slaveCommandQueue_{0}".format(job_node)
-    slaveCommandQueueBusName = "testmcqdaemon" + "/" + \
-                              slaveCommandQueue_topic_name
-    slaveCommandQueueBus = testFunctions.get_from_bus( 
-            slaveCommandQueueBusName, "locus102")
+            job_node = socket.gethostname()
+            slaveCommandQueue_topic_name = slaveCommandQueueNameTemplate.format(job_node)
+            slaveCommandQueueBusName = "testmcqdaemon" + "/" + \
+                                      slaveCommandQueue_topic_name
+            slaveCommandQueueBus = testFunctions.get_from_bus( 
+                    slaveCommandQueueBusName, "locus102")
 
-    # Test1: Create a test job payuoad
-    send_payload =  {'command':'run_job',
-                     'parameters':{
-                     'node':job_node,
-                     'job':{}},
-                     'subject':slaveCommandQueue_topic_name
-                     }
+            # Test1: Create a test job payuoad
+            send_payload =  {'command':'run_job',
+                             'type':'command',
+                             'node':job_node,
+                             'parameters':{                             
+                             'job':{}},
+                             'subject':slaveCommandQueue_topic_name
+                             }
 
-    msg = testFunctions.create_test_msg(send_payload)
-    commandQueueBus.send(msg)
+            msg = testFunctions.create_test_msg(send_payload)
+            commandQueueBus.send(msg)
 
-    # start the daemon processing
-    daemon._process_commands()
+            # start the daemon processing
+            daemon._process_command_queue()
   
 
-    # validate that a job is received on the slave queue
-    # wait on the slave command queue
-    msg_received = testFunctions.try_get_msg(slaveCommandQueueBus)
+            # validate that a job is received on the slave queue
+            # wait on the slave command queue
+            msg_received = testFunctions.try_get_msg(slaveCommandQueueBus)
 
-    # unpack received data
-    received_payload = eval(msg_received.content().payload)
-    expected_payload = send_payload
-    # not a deepcopy so send is also change, mhe
-    expected_payload['subject'] = slaveCommandQueue_topic_name 
-    # validate correct content
-    if received_payload != send_payload:
-        raise Exception("Send data not the same as received data")
+            # unpack received data
+            received_payload = eval(msg_received.content().payload)
+            expected_payload = send_payload
+            # not a deepcopy so send is also change, mhe
+            expected_payload['subject'] = slaveCommandQueue_topic_name 
+            # validate correct content
+            self.assertEqual(received_payload, send_payload)
 
-    # Cleanup sut
-    commandQueueBus.close()
-    slaveCommandQueueBus.close()
-    deadletterQueue.close()
-    daemon.close()
+    def test_forwarding_of_quit_msg_to_queue(self):
+        """
+        A msg with the command run_job should be forwarded to jobnode
+        """
+
+        slaveCommandQueueNameTemplate = "slaveCommandQueue_{0}"
+        daemon, commandQueueBus, deadletterQueue, deadletterToQueue = \
+            testFunctions.prepare_test(pipelineMCQDaemonImp.pipelineMCQDaemonImp,
+                             self.logfile, self.deadletterfile, slaveCommandQueueNameTemplate )
+
+        with nested(daemon, commandQueueBus, 
+                    deadletterQueue, deadletterToQueue) as (
+                      daemon, commandQueueBus, deadletterQueue, deadletterToQueue):
 
 
 
-if __name__ == "__main__":
-    print "test_forwarding_of_job_msg_to_queue()"    
-    test_forwarding_of_job_msg_to_queue()
+            job_node = socket.gethostname()
+            slaveCommandQueue_topic_name = slaveCommandQueueNameTemplate.format(job_node)
+            slaveCommandQueueBusName = "testmcqdaemon" + "/" + \
+                                      slaveCommandQueue_topic_name
+            slaveCommandQueueBus = testFunctions.get_from_bus( 
+                    slaveCommandQueueBusName, "locus102")
+
+            # Test1: Create a test job payuoad
+            send_payload =  {'command':'stop_session',
+                             'type':'command',
+                             'node':job_node}
+
+            msg = testFunctions.create_test_msg(send_payload)
+            commandQueueBus.send(msg)
+
+            # start the daemon processing
+            daemon._process_command_queue()
+  
+
+            # validate that a job is received on the slave queue
+            # wait on the slave command queue
+            msg_received = testFunctions.try_get_msg(slaveCommandQueueBus)
+
+            # unpack received data
+            received_payload = eval(msg_received.content().payload)
+            expected_payload = send_payload
+            
+            # validate correct content
+            self.assertEqual(received_payload, send_payload)
 
 
 

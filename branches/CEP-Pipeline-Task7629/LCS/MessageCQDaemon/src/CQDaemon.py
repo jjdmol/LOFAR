@@ -152,7 +152,7 @@ class CQDaemon(object):
             if not msg_type is "command":
                 self._logger.warn(
                   "Received non command msg on the command queue: {0}".format(
-                      selfunpacked_msg_content))
+                      self.unpacked_msg_content))
                 continue
             
 

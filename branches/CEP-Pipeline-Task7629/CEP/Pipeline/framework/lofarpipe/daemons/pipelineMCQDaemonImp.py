@@ -51,7 +51,7 @@ class pipelineMCQDaemonImp(CQDaemon.CQDaemon):
                  deadLetterQueueName, 
                  deadletter_log_location,
                  logfile,
-                 slaveCommandQueueNameTemplate,
+                 toSlaveSubjectTemplate,
                  loop_interval=10, 
                  daemon=True,
                  max_repost=5):
@@ -65,7 +65,7 @@ class pipelineMCQDaemonImp(CQDaemon.CQDaemon):
                     loop_interval,
                     daemon)
 
-        self._toSlaveSubjectTemplate = slaveCommandQueueNameTemplate
+        self._toSlaveSubjectTemplate = toSlaveSubjectTemplate
         self._max_repost = max_repost
 
 
