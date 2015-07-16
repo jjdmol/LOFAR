@@ -105,8 +105,9 @@ class GenericPipeline(control):
         except IndexError:
             return self.usage()
         try:
-            self.parset.adoptFile(parset_file)
-            self.parset_feedback_file = parset_file + "_feedback"
+            if self.parset.keys == []:
+                self.parset.adoptFile(parset_file)
+                self.parset_feedback_file = parset_file + "_feedback"
         except RuntimeError:
             print >> sys.stderr, "Error: Parset file not found!"
             return self.usage()
@@ -296,6 +297,11 @@ class GenericPipeline(control):
                     step_control_dict[name] = step_control_dict[j]
                     step_name_list.insert(0, name)
 
+                # remove replacements strings to prevent loading the same key twice
+                for k in copy.deepcopy(self.parset.keys):
+                    if str(k).startswith('!'):
+                        self.parset.remove(k)
+
             # loop
             if kind_of_step == 'loop':
                 # remember what loop is running to stop it from a conditional step
@@ -452,7 +458,11 @@ class GenericPipeline(control):
                     inoutdict[k] = vec
                 else:
                     step, outvar = argsparset.getString(k).split('.output.')
-                    inoutdict[k] = resdicts[step][outvar]
+                    if '+' in outvar:
+                        tmplist = str(outvar).split('+')
+                        inoutdict[k] = resdicts[step][tmplist[0]] + tmplist[1]
+                    else:
+                        inoutdict[k] = resdicts[step][outvar]
             else:
                 inoutdict[k] = argsparset.getString(k)
 
@@ -468,28 +478,35 @@ class GenericPipeline(control):
                     continue
         # \hack
         for k in ordered_keys:
-            keystring = argsparset.getString(k)
-            if keystring.__contains__('.output.'):
-                if keystring.__contains__(','):
-                    keystring = keystring.rstrip(']')
-                    keystring = keystring.lstrip('[')
+            valuestring = argsparset.getString(k)
+            if valuestring.__contains__('.output.'):
+                if valuestring.__contains__(','):
+                    valuestring = valuestring.rstrip(']')
+                    valuestring = valuestring.lstrip('[')
                     vec = []
-                    for item in keystring.split(','):
+                    for item in valuestring.split(','):
                         if item.__contains__('.output.'):
                             step, outvar = item.split('.output.')
                             vec.append(resdicts[step][outvar])
-                            addvals['inputkeys'].append(resdicts[step][outvar])
-                            addvals['mapfiles_in'].append(resdicts[step][outvar])
+                            if 'mapfile' in str(outvar):
+                                addvals['inputkeys'].append(resdicts[step][outvar])
+                                addvals['mapfiles_in'].append(resdicts[step][outvar])
                         else:
-                            vec.append((item))
-                    argsparset.replace(k,str(vec))
+                            vec.append(item)
+                    argsparset.replace(k, str(vec))
                     if k == 'flags':
-                        addvals['arguments'] = (vec)
+                        addvals['arguments'] = vec
                         argsparset.remove(k)
                 else:
                     step, outvar = argsparset.getString(k).split('.output.')
-                    argsparset.replace(k,str(resdicts[step][outvar]))
-                    if isinstance(resdicts[step][outvar], str):
+                    #more ugly hacks... really needs clearly structured replacement method...
+                    if '+' in outvar:
+                        tmplist = str(outvar).split('+')
+                        argsparset.replace(k, str(resdicts[step][tmplist[0]]) + tmplist[1])
+                    else:
+                        argsparset.replace(k, str(resdicts[step][outvar]))
+                    #if isinstance(resdicts[step][outvar], str):
+                    if 'mapfile' in str(outvar):
                         addvals['inputkeys'].append(resdicts[step][outvar])
                         addvals['mapfiles_in'].append(resdicts[step][outvar])
                     if k == 'flags':
@@ -499,6 +516,11 @@ class GenericPipeline(control):
                 if k == 'flags':
                     addvals['arguments'] = str(argsparset[k])
                     argsparset.remove(k)
+
+            #direct usage of outputkey
+            if valuestring.__contains__('outputkey'):
+                addvals['outputkey'] = 'outputkey'
+
         argsparset.writeFile(filename)
         return addvals
 
