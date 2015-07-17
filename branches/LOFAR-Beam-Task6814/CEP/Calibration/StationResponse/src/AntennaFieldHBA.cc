@@ -106,6 +106,18 @@ matrix22c_t AntennaFieldHBA::elementResponse(real_t time, real_t freq,
 real_t AntennaFieldHBA::getNormalization(real_t freq,
                                          const vector3r_t &direction) const
 {
+  int status;
+
+  /* Initialize the wcsprm struct, also taking control of memory allocated by
+   * fits_read_wcstab(). */
+  if ((status = wcsset(theirWCS_p.get()))) {
+    fprintf(stderr, "wcsset ERROR %d: %s.\n", status, wcs_errmsg[status]);
+    return 1;
+  }
+
+  /* Print the struct. */
+  if ((status = wcsprt(theirWCS_p.get()))) return status;
+
   // Get indices for azimuth and elevation
   const uint gridsize=50;
 
@@ -308,7 +320,6 @@ casa::CountedPtr<wcsprm> AntennaFieldHBA::readWCS(casa::CountedPtr<fitsfile> fit
   }
 
   /* Translate non-standard WCS keyvalues. */
-  /*
   if ((status = wcsfix(7, 0, wcs, stat))) {
     for (uint i = 0; i < NWCSFIX; i++) {
       if (stat[i] > 0) {
@@ -319,7 +330,6 @@ casa::CountedPtr<wcsprm> AntennaFieldHBA::readWCS(casa::CountedPtr<fitsfile> fit
 
     THROW (Exception, "Error translating non-standard WCS keyvalues");
   }
-*/
   return casa::CountedPtr<wcsprm>(wcs);
 }
 
