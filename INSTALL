@@ -7,63 +7,99 @@ Installation instructions for LOFAR software.
 Supported Systems
 -----------------
 
-- Linux (distributions in use at ASTRON are Ubuntu, Mint, CentOS)
-- Mac OS X (reasonably recent should work, also with LLVM/Clang)
+- Linux      (most in use at ASTRON are Ubuntu/Mint and CentOS)
+- Mac OS X   (reasonably recent should work, also with LLVM/Clang)
 
 
-Install from OS Packages
-------------------------
+Install from Ubuntu Packages
+----------------------------
 
-Somewhere in 2015, there will be Debian/Ubuntu binary packages of various LOFAR
-software packages and their dependencies (including casacore).
+To install LOFAR Offline processing tools the easy way for a specific Ubuntu version, see:
 
-This is so much easier to do and support than the manual way described below
-that we *strongly advise* all users to try this first. If this fails, ask for
-help (see README) instead of resorting to a manual build from source.
-
-	<ppa link + apt-get install, once it's in place, add pkg >
+	https://launchpad.net/~radio-astro/+archive/ubuntu/main
 
 
-Dependencies
-------------
+Install using Docker Scripts
+----------------------------
 
-If you install pre-built Debian/Ubuntu/... packages (highly advised),
-all dependencies will come along automatically.
+To create a Docker container with Ubuntu or CentOS and LOFAR Offline processing tools, see:
 
-If you build manually from source (disadvised, unless you are a developer),
-CMake needs to be able to find all dependencies. Please first try to install
-dependencies using your OS package manager. Only if unavailable or out-of-date,
-try to build from source.
-
-The most prominent dependency you likely need and may need to build from source
-is casacore (casacore, casacore-data-update, and possibly python-casacore), from
-
-	https://github.com/casacore
+	https://github.com/ygrange/lofar-profiling
 
 
-Manual Build and Install from Source (quick summary)
-------------------------------------
+Dependencies for Manual Build from Source
+-----------------------------------------
 
-- SVN checkout a release or trunk from https://svn.astron.nl/LOFAR/ into
-  e.g. $HOME/LOFAR/
-- To install the usual offline data reduction packages into e.g. $HOME/local/,
-  try the following command.
-  This only ends succesfully once CMake can find all required dependencies.
+Please first try to install as many dependencies as possible using your OS
+package manager. For almost all cases, you also need the development packages
+('pkgname-dev' for Ubuntu/Mint, or 'pkgname-devel' for CentOS/Fedora).
 
-	mkdir -p LOFAR-build/gnu_opt  # last directory must be {gnu|clang}_{debug|opt}
-	cd LOFAR-build/gnu_opt
-	cmake -DCMAKE_INSTALL_PREFIX="$HOME/local" -DBUILD_PACKAGES="DP3 Calibration Imager PyBDSM" -DUSE_OPENMP=ON "$HOME/LOFAR"
+For Ubuntu/Mint (likely incomplete list, but goes a long way):
 
-- Build and install by running:
+	apt-get install subversion cmake make g++ gfortran python-dev python-numpy
+	apt-get install libboost-dev libblitz0-dev libfftw3-dev libcfitsio3-dev libxml2-dev
+        apt-get install libpng12-dev                         # or a newer version (for AOFlagger)
 
-	make -j 4
+	apt-get install libreadline-dev libpqxx-dev doxygen  # optional
+	apt-get install libunittest++-dev                    # optional, to run all regression tests
+        apt-get install libgsl0-dev                          # optional, for AOFlagger's RayleighFitter
+	apt-get install libgtkmm-2.4-dev libsigc++-2.0-dev   # optional, for AOFlagger's rficonsole
+
+
+For CentOS/Fedora (likely incomplete list, but goes a long way):
+
+	yum install subversion cmake make gcc python-devel numpy
+	yum install boost-devel fftw-devel cfitsio-devel libxml2-devel libpng-devel
+
+	yum install readline-devel libpqxx-devel doxygen     # optional
+	yum install gsl-devel                                # optional, for AOFlagger's RayleighFitter
+        yum install gtkmm24-devel libsigc++20-devel          # optional, for AOFlagger's rficonsole
+
+	The blitz and blitz-devel pkgs are available on some distros, but not on e.g. CentOS 7.
+        If indeed required for your build, but not in your repo, take the two RPMs from CentOS 6.
+	Idem for log4cplus (LOFAR log4cxx is dodgy).
+	Similar for unittest++ and unitest++-devel (both optional), but take two RPMs from Fedora 22.
+	If you have LOFAR Redmine access, see: https://support.astron.nl/lofar_issuetracker/issues/8161
+
+
+
+NOTE (any OS): The most prominent dependency you likely need to build from source is casacore (+ friends):
+
+	casacore:                  https://github.com/casacore/casacore
+	python-casacore ('pyrap'): https://github.com/casacore/python-casacore
+	IERS/measures tables:      https://github.com/casacore/casacore-data-update
+        casarest:                  https://svn.astron.nl/casarest
+
+
+Instructions for Manual Build from Source
+-----------------------------------------
+
+- SVN checkout a tagged release x.y.z (or the trunk) from https://svn.astron.nl/LOFAR/ into e.g. $HOME/src/LOFAR-x.y.z/
+
+	LOFAR_VERSION=LOFAR-Release-x.y.z  # set to used release version
+	svn checkout https://svn.astron.nl/LOFAR/tags/$LOFAR_VERSION "$HOME/src/$LOFAR_VERSION"
+
+- Install the usual offline data reduction (imaging) packages into e.g. $HOME/local/$LOFAR_VERSION/
+  (Only ends succesfully once CMake can find all required dependencies.)
+
+	mkdir -p $HOME/build/$LOFAR_VERSION/gnu_opt  # last directory must be {gnu|clang}_{debug|opt}
+	cd $HOME/build/$LOFAR_VERSION/gnu_opt
+	cmake -DCMAKE_INSTALL_PREFIX="$HOME/local/$LOFAR_VERSION" -DBUILD_PACKAGES="DP3 Calibration Imager PyBDSM" -DUSE_OPENMP=ON "$HOME/src/$LOFAR_VERSION"
+
+- Build and install:
+
+	make -j4
 	make install  # with sufficient privileges
 
 - Optionally, run the regression tests:
 
-	ctest -j 4
+	ctest -j4
 
   All tests should pass, however, some packages require certain hardware or
   software (e.g. RTCP needs CUDA GPUs) to pass.
-- You may want to add the installation path bin/ to your $PATH
+
+- You may want to add the installation path bin/ to your PATH:
+
+	. "$HOME/local/$LOFAR_VERSION/lofarinit.sh"  # for Bourne-like shells, or
+	. "$HOME/local/$LOFAR_VERSION/lofarinit.csh" # for C-like shells
 

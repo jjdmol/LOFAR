@@ -155,7 +155,6 @@ int main(int argc, char **argv)
    * Initialise logger.
    */
 
-#ifdef HAVE_LOG4CPLUS
   // Set ${MPIRANK}, which is used by our log_prop file.
   if (setenv("MPIRANK", str(format("%02d") % mpi.rank()).c_str(), 1) < 0)
   {
@@ -165,9 +164,7 @@ int main(int argc, char **argv)
 
   // Use LOG_*() for c-strings (incl cppstr.c_str()), and LOG_*_STR() for std::string.
   INIT_LOGGER("rtcp");
-#else
-  INIT_LOGGER_WITH_SYSINFO(str(format("rtcp@%02d") % mpi.rank()));
-#endif
+
   LOG_INFO_STR("GPUProc version " << GPUProcVersion::getVersion() << " r" << GPUProcVersion::getRevision());
 
   LOG_INFO("===== INIT =====");

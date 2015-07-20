@@ -2256,7 +2256,7 @@ typedef struct malloc_chunk* mbinptr;
 typedef struct malloc_chunk* mfastbinptr;
 
 /* offset 2 to use otherwise unindexable first 2 bins */
-#define fastbin_index(sz)        ((((unsigned int)(sz)) >> 3) - 2)
+#define fastbin_index(sz)        ((int)(((unsigned int)(sz)) >> 3) - 2)
 
 /* The maximum fastbin request size we support */
 #define MAX_FAST_SIZE     80
@@ -2439,12 +2439,16 @@ static void malloc_init_state(av) mstate_shm av;
 
 #if __STD_C
 static Void_t*  sYSMALLOc(INTERNAL_SIZE_T, mstate_shm);
+#ifndef MORECORE_CANNOT_TRIM
 static int      sYSTRIm(size_t, mstate_shm);
+#endif
 static void     malloc_consolidate(mstate_shm);
 static Void_t** iALLOc(size_t, size_t*, int, Void_t**);
 #else
 static Void_t*  sYSMALLOc();
+#ifndef MORECORE_CANNOT_TRIM
 static int      sYSTRIm();
+#endif
 static void     malloc_consolidate();
 static Void_t** iALLOc();
 #endif
@@ -3168,6 +3172,7 @@ static Void_t* sYSMALLOc(nb, av) INTERNAL_SIZE_T nb; mstate_shm av;
 }
 
 
+#ifndef MORECORE_CANNOT_TRIM
 /*
   sYSTRIm is an inverse of sorts to sYSMALLOc.  It gives memory back
   to the system (via negative arguments to sbrk) if there is unused
@@ -3233,6 +3238,7 @@ static int sYSTRIm(pad, av) size_t pad; mstate_shm av;
   }
   return 0;
 }
+#endif
 
 /*
   ------------------------------ malloc ------------------------------
@@ -4532,6 +4538,7 @@ int mTRIm(pad) size_t pad;
 #ifndef MORECORE_CANNOT_TRIM        
   return sYSTRIm(pad, av);
 #else
+  (void)pad; // suppress unused parameter warning
   return 0;
 #endif
 }
