@@ -14,9 +14,17 @@ Supported Systems
 Install from Ubuntu Packages
 ----------------------------
 
-To install the easy way for a specific Ubuntu version, see:
+To install LOFAR Offline processing tools the easy way for a specific Ubuntu version, see:
 
 	https://launchpad.net/~radio-astro/+archive/ubuntu/main
+
+
+Install using Docker Scripts
+----------------------------
+
+To create a Docker container with Ubuntu or CentOS and LOFAR Offline processing tools, see:
+
+	https://github.com/ygrange/lofar-profiling
 
 
 Dependencies for Manual Build from Source
@@ -49,6 +57,7 @@ For CentOS/Fedora (likely incomplete list, but goes a long way):
 
 	The blitz and blitz-devel pkgs are available on some distros, but not on e.g. CentOS 7.
         If indeed required for your build, but not in your repo, take the two RPMs from CentOS 6.
+	Idem for log4cplus (LOFAR log4cxx is dodgy).
 	Similar for unittest++ and unitest++-devel (both optional), but take two RPMs from Fedora 22.
 	If you have LOFAR Redmine access, see: https://support.astron.nl/lofar_issuetracker/issues/8161
 

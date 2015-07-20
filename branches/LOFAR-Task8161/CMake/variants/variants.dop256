@@ -6,23 +6,27 @@ option(USE_MPI       "Use MPI"       ON)
 option(USE_OPENMP    "Use OpenMP"    ON)
 option(USE_CUDA      "Use CUDA"      ON)
 #option(USE_OPENCL    "Use OpenCL"    OFF)
-#set(GNU_COMPILE_DEFINITIONS -DCL_USE_DEPRECATED_OPENCL_1_1_APIS)
+#set(GNU_COMPILE_DEFINITIONS   -DCL_USE_DEPRECATED_OPENCL_1_1_APIS)
+#set(CLANG_COMPILE_DEFINITIONS -DCL_USE_DEPRECATED_OPENCL_1_1_APIS)
 
-# RHEL/CentOS 7 has log4cxx in the repo
-option(USE_LOG4CPLUS "Use log4cplus" OFF)
-option(USE_LOG4CXX   "Use log4cxx"   ON)
+# Default search path for LOFAR deps (see CMake/variants/variants): /opt/lofar/external:/usr/local
+# The dirs thereunder must be lower case, e.g. unittest++/ or dal/
 
-# /opt/lofar/external and /usr/local are searched by default for LOFAR dependencies (see CMake/variants/variants)
+# For the RPMs to make it work under CentOS 7, see https://support.astron.nl/lofar_issuetracker/issues/8161
 
-# RHEL/CentOS 7: no pkgs, so blitz/blitz-devel installed from two CentOS 6 rpm pkgs.
-# Includes end up in /usr/include, but an arch specific one under /usr/lib64/blitz/include.
+# RHEL/CentOS 7 has log4cxx in the repo, but LOFAR log4cxx is dodgy, so install log4cplus from CentOS 6 rpm pkgs.
+#option(USE_LOG4CPLUS "Use log4cplus" OFF)
+#option(USE_LOG4CXX   "Use log4cxx"   ON)
+
+# RHEL/CentOS 7: blitz/blitz-devel N/A, so installed from two CentOS 6 rpm pkgs. (Idem for UnitTest++, but from Fedora 22 pkgs)
+# blitz includes end up in /usr/include, but an arch specific one under /usr/lib64/blitz/include.
 # Set the latter as INCLUDE_DIR, since /usr/include is already in the std search path.
 set(BLITZ_INCLUDE_DIR /usr/lib64/blitz/include CACHE PATH "blitz include path")
 
 # RHEL/CentOS 7 has openmpi in /usr/lib64/openmpi and mpich in /usr/lib64/mpich
-set(MPI_ROOT_DIR /usr/lib64/openmpi)
+set(MPI_ROOT_DIR      /usr/lib64/openmpi)
 
-# By default and on RHEL/CentOS 7, the GCC linker does not opt out overlinking by default.
+# By default and on RHEL/CentOS 7, the GCC linker does not opt out overlinking.
 # Make it so. It removes some ghost deps, but still leaves mysterious lib deps in place...
 set(GNU_EXE_LINKER_FLAGS      "-Wl,--as-needed")
 set(GNU_SHARED_LINKER_FLAGS   "-Wl,--as-needed")
