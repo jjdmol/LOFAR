@@ -1,11 +1,11 @@
 # $Id$
 include(LofarCTest)
 
-lofar_add_test(testMCQLib.py)
-lofar_add_test(testNodeRecipeStart.py)
-lofar_add_test(testPipelineMCQDaemon.py)
-lofar_add_test(testPipelineSCQDaemon.py)
-lofar_add_test(testSCQLib.py)
-lofar_add_test(testSubprocessManager.py)
+lofar_add_test(testMCQLib)
+lofar_add_test(testNodeRecipeStart)
+lofar_add_test(testPipelineMCQDaemon)
+lofar_add_test(testPipelineSCQDaemon)
+lofar_add_test(testSCQLib)
+lofar_add_test(testSubprocessManager)
 
 
