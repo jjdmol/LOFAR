@@ -23,7 +23,6 @@ import unittest
 import time
 from contextlib import nested   #>2.7 allows nesting out of the box
 
-import CQDaemonTestFunctions as testFunctions
 import lofarpipe.daemons.pipelineSCQDaemonImp as PipelineSCQDaemonImp
 
 import lofar.messagebus.msgbus as msgbus
@@ -87,21 +86,31 @@ class testForwardOfJobMsgToQueueuSlave(
         open( self.logfile , 'a').close()
         self.deadletterfile = "/tmp/testPipelineSCQDaemonDeadletter.log"
         open( self.deadletterfile , 'a').close()
-        job_node = 'locus102'
+        job_node = HOST_NAME
 
     def tearDown(self):
         pass
         os.remove(self.logfile)
         os.remove(self.deadletterfile)
 
+        busname = "testmcqdaemon"
+        broker = HOST_NAME
+        logger = logging.getLogger("testMCQLib")
+        deadLetterQueueName = busname + ".deadletter"
+        deadLetterQueue = msgbus.FromBus(deadLetterQueueName)
+        while True:
+            msg = try_get_msg(deadLetterQueue, 0.1) 
+            if msg == None:
+                break
+        deadLetterQueue.close()
+
   
     def test_run_job_results_in_parameters_msg_on_bus(self):
         """
         A msg with the command run_job should be forwarded to jobnode
         """
-        slaveCommandQueueNameTemplate = "slaveCommandQueue_{0}"
         daemon, commandQueueBus,  deadletterToQueue = \
-            testFunctions.prepare_test_SCQ(testForwardOfJobMsgToQueueuSlaveWrapper,
+            prepare_test_SCQ(testForwardOfJobMsgToQueueuSlaveWrapper,
                              self.logfile, self.deadletterfile )
 
         with nested(daemon, commandQueueBus, 
@@ -109,7 +118,7 @@ class testForwardOfJobMsgToQueueuSlave(
                       daemon, commandQueueBus, deadletterToQueue):
 
             # Create the daemon and get all the default queues
-            job_node = 'locus102'
+            job_node = HOST_NAME
 
             # Test1: Create a test job payload
             send_payload =  {'type': 'command',
@@ -122,7 +131,7 @@ class testForwardOfJobMsgToQueueuSlave(
                                'environment':  {"ENV":"Value"},
                                'cmd': "ls"}}
 
-            msg = testFunctions.create_test_msg(send_payload)
+            msg = create_test_msg(send_payload)
             commandQueueBus.send(msg)
 
             # Run the process loop, parameters will be send to a bus adress that does
@@ -130,7 +139,7 @@ class testForwardOfJobMsgToQueueuSlave(
             daemon._process_command_queue()
 
             # read from the deadletter queue
-            msg = testFunctions.try_get_msg(daemon._deadletterFromBus, 2) 
+            msg = try_get_msg(daemon._deadletterFromBus, 2) 
             if msg == None:
                 raise Exception(
                      "Did not receive the expect msg on the deadletter queue")
@@ -155,7 +164,7 @@ class testForwardOfJobMsgToQueueuSlave(
         """
         slaveCommandQueueNameTemplate = "slaveCommandQueue_{0}"
         daemon, commandQueueBus, deadletterToQueue = \
-            testFunctions.prepare_test_SCQ(testForwardOfJobMsgToQueueuSlaveWrapper,
+            prepare_test_SCQ(testForwardOfJobMsgToQueueuSlaveWrapper,
                              self.logfile, self.deadletterfile )
 
         with nested(daemon, commandQueueBus, 
@@ -172,7 +181,7 @@ class testForwardOfJobMsgToQueueuSlave(
                                'environment':  {"ENV":"Value"},
                                'cmd': "ls"}}
 
-            msg = testFunctions.create_test_msg(send_payload)
+            msg = create_test_msg(send_payload)
             commandQueueBus.send(msg)
 
             # Run the process loop, The job will be send to a bus adress that does
@@ -193,7 +202,7 @@ class testForwardOfJobMsgToQueueuSlave(
 
         slaveCommandQueueNameTemplate = "slaveCommandQueue_{0}"
         daemon, commandQueueBus, deadletterToQueue = \
-            testFunctions.prepare_test_SCQ(PipelineSCQDaemonImp.PipelineSCQDaemonImp,
+            prepare_test_SCQ(PipelineSCQDaemonImp.PipelineSCQDaemonImp,
                              self.logfile, self.deadletterfile )
 
         with nested(daemon, commandQueueBus, 
@@ -221,7 +230,7 @@ class testForwardOfJobMsgToQueueuSlave(
                          
                              }
 
-            msg = testFunctions.create_test_msg(send_payload)
+            msg = create_test_msg(send_payload)
             commandQueueBus.send(msg)
 
 
@@ -232,7 +241,7 @@ class testForwardOfJobMsgToQueueuSlave(
             daemon._process_deadletter_queue()
 
             # Now check if deadletter contains a msg with n_repost = 2
-            msg = testFunctions.try_get_msg(daemon._deadletterFromBus, 2) 
+            msg = try_get_msg(daemon._deadletterFromBus, 2) 
             if msg == None:
                 commandQueueBus.close()
                 daemon.close()
@@ -256,7 +265,7 @@ class testForwardOfJobMsgToQueueuSlave(
         job_node = HOST_NAME
         slaveCommandQueueNameTemplate = "slaveCommandQueue_{0}"
         daemon, commandQueueBus, deadletterToQueue = \
-            testFunctions.prepare_test_SCQ(PipelineSCQDaemonImp.PipelineSCQDaemonImp,
+            prepare_test_SCQ(PipelineSCQDaemonImp.PipelineSCQDaemonImp,
                              self.logfile, self.deadletterfile )
 
         with nested(daemon, commandQueueBus, 
@@ -283,7 +292,7 @@ class testForwardOfJobMsgToQueueuSlave(
                          
                              }
 
-            msg = testFunctions.create_test_msg(send_payload)
+            msg = create_test_msg(send_payload)
             commandQueueBus.send(msg)
 
             # Run the process loop, The job will be send to a bus adress that does
@@ -300,7 +309,7 @@ class testForwardOfJobMsgToQueueuSlave(
         
 
             # Then a results msg
-            msg = testFunctions.try_get_msg(daemon._deadletterFromBus, 2) 
+            msg = try_get_msg(daemon._deadletterFromBus, 2) 
             if msg == None:
                 commandQueueBus.close()
                 daemon.close()
@@ -332,7 +341,7 @@ class testForwardOfJobMsgToQueueuSlave(
         resultQueue = msgbus.FromBus("testmcqdaemon" + "/" + "result_" + "123456",
                   broker = job_node)
         daemon, commandQueueBus, deadletterToQueue = \
-            testFunctions.prepare_test_SCQ(PipelineSCQDaemonImp.PipelineSCQDaemonImp,
+            prepare_test_SCQ(PipelineSCQDaemonImp.PipelineSCQDaemonImp,
                              self.logfile, self.deadletterfile )
 
         with nested(daemon, commandQueueBus, 
@@ -353,7 +362,7 @@ class testForwardOfJobMsgToQueueuSlave(
                              'node':job_node,
                              'info':"test_start_node_recipe_full",
                              'parameters':
-                             {'node':'locus102',
+                             {'node':HOST_NAME,
                               'environment':environment,
                               'cmd': 'python /home/klijn/build/7629/gnu_debug/installed/lib/python2.6/dist-packages/lofarpipe/recipes/nodes/test_recipe.py',
                               'cdw': '/home/klijn',
@@ -361,7 +370,7 @@ class testForwardOfJobMsgToQueueuSlave(
                          
                              }
 
-            msg = testFunctions.create_test_msg(send_payload)
+            msg = create_test_msg(send_payload)
             commandQueueBus.send(msg)
 
 
@@ -372,7 +381,7 @@ class testForwardOfJobMsgToQueueuSlave(
             daemon._process_deadletter_queue()  # force resend of the parameters
 
             # The script should send a logline on critical
-            msg = testFunctions.try_get_msg(daemon._deadletterFromBus, 2) 
+            msg = try_get_msg(daemon._deadletterFromBus, 2) 
             if msg == None:
                 commandQueueBus.close()
                 daemon.close()
@@ -383,7 +392,8 @@ class testForwardOfJobMsgToQueueuSlave(
             expected_content_sub_proces_exit_value = {'level': 'CRITICAL', 
                                 'sender': HOST_NAME, 
                  'log_data': '#####We are in the test recipe and we are going good#####'} 
-            self.assertEqual(eval(msg.content().payload), expected_content_sub_proces_exit_value)
+            self.assertEqual(eval(msg.content().payload), 
+                             expected_content_sub_proces_exit_value)
 
             # Next we need to assure that the results are send correctly
             time.sleep(2)  # wait for the suprocess to be done
@@ -404,7 +414,7 @@ class testForwardOfJobMsgToQueueuSlave(
 
             # There could be two diffent msg on the results queue
             for idx in range(2):
-                msg = testFunctions.try_get_msg(resultQueue, 2) 
+                msg = try_get_msg(resultQueue, 2) 
                 if msg == None:
                     commandQueueBus.close()
                     daemon.close()
@@ -423,6 +433,114 @@ class testForwardOfJobMsgToQueueuSlave(
 
 
 
+def prepare_test_SCQ(subclass, logfile, deadletterfile):
+    """
+    Hides boiler plate code
+
+    return the deamon and needed
+    """
+        # config
+    broker =  HOST_NAME
+    busname = "testmcqdaemon"  # TODO: Use a different name
+    #busname = "testbus"
+    commandQueueName = busname + "/" + "masterCommandQueueName"
+    #masterCommandQueueName = "masterCommandQueueName"
+    deadLetterQueueName = busname + ".deadletter"
+    # create the sut
+    daemon = subclass(broker, 
+                      busname, 
+                      commandQueueName,
+                      deadLetterQueueName, 
+                      deadletterfile,
+                      logfile,
+                      1, 
+                      False,
+                      2)
+
+    # connect to the queueus
+    commandQueueBus =get_to_bus(commandQueueName, broker)
+
+
+    deadletterToQueue = get_to_bus(deadLetterQueueName,
+                                                 broker)
+
+
+    return daemon, commandQueueBus,  deadletterToQueue
+
+def create_test_msg(payload):
+    """
+    Creates a minimal valid msg with payload
+    """
+    msg = message.MessageContent(
+                from_="test",
+                forUser="MCQDaemon",
+                summary="summary",
+                protocol="protocol",
+                protocolVersion="test", 
+                #momid="",
+                #sasid="", 
+                #qpidMsg=None
+                      )
+    msg.payload = payload
+    return msg
+
+def get_to_bus(masterCommandQueueName, broker):
+    """
+    Creates a command queue to bus
+    """
+    commandQueueBus = msgbus.ToBus(
+                   masterCommandQueueName,
+              broker = broker)
+
+    return commandQueueBus
+
+def get_from_bus(queueName, broker):
+    """
+    Helper function, creates validated frombus connected on the expected
+    slave bus name
+    """
+
+    slaveCommandQueueBus = None
+    try:
+        slaveCommandQueueBus = msgbus.FromBus(queueName,
+                                              broker = broker)
+
+    except Exception, ex:
+        logger.error("Exception thrown by FromBus, this is probably caused"
+                     " by the msgbus routing not been set up correctly.")
+        raise ex
+
+    return slaveCommandQueueBus
+
+def try_get_msg(queue, wait_period=10):
+    """
+    Helper function, try to get msg from queue. raise exception if not gotten
+    after 10 sec. return msg if received
+
+    """
+    # We expect a deadletter on the 
+    idx = 0
+    msg_received = None
+    while (True):
+        print "Waiting for msg"
+        if idx >= wait_period:
+            print "Did not receive a msg after {0} seconds!!".format(
+                      wait_period)
+
+            return None
+
+        msg_received = queue.get(1)
+        if msg_received is None:
+            print "Did not receive a msg on  queue"
+            idx += 1
+            time.sleep(1)
+            continue
+
+        queue.ack(msg_received)
+        break
+
+    return msg_received
+ 
 
 
 
