@@ -28,6 +28,9 @@ import time
 # Only the bigger functions are tested: Most implementation are shallow
 # functions
 
+import socket
+HOST_NAME = socket.gethostname()
+
 class BusMuck(object):
     def __init__(self, busname, broker):
         self._busname = busname
@@ -69,7 +72,7 @@ class TestSubprocessManager(unittest.TestCase):
         busname = "testmcqdaemon"
         toBus = None
         logger = logging.getLogger("subprocessManager")
-        starter = subprocessManager.subprocessManager(broker, busname, toBus,
+        starter = subprocessManager.SubprocessManager(broker, busname, toBus,
                                                       logger)
 
     def test_start_job_from_msg_succes(self):
@@ -79,17 +82,19 @@ class TestSubprocessManager(unittest.TestCase):
         functionality
         """
         # small wrapper class mucking members
-        class subprocessManagerWrapper(
-            subprocessManager.subprocessManager):
+        class SubprocessManagerWrapper(
+            subprocessManager.SubprocessManager):
             def __init__(self, broker, busname, toBus, logger):
-                  super(subprocessManagerWrapper, self).__init__(
+                  super(SubprocessManagerWrapper, self).__init__(
                                                 broker, busname, toBus, logger)
                   self._connect_called = None
-                  self._start_subprocess_called = None
+                  self._session_uuid = None
 
-            def _connect_result_log_parameter_queues(self, session_uuid):
+            #def send_job_parameters(self, session_uuid, job_uuid, msg_content):
 
-                self._connect_called = session_uuid
+            #    self._session_uuid = session_uuid
+            #    self._job_uuid = job_uuid
+            #    self._msg_content = msg_content
 
             def _start_subprocess(self, command, working_dir, environment):
                 self._start_subprocess_called = True
@@ -100,7 +105,7 @@ class TestSubprocessManager(unittest.TestCase):
         busname = "testmcqdaemon"
         toBus = BusMuck(broker, busname)
         logger = logging.getLogger("subprocessManager")
-        starter = subprocessManagerWrapper(broker, busname, toBus,
+        starter = SubprocessManagerWrapper(broker, busname, toBus,
                                                       logger)
 
         # A fake msg content
@@ -116,8 +121,7 @@ class TestSubprocessManager(unittest.TestCase):
 
         # Should result in a parameter msg on the toBus
         self.assertEqual(toBus._send_calls, {0:msg_content})
-        # _connect_result_log_parameter_queues called with the session_uuid
-        self.assertEqual(starter._connect_called, msg_content['session_uuid'] )
+        
         # subprocess called
         self.assertTrue(starter._start_subprocess_called)
 
@@ -128,21 +132,18 @@ class TestSubprocessManager(unittest.TestCase):
         functionality
         """
         # small wrapper class mucking members
-        class subprocessManagerWrapper(
-            subprocessManager.subprocessManager):
+        class SubprocessManagerWrapper(
+            subprocessManager.SubprocessManager):
             def __init__(self, broker, busname, toBus, logger):
-                  super(subprocessManagerWrapper, self).__init__(
+                  super(SubprocessManagerWrapper, self).__init__(
                                                 broker, busname, toBus, logger)
                   self._connect_called = None
                   self._start_subprocess_called = None
                   self._send_process_cout_cerr_called =None
                   self.__send_results_called = None
 
-            def _connect_result_log_parameter_queues(self, session_uuid):
-
-                self._connect_called = session_uuid
-
-            def _start_subprocess(self, command, working_dir, environment):
+            def _start_subprocess(self, cmd_with_bus_details,
+                                  working_dir, environment):
                 self._start_subprocess_called = True
                 return None, "ERROR"
 
@@ -159,7 +160,7 @@ class TestSubprocessManager(unittest.TestCase):
         busname = "testmcqdaemon"
         toBus = BusMuck(broker, busname)
         logger = logging.getLogger("subprocessManager")
-        starter = subprocessManagerWrapper(broker, busname, toBus,
+        starter = SubprocessManagerWrapper(broker, busname, toBus,
                                                       logger)
 
         # A fake msg content
@@ -173,24 +174,24 @@ class TestSubprocessManager(unittest.TestCase):
 
         starter.start_job_from_msg(msg_content)
 
-        # Should result in a parameter msg on the toBus
-        self.assertEqual(toBus._send_calls, {0:msg_content})
-        # _connect_result_log_parameter_queues called with the session_uuid
-        self.assertEqual(starter._connect_called, msg_content['session_uuid'] )
         # subprocess called
         self.assertTrue(starter._start_subprocess_called)
 
-        # Failure should result in sending of log info
-        self.assertTrue(starter._send_process_cout_cerr_called)
-        # and a status msg
-        self.assertEqual(starter._send_results_called, "-1")
+        # But the starting of the job failed: This should result in both a
+        # logline and a results msg
+        expect_msg_on_tobus = {0: {'sender': HOST_NAME, 
+                                   'level': 'ERROR', 
+                                   'log_data': 'ERROR', 
+                                   'session_uuid': '123456', 
+                                   'type': 'log',
+                                   'job_uuid': '654321'}, 
+                               1: {'info': '', 
+                                   'type': 'exit_value', 
+                                   'exit_value': '-1', 
+                                   'job_uuid': '654321', 
+                                   'session_uuid': '123456'}}         
 
-
-        
-
-
-
-
+        self.assertEqual(toBus._send_calls,expect_msg_on_tobus)
 
 if __name__ == "__main__":
     unittest.main()

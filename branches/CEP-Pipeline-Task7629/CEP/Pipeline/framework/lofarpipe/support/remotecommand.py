@@ -383,7 +383,12 @@ class RemoteCommandRecipeMixIn(object):
                         (k, v) for (k, v) in os.environ.iteritems()
                         if k.endswith('PATH') or k.endswith('ROOT') or k == 'QUEUE_PREFIX'
                         )
+                    # ********************************************************
+                    # This env is read at the node job.
+                    # TODO Q: Is this the correct place to do this?
+                    #         ALT: SubproccessManager (makes it testable)
                     environment["USE_QPID_DAEMON"] = "True"                   
+                    # ********************************************************
                     job_parameters = {'node':job.host,
                                   'environment':environment,
                                   'cmd':job.command,

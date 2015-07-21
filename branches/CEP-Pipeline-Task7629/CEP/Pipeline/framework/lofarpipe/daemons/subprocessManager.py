@@ -23,6 +23,8 @@ import subprocess
 
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
+import lofar.messagebus.CQCommon as CQCommon
+
 
 class SubprocessManager(object):
     """
@@ -72,14 +74,14 @@ class SubprocessManager(object):
         # https://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
 
         
-        cmd_with_uuid = "exec " + command + " " + self._busname + \
+        cmd_with_bus_details = "exec " + command + " " + self._busname + \
                   " " + session_uuid + " " + job_uuid 
         # new start a subprocess
         process, error_str =  self._start_subprocess(
-          cmd_with_uuid, working_dir, environment)
+          cmd_with_bus_details, working_dir, environment)
 
-        # if the starting of the subprocess failed, send the result to the
-        # the results queue
+        # if the starting of the subprocess failed, send the failure to the
+        # the results queue, also send a log line
         # else store the process
         if process == None:  # error state
             self.send_process_cout_cerr(session_uuid, job_uuid,
@@ -87,6 +89,7 @@ class SubprocessManager(object):
             self.send_results(session_uuid, job_uuid,"-1")
         else:                # store the process
             # Send the paramters on the parameter queue
+            print "debug 10"
             self.send_job_parameters(session_uuid, job_uuid, msg_content)
             self._registered_sessions[session_uuid]['jobs'][job_uuid] = \
             (process, msg_content)
@@ -208,27 +211,27 @@ class SubprocessManager(object):
         Sends the two supplied string as log to the correct session_uuid topic
         """
         # TODO: Use msg_subject in stead of a bus
-        with msgbus.ToBus(self._busname + "/" + "log_" + session_uuid,
-                          broker = self._broker) as logTopic:
-            if stdoutdata != "":  # If there is a logline to send
+        if stdoutdata != "":  # If there is a logline to send
                 payload = {'type':'log',
                            'level':   "INFO",
                            'log_data':stdoutdata,
                            'session_uuid':session_uuid,
                            'job_uuid':job_uuid,
                            'sender': self._broker}
-                msg = self.create_msg(payload)
-                logTopic.send(msg)
+                subject =  "log_" + session_uuid
+                msg = CQCommon.create_msg(payload, subject)
+                self._toBus.send(msg)
 
-            if stderrdata != "":  # If there is a logline to send
+        if stderrdata != "":  # If there is a logline to send
                 payload = {'type':'log',
                            'level':   "ERROR",
                            'log_data':stderrdata,
                            'session_uuid':session_uuid,
                            'job_uuid':job_uuid,
                            'sender': self._broker}
-                msg = self.create_msg(payload)
-                logTopic.send(msg)
+                subject =  "log_" + session_uuid
+                msg = CQCommon.create_msg(payload, subject)
+                self._toBus.send(msg)
 
 
     def send_job_parameters(self, session_uuid, job_uuid, msg_content):
@@ -243,9 +246,7 @@ class SubprocessManager(object):
         msg_content['info'] = {"sender":"subprocessStarter",
                                "target":"SCQLib",
                                'subject':subject}
-        msg = self.create_msg(msg_content)
-        
-        msg.set_subject(subject)
+        msg = CQCommon.create_msg(msg_content, subject)
         self._toBus.send(msg)
 
     def send_results(self, session_uuid, job_uuid, exit_status, info_str=""):
@@ -257,12 +258,9 @@ class SubprocessManager(object):
                    'session_uuid':session_uuid,
                    'job_uuid':job_uuid,
                    'info':info_str}
-        msg = self.create_msg(payload)
-
-        with msgbus.ToBus(self._busname + "/" + "result_" + session_uuid,
-                          broker = self._broker) as resultQueue:
-               resultQueue.send(msg)
-
+        subject = "result_" + session_uuid
+        msg = CQCommon.create_msg(payload, subject)
+        self._toBus.send(msg)
 
     def check_managed_processed(self):
         """
@@ -307,22 +305,3 @@ class SubprocessManager(object):
                                   "Subprocess Results")
 
                 del jobs[job_uuid]
-
-    def create_msg(self, payload):
-        """
-        TODO: should be moved into a shared code lib
-        Creates a minimal valid msg with payload
-        """
-        msg = message.MessageContent(
-                    from_="test",
-                    forUser="",
-                    summary="summary",
-                    protocol="protocol",
-                    protocolVersion="test", 
-                    #momid="",
-                    #sasid="", 
-                    #qpidMsg=None
-                          )
-        msg.payload = payload
-        return msg
-    
