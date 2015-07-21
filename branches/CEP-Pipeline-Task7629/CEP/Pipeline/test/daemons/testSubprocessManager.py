@@ -68,7 +68,7 @@ class TestSubprocessManager(unittest.TestCase):
         basic test, create the object and expect no exception etc.
 
         """
-        broker = "locus102"
+        broker = HOST_NAME
         busname = "testmcqdaemon"
         toBus = None
         logger = logging.getLogger("subprocessManager")
@@ -101,7 +101,7 @@ class TestSubprocessManager(unittest.TestCase):
                 return "Just a string", "Not an error"
 
 
-        broker = "locus102"
+        broker = HOST_NAME
         busname = "testmcqdaemon"
         toBus = BusMuck(broker, busname)
         logger = logging.getLogger("subprocessManager")
@@ -156,7 +156,7 @@ class TestSubprocessManager(unittest.TestCase):
                 
 
 
-        broker = "locus102"
+        broker = HOST_NAME
         busname = "testmcqdaemon"
         toBus = BusMuck(broker, busname)
         logger = logging.getLogger("subprocessManager")
