@@ -89,7 +89,6 @@ class SubprocessManager(object):
             self.send_results(session_uuid, job_uuid,"-1")
         else:                # store the process
             # Send the paramters on the parameter queue
-            print "debug 10"
             self.send_job_parameters(session_uuid, job_uuid, msg_content)
             self._registered_sessions[session_uuid]['jobs'][job_uuid] = \
             (process, msg_content)

@@ -8,6 +8,10 @@ import lofar.messagebus.message as message
 
 import lofarpipe.daemons.SCQLib as SCQLib
 
+import socket
+HOST_NAME = socket.gethostname()
+
+
 class testForwardOfJobMsgToQueueuSlave(
                 unittest.TestCase):
 
@@ -23,12 +27,14 @@ class testForwardOfJobMsgToQueueuSlave(
         pass
   
     def test_use_logging_handler_to_queue(self):
-        broker = "locus102" 
+        return
+        broker = HOST_NAME 
         job_uuid = "123456"
         session_uuid = "654321"
         busname = "testmcqdaemon"
-        topicName =busname + "/logging_" + session_uuid
+        topicName = busname + "/logging_" + session_uuid
 
+        return
         # Queue where logmsg will be send to
         fromTopic = msgbus.FromBus(topicName, broker=broker)
 
@@ -66,7 +72,7 @@ class testForwardOfJobMsgToQueueuSlave(
 
 
     def test_SCQLib_with_parameters(self):
-        broker = "locus102" 
+        broker = HOST_NAME
         job_uuid = "123456"
         session_uuid = "654321"
         busname = "testmcqdaemon"
@@ -90,6 +96,7 @@ class testForwardOfJobMsgToQueueuSlave(
                          'node':"ANODE",
                          'parameters':{
                            'cdw': "/home",
+                           "job_parameters":{},
                            'environment':  {"ENV":"Value"},
                            'cmd': "ls"}}
 
@@ -101,7 +108,8 @@ class testForwardOfJobMsgToQueueuSlave(
 
 
 
-
+# TODO: The amount of testing on this class does not feel right. It should be 
+# increased
 
 
 if __name__ == "__main__":
