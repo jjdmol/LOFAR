@@ -1,14 +1,3 @@
-# import lofar.messagebus.MCQDaemon as MCQ  # communicate using the lib
-
-#import uuid
-#import copy
-#import os
-#import logging
-#import time
-
-#import pwd
-#import socket  # needed for username TODO: is misschien een betere manier os.environ['USER']
-#import signal
 import time
 import unittest
 import threading 
@@ -17,11 +6,16 @@ import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
 
 import lofarpipe.daemons.MCQLib as MCQLib
-import CQDaemonTestFunctions as testFunctions
 from lofarpipe.support.remotecommand import ProcessLimiter 
+import lofar.messagebus.CQExceptions as CQExceptions
+from contextlib import nested   #>2.7 allows nesting out of the box
 
 import logging
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
+import socket
+HOST_NAME = socket.gethostname()
+
+
 
 def create_msg(payload):
     """
@@ -41,6 +35,35 @@ def create_msg(payload):
     msg.payload = payload
     return msg
 
+def try_get_msg(queue, wait_period=10):
+    """
+    Helper function, try to get msg from queue. raise exception if not gotten
+    after 10 sec. return msg if received
+
+    """
+    # We expect a deadletter on the 
+    idx = 0
+    msg_received = None
+    while (True):
+        print "Waiting for msg"
+        if idx >= wait_period:
+            print "Did not receive a msg after {0} seconds!!".format(
+                      wait_period)
+
+            return None
+
+        msg_received = queue.get(1)
+        if msg_received is None:
+            print "Did not receive a msg on  queue"
+            idx += 1
+            time.sleep(1)
+            continue
+
+        queue.ack(msg_received)
+        break
+
+    return msg_received
+
 class testMCQLib(unittest.TestCase):
 
     def __init__(self, arg):  
@@ -52,14 +75,18 @@ class testMCQLib(unittest.TestCase):
         pass
 
     def tearDown(self):
-        pass
-
-    def test_init(self):
         busname = "testmcqdaemon"
-        broker = "locus102"
+        broker = HOST_NAME
         logger = logging.getLogger("testMCQLib")
+        deadLetterQueueName = busname + ".deadletter"
+        deadLetterQueue = msgbus.FromBus(deadLetterQueueName)
+        while True:
+            msg = try_get_msg(deadLetterQueue, 0.1) 
+            if msg == None:
+                break
+        deadLetterQueue.close()
 
-        mcqlib = MCQLib.MCQLib(logger, broker, busname)
+
 
     def test_logtopic_handler(self):
         # TODO: Add test that the loglines are send to logging:
@@ -113,15 +140,22 @@ class testMCQLib(unittest.TestCase):
         
         #Wrapper to catch the call to the handler functioinality
         class resultQueueHandlerrWrapper(MCQLib.resultQueueHandler):
-            def __init__(self,broker, resultQueueName, 
-                 running_jobs, 
-                 running_jobs_lock, 
-                 logger=None, 
-                 poll_interval=1.0):
+            def __init__(self,
+                         broker, 
+                         resultQueueName, 
+                         running_jobs, 
+                         running_jobs_lock, 
+                         master_echo,
+                         logger=None, 
+                         poll_interval=1.0):
                 super(resultQueueHandlerrWrapper, self).__init__(
-                          broker,resultQueueName,
-                          running_jobs, running_jobs_lock,
-                          logger,  poll_interval)
+                          broker,
+                          resultQueueName,
+                          running_jobs, 
+                          running_jobs_lock,
+                          master_echo,
+                          logger,  
+                          poll_interval)
 
                 self._process_queue_message_called = False
                 self._msg_payload = None
@@ -133,10 +167,10 @@ class testMCQLib(unittest.TestCase):
         # We need a jobs dict and the lock
         running_jobs = {}
         running_jobs_lock = threading.Lock()
-        
+        master_echo= {"received":False}  
          # create wrapped handler
         resulthandler = resultQueueHandlerrWrapper(broker, resultsQueueName,
-                            running_jobs, running_jobs_lock,
+                            running_jobs, running_jobs_lock, master_echo,
                             logger,1.0)
         
         resulthandler.start()  # start the thread
@@ -171,10 +205,10 @@ class testMCQLib(unittest.TestCase):
 
         running_jobs = {job_uuid:{}}
         running_jobs_lock = threading.Lock()
-        
+        master_echo= {"received":False}  
          # create wrapped handler
         resulthandler = MCQLib.resultQueueHandler(broker, resultsQueueName,
-                            running_jobs, running_jobs_lock,
+                            running_jobs, running_jobs_lock, master_echo, 
                             logger,0.5)
         
         resulthandler.start()  # start the thread
@@ -188,11 +222,12 @@ class testMCQLib(unittest.TestCase):
 
         msg = create_msg(payload)
         resultsQueue.send(msg)
-        time.sleep(2)
+        time.sleep(0.6)
 
         # THe exit value should have been added to the running jobs dict
-
-        self.assertEqual({job_uuid:{"exit_value":-1}}, running_jobs)
+        expected_output = {job_uuid:{"exit_value":-1, 
+                                     'output':[]}}   # is added by the lib
+        self.assertEqual(expected_output, running_jobs)
 
         ## allow some time for the msg to arrive
         payload = {'type': 'output',
@@ -201,7 +236,7 @@ class testMCQLib(unittest.TestCase):
 
         msg = create_msg(payload)
         resultsQueue.send(msg)
-        time.sleep(2)          
+        time.sleep(0.6)          
         self.assertEqual({job_uuid:{
                             "exit_value":-1,
                             "output":"some data"}},
@@ -212,80 +247,93 @@ class testMCQLib(unittest.TestCase):
 
 
     def test_run_job(self):
-        # Create sut
         busname = "testmcqdaemon"
-        broker = "locus102"
+        broker = HOST_NAME
         logger = logging.getLogger("testMCQLib")
-        mcqobj = MCQLib.MCQLib(logger, broker, busname)
-
-        # parameters
-        class job:
-            def __init__(self):
-              self.host = "locus102"
-              self.results = {}
-
-        limiter = ProcessLimiter(nproc=1)
-        parameters = {
-                      "node":"locus102",  # must be valid
-                      "cmd":"ls"}         # must exist
-        jobObject = job()
-        killswitch = threading.Event()
-        
-        # Start the run_job as a thread
-        thread = threading.Thread(
-                            target = mcqobj.run_job,
-                     args = [parameters, jobObject, limiter, killswitch])
-        thread.daemon = True  
-        thread.start() 
-
-        # We expect a job msg on the deadletterqueue
-        #masterCommandQueueName = "masterCommandQueueName"
         deadLetterQueueName = busname + ".deadletter"
+
+        toBus = msgbus.ToBus(busname, broker=broker)
         deadLetterQueue = msgbus.FromBus(deadLetterQueueName)
 
-        msg = testFunctions.try_get_msg(deadLetterQueue, 2) 
-        if msg == None:
-            commandQueueBus.close()
-            daemon.close()
-            raise Exception(
-                 "Did not receive the expect msg on the deadletter queue")
+        with nested(toBus, deadLetterQueue
+                     ) as (
+                      toBus, deadLetterQueue):        
+            # Create sut
+            
+            # Set the the 
 
-        deadLetterQueue.ack(msg)         
-        content = eval(msg.content().payload)
+            mcqobj = MCQLib.MCQLib(logger, broker, busname, master_echo=True)
 
-        # quick test if the received msg is a run_job command
-        self.assertTrue(content["command"] == 'run_job')
+            # parameters
+            class job:
+                def __init__(self):
+                  self.host = "locus102"
+                  self.results = {}
 
-        # some data from the sent msg:
-        uuid = content['uuid']
-        job_uuid = content['job_uuid']
-
-
-        #now send a results msg to the correct temp queue
-        toBus = msgbus.ToBus(busname, broker=broker)
-        payload = {'type': 'exit_value',
-                   'exit_value': -1,
-                   'job_uuid': job_uuid}
-
-        msg = create_msg(payload)
-        msg.set_subject("result_" +uuid)  # use subbject to get the correct temp queue
-        toBus.send(msg)
-
-
-        payload = {'type': 'output',
-                   'output': {"some":"data"},
-                   'job_uuid': job_uuid}
-        msg = create_msg(payload)
-        msg.set_subject("result_" +uuid)  # use subbject to get the correct temp queue
-        toBus.send(msg)
-        time.sleep(2) # results queue is emptied each 1 second
+            limiter = ProcessLimiter(nproc=1)
+            parameters = {
+                          "node":"locus102",  # must be valid
+                          "cmd":"ls"}         # must exist
+            jobObject = job()
+            killswitch = threading.Event()
         
-        # a duration should have been added
-        self.assertTrue('job_duration' in jobObject.results)
-        # an exit code
-        self.assertEqual(jobObject.results['returncode'], -1)
-        # results data
-        self.assertEqual(jobObject.results['some'], 'data')
+            # Start the run_job as a thread
+            thread = threading.Thread(
+                                target = mcqobj.run_job,
+                         args = [parameters, jobObject, limiter, killswitch])
+            thread.daemon = True  
+            thread.start() 
+
+            # We expect a job msg on the deadletterqueue
+            # The echo msg for the master should be received on the deadletter bus
+            msg = try_get_msg(deadLetterQueue, 2) 
+            if msg == None:
+                raise Exception(
+                     "Did not receive the expect msg on the deadletter queue")  
+            content = eval(msg.content().payload)                
+            self.assertEqual(content["command"],'echo')
+
+            # Now to get the job msg
+            msg = try_get_msg(deadLetterQueue, 2) 
+            if msg == None:
+                raise Exception(
+                     "Did not receive the expect msg on the deadletter queue")  
+            content = eval(msg.content().payload)      
+        
+            self.assertEqual(content["command"],'run_job')
+
+
+
+            # some data from the sent msg:
+            uuid = content['session_uuid']
+            job_uuid = content['job_uuid']
+
+
+            #now send a results msg to the correct temp queue
+            payload = {'type': 'exit_value',
+                       'exit_value': -1,
+                       'job_uuid': job_uuid}
+
+            msg = create_msg(payload)
+            msg.set_subject("result_" +uuid)  # use subbject to get the correct temp queue
+            toBus.send(msg)
+
+
+            payload = {'type': 'output',
+                       'output': {"some":"data"},
+                       'job_uuid': job_uuid}
+            msg = create_msg(payload)
+            msg.set_subject("result_" +uuid)  # use subbject to get the correct temp queue
+            toBus.send(msg)
+            time.sleep(2) # results queue is emptied each 1 second
+        
+            # a duration should have been added
+            print jobObject.results
+            self.assertTrue('job_duration' in jobObject.results)
+            # an exit code
+            self.assertEqual(jobObject.results['returncode'], -1)
+            # results data
+            self.assertEqual(jobObject.results['some'], 'data')
 
 
 if __name__ == "__main__":

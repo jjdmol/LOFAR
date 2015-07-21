@@ -171,7 +171,9 @@ class resultQueueHandler(threading.Thread):
     After initiation it must be started using the start() method
     setStopFlag() stops the forwarder
     """
-    def __init__(self,broker, resultQueueName, 
+    def __init__(self,
+                 broker, 
+                 resultQueueName, 
                  pipeline_data, 
                  pipeline_data_lock, 
                  master_echo,
@@ -298,7 +300,7 @@ class MCQLib(object):
       b. Connect to queues 
 
     """
-    def __init__(self, logger, broker, busname):
+    def __init__(self, logger, broker, busname, master_echo=False):
         # Each MCQDaemonLib triggers a session with a uuid, generate and store
         # as a hex
         self.logger = logger
@@ -319,7 +321,7 @@ class MCQLib(object):
         # Place holders of the queues owned by the lib
         self._resultQueue = None
         self._logTopic    = None
-        self._master_echo= {"received":False}  # TODO: UGLY
+        self._master_echo= {"received":master_echo}  # TODO: UGLY
 
         # start threads needed for receiving msg, both results and log
         self._start_log_and_result_handlers()
@@ -393,7 +395,7 @@ class MCQLib(object):
             time.sleep(1)  
                                 
         if not master_up:
-            raise CQExceptions.ExecutableMasterUnreachable(
+            raise CQExceptions.ExceptionMasterUnreachable(
                   "could net get contact with the master!!!")
         self.logger.debug("Connection established and Master is active")
 
