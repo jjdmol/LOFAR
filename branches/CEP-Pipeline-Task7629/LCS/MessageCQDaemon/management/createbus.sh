@@ -1,159 +1,233 @@
 #!/bin/bash 
+#set -x
+#
+#  createbus.sh
+#
+#  createbus <op> <busname> [<nodename>...] [ignore]
+#
+#     if no nodenames are given then localhost is assumed.
+#     <op> :  'add'  creates 
+#
+#
+#
+
+
+
+
+# inlined bustools since paths are unknow at this time.
+#---------------------------------------------------------------------------------
+#
+# Bus Tools for managing QPID dynamic routing message bus
+#
+
+# History:
+# 23/07/2015 Initial version by Jan Rinze Peterzon
+#
+
+#
+# description:
+# 
+# createbus <busname> <hub> <spoke> [<spoke> ..]
+#   create a bus topology with name busname over the hub and spokes
+#
+# deletebus <busname> <hub> <spoke> [<spoke> ..]
+#   delete the bus topology with name busname over the hub and spokes
+#
+# addlocalbus <busname> [nodename]
+#   create the bus components on localhost or on node [nodename]
+#
+# dellocalbus <busname> [nodename]
+#   delete the bus components on localhost or on node [nodename]
+
+#
+# TODO:
+#   - add proper error handling
+#   - add option for uni-directional spoke connections
+#   - produce logging for automated tools
+#   - refactor 'add' vs 'create'
+
+
+function addlocalbus {
+   myname=`hostname`
+   if (( $# >= 1 ))
+   then
+     busname=$1
+     if (( $# > 1 ))
+     then
+        myname=$2
+     fi
+     # 
+     echo " creating exchanges on "$myname" for bus "$busname
+     qpid-config -b $myname add exchange topic $busname".deadletterproxy" --durable
+     qpid-config -b $myname add exchange direct $busname --durable --alternate-exchange=$busname".deadletterproxy"
+     echo " creating deadletters queue on "$myname
+     qpid-config -b $myname add queue $busname".deadletter" --durable
+     qpid-config -b $myname bind $busname".deadletterproxy" $busname".deadletter" '#' --durable
+   else
+     echo "Usage: $FUNCNAME <busname> [nodename]"
+   fi
+}
+ 
+function dellocalbus {
+   myname=`hostname`
+   if (( $# >= 1 ))
+   then
+     busname=$1
+     if (( $# > 1 ))
+     then
+        myname=$2
+     fi
+     # 
+     echo " deleting bus "$busname" on "$myname
+     qpid-config -b $myname del exchange $busname 
+     qpid-config -b $myname del exchange $busname".deadletterproxy"
+     echo " deleting deadletters queue on "$myname
+     qpid-config -b $myname del queue $busname".deadletter" --force
+   else
+     echo "Usage: $FUNCNAME <busname> [nodename]"
+   fi
+}
+
+
+
+function connectbus {
+     if (( $# == 3 ))
+     then
+         busname=$1
+         firstnode=$2
+         secondnode=$3
+         qpid-route dynamic add $firstnode $secondnode $busname --durable --ack=1
+         qpid-route dynamic add $secondnode $firstnode $busname --durable --ack=1
+     else
+         echo "Usage $FUNCNAME <busname> <firstnode> <secondnode>"
+     fi
+}
+function disconnectbus {
+     if (( $# == 3 ))
+     then
+         busname=$1
+         firstnode=$2
+         secondnode=$3
+         qpid-route dynamic del $firstnode $secondnode $busname 
+         qpid-route dynamic del $secondnode $firstnode $busname 
+     else
+         echo "Usage $FUNCNAME <busname> <firstnode> <secondnode>"
+     fi
+}
+
+function createbus {
+  if (( "$#" >=3 ))
+  then
+    busname=$1
+    hubname=$2
+    addlocalbus $busname $hubname
+    shift 2
+    for i in "$@"
+    do
+      addlocalbus $busname $i
+      connectbus $busname $hubname $i
+    done
+  else
+    echo "usage: $FUNCNAME <busname> <hubnode> <spokenode> [<spokenode>..]"
+  fi
+}
+ 
+function deletebus {
+  if (( "$#" >=3 ))
+  then
+    busname=$1
+    hubname=$2
+    shift 2
+    for i in "$@"
+    do
+      disconnectbus $busname $hubname $i
+      dellocalbus $busname $i
+    done
+    dellocalbus $busname $hubname
+  else
+    echo "usage: $FUNCNAME <busname> <hubnode> <spokenode> [<spokenode>..]"
+  fi
+}
+
+# ----------------------------------------------------------------------------------
 
 function usage {
     echo "'createbus' creates or deletes a dynamic routing bus between two nodes." 
-    echo "   createbus [add/del] <busname> <node1> <node2> [ignore]" 
-    echo ""
+    echo "   createbus <add|del> <busname> <hubnode> <spkokenode> [<spokenode>..] [ignore]" 
+	echo ""
     echo "If only one hostname is given the second hostname is presumed to be the local node." 
     echo "to ensure one-time delivery of messages avoid loops in the bus topology." 
-    echo "If ignore is provided errors will be ignored, this could be used to clean partly created"
-    echo "bus structures/setups"
-	echo " if <node1> == <node2> only the deadletter and bus structure will be created, no links"
+	echo "If ignore is provided errors will be ignored, this could be used to clean partly created"
+	echo "bus structures/setups"
 }
 
-function deadletter_topic {
-    local action=$1
-    local hostname=$2
-    local busname=$3    
-    local option=""
-    local type=""
-    
-    if [ "$action" == "add" ]; then
-        option="--durable"
-        type="topic"
-    fi
-    
-    echo "qpid-config -b $hostname $action exchange $type  $busname\".proxy.deadletter\" $option" 
-    qpid-config -b $hostname $action  exchange  $type  $busname".proxy.deadletter" $option
-}
-
-function deadletter_alternate_exchange {
-    local action=$1
-    local hostname=$2
-    local busname=$3
-    
-    local option=""
-    local type=""
-    if [ "$action" == "add" ]; then
-        # TODO: programmically creation of this command failed.
-        echo "qpid-config -b $hostname add exchange direct $busname --durable --alternate-exchange=$busname\".proxy.deadletter\""
-        qpid-config -b $hostname add exchange direct $busname --durable --alternate-exchange=$busname".proxy.deadletter" 
-    else
-        echo "qpid-config -b $hostname exchange $busname"
-        qpid-config -b $hostname del exchange $busname
-    fi
-    
-}
-
-function deadletter_queue {
-    local action=$1
-    local hostname=$2
-    local busname=$3
-    
-    local option=""
-    if [ "$action" == "add" ]; then
-        option="--durable"
-    fi
-            
-    echo "qpid-config -b $hostname $action queue $busname\".deadletter\" $option" 
-    qpid-config -b $hostname $action queue $busname".deadletter" $option
-}
-
-function deadletter_topic_to_queue {
-    local action=$1
-    local hostname=$2
-    local busname=$3
-    
-    local option=""
-    if [ "$action" == "bind" ]; then
-        option="--durable"
-    fi
-        
-    echo "qpid-config -b $hostname $action $busname\".proxy.deadletter\" $busname\".deadletter\" '*' $option" 
-    qpid-config -b $hostname $action $busname".proxy.deadletter" $busname".deadletter" '*' $option 
-}
-
-# Depending on the first argument adds or deletes a route between two nodes
-function routing {
-    local action=$1
-    local hostname=$2
-    local remotehost=$3
-    local busname=$4  
-
-    echo "qpid-route -d dynamic $action $remotehost $hostname $busname" 
-    qpid-route -d dynamic $action $remotehost $hostname $busname 
-}
-
-# createbus attempts to create a full instantiated bus structure between two nodes
-function addbus {   
-    busname=$1
-    remotehost=$2
-    hostname=$3
-        
-    deadletter_topic add $hostname $busname 
-    deadletter_alternate_exchange add $hostname $busname 
-    deadletter_queue add $hostname $busname 
-    deadletter_topic_to_queue bind $hostname $busname 
-
-    if [ $remotehost != $hostname ]
-    then
-		deadletter_topic add $remotehost $busname 
-	    deadletter_alternate_exchange add $remotehost $busname 
-		deadletter_queue add $remotehost $busname 
-	    deadletter_topic_to_queue bind $remotehost $busname 
-		
-        routing add $remotehost $hostname $busname
-        routing add $hostname $remotehost $busname 
-    fi
-}
-
-function delbus {
-    busname=$1
-    remotehost=$2
-    hostname=$3
-    
-    deadletter_topic_to_queue unbind $hostname $busname 
-    deadletter_queue del $hostname $busname 
-    deadletter_alternate_exchange del $hostname $busname 
-	deadletter_topic del $hostname $busname 
-
-    if [ $remotehost != $hostname ]
-    then        
-		routing del $remotehost $hostname $busname
-		routing del $hostname $remotehost $busname  
-		
-		deadletter_topic_to_queue unbind $remotehost $busname 
-		deadletter_queue del $remotehost $busname
-		deadletter_alternate_exchange del $remotehost $busname 
-		deadletter_topic del $remotehost $busname 
-    fi
-}
 
 # validate the number of arguments
-if [ $# -le 3 ] || [ $# -ge 6 ]
+if (( $# < 2  ))
 then
     usage
     exit 1
 fi
 
+
+operation="$1"
+busname="$2"
+
+# skip both the name of the process and the required operation
+shift 2
+
+# make an array of the node names
+declare -a nodenames
+declare -i numnodes
+numnodes=0
+
 # We need the option to ignore errors: It can be messy
-if [ $# == 5 ] && [ "$5" == "ignore" ]
+# check if "ignore" is mentioned on the command line
+ignore="False"
+for tmp in $@
+do 
+   if [ "$tmp" == "ignore" ]
+   then
+     ignore="True"
+   else
+     nodenames[$numnodes]="$tmp"
+     numnodes=$((numnodes + 1))
+   fi
+done
+
+if [ "$ignore" == "True" ]
 then
-    # Do not exit on ignore
-    echo "ignoring errors"
+	# Do not exit on ignore
+	echo "ignoring errors"
 else
-    set -e   
-fi  
+   	set -e   
+fi	
+
+# allow for zero nodes and use hostname as nodename.
+if (( numnodes == 0 )); then
+  nodenames[$numnodes]="localhost"
+  numnodes=$((numnodes + 1))
+fi
 
 # depending on the first argument call the del or add  bus function
-if [ "$1" == "del" ]; then
-    delbus $2 $3 $4
-elif [ "$1" == "add" ]; then
-    addbus $2 $3 $4
+if [ "$operation" == "del" ]; then
+   if (( numnodes == 1 )); then
+      echo "deletelocalbus $busname ${nodenames[*]}"
+      deletelocalbus $busname ${nodenames[*]}
+   else
+      echo "deletebus $busname ${nodenames[*]}"	
+      deletebus $busname ${nodenames[*]}
+   fi
+elif [ "$operation" == "add" ]; then
+   if (( numnodes == 1 )); then
+      echo "addlocalbus  $busname ${nodenames[*]}"
+      addlocalbus  $busname ${nodenames[*]}
+   else
+      echo "createbus $busname  ${nodenames[*]}"
+      createbus $busname  ${nodenames[*]}
+   fi
 else
     usage
     exit 1
-fi  
+fi	
 
-    
-    
