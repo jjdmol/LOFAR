@@ -19,7 +19,6 @@
 # $Id$
 import logging
 
-import CQDaemonTestFunctions as testFunctions
 import lofarpipe.daemons.subprocessManager as subprocessManager
 
 import unittest
