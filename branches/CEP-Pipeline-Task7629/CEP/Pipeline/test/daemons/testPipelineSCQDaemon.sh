@@ -1,7 +1,9 @@
 #!/bin/bash
 
-createbus.sh add testPipelineSCQDaemon $(hostname) $(hostname) 
+# Create the a bus structure to be used by the test program
+createbus.sh add testPipelineSCQDaemon $(hostname) 
 
 ./runctest.sh testPipelineSCQDaemon
 
-createbus.sh del testPipelineSCQDaemon $(hostname) $(hostname) ignore
+# ate the a bus structure to be used by the test program
+createbus.sh del testPipelineSCQDaemon $(hostname) ignore

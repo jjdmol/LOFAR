@@ -212,8 +212,8 @@ fi
 # depending on the first argument call the del or add  bus function
 if [ "$operation" == "del" ]; then
    if (( numnodes == 1 )); then
-      echo "deletelocalbus $busname ${nodenames[*]}"
-      deletelocalbus $busname ${nodenames[*]}
+      echo "dellocalbus $busname ${nodenames[*]}"
+      dellocalbus $busname ${nodenames[*]}
    else
       echo "deletebus $busname ${nodenames[*]}"	
       deletebus $busname ${nodenames[*]}
