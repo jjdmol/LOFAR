@@ -3,7 +3,7 @@ lofarroot 			= @CMAKE_INSTALL_PREFIX@
 pythonpath 			= @PYTHON_INSTALL_DIR@
 working_directory 	= /data/scratch/$ENV{USER}
 
-busname 			= testmcqdaemon
+busname 			= $ENV{USER}_pipelineBus
 deadletter 			= %(busname)s.deadletter
 
 

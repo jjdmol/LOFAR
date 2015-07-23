@@ -212,7 +212,7 @@ class resultQueueHandler(threading.Thread):
         # get the data from the msg
         type = msg_content['type']      
         if type == 'exit_value':
-            self._logger.debug("exit_value for: {0}".format(
+            self._logger.debug("exit_value for job: {0}".format(
                                                       msg_content['job_uuid']))
             exit_value = msg_content['exit_value']
             job_uuid = msg_content['job_uuid']
@@ -223,6 +223,14 @@ class resultQueueHandler(threading.Thread):
                 # if the exit value is invalid (different then 0)
                 # do not expect any output
                 if exit_value != 0:
+                    # Print some additional information regarding the reason of
+                    # the error
+                    if exit_value == "-10":
+                        self._logger.warn(
+                            "Could not deliver msg to node: {0}".format(
+                              msg_content["original_msg"]['node'] ))
+
+                        
                     self._pipeline_data[job_uuid]['output']=[]
 
         elif type == 'output':

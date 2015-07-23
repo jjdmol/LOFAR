@@ -27,7 +27,12 @@ import lofarpipe.daemons.pipelineMCQDaemonImp as pipelineMCQDaemonImp
 if __name__ == "__main__":
     # Read the config file, fail of not supplied
     if len(sys.argv) != 2:
-        "Usage: pipelineMCQDaemon config.cfg"
+        print "Usage: python pipelineMCQDaemon config.cfg"
+        print "default config.cfg file: installed/share/pipeline/daemon.cfg"
+
+        exit(-1)
+
+
     config_path = sys.argv[1]
     if not os.path.isfile(config_path):
         print "supplied config file {0} does not exist".format(config_path)
@@ -63,5 +68,3 @@ if __name__ == "__main__":
                 max_repost=max_repost)
 
     daemon.run()
-
-

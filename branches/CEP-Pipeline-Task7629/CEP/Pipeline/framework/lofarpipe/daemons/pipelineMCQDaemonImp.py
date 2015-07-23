@@ -99,6 +99,12 @@ class pipelineMCQDaemonImp(CQDaemon.CQDaemon):
             self._deadletter_run_job( 
                                   msg, unpacked_msg_content, msg_type)
             return True
+        if command == "stop_session":
+            # If a stopletter cannot be delivered we should just drop it for now
+            self._logger.warn("Could not deliver stop msg to node: {0}".format(
+              unpacked_msg_content['node']))
+            return True
+
 
     # ****************************************************************
     # Private helper functions
@@ -166,8 +172,8 @@ class pipelineMCQDaemonImp(CQDaemon.CQDaemon):
 
         # Test if we tried enough
         if n_repost >= self._max_repost:
-            send_results(unpacked_msg_content, 
-                     "-1", info_str="Could not deliver job to slave daemon")
+            send_results(self._toBus, unpacked_msg_content, 
+                     "-10", info_str="Could not deliver job to slave daemon")
         else:
             # Else resend the msg, increase the resend count
             unpacked_msg_content['n_repost'] += 1
@@ -176,7 +182,7 @@ class pipelineMCQDaemonImp(CQDaemon.CQDaemon):
 # ****************************************************************************
 # Candidate functions for external lib.
 # **************************************************************************
-def send_results(unpacked_msg_data, 
+def send_results(toBus, unpacked_msg_data, 
                    exit_status, info_str=""):
     """
     Send a results msg to the results queue
@@ -185,8 +191,9 @@ def send_results(unpacked_msg_data,
                'exit_value':exit_status,
                'session_uuid':unpacked_msg_data['session_uuid'],
                'job_uuid':unpacked_msg_data['job_uuid'],
-               'info':info_str}
+               'info':info_str,
+               "original_msg":unpacked_msg_data}
 
     msg = CQCommon.create_msg(payload)
     msg.set_subject(unpacked_msg_data['result_topic'])
-    self._toBus.send(msg)
+    toBus.send(msg)

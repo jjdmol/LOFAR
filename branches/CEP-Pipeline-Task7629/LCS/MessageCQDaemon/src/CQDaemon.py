@@ -396,7 +396,6 @@ class CQDaemon(object):
         self._toBus.send(msg)
 
 
-
     def _write_to_deadletter_log(self, msg, unpacked_msg_content):
         """
         Writes the unknown deadletter to the deadletter permanent log
@@ -417,6 +416,7 @@ class CQDaemon(object):
             f.write("{0}\n".format(unpacked_msg_content))
             f.write("END DEADLETTER\n")
             f.close()
+
         except Exception, ex:            
             # Writing to file might fail if on network disk. Catch all and
             # continue

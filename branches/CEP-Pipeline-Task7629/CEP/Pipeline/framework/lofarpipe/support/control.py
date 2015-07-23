@@ -16,9 +16,10 @@ from lofarpipe.support.stateful import StatefulRecipe
 from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.xmllogging import get_active_stack
 from lofar.parameterset import parameterset
-import lofar.messagebus.msgbus
+import lofar.messagebus.msgbus as msgbus
 from lofar.messagebus.protocols import TaskFeedbackDataproducts, TaskFeedbackProcessing, TaskFeedbackState
 import lofarpipe.daemons.MCQLib as MCQLib
+import lofar.messagebus.CQExceptions as CQExceptions
 
 # Includes for QPID framework, might not be available. Set status flag 
 
@@ -59,7 +60,7 @@ class control(StatefulRecipe):
         """
 
         if self.feedback_method == "messagebus":
-          bus = lofar.messagebus.msgbus.ToBus("lofar.task.feedback.processing")
+          bus = msgbus.ToBus("lofar.task.feedback.processing")
           msg = TaskFeedbackProcessing(
             "lofarpipe.support.control",
             "",
@@ -78,7 +79,7 @@ class control(StatefulRecipe):
         """
 
         if self.feedback_method == "messagebus":
-          bus = lofar.messagebus.msgbus.ToBus("lofar.task.feedback.dataproducts")
+          bus = msgbus.ToBus("lofar.task.feedback.dataproducts")
           msg = TaskFeedbackDataproducts(
             "lofarpipe.support.control",
             "",
@@ -98,7 +99,7 @@ class control(StatefulRecipe):
         """
 
         if self.feedback_method == "messagebus":
-          bus = lofar.messagebus.msgbus.ToBus("lofar.task.feedback.state")
+          bus = msgbus.ToBus("lofar.task.feedback.state")
           msg = TaskFeedbackState(
             "lofarpipe.support.control",
             "",
@@ -138,7 +139,7 @@ class control(StatefulRecipe):
         except:
           self.feedback_method = "messagebus"
 
-        if self.feedback_method == "messagebus" and not lofar.messagebus.msgbus.MESSAGING_ENABLED:
+        if self.feedback_method == "messagebus" and not msgbus.MESSAGING_ENABLED:
           self.logger.error("Feedback over messagebus requested, but messagebus support is not enabled or functional")
           return 1
 
@@ -154,10 +155,27 @@ class control(StatefulRecipe):
                                                           "use_daemon")
         if use_daemon_communication:
             self.logger.info("Using QPid based communication")
-            broker = socket.gethostname()
-            self.mcqlib  = MCQLib.MCQLib(self.logger, 
-                                         broker,
-                                         "testmcqdaemon")
+            busname = self.config.get(
+                        "daemon", "busname")
+
+            broker = socket.gethostname()  # always use local host.
+            try:
+                self.mcqlib  = MCQLib.MCQLib(self.logger, 
+                                             broker,
+                                             busname)
+            except msgbus.BusException, busex:
+                if "no such queue:" in str(busex):
+                    self.logger.error(
+                      "*** No queue found: You have to create the bus structure")
+                    self.logger.error(
+                      "see installed/bin/createbus --help")
+                raise
+
+            except CQExceptions.ExceptionMasterUnreachable, ex:
+                self.logger.error("*** No Master daemon found: "
+                                  "see: installed/bin/pipelineMCQDaemon.py")
+                raise
+
 
         try:
             self.pipeline_logic()
@@ -167,9 +185,9 @@ class control(StatefulRecipe):
                         self.inputs['job_name']))
 
             # Get detailed information of the caught exception
-            (type, value, traceback_object) = sys.exc_info()
+            (ex_type, value, traceback_object) = sys.exc_info()
             self.logger.error("Detailed exception information:")
-            self.logger.error(str(type))
+            self.logger.error(str(ex_type))
             self.logger.error(str(value))
             # Get the stacktrace and pretty print it:
             # self.logger.error("\n" + " ".join(traceback.format_list(

@@ -27,7 +27,9 @@ import lofarpipe.daemons.pipelineSCQDaemonImp as PipelineSCQDaemonImp
 if __name__ == "__main__":
     # Read the config file, fail of not supplied
     if len(sys.argv) != 2:
-        "Usage: pipelineSCQDaemon config.cfg"
+        print "Usage: pipelineSCQDaemon config.cfg"
+        exit(-1)
+
     config_path = sys.argv[1]
     if not os.path.isfile(config_path):
         print "supplied config file {0} does not exist".format(config_path)
