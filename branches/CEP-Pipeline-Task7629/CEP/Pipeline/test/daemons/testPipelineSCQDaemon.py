@@ -93,7 +93,7 @@ class testForwardOfJobMsgToQueueuSlave(
         os.remove(self.logfile)
         os.remove(self.deadletterfile)
 
-        busname = "testmcqdaemon"
+        busname = "testPipelineSCQDaemon"
         broker = HOST_NAME
         logger = logging.getLogger("testMCQLib")
         deadLetterQueueName = busname + ".deadletter"
@@ -338,7 +338,7 @@ class testForwardOfJobMsgToQueueuSlave(
         job_node = HOST_NAME
 
         ## Connect to the results bus for this session id
-        resultQueue = msgbus.FromBus("testmcqdaemon" + "/" + "result_" + "123456",
+        resultQueue = msgbus.FromBus("testPipelineSCQDaemon" + "/" + "result_" + "123456",
                   broker = job_node)
         daemon, commandQueueBus, deadletterToQueue = \
             prepare_test_SCQ(PipelineSCQDaemonImp.PipelineSCQDaemonImp,
@@ -441,7 +441,7 @@ def prepare_test_SCQ(subclass, logfile, deadletterfile):
     """
         # config
     broker =  HOST_NAME
-    busname = "testmcqdaemon"  # TODO: Use a different name
+    busname = "testPipelineSCQDaemon"  # TODO: Use a different name
     #busname = "testbus"
     commandQueueName = busname + "/" + "masterCommandQueueName"
     #masterCommandQueueName = "masterCommandQueueName"

@@ -31,7 +31,7 @@ class testForwardOfJobMsgToQueueuSlave(
         broker = HOST_NAME 
         job_uuid = "123456"
         session_uuid = "654321"
-        busname = "testmcqdaemon"
+        busname = "testSCQLib"
         topicName = busname + "/logging_" + session_uuid
 
         return
@@ -39,7 +39,7 @@ class testForwardOfJobMsgToQueueuSlave(
         fromTopic = msgbus.FromBus(topicName, broker=broker)
 
         # THe SCQLib object
-        sCQLibObject = SCQLib.SCQLib(broker, "testmcqdaemon",
+        sCQLibObject = SCQLib.SCQLib(broker, busname,
                                     session_uuid,  job_uuid)
 
         # We will be adapting the logger handler
@@ -75,7 +75,7 @@ class testForwardOfJobMsgToQueueuSlave(
         broker = HOST_NAME
         job_uuid = "123456"
         session_uuid = "654321"
-        busname = "testmcqdaemon"
+        busname = "testSCQLib"
         topicName =busname + "/logging_" + session_uuid
 
         parameterQueueName = busname + "/parameters_" + session_uuid + "_" + job_uuid
@@ -85,7 +85,7 @@ class testForwardOfJobMsgToQueueuSlave(
         fromTopic = msgbus.FromBus(topicName, broker=broker)
 
         # THe SCQLib object
-        sCQLibObject = SCQLib.SCQLib(broker, "testmcqdaemon",
+        sCQLibObject = SCQLib.SCQLib(broker, busname,
                                     session_uuid,  job_uuid)
 
         # send a startjob msg to the correct queue
