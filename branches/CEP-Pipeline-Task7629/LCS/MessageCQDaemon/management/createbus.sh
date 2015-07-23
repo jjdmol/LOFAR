@@ -80,7 +80,7 @@ function routing {
     local busname=$4  
 
     echo "qpid-route -d dynamic $action $remotehost $hostname $busname" 
-    qpid-route -d dynamic action $remotehost $hostname $busname 
+    qpid-route -d dynamic $action $remotehost $hostname $busname 
 }
 
 # createbus attempts to create a full instantiated bus structure between two nodes
