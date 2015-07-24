@@ -431,6 +431,9 @@ class MCQLib(object):
         # Send MCQDaemon for each node that we are stopping 
         # Send each job a stop command (multiple per node is possible)
         # This allows rerouting in the master
+        # TODO: When starting 360 jobs to a single node it actually takes about 20
+        # seconds to process all the stop msg (is it worth it?)
+        #
         for job_uuid in self._pipeline_data:
             node =self._pipeline_data[job_uuid]['node']
             payload = {"type":"command",

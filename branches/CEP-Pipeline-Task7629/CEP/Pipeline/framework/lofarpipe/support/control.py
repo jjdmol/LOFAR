@@ -168,7 +168,7 @@ class control(StatefulRecipe):
                     self.logger.error(
                       "*** No queue found: You have to create the bus structure")
                     self.logger.error(
-                      "see installed/bin/createbus --help")
+                      "see installed/bin/createbus.sh --help")
                 raise
 
             except CQExceptions.ExceptionMasterUnreachable, ex:
