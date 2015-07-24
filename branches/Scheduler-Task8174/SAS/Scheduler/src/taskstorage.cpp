@@ -331,7 +331,7 @@ bool TaskStorage::getEqualityInputOutputProducts()const
                 return false;
         }
     }
-    return True;
+    return true;
 }
 
 void TaskStorage::setInputFileSizes(dataProductTypes dpType, const std::pair<double, unsigned> &inputFileSizes) {

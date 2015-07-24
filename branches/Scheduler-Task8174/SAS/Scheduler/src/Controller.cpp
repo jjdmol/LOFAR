@@ -3335,11 +3335,18 @@ std::pair<unscheduled_reasons, QString> Controller::doPreScheduleChecks(Task *ta
         }
 	}
     // Check here if the input output locations are the same
-    if (!task->storage()->getEqualityInputOutputProducts())
+    if (task->isPipeline())
     {
-        error.first = INPUT_OUTPUT_LOCATION_MISMATCH;
-        error.second = unscheduled_reason_str[INPUT_OUTPUT_LOCATION_MISMATCH];
-        return error;
+        // TODO: This is incredibly ugly!!!
+        Pipeline *pipeline = dynamic_cast<Pipeline *>(task);
+
+        if (pipeline->isCalibrationPipeline() &&
+            !task->storage()->getEqualityInputOutputProducts())
+        {
+            error.first = INPUT_OUTPUT_LOCATION_MISMATCH;
+            error.second = unscheduled_reason_str[INPUT_OUTPUT_LOCATION_MISMATCH];
+            return error;
+        }
     }
 
 	// if we arrrive here no errors in the task
