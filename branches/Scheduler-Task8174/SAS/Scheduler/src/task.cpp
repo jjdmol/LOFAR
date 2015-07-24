@@ -76,8 +76,9 @@ const char *unscheduled_reason_str[NR_REASONS] = {
 		"skyImages = input MS subbands / (subbands_per_image * slices_per_image) (needs to be integer value)",
 		"No data output type selected (coherent/incoherent/correlated)",
 		"A required input data product could not be found within the predecessor tasks",
-        "demix freq.step and time step should be multiples of resp. averaging freq.step and time step",
-        "one of the specified sources to be demixed is unknown"
+        "demix freq.step and time step should be multiples of resp. averaging freq.step and time step",       
+        "one of the specified sources to be demixed is unknown",
+    "Mismatch between input and output node location, retry assigning resources"
 };
 
 const char * TASK_CONFLICTS[_END_CONFLICTS_] = {

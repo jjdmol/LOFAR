@@ -3334,6 +3334,13 @@ std::pair<unscheduled_reasons, QString> Controller::doPreScheduleChecks(Task *ta
             task->storage()->generateFileList();
         }
 	}
+    // Check here if the input output locations are the same
+    if (!task->storage()->getEqualityInputOutputProducts())
+    {
+        error.first = INPUT_OUTPUT_LOCATION_MISMATCH;
+        error.second = unscheduled_reason_str[INPUT_OUTPUT_LOCATION_MISMATCH];
+        return error;
+    }
 
 	// if we arrrive here no errors in the task
 	task->clearReason();
