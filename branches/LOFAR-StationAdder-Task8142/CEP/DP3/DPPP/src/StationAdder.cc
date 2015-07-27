@@ -56,7 +56,7 @@ namespace LOFAR {
         itsMinNPoint    (parset.getUint  (prefix+"minpoints", 1)),
         itsMakeAutoCorr (parset.getBool  (prefix+"autocorr", false)),
         itsSumAutoCorr  (parset.getBool  (prefix+"sumauto", true)),
-        itsDoAverage    (parset.getBool  (prefix+"average", false)),
+        itsDoAverage    (parset.getBool  (prefix+"average", true)),
         itsUseWeight    (parset.getBool  (prefix+"useweights", true))
     {
     }
