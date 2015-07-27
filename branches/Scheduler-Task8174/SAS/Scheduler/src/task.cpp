@@ -78,7 +78,8 @@ const char *unscheduled_reason_str[NR_REASONS] = {
 		"A required input data product could not be found within the predecessor tasks",
         "demix freq.step and time step should be multiples of resp. averaging freq.step and time step",       
         "one of the specified sources to be demixed is unknown",
-    "Mismatch between input and output node location, retry assigning resources"
+        "Mismatch between input and output node location, retry assigning resources: LOC 1",
+        "Mismatch between input and output node location, retry assigning resources: LOC 2",
 };
 
 const char * TASK_CONFLICTS[_END_CONFLICTS_] = {
