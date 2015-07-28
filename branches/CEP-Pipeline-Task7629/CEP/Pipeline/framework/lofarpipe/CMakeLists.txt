@@ -42,7 +42,8 @@ python_install(
   daemons/MCQLib.py
   DESTINATION lofarpipe)
 
-  install(PROGRAMS
-  daemons/pipelineMCQDaemon.py
-  daemons/pipelineSCQDaemon.py
+install(PROGRAMS
+  daemons/startMCQDaemons.py
   DESTINATION bin)
+  
+
