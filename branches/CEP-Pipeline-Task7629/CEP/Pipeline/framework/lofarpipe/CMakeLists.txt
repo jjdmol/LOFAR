@@ -44,6 +44,8 @@ python_install(
 
 install(PROGRAMS
   daemons/startMCQDaemons.py
+  daemons/pipelineMCQDaemon.py
+  daemons/pipelineSCQDaemon.py
   DESTINATION bin)
   
 
