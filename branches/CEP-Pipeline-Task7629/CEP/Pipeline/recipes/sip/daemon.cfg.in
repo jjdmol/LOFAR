@@ -29,3 +29,7 @@ logfile 				= %(lofarroot)s/var/log/pipelineMasterCQDaemon.log
 
 loop_interval 			= 1
 max_repost 				= 5
+
+[daemon_hosts]
+master_host		=  
+slave_hosts     = 

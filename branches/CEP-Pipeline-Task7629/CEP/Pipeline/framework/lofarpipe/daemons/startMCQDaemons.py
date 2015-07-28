@@ -22,12 +22,16 @@ import sys
 import os
 import socket
 import ConfigParser
+import subprocess
 
 
 if __name__ == "__main__":
     # Read the config file, fail of not supplied
     if len(sys.argv) != 2:
         print "Usage: startMCQDaemons.py config.cfg"
+        print "Start the master and slave daemon as configured in the suplied"
+        print "configuration file."
+
         exit(-1)
 
     config_path = sys.argv[1]
@@ -39,27 +43,45 @@ if __name__ == "__main__":
     config.read(config_path)
 
     # create or get parameters 
-    hostname = socket.gethostname()
-    broker = hostname
-    busname = config.get(               "DEFAULT", "busname")
-    slaveCommandQueueNameTemplate = config.get( "slave_cqdaemon",
-                             "command_queue_template").format(hostname)
-    deadLetterQueueName = config.get(   "DEFAULT", "deadletter")
-    deadletterfile = config.get(        "slave_cqdaemon", "deadletter_log_path")
-    logfile = config.get(               "slave_cqdaemon", "logfile")
-    loop_interval = config.getfloat(    "slave_cqdaemon", "loop_interval")
-    max_repost =  config.getfloat(      "slave_cqdaemon", "max_repost")
+    master_host		= config.get( "daemon_hosts", "master_host") 
+    slave_hosts   = config.get( "daemon_hosts", "slave_hosts") 
+    install_directory = config.get( "DEFAULT", "lofarroot") 
+    master_exec   = "pipelineMCQDaemon.py"
+    slave_exec    = "pipelineSCQDaemon.py"
 
-    #daemon = PipelineSCQDaemonImp.PipelineSCQDaemonImp(
-    #            broker, 
-    #            busname, 
-    #            slaveCommandQueueNameTemplate, 
-    #            deadLetterQueueName, 
-    #            deadletterfile,
-    #            logfile,
-    #            loop_interval=loop_interval,
-    #            max_repost=max_repost)
+    # The default config file does not have master and slave 
+    if ( len(master_host.strip()) == 0 or
+         len(slave_hosts.strip()) == 0):
+         print "The supplied daemon_hosts are empty"
+         print "starting both Master and slave daemon on the local host"
+         local_host = socket.gethostname()
+         master_host = local_host
+         slave_hosts = local_host
+    
+    slave_hosts_list = slave_hosts.split(" ")
 
-    #daemon.run()
+    # Parts of the ssh command needed to start the daemons
+    source_cmd = "sh source {0}/lofarinit.sh".format(install_directory)
+    output_redirects = " > /dev/null 2> /dev/null < /dev/null"     
+    #output_redirects = "> debug.out 2> debug.err < /dev/null"
+
+    # First start the master
+    print "starting master on host: {0}".format(master_host)
+    start_daemon_cmd = "{0}/bin/{1} {2}".format(install_directory,
+                                   master_exec, config_path)
+    bashCommand = "ssh {0} nohup {1} ; {2}{3} &".format(
+                master_host, source_cmd, start_daemon_cmd, output_redirects)       
+    process = subprocess.Popen(bashCommand,  shell=True)
+
+
+    # now start all the slaves
+    for slave_host in slave_hosts_list:
+        print "starting slave on host: {0}".format(slave_host)
+        start_daemon_cmd = "{0}/bin/{1} {2}".format(install_directory,
+                                   slave_exec, config_path)
+        bashCommand = "ssh {0} nohup {1} ; {2}{3} &".format(
+                slave_host, source_cmd, start_daemon_cmd, output_redirects)       
+        process = subprocess.Popen(bashCommand,  shell=True)
+
 
     
