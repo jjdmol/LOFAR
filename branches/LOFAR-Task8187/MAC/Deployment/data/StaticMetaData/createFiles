@@ -322,7 +322,7 @@ def createRSPDriverFile(resultDir, stationName, dataDir,int_local,is_Cobalt):
         for rspNr in range(4):
             if is_int_station and is_Cobalt:
                 # Cobalt nodes are part of the international station VLANs,
-                # allowing routing to x.x.x.50 (with x.x.x.x being the RSP board IPs).
+                # allowing routing to x.x.x.100 to x.x.x.110 (with x.x.x.x being the RSP board IPs).
                 #
                 # intl nodes can have 1, 2, or 4 entries
                 if nrNodes == 1:
@@ -395,7 +395,8 @@ def createRSPDriverFile(resultDir, stationName, dataDir,int_local,is_Cobalt):
         RSPconfig = RSPconfig.replace("@IP_EXTEN_03@",   ip_parts[2])
         RSPconfig = RSPconfig.replace("@FIRST_XLET_OUT@",  "5")
     else: # Non-NL station
-        hexStationID = str("%02x" % int(stationName[3:6]))
+        int_station_nr = int(stationName[3:6]) % 100 # DE605 -> 5
+        hexStationID = str("%02x" % int_station_nr)
         ringID = '0'+stationName[2]
         RSPconfig = RSPconfig.replace("@STATION_NAME@", stationName.upper())
         RSPconfig = RSPconfig.replace("@RING_ID@",   ringID)
@@ -408,6 +409,8 @@ def createRSPDriverFile(resultDir, stationName, dataDir,int_local,is_Cobalt):
           IPandMAC = findIPandMAC_local(stationName,dataDir)
         else:
           IPandMAC = findIPandMAC_station(stationName, dataDir)
+
+        int_station_nr = int(stationName[3:6]) % 100 # DE605 -> 5
         
         nrNodes = len(IPandMAC) # Number of occurences in file
         for rspNr in range(4):        
@@ -423,13 +426,13 @@ def createRSPDriverFile(resultDir, stationName, dataDir,int_local,is_Cobalt):
               srcip = IPandMAC[rspNr][1]
               srcip_suffix = 1
 
-            rspip_parts = srcip.split('.')                
-            repl_str = "@IP_EXTEN_0"+str(rspNr)+"@"
-            RSPconfig = RSPconfig.replace(repl_str, str(srcip_suffix))
+            rspip_parts = srcip.split('.')
             repl_str = "@IP_PREFIX_0"+str(rspNr)+"@"
             RSPconfig = RSPconfig.replace(repl_str, rspip_parts[1])
             repl_str = "@IP_SUBNET_0"+str(rspNr)+"@"
-            RSPconfig = RSPconfig.replace(repl_str, rspip_parts[2])
+            RSPconfig = RSPconfig.replace(repl_str, rspip_parts[2] if int(rspip_parts[2]) > 1 else str(int_station_nr)) # Some stations share VLANs, and get srcip 10.vlan.1.board, which would be equal for all stations. In those cases we will use srcip 10.vlan.stationnr.board
+            repl_str = "@IP_EXTEN_0"+str(rspNr)+"@"
+            RSPconfig = RSPconfig.replace(repl_str, str(srcip_suffix))
                        
     outFile = os.open(dataDir+"/RSPDriver.conf.tmp", os.O_RDWR|os.O_CREAT|os.O_TRUNC)
     os.write(outFile, RSPconfig)
@@ -525,7 +528,8 @@ def createRSPDriverFile_Test(resultDir, stationName, dataDir, alias):
         RSPconfig = RSPconfig.replace("@FIRST_XLET_OUT@",  "5")
 
     else: # Non-NL station
-        hexStationID = str("%02x" % int(stationName[3:6]))
+        int_station_nr = int(stationName[3:6]) % 100 # DE605 -> 5
+        hexStationID = str("%02x" % int_station_nr)
         ringID = '0'+stationName[2]
         RSPconfig = RSPconfig.replace("@STATION_NAME@", stationName.upper())
         RSPconfig = RSPconfig.replace("@RING_ID@",   ringID)
@@ -548,12 +552,12 @@ def createRSPDriverFile_Test(resultDir, stationName, dataDir, alias):
               srcip_suffix = 1
 
             rspip_parts = srcip.split('.')                
-            repl_str = "@IP_EXTEN_0"+str(rspNr)+"@"
-            RSPconfig = RSPconfig.replace(repl_str, str(srcip_suffix))
             repl_str = "@IP_PREFIX_0"+str(rspNr)+"@"
             RSPconfig = RSPconfig.replace(repl_str, rspip_parts[1])
             repl_str = "@IP_SUBNET_0"+str(rspNr)+"@"
-            RSPconfig = RSPconfig.replace(repl_str, rspip_parts[2])
+            RSPconfig = RSPconfig.replace(repl_str, rspip_parts[2] if int(rspip_parts[2]) > 1 else str(int_station_nr)) # Some stations share VLANs, and get srcip 10.vlan.1.board, which would be equal for all stations. In those cases we will use srcip 10.vlan.stationnr.board
+            repl_str = "@IP_EXTEN_0"+str(rspNr)+"@"
+            RSPconfig = RSPconfig.replace(repl_str, str(srcip_suffix))
                         
     outFile = os.open(dataDir+"/RSPDriver.conf.tmp", os.O_RDWR|os.O_CREAT|os.O_TRUNC)
     os.write(outFile, RSPconfig)
