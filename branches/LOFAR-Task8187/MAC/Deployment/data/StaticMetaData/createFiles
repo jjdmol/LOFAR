@@ -317,7 +317,7 @@ def createRSPDriverFile(resultDir, stationName, dataDir,int_local,is_Cobalt):
                 RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_MAC@", mac +"   # "+ node)
                 RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  dstip)
                 RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_PORT@", str(basePort + 6 + rspNr))
-                RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_BLET@", blet_out) 
+                RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_BLET@", blet_out)
         
         for rspNr in range(4):
             if is_int_station and is_Cobalt:
@@ -342,11 +342,13 @@ def createRSPDriverFile(resultDir, stationName, dataDir,int_local,is_Cobalt):
             #print node, ip, mac
             blet_out = find_Blets(stationName, dataDir)[1+rspNr];
             RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_MAC@", mac +"   # "+node)
-            # Need to fill this in until RSPDriver is fixed...
-            RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_BLET@", blet_out)
             RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_IP@",  dstip)
             RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_PORT@", str(basePort + rspNr))
             RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_BLET@", blet_out) 
+
+            # Need to fill this in until RSPDriver is fixed...
+            RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_BLET@", blet_out)
+
             # The following is only necessary for not crashing the
             # RSPDriver during startup.... It makes no sense as RS/Int
             # stations have no splitter so there is no LANE_1X
@@ -355,31 +357,28 @@ def createRSPDriverFile(resultDir, stationName, dataDir,int_local,is_Cobalt):
                 RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  dstip)
                 RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_PORT@", str(basePort + 6 + rspNr))
 
-
-
     # Find IP address for RSP board ethernet. All NL stations have RSP address
     # like 10.175.x.x, Non-NL station must be looked up 
     if not is_int_station:
         ip_prefix = "175" # NL stations; FIXED!
 
+        # SOURCE IP contains information on which Cobalt iface to send to, to help
+        # Cobalt route the packet.
+        for rspNr in range(4):
+            dstip = IPandMAC[0][1]
+            dstiface = dstip.split('.')[3] # 1 = 10GB01 ... 4 = 10GB04
+            RSPconfig = RSPconfig.replace("@IP_SUBNET_0"+str(rspNr)+"@", dstiface) 
+
         # Core stations should have Splitter set to 1; others to 0.
-        if (stationName[0:2].upper() == "CS"):
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_00@",   "1")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_01@",   "2")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_02@",   "3")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_03@",   "4")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_10@",   "7")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_11@",   "8")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_12@",   "9")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_13@",   "10")
+        if is_core_station:
             RSPconfig = RSPconfig.replace("@LAST_XLET_OUT@",  "11")
- 
-        else:
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_00@",   "1")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_01@",   "2")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_02@",   "3")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_03@",   "4")
-            
+
+            # SOURCE IP contains information on which Cobalt iface to send to, to help
+            # Cobalt route the packet.
+            for rspNr in range(4):
+                dstip = IPandMAC[1][1]
+                dstiface = dstip.split('.')[3] # 1 = 10GB01 ... 4 = 10GB04
+                RSPconfig = RSPconfig.replace("@IP_SUBNET_1"+str(rspNr)+"@", dstiface) 
       
         hexStationID = str("%02x" % int(stationName[3:6]))
         ringID = '0'+stationName[2]
@@ -390,10 +389,10 @@ def createRSPDriverFile(resultDir, stationName, dataDir,int_local,is_Cobalt):
         RSPconfig = RSPconfig.replace("@IP_PREFIX_01@",   ip_prefix)
         RSPconfig = RSPconfig.replace("@IP_PREFIX_02@",   ip_prefix)
         RSPconfig = RSPconfig.replace("@IP_PREFIX_03@",   ip_prefix)
-        RSPconfig = RSPconfig.replace("@IP_SUBNET_00@",   ip_parts[2])
-        RSPconfig = RSPconfig.replace("@IP_SUBNET_01@",   ip_parts[2])
-        RSPconfig = RSPconfig.replace("@IP_SUBNET_02@",   ip_parts[2])
-        RSPconfig = RSPconfig.replace("@IP_SUBNET_03@",   ip_parts[2])
+        RSPconfig = RSPconfig.replace("@IP_EXTEN_00@",   ip_parts[2])
+        RSPconfig = RSPconfig.replace("@IP_EXTEN_01@",   ip_parts[2])
+        RSPconfig = RSPconfig.replace("@IP_EXTEN_02@",   ip_parts[2])
+        RSPconfig = RSPconfig.replace("@IP_EXTEN_03@",   ip_parts[2])
         RSPconfig = RSPconfig.replace("@FIRST_XLET_OUT@",  "5")
     else: # Non-NL station
         hexStationID = str("%02x" % int(stationName[3:6]))
@@ -492,22 +491,23 @@ def createRSPDriverFile_Test(resultDir, stationName, dataDir, alias):
     if not is_int_station:
         ip_prefix = "175" # NL stations; FIXED!
 
+        # SOURCE IP contains information on which Cobalt iface to send to, to help
+        # Cobalt route the packet.
+        for rspNr in range(4):
+            dstip = IPandMAC[0][1]
+            dstiface = dstip.split('.')[3] # 1 = 10GB01 ... 4 = 10GB04
+            RSPconfig = RSPconfig.replace("@IP_SUBNET_0"+str(rspNr)+"@", dstiface) 
+
         # Core stations should have Splitter set to 1; others to 0.
-        if (stationName[0:2].upper() == "CS"):
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_00@",   "1")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_01@",   "2")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_02@",   "3")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_03@",   "4")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_10@",   "7")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_11@",   "8")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_12@",   "9")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_13@",   "10")
+        if is_core_station:
             RSPconfig = RSPconfig.replace("@LAST_XLET_OUT@",  "11")
-        else:
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_00@",   "1")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_01@",   "2")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_02@",   "3")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_03@",   "4")
+
+            # SOURCE IP contains information on which Cobalt iface to send to, to help
+            # Cobalt route the packet.
+            for rspNr in range(4):
+                dstip = IPandMAC[1][1]
+                dstiface = dstip.split('.')[3] # 1 = 10GB01 ... 4 = 10GB04
+                RSPconfig = RSPconfig.replace("@IP_SUBNET_1"+str(rspNr)+"@", dstiface) 
       
         hexStationID = str("%02x" % int(stationName[3:6]))
         ringID = '0'+stationName[2]
@@ -518,10 +518,10 @@ def createRSPDriverFile_Test(resultDir, stationName, dataDir, alias):
         RSPconfig = RSPconfig.replace("@IP_PREFIX_01@",   ip_prefix)
         RSPconfig = RSPconfig.replace("@IP_PREFIX_02@",   ip_prefix)
         RSPconfig = RSPconfig.replace("@IP_PREFIX_03@",   ip_prefix)
-        RSPconfig = RSPconfig.replace("@IP_SUBNET_00@",   ip_parts[2])
-        RSPconfig = RSPconfig.replace("@IP_SUBNET_01@",   ip_parts[2])
-        RSPconfig = RSPconfig.replace("@IP_SUBNET_02@",   ip_parts[2])
-        RSPconfig = RSPconfig.replace("@IP_SUBNET_03@",   ip_parts[2])
+        RSPconfig = RSPconfig.replace("@IP_EXTEN_00@",   ip_parts[2])
+        RSPconfig = RSPconfig.replace("@IP_EXTEN_01@",   ip_parts[2])
+        RSPconfig = RSPconfig.replace("@IP_EXTEN_02@",   ip_parts[2])
+        RSPconfig = RSPconfig.replace("@IP_EXTEN_03@",   ip_parts[2])
         RSPconfig = RSPconfig.replace("@FIRST_XLET_OUT@",  "5")
 
     else: # Non-NL station
