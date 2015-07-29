@@ -37,12 +37,12 @@ using boost::format;
 
 static void usage(const char *argv0)
 {
-  cerr << "Usage: " << argv0 << " parset success" << endl;
-  cerr << endl;
-  cerr << "  parset:  filename of parset describing the observation" << endl;
-  cerr << "  success: obs status: 1 = ok, 0 = failure" << endl;
-  cerr << endl;
-  cerr << "  -h: print this message" << endl;
+  cout << "Usage: " << argv0 << " parset success" << endl;
+  cout << endl;
+  cout << "  parset:  filename of parset describing the observation" << endl;
+  cout << "  success: obs status: 1 = ok, 0 = failure" << endl;
+  cout << endl;
+  cout << "  -h: print this message" << endl;
 }
 
 int main(int argc, char **argv)
@@ -70,6 +70,10 @@ int main(int argc, char **argv)
     usage(argv[0]);
     return EXIT_FAILURE;
   }
+
+  // Make sure all time is dealt with and reported in UTC
+  if (setenv("TZ", "UTC", 1) < 0)
+    THROW_SYSCALL("setenv(TZ)");
 
   INIT_LOGGER("send_status");
   MessageBus::init();

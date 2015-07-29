@@ -194,7 +194,8 @@ function send_msg() {
 }
 
 function compare_msg() {
-  # Compare two messages, ignoring uncontrollable fields (UUID, timestamp).
+  # Compare two messages, ignoring uncontrollable fields (UUID, timestamp,
+  #   encoding="UTF-8" within <?xml ?> tag added by qpid).
   # Both messages are expected to be in files (or filedescriptors).
   #
   # Usage:
@@ -203,7 +204,7 @@ function compare_msg() {
   GENERATED="$2"
 
   function compare_msg_filter() {
-    fgrep -v '<uuid>' | fgrep -v '<timestamp>'
+    fgrep -v '<uuid>' | fgrep -v '<timestamp>' | fgrep -v '<?xml '
   }
 
   diff -w <(<"$REFERENCE" compare_msg_filter) <(<"$GENERATED" compare_msg_filter)
