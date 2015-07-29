@@ -1281,6 +1281,23 @@ namespace LOFAR
       return settings.nrBitsPerSample;
     }
 
+    unsigned Parset::nrObsOutputTypes() const
+    {
+      unsigned nr = 0;
+
+      if (settings.correlator.enabled) {
+        nr += 1;
+      }
+      if (settings.beamFormer.anyCoherentTABs()) {
+        nr += 1;
+      }
+      if (settings.beamFormer.anyIncoherentTABs()) {
+        nr += 1;
+      }
+
+      return nr;
+    }
+
     bool Parset::outputThisType(OutputType outputType) const
     {
       switch (outputType) {

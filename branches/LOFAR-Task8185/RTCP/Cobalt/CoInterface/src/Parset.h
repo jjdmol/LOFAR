@@ -686,7 +686,8 @@ namespace LOFAR
 
       std::vector<std::string>    allStationNames() const;
 
-      bool outputThisType(OutputType) const;
+      unsigned                    nrObsOutputTypes() const;
+      bool                        outputThisType(OutputType) const;
 
       unsigned nrStreams(OutputType, bool force = false) const;
       std::string getHostName(OutputType, unsigned streamNr) const;

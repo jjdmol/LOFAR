@@ -69,13 +69,6 @@ namespace LOFAR
 
     void writeCommonLofarAttributes(dal::CLA_File& file, const Parset& parset)
     {
-      /*
-       * NOTE: the CLA metadata is intended to be identical across all
-       * output files and types (uv, bf (coh, incoh), tbb) from an observation.
-       *
-       * TODO: JD, what to do wrt min/max/center freq cmp to MS? Do I need to adapt that too, or do we do a "never mind"?
-       */
-
       file.groupType().value = "Root";
       //file.fileName() has been set by DAL
       //file.fileDate() has been set by DAL
@@ -83,9 +76,9 @@ namespace LOFAR
       //file.fileType() has been set by DAL
       //file.telescope() has been set by DAL
 
-      file.projectID().value = parset.getString("Observation.Campaign.name", "");
-      file.projectTitle().value = parset.getString("Observation.Scheduler.taskName", ""); // TODO: JD, why not "Observation.Campaign.title" as written in MS? Not the same value.
-      file.projectPI().value = parset.getString("Observation.Campaign.PI", "");
+      file.projectID().value =    parset.getString("Observation.Campaign.name",  "");
+      file.projectTitle().value = parset.getString("Observation.Campaign.title", "");
+      file.projectPI().value =    parset.getString("Observation.Campaign.PI",    "");
       std::ostringstream oss;
       // Use ';' instead of ',' to pretty print, because ',' already occurs in names (e.g. Smith, J.).
       writeVector(oss, parset.getStringVector("Observation.Campaign.CO_I", vector<string>(), true), "; ", "", "");
@@ -93,6 +86,7 @@ namespace LOFAR
       file.projectContact().value = parset.getString("Observation.Campaign.contact", "");
 
       file.observationID().value = str(boost::format("%u") % parset.settings.observationID);
+      //file.observationTitle().value = parset.getString("Observation.Scheduler.taskName", ""); // could be added (iff also added to MS and DAL)
 
       file.observationStartUTC().value = toUTC(parset.settings.startTime);
       file.observationStartMJD().value = toMJD(parset.settings.startTime);
@@ -104,10 +98,16 @@ namespace LOFAR
       const vector<string>& allStNames = parset.allStationNames();
       file.observationStationsList().create(allStNames.size()).set(allStNames); // TODO: check/fix when superstation beamformer is supp
 
-      // Best effort to properly set max, min, and central freqs for whole observation. Tiring situation.
+      /*
+       * NOTE: the CLA metadata is spec-ed to be identical across all
+       * data products in an obs, regardless of type (uv, bf (coh, incoh), tbb).
+       * This code supports bf (coh, incoh) and tbb, but not uv data.
+       * The max/min/center freq CLA values may differ between uv and bf/tbb,
+       * because the code writing MS does not take bf settings into account.
+       */
       double maxFrequencyOffsetPPF = 0.0;
       double minFrequencyOffsetPPF = 0.0;
-      int nrAppliedPPFs = 0;
+      unsigned nrAppliedPPFs = 0;
       if (parset.settings.correlator.enabled && parset.settings.correlator.nrChannels > 1) {
         nrAppliedPPFs += 1;
         const double freqOffsetPPF = getFrequencyOffsetPPF(parset.settings.subbandWidth(),
@@ -133,26 +133,32 @@ namespace LOFAR
           minFrequencyOffsetPPF = min(minFrequencyOffsetPPF, freqOffsetPPF);
         }
       }
-      bool applyPPFtoMax = nrAppliedPPFs == 3; // max freq affected if PPF for all
-      bool applyPPFtoMin = nrAppliedPPFs > 0;  // min freq affected if PPF for any
+      // max freq is shifted if 2nd PPF is active for all types in obs
+      // min freq is shifted if 2nd PPF is active for any type in obs
+      bool applyPPFtoMax = nrAppliedPPFs == parset.nrObsOutputTypes();
+      bool applyPPFtoMin = nrAppliedPPFs > 0;
 
       vector<double> subbandCenterFrequencies(parset.settings.subbands.size());
       for (unsigned sb = 0; sb < subbandCenterFrequencies.size(); ++sb) {
         subbandCenterFrequencies[sb] = parset.settings.subbands[sb].centralFrequency;
       }
 
-      double max_centerfrequency = *max_element( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end() );
+      double maxFrequency = *max_element(subbandCenterFrequencies.begin(),
+                                         subbandCenterFrequencies.end()) +
+                            0.5 * parset.settings.subbandWidth();
       if (applyPPFtoMax) {
-        max_centerfrequency = max_centerfrequency + parset.settings.subbandWidth() / 2.0 - minFrequencyOffsetPPF; // apply min offset to max
+        maxFrequency -= minFrequencyOffsetPPF; // apply min offset to max
       }
-      double min_centerfrequency = *min_element( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end() );
+      double minFrequency = *min_element(subbandCenterFrequencies.begin(),
+                                         subbandCenterFrequencies.end()) -
+                            0.5 * parset.settings.subbandWidth();
       if (applyPPFtoMin) {
-        min_centerfrequency = min_centerfrequency - parset.settings.subbandWidth() / 2.0 - maxFrequencyOffsetPPF; // apply max offset to min
+        minFrequency -= maxFrequencyOffsetPPF; // apply max offset to min
       }
 
-      file.observationFrequencyMax().value = max_centerfrequency / 1e6;
-      file.observationFrequencyMin().value = min_centerfrequency / 1e6;
-      file.observationFrequencyCenter().value = 0.5 * (max_centerfrequency + min_centerfrequency) / 1e6; // best single central val for the whole obs we can do
+      file.observationFrequencyMax().value = maxFrequency / 1e6;
+      file.observationFrequencyMin().value = minFrequency / 1e6;
+      file.observationFrequencyCenter().value = 0.5 * (maxFrequency + minFrequency) / 1e6; // best single central val for the whole obs we can do
       file.observationFrequencyUnit().value = "MHz";
 
       file.observationNofBitsPerSample().value = parset.settings.nrBitsPerSample;
