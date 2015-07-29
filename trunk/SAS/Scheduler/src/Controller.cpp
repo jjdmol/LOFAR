@@ -3325,6 +3325,15 @@ std::pair<unscheduled_reasons, QString> Controller::doPreScheduleChecks(Task *ta
         // now the enabled flags (user selection) gets reset by calling setInputFilesForPipeline which is also a bug. This should not be the case
         error = setInputFilesForPipeline(pPipe);
 
+        if (pPipe->isCalibrationPipeline() &&
+            !task->storage()->getEqualityInputOutputProducts())
+        {
+            error.first = INPUT_OUTPUT_LOCATION_MISMATCH1;
+            error.second = unscheduled_reason_str[INPUT_OUTPUT_LOCATION_MISMATCH2];
+            return error;
+        }
+
+
 		if (error.first != NO_ERROR) return error;
 	}
 
@@ -3334,6 +3343,21 @@ std::pair<unscheduled_reasons, QString> Controller::doPreScheduleChecks(Task *ta
             task->storage()->generateFileList();
         }
 	}
+    // Check here if the input output locations are the same
+    // Check added due to #8174
+    if (task->isPipeline())
+    {
+        // TODO: This is incredibly ugly!!!
+        Pipeline *pipeline = dynamic_cast<Pipeline *>(task);
+
+        if (pipeline->isCalibrationPipeline() &&
+            !task->storage()->getEqualityInputOutputProducts())
+        {
+            error.first = INPUT_OUTPUT_LOCATION_MISMATCH2;
+            error.second = unscheduled_reason_str[INPUT_OUTPUT_LOCATION_MISMATCH2];
+            return error;
+        }
+    }
 
 	// if we arrrive here no errors in the task
 	task->clearReason();
@@ -4072,6 +4096,22 @@ bool Controller::doScheduleChecks(Task *pTask) {
 		QMessageBox::warning(gui, tr("Cannot schedule the task"),result.second);
 		return false;
 	}
+
+    if (pTask->isPipeline())
+    {
+        // TODO: This is incredibly ugly!!!
+        Pipeline *pipeline = dynamic_cast<Pipeline *>(pTask);
+
+        if (pipeline->isCalibrationPipeline() &&
+            !pTask->storage()->getEqualityInputOutputProducts())
+        {
+            QMessageBox::warning(gui,
+              tr("Error during scheduling")
+                     ,"Task input and output are different, #8174, LOC3. Retry assigning resources");
+            return false;
+
+        }
+    }
 
 	return true;
 }
