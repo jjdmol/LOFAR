@@ -31,5 +31,11 @@ loop_interval 			= 1
 max_repost 				= 5
 
 [daemon_hosts]
-master_host		=  
-slave_hosts     = 
+master_host		= locus102
+#slave_hosts_type = static
+#slave_hosts		 = 
+# To define a range of hosts:
+slave_hosts_type = range
+slave_root = locus
+range_min = 98
+range_max = 99

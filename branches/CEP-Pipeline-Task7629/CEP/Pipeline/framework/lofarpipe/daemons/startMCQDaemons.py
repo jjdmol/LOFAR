@@ -43,11 +43,31 @@ if __name__ == "__main__":
     config.read(config_path)
 
     # create or get parameters 
-    master_host		= config.get( "daemon_hosts", "master_host") 
-    slave_hosts   = config.get( "daemon_hosts", "slave_hosts") 
     install_directory = config.get( "DEFAULT", "lofarroot") 
     master_exec   = "pipelineMCQDaemon.py"
     slave_exec    = "pipelineSCQDaemon.py"
+    master_host		= config.get( "daemon_hosts", "master_host") 
+
+    slave_hosts_type = config.get( "daemon_hosts","slave_hosts_type")
+    slave_hosts = None
+    if slave_hosts_type == "static":
+        slave_hosts   = config.get( "daemon_hosts", "slave_hosts") 
+    elif slave_hosts_type == "range":
+        print "debug 1"
+        slave_root = config.get( "daemon_hosts", "slave_root") 
+        range_min = int(config.get( "daemon_hosts", "range_min"))
+        range_max = int(config.get( "daemon_hosts", "range_max"))
+
+        node_root_template = slave_root+"{0}"
+        slave_hosts = " ".join([node_root_template.format(str(node_idx).zfill(3)) 
+                       for node_idx in range(range_min, range_max+1)])
+
+        print slave_hosts
+    else:
+        print "debiug sdf"
+        exit(2)
+    
+
 
     # The default config file does not have master and slave 
     if ( len(master_host.strip()) == 0 or
@@ -61,7 +81,7 @@ if __name__ == "__main__":
     slave_hosts_list = slave_hosts.split(" ")
 
     # Parts of the ssh command needed to start the daemons
-    source_cmd = "sh source {0}/lofarinit.sh".format(install_directory)
+    source_cmd = "source {0}/lofarinit.sh".format(install_directory)
     output_redirects = " > /dev/null 2> /dev/null < /dev/null"     
     #output_redirects = "> debug.out 2> debug.err < /dev/null"
 
@@ -77,10 +97,13 @@ if __name__ == "__main__":
     # now start all the slaves
     for slave_host in slave_hosts_list:
         print "starting slave on host: {0}".format(slave_host)
+        output_redirects = "> debug.out 2> debug.err < /dev/null"
         start_daemon_cmd = "{0}/bin/{1} {2}".format(install_directory,
                                    slave_exec, config_path)
-        bashCommand = "ssh {0} nohup {1} ; {2}{3} &".format(
+
+        bashCommand = "ssh {0} 'nohup sh -c ''{1} ; {2}{3} &'''".format(
                 slave_host, source_cmd, start_daemon_cmd, output_redirects)       
+        print bashCommand
         process = subprocess.Popen(bashCommand,  shell=True)
 
 
