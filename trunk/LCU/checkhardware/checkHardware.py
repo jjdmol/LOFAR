@@ -381,10 +381,10 @@ def main():
         
                     
     # set manualy marked bad antennas
-    log_dir = os.path.join(conf.getStr('log-dir-global'), 'stationtest')
+    global_log_dir = conf.getStr('log-dir-global')
     host = getHostName()
-    if os.path.exists(log_dir):
-        full_filename = os.path.join(log_dir, 'bad_antenna_list.txt')
+    if os.path.exists(global_log_dir):
+        full_filename = os.path.join(global_log_dir, 'bad_antenna_list.txt')
         logger.info('add bad_antenna_list data from file "%s" to db' %(full_filename))
         f = open(full_filename, 'r')
         data = f.readlines()
@@ -408,6 +408,8 @@ def main():
                             #print 'ant type=%s nr=%d' %(ant_type, ant_nr)
                             db.hba.tile[ant_nr].on_bad_list = 1
                 break
+    else:
+		logger.warn('bad_antenna_list data from file "%s" not found' %(full_filename))
     
     #
     db.script_versions = 'CHECK=%s,DB=%s,TEST=%s,SEARCH=%s,LOFAR=%s,GENERAL=%s' %\
