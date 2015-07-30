@@ -35,6 +35,7 @@ if __name__ == "__main__":
         exit(-1)
 
     config_path = sys.argv[1]
+    config_path = os.path.abspath(config_path)
     if not os.path.isfile(config_path):
         print "supplied config file {0} does not exist".format(config_path)
         sys.exit(-1)
@@ -64,12 +65,10 @@ if __name__ == "__main__":
 
         print slave_hosts
     else:
-        print "debiug sdf"
+        print "unknown slave_hosts_type, check config file"
         exit(2)
     
-
-
-    # The default config file does not have master and slave 
+    # When no master/host are defined (default config
     if ( len(master_host.strip()) == 0 or
          len(slave_hosts.strip()) == 0):
          print "The supplied daemon_hosts are empty"
@@ -80,31 +79,49 @@ if __name__ == "__main__":
     
     slave_hosts_list = slave_hosts.split(" ")
 
-    # Parts of the ssh command needed to start the daemons
-    source_cmd = "source {0}/lofarinit.sh".format(install_directory)
+    # ***********************************************************************
+    # Starting of the daemons
+    print "starting master on host: {0}".format(master_host)
+
+    # We need to source both the lofarinit and qpid
+    qpid_source =  ". /opt/qpid/.profile"
+    lofar_source = ". {0}/lofarinit.sh".format(install_directory)
+
     output_redirects = " > /dev/null 2> /dev/null < /dev/null"     
     #output_redirects = "> debug.out 2> debug.err < /dev/null"
 
-    # First start the master
-    print "starting master on host: {0}".format(master_host)
-    start_daemon_cmd = "{0}/bin/{1} {2}".format(install_directory,
-                                   master_exec, config_path)
-    bashCommand = "ssh {0} nohup {1} ; {2}{3} &".format(
-                master_host, source_cmd, start_daemon_cmd, output_redirects)       
-    process = subprocess.Popen(bashCommand,  shell=True)
+    # Specific for the master start
+    # The basic command we want to run on the remote host: exec + config
+    start_daemon_command = "{0}/bin/{1} {2}".format(
+        install_directory, master_exec, config_path)
+
+    # Combine, the source, the executable and redirect output
+    set_env_start_daemon_cmd = "{0};{1};{2}{3}".format(
+        qpid_source, lofar_source, start_daemon_command, output_redirects)
+
+    # Now add the ssh command with correct settings for remote starting of 
+    # the dameon: nohup, correct shell version and the & to start in bg
+    sshCommandStr = "ssh {0} \"nohup /bin/bash -c '{1} &' \"".format(
+                  master_host, set_env_start_daemon_cmd)
+    process = subprocess.Popen(sshCommandStr,  shell=True)
+
 
 
     # now start all the slaves
     for slave_host in slave_hosts_list:
-        print "starting slave on host: {0}".format(slave_host)
-        output_redirects = "> debug.out 2> debug.err < /dev/null"
-        start_daemon_cmd = "{0}/bin/{1} {2}".format(install_directory,
-                                   slave_exec, config_path)
+        print "starting master on host: {0}".format(slave_host)
+        # The basic command we want to run on the remote host: exec + config
 
-        bashCommand = "ssh {0} 'nohup sh -c ''{1} ; {2}{3} &'''".format(
-                slave_host, source_cmd, start_daemon_cmd, output_redirects)       
-        print bashCommand
-        process = subprocess.Popen(bashCommand,  shell=True)
+        start_daemon_command = "{0}/bin/{1} {2}".format(
+            install_directory, slave_exec, config_path)
 
+        # Combine, the source, the executable and redirect output
+        set_env_start_daemon_cmd = "{0};{1};{2}{3}".format(
+            qpid_source, lofar_source, start_daemon_command, output_redirects)
 
-    
+        # Now add the ssh command with correct settings for remote starting of 
+        # the dameon: nohup, correct shell version and the & to start in bg
+        sshCommandStr = "ssh {0} \"nohup /bin/bash -c '{1} &' \"".format(
+                      slave_host, set_env_start_daemon_cmd)
+        process = subprocess.Popen(sshCommandStr,  shell=True)
+

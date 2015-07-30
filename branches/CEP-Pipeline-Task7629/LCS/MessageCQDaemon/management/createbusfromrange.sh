@@ -1,3 +1,5 @@
+#!/bin/bash 
+
 function create_named_numbered_node_list {
     if (( $# == 3 ))
     then
