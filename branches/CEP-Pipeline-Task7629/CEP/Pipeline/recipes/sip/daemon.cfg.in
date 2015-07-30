@@ -6,13 +6,15 @@ working_directory 	= /data/scratch/$ENV{USER}
 busname 			= $ENV{USER}_pipelineBus
 deadletter 			= %(busname)s.deadletter
 
+# The following directory must exist:
+log_root            = /data/scratch/$ENV{USER}/log
 
 [slave_cqdaemon]
 command_queue_topic_template = pipelineSlaveCommandQueue_{0}
 command_queue_template 	= %(busname)s/pipelineSlaveCommandQueue_{0}
-deadletter_log_path 	= %(lofarroot)s/var/log/pipelineSlaveDeadletter.log
-# Logfiles are currently located on a network disk!!!!
-logfile 				= %(lofarroot)s/var/log/pipelineSlaveCQDaemon.log   
+
+deadletter_log_path 	= %(log_root)s/pipelineSlaveDeadletter.log
+logfile 				= %(log_root)s/pipelineSlaveCQDaemon.log   
 
 # Control the how long between loops of the daemon (rate limitter) in seconds.
 # actual processing time is substracted from this duration 
@@ -24,8 +26,8 @@ max_repost = 5
 
 [master_cqdaemon]
 command_queue 	= %(busname)s/pipelineMasterCommandQueue
-deadletter_log_path 	= %(lofarroot)s/var/log/pipelineMasterDeadletter.log
-logfile 				= %(lofarroot)s/var/log/pipelineMasterCQDaemon.log
+deadletter_log_path 	= %(log_root)s/pipelineMasterDeadletter.log
+logfile 				= %(log_root)s/pipelineMasterCQDaemon.log
 
 loop_interval 			= 1
 max_repost 				= 5

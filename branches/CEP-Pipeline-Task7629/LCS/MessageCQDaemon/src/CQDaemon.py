@@ -383,7 +383,8 @@ class CQDaemon(object):
 
         sleep_time = self._loop_interval - duration_loop_seconds
         self._logger.info(
-            "Run loop complete sleep for {0} seconds".format(sleep_time))
+            "Processing took ({0}). Sleep for {1} seconds".format(
+              duration_loop_seconds, sleep_time))
         time.sleep(sleep_time)
 
     def _send_to_deadletter(self, msg, unpacked_msg_content):

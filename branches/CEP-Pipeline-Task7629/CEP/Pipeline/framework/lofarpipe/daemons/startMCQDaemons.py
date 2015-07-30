@@ -24,29 +24,12 @@ import socket
 import ConfigParser
 import subprocess
 
+master_exec   = "pipelineMCQDaemon.py"
+slave_exec    = "pipelineSCQDaemon.py"
 
-if __name__ == "__main__":
-    # Read the config file, fail of not supplied
-    if len(sys.argv) != 2:
-        print "Usage: startMCQDaemons.py config.cfg"
-        print "Start the master and slave daemon as configured in the suplied"
-        print "configuration file."
 
-        exit(-1)
 
-    config_path = sys.argv[1]
-    config_path = os.path.abspath(config_path)
-    if not os.path.isfile(config_path):
-        print "supplied config file {0} does not exist".format(config_path)
-        sys.exit(-1)
-
-    config = ConfigParser.ConfigParser()
-    config.read(config_path)
-
-    # create or get parameters 
-    install_directory = config.get( "DEFAULT", "lofarroot") 
-    master_exec   = "pipelineMCQDaemon.py"
-    slave_exec    = "pipelineSCQDaemon.py"
+def get_master_and_slave_list_from_config(config):
     master_host		= config.get( "daemon_hosts", "master_host") 
 
     slave_hosts_type = config.get( "daemon_hosts","slave_hosts_type")
@@ -54,7 +37,6 @@ if __name__ == "__main__":
     if slave_hosts_type == "static":
         slave_hosts   = config.get( "daemon_hosts", "slave_hosts") 
     elif slave_hosts_type == "range":
-        print "debug 1"
         slave_root = config.get( "daemon_hosts", "slave_root") 
         range_min = int(config.get( "daemon_hosts", "range_min"))
         range_max = int(config.get( "daemon_hosts", "range_max"))
@@ -63,7 +45,6 @@ if __name__ == "__main__":
         slave_hosts = " ".join([node_root_template.format(str(node_idx).zfill(3)) 
                        for node_idx in range(range_min, range_max+1)])
 
-        print slave_hosts
     else:
         print "unknown slave_hosts_type, check config file"
         exit(2)
@@ -78,6 +59,17 @@ if __name__ == "__main__":
          slave_hosts = local_host
     
     slave_hosts_list = slave_hosts.split(" ")
+
+    return (master_host, slave_hosts_list)
+
+
+
+def start_daemons(config):
+    # create or get parameters 
+    install_directory = config.get( "DEFAULT", "lofarroot") 
+
+    (master_host, slave_hosts_list) = get_master_and_slave_list_from_config(
+                                        config)
 
     # ***********************************************************************
     # Starting of the daemons
@@ -124,4 +116,56 @@ if __name__ == "__main__":
         sshCommandStr = "ssh {0} \"nohup /bin/bash -c '{1} &' \"".format(
                       slave_host, set_env_start_daemon_cmd)
         process = subprocess.Popen(sshCommandStr,  shell=True)
+
+
+def stop_daemons(config):
+    (master_host, slave_hosts_list) = get_master_and_slave_list_from_config(
+      config)
+    # first kill the master
+    sshCommandStr = "ssh {0} 'killall {1}' ".format(
+                  master_host, master_exec)
+    process = subprocess.Popen(sshCommandStr,  shell=True)
+
+
+    # For the slave we need to ssh to the actual node
+    # now start all the slaves
+    for slave_host in slave_hosts_list:
+        sshCommandStr = "ssh {0} 'killall {1}' ".format(
+                  slave_host, slave_exec)
+        process = subprocess.Popen(sshCommandStr,  shell=True)
+
+
+
+def usage():
+    print "Usage: startMCQDaemons.py [start/stop] config.cfg "
+    print "Start or or stop the master and slave daemons as configured in the suplied"
+    print "configuration file."
+    print "Stopping is performed by issueing a killall on the respective nodes"
+    exit(-1)
+
+
+
+if __name__ == "__main__":
+    # Read the config file, fail of not supplied
+    n_args = len(sys.argv)
+    if n_args != 3:
+        usage()
+
+    config_path = sys.argv[2]
+    config_path = os.path.abspath(config_path)
+    if not os.path.isfile(config_path):
+        print "supplied config file {0} does not exist".format(config_path)
+        sys.exit(-1)
+
+    config = ConfigParser.ConfigParser()
+    config.read(config_path)
+
+    if (sys.argv[1] == "start"):
+        start_daemons(config)
+    elif (sys.argv[1] == "stop"):
+        stop_daemons(config)
+    else:
+        usage()
+      
+
 
