@@ -2,6 +2,7 @@
 
 check_version = '0714'
 
+from threading import Thread
 import sys
 import traceback
 import os
@@ -12,7 +13,9 @@ import logging
 
 mainPath = r'/opt/stationtest'
 mainDataPath = r'/localhome/stationtest'
-observationsPath = r"/opt/lofar/var/run"
+observationsPath = r'/opt/lofar/var/run'
+
+beamletPath = r'/localhome/data/Beamlets'
 
 libPath  = os.path.join(mainPath, 'lib')
 sys.path.insert(0, libPath)
@@ -168,26 +171,29 @@ def init_logging(args):
         _logger.addHandler(stream_handler)
     return (_logger)
 
-def getRcuMode():
+def getRcuMode(n_rcus):
+# RCU[ 0].control=0x10337a9c =>  ON, mode:3, delay=28, att=06
     rcumode = -1
     rcu_info = {}
     answer = rspctl("--rcu")
-    for line in answer.splitlines():
-        rcu   = line[line.find('[')+1 : line.find(']')].strip()
-        state = line[line.find('=>')+2 : line.find(',')].strip()
-        mode  = line[line.find('mode:')+5]
-        if rcu.isdigit() and state in ("OFF", "ON") and mode.isdigit():
-            rcu_info[int(rcu)] = (state, int(mode))
+    if answer.count('mode:') == n_rcus:
+        for line in answer.splitlines():
+            if line.find('mode:') == -1:
+                continue
+            rcu   = line[line.find('[')+1 : line.find(']')].strip()
+            state = line[line.find('=>')+2 : line.find(',')].strip()
+            mode  = line[line.find('mode:')+5]
+            if rcu.isdigit() and state in ("OFF", "ON") and mode.isdigit():
+                rcu_info[int(rcu)] = (state, int(mode))
 
-    for mode in range(8):
-        mode_cnt = answer.count("mode:%d" %(mode))
-        if mode == 0:
-            if mode_cnt == 96:
-                logger.debug("Not observing")
-                return (rcumode)
-        elif (mode_cnt > 32) and answer.count("mode:0") == (96 - mode_cnt):
-            logger.debug("Now observing in rcumode %d" %(mode))
-            rcumode = mode
+        for mode in range(8):
+            mode_cnt = answer.count("mode:%d" %(mode))
+            if mode == 0:
+                if mode_cnt == n_rcus:
+                    logger.debug("Not observing")
+            elif mode_cnt > (n_rcus / 3) and answer.count("mode:0") == (n_rcus - mode_cnt):
+                logger.debug("Now observing in rcumode %d" %(mode))
+                rcumode = mode
     return (rcumode, rcu_info)
 
 def getAntPol(rcumode, rcu):
@@ -561,7 +567,57 @@ def getObsIdInfo(obsid):
     
     logger.debug("obsid %s  %s .. %s" %(obsid, obs_start_str, obs_stop_str))
     return(obsid, obs_start_time, obs_stop_time)
+
+class RecordBeamletStatistics(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+        self.running = False
+        self.reset()
     
+    def reset(self):
+        self.dump_dir = ''
+        self.obsid = ''
+        self.duration = 0
+            
+    def set_obsid(self, obsid):
+        self.dump_dir = os.path.join(beamletPath, obsid)
+        try:
+            os.mkdir(self.dump_dir)
+        except:
+            pass
+        self.obsid = obsid
+    
+    def set_duration(self, duration):
+        self.duration = duration
+    
+    def is_running(self):
+        return self.running
+    
+    def kill_recording(self):
+        if self.running:
+            logger.debug("kill recording beamlet statistics")
+            response = sendCmd(cmd='killall', args='rspctl')
+            logger.debug("recording killed")
+            self.running = False
+            self.make_plots()
+    
+    def make_plots(self):
+        if self.obsid:
+            try:
+                response = sendCmd(cmd='/home/fallows/inspect_bsts.bash', args=self.obsid)
+                logger.debug('response "inspect.bsts.bash" = {%s}' % response)
+            except:
+                logger.debug('exception while running "inspect.bsts.bash"')
+        self.reset()
+        
+    def run(self):
+        if self.duration:
+            self.running = True
+            logger.debug("start recording beamlet statistics for %d seconds" % self.duration)
+            rspctl('--statistics=beamlet --duration=%d --integration=1 --directory=%s' % (self.duration, self.dump_dir))
+            logger.debug("recording done")
+            self.make_plots()
+            self.running = False
     
 def main():
     global logger
@@ -598,7 +654,10 @@ def main():
     obs_start_time = 0
     obs_stop_time  = 0
     obsid_samples  = 0
-
+    
+    beamlet_recording = RecordBeamletStatistics()
+     
+    
     while True:
         try:
             # get active obsid from swlevel
@@ -607,7 +666,7 @@ def main():
             time_now = time.time()
             # stop if no more obsids or observation is stoped
             if obs_stop_time > 0.0: 
-                if len(obsids) == 0 or time_now > obs_stop_time:
+                if active_obs_id not in obsids or len(obsids) == 0 or time_now > obs_stop_time:
                     logger.debug("save obs_id %s" %(obs_id))
                     DI.addObsInfo(obs_id, obs_start_time, obs_stop_time, rcumode, obsid_samples)
                     DI.writeFile()
@@ -616,9 +675,20 @@ def main():
                     active_obs_id  = ""
                     obs_start_time = 0.0
                     obs_stop_time  = 0.0
+                    # if still running kill recording
+                    if beamlet_recording:
+                        if beamlet_recording.is_running():
+                            beamlet_recording.kill_recording()
+                        beamlet_recording = 0
             
             # if no active observation get obs info if obsid available
             if active_obs_id == "":
+                # if still running kill recording
+                if beamlet_recording:
+                    if beamlet_recording.is_running():
+                        beamlet_recording.kill_recording()
+                    beamlet_recording = 0
+                
                 for id in obsids:
                     obsid, start, stop = getObsIdInfo(id)
                     if time_now >= (start - 60.0) and (time_now + 15) < stop:
@@ -630,6 +700,16 @@ def main():
             if time_now < obs_start_time:
                 logger.debug("waiting %d seconds for start of observation" %(int(obs_start_time - time_now)))
                 time.sleep((obs_start_time - time_now) + 1.0)
+                    
+            # start recording beamlets
+            if not beamlet_recording:
+                if obs_start_time > 0.0 and time.time() >= obs_start_time:
+                    duration = obs_stop_time - time.time() - 5
+                    if duration > 2:
+                        beamlet_recording = RecordBeamletStatistics()
+                        beamlet_recording.set_obsid(active_obs_id)
+                        beamlet_recording.set_duration(duration)
+                        beamlet_recording.start()
             
             check_start = time.time()
             # if new obs_id save data and reset settings
@@ -642,8 +722,8 @@ def main():
             # it takes about 11 seconds to record data, for safety use 15    
             if (time.time() + 15.0) < obs_stop_time:
                 # observing, so check mode now
-                rcumode, rcu_info = getRcuMode()
-                if rcumode == 0:
+                rcumode, rcu_info = getRcuMode(n_rcus)
+                if rcumode <= 0:
                     continue
 
                 active_rcus = []
@@ -687,8 +767,8 @@ def main():
                                   conf.getFloat('hba-noise-min-deviation', -3.0),
                                   conf.getFloat('hba-noise-max-deviation', 2.5),
                                   conf.getFloat('hba-noise-max-difference', 2.0))
-
             else:
+                
                 closeAllOpenFiles()
             
             if active_obs_id == "":
@@ -700,8 +780,10 @@ def main():
                 check_stop = time.time()
                 sleeptime = 60.0 - (check_stop - check_start)
                 logger.debug("sleep %1.0f seconds till next check" %(sleeptime))
-            if sleeptime > 0.0:
-                time.sleep(sleeptime)
+            while sleeptime > 0.0:
+                wait = min(1.0, sleeptime)
+                sleeptime -= wait
+                time.sleep(wait)
 
         except KeyboardInterrupt:
             logger.info("stopped by user")
@@ -722,6 +804,12 @@ def main():
     else:
         logger.warn("not a valid log directory")
     logger.info("Test ready.")
+
+    # if still running kill recording
+    if beamlet_recording:
+        if beamlet_recording.is_running():
+            beamlet_recording.kill_recording()
+        beamlet_recording = 0
 
     # delete files from data directory
     removeAllDataFiles()
