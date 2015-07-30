@@ -199,7 +199,7 @@ namespace LOFAR
         case 2:  maxBlocksPerMultiProc =  8; break;
         case 3:  maxBlocksPerMultiProc = 16; break;
         case 5:  maxBlocksPerMultiProc = 32; break;
-        default: maxBlocksPerMultiProc = 16; break; // guess; unknown for future hardware
+        default: maxBlocksPerMultiProc = 32; break; // guess; unknown for future hardware
       }
       factor = maxBlocksPerMultiProc;
 
