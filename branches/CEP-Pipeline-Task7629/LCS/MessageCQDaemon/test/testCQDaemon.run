@@ -1,9 +1,3 @@
 #!/bin/bash
 
-#source MessageFuncs.sh
-
-
-#export PYTHONPATH
-echo $PYTHONPATH
-
 python testCQDaemon.py
