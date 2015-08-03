@@ -263,7 +263,7 @@ if __name__ == '__main__':
   standalone = job_group(l, Id, 'MoM', 'schaap@astron.nl')
   jobs = []
   for i in range(2):
-    k = {'Status': JobScheduled, 'ExportID': 'jA_%s_%s_%i_L12345_SAP000_SB000_uv.MS' % (Id, Id, i), 'ObservationId': 12345, 'MoMId': 654321, 'DataProduct': 'L12345_SAP000_SB000_uv.MS', 'Location': 'locus123:/data/L12345/L12345_SAP000_SB000_uv.MS', 'errors': []}
+    k = {'Status': JobScheduled, 'ExportID': 'jA_%s_%s_%i_L12345_SAP000_SB000_uv.MS' % (Id, Id, i), 'ObservationId': 12345, 'ArchiveId': 654321, 'DataProduct': 'L12345_SAP000_SB000_uv.MS', 'Location': 'locus123:/data/L12345/L12345_SAP000_SB000_uv.MS', 'errors': []}
     jobs.append(k)
   for job in jobs:
     standalone.add_job(job)

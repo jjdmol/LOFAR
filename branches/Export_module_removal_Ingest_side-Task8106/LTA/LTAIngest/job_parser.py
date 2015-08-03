@@ -37,7 +37,7 @@ def jobState2String(jobstate):
 ## DataProduct = job['DataProduct'] : <input name="DataProduct">L202708_SB243_uv.dppp.MS</input>
 ## FileName = job['DataProduct'] (+ '.tar')
 ## JobId = job['JobId'] : <input name="JobId">A_1134_1134_3767569_10318605_L202708_SB243_uv.dppp.MS</input>
-## MomId = int(job['MomId']) : <input name="MomId">10318605</input>
+## ArchiveId = int(job['ArchiveId']) : <input name="ArchiveId">10318605</input>
 ## ObsId = int(job['ObservationId']) : <input name="ObservationId">202708</input>
 ## unused : <input name="Subband">-1</input>
 ## Source = job['Source'] : <input name="Source">L201198_red</input>
@@ -88,7 +88,7 @@ class parser():
                 if self.job['ObservationId'][0] == 'L':
                     self.job['ObservationId'] = self.job['ObservationId'][1:]
                 test = int(self.job['ObservationId']) ## check if it can be converted to an int
-                test = int(self.job['MomId']) ## check if it can be converted to an int
+                test = int(self.job['ArchiveId']) ## check if it can be converted to an int
                 self.job['host'] = self.job['Location'].split(':')[0]
                 self.job['Status'] = JobScheduled
                 self.job['retry'] = 0

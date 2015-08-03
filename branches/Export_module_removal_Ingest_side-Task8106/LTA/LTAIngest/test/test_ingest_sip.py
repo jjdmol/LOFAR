@@ -24,7 +24,7 @@ class TestIngestSIP(unittest.TestCase):
     job['Status'] = JobScheduled
     job['DataProduct'] = 'L123456_SB000_uv.MS'
     job['FileName'] = job['DataProduct'] + '.tar'
-    job['MomId'] = 12345678
+    job['ArchiveId'] = 12345678
     job['ObservationId'] = 123456
     job["Type"] = 'MoM'
     job['Project'] = 'test'
@@ -55,8 +55,8 @@ class TestIngestSIP(unittest.TestCase):
     #end of setup
     #start testing
 
-    #create proper SIP with valid ticket, momid and filename
-    pipeline.SIP = makeSIP(job['Project'], job['ObservationId'], job['MomId'], ticket, job['FileName'], 0, 0, 0, job["Type"])
+    #create proper SIP with valid ticket, ArchiveId and filename
+    pipeline.SIP = makeSIP(job['Project'], job['ObservationId'], job['ArchiveId'], ticket, job['FileName'], 0, 0, 0, job["Type"])
     pipeline.ticket = ticket
 
     #check SIP content
@@ -64,16 +64,16 @@ class TestIngestSIP(unittest.TestCase):
 
     #now invalidate the SIP in various ways
 
-    #with wrong momid
-    pipeline.SIP = makeSIP(job['Project'], job['ObservationId'], 'wrong_MomId', ticket, job['FileName'], 0, 0, 0, job["Type"])
+    #with wrong ArchiveId
+    pipeline.SIP = makeSIP(job['Project'], job['ObservationId'], 'wrong_ArchiveId', ticket, job['FileName'], 0, 0, 0, job["Type"])
     self.assertFalse(pipeline.CheckSIPContent(), pipeline.SIP)
     
-    #without momid
-    pipeline.SIP = pipeline.SIP.replace('<identifier>wrong_MomId</identifier>', '')
+    #without ArchiveId
+    pipeline.SIP = pipeline.SIP.replace('<identifier>wrong_ArchiveId</identifier>', '')
     self.assertFalse(pipeline.CheckSIPContent(), pipeline.SIP)
 
     #with wrong filename
-    pipeline.SIP = makeSIP(job['Project'], job['ObservationId'], job['MomId'], ticket, 'wrong_filename', 0, 0, 0, job["Type"])
+    pipeline.SIP = makeSIP(job['Project'], job['ObservationId'], job['ArchiveId'], ticket, 'wrong_filename', 0, 0, 0, job["Type"])
     self.assertFalse(pipeline.CheckSIPContent(), pipeline.SIP)
 
     #without filename
@@ -81,7 +81,7 @@ class TestIngestSIP(unittest.TestCase):
     self.assertFalse(pipeline.CheckSIPContent(), pipeline.SIP)
 
     #with wrong ticket
-    pipeline.SIP = makeSIP(job['Project'], job['ObservationId'], job['MomId'], 'wrong_ticket', job['FileName'], 0, 0, 0, job["Type"])
+    pipeline.SIP = makeSIP(job['Project'], job['ObservationId'], job['ArchiveId'], 'wrong_ticket', job['FileName'], 0, 0, 0, job["Type"])
     self.assertFalse(pipeline.CheckSIPContent(), pipeline.SIP)
 
     #without ticket

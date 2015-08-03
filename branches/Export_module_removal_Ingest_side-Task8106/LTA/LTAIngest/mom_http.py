@@ -56,7 +56,7 @@ class client:
         else:
             return result
 
-    def _getSIP(self, Type, MomId, StorageTicket, FileName, URI, FileSize, MD5Checksum, Adler32Checksum):
+    def _getSIP(self, Type, ArchiveId, StorageTicket, FileName, URI, FileSize, MD5Checksum, Adler32Checksum):
         try:
             xmlcontent = """<?xml version="1.0" encoding="UTF-8"?>
             <lofar:%s mom2DPId="%s" xmlns:lofar="http://www.astron.nl/MoM2-Lofar">
@@ -77,7 +77,7 @@ class client:
                         <value>%s</value>
                     </checksum>
                 </checksums>
-            </lofar:%s>""" % (Type, MomId, StorageTicket, FileName, URI, StorageTicket, FileSize, MD5Checksum, Adler32Checksum, Type)
+            </lofar:%s>""" % (Type, ArchiveId, StorageTicket, FileName, URI, StorageTicket, FileSize, MD5Checksum, Adler32Checksum, Type)
             
             data = urllib.urlencode({"command" : "get-sip-with-input", "xmlcontent" : xmlcontent})
             # Now get that file-like object again, remembering to mention the data.
@@ -103,10 +103,10 @@ class client:
         self._logout()
         return result
 
-    def getSIP(self, MomId, StorageTicket, FileName, URI, FileSize, MD5Checksum, Adler32Checksum):
+    def getSIP(self, ArchiveId, StorageTicket, FileName, URI, FileSize, MD5Checksum, Adler32Checksum):
         self._login()
-        #result = self._getSIP("uvDataProduct", MomId, StorageTicket, FileName, URI, FileSize, MD5Checksum, Adler32Checksum)
-        result = self._getSIP("DataProduct", MomId, StorageTicket, FileName, URI, FileSize, MD5Checksum, Adler32Checksum)
+        #result = self._getSIP("uvDataProduct", ArchiveId, StorageTicket, FileName, URI, FileSize, MD5Checksum, Adler32Checksum)
+        result = self._getSIP("DataProduct", ArchiveId, StorageTicket, FileName, URI, FileSize, MD5Checksum, Adler32Checksum)
         self._logout()
         return result
 

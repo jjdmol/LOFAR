@@ -54,7 +54,7 @@ class IngestPipeline():
     if 'summary' in self.DataProduct:
       self.FileType    = pulp_type
     self.JobId         = job['JobId']
-    self.MomId         = int(job['MomId'])
+    self.ArchiveId         = int(job['ArchiveId'])
     self.ObsId         = int(job['ObservationId'])
     self.HostLocation  = job['Location'].split(':')[0]
     self.Location      = job['Location'].split(':')[1]
@@ -94,7 +94,7 @@ class IngestPipeline():
   def GetStorageTicket(self):
     try:
       start = time.time()
-      result = self.ltaClient.GetStorageTicket(self.Project, self.FileName, self.FileSize, self.MomId, self.JobId, self.ObsId, True, self.Type)
+      result = self.ltaClient.GetStorageTicket(self.Project, self.FileName, self.FileSize, self.ArchiveId, self.JobId, self.ObsId, True, self.Type)
       self.logger.debug("GetStorageTicket for %s took %ds" % (self.JobId, time.time() - start))
     except xmlrpclib.Fault as err:
       self.logger.error('Received XML-RPC Fault: %s %s' % (err.faultCode, err.faultString))
@@ -102,7 +102,7 @@ class IngestPipeline():
     error = result['error']
     if error:
       self.logger.error(error) ## StorageTicket with mom ID "8948214" and ID source "MoM" already exists
-      if 'StorageTicket with mom ID "%i"' % (self.MomId) in error:
+      if 'StorageTicket with mom ID "%i"' % (self.ArchiveId) in error:
         if 'existing_ticket_id' in result and 'existing_ticket_state' in result:
           self.logger.warning("Got a Tier 1 GetStorageTicket error for an incomplete storage ticket %s with status %s" % (result['existing_ticket_id'],result['existing_ticket_state']))
           if result['existing_ticket_state'] < IngestSuccessful:
@@ -278,7 +278,7 @@ class IngestPipeline():
     if self.Type == "MoM":
       try:
         start = time.time()
-        sip = self.momClient.getSIP(self.MomId, self.ticket, self.FileName, self.PrimaryUri, self.FileSize, self.MD5Checksum, self.Adler32Checksum)
+        sip = self.momClient.getSIP(self.ArchiveId, self.ticket, self.FileName, self.PrimaryUri, self.FileSize, self.MD5Checksum, self.Adler32Checksum)
         self.SIP = sip.replace('<stationType>Europe</stationType>','<stationType>International</stationType>')
         self.logger.debug("GetSIP for %s took %ds" % (self.JobId, time.time() - start))
       except:
@@ -286,12 +286,12 @@ class IngestPipeline():
         raise
       self.logger.debug('SIP received for %s from MoM with size %d: %s' % (self.JobId, len(self.SIP), self.SIP[0:400]))
     else:
-      self.SIP = unspecifiedSIP.makeSIP(self.Project, self.ObsId, self.MomId, self.ticket, self.FileName, self.FileSize, self.MD5Checksum, self.Adler32Checksum, self.Type)
+      self.SIP = unspecifiedSIP.makeSIP(self.Project, self.ObsId, self.ArchiveId, self.ticket, self.FileName, self.FileSize, self.MD5Checksum, self.Adler32Checksum, self.Type)
       self.FileType = unspec_type
     if not self.CheckSIP():
       self.logger.debug('Got a malformed SIP from MoM: %s' % self.SIP[0:50])
       try:
-        self.SIP = unspecifiedSIP.makeSIP(self.Project, self.ObsId, self.MomId, self.ticket, self.FileName, self.FileSize, self.MD5Checksum, self.Adler32Checksum, self.Type)
+        self.SIP = unspecifiedSIP.makeSIP(self.Project, self.ObsId, self.ArchiveId, self.ticket, self.FileName, self.FileSize, self.MD5Checksum, self.Adler32Checksum, self.Type)
         self.FileType = unspec_type
       except Exception as e:
          self.logger.error('GetSIP failed: ' + str(e))
