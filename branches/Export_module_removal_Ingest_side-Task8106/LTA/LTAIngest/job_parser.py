@@ -30,7 +30,6 @@ def jobState2String(jobstate):
 ##------------------ Job keys --------------------------
 ## job['Status'] : JobRetry, JobError, JobHold, JobScheduled, JobProducing, JobProduced
 ## job['ExportID'] : nodeName == 'exportjob'
-## job['scriptname'] : nodeName == 'scriptname'
 ## job['repository'] : ('server','resultdir') in nodeName == 'repository'
 ## job['Location'] : <input name="Location">locus029:/data/L202708/L202708_SB243_uv.dppp.MS</input>
 ## job['host'] : job['Location'].split(':')[0]
@@ -71,10 +70,7 @@ class parser():
             if doc.documentElement.nodeName == 'exportjob':
                 self.job['ExportID'] = str(doc.documentElement.attributes.get('exportID').nodeValue)
                 for node in doc.documentElement.childNodes:
-                    if node.nodeName == 'scriptname':
-                        value = node.childNodes[0].nodeValue
-                        self.job['scriptname'] = value
-                    elif node.nodeName == 'repository':
+                    if node.nodeName == 'repository':
                         for itemnode in node.childNodes:
                             if itemnode.nodeName == 'server':
                                 name = itemnode.childNodes[0].nodeValue

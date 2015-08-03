@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <exportjob exportID="A_114_114_12600_352399_L6509_SAP000_SB000_uv.MS">
-        <scriptname>IngestPipeline</scriptname>
         <input name="DataProduct">L6509_SAP000_SB000_uv.MS</input>
         <input name="Project">test-lofar</input>
         <input name="JobId">A_114_114_12600_352399_L6509_SAP000_SB000_uv.MS</input>
