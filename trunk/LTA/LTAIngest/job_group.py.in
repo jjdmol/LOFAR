@@ -131,7 +131,7 @@ class job_group():
   def check_finished(self):
     total = len(self.jobs)
     finished = (self.scheduled['Total'] == 0) and (self.active['Total'] == 0) and (self.inactive['Total'] == 0) and (self.retry['Total'] == 0)
-    self.logger.debug('job_group %i progress: #done=%i #failed=%i #scheduled=%i #active=%i #inactive=%i #retry=%i' % (self.Id, self.done['Total'], self.done['Total'], self.failed['Total'], self.scheduled['Total'], self.active['Total'], self.inactive['Total'], self.retry['Total']))
+    self.logger.debug('job_group %i progress: #done=%i #failed=%i #scheduled=%i #active=%i #inactive=%i #retry=%i' % (self.Id, self.done['Total'], self.failed['Total'], self.scheduled['Total'], self.active['Total'], self.inactive['Total'], self.retry['Total']))
     if finished and (total == self.failed['Total'] + self.done['Total']): ## sanity check, somewhat redundant
       self.logger.info('job_group %i is finished, total of %i files' % (self.Id, total))
       return True
@@ -149,11 +149,8 @@ class job_group():
                       'project': 'unknown', 'ltalocation': "unknown", 'eid': "unknown"}
     if self.Type == 'MoM':
       try:
-        ## should be read from config file
-        #m = "lofartest_sas099_mom3_two"
-        m = "lofar_mom3"
-        #e = "lofartest_sas099_export"
-        e = "lofar_export"
+        m = "@MOM3SCHEMA@"
+        e = "@EXPORTSCHEMA@"
         db = MySQLdb.connect(host="mysql1.control.lofar", user="@MOMREADONLY_USER@", passwd="@MOMREADONLY_PASSWORD@", db=m)
         c = db.cursor()
         c.execute("SELECT a.id,toexportdate as started,a.status_date as last_update,a.exportername,b.name as state,d.name,e.name as projectname,g.name as location,a.data_location,d.mom2id FROM %s.exports AS a, %s.status AS b, %s.mom_references AS c, %s.mom2object AS d, %s.mom2object AS e, %s.resource AS f, %s.resourcetype AS g WHERE status_id=b.id AND a.mom_reference_id = c.id AND c.mom_id=d.mom2id AND d.ownerprojectid = e.id AND e.id=f.projectid AND g.type = \"LTA_STORAGE\" AND f.resourcetypeid = g.id and a.id = %i;" % (e,e,e,m,m,m,m,self.Id))
