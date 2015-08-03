@@ -7,13 +7,21 @@ set(LTAINGEST_BUILD_TARGET "test" CACHE STRING "Specify for which specific desti
 
 message(STATUS "Using LTAINGEST_BUILD_TARGET \"${LTAINGEST_BUILD_TARGET}\".")
 
+set(MOM3SCHEMA "lofar_mom3")
+set(EXPORTSCHEMA "lofar_export")
+
 #switch with config variables for the various build targets.
 if(LTAINGEST_BUILD_TARGET STREQUAL "lexar")
   set(LTAINGEST_LOG_ROOT_DIR "/log/ingest/")
+  set(LTAINGEST_DATA_DIR "/data/ingest/")
 elseif(LTAINGEST_BUILD_TARGET STREQUAL "lotar")
   set(LTAINGEST_LOG_ROOT_DIR "/home/lofarlocal/log/ingest/")
+  set(LTAINGEST_DATA_DIR "/home/lofarlocal/.ingest/")
 elseif(LTAINGEST_BUILD_TARGET STREQUAL "test")
   set(LTAINGEST_LOG_ROOT_DIR "/tmp/ingest/")
+  set(LTAINGEST_DATA_DIR "/tmp/ingest/")
+  set(MOM3SCHEMA "lofartest_sas099_mom3_two")
+  set(EXPORTSCHEMA "lofartest_sas099_export")
 else()
   message(SEND_ERROR "Unknown LTAINGEST_BUILD_TARGET given: '${LTAINGEST_BUILD_TARGET}'.")
 endif()
@@ -252,22 +260,32 @@ python_install(
 	do_ltacp.py
 	simple_server.py
 	__init__.py
+	doc/LTA-SIP.xsd #not a py file, but needed by ingest in python ingest lib dir
   DESTINATION LTAIngest)
+
+#deploy startup scripts in same python ingest lib dir
+#TODO: should be moved to LOFARROOT/bin. Currently probably not possible yet due to unknown dependencies.
+set(STARTUP_SCRIPTS 
+      startup.csh
+      startup_slave.csh
+      startup_target.csh
+      startup_target_test.csh
+      startup_test.csh)
+install(PROGRAMS ${STARTUP_SCRIPTS} DESTINATION ${PYTHON_INSTALL_DIR}/LTAIngest)
 
 #determine LTAINGEST_LOG_ROOT_DIR for various build hosts (used in ingest_config.py.in)
 if(NOT DEFINED LTAINGEST_LOG_ROOT_DIR)
   set(LTAINGEST_LOG_ROOT_DIR "/tmp/ingest/")
 endif()
 
-#get momreadonly account settings from environment
-set(MOMREADONLY_USER $ENV{MOMREADONLY_USER}) 
-set(MOMREADONLY_PASSWORD $ENV{MOMREADONLY_PASSWORD})
-
 #settings dir for ingest
-set(LTAINGEST_CFG_DIR "${CMAKE_INSTALL_PREFIX}/.ltaingest")
+set(LTAINGEST_CFG_DIR "${CMAKE_INSTALL_PREFIX}/etc/ltaingest")
 
 #set various user/passwords from environment
 #mail schaap@astron.nl for a shell script which sets up your build environment with these secret variables
+if ("$ENV{MOMREADONLY_USER}" STREQUAL "")
+  message(WARNING "MOMREADONLY_USER not found in environment. Did you source your build environment file?")
+endif()
 set(MOMREADONLY_USER $ENV{MOMREADONLY_USER})
 set(MOMREADONLY_PASSWORD $ENV{MOMREADONLY_PASSWORD})
 set(EXPORTCLIENT_USERNAME $ENV{EXPORTCLIENT_USERNAME})

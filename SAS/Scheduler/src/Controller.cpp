@@ -3321,10 +3321,6 @@ std::pair<unscheduled_reasons, QString> Controller::doPreScheduleChecks(Task *ta
             }
         }
 
-        // TODO: setInputFilesForPipeline should probably not be done here. Only set the input files when a task is downloaded from SAS or when it is just loaded from disk
-        // now the enabled flags (user selection) gets reset by calling setInputFilesForPipeline which is also a bug. This should not be the case
-        error = setInputFilesForPipeline(pPipe);
-
         if (pPipe->isCalibrationPipeline() &&
             !task->storage()->getEqualityInputOutputProducts())
         {

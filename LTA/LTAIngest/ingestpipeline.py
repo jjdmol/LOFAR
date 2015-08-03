@@ -5,6 +5,18 @@ from lxml import etree
 from cStringIO import StringIO
 from job_group import corr_type, bf_type, img_type, unspec_type, pulp_type
 
+def humanreadablesize(num, suffix='B'):
+  """ converts the given size (number) to a human readable string in powers of 1024
+  """
+  try:
+    for unit in ['','K','M','G','T','P','E','Z']:
+      if abs(num) < 1024.0:
+        return "%3.1f%s%s" % (num, unit, suffix)
+      num /= 1024.0
+    return "%.1f%s%s" % (num, 'Y', suffix)
+  except TypeError:
+    return str(num)
+  
 IngestStarted     = 10
 ## 20 not used
 IngestSIPComplete = 30
@@ -184,7 +196,8 @@ class IngestPipeline():
     start = time.time()
     p       = subprocess.Popen(cmd, stdin=open('/dev/null'), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     logs    = p.communicate()
-    self.logger.debug("File transfer for %s took %ds" % (self.JobId, time.time() - start))
+    elapsed = time.time() - start
+    self.logger.debug("File transfer for %s took %d sec" % (self.JobId, elapsed))
 ##    time.sleep(10)
 ##    logs = ("hoeba","bla")
     log     = logs[0].split('\n')
@@ -197,6 +210,12 @@ class IngestPipeline():
             self.logger.error("Parsing ltacp result failed for %s" % self.JobId)
             raise Exception('File transfer failed of %s' % self.JobId)
         else:
+            try:
+              if int(self.FileSize) > 0:
+                avgSpeed = float(self.FileSize) / elapsed
+                self.logger.debug("File transfer for %s  took %d sec with an average speed of %s for %s including ltacp overhead" % (self.JobId, elapsed, humanreadablesize(avgSpeed, 'Bps'), humanreadablesize(float(self.FileSize), 'B')))
+            except Exception:
+              pass
             self.CheckChecksums()
     else: # need to communicate that LTA transaction is to be rolled back but ingest not to be set to "hold"
         #os.system('echo "Dataproduct for %s not found on %s.\nConsidering dataproduct to be non existent"|mailx -s "Warning: Dataproduct not found on CEP host" ' % (self.JobId, self.HostLocation) + self.mailCommand)
@@ -207,7 +226,7 @@ class IngestPipeline():
   def CheckChecksums(self):
     if self.MD5Checksum and self.Adler32Checksum and self.FileSize:
       try:
-        self.logger.debug('Valid checksums found for %s with filesize %s' % (self.JobId, self.FileSize))
+        self.logger.debug('Valid checksums found for %s with filesize %sB (%s)' % (self.JobId, self.FileSize, humanreadablesize(float(self.FileSize), 'B')))
       except:
         self.logger.debug('Valid checksums found for %s' % (self.JobId))
     else:
@@ -277,17 +296,55 @@ class IngestPipeline():
       self.logger.error('CheckSIP failed: ' + str(e))
       return False
 
+  def CheckSIPContent(self):
+    try:
+      start = time.time()
+      sip   = StringIO(self.SIP)
+      tree   = etree.parse(sip)
+      root   = tree.getroot()
+      dataProducts = root.xpath('dataProduct')
+      if len(dataProducts) != 1:
+        self.logger.error("CheckSIPContent for %s could not find single dataProduct in SIP" % (self.JobId))
+        return False
+      dataProductIdentifierIDs = dataProducts[0].xpath('dataProductIdentifier/identifier')
+      if len(dataProductIdentifierIDs) != 1:
+        self.logger.error("CheckSIPContent for %s could not find single dataProductIdentifier/identifier in SIP dataProduct" % (self.JobId))
+        return False
+      if dataProductIdentifierIDs[0].text != str(self.MomId):
+        self.logger.error("CheckSIPContent for %s dataProductIdentifier/identifier %s does not match expected %s" % (self.JobId, dataProductIdentifierIDs[0].text, self.MomId))
+        return False
+      dataProductIdentifierNames = dataProducts[0].xpath('dataProductIdentifier/name')
+      if len(dataProductIdentifierNames) != 1:
+        self.logger.error("CheckSIPContent for %s could not find single dataProductIdentifier/name in SIP dataProduct" % (self.JobId))
+        return False
+      if not dataProductIdentifierNames[0].text in self.FileName:
+        self.logger.error("CheckSIPContent for %s dataProductIdentifier/name %s does not match expected %s" % (self.JobId, dataProductIdentifierNames[0].text, self.FileName))
+        return False
+      storageTickets = dataProducts[0].xpath('storageTicket')
+      if len(storageTickets) != 1:
+        self.logger.error("CheckSIPContent for %s could not find single storageTickets in SIP dataProduct" % (self.JobId))
+        return False
+      if storageTickets[0].text != str(self.ticket):
+        self.logger.error("CheckSIPContent for %s storageTicket %s does not match expected %s" % (self.JobId, storageTickets[0].text, self.ticket))
+        return False
+        
+      return True
+    except Exception as e:
+      self.logger.error('CheckSIPContent failed: ' + str(e))
+      return False
+
   def GetSIP(self):
     if self.Type == "MoM":
       try:
         start = time.time()
+        self.logger.debug("GetSIP for %s with mom2DPId %s - StorageTicket %s - FileName %s - Uri %s" % (self.JobId, self.MomId, self.ticket, self.FileName, self.PrimaryUri))
         sip = self.momClient.getSIP(self.MomId, self.ticket, self.FileName, self.PrimaryUri, self.FileSize, self.MD5Checksum, self.Adler32Checksum)
         self.SIP = sip.replace('<stationType>Europe</stationType>','<stationType>International</stationType>')
         self.logger.debug("GetSIP for %s took %ds" % (self.JobId, time.time() - start))
       except:
         self.logger.exception('Getting SIP from MoM failed')
         raise
-      self.logger.debug('SIP received for %s from MoM with size %d: %s' % (self.JobId, len(self.SIP), self.SIP[0:400]))
+      self.logger.debug('SIP received for %s from MoM with size %d (%s): %s' % (self.JobId, len(self.SIP), humanreadablesize(len(self.SIP)), self.SIP[0:1024]))
     else:
       self.SIP = unspecifiedSIP.makeSIP(self.Project, self.ObsId, self.MomId, self.ticket, self.FileName, self.FileSize, self.MD5Checksum, self.Adler32Checksum, self.Type)
       self.FileType = unspec_type
@@ -301,6 +358,8 @@ class IngestPipeline():
          raise
       self.logger.debug('Unspecified SIP created for %s: %s' % (self.JobId, self.SIP[0:400]))
       ###raise Exception('Got a malformed SIP from MoM: %s' % self.SIP[0:50])
+    if not self.CheckSIPContent():
+      raise PipelineError('Got a SIP with wrong contents from MoM for %s : %s' % (self.JobId, self.SIP), func.__name__)
 
   def SendSIP(self):
     try:
@@ -372,9 +431,16 @@ class IngestPipeline():
       self.RetryRun(self.GetSIP, self.momRetry, 'Get SIP from MoM')
       self.RetryRun(self.SendSIP, self.ltaRetry, 'Sending SIP')
       self.RetryRun(self.SendStatus, self.ltaRetry, 'Setting LTA status', IngestSuccessful)
-      self.logger.debug("Ingest Pipeline finished for %s in %d" % (self.JobId, time.time() - start))
+      elapsed = time.time() - start
+      try:
+        if int(self.FileSize) > 0:
+          avgSpeed = float(self.FileSize) / elapsed
+          self.logger.debug("Ingest Pipeline finished for %s in %d sec with average speed of %s for %s including all overhead" % (self.JobId, elapsed, humanreadablesize(avgSpeed, 'Bps'), humanreadablesize(float(self.FileSize), 'B')))
+      except Exception:
+        self.logger.debug("Ingest Pipeline finished for %s in %d sec" % (self.JobId, elapsed))
+      
     except PipelineError as pe:
-      self.logger.debug('Encountered PipelineError for %s' % (self.JobId))
+      self.logger.debug('Encountered PipelineError for %s : %s' % (self.JobId, str(pe)))
       ## roll back transfer if necessary
       if self.PrimaryUri or self.tempPrimary:
         if not (pe.type == PipelineNoSourceError):
