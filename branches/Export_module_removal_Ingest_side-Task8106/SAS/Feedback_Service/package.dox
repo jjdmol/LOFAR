@@ -1,0 +1,6 @@
+// 
+// \ingroup FeedbackService
+// \defgroup Feedback Service that receives feedback.* messages and updates
+// the database accordingly.
+// 
+
