@@ -30,7 +30,6 @@ def jobState2String(jobstate):
 ##------------------ Job keys --------------------------
 ## job['Status'] : JobRetry, JobError, JobHold, JobScheduled, JobProducing, JobProduced
 ## job['ExportID'] : nodeName == 'exportjob'
-## job['repository'] : ('server','resultdir') in nodeName == 'repository'
 ## job['Location'] : <input name="Location">locus029:/data/L202708/L202708_SB243_uv.dppp.MS</input>
 ## job['host'] : job['Location'].split(':')[0]
 ## job['filename'] : SOAP call, filename argument in new_job
@@ -70,15 +69,7 @@ class parser():
             if doc.documentElement.nodeName == 'exportjob':
                 self.job['ExportID'] = str(doc.documentElement.attributes.get('exportID').nodeValue)
                 for node in doc.documentElement.childNodes:
-                    if node.nodeName == 'repository':
-                        for itemnode in node.childNodes:
-                            if itemnode.nodeName == 'server':
-                                name = itemnode.childNodes[0].nodeValue
-                            elif itemnode.nodeName == 'resultdir':
-                                res  = itemnode.childNodes[0].nodeValue
-                        if res and name: 
-                            self.job['repository'] = (name, res)
-                    elif node.nodeName == 'inputlist':
+                    if node.nodeName == 'inputlist':
                         name  = "'" + node.attributes.get('name').nodeValue + "'"
                         exec(eval("'self.job[%s] = []' % (name)"))
                         for itemnode in node.childNodes:
