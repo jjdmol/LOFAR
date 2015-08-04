@@ -344,7 +344,7 @@ class IngestPipeline():
       except:
         self.logger.exception('Getting SIP from MoM failed')
         raise
-      self.logger.debug('SIP received for %s from MoM with size %d (%s): %s' % (self.JobId, len(self.SIP), humanreadablesize(len(self.SIP)), self.SIP[0:1024]))
+      self.logger.debug('SIP received for %s from MoM with size %d (%s): %s' % (self.JobId, len(self.SIP), humanreadablesize(len(self.SIP)), self.SIP[0:256]))
     else:
       self.SIP = unspecifiedSIP.makeSIP(self.Project, self.ObsId, self.ArchiveId, self.ticket, self.FileName, self.FileSize, self.MD5Checksum, self.Adler32Checksum, self.Type)
       self.FileType = unspec_type
@@ -359,6 +359,7 @@ class IngestPipeline():
       self.logger.debug('Unspecified SIP created for %s: %s' % (self.JobId, self.SIP[0:400]))
       ###raise Exception('Got a malformed SIP from MoM: %s' % self.SIP[0:50])
     if not self.CheckSIPContent():
+      self.logger.error('SIP has invalid content for %s\n%s' % (self.JobId, self.SIP))
       raise PipelineError('Got a SIP with wrong contents from MoM for %s : %s' % (self.JobId, self.SIP), func.__name__)
 
   def SendSIP(self):
