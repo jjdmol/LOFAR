@@ -34,7 +34,10 @@
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MeasConvert.h>
 
-#include <wcslib/wcslib.h>
+// Need to include getwcstab.h from wcslib, since cfitsio does not
+// declare it as extern C
+#include <wcslib/getwcstab.h>
+#include <fitsio.h>
 
 namespace LOFAR
 {
@@ -47,15 +50,6 @@ AntennaFieldHBA::AntennaFieldHBA(const string &name,
         itsAntennaModel(model),
         itsRotation(theirRotationMap.find(name)->second)
 {
-  casa::Bool ok=true;
-  casa::String message;
-
-  FileLocator locator("$LOFARROOT/share/beamnorms");
-  string fitsFile=locator.locate("beamintmap-"+name+".fits");
-  itsIntegrals = casa::ReadFITS(fitsFile.c_str(),ok,message);
-  if (!ok) {
-    LOG_WARN_STR("Could not read beam normalization fits file: " << message);
-  }
 }
 
 matrix22c_t AntennaFieldHBA::response(real_t time, real_t freq,
@@ -107,15 +101,13 @@ real_t AntennaFieldHBA::getNormalization(real_t freq,
                                          const vector3r_t &direction) const
 {
   // Get indices for azimuth and elevation
-  const uint gridsize=50;
-
   std::pair<double,double> azel=getAzEl(position(), direction);
   double az=azel.first;
   double el=azel.second;
 
   vector<double> world(2);
-  world[0]=az*180./casa::C::pi;
-  world[1]=el*180./casa::C::pi;
+  world[0]=az*180./casa::C::pi-itsRotation; // Azimuth in degrees, corrected for rotation
+  world[1]=el*180./casa::C::pi; // Elevation in degrees
   vector<double> phi(2), theta(2), imgcrd(2), pixcrd(2);
   vector<int> status(1);
   wcss2p(theirWCS_p.get(), 1, 0, &(world[0]),
@@ -123,39 +115,23 @@ real_t AntennaFieldHBA::getNormalization(real_t freq,
          &(status[0]));
 
   // Round to int, so add 0.5 and then truncate
-  long x_index=int(pixcrd[0]+0.5);
-  long y_index=int(pixcrd[1]+0.5);
-  long freq_index=0;
+  // Minus 1 because wcslib returns 1-based indices
+  uint x_index=int(pixcrd[0]+0.5)-1;
+  uint y_index=int(pixcrd[1]+0.5)-1;
+  uint freq_index=0;
 
   // Get index for frequency
   const double freq_min=100.e6;
   const double freq_max=250.e6;
-  const uint numfreqs=16;
+  const uint numfreqs=theirIntegrals.shape()[2];
 
   // Round to int, so add 0.5 and then truncate
   freq_index=int((freq-freq_min)/(freq_max-freq_min)*(numfreqs-1)+0.5);
 
-  cout<<"Station: "<<name()<<", (az,el)=("<<world[0]<<", "<<world[1]<<"), pix=("<<pixcrd[0]<<", "<<pixcrd[1]<<"), freq="<<freq<<", freq_index="<<freq_index;
 
-  ASSERTSTR(!itsIntegrals.empty(), "No beamnorms found for station "<<name());
-
-  //cout<<"Name="<<name()<<", itsIntegrals.shape="<<itsIntegrals.shape()<<endl;
-  //cout<<"Name="<<name()<<", freq="<<freq<<", az="<<az<<", el="<<el
-  //    <<", index=["<<x_index<<", "<<y_index<<", "<<freq_index<<"], norm="
-  //    <<itsIntegrals(casa::IPosition(3,y_index,x_index,freq_index))<<endl;
-
-  vector<long> fpixel(3);
-  fpixel[0]=x_index;
-  fpixel[1]=y_index;
-  fpixel[3]=freq_index;
-  double norm=0;
-  if (!fits_read_pix(theirFitsFile_p.get(), TDOUBLE, &(fpixel[0]), 1, NULL, &norm, NULL, &(status[0]))) {
-	  THROW (Exception, "Error reading coordinate from FITS file");
-  }
-  cout<<", norm="<<norm<<endl;
-
-  // Todo: interpolation for frequency
-  return real_t(itsIntegrals(casa::IPosition(3,y_index,x_index,freq_index)));
+  double norm=theirIntegrals(casa::IPosition(3,x_index,y_index,freq_index));
+  //cout<<"Station: "<<name()<<", rot="<<itsRotation<<", (az,el)=("<<world[0]<<", "<<world[1]<<"), pix=("<<pixcrd[0]<<", "<<pixcrd[1]<<") 1-based, ("<<x_index<<","<<y_index<<") 0-based, freq="<<freq<<", freq_index="<<freq_index<<"  (0-based), norm="<<norm<<endl;
+  return norm;
 }
 
 
@@ -182,24 +158,6 @@ std::pair<double,double> AntennaFieldHBA::getAzEl(const vector3r_t &position,
      azel.first =dir_azel.getAngle().getValue()[0];
      azel.second=dir_azel.getAngle().getValue()[1];
      return azel;
-}
-
-casa::CountedPtr<fitsfile> AntennaFieldHBA::readFITS(const string &filename)
-{
-  int status=0;
-  fitsfile *fptr;
-
-  FileLocator locator("$LOFARROOT/share/beamnorms");
-  string fitsFile=locator.locate(filename);
-
-  /* Open the FITS test file */
-  fits_open_file(&fptr, fitsFile.c_str(), READONLY, &status);
-  if (status!=0) {
-    fits_report_error(stderr, status);
-    ASSERT(1==0);
-  }
-
-  return casa::CountedPtr<fitsfile>(fptr);
 }
 
 map<string,double> AntennaFieldHBA::readRotationMap()
@@ -295,14 +253,27 @@ map<string,double> AntennaFieldHBA::readRotationMap()
   return tmpMap;
 }
 
-casa::CountedPtr<wcsprm> AntennaFieldHBA::readWCS(casa::CountedPtr<fitsfile> fitsPtr)
+casa::CountedPtr<wcsprm> AntennaFieldHBA::readWCS(const string &filename)
 {
-  int status=0, nkeyrec, nreject, nwcs, stat[NWCSFIX];
+  int status=0;
+  fitsfile *fptr;
+
+  FileLocator locator("$LOFARROOT/share/beamnorms");
+  string locatedFitsFile=locator.locate(filename);
+
+  /* Open the FITS test file */
+  fits_open_file(&fptr, locatedFitsFile.c_str(), READONLY, &status);
+  if (status!=0) {
+    fits_report_error(stderr, status);
+    THROW (Exception, "Error reading FITS file");
+  }
+
+  int nkeyrec, nreject, nwcs, stat[NWCSFIX];
   char *header;
   struct wcsprm *wcs;
 
   /* Read the primary header. */
-  if ((status = fits_hdr2str(fitsPtr.get(), 1, NULL, 0, &header, &nkeyrec,
+  if ((status = fits_hdr2str(fptr, 1, NULL, 0, &header, &nkeyrec,
                              &status))) {
     fits_report_error(stderr, status);
     THROW (Exception, "Error reading primary header of FITS file");
@@ -316,7 +287,7 @@ casa::CountedPtr<wcsprm> AntennaFieldHBA::readWCS(casa::CountedPtr<fitsfile> fit
   }
 
   /* Read coordinate arrays from the binary table extension. */
-  if ((status = fits_read_wcstab(fitsPtr.get(), wcs->nwtb, (wtbarr *)wcs->wtb,
+  if ((status = fits_read_wcstab(fptr, wcs->nwtb, (wtbarr *)wcs->wtb,
                                  &status))) {
     fits_report_error(stderr, status);
     THROW (Exception, "Error reading coordinate arrays from FITS file");
@@ -338,19 +309,33 @@ casa::CountedPtr<wcsprm> AntennaFieldHBA::readWCS(casa::CountedPtr<fitsfile> fit
    * fits_read_wcstab(). */
   if ((status = wcsset(wcs))) {
     fprintf(stderr, "wcsset ERROR %d: %s.\n", status, wcs_errmsg[status]);
-    THROW (Exception, "Error initializint wcsprm struct");
+    THROW (Exception, "Error initializing wcsprm struct");
   }
 
   return casa::CountedPtr<wcsprm>(wcs);
 }
 
+casa::Array<casa::Float> AntennaFieldHBA::readFITS(const string &filename) {
+	casa::Bool ok=true;
+	casa::String message;
+	casa::Array<casa::Float> integrals;
 
-casa::CountedPtr<fitsfile> AntennaFieldHBA::theirFitsFile_p =
-    AntennaFieldHBA::readFITS("cs002hba1mode5.fits");
+	FileLocator locator("$LOFARROOT/share/beamnorms");
+	string locatedFitsFile=locator.locate(filename);
+	integrals = casa::ReadFITS(locatedFitsFile.c_str(),ok,message);
+	if (!ok) {
+	  LOG_WARN_STR("Could not read beam normalization fits file: " << message);
+	}
+	return integrals;
+}
+
 map<string,double> AntennaFieldHBA::theirRotationMap =
     AntennaFieldHBA::readRotationMap();
 casa::CountedPtr<wcsprm> AntennaFieldHBA::theirWCS_p =
-    AntennaFieldHBA::readWCS(theirFitsFile_p);
+    AntennaFieldHBA::readWCS("cs002hba1mode5.fits");
+casa::Array<casa::Float> AntennaFieldHBA::theirIntegrals =
+    AntennaFieldHBA::readFITS("cs002hba1mode5.fits");
+
 
 } //# namespace StationResponse
 } //# namespace LOFAR

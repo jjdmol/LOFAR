@@ -32,10 +32,6 @@
 #include <casacore/casa/Utilities/CountedPtr.h>
 
 #include <wcslib/wcslib.h>
-// Need to include getwcstab.h from wcslib, since cfitsio does not 
-// declare it as extern C
-#include <wcslib/getwcstab.h>
-#include <fitsio.h>
 
 namespace LOFAR
 {
@@ -74,16 +70,15 @@ public:
 
 private:
     real_t getNormalization(real_t freq, const vector3r_t &direction) const;
-    static casa::CountedPtr<fitsfile> readFITS(const string &filename);
     static std::map<string,double> readRotationMap();
-    static casa::CountedPtr<wcsprm> readWCS(casa::CountedPtr<fitsfile>);
+    static casa::CountedPtr<wcsprm> readWCS(const string &filename);
+    static casa::Array<casa::Float> readFITS(const string &filename);
 
     AntennaModelHBA::ConstPtr   itsAntennaModel;
-    casa::Array<casa::Float>    itsIntegrals;
     double                      itsRotation;
-    static casa::CountedPtr<fitsfile> theirFitsFile_p;
     static std::map<string,double>    theirRotationMap;
     static casa::CountedPtr<wcsprm>   theirWCS_p;;
+    static casa::Array<casa::Float>   theirIntegrals;
 };
 
 
