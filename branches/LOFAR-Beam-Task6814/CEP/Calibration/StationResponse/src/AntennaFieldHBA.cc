@@ -106,18 +106,6 @@ matrix22c_t AntennaFieldHBA::elementResponse(real_t time, real_t freq,
 real_t AntennaFieldHBA::getNormalization(real_t freq,
                                          const vector3r_t &direction) const
 {
-  int status;
-
-  /* Initialize the wcsprm struct, also taking control of memory allocated by
-   * fits_read_wcstab(). */
-  if ((status = wcsset(theirWCS_p.get()))) {
-    fprintf(stderr, "wcsset ERROR %d: %s.\n", status, wcs_errmsg[status]);
-    return 1;
-  }
-
-  /* Print the struct. */
-  if ((status = wcsprt(theirWCS_p.get()))) return status;
-
   // Get indices for azimuth and elevation
   const uint gridsize=50;
 
@@ -125,16 +113,19 @@ real_t AntennaFieldHBA::getNormalization(real_t freq,
   double az=azel.first;
   double el=azel.second;
 
-  uint x_index=0;
-  uint y_index=0;
-  uint freq_index=0;
-
-  double xx_pix=sin(az)*gridsize*(.5-el/casa::C::pi);
-  double yy_pix=cos(az)*gridsize*(.5-el/casa::C::pi);
+  vector<double> world(2);
+  world[0]=az*180./casa::C::pi;
+  world[1]=el*180./casa::C::pi;
+  vector<double> phi(2), theta(2), imgcrd(2), pixcrd(2);
+  vector<int> status(1);
+  wcss2p(theirWCS_p.get(), 1, 0, &(world[0]),
+		 &(phi[0]), &(theta[0]), &(imgcrd[0]), &(pixcrd[0]),
+         &(status[0]));
 
   // Round to int, so add 0.5 and then truncate
-  x_index=int(xx_pix+.5*gridsize+0.5);
-  y_index=int(yy_pix+.5*gridsize+0.5);
+  long x_index=int(pixcrd[0]+0.5);
+  long y_index=int(pixcrd[1]+0.5);
+  long freq_index=0;
 
   // Get index for frequency
   const double freq_min=100.e6;
@@ -144,12 +135,24 @@ real_t AntennaFieldHBA::getNormalization(real_t freq,
   // Round to int, so add 0.5 and then truncate
   freq_index=int((freq-freq_min)/(freq_max-freq_min)*(numfreqs-1)+0.5);
 
+  cout<<"Station: "<<name()<<", (az,el)=("<<world[0]<<", "<<world[1]<<"), pix=("<<pixcrd[0]<<", "<<pixcrd[1]<<"), freq="<<freq<<", freq_index="<<freq_index;
+
   ASSERTSTR(!itsIntegrals.empty(), "No beamnorms found for station "<<name());
 
   //cout<<"Name="<<name()<<", itsIntegrals.shape="<<itsIntegrals.shape()<<endl;
   //cout<<"Name="<<name()<<", freq="<<freq<<", az="<<az<<", el="<<el
   //    <<", index=["<<x_index<<", "<<y_index<<", "<<freq_index<<"], norm="
   //    <<itsIntegrals(casa::IPosition(3,y_index,x_index,freq_index))<<endl;
+
+  vector<long> fpixel(3);
+  fpixel[0]=x_index;
+  fpixel[1]=y_index;
+  fpixel[3]=freq_index;
+  double norm=0;
+  if (!fits_read_pix(theirFitsFile_p.get(), TDOUBLE, &(fpixel[0]), 1, NULL, &norm, NULL, &(status[0]))) {
+	  THROW (Exception, "Error reading coordinate from FITS file");
+  }
+  cout<<", norm="<<norm<<endl;
 
   // Todo: interpolation for frequency
   return real_t(itsIntegrals(casa::IPosition(3,y_index,x_index,freq_index)));
@@ -330,6 +333,14 @@ casa::CountedPtr<wcsprm> AntennaFieldHBA::readWCS(casa::CountedPtr<fitsfile> fit
 
     THROW (Exception, "Error translating non-standard WCS keyvalues");
   }
+
+  /* Initialize the wcsprm struct, also taking control of memory allocated by
+   * fits_read_wcstab(). */
+  if ((status = wcsset(wcs))) {
+    fprintf(stderr, "wcsset ERROR %d: %s.\n", status, wcs_errmsg[status]);
+    THROW (Exception, "Error initializint wcsprm struct");
+  }
+
   return casa::CountedPtr<wcsprm>(wcs);
 }
 
