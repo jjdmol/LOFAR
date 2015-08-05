@@ -122,7 +122,7 @@ real_t AntennaFieldHBA::getNormalization(real_t freq,
 
   // Get index for frequency
   const double freq_min=100.e6;
-  const double freq_max=250.e6;
+  const double freq_max=195.e6;
   const uint numfreqs=theirIntegrals.shape()[2];
 
   // Round to int, so add 0.5 and then truncate
@@ -332,9 +332,9 @@ casa::Array<casa::Float> AntennaFieldHBA::readFITS(const string &filename) {
 map<string,double> AntennaFieldHBA::theirRotationMap =
     AntennaFieldHBA::readRotationMap();
 casa::CountedPtr<wcsprm> AntennaFieldHBA::theirWCS_p =
-    AntennaFieldHBA::readWCS("cs002hba1mode5.fits");
+    AntennaFieldHBA::readWCS("beamintmapwcs-CS002HBA1-mode5-201x201.fits");
 casa::Array<casa::Float> AntennaFieldHBA::theirIntegrals =
-    AntennaFieldHBA::readFITS("cs002hba1mode5.fits");
+    AntennaFieldHBA::readFITS("beamintmapwcs-CS002HBA1-mode5-201x201.fits");
 
 
 } //# namespace StationResponse
