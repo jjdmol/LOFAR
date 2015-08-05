@@ -157,6 +157,7 @@ namespace LOFAR {
       os << "  parmdb:         " << itsParmDBName << endl;
       os << "  correction:     " << itsCorrectType << endl;
       os << "  sigmaMMSE:      " << itsSigmaMMSE << endl;
+      os << "  invert:         " << boolalpha << itsInvert <<endl;
       os << "  timeSlotsPerParmUpdate: " << itsTimeSlotsPerParmUpdate <<endl;
     }
 
