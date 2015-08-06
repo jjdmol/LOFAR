@@ -46,6 +46,7 @@ install(PROGRAMS
   daemons/startMCQDaemons.py
   daemons/pipelineMCQDaemon.py
   daemons/pipelineSCQDaemon.py
+  daemons/testPipelineSlaveDaemonConnections.py
   DESTINATION bin)
   
 
