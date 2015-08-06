@@ -9,6 +9,7 @@ configure_file(
 install(PROGRAMS
   createbus.sh
   createbusfromrange.sh
+  testSlaveCQDaemonResponce.py
   DESTINATION bin)
 
 
