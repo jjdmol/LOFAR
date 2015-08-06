@@ -22,6 +22,7 @@ from datetime import datetime   # needed for duration
 import time
 import sys
 import logging
+import socket
 
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
@@ -91,7 +92,7 @@ class CQDaemon(object):
             raise NotImplementedError("CQDaemon should always be subtyped")
         
         self._add_logger(logfile)
-
+        self._hostname = socket.gethostname()
         self._broker = broker
         self._busname = busname
         self._loop_interval = loop_interval  
@@ -357,6 +358,7 @@ class CQDaemon(object):
         """           
         unpacked_msg_content['receive']=True
         unpacked_msg_content['type'] = 'echo'
+        unpacked_msg_content['host'] = self._hostname 
 
         msg = CQCommon.create_msg( unpacked_msg_content,
                         unpacked_msg_content['return_subject'])
@@ -423,7 +425,7 @@ class CQDaemon(object):
             # continue
             pass
 
-    def _get_next_msg_and_content(self, toBus):
+    def _get_next_msg_and_content(self, from_bus):
             """
             Helper function attempts to get the next msg from the command queue
 
@@ -434,7 +436,7 @@ class CQDaemon(object):
             """
             # Test if the timeout is in milli seconds or second
             while True:
-                msg = toBus.get(0.1)  #  use timeout, very short, well get 
+                msg = from_bus.get(0.1)  #  use timeout, very short, well get 
                 # there next time if more time is needed
                 if msg == None:
                     return False, None
@@ -446,13 +448,13 @@ class CQDaemon(object):
                     self._logger.warn(
                       "Could not process msg, incorrect content: {0}".format(
                         unpacked_msg_content))
-                    toBus.ack(msg) 
+                    from_bus.ack(msg) 
                     # send the incorrect msg to the deadletter log
                     self._write_to_deadletter_log(msg, unpacked_msg_content)
                     continue
                 
 
-                toBus.ack(msg)
+                from_bus.ack(msg)
 
                 return True, (msg, unpacked_msg_content, msg_type) 
 
