@@ -393,7 +393,7 @@ class RemoteCommandRecipeMixIn(object):
                                   'environment':environment,
                                   'cmd':job.command,
                                   'cdw':'/home/klijn',  # TODO: FIXME!!!!
-                                  'job_parameters':{'par1':'par1'}}
+                                  'job_parameters':job.arguments}
 
                     
                     thread = threading.Thread(

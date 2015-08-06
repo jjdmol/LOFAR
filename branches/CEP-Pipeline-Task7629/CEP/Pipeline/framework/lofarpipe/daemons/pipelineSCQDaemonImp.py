@@ -21,6 +21,7 @@
 import lofar.messagebus.CQDaemon as CQDaemon
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
+import lofar.messagebus.CQCommon as CQCommon
 
 import lofarpipe.daemons.subprocessManager as subprocessManager
 
@@ -147,7 +148,7 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
         else:
             # Else resend the msg, increase the resend count
             unpacked_msg_data['n_repost'] += 1
-            msg = self.create_msg(unpacked_msg_data, subject)
+            msg = CQCommon.create_msg(unpacked_msg_data, subject)
             self._toBus.send(msg)      
 
     def _process_deadletter_parameters_msg(self, unpacked_msg_data):

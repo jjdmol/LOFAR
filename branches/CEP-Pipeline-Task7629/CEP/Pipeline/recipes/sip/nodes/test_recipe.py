@@ -17,14 +17,20 @@ import lofar.messagebus.message as message
 class test_recipe(LOFARnodeTCP):
     """
     """
-    def run(self, argument):
+    def run(self, argument1, argument2):
         """
         """
         self.logger.critical("#####We are in the test recipe and we are going good#####")
 
+        #f = open('/home/klijn/parset/raw.dat', 'r')
+
+        #data = f.read()
+
+
 
         self.outputs["output"] = "OUPUT FROM TEST RECIPE"
         self.outputs["status"] = True
+        #self.outputs['data'] = data
         ## Time execution of this job
         return 0
 

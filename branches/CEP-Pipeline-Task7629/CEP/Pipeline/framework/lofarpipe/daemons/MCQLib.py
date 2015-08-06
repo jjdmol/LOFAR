@@ -212,10 +212,11 @@ class resultQueueHandler(threading.Thread):
         # get the data from the msg
         type = msg_content['type']      
         if type == 'exit_value':
-            self._logger.debug("exit_value for job: {0}".format(
-                                                      msg_content['job_uuid']))
             exit_value = msg_content['exit_value']
             job_uuid = msg_content['job_uuid']
+
+            self._logger.debug("exit_value {0} for job: {1}".format(exit_value,
+                                                      msg_content['job_uuid']))
 
             with self._pipeline_data_lock:
                 self._pipeline_data[job_uuid]['exit_value']=exit_value
@@ -511,7 +512,7 @@ class MCQLib(object):
                         break
         finally:
             limiter[job.host].release()  # always release the node lock
-
+       
         time_info_end = time.time()
 
         # Now retrieve all the results and set correct values on the job
@@ -519,5 +520,7 @@ class MCQLib(object):
         job.results['returncode'] = self._pipeline_data[job_uuid]['exit_value']
         job.results.update(self._pipeline_data[job_uuid]['output'])
 
-        return self._pipeline_data[job_uuid]['exit_value']
+        exit_value = self._pipeline_data[job_uuid]['exit_value']
+        print "Finished job node: {0}\n".format(job.host)
+        return exit_value
 

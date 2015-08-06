@@ -30,6 +30,7 @@ slave_exec    = "pipelineSCQDaemon.py"
 
 
 def get_master_and_slave_list_from_config(config):
+    # TODO: candidate for common functionality
     master_host		= config.get( "daemon_hosts", "master_host") 
 
     slave_hosts_type = config.get( "daemon_hosts","slave_hosts_type")
@@ -101,7 +102,7 @@ def start_daemons(config):
 
     # now start all the slaves
     for slave_host in slave_hosts_list:
-        print "starting master on host: {0}".format(slave_host)
+        print "starting slave on host: {0}".format(slave_host)
         # The basic command we want to run on the remote host: exec + config
 
         start_daemon_command = "{0}/bin/{1} {2}".format(

@@ -74,10 +74,7 @@ class test_recipe(BaseRecipe, RemoteCommandRecipeMixIn):
 
             # construct and save the output name
             arguments = [[measurement_path],
-                         self.inputs['executable'],
-                         self.environment
-
-                         ]
+                         self.inputs['executable']]
 
             jobs.append(ComputeJob(host, node_command, arguments))
         self._schedule_jobs(jobs)
