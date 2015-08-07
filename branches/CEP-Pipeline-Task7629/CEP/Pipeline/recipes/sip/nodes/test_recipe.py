@@ -22,15 +22,15 @@ class test_recipe(LOFARnodeTCP):
         """
         self.logger.critical("#####We are in the test recipe and we are going good#####")
 
-        #f = open('/home/klijn/parset/raw.dat', 'r')
+        f = open('/home/klijn/build/7629/gnu_debug/installed/raw_data_800.dat', 'r')
 
-        #data = f.read()
+        data = f.read()
 
 
 
         self.outputs["output"] = "OUPUT FROM TEST RECIPE"
         self.outputs["status"] = True
-        #self.outputs['data'] = data
+        self.outputs['data'] = data
         ## Time execution of this job
         return 0
 

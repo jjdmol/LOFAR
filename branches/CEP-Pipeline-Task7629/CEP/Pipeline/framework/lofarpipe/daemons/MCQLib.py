@@ -214,9 +214,11 @@ class resultQueueHandler(threading.Thread):
         if type == 'exit_value':
             exit_value = msg_content['exit_value']
             job_uuid = msg_content['job_uuid']
-
-            self._logger.debug("exit_value {0} for job: {1}".format(exit_value,
-                                                      msg_content['job_uuid']))
+            node = None
+            with self._pipeline_data_lock:
+                node = self._pipeline_data[job_uuid]['node']
+            self._logger.debug("exit_value {0} for job on {1}".format(exit_value,
+                                                      node))
 
             with self._pipeline_data_lock:
                 self._pipeline_data[job_uuid]['exit_value']=exit_value
@@ -229,7 +231,7 @@ class resultQueueHandler(threading.Thread):
                     if exit_value == "-10":
                         self._logger.warn(
                             "Could not deliver msg to node: {0}".format(
-                              msg_content["original_msg"]['node'] ))
+                              node ))
 
                         
                     self._pipeline_data[job_uuid]['output']=[]
@@ -502,6 +504,7 @@ class MCQLib(object):
                     self.results = {}
                     self.results['returncode'] = 1
                     return 1
+                #self.logger.error("Active:{0}".format(node))
 
                 with self._pipeline_data_lock:
                     # If both the exit_value (of the recipe executable)
@@ -524,3 +527,19 @@ class MCQLib(object):
         print "Finished job node: {0}\n".format(job.host)
         return exit_value
 
+    def _check_slave_connectivity(self, host):
+        all_slave_responded, non_respond_list = \
+            CQCommon.sendEchoToSlaveListReturnResponce(
+                self._toBus, 
+                self._echoQueue,
+                "echo_{0}".format(self._sessionUUID), 
+                "pipelineSlaveCommandQueue_{0}".format(host), 
+                [host], grace_period=5)
+            
+        if not all_slave_responded:
+            error_msg = "Could not a responce from the SlaveDaemon {0}.".format(
+                        host)
+            self.logger.warn(error_msg)
+            return False
+
+        return True

@@ -155,7 +155,8 @@ class SCQLib(object):
                     'output': output,
                     'job_msg': self._job_dict,
                     'job_uuid':self._job_uuid,
-                    'session_uuid':self._session_uuid}
+                    'session_uuid':self._session_uuid,
+                    'node':self._job_dict['node']}
 
 
         msg = self.create_msg(payload)

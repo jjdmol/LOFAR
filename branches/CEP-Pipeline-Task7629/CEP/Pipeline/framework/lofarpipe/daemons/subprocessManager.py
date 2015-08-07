@@ -256,7 +256,8 @@ class SubprocessManager(object):
                    'exit_value':exit_status,
                    'session_uuid':session_uuid,
                    'job_uuid':job_uuid,
-                   'info':info_str}
+                   'info':info_str,
+                   'node':self._broker}   # TODO: Ambigues had hostname member
         subject = "result_" + session_uuid
         msg = CQCommon.create_msg(payload, subject)
         self._toBus.send(msg)

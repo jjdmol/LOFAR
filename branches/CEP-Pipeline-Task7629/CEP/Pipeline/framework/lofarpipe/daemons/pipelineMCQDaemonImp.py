@@ -113,6 +113,9 @@ class pipelineMCQDaemonImp(CQDaemon.CQDaemon):
         """
         The starting of a job on one of the node servers.
         """
+        # TODO: If a routing table is added, the master should also take care
+        # of echo/heart beat msg: MCQDaemon should send echo to master, and
+        # let it forward to the correct slave.
         try:        
             node = unpacked_msg_content['node']   
             slave_commandqueue_topic_subject = \

@@ -28,7 +28,9 @@
     <Compile Include="framework\lofarpipe\daemons\SCQLib.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="framework\lofarpipe\daemons\startMCQDaemons.py" />
     <Compile Include="framework\lofarpipe\daemons\subprocessManager.py" />
+    <Compile Include="framework\lofarpipe\daemons\testPipelineSlaveDaemonConnections.py" />
     <Compile Include="framework\lofarpipe\daemons\__init__.py" />
     <Compile Include="framework\lofarpipe\process_monitoring\example\example.py" />
     <Compile Include="framework\lofarpipe\process_monitoring\example\script.py" />
