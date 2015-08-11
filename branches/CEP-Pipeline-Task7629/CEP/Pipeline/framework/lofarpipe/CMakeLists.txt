@@ -40,6 +40,7 @@ python_install(
   daemons/subprocessManager.py
   daemons/SCQLib.py
   daemons/MCQLib.py
+  daemons/inMemoryZip.py
   DESTINATION lofarpipe)
 
 install(PROGRAMS

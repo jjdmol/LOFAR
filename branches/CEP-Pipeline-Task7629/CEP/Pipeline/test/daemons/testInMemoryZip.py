@@ -18,24 +18,27 @@
 #
 # $Id$
 
-import StringIO
-import zipfile
+from lofarpipe.daemons.inMemoryZip import get_zipstring_from_string, get_string_from_zipstring
 
-buff = StringIO.StringIO()
+    
 
-zip_archive = zipfile.ZipFile(buff, mode='w')
+data = ["data {0}".format(id) for id in range(1000)]
 
-data = ["data{0}".format(idx) for idx in range(1000)]
+zip_string = get_zipstring_from_string(str(data))
+data_string = get_string_from_zipstring(zip_string)
 
-zip_archive.writestr(str(data))
+data_unpacked = eval(data_string)
 
-zip_archive.close()
+if data != data_unpacked:
+    raise Exception("Packed and unpacked data are not equal!!")
 
-buff2 = StringIO.StringIO(buff.getvalue())
 
-zip_archive = zipfile.ZipFile(buff2, mode='r')
+#f = open("/home/klijn/build/7629/gnu_debug/installed/raw_data_800.dat", 'r')
 
-data = eval(zip_archive.read())
+#zip_string = get_zipstring_from_string(f.read())
 
-print data
+#f2 = open("/home/klijn/build/7629/gnu_debug/installed/raw_data_800.dat.zip", 'w')
 
+#f2.write(zip_string)
+
+        
