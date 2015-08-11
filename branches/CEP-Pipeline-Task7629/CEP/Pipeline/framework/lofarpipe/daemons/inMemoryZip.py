@@ -24,6 +24,10 @@ import zipfile
 TEMP_FILENAME_IN_ZIP = "temp.filename"
 
 def get_zipstring_from_string(string_data):
+    """
+    get_zipstring_from_string expects a string, created a compressed an 
+    inmemory zip file. The contents are returned as a string
+    """
     if not isinstance(string_data, basestring):
       raise TypeError("get_zipstring_from_string only accepts strings")
 
@@ -34,12 +38,19 @@ def get_zipstring_from_string(string_data):
 
     #Put data in the archive
     zip_archive.writestr(TEMP_FILENAME_IN_ZIP, str(string_data))
-    # always close
-    zip_archive.close()
+    packed_data = buff.getvalue()
 
-    return buff.getvalue()
+    # Release memory
+    zip_archive.close()
+    buff.close() 
+    return packed_data
 
 def get_string_from_zipstring(zip_string):
+    """  
+    get_string_from_zipstring expects a string contianing a string that
+    can be interpreted as a zip-file. Data is unpacked in memory and returned 
+    as a string"""
+
     if not isinstance(zip_string, basestring):
       raise TypeError("get_string_from_zipstring only accepts strings")
 
@@ -50,5 +61,8 @@ def get_string_from_zipstring(zip_string):
     # unpack the archive
     data_string = zip_archive.read(TEMP_FILENAME_IN_ZIP)
 
+    # Release memory
+    zip_archive.close()
+    buff.close() 
     return data_string
 

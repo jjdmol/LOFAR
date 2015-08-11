@@ -26,6 +26,7 @@ import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message   
 import lofar.messagebus.CQCommon as CQCommon
 import lofar.messagebus.CQExceptions as CQExceptions
+from lofarpipe.daemons.inMemoryZip import get_string_from_zipstring
 
 # Handler for stopping the logTopicHandler and signalling the master that the
 # session has ended
@@ -239,8 +240,10 @@ class resultQueueHandler(threading.Thread):
         elif type == 'output':
             self._logger.debug("output for: {0}".format(
                                                       msg_content['job_uuid']))
-            output = msg_content['output']
+            zipped_output = msg_content['output']
             job_uuid = msg_content['job_uuid']
+
+            output = get_string_from_zipstring(output)
 
             with self._pipeline_data_lock:
                 self._pipeline_data[job_uuid]['output']=output

@@ -21,7 +21,7 @@ import logging
 import time
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
-
+from lofarpipe.daemons.inMemoryZip import get_zipstring_from_string
 
 def create_msg(payload):
         """
@@ -149,10 +149,14 @@ class SCQLib(object):
         """
         Send the outputs to the results queue
         include the job dict containing the uuid and job_uuid
+
+        The output is packed and send as a zipstring
         """
+        zipped_output = get_zipstring_from_string(str(output))
+
         # Create the output dict
         payload = {'type': 'output',
-                    'output': output,
+                    'output': zipped_output,
                     'job_msg': self._job_dict,
                     'job_uuid':self._job_uuid,
                     'session_uuid':self._session_uuid,
