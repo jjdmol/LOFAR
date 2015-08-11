@@ -859,7 +859,6 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
 		            itsTimerPort->setTimer(0.0);
                 }
             }
-			break;
 
             case 1: {
                 // Set the splitters
@@ -878,7 +877,6 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
                 setEvent.splittersOn = splitterState;
                 itsClkCtrlPort->send(setEvent);		// will result in CLKCTRL_SET_SPLITTERS_ACK
             } 
-			break;
 
             case 2: {
                 // Set the bit mode
@@ -910,7 +908,6 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
 		            itsTimerPort->setTimer(0.0);
                 }
             }
-			break;
 
             default: {
                 // finally send a CLAIM event to the observation
@@ -922,8 +919,7 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
                 itsStartingObs = itsObsMap.end();
                 TRAN(StationControl::operational_state);
             }
-			break;
-        } // switch
+        }  
 	}
 	break;
 
