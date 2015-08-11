@@ -6,8 +6,8 @@ import LTAIngest.ingestpipeline as ingestpipeline
 from LTAIngest.job_parser import JobScheduled
 from LTAIngest.unspecifiedSIP import makeSIP
 
-class TestIngestSIP(unittest.TestCase):
-  """Tests for getting and processing SIP in Ingest"""
+class TestIngestPipeline(unittest.TestCase):
+  """Tests for various IngestPipeline methods"""
 
   def testSIPContents(self):
     """test CheckSIPContent method with valid and invalid SIP"""
