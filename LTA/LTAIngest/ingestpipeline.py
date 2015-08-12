@@ -260,10 +260,10 @@ class IngestPipeline():
       result = self.ltaClient.UpdateUriState(self.Project, self.ticket, self.PrimaryUri, state)
       self.logger.debug("UpdateUriState for %s took %ds" % (self.JobId, time.time() - start))
     except xmlrpclib.Fault as err:
-      self.logger.error('Received XML-RPC Fault: %s %s' % (err.faultCode, err.faultString))
+      self.logger.error('Received XML-RPC Fault: %s %s' % (err.faultCode, self._hidePassword(err.faultString)))
       raise
     except Exception as e:
-      self.logger.error('Received unknown exception in SendStatus for %s: %s' % (self.JobId, str(e)))
+      self.logger.error('Received unknown exception in SendStatus for %s: %s' % (self.JobId, self._hidePassword(str(e))))
       raise
     if result['result'] == 'ok':
       self.logger.debug('Status update for %s to %s was successful: %s' % (self.PrimaryUri, state, result))
@@ -450,8 +450,8 @@ class IngestPipeline():
       try:
         if self.ticket:
           self.RetryRun(self.SendStatus, self.ltaRetry, 'Setting LTA status', IngestFailed)
-      except Exception as e:
-        os.system('echo "Received unknown exception in SendStatus for %s to %s while handling another error:\n%s\n\nCheck LTA catalog and SRM!\n%s"|mailx -s "Warning: LTA catalog status update failed" ' % (self.JobId, IngestFailed, str(e), self.PrimaryUri) + self.mailCommand)
+      except Exception as e:        
+        os.system('echo "Received unknown exception in SendStatus for %s to %s while handling another error:\n%s\n\nCheck LTA catalog and SRM!\n%s"|mailx -s "Warning: LTA catalog status update failed" ' % (self.JobId, IngestFailed, self._hidePassword(str(e)), self.PrimaryUri) + self.mailCommand)
         self.logger.error('Sent Mail: LTA catalog status update failed to ' + self.mailCommand)
         self.logger.exception('SendStatus IngestFailed failed')
       if pe.type == PipelineJobFailedError:
@@ -467,7 +467,7 @@ class IngestPipeline():
         self.logger.debug('Encountered PipelineNoProjectInLTAError for %s' % (self.JobId))
         raise
       elif pe.source == "SendStatus":
-        os.system('echo "Received unknown exception in SendStatus for %s to %s:\n%s\n\nCheck LTA catalog and SRM!\n%s"|mailx -s "Warning: LTA catalog status update failed" ' % (self.JobId, IngestFailed, str(e), self.PrimaryUri) + self.mailCommand)
+        os.system('echo "Received unknown exception in SendStatus for %s to %s:\n%s\n\nCheck LTA catalog and SRM!\n%s"|mailx -s "Warning: LTA catalog status update failed" ' % (self.JobId, IngestFailed, self._hidePassword(str(e)), self.PrimaryUri) + self.mailCommand)
         self.logger.error('Sent Mail: LTA catalog status update failed to ' + self.mailCommand)
         self.logger.error('SendStatus IngestFailed failed')
       else:
@@ -480,6 +480,17 @@ class IngestPipeline():
       if self.ticket:
         self.RetryRun(self.SendStatus, self.ltaRetry, 'Setting LTA status', IngestFailed)
       raise
+    
+  def _hidePassword(self, message):
+    ''' helper function which hides the password in the ltaClient url in the message
+    '''
+    try:
+      url = self.ltaClient._ServerProxy__host
+      password = url.split('@')[0].split(':')[-1] #assume url is http://user:pass@host:port
+      return message.replace(':'+password, ':HIDDENPASSWORD')
+    except Exception as e:
+      return message
+    
 
 #----------------------------------------------------------------- selfstarter -
 if __name__ == '__main__':
