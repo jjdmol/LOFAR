@@ -2,6 +2,7 @@
 
 import unittest
 import logging
+import xmlrpclib
 import LTAIngest.ingestpipeline as ingestpipeline
 from LTAIngest.job_parser import JobScheduled
 from LTAIngest.unspecifiedSIP import makeSIP
@@ -9,29 +10,27 @@ from LTAIngest.unspecifiedSIP import makeSIP
 class TestIngestPipeline(unittest.TestCase):
   """Tests for various IngestPipeline methods"""
 
-  def testSIPContents(self):
-    """test CheckSIPContent method with valid and invalid SIP"""
-
+  def setUp(self):
     #logging
-    logger = logging.getLogger('Slave')
-    logger.addHandler(logging.StreamHandler())
-    logger.setLevel(logging.DEBUG)
+    self.logger = logging.getLogger('Slave')
+    self.logger.addHandler(logging.StreamHandler())
+    self.logger.setLevel(logging.DEBUG)
 
-    #create mock job
-    job = {}
-    job['ExportID'] = '0000'
-    job['JobId'] = 'X_0000_0000_1234567_12345678_L123456_SB000_uv.MS'
-    job['Status'] = JobScheduled
-    job['DataProduct'] = 'L123456_SB000_uv.MS'
-    job['FileName'] = job['DataProduct'] + '.tar'
-    job['MomId'] = 12345678
-    job['ObservationId'] = 123456
-    job["Type"] = 'MoM'
-    job['Project'] = 'test'
-    job['Location'] = 'locus099:/data/L123456/L123456_SB000_uv.MS'
+    #create mock self.job
+    self.job = {}
+    self.job['ExportID'] = '0000'
+    self.job['JobId'] = 'X_0000_0000_1234567_12345678_L123456_SB000_uv.MS'
+    self.job['Status'] = JobScheduled
+    self.job['DataProduct'] = 'L123456_SB000_uv.MS'
+    self.job['FileName'] = self.job['DataProduct'] + '.tar'
+    self.job['MomId'] = 12345678
+    self.job['ObservationId'] = 123456
+    self.job["Type"] = 'MoM'
+    self.job['Project'] = 'test'
+    self.job['Location'] = 'locus099:/data/L123456/L123456_SB000_uv.MS'
     
-    #create mock storage ticket
-    ticket = 'ABCDEF123456789'
+    #create mock storage self.ticket
+    self.ticket = 'ABCDEF123456789'
     
     #create mock momClient
     class MockMoMClient():
@@ -50,43 +49,57 @@ class TestIngestPipeline(unittest.TestCase):
     srmInit = ''
 
     #create pipeline instance with mock info
-    pipeline =  ingestpipeline.IngestPipeline('/tmp', job, momClient, ltaClient, ltacphost, ltacpport, mailCommand, 1, 1, 1, srmInit)
+    self.pipeline =  ingestpipeline.IngestPipeline('/tmp', self.job, momClient, ltaClient, ltacphost, ltacpport, mailCommand, 1, 1, 1, srmInit)
 
     #end of setup
-    #start testing
 
-    #create proper SIP with valid ticket, momid and filename
-    pipeline.SIP = makeSIP(job['Project'], job['ObservationId'], job['MomId'], ticket, job['FileName'], 0, 0, 0, job["Type"])
-    pipeline.ticket = ticket
+  def testSIPContents(self):
+    #create proper SIP with valid self.ticket, momid and filename
+    self.pipeline.SIP = makeSIP(self.job['Project'], self.job['ObservationId'], self.job['MomId'], self.ticket, self.job['FileName'], 0, 0, 0, self.job["Type"])
+    self.pipeline.ticket = self.ticket
 
     #check SIP content
-    self.assertTrue(pipeline.CheckSIPContent(), pipeline.SIP)
+    self.assertTrue(self.pipeline.CheckSIPContent(), self.pipeline.SIP)
 
     #now invalidate the SIP in various ways
 
     #with wrong momid
-    pipeline.SIP = makeSIP(job['Project'], job['ObservationId'], 'wrong_MomId', ticket, job['FileName'], 0, 0, 0, job["Type"])
-    self.assertFalse(pipeline.CheckSIPContent(), pipeline.SIP)
+    self.pipeline.SIP = makeSIP(self.job['Project'], self.job['ObservationId'], 'wrong_MomId', self.ticket, self.job['FileName'], 0, 0, 0, self.job["Type"])
+    self.assertFalse(self.pipeline.CheckSIPContent(), self.pipeline.SIP)
     
     #without momid
-    pipeline.SIP = pipeline.SIP.replace('<identifier>wrong_MomId</identifier>', '')
-    self.assertFalse(pipeline.CheckSIPContent(), pipeline.SIP)
+    self.pipeline.SIP = self.pipeline.SIP.replace('<identifier>wrong_MomId</identifier>', '')
+    self.assertFalse(self.pipeline.CheckSIPContent(), self.pipeline.SIP)
 
     #with wrong filename
-    pipeline.SIP = makeSIP(job['Project'], job['ObservationId'], job['MomId'], ticket, 'wrong_filename', 0, 0, 0, job["Type"])
-    self.assertFalse(pipeline.CheckSIPContent(), pipeline.SIP)
+    self.pipeline.SIP = makeSIP(self.job['Project'], self.job['ObservationId'], self.job['MomId'], self.ticket, 'wrong_filename', 0, 0, 0, self.job["Type"])
+    self.assertFalse(self.pipeline.CheckSIPContent(), self.pipeline.SIP)
 
     #without filename
-    pipeline.SIP = pipeline.SIP.replace('<name>wrong_filename</name>', '')
-    self.assertFalse(pipeline.CheckSIPContent(), pipeline.SIP)
+    self.pipeline.SIP = self.pipeline.SIP.replace('<name>wrong_filename</name>', '')
+    self.assertFalse(self.pipeline.CheckSIPContent(), self.pipeline.SIP)
 
-    #with wrong ticket
-    pipeline.SIP = makeSIP(job['Project'], job['ObservationId'], job['MomId'], 'wrong_ticket', job['FileName'], 0, 0, 0, job["Type"])
-    self.assertFalse(pipeline.CheckSIPContent(), pipeline.SIP)
+    #with wrong self.ticket
+    self.pipeline.SIP = makeSIP(self.job['Project'], self.job['ObservationId'], self.job['MomId'], 'wrong_self.ticket', self.job['FileName'], 0, 0, 0, self.job["Type"])
+    self.assertFalse(self.pipeline.CheckSIPContent(), self.pipeline.SIP)
 
-    #without ticket
-    pipeline.SIP = pipeline.SIP.replace('<storageTicket>wrong_ticket</storageTicket>', '')
-    self.assertFalse(pipeline.CheckSIPContent(), pipeline.SIP)
+    #without self.ticket
+    self.pipeline.SIP = self.pipeline.SIP.replace('<storageTicket>wrong_self.ticket</storageTicket>', '')
+    self.assertFalse(self.pipeline.CheckSIPContent(), self.pipeline.SIP)
+    
+  def testHidePassword(self):
+    """test _hidePassword method"""
+
+    password = 'secret'
+    url = 'https://someuser:%s@somesite.domain:1234' % password
+    self.pipeline.ltaClient = xmlrpclib.ServerProxy(url)
+
+    messageWithPassword = 'some message from %s where something happened' % url
+    self.assertTrue(password in messageWithPassword)
+    
+    messageWithHiddenPassword = self.pipeline._hidePassword(messageWithPassword)
+    self.assertFalse(password in messageWithHiddenPassword)
+    
     
 #run tests if main
 if __name__ == '__main__':
