@@ -1,5 +1,5 @@
 //# Parset.h: class/struct that holds the Parset information
-//# Copyright (C) 2008-2015  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -671,7 +671,6 @@ namespace LOFAR
 
       void                        write(Stream *) const;
 
-      double                      getRealStopTime() const;
       unsigned                    nrTabStations() const;
       unsigned                    nrMergedStations() const;
       std::vector<std::string>    mergedStationNames() const;
@@ -686,8 +685,7 @@ namespace LOFAR
 
       std::vector<std::string>    allStationNames() const;
 
-      unsigned                    nrObsOutputTypes() const;
-      bool                        outputThisType(OutputType) const;
+      bool outputThisType(OutputType) const;
 
       unsigned nrStreams(OutputType, bool force = false) const;
       std::string getHostName(OutputType, unsigned streamNr) const;

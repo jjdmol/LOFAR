@@ -228,7 +228,7 @@ void read_mac(const char *arg, char mac[6])
 }
 
 
-int create_raw_eth_socket(const char *desc)
+int create_raw_eth_socket(const char *desc, int is_output)
 {
   char *copy = strdup(desc), *arg = copy;
   int sk;
@@ -395,7 +395,7 @@ int create_fd(const char *arg, int is_output, enum proto *proto, char *name, siz
 
     case File	: return create_file(arg, is_output);
 
-    case Eth	: return create_raw_eth_socket(arg);
+    case Eth	: return create_raw_eth_socket(arg, is_output);
 
     case StdIn	:
     case StdOut:

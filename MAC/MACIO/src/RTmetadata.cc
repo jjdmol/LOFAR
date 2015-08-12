@@ -62,7 +62,9 @@ RTmetadata::~RTmetadata()
 		// Give itsThread time to send the last events (best effort).
 		// We cannot do that while a cancellation exc is already in
 		// progress in case the connection hangs.
-		::usleep(100000); // 100 ms
+		// For localhost tests, wait long enough to allow this obj,
+		// PVSSGateway(Stub) and ServiceBroker to (re)connect.
+		::usleep(2000000); // 2 sec (1.5 sec can fail for local tests)
 
 		itsThread->cancel();
 

@@ -1,5 +1,5 @@
 //# TBB_Writer.cc: Write TBB data into an HDF5 file
-//# Copyright (C) 2012-2015  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -23,8 +23,6 @@
 #ifdef HAVE_DAL
 
 #define _FILE_OFFSET_BITS 64
-#include "TBB_Writer.h"
-
 #include <cstddef>
 #include <cstring>
 #include <csignal>
@@ -42,8 +40,8 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
-#include <boost/format.hpp> // TODO: replace formatString() usage by boost::format() in all TBB Writer sources
 
+#include <OutputProc/TBB_Writer.h>
 #include <Common/LofarConstants.h>
 #include <Common/LofarLogger.h>
 #ifdef basename // some glibc have this as a macro
@@ -56,7 +54,6 @@
 #include <ApplCommon/AntField.h>
 #include <Stream/StreamFactory.h>
 #include <CoInterface/Exceptions.h>
-#include <OutputProc/CommonLofarAttributes.h>
 
 #include <dal/lofar/StationNames.h>
 
@@ -114,6 +111,7 @@ namespace LOFAR
 
     static ostream& operator<<(ostream& out, const TBB_Header& h)
     {
+      // TODO: swap some header fields on big endian hosts
       out << (unsigned)h.stationID << " " << (unsigned)h.rspID << " " << (unsigned)h.rcuID << " " << (unsigned)h.sampleFreq <<
       " " << h.seqNr << " " << h.time << " " << (h.nOfFreqBands == 0 ? h.sampleNr : h.bandSliceNr) << " " << h.nOfSamplesPerFrame <<
       " " << h.nOfFreqBands << " " << h.spare << " " << h.crc16; // casts uin8_t to unsigned to avoid printing as char
@@ -373,7 +371,6 @@ namespace LOFAR
                                            const string& rawFilename, dal::TBB_Station& station)
     {
       itsDataset = new dal::TBB_DipoleDataset(station.dipole(header.stationID, header.rspID, header.rcuID)); // TODO: remove with new DAL version (see below)
-      const string filename = LOFAR::basename(rawFilename); // don't store paths in HDF5
 
       // Override endianess. TBB data is always stored little endian and also received as such, so written as-is on any platform.
       if (subbandInfo.centralFreqs.empty()) { // transient mode
@@ -382,7 +379,7 @@ namespace LOFAR
         itsDataset = static_cast<dal::TBB_Dataset<short>*>(dpDataset);
 */
 
-        itsDataset->create1D(0, -1, filename, itsDataset->LITTLE);
+        itsDataset->create1D(0, -1, LOFAR::basename(rawFilename), itsDataset->LITTLE);
 
 /*        dpDataset->sampleNumber().value = header.sampleNr; TODO: enable with new DAL version */
         itsDataset->sampleNumber().value = header.sampleNr;
@@ -394,10 +391,10 @@ namespace LOFAR
 
         vector<ssize_t> dims(2), maxdims(2);
         dims[0] = 0;
-        dims[1] = itsNrSubbands; // TODO: can be 0 for some reason, then create() throws. Shouldn't happen. Fix it.
+        dims[1] = itsNrSubbands;
         maxdims[0] = -1; // only the 1st dim can be extendible
         maxdims[1] = itsNrSubbands;
-        itsDataset->create(dims, maxdims, filename, itsDataset->LITTLE);
+        itsDataset->create(dims, maxdims, LOFAR::basename(rawFilename), itsDataset->LITTLE);
 
 /* TODO: enable with new DAL version
         sbDataset->sliceNumber().value = header.bandSliceNr >> TBB_SLICE_NR_SHIFT;
@@ -406,7 +403,6 @@ namespace LOFAR
         sbDataset->spectralBandsUnit().value = "MHz";
 */
       }
-      LOG_INFO_STR("Created HDF5 Dataset for rsp,rcu " << (unsigned) header.rspID << ',' << (unsigned)header.rcuID << " for raw file " << filename);
 
       itsDataset->groupType().value = "DipoleDataset";
       itsDataset->stationID().value = header.stationID;
@@ -549,9 +545,7 @@ namespace LOFAR
       , itsSubbandInfo(getSubbandInfo(parset))
       , itsH5Filename(h5Filename)
     {
-      LOG_INFO_STR("Created HDF5 file " << LOFAR::basename(h5Filename));
-
-      writeCommonLofarAttributes(itsH5File, parset);
+      initCommonLofarAttributes();
       initTBB_RootAttributesAndGroups(stationName);
     }
 
@@ -639,6 +633,117 @@ namespace LOFAR
       }
     }
 
+    string TBB_Station::utcTimeStr(double time) const
+    {
+      time_t timeSec = static_cast<time_t>(floor(time));
+      unsigned long timeNSec = static_cast<unsigned long>(round( (time - floor(time)) * 1e9 ));
+
+      char utc_str[50];
+      struct tm tm;
+      gmtime_r(&timeSec, &tm);
+      if (strftime(utc_str, sizeof(utc_str), "%Y-%m-%dT%H:%M:%S", &tm) == 0) {
+        return "";
+      }
+
+      return formatString("%s.%09luZ", utc_str, timeNSec);
+    }
+
+    double TBB_Station::toMJD(double time) const
+    {
+      // January 1st, 1970, 00:00:00 (GMT) equals 40587.0 Modify Julian Day number
+      return 40587.0 + time / (24 * 60 * 60);
+    }
+
+    void TBB_Station::initCommonLofarAttributes()
+    {
+      itsH5File.groupType().value = "Root";
+
+      //itsH5File.fileName() is set by DAL
+      //itsH5File.fileDate() is set by DAL
+      //itsH5File.fileType() is set by DAL
+      //itsH5File.telescope() is set by DAL
+
+      itsH5File.projectID().value = itsParset.getString("Observation.Campaign.name", "");
+      itsH5File.projectTitle().value = itsParset.getString("Observation.Scheduler.taskName", "");
+      itsH5File.projectPI().value = itsParset.getString("Observation.Campaign.PI", "");
+      ostringstream oss;
+      // Use ';' instead of ',' to pretty print, because ',' already occurs in names (e.g. Smith, J.).
+      writeVector(oss, itsParset.getStringVector("Observation.Campaign.CO_I", ""), "; ", "", "");
+      itsH5File.projectCOI().value = oss.str();
+      itsH5File.projectContact().value = itsParset.getString("Observation.Campaign.contact", "");
+
+      itsH5File.observationID().value = formatString("%u", itsParset.settings.observationID);
+
+      itsH5File.observationStartUTC().value = utcTimeStr(itsParset.settings.startTime);
+      itsH5File.observationStartMJD().value = toMJD(itsParset.settings.startTime);
+
+      // The stop time can be a bit further than the one actually specified, because we process in blocks.
+      unsigned nrExpectedBlocks = itsParset.settings.nrBlocks();
+      double stopTime = itsParset.settings.startTime + nrExpectedBlocks * itsParset.settings.blockDuration();
+
+      itsH5File.observationEndUTC().value = utcTimeStr(stopTime);
+      itsH5File.observationEndMJD().value = toMJD(stopTime);
+
+      itsH5File.observationNofStations().value = itsParset.settings.antennaFields.size(); // TODO: SS beamformer?
+      // For the observation attribs, dump all stations participating in the observation (i.e. allStationNames(), not mergedStationNames()).
+      // This may not correspond to which station HDF5 groups will be written for TBB, but that is true anyway, regardless of any merging.
+      vector<string> allStNames(itsParset.allStationNames());
+      itsH5File.observationStationsList().create(allStNames.size()).set(allStNames); // TODO: SS beamformer?
+
+      unsigned fileno = 0; // TODO: which nr channels to use for CLA metadata w/ TBB?!?
+      const struct ObservationSettings::BeamFormer::File &f = itsParset.settings.beamFormer.files[fileno];
+      const struct ObservationSettings::BeamFormer::StokesSettings &stokesSet =
+        f.coherent ? itsParset.settings.beamFormer.coherentSettings
+                   : itsParset.settings.beamFormer.incoherentSettings;
+      double subbandBandwidth = itsParset.settings.subbandWidth();
+      double channelBandwidth = subbandBandwidth / stokesSet.nrChannels;
+
+      // if PPF is used, the frequencies are shifted down by half a channel
+      // We'll annotate channel 0 to be below channel 1, but in reality it will
+      // contain frequencies from both the top and the bottom half-channel.
+      double frequencyOffsetPPF = stokesSet.nrChannels > 1 ? 0.5 * channelBandwidth : 0.0; // TODO: cover both CS and IS!
+
+      // For the whole obs, regardless which SAP and subbands (parts) this file contains.
+      vector<double> subbandCenterFrequencies(itsParset.settings.subbands.size());
+      for(size_t sb = 0; sb < itsParset.settings.subbands.size(); ++sb)
+        subbandCenterFrequencies[sb] = itsParset.settings.subbands[sb].centralFrequency;
+
+      double min_centerfrequency = *min_element( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end() );
+      double max_centerfrequency = *max_element( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end() );
+      double sum_centerfrequencies = accumulate( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end(), 0.0 );
+
+      itsH5File.observationFrequencyMax().value = (max_centerfrequency + subbandBandwidth / 2 - frequencyOffsetPPF) / 1e6;
+      itsH5File.observationFrequencyMin().value = (min_centerfrequency - subbandBandwidth / 2 - frequencyOffsetPPF) / 1e6;
+      itsH5File.observationFrequencyCenter().value = (sum_centerfrequencies / subbandCenterFrequencies.size() - frequencyOffsetPPF) / 1e6;
+      itsH5File.observationFrequencyUnit().value = "MHz";
+
+      itsH5File.observationNofBitsPerSample().value = itsParset.settings.nrBitsPerSample;
+      itsH5File.clockFrequency().value = itsParset.settings.clockMHz;
+      itsH5File.clockFrequencyUnit().value = "MHz";
+
+      itsH5File.antennaSet().value = itsParset.settings.antennaSet;
+      itsH5File.filterSelection().value = itsParset.settings.bandFilter;
+
+      size_t nrSAPs = itsParset.settings.SAPs.size();
+      vector<string> targets(nrSAPs);
+
+      for (size_t sap = 0; sap < nrSAPs; sap++)
+        targets[sap] = itsParset.settings.SAPs[sap].target;
+
+      itsH5File.targets().create(targets.size()).set(targets);
+
+#ifndef TBB_WRITER_VERSION
+      itsH5File.systemVersion().value = LOFAR::OutputProcVersion::getVersion();   // LOFAR version
+#else
+      itsH5File.systemVersion().value = TBB_WRITER_VERSION;
+#endif
+
+      //itsH5File.docName() is set by DAL
+      //itsH5File.docVersion() is set by DAL
+
+      itsH5File.notes().value = "";
+    }
+
     // The writer creates one HDF5 file per station, so create only one Station Group here.
     void TBB_Station::initTBB_RootAttributesAndGroups(const string& stName)
     {
@@ -652,7 +757,8 @@ namespace LOFAR
 
       itsStation.create();
       itsH5File.nofStations().value = 1u;
-      initStationGroup(itsStation, stName);
+      vector<double> stPos = itsParset.position(stName);
+      initStationGroup(itsStation, stName, itsParset.settings.antennaSet, stPos);
 
       // Trigger Group
       dal::TBB_Trigger tg(itsH5File.trigger());
@@ -660,28 +766,16 @@ namespace LOFAR
       initTriggerGroup(tg);
     }
 
-    void TBB_Station::initStationGroup(dal::TBB_Station& st, const string& stName)
+    void TBB_Station::initStationGroup(dal::TBB_Station& st, const string& stName,
+                                       const string& antSet, const vector<double>& stPosition)
     {
       st.groupType().value = "StationGroup";
       st.stationName().value = stName;
 
-      // Phase centers (named 'position(s)' here and there
-      // For now, store 'LBA' or 'HBA' phase centers. TODO: Also store:
-      // - LOFAR reference phase center (in another HDF5 group)
-      // - if HBA_<any>, always store phase centers for HBA and also HBA0 & HBA1 (core stations)
-      //   so CR and other TBB users can process in whatever way they want. (reqs new DAL)
-      const string antFieldName = stName + itsParset.getString("Observation.antennaArray"); // LBA or HBA (not HBA0, HBA1)
-      try {
-        const vector<double> stPos = itsParset.position(antFieldName);
-        if (stPos.size() != 3) {
-          throw APSException("antenna field position vector must be of size 3 instead of " + stPos.size());
-        }
-        // TODO: is phaseReference, only LBA or HBA (not HBA0 or HBA1) atm
-        st.stationPosition().create(stPos.size()).set(stPos);
+      if (!stPosition.empty()) {
+        st.stationPosition().create(stPosition.size()).set(stPosition);
         st.stationPositionUnit().value = "m";
         st.stationPositionFrame().value = itsParset.positionType();
-      } catch (APSException& exc) {
-        LOG_WARN_STR("TBB: failed to write antenna field phase centers: " << exc);
       }
 
       // digital beam(s)
@@ -695,32 +789,13 @@ namespace LOFAR
       }
 
       try {
-        // Delay coefficients as applied by COBALT
-        // For now, store avg of delay_x and delay_y as clock correction; HBA_DUAL modes get HBA_JOINED vals for the mo. TODO: Instead, store:
-        // - all delay.x, delay.y, phase0.x, phase0.y (reqs new DAL), for:
-        // - used array mode (for a HBA_DUAL mode this gives 2x the vals) plus if HBA_<any> all of: HBA_ZERO, HBA_ONE, HBA_JOINED (skip one if used array mode or if not contained in used mode) (only for proper freq band) (reqs new DAL)
-
-        string antSet = itsParset.settings.antennaSet;
-        if (antSet.find("HBA_DUAL") != string::npos) { // HBA_DUAL or HBA_DUAL_INNER
-          antSet = "HBA_JOINED"; // current fmt has 1 attrib, so resort to this for the mo
-        }
-/*
-        int afIdx = itsParset.settings.antennaFieldIndex(antFieldName); // Note: fails for HBA_DUAL modes
-        if (afIdx == -1) { // TODO: have antennaFieldIndex() throw instead of return -1
-          throw APSException("antenna field not found: " + antFieldName);
-        }
-        double delay_x = itsParset.settings.antennaFields[afIdx].delay.x;
-        double delay_y = itsParset.settings.antennaFields[afIdx].delay.y;
-        double phase_x = itsParset.settings.antennaFields[afIdx].phase.x;
-        double phase_y = itsParset.settings.antennaFields[afIdx].phase.y;
-*/
-        double delay_x = itsParset.getDouble(str(boost::format("PIC.Core.%s.%s.%s.delay.X") % antFieldName % antSet % itsParset.settings.bandFilter)/*, 0.0*/);
-        double delay_y = itsParset.getDouble(str(boost::format("PIC.Core.%s.%s.%s.delay.Y") % antFieldName % antSet % itsParset.settings.bandFilter)/*, 0.0*/);
-        double clockCorr = 0.5 * (delay_x + delay_y); // TODO: remove this backwards compat, since nobody uses TBB clock corr yet
+        // We don't have clock corr vals for e.g. CS001; only CS001HBA and CS001LBA. Strip HBA ear number.
+        string antFieldNameNoEarNr = stName + antSet.substr(0, sizeof("HBA")-1);
+        double clockCorr = itsParset.getDouble(string("PIC.Core.") + antFieldNameNoEarNr + ".clockCorrectionTime");
         st.clockOffset().value = clockCorr;
         st.clockOffsetUnit().value = "s";
       } catch (APSException& exc) {
-        LOG_WARN_STR("TBB: failed to write antenna field delays and phase0 values: " << exc);
+        LOG_WARN_STR("TBB: failed to write station clock offset and unit attributes: " << exc);
       }
 
       //st.nofDipoles.value is set at the end (destr)
@@ -739,7 +814,6 @@ namespace LOFAR
         tg.paramDirectionFit().value = itsParset.getString("Observation.ObservationControl.StationControl.TBBControl.DoDirectionFit");
         tg.paramElevationMin().value = itsParset.getDouble("Observation.ObservationControl.StationControl.TBBControl.MinElevation");
         tg.paramFitVarianceMax().value = itsParset.getDouble("Observation.ObservationControl.StationControl.TBBControl.MaxFitVariance");
-        //itsParset.getString("Observation.ObservationControl.StationControl.TBBControl.ParamExtension");
       } catch (APSException& exc) {
         LOG_WARN_STR("TBB: Failed to write trigger parameters: " << exc);
       }
@@ -770,9 +844,6 @@ namespace LOFAR
       , itsLogPrefix(logPrefix)
       , itsInExitStatus(inExitStatus)
       , itsOutExitStatus(outExitStatus)
-#ifdef TBB_DUMP_RAW_STATION_FRAMES
-      , itsRawStationData(NULL)
-#endif
     {
       itsFrameBuffers = new TBB_Frame[nrFrameBuffers];
       //itsReceiveQueue.reserve(nrFrameBuffers); // Queue does not support this...
@@ -805,7 +876,7 @@ namespace LOFAR
         throw;
       }
 
-#ifdef TBB_DUMP_RAW_STATION_FRAMES
+#ifdef DUMP_RAW_STATION_FRAMES
       struct timeval ts;
       ::gettimeofday(&ts, NULL);
       string rawStDataFilename("tbb_raw_station_frames_" + formatString("%ld_%p", ts.tv_sec, (void*)itsFrameBuffers) + ".fraw");
@@ -822,7 +893,7 @@ namespace LOFAR
       // Only cancel the input thread, which will notify the output thread.
       itsInputThread->cancel();
 
-#ifdef TBB_DUMP_RAW_STATION_FRAMES
+#ifdef DUMP_RAW_STATION_FRAMES
       delete itsRawStationData;
 #endif
       delete itsInputThread;
@@ -837,12 +908,12 @@ namespace LOFAR
 
     void TBB_StreamWriter::frameHeaderLittleToHost(TBB_Header& header) const
     {
-      header.seqNr = le32toh(header.seqNr);
+      header.seqNr = le32toh(header.seqNr); // set to 0 for crc16, otherwise unused
       header.time = le32toh(header.time);
       header.sampleNr = le32toh(header.sampleNr);
       header.nOfSamplesPerFrame = le16toh(header.nOfSamplesPerFrame);
       header.nOfFreqBands = le16toh(header.nOfFreqBands);
-      header.spare = le16toh(header.spare);
+      header.spare = le16toh(header.spare); // unused
       header.crc16 = le16toh(header.crc16);
     }
 
@@ -915,12 +986,8 @@ namespace LOFAR
      */
     void TBB_StreamWriter::processHeader(TBB_Header& header, size_t recvPayloadSize)
     {
-      uint32_t seqNr = header.seqNr; // save (little endian)
-      header.seqNr = 0; // for crc computation
-      bool crcOk = crc16tbb(&header);
-      header.seqNr = seqNr; // restore (but seqNr not used except in exception msg)
-      frameHeaderLittleToHost(header);
-      if (!crcOk) {
+      header.seqNr = 0; // For the header crc. Don't save/restore it as we don't need this field.
+      if (!crc16tbb(&header)) {
         /*
          * The TBB spec states that each frame has the same fixed length, so the previous values are a good base guess if the header crc fails.
          * But it is not clear if it is worth the effort to try to guess to fix something up. For now, drop and log.
@@ -936,6 +1003,7 @@ namespace LOFAR
         // Drop it. The data crc routine only works for at least 2 transient or 1 spectral sample(s) + a crc32.
         THROW(TBB_MalformedFrameException, "dropping too small frame: " << recvPayloadSize);
       }
+      frameHeaderLittleToHost(header);
       // Verify indicated sample freq, also to reject zeroed headers, which the crc16tbb does not reject.
       if (header.sampleFreq != 200 && header.sampleFreq != 160) {
         THROW(TBB_MalformedFrameException, "dropping frame with invalid sample frequency in frame header: " << header.sampleFreq);
@@ -992,14 +1060,10 @@ namespace LOFAR
           // Notify master that we are still busy. (Racy, but ok, see the timeoutstamp decl.)
           ::gettimeofday(&itsTimeoutStamp, NULL);
 
-#ifdef TBB_DUMP_RAW_STATION_FRAMES
-          if (itsRawStationData != NULL) {
-            try {
-              itsRawStationData->write(frame, nread);
-            } catch (exception& exc) {
-              LOG_WARN_STR(itsLogPrefix << "failed to write raw station input frame to file " << exc.what());
-            }
-          }
+#ifdef DUMP_RAW_STATION_FRAMES
+          try {
+            itsRawStationData->write(frame, nread);
+          } catch (exception& exc) { /* open() probably failed, don't spam */ }
 #endif
 
           if (nread < sizeof(TBB_Header)) {
@@ -1010,8 +1074,7 @@ namespace LOFAR
           itsReceiveQueue.append(frame);
 
         } catch (TBB_MalformedFrameException& mffExc) {
-          // don't print stacktrace on (every) broken incoming frame
-          LOG_WARN_STR(itsLogPrefix << mffExc.what());
+          LOG_WARN_STR(itsLogPrefix << mffExc);
           try {
             itsFreeQueue.append(frame);
           } catch (exception& exc) {
@@ -1046,7 +1109,7 @@ namespace LOFAR
             break;
           }
 
-#ifdef TBB_PRINT_QUEUE_LEN
+#ifdef PRINT_QUEUE_LEN
           LOG_INFO_STR(itsLogPrefix << "recvqsz=" << itsReceiveQueue.size());
 #endif
 
@@ -1062,12 +1125,8 @@ namespace LOFAR
           LOG_WARN_STR(itsLogPrefix << exc.what());
         } catch (out_of_range& exc) {
           LOG_WARN_STR(itsLogPrefix << exc.what());
-        } catch (Exception& exc) {
-          // Config/parset errors are fatal.
-          LOG_FATAL_STR(itsLogPrefix << exc);
-          running = false;
         } catch (exception& exc) {
-          // Other errors are fatal.
+          // Config/parset and other errors are fatal.
           LOG_FATAL_STR(itsLogPrefix << exc.what());
           running = false;
         }

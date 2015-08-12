@@ -29,7 +29,6 @@
 #include <DPPP/MultiMSReader.h>
 #include <DPPP/MSWriter.h>
 #include <DPPP/MSUpdater.h>
-#include <DPPP/ApplyBeam.h>
 #include <DPPP/Averager.h>
 #include <DPPP/MedFlagger.h>
 #include <DPPP/AORFlagger.h>
@@ -303,8 +302,6 @@ namespace LOFAR {
           step = DPStep::ShPtr(new Filter (reader, parset, prefix));
         } else if (type == "applycal"  ||  type == "correct") {
           step = DPStep::ShPtr(new ApplyCal (reader, parset, prefix));
-        } else if (type == "applybeam") {
-          step = DPStep::ShPtr(new ApplyBeam (reader, parset, prefix));
         } else if (type == "gaincal"  ||  type == "calibrate") {
           step = DPStep::ShPtr(new GainCal (reader, parset, prefix));
         } else if (type == "out" || type=="output") {
