@@ -54,6 +54,9 @@
     <Compile Include="recipes\sip\nodes\long_baseline.py" />
     <Compile Include="recipes\sip\nodes\test_recipe.py" />
     <Compile Include="test\daemons\CQDaemonTestFunctions.py" />
+    <Compile Include="test\daemons\testInMemoryZip.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="test\daemons\testMCQLib.py" />
     <Compile Include="test\daemons\testSCQLib.py">
       <SubType>Code</SubType>

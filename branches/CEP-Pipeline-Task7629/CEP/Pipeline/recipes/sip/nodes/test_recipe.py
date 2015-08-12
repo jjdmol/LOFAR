@@ -9,6 +9,7 @@ import os
 import shutil
 import sys
 import time
+import copy
 
 from lofarpipe.support.lofarnode import LOFARnodeTCP
 import lofar.messagebus.msgbus as msgbus
@@ -25,12 +26,13 @@ class test_recipe(LOFARnodeTCP):
         f = open('/home/klijn/build/7629/gnu_debug/installed/raw_data_800.dat', 'r')
 
         data = f.read()
-
+        data2 = copy.deepcopy(data)
 
 
         self.outputs["output"] = "OUPUT FROM TEST RECIPE"
         self.outputs["status"] = True
         self.outputs['data'] = data
+        self.outputs['data2'] = data2
         ## Time execution of this job
         return 0
 

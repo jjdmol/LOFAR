@@ -23,6 +23,10 @@ import zipfile
 
 TEMP_FILENAME_IN_ZIP = "temp.filename"
 
+# TODO: The module cStringIO provides an interface similar to that of the 
+# StringIO module. Heavy use of StringIO.StringIO objects can be made 
+# more efficient by using the function StringIO() from this module instead.
+
 def get_zipstring_from_string(string_data):
     """
     get_zipstring_from_string expects a string, created a compressed an 
@@ -34,14 +38,16 @@ def get_zipstring_from_string(string_data):
     # Create an in memory file like io object
     buff = StringIO.StringIO()
     # create a zip_file on this file object
-    zip_archive = zipfile.ZipFile(buff, 'w', zipfile.ZIP_DEFLATED)
+    zip_archive = zipfile.ZipFile(buff, 'w', 
+                                  zipfile.ZIP_DEFLATED) # Zip the data
 
     #Put data in the archive
     zip_archive.writestr(TEMP_FILENAME_IN_ZIP, str(string_data))
+    # Close the file before getting the buffer!!
+    zip_archive.close()
     packed_data = buff.getvalue()
 
-    # Release memory
-    zip_archive.close()
+    # Release memory   
     buff.close() 
     return packed_data
 
@@ -59,10 +65,11 @@ def get_string_from_zipstring(zip_string):
     # open as zip_archive
     zip_archive = zipfile.ZipFile(buff, 'r')
     # unpack the archive
-    data_string = zip_archive.read(TEMP_FILENAME_IN_ZIP)
 
-    # Release memory
+    data_string = zip_archive.read(TEMP_FILENAME_IN_ZIP)
     zip_archive.close()
+    # Release memory
+    
     buff.close() 
     return data_string
 

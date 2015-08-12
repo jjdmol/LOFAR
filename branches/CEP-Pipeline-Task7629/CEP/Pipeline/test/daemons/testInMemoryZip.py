@@ -20,25 +20,18 @@
 
 from lofarpipe.daemons.inMemoryZip import get_zipstring_from_string, get_string_from_zipstring
 
-    
-
+# some data
 data = ["data {0}".format(id) for id in range(1000)]
 
+# zip and unzip
 zip_string = get_zipstring_from_string(str(data))
 data_string = get_string_from_zipstring(zip_string)
 
+# cast to python list
 data_unpacked = eval(data_string)
 
+# check equality
 if data != data_unpacked:
     raise Exception("Packed and unpacked data are not equal!!")
 
 
-#f = open("/home/klijn/build/7629/gnu_debug/installed/raw_data_800.dat", 'r')
-
-#zip_string = get_zipstring_from_string(f.read())
-
-#f2 = open("/home/klijn/build/7629/gnu_debug/installed/raw_data_800.dat.zip", 'w')
-
-#f2.write(zip_string)
-
-        

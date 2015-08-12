@@ -94,9 +94,9 @@ function connectbus {
     if (( $# == 3 ))
     then
         busname=$1
-        firstnode=$2
-        secondnode=$3
-        qpid-route dynamic add $firstnode $secondnode $busname --durable --ack=1
+        firstnode=$2  # Hubnode
+        secondnode=$3 # Spoke node
+        qpid-route dynamic add $firstnode $secondnode $busname --durable --ack=1  
         qpid-route dynamic add $secondnode $firstnode $busname --durable --ack=1
     else
         echo "Usage $FUNCNAME <busname> <firstnode> <secondnode>"

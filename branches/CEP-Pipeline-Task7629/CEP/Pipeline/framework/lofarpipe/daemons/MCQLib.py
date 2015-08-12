@@ -240,11 +240,12 @@ class resultQueueHandler(threading.Thread):
         elif type == 'output':
             self._logger.debug("output for: {0}".format(
                                                       msg_content['job_uuid']))
+            
+            # unpack the output and eval to get as python dict
             zipped_output = msg_content['output']
+            output = eval(get_string_from_zipstring(zipped_output))
+
             job_uuid = msg_content['job_uuid']
-
-            output = get_string_from_zipstring(output)
-
             with self._pipeline_data_lock:
                 self._pipeline_data[job_uuid]['output']=output
 
