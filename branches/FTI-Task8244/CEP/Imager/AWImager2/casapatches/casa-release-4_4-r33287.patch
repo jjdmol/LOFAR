@@ -1,0 +1,245 @@
+Index: CMakeLists.txt
+===================================================================
+--- CMakeLists.txt	(revision 33292)
++++ CMakeLists.txt	(working copy)
+@@ -731,6 +731,7 @@
+ else()
+   casa_find( WCSLIB
+     VERSION 4.3
++    PREFIX_HINTS ${WCSLIB_ROOT_DIR}
+     INCLUDES wcslib/wcsconfig.h
+     LIBS wcs
+     # WCSLIB does "#define WCSLIB_VERSION 4.3.4" without quotes,
+@@ -801,7 +802,7 @@
+ endif()
+ 
+ casa_find( CASACORE
+-           VERSION 2.0.2
++           VERSION 2.0.0
+            PREFIX_HINTS ${CASACORE_ROOT_DIR} ${Boost_INCLUDE_DIR}
+            INCLUDES casa/aips.h
+                     casa/version.h
+@@ -1073,14 +1074,14 @@
+   #set( LIBSAKURA_ROOT_DIR "$ENV{HOME}/workspace/libsakura/build/installed" )
+   set( LIBSAKURA_ROOT_DIR ${casa_packages} )
+ endif()
+-casa_find( LIBSAKURA
+-  VERSION 0.1
+-  INCLUDES libsakura/sakura.h libsakura/config.h
+-  LIBS sakura
+-  PREFIX_HINTS ${LIBSAKURA_ROOT_DIR} ${LIBSAKURA_ROOT_DIR}/lib/libsakura/default
+-  CPP_VERSION "LIBSAKURA_VERSION_MAJOR << '.' << LIBSAKURA_VERSION_MINOR"
+-  NO_LINK    # The library may depend on newer gcc. Skip generating executable.
+-)
++#casa_find( LIBSAKURA
++#  VERSION 0.1
++#  INCLUDES libsakura/sakura.h libsakura/config.h
++#  LIBS sakura
++#  PREFIX_HINTS ${LIBSAKURA_ROOT_DIR} ${LIBSAKURA_ROOT_DIR}/lib/libsakura/default
++#  CPP_VERSION "LIBSAKURA_VERSION_MAJOR << '.' << LIBSAKURA_VERSION_MINOR"
++#  NO_LINK    # The library may depend on newer gcc. Skip generating executable.
++#)
+ 
+ casa_config_end()
+ 
+@@ -1121,8 +1122,8 @@
+ casa_add_module( dish CASACORE Boost)
+ casa_add_module( nrao CASACORE Boost)
+ casa_add_module( miriad CASACORE Boost components)
+-casa_add_module( casa_sakura CASACORE LIBSAKURA)
+-casa_add_module( singledish CASACORE casa_sakura msvis mstransform)
++#casa_add_module( casa_sakura CASACORE LIBSAKURA)
++#casa_add_module( singledish CASACORE casa_sakura msvis mstransform)
+ casa_add_module( bnmin1 Boost GSL GSLCBLAS CASACORE )
+ casa_add_module( air_casawvr CASACORE bnmin1 Boost synthesis WCSLIB CFITSIO LAPACK )
+ 
+Index: msvis/MSVis/VisBufferImpl2Internal.h
+===================================================================
+--- msvis/MSVis/VisBufferImpl2Internal.h	(revision 33292)
++++ msvis/MSVis/VisBufferImpl2Internal.h	(working copy)
+@@ -44,7 +44,7 @@
+ 
+ public:
+ 
+-    VbCacheItemBase () : isKey_p (False), vbComponent_p (Unknown), vb_p (0) {}
++    VbCacheItemBase () : vbComponent_p (Unknown), vb_p (0) {}
+ 
+     virtual ~VbCacheItemBase () {}
+ 
+@@ -111,8 +111,6 @@
+     : VbCacheItemBase (), isPresent_p (False)
+     {}
+ 
+-    virtual ~VbCacheItem () {}
+-
+     virtual void appendRows (Int, Bool)
+     {
+         // Noop for scalars
+@@ -388,16 +386,11 @@
+ public:
+ 
+     typedef typename VbCacheItem<T>::Filler Filler;
+-    typedef typename T::IteratorSTL::value_type ElementType;
+ 
+-    VbCacheItemArray() : capacity_p (0), shapePattern_p (NoCheck) {}
+     virtual ~VbCacheItemArray () {}
+ 
+     virtual void appendRows (Int nRows, Bool truncate)
+     {
+-
+-        // Only used when time averaging
+-
+         IPosition shape = this->getItem().shape();
+         Int nDims = shape.size();
+ 
+@@ -407,62 +400,33 @@
+         else if (truncate){
+ 
+             // Make any excess rows disappear with a little hack to
+-            // avoid a copy.  This leaves the storage unchanged and merely
+-            // changes the associated bookkeeping values.
++            // avoid a copy:
++            //
++            // The array tmp is copy constructed to reference this item's
++            // array, thus sharing its storage.  Then tmp is resized to have
++            // the appropriate shape (few rows). Finally the original array
++            // is set up to share the storage of tmp. This leave the current
++            // array with excess storage but the proper number of elements.
++            // When this item's array is freed or resized it will return all
++            // of the storage so there is no memory leak;
+ 
+-            AssertCc (nRows <= shape.last());
++            shape [nDims - 1] = nRows;
+ 
+-            shape.last() = nRows;
+-
+-            this->getItem().reformOrResize (shape, False);
+-
++            T tmp = this->getItem();
++            tmp.resize (shape, True);
++            this->getItem().reference (tmp);
+         }
+         else{
+ 
+-            // The array needs to resized to hold nRows worth of data.  If the
+-            // shape of the existing array is the same as the existing one ignoring
+-            // the number of rows then we expect the array
+-
+-            this->setAsPresent(); // This VB is being filled manually
+             IPosition desiredShape = this->getVb()->getValidShape (shapePattern_p);
+-            IPosition currentShape = getShape();
+ 
+-            // Determine if the existing shape is the same as the desired shape
+-            // ignoring rows.  If is the same, then the existing data will need
+-            // to be copied in the event that the array needs to be resized
+-            // (i.e., reallocated).
++            desiredShape [nDims - 1] = shape [nDims - 1] + nRows;
+ 
+-            Bool shapeOk = True; // will ignore last dimension
+-            for (uInt i = 0; i < currentShape.nelements() - 1; i++){
+-                shapeOk = shapeOk && desiredShape [i] == currentShape [i];
+-            }
++            this->getItem().resize (desiredShape, True);
++        }
+ 
+-            desiredShape.last() = nRows;
+-            this->getItem().reformOrResize (desiredShape, True, shapeOk, 20);
+-                // add storage for 20% more rows.
++        // Resize the array copying the existing values if needed.
+ 
+-//            if (! shapeOk){
+-//
+-//                // Need to completely resize this.  Since we're reshaping, there's
+-//                // no usable values to copy.
+-//
+-//                desiredShape.last() = nRows;
+-//                this->getItem().resize (desiredShape, False);
+-//                capacity_p = nRows;
+-//            }
+-//            else if (nRows > capacity_p){ // need more storage
+-//                resizeRows (nRows); // preserves data
+-//                capacity_p = nRows;
+-//            }
+-//            else{
+-//
+-//                // There's extra capacity in the array; just adjust the shape so it's
+-//                // as big as desired
+-//
+-//                shape.last() = nRows;
+-//                this->getItem().reformOrReshape (shape, False);
+-//            }
+-        }
+     }
+ 
+     virtual void copyRowElement (Int sourceRow, Int destinationRow)
+@@ -470,12 +434,6 @@
+         copyRowElementAux (this->getItem(), sourceRow, destinationRow);
+     }
+ 
+-    virtual IPosition getShape() const
+-    {
+-        return this->getItem().shape();
+-    }
+-
+-
+     void
+     initialize (VisBufferCache * cache,
+                 VisBufferImpl2 * vb,
+@@ -515,7 +473,6 @@
+             IPosition desiredShape = this->getVb()->getValidShape (shapePattern_p);
+ 
+             this->getItem().resize (desiredShape, copyValues);
+-            capacity_p = desiredShape.last();
+ 
+             if (! copyValues){
+                 this->getItem() = typename T::value_type();
+@@ -534,7 +491,7 @@
+             // Change the last dimension to be the new number of rows,
+             // then resize, copying values.
+ 
+-            shape.last() = newNRows;
++            shape (shape.nelements() - 1) = newNRows;
+ 
+             this->getItem().resize (shape, True);
+ 
+@@ -654,7 +611,6 @@
+ 
+ private:
+ 
+-    Int capacity_p;
+     ShapePattern shapePattern_p;
+ };
+ 
+Index: synthesis/CMakeLists.txt
+===================================================================
+--- synthesis/CMakeLists.txt	(revision 33292)
++++ synthesis/CMakeLists.txt	(working copy)
+@@ -596,6 +596,7 @@
+ 	TransformMachines/WTerm.h
+ 	TransformMachines/FTMachine.h
+ 	TransformMachines/GridFT.h
++	TransformMachines/SetJyGridFT.h
+ 	TransformMachines/HetArrayConvFunc.h
+ 	TransformMachines/MosaicFT.h
+ 	TransformMachines/MultiTermFT.h
+@@ -652,6 +653,7 @@
+ 	Utilities/AppRC.h
+ 	Utilities/FixVis.h
+ 	Utilities/ThreadCoordinator.h
++	Utilities/SigHandler.h
+ 	DESTINATION include/casacode/synthesis/Utilities
+ 	)
+ casa_add_executable( synthesis casasplit apps/casasplit/casasplit.cc )
+Index: synthesis/MeasurementEquations/Imager.h
+===================================================================
+--- synthesis/MeasurementEquations/Imager.h	(revision 33292)
++++ synthesis/MeasurementEquations/Imager.h	(working copy)
+@@ -762,7 +762,7 @@
+ 
+   // Create the FTMachines when necessary or when the control parameters
+   // have changed. 
+-  Bool createFTMachine();
++  virtual Bool createFTMachine();
+ 
+   void openSubTable (const Table & otherTable, Table & table, const TableLock & tableLock);
+ 
