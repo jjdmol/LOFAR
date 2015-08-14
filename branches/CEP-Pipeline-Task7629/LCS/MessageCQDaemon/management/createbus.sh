@@ -1,29 +1,4 @@
 #!/bin/bash 
-#set -x
-#
-#  createbus.sh
-#
-#  createbus <op> <busname> [<nodename>...] [ignore]
-#
-#     if no nodenames are given then localhost is assumed.
-#     <op> :  'add'  creates 
-#
-#
-#
-
-
-
-
-# inlined bustools since paths are unknow at this time.
-#---------------------------------------------------------------------------------
-#
-# Bus Tools for managing QPID dynamic routing message bus
-#
-
-# History:
-# 23/07/2015 Initial version by Jan Rinze Peterzon
-#
-
 #
 # description:
 # 
@@ -116,44 +91,47 @@ function disconnectbus {
 }
 
 function createbus {
-    if (( "$#" >=3 ))
+    if (( "$#" >=4 ))
     then
         busname=$1
-        hubname=$2
-        addlocalbus $busname $hubname
-        shift 2
+        port=$2
+        hubname=$3    
+        echo addlocalbus $busname $hubname:$port
+        addlocalbus $busname $hubname:$port
+        shift 3
         for i in "$@"
         do
-        addlocalbus $busname $i
-        connectbus $busname $hubname $i
+            addlocalbus $busname $i:$port
+            connectbus $busname $hubname:$port $i:$port
         done
     else
-        echo "usage: $FUNCNAME <busname> <hubnode> <spokenode> [<spokenode>..]"
+        echo "usage: $FUNCNAME <busname> <hubnode> <port> <spokenode> [<spokenode>..]"
     fi
 }
  
 function deletebus {
-    if (( "$#" >=3 ))
+    if (( "$#" >=4 ))
     then
         busname=$1
-        hubname=$2
-        shift 2
+        port=$2
+        hubname=$3        
+        shift 3
         for i in "$@"
         do
-            disconnectbus $busname $hubname $i
-            dellocalbus $busname $i
+            disconnectbus $busname $hubname:$port $i:$port
+            dellocalbus $busname $i:$port
         done
-        dellocalbus $busname $hubname
+        dellocalbus $busname $hubname:$port
     else
-        echo "usage: $FUNCNAME <busname> <hubnode> <spokenode> [<spokenode>..]"
+        echo "usage: $FUNCNAME <busname> <hubnode> <port> <spokenode> [<spokenode>..]"
     fi
 }
 
 # ----------------------------------------------------------------------------------
 
 function usage {
-    echo "'createbus' creates or deletes a dynamic routing bus between two nodes." 
-    echo "   createbus <add|del> <busname> <hubnode> <spkokenode> [<spokenode>..] [ignore]" 
+    echo "'createbus.sh' creates or deletes a dynamic routing bus between two nodes." 
+    echo "   createbus.sh <add|del> <busname> <port> <hubnode> <spkokenode> [<spokenode>..] [ignore]" 
     echo ""
     echo "If only one hostname is given the second hostname is presumed to be the local node." 
     echo "to ensure one-time delivery of messages avoid loops in the bus topology." 
@@ -170,9 +148,9 @@ fi
 
 operation="$1"
 busname="$2"
+port="$3"
 
-# skip both the name of the process and the required operation
-shift 2
+
 
 # make an array of the node names
 declare -a nodenames
@@ -181,6 +159,10 @@ numnodes=0
 
 # We need the option to ignore errors: it can be messy
 # check if "ignore" is mentioned on the command line
+
+# skip both the name of the process and the required operation
+shift 3
+
 ignore="False"
 for tmp in $@
 do 
@@ -207,22 +189,24 @@ if (( numnodes == 0 )); then
     numnodes=$((numnodes + 1))
 fi
 
+echo $port
+
 # depending on the first argument call the del or add  bus function
 if [ "$operation" == "del" ]; then
     if (( numnodes == 1 )); then
         echo "dellocalbus $busname ${nodenames[*]}"
-        dellocalbus $busname ${nodenames[*]}
+        dellocalbus $busname $port ${nodenames[*]}
     else
         echo "deletebus $busname ${nodenames[*]}"
-        deletebus $busname ${nodenames[*]}
+        deletebus $busname $port ${nodenames[*]}
     fi
 elif [ "$operation" == "add" ]; then
     if (( numnodes == 1 )); then
-        echo "addlocalbus  $busname ${nodenames[*]}"
-        addlocalbus  $busname ${nodenames[*]}
+        echo "addlocalbus $port  $busname ${nodenames[*]}"
+        addlocalbus  $busname $port ${nodenames[*]}
     else
-        echo "createbus $busname  ${nodenames[*]}"
-        createbus $busname  ${nodenames[*]}
+        echo "createbus $busname $port ${nodenames[*]}"
+        createbus $busname  $port ${nodenames[*]}
     fi
 else
     usage

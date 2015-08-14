@@ -22,7 +22,7 @@ function usage {
     echo "'createbusfromrange' creates or deletes a dynamic routing bus between a range of named nodes."
     echo " It uses the createbus.sh to perform the actual creation of the bus" 
     echo ""
-    echo "   createbusfromrange <add|del> <busname> <hubnode> <rootname> <range min> <range max>[ignore]" 
+    echo "   createbusfromrange <add|del> <busname> <port> <hubnode> <rootname> <range min> <range max>[ignore]" 
     echo " eg:"
     echo "  createbusfromrange add testbus lhn001 locus 1 94  ignore"
     echo ""
@@ -39,10 +39,10 @@ then
     exit 1
 fi
 
-node_list=`create_named_numbered_node_list $4 $5 $6`
+node_list=`create_named_numbered_node_list $5 $6 $7`
 
 my_dir="$(dirname "$0")"
 
-"$my_dir/createbus.sh" $1 $2 $3 $node_list $7
+"$my_dir/createbus.sh" $1 $2 $3 $4 $node_list $8
 
 

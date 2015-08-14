@@ -242,8 +242,8 @@ class resultQueueHandler(threading.Thread):
                                                       msg_content['job_uuid']))
             
             # unpack the output and eval to get as python dict
-            zipped_output = msg_content['output']
-            output = eval(get_string_from_zipstring(zipped_output))
+            output = msg_content['output']
+            output = eval(get_string_from_zipstring(output))
 
             job_uuid = msg_content['job_uuid']
             with self._pipeline_data_lock:

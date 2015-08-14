@@ -152,11 +152,11 @@ class SCQLib(object):
 
         The output is packed and send as a zipstring
         """
-        zipped_output = get_zipstring_from_string(str(output))
+        output = get_zipstring_from_string(str(output))
 
         # Create the output dict
         payload = {'type': 'output',
-                    'output': zipped_output,
+                    'output': output,
                     'job_msg': self._job_dict,
                     'job_uuid':self._job_uuid,
                     'session_uuid':self._session_uuid,

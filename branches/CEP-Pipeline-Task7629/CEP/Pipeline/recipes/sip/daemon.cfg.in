@@ -4,6 +4,8 @@ pythonpath 			= @PYTHON_INSTALL_DIR@
 working_directory 	= /data/scratch/$ENV{USER}
 
 busname 			= $ENV{USER}_pipelineBus
+# Default broker port == 5672
+broker_port         = 5672                      
 deadletter 			= %(busname)s.deadletter
 
 # The following directory must exist:
