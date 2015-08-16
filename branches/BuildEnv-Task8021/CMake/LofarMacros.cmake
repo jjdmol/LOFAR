@@ -184,11 +184,11 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
     else(POLICY CMP0026)
       get_target_property(_location ${_target} LOCATION)
     endif(POLICY CMP0026)
-    add_custom_target(${_target}_symlink ALL
+    add_custom_target(${PACKAGE_NAME}_${_target}_symlink ALL
       COMMAND ${CMAKE_COMMAND} -E create_symlink
       ${_location}
       ${_symlink})
-    add_dependencies(${_target}_symlink ${_target})
+    add_dependencies(${PACKAGE_NAME}_${_target}_symlink ${_target})
   endmacro(lofar_create_target_symlink _target _symlink)
 
 
