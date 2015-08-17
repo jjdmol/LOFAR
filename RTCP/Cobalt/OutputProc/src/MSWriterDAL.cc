@@ -257,7 +257,7 @@ namespace LOFAR
       beam.pointRAUnit().value = "deg";
       beam.pointDEC().value = tabDir.angle2 * 180.0 / M_PI;
       beam.pointDECUnit().value = "deg";
-      beam.pointOffsetRA().value = (tabDir.angle1 - beamDir.angle1) * 180.0 / M_PI;
+      beam.pointOffsetRA().value = (tabDir.angle1 - beamDir.angle1) * 180.0 / M_PI; // TODO: missing projection bug (also below for angle2)
       beam.pointOffsetRAUnit().value = "deg";
       beam.pointOffsetDEC().value = (tabDir.angle2 - beamDir.angle2) * 180.0 / M_PI;
       beam.pointOffsetDECUnit().value = "deg";
