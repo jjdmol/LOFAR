@@ -110,7 +110,7 @@ namespace LOFAR
     */
     double RingCoordinates::len_height()
     {
-      return len_width(); 
+      return itsWidth;
     }
 
     /*
@@ -134,7 +134,7 @@ namespace LOFAR
     */
     double RingCoordinates::delta_height()
     {
-      return 0.5 * len_width();
+      return 0.5 * len_height();
     }
 
     RingCoordinates::CoordinateVector RingCoordinates::createPrecompiledCoords()
