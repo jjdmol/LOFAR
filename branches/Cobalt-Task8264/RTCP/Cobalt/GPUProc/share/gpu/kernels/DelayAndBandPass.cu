@@ -35,7 +35,7 @@
 * into account:
 * - @c NR_CHANNELS: 1 or a multiple of 16
 * - if @c NR_CHANNELS == 1 (input data is in integer format):
-*   - @c NR_BITS_PER_SAMPLE: 8 or 16
+*   - @c NR_BITS_PER_SAMPLE: 4, 8 or 16
 *   - @c NR_SAMPLES_PER_SUBBAND: a multiple of 16
 * - if @c NR_CHANNELS > 1 (input data is in floating point format):
 *   - @c NR_SAMPLES_PER_CHANNEL: a multiple of 16
