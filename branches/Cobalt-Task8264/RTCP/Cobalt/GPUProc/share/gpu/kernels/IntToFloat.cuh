@@ -48,6 +48,25 @@ inline __device__ float convertIntToFloat(signed char x)
   // power (visibilities and Stokes) end up x16^2.
   return 16 * i;
 }
+#elif NR_BITS_PER_SAMPLE == 4
+// Extract the 4-bit real or imaginary part of an 8-bit input sample
+inline __device__ signed char extractRI(signed char x, bool imag)
+{
+  return imag ? x >> 4 : (x << 4) >> 4; // preserve sign
+}
+
+// WARNING: Caller is responsible for extracting 4-bit real or imaginary part from sample byte
+inline __device__ float convertIntToFloat(signed char x)
+{
+  // Edge case. -8 should be returned as -7
+  int i = x == -8 ? -7 : x;
+
+  // TODO: Is this the right scaling for 4-bit mode?
+  // Keep output scale the same as 16 bit mode.
+  // Gains (input and complex voltages) end up x16,
+  // power (visibilities and Stokes) end up x16^2.
+  return 16 * i;
+}
 #else
 #error unsupported NR_BITS_PER_SAMPLE
 #endif

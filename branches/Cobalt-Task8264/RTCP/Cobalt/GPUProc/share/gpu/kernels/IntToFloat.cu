@@ -20,14 +20,23 @@
 
 #include "IntToFloat.cuh"
 
-//#if NR_BITS_PER_SAMPLE   ==  4
-//typedef char1  SampleType
-#if NR_BITS_PER_SAMPLE ==  8
+// SampleType is a COMPLEX sample
+#if NR_BITS_PER_SAMPLE ==  4
+typedef signed char SampleType;
+#elif NR_BITS_PER_SAMPLE ==  8
 typedef char2  SampleType;
 #elif NR_BITS_PER_SAMPLE == 16
 typedef short2 SampleType;
 #else
 #error unsupported NR_BITS_PER_SAMPLE: must be 4, 8, or 16
+#endif
+
+#if NR_BITS_PER_SAMPLE ==  4
+#define REAL(sample) extractRI(sample, false)
+#define IMAG(sample) extractRI(sample, true)
+#else
+#define REAL(sample) sample.x
+#define IMAG(sample) sample.y
 #endif
 
 typedef SampleType (*SampledDataType)  [NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR_POLARIZATIONS];
@@ -69,10 +78,11 @@ __global__ void intToFloat(void *convertedDataPtr,
   for (uint time = threadIdx.x; time < NR_SAMPLES_PER_SUBBAND; time += blockDim.x)
   {
     float4 sample;
-    sample = make_float4(convertIntToFloat((*sampledData)[station][time][0].x),
-                         convertIntToFloat((*sampledData)[station][time][0].y),
-                         convertIntToFloat((*sampledData)[station][time][1].x), 
-                         convertIntToFloat((*sampledData)[station][time][1].y));
+
+    sample = make_float4(convertIntToFloat(REAL((*sampledData)[station][time][0])),
+                         convertIntToFloat(IMAG((*sampledData)[station][time][0])),
+                         convertIntToFloat(REAL((*sampledData)[station][time][1])),
+                         convertIntToFloat(IMAG((*sampledData)[station][time][1])));
 
     float2 sampleX = make_float2(sample.x, sample.y);
     (*convertedData)[station][0][time] = sampleX;
