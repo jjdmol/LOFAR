@@ -1,5 +1,5 @@
 //# RingCoordinates.cc
-//# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2008-2015  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -22,8 +22,7 @@
 #include <lofar_config.h>
 
 #include "RingCoordinates.h"
-#include <math.h>       // sqrt
-#include <algorithm>    // std::transform
+#include <math.h>       // sqrt, cos
 
 using namespace std;
 
@@ -142,6 +141,8 @@ namespace LOFAR
       //# stride for each side, starting left from the top, clock - wise
       CoordinateVector preCoords;
 
+      // Note: these asci art ring coord figures are wrong in the sense that
+      // they are rotated by 30 degr. The first ring vertex is actually on top.
       /*
       #  _
       # / \_
@@ -201,7 +202,9 @@ namespace LOFAR
       if (itsType == RingCoordinates::OTHER)
         return offset;
 
-      double cos_dec = cos(itsCenter.second + offset.second);
+      // warp coordinates closer to the NCP
+
+      double cos_dec = cos(itsCenter.second + offset.second); // TODO: stop gap solution for missing projection bug; unlike comment this code actually fails close to NCP
       double epsilon = 0.0001;
 
       if (cos_dec > epsilon)
