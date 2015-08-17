@@ -113,7 +113,7 @@ class LOFARnodeTCP(LOFARnode):
     to receive instructions via TCP from a
     :class:`~lofarpipe.support.jobserver.JobSocketReceiver`.
     """
-    def __init__(self, job_id, host, port):
+    def __init__(self, arg1, arg2, arg3):
         # Entrie point for QPID version of the internode communication at
         # the node recipe. If parsing of the ports as int fails
         # try connecting using QPID
@@ -127,21 +127,18 @@ class LOFARnodeTCP(LOFARnode):
 
         self._SCQLib = None
         if not self.use_daemon_communication:
-            self.job_id, self.host, self.port = int(job_id), host, int(port)
+            self.job_id, self.host, self.port = int(arg1), arg2, int(arg3)
         else:
-            bus_name = job_id 
-            session_uuid = host
-            job_uuid = port
-
-
-            hostname = socket.gethostname()
+            bus_name = arg1 
+            broker = arg2
+            job_uuid = arg3
 
             if not SCQLib.validParameterQueueName(job_uuid):
                 raise Exception("Incorrect parameterQueue name. This happens "
                          "when the toplevel uses sockets and the slave qpid")
                
-            self._SCQLib = SCQLib.SCQLib(hostname, bus_name,
-                                         session_uuid, job_uuid)
+            self._SCQLib = SCQLib.SCQLib(broker, bus_name,
+                                         job_uuid)
             self.host = None
             self.port = None
 
@@ -195,7 +192,7 @@ class LOFARnodeTCP(LOFARnode):
         """
         if self.use_daemon_communication:
             
-            self.arguments = self._SCQLib.getArguments()
+            self.arguments = self._SCQLib.get_arguments()
         else:
             while True:
                 tries -= 1

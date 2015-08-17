@@ -43,8 +43,7 @@ if __name__ == "__main__":
     # create or get parameters 
     hostname = socket.gethostname()
     busname = config.get(               "DEFAULT", "busname")
-    broker_port =  config.get(           "DEFAULT", "broker_port")
-    broker = "{0}:{1}".format(broker, hostname)
+    broker_port =  config.get(           "DEFAULT", "broker")
 
     # Get the slave command queue template  from the slave config!
     slaveCommandQueueNameTemplate = config.get( "slave_cqdaemon",

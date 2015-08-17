@@ -237,10 +237,8 @@ class SubprocessManager(object):
         """
         Sends a job parameter msg on the bus.
 
-        Both the session and job uuid are used to adress it.
-        THe session uuid allows the deadletter queue to resend it.
         """
-        subject = "parameters_" + session_uuid + "_" + job_uuid
+        subject = "parameters_" + job_uuid
         msg_content['type'] = 'parameters'
         msg_content['info'] = {"sender":"subprocessStarter",
                                "target":"SCQLib",

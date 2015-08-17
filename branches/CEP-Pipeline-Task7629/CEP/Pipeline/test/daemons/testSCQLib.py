@@ -104,7 +104,7 @@ class testForwardOfJobMsgToQueueuSlave(
 
         parameterQ.send(msg)
 
-        parameters = sCQLibObject.getArguments()
+        parameters = sCQLibObject._get_arguments()
 
 
 

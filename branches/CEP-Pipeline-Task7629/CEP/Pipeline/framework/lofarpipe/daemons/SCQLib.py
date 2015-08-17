@@ -88,7 +88,7 @@ class SCQLib(object):
     class combining objects and function needed for communication via QPID,
     using the NCQDaemon framework.
     """
-    def __init__(self, broker, busname, session_uuid, job_uuid):
+    def __init__(self, broker, busname, job_uuid):
         """
         Init function, connects to the logtopic and resultQueue.
 
@@ -96,27 +96,40 @@ class SCQLib(object):
         framework. Exit state is retrieved by the NCQDaemon, using the exit 
         value of the script
         """
-        self._session_uuid = session_uuid
+        self._session_uuid = None   # Needs to be exstracted from the parmeters
         self._job_uuid = job_uuid
+        self._broker = broker
+        self._busname = busname
 
-        self._parameterQueueName = busname + "/parameters_" + session_uuid + "_" + job_uuid
+        self._parameterQueueName = busname + "/parameters_" + job_uuid
+        
+        # Get the arguments from the parameter queued (including session uuid)
+        self._get_arguments()
+        # With the session id collected we can now connect al the named topics
+        self._connect_named_topics()
 
-        self._logTopicName = busname + "/log_" + session_uuid
-        self._returnQueueName = busname + "/result_" + session_uuid
+    def _connect_named_topics(self):
+
+        self._logTopicName = self._busname + "/log_" + self._session_uuid
+        self._returnQueueName = self._busname + "/result_" + self._session_uuid
         
         self._resultQueue = msgbus.ToBus(self._returnQueueName, 
-              broker = broker)
+              broker = self._broker)
 
         self._parameterQueue = msgbus.FromBus(self._parameterQueueName, 
-              broker = broker)
+              broker = self._broker)
 
-        self.QPIDLoggerHandler = QPIDLoggerHandler(broker,
+        self.QPIDLoggerHandler = QPIDLoggerHandler(self._broker,
                                                    self._logTopicName)
 
-        self._job_dict = None
-        self.environment = None
+    def get_arguments(self):
+        """
+        Returns the previously collected job_parameter dict
 
-    def getArguments(self):
+        """
+        return self._job_dict['parameters']['job_parameters']
+
+    def _get_arguments(self):
         """
         Retrieves the arguments for the current run from the command queue and
         returns them as a new dict.
@@ -141,9 +154,10 @@ class SCQLib(object):
 
         self._job_dict =  eval(msg.content().payload)  # raises on parse error
         self._parameterQueue.ack(msg)
+        self._session_uuid    = self._job_dict['session_uuid']
         self.environment = self._job_dict['parameters']['environment']
 
-        return self._job_dict['parameters']['job_parameters']
+        
 
     def send_results(self, output):
         """

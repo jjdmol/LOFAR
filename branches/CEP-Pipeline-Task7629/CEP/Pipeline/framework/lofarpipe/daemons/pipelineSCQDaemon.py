@@ -41,8 +41,7 @@ if __name__ == "__main__":
     hostname = socket.gethostname()
    
     busname = config.get(               "DEFAULT", "busname")
-    broker_port =  config.get(           "DEFAULT", "broker_port")
-    broker = "{0}:{1}".format(broker, hostname)
+    broker=  config.get(           "DEFAULT", "broker")
 
     slaveCommandQueueNameTemplate = config.get( "slave_cqdaemon",
                              "command_queue_template").format(hostname)

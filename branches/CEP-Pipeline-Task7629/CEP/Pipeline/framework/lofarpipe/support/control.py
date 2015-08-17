@@ -158,7 +158,8 @@ class control(StatefulRecipe):
             busname = self.config.get(
                         "daemon", "busname")
 
-            broker = socket.gethostname()  # always use local host.
+            broker =self.config.get(
+                        "daemon", "broker")
             try:
                 self.mcqlib  = MCQLib.MCQLib(self.logger, 
                                              broker,
