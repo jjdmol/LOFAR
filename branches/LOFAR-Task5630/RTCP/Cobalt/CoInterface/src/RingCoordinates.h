@@ -61,8 +61,8 @@ namespace LOFAR
 
     private:
 
-      // Note: these asci art ring coord figures are wrong in the sense that
-      // they are rotated by 30 degr. The first ring vertex is actually on top.
+      // Note: these asci art figures represent 1-2 TABs (NOT entire rings).
+      // Rings are also hexagonal, but with the first ring vertex (TAB) on top.
       /*
       *  _
       * / \
@@ -114,7 +114,7 @@ namespace LOFAR
 
       CoordinateVector itsCoordinates;
       size_t itsNRings; ///< central beam is ring nr 1
-      double itsWidth; ///< radius of ring 2 around central TAB
+      double itsWidth; ///< dist of any TAB in ring 2 from central TAB
       Coordinate itsCenter;
       COORDTYPES itsType;
     };

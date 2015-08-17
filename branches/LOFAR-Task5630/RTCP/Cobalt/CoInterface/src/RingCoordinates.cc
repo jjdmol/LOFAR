@@ -79,6 +79,9 @@ namespace LOFAR
 
     }
 
+    // Note: these asci art figures represent 1-2 TABs (NOT entire rings).
+    // Rings are also hexagonal, but with the first ring vertex (TAB) on top.
+
     /*
     *  _
     * / \
@@ -141,8 +144,6 @@ namespace LOFAR
       //# stride for each side, starting left from the top, clock - wise
       CoordinateVector preCoords;
 
-      // Note: these asci art ring coord figures are wrong in the sense that
-      // they are rotated by 30 degr. The first ring vertex is actually on top.
       /*
       #  _
       # / \_
