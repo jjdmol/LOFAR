@@ -759,7 +759,7 @@ namespace LOFAR
                 // Note that RingCoordinates provide *relative* coordinates, and
                 // we need absolute ones.
                 tab.direction.type = ptrRingCoords->coordTypeAsString();
-                tab.direction.angle1 = obsSap.direction.angle1 + pointing.first;
+                tab.direction.angle1 = obsSap.direction.angle1 + pointing.first; // TODO: missing projection bug (also below for angle2)
                 tab.direction.angle2 = obsSap.direction.angle2 + pointing.second;
                 // One dispersion measure for all TABs in rings is inconvenient,
                 // but not used anyway. Unclear if setting to 0.0 is better/worse.
