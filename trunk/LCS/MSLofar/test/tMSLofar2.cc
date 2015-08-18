@@ -378,11 +378,14 @@ uInt tConstructors(const String& msName)
       if (!thrown) errCount++;
       
       // make table invalid before destruction
-      thrown=False;
-      SetupNewTable newtab("tMSLofar2_tmp.msAnt","antTD",Table::New);
-      MSAntenna msant(newtab);
-      msant.markForDelete();
-      msant.renameColumn("myPos",MSAntenna::columnName(MSAntenna::POSITION));
+      // Older casacore throws exception, newer logs a message.
+      try {
+        SetupNewTable newtab("tMSLofar2_tmp.msAnt","antTD",Table::New);
+        MSAntenna msant(newtab);
+        msant.markForDelete();
+        msant.renameColumn("myPos",MSAntenna::columnName(MSAntenna::POSITION));
+      } catch (AipsError) {
+      }
     }
 
     //cleanup
