@@ -358,6 +358,11 @@ namespace LOFAR {
       }
     }
 
+    bool MultiMSReader::canUpdateMS() const
+    {
+      return false;
+    }
+
     void MultiMSReader::getUVW (const RefRows& rowNrs,
                                 double time, DPBuffer& buf)
     {

@@ -1,5 +1,5 @@
-//# MultiMSReader.h: DPPP step reading from multiple MSs
-//# Copyright (C) 2011
+//# MSReader.h: DPPP step reading from an MS being filled
+//# Copyright (C) 2013
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -17,15 +17,15 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: MultiMSReader.h 17800 2011-04-19 12:37:59Z diepen $
+//# $Id: MSReader.h 27640 2013-12-04 08:02:49Z diepen $
 //#
 //# @author Ger van Diepen
 
-#ifndef DPPP_MULTIMSREADER_H
-#define DPPP_MULTIMSREADER_H
+#ifndef DPPP_MSPOLLINGREADER_H
+#define DPPP_MSPOLLINGREADER_H
 
 // @file
-// @brief DPPP step reading from multiple MSs
+// @brief DPPP step reading from an MS
 
 #include <DPPP/MSReader.h>
 #include <DPPP/DPBuffer.h>
@@ -34,6 +34,7 @@
 #include <tables/Tables/TableIter.h>
 #include <tables/Tables/RefRows.h>
 #include <casa/Arrays/Slicer.h>
+#include <casa/OS/File.h>
 #include <Common/lofar_vector.h>
 
 namespace LOFAR {
@@ -57,6 +58,8 @@ namespace LOFAR {
     //  <li> msin.nchan: number of channels to use [all]
     //  <li> msin.useflag: use the existing flags? [yes]
     //  <li> msin.datacolumn: the data column to use [DATA]
+    //  <li> msin.weightcolumn: the weights column to use [WEIGHT_SPECTRUM or
+    //           WEIGHT]
     //  <li> msin.starttime: first time to use [first time in MS]
     //  <li> msin.endtime: last time to use [last time in MS]
     // </ul>
@@ -125,76 +128,38 @@ namespace LOFAR {
     //  </tr>
     // </table>
 
-    class MultiMSReader: public MSReader
+    class MSPollingReader: public MSReader
     {
     public:
+      // Default constructor.
+      MSPollingReader();
+
       // Construct the object for the given MS.
       // Parameters are obtained from the parset using the given prefix.
-      MultiMSReader (const vector<string>& msNames,
-                     const ParameterSet&, const string& prefix);
+      // The missingData argument is for MultiMSReader.
+      MSPollingReader (const std::string& msName,
+                       const ParameterSet&, const string& prefix);
 
-      virtual ~MultiMSReader();
-
-      // Process the next data chunk.
-      // It returns false when at the end.
-      virtual bool process (const DPBuffer&);
-
-      // Finish the processing of this step and subsequent steps.
-      virtual void finish();
-
-      // Update the general info (by initializing it).
-      virtual void updateInfo (const DPInfo&);
+      virtual ~MSPollingReader();
 
       // Show the step parameters.
       virtual void show (std::ostream&) const;
 
-      // If needed, show the flag counts.
-      virtual void showCounts (std::ostream&) const;
-
-      // Show the timings.
-      virtual void showTimings (std::ostream&, double duration) const;
-
-      // The input MS cannot be updated for MultiMSReader.
+      // The input MS cannot be updated for MSPollingReader.
       virtual bool canUpdateMS() const;
 
-      // Read the UVW at the given row numbers.
-      virtual void getUVW (const casa::RefRows& rowNrs,
-                           double time,
-                           DPBuffer& buf);
-
-      // Read the weights at the given row numbers.
-      virtual void getWeights (const casa::RefRows& rowNrs,
-                               DPBuffer& buf);
-
-      // Read the FullRes flags (LOFAR_FULL_RES_FLAG) at the given row numbers.
-      // It returns a 3-dim array [norigchan, ntimeavg, nbaseline].
-      // If undefined, false is returned.
-      virtual bool getFullResFlags (const casa::RefRows& rowNrs,
-                                    DPBuffer& buf);
-
-      // Tell if the visibility data are to be read.
-      virtual void setReadVisData (bool readVisData);
-
     private:
-      // Handle the info for all bands.
-      void handleBands();
+      // Set the table iterator to the next time slot in the input MS.
+      // It returns false when no more data.
+      virtual bool doGetNext();
 
-      // Sort the bands (MSs) inorder of frequency.
-      void sortBands();
-
-      // Fill the band info where some MSs are missing.
-      void fillBands();
+      // Get the middle of the last time interval from the OBSERVATION table.
+      double getLastTimeFromObs() const;
 
       //# Data members.
-      bool                  itsOrderMS;   //# sort multi MS in order of freq?
-      int                   itsFirst;     //# first valid MSReader (<0 = none)
-      int                   itsNMissing;  //# nr of missing MSs
-      vector<string>        itsMSNames;
-      vector<MSReader*>     itsReaders;   //# same as itsSteps
-      vector<DPStep::ShPtr> itsSteps;     //# used for automatic destruction
-      vector<DPBuffer>      itsBuffers;
-      uint                  itsFillNChan; //# nr of chans for missing MSs
-      FlagCounter           itsFlagCounter;
+      double      itsPollingTime;
+      double      itsMaxWaitTime;
+      bool        itsEndOfData;           //# is there more data?
     };
 
   } //# end namespace

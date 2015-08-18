@@ -428,10 +428,10 @@ namespace LOFAR {
       DComplex diag0B = itsParms[0][antB][timeFreqOffset];
       DComplex diag1B = itsParms[1][antB][timeFreqOffset];
 
-      vis[0] *= diag0A * conj(diag0B);
-      vis[1] *= diag0A * conj(diag1B);
-      vis[2] *= diag1A * conj(diag0B);
-      vis[3] *= diag1A * conj(diag1B);
+      vis[0] *= Complex(diag0A * conj(diag0B));
+      vis[1] *= Complex(diag0A * conj(diag1B));
+      vis[2] *= Complex(diag1A * conj(diag0B));
+      vis[3] *= Complex(diag1A * conj(diag1B));
 
       if (itsUpdateWeights) {
         weight[0] /= norm(diag0A) * norm(diag0B);

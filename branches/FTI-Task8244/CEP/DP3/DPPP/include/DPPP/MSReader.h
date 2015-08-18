@@ -136,9 +136,11 @@ namespace LOFAR {
       // Construct the object for the given MS.
       // Parameters are obtained from the parset using the given prefix.
       // The missingData argument is for MultiMSReader.
+      // The doOpen argument is for MSPollingReader.
       MSReader (const std::string& msName,
                 const ParameterSet&, const string& prefix,
-                bool missingData = false);
+                bool missingData = false,
+                bool doOpen = true);
 
       virtual ~MSReader();
 
@@ -164,6 +166,10 @@ namespace LOFAR {
 
       // Show the timings.
       virtual void showTimings (std::ostream&, double duration) const;
+
+      // Can the input MS be updated?
+      // That is not the case for MultiMSReader and MSPollingReader.
+      virtual bool canUpdateMS() const;
 
       // Read the UVW at the given row numbers into the buffer.
       virtual void getUVW (const casa::RefRows& rowNrs,
@@ -261,7 +267,19 @@ namespace LOFAR {
       static void flagInfNaN(const casa::Cube<casa::Complex>& dataCube,
                        casa::Cube<bool>& flagsCube, FlagCounter& flagCounter);
 
+    protected:
+      // Open the MS and prepare access to it.
+      void openMS (const string& msName);
+
+      // Show all parameters.
+      void showParm (std::ostream&, uint ntimes) const;
+
     private:
+      // Set the table iterator to the next time slot in the input MS.
+      // It returns false when no more data.
+      bool getNext();
+      virtual bool doGetNext();
+
       // Prepare the access to the MS.
       // Return the first and last time and the interval.
       void prepare (double& firstTime, double& lastTime,
@@ -291,6 +309,8 @@ namespace LOFAR {
       casa::String        itsModelColName;
       casa::String        itsStartChanStr;  //# startchan expression
       casa::String        itsNrChanStr;     //# nchan expression
+      casa::String        itsStartTimeStr;  //# start time string
+      casa::String        itsEndTimeStr;    //# end time string
       string              itsSelBL;         //# Baseline selection string
       bool                itsReadVisData;   //# read visibility data?
       bool                itsNeedSort;      //# sort needed on time,baseline?
@@ -314,6 +334,8 @@ namespace LOFAR {
       double              itsLastMSTime;
       uint                itsNrRead;        //# nr of time slots read from MS
       uint                itsNrInserted;    //# nr of inserted time slots
+      bool                itsSkipRead;      //# Read next time slot?
+      bool                itsPastEnd;       //# Past the end of data
       casa::Slicer        itsColSlicer;     //# slice in corr,chan column
       casa::Slicer        itsArrSlicer;     //# slice in corr,chan,bl array
       bool                itsHasFullResFlags;
