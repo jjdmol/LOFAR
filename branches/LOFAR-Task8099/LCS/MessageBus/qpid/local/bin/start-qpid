@@ -1,0 +1,26 @@
+#!/bin/bash
+ 
+MYID=$( id -un )
+ 
+if [[ "$MYID" == "qpid" ]]
+then
+   QPID=$(qpidd -c 2>&1 )
+   RETVAL=$?
+   if [ "$RETVAL" == "1" ]
+   then
+      echo -n "Starting QPID daemon..."
+      qpidd -d --data-dir $HOME/.qpidd --config /opt/qpid/etc/qpid/qpidd.conf --auth no --log-to-file $HOME/qpid.log
+
+      SUCCESS=$?
+      if [ "$SUCCESS" == 0 ]
+      then
+         echo " OK. "
+      else
+         echo " FAILED. "
+      fi
+   else
+      echo "QPID daemon is already running."
+   fi
+else
+   echo Need to be user qpid to start QPID daemon
+fi
