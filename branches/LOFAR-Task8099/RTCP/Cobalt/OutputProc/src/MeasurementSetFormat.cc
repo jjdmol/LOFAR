@@ -554,7 +554,7 @@ namespace LOFAR
       cli.put         (rownr, clivec);
     }
 
-    void MSCreate::fillProcessor()
+    void MeasurementSetFormat::fillProcessor()
     {
       MSProcessor msproc = itsMS->processor();
       MSProcessorColumns msprocCol(msproc);
@@ -568,7 +568,7 @@ namespace LOFAR
       msproc.flush();
     }
 
-    void MSCreate::fillState()
+    void MeasurementSetFormat::fillState()
     {
       MSState msstate = itsMS->state();
       MSStateColumns msstateCol(msstate);
