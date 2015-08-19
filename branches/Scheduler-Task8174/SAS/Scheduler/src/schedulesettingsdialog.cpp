@@ -130,7 +130,11 @@ ScheduleSettingsDialog::ScheduleSettingsDialog(Controller * controller) :
 	header << "ID" << "Name" << "Process type" << "Process subtype" << "Strategy" << "Status" << "Description";
 	ui.tableWidgetDefaultTemplates->setHorizontalHeaderLabels(header);
 	ui.tableWidgetDefaultTemplates->horizontalHeader()->setStretchLastSection(true);
-	ui.tableWidgetDefaultTemplates->horizontalHeader()->setResizeMode(QHeaderView::Interactive);
+#if QT_VERSION >= 0x050000
+    ui.tableWidgetDefaultTemplates->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+#else
+    ui.tableWidgetDefaultTemplates->horizontalHeader()->setResizeMode(QHeaderView::Interactive);
+#endif
 
     ui.checkBoxAutoPublish->setChecked(Controller::theSchedulerSettings.getAutoPublish());
 	itsPublishLocal = Controller::theSchedulerSettings.publishLocal();
@@ -741,7 +745,7 @@ void ScheduleSettingsDialog::privateKeyBrowseDialog(void) {
 			dialog.setDirectory(prevFile.absoluteDir());
 		}
 	}
-	dialog.setFilter("private key files (*.ppk)");
+    dialog.setNameFilter("private key files (*.ppk)");
 	dialog.exec();
 	if (dialog.result() == QDialog::Accepted) {
 		QStringList files = dialog.selectedFiles();

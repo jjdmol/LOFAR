@@ -162,7 +162,11 @@ TaskDialog::TaskDialog(QWidget *parentGUI, Controller *controller)
 	ui.tableWidgetTiedArrayBeams->setColumnWidth(1,150);
 	ui.tableWidgetTiedArrayBeams->setColumnWidth(2,130);
 	ui.tableWidgetTiedArrayBeams->horizontalHeader()->setStretchLastSection(true);
-	ui.tableWidgetTiedArrayBeams->horizontalHeader()->setResizeMode(QHeaderView::Interactive);
+#if QT_VERSION >= 0x050000
+    ui.tableWidgetTiedArrayBeams->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+#else
+    ui.tableWidgetTiedArrayBeams->horizontalHeader()->setResizeMode(QHeaderView::Interactive);
+#endif
 
 	// enable default output data type
 	ui.checkBoxCorrelatedData->blockSignals(true);

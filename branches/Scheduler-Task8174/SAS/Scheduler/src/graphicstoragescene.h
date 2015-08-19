@@ -14,7 +14,7 @@
 #ifndef GRAPHICSTORAGESCENE_H
 #define GRAPHICSTORAGESCENE_H
 
-#include <QtGui/QWidget>
+#include <QWidget>
 #include "ui_graphicstoragescene.h"
 #include <QGraphicsScene>
 #include "GraphicTimeLine.h"

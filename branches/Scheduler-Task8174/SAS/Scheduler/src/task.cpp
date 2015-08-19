@@ -300,7 +300,7 @@ Task::Task(const QSqlQuery &query, const OTDBtree &SAS_tree)
 		firstPossibleDay = day;
 	}
 	else { // first possible day not set use the schedule start day or the current date whichever is latest
-		firstPossibleDay = std::max(QDate::currentDate().toJulianDay() - J2000_EPOCH, (int)Controller::theSchedulerSettings.getEarliestSchedulingDay().toJulian());
+        firstPossibleDay = std::max(QDate::currentDate().toJulianDay() - J2000_EPOCH, (qint64)Controller::theSchedulerSettings.getEarliestSchedulingDay().toJulian());
 	}
 	QString time = query.value(query.record().indexOf("windowMaximumTime")).toString();
 	if (!time.isEmpty()) {

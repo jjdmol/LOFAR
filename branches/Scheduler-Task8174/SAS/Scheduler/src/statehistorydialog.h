@@ -1,7 +1,7 @@
 #ifndef STATEHISTORYDIALOG_H
 #define STATEHISTORYDIALOG_H
 
-#include <QtGui/QDialog>
+#include <QDialog>
 #include "ui_statehistorydialog.h"
 #include <QDateTime>
 

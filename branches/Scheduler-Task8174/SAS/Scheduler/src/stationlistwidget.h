@@ -14,7 +14,7 @@
 #ifndef STATIONLISTWIDGET_H
 #define STATIONLISTWIDGET_H
 
-#include <QtGui/QListWidget>
+#include <QListWidget>
 #include "ui_stationlistwidget.h"
 
 class QMouseEvents;

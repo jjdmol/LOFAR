@@ -519,9 +519,11 @@ bool DataHandler::saveProgramPreferences(void) {
 		return false;
 }
 
-bool DataHandler::saveSettings(const QString &filename) const {
-	QFile file(filename);
-	if (file.open(QIODevice::WriteOnly)) {
+bool DataHandler::saveSettings(const QString &filename) const
+{
+    QFile file(QDir::currentPath() + filename);
+    if (file.open(QIODevice::WriteOnly))
+    {
 		QDataStream out(&file);
 		out << (unsigned)FILE_WRITE_VERSION;
 		out << Controller::theSchedulerSettings;

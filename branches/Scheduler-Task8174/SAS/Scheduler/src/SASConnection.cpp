@@ -1898,7 +1898,7 @@ bool SASConnection::getSchedulerInfo(int tree_id, Task &task) {
 	if (query.next()) {
 		int day = query.value(0).toInt();
 		if (day) task.setWindowFirstDay(day);
-		else task.setWindowFirstDay(std::max(QDate::currentDate().toJulianDay() - J2000_EPOCH, (int)Controller::theSchedulerSettings.getEarliestSchedulingDay().toJulian()));
+        else task.setWindowFirstDay(std::max(QDate::currentDate().toJulianDay() - J2000_EPOCH, (qint64)Controller::theSchedulerSettings.getEarliestSchedulingDay().toJulian()));
 	}
 	else { // serious error
 		itsProgressDialog.addError(QString("Error: Scheduler.firstPossibleDay node of SAS tree: ") + treeID + " could not be fetched");
