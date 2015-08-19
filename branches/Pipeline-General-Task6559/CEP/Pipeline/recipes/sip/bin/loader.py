@@ -3,7 +3,8 @@ import sys
 
 def load_plugin(name, path=None):
     if path:
-        sys.path.append(path)
+        for item in path:
+            sys.path.append(item)
     mod = __import__("PipelineStep_" + name)
     return mod
 

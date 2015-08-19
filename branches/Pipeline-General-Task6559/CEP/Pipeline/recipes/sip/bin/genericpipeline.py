@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import os
 import sys
 import copy
@@ -344,8 +345,14 @@ class GenericPipeline(control):
 
             # plugins
             if kind_of_step == 'plugin':
+                bla = str(self.config.get('DEFAULT', 'recipe_directories'))
+                pluginpath = bla.rstrip(']').lstrip('[').split(',')
+                for i, item in enumerate(pluginpath):
+                    pluginpath[i] = os.path.join(item, 'plugins')
+                if 'pluginpath' in pipeline_args.keys():
+                    pluginpath.append(pipeline_args.getString('pluginpath'))
                 with duration(self, stepname):
-                    resultdict = loader.call_plugin(typeval, pipeline_args.getString('pluginpath'),
+                    resultdict = loader.call_plugin(typeval, pluginpath,
                                                     inputargs,
                                                     **inputdict)
             resultdicts[stepname] = resultdict
