@@ -102,6 +102,9 @@ class SCQLib(object):
         self._busname = busname
 
         self._parameterQueueName = busname + "/parameters_" + job_uuid
+
+        self._parameterQueue = msgbus.FromBus(self._parameterQueueName, 
+              broker = self._broker)
         
         # Get the arguments from the parameter queued (including session uuid)
         self._get_arguments()
@@ -114,9 +117,6 @@ class SCQLib(object):
         self._returnQueueName = self._busname + "/result_" + self._session_uuid
         
         self._resultQueue = msgbus.ToBus(self._returnQueueName, 
-              broker = self._broker)
-
-        self._parameterQueue = msgbus.FromBus(self._parameterQueueName, 
               broker = self._broker)
 
         self.QPIDLoggerHandler = QPIDLoggerHandler(self._broker,

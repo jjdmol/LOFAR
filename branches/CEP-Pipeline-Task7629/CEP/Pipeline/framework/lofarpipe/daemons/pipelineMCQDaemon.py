@@ -41,9 +41,11 @@ if __name__ == "__main__":
     config.read(config_path)
 
     # create or get parameters 
-    hostname = socket.gethostname()
+
     busname = config.get(               "DEFAULT", "busname")
-    broker_port =  config.get(           "DEFAULT", "broker")
+
+    hostname = socket.gethostname()
+    broker=  "{0}:{1}".format(hostname, config.get("DEFAULT", "broker_port"))
 
     # Get the slave command queue template  from the slave config!
     slaveCommandQueueNameTemplate = config.get( "slave_cqdaemon",
@@ -55,7 +57,6 @@ if __name__ == "__main__":
     loop_interval = config.getfloat(   "master_cqdaemon", "loop_interval")
     max_repost =  config.getfloat(     "master_cqdaemon", "max_repost")
 
-    print loop_interval
     daemon = pipelineMCQDaemonImp.pipelineMCQDaemonImp(
                 broker, 
                 busname, 

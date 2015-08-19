@@ -1,5 +1,5 @@
-#!/bin/bash 
-#
+#!/bin/bash -x
+# -v
 # description:
 # 
 # createbus <busname> <hub> <spoke> [<spoke> ..]
@@ -32,10 +32,9 @@ function addlocalbus {
             myname=$2
         fi
         
-        echo " creating exchanges on "$myname" for bus "$busname
         qpid-config -b $myname add exchange topic $busname".deadletterproxy" --durable
         qpid-config -b $myname add exchange direct $busname --durable --alternate-exchange=$busname".deadletterproxy"
-        echo " creating deadletters queue on "$myname
+
         qpid-config -b $myname add queue $busname".deadletter" --durable
         qpid-config -b $myname bind $busname".deadletterproxy" $busname".deadletter" '#' --durable
     else
@@ -52,11 +51,10 @@ function dellocalbus {
         then
             myname=$2
         fi
-    
-        echo " deleting bus "$busname" on "$myname
+  
+
         qpid-config -b $myname del exchange $busname 
         qpid-config -b $myname del exchange $busname".deadletterproxy"
-        echo " deleting deadletters queue on "$myname
         qpid-config -b $myname del queue $busname".deadletter" --force
     else
         echo "Usage: $FUNCNAME <busname> [nodename]"
@@ -71,6 +69,7 @@ function connectbus {
         busname=$1
         firstnode=$2  # Hubnode
         secondnode=$3 # Spoke node
+
         qpid-route dynamic add $firstnode $secondnode $busname --durable --ack=1  
         qpid-route dynamic add $secondnode $firstnode $busname --durable --ack=1
     else
@@ -83,6 +82,7 @@ function disconnectbus {
         busname=$1
         firstnode=$2
         secondnode=$3
+
         qpid-route dynamic del $firstnode $secondnode $busname 
         qpid-route dynamic del $secondnode $firstnode $busname 
     else
@@ -96,7 +96,7 @@ function createbus {
         busname=$1
         port=$2
         hubname=$3    
-        echo addlocalbus $busname $hubname:$port
+       
         addlocalbus $busname $hubname:$port
         shift 3
         for i in "$@"
@@ -194,18 +194,14 @@ echo $port
 # depending on the first argument call the del or add  bus function
 if [ "$operation" == "del" ]; then
     if (( numnodes == 1 )); then
-        echo "dellocalbus $busname ${nodenames[*]}"
         dellocalbus $busname $port ${nodenames[*]}
     else
-        echo "deletebus $busname ${nodenames[*]}"
         deletebus $busname $port ${nodenames[*]}
     fi
 elif [ "$operation" == "add" ]; then
     if (( numnodes == 1 )); then
-        echo "addlocalbus $port  $busname ${nodenames[*]}"
         addlocalbus  $busname $port ${nodenames[*]}
     else
-        echo "createbus $busname $port ${nodenames[*]}"
         createbus $busname  $port ${nodenames[*]}
     fi
 else

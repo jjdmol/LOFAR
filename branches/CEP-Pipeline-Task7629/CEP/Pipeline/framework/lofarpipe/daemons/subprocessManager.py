@@ -75,7 +75,7 @@ class SubprocessManager(object):
 
         
         cmd_with_bus_details = "exec " + command + " " + self._busname + \
-                  " " + session_uuid + " " + job_uuid 
+                  " " + self._broker + " " + job_uuid 
         # new start a subprocess
         process, error_str =  self._start_subprocess(
           cmd_with_bus_details, working_dir, environment)
