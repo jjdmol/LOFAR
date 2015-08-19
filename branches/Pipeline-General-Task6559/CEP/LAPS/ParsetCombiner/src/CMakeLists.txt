@@ -1,8 +1,7 @@
 # $Id$
 
-include(PythonInstall)
 
-python_install(
+install(PROGRAMS
   pcombine.py
 
-  DESTINATION LAPS/ParsetCombiner)
+  DESTINATION bin)

@@ -47,13 +47,13 @@ int main (int argc, char* argv[])
     inputs.create ("antennaset", "",
 		   "Antenna set used (e.g. LBA_INNER)",
 		   "string");
-    inputs.create ("antennasetfile", "/opt/lofar/etc/AntennaSets.conf",
+    inputs.create ("antennasetfile", "AntennaSets.conf",
 		   "Name of the AntennaSet file",
 		   "string");
-    inputs.create ("antennafielddir", "/opt/lofar/etc/StaticMetaData",
+    inputs.create ("antennafielddir", "StaticMetaData",
 		   "Directory where the AntennaField.conf files reside",
 		   "string");
-    inputs.create ("ihbadeltadir", "/opt/lofar/etc/StaticMetaData",
+    inputs.create ("ihbadeltadir", "StaticMetaData",
 		   "Directory where the iHBADelta.conf files reside",
 		   "string");
     inputs.create ("overwrite", "false",

@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -199,11 +199,11 @@ size_t SubArray::getSize() const
 
 size_t SubArray::pack(char* buffer) const
 {
-	uint32 offset = 0;
+	size_t offset = 0;
 
-	MSH_pack(buffer, offset, itsName);
-	MSH_pack(buffer, offset, itsAntennaSet);
-	MSH_pack(buffer, offset, itsRCUmask);
+	offset = MSH_pack(buffer, offset, itsName);
+	offset = MSH_pack(buffer, offset, itsAntennaSet);
+	offset = MSH_pack(buffer, offset, itsRCUmask);
 	offset += itsSPW.pack(buffer + offset);
 
 	return offset;
@@ -211,11 +211,11 @@ size_t SubArray::pack(char* buffer) const
 
 size_t SubArray::unpack(const char* buffer)
 {
-	uint32 offset = 0;
+	size_t offset = 0;
 
-	MSH_unpack(buffer, offset, itsName);
-	MSH_unpack(buffer, offset, itsAntennaSet);
-	MSH_unpack(buffer, offset, itsRCUmask);
+	offset = MSH_unpack(buffer, offset, itsName);
+	offset = MSH_unpack(buffer, offset, itsAntennaSet);
+	offset = MSH_unpack(buffer, offset, itsRCUmask);
 	offset += itsSPW.unpack(buffer + offset);
 
 	return offset;
@@ -230,16 +230,14 @@ size_t SubArrayMap::getSize() const
 
 size_t SubArrayMap::pack(char* buffer) const
 {
-	uint32	offset = 0;
-	MSH_pack(buffer, offset, (*this));
-	return (offset);
+	size_t	offset = 0;
+	return MSH_pack(buffer, offset, (*this));
 }
 
 size_t SubArrayMap::unpack(const char* buffer)
 {
-	uint32 offset = 0;
-	MSH_unpack(buffer, offset, (*this));
-	return (offset);
+	size_t offset = 0;
+	return MSH_unpack(buffer, offset, (*this));
 }
 
   } // namespace ICAL

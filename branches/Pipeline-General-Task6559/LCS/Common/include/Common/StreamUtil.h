@@ -27,6 +27,7 @@
 // Useful stream manipulation methods.
 
 //# Includes
+#include <utility>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>

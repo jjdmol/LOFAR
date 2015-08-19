@@ -2,7 +2,7 @@
 
 #  Copyright (C) 2008-2010
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
-#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -29,4 +29,4 @@ set(srcdir "${CMAKE_CURRENT_SOURCE_DIR}")
 ## Configure the LOFAR CTest wrapper script in the current binary directory
 ## ----------------------------------------------------------------------------
 configure_file(${LOFAR_ROOT}/CMake/testscripts/runctest.sh.in
-               ${CMAKE_CURRENT_BINARY_DIR}/runctest.sh)
+               ${CMAKE_CURRENT_BINARY_DIR}/runctest.sh @ONLY)

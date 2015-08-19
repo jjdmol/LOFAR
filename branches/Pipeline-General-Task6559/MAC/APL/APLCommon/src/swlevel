@@ -4,7 +4,7 @@
 #
 # Copyright (C) 2006
 # ASTRON (Netherlands Foundation for Research in Astronomy)
-# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -175,7 +175,7 @@ start_prog()
 	fi
 
 	# Check if program is already running
-	/sbin/pidof ${prog} 1>/dev/null 2>&1
+	/sbin/pidof -x ${prog} 1>/dev/null 2>&1
 	if [ $? -ne 0 ]; then
 		curdate=`date +%Y%m%dT%H%M%S`
 		# PVSS needs special treatment
@@ -248,7 +248,7 @@ stop_prog()
 	fi
 
 	# get processlist
-	/sbin/pidof ${prog} 1>/dev/null 2>&1
+	/sbin/pidof -x ${prog} 1>/dev/null 2>&1
 	if [ $? -ne 0 ]; then
 		return
 	fi
@@ -267,7 +267,7 @@ stop_prog()
 	fi
 
 	# first try normal kill
-	for pid in `/sbin/pidof ${prog}`
+	for pid in `/sbin/pidof -x ${prog}`
 	do 
 		echo "Softly killing ${prog}(${pid})"
 		$asroot kill $pid 1>/dev/null 2>&1
@@ -275,7 +275,7 @@ stop_prog()
 	done
 
 	# when normal kill did not work, kill is with -9
-	for pid in `/sbin/pidof ${prog}`
+	for pid in `/sbin/pidof -x ${prog}`
 	do 
 		echo "Hard killing ${prog}(${pid})"
 		$asroot kill -9 $pid 1>/dev/null 2>&1
@@ -283,7 +283,7 @@ stop_prog()
 	done
         # if user0 or lofarsys, try normal kill as root 	 
 	
-	for pid in `/sbin/pidof ${prog}` 	 
+	for pid in `/sbin/pidof -x ${prog}` 	 
 	do 	 
 	    if [ "$user" == "user0" -o "$user" == "lofarsys" ]; then 	 
 	      sudo kill $pid 1>/dev/null 2>&1 	 
@@ -292,7 +292,7 @@ stop_prog()
 	done 	 
 	  	 
 	# if user0 or lofarsys, try hard kill as root 	 
-	for pid in `/sbin/pidof ${prog}` 	 
+	for pid in `/sbin/pidof -x ${prog}` 	 
 	do 	 
 	    if [ "$user" == "user0" -o "$user" == "lofarsys" ]; then 	 
 		sudo kill -9 $pid 1>/dev/null 2>&1 	 
@@ -301,7 +301,7 @@ stop_prog()
 	done 	 
 	  	 
 	# if still alive, write a message 	 
-	for pid in `/sbin/pidof ${prog}` 	 
+	for pid in `/sbin/pidof -x ${prog}` 	 
 	do 	 
 	  echo -n "Could not kill ${prog}(${pid}); " 	 
 	  if [ "$user" == "user0" -o "$user" == "lofarsys" ]; then 	 
@@ -350,9 +350,9 @@ status_prog()
 		# find out the processID of the possibly (running) process
 		obsid=()
 		pid_user=()
-		/sbin/pidof ${prog} 1>/dev/null 2>&1
+		/sbin/pidof -x ${prog} 1>/dev/null 2>&1
 		if [ $? -eq 0 ]; then
-			pid=( `/sbin/pidof ${prog}` )
+			pid=( `/sbin/pidof -x ${prog}` )
 			i=0
 			for apid in ${pid[@]}
 			do
@@ -584,8 +584,8 @@ print_level()
 
 show_lofar_version()
 {
-        if [ -e /opt/lofar/Version.txt ]; then
-          version=`cat /opt/lofar/Version.txt`
+        if [ -e $LOFARROOT/Version.txt ]; then
+          version=`cat $LOFARROOT/Version.txt`
 	  if [ "$1" = "v" ]; then  
             echo -n "Current LOFAR version is "
 	  fi

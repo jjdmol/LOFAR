@@ -33,9 +33,10 @@ class imager_bbsTest(unittest.TestCase):
         super(imager_bbsTest, self).__init__(arg)
 
     def setUp(self):
-        self.test_path = tempfile.mkdtemp()
+        self.test_path = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
 
     def tearDown(self):
+        shutil.rmtree(self.test_path)
         pass
 
     def test_constructor(self):

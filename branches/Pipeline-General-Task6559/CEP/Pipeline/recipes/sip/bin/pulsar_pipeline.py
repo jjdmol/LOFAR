@@ -34,33 +34,8 @@ class pulsar_pipeline(control):
 
     def __init__(self):
         super(pulsar_pipeline, self).__init__()
-        self.parset = parameterset()
         self.input_data = {}
         self.output_data = {}
-        self.parset_feedback_file = None
-
-
-    def go(self):
-        """
-        Read the parset-file that was given as input argument;
-        set jobname, and input/output data products before calling the
-        base-class's `go()` method.
-        """
-        try:
-            parset_file = os.path.abspath(self.inputs['args'][0])
-        except IndexError:
-            return self.usage()
-        self.parset.adoptFile(parset_file)
-        self.parset_feedback_file = parset_file + "_feedback"
-
-        # Set job-name to basename of parset-file w/o extension, if it's not
-        # set on the command-line with '-j' or '--job-name'
-        if not self.inputs.has_key('job_name'):
-            self.inputs['job_name'] = (
-                os.path.splitext(os.path.basename(parset_file))[0])
-                
-        # Call the base-class's `go()` method.
-        return super(pulsar_pipeline, self).go()
   
 
     def _get_io_product_specs(self):
@@ -117,9 +92,22 @@ class pulsar_pipeline(control):
         """
         Define the individual tasks that comprise the current pipeline.
         This method will be invoked by the base-class's `go()` method.
+
+        Note: return 0 on success, 1 on failure.
         """
         # *********************************************************************
         # 1. Prepare phase, collect data from parset and input mapfiles.
+        #
+        # Note that PULP will read many of these fields directly. That makes
+        # the following fields, and possibly others, part of the API towards
+        # PULP:
+        #
+        # self.config
+        # self.logger
+        # self.input_data
+        # self.output_data
+        # self.parset_feedback_file
+        # self.job_dir
 
         # Get input/output-data products specifications.
         self._get_io_product_specs()
@@ -164,11 +152,29 @@ class pulsar_pipeline(control):
           
         if (not self.incoherentStokesEnabled):
           sys.argv.append("--noIS")       
+
+        # Tell PULP where to write the feedback to
+        self.parset_feedback_file =  "%s_feedback" % (self.parset_file,)
        
         # Run the pulsar pipeline
         self.logger.debug("Starting pulp with: " + join(sys.argv))
-        p = pulp.pulp(self)
-        return p.go()
+        p = pulp.pulp(self) # TODO: MUCK self to capture the API
+
+        # NOTE: PULP returns 0 on SUCCESS!!
+        if p.go():
+          self.logger.error("PULP did not succeed. Bailing out!")
+          return 1
+
+        # Read and forward the feedback
+        try:
+          metadata = parameterset(self.parset_feedback_file)
+        except IOError, e:
+          self.logger.error("Could not read feedback from %s: %s" % (metadata_file,e))
+          return 1
+
+        self.send_feedback_processing(parameterset())
+        self.send_feedback_dataproducts(metadata)
+        return 0
 
     
 if __name__ == '__main__':

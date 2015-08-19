@@ -104,7 +104,7 @@ TEST_FIXTURE(ParsetFixture, BufferSizes)
   CHECK_EQUAL(timeIntegrationFactor, settings.timeIntegrationFactor);
   CHECK_EQUAL(nrChannels, settings.nrChannels);
   CHECK_EQUAL(4U, settings.nrStokes);
-  CHECK_EQUAL(nrStations, parset.nrStations());
+  CHECK_EQUAL(nrStations, parset.settings.antennaFields.size());
   CHECK_EQUAL(nrOutputSamples, settings.nrSamples);
 }
 

@@ -80,16 +80,11 @@ namespace LOFAR
       // stop the processes and control threads, given an absolute time out.
       void stop( time_t deadline );
 
-      ParameterSet feedbackLTA() const;
-
     private:
       const Parset                         &itsParset;
       const std::string itsLogPrefix;
 
       std::vector<SmartPtr<StorageProcess> > itsStorageProcesses;
-
-      // All feedback for the LTA obtained by the storage processes
-      ParameterSet itsFeedbackLTA;
 
       // start the processes and control threads
       void start();

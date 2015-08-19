@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 #include <Common/StringUtil.h>
 #include <Common/NsTimestamp.h>
 
+#include <iostream>
 #include <math.h>
 #include <time.h>
 
@@ -50,12 +51,20 @@ void NsTimestamp::setNow(double delay)
 
 std::ostream& LOFAR::operator<< (std::ostream& os, const NsTimestamp& ts)
 {
-  char timestring[256];
+  char timestring[64];
   char zonestring[16];
   time_t seconds = (time_t)ts.sec();
 
-  strftime(timestring, 255, "%s - %a, %d %b %Y %H:%M:%S", gmtime(&seconds));
-  strftime(zonestring, 15, "  %z", gmtime(&seconds));
+  struct tm tm;
+  gmtime_r(&seconds, &tm);
+  if (strftime(timestring, sizeof(timestring), "%s - %a, %d %b %Y %H:%M:%S", &tm) == 0) {
+    strncpy(timestring, "unk timestamp", sizeof(timestring));
+    timestring[sizeof(timestring)-1] = '\0'; // defensive
+  }
+  if (strftime(zonestring, sizeof(zonestring), "  %z", &tm) == 0) {
+    strncpy(zonestring, "unk time zone", sizeof(zonestring));
+    zonestring[sizeof(zonestring)-1] = '\0'; // defensive
+  }
   return os << timestring << formatString(".%09d", ts.nsec()) << zonestring;
 }
 

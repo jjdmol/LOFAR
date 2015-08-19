@@ -72,7 +72,7 @@ namespace LOFAR
      *
      * n must be a power of two.
      */
-    static unsigned log2(unsigned n)
+    inline static unsigned log2(unsigned n)
     {
       ASSERT(powerOfTwo(n));
 

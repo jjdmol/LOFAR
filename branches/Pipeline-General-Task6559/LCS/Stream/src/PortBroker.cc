@@ -62,7 +62,7 @@ PortBroker &PortBroker::instance()
 
 PortBroker::PortBroker( uint16 port )
 :
-  SocketStream( "0.0.0.0", port, TCP, Server, 0, "", false ),
+  SocketStream( "0.0.0.0", port, TCP, Server, 0, false ),
   itsDone(false)
 {
 }
@@ -94,7 +94,7 @@ PortBroker::~PortBroker()
 
 
 void PortBroker::start() {
-  itsThread.reset(new Thread(this, &PortBroker::serverLoop, "[PortBroker] ", 65535));
+  itsThread.reset(new Thread(this, &PortBroker::serverLoop, "PortBroker", "[PortBroker] ", 65535));
 }
 
 

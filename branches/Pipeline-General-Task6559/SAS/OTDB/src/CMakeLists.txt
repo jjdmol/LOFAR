@@ -22,3 +22,6 @@ lofar_add_library(otdb
   DefaultTemplate.cc)
 
 lofar_add_bin_program(versionotdb versionotdb.cc)
+lofar_add_bin_program(setStatus setStatus.cc)
+
+install(FILES setStatus.conf DESTINATION etc)

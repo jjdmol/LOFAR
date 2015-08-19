@@ -2,7 +2,7 @@
 //
 //	Copyright (C) 2006-2008
 //	ASTRON (Netherlands Foundation for Research in Astronomy)
-//	P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//	P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //
 //	This program is free software; you can redistribute it and/or modify
 //	it under the terms of the GNU General Public License as published by
@@ -57,6 +57,7 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+using LOFAR::operator<<;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::RTDB;
@@ -66,6 +67,10 @@ using namespace std;
 
 namespace LOFAR {
 	using namespace APLCommon;
+	using namespace Controller_Protocol;
+	using namespace RSP_Protocol;
+	using namespace DP_Protocol;
+	using namespace Clock_Protocol;
 	namespace StationCU {
 
 // static pointer to this object for signalhandler
@@ -854,6 +859,7 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
 		            itsTimerPort->setTimer(0.0);
                 }
             }
+			break;
 
             case 1: {
                 // Set the splitters
@@ -872,6 +878,7 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
                 setEvent.splittersOn = splitterState;
                 itsClkCtrlPort->send(setEvent);		// will result in CLKCTRL_SET_SPLITTERS_ACK
             } 
+			break;
 
             case 2: {
                 // Set the bit mode
@@ -903,6 +910,7 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
 		            itsTimerPort->setTimer(0.0);
                 }
             }
+			break;
 
             default: {
                 // finally send a CLAIM event to the observation
@@ -914,7 +922,8 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
                 itsStartingObs = itsObsMap.end();
                 TRAN(StationControl::operational_state);
             }
-        }  
+			break;
+        } // switch
 	}
 	break;
 
@@ -1007,7 +1016,7 @@ void StationControl::_databaseEventHandler(GCFEvent& event)
 		// during startup we adopt the value set by the ClockController.
 		if (strstr(dpEvent.DPname.c_str(), PN_CLC_ACTUAL_CLOCK) != 0) {
 			itsClock = ((GCFPVInteger*)(dpEvent.value._pValue))->getValue();
-			LOG_INFO_STR("Received (actual)clock change from PVSS, bitmode is now " << itsClock);
+			LOG_INFO_STR("Received (actual)clock change from PVSS, clock is now " << itsClock);
 			_abortObsWithWrongClock();
 			break;
 		}
@@ -1304,13 +1313,20 @@ LOG_DEBUG_STR("def&userReceivers=" << realReceivers);
 
 	// apply the current state of the hardware to the desired selection when user likes that.
 	if (itsUseHWinfo) {
-		vector<int>		*mappingPtr = onLBAField ? &itsLBAmapping : &itsHBAmapping;
-		AntennaMask_t	antBitSet   = onLBAField ? itsLBAmask     : itsHBAmask;
+		vector<int16>	antMapping = itsAntSet->positionIndex(theObs.antennaSet);
+		AntennaMask_t	antMask    = onLBAField ? itsLBAmask     : itsHBAmask;		// bitset[rcu]=<in field or not>
+		LOG_DEBUG_STR("AntennaMask:" << antMask);
+		stringstream oss;
+		writeVector(oss, antMapping, ",", "[", "]");
+		LOG_DEBUG_STR("AntNrs    :" << oss.str());
 		for (int rcu = 0; rcu < MAX_RCUS; rcu++) {
-			int		idx((*mappingPtr)[rcu]);
-			if (!realReceivers[rcu] || idx<0 || !antBitSet[idx] || !itsRCUmask[rcu]) {
+			int		antNr(antMapping[rcu]>=0 ? antMapping[rcu]/2 : -1);
+			// realReceivers: definedRCUsInField AND userSelection
+			// itsRCUmask: PVSS derived availability	192 elements
+			// itsAntmask: PVSS derived availability	 96 elements
+			if (!realReceivers[rcu] || antNr<0 || !antMask[antNr] || !itsRCUmask[rcu]) {
 				realReceivers.reset(rcu);
-				if (idx >= 0 && !antBitSet[idx]) {
+				if (antNr >= 0 && !antMask[antNr]) {
 					LOG_INFO_STR("Rejecting RCU " << rcu << " because Antenna is out of order");
 				}
 			}
@@ -1429,35 +1445,6 @@ void StationControl::_initAntennaMasks()
 
 	ASSERTSTR (itsNrLBAs <= itsLBAmask.size() && 
 			   itsNrHBAs <= itsHBAmask.size(), "Number of antennas exceed expected count");
-
-	// Setup mapping from LBA antennas and HBA antennas to RCU numbers.
-	// itsxBAmapping(antNr,*) contains the
-	itsLBAmapping.resize(MAX_RCUS, -1);		// 192
-	itsHBAmapping.resize(MAX_RCUS, -1);
-	for (int ant  = 0; ant < (int)MAX_ANTENNAS; ant++) {
-		if (ant < (int)itsNrHBAs) {
-			itsHBAmapping[N_POL*ant]   = ant;
-			itsHBAmapping[N_POL*ant+1] = ant;
-		}
-		if (ant < (int)itsNrLBAs) {
-			if (ant > (int)itsNrRSPs * (int)NR_ANTENNAS_PER_RSPBOARD) {
-				itsLBAmapping[N_POL*ant+1 - (NR_RCUS_PER_RSPBOARD*itsNrRSPs)] = ant;
-				itsLBAmapping[N_POL*ant   - (NR_RCUS_PER_RSPBOARD*itsNrRSPs)] = ant;
-			}
-			else {
-				itsLBAmapping[N_POL*ant]   = ant;
-				itsLBAmapping[N_POL*ant+1] = ant;
-			}
-		}
-	}
-	 {	stringstream	oss;
-		writeVector(oss, itsLBAmapping);
-		LOG_DEBUG_STR("LBAmap: " << oss.str());
-	}
-	{	stringstream	oss;
-		writeVector(oss, itsHBAmapping);
-		LOG_DEBUG_STR("HBAmap: " << oss.str());
-	}
 
 	// The masks are now initialized with the static information. The _handleQueryEvent routine
 	// corrects the sets with the life information from PVSS. We assume that PVSS always has the 

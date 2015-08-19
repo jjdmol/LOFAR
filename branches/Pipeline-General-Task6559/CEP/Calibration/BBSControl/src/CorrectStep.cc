@@ -50,7 +50,7 @@ namespace LOFAR
       SingleStep(name, parent)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      read(parSet.makeSubset("Step." + name + "."));
+      read(parSet, "Step." + name + ".");
     }
 
 
@@ -120,13 +120,13 @@ namespace LOFAR
     }
 
 
-    void CorrectStep::read(const ParameterSet& ps)
+    void CorrectStep::read(const ParameterSet& ps, const string prefix)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      SingleStep::read(ps);
-      ParameterSet pss(ps.makeSubset("Correct."));
-      itsUseMMSE = pss.getBool("MMSE.Enable", false);
-      itsSigmaMMSE = pss.getDouble("MMSE.Sigma", 0.0);
+      SingleStep::read(ps, prefix);
+      //ParameterSet pss(ps.makeSubset("Correct."));
+      itsUseMMSE = ps.getBool(prefix+"MMSE.Enable", false);
+      itsSigmaMMSE = ps.getDouble(prefix+"MMSE.Sigma", 0.0);
       if(itsSigmaMMSE < 0.0)
       {
         THROW(BBSControlException, "MMSE.Sigma should be positive: "

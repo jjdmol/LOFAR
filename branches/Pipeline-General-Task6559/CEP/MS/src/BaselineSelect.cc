@@ -23,7 +23,11 @@
 //# Includes
 #include <MS/BaselineSelect.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
+#if defined(casacore)
+#include <ms/MSSel/MSSelection.h>
+#else
 #include <ms/MeasurementSets/MSSelection.h>
+#endif
 #include <tables/Tables/TableParse.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <casa/Arrays/Matrix.h>

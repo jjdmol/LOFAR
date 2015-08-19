@@ -21,5 +21,7 @@ lofar_add_test(startPythonFromMsg)
 
 # foreach(_test ${_tests})
   # lofar_add_test(${_test})
-  # set_tests_properties(${_test} PROPERTIES RUN_SERIAL ON)
+  # if(BUILD_TESTING)
+  #   set_tests_properties(${_test} PROPERTIES RUN_SERIAL ON)
+  # endif(BUILD_TESTING)
 # endforeach(_test ${_tests})

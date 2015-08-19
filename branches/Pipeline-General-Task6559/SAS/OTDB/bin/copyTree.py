@@ -346,6 +346,9 @@ if __name__ == '__main__':
 
     # TODO: check user table (owner of tree must exist)
 
+    # # Wrap all modifications in a transaction, to avoid leaving behind a broken database
+    toDB.query("BEGIN")
+
     # copy the trees metadata first
     copyTreeMetaData(treeID, newCampaignID, templateName)
 
@@ -358,6 +361,10 @@ if __name__ == '__main__':
 
     copyVICkvt(treeID)
 
+    # Write all changes to the database
+    toDB.query("COMMIT")
+
     toDB.close()
     fromDB.close()
     sys.exit(0)
+

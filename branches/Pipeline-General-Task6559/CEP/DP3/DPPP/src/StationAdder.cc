@@ -56,7 +56,7 @@ namespace LOFAR {
         itsMinNPoint    (parset.getUint  (prefix+"minpoints", 1)),
         itsMakeAutoCorr (parset.getBool  (prefix+"autocorr", false)),
         itsSumAutoCorr  (parset.getBool  (prefix+"sumauto", true)),
-        itsDoAverage    (parset.getBool  (prefix+"average", false)),
+        itsDoAverage    (parset.getBool  (prefix+"average", true)),
         itsUseWeight    (parset.getBool  (prefix+"useweights", true))
     {
     }
@@ -107,7 +107,8 @@ namespace LOFAR {
     {
       info() = infoIn;
       info().setNeedVisData();
-      info().setNeedWrite();
+      info().setWriteData();
+      info().setMetaChanged();
       // Check the superstation definition(s).
       // They are specified as a ParameterRecord like:
       //    stations = {new1:[s1,s2,s3], new2:[s4,s5,s6]}
@@ -134,8 +135,9 @@ namespace LOFAR {
         // Expand possible .. in the parameter value.
         vector<int> parts = getMatchingStations
           (antennaNames, iter->second.expand().getStringVector());
-        ASSERTSTR (!parts.empty(), "No stations found for superstation "
-                   << iter->first);
+        if (parts.empty()) {
+          continue;
+        }
         MVPosition newPosition;
         // Check if the stations exist and not used for other superstations.
         // Add their ITRF positions.
@@ -275,10 +277,10 @@ namespace LOFAR {
         os << ']' << endl;
       }
       os << "  minpoints:      " << itsMinNPoint << std::endl;
-      os << "  autocorr:       " << itsMakeAutoCorr << std::endl;
-      os << "  sumauto:        " << itsSumAutoCorr << std::endl;
-      os << "  average:        " << itsDoAverage << std::endl;
-      os << "  useweights:     " << itsUseWeight << std::endl;
+      os << "  autocorr:       " << boolalpha << itsMakeAutoCorr << std::endl;
+      os << "  sumauto:        " << boolalpha << itsSumAutoCorr << std::endl;
+      os << "  average:        " << boolalpha << itsDoAverage << std::endl;
+      os << "  useweights:     " << boolalpha << itsUseWeight << std::endl;
     }
 
     void StationAdder::showTimings (std::ostream& os, double duration) const
@@ -291,13 +293,16 @@ namespace LOFAR {
     bool StationAdder::process (const DPBuffer& buf)
     {
       itsTimer.start();
-      RefRows rowNrs(buf.getRowNrs());
       // Get the various data arrays.
+      itsBufTmp.referenceFilled (buf);
       const Array<Complex>& data = buf.getData();
       const Array<Bool>& flags = buf.getFlags();
-      Array<Float> weights(itsInput->fetchWeights (buf, rowNrs, itsTimer));
-      Array<Double> uvws(itsInput->fetchUVW (buf, rowNrs, itsTimer));
-      Array<Bool> frFlags(itsInput->fetchFullResFlags(buf, rowNrs, itsTimer));
+      const Array<Float>& weights =
+        itsInput->fetchWeights (buf, itsBufTmp, itsTimer);
+      const Array<Double>& uvws =
+        itsInput->fetchUVW (buf, itsBufTmp, itsTimer);
+      const Array<Bool>& frFlags =
+        itsInput->fetchFullResFlags (buf, itsBufTmp, itsTimer);
       // Size fullResFlags if not done yet.
       if (itsBuf.getFullResFlags().empty()) {
         IPosition frfShp = frFlags.shape();
@@ -336,6 +341,10 @@ namespace LOFAR {
         for (uint k=0; k<nrfr; ++k) {
           frfPtr[k] = true;
         }
+        for (uint k=0; k<3; ++k) {
+          uvwPtr[k]  = 0.;
+        }
+        double uvwWghtSum = 0.;
         // Sum the baselines forming the new baselines.
         for (uint j=0; j<itsBufRows[i].size(); ++j) {
           // Get the baseline number to use.
@@ -346,7 +355,7 @@ namespace LOFAR {
             blnr = -blnr;
             useConj = true;
           }
-          blnr--;
+          blnr--;     // decrement because blnr+1 is stored in itsBufRows
           // Get pointers to the input baseline data.
           const Complex* inDataPtr = (itsBuf.getData().data() +
                                       blnr*nrcc);
@@ -356,15 +365,21 @@ namespace LOFAR {
                                       blnr*nrcc);
           const Bool*    inFrfPtr  = (itsBuf.getFullResFlags().data() +
                                       blnr*nrfr);
-          // Add the data and weights if not flagged.
+          const Double*  inUvwPtr  = (itsBuf.getUVW().data() +
+                                      blnr*3);
+          // Add the data, uvw, and weights if not flagged.
           // Write 4 loops to avoid having to test inside the loop.
           if (useConj) {
             if (itsUseWeight) {
               for (uint k=0; k<nrcc; ++k) {
                 if (!inFlagPtr[k]) {
                   npoints[k]++;
-                  dataPtr[k] += conj(inDataPtr[k]);
+                  dataPtr[k] += conj(inDataPtr[k]) * inWghtPtr[k];
                   wghtPtr[k] += inWghtPtr[k];
+                  for (int ui=0; ui<3; ++ui) {
+                    uvwPtr[ui] -= inUvwPtr[ui] * inWghtPtr[k];
+                  }
+                  uvwWghtSum += inWghtPtr[k];
                 }
               }
             } else {
@@ -373,6 +388,10 @@ namespace LOFAR {
                   npoints[k]++;
                   dataPtr[k] += conj(inDataPtr[k]);
                   wghtPtr[k] += 1.;
+                  for (int ui=0; ui<3; ++ui) {
+                    uvwPtr[ui] -= inUvwPtr[ui];
+                  }
+                  uvwWghtSum += 1;
                 }
               }
             }
@@ -381,8 +400,12 @@ namespace LOFAR {
               for (uint k=0; k<nrcc; ++k) {
                 if (!inFlagPtr[k]) {
                   npoints[k]++;
-                  dataPtr[k] += inDataPtr[k];
+                  dataPtr[k] += inDataPtr[k] * inWghtPtr[k];
                   wghtPtr[k] += inWghtPtr[k];
+                  for (int ui=0; ui<3; ++ui) {
+                    uvwPtr[ui] += inUvwPtr[ui] * inWghtPtr[k];
+                  }
+                  uvwWghtSum += inWghtPtr[k];
                 }
               }
             } else {
@@ -391,6 +414,10 @@ namespace LOFAR {
                   npoints[k]++;
                   dataPtr[k] += inDataPtr[k];
                   wghtPtr[k] += 1.;
+                  for (int ui=0; ui<3; ++ui) {
+                    uvwPtr[ui] += inUvwPtr[ui];
+                  }
+                  uvwWghtSum += 1;
                 }
               }
             }
@@ -412,14 +439,20 @@ namespace LOFAR {
             }
           }
         }
-        // Calculate the UVW coordinate of the new station.
-        uint blnr = nrOldBL + i;
-        Vector<Double> uvws = itsUVWCalc.getUVW (getInfo().getAnt1()[blnr],
-                                                 getInfo().getAnt2()[blnr],
-                                                 buf.getTime());
-        uvwPtr[0] = uvws[0];
-        uvwPtr[1] = uvws[1];
-        uvwPtr[2] = uvws[2];
+        // Average or calculate the UVW coordinate of the new station.
+        if (itsDoAverage) {
+          for (int ui=0; ui<3; ++ui) {
+            uvwPtr[ui] /= uvwWghtSum;
+          }
+        } else {
+          uint blnr = nrOldBL + i;
+          Vector<Double> uvws = itsUVWCalc.getUVW (getInfo().getAnt1()[blnr],
+                                                   getInfo().getAnt2()[blnr],
+                                                   buf.getTime());
+          uvwPtr[0] = uvws[0];
+          uvwPtr[1] = uvws[1];
+          uvwPtr[2] = uvws[2];
+        }
         dataPtr += nrcc;
         flagPtr += nrcc;
         wghtPtr += nrcc;
@@ -441,6 +474,7 @@ namespace LOFAR {
 
     void StationAdder::addToMS (const string& msName)
     {
+      getPrevStep()->addToMS(msName);
       // Add the new stations to the ANTENNA subtable.
       Table antTab (msName + "/ANTENNA", Table::Update);
       ScalarColumn<String> nameCol   (antTab, "NAME");
@@ -548,6 +582,9 @@ namespace LOFAR {
       int nextClockId = max(clockIds);
       // Loop over all new antennae.
       for (uint i=0; i<itsParts.size(); ++i) {
+        if (itsParts[i].empty()) {
+          break;
+        }
         // Do all antennae of a new antenna share the same clock?
         // If so, use that clock-id, otherwise make a new one.
         int cid = clockIds[statIds[itsParts[i][0]]];

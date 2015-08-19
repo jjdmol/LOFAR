@@ -41,8 +41,6 @@ Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char *argv[])
 {
-  INIT_LOGGER("createHeaders");
-
   if (argc != 2) {
     cout << str(format("usage: %s parset") % argv[0]) << endl;
     cout << endl;
@@ -50,8 +48,14 @@ int main(int argc, char *argv[])
     return 1;
   }
 
+  // Make sure all time is dealt with and reported in UTC
+  if (setenv("TZ", "UTC", 1) < 0)
+    THROW_SYSCALL("setenv(TZ)");
+
+  INIT_LOGGER("createHeaders");
+
   Parset parset(argv[1]);
-  MACIO::RTmetadata rtmd(parset.observationID(), "", ""); // dummy
+  MACIO::RTmetadata rtmd(parset.settings.observationID, "", ""); // dummy
 
   // Process correlated data
   if (parset.settings.correlator.enabled) {

@@ -23,6 +23,7 @@
 #include "SubbandWriter.h"
 
 #include <CoInterface/CorrelatedData.h>
+#include <CoInterface/OMPThread.h>
 
 #include <boost/format.hpp>
 using boost::format;
@@ -35,12 +36,13 @@ namespace LOFAR
         RTmetadata &mdLogger, const std::string &mdKeyPrefix,
         const std::string &logPrefix)
     :
+      itsStreamNr(streamNr),
       itsOutputPool(str(format("SubbandWriter::itsOutputPool [stream %u]") % streamNr), parset.settings.realTime),
       itsInputThread(parset, streamNr, itsOutputPool, logPrefix),
       itsOutputThread(parset, streamNr, itsOutputPool, mdLogger, mdKeyPrefix, logPrefix)
     {
       for (unsigned i = 0; i < maxReceiveQueueSize; i++)
-        itsOutputPool.free.append(new CorrelatedData(parset.nrMergedStations(), parset.nrChannelsPerSubband(), parset.integrationSteps(), heapAllocator, 512));
+        itsOutputPool.free.append(new CorrelatedData(parset.settings.correlator.stations.size(), parset.settings.correlator.nrChannels, parset.settings.correlator.nrSamplesPerIntegration(), heapAllocator, 512));
     }
 
     
@@ -49,10 +51,18 @@ namespace LOFAR
 #     pragma omp parallel sections num_threads(2)
       {
 #       pragma omp section
-        itsInputThread.process();
+        {
+          OMPThread::ScopedName sn(str(format("input %u") % itsStreamNr));
+
+          itsInputThread.process();
+        }
 
 #       pragma omp section
-        itsOutputThread.process();
+        {
+          OMPThread::ScopedName sn(str(format("output %u") % itsStreamNr));
+
+          itsOutputThread.process();
+        }
       }
     }
 

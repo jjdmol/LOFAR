@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -60,6 +60,8 @@
 								c-'A'+10 : ((c>='a' && c<='f') ? c-'a'+10 : 0)))
 
 namespace LOFAR {
+	using namespace RSP_Protocol;
+	using namespace EPA_Protocol;
 	using namespace GCF::TM;
 	namespace rspctl {
 	using namespace std;
@@ -2857,7 +2859,7 @@ void XCStatisticsCommand::plot_xcstatistics(Array<complex<double>, 4>& xcstats, 
 	//	thestats = 10.0*log(thestats)/log(10.0);
 	//}
 
-	if ((size_t)thestats.size() != fwrite(thestats.data(), sizeof(double), (size_t)thestats.size(), handle->gnucmd)) {
+	if (thestats.size() != fwrite(thestats.data(), sizeof(double), thestats.size(), handle->gnucmd)) {
 		logMessage(cerr, "Failed to write to gnuplot.");
 	}
 }
@@ -2883,7 +2885,7 @@ void XCStatisticsCommand::dump_xcstatistics(Array<complex<double>, 4>& stats, co
 	FILE* file = getFile(0,fileName);
 
 	if (thestats.size()
-			!= (int)fwrite(thestats.data(), sizeof(complex<double>),
+			!= fwrite(thestats.data(), sizeof(complex<double>),
 					thestats.size(), file)) {
 		logMessage(cerr,formatString("Error: unable to write to file %s",fileName));
 		exit(EXIT_FAILURE);

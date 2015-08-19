@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2004-2012
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -28,6 +28,8 @@
 #include <Common/ParameterSet.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <MACIO/MACServiceInfo.h>
+#include <MessageBus/ToBus.h>
+#include <MessageBus/Protocols/TaskSpecificationSystem.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/ControllerDefines.h>
@@ -47,10 +49,14 @@ using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::RTDB;
 using namespace LOFAR::OTDB;
+using namespace LOFAR::Protocols;
 using namespace boost::posix_time;
 using namespace std;
 
 namespace LOFAR {
+	using namespace Controller_Protocol;
+	using namespace DP_Protocol;
+	using namespace CM_Protocol;
 	using namespace APLCommon;
 	namespace MainCU {
 
@@ -77,7 +83,8 @@ MACScheduler::MACScheduler() :
 	itsNextFinishedTime	(0),
 	itsNrPlanned		(0),
 	itsNrActive			(0),
-	itsOTDBconnection	(0)
+	itsOTDBconnection	(0),
+	itsMsgQueue			(0)
 {
 	LOG_TRACE_OBJ ("MACscheduler construction");
 
@@ -93,7 +100,8 @@ MACScheduler::MACScheduler() :
 	itsMaxPlanned    = globalParameterSet()->getTime("maxPlannedList",  30);
 	itsMaxFinished   = globalParameterSet()->getTime("maxFinishedList", 40);
 
-	ASSERTSTR(itsMaxPlanned + itsMaxFinished < MAX_CONCURRENT_OBSERVATIONS, "maxPlannedList + maxFinishedList should be less than " << MAX_CONCURRENT_OBSERVATIONS);
+	ASSERTSTR(itsMaxPlanned + itsMaxFinished < MAX_CONCURRENT_OBSERVATIONS, 
+				"maxPlannedList + maxFinishedList should be less than " << MAX_CONCURRENT_OBSERVATIONS);
 
 	// Read the schedule periods for starting observations.
 	itsQueuePeriod 		= globalParameterSet()->getTime("QueuePeriod");
@@ -101,19 +109,22 @@ MACScheduler::MACScheduler() :
 
 	// attach to child control task
 	itsChildControl = ChildControl::instance();
-	itsChildPort = new GCFITCPort (*this, *itsChildControl, "childITCport", 
-									GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
+	itsChildPort = new GCFITCPort (*this, *itsChildControl, "childITCport", GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
 	ASSERTSTR(itsChildPort, "Cannot allocate ITCport for childcontrol");
 	itsChildPort->open();		// will result in F_CONNECTED
 
 	// create an PVSSprepare Task
 	itsClaimerTask = new ObsClaimer(this);
 	ASSERTSTR(itsClaimerTask, "Cannot construct a ObsClaimerTask");
-	itsClaimerPort = new GCFITCPort (*this, *itsClaimerTask, "ObsClaimerPort",
-									GCFPortInterface::SAP, CM_PROTOCOL);
+	itsClaimerPort = new GCFITCPort (*this, *itsClaimerTask, "ObsClaimerPort", GCFPortInterface::SAP, CM_PROTOCOL);
 
 	// need port for timers
 	itsTimerPort = new GCFTimerPort(*this, "Timerport");
+
+	// setup MsgQueue
+	string queueName = globalParameterSet()->getString("ParsetQueuename");
+	ASSERTSTR(!queueName.empty(), "Queuename for distributing parameterSets not specified");
+	itsMsgQueue = new ToBus(queueName);
 
 	registerProtocol(CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
 	registerProtocol(DP_PROTOCOL, 		  DP_PROTOCOL_STRINGS);
@@ -133,6 +144,10 @@ MACScheduler::~MACScheduler()
 
 	if (itsOTDBconnection) {
 		delete itsOTDBconnection;
+	}
+
+	if (itsMsgQueue) {
+		delete itsMsgQueue;
 	}
 }
 
@@ -696,6 +711,10 @@ void MACScheduler::_updatePlannedList()
 					// add controller to our 'monitor' administration
 					itsControllerMap[cntlrName] =  obsID;
 					LOG_DEBUG_STR("itsControllerMap[" << cntlrName << "]=" <<  obsID);
+					if (!itsPreparedObs[obsID].parsetDistributed) {
+						_setParsetOnMsgBus(observationParset(obsID));
+						itsPreparedObs[obsID].parsetDistributed = true;
+					}
 				}
 				else {
 					LOG_DEBUG_STR("Observation " << obsID << " is already (being) started");
@@ -809,6 +828,21 @@ void MACScheduler::_updateFinishedList()
 	}
 }
 
+//
+// _setParsetOnMsgBus(parsetFile)
+//
+void MACScheduler::_setParsetOnMsgBus(const string&	filename) const
+{
+	// open file
+	ParameterSet	obsSpecs(filename);
+	string			obsPrefix = obsSpecs.fullModuleName("Observation");
+	string			momID = obsSpecs.getString(obsPrefix + ".momID");
+	string			sasID = obsSpecs.getString(obsPrefix + ".otdbID");
+
+    //                      from, forUser, summary, protocol, protocolVersion, momID, sasID
+	TaskSpecificationSystem	outMsg("LOFAR.MACScheduler", "", "", momID, sasID, obsSpecs);
+	itsMsgQueue->send(outMsg);
+}
 
 //
 // _connectedHandler(port)

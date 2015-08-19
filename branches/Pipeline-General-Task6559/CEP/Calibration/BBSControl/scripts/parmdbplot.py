@@ -157,6 +157,8 @@ def normalize(phase):
     # Convert to range [-2*pi, 2*pi].
     out = numpy.fmod(phase, 2.0 * numpy.pi)
 
+    # Remove nans
+    numpy.putmask(out, out!=out, 0)
     # Convert to range [-pi, pi]
     out[out < -numpy.pi] += 2.0 * numpy.pi
     out[out > numpy.pi] -= 2.0 * numpy.pi
@@ -228,6 +230,8 @@ def plot(fig, y, x=None, clf=True, sub=None, scatter=False, stack=False,
                 offset += sep
             else:
                 offset += y[i].mean() + sep * y[i].std()
+
+    fig.tight_layout()
 
     if not labels is None and show_legend:
         axes.legend(prop=FontProperties(size="x-small"), markerscale=0.5)
@@ -774,6 +778,9 @@ class PlotWindow(QFrame):
 
 
         if double:
+            # put nans to 0
+            [numpy.putmask(amp[i], amp[i]!=amp[i], 0) for i in xrange(len(amp))]
+            [numpy.putmask(phase[i], phase[i]!=phase[i], 0) for i in xrange(len(phase))]
             if self.polar:
                     self.valminmax[0] = plot(self.fig, amp, x=xvalues, sub="211", labels=labels, show_legend=legend, xlabel=xlabel, ylabel="Amplitude",scatter=self.use_points)
                     self.valminmax[1] = plot(self.fig, phase, x=xvalues, clf=False, sub="212", stack=True, scatter=True, labels=labels, show_legend=legend, xlabel=xlabel, ylabel=phaselabel)
@@ -781,10 +788,44 @@ class PlotWindow(QFrame):
                     self.valminmax[0] = plot(self.fig, amp, x=xvalues, sub="211", labels=labels, show_legend=legend, xlabel=xlabel, ylabel="Real",scatter=self.use_points)
                     self.valminmax[1] = plot(self.fig, phase, x=xvalues, clf=False, sub="212", labels=labels, show_legend=legend, xlabel=xlabel, ylabel="Imaginary",scatter=self.use_points)
         else:
+            # put nans to 0
+            [numpy.putmask(phase[i], phase[i]!=phase[i], 0) for i in xrange(len(phase))]
             self.valminmax[0] = plot(self.fig, phase, x=xvalues, sub="111", stack=True, scatter=True, labels=labels, show_legend=legend, xlabel=xlabel, ylabel=phaselabel)
 
         self.resize_plot()
         self.canvas.draw()
+
+
+class DefValuesWindow(QFrame):
+    def __init__(self, db, parent=None, title=None):
+        QFrame.__init__(self,None)
+
+        defvalues=db.getDefValues()
+
+        layout = QVBoxLayout()
+        self.table = QTableWidget(len(defvalues),2)
+
+        row=0
+        for defname in defvalues:
+          self.table.setItem(row, 0, QTableWidgetItem(defname))
+          valItem = QTableWidgetItem(str(defvalues[defname][0][0]))
+          valItem.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
+          self.table.setItem(row, 1, QTableWidgetItem(valItem))
+          row = row+1
+
+
+        self.table.verticalHeader().setVisible(False)
+        self.table.horizontalHeader().setVisible(False)
+        self.table.horizontalHeader().setResizeMode(QHeaderView.Fixed)
+        self.table.horizontalHeader().setResizeMode(1,QHeaderView.Stretch)
+        self.table.resizeColumnsToContents();
+        self.table.setSelectionMode(QAbstractItemView.NoSelection)
+        layout.addWidget(self.table,1)
+        self.setWindowTitle(title)
+
+        self.db=db
+
+        self.setLayout(layout);
 
 
 class MainWindow(QFrame):
@@ -821,11 +862,14 @@ class MainWindow(QFrame):
 
         self.plot_button = QPushButton("Plot")
         self.connect(self.plot_button, SIGNAL('clicked()'), self.handle_plot)
+        self.defvalues_button = QPushButton("DefValues")
+        self.connect(self.defvalues_button, SIGNAL('clicked()'), self.handle_defvalues)
         self.close_button = QPushButton("Close figures")
         self.connect(self.close_button, SIGNAL('clicked()'), self.handle_close)
 
         hbox = QHBoxLayout()
         hbox.addWidget(self.plot_button)
+        hbox.addWidget(self.defvalues_button)
         hbox.addWidget(self.close_button)
         layout.addLayout(hbox)
 
@@ -928,6 +972,10 @@ class MainWindow(QFrame):
             self.figures.append(PlotWindow(self.parms, this_selection, resolution, title=self.windowname + ": Figure %d" % (len(self.figures) + 1)))
             
             self.figures[-1].show()
+
+    def handle_defvalues(self):
+        self.defvalueswindow=DefValuesWindow(db, title=parmdbname+': default Values')
+        self.defvalueswindow.show()
 
     def handle_close(self):
         self.close_all_figures()

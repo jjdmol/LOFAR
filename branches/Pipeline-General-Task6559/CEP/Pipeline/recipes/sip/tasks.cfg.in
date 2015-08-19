@@ -60,8 +60,17 @@ recipe = imager_prepare
 ndppp_exec = %(lofarroot)s/bin/NDPPP
 asciistat_executable = %(lofarroot)s/bin/asciistats.py
 statplot_executable = %(lofarroot)s/bin/statsplot.py
-msselect_executable = %(lofarroot)s/bin/msselect
+msselect_executable = %(casaroot)s/bin/msselect
 rficonsole_executable = %(lofarroot)s/bin/rficonsole
+
+[long_baseline]
+recipe = long_baseline
+ndppp_exec = %(lofarroot)s/bin/NDPPP
+asciistat_executable = %(lofarroot)s/bin/asciistats.py
+statplot_executable = %(lofarroot)s/bin/statsplot.py
+msselect_executable = %(casaroot)s/bin/msselect
+rficonsole_executable = %(lofarroot)s/bin/rficonsole
+nproc = 1
 
 [imager_awimager]
 recipe = imager_awimager
@@ -95,6 +104,19 @@ parset = %(runtime_directory)s/%(job_name)s/parsets/bbs.parset
 instrument_mapfile = %(runtime_directory)s/%(job_name)s/mapfiles/instrument.mapfile
 sky_mapfile = %(runtime_directory)s/%(job_name)s/mapfiles/sky.mapfile
 data_mapfile = %(runtime_directory)s/%(job_name)s/mapfiles/bbs.mapfile
+
+[selfcal_awimager]
+recipe = selfcal_awimager
+executable = %(lofarroot)s/bin/awimager
+
+[selfcal_bbs]
+recipe = selfcal_bbs
+bbs_executable = %(lofarroot)s/bin/bbs-reducer
+
+[selfcal_finalize]
+recipe = selfcal_finalize
+fillrootimagegroup_exec = %(lofarroot)s/bin/fillRootImageGroup
+msselect_executable = %(casaroot)s/bin/msselect
 
 # below are tasks for the generic pipeline
 [executable_args]

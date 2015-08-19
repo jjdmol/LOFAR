@@ -19,9 +19,9 @@ void prepareHardwareList() {
   int z;
   
   dynAppend(g_stationList,navFunct_bareDBName(sysName));
-  // For this panel UriBoards, UniBoard and FPGA's  should be selectable so we get them for the treelist
+  // For this panel URIboards, UniBoard and FPGA's  should be selectable so we get them for the treelist
   
-  dpQuery(\"SELECT '_original.._value' FROM 'LOFAR_PIC_Cabinet*_**.status.state' REMOTE '\"+sysName+\"' WHERE _DPT=\\\"FPGA\\\" OR _DPT=\\\"UriBoard\\\" OR _DPT=\\\"UniBoard\\\"  \", tab);
+  dpQuery(\"SELECT '_original.._value' FROM 'LOFAR_PIC_Cabinet*_**.status.state' REMOTE '\"+sysName+\"' WHERE _DPT=\\\"FPGA\\\" OR _DPT=\\\"URIboard\\\" OR _DPT=\\\"UniBoard\\\"  \", tab);
   LOG_TRACE(\"Station_AARTFAAC.pnl:prepareHardwareList|tab: \"+tab);
   
   dyn_string aDS=navFunct_getDynString(tab, 2,1);
@@ -35,17 +35,13 @@ void prepareHardwareList() {
     //keep Path
     string path=aS;
 
-     // strip all b4 and including Subrack out of the string
-//    strreplace(aS,navFunct_getPathLessOne(baseDP)+\"_Cabinet\"+uNr+\"_\",\"\");
-    
-    // Remainder should be RSPBoard? combinations
     if (strpos(aS,\"FPGA\") > -1) {   // RSPBoard
-      strreplace(aS,\"FPGA\",\"\");
-      int f = aS;
+      int p = strpos(aS,\"FPGA\");
+      int f = substr(aS,p+4);
       dynAppend(g_FPGAList,f);
     }
   }
-  
+    
   dynAppend(g_uriBoardList,0);
   dynAppend(g_uriBoardList,1);
   dynAppend(g_uriBoardList,2);
