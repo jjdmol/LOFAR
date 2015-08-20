@@ -48,7 +48,6 @@ set(scheduler_SRCS
   pipeline.cpp
   publishdialog.cpp
   pulsarpipeline.cpp
-  qcustomplot.cpp
   qlofardatamodel.cpp
   redistributetasksdialog.cpp
   sasconnectdialog.cpp
@@ -102,7 +101,6 @@ set(scheduler_MOC_HDRS
   ListWidget.h
   parsettreeviewer.h
   publishdialog.h
-  qcustomplot.h
   qlofardatamodel.h
   redistributetasksdialog.h
   sasconnectdialog.h
