@@ -515,6 +515,11 @@ namespace LOFAR
       msspwCol.freqGroupName().put(0, "");
       msspwCol.flagRow().put(0, False);
 
+      // Remove a few keywords from the MEASINFO, because old CASA cannot
+      // deal with them since Dirk Petry added type Undefined.
+      MSLofar::removeMeasKeys (msspw, "REF_FREQUENCY");
+      MSLofar::removeMeasKeys (msspw, "CHAN_FREQ");
+
       msspw.flush();
     }
 
