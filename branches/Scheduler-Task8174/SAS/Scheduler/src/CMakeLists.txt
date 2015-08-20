@@ -147,7 +147,6 @@ set(scheduler_UIS
   statehistorydialog.ui
   stationlistwidget.ui
   stationtreewidget.ui
-  storageresourceview.ui
   tablecolumnselectdialog.ui
   taskcopydialog.ui
   taskdialog.ui
