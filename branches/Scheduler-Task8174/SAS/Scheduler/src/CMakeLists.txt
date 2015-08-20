@@ -74,7 +74,6 @@ set(scheduler_SRCS
   stationtreewidget.cpp
   Storage.cpp
   StorageNode.cpp
-  storageplot.cpp
   tablecolumnselectdialog.cpp
   tableview.cpp
   taskcopydialog.cpp
@@ -120,7 +119,6 @@ set(scheduler_MOC_HDRS
   statehistorydialog.h
   stationlistwidget.h
   stationtreewidget.h
-  storageplot.h
   tablecolumnselectdialog.h
   tableview.h
   taskcopydialog.h
