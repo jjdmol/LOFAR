@@ -198,9 +198,9 @@ class calibrate_stand_alone(LOFARnodeTCP):
         if os.path.exists(self.parmdb_path) and not self.replace_parmdb:
             self.logger.debug("warning: parmdb exists and will not be replaced (specify --replace-parmdb to force replacement)")
         elif self.parmdb:
-            self.logger.debug("some message about parmdb")
+            self.logger.debug("Copying existing parmdb")
             if not self.dry_run:
-                shutil.rmtree(self.parmdb_path)
+                shutil.rmtree(self.parmdb_path, ignore_errors=True)
                 shutil.copytree(self.parmdb,self.parmdb_path)
         else:
             self.logger.debug("creating parmdb")

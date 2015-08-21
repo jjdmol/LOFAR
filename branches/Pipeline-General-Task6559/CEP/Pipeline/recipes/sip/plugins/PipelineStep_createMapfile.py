@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+import re
 from lofarpipe.support.data_map import DataMap
 from lofarpipe.support.data_map import DataProduct
 import argparse
@@ -14,7 +15,12 @@ def plugin_main(args, **kwargs):
     datamap = None
     if kwargs['method'] == 'mapfile_from_folder':
         if 'pattern' in kwargs:
-            datamap = _create_mapfile_from_folder(kwargs['folder'], kwargs['pattern'])
+            exclude = False
+            if 'exclude_pattern' in kwargs and kwargs['exclude_pattern']:
+                exclude = True
+                if isinstance(kwargs['exclude_pattern'], basestring) and kwargs['exclude_pattern'] == 'False':
+                    exclude = False
+            datamap = _create_mapfile_from_folder(kwargs['folder'], kwargs['pattern'], exclude)
         else:
             datamap = _create_mapfile_from_folder(kwargs['folder'])
         if 'add_suffix' in kwargs:
@@ -56,8 +62,8 @@ def _split_listmap(dmap, number):
     return dmap
 
 
-def _create_mapfile_from_folder(path, pat=None):
-    dmap = MapfileManager(folder=path, pattern=pat)
+def _create_mapfile_from_folder(path, pat=None, exclude=None):
+    dmap = MapfileManager(folder=path, pattern=pat, excludepattern=exclude)
     return dmap
 
 
@@ -69,10 +75,10 @@ def _create_mapfile_from_parset(parset, identifier):
 
 class MapfileManager(DataMap):
 
-    def __init__(self, folder=None, pattern=None):
+    def __init__(self, folder=None, pattern=None, excludepattern=False):
         super(MapfileManager, self).__init__()
         if folder:
-            self.from_folder(folder, pattern)
+            self.from_folder(folder, pattern, excludepattern)
         #self.map = DataMap([])
 
     def expand(self, number, hostlist=None, filelist=None):
@@ -135,23 +141,29 @@ class MapfileManager(DataMap):
             raise DataMapError("Failed to validate data map: %s" % repr(data))
 
     def delete(self, host=None, data=None, skip=None, pattern=None):
+        if pattern:
+            #convert pattern-strin to RegExp format and make compiled RegExp
+            rePattern = pattern.strip().replace('.','\.').replace('?','.').replace('*','.*')+'$'
+            PatternReg = re.compile(rePattern)        
         for i, item in enumerate(self._data):
             if item.host == host or item.file == data or item.skip == skip:
                 del self._data[i]
             if pattern:
-                if pattern in item.file:
+                if PatternReg.match(item.file):
                     del self._data[i]
 
     def from_folder(self, folder, pattern=None, exclude_pattern=False):
         measurements = os.listdir(folder)
         measurements.sort()
+        if pattern:
+            #convert pattern-strin to RegExp format and make compiled RegExp
+            rePattern = pattern.strip().replace('.','\.').replace('?','.').replace('*','.*')+'$'
+            PatternReg = re.compile(rePattern)
         for ms in measurements:
             if pattern:
-                if pattern in ms and not exclude_pattern:
+                if not exclude_pattern and PatternReg.match(ms):
                     self._append(DataProduct('localhost', folder + '/' + ms, False))
-                elif pattern in ms and exclude_pattern:
-                    pass
-                elif pattern not in ms and exclude_pattern:
+                elif exclude_pattern and not PatternReg.match(ms):
                     self._append(DataProduct('localhost', folder + '/' + ms, False))
             else:
                 self._append(DataProduct('localhost', folder + '/' + ms, False))
@@ -295,7 +307,9 @@ if __name__ == '__main__':
     parser.add_argument('-n', '--number',     help='Number of times to expand a dummy mapfile', type=int, default=0)
     parser.add_argument('-M', '--mapfile_in', help='Input mapfile to be changed.')
     parser.add_argument('-f', '--folder',     help='Path to the directory containing the data.', default=None)
-    parser.add_argument('-p', '--pattern',    help='Pattern the files should contain (.MS).')
+    parser.add_argument('-p', '--pattern',    help='Pattern the files should contain (*.MS).')
+    parser.add_argument('-e', '--exclude_pattern',
+                        help='Files with the given pattern -p should be ignored', action='store_true')
     parser.add_argument('-s', '--suffix',     help='Suffix to add to the file names.')
     parser.add_argument('-m', '--method',     help='Method of creating the mapfile.', default='mapfile_from_folder')
     parser.add_argument('-d', '--directory',  help='Directory to store the mapfile in.', default='.')
@@ -307,6 +321,7 @@ if __name__ == '__main__':
         'mapfile_in': args.mapfile_in,
         'folder': args.folder,
         'pattern': args.pattern,
+        'exclude_pattern': args.exclude_pattern,
         'add_suffix_to_file': args.suffix,
         'method': args.method,
         'mapfile_dir': args.directory}
