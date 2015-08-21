@@ -92,7 +92,7 @@ class CQDaemon(object):
             raise NotImplementedError("CQDaemon should always be subtyped")
         
         self._add_logger(logfile)
-        self._hostname = socket.gethostname()
+        
         self._broker = broker
         self._busname = busname
         self._loop_interval = loop_interval  
@@ -172,6 +172,7 @@ class CQDaemon(object):
                 self._logger.warn(
                     "Subclass of CQDaemon threw exception in process")
                 self._logger.warn(str(ex))
+
             if processed_by_subclass:
                   continue # with next msg on the queue
 
@@ -358,7 +359,7 @@ class CQDaemon(object):
         """           
         unpacked_msg_content['receive']=True
         unpacked_msg_content['type'] = 'echo'
-        unpacked_msg_content['host'] = self._hostname 
+        unpacked_msg_content['host'] = self._broker 
 
         msg = CQCommon.create_msg( unpacked_msg_content,
                         unpacked_msg_content['return_subject'])
@@ -426,43 +427,43 @@ class CQDaemon(object):
             pass
 
     def _get_next_msg_and_content(self, from_bus):
-            """
-            Helper function attempts to get the next msg from the command queue
+        """
+        Helper function attempts to get the next msg from the command queue
 
-            Unpacks the data and assign data to the second return value.
-            Returns false and none if no valid msg is available
+        Unpacks the data and assign data to the second return value.
+        Returns false and none if no valid msg is available
 
-            Invalid msg are printed to logged and stored in the deadletter log
-            """
-            # Test if the timeout is in milli seconds or second
-            while True:
-                msg = from_bus.get(0.1)  #  use timeout, very short, well get 
-                # there next time if more time is needed
-                if msg == None:
-                    return False, None
+        Invalid msg are printed to logged and stored in the deadletter log
+        """
+        # Test if the timeout is in milli seconds or second
+        while True:
+            msg = from_bus.get(0.1)  #  use timeout, very short, well get 
+            # there next time if more time is needed
+            if msg == None:
+                return False, None
 
-                # Get the needed information from the msg
-                unpacked_msg_content, msg_type  = _save_unpack_msg(msg,
-                                                                   self._logger)
-                if not msg_type:  # if unpacking failed
-                    self._logger.warn(
-                      "Could not process msg, incorrect content: {0}".format(
-                        unpacked_msg_content))
-                    from_bus.ack(msg) 
-                    # send the incorrect msg to the deadletter log
-                    self._write_to_deadletter_log(msg, unpacked_msg_content)
-                    continue
+            # Get the needed information from the msg
+            unpacked_msg_content, msg_type  = _safe_unpack_msg(msg,
+                                                                self._logger)
+            if not msg_type:  # if unpacking failed
+                self._logger.warn(
+                  "Could not process msg, incorrect content: {0}".format(
+                    unpacked_msg_content))
+                from_bus.ack(msg) 
+                # send the incorrect msg to the deadletter log
+                self._write_to_deadletter_log(msg, unpacked_msg_content)
+                continue
                 
 
-                from_bus.ack(msg)
+            from_bus.ack(msg)
 
-                return True, (msg, unpacked_msg_content, msg_type) 
+            return True, (msg, unpacked_msg_content, msg_type) 
 
 # ****************************************************************************
 # Candidate functions for external lib.
 # **************************************************************************
 
-def _save_unpack_msg(msg, logger):
+def _safe_unpack_msg(msg, logger):
         """
         Private helper function unpacks a received msg and casts it to 
         a msg_Content dict, the command string is also extracted
@@ -478,10 +479,14 @@ def _save_unpack_msg(msg, logger):
             msg_type =  msg_content['type']
 
         except Exception, ex:
-            logger.warn("Failed evaluating msg data")
+            logger.warn("Failed evaluating msg data:")
+            try:
+                logger.warn(msg.content())
+            except Exception:
+                pass
             # TODO: return 'type' is not the same in error case..
             # tight coupling with calling function.
-            return msg.content().payload, False  
+            return "", False  
 
         return msg_content, msg_type
 

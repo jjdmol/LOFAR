@@ -67,7 +67,7 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
         self._subprocessManager = subprocessManager.SubprocessManager(
                self._broker, self._busname, self._toBus, self._logger)
 
-        self._max_repost = max_repost # We attempt 3 times to resend a msg
+        self._max_repost = max_repost # We attempt 5 times to resend a msg
 
     # ****************************************************************
     # The three overload process functions: command, deadletter and state

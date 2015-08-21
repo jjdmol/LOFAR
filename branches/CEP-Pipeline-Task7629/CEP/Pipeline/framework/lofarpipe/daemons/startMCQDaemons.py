@@ -98,8 +98,6 @@ def start_daemons(config):
                   master_host, set_env_start_daemon_cmd)
     process = subprocess.Popen(sshCommandStr,  shell=True)
 
-
-
     # now start all the slaves
     for slave_host in slave_hosts_list:
         print "starting slave on host: {0}".format(slave_host)
@@ -116,6 +114,9 @@ def start_daemons(config):
         # the dameon: nohup, correct shell version and the & to start in bg
         sshCommandStr = "ssh {0} \"nohup /bin/bash -c '{1} &' \"".format(
                       slave_host, set_env_start_daemon_cmd)
+
+        print sshCommandStr
+
         process = subprocess.Popen(sshCommandStr,  shell=True)
 
 
@@ -133,6 +134,7 @@ def stop_daemons(config):
     for slave_host in slave_hosts_list:
         sshCommandStr = "ssh {0} 'killall {1}' ".format(
                   slave_host, slave_exec)
+        print sshCommandStr
         process = subprocess.Popen(sshCommandStr,  shell=True)
 
 

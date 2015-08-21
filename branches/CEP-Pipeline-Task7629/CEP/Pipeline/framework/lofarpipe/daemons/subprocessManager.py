@@ -88,10 +88,12 @@ class SubprocessManager(object):
                                          "", error_str)
             self.send_results(session_uuid, job_uuid,"-1")
         else:                # store the process
-            # Send the paramters on the parameter queue
-            self.send_job_parameters(session_uuid, job_uuid, msg_content)
             self._registered_sessions[session_uuid]['jobs'][job_uuid] = \
             (process, msg_content)
+            # TODO: Maybee a try catch to remove the session of send_job
+            # fails with exception
+            self.send_job_parameters(session_uuid, job_uuid, msg_content)
+
 
     def failed_job_parameter_msg(self, msg_content):
         """
@@ -169,6 +171,8 @@ class SubprocessManager(object):
         if not job_uuid in self._registered_sessions[session_uuid]['jobs']:
             return 
 
+        self._logger.info("Killing job: \n {0}".format(
+          job_uuid))
         (process, job_msg) = \
                   self._registered_sessions[session_uuid]['jobs'][job_uuid]
 
@@ -255,7 +259,7 @@ class SubprocessManager(object):
                    'session_uuid':session_uuid,
                    'job_uuid':job_uuid,
                    'info':info_str,
-                   'node':self._broker}   # TODO: Ambigues had hostname member
+                   'node':self._broker}  # TODO: multiple slave need unique id.
         subject = "result_" + session_uuid
         msg = CQCommon.create_msg(payload, subject)
         self._toBus.send(msg)

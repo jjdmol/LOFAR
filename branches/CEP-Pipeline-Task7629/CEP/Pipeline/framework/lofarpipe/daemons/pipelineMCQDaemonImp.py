@@ -86,6 +86,8 @@ class pipelineMCQDaemonImp(CQDaemon.CQDaemon):
             self._process_stop_session(unpacked_msg_content)
             return True
   
+        return False
+
     def process_deadletter(self, msg, unpacked_msg_content, msg_type):
         """
         Process possible deadletter
@@ -99,12 +101,14 @@ class pipelineMCQDaemonImp(CQDaemon.CQDaemon):
             self._deadletter_run_job( 
                                   msg, unpacked_msg_content, msg_type)
             return True
+
         if command == "stop_session":
             # If a stopletter cannot be delivered we should just drop it for now
             self._logger.warn("Could not deliver stop msg to node: {0}".format(
               unpacked_msg_content['node']))
             return True
 
+        return False
 
     # ****************************************************************
     # Private helper functions

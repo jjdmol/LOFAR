@@ -37,7 +37,7 @@ function start_broker {
     federation_tag_postfix=$3
     node_name=$4
 
-    ssh -tt qpid@$node_name "/bin/bash -l -c ' qpidd -d --log-enable info+ -p '"$port"' --federation-tag \`hostname --fqdn\`'"$federation_tag_postfix"' --data-dir $data_dir --log-to-file '"$data_dir"'/qpid.log'"
+    ssh -tt qpid@$node_name "/bin/bash -l -c ' qpidd -d  --auth no --log-enable info+ -p '"$port"' --federation-tag \`hostname --fqdn\`'"$federation_tag_postfix"' --data-dir $data_dir --log-to-file '"$data_dir"'/qpid.log'"
 }
 
 function stop_broker {

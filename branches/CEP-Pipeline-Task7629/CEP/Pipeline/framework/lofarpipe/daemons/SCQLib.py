@@ -19,9 +19,12 @@
 # $Id$
 import logging
 import time
+import signal
+import threading
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
 from lofarpipe.daemons.inMemoryZip import get_zipstring_from_string
+
 
 def create_msg(payload):
         """
@@ -78,10 +81,86 @@ class QPIDLoggerHandler(logging.Handler):
         # add the data to send
         payload = {'level':   level,
                    'log_data':log_data,
-                   'sender':self._broker }  #TODO USE CORRECT HOSTNAME
+                   'sender':self._broker } 
 
         msg = create_msg(payload)
         self._logTOpic.send(msg)
+
+
+# Handler for stopping the heartbeat
+heartBeatGeneratorStopFlag = threading.Event()
+
+def treadStopHandler(signum, stack):
+    # stop the thread
+    #heartBeatGeneratorStopFlag.set()
+
+    exit(signum)
+
+
+class HeartBeatGenerator(threading.Thread):
+    """
+    Class used for listening to a log topic
+
+    usage:
+    After initiation it must be started using the start() method
+    setStopFlag() stops the forwarder
+
+    TODO: Candidate to move to LCS
+    """
+    def __init__(self, broker,targettopic, job_uuid,poll_interval=5.0):
+        """
+        Create the usage stat object. Create events for starting and stopping.
+        By default the Process creating the object is tracked.
+        Default polling interval is 10 seconds
+        """
+        threading.Thread.__init__(self)
+        # run as daemon: thread dies on owner death
+        self.daemon = True  
+
+        self.stopFlag = heartBeatGeneratorStopFlag    # needed for stopping on ctrl-c       
+        self.stopFlag.clear() # Set it to working (allows re entrant usage)
+
+        self._poll_interval = poll_interval
+        self._job_uuid = job_uuid       
+        self._targettopicname = targettopic
+        self._targettopic = msgbus.ToBus(self._targettopicname , 
+            broker = broker)
+        self._poll_interval = poll_interval
+
+    def run(self):
+        """
+        Run function, the work horse of the handler
+
+        While no stopflag is set:
+        a. Listen for log lines, process and ack
+        b. sleep for poll_interval
+        """
+        while not self.stopFlag.isSet():                       
+            while not self.stopFlag.isSet():
+                msg = message.MessageContent(
+                    from_="test",
+                    forUser="",
+                    summary="summary",
+                    protocol="protocol",
+                    protocolVersion="test", 
+                    #momid="",
+                    #sasid="", 
+                    #qpidMsg=None
+                          )
+                # add the data to send
+                payload = {'type': "heartbeat",
+                           'job_uuid':self._job_uuid } 
+                msg.payload = payload
+                self._targettopic.send(msg)
+
+                time.sleep(self._poll_interval)
+ 
+    def setStopFlag(self):
+        """
+        Stop the monitor
+        """
+        self.stopFlag.set()
+        #self._targettopic.close()
 
 class SCQLib(object):
     """
@@ -108,11 +187,8 @@ class SCQLib(object):
         
         # Get the arguments from the parameter queued (including session uuid)
         self._get_arguments()
+
         # With the session id collected we can now connect al the named topics
-        self._connect_named_topics()
-
-    def _connect_named_topics(self):
-
         self._logTopicName = self._busname + "/log_" + self._session_uuid
         self._returnQueueName = self._busname + "/result_" + self._session_uuid
         
@@ -121,6 +197,16 @@ class SCQLib(object):
 
         self.QPIDLoggerHandler = QPIDLoggerHandler(self._broker,
                                                    self._logTopicName)
+
+        self._heartBeatGenerator = HeartBeatGenerator(broker,
+                              self._returnQueueName , job_uuid)
+
+        # Register correct handlers for killing the threads
+        signal.signal(signal.SIGTERM, 
+                      treadStopHandler)   # from 'global' scope
+
+        self._heartBeatGenerator.start() 
+
 
     def get_arguments(self):
         """
@@ -179,6 +265,14 @@ class SCQLib(object):
 
         msg = self.create_msg(payload)
 
+        self._resultQueue.send(msg)
+
+    def send_to_result_queue(self, payload):
+        """
+        Send the outputs to the results queue
+        include the job dict containing the uuid and job_uuid
+        """
+        msg = self.create_msg(payload)
         self._resultQueue.send(msg)
 
     def create_msg(self, payload):

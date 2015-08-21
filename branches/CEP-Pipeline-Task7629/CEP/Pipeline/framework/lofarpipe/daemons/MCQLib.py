@@ -19,6 +19,7 @@
 # $Id$
 import uuid
 import time
+import datetime
 import threading 
 import signal
 
@@ -249,6 +250,14 @@ class resultQueueHandler(threading.Thread):
             with self._pipeline_data_lock:
                 self._pipeline_data[job_uuid]['output']=output
 
+        elif type == 'heartbeat':
+            # Store the last heartbeat 
+            job_uuid = msg_content['job_uuid']
+            date_time = datetime.datetime.now()
+
+            with self._pipeline_data_lock:
+                self._pipeline_data[job_uuid]['last_heartbeat']=date_time
+
         elif type == "echo":
             with self._pipeline_data_lock:
                 # TODO: What if the echo is received from a different
@@ -315,12 +324,14 @@ class MCQLib(object):
       b. Connect to queues 
 
     """
-    def __init__(self, logger, broker, busname, master_echo=False):
+    def __init__(self, logger, broker, busname, master_echo=False,
+                 slave_communication_timeout=10):
         # Each MCQDaemonLib triggers a session with a uuid, generate and store
         # as a hex
         self.logger = logger
         self._broker = broker
         self._busname = busname
+        self._slave_communication_timeout = slave_communication_timeout
         # It is the dict that 'owns' the session information, the container
         # for state information
         self._pipeline_data = {}  # TODO: Rename, also master connection is stored
@@ -495,20 +506,39 @@ class MCQLib(object):
             with self._pipeline_data_lock:
                 self._pipeline_data[job_uuid] = {'node':node,
                                                  'payload':msg.payload,
-                                                 'completed':False}
+                                                 'completed':False,
+                                      'last_heartbeat':datetime.datetime.now()}
 
             # wait until the job returns then return, this needs a lock around the
             # running jobs object.
             poll_interval = 1  # check for results each second
             while True:
                 time.sleep(poll_interval)
+
                  # We could have received a stop (ctrl-c) so check here if it is set
                 if killswitch.isSet():
                     self.logger.debug("Shutdown in progress: not starting remote job")
                     self.results = {}
                     self.results['returncode'] = 1
                     return 1
-                #self.logger.error("Active:{0}".format(node))
+
+                # Check the last time we had a keep alive msg from the slave
+                date_time = datetime.datetime.now()
+                with self._pipeline_data_lock:
+                    last_heartbeat = self._pipeline_data[job_uuid][
+                              "last_heartbeat"]
+
+                #self.logger.error(date_time - last_heartbeat)
+                if (date_time - last_heartbeat) > datetime.timedelta(
+                                  seconds = self._slave_communication_timeout):
+                    self.logger.warn(
+                      "Dit not receive a keep alive msg from"
+                      " node {0} for {1} seconds, killing jov".format(node, 
+                                    self._slave_communication_timeout))
+                      
+                    self._pipeline_data[job_uuid]['exit_value']=-1                       
+                    self._pipeline_data[job_uuid]['output']=[]                                                              
+                    break
 
                 with self._pipeline_data_lock:
                     # If both the exit_value (of the recipe executable)
@@ -528,7 +558,7 @@ class MCQLib(object):
         job.results.update(self._pipeline_data[job_uuid]['output'])
 
         exit_value = self._pipeline_data[job_uuid]['exit_value']
-        print "Finished job node: {0}\n".format(job.host)
+        print "Finished job node: {0}".format(job.host)
         return exit_value
 
     def _check_slave_connectivity(self, host):

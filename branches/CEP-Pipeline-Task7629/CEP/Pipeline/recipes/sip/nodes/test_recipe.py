@@ -12,8 +12,6 @@ import time
 import copy
 
 from lofarpipe.support.lofarnode import LOFARnodeTCP
-import lofar.messagebus.msgbus as msgbus
-import lofar.messagebus.message as message
 
 class test_recipe(LOFARnodeTCP):
     """
@@ -33,6 +31,7 @@ class test_recipe(LOFARnodeTCP):
         self.outputs["status"] = True
         self.outputs['data'] = data
         self.outputs['data2'] = data2
+        time.sleep(2)
         ## Time execution of this job
         return 0
 

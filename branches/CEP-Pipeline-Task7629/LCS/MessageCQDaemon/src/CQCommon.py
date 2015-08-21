@@ -57,6 +57,7 @@ def get_master_and_slave_list_from_config(config):
         exit(2)
     
     # When no master/host are defined (default config
+    # TODO: Might not work for port based communication
     if ( len(master_host.strip()) == 0 or
          len(slave_hosts.strip()) == 0):
          print "The supplied daemon_hosts are empty"
@@ -72,7 +73,7 @@ def get_master_and_slave_list_from_config(config):
 
 
 def sendEchoToSlaveListReturnResponce(toBus, namedFromBus, returnSubject,
-                slaveSubjectTemplate, slave_hosts_list, grace_period=30):
+                slaveSubjectTemplate, slave_hosts_list, port, grace_period=30):
     """
     Send an echo msg to all slave in the list and wait for reply.
 
@@ -91,7 +92,7 @@ def sendEchoToSlaveListReturnResponce(toBus, namedFromBus, returnSubject,
 
         msg = create_msg(payload, slaveSubjectTemplate.format(slave))
         toBus.send(msg)
-        echo_received[slave] = False
+        echo_received["{0}:{1}".format(slave,port)] = False
 
     start_tick = datetime.now()
     end_waitperiod = start_tick + timedelta(0,grace_period)

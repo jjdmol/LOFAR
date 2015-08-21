@@ -45,31 +45,34 @@ if __name__ == "__main__":
     config.read(config_path)
 
     # create or get parameters 
-    hostname = socket.gethostname()
-    broker = hostname
-    busname = config.get(               "DEFAULT", "busname")
 
+    busname = config.get(               "DEFAULT", "busname")
+    print busname
+    
+    broker = config.get(               "DEFAULT", "broker")
+    port = config.get("DEFAULT", "broker_port")
     (master_host, slave_hosts_list) = CQCommon.get_master_and_slave_list_from_config(
                                                       config)
 
     print "Connecting to Bus: {0}".format(busname)
-    toBus = msgbus.ToBus(busname, broker = hostname)
+    toBus = msgbus.ToBus(busname, broker = broker)
     print "Connected"
 
     returnSubject = "testPipelineSlaveDaemonConnections"
     
     print "Connecting to Bus: {0}".format(busname)
     namedFromBus = msgbus.FromBus(busname + "/" + returnSubject,
-                                 broker = hostname)
+                                 broker = broker)
     print "Connected"
-
-
+    
     slaveSubjectTemplate = config.get( "slave_cqdaemon",
                              "command_queue_topic_template")
+    
+
 
     silent_nodes, dict_of_nodes = CQCommon.sendEchoToSlaveListReturnResponce(
                 toBus, namedFromBus, returnSubject,
-                slaveSubjectTemplate, slave_hosts_list, 5)
+                slaveSubjectTemplate, slave_hosts_list,port, 5)
 
     print "****************************************"
 

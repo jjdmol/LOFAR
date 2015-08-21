@@ -2,7 +2,7 @@
 
 import logging
 import unittest
-
+import time
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
 
@@ -28,10 +28,10 @@ class testForwardOfJobMsgToQueueuSlave(
   
     def test_use_logging_handler_to_queue(self):
         return
-        broker = HOST_NAME 
+        broker = HOST_NAME + ":5673"
         job_uuid = "123456"
         session_uuid = "654321"
-        busname = "testSCQLib"
+        busname = "klijn_pipelineBus"
         topicName = busname + "/logging_" + session_uuid
 
         return
@@ -71,41 +71,56 @@ class testForwardOfJobMsgToQueueuSlave(
 
 
 
-    def test_SCQLib_with_parameters(self):
-        broker = HOST_NAME
-        job_uuid = "123456"
-        session_uuid = "654321"
-        busname = "testSCQLib"
-        topicName =busname + "/logging_" + session_uuid
+    #def test_SCQLib_with_parameters(self):
+    #    broker = HOST_NAME + ":5673"
+    #    job_uuid = "123456"
+    #    session_uuid = "654321"
+    #    busname = "klijn_pipelineBus"
+    #    topicName =busname + "/logging_" + session_uuid
 
-        parameterQueueName = busname + "/parameters_" + session_uuid + "_" + job_uuid
+    #    parameterQueueName = busname + "/parameters_" + session_uuid + "_" + job_uuid
 
 
-        # Queue where logmsg will be send to
-        fromTopic = msgbus.FromBus(topicName, broker=broker)
+    #    # Queue where logmsg will be send to
+    #    fromTopic = msgbus.FromBus(topicName, broker=broker)
 
-        # THe SCQLib object
-        sCQLibObject = SCQLib.SCQLib(broker, busname,
-                                    session_uuid,  job_uuid)
+    #    # THe SCQLib object
+    #    sCQLibObject = SCQLib.SCQLib(broker, busname,
+    #                    job_uuid)
 
-        # send a startjob msg to the correct queue
-        parameterQ = msgbus.ToBus(parameterQueueName, broker=broker)
-        send_payload =  {'command':'run_job',
-                         'session_uuid':"123456321654",
-                         'job_uuid': "654321",
-                         'node':"ANODE",
-                         'parameters':{
-                           'cdw': "/home",
-                           "job_parameters":{},
-                           'environment':  {"ENV":"Value"},
-                           'cmd': "ls"}}
+    #    # send a startjob msg to the correct queue
+    #    parameterQ = msgbus.ToBus(parameterQueueName, broker=broker)
+    #    send_payload =  {'command':'run_job',
+    #                     'session_uuid':"123456321654",
+    #                     'job_uuid': "654321",
+    #                     'node':"ANODE",
+    #                     'parameters':{
+    #                       'cdw': "/home",
+    #                       "job_parameters":{},
+    #                       'environment':  {"ENV":"Value"},
+    #                       'cmd': "ls"}}
 
-        msg = SCQLib.create_msg(send_payload)
+    #    msg = SCQLib.create_msg(send_payload)
 
-        parameterQ.send(msg)
+    #    parameterQ.send(msg)
 
-        parameters = sCQLibObject._get_arguments()
+    #    parameters = sCQLibObject._get_arguments()
 
+
+    def test_generate_heartbeat(self):
+        
+      broker = "lhn002:5673"
+      targettopic = "klijn_pipelineBus/topic"
+      job_uuid = "123"
+
+
+      generator = SCQLib.HeartBeatGenerator(broker,
+                   targettopic, job_uuid, 1)
+
+      generator.start()
+      
+      time.sleep(4)
+      generator.setStopFlag()
 
 
 # TODO: The amount of testing on this class does not feel right. It should be 
