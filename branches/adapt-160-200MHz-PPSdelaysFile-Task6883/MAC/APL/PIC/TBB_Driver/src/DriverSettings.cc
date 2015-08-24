@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@
 #include <fstream>
 
 using namespace LOFAR;
-	//using namespace GCFCommon;
+using namespace TBB_Protocol;
 using namespace TBB;
 
 // rcu to channel conversion, rcu-0 is on channel-2

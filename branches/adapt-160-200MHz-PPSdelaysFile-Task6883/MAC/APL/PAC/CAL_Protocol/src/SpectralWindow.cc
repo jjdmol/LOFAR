@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -126,6 +126,12 @@ int SpectralWindow::rcumode() const
 	}
 }
 
+uint32 SpectralWindow::raw_rcumode() const
+{
+    LOG_DEBUG (formatString("rcumode(%06X)", m_rcucontrol));
+    return (m_rcucontrol);
+}
+
 //
 // print
 //
@@ -148,9 +154,9 @@ size_t SpectralWindow::getSize() const
 
 size_t SpectralWindow::pack(char* buffer) const
 {
-  uint32 offset = 0;
+  size_t offset = 0;
 
-  MSH_pack(buffer, offset, m_name);
+  offset = MSH_pack(buffer, offset, m_name);
   memcpy(buffer + offset, &m_sampling_freq, sizeof(m_sampling_freq));
   offset += sizeof(m_sampling_freq);
   memcpy(buffer + offset, &m_nyquist_zone, sizeof(m_nyquist_zone));
@@ -165,9 +171,9 @@ size_t SpectralWindow::pack(char* buffer) const
 
 size_t SpectralWindow::unpack(const char* buffer)
 {
-  uint32 offset = 0;
+  size_t offset = 0;
 
-  MSH_unpack(buffer, offset, m_name);
+  offset = MSH_unpack(buffer, offset, m_name);
   memcpy(&m_sampling_freq, buffer + offset, sizeof(m_sampling_freq));
   offset += sizeof(m_sampling_freq);
   memcpy(&m_nyquist_zone, buffer + offset, sizeof(m_nyquist_zone));

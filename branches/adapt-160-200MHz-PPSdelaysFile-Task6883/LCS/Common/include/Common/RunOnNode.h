@@ -1,4 +1,4 @@
-//# filename.h: one line description
+//# RunOnNode.h:
 //#
 //# Copyright (C) 2002-2004
 //# ASTRON (Netherlands Institute for Radio Astronomy)

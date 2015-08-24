@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ namespace LOFAR {
   using GCF::TM::GCFPort;
   using GCF::TM::GCFTCPPort;
   using GCF::TM::GCFPortInterface;
+  using IBS_Protocol::Pointing;
   namespace BS {
 
 class beamctl : public GCFTask

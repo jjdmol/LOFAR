@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -47,19 +47,13 @@ namespace LOFAR {
     size_t RspStatus::pack  (char* buffer) const
     {
       size_t offset = 0;
-      
-      MSH_pack(buffer, offset, m_board_status);
-      
-      return offset;
+      return MSH_pack(buffer, offset, m_board_status);
     }
     
     size_t RspStatus::unpack(const char *buffer)
     {
       size_t offset = 0;
-      
-      MSH_unpack(buffer, offset, m_board_status);
-      
-      return offset;
+      return MSH_unpack(buffer, offset, m_board_status);
     }
   }
 }

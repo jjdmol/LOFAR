@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2011
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -26,10 +26,9 @@
 #define NSTIMESTAMP_H_
 
 #include <Common/LofarTypes.h>
-#include <time.h>
 #include <sys/time.h>
 #include <string.h>
-#include <iostream>
+#include <iosfwd>
 #include <limits.h>
 #include <cmath>
 

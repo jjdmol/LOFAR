@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@
 //#include "GSB_Defines.h"
 
 namespace LOFAR {
+  using namespace SB_Protocol;
   namespace MACIO {
 
 // Note: the difference with GCF-ports is that this port is only based on the

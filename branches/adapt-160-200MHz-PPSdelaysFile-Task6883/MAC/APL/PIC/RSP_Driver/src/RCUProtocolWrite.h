@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -35,41 +35,41 @@ namespace LOFAR {
 class RCUProtocolWrite : public SyncAction
 {
 public:
-    // Constructors for a RCUProtocolWrite object.
-    RCUProtocolWrite(GCFPortInterface& board_port, int board_id);
+	// Constructors for a RCUProtocolWrite object.
+	RCUProtocolWrite(GCFPortInterface& board_port, int board_id);
 
-    // Destructor for RCUProtocolWrite.
-    virtual ~RCUProtocolWrite();
+	// Destructor for RCUProtocolWrite.
+	virtual ~RCUProtocolWrite();
 
-    // Send the write message.
-    virtual void sendrequest();
+	// Send the write message.
+	virtual void sendrequest();
 
-    // Send the read request.
-    virtual void sendrequest_status();
+	// Send the read request.
+	virtual void sendrequest_status();
 
-    // Handle the read result.
-    virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
+	// Handle the read result.
+	virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
 private:
-    EPA_Protocol::MEPHeader m_hdr;
+	EPA_Protocol::MEPHeader m_hdr;
 
-    friend class RCUResultRead;
+	friend class RCUResultRead;
 
-    static const int PROTOCOL_WRITE_SIZE = 15;
-    static const int PROTOCOL_READ_SIZE  = 4;
-    static const int RESULT_WRITE_SIZE   = 7;
-    static const int RESULT_READ_SIZE    = 5;
+	static const int PROTOCOL_WRITE_SIZE = 15;
+	static const int PROTOCOL_READ_SIZE  = 4;
+	static const int RESULT_WRITE_SIZE	 = 7; 
+	static const int RESULT_READ_SIZE  	 = 5; 
 
-    // construct i2c sequence
-    static uint8 i2c_protocol_write[PROTOCOL_WRITE_SIZE];
-    static uint8 i2c_protocol_read [PROTOCOL_READ_SIZE];
+	// construct i2c sequence
+	static uint8 i2c_protocol_write[PROTOCOL_WRITE_SIZE];
+	static uint8 i2c_protocol_read [PROTOCOL_READ_SIZE];
 
-    // construct expected i2c result
-    static uint8 i2c_result_write[RESULT_WRITE_SIZE];
-    static uint8 i2c_result_read [RESULT_READ_SIZE];
+	// construct expected i2c result
+	static uint8 i2c_result_write[RESULT_WRITE_SIZE];
+	static uint8 i2c_result_read [RESULT_READ_SIZE];
 };
 
   }; // namespace RSP
 }; // namespace LOFAR
-
+     
 #endif /* RCUPROTOCOLWRITE_H_ */

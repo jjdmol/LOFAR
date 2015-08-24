@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@
 #include "SerdesBuffer.h"
 
 namespace LOFAR {
+  using namespace RSP_Protocol;
   namespace RSP {
 
 class Cache; // forward declaration
@@ -187,11 +188,11 @@ public:
 	static Cache& getInstance();
 	virtual ~Cache();
 	/*@}*/
-    
+
 	// Reset cache front and back buffers.
 	void reset(void);
 	void resetI2Cuser(void);
-    
+
 	// Swap the front and back buffers.
 	void swapBuffers();
 
@@ -205,7 +206,6 @@ public:
 private:
 	// Direct construction not allowed.
 	Cache();
-    
 
 	// Keep register update state.
 	AllRegisterState m_allstate; // communication status of all register

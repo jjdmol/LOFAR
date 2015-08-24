@@ -5,7 +5,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -38,35 +38,35 @@ namespace LOFAR {
 class Sequencer : public GCFFsm
 {
 public:
-    typedef enum {
-      SEQ_NONE = 0,
+	typedef enum {
+	  SEQ_NONE = 0,
       SEQ_STARTUP,  // done at initialization
       SEQ_SETCLOCK, // if clock switch
       SEQ_RSPCLEAR,
-    } Sequence;
-    //
-    // Constructor/destructor
-    //
-    static Sequencer& getInstance();
-    virtual ~Sequencer();
+	} Sequence;
+	//
+	// Constructor/destructor
+	//
+	static Sequencer& getInstance();
+	virtual ~Sequencer();
 
-    //
-    // Advance the sequencer state machine
-    //
-    void run(GCFEvent& event, GCFPortInterface& port);
+	//
+	// Advance the sequencer state machine
+	//
+	void run(GCFEvent& event, GCFPortInterface& port);
 
-    //
-    // Returns true when the statemachine is not in the 'idle' state.
-    //
-    bool isActive() const;
+	//
+	// Returns true when the statemachine is not in the 'idle' state.
+	//
+	bool isActive() const;
 
-    void startSequence(Sequence sequence) { itsCurSeq = sequence; }
-    void stopSequence()                   { itsCurSeq = SEQ_NONE; }
+	void startSequence(Sequence sequence) { itsCurSeq = sequence; }
+	void stopSequence()                   { itsCurSeq = SEQ_NONE; }
 
-    /*@{*/
-    //
-    // The states of the statemachine.
-    //
+	/*@{*/
+	//
+	// The states of the statemachine.
+	//
     GCFEvent::TResult idle_state        (GCFEvent& event, GCFPortInterface& port);
     GCFEvent::TResult disableClock_state(GCFEvent& event, GCFPortInterface& port);
     GCFEvent::TResult readDisabledClock_state(GCFEvent& event, GCFPortInterface& port);
@@ -83,25 +83,25 @@ public:
     /*@}*/
 
 private:
-    //
-    // Default construction prohibited (singleton pattern).
-    //
-    Sequencer();
-    void enableRCUs(bool);
+	//
+	// Default construction prohibited (singleton pattern).
+	//
+	Sequencer();
+	void enableRCUs(bool);
     blitz::Array<uint16, 2> str2blitz(const char* str, int max);
     //std::list<int> strtolist(const char* str, int max);
 
-    static Sequencer* m_instance;
+	static Sequencer* m_instance;
 
-    bool        itsIdle;        // In idle-state or not
-    Sequence    itsCurSeq;      // currently executing sequence
+	bool		itsIdle;		// In idle-state or not
+	Sequence	itsCurSeq;		// currently executing sequence
     int         itsClockRequest;// requested clock freq
 
-    int         itsTimer;       // timer used to delay some actions
-    bool        itsFinalState;  // final state of sequence (used by rcudisable_state)
+	int		 	itsTimer;		// timer used to delay some actions
+	bool		itsFinalState;	// final state of sequence (used by rcudisable_state)
 };
 
   };
 };
-
+     
 #endif /* SEQUENCER_H_ */

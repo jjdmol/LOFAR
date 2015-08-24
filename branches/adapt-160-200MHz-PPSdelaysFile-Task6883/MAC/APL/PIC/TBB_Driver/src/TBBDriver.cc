@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -83,6 +83,9 @@ using namespace LOFAR;
 using namespace GCF::TM;
 using namespace MACIO;
 using namespace TBB;
+using namespace TBB_Protocol;
+using namespace RSP_Protocol;
+using namespace TP_Protocol;
 using namespace std;
 
 // Use a terminate handler that can produce a backtrace.

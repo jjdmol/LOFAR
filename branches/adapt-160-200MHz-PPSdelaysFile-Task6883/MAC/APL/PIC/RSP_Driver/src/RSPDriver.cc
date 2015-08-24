@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -173,6 +173,8 @@
 #define PPS_FETCH_TIMEOUT { 3, 0 }
 
 namespace LOFAR {
+	using namespace EPA_Protocol;
+	using namespace RSP_Protocol;
 	using namespace GCF::TM;
 	namespace RSP {
 	using namespace blitz;
@@ -285,6 +287,7 @@ RSPDriver::~RSPDriver()
 	delete [] m_boardPorts;
 }
 
+/*
 //
 // readPPSdelaySettings()
 //
@@ -330,7 +333,7 @@ void RSPDriver::readPPSdelaySettings()
 	}
 	LOG_INFO_STR("PPSsyncDelays: " << itsPPSsyncDelays);
 }
-
+*/
 
 // ------------------------------ Boardpool related commands ------------------------------
 //
@@ -1688,6 +1691,16 @@ void RSPDriver::rsp_setrsu(GCFEvent& event, GCFPortInterface& port)
 {
 	Ptr<SetRSUCmd> command = new SetRSUCmd(event, port, Command::WRITE);
 
+    if (Sequencer::getInstance().isActive()) {
+		LOG_INFO("SETRSU: sequencer busy");
+
+		RSPSetrsuackEvent ack;
+		ack.timestamp = Timestamp(0,0);
+		ack.status = RSP_BUSY;
+		port.send(ack);
+		return;
+	}
+    
 	if (!command->validate()) {
 		LOG_ERROR("SETRSU: invalid parameter");
 
@@ -1986,6 +1999,16 @@ void RSPDriver::rsp_getconfig(GCFEvent& event, GCFPortInterface& port)
 void RSPDriver::rsp_setclock(GCFEvent& event, GCFPortInterface& port)
 {
 	Ptr<SetClocksCmd> command = new SetClocksCmd(event, port, Command::WRITE);
+
+	if (Sequencer::getInstance().isActive()) {
+		LOG_INFO("SETCLOCK: sequencer busy");
+
+		RSPSetclockackEvent ack;
+		ack.timestamp = Timestamp(0,0);
+		ack.status = RSP_BUSY;
+		port.send(ack);
+		return;
+	}
 
 	if (!command->validate()) {
 		LOG_ERROR("SETCLOCK: invalid parameter");

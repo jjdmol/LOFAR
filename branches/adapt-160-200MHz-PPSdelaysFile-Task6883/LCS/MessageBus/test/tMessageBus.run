@@ -1,0 +1,8 @@
+#!/bin/bash
+
+source MessageFuncs.sh
+
+create_queue tMessageBus
+create_queue tMessageBus-extraTestQ
+
+./tMessageBus

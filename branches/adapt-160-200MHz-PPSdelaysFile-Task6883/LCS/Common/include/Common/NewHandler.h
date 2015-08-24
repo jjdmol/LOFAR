@@ -27,6 +27,7 @@
 //
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
+#include <new>
 #include <Common/Exception.h>
 
 namespace LOFAR {

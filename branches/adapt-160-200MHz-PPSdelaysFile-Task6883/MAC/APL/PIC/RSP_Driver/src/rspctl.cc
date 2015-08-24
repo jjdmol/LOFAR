@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -60,6 +60,8 @@
 								c-'A'+10 : ((c>='a' && c<='f') ? c-'a'+10 : 0)))
 
 namespace LOFAR {
+	using namespace RSP_Protocol;
+	using namespace EPA_Protocol;
 	using namespace GCF::TM;
 	namespace rspctl {
 	using namespace std;
@@ -1115,9 +1117,14 @@ GCFEvent::TResult RSUCommand::ack(GCFEvent& e)
 #endif
 		case RSP_SETRSUACK: {
 			RSPSetrsuackEvent ack(e);
-
 			if (RSP_SUCCESS != ack.status) {
-				logMessage(cerr,"Error: RSP_SETRSU command failed.");
+                if (ack.status == RSP_BUSY) {
+                    logMessage(cout,"Warning, rsu NOT set, driver busy.");
+                }
+                else {
+                    logMessage(cerr,"Error: RSP_SETRSU command failed.");
+                }
+            
 			}
 		}
 	}
@@ -1173,7 +1180,12 @@ GCFEvent::TResult ClockCommand::ack(GCFEvent& e)
 	else if (e.signal == RSP_SETCLOCKACK) {
 		RSPSetclockackEvent ack(e);
 		if (RSP_SUCCESS != ack.status) {
-			logMessage(cerr,"Error: RSP_SETCLOCK command failed.");
+			if (ack.status == RSP_BUSY) {
+                logMessage(cout,"Warning, clock NOT set, driver busy.");
+            }
+            else {
+                logMessage(cerr,"Error: RSP_SETCLOCK command failed.");
+            }
 		}
 	}
 

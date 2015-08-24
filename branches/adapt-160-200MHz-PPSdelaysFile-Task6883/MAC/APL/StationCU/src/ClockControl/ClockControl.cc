@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006-2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -48,6 +48,10 @@ using namespace std;
 
 namespace LOFAR {
 	using namespace APLCommon;
+	using namespace Controller_Protocol;
+	using namespace RSP_Protocol;
+	using namespace DP_Protocol;
+	using namespace Clock_Protocol;
 	namespace StationCU {
 	
 
@@ -687,8 +691,13 @@ GCFEvent::TResult ClockControl::setClock_state(GCFEvent& event,
 	case RSP_SETCLOCKACK: {
 		RSPSetclockackEvent		ack(event);
 		if (ack.status != RSP_SUCCESS) {
-			LOG_ERROR_STR ("Clock could not be set to " << itsClock << ", retry in 5 seconds.");
-			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("clockset error"));
+            if (ack.status == RSP_BUSY) {
+                LOG_WARN_STR ("Clock could not be set to " << itsClock << ", busy retry in 5 seconds.");
+            }
+			else {
+                LOG_ERROR_STR ("Clock could not be set to " << itsClock << ", retry in 5 seconds.");
+            }
+            itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("clockset error"));
 			itsTimerPort->setTimer(5.0);
 			break;
 		}

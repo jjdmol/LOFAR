@@ -15,7 +15,7 @@
 #
 #  Copyright (C) 2008-2009
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
-#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -63,7 +63,9 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
     get_property(_libs GLOBAL PROPERTY ${PACKAGE_NAME}_LIBRARIES)
     target_link_libraries(${_name} ${_libs} 
       ${${PACKAGE_NAME}_LINK_LIBRARIES} ${LOFAR_EXTRA_LIBRARIES})
-    add_dependencies(${_name} ${PACKAGE_NAME}_PackageVersion)
+    if(TARGET ${PACKAGE_NAME}_PackageVersion)
+      add_dependencies(${_name} ${PACKAGE_NAME}_PackageVersion)
+    endif(TARGET ${PACKAGE_NAME}_PackageVersion)
     add_dependencies(${PACKAGE_NAME} ${_name})
   endmacro(lofar_add_executable)
 
@@ -107,7 +109,9 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
 #      VERSION ${${PACKAGE_NAME}_VERSION}
 #      OUTPUT_NAME lofar_${_name})
     install(TARGETS ${_name} DESTINATION ${LOFAR_LIBDIR})
-    add_dependencies(${_name} ${PACKAGE_NAME}_PackageVersion)
+    if(TARGET ${PACKAGE_NAME}_PackageVersion)
+      add_dependencies(${_name} ${PACKAGE_NAME}_PackageVersion)
+    endif(TARGET ${PACKAGE_NAME}_PackageVersion)
     add_dependencies(${PACKAGE_NAME} ${_name})
   endmacro(lofar_add_library)
 
