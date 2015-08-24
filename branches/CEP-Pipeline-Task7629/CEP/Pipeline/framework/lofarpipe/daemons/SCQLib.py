@@ -107,7 +107,8 @@ class HeartBeatGenerator(threading.Thread):
 
     TODO: Candidate to move to LCS
     """
-    def __init__(self, broker,targettopic, job_uuid,poll_interval=5.0):
+    def __init__(self, broker,targettopic, returnQueueSubject, session_uuid, 
+                 job_uuid,poll_interval=5.0):
         """
         Create the usage stat object. Create events for starting and stopping.
         By default the Process creating the object is tracked.
@@ -121,7 +122,9 @@ class HeartBeatGenerator(threading.Thread):
         self.stopFlag.clear() # Set it to working (allows re entrant usage)
 
         self._poll_interval = poll_interval
-        self._job_uuid = job_uuid       
+        self._job_uuid = job_uuid  
+        self._session_uuid = session_uuid
+        self._targetTopicSubject = returnQueueSubject
         self._targettopicname = targettopic
         self._targettopic = msgbus.ToBus(self._targettopicname , 
             broker = broker)
@@ -148,8 +151,10 @@ class HeartBeatGenerator(threading.Thread):
                     #qpidMsg=None
                           )
                 # add the data to send
-                payload = {'type': "heartbeat",
-                           'job_uuid':self._job_uuid } 
+                payload = {'type': "scqlib_heartbeat",
+                           'job_uuid':self._job_uuid ,
+                           "session_uuid":self._session_uuid,
+                           "target_topic_subject":self._targetTopicSubject} 
                 msg.payload = payload
                 self._targettopic.send(msg)
 
@@ -190,7 +195,8 @@ class SCQLib(object):
 
         # With the session id collected we can now connect al the named topics
         self._logTopicName = self._busname + "/log_" + self._session_uuid
-        self._returnQueueName = self._busname + "/result_" + self._session_uuid
+        self._returnQueueSubject = "/result_" + self._session_uuid
+        self._returnQueueName = self._busname + self._returnQueueSubject 
         
         self._resultQueue = msgbus.ToBus(self._returnQueueName, 
               broker = self._broker)
@@ -199,7 +205,8 @@ class SCQLib(object):
                                                    self._logTopicName)
 
         self._heartBeatGenerator = HeartBeatGenerator(broker,
-                              self._returnQueueName , job_uuid)
+                  self._returnQueueName, self._returnQueueSubject,
+                  self._session_uuid , job_uuid)
 
         # Register correct handlers for killing the threads
         signal.signal(signal.SIGTERM, 

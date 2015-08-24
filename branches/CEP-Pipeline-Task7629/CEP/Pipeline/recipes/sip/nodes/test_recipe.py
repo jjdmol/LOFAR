@@ -10,6 +10,7 @@ import shutil
 import sys
 import time
 import copy
+import socket
 
 from lofarpipe.support.lofarnode import LOFARnodeTCP
 
@@ -31,7 +32,11 @@ class test_recipe(LOFARnodeTCP):
         self.outputs["status"] = True
         self.outputs['data'] = data
         self.outputs['data2'] = data2
-        time.sleep(2)
+
+        hostname = socket.gethostname()
+        self.logger.critical(hostname)
+
+        time.sleep(1)
         ## Time execution of this job
         return 0
 

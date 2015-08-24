@@ -250,7 +250,7 @@ class resultQueueHandler(threading.Thread):
             with self._pipeline_data_lock:
                 self._pipeline_data[job_uuid]['output']=output
 
-        elif type == 'heartbeat':
+        elif type == 'scqlib_heartbeat':
             # Store the last heartbeat 
             job_uuid = msg_content['job_uuid']
             date_time = datetime.datetime.now()
@@ -326,6 +326,7 @@ class MCQLib(object):
     """
     def __init__(self, logger, broker, busname, master_echo=False,
                  slave_communication_timeout=10):
+        # TODO: The slave_communication_timeout is to short for operations
         # Each MCQDaemonLib triggers a session with a uuid, generate and store
         # as a hex
         self.logger = logger

@@ -100,6 +100,10 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
                                                             subject)
             return True
 
+        if msg_type == 'scqlib_heartbeat':
+            self._process_deadletter_scqlib_heartbeat_msg(unpacked_msg_content)
+            return True
+
         # Not processed  gerereturn False
         return False
 
@@ -172,6 +176,36 @@ class PipelineSCQDaemonImp(CQDaemon.CQDaemon):
             unpacked_msg_data['n_repost'] += 1
             self._subprocessManager.send_job_parameters(
                session_uuid, job_uuid, unpacked_msg_data)
+
+    def _process_deadletter_scqlib_heartbeat_msg(self, unpacked_msg_data):
+        """
+        We try to send heartbeat msg a couple of times.
+        if it keeps failing we have to assume that the toplevel recipe
+        is not reachable anymore and we have to kill the job
+        """
+        session_uuid = unpacked_msg_data['session_uuid']
+        job_uuid = unpacked_msg_data['job_uuid']
+
+        n_repost = self._deadletter_get_or_set_nrepost(unpacked_msg_data)  
+        
+              
+        if n_repost >= self._max_repost:
+            # If we tried enough times, kill the job
+            self._logger.warn(
+              "The toplevel recipe dit not respond to a heartbeats, killing job")
+
+            self._logger.error(session_uuid)
+            self._logger.error(job_uuid)
+
+            self._subprocessManager.kill_job_send_results(
+              session_uuid, job_uuid)
+        else:
+            self._logger.info("Resending heartbeat msg to toplevel(MCQLib)")
+            # Else resend the msg, increase the resend count
+            unpacked_msg_data['n_repost'] += 1
+            subject = unpacked_msg_data["target_topic_subject"]
+            msg = CQCommon.create_msg(unpacked_msg_data, subject)
+            self._toBus.send(msg)                       
         
     def _deadletter_get_or_set_nrepost(self, unpacked_msg_data):
         """
