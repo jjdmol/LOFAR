@@ -1,5 +1,5 @@
 //# tParset.cc
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2012-2015  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -1021,10 +1021,12 @@ TEST(testRing) {
   // The manual tabs should be added before the ring tabs. 
   // test values are for the 3rd value in the ring
   struct ObservationSettings::Direction sap = ps.settings.SAPs[0].direction;
-  CHECK_CLOSE(sap.angle1 + 4.04656677402571, ps.settings.beamFormer.SAPs[0].TABs[3].direction.angle1, 0.00000001);
-  CHECK_CLOSE(sap.angle2 + 1.15470053837925, ps.settings.beamFormer.SAPs[0].TABs[3].direction.angle2, 0.00000001);
+  CHECK_CLOSE(sap.angle1 + 6.10603350157654,
+              ps.settings.beamFormer.SAPs[0].TABs[3].direction.angle1, 0.00000001);
+  CHECK_CLOSE(sap.angle2 + 1.0,
+              ps.settings.beamFormer.SAPs[0].TABs[3].direction.angle2, 0.00000001);
   // Full list of value for 1 circle:
-  //[(0, 0), (0, 2.3094010767585), (4.04656677402571, 1.15470053837925), (1.73205080756888, -1.15470053837925), (0, -2.3094010767585), (-1.73205080756888, -1.15470053837925), (-4.04656677402571, 1.15470053837925)]
+  //[(0.0, 0.0), (0.0, 2.0), (6.10603350157654, 1.0), (sqrt(3.0), -1.0), (0.0, -2.0), (-sqrt(3.0), 0), (-6.10603350157654, 1.0)]
 }
 
 /*

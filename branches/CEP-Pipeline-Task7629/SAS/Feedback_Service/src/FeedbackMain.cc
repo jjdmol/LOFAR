@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
+#include <MessageBus/MessageBus.h>
 #include <GCF/TM/GCF_Control.h>
 
 #include "Feedback.h"
@@ -38,6 +39,8 @@ int main(int argc, char* argv[])
 {
 	try {
 		GCFScheduler::instance()->init(argc, argv, "FeedbackService");
+    
+    MessageBus::init();
 
 		Feedback	fbTask;
 		fbTask.start(); 					// make initial transition

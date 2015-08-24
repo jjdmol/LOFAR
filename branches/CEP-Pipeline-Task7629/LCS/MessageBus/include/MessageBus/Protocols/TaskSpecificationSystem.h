@@ -30,48 +30,43 @@
 namespace LOFAR {
 namespace Protocols {
 
-class TaskSpecificationSystem: public Message
+class TaskSpecificationSystem: public MessageContent
 {
 public:
     TaskSpecificationSystem(
-						// Name of the service or process producing this message
-						const std::string &from,
+                        // Name of the service or process producing this message
+                        const std::string &from,
 
-						// End-user responsible for this request (if applicable)
-						const std::string &forUser,
+                        // End-user responsible for this request (if applicable)
+                        const std::string &forUser,
 
-						// Human-readable summary describing this request
-						const std::string &summary,
+                        // Human-readable summary describing this request
+                        const std::string &summary,
 
-						// Identifiers for the context of this message
-						const std::string &momID,
-						const std::string &sasID,
+                        // Identifiers for the context of this message
+                        const std::string &momID,
+                        const std::string &sasID,
 
-						// Payload: a parset containing the generated feedback
-						const ParameterSet &feedback
-					  ): 
-		Message( from, forUser, summary, "task.specification.system", "1.0.0", momID, sasID)
-	{
-   		std::string buffer;
-		feedback.writeBuffer(buffer);
-		setTXTPayload(buffer);
-	}
+                        // Payload: a parset containing the generated feedback
+                        const ParameterSet &feedback
+                      ): 
+        MessageContent( from, forUser, summary, "task.specification.system", "1.0.0", momID, sasID)
+    {
+           std::string buffer;
+        feedback.writeBuffer(buffer);
+        setTXTPayload(buffer);
+    }
 
-	// Parse a message
-	TaskSpecificationSystem(const qpid::messaging::Message qpidMsg) :
-	    Message(qpidMsg)
-	{ }
+    // Parse a message
+    TaskSpecificationSystem(const qpid::messaging::Message qpidMsg) :
+        MessageContent(qpidMsg)
+    { }
 
-	// Read a message from disk (header + payload)
-	TaskSpecificationSystem(const std::string &rawContent) :
-		Message(rawContent)
-	{ }
-
-	ParameterSet specfications() const {
-		ParameterSet result;
-		result.adoptBuffer(payload());
-		return result;
-	}
+    ParameterSet specifications() const {
+        ParameterSet result;
+        result.adoptBuffer(payload.get());
+        return result;
+    }
 };
 
   } // namespace Protocols

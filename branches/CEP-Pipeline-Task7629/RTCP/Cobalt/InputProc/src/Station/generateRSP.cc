@@ -80,7 +80,7 @@ void usage()
 time_t parseTime(const char *str)
 {
   try {
-    return to_time_t(posix_time::time_from_string(str));
+    return LOFAR::to_time_t(posix_time::time_from_string(str));
   } catch (std::exception &err) {
     THROW (Exception, "Invalid date/time: " << err.what());
   }

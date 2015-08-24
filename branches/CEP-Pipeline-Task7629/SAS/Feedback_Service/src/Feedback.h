@@ -31,7 +31,7 @@
 #include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Control.h>
 #include <OTDB/OTDBconnection.h>
-#include <MessageBus/MsgBus.h>
+#include <MessageBus/FromBus.h>
 
 // Avoid 'using namespace' in headerfiles
 

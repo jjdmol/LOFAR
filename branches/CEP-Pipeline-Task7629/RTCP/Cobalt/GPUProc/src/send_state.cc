@@ -22,7 +22,8 @@
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
-#include <MessageBus/MsgBus.h>
+#include <MessageBus/MessageBus.h>
+#include <MessageBus/ToBus.h>
 #include <MessageBus/Protocols/TaskFeedbackState.h>
 
 #include <boost/format.hpp>
@@ -36,12 +37,12 @@ using boost::format;
 
 static void usage(const char *argv0)
 {
-  cerr << "Usage: " << argv0 << " parset success" << endl;
-  cerr << endl;
-  cerr << "  parset:  filename of parset describing the observation" << endl;
-  cerr << "  success: obs status: 1 = ok, 0 = failure" << endl;
-  cerr << endl;
-  cerr << "  -h: print this message" << endl;
+  cout << "Usage: " << argv0 << " parset success" << endl;
+  cout << endl;
+  cout << "  parset:  filename of parset describing the observation" << endl;
+  cout << "  success: obs status: 1 = ok, 0 = failure" << endl;
+  cout << endl;
+  cout << "  -h: print this message" << endl;
 }
 
 int main(int argc, char **argv)
@@ -70,10 +71,16 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
+  // Make sure all time is dealt with and reported in UTC
+  if (setenv("TZ", "UTC", 1) < 0)
+    THROW_SYSCALL("setenv(TZ)");
+
   INIT_LOGGER("send_status");
   MessageBus::init();
 
-  Parset parset(argv[optind]);
+  // Parse parset RAW to prevent exceptions caused by broken parsets.
+  // We just need the sasID and momID.
+  ParameterSet parset(argv[optind]);
   int success = atoi(argv[optind+1]);
 
   // send status feedback
@@ -83,8 +90,8 @@ int main(int argc, char **argv)
     "Cobalt/GPUProc/send_state",
     "",
     "State feedback",
-    str(format("%s") % parset.settings.momID),
-    str(format("%s") % parset.settings.observationID),
+    str(format("%s") % parset.getString("Observation.momID", "-1")),
+    str(format("%s") % parset.getString("Observation.ObsID")),
     success);
 
   bus.send(msg);

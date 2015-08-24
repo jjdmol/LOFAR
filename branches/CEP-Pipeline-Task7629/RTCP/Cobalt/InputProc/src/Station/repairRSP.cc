@@ -41,7 +41,7 @@ using namespace Cobalt;
 
 time_t parseTime(const char *str)
 {
-  return to_time_t(boost::posix_time::time_from_string(str));
+  return LOFAR::to_time_t(boost::posix_time::time_from_string(str));
 }
 
 void usage()

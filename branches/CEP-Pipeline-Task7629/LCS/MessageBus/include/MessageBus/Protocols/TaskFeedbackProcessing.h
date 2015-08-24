@@ -30,7 +30,7 @@ namespace LOFAR {
 
 namespace Protocols {
 
-class TaskFeedbackProcessing: public Message
+class TaskFeedbackProcessing: public MessageContent
 {
 public:
   TaskFeedbackProcessing(
@@ -50,7 +50,7 @@ public:
     // Payload: a parset containing the generated feedback
     const ParameterSet &feedback
   ):
-  Message(
+  MessageContent(
     from,
     forUser,
     summary,
@@ -68,20 +68,13 @@ public:
   // Parse a message
   TaskFeedbackProcessing(const qpid::messaging::Message qpidMsg)
   :
-    Message(qpidMsg)
-  {
-  }
-
-  // Read a message from disk (header + payload)
-  TaskFeedbackProcessing(const std::string &rawContent)
-  :
-    Message(rawContent)
+    MessageContent(qpidMsg)
   {
   }
 
   ParameterSet feedback() const {
     ParameterSet result;
-    result.adoptBuffer(payload());
+    result.adoptBuffer(payload.get());
 
     return result;
   }

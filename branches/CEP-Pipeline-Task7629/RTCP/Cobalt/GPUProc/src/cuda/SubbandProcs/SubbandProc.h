@@ -139,6 +139,7 @@ namespace LOFAR
       boost::shared_ptr<gpu::DeviceMemory> devB;
       // @}
 
+      PerformanceCounter totalCounter;
       PerformanceCounter inputCounter;
       BudgetTimer processCPUTimer;
 
