@@ -324,8 +324,9 @@ namespace LOFAR
       MSLofarFieldColumns msfieldCol(msfield);
 
       uInt rownr = msfield.nrow();
-      ASSERT(rownr == 0); // can only set directionType on first row, so only one field per MeasurementSet for now
 
+      // Set refframe for MS direction columns to be able to write non-J2000 refframe coords.
+      ASSERT(rownr == 0); // can only set directionType on first row, so only one field per MeasurementSet for now
       if (itsPS.settings.anaBeam.enabled)
         msfieldCol.setDirectionRef(beamDirectionType, anaBeamDirectionType);
       else
@@ -610,9 +611,14 @@ namespace LOFAR
 
       // Fill the POINTING subtable.
       MSPointing mspointing = itsMS->pointing();
-      mspointing.addRow(itsNrAnt);
       MSPointingColumns mspointingCol(mspointing);
 
+      uInt rownr = mspointing.nrow();
+      // Set refframe for MS direction columns to be able to write non-J2000 refframe coords.
+      ASSERT(rownr == 0); // can only set directionType on first row, so only one field per MeasurementSet for now
+      mspointingCol.setDirectionRef(beamDirectionType);
+
+      mspointing.addRow(itsNrAnt);
       for (unsigned i = 0; i < itsNrAnt; i++) {
         mspointingCol.antennaId().put(i, i);
         mspointingCol.time().put(i, itsStartTime + itsNrTimes * itsTimeStep / 2.);
@@ -620,8 +626,8 @@ namespace LOFAR
         mspointingCol.name().put(i, ctarget);
         mspointingCol.numPoly().put(i, 0);
         mspointingCol.timeOrigin().put(i, itsStartTime);
-        mspointingCol.directionMeasCol().put(i, outdir); // TODO: fix exc if refframe is SUN
-        mspointingCol.targetMeasCol().put(i, outdir);    // TODO: fix exc if refframe is SUN
+        mspointingCol.directionMeasCol().put(i, outdir);
+        mspointingCol.targetMeasCol().put(i, outdir);
         mspointingCol.tracking().put(i, true); // not tracking N/A w/ current obs software
       }
 
