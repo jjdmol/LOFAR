@@ -185,7 +185,7 @@ class TestSubprocessManager(unittest.TestCase):
                                    'type': 'log',
                                    'job_uuid': '654321'}, 
                                1: {'info': '', 
-                                   'node': 'lhn002',
+                                   'node': HOST_NAME,
                                    'type': 'exit_value', 
                                    'exit_value': '-1', 
                                    'job_uuid': '654321', 
