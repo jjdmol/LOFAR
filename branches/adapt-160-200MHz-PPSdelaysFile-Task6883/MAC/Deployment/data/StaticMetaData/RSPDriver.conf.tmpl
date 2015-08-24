@@ -42,9 +42,12 @@ RSPDriver.PPS_DELAY=10000
 RSPDriver.PPS_TRIGGER=1
 
 #
-# File with delays for each AP for finetuning the sychronisation to the PPS.
+# Files with delays for each AP for finetuning the sychronisation to the PPS.
+# Each clock has its own file.
 #
-RSPDriver.PPSdelayFile = "PPSdelays.conf"
+RSPDriver.PPSdelayFile = "PPSdelays.conf"    # Backwards compatibility (LOFAR 2.11 and earlier)
+RSPDriver.PPSdelayFile160 = "PPSdelays.conf"
+RSPDriver.PPSdelayFile200 = "PPSdelays.conf"
 
 #
 # Specify the MAC addresses of the control port (MAC) of RSP boards
