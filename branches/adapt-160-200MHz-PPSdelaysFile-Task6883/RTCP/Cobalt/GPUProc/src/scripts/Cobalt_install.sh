@@ -19,7 +19,7 @@ if [ "${RELEASE_NAME}" = "" ]; then
   exit 1
 fi
 
-for HOST in ${HOSTS:-cbm001 cbm002 cbm003 cbm004 cbm005 cbm006 cbm007 cbm008}; do
+for HOST in ${HOSTS:-cbm001 cbm002 cbm003 cbm004 cbm005 cbm006 cbm007 cbm008 cbm009 cbm010}; do
   echo "ssh-ing to node $HOST"
 
   # Escape double quotes below the following line!
@@ -36,6 +36,9 @@ for HOST in ${HOSTS:-cbm001 cbm002 cbm003 cbm004 cbm005 cbm006 cbm007 cbm008}; d
   # The full pathnames are in the tar file, so unpack from root dir.
   # -m: don't warn on timestamping /localhome
   cd / && tar -zxvmf \"/localhome/lofarbuild/incoming/${RELEASE_NAME}.ztar\" || exit 1
+
+  # Remove tarball
+  rm \"/localhome/lofarbuild/incoming/${RELEASE_NAME}.ztar\"
 
   # Sym link installed var/ to common location.
   cd \"/localhome/lofar/lofar_versions/${RELEASE_NAME}\" &&

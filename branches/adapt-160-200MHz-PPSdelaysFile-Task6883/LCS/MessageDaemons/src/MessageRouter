@@ -63,7 +63,7 @@ class BusMulticast(threading.Thread):
         try:
           content = msg.content()
           log("INFO","[%s] [%s] Message received" % (self.source, content))
-        except message.MessageException, e:
+        except Exception, e:
           content = "<unknown>"
           log("WARN","[%s] Non-compliant message received" % (self.source,))
 

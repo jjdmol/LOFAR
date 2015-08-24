@@ -66,7 +66,7 @@ class bbs(LOFARnodeTCP):
             #                                                     Run the kernel
             #               Catch & log output from the kernel logger and stdout
             # ------------------------------------------------------------------
-            working_dir = mkdtemp()
+            working_dir = mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
             env = read_initscript(self.logger, initscript)
             try:
                 cmd = [executable, parset_filename, "0"]

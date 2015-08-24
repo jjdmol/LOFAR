@@ -3,6 +3,7 @@ from multiprocessing import Process, Queue, Value
 from Queue import Empty as QueueEmpty
 from multiprocessing.managers import SyncManager
 from job_parser import JobRetry, JobError, JobHold, JobScheduled, JobProducing, JobProduced
+from job_parser import jobState2String
 import os, time, sys
 from ingestpipeline import IngestPipeline, PipelineError, PipelineJobFailedError
 from ingestpipeline import PipelineNoSourceError, PipelineAlreadyInLTAError, PipelineAlreadyInLTAError, PipelineNoProjectInLTAError
@@ -48,7 +49,7 @@ class momTalker(Process):
             self.logger.warning(message)
       self.logger.info(message)
     except:
-      self.logger.exception('Could not update job %s status to %s.' % (str(job['ExportID']), str(job['Status'])))
+      self.logger.exception('Could not update job %s status to %s.' % (str(job['ExportID']), jobState2String(job['Status'])))
 
   def run(self):
     self.logger.info('momTalker started')
@@ -85,8 +86,14 @@ class executer(Process):
     logger.info('Executer initialzed for %s (pid: %i)' % (job['ExportID'], os.getpid()))
 
   def run(self):
+    start = time.time()
+    self.logger.debug("Slave Pipeline executer starting for %s" % (self.job['ExportID']))
     self.job['Status'] = JobProducing
-    self.talker.put(self.job)
+    if not self.talker.full():
+      self.talker.put(self.job)
+    else:
+      self.logger.debug("MoM queue full, skipping JobProducing status update for %s" % (self.job['ExportID']))
+
     pipeline = IngestPipeline(self.logdir, self.job, self.momClient, self.ltaClient, self.host, self.ltacpport, self.mailCommand, self.momRetry, self.ltaRetry, self.srmRetry, self.srmInit)
     try:
       pipeline.run()
@@ -125,11 +132,14 @@ class executer(Process):
       self.job['retry'] += 1
       if self.job['retry'] < self.pipelineRetry:
         self.job['Status'] = JobRetry
-    if (self.job['Status'] == JobProduced) or (self.job['Status'] == JobError):
+    if (self.job['Status'] == JobProduced):
         self.talker.put(self.job)
+    elif (self.job['Status'] == JobError):
+      self.logger.warning('Skipping JobError status update to MoM to prevent the hold/running slow flipping bug for %s' % self.job['ExportID'])
     self.manager.slave_done(self.job, self.result, pipeline.FileType)
     with self.jobs.get_lock():
       self.jobs.value -= 1
+    self.logger.debug("Slave Pipeline executer finished for %s in %d sec" % (self.job['ExportID'], time.time() - start))
 
 ## ---------------- LTA Slave --------------------------------------------
 class ltaSlave():

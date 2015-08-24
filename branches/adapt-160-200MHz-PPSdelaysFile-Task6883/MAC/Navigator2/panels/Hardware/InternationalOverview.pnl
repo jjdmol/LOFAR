@@ -245,6 +245,18 @@ LANG:1 22 International Stations
 0
 1 164 10 "" 7
 0
+1 165 11 "" 6
+0
+1 166 11 "" 1
+0
+1 167 11 "" 2
+0
+1 168 11 "" 3
+0
+1 169 11 "" 4
+0
+1 170 11 "" 5
+0
 0
 LAYER, 1 
 1
@@ -312,4 +324,8 @@ LANG:1 6 Layer8
 3 10 "PANEL_REF10" -1
 "objects\\Hardware\\NLStatusView.pnl" 280 270 T 110 U 
 0
+3 11 "PANEL_REF11" -1
+"objects\\Hardware\\LBA_HBAStatusView.pnl" 470 240 T 110 1 0 1 90 -90
+1
+"$station""DE609"
 0

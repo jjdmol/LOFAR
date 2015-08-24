@@ -257,11 +257,6 @@ fi
 sourcedb_path=${observation}/${sourcedb_basename}
 parmdb_path=${observation}/${parmdb_basename}
 
-log_file="calibrate-stand-alone_$$.log"
-if test -f "${log_file}"; then
-    mv ${log_file} ${log_file}.bak
-fi
-
 echo "arguments:"
 echo "    observation: ${observation}"
 echo "    parset: ${parset}"
@@ -298,22 +293,22 @@ if test -d "${sourcedb_path}" -a ! ${replace_sourcedb} -eq 1; then
 else
   if test "${sourcedb}"; then
       if test ${verbose} -eq 1 -o ${dry} -eq 1; then
-          echo "rm -rf \"${sourcedb_path}\" && cp -r \"${sourcedb}\" \"${sourcedb_path}\" >> \"${log_file}\" 2>&1"
+          echo "rm -rf \"${sourcedb_path}\" && cp -r \"${sourcedb}\" \"${sourcedb_path}\""
       fi
 
       if test ${dry} -eq 0; then
-          rm -rf "${sourcedb_path}" && cp -r "${sourcedb}" "${sourcedb_path}" >> "${log_file}" 2>&1
+          rm -rf "${sourcedb_path}" && cp -r "${sourcedb}" "${sourcedb_path}"
           if test $? -ne 0; then
               error "failed to create sourcedb from: ${sourcedb}"
           fi
       fi
   else
       if test ${verbose} -eq 1 -o ${dry} -eq 1; then
-          echo "rm -rf \"${sourcedb_path}\" && makesourcedb in=\"${catalog}\" out=\"${sourcedb_path}\" format='<' >> \"${log_file}\" 2>&1"
+          echo "rm -rf \"${sourcedb_path}\" && makesourcedb in=\"${catalog}\" out=\"${sourcedb_path}\" format='<'"
       fi
 
       if test ${dry} -eq 0; then
-        rm -rf "${sourcedb_path}" && makesourcedb in="${catalog}" out="${sourcedb_path}" format='<' >> "${log_file}" 2>&1
+        rm -rf "${sourcedb_path}" && makesourcedb in="${catalog}" out="${sourcedb_path}" format='<'
         if test $? -ne 0; then
             error "failed to create sourcedb"
         fi
@@ -328,22 +323,22 @@ if test -d "${parmdb_path}" -a ! ${replace_parmdb} -eq 1; then
 else
     if test "${parmdb}"; then
         if test ${verbose} -eq 1 -o ${dry} -eq 1; then
-            echo "rm -rf \"${parmdb_path}\" && cp -r \"${parmdb}\" \"${parmdb_path}\" >> \"${log_file}\" 2>&1"
+            echo "rm -rf \"${parmdb_path}\" && cp -r \"${parmdb}\" \"${parmdb_path}\""
         fi
 
         if test ${dry} -eq 0; then
-            rm -rf "${parmdb_path}" && cp -r "${parmdb}" "${parmdb_path}" >> "${log_file}" 2>&1
+            rm -rf "${parmdb_path}" && cp -r "${parmdb}" "${parmdb_path}"
             if test $? -ne 0; then
                 error "failed to create parmdb from: ${parmdb}"
             fi
         fi
     else
         if test ${verbose} -eq 1 -o ${dry} -eq 1; then
-            echo "rm -rf \"${parmdb_path}\" && parmdbm >> \"$log_file\" 2>&1 << [default parmdb commands]"
+            echo "rm -rf \"${parmdb_path}\" && parmdbm << [default parmdb commands]"
         fi
 
         if test ${dry} -eq 0; then
-            rm -rf "${parmdb_path}" && parmdbm >> "${log_file}" 2>&1 <<EOF
+            rm -rf "${parmdb_path}" && parmdbm <<EOF
 create tablename="${parmdb_path}"
 adddef Gain:0:0:Ampl  values=1.0
 adddef Gain:1:1:Ampl  values=1.0
@@ -372,11 +367,11 @@ if test ${add_columns} -eq 1; then
     notice "add CASA imaging columns to MS"
 
     if test ${verbose} -eq 1 -o ${dry} -eq 1; then
-        echo "addImagingColumns.py \"${observation}\" >> \"${log_file}\" 2>&1"
+        echo "addImagingColumns.py \"${observation}\""
     fi
 
     if test ${dry} -eq 0; then
-        addImagingColumns.py "${observation}" >> "${log_file}" 2>&1
+        addImagingColumns.py "${observation}"
     fi
 
     if test $? -ne 0; then

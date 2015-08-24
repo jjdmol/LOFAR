@@ -215,38 +215,38 @@ namespace LOFAR
     }
 
 
-    void Step::read(const ParameterSet& ps)
+    void Step::read(const ParameterSet& ps, const std::string prefix)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // Read data selection.
-      itsBaselines = ps.getString("Baselines", itsBaselines);
-      itsCorrelations = ps.getStringVector("Correlations", itsCorrelations);
+      itsBaselines = ps.getString(prefix+"Baselines", itsBaselines);
+      itsCorrelations = ps.getStringVector(prefix+"Correlations", itsCorrelations);
 
       // Read model configuration.
-      bool usePhasors = ps.getBool("Model.Phasors.Enable", false);
+      bool usePhasors = ps.getBool(prefix+"Model.Phasors.Enable", false);
 
-      itsModelConfig.setBandpass(ps.getBool("Model.Bandpass.Enable",
+      itsModelConfig.setBandpass(ps.getBool(prefix+"Model.Bandpass.Enable",
         itsModelConfig.useBandpass()));
 
-      if (ps.getBool("Model.Clock.Enable", itsModelConfig.useClock())) {
+      if (ps.getBool(prefix+"Model.Clock.Enable", itsModelConfig.useClock())) {
         ClockConfig parentConfig = itsModelConfig.getClockConfig();
 
         bool splitClock = false;
         if(itsModelConfig.useClock()) {
-          splitClock = ps.getBool("Model.Clock.Split",
+          splitClock = ps.getBool(prefix+"Model.Clock.Split",
               parentConfig.splitClock());
         } else {
-          splitClock = ps.getBool("Model.Clock.Split", false);
+          splitClock = ps.getBool(prefix+"Model.Clock.Split", false);
         }
         itsModelConfig.setClockConfig(ClockConfig(splitClock));
       } else {
         itsModelConfig.clearClockConfig();
       }
 
-      if(ps.getBool("Model.Gain.Enable", itsModelConfig.useGain())) {
+      if(ps.getBool(prefix+"Model.Gain.Enable", itsModelConfig.useGain())) {
         const GainConfig &parentConfig = itsModelConfig.getGainConfig();
-        bool phasors = ps.getBool("Model.Gain.Phasors",
+        bool phasors = ps.getBool(prefix+"Model.Gain.Phasors",
             itsModelConfig.useGain() ? parentConfig.phasors() : usePhasors);
         itsModelConfig.setGainConfig(GainConfig(phasors));
       }
@@ -254,22 +254,22 @@ namespace LOFAR
         itsModelConfig.clearGainConfig();
       }
 
-      itsModelConfig.setTEC(ps.getBool("Model.TEC.Enable",
+      itsModelConfig.setTEC(ps.getBool(prefix+"Model.TEC.Enable",
         itsModelConfig.useTEC()));
 
-      itsModelConfig.setCommonRotation(ps.getBool("Model.CommonRotation.Enable",
+      itsModelConfig.setCommonRotation(ps.getBool(prefix+"Model.CommonRotation.Enable",
         itsModelConfig.useCommonRotation()));
 
       itsModelConfig.setCommonScalarPhase
-        (ps.getBool("Model.CommonScalarPhase.Enable",
+        (ps.getBool(prefix+"Model.CommonScalarPhase.Enable",
           itsModelConfig.useCommonScalarPhase()));
 
-      if(ps.getBool("Model.DirectionalGain.Enable",
+      if(ps.getBool(prefix+"Model.DirectionalGain.Enable",
         itsModelConfig.useDirectionalGain())) {
 
         const DirectionalGainConfig &parentConfig =
           itsModelConfig.getDirectionalGainConfig();
-        bool phasors = ps.getBool("Model.DirectionalGain.Phasors",
+        bool phasors = ps.getBool(prefix+"Model.DirectionalGain.Phasors",
           itsModelConfig.useDirectionalGain() ? parentConfig.phasors()
           : usePhasors);
 
@@ -279,20 +279,20 @@ namespace LOFAR
         itsModelConfig.clearDirectionalGainConfig();
       }
 
-      if(ps.getBool("Model.Beam.Enable", itsModelConfig.useBeam())) {
+      if(ps.getBool(prefix+"Model.Beam.Enable", itsModelConfig.useBeam())) {
         const BeamConfig &parentConfig = itsModelConfig.getBeamConfig();
 
-        string modeString = ps.getString("Model.Beam.Mode",
+        string modeString = ps.getString(prefix+"Model.Beam.Mode",
           itsModelConfig.useBeam() ? BeamConfig::asString(parentConfig.mode())
             : BeamConfig::asString(BeamConfig::DEFAULT));
         BeamConfig::Mode mode = BeamConfig::asMode(modeString);
         if(!BeamConfig::isDefined(mode)) {
-          THROW(BBSControlException, "Key Model.Beam.Mode invalid.");
+          THROW(BBSControlException, "Key "+prefix+"Model.Beam.Mode invalid.");
         }
 
-        bool useChannelFreq = ps.getBool("Model.Beam.UseChannelFreq",
+        bool useChannelFreq = ps.getBool(prefix+"Model.Beam.UseChannelFreq",
           itsModelConfig.useBeam() ? parentConfig.useChannelFreq() : false);
-        bool conjugateAF = ps.getBool("Model.Beam.ConjugateAF", false);
+        bool conjugateAF = ps.getBool(prefix+"Model.Beam.ConjugateAF", false);
         if(conjugateAF)
         {
           THROW(BBSControlException, "The key Step.*.Model.Beam.ConjugateAF has"
@@ -304,30 +304,30 @@ namespace LOFAR
         itsModelConfig.clearBeamConfig();
       }
 
-      itsModelConfig.setDirectionalTEC(ps.getBool("Model.DirectionalTEC.Enable",
+      itsModelConfig.setDirectionalTEC(ps.getBool(prefix+"Model.DirectionalTEC.Enable",
         itsModelConfig.useDirectionalTEC()));
 
       itsModelConfig.setFaradayRotation
-        (ps.getBool("Model.FaradayRotation.Enable",
+        (ps.getBool(prefix+"Model.FaradayRotation.Enable",
           itsModelConfig.useFaradayRotation()));
 
-      itsModelConfig.setRotation(ps.getBool("Model.Rotation.Enable",
+      itsModelConfig.setRotation(ps.getBool(prefix+"Model.Rotation.Enable",
         itsModelConfig.useRotation()));
 
-      itsModelConfig.setScalarPhase(ps.getBool("Model.ScalarPhase.Enable",
+      itsModelConfig.setScalarPhase(ps.getBool(prefix+"Model.ScalarPhase.Enable",
         itsModelConfig.useScalarPhase()));
 
-      if(ps.getBool("Model.Ionosphere.Enable", itsModelConfig.useIonosphere()))
+      if(ps.getBool(prefix+"Model.Ionosphere.Enable", itsModelConfig.useIonosphere()))
       {
         const IonosphereConfig &parentConfig =
             itsModelConfig.getIonosphereConfig();
 
         string modelTypeString;
         if(itsModelConfig.useIonosphere()) {
-          modelTypeString = ps.getString("Model.Ionosphere.Type",
+          modelTypeString = ps.getString(prefix+"Model.Ionosphere.Type",
             IonosphereConfig::asString(parentConfig.getModelType()));
         } else {
-          modelTypeString = ps.getString("Model.Ionosphere.Type");
+          modelTypeString = ps.getString(prefix+"Model.Ionosphere.Type");
         }
 
         IonosphereConfig::ModelType modelType =
@@ -340,9 +340,9 @@ namespace LOFAR
         unsigned int degree = 0;
         if(itsModelConfig.useIonosphere()
           && parentConfig.getModelType() == IonosphereConfig::MIM) {
-          degree = ps.getUint("Model.Ionosphere.Degree", parentConfig.degree());
+          degree = ps.getUint(prefix+"Model.Ionosphere.Degree", parentConfig.degree());
         } else if(modelType == IonosphereConfig::MIM) {
-          degree = ps.getUint("Model.Ionosphere.Degree");
+          degree = ps.getUint(prefix+"Model.Ionosphere.Degree");
         }
 
         itsModelConfig.setIonosphereConfig(IonosphereConfig(modelType, degree));
@@ -350,13 +350,13 @@ namespace LOFAR
         itsModelConfig.clearIonosphereConfig();
       }
 
-      if(ps.getBool("Model.Flagger.Enable", itsModelConfig.useFlagger())) {
+      if(ps.getBool(prefix+"Model.Flagger.Enable", itsModelConfig.useFlagger())) {
         double threshold = 0.0;
         if(itsModelConfig.useFlagger()) {
-          threshold = ps.getDouble("Model.Flagger.Threshold",
+          threshold = ps.getDouble(prefix+"Model.Flagger.Threshold",
             itsModelConfig.getFlaggerConfig().threshold());
         } else {
-          threshold = ps.getDouble("Model.Flagger.Threshold");
+          threshold = ps.getDouble(prefix+"Model.Flagger.Threshold");
         }
 
         itsModelConfig.setFlaggerConfig(FlaggerConfig(threshold));
@@ -364,10 +364,10 @@ namespace LOFAR
         itsModelConfig.clearFlaggerConfig();
       }
 
-      itsModelConfig.setCache(ps.getBool("Model.Cache.Enable",
+      itsModelConfig.setCache(ps.getBool(prefix+"Model.Cache.Enable",
         itsModelConfig.useCache()));
 
-      itsModelConfig.setSources(ps.getStringVector("Model.Sources",
+      itsModelConfig.setSources(ps.getStringVector(prefix+"Model.Sources",
         itsModelConfig.sources()));
     }
 

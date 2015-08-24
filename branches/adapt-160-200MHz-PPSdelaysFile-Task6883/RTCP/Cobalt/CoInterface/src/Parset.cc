@@ -1,5 +1,5 @@
 //# Parset.cc
-//# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2008-2015  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -321,6 +321,7 @@ namespace LOFAR
       // Generic information
       settings.realTime = getBool("Cobalt.realTime", false);
       settings.observationID = getUint32("Observation.ObsID", 0);
+      settings.momID         = getUint32("Observation.momID", 0);
       settings.commandStream = getString("Cobalt.commandStream", "null:");
       settings.startTime = getTime("Observation.startTime", "2013-01-01 00:00:00");
       settings.stopTime  = getTime("Observation.stopTime",  "2013-01-01 00:01:00");
@@ -511,6 +512,8 @@ namespace LOFAR
         // TODO: Super-station beam former is unused, so will likely be
         // implemented differently. The code below is only there to show how
         // the OLAP.* keys used to be interpreted.
+        //
+        // Note: then, also adapt TODO in writeCommonLofarAttributes()
 
         // OLAP.CNProc.tabList[i] = j <=> superstation j contains (input) station i
         vector<unsigned> tabList = getUint32Vector("OLAP.CNProc.tabList", emptyVectorUnsigned, true);
@@ -674,13 +677,16 @@ namespace LOFAR
         for (unsigned i = 0; i < nrSAPs; ++i) 
         {
           struct ObservationSettings::BeamFormer::SAP &sap = settings.beamFormer.SAPs[i];
+          struct ObservationSettings::SAP &obsSap = settings.SAPs[i];
+
+          // Clear counters
+          sap.nrCoherent = 0;
+          sap.nrIncoherent = 0;
 
           size_t nrTABs    = getUint32(str(format("Observation.Beam[%u].nrTiedArrayBeams") % i), 0);
           size_t nrTABSParset = nrTABs;
           size_t nrRings   = getUint32(str(format("Observation.Beam[%u].nrTabRings") % i), 0);
           double ringWidth = getDouble(str(format("Observation.Beam[%u].tabRingSize") % i), 0.0);
-          double sapAngle1 = getDouble(str(format("Observation.Beam[%u].angle1") % i), 0.0);
-          double sapAngle2 = getDouble(str(format("Observation.Beam[%u].angle2") % i), 0.0);
 
           // Create a ptr to RingCoordinates object
           // If there are tab rings the object will be actuall constructed
@@ -703,7 +709,7 @@ namespace LOFAR
             // Create coords object
             ptrRingCoords = std::auto_ptr<RingCoordinates>(
               new RingCoordinates(nrRings, ringWidth,
-              RingCoordinates::Coordinate(sapAngle1, sapAngle2), type));
+              RingCoordinates::Coordinate(obsSap.direction.angle1, obsSap.direction.angle2), type));
 
             // Increase the amount of tabs with the number from the coords object
             // this might be zero
@@ -736,12 +742,14 @@ namespace LOFAR
               {
                 const string prefix = str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
                 tab.direction.type    = getString(prefix + ".directionType", "J2000");
-              
-                tab.direction.angle1  = getDouble(prefix + ".angle1", 0.0);
-                tab.direction.angle2  = getDouble(prefix + ".angle2", 0.0);
 
                 tab.dispersionMeasure     = getDouble(prefix + ".dispersionMeasure", 0.0);
                 tab.coherent              = getBool(prefix + ".coherent", true);
+             
+                // Incoherent TABs point in the same direction as the SAP by definition. The processing
+                // pipelines do not use the angles, but the data writer does as part of its annotation.
+                tab.direction.angle1  = tab.coherent ? getDouble(prefix + ".angle1", 0.0) : obsSap.direction.angle1;
+                tab.direction.angle2  = tab.coherent ? getDouble(prefix + ".angle2", 0.0) : obsSap.direction.angle2;
               }
               else
               {
@@ -753,8 +761,8 @@ namespace LOFAR
                 // Note that RingCoordinates provide *relative* coordinates, and
                 // we need absolute ones.
                 tab.direction.type = ptrRingCoords->coordTypeAsString();
-                tab.direction.angle1 = sapAngle1 + pointing.first;
-                tab.direction.angle2 = sapAngle2 + pointing.second;
+                tab.direction.angle1 = obsSap.direction.angle1 + pointing.first; // TODO: missing projection bug (also below for angle2)
+                tab.direction.angle2 = obsSap.direction.angle2 + pointing.second;
                 // One dispersion measure for all TABs in rings is inconvenient,
                 // but not used anyway. Unclear if setting to 0.0 is better/worse.
                 const string prefix = str(format("Cobalt.Observation.Beam[%u]") % i);
@@ -1074,6 +1082,14 @@ namespace LOFAR
     }
 
 
+    // The real stop time can be a bit further than the one actually specified,
+    // because we process in blocks.
+    double Parset::getRealStopTime() const 
+    {
+      return settings.startTime +
+             settings.nrBlocks() * settings.blockDuration();
+    }
+
     std::string Parset::getHostName(OutputType outputType, unsigned streamNr) const
     {
       if (outputType == CORRELATED_DATA)
@@ -1194,7 +1210,7 @@ namespace LOFAR
 
     double Parset::getTime(const std::string &name, const std::string &defaultValue) const
     {
-      return to_time_t(boost::posix_time::time_from_string(getString(name, defaultValue)));
+      return LOFAR::to_time_t(boost::posix_time::time_from_string(getString(name, defaultValue)));
     }
 
     std::string Parset::name() const
@@ -1263,6 +1279,23 @@ namespace LOFAR
     unsigned Parset::nrBitsPerSample() const
     {
       return settings.nrBitsPerSample;
+    }
+
+    unsigned Parset::nrObsOutputTypes() const
+    {
+      unsigned nr = 0;
+
+      if (settings.correlator.enabled) {
+        nr += 1;
+      }
+      if (settings.beamFormer.anyCoherentTABs()) {
+        nr += 1;
+      }
+      if (settings.beamFormer.anyIncoherentTABs()) {
+        nr += 1;
+      }
+
+      return nr;
     }
 
     bool Parset::outputThisType(OutputType outputType) const

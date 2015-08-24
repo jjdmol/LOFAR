@@ -56,8 +56,7 @@ namespace LOFAR
     public:
       OutputThread(const Parset &parset, unsigned streamNr, Pool<T> &outputPool,
                    RTmetadata &mdLogger, const std::string &mdKeyPrefix,
-                   const std::string &logPrefix, const std::string &targetDirectory,
-                   const std::string &LTAfeedbackPrefix);
+                   const std::string &logPrefix, const std::string &targetDirectory);
 
       virtual ~OutputThread();
 
@@ -91,7 +90,6 @@ namespace LOFAR
       const std::string itsMdKeyPrefix;
       const std::string itsLogPrefix;
       const std::string itsTargetDirectory;
-      const std::string itsLTAfeedbackPrefix;
 
       size_t itsBlocksWritten, itsBlocksDropped;
       size_t itsNrExpectedBlocks;

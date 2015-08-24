@@ -9,7 +9,7 @@ DAL_SOURCE="https://github.com/nextgen-astrodata/DAL.git"
 # ********************************************
 #  Install latest DAL
 #
-#  into /localhome/lofar/DAL
+#  into /opt/DAL
 # ********************************************
 echo "Configuring DAL..."
 DALDIR=`mktemp -d`
@@ -22,7 +22,7 @@ cd DAL
 echo "  Configuring..."
 mkdir build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX=/localhome/lofar/DAL .. > cmake.log
+cmake -DCMAKE_INSTALL_PREFIX=/opt/DAL .. > cmake.log
 
 echo "  Building..."
 make -j 8 > make.log

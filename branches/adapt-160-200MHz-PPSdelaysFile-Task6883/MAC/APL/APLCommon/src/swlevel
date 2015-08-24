@@ -584,8 +584,8 @@ print_level()
 
 show_lofar_version()
 {
-        if [ -e /opt/lofar/Version.txt ]; then
-          version=`cat /opt/lofar/Version.txt`
+        if [ -e $LOFARROOT/Version.txt ]; then
+          version=`cat $LOFARROOT/Version.txt`
 	  if [ "$1" = "v" ]; then  
             echo -n "Current LOFAR version is "
 	  fi

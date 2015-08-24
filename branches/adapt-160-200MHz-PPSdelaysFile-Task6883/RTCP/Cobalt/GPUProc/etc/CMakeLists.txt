@@ -17,7 +17,6 @@ configure_file(
 file(GLOB _config_parsets
   "parset-additions.d/default/*.parset"
   "${CMAKE_CURRENT_BINARY_DIR}/parset-additions.d/default/*.parset")   # configured .parset.in
-list(APPEND _config_parsets "parset-additions.d/default/HardwareUsed.parset.testsys")
 install(FILES ${_config_parsets} DESTINATION etc/parset-additions.d/default)
 
 # List of override/ config parsets:

@@ -2,26 +2,30 @@
 
 include(LofarCTest)
 
-foreach(_file testFuncs runtest)
+foreach(_file testFuncs.sh runtest.sh tStatusFeedback.run2)
   configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/${_file}.sh.in
-    ${CMAKE_CURRENT_BINARY_DIR}/${_file}.sh @ONLY)
+    ${CMAKE_CURRENT_SOURCE_DIR}/${_file}.in
+    ${CMAKE_CURRENT_BINARY_DIR}/${_file} @ONLY)
 endforeach()
 
 set(_tests
   tgenerateStationStreams
-  tMACfeedback
+  tStatusFeedback
   tProductionParsets
   tstartBGL
-)
+  )
 
 foreach(_test ${_tests})
   lofar_add_test(${_test})
-  set_tests_properties(${_test} PROPERTIES RUN_SERIAL ON)
+  if(BUILD_TESTING)
+    set_tests_properties(${_test} PROPERTIES RUN_SERIAL ON)
+  endif(BUILD_TESTING)
 endforeach(_test ${_tests})
 
 lofar_add_test(tRTmetadataToFile DEPENDS tRTmetadata PVSSGateway_Stub Service_Broker)
-set_tests_properties(tRTmetadataToFile PROPERTIES RUN_SERIAL ON)
+if(BUILD_TESTING)
+  set_tests_properties(tRTmetadataToFile PROPERTIES RUN_SERIAL ON)
+endif(BUILD_TESTING)
 
 add_subdirectory(Correlator)
 add_subdirectory(Beamformer)

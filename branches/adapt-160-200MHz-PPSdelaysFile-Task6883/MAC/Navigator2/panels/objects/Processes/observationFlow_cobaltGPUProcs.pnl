@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 114 78 N "_3DFace" 0
+PANEL,-1 -1 177 78 N "_3DFace" 0
 "main()
 {
   baseDP = \"LOFAR_PermSW\";
@@ -20,7 +20,19 @@ PANEL,-1 -1 114 78 N "_3DFace" 0
   
   	
 }" 0
- E E E E 1 -1 -1 0  0 0
+ E "main(int x, int y)
+{
+  click();
+}" 0
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+ 1 -1 -1 0  0 0
 ""0  1
 E "#uses \"navPanel.ctl\"
 
@@ -31,11 +43,44 @@ dyn_string activeObservations;
 string activeObsDP = \"\";
 string database;
 dyn_string gpuprocs;
-dyn_string connectToGPUProcs;
+dyn_string oldConnectToGPUProcs;
 bool connectedGPUProcs;
 
 bool selectedObservations=false;
 
+bool bDoubleClicked  = false;
+
+// routine for single mouse click
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked && dynlen(gpuprocs) > 0) {
+      navPanel_setEvent(\"observationFlow_cobaltGPUProcs.pnl\",\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true; 
+  if (dynlen(gpuprocs) > 0) {
+  
+    LOG_DEBUG(\"observationFlow_cobaltGPUProcs.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \" + baseDP);
+    g_currentDatapoint=baseDP;
+    //we also have to set the tabctrl to think this was initiated from the ProcessesTab, otherwise we will get the wrong panel.
+    navPanel_setEvent(\"Processes\",\"ChangeTab\");
+  }
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;
+}
+
+// routine for right mouse click
+void rClick() {
+  if (dynlen(gpuprocs) > 0) {
+    navPanel_setEvent(\"observationFlow_cobaltGPUProcs.pnl\",\"EventRightClick\");
+  }
+}
 
 void updateActiveObservations(string dp1, dyn_string obs,
                               string dp2, bool invalid)
@@ -77,7 +122,7 @@ void updateActiveObservations(string dp1, dyn_string obs,
     string obsDP=MainDBName+claimManager_nameToRealName(obsName);
 
     // add DP to list with all connects
-    dynAppend(obsConnections,obsDP+\".runState\");
+    if (! dynContains(obsConnections,obsDP+\".runState\" )) dynAppend(obsConnections,obsDP+\".runState\");
   }
   
   if (dynlen(oldObsConnections) > 0) {
@@ -97,31 +142,43 @@ void updateActiveObservations(string dp1, dyn_string obs,
 }
 
 void monitorRunStates(dyn_string dpList,dyn_string runStates) {
-  connectGPUProcs();
+  for (int i=1; i<= dynlen(runStates); i++) {
+    if (runStates[i] == \"Running\" || runStates[i] == \"Quiting\") {
+      connectGPUProcs(runStates[i]);
+      break;
+    }
+  }
 }
-
 // connect to GPUProcs from the active observations
-void connectGPUProcs() {
+void connectGPUProcs(string runState) {
+
+  dyn_string connectToGPUProcs;
+  
+  // change all found DP's to contain all the elements that contain the .dropping
+  if (connectedGPUProcs) {
+    dpDisconnect(\"gpuprocCB\",oldConnectToGPUProcs);
+    dynClear(oldConnectToGPUProcs);
+    connectedGPUProcs = false;
+  }  
+  
+  if (dynlen(observationsList) == 1 && runState == \"Quiting\") {
+    setValue(\"GPUProcsObject\", \"foreCol\", \"Lofar_off\");
+    return;
+  }
 
   //collect all active observations and their stationInputStreams
   if (dynlen(observationsList) > 0) {
 
-    // change all found DP's to contain all the elements that contain the .dropping
-    if (connectedGPUProcs) {
-      dpDisconnect(\"gpuprocCB\",connectToGPUProcs);
-      dynClear(connectToGPUProcs);
-      connectedGPUProcs = false;
-    }
 
     // prepare connectList
     for(int i=1; i <= dynlen(observationsList); i++) {
       // get all the GPUProcs used by this observation
       gpuprocs = navFunct_getGPUProcsForObservation(observationsList[i]);
       for (int i=1; i<= dynlen(gpuprocs); i++) {
-        dynAppend(connectToGPUProcs,gpuprocs[i]+\".dropping:_online.._value\");
-        dynAppend(connectToGPUProcs,gpuprocs[i]+\".dropped:_online.._value\");
-        dynAppend(connectToGPUProcs,gpuprocs[i]+\".subband:_online.._value\");
-        dynAppend(connectToGPUProcs,gpuprocs[i]+\".dataProductType:_online.._value\");
+        if (! dynContains(connectToGPUProcs,gpuprocs[i]+\".dropping:_online.._value\")) dynAppend(connectToGPUProcs,gpuprocs[i]+\".dropping:_online.._value\");
+        if (! dynContains(connectToGPUProcs,gpuprocs[i]+\".dropped:_online.._value\")) dynAppend(connectToGPUProcs,gpuprocs[i]+\".dropped:_online.._value\");
+        if (! dynContains(connectToGPUProcs,gpuprocs[i]+\".subband:_online.._value\")) dynAppend(connectToGPUProcs,gpuprocs[i]+\".subband:_online.._value\");
+        if (! dynContains(connectToGPUProcs,gpuprocs[i]+\".dataProductType:_online.._value\")) dynAppend(connectToGPUProcs,gpuprocs[i]+\".dataProductType:_online.._value\");
       }
       if (dynlen(gpuprocs) > 0) baseDP = gpuprocs[1];
     }
@@ -132,6 +189,7 @@ void connectGPUProcs() {
         setValue(\"GPUProcsObject\", \"foreCol\", \"Lofar_dpdoesnotexist\");
       } else {
         connectedGPUProcs = true;
+        oldConnectToGPUProcs = connectToGPUProcs;
       }
     } else {
       setValue(\"GPUProcsObject\", \"foreCol\", \"Lofar_off\");
@@ -157,11 +215,35 @@ void gpuprocCB(dyn_string dps, dyn_dyn_anytype values)
     dyn_bool dropping = values[i];
     if (dynContains(dropping,TRUE )) {
       color = \"Lofar_broken\";
-      dyn_float dropped = values[i+1];
-      dyn_int subband = values[i+2];
-      string dataProductType = values[i+3];
+//      DebugN(\"val i+1 \",values[i+1]);
+//      DebugN(\"val i+2 \",values[i+2]);
+//      DebugN(\"val i+3 \",values[i+3]);
+      
+      dyn_float dropped;
+      dyn_int subband;
+      string dataProductType;
+      bool error = false;
+      if (i+1 <= dynlen(values)) {
+        dropped = values[i+1];
+      } else {
+        DebugN(\"error too less data, needed : \"+ i+1 +\" got: \"+dynlen(values));
+        error = true;
+      }
+      if (i+2 <= dynlen(values)){
+        subband = values[i+2];
+      } else {
+        DebugN(\"error too less data, needed : \"+ i+2 +\" got: \"+dynlen(values));
+        error = true;
+      }
+      if (i+3 <= dynlen(values)) {
+        dataProductType = values[i+3];
+      } else {
+        DebugN(\"error too less data, needed : \"+ i+3 +\" got: \"+dynlen(values));
+        error = true;
+      }
+      
       for (int j = 1; j <= dynlen(dropped); j++) {
-        if (dropping[j] == TRUE) {
+        if (dropping[j] == TRUE && !error) {
           toolTipText+=dp+\"</t> :\"+dropped[j]+\" - \"+subband[j]+\" - \"+dataProductType+\"<br>\";
         }
       }
@@ -184,7 +266,15 @@ LANG:1 0
 "GPUProcsObject"
 ""
 1 20 30 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+
 0 0 0 0 0 0
 E E E
 0
@@ -193,7 +283,37 @@ LANG:1 69 All GPUProcs involved in the  currently(selected) active observations
 
 1
 "dashclr"N "_Transparent"
-E E 0 4 1 2 1 E  20 30 50 30
+E "main(int x, int y)
+{
+  click();
+}" 0
+ 0 4 1 2 1 E  20 30 50 30
+6 1
+"RECTANGLE1"
+""
+1 10 10 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main(int x, int y)
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 10 5 0 E 10 10 40 40
 0
 LAYER, 1 
 1

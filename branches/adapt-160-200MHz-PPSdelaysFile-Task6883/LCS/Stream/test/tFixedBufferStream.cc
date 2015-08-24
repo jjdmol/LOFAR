@@ -109,7 +109,7 @@ int main(int /*argc*/, const char* argv[])
 
     try {
       testWrite(ws, 500);
-    } catch(Stream::EndOfStreamException &e) {
+    } catch(EndOfStreamException &e) {
       EOB = true;
     }
 
@@ -120,7 +120,7 @@ int main(int /*argc*/, const char* argv[])
 
     try {
       testRead(rs, 500);
-    } catch(Stream::EndOfStreamException &e) {
+    } catch(EndOfStreamException &e) {
       EOB = true;
     }
 

@@ -463,8 +463,12 @@ void GCFTCPPort::serviceInfo(unsigned int result, unsigned int portNumber, const
 		_handleDisconnect();
 	}
 
-    // Set socket to non-blocking to prevent stalls
-    _pSocket->setBlocking(false);
+    // Set socket to non-blocking to prevent stalls, but ONLY when connecting to other systems,
+    // to prevent waiting for connection timers on localhost. Many scripts depend on localhost
+    // connections to be nearly instant.
+    if (!isLocalhost()) {
+      _pSocket->setBlocking(false);
+    }
 
     // Start connect sequence
     _connect(portNumber, host);
@@ -477,10 +481,10 @@ void GCFTCPPort::_connect(unsigned int portNumber, const string& host)
 	switch (_pSocket->connect(portNumber, host)) {
 	case -1: _handleDisconnect(); break;	// error
 	case 0:  
-		LOG_INFO_STR("GCFTCPPort:connect(" << portNumber << "@" << host << ") still in progress");
+		LOG_DEBUG_STR("GCFTCPPort:connect(" << portNumber << "@" << host << ") still in progress");
 		// start 1 second interval timer to poll connect result
 		if (!itsConnectTimer) {
-			itsConnectTimer = _pTimerHandler->setTimer(*this, (uint64)(1000000.0), (uint64)(1000000.0), &itsConnectTimer);
+			itsConnectTimer = _pTimerHandler->setTimer(*this, (uint64)(200000.0), (uint64)(200000.0), &itsConnectTimer);
 		}
 		break;							// in progress
 	case 1:  _handleConnect(); break;		// successfull
