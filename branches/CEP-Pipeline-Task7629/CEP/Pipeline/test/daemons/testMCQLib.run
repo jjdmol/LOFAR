@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#!/bin/bash
+
+createbus.sh add testMCQLib 5672 $(hostname) 
+
+python testMCQLib.py
+
+# the a bus structure to be used by the test program
+createbus.sh del testMCQLib 5672 $(hostname) ignore

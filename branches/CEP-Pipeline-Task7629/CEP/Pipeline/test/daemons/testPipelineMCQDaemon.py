@@ -22,11 +22,14 @@ import unittest
 import os
 from contextlib import nested   #>2.7 allows nesting out of the box
 import socket
-
+HOST_NAME = socket.gethostname()
 
 import lofarpipe.daemons.pipelineMCQDaemonImp as pipelineMCQDaemonImp
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
+
+
+
 
 
 class testForwardOfJobMsgToQueueu(unittest.TestCase):
@@ -62,10 +65,10 @@ class testForwardOfJobMsgToQueueu(unittest.TestCase):
 
             job_node = socket.gethostname()
             slaveCommandQueue_topic_name = slaveCommandQueueNameTemplate.format(job_node)
-            slaveCommandQueueBusName = "testmcqdaemon" + "/" + \
+            slaveCommandQueueBusName = "testPipelineMCQDaemon" + "/" + \
                                       slaveCommandQueue_topic_name
             slaveCommandQueueBus = get_from_bus( 
-                    slaveCommandQueueBusName, "locus102")
+                    slaveCommandQueueBusName, HOST_NAME)
 
             # Test1: Create a test job payuoad
             send_payload =  {'command':'run_job',
@@ -113,10 +116,10 @@ class testForwardOfJobMsgToQueueu(unittest.TestCase):
 
             job_node = socket.gethostname()
             slaveCommandQueue_topic_name = slaveCommandQueueNameTemplate.format(job_node)
-            slaveCommandQueueBusName = "testmcqdaemon" + "/" + \
+            slaveCommandQueueBusName = "testPipelineMCQDaemon" + "/" + \
                                       slaveCommandQueue_topic_name
             slaveCommandQueueBus = get_from_bus( 
-                    slaveCommandQueueBusName, "locus102")
+                    slaveCommandQueueBusName, HOST_NAME)
 
             # Test1: Create a test job payuoad
             send_payload =  {'command':'stop_session',
@@ -150,8 +153,8 @@ def prepare_test_MCQ(subclass, logfile, deadletterfile, slaveCommandQueueNameTem
     return the deamon and needed
     """
         # config
-    broker =  "locus102"
-    busname = "testmcqdaemon"  # TODO: Use a different name
+    broker =  HOST_NAME
+    busname = "testPipelineMCQDaemon"  # TODO: Use a different name
     #busname = "testbus"
     commandQueueName = busname + "/" + "masterCommandQueueName"
     #masterCommandQueueName = "masterCommandQueueName"
