@@ -302,7 +302,8 @@ namespace LOFAR
       MVDirection radec(Quantity(itsPS.settings.SAPs[subarray].direction.angle1, "rad"),
                         Quantity(itsPS.settings.SAPs[subarray].direction.angle2, "rad"));
       MDirection::Types beamDirectionType;
-      MDirection::getType(beamDirectionType, itsPS.settings.SAPs[subarray].direction.type);
+      if (!MDirection::getType(beamDirectionType, itsPS.settings.SAPs[subarray].direction.type))
+        THROW(StorageException, "Beam direction type unknown: " << itsPS.settings.SAPs[subarray].direction.type);
       MDirection indir(radec, beamDirectionType);
       casa::Vector<MDirection> outdir(1);
       outdir(0) = indir;
@@ -310,12 +311,13 @@ namespace LOFAR
       // AnaBeam direction type
       MDirection::Types anaBeamDirectionType;
       if (itsPS.settings.anaBeam.enabled)
-        MDirection::getType(anaBeamDirectionType, itsPS.settings.anaBeam.direction.type);
+        if (!MDirection::getType(anaBeamDirectionType, itsPS.settings.anaBeam.direction.type))
+          THROW(StorageException, "Beam direction type unknown: " << itsPS.settings.anaBeam.direction.type);
+
 
       // ScSupp fills Observation.Beam[x].target, sometimes with field codes, sometimes with pointing names.
       // Use it here to write FIELD CODE.
-      casa::String ctarget(itsPS.getString("Observation.Beam[" + String::toString(subarray) +
-                                           "].target", string()));
+      casa::String ctarget(itsPS.settings.SAPs[subarray].target);
 
       // Put the direction into the FIELD subtable.
       MSLofarField msfield = itsMS->field();
@@ -595,15 +597,16 @@ namespace LOFAR
       MVDirection radec(Quantity(itsPS.settings.SAPs[subarray].direction.angle1, "rad"),
                         Quantity(itsPS.settings.SAPs[subarray].direction.angle2, "rad"));
       MDirection::Types beamDirectionType;
-      MDirection::getType(beamDirectionType, itsPS.settings.SAPs[subarray].direction.type);
+      if (!MDirection::getType(beamDirectionType, itsPS.settings.SAPs[subarray].direction.type))
+        THROW(StorageException, "Beam direction type unknown: " << itsPS.settings.SAPs[subarray].direction.type);
       MDirection indir(radec, beamDirectionType);
+
       casa::Vector<MDirection> outdir(1);
       outdir(0) = indir;
 
       // ScSupp fills Observation.Beam[x].target, sometimes with field codes, sometimes with pointing names.
       // Use it here to write POINTING NAME.
-      casa::String ctarget(itsPS.getString("Observation.Beam[" + String::toString(subarray) +
-                                           "].target", string()));
+      casa::String ctarget(itsPS.settings.SAPs[subarray].target);
 
       // Fill the POINTING subtable.
       MSPointing mspointing = itsMS->pointing();
