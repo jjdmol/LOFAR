@@ -292,8 +292,7 @@ def print_info(msg, keyvalue, msg_info):
         print
 
     if msg == 'BADLIST':
-        # 20150723,NFO,---,BADLIST,LBL=83 84 94 95
-        bad_ant_str = msg_info.replace('=', '(').replace(' ', ',').replace(';', ')   ') + ')'
+        bad_ant_str = string.join(d[4:], ';').replace('=', '(').replace(' ', ',').replace(';', ')   ') + ')'
         print "-- bad-antenna-list : %s" % bad_ant_str
     return
 

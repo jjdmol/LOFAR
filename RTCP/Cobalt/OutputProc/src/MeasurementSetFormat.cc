@@ -182,8 +182,6 @@ namespace LOFAR
         fillSpecWindow(subband);
         fillObs(subarray);
         fillHistory();
-        fillProcessor();
-        fillState();
 
         try {
           // Use ConfigLocator to locate antenna configuration files.
@@ -517,6 +515,11 @@ namespace LOFAR
       msspwCol.freqGroupName().put(0, "");
       msspwCol.flagRow().put(0, False);
 
+      // Remove a few keywords from the MEASINFO, because old CASA cannot
+      // deal with them since Dirk Petry added type Undefined.
+      MSLofar::removeMeasKeys (msspw, "REF_FREQUENCY");
+      MSLofar::removeMeasKeys (msspw, "CHAN_FREQ");
+
       msspw.flush();
     }
 
@@ -552,36 +555,6 @@ namespace LOFAR
       origin.put      (rownr, Version::getInfo<OutputProcVersion>("OutputProc", "full"));
       parms.put       (rownr, appvec);
       cli.put         (rownr, clivec);
-    }
-
-    void MeasurementSetFormat::fillProcessor()
-    {
-      MSProcessor msproc = itsMS->processor();
-      MSProcessorColumns msprocCol(msproc);
-      // Fill the columns
-      msproc.addRow();
-      msprocCol.type().put (0, "CORRELATOR");
-      msprocCol.subType().put (0, "CEP");
-      msprocCol.typeId().put (0, -1);
-      msprocCol.modeId().put (0, -1);
-      msprocCol.flagRow().put (0, False);
-      msproc.flush();
-    }
-
-    void MeasurementSetFormat::fillState()
-    {
-      MSState msstate = itsMS->state();
-      MSStateColumns msstateCol(msstate);
-      // Fill the columns
-      msstate.addRow();
-      msstateCol.sig().put (0, True);
-      msstateCol.ref().put (0, False);
-      msstateCol.cal().put (0, 0.);
-      msstateCol.load().put (0, 0.);
-      msstateCol.subScan().put (0, 0);
-      msstateCol.obsMode().put (0, "");
-      msstateCol.flagRow().put (0, False);
-      msstate.flush();
     }
 
 

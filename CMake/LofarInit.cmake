@@ -152,23 +152,17 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
     endforeach(_var ${LOFAR_BUILD_VARIANTS})
   endforeach(_cmp ${_compilers})
 
-  # Set the CMAKE_EXE_LINKER_FLAGS, CMAKE_EXE_LINKER_FLAGS_<BUILD_TYPE>,
-  # CMAKE_SHARED_LINKER_FLAGS and CMAKE_SHARED_LINKER_FLAGS_<BUILD_TYPE>
+  # Set the CMAKE_EXE_LINKER_FLAGS and CMAKE_EXE_LINKER_FLAGS_<BUILD_TYPE>
   # variables. These variables are used by CMake to supply the correct link
   # flags depending on the build variant (e.g. debug or opt). These are all
   # cache variables whose values must be forced to the values specified in our
   # variants file.
   set(CMAKE_EXE_LINKER_FLAGS ${${LOFAR_COMPILER_SUITE}_EXE_LINKER_FLAGS}
-    CACHE STRING "Flags used by the linker for all build types to create executables." FORCE)
-  set(CMAKE_SHARED_LINKER_FLAGS ${${LOFAR_COMPILER_SUITE}_SHARED_LINKER_FLAGS}
-    CACHE STRING "Flags used by the linker for all build types to create shared libraries." FORCE)
+    CACHE STRING "Flags used by the linker for all build types." FORCE)
   foreach(_var ${LOFAR_BUILD_VARIANTS})
     set(CMAKE_EXE_LINKER_FLAGS_${_var} 
       ${${LOFAR_COMPILER_SUITE}_EXE_LINKER_FLAGS_${_var}} CACHE STRING
-      "Flags used by the linker for ${_var} builds to create executables." FORCE)
-    set(CMAKE_SHARED_LINKER_FLAGS_${_var} 
-      ${${LOFAR_COMPILER_SUITE}_SHARED_LINKER_FLAGS_${_var}} CACHE STRING
-      "Flags used by the linker for ${_var} builds to create shared libraries." FORCE)
+      "Flags used by the linker for ${_var} builds." FORCE)
   endforeach(_var ${LOFAR_BUILD_VARIANTS})
 
   # Set compiler definitions (e.g., -D options). There are global options that
