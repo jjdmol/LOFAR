@@ -1,21 +1,21 @@
 import time
 import unittest
 import threading 
+import socket
+import logging
+from contextlib import nested   #>2.7 allows nesting out of the box
 
+from lofarpipe.support.remotecommand import ProcessLimiter 
+
+import lofar.messagebus.CQExceptions as CQExceptions
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
 
 import lofarpipe.daemons.MCQLib as MCQLib
-from lofarpipe.support.remotecommand import ProcessLimiter 
-import lofar.messagebus.CQExceptions as CQExceptions
-from contextlib import nested   #>2.7 allows nesting out of the box
+from lofarpipe.daemons.inMemoryZip import get_zipstring_from_string
 
-import logging
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
-import socket
 HOST_NAME = socket.gethostname()
-
-
 
 def create_msg(payload):
     """
@@ -45,11 +45,9 @@ def try_get_msg(queue, wait_period=10):
     idx = 0
     msg_received = None
     while (True):
-        print "Waiting for msg"
         if idx >= wait_period:
             print "Did not receive a msg after {0} seconds!!".format(
                       wait_period)
-
             return None
 
         msg_received = queue.get(1)
@@ -75,24 +73,26 @@ class testMCQLib(unittest.TestCase):
         pass
 
     def tearDown(self):
-        busname = "testmcqdaemon"
+        busname = "testMCQLib"
         broker = HOST_NAME
         logger = logging.getLogger("testMCQLib")
         deadLetterQueueName = busname + ".deadletter"
         deadLetterQueue = msgbus.FromBus(deadLetterQueueName)
         while True:
+            print "Clearing up the deadletter queue, to prevent crosstalk between tests"
             msg = try_get_msg(deadLetterQueue, 0.1) 
             if msg == None:
                 break
-        deadLetterQueue.close()
 
+        deadLetterQueue.close()
+        print "Clearing up the deadletter queue, Done"
 
 
     def test_logtopic_handler(self):
         # TODO: Add test that the loglines are send to logging:
         #      test the _process_log_message member
-        busname = "testmcqdaemon"
-        broker = "locus102"
+        busname = "testMCQLib"
+        broker = HOST_NAME
         logger = logging.getLogger("testMCQLib")
         logTopicName = busname + "/logtopichandler"
         
@@ -133,8 +133,8 @@ class testMCQLib(unittest.TestCase):
     def test_results_handler(self):
         # TODO: Add test that the loglines are send to logging:
         #      test the _process_log_message member
-        busname = "testmcqdaemon"
-        broker = "locus102"
+        busname = "testMCQLib"
+        broker = HOST_NAME
         logger = logging.getLogger("testMCQLib")
         resultsQueueName = busname + "/resultsqueuehandler1"
         
@@ -194,8 +194,8 @@ class testMCQLib(unittest.TestCase):
     def test_results_handler_exit_output(self):
         # TODO: Add test that the loglines are send to logging:
         #      test the _process_log_message member
-        busname = "testmcqdaemon"
-        broker = "locus102"
+        busname = "testMCQLib"
+        broker = HOST_NAME
         logger = logging.getLogger("testMCQLib")
         resultsQueueName = busname + "/resultsqueuehandler"
        
@@ -203,7 +203,7 @@ class testMCQLib(unittest.TestCase):
         
         job_uuid = "123456"
 
-        running_jobs = {job_uuid:{}}
+        running_jobs = {job_uuid:{'node':HOST_NAME}}
         running_jobs_lock = threading.Lock()
         master_echo= {"received":False}  
          # create wrapped handler
@@ -216,7 +216,8 @@ class testMCQLib(unittest.TestCase):
         # we need to send msgs to the handler        
         resultsQueue= msgbus.ToBus(resultsQueueName, broker = broker)
 
-        payload = {'type': 'exit_value',
+        payload = {'node':HOST_NAME,
+                   'type': 'exit_value',
                    'exit_value': -1,
                    'job_uuid': job_uuid}
 
@@ -226,12 +227,13 @@ class testMCQLib(unittest.TestCase):
 
         # THe exit value should have been added to the running jobs dict
         expected_output = {job_uuid:{"exit_value":-1, 
+                                     'node':HOST_NAME,
                                      'output':[]}}   # is added by the lib
         self.assertEqual(expected_output, running_jobs)
 
         ## allow some time for the msg to arrive
         payload = {'type': 'output',
-                   'output': "some data",
+                   'output': get_zipstring_from_string(str(["some data"])), # pack the data
                    'job_uuid': job_uuid}
 
         msg = create_msg(payload)
@@ -239,15 +241,15 @@ class testMCQLib(unittest.TestCase):
         time.sleep(0.6)          
         self.assertEqual({job_uuid:{
                             "exit_value":-1,
-                            "output":"some data"}},
+                            'node':HOST_NAME,
+                            "output":["some data"]}},
                          running_jobs)
-
 
         resulthandler.setStopFlag()
 
 
     def test_run_job(self):
-        busname = "testmcqdaemon"
+        busname = "testMCQLib"
         broker = HOST_NAME
         logger = logging.getLogger("testMCQLib")
         deadLetterQueueName = busname + ".deadletter"
@@ -258,21 +260,18 @@ class testMCQLib(unittest.TestCase):
         with nested(toBus, deadLetterQueue
                      ) as (
                       toBus, deadLetterQueue):        
-            # Create sut
-            
-            # Set the the 
 
             mcqobj = MCQLib.MCQLib(logger, broker, busname, master_echo=True)
 
             # parameters
             class job:
                 def __init__(self):
-                  self.host = "locus102"
+                  self.host = HOST_NAME
                   self.results = {}
 
             limiter = ProcessLimiter(nproc=1)
             parameters = {
-                          "node":"locus102",  # must be valid
+                          "node":HOST_NAME,  # must be valid
                           "cmd":"ls"}         # must exist
             jobObject = job()
             killswitch = threading.Event()
@@ -320,7 +319,7 @@ class testMCQLib(unittest.TestCase):
 
 
             payload = {'type': 'output',
-                       'output': {"some":"data"},
+                       'output': get_zipstring_from_string(str({"some":"data"})),
                        'job_uuid': job_uuid}
             msg = create_msg(payload)
             msg.set_subject("result_" +uuid)  # use subbject to get the correct temp queue

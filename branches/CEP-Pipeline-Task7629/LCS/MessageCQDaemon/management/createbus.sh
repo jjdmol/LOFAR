@@ -23,39 +23,41 @@
 
 
 function addlocalbus {
-    myname=`hostname`
+    host=`hostname`
     if (( $# >= 1 ))
     then
         busname=$1
         if (( $# > 1 ))
         then
-            myname=$2
+            port=$2
+            host=$3
         fi
         
-        qpid-config -b $myname add exchange topic $busname".deadletterproxy" --durable
-        qpid-config -b $myname add exchange direct $busname --durable --alternate-exchange=$busname".deadletterproxy"
+        qpid-config -b $host:$port add exchange topic $busname".deadletterproxy" --durable
+        qpid-config -b $host:$port add exchange direct $busname --durable --alternate-exchange=$busname".deadletterproxy"
 
-        qpid-config -b $myname add queue $busname".deadletter" --durable
-        qpid-config -b $myname bind $busname".deadletterproxy" $busname".deadletter" '#' --durable
+        qpid-config -b $host:$port add queue $busname".deadletter" --durable
+        qpid-config -b $host:$port bind $busname".deadletterproxy" $busname".deadletter" '#' --durable
     else
         echo "Usage: $FUNCNAME <busname> [nodename]"
     fi
 }
  
 function dellocalbus {
-    myname=`hostname`
+    host=`hostname`
     if (( $# >= 1 ))
     then
         busname=$1
         if (( $# > 1 ))
         then
-            myname=$2
+            port=$2
+            host=$3
         fi
   
 
-        qpid-config -b $myname del exchange $busname 
-        qpid-config -b $myname del exchange $busname".deadletterproxy"
-        qpid-config -b $myname del queue $busname".deadletter" --force
+        qpid-config -b $host:$port del exchange $busname 
+        qpid-config -b $host:$port del exchange $busname".deadletterproxy"
+        qpid-config -b $host:$port del queue $busname".deadletter" --force
     else
         echo "Usage: $FUNCNAME <busname> [nodename]"
     fi
@@ -189,11 +191,9 @@ if (( numnodes == 0 )); then
     numnodes=$((numnodes + 1))
 fi
 
-echo $port
-
 # depending on the first argument call the del or add  bus function
 if [ "$operation" == "del" ]; then
-    if (( numnodes == 1 )); then
+    if (( numnodes == 1 )); then    
         dellocalbus $busname $port ${nodenames[*]}
     else
         deletebus $busname $port ${nodenames[*]}
@@ -202,7 +202,7 @@ elif [ "$operation" == "add" ]; then
     if (( numnodes == 1 )); then
         addlocalbus  $busname $port ${nodenames[*]}
     else
-        createbus $busname  $port ${nodenames[*]}
+        createbus $busname $port ${nodenames[*]}
     fi
 else
     usage
