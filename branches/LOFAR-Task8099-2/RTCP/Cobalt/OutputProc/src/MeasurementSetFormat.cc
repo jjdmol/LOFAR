@@ -184,6 +184,7 @@ namespace LOFAR
         fillHistory();
         fillProcessor();
         fillState();
+        fillPointing(subarray);
 
         try {
           // Use ConfigLocator to locate antenna configuration files.
@@ -297,7 +298,6 @@ namespace LOFAR
 
     void MeasurementSetFormat::fillField(unsigned subarray)
     {
-
       // Beam direction
       MVDirection radec(Quantity(itsPS.settings.SAPs[subarray].direction.angle1, "rad"),
                         Quantity(itsPS.settings.SAPs[subarray].direction.angle2, "rad"));
@@ -311,6 +311,11 @@ namespace LOFAR
       MDirection::Types anaBeamDirectionType;
       if (itsPS.settings.anaBeam.enabled)
         MDirection::getType(anaBeamDirectionType, itsPS.settings.anaBeam.direction.type);
+
+      // ScSupp fills Observation.Beam[x].target, sometimes with field codes, sometimes with pointing names.
+      // Use it here to write FIELD CODE.
+      casa::String ctarget(itsPS.getString("Observation.Beam[" + String::toString(subarray) +
+                                           "].target", string()));
 
       // Put the direction into the FIELD subtable.
       MSLofarField msfield = itsMS->field();
@@ -326,7 +331,7 @@ namespace LOFAR
 
       msfield.addRow();
       msfieldCol.name().put(rownr, "BEAM_" + String::toString(subarray));
-      msfieldCol.code().put(rownr, "");
+      msfieldCol.code().put(rownr, ctarget);
       msfieldCol.time().put(rownr, itsStartTime);
       msfieldCol.numPoly().put(rownr, 0);
 
@@ -582,6 +587,42 @@ namespace LOFAR
       msstateCol.obsMode().put (0, "");
       msstateCol.flagRow().put (0, False);
       msstate.flush();
+    }
+
+    void MeasurementSetFormat::fillPointing(unsigned subarray)
+    {
+      // Beam direction
+      MVDirection radec(Quantity(itsPS.settings.SAPs[subarray].direction.angle1, "rad"),
+                        Quantity(itsPS.settings.SAPs[subarray].direction.angle2, "rad"));
+      MDirection::Types beamDirectionType;
+      MDirection::getType(beamDirectionType, itsPS.settings.SAPs[subarray].direction.type);
+      MDirection indir(radec, beamDirectionType);
+      casa::Vector<MDirection> outdir(1);
+      outdir(0) = indir;
+
+      // ScSupp fills Observation.Beam[x].target, sometimes with field codes, sometimes with pointing names.
+      // Use it here to write POINTING NAME.
+      casa::String ctarget(itsPS.getString("Observation.Beam[" + String::toString(subarray) +
+                                           "].target", string()));
+
+      // Fill the POINTING subtable.
+      MSPointing mspointing = itsMS->pointing();
+      mspointing.addRow(itsNrAnt);
+      MSPointingColumns mspointingCol(mspointing);
+
+      for (unsigned i = 0; i < itsNrAnt; i++) {
+        mspointingCol.antennaId().put(i, i);
+        mspointingCol.time().put(i, itsStartTime + itsNrTimes * itsTimeStep / 2.);
+        mspointingCol.interval().put(i, itsNrTimes * itsTimeStep);
+        mspointingCol.name().put(i, ctarget);
+        mspointingCol.numPoly().put(i, 0);
+        mspointingCol.timeOrigin().put(i, itsStartTime);
+        mspointingCol.directionMeasCol().put(i, outdir); // TODO: fix exc if refframe is SUN
+        mspointingCol.targetMeasCol().put(i, outdir);    // TODO: fix exc if refframe is SUN
+        mspointingCol.tracking().put(i, true); // not tracking N/A w/ current obs software
+      }
+
+      mspointing.flush();
     }
 
 
