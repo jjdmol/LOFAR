@@ -184,6 +184,7 @@ namespace LOFAR
         fillHistory();
         fillProcessor();
         fillState();
+        fillPointing(subarray);
 
         try {
           // Use ConfigLocator to locate antenna configuration files.
@@ -297,12 +298,12 @@ namespace LOFAR
 
     void MeasurementSetFormat::fillField(unsigned subarray)
     {
-
       // Beam direction
       MVDirection radec(Quantity(itsPS.settings.SAPs[subarray].direction.angle1, "rad"),
                         Quantity(itsPS.settings.SAPs[subarray].direction.angle2, "rad"));
       MDirection::Types beamDirectionType;
-      MDirection::getType(beamDirectionType, itsPS.settings.SAPs[subarray].direction.type);
+      if (!MDirection::getType(beamDirectionType, itsPS.settings.SAPs[subarray].direction.type))
+        THROW(StorageException, "Beam direction type unknown: " << itsPS.settings.SAPs[subarray].direction.type);
       MDirection indir(radec, beamDirectionType);
       casa::Vector<MDirection> outdir(1);
       outdir(0) = indir;
@@ -310,15 +311,22 @@ namespace LOFAR
       // AnaBeam direction type
       MDirection::Types anaBeamDirectionType;
       if (itsPS.settings.anaBeam.enabled)
-        MDirection::getType(anaBeamDirectionType, itsPS.settings.anaBeam.direction.type);
+        if (!MDirection::getType(anaBeamDirectionType, itsPS.settings.anaBeam.direction.type))
+          THROW(StorageException, "Beam direction type unknown: " << itsPS.settings.anaBeam.direction.type);
+
+
+      // ScSupp fills Observation.Beam[x].target, sometimes with field codes, sometimes with pointing names.
+      // Use it here to write FIELD CODE.
+      casa::String ctarget(itsPS.settings.SAPs[subarray].target);
 
       // Put the direction into the FIELD subtable.
       MSLofarField msfield = itsMS->field();
       MSLofarFieldColumns msfieldCol(msfield);
 
       uInt rownr = msfield.nrow();
-      ASSERT(rownr == 0); // can only set directionType on first row, so only one field per MeasurementSet for now
 
+      // Set refframe for MS direction columns to be able to write non-J2000 refframe coords.
+      ASSERT(rownr == 0); // can only set directionType on first row, so only one field per MeasurementSet for now
       if (itsPS.settings.anaBeam.enabled)
         msfieldCol.setDirectionRef(beamDirectionType, anaBeamDirectionType);
       else
@@ -326,7 +334,7 @@ namespace LOFAR
 
       msfield.addRow();
       msfieldCol.name().put(rownr, "BEAM_" + String::toString(subarray));
-      msfieldCol.code().put(rownr, "");
+      msfieldCol.code().put(rownr, ctarget);
       msfieldCol.time().put(rownr, itsStartTime);
       msfieldCol.numPoly().put(rownr, 0);
 
@@ -582,6 +590,48 @@ namespace LOFAR
       msstateCol.obsMode().put (0, "");
       msstateCol.flagRow().put (0, False);
       msstate.flush();
+    }
+
+    void MeasurementSetFormat::fillPointing(unsigned subarray)
+    {
+      // Beam direction
+      MVDirection radec(Quantity(itsPS.settings.SAPs[subarray].direction.angle1, "rad"),
+                        Quantity(itsPS.settings.SAPs[subarray].direction.angle2, "rad"));
+      MDirection::Types beamDirectionType;
+      if (!MDirection::getType(beamDirectionType, itsPS.settings.SAPs[subarray].direction.type))
+        THROW(StorageException, "Beam direction type unknown: " << itsPS.settings.SAPs[subarray].direction.type);
+      MDirection indir(radec, beamDirectionType);
+
+      casa::Vector<MDirection> outdir(1);
+      outdir(0) = indir;
+
+      // ScSupp fills Observation.Beam[x].target, sometimes with field codes, sometimes with pointing names.
+      // Use it here to write POINTING NAME.
+      casa::String ctarget(itsPS.settings.SAPs[subarray].target);
+
+      // Fill the POINTING subtable.
+      MSPointing mspointing = itsMS->pointing();
+      MSPointingColumns mspointingCol(mspointing);
+
+      uInt rownr = mspointing.nrow();
+      // Set refframe for MS direction columns to be able to write non-J2000 refframe coords.
+      ASSERT(rownr == 0); // can only set directionType on first row, so only one field per MeasurementSet for now
+      mspointingCol.setDirectionRef(beamDirectionType);
+
+      mspointing.addRow(itsNrAnt);
+      for (unsigned i = 0; i < itsNrAnt; i++) {
+        mspointingCol.antennaId().put(i, i);
+        mspointingCol.time().put(i, itsStartTime + itsNrTimes * itsTimeStep / 2.);
+        mspointingCol.interval().put(i, itsNrTimes * itsTimeStep);
+        mspointingCol.name().put(i, ctarget);
+        mspointingCol.numPoly().put(i, 0);
+        mspointingCol.timeOrigin().put(i, itsStartTime);
+        mspointingCol.directionMeasCol().put(i, outdir);
+        mspointingCol.targetMeasCol().put(i, outdir);
+        mspointingCol.tracking().put(i, true); // not tracking N/A w/ current obs software
+      }
+
+      mspointing.flush();
     }
 
 
