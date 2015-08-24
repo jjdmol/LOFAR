@@ -1,8 +1,8 @@
 #!/bin/bash
 
-createbus.sh add testSCQLib $(hostname) 
+createbus.sh add testSCQLib 5672 $(hostname) 
 
 python testSCQLib.py
 
 # the a bus structure to be used by the test program
-createbus.sh del testSCQLib $(hostname) ignore
+createbus.sh del testSCQLib 5672 $(hostname) ignore

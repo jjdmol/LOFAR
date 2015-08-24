@@ -151,7 +151,7 @@ class CQDaemon(object):
               self._CommandQueue)
             if not msg_available:
                 break
-                        
+
             # Assure that it is the correct type
             (msg, unpacked_msg_content, msg_type) = msg_data
             if not msg_type is "command":

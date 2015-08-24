@@ -20,6 +20,8 @@
 import os
 import logging
 import time
+import socket
+HOST_NAME = socket.gethostname()
 
 
 import unittest
@@ -86,50 +88,39 @@ class testCQDaemon(unittest.TestCase):
         os.remove(self.logfile)
         os.remove(self.deadletterfile)
 
-    #def test_subclass_processing(self):
-    #    """
-    #    Test if the subclass process_commands is called  
-    #    """
-    #    daemon, commandQueueBus, deadletterQueue, deadletterToQueue = \
-    #        prepare_test(subclassedMCQDaemontestcommand,
-    #                         self.logfile, self.deadletterfile )
+    def test_subclass_processing(self):
+        """
+        Test if the subclass process_commands is called  
+        """
+        daemon, commandQueueBus, deadletterQueue, deadletterToQueue = \
+            prepare_test(subclassedMCQDaemontestcommand,
+                             self.logfile, self.deadletterfile )
 
-    #    with nested(daemon, commandQueueBus, 
-    #                deadletterQueue, deadletterToQueue) as (
-    #                  daemon, commandQueueBus, deadletterQueue, deadletterToQueue):
+        with nested(daemon, commandQueueBus, 
+                    deadletterQueue, deadletterToQueue) as (
+                      daemon, commandQueueBus, deadletterQueue, deadletterToQueue):
             
-    #        # Test1: Create a test job payuoad
-    #        send_payload =  {'type':'command',
-    #                       'command':'testcommand',
-    #                       'node':"locus102",
-    #                       'job':{}}
+            # Test1: Create a test job payuoad
+            send_payload =  {'type':'command',
+                           'command':'testcommand',
+                           'node':HOST_NAME,
+                           'job':{}}
 
-    #        msg = create_test_msg(send_payload)
-    #        commandQueueBus.send(msg)
+            msg = create_test_msg(send_payload)
+            commandQueueBus.send(msg)
 
-    #        # start the daemon processing
-    #        daemon._process_command_queue()
+            # start the daemon processing
+            daemon._process_command_queue()
   
-    #        # validate that a job is processed o
-    #        expected_payload = { 'type':'command',
-    #                      'testcommand':"received",
-    #                       'command':'testcommand',
-    #                       'node':"locus102",
-    #                       'job':{}}
-    #        # validate correct content
-    #        self.assertEqual(expected_payload, daemon._adapted_content)
+            # validate that a job is processed o
+            expected_payload = { 'type':'command',
+                          'testcommand':"received",
+                           'command':'testcommand',
+                           'node':HOST_NAME,
+                           'job':{}}
+            # validate correct content
+            self.assertEqual(expected_payload, daemon._adapted_content)
 
-
-    #def test_not_implemented_exception_when_calling_superclass(self):
-    #    """
-    #    The daemon should always be subclasses. The process command should raise
-    #    a not implemented exception when used
-    #    """
-    #    self.assertRaises(NotImplementedError,
-    #                      CQDaemon.CQDaemon, 
-    #                      *[None]*8   # Just pass a list with 8 none s as args
-    #                      )
-            
           
     def test_silent_eating_of_incorrect_commands(self):
         """
@@ -149,7 +140,7 @@ class testCQDaemon(unittest.TestCase):
             # ****************************************
             # Test 1: incorrect command
             payload = {'command':'incorrect',  
-                           'node':'locus102',
+                           'node':HOST_NAME,
                            'job':{}}
             msg = create_test_msg(payload)
             commandQueueBus.send(msg)
@@ -161,7 +152,7 @@ class testCQDaemon(unittest.TestCase):
             #START DEADLETTER
             #2015-07-16 09:57:29.334901 <class '__main__.subclassedMCQDaemonFalse'>
             #[67b103d3-5f4e-49a8-b8a1-071366aecc97] [sasid ] summary
-            #{'node': 'locus102', 'job': {}, 'command': 'incorrect'}
+            #\n
             #END DEADLETTER
 
             # We expect a deadletter on the 
@@ -169,10 +160,11 @@ class testCQDaemon(unittest.TestCase):
             with open( self.deadletterfile , 'r') as file:
                 content = file.readlines()
 
+            print content
             self.assertEqual(content[0],"START DEADLETTER\n")
             self.assertTrue("subclassedMCQDaemonFalse" in content[1] )
-            self.assertEqual(content[3],
-                      "{'node': 'locus102', 'job': {}, 'command': 'incorrect'}\n")
+            self.assertEqual(content[3],"\n")   # We do not return the content
+                   # of the failed msg: opening the content led to errors
             self.assertEqual(content[4],"END DEADLETTER\n")
             return 
 
@@ -186,8 +178,8 @@ def prepare_test(subclass, logfile, deadletterfile):
     return the deamon and needed
     """
         # config
-    broker =  "locus102"
-    busname = "testmcqdaemon"  # TODO: Use a different name
+    broker =  HOST_NAME
+    busname = "testCQDaemon"  # TODO: Use a different name
     #busname = "testbus"
     masterCommandQueueName = busname + "/" + "masterCommandQueueName"
     #masterCommandQueueName = "masterCommandQueueName"
