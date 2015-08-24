@@ -60,11 +60,11 @@ else
          echo qpid-route route flush $name
          qpid-route route flush $name
       done
-      for name in $(seq -f "locus%03g" $node_start $node_end)
+      for name in $(seq -f "locus%03g.cep2.lofar" $node_start $node_end)
       do
-         echo flushing routing tables of broker at ${name}.cep2.lofar
-         echo qpid-route route flush ${name}.cep2.lofar
-         qpid-route route flush ${name}.cep2.lofar
+         echo flushing routing tables of broker at $name
+         echo qpid-route route flush $name
+         qpid-route route flush $name
       done
       exit
    fi
@@ -101,7 +101,7 @@ fed mom.command                       $sas     $mom
 fed mom.importxml                     $sas     $mom
 fed mom-otdb-adapter.importxml        $mom     $sas
 
-for NODE in $(seq -f "locus%03g" $node_start $node_end)
+for NODE in $(seq -f "locus%03g.cep2.lofar" $node_start $node_end)
 do
     fed lofar.task.feedback.dataproducts  $NODE $head
     fed lofar.task.feedback.processing    $NODE $head
