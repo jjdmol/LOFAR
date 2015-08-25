@@ -45,12 +45,13 @@ if __name__ == "__main__":
     config.read(config_path)
 
     # create or get parameters 
+    hostname = socket.gethostname()
+    broker_raw = hostname
 
     busname = config.get(               "DEFAULT", "busname")
-    print busname
-    
-    broker = config.get(               "DEFAULT", "broker")
     port = config.get("DEFAULT", "broker_port")
+    broker = "{0}:{1}".format(broker_raw, port)
+    
     (master_host, slave_hosts_list) = CQCommon.get_master_and_slave_list_from_config(
                                                       config)
 
