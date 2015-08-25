@@ -99,11 +99,11 @@ function createbus {
         port=$2
         hubname=$3    
        
-        addlocalbus $busname $hubname:$port
+        addlocalbus $busname $port $hubname
         shift 3
         for i in "$@"
         do
-            addlocalbus $busname $i:$port
+            addlocalbus $busname $port $i
             connectbus $busname $hubname:$port $i:$port
         done
     else
@@ -121,9 +121,9 @@ function deletebus {
         for i in "$@"
         do
             disconnectbus $busname $hubname:$port $i:$port
-            dellocalbus $busname $i:$port
+            dellocalbus $busname $port $i
         done
-        dellocalbus $busname $hubname:$port
+        dellocalbus $busname $port  $hubname 
     else
         echo "usage: $FUNCNAME <busname> <hubnode> <port> <spokenode> [<spokenode>..]"
     fi
