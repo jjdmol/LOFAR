@@ -674,7 +674,7 @@ GCFEvent::TResult ClockControl::setClock_state(GCFEvent& event,
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
 	switch (event.signal) {
-	case F_ENTRY:
+    case F_ENTRY:
 	case F_TIMER:
 		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Set clock"));
 		sendClockSetting();				// will result in RSP_SETCLOCKACK;
@@ -705,6 +705,10 @@ GCFEvent::TResult ClockControl::setClock_state(GCFEvent& event,
 		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
 		itsOwnPropertySet->setValue(PN_CLC_ACTUAL_CLOCK,GCFPVInteger(itsClock));
 		TRAN(ClockControl::active_state);				// go to next state.
+        
+        CLKCTRLSetClockAckEvent response;
+        response.status = CLKCTRL_NO_ERR;
+        itsParentPort->send(response);
 		break;
 	}
 
@@ -1101,6 +1105,7 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 		if (request.clock != 160 && request.clock != 200) {
 			LOG_ERROR_STR("Received request to change the clock to invalid value " << request.clock);
 			response.status = CLKCTRL_CLOCKFREQ_ERR;
+            port.send(response);
 		} else {
 		    LOG_INFO_STR("Received request to change the clock to " << request.clock << " MHz.");
 		    response.status = CLKCTRL_NO_ERR;
@@ -1109,13 +1114,13 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 
             if (itsClock == request.clock) {
 		        LOG_INFO_STR("Clock was already set to " << itsClock << ".");
+                port.send(response);
             } else {
 		        itsClock = request.clock;
 		        TRAN(ClockControl::setClock_state);
             }
         }
-
-		port.send(response);
+		// port.send(response);
 	}
 	break;
 
