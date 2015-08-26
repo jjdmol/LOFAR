@@ -831,7 +831,7 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
 		} else {
 		    // splitters set succesfully
 	    	itsSplitters = splitterState;
-		    LOG_INFO_STR("Station splitters set to " << (itsSplitters ? "ON" : "OFF"));
+		    LOG_INFO_STR("Station splitters set to " << (splitterState ? "ON" : "OFF"));
         }
 
 		itsClaimTimerPort->setTimer(0.0);
