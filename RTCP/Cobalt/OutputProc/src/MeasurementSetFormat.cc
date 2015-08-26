@@ -569,7 +569,7 @@ namespace LOFAR
       // Fill the columns
       msproc.addRow();
       msprocCol.type().put (0, "CORRELATOR");
-      msprocCol.subType().put (0, "CEP");
+      msprocCol.subType().put (0, "LOFAR-COBALT");
       msprocCol.typeId().put (0, -1);
       msprocCol.modeId().put (0, -1);
       msprocCol.flagRow().put (0, False);
