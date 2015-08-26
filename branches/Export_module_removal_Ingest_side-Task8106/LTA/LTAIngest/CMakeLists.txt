@@ -8,7 +8,7 @@ set(LTAINGEST_BUILD_TARGET "test" CACHE STRING "Specify for which specific desti
 message(STATUS "Using LTAINGEST_BUILD_TARGET \"${LTAINGEST_BUILD_TARGET}\".")
 
 set(MOM3SCHEMA "lofar_mom3")
-set(EXPORTSCHEMA "lofar_export")
+
 
 #switch with config variables for the various build targets.
 if(LTAINGEST_BUILD_TARGET STREQUAL "lexar")
@@ -21,7 +21,6 @@ elseif(LTAINGEST_BUILD_TARGET STREQUAL "test")
   set(LTAINGEST_LOG_ROOT_DIR "/tmp/ingest/")
   set(LTAINGEST_DATA_DIR "/tmp/ingest/")
   set(MOM3SCHEMA "lofartest_sas099_mom3_two")
-  set(EXPORTSCHEMA "lofartest_sas099_export")
 else()
   message(SEND_ERROR "Unknown LTAINGEST_BUILD_TARGET given: '${LTAINGEST_BUILD_TARGET}'.")
 endif()
