@@ -35,7 +35,7 @@
 * into account:
 * - @c NR_CHANNELS: 1 or a multiple of 16
 * - if @c NR_CHANNELS == 1 (input data is in integer format):
-*   - @c NR_BITS_PER_SAMPLE: 8 or 16
+*   - @c NR_BITS_PER_SAMPLE: 4, 8 or 16
 *   - @c NR_SAMPLES_PER_SUBBAND: a multiple of 16
 * - if @c NR_CHANNELS > 1 (input data is in floating point format):
 *   - @c NR_SAMPLES_PER_CHANNEL: a multiple of 16
@@ -72,9 +72,18 @@ typedef  fcomplex(*OutputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS][N
 #  if NR_BITS_PER_SAMPLE == 16
 typedef  short_complex rawSampleType;
 typedef  short_complex(*InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR_POLARIZATIONS];
+#define REAL(sample) sample.x
+#define IMAG(sample) sample.y
 #  elif NR_BITS_PER_SAMPLE == 8
 typedef  char_complex  rawSampleType;
 typedef  char_complex(*InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR_POLARIZATIONS];
+#define REAL(sample) sample.x
+#define IMAG(sample) sample.y
+#  elif NR_BITS_PER_SAMPLE == 4
+typedef  signed char   rawSampleType;
+typedef  signed char   (*InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR_POLARIZATIONS];
+#define REAL(sample) extractRI(sample, false)
+#define IMAG(sample) extractRI(sample, true)
 #  else
 #    error unsupported NR_BITS_PER_SAMPLE
 #  endif
@@ -221,11 +230,11 @@ extern "C" {
     {
 #ifdef INPUT_IS_STATIONDATA
       const rawSampleType sampleXraw = (*inputData)[station][time][0];
-      fcomplex sampleX = make_float2(convertIntToFloat(sampleXraw.x),
-        convertIntToFloat(sampleXraw.y));
+      fcomplex sampleX = make_float2(convertIntToFloat(REAL(sampleXraw)),
+                                     convertIntToFloat(IMAG(sampleXraw)));
       const rawSampleType sampleYraw = (*inputData)[station][time][1];
-      fcomplex sampleY = make_float2(convertIntToFloat(sampleYraw.x),
-        convertIntToFloat(sampleYraw.y));
+      fcomplex sampleY = make_float2(convertIntToFloat(REAL(sampleYraw)),
+                                     convertIntToFloat(IMAG(sampleYraw)));
 #else
       fcomplex sampleX = (*inputData)[station][0][time][channel];
       fcomplex sampleY = (*inputData)[station][1][time][channel];
