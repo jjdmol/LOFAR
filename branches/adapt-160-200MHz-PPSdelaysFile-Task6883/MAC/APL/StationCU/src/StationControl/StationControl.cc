@@ -156,6 +156,14 @@ StationControl::~StationControl()
 		delete itsDPservice;
 	}
 
+	if (itsTimerPort) {
+		delete itsTimerPort;
+	}
+
+	if (itsClaimTimerPort) {
+		delete itsClaimTimerPort;
+	}
+
 	// ...
 }
 
