@@ -104,8 +104,13 @@ class logTopicHandler(threading.Thread):
         level = msg_content['level']       
         log_data = msg_content['log_data'].strip()  #remove trailing whitespace
         sender = msg_content['sender']
+        # TODO: Remove before production
+        if "job_name" in msg_content:
+            job_name = msg_content['job_name']
+        else:
+            job_name = "subprocess_starter"
 
-        formatted_line = sender + ": " + log_data
+        formatted_line = "{0}: {1}: {2}".format(job_name,sender, log_data)
         if level == 'CRITICAL':
             self._logger.critical(formatted_line)
         elif level == 'ERROR':

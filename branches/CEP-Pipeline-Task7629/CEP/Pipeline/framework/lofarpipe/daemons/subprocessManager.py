@@ -20,6 +20,8 @@
 
 import time
 import subprocess
+import os
+import copy
 
 import lofar.messagebus.msgbus as msgbus
 import lofar.messagebus.message as message
@@ -44,6 +46,11 @@ class SubprocessManager(object):
         # with information about the runs and the registered pipelines
         self._registered_sessions = {} 
 
+        # Create a mutable dict of the enviroment
+        environment = os.environ
+        self._environment = {}
+        for key in environment:
+            self._environment[key] = environment[key]
 
     def start_job_from_msg(self, msg_content):
         """
@@ -132,15 +139,18 @@ class SubprocessManager(object):
 
     def _start_subprocess(self, command, working_dir, environment):
         """
-
         """
+        #We need an augmented enviroments expanded with the send environment
+        job_environment = copy.deepcopy(self._environment)
+        job_environment.update(environment)
+
         process = None
         error_str = None
         try:
             process = subprocess.Popen(
                         command,
                         cwd=working_dir,
-                        env=environment, 
+                        env=job_environment, 
                         shell=True,
                         stdin=subprocess.PIPE,
                         stdout=subprocess.PIPE,
@@ -220,6 +230,7 @@ class SubprocessManager(object):
                            'log_data':stdoutdata,
                            'session_uuid':session_uuid,
                            'job_uuid':job_uuid,
+                           'job_name':"subprocessManager", # TODO: real jobname
                            'sender': self._broker}
                 subject =  "log_" + session_uuid
                 msg = CQCommon.create_msg(payload, subject)
@@ -231,6 +242,7 @@ class SubprocessManager(object):
                            'log_data':stderrdata,
                            'session_uuid':session_uuid,
                            'job_uuid':job_uuid,
+                           'job_name':"subprocessManager",  # TODO: real jobname
                            'sender': self._broker}
                 subject =  "log_" + session_uuid
                 msg = CQCommon.create_msg(payload, subject)

@@ -67,7 +67,7 @@ then
     elif [ "$operation" == "stop" ]
     then
         echo "stop_broker $port $node"
-        stop_broker $port $node   
+        stop_broker $port $node_name   
     else
         echo "place select start or stop"
         usage

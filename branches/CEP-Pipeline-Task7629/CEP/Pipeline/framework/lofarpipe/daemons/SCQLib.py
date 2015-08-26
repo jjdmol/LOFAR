@@ -48,13 +48,14 @@ class QPIDLoggerHandler(logging.Handler):
     """
     TODO: Candidate to move to LCS
     """
-    def __init__(self, broker, logTopicName):
+    def __init__(self, broker, logTopicName, job_name):
         """
         INit function connects to the QPID logging topic supplied
         """
         logging.Handler.__init__(self)
         self._broker = broker
         self._logTopicName = logTopicName
+        self._job_name = job_name
         self._logTOpic = msgbus.ToBus(self._logTopicName, 
               broker = self._broker)
 
@@ -81,7 +82,8 @@ class QPIDLoggerHandler(logging.Handler):
         # add the data to send
         payload = {'level':   level,
                    'log_data':log_data,
-                   'sender':self._broker } 
+                   'sender':self._broker,
+                   'job_name':self._job_name } 
 
         msg = create_msg(payload)
         self._logTOpic.send(msg)
@@ -172,7 +174,7 @@ class SCQLib(object):
     class combining objects and function needed for communication via QPID,
     using the NCQDaemon framework.
     """
-    def __init__(self, broker, busname, job_uuid):
+    def __init__(self, broker, busname, job_uuid, job_name):
         """
         Init function, connects to the logtopic and resultQueue.
 
@@ -184,6 +186,7 @@ class SCQLib(object):
         self._job_uuid = job_uuid
         self._broker = broker
         self._busname = busname
+        self._job_name = job_name
 
         self._parameterQueueName = busname + "/parameters_" + job_uuid
 
@@ -202,7 +205,8 @@ class SCQLib(object):
               broker = self._broker)
 
         self.QPIDLoggerHandler = QPIDLoggerHandler(self._broker,
-                                                   self._logTopicName)
+                                                   self._logTopicName,
+                                                   self._job_name)
 
         self._heartBeatGenerator = HeartBeatGenerator(broker,
                   self._returnQueueName, self._returnQueueSubject,

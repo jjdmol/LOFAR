@@ -138,7 +138,7 @@ class LOFARnodeTCP(LOFARnode):
                          "when the toplevel uses sockets and the slave qpid")
                
             self._SCQLib = SCQLib.SCQLib(broker, bus_name,
-                                         job_uuid)
+                                         job_uuid, self.__class__.__name__)
             self.host = None
             self.port = None
 
