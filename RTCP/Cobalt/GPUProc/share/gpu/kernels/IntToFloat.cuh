@@ -48,6 +48,25 @@ inline __device__ float convertIntToFloat(signed char x)
   // power (visibilities and Stokes) end up x16^2.
   return 16 * i;
 }
+#elif NR_BITS_PER_SAMPLE == 4
+// Extract the 4-bit real or imaginary part of an 8-bit input sample
+inline __device__ signed char extractRI(signed char x, bool imag)
+{
+  // Note 1: Imaginary part is in the top 4 bits. See also RSP::decode4bit() in InputProc/Station/RSP.h.
+  // Note 2: Preserve the sign, so use sign-extending shifts to extract the right bits.
+  return imag ? x >> 4 : (x << 4) >> 4;
+}
+
+// WARNING: Caller is responsible for extracting 4-bit real or imaginary part from sample byte
+inline __device__ float convertIntToFloat(signed char x)
+{
+  // Edge case. -8 should be returned as -7
+  int i = x == -8 ? -7 : x;
+
+  // TODO: Is this the right scaling for 4-bit mode?
+  // Keep output scale the same as 16 bit mode.
+  return 64 * i;
+}
 #else
 #error unsupported NR_BITS_PER_SAMPLE
 #endif
