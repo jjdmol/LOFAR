@@ -785,9 +785,16 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
 
 	switch (event.signal) {
 	case CONTROL_CLAIM: {
-       	// defer the setup to the timer event
-      	itsClaimSequence = 0;
-		itsClaimTimerPort->setTimer(0.0);
+       	// defer the setup to the timer eventa
+	// NOTE: StationControl can receive multiple CLAIM requests. Example:
+	//    * We're in CLAIMED
+	//    * Station receives PREPARE (due to state sync errors?)
+	//    * Station will replay PREPARE -> CLAIM
+    // So we ONLY start the ClaimTimer if the ClaimSequence was not yet started
+		if (itsClaimSequence == 0) {
+			itsClaimSequence++;
+		    itsClaimTimerPort->setTimer(0.0);
+		}
 	}
 	break;
 
@@ -841,7 +848,7 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
 	case F_TIMER: {
 		if (&port == itsClaimTimerPort) {
           switch (itsClaimSequence++) {
-            case 0: {
+            case 1: {
                 // Set the clock
                 if (itsClock != itsStartingObs->second->obsPar()->sampleClock) {
                     // Check if all others obs are down otherwise we may not switch the clock
@@ -872,7 +879,7 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
             }
 			break;
 
-            case 1: {
+            case 2: {
                 // Set the splitters
                 StationConfig	sc;
                 if (!sc.hasSplitters) {
@@ -891,7 +898,7 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
             } 
 			break;
 
-            case 2: {
+            case 3: {
                 // Set the bit mode
                 if (itsBitmode != itsStartingObs->second->obsPar()->bitsPerSample) {
                     // Check if all others obs are down otherwise we may not switch the bitmode
