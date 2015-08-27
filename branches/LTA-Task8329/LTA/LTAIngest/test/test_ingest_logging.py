@@ -49,12 +49,22 @@ class TestIngestLogging(unittest.TestCase):
     #log a line and check if the log file reappears
     testlogline = 'unittest log line'
     logger.debug(testlogline)
-    self.assertTrue(os.path.isfile(logpath), 'log file %s (no longer) exists' % logpath)
+    self.assertTrue(os.path.isfile(logpath), 'log file %s no longer exists' % logpath)
     
     #test reading the written log line
     logfile = open(logpath, 'r')
     lines = logfile.readlines()
     self.assertTrue(lines[-1].strip().endswith(testlogline))
+
+    #cleanup
+    if os.path.isfile(logpath):
+      os.remove(logpath)
+    self.assertFalse(os.path.isfile(logpath), 'log file %s cleaned up' % logpath)
+
+    #cleanup
+    if os.path.isfile(logpath_moved):
+      os.remove(logpath_moved)
+    self.assertFalse(os.path.isfile(logpath_moved), 'old log file %s cleaned up' % logpath_moved)
 
 #run tests if main
 if __name__ == '__main__':
