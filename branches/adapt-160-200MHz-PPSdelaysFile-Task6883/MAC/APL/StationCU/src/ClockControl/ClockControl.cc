@@ -704,16 +704,20 @@ GCFEvent::TResult ClockControl::setClock_state(GCFEvent& event,
 			itsTimerPort->setTimer(5.0);
 			break;
 		}
-		LOG_INFO_STR ("StationClock is set to " << itsClock << ", going to operational state");
-		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
+		LOG_INFO_STR ("StationClock is set to " << itsClock << ", wait for update");
+        itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
 		itsOwnPropertySet->setValue(PN_CLC_ACTUAL_CLOCK,GCFPVInteger(itsClock));
-		TRAN(ClockControl::active_state);				// go to next state.
-        
+		break;
+	}
+
+    case RSP_UPDCLOCK: {
         CLKCTRLSetClockAckEvent response;
         response.status = CLKCTRL_NO_ERR;
         itsParentPort->send(response);
-		break;
-	}
+        LOG_INFO_STR ("Received clock update, going to operational state");
+        TRAN(ClockControl::active_state);				// go to next state.
+        return (GCFEvent::NEXT_STATE);
+    }
 
 	case DP_CHANGED:
 		_databaseEventHandler(event);
@@ -725,7 +729,6 @@ GCFEvent::TResult ClockControl::setClock_state(GCFEvent& event,
 	case CLKCTRL_SET_BITMODE:
 	case CLKCTRL_GET_SPLITTERS:
 	case CLKCTRL_SET_SPLITTERS:
-	case RSP_UPDCLOCK:
 	case RSP_UPDSPLITTER:
     case RSP_UPDBITMODE:
 		LOG_INFO_STR("Postponing event " << eventName(event) << " till next state");
