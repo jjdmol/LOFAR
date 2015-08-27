@@ -118,6 +118,9 @@ public:
     blitz::Array<int, 1> getPPSdelays() { return itsPPSsyncDelays; }
 	void setPPSdelays(blitz::Array<int, 1> pps_delays) { itsPPSsyncDelays = pps_delays; }
     
+    bool getSequencerRequest() { return itsSequencerRequest; }
+    void setSequencerRequest(bool state) { itsSequencerRequest = state; }
+    
 	// update timestamp
 	void setTimestamp(const RTC::Timestamp& timestamp);
 
@@ -175,7 +178,8 @@ private:
 	RSP_Protocol::SDOSelection      itsSDOSelection;
 	int                             itsSDOBitsPerSample;
     blitz::Array<int, 1>            itsPPSsyncDelays;  // one delay for each AP
-
+    bool                            itsSequencerRequest;
+    
 	Cache* m_cache;		// pointer to container
 };
 
