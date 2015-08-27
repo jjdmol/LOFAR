@@ -1,0 +1,336 @@
+V 11
+1
+LANG:1 0 
+PANEL,-1 -1 1028 66 N "_3DFace" 3
+"$barColor"
+"$gpuProc"
+"$yPos_AddSymbol"
+"main()
+{
+
+  barColor = $barColor;
+  strModuleName   = myModuleName();  
+  setValue(\"bar\",\"backCol\",barColor);
+  
+  baseDP   = g_currentDatapoint;
+  GPUProcDP  = $gpuProc;
+    
+  // connect to the gpuProcvalues  
+  // check if the requiered datapoint for this view are enabled and accessible
+  if (dpExists(GPUProcDP + \".status.state\")) {
+     if (!dpConnect(\"updateGPUProc\", GPUProcDP + \".observationName\",
+	                                    GPUProcDP + \".dataProductType\",
+	                                    GPUProcDP + \".subband\",
+	                                    GPUProcDP + \".dropping\",
+	                                    GPUProcDP + \".written\", 
+	                                    GPUProcDP + \".dropped\",
+                                     GPUProcDP + \".status.state:_online.._invalid\") == -1) {
+      LOG_ERROR(\"GPUProcDetail.pnl:updateTrigger|Couldn't connect to: \"+GPUProcDP+\" \"+getLastError());
+    }
+  } else {
+    LOG_ERROR(\"GPUProcDetail.pnl:updateTrigger|Couldn't find DP to connect to: \"+GPUProcDP);
+    setValue(\"observationName\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"dataProductType\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"subband\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"dropping\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"written\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"dropped\", \"backCol\", \"Lofar_dpdoesnotexist\");
+  }    
+    
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",GPUProcDP);
+ 
+  // connect for selfUpdates
+  showSelfState(GPUProcDP);
+}
+
+
+updateGPUProc(string dp1, string observationName, 
+              string dp2, string dataProductType,
+              string dp3, dyn_int subband,
+              string dp4, dyn_bool dropping,
+              string dp5, dyn_float written,
+              string dp6, dyn_float dropped,
+              string dp7, bool invalid)
+{ 
+
+  LOG_DEBUG(\"GPUProcDetail.pnl:update|entered\"); 
+  
+  observation=observationName;
+  string dp = dpSubStr(dp1,DPSUB_DP);
+  string color = \"Lofar_operational\";  
+  // get Node and gpu numbers out of the datapoint
+  int cbt = (substr(dp1,strpos(dp1,\"OSCBT\")+5,3));
+  int gpu = (substr(dp1,strpos(dp1,\"CobaltGPUProc\")+13,2));
+  CBTstr.text = cbt;
+  GPUstr.text = gpu;
+  string refname = observationName+cbt+gpu;
+
+  if (!invalid) {
+    setValue(\"observationName\", \"text\", observationName);
+    setValue(\"dataProductType\", \"text\", dataProductType);
+    if (dynContains(dropping,\"True\") ) color = \"Lofar_broken\";
+    setValue(\"dropping\", \"backCol\",color);
+      
+  } else {
+    setValue(\"observationName\", \"text\", \"\");
+    setValue(\"dataProductType\", \"text\", \"\");
+    setValue(\"written\", \"text\", \"\");
+    setValue(\"dropped\", \"text\", \"\");
+    setValue(\"dropping\", \"backCol\",\"Lofar_invalid\");
+  }
+  
+  addSubbands(refname, subband, written, dropped, invalid);
+  
+}
+" 0
+ E E E E 1 -1 -1 0  0 0
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string GPUProc=\"\";
+string database=\"\";
+string observation=\"\";
+
+string baseDP = \"\";
+string GPUProcDP=\"\";
+string barColor=\"\";
+
+bool   bDoubleClicked  = false;
+
+dyn_string oldSubbandRefNames;
+string strModuleName;
+
+
+void clearOldSubbandRefNames() {
+  // remove all symbols because new ones will be added
+  for (int i=1; i <= dynlen(oldSubbandRefNames); i++) {
+    removeSymbol(strModuleName,\"\",oldSubbandRefNames[i]);
+  }
+  dynClear(oldSubbandRefNames);
+}
+
+// routine for single mouse click
+void click(string dp) {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    if (dp == stationDP) {
+      navPanel_setEvent(\"GPUProc\",\"EventClick\");
+    }
+  }
+}
+
+// routine for double mouse click
+void dblClick(string dp) {
+  // indicate this is a doubleClick
+  bDoubleClicked = true; 
+
+  if (dpExists(dp) ) {
+    LOG_DEBUG(\"GPUProcDetail.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+dp);
+    g_currentDatapoint=dp;
+    navPanel_setEvent(\"GPUProcDetail.pnl\",\"ChangePanel\");  
+  }
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;
+}
+
+// routine for right mouse click
+void rClick(string dp) {
+  navPanel_setEvent(\"GPUProcDetail.pnl\",\"EventRightClick\");
+}
+
+// add subbandinformation
+void addSubbands(string refname, dyn_int subbands, dyn_float written, dyn_float dropped, bool invalid) {
+  LOG_DEBUG(\"GPUProcDetail.pnl:addSubbands\");
+  
+  dyn_string subbandRefNames;
+   if (dynlen(oldSubbandRefNames) > 0) {
+    clearOldSubbandRefNames();
+  }    
+  int xPos_AddSymbol = 265; 
+  int ref = 1;
+  string addPanelName    = \"objects/Processes/GPUProcSubbandInfo.pnl\";
+  //loop over list and prepare panel with all subband objects   
+  for (int i=1; i<= dynlen(subbands); i++) {
+    subbandRefNames[ref]=refname+ref;
+    
+    // sometimes it is possible that the trigger for this function is faster then
+    // cobalt has written all the buffers, so we will get an index out of range
+    // to avoid this we will set the value at the index to 0
+  
+    if (dynlen(written) < i) dynAppend(written,0);
+    if (dynlen(dropped) < i) dynAppend(dropped,0);
+    
+    if (  addSymbol(  strModuleName,                   // Stay in this modul
+                      \"\",                              // Name of this panel
+                      addPanelName,                    // Panel to add
+                      subbandRefNames[ref],            // Ref of the addedPanel
+                      makeDynString( \"$subband:\" + subbands[i],
+                                     \"$dropped:\" + dropped[i],
+                                     \"$written:\" + written[i],
+                                     \"$observation:\" + observation,
+                                     \"$invalid:\" + invalid),   // Define all $values
+                      xPos_AddSymbol,                  // Xpos of the AddedSymbol
+                      $yPos_AddSymbol,                 // Ypos of the AddedSymbol
+                      0,                               // angle
+                      1    ,1                          // zoomX , zoomY
+        ) < 0 ) {
+	  LOG_ERROR(\"GPUProcDetail.pnl:addSubbandsError Appending symbol for: \" + subbands[i] + \" in this panel.\");
+          }
+    xPos_AddSymbol += 14;
+    ref++;
+  }
+  oldSubbandRefNames = subbandRefNames;
+ 
+  
+} 
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+6 16
+"bar"
+""
+1 0 0 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+15 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 0 3 259 17
+1 25 0 "" 1
+0
+6 18
+"dropping"
+""
+1 90 30 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+16 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 155 -25 1 E 90 30 100 40
+2 20
+"observationName"
+""
+1 50 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+17 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 50 4 67 17
+0 2 2 "0s" 0 0 0 192 0 0  50 4 1
+1
+LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 3 obs
+2 22
+"CBTstr"
+""
+1 20 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+18 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 20 4 26 17
+0 2 2 "0s" 0 0 0 192 0 0  20 4 1
+1
+LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 1 1
+2 23
+"GPUstr"
+""
+1 30 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+19 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 30 4 36 17
+0 2 2 "0s" 0 0 0 192 0 0  30 4 1
+1
+LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 1 0
+2 24
+"dataProductType"
+""
+1 102 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+20 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 102 4 222 17
+0 2 2 "0s" 0 0 0 192 0 0  102 4 1
+1
+LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 23 correlated & beamformer
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+3 0 "selfState" -1
+"objects\\lofar_self_state.pnl" 7 18 T 15 0.7142857142857143 0 0.7142857142857143 -4 -9.857142857142858
+0
+0
