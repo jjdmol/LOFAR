@@ -10,6 +10,7 @@ lofar_add_bin_program(trigctl
 
 install(PROGRAMS
   startTBB.sh
+  stopTBB.sh
   DESTINATION sbin)
 
 install(FILES
