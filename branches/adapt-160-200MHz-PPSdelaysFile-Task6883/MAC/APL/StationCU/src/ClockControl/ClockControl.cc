@@ -713,7 +713,7 @@ GCFEvent::TResult ClockControl::setClock_state(GCFEvent& event,
     case RSP_UPDCLOCK: {
         CLKCTRLSetClockAckEvent response;
         response.status = CLKCTRL_NO_ERR;
-        itsParentPort->send(response);
+        itsCommandPort->send(response);
         LOG_INFO_STR ("Received clock update, going to operational state");
         TRAN(ClockControl::active_state);				// go to next state.
         return (GCFEvent::NEXT_STATE);
