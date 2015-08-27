@@ -33,8 +33,7 @@ class test_recipe(LOFARnodeTCP):
         self.outputs['data'] = data
         self.outputs['data2'] = data2
 
-        hostname = socket.gethostname()
-        self.logger.critical(hostname)
+        print "Print to stdout"
 
         time.sleep(1)
         ## Time execution of this job

@@ -69,9 +69,17 @@ class SubprocessManager(object):
             self._registered_sessions[session_uuid] = {}
             self._registered_sessions[session_uuid]['jobs'] = {}
 
+
         # TODO: WHat happens if the same job_uuid is retrieved twice??
-        assert not job_uuid in self._registered_sessions[session_uuid]['jobs'], \
-               "received the same Job_uuid twice, error state"
+        if job_uuid in self._registered_sessions[session_uuid]['jobs']:
+            self._logger.warn(
+               "received the same Job_uuid twice, error state \n{0}".format(
+                 msg_content ))
+            return
+        else:
+            self._logger.warn("Job received: {0}".format(msg_content))
+
+
         # Alternative send a.. results msg to the logger?
         # pythonic: fail early fail hard: This is a major error state
 
