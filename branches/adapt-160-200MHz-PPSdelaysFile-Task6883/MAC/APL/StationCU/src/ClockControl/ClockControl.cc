@@ -93,6 +93,7 @@ ClockControl::ClockControl(const string&	cntlrName) :
 	itsTimerPort		(0),
 	itsRSPDriver		(0),
 	itsCommandPort		(0),
+    itsLastCommandClient(0),
     itsNrRSPs           (0),
 
     // we need default values to push in case the boards are set to 0
@@ -359,6 +360,7 @@ GCFEvent::TResult ClockControl::connect2RSP_state(GCFEvent& event,
 		itsOwnPropertySet->setValue(PN_CLC_CONNECTED,  GCFPVBool(false));
 		itsClockSubscription = 0;
 		itsSplitterSubscription = 0;
+        itsBitmodeSubscription = 0;
 		itsRSPDriver->open();		// will result in F_CONN or F_DISCONN
 		break;
 
@@ -713,7 +715,7 @@ GCFEvent::TResult ClockControl::setClock_state(GCFEvent& event,
     case RSP_UPDCLOCK: {
         CLKCTRLSetClockAckEvent response;
         response.status = CLKCTRL_NO_ERR;
-        itsCommandPort->send(response);
+        itsLastCommandClient->send(response);
         LOG_INFO_STR ("Received clock update, going to operational state");
         TRAN(ClockControl::active_state);				// go to next state.
         return (GCFEvent::NEXT_STATE);
@@ -1128,6 +1130,7 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
             } else {
 		        itsClock = request.clock;
 		        TRAN(ClockControl::setClock_state);
+                itsLastCommandClient = &port;
             }
         }
 		// port.send(response);
