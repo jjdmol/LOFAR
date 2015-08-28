@@ -700,9 +700,13 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 
 		// In the claim state station-wide changes are activated.
 		if (event.signal == CONTROL_CLAIM) {
-			itsStartingObs = theObs;
-			TRAN(StationControl::startObservation_state);
-			queueTaskEvent(event, port);
+			if (itsClaimSequence == 0) {
+				itsStartingObs = theObs;
+				TRAN(StationControl::startObservation_state);
+				queueTaskEvent(event, port);
+			} else {
+				LOG_WARN("Already went through CLAIM phase -- ignoring CONTROL_CLAIM event");
+			}
 			return (GCFEvent::HANDLED);
 //			return (GCFEvent::NEXT_STATE);
 		}
