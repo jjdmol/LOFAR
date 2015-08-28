@@ -1,7 +1,21 @@
 #!/bin/bash
+#
+# Script to start qpid daemon qpidd with CEP specific settings
+#
+# Assumes:
+# - Database will be stored in /data/qpid/.qpidd
+# - Install in /opt/qpid
+#
  
 MYID=$( id -un )
- 
+
+# QPID_DATA_DIR should be set in /etc/sysconfig/qpid (RHEL systems), 
+# otherwise set it here
+[[ $QPID_DATA_DIR ]] || QPID_DATA_DIR=/data/qpid/.qpidd
+
+# Installation dir of qpid (to find config files)
+QPID_INSTALL_DIR=/opt/qpid
+
 if [[ "$MYID" == "qpid" ]]
 then
    QPID=$(qpidd -c 2>&1 )
@@ -9,7 +23,11 @@ then
    if [ "$RETVAL" == "1" ]
    then
       echo -n "Starting QPID daemon..."
-      qpidd -d --data-dir $HOME/.qpidd --config /opt/qpid/etc/qpid/qpidd.conf --auth no --log-to-file $HOME/qpid.log
+      qpidd -d --federation-tag `hostname -f` \
+               --data-dir $QPID_DATA_DIR \
+               --config $QPID_INSTALL_DIR/etc/qpid/qpidd.conf \
+               --auth no \
+               --log-to-file $QPID_DATA_DIR/qpid.log
 
       SUCCESS=$?
       if [ "$SUCCESS" == 0 ]
