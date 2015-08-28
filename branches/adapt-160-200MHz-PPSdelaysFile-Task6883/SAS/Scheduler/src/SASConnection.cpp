@@ -2559,12 +2559,10 @@ bool SASConnection::saveStationSettings(int treeID, const StationTask &task, con
 		// TBB piggyback allowed?
         const Observation *obs = dynamic_cast<const Observation *>(&task);
         if (obs) {
-            if (diff->TBBPiggybackAllowed)
                 bResult &= setNodeValue(treeID, "LOFAR.ObsSW.Observation.ObservationControl.StationControl.tbbPiggybackAllowed",
                                         (obs->getTBBPiggybackAllowed() ? "true" : "false"));
-            if (diff->AartfaacPiggybackAllowed)
-                 bResult &= setNodeValue(treeID, "LOFAR.ObsSW.Observation.ObservationControl.StationControl.aartfaacPiggybackAllowed",
-                                         (obs->getAartfaacPiggybackAllowed() ? "true" : "false"));
+                bResult &= setNodeValue(treeID, "LOFAR.ObsSW.Observation.ObservationControl.StationControl.aartfaacPiggybackAllowed",
+                                        (obs->getAartfaacPiggybackAllowed() ? "true" : "false"));
         }
     }
 
