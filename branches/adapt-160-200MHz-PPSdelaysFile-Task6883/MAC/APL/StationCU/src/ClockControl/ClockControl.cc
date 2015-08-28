@@ -713,9 +713,14 @@ GCFEvent::TResult ClockControl::setClock_state(GCFEvent& event,
 	}
 
     case RSP_UPDCLOCK: {
-        CLKCTRLSetClockAckEvent response;
-        response.status = CLKCTRL_NO_ERR;
-        itsLastCommandClient->send(response);
+	if (itsLastCommandClient) {
+		CLKCTRLSetClockAckEvent response;
+		response.status = CLKCTRL_NO_ERR;
+		itsLastCommandClient->send(response);
+        	LOG_DEBUG("Informed client of clock update");
+	} else {
+        	LOG_WARN("Client disconnected, so could not ack clock update");
+	}
         LOG_INFO_STR ("Received clock update, going to operational state");
         TRAN(ClockControl::active_state);				// go to next state.
         return (GCFEvent::NEXT_STATE);
@@ -1213,6 +1218,10 @@ void ClockControl::_disconnectedHandler(GCFPortInterface& port)
 		TRAN (ClockControl::connect2RSP_state);
 	}
 	else {
+		if (&port == itsLastCommandClient) {
+			itsLastCommandClient = 0;
+		}
+
 		itsClientList.remove(&port);
 	}
 }
