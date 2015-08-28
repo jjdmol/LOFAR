@@ -470,7 +470,11 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 
 	case RSP_SETRCUACK: {
 		RSPSetrcuackEvent ack(e);
-		if (ack.status != RSP_Protocol::RSP_SUCCESS) {
+		if (ack.status == RSP_Protocol::RSP_BUSY) {
+			// We could be switching off the RCU during a clock switch for the next
+			// observation. In that case, we don't need to try again.
+			LOG_INFO_STR("Failed to set RCU control register: RSP is busy.");
+		} else if (ack.status != RSP_Protocol::RSP_SUCCESS) {
 			LOG_FATAL_STR("Failed to set RCU control register.");
 			exit (EXIT_FAILURE);
 		}
