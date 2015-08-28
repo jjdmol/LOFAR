@@ -6,11 +6,12 @@ class client:
     """This is an HTTP client that knows how to use the Single Sign On of Mom2. 
     It is used instead of a SOAP client, because SOAPpy doesn't support
     form handling and cookies."""
-    def __init__(self, loginUrl, url, logoutUrl):
+    def __init__(self, loginUrl, url, logoutUrl, logger = None):
         self._loginurl  = loginUrl
         self._url       = url
         self._logouturl = logoutUrl
         self._headers   = {'User-agent' : 'Mozilla/4.0 (compatible; http_login.py)'}
+        self.logger     = logger
         ## The following is a global setting!
         socket.setdefaulttimeout(3600)
 
@@ -42,9 +43,14 @@ class client:
         except Exception, e:
             raise Exception("Logging into MoM failed: " + str(e))
 
-    def _setStatus(self, exportID, status):
+    def _setStatus(self, exportID, status, message = None):
         try:
-            request  = urllib2.Request(self._url + '?exportId=' + str(exportID) + '&status=' + str(status), None, self._headers)
+            statusUrl = self._url + '?exportId=' + str(exportID) + '&status=' + str(status)
+            if message:
+              statusUrl += '&message=' + str(message)
+            if self.logger:
+              self.logger.debug("updating MoM: " + statusUrl)
+            request  = urllib2.Request(statusUrl, None, self._headers)
             response = self.opener.open(request) ## We tell what we want
             reply = response.readlines()
             if reply == ['ok']:
@@ -56,10 +62,10 @@ class client:
         else:
             return result
 
-    def _getSIP(self, Type, MomId, StorageTicket, FileName, URI, FileSize, MD5Checksum, Adler32Checksum):
+    def _getSIP(self, Type, ArchiveId, StorageTicket, FileName, URI, FileSize, MD5Checksum, Adler32Checksum):
         try:
             xmlcontent = """<?xml version="1.0" encoding="UTF-8"?>
-            <lofar:%s mom2DPId="%s" xmlns:lofar="http://www.astron.nl/MoM2-Lofar">
+            <lofar:%s archiveId="%s" xmlns:lofar="http://www.astron.nl/MoM2-Lofar">
                 <locations>
                     <location>
                         <uri>lta://%s/%s/%s</uri>
@@ -77,7 +83,7 @@ class client:
                         <value>%s</value>
                     </checksum>
                 </checksums>
-            </lofar:%s>""" % (Type, MomId, StorageTicket, FileName, URI, StorageTicket, FileSize, MD5Checksum, Adler32Checksum, Type)
+            </lofar:%s>""" % (Type, ArchiveId, StorageTicket, FileName, URI, StorageTicket, FileSize, MD5Checksum, Adler32Checksum, Type)
             
             data = urllib.urlencode({"command" : "get-sip-with-input", "xmlcontent" : xmlcontent})
             # Now get that file-like object again, remembering to mention the data.
@@ -103,10 +109,10 @@ class client:
         self._logout()
         return result
 
-    def getSIP(self, MomId, StorageTicket, FileName, URI, FileSize, MD5Checksum, Adler32Checksum):
+    def getSIP(self, ArchiveId, StorageTicket, FileName, URI, FileSize, MD5Checksum, Adler32Checksum):
         self._login()
-        #result = self._getSIP("uvDataProduct", MomId, StorageTicket, FileName, URI, FileSize, MD5Checksum, Adler32Checksum)
-        result = self._getSIP("DataProduct", MomId, StorageTicket, FileName, URI, FileSize, MD5Checksum, Adler32Checksum)
+        #result = self._getSIP("uvDataProduct", ArchiveId, StorageTicket, FileName, URI, FileSize, MD5Checksum, Adler32Checksum)
+        result = self._getSIP("DataProduct", ArchiveId, StorageTicket, FileName, URI, FileSize, MD5Checksum, Adler32Checksum)
         self._logout()
         return result
 
