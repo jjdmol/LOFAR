@@ -1,12 +1,7 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <exportjob exportID="A_10_10_87">
-        <scriptname>IngestPipeline</scriptname>
         <input name="DataProduct">L1_B0_SB0.MS</input>
         <input name="Project">test-lofar</input>
         <input name="JobId">A_10_10_87</input>
-        <input name="MomId">466</input>
-        <repository>
-                <server>webdav_lofar_repository2</server>
-                <resultdir>/mom2/test-lofar/80/ArchiveLogs</resultdir>
-        </repository>
+        <input name="ArchiveId">466</input>
 </exportjob>
