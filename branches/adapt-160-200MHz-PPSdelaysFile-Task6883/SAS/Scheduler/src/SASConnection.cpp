@@ -2501,23 +2501,11 @@ bool SASConnection::saveStationSettings(int treeID, const StationTask &task, con
             if (task.getStationClock() == clock_160Mhz) {
 				//clock mode
                 if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.clockMode","<<Clock160")) return false;
-				// channelWidth
-				if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.channelWidth", STR_CLOCK160_CHANNELWIDTH)) return false;
-				// samplesPerSecond
-				if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.samplesPerSecond", STR_CLOCK160_SAMPLESPERSECOND)) return false;
-				// subbandWidth
-				if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.subbandWidth", STR_CLOCK160_SUBBANDWIDTH)) return false;
 				// systemClock
 				if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.sampleClock", STR_CLOCK160_SAMPLECLOCK)) return false;
 			}
 			else {
                 if (!setNodeValue(treeID,"LOFAR.ObsSW.Observation.clockMode","<<Clock200")) return false;
-				// channelWidth
-				if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.channelWidth", STR_CLOCK200_CHANNELWIDTH)) return false;
-				// samplesPerSecond
-				if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.samplesPerSecond", STR_CLOCK200_SAMPLESPERSECOND)) return false;
-				// subbandWidth
-				if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.subbandWidth", STR_CLOCK200_SUBBANDWIDTH)) return false;
 				// systemClock
 				if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.sampleClock", STR_CLOCK200_SAMPLECLOCK)) return false;
 			}
@@ -2558,23 +2546,11 @@ bool SASConnection::saveStationSettings(int treeID, const StationTask &task, con
         if (task.getStationClock() == clock_160Mhz) {
 			//clock mode
             if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.clockMode","<<Clock160")) return false;
-			// channelWidth
-			if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.channelWidth", STR_CLOCK160_CHANNELWIDTH)) return false;
-			// samplesPerSecond
-			if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.samplesPerSecond", STR_CLOCK160_SAMPLESPERSECOND)) return false;
-			// subbandWidth
-			if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.subbandWidth", STR_CLOCK160_SUBBANDWIDTH)) return false;
 			// systemClock
 			if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.sampleClock", STR_CLOCK160_SAMPLECLOCK)) return false;
 		}
 		else {
             if (!setNodeValue(treeID,"LOFAR.ObsSW.Observation.clockMode","<<Clock200")) return false;
-			// channelWidth
-			if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.channelWidth", STR_CLOCK200_CHANNELWIDTH)) return false;
-			// samplesPerSecond
-			if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.samplesPerSecond", STR_CLOCK200_SAMPLESPERSECOND)) return false;
-			// subbandWidth
-			if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.subbandWidth", STR_CLOCK200_SUBBANDWIDTH)) return false;
 			// systemClock
 			if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.sampleClock", STR_CLOCK200_SAMPLECLOCK)) return false;
 		}
