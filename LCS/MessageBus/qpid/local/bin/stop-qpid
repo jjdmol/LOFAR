@@ -1,4 +1,8 @@
 #!/bin/bash
+#
+# Script to stop a running qpidd daemon. Run as user qpid
+#
+
 MYID=$( id -un )
  
 if [[ "$MYID" == "qpid" ]]
