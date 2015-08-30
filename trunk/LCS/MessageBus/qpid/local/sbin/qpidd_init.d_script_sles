@@ -36,9 +36,20 @@ prog=qpidd
 lockfile=/var/lock/subsys/$prog
 pidfile=/var/run/${prog}.pid
 
-if [ -f /etc/sysconfig/$prog ] ; then
-	. /etc/sysconfig/$prog
-fi
+[[ -r /etc/sysconfig/$prog ]] && . /etc/sysconfig/$prog
+
+. /etc/rc.status
+# Shell functions sourced from /etc/rc.status:
+#      rc_check         check and set local and overall rc status
+#      rc_status        check and set local and overall rc status
+#      rc_status -v     ditto but be verbose in local rc status
+#      rc_status -v -r  ditto and clear the local rc status
+#      rc_failed        set local and overall rc status to failed
+#      rc_reset         clear local rc status (overall remains)
+#      rc_exit          exit appropriate to overall rc status
+
+# First reset status of this service
+rc_reset
 
 # Qpid install directory. Has to be added to /etc/sysconfig/qpidd
 [[ $QPID_INSTALL_DIR ]] || QPID_INSTALL_DIR=/opt/qpid
@@ -62,25 +73,19 @@ fi
 
 start() {
         echo -n $"Starting Qpid AMQP daemon: "
-	startproc -u qpid $daemon \
+	start_daemon -u qpid $daemon \
                --data-dir $QPID_DATA_DIR --federation-tag `hostname -f` \
-               --daemon --pid-dir $QPID_DATA_DIR $QPIDD_OPTIONS
-	RETVAL=$?
-	echo
-	[ $RETVAL = 0 ] && touch $lockfile
-	if [ $RETVAL = 0 ]; then
-	    touch $pidfile
-	    chown qpid.qpid $pidfile
-	fi
-	return $RETVAL
+               $QPIDD_OPTIONS \
+              --daemon --pid-dir $QPID_DATA_DIR
+        
+        rc_status -v
 }
 
 stop() {
 	echo -n $"Stopping Qpid AMQP daemon: "
-	killproc -p ${pidfile} $prog
+	$daemon --pid-dir $QPID_DATA_DIR -q
 	RETVAL=$?
-	echo
-	[ $RETVAL = 0 ] && rm -f ${lockfile} ${pidfile}
+	rc_status -v
 }
 
 reload() {
@@ -95,24 +100,14 @@ restart() {
 
 # See how we were called.
 case "$1" in
-  start|stop|restart|reload)
+  start|stop|restart)
 	$1
 	;;
-  status)
-	status $prog
-	RETVAL=$?
-	;;
-  force-reload)
-	restart
-	;;
-  try-restart|condrestart)
-	[ -e $lockfile ] && restart || :
-	;;
   *)
-	echo 1>&2 $"Usage: $0 {start|stop|status|restart|condrestart|try-restart|force-reload}"
+	echo 1>&2 $"Usage: $0 {start|stop|restart}"
 	exit 2
 esac
 
-exit $RETVAL
+rc_exit
 
 
