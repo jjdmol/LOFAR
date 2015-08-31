@@ -182,6 +182,9 @@ void ClockControl::finish()
 //
 // _databaseEventHandler(event)
 //
+// Call ONLY from the active_state, since the code here triggers
+// transactions that will always lead to active_state.
+//
 void ClockControl::_databaseEventHandler(GCFEvent& event)
 {
 	LOG_DEBUG_STR ("_databaseEventHandler:" << eventName(event));
@@ -322,8 +325,8 @@ GCFEvent::TResult ClockControl::initial_state(GCFEvent& event,
 	break;
 
 	case DP_CHANGED:
-		_databaseEventHandler(event);
-		break;
+		LOG_INFO_STR("Postponing event " << eventName(event) << " till next state");
+		return (GCFEvent::NEXT_STATE);
 	
 	default:
 		LOG_DEBUG_STR ("initial, default");
@@ -444,8 +447,8 @@ GCFEvent::TResult ClockControl::connect2RSP_state(GCFEvent& event,
 	break;
 
 	case DP_CHANGED:
-		_databaseEventHandler(event);
-		break;
+		LOG_INFO_STR("Postponing event " << eventName(event) << " till next state");
+		return (GCFEvent::NEXT_STATE);
 	
 	default:
 		LOG_DEBUG_STR ("connect, default");
@@ -506,8 +509,8 @@ GCFEvent::TResult ClockControl::startListener_state(GCFEvent& event,
 	break;
 
 	case DP_CHANGED:
-		_databaseEventHandler(event);
-		break;
+		LOG_INFO_STR("Postponing event " << eventName(event) << " till next state");
+		return (GCFEvent::NEXT_STATE);
 	
 	default:
 		LOG_DEBUG_STR ("startListener, default");
@@ -572,9 +575,6 @@ GCFEvent::TResult ClockControl::subscribeSplitter_state(GCFEvent& event,
 		break;
 
 	case DP_CHANGED:
-		_databaseEventHandler(event);
-		break;
-	
 	case CLKCTRL_GET_CLOCK:
 	case CLKCTRL_SET_CLOCK:
 	case CLKCTRL_GET_BITMODE:
@@ -641,9 +641,6 @@ GCFEvent::TResult ClockControl::subscribeClock_state(GCFEvent& event,
 	break;
 	
 	case DP_CHANGED:
-		_databaseEventHandler(event);
-		break;
-	
 	case CLKCTRL_GET_CLOCK:
 	case CLKCTRL_SET_CLOCK:
 	case CLKCTRL_GET_BITMODE:
@@ -727,9 +724,6 @@ GCFEvent::TResult ClockControl::setClock_state(GCFEvent& event,
     }
 
 	case DP_CHANGED:
-		_databaseEventHandler(event);
-		break;
-	
 	case CLKCTRL_GET_CLOCK:
 	case CLKCTRL_SET_CLOCK:
 	case CLKCTRL_GET_BITMODE:
@@ -795,9 +789,6 @@ GCFEvent::TResult ClockControl::subscribeBitmode_state(GCFEvent& event,
 	break;
 	
 	case DP_CHANGED:
-		_databaseEventHandler(event);
-		break;
-	
 	case CLKCTRL_GET_CLOCK:
 	case CLKCTRL_SET_CLOCK:
 	case CLKCTRL_GET_BITMODE:
@@ -879,9 +870,6 @@ GCFEvent::TResult ClockControl::setBitmode_state(GCFEvent& event,
   }
 
 	case DP_CHANGED:
-		_databaseEventHandler(event);
-		break;
-	
 	case CLKCTRL_GET_CLOCK:
 	case CLKCTRL_SET_CLOCK:
 	case CLKCTRL_GET_BITMODE:
@@ -944,7 +932,7 @@ GCFEvent::TResult ClockControl::setSplitters_state(GCFEvent& event,
 			break;
 		}
 
-		LOG_INFO_STR ("Splitter are set to " << (itsSplitterRequest ? "ON" : "OFF") << ", going to operational state");
+		LOG_INFO_STR ("Splitter are set to " << (itsSplitterRequest ? "ON" : "OFF"));
 		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
 		// update our admin
 		itsSplitters.reset();
@@ -971,9 +959,6 @@ GCFEvent::TResult ClockControl::setSplitters_state(GCFEvent& event,
         return (GCFEvent::NEXT_STATE);
 
 	case DP_CHANGED:
-		_databaseEventHandler(event);
-		break;
-	
 	case CLKCTRL_GET_CLOCK:
 	case CLKCTRL_SET_CLOCK:
 	case CLKCTRL_GET_BITMODE:
