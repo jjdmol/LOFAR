@@ -34,7 +34,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <Common/Exceptions.h>
-#include <MessageBus/ToBus.h>
+#include <MessageBus/MsgBus.h>
 #include <MessageBus/Protocols/TaskFeedbackDataproducts.h>
 #include <Stream/PortBroker.h>
 #include <ApplCommon/PVSSDatapointDefs.h>

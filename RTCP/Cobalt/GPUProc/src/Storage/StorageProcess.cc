@@ -28,7 +28,7 @@
 
 #include <Common/LofarLogger.h>
 #include <Common/Thread/Thread.h>
-#include <MessageBus/ToBus.h>
+#include <MessageBus/MsgBus.h>
 #include <MessageBus/Protocols/TaskFeedbackDataproducts.h>
 #include <Stream/PortBroker.h>
 #include <CoInterface/Stream.h>

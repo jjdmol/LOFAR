@@ -27,9 +27,6 @@ import xml.dom.minidom as xml
 import xml.parsers.expat as expat
 import datetime
 
-#
-# The template for the LOFAR message format.
-#
 LOFAR_MSG_TEMPLATE = """
 <message>
    <header>
@@ -70,31 +67,89 @@ def _uuid():
 class MessageException(Exception):
     pass
 
-class XMLDoc(object):
-    def __init__(self, content):
-      try:
-        self.document = xml.parseString(content)
-      except expat.ExpatError, e:
-        #print "Could not parse XML message content: ", e, qpidMsg.content
-        raise MessageException(e)
+class MessageContent(object):
+    """
+      Describes the content of a message, which can be constructed from either a set of fields, or from
+      an existing QPID message.
+    """
+
+    def __init__(self, from_="", forUser="", summary="", protocol="", protocolVersion="", momid="", sasid="", qpidMsg=None):
+      # Add properties to get/set header fields
+      for name, element in self._property_list().iteritems():
+        self._add_property(name, element)
+
+      # Set the content from either the parameters or from the provided qpidMsg
+      if qpidMsg is None:
+        self.document = xml.parseString(LOFAR_MSG_TEMPLATE)
+
+        # Set properties provided by constructor
+        self.system          = "LOFAR"
+        self.headerVersion   = "1.0.0"
+        self.protocol        = protocol
+        self.protocolVersion = protocolVersion
+        self.from_           = from_
+        self.forUser         = forUser
+        self.summary         = summary
+        self.uuid            = _uuid()
+        self.timestamp       = _timestamp()
+        self.momid           = momid
+        self.sasid           = sasid
+      else:
+        # Set properties by provided qpidMsg
+        try:
+          # Replace literal << in the content, which is occasionally inserted by the C++
+          # code as part of the Parset ("Observation.Clock=<<Clock200")
+          self.document = xml.parseString(qpidMsg.content.replace("<<","&lt;&lt;"))
+        except expat.ExpatError, e:
+          #print "Could not parse XML message content: ", e, qpidMsg.content
+          raise MessageException(e)
+
+    def _add_property(self, name, element):
+      def getter(self):
+        return self._getXMLdata(element)
+      def setter(self, value):
+        self._setXMLdata(element, str(value))
+
+      setattr(self.__class__, name, property(getter, setter))
+
+    def _property_list(self):
+      """ List of XML elements that are exposed as properties. """
+      return { 
+        "system":          "message.header.system",
+        "headerVersion":   "message.header.version",
+        "protocol":        "message.header.protocol.name",
+        "protocolVersion": "message.header.protocol.version",
+        "from_":           "message.header.source.name",
+        "forUser":         "message.header.source.user",
+        "uuid":            "message.header.source.uuid",
+        "summary":         "message.header.source.summary",
+        "timestamp":       "message.header.source.timestamp",
+        "momid":           "message.header.ids.momid",
+        "sasid":           "message.header.ids.sasid",
+        "payload":         "message.payload",
+        "header":          "message.header",
+      }
+
+    """ API (apart from properties). """
+
+    def __repr__(self):
+      return "MessageContent(%s %s)" % (self.protocol, self.protocolVersion)
+
+    def __str__(self):
+      return "[%s] [sasid %s] %s" % (self.uuid, self.sasid, self.summary)
 
     def content(self):
-      """ Return the XML document in string form. """
+      """ Construct the literal message content. """
+
       return self.document.toxml()
 
-    def getXMLdata(self, name):
-      """ Return the value of an XML key, given by its XPath. """
-      return self._get_data(self._getXMLnode(name))
+    def qpidMsg(self):
+      """ Construct a NEW QPID message. """
 
-    def setXMLdata(self, name, data):
-      """ Set the value of an XML key, given by its XPath. """
-      return self._set_data(self._getXMLnode(name), data)
+      msg = messaging.Message(content_type="text/plain", durable=True)
+      msg.content = self.content()
 
-    def insertXML(self, parent, xmlStr):
-      """ Insert XML into the current message. """
-      doc = xml.parseString(xmlStr)
-
-      self._getXMLnode(parent).appendChild(doc.firstChild)
+      return msg
 
     """ XML support functions. See also lofarpipe/support/xmllogging.py. """
 
@@ -143,91 +198,18 @@ class XMLDoc(object):
 
       return node
 
-class MessageContent(object):
-    """
-      Describes the content of a message, which can be constructed from either a set of fields, or from
-      an existing QPID message.
-    """
+    def _getXMLdata(self, name):
+      return self._get_data(self._getXMLnode(name))
 
-    class Defaults(object):
-      system = "LOFAR"
-      headerVersion = "1.0.0"
+    def _setXMLdata(self, name, data):
+      return self._set_data(self._getXMLnode(name), data)
 
-    def __init__(self, from_="", forUser="", summary="", protocol="", protocolVersion="", momid="", sasid="", qpidMsg=None):
-      # Add properties to get/set header fields
-      for name, element in self._property_list().iteritems():
-        self._add_property(name, element)
+    def _insertXML(self, parent, xmlStr):
+      """ Insert XML into the current message. """
 
-      # Set the content from either the parameters or from the provided qpidMsg
-      if qpidMsg is None:
-        self.document = XMLDoc(LOFAR_MSG_TEMPLATE)
+      doc = xml.parseString(xmlStr)
 
-        # Set properties provided by constructor
-        self.system          = self.Defaults.system
-        self.headerVersion   = self.Defaults.headerVersion
-        self.protocol        = protocol
-        self.protocolVersion = protocolVersion
-        self.from_           = from_
-        self.forUser         = forUser
-        self.summary         = summary
-        self.uuid            = _uuid()
-        self.timestamp       = _timestamp()
-        self.momid           = momid
-        self.sasid           = sasid
-      else:
-        # Set properties by provided qpidMsg
-
-        # Replace literal << in the content, which is occasionally inserted by the C++
-        # code as part of the Parset ("Observation.Clock=<<Clock200"),
-        # if libxml++ is not used.
-        self.document = XMLDoc(qpidMsg.content.replace("<<","&lt;&lt;"))
-
-    def _add_property(self, name, element):
-      def getter(self):
-        return self.document.getXMLdata(element)
-      def setter(self, value):
-        self.document.setXMLdata(element, str(value))
-
-      setattr(self.__class__, name, property(getter, setter))
-
-    def _property_list(self):
-      """ List of XML elements that are exposed as properties. """
-      return { 
-        "system":          "message.header.system",
-        "headerVersion":   "message.header.version",
-        "protocol":        "message.header.protocol.name",
-        "protocolVersion": "message.header.protocol.version",
-        "from_":           "message.header.source.name",
-        "forUser":         "message.header.source.user",
-        "uuid":            "message.header.source.uuid",
-        "summary":         "message.header.source.summary",
-        "timestamp":       "message.header.source.timestamp",
-        "momid":           "message.header.ids.momid",
-        "sasid":           "message.header.ids.sasid",
-        "payload":         "message.payload",
-        "header":          "message.header",
-      }
-
-    """ API (apart from properties). """
-
-    def __repr__(self):
-      return "MessageContent(%s %s)" % (self.protocol, self.protocolVersion)
-
-    def __str__(self):
-      return "[%s] [sasid %s] %s" % (self.uuid, self.sasid, self.summary)
-
-    def content(self):
-      """ Construct the literal message content. """
-
-      return self.document.content()
-
-    def qpidMsg(self):
-      """ Construct a NEW QPID message. """
-
-      msg = messaging.Message(content_type="text/plain", durable=True)
-      msg.content = self.content()
-
-      return msg
+      self._getXMLnode(parent).appendChild(doc.firstChild)
 
 
 class Message(object):
