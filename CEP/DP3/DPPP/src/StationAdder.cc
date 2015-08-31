@@ -330,8 +330,6 @@ namespace LOFAR {
       Double*  uvwPtr  = itsBuf.getUVW().data() + uvws.size();
       Bool*    frfPtr  = itsBuf.getFullResFlags().data() + frFlags.size();
       vector<uint> npoints(nrcc);
-      vector<Complex> dataFlg(nrcc);
-      vector<Float>  wghtFlg(nrcc);
       // Loop over all new baselines.
       for (uint i=0; i<itsBufRows.size(); ++i) {
         // Clear the data for the new baseline.
@@ -339,14 +337,12 @@ namespace LOFAR {
           dataPtr[k] = Complex();
           wghtPtr[k] = 0.;
           npoints[k] = 0;
-          dataFlg[k] = Complex();
-          wghtFlg[k] = 0.;
         }
         for (uint k=0; k<nrfr; ++k) {
           frfPtr[k] = true;
         }
         for (uint k=0; k<3; ++k) {
-          uvwPtr[k] = 0.;
+          uvwPtr[k]  = 0.;
         }
         double uvwWghtSum = 0.;
         // Sum the baselines forming the new baselines.
@@ -373,15 +369,10 @@ namespace LOFAR {
                                       blnr*3);
           // Add the data, uvw, and weights if not flagged.
           // Write 4 loops to avoid having to test inside the loop.
-          // Count the flagged points separately, so it can be used
-          // if too many points are flagged.
           if (useConj) {
             if (itsUseWeight) {
               for (uint k=0; k<nrcc; ++k) {
-                if (inFlagPtr[k]) {
-                  dataFlg[k] += conj(inDataPtr[k]) * inWghtPtr[k];
-                  wghtFlg[k] += inWghtPtr[k];
-                } else {
+                if (!inFlagPtr[k]) {
                   npoints[k]++;
                   dataPtr[k] += conj(inDataPtr[k]) * inWghtPtr[k];
                   wghtPtr[k] += inWghtPtr[k];
@@ -393,10 +384,7 @@ namespace LOFAR {
               }
             } else {
               for (uint k=0; k<nrcc; ++k) {
-                if (inFlagPtr[k]) {
-                  dataFlg[k] += conj(inDataPtr[k]);
-                  wghtFlg[k] += 1.;
-                } else {
+                if (!inFlagPtr[k]) {
                   npoints[k]++;
                   dataPtr[k] += conj(inDataPtr[k]);
                   wghtPtr[k] += 1.;
@@ -410,10 +398,7 @@ namespace LOFAR {
           } else {
             if (itsUseWeight) {
               for (uint k=0; k<nrcc; ++k) {
-                if (inFlagPtr[k]) {
-                  dataFlg[k] += inDataPtr[k] * inWghtPtr[k];
-                  wghtFlg[k] += inWghtPtr[k];
-                } else {
+                if (!inFlagPtr[k]) {
                   npoints[k]++;
                   dataPtr[k] += inDataPtr[k] * inWghtPtr[k];
                   wghtPtr[k] += inWghtPtr[k];
@@ -425,10 +410,7 @@ namespace LOFAR {
               }
             } else {
               for (uint k=0; k<nrcc; ++k) {
-                if (inFlagPtr[k]) {
-                  dataFlg[k] += inDataPtr[k];
-                  wghtFlg[k] += 1.;
-                } else {
+                if (!inFlagPtr[k]) {
                   npoints[k]++;
                   dataPtr[k] += inDataPtr[k];
                   wghtPtr[k] += 1.;
@@ -447,21 +429,18 @@ namespace LOFAR {
           }
         }
         // Set the resulting flags. Average if needed.
-        // Set flag if too few unflagged data points; use flagged data too.
         for (uint k=0; k<nrcc; ++k) {
-          if (wghtPtr[k] == 0  ||  npoints[k] < itsMinNPoint) {
+          if (wghtPtr[k] == 0) {
             flagPtr[k] = true;
-            dataPtr[k] += dataFlg[k];
-            wghtPtr[k] += wghtFlg[k];
           } else {
-            flagPtr[k] = false;
-          }
-          if (itsDoAverage) {
-            dataPtr[k] /= wghtPtr[k];
+            flagPtr[k] = (npoints[k] < itsMinNPoint);
+            if (itsDoAverage) {
+              dataPtr[k] /= wghtPtr[k];
+            }
           }
         }
         // Average or calculate the UVW coordinate of the new station.
-        if (itsDoAverage  &&  uvwWghtSum != 0) {
+        if (itsDoAverage) {
           for (int ui=0; ui<3; ++ui) {
             uvwPtr[ui] /= uvwWghtSum;
           }

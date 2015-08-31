@@ -437,6 +437,8 @@ goto_level()
               if [ $status == 1 ]; then 
        	        echo "set rcumode to 0 (power save)"
 	        rspctl --rcumode=0 1>/dev/null 2>&1
+                # Wait for setting to take effect before killing RSPDriver
+                sleep 2 
 	      else
 		echo "Beware: NOT going to rcumode 0 as images are still being initialized"
 	      fi
@@ -584,8 +586,8 @@ print_level()
 
 show_lofar_version()
 {
-        if [ -e $LOFARROOT/Version.txt ]; then
-          version=`cat $LOFARROOT/Version.txt`
+        if [ -e /opt/lofar/Version.txt ]; then
+          version=`cat /opt/lofar/Version.txt`
 	  if [ "$1" = "v" ]; then  
             echo -n "Current LOFAR version is "
 	  fi
