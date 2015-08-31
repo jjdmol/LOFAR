@@ -713,14 +713,14 @@ GCFEvent::TResult ClockControl::setClock_state(GCFEvent& event,
 	}
 
     case RSP_UPDCLOCK: {
-	if (itsLastCommandClient) {
-		CLKCTRLSetClockAckEvent response;
-		response.status = CLKCTRL_NO_ERR;
-		itsLastCommandClient->send(response);
+	    if (itsLastCommandClient) {
+		    CLKCTRLSetClockAckEvent response;
+		    response.status = CLKCTRL_NO_ERR;
+		    itsLastCommandClient->send(response);
+            itsLastCommandClient = 0;
         	LOG_DEBUG("Informed client of clock update");
-	} else {
-        	LOG_WARN("Client disconnected, so could not ack clock update");
-	}
+	    }
+
         LOG_INFO_STR ("Received clock update, going to operational state");
         TRAN(ClockControl::active_state);				// go to next state.
         return (GCFEvent::NEXT_STATE);
@@ -855,12 +855,28 @@ GCFEvent::TResult ClockControl::setBitmode_state(GCFEvent& event,
 			itsTimerPort->setTimer(5.0);
 			break;
 		}
+
 		LOG_INFO_STR ("StationBitmode is set to " << itsBitmode << ", going to operational state");
 		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
 		itsOwnPropertySet->setValue(PN_CLC_ACTUAL_BITMODE,GCFPVInteger(itsBitmode));
-		TRAN(ClockControl::active_state);				// go to next state.
 		break;
 	}
+
+  case RSP_UPDBITMODE:
+  {
+	    if (itsLastCommandClient) {
+		    CLKCTRLSetBitmodeAckEvent	response;
+		    response.status = CLKCTRL_NO_ERR;
+		    itsLastCommandClient->send(response);
+            itsLastCommandClient = 0;
+        	LOG_DEBUG("Informed client of bitmode update");
+	    }
+
+        LOG_INFO_STR ("Received bitmode update, going to operational state");
+
+		TRAN(ClockControl::active_state);				// go to next state.
+		return (GCFEvent::NEXT_STATE);
+  }
 
 	case DP_CHANGED:
 		_databaseEventHandler(event);
@@ -873,7 +889,6 @@ GCFEvent::TResult ClockControl::setBitmode_state(GCFEvent& event,
 	case CLKCTRL_GET_SPLITTERS:
 	case CLKCTRL_SET_SPLITTERS:
 	case RSP_UPDCLOCK:
-    case RSP_UPDBITMODE:
 	case RSP_UPDSPLITTER:
 		LOG_INFO_STR("Postponing event " << eventName(event) << " till next state");
 		return (GCFEvent::NEXT_STATE);
@@ -928,6 +943,7 @@ GCFEvent::TResult ClockControl::setSplitters_state(GCFEvent& event,
 			itsTimerPort->setTimer(5.0);
 			break;
 		}
+
 		LOG_INFO_STR ("Splitter are set to " << (itsSplitterRequest ? "ON" : "OFF") << ", going to operational state");
 		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
 		// update our admin
@@ -937,9 +953,22 @@ GCFEvent::TResult ClockControl::setSplitters_state(GCFEvent& event,
 				itsSplitters.set(i);
 			}
 		}
-		TRAN(ClockControl::active_state);				// handle RSP_UPDSPLITTER in next state.
 		break;
 	}
+
+	case RSP_UPDSPLITTER:
+	    if (itsLastCommandClient) {
+            CLKCTRLSetSplittersAckEvent	response;
+            response.status = CLKCTRL_NO_ERR;
+            itsLastCommandClient->send(response);
+            itsLastCommandClient = 0;
+        	LOG_DEBUG("Informed client of splitter update");
+        }
+
+        LOG_INFO_STR ("Received splitter update, going to operational state");
+
+		TRAN(ClockControl::active_state);				// handle RSP_UPDSPLITTER in next state.
+        return (GCFEvent::NEXT_STATE);
 
 	case DP_CHANGED:
 		_databaseEventHandler(event);
@@ -952,7 +981,6 @@ GCFEvent::TResult ClockControl::setSplitters_state(GCFEvent& event,
 	case CLKCTRL_GET_SPLITTERS:
 	case CLKCTRL_SET_SPLITTERS:
 	case RSP_UPDCLOCK:
-	case RSP_UPDSPLITTER:
     case RSP_UPDBITMODE:
 		LOG_INFO_STR("Postponing event " << eventName(event) << " till next state");
 		return (GCFEvent::NEXT_STATE);
@@ -1121,16 +1149,17 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 
 		if (request.clock != 160 && request.clock != 200) {
 			LOG_ERROR_STR("Received request to change the clock to invalid value " << request.clock);
+
 			response.status = CLKCTRL_CLOCKFREQ_ERR;
             port.send(response);
 		} else {
 		    LOG_INFO_STR("Received request to change the clock to " << request.clock << " MHz.");
-		    response.status = CLKCTRL_NO_ERR;
-
 		    itsOwnPropertySet->setValue(PN_CLC_REQUESTED_CLOCK,GCFPVInteger(request.clock));
 
             if (itsClock == request.clock) {
 		        LOG_INFO_STR("Clock was already set to " << itsClock << ".");
+
+		        response.status = CLKCTRL_NO_ERR;
                 port.send(response);
             } else {
 		        itsClock = request.clock;
@@ -1151,29 +1180,32 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 
 	case CLKCTRL_SET_BITMODE:	{
 		CLKCTRLSetBitmodeEvent		request(event);
-		CLKCTRLSetBitmodeAckEvent	response;
+	    CLKCTRLSetBitmodeAckEvent	response;
 
 		if (request.bits_per_sample != 16 && request.bits_per_sample != 8 && request.bits_per_sample != 4) {
 			LOG_ERROR_STR("Received request to change the bitmode to invalid value " << request.bits_per_sample);
+
 			response.status = CLKCTRL_INVALIDBITMODE_ERR;
+		    port.send(response);
 		} else if (!bitmodeSupported(request.bits_per_sample, itsBitmodeVersion)) {
 			LOG_ERROR_STR("Received request to change the bitmode to unsupported value " << request.bits_per_sample << " (supported is " << bitmodeVersionString(itsBitmodeVersion) << ")");
 			response.status = CLKCTRL_INVALIDBITMODE_ERR;
+		    port.send(response);
         } else {
 		    LOG_INFO_STR("Received request to change the bitmode to " << request.bits_per_sample << " bit.");
-		    response.status = CLKCTRL_NO_ERR;
-
 		    itsOwnPropertySet->setValue(PN_CLC_REQUESTED_BITMODE,GCFPVInteger(request.bits_per_sample));
 
             if (itsBitmode == request.bits_per_sample) {
 		        LOG_INFO_STR("Bitmode was already set to " << itsBitmode << ".");
+
+                response.status = CLKCTRL_NO_ERR;
+                port.send(response);
             } else {
 		        itsBitmode = request.bits_per_sample;
 		        TRAN(ClockControl::setBitmode_state);
+                itsLastCommandClient = &port;
             }
         }
-
-		port.send(response);
 	}
 	break;
 
@@ -1187,12 +1219,10 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 	case CLKCTRL_SET_SPLITTERS: {
 		CLKCTRLSetSplittersEvent		request(event);
 		LOG_INFO_STR("Received request to switch the splitters " << (request.splittersOn ? "ON" : "OFF"));
+
 		itsSplitterRequest = request.splittersOn;
 		TRAN (ClockControl::setSplitters_state);
-
-		CLKCTRLSetSplittersAckEvent		response;
-		response.status = CLKCTRL_NO_ERR;
-		port.send(response);
+        itsLastCommandClient = &port;
 	}
 	break;
 	
