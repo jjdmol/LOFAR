@@ -1,0 +1,29 @@
+#!/bin/bash
+#
+# addqueue [-f|-force] <queuename> [hostname]
+# Delete the queue <queuename> from the local broker or the broker at [hostname].
+#
+
+if (( $# < 1 )) || [[ "$1" == "-?" ]] || [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]] 
+then
+   myname=$( echo $0 | sed "s;.*/;;g" )
+   echo "Usage "$myname" [-f|-force] <queuename> [hostname]"
+   echo "Delete the queue <queuename> from the local broker or the broker at [hostname]."
+else
+  forceme=""
+  if [[ "$1" == "-f" ]] || [[ "$1" == "-force" ]]
+  then 
+     forceme="--force"
+     shift 1
+  fi 
+
+  queuename=$1
+  remote=`hostname`
+  if [[ $# > 1 ]]
+  then
+     remote=$2
+  fi
+  
+  qpid-config -a $remote del queue $1 $forceme
+fi
+
