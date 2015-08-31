@@ -43,7 +43,7 @@ class job_group():
     done_files   = []
     failed_files = []
     if self.Type == 'MoM':
-      Dir = '/A_%s/' % self.Id  
+      Dir = '/A_%s/' % self.Id
     else: ## tier0-ingest
       Dir = '/B_%s/' % self.Id
     if os.path.isdir(donedir + Dir):
@@ -78,14 +78,14 @@ class job_group():
       self.retry[job['ObservationId']]     = 0
       self.failed[job['ObservationId']]    = 0
       self.done[job['ObservationId']]      = 0
- 
+
   def update_file_type(self, fileType):
     if fileType == corr_type: self.corr     += 1
     if fileType == bf_type:   self.bf       += 1
     if fileType == img_type: self.img       += 1
-    if fileType == unspec_type: self.unspec += 1      
-    if fileType == pulp_type: self.pulp     += 1      
- 
+    if fileType == unspec_type: self.unspec += 1
+    if fileType == pulp_type: self.pulp     += 1
+
   def update_job(self, job, old_status, new_status, fileType):
     self.jobs[job['ExportID']] = job
     if old_status == JobScheduled:
@@ -153,11 +153,14 @@ class job_group():
         c = db.cursor()
         c.execute("SELECT * from export_jobs_advanced2 where export_mom2id = %i;" % (self.Id))
         db_job = c.fetchone()
-        ## id, export_mom2id, exportname, starter, starttime, description, status, updatetime, projectname, location
-        #'561859', '577442', 'LOTAAS-2015-08-18', 'schaap', '2015-08-25 08:02:44', 'Export to LTA', 'finished', '2015-08-25 12:21:36', 'LC4_030', 'Lofar Storage (SARA)'
-        self.job_info = {'id': db_job[1], 'start_time': db_job[4], 'update_time': db_job[7],
-                         'user': db_job[3].rjust(8), 'status': db_job[6], 'name': db_job[2].rjust(9),
-                         'project': db_job[8], 'ltalocation': db_job[9]}
+        if db_job:
+          ## id, export_mom2id, exportname, starter, starttime, description, status, updatetime, projectname, location
+          #'561859', '577442', 'LOTAAS-2015-08-18', 'schaap', '2015-08-25 08:02:44', 'Export to LTA', 'finished', '2015-08-25 12:21:36', 'LC4_030', 'Lofar Storage (SARA)'
+          self.job_info = {'id': db_job[1], 'start_time': db_job[4], 'update_time': db_job[7],
+                          'user': db_job[3].rjust(8), 'status': db_job[6], 'name': db_job[2].rjust(9),
+                          'project': db_job[8], 'ltalocation': db_job[9]}
+        else:
+          self.logger.warning('Could not find result for exportjob %i in momdb' % str(self.Id))
       except Exception as e:
         self.logger.warning('Caught an exception trying to talk to the Mom database: %s' % str(e))
     else:
@@ -178,7 +181,7 @@ class job_group():
         if k == 'Total': continue
         message += "L%(ObservationId)s: %(count)i\n" % {'ObservationId': k, 'count': v}
         message += "\n"
-    else: 
+    else:
       message = ""
     return message
 
@@ -249,7 +252,7 @@ Total Failed: %(failed)i""" % {'done': self.done['Total'], 'corr': self.corr, 'b
     os.system('echo "%s"|mailx -s "Ingest job of %s, %s(%i) has ended" ' % (message, user, job_name, self.Id) + self.mailCommand)
     self.logger.info('job_group %i sent an email to %s' % (self.Id, self.mailCommand))
 
-  
+
 ## Stand alone execution code ------------------------------------------
 if __name__ == '__main__':
 
