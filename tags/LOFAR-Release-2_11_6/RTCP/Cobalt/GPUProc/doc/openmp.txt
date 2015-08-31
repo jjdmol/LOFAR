@@ -1,0 +1,32 @@
+---------------------------
+OpenMP usage in Cobalt
+---------------------------
+
+Cobalt makes extensive use of OpenMP to parallellise tasks on the CPU. OpenMP makes parallellisation easy by keeping the control flow in the local scope, and by allowing easy information sharing between parent and child tasks. To keep control of the run time and resource usage (and sometimes, correctness), we do however specify the exact parallellism we desire or require for all "omp parallel" blocks using the "num_threads" option, f.e.:
+
+#pragma omp parallel sections num_threads(2)
+{
+  #pragma omp section
+  foo();
+
+  #pragma omp section
+  bar();
+}
+
+The above example ensures us that foo() and bar() will run in parallel, forcing OpenMP to create enough threads to do so. We also nest the above construct across our code, directly or indirectly, and thus need to tell OpenMP to allow this at the start of each program:
+
+#include <omp.h>
+
+..
+omp_set_nested(true);
+...
+
+---------------------------
+Pthread usage in Cobalt
+---------------------------
+
+OpenMP allows parallellisation within the local scope, but is less suited to accomodate background tasks. For threads that need to run in the background, we use the pthreads library, wrapped in LCS/Common/Thread/Thread.h. Examples in Cobalt include:
+
+1. Periodic system health checks.
+2. Control threads with external processes.
+
