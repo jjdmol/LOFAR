@@ -248,6 +248,10 @@ def print_info(msg, keyvalue, msg_info):
             info.append('TBB-version')    
         if 'TM' in checks:
             info.append('TBB-memory')
+        if 'SPU' in checks:
+            info.append('SPU-check')    
+        if 'RBV' in checks:
+            info.append('RSP-voltage')        
         if len(info):         
             print "-- Checks done      : %s" % string.join(info, ', ')
         info = []

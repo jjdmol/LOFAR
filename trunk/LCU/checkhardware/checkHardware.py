@@ -33,7 +33,9 @@ info = '''    ------------------------------------------------------------------
     
     -rv               : RSP version check, always done
     -tv               : TBB version check, always done
-    -spu              : RSP spu voltage check
+    
+    -rbc              : RSP board check, voltage and temperature
+    -spu              : SPU voltage check
     -tm               : TBB memmory check
     
     example   : ./checkHardware.py -s5 -n5=180
@@ -44,7 +46,7 @@ import os
 import sys
 import traceback
 
-check_version = '0615'
+check_version = '0815'
 
 mainPath = r'/opt/stationtest'
 libPath  = os.path.join(mainPath, 'lib')
@@ -80,7 +82,7 @@ rcu_m12_keys  = rcu_m1_keys + rcu_m2_keys
 rcu_m34_keys  = rcu_m3_keys + rcu_m4_keys
 rcu_m567_keys = rcu_m5_keys + rcu_m6_keys + rcu_m7_keys
 
-rsp_keys     = ('RV','SPU') + rcu_keys + rcu_m12_keys + rcu_m34_keys + rcu_m567_keys
+rsp_keys     = ('RV','SPU','RBC') + rcu_keys + rcu_m12_keys + rcu_m34_keys + rcu_m567_keys
 tbb_keys     = ('TV','TM')
 control_keys = ('R','START','STOP')
 all_keys     = control_keys + rsp_keys + tbb_keys
@@ -88,10 +90,10 @@ rsp_check    = False
 tbb_check    = False
 
 args = dict()
-# next checks are always done
+
+# version checks are always done
 args['RV'] = '-'
 args['TV'] = '-'
-#args['SPU'] = '-'
 
 
 def printHelp():
@@ -137,7 +139,9 @@ def getTestInfo(key=''):
     if key in 'RV':
         return 'RSP Version check'
     if key in 'SPU':
-        return 'RSP SPU check'    
+        return 'SPU check'
+    if key in 'RBC':
+        return 'RSP board check'    
     if key in 'TV':
         return 'TBB Version check'
     if key in 'TM':
@@ -457,8 +461,6 @@ def main():
                 if rsp_ready:
                     if args.has_key('RV'):
                         rsp.checkVersions(conf.getStr('bp-version'), conf.getStr('ap-version'))
-                    
-                    
                         
                     resetRSPsettings()
     
@@ -482,6 +484,9 @@ def main():
                             
                             if args.has_key('SPU'):
                                 spu.checkStatus()
+                            
+                            if args.has_key('RBC'):
+                                rsp.checkBoard()
 
                             # check if mode 1,2 is available on this station
                             if StID in CoreStations or StID in RemoteStations:
@@ -496,8 +501,6 @@ def main():
                                     
                                     if 'RCU%d' % mode in args or 'D%d' % mode in args:
                                        lbl.checkDown(mode=mode, subband=conf.getInt('lbl-test-sb',301))
-                                                          
-                                    
                                     
                                     if 'RCU%d' % mode in args or 'O%d' % mode in args:
                                         lbl.checkOscillation(mode=mode)

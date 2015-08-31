@@ -32,6 +32,8 @@
 #include <MSLofar/MSElementFailureColumns.h>
 #include <Common/LofarLogger.h>
 
+#include <ms/MeasurementSets/MSSpectralWindow.h>
+#include <ms/MeasurementSets/MSSpWindowColumns.h>
 #include <tables/Tables/SetupNewTab.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/OS/Timer.h>
@@ -65,7 +67,7 @@ void openMS()
   timer.show("open  ");
 }
 
-void fillMS()
+void fillMS (Bool removeMeasKeys=False)
 {
   MSLofar ms("tMSLofar_tmp.ms", Table::Update);
   MSLofarAntennaColumns ant(ms.antenna());
@@ -133,6 +135,11 @@ void fillMS()
   ms.antennaField().addRow();
 
   ms.elementFailure().addRow();
+
+  if (removeMeasKeys) {
+    MSLofar::removeMeasKeys (ms.spectralWindow(), "REF_FREQUENCY");
+    MSLofar::removeMeasKeys (ms.spectralWindow(), "CHAN_FREQ");
+  }
 }
 
 void checkMS (const MSLofar& ms)
@@ -143,6 +150,15 @@ void checkMS (const MSLofar& ms)
   ROMSStationColumns stat(ms.station());
   ROMSAntennaFieldColumns antFld(ms.antennaField());
   ROMSElementFailureColumns fail(ms.elementFailure());
+  // Check the spectral window measure columns can be constructed.
+  {
+    MSSpectralWindow spw(ms.spectralWindow());
+    ROMSSpWindowColumns spwcols(spw);
+    ROArrayMeasColumn<MFrequency> cf(spwcols.chanFreqMeas());
+    ASSERT (! cf.isNull());
+    ROScalarMeasColumn<MFrequency> rf(spwcols.refFrequencyMeas());
+    ASSERT (! rf.isNull());
+  }
   // Check data in LOFAR specific subtables.
   ASSERT (ant.name()(0) == "ant1");
   ASSERT (ant.stationId()(0) == 1);
@@ -230,7 +246,7 @@ int main()
     // Create for a SUN direction.
     createMS (MDirection::SUN);
     openMS();
-    fillMS();
+    fillMS (True);
     checkMS (MSLofar("tMSLofar_tmp.ms"));
   } catch (std::exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
