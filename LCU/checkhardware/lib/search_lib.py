@@ -335,12 +335,12 @@ def search_summator_noise(data, pol, min_peak):
                     if sb_diff in (3,4):
                         if abs(sb_val_diff) < 2.0:
                             sn_peaks += 1
-                        elif abs(sb_val_diff) > 5.0:
+                        elif sn_peaks < 6 and abs(sb_val_diff) > 3.0:
                             sn_peaks = 0
                     if sb_diff in (6,7):
                         if abs(sb_val_diff) < 2.0:
                             cr_peaks += 1
-                        elif abs(sb_val_diff) > 5.0:
+                        elif cr_peaks < 6 and  abs(sb_val_diff) > 3.0:
                             cr_peaks = 0
                     last_sb     = sb
                     last_sb_val = sb_val
