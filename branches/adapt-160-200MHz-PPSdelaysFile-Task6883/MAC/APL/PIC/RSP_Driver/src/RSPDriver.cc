@@ -220,9 +220,6 @@ RSPDriver::RSPDriver(string name) :
 	RCUCables		cables("Attenuation.conf", "CableDelays.conf");
 	CableSettings::createInstance(cables);
 
-	// LOG_DEBUG("Trying to load delay settings for synchronising the PPS between the subracks");
-    // readPPSdelaySettings();
-
 	int mode = GET_CONFIG("RSPDriver.SYNC_MODE", i);
 	if (mode < SYNC_SOFTWARE || mode > SYNC_PPS) {
 		LOG_FATAL_STR("Invalid SYNC_MODE: " << mode);
@@ -286,54 +283,6 @@ RSPDriver::~RSPDriver()
 {
 	delete [] m_boardPorts;
 }
-
-/*
-//
-// readPPSdelaySettings()
-//
-void RSPDriver::readPPSdelaySettings()
-{
-	ConfigLocator	CL;
-	string	filename = (CL.locate(GET_CONFIG_STRING("RSPDriver.PPSdelayFile160")));
-	LOG_DEBUG_STR("Trying to load the PPS delay settings for 160 MHz from file: " << filename);
-
-	// setup default values first
-	int	nrRspBoards = StationSettings::instance()->nrRspBoards();
-	itsPPSsyncDelays.resize(nrRspBoards * NR_BLPS_PER_RSPBOARD);
-	itsPPSsyncDelays = 0;
-
-	ifstream	ppsFile;
-	ppsFile.open(filename.c_str());
-	if (!ppsFile.good()) {
-		ppsFile.close();
-		LOG_WARN_STR("File " << filename << " could not be opened, cannot synchronise PPS pulses");
-		return;
-	}
-
-	// Skip comment lines
-	string	line;
-	getline(ppsFile, line);
-	while (line != "" && ppsFile.peek() == '#') {
-		getline(ppsFile, line);
-	}
-
-	// read values
-	blitz::Array<int, 1>	delayValues;
-	ppsFile >> delayValues;
-	ppsFile.close();
-
-	// Check number if values read in
-	if (delayValues.extent(firstDim) == nrRspBoards * NR_BLPS_PER_RSPBOARD) {
-		itsPPSsyncDelays = delayValues;
-	}
-	else {
-		LOG_ERROR_STR("File " << filename << " contains " << delayValues.extent(firstDim)
-					  << " values, expected " << nrRspBoards * NR_BLPS_PER_RSPBOARD 
-					  << " values, WILL NOT USE THEM!");
-	}
-	LOG_INFO_STR("PPSsyncDelays: " << itsPPSsyncDelays);
-}
-*/
 
 // ------------------------------ Boardpool related commands ------------------------------
 //
