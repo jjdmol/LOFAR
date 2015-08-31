@@ -27,6 +27,7 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <blitz/array.h>
 
+#include "Sequencer.h"
 #include "StationSettings.h"
 #include "UpdClocksCmd.h"
 
@@ -63,15 +64,19 @@ void UpdClocksCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
 
 void UpdClocksCmd::complete(CacheBuffer& cache)
 {
+  if (Sequencer::getInstance().isActive()) {
+    return;
+  }
+      
   if (cache.getClock() != m_current_clock) {
-
+  
     RSPUpdclockEvent ack;
     
     ack.timestamp = getTimestamp();
     ack.status = RSP_SUCCESS;
     ack.handle = (memptr_t)this; // opaque pointer used to refer to the subscription
     ack.clock = cache.getClock();
-
+    
     getPort()->send(ack);
   }
 

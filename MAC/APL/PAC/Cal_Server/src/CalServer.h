@@ -29,6 +29,7 @@
 #include <Common/lofar_string.h>
 #include <APL/CAL_Protocol/ACC.h>
 #include <APL/CAL_Protocol/SubArray.h>
+#include <APL/RSP_Protocol/RCUSettings.h>
 #include "Source.h"
 #include "DipoleModel.h"
 #include "SubArrays.h"
@@ -42,6 +43,7 @@ namespace LOFAR {
   using GCF::TM::GCFTCPPort;
   using GCF::TM::GCFPortInterface;
   using GCF::TM::GCFTimerPort;
+  
   namespace CAL {
 
 // forward declarations
@@ -69,7 +71,7 @@ public:
 	void remove_client(GCFPortInterface* port);
 
 	// increment RCU usagecounters and enable newly used RCUs
-	void _enableRCUs(SubArray*	subarray, int delay);
+	void _enableRCUs(SubArray*	subarray, RSP_Protocol::RCUSettings rcu_settings, int delay);
 
 	// decrement RCU usagecounters and disable unused RCUs
 	void _disableRCUs(SubArray*	subarray);

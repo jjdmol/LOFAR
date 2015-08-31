@@ -74,6 +74,7 @@ namespace LOFAR {
       static const int PROTOCOL_SIZE         = 320;
       static const int RESULT_SIZE           = 115;
 
+      static const int PROTOCOL_WAIT_OFFSET  = 43; // offset of wait settings in i2c_protocol
       static const int PROTOCOL_DELAY_OFFSET = 10; // offset of delay settings in i2c_protocol
       static const int RESULT_DELAY_OFFSET   = 6;  // offset of delay settings in i2c_result
       static const int RESULT_DELAY_STRIDE   = 7;  // nof bytes to next pair of X,Y delays

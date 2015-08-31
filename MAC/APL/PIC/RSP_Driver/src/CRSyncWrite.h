@@ -37,7 +37,7 @@ class CRSyncWrite : public SyncAction
 {
 public:
 	// Constructors for a CRSyncWrite object.
-	CRSyncWrite(GCFPortInterface& board_port, int board_id, blitz::Array<int, 1>);
+	CRSyncWrite(GCFPortInterface& board_port, int board_id);
 
 	// Destructor for CRSyncWrite.
 	virtual ~CRSyncWrite();

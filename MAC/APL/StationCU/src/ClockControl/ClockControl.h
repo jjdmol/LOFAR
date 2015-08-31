@@ -117,6 +117,8 @@ private:
 
 	GCFTCPPort*				itsCommandPort;
 	list<GCFPortInterface*>	itsClientList;
+    
+    GCFPortInterface*       itsLastCommandClient;
 
 	// ParameterSet variables
 	string					itsTreePrefix;
