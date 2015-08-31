@@ -9,7 +9,7 @@ import os
 import numpy as np
 import logging
 
-test_version = '0615'
+test_version = '0815'
 
 logger = None
 def init_test_lib():
@@ -37,7 +37,8 @@ class cSPU:
         # [0] = no-load,  [1] = full-load
         
         noload = []
-        fullload = []
+        fullload_3 = []
+        fullload_5 = []
         logger.debug("check spu no load")
         answer = rspctl('--spustatus')
 
@@ -57,7 +58,20 @@ class cSPU:
                                 (sr, float(li[1]), float(li[2]), float(li[3]), float(li[4]), self.db.spu[sr].temp))
 
             # turn on all hbas
-            logger.debug("check spu full load")
+            logger.debug("check spu full load mode 3")
+            rsp_rcu_mode(3, self.db.lbh.selectList())
+            answer = rspctl('--spustatus')
+            infolines = answer.splitlines()
+            for line in infolines:
+                li = line.split("|")
+                if li[0].strip().isdigit():
+                    sr = int(li[0].strip())
+                    fullload_3.append([sr, float(li[1]), float(li[2]), float(li[3]), float(li[4])])
+                    logger.debug("Subrack %d voltages: rcu=%3.1f  lba=%3.1f  hba=%3.1f  spu=%3.1f  temp: %3.1f" %\
+                                (sr, float(li[1]), float(li[2]), float(li[3]), float(li[4]), self.db.spu[sr].temp))
+
+            # turn on all hbas
+            logger.debug("check spu full load mode 5")
             rsp_rcu_mode(5, self.db.hba.selectList())
             answer = rspctl('--spustatus')
             infolines = answer.splitlines()
@@ -65,27 +79,27 @@ class cSPU:
                 li = line.split("|")
                 if li[0].strip().isdigit():
                     sr = int(li[0].strip())
-                    fullload.append([sr, float(li[1]), float(li[2]), float(li[3]), float(li[4])])
+                    fullload_5.append([sr, float(li[1]), float(li[2]), float(li[3]), float(li[4])])
                     logger.debug("Subrack %d voltages: rcu=%3.1f  lba=%3.1f  hba=%3.1f  spu=%3.1f  temp: %3.1f" %\
                                 (sr, float(li[1]), float(li[2]), float(li[3]), float(li[4]), self.db.spu[sr].temp))
-
-            
+                                
             for sr in range(self.db.nr_spu):
-                # calculate mean of nload, fullload
-                self.db.spu[sr].rcu_5_0V = (noload[sr][1] + fullload[sr][1]) / 2.0
-                self.db.spu[sr].lba_8_0V = (noload[sr][2] + fullload[sr][2]) / 2.0
-                self.db.spu[sr].hba_48V  = (noload[sr][3] + fullload[sr][3]) / 2.0
-                self.db.spu[sr].spu_3_3V = (noload[sr][4] + fullload[sr][4]) / 2.0
-                if (abs(4.7 - self.db.spu[sr].rcu_5_0V) > 0.2):
+                # calculate mean of noload, fullload_3, fullload_5
+                self.db.spu[sr].rcu_5_0V = (noload[sr][1] + fullload_3[sr][1] + fullload_5[sr][1]) / 3.0
+                self.db.spu[sr].lba_8_0V = (noload[sr][2] + fullload_3[sr][2] + fullload_5[sr][2]) / 3.0
+                self.db.spu[sr].hba_48V  = (noload[sr][3] + fullload_3[sr][3] + fullload_5[sr][3]) / 3.0
+                self.db.spu[sr].spu_3_3V = (noload[sr][4] + fullload_3[sr][4] + fullload_5[sr][4]) / 3.0
+                
+                if (abs(4.7 - self.db.spu[sr].rcu_5_0V) > 0.2) or ((noload[sr][1] - fullload_3[sr][1]) > 0.3):
                     self.db.spu[sr].rcu_ok = 0
                 
-                if (abs(7.6 - self.db.spu[sr].lba_8_0V) > 0.2):
+                if (abs(7.6 - self.db.spu[sr].lba_8_0V) > 0.2) or ((noload[sr][2] - fullload_3[sr][2]) > 0.3):
                     self.db.spu[sr].lba_ok = 0
                 # if voltage drop is too high
-                if (abs(45.75 - self.db.spu[sr].hba_48V) > 0.75) or ((noload[sr][3] - fullload[sr][3]) > 1.0):
+                if (abs(45.75 - self.db.spu[sr].hba_48V) > 0.75) or ((noload[sr][3] - fullload_5[sr][3]) > 1.0):
                     self.db.spu[sr].hba_ok = 0
                 
-                if (abs(3.3 - self.db.spu[sr].spu_3_3V) > 0.2):
+                if (abs(3.3 - self.db.spu[sr].spu_3_3V) > 0.2) or ((noload[sr][3] - fullload_3[sr][3]) > 0.3):
                     self.db.spu[sr].spu_ok = 0            
                 
         logger.info("=== Done SPU check ===")
@@ -233,6 +247,7 @@ class cRSP:
             p2 = answer.find("\n", p1)
             d = [float(i.split(":")[1].strip()) for i in answer[p1+7:p2].split(',')]
             if len(d) == 3:
+                logger.debug("RSP board %d: [1.2V]=%3.1fV, [2.5V]=%3.1fV, [3.3V]=%3.1fV" %(rsp.nr, d[0],  d[1],  d[2]))
                 rsp.voltage1_2 = d[0]
                 if d[0] < 1.1 or d[0] > 1.3:
                     rsp.voltage_ok = 0
@@ -251,6 +266,9 @@ class cRSP:
             p2 = answer.find("\n", p1)
             d = [float(i.split(":")[1].strip()) for i in answer[p1+7:p2].split(',')]
             if len(d) == 6:
+                logger.debug("RSP board %d temperatures: pcb=%3.1f, bp=%3.1f, ap0=%3.1f, ap1=%3.1f, ap2=%3.1f, ap3=%3.1f" %(
+                             rsp.nr, 
+                             d[0], d[1], d[2], d[3], d[4], d[5]))
                 rsp.pcb_temp   = d[0]
                 if d[0] > 45.0:
                     rsp.temp_ok = 0
@@ -275,6 +293,8 @@ class cRSP:
                 if d[5] > 75.0:
                     rsp.temp_ok = 0
                     logger.info("RSP board %d [ap3_temp]=%3.1f" %(rsp.nr, d[5]))
+        logger.info("=== Done RSP Board check ===")
+        self.db.addTestDone('RBV')
         return (ok)
 
 #### end of cRSP class ####
@@ -1309,7 +1329,7 @@ class cHBA:
                         return
 
                     clean = True
-                    self.record_data(rec_time=record_time)
+                    self.record_data(rec_time=record_time, new_data=True)
 
                     clean, n_off = self.checkOscillationElements(elem)
                     n_rcus_off += n_off

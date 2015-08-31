@@ -113,12 +113,9 @@ except:
 ltaRetry    = 5
 
 ## MoM client settings
-exportLogin  = 'https://lcs029.control.lofar:8443/export/systemprograms/login.jsp'
-exportStatus = 'https://lcs029.control.lofar:8443/export/interface/pipeline/setStatus.do'
-exportLogout = 'https://lcs029.control.lofar:8443/export/processLogout.do'
-
 momURLlogin  = 'https://lcs029.control.lofar:8443/useradministration/user/systemlogin.do'
 momURLgetSIP = 'https://lcs029.control.lofar:8443/mom3/interface/importXML2.do'
+momURLsetStatus = 'https://lcs029.control.lofar:8443/mom3/interface/service/setStatusDataProduct.do'
 momURLlogout = 'https://lcs029.control.lofar:8443/useradministration/user/logout.do'
 momRetry     = 3
 
@@ -129,10 +126,10 @@ if 'lotar' in host:
   srmInit      = '/home/lofarlocal/ltacp/bin/init.sh'
 
 try:
-  exportClient= mom_http.client(exportLogin, exportStatus, exportLogout)
-  exportClient.username = '@EXPORTCLIENT_USERNAME@' #fill in during build/install
-  exportClient.password = '@EXPORTCLIENT_PASSWORD@' #fill in during build/install
-  momClient = mom_http.client(momURLlogin, momURLgetSIP, momURLlogout)
+  exportClient= mom_http.client(momURLlogin, momURLsetStatus, momURLlogout, logger)
+  exportClient.username = '@MOMCLIENT_USERNAME@' #fill in during build/install
+  exportClient.password = '@MOMCLIENT_PASSWORD@' #fill in during build/install
+  momClient = mom_http.client(momURLlogin, momURLgetSIP, momURLlogout, logger)
   momClient.username = '@MOMCLIENT_USERNAME@' #fill in during build/install
   momClient.password = '@MOMCLIENT_PASSWORD@' #fill in during build/install
 except:

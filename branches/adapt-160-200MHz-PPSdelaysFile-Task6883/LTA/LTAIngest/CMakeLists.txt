@@ -8,7 +8,7 @@ set(LTAINGEST_BUILD_TARGET "test" CACHE STRING "Specify for which specific desti
 message(STATUS "Using LTAINGEST_BUILD_TARGET \"${LTAINGEST_BUILD_TARGET}\".")
 
 set(MOM3SCHEMA "lofar_mom3")
-set(EXPORTSCHEMA "lofar_export")
+
 
 #switch with config variables for the various build targets.
 if(LTAINGEST_BUILD_TARGET STREQUAL "lexar")
@@ -18,10 +18,9 @@ elseif(LTAINGEST_BUILD_TARGET STREQUAL "lotar")
   set(LTAINGEST_LOG_ROOT_DIR "/home/lofarlocal/log/ingest/")
   set(LTAINGEST_DATA_DIR "/home/lofarlocal/.ingest/")
 elseif(LTAINGEST_BUILD_TARGET STREQUAL "test")
-  set(LTAINGEST_LOG_ROOT_DIR "/tmp/ingest/")
-  set(LTAINGEST_DATA_DIR "/tmp/ingest/")
+  set(LTAINGEST_LOG_ROOT_DIR "/log/ingesttest/")
+  set(LTAINGEST_DATA_DIR "/log/ingesttest/")
   set(MOM3SCHEMA "lofartest_sas099_mom3_two")
-  set(EXPORTSCHEMA "lofartest_sas099_export")
 else()
   message(SEND_ERROR "Unknown LTAINGEST_BUILD_TARGET given: '${LTAINGEST_BUILD_TARGET}'.")
 endif()
@@ -288,12 +287,12 @@ if ("$ENV{MOMREADONLY_USER}" STREQUAL "")
 endif()
 set(MOMREADONLY_USER $ENV{MOMREADONLY_USER})
 set(MOMREADONLY_PASSWORD $ENV{MOMREADONLY_PASSWORD})
-set(EXPORTCLIENT_USERNAME $ENV{EXPORTCLIENT_USERNAME})
-set(EXPORTCLIENT_PASSWORD $ENV{EXPORTCLIENT_PASSWORD})
 set(MOMCLIENT_USERNAME $ENV{MOMCLIENT_USERNAME})
 set(MOMCLIENT_PASSWORD $ENV{MOMCLIENT_PASSWORD})
 set(LTAURL_USERNAME $ENV{LTAURL_USERNAME})
 set(LTAURL_PASSWORD $ENV{LTAURL_PASSWORD}) 
+set(LTAURL_TEST_USERNAME $ENV{LTAURL_TEST_USERNAME})
+set(LTAURL_TEST_PASSWORD $ENV{LTAURL_TEST_PASSWORD}) 
 
 #configure ingest_config.py.in with the various host and environment specific variables.
 configure_file(

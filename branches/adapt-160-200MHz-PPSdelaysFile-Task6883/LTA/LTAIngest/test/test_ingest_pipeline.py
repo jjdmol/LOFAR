@@ -23,7 +23,7 @@ class TestIngestPipeline(unittest.TestCase):
     self.job['Status'] = JobScheduled
     self.job['DataProduct'] = 'L123456_SB000_uv.MS'
     self.job['FileName'] = self.job['DataProduct'] + '.tar'
-    self.job['MomId'] = 12345678
+    self.job['ArchiveId'] = 12345678
     self.job['ObservationId'] = 123456
     self.job["Type"] = 'MoM'
     self.job['Project'] = 'test'
@@ -48,14 +48,16 @@ class TestIngestPipeline(unittest.TestCase):
     mailCommand = ''
     srmInit = ''
 
-    #create pipeline instance with mock info
+    #create self.pipeline instance with mock info
     self.pipeline =  ingestpipeline.IngestPipeline('/tmp', self.job, momClient, ltaClient, ltacphost, ltacpport, mailCommand, 1, 1, 1, srmInit)
 
     #end of setup
 
   def testSIPContents(self):
-    #create proper SIP with valid self.ticket, momid and filename
-    self.pipeline.SIP = makeSIP(self.job['Project'], self.job['ObservationId'], self.job['MomId'], self.ticket, self.job['FileName'], 0, 0, 0, self.job["Type"])
+    """test CheckSIPContent method with valid and invalid SIP"""
+
+    #create proper SIP with valid self.ticket, ArchiveId and filename
+    self.pipeline.SIP = makeSIP(self.job['Project'], self.job['ObservationId'], self.job['ArchiveId'], self.ticket, self.job['FileName'], 0, 0, 0, self.job["Type"])
     self.pipeline.ticket = self.ticket
 
     #check SIP content
@@ -63,16 +65,16 @@ class TestIngestPipeline(unittest.TestCase):
 
     #now invalidate the SIP in various ways
 
-    #with wrong momid
-    self.pipeline.SIP = makeSIP(self.job['Project'], self.job['ObservationId'], 'wrong_MomId', self.ticket, self.job['FileName'], 0, 0, 0, self.job["Type"])
+    #with wrong ArchiveId
+    self.pipeline.SIP = makeSIP(self.job['Project'], self.job['ObservationId'], 'wrong_ArchiveId', self.ticket, self.job['FileName'], 0, 0, 0, self.job["Type"])
     self.assertFalse(self.pipeline.CheckSIPContent(), self.pipeline.SIP)
     
-    #without momid
-    self.pipeline.SIP = self.pipeline.SIP.replace('<identifier>wrong_MomId</identifier>', '')
+    #without ArchiveId
+    self.pipeline.SIP = self.pipeline.SIP.replace('<identifier>wrong_ArchiveId</identifier>', '')
     self.assertFalse(self.pipeline.CheckSIPContent(), self.pipeline.SIP)
 
     #with wrong filename
-    self.pipeline.SIP = makeSIP(self.job['Project'], self.job['ObservationId'], self.job['MomId'], self.ticket, 'wrong_filename', 0, 0, 0, self.job["Type"])
+    self.pipeline.SIP = makeSIP(self.job['Project'], self.job['ObservationId'], self.job['ArchiveId'], self.ticket, 'wrong_filename', 0, 0, 0, self.job["Type"])
     self.assertFalse(self.pipeline.CheckSIPContent(), self.pipeline.SIP)
 
     #without filename
@@ -80,7 +82,7 @@ class TestIngestPipeline(unittest.TestCase):
     self.assertFalse(self.pipeline.CheckSIPContent(), self.pipeline.SIP)
 
     #with wrong self.ticket
-    self.pipeline.SIP = makeSIP(self.job['Project'], self.job['ObservationId'], self.job['MomId'], 'wrong_self.ticket', self.job['FileName'], 0, 0, 0, self.job["Type"])
+    self.pipeline.SIP = makeSIP(self.job['Project'], self.job['ObservationId'], self.job['ArchiveId'], 'wrong_self.ticket', self.job['FileName'], 0, 0, 0, self.job["Type"])
     self.assertFalse(self.pipeline.CheckSIPContent(), self.pipeline.SIP)
 
     #without self.ticket

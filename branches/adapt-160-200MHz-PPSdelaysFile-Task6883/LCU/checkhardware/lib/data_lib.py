@@ -9,7 +9,7 @@ import numpy as np
 import logging
 from time import sleep
 
-test_version = '0515'
+test_version = '0815'
 
 logger = None
 def init_data_lib():
@@ -125,6 +125,10 @@ class cRCUdata:
         
     def readFiles(self):
         files_in_dir = sorted(os.listdir(dataDir()))
+        if len(files_in_dir) == 0:
+            logger.warn('No data recorded !!')
+            self.reset()
+            return
         data_shape = self.readFile(os.path.join(dataDir(),files_in_dir[0])).shape
         ssdata = np.zeros((self.n_rcus, data_shape[0],data_shape[1]), dtype=np.float64)
         for file_name in files_in_dir:
