@@ -86,6 +86,9 @@ void SetHBACmd::apply(CacheBuffer& cache, bool setModFlag)
                     delays_changed = true;
                 }
             }
+            if (!delays_changed) {
+                LOG_DEBUG_STR("Skip updating rcu " << cache_rcu << ", value not changed"); 
+            }
             
             cache.getHBASettings()()(cache_rcu, Range::all()) = m_event->settings()(event_rcu, Range::all());
 			if (setModFlag && delays_changed) {
