@@ -248,6 +248,10 @@ def print_info(msg, keyvalue, msg_info):
             info.append('TBB-version')    
         if 'TM' in checks:
             info.append('TBB-memory')
+        if 'SPU' in checks:
+            info.append('SPU-check')    
+        if 'RBV' in checks:
+            info.append('RSP-voltage')        
         if len(info):         
             print "-- Checks done      : %s" % string.join(info, ', ')
         info = []
@@ -292,7 +296,8 @@ def print_info(msg, keyvalue, msg_info):
         print
 
     if msg == 'BADLIST':
-        bad_ant_str = string.join(d[4:], ';').replace('=', '(').replace(' ', ',').replace(';', ')   ') + ')'
+        # 20150723,NFO,---,BADLIST,LBL=83 84 94 95
+        bad_ant_str = msg_info.replace('=', '(').replace(' ', ',').replace(';', ')   ') + ')'
         print "-- bad-antenna-list : %s" % bad_ant_str
     return
 
