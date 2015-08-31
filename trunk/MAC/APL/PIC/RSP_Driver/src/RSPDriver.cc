@@ -220,9 +220,6 @@ RSPDriver::RSPDriver(string name) :
 	RCUCables		cables("Attenuation.conf", "CableDelays.conf");
 	CableSettings::createInstance(cables);
 
-	LOG_DEBUG("Trying to load delay settings for synchronising the PPS between the subracks");
-    readPPSdelaySettings();
-
 	int mode = GET_CONFIG("RSPDriver.SYNC_MODE", i);
 	if (mode < SYNC_SOFTWARE || mode > SYNC_PPS) {
 		LOG_FATAL_STR("Invalid SYNC_MODE: " << mode);
@@ -286,53 +283,6 @@ RSPDriver::~RSPDriver()
 {
 	delete [] m_boardPorts;
 }
-
-//
-// readPPSdelaySettings()
-//
-void RSPDriver::readPPSdelaySettings()
-{
-	ConfigLocator	CL;
-	string	filename = (CL.locate(GET_CONFIG_STRING("RSPDriver.PPSdelayFile")));
-	LOG_DEBUG_STR("Trying to load the PPS delay settings from file: " << filename);
-
-	// setup default values first
-	int	nrRspBoards = StationSettings::instance()->nrRspBoards();
-	itsPPSsyncDelays.resize(nrRspBoards * NR_BLPS_PER_RSPBOARD);
-	itsPPSsyncDelays = 0;
-
-	ifstream	ppsFile;
-	ppsFile.open(filename.c_str());
-	if (!ppsFile.good()) {
-		ppsFile.close();
-		LOG_WARN_STR("File " << filename << " could not be opened, cannot synchronise PPS pulses");
-		return;
-	}
-
-	// Skip comment lines
-	string	line;
-	getline(ppsFile, line);
-	while (line != "" && ppsFile.peek() == '#') {
-		getline(ppsFile, line);
-	}
-
-	// read values
-	blitz::Array<int, 1>	delayValues;
-	ppsFile >> delayValues;
-	ppsFile.close();
-
-	// Check number if values read in
-	if (delayValues.extent(firstDim) == nrRspBoards * NR_BLPS_PER_RSPBOARD) {
-		itsPPSsyncDelays = delayValues;
-	}
-	else {
-		LOG_ERROR_STR("File " << filename << " contains " << delayValues.extent(firstDim)
-					  << " values, expected " << nrRspBoards * NR_BLPS_PER_RSPBOARD 
-					  << " values, WILL NOT USE THEM!");
-	}
-	LOG_INFO_STR("PPSsyncDelays: " << itsPPSsyncDelays);
-}
-
 
 // ------------------------------ Boardpool related commands ------------------------------
 //
@@ -720,9 +670,10 @@ void RSPDriver::addAllSyncActions()
 		}
 
 		// Always add CRsync because it is used in the init sequence
-		int	sliceBegin = boardid * NR_BLPS_PER_RSPBOARD;
-		int sliceEnd   = sliceBegin + NR_BLPS_PER_RSPBOARD - 1;
-		CRSyncWrite* CrWrite = new CRSyncWrite(m_boardPorts[boardid], boardid, itsPPSsyncDelays(Range(sliceBegin, sliceEnd)));
+		//int	sliceBegin = boardid * NR_BLPS_PER_RSPBOARD;
+		//int sliceEnd   = sliceBegin + NR_BLPS_PER_RSPBOARD - 1;
+		//CRSyncWrite* CrWrite = new CRSyncWrite(m_boardPorts[boardid], boardid, itsPPSsyncDelays(Range(sliceBegin, sliceEnd)));
+		CRSyncWrite* CrWrite = new CRSyncWrite(m_boardPorts[boardid], boardid);
 		ASSERT(CrWrite);
 		m_scheduler.addSyncAction(CrWrite);
 
@@ -1689,6 +1640,16 @@ void RSPDriver::rsp_setrsu(GCFEvent& event, GCFPortInterface& port)
 {
 	Ptr<SetRSUCmd> command = new SetRSUCmd(event, port, Command::WRITE);
 
+    if (Sequencer::getInstance().isActive()) {
+		LOG_INFO("SETRSU: sequencer busy");
+
+		RSPSetrsuackEvent ack;
+		ack.timestamp = Timestamp(0,0);
+		ack.status = RSP_BUSY;
+		port.send(ack);
+		return;
+	}
+    
 	if (!command->validate()) {
 		LOG_ERROR("SETRSU: invalid parameter");
 
@@ -1987,6 +1948,16 @@ void RSPDriver::rsp_getconfig(GCFEvent& event, GCFPortInterface& port)
 void RSPDriver::rsp_setclock(GCFEvent& event, GCFPortInterface& port)
 {
 	Ptr<SetClocksCmd> command = new SetClocksCmd(event, port, Command::WRITE);
+
+	if (Sequencer::getInstance().isActive()) {
+		LOG_INFO("SETCLOCK: sequencer busy");
+
+		RSPSetclockackEvent ack;
+		ack.timestamp = Timestamp(0,0);
+		ack.status = RSP_BUSY;
+		port.send(ack);
+		return;
+	}
 
 	if (!command->validate()) {
 		LOG_ERROR("SETCLOCK: invalid parameter");

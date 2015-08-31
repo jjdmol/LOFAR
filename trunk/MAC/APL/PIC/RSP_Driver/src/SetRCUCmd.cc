@@ -85,6 +85,15 @@ void SetRCUCmd::apply(CacheBuffer& cache, bool setModFlag)
 			
 			// Apply delays and attenuation when mode was changed.
 			if (newMode) {
+                // if mode changed be sure RCU is enabled, is needed to reduce poweron current on hba's
+                /*
+                if (mode > 0) {
+                    cache.getRCUSettings()()(cache_rcu).setEnable(1);
+                }
+                else {
+                    cache.getRCUSettings()()(cache_rcu).setEnable(0);
+                }
+                */
 				cache.getRCUSettings()()(cache_rcu).setDelay(
 							(uint8) ((delayStep/2.0 + cableSettings->getDelay(cache_rcu, mode)) / delayStep));
 				cache.getRCUSettings()()(cache_rcu).setAttenuation(

@@ -126,6 +126,12 @@ int SpectralWindow::rcumode() const
 	}
 }
 
+uint32 SpectralWindow::raw_rcumode() const
+{
+    LOG_DEBUG (formatString("rcumode(%06X)", m_rcucontrol));
+    return (m_rcucontrol);
+}
+
 //
 // print
 //
