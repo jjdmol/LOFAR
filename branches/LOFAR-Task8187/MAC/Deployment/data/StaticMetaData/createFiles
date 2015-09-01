@@ -432,7 +432,7 @@ def createRSPDriverFile(resultDir, stationName, dataDir,int_local,is_Cobalt):
             repl_str = "@IP_SUBNET_0"+str(rspNr)+"@"
             if int(rspip_parts[2]) > 1:
               RSPconfig = RSPconfig.replace(repl_str, rspip_parts[2])
-            else
+            else:
               # Some stations share VLANs, and get srcip 10.vlan.1.board, which would be equal for all stations. In those cases we will use srcip 10.vlan.stationnr.board
               RSPconfig = RSPconfig.replace(repl_str, str(int_station_nr))
             repl_str = "@IP_EXTEN_0"+str(rspNr)+"@"
@@ -561,7 +561,7 @@ def createRSPDriverFile_Test(resultDir, stationName, dataDir, alias):
             repl_str = "@IP_SUBNET_0"+str(rspNr)+"@"
             if int(rspip_parts[2]) > 1:
               RSPconfig = RSPconfig.replace(repl_str, rspip_parts[2])
-            else
+            else:
               # Some stations share VLANs, and get srcip 10.vlan.1.board, which would be equal for all stations. In those cases we will use srcip 10.vlan.stationnr.board
               RSPconfig = RSPconfig.replace(repl_str, str(int_station_nr))
             repl_str = "@IP_EXTEN_0"+str(rspNr)+"@"
