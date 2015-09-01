@@ -16,7 +16,7 @@ set(GNU_CXX       /usr/bin/g++)      # GNU C++ compiler
 set(GNU_Fortran   /usr/bin/gfortran) # GNU Fortran compiler
 set(GNU_ASM       /usr/bin/gcc)      # GNU assembler
 
-set(GNU_C_FLAGS          "-W -Wall -Wno-unknown-pragmas")
+set(GNU_C_FLAGS)
 set(GNU_C_FLAGS_DEBUG    "-g")
 set(GNU_C_FLAGS_OPT      "-g -O2")
 set(GNU_C_FLAGS_OPT3     "-g -O3")
@@ -28,10 +28,6 @@ set(GNU_EXE_LINKER_FLAGS)
 set(GNU_EXE_LINKER_FLAGS_DEBUG)
 set(GNU_EXE_LINKER_FLAGS_OPT)
 set(GNU_EXE_LINKER_FLAGS_OPT3)
-set(GNU_SHARED_LINKER_FLAGS)
-set(GNU_SHARED_LINKER_FLAGS_DEBUG)
-set(GNU_SHARED_LINKER_FLAGS_OPT)
-set(GNU_SHARED_LINKER_FLAGS_OPT3)
 set(GNU_COMPILE_DEFINITIONS)
 set(GNU_COMPILE_DEFINITIONS_DEBUG 
                          "-DLOFAR_DEBUG -DENABLE_DBGASSERT -DENABLE_TRACER")

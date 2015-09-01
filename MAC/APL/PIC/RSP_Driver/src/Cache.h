@@ -115,11 +115,6 @@ public:
 	void setSDOBitsPerSample(int bits) { itsSDOBitsPerSample = bits; }
 	/*@}*/
     
-    blitz::Array<int, 1> getPPSdelays() { return itsPPSsyncDelays; }
-	void setPPSdelays(blitz::Array<int, 1> pps_delays) { itsPPSsyncDelays = pps_delays; }
-    
-    bool getSequencerRequest() { return itsSequencerRequest; }
-    void setSequencerRequest(bool state) { itsSequencerRequest = state; }
     
 	// update timestamp
 	void setTimestamp(const RTC::Timestamp& timestamp);
@@ -140,11 +135,8 @@ private:
 	//	which is never the case.
 
 	CacheBuffer(); // prevent default construction
-    
-    // function to readin PPSdelays
-    void readPPSdelaySettings();
-	
-    // --- datamembers ---
+
+	// --- datamembers ---
 	RTC::Timestamp					m_timestamp;
 	I2Cuser							itsI2Cuser;
 	RSP_Protocol::BeamletWeights	m_beamletweights;
@@ -177,9 +169,7 @@ private:
 	RSP_Protocol::SDOModeInfo       itsSDOModeInfo;
 	RSP_Protocol::SDOSelection      itsSDOSelection;
 	int                             itsSDOBitsPerSample;
-    blitz::Array<int, 1>            itsPPSsyncDelays;  // one delay for each AP
-    bool                            itsSequencerRequest;
-    
+	 
 	Cache* m_cache;		// pointer to container
 };
 
@@ -219,9 +209,7 @@ private:
 	CacheBuffer* m_front;
 	CacheBuffer* m_back;
 	/*@}*/
-    
-   
-    
+
 	// Singleton class.
 	static Cache* m_instance;
 };

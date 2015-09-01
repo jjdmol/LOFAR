@@ -297,7 +297,6 @@ QDataStream& operator>> (QDataStream &in, TaskStorage &storage) {
     return in;
 }
 
-
 // Returns True if the input and output node locations are equal for
 // all the input and output products
 // THis function should be moved to the pipeline class?
@@ -340,6 +339,8 @@ bool TaskStorage::getEqualityInputOutputProducts()const
     }
     return true;
 }
+
+
 
 void TaskStorage::setInputFileSizes(dataProductTypes dpType, const std::pair<double, unsigned> &inputFileSizes) {
     itsInputDataFiles[dpType] = inputFileSizes;

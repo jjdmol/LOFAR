@@ -156,9 +156,7 @@ private:
 	uint32									itsNrTBBs;
 	bool									itsHasSplitters;
 	bitset<MAX_RSPBOARDS>					itsSplitters;	// On or Off.
-
-    	unsigned                                itsClaimSequence;
-	GCFTimerPort*				itsClaimTimerPort;
+    unsigned                                itsSetupSequence;
 };
 
   };//StationCU

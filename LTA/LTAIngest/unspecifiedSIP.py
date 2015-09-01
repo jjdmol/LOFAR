@@ -59,7 +59,7 @@ genericSIP = '''<?xml version="1.0" encoding="UTF-8"?>
 '''
 
 
-def makeSIP(Project, ObsId, ArchiveId, ticket, FileName, FileSize, MD5Checksum, Adler32Checksum, Type):
+def makeSIP(Project, ObsId, MomId, ticket, FileName, FileSize, MD5Checksum, Adler32Checksum, Type):
   if FileName[-3:] == '.MS':
     fileFormat = 'AIPS++/CASA'
   elif FileName[-3:].lower() == '.h5':
@@ -68,7 +68,7 @@ def makeSIP(Project, ObsId, ArchiveId, ticket, FileName, FileSize, MD5Checksum, 
     fileFormat = 'FITS'
   else: ## Maybe we need an 'Unknown' in the future?
     fileFormat = 'PULP'
-  return genericSIP % (Project, Type, ArchiveId, FileName, ticket, FileSize, MD5Checksum, Adler32Checksum, FileName, fileFormat, ObsId, ObsId, ObsId, ObsId, ObsId)
+  return genericSIP % (Project, Type, MomId, FileName, ticket, FileSize, MD5Checksum, Adler32Checksum, FileName, fileFormat, ObsId, ObsId, ObsId, ObsId, ObsId)
 
 ## Stand alone execution code ------------------------------------------
 if __name__ == '__main__':
