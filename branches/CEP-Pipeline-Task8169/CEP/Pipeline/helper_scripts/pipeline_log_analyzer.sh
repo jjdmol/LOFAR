@@ -48,9 +48,10 @@ nPipelineByType[4]=0  # calibration_pipeline
 nPipelineByType[5]=0  # preprocessing_pipeline
 nPipelineByType[6]=0  # long_baseline_pipeline
 nPipelineByType[7]=0  # pulsar_pipeline
+nPipelineByType[8]=0  # imaging_pipeline
 
-nPipelineByTypeFail=(0 0 0 0 0 0)         # count the number of failed pipeline runs
-nPipelineByTypeFailExplained=(0 0 0 0 0 0) # When pipeline failed, the actual error can be pinpointed, explained
+nPipelineByTypeFail=(0 0 0 0 0 0 0 0 0)         # count the number of failed pipeline runs
+nPipelineByTypeFailExplained=(0 0 0 0 0 0 0 0 0) # When pipeline failed, the actual error can be pinpointed, explained
 
 # Create the array containing the grep string and the message to display
 problemGrep[0]='Demix averaging .* must be multiple of output averaging'
@@ -98,8 +99,53 @@ problemMSG[13]='Nr. antennas in data is different to meta data bug #8157'
 problemGrep[14]='Validation of input.*output data product specification failed'
 problemMSG[14]='The number of input and output dataproducts is incorrect'
 
-# problemGrep[15]='pulp has crashed'
-# problemMSG[15]='An error occured in a pulsar pipeline, inform Vlad Condratu'
+problemGrep[15]='pulp has crashed' 
+problemMSG[15]='An error occured in a pulsar pipeline, inform Vlad Condratu'
+
+problemGrep[16]='ssh: connect to host locus'
+problemMSG[16]='Suspected connectivity problems on locus nodes, test ssh connection to affected nodes'
+
+problemGrep[17]='The system is going down for reboot in'
+problemMSG[17]='The pipeline was stopped due to reboot of system, (stopday?)'
+
+problemGrep[18]='is an invalid value for ExecField'
+problemMSG[18]='Incorrect executable configuration, warn pipeline developer'
+
+problemGrep[19]='ImportError.*libcasa.*undefined symbol'
+problemMSG[19]='Casacore problem, warn pipeline developer or Ger van Diepen'
+
+problemGrep[20]='imag nor amplitude/phase parameters found in'
+problemMSG[20]='An input data set is empty, check predecessor'
+
+problemGrep[21]='Segmentation fault'
+problemMSG[21]='Major error in on of the executables. Check input data, else warn pipeline dev.'
+
+problemGrep[22]='Errno 104.* Connection reset by peer'
+problemMSG[22]='Network reset while communicating with node. If problem persist for the same node suspect faulty hardware, else restart'
+
+problemGrep[23]='global name .* is not defined'
+problemMSG[23]='Known and solved bug in pulp/pipeline integration'
+
+problemGrep[24]='pulsar_pipeline.* object has no attribute .*parset_file'
+problemMSG[24]='Known and solved bug in pulp/pipeline integration'
+
+problemGrep[25]='ImportError.*cannot open shared object file: No such file or directory'
+problemMSG[25]='Executable has problem finding librairy, suspect deployment error'
+
+problemGrep[26]='Failed to validate data map'
+problemMSG[26]='Internal pipeline problem warn pipeline developer'
+
+problemGrep[27]='All makevds processes failed.* Bailing out'
+problemMSG[27]='Makevds failed on all nodes, suspect corrupt input data.'
+
+problemGrep[28]='Target source name cannot be given if ignoretarget'
+problemMSG[28]='NDPPP specification error'
+
+problemGrep[29]='bbs-reducer.* returned non-zero exit status 1'
+problemMSG[29]='Error in BBS, check inputdata and specification'
+
+problemGrep[30]='Number of entries in the source and target map is not the same'
+problemMSG[30]='suspect incorrect specification of input or output products'
 
 
 lengthProblemArray=${#problemGrep[@]}
@@ -126,7 +172,7 @@ do
 	complexProblemCount[$i]=0
 done
 
-skipObsIDArray=(78815 78863)
+skipObsIDArray=(78815 78863 274027 344688 346978)
 
 echo "-------------------------------------------------------------"
 
@@ -139,15 +185,13 @@ echo "logfiles containing unknown error:"
 for f in /opt/lofar/var/run/pipeline/Observation$obsIDExpression/logs/*/pipeline.log*
 do
   # if we have a gz file we first need to unpack it
-  echo "debug 1000"
   logloc=$f
-  echo $logLoc
+
   if [ "${f: -2}" == "gz" ] 
   then
     gunzip -c $f > pipeline.log
     f="pipeline.log"
   fi
-  echo "debug 1"  
   # Count the number of pipeline logs
   nPipelines=$((nPipelines+1)) 
   # The first logline contains as the 4th word the name of the pipeline
@@ -174,33 +218,34 @@ do
   elif [ "$pipelineName" == "pulsar_pipeline:" ]
   then
     pipelineType=7		
+  elif [ "$pipelineName" == "imaging_pipeline:" ]
+  then
+    pipelineType=8		
   else
-    echo $pipelineName
+  echo $pipelineName
     pipelineType=0  
   fi
-  echo "debug 2"
-  echo nPipelineByType[$pipelineType]
-  
-  echo "debug 10"
+ 
+
   # Use the pipeline idx to increase the corresponding array with counts for type 
   nPipelineByType[$pipelineType]=$((nPipelineByType[$pipelineType] + 1))
-  echo "debug 11"
+
   # Look for failing pipelines
   if tail -1 $f | grep "_pipeline completed with errors" > /dev/null
   then   # If failing pipeline
-      echo "debug 3"
+
       nPipelineFail=$((nPipelineFail+1)) 
       nPipelineByTypeFail[$pipelineType]=$((nPipelineByTypeFail[$pipelineType]+1)) # count by type
-      echo "debug 4"
+
 	  # Loop the known simple problems, count the total error per pipeline and stop with file process
       errorFound=false
       for i in `seq 0 $lengthProblemArray`  # for all the known problems
 	  do
-	    echo "debug 5"
+
 	    if grep -c "${problemGrep[$i]}" $f > /dev/null  # grab with the literal string
 	    then
 		  problemCount[$i]=$((problemCount[$i]+1))
-		  echo "debug 6"
+
 		  if $displayProblem
 		  then
 		    echo "---------------------------------------------------"
@@ -219,7 +264,7 @@ do
 	  then
 	    continue
 	  fi
-      echo "debug 4"
+
 	  # Loop the known complex problems, count the total error per pipeline and stop with file process
       errorFound=false
       for i in `seq 0 $lengthComplexProblemArray`  # for all the known problems
@@ -268,7 +313,7 @@ do
 	  # Print logfile if cause is unknown
 	  echo $logloc
   fi
-  echo "debug 100" 
+
 done
 # Get the number of parsets ( minus one for the pipeline subdir)
 nparsets=$(ls -1 /opt/lofar/var/run/pipeline/ | wc -l)
@@ -276,7 +321,7 @@ nparsets=$((nparsets-1))
 # Display the result
 echo
 echo "------------------------------------------------"
-echo "number of parsets                : " $nparsets
+echo "number of parsets      : " $nparsets
 echo "total number of pipeline logfiles: " $nPipelines
 echo "Failing pipelines                : " $nPipelineFail       
 echo
@@ -291,6 +336,7 @@ echo calibration_pipeline "            :" ${nPipelineByType[4]} "," ${nPipelineB
 echo preprocessing_pipeline "          :" ${nPipelineByType[5]} "," ${nPipelineByTypeFail[5]} "," ${nPipelineByTypeFailExplained[5]}
 echo long_baseline_pipeline "          :" ${nPipelineByType[6]} "," ${nPipelineByTypeFail[6]} "," ${nPipelineByTypeFailExplained[6]}
 echo pulsar_pipeline "                 :" ${nPipelineByType[7]} "," ${nPipelineByTypeFail[7]} "," ${nPipelineByTypeFailExplained[7]}
+echo imaging_pipeline "                :" ${nPipelineByType[8]} "," ${nPipelineByTypeFail[8]} "," ${nPipelineByTypeFailExplained[8]}
 echo
 
 echo "------------------------------------------------"
@@ -300,7 +346,7 @@ for i in `seq 0 $lengthProblemArray`  # for all the known problems
 do
   echo ${problemCount[$i]} " : " ${problemMSG[$i]} 
 done
-echo $nPipelineSkip " :  OTHER: Failing pipelines with known singular cause of failure"
+echo $nPipelineSkip " :  OTHER: Failing pipelines with unique singular cause of failure"
 echo
 
 echo "------------------------------------------------"
