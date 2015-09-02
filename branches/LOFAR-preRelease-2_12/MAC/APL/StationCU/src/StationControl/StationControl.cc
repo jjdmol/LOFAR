@@ -634,7 +634,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 			LOG_DEBUG_STR("Removing " << theObs->second->getName() << " from the administration due to premature quit");
 			delete theObs->second;
 			itsObsMap.erase(theObs);
-      itsClaimedMap.erase(theObs);
+      itsClaimedMap.erase(port.getName());
 		}
 	}
 	break;
@@ -701,9 +701,9 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 
 		// In the claim state station-wide changes are activated.
 		if (event.signal == CONTROL_CLAIM) {
-			if (!itsClaimedMap[theObs]) {
+			if (!itsClaimedMap[cntlrName]) {
 				LOG_INFO("Claiming resources.");
-        itsClaimedMap[theObs] = true; // mark as claiming/claimed
+        itsClaimedMap[cntlrName] = true; // mark as claiming/claimed
 				itsStartingObs = theObs;
 				TRAN(StationControl::startObservation_state);
 
@@ -727,7 +727,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 //			itsTimerPort->cancelTimer(theObs->second->itsStopTimerID);
 			delete theObs->second;
 			itsObsMap.erase(theObs);
-      itsClaimedMap.erase(theObs);
+      itsClaimedMap.erase(cntlrName);
 			return (GCFEvent::HANDLED);
 		}
 
