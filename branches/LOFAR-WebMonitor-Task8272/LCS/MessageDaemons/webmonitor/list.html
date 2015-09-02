@@ -25,39 +25,59 @@ function asrow(text,style)
 
 function To_QPID_State(qpidstate)
 {
-    //var replacement = schemasvg;
-    var outtext="<table><tr><td>BROKER</td><td>QUEUE NAME</td><td>WAITING</td><td>PROCESSED</td><td>CONNECTED</td></tr>";
+    var today = new Date();
+    var datestamp = "<p> Browser Time: "+today+"</p>";
+    var result = "";
+    var outtext="";
+    var locustext="";
+    var headertext="<table><tr><td>BROKER</td><td>QUEUE NAME</td><td>WAITING</td><td>PROCESSED</td><td>CONNECTED</td></tr>";
+    var footertext="</table>";
     console.log(qpidstate);
+    // simple check for validity of JSON input
     if ( qpidstate.search('amqp') != -1)
     {
+        // parse JSON to object
         var obj = eval('(' + qpidstate + ')');
         for (var key in obj) {
+            // Retrieve datestamp if available
+            if (key == "datestamp") {
+                datestamp="<p>Sampled at UTC:"+obj[key]+"</p>";
+            } else
             for (var subkey in obj[key]) {
-               //if(( subkey.indexOf("mom.") !=-1) || (subkey.indexOf("lofar")!=-1) || (subkey.indexOf("otdb")!=-1)||(subkey.indexOf("mac")!=-1)){
+               // filter queue names for LOFAR defined queues
                if ( subkey.match(/(mom.|lofar|otdb|mac)/g) != null ) {
                   var result = "";
                   var numwaiting=parseInt(obj[key][subkey]);
                   result += obj[key][subkey];
+                  // use Red background if queue has messages
+                  // ToDo: find out why there is duplicates here
                   color='style="color: #000000; background-color: #ffffff"';
                   if (numwaiting>0) {
                         color='style="color: #000000; background-color: #ff0000"';
                   }
+                  
                   result=result.replace(",","</td><td " +color +" >");
                   result=result.replace(",","</td><td " +color +">");
                   color='style="color: #000000; background-color: #ffffff"';
                   if (numwaiting>0) {
 			color='style="color: #000000; background-color: #ff0000"';
                   }
-		  outtext+="<tr "+ color +">";
-                  outtext+=asrow(key,color) + asrow(subkey,color) + asrow(result,color);
-		  outtext+="</tr>";
+                  // assure locusXXX nodes are filtered and only shown if queue has messages
+                  if (key.indexOf("locus")==-1){ 
+                      outtext+="<tr "+ color +">";
+                      outtext+=asrow(key,color) + asrow(subkey,color) + asrow(result,color);
+                      outtext+="</tr>";
+                  } else {
+                      if (numwaiting>0) {
+                         locustext+="<tr "+ color +">"+asrow(key,color) + asrow(subkey,color) + asrow(result,color) + "</tr>";
+                      }
+                  }
                }
             }
-
         }
     }
-    outtext+="</table>";
-    document.getElementById("overview").innerHTML=outtext;
+    result=datestamp+headertext+outtext+locustext+footertext;
+    document.getElementById("overview").innerHTML=result;
 }
 
 function readtext_from_file(urlname)
@@ -116,8 +136,7 @@ function touchHandler(event)
                               first.screenX, first.screenY, 
                               first.clientX, first.clientY, false, 
                               false, false, false, 0/*left*/, null);
-
-                                                                                 first.target.dispatchEvent(simulatedEvent);
+    first.target.dispatchEvent(simulatedEvent);
     event.preventDefault();
 }
 
