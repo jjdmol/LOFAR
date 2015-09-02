@@ -634,6 +634,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 			LOG_DEBUG_STR("Removing " << theObs->second->getName() << " from the administration due to premature quit");
 			delete theObs->second;
 			itsObsMap.erase(theObs);
+      itsClaimedMap.erase(theObs);
 		}
 	}
 	break;
@@ -700,15 +701,19 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 
 		// In the claim state station-wide changes are activated.
 		if (event.signal == CONTROL_CLAIM) {
-			if (itsStartingObs != theObs) {
+			if (!itsClaimedMap[theObs]) {
+				LOG_INFO("Claiming resources.");
+        itsClaimedMap[theObs] = true; // mark as claiming/claimed
 				itsStartingObs = theObs;
 				TRAN(StationControl::startObservation_state);
+
+        // Keep forwarding until CLAIM comes around to us again, at which point we can check on our children
+        // and report back using sendControlResult.
 				queueTaskEvent(event, port);
+			  return (GCFEvent::HANDLED);
 			} else {
-				LOG_WARN("Already went through CLAIM phase -- ignoring CONTROL_CLAIM event");
+				LOG_INFO("Already claimed resources.");
 			}
-			return (GCFEvent::HANDLED);
-//			return (GCFEvent::NEXT_STATE);
 		}
 
 		// pass event to observation FSM
@@ -722,6 +727,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 //			itsTimerPort->cancelTimer(theObs->second->itsStopTimerID);
 			delete theObs->second;
 			itsObsMap.erase(theObs);
+      itsClaimedMap.erase(theObs);
 			return (GCFEvent::HANDLED);
 		}
 
@@ -791,29 +797,6 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
 	case F_ENTRY: {
 		itsClaimSequence = 1;
 	    itsClaimTimerPort->setTimer(0.0);
-	}
-	break;
-
-	case CONTROL_CLAIM: {
-       	// defer the setup to the timer eventa
-	// NOTE: StationControl can receive multiple CLAIM requests. Example:
-	//    * We're in CLAIMED
-	//    * Station receives PREPARE (due to state sync errors?)
-	//    * Station will replay PREPARE -> CLAIM
-    // So we ONLY start the ClaimTimer if the ClaimSequence was not yet started
-		CONTROLCommonEvent	ObsEvent(event);		// we just need the name
-		uint16			 instanceNr = getInstanceNr(ObsEvent.cntlrName);
-		OTDBtreeIDType	 treeID	    = getObservationNr(ObsEvent.cntlrName);
-		string			 cntlrName  = controllerName(CNTLRTYPE_STATIONCTRL, 
-															instanceNr, treeID);
-		CTState			CTS;
-		ObsIter			 theObs     = itsObsMap.find(cntlrName);
-
-		if (theObs != itsStartingObs) {
-			// CLAIM is for a different observation
-			LOG_DEBUG_STR("Postponing event " << eventName(event) << " till operational state");
-			return (GCFEvent::NEXT_STATE);
-        }
 	}
 	break;
 
@@ -1394,6 +1377,7 @@ LOG_DEBUG_STR("final receivers   =" << realReceivers);
 
 	LOG_DEBUG_STR("Adding " << name << " to administration");
 	itsObsMap[name] = theNewObs;
+  itsClaimedMap[name] = false;
 	LOG_DEBUG_STR(*theNewObs);
 	theNewObs->start();				// call initial state.
 
