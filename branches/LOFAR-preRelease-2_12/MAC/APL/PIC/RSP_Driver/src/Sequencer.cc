@@ -537,8 +537,6 @@ GCFEvent::TResult Sequencer::setAll_state(GCFEvent& event, GCFPortInterface& /*p
         Cache::getInstance().getState().bs().write();
         Cache::getInstance().getState().rad().reset();
         Cache::getInstance().getState().rad().write();
-        Cache::getInstance().getState().bmState().reset();
-        Cache::getInstance().getState().bmState().read();
         Cache::getInstance().getState().crcontrol().reset();
         Cache::getInstance().getState().crcontrol().read();
         // Note: we set the state to read iso write so that the CRSync action knows it a new start.

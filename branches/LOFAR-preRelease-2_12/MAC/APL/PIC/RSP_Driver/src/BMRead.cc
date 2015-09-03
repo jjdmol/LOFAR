@@ -43,7 +43,7 @@ BMRead::BMRead(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, 1)
 {
   memset(&itsHdr, 0, sizeof(MEPHeader));
-  doAtInit();
+  //doAtInit();
 }
 
 BMRead::~BMRead()
