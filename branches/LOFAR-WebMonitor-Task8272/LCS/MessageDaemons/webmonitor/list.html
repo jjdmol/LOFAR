@@ -23,7 +23,7 @@ function asrow(text,style)
     return out;
 }
 
-function To_QPID_State(qpidstate)
+function Parse_QPID_State(qpidstate)
 {
     var today = new Date();
     var datestamp = "<p> Browser Time: "+today+"</p>";
@@ -61,17 +61,18 @@ function To_QPID_State(qpidstate)
                   var statustext="<tr "+ color +">"+asrow(key,color) + asrow(subkey,color) + asrow(result,color) + "</tr>";
                   // assure locusXXX nodes are filtered and only shown if queue has messages
                   var IsLocusNode=(key.indexOf("locus")!=-1);
-                  if ((IsLocusNode==true)&&(numwaiting>0)){
-                      if (IsLocusNode==true) {
+                  if (IsLocusNode==true){
+                      if (numwaiting>0) {
                          locustext+=statustext;
-                      } else {
-                         warntext+=statustext;
                       }
                   } else {
-                      if (IsLocusNode==false) {
+                      if (numwaiting>0) {
+                         warntext+=statustext;
+                      } else {
                          outtext+=statustext;
                       }
                   }
+
                }
             }
         }
@@ -79,7 +80,6 @@ function To_QPID_State(qpidstate)
     result=datestamp+headertext+warntext+locustext+outtext+footertext;
     document.getElementById("overview").innerHTML=result;
 }
-
 function readtext_from_file(urlname)
 {
    var request = new XMLHttpRequest();
@@ -104,7 +104,7 @@ function myTimer() {
    {
       if (request.readyState == 4)
       {
-         To_QPID_State(request.responseText);
+         Parse_QPID_State(request.responseText);
       }
    }
    request.send(null);

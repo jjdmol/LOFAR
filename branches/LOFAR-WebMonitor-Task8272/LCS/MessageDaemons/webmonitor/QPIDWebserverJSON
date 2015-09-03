@@ -155,13 +155,19 @@ def retrieve_status():
     stest=str(queuestat).replace("'",'"',1000000).replace('(','[',10000000).replace(')',']',1000000).replace('L','',1000000)
     return stest 
 
+retrievebusy=False
+
 def periodic_retrieve( ):
     global last_status
+    global retrievebusy
     if (last_status=="NOTCONNECTED"):
-	connect_to_brokers()
+        connect_to_brokers()
         last_status="CONNECTION setup"
     else:
-        last_status=retrieve_status()
+        if (retrievebusy==False):
+           retrievebusy=True
+           last_status=retrieve_status()
+           retrievebusy=False
 
 if __name__ == '__main__':
     from BaseHTTPServer import HTTPServer
