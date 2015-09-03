@@ -29,6 +29,7 @@ function To_QPID_State(qpidstate)
     var datestamp = "<p> Browser Time: "+today+"</p>";
     var result = "";
     var outtext="";
+    var warntext="";
     var locustext="";
     var headertext="<table><tr><td>BROKER</td><td>QUEUE NAME</td><td>WAITING</td><td>PROCESSED</td><td>CONNECTED</td></tr>";
     var footertext="</table>";
@@ -50,33 +51,32 @@ function To_QPID_State(qpidstate)
                   var numwaiting=parseInt(obj[key][subkey]);
                   result += obj[key][subkey];
                   // use Red background if queue has messages
-                  // ToDo: find out why there is duplicates here
                   color='style="color: #000000; background-color: #ffffff"';
                   if (numwaiting>0) {
                         color='style="color: #000000; background-color: #ff0000"';
                   }
-                  
-                  result=result.replace(",","</td><td " +color +" >");
-                  result=result.replace(",","</td><td " +color +">");
-                  color='style="color: #000000; background-color: #ffffff"';
-                  if (numwaiting>0) {
-			color='style="color: #000000; background-color: #ff0000"';
-                  }
+                  // split all items in a table column
+                  result=result.replace(",","</td><td " + color + " >");
+                  result=result.replace(",","</td><td " + color + ">");
+                  var statustext="<tr "+ color +">"+asrow(key,color) + asrow(subkey,color) + asrow(result,color) + "</tr>";
                   // assure locusXXX nodes are filtered and only shown if queue has messages
-                  if (key.indexOf("locus")==-1){ 
-                      outtext+="<tr "+ color +">";
-                      outtext+=asrow(key,color) + asrow(subkey,color) + asrow(result,color);
-                      outtext+="</tr>";
+                  var IsLocusNode=(key.indexOf("locus")!=-1);
+                  if ((IsLocusNode==true)&&(numwaiting>0)){
+                      if (IsLocusNode==true) {
+                         locustext+=statustext;
+                      } else {
+                         warntext+=statustext;
+                      }
                   } else {
-                      if (numwaiting>0) {
-                         locustext+="<tr "+ color +">"+asrow(key,color) + asrow(subkey,color) + asrow(result,color) + "</tr>";
+                      if (IsLocusNode==false) {
+                         outtext+=statustext;
                       }
                   }
                }
             }
         }
     }
-    result=datestamp+headertext+outtext+locustext+footertext;
+    result=datestamp+headertext+warntext+locustext+outtext+footertext;
     document.getElementById("overview").innerHTML=result;
 }
 
