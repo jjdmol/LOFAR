@@ -124,6 +124,7 @@ GCFEvent::TResult Sequencer::idle_state(GCFEvent& event, GCFPortInterface& /*por
     break;
 
     case F_ENTRY: {
+        Cache::getInstance().getState().force();
         LOG_INFO("Entering Sequencer::idle_state");
         itsIdle = true;
     }
@@ -137,7 +138,7 @@ GCFEvent::TResult Sequencer::idle_state(GCFEvent& event, GCFPortInterface& /*por
             }
             else if (itsCurSeq == SEQ_SETCLOCK) {
                 LOG_DEBUG(">> Start sequencer *setclock*");
-                Cache::getInstance().reset();
+                //Cache::getInstance().reset();
                 TRAN(Sequencer::clearClock_state);
             }
             else if (itsCurSeq == SEQ_RSPCLEAR) {
@@ -546,6 +547,7 @@ GCFEvent::TResult Sequencer::setAll_state(GCFEvent& event, GCFPortInterface& /*p
         Cache::getInstance().getState().cdo().write();
         
         // next settings will be written after sequencer is ready
+        
         if (StationSettings::instance()->hasAartfaac()) {
             Cache::getInstance().getState().sdoState().reset();
             Cache::getInstance().getState().sdoState().write();
