@@ -87,7 +87,7 @@ GCFEvent::TResult BMRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
   // unpack bm message
   EPARsrBeammodeEvent bm(event);
 
-  LOG_INFO_STR(formatString("BM supported = %d, selected  = %d", bm.beammode.bm_max, bm.beammode.bm_select));
+  LOG_DEBUG_STR(formatString("BM supported = %d, selected  = %d", bm.beammode.bm_max, bm.beammode.bm_select));
 
   if (!bm.hdr.isValidAck(itsHdr))
   {

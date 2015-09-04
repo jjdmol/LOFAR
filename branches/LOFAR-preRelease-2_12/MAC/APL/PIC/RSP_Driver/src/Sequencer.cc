@@ -545,6 +545,7 @@ GCFEvent::TResult Sequencer::setAll_state(GCFEvent& event, GCFPortInterface& /*p
         Cache::getInstance().getState().cdo().reset();
         Cache::getInstance().getState().cdo().write();
         
+        // next settings will be written after sequencer is ready
         if (StationSettings::instance()->hasAartfaac()) {
             Cache::getInstance().getState().sdoState().reset();
             Cache::getInstance().getState().sdoState().write();
