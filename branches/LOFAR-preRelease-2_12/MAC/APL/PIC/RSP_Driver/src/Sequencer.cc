@@ -124,7 +124,9 @@ GCFEvent::TResult Sequencer::idle_state(GCFEvent& event, GCFPortInterface& /*por
     break;
 
     case F_ENTRY: {
-        Cache::getInstance().getState().force();
+        if (itsIdle == false) {
+            Cache::getInstance().getState().force();
+        }
         LOG_INFO("Entering Sequencer::idle_state");
         itsIdle = true;
     }
