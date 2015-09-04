@@ -703,17 +703,13 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 		if (event.signal == CONTROL_CLAIM) {
 			if (!itsClaimedMap[cntlrName]) {
 				LOG_INFO("Claiming resources.");
-        itsClaimedMap[cntlrName] = true; // mark as claiming/claimed
+        		itsClaimedMap[cntlrName] = true; // mark as claiming/claimed
 				itsStartingObs = theObs;
 				TRAN(StationControl::startObservation_state);
-
-        // Keep forwarding until CLAIM comes around to us again, at which point we can check on our children
-        // and report back using sendControlResult.
-				queueTaskEvent(event, port);
-			  return (GCFEvent::HANDLED);
 			} else {
 				LOG_INFO("Already claimed resources.");
 			}
+	        return (GCFEvent::HANDLED);
 		}
 
 		// pass event to observation FSM
