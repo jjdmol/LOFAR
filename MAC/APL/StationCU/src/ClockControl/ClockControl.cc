@@ -825,6 +825,9 @@ GCFEvent::TResult ClockControl::setBitmode_state(GCFEvent& event,
   
 	switch (event.signal) {
 	case F_ENTRY:
+        itsTimerPort->setTimer(1.0);
+        break;
+        
 	case F_TIMER:
 		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Set bitmode"));
 		sendBitmodeSetting();				// will result in RSP_SETBITMODEACK;
@@ -841,9 +844,9 @@ GCFEvent::TResult ClockControl::setBitmode_state(GCFEvent& event,
 	case RSP_SETBITMODEACK: {
 		RSPSetbitmodeackEvent		ack(event);
 		if (ack.status != RSP_SUCCESS) {
-			LOG_ERROR_STR ("Bitmode could not be set to " << itsBitmode << ", retry in 5 seconds.");
+			LOG_ERROR_STR ("Bitmode could not be set to " << itsBitmode << ", retry in 2 seconds.");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("bitmodeset error"));
-			itsTimerPort->setTimer(5.0);
+			itsTimerPort->setTimer(2.0);
 			break;
 		}
 
@@ -926,9 +929,9 @@ GCFEvent::TResult ClockControl::setSplitters_state(GCFEvent& event,
 		RSPSetsplitterackEvent		ack(event);
 		if (ack.status != RSP_SUCCESS) {
 			LOG_ERROR_STR ("Splitters could not be set to " << (itsSplitterRequest ? "ON" : "OFF") << 
-						", retry in 5 seconds.");
+						", retry in 2 seconds.");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("splitter set error"));
-			itsTimerPort->setTimer(5.0);
+			itsTimerPort->setTimer(2.0);
 			break;
 		}
 

@@ -634,6 +634,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 			LOG_DEBUG_STR("Removing " << theObs->second->getName() << " from the administration due to premature quit");
 			delete theObs->second;
 			itsObsMap.erase(theObs);
+      itsClaimedMap.erase(port.getName());
 		}
 	}
 	break;
@@ -700,15 +701,15 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 
 		// In the claim state station-wide changes are activated.
 		if (event.signal == CONTROL_CLAIM) {
-			if (itsClaimSequence == 0) {
+			if (!itsClaimedMap[cntlrName]) {
+				LOG_INFO("Claiming resources.");
+        		itsClaimedMap[cntlrName] = true; // mark as claiming/claimed
 				itsStartingObs = theObs;
 				TRAN(StationControl::startObservation_state);
-				queueTaskEvent(event, port);
 			} else {
-				LOG_WARN("Already went through CLAIM phase -- ignoring CONTROL_CLAIM event");
+				LOG_INFO("Already claimed resources.");
 			}
-			return (GCFEvent::HANDLED);
-//			return (GCFEvent::NEXT_STATE);
+	        return (GCFEvent::HANDLED);
 		}
 
 		// pass event to observation FSM
@@ -722,6 +723,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 //			itsTimerPort->cancelTimer(theObs->second->itsStopTimerID);
 			delete theObs->second;
 			itsObsMap.erase(theObs);
+      itsClaimedMap.erase(cntlrName);
 			return (GCFEvent::HANDLED);
 		}
 
@@ -788,17 +790,9 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
      */
 
 	switch (event.signal) {
-	case CONTROL_CLAIM: {
-       	// defer the setup to the timer eventa
-	// NOTE: StationControl can receive multiple CLAIM requests. Example:
-	//    * We're in CLAIMED
-	//    * Station receives PREPARE (due to state sync errors?)
-	//    * Station will replay PREPARE -> CLAIM
-    // So we ONLY start the ClaimTimer if the ClaimSequence was not yet started
-		if (itsClaimSequence == 0) {
-			itsClaimSequence++;
-		    itsClaimTimerPort->setTimer(0.0);
-		}
+	case F_ENTRY: {
+		itsClaimSequence = 1;
+	    itsClaimTimerPort->setTimer(0.0);
 	}
 	break;
 
@@ -952,7 +946,6 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
 	}
 	break;
 
-	case F_ENTRY:
 	case F_EXIT:
 		break;
 
@@ -1380,6 +1373,7 @@ LOG_DEBUG_STR("final receivers   =" << realReceivers);
 
 	LOG_DEBUG_STR("Adding " << name << " to administration");
 	itsObsMap[name] = theNewObs;
+  itsClaimedMap[name] = false;
 	LOG_DEBUG_STR(*theNewObs);
 	theNewObs->start();				// call initial state.
 

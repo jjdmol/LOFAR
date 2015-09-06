@@ -352,14 +352,9 @@ class GenericPipeline(control):
                 if 'pluginpath' in pipeline_args.keys():
                     pluginpath.append(pipeline_args.getString('pluginpath'))
                 with duration(self, stepname):
-                    for path in (pluginpath):
-                        try:
-                            resultdict = loader.call_plugin(typeval, path,
+                    resultdict = loader.call_plugin(typeval, pluginpath,
                                                     inputargs,
                                                     **inputdict)
-                            break
-                        except:
-                            pass
             resultdicts[stepname] = resultdict
 
             # breaking the loopstep
@@ -568,8 +563,6 @@ class GenericPipeline(control):
         for check in self.parset.keys:
             if str(check).startswith('!'):
                 replacedict[str(check).lstrip('!').lstrip(' ')] = str(self.parset[check])
-            if str(check).startswith('pipeline.replace.'):
-                replacedict[str(check).lstrip('pipeline.replace.').lstrip(' ')] = str(self.parset[check])
         #print 'REPLACEDICT: ',replacedict
         for check in self.parset.keys:
             if not str(check).startswith('#'):
