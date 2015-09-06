@@ -471,6 +471,7 @@ def createRSPDriverFile_Test(resultDir, stationName, dataDir, alias):
     stationNr = int(name[2:])
 
     # International stations can be identified by the second part of their IP address
+    is_core_station = name[:2] == "CS"
     is_int_station = (ip_parts[1] != "151")
 
     # Need globally unique IP port numbers.
@@ -502,7 +503,7 @@ def createRSPDriverFile_Test(resultDir, stationName, dataDir, alias):
         # SOURCE IP contains information on which Cobalt iface to send to, to help
         # Cobalt route the packet.
         for rspNr in range(4):
-            dstip = IPandMAC[0][1]
+            dstip = ip_mac_alias[0][0]
             dstiface = dstip.split('.')[3] # 1 = 10GB01 ... 4 = 10GB04
             RSPconfig = RSPconfig.replace("@IP_SUBNET_0"+str(rspNr)+"@", dstiface) 
 
@@ -513,7 +514,7 @@ def createRSPDriverFile_Test(resultDir, stationName, dataDir, alias):
             # SOURCE IP contains information on which Cobalt iface to send to, to help
             # Cobalt route the packet.
             for rspNr in range(4):
-                dstip = IPandMAC[1][1]
+                dstip = ip_mac_alias[1][0]
                 dstiface = dstip.split('.')[3] # 1 = 10GB01 ... 4 = 10GB04
                 RSPconfig = RSPconfig.replace("@IP_SUBNET_1"+str(rspNr)+"@", dstiface) 
       
