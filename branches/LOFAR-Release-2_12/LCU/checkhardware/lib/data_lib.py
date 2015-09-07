@@ -173,11 +173,15 @@ class cRCUdata:
     def getSubbands(self, rcu):
         return (self.getMaskedData()[int(rcu),:,:].mean(axis=0))
     
-    def getSubbandX(self):
-        return (self.getMaskedData()[0::2,:,self.testSubband_Y].mean(axis=1))
+    def getSubbandX(self, subband=None):
+        if subband is None:
+            return (self.getMaskedData()[0::2,:,self.testSubband_Y].mean(axis=1))
+        return (self.getMaskedData()[0::2,:,subband].mean(axis=1))
     
-    def getSubbandY(self):
-        return (self.getMaskedData()[1::2,:,self.testSubband_Y].mean(axis=1))
+    def getSubbandY(self, subband=None):
+        if subband is None:
+            return (self.getMaskedData()[1::2,:,self.testSubband_Y].mean(axis=1))
+        return (self.getMaskedData()[1::2,:,subband].mean(axis=1))
                        
     def getAll(self, pol='XY'):
         if pol in ('XY', 'xy'):

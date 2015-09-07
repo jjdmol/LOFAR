@@ -327,10 +327,10 @@ def print_rsp(partnumber, msg, keyvalue):
             print "    Board %2d wrong firmware version: AP=%s BP=%s" % (
                 partnumber, keyvalue.get('AP'), keyvalue.get('BP'))
     if msg == 'VOLTAGE':
-        print "    Board %2d wrong voltage: 1.2V=%3.1f 2.5V=%3.1f 3.3V=%3.1f" % (
+        print "    Board %2d wrong voltage: 1.2V=%s 2.5V=%s 3.3V=%s" % (
               partnumber, keyvalue.get('1.2V'), keyvalue.get('2.5V'), keyvalue.get('3.3V'))
     if msg == 'TEMPERATURE':
-        print "    Board %2d high temperature: PCB=%3.1f BP=%3.1f AP0=%3.1f AP1=%3.1f AP2=%3.1f AP3=%3.1f" % (
+        print "    Board %2d high temperature: PCB=%s BP=%s AP0=%s AP1=%s AP2=%s AP3=%s" % (
               partnumber, keyvalue.get('PCB'), keyvalue.get('BP'), keyvalue.get('AP0'), keyvalue.get('AP1'),
               keyvalue.get('AP2'), keyvalue.get('AP3'))
     return
