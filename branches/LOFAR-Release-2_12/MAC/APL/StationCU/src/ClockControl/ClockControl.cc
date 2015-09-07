@@ -961,6 +961,7 @@ GCFEvent::TResult ClockControl::setSplitters_state(GCFEvent& event,
         LOG_INFO_STR ("Received splitter update, going to operational state");
 
 		TRAN(ClockControl::active_state);
+		break;
 	}
 
 	case DP_CHANGED:
