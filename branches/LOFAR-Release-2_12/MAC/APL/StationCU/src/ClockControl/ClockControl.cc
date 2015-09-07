@@ -853,11 +853,11 @@ GCFEvent::TResult ClockControl::setBitmode_state(GCFEvent& event,
 		LOG_INFO_STR ("StationBitmode is set to " << itsBitmode << ", going to operational state");
 		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
 		itsOwnPropertySet->setValue(PN_CLC_ACTUAL_BITMODE,GCFPVInteger(itsBitmode));
-		break;
-	}
 
-  case RSP_UPDBITMODE:
-  {
+		// Do NOT wait for RSP_UPDBITMODE: Updating the bit mode is instantaneous,
+        // and does not trigger RSP_UPDBITMODE if the bit mode happened to be in the
+        // right state already.
+
 	    if (itsLastCommandClient) {
 		    CLKCTRLSetBitmodeAckEvent	response;
 		    response.status = CLKCTRL_NO_ERR;
@@ -870,7 +870,7 @@ GCFEvent::TResult ClockControl::setBitmode_state(GCFEvent& event,
 
 		TRAN(ClockControl::active_state);				// go to next state.
 		return (GCFEvent::NEXT_STATE);
-  }
+    }
 
 	case DP_CHANGED:
 	case CLKCTRL_GET_CLOCK:
@@ -879,6 +879,7 @@ GCFEvent::TResult ClockControl::setBitmode_state(GCFEvent& event,
 	case CLKCTRL_SET_BITMODE:
 	case CLKCTRL_GET_SPLITTERS:
 	case CLKCTRL_SET_SPLITTERS:
+    case RSP_UPDBITMODE:
 	case RSP_UPDCLOCK:
 	case RSP_UPDSPLITTER:
 		LOG_INFO_STR("Postponing event " << eventName(event) << " till next state");
@@ -944,10 +945,11 @@ GCFEvent::TResult ClockControl::setSplitters_state(GCFEvent& event,
 				itsSplitters.set(i);
 			}
 		}
-		break;
-	}
 
-	case RSP_UPDSPLITTER:
+		// Do NOT wait for RSP_UDPSPLITTER: Updating the splitter is instantaneous,
+        // and does not trigger RSP_UDPSPLITTER if the splitters happened to be in the
+        // right state already.
+
 	    if (itsLastCommandClient) {
             CLKCTRLSetSplittersAckEvent	response;
             response.status = CLKCTRL_NO_ERR;
@@ -960,6 +962,7 @@ GCFEvent::TResult ClockControl::setSplitters_state(GCFEvent& event,
 
 		TRAN(ClockControl::active_state);				// handle RSP_UPDSPLITTER in next state.
         return (GCFEvent::NEXT_STATE);
+	}
 
 	case DP_CHANGED:
 	case CLKCTRL_GET_CLOCK:
@@ -970,6 +973,7 @@ GCFEvent::TResult ClockControl::setSplitters_state(GCFEvent& event,
 	case CLKCTRL_SET_SPLITTERS:
 	case RSP_UPDCLOCK:
     case RSP_UPDBITMODE:
+	case RSP_UPDSPLITTER:
 		LOG_INFO_STR("Postponing event " << eventName(event) << " till next state");
 		return (GCFEvent::NEXT_STATE);
 
