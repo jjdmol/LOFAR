@@ -1,0 +1,541 @@
+V 11
+1
+LANG:1 0 
+PANEL,-1 -1 273 73 N "_3DFace" 0
+"main()
+{
+  baseDP = \"LOFAR_PermSW\";
+  database=dpSubStr(baseDP,DPSUB_SYS);
+  
+  activeObsDP =MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\";  
+  // check if MACScheduler pointenabled and accessible
+  if (dpExists(activeObsDP)) {
+    if (dpConnect(\"updateActiveObservations\", activeObsDP+\":_online.._value\",
+                                             activeObsDP+\":_online.._invalid\") == -1) {
+      LOG_ERROR(\"ObservationFlow_cobaltNodeProcesses.pnl:main|Couldn't connect to: \"+activeObsDP);
+    }
+  } else {
+    if (!isStandalone()) LOG_ERROR(\"ObservationFlow_cobaltInputStreams.pnl:main|Couldn't find DP to connect to: \"+activeObsDP);
+  }
+  
+  	
+}" 0
+ E "main()
+{
+  click();
+}" 0
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+ 1 -1 -1 0  0 0
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string baseDP          = \"\";
+dyn_string observationsList;
+dyn_string oldObsConnections;   // keep copy latest observations to be disconnected when the list changes
+dyn_string activeObservations;
+string activeObsDP = \"\";
+string database;
+dyn_string stationInputs;
+dyn_string oldConnectTo0;
+dyn_string oldConnectTo1;
+dyn_string oldConnectTo2;
+dyn_string oldConnectTo3;
+bool connected0;
+bool connected1;
+bool connected2;
+bool connected3;
+
+bool selectedObservations=false;
+
+bool bDoubleClicked  = false;
+
+// routine for single mouse click
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked && dynlen(stationInputs) > 0) {
+      navPanel_setEvent(\"observationFlow_cobaltInputStream.pnl\",\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true; 
+  if (dynlen(stationInputs) > 0) {
+  
+    LOG_DEBUG(\"observationFlow_cobaltInputStream.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \" + baseDP);
+    g_currentDatapoint=baseDP;
+    //we also have to set the tabctrl to think this was initiated from the ProcessesTab, otherwise we will get the wrong panel.
+    navPanel_setEvent(\"Processes\",\"ChangeTab\");
+  }
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;
+}
+
+// routine for right mouse click
+void rClick() {
+  if (dynlen(stationInputs) > 0) {
+    navPanel_setEvent(\"observationFlow_cobaltInputStream.pnl\",\"EventRightClick\");
+  }
+}
+
+void updateActiveObservations(string dp1, dyn_string obs,
+                              string dp2, bool invalid)
+{
+
+  // remove pipelines from the list
+  for (int i=dynlen(obs);i > 0;  i--) if (!navFunct_isObservation(obs[i])) dynRemove(obs,i);
+  
+  activeObservations = obs;
+  // if there are selected observation check the observationsList if those selected observations still are active
+  // remove the unactive observations from the list  
+  
+  // replace old observations if there are no observations selected
+  if (selectedObservations) {
+    for (int i=dynlen(observationsList); i < 1; i--) {
+      int idx = dynContains(activeObservations,observationsList[i]);
+      if (i <= 0) dynRemove(observationsList,i);
+    }
+    if (dynlen(observationsList) ==0) {
+      selectedObservations=false;
+    }
+  }
+  
+  if (!selectedObservations) {
+    observationsList = activeObservations;
+  }
+  // because CobaltProcesses claim their datapoints when the observation is actually running we need to connect to all these observations
+  // and give a signal when the runstate of one of them changes to running to trigger the Cobalt point collection
+  
+  LOG_DEBUG(\"ObservationFlow_cobaltInputStreams.pnl:updateActiveObservations|observationList: \"+observationsList);
+
+  dyn_string obsConnections = makeDynString();  
+  for (int i = 1; i <= dynlen(observationsList) ; i++) {
+    // compose the WinCC OA DP name 
+    string obsName = \"LOFAR_ObsSW_\"+observationsList[i]; 
+
+    // Ask the claimmanager for the temp obs representation
+    string obsDP=MainDBName+claimManager_nameToRealName(obsName);
+
+    // add DP to list with all connects
+    if (! dynContains(obsConnections,obsDP+\".runState\")) dynAppend(obsConnections,obsDP+\".runState\");
+  }
+  
+  if (dynlen(oldObsConnections) > 0) {
+    // disconnect old observations
+    dpDisconnect(\"monitorRunStates\",oldObsConnections);
+    dynClear(oldObsConnections);
+  }
+  
+  // connect to runState for all active observations  
+  if (dynlen(obsConnections) > 0 && dpConnect(\"monitorRunStates\",obsConnections) == -1) {
+    LOG_ERROR(\"ObservationFlow_cobaltInputStreams.pnl:updateActiveObservations|ERROR: couldn't connect to : \"+obsConnections+ \" \" + getLastError());
+  } else if (dynlen(obsConnections) > 0) {
+    oldObsConnections = obsConnections;
+  }  else {
+    setValue(\"streamObject0\", \"foreCol\", \"Lofar_off\");
+    setValue(\"streamObject1\", \"foreCol\", \"Lofar_off\");
+    setValue(\"streamObject2\", \"foreCol\", \"Lofar_off\");
+    setValue(\"streamObject3\", \"foreCol\", \"Lofar_off\");
+  }     
+  
+}
+
+void monitorRunStates(dyn_string dpList,dyn_string runStates) {
+  for (int i=1; i<= dynlen(runStates); i++) {
+    if (runStates[i] == \"Running\" || runStates[i] == \"Quiting\") {
+      connectStationInputStreams(runStates[i]);
+      break;
+    }
+  }
+}
+
+
+
+
+// connect to stationInputStreams from the active observations
+void connectStationInputStreams(string runState) {
+  stationInputs = \"\";
+  string obsDP=\"\";
+  dyn_string stream0DPList;
+  dyn_string stream1DPList;
+  dyn_string stream2DPList;
+  dyn_string stream3DPList;
+
+  dyn_string connectTo0;
+  dyn_string connectTo1;
+  dyn_string connectTo2;
+  dyn_string connectTo3;
+  
+  // change all found DP's to contain all the elements that contain the stream.percBad
+  if (connected0) {
+    dpDisconnect(\"streamCB0\",oldConnectTo0);
+    dynClear(oldConnectTo0);
+    connected0 = false;
+  }
+  if (connected1) {
+    dpDisconnect(\"streamCB1\",oldConnectTo1);
+    dynClear(oldConnectTo1);
+    connected1 = false;
+  }
+  if (connected2) {
+    dpDisconnect(\"streamCB2\",oldConnectTo2);
+    dynClear(oldConnectTo2);
+    connected2 = false;
+  }
+  if (connected3) {
+    dpDisconnect(\"streamCB3\",oldConnectTo3);
+    dynClear(oldConnectTo3);
+    connected3 = false;
+  }
+
+  if (dynlen(observationsList) == 1 && runState == \"Quiting\") {
+    setValue(\"streamObject0\", \"foreCol\", \"Lofar_off\");
+    setValue(\"streamObject1\", \"foreCol\", \"Lofar_off\");
+    setValue(\"streamObject2\", \"foreCol\", \"Lofar_off\");
+    setValue(\"streamObject3\", \"foreCol\", \"Lofar_off\");
+    return;
+  }
+
+
+  //collect all active observations and their stationInputStreams
+  if (dynlen(observationsList) > 0) {
+    // prepare connectList
+    for(int i=1; i <= dynlen(observationsList); i++) {
+      dynClear(stream0DPList);
+      dynClear(stream1DPList);
+      dynClear(stream2DPList);
+      dynClear(stream3DPList);
+      // For all observations collect the PermSW streamInfo
+      stationInputs = navFunct_getStationInputForObservation(observationsList[i]);
+  
+
+      for (int i=1; i<= dynlen(stationInputs); i++) {
+        if (! dynContains(connectTo0,stationInputs[i]+\".stream0:_online.._value\")) dynAppend(connectTo0,stationInputs[i]+\".stream0.rejected:_online.._value\");
+        if (! dynContains(connectTo1,stationInputs[i]+\".stream1:_online.._value\")) dynAppend(connectTo1,stationInputs[i]+\".stream1.rejected:_online.._value\");
+        if (! dynContains(connectTo2,stationInputs[i]+\".stream2:_online.._value\")) dynAppend(connectTo2,stationInputs[i]+\".stream2.rejected:_online.._value\");
+        if (! dynContains(connectTo3,stationInputs[i]+\".stream3:_online.._value\")) dynAppend(connectTo3,stationInputs[i]+\".stream3.rejected:_online.._value\");
+      }
+      if (dynlen(stationInputs) > 0) baseDP = stationInputs[1];
+    }
+      
+  
+    // check if the required datapoint for this view are enabled and accessible
+    if (dynlen(connectTo0)>0 && navFunct_dpReachable(CEPDBName)  ){
+      if (dpConnect(\"streamCB0\", connectTo0) == -1) {
+        setValue(\"streamObject0\", \"foreCol\", \"Lofar_dpdoesnotexist\");
+      } else {
+        connected0 = true;
+        oldConnectTo0 = connectTo0;
+      }
+    } else {
+      
+      setValue(\"streamObject0\", \"foreCol\", \"Lofar_off\");
+    }
+    if (dynlen(connectTo1)>0 && navFunct_dpReachable(CEPDBName) ){
+      if (dpConnect(\"streamCB1\", connectTo1) == -1) {
+        setValue(\"streamObject1\", \"foreCol\", \"Lofar_dpdoesnotexist\");
+      } else {
+        connected1 = true;
+        oldConnectTo1 = connectTo1;
+      }
+    } else {
+      setValue(\"streamObject1\", \"foreCol\", \"Lofar_off\");
+    }
+    if (dynlen(connectTo2)>0 &&  navFunct_dpReachable(CEPDBName) ){
+      if (dpConnect(\"streamCB2\", connectTo2) == -1) {
+        setValue(\"streamObject2\", \"foreCol\", \"Lofar_dpdoesnotexist\");
+      } else {
+        connected2 = true;
+        oldConnectTo2 = connectTo2;
+      }
+    } else {
+      setValue(\"streamObject2\", \"foreCol\", \"Lofar_off\");
+    }
+    if (dynlen(connectTo3)>0 && navFunct_dpReachable(CEPDBName)){
+      if (dpConnect(\"streamCB3\", connectTo3) == -1) {
+        setValue(\"streamObject3\", \"foreCol\", \"Lofar_dpdoesnotexist\");
+      } else {
+        connected3 = true;
+        oldConnectTo3 = connectTo3;
+      }
+    } else {
+      setValue(\"streamObject3\", \"foreCol\", \"Lofar_off\");
+    }
+  } else {
+      setValue(\"streamObject0\", \"foreCol\", \"Lofar_off\");    
+      setValue(\"streamObject1\", \"foreCol\", \"Lofar_off\");    
+      setValue(\"streamObject2\", \"foreCol\", \"Lofar_off\");    
+      setValue(\"streamObject3\", \"foreCol\", \"Lofar_off\");    
+  }
+}
+
+      
+void streamCB0(dyn_string dps, dyn_float values)
+{
+  calcValues(0,dps,values);
+}
+
+void streamCB1(dyn_string dps, dyn_float values)
+{
+  calcValues(1,dps,values);
+}
+
+void streamCB2(dyn_string dps, dyn_float values)
+{
+  calcValues(2,dps,values);
+}
+
+void streamCB3(dyn_string dps, dyn_float values)
+{
+  calcValues(3,dps,values);
+}
+
+void calcValues(int stream,dyn_string dps,dyn_float values)
+{
+  // Here we get all bad values and we have to determine how many are wrong. 
+  // if a station has more then 25% bad data (i.e. a single value in the values list exceeds 25%, 
+  //   or more then 25% of the stations have bad data we need to set the color to yellow, 
+  // if a station has more then 50% bad data (i.e. a single value in the values list exceeds 50%, 
+  //   or more then 50% of the stations have bad data we need to set the color to orange, 
+  // if a station has more then 75% bad data (i.e. a single value in the values list exceeds 75%, 
+  //   or more then 75% of the stations have bad data we need to set the color to red, 
+  
+  string obsname = dpSubStr(dps,DPSUB_SYS_DP)+\".observationName\";
+  string obs;
+  dpGet(obsname,obs);
+  string observation = \"Observation\"+obs; 
+
+  
+  string toolTipText = observation+\" - stream\"+stream+\"<br>\";
+  
+  int count=0;
+  string color = \"Lofar_operational\";
+  dyn_string toollist;
+  for (int i = 1; i<= dynlen(values); i++) {
+    float val = values[i];
+    string dp = dps[i];
+    if (val > 0.0 && val < 33.0) {
+      color = \"Lofar_test\";
+    } else if (val >= 33.0 && val < 66.0) {
+      color = \"Lofar_maintenance\";
+    } else if (val >= 66.0 && val < 100.0) {
+      color = \"Lofar_suspicious\";
+    } else if (val >= 100.0) {
+      color = \"Lofar_broken\";
+    }
+        
+    if (val > 0.0) {
+      string aS=dp+\"</t> :\"+val+\"<br>\";
+      dynAppend(toollist,aS);
+      count++;
+    }
+  }
+  dynSort(toollist);
+  for (int i=1; i<= dynlen(toollist);i++) {
+    toolTipText += toollist[i];
+  }
+  if (count >= dynlen(values)*.8) {
+    if (getStateNumber(color) < getStateNumber(\"Lofar_broken\") ) {
+      color = \"Lofar_broken\";
+    }
+    toolTipText +=\"<br>\"+(float)(dynlen(values)/count)+\" % CobaltStationInput with bad values<br>\";
+  } else if (count >= dynlen(values)*.6) {
+    if (getStateNumber(color) < getStateNumber(\"Lofar_suspicious\") ) {
+      color = \"Lofar_suspicious\";
+    }
+    toolTipText +=\"<br>\"+(float)(dynlen(values)/count)+\" % CobaltStationInput with bad values<br>\";
+  } else if (count >= dynlen(values)*.4) {
+    if (getStateNumber(color) < getStateNumber(\"Lofar_maintenance\") ) {
+      color = \"Lofar_maintenance\";
+    }
+    toolTipText +=\"<br>\"+(float)(dynlen(values)/count)+\" % CobaltStationInput with bad values<br>\";
+  } else if (count > dynlen(values)*.2) {
+    if (getStateNumber(color) < getStateNumber(\"Lofar_test\") ) {
+      color = \"Lofar_test\";
+    }
+    toolTipText +=\"<br>\"+(float)(dynlen(values)/count)+\" % CobaltStationInput with bad values<br>\";
+  }
+
+  setValue(\"streamObject\"+stream, \"toolTipText\",toolTipText);
+  setValue(\"streamObject\"+stream, \"foreCol\", color);
+
+}
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+4 0
+"streamObject0"
+""
+1 10 10 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+0 0 0 0 0 0
+E E E
+0
+1
+LANG:1 73 All inputbuffers involved in the  currently(selected) active observations
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 4 1 2 1 E  10 10 40 10
+4 1
+"streamObject3"
+""
+1 10 40 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 73 All inputbuffers involved in the  currently(selected) active observations
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 4 1 2 1 E  10 40 40 40
+4 2
+"streamObject1"
+""
+1 10 20 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 73 All inputbuffers involved in the  currently(selected) active observations
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 4 1 2 1 E  10 20 40 20
+4 3
+"streamObject2"
+""
+1 10 30 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 73 All inputbuffers involved in the  currently(selected) active observations
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 4 1 2 1 E  10 30 40 30
+6 4
+"RECTANGLE1"
+""
+1 10 10 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  0 E 10 10 40 40
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0
