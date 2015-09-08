@@ -78,6 +78,7 @@ namespace LOFAR {
         itsTolerance     (parset.getDouble (prefix + "tolerance", 1.e-5)),
         itsPropagateSolutions (parset.getBool(prefix + "propagatesolutions", false)),
         itsSolInt        (parset.getInt(prefix + "solint", 1)),
+        itsSlideInt      (parset.getInt(prefix + "slideint", 0)),
         itsMinBLperAnt   (parset.getInt(prefix + "minblperant", 4)),
         itsConverged     (0),
         itsNonconverged  (0),
@@ -133,9 +134,10 @@ namespace LOFAR {
 
       if (itsSolInt==0) {
         itsSolInt=info().ntime();
+        ASSERTSTR(itsSlideInt==0, "When solving over all time slots, slideint should be zero");
       }
 
-      itsSols.reserve(info().ntime());
+      itsSols.reserve(info().ntime()/itsSolInt);
 
       // Read the antenna beam info from the MS.
       // Only take the stations actually used.
@@ -152,6 +154,7 @@ namespace LOFAR {
       os << "GainCal " << itsName << endl;
       os << "  parmdb:             " << itsParmDBName << endl;
       os << "  solint:             " << itsSolInt <<endl;
+      os << "  slideint:           " << itsSlideInt <<endl;
       os << "  max iter:           " << itsMaxIter << endl;
       os << "  tolerance:          " << itsTolerance << endl;
       os << "  mode:               " << itsMode << endl;
@@ -199,7 +202,14 @@ namespace LOFAR {
       itsInput->fetchWeights(bufin, itsBuf, itsTimer);
       itsInput->fetchFullResFlags(bufin, itsBuf, itsTimer);
 
-      Cube<Complex> dataCube=itsBuf.getData();
+      Cube<Complex> dataCube;
+      if (itsUseModelColumn && itsApplyBeamToModelColumn) {
+        // Need a deep copy
+        dataCube=itsBuf.getData().copy();
+      } else {
+        // Shallow copy will do
+        dataCube=itsBuf.getData();
+      }
       Complex* data=dataCube.data();
       float* weight = itsBuf.getWeights().data();
       const Bool* flag=itsBuf.getFlags().data();
@@ -229,6 +239,7 @@ namespace LOFAR {
 
       itsTimerFill.start();
 
+      // TODO
       if (itsNTimes==0) {
         itsDataPerAntenna=0;
         itsVis=0;
@@ -239,7 +250,7 @@ namespace LOFAR {
       if (itsUseModelColumn && !itsApplyBeamToModelColumn) {
         fillMatrices(itsModelData.data(),data,weight,flag);
       } else {
-        fillMatrices(itsResultStep->get().getData().data(),data,weight,flag);
+         fillMatrices(itsResultStep->get().getData().data(),data,weight,flag);
       }
       itsTimerFill.stop();
 
@@ -274,6 +285,7 @@ namespace LOFAR {
             continue;
           }
 
+          //TODO
           for (uint cr=0;cr<nCr;++cr) {
             itsVis (IPosition(6,ant1,cr/2,ch,itsNTimes,cr%2,ant2)) =
                 DComplex(data [bl*nCr*nCh+ch*nCr+cr]) *
@@ -292,6 +304,10 @@ namespace LOFAR {
           }
         }
       }
+    }
+
+    void removeDeadAntennas() {
+
     }
 
 
@@ -319,7 +335,7 @@ namespace LOFAR {
         }
       }
     }
-      
+
     void GainCal::setAntennaMaps () {      
       vector<int> antMap(info().antennaNames().size(),-1);
       uint nCr=info().ncorr();
@@ -345,8 +361,8 @@ namespace LOFAR {
       uint nSt=antUsed.size();
       uint nCh=info().nchan();
       // initialize storage
-      itsVis.resize (IPosition(6,nSt,2,nCh,itsSolInt,2,nSt));
-      itsMVis.resize(IPosition(6,nSt,2,nCh,itsSolInt,2,nSt));
+      itsVis.resize (IPosition(6,nSt,2,nCh,itsSolInt+2*itsSlideInt,2,nSt));
+      itsMVis.resize(IPosition(6,nSt,2,nCh,itsSolInt+2*itsSlideInt,2,nSt));
     }
 
     void GainCal::stefcal (string mode, uint solInt) {
@@ -397,24 +413,19 @@ namespace LOFAR {
       iS.h.resize(nUn,nCr);
       iS.z.resize(nUn*nCh*solInt*nSp,nCr);
 
-      double ww; // Same as w, but specifically for pol==false
       Vector<DComplex> w(nCr);
-      Vector<DComplex> t(nCr);
 
       // Initialize all vectors
       double fronormvis=0;
       double fronormmod=0;
 
-      DComplex* vis_p;
-      DComplex* mvis_p;
-
-      vis_p=itsVis.data();
-      mvis_p=itsMVis.data();
+      DComplex* vis_p=itsVis.data();
+      DComplex* mvis_p=itsMVis.data();
 
       uint vissize=itsVis.size();
       for (uint i=0;i<vissize;++i) {
-        fronormvis+=norm(*vis_p++);
-        fronormmod+=norm(*mvis_p++);
+        fronormvis+=norm(vis_p[i]);
+        fronormmod+=norm(mvis_p[i]);
       }
 
       fronormvis=sqrt(fronormvis);
@@ -470,6 +481,7 @@ namespace LOFAR {
             }
 
             w=0;
+            Vector<DComplex> t(nCr);
             t=0;
 
             for (uint time=0;time<solInt;++time) {
@@ -515,32 +527,29 @@ namespace LOFAR {
           for (uint st=0;st<nUn;++st) {
             iS.h(st,0)=conj(iS.g(st,0));
           }
-//#pragma omp parallel for
+#pragma omp parallel for
           for (uint st1=0;st1<nUn;++st1) {
-            ww=0;
-            t(0)=0;
+            double ww=0; // Same as w, but specifically for pol==false
+            DComplex tt=0; // Same as t, but specifically for pol==false
             DComplex* z_p=iS.z.data();
-            mvis_p=&itsMVis(IPosition(6,0,0,0,0,st1/nSt,st1%nSt));
-            vis_p = &itsVis(IPosition(6,0,0,0,0,st1/nSt,st1%nSt));
+            DComplex* mvis_p_t=&itsMVis(IPosition(6,0,0,0,0,st1/nSt,st1%nSt));
+            DComplex* vis_p_t = &itsVis(IPosition(6,0,0,0,0,st1/nSt,st1%nSt));
             for (uint st1pol=0;st1pol<nSp;++st1pol) {
               for (uint time=0;time<solInt;++time) {
                 for (uint ch=0;ch<nCh;++ch) {
                   DComplex* h_p=iS.h.data();
                   for (uint st2=0;st2<nUn;++st2) {
-                    *z_p = h_p[st2] * *mvis_p; //itsMVis(IPosition(6,st2%nSt,st2/nSt,ch,time,st1/nSt,st1%nSt));
-                    ww+=norm(*z_p);
-                    t(0)+=conj(*z_p) * *vis_p; //itsVis(IPosition(6,st2%nSt,st2/nSt,ch,time,st1/nSt,st1%nSt));
-                    mvis_p++;
-                    vis_p++;
-                    z_p++;
+                    z_p[st2] = h_p[st2] * mvis_p_t[st2]; //itsMVis(IPosition(6,st2%nSt,st2/nSt,ch,time,st1/nSt,st1%nSt));
+                    ww+=norm(z_p[st2]);
+                    tt+=conj(z_p[st2]) * vis_p_t[st2]; //itsVis(IPosition(6,st2%nSt,st2/nSt,ch,time,st1/nSt,st1%nSt));
+                    //cout<<"iS.z bij ch="<<ch<<"="<<iS.z<<endl<<"----"<<endl;
                   }
-                  //cout<<"iS.z bij ch="<<ch<<"="<<iS.z<<endl<<"----"<<endl;
                 }
               }
             }
             //cout<<"st1="<<st1%nSt<<(st1>=nSt?"y":"x")<<", t="<<t(0)<<"       ";
             //cout<<", w="<<ww<<"       ";
-            iS.g(st1,0)=t(0)/ww;
+            iS.g(st1,0)=tt/ww;
             //cout<<", g="<<iS.g(st1,0)<<endl;
             if (itsMode=="phaseonly" || itsMode=="scalarphase") {
               iS.g(st1,0)/=abs(iS.g(st1,0));
@@ -552,6 +561,9 @@ namespace LOFAR {
               iS.h(st1,0)=0.8*iS.h(st1,0)-0.2*conj(iS.g(st1,0));
             }
           }
+
+// End pragma parallel for
+
           if (itsStefcalVariant!="1c") {
             double fronormdiff=0;
             double fronormg=0;

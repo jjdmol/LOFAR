@@ -152,6 +152,7 @@ namespace LOFAR {
       double           itsTolerance;
       bool             itsPropagateSolutions;
       uint             itsSolInt;
+      uint             itsSlideInt;
       uint             itsMinBLperAnt;      
 
       uint             itsConverged;
