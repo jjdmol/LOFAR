@@ -76,7 +76,7 @@ def _create_mapfile_from_parset(parset, identifier):
 class MapfileManager(DataMap):
 
     def __init__(self, folder=None, pattern=None, excludepattern=False):
-        super(MapfileManager, self).__init__()
+        super(MapfileManager, self).__init__([])
         if folder:
             self.from_folder(folder, pattern, excludepattern)
         #self.map = DataMap([])
