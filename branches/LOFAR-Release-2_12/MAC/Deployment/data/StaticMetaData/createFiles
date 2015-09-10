@@ -515,8 +515,11 @@ def createRSPDriverFile_Test(resultDir, stationName, dataDir, alias):
             # Cobalt route the packet.
             for rspNr in range(4):
                 dstip = ip_mac_alias_1[0][0]
+                print dstip;
                 dstiface = dstip.split('.')[3] # 1 = 10GB01 ... 4 = 10GB04
                 RSPconfig = RSPconfig.replace("@IP_SUBNET_1"+str(rspNr)+"@", dstiface) 
+                RSPconfig = RSPconfig.replace("@IP_EXTEN_1"+str(rspNr)+"@",  ip_parts[2])
+
       
         hexStationID = str("%02x" % int(stationName[3:6]))
         ringID = '0'+stationName[2]
