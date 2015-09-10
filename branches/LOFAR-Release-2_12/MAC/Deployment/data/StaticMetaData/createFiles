@@ -487,11 +487,11 @@ def createRSPDriverFile_Test(resultDir, stationName, dataDir, alias):
             RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_PORT@", str(basePort + rspNr))
     if (len(alias) == 2):
         # Assume core station; fill in LANE_1, as well
-        ip_mac_alias = findIPandMAC_test(alias[1],dataDir)
+        ip_mac_alias_1 = findIPandMAC_test(alias[1],dataDir)
         for rspNr in range(4):  
             blet_out = find_Blets(stationName, dataDir)[5+rspNr];
-            RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_MAC@", ip_mac_alias[0][1] +"   # "+ip_mac_alias[0][2])
-            RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  ip_mac_alias[0][0])
+            RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_MAC@", ip_mac_alias_1[0][1] +"   # "+ip_mac_alias_1[0][2])
+            RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  ip_mac_alias_1[0][0])
             RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_PORT@", str(basePort + 6 + rspNr))
             RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_BLET@", blet_out) 
 
@@ -514,7 +514,7 @@ def createRSPDriverFile_Test(resultDir, stationName, dataDir, alias):
             # SOURCE IP contains information on which Cobalt iface to send to, to help
             # Cobalt route the packet.
             for rspNr in range(4):
-                dstip = ip_mac_alias[1][0]
+                dstip = ip_mac_alias_1[0][0]
                 dstiface = dstip.split('.')[3] # 1 = 10GB01 ... 4 = 10GB04
                 RSPconfig = RSPconfig.replace("@IP_SUBNET_1"+str(rspNr)+"@", dstiface) 
       
