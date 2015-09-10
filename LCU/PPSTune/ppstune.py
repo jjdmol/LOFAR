@@ -53,9 +53,9 @@ def version_string():
     **Example**
 
     >>> version_string()
-    '1.4'
+    '1.5'
     '''
-    return '1.4'
+    return '1.5'
 
 
 #######################
@@ -1471,7 +1471,7 @@ def measure_diff_stability(clock_mhz, repeat = 10,
 
 
 
-def measure_all_delays(station, clock_mhz,
+def measure_all_delays(clock_mhz,
                        edge = 'rising', repeat = 10,
                        rspctl_cmd = '/opt/lofar/bin/rspctl',
                        first_delay_step = 0,
@@ -1490,9 +1490,6 @@ def measure_all_delays(station, clock_mhz,
     3) reset sync delays to 0     
 
     **Parameters**
-
-    station : string
-        Station name.
 
     clock_mhz : int
         Clock frequency in MHz. Must be 160 or 200 MHz.
@@ -1529,7 +1526,7 @@ def measure_all_delays(station, clock_mhz,
     
     **Examples**
 
-    >>> measure_all_delays('CS021', clock_mhz = 200, edge = 'rising', repeat = 3,
+    >>> measure_all_delays(clock_mhz = 200, edge = 'rising', repeat = 3,
     ...                    rspctl_cmd = 'test/rspctl-odd', first_delay_step = 5,
     ...                    one_past_last_delay_step = 7,
     ...                    remote_station_conf='test/CS021-RemoteStation.conf')
@@ -1546,13 +1543,13 @@ def measure_all_delays(station, clock_mhz,
 
     Of course, one has to take care with the inputs:
 
-    >>> measure_all_delays('CS021', clock_mhz = 20, edge = 'rising', repeat = 3,
+    >>> measure_all_delays(clock_mhz = 20, edge = 'rising', repeat = 3,
     ...                    rspctl_cmd = 'test/rspctl-odd', one_past_last_delay_step = 2,
     ...                    remote_station_conf='test/CS021-RemoteStation.conf')
     Traceback (most recent call last):
     ...
     ValueError: clock_mhz (20) not in [160, 200]
-    >>> measure_all_delays('CS021', clock_mhz = 200, edge = 'rinsing', repeat = 3,
+    >>> measure_all_delays(clock_mhz = 200, edge = 'rinsing', repeat = 3,
     ...                    rspctl_cmd = 'test/rspctl-odd', one_past_last_delay_step = 2,
     ...                    remote_station_conf='test/CS021-RemoteStation.conf')
     Traceback (most recent call last):
@@ -1898,7 +1895,7 @@ def find_optimal_delays(diff_error_counts):
 
 
 
-def pps_delays_conf(station, start_date, pps_delays):
+def pps_delays_conf(station, clock_mhz, start_date, pps_delays):
     r'''
     Format pps_delays in PPSdelays.conf format.
 
@@ -1906,6 +1903,9 @@ def pps_delays_conf(station, start_date, pps_delays):
 
     station : string
         Station name.
+
+    clock_mhz : int
+        Clock frequency in MHz.
 
     start_date : float
         seconds since 1970.0
@@ -1915,7 +1915,7 @@ def pps_delays_conf(station, start_date, pps_delays):
 
     **Returns**
 
-    A string with the contents of PPSdelays.conf.
+    A string with the contents of PPSdelaysNNN.conf.
 
     **Examples**
 
@@ -1926,13 +1926,15 @@ def pps_delays_conf(station, start_date, pps_delays):
     ... #
     ... # 2012-03-20 12:32:46
     ... #
+    ... # Clock: %3d MHz
+    ... #
     ... 
     ... 48 [
     ...  36  26  21  36  17  53  49   9  50   7  51  48  60  42  11  37
     ...  47  57  33  47  49  22   2  51  61  44  14  63  61   3  37  19
     ...  57  36  35  54  35  34  42  60  59  63  63  37   4  53  52  10
-    ... ]""" % pwd.getpwuid(os.getuid()).pw_name
-    >>> expected == pps_delays_conf('CS030', 1332246766.307168,
+    ... ]""" % (pwd.getpwuid(os.getuid()).pw_name, 200)
+    >>> expected == pps_delays_conf('CS030', 200, 1332246766.307168,
     ... [36, 26, 21, 36, 17, 53, 49, 9, 50, 7, 51, 48, 60, 42, 11, 37,
     ...  47, 57, 33, 47, 49, 22, 2, 51, 61, 44, 14, 63, 61, 3, 37, 19,
     ...  57, 36, 35, 54, 35, 34, 42, 60, 59, 63, 63, 37, 4, 53, 52, 10])
@@ -1946,10 +1948,12 @@ def pps_delays_conf(station, start_date, pps_delays):
 #
 # %4d-%02d-%02d %02d:%02d:%02d
 #
+# Clock: %3d MHz
+#
 
 '''
     user = pwd.getpwuid(os.getuid()).pw_name
-    header = header_format % ((station, user)+gmtime_tuple(start_date))
+    header = header_format % ((station, user)+gmtime_tuple(start_date)+(clock_mhz,))
     contents = header + str(len(pps_delays)) + ' [\n'
     for subrack in range(len(pps_delays) / 16):
         subrack_delays = pps_delays[subrack*16:(subrack+1)*16]
@@ -2041,12 +2045,16 @@ def parse_command_line(argv):
                                     '"both". Default: %default']),
                 metavar = 'EDGE',
                 default = 'both')
-
+    
     parser.add_option('--clock', type = 'int',
+                      action  = 'append',
                       dest    = 'clock_mhz',
-                      help    = 'Set clock to CLOCK MHz. Default: %default',
+                      help    = ' '.join(['Set clock to CLOCK MHz (160 or 200).',
+                                          'This option can be provided multiple',
+                                          'times if both clocks must be measured',
+                                          'Default: 200.']),
                       metavar = 'CLOCK',
-                      default = 200)
+                      default = None)
                 
     parser.add_option('--log-dir', type = 'string',
                 dest    = 'log_dir',
@@ -2092,10 +2100,12 @@ def parse_command_line(argv):
     if options.edge not in ['rising', 'falling', 'both']:
         raise ValueError('Edge (%r) not \'rising\', \'falling\', or \'both\'' %
                          options.edge)
-
-    if options.clock_mhz not in [160, 200]:
-        raise ValueError('Clock (%d) must be 160 or 200 MHz' %
-                         options.clock_mhz)
+    if options.clock_mhz is None:
+        options.clock_mhz = [200]
+    for clock_mhz in options.clock_mhz:
+        if clock_mhz not in [160, 200]:
+            raise ValueError('Clock (%d) must be 160 or 200 MHz' %
+                             clock_mhz)
 
     if not options.measure_delays:
         options.write_conf_file = False
@@ -2490,9 +2500,12 @@ def write_pps_delays_conf(etc_name, temp_name, pps_delays):
         Final name of config file. Most likely
         '/opt/lofar/etc/PPSdelays.conf' 
 
-    temp_name :string
+    temp_name : string
         File to which ``pps_delays`` is written first. If this
         succeeds, this file is renamed to ``etc_name``.
+
+    pps_delays : string
+        The contents of the file, already formatted as a string.
 
     **Raises**
 
@@ -2590,6 +2603,104 @@ def write_pps_delays_conf(etc_name, temp_name, pps_delays):
 
 
 
+def pps_tune_for_clock(clock_mhz, station, start_date, options):
+    r'''
+    Perfrom full PPS tuning for one clock.
+    '''
+    previous_pps_delays = None
+    conf_etc_name  = os.path.join(options.output_dir, 'PPSdelays%d.conf' % clock_mhz)
+    conf_temp_name = os.path.join(options.output_dir,
+            '%s-%4d%02d%02d-%02d%02d%02d-PPSdelays%d.conf' %
+            ((station,) + gmtime_tuple(start_date) + (clock_mhz,)))
+    conf_etc_name_default  = os.path.join(
+        options.output_dir, 'PPSdelays.conf')
+    conf_temp_name_default = os.path.join(
+        options.output_dir,
+        '%s-%4d%02d%02d-%02d%02d%02d-PPSdelays.conf' %
+        ((station,) + gmtime_tuple(start_date)))
+
+    if options.write_conf_file:
+        logging.info('Writing temporary output to %s', conf_temp_name)
+    else:
+        logging.info('%s will not be overwritten', conf_etc_name)    
+    backup_name = prepare_for_tuning(conf_etc_name = conf_etc_name,
+                                     start_date    = start_date,
+                                     clock_mhz     = clock_mhz,
+                                     lofar_log_dir = options.log_dir)
+    # Actual measurements
+    if options.measure_delays:
+        if options.edge == 'both':
+            diff_errors_rising  = measure_all_delays(
+                clock_mhz       = clock_mhz,
+                edge            = 'rising',
+                repeat          = options.repeat)
+
+            diff_errors_falling = measure_all_delays(
+                clock_mhz       = clock_mhz,
+                edge            = 'falling',
+                repeat          = options.repeat,
+                first_delay_step = 29,
+                one_past_last_delay_step = 33)
+
+            diff_errors = diff_errors_rising + diff_errors_falling[1:]
+
+        else:
+            diff_errors  = measure_all_delays(
+                clock_mhz       = clock_mhz,
+                edge            = options.edge,
+                repeat          = options.repeat)
+            diff_errors += [[0]*len(diff_errors[0])]*4
+        diff_errors += diff_errors
+
+
+
+        # Report
+        logging.info('*** Failure report %s***\n%s',
+            station, sync_failure_report(diff_errors))
+
+        # Determine new optimum
+        new_delays = find_optimal_delays(diff_errors)
+
+        previous_pps_delays = read_pps_delays(conf_etc_name)
+        if previous_pps_delays is None and clock_mhz == 200:
+            previous_pps_delays = read_pps_delays(conf_etc_name_default)
+        if previous_pps_delays:
+            logging.info('Old delays:\n%s', previous_pps_delays)
+            old_delays = parse_pps_delays(previous_pps_delays)
+        else:
+            old_delays = None
+
+        pps_delays = pps_delays_conf(station, clock_mhz, start_date, new_delays)
+        logging.info('New delays:\n%s', pps_delays)
+
+        if old_delays:
+            logging.info('Difference new - old:\n%r',
+                         [p_new - p_old
+                          for p_new, p_old
+                          in zip(new_delays, old_delays)])
+
+        if options.write_conf_file:
+            # Throws IOError or OSError if writing failed
+            write_pps_delays_conf(conf_etc_name, conf_temp_name, pps_delays)
+            if clock_mhz == 200: # ALSO write the old default file
+                write_pps_delays_conf(conf_etc_name_default,
+                                      conf_temp_name_default,
+                                      pps_delays)
+        else:
+            logging.info('New delays will NOT be written to %s', conf_etc_name)
+    else:
+        logging.info('      *** Skipping measurements! ***')
+    # We do not get here in case of exceptions. It is safe to
+    # remove the backup now.
+    if os.path.exists(backup_name):
+        logging.info('Removing backup %s', backup_name)
+        os.remove(backup_name)
+
+
+
+
+
+
 def pps_tune_main(argv):
     r'''
     Main routine for pps tuning.
@@ -2606,7 +2717,6 @@ def pps_tune_main(argv):
 
     '''
     start_date          = time.time()
-    previous_pps_delays = None
     exit_status         = 0
     initial_swlevel     = None
     try:
@@ -2618,17 +2728,7 @@ def pps_tune_main(argv):
         logging.info('Beginning PPS tuning with %s version %s',
                      argv[0], version_string())
         logging.info('Command: %r', ' '.join(argv))        
-        conf_etc_name  = os.path.join(options.output_dir, 'PPSdelays.conf')
-        conf_temp_name = os.path.join(options.output_dir,
-                '%s-%4d%02d%02d-%02d%02d%02d-PPSdelays.conf' %
-                ((station,) + gmtime_tuple(start_date)))
-        
-        if options.write_conf_file:
-            logging.info('Writing temporary output to %s', conf_temp_name)
-        else:
-            logging.info('%s will not be overwritten', conf_etc_name)    
 
-        previous_pps_delays = read_pps_delays(conf_etc_name)
         initial_swlevel     = get_swlevel()
         logging.info('Initial swlevel is %d', initial_swlevel)
         if abs(initial_swlevel) < 2:
@@ -2639,75 +2739,10 @@ def pps_tune_main(argv):
         install_sig_term_handler(start_date, initial_swlevel,
                                  lofar_log_dir = options.log_dir)
         log_cabinet_climate(station)
-        
-        backup_name = prepare_for_tuning(conf_etc_name = conf_etc_name,
-                                         start_date    = start_date,
-                                         clock_mhz     = options.clock_mhz,
-                                         lofar_log_dir = options.log_dir)
-            
-        # Actual measurements
-        if options.measure_delays:
-            if options.edge == 'both':
-                diff_errors_rising  = measure_all_delays(station,
-                    clock_mhz       = options.clock_mhz,
-                    edge            = 'rising',
-                    repeat          = options.repeat)
-
-                diff_errors_falling = measure_all_delays(station,
-                    clock_mhz       = options.clock_mhz,
-                    edge            = 'falling',
-                    repeat          = options.repeat,
-                    first_delay_step = 29,
-                    one_past_last_delay_step = 33)
-
-                diff_errors = diff_errors_rising + diff_errors_falling[1:]
-
-            else:
-                diff_errors  = measure_all_delays(station,
-                    clock_mhz       = options.clock_mhz,
-                    edge            = options.edge,
-                    repeat          = options.repeat)
-                diff_errors += [[0]*len(diff_errors[0])]*4
-            diff_errors += diff_errors
-
-
-
-            # Report
-            logging.info('*** Failure report %s***\n%s',
-                station, sync_failure_report(diff_errors))
-
-            # Determine new optimum
-            new_delays = find_optimal_delays(diff_errors)
-            if previous_pps_delays:
-                logging.info('Old delays:\n%s', previous_pps_delays)
-                old_delays = parse_pps_delays(previous_pps_delays)
-            else:
-                old_delays = None
-
-            pps_delays = pps_delays_conf(station, start_date, new_delays)
-            logging.info('New delays:\n%s', pps_delays)
-
-            if old_delays:
-                logging.info('Difference new - old:\n%r',
-                             [p_new - p_old
-                              for p_new, p_old
-                              in zip(new_delays, old_delays)])
-
-            if options.write_conf_file:
-                # Throws IOError or OSError if writing failed
-                write_pps_delays_conf(conf_etc_name, conf_temp_name, pps_delays)
-            else:
-                logging.info('New delays will NOT be written to %s', conf_etc_name)
-        else:
-            logging.info('      *** Skipping measurements! ***')
-            
+        for clock_mhz in sorted(options.clock_mhz):
+            pps_tune_for_clock(clock_mhz, station, start_date, options)
         log_cabinet_climate(station)
             
-        # We do not get here in case of exceptions. It is safe to
-        # remove the backup now.
-        if os.path.exists(backup_name):
-            logging.info('Removing backup %s', backup_name)
-            os.remove(backup_name)
             
     except SystemExit:
         logging.error('Caught SystemExit: Aborting NOW')
@@ -2761,12 +2796,12 @@ WARNING: ==============================================================''',
     remove_sig_term_handlers()
     logging.info('Execution time %8.3f seconds', end_date - start_date)
     return exit_status
-    
 
 
 
 
-    
+
+
 ########################
 #       M A I N        #
 ########################

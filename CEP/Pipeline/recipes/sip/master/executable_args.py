@@ -190,8 +190,7 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
                        'args_format_option': self.inputs['args_format_option'],
                        'args_formatlongoption': self.inputs['args_format_longoption'],
                        'args_format_option_argument': self.inputs['args_format_option_argument']}
-        mapfile_dir = os.path.join(self.config.get("layout", "job_directory"), "mapfiles")
-        work_dir = os.path.join(self.inputs['working_directory'], self.inputs['job_name'])
+
         # *********************************************************************
         # try loading input/output data file, validate output vs the input location if
         #    output locations are provided
@@ -214,6 +213,7 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
             return 1
 
         outputmapfiles = []
+        prefix = os.path.join(self.inputs['working_directory'], self.inputs['job_name'])
         if self.inputs['mapfile_out']:
             try:
                 outdata = DataMap.load(self.inputs['mapfile_out'])
@@ -240,7 +240,7 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
                         #os.path.basename(item.file) + '.' + os.path.split(str(executable))[1]
                         os.path.splitext(os.path.basename(item.file))[0] + '.' + self.inputs['stepname']
                     )
-                self.inputs['mapfile_out'] = os.path.join(mapfile_dir, self.inputs['stepname'] + '.' + 'mapfile')
+                self.inputs['mapfile_out'] = os.path.join(prefix, self.inputs['stepname'] + '.' + 'mapfile')
                 self.inputs['mapfiles_out'].append(self.inputs['mapfile_out'])
             else:
                 self.inputs['mapfile_out'] = self.inputs['mapfile_in']
@@ -257,10 +257,10 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
             # Handle multiple outputfiles
             for name in self.inputs['outputsuffixes']:
                 outputmapfiles.append(copy.deepcopy(inputmapfiles[0]))
-                self.inputs['mapfiles_out'].append(os.path.join(mapfile_dir, self.inputs['stepname'] + name + '.' + 'mapfile'))
+                self.inputs['mapfiles_out'].append(os.path.join(prefix, self.inputs['stepname'] + name + '.' + 'mapfile'))
                 for item in outputmapfiles[-1]:
                     item.file = os.path.join(
-                        mapfile_dir,
+                        prefix,
                         os.path.splitext(os.path.basename(item.file))[0] + '.' + self.inputs['stepname'] + name
                     )
             self.inputs['mapfile_out'] = self.inputs['mapfiles_out'][0]
@@ -332,7 +332,7 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
                         executable,
                         arglist_copy,
                         parsetdict_copy,
-                        work_dir,
+                        prefix,
                         self.inputs['parsetasfile'],
                         args_format,
                         #self.inputs['working_directory'],
@@ -355,7 +355,7 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
                     self.outputs.update({'break': v})
 
         # temp solution. write all output dict entries to a mapfile
-        #mapfile_dir = os.path.join(self.config.get("layout", "job_directory"), "mapfiles")
+        mapfile_dir = os.path.join(self.config.get("layout", "job_directory"), "mapfiles")
         for k, v in jobresultdict.items():
             dmap = DataMap(v)
             dmap.save(os.path.join(mapfile_dir, k + '.mapfile'))

@@ -210,7 +210,7 @@ class cDB:
                     log.addLine("%s,SPU,%03d,VOLTAGE%s" %(date, spu.nr, valstr))
                 
             if not spu.temp_ok:
-                log.addLine("%s,SPU,%03d,TEMPERATURE,PCB=%3.1f" %\
+                log.addLine("%s,SPU,%03d,TEMPERATURE,PCB=%2.0f" %\
                            (date, spu.nr, spu.temp))
 
         for rsp in self.rsp:
@@ -219,10 +219,10 @@ class cDB:
                 log.addLine("%s,RSP,%03d,VERSION,BP=%s,AP=%s" %\
                            (date, rsp.nr, rsp.bp_version, rsp.ap_version))
             if not rsp.voltage_ok:
-                log.addLine("%s,RSP,%03d,VOLTAGE,1.2V=%3.1f,2.5V=%3.1f,3.3V=%3.1f" %\
+                log.addLine("%s,RSP,%03d,VOLTAGE,1.2V=%3.2f,2.5V=%3.2f,3.3V=%3.2f" %\
                            (date,rsp.nr, rsp.voltage1_2, rsp.voltage2_5, rsp.voltage3_3))
             if not rsp.temp_ok:
-                log.addLine("%s,RSP,%03d,TEMPERATURE,PCB=%3.1f,BP=%3.1f,AP0=%3.1f,AP1=%3.1f,AP2=%3.1f,AP3=%3.1f" %\
+                log.addLine("%s,RSP,%03d,TEMPERATURE,PCB=%2.0f,BP=%2.0f,AP0=%2.0f,AP1=%2.0f,AP2=%2.0f,AP3=%2.0f" %\
                            (date,rsp.nr, rsp.pcb_temp, rsp.bp_temp, rsp.ap0_temp, rsp.ap1_temp, rsp.ap2_temp, rsp.ap3_temp))
 
         if self.tbbdriver_version != "ok" or self.tbbctl_version != "ok":
