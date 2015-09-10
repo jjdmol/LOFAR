@@ -353,15 +353,15 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
                     continue;
                 }
 
-                if (TS->getBoardState(board) == setImage1) {
+                if (TS->getBoardState(board) == setDefaultImage) {
                     TPConfigEvent config;
                     config.opcode = oc_CONFIG;
                     config.status = 0;
-                    config.imagenr = 1;
+                    config.imagenr = TS->getDefaultImageNr();
                     //config.imagenr = 0;
                     itsBoard[board].send(config);
                     
-                    TS->setBoardState(board, image1Set);
+                    TS->setBoardState(board, defaultImageSet);
                     //TS->setImageNr(board, 1);
                     TS->setSetupWaitTime(board, 12);
                     
@@ -371,7 +371,7 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
                     continue;
                 }
 
-                if ((TS->getBoardState(board) == image1Set) ||
+                if ((TS->getBoardState(board) == defaultImageSet) ||
                     (TS->getBoardState(board) == checkAlive)) {
                     TPAliveEvent alive;
                     alive.opcode = oc_ALIVE;
@@ -485,7 +485,7 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
             TPConfigAckEvent ack(event);
             LOG_INFO_STR(formatString("Received ConfigAck from boardnr[%d], status=%d", board, ack.status));
             if (ack.status == TBB_SUCCESS) {
-                TS->setBoardState(board, image1Set);
+                TS->setBoardState(board, defaultImageSet);
                 //TS->setImageNr(board, 1);
                 TS->setSetupWaitTime(board, 12);
             }
@@ -515,10 +515,10 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
                 if (TS->getConfigState(board) != 1) {  // config not done by user
                     TS->setImageNr(board, 0);
                     LOG_WARN_STR("Image 1 NOT loaded");
-                    TS->setBoardState(board, setImage1);
+                    TS->setBoardState(board, setDefaultImage);
                 }
                 else {
-                    TS->setImageNr(board, 1);
+                    TS->setImageNr(board, TS->getDefaultImageNr());
                     TS->setBoardState(board, statusChecked);
                 }
 
@@ -1018,7 +1018,7 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
                      (TS->getBoardState(nr) == boardReady) ||
                      (TS->getBoardState(nr) == boardError) ||
                      (TS->getBoardState(nr) == boardCleared)) {
-                 LOG_DEBUG_STR(formatString("board %d alive check needed", nr));
+                LOG_DEBUG_STR(formatString("board %d alive check needed", nr));
                 itsBoard[nr].send(tp_event);
                 sendmask |= (1 << nr);
             }
@@ -1055,9 +1055,15 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
                     TS->clearRcuSettings(boardnr);
                     // if a new image is loaded by config, do not reload it to image-1
                     if (TS->getFreeToReset(boardnr)) {
-                        TS->setImageNr(boardnr, 0);
-                        TS->setBoardState(boardnr,setImage1);
-                        TS->resetSetupRetries(boardnr);
+                        if (ack.imagenr != TS->getDefaultImageNr()) {
+                            TS->setImageNr(boardnr, ack.imagenr);
+                            TS->setBoardState(boardnr, setDefaultImage);
+                            TS->resetSetupRetries(boardnr);
+                        }
+                        else {
+                            TS->setBoardState(boardnr, freeBoard);
+                        }
+                        
                     } else {
                         // new image loaded, auto reconfigure is now possible again
                         TS->setFreeToReset(boardnr, true);
@@ -1171,7 +1177,7 @@ void TBBDriver::setClockState(GCFEvent& event)
 	else if ((int32)e.clock != TS->getClockFreq()) {
 		LOG_WARN_STR ("CLOCK WAS CHANGED TO " << e.clock << "MHz, RESET NEEDED (wait 80 secs for done)");
 		for (int bnr = 0; bnr < TS->maxBoards(); bnr++) {
-		    TS->setBoardState(bnr, setImage1);
+		    TS->setBoardState(bnr, setDefaultImage);
 	    }
 		TS->setClockFreq((int32)e.clock);
 		
