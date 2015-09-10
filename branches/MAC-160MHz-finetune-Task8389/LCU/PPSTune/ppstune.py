@@ -2775,7 +2775,7 @@ def pps_tune_main(argv):
             logging.info('Clocks locked to %d MHz', clock_mhz)
             for swlevel_step in range(2, initial_swlevel+1):
                 swlevel(swlevel_step)
-            start_tbb_sh = os.path.join('/home', 'lofarsys', 'startTBB.sh')
+            start_tbb_sh = os.path.join('/opt', 'lofar', 'sbin', 'startTBB.sh')
             if os.path.exists(start_tbb_sh):
                 logging.info('Starting TBBs...')
                 start_tbb_output = check_output(start_tbb_sh, timeout_s=60.0)
