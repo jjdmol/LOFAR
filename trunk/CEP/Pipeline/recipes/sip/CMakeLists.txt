@@ -31,6 +31,7 @@ python_install(
   master/selfcal_awimager.py
   master/selfcal_bbs.py
   master/selfcal_finalize.py
+  master/executable_args.py
   nodes/__init__.py
   nodes/bbs_reducer.py
   nodes/copier.py
@@ -53,6 +54,13 @@ python_install(
   nodes/selfcal_awimager.py
   nodes/selfcal_bbs.py
   nodes/selfcal_finalize.py
+  nodes/executable_args.py
+  nodes/python_plugin.py
+  nodes/calibrate-stand-alone.py
+  plugins/PipelineStep_createMapfile.py
+  plugins/PipelineStep_addMapfile.py
+  plugins/PipelineStep_changeMapfile.py
+  plugins/PipelineStep_combineParsets.py
   DESTINATION lofarpipe/recipes)
 
 install(PROGRAMS
@@ -68,6 +76,8 @@ install(PROGRAMS
   bin/startPython.sh
   bin/startPythonVersion.sh
   bin/stopPython.sh
+  bin/genericpipeline.py
+  bin/loader.py
   external/bad_station_detection/asciistats.py
   external/bad_station_detection/statsplot.py
   DESTINATION bin)
