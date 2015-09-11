@@ -13,7 +13,6 @@ set(LOFAR_BUILD_VARIANTS DEBUG OPT OPT3)
 set(CLANG_COMPILERS CLANG_C CLANG_CXX CLANG_Fortran CLANG_ASM)
 set(CLANG_C         /usr/bin/clang)    # CLANG C compiler
 set(CLANG_CXX       /usr/bin/clang++)  # CLANG C++ compiler
-set(CLANG_Fortran   /usr/bin/gfortran) # CLANG Fortran compiler
 set(CLANG_ASM       /usr/bin/gcc)      # CLANG assembler
 
 set(CLANG_C_FLAGS          "-W -Wall -Wno-unknown-pragmas")

@@ -13,7 +13,6 @@ set(LOFAR_BUILD_VARIANTS DEBUG OPT OPT3)
 set(GNU_COMPILERS GNU_C GNU_CXX GNU_Fortran GNU_ASM)
 set(GNU_C         /usr/bin/gcc)      # GNU C compiler
 set(GNU_CXX       /usr/bin/g++)      # GNU C++ compiler
-set(GNU_Fortran   /usr/bin/gfortran) # GNU Fortran compiler
 set(GNU_ASM       /usr/bin/gcc)      # GNU assembler
 
 set(GNU_C_FLAGS          "-W -Wall -Wno-unknown-pragmas")
