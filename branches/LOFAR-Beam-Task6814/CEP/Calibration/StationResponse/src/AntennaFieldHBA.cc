@@ -76,7 +76,7 @@ raw_response_t AntennaFieldHBA::rawResponse(real_t time, real_t freq,
     raw_response_t result = itsAntennaModel->rawResponse(freq,
         itrf2field(direction), itrf2field(direction0));
 
-    real_t norm=sqrt(getNormalization(freq, direction));
+    real_t norm=getNormalization(freq, direction);
     result.response = result.response * rotation(time, direction);
     result.response[0][0]/=norm; result.response[1][0]/=norm;
     result.response[0][1]/=norm; result.response[1][1]/=norm;
