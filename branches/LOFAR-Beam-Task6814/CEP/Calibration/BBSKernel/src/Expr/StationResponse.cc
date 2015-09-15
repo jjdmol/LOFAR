@@ -36,6 +36,7 @@ StationResponse::StationResponse(const Expr<Vector<3> >::ConstPtr &direction,
             JonesMatrix>(direction, station0, tile0),
         itsStation(station),
         itsUseChannelFreq(true),
+        itsNormalize(false),
         itsUseArrayFactor(true),
         itsUseElementResponse(true),
         itsReferenceFreq(0.0)
@@ -54,6 +55,11 @@ void StationResponse::useChannelFreq()
     itsUseChannelFreq = true;
 }
 
+void StationResponse::normalize()
+{
+    itsNormalize = true;
+
+}
 void StationResponse::useArrayFactor(bool use)
 {
     itsUseArrayFactor = use;

@@ -66,6 +66,13 @@ public:
     void useChannelFreq();
 
     /*!
+     *  \brief Normalize the response by the total sensitivity over the 
+     *  hemisphere.
+     *
+     */
+    void normalize();
+
+    /*!
      *  \brief Switch computation of the array factor on or off.
      *
      *  When switched off, the array factor defaults to 1.0, i.e. the array
@@ -102,6 +109,7 @@ private:
 
     LOFAR::StationResponse::Station::ConstPtr   itsStation;
     bool                                        itsUseChannelFreq;
+    bool                                        itsNormalize;
     bool                                        itsUseArrayFactor;
     bool                                        itsUseElementResponse;
     double                                      itsReferenceFreq;

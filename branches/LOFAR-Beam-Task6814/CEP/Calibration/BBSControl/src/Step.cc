@@ -175,6 +175,7 @@ namespace LOFAR
         ps.add(prefix + "Model.Beam.Mode", BeamConfig::asString(config.mode()));
         ps.add(prefix + "Model.Beam.UseChannelFreq",
           toString(config.useChannelFreq()));
+        ps.add(prefix + "Model.Beam.Normalize", toString(config.normalize()));
       }
 
       ps.add(prefix + "Model.DirectionalTEC.Enable",
@@ -292,6 +293,8 @@ namespace LOFAR
 
         bool useChannelFreq = ps.getBool(prefix+"Model.Beam.UseChannelFreq",
           itsModelConfig.useBeam() ? parentConfig.useChannelFreq() : false);
+        bool normalize = ps.getBool(prefix+"Model.Beam.Normalize",
+          itsModelConfig.useBeam() ? parentConfig.normalize() : false);
         bool conjugateAF = ps.getBool(prefix+"Model.Beam.ConjugateAF", false);
         if(conjugateAF)
         {
@@ -299,7 +302,7 @@ namespace LOFAR
             " been deprecated and should not be used.");
         }
 
-        itsModelConfig.setBeamConfig(BeamConfig(mode, useChannelFreq));
+        itsModelConfig.setBeamConfig(BeamConfig(mode, useChannelFreq, normalize));
       } else {
         itsModelConfig.clearBeamConfig();
       }
