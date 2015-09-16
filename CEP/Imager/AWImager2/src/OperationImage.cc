@@ -46,6 +46,12 @@ OperationImage::OperationImage(ParameterSet& parset): Operation(parset)
 void OperationImage::init()
 {
   Operation::init();
+
+  if (!itsMS.tableDesc().isColumn("CORRECTED_DATA"))
+  {
+    throw(AipsError("CORRECTED_DATA column not found."));
+  }
+
   itsImageName = itsParset.getString("output.imagename");
 }
 
