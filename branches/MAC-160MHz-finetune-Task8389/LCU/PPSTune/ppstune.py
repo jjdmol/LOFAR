@@ -188,31 +188,31 @@ def check_output(args, stderr = None, execute = True, timeout_s = None):
                 stdout = subprocess.PIPE,
                 stdin  = subprocess.PIPE,
                 stderr = stderr)
-            stdout = []
-            out = ''
-            while True:
-                out = process.stdout.read(1)
-                if out == '' and process.poll() != None:
-                    break
-                if out != '':
-                    stdout.append(out)
+            
+            proc_ready = True
+            while process.poll() == None:  # while poll() returns None, process is still running.
                 if time.time() - start_date > timeout_s:
+                    proc_ready = False
                     logging.error('timeout after %6.3f s: terminating command %s ',
                                   timeout_s, ' '.join(args))
-                    os.kill(process.pid, signal.SIGTERM)
-                    raise RuntimeError('%s killed with signal %d; output:\n%r' %
-                                       (' '.join(args), signal.SIGTERM,
-                                        ''.join(stdout)))
+                    break
+                time.sleep(1.0)
+            
             logging.debug('process.poll(): %r', process.poll())
             if process.poll() < 0:
                 raise RuntimeError('%s killed with signal %d' %
                                    (' '.join(args), process.poll()))
-            return ''.join(stdout)
+            
+            if proc_ready:
+                return process.communicate()[0]
+            
+            os.kill(process.pid, signal.SIGTERM)
+            raise RuntimeError('%s killed with signal %d; output:\n%r' %
+                              (' '.join(args), signal.SIGTERM,
+                               ''.join(stdout)))
+            return ''
     else:
         return ''
-
-
-
 
 def gmtime_tuple(date_s):
     r'''

@@ -38,7 +38,7 @@ namespace LOFAR {
     namespace RSP {
 
 #define STARTUP_WAIT   10
-#define CLOCK_WAIT     4
+#define CLOCK_WAIT     5
 #define TDWRITE_WAIT   1
 #define TDREAD_TIMEOUT 3
 #define RSUCLEAR_WAIT  5
