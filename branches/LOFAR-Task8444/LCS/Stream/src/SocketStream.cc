@@ -71,6 +71,50 @@ static struct RandomState {
 
 namespace {
   Mutex getAddrInfoMutex;
+
+  // A wrapper on 'struct addrInfo' to make sure it is freed correctly
+  struct safeAddrInfo {
+    struct addrinfo *addrinfo;
+
+    safeAddrInfo(): addrinfo(0) {
+    }
+
+    ~safeAddrInfo() {
+      if(addrinfo) freeaddrinfo(addrinfo);
+    }
+  };
+
+  void safeGetAddrInfo(safeAddrInfo &result, SocketStream::Protocol protocol, const std::string &hostname, uint16 port) {
+    struct addrinfo hints;
+    char portStr[16];
+
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_INET; // IPv4
+    hints.ai_flags = AI_NUMERICSERV; // we only use numeric port numbers, not strings like "smtp"
+
+    if (protocol == SocketStream::TCP) {
+      hints.ai_socktype = SOCK_STREAM;
+      hints.ai_protocol = IPPROTO_TCP;
+    } else {
+      hints.ai_socktype = SOCK_DGRAM;
+      hints.ai_protocol = IPPROTO_UDP;
+    }
+
+    snprintf(portStr, sizeof portStr, "%hu", port);
+
+    {
+      // getaddrinfo does not seem to be thread safe
+      ScopedLock sl(getAddrInfoMutex);
+
+      int retval;
+
+      if ((retval = getaddrinfo(hostname.c_str(), portStr, &hints, &result.addrinfo)) != 0) {
+        const string errorstr = gai_strerror(retval);
+
+        throw SystemCallException(str(format("getaddrinfo(%s): %s") % hostname % errorstr), 0, THROW_ARGS); // TODO: SystemCallException also adds strerror(0), which is useless here
+      }
+    }
+  }
 };
 
 SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol protocol,
@@ -87,21 +131,7 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
       % hostname
       % _port);
 
-  struct addrinfo hints;
   const bool autoPort = (port == 0);
-
-  // use getaddrinfo, because gethostbyname is not thread safe
-  memset(&hints, 0, sizeof(struct addrinfo));
-  hints.ai_family = AF_INET; // IPv4
-  hints.ai_flags = AI_NUMERICSERV; // we only use numeric port numbers, not strings like "smtp"
-
-  if (protocol == TCP) {
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = IPPROTO_TCP;
-  } else {
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_protocol = IPPROTO_UDP;
-  }
 
   for(;;) {
     try {
@@ -111,43 +141,20 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
         if (deadline > 0 && deadline <= time(0))
           THROW(TimeOutException, "SocketStream");
 
-        char portStr[16];
-        int  retval;
-        struct addrinfo *result;
-
         if (mode == Server && autoPort)
           port = MINPORT + static_cast<unsigned short>((MAXPORT - MINPORT) * erand48(randomState.xsubi)); // erand48() not thread safe, but not a problem.
 
-        snprintf(portStr, sizeof portStr, "%hu", port);
-
-        {
-          // getaddrinfo does not seem to be thread safe
-          ScopedLock sl(getAddrInfoMutex);
-
-          if ((retval = getaddrinfo(hostname.c_str(), portStr, &hints, &result)) != 0) {
-            const string errorstr = gai_strerror(retval);
-
-            throw SystemCallException(str(format("getaddrinfo(%s): %s") % hostname % errorstr), 0, THROW_ARGS); // TODO: SystemCallException also adds strerror(0), which is useless here
-          }
-        }
-
-        // make sure result will be freed
-        struct D {
-          ~D() {
-            freeaddrinfo(result);
-          }
-
-          struct addrinfo *result;
-        } onDestruct = { result };
-        (void) onDestruct;
+        // Resolve host + port to a 'struct addrinfo'
+        safeAddrInfo result;
+        safeGetAddrInfo(result, protocol, hostname, port);
 
         // result is a linked list of resolved addresses, we only use the first
 
-        if ((fd = socket(result->ai_family, result->ai_socktype, result->ai_protocol)) < 0)
+        if ((fd = socket(result.addrinfo->ai_family, result.addrinfo->ai_socktype, result.addrinfo->ai_protocol)) < 0)
           THROW_SYSCALL("socket");
 
         if (mode == Client) {
-          while (connect(fd, result->ai_addr, result->ai_addrlen) < 0)
+          while (connect(fd, result.addrinfo->ai_addr, result.addrinfo->ai_addrlen) < 0)
             if (errno == ECONNREFUSED || errno == ETIMEDOUT) {
               if (deadline > 0 && time(0) >= deadline)
                 throw TimeOutException("client socket", THROW_ARGS);
@@ -166,7 +173,7 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
           if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof on) < 0)
             THROW_SYSCALL("setsockopt(SO_REUSEADDR)");
 
-          if (bind(fd, result->ai_addr, result->ai_addrlen) < 0)
+          if (bind(fd, result.addrinfo->ai_addr, result.addrinfo->ai_addrlen) < 0)
             THROW_SYSCALL(str(boost::format("bind [%s]") % description));
 
           if (protocol == TCP) {
