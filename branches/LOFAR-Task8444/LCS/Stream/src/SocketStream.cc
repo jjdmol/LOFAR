@@ -35,14 +35,16 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <dirent.h>
+#include <net/if.h>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
 
 #include <Common/SystemCallException.h>
-#include <Common/Thread/Mutex.h>
 #include <Common/Thread/Cancellation.h>
 #include <Common/LofarLogger.h>
+
+#include "NetFuncs.h"
 
 //# AI_NUMERICSERV is not defined on OS-X
 #ifndef AI_NUMERICSERV
@@ -69,56 +71,8 @@ static struct RandomState {
   unsigned short xsubi[3];
 } randomState;
 
-namespace {
-  Mutex getAddrInfoMutex;
-
-  // A wrapper on 'struct addrInfo' to make sure it is freed correctly
-  struct safeAddrInfo {
-    struct addrinfo *addrinfo;
-
-    safeAddrInfo(): addrinfo(0) {
-    }
-
-    ~safeAddrInfo() {
-      if(addrinfo) freeaddrinfo(addrinfo);
-    }
-  };
-
-  void safeGetAddrInfo(safeAddrInfo &result, SocketStream::Protocol protocol, const std::string &hostname, uint16 port) {
-    struct addrinfo hints;
-    char portStr[16];
-
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET; // IPv4
-    hints.ai_flags = AI_NUMERICSERV; // we only use numeric port numbers, not strings like "smtp"
-
-    if (protocol == SocketStream::TCP) {
-      hints.ai_socktype = SOCK_STREAM;
-      hints.ai_protocol = IPPROTO_TCP;
-    } else {
-      hints.ai_socktype = SOCK_DGRAM;
-      hints.ai_protocol = IPPROTO_UDP;
-    }
-
-    snprintf(portStr, sizeof portStr, "%hu", port);
-
-    {
-      // getaddrinfo does not seem to be thread safe
-      ScopedLock sl(getAddrInfoMutex);
-
-      int retval;
-
-      if ((retval = getaddrinfo(hostname.c_str(), portStr, &hints, &result.addrinfo)) != 0) {
-        const string errorstr = gai_strerror(retval);
-
-        throw SystemCallException(str(format("getaddrinfo(%s): %s") % hostname % errorstr), 0, THROW_ARGS); // TODO: SystemCallException also adds strerror(0), which is useless here
-      }
-    }
-  }
-};
-
 SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol protocol,
-                           Mode mode, time_t deadline, bool doAccept)
+                           Mode mode, time_t deadline, bool doAccept, const std::string &bind_local_iface)
 :
   protocol(protocol),
   mode(mode),
@@ -153,7 +107,31 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
         if ((fd = socket(result.addrinfo->ai_family, result.addrinfo->ai_socktype, result.addrinfo->ai_protocol)) < 0)
           THROW_SYSCALL("socket");
 
+        if (bind_local_iface != "") {
+          // Bind socket to a specific network interface, causing packets to be
+          // emitted through this interface.
+          //
+          // Requires CAP_NET_RAW (or root)
+          struct ifreq ifr;
+
+          memset(&ifr, 0, sizeof ifr);
+          snprintf(ifr.ifr_name, sizeof ifr.ifr_name, "%s", bind_local_iface.c_str());
+          if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof ifr) < 0)
+            try {
+              THROW_SYSCALL("setsockopt(SO_BINDTODEVICE)");
+            } catch(Exception &ex) {
+              LOG_ERROR_STR("Could not bind socket to device " << bind_local_iface << ": " << ex);
+            }
+        }
+
         if (mode == Client) {
+          if (bind_local_iface != "") {
+            struct sockaddr sa = getInterfaceIP(bind_local_iface);
+
+            if (bind(fd, &sa, sizeof sa) < 0)
+              THROW_SYSCALL(str(boost::format("bind [%s]") % description));
+          }
+
           while (connect(fd, result.addrinfo->ai_addr, result.addrinfo->ai_addrlen) < 0)
             if (errno == ECONNREFUSED || errno == ETIMEDOUT) {
               if (deadline > 0 && time(0) >= deadline)

@@ -46,7 +46,7 @@ class SocketStream : public FileDescriptorBasedStream
     };
 
     SocketStream(const std::string &hostname, uint16 _port, Protocol, Mode,
-                 time_t deadline = 0, bool doAccept = true);
+                 time_t deadline = 0, bool doAccept = true, const std::string &bind_local_iface = "");
     virtual ~SocketStream();
 
     FileDescriptorBasedStream *detach();
