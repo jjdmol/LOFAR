@@ -184,10 +184,10 @@ def check_output(args, stderr = None, execute = True, timeout_s = None):
         else:
             start_date = time.time()
             process = subprocess.Popen(args,
-                shell  = False,
-                stdout = subprocess.PIPE,
-                stdin  = subprocess.PIPE,
-                stderr = stderr)
+                                       shell  = False,
+                                       stdout = subprocess.PIPE,
+                                       stdin  = subprocess.PIPE,
+                                       stderr = stderr)
             
             proc_ready = True
             while process.poll() == None:  # while poll() returns None, process is still running.
@@ -207,7 +207,7 @@ def check_output(args, stderr = None, execute = True, timeout_s = None):
                 return process.communicate()[0]
             
             os.kill(process.pid, signal.SIGTERM)
-            raise RuntimeError('%s killed with signal %d; output:\n%r' %
+            raise RuntimeError('%s killed with signal %d; output:\n%s' %
                               (' '.join(args), signal.SIGTERM,
                                ''.join(stdout)))
             return ''
@@ -293,7 +293,7 @@ class BrokenRSPBoardsError(RuntimeError):
 class MalformedRemoteStationConfError(RuntimeError):
     pass
 
-def swlevel(level, swlevel_cmd = '/opt/lofar/bin/swlevel', timeout_s = 80.0):
+def swlevel(level, swlevel_cmd = '/opt/lofar/bin/swlevel', timeout_s = 180.0):
     r'''
     Set the swlevel at the station.
 
@@ -309,8 +309,8 @@ def swlevel(level, swlevel_cmd = '/opt/lofar/bin/swlevel', timeout_s = 80.0):
     timeout_s : float
         If the swlevel command has not returned after ``timeout_s``
         seconds, raise a RuntimeError. At international stations,
-        changing swlevel from 1 to 6 should typically take about 40
-        seconds, hence the timeout at 80 seconds to catch seriously
+        changing swlevel from 1 to 6 should typically take about 100
+        seconds, hence the timeout at 180 seconds to catch seriously
         anomalous cases.
 
     **Returns**
@@ -682,21 +682,26 @@ def set_clock_frequency_mhz(clock_mhz, rspctl_cmd = '/opt/lofar/bin/rspctl', tim
     if clock_mhz not in [160, 200]:
         raise ValueError('clock_mhz (%d) neither 160 nor 200' % clock_mhz)
 
+    """
+    PD: always switch clock, firmware is reloaded and RSPDriver cache is cleared
+    
     current_clock_mhz = wait_for_clocks_to_lock(rspctl_cmd = rspctl_cmd,
                                                 timeout_s  = timeout_s)
     if current_clock_mhz != clock_mhz:
-        logging.info('Switching clock to %d MHz', clock_mhz)
-        check_output([rspctl_cmd, '--clock=%d' % clock_mhz], timeout_s = 1.0)
-        time.sleep(10.0) # Clock switch takes ~ 45 s, but only starts
-        # after a couple sec. If one does not wait enough, one may
-        # still see the clock in the previous clock mode.
-        current_clock_mhz = wait_for_clocks_to_lock(rspctl_cmd = rspctl_cmd,
-                                                    timeout_s  = timeout_s)
-        if current_clock_mhz != clock_mhz:
-            raise RuntimeError('Clocks locked to %d MHz instead of %d MHz' %
-                               (current_clock_mhz, clock_mhz))
-        else:
-            logging.info('Clocks locked to %d MHz', current_clock_mhz)
+    """
+    
+    logging.info('Switching clock to %d MHz', clock_mhz)
+    check_output([rspctl_cmd, '--clock=%d' % clock_mhz], timeout_s = 1.0)
+    time.sleep(10.0) # Clock switch takes ~ 45 s, but only starts
+    # after a couple sec. If one does not wait enough, one may
+    # still see the clock in the previous clock mode.
+    current_clock_mhz = wait_for_clocks_to_lock(rspctl_cmd = rspctl_cmd,
+                                                timeout_s  = timeout_s)
+    if current_clock_mhz != clock_mhz:
+        raise RuntimeError('Clocks locked to %d MHz instead of %d MHz' %
+                           (current_clock_mhz, clock_mhz))
+    else:
+        logging.info('Clocks locked to %d MHz', current_clock_mhz)
     return current_clock_mhz
 
 
@@ -712,10 +717,18 @@ def rspdriver_down(swlevel_cmd = '/opt/lofar/bin/swlevel'):
         return rsp_driver_pid_lines[0].split()[-1].strip() == 'DOWN'
     else:
         return True
+
     
-
-
-
+def kill_rspctl():
+    r"""
+    kill all running rspctl processes.
+    """
+    logging.info('Killing all rspctl processes')
+    output = subprocess.Popen(['killall', 'rspctl'],
+                        stdin  = subprocess.PIPE,
+                        stdout = subprocess.PIPE).communicate()[0]
+    logging.debug('%s' % output)
+    
 
 def restart_rsp_driver(lofar_log_dir,
                        rspdriver_cmd = '/opt/lofar/bin/RSPDriver',
@@ -776,7 +789,7 @@ def restart_rsp_driver(lofar_log_dir,
                             if 'RSPDriver' in line and not 'Missing' in line]
     current_swlevel = get_swlevel(swlevel_cmd)
     if  abs(current_swlevel) < 2:
-        logging.warning('swlevel (%r) < 2. Will not start RSPDriver now',
+        logging.warning('swlevel (%d) < 2. Will not start RSPDriver now',
                         current_swlevel)
         return None
     if len(rsp_driver_pid_lines) == 1:
@@ -2283,21 +2296,35 @@ def prepare_for_tuning(conf_etc_name, start_date, clock_mhz,
             raise IOError('Failed to backup %s' % conf_etc_name)
 
     
-    swlevel(2, swlevel_cmd = swlevel_cmd, timeout_s = 80.0)
+    swlevel(2, swlevel_cmd = swlevel_cmd)
+    
+    # befor switching clock kill all running rspctl processes
+    kill_rspctl()
+    
     old_clock_mhz = wait_for_clocks_to_lock(rspctl_cmd = rspctl_cmd,
                                             timeout_s  = timeout_s)
     logging.info('Clocks locked to %d MHz', old_clock_mhz)
 
+    """
+    PD: do not restart driver to reset all, but always change clock,
+        kill_rspctl() is used to kill all running rspctl processes                            
+    
     restart_rsp_driver(swlevel_cmd = swlevel_cmd, sudo_cmd = sudo_cmd,
                        rspdriver_cmd = rspdriver_cmd,
                        lofar_log_dir = lofar_log_dir)
     old_clock_mhz = wait_for_clocks_to_lock(rspctl_cmd = rspctl_cmd,
                                             timeout_s  = timeout_s)
     logging.info('Clocks locked to %d MHz', old_clock_mhz)
-
+    
     if old_clock_mhz != clock_mhz:
         set_clock_frequency_mhz(clock_mhz, rspctl_cmd = rspctl_cmd,
                                 timeout_s = timeout_s)
+                                
+    """
+    # always switch clock to reset firmware and clear the cache
+    set_clock_frequency_mhz(clock_mhz, rspctl_cmd = rspctl_cmd,
+                            timeout_s = timeout_s)
+    
     time.sleep(1.0)
     rspctl_status = check_output([rspctl_cmd, '--status'], timeout_s = 3.0)
     if 'ERROR' in rspctl_status:
@@ -2360,7 +2387,10 @@ def install_sig_term_handler(start_date, initial_swlevel, lofar_log_dir):
         logging.error('Received signal %d; terminating', signal_number)
         logging.error('Stack frame:\n%s',
                       str(inspect.getframeinfo(stack_frame)))
-        restart_rsp_driver(lofar_log_dir = lofar_log_dir)
+        
+        # restart_rsp_driver(lofar_log_dir = lofar_log_dir)
+        # PD: set default clock frequency
+        set_clock_frequency_mhz(200)
         clock_mhz = wait_for_clocks_to_lock()
         logging.info('Clocks locked to %d MHz', clock_mhz)
         try:
@@ -2770,7 +2800,9 @@ def pps_tune_main(argv):
         
     if initial_swlevel != None:
         if initial_swlevel >= 2:
-            restart_rsp_driver(lofar_log_dir = options.log_dir)
+            # restart_rsp_driver(lofar_log_dir = options.log_dir)
+            # set clock to default value
+            set_clock_frequency_mhz(200)
             clock_mhz = wait_for_clocks_to_lock()
             logging.info('Clocks locked to %d MHz', clock_mhz)
             for swlevel_step in range(2, initial_swlevel+1):
