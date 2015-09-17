@@ -7,10 +7,10 @@ echo "Giving /localhome/lofar to lofarbuild..."
 mkdir /localhome/lofar
 chown lofarbuild.lofarbuild /localhome/lofar
 
-echo "Giving capabilities to lofarsys..."
-# NOTE: the line added below needs to be inserted BEFORE 'none *'
-(echo "cap_net_raw,cap_sys_nice,cap_ipc_lock lofarsys"; grep -v lofarsys /etc/security/capability.conf) > /tmp/new-capability.conf
-mv /tmp/new-capability.conf /etc/security/capability.conf
+echo "Giving capabilities to lofarbuild..."
+addgroup --system capabilities
+usermod -a -G capabilities lofarbuild
+echo "%capabilities  ALL= NOPASSWD:/sbin/setcap" >> /etc/sudoers
 
 #
 # Casacore
