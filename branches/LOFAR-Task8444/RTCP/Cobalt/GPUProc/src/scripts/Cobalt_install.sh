@@ -49,10 +49,11 @@ for HOST in ${HOSTS:-cbm001 cbm002 cbm003 cbm004 cbm005 cbm006 cbm007 cbm008 cbm
   # cap_sys_nice: allow real-time priority for threads
   # cap_ipc_lock: allow app to lock in memory (prevent swap)
   # cap_net_raw:  allow binding sockets to NICs
-  OUTPUTPROC_CAPABILITIES='cap_sys_nice,cap_ipc_lock'
-  sudo /sbin/setcap \"${OUTPUTPROC_CAPABILITIES}\"=ep bin/outputProc || true
-  RTCP_CAPABILITIES='cap_net_raw,cap_sys_nice,cap_ipc_lock'
-  sudo /sbin/setcap \"${RTCP_CAPABILITIES}\"=ep bin/rtcp || true
+  # DISABLED: Rights are granted to lofarsys in /etc/security/capability.conf
+  #OUTPUTPROC_CAPABILITIES='cap_sys_nice,cap_ipc_lock'
+  #sudo /sbin/setcap \"${OUTPUTPROC_CAPABILITIES}\"=ep bin/outputProc || true
+  #RTCP_CAPABILITIES='cap_net_raw,cap_sys_nice,cap_ipc_lock'
+  #sudo /sbin/setcap \"${RTCP_CAPABILITIES}\"=ep bin/rtcp || true
   " || exit 1
 done
 
