@@ -43,6 +43,9 @@ namespace LOFAR {
 
   // Retrieve the IP of an interface ("eth0") as an 'ifreq' struct, which can be used as sockaddr.
   struct sockaddr getInterfaceIP(const std::string &iface);
+
+  // Returns the TCP/UDP port number allocated to a socket
+  int getSocketPort(int fd);
 }
 
 #endif

@@ -85,4 +85,20 @@ namespace LOFAR {
     close(fd);
     return ifr.ifr_addr;
   }
+
+  int getSocketPort(int fd) {
+    struct sockaddr_in sin;
+    socklen_t addrlen = sizeof sin;
+
+    if (getsockname(fd, (struct sockaddr *)&sin, &addrlen) < 0)
+      THROW_SYSCALL("getsockname");
+
+    if (sin.sin_family != AF_INET)
+      return -1;
+
+    if (addrlen != sizeof sin)
+      return -1;
+
+    return ntohs(sin.sin_port);
+  }
 }

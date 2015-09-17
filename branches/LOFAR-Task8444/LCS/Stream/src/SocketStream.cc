@@ -100,7 +100,7 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
 
         // Resolve host + port to a 'struct addrinfo'
         safeAddrInfo result;
-        safeGetAddrInfo(result, protocol, hostname, port);
+        safeGetAddrInfo(result, protocol == SocketStream::TCP, hostname, port);
 
         // result is a linked list of resolved addresses, we only use the first
 
@@ -153,6 +153,9 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
 
           if (bind(fd, result.addrinfo->ai_addr, result.addrinfo->ai_addrlen) < 0)
             THROW_SYSCALL(str(boost::format("bind [%s]") % description));
+
+          if (port == 0) // let OS search for a free port
+            port = getSocketPort(fd);
 
           if (protocol == TCP) {
             listen_sk = fd;
