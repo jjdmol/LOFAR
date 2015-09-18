@@ -36,6 +36,7 @@
 #include <netdb.h>
 #include <dirent.h>
 #include <net/if.h>
+#include <arpa/inet.h>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
@@ -112,10 +113,12 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
           // emitted through this interface.
           //
           // Requires CAP_NET_RAW (or root)
-          struct ifreq ifr;
+          LOG_DEBUG_STR("Binding socket " << description << " to interface " << bind_local_iface);
 
+          struct ifreq ifr;
           memset(&ifr, 0, sizeof ifr);
           snprintf(ifr.ifr_name, sizeof ifr.ifr_name, "%s", bind_local_iface.c_str());
+
           if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof ifr) < 0)
             try {
               THROW_SYSCALL("setsockopt(SO_BINDTODEVICE)");
@@ -127,6 +130,7 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
         if (mode == Client) {
           if (bind_local_iface != "") {
             struct sockaddr sa = getInterfaceIP(bind_local_iface);
+            LOG_DEBUG_STR("Binding socket " << description << " to IP " << inet_ntoa(((struct sockaddr_in*)&sa)->sin_addr) << " of interface " << bind_local_iface);
 
             if (bind(fd, &sa, sizeof sa) < 0)
               THROW_SYSCALL(str(boost::format("bind [%s]") % description));
