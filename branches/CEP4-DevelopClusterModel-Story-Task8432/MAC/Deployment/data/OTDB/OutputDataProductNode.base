@@ -18,4 +18,6 @@ par namemask           I       text    -       10     100       ''      -       
 par percentageWritten  I       vint    -       10     100       '[]'    -       "the percentage written for all files 0=not written, 100=complete"
 par retentiontime      I       uint    -       10     100       14      -       "number of days the data stays on storage nodes before cleanup"
 par skip               I       vint    -       10     100	'[]'    -	"array of integers. 0 = don't skip, 1 = skip processing the corresponding file"
+par clustername        I       text    -       10     100       ''      -       "name of StorageCluster to store data"
+par clusterpartition   I       text    -       10     100       ''      -       "name of StorageCluster partition to store data"
 

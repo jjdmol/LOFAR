@@ -1,0 +1,16 @@
+# $Id: ClustersNode.base 25528 2013-07-02 09:23:01Z loose $
+#
+#      name             vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  @clusters@     4.0.2  development 'node constraint'  "Cluster description(s) for processing locations"
+
+#    name              dir.    type   unit     prun.   vm      value   constr. descr.
+#--------------------------------------------------------------------------------------------------------
+par clustername        I       text    -       10     100       ''      -       "name of StorageCluster to store data"
+par clusterpartition   I       text    -       10     100       ''      -       "name of StorageCluster partition to store data"
+par numberoftasks      I       uint    -       10     100       0      -       "Number of tasks this job requires"
+par minrampertask      I       uint    -       10     100       0      -       "Minimum RAM needed by task"
+par minscratchpertask  I       uint    -       10     100       0      -       "Minimal scratch space needed by task"
+par maxdurationpertask I       text    -       10     100       ''      -       "Duration in which a task should be killed if not finished (xs:duration format)"
+par numberofcorespertask I       uint    -       10     100       1      -       "Number of cores a task needs on a node"
+par runsimultaneous    I       bool    -       10     100       false   -       "Do the tasks need to run at the same time"
