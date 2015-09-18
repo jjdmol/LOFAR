@@ -802,10 +802,11 @@ namespace LOFAR
       SmartPtr<Stream> outputStream;
 
       if (ps.settings.correlator.enabled) {
-        const string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, globalSubbandIdx);
+        const string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, globalSubbandIdx,
+          hostID < ps.settings.nodes.size() ? ps.settings.nodes.at(hostID).out_nic : "");
 
         try {
-          outputStream = createStream(desc, false, 0, hostID < ps.settings.nodes.size() ? ps.settings.nodes.at(hostID).out_nic : "");
+          outputStream = createStream(desc, false, 0);
         } catch (Exception &ex) {
           LOG_ERROR_STR("Error writing subband " << globalSubbandIdx << ", dropping all subsequent blocks: " << ex.what());
           return;

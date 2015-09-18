@@ -39,7 +39,7 @@ namespace LOFAR
 {
 
   // Caller should wrap the returned pointer in some smart ptr type.
-  Stream *createStream(const std::string &descriptor, bool asServer, time_t deadline, const std::string &bind_local_iface)
+  Stream *createStream(const std::string &descriptor, bool asServer, time_t deadline)
   {
     std::vector<std::string> split = StringUtil::split(descriptor, ':');
 
@@ -47,17 +47,17 @@ namespace LOFAR
     if (descriptor == "null:")
       return new NullStream;
 
-    // udp:HOST:PORT
-    else if (split.size() == 3 && split[0] == "udp")
-      return new SocketStream(split[1].c_str(), boost::lexical_cast<unsigned short>(split[2]), SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, deadline, true, bind_local_iface);
+    // udp:HOST:PORT[:LOCAL_IFACE]
+    else if (split.size() >= 3 && split[0] == "udp")
+      return new SocketStream(split[1].c_str(), boost::lexical_cast<unsigned short>(split[2]), SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, deadline, true, split.size() > 3 ? split[3] : "");
 
-    // tcp:HOST:PORT
-    else if (split.size() == 3 && split[0] == "tcp")
-      return new SocketStream(split[1].c_str(), boost::lexical_cast<unsigned short>(split[2]), SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, deadline, true, bind_local_iface);
+    // tcp:HOST:PORT[:LOCAL_IFACE]
+    else if (split.size() >= 3 && split[0] == "tcp")
+      return new SocketStream(split[1].c_str(), boost::lexical_cast<unsigned short>(split[2]), SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, deadline, true, split.size() > 3 ? split[3] : "");
 
-    // tcpbroker:HOST:BROKERPORT:KEY
-    else if (split.size() == 4 && split[0] == "tcpbroker")
-      return asServer ? static_cast<Stream*>(new PortBroker::ServerStream(split[3])) : static_cast<Stream*>(new PortBroker::ClientStream(split[1], boost::lexical_cast<unsigned short>(split[2]), split[3], deadline, bind_local_iface));
+    // tcpbroker:HOST:BROKERPORT:KEY[:LOCAL_IFACE]
+    else if (split.size() >= 4 && split[0] == "tcpbroker")
+      return asServer ? static_cast<Stream*>(new PortBroker::ServerStream(split[3])) : static_cast<Stream*>(new PortBroker::ClientStream(split[1], boost::lexical_cast<unsigned short>(split[2]), split[3], deadline, split.size() > 4 ? split[4] : ""));
 
     // file:PATH
     else if (split.size() > 1 && split[0] == "file") {
@@ -72,7 +72,7 @@ namespace LOFAR
 
     // HOST:PORT (udp)
     else if (split.size() == 2)
-      return new SocketStream(split[0].c_str(), boost::lexical_cast<unsigned short>(split[1]), SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, deadline, true, bind_local_iface);
+      return new SocketStream(split[0].c_str(), boost::lexical_cast<unsigned short>(split[1]), SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, deadline, true, "");
 
     // PATH (file)
     else if (split.size() == 1)
