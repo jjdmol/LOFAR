@@ -6,6 +6,11 @@ include(PythonInstall)
 set(USE_PYTHON_COMPILATION Off)
 
 python_install(
-    scraper.py
+    lib/scraper.py
     DESTINATION ltastorageoverview)
   
+
+install(PROGRAMS
+  bin/ltastorageoverviewscraper
+  DESTINATION bin)
+
