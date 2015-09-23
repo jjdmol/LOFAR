@@ -7,6 +7,7 @@ set(USE_PYTHON_COMPILATION Off)
 
 python_install(
     lib/scraper.py
+    lib/store.py
     DESTINATION ltastorageoverview)
   
 
