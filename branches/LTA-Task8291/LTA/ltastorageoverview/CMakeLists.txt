@@ -2,16 +2,5 @@
 
 lofar_package(ltastorageoverview 0.1)
 
-include(PythonInstall)
-set(USE_PYTHON_COMPILATION Off)
-
-python_install(
-    lib/scraper.py
-    lib/store.py
-    DESTINATION ltastorageoverview)
-  
-
-install(PROGRAMS
-  bin/ltastorageoverviewscraper
-  DESTINATION bin)
-
+add_subdirectory(lib)
+add_subdirectory(bin)
