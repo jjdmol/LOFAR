@@ -24,9 +24,6 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-//# This code can only be compiled if Boost is available.
-#ifdef HAVE_BOOST
-
 //# Includes
 #include "Coordinates.h"
 #include <Common/lofar_iostream.h>
@@ -71,5 +68,3 @@ namespace LOFAR
   }
 
 }
-
-#endif
