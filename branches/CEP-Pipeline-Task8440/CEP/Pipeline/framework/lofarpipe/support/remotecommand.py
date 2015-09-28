@@ -100,7 +100,7 @@ def run_remote_command(config, logger, host, command, env, arguments = None):
 def run_via_slurm_srun_cep3(logger, command, arguments, host):
     for arg in arguments:
         command = command + " " + str(arg)
-    commandstring = ["srun","-N 1","--cpu_bind=map_cpu:none","-w",host, "/bin/sh", "-c", "hostname && " + command]
+    commandstring = ["srun","-N 1","-n 1","-w",host, "/bin/sh", "-c", "hostname && " + command]
     # we have a bug that crashes jobs when too many get startet at the same time
     # temporary NOT 100% reliable workaround
     #from random import randint
