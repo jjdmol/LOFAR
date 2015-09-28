@@ -17,6 +17,14 @@
 # You should have received a copy of the GNU General Public License along
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 
+import os
+import os.path
+import sqlite3
+import datetime
+
+class EntryNotFoundException(Exception):
+    pass
+
 class LTAStorageDb:
     def __init__(self, db_filename, removeIfExisting = False):
         self.db_filename = db_filename
@@ -88,16 +96,56 @@ class LTAStorageDb:
                 #save created tables and triggers
                 conn.commit()
 
-    def insertRootLocation(self, siteName, rootLocation):
+    def insertSite(self, siteName, srmurl):
         with sqlite3.connect(self.db_filename) as conn:
             cursor = conn.cursor()
 
-            site_row = cursor.execute('select id from storage_site where url = ?', [rootLocation.srmurl]).fetchone()
-            site_id = site_row[0] if site_row else cursor.execute('insert into storage_site (name, url) values (?, ?)', (siteName, rootLocation.srmurl)).lastrowid
+            site_row = cursor.execute('select id from storage_site where url = ?', [srmurl]).fetchone()
+            site_id = site_row[0] if site_row else cursor.execute('insert into storage_site (name, url) values (?, ?)', (siteName, srmurl)).lastrowid
 
-            dir_id = cursor.execute('insert into directory (name) values (?)', [rootLocation.directory]).lastrowid
+            conn.commit()
+
+            return site_id
+
+    def insertRootDirectory(self, siteName, rootDirectory):
+        with sqlite3.connect(self.db_filename) as conn:
+            cursor = conn.cursor()
+
+            site_row = cursor.execute('select id from storage_site where name = ?', [siteName]).fetchone()
+
+            if not site_row:
+                raise EntryNotFoundException()
+
+            site_id = site_row[0]
+
+            dir_id = cursor.execute('insert into directory (name) values (?)', [rootDirectory]).lastrowid
 
             cursor.execute('insert into storage_site_root (storage_site_id, directory_id) values (?, ?)', (site_id, dir_id)).lastrowid
+
+            conn.commit()
+
+            return dir_id
+
+    def insertRootLocation(self, siteName, srmurl, rootDirectory):
+        with sqlite3.connect(self.db_filename) as conn:
+            cursor = conn.cursor()
+
+            site_row = cursor.execute('select id from storage_site where url = ?', [srmurl]).fetchone()
+            site_id = site_row[0] if site_row else cursor.execute('insert into storage_site (name, url) values (?, ?)', (siteName, srmurl)).lastrowid
+
+            dir_id = cursor.execute('insert into directory (name) values (?)', [rootDirectory]).lastrowid
+
+            cursor.execute('insert into storage_site_root (storage_site_id, directory_id) values (?, ?)', (site_id, dir_id)).lastrowid
+
+            conn.commit()
+
+            return dir_id
+
+    def insertSubDirectory(self, parent_directory_id, sub_directory):
+        with sqlite3.connect(self.db_filename) as conn:
+            cursor = conn.cursor()
+
+            dir_id = cursor.execute('insert into directory (name, parent_directory_id) values (?, ?)', (sub_directory, parent_directory_id)).lastrowid
 
             conn.commit()
 
@@ -124,6 +172,24 @@ class LTAStorageDb:
 
                 conn.commit()
 
+    def sites(self):
+        '''returns list of tuples (id, name, url) of all sites'''
+        with sqlite3.connect(self.db_filename) as conn:
+            return conn.execute('''SELECT id, name, url FROM storage_site''').fetchall()
+
+    def site(self, site_id):
+        '''returns tuple (id, name, url) for site with id=site_id'''
+        with sqlite3.connect(self.db_filename) as conn:
+            return conn.execute('''SELECT id, name, url FROM storage_site where id = ?''', [site_id]).fetchone()
+
+    def rootDirectories(self):
+        '''returns list of all root directories (id, name, sitename) for all sites'''
+        with sqlite3.connect(self.db_filename) as conn:
+            return conn.execute('''SELECT dir.id, dir.name, site.name
+                FROM storage_site_root
+                join directory dir on dir.id = storage_site_root.directory_id
+                join storage_site site on site.id = storage_site_root.storage_site_id''').fetchall()
+
     def subDirectories(self, directory_id):
         with sqlite3.connect(self.db_filename) as conn:
             return conn.execute('''
@@ -131,7 +197,7 @@ class LTAStorageDb:
                 join directory dir on dir.id = directory_closure.descendant_id
                 where ancestor_id = ? and depth > 0
                 order by depth asc
-                ''', [directory_id]).fetchall();
+                ''', [directory_id]).fetchall()
 
     def parentDirectories(self, directory_id):
         with sqlite3.connect(self.db_filename) as conn:
@@ -140,11 +206,11 @@ class LTAStorageDb:
                 join directory dir on dir.id = dc.ancestor_id
                 where dc.descendant_id = ? and depth > 0
                 order by depth desc
-                ''', [directory_id]).fetchall();
+                ''', [directory_id]).fetchall()
 
     def filesInDirectory(self, directory_id):
         with sqlite3.connect(self.db_filename) as conn:
             return conn.execute('''
                 SELECT * FROM fileinfo
                 where directory_id = ?
-                ''', [directory_id]).fetchall();
+                ''', [directory_id]).fetchall()
