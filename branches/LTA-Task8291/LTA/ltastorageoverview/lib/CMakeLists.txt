@@ -3,5 +3,6 @@
 python_install(
     scraper.py
     store.py
+    webservice/webservice.py
     DESTINATION ltastorageoverview)
 
