@@ -2,11 +2,13 @@
 # Variables used by this module:
 #  SLURM_ROOT_DIR     - SLURM root directory
 # Variables defined by this module:
-#  SLURM_FOUND             - system has SLURM
-#  SLURM_SRUN_EXECUTABLE   - the full path of srun
-#  SLURM_SALLOC_EXECUTABLE - the full path of salloc
-#  SLURM_SQUEUE_EXECUTABLE - the full path of squeue
-#  SLURM_SACCT_EXECUTABLE  - the full path of sacct
+#  SLURM_FOUND               - system has SLURM
+#  SLURM_SRUN_EXECUTABLE     - the full path of srun
+#  SLURM_SALLOC_EXECUTABLE   - the full path of salloc
+#  SLURM_SQUEUE_EXECUTABLE   - the full path of squeue
+#  SLURM_SACCT_EXECUTABLE    - the full path of sacct
+#  SLURM_SCONTROL_EXECUTABLE - the full path of scontrol
+#  SLURM_SINFO_EXECUTABLE    - the full path of sinfo
 
 # Copyright (C) 2015
 # ASTRON (Netherlands Institute for Radio Astronomy)
@@ -36,6 +38,10 @@ if(NOT SLURM_FOUND)
   find_program(SLURM_SQUEUE_EXECUTABLE squeue
     HINTS ${SLURM_ROOT_DIR} PATH_SUFFIXES bin)
   find_program(SLURM_SACCT_EXECUTABLE sacct
+    HINTS ${SLURM_ROOT_DIR} PATH_SUFFIXES bin)
+  find_program(SLURM_SCONTROL_EXECUTABLE scontrol
+    HINTS ${SLURM_ROOT_DIR} PATH_SUFFIXES bin)
+  find_program(SLURM_SINFO_EXECUTABLE sinfo
     HINTS ${SLURM_ROOT_DIR} PATH_SUFFIXES bin)
 
   if(SLURM_SRUN_EXECUTABLE)
