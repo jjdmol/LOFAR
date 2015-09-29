@@ -6,6 +6,7 @@
 #  SLURM_SRUN_EXECUTABLE   - the full path of srun
 #  SLURM_SALLOC_EXECUTABLE - the full path of salloc
 #  SLURM_SQUEUE_EXECUTABLE - the full path of squeue
+#  SLURM_SACCT_EXECUTABLE  - the full path of sacct
 
 # Copyright (C) 2015
 # ASTRON (Netherlands Institute for Radio Astronomy)
@@ -33,6 +34,8 @@ if(NOT SLURM_FOUND)
   find_program(SLURM_SALLOC_EXECUTABLE salloc
     HINTS ${SLURM_ROOT_DIR} PATH_SUFFIXES bin)
   find_program(SLURM_SQUEUE_EXECUTABLE squeue
+    HINTS ${SLURM_ROOT_DIR} PATH_SUFFIXES bin)
+  find_program(SLURM_SACCT_EXECUTABLE sacct
     HINTS ${SLURM_ROOT_DIR} PATH_SUFFIXES bin)
 
   if(SLURM_SRUN_EXECUTABLE)
