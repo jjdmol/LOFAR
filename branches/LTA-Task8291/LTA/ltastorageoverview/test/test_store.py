@@ -47,11 +47,11 @@ class TestLTAStorageDb(unittest.TestCase):
 
         rootDirs = self.db.rootDirectories()
         self.assertEquals(5, len(rootDirs))
-        self.assertTrue((dirA1_id, 'rootDir1', 'siteA') in rootDirs)
-        self.assertTrue((dirA2_id, 'rootDir2', 'siteA') in rootDirs)
-        self.assertTrue((dirA3_id, 'path/to/rootDir3', 'siteA') in rootDirs)
-        self.assertTrue((dirB1_id, 'rootDir1', 'siteB') in rootDirs)
-        self.assertTrue((dirB2_id, 'path/to/otherRootDir', 'siteB') in rootDirs)
+        self.assertTrue((dirA1_id, 'rootDir1', siteA_id, 'siteA') in rootDirs)
+        self.assertTrue((dirA2_id, 'rootDir2', siteA_id, 'siteA') in rootDirs)
+        self.assertTrue((dirA3_id, 'path/to/rootDir3', siteA_id, 'siteA') in rootDirs)
+        self.assertTrue((dirB1_id, 'rootDir1', siteB_id, 'siteB') in rootDirs)
+        self.assertTrue((dirB2_id, 'path/to/otherRootDir', siteB_id, 'siteB') in rootDirs)
 
     def testDirectoryTrees(self):
         siteA_id = self.db.insertSite('siteA', 'srm://siteA.org')
@@ -69,11 +69,11 @@ class TestLTAStorageDb(unittest.TestCase):
         rootDirs = self.db.rootDirectories()
         self.assertEquals(2, len(rootDirs))
 
-        for (id, name, site) in rootDirs:
-            subDirs = self.db.subDirectories(id)
-            print (id, name, site)
-            print subDirs
-            print
+        for (id, name, site_id, site_name) in rootDirs:
+            subDirs = self.db.subDirectories(id, 1, False)
+            for subDir in subDirs:
+                subDir_parent_id = subDir[2]
+                self.assertEquals(id, subDir_parent_id)
 
 # run tests if main
 if __name__ == '__main__':

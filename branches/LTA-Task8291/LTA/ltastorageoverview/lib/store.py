@@ -151,6 +151,17 @@ class LTAStorageDb:
 
             return dir_id
 
+    def insertFileInfo(self, name, size, creation_date, parent_directory_id):
+        with sqlite3.connect(self.db_filename) as conn:
+            cursor = conn.cursor()
+
+            fileinfo_id = cursor.execute('insert into fileinfo (name, size, creation_date, directory_id) values (?, ?, ?, ?)',
+                                         (name.split('/')[-1], size, datetime.datetime.utcnow(), parent_directory_id))
+
+            conn.commit()
+
+            return fileinfo_id
+
     def insertLocationResult(self, result):
         with sqlite3.connect(self.db_filename) as conn:
             cursor = conn.cursor()
@@ -183,21 +194,22 @@ class LTAStorageDb:
             return conn.execute('''SELECT id, name, url FROM storage_site where id = ?''', [site_id]).fetchone()
 
     def rootDirectories(self):
-        '''returns list of all root directories (id, name, sitename) for all sites'''
+        '''returns list of all root directories (id, name, site_id, site_name) for all sites'''
         with sqlite3.connect(self.db_filename) as conn:
-            return conn.execute('''SELECT dir.id, dir.name, site.name
+            return conn.execute('''SELECT dir.id, dir.name, site.id, site.name
                 FROM storage_site_root
                 join directory dir on dir.id = storage_site_root.directory_id
                 join storage_site site on site.id = storage_site_root.storage_site_id''').fetchall()
 
-    def subDirectories(self, directory_id):
+    def subDirectories(self, directory_id, depth = 1, includeSelf=False):
+        '''returns list of all sub directories up to the given depth (id, name, site_id, site_name, depth) for the given directory_id'''
         with sqlite3.connect(self.db_filename) as conn:
             return conn.execute('''
-                SELECT dir.* FROM directory_closure
+                SELECT dir.id, dir.name, dir.parent_directory_id, directory_closure.depth FROM directory_closure
                 join directory dir on dir.id = directory_closure.descendant_id
-                where ancestor_id = ? and depth > 0
+                where ancestor_id = ? and depth <= ? and depth > ?
                 order by depth asc
-                ''', [directory_id]).fetchall()
+                ''', (directory_id, depth, -1 if includeSelf else 0)).fetchall()
 
     def parentDirectories(self, directory_id):
         with sqlite3.connect(self.db_filename) as conn:
@@ -214,3 +226,4 @@ class LTAStorageDb:
                 SELECT * FROM fileinfo
                 where directory_id = ?
                 ''', [directory_id]).fetchall()
+
