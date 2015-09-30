@@ -56,12 +56,28 @@ class cSPU:
     def checkStatus(self):
         """
         check PSU if boards idle and fully loaded
-        """ 
+        """
+        # in future get all settings from configuration file
+        max_3_3 = 3.4
+        min_3_3 = 3.1
+        max_drop_3_3 = 0.3
+        
+        max_5_0 = 5.0
+        min_5_0 = 4.5
+        max_drop_5_0 = 0.3
+        
+        max_8_0 = 8.0
+        min_8_0 = 7.4
+        max_drop_8_0 = 0.3
+        
+        max_48  = 48.0
+        min_48  = 43.0
+        max_drop_48 = 2.0
+          
         logger.info("=== SPU status check ===")
         if not checkActiveRSPDriver():
             logger.warn("RSPDriver down, skip test")
             return
-        # [0] = no-load,  [1] = full-load
         
         noload = []
         fullload_3 = []
@@ -120,28 +136,32 @@ class cSPU:
                 if (self.db.spu[sr].temp > 35.0):
                     self.db.spu[sr].temp_ok = 0
                 
-                if(abs(4.75 - noload[sr][1]) > 0.2 
-                or abs(4.75 - fullload_3[sr][1]) > 0.2 
-                or abs(4.75 - fullload_5[sr][1]) > 0.2 
-                or (noload[sr][1] - fullload_3[sr][1]) > 0.3):
-                    self.db.spu[sr].rcu_ok = 0   
+                if (not (min_5_0 <= noload[sr][1] <= max_5_0)
+                or not (min_5_0 < fullload_3[sr][1] <= max_5_0)
+                or not (min_5_0 <= fullload_5[sr][1] <= max_5_0)
+                or (noload[sr][1] - fullload_3[sr][1]) > max_drop_5_0):
+                    self.db.spu[sr].rcu_ok = 0
+                    logger.info("SPU voltage 5.0V out of range")
+                    
+                if (not (min_8_0 <= noload[sr][2] <= max_8_0)
+                or not (min_8_0 <= fullload_3[sr][2] <= max_8_0)
+                or (noload[sr][2] - fullload_3[sr][2]) > max_drop_8_0):
+                    self.db.spu[sr].lba_ok = 0   
+                    logger.info("SPU voltage 8.0V out of range")
                 
-                if(abs(7.6 - noload[sr][1]) > 0.2 
-                or abs(7.6 - fullload_3[sr][1]) > 0.2 
-                or (noload[sr][1] - fullload_3[sr][1]) > 0.3):
-                    self.db.spu[sr].lba_ok = 0      
+                if (not (min_48 <= noload[sr][3] <= max_48)
+                or not (min_48 <= fullload_5[sr][3] <= max_48)
+                or (noload[sr][3] - fullload_5[sr][3]) > max_drop_48):
+                    self.db.spu[sr].hba_ok = 0   
+                    logger.info("SPU voltage 48V out of range")
                 
-                if(abs(45.0 - noload[sr][1]) > 2.0  
-                or abs(45.0 - fullload_5[sr][1]) > 2.0 
-                or (noload[sr][1] - fullload_5[sr][1]) > 2.0):
-                    self.db.spu[sr].hba_ok = 0
-                
-                if(abs(3.3 - noload[sr][1]) > 0.2 
-                or abs(3.3 - fullload_3[sr][1]) > 0.2 
-                or abs(3.3 - fullload_5[sr][1]) > 0.2 
-                or (noload[sr][1] - fullload_5[sr][1]) > 0.3):
-                    self.db.spu[sr].spu_ok = 0
-                
+                if (not (min_3_3 <= noload[sr][4] <= max_3_3)
+                or not (min_3_3 <= fullload_3[sr][4] <= max_3_3)
+                or not (min_3_3 <= fullload_5[sr][4] <= max_3_3)
+                or (noload[sr][4] - fullload_5[sr][4]) > max_drop_3_3):
+                    self.db.spu[sr].spu_ok = 0   
+                    logger.info("SPU voltage 3.3V out of range")
+                    
         logger.info("=== Done SPU check ===")
         self.db.addTestDone('SPU')
         return
@@ -275,6 +295,15 @@ class cRSP:
         return (images_ok)
 
     def checkBoard(self):
+        max_1_2 = 1.3
+        min_1_2 = 1.1
+        
+        max_2_5 = 2.6
+        min_2_5 = 2.4
+        
+        max_3_3 = 3.4
+        min_3_3 = 3.1
+        
         ok = True
         logger.info("=== RSP Board check ===")
         if not checkActiveRSPDriver():
@@ -289,15 +318,15 @@ class cRSP:
             if len(d) == 3:
                 logger.debug("RSP board %d: [1.2V]=%3.2fV, [2.5V]=%3.2fV, [3.3V]=%3.2fV" %(rsp.nr, d[0],  d[1],  d[2]))
                 rsp.voltage1_2 = d[0]
-                if d[0] < 1.1 or d[0] > 1.3:
+                if not (min_1_2 <= d[0] <= max_1_2):
                     rsp.voltage_ok = 0
                     logger.info("RSP board %d [1.2V]=%3.2fV" %(rsp.nr, d[0]))
                 rsp.voltage2_5 = d[1]
-                if d[1] < 2.4 or d[1] > 2.6:
+                if not (min_2_5 <= d[1] <= max_2_5):
                     rsp.voltage_ok = 0
                     logger.info("RSP board %d [2.5V]=%3.2fV" %(rsp.nr, d[1]))
                 rsp.voltage3_3 = d[2]
-                if d[2] < 3.1 or d[2] > 3.4:
+                if not (min_3_3 <= d[2] <= max_3_3):
                     rsp.voltage_ok = 0
                     logger.info("RSP board %d [3.3V]=%3.2fV" %(rsp.nr, d[2]))
 

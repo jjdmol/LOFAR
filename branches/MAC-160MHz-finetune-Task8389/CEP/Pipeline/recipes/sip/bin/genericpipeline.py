@@ -274,7 +274,7 @@ class GenericPipeline(control):
                 for k in subpipeline_parset.keys:
                     if not str(k).startswith('#'):
                         val = subpipeline_parset[k]
-                        if not str(k).startswith('!'):
+                        if not str(k).startswith('!') and not str(k).startswith('pipeline.replace.'):
                             for item in checklist:
                                 if item in str(val):
                                     val = str(val).replace(item, stepname + '-' + item)
@@ -286,10 +286,9 @@ class GenericPipeline(control):
                     subpipeline_steplist[i] = stepname + '-' + item
                 for item in step_parset_obj[stepname].keys():
                     for k in self.parset.keys:
-                        if str(k).startswith('!') and item in k:
+                        if str(k).startswith('!') and item in k or str(k).startswith('pipeline.replace.') and item in k:
                             self.parset.remove(k)
                             self.parset.add('! ' + item, str(step_parset_obj[stepname][item]))
-
                 self._replace_values()
 
                 self._construct_steps(subpipeline_steplist, step_control_dict, step_parset_files, step_parset_obj, parset_dir)
@@ -554,15 +553,11 @@ class GenericPipeline(control):
 
     def _replace_values(self):
         replacedict = {}
-        try:
-            import imp
-            plugin = imp.load_source('main', str(self.parset['prepare']))
-            replacedict = plugin.main()
-        except:
-            pass
         for check in self.parset.keys:
             if str(check).startswith('!'):
                 replacedict[str(check).lstrip('!').lstrip(' ')] = str(self.parset[check])
+            if str(check).startswith('pipeline.replace.'):
+                replacedict[str(check).replace('pipeline.replace.', '').lstrip(' ')] = str(self.parset[check])
         #print 'REPLACEDICT: ',replacedict
         for check in self.parset.keys:
             if not str(check).startswith('#'):
