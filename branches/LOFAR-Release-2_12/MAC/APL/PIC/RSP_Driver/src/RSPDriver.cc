@@ -1979,7 +1979,17 @@ void RSPDriver::rsp_getclock(GCFEvent& event, GCFPortInterface& port)
 {
 	Ptr<GetClocksCmd> command = new GetClocksCmd(event, port, Command::READ);
 
-	if (!command->validate()) {
+	if (Sequencer::getInstance().isActive()) {
+		LOG_INFO("GETCLOCK: sequencer busy");
+
+		RSPGetclockackEvent ack;
+		ack.timestamp = Timestamp(0,0);
+		ack.status = RSP_BUSY;
+		port.send(ack);
+		return;
+	}
+    
+    if (!command->validate()) {
 		LOG_ERROR("GETCLOCK: invalid parameter");
 
 		RSPGetclockackEvent ack;

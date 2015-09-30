@@ -38,6 +38,7 @@ namespace LOFAR {
     namespace RSP {
 
 #define STARTUP_WAIT   10
+#define CLOCK_WAIT     5
 #define TDWRITE_WAIT   1
 #define TDREAD_TIMEOUT 3
 #define RSUCLEAR_WAIT  5
@@ -59,7 +60,7 @@ namespace LOFAR {
  *   |  |      writePLL_state <--------------------------.  |        WRITE_TIMEOUT
  *   |  |      readPLL_state  ---------> readError ------'  |        TDREAD_TIMEOUT
  *   |  |                                                   |        
- *   |  '----> writeClock_state <------------------------.  |        STARTUP_WAIT
+ *   |  '----> writeClock_state <------------------------.  |        CLOCK_WAIT
  *   |         readClock_state --------> readError ------'  |        TDREAD_TIMEOUT
  *   |  .------- ok <----------'                            |        
  *   |  |                                                   |        
@@ -124,9 +125,6 @@ GCFEvent::TResult Sequencer::idle_state(GCFEvent& event, GCFPortInterface& /*por
     break;
 
     case F_ENTRY: {
-        if (itsIdle == false) {
-            Cache::getInstance().getState().force();
-        }
         LOG_INFO("Entering Sequencer::idle_state");
         itsIdle = true;
     }
@@ -140,11 +138,12 @@ GCFEvent::TResult Sequencer::idle_state(GCFEvent& event, GCFPortInterface& /*por
             }
             else if (itsCurSeq == SEQ_SETCLOCK) {
                 LOG_DEBUG(">> Start sequencer *setclock*");
-                //Cache::getInstance().reset();
+                Cache::getInstance().reset();
                 TRAN(Sequencer::clearClock_state);
             }
             else if (itsCurSeq == SEQ_RSPCLEAR) {
                 LOG_DEBUG(">> Start sequencer *rspclear*");
+                Cache::getInstance().reset();
                 TRAN(Sequencer::RSUclear_state);
             }
         }
@@ -391,7 +390,7 @@ GCFEvent::TResult Sequencer::writeClock_state(GCFEvent& event, GCFPortInterface&
         break;
 
     case F_TIMER:
-        if (itsTimer++ > STARTUP_WAIT && Cache::getInstance().getState().tdwrite().isMatchAll(RegisterState::IDLE)) {
+        if (itsTimer++ > CLOCK_WAIT && Cache::getInstance().getState().tdwrite().isMatchAll(RegisterState::IDLE)) {
             TRAN(Sequencer::readClock_state);
         }
         break;
