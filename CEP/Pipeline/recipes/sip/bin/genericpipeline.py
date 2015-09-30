@@ -151,19 +151,22 @@ class GenericPipeline(control):
         # initial parameters to be saved in resultsdict so that recipes have access to this step0
         # double init values. 'input' should be considered deprecated
         # self.name would be consistent to use in subpipelines
-        resultdicts = {'input': {
+        input_dictionary = {
             'parset': parset_file,
             'parsetobj': self.parset,
-            'job_dir': job_dir,
             'parset_dir': parset_dir,
-            'mapfile_dir': mapfile_dir}}
+            'mapfile_dir': mapfile_dir}
 
-        resultdicts.update({self.name: {
-            'parset': parset_file,
-            'parsetobj': self.parset,
-            'job_dir': job_dir,
-            'parset_dir': parset_dir,
-            'mapfile_dir': mapfile_dir}})
+        resultdicts = {}
+        for section in self.config.sections():
+            tmp_dict = {}
+            for entry in self.config.items(section):
+                input_dictionary[entry[0]] = entry[1]
+                tmp_dict[entry[0]] = entry[1]
+            resultdicts.update({section: copy.deepcopy(tmp_dict)})
+
+        resultdicts.update({'input': input_dictionary})
+        resultdicts.update({self.name: input_dictionary})
 
         if 'pipeline.mapfile' in self.parset.keys:
             resultdicts['input']['mapfile'] = str(self.parset['pipeline.mapfile'])
