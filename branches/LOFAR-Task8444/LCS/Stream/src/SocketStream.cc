@@ -57,21 +57,6 @@ using boost::format;
 
 namespace LOFAR {
 
-// port range for unused ports search
-const int MINPORT = 10000;
-const int MAXPORT = 30000;
-
-
-static struct RandomState {
-  RandomState() {
-    xsubi[0] = getpid();
-    xsubi[1] = time(0);
-    xsubi[2] = time(0) >> 16;
-  }
-
-  unsigned short xsubi[3];
-} randomState;
-
 SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol protocol,
                            Mode mode, time_t deadline, bool doAccept, const std::string &bind_local_iface)
 :
@@ -86,109 +71,102 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
       % hostname
       % _port);
 
-  const bool autoPort = (port == 0);
-
   for(;;) {
     try {
-      try {
-        // Not all potentially blocking calls below have a timeout arg.
-        // So check early every round. It may abort hanging tests early (=good).
-        if (deadline > 0 && deadline <= time(0))
-          THROW(TimeOutException, "SocketStream");
+      // Not all potentially blocking calls below have a timeout arg.
+      // So check early every round. It may abort hanging tests early (=good).
+      if (deadline > 0 && deadline <= time(0))
+        THROW(TimeOutException, "SocketStream");
 
-        if (mode == Server && autoPort)
-          port = MINPORT + static_cast<unsigned short>((MAXPORT - MINPORT) * erand48(randomState.xsubi)); // erand48() not thread safe, but not a problem.
+      // Resolve host + port to a 'struct addrinfo'
+      safeAddrInfo result;
+      safeGetAddrInfo(result, protocol == SocketStream::TCP, hostname, port);
 
-        // Resolve host + port to a 'struct addrinfo'
-        safeAddrInfo result;
-        safeGetAddrInfo(result, protocol == SocketStream::TCP, hostname, port);
+      // result is a linked list of resolved addresses, we only use the first
 
-        // result is a linked list of resolved addresses, we only use the first
+      if ((fd = socket(result.addrinfo->ai_family, result.addrinfo->ai_socktype, result.addrinfo->ai_protocol)) < 0)
+        THROW_SYSCALL("socket");
 
-        if ((fd = socket(result.addrinfo->ai_family, result.addrinfo->ai_socktype, result.addrinfo->ai_protocol)) < 0)
-          THROW_SYSCALL("socket");
+      if (bind_local_iface != "") {
+        // Bind socket to a specific network interface, causing packets to be
+        // emitted through this interface.
+        //
+        // Requires CAP_NET_RAW (or root)
+        LOG_DEBUG_STR("Binding socket " << description << " to interface " << bind_local_iface);
 
+        struct ifreq ifr;
+        memset(&ifr, 0, sizeof ifr);
+        snprintf(ifr.ifr_name, sizeof ifr.ifr_name, "%s", bind_local_iface.c_str());
+
+        if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof ifr) < 0)
+          try {
+            THROW_SYSCALL("setsockopt(SO_BINDTODEVICE)");
+          } catch(Exception &ex) {
+            LOG_ERROR_STR("Could not bind socket to device " << bind_local_iface << ": " << ex);
+          }
+      }
+
+      if (mode == Client) {
         if (bind_local_iface != "") {
-          // Bind socket to a specific network interface, causing packets to be
-          // emitted through this interface.
-          //
-          // Requires CAP_NET_RAW (or root)
-          LOG_DEBUG_STR("Binding socket " << description << " to interface " << bind_local_iface);
+          struct sockaddr sa = getInterfaceIP(bind_local_iface);
+          LOG_DEBUG_STR("Binding socket " << description << " to IP " << inet_ntoa(((struct sockaddr_in*)&sa)->sin_addr) << " of interface " << bind_local_iface);
 
-          struct ifreq ifr;
-          memset(&ifr, 0, sizeof ifr);
-          snprintf(ifr.ifr_name, sizeof ifr.ifr_name, "%s", bind_local_iface.c_str());
-
-          if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof ifr) < 0)
-            try {
-              THROW_SYSCALL("setsockopt(SO_BINDTODEVICE)");
-            } catch(Exception &ex) {
-              LOG_ERROR_STR("Could not bind socket to device " << bind_local_iface << ": " << ex);
-            }
-        }
-
-        if (mode == Client) {
-          if (bind_local_iface != "") {
-            struct sockaddr sa = getInterfaceIP(bind_local_iface);
-            LOG_DEBUG_STR("Binding socket " << description << " to IP " << inet_ntoa(((struct sockaddr_in*)&sa)->sin_addr) << " of interface " << bind_local_iface);
-
-            if (bind(fd, &sa, sizeof sa) < 0)
-              THROW_SYSCALL(str(boost::format("bind [%s]") % description));
-          }
-
-          while (connect(fd, result.addrinfo->ai_addr, result.addrinfo->ai_addrlen) < 0)
-            if (errno == ECONNREFUSED || errno == ETIMEDOUT) {
-              if (deadline > 0 && time(0) >= deadline)
-                throw TimeOutException("client socket", THROW_ARGS);
-
-              if (usleep(999999) < 0) { // near 1 sec; max portably safe arg val
-                // interrupted by a signal handler -- abort to allow this thread to
-                // be forced to continue after receiving a SIGINT, as with any other
-                // system call in this constructor 
-                THROW_SYSCALL("usleep");
-              }
-            } else
-              THROW_SYSCALL(str(boost::format("connect [%s]") % description));
-        } else {
-          const int on = 1;
-
-          if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof on) < 0)
-            THROW_SYSCALL("setsockopt(SO_REUSEADDR)");
-
-          if (bind(fd, result.addrinfo->ai_addr, result.addrinfo->ai_addrlen) < 0)
+          if (bind(fd, &sa, sizeof sa) < 0)
             THROW_SYSCALL(str(boost::format("bind [%s]") % description));
-
-          if (port == 0) // let OS search for a free port
-            port = getSocketPort(fd);
-
-          if (protocol == TCP) {
-            listen_sk = fd;
-            fd	= -1;
-
-            const int listenBacklog = 15;
-            if (listen(listen_sk, listenBacklog) < 0)
-              THROW_SYSCALL(str(boost::format("listen [%s]") % description));
-
-            if (doAccept)
-              accept(deadline);
-            else
-              break;
-          }
         }
 
-        // we have an fd! break out of the infinite loop
-        break;
-      } catch (...) {
-        if (listen_sk >= 0) { close(listen_sk); listen_sk = -1; }
-        if (fd >= 0)        { close(fd);        fd = -1; }
+        while (connect(fd, result.addrinfo->ai_addr, result.addrinfo->ai_addrlen) < 0)
+          if (errno == ECONNREFUSED || errno == ETIMEDOUT) {
+            if (deadline > 0 && time(0) >= deadline)
+              throw TimeOutException("client socket", THROW_ARGS);
 
-        throw;
+            if (usleep(999999) < 0) { // near 1 sec; max portably safe arg val
+              // interrupted by a signal handler -- abort to allow this thread to
+              // be forced to continue after receiving a SIGINT, as with any other
+              // system call in this constructor 
+              THROW_SYSCALL("usleep");
+            }
+          } else
+            THROW_SYSCALL(str(boost::format("connect [%s]") % description));
+      } else {
+        const int on = 1;
+
+        if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof on) < 0)
+          THROW_SYSCALL("setsockopt(SO_REUSEADDR)");
+
+        if (bind(fd, result.addrinfo->ai_addr, result.addrinfo->ai_addrlen) < 0)
+          THROW_SYSCALL(str(boost::format("bind [%s]") % description));
+
+        if (port == 0) {
+          // we let OS search for a free port
+          int actual_port = getSocketPort(fd);
+
+          LOG_DEBUG(str(boost::format("Bound socket %s to port %s") % description % actual_port));
+
+          // we can't accept -1
+          if (actual_port >= 0) port = actual_port;
+        }
+
+        if (protocol == TCP) {
+          listen_sk = fd;
+          fd	= -1;
+
+          const int listenBacklog = 15;
+          if (listen(listen_sk, listenBacklog) < 0)
+            THROW_SYSCALL(str(boost::format("listen [%s]") % description));
+
+          if (doAccept)
+            accept(deadline);
+          else
+            break;
+        }
       }
-    } catch (SystemCallException &exc) {
-      if ( (exc.syscall() == "bind" || exc.syscall() == "listen") &&
-           mode == Server && autoPort ) {
-        continue; // try listening on / binding to another server port
-      }
+
+      // we have an fd! break out of the infinite loop
+      break;
+    } catch (...) {
+      if (listen_sk >= 0) { close(listen_sk); listen_sk = -1; }
+      if (fd >= 0)        { close(fd);        fd = -1; }
 
       throw;
     }
