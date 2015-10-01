@@ -139,12 +139,9 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
 
         if (port == 0) {
           // we let OS search for a free port
-          int actual_port = getSocketPort(fd);
+          port = getSocketPort(fd);
 
-          LOG_DEBUG(str(boost::format("Bound socket %s to port %s") % description % actual_port));
-
-          // we can't accept -1
-          if (actual_port >= 0) port = actual_port;
+          LOG_DEBUG(str(boost::format("Bound socket %s to port %s") % description % port));
         }
 
         if (protocol == TCP) {

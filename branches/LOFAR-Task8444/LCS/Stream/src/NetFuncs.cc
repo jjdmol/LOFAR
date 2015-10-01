@@ -115,10 +115,10 @@ namespace LOFAR {
       THROW_SYSCALL("getsockname");
 
     if (sin.sin_family != AF_INET)
-      return -1;
+      return 0;
 
     if (addrlen != sizeof sin)
-      return -1;
+      return 0;
 
     return ntohs(sin.sin_port);
   }
