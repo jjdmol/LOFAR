@@ -331,7 +331,7 @@ int main(int argc, char **argv)
 
     // Select on the local NUMA InfiniBand interface (OpenMPI only, for now)
     if (mynode.mpi_nic != "") {
-      LOG_DEBUG_STR("Binding to interface " << mynode.mpi_nic);
+      LOG_DEBUG_STR("Binding MPI to interface " << mynode.mpi_nic);
 
       if (setenv("OMPI_MCA_btl_openib_if_include", mynode.mpi_nic.c_str(), 1) < 0)
         THROW_SYSCALL("setenv(OMPI_MCA_btl_openib_if_include)");
