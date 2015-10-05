@@ -265,7 +265,7 @@ casa::CountedPtr<wcsprm> AntennaFieldHBA::readWCS(const string &filename)
   fits_open_file(&fptr, locatedFitsFile.c_str(), READONLY, &status);
   if (status!=0) {
     fits_report_error(stderr, status);
-    THROW (Exception, "Error reading FITS file");
+    THROW (Exception, "Error reading FITS file: "+locatedFitsFile);
   }
 
   int nkeyrec, nreject, nwcs, stat[NWCSFIX];
@@ -332,9 +332,9 @@ casa::Array<casa::Float> AntennaFieldHBA::readFITS(const string &filename) {
 map<string,double> AntennaFieldHBA::theirRotationMap =
     AntennaFieldHBA::readRotationMap();
 casa::CountedPtr<wcsprm> AntennaFieldHBA::theirWCS_p =
-    AntennaFieldHBA::readWCS("beamintmapwcsel-CS002HBA1-mode5-201x201.fits");
+    AntennaFieldHBA::readWCS("beamintmapwcselabs-CS002HBA1-mode5-201x201.fits");
 casa::Array<casa::Float> AntennaFieldHBA::theirIntegrals =
-    AntennaFieldHBA::readFITS("beamintmapwcsel-CS002HBA1-mode5-201x201.fits");
+    AntennaFieldHBA::readFITS("beamintmapwcselabs-CS002HBA1-mode5-201x201.fits");
 
 
 } //# namespace StationResponse
