@@ -30,6 +30,8 @@ namespace LOFAR
 
   // Create a stream from a descriptor.
   // Caller should wrap the returned pointer in some smart ptr type. 
+  //
+  // deadline: absolute deadline for creating the connection
   Stream *createStream(const std::string &descriptor, bool asReader, time_t deadline = 0);
 
 } // namespace LOFAR
