@@ -314,9 +314,17 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
                 #for name, value in zip(keylist, inputlist):
             if filedict:
                 for name, value in filedict.iteritems():
-                    if arglist_copy and name in arglist_copy:
-                        ind = arglist_copy.index(name)
-                        arglist_copy[ind] = value[i]
+                    #if arglist_copy and name in arglist_copy:
+                    if arglist_copy:
+                        yes = False
+                        for bla in arglist:
+                            if name in bla:
+                                ind = arglist_copy.index(bla)
+                                yes = True
+                        if yes:
+                            arglist_copy[ind] = arglist_copy[ind].replace(name, value[i])
+                        #ind = arglist_copy.index(name)
+                        #arglist_copy[ind] = value[i]
                     elif name in parsetdict_copy.values():
                         for k, v in parsetdict_copy.iteritems():
                             if v == name:
