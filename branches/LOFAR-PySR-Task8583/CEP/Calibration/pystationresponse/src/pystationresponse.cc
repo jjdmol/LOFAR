@@ -583,10 +583,12 @@ namespace BBS
     double time, double freq,  double freq0) const
   {
     vector3r_t direction;
+    vector3r_t station0;
+    vector3r_t tile0;
     if (itsUseArrayFactor) {
       direction = itsDirection->at(time);
-      vector3r_t station0 = itsRefDelay->at(time);
-      vector3r_t tile0 = itsRefTile->at(time);
+      station0 = itsRefDelay->at(time);
+      tile0 = itsRefTile->at(time);
     } else if (itsUseElementResponse) {
       direction = itsDirection->at(time);
     }
