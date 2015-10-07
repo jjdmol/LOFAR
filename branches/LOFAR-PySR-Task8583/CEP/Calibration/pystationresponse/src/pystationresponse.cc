@@ -582,9 +582,14 @@ namespace BBS
   Matrix<DComplex> PyStationResponse::evaluate(const Station::ConstPtr &station,
     double time, double freq,  double freq0) const
   {
-    vector3r_t direction = itsDirection->at(time);
-    vector3r_t station0 = itsRefDelay->at(time);
-    vector3r_t tile0 = itsRefTile->at(time);
+    vector3r_t direction;
+    if (itsUseArrayFactor) {
+      direction = itsDirection->at(time);
+      vector3r_t station0 = itsRefDelay->at(time);
+      vector3r_t tile0 = itsRefTile->at(time);
+    } else if (itsUseElementResponse) {
+      direction = itsDirection->at(time);
+    }
     return evaluate_itrf(station, time, freq, freq0, direction, station0, tile0);
   }
 
