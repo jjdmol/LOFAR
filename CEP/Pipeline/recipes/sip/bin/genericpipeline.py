@@ -193,8 +193,6 @@ class GenericPipeline(control):
                 typeval = step.getString('type')
             except:
                 typeval = ''
-            #self._construct_cmdline(inputargs, step, resultdicts)
-
             if stepname in step_parset_obj:
                 self._construct_step_parset(inputdict,
                                              step_parset_obj[stepname],
@@ -206,14 +204,13 @@ class GenericPipeline(control):
                 if self.task_definitions.get(typeval, 'recipe') == 'executable_args':
                     inputdict['stepname'] = stepname
 
-            self._construct_cmdline2(inputargs, step, resultdicts)
+            self._construct_cmdline(inputargs, step, resultdicts)
 
             if stepname in step_parset_files:
                 inputdict['parset'] = step_parset_files[stepname]
 
 
             self._construct_input(inputdict, step, resultdicts)
-
             # hack, popping 'type' is necessary, why? because you deleted kind already in parsets
             try:
                 inputdict.pop('type')
@@ -377,7 +374,7 @@ class GenericPipeline(control):
         # \hack
         self._replace_output_keyword(inoutdict, argsparset, argsparset.keys(), resdicts)
 
-    def _construct_cmdline2(self, inoutargs, controlparset, resdicts):
+    def _construct_cmdline(self, inoutargs, controlparset, resdicts):
         inoutdict = {}
         argsparset = controlparset.makeSubset(controlparset.fullModuleName('cmdline') + '.')
         self._replace_output_keyword(inoutdict, argsparset, argsparset.keys(), resdicts)
@@ -386,19 +383,6 @@ class GenericPipeline(control):
         for k in controlparset.keys():
             if 'cmdline' in k:
                 controlparset.remove(k)
-
-    def _construct_cmdline(self, inoutargs, controlparset, resdicts):
-        argsparset = controlparset.makeSubset(controlparset.fullModuleName('cmdline') + '.')
-        for k in argsparset.keys():
-            if argsparset.getString(k).__contains__('.output.'):
-                step, outvar = argsparset.getString(k).split('.output.')
-                inoutargs.append(resdicts[step][outvar])
-            else:
-                inoutargs.append(argsparset.getString(k))
-        try:
-            controlparset.remove('cmdline.inmap')
-        except:
-            pass
 
     def _construct_steps(self, step_name_list, step_control_dict, step_parset_files, step_parset_obj, parset_dir):
         step_list_copy = (copy.deepcopy(step_name_list))
@@ -480,9 +464,14 @@ class GenericPipeline(control):
         parsetdict = {}
         for orig in self.parset.keys:
             for item in tmp_keys:
-                if (stepname + '.') in orig and ('argument.'+item in orig and not 'argument.'+item+'.' in orig):
-                    ordered_keys.append(item)
-                    continue
+                if not str(orig).startswith('#'):
+                    if (stepname + '.') in orig and ('argument.'+item in orig and not 'argument.'+item+'.' in orig):
+                        ordered_keys.append(item)
+                        continue
+        # add keys from parset files that were not in the original list
+        for item in argsparset.keys():
+            if not item in ordered_keys:
+                ordered_keys.append(item)
         additional = self._replace_output_keyword(parsetdict, argsparset, ordered_keys, resdicts)
         for k in argsparset.keys():
             argsparset.replace(k, parsetdict[k])
