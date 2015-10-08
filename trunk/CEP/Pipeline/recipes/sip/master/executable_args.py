@@ -275,8 +275,8 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
                 parsetdict[k] = str(parset[k])
 
         # construct multiple input data
-        if not self.inputs['inputkeys'] and self.inputs['inputkey']:
-            self.inputs['inputkeys'].append(self.inputs['inputkey'])
+        if self.inputs['inputkey'] and not self.inputs['inputkey'] in self.inputs['inputkeys']:
+            self.inputs['inputkeys'].insert(0, self.inputs['inputkey'])
 
         if not self.inputs['outputkeys'] and self.inputs['outputkey']:
             self.inputs['outputkeys'].append(self.inputs['outputkey'])
