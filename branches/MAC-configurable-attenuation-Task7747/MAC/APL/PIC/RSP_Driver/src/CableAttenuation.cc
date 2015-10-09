@@ -70,7 +70,7 @@ CableAttenuation::CableAttenuation(const string&	filename)
 				ASSERTSTR(strToInt(column[0]) == 0, "Table must begin with line for rcumode 0");
 
 				// alloc storage and store cable lengths in seperate array.
-				itsAtts.resize(MAX_RCU_MODE + 1, nrOfColumns-1);
+                itsAtts.resize(MAX_RCU_MODE + 1, nrOfColumns-1);
 				itsAtts = 0.0;
 				itsCableLengths.resize(nrOfColumns-1);
 				itsCableLengths = 0;
@@ -88,7 +88,7 @@ CableAttenuation::CableAttenuation(const string&	filename)
 							"RCUmode " << rcuMode << " not in range [0.." << MAX_RCU_MODE << "]");
 
 				// copy values to internal array.
-				for (int	colNr = 1; colNr < nrOfColumns; colNr++) {
+				for (int colNr = 1; colNr < nrOfColumns; colNr++) {
 					itsAtts(prevRcuMode + 1, colNr - 1) = strToFloat(column[colNr]);
 				}
 			}

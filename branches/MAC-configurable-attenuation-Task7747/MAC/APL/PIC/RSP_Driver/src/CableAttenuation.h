@@ -54,7 +54,7 @@ class CableAttenuation
 public:
 	CableAttenuation(const string&	filename);
 	~CableAttenuation();
-
+    
 	// Returns the attenuation in dB for the given cable length and rcumode.
 	float	getAttenuation(int	cableLength, int	rcuMode) const;
 
