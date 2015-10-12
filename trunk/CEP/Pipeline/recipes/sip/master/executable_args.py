@@ -366,8 +366,8 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
         #mapfile_dir = os.path.join(self.config.get("layout", "job_directory"), "mapfiles")
         for k, v in jobresultdict.items():
             dmap = DataMap(v)
-            dmap.save(os.path.join(mapfile_dir, k + '.mapfile'))
-            resultmap[k + '.mapfile'] = os.path.join(mapfile_dir, k + '.mapfile')
+            dmap.save(os.path.join(mapfile_dir, self.inputs['stepname'] + '.' + k + '.mapfile'))
+            resultmap[k + '.mapfile'] = os.path.join(mapfile_dir, self.inputs['stepname'] + '.' + k + '.mapfile')
         self.outputs.update(resultmap)
         # *********************************************************************
         # Check job results, and create output data map file
