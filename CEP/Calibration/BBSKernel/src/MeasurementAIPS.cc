@@ -723,10 +723,8 @@ void MeasurementAIPS::initDimensions()
     // Check that channels have no gaps and are evenly spaced
     // (this is not prevented by the MS 2.0 standard).
     if (frequency.nelements()>1) {
-      Vector<Double> upFreq = frequency(Slicer(IPosition(1,1),
-                                               IPosition(1,frequency.nelements()-1)));
-      Vector<Double> lowFreq = frequency(Slicer(IPosition(1,0),
-                                                IPosition(1,frequency.nelements()-1)));
+      Vector<Double> upFreq = frequency(Slice(1,frequency.nelements()-1));
+      Vector<Double> lowFreq = frequency(Slice(0,frequency.nelements()-1));
       Double freqstep0=upFreq(0)-lowFreq(0);
       ASSERTSTR(allEQ(upFreq-lowFreq,freqstep0),
                 "Channels are not evenly spaced. This is not supported.");
