@@ -71,9 +71,13 @@ class python_plugin(LOFARnodeTCP):
             try:
             # ****************************************************************
             # Run
+                # Change to working directory for the script
+                pipedir = os.getcwd()
+                os.chdir(work_dir)
                 outdict = {}
                 plugin = imp.load_source('main', executable)
                 outdict = plugin.main(*args, **kwargs)
+                os.chdir(pipedir)
 
             except CalledProcessError, err:
                 # CalledProcessError isn't properly propagated by IPython
