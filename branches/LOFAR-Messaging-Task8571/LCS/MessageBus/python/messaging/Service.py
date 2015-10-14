@@ -42,6 +42,7 @@ class Service():
    def __enter__(self):
       self.Listen.open()
       self.Reply.open()
+      return self
 
    def __exit__(self, exc_type, exc_val, exc_tb):
       self.Listen.close()

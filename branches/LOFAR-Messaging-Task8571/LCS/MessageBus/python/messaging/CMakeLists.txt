@@ -1,6 +1,6 @@
 # $Id$
 
-lofar_package(PyMessaging 1.0 DEPENDS PyCommon)
+#lofar_package(PyMessaging 1.0 DEPENDS PyCommon)
 
 include(PythonInstall)
 
@@ -9,6 +9,8 @@ set(_py_files
   exceptions.py
   messagebus.py
   messages.py
+  RPC.py
+  Service.py
 )
 
 python_install(${_py_files} DESTINATION messaging)
