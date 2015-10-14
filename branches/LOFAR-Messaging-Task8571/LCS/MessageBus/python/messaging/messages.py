@@ -53,11 +53,11 @@ def validate_qpid_message(qmsg):
             "Not a Qpid Message: %r" % type(qmsg)
         )
     msg_props = qmsg.properties
-    #if not isinstance(msg_props, dict):
-    #    raise InvalidMessage(
-    #        "Invalid message properties type: %r (expected %r)" %
-    #        (type(msg_props), type(dict()))
-    #    )
+    if not isinstance(msg_props, dict):
+        raise InvalidMessage(
+            "Invalid message properties type: %r (expected %r)" %
+            (type(msg_props), type(dict()))
+        )
     illegal_props = _QPID_MESSAGE_FIELDS.intersection(msg_props)
     if illegal_props:
         raise InvalidMessage(
@@ -94,23 +94,6 @@ def to_qpid_message(msg):
         return msg
     if isinstance(msg, ApertifMessage):
         return msg.qpid_msg
-    #try:
-    #  if (isinstance(msg,dict):
-    #     reply_to=None
-    #     content=None
-    #     subject=None
-    #     if msg.has_key("content"):
-    #        reply_to=msg["content"]
-    #        if msg.has_key("reply_to"):
-    #          reply_to=msg["reply_to"]
-    #        if msg,has_key("service"):
-    #          subject=msg["service"]
-    #     else:
-    #       content=msg
-    #     return qpid.messaging.Message(content,reply_to=reply_to,subject=subject)
-    #except Exception e:
-       # noop
-        
     raise InvalidMessage("Invalid message type: %r" % type(msg))
 
 
