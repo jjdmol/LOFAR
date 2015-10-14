@@ -32,6 +32,8 @@ class RPC():
      MyMsg.reply_to=self.ReplyAddress
      self.Request.send(MyMsg) #ServiceMessage(MyMsg) #msg,reply_to=self.ReplyAddress))
      answer=self.Reply.receive(timeout)
-     if (answer!=None):
-        answer=answer.content
+     try:
+        answer=(answer.content,answer.status)
+     except Exception as e:
+        answer=("","Malformed return message")
      return answer

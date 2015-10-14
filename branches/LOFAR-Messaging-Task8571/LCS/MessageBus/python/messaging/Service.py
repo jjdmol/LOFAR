@@ -9,7 +9,7 @@ import uuid
 # create service:
 class Service():
 
-   def __init__(self,BusName,ServiceName,ServiceHandler,exclusive=True,numthreads=1):
+   def __init__(self,BusName,ServiceName,ServiceHandler,exclusive=True,numthreads=1,Verbose=False):
       self.BusName=BusName
       self.ServiceName=ServiceName
       self.ServiceHandler=ServiceHandler
@@ -18,6 +18,7 @@ class Service():
       self.exclusive=exclusive
       self.link_uuid=str(uuid.uuid4())
       self._numthreads=numthreads
+      self.Verbose=Verbose
       if (self.BusName!=None):
          self.Listen=FromBus(self.BusName+"/"+self.ServiceName,options={"link":"{name:two, x-bindings:[{key:" + self.ServiceName + ", arguments: {\"qpid.exclusive-binding\":True}}]}","capacity":numthreads*20})
          self.Reply=ToBus(self.BusName)
@@ -33,9 +34,7 @@ class Service():
       self.running=True
       self._tr=[]
       self.counter=[]
-     #with self.Listen:
-      #  with self.Reply:
-      for i in range(numthreads):
+      for i in range(self._numthreads):
              self._tr.append(threading.Thread(target=self.loop,args=[i]))
              self.counter.append(0)
              self._tr[i].start()
@@ -59,27 +58,31 @@ class Service():
          except Exception as e:
            print e
 
- 
          if (msg!=None):
+             status="unknown"
              self.counter[index]+=1
              #print "got a message"
              # create a reply message using the ToUpper conversion
              replymessage=""
              try:
                 replymessage=self.ServiceHandler(msg.content)
+                status="OK"
              except Exception as e:
                 print e
-                replymessage=str(e)
+                replymessage=""
+                status=str(e)
              # ensure to deliver at the destination in the reply_to field
              # send the result to the RPC client
              ToSend=EventMessage(replymessage)
+             ToSend.status=status
              ToSend.subject=msg.reply_to
-             msg.show()
-             ToSend.show()
+             if (self.Verbose):
+               msg.show()
+               ToSend.show()
              self.Reply.send(ToSend)
              self.Listen.ack(msg)
-         
-      print( "STOPPED Listening for messages on Bus %s and service name %s and %d processed." %(self.BusName,self.ServiceName,self.counter[index]))
+
+      print("STOPPED Listening for messages on Bus %s and service name %s and %d processed." %(self.BusName,self.ServiceName,self.counter[index]))
 
    def StopListening(self):
       if (self.running):
@@ -99,4 +102,3 @@ class Service():
          except (KeyboardInterrupt): 
            looping=False
            print("Keyboard interrupt received.")
-
