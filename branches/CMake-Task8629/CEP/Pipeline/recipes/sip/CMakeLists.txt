@@ -63,7 +63,7 @@ python_install(
   plugins/PipelineStep_combineParsets.py
   DESTINATION lofarpipe/recipes)
 
-install(PROGRAMS
+lofar_add_bin_scripts(
   bin/calibration_pipeline.py
   bin/msss_calibrator_pipeline.py
   bin/msss_imager_pipeline.py
@@ -79,8 +79,7 @@ install(PROGRAMS
   bin/genericpipeline.py
   bin/loader.py
   external/bad_station_detection/asciistats.py
-  external/bad_station_detection/statsplot.py
-  DESTINATION bin)
+  external/bad_station_detection/statsplot.py)
 
 install(FILES
   demixing/bbs_CasA.parset
