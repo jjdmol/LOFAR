@@ -4,7 +4,7 @@ lofar_package(PyCommon 1.0)
 
 include(PythonInstall)
 
-add_subdirectory(test)
+#add_subdirectory(test)
 
 set(_py_files
   factory.py
