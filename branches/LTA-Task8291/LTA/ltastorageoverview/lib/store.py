@@ -217,6 +217,17 @@ class LTAStorageDb:
         with sqlite3.connect(self.db_filename) as conn:
             return conn.execute('''SELECT id, name, url FROM storage_site where id = ?''', [site_id]).fetchone()
 
+    def directory(self, directory_id):
+        '''returns directory tuple (id, name, site_id, site_name) for the given directory_id'''
+        with sqlite3.connect(self.db_filename) as conn:
+            return conn.execute('''SELECT dir.id, dir.name, site.id, site.name
+                FROM storage_site_root
+                join storage_site site on site.id = storage_site_root.storage_site_id
+                join directory_closure dc on dc.ancestor_id = storage_site_root.directory_id
+                join directory dir on dir.id = dc.descendant_id
+                where dc.descendant_id = ?
+                ''', [directory_id]).fetchall()
+
     def rootDirectories(self):
         '''returns list of all root directories (id, name, site_id, site_name) for all sites'''
         with sqlite3.connect(self.db_filename) as conn:
