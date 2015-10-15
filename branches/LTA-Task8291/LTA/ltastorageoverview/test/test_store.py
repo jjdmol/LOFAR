@@ -2,6 +2,7 @@
 
 import unittest
 import datetime
+import time
 import os
 import os.path
 import tempfile
@@ -79,6 +80,27 @@ class TestLTAStorageDb(unittest.TestCase):
                 self.assertEquals(id, subDir_parent_id)
 
         print '\n'.join([str(x) for x in self.db.filesInTree(rootDir_id)])
+
+    def testLeastRecentlyVisitedDirectory(self):
+        siteA_id = self.db.insertSite('siteA', 'srm://siteA.org')
+
+        dir_ids = []
+        for i in range(3):
+            dir_id = self.db.insertRootDirectory('siteA', 'rootDir_%d' % i)
+            dir_ids.append(dir_id)
+
+            self.db.updateDirectoryLastVisitTime(dir_id, datetime.datetime.utcnow())
+            time.sleep(0.002)
+
+        lvr_dir_id = self.db.leastRecentlyVisitedDirectory()
+        self.assertEquals(dir_ids[0], lvr_dir_id)
+
+        self.db.updateDirectoryLastVisitTime(dir_ids[0], datetime.datetime.utcnow())
+        self.db.updateDirectoryLastVisitTime(dir_ids[1], datetime.datetime.utcnow())
+
+        lvr_dir_id = self.db.leastRecentlyVisitedDirectory()
+        self.assertEquals(dir_ids[2], lvr_dir_id)
+
 
 # run tests if main
 if __name__ == '__main__':

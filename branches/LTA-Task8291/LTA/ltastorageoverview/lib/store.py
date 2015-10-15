@@ -93,6 +93,15 @@ class LTAStorageDb:
                     foreign key (directory_id) references directory(id) );
                     """)
 
+                cursor.execute("""
+                    create table scraper_last_directory_visit (
+                    directory_id       integer not null,
+                    visit_date         datetime not null,
+                    primary key (directory_id)
+                    foreign key (directory_id) references directory(id)
+                    );
+                    """)
+
                 #save created tables and triggers
                 conn.commit()
 
@@ -183,6 +192,21 @@ class LTAStorageDb:
 
                 conn.commit()
 
+    def updateDirectoryLastVisitTime(self, directory_id, timestamp):
+        with sqlite3.connect(self.db_filename) as conn:
+            cursor = conn.cursor()
+
+            updated = cursor.execute('''update or ignore scraper_last_directory_visit
+                set visit_date=?
+                where directory_id = ?''', (timestamp, directory_id)).rowcount
+
+            if not updated:
+                cursor.execute('''insert into scraper_last_directory_visit
+                (visit_date, directory_id)
+                values (?, ?)''', (timestamp, directory_id))
+
+            conn.commit()
+
     def sites(self):
         '''returns list of tuples (id, name, url) of all sites'''
         with sqlite3.connect(self.db_filename) as conn:
@@ -236,4 +260,17 @@ class LTAStorageDb:
                 where ancestor_id = ? and depth > 0
                 order by depth asc
                 ''', [base_directory_id]).fetchall()
+
+    def leastRecentlyVisitedDirectory(self):
+        with sqlite3.connect(self.db_filename) as conn:
+            result = conn.execute('''
+                SELECT directory_id FROM scraper_last_directory_visit
+                ORDER BY visit_date asc
+                LIMIT 1
+                ''').fetchone()
+
+            if result:
+                return result[0]
+
+            return -1
 
