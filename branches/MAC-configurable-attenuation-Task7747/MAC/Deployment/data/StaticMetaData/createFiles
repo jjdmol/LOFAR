@@ -777,17 +777,6 @@ def createCableDelaysFile(resultDir, stationName, dataDir):
     #print command
     os.system(command)
 
-def createAttenuationFile(resultDir, stationName, dataDir):
-    """
-    Copies the Attenuation.conf file for this station to resultDir
-    """
-    srcFile = dataDir + "/CableAttenuation.conf"
-    destFile = resultDir + "/CableAttenuation.conf"
-    
-    command = "cp -f "+srcFile+ " " + destFile
-    #print command
-    os.system(command)
-
 def createiHBADeltasFile(resultDir, stationName, dataDir):
     """
     Copies the right iHBADeltas.conf file for this station
@@ -911,7 +900,6 @@ if __name__ == "__main__":
                     createRemoteStationFile(resultDir, stationName, dataDir)
                     createAntennaArraysFile(resultDir, stationName, dataDir)
                     createAntennaFieldFile (resultDir, stationName, dataDir)
-                    createAttenuationFile  (resultDir, stationName, dataDir)
                     createCableDelaysFile  (resultDir, stationName, dataDir)
                     createiHBADeltasFile   (resultDir, stationName, dataDir)
                     createHardwareMonitorFile(resultDir, stationName, dataDir)
@@ -956,7 +944,6 @@ if __name__ == "__main__":
             createRemoteStationFile(resultDir, stationName, dataDir)
             createAntennaArraysFile(resultDir, stationName, dataDir)
             createAntennaFieldFile (resultDir, stationName, dataDir)
-            createAttenuationFile  (resultDir, stationName, dataDir)
             createCableDelaysFile  (resultDir, stationName, dataDir)
             createiHBADeltasFile   (resultDir, stationName, dataDir)
             createHardwareMonitorFile(resultDir, stationName, dataDir)
