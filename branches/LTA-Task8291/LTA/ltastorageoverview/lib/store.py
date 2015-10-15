@@ -285,3 +285,15 @@ class LTAStorageDb:
 
             return -1
 
+    def numDirectoriesNotVisitedSince(self, timestamp):
+        with sqlite3.connect(self.db_filename) as conn:
+            result = conn.execute('''
+                SELECT count(directory_id) FROM scraper_last_directory_visit
+                WHERE visit_date < ?
+                ''', [timestamp]).fetchone()
+
+            if result:
+                return result[0]
+
+            return 0
+
