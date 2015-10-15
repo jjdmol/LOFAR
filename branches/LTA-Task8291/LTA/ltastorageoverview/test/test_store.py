@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import unittest
+import datetime
 import os
 import os.path
 import tempfile
@@ -14,9 +15,9 @@ class TestLTAStorageDb(unittest.TestCase):
 
         self.assertTrue(os.path.exists(self.db.db_filename))
 
-    def tearDown(self):
-        if os.path.exists(self.db.db_filename):
-            os.remove(self.db.db_filename)
+    #def tearDown(self):
+        #if os.path.exists(self.db.db_filename):
+            #os.remove(self.db.db_filename)
 
     def testSites(self):
         self.db.insertSite('siteA', 'srm://siteA.org')
@@ -62,9 +63,11 @@ class TestLTAStorageDb(unittest.TestCase):
 
             for j in range(2):
                 subDir_id = self.db.insertSubDirectory(rootDir_id, 'subDir_%d' % j)
+                self.db.insertFileInfo('file_%d' % j, 271*(j+1), datetime.datetime.utcnow(), subDir_id)
 
                 for k in range(2):
                     subsubDir_id = self.db.insertSubDirectory(subDir_id, 'subsubDir_%d' % k)
+                    self.db.insertFileInfo('file_%d_%d' % (j,k), 314*(k+1), datetime.datetime.utcnow(), subsubDir_id)
 
         rootDirs = self.db.rootDirectories()
         self.assertEquals(2, len(rootDirs))
@@ -74,6 +77,8 @@ class TestLTAStorageDb(unittest.TestCase):
             for subDir in subDirs:
                 subDir_parent_id = subDir[2]
                 self.assertEquals(id, subDir_parent_id)
+
+        print '\n'.join([str(x) for x in self.db.filesInTree(rootDir_id)])
 
 # run tests if main
 if __name__ == '__main__':

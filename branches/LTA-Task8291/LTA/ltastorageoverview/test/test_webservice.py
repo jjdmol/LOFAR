@@ -12,7 +12,7 @@ import datetime
 from StringIO import StringIO
 from flask.ext.testing import LiveServerTestCase as FlaskLiveTestCase
 from ltastorageoverview import store
-import ltastorageoverview.webservice.webservice as webservice
+from ltastorageoverview.webservice import webservice as webservice
 
 def setUpModule():
     tmpfile = os.path.join(tempfile.gettempdir(), 'test.sqlite')
@@ -31,13 +31,13 @@ def setUpModule():
     rootDir_ids.append(webservice.db.insertRootDirectory('siteB', 'path/to/rootDir3'))
 
     for rootDir_id in rootDir_ids:
-        for j in range(3):
+        for j in range(2):
             subDir_id = webservice.db.insertSubDirectory(rootDir_id, 'subDir_%d' % j)
 
             if j == 0:
                 webservice.db.insertFileInfo('file_%d' % j, 271*(j+1), datetime.datetime.utcnow(), subDir_id)
 
-            for k in range(5):
+            for k in range(2):
                 subsubDir_id = webservice.db.insertSubDirectory(subDir_id, 'subsubDir_%d' % k)
 
                 for l in range((j+1)*(k+1)):
@@ -49,6 +49,7 @@ def tearDownModule():
 
 class TestLTAStorageWebService(FlaskLiveTestCase):
     def create_app(self):
+        webservice.app.debug = True
         return webservice.app
 
     def testSites(self):

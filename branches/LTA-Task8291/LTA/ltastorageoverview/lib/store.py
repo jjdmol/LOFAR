@@ -227,3 +227,13 @@ class LTAStorageDb:
                 where directory_id = ?
                 ''', [directory_id]).fetchall()
 
+    def filesInTree(self, base_directory_id):
+        with sqlite3.connect(self.db_filename) as conn:
+            return conn.execute('''
+                SELECT dir.id, dir.name, fileinfo.id, fileinfo.name, fileinfo.size, fileinfo.creation_date FROM directory_closure
+                join directory dir on dir.id = directory_closure.descendant_id
+                join fileinfo on fileinfo.directory_id = directory_closure.descendant_id
+                where ancestor_id = ? and depth > 0
+                order by depth asc
+                ''', [base_directory_id]).fetchall()
+

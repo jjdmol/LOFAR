@@ -20,47 +20,70 @@
 import sys
 import os
 import os.path
-import flask
+from flask import Flask
+from flask import Config
+from flask import render_template
+from flask import json
 import threading
 from ltastorageoverview import store
 
-app = flask.Flask('LTA storage overview')
-db = None
+app = Flask('LTA storage overview')
+print str(app.config)
+print __file__
+print os.path.dirname(__file__)
+app.config.root_path = os.path.dirname(__file__)
+print
+print str(app.config)
+db = store.LTAStorageDb('/tmp/test.sqlite')
 
 @app.route('/')
-def hello_world():
-    return 'Hello World!'
+@app.route('/index.html')
+def index():
+    return render_template('index.html',
+                           title='LTA storage overview',
+                           storagesitedata='''[{name: "Microsoft Internet Explorer",y: 56.33}, {name: "Chrome",y: 24.03,sliced: true,selected: true}, {name: "Firefox",y: 10.38}, {name: "Safari",y: 4.77}, {name: "Opera",y: 0.91}, {name: "Proprietary or Undetectable",y: 0.2}]''')
 
 @app.route('/rest/sites/')
 def get_sites():
     sites = {'sites': [{'id': x[0], 'name': x[1], 'url': x[2]} for x in db.sites()]}
-    return flask.json.jsonify(sites)
+    return json.jsonify(sites)
 
 @app.route('/rest/sites/<int:site_id>')
 def get_site(site_id):
     site = db.site(site_id)
     site_dict = {'id': site[0], 'name': site[1], 'url': site[2]}
-    return flask.json.jsonify(site_dict)
+    return json.jsonify(site_dict)
+
+@app.route('/rest/sites/usages')
+def get_sites_usages():
+    rootDirs = {'rootDirectories': [{'id': x[0], 'name': x[1], 'site_id': x[2], 'site_name': x[3]} for x in db.rootDirectories()]}
+
+    for rootDir in rootDirs['rootDirectories']:
+        print '\n'.join([str(x) for x in db.filesInTree(rootDir['id'])])
+        rootDir['usage'] = sum([x[4] for x in db.filesInTree(rootDir['id'])])
+        print
+
+    return json.jsonify(rootDirs)
 
 @app.route('/rest/rootdirectories/',)
 def get_rootDirectories():
     rootDirs = {'rootDirectories': [{'id': x[0], 'name': x[1], 'site_id': x[2], 'site_name': x[3]} for x in db.rootDirectories()]}
-    return flask.json.jsonify(rootDirs)
+    return json.jsonify(rootDirs)
 
 @app.route('/rest/directory/<int:dir_id>/subdirectories/',)
 def get_directoryTree(dir_id):
     subDirsList = {'subdirectories': [{'id': x[0], 'name': x[1], 'parent_dir_id': x[2]} for x in db.subDirectories(dir_id, 1, False)]}
-    return flask.json.jsonify(subDirsList)
+    return json.jsonify(subDirsList)
 
 @app.route('/rest/directory/<int:dir_id>/files')
 def get_filesInDirectory(dir_id):
     files = {'files': [{'id': x[0], 'name': x[1], 'size': x[2], 'creation_date': x[3]} for x in db.filesInDirectory(dir_id)]}
-    return flask.json.jsonify(files)
+    return json.jsonify(files)
 
 
 def main(argv):
-    db = store.LTAStorageDb(argv[0] if argv else 'ltastoragedb.sqlite')
-    app.run()
+    #db = store.LTAStorageDb(argv[0] if argv else 'ltastoragedb.sqlite')
+    app.run(debug=True)
 
 if __name__ == '__main__':
     main(sys.argv[1:])
