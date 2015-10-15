@@ -2,12 +2,11 @@
 
 lofar_package(OTDB_COMPS 1.0)
 
-install(PROGRAMS
+lofar_add_sbin_scripts(
   create_OTDB_comps
   createPICfile
   loadComponents
-  loadPICtree
-DESTINATION sbin)
+  loadPICtree)
 
 install(PROGRAMS Component_diff.sh DESTINATION sbin RENAME Component_diff)
 

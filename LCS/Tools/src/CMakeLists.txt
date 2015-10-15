@@ -21,7 +21,7 @@
 lofar_add_sbin_program(LimitExec LimitExec.cc)
 lofar_add_sbin_program(pkgdep pkgdep.cc)
 
-install(PROGRAMS
+lofar_add_sbin_scripts(
   checkcomp.py
   checkrun
   countalllines
@@ -39,8 +39,7 @@ install(PROGRAMS
   makeClass.py
   makePackage.py
   makeTest.py
-  processgcov
-  DESTINATION sbin)
+  processgcov)
 
 install(FILES
   templates/header.cc_template

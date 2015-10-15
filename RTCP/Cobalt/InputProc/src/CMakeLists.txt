@@ -48,6 +48,4 @@ configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mpirun.sh.in
   ${CMAKE_BINARY_DIR}/bin/mpirun.sh @ONLY)
 
-install(PROGRAMS
-  ${CMAKE_BINARY_DIR}/bin/mpirun.sh
-  DESTINATION bin)
+lofar_add_bin_scripts(${CMAKE_BINARY_DIR}/bin/mpirun.sh)

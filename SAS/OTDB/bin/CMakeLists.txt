@@ -1,8 +1,7 @@
 # $Id$
 
-install (PROGRAMS
+lofar_add_sbin_scripts(
   copyTree.py
   makeDefaultTemplates.py
   revertDefaultTemplates.py
-  create_new_database.sh
-  DESTINATION sbin)
+  create_new_database.sh)
