@@ -21,6 +21,7 @@ import subprocess
 import logging
 import cPickle as pickle
 import time
+import datetime
 import sys
 import os
 import os.path
@@ -44,12 +45,13 @@ def humanreadablesize(num, suffix='B'):
 
 
 logging.basicConfig(filename='get_srm2_' + time.strftime("%Y-%m-%d_%HH%M") + '.log', level=logging.DEBUG, format="%(asctime)-15s %(levelname)s %(message)s")
+#logging.basicConfig(level=logging.DEBUG, format="%(asctime)-15s %(levelname)s %(message)s")
 logger = logging.getLogger()
 
 
 class FileInfo:
     '''Simple struct to hold filename and size'''
-    def __init__(self, filename, size):
+    def __init__(self, filename, size, modified_at):
         '''
         Parameters
         ----------
@@ -58,9 +60,10 @@ class FileInfo:
         '''
         self.filename = filename
         self.size = size
+        self.modified_at = modified_at
 
     def __str__(self):
-        return self.filename + " " + humanreadablesize(self.size)
+        return self.filename + " " + humanreadablesize(self.size) + " " + str(self.modified_at)
 
 
 class Location:
@@ -112,33 +115,54 @@ class Location:
 
         # the core command: do an srmls call and parse the results
         # srmls can only yield max 900 items in a result, hence we can recurse for the next 900 by using the offset
-        cmd = ["bash", "-c", "source %s;srmls -count=900 -offset=%d %s%s" % ('/globalhome/ingest/service/bin/init.sh', offset, self.srmurl, self.directory)]
+        cmd = ["bash", "-c", "source %s;srmls -l -count=900 -offset=%d %s%s" % ('/globalhome/ingest/service/bin/init.sh', offset, self.srmurl, self.directory)]
         # logger.debug(' '.join(cmd))
         p = subprocess.Popen(cmd, stdin=open('/dev/null'), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         logs = p.communicate()
-        entries = logs[0].split('\n')
         # logger.debug('Shell command for %s exited with code %s' % (self.path(), p.returncode))
+        loglines = logs[0].split('\n')
 
         # parse logs from succesfull command
-        if p.returncode == 0 and len(entries) > 1 and "FAILURE" not in logs[0]:
-            for entry in entries:
-                items = entry.strip().split()
-                if len(items) < 2:
-                    if entry:  # otherwise it's just an empty trailing items
-                        logger.error("Line shorter than expected: %s" % entry)
+        if p.returncode == 0 and len(loglines) > 1 and "FAILURE" not in logs[0]:
+            entries = []
+            entry = []
+
+            for line in loglines:
+                entry.append(line)
+
+                if 'Type:' in line:
+                    entries.append(entry)
+                    entry = []
+
+            for lines in entries:
+                if len(lines) < 2:
                     continue
-                if items[1] == (self.directory + '/') or    items[1] == self.directory: # skip current directory
+                pathLine = lines[0].strip()
+                pathLineItems = [x.strip() for x in pathLine.split()]
+                entryType = lines[-1].strip().split('Type:')[-1].strip()
+
+                if len(pathLineItems) < 2:
+                    logger.error("path line shorter than expected: %s" % pathLine)
                     continue
 
-                # append found directories as new Locations (for later queries)
-                if items[1][-1] == '/' or (int(items[0]) < 1): # Directory, size=0 for Target/StoRM, but no trailing slash
-                    foundDirectories.append(Location(self.srmurl, items[1]))
-                else:
-                    # append found files
+                if entryType.lower() == 'directory':
+                    dirname = pathLineItems[1]
+                    if dirname == (self.directory + '/') or dirname == self.directory: # skip current directory
+                        continue
+                    else:
+                        foundDirectories.append(Location(self.srmurl, dirname))
+                elif entryType.lower() == 'file':
                     try:
-                        foundFiles.append(FileInfo(items[1], int(items[0])))
-                    except:
-                        logger.exception(items)
+                        filesize = int(pathLineItems[0])
+                        filename = pathLineItems[1]
+                        timestampline = [x for x in lines if 'modified at' in x][0]
+                        timestamppart = timestampline.split('at:')[1].strip()
+                        timestamp = datetime.datetime.strptime(timestamppart + ' UTC', '%Y/%m/%d %H:%M:%S %Z')
+                        foundFiles.append(FileInfo(filename, filesize, timestamp))
+                    except Exception as e:
+                        logger.exception(str(e))
+                else:
+                    logger.error("Unknown type: %s" % entryType)
 
         # recurse and ask for more files if we hit the 900 line limit
         if len(entries) >= 900:
