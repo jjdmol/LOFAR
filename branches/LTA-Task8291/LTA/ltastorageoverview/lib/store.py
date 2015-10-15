@@ -165,7 +165,7 @@ class LTAStorageDb:
             cursor = conn.cursor()
 
             fileinfo_id = cursor.execute('insert into fileinfo (name, size, creation_date, directory_id) values (?, ?, ?, ?)',
-                                         (name.split('/')[-1], size, datetime.datetime.utcnow(), parent_directory_id))
+                                         (name.split('/')[-1], size, creation_date, parent_directory_id))
 
             conn.commit()
 
@@ -226,7 +226,7 @@ class LTAStorageDb:
                 join directory_closure dc on dc.ancestor_id = storage_site_root.directory_id
                 join directory dir on dir.id = dc.descendant_id
                 where dc.descendant_id = ?
-                ''', [directory_id]).fetchall()
+                ''', [directory_id]).fetchone()
 
     def rootDirectories(self):
         '''returns list of all root directories (id, name, site_id, site_name) for all sites'''
@@ -272,18 +272,25 @@ class LTAStorageDb:
                 order by depth asc
                 ''', [base_directory_id]).fetchall()
 
-    def leastRecentlyVisitedDirectory(self):
+    def leastRecentlyVisitedDirectoryId(self, before_timestamp = None):
         with sqlite3.connect(self.db_filename) as conn:
+            if not before_timestamp:
+                before_timestamp = datetime.datetime.utcnow()
             result = conn.execute('''
                 SELECT directory_id FROM scraper_last_directory_visit
+                WHERE visit_date < ?
                 ORDER BY visit_date asc
                 LIMIT 1
-                ''').fetchone()
+                ''', [before_timestamp]).fetchone()
 
             if result:
                 return result[0]
 
             return -1
+
+    def leastRecentlyVisitedDirectory(self, before_timestamp = None):
+        lrv_dir_id = self.leastRecentlyVisitedDirectoryId(before_timestamp)
+        return self.directory(lrv_dir_id)
 
     def numDirectoriesNotVisitedSince(self, timestamp):
         with sqlite3.connect(self.db_filename) as conn:
