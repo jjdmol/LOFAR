@@ -197,6 +197,7 @@ TBBDriver::TBBDriver(string name)
 
     itsAliveTimer = new GCFTimerPort(*this, "AliveTimer");
     itsSetupTimer = new GCFTimerPort(*this, "SetupTimer");
+    itsInitTimer = new GCFTimerPort(*this, "InitTimer");
     itsCmdTimer = new GCFTimerPort(*this, "CmdTimer");
     itsQueueTimer = new GCFTimerPort(*this, "QueueTimer");
     itsTriggerTimer = new GCFTimerPort(*this, "TriggerTimer");
@@ -242,6 +243,7 @@ GCFEvent::TResult TBBDriver::init_state(GCFEvent& event, GCFPortInterface& port)
 
     switch(event.signal) {
         case F_INIT: {
+            itsInitTimer->cancelAllTimers();
             if (itsAcceptor.isConnected()) {
                 itsAcceptor.close();
             }
@@ -255,6 +257,7 @@ GCFEvent::TResult TBBDriver::init_state(GCFEvent& event, GCFPortInterface& port)
 
         case F_ENTRY: {
             itsAcceptor.open();
+            itsInitTimer->setTimer(20.0);
         } break;
 
         case F_CONNECTED: {
@@ -273,7 +276,7 @@ GCFEvent::TResult TBBDriver::init_state(GCFEvent& event, GCFPortInterface& port)
             else {
                 if (boardsConnected()) {
                     // take subscription on clock changes
-                    itsAliveTimer->setTimer(0.0);
+                    requestClockSubscription();
                 }
             }
 
@@ -284,8 +287,15 @@ GCFEvent::TResult TBBDriver::init_state(GCFEvent& event, GCFPortInterface& port)
         } break;
 
         case F_TIMER: {
-            if (&port == itsAliveTimer) {
-                requestClockSubscription();
+            if (&port == itsInitTimer) {
+                if (itsAcceptor.isConnected()) {
+                    itsAcceptor.close();
+                }
+                if (itsRSPDriver->isConnected()) {
+                    itsRSPDriver->close();
+                }
+                itsAcceptor.open();  // will result in a F_CONNECT
+                itsInitTimer->setTimer(20.0);   
             }
         } break;
 
@@ -294,16 +304,18 @@ GCFEvent::TResult TBBDriver::init_state(GCFEvent& event, GCFPortInterface& port)
     		if (ack.status != RSP_SUCCESS) {
     			LOG_WARN ("Could not get subscription on clock, retry in 2 seconds.");
     			//itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString("subscribe failed"));
-    			itsAliveTimer->setTimer(2.0);
-    			break;
+    			itsInitTimer->cancelAllTimers();
+                itsInitTimer->setTimer(3.0);
+                break;
     		}
     		itsClockSubscription = ack.handle;
     		LOG_INFO("Subscription on the clock successful. going to operational mode");
     		//itsOwnPropertySet->setValue(PN_CLC_ACTUAL_CLOCK,GCFPVInteger(itsClock));
     		
     		// start trigger reset timer
+            itsInitTimer->cancelAllTimers();
             itsTriggerTimer->setTimer(90.0, 0.1);  // first start over 90 seconds, then every 0.1 Sec
-    		itsAliveTimer->setTimer(45.0);
+    		itsAliveTimer->setTimer(30.0);
     		TRAN(TBBDriver::idle_state);
     	} break;
         
@@ -353,15 +365,15 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
                     continue;
                 }
 
-                if (TS->getBoardState(board) == setImage1) {
+                if (TS->getBoardState(board) == setDefaultImage) {
                     TPConfigEvent config;
                     config.opcode = oc_CONFIG;
                     config.status = 0;
-                    config.imagenr = 1;
+                    config.imagenr = TS->getDefaultImageNr();
                     //config.imagenr = 0;
                     itsBoard[board].send(config);
                     
-                    TS->setBoardState(board, image1Set);
+                    TS->setBoardState(board, defaultImageSet);
                     //TS->setImageNr(board, 1);
                     TS->setSetupWaitTime(board, 12);
                     
@@ -371,7 +383,7 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
                     continue;
                 }
 
-                if ((TS->getBoardState(board) == image1Set) ||
+                if ((TS->getBoardState(board) == defaultImageSet) ||
                     (TS->getBoardState(board) == checkAlive)) {
                     TPAliveEvent alive;
                     alive.opcode = oc_ALIVE;
@@ -425,7 +437,7 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
             else if (&port == itsRSPDriver) {
                 port.close();
                 LOG_FATAL_STR("RSPDriver port closed.");
-                exit(EXIT_FAILURE);
+                TRAN(TBBDriver::init_state);
             }
             else {
                 itsClientList.remove(&port);
@@ -485,7 +497,7 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
             TPConfigAckEvent ack(event);
             LOG_INFO_STR(formatString("Received ConfigAck from boardnr[%d], status=%d", board, ack.status));
             if (ack.status == TBB_SUCCESS) {
-                TS->setBoardState(board, image1Set);
+                TS->setBoardState(board, defaultImageSet);
                 //TS->setImageNr(board, 1);
                 TS->setSetupWaitTime(board, 12);
             }
@@ -515,10 +527,10 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
                 if (TS->getConfigState(board) != 1) {  // config not done by user
                     TS->setImageNr(board, 0);
                     LOG_WARN_STR("Image 1 NOT loaded");
-                    TS->setBoardState(board, setImage1);
+                    TS->setBoardState(board, setDefaultImage);
                 }
                 else {
-                    TS->setImageNr(board, 1);
+                    TS->setImageNr(board, TS->getDefaultImageNr());
                     TS->setBoardState(board, statusChecked);
                 }
 
@@ -647,7 +659,9 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
             else if (&port == itsRSPDriver) {
                 port.close();
                 LOG_FATAL_STR("RSPDriver port closed.");
-                exit(EXIT_FAILURE);
+                itsInitTimer->cancelAllTimers();
+                itsInitTimer->setTimer(10.0);
+                //exit(EXIT_FAILURE);
             }
             else {
                 itsClientList.remove(&port);
@@ -688,6 +702,11 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
             else if (&port == itsSetupTimer) {
                 LOG_DEBUG_STR("need boards setup");
                 TRAN(TBBDriver::setup_state);
+                return(status);
+            }
+            else if (&port == itsInitTimer) {
+                LOG_DEBUG_STR("need init of port");
+                TRAN(TBBDriver::init_state);
                 return(status);
             }
             else if (&port == itsAliveTimer) {
@@ -809,7 +828,8 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
             else if (&port == itsRSPDriver) {
                 port.close();
                 LOG_FATAL_STR("RSPDriver port closed.");
-                exit(EXIT_FAILURE);
+                itsInitTimer->cancelAllTimers();
+                itsInitTimer->setTimer(10.0, 1.0);
             }
             else {
                 port.close();
@@ -835,6 +855,13 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
                   TS->resetTriggersLeft();
              }
             else if (&port == itsSetupTimer) {
+                //TRAN(TBBDriver::setup_state);
+                //return(status);
+            }
+            else if (&port == itsInitTimer) {
+                //LOG_DEBUG_STR("need init of port");
+                //TRAN(TBBDriver::init_state);
+                //return(status);
             }
             else if (&port == itsAliveTimer) {
                 CheckAlive(event, port);
@@ -1018,7 +1045,7 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
                      (TS->getBoardState(nr) == boardReady) ||
                      (TS->getBoardState(nr) == boardError) ||
                      (TS->getBoardState(nr) == boardCleared)) {
-                 LOG_DEBUG_STR(formatString("board %d alive check needed", nr));
+                LOG_DEBUG_STR(formatString("board %d alive check needed", nr));
                 itsBoard[nr].send(tp_event);
                 sendmask |= (1 << nr);
             }
@@ -1055,9 +1082,15 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
                     TS->clearRcuSettings(boardnr);
                     // if a new image is loaded by config, do not reload it to image-1
                     if (TS->getFreeToReset(boardnr)) {
-                        TS->setImageNr(boardnr, 0);
-                        TS->setBoardState(boardnr,setImage1);
-                        TS->resetSetupRetries(boardnr);
+                        if (ack.imagenr != TS->getDefaultImageNr()) {
+                            TS->setImageNr(boardnr, ack.imagenr);
+                            TS->setBoardState(boardnr, setDefaultImage);
+                            TS->resetSetupRetries(boardnr);
+                        }
+                        else {
+                            TS->setBoardState(boardnr, freeBoard);
+                        }
+                        
                     } else {
                         // new image loaded, auto reconfigure is now possible again
                         TS->setFreeToReset(boardnr, true);
@@ -1171,16 +1204,21 @@ void TBBDriver::setClockState(GCFEvent& event)
 	else if ((int32)e.clock != TS->getClockFreq()) {
 		LOG_WARN_STR ("CLOCK WAS CHANGED TO " << e.clock << "MHz, RESET NEEDED (wait 80 secs for done)");
 		for (int bnr = 0; bnr < TS->maxBoards(); bnr++) {
-		    TS->setBoardState(bnr, setImage1);
+		    TS->setBoardState(bnr, setDefaultImage);
 	    }
 		TS->setClockFreq((int32)e.clock);
 		
-		itsSetupTimer->cancelAllTimers();
-        itsSetupTimer->setTimer(60.0, 1.0);
-		
+		itsInitTimer->cancelAllTimers();
+        itsInitTimer->setTimer(10.0, 1.0);
+        
+        itsSetupTimer->cancelAllTimers();
 		itsAliveCheck = false;
 		itsAliveTimer->cancelAllTimers();
-		itsAliveTimer->setTimer(90.0);
+        
+        /*
+        itsSetupTimer->setTimer(10.0, 1.0);
+		itsAliveTimer->setTimer(40.0);
+        */
 	}
 }
 

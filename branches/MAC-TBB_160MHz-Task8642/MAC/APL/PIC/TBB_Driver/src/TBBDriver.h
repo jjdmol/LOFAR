@@ -137,6 +137,7 @@ private:
     GCFTCPPort*    itsRSPDriver;   // port for clock subscription
 	GCFTimerPort*  itsAliveTimer;  // used to check precence and reset of the boards
 	GCFTimerPort*  itsSetupTimer;  // used in the setup state
+	GCFTimerPort*  itsInitTimer;  // used in the init state
 	GCFTimerPort*  itsCmdTimer;    // used by CommandHandler
 	GCFTimerPort*  itsQueueTimer;  // used to handle events in queue
 	GCFTimerPort*  itsTriggerTimer;// used to maximize triggers
