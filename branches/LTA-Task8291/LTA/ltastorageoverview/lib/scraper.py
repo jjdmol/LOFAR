@@ -19,7 +19,6 @@
 
 import subprocess
 import logging
-import cPickle as pickle
 import time
 import datetime
 import sys
@@ -31,6 +30,7 @@ import threading
 import multiprocessing
 from random import random
 from collections import deque
+from ltastorageoverview import store
 
 def humanreadablesize(num, suffix='B'):
     """ converts the given size (number) to a human readable string in powers of 1024"""
@@ -51,7 +51,7 @@ logger = logging.getLogger()
 
 class FileInfo:
     '''Simple struct to hold filename and size'''
-    def __init__(self, filename, size, modified_at):
+    def __init__(self, filename, size, created_at):
         '''
         Parameters
         ----------
@@ -60,10 +60,10 @@ class FileInfo:
         '''
         self.filename = filename
         self.size = size
-        self.modified_at = modified_at
+        self.created_at = created_at
 
     def __str__(self):
-        return self.filename + " " + humanreadablesize(self.size) + " " + str(self.modified_at)
+        return self.filename + " " + humanreadablesize(self.size) + " " + str(self.created_at)
 
 
 class Location:
@@ -147,7 +147,8 @@ class Location:
 
                 if entryType.lower() == 'directory':
                     dirname = pathLineItems[1]
-                    if dirname == (self.directory + '/') or dirname == self.directory: # skip current directory
+                    if dirname.rstrip('/') == self.directory.rstrip('/'):
+                        # skip current directory
                         continue
                     else:
                         foundDirectories.append(Location(self.srmurl, dirname))
@@ -155,7 +156,13 @@ class Location:
                     try:
                         filesize = int(pathLineItems[0])
                         filename = pathLineItems[1]
-                        timestampline = [x for x in lines if 'modified at' in x][0]
+                        timestamplines = [x for x in lines if 'ed at:' in x]
+                        timestampline = None
+                        for line in timestamplines:
+                            if 'created' in line:
+                                timestampline = line
+                                break
+                            timestampline = line
                         timestamppart = timestampline.split('at:')[1].strip()
                         timestamp = datetime.datetime.strptime(timestamppart + ' UTC', '%Y/%m/%d %H:%M:%S %Z')
                         foundFiles.append(FileInfo(filename, filesize, timestamp))
@@ -215,37 +222,45 @@ class ResultGetterThread(threading.Thread):
     '''Helper class to query Locations asynchronously for results.
     Gets the result for the first Location in the locations deque and appends it to the results deque
     Appends the subdirectory Locations at the end of the locations deque for later processing'''
-    def __init__(self, locations, results):
-        '''
-        Parameters
-        ----------
-        locations : deque([Location])
-
-        results : deque([LocationResult])
-        '''
+    def __init__(self, db):
         threading.Thread.__init__(self)
         self.daemon = True
-        self.locations = locations
-        self.results = results
+        self.db = db
 
     def run(self):
         '''A single location is pop\'ed from the locations deque and the results are queried.
         Resulting subdirectories are appended to the locations deque'''
         try:
             with lock:
-                location = self.locations.popleft()
+                dir = self.db.leastRecentlyVisitedDirectory(datetime.datetime.utcnow() - datetime.timedelta(minutes=1))
 
-            # get results... long blocking
-            result = location.getResult()
-            logger.info(result)
+                if not dir:
+                    return
 
-            with lock:
-                self.results.append(result)
-                for subdir in result.subDirectories:
-                    self.locations.append(subdir)
+                dir_id = dir[0]
+                dir_name = dir[1]
+                self.db.updateDirectoryLastVisitTime(dir_id, datetime.datetime.utcnow())
 
-        except IndexError:
-            pass
+                site = self.db.site(dir[2])
+                srm_url = site[2]
+
+            location = Location(srm_url, dir_name)
+
+            if not ('nikhef' == site[1] and 'generated' in dir_name):
+                # get results... long blocking
+                result = location.getResult()
+                logger.info(result)
+
+                with lock:
+                    for subDirLocation in result.subDirectories:
+                        subdir_id = self.db.insertSubDirectory(dir_id, subDirLocation.directory)
+                        self.db.updateDirectoryLastVisitTime(subdir_id, datetime.datetime.utcnow() - datetime.timedelta(days=1000))
+
+                    for file in result.files:
+                        self.db.insertFileInfo(file.filename, file.size, file.created_at, dir_id)
+            else:
+                logger.info('skipping empty nikhef dirs')
+
         except Exception as e:
             logger.error(str(e))
 
@@ -298,106 +313,51 @@ class LocationResultTreeNode:
             tree='\n' + '\n'.join([(level+1)*'    ' + child.treeString(level+1, maxLevel) for child in self.children]) if self.children and level < maxLevel else "")
 
 
-def readPickle(path):
-    '''read and return the pickled (locations,results) tuple from a file'''
-    with open(path, 'rb') as pickleFile:
-        return pickle.load(pickleFile)
-
-
-def writePickle(path, locations,results):
-    ''' Write the locations and results to a file.
-    can be used for intermediate storage in case the script is interrupted or killed
-    Parameters
-    ----------
-    path : string
-        name of the file in which to save the pickled data
-
-    locations : deque([Location])
-        the deque of Location which still need to be queried
-
-    results : deque([c])
-        the deque of LocationResults which we already found
-        '''
-    try:
-        # since pickling can take a long time
-        # and the program can be interupted while pickling
-        # write pickle to tmp file and move it to the given path later
-        tmpfile = os.path.join(tempfile.gettempdir(), "srm.pickle")
-        with open(tmpfile , 'wb') as pickleFile:
-                pickle.dump((locations,results), pickleFile, 2)
-
-        if not os.path.isabs(path):
-            path = os.path.join(os.getcwd(), path)
-
-        # move tmpfile to given path, but make intermediate backup
-        if os.path.exists(path):
-            shutil.move(path, path + ".old")
-
-        # actual move
-        shutil.move(tmpfile, path)
-
-        # remove intermediate backup
-        if os.path.exists(path + ".old"):
-            os.remove(path + ".old")
-
-    except Exception as e:
-        logger.error(e)
-
-
 def main(argv):
     '''the main function scanning all locations and gathering the results'''
 
     # results are stored in a deque which is thread safe
     results = deque()
 
-    # the big dict containing per site a deque of Locations which need to be scanned
-    # the deque's in this dict are filled and emptied using parrellel running ResultGetterThreads
-    locations = { 'target' : deque( [    Location("srm://srm.target.rug.nl:8444", "/lofar/ops/disk") ] ) ,
-                                'nikhef' : deque( [    Location("srm://tbn18.nikhef.nl:8446", "/dpm/nikhef.nl/home/lofar") ] ),
-                                'sara' : deque( [    Location("srm://srm.grid.sara.nl:8443", "/pnfs/grid.sara.nl/data/lofar/ops"),
-                                                                Location("srm://srm.grid.sara.nl:8443", "/pnfs/grid.sara.nl/data/lofar/user"),
-                                                                Location("srm://srm.grid.sara.nl:8443", "/pnfs/grid.sara.nl/data/lofar/software"),
-                                                                Location("srm://srm.grid.sara.nl:8443", "/pnfs/grid.sara.nl/data/lofar/storage"),
-                                                                Location("srm://srm.grid.sara.nl:8443", "/pnfs/grid.sara.nl/data/lofar/pulsar") ] ),
-                                'juelich' : deque( [    Location("srm://lofar-srm.fz-juelich.de:8443", "/pnfs/fz-juelich.de/data/lofar/ops") ] ) }
+    db = store.LTAStorageDb('ltastorageoverview.sqlite')
+
+    if not db.sites():
+        db.insertSite('target', 'srm://srm.target.rug.nl:8444')
+        db.insertSite('nikhef', 'srm://tbn18.nikhef.nl:8446')
+        db.insertSite('sara', 'srm://srm.grid.sara.nl:8443')
+        db.insertSite('juelich', 'srm://lofar-srm.fz-juelich.de:8443')
+
+        db.insertRootDirectory('target', '/lofar/ops')
+        db.insertRootDirectory('target', '/lofar/ops/disk')
+        db.insertRootDirectory('nikhef', '/dpm/nikhef.nl/home/lofar')
+        db.insertRootDirectory('sara', '/pnfs/grid.sara.nl/data/lofar/ops')
+        db.insertRootDirectory('sara', '/pnfs/grid.sara.nl/data/lofar/user')
+        db.insertRootDirectory('sara', '/pnfs/grid.sara.nl/data/lofar/software')
+        db.insertRootDirectory('sara', '/pnfs/grid.sara.nl/data/lofar/storage')
+        db.insertRootDirectory('sara', '/pnfs/grid.sara.nl/data/lofar/pulsar')
+        db.insertRootDirectory('juelich', '/pnfs/fz-juelich.de/data/lofar/ops')
+
+        for dir_id in [x[0] for x in db.rootDirectories()]:
+            db.updateDirectoryLastVisitTime(dir_id, datetime.datetime.utcnow() - datetime.timedelta(days=1000))
+
 
     # for each site we want one or more ResultGetterThreads
     # so make a dict with a list per site based on the locations
-    getters = dict([(k,[]) for k,v in locations.items()])
+    getters = dict([(site[1],[]) for site in db.sites()])
 
     # some helper functions
     def numLocationsInQueues():
         '''returns the total number of locations in the queues'''
-        return sum([len(v) for v in locations.values()])
+        return db.numDirectoriesNotVisitedSince(datetime.datetime.utcnow())
 
     def totalNumGetters():
         '''returns the total number of parallel running ResultGetterThreads'''
         return sum([len(v) for v in getters.values()])
 
-    # parse arguments for given pickle file
-    if len(argv) == 1:
-        # if a pickle file name was supplied, try to read it
-        # and use the contents as locations and getters dicts/queues
-        outputFile = argv[0]
-
-        if os.path.exists(outputFile):
-            logger.info('Trying to load srm data from %s' % outputFile)
-            # overwrite initial locations and results with stored results from file
-            (locations, results) = readPickle(outputFile)
-            [logger.info("%s: %d locations in queue" % (k,len(v))) for k,v in locations.items()]
-            logger.info('Total: %d locations in queue and %d results gathered' % (numLocationsInQueues(), len(results)))
-            logger.info('Loaded srm data from %s' % outputFile)
-        else:
-            writePickle(outputFile, locations, results)
-    else:
-        # else make a default pickle file name and store inital locations and results
-        outputFile = "srm_data_"+ time.strftime("%Y-%m-%d") + ".pickle"
-        writePickle(outputFile, locations, results)
+    logger.info('numLocationsInQueues=%d' % numLocationsInQueues())
 
     # only enter main loop if there is anything to process
     if numLocationsInQueues() > 0:
-        # keep track when last pickle was done
-        lastPickleTimeStamp = time.time()
 
         # the main loop
         # loop over the locations and spawn ResultGetterThreads to get the results parallel
@@ -411,11 +371,7 @@ def main(argv):
                 for finishedGetter in finishedGetterList:
                     getters[site].remove(finishedGetter)
 
-            # save intermediate data to pickle every thirty minutes
-            if time.time() - lastPickleTimeStamp > 1800:
-                with lock:
-                    writePickle(outputFile, locations, results)
-                lastPickleTimeStamp = time.time()
+            logger.info('numLocationsInQueues=%d totalNumGetters=%d' % (numLocationsInQueues(), totalNumGetters()))
 
             # spawn new ResultGetterThreads
             # do not overload this host system
@@ -423,40 +379,10 @@ def main(argv):
                                                   (os.getloadavg()[0] < 3*multiprocessing.cpu_count() and
                                                   totalNumGetters() < 2*multiprocessing.cpu_count())):
 
-                # in order to pick random locationqueue from all sites....
-                # gather 'stats' per site
-                # construct a weight based on these stats
-                siteStats = {}
-                for site in locations:
-                    numGetters = len(getters[site])
-                    locationQueueLength = len(locations[site])
-                    weight = float(locationQueueLength) / float(20 * (numGetters + 1))
-                    if numGetters == 0 and locationQueueLength > 0:
-                        weight = 1e6 # make getterless sites extra important, so each site keeps flowing
-                    siteStats[site] = {'# get': numGetters, '# queue': locationQueueLength, 'weight' : weight }
-
-                totalWeight = sum([stat['weight'] for stat in siteStats.values()])
-
-                if len(results) % 10 == 0:
-                    logger.debug("siteStats:\n%s" % str('\n'.join([str((k,v)) for k,v in siteStats.items()])))
-
-                # now pick a random site using the weights
-                site = None
-                cumul = 0.0
-                r = random()
-                for s,stat in siteStats.items():
-                    ratio = stat['weight']/totalWeight
-                    cumul += ratio
-
-                    if r <= cumul:
-                        site = s
-                        break
-
-                if not site:
-                    break
+                logger.info('numLocationsInQueues=%d totalNumGetters=%d' % (numLocationsInQueues(), totalNumGetters()))
 
                 # make and start a new ResultGetterThread the location deque of the chosen site
-                newGetter = ResultGetterThread(locations[site], results)
+                newGetter = ResultGetterThread(db)
                 newGetter.start()
                 getters[site].append(newGetter)
 
@@ -469,40 +395,6 @@ def main(argv):
             time.sleep(1)
 
         # all locations were processed
-        # write final pickle
-        writePickle(outputFile, locations, results)
-
-
-    # process results into tree structure
-    # first make a helper lookup dict with an empy tree node for each result location
-    loc2res = {}
-    for r in results:
-        loc2res[r.location.path()] = LocationResultTreeNode(r)
-
-    # then try to link each tree node to it's parent and child nodes using the helper dict loc2res
-    for r in results:
-        treeNode = loc2res[r.location.path()]
-
-        parentLocationPath = r.location.parentLocation().path()
-
-        if parentLocationPath in loc2res:
-            parentTreeNode = loc2res[parentLocationPath]
-            treeNode.parent = parentTreeNode
-
-        for subDirLocation in r.subDirectories:
-            if subDirLocation.path() in loc2res:
-                subDirTreeNode = loc2res[subDirLocation.path()]
-                treeNode.children.append(subDirTreeNode)
-
-
-    # filter the root tree nodes
-    rootTreeNodes = [x for x in loc2res.values() if not x.parent]
-
-    # and finally log the resuling tree info for each root tree node.
-    logger.info('---------------------------')
-    logger.info('----------RESULTS----------\n' +
-                            '\n\n'.join([x.treeString(maxLevel = 1) for x in rootTreeNodes]))
-
 
 if __name__ == "__main__":
     main(sys.argv[1:])
