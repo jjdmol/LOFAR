@@ -136,7 +136,7 @@ class QpidLofarMessage(unittest.TestCase):
         Test that exception is raised if 'SystemName' has wrong value (i.e.
         not equal to 'LOFAR')
         """
-        self.qmsg.properties["SystemName"] = "LOFAR"
+        self.qmsg.properties["SystemName"] = "NOTLOFAR"
         self.assertRaisesRegexp(InvalidMessage,
                                 "^Invalid message property 'SystemName':",
                                 LofarMessage, self.qmsg)
