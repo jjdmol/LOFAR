@@ -59,8 +59,7 @@ CableAttenuation::CableAttenuation(const string&	filename)
 			// syntax: rcumode <serie of cable-lengths
 			vector<string>	column;
 			boost::replace_all(line, "\t", " ");
-			boost::replace_all(line, "  ", " ");
-			boost::split(column, line, boost::is_any_of(" "));
+			boost::split(column, line, boost::is_any_of(" "),token_compress_on);
 
 			// First line (with rcumode 0) contains the cable lengths
 			if (prevRcuMode == -1) {
@@ -70,7 +69,7 @@ CableAttenuation::CableAttenuation(const string&	filename)
 				ASSERTSTR(strToInt(column[0]) == 0, "Table must begin with line for rcumode 0");
 
 				// alloc storage and store cable lengths in seperate array.
-                itsAtts.resize(MAX_RCU_MODE + 1, nrOfColumns-1);
+				itsAtts.resize(MAX_RCU_MODE + 1, nrOfColumns-1);
 				itsAtts = 0.0;
 				itsCableLengths.resize(nrOfColumns-1);
 				itsCableLengths = 0;
