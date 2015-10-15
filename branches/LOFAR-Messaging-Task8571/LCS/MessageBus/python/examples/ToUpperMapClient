@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 #from messagebus.RPC import RPC
-from messaging.RPC import RPC
+from lofar.messaging.RPC import RPC
 
 # Simple RPC client for Service 'ToUpper'
 

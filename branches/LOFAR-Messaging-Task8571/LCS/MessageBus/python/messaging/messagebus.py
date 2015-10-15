@@ -4,19 +4,19 @@
 # ASTRON (Netherlands Institute for Radio Astronomy)
 # P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 #
-# This file is part of the APERTIF software suite.
-# The APERTIF software suite is free software: you can redistribute it
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
 # published by the Free Software Foundation, either version 3 of the
 # License, or (at your option) any later version.
 #
-# The APERTIF software suite is distributed in the hope that it will be
+# The LOFAR software suite is distributed in the hope that it will be
 # useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along
-# with the APERTIF software suite. If not, see <http://www.gnu.org/licenses/>.
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
 # $Id: messagebus.py 1580 2015-09-30 14:18:57Z loose $
 
@@ -24,9 +24,9 @@
 Provide an easy way exchange messages on the message bus.
 """
 
-from .exceptions import MessageBusError, MessageFactoryError
-from .messages import to_qpid_message, MESSAGE_FACTORY
-from common.util import raise_exception
+from lofar.messaging.exceptions import MessageBusError, MessageFactoryError
+from lofar.messaging.messages import to_qpid_message, MESSAGE_FACTORY
+from lofar.common.util import raise_exception
 
 import qpid.messaging
 import logging

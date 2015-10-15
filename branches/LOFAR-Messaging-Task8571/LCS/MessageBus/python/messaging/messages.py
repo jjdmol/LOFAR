@@ -1,34 +1,34 @@
-# messages.py: Message classes used by the package apertif.messaging.
+# messages.py: Message classes used by the package lofar.messaging.
 #
 # Copyright (C) 2015
 # ASTRON (Netherlands Institute for Radio Astronomy)
 # P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 #
-# This file is part of the APERTIF software suite.
-# The APERTIF software suite is free software: you can redistribute it
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
 # published by the Free Software Foundation, either version 3 of the
 # License, or (at your option) any later version.
 #
-# The APERTIF software suite is distributed in the hope that it will be
+# The LOFAR software suite is distributed in the hope that it will be
 # useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along
-# with the APERTIF software suite. If not, see <http://www.gnu.org/licenses/>.
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
 # $Id: messages.py 1580 2015-09-30 14:18:57Z loose $
 
 """
-Message classes used by the package apertif.messaging.
+Message classes used by the package lofar.messaging.
 """
 
 import qpid.messaging
 import uuid
 
-from common.factory import Factory
-from .exceptions import InvalidMessage, MessageFactoryError
+from lofar.common.factory import Factory
+from lofar.messaging.exceptions import InvalidMessage, MessageFactoryError
 
 
 # Valid QPID message fields (from qpid.messaging.Message)
@@ -41,7 +41,7 @@ def validate_qpid_message(qmsg):
     """
     Validate Qpid message `qmsg`. A Qpid message is required to contain the
     following properties in order to be considered valid:
-    - "SystemName"  : "APERTIF"
+    - "SystemName"  : "LOFAR"
     - "MessageType" : message type string
     - "MessageId"   : a valid UUID string
     :raises InvalidMessage: if any of the required properties are missing in
@@ -71,7 +71,7 @@ def validate_qpid_message(qmsg):
             ("ies" if len(missing_props) > 1 else "y", ', '.join(missing_props))
         )
     sysname, _, msgid = (msg_props[prop] for prop in required_props)
-    if sysname != "APERTIF":
+    if sysname != "LOFAR":
         raise InvalidMessage(
             "Invalid message property 'SystemName': %s" % sysname
         )
@@ -92,22 +92,22 @@ def to_qpid_message(msg):
     """
     if isinstance(msg, qpid.messaging.Message):
         return msg
-    if isinstance(msg, ApertifMessage):
+    if isinstance(msg, LofarMessage):
         return msg.qpid_msg
     raise InvalidMessage("Invalid message type: %r" % type(msg))
 
 
 class MessageFactory(Factory):
     """
-    Factory to produce ApertifMessage objects.
+    Factory to produce LofarMessage objects.
     """
 
     def create(self, qmsg):
         """
         Override the create method to restrict the number of arguments to one
         and to do some extra testing.
-        :param qmsg: Qpid message that must be converted into an ApertifMessage.
-        :return: Instance of a child class of ApertifMessage.
+        :param qmsg: Qpid message that must be converted into an LofarMessage.
+        :return: Instance of a child class of LofarMessage.
         :raise MessageFactoryError: if the MessageType property of the Qpid
         message `qmsg` contains a type name that is not registered with the
         factory.
@@ -122,11 +122,11 @@ class MessageFactory(Factory):
         return msg
 
 
-# Global MessageFactory object, to be used by the apertif.messaging package,
+# Global MessageFactory object, to be used by the lofar.messaging package,
 MESSAGE_FACTORY = MessageFactory()
 
 
-class ApertifMessage(object):
+class LofarMessage(object):
     """
     Describes the content of a message, which can be constructed from either a
     set of fields, or from an existing QPID message.
@@ -144,9 +144,9 @@ class ApertifMessage(object):
         :param content: Content can either be a qpid.messaging.Message object,
         or an object that is valid content for a qpid.messaging.Message. In the
         first case, `content` must contain all the message properties that are
-        required by APERTIF.
+        required by LOFAR.
         :raise InvalidMessage if `content` cannot be used to initialize an
-        ApertifMessage object.
+        LofarMessage object.
 
         note:: Because every access to attributes will be caught by
         `__getattr__` and `__setattr__`, we need to use `self.__dict__` to
@@ -164,7 +164,7 @@ class ApertifMessage(object):
                     "Unsupported content type: %r" % type(content))
             else:
                 self._qpid_msg.properties.update({
-                    'SystemName': 'APERTIF',
+                    'SystemName': 'LOFAR',
                     'MessageId': str(uuid.uuid4()),
                     'MessageType': self.__class__.__name__})
 
@@ -235,7 +235,7 @@ class ApertifMessage(object):
         print "==="
 
 
-class EventMessage(ApertifMessage):
+class EventMessage(LofarMessage):
     """
     Message class used for event messages. Events are messages that *must*
     be delivered. If the message cannot be delivered to the recipient, it
@@ -247,7 +247,7 @@ class EventMessage(ApertifMessage):
         self.durable = True
 
 
-class MonitoringMessage(ApertifMessage):
+class MonitoringMessage(LofarMessage):
     """
     Message class used for monitoring messages. Monitoring messages are
     publish-subscribe type of messages. They will be not be queued, so they
@@ -258,7 +258,7 @@ class MonitoringMessage(ApertifMessage):
         super(MonitoringMessage, self).__init__(content)
 
 
-class ProgressMessage(ApertifMessage):
+class ProgressMessage(LofarMessage):
     """
     Message class used for progress messages. Progress messages are
     publish-subscribe type of messages. They will be not be queued, so they
@@ -269,7 +269,7 @@ class ProgressMessage(ApertifMessage):
         super(ProgressMessage, self).__init__(content)
 
 
-class ServiceMessage(ApertifMessage):
+class ServiceMessage(LofarMessage):
     """
     Message class used for service messages. Service messages are
     request-reply type of messages. They are typically used to query a

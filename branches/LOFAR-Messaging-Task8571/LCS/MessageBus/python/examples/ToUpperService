@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from messaging.Service import Service
+from lofar.messaging.Service import Service
 
 # Simple RPC server 'ToUpper'
 

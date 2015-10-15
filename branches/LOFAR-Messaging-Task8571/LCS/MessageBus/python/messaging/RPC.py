@@ -1,7 +1,7 @@
 
 #  RPC invocation with possible timeout
-from messaging.messagebus import ToBus,FromBus
-from messaging.messages import ServiceMessage
+from lofar.messaging.messagebus import ToBus,FromBus
+from lofar.messaging.messages import ServiceMessage
 
 import uuid
 

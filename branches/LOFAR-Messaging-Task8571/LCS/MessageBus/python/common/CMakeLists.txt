@@ -10,4 +10,4 @@ set(_py_files
   factory.py
   util.py)
 
-python_install(${_py_files} DESTINATION common)
+python_install(${_py_files} DESTINATION lofar/common)

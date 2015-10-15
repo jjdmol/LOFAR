@@ -1,52 +1,52 @@
-# t_message.py: Test program for the module apertif.messaging.message
+# t_message.py: Test program for the module lofar.messaging.message
 #
 # Copyright (C) 2015
 # ASTRON (Netherlands Institute for Radio Astronomy)
 # P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 #
-# This file is part of the APERTIF software suite.
-# The APERTIF software suite is free software: you can redistribute it
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
 # published by the Free Software Foundation, either version 3 of the
 # License, or (at your option) any later version.
 #
-# The APERTIF software suite is distributed in the hope that it will be
+# The LOFAR software suite is distributed in the hope that it will be
 # useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along
-# with the APERTIF software suite. If not, see <http://www.gnu.org/licenses/>.
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
 # $Id: t_messages.py 1576 2015-09-29 15:22:28Z loose $
 
 """
-Test program for the module apertif.messaging.message
+Test program for the module lofar.messaging.message
 """
 
 import unittest
 import uuid
 import struct
 import qpid.messaging
-from apertif.messaging.messages import ApertifMessage, InvalidMessage
+from lofar.messaging.messages import LofarMessage, InvalidMessage
 
 
-class DefaultApertifMessage(unittest.TestCase):
+class DefaultLofarMessage(unittest.TestCase):
     """
-    Class to test default constructed ApertifMessage class
+    Class to test default constructed LofarMessage class
     """
 
     def setUp(self):
         """
         Create default constructed object
         """
-        self.message = ApertifMessage()
+        self.message = LofarMessage()
 
     def test_system_name(self):
         """
-        Object attribute SystemName must be set to 'APERTIF'
+        Object attribute SystemName must be set to 'LOFAR'
         """
-        self.assertEqual(self.message.SystemName, "APERTIF")
+        self.assertEqual(self.message.SystemName, "LOFAR")
 
     def test_message_id(self):
         """
@@ -55,9 +55,9 @@ class DefaultApertifMessage(unittest.TestCase):
         self.assertIsNotNone(uuid.UUID(self.message.MessageId))
 
 
-class QpidApertifMessage(unittest.TestCase):
+class QpidLofarMessage(unittest.TestCase):
     """
-    Class to test ApertifMessage constructed from a Qpid message
+    Class to test LofarMessage constructed from a Qpid message
     """
 
     def setUp(self):
@@ -66,7 +66,7 @@ class QpidApertifMessage(unittest.TestCase):
         """
         self.qmsg = qpid.messaging.Message()
         self.qmsg.properties = {
-            "SystemName": "APERTIF",
+            "SystemName": "LOFAR",
             "MessageType": None,
             "MessageId": str(uuid.uuid4())
         }
@@ -79,7 +79,7 @@ class QpidApertifMessage(unittest.TestCase):
         self.qmsg.properties = 42
         self.assertRaisesRegexp(InvalidMessage,
                                 "^Invalid message properties type:",
-                                ApertifMessage, self.qmsg)
+                                LofarMessage, self.qmsg)
 
     def test_illegal_properties(self):
         """
@@ -89,17 +89,17 @@ class QpidApertifMessage(unittest.TestCase):
         self.qmsg.properties['content'] = 'blah blah blah'
         self.assertRaisesRegexp(InvalidMessage,
                                 "^Illegal message propert(y|ies).*:",
-                                ApertifMessage, self.qmsg)
+                                LofarMessage, self.qmsg)
 
     def test_missing_properties(self):
         """
         Test that exception is raised if required properties for constructing
-        an ApertifMessage are missing.
+        an LofarMessage are missing.
         """
         self.qmsg.properties = {}
         self.assertRaisesRegexp(InvalidMessage,
                                 "^Missing message propert(y|ies):",
-                                ApertifMessage, self.qmsg)
+                                LofarMessage, self.qmsg)
 
     def test_missing_property_systemname(self):
         """
@@ -109,7 +109,7 @@ class QpidApertifMessage(unittest.TestCase):
         self.qmsg.properties.pop("SystemName")
         self.assertRaisesRegexp(InvalidMessage,
                                 "^Missing message property: SystemName",
-                                ApertifMessage, self.qmsg)
+                                LofarMessage, self.qmsg)
 
     def test_missing_property_messageid(self):
         """
@@ -119,7 +119,7 @@ class QpidApertifMessage(unittest.TestCase):
         self.qmsg.properties.pop("MessageId")
         self.assertRaisesRegexp(InvalidMessage,
                                 "^Missing message property: MessageId",
-                                ApertifMessage, self.qmsg)
+                                LofarMessage, self.qmsg)
 
     def test_missing_property_messagetype(self):
         """
@@ -129,17 +129,17 @@ class QpidApertifMessage(unittest.TestCase):
         self.qmsg.properties.pop("MessageType")
         self.assertRaisesRegexp(InvalidMessage,
                                 "^Missing message property: MessageType",
-                                ApertifMessage, self.qmsg)
+                                LofarMessage, self.qmsg)
 
     def test_invalid_property_systemname(self):
         """
         Test that exception is raised if 'SystemName' has wrong value (i.e.
-        not equal to 'APERTIF')
+        not equal to 'LOFAR')
         """
         self.qmsg.properties["SystemName"] = "LOFAR"
         self.assertRaisesRegexp(InvalidMessage,
                                 "^Invalid message property 'SystemName':",
-                                ApertifMessage, self.qmsg)
+                                LofarMessage, self.qmsg)
 
     def test_invalid_property_messageid(self):
         """
@@ -149,13 +149,13 @@ class QpidApertifMessage(unittest.TestCase):
         self.qmsg.properties["MessageId"] = "Invalid-UUID-string"
         self.assertRaisesRegexp(InvalidMessage,
                                 "^Invalid message property 'MessageId':",
-                                ApertifMessage, self.qmsg)
+                                LofarMessage, self.qmsg)
 
     def test_getattr_raises(self):
         """
         Test that exception is raised if a non-existent attribute is read.
         """
-        msg = ApertifMessage(self.qmsg)
+        msg = LofarMessage(self.qmsg)
         with self.assertRaisesRegexp(AttributeError, "object has no attribute"):
             _ = msg.non_existent
 
@@ -164,7 +164,7 @@ class QpidApertifMessage(unittest.TestCase):
         Test that exception is raised if attribute 'properties' is read.
         This attribute should not be visible.
         """
-        msg = ApertifMessage(self.qmsg)
+        msg = LofarMessage(self.qmsg)
         with self.assertRaisesRegexp(AttributeError, "object has no attribute"):
             _ = msg.properties
 
@@ -173,42 +173,42 @@ class QpidApertifMessage(unittest.TestCase):
         Test that exception is raised if attribute 'properties' is written.
         This attribute should not be visible.
         """
-        msg = ApertifMessage(self.qmsg)
+        msg = LofarMessage(self.qmsg)
         with self.assertRaisesRegexp(AttributeError, "object has no attribute"):
             msg.properties = {}
 
     def test_getattr_qpid_field(self):
         """
-        Test that a Qpid message field becomes an ApertifMessage attribute.
+        Test that a Qpid message field becomes an LofarMessage attribute.
         """
-        msg = ApertifMessage(self.qmsg)
+        msg = LofarMessage(self.qmsg)
         msg.qpid_msg.ttl = 100
         self.assertEqual(self.qmsg.ttl, msg.ttl)
         self.assertEqual(msg.ttl, 100)
 
     def test_setattr_qpid_field(self):
         """
-        Test that an ApertifMessage attribute becomes a Qpid message field.
+        Test that an LofarMessage attribute becomes a Qpid message field.
         """
-        msg = ApertifMessage(self.qmsg)
+        msg = LofarMessage(self.qmsg)
         msg.ttl = 100
         self.assertEqual(self.qmsg.ttl, msg.ttl)
         self.assertEqual(self.qmsg.ttl, 100)
 
     def test_getattr_qpid_property(self):
         """
-        Test that a Qpid message property becomes an ApertifMessage attribute.
+        Test that a Qpid message property becomes an LofarMessage attribute.
         """
         self.qmsg.properties["NewProperty"] = "New Property"
-        msg = ApertifMessage(self.qmsg)
+        msg = LofarMessage(self.qmsg)
         self.assertEqual(msg.qpid_msg.properties["NewProperty"],
                          msg.NewProperty)
 
     def test_setattr_qpid_property(self):
         """
-        Test that an ApertifMessage attribute becomes a Qpid message property.
+        Test that an LofarMessage attribute becomes a Qpid message property.
         """
-        msg = ApertifMessage(self.qmsg)
+        msg = LofarMessage(self.qmsg)
         msg.NewProperty = "New Property"
         self.assertEqual(msg.qpid_msg.properties["NewProperty"],
                          msg.NewProperty)
@@ -218,71 +218,71 @@ class QpidApertifMessage(unittest.TestCase):
         Test that prop_names() does not return the property 'properties'.
         This attribute should not be visible.
         """
-        msg = ApertifMessage(self.qmsg)
+        msg = LofarMessage(self.qmsg)
         self.assertNotIn('properties', msg.prop_names())
 
 
-class ContentApertifMessage(unittest.TestCase):
+class ContentLofarMessage(unittest.TestCase):
     """
-    Class to test that an ApertifMessage can be constructed from different types
+    Class to test that an LofarMessage can be constructed from different types
     of content. The content is used to initialize a Qpid Message object.
     """
 
     def test_construct_from_string(self):
         """
-        Test that an ApertifMessage can be constructed from an ASCII string.
+        Test that an LofarMessage can be constructed from an ASCII string.
         """
         content = "ASCII string"
-        msg = ApertifMessage(content)
+        msg = LofarMessage(content)
         self.assertEqual((msg.content, msg.content_type),
                          (content, None))
 
     def test_construct_from_unicode(self):
         """
-        Test that an ApertifMessage can be constructed from a Unicode string.
+        Test that an LofarMessage can be constructed from a Unicode string.
         :return:
         """
         content = u"Unicode string"
-        msg = ApertifMessage(content)
+        msg = LofarMessage(content)
         self.assertEqual((msg.content, msg.content_type),
                          (content, "text/plain"))
 
     def test_construct_from_list(self):
         """
-        Test that an ApertifMessage can be constructed from a python list.
+        Test that an LofarMessage can be constructed from a python list.
         """
         content = range(10)
-        msg = ApertifMessage(content)
+        msg = LofarMessage(content)
         self.assertEqual((msg.content, msg.content_type),
                          (content, "amqp/list"))
 
     def test_construct_from_dict(self):
         """
-        Test that an ApertifMessage can be constructed from a python dict.
+        Test that an LofarMessage can be constructed from a python dict.
         """
         content = {1: 'one', 2: 'two', 3: 'three'}
-        msg = ApertifMessage(content)
+        msg = LofarMessage(content)
         self.assertEqual((msg.content, msg.content_type),
                          (content, "amqp/map"))
 
     def test_construct_from_binary(self):
         """
-        Test that an ApertifMessage can be constructed from binary data.
+        Test that an LofarMessage can be constructed from binary data.
         Use struct.pack() to create a byte array
         """
         content = struct.pack("<256B", *range(256))
-        msg = ApertifMessage(content)
+        msg = LofarMessage(content)
         self.assertEqual((msg.content, msg.content_type),
                          (content, None))
 
     def test_construct_from_unsupported(self):
         """
-        Test that an ApertifMessage cannot be constructed from unsupported
+        Test that an LofarMessage cannot be constructed from unsupported
         data type like 'int'.
         """
         content = 42
         self.assertRaisesRegexp(InvalidMessage, "^Unsupported content type:",
-                                ApertifMessage, content)
+                                LofarMessage, content)
 
 
 if __name__ == '__main__':

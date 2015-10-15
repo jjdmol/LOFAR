@@ -1,27 +1,27 @@
-# t_messagebus.py: Test program for the module apertif.messaging.messagebus
+# t_messagebus.py: Test program for the module lofar.messaging.messagebus
 #
 # Copyright (C) 2015
 # ASTRON (Netherlands Institute for Radio Astronomy)
 # P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 #
-# This file is part of the APERTIF software suite.
-# The APERTIF software suite is free software: you can redistribute it
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
 # published by the Free Software Foundation, either version 3 of the
 # License, or (at your option) any later version.
 #
-# The APERTIF software suite is distributed in the hope that it will be
+# The LOFAR software suite is distributed in the hope that it will be
 # useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along
-# with the APERTIF software suite. If not, see <http://www.gnu.org/licenses/>.
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
 # $Id: t_messagebus.py 1580 2015-09-30 14:18:57Z loose $
 
 """
-Test program for the module apertif.messaging.messagebus
+Test program for the module lofar.messaging.messagebus
 """
 
 import re
@@ -29,9 +29,9 @@ import struct
 import sys
 import unittest
 
-from apertif.messaging.messages import *
-from apertif.messaging.messagebus import *
-from apertif.messaging.exceptions import MessageBusError, InvalidMessage
+from lofar.messaging.messages import *
+from lofar.messaging.messagebus import *
+from lofar.messaging.exceptions import MessageBusError, InvalidMessage
 
 TIMEOUT = 0.1
 
@@ -220,7 +220,7 @@ class ToBusSendMessage(unittest.TestCase):
 
     def test_send_invalid_message_raises(self):
         """
-        If an invalid message is sent (i.e., not an ApertifMessage), then an
+        If an invalid message is sent (i.e., not an LofarMessage), then an
         InvalidMessage must be raised.
         """
         with self.tobus:

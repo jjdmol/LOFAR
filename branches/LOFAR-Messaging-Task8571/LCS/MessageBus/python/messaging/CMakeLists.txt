@@ -13,6 +13,6 @@ set(_py_files
   Service.py
 )
 
-python_install(${_py_files} DESTINATION messaging)
+python_install(${_py_files} DESTINATION lofar/messaging)
 
 add_subdirectory(test)

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-from messaging.messagebus import ToBus,FromBus
-from messaging.messages import EventMessage
+from lofar.messaging.messagebus import ToBus,FromBus
+from lofar.messaging.messages import EventMessage
 import threading
 import time
 import uuid
