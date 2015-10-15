@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from lofar.messaging.messagebus import ToBus,FromBus
-from lofar.messaging.messages import EventMessage
+from lofar.messaging.messages import EventMessage,ServiceMessage
 import threading
 import time
 import uuid
@@ -59,7 +59,7 @@ class Service():
          except Exception as e:
            print e
 
-         if (msg!=None):
+         if (isinstance(msg,ServiceMessage)):
              status="unknown"
              self.counter[index]+=1
              #print "got a message"
