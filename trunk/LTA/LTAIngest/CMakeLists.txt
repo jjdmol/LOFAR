@@ -340,9 +340,8 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/ingest_install_logrotate_crontab.sh @ONLY)
 
 #install ingest_install_logrotate_crontab.sh in bin
-install(PROGRAMS
-  ${CMAKE_CURRENT_BINARY_DIR}/ingest_install_logrotate_crontab.sh
-  DESTINATION bin)
+lofar_add_bin_scripts(
+  ${CMAKE_CURRENT_BINARY_DIR}/ingest_install_logrotate_crontab.sh)
 
   
 add_subdirectory(test)

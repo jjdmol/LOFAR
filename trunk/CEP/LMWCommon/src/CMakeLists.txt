@@ -40,7 +40,7 @@ lofar_add_library(lmwcommon
 lofar_add_bin_program(versionlmwcommon versionlmwcommon.cc)
 lofar_add_bin_program(finddproc finddproc.cc)
 
-install(PROGRAMS
+lofar_add_bin_scripts(
   cexecms
   cexecms-part
   expandparameter
@@ -48,5 +48,4 @@ install(PROGRAMS
   rundist-part
   startdistproc
   socketrun
-  runlogpid
-  DESTINATION bin)
+  runlogpid)
