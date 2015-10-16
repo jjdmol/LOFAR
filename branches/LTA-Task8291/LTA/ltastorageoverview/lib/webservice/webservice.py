@@ -34,7 +34,18 @@ print os.path.dirname(__file__)
 app.config.root_path = os.path.dirname(__file__)
 print
 print str(app.config)
-db = store.LTAStorageDb('/tmp/test.sqlite')
+db = store.LTAStorageDb('../ltastorageoverview.sqlite')
+
+def humanreadablesize(num, suffix='B'):
+    """ converts the given size (number) to a human readable string in powers of 1024"""
+    try:
+        for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
+            if abs(num) < 1024.0:
+                return "%3.1f%s%s" % (num, unit, suffix)
+            num /= 1024.0
+        return "%.1f%s%s" % (num, 'Y', suffix)
+    except TypeError:
+        return str(num)
 
 @app.route('/')
 @app.route('/index.html')
@@ -56,14 +67,21 @@ def get_site(site_id):
 
 @app.route('/rest/sites/usages')
 def get_sites_usages():
-    rootDirs = {'rootDirectories': [{'id': x[0], 'name': x[1], 'site_id': x[2], 'site_name': x[3]} for x in db.rootDirectories()]}
+    sites = {'sites_usages': [{'id': x[0],
+                               'name': x[1]} for x in db.sites()]}
 
-    for rootDir in rootDirs['rootDirectories']:
-        print '\n'.join([str(x) for x in db.filesInTree(rootDir['id'])])
-        rootDir['usage'] = sum([x[4] for x in db.filesInTree(rootDir['id'])])
-        print
+    for site in sites['sites_usages']:
+        rootDirs = db.rootDirectoriesForSite(site['id'])
 
-    return json.jsonify(rootDirs)
+        site_usage = 0L
+        for rootDir in rootDirs:
+            usage = db.totalFileSizeInTree(rootDir[0])
+            print site['name'] + " " + rootDir[1] + " " + str(usage)
+            site_usage += usage
+        site['usage'] = site_usage
+        site['usage_hr'] = humanreadablesize(site_usage)
+
+    return json.jsonify(sites)
 
 @app.route('/rest/rootdirectories/',)
 def get_rootDirectories():
