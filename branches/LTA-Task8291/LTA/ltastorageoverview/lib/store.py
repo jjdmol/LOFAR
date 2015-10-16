@@ -49,7 +49,7 @@ class LTAStorageDb:
                     name                text key not null,
                     parent_directory_id integer,
                     foreign key (parent_directory_id) references directory(id) );
-                    create index dir_parent_directory_id_idx on directory(parent_directory_id) where directory.parent_directory_id is not null;
+                    create index dir_parent_directory_id_idx on directory(parent_directory_id) where parent_directory_id is not null;
                     """)
 
                 cursor.executescript("""
