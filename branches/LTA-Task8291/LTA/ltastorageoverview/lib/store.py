@@ -295,7 +295,7 @@ class LTAStorageDb:
                 where ancestor_id = ?
                 ''', [base_directory_id]).fetchone()
 
-            if result:
+            if result[0]:
                 return result[0]
             return 0
 
