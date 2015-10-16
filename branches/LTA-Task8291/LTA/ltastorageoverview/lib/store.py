@@ -371,3 +371,32 @@ class LTAStorageDb:
 
             return 0
 
+    def visitStats(self, before_timestamp = None):
+        if not before_timestamp:
+            before_timestamp = datetime.datetime.utcnow()
+
+        sites = self.sites()
+        siteStats = {}
+
+        with sqlite3.connect(self.db_filename) as conn:
+
+            for site in sites:
+                site_id = site[0]
+                siteStats[site_id] = {'name': site[1]}
+
+                print '''select * from site_scraper_last_directoy_visit where site_id = %s and last_visit < %s order by last_visit asc''' % (site_id, before_timestamp)
+
+                visits = conn.execute('''
+                    select *
+                    from site_scraper_last_directoy_visit
+                    where site_id = ?
+                    and last_visit < ?
+                    order by last_visit asc
+                    ''', [site_id, before_timestamp]).fetchall()
+
+                siteStats[site_id]['queue_length'] = len(visits)
+                if len(visits) > 0:
+                    siteStats[site_id]['least_recented_dir_id'] = visits[0][2]
+                    siteStats[site_id]['least_recent_visit'] = visits[0][4]
+
+        return siteStats
