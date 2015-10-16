@@ -24,12 +24,8 @@ import datetime
 import sys
 import os
 import os.path
-import tempfile
-import shutil
 import threading
 import multiprocessing
-from random import random
-from collections import deque
 from ltastorageoverview import store
 
 def humanreadablesize(num, suffix='B'):
@@ -44,8 +40,7 @@ def humanreadablesize(num, suffix='B'):
         return str(num)
 
 
-logging.basicConfig(filename='get_srm2_' + time.strftime("%Y-%m-%d_%HH%M") + '.log', level=logging.DEBUG, format="%(asctime)-15s %(levelname)s %(message)s")
-#logging.basicConfig(level=logging.DEBUG, format="%(asctime)-15s %(levelname)s %(message)s")
+logging.basicConfig(filename='scraper.' + time.strftime("%Y-%m-%d_%HH%M") + '.log', level=logging.DEBUG, format="%(asctime)-15s %(levelname)s %(message)s")
 logger = logging.getLogger()
 
 
@@ -315,9 +310,6 @@ class LocationResultTreeNode:
 
 def main(argv):
     '''the main function scanning all locations and gathering the results'''
-
-    # results are stored in a deque which is thread safe
-    results = deque()
 
     db = store.LTAStorageDb('ltastorageoverview.sqlite')
 
