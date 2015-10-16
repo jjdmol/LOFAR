@@ -36,6 +36,10 @@ class LTAStorageDb:
             with sqlite3.connect(self.db_filename) as conn:
                 cursor = conn.cursor()
                 cursor.executescript("""
+                    PRAGMA foreign_keys = ON;
+                    """)
+
+                cursor.executescript("""
                     create table storage_site (
                     id                  integer primary key autoincrement unique not null,
                     name                text unique not null,
@@ -110,7 +114,15 @@ class LTAStorageDb:
                     );
                     """)
 
-                #save created tables and triggers
+                cursor.execute('''
+                    CREATE VIEW root_directories AS
+                    SELECT dir.id as dir_id, dir.name as dir_name, ss.id as site_id, ss.name as site_name
+                    FROM storage_site_root
+                    join directory dir on dir.id = storage_site_root.directory_id
+                    join storage_site ss on ss.id = storage_site_root.storage_site_id;
+                    ''')
+
+                # save created tables and triggers
                 conn.commit()
 
     def insertSite(self, siteName, srmurl):
@@ -239,18 +251,17 @@ class LTAStorageDb:
     def rootDirectories(self):
         '''returns list of all root directories (id, name, site_id, site_name) for all sites'''
         with sqlite3.connect(self.db_filename) as conn:
-            return conn.execute('''SELECT dir.id, dir.name, site.id, site.name
-                FROM storage_site_root
-                join directory dir on dir.id = storage_site_root.directory_id
-                join storage_site site on site.id = storage_site_root.storage_site_id''').fetchall()
+            return conn.execute('''
+                SELECT *
+                FROM root_directories
+                ''').fetchall()
 
     def rootDirectoriesForSite(self, site_id):
         '''returns list of all root directories (id, name) for given site_id'''
         with sqlite3.connect(self.db_filename) as conn:
-            return conn.execute('''SELECT dir.id, dir.name
-                FROM storage_site_root
-                join directory dir on dir.id = storage_site_root.directory_id
-                where storage_site_root.storage_site_id = ?''', [site_id]).fetchall()
+            return conn.execute('''SELECT dir_id, dir_name
+                FROM root_directories
+                where site_id = ?''', [site_id]).fetchall()
 
     def subDirectories(self, directory_id, depth = 1, includeSelf=False):
         '''returns list of all sub directories up to the given depth (id, name, site_id, site_name, depth) for the given directory_id'''
