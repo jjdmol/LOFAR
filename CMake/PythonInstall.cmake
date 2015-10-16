@@ -30,7 +30,11 @@ find_package(PythonInterp)
 if(PYTHON_EXECUTABLE)
   set(_cmd
     "from distutils.sysconfig import get_python_lib"
-    "print(get_python_lib(plat_specific=True, prefix=''))")
+    "from os.path import join"
+    "print(join(
+       get_python_lib(plat_specific=True, standard_lib=True, prefix=''), 
+       'site-packages'))"
+  )
   execute_process(
     COMMAND "${PYTHON_EXECUTABLE}" "-c" "${_cmd}"
     OUTPUT_VARIABLE _pydir
