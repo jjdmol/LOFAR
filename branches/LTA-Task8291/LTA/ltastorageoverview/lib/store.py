@@ -35,22 +35,24 @@ class LTAStorageDb:
         if not os.path.exists(self.db_filename):
             with sqlite3.connect(self.db_filename) as conn:
                 cursor = conn.cursor()
-                cursor.execute("""
+                cursor.executescript("""
                     create table storage_site (
-                    id                  integer primary key autoincrement not null,
-                    name                text not null,
+                    id                  integer primary key autoincrement unique not null,
+                    name                text unique not null,
                     url                 text not null);
+                    create index ss_name_idx on storage_site(name);
                     """)
 
-                cursor.execute("""
+                cursor.executescript("""
                     create table directory (
-                    id                  integer primary key autoincrement not null,
+                    id                  integer primary key autoincrement unique not null,
                     name                text key not null,
                     parent_directory_id integer,
                     foreign key (parent_directory_id) references directory(id) );
+                    create index dir_parent_directory_id_idx on directory(parent_directory_id) where directory.parent_directory_id is not null;
                     """)
 
-                cursor.execute("""
+                cursor.executescript("""
                     create table directory_closure (
                     ancestor_id         integer not null,
                     descendant_id       integer not null,
@@ -59,6 +61,9 @@ class LTAStorageDb:
                     foreign key (ancestor_id) references directory(id)
                     foreign key (descendant_id) references directory(id)
                     );
+                    create index dc_ancestor_id_idx on directory_closure(ancestor_id);
+                    create index dc_descendant_id_idx on directory_closure(descendant_id);
+                    create index dc_depth_idx on directory_closure(depth);
                     """)
 
                 cursor.executescript("""
@@ -74,23 +79,26 @@ class LTAStorageDb:
                     end;
                     """)
 
-                cursor.execute("""
+                cursor.executescript("""
                     create table storage_site_root (
                     storage_site_id                 integer not null,
                     directory_id                        integer not null,
                     primary key (storage_site_id, directory_id),
                     foreign key (storage_site_id) references storage_site(id),
                     foreign key (directory_id) references directory(id) );
+                    create index ssr_storage_site_id_idx on storage_site_root(storage_site_id);
+                    create index ssr_directory_id_idx on storage_site_root(directory_id);
                     """)
 
-                cursor.execute("""
+                cursor.executescript("""
                     create table fileinfo (
-                    id                                        integer primary key autoincrement not null,
-                    name                                    text key not null,
-                    size                                    integer not null,
-                    creation_date                 datetime not null,
-                    directory_id                    integer not null,
-                    foreign key (directory_id) references directory(id) );
+                    id                          integer primary key autoincrement not null,
+                    name                        text key not null,
+                    size                        integer not null,
+                    creation_date               datetime not null,
+                    directory_id                integer not null,
+                    foreign key (directory_id)  references directory(id) );
+                    create index fi_directory_id_idx on fileinfo(directory_id);
                     """)
 
                 cursor.execute("""
