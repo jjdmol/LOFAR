@@ -345,26 +345,6 @@ class LTAStorageDb:
                 return result[0]
             return 0
 
-    def leastRecentlyVisitedDirectoryId(self, before_timestamp = None):
-        with sqlite3.connect(self.db_filename) as conn:
-            if not before_timestamp:
-                before_timestamp = datetime.datetime.utcnow()
-            result = conn.execute('''
-                SELECT directory_id FROM scraper_last_directory_visit
-                WHERE visit_date < ?
-                ORDER BY visit_date asc
-                LIMIT 1
-                ''', [before_timestamp]).fetchone()
-
-            if result:
-                return result[0]
-
-            return -1
-
-    def leastRecentlyVisitedDirectory(self, before_timestamp = None):
-        lrv_dir_id = self.leastRecentlyVisitedDirectoryId(before_timestamp)
-        return self.directory(lrv_dir_id)
-
     def numDirectoriesNotVisitedSince(self, timestamp):
         with sqlite3.connect(self.db_filename) as conn:
             result = conn.execute('''
