@@ -53,7 +53,6 @@ class LTAStorageDb:
                     name                text key not null,
                     parent_directory_id integer,
                     foreign key (parent_directory_id) references directory(id) );
-                    create index dir_parent_directory_id_idx on directory(parent_directory_id) where parent_directory_id is not null;
                     """)
 
                 cursor.executescript("""
@@ -382,9 +381,8 @@ class LTAStorageDb:
 
             for site in sites:
                 site_id = site[0]
-                siteStats[site_id] = {'name': site[1]}
-
-                print '''select * from site_scraper_last_directoy_visit where site_id = %s and last_visit < %s order by last_visit asc''' % (site_id, before_timestamp)
+                site_name = site[1]
+                siteStats[site_name] = {'id': site_id}
 
                 visits = conn.execute('''
                     select *
@@ -394,9 +392,9 @@ class LTAStorageDb:
                     order by last_visit asc
                     ''', [site_id, before_timestamp]).fetchall()
 
-                siteStats[site_id]['queue_length'] = len(visits)
+                siteStats[site_name]['queue_length'] = len(visits)
                 if len(visits) > 0:
-                    siteStats[site_id]['least_recented_dir_id'] = visits[0][2]
-                    siteStats[site_id]['least_recent_visit'] = visits[0][4]
+                    siteStats[site_name]['least_recent_visited_dir_id'] = visits[0][2]
+                    siteStats[site_name]['least_recent_visit'] = visits[0][4]
 
         return siteStats

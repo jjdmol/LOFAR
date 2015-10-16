@@ -27,6 +27,7 @@ import os.path
 import threading
 import multiprocessing
 from ltastorageoverview import store
+from random import random
 
 def humanreadablesize(num, suffix='B'):
     """ converts the given size (number) to a human readable string in powers of 1024"""
@@ -40,7 +41,8 @@ def humanreadablesize(num, suffix='B'):
         return str(num)
 
 
-logging.basicConfig(filename='scraper.' + time.strftime("%Y-%m-%d_%HH%M") + '.log', level=logging.DEBUG, format="%(asctime)-15s %(levelname)s %(message)s")
+#logging.basicConfig(filename='scraper.' + time.strftime("%Y-%m-%d") + '.log', level=logging.DEBUG, format="%(asctime)-15s %(levelname)s %(message)s")
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)-15s %(levelname)s %(message)s")
 logger = logging.getLogger()
 
 
@@ -217,17 +219,18 @@ class ResultGetterThread(threading.Thread):
     '''Helper class to query Locations asynchronously for results.
     Gets the result for the first Location in the locations deque and appends it to the results deque
     Appends the subdirectory Locations at the end of the locations deque for later processing'''
-    def __init__(self, db):
+    def __init__(self, db, dir_id):
         threading.Thread.__init__(self)
         self.daemon = True
         self.db = db
+        self.dir_id = dir_id
 
     def run(self):
         '''A single location is pop\'ed from the locations deque and the results are queried.
         Resulting subdirectories are appended to the locations deque'''
         try:
             with lock:
-                dir = self.db.leastRecentlyVisitedDirectory(datetime.datetime.utcnow() - datetime.timedelta(minutes=1))
+                dir = self.db.directory(self.dir_id)
 
                 if not dir:
                     return
@@ -236,25 +239,24 @@ class ResultGetterThread(threading.Thread):
                 dir_name = dir[1]
                 self.db.updateDirectoryLastVisitTime(dir_id, datetime.datetime.utcnow())
 
-                site = self.db.site(dir[2])
+                site_id = dir[2]
+                site = self.db.site(site_id)
                 srm_url = site[2]
 
             location = Location(srm_url, dir_name)
 
-            if not ('nikhef' == site[1] and 'generated' in dir_name):
-                # get results... long blocking
-                result = location.getResult()
-                logger.info(result)
+            # get results... long blocking
+            result = location.getResult()
+            logger.info(result)
 
-                with lock:
-                    for subDirLocation in result.subDirectories:
+            with lock:
+                for subDirLocation in result.subDirectories:
+                    if not ('nikhef' == subDirLocation.srmurl and 'generated' in subDirLocation.directory): # skip empty nikhef dirs
                         subdir_id = self.db.insertSubDirectory(dir_id, subDirLocation.directory)
                         self.db.updateDirectoryLastVisitTime(subdir_id, datetime.datetime.utcnow() - datetime.timedelta(days=1000))
 
-                    for file in result.files:
-                        self.db.insertFileInfo(file.filename, file.size, file.created_at, dir_id)
-            else:
-                logger.info('skipping empty nikhef dirs')
+                for file in result.files:
+                    self.db.insertFileInfo(file.filename, file.size, file.created_at, dir_id)
 
         except Exception as e:
             logger.error(str(e))
@@ -340,7 +342,7 @@ def main(argv):
     # some helper functions
     def numLocationsInQueues():
         '''returns the total number of locations in the queues'''
-        return db.numDirectoriesNotVisitedSince(datetime.datetime.utcnow())
+        return db.numDirectoriesNotVisitedSince(datetime.datetime.utcnow() - datetime.timedelta(days=1))
 
     def totalNumGetters():
         '''returns the total number of parallel running ResultGetterThreads'''
@@ -358,10 +360,10 @@ def main(argv):
         while numLocationsInQueues() > 0 or totalNumGetters() > 0:
 
             # get rid of old finished ResultGetterThreads
-            finishedGetters = dict([(site, [getter for getter in getterList if not getter.isAlive()]) for site,getterList in getters.items()])
-            for site,finishedGetterList in finishedGetters.items():
+            finishedGetters = dict([(site_name, [getter for getter in getterList if not getter.isAlive()]) for site_name, getterList in getters.items()])
+            for site_name,finishedGetterList in finishedGetters.items():
                 for finishedGetter in finishedGetterList:
-                    getters[site].remove(finishedGetter)
+                    getters[site_name].remove(finishedGetter)
 
             logger.info('numLocationsInQueues=%d totalNumGetters=%d' % (numLocationsInQueues(), totalNumGetters()))
 
@@ -373,10 +375,43 @@ def main(argv):
 
                 logger.info('numLocationsInQueues=%d totalNumGetters=%d' % (numLocationsInQueues(), totalNumGetters()))
 
+                with lock:
+                    sitesStats = db.visitStats(datetime.datetime.utcnow() - datetime.timedelta(days=1))
+
+                for site_name, site_stats in sitesStats.items():
+                    numGetters = len(getters[site_name])
+                    queue_length = site_stats['queue_length']
+                    weight = float(queue_length) / float(20 * (numGetters + 1))
+                    if numGetters == 0 and queue_length > 0:
+                        weight = 1e6 # make getterless sites extra important, so each site keeps flowing
+                    site_stats['# get'] = numGetters
+                    site_stats['weight'] = weight
+
+                totalWeight = sum([site_stats['weight'] for site_stats in sitesStats.values()])
+
+                #logger.debug("siteStats:\n%s" % str('\n'.join([str((k, v)) for k, v in sitesStats.items()])))
+
+                # now pick a random site using the weights
+                chosen_site_name = None
+                cumul = 0.0
+                r = random()
+                for site_name,site_stats in sitesStats.items():
+                    ratio = site_stats['weight']/totalWeight
+                    cumul += ratio
+
+                    if r <= cumul and site_stats['queue_length'] > 0:
+                        chosen_site_name = site_name
+                        break
+
+                if not chosen_site_name:
+                    break
+
+                chosen_dir_id = sitesStats[chosen_site_name]['least_recent_visited_dir_id']
+
                 # make and start a new ResultGetterThread the location deque of the chosen site
-                newGetter = ResultGetterThread(db)
+                newGetter = ResultGetterThread(db, chosen_dir_id)
                 newGetter.start()
-                getters[site].append(newGetter)
+                getters[chosen_site_name].append(newGetter)
 
                 # small sleep between starting multiple getters
                 time.sleep(0.25)
