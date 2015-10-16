@@ -219,6 +219,13 @@ class LTAStorageDb:
 
             return fileinfo_id
 
+    def insertFileInfos(self, file_infos):
+        with sqlite3.connect(self.db_filename) as conn:
+            conn.executemany('insert into fileinfo (name, size, creation_date, directory_id) values (?, ?, ?, ?)',
+                             [(f[0].split('/')[-1], f[1], f[2], f[3]) for f in file_infos])
+
+            conn.commit()
+
     def insertLocationResult(self, result):
         with sqlite3.connect(self.db_filename) as conn:
             cursor = conn.cursor()

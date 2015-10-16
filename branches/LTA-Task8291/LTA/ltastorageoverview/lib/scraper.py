@@ -250,13 +250,12 @@ class ResultGetterThread(threading.Thread):
             logger.info(result)
 
             with lock:
+                self.db.insertFileInfos([(file.filename, file.size, file.created_at, dir_id) for file in result.files])
+
                 for subDirLocation in result.subDirectories:
                     if not ('nikhef' == subDirLocation.srmurl and 'generated' in subDirLocation.directory): # skip empty nikhef dirs
                         subdir_id = self.db.insertSubDirectory(dir_id, subDirLocation.directory)
                         self.db.updateDirectoryLastVisitTime(subdir_id, datetime.datetime.utcnow() - datetime.timedelta(days=1000))
-
-                for file in result.files:
-                    self.db.insertFileInfo(file.filename, file.size, file.created_at, dir_id)
 
         except Exception as e:
             logger.error(str(e))
