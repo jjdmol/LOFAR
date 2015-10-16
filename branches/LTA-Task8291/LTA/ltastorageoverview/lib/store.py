@@ -137,6 +137,20 @@ class LTAStorageDb:
                     inner join directory dir on dc.descendant_id = dir.id
                     ''')
 
+                cursor.execute('''
+                    create view site_scraper_last_directoy_visit as
+                    select
+                    rootdir.site_id as site_id,
+                    rootdir.site_name as site_name,
+                    dir.id as dir_id,
+                    dir.name as dir_name,
+                    sldv.visit_date as last_visit
+                    from root_directories rootdir
+                    inner join directory_closure dc on dc.ancestor_id = rootdir.dir_id
+                    inner join directory dir on dc.descendant_id = dir.id
+                    inner join scraper_last_directory_visit sldv on sldv.directory_id = dir.id
+                    ''')
+
                 # save created tables and triggers
                 conn.commit()
 
