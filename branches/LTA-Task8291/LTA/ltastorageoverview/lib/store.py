@@ -122,6 +122,21 @@ class LTAStorageDb:
                     join storage_site ss on ss.id = storage_site_root.storage_site_id;
                     ''')
 
+                cursor.execute('''
+                    CREATE VIEW site_directory_tree AS select
+                    rootdir.site_id as site_id,
+                    rootdir.site_name as site_name,
+                    rootdir.dir_id as rootdir_id,
+                    rootdir.dir_name as rootdir_name,
+                    dir.id as dir_id,
+                    dir.name as dir_name,
+                    dir.parent_directory_id as parent_directory_id,
+                    dc.depth as depth
+                    from root_directories rootdir
+                    inner join directory_closure dc on dc.ancestor_id = rootdir.dir_id
+                    inner join directory dir on dc.descendant_id = dir.id
+                    ''')
+
                 # save created tables and triggers
                 conn.commit()
 
