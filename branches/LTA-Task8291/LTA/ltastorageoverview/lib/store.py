@@ -290,7 +290,7 @@ class LTAStorageDb:
     def totalFileSizeInTree(self, base_directory_id):
         with sqlite3.connect(self.db_filename) as conn:
             result = conn.execute('''
-                SELECT sum(fileinfo.size) FROM file_info
+                SELECT sum(fileinfo.size) FROM fileinfo
                 join directory_closure dc on dc.descendant_id = fileinfo.directory_id
                 where ancestor_id = ?
                 ''', [base_directory_id]).fetchone()
