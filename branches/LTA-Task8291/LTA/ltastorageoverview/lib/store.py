@@ -281,12 +281,23 @@ class LTAStorageDb:
     def filesInTree(self, base_directory_id):
         with sqlite3.connect(self.db_filename) as conn:
             return conn.execute('''
-                SELECT dir.id, dir.name, fileinfo.id, fileinfo.name, fileinfo.size, fileinfo.creation_date FROM directory_closure
-                join directory dir on dir.id = directory_closure.descendant_id
-                join fileinfo on fileinfo.directory_id = directory_closure.descendant_id
-                where ancestor_id = ? and depth > 0
-                order by depth asc
+                SELECT dir.id, dir.name, dc.depth, fileinfo.id, fileinfo.name, fileinfo.size, fileinfo.creation_date FROM directory_closure dc
+                join directory dir on dir.id = dc.descendant_id
+                join fileinfo on fileinfo.directory_id = dc.descendant_id
+                where dc.ancestor_id = ?
                 ''', [base_directory_id]).fetchall()
+
+    def totalFileSizeInTree(self, base_directory_id):
+        with sqlite3.connect(self.db_filename) as conn:
+            result = conn.execute('''
+                SELECT sum(fileinfo.size) FROM file_info
+                join directory_closure dc on dc.descendant_id = fileinfo.directory_id
+                where ancestor_id = ?
+                ''', [base_directory_id]).fetchone()
+
+            if result:
+                return result[0]
+            return 0
 
     def leastRecentlyVisitedDirectoryId(self, before_timestamp = None):
         with sqlite3.connect(self.db_filename) as conn:
