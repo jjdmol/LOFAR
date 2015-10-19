@@ -347,8 +347,6 @@ def main(argv):
         '''returns the total number of parallel running ResultGetterThreads'''
         return sum([len(v) for v in getters.values()])
 
-    logger.info('numLocationsInQueues=%d' % numLocationsInQueues())
-
     # only enter main loop if there is anything to process
     if numLocationsInQueues() > 0:
 
@@ -364,15 +362,11 @@ def main(argv):
                 for finishedGetter in finishedGetterList:
                     getters[site_name].remove(finishedGetter)
 
-            logger.info('numLocationsInQueues=%d totalNumGetters=%d' % (numLocationsInQueues(), totalNumGetters()))
-
             # spawn new ResultGetterThreads
             # do not overload this host system
             while numLocationsInQueues() > 0 and (totalNumGetters() <= 4 or
                                                   (os.getloadavg()[0] < 3*multiprocessing.cpu_count() and
                                                   totalNumGetters() < 2*multiprocessing.cpu_count())):
-
-                logger.info('numLocationsInQueues=%d totalNumGetters=%d' % (numLocationsInQueues(), totalNumGetters()))
 
                 with lock:
                     sitesStats = db.visitStats(datetime.datetime.utcnow() - datetime.timedelta(days=1))
@@ -411,6 +405,8 @@ def main(argv):
                 newGetter = ResultGetterThread(db, chosen_dir_id)
                 newGetter.start()
                 getters[chosen_site_name].append(newGetter)
+
+                logger.info('numLocationsInQueues=%d totalNumGetters=%d' % (numLocationsInQueues(), totalNumGetters()))
 
                 # small sleep between starting multiple getters
                 time.sleep(0.25)
