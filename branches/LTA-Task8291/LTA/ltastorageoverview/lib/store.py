@@ -213,6 +213,18 @@ class LTAStorageDb:
                 where directory_id = ?
                 ''', [directory_id]).fetchall()
 
+    def numFilesInDirectory(self, directory_id):
+        with sqlite3.connect(self.db_filename) as conn:
+            result = conn.execute('''
+                SELECT count(id) FROM fileinfo
+                where directory_id = ?
+                ''', [directory_id]).fetchone()
+
+            if result:
+                return result[0]
+
+            return 0
+
     def filesInTree(self, base_directory_id):
         with sqlite3.connect(self.db_filename) as conn:
             return conn.execute('''
@@ -221,6 +233,19 @@ class LTAStorageDb:
                 join fileinfo on fileinfo.directory_id = dc.descendant_id
                 where dc.ancestor_id = ?
                 ''', [base_directory_id]).fetchall()
+
+    def numFilesInTree(self, base_directory_id):
+        with sqlite3.connect(self.db_filename) as conn:
+            result = conn.execute('''
+                SELECT count(fileinfo.id) FROM directory_closure dc
+                join fileinfo on fileinfo.directory_id = dc.descendant_id
+                where dc.ancestor_id = ?
+                ''', [base_directory_id]).fetchone()
+
+            if result:
+                return result[0]
+
+            return 0
 
     def totalFileSizeInTree(self, base_directory_id):
         with sqlite3.connect(self.db_filename) as conn:
