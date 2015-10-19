@@ -2,7 +2,7 @@
 
 #include <Messaging/FromBus.h>
 #include <Messaging/ToBus.h>
-#include <Messaging/ApertifMessages.h>
+#include <Messaging/LofarMessages.h>
 #include <Common/LofarLogger.h>
 
 // #include <qpid/messaging/Message.h>    //# for debuggging
@@ -13,7 +13,7 @@
 #include <iostream>
 #include <memory>
 
-using namespace APERTIF::Messaging;
+using namespace LOFAR::Messaging;
 using namespace std;
 
 // //# for debugging

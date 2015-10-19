@@ -3,7 +3,7 @@
 include(LofarCTest)
 
 set(_unit_tests 
-  tApertifMessages
+  tLofarMessages
   tMessaging
 )
 

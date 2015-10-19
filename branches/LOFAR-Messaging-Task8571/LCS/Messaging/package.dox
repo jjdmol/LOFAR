@@ -1,6 +1,6 @@
 /**
 
-@ingroup APERTIF
+@ingroup LOFAR
 @defgroup Messaging Messaging
 
 The Messaging package contains software that provides a messaging middle-ware

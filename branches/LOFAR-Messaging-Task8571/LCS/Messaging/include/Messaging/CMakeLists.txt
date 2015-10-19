@@ -2,8 +2,8 @@
 
 # List of header files that will be installed.
 set(inst_HEADERS
-  ApertifMessage.h
-  ApertifMessages.h
+  LofarMessage.h
+  LofarMessages.h
   DefaultSettings.h
   EventMessage.h
   Exceptions.h

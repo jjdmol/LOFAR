@@ -1,5 +1,5 @@
-#ifndef APERTIF_MESSAGING_MESSAGE_H
-#define APERTIF_MESSAGING_MESSAGE_H
+#ifndef LOFAR_MESSAGING_MESSAGE_H
+#define LOFAR_MESSAGING_MESSAGE_H
 
 #include <Messaging/Exceptions.h>
 #include <Messaging/DefaultSettings.h> // for TRACE macro
@@ -14,7 +14,7 @@
 
 
 
-namespace APERTIF
+namespace LOFAR
 {
   namespace Messaging
   {
@@ -22,7 +22,7 @@ namespace APERTIF
     // typedef std::map<std::string, qpid::types::Variant> qpid_variant_map_t;
 
     // Top-level message class.
-    // @todo: move outside of APERTIF source code tree.
+    // @todo: move outside of LOFAR source code tree.
     class Message
     {
     public:

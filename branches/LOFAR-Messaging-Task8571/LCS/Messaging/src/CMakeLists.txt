@@ -1,7 +1,7 @@
 # $Id: CMakeLists.txt 1457 2015-08-18 14:44:52Z loose $
 
 lofar_add_library(messaging
-  ApertifMessage.cc
+  LofarMessage.cc
   DefaultSettings.cc
   EventMessage.cc
   FromBus.cc

@@ -2,7 +2,7 @@
 #include <iostream>
 
 using namespace std;
-using namespace APERTIF::Messaging;
+using namespace LOFAR::Messaging;
 
 int main()
 {

@@ -1,6 +1,6 @@
 #include <lofar_config.h>
 
-#include <Messaging/ApertifMessages.h>
+#include <Messaging/LofarMessages.h>
 #include <Messaging/Exceptions.h>
 #include <Common/LofarLogger.h>
 
@@ -9,13 +9,13 @@
 #include <UnitTest++.h>
 #include <memory>
 
-using namespace APERTIF::Messaging;
+using namespace LOFAR::Messaging;
 using namespace std;
 
 struct QpidMsgFixture
 {
   QpidMsgFixture() {
-    qpidMsg.setProperty("SystemName", "APERTIF");
+    qpidMsg.setProperty("SystemName", "LOFAR");
     qpidMsg.setProperty("MessageId", "1b4e28ba-2fa1-11d2-883f-b9a761bde3fb");
     qpidMsg.setProperty("MessageType", "EventMessage");
   }
@@ -50,7 +50,7 @@ SUITE(EventMessage)
     cout << "** DefaultEventMessage ** " << endl;
     EventMessage msg;
     CHECK(msg.type() == "EventMessage");
-    CHECK(msg.getProperty("SystemName") == "APERTIF");
+    CHECK(msg.getProperty("SystemName") == "LOFAR");
     string messageId(msg.getProperty("MessageId"));
     CHECK(messageId.size() == 36 && 
           messageId != "00000000-0000-0000-0000-000000000000");
@@ -74,7 +74,7 @@ SUITE(MonitoringMessage)
     cout << "** DefaultMonitoringMessage ** " << endl;
     MonitoringMessage msg;
     CHECK(msg.type() == "MonitoringMessage");
-    CHECK(msg.getProperty("SystemName") == "APERTIF");
+    CHECK(msg.getProperty("SystemName") == "LOFAR");
     string messageId(msg.getProperty("MessageId"));
     CHECK(messageId.size() == 36 && 
           messageId != "00000000-0000-0000-0000-000000000000");
@@ -98,7 +98,7 @@ SUITE(ProgressMessage)
     cout << "** DefaultProgressMessage ** " << endl;
     ProgressMessage msg;
     CHECK(msg.type() == "ProgressMessage");
-    CHECK(msg.getProperty("SystemName") == "APERTIF");
+    CHECK(msg.getProperty("SystemName") == "LOFAR");
     string messageId(msg.getProperty("MessageId"));
     CHECK(messageId.size() == 36 && 
           messageId != "00000000-0000-0000-0000-000000000000");
@@ -122,7 +122,7 @@ SUITE(ServiceMessage)
     cout << "** DefaultServiceMessage ** " << endl;
     ServiceMessage msg;
     CHECK(msg.type() == "ServiceMessage");
-    CHECK(msg.getProperty("SystemName") == "APERTIF");
+    CHECK(msg.getProperty("SystemName") == "LOFAR");
     string messageId(msg.getProperty("MessageId"));
     CHECK(messageId.size() == 36 && 
           messageId != "00000000-0000-0000-0000-000000000000");
@@ -141,6 +141,6 @@ SUITE(ServiceMessage)
 
 int main()
 {
-  INIT_LOGGER("tApertifMessages");
+  INIT_LOGGER("tLofarMessages");
   return UnitTest::RunAllTests() > 0;
 }

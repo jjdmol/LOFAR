@@ -15,7 +15,7 @@ Index: include/Messaging/Exceptions.h
 +    // Exception class used when a message is invalid. 
 +    EXCEPTION_CLASS(InvalidMessage, MessagingException);
  
--    // Exception class used when an APERTIF message cannot be constructed,
+-    // Exception class used when an LOFAR message cannot be constructed,
 -    // because a required property cannot be found.
 -    EXCEPTION_CLASS(MessagePropertyNotFound, Exception);
 -
@@ -73,14 +73,14 @@ Index: src/MessageImpl.cc
      }
  
  
-Index: test/tApertifMessages.cc
+Index: test/tLofarMessages.cc
 ===================================================================
---- test/tApertifMessages.cc	(revision 1400)
-+++ test/tApertifMessages.cc	(working copy)
+--- test/tLofarMessages.cc	(revision 1400)
++++ test/tLofarMessages.cc	(working copy)
 @@ -20,11 +20,17 @@
  {
    QpidMsgFixture() {
-     qpidMsg.setProperty("System", "APERTIF");
+     qpidMsg.setProperty("System", "LOFAR");
 -    qpidMsg.setMessageId(qpid::types::Uuid(true).str());
 +    // qpidMsg.setMessageId(qpid::types::Uuid(true).str());
 +    qpidMsg.setMessageId(qpid::types::Uuid().str());
