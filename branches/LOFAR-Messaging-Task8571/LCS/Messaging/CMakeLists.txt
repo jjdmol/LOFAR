@@ -4,7 +4,7 @@ lofar_package(Messaging 1.0 DEPENDS Common)
 
 include(LofarFindPackage)
 lofar_find_package(QPID REQUIRED)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 add_subdirectory(include/Messaging)
 add_subdirectory(src)
 add_subdirectory(test)
+add_subdirectory(python)
