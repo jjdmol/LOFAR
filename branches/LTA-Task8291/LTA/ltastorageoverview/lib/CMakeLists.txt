@@ -4,6 +4,7 @@ python_install(
     __init__.py
     scraper.py
     store.py
+    create_db_ltastorageoverview.sql
     webservice/webservice.py
     webservice/__init__.py
     DESTINATION ltastorageoverview)
