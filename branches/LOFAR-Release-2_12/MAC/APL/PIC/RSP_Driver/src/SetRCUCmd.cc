@@ -76,7 +76,9 @@ void SetRCUCmd::apply(CacheBuffer& cache, bool setModFlag)
 	uint32			mode 		  = m_event->settings()(0).getMode();
 	CableSettings*	cableSettings = CableSettings::instance();
 	float			delayStep	  = 1000.0 / cache.getClock();
-
+    float           attenuationStep = cache.getAttenuationStepSize();
+    uint8           attenuation   = 0;
+    
 //  LOG_INFO("SetRCUCmd::apply");
 	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
 		if (m_event->rcumask[cache_rcu]) {
@@ -96,14 +98,21 @@ void SetRCUCmd::apply(CacheBuffer& cache, bool setModFlag)
                 */
 				cache.getRCUSettings()()(cache_rcu).setDelay(
 							(uint8) ((delayStep/2.0 + cableSettings->getDelay(cache_rcu, mode)) / delayStep));
-				cache.getRCUSettings()()(cache_rcu).setAttenuation(
-							(uint8) ((-0.125 + cableSettings->getAtt(cache_rcu, mode)) / -0.25));
-				if (cache_rcu == 0) {
+				
+                attenuation = (uint8) (((attenuationStep/2.0) + cableSettings->getAtt(cache_rcu, mode) + cache.getFixedAttenuation(mode)) / attenuationStep); 
+                if (attenuation > 31) { attenuation = 31; }
+                
+                cache.getRCUSettings()()(cache_rcu).setAttenuation(attenuation);
+                if (cache_rcu == 0) {
 					LOG_DEBUG(formatString("RCU 0 new Delay   : %f/2.0 + %f / %f = %d", 
 						delayStep, cableSettings->getDelay(0, mode), delayStep, 
 						(uint8) ((delayStep/2.0 + cableSettings->getDelay(cache_rcu, mode)) / delayStep)));
-					LOG_DEBUG(formatString("RCU 0 new Atten   : -0.125  + %f / -0.25 = %d", cableSettings->getAtt(0, mode),
-						(uint8) ((-0.125 + cableSettings->getAtt(cache_rcu, mode)) / -0.25)));
+					LOG_DEBUG(formatString("RCU 0 new Atten   : (%f  + %f + %f) / %f = %d", 
+                        (attenuationStep/2.0), 
+                        cableSettings->getAtt(0, mode), 
+                        cache.getFixedAttenuation(mode), 
+                        attenuationStep, 
+                        attenuation));
 					LOG_DEBUG(formatString("RCU 0 new RawMode : %08lX", cache.getRCUSettings()()(0).getRaw()));
 				}
 			}

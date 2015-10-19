@@ -216,8 +216,8 @@ RSPDriver::RSPDriver(string name) :
 	ssp->setAartfaac      (sc.hasAartfaac);
 	LOG_DEBUG_STR (*ssp);
 
-	LOG_DEBUG("Setting up cable characteristics from Attenuation.conf and CableDelays.conf");
-	RCUCables		cables("Attenuation.conf", "CableDelays.conf");
+	LOG_DEBUG("Setting up cable characteristics from CableAttenuation.conf and CableDelays.conf");
+	RCUCables		cables("CableAttenuation.conf", "CableDelays.conf");
 	CableSettings::createInstance(cables);
 
 	int mode = GET_CONFIG("RSPDriver.SYNC_MODE", i);
