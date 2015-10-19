@@ -206,54 +206,88 @@ class LTAStorageDb:
                 order by depth desc
                 ''', [directory_id]).fetchall()
 
-    def filesInDirectory(self, directory_id):
-        with sqlite3.connect(self.db_filename) as conn:
-            return conn.execute('''
-                SELECT * FROM fileinfo
-                where directory_id = ?
-                ''', [directory_id]).fetchall()
+    def _date_bounded(self, query, args, from_date=None, to_date=None):
+        result_query = query
+        result_args = args
+        if from_date:
+            result_query += ' and fileinfo.creation_date >= ?'
+            result_args += (from_date,)
 
-    def numFilesInDirectory(self, directory_id):
+        if to_date:
+            result_query += ' and fileinfo.creation_date <= ?'
+            result_args += (to_date,)
+
+        return result_query, result_args
+
+    def filesInDirectory(self, directory_id, from_date=None, to_date=None):
         with sqlite3.connect(self.db_filename) as conn:
-            result = conn.execute('''
-                SELECT count(id) FROM fileinfo
-                where directory_id = ?
-                ''', [directory_id]).fetchone()
+            query = '''SELECT * FROM fileinfo
+            where directory_id = ?'''
+
+            args = (directory_id,)
+
+            query, args = self._date_bounded(query, args, from_date, to_date)
+
+            return conn.execute(query, args).fetchall()
+
+    def numFilesInDirectory(self, directory_id, from_date=None, to_date=None):
+        with sqlite3.connect(self.db_filename) as conn:
+            query = '''SELECT count(id) FROM fileinfo
+            where directory_id = ?'''
+
+            args = (directory_id,)
+
+            query, args = self._date_bounded(query, args, from_date, to_date)
+
+            result = conn.execute(query, args).fetchone()
 
             if result:
                 return result[0]
 
             return 0
 
-    def filesInTree(self, base_directory_id):
+    def filesInTree(self, base_directory_id, from_date=None, to_date=None):
         with sqlite3.connect(self.db_filename) as conn:
-            return conn.execute('''
-                SELECT dir.id, dir.name, dc.depth, fileinfo.id, fileinfo.name, fileinfo.size, fileinfo.creation_date FROM directory_closure dc
-                join directory dir on dir.id = dc.descendant_id
-                join fileinfo on fileinfo.directory_id = dc.descendant_id
-                where dc.ancestor_id = ?
-                ''', [base_directory_id]).fetchall()
+            query = '''SELECT dir.id, dir.name, dc.depth, fileinfo.id, fileinfo.name, fileinfo.size, fileinfo.creation_date FROM directory_closure dc
+            join directory dir on dir.id = dc.descendant_id
+            join fileinfo on fileinfo.directory_id = dc.descendant_id
+            where dc.ancestor_id = ?'''
 
-    def numFilesInTree(self, base_directory_id):
+            args = (base_directory_id,)
+
+            query, args = self._date_bounded(query, args, from_date, to_date)
+
+            return conn.execute(query, args).fetchall()
+
+    def numFilesInTree(self, base_directory_id, from_date=None, to_date=None):
         with sqlite3.connect(self.db_filename) as conn:
-            result = conn.execute('''
-                SELECT count(fileinfo.id) FROM directory_closure dc
-                join fileinfo on fileinfo.directory_id = dc.descendant_id
-                where dc.ancestor_id = ?
-                ''', [base_directory_id]).fetchone()
+            query = '''SELECT count(fileinfo.id) FROM directory_closure dc
+            join fileinfo on fileinfo.directory_id = dc.descendant_id
+            where dc.ancestor_id = ?'''
+
+            args = (base_directory_id,)
+
+            query, args = self._date_bounded(query, args, from_date, to_date)
+
+            result = conn.execute(query, args).fetchone()
 
             if result:
                 return result[0]
 
             return 0
 
-    def totalFileSizeInTree(self, base_directory_id):
+    def totalFileSizeInTree(self, base_directory_id, from_date=None, to_date=None):
         with sqlite3.connect(self.db_filename) as conn:
-            result = conn.execute('''
+            query = '''
                 SELECT sum(fileinfo.size) FROM fileinfo
                 join directory_closure dc on dc.descendant_id = fileinfo.directory_id
                 where ancestor_id = ?
-                ''', [base_directory_id]).fetchone()
+                '''
+            args = (base_directory_id,)
+
+            query, args = self._date_bounded(query, args, from_date, to_date)
+
+            result = conn.execute(query, args).fetchone()
 
             if result[0]:
                 return result[0]
