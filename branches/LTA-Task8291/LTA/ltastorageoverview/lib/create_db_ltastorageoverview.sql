@@ -113,3 +113,17 @@ create view site_scraper_last_directoy_visit as
         inner join directory dir on dc.descendant_id = dir.id
         inner join scraper_last_directory_visit sldv on sldv.directory_id = dir.id ;
 
+create view site_directory_file as
+    select site.id as site_id,
+        site.name as site_name,
+        dir.id as dir_id,
+        dir.name as dir_name,
+        fileinfo.id as file_id,
+        fileinfo.name as file_name,
+        fileinfo.size as file_size,
+        fileinfo.creation_date as file_creation_date
+        from storage_site site
+        join storage_site_root on storage_site_root.storage_site_id = site.id
+        inner join directory_closure dc on dc.ancestor_id = storage_site_root.directory_id
+        inner join directory dir on dc.descendant_id = dir.id
+        inner join fileinfo on fileinfo.directory_id = dir.id ;
