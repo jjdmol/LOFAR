@@ -32,7 +32,7 @@ TEST_FIXTURE(QpidMsgFixture, UnknownMessageType)
 TEST_FIXTURE(QpidMsgFixture, WrongSystemName)
 {
   cout << "** WrongSystemName **" << endl;
-  qpidMsg.setProperty("SystemName", "LOFAR");
+  qpidMsg.setProperty("SystemName", "NOTLOFAR");
   CHECK_THROW(Message::create(qpidMsg), InvalidMessage);
 }
 
