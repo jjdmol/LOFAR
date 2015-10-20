@@ -60,7 +60,6 @@ class Service():
    def StartListening(self,numthreads=None):
       if (numthreads!=None):
          self._numthreads=numthreads
-      numthreads=self._numthreads
       self.connected=True
       self.running=True
       self._tr=[]
@@ -69,21 +68,19 @@ class Service():
              self._tr.append(threading.Thread(target=self.loop,args=[i]))
              self.counter.append(0)
              self._tr[i].start()
-   
+
    def __enter__(self):
-      self.Listen.open()
+      if (isinstance(self.Listen,FromBus)):
+         self.Listen.open()
       if (isinstance(self.Reply,ToBus)):
          self.Reply.open()
       return self
 
    def __exit__(self, exc_type, exc_val, exc_tb):
-      self.Listen.close()
-      if (isinstance(self.Reply,ToBus)):
-         self.Reply.close()
+      self.StopListening()
 
    def loop(self,index):
       print( "Thread %d START Listening for messages on Bus %s and service name %s." %(index,self.BusName,self.ServiceName)) 
-      #with self.Listen,self.Reply:
       while self.running:
          msg=None
          try:
@@ -93,46 +90,58 @@ class Service():
            print e
 
          try:
-
            if (isinstance(msg,ServiceMessage)):
+             # Initial status is unknown
              status="unknown"
+             # Keep track of number of processed messages
              self.counter[index]+=1
-             #print "got a message"
-             # create a reply message using the ToUpper conversion
              replymessage=""
+             # Execute the service handler function and send reply back to client
              try:
                 print status
                 replymessage=self.ServiceHandler(msg.content)
                 status="OK"
              except Exception as e:
+                # Any thrown exceptions either Service exception or unhandled exception
+                # during the execution of the service handler is caught here.
                 print status
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 errtxt=traceback.format_exception(exc_type, exc_value, exc_traceback)
-                #del errtxt[1]
+                del errtxt[1]
                 status="ERROR: "+''.join(errtxt).encode('latin-1').decode('unicode_escape')
                 if self.Verbose:
                   print status
                 replymessage=None
-             # ensure to deliver at the destination in the reply_to field
-             # send the result to the RPC client
-             print status
+
+             # Compile Event message from reply and status.
              ToSend=EventMessage(replymessage)
              ToSend.status=status
+
+             # ensure to deliver at the destination in the reply_to field
              ToSend.subject=msg.reply_to
+
+             # show the message content if required by the Verbose flag.
              if (self.Verbose):
                msg.show()
                ToSend.show()
+
+             # send the result to the RPC client
              if (isinstance(self.Reply,ToBus)):
                self.Reply.send(ToSend)
              else:
                dest=ToBus(self.Reply)
                with dest:
                   dest.send(ToSend)
+
+             # acknowledge the message to the messaging subsystem
              self.Listen.ack(msg)
            else:
+             # Report if message wasn't a ServiceMessage.
              if (msg!=None):
-                print "Received wrong messagetype %s" %(str(type(msg)))
+                print "Received wrong messagetype %s, ServiceMessage expected." %(str(type(msg)))
+
          except Exception as e:
+            # Unknown problem in the library. Report this and continue.
             excinfo = sys.exc_info()
             print "ERROR during processing of incoming message."
             traceback.print_exception(*excinfo)
@@ -141,14 +150,18 @@ class Service():
       print("Thread %d STOPPED Listening for messages on Bus %s and service name %s and %d processed." %(index,self.BusName,self.ServiceName,self.counter[index]))
 
    def StopListening(self):
+      # stop all running threads
       if (self.running):
            self.running=False
            for i in range(self._numthreads):
              self._tr[i].join()
+      # possibly doubly defined..
       if (self.connected):
            self.connected=False
-           self.Listen.close()
-           self.Reply.close()
+           if (isinstance(self.Listen,FromBus)):
+              self.Listen.close()
+           if (isinstance(self.Reply,ToBus)):
+              self.Reply.close()
 
    def WaitForInterrupt(self):
       looping=True

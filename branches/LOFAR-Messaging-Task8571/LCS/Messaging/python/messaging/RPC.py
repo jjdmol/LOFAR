@@ -27,8 +27,11 @@ import uuid
 
 
 class RPC():
-  def __init__(self,bus,service,timeout=None):
+  def __init__(self,bus,service,timeout=None,GenerateExceptions=None):
      self.timeout=timeout
+     self.GenerateExceptions=False
+     if (GenerateExceptions==True):
+        self.GenerateExceptions=True
      self.BusName=bus
      self.ServiceName=service
      self.Request = ToBus(self.BusName+"/"+self.ServiceName,
@@ -45,28 +48,34 @@ class RPC():
      self.Request.close()
      self.Reply.close()
 
-  def __call__(self,msg,timeout=-1):
-     if (timeout==-1):
+  def __call__(self,msg,timeout=None):
+     if (timeout==None):
        timeout=self.timeout
      MyMsg=ServiceMessage(msg)
      MyMsg.reply_to=self.ReplyAddress
-     self.Request.send(MyMsg) #ServiceMessage(MyMsg) #msg,reply_to=self.ReplyAddress))
+     self.Request.send(MyMsg)
      answer=self.Reply.receive(timeout)
      if (answer!=None):
-        status=None
+        status={}
         try:
-            status=answer.status
-            if (status!="OK"):
-              status = '\n'.join(status.split('\n')[1:])
+            if (answer.status!="OK"):
+              status["state"]=answer.status
+              status["ERRMSG"]=anser.errmsg
+              status["BackTrace"]=answer.backtrace
+            else:
+              status="OK"
         except Exception as e:
             status="Malformed return message"
         else:
-            if (status!="OK"):
-              raise Exception(status)
+            if (self.GenerateExceptions==True):
+              if (status!="OK"):
+                raise Exception(status)
         try:
            answer=(answer.content,status)
         except Exception as e:
-           answer=(None,"Malformed return message")
+           # we can't properly convert to a result message.
+           answer=(None,{"ERROR":"Malformed return message"})
      else:
+        # if we come here we had a Time-Out
         answer=(None,"RPC Timed out")
      return answer
