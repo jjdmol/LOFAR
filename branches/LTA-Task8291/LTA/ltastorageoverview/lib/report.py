@@ -19,28 +19,35 @@
 
 import logging
 import time
-import datetime
+from datetime import datetime, timedelta
 import sys
 import os
 import os.path
 from ltastorageoverview import store
-
-def humanreadablesize(num, suffix='B', base=1000):
-    """ converts the given size (number) to a human readable string in powers of 'base'"""
-    try:
-        for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
-            if abs(num) < float(base):
-                return "%3.1f%s%s" % (num, unit, suffix)
-            num /= float(base)
-        return "%.2f%s%s" % (num, 'Y', suffix)
-    except TypeError:
-        return str(num)
-
+from ltastorageoverview.utils import humanreadablesize
+from ltastorageoverview.utils import monthRanges
 
 def main(argv):
     db = store.LTAStorageDb('ltastorageoverview.sqlite')
 
     sites = db.sites()
+
+    min_date, max_date = db.datetimeRangeOfFilesInTree()
+    month_ranges = monthRanges(min_date, max_date)
+
+    for site in sites:
+        print '\n--- %s ---' % site[1]
+
+        for month_range in month_ranges:
+            numFilesInSite = db.numFilesInSite(site[0], month_range[0], month_range[1])
+            totalFileSizeInSite = db.totalFileSizeInSite(site[0], month_range[0], month_range[1])
+
+            print "  %s %s %s #files=%d total_size=%s" % (site[1], month_range[0], month_range[1], numFilesInSite, humanreadablesize(totalFileSizeInSite))
+
+
+
+    sys.exit(0)
+
 
     print '\n*** TOTALS ***'
 

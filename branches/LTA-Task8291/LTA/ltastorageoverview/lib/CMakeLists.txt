@@ -6,6 +6,7 @@ python_install(
     store.py
     create_db_ltastorageoverview.sql
     report.py
+    utils.py
     webservice/webservice.py
     webservice/__init__.py
     DESTINATION ltastorageoverview)
