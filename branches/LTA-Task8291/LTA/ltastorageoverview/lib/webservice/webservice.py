@@ -50,9 +50,27 @@ def humanreadablesize(num, suffix='B'):
 @app.route('/')
 @app.route('/index.html')
 def index():
+    usages = {}
+
+    sites = db.sites()
+
+    total = 0.0
+    for site in sites:
+        rootDirs = db.rootDirectoriesForSite(site[0])
+
+        site_usage = 0.0
+        for rootDir in rootDirs:
+            usage = float(db.totalFileSizeInTree(rootDir[0]))
+            site_usage += usage
+        usages[site[1]] = site_usage
+        total += site_usage
+
+    data='[' + ', '.join(['''{name: "%s %s", y: %.1f}''' % (name, humanreadablesize(usage), 100.0*usage/total) for name, usage in usages.items()]) + ']'
+    #data='''[{name: "Microsoft Internet Explorer",y: 56.33}, {name: "Chrome",y: 24.03,sliced: true,selected: true}, {name: "Firefox",y: 10.38}, {name: "Safari",y: 4.77}, {name: "Opera",y: 0.91}, {name: "Proprietary or Undetectable",y: 0.2}]'''
+
     return render_template('index.html',
                            title='LTA storage overview',
-                           storagesitedata='''[{name: "Microsoft Internet Explorer",y: 56.33}, {name: "Chrome",y: 24.03,sliced: true,selected: true}, {name: "Firefox",y: 10.38}, {name: "Safari",y: 4.77}, {name: "Opera",y: 0.91}, {name: "Proprietary or Undetectable",y: 0.2}]''')
+                           storagesitedata=data)
 
 @app.route('/rest/sites/')
 def get_sites():
@@ -75,8 +93,7 @@ def get_sites_usages():
 
         site_usage = 0L
         for rootDir in rootDirs:
-            usage = db.totalFileSizeInTree(rootDir[0])
-            print site['name'] + " " + rootDir[1] + " " + str(usage)
+            usage = long(db.totalFileSizeInTree(rootDir[0]))
             site_usage += usage
         site['usage'] = site_usage
         site['usage_hr'] = humanreadablesize(site_usage)
@@ -101,7 +118,7 @@ def get_filesInDirectory(dir_id):
 
 def main(argv):
     #db = store.LTAStorageDb(argv[0] if argv else 'ltastoragedb.sqlite')
-    app.run(debug=True)
+    app.run(debug=False,host='0.0.0.0')
 
 if __name__ == '__main__':
     main(sys.argv[1:])
