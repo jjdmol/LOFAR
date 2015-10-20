@@ -293,6 +293,26 @@ class LTAStorageDb:
                 return result[0]
             return 0
 
+    def numFilesInSite(self, site_id, from_date=None, to_date=None):
+        num_files = 0L
+
+        root_dirs = self.rootDirectoriesForSite(site_id)
+
+        for root_dir in root_dirs:
+            num_files += long(self.numFilesInTree(root_dir[0], from_date, to_date))
+
+        return num_files
+
+    def totalFileSizeInSite(self, site_id, from_date=None, to_date=None):
+        total_size = 0L
+
+        root_dirs = self.rootDirectoriesForSite(site_id)
+
+        for root_dir in root_dirs:
+            total_size += long(self.totalFileSizeInTree(root_dir[0], from_date, to_date))
+
+        return total_size
+
     def datetimeRangeOfFilesInTree(self, base_directory_id = None):
         with sqlite3.connect(self.db_filename) as conn:
             query = '''
