@@ -56,7 +56,11 @@ class Service():
       else:
          self.Listen=FromBus(self.ServiceName,options=self.options)
          self.Reply=self.replyto
- 
+
+   def _debug(self,txt):
+      if (self.Verbose==True):
+         print(txt)
+
    def StartListening(self,numthreads=None):
       if (numthreads!=None):
          self._numthreads=numthreads
@@ -93,35 +97,54 @@ class Service():
            if (isinstance(msg,ServiceMessage)):
              # Initial status is unknown
              status="unknown"
+             backtrace=None
+             errtxt=None
+
              # Keep track of number of processed messages
              self.counter[index]+=1
              replymessage=""
              # Execute the service handler function and send reply back to client
              try:
-                print status
+                self._debug("Running handler")
                 replymessage=self.ServiceHandler(msg.content)
+                self._debug("finished handler")
                 status="OK"
+                self._debug(status)
              except Exception as e:
                 # Any thrown exceptions either Service exception or unhandled exception
                 # during the execution of the service handler is caught here.
-                print status
+                self._debug("handling exception")
                 exc_type, exc_value, exc_traceback = sys.exc_info()
-                errtxt=traceback.format_exception(exc_type, exc_value, exc_traceback)
-                del errtxt[1]
-                status="ERROR: "+''.join(errtxt).encode('latin-1').decode('unicode_escape')
-                if self.Verbose:
+                backtrace=traceback.format_exception(exc_type, exc_value, exc_traceback)
+                errtxt=backtrace[-1]
+                self._debug(backtrace)
+                del backtrace[1]
+                del backtrace[0]
+                del backtrace[-1]
+                status="ERROR"
+                backtrace= ''.join(backtrace).encode('latin-1').decode('unicode_escape')
+                self._debug(backtrace)
+                if self.Verbose==True:
                   print status
+                  print errtxt
+                  print backtrace
                 replymessage=None
 
+
+             self._debug("Done call")
              # Compile Event message from reply and status.
              ToSend=EventMessage(replymessage)
              ToSend.status=status
+             if (errtxt!=None):
+                ToSend.errmsg=errtxt
+             if (backtrace!=None):
+                ToSend.backtrace=backtrace
 
              # ensure to deliver at the destination in the reply_to field
              ToSend.subject=msg.reply_to
 
              # show the message content if required by the Verbose flag.
-             if (self.Verbose):
+             if (self.Verbose==True):
                msg.show()
                ToSend.show()
 

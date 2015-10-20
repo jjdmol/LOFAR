@@ -22,9 +22,7 @@
 #  RPC invocation with possible timeout
 from lofar.messaging.messagebus import ToBus,FromBus
 from lofar.messaging.messages import ServiceMessage
-
 import uuid
-
 
 class RPC():
   def __init__(self,bus,service,timeout=None,GenerateExceptions=None):
@@ -43,7 +41,7 @@ class RPC():
      self.Request.open()
      self.Reply.open()
      return self
-  
+
   def __exit__(self, exc_type, exc_val, exc_tb):
      self.Request.close()
      self.Reply.close()
@@ -60,8 +58,8 @@ class RPC():
         try:
             if (answer.status!="OK"):
               status["state"]=answer.status
-              status["ERRMSG"]=anser.errmsg
-              status["BackTrace"]=answer.backtrace
+              status["errmsg"]=answer.errmsg
+              status["backtrace"]=answer.backtrace
             else:
               status="OK"
         except Exception as e:
