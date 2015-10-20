@@ -20,12 +20,15 @@
 import sys
 import os
 import os.path
+from datetime import datetime, timedelta
 from flask import Flask
 from flask import Config
 from flask import render_template
 from flask import json
 import threading
 from ltastorageoverview import store
+from ltastorageoverview.utils import humanreadablesize
+from ltastorageoverview.utils import monthRanges
 
 app = Flask('LTA storage overview')
 print str(app.config)
@@ -36,17 +39,6 @@ print
 print str(app.config)
 db = store.LTAStorageDb('../ltastorageoverview.sqlite')
 
-def humanreadablesize(num, suffix='B'):
-    """ converts the given size (number) to a human readable string in powers of 1024"""
-    try:
-        for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
-            if abs(num) < 1024.0:
-                return "%3.1f%s%s" % (num, unit, suffix)
-            num /= 1024.0
-        return "%.1f%s%s" % (num, 'Y', suffix)
-    except TypeError:
-        return str(num)
-
 @app.route('/')
 @app.route('/index.html')
 def index():
@@ -56,21 +48,40 @@ def index():
 
     total = 0.0
     for site in sites:
-        rootDirs = db.rootDirectoriesForSite(site[0])
-
-        site_usage = 0.0
-        for rootDir in rootDirs:
-            usage = float(db.totalFileSizeInTree(rootDir[0]))
-            site_usage += usage
+        site_usage = float(db.totalFileSizeInSite(site[0]))
         usages[site[1]] = site_usage
         total += site_usage
 
-    data='[' + ', '.join(['''{name: "%s %s", y: %.1f}''' % (name, humanreadablesize(usage), 100.0*usage/total) for name, usage in usages.items()]) + ']'
-    #data='''[{name: "Microsoft Internet Explorer",y: 56.33}, {name: "Chrome",y: 24.03,sliced: true,selected: true}, {name: "Firefox",y: 10.38}, {name: "Safari",y: 4.77}, {name: "Opera",y: 0.91}, {name: "Proprietary or Undetectable",y: 0.2}]'''
+    storagesitedata='[' + ', '.join(['''{name: "%s %s", y: %.1f}''' % (site[1], humanreadablesize(usages[site[1]]), 100.0*usages[site[1]]/total) for site in sites]) + ']'
+
+    min_date, max_date = db.datetimeRangeOfFilesInTree()
+    month_ranges = monthRanges(min_date, max_date)
+
+    format = '%Y,%m,%d,%H,%M,%S'
+    datestamps=['Date.UTC(%s)' % datetime.strftime(x[1], format) for x in month_ranges]
+
+    usage_per_month_series='['
+    deltas_per_month_series='['
+    for site in sites:
+        deltas = [db.totalFileSizeInSite(site[0], mr[0], mr[1]) for mr in month_ranges]
+        data = ', '.join(['[%s, %s]' % (x[0], str(x[1])) for x in zip(datestamps, deltas)])
+        deltas_per_month_series += '''{name: '%s', data: [%s]},\n''' % (site[1], data)
+
+        cumulatives = [deltas[0]]
+        for delta in deltas[1:]:
+            cumulatives.append(cumulatives[-1] + delta)
+
+        data = ', '.join(['[%s, %s]' % (x[0], str(x[1])) for x in zip(datestamps, cumulatives)])
+        usage_per_month_series += '''{name: '%s', data: [%s]},\n''' % (site[1], data)
+
+    usage_per_month_series+=']'
+    deltas_per_month_series+=']'
 
     return render_template('index.html',
                            title='LTA storage overview',
-                           storagesitedata=data)
+                           storagesitedata=storagesitedata,
+                           usage_per_month_series=usage_per_month_series,
+                           deltas_per_month_series=deltas_per_month_series)
 
 @app.route('/rest/sites/')
 def get_sites():
@@ -118,7 +129,7 @@ def get_filesInDirectory(dir_id):
 
 def main(argv):
     #db = store.LTAStorageDb(argv[0] if argv else 'ltastoragedb.sqlite')
-    app.run(debug=False,host='0.0.0.0')
+    app.run(debug=True,host='0.0.0.0')
 
 if __name__ == '__main__':
     main(sys.argv[1:])

@@ -11,40 +11,113 @@
 <body>
     <script type="text/javascript">
         $(function () {
-        $('#container').highcharts({
-        chart: {
-        plotBackgroundColor: null,
-        plotBorderWidth: null,
-        plotShadow: false,
-        type: 'pie'
-        },
-        title: {
-        text: 'LTA Storage Site Usage'
-        },
-        tooltip: {
-        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
-        },
-        plotOptions: {
-        pie: {
-        allowPointSelect: true,
-        cursor: 'pointer',
-        dataLabels: {
-        enabled: true,
-        format: '<b>{point.name}</b>: {point.percentage:.1f} %',
-        style: {
-        color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
-        }
-        }
-        }
-        },
-        series: [{
-        name: "StorageSiteUsage",
-        colorByPoint: true,
-        data: {{storagesitedata|safe}}
-        }]
+            $('#usage_piechart_container').highcharts({
+                chart: {
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false,
+                type: 'pie'
+                },
+                title: {
+                text: 'LTA Storage Site Usage'
+                },
+                tooltip: {
+                pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+                },
+                plotOptions: {
+                pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                enabled: true,
+                format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                style: {
+                color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                }
+                }
+                }
+                },
+                series: [{
+                name: "StorageSiteUsage",
+                colorByPoint: true,
+                data: {{storagesitedata|safe}}
+                }]
+                });
+
+
+        $(function () {
+            $('#usage_trend_container').highcharts({
+                chart: { type: 'area'},
+                title: { text: 'LTA Storage Site Usage Per Month' },
+                xAxis: { type: 'datetime' },
+                yAxis: { title: { text: 'TB'},
+                         labels: { formatter: function () { return this.value / 10000000000000;}}
+                },
+                tooltip: {
+                    formatter: function () {
+                        var s = '<b>' + Highcharts.dateFormat('%Y/%m/%d', this.x) + '</b>';
+
+                        $.each(this.points, function () {
+                            s += '<br/><b>' + this.series.name + '</b>: ' +
+                                Highcharts.numberFormat(this.y / 10000000000000, 1, '.') + ' TB';
+                        });
+
+                        return s;
+                    },
+                    shared: true
+                },
+                plotOptions: {
+                    area: {
+                        stacking: 'normal',
+                        lineColor: '#666666',
+                        lineWidth: 1,
+                        marker: {
+                            lineWidth: 1,
+                            radius: 2,
+                            lineColor: '#666666'
+                        }
+                    }
+                },
+                series: {{usage_per_month_series|safe}}
+            });
         });
+
+        $(function () {
+            $('#usage_deltas_container').highcharts({
+                chart: { type: 'column'},
+                title: { text: 'LTA Storage Site Deltas Per Month' },
+                xAxis: { type: 'datetime' },
+                yAxis: { title: { text: 'TB'},
+                         labels: { formatter: function () { return this.value / 10000000000000;}}
+                },
+                tooltip: {
+                    formatter: function () {
+                        var s = '<b>' + Highcharts.dateFormat('%Y/%m/%d', this.x) + '</b>';
+
+                        $.each(this.points, function () {
+                            s += '<br/><b>' + this.series.name + '</b>: ' +
+                                Highcharts.numberFormat(this.y / 10000000000000, 1, '.') + ' TB';
+                        });
+
+                        return s;
+                    },
+                    shared: true
+                },
+                plotOptions: {
+                    column: {
+                        pointPadding: 0.2,
+                        borderWidth: 0
+                    }
+                },
+                series: {{deltas_per_month_series|safe}}
+            });
+        });
+
+
         });
         </script>
-    <div id="container" style="min-width: 310px; min-height: 400px; width: 100%; height: 100%; margin: 0 auto"></div>
+    <div id="usage_piechart_container" style="min-width: 310px; min-height: 400px; width: 100%; height: 100%; margin: 10 auto; border-width:1"></div>
+    <div id="usage_trend_container" style="min-width: 310px; min-height: 400px; width: 100%; height: 100%; margin: 10 auto border-width:1"></div>
+    <div id="usage_deltas_container" style="min-width: 310px; min-height: 400px; width: 100%; height: 100%; margin: 10 auto border-width:1"></div>
 </body>
 </html>
