@@ -25,13 +25,13 @@ import os
 import os.path
 from ltastorageoverview import store
 
-def humanreadablesize(num, suffix='B'):
-    """ converts the given size (number) to a human readable string in powers of 1024"""
+def humanreadablesize(num, suffix='B', base=1000):
+    """ converts the given size (number) to a human readable string in powers of 'base'"""
     try:
         for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
-            if abs(num) < 1024.0:
+            if abs(num) < float(base):
                 return "%3.1f%s%s" % (num, unit, suffix)
-            num /= 1024.0
+            num /= float(base)
         return "%.2f%s%s" % (num, 'Y', suffix)
     except TypeError:
         return str(num)
@@ -42,13 +42,18 @@ def main(argv):
 
     sites = db.sites()
 
+    print '\n*** TOTALS ***'
+
     for site in sites:
         print '\n--- %s ---' % site[1]
 
         root_dirs = db.rootDirectoriesForSite(site[0])
 
         for root_dir in root_dirs:
-            print "  %s " % root_dir[1]
+            numFilesInTree = db.numFilesInTree(root_dir[0])
+            totalFileSizeInTree = db.totalFileSizeInTree(root_dir[0])
+
+            print "  %s #files=%d total_size=%s" % (root_dir[1], numFilesInTree, humanreadablesize(totalFileSizeInTree))
 
             subdirs = db.subDirectories(root_dir[0], 1, False)
 
@@ -57,6 +62,43 @@ def main(argv):
                 totalFileSizeInTree = db.totalFileSizeInTree(subdir[0])
 
                 print "    %s #files=%d total_size=%s" % (subdir[1], numFilesInTree, humanreadablesize(totalFileSizeInTree))
+
+    utcnow = datetime.datetime.utcnow()
+    monthbegin = datetime.datetime(utcnow.year, utcnow.month, 1)
+    monthend =  datetime.datetime(utcnow.year, utcnow.month+1, 1) - datetime.timedelta(milliseconds=1)
+    print '\n*** CHANGES THIS MONTH %s ***' % monthbegin.strftime('%Y/%m')
+
+    for site in sites:
+        print '\n--- %s ---' % site[1]
+
+        root_dirs = db.rootDirectoriesForSite(site[0])
+
+        for root_dir in root_dirs:
+
+            changedFiles = db.filesInTree(root_dir[0], monthbegin, monthend)
+
+            if len(changedFiles) == 0:
+                print "  %s None" % (root_dir[1])
+            else:
+                numFilesInTree = db.numFilesInTree(root_dir[0], monthbegin, monthend)
+                totalFileSizeInTree = db.totalFileSizeInTree(root_dir[0], monthbegin, monthend)
+
+                print "  %s #files=%d total_size=%s" % (root_dir[1], numFilesInTree, humanreadablesize(totalFileSizeInTree))
+
+                # filter unique dirs
+                dirsWithChangedFiles = set([(x[0], x[1]) for x in changedFiles])
+
+                # sort by name
+                dirsWithChangedFiles = sorted(dirsWithChangedFiles, key=lambda x: x[1])
+
+                for dir in dirsWithChangedFiles:
+                    numFilesInTree = db.numFilesInTree(dir[0], monthbegin, monthend)
+                    totalFileSizeInTree = db.totalFileSizeInTree(dir[0], monthbegin, monthend)
+
+                    print "    %s #files=%d total_size=%s" % (dir[1], numFilesInTree, humanreadablesize(totalFileSizeInTree))
+
+
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])
