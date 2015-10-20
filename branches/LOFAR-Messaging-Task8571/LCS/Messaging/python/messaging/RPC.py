@@ -1,3 +1,23 @@
+# RPC.py: RPC client side used by the lofar.messaging module.
+#
+# Copyright (C) 2015
+# ASTRON (Netherlands Institute for Radio Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+#
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it
+# and/or modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# The LOFAR software suite is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+#
 
 #  RPC invocation with possible timeout
 from lofar.messaging.messagebus import ToBus,FromBus
@@ -32,8 +52,21 @@ class RPC():
      MyMsg.reply_to=self.ReplyAddress
      self.Request.send(MyMsg) #ServiceMessage(MyMsg) #msg,reply_to=self.ReplyAddress))
      answer=self.Reply.receive(timeout)
-     try:
-        answer=(answer.content,answer.status)
-     except Exception as e:
-        answer=("","Malformed return message")
+     if (answer!=None):
+        status=None
+        try:
+            status=answer.status
+            if (status!="OK"):
+              status = '\n'.join(status.split('\n')[1:])
+        except Exception as e:
+            status="Malformed return message"
+        else:
+            if (status!="OK"):
+              raise Exception(status)
+        try:
+           answer=(answer.content,status)
+        except Exception as e:
+           answer=(None,"Malformed return message")
+     else:
+        answer=(None,"RPC Timed out")
      return answer
