@@ -32,23 +32,6 @@ def main(argv):
 
     sites = db.sites()
 
-    min_date, max_date = db.datetimeRangeOfFilesInTree()
-    month_ranges = monthRanges(min_date, max_date)
-
-    for site in sites:
-        print '\n--- %s ---' % site[1]
-
-        for month_range in month_ranges:
-            numFilesInSite = db.numFilesInSite(site[0], month_range[0], month_range[1])
-            totalFileSizeInSite = db.totalFileSizeInSite(site[0], month_range[0], month_range[1])
-
-            print "  %s %s %s #files=%d total_size=%s" % (site[1], month_range[0], month_range[1], numFilesInSite, humanreadablesize(totalFileSizeInSite))
-
-
-
-    sys.exit(0)
-
-
     print '\n*** TOTALS ***'
 
     for site in sites:
@@ -70,10 +53,10 @@ def main(argv):
 
                 print "    %s #files=%d total_size=%s" % (subdir[1], numFilesInTree, humanreadablesize(totalFileSizeInTree))
 
-    utcnow = datetime.datetime.utcnow()
-    monthbegin = datetime.datetime(utcnow.year, utcnow.month, 1)
-    monthend =  datetime.datetime(utcnow.year, utcnow.month+1, 1) - datetime.timedelta(milliseconds=1)
-    print '\n*** CHANGES THIS MONTH %s ***' % monthbegin.strftime('%Y/%m')
+    utcnow = datetime.utcnow()
+    monthbegin = datetime(utcnow.year, utcnow.month, 1)
+    monthend =  datetime(utcnow.year, utcnow.month+1, 1) - timedelta(milliseconds=1)
+    print '\n\n*** CHANGES THIS MONTH %s ***' % monthbegin.strftime('%Y/%m')
 
     for site in sites:
         print '\n--- %s ---' % site[1]
@@ -104,7 +87,19 @@ def main(argv):
 
                     print "    %s #files=%d total_size=%s" % (dir[1], numFilesInTree, humanreadablesize(totalFileSizeInTree))
 
+    print '\n\n*** CHANGES PER MONTH ***'
 
+    min_date, max_date = db.datetimeRangeOfFilesInTree()
+    month_ranges = monthRanges(min_date, max_date)
+
+    for site in sites:
+        print '\n--- %s ---' % site[1]
+
+        for month_range in month_ranges:
+            numFilesInSite = db.numFilesInSite(site[0], month_range[0], month_range[1])
+            totalFileSizeInSite = db.totalFileSizeInSite(site[0], month_range[0], month_range[1])
+
+            print "  %s %s %s #files=%d total_size=%s" % (site[1], month_range[0], month_range[1], numFilesInSite, humanreadablesize(totalFileSizeInSite))
 
 
 if __name__ == "__main__":
