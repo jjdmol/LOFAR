@@ -293,6 +293,30 @@ class LTAStorageDb:
                 return result[0]
             return 0
 
+    def datetimeRangeOfFilesInTree(self, base_directory_id = None):
+        with sqlite3.connect(self.db_filename) as conn:
+            query = '''
+                SELECT min(fileinfo.creation_date) as min_creation_date,
+                max(fileinfo.creation_date) as max_creation_date
+                FROM fileinfo
+                '''
+            args = []
+
+            if base_directory_id:
+                query += '''\njoin directory_closure dc on dc.descendant_id = fileinfo.directory_id
+                where ancestor_id = ?'''
+                args.append(base_directory_id)
+
+            result = conn.execute(query, args).fetchone()
+
+            if result[0]:
+                format = '%Y-%m-%d %H:%M:%S %Z'
+                return (datetime.datetime.strptime(result[0]+' UTC', format),
+                        datetime.datetime.strptime(result[1]+' UTC', format))
+
+            utcnow = datetime.datetime.utcnow()
+            return (utcnow, utcnow)
+
     def numDirectoriesNotVisitedSince(self, timestamp):
         with sqlite3.connect(self.db_filename) as conn:
             result = conn.execute('''
