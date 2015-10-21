@@ -269,7 +269,7 @@ class ProgressMessage(LofarMessage):
         super(ProgressMessage, self).__init__(content)
 
 
-class ServiceMessage(LofarMessage):
+class ServiceMessage(ApertifMessage):
     """
     Message class used for service messages. Service messages are
     request-reply type of messages. They are typically used to query a
@@ -278,14 +278,27 @@ class ServiceMessage(LofarMessage):
 
     def __init__(self, content=None, reply_to=None):
         super(ServiceMessage, self).__init__(content)
-        if content is None:
-            self.reply_to = reply_to
+        self.reply_to = reply_to
+
+
+class ReplyMessage(ApertifMessage):
+    """
+    Message class used for reply messages. Reply messages are part of the
+    request-reply type of messages. They are typically used as a reply on a service
+    message. These use topic exchanges and thus are routed by the 'subject' property
+    """
+
+    def __init__(self, content=None, reply_to=None):
+        super(ServiceMessage, self).__init__(content)
+        self.subject = reply_to
+
 
 
 MESSAGE_FACTORY.register("EventMessage", EventMessage)
 MESSAGE_FACTORY.register("MonitoringMessage", MonitoringMessage)
 MESSAGE_FACTORY.register("ProgressMessage", ProgressMessage)
 MESSAGE_FACTORY.register("ServiceMessage", ServiceMessage)
+MESSAGE_FACTORY.register("ReplyMessage", ReplyMessage)
 
-__all__ = ["EventMessage", "MonitoringMessage",
-           "ProgressMessage", "ServiceMessage"]
+__all__ = ["EventMessage", "MonitoringMessage", "ProgressMessage",
+	   "ServiceMessage", "ReplyMessage"]
