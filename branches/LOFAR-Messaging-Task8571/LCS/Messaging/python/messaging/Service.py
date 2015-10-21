@@ -149,8 +149,8 @@ class Service():
                   ToSend.backtrace=""
                #if (exception!=None):
                #  ToSend.exception=exception
-               else:
-                  ToSend.exception=""
+               #else:
+               #  ToSend.exception=""
 
 
              # ensure to deliver at the destination in the reply_to field
