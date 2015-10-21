@@ -59,13 +59,19 @@ class RPC():
         if (isinstance(answer,ReplyMessage)):
            status={}
            exception=None
+           errmsg=None
+           errbacktrace=None
            try:
               if (answer.status!="OK"):
                  status["state"]=answer.status
                  status["errmsg"]=answer.errmsg
                  status["backtrace"]=answer.backtrace
-                 if (answer.exception!=""):
-                    exception=pickle.loads(answer.exception)
+                 #if (answer.exception!=""):
+                 #    exception=pickle.loads(answer.exception)
+                 if (answer.errmsg!=""):
+                    errmsg=answer.errmsg
+                 if (answer.backtrace!=""):
+                    errbacktrace=answer.backtrace
               else:
                  status="OK"
            except Exception as e:
@@ -74,8 +80,17 @@ class RPC():
               status["backtrace"]=""
            else:
               if (self.ForwardExceptions==True):
-                if (exception!=None):
-                  raise exception[0],exception[1],exception[2]
+                #if (exception!=None):
+                #  raise exception[0],exception[1],exception[2]
+                #else:
+                if (errmsg!=None):
+                    excep_mod=__import__("exceptions")
+                    excep_class_= getattr(excep_mod,errmsg.split(':')[0],None)
+                    if (excep_class_!=None):
+                      instance=excep_class_(errbacktrace)
+                      raise(instance)
+                    else:
+                      raise(Exception(errmsg))
         try:
            answer=(answer.content,status)
         except Exception as e:

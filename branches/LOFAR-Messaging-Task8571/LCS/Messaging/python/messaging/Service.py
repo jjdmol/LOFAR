@@ -100,7 +100,7 @@ class Service():
              status="unknown"
              backtrace=None
              errtxt=None
-             exception=None
+             #exception=None
 
              # Keep track of number of processed messages
              self.counter[index]+=1
@@ -131,19 +131,27 @@ class Service():
                   print errtxt
                   print backtrace
                 replymessage=None
-                exception=pickle.dumps(exception)
+                #exception=pickle.dumps(exc_info)
 
 
              self._debug("Done call")
-             # Compile Event message from reply and status.
+             # Compose Reply message from reply and status.
              ToSend=ReplyMessage(replymessage,msg.reply_to)
              ToSend.status=status
-             if (errtxt!=None):
-                ToSend.errmsg=errtxt
-             if (backtrace!=None):
-                ToSend.backtrace=backtrace
-             if (exception!=None):
-                ToSend.exception=exception
+             if (status!="OK"):
+               if (errtxt!=None):
+                  ToSend.errmsg=errtxt
+               else:
+                  ToSend.errmsg=""
+               if (backtrace!=None):
+                  ToSend.backtrace=backtrace
+               else:
+                  ToSend.backtrace=""
+               #if (exception!=None):
+               #  ToSend.exception=exception
+               else:
+                  ToSend.exception=""
+
 
              # ensure to deliver at the destination in the reply_to field
              #ToSend.subject=msg.reply_to
