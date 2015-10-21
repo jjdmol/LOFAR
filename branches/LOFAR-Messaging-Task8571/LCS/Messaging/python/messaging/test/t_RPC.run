@@ -1,4 +1,6 @@
-leanup on normal exit and on SIGHUP, SIGINT, SIGQUIT, and SIGTERM
+#!/bin/sh -e
+
+#cleanup on normal exit and on SIGHUP, SIGINT, SIGQUIT, and SIGTERM
 trap 'qpid-config del queue --force $queue' 0 1 2 3 15
 
 # Generate randome queue name
