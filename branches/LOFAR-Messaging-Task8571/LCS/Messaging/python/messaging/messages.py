@@ -192,14 +192,11 @@ class LofarMessage(object):
 
         :raises: AttributeError
         """
-        print("Trying to set attribute %s with %s" %(name,value))
         if name != 'properties':
             if name in _QPID_MESSAGE_FIELDS:
                 self.__dict__['_qpid_msg'].__dict__[name] = value
-                print("set in native QPID")
             else:
                 self.__dict__['_qpid_msg'].__dict__['properties'][name] = value
-                print("set in properties map")
         else:
             raise AttributeError("%r object has no attribute %r" %
                                  (self.__class__.__name__, name))
