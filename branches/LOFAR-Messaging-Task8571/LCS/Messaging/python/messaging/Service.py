@@ -21,12 +21,13 @@
 #
 
 from lofar.messaging.messagebus import ToBus,FromBus
-from lofar.messaging.messages import EventMessage,ServiceMessage
+from lofar.messaging.messages import ReplyMessage,ServiceMessage
 import threading
 import time
 import uuid
 import sys
 import traceback
+import pickle
 
 # create service:
 class Service():
@@ -99,6 +100,7 @@ class Service():
              status="unknown"
              backtrace=None
              errtxt=None
+             exception=None
 
              # Keep track of number of processed messages
              self.counter[index]+=1
@@ -114,8 +116,8 @@ class Service():
                 # Any thrown exceptions either Service exception or unhandled exception
                 # during the execution of the service handler is caught here.
                 self._debug("handling exception")
-                exc_type, exc_value, exc_traceback = sys.exc_info()
-                backtrace=traceback.format_exception(exc_type, exc_value, exc_traceback)
+                exc_info = sys.exc_info()
+                backtrace=traceback.format_exception(*exc_info)
                 errtxt=backtrace[-1]
                 self._debug(backtrace)
                 del backtrace[1]
@@ -129,19 +131,22 @@ class Service():
                   print errtxt
                   print backtrace
                 replymessage=None
+                exception=pickle.dumps(exception)
 
 
              self._debug("Done call")
              # Compile Event message from reply and status.
-             ToSend=EventMessage(replymessage)
+             ToSend=ReplyMessage(replymessage,msg.reply_to)
              ToSend.status=status
              if (errtxt!=None):
                 ToSend.errmsg=errtxt
              if (backtrace!=None):
                 ToSend.backtrace=backtrace
+             if (exception!=None):
+                ToSend.exception=exception
 
              # ensure to deliver at the destination in the reply_to field
-             ToSend.subject=msg.reply_to
+             #ToSend.subject=msg.reply_to
 
              # show the message content if required by the Verbose flag.
              if (self.Verbose==True):

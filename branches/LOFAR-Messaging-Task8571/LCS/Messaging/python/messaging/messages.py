@@ -192,12 +192,14 @@ class LofarMessage(object):
 
         :raises: AttributeError
         """
-        #print("Trying to set attribute %s with %s" %(name,value))
+        print("Trying to set attribute %s with %s" %(name,value))
         if name != 'properties':
             if name in _QPID_MESSAGE_FIELDS:
                 self.__dict__['_qpid_msg'].__dict__[name] = value
+                print("set in native QPID")
             else:
                 self.__dict__['_qpid_msg'].__dict__['properties'][name] = value
+                print("set in properties map")
         else:
             raise AttributeError("%r object has no attribute %r" %
                                  (self.__class__.__name__, name))
@@ -269,7 +271,7 @@ class ProgressMessage(LofarMessage):
         super(ProgressMessage, self).__init__(content)
 
 
-class ServiceMessage(ApertifMessage):
+class ServiceMessage(LofarMessage):
     """
     Message class used for service messages. Service messages are
     request-reply type of messages. They are typically used to query a
@@ -278,10 +280,11 @@ class ServiceMessage(ApertifMessage):
 
     def __init__(self, content=None, reply_to=None):
         super(ServiceMessage, self).__init__(content)
-        self.reply_to = reply_to
+        if (reply_to!=None):
+          self.reply_to = reply_to
 
 
-class ReplyMessage(ApertifMessage):
+class ReplyMessage(LofarMessage):
     """
     Message class used for reply messages. Reply messages are part of the
     request-reply type of messages. They are typically used as a reply on a service
@@ -289,8 +292,9 @@ class ReplyMessage(ApertifMessage):
     """
 
     def __init__(self, content=None, reply_to=None):
-        super(ServiceMessage, self).__init__(content)
-        self.subject = reply_to
+        super(ReplyMessage, self).__init__(content)
+        if (reply_to!=None):
+          self.subject = reply_to
 
 
 

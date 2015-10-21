@@ -21,15 +21,15 @@
 
 #  RPC invocation with possible timeout
 from lofar.messaging.messagebus import ToBus,FromBus
-from lofar.messaging.messages import ServiceMessage
+from lofar.messaging.messages import ServiceMessage,ReplyMessage
 import uuid
 
 class RPC():
-  def __init__(self,bus,service,timeout=None,GenerateExceptions=None):
+  def __init__(self,bus,service,timeout=None,ForwardExceptions=None):
      self.timeout=timeout
-     self.GenerateExceptions=False
-     if (GenerateExceptions==True):
-        self.GenerateExceptions=True
+     self.ForwardExceptions=False
+     if (ForwardExceptions==True):
+        self.ForwardExceptions=True
      self.BusName=bus
      self.ServiceName=service
      self.Request = ToBus(self.BusName+"/"+self.ServiceName,
@@ -49,25 +49,33 @@ class RPC():
   def __call__(self,msg,timeout=None):
      if (timeout==None):
        timeout=self.timeout
-     MyMsg=ServiceMessage(msg)
-     MyMsg.reply_to=self.ReplyAddress
+     MyMsg=ServiceMessage(msg,self.ReplyAddress)
+     #MyMsg.reply_to=self.ReplyAddress
      self.Request.send(MyMsg)
+     print("sent")
      answer=self.Reply.receive(timeout)
+     print("received or timed out")
      if (answer!=None):
-        status={}
-        try:
-            if (answer.status!="OK"):
-              status["state"]=answer.status
-              status["errmsg"]=answer.errmsg
-              status["backtrace"]=answer.backtrace
-            else:
-              status="OK"
-        except Exception as e:
-            status="Malformed return message"
-        else:
-            if (self.GenerateExceptions==True):
-              if (status!="OK"):
-                raise Exception(status)
+        if (isinstance(answer,ReplyMessage)):
+           status={}
+           exception=None
+           try:
+              if (answer.status!="OK"):
+                 status["state"]=answer.status
+                 status["errmsg"]=answer.errmsg
+                 status["backtrace"]=answer.backtrace
+                 if (answer.exception!=""):
+                    exception=pickle.loads(answer.exception)
+              else:
+                 status="OK"
+           except Exception as e:
+              status["state"]="ERROR"
+              status["errmsg"]="Return state in message not found"
+              status["backtrace"]=""
+           else:
+              if (self.ForwardExceptions==True):
+                if (exception!=None):
+                  raise exception[0],exception[1],exception[2]
         try:
            answer=(answer.content,status)
         except Exception as e:
