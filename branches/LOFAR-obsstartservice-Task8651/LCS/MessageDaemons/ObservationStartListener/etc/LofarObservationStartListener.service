@@ -1,0 +1,43 @@
+# LofarObservationStartListener.service systemd service description for DRAGNET
+#
+# Not part of LOFAR roll-out, since cluster specific and to be installed into:
+#  /usr/lib/systemd/system/ (CentOS)
+#  /lib/systemd/system/     (Ubuntu)
+# Then run: sudo systemctl daemon-reload && sudo systemctl restart LofarObservationStartListener
+#
+# $Id$
+
+[Unit]
+Description=LOFAR daemon that listens to observation start messages. DRAGNET cluster config.
+Requires=network.target
+After=network.target
+
+[Service]
+
+# Note: appears to require a local (or at least non-NIS) account for some reason
+User=lofarsys
+Group=dragnet
+
+# Type, ExecStart: no daemonization (-d) needed when managed by systemd as Type=simple
+Type=simple
+Environment='PYTHONPATH=/opt/lofar/lib64/python2.7/site-packages'
+ExecStart=/usr/bin/python /opt/lofar/bin/ObservationStartListener.py \
+  --broker ccu001.control.lofar \
+  --address dump.lofar.task.specification.system \
+  --match-prefix 'drg,drag' \
+  --msg-save-dir /opt/lofar/var/run \
+  --exec /opt/lofar/bin/slurm-submit-cobalt-outputproc.sh \
+  --logfile /opt/lofar/var/log/ObservationStartListener.log \
+  --quiet
+
+# To test:
+# Service: /usr/bin/python /home/amesfoort/obslistener/ObservationStartListener.py --broker localhost --address alexander.test.task.specification.system --match-prefix 'node,yike' --msg-save-dir /home/amesfoort/obslistener/parsetsxml --exec /home/amesfoort/obslistener/slurm-submit-cobalt-outputproc.sh --logfile /home/amesfoort/obslistener/ObservationStartListener.log
+# Client: qpid-send -a alexander.test.task.specification.system --content-string "`/bin/cat testout3.parset`"
+
+Restart=on-failure
+
+# Raise prio somewhat. This service must be responsive.
+Nice=-15
+
+[Install]
+WantedBy=multi-user.target
