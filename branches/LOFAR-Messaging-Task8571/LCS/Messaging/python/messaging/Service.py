@@ -27,15 +27,21 @@ import time
 import uuid
 import sys
 import traceback
-import pickle
 
 
 # create service:
 class Service:
     """
-    Service class for registering python functions with a Service name on a messgage bus.
+    Service class for registering python functions with a Service name on a message bus.
+    create new service with Service( BusName, ServiceName, ServiceHandler )
+    Additional options:
+       options=<dict>     for the QPID connection
+       numthreads=<int>   amount of threads processing messages
+       startonwith=<bool> automatically start listening when in scope using 'with'
+       verbose=<bool>     show debug text
     """
-    def __init__(self, busname, servicename, servicehandler, options=None, exclusive=True, numthreads=1, verbose=False):
+
+    def __init__(self, busname, servicename, servicehandler, options=None, exclusive=True, numthreads=1, startonwith=False, verbose=False):
         self.BusName = busname
         self.ServiceName = servicename
         self.ServiceHandler = servicehandler
@@ -46,21 +52,16 @@ class Service:
         self._numthreads = numthreads
         self.Verbose = verbose
         self.options = {"capacity": numthreads*20}
+        self.startonwith = startonwith
+
         # Set appropriate flags for exclusive binding
         if self.exclusive is True:
             self.options["link"] = '{name:"' + self.link_uuid + '", x-bindings:[{key:' + self.ServiceName + ', arguments: {"qpid.exclusive-binding":True}}]}'
+
         # only add options if it is given as a dictionary
         if isinstance(options,dict):
             for key,val in options.iteritems():
                 self.options[key] = val
-        # Usually a service will be listening on a 'bus' implemented by a topic exchange
-        if self.BusName is not None:
-            self.Listen = FromBus(self.BusName+"/"+self.ServiceName,options=self.options)
-            self.Reply = ToBus(self.BusName)
-        else:
-            # assume that we are listening on a queue and therefore we cannot use a generic ToBus() for replies.
-            self.Listen = FromBus(self.ServiceName,options=self.options)
-            self.Reply=self.replyto
 
     def _debug(self, txt):
         if self.Verbose is True:
@@ -69,28 +70,69 @@ class Service:
     def StartListening(self, numthreads=None):
         if numthreads is not None:
             self._numthreads = numthreads
-        self.connected = True
+        if self.connected is False:
+            raise Exception("StartListening Called on closed connections")
+
         self.running = True
         self._tr = []
         self.reccounter = []
         self.okcounter =[]
         for i in range(self._numthreads):
-            self._tr.append(threading.Thread(target=self.loop, args=[i]))
+            self._tr.append(threading.Thread(target=self._loop, args=[i]))
             self.reccounter.append(0)
             self.okcounter.append(0)
             self._tr[i].start()
 
+    def StopListening(self):
+        # stop all running threads
+        if self.running is True:
+            self.running = False
+            for i in range(self._numthreads):
+                self._tr[i].join()
+                print("Thread %2d: STOPPED Listening for messages on Bus %s and service name %s." % (i, self.BusName, self.ServiceName))
+                print("           %d messages received and %d processed OK." % (self.reccounter[i], self.okcounter[i]))
+
+    def WaitForInterrupt(self):
+        looping = True
+        while looping:
+            try:
+                time.sleep(10)
+            except KeyboardInterrupt:
+                looping = False
+                print("Keyboard interrupt received.")
+
     def __enter__(self):
-        if isinstance(self.Listen,FromBus):
+        # Usually a service will be listening on a 'bus' implemented by a topic exchange
+        if self.BusName is not None:
+            self.Listen = FromBus(self.BusName+"/"+self.ServiceName, options=self.options)
+            self.Reply = ToBus(self.BusName)
             self.Listen.open()
-        if isinstance(self.Reply,ToBus):
             self.Reply.open()
+        # Handle case when queues are used
+        else:
+            # assume that we are listening on a queue and therefore we cannot use a generic ToBus() for replies.
+            self.Listen = FromBus(self.BusName+"/"+self.ServiceName, options=self.options)
+            self.Listen.open()
+            self.Reply=self.replyto
+
+        self.connected = True
+
+        # If required start listening on 'with'
+        if self.startonwith is True:
+            self.StartListening()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.StopListening()
+        # close the listeners
+        if self.connected is True:
+            self.connected = False
+            if isinstance(self.Listen, FromBus):
+                self.Listen.close()
+            if isinstance(self.Reply, ToBus):
+                self.Reply.close()
 
-    def send_reply(self, replymessage, status, reply_to, errtxt="",backtrace=""):
+    def _send_reply(self, replymessage, status, reply_to, errtxt="",backtrace=""):
         # Compose Reply message from reply and status.
         ToSend = ReplyMessage(replymessage, reply_to)
         ToSend.status = status
@@ -110,13 +152,13 @@ class Service:
                 dest.send(ToSend)
 
 
-    def loop(self, index):
+    def _loop(self, index):
         print( "Thread %d START Listening for messages on Bus %s and service name %s." %(index, self.BusName, self.ServiceName))
         while self.running:
             try:
                 # get the next message
                 msg = self.Listen.receive(1)
-                # loop until we get a valid message.
+                # retry if timed-out
                 if msg is None:
                     continue
 
@@ -134,7 +176,7 @@ class Service:
                     self._debug("Running handler")
                     replymessage = self.ServiceHandler(msg.content)
                     self._debug("finished handler")
-                    self.send_reply(replymessage,"OK",msg.reply_to)
+                    self._send_reply(replymessage,"OK",msg.reply_to)
                     self.okcounter[index] += 1
                     self.Listen.ack(msg)
                     continue
@@ -152,45 +194,18 @@ class Service:
                     del rawbacktrace[1]
                     del rawbacktrace[0]
                     del rawbacktrace[-1]
-                    backtrace= ''.join(rawbacktrace).encode('latin-1').decode('unicode_escape')
+                    backtrace = ''.join(rawbacktrace).encode('latin-1').decode('unicode_escape')
                     self._debug(backtrace)
                     if self.Verbose is True:
                         print status
                         print errtxt
                         print backtrace
-                    self.send_reply(None,status,msg.reply_to,errtxt=errtxt,backtrace=backtrace)
-
+                    self._send_reply(None, status, msg.reply_to, errtxt=errtxt, backtrace=backtrace)
 
             except Exception as e:
                 # Unknown problem in the library. Report this and continue.
                 excinfo = sys.exc_info()
                 print "ERROR during processing of incoming message."
                 traceback.print_exception(*excinfo)
-                print "Thread %d: Resuming listening on bus %s for service %s" %(index,self.BusName,self.ServiceName)
+                print "Thread %d: Resuming listening on bus %s for service %s" % (index, self.BusName, self.ServiceName)
 
-        print("Thread %2d: STOPPED Listening for messages on Bus %s and service name %s." %(index,self.BusName,self.ServiceName))
-        print("           %d messages received and %d processed OK." %(self.reccounter[index],self.okcounter[index]))
-
-    def StopListening(self):
-        # stop all running threads
-        if self.running is True:
-            self.running = False
-            for i in range(self._numthreads):
-                self._tr[i].join()
-
-        # possibly doubly defined..
-        if self.connected is True:
-            self.connected = False
-            if isinstance(self.Listen, FromBus):
-                self.Listen.close()
-            if isinstance(self.Reply, ToBus):
-                self.Reply.close()
-
-    def WaitForInterrupt(self):
-        looping = True
-        while looping:
-            try:
-                time.sleep(100)
-            except KeyboardInterrupt:
-                looping = False
-                print("Keyboard interrupt received.")
