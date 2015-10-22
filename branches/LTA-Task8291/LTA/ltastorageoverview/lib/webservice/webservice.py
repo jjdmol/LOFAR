@@ -37,7 +37,7 @@ print os.path.dirname(__file__)
 app.config.root_path = os.path.dirname(__file__)
 print
 print str(app.config)
-db = store.LTAStorageDb('../ltastorageoverview.sqlite')
+db = store.LTAStorageDb('../test.sqlite')
 
 @app.route('/')
 @app.route('/index.html')
@@ -89,7 +89,7 @@ def index():
     return render_template('index.html',
                            title='LTA storage overview',
                            storagesitetitle='LTA Storage Site Usage',
-                           storagesitesubtitle='Total: %s #dataproducts: %d' % (humanreadablesize(total, 'B', 1000), humanreadablesize(numFiles, '', 1000)),
+                           storagesitesubtitle='Total: %s #dataproducts: %s' % (humanreadablesize(total, 'B', 1000), humanreadablesize(numFiles, '', 1000)),
                            storagesitedata=storagesitedata,
                            usage_per_month_series=usage_per_month_series,
                            deltas_per_month_series=deltas_per_month_series)
