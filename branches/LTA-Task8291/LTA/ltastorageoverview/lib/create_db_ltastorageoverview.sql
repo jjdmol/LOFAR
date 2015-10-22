@@ -76,6 +76,49 @@ create table fileinfo (
     foreign key (directory_id)  references directory(id) );
 
 create index fi_directory_id_idx on fileinfo(directory_id);
+create index fi_creation_date_idx on fileinfo(creation_date);
+
+create table directory_stats (
+    id                      integer primary key autoincrement unique not null,
+    directory_id            integer unique not null,
+    num_files               integer,
+    total_file_size         integer,
+    min_file_size           integer,
+    max_file_size           integer,
+    min_file_creation_date  datetime,
+    max_file_creation_date  datetime,
+    foreign key (directory_id) references directory(id) );
+
+create index ds_directory_id_idx on directory_stats(directory_id);
+create index ds_min_file_creation_date_idx on directory_stats(min_file_creation_date);
+create index ds_max_file_creation_date_idx on directory_stats(max_file_creation_date);
+
+create table _temp_fileinfo_for_dir_stats (
+    size                        integer not null,
+    creation_date               datetime not null );
+
+create trigger fileinfo_to_directory_stats_trigger
+    after insert on fileinfo
+    begin
+        insert or ignore into directory_stats (directory_id)
+        values (new.directory_id) ;
+
+        delete from _temp_fileinfo_for_dir_stats ;
+
+        insert into _temp_fileinfo_for_dir_stats
+          select fileinfo.size, fileinfo.creation_date from fileinfo
+          where directory_id = new.directory_id ;
+
+         update directory_stats set
+            num_files=(select count(size) from _temp_fileinfo_for_dir_stats),
+            total_file_size=(select sum(size) from _temp_fileinfo_for_dir_stats),
+            min_file_size=(select min(size) from _temp_fileinfo_for_dir_stats),
+            max_file_size=(select max(size) from _temp_fileinfo_for_dir_stats),
+            min_file_creation_date=(select min(creation_date) from _temp_fileinfo_for_dir_stats),
+            max_file_creation_date=(select max(creation_date) from _temp_fileinfo_for_dir_stats)
+         where directory_id = new.directory_id ;
+    end;
+
 
 create table scraper_last_directory_visit (
     directory_id       integer not null,
