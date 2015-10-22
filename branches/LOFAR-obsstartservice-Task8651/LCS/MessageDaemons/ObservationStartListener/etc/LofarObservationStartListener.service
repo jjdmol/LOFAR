@@ -8,7 +8,7 @@
 # $Id$
 
 [Unit]
-Description=LOFAR daemon that listens to observation start messages. DRAGNET cluster config.
+Description=LOFAR daemon that listens to qpid messages that match to a prefix and then runs a program passing the message and the matched values.
 Requires=network.target
 After=network.target
 
@@ -31,8 +31,10 @@ ExecStart=/usr/bin/python /opt/lofar/bin/ObservationStartListener.py \
   --quiet
 
 # To test:
+# Create test exchange: qpid-config add exchange fanout alexander.test.task.specification.system
 # Service: /usr/bin/python /home/amesfoort/obslistener/ObservationStartListener.py --broker localhost --address alexander.test.task.specification.system --match-prefix 'node,yike' --msg-save-dir /home/amesfoort/obslistener/parsetsxml --exec /home/amesfoort/obslistener/slurm-submit-cobalt-outputproc.sh --logfile /home/amesfoort/obslistener/ObservationStartListener.log
 # Client: qpid-send -a alexander.test.task.specification.system --content-string "`/bin/cat testout3.parset`"
+# Delete test exchange: qpid-config del exchange alexander.test.task.specification.system
 
 Restart=on-failure
 
