@@ -3,5 +3,7 @@
 python_install(
     __init__.py
     webservice.py
+    static/favicon.ico
+    templates/index.html
     DESTINATION resourceassignementeditor)
 

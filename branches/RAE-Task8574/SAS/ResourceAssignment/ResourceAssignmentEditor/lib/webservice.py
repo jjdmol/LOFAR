@@ -17,27 +17,39 @@
 # You should have received a copy of the GNU General Public License along
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 
+# $Id:
+
 '''ResourceAssignementEditor webservice serves a interactive html5 website for
 viewing and editing lofar resources.'''
 
 import sys
 from flask import Flask
+from flask import render_template
+from flask import url_for
+import os
+
+__root_path = os.path.dirname(os.path.abspath(__file__))
 
 '''The flask webservice app'''
-app = Flask('ResourceAssignementEditor')
+app = Flask('ResourceAssignementEditor',
+            instance_path=__root_path,
+            template_folder=os.path.join(__root_path, 'templates'),
+            static_folder=os.path.join(__root_path, 'static'),
+            instance_relative_config=True)
 
+# Load the default configuration
+app.config.from_object('resourceassignementeditor.config.default')
 
 @app.route('/')
 @app.route('/index.htm')
 @app.route('/index.html')
 def index():
     '''Serves the ResourceAssignementEditor's index page'''
-    return "Hello World!"
-
+    return render_template('index.html', title='Resource Assignement Editor')
 
 def main(argv=None, debug=False):
     '''Start the webserver'''
-    app.run(use_debugger=debug)
+    app.run(debug=debug, port=5001)
 
 if __name__ == '__main__':
     main(sys.argv[1:], True)
