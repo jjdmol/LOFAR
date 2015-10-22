@@ -206,15 +206,15 @@ class LTAStorageDb:
                 order by depth desc
                 ''', [directory_id]).fetchall()
 
-    def _date_bounded(self, query, args, from_date=None, to_date=None):
+    def _date_bounded(self, query, args, table_column, from_date=None, to_date=None):
         result_query = query
         result_args = args
         if from_date:
-            result_query += ' and fileinfo.creation_date >= ?'
+            result_query += ' and %s >= ?' % table_column
             result_args += (from_date,)
 
         if to_date:
-            result_query += ' and fileinfo.creation_date <= ?'
+            result_query += ' and %s  <= ?' % table_column
             result_args += (to_date,)
 
         return result_query, result_args
@@ -226,7 +226,7 @@ class LTAStorageDb:
 
             args = (directory_id,)
 
-            query, args = self._date_bounded(query, args, from_date, to_date)
+            query, args = self._date_bounded(query, args, 'fileinfo.creation_date', from_date, to_date)
 
             return conn.execute(query, args).fetchall()
 
@@ -237,7 +237,7 @@ class LTAStorageDb:
 
             args = (directory_id,)
 
-            query, args = self._date_bounded(query, args, from_date, to_date)
+            query, args = self._date_bounded(query, args, 'fileinfo.creation_date', from_date, to_date)
 
             result = conn.execute(query, args).fetchone()
 
@@ -261,17 +261,25 @@ class LTAStorageDb:
 
     def numFilesInTree(self, base_directory_id, from_date=None, to_date=None):
         with sqlite3.connect(self.db_filename) as conn:
-            query = '''SELECT count(fileinfo.id) FROM directory_closure dc
-            join fileinfo on fileinfo.directory_id = dc.descendant_id
-            where dc.ancestor_id = ?'''
+            query = '''
+                SELECT sum(directory_stats.num_files) FROM directory_stats
+                join directory_closure dc on dc.descendant_id = directory_stats.directory_id
+                where ancestor_id = ?
+                '''
 
             args = (base_directory_id,)
 
-            query, args = self._date_bounded(query, args, from_date, to_date)
+            query, args = self._date_bounded(query, args, 'directory_stats.min_file_creation_date', from_date=from_date)
+            query, args = self._date_bounded(query, args, 'directory_stats.max_file_creation_date', to_date=to_date)
+
+            print query
+            print args
 
             result = conn.execute(query, args).fetchone()
 
-            if result:
+            print result
+
+            if result[0]:
                 return result[0]
 
             return 0
@@ -279,13 +287,14 @@ class LTAStorageDb:
     def totalFileSizeInTree(self, base_directory_id, from_date=None, to_date=None):
         with sqlite3.connect(self.db_filename) as conn:
             query = '''
-                SELECT sum(fileinfo.size) FROM fileinfo
-                join directory_closure dc on dc.descendant_id = fileinfo.directory_id
+                SELECT sum(directory_stats.total_file_size) FROM directory_stats
+                join directory_closure dc on dc.descendant_id = directory_stats.directory_id
                 where ancestor_id = ?
                 '''
             args = (base_directory_id,)
 
-            query, args = self._date_bounded(query, args, from_date, to_date)
+            query, args = self._date_bounded(query, args, 'directory_stats.min_file_creation_date', from_date=from_date)
+            query, args = self._date_bounded(query, args, 'directory_stats.max_file_creation_date', to_date=to_date)
 
             result = conn.execute(query, args).fetchone()
 
