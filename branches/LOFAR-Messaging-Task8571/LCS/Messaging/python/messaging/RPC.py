@@ -94,7 +94,7 @@ class RPC():
         if self.ForwardExceptions is True:
             excep_mod = __import__("exceptions")
             excep_class_ = getattr(excep_mod, answer.errmsg.split(':')[0], None)
-            if excep_class_ not is None:
+            if (excep_class_ != None):
                 instance = excep_class_(answer.backtrace)
                 raise (instance)
             else:
