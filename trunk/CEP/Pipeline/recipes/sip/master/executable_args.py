@@ -77,6 +77,12 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
             default=[],
             optional=True
         ),
+        'mapfiles_as_string': ingredient.ListField(
+            '--mapfiles_as_string',
+            help="List of the input mapfiles to ignore and just use the name string instead.",
+            default=[],
+            optional=True
+        ),
         'mapfiles_out': ingredient.ListField(
             '--mapfiles-out',
             help="List of the output mapfiles containing the names of the "
@@ -288,10 +294,11 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
 
         filedict = {}
         if self.inputs['inputkeys'] and not self.inputs['skip_infile']:
-            for key, filemap in zip(self.inputs['inputkeys'], inputmapfiles):
-                filedict[key] = []
-                for inp in filemap:
-                    filedict[key].append(inp.file)
+            for key, filemap, mapname in zip(self.inputs['inputkeys'], inputmapfiles, self.inputs['mapfiles_in']):
+                if not mapname in self.inputs['mapfiles_as_string']:
+                    filedict[key] = []
+                    for inp in filemap:
+                        filedict[key].append(inp.file)
 
         if self.inputs['outputkey']:
             filedict[self.inputs['outputkey']] = []
