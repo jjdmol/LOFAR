@@ -45,16 +45,22 @@ def index():
     usages = {}
 
     sites = db.sites()
+    sites2 = [x for x in sites if x[1] != 'nikhef']
+    print sites
+    sites = [sites2[0], sites2[2], sites2[1]]
 
     total = 0.0
+    numFiles = 0L
     for site in sites:
         site_usage = float(db.totalFileSizeInSite(site[0]))
         usages[site[1]] = site_usage
         total += site_usage
+        numFiles += db.numFilesInSite(site[0])
 
     storagesitedata='[' + ', '.join(['''{name: "%s %s", y: %.1f}''' % (site[1], humanreadablesize(usages[site[1]]), 100.0*usages[site[1]]/total) for site in sites]) + ']'
 
     min_date, max_date = db.datetimeRangeOfFilesInTree()
+    #min_date = datetime(2015, 2, 1)
     month_ranges = monthRanges(min_date, max_date)
 
     format = '%Y,%m,%d,%H,%M,%S'
@@ -63,22 +69,27 @@ def index():
     usage_per_month_series='['
     deltas_per_month_series='['
     for site in sites:
-        deltas = [db.totalFileSizeInSite(site[0], mr[0], mr[1]) for mr in month_ranges]
-        data = ', '.join(['[%s, %s]' % (x[0], str(x[1])) for x in zip(datestamps, deltas)])
-        deltas_per_month_series += '''{name: '%s', data: [%s]},\n''' % (site[1], data)
-
-        cumulatives = [deltas[0]]
-        for delta in deltas[1:]:
-            cumulatives.append(cumulatives[-1] + delta)
+        cumulatives = [db.totalFileSizeInSite(site[0], to_date=mr[1]) for mr in month_ranges]
 
         data = ', '.join(['[%s, %s]' % (x[0], str(x[1])) for x in zip(datestamps, cumulatives)])
         usage_per_month_series += '''{name: '%s', data: [%s]},\n''' % (site[1], data)
+
+        deltas = [0]
+        for i in range(1, len(cumulatives)):
+            delta = cumulatives[i] - cumulatives[i-1]
+            deltas.append(delta)
+
+        data = ', '.join(['[%s, %s]' % (x[0], str(x[1])) for x in zip(datestamps, deltas)])
+        deltas_per_month_series += '''{name: '%s', data: [%s]},\n''' % (site[1], data)
+
 
     usage_per_month_series+=']'
     deltas_per_month_series+=']'
 
     return render_template('index.html',
                            title='LTA storage overview',
+                           storagesitetitle='LTA Storage Site Usage',
+                           storagesitesubtitle='Total: %s #dataproducts: %d' % (humanreadablesize(total, 'B', 1000), humanreadablesize(numFiles, '', 1000)),
                            storagesitedata=storagesitedata,
                            usage_per_month_series=usage_per_month_series,
                            deltas_per_month_series=deltas_per_month_series)

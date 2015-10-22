@@ -19,7 +19,10 @@
                 type: 'pie'
                 },
                 title: {
-                text: 'LTA Storage Site Usage'
+                text: '{{storagesitetitle|safe}}'
+                },
+                subtitle: {
+                text: '{{storagesitesubtitle|safe}}'
                 },
                 tooltip: {
                 pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
@@ -48,10 +51,10 @@
         $(function () {
             $('#usage_trend_container').highcharts({
                 chart: { type: 'area'},
-                title: { text: 'LTA Storage Site Usage Per Month' },
+                title: { text: 'LTA Storage Site Usage Trend' },
                 xAxis: { type: 'datetime' },
-                yAxis: { title: { text: 'TB'},
-                         labels: { formatter: function () { return this.value / 10000000000000;}}
+                yAxis: { title: { text: 'PB'},
+                         labels: { formatter: function () { return this.value / 1e15;}}
                 },
                 tooltip: {
                     formatter: function () {
@@ -59,7 +62,7 @@
 
                         $.each(this.points, function () {
                             s += '<br/><b>' + this.series.name + '</b>: ' +
-                                Highcharts.numberFormat(this.y / 10000000000000, 1, '.') + ' TB';
+                                Highcharts.numberFormat(this.y / 1e15, 1, '.') + ' PB';
                         });
 
                         return s;
@@ -88,7 +91,7 @@
                 title: { text: 'LTA Storage Site Deltas Per Month' },
                 xAxis: { type: 'datetime' },
                 yAxis: { title: { text: 'TB'},
-                         labels: { formatter: function () { return this.value / 10000000000000;}}
+                         labels: { formatter: function () { return this.value / 1e12;}}
                 },
                 tooltip: {
                     formatter: function () {
@@ -96,7 +99,7 @@
 
                         $.each(this.points, function () {
                             s += '<br/><b>' + this.series.name + '</b>: ' +
-                                Highcharts.numberFormat(this.y / 10000000000000, 1, '.') + ' TB';
+                                Highcharts.numberFormat(this.y / 1e12, 1, '.') + ' TB';
                         });
 
                         return s;
@@ -105,7 +108,7 @@
                 },
                 plotOptions: {
                     column: {
-                        pointPadding: 0.2,
+                        pointPadding: 0.05,
                         borderWidth: 0
                     }
                 },
