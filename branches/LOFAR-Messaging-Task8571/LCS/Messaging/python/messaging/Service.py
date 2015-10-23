@@ -41,7 +41,7 @@ class Service:
        verbose=<bool>     show debug text
     """
 
-    def __init__(self, busname, servicename, servicehandler, options=None, exclusive=True, numthreads=1, startonwith=False, verbose=False):
+    def __init__(self, busname, servicename, servicehandler, options=None, exclusive=True, numthreads=1, parsefullmessage=False, startonwith=False, verbose=False):
         self.BusName = busname
         self.ServiceName = servicename
         self.ServiceHandler = servicehandler
@@ -52,6 +52,7 @@ class Service:
         self._numthreads = numthreads
         self.Verbose = verbose
         self.options = {"capacity": numthreads*20}
+        self.parsefullmessage=parsefullmessage
         self.startonwith = startonwith
 
         # Set appropriate flags for exclusive binding
@@ -134,7 +135,10 @@ class Service:
 
     def _send_reply(self, replymessage, status, reply_to, errtxt="",backtrace=""):
         # Compose Reply message from reply and status.
-        ToSend = ReplyMessage(replymessage, reply_to)
+        if isinstance(replymessage,ReplyMessage):
+            ToSend = replymessage
+        else:
+            ToSend = ReplyMessage(replymessage, reply_to)
         ToSend.status = status
         ToSend.errmsg = errtxt
         ToSend.backtrace = backtrace
@@ -146,9 +150,10 @@ class Service:
 
         # send the result to the RPC client
         if isinstance(self.Reply,ToBus):
+            ToSend.subject = reply_to
             self.Reply.send(ToSend)
         else:
-            with ToBus(self.Reply) as dest:
+            with ToBus(reply_to) as dest:
                 dest.send(ToSend)
 
 
@@ -174,7 +179,10 @@ class Service:
                 # Execute the service handler function and send reply back to client
                 try:
                     self._debug("Running handler")
-                    replymessage = self.ServiceHandler(msg.content)
+                    if self.parsefullmessage is True:
+                        replymessage = self.ServiceHandler(msg)
+                    else:
+                        replymessage = self.ServiceHandler(msg.content)
                     self._debug("finished handler")
                     self._send_reply(replymessage,"OK",msg.reply_to)
                     self.okcounter[index] += 1
