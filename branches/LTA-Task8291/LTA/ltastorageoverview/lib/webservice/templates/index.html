@@ -19,26 +19,29 @@
                 type: 'pie'
                 },
                 title: {
-                text: '{{storagesitetitle|safe}}'
+                    text: '<span style="font-size: 22px">{{storagesitetitle|safe}}</span>',
                 },
                 subtitle: {
-                text: '{{storagesitesubtitle|safe}}'
+                    text: '<span style="font-size: 20px">{{storagesitesubtitle|safe}}</span>',
                 },
+                legend: { itemStyle: { fontSize: '22px' } },
                 tooltip: {
-                pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+                    pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
                 },
                 plotOptions: {
-                pie: {
-                allowPointSelect: true,
-                cursor: 'pointer',
-                dataLabels: {
-                enabled: true,
-                format: '<b>{point.name}</b>: {point.percentage:.1f} %',
-                style: {
-                color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
-                }
-                }
-                }
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        dataLabels: {
+                        enabled: true,
+                        format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                        style: {
+                            color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black',
+                                    fontFamily: '"Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif', // default font
+                                    fontSize: '16px'
+                            }
+                        }
+                    }
                 },
                 series: [{
                 name: "StorageSiteUsage",
@@ -51,11 +54,20 @@
         $(function () {
             $('#usage_trend_container').highcharts({
                 chart: { type: 'area'},
-                title: { text: 'LTA Storage Site Usage Trend' },
-                xAxis: { type: 'datetime' },
-                yAxis: { title: { text: 'PB'},
-                         labels: { formatter: function () { return this.value / 1e15;}}
+                title: {
+                    text: '<span style="font-size: 22px">LTA Storage Site Usage Trend</span>',
                 },
+                xAxis: {
+                    type: 'datetime',
+                    labels: { style: { fontSize: '22px'} },
+                },
+                yAxis: {
+                    title: { text: '<span style="font-size: 22px">PB</span>'},
+                    labels: {
+                        style: { fontSize: '22px'},
+                        formatter: function () { return this.value / 1e15;}},
+                },
+                legend: { itemStyle: { fontSize: '22px' } },
                 tooltip: {
                     formatter: function () {
                         var s = '<b>' + Highcharts.dateFormat('%Y/%m/%d', this.x) + '</b>';
@@ -68,6 +80,11 @@
                         return s;
                     },
                     shared: true
+                },
+                style: {
+                color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black',
+                        fontFamily: '"Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif', // default font
+                        fontSize: '22px'
                 },
                 plotOptions: {
                     area: {
@@ -88,10 +105,22 @@
         $(function () {
             $('#usage_deltas_container').highcharts({
                 chart: { type: 'column'},
-                title: { text: 'LTA Storage Site Deltas Per Month' },
-                xAxis: { type: 'datetime' },
-                yAxis: { title: { text: 'TB'},
-                         labels: { formatter: function () { return this.value / 1e12;}}
+                title: {
+                    text: '<span style="font-size: 22px">LTA Storage Site Deltas Per Month</span>',
+                    },
+                xAxis: {
+                    type: 'datetime',
+                    labels: { style: { fontSize: '22px'} },
+                },
+                yAxis: {
+                    title: { text: '<span style="font-size: 22px">TB</span>'},
+                    labels: { style: { fontSize: '22px'}, formatter: function () { return this.value / 1e12;}}
+                },
+                legend: { itemStyle: { fontSize: '22px' } },
+                style: {
+                color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black',
+                        fontFamily: '"Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif', // default font
+                        fontSize: '22px'
                 },
                 tooltip: {
                     formatter: function () {
@@ -108,9 +137,10 @@
                 },
                 plotOptions: {
                     column: {
-                        pointPadding: 0.05,
-                        borderWidth: 0
-                    }
+                        stacking:'normal',
+                        pointPadding: 0.025,
+                        groupPadding: 0.05,
+                      }
                 },
                 series: {{deltas_per_month_series|safe}}
             });
@@ -119,8 +149,8 @@
 
         });
         </script>
-    <div id="usage_piechart_container" style="min-width: 310px; min-height: 400px; width: 100%; height: 100%; margin: 10 auto; border-width:1"></div>
-    <div id="usage_trend_container" style="min-width: 310px; min-height: 400px; width: 100%; height: 100%; margin: 10 auto border-width:1"></div>
-    <div id="usage_deltas_container" style="min-width: 310px; min-height: 400px; width: 100%; height: 100%; margin: 10 auto border-width:1"></div>
+    <div id="usage_trend_container" style="min-width: 310px; min-height: 600px; width: 95%; height: 100%; margin: 24px; margin-left: auto; margin-right: auto; "></div>
+    <div id="usage_deltas_container" style="min-width: 310px; min-height: 600px; width: 95%; height: 100%; margin: 24px; margin-left: auto; margin-right: auto; "></div>
+    <div id="usage_piechart_container" style="min-width: 310px; min-height: 600px; width: 80%; height: 100%; margin: 24px; margin-left: auto; margin-right: auto; "></div>
 </body>
 </html>

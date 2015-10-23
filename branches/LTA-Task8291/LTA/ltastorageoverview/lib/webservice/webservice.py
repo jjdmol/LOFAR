@@ -37,7 +37,7 @@ print os.path.dirname(__file__)
 app.config.root_path = os.path.dirname(__file__)
 print
 print str(app.config)
-db = store.LTAStorageDb('../test.sqlite')
+db = store.LTAStorageDb('../ltastorageoverview.sqlite')
 
 @app.route('/')
 @app.route('/index.html')
@@ -60,7 +60,7 @@ def index():
     storagesitedata='[' + ', '.join(['''{name: "%s %s", y: %.1f}''' % (site[1], humanreadablesize(usages[site[1]]), 100.0*usages[site[1]]/total) for site in sites]) + ']'
 
     min_date, max_date = db.datetimeRangeOfFilesInTree()
-    #min_date = datetime(2015, 2, 1)
+    min_date = datetime(2012, 1, 1)
     month_ranges = monthRanges(min_date, max_date)
 
     format = '%Y,%m,%d,%H,%M,%S'
