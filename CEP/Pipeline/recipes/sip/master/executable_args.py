@@ -294,11 +294,16 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
 
         filedict = {}
         if self.inputs['inputkeys'] and not self.inputs['skip_infile']:
-            for key, filemap, mapname in zip(self.inputs['inputkeys'], inputmapfiles, self.inputs['mapfiles_in']):
+            for key, filemap, mapname in zip(self.inputs['inputkeys'], inputmapfiles, inlist):
                 if not mapname in self.inputs['mapfiles_as_string']:
                     filedict[key] = []
                     for inp in filemap:
                         filedict[key].append(inp.file)
+                else:
+                    if key != mapname:
+                        filedict[key] = []
+                        for inp in filemap:
+                            filedict[key].append(mapname)
 
         if self.inputs['outputkey']:
             filedict[self.inputs['outputkey']] = []
