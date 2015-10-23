@@ -12,4 +12,4 @@
 lofar.task.feedback.dataproducts:  otdb.task.feedback.dataproducts
 lofar.task.feedback.processing:    mom.task.feedback.processing, otdb.task.feedback.processing
 lofar.task.feedback.state:         mac.task.feedback.state
-lofar.task.specification.system:   mom.task.specification.system, cobalt.task.specification.system
+lofar.task.specification.system:   mom.task.specification.system

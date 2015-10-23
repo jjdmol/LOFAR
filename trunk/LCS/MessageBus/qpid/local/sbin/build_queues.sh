@@ -25,9 +25,6 @@ if [ "$host" == "CCU001" ]; then
   head="lhn001.cep2.lofar"
   node_start=1
   node_end=94
-  drg_head="dragnet.control.lofar"
-  drg_node_start=1
-  drg_node_end=23
 else
   # Host definitions: TEST
   ccu="CCU099.control.lofar"
@@ -50,8 +47,8 @@ if [ "$1" == "-h" ] || [ "$1" == "-?" ] || [ "$1" == "--help" ]; then
 else
    if [ "$1" == "--flush" ]; then
       # flush all routing
-      for name in $sas $ccu $mcu $mom $head $drg_head
-      do
+       for name in $sas $ccu $mcu $mom $head
+       do
          echo flushing routing tables of broker at $name
          echo qpid-route route flush $name
          qpid-route route flush $name
@@ -64,12 +61,6 @@ else
          qpid-route route flush $name
       done
       for name in $(seq -f "locus%03g.cep2.lofar" $node_start $node_end)
-      do
-         echo flushing routing tables of broker at $name
-         echo qpid-route route flush $name
-         qpid-route route flush $name
-      done
-      for name in dragproc.control.lofar $(seq -f "drg%02g.control.lofar" $drg_node_start $drg_node_end)
       do
          echo flushing routing tables of broker at $name
          echo qpid-route route flush $name
@@ -97,10 +88,6 @@ fed lofar.task.feedback.processing    $head    $ccu
 fed lofar.task.feedback.dataproducts  $head    $ccu
 fed lofar.task.feedback.state         $head    $ccu
 
-fed lofar.task.feedback.processing    $drg_head    $ccu
-fed lofar.task.feedback.dataproducts  $drg_head    $ccu
-fed lofar.task.feedback.state         $drg_head    $ccu
-
 fed otdb.task.feedback.processing     $ccu     $mcu
 fed otdb.task.feedback.dataproducts   $ccu     $mcu
 fed lofar.task.specification.system   $mcu     $ccu
@@ -109,21 +96,12 @@ fed mom.task.feedback.processing      $ccu     $mom
 fed mom.task.feedback.dataproducts    $ccu     $mom
 fed mom.task.feedback.state           $ccu     $mom
 fed mom.task.specification.system     $ccu     $mom
-#fed cobalt.task.specification.system  $ccu     cbmmaster.control.lofar
-fed cobalt.task.specification.system  $ccu     $drg_head
   
 fed mom.command                       $sas     $mom
 fed mom.importxml                     $sas     $mom
 fed mom-otdb-adapter.importxml        $mom     $sas
 
 for NODE in $(seq -f "locus%03g.cep2.lofar" $node_start $node_end)
-do
-    fed lofar.task.feedback.dataproducts  $NODE $head
-    fed lofar.task.feedback.processing    $NODE $head
-    fed lofar.task.feedback.state         $NODE $head
-done
-
-for NODE in dragproc.control.lofar $(seq -f "drg%02g.control.lofar" $drg_node_start $drg_node_end)
 do
     fed lofar.task.feedback.dataproducts  $NODE $head
     fed lofar.task.feedback.processing    $NODE $head
