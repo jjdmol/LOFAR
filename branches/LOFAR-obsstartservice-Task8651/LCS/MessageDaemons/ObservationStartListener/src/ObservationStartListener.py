@@ -35,9 +35,13 @@ import signal
 import logging
 from socket import gethostname
 from time import sleep
-from daemon import DaemonContext
 from subprocess import Popen
 from optparse import OptionParser
+daemon_exc = None
+try:
+  from daemon import DaemonContext
+except ImportError as exc:
+  daemon_exc = exc
 
 import lofar.parameterset as lofParset
 import lofar.messagebus.messagebus as lofMess
@@ -229,9 +233,11 @@ def registerCmdOptions(parser):
     parser.add_option('-q', '--quiet', action='store_true', dest='quiet',
                       default=False,
                       help='suppress logging stream to stderr. Useful with -l and when run from systemd to keep system log clean.')
+    daemon_help = 'run this program as a daemon. Use absolute paths in other options.'
+    if daemon_exc is not None:
+        daemon_help += ' (N/A: ImportError: ' + daemon_exc.message + ')'
     parser.add_option('-d', '--daemon', action='store_true', dest='daemonize',
-                      default=False,
-                      help='run this program as a daemon. Use absolute paths in other options.')
+                      default=False, help=daemon_help)
 
 def checkArgs(parser, options, leftOverArgs):
     # Mandatory option is contradictory, but these as positional args is unclear.
@@ -243,6 +249,8 @@ def checkArgs(parser, options, leftOverArgs):
         parser.error('--msg-save-dir (-m) is required (or pass -h for usage)')
     if options.execPath is None:
         parser.error('--exec (-x) is required (or pass -h for usage)')
+    if options.daemonize and daemon_exc is not None:
+        parser.error('--daemon (-d) is N/A: ImportError: ' + daemon_exc.message)
 
     options.matchPrefix = tuple(options.matchPrefix.split(','))  # for str.startswith()
 
