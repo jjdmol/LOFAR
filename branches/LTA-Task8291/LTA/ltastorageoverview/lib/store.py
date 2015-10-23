@@ -172,6 +172,22 @@ class LTAStorageDb:
                 where dc.descendant_id = ?
                 ''', [directory_id]).fetchone()
 
+    def directory_id(self, site_id, directory_name):
+        '''returns directory id for the given site_id, directory_name'''
+        with sqlite3.connect(self.db_filename) as conn:
+            result = conn.execute('''SELECT dir.id
+                FROM storage_site_root
+                join directory_closure dc on dc.ancestor_id = storage_site_root.directory_id
+                join directory dir on dir.id = dc.descendant_id
+                where storage_site_root.storage_site_id = ?
+                and dir.name = ?
+                ''', [site_id, directory_name]).fetchone()
+
+            if result:
+                return result[0]
+
+            return -1
+
     def rootDirectories(self):
         '''returns list of all root directories (id, name, site_id, site_name) for all sites'''
         with sqlite3.connect(self.db_filename) as conn:
