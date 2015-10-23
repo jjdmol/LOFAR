@@ -8,4 +8,4 @@ lofar_find_package(LibXMLxx)
 
 add_subdirectory(etc)
 add_subdirectory(src)
-#add_subdirectory(test)
+add_subdirectory(test)

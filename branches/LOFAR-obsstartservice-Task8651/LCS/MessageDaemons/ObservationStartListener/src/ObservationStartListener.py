@@ -44,9 +44,6 @@ import lofar.messagebus.messagebus as lofMess
 
 __version__ = "1.0"
 
-#TODO: set it up in CMake env, install as pkg under lofar module
-#TODO: add test case; also test parset key expand
-
 def runProcess(execPath, parsetFilename, hosts):
     """
     Run command execPath with arguments parsetFilename and the sequence hosts.
@@ -73,19 +70,19 @@ def getOutputHosts(paramset, matchPrefix):
     # so we don't have to try/except RuntimeError.
     uvOutputEnabled = paramset.getBool('ObsSW.Observation.DataProducts.Output_Correlated.enabled', False)
     if uvOutputEnabled:
-        uvOutputLocations = paramset.getStringVector('ObsSW.Observation.DataProducts.Output_Correlated.locations', [])
+        uvOutputLocations = paramset.getStringVector('ObsSW.Observation.DataProducts.Output_Correlated.locations', [], True)
 
         # E.g. 'node' in ['node1:/a/b', 'nope:/x/y'] -> ['node1']
         hosts.extend([loc.split(':')[0] for loc in uvOutputLocations if loc.startswith(matchPrefix)])
 
     cohStokesOutputEnabled = paramset.getBool('ObsSW.Observation.DataProducts.Output_CoherentStokes.enabled', False)
     if cohStokesOutputEnabled:
-        cohStokesOutputLocations = paramset.getStringVector('ObsSW.Observation.DataProducts.Output_CoherentStokes.locations', [])
+        cohStokesOutputLocations = paramset.getStringVector('ObsSW.Observation.DataProducts.Output_CoherentStokes.locations', [], True)
         hosts.extend([loc.split(':')[0] for loc in cohStokesOutputLocations if loc.startswith(matchPrefix)])
 
     incohStokesOutputEnabled = paramset.getBool('ObsSW.Observation.DataProducts.Output_IncoherentStokes.enabled', False)
     if incohStokesOutputEnabled:
-        incohStokesOutputLocations = paramset.getStringVector('ObsSW.Observation.DataProducts.Output_IncoherentStokes.locations', [])
+        incohStokesOutputLocations = paramset.getStringVector('ObsSW.Observation.DataProducts.Output_IncoherentStokes.locations', [], True)
         hosts.extend([loc.split(':')[0] for loc in incohStokesOutputLocations if loc.startswith(matchPrefix)])
 
     return hosts
@@ -234,7 +231,7 @@ def registerCmdOptions(parser):
                       help='suppress logging stream to stderr. Useful with -l and when run from systemd to keep system log clean.')
     parser.add_option('-d', '--daemon', action='store_true', dest='daemonize',
                       default=False,
-                      help='run this program as a daemon')
+                      help='run this program as a daemon. Use absolute paths in other options.')
 
 def checkArgs(parser, options, leftOverArgs):
     # Mandatory option is contradictory, but these as positional args is unclear.
