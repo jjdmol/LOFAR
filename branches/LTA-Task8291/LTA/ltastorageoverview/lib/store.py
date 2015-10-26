@@ -364,6 +364,20 @@ class LTAStorageDb:
             utcnow = datetime.datetime.utcnow()
             return (utcnow, utcnow)
 
+    def mostRecentVisitDate(self):
+        with sqlite3.connect(self.db_filename) as conn:
+            result = conn.execute('''
+                SELECT visit_date FROM scraper_last_directory_visit
+                order by visit_date desc
+                limit 1
+                ''').fetchone()
+
+            if result:
+                format = '%Y-%m-%d %H:%M:%S %Z'
+                return datetime.datetime.strptime(result[0]+' UTC', format)
+
+            return datetime.datetime(2011, 1, 1)
+
     def numDirectoriesNotVisitedSince(self, timestamp):
         with sqlite3.connect(self.db_filename) as conn:
             result = conn.execute('''

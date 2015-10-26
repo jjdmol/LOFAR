@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License along
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 
+# $Id$
+
 import sys
 import os
 import os.path
@@ -92,7 +94,8 @@ def index():
                            storagesitesubtitle='Total: %s #dataproducts: %s' % (humanreadablesize(total, 'B', 1000), humanreadablesize(numFiles, '', 1000)),
                            storagesitedata=storagesitedata,
                            usage_per_month_series=usage_per_month_series,
-                           deltas_per_month_series=deltas_per_month_series)
+                           deltas_per_month_series=deltas_per_month_series,
+                           data_gathered_timestamp=str(db.mostRecentVisitDate()))
 
 @app.route('/rest/sites/')
 def get_sites():
