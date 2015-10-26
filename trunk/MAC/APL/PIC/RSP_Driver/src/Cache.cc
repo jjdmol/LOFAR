@@ -42,6 +42,8 @@ using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 
+#define MAX_RCU_MODE 7
+
 // default settings
 // sdo_ss=295:330,331:366,367:402,403:438
 blitz::Array<uint16, 2> str2blitz(const char* str, int max)
@@ -170,6 +172,8 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
   LOG_DEBUG_STR("itsSDOSelection.size()               =" << itsSDOSelection.subbands().size() * sizeof(uint16));
   LOG_DEBUG_STR("itsSDOBitsPerSample.size()           =" << sizeof(itsSDOBitsPerSample));
   LOG_DEBUG_STR("itsPPSsyncDelays.size()              =" << sizeof(itsPPSsyncDelays));
+  LOG_DEBUG_STR("itsFixedAttenuations.size()          =" << sizeof(itsFixedAttenuations));
+  LOG_DEBUG_STR("itsAttenuationStepSize.size()        =" << sizeof(itsAttenuationStepSize));
   LOG_INFO_STR(formatString("CacheBuffer size = %d bytes",
 	         m_beamletweights().size()    	       
 	       + m_subbandselection.crosslets().size()  
@@ -199,7 +203,9 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
            + itsSDOModeInfo().size()
            + itsSDOSelection.subbands().size()
            + sizeof(itsBitsPerSample)
-           + sizeof(itsPPSsyncDelays)));
+           + sizeof(itsPPSsyncDelays)
+           + sizeof(itsFixedAttenuations)
+           + sizeof(itsAttenuationStepSize)));
 }
 
 CacheBuffer::~CacheBuffer()
@@ -442,6 +448,19 @@ void CacheBuffer::reset(void)
         } // for each bank
     }
     readPPSdelaySettings();
+    
+    itsAttenuationStepSize = 0.25;
+    try { itsAttenuationStepSize = GET_CONFIG("RSPDriver.ATT_STEP_SIZE", f); }
+	catch (APSException&) { LOG_INFO_STR("RSPDriver.ATT_STEP_SIZE not found"); }
+    char key[40];
+    itsFixedAttenuations.resize(MAX_RCU_MODE + 1);
+    itsFixedAttenuations = 0.0;
+    for (int rcumode = 1; rcumode <= MAX_RCU_MODE; rcumode++) {
+        snprintf(key,  40, "RSPDriver.FIXED_ATT_MODE_%d", rcumode);
+        itsFixedAttenuations(rcumode) = 0.0;
+        try { itsFixedAttenuations(rcumode) = GET_CONFIG(key, f); }
+        catch (APSException&) { LOG_INFO_STR(formatString("RSPDriver.FIXED_ATT_MODE_%d not found", rcumode)); }
+    } 
 }
 
 

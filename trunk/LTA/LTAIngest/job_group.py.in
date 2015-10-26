@@ -153,11 +153,14 @@ class job_group():
         c = db.cursor()
         c.execute("SELECT * from export_jobs_advanced2 where export_mom2id = %i;" % (self.Id))
         db_job = c.fetchone()
-        ## id, export_mom2id, exportname, starter, starttime, description, status, updatetime, projectname, location
-        #'561859', '577442', 'LOTAAS-2015-08-18', 'schaap', '2015-08-25 08:02:44', 'Export to LTA', 'finished', '2015-08-25 12:21:36', 'LC4_030', 'Lofar Storage (SARA)'
-        self.job_info = {'id': db_job[1], 'start_time': db_job[4], 'update_time': db_job[7],
-                         'user': db_job[3].rjust(8), 'status': db_job[6], 'name': db_job[2].rjust(9),
-                         'project': db_job[8], 'ltalocation': db_job[9]}
+
+        if db_job:
+          self.job_info = {'id': db_job[1], 'start_time': db_job[4], 'update_time': db_job[7],
+                          'user': db_job[3].rjust(8), 'status': db_job[6], 'name': db_job[2].rjust(9),
+                          'project': db_job[8], 'ltalocation': db_job[9]}
+        else:
+          self.logger.warning('Could not find result for exportjob %i in momdb' % str(self.Id))
+
       except Exception as e:
         self.logger.warning('Caught an exception trying to talk to the Mom database: %s' % str(e))
     else:
