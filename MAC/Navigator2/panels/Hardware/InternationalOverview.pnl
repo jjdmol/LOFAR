@@ -257,6 +257,42 @@ LANG:1 22 International Stations
 0
 1 170 11 "" 5
 0
+1 171 12 "" 6
+0
+1 172 12 "" 1
+0
+1 173 12 "" 2
+0
+1 174 12 "" 3
+0
+1 175 12 "" 4
+0
+1 176 12 "" 5
+0
+1 177 13 "" 6
+0
+1 178 13 "" 1
+0
+1 179 13 "" 2
+0
+1 180 13 "" 3
+0
+1 181 13 "" 4
+0
+1 182 13 "" 5
+0
+1 183 14 "" 6
+0
+1 184 14 "" 1
+0
+1 185 14 "" 2
+0
+1 186 14 "" 3
+0
+1 187 14 "" 4
+0
+1 188 14 "" 5
+0
 0
 LAYER, 1 
 1
@@ -287,7 +323,7 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 1 "PANEL_REF1" -1
-"objects\\Hardware\\antennaPercentage.pnl" 682 80 T 63 U 
+"objects\\Hardware\\antennaPercentage.pnl" 682 80 T 63 1 0 1 200 40
 0
 3 2 "PANEL_REF2" -1
 "objects\\Hardware\\LBA_HBAStatusView.pnl" 100 310 T 103 U 
@@ -328,4 +364,16 @@ LANG:1 6 Layer8
 "objects\\Hardware\\LBA_HBAStatusView.pnl" 470 240 T 110 1 0 1 90 -90
 1
 "$station""DE609"
+3 12 "PANEL_REF12" -1
+"objects\\Hardware\\LBA_HBAStatusView.pnl" 650 240 T 110 1 0 1 100 0
+1
+"$station""PL610"
+3 13 "PANEL_REF13" -1
+"objects\\Hardware\\LBA_HBAStatusView.pnl" 650 240 T 111 1 0 1 200 -70
+1
+"$station""PL612"
+3 14 "PANEL_REF14" -1
+"objects\\Hardware\\LBA_HBAStatusView.pnl" 650 240 T 112 1 0 1 200 60
+1
+"$station""PL611"
 0
