@@ -27,6 +27,9 @@ import time
 import uuid
 import sys
 import traceback
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # create service:
@@ -77,7 +80,7 @@ class Service:
 	Internal use only.
 	"""
         if self.Verbose is True:
-            print(txt)
+            logger.debug("[Service: %s]", txt)
 
     def StartListening(self, numthreads=None):
         """
@@ -107,8 +110,8 @@ class Service:
             self.running = False
             for i in range(self._numthreads):
                 self._tr[i].join()
-                print("Thread %2d: STOPPED Listening for messages on Bus %s and service name %s." % (i, self.BusName, self.ServiceName))
-                print("           %d messages received and %d processed OK." % (self.reccounter[i], self.okcounter[i]))
+                logger.info("Thread %2d: STOPPED Listening for messages on Bus %s and service name %s." % (i, self.BusName, self.ServiceName))
+                logger.info("           %d messages received and %d processed OK." % (self.reccounter[i], self.okcounter[i]))
 
     def WaitForInterrupt(self):
 	"""
@@ -120,7 +123,8 @@ class Service:
                 time.sleep(10)
             except KeyboardInterrupt:
                 looping = False
-                print("Keyboard interrupt received.")
+                logger.info("Keyboard interrupt received.")
+
 
     def __enter__(self):
         """
@@ -185,14 +189,14 @@ class Service:
                 with ToBus(reply_to) as dest:
                     dest.send(ToSend)
             except MessageBusError as e:
-                print("Failed to send reply to reply address %s" %(reply_to))
+                logger.error("Failed to send reply to reply address %s" %(reply_to))
 
 
     def _loop(self, index):
 	"""
 	Internal use only. Message listener loop that receives messages and starts the attached function with the message content as argument.
 	"""
-        print( "Thread %d START Listening for messages on Bus %s and service name %s." %(index, self.BusName, self.ServiceName))
+        logger.info( "Thread %d START Listening for messages on Bus %s and service name %s." %(index, self.BusName, self.ServiceName))
         while self.running:
             try:
                 # get the next message
@@ -203,7 +207,7 @@ class Service:
 
                 # report if messages are not Service Messages
                 if isinstance(msg, ServiceMessage) is not True:
-                    print "Received wrong messagetype %s, ServiceMessage expected." %(str(type(msg)))
+                    logger.error( "Received wrong messagetype %s, ServiceMessage expected." %(str(type(msg))))
                     self.Listen.ack(msg)
                     continue
 
@@ -239,15 +243,15 @@ class Service:
                     backtrace = ''.join(rawbacktrace).encode('latin-1').decode('unicode_escape')
                     self._debug(backtrace)
                     if self.Verbose is True:
-                        print status
-                        print errtxt
-                        print backtrace
+                        logger.info("[Service:] Status: %s", str(status))
+                        logger.info("[Service:] ERRTXT: %s", str(errtxt))
+                        logger.info("[Service:] BackTrace: %s", str( backtrace ))
                     self._send_reply(None, status, msg.reply_to, errtxt=errtxt, backtrace=backtrace)
 
             except Exception as e:
                 # Unknown problem in the library. Report this and continue.
                 excinfo = sys.exc_info()
-                print "ERROR during processing of incoming message."
+                logger.error("[Service:] ERROR during processing of incoming message.")
                 traceback.print_exception(*excinfo)
-                print "Thread %d: Resuming listening on bus %s for service %s" % (index, self.BusName, self.ServiceName)
+                logger.info( "Thread %d: Resuming listening on bus %s for service %s" % (index, self.BusName, self.ServiceName))
 
