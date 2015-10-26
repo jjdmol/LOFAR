@@ -63,7 +63,7 @@ For CentOS/Fedora (likely incomplete list, but goes a long way):
 
 
 
-NOTE (any OS): The most prominent dependency you likely need to build from source is casacore (+ friends):
+NOTE (any OS): For manual builds, the most prominent dependency you likely need to build is casacore (+ friends):
 
 	casacore:                  https://github.com/casacore/casacore
 	python-casacore ('pyrap'): https://github.com/casacore/python-casacore
@@ -99,7 +99,7 @@ Instructions for Manual Build from Source
 	ctest -j 4 --timeout 60
 
   All tests should pass, however, a few packages (not selected above) require
-  GPU hardware or a database to pass.
+  GPU hardware or a database to pass all tests.
 
 - You may want to add the installation path bin/ to your PATH:
 
