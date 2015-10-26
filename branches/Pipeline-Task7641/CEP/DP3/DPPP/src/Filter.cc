@@ -67,7 +67,11 @@ namespace LOFAR {
     {
       info() = infoIn;
       info().setNeedVisData();
-      info().setNeedWrite();
+      info().setWriteData();
+      info().setWriteFlags();
+      if (itsRemoveAnt) {
+        info().setMetaChanged();
+      }
       // Parse the chan expressions.
       // Nr of channels can be used as 'nchan' in the expressions.
       Record rec;
@@ -144,6 +148,7 @@ namespace LOFAR {
     {
       itsTimer.start();
       if (!itsDoSelect) {
+        itsBuf.referenceFilled (buf);
         itsTimer.stop();
         getNextStep()->process (buf);
         return true;
@@ -244,6 +249,7 @@ namespace LOFAR {
 
     void Filter::addToMS (const string& msName)
     {
+      getPrevStep()->addToMS(msName);
       if (! itsRemoveAnt) {
         return;
       }

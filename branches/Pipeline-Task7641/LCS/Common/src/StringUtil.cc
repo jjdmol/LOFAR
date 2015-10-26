@@ -26,7 +26,6 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarTypes.h>
 #include <Common/StringUtil.h>
-#include <Common/lofar_algorithm.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_iomanip.h>
 #include <Common/lofar_map.h>
@@ -124,7 +123,7 @@ const string formatlString(const	char* format, ...) {
 //
 // timeString(aTime [,format]) --> string
 //
-// Define a global function that convert a timestamp into a humanreadable 
+// Define a global function that convert a timestamp into a human-readable 
 // format.
 //
 const string timeString(time_t		aTime, 
@@ -132,8 +131,17 @@ const string timeString(time_t		aTime,
 							 const char*	format)
 {
 	char	theTimeString [256];
-	strftime(theTimeString, 256, format, gmt ? gmtime(&aTime) 
-														: localtime(&aTime));
+	struct tm tm;
+
+	if (gmt) {
+		gmtime_r(&aTime, &tm);
+	} else {
+		localtime_r(&aTime, &tm);
+	}
+	if (strftime(theTimeString, sizeof(theTimeString), format, &tm) == 0) {
+		strncpy(theTimeString, "unk timestamp", sizeof(theTimeString));
+		theTimeString[sizeof(theTimeString)-1] = '\0'; // defensive
+	}
 
 	return (theTimeString);
 }

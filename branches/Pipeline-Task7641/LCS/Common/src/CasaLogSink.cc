@@ -24,6 +24,7 @@
 
 #include <lofar_config.h>
 #include <Common/CasaLogSink.h>
+#include <string>
 #include <Common/LofarLogger.h>
 
 

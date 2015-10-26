@@ -29,7 +29,7 @@ srcdir="@srcdir@"; export srcdir
 PATH="@CMAKE_BINARY_DIR@/bin:$PATH"; export PATH
 
 # Add the Python build directory to PYTHONPATH.
-PYTHONPATH="@PYTHON_BUILD_DIR@"; export PYTHONPATH
+PYTHONPATH="@srcdir@:@PYTHON_BUILD_DIR@:${PYTHONPATH}"; export PYTHONPATH
 
 # Start CMake/testscripts/runtest.sh
 "@LOFAR_ROOT@/CMake/testscripts/runtest.sh" "$@"

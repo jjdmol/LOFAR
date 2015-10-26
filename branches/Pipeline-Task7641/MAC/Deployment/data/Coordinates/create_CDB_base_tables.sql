@@ -205,4 +205,7 @@ INSERT INTO station VALUES ('FR606', 'Nancy');
 INSERT INTO station VALUES ('SE607', 'Onsala');
 INSERT INTO station VALUES ('UK608', 'Chillbolton');
 INSERT INTO station VALUES ('FI609', 'Kaira');
+INSERT INTO station VALUES ('PL610', '');
+INSERT INTO station VALUES ('PL611', '');
+INSERT INTO station VALUES ('PL612', 'Baldy');
 

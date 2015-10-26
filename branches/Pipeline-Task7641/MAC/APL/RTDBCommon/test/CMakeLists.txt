@@ -15,6 +15,8 @@ configure_file(
 lofar_add_test(tRTDButilities tRTDButilities.cc)
 lofar_add_test(tClaimManager tClaimManager.cc)
 
-set_tests_properties(
-  tRTDButilities tClaimManager
-  PROPERTIES RUN_SERIAL ON)
+if(BUILD_TESTING)
+  set_tests_properties(
+    tRTDButilities tClaimManager
+    PROPERTIES RUN_SERIAL ON)
+endif(BUILD_TESTING)

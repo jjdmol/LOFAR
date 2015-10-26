@@ -31,9 +31,12 @@ namespace LOFAR {
 
 namespace Protocols {
 
-class TaskFeedbackState: public Message
+class TaskFeedbackState: public MessageContent
 {
 public:
+  Property type;
+  Property state;
+
   TaskFeedbackState(
     // Name of the service or process producing this message
     const std::string &from,
@@ -51,7 +54,7 @@ public:
     // Payload: a boolean indicating success
     bool success
   ):
-  Message(
+  MessageContent(
     from,
     forUser,
     summary,
@@ -60,6 +63,8 @@ public:
     momID,
     sasID)
   {
+    addPayloadProperties();
+
     setXMLPayload(formatString(
       "<task>\n"
       "  <type>observation</type>\n"
@@ -71,22 +76,15 @@ public:
   // Parse a message
   TaskFeedbackState(const qpid::messaging::Message qpidMsg)
   :
-    Message(qpidMsg)
+    MessageContent(qpidMsg)
   {
+    addPayloadProperties();
   }
 
-  // Read a message from disk (header + payload)
-  TaskFeedbackState(const std::string &rawContent)
-  :
-    Message(rawContent)
+  void addPayloadProperties()
   {
-  }
-
-  ParameterSet feedback() const {
-    ParameterSet result;
-    result.adoptBuffer(payload());
-
-    return result;
+    type.attach (&itsContent, "message/payload/task/type");
+    state.attach(&itsContent, "message/payload/task/state");
   }
 };
 

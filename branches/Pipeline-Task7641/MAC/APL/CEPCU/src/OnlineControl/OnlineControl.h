@@ -29,8 +29,8 @@
 #include <Common/LofarLogger.h>
 #include <Common/ParameterSet.h>
 
-//# MsgBus Includes
-#include <MessageBus/MsgBus.h>
+//# MessageBus Includes
+#include <MessageBus/FromBus.h>
 
 //# GCF Includes
 #include <GCF/TM/GCF_Control.h>

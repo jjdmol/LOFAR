@@ -38,16 +38,21 @@ using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 using namespace RTC;
 
-CRSyncWrite::CRSyncWrite(GCFPortInterface& board_port, int board_id, blitz::Array<int, 1> delaySteps)
-  : SyncAction(board_port, board_id, 1+max(delaySteps))
-{
-	ASSERTSTR(delaySteps.extent(firstDim) == NR_BLPS_PER_RSPBOARD, "Expected " << NR_BLPS_PER_RSPBOARD << 
-				" delay-steps not " << delaySteps.extent(firstDim));
 
-	itsDelays.resize(delaySteps.shape());
-	itsCounters.resize(delaySteps.shape());
-	itsDelays   = delaySteps;
-	itsCounters = itsDelays;
+CRSyncWrite::CRSyncWrite(GCFPortInterface& board_port, int board_id)
+  : SyncAction(board_port, board_id, NR_BLPS_PER_RSPBOARD)
+{
+	
+    //ASSERTSTR(delaySteps.extent(firstDim) == NR_BLPS_PER_RSPBOARD, "Expected " << NR_BLPS_PER_RSPBOARD << 
+	//			" delay-steps not " << delaySteps.extent(firstDim));
+
+	itsDelays.resize(NR_BLPS_PER_RSPBOARD);
+	itsCounters.resize(NR_BLPS_PER_RSPBOARD);
+    	
+    //itsDelays.resize(delaySteps.shape());
+	//itsCounters.resize(delaySteps.shape());
+	//itsDelays   = delaySteps;
+	//itsCounters = itsDelays;
 
 	memset(&m_hdr, 0, sizeof(MEPHeader));
 	doAtInit();								// only during initialisation mode
@@ -72,7 +77,14 @@ void CRSyncWrite::sendrequest()
 	uint16	blpid(0);
 	EPACrControlEvent CRSyncEvent;
 	if (Cache::getInstance().getState().crcontrol().get(getBoardId()) == RTC::RegisterState::READ) {
-		// start of cycle, log unfinished cycles
+        
+        int	sliceBegin = getBoardId() * NR_BLPS_PER_RSPBOARD;
+		int sliceEnd   = sliceBegin + NR_BLPS_PER_RSPBOARD - 1;
+		itsDelays = Cache::getInstance().getBack().getPPSdelays()(Range(sliceBegin, sliceEnd));
+                
+        setNumIndices(max(itsDelays)+1);
+        
+        // start of cycle, log unfinished cycles
 		for (int b = 0; b < NR_BLPS_PER_RSPBOARD; b++) {
 			if (itsCounters(b) && itsCounters(b) != itsDelays(b)) {
 				LOG_WARN(formatString("PPS delay[%d][%]: %d out of %d written", 

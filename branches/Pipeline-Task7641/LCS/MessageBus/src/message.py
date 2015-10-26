@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # Copyright (C) 2012-2015  ASTRON (Netherlands Institute for Radio Astronomy)
 # P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 #
@@ -17,15 +17,20 @@
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 
 try:
-  import qpid.messaging
-  enabled = True
+  import qpid.messaging as messaging
+  MESSAGING_ENABLED = True
 except ImportError:
-  enabled = False
+  import noqpidfallback as messaging
+  MESSAGING_ENABLED = False
 
 import xml.dom.minidom as xml
 import xml.parsers.expat as expat
+from xml.sax.saxutils import escape
 import datetime
 
+#
+# The template for the LOFAR message format.
+#
 LOFAR_MSG_TEMPLATE = """
 <message>
    <header>
@@ -47,8 +52,7 @@ LOFAR_MSG_TEMPLATE = """
          <sasid/>
       </ids>
    </header>
-   <payload>
-   </payload>
+   <payload/>
 </message>"""
 
 def _timestamp():
@@ -62,100 +66,46 @@ def _uuid():
   """
     Return an UUID
   """
-  return str(qpid.messaging.uuid4())
+  return str(messaging.uuid4())
 
 class MessageException(Exception):
     pass
 
-class Message(object):
-    def __init__(self, from_="", forUser="", summary="", protocol="", protocolVersion="", momid="", sasid="", qpidMsg=None):
+class XMLDoc(object):
+    def __init__(self, content):
+      try:
+        self.document = xml.parseString(content)
+      except expat.ExpatError, e:
+        #print "Could not parse XML message content: ", e, qpidMsg.content
+        raise MessageException(e)
 
-      for name, element in self._property_list().iteritems():
-        self._add_property(name, element)
+    def content(self):
+      """ Return the XML document in string form. """
+      return self.document.toxml()
 
-      if qpidMsg is None:
-        self.document = xml.parseString(LOFAR_MSG_TEMPLATE)
-        self._qpidMsg = qpid.messaging.Message(content_type="text/plain", durable=True)
-        self.dirty    = True
+    def getXMLdata(self, name):
+      """ Return the value of an XML key, given by its XPath.
+          Raise MessageException if name is N/A. """
+      node = self._getXMLnode(name)
+      if node is None:
+          raise MessageException('node ' + name + ' not in XML document')
 
-        # Set properties provided by constructor
-        self.system          = "LOFAR"
-        self.headerVersion   = "1.0.0"
-        self.protocol        = protocol
-        self.protocolVersion = protocolVersion
-        self.from_           = from_
-        self.forUser         = forUser
-        self.summary         = summary
-        self.uuid            = _uuid()
-        self.timestamp       = _timestamp()
-        self.momid           = momid
-        self.sasid           = sasid
-      else:
-        self._qpidMsg = qpidMsg
-        self.dirty    = False
+      return self._get_data(node)
 
-        # Set properties by provided qpidMsg
-        try:
-          # Replace literal << in the content, which is occasionally inserted by the C++
-          # code as part of the Parset ("Observation.Clock=<<Clock200")
-          self.document = xml.parseString(qpidMsg.content.replace("<<","&lt;&lt;"))
-        except expat.ExpatError, e:
-          print "Could not parse XML message content: ", e, msg.content
-          raise MessageException(e)
+    def setXMLdata(self, name, data):
+      """ Set the value of an XML key, given by its XPath.
+          Raise MessageException if name is N/A. """
+      node = self._getXMLnode(name)
+      if node is None:
+          raise MessageException('node ' + name + ' not in XML document')
 
-    def _add_property(self, name, element):
-      def getter(self):
-        return self._getXMLdata(element)
-      def setter(self, value):
-        self._setXMLdata(element, str(value))
+      return self._set_data(node, data)
 
-      setattr(self.__class__, name, property(getter, setter))
+    def insertXML(self, parent, xmlStr):
+      """ Insert XML into the current message. """
+      doc = xml.parseString(xmlStr)
 
-    def _property_list(self):
-      """ List of XML elements that are exposed as properties. """
-      return { 
-        "system":          "message.header.system",
-        "headerVersion":   "message.header.version",
-        "protocol":        "message.header.protocol.name",
-        "protocolVersion": "message.header.protocol.version",
-        "from_":           "message.header.source.name",
-        "forUser":         "message.header.source.user",
-        "uuid":            "message.header.source.uuid",
-        "summary":         "message.header.source.summary",
-        "timestamp":       "message.header.source.timestamp",
-        "momid":           "message.header.ids.momid",
-        "sasid":           "message.header.ids.sasid",
-        "payload":         "message.payload",
-        "header":          "message.header",
-      }
-
-    """ API (apart from properties). """
-
-    def __repr__(self):
-      return "Message(%s %s)" % (self.protocol, self.protocolVersion)
-
-    def __str__(self):
-      return ("system         : %s\n" % (self.system,) +
-              "systemversion  : %s\n" % (self.headerVersion,) +
-              "protocol       : %s\n" % (self.protocol,) +
-              "protocolVersion: %s\n" % (self.protocolVersion,) +
-              "summary        : %s\n" % (self.summary,) +
-              "timestamp      : %s\n" % (self.timestamp,) +
-              "source         : %s\n" % (self.from_,) +
-              "user           : %s\n" % (self.forUser,) +
-              "uuid           : %s\n" % (self.uuid,) +
-              "momid          : %s\n" % (self.momid,) +
-              "sasid          : %s\n" % (self.sasid,) +
-              "payload        : %s\n" % (self.payload,)
-             )
-
-    def qpidMsg(self):
-      """ Construct the QPID message content. """
-
-      if self.dirty:
-        self._qpidMsg.content = self.document.toxml()
-
-      return self._qpidMsg
+      self._getXMLnode(parent).appendChild(doc.firstChild)
 
     """ XML support functions. See also lofarpipe/support/xmllogging.py. """
 
@@ -190,8 +140,6 @@ class Message(object):
       else:
         node.appendChild(newchild)
 
-      self.dirty = True
-
     def _getXMLnode(self, name):
       """ Return a node given by its dot-separated path name.
           So a.b.c returns the inner node of <a><b><c></c></b></a>. """
@@ -206,14 +154,124 @@ class Message(object):
 
       return node
 
-    def _getXMLdata(self, name):
-      return self._get_data(self._getXMLnode(name))
+class MessageContent(object):
+    """
+      Describes the content of a message, which can be constructed from either a set of fields, or from
+      an existing QPID message.
+    """
 
-    def _setXMLdata(self, name, data):
-      return self._set_data(self._getXMLnode(name), data)
+    class Defaults(object):
+      system = "LOFAR"
+      headerVersion = "1.0.0"
+
+    def __init__(self, from_="", forUser="", summary="", protocol="", protocolVersion="", momid="", sasid="", qpidMsg=None):
+      # Add properties to get/set header fields
+      for name, element in self._property_list().iteritems():
+        self._add_property(name, element)
+
+      # Set the content from either the parameters or from the provided qpidMsg
+      if qpidMsg is None:
+        self.document = XMLDoc(LOFAR_MSG_TEMPLATE)
+
+        # Set properties provided by constructor
+        self.system          = self.Defaults.system
+        self.headerVersion   = self.Defaults.headerVersion
+        self.protocol        = protocol
+        self.protocolVersion = protocolVersion
+        self.from_           = from_
+        self.forUser         = forUser
+        self.summary         = summary
+        self.uuid            = _uuid()
+        self.timestamp       = _timestamp()
+        self.momid           = momid
+        self.sasid           = sasid
+      else:  # Set properties by provided qpidMsg
+        # Encode '<', '&', '>' in the content payload. Content header should not
+        # have these and going through all header fields is tedious; tough luck.
+        # Some senders fail to use libxml++ properly/at all. Fix it! Hack ahead!
+        if qpidMsg.content is None:
+          qpidMsg.content = ''  # avoid find() or replace() via escape() on None
+        plIdx = qpidMsg.content.find('<payload>')
+        if plIdx != -1:
+          plIdx += len('<payload>')
+          plEndIdx = qpidMsg.content.rfind('</payload>', plIdx)
+          if plEndIdx != -1:
+            qpidMsg.content = qpidMsg.content[ : plIdx] + escape(qpidMsg.content[plIdx : plEndIdx]) + qpidMsg.content[plEndIdx : ]
+        self.document = XMLDoc(qpidMsg.content)  # may raise MessageException
+
+    def _add_property(self, name, element):
+      def getter(self):
+        return self.document.getXMLdata(element)
+      def setter(self, value):
+        self.document.setXMLdata(element, str(value))
+
+      setattr(self.__class__, name, property(getter, setter))
+
+    def _property_list(self):
+      """ List of XML elements that are exposed as properties. """
+      return { 
+        "system":          "message.header.system",
+        "headerVersion":   "message.header.version",
+        "protocol":        "message.header.protocol.name",
+        "protocolVersion": "message.header.protocol.version",
+        "from_":           "message.header.source.name",
+        "forUser":         "message.header.source.user",
+        "uuid":            "message.header.source.uuid",
+        "summary":         "message.header.source.summary",
+        "timestamp":       "message.header.source.timestamp",
+        "momid":           "message.header.ids.momid",
+        "sasid":           "message.header.ids.sasid",
+        "payload":         "message.payload",
+        "header":          "message.header",
+      }
+
+    """ API (apart from properties). """
+
+    def __repr__(self):
+      return "MessageContent(%s %s)" % (self.protocol, self.protocolVersion)
+
+    def __str__(self):
+      return "[%s] [sasid %s] %s" % (self.uuid, self.sasid, self.summary)
+
+    def content(self):
+      """ Construct the literal message content. """
+
+      return self.document.content()
+
+    def qpidMsg(self):
+      """ Construct a NEW QPID message. """
+
+      msg = messaging.Message(content_type="text/plain", durable=True)
+      msg.content = self.content()
+
+      return msg
+
+
+class Message(object):
+    """
+      Describes a QPID message, which can be received or sent.
+    """
+
+    def __init__(self, qpidMsg=None):
+      self._qpidMsg = qpidMsg
+
+    """ API (apart from properties). """
+
+    def qpidMsg(self):
+      return self._qpidMsg
+
+    def content(self):
+      return MessageContent(qpidMsg=self._qpidMsg)
+
+    def raw_content(self):
+      return self._qpidMsg.content
+
+    def __repr__(self):
+      msg = self.content()
+      return "Message(%s %s)" % (msg.protocol, msg.protocolVersion)
 
 if __name__ == "__main__":
-  m = Message("FROM", "FORUSER", "SUMMARY", "PROTOCOL", "1.2.3", "11111", "22222")
+  m = MessageContent("FROM", "FORUSER", "SUMMARY", "PROTOCOL", "1.2.3", "11111", "22222")
   print str(m)
-  print m.document.toxml()
+  print m.content()
 

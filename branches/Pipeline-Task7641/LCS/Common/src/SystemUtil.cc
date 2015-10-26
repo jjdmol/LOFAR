@@ -67,7 +67,7 @@ int remoteCopy (const	string& localFile,
 	}
 
 	// execute the command.
-	int error = system(command.c_str());
+	int error = std::system(command.c_str());
 	LOG_DEBUG(formatString("copy command: %s",command.c_str()));
 
 	if (error == 0) {			
@@ -78,7 +78,7 @@ int remoteCopy (const	string& localFile,
 		// an error occured, try to reconstruct the message
 		char 	outputLine[200];
 		string 	outputString;
-		FILE* 	f = fopen(tmpResultFile.c_str(),"rt");	// open file with errormsg
+		FILE* 	f = std::fopen(tmpResultFile.c_str(),"rt");	// open file with errormsg
 		if (f == NULL) {						// oops, problems opening the file
 			LOG_ERROR(
 				formatString("Unable to remote copy %s to %s:%s: reason unknown",
@@ -93,7 +93,7 @@ int remoteCopy (const	string& localFile,
 					outputString+=string(outputLine);
 				}
 			}
-			fclose(f);
+			std::fclose(f);
 			LOG_ERROR(formatString("Unable to remote copy %s to %s:%s: %s",
 						localFile.c_str(),remoteHost.c_str(),remoteFile.c_str(),
 						outputString.c_str()));
@@ -101,7 +101,7 @@ int remoteCopy (const	string& localFile,
 	}
 
 	// remove the temporarely file.
-	remove(tmpResultFile.c_str());
+	std::remove(tmpResultFile.c_str());
 
 	return (error);
 }
@@ -120,7 +120,7 @@ int copyFromRemote(const string& remoteHost,
 									remoteHost.c_str(), remoteFile.c_str(), localFile.c_str(),
 									tmpResultFile.c_str()));
 	// execute the command.
-	int error = system(command.c_str());
+	int error = std::system(command.c_str());
 	LOG_DEBUG(formatString("copy command: %s",command.c_str()));
 
 	if(error == 0) {			
@@ -131,7 +131,7 @@ int copyFromRemote(const string& remoteHost,
 		// an error occured, try to reconstruct the message
 		char 	outputLine[200];
 		string 	outputString;
-		FILE* 	f = fopen(tmpResultFile.c_str(),"rt");	// open file with errormsg
+		FILE* 	f = std::fopen(tmpResultFile.c_str(),"rt");	// open file with errormsg
 		if (f == NULL) {						// oops, problems opening the file
 			LOG_ERROR(
 				formatString("Unable to remote copy %s:%s to %s: reason unknown",
@@ -146,7 +146,7 @@ int copyFromRemote(const string& remoteHost,
 					outputString+=string(outputLine);
 				}
 			}
-			fclose(f);
+			std::fclose(f);
 			LOG_ERROR(formatString("Unable to remote copy %s:%s to %s: %s",
 								   remoteHost.c_str(),remoteFile.c_str(),localFile.c_str(),
 								   outputString.c_str()));
@@ -154,7 +154,7 @@ int copyFromRemote(const string& remoteHost,
 	}
 
 	// remove the temporarely file.
-	remove(tmpResultFile.c_str());
+	std::remove(tmpResultFile.c_str());
 
 	return (error);
 }

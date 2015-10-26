@@ -44,15 +44,13 @@ size_t SDOSelection::getSize() const
 size_t SDOSelection::pack(char* buffer) const
 {
   size_t offset = 0;
-  MSH_pack(buffer, offset, itsSubbands);
-  return offset;
+  return MSH_pack(buffer, offset, itsSubbands);
 }
 
 size_t SDOSelection::unpack(const char *buffer)
 {
   size_t offset = 0;
-  MSH_unpack(buffer, offset, itsSubbands);
-  return offset;
+  return MSH_unpack(buffer, offset, itsSubbands);
 }
 
 

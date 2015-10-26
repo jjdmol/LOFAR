@@ -23,9 +23,6 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-//# This program can only be compiled if Boost is available.
-#ifdef HAVE_BOOST
-
 //# Includes
 #include "Shapes.h"
 #include "Coordinates.h"
@@ -89,13 +86,3 @@ int main()
   cout << endl;
   return 0;
 }
-
-#else
-
-int main()
-{
-  // Test skipped.
-  return 3;
-}
-
-#endif

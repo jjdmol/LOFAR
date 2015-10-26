@@ -169,6 +169,8 @@ public:
     bool diff(const TaskStorage *other, task_diff &dif) const;
     QString diffString(const task_diff &dif) const;
 
+    bool getEqualityInputOutputProducts()const;
+
 private:
     const Task *itsOwner;
     bool itsRecalcStorageNeeded;

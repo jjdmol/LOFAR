@@ -45,9 +45,14 @@ for HOST in ${HOSTS:-cbm001 cbm002 cbm003 cbm004 cbm005 cbm006 cbm007 cbm008 cbm
     ln -sfT /localhome/lofarsystem/lofar/var var
 
   # Set capabilities so our soft real-time programs can elevate prios.
-  COBALT_CAPABILITIES='cap_sys_admin,cap_sys_nice,cap_ipc_lock'
-#disabled until we've updated /etc/sudoers to allow lofarbuild to do this
-#also, we don't need cap_sys_admin and should drop it, idem on CEP2
-  #sudo /sbin/setcap \"${COBALT_CAPABILITIES}\"=ep bin/rtcp bin/outputProc
+  #
+  # cap_sys_nice: allow real-time priority for threads
+  # cap_ipc_lock: allow app to lock in memory (prevent swap)
+  # cap_net_raw:  allow binding sockets to NICs
+  OUTPUTPROC_CAPABILITIES='cap_sys_nice,cap_ipc_lock'
+  sudo /sbin/setcap \"${OUTPUTPROC_CAPABILITIES}\"=ep bin/outputProc || true
+  RTCP_CAPABILITIES='cap_net_raw,cap_sys_nice,cap_ipc_lock'
+  sudo /sbin/setcap \"${RTCP_CAPABILITIES}\"=ep bin/rtcp || true
   " || exit 1
 done
+

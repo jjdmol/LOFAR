@@ -2,7 +2,9 @@
 
 check_version = '0714'
 
+from threading import Thread
 import sys
+import traceback
 import os
 import numpy as np
 import time
@@ -11,7 +13,9 @@ import logging
 
 mainPath = r'/opt/stationtest'
 mainDataPath = r'/localhome/stationtest'
-observationsPath = r"/opt/lofar/var/run"
+observationsPath = r'/opt/lofar/var/run'
+
+beamletPath = r'/localhome/data/Beamlets'
 
 libPath  = os.path.join(mainPath, 'lib')
 sys.path.insert(0, libPath)
@@ -35,25 +39,6 @@ if not os.access(rtsmPath, os.F_OK):
     os.mkdir(rtsmPath)
 
 logger = None
-
-# class holding active function (stage)
-class ERR:
-    stage = ""
-    last_stage = ""
-    @staticmethod
-    def setStage(stage):
-        ERR.last_stage = ERR.stage
-        ERR.stage = stage
-        return
-    @staticmethod
-    def setLastStage():
-        ERR.stage = ERR.last_stage
-        return
-    @staticmethod
-    def log():
-        if logger != None:
-            logger.warn("program error(%s) in stage %s" %(sys.exc_value, ERR.stage))
-        return
 
 def lbaMode(mode):
     if mode in (1, 2, 3, 4):
@@ -186,38 +171,38 @@ def init_logging(args):
         _logger.addHandler(stream_handler)
     return (_logger)
 
-def getRcuMode():
-    ERR.setStage("getRcuMode")
+def getRcuMode(n_rcus):
+# RCU[ 0].control=0x10337a9c =>  ON, mode:3, delay=28, att=06
     rcumode = -1
     rcu_info = {}
     answer = rspctl("--rcu")
-    for line in answer.splitlines():
-        rcu   = int(line[4:6].strip())
-        state = line[30:33].strip()
-        mode  = int(line[40])
-        rcu_info[rcu] = (state, mode)
+    if answer.count('mode:') == n_rcus:
+        for line in answer.splitlines():
+            if line.find('mode:') == -1:
+                continue
+            rcu   = line[line.find('[')+1 : line.find(']')].strip()
+            state = line[line.find('=>')+2 : line.find(',')].strip()
+            mode  = line[line.find('mode:')+5]
+            if rcu.isdigit() and state in ("OFF", "ON") and mode.isdigit():
+                rcu_info[int(rcu)] = (state, int(mode))
 
-    for mode in range(8):
-        mode_cnt = answer.count("mode:%d" %(mode))
-        if mode == 0:
-            if mode_cnt == 96:
-                logger.debug("Not observing")
-                return (rcumode)
-        elif (mode_cnt > 32) and answer.count("mode:0") == (96 - mode_cnt):
-            logger.debug("Now observing in rcumode %d" %(mode))
-            rcumode = mode
-    ERR.setLastStage()
+        for mode in range(8):
+            mode_cnt = answer.count("mode:%d" %(mode))
+            if mode == 0:
+                if mode_cnt == n_rcus:
+                    logger.debug("Not observing")
+            elif mode_cnt > (n_rcus / 3) and answer.count("mode:0") == (n_rcus - mode_cnt):
+                logger.debug("Now observing in rcumode %d" %(mode))
+                rcumode = mode
     return (rcumode, rcu_info)
 
 def getAntPol(rcumode, rcu):
-    ERR.setStage("getAntPol")
     pol_str = ('X','Y')
     ant = rcu / 2
     if rcumode == 1:
         pol_str = ('Y','X')
         ant += 48
     pol = pol_str[rcu % 2]
-    ERR.setLastStage()
     return (ant, pol)
 
 class CSV:
@@ -228,30 +213,23 @@ class CSV:
     record_timestamp = 0
     @staticmethod
     def setObsID(obs_id):
-        ERR.setStage("CSV.setObsID")
         CSV.station  = getHostName()
         CSV.obs_id   = obs_id
         CSV.filename = "%s_%s_open.dat" %(CSV.station, CSV.obs_id)
         CSV.rcu_mode = 0
         CSV.rec_timestamp = 0
         CSV.writeHeader()
-        ERR.setLastStage()
         return
     @staticmethod
     def setRcuMode(rcumode):
-        ERR.setStage("CSV.setRcuMode")
         CSV.rcu_mode = rcumode
-        ERR.setLastStage()
         return
     @staticmethod
     def setRecordTimestamp(timestamp):
-        ERR.setStage("CSV.setRecordTimestamp")
         CSV.record_timestamp = timestamp
-        ERR.setLastStage()
         return
     @staticmethod
     def writeHeader():
-        ERR.setStage("CSV.writeHeader")
         full_filename = os.path.join(rtsmPath, CSV.filename)
         # write only if new file
         if not os.path.exists(full_filename):
@@ -260,11 +238,9 @@ class CSV:
             f.write('#\n')
             f.flush()
             f.close()
-        ERR.setLastStage()
         return
     @staticmethod
     def writeSpectra(data, rcu, check):
-        ERR.setStage("CSV.writeSpectra")
         dumpTime = time.gmtime(CSV.record_timestamp)
         date_str = time.strftime("%Y%m%d", dumpTime)
 
@@ -301,11 +277,9 @@ class CSV:
         f.write(bad_spectra)
 
         f.close()
-        ERR.setLastStage()
         return
     @staticmethod
     def writeInfo(start_time, stop_time, obsid_samples):
-        ERR.setStage("CSV.writeInfo")
         full_filename = os.path.join(rtsmPath, CSV.filename)
         logger.debug("add obs_info to %s" %(full_filename))
         f = open(full_filename, 'a')
@@ -313,11 +287,9 @@ class CSV:
         f.write('OBS-ID-INFO=%s,%5.3f,%5.3f,%d\n\n' %(CSV.obs_id, start_time, stop_time, obsid_samples))
         f.flush()
         f.close()
-        ERR.setLastStage()
         return
     @staticmethod
     def closeFile():
-        ERR.setStage("CSV.closeFile")
         full_filename = os.path.join(rtsmPath, CSV.filename)
         filename_new = CSV.filename.replace('open','closed')
         full_filename_new = os.path.join(rtsmPath, filename_new)
@@ -325,11 +297,9 @@ class CSV:
         os.rename(full_filename, full_filename_new)
         CSV.obs_id = ""
         CSV.filename = ""
-        ERR.setLastStage()
         return
 
 def checkForOscillation(data, rcumode, error_list, delta):
-    ERR.setStage("checkForOscillation")
     logger.debug("start oscillation check")
     for pol_nr, pol in enumerate(('X', 'Y')):
         #test_data = data.getAll()[:,:1,:]
@@ -373,7 +343,6 @@ def checkForOscillation(data, rcumode, error_list, delta):
     return
 
 def checkForNoise(data, rcumode, error_list, low_deviation, high_deviation, max_diff):
-    ERR.setStage("checkForNoise")
     logger.debug("start noise check")
     for pol_nr, pol in enumerate(('X', 'Y')):
         low_noise, high_noise, jitter = search_noise(data, pol, low_deviation, high_deviation*1.5, max_diff)
@@ -416,7 +385,6 @@ def checkForNoise(data, rcumode, error_list, low_deviation, high_deviation, max_
     return
 
 def checkForSummatorNoise(data, rcumode, error_list):
-    ERR.setStage("checkForSummatorNoise")
     logger.debug("start summator-noise check")
     for pol_nr, pol in enumerate(('X', 'Y')):
         # sn=SummatorNoise  cr=CableReflections
@@ -442,7 +410,6 @@ def checkForSummatorNoise(data, rcumode, error_list):
     return
 
 def checkForDown(data, rcumode, error_list, subband):
-    ERR.setStage("checkForDown")
     logger.debug("start down check")
     down, shifted = searchDown(data, subband)
     for msg in down:
@@ -455,22 +422,38 @@ def checkForDown(data, rcumode, error_list, subband):
                    (rcumode, rcu, (rcu+1), ant, max_x_offset, max_y_offset))
         if rcu not in error_list:
             error_list.append(rcu)
+            error_list.append(rcu+1)
             CSV.writeSpectra(data, rcu, "DOWN")
             CSV.writeSpectra(data, rcu+1, "DOWN")
+    return
 
-    for msg in shifted:
-        rcu, max_sb, mean_max_sb = i
-        offset = max_sb - mean_max_sb
+def checkForFlat(data, rcumode, error_list):
+    logger.debug("start flat check")
+    flat = searchFlat(data)
+    for msg in flat:
+        rcu, mean_val = msg
         ant, pol = getAntPol(rcumode, rcu)
-        logger.info("Mode-%d RCU-%02d Ant-%02d Shifted, offset=%d" %\
-                   (rcumode, rcu, ant, offset))
+        logger.info("Mode-%d RCU-%02d Ant-%02d Flat, value=%5.1fdB" %\
+                   (rcumode, rcu, ant, mean_val))
         if rcu not in error_list:
             error_list.append(rcu)
-            CSV.writeSpectra(data, rcu, "SHIFT")
+            CSV.writeSpectra(data, rcu, "FLAT")
+    return
+
+def checkForShort(data, rcumode, error_list):
+    logger.debug("start short check")
+    short = searchShort(data)
+    for msg in short:
+        rcu, mean_val = msg
+        ant, pol = getAntPol(rcumode, rcu)
+        logger.info("Mode-%d RCU-%02d Ant-%02d Short, value=%5.1fdB" %\
+                   (rcumode, rcu, ant, mean_val))
+        if rcu not in error_list:
+            error_list.append(rcu)
+            CSV.writeSpectra(data, rcu, "SHORT")
     return
 
 def closeAllOpenFiles():
-    ERR.setStage("closeAllOpenFiles")
     files = os.listdir(rtsmPath)
     for filename in files:
         if filename.find('open') > -1:
@@ -478,7 +461,6 @@ def closeAllOpenFiles():
             filename_new = filename.replace('open','closed')
             full_filename_new = os.path.join(rtsmPath, filename_new)
             os.rename(full_filename, full_filename_new)
-    ERR.setLastStage()
     return
 
 class cDayInfo:
@@ -491,7 +473,6 @@ class cDayInfo:
         self.readFile()
 
     def addSample(self, rcumode=-1):
-        ERR.setStage("cDayInfo.addSample")
         date = time.strftime("%Y%m%d", time.gmtime(time.time()))
         # new day reset data and set new filename
         if self.date != date:
@@ -500,24 +481,18 @@ class cDayInfo:
         if rcumode in range(1,8,1):
             self.samples[rcumode-1] += 1
             self.writeFile()
-        ERR.setLastStage()
 
     def addObsInfo(self, obs_id, start_time, stop_time, rcu_mode, samples):
-        ERR.setStage("cDayInfo.addObsInfo")
         self.obs_info.append([obs_id, start_time, stop_time, rcu_mode, samples])
-        ERR.setLastStage()
 
     def reset(self):
-        ERR.setStage("cDayInfo.reset")
         self.filename = "%s_%s_dayinfo.dat" %(getHostName(), self.date)
         self.samples = [0,0,0,0,0,0,0] # RCU-mode 1..7
         self.obs_info = list()
         self.deleteOldDays()
-        ERR.setLastStage()
 
     # after a restart, earlier data is imported
     def readFile(self):
-        ERR.setStage("cDayInfo.readFile")
         full_filename = os.path.join(rtsmPath, self.filename)
         if os.path.exists(full_filename):
             f = open(full_filename, 'r')
@@ -532,11 +507,9 @@ class cDayInfo:
                 if key == 'OBSID-INFO':
                     d = data.split(',')
                     self.obs_info.append([d[0],float(d[1]),float(d[2]),int(d[3]), int(d[4])])
-        ERR.setLastStage()
 
     # rewrite file every sample
     def writeFile(self):
-        ERR.setStage("cDayInfo.writeFile")
         full_filename = os.path.join(rtsmPath, self.filename)
         f = open(full_filename, 'w')
         f.write('#DAY-INFO date,M1,M2,M3,M4,M5,M6,M7\n')
@@ -547,10 +520,8 @@ class cDayInfo:
             f.write('OBS-ID-INFO=%s,%5.3f,%5.3f,%d,%d\n' %\
                    (i[0],i[1],i[2],i[3],i[4]))
         f.close()
-        ERR.setLastStage()
 
     def deleteOldDays(self):
-        ERR.setStage("cDayInfo.deleteOldDayInfo")
         files = os.listdir(rtsmPath)
         backup = True
         for filename in files:
@@ -562,7 +533,6 @@ class cDayInfo:
                     if filename.split('.')[0].split('_')[1] != self.date:
                         full_filename = os.path.join(rtsmPath, filename)
                         os.remove(full_filename)
-        ERR.setLastStage()
 
         
 def getObsId():
@@ -597,11 +567,60 @@ def getObsIdInfo(obsid):
     
     logger.debug("obsid %s  %s .. %s" %(obsid, obs_start_str, obs_stop_str))
     return(obsid, obs_start_time, obs_stop_time)
+
+class RecordBeamletStatistics(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+        self.running = False
+        self.reset()
     
+    def reset(self):
+        self.dump_dir = ''
+        self.obsid = ''
+        self.duration = 0
+            
+    def set_obsid(self, obsid):
+        self.dump_dir = os.path.join(beamletPath, obsid)
+        try:
+            os.mkdir(self.dump_dir)
+        except:
+            pass
+        self.obsid = obsid
+    
+    def set_duration(self, duration):
+        self.duration = duration
+    
+    def is_running(self):
+        return self.running
+    
+    def kill_recording(self):
+        if self.running:
+            logger.debug("kill recording beamlet statistics")
+            response = sendCmd(cmd='killall', args='rspctl')
+            logger.debug("recording killed")
+            self.running = False
+            self.make_plots()
+    
+    def make_plots(self):
+        if self.obsid:
+            try:
+                response = sendCmd(cmd='/home/fallows/inspect_bsts.bash', args=self.obsid)
+                logger.debug('response "inspect.bsts.bash" = {%s}' % response)
+            except:
+                logger.debug('exception while running "inspect.bsts.bash"')
+        self.reset()
+        
+    def run(self):
+        if self.duration:
+            self.running = True
+            logger.debug("start recording beamlet statistics for %d seconds" % self.duration)
+            rspctl('--statistics=beamlet --duration=%d --integration=1 --directory=%s' % (self.duration, self.dump_dir))
+            logger.debug("recording done")
+            self.make_plots()
+            self.running = False
     
 def main():
     global logger
-    ERR.setStage("main")
     obs_id   = ""
     active_obs_id  = ""
     rcumode  = 0
@@ -635,7 +654,10 @@ def main():
     obs_start_time = 0
     obs_stop_time  = 0
     obsid_samples  = 0
-
+    
+    beamlet_recording = RecordBeamletStatistics()
+     
+    
     while True:
         try:
             # get active obsid from swlevel
@@ -644,7 +666,7 @@ def main():
             time_now = time.time()
             # stop if no more obsids or observation is stoped
             if obs_stop_time > 0.0: 
-                if len(obsids) == 0 or time_now > obs_stop_time:
+                if active_obs_id not in obsids or len(obsids) == 0 or time_now > obs_stop_time:
                     logger.debug("save obs_id %s" %(obs_id))
                     DI.addObsInfo(obs_id, obs_start_time, obs_stop_time, rcumode, obsid_samples)
                     DI.writeFile()
@@ -653,9 +675,20 @@ def main():
                     active_obs_id  = ""
                     obs_start_time = 0.0
                     obs_stop_time  = 0.0
+                    # if still running kill recording
+                    if beamlet_recording:
+                        if beamlet_recording.is_running():
+                            beamlet_recording.kill_recording()
+                        beamlet_recording = 0
             
             # if no active observation get obs info if obsid available
             if active_obs_id == "":
+                # if still running kill recording
+                if beamlet_recording:
+                    if beamlet_recording.is_running():
+                        beamlet_recording.kill_recording()
+                    beamlet_recording = 0
+                
                 for id in obsids:
                     obsid, start, stop = getObsIdInfo(id)
                     if time_now >= (start - 60.0) and (time_now + 15) < stop:
@@ -667,6 +700,16 @@ def main():
             if time_now < obs_start_time:
                 logger.debug("waiting %d seconds for start of observation" %(int(obs_start_time - time_now)))
                 time.sleep((obs_start_time - time_now) + 1.0)
+                    
+            # start recording beamlets
+            if not beamlet_recording:
+                if obs_start_time > 0.0 and time.time() >= obs_start_time:
+                    duration = obs_stop_time - time.time() - 5
+                    if duration > 2:
+                        beamlet_recording = RecordBeamletStatistics()
+                        beamlet_recording.set_obsid(active_obs_id)
+                        beamlet_recording.set_duration(duration)
+                        beamlet_recording.start()
             
             check_start = time.time()
             # if new obs_id save data and reset settings
@@ -679,8 +722,8 @@ def main():
             # it takes about 11 seconds to record data, for safety use 15    
             if (time.time() + 15.0) < obs_stop_time:
                 # observing, so check mode now
-                rcumode, rcu_info = getRcuMode()
-                if rcumode == 0:
+                rcumode, rcu_info = getRcuMode(n_rcus)
+                if rcumode <= 0:
                     continue
 
                 active_rcus = []
@@ -691,11 +734,9 @@ def main():
                 data.setActiveRcus(active_rcus)
 
                 rec_timestamp  = time.time()+3.0
-                ERR.setStage("record")
                 data.record(rec_time=1, read=True, slow=True)
                 #data.fetch()
 
-                ERR.setStage("main")
                 CSV.setRcuMode(rcumode)
                 CSV.setRecordTimestamp(rec_timestamp)
                 DI.addSample(rcumode)
@@ -711,6 +752,8 @@ def main():
                 if lbaMode(rcumode):
                     checkForDown(data, rcumode, error_list,
                                   conf.getInt('lbh-test-sb',301))
+                    checkForShort(data, rcumode, error_list)
+                    checkForFlat(data, rcumode, error_list)
                     checkForOscillation(data, rcumode, error_list, 6.0)
                     checkForNoise(data, rcumode, error_list,
                                   conf.getFloat('lba-noise-min-deviation', -3.0),
@@ -724,8 +767,8 @@ def main():
                                   conf.getFloat('hba-noise-min-deviation', -3.0),
                                   conf.getFloat('hba-noise-max-deviation', 2.5),
                                   conf.getFloat('hba-noise-max-difference', 2.0))
-
             else:
+                
                 closeAllOpenFiles()
             
             if active_obs_id == "":
@@ -737,14 +780,21 @@ def main():
                 check_stop = time.time()
                 sleeptime = 60.0 - (check_stop - check_start)
                 logger.debug("sleep %1.0f seconds till next check" %(sleeptime))
-            if sleeptime > 0.0:
-                time.sleep(sleeptime)
+            while sleeptime > 0.0:
+                wait = min(1.0, sleeptime)
+                sleeptime -= wait
+                time.sleep(wait)
 
         except KeyboardInterrupt:
             logger.info("stopped by user")
             sys.exit()
         except:
-            ERR.log()
+            logger.error('Caught %s', str(sys.exc_info()[0]))
+            logger.error(str(sys.exc_info()[1]))
+            logger.error('TRACEBACK:\n%s', traceback.format_exc())
+            logger.error('Aborting NOW')
+            sys.exit(0)
+            
 
     # do test and write result files to log directory
     log_dir = conf.getStr('log-dir-local')
@@ -754,6 +804,12 @@ def main():
     else:
         logger.warn("not a valid log directory")
     logger.info("Test ready.")
+
+    # if still running kill recording
+    if beamlet_recording:
+        if beamlet_recording.is_running():
+            beamlet_recording.kill_recording()
+        beamlet_recording = 0
 
     # delete files from data directory
     removeAllDataFiles()

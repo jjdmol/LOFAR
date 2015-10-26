@@ -31,11 +31,7 @@
 #include <string>
 #include <iosfwd>
 
-//#ifdef HAVE_BOOST
 # include <boost/shared_ptr.hpp>
-//#else
-//# error "The Boost libraries are required. See http://www.boost.org/"
-//#endif
 
 #ifdef HAVE_BACKTRACE
 # include <Common/Backtrace.h>

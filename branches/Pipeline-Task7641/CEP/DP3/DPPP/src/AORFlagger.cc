@@ -121,7 +121,7 @@ namespace LOFAR {
     {
       info() = infoIn;
       info().setNeedVisData();
-      info().setNeedWrite (DPInfo::NeedWriteFlags);
+      info().setWriteFlags();
       // Get nr of threads.
       uint nthread = OpenMP::maxThreads();
       // Determine available memory.
@@ -271,6 +271,7 @@ namespace LOFAR {
 
     void AORFlagger::addToMS (const string& msName)
     {
+      getPrevStep()->addToMS(msName);
       itsTimer.start();
       if (itsDoRfiStats) {
         itsQualityTimer.start();

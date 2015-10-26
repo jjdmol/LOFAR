@@ -102,9 +102,11 @@ namespace LOFAR {
 
       /*
        * Set up delay compensation.
+       *
+       * NOTE: We start at block -1 to initalise the FIR's HistorySamples!
        */
 
-      Delays delays(ps, stationIdx, startTime, nrSamples);
+      Delays delays(ps, stationIdx, startTime - nrSamples, nrSamples);
 
       // We keep track of the delays at the beginning and end of each block.
       // After each block, we'll swap the afterEnd delays into atBegin.
@@ -115,6 +117,9 @@ namespace LOFAR {
       // Get delays at begin of first block
       delays.getNextDelays(*delaysAtBegin);
 
+      /*
+       * Generate all the blocks. Again, start at block -1.
+       */
       for (ssize_t block = -1; block < (ssize_t)nrBlocks; ++block) {
         if (stopSwitch && stopSwitch->test()) {
           LOG_WARN_STR(logPrefix << "Requested to stop");

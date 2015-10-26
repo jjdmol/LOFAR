@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2015
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -165,6 +165,8 @@ GCFEvent::TResult Feedback::operational_state(GCFEvent& event, GCFPortInterface&
 			GCFScheduler::instance()->stop();		// TODO better solution
 		}
 
+		MessageContent content(msg.qpidMsg());
+
 		if (!itsOTDBconn->connect()) {
 			LOG_ERROR("Lost connection with OTDB, starting reconnect cycle");
 			delete itsOTDBconn;
@@ -175,7 +177,7 @@ GCFEvent::TResult Feedback::operational_state(GCFEvent& event, GCFPortInterface&
 		}
 
 		// Yeah, still connected.
-		if (passKVpairsToOTDB(atoi(msg.sasid().c_str()), msg.payload())) {
+		if (passKVpairsToOTDB(atoi(content.sasid.get().c_str()), content.payload.get())) {
 			itsMsgQueue->ack(msg);
 			LOG_DEBUG("Message processed successful");
 		}

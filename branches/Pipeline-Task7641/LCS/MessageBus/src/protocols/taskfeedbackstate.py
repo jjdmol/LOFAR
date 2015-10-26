@@ -18,8 +18,7 @@
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 
 #import lofar.messagebus.Message
-import lofar.messagebus.message
-import xml.dom.minidom as xml
+from lofar.messagebus.message import MessageContent
 
 LOFAR_STATUS_MSG_TEMPLATE = """
 <task>
@@ -27,7 +26,7 @@ LOFAR_STATUS_MSG_TEMPLATE = """
   <state/>
 </task>"""
 
-class TaskFeedbackState(lofar.messagebus.message.Message):
+class TaskFeedbackState(MessageContent):
   def __init__(self, from_, forUser, summary, momID, sasID, status):
     super(TaskFeedbackState, self).__init__(
       from_,
@@ -38,9 +37,7 @@ class TaskFeedbackState(lofar.messagebus.message.Message):
       momID,
       sasID)
 
-    payload_document = xml.parseString(LOFAR_STATUS_MSG_TEMPLATE)
-
-    self._getXMLnode("message.payload").appendChild(payload_document.firstChild)
+    self.document.insertXML("message.payload", LOFAR_STATUS_MSG_TEMPLATE)
 
     self.type_ = "pipeline"
     if status:
@@ -60,5 +57,5 @@ class TaskFeedbackState(lofar.messagebus.message.Message):
 
 if __name__ == "__main__":
     msg = TaskFeedbackState("FROM", "FORUSER", "SUMMARY", "11111", "22222", True)
-    print msg.document.toxml()
+    print msg.content()
 

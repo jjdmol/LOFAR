@@ -20,16 +20,17 @@
 """Very basic messagebus router that routs the messages according to the settings in Router.conf
 """
 
-import lofar.messagebus.basemsgbus as msgbus
-#import lofar.messagebus.message as message
+import lofar.messagebus.messagebus as messagebus
+import lofar.messagebus.message as message
 
 import threading
 from ConfigParser import SafeConfigParser
 import os.path
+import sys
 from datetime import datetime
 
 def log(level, msg):
-  print "%s %-5s %s" % (datetime.now(), level, msg)
+  print "%s %-4s %s" % (str(datetime.now())[:-3], level, msg)
 
 class BusMulticast(threading.Thread):
   """
@@ -39,28 +40,49 @@ class BusMulticast(threading.Thread):
     threading.Thread.__init__(self)
     self.source   = source
     self.destlist = destlist
+    self.done     = False
+
+  def stop(self):
+    self.done     = True
 
   def run(self):
-    inbus = msgbus.FromBus(self.source)
-    outbusses = [msgbus.ToBus(dest) for dest in self.destlist]
+    try:
+      inbus = messagebus.FromBus(self.source)
+      outbusses = [messagebus.ToBus(dest) for dest in self.destlist]
+      outdump = messagebus.ToBus("dump.%s" % (self.source,), "create:always,delete:always,node:{type:topic}")
 
-    log("INFO","Forwarding %s -> %s" % (self.source,self.destlist))
+      log("INFO","[%s] Forwarding to %s" % (self.source,self.destlist))
 
-    while True:
-      # TODO: Use a transaction (not supported yet in qpid 0.30)
+      while not self.done:
+        # TODO: Use a transaction (not supported yet in qpid 0.30)
+        msg = inbus.get(1.0)
+        if msg is None:
+          # timeout
+          continue
 
-      msg = inbus.get()
-      if msg is None:
-        log("ERROR","Received 'None' message from %s" % (self.source,))
-        continue
+        try:
+          content = msg.content()
+          log("INFO","[%s] [%s] Message received" % (self.source, content))
+        except Exception, e:
+          content = "<unknown>"
+          log("WARN","[%s] Non-compliant message received" % (self.source,))
 
-      log("INFO","Msg received from %s" % (self.source))
 
-      for outbus in outbusses:
-        outbus.send(msg)
-      inbus.ack(msg)
+        outdump.send(msg)
+        for outbus in outbusses:
+          outbus.send(msg)
+        inbus.ack(msg)
 
-      log("INFO","Forwarded %s -> %s" % (self.source,self.destlist))
+        log("INFO", "[%s] [%s] Forwarded to %s" % (self.source, content, self.destlist))
+
+    except Exception, e:
+      log("FATAL", "[%s] Caught exception: %s" % (self.source, e))
+
+      # Abort everything, to avoid half-broken situations
+      cmdbus = messagebus.ToBus("messagerouter.command")
+      cmdbus.send("stop")
+
+    log("INFO", "[%s] Done" % (self.source,))
 
 class RouterConfig(SafeConfigParser):
   """
@@ -70,6 +92,8 @@ class RouterConfig(SafeConfigParser):
     source-queue-1: dest-queue-1, dest-queue2
     source-queue-2: dest-queue-3
 
+    NOTE: Once we have python 2.6+ on ccu001 and ccu099, we could override the dict_type in the RawConfigParser
+    and allow multiple source: dest lines to accumulate.
   """
   def __init__(self, filename=None):
     SafeConfigParser.__init__(self)
@@ -95,6 +119,32 @@ class RouterConfig(SafeConfigParser):
 
   def destinations(self, source):
     return [field.strip() for field in self.get('multicast', source).split(',')]
+
+
+def process_command_queue(command_queue):
+  """
+    Listen on the given queue, and process the received commands.
+
+    Supported commands:
+
+      stop             - Do a graceful shutdown of this service
+  """
+
+  log("INFO","[main] Listening for commands on %s" % (command_queue,))
+
+  cmdq = messagebus.FromBus(command_queue, "create: always, delete: always")
+  while True:
+    msg = cmdq.get(1.0)
+    if msg is None:
+      continue
+
+    command = msg.raw_content()
+    log("INFO","[main] Received command: %s" % (command,))
+
+    cmdq.ack(msg)
+
+    if command == "stop":
+      break
 
 if __name__ == "__main__":
   """
@@ -132,15 +182,20 @@ if __name__ == "__main__":
     t.start()
     threadlist.append(t)
 
+
   log("INFO","[main] Running %s threads" % (len(threadlist),))
 
-  if not threadlist:
-    # stall forever (future: allow rereading config from config file? command queue?)
-    log("INFO","[main] Nothing to do. Sleeping forever.");
-    while True:
-      time.sleep(60)
-  else:
-    # wait for join (forever)
-    for t in threadlist:
-      t.join()
+  # Listen for commands on a special queue
+  process_command_queue("messagerouter.command")
 
+  log("INFO","[main] Shutting down")
+
+  # signal end of processing
+  for t in threadlist:
+    t.stop()
+
+  # wait for join (forever)
+  for t in threadlist:
+    t.join()
+
+  log("INFO","[main] Done")

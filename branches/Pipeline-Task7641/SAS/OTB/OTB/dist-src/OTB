@@ -44,7 +44,7 @@ else
 fi
 echo "Using port $port1 for this client"
 
-export OTB_DIR=/opt/sas/otb/client
+export OTB_DIR=/opt/otdb/otb/client
 export JAVA_HOME=/usr/java/jdk1.7.0_02
 
 echo
@@ -131,7 +131,7 @@ serverstart()
 
 # OTB Servers are always running as user tomcat
 if [ "$USER" != "tomcat" ]; then 
-  sudo -u tomcat /opt/sas/OTB serverstart $*
+  sudo -u tomcat /opt/otdb/OTB serverstart $*
   exit
 fi
 
@@ -145,7 +145,7 @@ else
 fi
 echo "Using port $port1 and $port2 for this server"
 
-export OTB_DIR=/opt/sas/otb/server
+export OTB_DIR=/opt/otdb/otb/server
 export JAVA_HOME=/usr/java/jdk1.7.0_02
 
 echo
@@ -183,7 +183,7 @@ serverstop()
 
 # OTB Servers are always running as user tomcat
 if [ "$USER" != "tomcat" ]; then
-  sudo -u tomcat /opt/sas/OTB serverstop $*
+  sudo -u tomcat /opt/otdb/OTB serverstop $*
   exit
 fi
 

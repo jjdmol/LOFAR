@@ -62,6 +62,9 @@ class imager_bbs(LOFARnodeTCP):
             if bbs_process_group.wait_for_finish() != None:
                 self.logger.error(
                             "Failed bbs run detected Aborting")
+                return 1    # If bbs failed we need to abort: the concat
+                            # is now corrupt
+
         except OSError, exception:
             self.logger.error("Failed to execute bbs: {0}".format(str(
                                                                     exception)))

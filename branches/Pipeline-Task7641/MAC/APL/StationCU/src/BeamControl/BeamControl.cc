@@ -628,6 +628,9 @@ GCFEvent::TResult BeamControl::sendPointings_state(GCFEvent& event, GCFPortInter
 	}
 	break;
 
+	case F_EXIT:
+		break;
+
 	case IBS_POINTTOACK: {
 		IBSPointtoackEvent ack(event);
 		if (ack.status != IBS_Protocol::IBS_NO_ERR) {

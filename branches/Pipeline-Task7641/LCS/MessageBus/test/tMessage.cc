@@ -1,6 +1,6 @@
 //#  Copyright (C) 2015
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -23,63 +23,61 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <UnitTest++.h>
 #include <MessageBus/Message.h>
 
-//using namespace qpid::messaging;
+#include <iostream>
+
 using namespace LOFAR;
+using namespace std;
 
-#if 0
-void showMessage(Message&	msg)
-{
-	cout << "Message ID    : " << msg.getMessageId() << endl;
-	cout << "User ID       : " << msg.getUserId() << endl;
-	cout << "Correlation ID: " << msg.getCorrelationId() << endl;
-	cout << "Subject       : " << msg.getSubject() << endl;
-	cout << "Reply to      : " << msg.getReplyTo() << endl;
-	cout << "Content type  : " << msg.getContentType() << endl;
-	cout << "Priority      : " << msg.getPriority() << endl;
-//	cout << "TTL           : " << msg.getTtl() << endl;
-	cout << "Durable       : " << (msg.getDurable() ? "Yes" : "No") << endl;
-	cout << "Redelivered   : " << (msg.getRedelivered() ? "Yes" : "No")  << endl;
-	cout << "Properties    : " << msg.getProperties() << endl;
-	cout << "Content size  : " << msg.getContentSize() << endl;
-	cout << "Content       : " << msg.getContent() << endl;
+SUITE(MessageContent) {
+  TEST(default) {
+    MessageContent msg;
+  }
+
+  TEST(newmsg) {
+    // Create a message from scratch
+    MessageContent msg("NAME", "USER", "SUMMARY", "PROTOCOL", "1.2", "MOMID", "SASID");
+
+    CHECK_EQUAL("NAME",     msg.name.get());
+    CHECK_EQUAL("USER",     msg.user.get());
+    CHECK_EQUAL("SUMMARY",  msg.summary.get());
+    CHECK_EQUAL("PROTOCOL", msg.protocol.get());
+    CHECK_EQUAL("1.2",      msg.protocolVersion.get());
+    CHECK_EQUAL("MOMID",    msg.momid.get());
+    CHECK_EQUAL("SASID",    msg.sasid.get());
+
+    std::cout << msg << std::endl;
+    std::cout << msg.qpidMsg().getContent() << std::endl;
+  }
+
+  TEST(existingmsg) {
+    MessageContent orig("NAME", "USER", "SUMMARY", "PROTOCOL", "1.2", "MOMID", "SASID");
+
+    // Create a qpid message and parse it again
+    MessageContent copy(orig.qpidMsg());
+
+    CHECK_EQUAL(orig.name,            copy.name);
+    CHECK_EQUAL(orig.user,            copy.user);
+    CHECK_EQUAL(orig.summary,         copy.summary);
+    CHECK_EQUAL(orig.protocol,        copy.protocol);
+    CHECK_EQUAL(orig.protocolVersion, copy.protocolVersion);
+    CHECK_EQUAL(orig.momid,           copy.momid);
+    CHECK_EQUAL(orig.sasid,           copy.sasid);
+  }
+
+  TEST(modifymsg) {
+    MessageContent orig("NAME", "USER", "SUMMARY", "PROTOCOL", "1.2", "MOMID", "SASID");
+
+    orig.protocolVersion = "1.3";
+
+    CHECK_EQUAL("1.3", orig.protocolVersion.get());
+  }
 }
 
-void compareMessages(Message&	lhm, Message& rhm)
-{
-	ASSERTSTR(lhm.getMessageId()     == rhm.getMessageId(),     "messageIDs differ");
-	ASSERTSTR(lhm.getUserId()        == rhm.getUserId(),        "UserIDs differ");
-	ASSERTSTR(lhm.getCorrelationId() == rhm.getCorrelationId(), "CorrelationIDs differ");
-	ASSERTSTR(lhm.getSubject()       == rhm.getSubject(),       "Subjects differ");
-	ASSERTSTR(lhm.getReplyTo()       == rhm.getReplyTo(),       "ReplyTos differ");
-	ASSERTSTR(lhm.getContentType()   == rhm.getContentType(),   "ContentTypes differ");
-	ASSERTSTR(lhm.getPriority()      == rhm.getPriority(),      "Priorities differ");
-	ASSERTSTR(lhm.getTtl()           == rhm.getTtl(),           "TTLs differ");
-	ASSERTSTR(lhm.getDurable()       == rhm.getDurable(),       "Durability differs");
-	ASSERTSTR(lhm.getRedelivered()   == rhm.getRedelivered(),   "Redelivered differs");
-//	ASSERTSTR(lhm.getProperties()    == rhm.getProperties(),    "Properties differ");
-	ASSERTSTR(lhm.getContentSize()   == rhm.getContentSize(),   "ContentSize differs");
-	ASSERTSTR(lhm.getContent()       == rhm.getContent(),       "Content differs");
+int main() {
+  INIT_LOGGER("tMessage");
+
+  return UnitTest::RunAllTests() > 0;
 }
-#endif
-
-int main(int argc, char* argv[]) {
-	if (argc != 1) {
-		cout << "Syntax: " << argv[0] << endl;
-		return (1);
-	}
-
-	Message	msg1("mySubSystem", "user", "some test message", "lofar.observation.start", "1.0", "12345", "54321");
-
-	qpid::messaging::Message	qpMsg("Qpid message");
-	Message		msg2(qpMsg);
-	
-	string	KVmapje("abc=[aap,noot,mies]\nmyInteger=5\nmyDouble=3.14");
-	msg1.setTXTPayload(KVmapje);
-
-	cout << msg1;
-
-	return (0);
-}
-

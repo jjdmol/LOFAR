@@ -75,10 +75,23 @@ void SetHBACmd::apply(CacheBuffer& cache, bool setModFlag)
 	}
 
 	int event_rcu = 0; // rcu number in m_event->settings()
-	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
+	bool delays_changed;
+    for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
 		if (m_event->rcumask.test(cache_rcu)) { // check if rcu is selected
-			cache.getHBASettings()()(cache_rcu, Range::all()) = m_event->settings()(event_rcu, Range::all());
-			if (setModFlag) {
+			
+            // check if changed
+            delays_changed = false;
+            for (int i = 0; i < 16; ++i) { 
+                if (cache.getHBASettings()()(cache_rcu, Range::all())(i) != m_event->settings()(event_rcu, Range::all())(i) ) {
+                    delays_changed = true;
+                }
+            }
+            if (!delays_changed) {
+                LOG_DEBUG_STR("Skip updating rcu " << cache_rcu << ", value not changed"); 
+            }
+            
+            cache.getHBASettings()()(cache_rcu, Range::all()) = m_event->settings()(event_rcu, Range::all());
+			if (setModFlag && delays_changed) {
 				cache.getCache().getState().hbaprotocol().write(cache_rcu);
 			}
 			event_rcu++;

@@ -1,4 +1,4 @@
-//# Mmap.h: class wrap the mmap(2) system call and friends
+//# Mmap.h: class wrap the mmap and munmap system calls
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#

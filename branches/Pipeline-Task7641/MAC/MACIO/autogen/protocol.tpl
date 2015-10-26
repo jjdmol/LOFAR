@@ -186,7 +186,7 @@ void [+ event_class_name +]::pack()
   [+ ELIF (*== (get "type") "[]") +]
   __offset += packMember(__offset, [+ (get "name") +], [+ (get "name") +]NOE, sizeof([+ event_class_member_type +]));
   [+ ELSE +]
-  MSH_pack(_buffer, __offset, [+ (get "name") +]);
+  __offset = MSH_pack(_buffer, __offset, [+ (get "name") +]);
   [+ ENDIF +][+ ENDFOR +]
 	[+ IF (= (count "param") 0) +]
   // no params in this event to pack
@@ -213,7 +213,7 @@ void [+ event_class_name +]::unpack()
     [+ ELIF (*== (get "type") "[]") +]
     [+ (get "name") +] = ([+ event_class_member_type +]*) unpackMember(_buffer, __offset, [+ (get "name") +]NOE,  sizeof([+ event_class_member_type +]));
     [+ ELSE +]
-    MSH_unpack(_buffer, __offset, [+ (get "name") +]);
+    __offset = MSH_unpack(_buffer, __offset, [+ (get "name") +]);
     [+ ENDIF +][+ ENDFOR +]
 	_buffer  = 0;
 	__offset = 0;

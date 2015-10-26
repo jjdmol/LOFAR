@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/echo Usage: source
 #
 # Usage: source MessageFuncs.sh
 #
@@ -148,6 +148,28 @@ function recv_msg() {
   _qpid_receive "$HOSTQUEUE" "" --ignore-reply-to -m 1
 }
 
+function wait_msg() {
+  # Waits for one message from a queue, with a timeout
+  #
+  # Usage:
+  #   wait_msg timeout [host:]queue > message
+  #
+  # Returns 0 if a message was received, 1 if not.
+  # The received message is emitted on stdout.
+  TIMEOUT="$1"
+  HOSTQUEUE="$2"
+
+  MSG=`_qpid_receive "$HOSTQUEUE" "" --ignore-reply-to -m 1 --timeout $TIMEOUT`
+
+  # Fix return code (qpid_receive will almost always return success)
+  if [ -z "$MSG" ]; then
+    return 1
+  fi
+
+  echo "$MSG"
+  return 0
+}
+
 function recv_all_msgs() {
   # Retrieves all messages from a queue
   #
@@ -172,7 +194,8 @@ function send_msg() {
 }
 
 function compare_msg() {
-  # Compare two messages, ignoring uncontrollable fields (UUID, timestamp).
+  # Compare two messages, ignoring uncontrollable fields (UUID, timestamp,
+  #   encoding="UTF-8" within <?xml ?> tag added by qpid).
   # Both messages are expected to be in files (or filedescriptors).
   #
   # Usage:
@@ -181,7 +204,7 @@ function compare_msg() {
   GENERATED="$2"
 
   function compare_msg_filter() {
-    fgrep -v '<uuid>' | fgrep -v '<timestamp>'
+    fgrep -v '<uuid>' | fgrep -v '<timestamp>' | fgrep -v '<?xml '
   }
 
   diff -w <(<"$REFERENCE" compare_msg_filter) <(<"$GENERATED" compare_msg_filter)

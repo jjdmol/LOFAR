@@ -31,6 +31,7 @@ if [ "$LOFARROOT" == "" ]; then
 fi
 
 BINDIR=$LOFARROOT/bin
+SBINDIR=$LOFARROOT/sbin
 LOGDIR=$LOFARROOT/var/log
 ETCDIR=$LOFARROOT/etc
 LEVELTABLE=${ETCDIR}/swlevel.conf
@@ -129,7 +130,7 @@ selectImage()
                 #if [ "$boardHex" == "03" ]; then 
 		#   boardHex="1F"
                 #fi
-		rsu=`run_timeout.sh 5 sudo ${BINDIR}/../sbin/rsuctl3 -m 10:fa:00:00:$boardHex:00 -qV 2>&1 | grep BP | cut -d':' -f2 | sed 's/ //g' | cut -d'.' -f1`
+		rsu=`run_timeout.sh 5 sudo ${SBINDIR}/rsuctl3 -m 10:fa:00:00:$boardHex:00 -qV 2>&1 | grep BP | cut -d':' -f2 | sed 's/ //g' | cut -d'.' -f1`
 
 		# If not a single number, something weird  must have happened
 		if [ ${#rsu} -ne 1 ]; then 
@@ -138,7 +139,7 @@ selectImage()
 		  errorBoards=${errorBoards}${boardHex}","
                 else
   		  echo "Loading image $image on RSPboard $boardHex ..."
-		  run_timeout.sh 5 sudo ${BINDIR}/../sbin/rsuctl3_reset -m 10:fa:00:00:$boardHex:00 -q -x -p $image 1>/dev/null 2>&1
+		  run_timeout.sh 5 sudo ${SBINDIR}/rsuctl3_reset -m 10:fa:00:00:$boardHex:00 -q -x -p $image 1>/dev/null 2>&1
                   if [ $? -ne 0 ]; then 
 		      boardError=1
                       errorBoards=${errorBoards}${boardHex}","
@@ -150,6 +151,66 @@ selectImage()
 	if [ $boardError -eq 1 ]; then
 	    echo "Board(s) $errorBoards have a communication problem; try reset the 48V"
 	fi
+}
+
+#
+# Check if RSP images and TBB images are properly loaded, and start TBB
+# recording if they are
+#
+check_images()
+{
+if [ -e $BINDIR/rspctl ]; then 
+   # First make sure RSP images are properly loaded
+   # Introduce a timeout of 60 sec for images to initialize
+   echo "Waiting for RSP and TBB images to be initialized"
+   timeout=60
+   for (( s=0 ; s<timeout; s++ ))
+   do 
+     rsu_ready=`( rspctl --version | grep "0.0" ) >& /dev/null; echo $?`
+     if [ $rsu_ready == 1 ]; then
+	    echo "RSP Images are loaded"
+	    break
+     fi
+     sleep 1
+   done
+   if [ $s == $timeout ]; then 
+     echo "Could not load RSP images in time; Reset RSP boards"
+     exit 1
+   fi 
+fi
+
+if [ -e $BINDIR/tbbctl ]; then
+   # Now make sure TBB images are properly loaded
+   # Introduce a timeout of 60 sec for images to initialize
+   echo "Waiting for TBB images to be initialized"
+   timeout=60
+   for (( s=0 ; s<timeout; s++ ))
+   do 
+     tbb_respons=`tbbctl --version`
+	tbb_ready=`( echo $tbb_respons | grep "\ V\ " ) >& /dev/null; echo $?`
+     if [ $tbb_ready -eq 0 ]; then
+         sleep 10 # additional delay to let TBB boards end their init phase
+	 echo "TBB Images are loaded"
+	 break
+     fi
+     tbb_down=`( echo $tbb_respons | grep "TBBDriver is NOT responding" )>& /dev/null; echo $?`
+     if [ $tbb_down -eq 0 ]; then
+         echo "TBBDriver is not responding; cannot continue start of TBBs"
+	 # Trigger message furtheron in the code
+	 s=$timeout
+	 break
+     fi
+     sleep 1
+   done
+   if [ $s == $timeout ]; then 
+     echo "Could not load TBB images; Reset TBB boards"
+   else
+     # Start TBB recording mode
+     if [ -e $SBINDIR/startTBB.sh ]; then
+        $SBINDIR/startTBB.sh
+     fi
+   fi 
+fi
 }
 
 #
@@ -213,7 +274,11 @@ start_prog()
 			   fi
                         fi
 		       	sudo -b $BINDIR/$prog 1>>$LOGDIR/$prog.stdout.${curdate} 2>&1
+                       if [ "$prog" = "TBBDriver" ]; then 
+                           check_images
+		       fi
 		    else
+
 			echo Starting $prog
 			rm -f $LOGDIR/$prog.log*.? 1>/dev/null 2>&1
 			$BINDIR/$prog 1>>$LOGDIR/$prog.stdout.${curdate} 2>&1 &
@@ -437,9 +502,15 @@ goto_level()
               if [ $status == 1 ]; then 
        	        echo "set rcumode to 0 (power save)"
 	        rspctl --rcumode=0 1>/dev/null 2>&1
+                # Wait for setting to take effect before killing RSPDriver
+                sleep 2 
 	      else
 		echo "Beware: NOT going to rcumode 0 as images are still being initialized"
 	      fi
+            fi
+	    if [ -e $SBINDIR/stopTBB.sh ]; then
+	       echo "Stopping TBB recording mode"
+	       $SBINDIR/stopTBB.sh
             fi
           fi
 	fi
@@ -462,56 +533,8 @@ goto_level()
 	# then power up to new level
 	for (( l=1 ; l<=newlevel ; l++ ))
 	do
-	  if [ $l == 3 ]; then 
-	    if [ -e $BINDIR/rspctl ]; then 
-	      # First make sure RSP images are properly loaded
-              # Introduce a timeout of 60 sec for images to initialize
-	      echo "Waiting for RSP images to be initialized"
-	      timeout=59
-	      sleep 1
-              for (( s=0 ; s<timeout; s++ ))
-	      do 
-	        rsu_ready=`( rspctl --version | grep "0.0" ) >& /dev/null; echo $?`
-	        if [ $rsu_ready == 1 ]; then
-		    echo "RSP Images are loaded"
-		    break
-	        fi
-                sleep 1
-              done
-              if [ $s == $timeout ]; then 
-                echo "Could not load RSP images in time; Reset RSP boards"
-                exit 1
-              fi 
-            fi
-	    if [ -e $BINDIR/tbbctl ]; then
-	      # Now make sure TBB images are properly loaded
-              # Introduce a timeout of 60 sec for images to initialize
-	      echo "Waiting for TBB images to be initialized"
-	      timeout=59
-	      sleep 1
-              for (( s=0 ; s<timeout; s++ ))
-	      do 
-                tbb_respons=`tbbctl --version`
-		tbb_ready=`( echo $tbb_respons | grep "\ V\ " ) >& /dev/null; echo $?`
-	        if [ $tbb_ready -eq 0 ]; then
-                    sleep 10
-		    echo "TBB Images are loaded"
-		    break
-	        fi
-                tbb_down=`( echo $tbb_respons | grep "TBBDriver is NOT responding" )>& /dev/null; echo $?`
-                if [ $tbb_down -eq 0 ]; then
-                    echo "TBBDriver is not responding; cannot continue start of TBBs"
-		    # Trigger message furtheron in the code
-		    s=$timeout
-		    break
-		fi
-		sleep 1
-              done
-              if [ $s == $timeout ]; then 
-                echo "Could not load TBB images; Reset TBB boards"
-              fi 
-            fi
-	  fi  
+
+	  # Start programs for level $l
 	  cat $LEVELTABLE | cut -d"#" -f1 | awk '{ if (NF>0) print $0 }' | grep "^${l}:" | grep ":u:" |  while read line
 		do
                         (
@@ -521,12 +544,10 @@ goto_level()
 			start_prog $program x$asroot x$withmpi
                         ) <&- # cant have programs reading from stdin
                               # as that would mess up 'while read line'
-#			if [ $start -eq 1 ]; then
-#			    break
-#			fi
 	       done
 	done
 }
+
 
 show_level()
 {
@@ -584,8 +605,8 @@ print_level()
 
 show_lofar_version()
 {
-        if [ -e /opt/lofar/Version.txt ]; then
-          version=`cat /opt/lofar/Version.txt`
+        if [ -e $LOFARROOT/Version.txt ]; then
+          version=`cat $LOFARROOT/Version.txt`
 	  if [ "$1" = "v" ]; then  
             echo -n "Current LOFAR version is "
 	  fi

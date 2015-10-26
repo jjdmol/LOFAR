@@ -6,7 +6,7 @@ include(LofarCTest)
 cuda_include_directories(${PACKAGE_SOURCE_DIR}/share/gpu/kernels)
 
 
-if(UNITTEST++_FOUND)
+if(UNITTEST++_FOUND AND BUILD_TESTING)
   # CUDA CPU side UnitTest++ tests
   lofar_add_test(tGPUWrapper tGPUWrapper.cc)
   lofar_add_test(tIncoherentStokes tIncoherentStokes.cc)
@@ -29,7 +29,7 @@ if(UNITTEST++_FOUND)
     tCorrelatorPerformance
     PROPERTIES RUN_SERIAL ON
   )
-endif(UNITTEST++_FOUND)
+endif(UNITTEST++_FOUND AND BUILD_TESTING)
 
 # CUDA CPU side unit tests
 lofar_add_test(tKernel tKernel.cc)
@@ -51,17 +51,19 @@ lofar_add_test(tIncoherentStokesTranspose tIncoherentStokesTranspose.cc)
 
 # Trick tests that compile kernels that need to be installed into thinking
 # that they can find the kernels using the LOFARROOT environment variable.
-set_tests_properties(
-  tFIR_Filter
-  tCorrelator
-  tCorrelator2
-  tBeamFormer
-  tTranspose
-  tTranspose2
-  tIncoherentStokesTranspose
-  tCoherentStokesTranspose
-  PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
-)
+if(BUILD_TESTING)
+  set_tests_properties(
+    tFIR_Filter
+    tCorrelator
+    tCorrelator2
+    tBeamFormer
+    tTranspose
+    tTranspose2
+    tIncoherentStokesTranspose
+    tCoherentStokesTranspose
+    PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
+    )
+endif(BUILD_TESTING)
 
 
 # Tests built by nvcc
