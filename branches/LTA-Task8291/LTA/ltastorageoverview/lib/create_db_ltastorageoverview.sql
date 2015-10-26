@@ -17,7 +17,7 @@
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 */
 
--- $Id:
+-- $Id: $
 
 -- sqlite3 create script for ltastorageoverview database
 
