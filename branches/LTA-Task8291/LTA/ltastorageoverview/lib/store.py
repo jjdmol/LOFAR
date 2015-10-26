@@ -19,6 +19,11 @@
 
 # $Id$
 
+# TODO: add comment to methods
+# TODO: reuse connection in methods (take care of exceptions closing the connection)
+# TODO: use generators and yield for faster and more memory efficient processing of results.
+# TODO: use other database? MariaDB? instead of sqlite?
+
 import os
 import os.path
 import sqlite3

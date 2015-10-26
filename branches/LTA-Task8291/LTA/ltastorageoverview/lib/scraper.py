@@ -19,6 +19,10 @@
 
 # $Id$
 
+# TODO: add comments to methods
+# TODO: code cleanup
+# TODO: scraper should be able to process each directory more than once. Requires changes in store.py
+
 import subprocess
 import logging
 import time
@@ -29,19 +33,8 @@ import os.path
 import threading
 import multiprocessing
 from ltastorageoverview import store
+from ltastorageoverview.utils import humanreadablesize
 from random import random
-
-def humanreadablesize(num, suffix='B'):
-    """ converts the given size (number) to a human readable string in powers of 1024"""
-    try:
-        for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
-            if abs(num) < 1024.0:
-                return "%3.1f%s%s" % (num, unit, suffix)
-            num /= 1024.0
-        return "%.1f%s%s" % (num, 'Y', suffix)
-    except TypeError:
-        return str(num)
-
 
 #logging.basicConfig(filename='scraper.' + time.strftime("%Y-%m-%d") + '.log', level=logging.DEBUG, format="%(asctime)-15s %(levelname)s %(message)s")
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)-15s %(levelname)s %(message)s")
@@ -262,55 +255,6 @@ class ResultGetterThread(threading.Thread):
         except Exception as e:
             logger.error(str(e))
 
-
-class LocationResultTreeNode:
-    '''Helper class to order results in a tree structure,
-    so we can get totals (files and sizes) of the whole (or part of) the tree.'''
-    def __init__(self, locationResult, parent=None, children=None):
-        '''
-        Parameters
-        ----------
-        locationResult : LocationResult
-            the locationResult for this tree node
-
-        parent : LocationResultTreeNode
-            the parent LocationResultTreeNode of this tree node
-
-        children : [LocationResultTreeNode]
-            the children LocationResultTreeNode's of this tree node
-        '''
-        self.locationResult = locationResult
-        self.parent = parent
-        self.children = children if children else []
-
-    def __str__(self):
-        return "LocationResultTreeNode: loc=%s total # files=%d in total # subDirs=%d with a total size of %s" % (self.locationResult.location.path(), self.totalNrOfFilesInDirAndSubDirs(), self.totalNrOfSubDirs(), humanreadablesize(self.totalFileSizeOfDirAndSubDirs()))
-
-    def totalNrOfFilesInDirAndSubDirs(self):
-        '''returns the total number of files in this dir and the all subdirs of the tree'''
-        return self.locationResult.nrOfFiles() + sum([child.totalNrOfFilesInDirAndSubDirs() for child in self.children])
-
-    def totalNrOfSubDirs(self):
-        '''returns the total number of subdirs in this dir and the all subdirs of the tree'''
-        return self.locationResult.nrOfSubDirs() + sum([child.totalNrOfSubDirs() for child in self.children])
-
-    def totalFileSizeOfDirAndSubDirs(self):
-        '''returns the total filesize in this dir and the all subdirs of the tree'''
-        return self.locationResult.totalFileSizeOfDir() + sum([child.totalFileSizeOfDirAndSubDirs() for child in self.children])
-
-    def treeString(self, level=0, maxLevel=sys.maxint):
-        '''returns a string tree representation of this node and its subtree
-        uses recursion to indent each sublevel.
-        can be limited to maxLevel levels deep'''
-        return "> {path} # files={numFiles} fileSizeOfDir={fileSize} # filesInTree={numFilesInTree} fileSizeOfTree={fileSizeOfTree}{tree}".format(
-            path=self.locationResult.location.path(),
-            numFiles=self.locationResult.nrOfFiles(),
-            fileSize=humanreadablesize(self.locationResult.totalFileSizeOfDir()),
-            numFilesInTree=self.totalNrOfFilesInDirAndSubDirs(),
-            fileSizeOfTree=humanreadablesize(self.totalFileSizeOfDirAndSubDirs()),
-            tree='\n' + '\n'.join([(level+1)*'    ' + child.treeString(level+1, maxLevel) for child in self.children]) if self.children and level < maxLevel else "")
-
-
 def main(argv):
     '''the main function scanning all locations and gathering the results'''
 
@@ -334,7 +278,6 @@ def main(argv):
 
         for dir_id in [x[0] for x in db.rootDirectories()]:
             db.updateDirectoryLastVisitTime(dir_id, datetime.datetime.utcnow() - datetime.timedelta(days=1000))
-
 
     # for each site we want one or more ResultGetterThreads
     # so make a dict with a list per site based on the locations

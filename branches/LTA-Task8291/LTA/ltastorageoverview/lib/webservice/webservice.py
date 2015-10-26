@@ -19,36 +19,33 @@
 
 # $Id$
 
+# TODO: add comment to methods
+# TODO: code cleanup
+# TODO: where to store the sqlite database?
+
 import sys
 import os
 import os.path
-from datetime import datetime, timedelta
+from datetime import datetime
 from flask import Flask
-from flask import Config
 from flask import render_template
 from flask import json
-import threading
 from ltastorageoverview import store
 from ltastorageoverview.utils import humanreadablesize
 from ltastorageoverview.utils import monthRanges
 
 app = Flask('LTA storage overview')
-print str(app.config)
-print __file__
-print os.path.dirname(__file__)
 app.config.root_path = os.path.dirname(__file__)
-print
-print str(app.config)
 db = store.LTAStorageDb('../ltastorageoverview.sqlite')
 
 @app.route('/')
 @app.route('/index.html')
 def index():
+    # TODO: serve html first, and let client request data via ajax
     usages = {}
 
     sites = db.sites()
     sites2 = [x for x in sites if x[1] != 'nikhef']
-    print sites
     sites = [sites2[0], sites2[2], sites2[1]]
 
     total = 0.0
@@ -142,8 +139,7 @@ def get_filesInDirectory(dir_id):
 
 
 def main(argv):
-    #db = store.LTAStorageDb(argv[0] if argv else 'ltastoragedb.sqlite')
-    app.run(debug=True,host='0.0.0.0')
+    app.run(debug=False,host='0.0.0.0')
 
 if __name__ == '__main__':
     main(sys.argv[1:])
