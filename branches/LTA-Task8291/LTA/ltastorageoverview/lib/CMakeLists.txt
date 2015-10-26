@@ -14,7 +14,7 @@ python_install(
 set(web_files webservice/templates/index.html)
 
 install(FILES ${web_files}
-  DESTINATION ltastorageoverview/webservice/templates/)
+  DESTINATION ${PYTHON_INSTALL_DIR}/ltastorageoverview/webservice/templates/)
 
 foreach(web_file ${web_files})
     get_filename_component(web_file_path ${web_file} PATH)
