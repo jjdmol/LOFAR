@@ -24,8 +24,19 @@ from lofar.messaging.messagebus import ToBus, FromBus
 from lofar.messaging.messages import ServiceMessage, ReplyMessage
 import uuid
 
-
 class RPC():
+    """
+    This class provides an easy way to invoke a Remote Rrocedure Call to a
+    Services on the message bus.
+
+    Note that most methods require that the RPC object is used *inside* a
+    context. When entering the context, the connection with the broker is
+    opened, and a session and a sender are created. For each rpc invocation
+    a new unique reply context is created as to avoid cross talk.
+    When exiting the context the connection to the broker is closed.
+    As a side-effect the sender and session are destroyed.
+
+    """
     def __init__(self, bus, service, timeout=None, ForwardExceptions=None, Verbose=None):
 	"""
 	Initialize an Remote procedure call using:
