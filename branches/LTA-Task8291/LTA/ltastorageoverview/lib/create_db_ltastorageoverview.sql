@@ -30,7 +30,7 @@ create index ss_name_idx on storage_site(name);
 
 create table directory (
     id                  integer primary key autoincrement unique not null,
-    name                text key not null,
+    name                text key not null COLLATE NOCASE,
     parent_directory_id integer,
     foreign key (parent_directory_id) references directory(id) );
 
@@ -119,6 +119,20 @@ create trigger fileinfo_to_directory_stats_trigger
          where directory_id = new.directory_id ;
     end;
 
+create table project (
+    id              integer primary key autoincrement unique not null,
+    name            text unique not null);
+
+create index project_name_idx on project(name);
+
+create table project_top_level_directory (
+    project_id      integer,
+    directory_id    integer,
+    primary key (project_id, directory_id)
+    foreign key (project_id) references project(id)
+    foreign key (directory_id) references directory(id) );
+
+
 
 create table scraper_last_directory_visit (
     directory_id       integer not null,
@@ -170,3 +184,18 @@ create view site_directory_file as
         inner join directory_closure dc on dc.ancestor_id = storage_site_root.directory_id
         inner join directory dir on dc.descendant_id = dir.id
         inner join fileinfo on fileinfo.directory_id = dir.id ;
+
+create view project_directory_stats as
+    select * from project_directory
+    inner join directory_stats ds on ds.directory_id = project_directory.dir_id ;
+
+create view project_directory as
+    select
+        project.id as project_id,
+        project.name as project_name,
+        dir.id as dir_id,
+        dir.name as dir_name
+        from project_top_level_directory
+        inner join project on project.id = project_top_level_directory.project_id
+        inner join directory_closure dc on dc.ancestor_id = project_top_level_directory.directory_id
+        inner join directory dir on dc.descendant_id = dir.id ;
