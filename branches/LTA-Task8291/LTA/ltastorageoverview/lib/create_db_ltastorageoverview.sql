@@ -17,7 +17,7 @@
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 */
 
--- $Id: $
+-- $Id: CMakeLists.txt 32341 2015-08-28 11:59:26Z schaap $
 
 -- sqlite3 create script for ltastorageoverview database
 

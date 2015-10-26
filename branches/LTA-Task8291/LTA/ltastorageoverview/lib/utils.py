@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License along
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 
-# $Id: $
+# $Id: CMakeLists.txt 32341 2015-08-28 11:59:26Z schaap $
 
 from datetime import datetime, timedelta
 import sys
