@@ -290,12 +290,7 @@ class LTAStorageDb:
             query, args = self._date_bounded(query, args, 'directory_stats.min_file_creation_date', from_date=from_date)
             query, args = self._date_bounded(query, args, 'directory_stats.max_file_creation_date', to_date=to_date)
 
-            print query
-            print args
-
             result = conn.execute(query, args).fetchone()
-
-            print result
 
             if result[0]:
                 return result[0]
