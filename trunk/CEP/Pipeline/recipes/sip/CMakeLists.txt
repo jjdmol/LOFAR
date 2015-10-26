@@ -55,6 +55,7 @@ python_install(
   nodes/selfcal_bbs.py
   nodes/selfcal_finalize.py
   nodes/executable_args.py
+  nodes/executable_casa.py
   nodes/python_plugin.py
   nodes/calibrate-stand-alone.py
   plugins/PipelineStep_createMapfile.py
