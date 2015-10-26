@@ -27,6 +27,16 @@ import uuid
 
 class RPC():
     def __init__(self, bus, service, timeout=None, ForwardExceptions=None, Verbose=None):
+	"""
+	Initialize an Remote procedure call using:
+	    bus=     <str>    Bus Name
+	    service= <str>    Service Name
+            timeout= <float>  Time to wait in seconds before the call is considered a failure.
+            Verbose= <bool>   If True output extra logging to stdout.
+
+        Use with extra care: ForwardExceptions= <bool>
+	    This enables forwarding exceptions from the server side tobe raised at the client side durting RPC invocation.
+	"""
         self.timeout = timeout
         self.ForwardExceptions = False
         self.Verbose = False
@@ -36,30 +46,52 @@ class RPC():
             self.Verbose = True
         self.BusName = bus
         self.ServiceName = service
-        self.Request = ToBus(self.BusName + "/" + self.ServiceName)
-        self.ReplyAddress = "reply." + str(uuid.uuid4())
-        self.Reply = FromBus(self.BusName + "/" + self.ReplyAddress)
+        if self.BusName is None:
+            self.Request = ToBus(self.ServiceName)
+        else:
+            self.Request = ToBus(self.BusName + "/" + self.ServiceName)
 
     def __enter__(self):
+	"""
+	Internal use only. (handles scope 'with')
+	"""
         self.Request.open()
-        self.Reply.open()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+	"""
+	Internal use only. (handles scope 'with')
+	"""
         self.Request.close()
-        self.Reply.close()
 
     def __call__(self, msg, timeout=None):
+	"""
+	Enable the use of the object to directly invoke the RPC.
+
+        example:
+
+	    with RPC(bus,service) as myrpc:
+                result=myrpc(request)
+ 
+	"""
         if timeout is None:
             timeout = self.timeout
+        # create unique reply address for this rpc call
+        options={'create':'always','delete':'receiver'}
+        ReplyAddress= "reply." + str(uuid.uuid4())
+        if self.BusName is None:
+            Reply = FromBus(ReplyAddress+" ; "+str(options))
+        else:
+            Reply = FromBus(self.BusName + "/" + ReplyAddress)
+        with Reply:
+            MyMsg = ServiceMessage(msg, ReplyAddress)
+            MyMsg.ttl = timeout
+            self.Request.send(MyMsg)
+            answer = Reply.receive(timeout)
 
-        MyMsg = ServiceMessage(msg, self.ReplyAddress)
-        self.Request.send(MyMsg)
-        answer = self.Reply.receive(timeout)
-
+        status = {}
         # Check for Time-Out
         if answer is None:
-            status = []
             status["state"] = "TIMEOUT"
             status["errmsg"] = "RPC Timed out"
             status["backtrace"] = ""
@@ -68,7 +100,6 @@ class RPC():
         # Check for illegal message type
         if isinstance(answer, ReplyMessage) is False:
             # if we come here we had a Time-Out
-            status = []
             status["state"] = "ERROR"
             status["errmsg"] = "Incorrect messagetype (" + str(type(answer)) + ") received."
             status["backtrace"] = ""
@@ -79,7 +110,6 @@ class RPC():
             return (answer.content, answer.status)
 
         # Compile error handling from status
-        status = {}
         try:
             status["state"] = answer.status
             status["errmsg"] = answer.errmsg

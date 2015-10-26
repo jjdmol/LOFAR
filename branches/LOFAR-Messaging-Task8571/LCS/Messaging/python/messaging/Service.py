@@ -42,6 +42,14 @@ class Service:
     """
 
     def __init__(self, busname, servicename, servicehandler, options=None, exclusive=True, numthreads=1, parsefullmessage=False, startonwith=False, verbose=False):
+        """
+	Initialize Service object with busname (str) ,servicename (str) and servicehandler function.
+        additional parameters:
+            options=   <dict>  Dictionary of options passed to QPID
+            exclusive= <bool>  Create an exclusive binding so no other services can consume duplicate messages (default: True)
+	    numthreads= <int>  Number of parallel threads processing messages (default: 1)
+            verbose=   <bool>  Output extra logging over stdout (default: False)
+        """
         self.BusName = busname
         self.ServiceName = servicename
         self.ServiceHandler = servicehandler
@@ -65,10 +73,16 @@ class Service:
                 self.options[key] = val
 
     def _debug(self, txt):
+        """
+	Internal use only.
+	"""
         if self.Verbose is True:
             print(txt)
 
     def StartListening(self, numthreads=None):
+        """
+	Start the background threads and process incoming messages.
+	""" 
         if numthreads is not None:
             self._numthreads = numthreads
         if self.connected is False:
@@ -85,6 +99,9 @@ class Service:
             self._tr[i].start()
 
     def StopListening(self):
+	"""
+	Stop the background threads that listen to incoming messages.
+	"""
         # stop all running threads
         if self.running is True:
             self.running = False
@@ -94,6 +111,9 @@ class Service:
                 print("           %d messages received and %d processed OK." % (self.reccounter[i], self.okcounter[i]))
 
     def WaitForInterrupt(self):
+	"""
+	Useful (low cpu load) loop that waits for keyboard interrupt.
+	"""
         looping = True
         while looping:
             try:
@@ -103,6 +123,9 @@ class Service:
                 print("Keyboard interrupt received.")
 
     def __enter__(self):
+        """
+	Internal use only. Handles scope with keyword 'with'
+        """
         # Usually a service will be listening on a 'bus' implemented by a topic exchange
         if self.BusName is not None:
             self.Listen = FromBus(self.BusName+"/"+self.ServiceName, options=self.options)
@@ -112,9 +135,9 @@ class Service:
         # Handle case when queues are used
         else:
             # assume that we are listening on a queue and therefore we cannot use a generic ToBus() for replies.
-            self.Listen = FromBus(self.BusName+"/"+self.ServiceName, options=self.options)
+            self.Listen = FromBus(self.ServiceName, options=self.options)
             self.Listen.open()
-            self.Reply=self.replyto
+            self.Reply=None
 
         self.connected = True
 
@@ -124,6 +147,9 @@ class Service:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+	"""
+	Internal use only. Handles scope with keyword 'with'
+	"""
         self.StopListening()
         # close the listeners
         if self.connected is True:
@@ -134,6 +160,9 @@ class Service:
                 self.Reply.close()
 
     def _send_reply(self, replymessage, status, reply_to, errtxt="",backtrace=""):
+	"""
+	Internal use only. Send a reply message to the RPC client including exception info.
+	"""
         # Compose Reply message from reply and status.
         if isinstance(replymessage,ReplyMessage):
             ToSend = replymessage
@@ -145,7 +174,6 @@ class Service:
 
         # show the message content if required by the Verbose flag.
         if self.Verbose is True:
-            msg.show()
             ToSend.show()
 
         # send the result to the RPC client
@@ -153,11 +181,17 @@ class Service:
             ToSend.subject = reply_to
             self.Reply.send(ToSend)
         else:
-            with ToBus(reply_to) as dest:
-                dest.send(ToSend)
+            try:
+                with ToBus(reply_to) as dest:
+                    dest.send(ToSend)
+            except MessageBusError as e:
+                print("Failed to send reply to reply address %s" %(reply_to))
 
 
     def _loop(self, index):
+	"""
+	Internal use only. Message listener loop that receives messages and starts the attached function with the message content as argument.
+	"""
         print( "Thread %d START Listening for messages on Bus %s and service name %s." %(index, self.BusName, self.ServiceName))
         while self.running:
             try:
