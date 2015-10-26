@@ -187,10 +187,6 @@ create view site_directory_file as
         inner join directory dir on dc.descendant_id = dir.id
         inner join fileinfo on fileinfo.directory_id = dir.id ;
 
-create view project_directory_stats as
-    select * from project_directory
-    inner join directory_stats ds on ds.directory_id = project_directory.dir_id ;
-
 create view project_directory as
     select
         project.id as project_id,
@@ -201,3 +197,8 @@ create view project_directory as
         inner join project on project.id = project_top_level_directory.project_id
         inner join directory_closure dc on dc.ancestor_id = project_top_level_directory.directory_id
         inner join directory dir on dc.descendant_id = dir.id ;
+
+create view project_directory_stats as
+    select * from project_directory
+    inner join directory_stats ds on ds.directory_id = project_directory.dir_id ;
+
