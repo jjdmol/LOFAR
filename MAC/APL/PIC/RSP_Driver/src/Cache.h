@@ -121,6 +121,9 @@ public:
     bool getSequencerRequest() { return itsSequencerRequest; }
     void setSequencerRequest(bool state) { itsSequencerRequest = state; }
     
+    float getFixedAttenuation(int mode) { return itsFixedAttenuations(mode); }
+    float getAttenuationStepSize() { return itsAttenuationStepSize; }
+    
 	// update timestamp
 	void setTimestamp(const RTC::Timestamp& timestamp);
 
@@ -179,6 +182,8 @@ private:
 	int                             itsSDOBitsPerSample;
     blitz::Array<int, 1>            itsPPSsyncDelays;  // one delay for each AP
     bool                            itsSequencerRequest;
+    blitz::Array<float, 1>          itsFixedAttenuations;
+    float                           itsAttenuationStepSize;
     
 	Cache* m_cache;		// pointer to container
 };

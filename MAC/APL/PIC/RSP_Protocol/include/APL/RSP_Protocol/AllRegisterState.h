@@ -159,7 +159,7 @@ public:
 		rawdataread_state.check();
 		itsSerdesWriteState.check();
 		itsSerdesReadState.check();
-		itsBitModeWriteState.check();
+		itsBitModeWriteState.write();
 		itsSDOModeWriteState.check();
 		itsSDOSelectWriteState.check();
 		ts_state.write();
