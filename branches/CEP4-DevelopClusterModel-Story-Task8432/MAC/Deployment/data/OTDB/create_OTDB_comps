@@ -207,10 +207,10 @@ do
                 expand_dataproduct "InputDataProductNode" "@inputdataproduct@" |\
 		expand_dataproduct "OutputDataProductNode" "@outputdataproduct@" >${outputname}
         fi
-        grep @clusters@ $file >/dev/null 2>&1
+        grep @cluster@ $file >/dev/null 2>&1
         if [ $? -eq 0 ]; then
                 cat $file | \
-                expand_dataproduct "ClustersNode" "@clusters@" >${outputname}
+                expand_dataproduct "ClusterNode" "@cluster@" >${outputname}
         fi
 
 

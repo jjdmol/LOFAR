@@ -19,4 +19,4 @@ node  Cluster     4.0.2  development 'node constraint'  "Place holder for all pr
 #--------------------------------------------------------------------------------------------------------
 #    name                         dir. type   unit   prun. vm   value                   constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-uses  @clusters@            4.0.2  development 'node constraint'  "Cluster descriptions"
+uses  @cluster@            4.0.2  development 'node constraint'  "Cluster descriptions"
