@@ -19,7 +19,7 @@
 
         <div >
             <ul>
-                <li ng-repeat='item in dataCtrl.data'>{{item.name}} lives in {{item.city}}</li>
+                <li ng-repeat='item in dataCtrl.data | filter:name'>{{item.name}} lives in {{item.city}}</li>
             </ul>
         </div>
     </div>
