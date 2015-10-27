@@ -29,6 +29,7 @@ from flask import url_for
 import os
 
 __root_path = os.path.dirname(os.path.abspath(__file__))
+print '__root_path=%s' % __root_path
 
 '''The flask webservice app'''
 app = Flask('ResourceAssignementEditor',
@@ -36,6 +37,9 @@ app = Flask('ResourceAssignementEditor',
             template_folder=os.path.join(__root_path, 'templates'),
             static_folder=os.path.join(__root_path, 'static'),
             instance_relative_config=True)
+
+print 'app.template_folder= %s' % app.template_folder
+print 'app.static_folder= %s' % app.static_folder
 
 # Load the default configuration
 app.config.from_object('resourceassignementeditor.config.default')

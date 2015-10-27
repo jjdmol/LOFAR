@@ -1,12 +1,19 @@
 <!-- # $Id: -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang='en' ng-app='raeApp'>
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta http-equiv='Content-Type' content='text/html; charset=utf-8'/>
     <title>{{title}}</title>
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel='shortcut icon' href='{{ url_for('static', filename='favicon.ico') }}'>
 </head>
 <body>
-Hello World!
+    <script src='{{url_for('static', filename='js/angular.min.js')}}'></script>
+    <script src='{{url_for('static', filename='js/jquery.min.js')}}'></script>
+    <script src='{{url_for('static', filename='app/app.js')}}'></script>
+
+    {% raw %}
+    <label>What's your name? <input type="text" ng-model="name" autofocus/></label><br />
+    <label>Hello </label> {{name}}<br />
+    {% endraw %}
 </body>
 </html>
