@@ -1,4 +1,4 @@
-<!-- # $Id: -->
+<!-- # $Id: $-->
 <!DOCTYPE html>
 <html lang='en' ng-app='raeApp'>
 <head>
@@ -10,10 +10,19 @@
     <script src='{{url_for('static', filename='js/angular.min.js')}}'></script>
     <script src='{{url_for('static', filename='js/jquery.min.js')}}'></script>
     <script src='{{url_for('static', filename='app/app.js')}}'></script>
+    <script src='{{url_for('static', filename='app/controllers/controller.js')}}'></script>
 
     {% raw %}
-    <label>What's your name? <input type="text" ng-model="name" autofocus/></label><br />
-    <label>Hello </label> {{name}}<br />
+    <div ng-controller='DataController as dataCtrl'>
+        <label>What's your name? <input type="text" ng-model="name" autofocus/></label><br />
+        <label>Hello </label> {{name}}
+
+        <div >
+            <ul>
+                <li ng-repeat='item in dataCtrl.data'>{{item.name}} lives in {{item.city}}</li>
+            </ul>
+        </div>
+    </div>
     {% endraw %}
 </body>
 </html>
