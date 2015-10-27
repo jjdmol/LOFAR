@@ -2,7 +2,7 @@
 #
 #      name             vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  @clusters@     4.0.2  development 'node constraint'  "Cluster description(s) for processing locations"
+node  @cluster@     4.0.2  development 'node constraint'  "Cluster description(s) for processing locations"
 
 #    name              dir.    type   unit     prun.   vm      value   constr. descr.
 #--------------------------------------------------------------------------------------------------------
