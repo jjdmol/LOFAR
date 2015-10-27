@@ -3,6 +3,7 @@
 python_install(
     __init__.py
     webservice.py
+    utils.py
     DESTINATION resourceassignementeditor)
 
 set(web_files
@@ -12,6 +13,7 @@ set(web_files
     static/js/jquery-2.1.4.min.js
     static/js/jquery.min.js
     static/app/app.js
+    static/app/controllers/controller.js
     templates/index.html)
 
 install(FILES ${web_files}
