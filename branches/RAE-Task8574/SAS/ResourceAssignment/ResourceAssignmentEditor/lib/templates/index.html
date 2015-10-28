@@ -6,6 +6,19 @@
     <title>{{title}}</title>
     <link rel='shortcut icon' href='{{ url_for('static', filename='favicon.ico') }}'>
 </head>
+<style>
+table, th , td {
+  border: 1px solid grey;
+  border-collapse: collapse;
+  padding: 5px;
+}
+table tr:nth-child(odd) {
+  background-color: #f1f1f1;
+}
+table tr:nth-child(even) {
+  background-color: #ffffff;
+}
+</style>
 <body>
     <script src='{{url_for('static', filename='js/angular.min.js')}}'></script>
     <script src='{{url_for('static', filename='js/jquery.min.js')}}'></script>
@@ -18,9 +31,16 @@
         <label>Hello </label> {{name}}
 
         <div >
-            <ul>
-                <li ng-repeat='item in dataCtrl.data | filter:name'>{{item.name}} lives in {{item.city}}</li>
-            </ul>
+            <strong>Tasks:</strong>
+            <table>
+            <th>label</th><th>momId</th><th>obsId</th><th>status</th>
+            <tr ng-repeat='item in dataCtrl.tasks'>
+                <td>{{ item.label }}</td>
+                <td>{{ item.momId }}</td>
+                <td>{{ item.obsId }}</td>
+                <td>{{ item.status }}</td>
+            </tr>
+            </table>
         </div>
     </div>
     {% endraw %}

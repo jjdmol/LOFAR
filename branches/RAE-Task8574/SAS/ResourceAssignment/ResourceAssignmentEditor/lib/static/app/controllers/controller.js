@@ -1,9 +1,13 @@
 // $Id$
 angular.module('raeApp').controller('DataController', ['$http', function($http) {
     var store = this;
-    this.data = [];
+    this.tasks = [];
 
-    $http.get('/rest/data.json').success(function(data) {
-        store.data = data.data;
-    });
+    function getTasks() {
+        $http.get('/rest/tasks').success(function(result) {
+            store.tasks = result.tasks;
+        });
+    };
+
+    getTasks();
 }]);
