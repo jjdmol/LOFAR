@@ -28,4 +28,4 @@ from exceptions import *
 from messages import *
 from messagebus import *
 from RPC import RPC
-from Service import Service
+from Service import Service, MessageHandlerInterface

@@ -119,11 +119,11 @@ if __name__ == '__main__':
     # 'with' sets up the connection context and defines the scope of the service.
     with serv1, serv2, serv3, serv4, serv5:
         # Start listening in the background. This will start as many threads as defined by the instance
-        serv1.StartListening()
-        serv2.StartListening()
-        serv3.StartListening()
-        serv4.StartListening()
-        serv5.StartListening()
+        serv1.start_listening()
+        serv2.start_listening()
+        serv3.start_listening()
+        serv4.start_listening()
+        serv5.start_listening()
 
         # Redo all tests but via through RPC
         # ErrorFunc
@@ -173,8 +173,8 @@ if __name__ == '__main__':
         print "Functions tested with RPC: All OK"
 
         # Tell all background listener threads to stop and wait for them to finish.
-        serv1.StopListening()
-        serv2.StopListening()
-        serv3.StopListening()
-        serv4.StopListening()
-        serv5.StopListening()
+        serv1.stop_listening()
+        serv2.stop_listening()
+        serv3.stop_listening()
+        serv4.stop_listening()
+        serv5.stop_listening()
