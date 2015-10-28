@@ -43,10 +43,10 @@ class MessageHandlerInterface(object):
         handler = <from_MessageHandlerInterface_derived_class>(HandlerArguments)
         handler.before_main_loop()
         while alive:
-            handler.loop_before_receive()
+            handler.in_loop_before_receive()
             msg = wait for messages()
             handler.handle_message(msg)
-            handler.loop_after_handling()
+            handler.in_loop_after_handling()
         handler.after_main_loop()
     """
     def __init__(self, **kwargs):
@@ -56,15 +56,15 @@ class MessageHandlerInterface(object):
         "Called before main processing loop is entered."
         pass
 
-    def loop_before_receive(self):
+    def in_loop_before_receive(self):
         "Called in main processing loop just before a blocking wait for messages is done."
         pass
 
     def handle_message(self, msg):
         "Function the should handle the received message and return a result."
-        pass
+        raise Exception("OOPS! YOU ENDED UP IN THE MESSAGE HANDLER OF THE ABSTRACT BASE CLASS!")
 
-    def loop_after_handling(self):
+    def in_loop_after_handling(self):
         "Called in the main loop after the result was send back to the requester."
         pass
 
@@ -118,7 +118,7 @@ class Service(object):
         self.startonwith      = kwargs.pop("startonwith", False)
         self.handler_args     = kwargs.pop("handler_args", None)
         if len(kwargs):
-            raise ArgumentError("Unexpected argument passed to Serice class: %s", kwargs)
+            raise AttributeError("Unexpected argument passed to Serice class: %s", kwargs)
 
         # Set appropriate flags for exclusive binding
         if self.exclusive is True:
@@ -136,7 +136,7 @@ class Service(object):
             self.service_handler = MessageHandlerInterface()
             self.service_handler.handle_message = servicehandler
         else:
-            self.service_handler = servicehandler(self.handler_args)
+            self.service_handler = servicehandler(**self.handler_args)
             if not isinstance(self.service_handler, MessageHandlerInterface):
                 raise TypeError("Servicehandler argument must by a function or a derived class from MessageHandlerInterface.")
 
@@ -270,9 +270,9 @@ class Service(object):
 
         while self.running:
             try:
-                self.service_handler.loop_before_receive()
+                self.service_handler.in_loop_before_receive()
             except Exception as e:
-                logger.error("loop_before_receive() failed with %s", e)
+                logger.error("in_loop_before_receive() failed with %s", e)
                 continue
 
             try:
@@ -303,9 +303,9 @@ class Service(object):
                     self.okcounter[index] += 1
                     self.Listen.ack(msg)
                     try:
-                        self.service_handler.loop_after_handling()
+                        self.service_handler.in_loop_after_handling()
                     except Exception as e:
-                        logger.error("loop_after_handling() failed with %s", e)
+                        logger.error("in_loop_after_handling() failed with %s", e)
                     continue
 
                 except Exception as e:
