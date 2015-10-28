@@ -64,6 +64,37 @@ def data():
     data = {'data': values}
     return jsonify(data)
 
+@app.route('/rest/resourceitems')
+@gzipped
+def resourcesitems():
+    data = {'resourceitems': [{'id': 0, 'name': 'CS001', 'typeId': 0, 'type': 'station', 'group': False},
+                              {'id': 1, 'name': 'CS002', 'typeId': 0, 'type': 'station', 'group': False},
+                              {'id': 2, 'name': 'CS003', 'typeId': 0, 'type': 'station', 'group': False},
+                              {'id': 3, 'name': 'CS004', 'typeId': 0, 'type': 'station', 'group': False},
+                              {'id': 4, 'name': 'Core', 'typeId': 1, 'type': 'stationset', 'group': True},
+                              {'id': 5, 'name': 'Node1', 'typeId': 2, 'type': 'node', 'group': False},
+                              {'id': 6, 'name': 'Node2', 'typeId': 2, 'type': 'node', 'group': False}
+                              ]}
+    return jsonify(data)
+
+@app.route('/rest/resourceclaims')
+@gzipped
+def resourceclaims():
+    data = {'resourceclaims': [{'id': 0, 'resourceId': 4, 'taskId': 0, 'startTime': '2015-10-28T14:14:00Z', 'endTime': '2015-10-28T17:00:00Z', 'status': 'allocated'},
+                               {'id': 1, 'resourceId': 4, 'taskId': 1, 'startTime': '2015-10-29T10:00:00Z', 'endTime': '2015-10-29T12:00:00Z', 'status': 'claimed'},
+                               {'id': 2, 'resourceId': 4, 'taskId': 2, 'startTime': '2015-10-29T12:15:00Z', 'endTime': '2015-10-29T18:00:00Z', 'status': 'claimed'},
+                               ]}
+    return jsonify(data)
+
+@app.route('/rest/tasks')
+@gzipped
+def tasks():
+    data = {'tasks': [{'id': 0, 'momId': 123, 'obsId': 876, 'status': 'scheduled', 'label': 'Lobos Obs 2a'},
+                      {'id': 1, 'momId': 345, 'obsId': 654, 'status': 'approved', 'label': 'LOTAAS Obs 32q'},
+                      {'id': 2, 'momId': 567, 'obsId': 432, 'status': 'approved', 'label': 'Pulsar Obs 3'}
+                    ] }
+    return jsonify(data)
+
 def main(argv=None, debug=False):
     '''Start the webserver'''
     app.run(debug=debug, port=5001)
