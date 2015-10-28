@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License along
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 
-# $Id: $
+# $Id$
 
 '''ResourceAssignementEditor webservice serves a interactive html5 website for
 viewing and editing lofar resources.'''

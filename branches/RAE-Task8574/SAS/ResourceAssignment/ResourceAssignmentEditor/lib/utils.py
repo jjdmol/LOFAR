@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License along
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 
-# $Id: $
+# $Id$
 
 from flask import after_this_request, request
 from cStringIO import StringIO as IO

@@ -1,4 +1,4 @@
-// $Id: $
+// $Id$
 angular.module('raeApp').controller('DataController', ['$http', function($http) {
     var store = this;
     this.data = [];
