@@ -6,7 +6,7 @@ that the functions are OK. Next the same tests are done with the RPC and
 Service classes in between. This should give the same results.
 """
 import sys
-from lofar.messaging import Service, RPC
+from lofar.messaging import *
 
 class UserException(Exception):
     "Always thrown in one of the functions"

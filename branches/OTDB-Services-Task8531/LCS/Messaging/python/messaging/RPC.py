@@ -24,6 +24,10 @@ from lofar.messaging.messagebus import ToBus, FromBus
 from lofar.messaging.messages import ServiceMessage, ReplyMessage
 import uuid
 
+class RPCException(Exception):
+    "Passing exception of the messahe handler function."
+    pass
+
 class RPC():
     """
     This class provides an easy way to invoke a Remote Rrocedure Call to a
@@ -139,5 +143,7 @@ class RPC():
                 instance = excep_class_(answer.backtrace)
                 raise (instance)
             else:
-                raise (Exception(answer.errmsg))
+                raise (RPCException(answer.errmsg))
         return (None,status)
+
+__all__ = ["RPC", "RPCException"]

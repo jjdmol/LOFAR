@@ -341,3 +341,4 @@ class Service(object):
         except Exception as e:
             logger.error("after_main_loop() failed with %s", e)
 
+__all__ = ["Service", "MessageHandlerInterface"]
