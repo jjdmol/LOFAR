@@ -32,9 +32,9 @@ from lofar.messaging.exceptions import InvalidMessage, MessageFactoryError
 
 
 # Valid QPID message fields (from qpid.messaging.Message)
-_QPID_MESSAGE_FIELDS = {
+_QPID_MESSAGE_FIELDS = set([
     'content', 'content_type', 'correlation_id', 'durable', 'id',
-    'priority', 'properties', 'reply_to', 'subject', 'ttl', 'user_id'}
+    'priority', 'properties', 'reply_to', 'subject', 'ttl', 'user_id'])
 
 
 def validate_qpid_message(qmsg):
