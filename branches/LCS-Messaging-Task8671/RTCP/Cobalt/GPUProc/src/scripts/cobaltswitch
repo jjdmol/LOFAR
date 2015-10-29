@@ -1,0 +1,85 @@
+#!/bin/bash
+#
+# Script to switch Cobalt from ilt to test mode (and back)
+#
+
+function error() {
+  echo "$@" >&2
+  exit 1
+}
+
+SHOW_MODE=0
+NEW_MODE=
+
+function usage() {
+  echo "$0 [-s] [-m new mode]"
+  echo ""
+  echo "-s: Show current status, exit"
+  echo "-m: Switch to new mode: ilt, test"
+  exit 1
+}
+
+while getopts "hsm:" opt; do
+  case $opt in
+    h)  usage
+        ;;
+    s)  SHOW_MODE=1
+        ;;
+    m)  NEW_MODE=$OPTARG
+        ;;
+    \?) error "Invalid option: -$OPTARG"
+        ;;
+    :)  error "Option requires an argument: -$OPTARG"
+        ;;
+  esac
+done
+
+# Check if LOFARROOT is set.
+[ -n "$LOFARROOT" ] || error "LOFARROOT is not set!"
+
+OVERRIDE_PARSET="$LOFARROOT/etc/parset-additions.d/override/test-system.parset"
+
+if [ "$SHOW_MODE" == "1" ]; then
+  # Determine current mode
+  if [ -e "$OVERRIDE_PARSET" ]; then
+    echo "Current mode is: test"
+  else
+    echo "Current mode is: ilt"
+  fi
+  exit 0
+fi
+
+if [ "$NEW_MODE" != "" ]; then
+  case "$NEW_MODE" in
+    # Switch to test system
+    test) echo "Creating $OVERRIDE_PARSET"
+          (
+          echo "# NOTE: This file has been GENERATED"
+          echo "#       by `readlink -f $0`"
+          echo "#       on `date +"%F %T"`"
+          echo ""
+          echo "# Route all meta data to the test systems"
+          echo "Cobalt.PVSSGateway.host = ccu099"
+          echo "Cobalt.Feedback.host = ccu099"
+          echo "Cobalt.FinalMetaDataGatherer.database.host = sasdbtest"
+          echo ""
+          echo "# Use only cbt009 to observe"
+          echo "Cobalt.Nodes = [cbt009_0, cbt009_1]"
+          echo ""
+          echo "# Accept stations on any interface"
+          cat $LOFARROOT/etc/parset-additions.d/default/StationStreams.parset | grep "RSP.ports" | sed 's/udp:[^:]*:/udp:0:/g'
+          ) > $OVERRIDE_PARSET
+          echo "Cobalt is now in test mode"
+          ;;
+
+    # Switch back to production
+    ilt)  echo "Removing $OVERRIDE_PARSET"
+          rm -f "$OVERRIDE_PARSET"
+          echo "Cobalt is back in ILT mode"
+          ;;
+
+    *)    error "Invalid mode: $NEW_MODE"
+          ;;
+  esac
+fi
+
