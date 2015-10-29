@@ -6,14 +6,22 @@ python_install(
     utils.py
     DESTINATION resourceassignementeditor)
 
+file(GLOB_RECURSE jquery_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/jquery/*)
+file(GLOB_RECURSE angular_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/angular/*)
+file(GLOB_RECURSE angular_route_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/angular-route/*)
+file(GLOB_RECURSE angular_touch_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/angular-touch/*)
+file(GLOB_RECURSE angular_ui_grid_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/angular-ui-grid/*)
+
 set(web_files
+    ${jquery_files}
+    ${angular_files}
+    ${angular_route_files}
+    ${angular_touch_files}
+    ${angular_ui_grid_files}
     static/favicon.ico
-    static/js/angular-1.4.7.min.js
-    static/js/angular.min.js
-    static/js/jquery-2.1.4.min.js
-    static/js/jquery.min.js
     static/app/app.js
     static/app/controllers/controller.js
+    static/css/main.css
     templates/index.html)
 
 install(FILES ${web_files}

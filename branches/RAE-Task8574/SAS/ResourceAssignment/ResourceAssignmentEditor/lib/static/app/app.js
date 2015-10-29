@@ -1,2 +1,3 @@
 // $Id$
-angular.module('raeApp', []);
+
+var app = angular.module('raeApp', ['ngTouch', 'ui.grid']);
