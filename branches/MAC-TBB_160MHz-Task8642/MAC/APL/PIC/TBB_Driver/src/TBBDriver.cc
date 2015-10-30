@@ -999,8 +999,8 @@ void TBBDriver::openBoards()
 {
     LOG_DEBUG_STR("opening boards");
     for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-        if (itsBoard[boardnr].isConnected())
-            itsBoard[boardnr].close();
+        if (itsBoard[boardnr].isConnected()) itsBoard[boardnr].close();
+        TS->clearRcuSettings(boardnr);
         TS->setBoardState(boardnr, noBoard);
         itsBoard[boardnr].open();
     }
