@@ -1,0 +1,4 @@
+#!/bin/bash
+
+/opt/openmpi/bin/mpicc mpi-hello-world.c -o mpi-hello-world
+/opt/openmpi/bin/mpirun --tag-output -H localhost,localhost ./mpi-hello-world | sort | fgrep 'Hello world' | wc -l | grep '^2$'

@@ -1,0 +1,293 @@
+
+rsuctl manual
+-------------
+
+This directory contains the rsuctl utility used to update firmware on the RSP boards.
+The help information 
+
+Usage
+-----
+
+# ./rsuctl -h
+
+rsuctl (Revision: 1.15 ) # Remote System Update - program firmware in FPGA flash
+
+Usage: rsuctl [options] command
+
+  options
+    [-i ifname]      # Ethernet interface name on which to communicate (default is eth1)
+    [-m mac-address] # IP-address of the target board
+                     # (default is broadcast address ff:ff:ff:ff:ff:ff)
+
+  command (specify at least one of the following)
+    [-l] # List the images currently stored in all pages of the flash
+
+    [-b -f in.ttf -o out.bin]        # Convert a ttf file to a binary file
+    [-e -p page [-F]]                # Erase flash page, 0 <= page < 16 (-F forces erase of page 0)
+    [-x -p page                      # Start (load & reset) new firmware from the specified page
+    [-w -p page -f image[.ttf] [-F]] # Write img.bin into specified page (-F forces write to page 0)
+    [-v -p page -f image[.ttf]]      # Compare flash page with img.bin
+    [-d -p page -f dumpfile.bin]     # Dump flash page to dmp.bin
+
+    [-r] # Reset all FPGA's (load factory image)
+    [-c] # Clear all FPGA's (restart current image)
+    [-s] # Send SYNC pulse to all FPGA's
+
+    [-P] # Ping the board (find board when using broadcast address)
+    [-V] # Read RSU status and RSR versions
+    [-h] # This help text
+
+
+Introduction
+-------------
+
+The flash is divided into 16 pages. Page 0 will be write protected in
+the final system and contains the factory image for the BP FPGA. Pages
+1 to 7 may contain application images for the BP FPGA.
+
+Page 8 contains the factory image for the AP FPGA's. Pages 9 to 15
+may contain application images for the AP FPGA's.
+
+Listing the contents of the flash
+---------------------------------
+
+To list the images that are available in the flash use the -l argument:
+
+# ./rsuctl -l
+=== connected to RSP board(s) on eth1:FF:FF:FF:FF:FF:FF
+
+BP Factory  0:
+BP Image    1:    8740783 Fri Apr  7 16:02:37 2006 bp_20060407.ttf
+AP Factory  8:
+AP Image    9:   13251099 Fri Apr  7 16:01:08 2006 ap_20060407.ttf
+AP Image   15:      32366 Thu Mar 16 16:21:53 2006 lofar.jpg
+
+=== OK
+
+When an image is written to a flash page using the rsuctl utility,
+information about the file is written to the last block of the
+destination page. This acts as a directory to the flash.  This
+directory is read by the "./rsuctl -l" command. The directory block
+for the BP Factory image is empty because that image was not written
+using rsuctl and therefor the directory entry for it is missing.
+
+Writing an image to a flash page
+--------------------------------
+
+To write a new image to the flash you can use the -w argument, specify
+the destination page (-p) and the file to write.
+
+# ./rsuctl -w -p1 -f bp.ttf
+=== connected to RSP board(s) on eth1:ff:ff:ff:ff:ff:ff
+=== Reading 'bp.ttf'
+=== Converting 'bp.ttf' to binary
+=== |--------------------------------|
+===  ................................
+=== erasing page 01
+=== |--------------------------------|
+===  ................................
+=== writing and verifying page 01
+=== |--------------------------------|
+===  ................................
+=== OK
+
+Because the file extension is .ttf, this ttf text file is first
+converted to binary before being written to flash. After this
+conversion, the destination flash page is erase. As the new image is
+written each block is verified after it has been written.
+
+You can write arbitrary data to the flash, only when the file
+extension is ttf is the file converted from ttf to binary format. The
+following command writes the banner jpg from www.lofar.org to page
+15.
+
+# ./rsuctl -w -p15 -f lofar.jpg
+=== connected to RSP board(s) on eth1:ff:ff:ff:ff:ff:ff
+=== Reading 'lofar.jpg'
+=== erasing page 15
+=== |--------------------------------|
+===  ................................
+=== writing and verifying page 15
+=== |--------------------------------|
+===  ................................
+=== OK
+
+Verifying an image in the flash
+-------------------------------
+
+To verify that an image in the flash corresponds to a file on disk use
+the -v option.
+
+# ./rsuctl -v -p1 -f bp.ttf
+=== connected to RSP board(s) on eth1:ff:ff:ff:ff:ff:ff
+=== Reading 'bp.ttf'
+=== Converting 'bp.ttf' to binary
+=== |--------------------------------|
+===  ................................
+=== verifying page 01
+=== |--------------------------------|
+===  ................................
+=== OK
+
+Supplying the wrong reference file might result in the following
+output. 
+
+# ./rsuctl -v -p1 -f bp41.ttf
+=== connected to RSP board(s) on eth1:ff:ff:ff:ff:ff:ff
+=== Reading 'bp41.ttf'
+=== Converting 'bp41.ttf' to binary
+=== |--------------------------------|
+===  ................................
+=== verifying page 01
+=== |--------------------------------|
+===  XXXXXXXXXXXXXXXXXX..............
+=== FAILED
+
+Each '.' represents on sector on the flash (128 blocks). When an error
+is found in any of the blocks within a sector a 'X' is shown. Note
+that the sectors at the end appear to be correct. This is because the
+page is zero padded to the end and the actual image only occupies just
+over half of the flash page.
+
+Dumping a flash page to file
+----------------------------
+The binary data stored in flash can be dumped to file with the -d
+command.
+
+# ./rsuctl -d -p15 my.jpg
+=== connected to RSP board(s) on eth1:ff:ff:ff:ff:ff:ff
+=== Dumping to file 'dump.jpg'
+=== dumping page 15
+=== |--------------------------------|
+===  ................................
+=== OK
+
+Note that the complete page (excluding the directory block) is dumped,
+irrespective of the orginal size of the image file. This results in a
+file of 4193280 bytes which is (32*128 - 1 ) * 1024). The file is
+zeropadded from the orginal image size upto the page size (minus the one
+directory block).
+
+Converting a .ttf file to a binary file
+---------------------------------------
+To prevent repeated conversion from .ttf to bin or to compare a binary
+file with the result of a dumped image you can use the -b command.
+
+# ./rsuctl -b -f bp.ttf -o bp.bin
+=== Reading 'bp.ttf'
+=== Converting 'bp.ttf' to binary
+=== |--------------------------------|
+===  ................................
+=== OK
+
+Erasing pages
+-------------
+
+To erase a page of the flash use the -e command. The factory image in 
+page 0 is protected. To force erasing page 0 add the -F flag. Adding
+the -F flag will only disable the software protection in the rsuctl
+program, not the hardware protection on the board. The hardware
+protection of page 0 in the flash can only be disabled by setting the
+right dip switches.
+
+# ./rsuctl -e -p5
+=== connected to RSP board(s) on eth1:ff:ff:ff:ff:ff:ff
+=== erasing page 05
+=== |--------------------------------|
+===  ................................
+=== OK
+
+# ./rsuctl -e -p0
+=== connected to RSP board(s) on eth1:ff:ff:ff:ff:ff:ff
+=== ERR erasing factory image (page 0) prohibited, use -F to force erase of factory image at ./rsuctl line 778.
+
+# ./rsuctl -e -p0 -F
+=== connected to RSP board(s) on eth1:ff:ff:ff:ff:ff:ff
+=== erasing page 00
+=== |--------------------------------|
+===  ................................
+=== OK
+
+Resetting All FPGA's
+--------------------
+
+To return to the factory default images on all FPGA's use the -r
+command.
+
+# ./rsuctl -r
+=== connected to RSP board(s) on eth1:ff:ff:ff:ff:ff:ff
+=== waiting 3 seconds after reset
+=== reconfiguring AP's with factory image (page 8)
+=== waiting 1 second after AP reconfig
+=== waiting 3 seconds after clear
+
+RSU Status:
+  rdy  : Configuration done
+  err  : Configuration successfull
+  fpga : BP was reconfigured
+  image: Factory image
+  trig : User reconfig
+
+RSP   version: 2
+BP    version: 4.1
+AP[0] version: 4.1
+AP[1] version: 4.1
+AP[2] version: 4.1
+AP[3] version: 4.1
+=== OK
+
+Clearing FPGA's
+---------------
+
+Clearing FPGA's will help resyncing the internal datapaths if needed.
+
+# ./rsuctl -c
+=== connected to RSP board(s) on eth1:ff:ff:ff:ff:ff:ff
+=== waiting 3 seconds after clear
+
+RSU Status:
+  rdy  : Configuration done
+  err  : Configuration successfull
+  fpga : BP was reconfigured
+  image: Factory image
+  trig : User reconfig
+
+RSP   version: 2
+BP    version: 4.1
+AP[0] version: 4.1
+AP[1] version: 4.1
+AP[2] version: 4.1
+AP[3] version: 4.1
+=== OK
+
+Send SYNC to all FPGA's
+-----------------------
+
+# ./rsuctl -s
+=== connected to RSP board(s) on eth1:ff:ff:ff:ff:ff:ff
+=== OK
+
+Read RSU status and versions
+----------------------------
+
+# ./rsuctl -V
+=== connected to RSP board(s) on eth1:ff:ff:ff:ff:ff:ff
+
+RSU Status:
+  rdy  : Configuration done
+  err  : Configuration successfull
+  fpga : BP was reconfigured
+  image: Factory image
+  trig : User reconfig
+
+RSP   version: 2
+BP    version: 4.1
+AP[0] version: 4.1
+AP[1] version: 4.1
+AP[2] version: 4.1
+AP[3] version: 4.1
+=== OK
+
+
+END OF DOCUMENT
+
