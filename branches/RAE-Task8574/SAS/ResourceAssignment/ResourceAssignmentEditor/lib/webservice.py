@@ -23,12 +23,14 @@
 viewing and editing lofar resources.'''
 
 import sys
+import os
 import time
+from datetime import datetime
+from datetime import timedelta
 from flask import Flask
 from flask import render_template
 from flask import url_for
 from flask.json import jsonify
-import os
 from resourceassignementeditor.utils import gzipped
 
 __root_path = os.path.dirname(os.path.abspath(__file__))
@@ -89,15 +91,15 @@ def resourceclaims():
 @app.route('/rest/tasks')
 @gzipped
 def tasks():
-    data = {'tasks': [{'id': 0, 'momId': 123, 'obsId': 876, 'status': 'scheduled', 'label': 'Lobos Obs 2a'},
-                      {'id': 1, 'momId': 345, 'obsId': 654, 'status': 'approved', 'label': 'LOTAAS Obs 32q'},
-                      {'id': 2, 'momId': 567, 'obsId': 432, 'status': 'approved', 'label': 'Pulsar Obs 3'}
+    data = {'name': 'Observations', 'tasks': [{'id': 0, 'momId': 123, 'obsId': 876, 'status': 'scheduled', 'name': 'Lobos Obs 2a', 'from': datetime.utcnow() - timedelta(hours=1), 'to': datetime.utcnow() + timedelta(hours=1)},
+                      {'id': 1, 'momId': 345, 'obsId': 654, 'status': 'approved', 'name': 'LOTAAS Obs 32q', 'from': datetime.utcnow() + timedelta(hours=5), 'to': datetime.utcnow() + timedelta(hours=6)},
+                      {'id': 2, 'momId': 567, 'obsId': 432, 'status': 'approved', 'name': 'Pulsar Obs 3', 'from': datetime.utcnow() + timedelta(hours=10), 'to': datetime.utcnow() + timedelta(hours=32)}
                     ] }
     return jsonify(data)
 
 def main(argv=None, debug=False):
     '''Start the webserver'''
-    app.run(debug=debug, port=5001)
+    app.run(debug=debug, threaded=True, port=5001)
 
 if __name__ == '__main__':
     main(sys.argv[1:], True)

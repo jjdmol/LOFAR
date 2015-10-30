@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- $Id$ -->
 <html lang='en' ng-app="raeApp">
     <head>
     <meta http-equiv='Content-Type' content='text/html; charset=utf-8'/>
@@ -6,10 +7,16 @@
     <link rel='shortcut icon' href='{{ url_for('static', filename='favicon.ico') }}'>
     <link href="/static/css/main.css" rel="stylesheet" type="text/css">
     <link href="/static/js/angular-ui-grid/ui-grid.min.css" rel="stylesheet" type="text/css">
-    <script src="/static/js/angular/angular.min.js"></script>
+    <script src="/static/js/angular/angular.js"></script>
     <script src="/static/js/angular-route/angular-route.min.js"></script>
-    <script src="/static/js/angular-touch/angular-touch.min.js"></script>
-    <script src="/static/js/angular-ui-grid/ui-grid.min.js"></script>
+    <script src="/static/js/angular-touch/angular-touch.js"></script>
+    <script src="/static/js/angular-ui-grid/ui-grid.js"></script>
+    <script src="/static/js/moment/moment.js"></script>
+    <script src="/static/js/angular-moment/angular-moment.js"></script>
+    <link href="/static/js/angular-gantt/angular-gantt.min.css" rel="stylesheet" type="text/css">
+    <link href="/static/js/angular-gantt/angular-gantt-plugins.min.css" rel="stylesheet" type="text/css">
+    <script src="/static/js/angular-gantt/angular-gantt.js"></script>
+    <script src="/static/js/angular-gantt/angular-gantt-plugins.js"></script>
     <script src="/static/app/app.js"></script>
     <script src="/static/app/controllers/controller.js"></script>
     </head>
@@ -17,7 +24,15 @@
     {% raw %}
     <div ng-controller="DataController as dataCtrl">
         <strong>Tasks:</strong>
-        <div id="grid1" ui-grid="{ data: dataCtrl.tasks }" class="grid"></div>
+        <div id="grid1" ui-grid="{ data: dataCtrl.tasks }" ui-grid-move-columns class="grid"></div>
+        <br/>
+        <br/>
+        <br/>
+        <div gantt "{ data= dataCtrl.gtasks }" style="min-height:300px">
+            <gantt-table></gantt-table>
+            <gantt-movable></gantt-movable>
+            <gantt-tooltips></gantt-tooltips>
+        </div>
     </div>
     {% endraw %}
     </body>
