@@ -266,7 +266,7 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
                 self.inputs['mapfiles_out'].append(os.path.join(mapfile_dir, self.inputs['stepname'] + name + '.' + 'mapfile'))
                 for item in outputmapfiles[-1]:
                     item.file = os.path.join(
-                        work_dir,
+                        mapfile_dir,
                         os.path.splitext(os.path.basename(item.file))[0] + '.' + self.inputs['stepname'] + name
                     )
             self.inputs['mapfile_out'] = self.inputs['mapfiles_out'][0]
@@ -322,23 +322,27 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
             arglist_copy = copy.deepcopy(arglist)
             parsetdict_copy = copy.deepcopy(parsetdict)
 
+            #if keylist:
+                #for name, value in zip(keylist, inputlist):
             if filedict:
                 for name, value in filedict.iteritems():
-                    replaced = False
+                    #if arglist_copy and name in arglist_copy:
                     if arglist_copy:
-                        for arg in arglist:
-                            if name in arg:
-                                ind = arglist_copy.index(arg)
-                                arglist_copy[ind] = arglist_copy[ind].replace(name, value[i])
-                                replaced = True
-                    if parsetdict_copy:
-                        if name in parsetdict_copy.values():
-                            for k, v in parsetdict_copy.iteritems():
-                                if v == name:
-                                    parsetdict_copy[k] = value[i]
-                        else:
-                            if not replaced:
-                                parsetdict_copy[name] = value[i]
+                        yes = False
+                        for bla in arglist:
+                            if name in bla:
+                                ind = arglist_copy.index(bla)
+                                yes = True
+                        if yes:
+                            arglist_copy[ind] = arglist_copy[ind].replace(name, value[i])
+                        #ind = arglist_copy.index(name)
+                        #arglist_copy[ind] = value[i]
+                    elif name in parsetdict_copy.values():
+                        for k, v in parsetdict_copy.iteritems():
+                            if v == name:
+                                parsetdict_copy[k] = value[i]
+                    else:
+                        parsetdict_copy[name] = value[i]
 
             jobs.append(
                 ComputeJob(
@@ -351,6 +355,7 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
                         work_dir,
                         self.inputs['parsetasfile'],
                         args_format,
+                        #self.inputs['working_directory'],
                         self.environment
                     ]
                 )
