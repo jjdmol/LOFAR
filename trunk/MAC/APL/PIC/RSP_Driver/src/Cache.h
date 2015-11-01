@@ -180,8 +180,7 @@ private:
 	RSP_Protocol::SDOModeInfo       itsSDOModeInfo;
 	RSP_Protocol::SDOSelection      itsSDOSelection;
 	int                             itsSDOBitsPerSample;
-        blitz::Array<int, 1>            itsPPSsyncDelays;  // one delay 
-for each AP
+        blitz::Array<int, 1>            itsPPSsyncDelays;  // one delay for each AP
         bool                            itsSequencerRequest;
         blitz::Array<float, 1>          itsFixedAttenuations;
         float                           itsAttenuationStepSize;
