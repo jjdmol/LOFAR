@@ -86,7 +86,11 @@ void CepStatusCmd::saveTpAckEvent(GCFEvent& event)
 		setStatus(getBoardNr(), TBB_TIME_OUT);
 	}	else {
 		TPCepStatusAckEvent tp_ack(event);
-		LOG_DEBUG_STR(formatString("Received CepStatusAck from boardnr[%d]", getBoardNr()));
+		// TODO: set back to DEBUG
+        LOG_INFO_STR(formatString("Received CepStatusAck from boardnr[%d], status=%ld, pages_left=%ld ", 
+                                    getBoardNr(),
+                                    tp_ack.status,
+                                    tp_ack.pages_left));
 		
 		if (tp_ack.status != 0) {
 			setStatus(getBoardNr(), (tp_ack.status << 24));
