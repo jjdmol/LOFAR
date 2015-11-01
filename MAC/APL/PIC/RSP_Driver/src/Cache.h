@@ -180,17 +180,12 @@ private:
 	RSP_Protocol::SDOModeInfo       itsSDOModeInfo;
 	RSP_Protocol::SDOSelection      itsSDOSelection;
 	int                             itsSDOBitsPerSample;
-<<<<<<< .working
-    blitz::Array<int, 1>            itsPPSsyncDelays;  // one delay for each AP
-    bool                            itsSequencerRequest;
-    blitz::Array<float, 1>          itsFixedAttenuations;
-    float                           itsAttenuationStepSize;
+        blitz::Array<int, 1>            itsPPSsyncDelays;  // one delay 
+for each AP
+        bool                            itsSequencerRequest;
+        blitz::Array<float, 1>          itsFixedAttenuations;
+        float                           itsAttenuationStepSize;
     
-=======
-    blitz::Array<int, 1>            itsPPSsyncDelays;  // one delay for each AP
-    bool                            itsSequencerRequest;
-    
->>>>>>> .merge-right.r32743
 	Cache* m_cache;		// pointer to container
 };
 
