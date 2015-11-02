@@ -4,6 +4,7 @@ python_install(
     __init__.py
     webservice.py
     utils.py
+    fakedata.py
     DESTINATION resourceassignementeditor)
 
 file(GLOB_RECURSE jquery_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/jquery/*)

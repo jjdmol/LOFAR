@@ -32,6 +32,7 @@ from flask import render_template
 from flask import url_for
 from flask.json import jsonify
 from resourceassignementeditor.utils import gzipped
+from resourceassignementeditor.fakedata import *
 
 __root_path = os.path.dirname(os.path.abspath(__file__))
 print '__root_path=%s' % __root_path
@@ -91,10 +92,14 @@ def resourceclaims():
 @app.route('/rest/tasks')
 @gzipped
 def tasks():
-    data = {'name': 'Observations', 'tasks': [{'id': 0, 'momId': 123, 'obsId': 876, 'status': 'scheduled', 'name': 'Lobos Obs 2a', 'from': datetime.utcnow() - timedelta(hours=1), 'to': datetime.utcnow() + timedelta(hours=1)},
-                      {'id': 1, 'momId': 345, 'obsId': 654, 'status': 'approved', 'name': 'LOTAAS Obs 32q', 'from': datetime.utcnow() + timedelta(hours=5), 'to': datetime.utcnow() + timedelta(hours=6)},
-                      {'id': 2, 'momId': 567, 'obsId': 432, 'status': 'approved', 'name': 'Pulsar Obs 3', 'from': datetime.utcnow() + timedelta(hours=10), 'to': datetime.utcnow() + timedelta(hours=32)}
-                    ] }
+    data = {'tasks': [
+        {'name': 'Observations', 'tasks': observartionTasks},
+        {'name': 'Pipelines', 'tasks': pipelineTasks},
+        {'name': 'Maintenance', 'tasks': maintenanceTasks},
+        {'name': 'Reservations', 'tasks': reservationTasks},
+        {'name': 'Ingest', 'tasks': ingestTasks}
+        ]}
+
     return jsonify(data)
 
 def main(argv=None, debug=False):

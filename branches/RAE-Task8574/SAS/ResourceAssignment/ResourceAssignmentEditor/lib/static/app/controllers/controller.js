@@ -6,14 +6,14 @@ angular.module('raeApp').controller('DataController', ['$http', '$scope', functi
 
     function getTasks() {
         $http.get('/rest/tasks').success(function(result) {
-            for(var key in result.tasks) {
-                var elem = result.tasks[key];
-                elem.from = new Date(elem.from);
-                elem.to = new Date(elem.to);
-            }
+//             for(var key in result.data) {
+//                 var elem = result.tasks[key];
+//                 elem.from = new Date(elem.from);
+//                 elem.to = new Date(elem.to);
+//             }
 
             store.tasks = result.tasks;
-            store.gtasks = [result];
+            store.gtasks = result.tasks;
         });
     };
 
