@@ -70,7 +70,7 @@ def TaskSpecificationRequest(input_dict, db_connection):
 
     # Try to get the specification information
     try:
-        logger.debug("TaskSpecificationRequest:%s" % input_dict)
+        logger.info("TaskSpecificationRequest:%s" % input_dict)
         top_node = db_connection.query("select nodeid from getTopNode('%s')" % tree_id).getresult()[0][0]
         treeinfo = db_connection.query("select exportTree(1, '%s', '%s')" % (tree_id, top_node)).getresult()[0][0]
     except QUERY_EXCEPTIONS, exc_info:
@@ -86,7 +86,7 @@ def TaskSpecificationRequest(input_dict, db_connection):
     return answer
 
 # Status Update Command
-def StatusUpdateCommand(input_dict):
+def StatusUpdateCommand(input_dict, db_connection):
     """
     RPC function to update the status of a tree.
 
@@ -104,7 +104,6 @@ def StatusUpdateCommand(input_dict):
     FunctionError: An error occurred during the execution of the function. 
                    The text of the exception explains what is wrong.
     """
-    global otdb_connection
     # Check input
     if not isinstance(input_dict, dict):
         raise AttributeError("StatusUpdateCommand: Expected a dict as input")
@@ -114,13 +113,14 @@ def StatusUpdateCommand(input_dict):
         update_times = True
         if input_dict.has_key("UpdateTimestamps"):
             update_times = bool(input_dict["UpdateTimestamps"])
+        logger.info("StatusUpdateCommand(%s,%s,%s)" % (tree_id, new_status, update_times))
     except KeyError, info:
         raise AttributeError("StatusUpdateCommand: Key %s is missing in the input" % info)
 
     # Get list of allowed tree states
     allowed_states = {}
     try:
-        for (id,name) in otdb_connection.query("select id,name from treestate").getresult():
+        for (id,name) in db_connection.query("select id,name from treestate").getresult():
             allowed_states[name] = id
     except QUERY_EXCEPTIONS, exc_info:
         raise FunctionError("Error while getting allowed states of tree %d: %s" % (tree_id, exc_info))
@@ -132,7 +132,7 @@ def StatusUpdateCommand(input_dict):
 
     # Finally try to change the status
     try:
-        success = (otdb_connection.query("select setTreeState(1, %d, %d::INT2,%s)" % 
+        success = (db_connection.query("select setTreeState(1, %d, %d::INT2,%s)" % 
             (tree_id, allowed_states[new_status], str(update_times))).getresult()[0][0] == 't')
     except QUERY_EXCEPTIONS, exc_info:
         raise FunctionError("Error while setting the status of tree %d: %s" % (tree_id, exc_info))
@@ -140,7 +140,7 @@ def StatusUpdateCommand(input_dict):
 
 
 # Key Update Command
-def KeyUpdateCommand(input_dict):
+def KeyUpdateCommand(input_dict, db_connection):
     """
     RPC function to update the values of a tree.
 
@@ -154,7 +154,6 @@ def KeyUpdateCommand(input_dict):
     FunctionError: An error occurred during the execution of the function. 
                    The text of the exception explains what is wrong.
     """
-    global otdb_connection
     # Check input
     if not isinstance(input_dict, dict):
         raise AttributeError("Expected a dict as input")
@@ -167,12 +166,13 @@ def KeyUpdateCommand(input_dict):
         raise AttributeError("KeyUpdateCommand (tree=%d): Field 'OtdbID' must be of type 'integer'" % tree_id)
     if not isinstance(update_list, dict):
         raise AttributeError("KeyUpdateCommand (tree=%d): Field 'Updates' must be of type 'dict'" % tree_id)
+    logger.info("KeyUpdateCommand for tree: %d", tree_id)
 
     # Finally try to update all keys
     errors = {}
     for (key,value) in update_list.iteritems():
         try:
-            record_list = (otdb_connection.query("select nodeid,instances,limits from getvhitemlist (%d, '%s')" % 
+            record_list = (db_connection.query("select nodeid,instances,limits from getvhitemlist (%d, '%s')" % 
                            (tree_id, key))).getresult()
             if len(record_list) == 0:
                 errors[key] = "Not found for tree %d" % tree_id
@@ -183,7 +183,7 @@ def KeyUpdateCommand(input_dict):
             # When one record was found record_list is a list with a single tuple (nodeid, instances, current_value)
             node_id   = record_list[0][0]
             instances = record_list[0][1]
-            result = ((otdb_connection.query("select updateVTnode(1,%d,%d,%d::INT2,'%s')" % 
+            result = ((db_connection.query("select updateVTnode(1,%d,%d,%d::INT2,'%s')" % 
                        (tree_id, node_id, instances, value))).getresult()[0][0] == 't')
             print "%s: %s ==> %s" % (key, record_list[0][2], value)
         except QUERY_EXCEPTIONS, exc:
@@ -218,11 +218,11 @@ class PostgressMessageHandlerInterface(MessageHandlerInterface):
             try:
                 self.connection = pg.connect(user=self.db_user, host=self.db_host, dbname=self.database)
                 self.connected = True
-                logger.info("Connected to database %s on host %s" % (dbname, host))
+                logger.info("Connected to database %s on host %s" % (self.database, self.db_host))
             except (TypeError, SyntaxError, pg.InternalError):
                 self.connected = False
                 logger.error("Not connected to database %s on host %s (anymore), retry in 5 seconds" 
-                             % (dbname, host))
+                             % (self.database, self.db_host))
                 time.sleep(5)
 
 class PostgressTaskSpecificationRequest(PostgressMessageHandlerInterface):
@@ -280,37 +280,21 @@ if __name__ == "__main__":
         parser.print_help()
         sys.exit(0)
 
-    def do_specification_rpc(function, args):
-        try:
-            (data,status) = function(args)
-            if data:
-                for (key,value) in  data.iteritems():
-                    print "%s ==> %s" % (key, value)
-            else:
-                print status
-        except Exception as e:
-            print e
-        print "################"
-
     busname = sys.argv[1] if len(sys.argv) > 1 else "simpletest"
 
-    serv1 = Service(busname, "TaskSpecification", PostgressTaskSpecificationRequest, 
-                    numthreads=1, startonwith=True,
+    serv1 = Service("TaskSpecification", PostgressTaskSpecificationRequest, 
+                    busname=busname, numthreads=1, startonwith=True,
                     handler_args = {"database" : options.dbName, "db_host" : options.dbHost})
-    serv2 = Service(busname, "StatusUpdateCmd",   PostgressStatusUpdateCommand,
-                    numthreads=1, startonwith=True,
+    serv2 = Service("StatusUpdateCmd",   PostgressStatusUpdateCommand,
+                    busname=busname, numthreads=1, startonwith=True,
                     handler_args = {"database" : options.dbName, "db_host" : options.dbHost})
-    serv3 = Service(busname, "KeyUpdateCmd",      PostgressKeyUpdateCommand,
-                    numthreads=1, startonwith=True,
+    serv3 = Service("KeyUpdateCmd",      PostgressKeyUpdateCommand,
+                    busname=busname, numthreads=1, startonwith=True,
                     handler_args = {"database" : options.dbName, "db_host" : options.dbHost})
 
     with serv1,serv2,serv3:
-        with RPC(busname, "TaskSpecification", ForwardExceptions=True) as task_spec_request:
-            do_specification_rpc(task_spec_request, {'OtdbID':63370})
-            do_specification_rpc(task_spec_request, {'OtdbID':82111})
-            do_specification_rpc(task_spec_request, {'OtdbID':146300})
+        logger.info("Started the OTDB services")
+        serv3.wait_for_interrupt()
 
-#    print StatusUpdateCommand({'OtdbID':146300, 'NewStatus':'finished', 'UpdateTimestamps':True})
-#    print KeyUpdateCommand({'OtdbID':63370, 'Updates':{'LOFAR.ObsSW.Observation.ObservationControl.OnlineControl._hostname':'CCU099ABC'}})
-   
+    logger.info("Stopped the OTDB services")
 

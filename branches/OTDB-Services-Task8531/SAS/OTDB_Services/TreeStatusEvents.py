@@ -26,6 +26,7 @@ Daemon that watches the OTDB database for status changes of trees and publishes 
 
 import os,sys,time,pg, signal
 from optparse import OptionParser
+from lofar.messaging import EventMessage,ToBus
 
 QUERY_EXCEPTIONS = (TypeError, ValueError, MemoryError, pg.ProgrammingError, pg.InternalError)
 Alive = False
@@ -82,6 +83,8 @@ if __name__ == "__main__":
                       help="Name of the database")
     parser.add_option("-H", "--hostname", dest="dbHost", type="string", default="sasdb", 
                       help="Hostname of database server")
+    parser.add_option("-B", "--busname", dest="busname", type="string", default="", 
+                      help="Busname or queue-name the status changes are published on")
     (options, args) = parser.parse_args()
 
     if not options.dbName:
@@ -94,46 +97,55 @@ if __name__ == "__main__":
         parser.print_help()
         sys.exit(0)
 
+    if not options.busname:
+        print "Missing busname"
+        parser.print_help()
+        sys.exit(0)
+
     # Set signalhandler to stop the program in a neat way.
     signal.signal(signal.SIGINT, signal_handler)
 
     Alive = True
     connected = False
     otdb_connection = None
-    while Alive:
-        while Alive and not connected:
-            # Connect to the database
-            try:
-                otdb_connection = pg.connect(user="postgres", host=options.dbHost, dbname=options.dbName)
-                connected = True
-            except (TypeError, SyntaxError, pg.InternalError):
-                connected = False
-                print "DatabaseError: Connection to database could not be made, reconnect attempt in 5 seconds"
-                time.sleep(5)
-             
-        # When we are connected we can poll the database
-        if connected:
-            # Get start_time (= creation time of last retrieved record if any)
-            start_time = ''
-            try:
-                start_time = open('time_save.txt', 'rb').read()
-            except IOError:
-                start_time = "2015-01-01 00:00:00.00"
-            print "start_time=", start_time
+    with ToBus(options.busname) as send_bus:
+        while Alive:
+            while Alive and not connected:
+                # Connect to the database
+                try:
+                    otdb_connection = pg.connect(user="postgres", host=options.dbHost, dbname=options.dbName)
+                    connected = True
+                except (TypeError, SyntaxError, pg.InternalError):
+                    connected = False
+                    print "DatabaseError: Connection to database could not be made, reconnect attempt in 5 seconds"
+                    time.sleep(5)
+                 
+            # When we are connected we can poll the database
+            if connected:
+                # Get start_time (= creation time of last retrieved record if any)
+                start_time = ''
+                try:
+                    start_time = open('time_save.txt', 'rb').read()
+                except IOError:
+                    start_time = "2015-01-01 00:00:00.00"
+                print "start_time=", start_time
+    
+                try:
+                    record_list = PollForStatusChanges(start_time, "now", otdb_connection)
+                except FunctionError, exc_info:
+                    print exc_info
+                else:
+                    for (treeid, state, modtime, creation) in record_list:
+                        content = { "treeID" : treeid, "state" : state, "time_of_change" : modtime }
+                        msg = EventMessage(content)
+                        print treeid, state, modtime, creation
+                        send_bus.send(msg)
+                        open('time_save.txt', 'wb').write(creation)
+                        start_time = creation
+                    print "==="
 
-            try:
-                record_list = PollForStatusChanges(start_time, "now", otdb_connection)
-            except FunctionError, exc_info:
-                print exc_info
-            else:
-                for (treeid, state, modtime, creation) in record_list:
-                    print treeid, state, modtime, creation
-                    open('time_save.txt', 'wb').write(creation)
-                    start_time = creation
-                print "==="
+                # Redetermine the database status.
+                connected = (otdb_connection and otdb_connection.status == 1)
 
-            # Redetermine the database status.
-            connected = (otdb_connection and otdb_connection.status == 1)
-
-            time.sleep(2)
+                time.sleep(2)
 
