@@ -36,157 +36,161 @@ def StringFunc(input_value):
     return input_value.upper()
 
 class OnlyMessageHandling(MessageHandlerInterface):
-    def __init__(self, arg_dict):
+    def __init__(self, **kwargs):
         MessageHandlerInterface.__init__(self)
-        print "Creation of OnlyMessageHandling class: %s" % arg_dict
-        self.handle_message = arg_dict.pop("function")
-        self.args = arg_dict
+        print "Creation of OnlyMessageHandling class: %s" % kwargs
+        self.handle_message = kwargs.pop("function")
+        self.args = kwargs
 
 class FullMessageHandling(MessageHandlerInterface):
-    def __init__(self, arg_dict):
+    def __init__(self, **kwargs):
         MessageHandlerInterface.__init__(self)
-        print "Creation of FullMessageHandling class: %s" % arg_dict
-        self.handle_message = arg_dict.pop("function")
-        self.args = arg_dict
-    def before_main_loop(self):
-        print "FullMessageHandling before_main_loop: %s" % self.args
-    def loop_before_receive(self):
-        print "FullMessageHandling loop_before_receive: %s" % self.args
-    def loop_after_handling(self):
-        print "FullMessageHandling loop_after_handling: %s" % self.args
-    def after_main_loop(self):
-        print "FullMessageHandling after_main_loop: %s" % self.args
+        print "Creation of FullMessageHandling class: %s" % kwargs
+        self.handle_message = kwargs.pop("function")
+        self.args = kwargs
+    def prepare_loop(self):
+        print "FullMessageHandling prepare_loop: %s" % self.args
+    def prepare_receive(self):
+        print "FullMessageHandling prepare_receive: %s" % self.args
+    def finalize_handling(self, successful):
+        print "FullMessageHandling finalize_handling: %s" % self.args
+    def finalize_loop(self):
+        print "FullMessageHandling finalize_loop: %s" % self.args
 
 class FailingMessageHandling(MessageHandlerInterface):
-    def __init__(self, arg_dict):
+    def __init__(self, **kwargs):
         MessageHandlerInterface.__init__(self)
-        print "Creation of FailingMessageHandling class: %s" % arg_dict
-        self.handle_message = arg_dict.pop("function")
-        self.args = arg_dict
+        print "Creation of FailingMessageHandling class: %s" % kwargs
+        self.handle_message = kwargs.pop("function")
+        self.args = kwargs
         self.counter = 0
-    def before_main_loop(self):
-        print "FailingMessageHandling before_main_loop: %s" % self.args
-        raise Exception("oops in before_main_loop()")
-    def loop_before_receive(self):
+    def prepare_loop(self):
+        print "FailingMessageHandling prepare_loop: %s" % self.args
+        raise UserException("oops in prepare_loop()")
+    def prepare_receive(self):
         # allow one succesfull call otherwise the main loop never accepts the message :-)
-        print "FailingMessageHandling loop_before_receive: %s" % self.args
+        print "FailingMessageHandling prepare_receive: %s" % self.args
         if self.counter:
             time.sleep(1)  # Prevent running around too fast
-            raise Exception("oops in loop_before_receive(%d)" % self.counter)
+            raise UserException("oops in prepare_receive(%d)" % self.counter)
         else:
             self.counter = self.counter + 1
-    def loop_after_handling(self):
-        print "FailingMessageHandling loop_after_handling: %s" % self.args
-        raise Exception("oops in loop_after_handling()")
-    def after_main_loop(self):
-        print "FailingMessageHandling after_main_loop: %s" % self.args
-        raise Exception("oops in after_main_loop()")
+    def finalize_handling(self, successful):
+        print "FailingMessageHandling finalize_handling: %s, %s" % (self.args, successful)
+        raise UserException("oops in finalize_handling()")
+    def finalize_loop(self):
+        print "FailingMessageHandling finalize_loop: %s" % self.args
+        raise UserException("oops in finalize_loop()")
 
 if __name__ == '__main__':
     busname = sys.argv[1] if len(sys.argv) > 1 else "simpletest"
 
     # Register functs as a service handler listening at busname and ServiceName
-    serv1_plain         = Service(busname, "Error1Service", ErrorFunc,              numthreads=1, startonwith=True)
-    serv1_minimal_class = Service(busname, "Error2Service", OnlyMessageHandling,    numthreads=1, startonwith=True, 
-                                  handler_args={"function" : ErrorFunc})
-    serv1_full_class    = Service(busname, "Error3Service", FullMessageHandling,    numthreads=1, startonwith=True, 
-                                  handler_args={"function" : ErrorFunc})
-    serv1_failing_class = Service(busname, "Error4Service", FailingMessageHandling, numthreads=1, startonwith=True, 
-                                  handler_args={"function" : ErrorFunc})
+    serv1_plain         = Service("String1Service", StringFunc,             busname=busname, numthreads=1, startonwith=True)
+    serv1_minimal_class = Service("String2Service", OnlyMessageHandling,    busname=busname, numthreads=1, startonwith=True, 
+                                  handler_args={"function" : StringFunc})
+    serv1_full_class    = Service("String3Service", FullMessageHandling,    busname=busname, numthreads=1, startonwith=True, 
+                                  handler_args={"function" : StringFunc})
+    serv1_failing_class = Service("String4Service", FailingMessageHandling, busname=busname, numthreads=1, startonwith=True, 
+                                  handler_args={"function" : StringFunc})
 
     # 'with' sets up the connection context and defines the scope of the service.
     with serv1_plain, serv1_minimal_class, serv1_full_class, serv1_failing_class:
-        # Redo Error tests via RPC
-        with RPC(busname, "Error1Service", ForwardExceptions=True) as rpc:
-            try:
-                result = rpc("aap noot mies")
-            except RPCException as e:
-                print "Caught expected exception"
-
-        with RPC(busname, "Error2Service", ForwardExceptions=True) as rpc:
-            try:
-                result = rpc("aap noot mies")
-            except RPCException as e:
-                print "Caught expected exception"
-
-        with RPC(busname, "Error3Service", ForwardExceptions=True) as rpc:
-            try:
-                result = rpc("aap noot mies")
-            except RPCException as e:
-                print "Caught expected exception"
-
-        with RPC(busname, "Error4Service", ForwardExceptions=True) as rpc:
-            try:
-                result = rpc("aap noot mies")
-            except Exception as e:
-                print "Caught expected exception"
-
-    # Register functs as a service handler listening at busname and ServiceName
-    serv2_plain         = Service(busname, "Except1Service", ExceptionFunc,          numthreads=1, startonwith=True)
-    serv2_minimal_class = Service(busname, "Except2Service", OnlyMessageHandling,    numthreads=1, startonwith=True, 
-                                  handler_args={"function" : ExceptionFunc})
-    serv2_full_class    = Service(busname, "Except3Service", FullMessageHandling,    numthreads=1, startonwith=True, 
-                                  handler_args={"function" : ExceptionFunc})
-    serv2_failing_class = Service(busname, "Except4Service", FailingMessageHandling, numthreads=1, startonwith=True, 
-                                  handler_args={"function" : ExceptionFunc})
-
-    # 'with' sets up the connection context and defines the scope of the service.
-    with serv2_plain, serv2_minimal_class, serv2_full_class, serv2_failing_class:
-        # Redo exception tests via RPC
-        with RPC(busname, "Except1Service", ForwardExceptions=True) as rpc:
-            try:
-                result = rpc("aap noot mies")
-            except IndexError as e:
-                print "Caught expected exception"
-
-        with RPC(busname, "Except2Service", ForwardExceptions=True) as rpc:
-            try:
-                result = rpc("aap noot mies")
-            except IndexError as e:
-                print "Caught expected exception"
-
-        with RPC(busname, "Except3Service", ForwardExceptions=True) as rpc:
-            try:
-                result = rpc("aap noot mies")
-            except IndexError as e:
-                print "Caught expected exception"
-
-        with RPC(busname, "Except4Service", ForwardExceptions=True) as rpc:
-            try:
-                result = rpc("aap noot mies")
-            except IndexError as e:
-                print "Caught expected exception"
-
-    # Register functs as a service handler listening at busname and ServiceName
-    serv3_plain         = Service(busname, "String1Service", StringFunc,             numthreads=1, startonwith=True)
-    serv3_minimal_class = Service(busname, "String2Service", OnlyMessageHandling,    numthreads=1, startonwith=True, 
-                                  handler_args={"function" : StringFunc})
-    serv3_full_class    = Service(busname, "String3Service", FullMessageHandling,    numthreads=1, startonwith=True, 
-                                  handler_args={"function" : StringFunc})
-    serv3_failing_class = Service(busname, "String4Service", FailingMessageHandling, numthreads=1, startonwith=True, 
-                                  handler_args={"function" : StringFunc})
-
-    # 'with' sets up the connection context and defines the scope of the service.
-    with serv3_plain, serv3_minimal_class, serv3_full_class, serv3_failing_class:
         # Redo string tests via RPC
-        with RPC(busname, "String1Service", ForwardExceptions=True) as rpc:
+        with RPC("String1Service", ForwardExceptions=True, busname=busname) as rpc:
             result = rpc("aap noot mies")
             if result[0] != "AAP NOOT MIES":
                 raise Exception("String function failed of String1Service:{}".format(result))
+            print "string1Service is OK"
 
-        with RPC(busname, "String2Service", ForwardExceptions=True) as rpc:
+        with RPC("String2Service", ForwardExceptions=True, busname=busname) as rpc:
             result = rpc("aap noot mies")
             if result[0] != "AAP NOOT MIES":
                 raise Exception("String function failed of String2Service:{}".format(result))
+            print "string2Service is OK"
 
-        with RPC(busname, "String3Service", ForwardExceptions=True) as rpc:
+        with RPC("String3Service", ForwardExceptions=True, busname=busname) as rpc:
             result = rpc("aap noot mies")
             if result[0] != "AAP NOOT MIES":
                 raise Exception("String function failed of String3Service:{}".format(result))
+            print "string3Service is OK"
 
-        with RPC(busname, "String4Service", ForwardExceptions=True) as rpc:
+        with RPC("String4Service", ForwardExceptions=True, busname=busname) as rpc:
             result = rpc("aap noot mies")
             if result[0] != "AAP NOOT MIES":
                 raise Exception("String function failed of String4Service:{}".format(result))
+            print "string4Service is OK"
 
-        print "Functions tested with RPC: All OK"
+    # Register functs as a service handler listening at busname and ServiceName
+    serv2_plain         = Service("Error1Service", ErrorFunc,              busname=busname, numthreads=1, startonwith=True)
+    serv2_minimal_class = Service("Error2Service", OnlyMessageHandling,    busname=busname, numthreads=1, startonwith=True, 
+                                  handler_args={"function" : ErrorFunc})
+    serv2_full_class    = Service("Error3Service", FullMessageHandling,    busname=busname, numthreads=1, startonwith=True, 
+                                  handler_args={"function" : ErrorFunc})
+    serv2_failing_class = Service("Error4Service", FailingMessageHandling, busname=busname, numthreads=1, startonwith=True, 
+                                  handler_args={"function" : ErrorFunc})
+
+    # 'with' sets up the connection context and defines the scope of the service.
+    with serv2_plain, serv2_minimal_class, serv2_full_class, serv2_failing_class:
+        # Redo Error tests via RPC
+        with RPC("Error1Service", ForwardExceptions=True, busname=busname) as rpc:
+            try:
+                result = rpc("aap noot mies")
+            except RPCException as e:
+                print "Error1Service is OK"
+
+        with RPC("Error2Service", ForwardExceptions=True, busname=busname) as rpc:
+            try:
+                result = rpc("aap noot mies")
+            except RPCException as e:
+                print "Error2Service is OK"
+
+        with RPC("Error3Service", ForwardExceptions=True, busname=busname) as rpc:
+            try:
+                result = rpc("aap noot mies")
+            except RPCException as e:
+                print "Error3Service is OK"
+
+        with RPC("Error4Service", ForwardExceptions=True, busname=busname) as rpc:
+            try:
+                result = rpc("aap noot mies")
+            except Exception as e:
+                print "Error4Service is OK"
+
+    # Register functs as a service handler listening at busname and ServiceName
+    serv3_plain         = Service("Except1Service", ExceptionFunc,          busname=busname, numthreads=1, startonwith=True)
+    serv3_minimal_class = Service("Except2Service", OnlyMessageHandling,    busname=busname, numthreads=1, startonwith=True, 
+                                  handler_args={"function" : ExceptionFunc})
+    serv3_full_class    = Service("Except3Service", FullMessageHandling,    busname=busname, numthreads=1, startonwith=True, 
+                                  handler_args={"function" : ExceptionFunc})
+    serv3_failing_class = Service("Except4Service", FailingMessageHandling, busname=busname, numthreads=1, startonwith=True, 
+                                  handler_args={"function" : ExceptionFunc})
+
+    # 'with' sets up the connection context and defines the scope of the service.
+    with serv3_plain, serv3_minimal_class, serv3_full_class, serv3_failing_class:
+        # Redo exception tests via RPC
+        with RPC("Except1Service", ForwardExceptions=True, busname=busname) as rpc:
+            try:
+                result = rpc("aap noot mies")
+            except IndexError as e:
+                print "Except1Service is OK"
+
+        with RPC("Except2Service", ForwardExceptions=True, busname=busname) as rpc:
+            try:
+                result = rpc("aap noot mies")
+            except IndexError as e:
+                print "Except2Service is OK"
+
+        with RPC("Except3Service", ForwardExceptions=True, busname=busname) as rpc:
+            try:
+                result = rpc("aap noot mies")
+            except IndexError as e:
+                print "Except3Service is OK"
+
+        with RPC("Except4Service", ForwardExceptions=True, busname=busname) as rpc:
+            try:
+                result = rpc("aap noot mies")
+            except IndexError as e:
+                print "Except4Service is OK"
+
+    print "Functions tested with RPC: All OK"

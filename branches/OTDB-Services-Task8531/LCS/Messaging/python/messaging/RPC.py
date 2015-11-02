@@ -41,11 +41,11 @@ class RPC():
     As a side-effect the sender and session are destroyed.
 
     """
-    def __init__(self, bus, service, timeout=None, ForwardExceptions=None, Verbose=None):
+    def __init__(self, service, busname=None, timeout=None, ForwardExceptions=None, Verbose=None):
 	"""
 	Initialize an Remote procedure call using:
-	    bus=     <str>    Bus Name
 	    service= <str>    Service Name
+	        bus=     <str>    Bus Name
             timeout= <float>  Time to wait in seconds before the call is considered a failure.
             Verbose= <bool>   If True output extra logging to stdout.
 
@@ -59,7 +59,7 @@ class RPC():
             self.ForwardExceptions = True
         if Verbose is True:
             self.Verbose = True
-        self.BusName = bus
+        self.BusName = busname
         self.ServiceName = service
         if self.BusName is None:
             self.Request = ToBus(self.ServiceName)
