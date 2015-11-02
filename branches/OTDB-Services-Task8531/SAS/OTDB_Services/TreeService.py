@@ -210,7 +210,7 @@ class PostgressMessageHandlerInterface(MessageHandlerInterface):
         self.connection = None
         self.connected = False
 
-    def in_loop_before_receive(self):
+    def prepare_receive(self):
         "Called in main processing loop just before a blocking wait for messages is done."
         "Make sure we are connected with the database."
         self.connected = (self.connection and self.connection.status == 1)
