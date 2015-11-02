@@ -14,6 +14,7 @@ file(GLOB_RECURSE angular_ui_grid_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} sta
 file(GLOB_RECURSE angular_gantt_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/angular-gantt/*)
 file(GLOB_RECURSE angular_moment_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/angular-moment/*)
 file(GLOB_RECURSE moment_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/moment/*)
+file(GLOB_RECURSE bootstrap_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/css/bootstrap.min.css)
 
 set(web_files 
     ${jquery_files}
@@ -24,6 +25,7 @@ set(web_files
     ${angular_gantt_files}
     ${angular_moment_files}
     ${moment_files}
+    ${bootstrap_files}
     static/favicon.ico
     static/app/app.js
     static/app/controllers/controller.js
