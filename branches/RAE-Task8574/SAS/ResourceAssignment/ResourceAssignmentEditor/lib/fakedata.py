@@ -38,3 +38,22 @@ reservationTasks = [{'id': 300, 'momId': 300124, 'obsId': 300875, 'status': 'sch
                     ]
 ingestTasks = [{'id': 400, 'momId': 400124, 'obsId': 400875, 'status': 'scheduled', 'name': 'Ingest', 'from': datetime.utcnow() - timedelta(hours=1), 'to': datetime.utcnow() + timedelta(hours=10)}
                ]
+
+allTasks = observartionTasks + pipelineTasks + maintenanceTasks + reservationTasks + ingestTasks
+
+resourceItems = [{'id': 0, 'name': 'CS001', 'typeId': 0, 'type': 'station', 'group': False},
+                 {'id': 1, 'name': 'CS002', 'typeId': 0, 'type': 'station', 'group': False},
+                 {'id': 2, 'name': 'CS003', 'typeId': 0, 'type': 'station', 'group': False},
+                 {'id': 3, 'name': 'CS004', 'typeId': 0, 'type': 'station', 'group': False},
+                 {'id': 4, 'name': 'Core', 'typeId': 1, 'type': 'stationset', 'group': True},
+                 {'id': 5, 'name': 'Node1', 'typeId': 2, 'type': 'node', 'group': False},
+                 {'id': 6, 'name': 'Node2', 'typeId': 2, 'type': 'node', 'group': False}
+                 ]
+
+resourceClaims = [{'id': 0, 'resourceId': 0, 'taskId': 0, 'startTime': '2015-10-28T14:14:00Z', 'endTime': '2015-10-28T17:00:00Z', 'status': 'allocated'},
+                  {'id': 1, 'resourceId': 1, 'taskId': 0, 'startTime': '2015-10-28T14:14:00Z', 'endTime': '2015-10-28T17:00:00Z', 'status': 'allocated'},
+                  {'id': 2, 'resourceId': 2, 'taskId': 0, 'startTime': '2015-10-28T14:14:00Z', 'endTime': '2015-10-28T17:00:00Z', 'status': 'allocated'},
+                  {'id': 3, 'resourceId': 3, 'taskId': 0, 'startTime': '2015-10-28T14:14:00Z', 'endTime': '2015-10-28T17:00:00Z', 'status': 'allocated'},
+                  {'id': 4, 'resourceId': 4, 'taskId': 1, 'startTime': '2015-10-29T10:00:00Z', 'endTime': '2015-10-29T12:00:00Z', 'status': 'claimed'},
+                  {'id': 5, 'resourceId': 4, 'taskId': 2, 'startTime': '2015-10-29T12:15:00Z', 'endTime': '2015-10-29T18:00:00Z', 'status': 'claimed'},
+                  ]
