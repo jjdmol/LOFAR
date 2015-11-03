@@ -17,6 +17,14 @@ file(GLOB_RECURSE angular_moment_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} stat
 file(GLOB_RECURSE moment_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/moment/*)
 file(GLOB_RECURSE bootstrap_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/css/bootstrap.min.css)
 
+set(app_files
+    static/favicon.ico
+    static/app/app.js
+    static/app/controllers/datacontroller.js
+    static/app/controllers/gridcontroller.js
+    static/css/main.css
+    templates/index.html)
+
 set(web_files 
     ${jquery_files}
     ${angular_files}
@@ -27,11 +35,7 @@ set(web_files
     ${angular_moment_files}
     ${moment_files}
     ${bootstrap_files}
-    static/favicon.ico
-    static/app/app.js
-    static/app/controllers/controller.js
-    static/css/main.css
-    templates/index.html)
+    ${app_files})
 
 install(FILES ${web_files}
   DESTINATION ${PYTHON_INSTALL_DIR}/resourceassignementeditor)

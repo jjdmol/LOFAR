@@ -19,17 +19,20 @@
     <script src="/static/js/angular-gantt/angular-gantt.js"></script>
     <script src="/static/js/angular-gantt/angular-gantt-plugins.js"></script>
     <script src="/static/app/app.js"></script>
-    <script src="/static/app/controllers/controller.js"></script>
+    <script src="/static/app/controllers/datacontroller.js"></script>
+    <script src="/static/app/controllers/gridcontroller.js"></script>
     </head>
     <body>
     {% raw %}
-    <div ng-controller="DataController as dataCtrl">
+    <div ng-controller="GridController as gridCtrl">
         <strong>Tasks:</strong>
-        <div id="grid1" ui-grid="{ data: dataCtrl.tasks }" ui-grid-move-columns class="grid"></div>
-        <br/>
-        <br/>
-        <br/>
-        <div gantt "{ data= dataCtrl.gtasks }" style="min-height:300px">
+        <div id="grid1" ui-grid="gridOptions" ui-grid-move-columns class="grid"></div>
+    </div>
+    <br/>
+    <br/>
+    <br/>
+    <div ng-controller="DataController as dataCtrl">
+        <div gantt "{ data= dataCtrl.dataService.resources }" style="min-height:300px">
             <gantt-table></gantt-table>
             <gantt-movable></gantt-movable>
             <gantt-tooltips></gantt-tooltips>
