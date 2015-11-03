@@ -241,9 +241,10 @@ class EventMessage(LofarMessage):
     will be stored in a persistent queue for later delivery.
     """
 
-    def __init__(self, content=None):
+    def __init__(self, context, content=None):
         super(EventMessage, self).__init__(content)
         self.durable = True
+        self.subject = context
 
 
 class MonitoringMessage(LofarMessage):
