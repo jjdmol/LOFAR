@@ -22,24 +22,32 @@
 from datetime import datetime
 from datetime import timedelta
 
-observartionTasks = [{'id': 0, 'momId': 123, 'obsId': 876, 'status': 'scheduled', 'name': 'Lobos Obs 2a', 'from': datetime.utcnow() - timedelta(hours=1), 'to': datetime.utcnow() + timedelta(hours=5)},
-                     {'id': 1, 'momId': 345, 'obsId': 654, 'status': 'approved', 'name': 'LOTAAS Obs 32q', 'from': datetime.utcnow() + timedelta(hours=6), 'to': datetime.utcnow() + timedelta(hours=12)},
-                     {'id': 2, 'momId': 567, 'obsId': 432, 'status': 'approved', 'name': 'Pulsar Obs 3', 'from': datetime.utcnow() + timedelta(hours=13), 'to': datetime.utcnow() + timedelta(hours=32)}
-                     ]
+_taskIdCntr = 0
 
-pipelineTasks = [{'id': 100, 'momId': 100123, 'obsId': 100876, 'status': 'scheduled', 'name': 'Averaging', 'from': datetime.utcnow() - timedelta(hours=1), 'to': datetime.utcnow() + timedelta(hours=1)},
-                 {'id': 101, 'momId': 100124, 'obsId': 100875, 'status': 'scheduled', 'name': 'Averaging', 'from': datetime.utcnow() + timedelta(hours=1), 'to': datetime.utcnow() + timedelta(hours=2)}
-                 ]
+def _genTask(name, startTime, duration, status = 'scheduled', type = 'Observation'):
+    global _taskIdCntr
+    _taskIdCntr = _taskIdCntr + 1
+    return {'id': _taskIdCntr,
+            'momId': 123 + _taskIdCntr,
+            'obsId': 876 + _taskIdCntr,
+            'status': status,
+            'name': name,
+            'from': startTime,
+            'to': startTime + duration,
+            'type': type}
 
-maintenanceTasks = [{'id': 200, 'momId': 200124, 'obsId': 200875, 'status': 'scheduled', 'name': 'Mowing', 'from': datetime.utcnow() + timedelta(days=1), 'to': datetime.utcnow() + timedelta(days=2)}
-                     ]
 
-reservationTasks = [{'id': 300, 'momId': 300124, 'obsId': 300875, 'status': 'scheduled', 'name': 'Glow', 'from': datetime.utcnow() + timedelta(days=1), 'to': datetime.utcnow() + timedelta(days=3)}
-                    ]
-ingestTasks = [{'id': 400, 'momId': 400124, 'obsId': 400875, 'status': 'scheduled', 'name': 'Ingest', 'from': datetime.utcnow() - timedelta(hours=1), 'to': datetime.utcnow() + timedelta(hours=10)}
-               ]
+allTasks = []
+now = datetime.utcnow()
 
-allTasks = observartionTasks + pipelineTasks + maintenanceTasks + reservationTasks + ingestTasks
+for p in range(1, 10):
+    for i in range(1000):
+        task = _genTask('LC4_%03d Obs %d'% (p, i), now + timedelta(hours=p*i*4), timedelta(hours=4))
+        allTasks.append(task)
+
+    for i in range(200):
+        task = _genTask('LC4_%03d Obs %d'% (p, i), now + timedelta(hours=p*i*4), timedelta(hours=4), type='Pipeline')
+        allTasks.append(task)
 
 resourceItems = [{'id': 0, 'name': 'CS001', 'typeId': 0, 'type': 'station', 'group': False},
                  {'id': 1, 'name': 'CS002', 'typeId': 0, 'type': 'station', 'group': False},

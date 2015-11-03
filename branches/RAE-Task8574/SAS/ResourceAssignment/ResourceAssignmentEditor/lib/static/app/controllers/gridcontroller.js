@@ -1,37 +1,29 @@
 // $Id: controller.js 32761 2015-11-02 11:50:21Z schaap $
 
-var gridControllerMod = angular.module('GridControllerMod', ['ui.grid', 'ui.grid.treeView']);
+var gridControllerMod = angular.module('GridControllerMod', ['ui.grid']);
 
-gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGridTreeViewConstants', function($scope, dataService, uiGridTreeViewConstants) {
+gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGridConstants', function($scope, dataService, uiGridConstants) {
 
     $scope.dataService = dataService;
 
     $scope.$watch('dataService.tasks', function() {
         if('tasks' in $scope.dataService && $scope.dataService.tasks.length > 0)
-        {
-            var taskList = [];
-            for ( var i = 0; i < $scope.dataService.tasks.length; i++ ){
-                var node = $scope.dataService.tasks[i];
-                node.$$treeLevel = 0;
-                taskList.push(node);
-                var nodeTasks = node['tasks'];
-                for ( var j = 0; j < nodeTasks.length; j++ ){
-                    nodeTasks[j].$$treeLevel = 1;
-                    taskList.push(nodeTasks[j]);
-                }
-            }
-            $scope.gridOptions.data = taskList;
-        }
+            $scope.gridOptions.data = $scope.dataService.tasks;
         else
             $scope.gridOptions.data = []
     }, true);
 
-    $scope.columns = [{ field: 'name' }, { field: 'from' }, { field: 'to' }];
+    $scope.columns = [{ field: 'name' }, { field: 'from' }, { field: 'to' }, { field: 'status' },
+    { field: 'type',
+        filter: {
+            type: uiGridConstants.filter.SELECT,
+            selectOptions: [ { value: 'Observation', label: 'Observation' }, { value: 'Pipeline', label: 'Pipeline' } ]
+        }
+    }];
     $scope.gridOptions = {
         enableSorting: true,
         enableFiltering: true,
         columnDefs: $scope.columns,
-        showTreeExpandNoChildren: false,
         data: []
     };
 }

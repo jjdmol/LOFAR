@@ -73,13 +73,7 @@ def resourceclaims():
 @app.route('/rest/tasks')
 @gzipped
 def tasks():
-    data = {'tasks': [
-        {'name': 'Observations', 'tasks': observartionTasks},
-        {'name': 'Pipelines', 'tasks': pipelineTasks},
-        {'name': 'Maintenance', 'tasks': maintenanceTasks},
-        {'name': 'Reservations', 'tasks': reservationTasks},
-        {'name': 'Ingest', 'tasks': ingestTasks}
-        ]}
+    data = {'tasks': allTasks}
 
     return jsonify(data)
 
