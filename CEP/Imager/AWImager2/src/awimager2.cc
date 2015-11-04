@@ -27,6 +27,7 @@
 
 //# Includes
 #include <lofar_config.h>
+#include <AWImager2/Package__Version.h>
 #include <AWImager2/ScopedTimer.h>
 #include <AWImager2/Imager.h>
 #include <AWImager2/Operation.h>
@@ -76,34 +77,49 @@ void correctImages (
 
 int main (Int argc, char** argv)
 {
-  vector<string> operations = LOFAR::LofarFT::OperationFactory::instance().registeredClassIds();
-  
-  //LOFAR::Version version_info = LOFAR::AWImager2Version().getInfo(); //TODO TJD
-  //string version = version_info.version() + " revision=" + version_info.packageRevision();
-  //if (version_info.nrChangedFiles() != "0") 
-  //{
-  //  if (version_info.nrChangedFiles() == "1") 
-  //  {
-  //     version += " (1 locally modified file)";
-  //  }
-  //  else
-  //  {
-  //    version += " (" + version_info.nrChangedFiles() + " locally modified files)";
-  //  }
-  //}
 
-  if (argc>1 && (string(argv[1])=="--version" || string(argv[1])=="version")) {
-  //  cerr<<"awimager version: "<<version<<endl;
+  // Fill a string with version info
+  LOFAR::Version version_info = LOFAR::AWImager_Version().getInfo();
+  string version = version_info.version() + " revision=" + version_info.packageRevision();
+  if (version_info.nrChangedFiles() != "0") 
+  {
+    if (version_info.nrChangedFiles() == "1") 
+    {
+      version += " (1 locally modified file)";
+    }
+    else
+    {
+     version += " (" + version_info.nrChangedFiles() + " locally modified files)";
+    }
+  }
+
+  // Handle the simple cases first
+  // where only version info or a help text needs to be printed
+  
+  // Print version info
+  if (argc>1 && (string(argv[1])=="--version" || string(argv[1])=="version")) 
+  {
+    cerr<<"awimager version: "<<version<<endl;
     exit(0);
   }
 
-  if (argc<=1 || string(argv[1])=="--help" || string(argv[1])=="-help" || string(argv[1])=="help") {
+  // Print help info
+  vector<string> operations = LOFAR::LofarFT::OperationFactory::instance().registeredClassIds();
+  if (argc<=1 || string(argv[1])=="--help" || string(argv[1])=="-help" || string(argv[1])=="help") 
+  {
+    // printHelp either lists all possible operations
+    // or provides help on a specific operation
     printHelp(argc,argv,operations);
     exit(0);
   }
 
+
   INIT_LOGGER(LOFAR::basename(string(argv[0])));
 
+  // Now process the parameters
+  // The argument(s) can either be the name of a parset file
+  // or a list of parameter=value pairs
+  
   string parsetname=argv[1];
   LOFAR::ParameterSet parset(true);
 
@@ -111,7 +127,10 @@ int main (Int argc, char** argv)
     parset.adoptFile(parsetname); //case insensitive
   }
   parset.adoptArgv(argc,argv);
-  
+
+
+  // Get the name of the requested operation
+  // The operation itself will read the parameters it needs
   String operation_name = parset.getString("operation");
   LOFAR::LofarFT::Operation *operation = LOFAR::LofarFT::OperationFactory::instance().create(operation_name,parset);
   if (!operation)
@@ -127,31 +146,54 @@ int main (Int argc, char** argv)
   try 
   {
     operation->init();
-  }
-  catch (AipsError& x) 
-  {
-    cout << x.getMesg() << endl;
-    return 1;
-  }
 
-  std::vector<std::string> unused = parset.unusedKeys();
-  if (! unused.empty()) {
-     LOG_WARN_STR("The following parset keywords were not used");
-     LOG_WARN_STR("maybe they are misspelled");
-     LOG_WARN_STR(unused);
-  }
+    // After the initialization of the operation all parameters needed should have been read
+    // It is not an error to specify a parameter that will not be used
+    // but the user will be warned.
+    std::vector<std::string> unused = parset.unusedKeys();
+    if (! unused.empty()) {
+      LOG_WARN_STR("The following parset keywords were not used");
+      LOG_WARN_STR("maybe they are misspelled");
+      LOG_WARN_STR(unused);
+    }
   
-  try 
-  {
-    LOFAR::LofarFT::ScopedTimer t("operation->run()");
-    operation->run();
+    // Now run the operation
+    // This is where the actual work is done
+    {
+      LOFAR::LofarFT::ScopedTimer t("operation->run()");
+      operation->run();
+    }
   }
   catch (AipsError& x) 
   {
-    cout << x.getMesg() << endl;
+    std::cerr << "CASA Exception detected: " << x.getMesg() << std::endl;
     return 1;
   }
-  
+  // APSExceptions are thrown when an error occurs reading parameters
+  catch (LOFAR::APSException& err) 
+  {
+    // just send err.what() to the error stream
+    // this is just the error message, not a full backtrace
+    std::cerr << "ParameterSet Exception detected: " << err.what() << std::endl;
+    return 1;
+  }
+  // All other LOFAR Exceptions
+  catch (LOFAR::Exception& err) 
+  {
+    // here send the complete err object to the error stream
+    // this can include a backtrace
+    std::cerr << "LOFAR Exception detected: " << err << std::endl;
+    return 1;
+  }
+#ifdef __clang__
+  catch (std::exception& err) 
+  {
+    std::cerr << "std exception detected: " << err.what() << std::endl;
+    return 1;
+  }
+#endif
+
+  // Show the status of all scoped timers
   LOFAR::LofarFT::ScopedTimer::show();
   
   LOG_INFO_STR("awimager2 normally ended");
