@@ -13,11 +13,18 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
             $scope.gridOptions.data = []
     }, true);
 
-    $scope.columns = [{ field: 'name' }, { field: 'from' }, { field: 'to' }, { field: 'status' },
+    $scope.columns = [
+    { field: 'name' },
+    { field: 'from' },
+    { field: 'to' },
+    { field: 'status' },
     { field: 'type',
         filter: {
             type: uiGridConstants.filter.SELECT,
-            selectOptions: [ { value: 'Observation', label: 'Observation' }, { value: 'Pipeline', label: 'Pipeline' } ]
+            selectOptions: [
+            { value: '', label: 'All' },
+            { value: 'Observation', label: 'Observation' },
+            { value: 'Pipeline', label: 'Pipeline' } ]
         }
     }];
     $scope.gridOptions = {

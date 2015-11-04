@@ -9,9 +9,3 @@ var app = angular.module('raeApp',
                          'DataControllerMod',
                          'GridControllerMod']);
 
-app.factory("dataService", function(){
-    var self = this;
-    self.tasks = [];
-    self.resources = [];
-    return self;
-});
