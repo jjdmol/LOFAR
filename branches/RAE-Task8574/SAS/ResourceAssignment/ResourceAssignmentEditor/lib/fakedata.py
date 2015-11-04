@@ -40,13 +40,13 @@ def _genTask(name, startTime, duration, status = 'scheduled', type = 'Observatio
 allTasks = []
 now = datetime.utcnow()
 
-for p in range(1, 10):
-    for i in range(1000):
+for p in range(1, 4):
+    for i in range(20):
         task = _genTask('LC4_%03d Obs %d'% (p, i), now + timedelta(hours=p*i*4), timedelta(hours=4))
         allTasks.append(task)
 
-    for i in range(200):
-        task = _genTask('LC4_%03d Obs %d'% (p, i), now + timedelta(hours=p*i*4), timedelta(hours=4), type='Pipeline')
+    for i in range(5):
+        task = _genTask('LC4_%03d Pipeline %d'% (p, i), now + timedelta(hours=p*i*4), timedelta(hours=4), type='Pipeline')
         allTasks.append(task)
 
 resourceItems = [{'id': 0, 'name': 'CS001', 'typeId': 0, 'type': 'station', 'group': False},
@@ -58,10 +58,10 @@ resourceItems = [{'id': 0, 'name': 'CS001', 'typeId': 0, 'type': 'station', 'gro
                  {'id': 6, 'name': 'Node2', 'typeId': 2, 'type': 'node', 'group': False}
                  ]
 
-resourceClaims = [{'id': 0, 'resourceId': 0, 'taskId': 0, 'startTime': '2015-10-28T14:14:00Z', 'endTime': '2015-10-28T17:00:00Z', 'status': 'allocated'},
-                  {'id': 1, 'resourceId': 1, 'taskId': 0, 'startTime': '2015-10-28T14:14:00Z', 'endTime': '2015-10-28T17:00:00Z', 'status': 'allocated'},
-                  {'id': 2, 'resourceId': 2, 'taskId': 0, 'startTime': '2015-10-28T14:14:00Z', 'endTime': '2015-10-28T17:00:00Z', 'status': 'allocated'},
-                  {'id': 3, 'resourceId': 3, 'taskId': 0, 'startTime': '2015-10-28T14:14:00Z', 'endTime': '2015-10-28T17:00:00Z', 'status': 'allocated'},
-                  {'id': 4, 'resourceId': 4, 'taskId': 1, 'startTime': '2015-10-29T10:00:00Z', 'endTime': '2015-10-29T12:00:00Z', 'status': 'claimed'},
-                  {'id': 5, 'resourceId': 4, 'taskId': 2, 'startTime': '2015-10-29T12:15:00Z', 'endTime': '2015-10-29T18:00:00Z', 'status': 'claimed'},
+resourceClaims = [{'id': 0, 'resourceId': 0, 'taskId': 1, 'startTime': '2015-10-28T14:14:00Z', 'endTime': '2015-10-28T17:00:00Z', 'status': 'allocated'},
+                  {'id': 1, 'resourceId': 1, 'taskId': 1, 'startTime': '2015-10-28T14:14:00Z', 'endTime': '2015-10-28T17:00:00Z', 'status': 'allocated'},
+                  {'id': 2, 'resourceId': 2, 'taskId': 1, 'startTime': '2015-10-28T14:14:00Z', 'endTime': '2015-10-28T17:00:00Z', 'status': 'allocated'},
+                  {'id': 3, 'resourceId': 3, 'taskId': 1, 'startTime': '2015-10-28T14:14:00Z', 'endTime': '2015-10-28T17:00:00Z', 'status': 'allocated'},
+                  {'id': 4, 'resourceId': 4, 'taskId': 2, 'startTime': '2015-10-29T10:00:00Z', 'endTime': '2015-10-29T12:00:00Z', 'status': 'claimed'},
+                  {'id': 5, 'resourceId': 4, 'taskId': 3, 'startTime': '2015-10-29T12:15:00Z', 'endTime': '2015-10-29T18:00:00Z', 'status': 'claimed'},
                   ]
