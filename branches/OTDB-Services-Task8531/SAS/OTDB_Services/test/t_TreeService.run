@@ -13,9 +13,8 @@ qpid-config add exchange topic $queue
 
 # Setup a clean database with predefined content
 dropdb -U postgres -h ${DBHOST} unittest_db
-createdb -U postgres -h ${DBHOST} unittest_db
-psql -U postgres -h ${DBHOST} -f $src_dir/unittest_db.dump
-python TreeService.py $queue -D unittest_db -H ${DBHOST} &
+gzip -dc $srcdir/unittest_db.dump.gz | psql -U postgres -h ${DBHOST} -f -
+TreeService.py $queue -D unittest_db -H ${DBHOST} &
 SERVER_PID=$!
 # Starting up takes a while
 sleep 3

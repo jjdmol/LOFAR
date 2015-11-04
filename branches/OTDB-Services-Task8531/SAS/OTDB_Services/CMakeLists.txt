@@ -4,13 +4,11 @@
 
 include(PythonInstall)
 
-set(_py_files
-  __init__.py
+lofar_add_bin_scripts(
   TreeService.py
   TreeStatusEvents.py
 )
 
-python_install(${_py_files} DESTINATION bin)
 
 add_subdirectory(test)
 
