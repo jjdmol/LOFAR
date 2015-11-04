@@ -320,7 +320,6 @@ template <typename T> inline void Thread::stub(Args<T> *args)
     int retval;
 
     // Set name WITHIN the thread, to avoid race conditions
-    std::cout<<"Hupseflups"<<std::endl;
     if ((retval = pthread_setname_np(args->name.substr(0,15).c_str())) != 0)
       throw SystemCallException("pthread_setname_np", retval, THROW_ARGS);
 #else
