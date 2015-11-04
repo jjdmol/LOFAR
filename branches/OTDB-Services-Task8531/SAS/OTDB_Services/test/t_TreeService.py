@@ -32,34 +32,82 @@ import sys
 import logging
 from lofar.messaging.RPC import *
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+logging.basicConfig(stream=sys.stdout, level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 def do_rpc(rpc_instance, arg_dict):
-    try:
-        (data,status) = (rpc_instance)(arg_dict)
-        if (status != "OK"):
-            raise Exception("Status returned is %s" % status)
-        print type(data)
-        for (key,value) in data.iteritems():
-            print "%s ==> %s" % (key, value)
-    except OverflowError as e:
-        pass
+#    try:
+    (data,status) = (rpc_instance)(arg_dict)
+    if (status != "OK"):
+        raise Exception("Status returned is %s" % status)
+    for key in sorted(data):
+        print "%s ==> %s" % (key, data[key])
+#    except OverflowError as e:
+#        pass
     print "======"
 
 if __name__ == "__main__":
     busname = sys.argv[1] if len(sys.argv) > 1 else "simpletest"
 
-#    with RPC("TaskSpecification", ForwardExceptions=True, busname=busname, timeout=2) as task_spec_request:
-#        do_rpc(task_spec_request, {'OtdbID':63370})
-#        do_rpc(task_spec_request, {'OtdbID':146300})
-#        do_rpc(task_spec_request, {'OtdbID':82111})
+    with RPC("TaskSpecification", ForwardExceptions=True, busname=busname, timeout=10) as task_spec_request:
+        do_rpc(task_spec_request, {'OtdbID':1099269})	# PIC
+        do_rpc(task_spec_request, {'OtdbID':1099238})	# Template
+        do_rpc(task_spec_request, {'OtdbID':1099266})	# VIC
 
-#    print StatusUpdateCmd({'OtdbID':146300, 'NewStatus':'finished', 'UpdateTimestamps':True})
+    with RPC("StatusUpdateCmd", ForwardExceptions=True, busname=busname, timeout=5) as status_update_command:
+        # PIC
+        (data, status) = status_update_command({'OtdbID':1099269, 'NewStatus':'finished', 'UpdateTimestamps':True})
+        print status, data
+        # Template
+        (data, status) = status_update_command({'OtdbID':1099238, 'NewStatus':'finished', 'UpdateTimestamps':True})
+        print status, data
+        # VIC
+        (data, status) = status_update_command({'OtdbID':1099266, 'NewStatus':'finished', 'UpdateTimestamps':True})
+        print status, data
 
-    with RPC("KeyUpdateCmd", ForwardExceptions=True, busname=busname, timeout=2) as key_update:
-        print key_update({'OtdbID':63370, 
-                          'Updates':{'LOFAR.ObsSW.Observation.ObservationControl.OnlineControl._hostname':'CCU099ABC'}})
+        # Nonexisting tree
+        try:
+            (data, status) = status_update_command({'OtdbID':10, 'NewStatus':'finished', 'UpdateTimestamps':True})
+        except RPCException as e:
+            print "Caught expected exception on invalid treeID in status update"
 
+        # VIC tree: invalid status
+        try:
+            (data, status) = status_update_command({'OtdbID':1099266, 'NewStatus':'what_happend', 'UpdateTimestamps':True})
+        except RPCException as e:
+            print "Caught expected exception on invalid status in status update"
+
+
+    with RPC("KeyUpdateCmd", ForwardExceptions=True, busname=busname, timeout=5) as key_update:
+        # VIC tree: valid
+        (data, status) = key_update({'OtdbID':1099266, 
+                          'Updates':{'LOFAR.ObsSW.Observation.ObservationControl.PythonControl.pythonHost':'NameOfTestHost'}})
+        print status, data
+
+        # Template tree: not supported yet
+        try: 
+            (data, status) = key_update({'OtdbID':1099238, 
+                          'Updates':{'LOFAR.ObsSW.Observation.ObservationControl.PythonControl.pythonHost':'NameOfTestHost'}})
+        except RPCException as e:
+            print "Caught expected exception on invalid treetype in key update"
+
+        # PIC tree: not supported yet
+        try:
+            (data, status) = key_update({'OtdbID':1099269, 'Updates':{'LOFAR.PIC.Core.CS001.status_state':'50'}})
+        except RPCException as e:
+            print "Caught expected exception on invalid treetype (PIC) in key update"
    
-
+        # Non exsisting tree
+        try:
+            (data, status) = key_update({'OtdbID':10, 
+                          'Updates':{'LOFAR.ObsSW.Observation.ObservationControl.PythonControl.pythonHost':'NameOfTestHost'}})
+        except RPCException as e:
+            print "Caught expected exception on invalid treeID in key update"
+   
+        # VIC tree: wrong key
+        try:
+            (data, status) = key_update({'OtdbID':1099266, 
+                          'Updates':{'LOFAR.ObsSW.Observation.ObservationControl.PythonControl.NoSuchKey':'NameOfTestHost'}})
+        except RPCException as e:
+            print "Caught expected exception on invalid key in key update"
+   

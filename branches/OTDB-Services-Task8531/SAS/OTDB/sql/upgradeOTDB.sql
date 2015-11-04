@@ -6,3 +6,6 @@ CREATE INDEX statehist_creation_idx ON statehistory(creation);
 
 -- Load new functions
 \i getStateChanges.sql
+
+-- Load modified/improved functions
+\i exportTree_func.sql

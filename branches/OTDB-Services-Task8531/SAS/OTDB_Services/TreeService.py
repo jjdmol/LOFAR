@@ -32,7 +32,6 @@ import os,sys,time,pg
 import logging
 from optparse import OptionParser
 from lofar.messaging.Service import *
-from lofar.messaging.RPC import *
 
 QUERY_EXCEPTIONS = (TypeError, ValueError, MemoryError, pg.ProgrammingError, pg.InternalError)
 
@@ -76,14 +75,20 @@ def TaskSpecificationRequest(input_dict, db_connection):
     except QUERY_EXCEPTIONS, exc_info:
         raise FunctionError("Error while requesting specs of tree %d: %s"% (tree_id, exc_info))
     # convert the single string into the dict
-    answer = {}
+    # Note: a PIC tree is a list of keys while a Template tree and a VIC tree is a list of key-values.
+    #       Since we don't know what kind of tree was requested we assume a Template/VIC tree (most likely)
+    #       but if this ends in exceptions we fall back to a PIC tree.
+    answer_dict = {}
+    answer_list = []
     for line in treeinfo.split('\n'):
         try:
             (key, value) = line.split("=", 1)
-            answer[key] = value
+            answer_dict[key] = value
         except ValueError:
-            pass
-    return answer
+            answer_list.append(line)
+    if len(answer_list)>1:		# there is always one empty line, ignore that one...
+        answer_dict["tree"] = answer_list
+    return answer_dict
 
 # Status Update Command
 def StatusUpdateCommand(input_dict, db_connection):
@@ -136,7 +141,7 @@ def StatusUpdateCommand(input_dict, db_connection):
             (tree_id, allowed_states[new_status], str(update_times))).getresult()[0][0] == 't')
     except QUERY_EXCEPTIONS, exc_info:
         raise FunctionError("Error while setting the status of tree %d: %s" % (tree_id, exc_info))
-    return success
+    return str(success)
 
 
 # Key Update Command
@@ -188,7 +193,8 @@ def KeyUpdateCommand(input_dict, db_connection):
             print "%s: %s ==> %s" % (key, record_list[0][2], value)
         except QUERY_EXCEPTIONS, exc:
             errors[key] = str(exc)
-
+    if len(errors):
+        raise FunctionError(("Not all key were updated:", errors))
     return errors
 
 class PostgressMessageHandlerInterface(MessageHandlerInterface):

@@ -25,7 +25,7 @@ from lofar.messaging.messages import ServiceMessage, ReplyMessage
 import uuid
 
 class RPCException(Exception):
-    "Passing exception of the messahe handler function."
+    "Exception occured in the RPC code itself, like time-out, invalid message received, etc."
     pass
 
 class RPC():
@@ -110,7 +110,7 @@ class RPC():
             status["state"] = "TIMEOUT"
             status["errmsg"] = "RPC Timed out"
             status["backtrace"] = ""
-            return (None, status)
+            raise RPCException(status)
 
         # Check for illegal message type
         if isinstance(answer, ReplyMessage) is False:
@@ -118,7 +118,7 @@ class RPC():
             status["state"] = "ERROR"
             status["errmsg"] = "Incorrect messagetype (" + str(type(answer)) + ") received."
             status["backtrace"] = ""
-            return (None, status)
+            raise RPCException(status)
 
         # return content and status if status is 'OK'
         if (answer.status == "OK"):
@@ -133,7 +133,7 @@ class RPC():
             status["state"] = "ERROR"
             status["errmsg"] = "Return state in message not found"
             status["backtrace"] = ""
-            return (Null, status)
+            raise RPCException(status)
 
         # Does the client expect us to throw the exception?
         if self.ForwardExceptions is True:
@@ -143,7 +143,7 @@ class RPC():
                 instance = excep_class_(answer.backtrace)
                 raise (instance)
             else:
-                raise (RPCException(answer.errmsg))
-        return (None,status)
+                raise RPCException(answer.errmsg)
+        return (None, status)
 
 __all__ = ["RPC", "RPCException"]
