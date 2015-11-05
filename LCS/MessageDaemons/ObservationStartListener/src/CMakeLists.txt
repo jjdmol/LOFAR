@@ -9,10 +9,6 @@ python_install(
 )
 
 lofar_add_bin_scripts(
-  slurm-submit-cobalt-outputproc.sh
-)
-
-install(FILES
   lofarlogger.sh
-  DESTINATION bin
+  slurm-submit-cobalt-outputproc.sh
 )
