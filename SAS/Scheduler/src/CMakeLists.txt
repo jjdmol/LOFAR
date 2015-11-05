@@ -48,7 +48,6 @@ set(scheduler_SRCS
   pipeline.cpp
   publishdialog.cpp
   pulsarpipeline.cpp
-  qcustomplot.cpp
   qlofardatamodel.cpp
   redistributetasksdialog.cpp
   sasconnectdialog.cpp
@@ -74,7 +73,6 @@ set(scheduler_SRCS
   stationtreewidget.cpp
   Storage.cpp
   StorageNode.cpp
-  storageplot.cpp
   tablecolumnselectdialog.cpp
   tableview.cpp
   taskcopydialog.cpp
@@ -103,7 +101,6 @@ set(scheduler_MOC_HDRS
   ListWidget.h
   parsettreeviewer.h
   publishdialog.h
-  qcustomplot.h
   qlofardatamodel.h
   redistributetasksdialog.h
   sasconnectdialog.h
@@ -120,7 +117,6 @@ set(scheduler_MOC_HDRS
   statehistorydialog.h
   stationlistwidget.h
   stationtreewidget.h
-  storageplot.h
   tablecolumnselectdialog.h
   tableview.h
   taskcopydialog.h
@@ -147,7 +143,6 @@ set(scheduler_UIS
   statehistorydialog.ui
   stationlistwidget.ui
   stationtreewidget.ui
-  storageresourceview.ui
   tablecolumnselectdialog.ui
   taskcopydialog.ui
   taskdialog.ui

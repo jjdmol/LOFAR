@@ -297,49 +297,44 @@ QDataStream& operator>> (QDataStream &in, TaskStorage &storage) {
     return in;
 }
 
-
+//WK code commented out
 // Returns True if the input and output node locations are equal for
 // all the input and output products
 // THis function should be moved to the pipeline class?
-bool TaskStorage::getEqualityInputOutputProducts()const
-{
-    // Check we have the same number of dataproduct types
-    //if (itsInputDataProducts.size() != itsOutputDataProducts.size())
-    //    return false;
+//bool TaskStorage::getEqualityInputOutputProducts()const
+//{
+//    // Check we have the same number of dataproduct types
+//    if (itsInputDataProducts.size() != itsOutputDataProducts.size())
+//        return false;
 
-    //loop over the input and output data types
-    std::map<dataProductTypes, inputDataProduct >::const_iterator inputTypePair;
-    std::map<dataProductTypes, outputDataProduct >::const_iterator outputTypePair;
-    for (outputTypePair = itsOutputDataProducts.begin();
-         outputTypePair != itsOutputDataProducts.end();  // length is the same
-          ++outputTypePair )
-    {
-        if(itsInputDataProducts.find(outputTypePair->first) !=
-                itsInputDataProducts.end())
-            continue;
-        inputDataProduct input = itsInputDataProducts.at(outputTypePair->first);
+//    //loop over the input and output data types
+//    std::map<dataProductTypes, inputDataProduct >::const_iterator inputTypePair;
+//    std::map<dataProductTypes, outputDataProduct >::const_iterator outputTypePair;
+//    for (inputTypePair = itsInputDataProducts.begin(),
+//         outputTypePair = itsOutputDataProducts.begin();
+//         inputTypePair != itsInputDataProducts.end();  // length is the same
+//         ++inputTypePair, ++outputTypePair )
+//    {
+//        // Check if we have the same number of input and output entries
+//        if (inputTypePair->second.locations.size() !=
+//            outputTypePair->second.locations.size())
+//            return false;
 
-
-        // Check if we have the same number of input and output entries
-        if (input.locations.size() !=
-            outputTypePair->second.locations.size())
-            return false;
-
-        // Loop over all the input and output locations
-        QStringList::const_iterator inputLoc;
-        QStringList::const_iterator outputLoc;
-        for (inputLoc = input.locations.begin(),
-             outputLoc = outputTypePair->second.locations.begin();
-             inputLoc != input.locations.end();
-             ++inputLoc , ++outputLoc)
-        {
-            //return false if the nodes are not the same
-            if (inputLoc->split(":").at(0) != outputLoc->split(":").at(0))
-                return false;
-        }
-    }
-    return true;
-}
+//        // Loop over all the input and output locations
+//        QStringList::const_iterator inputLoc;
+//        QStringList::const_iterator outputLoc;
+//        for (inputLoc = inputTypePair->second.locations.begin(),
+//             outputLoc = outputTypePair->second.locations.begin();
+//             inputLoc != inputTypePair->second.locations.end();
+//             ++inputLoc , ++outputLoc)
+//        {
+//            //return false if the nodes are not the same
+//            if (inputLoc->split(":").at(0) != outputLoc->split(":").at(0))
+//                return false;
+//        }
+//    }
+//    return true;
+//}
 
 void TaskStorage::setInputFileSizes(dataProductTypes dpType, const std::pair<double, unsigned> &inputFileSizes) {
     itsInputDataFiles[dpType] = inputFileSizes;

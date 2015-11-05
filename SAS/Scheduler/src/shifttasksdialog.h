@@ -21,7 +21,7 @@ enum moveType {
 	MOVE_TO_START
 };
 
-#include <QtGui/QDialog>
+#include <QDialog>
 #include "ui_shifttasksdialog.h"
 #include "Controller.h"
 

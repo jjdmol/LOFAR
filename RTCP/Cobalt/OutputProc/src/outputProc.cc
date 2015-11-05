@@ -1,5 +1,5 @@
 //# outputProc.cc
-//# Copyright (C) 2008-2015  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2008-2014  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -23,9 +23,9 @@
 
 #include <cstdio> // for setvbuf
 #include <unistd.h>
-#include <omp.h>
 #include <string>
 #include <stdexcept>
+#include <omp.h>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <Common/LofarLogger.h>
@@ -59,16 +59,17 @@ static char stderrbuf[STDLOG_BUFFER_SIZE];
 
 static void usage(const char *argv0)
 {
-  cout << "OutputProc: Data writer for the Real-Time Central Processing of the" << endl;
-  cout << "LOFAR radio telescope." << endl;
-  cout << "OutputProc provides CASA Measurement Set files with correlated data" << endl;
-  cout << "for the Standard Imaging mode and HDF5 files with beamformed data" << endl;
-  cout << "for the Pulsar mode." << endl; 
-  cout << "OutputProc version " << OutputProcVersion::getVersion() << " r" << OutputProcVersion::getRevision() << endl;
-  cout << endl;
-  cout << "Usage: " << argv0 << " ObservationID mpi_rank" << endl;
-  cout << endl;
-  cout << "  -h: print this message" << endl;
+  cerr << "OutputProc: Data writer for the Real-Time Central Processing of the" << endl;
+  cerr << "LOFAR radio telescope." << endl;
+  cerr << "OutputProc provides CASA Measurement Set files with correlated data" << endl;
+  cerr << "for the Standard Imaging mode and HDF5 files with beamformed data" << endl;
+  cerr << "for the Pulsar mode." << endl; 
+  // one of the roll-out scripts greps for the version x.y
+  cerr << "OutputProc version " << OutputProcVersion::getVersion() << " r" << OutputProcVersion::getRevision() << endl;
+  cerr << endl;
+  cerr << "Usage: " << argv0 << " ObservationID mpi_rank" << endl;
+  cerr << endl;
+  cerr << "  -h: print this message" << endl;
 }
 
 int main(int argc, char *argv[])
@@ -94,27 +95,15 @@ int main(int argc, char *argv[])
     return EXIT_FAILURE;
   }
 
-  int observationID = boost::lexical_cast<int>(argv[1]);
-  unsigned myRank = boost::lexical_cast<unsigned>(argv[2]);
-
-  // Ignore SIGPIPE, as we handle disconnects ourselves
-  struct sigaction sa;
-  sigemptyset(&sa.sa_mask);
-  sa.sa_flags = 0;
-  sa.sa_handler = SIG_IGN;
-  if (sigaction(SIGPIPE, &sa, NULL) < 0)
-    THROW_SYSCALL("sigaction(SIGPIPE, <SIG_IGN>)");
-
-  // Make sure all time is dealt with and reported in UTC
-  if (setenv("TZ", "UTC", 1) < 0)
-    THROW_SYSCALL("setenv(TZ)");
-
   INIT_LOGGER("outputProc"); // also attaches to CasaLogSink
+
+  MessageBus::init();
 
   LOG_DEBUG_STR("Started: " << argv[0] << ' ' << argv[1] << ' ' << argv[2]);
   LOG_INFO_STR("OutputProc version " << OutputProcVersion::getVersion() << " r" << OutputProcVersion::getRevision());
 
-  MessageBus::init();
+  int observationID = boost::lexical_cast<int>(argv[1]);
+  unsigned myRank = boost::lexical_cast<unsigned>(argv[2]);
 
   omp_set_nested(true);
 

@@ -14,7 +14,7 @@
 #ifndef SCHEDULESETTINGSDIALOG_H
 #define SCHEDULESETTINGSDIALOG_H
 
-#include <QtGui/QDialog>
+#include <QDialog>
 #include "ui_schedulesettingsdialog.h"
 #include "lofar_scheduler.h"
 #include "astrodate.h"

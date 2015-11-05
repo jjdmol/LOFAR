@@ -14,7 +14,7 @@
 #ifndef CONFLICTDIALOG_H
 #define CONFLICTDIALOG_H
 
-#include <QtGui/QDialog>
+#include <QDialog>
 #include "ui_conflictdialog.h"
 #include <map>
 #include "taskstorage.h"

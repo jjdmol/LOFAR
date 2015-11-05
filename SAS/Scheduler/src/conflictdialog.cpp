@@ -28,7 +28,11 @@ ConflictDialog::ConflictDialog(const Controller *controller)
 	ui.treeWidgetConflicts->header()->resizeSection(2, 55);
 	ui.treeWidgetConflicts->header()->resizeSection(3, 55);
 	ui.treeWidgetConflicts->header()->resizeSection(4, 55);
-	ui.treeWidgetConflicts->header()->setResizeMode(QHeaderView::ResizeToContents);
+#if QT_VERSION >= 0x050000
+    ui.treeWidgetConflicts->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
+#else
+    ui.treeWidgetConflicts->header()->setResizeMode(QHeaderView::ResizeToContents);
+#endif
 }
 
 ConflictDialog::~ConflictDialog()

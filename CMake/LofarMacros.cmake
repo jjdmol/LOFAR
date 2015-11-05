@@ -2,11 +2,9 @@
 #
 # Defines the following macros:
 #   lofar_add_bin_program(name)
-#   lofar_add_bin_scripts([name1 [name2 ..]])
 #   lofar_add_executable(name)
 #   lofar_add_library(name)
 #   lofar_add_sbin_program(name)
-#   lofar_add_sbin_scripts([name1 [name2 ..]])
 #   lofar_add_test(name)
 #   lofar_join_arguments(var)
 #   lofar_search_path(path package)
@@ -48,22 +46,6 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
     lofar_add_executable(${_name} ${ARGN})
     install(TARGETS ${_name} DESTINATION bin)
   endmacro(lofar_add_bin_program)
-
-
-  # --------------------------------------------------------------------------
-  # lofar_add_bin_scripts([name1 [name2 ..]])
-  #
-  # Add scripts that need to be installed into the <prefix>/bin directory.
-  # Also create a symbolic link in <build-dir>/bin to each of these scripts.
-  # --------------------------------------------------------------------------
-  macro(lofar_add_bin_scripts)
-    foreach(_name ${ARGN})
-      get_filename_component(_abs_name ${_name} ABSOLUTE)
-      execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-        ${_abs_name} ${CMAKE_BINARY_DIR}/bin/${_name})
-      install(PROGRAMS ${_name} DESTINATION bin)
-    endforeach(_name ${ARGN})
-  endmacro(lofar_add_bin_scripts)
 
 
   # --------------------------------------------------------------------------
@@ -144,22 +126,6 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
     lofar_add_executable(${_name} ${ARGN})
     install(TARGETS ${_name} DESTINATION sbin)
   endmacro(lofar_add_sbin_program)
-
-
-  # --------------------------------------------------------------------------
-  # lofar_add_sbin_scripts([name1 [name2 ..]])
-  #
-  # Add scripts that need to be installed into the <prefix>/sbin directory.
-  # Also create a symbolic link in <build-dir>/sbin to each of these scripts.
-  # --------------------------------------------------------------------------
-  macro(lofar_add_sbin_scripts)
-    foreach(_name ${ARGN})
-      get_filename_component(_abs_name ${_name} ABSOLUTE)
-      execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-        ${_abs_name} ${CMAKE_BINARY_DIR}/sbin/${_name})
-      install(PROGRAMS ${_name} DESTINATION sbin)
-    endforeach(_name ${ARGN})
-  endmacro(lofar_add_sbin_scripts)
 
 
   # --------------------------------------------------------------------------
