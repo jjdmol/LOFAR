@@ -31,48 +31,51 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    class BeamFormerKernel : public CompiledKernel
+    class BeamFormerKernel : public Kernel
     {
     public:
       static std::string theirSourceFile;
       static std::string theirFunction;
-
-      enum BufferType
-      {
-        INPUT_DATA,
-        OUTPUT_DATA,
-        BEAM_FORMER_DELAYS
-      };
 
       // Parameters that must be passed to the constructor of the
       // BeamFormerKernel class.
       struct Parameters : Kernel::Parameters
       {
         Parameters(const Parset& ps);
-        unsigned nrStations;
-        unsigned nrChannels;
-        unsigned nrSamplesPerChannel;
+        size_t nrTABs;
+        float weightCorrection;   // constant weight applied to all weights
+      };
 
-        unsigned nrSAPs;
-        unsigned nrTABs;
-        double subbandBandwidth;
-        bool doFlysEye;
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA,
+        BEAM_FORMER_WEIGHTS
+      };
 
-        size_t bufferSize(BufferType bufferType) const;
+      // Buffers that must be passed to the constructor of the BeamFormerKernel
+      // class.
+      struct Buffers : Kernel::Buffers
+      {
+        Buffers(const gpu::DeviceMemory& in, 
+                const gpu::DeviceMemory& out,
+                const gpu::DeviceMemory& beamFormerWeights) :
+          Kernel::Buffers(in, out), beamFormerWeights(beamFormerWeights)
+        {}
+
+        gpu::DeviceMemory beamFormerWeights;
       };
 
       BeamFormerKernel(const gpu::Stream &stream,
                              const gpu::Module &module,
                              const Buffers &buffers,
                              const Parameters &param);
-
-      void enqueue(const BlockID &blockId, 
-                   double subbandFrequency, unsigned SAP);
-
-      gpu::DeviceMemory beamFormerDelays;
     };
 
-    //# --------  Template specializations for KernelFactory  -------- #//
+    // Specialization of the KernelFactory for
+    // BeamFormerKernel
+    template<> size_t
+    KernelFactory<BeamFormerKernel>::bufferSize(BufferType bufferType) const;
 
     template<> CompileDefinitions
     KernelFactory<BeamFormerKernel>::compileDefinitions() const;

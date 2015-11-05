@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2007-2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -84,12 +84,12 @@ void subscribeObjectStateChange() {
 // of the state's and childstate's of the ones in the stations
 //
 // Msg something like: Station:Dp.state=state
-//                e.g. CS011:LOFAR_ObsSW_Oservation10.status.state=broken
+//                e.g. CS010:LOFAR_ObsSW_Oservation10.status.state=broken
 //
 // Points of interrest:
-//    StnObservation  --> Station --> MCU*:LOFAR_ObsSW_Observation*_*_CS011.status.state/childState
-//    StnPermSW       --> Station --> MCU*:LOFAR_PermSW_*_CS011.status.state/childState
-//    StnPic          --> Station --> MCU*:LOFAR_PIC_*_CS011.status.state/childState
+//    StnObservation  --> Station --> MCU*:LOFAR_ObsSW_Observation*_*_CS010.status.state/childState
+//    StnPermSW       --> Station --> MCU*:LOFAR_PermSW_*_CS010.status.state/childState
+//    StnPic          --> Station --> MCU*:LOFAR_PIC_*_CS010.status.state/childState
 //    if an Antenna changes state or childstate, the rcu belonging to this antenna should trigger its childstate
 //
 // Added 26-3-2007 A.Coolen

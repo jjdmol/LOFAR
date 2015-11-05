@@ -23,7 +23,6 @@
 
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
 #include <CoInterface/Parset.h>
-#include <CoInterface/BlockID.h>
 #include <Common/lofar_complex.h>
 #include <sstream>
 
@@ -41,26 +40,12 @@ TEST(tKernelFunctions)
   Parset ps;
   ps.add("Observation.nrBitsPerSample", "8");
   ps.add("Observation.VirtualInstrument.stationList", "[RS000]");
-  ps.add("Observation.antennaSet", "LBA_INNER");
-  ps.add("Observation.Dataslots.RS000LBA.RSPBoardList", "[0]");
-  ps.add("Observation.Dataslots.RS000LBA.DataslotList", "[0]");
-  ps.add("Observation.nrBeams", "1");
-  ps.add("Observation.Beam[0].subbandList", "[0]");
-  ps.add("Cobalt.blockSize", "262144");
-  ps.add("Cobalt.Correlator.nrChannelsPerSubband", "64");
+  ps.add("OLAP.CNProc.integrationSteps", "1048576");
+  ps.add("Observation.channelsPerSubband", "64");
   ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
-  ps.add("Observation.DataProducts.Output_Correlated.filenames", "[L12345_SAP000_SB000_uv.MS]");
-  ps.add("Observation.DataProducts.Output_Correlated.locations", "[localhost:.]");
   ps.updateSettings();
-  
-  FIR_FilterKernel::Parameters params(ps,
-    ps.settings.antennaFields.size(),
-    true,
-    1,
-    ps.settings.correlator.nrChannels,
-    1.0f);
 
-  KernelFactory<FIR_FilterKernel> factory(params);
+  KernelFactory<FIR_FilterKernel> factory(ps);
 
   gpu::Device device(gpu::Platform().devices()[0]);
   gpu::Context context(device);
@@ -69,15 +54,16 @@ TEST(tKernelFunctions)
   gpu::DeviceMemory
     dInput(context, factory.bufferSize(FIR_FilterKernel::INPUT_DATA)),
     dOutput(context, factory.bufferSize(FIR_FilterKernel::OUTPUT_DATA)),
-    dCoeff(context,  factory.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
-    dHistory(context,  factory.bufferSize(FIR_FilterKernel::HISTORY_DATA));
+    dCoeff(context,  factory.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS));
 
   gpu::HostMemory
     hInput(context, dInput.size()),
-    hOutput(context, dOutput.size());
+    hOutput(context, dOutput.size()),
+    hCoeff(context, dCoeff.size());
 
   cout << "dInput.size() = " << dInput.size() << endl;
   cout << "dOutput.size() = " << dOutput.size() << endl;
+  cout << "dCoeff.size() = " << dCoeff.size() << endl;
 
   // hInput.get<i8complex>()[2176] = i8complex(1,0);
 
@@ -88,15 +74,29 @@ TEST(tKernelFunctions)
 
   stream.writeBuffer(dInput, hInput);
 
-  auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, dInput, dOutput));
+  FIR_FilterKernel::Buffers buffers(dInput, dOutput, dCoeff);
+  auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, buffers));
 
   // **************************************
   // excercise it
-  BlockID blockId;                      // create a dummy block-ID struct
-  kernel->enqueue(blockId,  0); // insert in kernel queue
+  PerformanceCounter counter(context);  //create a counter
+  kernel->enqueue(counter);             // insert in kernel queue
+
 
   stream.readBuffer(hOutput, dOutput);
+  stream.readBuffer(hCoeff, dCoeff);
   stream.synchronize();
+ 
+  // update the counter
+  counter.logTime();
+
+  stringstream str;
+  counter.stats.print(str);
+  
+  // Most functionality is tested at the specific stats class. Just test if
+  // the stats object has been used once
+  CHECK(str.str() != "*Not executed*");
+
 }
 
 int main()

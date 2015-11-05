@@ -26,10 +26,8 @@
 
 #include <Common/LofarTypes.h>
 #include <CoInterface/MultiDimArray.h>
-#include <CoInterface/SmartPtr.h>
 
 #include "MPIProtocol.h"
-#include "MPIUtil.h"
 #include "ReceiveStations.h"
 
 #include <vector>
@@ -56,7 +54,7 @@ namespace LOFAR
       //   observation.
       //
       // blockSize:
-      //   The number of samples in each block.
+      //   The number of samples in each block. Includes nrHistorySamples.
       MPIReceiveStations( size_t nrStations, const std::vector<size_t> &beamlets, size_t blockSize );
 
       // Receive the next block. The `block' parameter is a structure allocated
@@ -64,10 +62,10 @@ namespace LOFAR
       // [stationRanks.size()][beamlets.size()]. Each sample block needs to be
       // blockSize in length.
       //
-      // Returns whether all stations are done sending. If so, this block does not
-      // have to be processed either since all metatData[stat][0].EOS will be set.
+      // It is the callers responsibility to call receiveBlock exactly as often
+      // as sendBlock is called by the stations.
       template<typename T>
-      bool receiveBlock( MultiDimArray<T,3> &data, MultiDimArray<struct MPIProtocol::MetaData,2> &metaData );
+      void receiveBlock( std::vector< struct Block<T> > &blocks );
 
     private:
       const std::string logPrefix;
@@ -79,15 +77,15 @@ namespace LOFAR
 
       std::vector<int> stationSourceRanks; // [station]
 
-      // Which stations are done sending (and we should thus post no receive for for subsequent blocks)
-      std::vector<bool> stationDone; // [station]
+      // Receive a header (async) from the given rank.
+      MPI_Request receiveHeader( size_t station, struct MPIProtocol::Header &header );
 
       // Receive beamlet data (async) from the given rank.
       template<typename T>
-      MPI_Request receiveData( size_t station, T *buffer );
+      MPI_Request receiveData( size_t station, size_t beamlet, int transfer, T *from, size_t nrSamples );
 
       // Receive marshalled flags and metadata (async) from the given rank.
-      MPI_Request receiveMetaData( size_t station, struct MPIProtocol::MetaData *metaData );
+      MPI_Request receiveMetaData( size_t station, size_t beamlet, struct MPIProtocol::MetaData &metaData );
     };
 
   }

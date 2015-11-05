@@ -27,12 +27,11 @@
 // Useful stream manipulation methods.
 
 //# Includes
-#include <utility>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_map.h>
-#include <Common/lofar_iostream.h>
+#include <Common/lofar_iosfwd.h>
 
 namespace LOFAR
 {
@@ -70,32 +69,6 @@ namespace LOFAR
   }
 
 
-  // Declare the functions.
-  // Write a std::pair.
-  template <typename T, typename U>
-  ostream& operator<< (ostream& os, const std::pair<T,U>& p);
-  // Write any container to the given ostream.
-  template<typename ITER>
-  void print (ostream& os, ITER begin, ITER end, 
-              const char* separator=",",
-              const char* prefix="[", const char* postfix="]");
-  // Write a vector to an ostream with a given separator, prefix and postfix.
-  template<class T>
-  void writeVector (std::ostream& os, const std::vector<T>& vec,
-		    const char* separator=",",
-		    const char* prefix="[", const char* postfix="]");
-  // Print the contents of a vector enclosed in square brackets, using a comma
-  // as separator.
-  // \note operator<<() must be defined for type \c T.
-  template<typename T>
-  ostream& operator<<(ostream& os, const vector<T>& v);
-  // Print the contents of a map enclosed in braces, using a comma
-  // as separator.
-  // \note operator<<() must be defined for type \c T.
-  template<typename T, typename U>
-  ostream& operator<<(ostream& os, const map<T,U>& m);
-
-
   // Write a std::pair.
   template <typename T, typename U>
   inline ostream& operator<< (ostream& os, const std::pair<T,U>& p)
@@ -104,11 +77,15 @@ namespace LOFAR
     return os;
   }
 
+  //# Forward declaration, to keep compiler happy.
+  template<typename T>
+  ostream& operator<<(ostream& os, const vector<T>& v);
+
   // Write any container to the given ostream.
   template<typename ITER>
-  inline void print (ostream& os, ITER begin, ITER end, 
-                     const char* separator,
-                     const char* prefix, const char* postfix)
+  inline void print (std::ostream& os, ITER begin, ITER end, 
+                     const char* separator=",",
+                     const char* prefix="[", const char* postfix="]")
   {
     os << prefix;
     if (begin != end) {
@@ -124,9 +101,9 @@ namespace LOFAR
 
   // Write a vector to an ostream with a given separator, prefix and postfix.
   template<class T>
-  inline void writeVector (std::ostream& os, const std::vector<T>& vec,
-                           const char* separator,
-                           const char* prefix, const char* postfix)
+  void writeVector (std::ostream& os, const std::vector<T>& vec,
+		    const char* separator=",",
+		    const char* prefix="[", const char* postfix="]")
   {
     print (os, vec.begin(), vec.end(), separator, prefix, postfix);
   }

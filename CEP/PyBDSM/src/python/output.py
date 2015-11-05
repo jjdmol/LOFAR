@@ -227,7 +227,7 @@ def write_bbs_gaul(img, filename=None, srcroot=None, patch=None,
     outstr_list = make_bbs_str(img, outl, outn, patl, incl_empty=incl_empty,
                                correct_proj=correct_proj)
 
-    if filename is None:
+    if filename == None:
         filename = img.imagename + '.sky_in'
     if os.path.exists(filename) and clobber == False:
         return None
@@ -260,7 +260,7 @@ def write_lsm_gaul(img, filename=None, srcroot=None, patch=None,
                                                root=srcroot, sort_by=sort_by)
     outstr_list = make_lsm_str(img, outl, outn, incl_empty=incl_empty)
 
-    if filename is None:
+    if filename == None:
         filename = img.imagename + '.lsm'
     if os.path.exists(filename) and clobber == False:
         return None
@@ -300,7 +300,7 @@ def write_ds9_list(img, filename=None, srcroot=None, deconvolve=False,
                             str(dsrc.source_id))
         outn = [outn]
     outstr_list = make_ds9_str(img, outl, outn, deconvolve=deconvolve, objtype=objtype, incl_empty=incl_empty)
-    if filename is None:
+    if filename == None:
         filename = img.imagename + '.' + objtype + '.reg'
     if os.path.exists(filename) and clobber == False:
         return None
@@ -312,7 +312,7 @@ def write_ds9_list(img, filename=None, srcroot=None, deconvolve=False,
     return filename
 
 
-def write_ascii_list(img, filename=None, sort_by='indx', format = 'ascii',
+def write_ascii_list(img, filename=None, sort_by='indx',
                      incl_chan=False, incl_empty=False, clobber=False, objtype='gaul'):
     """Writes Gaussian list to an ASCII file"""
     import mylogger
@@ -326,9 +326,8 @@ def write_ascii_list(img, filename=None, sort_by='indx', format = 'ascii',
         if incl_empty:
             # Append the dummy sources for islands without any unflagged Gaussians
             outl[0] += img.dsources
-    outstr_list = make_ascii_str(img, outl, objtype=objtype,
-                                 incl_empty=incl_empty, format=format)
-    if filename is None:
+    outstr_list = make_ascii_str(img, outl, objtype=objtype, incl_empty=incl_empty)
+    if filename == None:
         if objtype == 'gaul':
             filename = img.imagename + '.gaul'
         elif objtype == 'srl':
@@ -343,7 +342,7 @@ def write_ascii_list(img, filename=None, sort_by='indx', format = 'ascii',
     return filename
 
 
-def write_casa_gaul(img, filename=None,  incl_empty=False, clobber=False):
+def write_casa_gaul(img, filename=None, clobber=False):
     """Writes a clean box file for use in casapy"""
     import mylogger
     import os
@@ -351,7 +350,7 @@ def write_casa_gaul(img, filename=None,  incl_empty=False, clobber=False):
     mylog = mylogger.logging.getLogger("PyBDSM."+img.log+"Output")
     outl, outn, patl = list_and_sort_gaussians(img, patch=None)
     outstr_list = make_casa_str(img, outl)
-    if filename is None:
+    if filename == None:
         filename = img.imagename + '.box'
     if os.path.exists(filename) and clobber == False:
         return None
@@ -401,7 +400,7 @@ def write_fits_list(img, filename=None, sort_by='index', objtype='gaul',
                 nmax = isl.shapelet_nmax
         nmax += 1
 
-    if img.opts.aperture is not None:
+    if img.opts.aperture != None:
         incl_aper = True
     else:
         incl_aper = False
@@ -414,7 +413,7 @@ def write_fits_list(img, filename=None, sort_by='index', objtype='gaul',
                                                               incl_aper=incl_aper,
                                                               incl_empty=incl_empty,
                                                               nmax=nmax, nchan=img.nchan)
-    out_list = make_fits_list(img, outl, objtype=objtype, nmax=nmax, incl_empty=incl_empty)
+    out_list = make_fits_list(img, outl, objtype=objtype, nmax=nmax)
     col_list = []
     for ind, col in enumerate(out_list):
       list1 = pyfits.Column(name=cnames[ind], format=cformats[ind],
@@ -442,7 +441,7 @@ def write_fits_list(img, filename=None, sort_by='index', objtype='gaul',
         tbhdu.header['INIMAGE'] = (img.filename, 'Filename of image')
         tbhdu.header['FREQ0'] = (float(freq), 'Reference frequency')
         tbhdu.header['EQUINOX'] = (img.equinox, 'Equinox')
-    if filename is None:
+    if filename == None:
         filename = img.imagename + '.' + objtype + '.fits'
     if os.path.exists(filename) and clobber == False:
         return None
@@ -457,7 +456,7 @@ def write_kvis_ann(img, filename=None, sort_by='indx',
     import os
 
     mylog = mylogger.logging.getLogger("PyBDSM."+img.log+"Output")
-    if filename is None:
+    if filename == None:
         filename = img.imagename + '.kvis.ann'
     if os.path.exists(filename) and clobber == False:
         return None
@@ -491,7 +490,7 @@ def write_star(img, filename=None, sort_by='indx',
     import os
 
     mylog = mylogger.logging.getLogger("PyBDSM."+img.log+"Output")
-    if filename is None:
+    if filename == None:
         filename = img.imagename + '.star'
     if os.path.exists(filename) and clobber == False:
         return None
@@ -539,7 +538,7 @@ def make_bbs_str(img, glist, gnames, patchnames, objtype='gaul',
                                "MajorAxis, MinorAxis, Orientation, "\
                                "ReferenceFrequency='"+freq+"', "\
                                "SpectralIndex='[]'\n\n")
-    elif patchnames[0] is None:
+    elif patchnames[0] == None:
         outstr_list.append("format = Name, Type, Ra, Dec, I, Q, U, V, "\
                                "MajorAxis, MinorAxis, Orientation, "\
                                "ReferenceFrequency='"+freq+"', "\
@@ -552,11 +551,11 @@ def make_bbs_str(img, glist, gnames, patchnames, objtype='gaul',
     if objtype == 'shap':
         patchname_last = ''
         for pindx, patch_name in enumerate(patchnames): # loop over patches
-          if patch_name is not None and patch_name != patchname_last:
+          if patch_name != None and patch_name != patchname_last:
               outstr_list.append(', , ' + patch_name + ', 00:00:00, +00.00.00\n')
               patchname_last = patch_name
               names_in_patch = gnames[pindx]
-              if patch_name is None:
+              if patch_name == None:
                   outstr_list.append(src_name + sep + stype + sep + sra + sep +
                                      sdec + sep + total + sep + Q_flux + sep +
                                      U_flux + sep + V_flux + sep +
@@ -571,7 +570,7 @@ def make_bbs_str(img, glist, gnames, patchnames, objtype='gaul',
     else:
         patchname_last = ''
         for pindx, patch_name in enumerate(patchnames): # loop over patches
-          if patch_name is not None and patch_name != patchname_last:
+          if patch_name != None and patch_name != patchname_last:
               outstr_list.append(', , ' + patch_name + ', 00:00:00, +00.00.00\n')
               patchname_last = patch_name
           gaussians_in_patch = glist[pindx]
@@ -583,10 +582,10 @@ def make_bbs_str(img, glist, gnames, patchnames, objtype='gaul',
                   if img.equinox == 1950:
                       ra, dec = B1950toJ2000([ra, dec])
                   ra = ra2hhmmss(ra)
-                  sra = str(ra[0]).zfill(2)+':'+str(ra[1]).zfill(2)+':'+str("%.6f" % (ra[2])).zfill(6)
+                  sra = str(ra[0]).zfill(2)+':'+str(ra[1]).zfill(2)+':'+str("%.3f" % (ra[2])).zfill(6)
                   dec = dec2ddmmss(dec)
                   decsign = ('-' if dec[3] < 0 else '+')
-                  sdec = decsign+str(dec[0]).zfill(2)+'.'+str(dec[1]).zfill(2)+'.'+str("%.6f" % (dec[2])).zfill(6)
+                  sdec = decsign+str(dec[0]).zfill(2)+'.'+str(dec[1]).zfill(2)+'.'+str("%.3f" % (dec[2])).zfill(6)
                   total = str("%.3e" % (g.total_flux))
                   if correct_proj:
                       deconv = g.deconv_size_sky
@@ -603,7 +602,7 @@ def make_bbs_str(img, glist, gnames, patchnames, objtype='gaul',
                   deconvstr = deconv1 + ', ' + deconv2 + ', ' + deconv3
                   specin = '-0.8'
                   if 'spectralindex' in img.completed_Ops:
-                      if g.spec_indx is not None and N.isfinite(g.spec_indx):
+                      if g.spec_indx != None and N.isfinite(g.spec_indx):
                           specin = str("%.3e" % (g.spec_indx))
                   sep = ', '
                   if img.opts.polarisation_do:
@@ -614,7 +613,7 @@ def make_bbs_str(img, glist, gnames, patchnames, objtype='gaul',
                       Q_flux = '0.0'
                       U_flux = '0.0'
                       V_flux = '0.0'
-                  if patch_name is None:
+                  if patch_name == None:
                       outstr_list.append(src_name + sep + stype + sep + sra + sep +
                                          sdec + sep + total + sep + Q_flux + sep +
                                          U_flux + sep + V_flux + sep +
@@ -648,7 +647,7 @@ def make_bbs_shapeletfiles(img):
     import numpy as N
 
     for isl in img.islands:
-        basis = isl.shapelet_basis
+        basis = isl.shapelet_basis # units?
         nmax = isl.shapelet_nmax
         cf = isl.shapelet_cf
         beta = isl.shapelet_beta
@@ -663,7 +662,7 @@ def make_bbs_shapeletfiles(img):
         ra_dec_string = sra + '  ' + sdec + ' \n'
         outstr_list = [ra_dec_string]
         outstr_list.append(str(nmax) + '   ' + str(beta) + '\n')
-        cf.transpose # transpose so that we can access array in column-major way
+        cf.transpose # traspose so that we can access array in column-major way
         for entry in cf.flatten():
             outstr_list.append(str(entry) + '\n')
 
@@ -694,10 +693,10 @@ def make_lsm_str(img, glist, gnames, incl_empty=False):
             if img.equinox == 1950:
                 ra, dec = B1950toJ2000([ra, dec])
             ra = ra2hhmmss(ra)
-            sra = str(ra[0]).zfill(2)+' '+str(ra[1]).zfill(2)+' '+str("%.6f" % (ra[2])).zfill(6)
+            sra = str(ra[0]).zfill(2)+' '+str(ra[1]).zfill(2)+' '+str("%.3f" % (ra[2])).zfill(6)
             dec = dec2ddmmss(dec)
             decsign = ('-' if dec[3] < 0 else '+')
-            sdec = decsign+str(dec[0]).zfill(2)+' '+str(dec[1]).zfill(2)+' '+str("%.6f" % (dec[2])).zfill(6)
+            sdec = decsign+str(dec[0]).zfill(2)+' '+str(dec[1]).zfill(2)+' '+str("%.3f" % (dec[2])).zfill(6)
             total = str("%.3e" % (g.total_flux))
             deconv = g.deconv_size_sky
             if deconv[0] == 0.0  and deconv[1] == 0.0:
@@ -717,7 +716,7 @@ def make_lsm_str(img, glist, gnames, incl_empty=False):
             deconvstr = deconv1 + ' ' + deconv2 + ' ' + deconv3
             specin = '-0.8'
             if 'spectralindex' in img.completed_Ops:
-                if g.spec_indx is not None and N.isfinite(g.spec_indx):
+                if g.spec_indx != None and N.isfinite(g.spec_indx):
                     specin = str("%.3e" % (g.spec_indx))
             sep = ' '
             if img.opts.polarisation_do:
@@ -740,7 +739,7 @@ def make_ds9_str(img, glist, gnames, deconvolve=False, objtype='gaul', incl_empt
     """Makes a list of string entries for a ds9 region file."""
     outstr_list = []
     freq = "%.5e" % img.frequency
-    if img.equinox is None:
+    if img.equinox == None:
         equinox = 'fk5'
     else:
         if int(img.equinox) == 2000:
@@ -791,7 +790,7 @@ def make_ds9_str(img, glist, gnames, deconvolve=False, objtype='gaul', incl_empt
     return outstr_list
 
 
-def make_ascii_str(img, glist, objtype='gaul', format='ascii', incl_empty=False):
+def make_ascii_str(img, glist, objtype='gaul', incl_empty=False):
     """Makes a list of string entries for an ascii region file."""
     from _version import __version__, __revision__
     outstr_list = []
@@ -806,7 +805,7 @@ def make_ascii_str(img, glist, objtype='gaul', format='ascii', incl_empty=False)
     outstr_list.append('# Reference frequency of the detection ("ch0") image: %s Hz\n' % freq)
     outstr_list.append('# Equinox : %s \n\n' % img.equinox)
     val_list = []
-    if img.opts.aperture is not None:
+    if img.opts.aperture != None:
         incl_aper = True
     else:
         incl_aper = False
@@ -820,16 +819,11 @@ def make_ascii_str(img, glist, objtype='gaul', format='ascii', incl_empty=False)
                                                               incl_aper=incl_aper,
                                                               incl_empty=incl_empty,
                                                               nchan=img.nchan)
-        if cvals is not None:
+        if cvals != None:
             cformats[-1] += "\n"
-            if format == 'ascii':
-                if i == 0:
-                    outstr_list.append("# " + " ".join(cnames) + "\n")
-                outstr_list.append(" ".join(cformats) % tuple(cvals))
-            else:
-                if i == 0:
-                    outstr_list.append("# " + ", ".join(cnames) + "\n")
-                outstr_list.append(", ".join(cformats) % tuple(cvals))
+            if i == 0:
+                outstr_list.append("# " + " ".join(cnames) + "\n")
+            outstr_list.append(" ".join(cformats) % tuple(cvals))
     return outstr_list
 
 
@@ -837,7 +831,7 @@ def make_fits_list(img, glist, objtype='gaul', nmax=30, incl_empty=False):
     import functions as func
 
     out_list = []
-    if img.opts.aperture is not None:
+    if img.opts.aperture != None:
         incl_aper = True
     else:
         incl_aper = False
@@ -849,41 +843,36 @@ def make_fits_list(img, glist, objtype='gaul', nmax=30, incl_empty=False):
                                                       incl_aper=incl_aper,
                                                       incl_empty=incl_empty,
                                                       nmax=nmax, nchan=img.nchan)
-        if cvals is not None:
+        if cvals != None:
             out_list.append(cvals)
     out_list = func.trans_gaul(out_list)
     return out_list
 
 
 def make_casa_str(img, glist):
-    """Makes a list of string entries for a casa region file."""
+    """Makes a list of string entries for a casa clean box file."""
     import functions as func
-    outstr_list = ['#CRTFv0 CASA Region Text Format version 0\n']
+    outstr_list = []
     sep = ' '
-    scale = 2.0 # scale box to 2 times FWHM of Gaussian
+    scale = 2.0
     for gindx, g in enumerate(glist[0]):
         x, y = g.centre_pix
+        xsize, ysize, ang = g.size_pix # FWHM
         ellx, elly = func.drawellipse(g)
-        blc = [min(ellx), min(elly)]
-        trc = [max(ellx), max(elly)]
+        blc = [int(min(ellx)), int(min(elly))]
+        trc = [int(max(ellx)), int(max(elly))]
 
         blc[0] -= (x - blc[0]) * scale
         blc[1] -= (y - blc[1]) * scale
         trc[0] += (trc[0] - x) * scale
         trc[1] += (trc[1] - y) * scale
-
-        blc_sky = img.pix2sky(blc)
-        trc_sky = img.pix2sky(trc)
-
-        blc_sky_str = convert_radec_str(blc_sky[0], blc_sky[1])
-        trc_sky_str = convert_radec_str(trc_sky[0], trc_sky[1])
-
-        # Format is: box [ [<blcx>, <blcy>], [<trcx>, <trcy>] ]
+        # Format is: <id> <blcx> <blcy> <trcx> <trcy>
         # Note that we use gindx rather than g.gaus_num so that
         # all Gaussians will have a unique id, even if wavelet
         # Gaussians are included.
-        outstr_list.append('box [[' + ', '.join(blc_sky_str) + '], [' +
-                           ', '.join(trc_sky_str) + ']] coord=J2000\n')
+        outstr_list.append(str(gindx+1) + sep + str(blc[0]) + sep +
+                           str(blc[1]) + sep + str(trc[0]) + sep +
+                           str(trc[1]) +'\n')
     return outstr_list
 
 
@@ -912,24 +901,12 @@ def write_islands(img):
 
     f.close()
 
-
 def get_src(src_list, srcid):
     """Returns the source for srcid or None if not found"""
     for src in src_list:
         if src.source_id == srcid:
             return src
     return None
-
-
-def convert_radec_str(ra, dec):
-    """Takes ra, dec in degrees and returns BBS/CASA strings"""
-    ra = ra2hhmmss(ra)
-    sra = str(ra[0]).zfill(2)+':'+str(ra[1]).zfill(2)+':'+str("%.3f" % (ra[2])).zfill(6)
-    dec = dec2ddmmss(dec)
-    decsign = ('-' if dec[3] < 0 else '+')
-    sdec = decsign+str(dec[0]).zfill(2)+'.'+str(dec[1]).zfill(2)+'.'+str("%.3f" % (dec[2])).zfill(6)
-    return sra, sdec
-
 
 def list_and_sort_gaussians(img, patch=None, root=None,
                             sort_by='index'):
@@ -948,7 +925,7 @@ def list_and_sort_gaussians(img, patch=None, root=None,
     import functions as func
 
     # Define lists
-    if root is None:
+    if root == None:
         root = img.parentname
     gauslist = []
     gausname = []
@@ -960,20 +937,17 @@ def list_and_sort_gaussians(img, patch=None, root=None,
     gausindx = [] # indices of Gaussians
     patchflux = [] # total flux of each patch
     patchindx = [] # indices of sources
-    patchnums = [] # number of patch from mask
 
     # If a mask image is to be used to define patches, read it in and
     # make a rank image from it
-    use_mask = False
-    if patch not in ['single', 'gaussian', 'source', None]:
-        mask_file = img.opts.bbs_patches_mask
-        patches_mask, hdr = func.read_image_from_file(mask_file, img, img.indir)
-        use_mask = True
-        act_pixels = patches_mask[0,0]
-        rank = len(act_pixels.shape)
-        import scipy.ndimage as nd
-        connectivity = nd.generate_binary_structure(rank, rank)
-        mask_labels, count = nd.label(act_pixels, connectivity)
+#     if patch == 'mask':
+#         patches_mask = func.readimage(mask_file)
+#         act_pixels = patches_mask
+#         rank = len(patches_mask.shape)
+#         connectivity = nd.generate_binary_structure(rank, rank)
+#         labels, count = nd.label(act_pixels, connectivity)
+#         mask_labels = labels
+
 
     src_list = img.sources
     for src in src_list:
@@ -994,9 +968,8 @@ def list_and_sort_gaussians(img, patch=None, root=None,
                 gausname = []
                 gausflux = []
                 gausindx = []
-            if use_mask:
-                patchnums.append(mask_labels[g.centre_pix[0], g.centre_pix[1]])
-
+#                 if patch == 'mask':
+#                     patchnum = mask_labels[g.centre_pix]
 
         if patch == 'source':
             sorted_gauslist = list(gauslist)
@@ -1025,29 +998,8 @@ def list_and_sort_gaussians(img, patch=None, root=None,
             gausname = []
             gausflux = []
 
-    if use_mask:
-        unique_patch_ids = set(patchnums)
-
-        # Check if there is a patch with id = 0. If so, this means there were
-        # some Gaussians that fell outside of the regions in the patch
-        # mask file.
-        if 0 in unique_patch_ids:
-            import mylogger
-            mylog = mylogger.logging.getLogger("PyBDSM.write_gaul")
-            mylog.warning('Some sources fall outside of the regions '
-                      'defined in the mask file. These sources are not '
-                      'included in the output sky model.')
-        for p in unique_patch_ids:
-            if p != 0:
-                in_patch = N.where(patchnums == p)
-                outlist.append(N.array(gauslist)[in_patch].tolist())
-                outnames.append(N.array(gausname)[in_patch].tolist())
-                patchnames.append('patch_'+str(p))
-                patchflux.append(N.sum(N.array(gausflux)[in_patch]))
-                patchindx.append(p)
-
     # Sort
-    if patch == 'single' or patch is None:
+    if patch == 'single' or patch == None:
         outlist = [list(gauslist)]
         outlist_sorted = [list(gauslist)]
         outnames = [list(gausname)]
@@ -1133,8 +1085,13 @@ def make_output_columns(obj, fits=False, objtype='gaul', incl_spin=False,
                  'rms_isl', 'mean_isl', 'gresid_rms',
                  'gresid_mean', 'code']
     elif objtype == 'shap':
-        names = ['island_id', 'shapelet_posn_sky', 'shapelet_posn_skyE',
-                 'shapelet_basis', 'shapelet_beta', 'shapelet_nmax', 'shapelet_cf']
+        names = ['island_id', 'posn_sky_centroid',
+                 'posn_sky_centroidE', 'total_flux',
+                 'total_fluxE',
+                 'peak_flux_max', 'peak_flux_maxE', 'posn_sky_max', 'posn_sky_maxE',
+                 'posn_pix_centroid', 'posn_pix_centroidE', 'posn_pix_max',
+                 'posn_pix_maxE', 'rms_isl', 'mean_isl', 'shapelet_basis' ,
+                 'shapelet_beta', 'shapelet_nmax', 'shapelet_cf']
     else:
         print 'Object type unrecongnized.'
         return (None, None, None, None)
@@ -1175,7 +1132,7 @@ def make_output_columns(obj, fits=False, objtype='gaul', incl_spin=False,
                     val = obj.__getattribute__(name)
                     colname = obj.__class__.__dict__[name]._colname
                     units = obj.__class__.__dict__[name]._units
-                    if units is None:
+                    if units == None:
                         units = ' '
                     if isinstance(val, list):
                         # This is a list, so handle it differently. We assume the next
@@ -1185,7 +1142,7 @@ def make_output_columns(obj, fits=False, objtype='gaul', incl_spin=False,
                         val_next = obj.__getattribute__(next_name)
                         colname_next = obj.__class__.__dict__[next_name]._colname
                         units_next = obj.__class__.__dict__[next_name]._units
-                        if units_next is None:
+                        if units_next == None:
                             units_next = ' '
                         for i in range(len(val)):
                             cvals.append(val[i])
@@ -1213,11 +1170,11 @@ def make_output_columns(obj, fits=False, objtype='gaul', incl_spin=False,
     for i, v in enumerate(cvals):
         if fits:
             if isinstance(v, int):
-                cformats.append('J')
+                cformats.append('1J')
             if isinstance(v, float):
-                cformats.append('D')
+                cformats.append('1D')
             if isinstance(v, str):
-                cformats.append('A')
+                cformats.append('1A')
             if isinstance(v, N.ndarray):
                 cformats.append('%iD' % (nmax**2,))
         else:

@@ -20,6 +20,11 @@ import scipy.ndimage as nd
 import multi_proc as mp
 import itertools
 
+### insert into Image tc-variables for mean & rms maps
+Image.mean = NArray(doc="Mean map, Stokes I")
+Image.rms  = NArray(doc="RMS map, Stokes I")
+Image.mean_QUV = List(NArray(), doc="Mean maps, Stokes QUV")
+Image.rms_QUV  = List(NArray(), doc="RMS maps, Stokes QUV")
 
 class Op_rmsimage(Op):
     """Calculate rms & noise maps
@@ -40,7 +45,10 @@ class Op_rmsimage(Op):
             cmeans = [img.clipped_mean]
             crmss = [img.clipped_rms]
 
-        mask = img.mask_arr
+        if hasattr(img, 'rms_mask'):
+            mask = img.rms_mask
+        else:
+            mask = img.mask_arr
         opts = img.opts
         cdelt = N.array(img.wcs_obj.acdelt[:2])
 
@@ -58,7 +66,7 @@ class Op_rmsimage(Op):
         # scales.
         fwsig = const.fwsig
         min_adapt_threshold = 10.0
-        if opts.adaptive_thresh is None:
+        if opts.adaptive_thresh == None:
             adapt_thresh = 50.0
             start_thresh = 500.0
         else:
@@ -159,13 +167,9 @@ class Op_rmsimage(Op):
             max_isl_size_lowthresh = max(isl_size_lowthresh)
             avg_max_isl_size = (max_isl_size_highthresh + max_isl_size_lowthresh) / 2.0
 
-        if hasattr(img, '_adapt_rms_isl_pos'):
-            isl_pos = img._adapt_rms_isl_pos # set isl_pos to existing value (for wavelet analysis)
         if len(isl_pos) == 0:
             # No bright sources found
             do_adapt = False
-        else:
-            img._adapt_rms_isl_pos = isl_pos
         min_size_allowed = int(img.pixel_beam()[0]*9.0)
 
         if opts.rms_box is None or (opts.rms_box_bright is None and do_adapt):
@@ -259,7 +263,7 @@ class Op_rmsimage(Op):
                         img.use_rms_map = True
                     else:
                         self.check_rmsmap(img, rms)
-                elif opts.rms_map is not None:
+                elif opts.rms_map != None:
                     img.use_rms_map = opts.rms_map
                 if img.use_rms_map is False:
                     mylogger.userinfo(mylog, 'Using constant background rms')
@@ -277,7 +281,7 @@ class Op_rmsimage(Op):
 
           ## if rms map is insignificant, or rms_map==False use const value
           if img.use_rms_map is False:
-            if opts.rms_value is None:
+            if opts.rms_value == None:
               rms[:]  = crmss[ipol]
             else:
               rms[:]  = opts.rms_value
@@ -304,6 +308,30 @@ class Op_rmsimage(Op):
                               '(%.5f, %.5f) Jy/beam' % (mean_min, mean_max))
 
           if pol == 'I':
+            # Check for regions of abnormally low rms and blank
+#             if opts.blank_lowrms:
+#                 rms_lowfac = 0.001
+#                 mylogger.userinfo(mylog, "Checking for pixels with low rms (below 0.001 * clipped rms = %.2e Jy/beam)" %
+#                                   (rms_lowfac*img.clipped_rms,))
+#                 zero_pixels = N.where(rms <= rms_lowfac*img.clipped_rms)
+#                 nlow_rms = len(zero_pixels[0])
+#                 frac_blank = round(float(nlow_rms)/float(image.shape[0]*image.shape[1]),3)
+#                 mylogger.userinfo(mylog, "Number of additional pixels blanked", str(nlow_rms)
+#                                   +' ('+str(frac_blank*100.0)+'%)')
+#                 if nlow_rms > 0:
+#                     img.ch0[zero_pixels] = N.nan
+#             else:
+#                 nlow_rms = 0
+#
+#             # If needed, (re)mask the image
+#             if nlow_rms > 0:
+#                 mask = N.isnan(img.ch0)
+#                 masked = mask.any()
+#                 img.masked = masked
+#                 if masked:
+#                     img.mask = mask
+#                 img.blankpix = N.sum(mask)
+
             # Apply mask to mean_map and rms_map by setting masked values to NaN
             if isinstance(mask, N.ndarray):
                 pix_masked = N.where(mask == True)
@@ -639,7 +667,7 @@ class Op_rmsimage(Op):
             new_shape = (arr.shape[0] + 2*pad_border_size, arr.shape[1]
                          + 2*pad_border_size)
             arr_pad = self.pad_array(arr, new_shape)
-            if mask is None:
+            if mask == None:
                 mask_pad = None
             else:
                 mask_pad = self.pad_array(mask, new_shape)
@@ -680,7 +708,7 @@ class Op_rmsimage(Op):
             rms_map[co] = cr
 
         # Check if all regions have too few unmasked pixels
-        if mask is not None and N.size(N.where(mean_map != N.inf)) == 0:
+        if mask != None and N.size(N.where(mean_map != N.inf)) == 0:
             raise RuntimeError("No unmasked regions from which to determine "\
                          "mean and rms maps")
 
@@ -870,7 +898,7 @@ class Op_rmsimage(Op):
 
         bstat = func.bstat#_cbdsm.bstat
         a, b, c, d = ind; i, j = co
-        if mask is None:
+        if mask == None:
           m, r, cm, cr, cnt = bstat(arr[a:b, c:d], mask, kappa)
           if cnt > 198: cm = m; cr = r
           mean_map[i, j], rms_map[i, j] = cm, cr
@@ -894,7 +922,7 @@ class Op_rmsimage(Op):
 
         bstat = func.bstat #_cbdsm.bstat
         a, b, c, d = ind
-        if mask is None:
+        if mask == None:
           m, r, cm, cr, cnt = bstat(arr[a:b, c:d], mask, kappa)
           if cnt > 198: cm = m; cr = r
         else:

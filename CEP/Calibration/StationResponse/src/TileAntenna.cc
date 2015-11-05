@@ -31,21 +31,6 @@ namespace LOFAR
 namespace StationResponse
 {
 
-TileAntenna::TileAntenna(const TileConfig &config)
-    :   itsConfig(config)
-{
-}
-
-void TileAntenna::setConfig(const TileConfig &config)
-{
-    itsConfig = config;
-}
-
-const TileAntenna::TileConfig &TileAntenna::config() const
-{
-    return itsConfig;
-}
-
 raw_array_factor_t TileAntenna::rawArrayFactor(real_t freq,
     const vector3r_t &direction, const vector3r_t &direction0) const
 {
@@ -66,7 +51,7 @@ raw_array_factor_t TileAntenna::rawArrayFactor(real_t freq,
 
     complex_t af(0.0, 0.0);
     for(TileConfig::const_iterator element_it = itsConfig.begin(),
-        element_end = itsConfig.end(); element_it != element_end; ++element_it)
+        element_end = itsConfig.end(); element_it != element_end; ++element_end)
     {
         // Compute the effective delay for a plane wave approaching from the
         // direction of interest with respect to the position of element i
@@ -80,7 +65,7 @@ raw_array_factor_t TileAntenna::rawArrayFactor(real_t freq,
     return result;
 }
 
-matrix22c_t TileAntenna::elementResponse(real_t freq,
+matrix22c_t TileAntenna::singleElementResponse(real_t freq,
     const vector3r_t &direction) const
 {
     // The positive X dipole direction is SW of the reference orientation,

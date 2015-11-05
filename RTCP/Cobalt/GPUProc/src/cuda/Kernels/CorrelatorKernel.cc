@@ -22,116 +22,98 @@
 
 #include "CorrelatorKernel.h"
 
-#include <GPUProc/gpu_utils.h>
-#include <CoInterface/BlockID.h>
-#include <CoInterface/Config.h>
+#include <vector>
+#include <algorithm>
+
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
+#include <CoInterface/Align.h>
+#include <CoInterface/Exceptions.h>
 
-#include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
-
-#include <fstream>
-
-using boost::format;
-using boost::lexical_cast;
+#include <GPUProc/global_defines.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
     string CorrelatorKernel::theirSourceFile = "Correlator.cu";
+# if defined USE_4X4
+    string CorrelatorKernel::theirFunction = "correlate_4x4";
+# elif defined USE_3X3
+    string CorrelatorKernel::theirFunction = "correlate_3x3";
+# elif defined USE_2X2
+    string CorrelatorKernel::theirFunction = "correlate_2x2";
+# else
     string CorrelatorKernel::theirFunction = "correlate";
-
-    CorrelatorKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters("correlator"),
-      nrStations(ps.settings.antennaFields.size()),
-      // For Cobalt (= up to 80 antenna fields), the 2x2 kernel gives the best
-      // performance.
-      nrStationsPerThread(2),
-
-      nrChannels(ps.settings.correlator.nrChannels),
-      nrSamplesPerIntegration(ps.settings.correlator.nrSamplesPerBlock / ps.settings.correlator.nrIntegrationsPerBlock),
-      nrIntegrationsPerBlock(ps.settings.correlator.nrIntegrationsPerBlock)
-    {
-      dumpBuffers = 
-        ps.getBool("Cobalt.Kernels.CorrelatorKernel.dumpOutput", false);
-      dumpFilePattern = 
-        str(format("L%d_SB%%03d_BL%%03d_CorrelatorKernel.dat") % 
-            ps.settings.observationID);
-    }
-
-    unsigned CorrelatorKernel::Parameters::nrBaselines() const {
-      return nrStations * (nrStations + 1) / 2;
-    }
-
-    size_t CorrelatorKernel::Parameters::nrSamplesPerBlock() const {
-      return nrSamplesPerIntegration * nrIntegrationsPerBlock;
-    }
-
-
-    size_t CorrelatorKernel::Parameters::bufferSize(BufferType bufferType) const
-    {
-      switch (bufferType) {
-      case CorrelatorKernel::INPUT_DATA:
-        return
-          (size_t) nrChannels * nrSamplesPerBlock() * nrStations * 
-            NR_POLARIZATIONS * sizeof(std::complex<float>);
-      case CorrelatorKernel::OUTPUT_DATA:
-        return 
-          (size_t) nrIntegrationsPerBlock * nrBaselines() * nrChannels * 
-            NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
-      default: 
-        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
-      }
-    }
+# endif
 
     CorrelatorKernel::CorrelatorKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      CompiledKernel(stream, gpu::Function(module, theirFunction), buffers, params)
+      Kernel(stream, gpu::Function(module, theirFunction))
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
 
-      unsigned preferredMultiple = 64; // FOR NVIDIA CUDA, there is no call to get this. Could check what the NV OCL pf says, but set to 64 for now. Generalize later (TODO).
+      size_t maxNrThreads, preferredMultiple;
+      maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
 
-      // Knowing the number of stations/thread, we can divide up our baselines
-      // in bigger blocks (of stationsPerThread each).
-      unsigned nrMacroStations = ceilDiv(params.nrStations, params.nrStationsPerThread);
-      unsigned nrBlocks = nrMacroStations * (nrMacroStations + 1) / 2;
+      gpu::Platform pf;
+      if (pf.getName() == "AMD Accelerated Parallel Processing") {
+        preferredMultiple = 256;
+      } else {
+        preferredMultiple = 64; // FOR NVIDIA CUDA, there is no call to get this. Could check what the NV OCL pf says, but set to 64 for now. Generalize later (TODO).
+      }
 
-      unsigned nrPasses = ceilDiv(nrBlocks, maxThreadsPerBlock);
-      unsigned nrThreads = ceilDiv(nrBlocks, nrPasses);
-      nrThreads = align(nrThreads, preferredMultiple);
+      unsigned nrBaselines = params.nrStations * (params.nrStations + 1) / 2;
+
+# if defined USE_4X4
+      unsigned quartStations = (params.nrStations + 2) / 4;
+      unsigned nrBlocks = quartStations * (quartStations + 1) / 2;
+# elif defined USE_3X3
+      unsigned thirdStations = (params.nrStations + 2) / 3;
+      unsigned nrBlocks = thirdStations * (thirdStations + 1) / 2;
+# elif defined USE_2X2
+      unsigned halfStations = (params.nrStations + 1) / 2;
+      unsigned nrBlocks = halfStations * (halfStations + 1) / 2;
+# else
+      unsigned nrBlocks = nrBaselines;
+# endif
+      unsigned nrPasses = (nrBlocks + maxNrThreads - 1) / maxNrThreads;
+      unsigned nrThreads = (nrBlocks + nrPasses - 1) / nrPasses;
+      nrThreads = (nrThreads + preferredMultiple - 1) / preferredMultiple * preferredMultiple;
 
       //LOG_DEBUG_STR("nrBlocks = " << nrBlocks << ", nrPasses = " << nrPasses << ", preferredMultiple = " << preferredMultiple << ", nrThreads = " << nrThreads);
 
-      unsigned nrUsableChannels = std::max(params.nrChannels - 1, 1U);
-      setEnqueueWorkSizes( gpu::Grid(nrPasses * nrThreads, nrUsableChannels),
-                           gpu::Block(nrThreads, 1) );
+      unsigned nrUsableChannels = std::max(params.nrChannelsPerSubband - 1, 1UL);
+      globalWorkSize = gpu::Grid(nrPasses * nrThreads, nrUsableChannels);
+      localWorkSize = gpu::Block(nrThreads, 1);
+
+      nrOperations = (size_t) nrUsableChannels * nrBaselines * params.nrSamplesPerChannel * 32;
+      nrBytesRead = (size_t) nrPasses * params.nrStations * nrUsableChannels * params.nrSamplesPerChannel * NR_POLARIZATIONS * sizeof(std::complex<float>);
+      nrBytesWritten = (size_t) nrBaselines * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
     }
 
     //--------  Template specializations for KernelFactory  --------//
 
-
-    template<> CompileDefinitions
-    KernelFactory<CorrelatorKernel>::compileDefinitions() const
+    template<> size_t 
+    KernelFactory<CorrelatorKernel>::bufferSize(BufferType bufferType) const
     {
-      CompileDefinitions defs =
-        KernelFactoryBase::compileDefinitions(itsParameters);
+      size_t nrBaselines = itsParameters.nrStations * (itsParameters.nrStations + 1) / 2;
 
-      defs["NR_STATIONS"] = lexical_cast<string>(itsParameters.nrStations);
-      defs["NR_STATIONS_PER_THREAD"] = lexical_cast<string>(itsParameters.nrStationsPerThread);
-
-      defs["NR_CHANNELS"] = lexical_cast<string>(itsParameters.nrChannels);
-      defs["NR_INTEGRATIONS"] =
-        lexical_cast<string>(itsParameters.nrIntegrationsPerBlock);
-      defs["NR_SAMPLES_PER_INTEGRATION"] = 
-        lexical_cast<string>(itsParameters.nrSamplesPerIntegration);
-
-      return defs;
+      switch (bufferType) {
+      case CorrelatorKernel::INPUT_DATA:
+        return
+          itsParameters.nrSamplesPerSubband * itsParameters.nrStations * 
+          NR_POLARIZATIONS * sizeof(std::complex<float>);
+      case CorrelatorKernel::OUTPUT_DATA:
+        return 
+          nrBaselines * itsParameters.nrChannelsPerSubband * 
+          NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
+      default: 
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
     }
   }
 }

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -36,11 +36,8 @@
 
 using namespace blitz;
 using namespace LOFAR;
-namespace LOFAR {
-  using namespace RSP_Protocol;
-  using namespace EPA_Protocol;
-  using namespace RTC;
-  namespace RSP {
+using namespace RSP;
+using namespace RTC;
 
 BMWrite::BMWrite(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, 1)
@@ -115,5 +112,3 @@ GCFEvent::TResult BMWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   
   return GCFEvent::HANDLED;
 }
-  } // namespace RSP
-} // namespace LOFAR

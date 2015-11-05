@@ -34,6 +34,9 @@ namespace LOFAR
   {
     bool profiling = false;
     bool gpuProfiling = true;
+    const char *str = getenv("NR_GPUS");
+    unsigned nrGPUs = str ? atoi(str) : 1;
+
 
     inline void set_affinity(unsigned device)
     {

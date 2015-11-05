@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$ 
+//# $Id: Trigger.h 17975 2011-05-10 09:52:51Z mol $ 
 
 #ifndef  LOFAR_LCS_COMMON_TRIGGER_H
 #define  LOFAR_LCS_COMMON_TRIGGER_H
@@ -38,7 +38,6 @@ class Trigger
     Trigger();
 
     void trigger();
-    bool test();
     void wait();
     bool wait(const struct timespec &timespec);
 
@@ -60,18 +59,9 @@ inline Trigger::Trigger()
 {
 }
 
-inline bool Trigger::test()
-{
-  return triggered;
-}
-
 
 inline void Trigger::trigger()
 {
-  // Make repeated triggering very cheap
-  if (triggered) 
-    return;
-
   ScopedLock lock(mutex);
 
   triggered = true;

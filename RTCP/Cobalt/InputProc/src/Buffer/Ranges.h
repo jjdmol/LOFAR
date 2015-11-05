@@ -26,7 +26,7 @@
 
 #include <Common/LofarTypes.h>
 #include <Common/LofarLogger.h>
-#include <CoInterface/SparseSet.h>
+#include "BufferSettings.h"
 
 namespace LOFAR
 {
@@ -50,8 +50,7 @@ namespace LOFAR
     class Ranges
     {
     public:
-      typedef uint64 value_type;
-      typedef SparseSet<value_type> flags_type;
+      typedef BufferSettings::range_type value_type;
 
       Ranges();
       Ranges( void *data, size_t numBytes, value_type minHistory, bool create );
@@ -71,7 +70,7 @@ namespace LOFAR
       bool anythingBetween( value_type first, value_type last ) const;
 
       // Returns [first, last) as a SparseSet
-      flags_type sparseSet( value_type first, value_type last ) const;
+      BufferSettings::flags_type sparseSet( value_type first, value_type last ) const;
 
       // Dump the raw contents to LOG_DEBUG
       void dump() const;

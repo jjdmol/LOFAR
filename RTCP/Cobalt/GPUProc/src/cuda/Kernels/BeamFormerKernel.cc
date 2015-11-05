@@ -21,21 +21,14 @@
 #include <lofar_config.h>
 
 #include <boost/lexical_cast.hpp>
-#include <boost/format.hpp>
 
 #include "BeamFormerKernel.h"
 
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
-#include <GPUProc/gpu_utils.h>
-#include <CoInterface/BlockID.h>
-#include <CoInterface/Config.h>
-
-#include <fstream>
-#include <algorithm>
+#include <GPUProc/global_defines.h>
 
 using boost::lexical_cast;
-using boost::format;
 
 namespace LOFAR
 {
@@ -45,102 +38,87 @@ namespace LOFAR
     string BeamFormerKernel::theirFunction = "beamFormer";
 
     BeamFormerKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters("beamFormer"),
-      nrStations(ps.settings.antennaFields.size()),
-
-      nrChannels(ps.settings.beamFormer.nrHighResolutionChannels),
-      nrSamplesPerChannel(ps.settings.blockSize / nrChannels),
-
-      nrSAPs(ps.settings.beamFormer.SAPs.size()),
-      nrTABs(ps.settings.beamFormer.maxNrCoherentTABsPerSAP()),
-      subbandBandwidth(ps.settings.subbandWidth()),
-      doFlysEye(ps.settings.beamFormer.doFlysEye)
+      Kernel::Parameters(ps),
+      nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()),
+      weightCorrection(1.0f)  // TODO: Add a key to the parset to specify this
     {
-      dumpBuffers = 
-        ps.getBool("Cobalt.Kernels.BeamFormerKernel.dumpOutput", false);
-      dumpFilePattern = 
-        str(format("L%d_SB%%03d_BL%%03d_BeamFormerKernel.dat") % 
-            ps.settings.observationID);
+      // override the correlator settings with beamformer specifics
+      nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
+      nrSamplesPerChannel  = ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
     }
 
+    BeamFormerKernel::BeamFormerKernel(const gpu::Stream& stream,
+                                       const gpu::Module& module,
+                                       const Buffers& buffers,
+                                       const Parameters& params) :
+      Kernel(stream, gpu::Function(module, theirFunction))
+    {
+      setArg(0, buffers.output);
+      setArg(1, buffers.input);
+      setArg(2, buffers.beamFormerWeights);
 
-    size_t BeamFormerKernel::Parameters::bufferSize(BufferType bufferType) const {
+      size_t maxChannelParallisation = std::min(params.nrChannelsPerSubband, maxThreadsPerBlock / NR_POLARIZATIONS / params.nrTABs);
+
+      ASSERT(params.nrChannelsPerSubband % maxChannelParallisation == 0);
+
+      globalWorkSize = gpu::Grid(NR_POLARIZATIONS, 
+                                 params.nrTABs, 
+                                 params.nrChannelsPerSubband);
+      localWorkSize = gpu::Block(NR_POLARIZATIONS, 
+                                 params.nrTABs, 
+                                 maxChannelParallisation);
+
+#if 0
+      size_t nrWeightsBytes = bufferSize(ps, BEAM_FORMER_WEIGHTS);
+      size_t nrSampleBytesPerPass = bufferSize(ps, INPUT_DATA);
+      size_t nrComplexVoltagesBytesPerPass = bufferSize(ps, OUTPUT_DATA);
+
+      size_t count = 
+        params.nrChannelsPerSubband * params.nrSamplesPerChannel * NR_POLARIZATIONS;
+      unsigned nrPasses = std::max((params.nrStations + 6) / 16, 1U);
+
+      nrOperations = count * params.nrStations * params.nrTABs * 8;
+      nrBytesRead = 
+        nrWeightsBytes + nrSampleBytesPerPass + (nrPasses - 1) * 
+        nrComplexVoltagesBytesPerPass;
+      nrBytesWritten = nrPasses * nrComplexVoltagesBytesPerPass;
+#endif
+    }
+
+    //--------  Template specializations for KernelFactory  --------//
+
+    template<> size_t 
+    KernelFactory<BeamFormerKernel>::bufferSize(BufferType bufferType) const
+    {
       switch (bufferType) {
       case BeamFormerKernel::INPUT_DATA: 
         return
-          (size_t) nrChannels *
-          nrSamplesPerChannel * NR_POLARIZATIONS *
-          nrStations * sizeof(std::complex<float>);
+          itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel * 
+          NR_POLARIZATIONS * itsParameters.nrStations * sizeof(std::complex<float>);
       case BeamFormerKernel::OUTPUT_DATA:
         return
-          (size_t) nrChannels * 
-          nrSamplesPerChannel * NR_POLARIZATIONS *
-          nrTABs * sizeof(std::complex<float>);
-      case BeamFormerKernel::BEAM_FORMER_DELAYS:
+          itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel * 
+          NR_POLARIZATIONS * itsParameters.nrTABs * sizeof(std::complex<float>);
+      case BeamFormerKernel::BEAM_FORMER_WEIGHTS:
         return 
-          (size_t) nrSAPs * nrStations *
-          nrTABs * sizeof(double);
+          itsParameters.nrStations * itsParameters.nrTABs * itsParameters.nrChannelsPerSubband * 
+          sizeof(std::complex<float>);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
     }
 
     
-
-    BeamFormerKernel::BeamFormerKernel(const gpu::Stream& stream,
-                                       const gpu::Module& module,
-                                       const Buffers& buffers,
-                                       const Parameters& params) :
-      CompiledKernel(stream, gpu::Function(module, theirFunction), buffers, params),
-      beamFormerDelays(stream.getContext(), params.bufferSize(BEAM_FORMER_DELAYS))
-    {
-      setArg(0, buffers.output);
-      setArg(1, buffers.input);
-      setArg(2, beamFormerDelays);
-
-      // Beamformer kernel requires 1 channel in the blockDim.z dimension
-      setEnqueueWorkSizes(
-        gpu::Grid(NR_POLARIZATIONS,
-                  std::max(16U, params.nrTABs),  // if < 16 tabs use more to fill out the wave
-                  params.nrChannels),
-        gpu::Block(NR_POLARIZATIONS,
-                   std::max(16U, params.nrTABs),  // if < 16 tabs use more to fill out the wave
-                   1));
-        // The additional tabs added to fill out the waves are skipped
-        // in the kernel file. Additional threads are used to optimize
-        // memory access
-    }
-
-    void BeamFormerKernel::enqueue(const BlockID &blockId,
-                                   double subbandFrequency, unsigned SAP)
-    {
-      setArg(3, subbandFrequency);
-      setArg(4, SAP);
-      Kernel::enqueue(blockId);
-    }
-
-    //--------  Template specializations for KernelFactory  --------//
     
     template<> CompileDefinitions
     KernelFactory<BeamFormerKernel>::compileDefinitions() const
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
-
-      defs["NR_STATIONS"] = lexical_cast<string>(itsParameters.nrStations);
-
-      defs["NR_CHANNELS"] = lexical_cast<string>(itsParameters.nrChannels);
-      defs["NR_SAMPLES_PER_CHANNEL"] = 
-        lexical_cast<string>(itsParameters.nrSamplesPerChannel);
-
-      defs["NR_SAPS"] =
-        lexical_cast<string>(itsParameters.nrSAPs);
       defs["NR_TABS"] =
         lexical_cast<string>(itsParameters.nrTABs);
-      defs["SUBBAND_BANDWIDTH"] =
-        str(format("%.7f") % itsParameters.subbandBandwidth);
-      if (itsParameters.doFlysEye)
-        defs["FLYS_EYE"] = "1";
+      defs["WEIGHT_CORRECTION"] =
+        lexical_cast<string>(itsParameters.weightCorrection);
 
       return defs;
     }

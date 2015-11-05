@@ -3,7 +3,7 @@
 //
 //  Copyright (C) 2013
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -29,9 +29,8 @@
 #include "tServer.h"
 
 namespace LOFAR {
-  using namespace Echo_Protocol;
-  namespace GCF {
-    namespace TM {
+ namespace GCF {
+  namespace TM {
 
 static int	gCounter1;
 static int	gCounter2;
@@ -323,7 +322,7 @@ GCFEvent::TResult tEventBinding::bindDefaultOnSignal(GCFEvent& event, GCFPortInt
 		
 	case ECHO_ECHO: {
 		EchoEchoEvent	echo(event);
-		ASSERTSTR( (echo.seqnr == 401 && gCounter1 == 0) || (echo.seqnr == 402 && gCounter1 == 1), "DEFAULT BINDING ON SIGNAL DOES NOT WORK.");
+		ASSERTSTR(echo.seqnr == 401 && gCounter1 == 0 || echo.seqnr == 402 && gCounter1 == 1, "DEFAULT BINDING ON SIGNAL DOES NOT WORK.");
 		switch (echo.seqnr) {
 		case 401: {
 			EchoPingEvent	ping;

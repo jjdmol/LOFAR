@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: SharedMemoryStream.cc 17976 2011-05-10 09:54:45Z mol $
 
 #include <lofar_config.h>
 

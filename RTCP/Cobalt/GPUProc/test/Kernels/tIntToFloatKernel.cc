@@ -1,4 +1,4 @@
-//# tIntToFloatKernel.cc
+//# tDelayAndBandPassKernel.cc: test Kernels/DelayAndBandPassKernel class
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -16,17 +16,17 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: tDelayAndBandPassKernel.cc 25199 2013-06-05 23:46:56Z amesfoort $
 
 #include <lofar_config.h>
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
-#include <CoInterface/BlockID.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
 #include <GPUProc/Kernels/IntToFloatKernel.h>
+#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
 
 using namespace std;
 using namespace LOFAR::Cobalt;
@@ -40,7 +40,7 @@ int main() {
     gpu::Platform pf;
     cout << "Detected " << pf.size() << " GPU devices" << endl;
   } catch (gpu::GPUException& e) {
-    cerr << "No GPU device(s) found. Skipping tests." << endl;
+    cerr << e.what() << endl;
     return 3;
   }
   gpu::Device device(0);
@@ -67,10 +67,10 @@ int main() {
   gpu::HostMemory convertedData(ctx,  factory.bufferSize(IntToFloatKernel::OUTPUT_DATA));
   //stream.writeBuffer(devConvertedData, sampledData, true);
 
-  auto_ptr<IntToFloatKernel> kernel(factory.create(stream, devSampledData, devConvertedData));
+  IntToFloatKernel::Buffers buffers(devSampledData, devConvertedData);
+  auto_ptr<IntToFloatKernel> kernel(factory.create(ctx, buffers));
 
-  BlockID blockId;
-  kernel->enqueue(blockId);
+  kernel->enqueue(stream);
   stream.synchronize();
   stream.readBuffer(convertedData, devConvertedData, true);
   stream.synchronize();
@@ -80,7 +80,7 @@ int main() {
   // The inputs were all -128 with bits per sample 8. 
   // Therefore they should all be converted to -127 (but scaled to 16 bit amplitute values).
   for (size_t idx =0; idx < nSampledData; ++idx)
-    if (samplesFloat[idx] != -127 * 16)
+    if (samplesFloat[idx] != -127 * 256)
     {
         cerr << "Found an uncorrect sample in the output array at idx: " << idx << endl
              << "Value found: " << samplesFloat[idx] << endl

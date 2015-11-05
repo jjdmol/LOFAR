@@ -3,7 +3,7 @@
 //#
 //# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //# This program is free software; you can redistribute it and/or modify
 //# it under the terms of the GNU General Public License as published by
@@ -58,6 +58,7 @@ public:
     ExprValueView();
     ExprValueView(const Matrix &value);
 
+    bool valid() const;
     bool bound() const;
 
     const Matrix operator()() const;
@@ -65,7 +66,7 @@ public:
 
 private:
     Matrix  itsValue;
-    bool    itsBindMask; // which element Matrix's are bound?
+    bool    itsBindMask;
 };
 
 template <unsigned int LENGTH>
@@ -74,6 +75,7 @@ class ExprValueView<Vector<LENGTH> >
 public:
     ExprValueView();
 
+    bool valid(unsigned int i0) const;
     bool bound(unsigned int i0) const;
 
     const Matrix operator()(unsigned int i0) const;
@@ -81,7 +83,7 @@ public:
 
 private:
     Matrix  itsValue[LENGTH];
-    bool    itsBindMask[LENGTH]; // which element Matrix's are bound?
+    bool    itsBindMask[LENGTH];
 };
 
 template <>
@@ -92,7 +94,7 @@ public:
     ExprValueView(const Matrix &el00, const Matrix &el01, const Matrix &el10,
         const Matrix &el11);
 
-    // are the four elements bound (perturbed) values or not
+    bool valid(unsigned int i0, unsigned int i1) const;
     bool bound(unsigned int i0, unsigned int i1) const;
 
     const Matrix operator()(unsigned int i0, unsigned int i1) const;
@@ -101,7 +103,7 @@ public:
 
 private:
     Matrix  itsValue[4];
-    bool    itsBindMask[4]; // which element Matrix's are bound?
+    bool    itsBindMask[4];
 };
 
 // @}
@@ -110,6 +112,10 @@ private:
 // - Implementation: ExprValueView<Scalar>                                  - //
 // -------------------------------------------------------------------------- //
 
+inline bool ExprValueView<Scalar>::valid() const
+{
+    return !itsValue.isNull();
+}
 
 inline bool ExprValueView<Scalar>::bound() const
 {
@@ -137,6 +143,11 @@ ExprValueView<Vector<LENGTH> >::ExprValueView()
     fill(itsBindMask, itsBindMask + LENGTH, false);
 }
 
+template <unsigned int LENGTH>
+inline bool ExprValueView<Vector<LENGTH> >::valid(unsigned int i0) const
+{
+    return !itsValue[i0].isNull();
+}
 
 template <unsigned int LENGTH>
 inline bool ExprValueView<Vector<LENGTH> >::bound(unsigned int i0) const
@@ -162,6 +173,12 @@ inline void ExprValueView<Vector<LENGTH> >::assign(unsigned int i0,
 // -------------------------------------------------------------------------- //
 // - Implementation: ExprValueView<JonesMatrix>                             - //
 // -------------------------------------------------------------------------- //
+
+inline bool ExprValueView<JonesMatrix>::valid(unsigned int i0, unsigned int i1)
+    const
+{
+    return !itsValue[i0 * 2 + i1].isNull();
+}
 
 inline bool ExprValueView<JonesMatrix>::bound(unsigned int i0, unsigned int i1)
     const

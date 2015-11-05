@@ -23,122 +23,96 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 #include <Common/LofarTypes.h>
-#include <MACIO/RTmetadata.h>
+#include <Common/Thread/Queue.h>
+#include <Common/Thread/Mutex.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
-#include <CoInterface/Pool.h>
-#include <CoInterface/OMPThread.h>
-#include <CoInterface/TABTranspose.h>
+#include <CoInterface/SlidingPointer.h>
 
+#include <GPUProc/global_defines.h>
+#include <GPUProc/OpenMP_Lock.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/PerformanceCounter.h>
+#include <GPUProc/BestEffortQueue.h>
 #include <GPUProc/SubbandProcs/SubbandProc.h>
-#include <GPUProc/SubbandProcs/KernelFactories.h>
-
-#include <GPUProc/MPIReceiver.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    using MACIO::RTmetadata;
-
     class Pipeline
     {
     public:
-      Pipeline(const Parset &, const std::vector<size_t> &subbandIndices, 
-        const std::vector<gpu::Device> &devices,
-        Pool<struct MPIRecvData> &pool,
-        RTmetadata &mdLogger, const std::string &mdKeyPrefix,
-        unsigned hostID = 0);
+      Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices);
 
-      ~Pipeline();
-
-      // allocate resources, such as GPU buffers.
-      //
-      // Pipeline deploys delayed construction, because the resources may still
-      // be occupied by a previous observation at the time of construction.
-      //
-      // An alternative to delayed allocation could be to retry the GPU malloc
-      // with a timeout, but that could potentially dead-lock two concurrent
-      // observations.
-      void allocateResources();
+      virtual ~Pipeline();
 
       // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
-      void processObservation();
-
-      struct Output 
-      {
-        // output data queue
-        SmartPtr< Queue< SmartPtr<SubbandProcOutputData> > > queue;
-      };
-
-      std::vector< SmartPtr<SubbandProc> > subbandProcs;
+      void processObservation(OutputType outputType);
 
     protected:
       const Parset             &ps;
       const std::vector<gpu::Device> devices;
 
       const std::vector<size_t> subbandIndices; // [localSubbandIdx]
+      std::vector< SmartPtr<SubbandProc> > workQueues;
 
-      // Whether we're the pipeline that processes the first subband.
-      // If true, we log our progress at INFO. Otherwise, at DEBUG.
-      const bool processingSubband0;
+#if defined USE_B7015
+      OMP_Lock hostToDeviceLock[4], deviceToHostLock[4];
+#endif
 
-      const size_t nrSubbandsPerSubbandProc;
+      // combines all functionality needed for getting the total from a set of counters
+      struct Performance {
+        std::map<std::string, SmartPtr<NSTimer> > total_timers;
+        // lock on the shared data
+        Mutex totalsMutex;
+        // add the counter in this queue
+        void addQueue(SubbandProc &queue);
+        // Print a logline with results
+        void log(size_t nrSubbandProcs);
 
-      RTmetadata &itsMdLogger; // non-const to be able to use its log()
-      const std::string itsMdKeyPrefix;
+        size_t nrGPUs;
 
-      // Threads that write to outputProc, and need to
-      // be killed when they stall at observation end.
-      OMPThreadSet outputThreads;
+        Performance(size_t nrGPUs = 1);
+      } performance;
 
-      Pool<struct MPIRecvData> &mpiPool;
+    private:
+      // for each block, read all subbands from all stations, and divide the work over the workQueues
+      void receiveInput( size_t nrBlocks );
+
+      // Templated version of receiveInput(), to specialise in receiving
+      // a certain type of input sample.
+      template<typename SampleT> void receiveInput( size_t nrBlocks );
+
+      struct Output {
+        // synchronisation to write blocks in-order
+        SlidingPointer<size_t> sync;
+
+        // output data queue
+        SmartPtr< BestEffortQueue< SmartPtr<StreamableData> > > bequeue;
+      };
 
       std::vector<struct Output> writePool; // [localSubbandIdx]
 
-      KernelFactories factories;
-
-      // For each block, transpose all subbands from all stations, and divide the
-      // work over the subbandProcs
-      void transposeInput();
-      template<typename SampleT> void transposeInput();
-
       // preprocess subbands on the CPU
-      void preprocessSubbands(SubbandProc &subbandProc);
+      void preprocessSubbands(SubbandProc &workQueue);
 
       // process subbands on the GPU
-      void processSubbands(SubbandProc &subbandProc);
+      void processSubbands(SubbandProc &workQueue);
 
-      // Post-process subbands on the CPU
-      void postprocessSubbands(SubbandProc &subbandProc);
+      // postprocess subbands on the CPU
+      void postprocessSubbands(SubbandProc &workQueue);
 
-      void writeBeamformedOutput(
-        unsigned globalSubbandIdx,
-        Queue< SmartPtr<SubbandProcOutputData> > &inputQueue,
-        Queue< SmartPtr<SubbandProcOutputData> > &outputQueue,
-        Queue< SmartPtr<SubbandProcOutputData> > &spillQueue );
+      // send subbands to Storage
+      void writeSubband(unsigned globalSubbandIdx, struct Output &output,
+                        SmartPtr<Stream> outputStream);
 
-      void writeCorrelatedOutput(
-        unsigned globalSubbandIdx,
-        Queue< SmartPtr<SubbandProcOutputData> > &inputQueue,
-        Queue< SmartPtr<SubbandProcOutputData> > &outputQueue );
-
-    public:
-      // Send subbands to Storage
-      void writeOutput(
-        unsigned globalSubbandIdx,
-        Queue< SmartPtr<SubbandProcOutputData> > &inputQueue,
-        Queue< SmartPtr<SubbandProcOutputData> > &outputQueue );
-
-      // Output send engine, takes care of the host connections and the multiplexing.
-      TABTranspose::MultiSender multiSender;
-
-      // MPI rank for this node
-      const unsigned hostID;
+      // create Stream to Storage
+      SmartPtr<Stream> connectToOutput(unsigned globalSubbandIdx,
+                                       OutputType outputType) const;
     };
   }
 }

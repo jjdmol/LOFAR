@@ -86,14 +86,6 @@ namespace LOFAR
     gpu::Module createModule(const gpu::Context &context,
                              const std::string &srcFilename, 
                              const std::string &ptx);
-
-    // Dump the contents of a device memory buffer as raw binary data to file.
-    // \par deviceMemory Device memory buffer to be dumped.
-    // \par dumpFile Name of the dump file.
-    // \warning The underlying gpu::Stream must be synchronized, in order to
-    // dump a device buffer. This may have a serious impact on performance.
-    void dumpBuffer(const gpu::DeviceMemory &deviceMemory, 
-                    const std::string &dumpFile);
   }
 }
 

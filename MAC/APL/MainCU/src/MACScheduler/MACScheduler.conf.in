@@ -29,4 +29,3 @@ maxFinishedList	= 40	# Never show more finished observations
 #ChildControl.StartupRetryInterval = 10s
 #ChildControl.MaxStartupRetry	   = 5
 
-ParsetQueuename = lofar.task.specification.system

@@ -4,7 +4,7 @@
 #
 #  Copyright (C) 2002
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
-#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ if [ $# -lt 1 ] || [ $# -gt 3 ]; then
 fi
 
 # List of files to copy (and later clean up)
-FILELIST='$1.in* $1.stdout $1.run $1.py $1.parset* $1.log_prop $1.debug'
+FILELIST="$1.in* $1.stdout $1.run $1.py $1.parset* $1.log_prop $1.debug"
 
 # Maximum run-time in seconds, defaults to 300
 MAXTIME=${2:-300}
@@ -82,6 +82,6 @@ done
 STATUS=$?
 
 # Clean up
-trap 'for f in $FILELIST; do eval rm -rf "$f"; done; \
+trap 'for f in $FILELIST; do rm -rf "$f"; done; \
       trap - 0;
       exit $STATUS' 0 1 2 3 15

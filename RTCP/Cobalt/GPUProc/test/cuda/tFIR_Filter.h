@@ -52,8 +52,6 @@ typedef signed char SampleType;
 #include <exception>
 #include <cuda.h>
 
-#include <CoInterface/Align.h>
-
 extern cudaError_t FIR_filter_wrapper(float *DevFilteredData,
   float const *DevSampledData,
   float const *DevWeightsData);
@@ -169,11 +167,11 @@ namespace LOFAR
         int nrChannelsPerSubband = NR_CHANNELS;
         int nrStations = NR_STATIONS; 
         unsigned totalNrThreads = nrChannelsPerSubband * NR_POLARIZATIONS * 2; //ps.nrChannelsPerSubband()
-        dim3 globalWorkSize(totalNrThreads, nrStations); //ps.settings.antennaFields.size()
+        dim3 globalWorkSize(totalNrThreads, nrStations); //ps.nrStations()
 
         int MAXNRCUDATHREADS = 512;
         size_t maxNrThreads = MAXNRCUDATHREADS;
-        unsigned nrPasses = ceilDiv(totalNrThreads, maxNrThreads);
+        unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
         dim3 localWorkSize(totalNrThreads / nrPasses, 1); 
 
 
@@ -300,9 +298,10 @@ namespace LOFAR
 
         // Expected output: St0, pol0, ch0, sampl0: 6. The rest all 0.
         // However, in modes other than 16 bit mode, all amplitudes are scaled to match 16 bit mode.
+        // For 8 bit mode, this means *256.
         unsigned scale = 1;
         if (NR_BITS_PER_SAMPLE != 16)
-          scale = 16;
+          scale = 256;
         if((*filteredData)[0][0][0][0][0] != 6.0f * scale) 
         {
           // int maxSample = NR_SAMPLES_PER_CHANNEL;

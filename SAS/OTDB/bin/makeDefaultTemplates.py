@@ -54,7 +54,7 @@ def removeElement(orgTmplID, newTmplID, key, always):
 #
 # createNewDefaultTemplate(orgTemplateID, newMasterTemplateID, orgTemplateInfo)
 #
-def createNewDefaultTemplate(orgTmplID, orgMasterTmplID, newMasterTmplID, orgTmplInfo):
+def createNewDefaultTemplate(orgTmplID, newMasterTmplID, orgTmplInfo):
     """
     Create a new defaultTemplate based on the 'newMaster' information that has the changed values
     of the original default template.
@@ -98,18 +98,10 @@ def createNewDefaultTemplate(orgTmplID, orgMasterTmplID, newMasterTmplID, orgTmp
         if limits == value:
             print "   %s: %-75s value is equal"  % (newTmplID, key)
         else:
-	   (old_nodeid, old_comp_value) = otdb.query("select nodeid, limits from getVTitem(%s, '%s')" % (orgMasterTmplID, key)).getresult()[0]
-	   (new_nodeid, new_comp_value) = otdb.query("select nodeid, limits from getVTitem(%s, '%s')" % (newMasterTmplID, key)).getresult()[0]
-	   if old_comp_value == new_comp_value:
-	      # no change in definition, copy old (modified) value
-	      print "   %s: %-75s %s --> %s" % (newTmplID, key, limits, value)
-	      otdb.query("select * from updateVTnode(1, %s, %s, '%s', '%s')" % (newTmplID, nodeid, instances, value))
-	   else:
-	      # value in new component is different from value in old component: use new component value
-              print "   %s: %-75s %s --> %s" % (newTmplID, key, limits, new_comp_value)
-              otdb.query("select * from updateVTnode(1, %s, %s, '%s', '%s')" % (newTmplID, nodeid, instances, new_comp_value))
+            print "   %s: %-75s %s --> %s" % (newTmplID, key, limits, value)
+            otdb.query("select * from updateVTnode(1, %s, %s, '%s', '%s')" % (newTmplID, nodeid, instances, value))
 
-	# get a list with the removed items
+    # get a list with the removed items
 	# -13 -> items uniq in Master --> removed in template OR different value
 	# -23 -> items uniq in template --> added to template OR different value
 	# comm -23 d1 d2 --> removed in template irt Mastertree.
@@ -225,6 +217,10 @@ if __name__ == '__main__':
     dbHost = options.dbHost
     newVersion = options.newVersion
 
+    # get info from database.py
+    #dbName=getDBname()
+    #dbHost=getDBhost()
+
     # calling stored procedures only works from the pg module for some reason.
     otdb = pg.connect(user="postgres", host=dbHost, dbname=dbName)
 
@@ -265,17 +261,6 @@ if __name__ == '__main__':
             print "   DefaultTemplate %s starts at %s (version %d) : %s" % \
                    (dfltTemplate['treeid'], nodeDefID['name'], nodeInfo[0]['version'], dfltTemplate['name'])
 
-    # Wrap all modifications in a transaction, to avoid leaving behind a broken database
-    otdb.query("BEGIN")
-
-    # make all obsolete default templates non-default
-    print "=> Making all obsolete default templates non-default"
-    for dfltTemplate in dfltTemplateIDs:
-        state       = otdb.query("select state from getTreeInfo(%s, 'false')" % dfltTemplate['treeid']).getresult()[0][0]
-        if state == 1200 :
-            print "    Moving obsolete DefaultTemplate ", dfltTemplate['treeid']
-            otdb.query("select * from assignTemplateName(1, %s, NULL)" % (dfltTemplate['treeid'],))
-
     # second step create temporarely parsetfiles from all DefaultTemplates
     print "=> Creating temporarely parsetfiles from the DefaultTemplates..."
     for treeID in dfltTmplInfo:
@@ -284,9 +269,8 @@ if __name__ == '__main__':
     # create parsets from the masterTemplates (original template)
     # Note: Since multiple defaultTemplates can have the same Master template remember the
     #       master template parsetfile in masterTmplInfo
-    print "=> Creating temporary master templates in the OTDB and create parsetfiles from them"
+    print "=> Creating temporarely master templates in the OTDB and create parsetfiles from them"
     newMasterID = 0
-    oldMasterID = 0
     masterTmplInfo = {}
     for dfltTmpl in dfltTmplInfo.values():
         treeIdentification = "%s%d" % (dfltTmpl['nodeName'], dfltTmpl['version'])
@@ -295,7 +279,6 @@ if __name__ == '__main__':
             masterTmplID = makeMasterTemplateTreeAndParset(treeIdentification, dfltTmpl['componentID'])
             masterTmplInfo[treeIdentification] = masterTmplID
             print "   Master template '%s' version %s = %s" % (dfltTmpl['nodeName'], dfltTmpl['version'], masterTmplID)
-	    oldMasterID = masterTmplID
             # when this master template is the destination master remember its ID
             if dfltTmpl['version'] == newVersion:
                 newMasterID = masterTmplID
@@ -305,19 +288,11 @@ if __name__ == '__main__':
         topComponent = otdb.query("select nodeid from getVCnodelist('LOFAR', %d, false)" % newVersion).getresult()[0]
         newMasterID  = makeMasterTemplateTreeAndParset("LOFAR%d" % newVersion, topComponent)
 
-    if oldMasterID == 0:
-	print "  Could not find old master template ID. Stopping now"
-	otdb.close()
-	sys.exit(1)
-
     # for each old default template make a new template
     print "   TreeID of new master template = %s" % newMasterID
     print "=> Creating new default templates for version %d" % newVersion
     for treeID in dfltTmplInfo:
-        createNewDefaultTemplate(treeID, oldMasterID, newMasterID, dfltTmplInfo[treeID])
-
-    # Write all changes to the database
-    otdb.query("COMMIT")
+        createNewDefaultTemplate(treeID, newMasterID, dfltTmplInfo[treeID])
 
     otdb.close()
     sys.exit(0)

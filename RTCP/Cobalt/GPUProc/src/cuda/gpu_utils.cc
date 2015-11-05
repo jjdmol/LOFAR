@@ -25,7 +25,6 @@
 
 #include <cstdlib>    // for getenv()
 #include <cstdio>     // for popen(), pclose(), fgets()
-#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <boost/format.hpp>
@@ -274,8 +273,9 @@ namespace LOFAR
 
       // For now, keep optimisations the same to detect changes in
       // output with reference.
-      flags.insert("--restrict");
-      flags.insert("-O3");
+      flags.insert("-use_fast_math");
+      //flags.insert("--restrict");
+      //flags.insert("-O3");
 
       flags.insert(str(format("-I%s") % includePath()));
       return flags;
@@ -406,15 +406,6 @@ namespace LOFAR
              << " ms):" << endl << &errorLog[0] );
         throw;
       }
-    }
-
-    void dumpBuffer(const gpu::DeviceMemory &deviceMemory, 
-                    const std::string &dumpFile)
-    {
-      LOG_INFO_STR("Dumping device memory to file: " << dumpFile);
-      gpu::HostMemory hostMemory(deviceMemory.fetch());
-      std::ofstream ofs(dumpFile.c_str(), std::ios::binary);
-      ofs.write(hostMemory.get<char>(), hostMemory.size());
     }
 
   } // namespace Cobalt

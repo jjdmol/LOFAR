@@ -22,8 +22,12 @@
 #define LOFAR_GPUPROC_CUDA_PERFORMANCECOUNTER_H
 
 
-#include <GPUProc/gpu_wrapper.h>
-#include <CoInterface/RunningStatistics.h>
+#include <Common/Thread/Mutex.h>
+#include <Common/Thread/Condition.h>
+
+#include <GPUProc/gpu_wrapper.h> // GPUException
+
+#include <GPUProc/RunningStatistics.h>
 
 namespace LOFAR
 {
@@ -32,31 +36,17 @@ namespace LOFAR
     class PerformanceCounter
     {
     public:
-      PerformanceCounter(const gpu::Context &context, const std::string &name);
-      ~PerformanceCounter();
-
-      void recordStart(const gpu::Stream &stream);
-      void recordStop(const gpu::Stream &stream);
-
-      // Warning: user must make sure that the counter is not running!
-      RunningStatistics getStats() { logTime(); return stats; }
-
-    private:
-      const std::string name;
-
-      // Public event: it needs to be inserted into a stream.
-      // @{
-      gpu::Event start;
-      gpu::Event stop;
-      // @}
-
-      // Whether we have posted events that still need to be
-      // processed in logTime()
-      bool recording;
-
-      RunningStatistics stats;
+      PerformanceCounter(const LOFAR::Cobalt::gpu::Context &context);
 
       void logTime();
+
+      // public events: they need to be inserted in streams..
+      gpu::Event start;
+      gpu::Event stop;
+
+      RunningStatistics stats;
+    private:
+      
     };
   }
 }

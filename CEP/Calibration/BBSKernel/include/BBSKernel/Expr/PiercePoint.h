@@ -45,26 +45,25 @@ namespace BBS
 // \addtogroup Expr
 // @{
 
-class PiercePoint: public BasicBinaryExpr<Vector<3>, Scalar, Vector<4> >
+class PiercePoint: public BasicBinaryExpr<Vector<2>, Scalar, Vector<4> >
 {
 public:
     typedef shared_ptr<PiercePoint>         Ptr;
     typedef shared_ptr<const PiercePoint>   ConstPtr;
 
     PiercePoint(const casa::MPosition &position,
-        const Expr<Vector<3> >::ConstPtr &direction,
+        const Expr<Vector<2> >::ConstPtr &azel,
         const Expr<Scalar>::ConstPtr &height);
 
 protected:
     virtual const Vector<4>::View evaluateImpl(const Grid &grid,
-        const Vector<3>::View &direction, const Scalar::View &height) const;
+        const Vector<2>::View &azel, const Scalar::View &height) const;
 
 private:
     // Station position in ITRF coordinates.
     casa::MPosition     itsPosition;
-    // Geodetic longitude (rad), geodetic latittude (rad), and height above the
-    // ellipsoid (m) (WGS84) of the station.
-    double              itsLon, itsLat, itsHeight;
+    // Geodetic longitude (rad) and latittude (rad) (WGS84) of the station.
+    double              itsLon, itsLat;
     // Distance from the center of gravity of the earth to the station (m).
     double              itsPositionRadius;
     // Earth "radius" at the station position (m).

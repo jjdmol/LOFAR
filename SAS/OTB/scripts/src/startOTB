@@ -1,0 +1,17 @@
+export serverDir=/opt/sas/server
+export clientDir=/opt/sas/client
+export JAVAHOME=/usr/java/jdk1.6.0_07
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$serverDir
+
+serverpid=0
+ps -ef | grep -v grep | grep server | grep java | grep 11500 2>&1 1>/dev/null
+if [ $? -ne 0 ]; then
+	echo "starting server first"
+	curdate=`date +%Y%m%dT%H%M%S`
+        $JAVAHOME/bin/java -jar $serverDir/jOTDB3.jar sas001.control.lofar sas001.control.lofar 11500 11501 2>&1 1>/opt/lofar/var/log/OTBServer.$curdate &
+    serverpid=$!
+fi
+
+curdate=`date +%Y%m%dT%H%M%S`
+$JAVAHOME/bin/java -jar $clientDir/OTB.jar -p 11500 2>&1 1>/opt/lofar/var/log/OTB.$curdate &
+

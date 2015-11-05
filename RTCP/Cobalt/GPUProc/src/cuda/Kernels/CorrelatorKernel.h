@@ -21,15 +21,18 @@
 #ifndef LOFAR_GPUPROC_CUDA_CORRELATOR_KERNEL_H
 #define LOFAR_GPUPROC_CUDA_CORRELATOR_KERNEL_H
 
+#include <CoInterface/Parset.h>
+
 #include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/KernelFactory.h>
+#include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_wrapper.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    class CorrelatorKernel : public CompiledKernel
+    class CorrelatorKernel : public Kernel
     {
     public:
       static std::string theirSourceFile;
@@ -41,31 +44,16 @@ namespace LOFAR
         OUTPUT_DATA
       };
 
-      struct Parameters : Kernel::Parameters
-      {
-        Parameters(const Parset& ps);
-        unsigned nrStations;
-        unsigned nrStationsPerThread;
-        unsigned nrBaselines() const;
-
-        unsigned nrChannels;
-        unsigned nrSamplesPerIntegration;
-        unsigned nrIntegrationsPerBlock;
-        size_t nrSamplesPerBlock() const;
-
-        size_t bufferSize(BufferType bufferType) const;
-      };
-
       CorrelatorKernel(const gpu::Stream &stream,
-                       const gpu::Module &module,
-                       const Buffers &buffers,
-                       const Parameters &param);
+                             const gpu::Module &module,
+                             const Buffers &buffers,
+                             const Parameters &param);
     };
 
-    //# --------  Template specializations for KernelFactory  -------- #//
-
-    template<> CompileDefinitions
-    KernelFactory<CorrelatorKernel>::compileDefinitions() const;
+    // Specialization of the KernelFactory for
+    // CorrelatorKernel
+    template<> size_t
+    KernelFactory<CorrelatorKernel>::bufferSize(BufferType bufferType) const;
   }
 }
 

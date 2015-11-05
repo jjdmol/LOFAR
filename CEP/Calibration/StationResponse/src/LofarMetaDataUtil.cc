@@ -35,16 +35,9 @@
 #include <measures/Measures/MCPosition.h>
 #include <measures/Measures/MeasTable.h>
 #include <measures/Measures/MeasConvert.h>
-#include <measures/TableMeasures/ScalarMeasColumn.h>
 
 #include <ms/MeasurementSets/MSAntenna.h>
-#if defined(casacore)
-#include <ms/MSSel/MSSelection.h>
-#include <ms/MSSel/MSAntennaParse.h>
-#else
-#include <ms/MeasurementSets/MSSelection.h>
 #include <ms/MeasurementSets/MSAntennaParse.h>
-#endif
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <ms/MeasurementSets/MSDataDescription.h>
 #include <ms/MeasurementSets/MSDataDescColumns.h>
@@ -56,6 +49,7 @@
 #include <ms/MeasurementSets/MSPolColumns.h>
 #include <ms/MeasurementSets/MSSpectralWindow.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
+#include <ms/MeasurementSets/MSSelection.h>
 
 namespace LOFAR
 {
@@ -64,10 +58,10 @@ namespace StationResponse
 
 using namespace casa;
 
-bool hasColumn(const Table &table, const string &column)
-{
-    return table.tableDesc().isColumn(column);
-}
+//bool hasColumn(const Table &table, const string &column)
+//{
+//    return table.tableDesc().isColumn(column);
+//}
 
 bool hasSubTable(const Table &table, const string &name)
 {
@@ -85,9 +79,13 @@ TileAntenna::TileConfig readTileConfig(const Table &table, unsigned int row)
 
     // Read tile configuration for HBA antenna fields.
     Matrix<Quantity> aips_offset = c_tile_offset(row);
-    assert(aips_offset.ncolumn() == TileAntenna::TileConfig::size());
+
+//            ASSERTSTR(nElement > 0, "Antenna field #" << i << " of antenna "
+//                << name << " is reported to be an HBA field, but no HBA tile"
+//                " layout information is available for it.");
 
     TileAntenna::TileConfig config;
+    // assert(aips_offset.ncolumn() == config.size())
     for(unsigned int i = 0; i < config.size(); ++i)
     {
         config[i][0] = aips_offset(0, i).getValue();
@@ -117,14 +115,14 @@ AntennaField::CoordinateSystem readCoordinateSystem(const Table &table,
 
     // Read antenna field center (ITRF).
     Vector<Quantity> aips_position = c_position(id);
-    assert(aips_position.size() == 3);
+//        ASSERT(aips_position.size() == 3);
 
     vector3r_t position = {{aips_position(0).getValue(),
         aips_position(1).getValue(), aips_position(2).getValue()}};
 
     // Read antenna field coordinate axes (ITRF).
     Matrix<Quantity> aips_axes = c_axes(id);
-    assert(aips_axes.shape().isEqual(IPosition(2, 3, 3)));
+//        ASSERT(aips_axes.shape().isEqual(IPosition(2, 3, 3)));
 
     vector3r_t p = {{aips_axes(0, 0).getValue(), aips_axes(1, 0).getValue(),
         aips_axes(2, 0).getValue()}};
@@ -145,10 +143,12 @@ void readAntennae(const Table &table, unsigned int id,
 
     // Read element offsets and flags.
     Matrix<Quantity> aips_offset = c_offset(id);
-    assert(aips_offset.shape().isEqual(IPosition(2, 3, aips_offset.ncolumn())));
-
     Matrix<Bool> aips_flag = c_flag(id);
-    assert(aips_flag.shape().isEqual(IPosition(2, 2, aips_offset.ncolumn())));
+
+//        ASSERTSTR(nElement > 0, "Antenna field #" << i << " of antenna " << name
+//            << " contains no antenna elements.");
+//        ASSERT(aips_offset.shape().isEqual(IPosition(2, 3, nElement)));
+//        ASSERT(aips_flag.shape().isEqual(IPosition(2, 2, nElement)));
 
     for(size_t i = 0; i < aips_offset.ncolumn(); ++i)
     {
@@ -188,50 +188,35 @@ AntennaField::Ptr readAntennaField(const Table &table, unsigned int id)
     return field;
 }
 
-void readStationPhaseReference(const Table &table, unsigned int id,
-    const Station::Ptr &station)
-{
-    const string columnName("LOFAR_PHASE_REFERENCE");
-    if(hasColumn(table, columnName))
-    {
-        ROScalarMeasColumn<MPosition> c_reference(table, columnName);
-        MPosition mReference = MPosition::Convert(c_reference(id),
-            MPosition::ITRF)();
-        MVPosition mvReference = mReference.getValue();
-        vector3r_t reference = {{mvReference(0), mvReference(1),
-            mvReference(2)}};
-
-        station->setPhaseReference(reference);
-    }
-}
-
 Station::Ptr readStation(const MeasurementSet &ms, unsigned int id)
 {
     ROMSAntennaColumns antenna(ms.antenna());
-    assert(antenna.nrow() > id && !antenna.flagRow()(id));
 
-    // Get station name.
-    const string name(antenna.name()(id));
-
-    // Get station position (ITRF).
+    // Get ITRF position.
     MPosition mPosition = MPosition::Convert(antenna.positionMeas()(id),
         MPosition::ITRF)();
     MVPosition mvPosition = mPosition.getValue();
-    const vector3r_t position = {{mvPosition(0), mvPosition(1), mvPosition(2)}};
+    vector3r_t position = {{mvPosition(0), mvPosition(1), mvPosition(2)}};
 
     // Create station.
-    Station::Ptr station(new Station(name, position));
+    Station::Ptr station(new Station(antenna.name()(id), position));
 
-    // Read phase reference position (if available).
-    readStationPhaseReference(ms.antenna(), id, station);
-
-    // Read antenna field information.
+    // Read antenna field information for each field of this station.
     Table tab_field = getSubTable(ms, "LOFAR_ANTENNA_FIELD");
     tab_field = tab_field(tab_field.col("ANTENNA_ID") == static_cast<Int>(id));
 
-    for(size_t i = 0; i < tab_field.nrow(); ++i)
+    const size_t nFields = tab_field.nrow();
+
+//    if(nFields == 0)
+//    {
+////        LOG_WARN_STR("Antenna " << name << " has no associated antenna fields."
+////          " Beamforming simulation will be switched off for this antenna.");
+//        return Station::Ptr(new Station(name, position));
+//    }
+
+    for(size_t i = 0; i < nFields; ++i)
     {
-        station->addField(readAntennaField(tab_field, i));
+        station->addAntennaField(readAntennaField(tab_field, i));
     }
 
     return station;

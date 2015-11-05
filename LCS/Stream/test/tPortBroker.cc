@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: tAllocator.cc 14057 2009-09-18 12:26:29Z diepen $
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -68,14 +68,13 @@ void start()
 class OneRequest
 {
   public:
-    OneRequest( const string &resource, unsigned msg, bool prefix = false ): resource(resource), msg(msg), prefix(prefix) {}
+    OneRequest( const string &resource, unsigned msg ): resource(resource), msg(msg) {}
 
     void clientThread();
     void serverThread();
   private:
     const string resource;
     const unsigned msg;
-    const bool prefix;
 };
 
 void OneRequest::clientThread() {
@@ -89,7 +88,7 @@ void OneRequest::clientThread() {
 }
 
 void OneRequest::serverThread() {
-  PortBroker::ServerStream ss(resource, prefix);
+  PortBroker::ServerStream ss(resource);
 
   unsigned x = msg;
 
@@ -105,7 +104,7 @@ void one_request()
   {
     // client first
     Thread ct(&obj, &OneRequest::clientThread);
-    usleep(100);
+    sleep(1);
 
     Thread st(&obj, &OneRequest::serverThread);
   }  
@@ -117,7 +116,7 @@ void one_request()
   {
     // server first
     Thread st(&obj, &OneRequest::serverThread);
-    usleep(100);
+    sleep(1);
 
     Thread ct(&obj, &OneRequest::clientThread);
   }  
@@ -136,7 +135,7 @@ void two_requests()
     // client first
     Thread ct1(&obj1, &OneRequest::clientThread);
     Thread ct2(&obj2, &OneRequest::clientThread);
-    usleep(100);
+    sleep(1);
 
     Thread st1(&obj1, &OneRequest::serverThread);
     Thread st2(&obj2, &OneRequest::serverThread);
@@ -147,10 +146,10 @@ void two_requests()
   LOG_DEBUG( "two_requests: servers first" );
 
   {
-    // server first
+    // client first
     Thread st1(&obj1, &OneRequest::serverThread);
     Thread st2(&obj2, &OneRequest::serverThread);
-    usleep(100);
+    sleep(1);
 
     Thread ct1(&obj1, &OneRequest::clientThread);
     Thread ct2(&obj2, &OneRequest::clientThread);
@@ -159,27 +158,9 @@ void two_requests()
   ASSERT( PortBroker::instance().nrOutstandingRequests() == 0 );
 }
 
-void prefix()
+int main(int /*argc*/, const char* argv[])
 {
-  OneRequest cl_obj("foo-1", 12345);
-  OneRequest st_obj("foo",   12345, true);
-
-  LOG_DEBUG( "prefix" );
-
-  {
-    // client first
-    Thread ct1(&cl_obj, &OneRequest::clientThread);
-    usleep(100);
-
-    Thread st1(&st_obj, &OneRequest::serverThread);
-  }  
-
-  ASSERT( PortBroker::instance().nrOutstandingRequests() == 0 );
-}
-
-int main()
-{
-  INIT_LOGGER("tPortBroker");
+  INIT_LOGGER(argv[0]);
   try {
     alarm(30);
 
@@ -187,7 +168,6 @@ int main()
 
     one_request();
     two_requests();
-    prefix();
   } catch (Exception& e) {
     LOG_ERROR_STR(e);
     return 1;
@@ -198,7 +178,7 @@ int main()
 
 #else // USE_THREADS
 
-int main()
+int main(int /*argc*/, const char* /*argv[]*/)
 {
   return 0;
 }

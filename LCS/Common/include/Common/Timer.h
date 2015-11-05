@@ -28,7 +28,7 @@
 
 #include <cstdlib>
 #include <cstring>
-#include <iosfwd>
+#include <iostream>
 
 #include <Common/LofarLogger.h>
 
@@ -104,7 +104,7 @@ namespace LOFAR {
         NSTimer& itsTimer;
     };
 
-  protected:
+  private:
     void print_time(std::ostream &, const char *which, double time) const;
 
     union {
@@ -178,7 +178,7 @@ namespace LOFAR {
     if (print_on_destruction) {
       if (log_on_destruction) {
         std::stringstream logStr;
-        LOG_INFO_STR(print(logStr).rdbuf());
+        LOG_DEBUG_STR(print(logStr).rdbuf());
       } else
         std::clog << *this << std::endl;
     }

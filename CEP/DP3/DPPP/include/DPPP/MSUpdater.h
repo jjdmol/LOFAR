@@ -31,7 +31,6 @@
 #include <Common/LofarTypes.h>
 #include <tables/Tables/ColumnDesc.h>
 #include <tables/Tables/RefRows.h>
-#include <tables/Tables/Table.h>
 
 namespace LOFAR {
 
@@ -53,9 +52,8 @@ namespace LOFAR {
     class MSUpdater: public DPStep
     {
     public:
-      MSUpdater (MSReader* reader, casa::String msName,
-                const ParameterSet& parset, const std::string& prefix,
-                bool writeHistory=true);
+      MSUpdater (MSReader*, const ParameterSet& parset,
+                 const std::string& prefix, int needWrite);
 
       virtual ~MSUpdater();
 
@@ -66,24 +64,16 @@ namespace LOFAR {
       // Finish the processing of this step and subsequent steps.
       virtual void finish();
 
-      // Update the general info.
-      virtual void updateInfo (const DPInfo&);
-
-      // Add some data to the MeasurementSet written/updated.
-      // Calls addToMS from the previous step, with the current output msname.
-      virtual void addToMS (const string&);
-
       // Show the step parameters.
       virtual void show (std::ostream&) const;
 
       // Show the timings.
       virtual void showTimings (std::ostream&, double duration) const;
 
-      // Tests if an update of the buffer described in info to the MS msName
-      // is possible. When throwError is true, it will throw an error with a
-      // descriptive string before returning false
-      static bool updateAllowed (const DPInfo& info, casa::String msName,
-                                  bool throwError=true);
+      // Test if output data column differs from input column.
+      static bool isNewDataColumn (MSReader* reader,
+                                   const ParameterSet& parset,
+                                   const string& prefix);
 
     private:
       // Write the flags at the given row numbers.
@@ -105,23 +95,19 @@ namespace LOFAR {
           const casa::ColumnDesc& cd);
 
       //# Data members
-      MSReader*    itsReader;
-      string       itsName;
-      casa::String itsMSName;
-      casa::Table  itsMS;
-      const ParameterSet& itsParset;
-      DPBuffer     itsBuffer;
+      MSReader*   itsReader;
       casa::String itsDataColName;
       casa::String itsWeightColName;
-      uint         itsNrTimesFlush; //# flush every N time slots (0=no flush)
-      bool         itsWriteData;
-      bool         itsWriteWeights;
-      bool         itsWriteFlags;
-      uint         itsNrDone;       //# nr of time slots written
-      bool         itsDataColAdded; //# has data column been added?
-      bool         itsWeightColAdded; //# has weight column been added?
-      bool         itsWriteHistory; //# Should history be written?
-      NSTimer      itsTimer;
+      uint        itsNrTimesFlush; //# flush every N time slots (0=no flush)
+      bool        itsWriteData;
+      bool        itsWriteWeight;
+      uint        itsNrCorr;
+      uint        itsNrChan;
+      uint        itsNrBl;
+      uint        itsNrDone;       //# nr of time slots written
+      bool        itsDataColAdded; //# has data column been added?
+      bool        itsWeightColAdded; //# has weight column been added?
+      NSTimer     itsTimer;
     };
 
   } //# end namespace

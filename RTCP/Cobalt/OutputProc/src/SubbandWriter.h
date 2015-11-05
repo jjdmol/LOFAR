@@ -1,4 +1,4 @@
-//# SubbandWriter.h: Write visibilites and beam-formed data
+//# SubbandWriter.h: Write subband(s) in an AIPS++ Measurement Set
 //# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -23,9 +23,9 @@
 
 #include <string>
 
+#include <Common/Thread/Queue.h>
 #include <CoInterface/OutputTypes.h>
 #include <CoInterface/Parset.h>
-#include <CoInterface/Pool.h>
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/StreamableData.h>
 #include <CoInterface/FinalMetaData.h>
@@ -36,40 +36,27 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    /*
-     * SubbandWriter is responsible for completely handling the reception
-     * and writing of one subband of correlated visibilities.
-     *
-     * It maintains an InputThread and SubbandOutputThread, connected by
-     * an internal Pool<> of data blocks.
-     */
+
+
     class SubbandWriter
     {
     public:
-      SubbandWriter(const Parset &parset,
-                    unsigned streamNr,
-                    RTmetadata &mdLogger,
-                    const std::string &mdKeyPrefix,
-                    const std::string &logPrefix);
-
-      void process();
+      SubbandWriter(const Parset &, OutputType, unsigned streamNr, bool isBigEndian, const std::string &logPrefix);
 
       void augment(const FinalMetaData &finalMetaData);
 
       ParameterSet feedbackLTA() const;
 
-      unsigned streamNr() const { return itsStreamNr; }
-
     private:
-      static const unsigned maxReceiveQueueSize = 60;
+      static const unsigned maxReceiveQueueSize = 3;
 
-      const unsigned itsStreamNr;
+      Queue<SmartPtr<StreamableData> > itsFreeQueue, itsReceiveQueue;
 
-      Pool<StreamableData> itsOutputPool;
-
-      InputThread itsInputThread;
-      SubbandOutputThread itsOutputThread;
+      SmartPtr<InputThread>            itsInputThread;
+      SmartPtr<OutputThread>           itsOutputThread;
     };
+
+
   } // namespace Cobalt
 } // namespace LOFAR
 
