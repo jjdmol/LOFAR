@@ -99,11 +99,10 @@ namespace LOFAR
           (size_t) nrChannels * nrTaps *
             sizeof(float);
       case FIR_FilterKernel::HISTORY_DATA:
-        // History is split over 2 bytes in 4-bit mode, to avoid unnecessary packing/unpacking
         return
           (size_t) nrSubbands *
             nrHistorySamples() * nrSTABs * 
-            NR_POLARIZATIONS * (nrBitsPerSample == 4 ? 2U : nrBytesPerComplexSample());
+            NR_POLARIZATIONS * nrBytesPerComplexSample();
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }

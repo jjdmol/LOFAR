@@ -1,5 +1,5 @@
 //# plotMS.cc
-//# Copyright (C) 2011-2015  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2011-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -81,7 +81,15 @@ static void usage(char *progname, int exitcode)
 
 int main(int argc, char *argv[])
 {
-  INIT_LOGGER(string(getenv("LOFARROOT") ? : ".") + "/etc/outputProc.log_prop");
+#if defined HAVE_LOG4CPLUS
+  INIT_LOGGER(string(getenv("LOFARROOT") ? : ".") + "/etc/Storage.log_prop");
+#elif defined HAVE_LOG4CXX
+  #error LOG4CXX support is broken (nonsensical?) -- please fix this code if you want to use it
+  Context::initialize();
+  setLevel("Global",8);
+#else
+  INIT_LOGGER_WITH_SYSINFO(str(boost::format("Storage@%02d") % (argc > 1 ? atoi(argv[1]) : -1)));
+#endif
 
   try {
     int opt;

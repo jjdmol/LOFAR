@@ -7,9 +7,6 @@
 
 include(LibFindMacros)
 
-# For now, don't print warning if IDG not found
-set(IDG_FIND_QUIETLY TRUE)
-
 # Dependencies
 # libfind_package(IDG FFTW3)
 

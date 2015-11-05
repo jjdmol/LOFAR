@@ -55,9 +55,9 @@ private:
 
 	friend class RCUResultRead;
 
-	static const int PROTOCOL_WRITE_SIZE = 15;
+	static const int PROTOCOL_WRITE_SIZE = 10;
 	static const int PROTOCOL_READ_SIZE  = 4;
-	static const int RESULT_WRITE_SIZE	 = 7; 
+	static const int RESULT_WRITE_SIZE	 = 6; 
 	static const int RESULT_READ_SIZE  	 = 5; 
 
 	// construct i2c sequence
