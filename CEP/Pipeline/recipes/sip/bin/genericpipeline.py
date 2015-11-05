@@ -359,9 +359,8 @@ class GenericPipeline(control):
 
             # breaking the loopstep
             # if the step has the keyword for loopbreaks assign the value
-            if resultdict is not None and 'break' in resultdict:
-                if resultdict['break']:
-                    resultdicts[activeloop[0]]['break'] = resultdict['break']
+            if activeloop[0] in resultdicts and resultdict is not None and 'break' in resultdict:
+                resultdicts[activeloop[0]]['break'] = resultdict['break']
 
     # *********************************************************************
     # build the inputs for the master recipes.

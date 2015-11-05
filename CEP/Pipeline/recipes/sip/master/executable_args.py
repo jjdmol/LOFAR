@@ -8,7 +8,7 @@
 import copy
 import sys
 import os
-
+import errno
 import lofarpipe.support.lofaringredient as ingredient
 
 from lofarpipe.support.baserecipe import BaseRecipe
@@ -327,7 +327,7 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
                     replaced = False
                     if arglist_copy:
                         for arg in arglist:
-                            if name in arg:
+                            if name == arg:
                                 ind = arglist_copy.index(arg)
                                 arglist_copy[ind] = arglist_copy[ind].replace(name, value[i])
                                 replaced = True
@@ -371,6 +371,15 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # temp solution. write all output dict entries to a mapfile
         #mapfile_dir = os.path.join(self.config.get("layout", "job_directory"), "mapfiles")
+        #check directory for stand alone mode
+        if not os.path.isdir(mapfile_dir):
+            try:
+                os.mkdir(mapfile_dir, )
+            except OSError as exc:  # Python >2.5
+                if exc.errno == errno.EEXIST and os.path.isdir(mapfile_dir):
+                    pass
+                else:
+                    raise
         for k, v in jobresultdict.items():
             dmap = DataMap(v)
             dmap.save(os.path.join(mapfile_dir, self.inputs['stepname'] + '.' + k + '.mapfile'))
