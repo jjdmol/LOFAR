@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -37,10 +37,13 @@ using std::ifstream;
 
 #define ASCII_LINE_SIZE 1024
 
-namespace LOFAR {
-  using namespace GCF::Common;
-  using namespace SHM_Protocol;
- namespace AMI {
+namespace LOFAR 
+{
+using namespace GCF::Common;
+//using namespace APLCommon;
+
+ namespace AMI
+ {
 
 string trim(string source)
 {  

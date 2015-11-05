@@ -27,11 +27,12 @@ lofar_add_bin_program(ACcli ACcli.cc)
 
 lofar_add_bin_program(ACuserMenu ACuserMenu.cc)
 
-lofar_add_bin_scripts(
+install(PROGRAMS 
   startAP.sh
   startMPI.sh
   stopAP.sh
-  stopMPI.sh)
+  stopMPI.sh
+  DESTINATION bin)
   
 install(FILES
   ACDaemon.log_prop 

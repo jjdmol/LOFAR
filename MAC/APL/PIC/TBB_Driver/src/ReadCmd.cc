@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -314,7 +314,7 @@ void ReadCmd::saveTpAckEvent(GCFEvent& event)
 		*/
 		if (tp_ack.status == 0xfd) {
 			LOG_INFO_STR(formatString("TBB busy, %d pages left", tp_ack.pages_left));
-			usleep(100000); // wait for some time and try again
+			usleep(1000); // wait for some time and try again
 		}
 		else { 
 		    if (tp_ack.status != 0) {

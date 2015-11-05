@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2013-2014
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -62,7 +62,9 @@ RTmetadata::~RTmetadata()
 		// Give itsThread time to send the last events (best effort).
 		// We cannot do that while a cancellation exc is already in
 		// progress in case the connection hangs.
-		::usleep(100000); // 100 ms
+		// For localhost tests, wait long enough to allow this obj,
+		// PVSSGateway(Stub) and ServiceBroker to (re)connect.
+		::usleep(2000000); // 2 sec (1.5 sec can fail for local tests)
 
 		itsThread->cancel();
 

@@ -1,9 +1,9 @@
-#                                                      LOFAR PIPELINE FRAMEWORK
+#                                                       LOFAR PIPELINE FRAMEWORK
 #
-#                                                         Stateful LOFAR Recipe
-#                                                            Wouter Klijn, 2015
-#                                                               klijn@astron.nl
-# -----------------------------------------------------------------------------
+#                                                          Stateful LOFAR Recipe
+#                                                            John Swinbank, 2010
+#                                                      swinbank@transientskp.org
+# ------------------------------------------------------------------------------
 
 from functools import wraps
 
@@ -12,9 +12,6 @@ import cPickle
 
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.lofarexceptions import PipelineException
-
-from lofarpipe.support.xmllogging import add_child_to_active_stack_head
-import xml.dom.minidom as xml
 
 def stateful(run_task):
     @wraps(run_task)
@@ -29,24 +26,11 @@ def stateful(run_task):
             # We have already run this task and stored its state, or...
             self.logger.info("Task %s already exists in saved state; skipping"
                              % configblock)
-
-            # Get the (optional) node xml information, normally added
-            # in remotecommand.py
-            if "return_xml" in my_state[1]:
-               return_node = xml.parseString(
-                                my_state[1]['return_xml']).documentElement
-              
-               add_child_to_active_stack_head(self, return_node)
-               # If no active stack, do nothing
-
             return my_state[1]
-
         elif my_state[0] != '':
             # There is a stored task, but it doesn't match this one, or...
-            self.logger.error(
-                "Stored state does not match pipeline definition; bailing out")
-            raise PipelineException(
-                "Stored state does not match pipeline definition")
+            self.logger.error("Stored state does not match pipeline definition; bailing out")
+            raise PipelineException("Stored state does not match pipeline definition")
         else:
             # We need to run this task now.
             outputs = run_task(self, configblock, datafiles, **kwargs)
@@ -54,7 +38,6 @@ def stateful(run_task):
             self._save_state()
             return outputs
     return wrapper
-
 
 class StatefulRecipe(BaseRecipe):
     """

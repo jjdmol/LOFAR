@@ -24,7 +24,7 @@ from lofarpipe.support.loggingdecorators import xml_node, mail_log_on_exception
 from lofar.parameterset import parameterset
 
 
-class longbaseline_pipeline(control):
+class msss_imager_pipeline(control):
     """
     The Automatic MSSS long baselione pipeline is used to generate MSSS 
     measurement sets combining information of multiple subbands and or 
@@ -52,7 +52,7 @@ class longbaseline_pipeline(control):
        single large measurement set and perform flagging, RFI and bad station
        exclusion.
 
-    2. Generate meta information feedback based on dataproduct information
+    2. Generate meta information feedback files based on dataproduct information
        and parset/configuration data
 
     **Per subband-group, the following output products will be delivered:**
@@ -64,13 +64,40 @@ class longbaseline_pipeline(control):
         Initialize member variables and call superclass init function
         """
         control.__init__(self)
+        self.parset = parameterset()
         self.input_data = DataMap()
         self.target_data = DataMap()
         self.output_data = DataMap()
         self.scratch_directory = None
+        self.parset_feedback_file = None
         self.parset_dir = None
         self.mapfile_dir = None
 
+    def usage(self):
+        """
+        Display usage information
+        """
+        print >> sys.stderr, "Usage: %s <parset-file>  [options]" % sys.argv[0]
+        return 1
+
+    def go(self):
+        """
+        Read the parset-file that was given as input argument, and set the
+        jobname before calling the base-class's `go()` method.
+        """
+        try:
+            parset_file = os.path.abspath(self.inputs['args'][0])
+        except IndexError:
+            return self.usage()
+        self.parset.adoptFile(parset_file)
+        self.parset_feedback_file = parset_file + "_feedback"
+        # Set job-name to basename of parset-file w/o extension, if it's not
+        # set on the command-line with '-j' or '--job-name'
+        if not 'job_name' in self.inputs:
+            self.inputs['job_name'] = (
+                os.path.splitext(os.path.basename(parset_file))[0]
+            )
+        return super(msss_imager_pipeline, self).go()
 
     @mail_log_on_exception
     def pipeline_logic(self):
@@ -78,7 +105,7 @@ class longbaseline_pipeline(control):
         Define the individual tasks that comprise the current pipeline.
         This method will be invoked by the base-class's `go()` method.
         """
-        self.logger.info("Starting longbaseline pipeline")
+        self.logger.info("Starting imager pipeline")
 
         # Define scratch directory to be used by the compute nodes.
         self.scratch_directory = os.path.join(
@@ -105,11 +132,6 @@ class longbaseline_pipeline(control):
         # Input measure ment sets
         input_mapfile = os.path.join(self.mapfile_dir, "uvdata.mapfile")
         self.input_data.save(input_mapfile)
-
-        ## ***************************************************************
-        #output_mapfile_path = os.path.join(self.mapfile_dir, "output.mapfile")
-        #self.output_mapfile.save(output_mapfile_path)
-
         # storedata_map(input_mapfile, self.input_data)
         self.logger.debug(
             "Wrote input UV-data mapfile: {0}".format(input_mapfile))
@@ -121,10 +143,10 @@ class longbaseline_pipeline(control):
             "Wrote target mapfile: {0}".format(target_mapfile))
 
         # images datafiles
-        output_ms_mapfile = os.path.join(self.mapfile_dir, "output.mapfile")
-        self.output_data.save(output_ms_mapfile)
+        output_image_mapfile = os.path.join(self.mapfile_dir, "images.mapfile")
+        self.output_data.save(output_image_mapfile)
         self.logger.debug(
-            "Wrote output sky-image mapfile: {0}".format(output_ms_mapfile))
+            "Wrote output sky-image mapfile: {0}".format(output_image_mapfile))
 
         # TODO: This is a backdoor option to manually add beamtables when these
         # are missing on the provided ms. There is NO use case for users of the
@@ -134,9 +156,8 @@ class longbaseline_pipeline(control):
 
         # ******************************************************************
         # (1) prepare phase: copy and collect the ms
-        concat_ms_map_path, timeslice_map_path, ms_per_image_map_path, \
-            processed_ms_dir = self._long_baseline(input_mapfile,
-                         target_mapfile, add_beam_tables, output_ms_mapfile)
+        concat_ms_map_path = self._long_baseline(
+              input_mapfile,  target_mapfile, add_beam_tables)
 
         # *********************************************************************
         # (7) Get metadata
@@ -151,19 +172,30 @@ class longbaseline_pipeline(control):
                                            str(subbands_per_subbandgroup))
         toplevel_meta_data.replace("subbandGroupsPerMS", 
                                            str(subbandgroups_per_ms))
+
+        toplevel_meta_data_path = os.path.join(
+                self.parset_dir, "toplevel_meta_data.parset")
+
+        try:
+            toplevel_meta_data.writeFile(toplevel_meta_data_path)
+            self.logger.info("Wrote meta data to: " + 
+                    toplevel_meta_data_path)
+        except RuntimeError, err:
+            self.logger.error(
+              "Failed to write toplevel meta information parset: %s" % str(
+                                    toplevel_meta_data_path))
+            return 1
+
         
         # Create a parset-file containing the metadata for MAC/SAS at nodes
-        metadata_file = "%s_feedback_Correlated" % (self.parset_file,)
-        self.run_task("get_metadata", output_ms_mapfile,
+        self.run_task("get_metadata", concat_ms_map_path,
+            parset_file = self.parset_feedback_file,
             parset_prefix = (
                 full_parset.getString('prefix') +
                 full_parset.fullModuleName('DataProducts')
             ),
-            product_type = "Correlated",
-            metadata_file = metadata_file)
-
-        self.send_feedback_processing(toplevel_meta_data)
-        self.send_feedback_dataproducts(parameterset(metadata_file))
+            toplevel_meta_data_path=toplevel_meta_data_path, 
+            product_type = "Correlated")
 
         return 0
 
@@ -212,9 +244,9 @@ class longbaseline_pipeline(control):
 
     @xml_node
     def _finalize(self, awimager_output_map, processed_ms_dir,
-                  ms_per_image_map, sourcelist_map, minbaseline,
+                  raw_ms_per_image_map, sourcelist_map, minbaseline,
                   maxbaseline, target_mapfile,
-                  output_ms_mapfile, sourcedb_map, skip = False):
+                  output_image_mapfile, sourcedb_map, skip = False):
         """
         Perform the final step of the imager:
         Convert the output image to hdf5 and copy to output location
@@ -229,15 +261,16 @@ class longbaseline_pipeline(control):
         if skip:
             return placed_image_mapfile
         else:
+            # run the awimager recipe
             placed_image_mapfile = self.run_task("imager_finalize",
                 target_mapfile, awimager_output_map = awimager_output_map,
-                    ms_per_image_map = ms_per_image_map,
+                    raw_ms_per_image_map = raw_ms_per_image_map,
                     sourcelist_map = sourcelist_map,
                     sourcedb_map = sourcedb_map,
                     minbaseline = minbaseline,
                     maxbaseline = maxbaseline,
                     target_mapfile = target_mapfile,
-                    output_ms_mapfile = output_ms_mapfile,
+                    output_image_mapfile = output_image_mapfile,
                     processed_ms_dir = processed_ms_dir,
                     placed_image_mapfile = placed_image_mapfile
                     )["placed_image_mapfile"]
@@ -247,13 +280,13 @@ class longbaseline_pipeline(control):
 
     @xml_node
     def _long_baseline(self, input_ms_map_path, target_mapfile,
-        add_beam_tables, output_ms_mapfile):
+        add_beam_tables):
         """
         Copy ms to correct location, combine the ms in slices and combine
         the time slices into a large virtual measurement set
         """
         # Create the dir where found and processed ms are placed
-        # ms_per_image_map_path contains all the original ms locations:
+        # raw_ms_per_image_map_path contains all the original ms locations:
         # this list contains possible missing files
         processed_ms_dir = os.path.join(self.scratch_directory, "subbands")
 
@@ -265,15 +298,16 @@ class longbaseline_pipeline(control):
         # create the output file paths
         # [1] output -> prepare_output
         output_mapfile = self._write_datamap_to_file(None, "prepare_output")
-        time_slices_mapfile = self._write_datamap_to_file(None,
+        subband_group_mapfile = self._write_datamap_to_file(None,
                                                     "prepare_time_slices")
-        ms_per_image_mapfile = self._write_datamap_to_file(None,
-                                                         "ms_per_image")
+        raw_ms_per_image_mapfile = self._write_datamap_to_file(None,
+                                                         "raw_ms_per_image")
 
         # get some parameters from the imaging pipeline parset:
+
+
         subbandgroups_per_ms = self.parset.getInt("LongBaseline.subbandgroups_per_ms")
         subbands_per_subbandgroup = self.parset.getInt("LongBaseline.subbands_per_subbandgroup")
-
 
         outputs = self.run_task("long_baseline", input_ms_map_path,
                 parset = ndppp_parset_path,
@@ -281,12 +315,11 @@ class longbaseline_pipeline(control):
                 subbandgroups_per_ms = subbandgroups_per_ms,
                 subbands_per_subbandgroup = subbands_per_subbandgroup,
                 mapfile = output_mapfile,
-                slices_mapfile = time_slices_mapfile,
-                ms_per_image_mapfile = ms_per_image_mapfile,
+                slices_mapfile = subband_group_mapfile,
+                raw_ms_per_image_mapfile = raw_ms_per_image_mapfile,
                 working_directory = self.scratch_directory,
                 processed_ms_dir = processed_ms_dir,
-                add_beam_tables = add_beam_tables,
-                output_ms_mapfile = output_ms_mapfile)
+                add_beam_tables = add_beam_tables)
 
         # validate that the prepare phase produced the correct data
         output_keys = outputs.keys()
@@ -301,16 +334,15 @@ class longbaseline_pipeline(control):
                                                         'slices_mapfile')
             self.logger.error(error_msg)
             raise PipelineException(error_msg)
-        if not ('ms_per_image_mapfile' in output_keys):
+        if not ('raw_ms_per_image_mapfile' in output_keys):
             error_msg = "The imager_prepare master script did not"\
                     "return correct data. missing: {0}".format(
-                                                'ms_per_image_mapfile')
+                                                'raw_ms_per_image_mapfile')
             self.logger.error(error_msg)
             raise PipelineException(error_msg)
 
         # Return the mapfiles paths with processed data
-        return output_mapfile, outputs["slices_mapfile"], ms_per_image_mapfile, \
-            processed_ms_dir
+        return output_mapfile
 
 
     # TODO: Move these helpers to the parent class
@@ -371,4 +403,4 @@ class longbaseline_pipeline(control):
 
 
 if __name__ == '__main__':
-    sys.exit(longbaseline_pipeline().main())
+    sys.exit(msss_imager_pipeline().main())

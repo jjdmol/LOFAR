@@ -17,6 +17,7 @@ configure_file(
 file(GLOB _config_parsets
   "parset-additions.d/default/*.parset"
   "${CMAKE_CURRENT_BINARY_DIR}/parset-additions.d/default/*.parset")   # configured .parset.in
+list(APPEND _config_parsets "parset-additions.d/default/HardwareUsed.parset.testsys")
 install(FILES ${_config_parsets} DESTINATION etc/parset-additions.d/default)
 
 # List of override/ config parsets:
@@ -25,4 +26,4 @@ INSTALL(CODE "FILE(MAKE_DIRECTORY \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/etc/p
 
 
 # Install script to generate StationStreams.parset for the live test system.
-lofar_add_sbin_scripts(parset-additions.d/default/generateStationStreams.sh)
+install(PROGRAMS parset-additions.d/default/generateStationStreams.sh DESTINATION sbin)

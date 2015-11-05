@@ -6,7 +6,7 @@ include(LofarCTest)
 cuda_include_directories(${PACKAGE_SOURCE_DIR}/share/gpu/kernels)
 
 
-if(UNITTEST++_FOUND AND BUILD_TESTING)
+if(UNITTEST++_FOUND)
   # CUDA CPU side UnitTest++ tests
   lofar_add_test(tGPUWrapper tGPUWrapper.cc)
   lofar_add_test(tIncoherentStokes tIncoherentStokes.cc)
@@ -29,7 +29,7 @@ if(UNITTEST++_FOUND AND BUILD_TESTING)
     tCorrelatorPerformance
     PROPERTIES RUN_SERIAL ON
   )
-endif(UNITTEST++_FOUND AND BUILD_TESTING)
+endif(UNITTEST++_FOUND)
 
 # CUDA CPU side unit tests
 lofar_add_test(tKernel tKernel.cc)
@@ -51,19 +51,17 @@ lofar_add_test(tIncoherentStokesTranspose tIncoherentStokesTranspose.cc)
 
 # Trick tests that compile kernels that need to be installed into thinking
 # that they can find the kernels using the LOFARROOT environment variable.
-if(BUILD_TESTING)
-  set_tests_properties(
-    tFIR_Filter
-    tCorrelator
-    tCorrelator2
-    tBeamFormer
-    tTranspose
-    tTranspose2
-    tIncoherentStokesTranspose
-    tCoherentStokesTranspose
-    PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
-    )
-endif(BUILD_TESTING)
+set_tests_properties(
+  tFIR_Filter
+  tCorrelator
+  tCorrelator2
+  tBeamFormer
+  tTranspose
+  tTranspose2
+  tIncoherentStokesTranspose
+  tCoherentStokesTranspose
+  PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
+)
 
 
 # Tests built by nvcc
@@ -71,7 +69,7 @@ endif(BUILD_TESTING)
 # CUDA driver API tests need a .ptx file compiled first and passed to the host code compilation.
 # This way we don't need a generated .sh file, nor compile to .ptx from our test code.
 cuda_compile_ptx(tcuda_driver_api_ptx tcuda-driver-api.cu)
-cuda_add_executable(tcuda-driver-api  tcuda-driver-api.cu  OPTIONS "-DPTX_FILENAME=${tcuda_driver_api_ptx}")
+cuda_add_executable(tcuda-driver-api  tcuda-driver-api.cu  OPTIONS "-DPTX_FILE_CSTR=\"${tcuda_driver_api_ptx}\"")
 target_link_libraries(tcuda-driver-api cuda)
 add_test(tcuda-driver-api  "${CMAKE_CURRENT_BINARY_DIR}/tcuda-driver-api")
 

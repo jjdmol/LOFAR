@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -41,7 +41,6 @@
 using namespace LOFAR::GCF::TM;
 
 namespace LOFAR {
-  using namespace StartDaemon_Protocol;
   namespace CUDaemons {
 
 //
@@ -265,10 +264,10 @@ int32 CTStartDaemon::startController(uint16			cntlrType,
 									parentService.c_str());
 	LOG_INFO_STR("About to start: " << startCmd);
 
-	int	result = system (startCmd.c_str());
+	int32	result = system (startCmd.c_str());
 	LOG_INFO_STR ("Result of start = " << result);
 
-	if (result != 0) {
+	if (result == -1) {
 		return (SD_RESULT_START_FAILED);
 	}
 	

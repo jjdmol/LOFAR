@@ -86,9 +86,7 @@ namespace LOFAR {
     private:
       // Each packet is expected to have 16 samples per subband, i.e. ~80 us worth of data @ 200 MHz.
       // So 512 packets is ~40 ms of data.
-      static const unsigned RT_PACKET_BATCH_SIZE = 512;
-
-      static const unsigned NONRT_PACKET_BATCH_SIZE = 1;
+      static const size_t RT_PACKET_BATCH_SIZE = 512;
 
       // Data received from an RSP board
       struct RSPData {
