@@ -45,7 +45,7 @@ SDOWrite::SDOWrite(GCFPortInterface& board_port, int board_id)
     
 {
 	memset(&m_hdr, 0, sizeof(MEPHeader));
-    //doAtInit();
+    doAtInit();
 }
 
 SDOWrite::~SDOWrite()

@@ -36,17 +36,17 @@ using boost::format;
 
 void usage(char **argv)
 {
-  cout << "usage: " << argv[0] << " -S station            -h parset" << endl;
-  cout << "usage: " << argv[0] << " -S station [-B board] -s parset" << endl;
-  cout << "usage: " << argv[0] << " -S station            -c parset" << endl;
-  cout << endl;
-  cout << "-h        : print the host name    on which this antenna field is received" << endl;
-  cout << "-s        : print the stream       on which this antenna field is received" << endl;
-  cout << "-s        : print the cpu (socket) on which this antenna field is received" << endl;
-  cout << endl;
-  cout << "-S station: select antenna field (CS001LBA, etc)" << endl;
-  cout << "-B board  : select board (0, 1, 2, 3)" << endl;
-  cout << endl;
+  cerr << "usage: " << argv[0] << " -S station            -h parset" << endl;
+  cerr << "usage: " << argv[0] << " -S station [-B board] -s parset" << endl;
+  cerr << "usage: " << argv[0] << " -S station            -c parset" << endl;
+  cerr << endl;
+  cerr << "-h        : print the host name    on which this antenna field is received" << endl;
+  cerr << "-s        : print the stream       on which this antenna field is received" << endl;
+  cerr << "-s        : print the cpu (socket) on which this antenna field is received" << endl;
+  cerr << endl;
+  cerr << "-S station: select antenna field (CS001LBA, etc)" << endl;
+  cerr << "-B board  : select board (0, 1, 2, 3)" << endl;
+  cerr << endl;
 }
 
 void print_node_list(Parset &ps)
@@ -63,6 +63,8 @@ void print_node_list(Parset &ps)
 
 int main(int argc, char **argv)
 {
+  INIT_LOGGER("station_stream");
+
   string antennaField = "";
   unsigned board = 0;
   bool print_host = false;
@@ -107,8 +109,6 @@ int main(int argc, char **argv)
     usage(argv);
     exit(1);
   }
-
-  INIT_LOGGER("station_stream");
 
   // Create a parameters set object based on the inputs
   Parset ps(argv[optind]);

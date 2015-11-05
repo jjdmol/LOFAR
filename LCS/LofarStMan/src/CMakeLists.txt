@@ -12,4 +12,6 @@ lofar_add_library(lofarstman
 lofar_add_bin_program(versionlofarstman versionlofarstman.cc)
 lofar_add_bin_program(fixlsmeta fixlsmeta.cc)
 
-lofar_add_bin_scripts(makeFLAGwritable)
+install(PROGRAMS
+  makeFLAGwritable
+  DESTINATION bin)

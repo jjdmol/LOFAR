@@ -9,7 +9,7 @@ import numpy as np
 import logging
 from time import sleep
 
-test_version = '0815'
+test_version = '0515'
 
 logger = None
 def init_data_lib():
@@ -125,10 +125,6 @@ class cRCUdata:
         
     def readFiles(self):
         files_in_dir = sorted(os.listdir(dataDir()))
-        if len(files_in_dir) == 0:
-            logger.warn('No data recorded !!')
-            self.reset()
-            return
         data_shape = self.readFile(os.path.join(dataDir(),files_in_dir[0])).shape
         ssdata = np.zeros((self.n_rcus, data_shape[0],data_shape[1]), dtype=np.float64)
         for file_name in files_in_dir:
@@ -173,15 +169,11 @@ class cRCUdata:
     def getSubbands(self, rcu):
         return (self.getMaskedData()[int(rcu),:,:].mean(axis=0))
     
-    def getSubbandX(self, subband=None):
-        if subband is None:
-            return (self.getMaskedData()[0::2,:,self.testSubband_Y].mean(axis=1))
-        return (self.getMaskedData()[0::2,:,subband].mean(axis=1))
+    def getSubbandX(self):
+        return (self.getMaskedData()[0::2,:,self.testSubband_Y].mean(axis=1))
     
-    def getSubbandY(self, subband=None):
-        if subband is None:
-            return (self.getMaskedData()[1::2,:,self.testSubband_Y].mean(axis=1))
-        return (self.getMaskedData()[1::2,:,subband].mean(axis=1))
+    def getSubbandY(self):
+        return (self.getMaskedData()[1::2,:,self.testSubband_Y].mean(axis=1))
                        
     def getAll(self, pol='XY'):
         if pol in ('XY', 'xy'):
