@@ -122,6 +122,15 @@ CREATE TABLE task (
 ALTER TABLE task
   OWNER TO renting;
 
+DROP TABLE IF EXISTS task_status;
+CREATE TABLE task_status (
+  id serial NOT NULL,
+  name text NOT NULL,
+  PRIMARY KEY (id)
+) WITH (OIDS=FALSE);
+ALTER TABLE task_status
+  OWNER TO renting;
+
 DROP TABLE IF EXISTS task_type;
 CREATE TABLE task_type (
   id serial NOT NULL,
