@@ -149,7 +149,10 @@ ValueHolder fit(const ValueHolder &phases_vh, const ValueHolder &A_vh, const Val
                                 phase_ij_model += (sol[i + l*N_station] - sol[j + l*N_station]) * coeff ;
                             }
                             Float sin_dphase, cos_dphase;
-                            __sincosf(phase_ij_obs - phase_ij_model, &sin_dphase, &cos_dphase);
+#if defined(_LIBCPP_VERSION)
+#define sincosf __sincosf
+#endif
+                            sincosf(phase_ij_obs - phase_ij_model, &sin_dphase, &cos_dphase);
                             Float residual_re = cos_dphase - 1.0;
                             Float residual_im = sin_dphase;
                             Float derivative_re = -sin_dphase;
