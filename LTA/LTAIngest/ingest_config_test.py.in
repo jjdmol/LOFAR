@@ -50,16 +50,11 @@ else:
   master = False
 
 ## Make directories if needed, should include trailing /
-logroot = '@LTAINGEST_LOG_ROOT_DIR@'
-if not os.path.exists(logroot) and logroot[:4] != '/tmp':
-  print 'changing test ingest logroot from %s to /tmp/ingest/' % logroot
-  logroot = '/tmp/ingest/'
-
-jobsdir   = os.path.join(logroot, 'jobs/')
-retrydir  = os.path.join(logroot, 'jobs_retry/')
-faileddir = os.path.join(logroot, 'log/failed/')
-logdir    = os.path.join(logroot, 'log/')
-donedir   = os.path.join(logroot, 'log/done/')
+jobsdir   = '/tmp/ingest/jobs/'
+retrydir  = '/tmp/ingest/jobs_retry/'
+faileddir = '/tmp/ingest/log/failed/'
+logdir    = '/tmp/ingest/log/'
+donedir   = '/tmp/ingest/log/done/'
 
 if not os.path.exists(jobsdir):
   os.makedirs(jobsdir)
@@ -100,7 +95,7 @@ pipelineRetry = 3
 #      lofar-ingest.target.rug.nl:9443
 #      lofar-ingest-test.target.rug.nl:19443
 #
-LTAurl = 'https://@LTAURL_TEST_USERNAME@:@LTAURL_TEST_PASSWORD@@lofar-ingest-test.target.rug.nl:19443'  #fill in during build/install
+LTAurl = 'https://@LTAURL_USERNAME@:@LTAURL_PASSWORD@@lofar-ingest-test.target.rug.nl:19443'  #fill in during build/install
 try:
   ltaClient = xmlrpclib.ServerProxy(LTAurl)
 except:
@@ -110,9 +105,12 @@ except:
 ltaRetry    = 20
 
 ## MoM client settings
+exportLogin  = 'https://lcs028.control.lofar:8443/export/systemprograms/login.jsp'
+exportStatus = 'https://lcs028.control.lofar:8443/export/interface/pipeline/setStatus.do'
+exportLogout = 'https://lcs028.control.lofar:8443/export/processLogout.do'
+
 momURLlogin  = 'https://lcs028.control.lofar:8443/useradministration/user/systemlogin.do'
 momURLgetSIP = 'https://lcs028.control.lofar:8443/mom3/interface/importXML2.do'
-momURLsetStatus = 'https://lcs028.control.lofar:8443/mom3/interface/service/setStatusDataProduct.do'
 momURLlogout = 'https://lcs028.control.lofar:8443/useradministration/user/logout.do'
 momRetry     = 2
 
@@ -123,10 +121,10 @@ if 'lotar' in host:
   srmInit      = '/home/lofarlocal/ltacp/bin/init.sh'
 
 try:
-  exportClient= mom_http.client(momURLlogin, momURLsetStatus, momURLlogout, logger)
-  exportClient.username = '@MOMCLIENT_USERNAME@' #fill in during build/install
-  exportClient.password = '@MOMCLIENT_PASSWORD@' #fill in during build/install
-  momClient = mom_http.client(momURLlogin, momURLgetSIP, momURLlogout, logger)
+  exportClient= mom_http.client(exportLogin, exportStatus, exportLogout)
+  exportClient.username = '@EXPORTCLIENT_USERNAME@' #fill in during build/install
+  exportClient.password = '@EXPORTCLIENT_PASSWORD@' #fill in during build/install
+  momClient = mom_http.client(momURLlogin, momURLgetSIP, momURLlogout)
   momClient.username = '@MOMCLIENT_USERNAME@' #fill in during build/install
   momClient.password = '@MOMCLIENT_PASSWORD@' #fill in during build/install
 except:
@@ -147,8 +145,8 @@ if master:
     raise
 
 # Used by Master to send error and (re) start messages
-mailCommand = ' schaap@astron.nl'
+mailCommand = ' renting@astron.nl'
 # Used by Slave to send SendStatus warnings
-mailSlCommand = ' schaap@astron.nl'
+mailSlCommand = ' renting@astron.nl'
 
 logger.info("Configuration complete")

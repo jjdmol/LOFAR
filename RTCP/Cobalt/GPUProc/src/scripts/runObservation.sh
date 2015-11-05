@@ -65,7 +65,7 @@ function usage {
 # It wait on the processes finish (using the PID) with a
 # succesfull return value
 # - On signals kill the child process
-# - On ssh and bash errors it will retry
+# - On non zero return value of the command it will retry
 #   with increasingly larger wait periods between tries
 function command_retry {
   COMMAND="$1"   
@@ -78,22 +78,8 @@ function command_retry {
     # Trap 'all' signals and forward to ssh process
     TRAP_COMMAND="kill $SSH_PID; break"
     trap "$TRAP_COMMAND" SIGTERM SIGINT SIGQUIT SIGHUP 2> /dev/null
-
-    # wait for ssh to finish
-    wait $SSH_PID
-
-    # Return codes:
-    #     255: SSH fails
-    #     127: BASH 'command not found'
-    #     126: BASH 'command not executable'
-    # smaller: outputProc fails
-    #       0: success
-
-    # Break the loop if the command was started -- there is no need
-    # to keep starting it if the command itself returned an error.
-    if [ "$?" -lt 126 ]; then
-      break
-    fi
+    wait $SSH_PID && break       # wait while the ssh command is up
+                                 # Break the loop if the command returned with exit value 0
 
     sleep $SLEEP_DURATION                  # Sleep if ssh failed
     SLEEP_DURATION=$((SLEEP_DURATION + 1)) # Increase duration   

@@ -111,7 +111,7 @@ GCFEvent::TResult RCUResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
 
 	uint8	global_rcu 			= (getBoardId() * NR_RCUS_PER_RSPBOARD) + getCurrentIndex();
 	bool	handlingWriteResult = (Cache::getInstance().getState().rcuprotocol().get(global_rcu) == RTC::RegisterState::READ);
-	int		resultOffset		= handlingWriteResult ? 2 : 0;
+	int		resultOffset		= handlingWriteResult ? 1 : 0;
 
 	EPARcuResultEvent ack(event);
 	if (!ack.hdr.isValidAck(m_hdr)) {
