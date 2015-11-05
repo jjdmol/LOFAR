@@ -1,29 +1,6 @@
 # $Id$
 
-lofar_package(LTAIngest 0.1) #DEPENDS MessageBus)
-
-#by default use LTAINGEST_BUILD_TARGET="test" unless overridden on the command line, or by variants files
-set(LTAINGEST_BUILD_TARGET "test" CACHE STRING "Specify for which specific destination host you want to build LTAIngest.")
-
-message(STATUS "Using LTAINGEST_BUILD_TARGET \"${LTAINGEST_BUILD_TARGET}\".")
-
-set(MOM3SCHEMA "lofar_mom3")
-
-
-#switch with config variables for the various build targets.
-if(LTAINGEST_BUILD_TARGET STREQUAL "lexar")
-  set(LTAINGEST_LOG_ROOT_DIR "/log/ingest/")
-  set(LTAINGEST_DATA_DIR "/data/ingest/")
-elseif(LTAINGEST_BUILD_TARGET STREQUAL "lotar")
-  set(LTAINGEST_LOG_ROOT_DIR "/home/lofarlocal/log/ingest/")
-  set(LTAINGEST_DATA_DIR "/home/lofarlocal/.ingest/")
-elseif(LTAINGEST_BUILD_TARGET STREQUAL "test")
-  set(LTAINGEST_LOG_ROOT_DIR "/log/ingesttest/")
-  set(LTAINGEST_DATA_DIR "/log/ingesttest/")
-  set(MOM3SCHEMA "lofartest_sas099_mom3_two")
-else()
-  message(SEND_ERROR "Unknown LTAINGEST_BUILD_TARGET given: '${LTAINGEST_BUILD_TARGET}'.")
-endif()
+lofar_package(LTAIngest 0.1) # DEPENDS Common)
 
 include(PythonInstall)
 set(USE_PYTHON_COMPILATION Off)
@@ -172,6 +149,7 @@ python_install(
 	dav/qp_xml.py
 	job_parser.py
 	find_files.py
+	ingest_config_test.py
 	multiprocessing/reduction.py
 	multiprocessing/process.py
 	multiprocessing/queues.py
@@ -254,23 +232,13 @@ python_install(
 	SOAPpy-0.12.0/validate/silabclient.py
 	SOAPpy-0.12.0/validate/soapware.py
 	SOAPpy-0.12.0/validate/silabserver.py
+	job_group.py
 	master.py
 	user_ingest.py
 	do_ltacp.py
 	simple_server.py
 	__init__.py
-	doc/LTA-SIP.xsd #not a py file, but needed by ingest in python ingest lib dir
   DESTINATION LTAIngest)
-
-#deploy startup scripts in same python ingest lib dir
-#TODO: should be moved to LOFARROOT/bin. Currently probably not possible yet due to unknown dependencies.
-set(STARTUP_SCRIPTS 
-      startup.csh
-      startup_slave.csh
-      startup_target.csh
-      startup_target_test.csh
-      startup_test.csh)
-install(PROGRAMS ${STARTUP_SCRIPTS} DESTINATION ${PYTHON_INSTALL_DIR}/LTAIngest)
 
 #determine LTAINGEST_LOG_ROOT_DIR for various build hosts (used in ingest_config.py.in)
 if(NOT DEFINED LTAINGEST_LOG_ROOT_DIR)
@@ -278,21 +246,7 @@ if(NOT DEFINED LTAINGEST_LOG_ROOT_DIR)
 endif()
 
 #settings dir for ingest
-set(LTAINGEST_CFG_DIR "${CMAKE_INSTALL_PREFIX}/etc/ltaingest")
-
-#set various user/passwords from environment
-#mail schaap@astron.nl for a shell script which sets up your build environment with these secret variables
-if ("$ENV{MOMREADONLY_USER}" STREQUAL "")
-  message(WARNING "MOMREADONLY_USER not found in environment. Did you source your build environment file?")
-endif()
-set(MOMREADONLY_USER $ENV{MOMREADONLY_USER})
-set(MOMREADONLY_PASSWORD $ENV{MOMREADONLY_PASSWORD})
-set(MOMCLIENT_USERNAME $ENV{MOMCLIENT_USERNAME})
-set(MOMCLIENT_PASSWORD $ENV{MOMCLIENT_PASSWORD})
-set(LTAURL_USERNAME $ENV{LTAURL_USERNAME})
-set(LTAURL_PASSWORD $ENV{LTAURL_PASSWORD}) 
-set(LTAURL_TEST_USERNAME $ENV{LTAURL_TEST_USERNAME})
-set(LTAURL_TEST_PASSWORD $ENV{LTAURL_TEST_PASSWORD}) 
+set(LTAINGEST_CFG_DIR "${CMAKE_INSTALL_PREFIX}/.ltaingest")
 
 #configure ingest_config.py.in with the various host and environment specific variables.
 configure_file(
@@ -302,26 +256,6 @@ configure_file(
 #include configured ingest_config.py in python install.
 python_install(
   ${CMAKE_CURRENT_BINARY_DIR}/ingest_config.py
-  DESTINATION LTAIngest)
-
-#configure job_group.py.in with the various host and environment specific variables.
-configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/job_group.py.in
-  ${CMAKE_CURRENT_BINARY_DIR}/job_group.py @ONLY)
-
-#include configured job_group.py in python install.
-python_install(
-  ${CMAKE_CURRENT_BINARY_DIR}/job_group.py
-  DESTINATION LTAIngest)
-  
-#configure ingest_config_test.py.in with the various host and environment specific variables.
-configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/ingest_config_test.py.in
-  ${CMAKE_CURRENT_BINARY_DIR}/ingest_config_test.py @ONLY)
-
-#include configured ingest_config_test.py in python install.
-python_install(
-  ${CMAKE_CURRENT_BINARY_DIR}/ingest_config_test.py
   DESTINATION LTAIngest)
 
 #configure ingest_logrotate.conf.in with @LTAINGEST_LOG_ROOT_DIR@
@@ -340,9 +274,9 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/ingest_install_logrotate_crontab.sh @ONLY)
 
 #install ingest_install_logrotate_crontab.sh in bin
-lofar_add_bin_scripts(
-  ${CMAKE_CURRENT_BINARY_DIR}/ingest_install_logrotate_crontab.sh)
+install(PROGRAMS
+  ${CMAKE_CURRENT_BINARY_DIR}/ingest_install_logrotate_crontab.sh
+  DESTINATION bin)
 
-  
 add_subdirectory(test)
   

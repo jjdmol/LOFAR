@@ -5,14 +5,10 @@ include(PythonInstall)
 
 set(messagebus_LIB_SRCS
   Package__Version.cc
-  FromBus.cc
   LogSink.cc
+  MsgBus.cc
   Message.cc
-  MessageBus.cc
-  NoQpidFallback.cc
-  ToBus.cc
-  Util.cc
-  XMLDoc.cc)
+  NoQpidFallback.cc)
 
 set(messagebus_PROGRAMS
 )
@@ -25,7 +21,7 @@ endforeach(prog ${messagebus_PROGRAMS})
 
 python_install(
   __init__.py
-  messagebus.py
+  msgbus.py
   message.py
   noqpidfallback.py
   DESTINATION lofar/messagebus)

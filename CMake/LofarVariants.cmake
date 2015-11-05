@@ -37,16 +37,23 @@ if(NOT DEFINED LOFAR_VARIANTS_INCLUDED)
     endif(NOT DEFINED "${var}")
   endmacro(set_if_not_set)
 
+  set(TARGET_VARIANT "" CACHE STRING "Specify for which specific destination host you want to build. If none, the system use the current host as target.")
+  
+  if(NOT TARGET_VARIANT STREQUAL "")
+    message(STATUS "Target variant given for this build: ${TARGET_VARIANT}")
+    set(variants_file "${CMAKE_MODULE_PATH}/variants/variants.${TARGET_VARIANT}")
+  else()
+    execute_process(COMMAND uname -n
+      OUTPUT_VARIABLE _hostname
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
+    # Strip everything after the first dot.
+    string(REGEX REPLACE "\\..*" "" _hostname "${_hostname}")
+    set(variants_file "${CMAKE_MODULE_PATH}/variants/variants.${_hostname}")
+  endif()
+  
   ## --------------------------------------------------------------------------
   ## First, include host-specific variants file, if present
   ## --------------------------------------------------------------------------
-  execute_process(COMMAND uname -n
-    OUTPUT_VARIABLE _hostname
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
-  # Strip everything after the first dot.
-  string(REGEX REPLACE "\\..*" "" _hostname "${_hostname}")
-  set(variants_file "${CMAKE_MODULE_PATH}/variants/variants.${_hostname}")
-  
   if (EXISTS ${variants_file})
     message(STATUS "Loading host-specific variants file: ${variants_file}")
     include(${variants_file})
