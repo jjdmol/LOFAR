@@ -17,7 +17,9 @@ lofar_add_test(tRCUCables
 lofar_add_sbin_program(EPAStub EPAStub.cc)
 lofar_add_sbin_program(RSPTest RSPTest.cc)
 
-lofar_add_sbin_scripts(beamtest)
+install(PROGRAMS
+  beamtest
+  DESTINATION sbin)
 
 foreach(file RSPTest.conf EPAStub.conf EPAStub.log_prop)
   configure_file(

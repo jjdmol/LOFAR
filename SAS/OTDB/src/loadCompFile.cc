@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -38,10 +38,6 @@
 #include <OTDB/UnitConv.h>
 #include <OTDB/ClassifConv.h>
 #include <OTDB/misc.h>
-
-#include <pqxx/transaction>
-
-using namespace pqxx;
 
 namespace LOFAR {
   namespace OTDB {
@@ -433,12 +429,6 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename,
 	 	return (0);
 	}
 
-#if 0
-	// start transaction
-  // This does not seem to work on kis001, because we're starting to nest transactions, causing pqxx to throw a logic_error. PostGreSQL does not support nested transacions.
-	//work	xAction(*(itsConn->getConn()), "loadComponentFile");
-#endif
-
 	// get convertors (from database)
 	ParamTypeConv	PTconv(itsConn);
 	UnitConv		UTconv(itsConn);
@@ -563,13 +553,6 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename,
 	}
 
 	inFile.close();
-
-#if 0
-	if (!inError) {
-		// commit changes
-		xAction.commit();
-	}
-#endif
 
 	return (inError ? 0 : topNodeID);
 }

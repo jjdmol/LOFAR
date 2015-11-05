@@ -4,388 +4,41 @@ This module simply stores the version and svn revision numbers, as well
 as a changelog. The svn revision number will be updated automatically
 whenever there is a change to this file. However, if no change is made
 to this file, the revision number will get out of sync. Therefore, one
-must update this file with each (significant) update of the code:
+must update this file with each (significant) update of the code: 
 adding to the changelog will naturally do this.
 """
 
 # Version number
-__version__ = '1.8.4'
+__version__ = '1.1'
 
-# Store svn Revision number. For this to work, one also needs to do:
-#
+# Store svn Revision number. For this to work, one also
+# needs to do: 
 # "svn propset svn:keywords Revision CEP/PyBDSM/src/python/_version.py"
-#
-# from the LOFAR directory. Then, the revision number is
+# "svn propset svn:keywords Revision src/Anaamika/implement/PyBDSM/python/_version.py" 
+# from the LOFARSOFT directory. Then, the revision number is
 # added automatically with each update to this file. The line below does not
 # need to be edited by hand.
 __revision__ = filter(str.isdigit, "$Revision$")
 
 
-# Changelog
+# Change log
 def changelog():
     """
     PyBDSM Changelog.
     -----------------------------------------------------------------------
-    2015/08/06 - Version 1.8.4
-
-    2015/08/06 - Improved speed of wavelet module.
-
-    2015/08/06 - Added option to use PyFFTW in wavelet module if available.
-
-    2015/08/06 - Fix to IPython version check.
-
-    2015/08/06 - Fix to bug that caused a failure to write shapelet models
-        in FITS format.
-
-    2014/11/07 - Fix to bug that caused a crash when both atrous_do = True
-        and output_all = True. Fixed a bug that caused a crash on machines
-        with only one core.
-
-    2014/09/26 - Version 1.8.3
-
-    2014/09/26 - Fix to bug that caused a crash when using the wavelet
-        module and all Gaussians in an island were flagged.
-
-    2014/07/03 - Mask will now be expanded to match input image shape. Fix
-        to bug that caused image read failure when image lacks a Stokes axis.
-
-    2014/05/14 - Version 1.8.2
-
-    2014/05/15 - Fix to bug in CASA masks generated with export_image() that
-        caused cleaning to fail in CASA 4.2 and above.
-
-    2014/02/05 - Fix to bug that resulted in output file names being
-        converted to lower case inappropriately.
-
-    2014/01/14 - Version 1.8.1
-
-    2014/01/13 - Added option (bbs_patches = 'mask') to allow patches in
-        an output BBS sky model to be defined using a mask image.
-
-    2014/01/09 - Fix to bug that caused the incl_empty option to be
-        ignored when format='fits' in the write_catalog task.
-
-    2013/12/05 - Enabled output of images in CASA format in the export_image
-    	task (img_format = 'casa'). Added an option to export_image task to
-    	export an island-mask image, with ones where there is emission and
-    	zeros elsewhere (image_type = 'island_mask'). Features in the island
-    	mask may be optionally dilated by specifying the number of dilation
-    	iterations with the mask_dilation parameter. Added an option to
-    	write a CASA region file to the write_catalog task (format =
-    	'casabox'). Added an option to write a CSV catalog to the
-    	write_catalog task (format = 'csv').
-
-    2013/11/04 - Added error message when the rms is zero in some part of the
-        rms map.
-
-    2013/10/16 - Version 1.8.0
-
-    2013/10/16 - Improved wavelet fitting. Added option so that wavelet
-    	fitting can be done to the sum of images on the remaining wavelet
-    	scales, improving the signal for fitting (controlled with the
-    	atrous_sum option). Added option so that user can choose whether to
-    	include new islands found only in the wavelet images in the final
-    	fit or not (controlled with the atrous_orig_isl option).
-
-    2013/10/10 - Fixed a bug that could lead to incomplete fitting of
-        some islands. Improved overall convergence of fits.
-
-    2013/10/10 - Version 1.7.7
-
-    2013/10/10 - Improved fitting of bright sources under certain
-        circumstances.
-
-    2013/09/27 - Version 1.7.6
-
-    2013/09/27 - Changed caching behavior to ensure that temporary files
-        are always deleted after they are no longer needed or on exit.
-
-    2013/09/05 - Renamed blank_zeros to blank_limit. The blank_limit
-        option now specifies a limit below which pixels are blanked.
-
-    2013/09/05 - Enabled SAGECAL sky-model output.
-
-    2013/09/02 - Version 1.7.5
-
-    2013/09/02 - Fix to bug that caused a crash when images with 2 or
-        3 axes were used. Improved rms and mean calculation (following the
-        implementation used in PySE, see http://dare.uva.nl/document/174052
-        for details). The threshold used to determine the clipped rms and
-        mean values is now determined internally by default (kappa_clip =
-        None).
-
-    2013/08/27 - Version 1.7.4
-
-    2013/08/29 - Fix to bug in show_fit() that caused error when
-        'i' is pressed in the plot window and shapelet decomposition
-        had not been done. Tweak to 'pybdsm' startup shell script to
-        avoid problems with the Mac OS X matplotlib backend on non-
-        framework Python installations (such as Anaconda Python).
-
-    2013/08/28 - Fix to bug in process_image() that could result in
-        wavelet Gaussians being excluded from model image under certain
-        conditions.
-
-    2013/08/27 - Version 1.7.3
-
-    2013/08/27 - Fix to bug in image reading that caused images to be
-        distorted.
-
-    2013/08/23 - Version 1.7.2
-
-    2013/08/23 - Improved handling of non-standard FITS CUNIT keywords.
-        Improved loading of FITS images when trim_box is specified.
-
-    2013/08/22 - Version 1.7.1
-
-    2013/08/21 - Fix to bug that caused cached images to be deleted when
-        rerunning an analysis. Fix to bug in show_fit() due to undefined
-        images. Fix to bug in process_image() that would result in unneeded
-        reprocessing.
-
-    2013/08/20 - Version 1.7.0
-
-    2013/08/19 - PyBDSM will now use Astropy if installed for FITS and WCS
-        modules.
-
-    2013/08/11 - Fix to avoid excessive memory usage in the wavelet module
-        (replaced scipy.signal.fftconvolve with a custom function).
-
-    2013/08/11 - Added option to use disk caching for internally derived
-    	images (do_cache). Caching can reduce memory usage and is
-    	therefore useful when processing large images.
-
-    2013/07/11 - Implemented a variable operation chain for process_image
-        (and img.process()) that allows unneeded steps to be skipped if
-        the image is being reprocessed.
-
-    2013/07/11 - Fixed a bug that could cause Gaussian fitting to hang
-        during iterative fitting of large islands.
-
-    2013/06/24 - Added option (fix_to_beam) to fix the size and position
-    	angle of Gaussians to the restoring beam during fitting. Fix to
-    	bug that caused the position angle used to initialize fitting to
-    	be incorrect.
-
-    2013/03/22 - Version 1.6.1
-
-    2013/03/21 - Fix to bug in ds9 and kvis catalog files that resulted in
-        incorrect position angles. Fix to bug in position-dependent WCS
-        transformations that caused incorrect source parameters in output
-        catalogs. Added option to output uncorrected source parameters
-        to a BBS sky model file (correct_proj).
-
-    2013/03/14 - Removed sky transformations for flagged Gaussians, as
-        these could sometimes give math domain errors. Disabled aperture
-        flux measurement on wavelet images as it is not used/needed.
-
-    2013/02/25 - Version 1.6.0
-
-    2013/02/25 - Improved speed and accuracy of aperture flux
-        calculation.
-
-    2013/02/20 - Added option to use the curvature map method of
-        Hancock et al. (2012) for the initial estimation of Gaussian
-        parameters (ini_method = 'curvature') and for grouping of
-        Gaussians into sources (group_method = 'curvature').
-
-    2013/02/18 - Fix to bug in spectral index module that caused sources
-        with multiple Gaussians to be skipped. Minor adjustments to the
-        wavelet module to improve performance.
-
-    2013/02/08 - Implemented position-dependent WCS transformations.
-
-    2013/02/08 - Added option to fit to any arbitrary location in the
-        image within a given radius (src_ra_dec and src_radius_pix).
-
-    2013/02/04 - Fix to bug in wavelet module that caused crash when
-       no Gaussians were fit to the main image.
-
-    2013/01/30 - Fix to bug that resulted in incorrect numbering of
-       wavelet Gaussians. Added 'srl' output in ds9 format when using
-       output_all = True.
-
-    2013/01/28 - Fix to bug in source grouping algorithm. Improved fitting
-       when background mean is nonzero. Fix to allow images with GLAT and
-       GLON WCS coordinates. Fix to bug when equinox is taken from the
-       epoch keyword.
-
-    2012/12/19 - Version 1.5.1
-
-    2012/12/19 - Fix to bug in wavelet module that occurred when the
-        center of the wavelet Gaussian lies outside of the image. Fix
-        to re-enable srl output catalogs in ds9 region format. Fix to
-        bug that resulted in the output directory not always being
-        created. Added an option (aperture_posn), used when aperture
-        fluxes are desired, to specify whether to center the aperture
-        on the source centroid or the source peak.
-
-    2012/12/02 - Changes to reduce memory usage, particularly in the
-        wavelet module.
-
-    2012/11/30 - Fix to bypass bug in matplotlib when display variable
-        is not set.
-
-    2012/11/21 - Fixed bug that caused a crash when a detection image
-        was used. Fixed a bug with incorrect save directory when
-        plot_allgaus = True.
-
-    2012/10/29 - Version 1.5.0
-
-    2012/10/29 - Improved handling of WCS information so that a much
-        greater variety of WCS systems may be used. Fixed a bug in logging
-        that occurred when negative values were found in the rms map.
-        Updated installation instructions.
-
-    2012/10/12 - Version 1.4.5
-
-    2012/10/12 - Added option (incl_empty) to include empty islands (that
-        have no un-flagged Gaussians) in output catalogs. Any such empty
-        islands are given negative source IDs and positions given by the
-        location of the peak of the island.
-
-    2012/10/10 - Fixed a bug in Gaussian fitting that could cause a crash
-        when fitting fails. Fixed a bug in parallelization that could
-        cause a crash due to improper concatenation of result lists.
-
-    2012/10/09 - Version 1.4.4
-
-    2012/10/09 - Improved logging. Added a warning when one or more islands
-        are not fit properly (i.e., no valid, unflagged Gaussians were
-        fit). Fixed a bug in parallelization of Gaussian fitting that
-        could cause a crash due to improper mapping of island lists to
-        processes.
-
-    2012/10/05 - Added code to handle images with no unblanked pixels.
-        Improved fitting robustness.
-
-    2012/10/04 - Version 1.4.3
-
-    2012/10/04 - Fixed a bug in the mean map calculation that caused mean
-        maps with constant values (i.e., non-2D maps) to have values of
-        0.0 Jy/beam unless mean_map = 'const' was explicitly specified.
-        Fixed a bug in Gaussian fitting that could cause an island to be
-        skipped.
-
-    2012/10/02 - Fixed a bug in the PSF vary module that resulted in
-        incorrect PSF generators being used. Added an option to smooth
-        the resulting PSF images (psf_smooth). Parallelized the PSF
-        interpolation and smoothing steps. Improved PSF vary documentation.
-
-    2012/09/25 - Version 1.4.2
-
-    2012/09/25 - Dramatically reduced the time required to identify valid
-        wavelet islands.
-
-    2012/09/21 - Fixed bug that resulted in output FITS gaul tables being
-        improperly sorted. Fixed cosmetic bug in the statusbar that could
-        sometimes cause improper formatting. Added example of SAMP usage
-        to the documentation.
-
-    2012/09/20 - Version 1.4.1
-
-    2012/09/20 - Fixed a bug in the wavelet module that caused a crash when
-        no Gaussians were fit to the ch0 image.
-
-    2012/09/19 - Added option (broadcast) to show_fit task to send
-    	coordinates and row highlight request to a SAMP hub when a Gaussian
-    	is clicked. Fixed bug in aperture flux masking that sometimes caused
-    	the mask to be the wrong shape.
-
-    2012/09/18 - Added option to send images and catalogs to a SAMP hub
-        (activated by setting outfile = 'SAMP' in the export_image and
-        write_catalog tasks).
-
-    2012/09/13 - Improved speed of plotting when images are large and in
-        mean/rms map generation. Fixed bug that caused residual image
-        statistics to fail when NaNs are present.
-
-    2012/09/11 - Version 1.4.0
-
-    2012/09/11 - Parallelized Gaussian fitting, shapelet decomposition,
-        validation of wavelet islands, and mean/rms map generation.
-        The number of cores to be used can be specified with the ncores
-        option (default is to use up to 8). Fixed bug in SED plotting in
-        the show_fit task.
-
-    2012/08/29 - Fixed incorrect terminal size in parameter listing. Added
-        logging of non-default input parameters and internally derived
-        parameters.
-
-    2012/08/22 - Version 1.3.2
-
-    2012/08/22 - Fixed a bug that caused the user-specified rms_box to be
-        ignored. Added an option to enable the Monte Carlo error estimation
-        for 'M'-type sources (the do_mc_errors option), which is now
-        disabled by default.
-
-    2012/07/11 - Version 1.3.1
-
-    2012/07/11 - Cleaned up unused options.
-
-    2012/07/10 - Fixed a bug that caused a segfault during Gaussian
-        fitting. Fixed a bug that caused a crash when a detection image
-        is used.
-
-    2012/07/05 - Fixed a bug that caused images written when output_all =
-        True to be transposed. Added frequency information to all output
-        images. Improved fitting robustness to prevent rare cases in
-        which no valid Gaussians could be fit to an island. Modified the
-        island-finding routine to handle NaNs properly.
-
-    2012/07/03 - Version 1.3
-
-    2012/07/03 - Fixed a bug in calculation of the positional errors of
-        Gaussians. If interactive=True and image is large (> 4096 pixels),
-        display is limited to 'ch0_islands' only; otherwise, show_fit()
-        is very slow. Tweaked show_fit() to better display a single image.
-
-    2012/07/02 - Adjusted rms_box algorithm to check for negative rms
-        values (due to interpolation with cubic spline). If negative
-        values are found, either the box size is increased or the
-        interpolation is done with order=1 (bilinear) instead.
-
-    2012/06/28 - Output now includes the residual image produced by
-        using only wavelet Gaussians (if any) when atrous_do=True and
-        output_all=True. Improved organization of files when
-        output_all=True. Added logging of simple statistics (mean,
-        std. dev, skew, and kurtosis) of the residual images.
-
-    2012/06/22 - Included image rotation (if any) in beam definition.
-        Rotation angle can vary across the image (defined by image WCS).
-
-    2012/06/19 - Changed exception handling to raise exceptions when
-        the interactive shell is not being used. Fixed bug that
-        caused a crash when using show_fit() when no islands were
-        found.
-
-    2012/06/15 - Added Sagecal output format for Gaussian catalogs.
-
-    2012/06/14 - Added check for newer versions of the PyBDSM
-        software tar.gz file available on ftp.strw.leidenuniv.nl.
-
-    2012/06/13 - Added total island flux (from sum of pixels) to
-        "gaul" and "srl" catalogs.
-
-    2012/06/06 - Version 1.2
-
-    2012/06/06 - Added option to calculate fluxes within a specified
-        aperture radius in pixels (set with the "aperture" option).
-        Aperture fluxes, if measured, are output in the 'srl' catalogs.
-        Changed code that determines terminal width to be more robust.
-
+    
     2012/05/07 - Removed dependencies on matplotlib -- if matplotlib is
     	not available, plotting is disabled. Corrected inconsistencies,
     	spelling mistakes, etc. in help text and documentation. Cleaned
     	up unneeded modules and files.
-
+    
     2012/05/02 - Added option to output flux densities for every channel
     	found by the spectral index module. Added option to spectral index
     	module to allow use of flux densities that do not meet the desired
     	SNR. Changed flag_maxsnr criterion to also flag if the peak flux
     	density per beam of the Gaussian exceeds the value at its center.
     	Removed incl_wavelet option.
-
+                 
     2012/04/20 - Promoted the adaptive_rms_box parameter to the main options
     	listing and added the rms_box_bright option so that the user can
     	specify either (or both) of the rms_boxes. Fixed bug in wavelet
@@ -397,8 +50,8 @@ def changelog():
     	being masked properly.
 
     2012/04/17 - Fixed bug in psf_vary module that resulted in PSF major and
-    	minor axis maps in terms of sigma instead of FWHM. Added option
-    	(psf_stype_only) to allow PSF fitting to non- S-type sources
+    	minor axis maps in terms of sigma instead of FWHM. Added psf_vary
+    	option (psf_stype_only) to allow PSF fitting to non- S-type sources
     	(useful if sources are very distorted).
 
     2012/04/12 - Fixed bug in adaptive scaling code that could cause
@@ -413,7 +66,7 @@ def changelog():
     	mean maps when both strong artifacts and extended sources are
     	present. Fixed bug that prevented plotting of results during wavelet
     	decomposition when interactive = True.
-
+    
     2012/03/29 - Fixed bug in wavelet module that could cause incorrect
     	associations of Gaussians. Fixed bug in show_fit that displayed
     	incorrect model and residual images when wavelets were used.
@@ -569,6 +222,7 @@ def changelog():
     2011/09/08 - Version 1.0
 
     2011/09/08 - Versioning system changed to use _version.py.
-
+    
     """
     pass
+    

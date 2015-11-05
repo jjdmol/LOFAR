@@ -9,20 +9,9 @@ Parameters for substitution are passed to get_sql.
 """
 from os import path
 import re
-from src.queries import *
+from src.queries import _get_assoc_r, _get_distance, _get_column_update
 
 SQL_LIST = {}
-
-# Global parameters: image_id etc.
-GLOBALS = {}
-
-
-def re_sub(regexp, sub_to, sub_from, count=0, flags=0):
-    """
-    Run regexp-substitute with flags.
-    """
-    prog = re.compile(regexp, flags)
-    return prog.sub(sub_to, sub_from, count=count)
 
 
 def _expand_value(value):
@@ -30,11 +19,8 @@ def _expand_value(value):
     Replace all occurences of $$function()$$ by result of the function call.
     """
     def _expand_formula(matchvalues):
-        """
-        Expand $$..$$ by calculating value in $s.
-        """
         return str(eval(matchvalues.group(0)[2:-2]))
-    return re_sub(r'\$\$(.*?)\$\$', _expand_formula, value, count=0)
+    return re.sub(r'\$\$(.*?)\$\$', _expand_formula, value, count=0)
 
 
 def _load_from_sql_list(filename):
@@ -42,34 +28,21 @@ def _load_from_sql_list(filename):
     Load sql-commands from file.
     Command name is prefixed by --#
     """
-    sqls = open(filename, 'r')
+    sqlfile = open(filename, 'r')
     hashkey = None
     hashvalue = ''
-    for line in iter(sqls.readline, ''):
+    for line in iter(sqlfile.readline, ''):
         if (line.startswith('--#')):
             if hashkey:
                 SQL_LIST[hashkey] = _expand_value(hashvalue)
                 hashvalue = ''
             hashkey = line[3:].strip()
         elif (not line.startswith('--')) and line:
-            if line.find('--') > 0:  # Drop comments
-                line = line[:line.index('--')]
             hashvalue = '%s %s' % (hashvalue, line.strip())
     if hashkey:
         SQL_LIST[hashkey] = _expand_value(hashvalue)
-    sqls.close()
-
-
-def _substitute_globals(sql):
-    """
-    Substitute all [param] with a value of GLOBALS[param].
-    """
-    def _substitute_global(matchvalue):
-        if matchvalue.group(0)[1:-1] in GLOBALS:
-            return str(GLOBALS[matchvalue.group(0)[1:-1]])
-        else:
-            return ''
-    return re_sub(r'\[(.?)\]', _substitute_global, sql, count=0)
+    print 'Loaded SQL list'
+    sqlfile.close()
 
 
 def get_sql(name, *params):
@@ -79,18 +52,10 @@ def get_sql(name, *params):
     if not name in SQL_LIST:
         raise IndexError('Name %s not in sqllist.sql' % name)
     if (SQL_LIST[name].find('%') >= 0):
-        return_sql = SQL_LIST[name] % (params)
+        return SQL_LIST[name] % (params)
     else:
-        return_sql = SQL_LIST[name].format(*params)
-    return _substitute_globals(return_sql)
+        return SQL_LIST[name].format(*params)
 
 
-for sqlfile in ['sqllist.sql',
-                'sqllist_api.sql',
-                'sqllist_associate.sql',
-                'sqllist_join.sql',
-                'sqllist_new.sql',
-                'sqllist_update.sql',
-                'sqllist_deduct.sql',
-                'sqllist_group.sql']:
-    _load_from_sql_list(path.dirname(path.abspath(__file__)) + '/%s' % sqlfile)
+_load_from_sql_list(path.dirname(path.abspath(__file__)) + '/sqllist.sql')
+_load_from_sql_list(path.dirname(path.abspath(__file__)) + '/sqllist_api.sql')

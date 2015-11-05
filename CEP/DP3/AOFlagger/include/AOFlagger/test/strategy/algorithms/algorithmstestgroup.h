@@ -25,7 +25,6 @@
 #include <AOFlagger/test/strategy/algorithms/convolutionstest.h>
 #include <AOFlagger/test/strategy/algorithms/dilationtest.h>
 #include <AOFlagger/test/strategy/algorithms/eigenvaluetest.h>
-#include <AOFlagger/test/strategy/algorithms/highpassfiltertest.h>
 #include <AOFlagger/test/strategy/algorithms/noisestatisticstest.h>
 #include <AOFlagger/test/strategy/algorithms/noisestatisticscollectortest.h>
 #include <AOFlagger/test/strategy/algorithms/siroperatortest.h>
@@ -42,7 +41,6 @@ class AlgorithmsTestGroup : public TestGroup {
 			Add(new ConvolutionsTest());
 			Add(new DilationTest());
 			Add(new EigenvalueTest());
-			Add(new HighPassFilterTest());
 			Add(new NoiseStatisticsTest());
 			Add(new NoiseStatisticsCollectorTest());
 			Add(new SIROperatorTest());

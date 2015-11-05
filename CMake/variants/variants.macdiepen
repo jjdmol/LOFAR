@@ -1,4 +1,5 @@
 # Specific options
+option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 option(USE_BACKTRACE     "No backtrace" OFF)
 option(USE_LOG4CPLUS     "log4cxx is used" OFF)
 option(USE_LOG4CXX     "log4cxx is used" OFF)

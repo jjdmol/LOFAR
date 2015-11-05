@@ -91,9 +91,9 @@ size_t MeasurementSet::FrequencyCount()
 	return _maxFrequencyIndex;
 }
 
-size_t MeasurementSet::BandCount(const std::string &location)
+size_t MeasurementSet::BandCount()
 {
-	casa::MeasurementSet ms(location);
+	casa::MeasurementSet ms(_location);
 	casa::Table spwTable = ms.spectralWindow();
 	size_t count = spwTable.nrow();
 	return count;
@@ -157,7 +157,7 @@ size_t MeasurementSet::AntennaCount()
 	return count;
 }
 
-class AntennaInfo MeasurementSet::GetAntennaInfo(unsigned antennaId)
+struct AntennaInfo MeasurementSet::GetAntennaInfo(unsigned antennaId)
 {
 	casa::MeasurementSet ms(_location);
 	casa::Table antennaTable = ms.antenna();
@@ -207,18 +207,15 @@ BandInfo MeasurementSet::GetBandInfo(const std::string &filename, unsigned bandI
 	casa::ROArrayColumn<double> frequencyCol(spectralWindowTable, "CHAN_FREQ");
 
 	band.windowIndex = bandIndex;
-	size_t channelCount = numChanCol(bandIndex);
+	band.channelCount = numChanCol(bandIndex);
 
 	const casa::Array<double> &frequencies = frequencyCol(bandIndex);
 	casa::Array<double>::const_iterator frequencyIterator = frequencies.begin();
 
-	for(unsigned channel=0;channel<channelCount;++channel) {
+	for(unsigned channel=0;channel<band.channelCount;++channel) {
 		ChannelInfo channelInfo;
 		channelInfo.frequencyIndex = channel;
 		channelInfo.frequencyHz = frequencies(casa::IPosition(1, channel));
-		channelInfo.channelWidthHz = 0.0;
-		channelInfo.effectiveBandWidthHz = 0.0;
-		channelInfo.resolutionHz = 0.0;
 		band.channels.push_back(channelInfo);
 
 		++frequencyIterator;
@@ -235,7 +232,7 @@ size_t MeasurementSet::FieldCount()
 	return fieldCount;
 }
 
-class FieldInfo MeasurementSet::GetFieldInfo(unsigned fieldIndex)
+struct FieldInfo MeasurementSet::GetFieldInfo(unsigned fieldIndex)
 {
 	casa::MeasurementSet ms(_location);
 	casa::Table fieldTable = ms.field();
@@ -462,7 +459,7 @@ bool MeasurementSet::ChannelZeroIsRubish()
 		if(station != "LOFAR") return false;
 		// This is of course a hack, but its the best estimate we can make :-/ (easily)
 		const BandInfo bandInfo = GetBandInfo(0);
-		return (bandInfo.channels.size() == 256 || bandInfo.channels.size()==64);
+		return (bandInfo.channelCount == 256 || bandInfo.channelCount==64);
 	} catch(std::exception &e)
 	{
 		return false;

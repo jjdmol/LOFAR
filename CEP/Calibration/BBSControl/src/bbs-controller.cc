@@ -97,11 +97,11 @@ int main(int argc, char *argv[])
 
   if(options.getBool("Help", false))
   {
-    cout << "Usage: " << progName << " [OPTION]... GDS PARSET" << endl
+    cout << "Usage: " << progName << " [OPTION]... VDS PARSET" << endl
       << endl
       << "Control the distributed execution of the reduction of the observation"
       " described" << endl
-      << "by the specified GDS file. (The GDS file is mainly just a list of"
+      << "by the specified VDS file. (The VDS file is mainly just a list of"
       " paths to" << endl
       << "measurement sets (MS) that together constitute the observation.) The"
       " reduction" << endl
@@ -131,6 +131,11 @@ int main(int argc, char *argv[])
   catch(Exception &ex)
   {
     LOG_FATAL_STR(progName << " terminated due to an exception: " << ex);
+    return 1;
+  }
+  catch(...)
+  {
+    LOG_FATAL_STR(progName << " terminated due to an unknown exception.");
     return 1;
   }
 

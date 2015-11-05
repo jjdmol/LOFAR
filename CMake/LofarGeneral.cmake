@@ -13,7 +13,7 @@
 
 #  Copyright (C) 2008-2010
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
-#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -125,18 +125,6 @@ if(NOT DEFINED LOFAR_GENERAL_INCLUDED)
         #endif
       }" HAVE_GETPROTOBYNAME_R)
   endif(HAVE_NETDB_H)
-
-  ## --------------------------------------------------------------------------
-  ## Define `STRNLEN', if the strnlen() function exists.
-  ## --------------------------------------------------------------------------
-  check_c_source_compiles("
-    #include <string.h>
-    #include <stdio.h>
-    int main() {
-      char *s = \"test\";
-      int i = 3;
-      unsigned l = strnlen(s,i);
-    }" HAVE_STRNLEN)
 
   ## --------------------------------------------------------------------------
   ## Define custom target 'check', so that we can do 'make check', like we did

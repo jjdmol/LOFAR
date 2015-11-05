@@ -15,7 +15,7 @@ from lofarpipe.support.utilities import create_directory
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.data_map import DataMap
+from lofarpipe.support.group_data import load_data_map
 from lofarpipe.support.pipelinelogging import log_process_output
 
 class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
@@ -24,13 +24,9 @@ class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
     see the ``unlink`` input parameter) describing a collection of
     MeasurementSets.
 
-    1. Load data from disk, create the output vds paths
-    2. Call the vdsmaker node script to generate the vds files
-    3. Combine the vds files in a gvds file (master side operation)
-    
-    **Command line arguments**
+    **Arguments**
 
-    A mapfile describing the measurementsets to be processed.
+    A mapfile describing the data to be processed.
     """
     inputs = {
         'gvds': ingredient.StringField(
@@ -66,60 +62,48 @@ class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
     }
 
     def go(self):
-        """
-        Contains functionality of the vdsmaker
-        """
         super(vdsmaker, self).go()
-        # **********************************************************************
-        # 1. Load data from disk create output files
+
+        #                           Load file <-> compute node mapping from disk
+        # ----------------------------------------------------------------------
         args = self.inputs['args']
         self.logger.debug("Loading input-data mapfile: %s" % args[0])
-        data = DataMap.load(args[0])
+        data = load_data_map(args[0])
 
-        # Skip items in `data` that have 'skip' set to True
-        data.iterator = DataMap.SkipIterator
-
-        # Create output vds names
         vdsnames = [
             os.path.join(
-                self.inputs['directory'], os.path.basename(item.file) + '.vds'
-            ) for item in data
+                self.inputs['directory'], os.path.basename(x[1]) + '.vds'
+            ) for x in data
         ]
 
-        # *********************************************************************
-        # 2. Call vdsmaker 
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
         jobs = []
-        for inp, vdsfile in zip(data, vdsnames):
+        for host, infile, outfile in (x+(y,) for x, y in zip(data, vdsnames)):
             jobs.append(
                 ComputeJob(
-                    inp.host, command,
+                    host, command,
                     arguments=[
-                        inp.file,
+                        infile,
                         self.config.get('cluster', 'clusterdesc'),
-                        vdsfile,
+                        outfile,
                         self.inputs['makevds']
                     ]
                 )
             )
         self._schedule_jobs(jobs, max_per_node=self.inputs['nproc'])
-        vdsnames = [
-            vds for vds, job in zip(vdsnames, jobs) 
-            if job.results['returncode'] == 0
-        ]
-        if not vdsnames:
-            self.logger.error("All makevds processes failed. Bailing out!")
+
+        if self.error.isSet():
+            self.logger.warn("Failed vdsmaker process detected")
             return 1
 
-        # *********************************************************************
-        # 3. Combine VDS files to produce GDS
+        # Combine VDS files to produce GDS
         failure = False
         self.logger.info("Combining VDS files")
         executable = self.inputs['combinevds']
         gvds_out = self.inputs['gvds']
         # Create the gvds directory for output files, needed for combine
         create_directory(os.path.dirname(gvds_out))
-
+ 
         try:
             command = [executable, gvds_out] + vdsnames
             combineproc = subprocess.Popen(
@@ -150,9 +134,8 @@ class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
                 for name in vdsnames:
                     os.unlink(name)
             self.logger.info("vdsmaker done")
-
         if failure:
-            self.logger.info("Error was set, exit vds maker with error state")
+            self.logger.info("Failure was set")
             return 1
         elif not self.outputs.complete():
             self.logger.info("Outputs incomplete")

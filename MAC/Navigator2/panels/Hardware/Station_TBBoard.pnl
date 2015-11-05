@@ -1,7 +1,7 @@
-V 11
+V 10
 1
 LANG:1 8 (NoName)
-PANEL,-1 -1 1200 823 N "_3DFace" 0
+PANEL,-1 -1 952 723 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel
@@ -366,8 +366,9 @@ LANG:1 0
 E E 0 1 1 0 1 E U  0 E 568 643 638 659
 0 2 0 "0s" 0 0 0 66 0 0  568 643 1
 1
-LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
-0 1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 12 Voltage 2.5:
 2 85
 "txt_voltage12"
@@ -382,11 +383,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 672 619 697 635
+E E 0 1 1 0 1 E U  0 E 672 619 697 636
 0 2 0 "1.2f" 4 0 0 194 0 0  697 619 1
 1
-LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
-0 1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 4 0.00
 2 86
 "txt_voltage25"
@@ -401,11 +403,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 672 643 697 659
+E E 0 1 1 0 1 E U  0 E 672 643 697 660
 0 2 0 "1.2f" 4 0 0 194 0 0  697 643 1
 1
-LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
-0 1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 4 0.00
 2 87
 "txt_unitVoltage12"
@@ -420,11 +423,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 700 619 710 635
+E E 0 1 1 0 1 E U  0 E 700 619 709 636
 0 2 0 "0s" 0 0 0 192 0 0  700 619 1
 1
-LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
-0 1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 1 V
 2 88
 "txt_unitVoltage25"
@@ -439,11 +443,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 700 643 710 659
+E E 0 1 1 0 1 E U  0 E 700 643 709 660
 0 2 0 "0s" 0 0 0 192 0 0  700 643 1
 1
-LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
-0 1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 1 V
 2 84
 "label_voltage12"
@@ -461,8 +466,9 @@ LANG:1 0
 E E 0 1 1 0 1 E U  0 E 568 619 638 638
 0 2 0 "0s" 0 0 0 66 0 0  568 619 1
 1
-LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
-0 1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 12 Voltage 1.2:
 1 420 11 "" 23
 0
@@ -829,11 +835,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 157 667 211 683
+E E 0 1 1 0 1 E U  0 E 157 667 211 684
 0 2 0 "0s" 0 0 0 192 0 0  157 667 1
 1
-LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
-0 1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 8 BoardId:
 2 80
 "txt_boardid"
@@ -848,11 +855,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 215 667 250 683
+E E 0 1 1 0 1 E U  0 E 215 667 250 684
 0 2 0 "5d" 5 0 0 192 0 0  215 667 1
 1
-LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
-0 1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 5 00000
 2 81
 "txt_ramsize"
@@ -867,11 +875,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 277 667 305 683
+E E 0 1 1 0 1 E U  0 E 277 667 305 684
 0 2 0 "8s" 8 0 0 192 0 0  277 667 1
 1
-LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
-0 1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 4 0000
 2 82
 "Text4"
@@ -886,11 +895,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 316 667 345 683
+E E 0 1 1 0 1 E U  0 E 316 667 345 684
 0 2 0 "0s" 0 0 0 192 0 0  316 667 1
 1
-LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
-0 1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 3 RAM
 2 89
 "label_voltage33"
@@ -908,8 +918,9 @@ LANG:1 0
 E E 0 1 1 0 1 E U  0 E 568 665 638 683
 0 2 0 "0s" 0 0 0 66 0 0  568 665 1
 1
-LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
-0 1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 12 Voltage 3.3:
 2 90
 "txt_voltage33"
@@ -924,11 +935,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 672 665 697 681
+E E 0 1 1 0 1 E U  0 E 672 665 697 682
 0 2 0 "1.2f" 4 0 0 194 0 0  697 665 1
 1
-LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
-0 1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 4 0.00
 2 91
 "txt_unitVoltage33"
@@ -943,11 +955,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 700 665 710 681
+E E 0 1 1 0 1 E U  0 E 700 665 709 682
 0 2 0 "0s" 0 0 0 192 0 0  700 665 1
 1
-LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
-0 1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 1 V
 1 600 28 "" 0
 0
@@ -1658,11 +1671,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 76 234 85 250
+E E 0 1 1 0 1 E U  0 E 76 234 85 251
 0 2 0 "0s" 0 0 0 192 0 0  76 234 1
 1
-LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
-0 1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 1 X
 2 359
 "Text5"
@@ -1677,11 +1691,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 76 94 85 110
+E E 0 1 1 0 1 E U  0 E 76 94 85 111
 0 2 0 "0s" 0 0 0 192 0 0  76 94 1
 1
-LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
-0 1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 1 X
 2 360
 "Text6"
@@ -1696,11 +1711,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 76 375 85 391
+E E 0 1 1 0 1 E U  0 E 76 375 85 392
 0 2 0 "0s" 0 0 0 192 0 0  76 375 1
 1
-LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
-0 1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 1 X
 2 361
 "Text7"
@@ -1715,11 +1731,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 76 515 85 531
+E E 0 1 1 0 1 E U  0 E 76 515 85 532
 0 2 0 "0s" 0 0 0 192 0 0  76 515 1
 1
-LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
-0 1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 1 X
 2 362
 "Text8"
@@ -1734,11 +1751,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 861 57 870 73
+E E 0 1 1 0 1 E U  0 E 861 57 870 74
 0 2 0 "0s" 0 0 0 192 0 0  861 57 1
 1
-LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
-0 1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 1 X
 2 363
 "Text9"
@@ -1753,11 +1771,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 861 196 870 212
+E E 0 1 1 0 1 E U  0 E 861 196 870 213
 0 2 0 "0s" 0 0 0 192 0 0  861 196 1
 1
-LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
-0 1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 1 X
 2 364
 "Text10"
@@ -1772,11 +1791,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 861 337 870 353
+E E 0 1 1 0 1 E U  0 E 861 337 870 354
 0 2 0 "0s" 0 0 0 192 0 0  861 337 1
 1
-LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
-0 1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 1 X
 2 365
 "Text11"
@@ -1791,11 +1811,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 861 479 870 495
+E E 0 1 1 0 1 E U  0 E 861 479 870 496
 0 2 0 "0s" 0 0 0 192 0 0  861 479 1
 1
-LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
-0 1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 1 X
 2 366
 "Text12"
@@ -1810,11 +1831,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 77 130 86 146
+E E 0 1 1 0 1 E U  0 E 77 130 85 147
 0 2 0 "0s" 0 0 0 192 0 0  77 130 1
 1
-LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
-0 1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 1 Y
 2 367
 "Text13"
@@ -1829,11 +1851,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 77 270 86 286
+E E 0 1 1 0 1 E U  0 E 77 270 85 287
 0 2 0 "0s" 0 0 0 192 0 0  77 270 1
 1
-LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
-0 1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 1 Y
 2 368
 "Text14"
@@ -1848,11 +1871,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 77 410 86 426
+E E 0 1 1 0 1 E U  0 E 77 410 85 427
 0 2 0 "0s" 0 0 0 192 0 0  77 410 1
 1
-LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
-0 1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 1 Y
 2 369
 "Text15"
@@ -1867,11 +1891,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 77 551 86 567
+E E 0 1 1 0 1 E U  0 E 77 551 85 568
 0 2 0 "0s" 0 0 0 192 0 0  77 551 1
 1
-LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
-0 1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 1 Y
 2 370
 "Text16"
@@ -1886,11 +1911,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 861 89 870 105
+E E 0 1 1 0 1 E U  0 E 861 89 869 106
 0 2 0 "0s" 0 0 0 192 0 0  861 89 1
 1
-LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
-0 1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 1 Y
 2 371
 "Text17"
@@ -1905,11 +1931,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 861 231 870 247
+E E 0 1 1 0 1 E U  0 E 861 231 869 248
 0 2 0 "0s" 0 0 0 192 0 0  861 231 1
 1
-LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
-0 1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 1 Y
 2 372
 "Text18"
@@ -1924,11 +1951,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 861 372 870 388
+E E 0 1 1 0 1 E U  0 E 861 372 869 389
 0 2 0 "0s" 0 0 0 192 0 0  861 372 1
 1
-LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
-0 1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 1 Y
 2 373
 "Text19"
@@ -1943,11 +1971,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 861 514 870 530
+E E 0 1 1 0 1 E U  0 E 861 514 869 531
 0 2 0 "0s" 0 0 0 192 0 0  861 514 1
 1
-LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
-0 1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 1 Y
 4 102
 "Line9"
@@ -2074,8 +2103,9 @@ LANG:1 0
 
 0
 1
-LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
-0  154 628 368 662
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 154 628 368 662
 
 T 
 1
@@ -2133,150 +2163,150 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-3 9 "" -1
+3 9 ""
 "objects\\Hardware\\TBBoard.pnl" 482 421 T 16 1 0 1 -76 269
 0
-3 11 "" -1
+3 11 ""
 "objects\\Hardware\\RCU_TBB.pnl" 106 63 T 48 1 0 1 -10 61
 1
 "$rcuNr""0"
-3 12 "" -1
+3 12 ""
 "objects\\Hardware\\RCU_TBB.pnl" 96 178 T 49 1 0 1 0 13
 1
 "$rcuNr""1"
-3 13 "" -1
+3 13 ""
 "objects\\Hardware\\RCU_TBB.pnl" 59 285 T 50 1 0 1 37 -20
 1
 "$rcuNr""2"
-3 14 "" -1
+3 14 ""
 "objects\\Hardware\\RCU_TBB.pnl" 76 349 T 50 1 0 1 20 -17
 1
 "$rcuNr""3"
-3 15 "" -1
+3 15 ""
 "objects\\Hardware\\RCU_TBB.pnl" 115 369 T 51 1 0 1 -19 38
 1
 "$rcuNr""4"
-3 16 "" -1
+3 16 ""
 "objects\\Hardware\\RCU_TBB.pnl" 120 452 T 52 1 0 1 -24 22
 1
 "$rcuNr""5"
-3 17 "" -1
+3 17 ""
 "objects\\Hardware\\RCU_TBB.pnl" 119 485 T 53 1 0 1 -23 63
 1
 "$rcuNr""6"
-3 18 "" -1
+3 18 ""
 "objects\\Hardware\\RCU_TBB.pnl" 131 575 T 54 1 0 1 -35 40
 1
 "$rcuNr""7"
-3 19 "Group20" -1
+3 19 "Group20"
 "objects\\Hardware\\RCU_TBB.pnl" 50 52 T 55 1 0 1 615 33
 1
 "$rcuNr""8"
-3 20 "Group21" -1
+3 20 "Group21"
 "objects\\Hardware\\RCU_TBB.pnl" 50 119 T 56 1 0 1 615 33
 1
 "$rcuNr""9"
-3 21 "Group22" -1
+3 21 "Group22"
 "objects\\Hardware\\RCU_TBB.pnl" 50 193 T 57 1 0 1 615 33
 1
 "$rcuNr""10"
-3 22 "Group23" -1
+3 22 "Group23"
 "objects\\Hardware\\RCU_TBB.pnl" 50 260 T 58 1 0 1 615 33
 1
 "$rcuNr""11"
-3 23 "Group24" -1
+3 23 "Group24"
 "objects\\Hardware\\RCU_TBB.pnl" 50 335 T 59 1 0 1 615 33
 1
 "$rcuNr""12"
-3 24 "Group25" -1
+3 24 "Group25"
 "objects\\Hardware\\RCU_TBB.pnl" 50 402 T 60 1 0 1 615 33
 1
 "$rcuNr""13"
-3 25 "Group26" -1
+3 25 "Group26"
 "objects\\Hardware\\RCU_TBB.pnl" 50 476 T 61 1 0 1 615 33
 1
 "$rcuNr""14"
-3 26 "Group27" -1
+3 26 "Group27"
 "objects\\Hardware\\RCU_TBB.pnl" 50 543 T 62 1 0 1 615 33
 1
 "$rcuNr""15"
-3 27 "" -1
+3 27 ""
 "objects\\Hardware\\TBB_RSP.pnl" 268 325 T 78 1 0 1 34 265
 1
 "$position""left"
-3 28 "" -1
+3 28 ""
 "objects\\Hardware\\TBB_AP.pnl" 289 128 T 79 1 0 1 27 16
 2
 "$APNr""0"
 "$rcuStartNr""0"
-3 29 "" -1
+3 29 ""
 "objects\\Hardware\\TBB_AP.pnl" 291 246 T 80 1 0 1 25 38
 2
 "$APNr""1"
 "$rcuStartNr""0"
-3 30 "" -1
+3 30 ""
 "objects\\Hardware\\TBB_AP.pnl" 297 398 T 81 1 0 1 19 25
 2
 "$APNr""2"
 "$rcuStartNr""0"
-3 31 "" -1
+3 31 ""
 "objects\\Hardware\\TBB_AP.pnl" 303 541 T 82 1 0 1 13 23
 2
 "$APNr""3"
 "$rcuStartNr""0"
-3 32 "" -1
+3 32 ""
 "objects\\Hardware\\TBB_RSP.pnl" 545 371 T 82 1 0 1 8 219
 1
 "$position""right"
-3 33 "" -1
+3 33 ""
 "objects\\Hardware\\TBB_AP.pnl" 531 91 T 83 1 0 1 38 13
 2
 "$APNr""0"
 "$rcuStartNr""8"
-3 34 "" -1
+3 34 ""
 "objects\\Hardware\\TBB_AP.pnl" 547 211 T 84 1 0 1 22 32
 2
 "$APNr""1"
 "$rcuStartNr""8"
-3 35 "" -1
+3 35 ""
 "objects\\Hardware\\TBB_AP.pnl" 544 352 T 85 1 0 1 25 31
 2
 "$APNr""2"
 "$rcuStartNr""8"
-3 36 "" -1
+3 36 ""
 "objects\\Hardware\\TBB_AP.pnl" 540 493 T 86 1 0 1 29 29
 2
 "$APNr""3"
 "$rcuStartNr""8"
-3 38 "" -1
+3 38 ""
 "objects\\Hardware\\AntenneSymbol.pnl" 45 116 T 88 1 0 1 -35 -31
 1
 "$antNr""0"
-3 39 "" -1
+3 39 ""
 "objects\\Hardware\\AntenneSymbol.pnl" 42 252 T 89 1 0 1 -32 -29
 1
 "$antNr""1"
-3 40 "" -1
+3 40 ""
 "objects\\Hardware\\AntenneSymbol.pnl" 38 409 T 90 1 0 1 -28 -45
 1
 "$antNr""2"
-3 41 "" -1
+3 41 ""
 "objects\\Hardware\\AntenneSymbol.pnl" 40 548 T 91 1 0 1 -30 -45
 1
 "$antNr""3"
-3 42 "" -1
+3 42 ""
 "objects\\Hardware\\AntenneSymbol.pnl" 920 77 T 92 1 0 1 -50 -31
 1
 "$antNr""4"
-3 43 "" -1
+3 43 ""
 "objects\\Hardware\\AntenneSymbol.pnl" 912 213 T 93 1 0 1 -42 -27
 1
 "$antNr""5"
-3 44 "" -1
+3 44 ""
 "objects\\Hardware\\AntenneSymbol.pnl" 906 361 T 94 1 0 1 -36 -34
 1
 "$antNr""6"
-3 45 "" -1
+3 45 ""
 "objects\\Hardware\\AntenneSymbol.pnl" 913 496 T 95 1 0 1 -43 -27
 1
 "$antNr""7"

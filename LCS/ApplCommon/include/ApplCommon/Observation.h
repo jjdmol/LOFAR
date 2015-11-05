@@ -34,7 +34,6 @@
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
 #include <Common/LofarConstants.h>
-#include <ctime>
 
 namespace LOFAR {
 
@@ -54,7 +53,7 @@ public:
 	Observation();
 	~Observation();
 //	explicit	Observation (const ParameterSet*		aParSet, bool	hasDualHBA = false);
-	explicit	Observation (const ParameterSet*		aParSet, bool	hasDualHBA, unsigned nrBGPIOnodes = 64);
+	explicit	Observation (const ParameterSet*		aParSet, bool	hasDualHBA);
 
 	// global function for converting filtername to nyquist zone
 	static uint nyquistzoneFromFilter(const string&	filterName);
@@ -180,7 +179,6 @@ public:
 	vector<string>	stations;
 	int				nrSlotsInFrame;
 	int				sampleClock;		// 160 | 200
-    int             bitsPerSample;      // 4 | 8 | 16
 	string			filter;				// LBA_30_80, LBA_10_90, HBA_110_190, etc.
 	string			MSNameMask;
 	string			realPVSSdatapoint;
@@ -199,11 +197,6 @@ public:
 	vector<AnaBeam>	anaBeams;
 
     vector<StreamToStorage> streamsToStorage; 
-
-	// type of observation
-	string			processType;
-	string			processSubtype;
-	string			strategy;
 
 	// couple of values of the virtual instrument as compacted strings
 	string			receiverList;

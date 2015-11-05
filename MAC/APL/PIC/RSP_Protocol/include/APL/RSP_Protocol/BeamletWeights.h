@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ namespace LOFAR {
       /* Destructor for BeamletWeights. */
       virtual ~BeamletWeights() {}
 
-      static const int NDIM = 4; // dimension (N_POL) REMOVED, now using rcumask
+      static const int NDIM = 3; // dimension (N_POL) REMOVED, now using rcumask
 
       /* get reference to the weights array */
       blitz::Array<std::complex<int16>, NDIM>& operator()();
@@ -59,9 +59,9 @@ namespace LOFAR {
       /**
        * marshalling methods
        */
-		size_t getSize() const;
-		size_t pack  (char* buffer) const;
-		size_t unpack(const char *buffer);
+      unsigned int getSize();
+      unsigned int pack  (void* buffer);
+      unsigned int unpack(void *buffer);
       /*@}*/
 
     private:
@@ -69,8 +69,8 @@ namespace LOFAR {
        * The beamlet weights.
        * Dimension 1: nr_timesteps (>1)
        * Dimension 2: count(rcumask)
-       * Dimension 3: number of banks
-       * Dimension 4: N_BEAMLETS
+       * Dimension 3: N_BEAMLETS
+       * REMOVED Dimension 4, now using rcumask...
        */
       blitz::Array<std::complex<int16>, NDIM> m_weights;
     };

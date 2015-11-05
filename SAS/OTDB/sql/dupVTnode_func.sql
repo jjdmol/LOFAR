@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -31,7 +31,6 @@
 --
 CREATE OR REPLACE FUNCTION attachVTparameters(INT4, INT4)
   RETURNS VOID AS '
-    --  $Id$
 	DECLARE
 	  vParam		RECORD;
 
@@ -64,7 +63,6 @@ CREATE OR REPLACE FUNCTION attachVTparameters(INT4, INT4)
 --
 CREATE OR REPLACE FUNCTION dupVTleafNode(INT4, INT4, INT2)
   RETURNS INT4 AS '
-    --  $Id$
 	DECLARE
 		vNodeID		INT4;
 		vOrgNode	RECORD;
@@ -129,7 +127,6 @@ CREATE OR REPLACE FUNCTION dupVTleafNode(INT4, INT4, INT2)
 --
 CREATE OR REPLACE FUNCTION dupVTsubTree(INT4, INT4, INT2)
   RETURNS INT4 AS '
-    --  $Id$
 	DECLARE
 		vNodeID		INT4;
 		vChild		RECORD;
@@ -170,7 +167,6 @@ CREATE OR REPLACE FUNCTION dupVTsubTree(INT4, INT4, INT2)
 --
 CREATE OR REPLACE FUNCTION dupVTnode(INT4, INT4, INT4, INT2)
   RETURNS INT4 AS '
-    --  $Id$
 	DECLARE
 		vFunction		INT2 := 1;
 		vIsAuth			BOOLEAN;

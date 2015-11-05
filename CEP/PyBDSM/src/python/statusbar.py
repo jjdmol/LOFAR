@@ -1,7 +1,6 @@
 """Display an animated statusbar"""
 import sys
 import os
-import functions as func
 
 class StatusBar():
     # class variables:
@@ -12,7 +11,7 @@ class StatusBar():
     #           (shared resource)
     # comp: amount of '=' to display in the progress bar
     # started: whether or not the statusbar has been started
-    # color: color of text
+    # color: color of text 
     def __init__(self, text, pos=0, max=100, color='\033[0m'):
         self.text = text
         self.pos = pos
@@ -27,13 +26,10 @@ class StatusBar():
             self.comp = int(float(self.pos) / self.max * self.columns)
         else:
             self.comp = 0
-
+            
     # find number of columns in terminal
     def __getsize(self):
-        try:
-            rows, columns = func.getTerminalSize()
-        except ValueError:
-            rows = columns = 0
+        rows, columns = os.popen('stty size', 'r').read().split()
         if int(columns) > self.max + 2 + 44 + (len(str(self.max))*2 + 2):
             self.columns = self.max
         else:
@@ -64,7 +60,7 @@ class StatusBar():
         self.busy_char = busy_chars[self.spin_pos]
         sys.stdout.write(self.color + busy_chars[self.spin_pos] + '\x1b[1D' + '\033[0m')
         sys.stdout.flush()
-
+        
     # increment number of completed items
     def increment(self):
         self.inc = 1
@@ -73,6 +69,7 @@ class StatusBar():
             self.comp = self.columns
             self.busy_char = ''
             self.__print()
+            sys.stdout.write('\n')
             return 0
         else:
             self.pos += self.inc
@@ -87,12 +84,3 @@ class StatusBar():
         self.started = 1
         self.__print()
 
-    def stop(self):
-        if self.started:
-            self.pos = self.max
-            self.comp = self.columns
-            self.busy_char = ''
-            self.__print()
-            sys.stdout.write('\n')
-            self.started = 0
-            return 0

@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ import org.apache.log4j.Logger;
  * @author pompert
  * @see nl.astron.lofar.java.gui.plotter.*
  */
-public final class PlotSlot extends JPanel{
+public class PlotSlot extends JPanel{
     
     public static final String EMPTY_SLOT = "Empty Slot";
     private static Logger logger = Logger.getLogger(PlotSlot.class);
@@ -372,7 +372,7 @@ public final class PlotSlot extends JPanel{
     public void addSlotListener(PlotSlotListener listener) {
         
         if (myListenerList == null ) {
-            myListenerList = new LinkedList<>();
+            myListenerList = new LinkedList<PlotSlotListener>();
         }
         myListenerList.add(listener);
     }

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -32,19 +32,25 @@ using namespace LOFAR;
 using namespace RSP_Protocol;
 
 
-size_t RSUSettings::getSize() const
+unsigned int RSUSettings::getSize()
 {
-  return MSH_size(m_registers);
+  return MSH_ARRAY_SIZE(m_registers, RSUSettings::ResetControl);
 }
 
-size_t RSUSettings::pack  (char * buffer) const
+unsigned int RSUSettings::pack  (void* buffer)
 {
-  size_t offset = 0;
-  return MSH_pack(buffer, offset, m_registers);
+  unsigned int offset = 0;
+  
+  MSH_PACK_ARRAY(buffer, offset, m_registers, RSUSettings::ResetControl);
+
+  return offset;
 }
 
-size_t RSUSettings::unpack(const char *buffer)
+unsigned int RSUSettings::unpack(void *buffer)
 {
-  size_t offset = 0;
-  return MSH_unpack(buffer, offset, m_registers);
+  unsigned int offset = 0;
+
+  MSH_UNPACK_ARRAY(buffer, offset, m_registers, RSUSettings::ResetControl, 1);
+
+  return offset;
 }

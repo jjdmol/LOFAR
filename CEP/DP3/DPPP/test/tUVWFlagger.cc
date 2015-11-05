@@ -26,7 +26,7 @@
 #include <DPPP/DPInput.h>
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
-#include <Common/ParameterSet.h>
+#include <DPPP/ParSet.h>
 #include <Common/StringUtil.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
@@ -49,16 +49,15 @@ public:
     : itsCount(0), itsNTime(ntime), itsNBl(nbl), itsNChan(nchan),
       itsNCorr(ncorr)
   {
-    info().init (ncorr, nchan, ntime, 0., 5., string(), string());
     // Fill the baseline stations; use 4 stations.
     // So they are called 00 01 02 03 10 11 12 13 20, etc.
-    Vector<Int> ant1(nbl);
-    Vector<Int> ant2(nbl);
+    itsAnt1.resize (nbl);
+    itsAnt2.resize (nbl);
     int st1 = 0;
     int st2 = 0;
     for (int i=0; i<nbl; ++i) {
-      ant1[i] = st1;
-      ant2[i] = st2;
+      itsAnt1[i] = st1;
+      itsAnt2[i] = st2;
       if (++st2 == 4) {
         st2 = 0;
         if (++st1 == 4) {
@@ -66,33 +65,29 @@ public:
         }
       }
     }
-    Vector<String> antNames(4);
-    antNames[0] = "rs01.s01";
-    antNames[1] = "rs02.s01";
-    antNames[2] = "cs01.s01";
-    antNames[3] = "cs01.s02";
+    itsAntNames.resize(4);
+    itsAntNames[0] = "rs01.s01";
+    itsAntNames[1] = "rs02.s01";
+    itsAntNames[2] = "cs01.s01";
+    itsAntNames[3] = "cs01.s02";
     // Define their positions (more or less WSRT RT0-3).
-    vector<MPosition> antPos(4);
+    itsAntPos.resize (4);
     Vector<double> vals(3);
     vals[0] = 3828763; vals[1] = 442449; vals[2] = 5064923;
-    antPos[0] = MPosition(Quantum<Vector<double> >(vals,"m"),
-                          MPosition::ITRF);
+    itsAntPos[0] = MPosition(Quantum<Vector<double> >(vals,"m"),
+                             MPosition::ITRF);
     vals[0] = 3828746; vals[1] = 442592; vals[2] = 5064924;
-    antPos[1] = MPosition(Quantum<Vector<double> >(vals,"m"),
-                          MPosition::ITRF);
+    itsAntPos[1] = MPosition(Quantum<Vector<double> >(vals,"m"),
+                             MPosition::ITRF);
     vals[0] = 3828729; vals[1] = 442735; vals[2] = 5064925;
-    antPos[2] = MPosition(Quantum<Vector<double> >(vals,"m"),
-                          MPosition::ITRF);
+    itsAntPos[2] = MPosition(Quantum<Vector<double> >(vals,"m"),
+                             MPosition::ITRF);
     vals[0] = 3828713; vals[1] = 442878; vals[2] = 5064926;
-    antPos[3] = MPosition(Quantum<Vector<double> >(vals,"m"),
-                          MPosition::ITRF);
-    Vector<double> antDiam(4, 70.);
-    info().set (antNames, antDiam, antPos, ant1, ant2);
+    itsAntPos[3] = MPosition(Quantum<Vector<double> >(vals,"m"),
+                             MPosition::ITRF);
     // Define the frequencies.
-    Vector<double> chanWidth(nchan, 1000000.);
-    Vector<double> chanFreqs(nchan);
-    indgen (chanFreqs, 10500000., 1000000.);
-    info().set (chanFreqs, chanWidth);
+    itsChanFreqs.resize (nchan);
+    indgen (itsChanFreqs, 10500000., 1000000.);
   }
 private:
   virtual bool process (const DPBuffer&)
@@ -125,7 +120,9 @@ private:
 
   virtual void finish() {getNextStep()->finish();}
   virtual void show (std::ostream&) const {}
-  virtual void updateInfo (const DPInfo&) {}
+  virtual void updateInfo (DPInfo& info)
+    // Use startchan=0 and timeInterval=5
+    { info.init (itsNCorr, 0, itsNChan, itsNBl, itsNTime, 5); }
 
   int itsCount, itsNTime, itsNBl, itsNChan, itsNCorr;
 };
@@ -166,19 +163,19 @@ private:
 
   virtual void finish() {}
   virtual void show (std::ostream&) const {}
-  virtual void updateInfo (const DPInfo& infoIn)
+  virtual void updateInfo (DPInfo& info)
   {
-    info() = infoIn;
-    ASSERT (int(infoIn.origNChan())==itsNChan);
-    ASSERT (int(infoIn.nchan())==itsNChan);
-    ASSERT (int(infoIn.ntime())==itsNTime);
-    ASSERT (infoIn.timeInterval()==5);
-    ASSERT (int(infoIn.nchanAvg())==1);
-    ASSERT (int(infoIn.ntimeAvg())==1);
+    ASSERT (info.startChan()==0);
+    ASSERT (int(info.origNChan())==itsNChan);
+    ASSERT (int(info.nchan())==itsNChan);
+    ASSERT (int(info.ntime())==itsNTime);
+    ASSERT (info.timeInterval()==5);
+    ASSERT (int(info.nchanAvg())==1);
+    ASSERT (int(info.ntimeAvg())==1);
   }
 
   int itsCount;
-  int itsNTime, itsNBl, itsNChan, itsNCorr;
+  int itsNTime, itsNBl, itsNChan, itsNCorr, itsNAvgTime, itsNAvgChan;
 };
 
 // Class to check result of flagged, unaveraged TestInput run by test2.
@@ -218,19 +215,19 @@ private:
 
   virtual void finish() {}
   virtual void show (std::ostream&) const {}
-  virtual void updateInfo (const DPInfo& infoIn)
+  virtual void updateInfo (DPInfo& info)
   {
-    info() = infoIn;
-    ASSERT (int(infoIn.origNChan())==itsNChan);
-    ASSERT (int(infoIn.nchan())==itsNChan);
-    ASSERT (int(infoIn.ntime())==itsNTime);
-    ASSERT (infoIn.timeInterval()==5);
-    ASSERT (int(infoIn.nchanAvg())==1);
-    ASSERT (int(infoIn.ntimeAvg())==1);
+    ASSERT (info.startChan()==0);
+    ASSERT (int(info.origNChan())==itsNChan);
+    ASSERT (int(info.nchan())==itsNChan);
+    ASSERT (int(info.ntime())==itsNTime);
+    ASSERT (info.timeInterval()==5);
+    ASSERT (int(info.nchanAvg())==1);
+    ASSERT (int(info.ntimeAvg())==1);
   }
 
   int itsCount;
-  int itsNTime, itsNBl, itsNChan, itsNCorr;
+  int itsNTime, itsNBl, itsNChan, itsNCorr, itsNAvgTime, itsNAvgChan;
 };
 
 
@@ -310,19 +307,19 @@ private:
 
   virtual void finish() {}
   virtual void show (std::ostream&) const {}
-  virtual void updateInfo (const DPInfo& infoIn)
+  virtual void updateInfo (DPInfo& info)
   {
-    info() = infoIn;
-    ASSERT (int(infoIn.origNChan())==itsNChan);
-    ASSERT (int(infoIn.nchan())==itsNChan);
-    ASSERT (int(infoIn.ntime())==itsNTime);
-    ASSERT (infoIn.timeInterval()==5);
-    ASSERT (int(infoIn.nchanAvg())==1);
-    ASSERT (int(infoIn.ntimeAvg())==1);
+    ASSERT (info.startChan()==0);
+    ASSERT (int(info.origNChan())==itsNChan);
+    ASSERT (int(info.nchan())==itsNChan);
+    ASSERT (int(info.ntime())==itsNTime);
+    ASSERT (info.timeInterval()==5);
+    ASSERT (int(info.nchanAvg())==1);
+    ASSERT (int(info.ntimeAvg())==1);
   }
 
   int itsCount;
-  int itsNTime, itsNBl, itsNChan, itsNCorr;
+  int itsNTime, itsNBl, itsNChan, itsNCorr, itsNAvgTime, itsNAvgChan;
 };
 
 
@@ -330,7 +327,13 @@ private:
 void execute (const DPStep::ShPtr& step1)
 {
   // Set DPInfo.
-  step1->setInfo (DPInfo());
+  DPInfo info;
+  DPStep::ShPtr step = step1;
+  while (step) {
+    step->updateInfo (info);
+    step->show (cout);
+    step = step->getNextStep();
+  }
   // Execute the steps.
   DPBuffer buf;
   while (step1->process(buf));

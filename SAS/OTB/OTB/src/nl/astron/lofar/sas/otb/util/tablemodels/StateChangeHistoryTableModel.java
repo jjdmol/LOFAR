@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
 package nl.astron.lofar.sas.otb.util.tablemodels;
 
 import java.rmi.RemoteException;
-import java.util.ArrayList;
+import java.util.Vector;
 import nl.astron.lofar.sas.otb.jotdb3.jTreeState;
 import nl.astron.lofar.sas.otb.util.*;
 import org.apache.log4j.Logger;
@@ -39,7 +39,7 @@ import org.apache.log4j.Logger;
  *
  * @updated
  */
-public final class StateChangeHistoryTableModel extends javax.swing.table.DefaultTableModel {
+public class StateChangeHistoryTableModel extends javax.swing.table.DefaultTableModel {
     
     private String  headers[] = {"ID","MomID","New State","UserName","TimeStamp"};
     private OtdbRmi otdbRmi;
@@ -54,13 +54,14 @@ public final class StateChangeHistoryTableModel extends javax.swing.table.Defaul
 
         this.otdbRmi = otdbRmi;
         this.itsTreeID=treeID;
-        boolean fillTable = fillTable();
+        fillTable();
     }
 
     public void setTree(int treeID) {
         this.itsTreeID=treeID;
         fillTable();
     }
+    
     
     /** Fills the table from the database */
     public boolean fillTable() {
@@ -78,21 +79,21 @@ public final class StateChangeHistoryTableModel extends javax.swing.table.Defaul
             this.setRowCount(0);
 
             // Get a stateList of all available changes
-            ArrayList<jTreeState> aStateList=new ArrayList(OtdbRmi.getRemoteOTDB().getStateList(itsTreeID, false));
+            Vector<jTreeState> aStateList=OtdbRmi.getRemoteOTDB().getStateList(itsTreeID, false);
             data = new Object[aStateList.size()][headers.length];
             logger.debug("Statelist downloaded. Size: "+aStateList.size());
            
             for (int k=0; k< aStateList.size();k++) {
-                jTreeState tState = aStateList.get(k);
+                jTreeState tState = aStateList.elementAt(k);
                 if (tState == null) {
                     logger.warn("No such treeState found!");
                 } else {
                     logger.debug("Gathered info for ID: "+tState.treeID);
                     data[k][0]=new Integer(tState.treeID);
                     data[k][1]=new Integer(tState.momID);
-	            data[k][2]=OtdbRmi.getTreeState().get(tState.newState);
-	            data[k][3]=tState.username;
-	            data[k][4]=tState.timestamp.replace("T", " ");
+	            data[k][2]=new String(OtdbRmi.getTreeState().get(tState.newState));
+	            data[k][3]=new String(tState.username);
+	            data[k][4]=new String(tState.timestamp.replace("T", " "));
                 }
             }
             fireTableDataChanged();

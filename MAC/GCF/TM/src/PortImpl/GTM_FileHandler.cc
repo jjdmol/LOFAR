@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -77,6 +77,7 @@ void GTMFileHandler::deregisterFile(GTMFile& file)
 void GTMFileHandler::workProc()
 {
 	int				result;
+	int				fd;
 	TFiles 			testFiles;
 	struct timeval	select_timeout;
 
@@ -89,22 +90,18 @@ void GTMFileHandler::workProc()
 	select_timeout.tv_usec = 10000;
 
 	_running = true;
-	fd_set testFDs = _readFDs;
-	testFiles = _files;
-
-	// map keys are sorted low-to-high, so last key is highest
-	int maxfd = testFiles.empty() ? 0 : testFiles.rbegin()->first;
-
-	// wait for any file to be readable, or for our timeout
-	result = ::select(maxfd + 1, &testFDs, (fd_set *) 0, (fd_set *) 0, &select_timeout);
+	fd_set testFDs;
+	testFDs = _readFDs;
+	testFiles.insert(_files.begin(), _files.end());
+	result = ::select(FD_SETSIZE, &testFDs, (fd_set *) 0, (fd_set *) 0, &select_timeout);
+	if (_files.empty()) {
+		return;
+	}
 
 	if (result >= 0) {
-		for (TFiles::iterator i = testFiles.begin(); i != testFiles.end() && _running; ++i) {
-			int fd = i->first;
-			GTMFile *file = i->second;
-
+		for (fd = 0; fd < FD_SETSIZE && _running; fd++) {
 			if (FD_ISSET(fd, &testFDs)) {
-				file->doWork();
+				testFiles[fd]->doWork();
 			}
 		}
 	}

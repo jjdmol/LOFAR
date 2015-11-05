@@ -1,8 +1,8 @@
-// \ingroup LCS
+// \ingroup Appl
 // \defgroup ApplCommon ApplCommon
 //
-// The ApplCommon package contains pieces of software that are used
-// by the different LOFAR applications. 
+// The ApplCommon package contains pieces of software that are very
+// reusable for LOFAR applications. 
 
 /// @{
 

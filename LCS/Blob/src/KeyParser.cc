@@ -36,7 +36,7 @@
 //extern int yy_start;
 extern char* KeyTokenizetext;
 extern FILE* KeyTokenizein;
-extern int KeyParseparse();
+extern void KeyParseparse();
 extern void KeyTokenizerestart(FILE*);
 
 namespace LOFAR {

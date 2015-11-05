@@ -1,4 +1,4 @@
-V 11
+V 10
 1
 LANG:1 8 (NoName)
 PANEL,-1 -1 638 94 N "_3DFace" 1
@@ -15,43 +15,51 @@ PANEL,-1 -1 638 94 N "_3DFace" 1
       break;
     }
   }
-  
   // Check if Action point exists and connect to it if
   // it does. The action Point is the call back for this object
   itsActionDp      = DPNAME_NAVIGATOR + g_navigatorID + \".\"+$name+\".action\";
   itsEventDp       = DPNAME_NAVIGATOR + g_navigatorID + \".\"+$name+\".event\";
   itsSelectionDp   = DPNAME_NAVIGATOR + g_navigatorID + \".\"+$name+\".selection\";
 	
+  itsProgressBarDp = DPNAME_NAVIGATOR + g_navigatorID + \".progress\";
+
   if ( dpExists(itsActionDp) ) {
     dpConnect(\"doAction\",false,itsActionDp);
     PROGRESSBARACTIONDP=itsActionDp;
-  }    
+  }  
+  
 }
 
 void initialize() {      
   LOG_TRACE(\"navigator_progressBar.pnl:initialize|entered\");
   
+  setProgressBarDPE();
+
   LOG_TRACE(\"navigator_progressBar.pnl:initialize|end\");
 }
 
-
-void update(int number, string text)
-{
-  setMultiValue(\"avail31\",\"scale\",number/100.0,1,
-                \"avail32\",\"scale\",number/100.0,1,
-                \"used31\",\"scale\",1-number/100.0,1,
-                \"used32\",\"scale\",1-number/100.0,1,
-                \"progressValue\",\"text\",number);
-  
-  setMultiValue(\"avail31\",\"toolTipText\",text,
-                \"avail32\",\"toolTipText\",text,
-                \"used31\",\"toolTipText\",text,
-                \"used32\",\"toolTipText\",text,
-                \"progressValue\",\"toolTipText\",text);
-  
-     
+// connect progressbar to value to act on
+setProgressBarDPE() {
+  if (dpExists(itsProgressBarDp)) {
+    if (connected) {
+      dpDisconnect(display,dpe);
+      connected=false;
+    }
+    dpe = itsProgressBarDp+\":_online.._value\";
+    dpConnect(\"display\",true,dpe);
+    connected=true;
+  }
 }
-  
+
+display(string dp1, int progress)
+{
+  setMultiValue(\"avail31\",\"scale\",progress/100.0,1,
+	        \"avail32\",\"scale\",progress/100.0,1,
+  		\"used31\",\"scale\",1-progress/100.0,1,
+  		\"used32\",\"scale\",1-progress/100.0,1,
+  		\"progressValue\",\"text\",progress);
+}
+
 
 //
 // Callback for dpConnect to action point.
@@ -70,14 +78,6 @@ void doAction(string aDP, string anAction) {
     initialize();
     return;
   }
-  if (actionString[1] == \"Update\") {
-    int value=0;
-    string text=\"\";
-    if (dynlen(actionString) >= 3) text=actionString[3];
-    if (dynlen(actionString) >= 2) value=(int)actionString[2];
-    update(value,text);
-    return;
-  }
 }" 0
  E E E E 1 0 0 0  210 10
 ""0  1
@@ -85,7 +85,7 @@ E "//Global mainpoint holders
 string 	       itsActionDp    = \"\";
 string         itsEventDp     = \"\";
 dyn_string     itsSelectionDp = \"\";
-
+string         itsProgressBarDp = \"\";
 
 bool connected=false;
 string dpe;
@@ -128,7 +128,14 @@ LANG:0 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E -1 1.224646799147353e-016 -1.224646799147353e-016 -1 220 40 1 E 4 10 10
+"main()
+{
+  float x,y;
+  
+  getValue(\"\",\"position\",x,y);
+  addSymbol(myModuleName(), myPanelName(), \"objects/STD_INFOS/minitext_t_r.pnl\",\"progress\",makeDynString(),x+1,y,0,1,1);
+}" 0
+ E 0 1 1 0 1 E U  1 E 4 10 10
 10 30
 210 30
 210 10
@@ -147,7 +154,7 @@ LANG:0 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E -1 -1.224646799147353e-016 1.224646799147353e-016 -1 220 40 1 E 3 10 30
+E E 0 1 1 0 1 E U  1 E 3 10 30
 10 10
 210 10
  0
@@ -165,7 +172,7 @@ LANG:0 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E -1 -1.224646799147353e-016 1.224646799147353e-016 -1 220 40 0 E 3 10 30
+E E 0 1 1 0 1 E U  0 E 3 10 30
 10 10
 210 10
  0
@@ -185,14 +192,12 @@ LANG:0 0
 "dashclr"N "_Transparent"
 "main()
 {
-  
   float x,y;
   
   getValue(\"\",\"position\",x,y);
   addSymbol(myModuleName(), myPanelName(), \"objects/STD_INFOS/minitext_t_l.pnl\",\"mt1\",makeDynString(\"$s_txt:\"),x,y,0,1,1);
-  
 }" 0
- E 0 1 1 0 1 E -1 1.224646799147353e-016 -1.224646799147353e-016 -1 220 40 1 E 4 10 10
+ E 0 1 1 0 1 E U  1 E 4 10 10
 10 30
 210 30
 210 10
@@ -200,7 +205,7 @@ LANG:0 0
 2 5
 "progressValue"
 ""
-1 100 14 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 130 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 6 0 0 0 0 0
 E E E
@@ -210,31 +215,13 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 100 14 101 27
-0 2 2 "0s" 0 0 0 192 0 0  100 14 1
+E E 0 1 1 2 1 E U  1 E 130 10 131 24
+0 2 2 "0s" 0 0 0 192 0 0  130 10 1
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
-LANG:1 0 
-2 6
-"PRIMITIVE_TEXT1"
-""
-1 213 13 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-7 0 0 0 0 0
-E E E
-0
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
 1
 LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 213 13 227 29
-0 2 2 "0s" 0 0 0 192 0 0  213 13 1
-1
-LANG:1 35 MS Shell Dlg 2,10,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 1 %
 0
 LAYER, 1 
 1

@@ -3,7 +3,7 @@
 //
 //  Copyright (C) 2008
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -189,8 +189,9 @@ int main(int argc, char* argv[])
             cout << "Waiting for more input..." << endl;
           }else{
 	  LOG_DEBUG_STR("input: " << triggerLine);
-	  if (sscanf(triggerLine, "%d %u %u %u %u %u",
+	  if (sscanf(triggerLine, "%d %u %u %u %u %u %u",
 		     &theTrigger.itsRcuNr,
+		     &theTrigger.itsSeqNr,
 		     &theTrigger.itsTime,
 		     &theTrigger.itsSampleNr,
 		     &theTrigger.itsSum,

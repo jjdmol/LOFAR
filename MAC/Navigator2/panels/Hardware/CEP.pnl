@@ -1,7 +1,7 @@
-V 11
+V 10
 1
 LANG:1 7 Station
-PANEL,-1 -1 1200 823 N "_3DFace" 0
+PANEL,-1 -1 1103 745 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel
@@ -17,14 +17,13 @@ void prepareHardwareList() {
   dyn_dyn_anytype tab;
   int z;
   
+  
   // For this panel CEP should be selectable so we get them for the treelist
   dynAppend(g_stationList,navFunct_bareDBName(sysName));
   
-  
-  // Cobalt
-  // For this panel CobaltRacks and CobaltNodes should be selectable so we get them for the treelist
-  // CobaltRacks first
-  dpQuery(\"SELECT '_original.._value' FROM '\"+baseDP+\"_*.status.state' REMOTE '\"+sysName+\"' WHERE _DPT= \\\"CobaltRack\\\" OR _DPT=\\\"CobaltNode\\\" \", tab);
+  // For this panel BGPRacks and BGPMidplanes should be selectable so we get them for the treelist
+  // BGPRacks first
+  dpQuery(\"SELECT '_original.._value' FROM '\"+baseDP+\"_*.status.state' REMOTE '\"+sysName+\"' WHERE _DPT= \\\"BGPRack\\\" OR _DPT=\\\"BGPMidplane\\\" \", tab);
   LOG_TRACE(\"CEP.pnl:prepareHardwareList|tab: \"+tab);
   
   dyn_string aDS=navFunct_getDynString(tab, 2,1);
@@ -34,24 +33,27 @@ void prepareHardwareList() {
     // strip .status.state from result
     string aS = dpSubStr(aDS[z],DPSUB_SYS_DP);
 
-    // strip all b4 Cobalt out of the string
+    // strip all b4 BGP out of the string
     strreplace(aS,baseDP+\"_\",\"\");
     
-    // Remainder should be Cobalt?_CobaltNode? combinations, split on _ 
+    // Remainder should be BGP?_Midplane? combinations, split on _ 
     dyn_string spl=strsplit(aS,\"_\");
-    if (dynlen(spl) > 1) { // CobaltNode
-      string cbt = spl[2];
-      strreplace(cbt,\"CBT\",\"\");
-      int n = cbt;
-      dynAppend(g_cobaltNodeList,n);
-    } else {   // CobaltRack
-      dynAppend(g_cobaltRackList,0);
+    if (dynlen(spl) > 1) { // Midplane
+      string midplane = spl[2];
+      strreplace(midplane,\"Midplane\",\"\");
+      int m = midplane;
+      dynAppend(g_BGPMidplaneList,m);
+    } else {   // BGPRack
+      string bgp = spl[1];
+      strreplace(bgp,\"BGP\",\"\");
+      int b = bgp;
+      dynAppend(g_BGPRackList,b);
     }
   }
   
   // For this panel OSRacks and OSSubclusters should be selectable so we get them for the treelist
   // OSRacks first
-  dpQuery(\"SELECT '_original.._value' FROM '\"+baseDP+\"_*.status.state' REMOTE '\"+sysName+\"' WHERE _DPT= \\\"OSRack\\\" \", tab);
+  dpQuery(\"SELECT '_original.._value' FROM '\"+baseDP+\"_*.status.state' REMOTE '\"+sysName+\"' WHERE _DPT= \\\"OSRack\\\" OR _DPT=\\\"OSSubcluster\\\" \", tab);
   LOG_TRACE(\"CEP.pnl:prepareHardwareList|tab: \"+tab);
   
   dyn_string aDS=navFunct_getDynString(tab, 2,1);
@@ -65,15 +67,19 @@ void prepareHardwareList() {
     strreplace(aS,baseDP+\"_\",\"\");
     
   
-    // Remainder should be OSRack? combinations, split on _ 
+    // Remainder should be OSRack?_OSSubcluster? combinations, split on _ 
     dyn_string spl=strsplit(aS,\"_\");
-    if (dynlen(spl) > 0) { // OSRack
+    if (dynlen(spl) > 1) { // OSSubcluster
+      string subcluster = spl[2];
+      strreplace(subcluster,\"OSSubcluster\",\"\");
+      int s = subcluster;
+      dynAppend(g_OSSubclusterList,s);
+    } else {   // OSRack
       string rack = spl[1];
       strreplace(rack,\"OSRack\",\"\");
       int r = rack;
       dynAppend(g_OSRackList,r);
     }
-    
   }
 }
 
@@ -130,7 +136,6 @@ void reload() {
  E E E E 1 -1 -1 0  188 128
 ""0  1
 E "#uses \"navPanel.ctl\"
-
 string      baseDP         = \"\";
 
 " 0
@@ -143,6 +148,42 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
+1 60 0 "" 2190
+0
+1 61 0 "" 2188
+0
+1 62 0 "86" 1
+0
+1 63 0 "" 2187
+0
+1 64 1 "" 2190
+0
+1 65 1 "" 2188
+0
+1 66 1 "86" 1
+0
+1 67 1 "" 2187
+0
+2 9
+"PRIMITIVE_TEXT1"
+""
+1 123 62 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 123 62 165 83
+0 2 2 "0s" 0 0 0 192 0 0  123 62 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 4 BG/P
 2 10
 "PRIMITIVE_TEXT2"
 ""
@@ -156,118 +197,89 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 320 10 542 35
+E E 0 1 1 2 1 E U  1 E 320 10 542 36
 0 2 2 "0s" 0 0 0 192 0 0  320 10 1
 1
-LANG:1 33 MS Shell Dlg,-1,21,5,75,0,0,0,0,0
-0 1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-21-*-100-100-*-*-iso8859-1|-21,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
 LANG:1 18 LOFAR CEP Clusters
-1 277 11 "" 2190
+1 68 6 "" 0
 0
-1 278 11 "" 2188
+1 69 6 "" 1
 0
-1 279 11 "86" 1
+1 70 6 "" 3
 0
-1 280 11 "" 2187
+1 71 6 "" 4
 0
-1 281 11 "" 2192
+1 72 6 "1" 1
 0
-1 282 11 "" 2193
+1 73 7 "" 0
 0
-1 283 11 "" 2194
+1 74 7 "" 1
 0
-1 284 11 "" 2195
+1 75 7 "" 3
 0
-1 285 11 "" 2196
+1 76 7 "" 4
 0
-1 286 11 "" 2197
+1 77 7 "1" 1
 0
-1 287 11 "" 2198
+1 78 8 "" 0
 0
-1 288 11 "" 2199
+1 79 8 "" 1
 0
-1 289 11 "" 2200
+1 80 8 "" 3
 0
-1 290 11 "" 2201
+1 81 8 "" 4
 0
-1 291 11 "" 2202
+1 82 8 "1" 1
 0
-1 292 11 "" 2203
+1 83 9 "" 0
 0
-1 293 11 "" 2204
+1 84 9 "" 1
 0
-1 294 12 "" 2190
+1 85 9 "" 3
 0
-1 295 12 "" 2188
+1 86 9 "" 4
 0
-1 296 12 "86" 1
+1 87 9 "1" 1
 0
-1 297 12 "" 2187
+1 88 10 "" 2190
 0
-1 298 12 "" 2192
+1 89 10 "" 2188
 0
-1 299 12 "" 2193
+1 90 10 "86" 1
 0
-1 300 12 "" 2194
+1 91 10 "" 2187
 0
-1 301 12 "" 2195
+1 92 11 "" 2190
 0
-1 302 12 "" 2196
+1 93 11 "" 2188
 0
-1 303 12 "" 2197
+1 94 11 "86" 1
 0
-1 304 12 "" 2198
+1 95 11 "" 2187
 0
-1 305 12 "" 2199
+1 96 12 "" 2190
 0
-1 306 12 "" 2200
+1 97 12 "" 2188
 0
-1 307 12 "" 2201
+1 98 12 "86" 1
 0
-1 308 12 "" 2202
+1 99 12 "" 2187
 0
-1 309 12 "" 2203
+1 100 14 "" 2190
 0
-1 310 12 "" 2204
+1 101 14 "" 2188
 0
-1 311 14 "" 2190
+1 102 14 "86" 1
 0
-1 312 14 "" 2188
-0
-1 313 14 "86" 1
-0
-1 314 14 "" 2187
-0
-1 315 14 "" 2192
-0
-1 316 14 "" 2193
-0
-1 317 14 "" 2194
-0
-1 318 14 "" 2195
-0
-1 319 14 "" 2196
-0
-1 320 14 "" 2197
-0
-1 321 14 "" 2198
-0
-1 322 14 "" 2199
-0
-1 323 14 "" 2200
-0
-1 324 14 "" 2201
-0
-1 325 14 "" 2202
-0
-1 326 14 "" 2203
-0
-1 327 14 "" 2204
+1 103 14 "" 2187
 0
 2 59
 "PRIMITIVE_TEXT3"
 ""
-1 720 82 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 584 60 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 17 0 0 0 0 0
 E E E
@@ -277,243 +289,269 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 720 82 842 102
-0 2 2 "0s" 0 0 0 192 0 0  720 82 1
+E E 0 1 1 2 1 E U  1 E 584 60 706 81
+0 2 2 "0s" 0 0 0 192 0 0  584 60 1
 1
-LANG:1 33 MS Shell Dlg,-1,16,5,75,0,0,0,0,0
-0 1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
 LANG:1 15 Offline/Storage
-1 328 15 "" 2190
+1 104 15 "" 0
 0
-1 329 15 "" 2188
+1 105 15 "" 1
 0
-1 330 15 "86" 1
+1 106 15 "1" 1
 0
-1 331 15 "" 2187
+1 107 15 "" 4
 0
-1 332 15 "" 2192
+1 108 15 "" 18
 0
-1 333 15 "" 2193
+1 109 15 "" 19
 0
-1 334 15 "" 2194
+1 110 15 "" 20
 0
-1 335 15 "" 2195
+1 111 15 "" 21
 0
-1 336 15 "" 2196
+1 112 15 "" 22
 0
-1 337 15 "" 2197
+1 113 15 "" 23
 0
-1 338 15 "" 2198
+1 114 15 "" 24
 0
-1 339 15 "" 2199
+1 115 15 "" 25
 0
-1 340 15 "" 2200
+1 116 15 "" 26
 0
-1 341 15 "" 2201
+1 117 15 "" 27
 0
-1 342 15 "" 2202
+1 118 15 "" 28
 0
-1 343 15 "" 2203
+1 119 15 "" 29
 0
-1 344 15 "" 2204
+1 120 16 "" 0
 0
-1 345 16 "" 2190
+1 121 16 "" 1
 0
-1 346 16 "" 2188
+1 122 16 "1" 1
 0
-1 347 16 "86" 1
+1 123 16 "" 4
 0
-1 348 16 "" 2187
+1 124 16 "" 18
 0
-1 349 16 "" 2192
+1 125 16 "" 19
 0
-1 350 16 "" 2193
+1 126 16 "" 20
 0
-1 351 16 "" 2194
+1 127 16 "" 21
 0
-1 352 16 "" 2195
+1 128 16 "" 22
 0
-1 353 16 "" 2196
+1 129 16 "" 23
 0
-1 354 16 "" 2197
+1 130 16 "" 24
 0
-1 355 16 "" 2198
+1 131 16 "" 25
 0
-1 356 16 "" 2199
+1 132 16 "" 26
 0
-1 357 16 "" 2200
+1 133 16 "" 27
 0
-1 358 16 "" 2201
+1 134 16 "" 28
 0
-1 359 16 "" 2202
+1 135 16 "" 29
 0
-1 360 16 "" 2203
+1 136 17 "" 0
 0
-1 361 16 "" 2204
+1 137 17 "" 1
 0
-1 362 17 "" 2190
+1 138 17 "1" 1
 0
-1 363 17 "" 2188
+1 139 17 "" 4
 0
-1 364 17 "86" 1
+1 140 17 "" 18
 0
-1 365 17 "" 2187
+1 141 17 "" 19
 0
-1 366 17 "" 2192
+1 142 17 "" 20
 0
-1 367 17 "" 2193
+1 143 17 "" 21
 0
-1 368 17 "" 2194
+1 144 17 "" 22
 0
-1 369 17 "" 2195
+1 145 17 "" 23
 0
-1 370 17 "" 2196
+1 146 17 "" 24
 0
-1 371 17 "" 2197
+1 147 17 "" 25
 0
-1 372 17 "" 2198
+1 148 17 "" 26
 0
-1 373 17 "" 2199
+1 149 17 "" 27
 0
-1 374 17 "" 2200
+1 150 17 "" 28
 0
-1 375 17 "" 2201
+1 151 17 "" 29
 0
-1 376 17 "" 2202
+1 152 18 "" 0
 0
-1 377 17 "" 2203
+1 153 18 "" 1
 0
-1 378 17 "" 2204
+1 154 18 "1" 1
 0
-1 379 18 "" 2190
+1 155 18 "" 4
 0
-1 380 18 "" 2188
+1 156 18 "" 18
 0
-1 381 18 "86" 1
+1 157 18 "" 19
 0
-1 382 18 "" 2187
+1 158 18 "" 20
 0
-1 383 18 "" 2192
+1 159 18 "" 21
 0
-1 384 18 "" 2193
+1 160 18 "" 22
 0
-1 385 18 "" 2194
+1 161 18 "" 23
 0
-1 386 18 "" 2195
+1 162 18 "" 24
 0
-1 387 18 "" 2196
+1 163 18 "" 25
 0
-1 388 18 "" 2197
+1 164 18 "" 26
 0
-1 389 18 "" 2198
+1 165 18 "" 27
 0
-1 390 18 "" 2199
+1 166 18 "" 28
 0
-1 391 18 "" 2200
+1 167 18 "" 29
 0
-1 392 18 "" 2201
+1 168 19 "" 0
 0
-1 393 18 "" 2202
+1 169 19 "" 1
 0
-1 394 18 "" 2203
+1 170 19 "1" 1
 0
-1 395 18 "" 2204
+1 171 19 "" 4
 0
-1 396 19 "" 2190
+1 172 19 "" 18
 0
-1 397 19 "" 2188
+1 173 19 "" 19
 0
-1 398 19 "86" 1
+1 174 19 "" 20
 0
-1 399 19 "" 2187
+1 175 19 "" 21
 0
-1 400 19 "" 2192
+1 176 19 "" 22
 0
-1 401 19 "" 2193
+1 177 19 "" 23
 0
-1 402 19 "" 2194
+1 178 19 "" 24
 0
-1 403 19 "" 2195
+1 179 19 "" 25
 0
-1 404 19 "" 2196
+1 180 19 "" 26
 0
-1 405 19 "" 2197
+1 181 19 "" 27
 0
-1 406 19 "" 2198
+1 182 19 "" 28
 0
-1 407 19 "" 2199
+1 183 19 "" 29
 0
-1 408 19 "" 2200
+1 184 20 "" 0
 0
-1 409 19 "" 2201
+1 185 20 "" 1
 0
-1 410 19 "" 2202
+1 186 20 "1" 1
 0
-1 411 19 "" 2203
+1 187 20 "" 4
 0
-1 412 19 "" 2204
+1 188 20 "" 18
 0
-1 260 10 "" 2190
+1 189 20 "" 19
 0
-1 261 10 "" 2188
+1 190 20 "" 20
 0
-1 262 10 "86" 1
+1 191 20 "" 21
 0
-1 263 10 "" 2187
+1 192 20 "" 22
 0
-1 264 10 "" 2192
+1 193 20 "" 23
 0
-1 265 10 "" 2193
+1 194 20 "" 24
 0
-1 266 10 "" 2194
+1 195 20 "" 25
 0
-1 267 10 "" 2195
+1 196 20 "" 26
 0
-1 268 10 "" 2196
+1 197 20 "" 27
 0
-1 269 10 "" 2197
+1 198 20 "" 28
 0
-1 270 10 "" 2198
+1 199 20 "" 29
 0
-1 271 10 "" 2199
+1 200 21 "" 0
 0
-1 272 10 "" 2200
+1 201 21 "" 1
 0
-1 273 10 "" 2201
+1 202 21 "1" 1
 0
-1 274 10 "" 2202
+1 203 21 "" 4
 0
-1 275 10 "" 2203
+1 204 21 "" 18
 0
-1 276 10 "" 2204
+1 205 21 "" 19
 0
-1 413 20 "" 2190
+1 206 21 "" 20
 0
-1 414 20 "" 2188
+1 207 21 "" 21
 0
-1 415 20 "86" 1
+1 208 21 "" 22
 0
-1 416 20 "" 2192
+1 209 21 "" 23
 0
-2 245
-"PRIMITIVE_TEXT4"
-""
-1 282 82 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-30 0 0 0 0 0
-E E E
+1 210 21 "" 24
 0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 282 82 334 102
-0 2 2 "0s" 0 0 0 192 0 0  282 82 1
-1
-LANG:1 33 MS Shell Dlg,-1,16,5,75,0,0,0,0,0
-0 1
-LANG:1 6 Cobalt
+1 211 21 "" 25
+0
+1 212 21 "" 26
+0
+1 213 21 "" 27
+0
+1 214 21 "" 28
+0
+1 215 21 "" 29
+0
+1 216 22 "" 0
+0
+1 217 22 "" 1
+0
+1 218 22 "1" 1
+0
+1 219 22 "" 4
+0
+1 220 22 "" 18
+0
+1 221 22 "" 19
+0
+1 222 22 "" 20
+0
+1 223 22 "" 21
+0
+1 224 22 "" 22
+0
+1 225 22 "" 23
+0
+1 226 22 "" 24
+0
+1 227 22 "" 25
+0
+1 228 22 "" 26
+0
+1 229 22 "" 27
+0
+1 230 22 "" 28
+0
+1 231 22 "" 29
+0
 0
 LAYER, 1 
 1
@@ -543,43 +581,88 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-3 10 "PANEL_REF11" -1
-"objects\\Hardware\\CEP_OSRack.pnl" 588 198 T 12 1 0 1 90 32
+3 0 "PANEL_REF1"
+"objects\\Hardware\\CEP_BGPRack.pnl" 488 288 T 1 1 0 1 -310 -84
+1
+"$bgpNr""0"
+3 1 "PANEL_REF2"
+"objects\\Hardware\\CEP_BGPRack.pnl" 658 288 T 2 1 0 1 -336 -84
+1
+"$bgpNr""1"
+3 6 "PANEL_REF7"
+"objects\\Hardware\\CEP_Midplane_small.pnl" 18 460 T 8 1 0 1 -15 19
+2
+"$BGPMidplaneNr""0"
+"$BGPRackNr""0"
+3 7 "PANEL_REF8"
+"objects\\Hardware\\CEP_Midplane_small.pnl" 18 290 T 9 1 0 1 -15 5
+2
+"$BGPMidplaneNr""1"
+"$BGPRackNr""0"
+3 8 "PANEL_REF9"
+"objects\\Hardware\\CEP_Midplane_small.pnl" 188 460 T 10 1 0 1 -41 19
+2
+"$BGPMidplaneNr""2"
+"$BGPRackNr""1"
+3 9 "PANEL_REF10"
+"objects\\Hardware\\CEP_Midplane_small.pnl" 188 290 T 11 1 0 1 -41 6
+2
+"$BGPMidplaneNr""3"
+"$BGPRackNr""1"
+3 10 "PANEL_REF11"
+"objects\\Hardware\\CEP_OSRack.pnl" 588 198 T 12 1 0 1 -60 6
 1
 "$osNr""0"
-3 11 "PANEL_REF12" -1
-"objects\\Hardware\\CEP_OSRack.pnl" 758 198 T 13 1 0 1 20 32
+3 11 "PANEL_REF12"
+"objects\\Hardware\\CEP_OSRack.pnl" 758 198 T 13 1 0 1 -85 6
 1
 "$osNr""1"
-3 12 "PANEL_REF13" -1
-"objects\\Hardware\\CEP_OSRack.pnl" 928 198 T 14 1 0 1 -50 32
+3 12 "PANEL_REF13"
+"objects\\Hardware\\CEP_OSRack.pnl" 928 198 T 14 1 0 1 -110 6
 1
 "$osNr""2"
-3 14 "PANEL_REF15" -1
-"objects\\Hardware\\CEP_OSRack.pnl" 1098 198 T 15 1 0 1 -120 32
+3 14 "PANEL_REF15"
+"objects\\Hardware\\CEP_OSRack.pnl" 1098 198 T 15 1 0 1 -135 6
 1
 "$osNr""3"
-3 15 "PANEL_REF16" -1
-"objects\\Hardware\\CEP_OSRack.pnl" 1098 198 T 18 1 0 1 -20 32
-1
-"$osNr""4"
-3 16 "PANEL_REF17" -1
-"objects\\Hardware\\CEP_OSRack.pnl" 588 198 T 25 1 0 1 140 232
-1
-"$osNr""5"
-3 17 "PANEL_REF18" -1
-"objects\\Hardware\\CEP_OSRack.pnl" 758 198 T 26 1 0 1 70 232
-1
-"$osNr""6"
-3 18 "PANEL_REF19" -1
-"objects\\Hardware\\CEP_OSRack.pnl" 928 198 T 27 1 0 1 0 232
-1
-"$osNr""7"
-3 19 "PANEL_REF20" -1
-"objects\\Hardware\\CEP_OSRack.pnl" 1098 198 T 28 1 0 1 -70 232
-1
-"$osNr""8"
-3 20 "PANEL_REF20" -1
-"objects\\Hardware\\CEP_CobaltRack.pnl" 338 228 T 28 U 
-0
+3 15 "PANEL_REF16"
+"objects\\Hardware\\CEP_OSSubcluster_small.pnl" 358 470 T 18 1 0 1 -5 8
+2
+"$OSRackNr""0"
+"$OSSubclusterNr""0"
+3 16 "PANEL_REF17"
+"objects\\Hardware\\CEP_OSSubcluster_small.pnl" 348 300 T 19 1 0 1 5 -5
+2
+"$OSRackNr""0"
+"$OSSubclusterNr""1"
+3 17 "PANEL_REF18"
+"objects\\Hardware\\CEP_OSSubcluster_small.pnl" 498 470 T 20 1 0 1 0 8
+2
+"$OSRackNr""1"
+"$OSSubclusterNr""2"
+3 18 "PANEL_REF19"
+"objects\\Hardware\\CEP_OSSubcluster_small.pnl" 498 290 T 21 1 0 1 0 5
+2
+"$OSRackNr""1"
+"$OSSubclusterNr""3"
+3 19 "PANEL_REF20"
+"objects\\Hardware\\CEP_OSSubcluster_small.pnl" 648 480 T 22 1 0 1 -5 -2
+2
+"$OSRackNr""2"
+"$OSSubclusterNr""4"
+3 20 "PANEL_REF21"
+"objects\\Hardware\\CEP_OSSubcluster_small.pnl" 648 300 T 23 1 0 1 -5 -5
+2
+"$OSRackNr""2"
+"$OSSubclusterNr""5"
+3 21 "PANEL_REF22"
+"objects\\Hardware\\CEP_OSSubcluster_small.pnl" 788 470 T 24 1 0 1 0 8
+2
+"$OSRackNr""3"
+"$OSSubclusterNr""6"
+3 22 "PANEL_REF23"
+"objects\\Hardware\\CEP_OSSubcluster_small.pnl" 788 290 T 25 1 0 1 0 5
+2
+"$OSRackNr""3"
+"$OSSubclusterNr""7"
 0

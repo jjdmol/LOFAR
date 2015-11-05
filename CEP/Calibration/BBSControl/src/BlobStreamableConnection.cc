@@ -124,7 +124,7 @@ namespace LOFAR
       if(!itsConnection)
       {
         LOG_ERROR("recvObject() called while not connected.");
-        return 0;
+        return false;
       }
 
       BlobStreamable* bs(0);

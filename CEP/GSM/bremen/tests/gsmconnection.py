@@ -2,13 +2,14 @@
 import os
 import unittest
 import monetdb
-from monetdb.monetdb_exceptions import DatabaseError as MonetDatabaseError
 import monetdb.sql as db
 import psycopg2
 from src.gsmconnectionmanager import GSMConnectionManager
-from tests.switchable import SwitchableTest
 
-class ConnectionTest(SwitchableTest):
+class ConnectionTest(unittest.TestCase):
+
+    def setUp(self):
+        self.cm = GSMConnectionManager()
 
     def test_default_connection(self):
         conn = self.cm.get_connection()
@@ -19,40 +20,11 @@ class ConnectionTest(SwitchableTest):
         self.assertTrue(conn.established())
 
     def test_fail_connection(self):
-        self.assertRaises((MonetDatabaseError, psycopg2.OperationalError),
-            self.cm.get_connection, database='test_nonexistent',
-                                    username='test1',
-                                    password='test1')
-
-    def test_bad_sql(self):
-        conn = self.cm.get_connection(database='test')
-        self.assertTrue(conn.established())
-        self.assertRaises((MonetDatabaseError, psycopg2.DatabaseError),
-                          conn.execute, 'select abracadabra from xxxtable;')
-        conn.rollback()
-        bad_sql = """update assocxtrsources
-   set weight = weight*(select ta.flux_fraction
-                   from temp_associations ta
-                  where ta.runcat_id = assocxtrsources.runcat_id
-                    and not exists (select 1 from runningcatalog  r
-                      where r.first_xtrsrc_id = ta.xtrsrc_id
-                    )
-                    and assocxtrsources.xtrsrc_id <> ta.xtrsrc_id
-                    and ta.lr_method = 1
-                    and ta.kind = 3),
-       lr_method = -4
- where exists (select ta.flux_fraction
-                   from temp_associations ta
-                  where ta.runcat_id = assocxtrsources.runcat_id
-                    and not exists (select 1 from runningcatalog  r
-                      where r.first_xtrsrc_id = ta.xtrsrc_id
-                    )
-                    and assocxtrsources.xtrsrc_id <> ta.xtrsrc_id
-                    and ta.lr_method = 1
-                    and ta.kind = 3);"""
-        if self.is_monet:
-            self.assertRaises(MonetDatabaseError, conn.execute, bad_sql)
-            self.assertFalse(conn.established())
+        with self.assertRaises((monetdb.monetdb_exceptions.DatabaseError,
+                                psycopg2.OperationalError)):
+            self.cm.get_connection(database='test_nonexistent',
+                                   username='test1',
+                                   password='test1')
 
     def test_store_properties(self):
         self.cm.params['port'] = 12345

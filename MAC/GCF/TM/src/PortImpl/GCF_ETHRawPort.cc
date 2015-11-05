@@ -2,7 +2,7 @@
 //#
 //# Copyright (C) 2003
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //# This program is free software; you can redistribute it and/or modify
 //# it under the terms of the GNU General Public License as published by
@@ -74,80 +74,98 @@ bool GCFETHRawPort::close()
 
 bool GCFETHRawPort::open()
 {
-  if (isConnected()) {
+  if (isConnected())
+  {
     LOG_WARN("already connected");
    
     return false;
   }
-  else if (MSPP == getType()) {
+  else if (MSPP == getType())
+  {
     LOG_ERROR(formatString ( 
         "ETH raw ports can not act as a MSPP (%s).",
         getRealName().c_str()));
     return false;
   }
   // check for ifname
-  if (_ifname == "") {    
-    try {
+  if (_ifname == "")
+  {    
+    try 
+    {
       string ifNameParam = formatString(
           PARAM_ETH_IFNAME,
           getTask()->getName().c_str(),
           getRealName().c_str());
       _ifname += globalParameterSet()->getString(ifNameParam);      
     }
-    catch (...) {
+    catch (...)
+    {
       LOG_ERROR("no interface name specified");
       return false;
     }
   }
 
-  if (_destMacStr == "") {    
-    try {
+  if (_destMacStr == "")
+  {    
+    try 
+    {
       string destMacParam = formatString(
           PARAM_ETH_MACADDR,
           getTask()->getName().c_str(),
           getRealName().c_str());
       _destMacStr += globalParameterSet()->getString(destMacParam);      
     }
-    catch (...) {
+    catch (...)
+    {
       LOG_ERROR("no destination mac adres is specified");
       return false;
     }
   }
 
-  if (_ethertype == 0x0000) {
-    try {
+  if (_ethertype == 0x0000)
+  {
+    try 
+    {
       string ethertypeParam = formatString(
           PARAM_ETH_ETHERTYPE,
           getTask()->getName().c_str(),
           getRealName().c_str());
       _ethertype += globalParameterSet()->getInt32(ethertypeParam);      
     }
-    catch (...) {
+    catch (...)
+    {
       // is optional so no problem.
     }
   }
-  if (!_pSocket) {
-    if (isSlave()) {
+  if (!_pSocket)
+  {
+    if (isSlave())
+    {
       LOG_ERROR(formatString (
   			  "Port %s is not initialised.",
   			  getRealName().c_str()));
       return false;
     }
-    else    {
+    else    
+    {
       _pSocket = new GTMETHSocket(*this);
     }
   } 
    
-  if (_pSocket->open(_ifname.c_str(), _destMacStr.c_str(), _ethertype) < 0) {    
-    if (SAP == getType()) {
+  if (_pSocket->open(_ifname.c_str(), _destMacStr.c_str(), _ethertype) < 0)
+  {    
+    if (SAP == getType())
+    {
       setState(S_DISCONNECTING);
       schedule_disconnected();
     }
-    else {
+    else
+    {
       return false;
     }
   }
-  else { 
+  else
+  { 
     setState(S_CONNECTING);
     schedule_connected();
   }
@@ -160,7 +178,8 @@ ssize_t GCFETHRawPort::send(GCFEvent& e)
 
   ASSERT(_pSocket);
 
-  if (!isConnected()) {
+  if (!isConnected()) 
+  {
     LOG_ERROR(formatString (
         "Port '%s' on task '%s' not connected! Event not sent!",
         getRealName().c_str(),

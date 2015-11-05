@@ -34,8 +34,7 @@ enum {
 	ERR_ALREADY_REGISTERED,	// subarray already registered
 	ERR_ONLY_ONE_SUBARRAY,  // only 1 subarray per client allowed
 	ERR_NO_SUBARRAY_NAME,	// name of subarray is empty
-	ERR_NO_ANTENNAS,		// antenna selection is empty
-	ERR_CONFLICT			// array conflicts with other array
+	ERR_NO_ANTENNAS			// antenna selection is empty
 };
 
 //
@@ -77,7 +76,7 @@ event = {
       };
       param = { // subset of the receivers (2 receivers per antenna)
 	    name = "subset";
-	    type = "bitset<LOFAR::MAX_RCUS>";
+	    type = "LOFAR::bitset<LOFAR::MAX_RCUS>";
       };
       param = {
 	    // RCU control byte controls the setting of all
@@ -89,7 +88,7 @@ event = {
 	  // TODO: add this parameter for faster calibration in the future
 //      param = { // set of subbands
 //	    name = "subbandset";
-//	    type = "bitset<LOFAR::MAX_SUBBANDS>";
+//	    type = "LOFAR::bitset<LOFAR::MAX_SUBBANDS>";
 //      };
       // nyquist_zone is deducted from RCUSettings
       // sampling_frequency and nyquist_zone determine the spectral window
@@ -139,7 +138,7 @@ event = {
       };
       param = { // set of subbands
 	    name = "subbandset";
-	    type = "bitset<LOFAR::MAX_SUBBANDS>";
+	    type = "LOFAR::bitset<LOFAR::MAX_SUBBANDS>";
       };
 };
 
