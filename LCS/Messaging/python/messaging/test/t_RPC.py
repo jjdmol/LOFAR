@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 """
 Program to test the RPC and Service class of the Messaging package.
 It defines 5 functions and first calls those functions directly to check
@@ -6,9 +6,7 @@ that the functions are OK. Next the same tests are done with the RPC and
 Service classes in between. This should give the same results.
 """
 import sys
-from contextlib import nested
-
-from lofar.messaging import Service, RPC
+from lofar.messaging import *
 
 class UserException(Exception):
     "Always thrown in one of the functions"
@@ -112,38 +110,38 @@ if __name__ == '__main__':
     busname = sys.argv[1] if len(sys.argv) > 1 else "simpletest"
 
     # Register functs as a service handler listening at busname and ServiceName
-    serv1 = Service(busname, "ErrorService",     ErrorFunc,     numthreads=1)
-    serv2 = Service(busname, "ExceptionService", ExceptionFunc, numthreads=1)
-    serv3 = Service(busname, "StringService",    StringFunc,    numthreads=1)
-    serv4 = Service(busname, "ListService",      ListFunc,      numthreads=1)
-    serv5 = Service(busname, "DictService",      DictFunc,      numthreads=1)
+    serv1 = Service("ErrorService",     ErrorFunc,     busname=busname, numthreads=1)
+    serv2 = Service("ExceptionService", ExceptionFunc, busname=busname, numthreads=1)
+    serv3 = Service("StringService",    StringFunc,    busname=busname, numthreads=1)
+    serv4 = Service("ListService",      ListFunc,      busname=busname, numthreads=1)
+    serv5 = Service("DictService",      DictFunc,      busname=busname, numthreads=1)
 
     # 'with' sets up the connection context and defines the scope of the service.
-    with nested(serv1, serv2, serv3, serv4, serv5):
+    with serv1, serv2, serv3, serv4, serv5:
         # Start listening in the background. This will start as many threads as defined by the instance
-        serv1.StartListening()
-        serv2.StartListening()
-        serv3.StartListening()
-        serv4.StartListening()
-        serv5.StartListening()
+        serv1.start_listening()
+        serv2.start_listening()
+        serv3.start_listening()
+        serv4.start_listening()
+        serv5.start_listening()
 
         # Redo all tests but via through RPC
         # ErrorFunc
-        with RPC(busname, "ErrorService") as rpc:
+        with RPC("ErrorService", busname=busname) as rpc:
             try:
                 result = rpc("aap noot mies")
             except UserException as e:
                 pass
 
         # ExceptionFunc
-        with RPC(busname, "ExceptionService") as rpc:
+        with RPC("ExceptionService", busname=busname) as rpc:
             try:
                 result = rpc("aap noot mies")
             except IndexError as e:
                 pass
 
         # StringFunc
-        with RPC(busname, "StringService") as rpc:
+        with RPC("StringService", busname=busname) as rpc:
             try:
                 result = rpc([25])
             except InvalidArgType as e:
@@ -153,7 +151,7 @@ if __name__ == '__main__':
                 raise Exception("String function failed:{}".format(result))
 
         # ListFunc
-        with RPC(busname, "ListService") as rpc:
+        with RPC("ListService", busname=busname) as rpc:
             try:
                 result = rpc("25")
             except InvalidArgType as e:
@@ -163,7 +161,7 @@ if __name__ == '__main__':
                 raise Exception("List function failed:{}".format(result))
 
         # DictFunc
-        with RPC(busname, "DictService") as rpc:
+        with RPC("DictService", busname=busname) as rpc:
             try:
                 result = rpc([25])
             except InvalidArgType as e:
@@ -175,8 +173,8 @@ if __name__ == '__main__':
         print "Functions tested with RPC: All OK"
 
         # Tell all background listener threads to stop and wait for them to finish.
-        serv1.StopListening()
-        serv2.StopListening()
-        serv3.StopListening()
-        serv4.StopListening()
-        serv5.StopListening()
+        serv1.stop_listening()
+        serv2.stop_listening()
+        serv3.stop_listening()
+        serv4.stop_listening()
+        serv5.stop_listening()

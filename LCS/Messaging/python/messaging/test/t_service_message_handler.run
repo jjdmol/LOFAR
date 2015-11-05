@@ -22,7 +22,7 @@ if type "coverage" > /dev/null; then
     #setup coverage config file
     printf "[report]\nexclude_lines = \n  if __name__ == .__main__.\n  def main\n" > .coveragerc
 
-    coverage run --branch --include=*Messaging/python* t_RPC.py $queue
+    coverage run --branch --include=*Messaging/python* t_service_message_handler.py $queue
     RESULT=$?
     if [ $RESULT -eq 0 ]; then
         echo " *** Code coverage results *** "
@@ -34,5 +34,5 @@ else
     #coverage not available
     echo "Please run: 'pip install coverage' to enable code coverage reporting of the unit tests"
     #run plain test script
-    python t_RPC.py $queue
+    python t_service_message_handler.py $queue
 fi

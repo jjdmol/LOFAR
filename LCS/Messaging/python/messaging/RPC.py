@@ -24,6 +24,10 @@ from lofar.messaging.messagebus import ToBus, FromBus
 from lofar.messaging.messages import ServiceMessage, ReplyMessage
 import uuid
 
+class RPCException(Exception):
+    "Exception occured in the RPC code itself, like time-out, invalid message received, etc."
+    pass
+
 class RPC():
     """
     This class provides an easy way to invoke a Remote Rrocedure Call to a
@@ -37,11 +41,11 @@ class RPC():
     As a side-effect the sender and session are destroyed.
 
     """
-    def __init__(self, bus, service, timeout=None, ForwardExceptions=None, Verbose=None):
+    def __init__(self, service, busname=None, timeout=None, ForwardExceptions=None, Verbose=None):
 	"""
 	Initialize an Remote procedure call using:
-	    bus=     <str>    Bus Name
 	    service= <str>    Service Name
+	        bus=     <str>    Bus Name
             timeout= <float>  Time to wait in seconds before the call is considered a failure.
             Verbose= <bool>   If True output extra logging to stdout.
 
@@ -55,7 +59,7 @@ class RPC():
             self.ForwardExceptions = True
         if Verbose is True:
             self.Verbose = True
-        self.BusName = bus
+        self.BusName = busname
         self.ServiceName = service
         if self.BusName is None:
             self.Request = ToBus(self.ServiceName)
@@ -106,7 +110,7 @@ class RPC():
             status["state"] = "TIMEOUT"
             status["errmsg"] = "RPC Timed out"
             status["backtrace"] = ""
-            return (None, status)
+            raise RPCException(status)
 
         # Check for illegal message type
         if isinstance(answer, ReplyMessage) is False:
@@ -114,7 +118,7 @@ class RPC():
             status["state"] = "ERROR"
             status["errmsg"] = "Incorrect messagetype (" + str(type(answer)) + ") received."
             status["backtrace"] = ""
-            return (None, status)
+            raise RPCException(status)
 
         # return content and status if status is 'OK'
         if (answer.status == "OK"):
@@ -129,7 +133,7 @@ class RPC():
             status["state"] = "ERROR"
             status["errmsg"] = "Return state in message not found"
             status["backtrace"] = ""
-            return (Null, status)
+            raise RPCException(status)
 
         # Does the client expect us to throw the exception?
         if self.ForwardExceptions is True:
@@ -139,5 +143,7 @@ class RPC():
                 instance = excep_class_(answer.backtrace)
                 raise (instance)
             else:
-                raise (Exception(answer.errmsg))
-        return (None,status)
+                raise RPCException(answer.errmsg)
+        return (None, status)
+
+__all__ = ["RPC", "RPCException"]

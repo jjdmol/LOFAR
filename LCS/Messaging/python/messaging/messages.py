@@ -32,9 +32,9 @@ from lofar.messaging.exceptions import InvalidMessage, MessageFactoryError
 
 
 # Valid QPID message fields (from qpid.messaging.Message)
-_QPID_MESSAGE_FIELDS = set([
+_QPID_MESSAGE_FIELDS = {
     'content', 'content_type', 'correlation_id', 'durable', 'id',
-    'priority', 'properties', 'reply_to', 'subject', 'ttl', 'user_id'])
+    'priority', 'properties', 'reply_to', 'subject', 'ttl', 'user_id'}
 
 
 def validate_qpid_message(qmsg):
@@ -47,7 +47,7 @@ def validate_qpid_message(qmsg):
     :raises InvalidMessage: if any of the required properties are missing in
     the Qpid message
     """
-    required_props = set(["SystemName", "MessageType", "MessageId"])
+    required_props = {"SystemName", "MessageType", "MessageId"}
     if not isinstance(qmsg, qpid.messaging.Message):
         raise InvalidMessage(
             "Not a Qpid Message: %r" % type(qmsg)
@@ -159,6 +159,9 @@ class LofarMessage(object):
         else:
             try:
                 self.__dict__['_qpid_msg'] = qpid.messaging.Message(content)
+                if self.__dict__['_qpid_msg'].content_type is None:
+                    self.__dict__['_qpid_msg'].content_type='text/plain'
+
             except KeyError:
                 raise InvalidMessage(
                     "Unsupported content type: %r" % type(content))
@@ -208,7 +211,7 @@ class LofarMessage(object):
         """
         return list(
             _QPID_MESSAGE_FIELDS.union(self._qpid_msg.properties) -
-            set(['properties'])
+            {'properties'}
         )
 
     @property
@@ -241,9 +244,10 @@ class EventMessage(LofarMessage):
     will be stored in a persistent queue for later delivery.
     """
 
-    def __init__(self, content=None):
+    def __init__(self, context, content=None):
         super(EventMessage, self).__init__(content)
         self.durable = True
+        self.subject = context
 
 
 class MonitoringMessage(LofarMessage):
