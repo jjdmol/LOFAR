@@ -25,9 +25,6 @@
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_iomanip.h>
 
-#include <CoInterface/TimeFuncs.h>
-
-#include <sys/time.h>
 #include <time.h>
 
 namespace LOFAR
@@ -35,30 +32,20 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    TimeStamp TimeStamp::now( unsigned clockSpeed )
-    {
-      struct timeval tv;
-
-      gettimeofday(&tv, NULL);
-
-      unsigned long usec = tv.tv_sec * 1000000 + tv.tv_usec;
-      return convert((double)usec / 1000000, clockSpeed);
-    }
-
-    TimeStamp TimeStamp::universe_heat_death( unsigned clockSpeed )
-    {
-      return TimeStamp(0x7FFFFFFFFFFFFFFFUL, clockSpeed);
-    }
-
-
-    TimeStamp TimeStamp::convert( double seconds, unsigned clockSpeed )
-    {
-      return TimeStamp(seconds * clockSpeed / 1024, clockSpeed);
-    }
-
     ostream &operator << (ostream &os, const TimeStamp &ts)
     {
-      return os << TimeDouble::toString(ts.getSeconds(), true) << " UTC";
+      double time_d = ts.getSeconds();
+      time_t seconds = static_cast<time_t>(floor(time_d));
+      unsigned ms = static_cast<unsigned>(floor((time_d - seconds) * 1000 + 0.5));
+
+      char   buf[26];
+      struct tm tm;
+
+      gmtime_r(&seconds, &tm);
+      size_t len = strftime(buf, sizeof buf, "%F %T", &tm);
+      buf[len] = '\0';
+
+      return os << "[" << ts.getSeqId() << "s, " << ts.getBlockId() << "] = " << buf << "." << setfill('0') << setw(3) << ms << " UTC";
     }
 
   } // namespace Cobalt

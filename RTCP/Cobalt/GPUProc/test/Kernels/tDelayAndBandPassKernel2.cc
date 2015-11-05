@@ -30,7 +30,7 @@ using namespace LOFAR::Cobalt;
 
 struct TestFixture
 {
-  TestFixture() : ps("tDelayAndBandPassKernel2.in_parset"), factory(DelayAndBandPassKernel::Parameters(ps, true)) {}
+  TestFixture() : ps("tDelayAndBandPassKernel2.in_parset"), factory(ps) {}
   ~TestFixture() {}
 
   Parset ps;
@@ -58,11 +58,11 @@ TEST_FIXTURE(TestFixture, Delays)
                 DelayAndBandPassKernel::DELAYS));
 }
 
-TEST_FIXTURE(TestFixture, Phase0s)
+TEST_FIXTURE(TestFixture, PhaseOffsets)
 {
   CHECK_EQUAL(size_t(16),
               factory.bufferSize(
-                DelayAndBandPassKernel::PHASE_ZEROS));
+                DelayAndBandPassKernel::PHASE_OFFSETS));
 }
 
 TEST_FIXTURE(TestFixture, BandPassCorrectionWeights)

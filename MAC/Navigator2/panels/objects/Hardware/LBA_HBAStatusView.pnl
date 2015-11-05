@@ -89,9 +89,6 @@ void updateLBAInfo(string ident, dyn_dyn_anytype tab)
 
 void updateHBAInfo(string ident, dyn_dyn_anytype tab)
 {
-  
-  // for corestations (these are starting with \"CS\" in the name) do hava a HBA0 and HBA1 
-  // and in this case we want to know the nrBroken for these parts and not for the total HBA
 
   if (dynlen(tab) <= 1) return;
   
@@ -301,7 +298,7 @@ E "main(int x, int y)
 2 3
 "stationName"
 ""
-1 10 25.00000000000002 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 10 30.00000000000001 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  "main()
 {
   rClick();

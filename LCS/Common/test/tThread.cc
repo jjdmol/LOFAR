@@ -179,26 +179,6 @@ void test_mt() {
 }
 
 
-void test_prio()
-{
-  /*
-   * Note: Failure to set thread priority
-   * merely results in a warning, so there
-   * isn't really anything to test except
-   * not freezing or crashing.
-   */
-  {
-    // normal priority
-    Thread::ScopedPriority sp(SCHED_OTHER, 0);
-  }
-
-  {
-    // real-time priority
-    Thread::ScopedPriority sp(SCHED_FIFO, 1);
-  }
-}
-
-
 int main()
 {
   INIT_LOGGER("tThread");
@@ -209,7 +189,6 @@ int main()
 
   test_simple();
   test_mt();
-  test_prio();
 
   LOG_INFO("Program terminated successfully");
   return 0;

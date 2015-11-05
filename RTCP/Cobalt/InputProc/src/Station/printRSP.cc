@@ -44,33 +44,38 @@ void report( const string &filename )
 
   struct RSP packet;
 
-  try {
-    for(;;) {
-      // read header
-      f.read( &packet.header, sizeof (RSP::Header) );
+  // read header
+  f.read( &packet.header, sizeof (RSP::Header) );
 
-      TimeStamp timeStamp = packet.timeStamp();
-      time_t seconds = timeStamp.getSeqId();
+#ifdef WORDS_BIGENDIAN
+  dataConvert(LittleEndian, packet.header.configuration);
+  dataConvert(LittleEndian, packet.header.timestamp);
+  dataConvert(LittleEndian, packet.header.blockSequenceNumber);
+#endif
 
-      char buf[26];
-      ctime_r(&seconds, buf);
-      buf[strlen(buf) -1] = 0; // remove trailing \n
+  TimeStamp timeStamp = packet.timeStamp();
+  time_t seconds = timeStamp.getSeqId();
 
-      cout << "Time stamp:   " << buf << " sample " << timeStamp.getBlockId() << endl;
-      cout << "RSP version:  " << (int)packet.header.version << endl;
-      cout << "RSP board nr: " << packet.rspBoard() << endl;
-      cout << "Payload OK:   " << (packet.payloadError() ? "NO" : "YES") << endl;
-      cout << "Clock:        " << packet.clockMHz() << " MHz" << endl;
-      cout << "Bit mode:     " << packet.bitMode() << " bit" << endl;
-      cout << "Blocks:       " << (int)packet.header.nrBlocks << endl;
-      cout << "Beamlets:     " << (int)packet.header.nrBeamlets << endl;
+  char buf[26];
+  ctime_r(&seconds, buf);
+  buf[strlen(buf) -1] = 0; // remove trailing \n
 
-      // read payload
-      f.read( &packet.payload, packet.packetSize() - sizeof (RSP::Header) );
-    }
-  } catch(EndOfStreamException &) {
-  }
+  cout << "Time stamp:   " << buf << " sample " << timeStamp.getBlockId() << endl;
+  cout << "RSP version:  " << (int)packet.header.version << endl;
+  cout << "RSP board nr: " << packet.rspBoard() << endl;
+  cout << "Payload OK:   " << (packet.payloadError() ? "NO" : "YES") << endl;
+  cout << "Clock:        " << packet.clockMHz() << " MHz" << endl;
+  cout << "Bit mode:     " << packet.bitMode() << " bit" << endl;
+  cout << "Blocks:       " << (int)packet.header.nrBlocks << endl;
+  cout << "Beamlets:     " << (int)packet.header.nrBeamlets << endl;
 
+  // read payload
+  f.read( &packet.payload, packet.packetSize() - sizeof (RSP::Header) );
+
+#ifdef WORDS_BIGENDIAN
+  if (packet.bitMode() == 16)
+    dataConvert(LittleEndian, (int16*)&packet.payload, packet.header.nrBlocks * packet.header.nrBeamlets * 2 * 2);
+#endif
 }
 
 int main()

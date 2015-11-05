@@ -152,10 +152,6 @@ namespace LOFAR {
       // Update the general info.
       virtual void updateInfo (const DPInfo&);
 
-      // Add some data to the MeasurementSet written/updated.
-      // Do nothing.
-      virtual void addToMS (const string&) {};
-
       // Show the step parameters.
       virtual void show (std::ostream&) const;
 
@@ -165,31 +161,21 @@ namespace LOFAR {
       // Show the timings.
       virtual void showTimings (std::ostream&, double duration) const;
 
-      // Read the UVW at the given row numbers into the buffer.
-      virtual void getUVW (const casa::RefRows& rowNrs,
-                           double time,
-                           DPBuffer&);
+      // Read the UVW at the given row numbers.
+      virtual casa::Matrix<double> getUVW (const casa::RefRows& rowNrs);
 
-      // Read the weights at the given row numbers into the buffer.
-      // Note: the buffer must contain DATA if autoweighting is in effect.
-      virtual void getWeights (const casa::RefRows& rowNrs,
-                               DPBuffer&);
+      // Read the weights at the given row numbers.
+      virtual casa::Cube<float> getWeights (const casa::RefRows& rowNrs,
+                                            const DPBuffer& buf);
 
-      // Read the fullRes flags (LOFAR_FULL_RES_FLAG) at the given row numbers
-      // into the buffer.
-      // If there is no such column, the flags are set to false and false is
-      // returned.
-      virtual bool getFullResFlags (const casa::RefRows& rowNrs,
-                                    DPBuffer&);
+      // Read the FullRes flags (LOFAR_FULL_RES_FLAG) at the given row numbers.
+      // It returns a 3-dim array [norigchan, ntimeavg, nbaseline].
+      // If undefined, an empty array is returned.
+      virtual casa::Cube<bool> getFullResFlags (const casa::RefRows& rowNrs);
 
-      // Read the model data at the given row numbers into the array.
-      virtual void getModelData (const casa::RefRows& rowNrs,
-                                 casa::Cube<casa::Complex>&);
-
-      // Fill the vector with station beam info from the input MS.
-      // Only fill it for the given station names.
-      virtual void fillBeamInfo (vector<StationResponse::Station::Ptr>&,
-                                 const casa::Vector<casa::String>& antNames);
+      // Read the given data column at the given row numbers.
+      ///      virtual casa::Cube<casa::Complex> getData (const casa::String& columnName,
+      ///                                                 const casa::RefRows& rowNrs);
 
       // Tell if the visibility data are to be read.
       virtual void setReadVisData (bool readVisData);
@@ -204,9 +190,6 @@ namespace LOFAR {
 
       const casa::String& weightColumnName() const
         { return itsWeightColName; }
-
-      const casa::String& modelColumnName() const
-        { return itsModelColName; }
 
       // Get the slicer in the FLAG and DATA column.
       const casa::Slicer& colSlicer() const
@@ -275,7 +258,7 @@ namespace LOFAR {
       void skipFirstTimes();
 
       // Calculate the UVWs for a missing time slot.
-      void calcUVW (double time, DPBuffer&);
+      void calcUVW();
 
       // Calculate the weights from the autocorrelations.
       void autoWeight (casa::Cube<float>& weights, const DPBuffer& buf);
@@ -288,7 +271,6 @@ namespace LOFAR {
       casa::TableIterator itsIter;
       casa::String        itsDataColName;
       casa::String        itsWeightColName;
-      casa::String        itsModelColName;
       casa::String        itsStartChanStr;  //# startchan expression
       casa::String        itsNrChanStr;     //# nchan expression
       string              itsSelBL;         //# Baseline selection string
@@ -305,7 +287,6 @@ namespace LOFAR {
       uint                itsNrCorr;
       uint                itsNrChan;
       uint                itsStartChan;
-      double              itsTimeTolerance; //# tolerance for time comparison
       double              itsTimeInterval;
       double              itsStartTime;
       double              itsFirstTime;

@@ -32,7 +32,7 @@ def main():
     global args, logdir, logger, nRSP, nLBL, nLBH, nHBA
     getArguments()
     logdir = getLogDir()
-    ID, nRSP, nTBB, nLBL, nLBH, nHBA, HBA_SPLIT = readStationConfig()
+    ID, nRSP, nTBB, nLBL, nLBH, nHBA = readStationConfig()
     logger = cPVSSLogger(logdir)
     
     if args.has_key('RESET'):
@@ -186,7 +186,7 @@ def resetPVSS(state=0):
                 f.write("LOFAR_PIC_HBA%02d.element%02d.Y %d\n" %(tile, elem, state))
     f.close()
     if not args.has_key('TEST'):
-        sendCmd("setObjectState", "stationtest:reset %s" %(full_filename))
+        sendCmd("setObjectState", "stationtes:reset %s" %(full_filename))
         sleep(5.0)
     
 

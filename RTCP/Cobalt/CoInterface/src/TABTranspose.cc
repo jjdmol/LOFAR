@@ -16,31 +16,22 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: BlockID.h 26419 2013-09-09 11:19:56Z mol $
 
 #include <lofar_config.h>
-
 #include "TABTranspose.h"
 
-#include <algorithm>
-#include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
-
 #include <Common/LofarLogger.h>
-#include <Common/Timer.h>
-#include <ApplCommon/PVSSDatapointDefs.h>
-#include <CoInterface/TimeFuncs.h>
+#include <boost/format.hpp>
+#include <algorithm>
 
 using namespace std;
 using boost::format;
-using boost::lexical_cast;
 
 namespace LOFAR {
 namespace Cobalt {
 namespace TABTranspose {
 
-// A Subband here is the part of a Block (see below) that contains the data
-// values in a subband during a block duration (e.g. 1 second).
 Subband::Subband( size_t nrSamples, size_t nrChannels )
 : 
   data(boost::extents[nrSamples][nrChannels])
@@ -51,8 +42,6 @@ Subband::Subband( size_t nrSamples, size_t nrChannels )
 }
 
 
-// Used by a MultiSender in rtcp to write a Subband through a Stream to a
-// Receiver in outputProc. 
 void Subband::write(Stream &stream) const {
   stream.write(&id, sizeof id);
 
@@ -61,161 +50,55 @@ void Subband::write(Stream &stream) const {
   stream.write(&dim1, sizeof dim1);
   stream.write(&dim2, sizeof dim2);
   stream.write(data.origin(), data.num_elements() * sizeof *data.origin());
-
-  LOG_DEBUG_STR("Written block "  << id);
+  LOG_DEBUG_STR("Written block");
 }
 
 
-// Used by a Receiver in outputProc to read a Subband through a Stream from a
-// MultiSender in rtcp.
 void Subband::read(Stream &stream) {
   LOG_DEBUG_STR("Reading block id");
   stream.read(&id, sizeof id);
-  LOG_DEBUG_STR("Read block id " << id);
+  LOG_DEBUG_STR("Read block id");
 
   size_t dim1, dim2;
   stream.read(&dim1, sizeof dim1);
   stream.read(&dim2, sizeof dim2);
   data.resize(boost::extents[dim1][dim2]);
   stream.read(data.origin(), data.num_elements() * sizeof *data.origin());
-  LOG_DEBUG_STR("Read block " << id);
+  LOG_DEBUG_STR("Read block");
 }
 
 
-std::ostream &operator<<(std::ostream &str, const Subband::BlockID &id)
-{
-  return str << "file " << id.fileIdx << " block " << id.block << " subband " << id.subband;
-}
-
-
-// A Block here is a block duration (e.g. 1 sec) of data with all the Subbands
-// that should go info a single file (part).
-Block::Block( size_t fileIdx, size_t blockIdx, size_t nrSubbands, size_t nrSamples, size_t nrChannels )
+Block::Block( size_t nrSubbands, size_t nrSamples, size_t nrChannels )
 :
-  fileIdx(fileIdx),
-  blockIdx(blockIdx),
-  nrSamples(nrSamples),
-  nrSubbands(nrSubbands),
-  nrChannels(nrChannels),
-  subbandCache(nrSubbands, NULL),
+  data(boost::extents[nrSubbands][nrSamples][nrChannels]),
+  subbandWritten(nrSubbands, false),
+  fileIdx(0),
+  block(0),
   nrSubbandsLeft(nrSubbands)
 {
 }
 
 
-// Used by the BlockCollector to add a received Subband to a Block.
-// Runs in outputProc.
-void Block::addSubband( SmartPtr<Subband> &subband ) {
+void Block::addSubband( const Subband &subband ) {
   ASSERT(nrSubbandsLeft > 0);
 
-  const Subband::BlockID id = subband->id;
-
   // Only add subbands that match our ID
-  ASSERTSTR(id.fileIdx == fileIdx,  "Got fileIdx " << id.fileIdx << ", expected " << fileIdx);
-  ASSERTSTR(id.subband < nrSubbands, "Got subband " << id.subband << ", expected < " << nrSubbands);
-  ASSERTSTR(id.block   == blockIdx, "Got block " << id.block << ", expected " << blockIdx);
+  ASSERT(subband.id.fileIdx == fileIdx);
+  ASSERT(subband.id.block   == block);
 
-  ASSERT(id.subband < nrSubbands);
-  ASSERT(subband->data.shape()[0] == nrSamples);
-  ASSERT(subband->data.shape()[1] == nrChannels);
-
-  // Subbands should not arrive twice
-  ASSERT(subbandCache[id.subband] == NULL);
-
-  subbandCache[id.subband] = subband;
-  ASSERT(subband == NULL);
+  memcpy(data[subband.id.subband].origin(), subband.data.origin(), subband.data.num_elements() * sizeof *subband.data.origin());
+  subbandWritten[subband.id.subband] = true;
 
   nrSubbandsLeft--;
-
-  LOG_DEBUG_STR("Block: adding " << id << ", " << nrSubbandsLeft << " subbands left");
 }
 
 
-void Block::write( BeamformedData &output ) {
-  // Check dimensions
-  ASSERT( output.samples.shape()[0] == nrSamples );
-  ASSERT( output.samples.shape()[1] == nrSubbands );
-  ASSERT( output.samples.shape()[2] == nrChannels );
-
-  // Set annotation
-  output.setSequenceNumber(blockIdx);
-
-  // Set data
-
-  /*
-   * Input:
-   *   the set of subbandCache[nrSubbands],
-   *   each of which is either NULL, 
-   *   or (indirectly) a pointer to [nrSamples][nrChannels]
-   * Output:
-   *   output.samples[nrSamples][nrSubbands][nrChannels]
-   *
-   * Which means we're transposing nrChannels * sizeof(float) bytes at a time,
-   * which is especially painful if nrChannels == 1.
-   *
-   * The implemented strategy coalesces the writes in batches. Large batches
-   * will cause TLB misses due to the larger number of arrays we need to index.
-   */
-  const size_t MAXBATCHSIZE = 4;
-
-  // Stride between samples in output
-  const ptrdiff_t dst_sample_stride = output.samples.strides()[0];
-  // Stride between subbands in output
-  const ptrdiff_t dst_sb_stride = output.samples.strides()[1];
-
-  const vector<float> zeroes(nrChannels * nrSamples, 0.0f);
-
-  // Four threads gives the best performance on CEP2, see figures given by 'tTABTranspose | grep write'
-# pragma omp parallel for num_threads(4)
-  for (size_t subbandBase = 0; subbandBase < subbandCache.size(); subbandBase += MAXBATCHSIZE) {
-    // Determine actual batch size
-    const size_t BATCHSIZE = std::min(MAXBATCHSIZE, subbandCache.size() - subbandBase);
-
-    // Collect source pointers for all our subbands, or to our zeroes array if
-    // a subband is not available. Each element points to an array of dimensions
-    //   [nrSamples][nrChannels]
-    const float *src[MAXBATCHSIZE];
-
-    for (size_t i = 0; i < BATCHSIZE; ++i) {
-      size_t subbandIdx = subbandBase + i;
-
-      src[i] = subbandCache[subbandIdx] ? subbandCache[subbandIdx]->data.origin() : &zeroes[0];
-    }
-
-    // Pointer to walk over all samples
-    float *dst = &output.samples[0][subbandBase][0];
-
-    if (nrChannels == 1) {
-      /* Use assignment to copy data */
-      for (size_t t = 0; t < nrSamples; ++t) {
-        float *sample = dst;
-        dst += dst_sample_stride;
-
-        for (size_t i = 0; i < BATCHSIZE; ++i) {
-          *sample = src[i][t];
-
-          sample += dst_sb_stride;
-        }
-      }
-    } else {
-      /* Use memcpy to copy data */
-      for (size_t t = 0; t < nrSamples; ++t) {
-        float *sample = dst;
-        dst += dst_sample_stride;
-
-        for (size_t i = 0; i < BATCHSIZE; ++i) {
-          memcpy(sample, &src[i][t * nrChannels], nrChannels * sizeof(float));
-
-          sample += dst_sb_stride;
-        }
-      }
+void Block::zeroRemainingSubbands() {
+  for (size_t subbandIdx = 0; subbandIdx < subbandWritten.size(); ++subbandIdx) {
+    if (!subbandWritten[subbandIdx]) {
+      memset(data[subbandIdx].origin(), 0, data[subbandIdx].size() * sizeof *data[subbandIdx].origin());
     }
   }
-
-  // Report summary
-  size_t nrLost = std::count(subbandCache.begin(), subbandCache.end(), (Subband*)NULL);
-
-  LOG_INFO_STR("Block: written " << (nrSubbands - nrLost) << " subbands, lost " << nrLost << " subbands.");
 }
 
 
@@ -224,99 +107,38 @@ bool Block::complete() const {
 }
 
 
-// The BlockCollector collects blocks from different rtcp processes for a TAB.
-// More precisely, we have one BlockCollector per file (i.e. part).
-BlockCollector::BlockCollector( Pool<BeamformedData> &outputPool, size_t fileIdx, size_t nrSubbands, size_t nrChannels, size_t nrSamples, size_t nrBlocks, size_t maxBlocksInFlight )
+BlockCollector::BlockCollector( Pool<Block> &outputPool, size_t fileIdx, size_t maxBlocksInFlight )
 :
-  // drop = false: we drop at the output, not at the input, but we do want to protect against unbounded growth
-  inputQueue(str(format("BlockCollector::inputQueue [file %u]") % fileIdx), (1 + maxBlocksInFlight) * nrSubbands, false),
-  outputQueue(str(format("BlockCollector::outputQueue [file %u]") % fileIdx), 3, false),
-
   outputPool(outputPool),
-
   fileIdx(fileIdx),
-  nrBlocks(nrBlocks),
-  nrSubbands(nrSubbands),
-  nrChannels(nrChannels),
-  nrSamples(nrSamples),
-
   maxBlocksInFlight(maxBlocksInFlight),
   canDrop(maxBlocksInFlight > 0),
-  lastEmitted(-1),
-
-  inputThread(this, &BlockCollector::inputLoop, str(format("BC:input %u") % fileIdx)),
-  outputThread(this, &BlockCollector::outputLoop, str(format("BC:output %u") % fileIdx))
+  lastEmitted(-1)
 {
-  ASSERT(nrSubbands > 0);
-  ASSERT(nrChannels > 0);
-  ASSERT(nrSamples > 0);
 }
 
 
-BlockCollector::~BlockCollector()
-{
-  // Make SURE the threads can finish, regardless of whether finish() was called
-  inputQueue.noMore();
-  outputQueue.noMore();
-}
+void BlockCollector::addSubband( const Subband &subband ) {
+  ScopedLock sl(mutex);
 
-
-void BlockCollector::addSubband( SmartPtr<Subband> &subband ) {
-  inputQueue.append(subband);
-}
-
-
-void BlockCollector::inputLoop() {
-  SmartPtr<Subband> subband;
-
-  while ((subband = inputQueue.remove()) != NULL) {
-    processSubband(subband);
-  }
-}
-
-
-void BlockCollector::outputLoop() {
-  SmartPtr<Block> block;
-
-  NSTimer writeTimer("Block: data transpose/zeroing", true, true);
-
-  while ((block = outputQueue.remove()) != NULL) {
-    SmartPtr<BeamformedData> output = outputPool.free.remove();
-
-    writeTimer.start();
-    block->write(*output);
-    writeTimer.stop();
-
-    outputPool.filled.append(output);
-  }
-
-  outputPool.filled.append(NULL);
-}
-
-
-// Used by BlockCollector::inputLoop to add a Subband to a Block into a BlockCollector.
-// If this completes a Block (all Subbands for this Block received) and no
-// subsequent Blocks are missing something, send it (or them) off into the
-// outputQueue for write-back to storage.
-void BlockCollector::processSubband( SmartPtr<Subband> &subband ) {
-  LOG_DEBUG_STR("BlockCollector: Add " << subband->id);
-
-  const size_t &blockIdx = subband->id.block;
-
-  ASSERT(nrBlocks == 0 || blockIdx < nrBlocks);
+  const size_t &blockIdx = subband.id.block;
 
   if (!have(blockIdx)) {
-    if (!fetch(blockIdx)) {
-      // too late -- discard packet
-      LOG_DEBUG_STR("BlockCollector: Dropped subband " << subband->id.subband  << " of file " << subband->id.fileIdx);
-
-      // if we can't drop, we shouldn't even be here.
-      ASSERTSTR(canDrop, "Received block " << blockIdx << ", but already emitted up to " << lastEmitted << " for file " << subband->id.fileIdx << " subband " << subband->id.subband);
-
-      return;
+    if (canDrop) {
+      if ((ssize_t)blockIdx <= lastEmitted) {
+	// too late -- discard packet
+	return;
+      }
+    } else {
+      // if we can't drop, we shouldn't have written
+      // this block yet.
+      ASSERTSTR((ssize_t)blockIdx > lastEmitted, "Received block " << blockIdx << ", but already emitted up to " << lastEmitted << " for TAB " << subband.id.fileIdx << " subband " << subband.id.subband);
     }
+
+    fetch(blockIdx);
   }
 
+  // augment existing block
   SmartPtr<Block> &block = blocks.at(blockIdx);
 
   block->addSubband(subband);
@@ -324,44 +146,22 @@ void BlockCollector::processSubband( SmartPtr<Subband> &subband ) {
   if (block->complete()) {
     // Block is complete -- send it downstream,
     // and everything before it. We know we won't receive
-    // data from earlier blocks, because each subband
-    // is sent in-order.
-    //
-    // Note that blocks can be received out-of-order once
-    // (many) subbands go missing. 
+    // data from earlier blocks, because all subbands
+    // are sent in-order.
     emitUpTo(blockIdx);
-
-    if (nrBlocks > 0 && blockIdx == nrBlocks - 1) {
-      // Received last block -- wrap up
-      LOG_INFO_STR("BlockCollector: Received last block of file " << fileIdx);
-
-      ASSERT(blocks.empty());
-
-      // Signal end-of-stream
-      outputQueue.noMore();
-    }
   }
 }
 
 
 void BlockCollector::finish() {
-  // Wait for all input to be processed
-  inputQueue.noMore();
-  inputThread.wait();
+  ScopedLock sl(mutex);
 
-  // Wrap-up remainder
   if (!blocks.empty()) {
     emitUpTo(maxBlock());
   }
 
-  if (!canDrop) {
-    // Should have received everything
-    ASSERT(nrBlocks == 0 || (ssize_t)nrBlocks == lastEmitted + 1);
-  }
-
   // Signal end-of-stream
-  outputQueue.noMore();
-  outputThread.wait();
+  outputPool.filled.append(NULL);
 }
 
 
@@ -378,7 +178,6 @@ size_t BlockCollector::maxBlock() const {
 }
 
 
-// Send the Block with blockIdx for write-back to storage now.
 void BlockCollector::emit(size_t blockIdx) {
   // should emit in-order
   if (!canDrop) {
@@ -391,10 +190,10 @@ void BlockCollector::emit(size_t blockIdx) {
   // clear data we didn't receive
   SmartPtr<Block> &block = blocks.at(blockIdx);
 
-  LOG_DEBUG_STR("BlockCollector: emitting block " << blockIdx << " of file " << fileIdx);
+  block->zeroRemainingSubbands();
   
   // emit to outputPool.filled()
-  outputQueue.append(block);
+  outputPool.filled.append(block);
 
   // remove from our administration
   blocks.erase(blockIdx);
@@ -413,35 +212,22 @@ bool BlockCollector::have(size_t block) const {
 }
 
 
-bool BlockCollector::fetch(size_t block) {
-  if ((ssize_t)block <= lastEmitted)
-    // too late -- discard packet
-    return false;
+void BlockCollector::fetch(size_t block) {
+  ASSERT(!have(block));
 
-  // Make sure we don't exceed our maximum cache size
   if (canDrop && blocks.size() >= maxBlocksInFlight) {
-    // Under severe data loss, we can get disjunct sets
-    // of subbands for each block. In that case,
-    // the blocks can arrive out-of-order.
-    //
-    // We should not accept any blocks that are even earlier
-    // than the one we're about to emit.
-    if (block < minBlock())
-      return false;
-
     // No more room -- force out oldest block
     emit(minBlock());
   }
 
-  // Add and annotate
-  ASSERT(!have(block));
-  blocks[block] = new Block(fileIdx, block, nrSubbands, nrSamples, nrChannels);
+  blocks[block] = outputPool.free.remove();
 
-  return true;
+  // Annotate
+  blocks[block]->fileIdx = fileIdx;
+  blocks[block]->block = block;
 }
 
 
-// Receives data from an rtcp process. Runs in outputProc.
 Receiver::Receiver( Stream &stream, CollectorMap &collectors )
 :
   stream(stream),
@@ -467,9 +253,6 @@ bool Receiver::finish()
 {
   thread.wait();
 
-  for (CollectorMap::iterator i = collectors.begin(); i != collectors.end(); ++i)
-    i->second->finish();
-
   return !thread.caughtException();
 }
 
@@ -477,26 +260,24 @@ bool Receiver::finish()
 void Receiver::receiveLoop()
 {
   try {
+    Subband subband;
+
     for(;;) {
-      SmartPtr<Subband> subband = new Subband;
+      subband.read(stream);
 
-      subband->read(stream);
+      const size_t fileIdx = subband.id.fileIdx;
 
-      const size_t fileIdx = subband->id.fileIdx;
+      ASSERTSTR(collectors.find(fileIdx) != collectors.end(), "Received a piece of TAB " << fileIdx << ", which is unknown to me");
 
-      ASSERTSTR(collectors.find(fileIdx) != collectors.end(), "Received a piece of file " << fileIdx << ", which is unknown to me");
-
-      //LOG_DEBUG_STR("File " << fileIdx << ": Adding subband " << subband.id);
+      LOG_DEBUG_STR("TAB " << fileIdx << ": Adding subband " << subband.id.subband);
 
       collectors.at(fileIdx)->addSubband(subband);
     }
-  } catch (EndOfStreamException &) {
+  } catch (Stream::EndOfStreamException &) {
   }
 }
 
 
-// Listen for and receive connections and data in an outputProc process
-// from MultiSender objects at different rtcp processes.
 MultiReceiver::MultiReceiver( const std::string &servicePrefix, Receiver::CollectorMap &collectors )
 :
   servicePrefix(servicePrefix),
@@ -506,7 +287,6 @@ MultiReceiver::MultiReceiver( const std::string &servicePrefix, Receiver::Collec
 }
 
 
-// cancel listeners
 MultiReceiver::~MultiReceiver()
 {
   kill(0);
@@ -543,7 +323,6 @@ void MultiReceiver::kill(size_t minNrClients)
 }
 
 
-// Listen for incoming connects on outputProc from rtcp.
 void MultiReceiver::listenLoop()
 {
   for(;;) {
@@ -552,7 +331,7 @@ void MultiReceiver::listenLoop()
    
     try {
       stream = new PortBroker::ServerStream(servicePrefix, true);
-    } catch(TimeOutException &) {
+    } catch(SocketStream::TimeOutException &) {
       // fail silently if no client connected
       LOG_DEBUG_STR("TABTranspose::MultiReceiver: Timed out");
       break;
@@ -566,8 +345,6 @@ void MultiReceiver::listenLoop()
 }
 
 
-// Hook up a new Receiver (connected to rtcp) to block collectors,
-// both in outputProc.
 void MultiReceiver::dispatch( PortBroker::ServerStream *stream )
 {
   ScopedLock sl(mutex);
@@ -586,127 +363,66 @@ void MultiReceiver::dispatch( PortBroker::ServerStream *stream )
 }
 
 
-// Maintains the connections of an rtcp process with all its outputProc processes
-// it needs to send data to.
-MultiSender::MultiSender( const HostMap &hostMap, const Parset &parset,
-                          double maxRetentionTime, const std::string &bind_local_iface )
+MultiSender::MultiSender( const HostMap &hostMap, size_t queueSize, bool canDrop )
 :
-  hostMap(hostMap),
-  itsParset(parset),
-  maxRetentionTime(maxRetentionTime),
-  bind_local_iface(bind_local_iface)
+  hostMap(hostMap)
 {
   for (HostMap::const_iterator i = hostMap.begin(); i != hostMap.end(); ++i) {
-    // keep a list of unique hosts
     if(find(hosts.begin(), hosts.end(), i->second) == hosts.end())
       hosts.push_back(i->second);
-
-    // each file gets a drop_rate counter
-    drop_rates[i->first] = RunningStatistics("%");
   }
 
   for (vector<struct Host>::const_iterator i = hosts.begin(); i != hosts.end(); ++i) {
-    queues[*i] = new Queue< SmartPtr<struct Subband> >(str(format("MultiSender::queue [to %s]") % i->hostName));
+    queues[*i] = new BestEffortQueue< SmartPtr<struct Subband> >(queueSize, canDrop);
   }
 }
 
 
-MultiSender::~MultiSender()
+void MultiSender::process()
 {
-  LOG_INFO_STR("MultiSender: realTime = " << itsParset.settings.realTime << ", maxRetentionTime = " << maxRetentionTime);
-  for (HostMap::const_iterator i = hostMap.begin(); i != hostMap.end(); ++i) {
-    LOG_INFO_STR("MultiSender: [file " << i->first << " to " << i->second.hostName << "] Dropped " << drop_rates.at(i->first).mean() << "% of the data");
-  }
-}
-
-
-// Sets up the connections from an rtcp process to its outputProc processes.
-// Then, keep writing blocks until we see a NULL Block ptr.
-void MultiSender::process( OMPThreadSet *threadSet )
-{
-  // We need to register our threads somewhere...
-  OMPThreadSet dummySet;
-
-  if (!threadSet)
-    threadSet = &dummySet;
-
 #pragma omp parallel for num_threads(hosts.size())
   for (int i = 0; i < (ssize_t)hosts.size(); ++i) {
-    const struct Host &host = hosts[i];
-    const string logPrefix = str(format("[MultiSender -> %s] ") % host.hostName);
-
     try {
-      OMPThreadSet::ScopedRun sr(*threadSet);
+      const struct Host &host = hosts[i];
 
-      LOG_DEBUG_STR(logPrefix << "MultiSender: Connecting to " << host.hostName << ":" << host.brokerPort << ":" << host.service);
+      LOG_DEBUG_STR("MultiSender: Connecting to " << host.hostName << ":" << host.brokerPort << ":" << host.service);
 
-      PortBroker::ClientStream stream(host.hostName, host.brokerPort, host.service, 0, bind_local_iface);
+      PortBroker::ClientStream stream(host.hostName, host.brokerPort, host.service);
 
-      LOG_DEBUG_STR(logPrefix << "Connected");
+      LOG_DEBUG_STR("MultiSender->" << host.hostName << ": connected");
 
-      SmartPtr< Queue< SmartPtr<struct Subband> > > &queue = queues.at(host);
+      SmartPtr< BestEffortQueue< SmartPtr<struct Subband> > > &queue = queues.at(host);
+
+      LOG_DEBUG_STR("MultiSender->" << host.hostName << ": processing queue");
 
       SmartPtr<struct Subband> subband;
-      NSTimer sendTimer(str(format("Send Subband to %s") % host.hostName), true, true);
 
       while ((subband = queue->remove()) != NULL) {
-        NSTimer::StartStop ss(sendTimer);
-
-        // Note: this can take any amount of time, even hours, even in real-time mode
         subband->write(stream);
       }
 
-      LOG_DEBUG_STR(logPrefix << "Done");
-    } catch (SystemCallException &ex) {
-      LOG_ERROR_STR(logPrefix << "Caught exception: " << ex.what());
+      LOG_DEBUG_STR("MultiSender->" << host.hostName << ": done");
     } catch (Exception &ex) {
-      LOG_ERROR_STR(logPrefix << "Caught exception: " << ex);
+      LOG_ERROR_STR("Caught exception: " << ex);
     }
   }
 }
 
 
-// The pipeline calls here to write a block for a single file (part).
-bool MultiSender::append( SmartPtr<struct Subband> &subband )
+void MultiSender::append( SmartPtr<struct Subband> &subband )
 {
-  using namespace TimeSpec;
-
   // Find the host to send these data to
-  const size_t fileIdx = subband->id.fileIdx;
-  const struct Host &host = hostMap.at(fileIdx);
-
-  SmartPtr< Queue< SmartPtr<struct Subband> > > &queue = queues.at(host);
-
-  bool dropped = false;
-
-  // If oldest packet in queue is too old, drop it in lieu of this new one
-  if (itsParset.settings.realTime && TimeSpec::now() - queue->oldest() > maxRetentionTime) {
-    drop_rates.at(fileIdx).push(100.0);
-
-    // remove oldest item
-    SmartPtr<struct Subband> subband = queue->remove();
-
-    // would be weird to have NULL in here while we're appending elements
-    ASSERT(subband);
-
-    dropped = true;
-  } else {
-    drop_rates.at(fileIdx).push(0.0);
-  }
+  const struct Host &host = hostMap.at(subband->id.fileIdx);
 
   // Append the data to the respective queue
-  queue->append(subband);
-
-  return !dropped;
+  queues.at(host)->append(subband);
 }
 
 
-// The pipeline indicates that it has appended its last block.
-// Further appending is denied and a final NULL Block ptr is queued.
 void MultiSender::finish()
 {
   for (vector<struct Host>::const_iterator i = hosts.begin(); i != hosts.end(); ++i) {
-    queues.at(*i)->append(NULL, false);
+    queues.at(*i)->noMore();
   }
 }
 

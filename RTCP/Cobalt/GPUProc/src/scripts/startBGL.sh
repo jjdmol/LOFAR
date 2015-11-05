@@ -8,11 +8,9 @@
 # observationID   observation number
 #
 # This script is called by OnlineControl to start an observation.
-#
-# $Id$
 
 if test "$LOFARROOT" == ""; then
-  echo "LOFARROOT is not set! Exiting." >&2
+  echo "LOFARROOT is not set! Exiting."
   exit 1
 fi
 
@@ -25,20 +23,10 @@ PIDFILE=$LOFARROOT/var/run/rtcp-$OBSID.pid
 # The file we will log the observation output to
 LOGFILE=$LOFARROOT/var/log/rtcp-$OBSID.log
 
-# The FIFO used for communication with rtcp
-COMMANDPIPE=$LOFARROOT/var/run/rtcp-$OBSID.pipe
-
-function addlogprefix {
-  ME="`basename "$0" .sh`@`hostname`"
-  while read LINE
-  do
-    echo "$ME" "`date "+%F %T.%3N"`" "$LINE"
-  done
-}
-
 (
 # Always print a header, to match errors to observations
 echo "---------------"
+echo "now:      " `date +"%F %T"`
 echo "called as: $0 $@"
 echo "pwd:       $PWD"
 echo "LOFARROOT: $LOFARROOT"
@@ -48,33 +36,26 @@ echo "log file:  $LOGFILE"
 echo "---------------"
 
 function error {
-  echo "$@" >&2
+  echo "$@"
   exit 1
 }
 
 [ -n "$PARSET" ] || error "No parset provided"
 [ -f "$PARSET" -a -r "$PARSET" ] || error "Cannot read parset: $PARSET"
 
-TBB_PARSET=/globalhome/lofarsystem/log/L$OBSID.parset
-echo "Copying parset to $TBB_PARSET for postprocessing"
-cp "$PARSET" "$TBB_PARSET" || true
-ln -sfT $TBB_PARSET /globalhome/lofarsystem/log/latest || true
-
-# Create the command pipe
-[ -e "$COMMANDPIPE" ] && rm -f "$COMMANDPIPE"
-mkfifo -m 0660 "$COMMANDPIPE" || true
-
 # Start observation in the background
-PARAMS="-P $PIDFILE -o Cobalt.commandStream=file:$COMMANDPIPE $PARSET"
-echo "Starting runObservation.sh $PARAMS"
-runObservation.sh $PARAMS > $LOGFILE 2>&1 </dev/null &
+runObservation.sh "$PARSET" > $LOGFILE 2>&1 </dev/null &
 PID=$!
 echo "PID: $PID"
+
+# Keep track of PID for stop script
+echo "PID file: $PIDFILE"
+echo $PID > $PIDFILE || error "Could not write PID file: $PIDFILE"
 
 # Done
 echo "Done"
 
-) 2>&1 | addlogprefix | tee -a $LOFARROOT/var/log/startBGL.log
+) 2>&1 | tee -a $LOFARROOT/var/log/startBGL.log
 
 # Return the status of our subshell, not of tee
 exit ${PIPESTATUS[0]}

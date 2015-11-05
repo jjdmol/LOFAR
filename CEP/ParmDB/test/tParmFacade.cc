@@ -58,11 +58,10 @@ void showRec (const Record& rec)
   cout << ">end<" << endl;
 }
 
-void showValues (ParmFacade& acc, const string& pattern, int nf, int nt,
-                 bool includeDefaults)
+void showValues (ParmFacade& acc, const string& pattern, int nf, int nt)
 {
   // Now get the values of all parameters.
-  vector<string> names = acc.getNames(pattern, includeDefaults);
+  vector<string> names = acc.getNames(pattern);
   cout << ">start<" << endl;
   cout << "Names: " << names << endl;
   vector<double> rng = acc.getRange("*");
@@ -73,7 +72,7 @@ void showValues (ParmFacade& acc, const string& pattern, int nf, int nt,
   map<string,vector<double> > values = acc.getValuesMap (pattern,
                                                          rng[0], rng[1], fs,
                                                          rng[2], rng[3], ts,
-                                                         true, includeDefaults);
+                                                         true);
   cout << ">start<" << endl;
   for (map<string,vector<double> >::const_iterator iter=values.begin();
        iter != values.end();
@@ -94,12 +93,6 @@ void showValues (ParmFacade& acc, const string& pattern, int nf, int nt,
   // Get the coeff and errors.
   cout << ">start<" << endl;
   cout << acc.getCoeff (pattern) << endl;
-  // Set and get the default freq/time step.
-  vector<double> steps(2);
-  steps[0] = 1.;
-  steps[1] = 1.5;
-  acc.setDefaultSteps (steps);
-  cout << "defaultsteps=" << acc.getDefaultSteps() << endl;
   cout << ">end<" << endl;
 }
 
@@ -180,10 +173,7 @@ int main (int argc, const char* argv[])
     // Open the facade.
     ParmFacade acc(argv[starg]);
     // Get values.
-    cout << endl << "includedefaults=false..." << endl;
-    showValues (acc, pattern, nf, nt, false);
-    cout << endl << "includedefaults=true..." << endl;
-    showValues (acc, pattern, nf, nt, true);
+    showValues (acc, pattern, nf, nt);
     // Get default values.
     cout << ">start<" << endl;
     cout << "get default values ..." << endl;

@@ -2,7 +2,7 @@
 //
 //  Copyright (C) 2002-2004  // TabChanoged: The Tab has changed, so a new panel needs to be initialized and put in place
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -36,19 +36,6 @@
 // navCtrl_handleHeadLinesEvent              : handles headLines
 // navCtrl_handleAlertEvent                  : handles alert
 // navCtrl_handleFastJumperEvent             : handles fastJumper
-
-// defined possible events:
-//
-//       ChangeTab         :         This is used when a point on one tab refers to a point that belaongs to another tab. 
-//       ChangePanel       :         The currentDataPoint has been changed and we have to see if we need to load another panel
-//       Reload            :         A reload of all current active panels is requested 
-//       Update            :         An update of all current active panels is requested
-//       Initialized       :         The Navigator base is initialized, all other wondeows can initialize now also
-//       EventClick        :         An EventClick event has been done
-//       EventDoubleClick  :         An EventDoubleClick event has been done
-//       EventRightClick   :         An EventRightClick event has been done
-//       ChangeSelection   :         The selectionBox has changed its main selection
-//
 
 #uses "navigator.ctl"
 
@@ -106,18 +93,13 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
   // depending on the event received, actions need to be taken
   
  
-  // ChangeTab: This is used when a point on one tab refers to a point that belaongs to another tab. 
-  // Obviously we dont want a restore  a previously saved panel in this caes
-  // Check for top tab and change when needed, also set the new active DP panel if available 
+  // TabChanged: The Tab has changed, so a new panel needs to be initialized and put in place
+    // Check for top tab and change when needed, also set the new active DP panel if available 
   if (anEvent == "ChangeTab") {
     if (ACTIVE_TAB != aSelection) {
-      navFunct_clearGlobalLists();
-      // if on the other Tab a dp was saved restore it, and also
-      navTabCtrl_removeView();
       navTabCtrl_setSelectedTab(aSelection);
       ACTIVE_TAB = aSelection;
     }
-
     if (navTabCtrl_showView()) {
       
       navFunct_waitObjectReady(500,"handleViewBoxEvent:ChangeTab wait navTabCtrl_showView");
@@ -209,52 +191,25 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
     // so if g_observationsList is filled, fill hardware and processes based on this
     // if g_processesList is filled, fill hardware and observations list based on this
     // and if g_harwareList is filled, fill observation and processes List based on this
-    // We can assume that when we are in hardware tab that the hardware is filled and we have to determine the rest of the lists from this
-    // if we are in the observations tab then the observation list is fileld and we can determine the other lists from this
-    // and if we are in the processes tab the processes are filled.
     
+    if (dynlen(g_observationsList) > 0) {
+      LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| g_observations entry");
+      
+      navFunct_fillObservationsTree();
+      navFunct_fillHardwareLists();
+      navFunct_fillProcessesList();
+    } else if (dynlen(g_processesList) > 0) {
+      LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| g_processes entry");
+      navFunct_fillProcessesTree();
+      navFunct_fillHardwareLists();
+      navFunct_fillObservationsList();
+    } else if (dynlen(g_stationList) > 0) {
+      LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| g_stationList entry");
+      navFunct_fillHardwareTree();
+      navFunct_fillProcessesList();
+      navFunct_fillObservationsList();
+    }
     
-    if (ACTIVE_TAB == "Hardware") {
-      if (dynlen(g_stationList) > 0) {
-        LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| g_stationList entry");
-        navFunct_fillHardwareTree();
-        navFunct_fillObservationsList();
-        navFunct_fillPipelinesList();
-        navFunct_fillProcessesList();
-      } else {    
-        LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| in hardware but g_stationList is empy ????");
-      }
-    } else if (ACTIVE_TAB == "Observations") {
-      if (dynlen(g_observationsList) > 0) {
-        LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| g_observations entry");
-        navFunct_fillObservationsTree();
-        navFunct_fillHardwareLists();
-        navFunct_fillProcessesList();       
-        navFunct_fillPipelinesList();
-      } else {
-        LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| in observations but g_observationsList is empy ????");
-      }
-    } else if (ACTIVE_TAB == "Pipelines") {
-      if (dynlen(g_pipelinesList) > 0) {
-        LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| g_pipelines entry");
-        navFunct_fillPipelinesTree();
-        navFunct_fillHardwareLists();
-        navFunct_fillProcessesList();       
-        navFunct_fillObservationsList();
-      } else {
-        LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| in observations but g_pipelinesList is empy ????");
-      }
-    } else if (ACTIVE_TAB == "Processes") {
-      if (dynlen(g_processesList) > 0) {
-        LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| g_processes entry");
-        navFunct_fillProcessesTree();
-        navFunct_fillHardwareLists();
-        navFunct_fillObservationsList();
-        navFunct_fillPipelinesList();
-      } else {
-        LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| in processes but g_processesList is empy ????");
-      }
-    }    
 
     dpSet(TOPDETAILSELECTIONACTIONDP,"Update");
     navFunct_waitObjectReady(1500,"handleViewBoxEvent:Update wait TopDetail");
@@ -310,7 +265,6 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
           LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|g_stationList: ",g_stationList);
           LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|g_processesList: ",g_processesList);
           LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|g_observationsList: ",g_observationsList);
-          LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|g_pipelinesList: ",g_pipelinesList);
 
         LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|ACTIVE TAB: "+ACTIVE_TAB); 
    
@@ -658,7 +612,7 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
             dpGet("MCU001:LOFAR_PermSW_MACScheduler."+selection+"Observations",selections);
             for (int o=1; o <=dynlen(selections) ; o++) {
               navCtrl_highlightAddHardwareFromObservation(selections[o]);
-              navCtrl_highlightAddProcessesFromObservation(selections[o]);
+              navCtrl_highlightAddProcessesFromObservation(selection[o]);
             }
           } else { 
             // if selection == observation, add involved hardware && software
@@ -923,13 +877,9 @@ void navCtrl_handleAlertsEvent(string dp,string value){
  	navCtrl_handleNavigatorEvent(aSelection,anEvent,aShape); 
         
        
- // ChangeTab: This is used when a point on one tab refers to a point that belaongs to another tab. 
- // Obviously we dont want a restore  a previously saved panel in this caes
- // Check for top tab and change when needed, also set the new active DP panel if available 
- if (anEvent == "ChangeTab") {
+  // Check for top tab and change when needed, also set the new active DP panel if available 
+  if (anEvent == "ChangeTab") {
     if (ACTIVE_TAB != aSelection) {
-      navTabCtrl_setSelectedTab(aSelection);
-      navTabCtrl_removeView();
       navTabCtrl_setSelectedTab(aSelection);
       ACTIVE_TAB = aSelection;
     }
@@ -1097,16 +1047,6 @@ void navCtrl_highlightAddObservationsFromHardware(string selection) {
   LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddObservationsFromHardware|leaving with highlight now: ", highlight);
 }
 
-void navCtrl_highlightAddPipelinesFromHardware(string selection) {
-  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddPipelinesFromHardware|entered with highlight: "+ highlight + " selection: " + selection);  
-
-  // To be done
-  
-  
-  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddPipelinesFromHardware|leaving with highlight now: ", highlight);
-}
-
-
 void navCtrl_highlightAddHardwareFromObservation(string selection) {
   LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromObservation|entered with highlight: " + highlight+ "selection: " + selection); 
   LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromObservation|g_stationList: " + g_stationList); 
@@ -1163,15 +1103,6 @@ void navCtrl_highlightAddHardwareFromObservation(string selection) {
       }
     }
   }
-  
-  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromObservation|leaving with highlight: " + highlight);
-}
-
-void navCtrl_highlightAddHardwareFromPipeline(string selection) {
-  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromPipeline|entered with highlight: " + highlight+ "selection: " + selection); 
-  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromPipeline|g_stationList: " + g_stationList); 
-   
-  // To be done
   
   LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromObservation|leaving with highlight: " + highlight);
 }
@@ -1239,16 +1170,6 @@ void navCtrl_highlightAddObservationsFromProcess(string selection) {
   LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddObservationsFromProcess|leaving with highlight: " + highlight);
 }
 
-// selection is a single processline, check if it contains an observation
-void navCtrl_highlightAddPipelinesFromProcess(string selection) {
-  
-  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddPipelinesFromProcess|entered with highlight: "+ highlight + " selection: " + selection);  
-
-    // To be done
-  
-  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddObservationsFromProcess|leaving with highlight: " + highlight);
-}
-
 // selection is a single observationitem, check for all processes that have that hardware in its line
 void navCtrl_highlightAddProcessesFromObservation(string selection) {
   
@@ -1265,16 +1186,6 @@ void navCtrl_highlightAddProcessesFromObservation(string selection) {
     }
   }
   LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddProcessesFromHardware|leaving with highlight: " + highlight);
-}
-
-// selection is a single pipelineitem, check for all processes that have that hardware in its line
-void navCtrl_highlightAddProcessesFromPipeline(string selection) {
-  
-  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddProcessesFromPipeline|entered with highlight: "+ highlight + " selection: " + selection);  
-  
-  // To be done
-  
-  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddProcessesFromPipeline|leaving with highlight: " + highlight);
 }
 
 // Strips names like xxxx:yyyy_zzzz_wwww
