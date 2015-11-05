@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2010
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 --  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 --
 
-DROP TYPE IF EXISTS schedulerInfo CASCADE;
+DROP TYPE schedulerInfo CASCADE;
 
 CREATE TYPE schedulerInfo AS (
 	contactEmail           VARCHAR(40),
@@ -36,7 +36,7 @@ CREATE TYPE schedulerInfo AS (
 	predMaxTimeDif         VARCHAR(10),
 	predMinTimeDif         VARCHAR(10),
 	priority               FLOAT,
-	reason                 TEXT,
+	reason                 VARCHAR(40),
 	referenceFrame         INT4,
 	reservation            INT4,
 	storageSelectionMode   INT4,

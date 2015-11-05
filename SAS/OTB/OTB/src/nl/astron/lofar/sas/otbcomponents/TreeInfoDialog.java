@@ -2,7 +2,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -574,8 +574,8 @@ public final class TreeInfoDialog extends javax.swing.JDialog {
                     if (!aTreeState.equals(stateInput.getSelectedItem().toString())) {
                         aTree.state=OtdbRmi.getRemoteTypes().getTreeState(stateInput.getSelectedItem().toString());
                         hasChanged=true;
-                        if (!OtdbRmi.getRemoteMaintenance().setTreeState(aTree.treeID(), aTree.state,false)) {
-                            String aS="Error during setTreeState("+aTree.treeID()+","+aTree.state+",false): "+OtdbRmi.getRemoteMaintenance().errorMsg();
+                        if (!OtdbRmi.getRemoteMaintenance().setTreeState(aTree.treeID(), aTree.state)) {
+                            String aS="Error during setTreeState("+aTree.treeID()+","+aTree.state+"): "+OtdbRmi.getRemoteMaintenance().errorMsg();
                             logger.error(aS);
                             LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                             succes=false;
@@ -610,8 +610,8 @@ public final class TreeInfoDialog extends javax.swing.JDialog {
                 if (!itsTreeState.equals(stateInput.getSelectedItem().toString())) {
                     hasChanged=true;
                     itsTree.state=OtdbRmi.getRemoteTypes().getTreeState(stateInput.getSelectedItem().toString());
-                    if (!OtdbRmi.getRemoteMaintenance().setTreeState(itsTree.treeID(), itsTree.state,false)) {
-                        String aS="Error during setTreeState("+itsTree.treeID()+","+itsTree.state+",false): "+OtdbRmi.getRemoteMaintenance().errorMsg();
+                    if (!OtdbRmi.getRemoteMaintenance().setTreeState(itsTree.treeID(), itsTree.state)) {
+                        String aS="Error during setTreeState("+itsTree.treeID()+","+itsTree.state+"): "+OtdbRmi.getRemoteMaintenance().errorMsg();
                         logger.error(aS);
                         LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                         succes=false;

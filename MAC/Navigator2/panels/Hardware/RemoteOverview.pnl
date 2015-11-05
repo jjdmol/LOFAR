@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 8 (NoName)
-PANEL,-1 -1 1200 823 N "_3DFace" 0
+PANEL,-1 -1 1075 795 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel
@@ -106,7 +106,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 0 0 1199 822
+E E 0 1 1 0 1 E U  1 E 0 0 1008 744
 1 194 1 "" 0
 0
 1 195 1 "" 1
@@ -320,18 +320,6 @@ LANG:1 15 Remote Stations
 0
 1 290 15 "" 7
 0
-1 291 16 "" 6
-0
-1 292 16 "" 1
-0
-1 293 16 "" 2
-0
-1 294 16 "" 3
-0
-1 295 16 "" 4
-0
-1 296 16 "" 5
-0
 0
 LAYER, 1 
 1
@@ -417,10 +405,6 @@ LANG:1 6 Layer8
 1
 "$station""RS310"
 3 15 "PANEL_REF15" -1
-"objects\\Hardware\\CoreStatusView.pnl" 320 240 T 103 1 0 1 -1 -2
+"objects/Hardware\\CoreStatusView.pnl" 320 240 T 103 1 0 1 -1 -2
 0
-3 16 "PANEL_REF16" -1
-"objects\\Hardware\\LBA_HBAStatusView.pnl" 640 550 T 103 1 0 1 80 100
-1
-"$station""RS210"
 0

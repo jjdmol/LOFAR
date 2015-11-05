@@ -65,9 +65,7 @@ namespace LOFAR
     casa::Record       itsParameters;
     LofarFTMachine*    itsMachine;
     LofarFTMachineOld* itsMachineOld;
-    vector<Array<Complex> > itsGridsParallel;
-    vector<Array<DComplex> > itsGridsParallel2;
-   };
+  };
 
 } //# end namespace
 

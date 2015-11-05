@@ -1,22 +1,23 @@
-//# SparseSet.h: portable <bitset> adaptation
-//# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id$
+/* SparseSet.h: portable <bitset> adaptation
+ * Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id$
+ */
 
 #ifndef LOFAR_INTERFACE_SPARSESET_H
 #define LOFAR_INTERFACE_SPARSESET_H
@@ -56,9 +57,6 @@ namespace LOFAR
     typedef typename Ranges::iterator iterator;
     typedef typename Ranges::const_iterator const_iterator;
 
-    // Convert types.
-    template <typename U> SparseSet<T> &operator=(const SparseSet<U> &other);
-
     // Add `index' to the set.
     SparseSet<T> &include(T index);
 
@@ -77,29 +75,18 @@ namespace LOFAR
     // Returns the number of elements in the set.
     T            count() const;
 
-    // Returns the number of elements in [first, last).
-    T            count(T first, T last) const;
-
     // Returns true if `index' is in the set.
     bool         test(T index) const;
-
-    // Compare two sets.
-    bool operator == (const SparseSet<T> &) const;
-    bool operator != (const SparseSet<T> &) const;
 
     // Return the union of two sets.
     SparseSet<T> operator | (const SparseSet<T> &) const;
     SparseSet<T> &operator |= (const SparseSet<T> &);
 
-    // Return the intersection of two sets.
-    SparseSet<T> operator & (const SparseSet<T> &) const;
-    SparseSet<T> &operator &= (const SparseSet<T> &);
-
     // Increase all indices in the set by `count'.
-    SparseSet<T> &operator += (T count);
+    SparseSet<T> &operator += (size_t count);
 
     // Decrease all indices in the set by `count'.
-    SparseSet<T> &operator -= (T count);
+    SparseSet<T> &operator -= (size_t count);
 
     // Divide all indices by `shrinkFactor'. Fractions are rounded in favor
     // of including more elements.
@@ -115,10 +102,6 @@ namespace LOFAR
 
     // Returns the range vector, useful for iteration.
     const Ranges &getRanges() const;
-
-    // Returns the number of bytes to marshall the given
-    // number of ranges.
-    static size_t marshallSize(size_t nrRanges);
 
     // Write the set to *ptr, using at most maxSize bytes.
     // Returns the number of marshalled bytes, or -1
@@ -176,14 +159,6 @@ namespace LOFAR
   inline SparseSet<T> &SparseSet<T>::operator |= (const SparseSet<T> &other)
   {
     ranges = (*this | other).ranges;
-    return *this;
-  }
-
-
-  template <typename T>
-  inline SparseSet<T> &SparseSet<T>::operator &= (const SparseSet<T> &other)
-  {
-    ranges = (*this & other).ranges;
     return *this;
   }
 
@@ -288,52 +263,10 @@ namespace LOFAR
 
 
   template <typename T>
-  T SparseSet<T>::count(T first, T last) const
-  {
-    T count = 0;
-
-    for (const_iterator it = ranges.begin(); it != ranges.end(); it++) {
-      if (it->end <= first)
-        continue;
-
-      if (it->begin >= last)
-        break;
-
-      count += std::min(last, it->end) - std::max(first, it->begin);
-    }
-
-    return count;
-  }
-
-
-  template <typename T>
   bool SparseSet<T>::test(T index) const
   {
     const_iterator it = lower_bound(ranges.begin(), ranges.end(), range(index, index + 1), less_equal());
     return it != ranges.end() && index >= it->begin;
-  }
-
-
-  template <typename T>
-  bool SparseSet<T>::operator == (const SparseSet<T> &other) const
-  {
-    const_iterator it1, it2;
-
-    for (it1 = ranges.begin(), it2 = other.ranges.begin();
-         it1 != ranges.end() && it2 != other.ranges.end();
-         ++it1, ++it2) {
-      if (it1->begin != it2->begin || it1->end != it2->end)
-        return false;
-    }
-
-    return it1 == ranges.end() && it2 == other.ranges.end();
-  }
-
-
-  template <typename T>
-  bool SparseSet<T>::operator != (const SparseSet<T> &other) const
-  {
-    return !(*this == other);
   }
 
 
@@ -379,38 +312,7 @@ namespace LOFAR
 
 
   template <typename T>
-  SparseSet<T> SparseSet<T>::operator & (const SparseSet<T> &other) const
-  {
-    SparseSet<T> intersection_set;
-    const_iterator it1 = ranges.begin(), it2 = other.ranges.begin();
-
-    while (it1 != ranges.end() && it2 != other.ranges.end()) {
-      if (it1->end < it2->begin) {
-        // no overlap; *it1 is the smallest
-        ++it1;
-      } else if (it2->end < it1->begin) {
-        // no overlap; *it2 is the smallest
-        ++it2;
-      } else { // there is overlap, or it1 and it2 are contiguous
-        intersection_set.ranges.push_back(range(std::max(it1->begin, it2->begin), std::min(it1->end, it2->end)));
-
-        // continue with earliest end, as multiple ranges may overlap
-        // with the latest end.
-        if (it1->end < it2->end)
-          ++it1;
-        else
-          ++it2;
-      }
-    }
-
-    // ignore the remainder of the set that we have not finished yet
-
-    return intersection_set;
-  }
-
-
-  template <typename T>
-  SparseSet<T> &SparseSet<T>::operator += (T count)
+  SparseSet<T> &SparseSet<T>::operator += (size_t count)
   {
     for (iterator it = ranges.begin(); it != ranges.end(); it++)
       it->begin += count, it->end += count;
@@ -420,7 +322,7 @@ namespace LOFAR
 
 
   template <typename T>
-  SparseSet<T> &SparseSet<T>::operator -= (T count)
+  SparseSet<T> &SparseSet<T>::operator -= (size_t count)
   {
     assert(ranges.size() == 0 || ranges[0].begin >= count);
 
@@ -460,25 +362,17 @@ namespace LOFAR
     return *this;
   }
 
-  template <typename T>
-  size_t SparseSet<T>::marshallSize(size_t nrRanges)
-  {
-    return sizeof(uint32_t) + nrRanges * sizeof(range);
-  }
-
 
   template <typename T>
   ssize_t SparseSet<T>::marshall(void *ptr, size_t maxSize) const
   {
-    size_t size = marshallSize(ranges.size());
+    size_t size = sizeof(uint32_t) + ranges.size() * sizeof(range);
 
     if (size > maxSize)
       return -1;
 
     *(uint32_t *) ptr = ranges.size();
-    if (ranges.size() > 0) {
-      std::memcpy((uint32_t *) ptr + 1, &ranges[0], ranges.size() * sizeof(range));
-    }
+    std::memcpy((uint32_t *) ptr + 1, &ranges[0], ranges.size() * sizeof(range));
 
     return size;
   }
@@ -488,27 +382,18 @@ namespace LOFAR
   void SparseSet<T>::unmarshall(const void *ptr)
   {
     ranges.resize(*(uint32_t *) ptr);
-    if (ranges.size() > 0) {
-      std::memcpy(&ranges[0], (uint32_t *) ptr + 1, ranges.size() * sizeof(range));
-    }
+    std::memcpy(&ranges[0], (uint32_t *) ptr + 1, ranges.size() * sizeof(range));
   }
 
 
   template <typename T>
   std::ostream &operator << (std::ostream &str, const SparseSet<T> &set)
   {
-    if (set.getRanges().empty())
-      return str << "[]";
-
-    for (typename SparseSet<T>::const_iterator it = set.getRanges().begin(); it != set.getRanges().end(); it++) {
-      if (it != set.getRanges().begin())
-        str << ' ';
-
+    for (typename SparseSet<T>::const_iterator it = set.getRanges().begin(); it != set.getRanges().end(); it++)
       if (it->end == it->begin + 1)
-        str << '[' << it->begin << ']';
+        str << '[' << it->begin << "] ";
       else
-        str << '[' << it->begin << ".." << it->end << '>';
-    }
+        str << '[' << it->begin << ".." << it->end << "> ";
 
     return str;
   }

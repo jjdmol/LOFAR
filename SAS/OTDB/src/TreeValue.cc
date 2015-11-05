@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -105,17 +105,11 @@ bool TreeValue::addKVT (const string&	key,
 		}
 		return (insertResult);
 	}
-	catch (broken_connection&  ex) {
-		itsError = string("Exception during insert of KVT:") + ex.what();
-		LOG_ERROR(itsError);
-		itsConn->disconnect();
-		return (false);
-	}
 	catch (std::exception&	ex) {
 		// [080508] tables now have constraints on duplicate keys. Don't report the errors
 		// to the operator anymore, only to the DEBUGger.
 		itsError = string("Exception during insert of KVT:") + ex.what();
-		LOG_WARN(itsError);
+		LOG_DEBUG(itsError);
 		return (false);
 	}
 

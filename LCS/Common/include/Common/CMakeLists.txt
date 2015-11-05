@@ -11,7 +11,6 @@ install(FILES
   Backtrace.h
   CasaLogSink.h
   CheckConfig.h
-  compiler.h
   ComplexBuiltinFP.h
   ComplexBuiltinInt.h
   ComplexC99.h
@@ -56,9 +55,7 @@ install(FILES
   LofarTypedefs.h
   LofarTypes.h
   lofar_vector.h
-  Mmap.h
   Numeric.h
-  NsTimestamp.h
   ObjectFactory.h
   OpenMP.h
   ParameterRecord.h

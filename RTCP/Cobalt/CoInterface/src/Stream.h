@@ -1,22 +1,23 @@
-//# Stream.h: functions to construct streams between ION/CN/Storage
-//# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id$
+/* Stream.h: functions to construct streams between ION/CN/Storage
+ * Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 #ifndef LOFAR_INTERFACE_STREAM_H
 #define LOFAR_INTERFACE_STREAM_H
@@ -27,16 +28,22 @@
 #include <CoInterface/Parset.h>
 #include <Stream/Stream.h>
 
+
 namespace LOFAR
 {
   namespace Cobalt
   {
 
+    // Create a stream from a descriptor
+    Stream *createStream(const std::string &descriptor, bool asReader, time_t deadline = 0);
+
+    // Return a string descriptor, for all supported streamTypes except FCNP
+    std::string getStreamDescriptorBetweenIONandCN(const char *streamType, unsigned ionode, unsigned pset, unsigned core, unsigned numpsets, unsigned numcores, unsigned channel);
+
     uint16 storageBrokerPort(int observationID);
     std::string getStorageControlDescription(int observationID, int rank);
 
-    // The returned descriptor can be supplied to LCS/Stream StreamFactory.h
-    std::string getStreamDescriptorBetweenIONandStorage(const Parset &parset, OutputType outputType, unsigned streamNr, const std::string &bind_local_iface = "");
+    std::string getStreamDescriptorBetweenIONandStorage(const Parset &parset, OutputType outputType, unsigned streamNr);
 
   } // namespace Cobalt
 } // namespace LOFAR

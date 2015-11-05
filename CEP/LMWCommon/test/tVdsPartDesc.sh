@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tVdsPartDesc
+./runctest.sh tVdsPartDesc > tVdsPartDesc.log 2>&1

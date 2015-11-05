@@ -1,0 +1,372 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\cl_files">
+      <UniqueIdentifier>{2c27e6e2-8f91-4550-af49-c5465d34ab53}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Kernels">
+      <UniqueIdentifier>{f04e83ec-ec6a-43c0-8a97-89a9756938b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Kernels">
+      <UniqueIdentifier>{06b0acfd-4143-480d-a796-b92e18981e29}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Pipelines">
+      <UniqueIdentifier>{bcb6d258-38ae-48db-9f81-02457e5f8f72}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Pipelines">
+      <UniqueIdentifier>{f4e0cb9e-7ef6-464e-b7a8-743dc62293dc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\WorkQueues">
+      <UniqueIdentifier>{34b7d0d2-6a42-473d-97d9-4692816bf744}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\WorkQueues">
+      <UniqueIdentifier>{c3a4f2ce-ba0c-45d6-ae77-68c0eef59301}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ReadMe.txt" />
+    <None Include="..\..\..\src\RTCP.cc.not">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="..\..\..\src\Correlator.cl">
+      <Filter>Source Files\cl_files</Filter>
+    </None>
+    <None Include="..\..\..\src\DelayAndBandPass.cl">
+      <Filter>Source Files\cl_files</Filter>
+    </None>
+    <None Include="..\..\..\src\FFT.cl">
+      <Filter>Source Files\cl_files</Filter>
+    </None>
+    <None Include="..\..\..\src\fft2.cl">
+      <Filter>Source Files\cl_files</Filter>
+    </None>
+    <None Include="..\..\..\src\FIR.cl">
+      <Filter>Source Files\cl_files</Filter>
+    </None>
+    <None Include="..\..\..\src\math.cl">
+      <Filter>Source Files\cl_files</Filter>
+    </None>
+    <None Include="..\..\..\src\NewCorrelator.cl">
+      <Filter>Source Files\cl_files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Align.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\BandPass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\BeamletBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\BeamletBufferToComputeNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\createProgram.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Delays.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\FFT_Kernel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\FFT_Plan.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\FilterBank.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\global_defines.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\InputSection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\InputThread.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ION_Allocator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Kernel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\LockedRanges.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\LogThread.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\OpenCL_Support.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\OpenMP_Support.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\PerformanceCounter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Pipeline.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ReaderWriterSynchronization.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\RSP.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Scheduling.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\SlidingPointer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\UnitTest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\WallClockTime.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Kernels\CoherentStokesKernel.h">
+      <Filter>Header Files\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Kernels\CorrelatorKernel.h">
+      <Filter>Header Files\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Kernels\DedispersionBackwardFFTkernel.h">
+      <Filter>Header Files\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Kernels\DedispersionChirpKernel.h">
+      <Filter>Header Files\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Kernels\DedispersionForwardFFTkernel.h">
+      <Filter>Header Files\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Kernels\DelayAndBandPassKernel.h">
+      <Filter>Header Files\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Kernels\Filter_FFT_Kernel.h">
+      <Filter>Header Files\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Kernels\FIR_FilterKernel.h">
+      <Filter>Header Files\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Kernels\IncoherentStokesKernel.h">
+      <Filter>Header Files\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Kernels\IntToFloatKernel.h">
+      <Filter>Header Files\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Kernels\UHEP_BeamFormerKernel.h">
+      <Filter>Header Files\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Kernels\UHEP_InvFFT_Kernel.h">
+      <Filter>Header Files\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Kernels\UHEP_InvFIR_Kernel.h">
+      <Filter>Header Files\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Kernels\UHEP_TransposeKernel.h">
+      <Filter>Header Files\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Kernels\UHEP_TriggerKernel.h">
+      <Filter>Header Files\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Kernels\BeamFormerKernel.h">
+      <Filter>Header Files\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Kernels\BeamFormerTransposeKernel.h">
+      <Filter>Header Files\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Pipelines\UHEP_Pipeline.h">
+      <Filter>Header Files\Pipelines</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Pipelines\BeamFormerPipeline.h">
+      <Filter>Header Files\Pipelines</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Pipelines\CorrelatorPipeline.h">
+      <Filter>Header Files\Pipelines</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\WorkQueues\UHEP_WorkQueue.h">
+      <Filter>Header Files\WorkQueues</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\WorkQueues\WorkQueue.h">
+      <Filter>Header Files\WorkQueues</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\WorkQueues\BeamFormerWorkQueue.h">
+      <Filter>Header Files\WorkQueues</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\WorkQueues\CorrelatorWorkQueue.h">
+      <Filter>Header Files\WorkQueues</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\WorkQueues\WorkQueueInputItem.h">
+      <Filter>Header Files\WorkQueues</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Cobalt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\BandPass.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Scheduling.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\BeamletBuffer.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\BeamletBufferToComputeNode.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\createProgram.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Delays.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\FFT_Kernel.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\FFT_Plan.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\FilterBank.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\global_defines.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\InputSection.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\InputThread.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ION_Allocator.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Kernel.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\LogThread.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\OpenCL_Support.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\PerformanceCounter.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Pipeline.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ReaderWriterSynchronization.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\RTCP_new.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\RTCP_UnitTest.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\UnitTest.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Kernels\DedispersionForwardFFTkernel.cc">
+      <Filter>Source Files\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Kernels\DelayAndBandPassKernel.cc">
+      <Filter>Source Files\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Kernels\Filter_FFT_Kernel.cc">
+      <Filter>Source Files\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Kernels\FIR_FilterKernel.cc">
+      <Filter>Source Files\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Kernels\IncoherentStokesKernel.cc">
+      <Filter>Source Files\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Kernels\IntToFloatKernel.cc">
+      <Filter>Source Files\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Kernels\UHEP_BeamFormerKernel.cc">
+      <Filter>Source Files\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Kernels\UHEP_InvFFT_Kernel.cc">
+      <Filter>Source Files\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Kernels\UHEP_InvFIR_Kernel.cc">
+      <Filter>Source Files\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Kernels\UHEP_TransposeKernel.cc">
+      <Filter>Source Files\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Kernels\UHEP_TriggerKernel.cc">
+      <Filter>Source Files\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Kernels\BeamFormerKernel.cc">
+      <Filter>Source Files\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Kernels\BeamFormerTransposeKernel.cc">
+      <Filter>Source Files\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Kernels\CoherentStokesKernel.cc">
+      <Filter>Source Files\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Kernels\CorrelatorKernel.cc">
+      <Filter>Source Files\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Kernels\DedispersionBackwardFFTkernel.cc">
+      <Filter>Source Files\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Kernels\DedispersionChirpKernel.cc">
+      <Filter>Source Files\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Pipelines\CorrelatorPipeline.cc">
+      <Filter>Source Files\Pipelines</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Pipelines\UHEP_Pipeline.cc">
+      <Filter>Source Files\Pipelines</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Pipelines\BeamFormerPipeline.cc">
+      <Filter>Source Files\Pipelines</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\WorkQueues\UHEP_WorkQueue.cc">
+      <Filter>Source Files\WorkQueues</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\WorkQueues\WorkQueue.cc">
+      <Filter>Source Files\WorkQueues</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\WorkQueues\BeamFormerWorkQueue.cc">
+      <Filter>Source Files\WorkQueues</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\WorkQueues\CorrelatorWorkQueue.cc">
+      <Filter>Source Files\WorkQueues</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\WorkQueues\WorkQueueInputItem.cc">
+      <Filter>Source Files\WorkQueues</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

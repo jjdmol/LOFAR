@@ -1,22 +1,23 @@
-//# FastFileStream.cc: a file writer using O_DIRECT
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id$
+/* FastFileStream.cc: a file writer using O_DIRECT
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 #include <lofar_config.h>
 
@@ -64,12 +65,12 @@ namespace LOFAR
 
         // lseek can return -1 as a valid file position, so check errno as well
         if (curlen == (off_t)-1 && errno)
-          THROW_SYSCALL("lseek");
+          throw SystemCallException("lseek", errno, THROW_ARGS);
 
         writeRemainder();
 
         if (ftruncate(fd, curlen + origremainder) < 0)
-          THROW_SYSCALL("ftruncate");
+          throw SystemCallException("ftruncate", errno, THROW_ARGS);
       } catch (Exception &ex) {
         LOG_ERROR_STR("Exception in destructor: " << ex);
       }
@@ -80,14 +81,13 @@ namespace LOFAR
     {
       if (remainder) {
         // pad with zeroes
-        size_t nrpadbytes = alignment - remainder;
         ensureBuffer(alignment);
-        memset(buffer.get() + remainder, 0, nrpadbytes);
+        memset(buffer.get() + remainder, 0, alignment - remainder);
         forceWrite(buffer, alignment);
 
         remainder = 0;
 
-        return nrpadbytes;
+        return alignment;
       }
 
       return 0;
@@ -177,7 +177,7 @@ namespace LOFAR
 
       // get rid of the old remainder first
       if (bytes + remainder >= alignment) {
-        bytes -= writeRemainder();
+        bytes -= (writeRemainder() - remainder);
 
         if (bytes >= alignment ) {
           // skip whole number of blocks
@@ -212,7 +212,7 @@ namespace LOFAR
 
       // lseek can return -1 as a valid file position, so check errno as well
       if (curlen == (off_t)-1 && errno)
-        THROW_SYSCALL("lseek");
+        throw SystemCallException("lseek", errno, THROW_ARGS);
 
       return curlen + remainder;
     }

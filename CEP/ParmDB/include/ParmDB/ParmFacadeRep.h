@@ -76,8 +76,7 @@ namespace LOFAR { namespace BBS {
 
     // Get parameter names in the table matching the pattern.
     // An empty name pattern is the same as * (all parm names).
-    virtual vector<string> getNames (const string& parmNamePattern,
-                                     bool includeDefaults) const = 0;
+    virtual vector<string> getNames (const string& parmNamePattern) const = 0;
 
     // Get default parameter names matching the pattern.
     // An empty name pattern is the same as * (all parm names).
@@ -103,8 +102,7 @@ namespace LOFAR { namespace BBS {
                                     double freqStep,
                                     double timev1, double timev2,
                                     double timeStep,
-                                    bool asStartEnd,
-                                    bool includeDefaults) = 0;
+                                    bool asStartEnd) = 0;
 
     // Get the values of the given parameters on the given grid where v1/v2
     // represents center/width or start/end.
@@ -114,8 +112,7 @@ namespace LOFAR { namespace BBS {
                                     const vector<double>& freqv2,
                                     const vector<double>& timev1,
                                     const vector<double>& timev2,
-                                    bool asStartEnd,
-                                    bool includeDefaults) = 0;
+                                    bool asStartEnd) = 0;
 
     // Get the values of the given parameters for the given domain.
     // The Record contains a map of parameter name to Array<value>.

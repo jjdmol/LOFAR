@@ -31,12 +31,12 @@
 #endif
 
 #include <ctime>
-#include <boost/date_time/posix_time/posix_time.hpp>
+
+//# Forward declarations
+namespace boost { namespace posix_time { class ptime; } }
 
 namespace LOFAR
 {
-  // WARNING: boost::posix_time::to_time_t is also defined in Boost 1.58+,
-  //          so you may need to write LOFAR::to_time_t().
   time_t to_time_t(boost::posix_time::ptime aPtime);
 
   boost::posix_time::ptime from_ustime_t(double	secsEpoch1970);

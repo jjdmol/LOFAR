@@ -1,22 +1,23 @@
-//# MultiDimArray.h
-//# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id$
+/* MultiDimArray.h
+ * Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id$
+ */
 
 #ifndef LOFAR_INTERFACE_MULTI_DIM_ARRAY_H
 #define LOFAR_INTERFACE_MULTI_DIM_ARRAY_H
@@ -82,8 +83,8 @@ namespace LOFAR
         SuperType(construct ? new(ptr)T[nrElements(extents)] : ptr, extents),
         allocator(0),
         allocated_num_elements(nrElements(extents)),
-        alignment(defaultAlignment()),
-        padToAlignment(false),
+        alignment(alignment),
+        padToAlignment(padToAlignment),
         construct(construct)
       {
         // NOTE: Elements are not destructed even if construct == true!
@@ -140,17 +141,6 @@ namespace LOFAR
 
         if (allocator) {
           allocator->deallocate(this->base_);
-        }
-      }
-
-      /*
-       * Reset the contents of the array.
-       */
-      void reset()
-      {
-        T *ptr = this->data();
-        for(size_t i = 0; i < this->num_elements(); i++) {
-          ptr[i] = T();
         }
       }
 
@@ -465,42 +455,11 @@ namespace LOFAR
     {
       str << "[ ";
 
-      for (size_t i = 0; i < array.num_elements(); i++) {
+      for (size_t i = 0; i < array.size(); i++) {
         if (i > 0)
           str << ", ";
 
-        str << array.data()[i];
-      }
-
-      str << " ]";
-      return str;
-    }
-
-    // output function for full MultiDimArrays suitable when large ranges of
-    // consecutive values are the same.
-    template <typename T, unsigned DIM>
-    std::ostream &printBlockFormat(std::ostream& str, const MultiDimArray<T, DIM> &array)
-    {
-      str << "[ ";
-
-      if (!array.empty()) {
-        T seen = array.data()[0];
-        size_t count = 1;
-
-        for (size_t i = 1; i < array.num_elements(); ++i) {
-          T val = array.data()[i];
-
-          if (seen == val) {
-            count += 1;
-          } else {
-            str << seen << " (" << count << "x), ";
-
-            seen = val;
-            count = 1;
-          }
-        }
-
-        str << seen << " (" << count << "x)";
+        str << array[i];
       }
 
       str << " ]";
@@ -513,11 +472,11 @@ namespace LOFAR
     {
       str << "[ ";
 
-      for (size_t i = 0; i < array.num_elements(); i++) {
+      for (size_t i = 0; i < array.size(); i++) {
         if (i > 0)
           str << ", ";
 
-        str << array.data()[i];
+        str << array[i];
       }
 
       str << " ]";

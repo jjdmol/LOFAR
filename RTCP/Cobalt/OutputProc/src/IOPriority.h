@@ -1,22 +1,23 @@
-//# IOPriority.h: define some Linux specific IO priority macro's
-//# Copyright (C) 2011-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id$
+/* IOPriority.h: define some Linux specific IO priority macro's
+ * Copyright (C) 2011-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 #ifndef LOFAR_STORAGE_IOPRIORITY_H
 #define LOFAR_STORAGE_IOPRIORITY_H
@@ -132,43 +133,23 @@ inline void setRTpriority()
 }
 
 
-inline void lockInMemory(rlim_t memLockLimit = RLIM_INFINITY)
+inline void lockInMemory()
 {
-  struct passwd *user = getpwnam("lofarsys");
-  bool am_lofarsys = (user != NULL) && (getuid() == user->pw_uid);
-
   if (mlockall(MCL_CURRENT | MCL_FUTURE) < 0) {
     switch (errno) {
     case ENOMEM:
     case EPERM:
     {
-      if (am_lofarsys)
-        LOG_ERROR_STR("Failed to lock application in memory, capability CAP_IPC_LOCK not set?");
-      else
+      struct passwd *user = getpwnam("lofarsys");
+      if ((user != NULL) && (getuid() != user->pw_uid))
         LOG_WARN_STR("Failed to lock application in memory, permission denied");
+      else
+        LOG_ERROR_STR("Failed to lock application in memory, capability CAP_IPC_LOCK not set?");
     } break;
     case EINVAL:
     default:
       LOG_ERROR_STR("Failed to lock application in memory: flags invalid");
     }
-  }
-
-  const struct rlimit limit = { memLockLimit, memLockLimit };
-
-  // Set MEMLOCK limit
-  if (setrlimit(RLIMIT_MEMLOCK, &limit) < 0) {
-    if (am_lofarsys)
-      LOG_ERROR_STR("Failed to set MEMLOCK limit");
-    else
-      LOG_WARN_STR("Failed to set MEMLOCK limit");
-  }
-
-  // Set DATA limit
-  if (setrlimit(RLIMIT_DATA, &limit) < 0) {
-    if (am_lofarsys)
-      LOG_ERROR_STR("Failed to set DATA limit");
-    else
-      LOG_WARN_STR("Failed to set DATA limit");
   }
 }
 

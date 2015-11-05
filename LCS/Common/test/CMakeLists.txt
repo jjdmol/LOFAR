@@ -3,6 +3,7 @@
 include(LofarCTest)
 
 lofar_add_test(tBoostBitset tBoostBitset.cc)
+
 lofar_add_test(testLogger testLogger.cc)
 lofar_add_test(tCasaLogSink tCasaLogSink.cc)
 lofar_add_test(tAllocator tAllocator.cc)
@@ -18,10 +19,7 @@ lofar_add_test(tComplex tComplex.cc)
 lofar_add_test(tProcess tProcess.cc)
 lofar_add_test(tRunOnNode tRunOnNode.cc)
 lofar_add_test(tTimer tTimer.cc)
-lofar_add_test(tMmap tMmap.cc)
 lofar_add_test(tNumeric tNumeric.cc)
-lofar_add_test(tNsTimestamp tNsTimestamp.cc)
-lofar_add_test(tKVpair tKVpair.cc)
 lofar_add_test(tSingleton tSingleton.cc)
 lofar_add_test(tObjectFactory tObjectFactory.cc Shapes.cc Coordinates.cc)
 lofar_add_test(tSystemUtil tSystemUtil.cc)

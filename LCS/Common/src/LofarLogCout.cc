@@ -1,4 +1,4 @@
-//# LofarLogCout.cc
+//# filename.cc: one line description
 //#
 //# Copyright (C) 2002-2004
 //# ASTRON (Netherlands Institute for Radio Astronomy)

@@ -1,22 +1,23 @@
-//# TBB_StaticMapping.cc: read out the TBB static station-node mapping
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id$
+/* TBB_StaticMapping.cc: read out the TBB static station-node mapping
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 #include <lofar_config.h>
 
@@ -33,7 +34,6 @@ namespace LOFAR
 {
 namespace Cobalt
 {
-
   TBB_StaticMapping::TBB_StaticMapping()
   {
   }
@@ -55,12 +55,11 @@ namespace Cobalt
     while (ifile.getline(buf, parseBufSize).good()) {
       string sbuf(buf);
 
-      size_t pos = sbuf.find('#'); // line comments
+      size_t pos = sbuf.find('#');           // line comments
       sbuf = sbuf.substr(0, pos);
       vector<string> tokens(StringUtil::tokenize(sbuf, ws));
 
-      // We expect 3 tokens (columns): stationName (0), board (1), destNode (2).
-      // Ignore other tokens and "empty" lines.
+      // We expect 3 tokens (columns): stationName (0), board (1), destNode (2); ignore other tokens and "empty" lines.
       if (tokens.size() >= 3) {
         itsMapping.insert(make_pair(tokens[2], make_pair(tokens[0], tokens[1])));
       }
@@ -92,10 +91,9 @@ namespace Cobalt
     vector<string> mapping;
 
     for (pair<multimap<string, pair<string, string> >::const_iterator,
-         multimap<string, pair<string, string> >::const_iterator> iters(
-         itsMapping.equal_range(nodeName));
-         iters.first != iters.second; ++iters.first)
-    {
+              multimap<string, pair<string, string> >::const_iterator> iters(
+           itsMapping.equal_range(nodeName));
+         iters.first != iters.second; ++iters.first) {
       mapping.push_back((*iters.first).second.first);
     }
 
@@ -107,10 +105,9 @@ namespace Cobalt
     vector<string> mapping;
 
     for (pair<multimap<string, pair<string, string> >::const_iterator,
-         multimap<string, pair<string, string> >::const_iterator> iters(
-         itsMapping.equal_range(nodeName));
-         iters.first != iters.second; ++iters.first)
-    {
+              multimap<string, pair<string, string> >::const_iterator> iters(
+           itsMapping.equal_range(nodeName));
+         iters.first != iters.second; ++iters.first) {
       mapping.push_back((*iters.first).second.second);
     }
 

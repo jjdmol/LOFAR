@@ -1,22 +1,23 @@
-//# MSWriterCorrelated.cc: a writer for correlated visibilities
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id$
+/* MSWriterCorrelated.cc: a writer for correlated visibilities
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 #include <lofar_config.h>
 
@@ -30,7 +31,6 @@
 #include <Common/SystemUtil.h>
 #include <MSLofar/FailedTileInfo.h>
 #include <CoInterface/CorrelatedData.h>
-#include <CoInterface/LTAFeedback.h>
 
 #include <tables/Tables/Table.h>
 #include <casa/Quanta/MVTime.h>
@@ -46,21 +46,16 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    MSWriterCorrelated::MSWriterCorrelated (const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex)
+    MSWriterCorrelated::MSWriterCorrelated (const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex, bool isBigEndian)
       :
       MSWriterFile(
-        (makeMeasurementSet(logPrefix, msName, parset, subbandIndex),
+        (makeMeasurementSet(logPrefix, msName, parset, subbandIndex, isBigEndian),
          str(format("%s/table.f0data") % msName))),
       itsLogPrefix(logPrefix),
       itsMSname(msName),
       itsParset(parset)
     {
-      // Add file-specific processing feedback
-      LTAFeedback fb(itsParset.settings);
-      itsConfiguration.adoptCollection(fb.correlatedFeedback(subbandIndex));
-      itsConfigurationPrefix = fb.correlatedPrefix(subbandIndex);
-
-      if (LofarStManVersion > 1) {
+      if (itsParset.getLofarStManVersion() > 1) {
         string seqfilename = str(format("%s/table.f0seqnr") % msName);
 
         try {
@@ -83,9 +78,28 @@ namespace LOFAR
 
       for(unsigned s1 = 0; s1 < nrStations; s1++)
         for(unsigned s2 = 0; s2 <= s1; s2++)
-          //bl = s1 * (s1 + 1) / 2 + stat2 ;
           baselineNames[bl++] = str(format("%s_%s") % stationNames[s1] % stationNames[s2]);
 #endif
+
+      const vector<unsigned> subbands = itsParset.subbandList();
+      const vector<unsigned> SAPs = itsParset.subbandToSAPmapping();
+      const vector<double> frequencies = itsParset.subbandToFrequencyMapping();
+
+      itsConfiguration.add("fileFormat",           "AIPS++/CASA");
+      itsConfiguration.add("filename",             LOFAR::basename(msName));
+      itsConfiguration.add("size",                 "0");
+      itsConfiguration.add("location",             parset.getHostName(CORRELATED_DATA, subbandIndex) + ":" + LOFAR::dirname(msName));
+
+      itsConfiguration.add("percentageWritten",    "0");
+      itsConfiguration.add("startTime",            parset.getString("Observation.startTime"));
+      itsConfiguration.add("duration",             "0");
+      itsConfiguration.add("integrationInterval",  str(format("%f") % parset.IONintegrationTime()));
+      itsConfiguration.add("centralFrequency",     str(format("%f") % (frequencies[subbandIndex] / 1e6)));
+      itsConfiguration.add("channelWidth",         str(format("%f") % (parset.channelWidth() / 1e3)));
+      itsConfiguration.add("channelsPerSubband",   str(format("%u") % parset.nrChannelsPerSubband()));
+      itsConfiguration.add("stationSubband",       str(format("%u") % subbands[subbandIndex]));
+      itsConfiguration.add("subband",              str(format("%u") % subbandIndex));
+      itsConfiguration.add("SAP",                  str(format("%u") % SAPs[subbandIndex]));
     }
 
 
@@ -94,14 +108,14 @@ namespace LOFAR
     }
 
 
-    void MSWriterCorrelated::makeMeasurementSet(const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex)
+    void MSWriterCorrelated::makeMeasurementSet(const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex, bool isBigEndian)
     {
 #if defined HAVE_AIPSPP
       MeasurementSetFormat myFormat(parset, 512);
 
-      myFormat.addSubband(msName, subbandIndex);
+      myFormat.addSubband(msName, subbandIndex, isBigEndian);
 
-      LOG_DEBUG_STR(logPrefix << "MeasurementSet created");
+      LOG_INFO_STR(logPrefix << "MeasurementSet created");
 #endif // defined HAVE_AIPSPP
     }
 
@@ -126,9 +140,9 @@ namespace LOFAR
 
       itsNrBlocksWritten++;
 
-      itsConfiguration.replace(itsConfigurationPrefix + "size",     str(format("%u") % getDataSize()));
-      itsConfiguration.replace(itsConfigurationPrefix + "duration", str(format("%f") % ((data->sequenceNumber() + 1) * itsParset.settings.correlator.integrationTime())));
-      itsConfiguration.replace(itsConfigurationPrefix + "percentageWritten", str(format("%u") % percentageWritten()));
+      itsConfiguration.replace("size",     str(format("%u") % getDataSize()));
+      itsConfiguration.replace("duration", str(format("%f") % ((data->sequenceNumber() + 1) * itsParset.IONintegrationTime())));
+      itsConfiguration.replace("percentageWritten", str(format("%u") % percentageWritten()));
     }
 
 
@@ -163,20 +177,16 @@ namespace LOFAR
         brokenDuring[rcu.station].push_back(FailedTileInfo(rcu.station, rcu.time, datetime2epoch(rcu.time), rcu.type, rcu.seqnr));
       }
 
-      LOG_DEBUG_STR(itsLogPrefix << "Reopening MeasurementSet");
+      LOG_INFO_STR(itsLogPrefix << "Reopening MeasurementSet");
 
       Table ms(itsMSname, Table::Update);
 
       vector<FailedTileInfo::VectorFailed> before(FailedTileInfo::antennaConvert(ms, brokenBefore));
       vector<FailedTileInfo::VectorFailed> during(FailedTileInfo::antennaConvert(ms, brokenDuring));
 
-      LOG_DEBUG_STR(itsLogPrefix << "Writing broken hardware information to MeasurementSet");
+      LOG_INFO_STR(itsLogPrefix << "Writing broken hardware information to MeasurementSet");
 
-      try {
-        FailedTileInfo::writeFailed(ms, before, during);
-      } catch (Exception &ex) {
-        LOG_ERROR_STR("Failed to write broken hardware information: " << ex);
-      }
+      FailedTileInfo::writeFailed(ms, before, during);
     }
 
 

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -26,17 +26,18 @@
 #include <Common/LofarConstants.h>
 #include <Common/StringUtil.h>
 #include <Common/hexdump.h>
-#include <ApplCommon/StationInfo.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSinfo.h>
 #include <MACIO/MACServiceInfo.h>
+#include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <ApplCommon/StationConfig.h>
 #include <APL/RTDBCommon/RTDButilities.h>
 #include <EC_Protocol.ph>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <GCF/TM/GCF_RawPort.h>
+//#include <APL/APLCommon/StationInfo.h>
 #include <signal.h>
 
 #include "ECMonitor.h"
@@ -54,8 +55,6 @@ namespace LOFAR {
 	using namespace GCF::RTDB;
 	using namespace APLCommon;
 	using namespace APL::RTDBCommon;
-	using namespace EC_Protocol;
-	using namespace DP_Protocol;
 	namespace StationCU {
 
 //

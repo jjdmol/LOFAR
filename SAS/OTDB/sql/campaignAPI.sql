@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2010
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -210,11 +210,11 @@ CREATE OR REPLACE FUNCTION exportCampaign(INT4, INT4)
 	  SELECT substr(name,$2)
 	  INTO	 vPrefix
 	  FROM	 getVHitemList($1, '%.Observation');
-	  vResult := vResult || vPrefix || '.Campaign.name="'    || vRecord.name    || '"' || chr(10);
-	  vResult := vResult || vPrefix || '.Campaign.title="'   || vRecord.title   || '"' || chr(10);
-	  vResult := vResult || vPrefix || '.Campaign.PI="'      || vRecord.PI      || '"' || chr(10);
-	  vResult := vResult || vPrefix || '.Campaign.CO_I="'    || vRecord.CO_I    || '"' || chr(10);
-	  vResult := vResult || vPrefix || '.Campaign.contact="' || vRecord.contact || '"' || chr(10);
+	  vResult := vResult || vPrefix || '.Campaign.name='    || vRecord.name    || chr(10);
+	  vResult := vResult || vPrefix || '.Campaign.title='   || vRecord.title   || chr(10);
+	  vResult := vResult || vPrefix || '.Campaign.PI='      || vRecord.PI      || chr(10);
+	  vResult := vResult || vPrefix || '.Campaign.CO_I='    || vRecord.CO_I    || chr(10);
+	  vResult := vResult || vPrefix || '.Campaign.contact=' || vRecord.contact || chr(10);
       RETURN vResult;
     END
 $$ LANGUAGE plpgsql;

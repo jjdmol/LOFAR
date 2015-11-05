@@ -29,9 +29,9 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include <BBSControl/KernelConnection.h>
 #include <BBSControl/CalSession.h>
 #include <BBSControl/CommandVisitor.h>
+#include <BBSControl/KernelConnection.h>
 #include <BBSControl/SolveTask.h>
 
 #include <PLC/ProcessControl.h>

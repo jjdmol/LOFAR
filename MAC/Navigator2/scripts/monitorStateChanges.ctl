@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2007-2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -84,12 +84,12 @@ void subscribeObjectStateChange() {
 // of the state's and childstate's of the ones in the stations
 //
 // Msg something like: Station:Dp.state=state
-//                e.g. CS011:LOFAR_ObsSW_Oservation10.status.state=broken
+//                e.g. CS010:LOFAR_ObsSW_Oservation10.status.state=broken
 //
 // Points of interrest:
-//    StnObservation  --> Station --> MCU*:LOFAR_ObsSW_Observation*_*_CS011.status.state/childState
-//    StnPermSW       --> Station --> MCU*:LOFAR_PermSW_*_CS011.status.state/childState
-//    StnPic          --> Station --> MCU*:LOFAR_PIC_*_CS011.status.state/childState
+//    StnObservation  --> Station --> MCU*:LOFAR_ObsSW_Observation*_*_CS010.status.state/childState
+//    StnPermSW       --> Station --> MCU*:LOFAR_PermSW_*_CS010.status.state/childState
+//    StnPic          --> Station --> MCU*:LOFAR_PIC_*_CS010.status.state/childState
 //    if an Antenna changes state or childstate, the rcu belonging to this antenna should trigger its childstate
 //
 // Added 26-3-2007 A.Coolen
@@ -234,7 +234,7 @@ void objectStateTriggered(string dp1, string trigger,
 
   if (trigger == "") return;
 
-  if (bDebug) DebugTN("monitorStateChanges.ctl:objectStateTriggered|entered with trigger:", trigger);
+  if (bDebug) DebugN("monitorStateChanges.ctl:objectStateTriggered|entered with trigger:", trigger);
 
   string datapoint = "";
   string element   = "";
@@ -293,7 +293,7 @@ void objectStateTriggered(string dp1, string trigger,
 ///////////////////////////////////////////////////////////////////////////
 void setStates(string datapoint,string element,int state,string message,bool force,bool stationTrigger) {
 
-  if (bDebug) DebugN("monitorStateChanges.ctl:setStates|entered with datapoint: "+ datapoint+" element: "+ element+ " state: "+state+" message: "+message+" stationTrigger: "+stationTrigger);
+  if (bDebug) DebugN("monitorStateChanges.ctl:setStates|entered with datapoint: "+ datapoint+" element: "+ element+ " state: "+state+" message: "+message);
 
   string dp;
   
@@ -302,7 +302,7 @@ void setStates(string datapoint,string element,int state,string message,bool for
   // and start updating the childStates for the remaining nodes. If the element is childState,
   // only the childState updates needs 2b done, unless stationTrigger = true, then childstate should be
   // handled the same way as state.
-  if (element == "status.state" || stationTrigger) {
+  if (element == "status.state" | stationTrigger) {
     // set the state value of this dp
     
     int aVal;
@@ -367,11 +367,16 @@ void setStates(string datapoint,string element,int state,string message,bool for
           rcuYDP = dp;        
 
       
-
           while ( setChildState(rcuXDP,state)) {
             if (bDebug) DebugN( "monitorStateChanges.ctl:setStates|Continueing with setChildState passing path: "+rcuXDP);
             dp = navFunct_getPathLessOne(rcuXDP);
             rcuXDP=dp;
+          }
+
+          while ( setChildState(rcuYDP,state)) {
+            if (bDebug) DebugN( "monitorStateChanges.ctl:setStates|Continueing with setChildState passing path: "+rcuYDP);
+            dp = navFunct_getPathLessOne(rcuYDP);
+            rcuYDP=dp;
           }
   //      }  
       }

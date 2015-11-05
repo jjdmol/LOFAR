@@ -1,22 +1,23 @@
-//# StationID.cc
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id$
+/* StationID.cc
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 #include <lofar_config.h>
 
@@ -24,10 +25,7 @@
 
 #include <cstring>
 #include <cstdio>
-#include <boost/format.hpp>
 #include <Common/LofarLogger.h>
-
-using boost::format;
 
 #ifndef HAVE_STRNLEN
 static size_t strnlen( const char *s, size_t maxlen )
@@ -47,35 +45,24 @@ namespace LOFAR
   {
 
 
-    StationID::StationID( const std::string &stationName, const std::string &antennaField )
+    StationID::StationID( const std::string &stationName, const std::string &antennaField, unsigned clockMHz, unsigned bitMode)
+      :
+      clockMHz(clockMHz),
+      bitMode(bitMode)
     {
       ASSERTSTR( stationName.size() < sizeof this->stationName, "Station name longer than " << (sizeof this->stationName - 1) << " characters.");
       ASSERTSTR( antennaField.size() < sizeof this->antennaField, "Antenna-set name longer than " << (sizeof this->antennaField - 1) << " characters.");
 
-      memset(&this->stationName[0], 0, sizeof this->stationName);
       snprintf(this->stationName, sizeof this->stationName, "%s", stationName.c_str());
-
-      memset(&this->antennaField[0], 0, sizeof this->antennaField);
       snprintf(this->antennaField, sizeof this->antennaField, "%s", antennaField.c_str());
-    }
-
-    StationID StationID::parseFullFieldName( const std::string &fullFieldName )
-    {
-      const string stationName = fullFieldName.substr(0,5); // CS001
-      const string fieldName   = fullFieldName.substr(5);   // HBA0
-
-      return StationID(stationName, fieldName);
-    }
-
-    std::string StationID::name() const
-    {
-      return str(format("%s%s") % stationName % antennaField);
     }
 
     bool StationID::operator==(const struct StationID &other) const
     {
       return !strncmp(stationName, other.stationName, sizeof stationName)
-             && !strncmp(antennaField, other.antennaField, sizeof antennaField);
+             && !strncmp(antennaField, other.antennaField, sizeof antennaField)
+             && clockMHz == other.clockMHz
+             && bitMode == other.bitMode;
     }
 
     bool StationID::operator!=(const struct StationID &other) const
@@ -87,12 +74,13 @@ namespace LOFAR
     {
       // convert to 32 bit value (human-readable in hexadecimal):
       //
-      // 0x10001060
-      //   |  \__||
-      //   |     |\____ antenna field: 0 = HBA/HBA0/LBA, 1 = HBA1
-      //   |     \_____ station ID:    0x0106 = RS106
-      //   \___________ prevent keys being 0, which is a special value
-      //                for Linux.
+      //
+      // 0x0106020F
+      //   \__||\||
+      //      || |\_ bit mode:      F  = 16-bit, 8 = 8-bit, 4 = 4-bit
+      //      || \__ clock:         20 = 200 MHz, 16 = 160 MHz
+      //      |\____ antenna field: 0 = HBA/HBA0/LBA, 1 = HBA1
+      //      \_____ station ID:    0x0106 = RS106
 
       uint32 stationNr = 0;
 
@@ -112,15 +100,21 @@ namespace LOFAR
 
       // make sure everything fits
       ASSERT( stationNr    < (1L << 16) );
-      ASSERT( antennaFieldNr < (1L << 4) );
+      ASSERT( antennaFieldNr < (1L << 4)  );
+
+      ASSERT( clockMHz == 200 || clockMHz == 160 );
+      ASSERT( bitMode == 4 || bitMode == 8 || bitMode == 16 );
 
       // derive the hash
-      return ((stationNr << 4) + (antennaFieldNr << 0)) | 0x10000000;
+      unsigned clockMHzNr = clockMHz == 200 ? 0x20 : 0x16;
+      unsigned bitModeNr = bitMode == 16 ? 0xF : bitMode;
+
+      return (stationNr << 16) + (antennaFieldNr << 12) + (clockMHzNr << 4) + bitModeNr;
     }
 
     std::ostream& operator<<( std::ostream &str, const struct StationID &s )
     {
-      str << "station " << s.stationName << " antenna field " << s.antennaField;
+      str << "station " << s.stationName << " antenna field " << s.antennaField << " clockMHz " << s.clockMHz << " bitMode " << s.bitMode;
 
       return str;
     }

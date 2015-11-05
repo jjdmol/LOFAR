@@ -1,22 +1,23 @@
-//# BandPass.cc
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id$
+/* BandPass.cc
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 #include <lofar_config.h>
 
@@ -25,9 +26,14 @@
 #include <vector>
 #include <complex>
 #include <cmath>
-#include <stdexcept>
 
+#if defined HAVE_FFTW3
 #include <fftw3.h>
+#elif defined HAVE_FFTW2
+#include <fftw.h>
+#else
+#error Should have FFTW3 or FFTW2 installed
+#endif
 
 #define STATION_FILTER_LENGTH 16384 // Number of filter taps of the station filters.
 #define STATION_FFT_SIZE 1024 // The size of the FFT that the station filter does
@@ -2093,7 +2099,7 @@ namespace LOFAR
   };
 
 
-  void computeCorrectionFactors(float *factors_out, unsigned nrChannels, double scale)
+  void computeCorrectionFactors(float *factors, unsigned nrChannels)
   {
     // The following matlab functions are used:
 
@@ -2109,63 +2115,43 @@ namespace LOFAR
     if (fftSize < STATION_FILTER_LENGTH)
       fftSize = STATION_FILTER_LENGTH;
 
-    // The advantage of computing in double precision is negligible,
-    // but as an init operation, the disadvantage is also negligible.
-
     // it is not worth to use the more complex R2C FFTW method
+    std::vector<std::complex<float> > in(fftSize), out(fftSize);
 
-    struct FFTW_Buffer {
-      fftw_complex* buf;
-
-      FFTW_Buffer(size_t nr_el)
-      : buf((fftw_complex *)fftw_malloc(nr_el * sizeof(std::complex<double>)))
-      {
-        if (buf == NULL)
-          // bad_alloc does not take an arg, so throw runtime_error
-          throw std::runtime_error("fftw_malloc() returned NULL");
-      }
-
-      ~FFTW_Buffer()
-      {
-        fftw_free(buf);
-      }
-    };
-    FFTW_Buffer in(fftSize);
-    FFTW_Buffer out(fftSize);
-
+#if defined HAVE_FFTW3
+    fftwf_plan plan;
+#pragma omp critical (FFTW)
+    plan = fftwf_plan_dft_1d(fftSize, reinterpret_cast<fftwf_complex *>(&in[0]), reinterpret_cast<fftwf_complex *>(&out[0]), FFTW_FORWARD, FFTW_ESTIMATE);
+#elif defined HAVE_FFTW2
     fftw_plan plan;
 #pragma omp critical (FFTW)
-    plan = fftw_plan_dft_1d(fftSize, in.buf, out.buf,
-                            FFTW_FORWARD, FFTW_ESTIMATE);
+    plan = fftw_create_plan(fftSize, FFTW_FORWARD, FFTW_ESTIMATE);
+#else
+#error need FFTW2 or FFTW3
+#endif
 
-    unsigned i;
-    for (i = 0; i < STATION_FILTER_LENGTH; i++)
-    {
-      in.buf[i][0] = (double)stationFilterConstants[i]; // real
-      in.buf[i][1] = 0.0; // imag
-    }
-    for ( ; i < fftSize; i++)
-    {
-      in.buf[i][0] = in.buf[i][1] = 0.0;
-    }
+    for (unsigned i = 0; i < STATION_FILTER_LENGTH; i++)
+      in[i] = stationFilterConstants[i];
 
-    fftw_execute(plan);
+    for (unsigned i = STATION_FILTER_LENGTH; i < fftSize; i++)
+      in[i] = 0;
+
+#if defined HAVE_FFTW3
+    fftwf_execute(plan);
+#pragma omp critical (FFTW)
+    fftwf_destroy_plan(plan);
+#elif defined HAVE_FFTW2
+    fftw_one(plan, reinterpret_cast<fftw_complex *>(&in[0]), reinterpret_cast<fftw_complex *>(&out[0]));
 #pragma omp critical (FFTW)
     fftw_destroy_plan(plan);
+#endif
 
     for (unsigned i = 0; i < nrChannels; i++) {
-      const std::complex<double> m(
-        out.buf[(i - nrChannels / 2) % fftSize][0],
-        out.buf[(i - nrChannels / 2) % fftSize][1]);
-      const std::complex<double> l(
-        out.buf[(i - 3 * nrChannels / 2) % fftSize][0],
-        out.buf[(i - 3 * nrChannels / 2) % fftSize][1]);
-      const std::complex<double> r(
-        out.buf[i + nrChannels / 2][0],
-        out.buf[i + nrChannels / 2][1]);
+      const std::complex<float> m = out[(i - nrChannels / 2) % fftSize];
+      const std::complex<float> l = out[(i - 3 * nrChannels / 2) % fftSize];
+      const std::complex<float> r = out[i + nrChannels / 2];
 
-      factors_out[i] = (float)(std::pow(2.0, 25.0) /
-                               std::sqrt(std::abs(m * m + l * l + r * r)) * scale);
+      factors[i] = pow(2, 25) / sqrt(abs(m * m + l * l + r * r));
     }
   }
 
@@ -2175,12 +2161,11 @@ namespace LOFAR
 } // namespace LOFAR
 
 
-#ifdef TEST_COMPUTE_BANDPASS_CORRECTION_FACTORS
+#if 0
 int main()
 {
-  unsigned nrChannelsPerSb = 4096;
-  std::vector<float> factors(nrChannelsPerSb);
-  BandPass::computeCorrectionFactors(&factors[0], nrChannelsPerSb);
+  std::vector<float> factors(4096);
+  BandPass::computeCorrectionFactors(&factors[0], 4096);
   return 0;
 }
 #endif
