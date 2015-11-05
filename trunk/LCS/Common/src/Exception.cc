@@ -52,7 +52,7 @@ namespace LOFAR
     // twice, because a rethrow was attempted without an active exception.
     static bool terminating = false;
     if (terminating) {
-#ifdef __GNUG__
+#if defined(__GNUG__) && !defined(_LIBCPP_VERSION)
       __gnu_cxx::__verbose_terminate_handler();
 #else
       // fputs() is the only safe way to print to stderr when low on memory
@@ -89,7 +89,7 @@ namespace LOFAR
           cerr << Backtrace() << endl;
         } catch (...) {}
 #endif
-#ifdef __GNUG__
+#if defined(__GNUG__) && !defined(_LIBCPP_VERSION)
         __gnu_cxx::__verbose_terminate_handler();
 #else
         // Rethrow once more to separate std::exception from other exceptions.
