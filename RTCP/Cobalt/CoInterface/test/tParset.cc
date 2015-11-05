@@ -1,5 +1,5 @@
 //# tParset.cc
-//# Copyright (C) 2012-2015  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -29,14 +29,13 @@
 #include <sstream>
 #include <boost/format.hpp>
 
-#include "tParsetDefault.h"
-
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace std;
 using boost::format;
 
 // macros for testing true/false keys
+#define TESTKEYS(new, old) for ( string k = "x", keystr = new; k != "xxx"; k += "x", keystr = old)
 #define TESTBOOL for( unsigned val = 0; val < 2; ++val )
 #define valstr ((val) ? "true" : "false")
 
@@ -66,6 +65,61 @@ template<typename T> string toStr( const vector<T> &v )
   return sstr.str();
 }
 
+Parset makeDefaultTestParset() {
+  Parset ps;
+
+  // Required keys to pass basic parset checks.
+  ps.add("Observation.ObsID", "12345");
+  // Use a valid station name (CS001) that is not in any tests below,
+  // so we don't have to remove board and slot list keys in some tests.
+  ps.add("Observation.VirtualInstrument.stationList", "[CS001]");
+  ps.add("Observation.antennaSet", "LBA_INNER");
+  ps.add("Observation.bandFilter", "LBA_30_70");
+  ps.add("Observation.nrBeams", "1");
+  ps.add("Observation.Beam[0].subbandList", "[21..23]");
+  ps.add("Observation.Dataslots.CS001LBA.RSPBoardList", "[3*0]");
+  ps.add("Observation.Dataslots.CS001LBA.DataslotList", "[0..2]");
+
+  ps.add("Observation.Beam[0].nrTiedArrayBeams", "1");
+  ps.add("Observation.Beam[0].TiedArrayBeam[0].coherent", "true");
+
+  // for tests that use HBA
+  ps.add("Observation.Dataslots.CS001HBA.RSPBoardList", "[3*0]");
+  ps.add("Observation.Dataslots.CS001HBA.DataslotList", "[0..2]");
+  ps.add("Observation.Dataslots.CS001HBA0.RSPBoardList", "[3*0]");
+  ps.add("Observation.Dataslots.CS001HBA0.DataslotList", "[0..2]");
+  ps.add("Observation.Dataslots.CS001HBA1.RSPBoardList", "[3*0]");
+  ps.add("Observation.Dataslots.CS001HBA1.DataslotList", "[0..2]");
+
+  // basic correlation output keys
+  ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+  ps.add("Observation.DataProducts.Output_Correlated.filenames",
+         "[L12345_SAP000_SB000_uv.MS, L12345_SAP000_SB001_uv.MS, L12345_SAP000_SB002_uv.MS]");
+  ps.add("Observation.DataProducts.Output_Correlated.locations", "[3*localhost:tParset-data/]");
+
+  // basic beamforming output keys
+  ps.add("Observation.DataProducts.Output_CoherentStokes.enabled", "true");
+  ps.add("Cobalt.BeamFormer.CoherentStokes.which", "I");
+  ps.add("Observation.DataProducts.Output_CoherentStokes.filenames", "[L12345_SAP000_B000_S000_P000_bf.h5]");
+  ps.add("Observation.DataProducts.Output_CoherentStokes.locations", "[4*localhost:tParset-data/]");
+
+  ps.updateSettings();
+
+  return ps;
+}
+
+// Create a Parset out of one key/value pair in addition to
+// minimally required key/value pairs.
+Parset makeDefaultTestParset(const string& key, const string& value) {
+  Parset ps = makeDefaultTestParset();
+
+  // use replace() instead of set() in case one of the default keys is specified
+  ps.replace(key, value);
+  ps.updateSettings();
+
+  return ps;
+}
+
 
 // See if we pass basic Parset checks for the default test parset.
 TEST(defaultTestParset) {
@@ -83,10 +137,13 @@ TEST(defaultTestParset) {
  */
 
 TEST(realTime) {
-  TESTBOOL {
-    Parset ps = makeDefaultTestParset("Cobalt.realTime", valstr);
+  TESTKEYS("Cobalt.realTime", "OLAP.realTime") {
+    TESTBOOL {
+      Parset ps = makeDefaultTestParset(keystr, valstr);
 
-    CHECK_EQUAL(val, ps.settings.realTime);
+      CHECK_EQUAL(val, ps.settings.realTime);
+      CHECK_EQUAL(val, ps.realTime());
+    }
   }
 }
 
@@ -94,24 +151,21 @@ TEST(observationID) {
   Parset ps = makeDefaultTestParset("Observation.ObsID", "12345");
 
   CHECK_EQUAL(12345U, ps.settings.observationID);
-}
-
-TEST(momID) {
-  Parset ps = makeDefaultTestParset("Observation.momID", "12345");
-
-  CHECK_EQUAL(12345U, ps.settings.momID);
+  CHECK_EQUAL(12345U, ps.observationID());
 }
 
 TEST(startTime) {
   Parset ps = makeDefaultTestParset("Observation.startTime", "2013-03-17 10:55:08");
 
   CHECK_CLOSE(1363517708.0, ps.settings.startTime, 0.1);
+  CHECK_CLOSE(1363517708.0, ps.startTime(), 0.1);
 }
 
 TEST(stopTime) {
   Parset ps = makeDefaultTestParset("Observation.stopTime", "2013-03-17 10:55:08");
 
   CHECK_CLOSE(1363517708.0, ps.settings.stopTime, 0.1);
+  CHECK_CLOSE(1363517708.0, ps.stopTime(), 0.1);
 }
 
 SUITE(clockMHz) {
@@ -119,9 +173,10 @@ SUITE(clockMHz) {
     Parset ps = makeDefaultTestParset("Observation.sampleClock", "200");
 
     CHECK_EQUAL(200U, ps.settings.clockMHz);
-    CHECK_EQUAL(200000000U, ps.settings.clockHz());
+    CHECK_EQUAL(200000000U, ps.clockSpeed());
 
     CHECK_CLOSE(195312.5, ps.settings.subbandWidth(), 0.001);
+    CHECK_CLOSE(195312.5, ps.subbandBandwidth(), 0.001);
     CHECK_CLOSE(1.0/195312.5, ps.sampleDuration(), 0.001);
   }
 
@@ -129,9 +184,10 @@ SUITE(clockMHz) {
     Parset ps = makeDefaultTestParset("Observation.sampleClock", "160");
 
     CHECK_EQUAL(160U, ps.settings.clockMHz);
-    CHECK_EQUAL(160000000U, ps.settings.clockHz());
+    CHECK_EQUAL(160000000U, ps.clockSpeed());
 
     CHECK_CLOSE(156250.0, ps.settings.subbandWidth(), 0.001);
+    CHECK_CLOSE(156250.0, ps.subbandBandwidth(), 0.001);
     CHECK_CLOSE(1.0/156250.0, ps.sampleDuration(), 0.001);
   }
 }
@@ -169,40 +225,52 @@ TEST(nrPolarisations) {
 
   CHECK_EQUAL(nPol,        ps.settings.nrPolarisations);
   CHECK_EQUAL(nPol * nPol, ps.settings.nrCrossPolarisations());
+  CHECK_EQUAL(nPol * nPol, ps.nrCrossPolarisations());
 }
 
 SUITE(corrections) {
   TEST(bandPass) {
-    TESTBOOL {
-      Parset ps = makeDefaultTestParset("Cobalt.correctBandPass", valstr);
+    TESTKEYS("Cobalt.correctBandPass", "OLAP.correctBandPass") {
+      TESTBOOL {
+        Parset ps = makeDefaultTestParset(keystr, valstr);
 
-      CHECK_EQUAL(val, ps.settings.corrections.bandPass);
+        CHECK_EQUAL(val, ps.settings.corrections.bandPass);
+        CHECK_EQUAL(val, ps.correctBandPass());
+      }
     }
   }
 
   TEST(clock) {
-    TESTBOOL {
-      Parset ps = makeDefaultTestParset("Cobalt.correctClocks", valstr);
+    TESTKEYS("Cobalt.correctClocks", "OLAP.correctClocks") {
+      TESTBOOL {
+        Parset ps = makeDefaultTestParset(keystr, valstr);
 
-      CHECK_EQUAL(val, ps.settings.corrections.clock);
+        CHECK_EQUAL(val, ps.settings.corrections.clock);
+        CHECK_EQUAL(val, ps.correctClocks());
+      }
     }
   }
 
   TEST(dedisperse) {
-    TESTBOOL {
-      Parset ps = makeDefaultTestParset("Cobalt.BeamFormer.coherentDedisperseChannels", valstr);
+    TESTKEYS("Cobalt.BeamFormer.coherentDedisperseChannels", "OLAP.coherentDedisperseChannels") {
+      TESTBOOL {
+        Parset ps = makeDefaultTestParset(keystr, valstr);
 
-      CHECK_EQUAL(val, ps.settings.corrections.dedisperse);
+        CHECK_EQUAL(val, ps.settings.corrections.dedisperse);
+      }
     }
   }
 }
 
 SUITE(delayCompensation) {
   TEST(enabled) {
-    TESTBOOL {
-      Parset ps = makeDefaultTestParset("Cobalt.delayCompensation", valstr);
+    TESTKEYS("Cobalt.delayCompensation", "OLAP.delayCompensation") {
+      TESTBOOL {
+        Parset ps = makeDefaultTestParset(keystr, valstr);
 
-      CHECK_EQUAL(val, ps.settings.delayCompensation.enabled);
+        CHECK_EQUAL(val, ps.settings.delayCompensation.enabled);
+        CHECK_EQUAL(val, ps.delayCompensation());
+      }
     }
   }
 
@@ -231,6 +299,7 @@ TEST(antennaSetLBA) {
     ps.replace("Observation.bandFilter", "LBA_30_70");
 
     CHECK_EQUAL(*i, ps.settings.antennaSet);
+    CHECK_EQUAL(*i, ps.antennaSet());
   }
 }
 
@@ -250,6 +319,7 @@ TEST(antennaSetHBA) {
     ps.replace("Observation.bandFilter", "HBA_110_190");
 
     CHECK_EQUAL(*i, ps.settings.antennaSet);
+    CHECK_EQUAL(*i, ps.antennaSet());
   }
 }
 
@@ -266,6 +336,8 @@ TEST(bandFilter) {
     Parset ps = makeDefaultTestParset("Observation.bandFilter", i->first);
 
     CHECK_EQUAL(i->first, ps.settings.bandFilter);
+    CHECK_EQUAL(i->first, ps.bandFilter());
+    
     CHECK_EQUAL(i->second, ps.settings.nyquistZone());
   }
 }
@@ -726,13 +798,17 @@ SUITE(correlator) {
   }
 
   TEST(nrChannels) {
-    Parset ps = makeDefaultTestParset();
+    // for now, nrChannels is also defined if the correlator is disabled
+    TESTKEYS("Cobalt.Correlator.nrChannelsPerSubband", "Observation.channelsPerSubband") {
+      Parset ps = makeDefaultTestParset();
 
-    ps.replace("Observation.DataProducts.Output_Correlated.enabled", "true");
-    ps.replace("Cobalt.Correlator.nrChannelsPerSubband", "256");
-    ps.updateSettings();
+      ps.replace("Observation.DataProducts.Output_Correlated.enabled", "true");
+      ps.replace(keystr, "256");
+      ps.updateSettings();
 
-    CHECK_EQUAL(256U, ps.settings.correlator.nrChannels);
+      CHECK_EQUAL(256U, ps.settings.correlator.nrChannels);
+      CHECK_EQUAL(256U, ps.nrChannelsPerSubband());
+    }
   }
 
   TEST(channelWidth) {
@@ -741,36 +817,44 @@ SUITE(correlator) {
       Parset ps = makeDefaultTestParset();
 
       ps.replace("Observation.DataProducts.Output_Correlated.enabled", "true");
-      ps.replace("Cobalt.Correlator.nrChannelsPerSubband", str(format("%u") % nrChannels));
+      ps.replace("Observation.channelsPerSubband", str(format("%u") % nrChannels));
       ps.updateSettings();
 
       CHECK_CLOSE(ps.settings.subbandWidth() / nrChannels, ps.settings.correlator.channelWidth, 0.00001);
+      CHECK_CLOSE(ps.settings.subbandWidth() / nrChannels, ps.channelWidth(), 0.00001);
     }
   }
 
   TEST(nrSamplesPerChannel) {
-    Parset ps = makeDefaultTestParset();
-    
-    // set
-    ps.replace("Observation.DataProducts.Output_Correlated.enabled", "true");
-    ps.replace("Cobalt.blockSize", "256");
-    ps.replace("Cobalt.Correlator.nrChannelsPerSubband", "64");
-    ps.updateSettings();
+    TESTKEYS("Cobalt.Correlator.nrChannelsPerSubband", "Observation.nrChannelsPerSubband") {
+      Parset ps = makeDefaultTestParset();
+      
+      // set
+      ps.replace("Observation.DataProducts.Output_Correlated.enabled", "true");
+      ps.replace("Cobalt.blockSize", "256");
+      ps.replace(keystr, "64");
+      ps.updateSettings();
 
-    // verify settings
-    CHECK_EQUAL(4U, ps.settings.correlator.nrSamplesPerBlock);
+      // verify settings
+      CHECK_EQUAL(4U, ps.settings.correlator.nrSamplesPerChannel);
+      CHECK_EQUAL(4U, ps.CNintegrationSteps());
+      CHECK_EQUAL(4U, ps.nrSamplesPerChannel());
+    }
   }
 
   TEST(nrBlocksPerIntegration) {
-    Parset ps = makeDefaultTestParset();
-    
-    // set
-    ps.replace("Observation.DataProducts.Output_Correlated.enabled", "true");
-    ps.replace("Cobalt.Correlator.nrBlocksPerIntegration", "42");
-    ps.updateSettings();
+    TESTKEYS("Cobalt.Correlator.nrBlocksPerIntegration", "OLAP.IONProc.integrationSteps") {
+      Parset ps = makeDefaultTestParset();
+      
+      // set
+      ps.replace("Observation.DataProducts.Output_Correlated.enabled", "true");
+      ps.replace(keystr, "42");
+      ps.updateSettings();
 
-    // verify settings
-    CHECK_EQUAL(42U, ps.settings.correlator.nrBlocksPerIntegration);
+      // verify settings
+      CHECK_EQUAL(42U, ps.settings.correlator.nrBlocksPerIntegration);
+      CHECK_EQUAL(42U, ps.IONintegrationSteps());
+    }
   }
 
   /* TODO: test super-station beam former */
@@ -993,7 +1077,7 @@ TEST(testRing) {
   ps.replace(key, value);
 
   // ringwidth == 1
-  key = prefix + ".tabRingSize";
+  key = prefix + ".ringWidth";
   value = "2";
   ps.replace(key, value);
 
@@ -1020,13 +1104,10 @@ TEST(testRing) {
   // test suite)
   // The manual tabs should be added before the ring tabs. 
   // test values are for the 3rd value in the ring
-  struct ObservationSettings::Direction sap = ps.settings.SAPs[0].direction;
-  CHECK_CLOSE(sap.angle1 + 6.10603350157654,
-              ps.settings.beamFormer.SAPs[0].TABs[3].direction.angle1, 0.00000001);
-  CHECK_CLOSE(sap.angle2 + 1.0,
-              ps.settings.beamFormer.SAPs[0].TABs[3].direction.angle2, 0.00000001);
+  CHECK_CLOSE(4.04656677402571, ps.settings.beamFormer.SAPs[0].TABs[3].direction.angle1, 0.00000001);
+  CHECK_CLOSE(1.15470053837925, ps.settings.beamFormer.SAPs[0].TABs[3].direction.angle2, 0.00000001);
   // Full list of value for 1 circle:
-  //[(0.0, 0.0), (0.0, 2.0), (6.10603350157654, 1.0), (sqrt(3.0), -1.0), (0.0, -2.0), (-sqrt(3.0), 0), (-6.10603350157654, 1.0)]
+  //[(0, 0), (0, 2.3094010767585), (4.04656677402571, 1.15470053837925), (1.73205080756888, -1.15470053837925), (0, -2.3094010767585), (-1.73205080756888, -1.15470053837925), (-4.04656677402571, 1.15470053837925)]
 }
 
 /*
@@ -1037,31 +1118,6 @@ TEST(testRing) {
  */
 
 SUITE(integration) {
-  TEST(228591) {
-    // ===== read parset of observation L228591
-    Parset ps("tParset.parset_obs228591");
-
-    // check basic assumptions without which the subsequent
-    // checks will return random crap
-    CHECK(ps.settings.beamFormer.enabled);
-    CHECK_EQUAL(1U, ps.settings.beamFormer.SAPs.size());
-
-    // check the TAB rings: 4 rings = 61 TABs
-    CHECK_EQUAL(61U, ps.settings.beamFormer.SAPs[0].TABs.size());
-
-    // first TAB is equal to SAP
-    struct ObservationSettings::Direction sap = ps.settings.SAPs[0].direction;
-    CHECK_EQUAL(sap.angle1, ps.settings.beamFormer.SAPs[0].TABs[0].direction.angle1);
-    CHECK_EQUAL(sap.angle2, ps.settings.beamFormer.SAPs[0].TABs[0].direction.angle2);
-
-    // subsequent TABs are NOT (0,0)
-    for (size_t tab = 1; tab < ps.settings.beamFormer.SAPs[0].TABs.size(); tab++) {
-      struct ObservationSettings::Direction dir = ps.settings.beamFormer.SAPs[0].TABs[tab].direction;
-
-      CHECK(dir.angle1 != sap.angle1 || dir.angle2 != sap.angle2);
-    }
-  }
-
   TEST(99275) {
     // ===== read parset of observation L99275
     Parset ps("tParset.parset_obs99275");
@@ -1138,10 +1194,8 @@ SUITE(integration) {
     CHECK_EQUAL(true,       ps.settings.correlator.enabled);
     CHECK_EQUAL(64U,        ps.settings.correlator.nrChannels);
     CHECK_CLOSE(3051.76,    ps.settings.correlator.channelWidth, 0.01);
-    CHECK_EQUAL(768U,       ps.settings.correlator.nrSamplesPerBlock);
-    CHECK_EQUAL(30U,        ps.settings.correlator.nrBlocksPerIntegration);
-    CHECK_EQUAL(30U * 768U, ps.settings.correlator.nrSamplesPerIntegration());
-    CHECK_EQUAL(1U,         ps.settings.correlator.nrIntegrationsPerBlock);
+    CHECK_EQUAL(768U,       ps.settings.correlator.nrSamplesPerChannel);
+    CHECK_EQUAL(30U,         ps.settings.correlator.nrBlocksPerIntegration);
     CHECK_EQUAL(nrStations, ps.settings.correlator.stations.size());
     for (unsigned st = 0; st < nrStations; ++st) {
       CHECK_EQUAL(ps.settings.antennaFields[st].name, ps.settings.correlator.stations[st].name);

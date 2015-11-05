@@ -42,12 +42,9 @@ RSPDriver.PPS_DELAY=10000
 RSPDriver.PPS_TRIGGER=1
 
 #
-# Files with delays for each AP for finetuning the sychronisation to the PPS.
-# Each clock has its own file.
+# File with delays for each AP for finetuning the sychronisation to the PPS.
 #
-RSPDriver.PPSdelayFile = "PPSdelays.conf"    # Backwards compatibility (LOFAR 2.11 and earlier)
-RSPDriver.PPSdelayFile160 = "PPSdelays160.conf"
-RSPDriver.PPSdelayFile200 = "PPSdelays200.conf"
+RSPDriver.PPSdelayFile = "PPSdelays.conf"
 
 #
 # Specify the MAC addresses of the control port (MAC) of RSP boards
@@ -55,7 +52,6 @@ RSPDriver.PPSdelayFile200 = "PPSdelays200.conf"
 # NOTE: not used yet!
 RSPDriver.MAC_ADDR_MASK=10:FA:00:00:%02x:00
 
-# old-way of specifying the MAC addresses
 #
 # Specify the absolute backplane index of the first
 # RSP board in hexadecimal
@@ -64,7 +60,8 @@ RSPDriver.MAC_ADDR_MASK=10:FA:00:00:%02x:00
 #
 RSPDriver.XST_FIRST_RSP_BOARD=0x00
 
-# old-way of specifying the MAC addresses
+# old-way of 
+specifying the MAC addresses
 #
 RSPDriver.MAC_ADDR_0=10:FA:00:00:00:00
 RSPDriver.MAC_ADDR_1=10:FA:00:00:01:00
@@ -130,9 +127,7 @@ RSPDriver.MAC_ADDR_23=10:FA:00:00:17:00
 # lanes will produce ethernet packets and use these MAC- and
 # IP-addresses.
 #
-
-
-RSPDriver.LANE_00_BLET_OUT= @LANE_00_BLET@ 	 
+RSPDriver.LANE_00_BLET_OUT= @LANE_00_BLET@
 RSPDriver.LANE_00_XLET_OUT= @FIRST_XLET_OUT@
 RSPDriver.LANE_00_SRCMAC  = 00:22:86:@RING_ID@:@STATION_HID@:00
 RSPDriver.LANE_00_SRCIP   = 10.@IP_PREFIX_00@.@IP_SUBNET_00@.@IP_EXTEN_00@
@@ -148,7 +143,6 @@ RSPDriver.LANE_01_DSTMAC  = @LANE_01_MAC@
 RSPDriver.LANE_01_DSTIP   = @LANE_01_IP@
 RSPDriver.LANE_01_DSTPORT = @LANE_01_PORT@
 
-
 RSPDriver.LANE_02_BLET_OUT= @LANE_02_BLET@
 RSPDriver.LANE_02_XLET_OUT= @FIRST_XLET_OUT@
 RSPDriver.LANE_02_SRCMAC  = 00:22:86:@RING_ID@:@STATION_HID@:02
@@ -157,7 +151,7 @@ RSPDriver.LANE_02_DSTMAC  = @LANE_02_MAC@
 RSPDriver.LANE_02_DSTIP   = @LANE_02_IP@
 RSPDriver.LANE_02_DSTPORT = @LANE_02_PORT@
 
-RSPDriver.LANE_03_BLET_OUT= @LANE_03_BLET@ 	 
+RSPDriver.LANE_03_BLET_OUT= @LANE_03_BLET@
 RSPDriver.LANE_03_XLET_OUT= @FIRST_XLET_OUT@
 RSPDriver.LANE_03_SRCMAC  = 00:22:86:@RING_ID@:@STATION_HID@:03
 RSPDriver.LANE_03_SRCIP   = 10.@IP_PREFIX_03@.@IP_SUBNET_03@.@IP_EXTEN_03@
@@ -207,24 +201,6 @@ RSPDriver.LANE_13_DSTPORT = @LANE_13_PORT@
 #
 RSPDriver.IGNORE_REMOTE_DATA=0
 
-# ATTENUATION SETTINGS
-# --------------------
-# For each RCUMODE a fixed attenuation offset is set in dB. 
-# The Attenuation stepsize that can be controlled in the hardware 
-# of the station is also provided.
-#
-# ATT_STEP_SIZE = <stepsize>
-# FIXED_ATT_MODE_<rcumode> = <offset>
-#
-RSPDriver.ATT_STEP_SIZE = @ATT_STEP_SIZE@
-RSPDriver.FIXED_ATT_MODE_1 = @ATT_MODE_1@
-RSPDriver.FIXED_ATT_MODE_2 = @ATT_MODE_2@
-RSPDriver.FIXED_ATT_MODE_3 = @ATT_MODE_3@
-RSPDriver.FIXED_ATT_MODE_4 = @ATT_MODE_4@
-RSPDriver.FIXED_ATT_MODE_5 = @ATT_MODE_5@
-RSPDriver.FIXED_ATT_MODE_6 = @ATT_MODE_6@
-RSPDriver.FIXED_ATT_MODE_7 = @ATT_MODE_7@
-
 #
 # CDO Control
 # This controls the format of CEP output data from the serdes lane specified in
@@ -238,6 +214,14 @@ RSPDriver.CDO_ENABLE=1
 RSPDriver.CDO_N_BLOCKS=16
 #RSPDriver.CDO_N_BEAMLETS=61
 RSPDriver.FB_ENABLE=1
+
+#
+# Specify the absolute backplane index of the first
+# RSP board in hexadecimal
+#
+# MAC address is equal to : 10:FA:00:00:XX:00
+#
+RSPDriver.XST_FIRST_RSP_BOARD=0x00
 
 #
 # Ethernet interface on which to contact the RSP boards.
@@ -289,7 +273,6 @@ RSPDriver.READ_STATUS=1
 RSPDriver.WRITE_XBF=1
 RSPDriver.WRITE_BF=1
 RSPDriver.WRITE_SS=1
-RSPDriver.WRITE_SDO=1
 RSPDriver.WRITE_RCU_PROTOCOL=1
 RSPDriver.WRITE_HBA_PROTOCOL=1
 RSPDriver.READ_SST=1
@@ -308,7 +291,6 @@ RSPDriver.READ_SI=1
 RSPDriver.SPLITTER=1
 RSPDriver.READ_LATENCY=1
 RSPDriver.READ_BITMODE=1
-RSPDriver.READ_SDOMODE=1
 
 #
 # TDS_CONTROL
@@ -324,7 +306,6 @@ RSPDriver.TDS_CONTROL=0x00111111
 #
 RSPDriver.READ_BF=0
 RSPDriver.READ_SS=0
-RSPDriver.READ_SDO=0
 RSPDriver.READ_RCU=0
 RSPDriver.READ_WG=0
 
@@ -372,11 +353,5 @@ RSPDriver.HBA_SERVER_ADDRESS_OFFSET=1
 # Allow/deny writing raw datablocks. This is only needed for testing!
 RSPDriver.READ_RAW_DATA  = 1
 RSPDriver.WRITE_RAW_DATA = 1
-
-# Default settings for Aartfaac stations 
-RSPDriver.SDO_MODE = 16
-RSPDriver.SDO_SS = 295:330,331:366,367:402,403:438
-
-
 
  

@@ -38,7 +38,6 @@ namespace LOFAR
   {
     const string gExecutablePath = getExecutablePath();
 
-#ifdef ENABLE_TRACER
     // Define the eight trace log levels
     const LogLevel TRACE1_LOG_LEVEL = 1;
     const LogLevel TRACE2_LOG_LEVEL = 2;
@@ -93,6 +92,7 @@ namespace LOFAR
     // Appender that logs to stderr.
     void initTraceModule (void)
     {
+#ifdef ENABLE_TRACER
       // Register our own loglevels
       getLogLevelManager().pushToStringMethod(traceLevel2String);
       getLogLevelManager().pushFromStringMethod(string2TraceLevel);
@@ -111,8 +111,8 @@ namespace LOFAR
                        "%D{%y%m%d %H%M%S,%q} [%i] %-6p %c{3} [%b:%L] - %m%n");
       PropertyConfigurator(prop).configure();
       Logger::getInstance("TRC").forcedLog(0, "TRACE module activated");
-    }
 #endif
+    }
   } // namespace
 
 
@@ -147,10 +147,8 @@ namespace LOFAR
     // Initialize NDC (nested diagnostic context).
     initNDC();
 
-#ifdef ENABLE_TRACER
     // Initialize tracing module.
     initTraceModule();
-#endif
 
     // Add extension ".log_prop" to \a propFile, if necessary.
     if(propFile.find(".log_prop") == string::npos) {
@@ -182,10 +180,8 @@ namespace LOFAR
     // Initialize NDC (nested diagnostic context).
     initNDC();
 
-#ifdef ENABLE_TRACER
     // Initialize tracing module.
     initTraceModule();
-#endif
 
     // Add extension ".log_prop" to \a propFile, if necessary.
     if(propFile.find(".log_prop") == string::npos) {

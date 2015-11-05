@@ -67,14 +67,9 @@
 #include <lattices/Lattices/ArrayLattice.h>
 #include <measures/Measures/UVWMachine.h>
 #include <lattices/Lattices/SubLattice.h>
-#if defined(casacore)
-#include <lattices/LRegions/LCBox.h>
-#include <lattices/LatticeMath/LatticeFFT.h>
-#else
 #include <lattices/Lattices/LCBox.h>
-#include <lattices/Lattices/LatticeFFT.h>
-#endif
 #include <lattices/Lattices/LatticeCache.h>
+#include <lattices/Lattices/LatticeFFT.h>
 #include <lattices/Lattices/LatticeIterator.h>
 #include <lattices/Lattices/LatticeStepper.h>
 #include <scimath/Mathematics/ConvolveGridder.h>
@@ -147,7 +142,7 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
     maxAbsData(0.0), centerLoc(IPosition(4,0)),
     offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False),
     usePut2_p(False), machineName_p("LofarFTMachine"), itsParameters(parameters), itsMS(ms),
-    itsNWPlanes(nwPlanes), itsWMax(wmax), 
+    itsNWPlanes(nwPlanes), itsWMax(wmax), itsConvFunc(0),
     itsVerbose(verbose),
     itsMaxSupport(maxsupport), itsOversample(oversample), itsImgName(imgName),
     itsGridMuellerMask(gridMuellerMask),

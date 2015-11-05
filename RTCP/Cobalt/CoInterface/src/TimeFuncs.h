@@ -22,8 +22,6 @@
 #define LOFAR_COINTERFACE_TIMEFUNCS_H
 
 #include <ctime>
-#include <climits>
-#include <string>
 #include <sys/time.h>
 
 namespace LOFAR
@@ -35,32 +33,11 @@ namespace LOFAR
       // A timestamp earlier than any other.
       const static struct timespec big_bang = { 0, 0 };
 
-      // A timestamp later than any other.
-      const static struct timespec universe_heat_death = { LONG_MAX, 999999999 };
-
       // Returns the current time, as a struct timespec
       struct timespec now();
 
-      // Converts a timespec to double
-      double toDouble(const struct timespec &ts);
-
       // Increment a timespec with a certain number of seconds
       void inc(struct timespec &ts, double seconds);
-
-      // Return end - begin
-      double operator-(const struct timespec &end, const struct timespec &begin);
-
-      // Returns whether a is later than b
-      bool operator>(const struct timespec &a, const struct timespec &b);
-
-      // Provides (in)equality for timespecs
-      bool operator==(const struct timespec &a, const struct timespec &b);
-      bool operator!=(const struct timespec &a, const struct timespec &b);
-    }
-
-    namespace TimeDouble {
-      // Convert seconds to a string, with either second or millisecond precision
-      std::string toString(double seconds, bool milliseconds = true);
     }
   }
 }

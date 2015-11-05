@@ -52,15 +52,8 @@ TEST(tKernelFunctions)
   ps.add("Observation.DataProducts.Output_Correlated.filenames", "[L12345_SAP000_SB000_uv.MS]");
   ps.add("Observation.DataProducts.Output_Correlated.locations", "[localhost:.]");
   ps.updateSettings();
-  
-  FIR_FilterKernel::Parameters params(ps,
-    ps.settings.antennaFields.size(),
-    true,
-    1,
-    ps.settings.correlator.nrChannels,
-    1.0f);
 
-  KernelFactory<FIR_FilterKernel> factory(params);
+  KernelFactory<FIR_FilterKernel> factory(ps);
 
   gpu::Device device(gpu::Platform().devices()[0]);
   gpu::Context context(device);
@@ -74,10 +67,14 @@ TEST(tKernelFunctions)
 
   gpu::HostMemory
     hInput(context, dInput.size()),
-    hOutput(context, dOutput.size());
+    hOutput(context, dOutput.size()),
+    hCoeff(context, dCoeff.size()),
+    hHistory(context, dHistory.size());
 
   cout << "dInput.size() = " << dInput.size() << endl;
   cout << "dOutput.size() = " << dOutput.size() << endl;
+  cout << "dCoeff.size() = " << dCoeff.size() << endl;
+  cout << "dHistory.size() = " << dHistory.size() << endl;
 
   // hInput.get<i8complex>()[2176] = i8complex(1,0);
 
@@ -88,15 +85,30 @@ TEST(tKernelFunctions)
 
   stream.writeBuffer(dInput, hInput);
 
-  auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, dInput, dOutput));
+  FIR_FilterKernel::Buffers buffers(dInput, dOutput, dCoeff, dHistory);
+  auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, buffers));
 
   // **************************************
   // excercise it
+  PerformanceCounter counter(context);  //create a counter
   BlockID blockId;                      // create a dummy block-ID struct
   kernel->enqueue(blockId,  0); // insert in kernel queue
 
+
   stream.readBuffer(hOutput, dOutput);
+  stream.readBuffer(hCoeff, dCoeff);
   stream.synchronize();
+ 
+  // update the counter
+  kernel->getCounter().logTime();
+
+  stringstream str;
+  kernel->getCounter().stats.print(str);
+
+  // Most functionality is tested at the specific stats class. Just test if
+  // the stats object has been used once
+  CHECK(str.str() != "*Not executed*");
+
 }
 
 int main()

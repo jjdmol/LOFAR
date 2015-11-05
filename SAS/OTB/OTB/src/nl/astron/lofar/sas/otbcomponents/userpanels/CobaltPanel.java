@@ -2,7 +2,7 @@
  * CobaltPanel.java
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -132,9 +132,13 @@ public class CobaltPanel extends javax.swing.JPanel implements IViewPanel {
                 if (aNode.leaf) {
                     aParam = OtdbRmi.getRemoteMaintenance().getParam(aNode);
                     setField(itsNode, aParam, aNode);
+                } else if (LofarUtils.keyName(aNode.name).equals("Output_Beamformed")) {
+                    this.retrieveAndDisplayChildDataForNode(aNode);
                 } else if (LofarUtils.keyName(aNode.name).equals("Output_CoherentStokes")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
                 } else if (LofarUtils.keyName(aNode.name).equals("Output_Correlated")) {
+                    this.retrieveAndDisplayChildDataForNode(aNode);
+                } else if (LofarUtils.keyName(aNode.name).equals("Output_Filtered")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
                 } else if (LofarUtils.keyName(aNode.name).equals("Output_IncoherentStokes")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
@@ -338,10 +342,8 @@ public class CobaltPanel extends javax.swing.JPanel implements IViewPanel {
                 // We need to keep all the params needed by this panel
                 if (aHWNode.leaf) {
                     aParam = OtdbRmi.getRemoteMaintenance().getParam(aHWNode);
-                    setField(aNode, aParam, aHWNode);
-                } else {
-                    retrieveAndDisplayChildDataForNode(aHWNode);
                 }
+                setField(aNode, aParam, aHWNode);
             }
         } catch (RemoteException ex) {
             String aS = "Error during retrieveAndDisplayChildDataForNode: " + ex;
@@ -514,22 +516,6 @@ public class CobaltPanel extends javax.swing.JPanel implements IViewPanel {
                         inputCoherentDedisperseChannels.setSelected(aSelection);
                         break;
                     }
-                    case "flysEye": {
-                        inputFlysEye.setToolTipText(aParam.description);
-                        itsFlysEye = aNode;
-                        boolean aSelection = false;
-                        if (isRef && aParam != null) {
-                            if (aParam.limits.equals("true") || aParam.limits.equals("TRUE")) {
-                                aSelection = true;
-                            }
-                        } else {
-                            if (aNode.limits.equals("true") || aNode.limits.equals("TRUE")) {
-                                aSelection = true;
-                            }
-                        }
-                        inputFlysEye.setSelected(aSelection);
-                        break;
-                    }
                 }
                 break;
             case "Cobalt":
@@ -610,6 +596,24 @@ public class CobaltPanel extends javax.swing.JPanel implements IViewPanel {
                         break;
                 }
                 break;
+            case "Output_Beamformed":
+                if (aKeyName.equals("enabled")) {
+                    inputOutputBeamFormedData.setToolTipText(aParam.description);
+                    itsOutputBeamFormedData = aNode;
+                    boolean aSelection = false;
+                    if (isRef && aParam != null) {
+                        if (aParam.limits.equals("true") || aParam.limits.equals("TRUE")) {
+                            aSelection = true;
+                        }
+                    } else {
+                        if (aNode.limits.equals("true") || aNode.limits.equals("TRUE")) {
+                            aSelection = true;
+                        }
+                    }
+                    inputOutputBeamFormedData.setSelected(aSelection);
+                    checkSettings();
+                }
+                break;
             case "Output_Correlated":
                 if (aKeyName.equals("enabled")) {
                     inputOutputCorrelatedData.setToolTipText(aParam.description);
@@ -626,6 +630,24 @@ public class CobaltPanel extends javax.swing.JPanel implements IViewPanel {
                     }
                     inputOutputCorrelatedData.setSelected(aSelection);
                     inputIntegrationTime.setEnabled(aSelection);
+                    checkSettings();
+                }
+                break;
+            case "Output_Filtered":
+                if (aKeyName.equals("enabled")) {
+                    inputOutputFilteredData.setToolTipText(aParam.description);
+                    itsOutputFilteredData = aNode;
+                    boolean aSelection = false;
+                    if (isRef && aParam != null) {
+                        if (aParam.limits.equals("true") || aParam.limits.equals("TRUE")) {
+                            aSelection = true;
+                        }
+                    } else {
+                        if (aNode.limits.equals("true") || aNode.limits.equals("TRUE")) {
+                            aSelection = true;
+                        }
+                    }
+                    inputOutputFilteredData.setSelected(aSelection);
                     checkSettings();
                 }
                 break;
@@ -678,6 +700,17 @@ public class CobaltPanel extends javax.swing.JPanel implements IViewPanel {
             inputIntegrationTime.setEnabled(false);
             inputChannelsPerSubbandCorrelator.setEnabled(false);
             inputBlocksPerIntegration.setEnabled(false);
+        }
+
+
+        if (inputOutputBeamFormedData.isSelected() || inputOutputCoherentStokes.isSelected()) {
+            if (inputOutputBeamFormedData.isSelected()) {
+                inputOutputCoherentStokes.setSelected(false);
+                inputOutputCoherentStokes.setEnabled(false);
+            } else if (inputOutputCoherentStokes.isSelected()) {
+                inputOutputBeamFormedData.setSelected(false);
+                inputOutputBeamFormedData.setEnabled(false);
+            }
         }
 
         if (inputOutputCoherentStokes.isSelected()) {
@@ -745,13 +778,6 @@ public class CobaltPanel extends javax.swing.JPanel implements IViewPanel {
             inputCoherentDedisperseChannels.setSelected(aB);
         }
         
-        if (itsFlysEye != null) {
-            aB = false;
-            if (itsFlysEye.limits.equals("true") || itsFlysEye.limits.equals("TRUE")) {
-                aB = true;
-            }
-            inputFlysEye.setSelected(aB);
-        }
         if (itsBlockSize != null) {
             inputBlockSize.setText(itsBlockSize.limits);
         }
@@ -762,6 +788,20 @@ public class CobaltPanel extends javax.swing.JPanel implements IViewPanel {
                 aB = true;
             }
             inputOutputCorrelatedData.setSelected(aB);
+        }
+        if (itsOutputFilteredData != null) {
+            aB = false;
+            if (itsOutputFilteredData.limits.equals("true") || itsOutputFilteredData.limits.equals("TRUE")) {
+                aB = true;
+            }
+            inputOutputFilteredData.setSelected(aB);
+        }
+        if (itsOutputBeamFormedData != null) {
+            aB = false;
+            if (itsOutputBeamFormedData.limits.equals("true") || itsOutputBeamFormedData.limits.equals("TRUE")) {
+                aB = true;
+            }
+            inputOutputBeamFormedData.setSelected(aB);
         }
         if (itsOutputCoherentStokes != null) {
             aB = false;
@@ -975,6 +1015,28 @@ public class CobaltPanel extends javax.swing.JPanel implements IViewPanel {
             itsOutputCorrelatedData.limits = bp;
             saveNode(itsOutputCorrelatedData);
         }
+        if ((!inputOutputFilteredData.isSelected()
+                & (itsOutputFilteredData.limits.equals("TRUE") || itsOutputFilteredData.limits.equals("true")))
+                || (inputOutputFilteredData.isSelected()
+                & (itsOutputFilteredData.limits.equals("FALSE") || itsOutputFilteredData.limits.equals("false")))) {
+            String bp = "true";
+            if (!inputOutputFilteredData.isSelected()) {
+                bp = "false";
+            }
+            itsOutputFilteredData.limits = bp;
+            saveNode(itsOutputFilteredData);
+        }
+        if ((!inputOutputBeamFormedData.isSelected()
+                & (itsOutputBeamFormedData.limits.equals("TRUE") || itsOutputBeamFormedData.limits.equals("true")))
+                || (inputOutputBeamFormedData.isSelected()
+                & (itsOutputBeamFormedData.limits.equals("FALSE") || itsOutputBeamFormedData.limits.equals("false")))) {
+            String bp = "true";
+            if (!inputOutputBeamFormedData.isSelected()) {
+                bp = "false";
+            }
+            itsOutputBeamFormedData.limits = bp;
+            saveNode(itsOutputBeamFormedData);
+        }
         if ((!inputOutputCoherentStokes.isSelected()
                 & (itsOutputCoherentStokes.limits.equals("TRUE") || itsOutputCoherentStokes.limits.equals("true")))
                 || (inputOutputCoherentStokes.isSelected()
@@ -1016,7 +1078,7 @@ public class CobaltPanel extends javax.swing.JPanel implements IViewPanel {
         }
 
 
-        // oherentDedisperseChannels
+        // BeamFormer
         if ((!inputCoherentDedisperseChannels.isSelected()
                 & (itsCoherentDedisperseChannels.limits.equals("TRUE") || itsCoherentDedisperseChannels.limits.equals("true")))
                 || (inputOutputIncoherentStokes.isSelected()
@@ -1027,19 +1089,6 @@ public class CobaltPanel extends javax.swing.JPanel implements IViewPanel {
             }
             itsCoherentDedisperseChannels.limits = bp;
             saveNode(itsCoherentDedisperseChannels);
-        }
-
-        // flysEye
-        if ((!inputFlysEye.isSelected()
-                & (itsFlysEye.limits.equals("TRUE") || itsFlysEye.limits.equals("true")))
-                || (inputFlysEye.isSelected()
-                & (itsFlysEye.limits.equals("FALSE") || itsFlysEye.limits.equals("false")))) {
-            String bp = "true";
-            if (!inputFlysEye.isSelected()) {
-                bp = "false";
-            }
-            itsFlysEye.limits = bp;
-            saveNode(itsFlysEye);
         }
         
         // CoherentStokes
@@ -1106,6 +1155,8 @@ public class CobaltPanel extends javax.swing.JPanel implements IViewPanel {
         inputBlockSize = new javax.swing.JTextField();
         jLabel3 = new javax.swing.JLabel();
         inputOutputCorrelatedData = new javax.swing.JCheckBox();
+        inputOutputFilteredData = new javax.swing.JCheckBox();
+        inputOutputBeamFormedData = new javax.swing.JCheckBox();
         inputOutputCoherentStokes = new javax.swing.JCheckBox();
         inputOutputIncoherentStokes = new javax.swing.JCheckBox();
         jPanel7 = new javax.swing.JPanel();
@@ -1128,7 +1179,6 @@ public class CobaltPanel extends javax.swing.JPanel implements IViewPanel {
         labelSubbandsPerFileIncoherent = new javax.swing.JLabel();
         inputSubbandsPerFileIncoherent = new javax.swing.JTextField();
         inputCoherentDedisperseChannels = new javax.swing.JCheckBox();
-        inputFlysEye = new javax.swing.JCheckBox();
         CorrelatorPanel = new javax.swing.JPanel();
         labelIntegrationTime = new javax.swing.JLabel();
         inputIntegrationTime = new javax.swing.JTextField();
@@ -1157,7 +1207,7 @@ public class CobaltPanel extends javax.swing.JPanel implements IViewPanel {
         jPanel1.setPreferredSize(new java.awt.Dimension(100, 25));
         jPanel1.setLayout(new java.awt.BorderLayout());
 
-        jLabel1.setFont(new java.awt.Font("Tahoma", 1, 11));
+        jLabel1.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("Cobalt Details");
         jPanel1.add(jLabel1, java.awt.BorderLayout.CENTER);
@@ -1196,6 +1246,15 @@ public class CobaltPanel extends javax.swing.JPanel implements IViewPanel {
         inputOutputCorrelatedData.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputOutputCorrelatedDataActionPerformed(evt);
+            }
+        });
+
+        inputOutputFilteredData.setText("Filtered Data");
+
+        inputOutputBeamFormedData.setText("Beamformed Data");
+        inputOutputBeamFormedData.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                inputOutputBeamFormedDataActionPerformed(evt);
             }
         });
 
@@ -1239,10 +1298,12 @@ public class CobaltPanel extends javax.swing.JPanel implements IViewPanel {
                         .addGap(63, 63, 63)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(inputOutputIncoherentStokes)
+                    .addComponent(inputOutputCoherentStokes)
+                    .addComponent(inputOutputBeamFormedData)
                     .addComponent(jLabel3)
                     .addComponent(inputOutputCorrelatedData)
-                    .addComponent(inputOutputIncoherentStokes)
-                    .addComponent(inputOutputCoherentStokes))
+                    .addComponent(inputOutputFilteredData))
                 .addGap(241, 241, 241))
         );
         jPanel8Layout.setVerticalGroup(
@@ -1268,6 +1329,10 @@ public class CobaltPanel extends javax.swing.JPanel implements IViewPanel {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(inputOutputCorrelatedData)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(inputOutputFilteredData)
+                        .addGap(4, 4, 4)
+                        .addComponent(inputOutputBeamFormedData)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(inputOutputCoherentStokes)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(inputOutputIncoherentStokes)))
@@ -1398,18 +1463,14 @@ public class CobaltPanel extends javax.swing.JPanel implements IViewPanel {
 
         inputCoherentDedisperseChannels.setText("CoherentDedisperseChannels");
 
-        inputFlysEye.setText("FlysEye");
-
         javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
         jPanel7.setLayout(jPanel7Layout);
         jPanel7Layout.setHorizontalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel7Layout.createSequentialGroup()
-                .addContainerGap()
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(inputFlysEye)
-                    .addComponent(IncoherentStokesPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(CoherentStokesPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(IncoherentStokesPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(inputCoherentDedisperseChannels))
                 .addContainerGap())
         );
@@ -1420,10 +1481,7 @@ public class CobaltPanel extends javax.swing.JPanel implements IViewPanel {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(IncoherentStokesPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(inputCoherentDedisperseChannels)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(inputFlysEye)
-                .addGap(31, 31, 31))
+                .addComponent(inputCoherentDedisperseChannels))
         );
 
         CorrelatorPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Correlator", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
@@ -1500,8 +1558,8 @@ public class CobaltPanel extends javax.swing.JPanel implements IViewPanel {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(CorrelatorPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(33, Short.MAX_VALUE))
+                    .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
         jPanel7.getAccessibleContext().setAccessibleDescription("");
@@ -1513,13 +1571,13 @@ public class CobaltPanel extends javax.swing.JPanel implements IViewPanel {
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(4459, Short.MAX_VALUE))
+                .addContainerGap(4471, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(2363, Short.MAX_VALUE))
+                .addContainerGap(2442, Short.MAX_VALUE))
         );
 
         jScrollPane1.setViewportView(jPanel2);
@@ -1549,9 +1607,13 @@ public class CobaltPanel extends javax.swing.JPanel implements IViewPanel {
 
         checkSettings();     }//GEN-LAST:event_inputOutputCorrelatedDataActionPerformed
 
+    private void inputOutputBeamFormedDataActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputOutputBeamFormedDataActionPerformed
+
+        inputOutputCoherentStokes.setEnabled(!inputOutputBeamFormedData.isSelected());         inputOutputCoherentStokes.setSelected(false);         checkSettings();     }//GEN-LAST:event_inputOutputBeamFormedDataActionPerformed
+
     private void inputOutputCoherentStokesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputOutputCoherentStokesActionPerformed
 
-        checkSettings();     }//GEN-LAST:event_inputOutputCoherentStokesActionPerformed
+        inputOutputBeamFormedData.setEnabled(!inputOutputCoherentStokes.isSelected());         inputOutputBeamFormedData.setSelected(false);         checkSettings();     }//GEN-LAST:event_inputOutputCoherentStokesActionPerformed
 
     private void inputOutputIncoherentStokesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputOutputIncoherentStokesActionPerformed
 
@@ -1568,6 +1630,8 @@ public class CobaltPanel extends javax.swing.JPanel implements IViewPanel {
     private jOTDBnode itsCorrectClocks = null;
     // _Output params
     private jOTDBnode itsOutputCorrelatedData = null;
+    private jOTDBnode itsOutputFilteredData = null;
+    private jOTDBnode itsOutputBeamFormedData = null;
     private jOTDBnode itsOutputCoherentStokes = null;
     private jOTDBnode itsOutputIncoherentStokes = null;
     //Correlator
@@ -1576,7 +1640,6 @@ public class CobaltPanel extends javax.swing.JPanel implements IViewPanel {
     private jOTDBnode itsBlocksPerIntegration = null;
     // BeamFormer
     private jOTDBnode itsCoherentDedisperseChannels = null;
-    private jOTDBnode itsFlysEye = null;
     // Coherentstokes
     private jOTDBnode itsWhichCoherent = null;
     private jOTDBnode itsChannelsPerSubbandCoherent = null;
@@ -1602,10 +1665,11 @@ public class CobaltPanel extends javax.swing.JPanel implements IViewPanel {
     private javax.swing.JCheckBox inputCorrectBandPass;
     private javax.swing.JCheckBox inputCorrectClocks;
     private javax.swing.JCheckBox inputDelayCompensation;
-    private javax.swing.JCheckBox inputFlysEye;
     private javax.swing.JTextField inputIntegrationTime;
+    private javax.swing.JCheckBox inputOutputBeamFormedData;
     private javax.swing.JCheckBox inputOutputCoherentStokes;
     private javax.swing.JCheckBox inputOutputCorrelatedData;
+    private javax.swing.JCheckBox inputOutputFilteredData;
     private javax.swing.JCheckBox inputOutputIncoherentStokes;
     private javax.swing.JCheckBox inputRealTime;
     private javax.swing.JTextField inputSubbandsPerFileCoherent;

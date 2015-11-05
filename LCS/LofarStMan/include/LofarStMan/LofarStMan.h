@@ -143,9 +143,6 @@ public:
   uint getNRow() const
     { return itsNrRows; }
   
-  // The storage manager is not a regular one.
-  virtual casa::Bool isRegular() const;
-  
   // The storage manager cannot add rows.
   virtual casa::Bool canAddRow() const;
   
@@ -340,8 +337,7 @@ private:
   int64  itsBLDataSize;   //# data size of a single baseline
   int64  itsDataStart;    //# start of data in a block
   int64  itsSampStart;    //# start of nsamples in a block
-  //# Buffer to hold nsample values.
-  casa::Block<casa::uChar> itsNSampleBuf1;
+  //# Buffer to hold swapped nsample values.
   casa::Block<casa::uShort> itsNSampleBuf2;
   casa::Block<casa::uInt>   itsNSampleBuf4;
   double  itsMaxNrSample; //# weight = nsample / itsMaxNrSample;
