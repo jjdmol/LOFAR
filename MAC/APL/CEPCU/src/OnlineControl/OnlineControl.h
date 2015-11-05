@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -27,10 +27,9 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/LofarLogger.h>
-#include <Common/ParameterSet.h>
 
-//# MessageBus Includes
-#include <MessageBus/FromBus.h>
+//# ACC Includes
+#include <Common/ParameterSet.h>
 
 //# GCF Includes
 #include <GCF/TM/GCF_Control.h>
@@ -89,16 +88,19 @@ private:
 
 	uint32	_startApplications();
 	void	_stopApplications();
+	void	_setupBGPmappingTables();
 	void   	_finishController	 (uint16_t 				result);
    	void	_handleDisconnect	 (GCFPortInterface& 	port);
+   	void	_handleAcceptRequest (GCFPortInterface& 	port);
+   	void	_handleDataIn		 (GCFPortInterface& 	port);
 	void	_setState	  		 (CTState::CTstateNr	newState);
 	void	_databaseEventHandler(GCFEvent&				event);
-	void	_clearCobaltDatapoints();
+	void	_passMetadatToOTDB   ();
 
 	// ----- datamembers -----
 	string						itsMyName;
-	int							itsObsID;
    	RTDBPropertySet*           	itsPropertySet;
+   	RTDBPropertySet*           	itsBGPApplPropSet;
 	bool					  	itsPropertySetInitialized;
 	PVSSservice*				itsPVSSService;
 	PVSSresponse*				itsPVSSResponse;
@@ -114,8 +116,9 @@ private:
 
 	CTState::CTstateNr		itsState;
 
-	FromBus*				itsMsgQueue;
-	GCFTimerPort*			itsQueueTimer;
+	// QUICK FIX #4022
+	GCFTCPPort*				itsFeedbackListener;
+	GCFTCPPort*				itsFeedbackPort;
 	int						itsFeedbackResult;
 
 	// ParameterSet variables

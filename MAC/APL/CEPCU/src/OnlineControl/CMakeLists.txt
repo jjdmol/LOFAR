@@ -12,7 +12,3 @@ lofar_add_bin_program(OnlineControl
   forkexec.cc)
 
 lofar_add_executable(tPVSSMapping tPVSSMapping.cc)
-
-install(FILES
-  OnlineControl.conf
-  DESTINATION etc)

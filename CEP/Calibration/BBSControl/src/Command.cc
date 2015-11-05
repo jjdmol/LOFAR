@@ -63,7 +63,7 @@ namespace LOFAR
     ParameterSet& operator>>(ParameterSet& ps, Command& cmd)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      cmd.read(ps,""); //TJD: not sure about prefix "" here
+      cmd.read(ps); 
       return ps;
     }
 

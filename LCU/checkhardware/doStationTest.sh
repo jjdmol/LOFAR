@@ -42,7 +42,7 @@ host=`hostname -s`
 
 # set filenames and dirs
 locallogdir="/opt/stationtest/data/"
-globallogdir="/globalhome/log/stationtest/"
+globallogdir="/globalhome/log/"
 
 if [ $LEVEL -ne 0 ]
 then
@@ -79,12 +79,7 @@ then
 fi
 
 # Check hardware
-if [ $SERVICE == "yes" ]
-then
-    checkHardware.py $level $start $stop -ls=info
-else
-    checkHardware.py $level $start $stop
-fi
+checkHardware.py $level $start $stop
 
 err=$?
 echo $err

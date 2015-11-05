@@ -1,19 +1,28 @@
-#!/bin/sh
+#!/bin/bash
 #
-# Test connectivity from Cobalt to Cobalt.
+# Test connectivity from Cobalt to Cobalt using ping
 #
 # $Id$
 
-. $(dirname $0)/../funcs.sh
+# Handle common signals
+trap 'exit 1' 1 2 3 15
 
-# Setup signal handler.
-trap 'print_status; exit' 1 2 3 15
-
-host=$(hostname)
 status=0
-for i in $(seq 1 9)
+for((i=1; i<9; i++)) 
 do
-  target=$(printf cbm%03d $i)
-  run_command "ssh $target /bin/true" 1 || status=1
+  host=$(printf cbm%03d $i)
+  cmd='
+    sts=0;\
+    for((j=1; j<9; j++));\
+      do\
+        target=$(printf cbm%03d $j);\
+        if ! ping -c1 $target > /dev/null 2>&1;\
+        then\
+          echo "'$host' --> $target   FAILED!";\
+          sts=1;\
+        fi;\
+      done;\
+    exit $sts'
+  ssh $host "$cmd" || status=1
 done
 exit $status

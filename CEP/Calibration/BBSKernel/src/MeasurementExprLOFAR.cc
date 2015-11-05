@@ -860,9 +860,7 @@ void MeasurementExprLOFAR::setCorrelations(bool circular)
     if(circular)
     {
         LOG_DEBUG_STR("Visibilities will be simulated using circular-RL"
-            " correlations. Instrument tables are interpreted as linear"
-            " so when applying them the visibilities will be converted to"
-            " linear and back.");
+            " correlations.");
         itsCorrelations.append(Correlation::RR);
         itsCorrelations.append(Correlation::RL);
         itsCorrelations.append(Correlation::LR);
