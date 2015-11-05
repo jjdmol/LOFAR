@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 """
 Program to test the RPC and Service class of the Messaging package.
 It defines 5 functions and first calls those functions directly to check

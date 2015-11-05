@@ -33,7 +33,7 @@ from lofar.messaging.messages import *
 from lofar.messaging.messagebus import *
 from lofar.messaging.exceptions import MessageBusError, InvalidMessage
 
-TIMEOUT = 0.1
+TIMEOUT = 1.0
 
 
 # ========  FromBus unit tests  ======== #
@@ -245,9 +245,8 @@ class SendReceiveMessage(unittest.TestCase):
         Helper class that implements the send/receive logic and message checks.
         :param send_msg: Message to send
         """
-        with self.tobus:
+        with self.tobus, self.frombus:
             self.tobus.send(send_msg)
-        with self.frombus:
             recv_msg = self.frombus.receive(timeout=TIMEOUT)
             self.frombus.ack(recv_msg)
         self.assertEqual(

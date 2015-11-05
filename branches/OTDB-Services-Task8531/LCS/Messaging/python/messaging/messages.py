@@ -159,6 +159,9 @@ class LofarMessage(object):
         else:
             try:
                 self.__dict__['_qpid_msg'] = qpid.messaging.Message(content)
+                if self.__dict__['_qpid_msg'].content_type is None:
+                    self.__dict__['_qpid_msg'].content_type='text/plain'
+
             except KeyError:
                 raise InvalidMessage(
                     "Unsupported content type: %r" % type(content))
