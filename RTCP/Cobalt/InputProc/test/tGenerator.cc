@@ -26,7 +26,7 @@
 #include <omp.h>
 
 #include <Common/LofarLogger.h>
-#include <Stream/StreamFactory.h>
+#include <CoInterface/Stream.h>
 #include <CoInterface/OMPThread.h>
 
 #include <InputProc/Station/PacketFactory.h>
@@ -92,8 +92,6 @@ int main( int, char **argv )
 
     #pragma omp section
     {
-      MACIO::RTmetadata rtmd(12345, "", "");
-
       // Read and verify the generated packets
 
       try {
@@ -103,8 +101,7 @@ int main( int, char **argv )
           struct RSP packet;
 
           if (!reader.readPacket(packet)) {
-            const unsigned boardNr = 0;
-            reader.logStatistics(boardNr, rtmd, "rtmd key prefix");
+            reader.logStatistics();
 
             ASSERT(false);
           }

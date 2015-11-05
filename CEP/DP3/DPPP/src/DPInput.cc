@@ -42,82 +42,76 @@ namespace LOFAR {
       return String();
     }
 
-    const Cube<bool>& DPInput::fetchFullResFlags (const DPBuffer& bufin,
-                                                  DPBuffer& bufout,
-                                                  NSTimer& timer,
-                                                  bool merge)
+    Cube<bool> DPInput::fetchFullResFlags (const DPBuffer& buf,
+                                           const RefRows& rowNrs,
+                                           NSTimer& timer,
+                                           bool merge)
     {
       // If already defined in the buffer, return those fullRes flags.
-      if (! bufin.getFullResFlags().empty()) {
-        return bufin.getFullResFlags();
+      if (! buf.getFullResFlags().empty()) {
+        return buf.getFullResFlags();
       }
       // No fullRes flags in buffer, so get them from the input.
       timer.stop();
-      bool fnd = getFullResFlags (bufin.getRowNrs(), bufout);
+      Cube<bool> fullResFlags (getFullResFlags(rowNrs));
       timer.start();
-      Cube<bool>& fullResFlags = bufout.getFullResFlags();
-      if (!fnd) {
+      if (fullResFlags.empty()) {
         // No fullRes flags in input; form them from the flags in the buffer.
         // Only use the XX flags; no averaging done, thus navgtime=1.
-        // (If any averaging was done, the flags would be in the buffer).
-        IPosition shp(bufin.getFlags().shape());
-        ASSERT (fullResFlags.shape()[0] == shp[1]  &&
-                fullResFlags.shape()[1] == 1  &&
-                fullResFlags.shape()[2] == shp[2]);
-        objcopy (fullResFlags.data(), bufin.getFlags().data(),
+        IPosition shp(buf.getFlags().shape());
+        IPosition ofShape(3, shp[1], 1, shp[2]);    // nchan,navgtime,nbl
+        fullResFlags.resize (ofShape);
+        objcopy (fullResFlags.data(), buf.getFlags().data(),
                  fullResFlags.size(), 1, shp[0]);    // only copy XX.
         return fullResFlags;
       }
       // There are fullRes flags.
       // If needed, merge them with the buffer's flags.
       if (merge) {
-        DPBuffer::mergeFullResFlags (fullResFlags, bufin.getFlags());
+        DPBuffer::mergeFullResFlags (fullResFlags, buf.getFlags());
       }
       return fullResFlags;
     }
 
-    const Cube<float>& DPInput::fetchWeights (const DPBuffer& bufin,
-                                              DPBuffer& bufout,
-                                              NSTimer& timer)
+    Cube<float> DPInput::fetchWeights (const DPBuffer& buf,
+                                       const RefRows& rowNrs,
+                                       NSTimer& timer)
     {
       // If already defined in the buffer, return those weights.
-      if (! bufin.getWeights().empty()) {
-        return bufin.getWeights();
+      if (! buf.getWeights().empty()) {
+        return buf.getWeights();
       }
       // No weights in buffer, so get them from the input.
       // It might need the data and flags in the buffer.
       timer.stop();
-      getWeights (bufin.getRowNrs(), bufout);
+      Cube<float> weights(getWeights(rowNrs, buf));
       timer.start();
-      return bufout.getWeights();
+      return weights;
     }
 
-    const Matrix<double>& DPInput::fetchUVW (const DPBuffer& bufin,
-                                             DPBuffer& bufout,
-                                             NSTimer& timer)
+    Matrix<double> DPInput::fetchUVW (const DPBuffer& buf,
+                                      const RefRows& rowNrs,
+                                      NSTimer& timer)
     {
       // If already defined in the buffer, return those UVW.
-      if (! bufin.getUVW().empty()) {
-        return bufin.getUVW();
+      if (! buf.getUVW().empty()) {
+        return buf.getUVW();
       }
       // No UVW in buffer, so get them from the input.
       timer.stop();
-      getUVW (bufin.getRowNrs(), bufin.getTime(), bufout);
+      Matrix<double> uvws(getUVW(rowNrs));
       timer.start();
-      return bufout.getUVW();
+      return uvws;
     }
 
-    void DPInput::getUVW (const RefRows&, double, DPBuffer&)
+    Matrix<double> DPInput::getUVW (const RefRows&)
       { throw Exception ("DPInput::getUVW not implemented"); }
 
-    void DPInput::getWeights (const RefRows&, DPBuffer&)
+    Cube<float> DPInput::getWeights (const RefRows&, const DPBuffer&)
       { throw Exception ("DPInput::getWeights not implemented"); }
 
-    bool DPInput::getFullResFlags (const RefRows&, DPBuffer&)
+    Cube<bool> DPInput::getFullResFlags (const RefRows&)
       { throw Exception ("DPInput::getFullResFlags not implemented"); }
-
-    void DPInput::getModelData (const RefRows&, Cube<Complex>&)
-      { throw Exception ("DPInput::getModelData not implemented"); }
 
     void DPInput::fillBeamInfo (vector<StationResponse::Station::Ptr>&,
                                 const Vector<String>&)

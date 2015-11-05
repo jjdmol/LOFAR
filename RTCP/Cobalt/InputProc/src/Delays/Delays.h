@@ -88,6 +88,8 @@ namespace LOFAR
       Delays(const Parset &ps, size_t stationIdx, const TimeStamp &from, size_t increment);
       ~Delays();
 
+      void start();
+
       // Output structures for adjusted directions and delays
       struct Delay {
         double  direction[3];

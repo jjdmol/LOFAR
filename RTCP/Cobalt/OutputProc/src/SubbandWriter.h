@@ -46,10 +46,8 @@ namespace LOFAR
     class SubbandWriter
     {
     public:
-      SubbandWriter(const Parset &parset,
+      SubbandWriter(const Parset &,
                     unsigned streamNr,
-                    RTmetadata &mdLogger,
-                    const std::string &mdKeyPrefix,
                     const std::string &logPrefix);
 
       void process();
@@ -58,12 +56,8 @@ namespace LOFAR
 
       ParameterSet feedbackLTA() const;
 
-      unsigned streamNr() const { return itsStreamNr; }
-
     private:
       static const unsigned maxReceiveQueueSize = 60;
-
-      const unsigned itsStreamNr;
 
       Pool<StreamableData> itsOutputPool;
 

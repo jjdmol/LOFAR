@@ -23,6 +23,7 @@ if(MPI_FOUND)
     Transpose/MPISendStation.cc
     Transpose/MPIReceiveStations.cc
     Transpose/MPIUtil.cc
+    Transpose/MPIUtil2.cc
   )
 endif(MPI_FOUND)
 
@@ -48,4 +49,6 @@ configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mpirun.sh.in
   ${CMAKE_BINARY_DIR}/bin/mpirun.sh @ONLY)
 
-lofar_add_bin_scripts(${CMAKE_BINARY_DIR}/bin/mpirun.sh)
+install(PROGRAMS
+  ${CMAKE_BINARY_DIR}/bin/mpirun.sh
+  DESTINATION bin)

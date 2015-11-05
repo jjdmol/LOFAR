@@ -23,29 +23,28 @@
 #include "Pipeline.h"
 
 #include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
 
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
 #include <Common/lofar_iomanip.h>
 #include <ApplCommon/PosixTime.h>
-#include <ApplCommon/PVSSDatapointDefs.h>
 #include <Stream/Stream.h>
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
-#include <Stream/StreamFactory.h>
 
-#include <CoInterface/Align.h>
-#include <CoInterface/BudgetTimer.h>
 #include <CoInterface/Stream.h>
 #include <GPUProc/gpu_utils.h>
-#include <GPUProc/global_defines.h>
 #include <GPUProc/Kernels/Kernel.h>
+#include <GPUProc/SubbandProcs/SubbandProc.h>
 #include <InputProc/SampleType.h>
 #include <InputProc/RSPTimeStamp.h>
 
+#ifdef HAVE_MPI
 #include <InputProc/Transpose/MPIReceiveStations.h>
 #include <InputProc/Transpose/MPIProtocol.h>
+#else
+#include <GPUProc/Station/StationInput.h>
+#endif
 
 #include <cmath>
 
@@ -66,140 +65,130 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    using namespace std;
-    using boost::format;
-    using boost::lexical_cast;
-
-    static TABTranspose::MultiSender::HostMap hostMap(const Parset &ps, const vector<size_t> &subbandIndices, int hostID)
-    {
-      TABTranspose::MultiSender::HostMap hostMap;
-
-      if (!ps.settings.beamFormer.enabled)
-        return hostMap;
-
-      // The requested service is an unique identifier for this observation,
-      // and for our process.
-      const string service = str(format("2nd-transpose-obs-%u-fromrank-%u")
-                             % ps.settings.observationID
-                             % hostID);
-
-      // The PortBroker listen port is the same for all outputProc nodes.
-      const uint16_t brokerPort = storageBrokerPort(ps.settings.observationID);
-
-      // Create the list of all outputProcs we send data to.
-      for (size_t fileIdx = 0; fileIdx < ps.settings.beamFormer.files.size(); ++fileIdx) {
-        const struct ObservationSettings::BeamFormer::File &file = ps.settings.beamFormer.files[fileIdx];
-        struct TABTranspose::MultiSender::Host host;
-
-        // Check whether we really will write to this file
-        bool willUse = false;
-        for (size_t i = 0; i < subbandIndices.size(); ++i) {
-          // All files to our SAPs and subbands (parts) will be relevant.
-          const unsigned globalSubbandIdx = subbandIndices[i];
-          const unsigned SAP = ps.settings.subbands[globalSubbandIdx].SAP;
-
-          if (file.sapNr != SAP)
-            continue;
-
-          if (globalSubbandIdx < file.firstSubbandIdx || globalSubbandIdx >= file.lastSubbandIdx)
-            continue;
-
-          willUse = true;
-          break;
-        }
-
-        if (!willUse)
-          continue;
-
-        // Add file to our list of outputs
-        host.hostName = file.location.host;
-        host.brokerPort = brokerPort;
-        host.service = service;
-
-        hostMap[fileIdx] = host;
-      }
-
-      return hostMap;
-    }
 
 
-    Pipeline::Pipeline(const Parset &ps, 
-         const std::vector<size_t> &subbandIndices, 
-         const std::vector<gpu::Device> &devices, 
-         Pool<struct MPIRecvData> &pool,
-         RTmetadata &mdLogger, const std::string &mdKeyPrefix,
-         unsigned hostID)
+    Pipeline::Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices)
       :
-      subbandProcs(std::max(1UL, (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size())),
       ps(ps),
       devices(devices),
       subbandIndices(subbandIndices),
       processingSubband0(std::find(subbandIndices.begin(), subbandIndices.end(), 0U) != subbandIndices.end()),
-      nrSubbandsPerSubbandProc(ceilDiv(subbandIndices.size(), subbandProcs.size())),
-      itsMdLogger(mdLogger),
-      itsMdKeyPrefix(mdKeyPrefix),
-      mpiPool(pool),
-      writePool(subbandIndices.size()),
-      factories(ps, nrSubbandsPerSubbandProc),
-
-      // Each work queue needs an output element for each subband it processes, because the GPU output can
-      // be in bulk: if processing is cheap, all subbands will be output right after they have been received.
-      //
-      // Allow queue to drop items older than 3 seconds.
-      multiSender(hostMap(ps, subbandIndices, hostID), ps, 3.0, hostID < ps.settings.nodes.size() ? ps.settings.nodes.at(hostID).out_nic : ""),
-      hostID(hostID)
+      workQueues(std::max(1UL, (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size())),
+      nrSubbandsPerSubbandProc(
+        (subbandIndices.size() + workQueues.size() - 1) / workQueues.size()),
+      mpiPool("Pipeline::mpiPool"),
+      writePool(subbandIndices.size())
     {
       ASSERTSTR(!devices.empty(), "Not bound to any GPU!");
-
-      // Write data point(s) for monitoring (PVSS).
-      itsMdLogger.log(itsMdKeyPrefix + PN_CGP_OBSERVATION_NAME,
-                      boost::lexical_cast<string>(ps.settings.observationID));
-      for (unsigned i = 0; i < subbandIndices.size(); ++i) {
-        const string sbStr = '[' + boost::lexical_cast<string>(i) + ']';
-
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_SUBBAND + sbStr, (int)subbandIndices[i]);
-
-        // After obs start these dynarray data points are written _conditionally_, so init.
-        // While we only have to write the last index (PVSSGateway will zero the rest),
-        // we'd have to find out who has the last subband. Don't bother, just init all.
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPING + sbStr, 0);
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_WRITTEN  + sbStr, 0.0f);
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPED  + sbStr, 0.0f);
-      }
-
-      string dataProductType;
-      if (ps.settings.correlator.enabled && ps.settings.beamFormer.enabled) {
-        dataProductType = "Correlated + Beamformed";
-      } else if (ps.settings.correlator.enabled) {
-        dataProductType = "Correlated";
-      } else if (ps.settings.beamFormer.enabled) {
-        dataProductType = "Beamformed";
-      } else {
-        dataProductType = "None";
-      }
-      itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DATA_PRODUCT_TYPE, dataProductType);
     }
 
     Pipeline::~Pipeline()
     {
-      if (ps.settings.realTime) {
+      if (ps.realTime()) {
         // Ensure all output is stopped, even if we didn't start processing.
         outputThreads.killAll();
       }
     }
 
+    template<typename SampleT> void Pipeline::MPIData::allocate( size_t nrStations, size_t nrBeamlets, size_t nrSamples )
+    {
+      data     = (char*)mpiAllocator.allocate( nrStations * nrBeamlets * nrSamples * sizeof(SampleT));
+      metaData = (char*)mpiAllocator.allocate( nrStations * nrBeamlets * sizeof(struct MPIProtocol::MetaData));
+    }
+
+    template void Pipeline::MPIData::allocate< SampleType<i16complex> >( size_t nrStations, size_t nrBeamlets, size_t nrSamples );
+    template void Pipeline::MPIData::allocate< SampleType<i8complex> >( size_t nrStations, size_t nrBeamlets, size_t nrSamples );
+    template void Pipeline::MPIData::allocate< SampleType<i4complex> >( size_t nrStations, size_t nrBeamlets, size_t nrSamples );
+
+    template<typename SampleT> void Pipeline::receiveInput( size_t nrBlocks )
+    {
+      // Need SubbandProcs to send work to
+      ASSERT(workQueues.size() > 0);
+
+      NSTimer receiveTimer("MPI: Receive station data", true, true);
+
+      // The length of a block in samples
+      size_t blockSize = ps.nrSamplesPerSubband();
+
+      // RECEIVE: Set up to receive our subbands as indicated by subbandIndices
+#ifdef HAVE_MPI
+      MPIReceiveStations receiver(ps.nrStations(), subbandIndices, blockSize);
+
+      for (size_t i = 0; i < 4; i++) {
+        SmartPtr<struct MPIData> mpiData = new MPIData;
+
+        mpiData->allocate<SampleT>(ps.nrStations(), subbandIndices.size(), blockSize);
+
+        mpiPool.free.append(mpiData, false);
+      }
+
+#else
+      DirectInput &receiver = DirectInput::instance();
+#endif
+
+      // Receive input from StationInput::sendInputToPipeline.
+      //
+      // Start processing from block -1, and don't process anything if the
+      // observation is empty.
+      for (ssize_t block = -1; nrBlocks > 0 && block < ssize_t(nrBlocks); block++) {
+        // Receive the samples from all subbands from the ant fields for this block.
+        LOG_DEBUG_STR("[block " << block << "] Collecting input buffers");
+
+        SmartPtr<struct MPIData> mpiData = mpiPool.free.remove();
+
+        mpiData->block = block;
+
+        MultiDimArray<SampleT,3> data(
+          boost::extents[ps.nrStations()][subbandIndices.size()][ps.nrSamplesPerSubband()],
+          (SampleT*)mpiData->data.get(), false);
+
+        MultiDimArray<struct MPIProtocol::MetaData,2> metaData(
+          boost::extents[ps.nrStations()][subbandIndices.size()],
+          (struct MPIProtocol::MetaData*)mpiData->metaData.get(), false);
+
+        // Receive all subbands from all antenna fields
+        LOG_DEBUG_STR("[block " << block << "] Receive input");
+
+        if (block > 2) receiveTimer.start();
+        receiver.receiveBlock<SampleT>(data, metaData);
+        if (block > 2) receiveTimer.stop();
+
+        LOG_INFO_STR("[block " << block << "] Input received");
+
+        mpiPool.filled.append(mpiData);
+      }
+
+      // Signal end of input
+      mpiPool.filled.append(NULL);
+    }
+
+    template void Pipeline::receiveInput< SampleType<i16complex> >( size_t nrBlocks );
+    template void Pipeline::receiveInput< SampleType<i8complex> >( size_t nrBlocks );
+    template void Pipeline::receiveInput< SampleType<i4complex> >( size_t nrBlocks );
+
+    void Pipeline::receiveInput( size_t nrBlocks )
+    {
+      switch (ps.nrBitsPerSample()) {
+      default:
+      case 16:
+        receiveInput< SampleType<i16complex> >(nrBlocks);
+        break;
+      case 8:
+        receiveInput< SampleType<i8complex> >(nrBlocks);
+        break;
+      case 4:
+        receiveInput< SampleType<i4complex> >(nrBlocks);
+        break;
+      }
+    }
+
+
     void Pipeline::allocateResources()
     {
       for (size_t i = 0; i < writePool.size(); i++) {
-        writePool[i].queue = new Queue< SmartPtr<SubbandProcOutputData> >(str(boost::format("Pipeline::writePool [local subband %u]") % i));
-      }
-
-      // Create the SubbandProcs, which in turn allocate the GPU buffers and
-      // functions.
-      for (size_t i = 0; i < subbandProcs.size(); ++i) {
-        gpu::Context context(devices[i % devices.size()]);
-
-        subbandProcs[i] = new SubbandProc(ps, context, factories, nrSubbandsPerSubbandProc);
+        // Allow 10 blocks to be in the best-effort queue.
+        // TODO: make this dynamic based on memory or time
+        writePool[i].bequeue = new BestEffortQueue< SmartPtr<SubbandProcOutputData> >(str(boost::format("Pipeline::writePool [local subband %u]") % i), 3, ps.realTime());
       }
     }
 
@@ -210,37 +199,41 @@ namespace LOFAR
       LOG_INFO("----- Allocating resources");
       allocateResources();
 
+
       //sections = program segments defined by the following omp section directive
       //           are distributed for parallel execution among available threads
       //parallel = directive explicitly instructs the compiler to parallelize the chosen block of code.
       //  The two sections in this function are done in parallel with a seperate set of threads.
 #     pragma omp parallel sections num_threads(6)
       {
+        /*
+         * BLOCK OF SUBBANDS -> MPIQUEUE
+         */
+#       pragma omp section
+        {
+          size_t nrBlocks = floor((ps.settings.stopTime - ps.settings.startTime) / ps.settings.blockDuration());
+
+          receiveInput(nrBlocks);
+        }
 
         /*
          * MPIQUEUE -> WORKQUEUE INPUTPOOL
          */
 #       pragma omp section
         {
-          OMPThread::ScopedName sn("transposeInput");
-
           transposeInput();
         }
 
         /*
          * WORKQUEUE INPUTPOOL -> PROCESSPOOL
          *
-         * Perform pre-processing, one thread per subbandProc.
+         * Perform pre-processing, one thread per workQueue.
          */
 #       pragma omp section
         {
-          OMPThread::ScopedName sn("preprocess");
-
-#         pragma omp parallel for num_threads(subbandProcs.size())
-          for (size_t i = 0; i < subbandProcs.size(); ++i) {
-            OMPThread::ScopedName sn(str(format("preprocess %u") % i));
-
-            SubbandProc &queue = *subbandProcs[i];
+#         pragma omp parallel for num_threads(workQueues.size())
+          for (size_t i = 0; i < workQueues.size(); ++i) {
+            SubbandProc &queue = *workQueues[i];
 
             // run the queue
             preprocessSubbands(queue);
@@ -253,21 +246,19 @@ namespace LOFAR
         /*
          * WORKQUEUE INPUTPOOL -> WORKQUEUE OUTPUTPOOL
          *
-         * Perform GPU processing, one thread per subbandProc.
+         * Perform GPU processing, one thread per workQueue.
          */
 #       pragma omp section
         {
-          OMPThread::ScopedName sn("process");
-
-#         pragma omp parallel for num_threads(subbandProcs.size())
-          for (size_t i = 0; i < subbandProcs.size(); ++i) 
+#         pragma omp parallel for num_threads(workQueues.size())
+          for (size_t i = 0; i < workQueues.size(); ++i) 
           {
-            OMPThread::ScopedName sn(str(format("process %u") % i));
-
-            SubbandProc &queue = *subbandProcs[i];
+            SubbandProc &queue = *workQueues[i];
 
             // run the queue
+            //queue.timers["CPU - total"]->start();
             processSubbands(queue);
+            //queue.timers["CPU - total"]->stop();
 
             // Signal end of output
             queue.outputPool.filled.append(NULL);
@@ -277,17 +268,13 @@ namespace LOFAR
         /*
          * WORKQUEUE OUTPUTPOOL -> WRITEPOOL
          *
-         * Perform post-processing, one thread per subbandProc.
+         * Perform post-processing, one thread per workQueue.
          */
 #       pragma omp section
         {
-          OMPThread::ScopedName sn("postprocess");
-
-#         pragma omp parallel for num_threads(subbandProcs.size())
-          for (size_t i = 0; i < subbandProcs.size(); ++i) {
-            OMPThread::ScopedName sn(str(format("postprocess %u") % i));
-
-            SubbandProc &queue = *subbandProcs[i];
+#         pragma omp parallel for num_threads(workQueues.size())
+          for (size_t i = 0; i < workQueues.size(); ++i) {
+            SubbandProc &queue = *workQueues[i];
 
             // run the queue
             postprocessSubbands(queue);
@@ -295,12 +282,12 @@ namespace LOFAR
 
           // Signal end of output
           for (size_t i = 0; i < writePool.size(); ++i) {
-            writePool[i].queue->append(NULL);
+            writePool[i].bequeue->noMore();
           }
 
           // Wait for data to propagate towards outputProc,
           // and kill lingering outputThreads.
-          if (ps.settings.realTime) {
+          if (ps.realTime()) {
             struct timespec deadline = TimeSpec::now();
             TimeSpec::inc(deadline, outputFlushTimeout);
 
@@ -320,28 +307,16 @@ namespace LOFAR
          */
 #       pragma omp section
         {
-          OMPThread::ScopedName sn("writeOutput");
-
 #         pragma omp parallel for num_threads(writePool.size())
           for (size_t i = 0; i < writePool.size(); ++i) {
-            OMPThread::ScopedName sn(str(format("writeOutput %u") % i));
-
-            writeOutput(subbandIndices[i], *writePool[i].queue, subbandProcs[i % subbandProcs.size()]->outputPool.free);
+            writeOutput(subbandIndices[i], writePool[i]);
           }
 
-          // Signal end-of-output to unlock
+          // Signal end-of-output (needed by BeamFormerPipeline), to unlock
           // outputThreads that are waiting for their NULL marker. Because of
-          // the 2nd transpose, writeBeamformedOutput cannot
+          // the 2nd transpose, the BeamformerPipeline::writeOutput cannot
           // insert the NULL itself; it needs to be a collective action.
-          multiSender.finish();
-        }
-
-        // Output processing
-#       pragma omp section
-        {
-          OMPThread::ScopedName sn("MS::process");
-
-          multiSender.process(&outputThreads);
+          doneWritingOutput();
         }
       }
     }
@@ -350,26 +325,23 @@ namespace LOFAR
     template<typename SampleT>
     void Pipeline::transposeInput()
     {
-      SmartPtr<struct MPIRecvData> input;
+      SmartPtr<struct MPIData> input;
 
-      BudgetTimer copyTimer(
-        "transposeInput",
-        ps.settings.blockDuration() / subbandIndices.size(),
-        true, true);
+      NSTimer copyTimer("transpose input data", true, true);
 
       // Keep fetching input objects until end-of-output
       while ((input = mpiPool.filled.remove()) != NULL) {
         const ssize_t block = input->block;
 
-        vector<size_t> nrFlaggedSamples(ps.settings.antennaFields.size(), 0);
+        vector<size_t> nrFlaggedSamples(ps.nrStations(), 0);
 
 #ifdef DO_PROCESSING
         MultiDimArray<SampleT,3> data(
-          boost::extents[ps.settings.antennaFields.size()][subbandIndices.size()][ps.settings.blockSize],
+          boost::extents[ps.nrStations()][subbandIndices.size()][ps.nrSamplesPerSubband()],
           (SampleT*)input->data.get(), false);
 
         MultiDimArray<struct MPIProtocol::MetaData,2> metaData(
-          boost::extents[ps.settings.antennaFields.size()][subbandIndices.size()],
+          boost::extents[ps.nrStations()][subbandIndices.size()],
           (struct MPIProtocol::MetaData*)input->metaData.get(), false);
 
         // The set of InputData objects we're using for this block.
@@ -377,7 +349,7 @@ namespace LOFAR
 
         for (size_t subbandIdx = 0; subbandIdx < subbandIndices.size(); ++subbandIdx) {
           // Fetch an input object to store this subband.
-          SubbandProc &queue = *subbandProcs[subbandIdx % subbandProcs.size()];
+          SubbandProc &queue = *workQueues[subbandIdx % workQueues.size()];
 
           // Fetch an input object to fill from the selected queue.
           SmartPtr<SubbandProcInputData> subbandData = queue.inputPool.free.remove();
@@ -387,38 +359,21 @@ namespace LOFAR
           id.block                 = block;
           id.globalSubbandIdx      = subbandIndices[subbandIdx];
           id.localSubbandIdx       = subbandIdx;
-          id.subbandProcSubbandIdx = subbandIdx / subbandProcs.size();
+          id.subbandProcSubbandIdx = subbandIdx / workQueues.size();
           subbandData->blockID = id;
 
           copyTimer.start();
-          // transposeInput requires a significant amount of CPU to copy the buffers.
-          // We need to spread the load across a few cores to keep running within
-          // budget if there are too many stations.
-#         pragma omp parallel for num_threads(4)
-          for (size_t stat = 0; stat < ps.settings.antennaFields.size(); ++stat) {
-            OMPThread::ScopedName sn("transposeInput");
-
-            if (metaData[stat][subbandIdx].EOS) {
-              // Flag everything -- note that delays etc will not matter, so no need to set them
-              subbandData->metaData[stat].flags.include(0, ps.settings.blockSize);
-            } else {
-              // Copy the metadata
-              subbandData->metaData[stat] = metaData[stat][subbandIdx];
-            }
-
-            const size_t nflags = subbandData->metaData[stat].flags.count();
-
-            nrFlaggedSamples[stat] += nflags;
+          for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+            // Copy the data
 #if 1
-            // Flagged input samples will be set to zero (in preprocessSubband),
-            // so no need to copy anything if everything is flagged.
-            if (nflags < ps.settings.blockSize) {
-              // Copy the data
-              memcpy(&subbandData->inputSamples[stat][0][0][0],
-                     &data[stat][subbandIdx][0],
-                     ps.settings.blockSize * sizeof(SampleT));
-            }
+            memcpy(&subbandData->inputSamples[stat][0][0][0],
+                   &data[stat][subbandIdx][0],
+                   ps.nrSamplesPerSubband() * sizeof(SampleT));
 #endif
+            // Copy the metadata
+            subbandData->metaData[stat] = metaData[stat][subbandIdx];
+
+            nrFlaggedSamples[stat] += subbandData->metaData[stat].flags.count();
           }
           copyTimer.stop();
 
@@ -433,8 +388,8 @@ namespace LOFAR
         stringstream flagStr;  // antenna fields with >0% flags
         stringstream cleanStr; // antenna fields with  0% flags
 
-        for (size_t stat = 0; stat < ps.settings.antennaFields.size(); ++stat) {
-          const double flagPerc = 100.0 * nrFlaggedSamples[stat] / subbandIndices.size() / ps.settings.blockSize;
+        for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+          const double flagPerc = 100.0 * nrFlaggedSamples[stat] / subbandIndices.size() / ps.nrSamplesPerSubband();
 
           if (flagPerc == 0.0)
             cleanStr << str(boost::format("%s, ") % ps.settings.antennaFields[stat].name);
@@ -452,10 +407,14 @@ namespace LOFAR
       }
 
       // Signal end of input
-      for (size_t i = 0; i < subbandProcs.size(); ++i) {
-        subbandProcs[i]->inputPool.filled.append(NULL);
+      for (size_t i = 0; i < workQueues.size(); ++i) {
+        workQueues[i]->inputPool.filled.append(NULL);
       }
     }
+
+    template void Pipeline::transposeInput< SampleType<i16complex> >();
+    template void Pipeline::transposeInput< SampleType<i8complex> >();
+    template void Pipeline::transposeInput< SampleType<i4complex> >();
 
     void Pipeline::transposeInput()
     {
@@ -474,17 +433,14 @@ namespace LOFAR
     }
 
 
-    void Pipeline::preprocessSubbands(SubbandProc &subbandProc)
+    void Pipeline::preprocessSubbands(SubbandProc &workQueue)
     {
       SmartPtr<SubbandProcInputData> input;
 
-      BudgetTimer preprocessTimer(
-        "preprocess",
-        ps.settings.blockDuration() / nrSubbandsPerSubbandProc,
-        true, true);
+      NSTimer preprocessTimer("preprocess", true, true);
 
       // Keep fetching input objects until end-of-output
-      while ((input = subbandProc.inputPool.filled.remove()) != NULL) {
+      while ((input = workQueue.inputPool.filled.remove()) != NULL) {
         const struct BlockID &id = input->blockID;
 
         LOG_DEBUG_STR("[" << id << "] Pre processing start");
@@ -495,7 +451,7 @@ namespace LOFAR
         const unsigned SAP = ps.settings.subbands[id.globalSubbandIdx].SAP;
 
         // Translate the metadata as provided by receiver
-        for (size_t stat = 0; stat < ps.settings.antennaFields.size(); ++stat) {
+        for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
           input->applyMetaData(ps, stat, SAP, input->metaData[stat]);
         }
 
@@ -503,7 +459,7 @@ namespace LOFAR
         /* PREPROCESS END */
 
         // Hand off output to processing
-        subbandProc.processPool.filled.append(input);
+        workQueue.processPool.filled.append(input);
         ASSERT(!input);
 
         LOG_DEBUG_STR("[" << id << "] Forwarded input to processing");
@@ -511,23 +467,20 @@ namespace LOFAR
     }
 
 
-    void Pipeline::processSubbands(SubbandProc &subbandProc)
+    void Pipeline::processSubbands(SubbandProc &workQueue)
     {
       SmartPtr<SubbandProcInputData> input;
 
-      BudgetTimer processTimer(
-        "process",
-        ps.settings.blockDuration() / nrSubbandsPerSubbandProc,
-        true, true);
+      NSTimer processTimer("process", true, true);
 
       // Keep fetching input objects until end-of-input
-      while ((input = subbandProc.processPool.filled.remove()) != NULL) {
+      while ((input = workQueue.processPool.filled.remove()) != NULL) {
         const struct BlockID id = input->blockID;
 
         LOG_DEBUG_STR("[" << id << "] Processing start");
 
         // Also fetch an output object to store results
-        SmartPtr<SubbandProcOutputData> output = subbandProc.outputPool.free.remove();
+        SmartPtr<SubbandProcOutputData> output = workQueue.outputPool.free.remove();
 
         // Only _we_ signal end-of-data, so we should _never_ receive it
         ASSERT(output != NULL); 
@@ -536,20 +489,20 @@ namespace LOFAR
 
         // Perform calculations
         processTimer.start();
-        subbandProc.processSubband(*input, *output);
+        workQueue.processSubband(*input, *output);
         processTimer.stop();
 
         if (id.block < 0) {
           // Ignore block; only used to initialize FIR history samples
-          subbandProc.outputPool.free.append(output);
+          workQueue.outputPool.free.append(output);
         } else {
           // Hand off output to post processing
-          subbandProc.outputPool.filled.append(output);
+          workQueue.outputPool.filled.append(output);
         }
         ASSERT(!output);
 
         // Give back input data for a refill
-        subbandProc.inputPool.free.append(input);
+        workQueue.inputPool.free.append(input);
         ASSERT(!input);
 
         LOG_DEBUG_STR("[" << id << "] Forwarded output to post processing");
@@ -557,296 +510,61 @@ namespace LOFAR
     }
 
 
-    void Pipeline::postprocessSubbands(SubbandProc &subbandProc)
+    void Pipeline::postprocessSubbands(SubbandProc &workQueue)
     {
       SmartPtr<SubbandProcOutputData> output;
 
-      BudgetTimer postprocessTimer(
-        "postprocess",
-        ps.settings.blockDuration() / nrSubbandsPerSubbandProc,
-        true, true);
+      NSTimer postprocessTimer("postprocess", true, true);
+
+      size_t nrBlocksForwarded = 0;
+      size_t nrBlocksDropped = 0;
+      time_t lastLogTime = 0;
 
       // Keep fetching output objects until end-of-output
-      while ((output = subbandProc.outputPool.filled.remove()) != NULL) {
+      while ((output = workQueue.outputPool.filled.remove()) != NULL) {
         const struct BlockID id = output->blockID;
 
         LOG_DEBUG_STR("[" << id << "] Post processing start");
 
         postprocessTimer.start();
-        subbandProc.postprocessSubband(*output);
+        bool handOffOutput = workQueue.postprocessSubband(*output);
         postprocessTimer.stop();
 
+        if (!handOffOutput) {
+          workQueue.outputPool.free.append(output);
+          ASSERT(!output);
+          continue;
+        }
+
+        // Hand off output, force in-order as Storage expects it that way
         struct Output &pool = writePool[id.localSubbandIdx];
 
-        pool.queue->append(output);
+        if (pool.bequeue->append(output)) {
+          nrBlocksForwarded++;
+        } else {
+          nrBlocksDropped++;
+          // LOG_WARN_STR("[block " << block << "] Dropped for subband " <<
+          //              globalSubbandIdx);
+          // Give back to queue
+          workQueue.outputPool.free.append(output);
+        }
         ASSERT(!output);
 
         LOG_DEBUG_STR("[" << id << "] Forwarded output to writer");
-      }
-    }
 
-    void Pipeline::writeOutput(
-      unsigned globalSubbandIdx,
-      Queue< SmartPtr<SubbandProcOutputData> > &inputQueue,
-      Queue< SmartPtr<SubbandProcOutputData> > &outputQueue )
-    {
-      Queue< SmartPtr<SubbandProcOutputData> > queue(str(boost::format("Pipeline::writeOutput [subband %u]") % globalSubbandIdx));
-
-#     pragma omp parallel sections num_threads(2)
-      {
-        // Let parent do work
-#       pragma omp section
-        {
-          OMPThread::ScopedName sn(str(format("writeBF %u") % globalSubbandIdx));
-
-          writeBeamformedOutput(globalSubbandIdx, inputQueue, queue, outputQueue);
-          queue.append(NULL);
-        }
-
-        // Output processing
-#       pragma omp section
-        {
-          OMPThread::ScopedName sn(str(format("writeCorr %u") % globalSubbandIdx));
-
-          writeCorrelatedOutput(globalSubbandIdx, queue, outputQueue);
+        // Log every 5 seconds (note: time() returns time in sec.)
+        if (time(0) > lastLogTime + 5) {
+          lastLogTime = time(0);
+          LOG_INFO_STR("Forwarded " << nrBlocksForwarded << 
+                       " blocks, dropped " << nrBlocksDropped << " blocks");
         }
       }
     }
 
-    // Write the blocks of rtcp bf output via the MultiSender towards outputProc.
-    // Removes the blocks the queue in 'output'.
-    // All output corresponds to the subband indexed by globalSubbandIdx in the list of sb.
-    void Pipeline::writeBeamformedOutput(
-      unsigned globalSubbandIdx,
-      Queue< SmartPtr<SubbandProcOutputData> > &inputQueue,
-      Queue< SmartPtr<SubbandProcOutputData> > &outputQueue,
-      Queue< SmartPtr<SubbandProcOutputData> > &spillQueue )
+
+    void Pipeline::doneWritingOutput()
     {
-      NSTimer transposeTimer(str(format("Pipeline::writeBeamFormedOutput(subband %u) transpose/file") % globalSubbandIdx), true, true);
-      NSTimer forwardTimer(str(format("Pipeline::writeBeamFormedOutput(subband %u) forward/file") % globalSubbandIdx), true, true);
-
-      const unsigned SAP = ps.settings.subbands[globalSubbandIdx].SAP;
-
-      // Statistics for forwarding blocks to writeCorrelatedOutput
-      struct LossStatistics {
-        bool dropping;
-        size_t blocksWritten;
-        size_t blocksDropped;
-      };
-      
-      struct LossStatistics correlatorLoss = {false, 0, 0};
-      struct LossStatistics beamFormerLoss = {false, 0, 0};
-
-      SmartPtr<SubbandProcOutputData> data;
-
-      // Process pool elements until end-of-output
-      while ((data = inputQueue.remove()) != NULL) 
-      {
-        const struct BlockID id = data->blockID;
-        ASSERT( globalSubbandIdx == id.globalSubbandIdx );
-        ASSERT( id.block >= 0 ); // Negative blocks should not reach storage
-
-        LOG_DEBUG_STR("[" << id << "] Writing start");
-
-        // 'dropping' will be toggled once we detect dropped data
-        correlatorLoss.dropping = false;
-        beamFormerLoss.dropping = false;
-
-        if (ps.settings.beamFormer.enabled) {
-          // Try all files until we found the file(s) this block belongs to.
-          // TODO: This could be optimized, either by recognizing that only the Stokes can
-          // change the file idx, or by preparing a better data structure for 1 lookup here.
-          // Idem for the data copying (assign()) below.
-          for (size_t fileIdx = 0;
-               fileIdx < ps.settings.beamFormer.files.size();
-               ++fileIdx) 
-          {
-            const struct ObservationSettings::BeamFormer::File &file = 
-                  ps.settings.beamFormer.files[fileIdx];
-
-            // Skip SAPs and subbands (parts) that we are not responsible for.
-            if (file.sapNr != SAP)
-              continue;
-
-            if (globalSubbandIdx < file.firstSubbandIdx || globalSubbandIdx >= file.lastSubbandIdx)
-              continue;
-
-            // Note that the 'file' encodes 1 Stokes of 1 TAB, so each TAB we've
-            // produced can be visited 1 or 4 times.
-
-            // Compute shape of block
-            const ObservationSettings::BeamFormer::StokesSettings &stokes =
-              file.coherent
-              ? ps.settings.beamFormer.coherentSettings
-              : ps.settings.beamFormer.incoherentSettings;
-
-            const size_t nrChannels = stokes.nrChannels;
-            const size_t nrSamples =  stokes.nrSamples;
-
-            // Our data has the shape
-            //   data->(in)coherentData[tab][stokes][sample][channel]
-            //
-            // To transpose our data, we copy a slice representing
-            //   slice[sample][channel]
-            // and send it to outputProc to combine with the other subbands.
-            //
-            // We create a copy to be able to release outputData, since our
-            // slices can be blocked by writes to any number of outputProcs.
-            SmartPtr<struct TABTranspose::Subband> subband = 
-                  new TABTranspose::Subband(nrSamples, nrChannels);
-
-            // These 3 values are guarded with ASSERTSTR() on the other side at
-            // outputProc (Block::addSubband()).
-            subband->id.fileIdx  = file.streamNr;
-            // global to local sb idx: here local means to the TAB Transpose,
-            // which only knows about #subbands and #blocks in a file (part).
-            unsigned sbIdxInFile = globalSubbandIdx - file.firstSubbandIdx;
-            subband->id.subband  = sbIdxInFile;
-            subband->id.block    = id.block;
-
-            // Create view of subarray 
-            MultiDimArray<float, 2> srcData(
-                boost::extents[nrSamples][nrChannels],
-                file.coherent
-                     ? data->coherentData[file.coherentIdxInSAP][file.stokesNr].origin()
-                     : data->incoherentData[file.incoherentIdxInSAP][file.stokesNr].origin(),
-                false);
-
-            // Copy data to block
-            transposeTimer.start();
-            subband->data.assign(srcData.origin(), srcData.origin() + srcData.num_elements());
-            transposeTimer.stop();
-
-            // Forward block to MultiSender, who takes ownership.
-            forwardTimer.start();
-            if (multiSender.append(subband)) {
-              // Added a block
-              beamFormerLoss.blocksWritten++;
-            } else {
-              // Dropped a block
-              beamFormerLoss.dropping = true;
-              beamFormerLoss.blocksDropped++;
-            }
-            forwardTimer.stop();
-
-            // If `subband' is still alive, it has been dropped instead of sent.
-            ASSERT(ps.settings.realTime || !subband); 
-          }
-        }
-
-        /*
-         * Forward the output to writeCorrelatedOutput (if visibilities are produced).
-         *
-         * Note that loss of throughput must be detected here, since writeCorrelatedOutput()
-         * can freeze in its write() routine. Detecting correlator loss here also allows
-         * us to derive a global loss figure for this subband.
-         */
-        if (ps.settings.correlator.enabled) {
-          const double maxRetentionTime = 3.0 + ps.settings.blockDuration();
-          using namespace TimeSpec;
-          if (ps.settings.realTime && TimeSpec::now() - outputQueue.oldest() > maxRetentionTime) {
-            // Drop: return outputData back to the subbandProc.
-            spillQueue.append(data);
-            correlatorLoss.dropping = true;
-            correlatorLoss.blocksDropped++;
-          } else {
-            // Forward to writeCorrelatedOutput
-            outputQueue.append(data);
-            correlatorLoss.blocksWritten++;
-          }
-        } else {
-          // Return outputData back to the subbandProc.
-          spillQueue.append(data);
-        }
-
-        ASSERT(!data);
-
-        /*
-         * Update the loss figures for this subband.
-         */
-        const double blockDuration = ps.settings.blockDuration();
-
-        // Prevent division by zero for observations without beamformer
-        const size_t nrFiles = std::max(multiSender.nrFiles(), 1UL);
-
-        const string localSbStr = '[' + lexical_cast<string>(id.localSubbandIdx) + ']';
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPING + localSbStr,
-                        correlatorLoss.dropping || beamFormerLoss.dropping);
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_WRITTEN  + localSbStr,
-                        static_cast<float>(correlatorLoss.blocksWritten * blockDuration) +
-                        static_cast<float>(beamFormerLoss.blocksWritten * blockDuration / nrFiles)
-                       );
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPED  + localSbStr,
-                        static_cast<float>(correlatorLoss.blocksDropped * blockDuration) +
-                        static_cast<float>(beamFormerLoss.blocksDropped * blockDuration / nrFiles)
-                       );
-
-        if (id.localSubbandIdx == 0 || id.localSubbandIdx == subbandIndices.size() - 1)
-          LOG_INFO_STR("[" << id << "] Done"); 
-        else
-          LOG_DEBUG_STR("[" << id << "] Done"); 
-      }
-    }
-
-
-    void Pipeline::writeCorrelatedOutput(
-      unsigned globalSubbandIdx,
-      Queue< SmartPtr<SubbandProcOutputData> > &inputQueue,
-      Queue< SmartPtr<SubbandProcOutputData> > &outputQueue )
-    {
-      NSTimer writeTimer(str(format("Pipeline::writeCorrelatedOutput(subband %u)") % globalSubbandIdx), true, true);
-
-      // Register our thread to be killable at exit
-      OMPThreadSet::ScopedRun sr(outputThreads);
-
-      SmartPtr<Stream> outputStream;
-
-      if (ps.settings.correlator.enabled) {
-        const string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, globalSubbandIdx,
-          hostID < ps.settings.nodes.size() ? ps.settings.nodes.at(hostID).out_nic : "");
-
-        try {
-          outputStream = createStream(desc, false, 0);
-        } catch (Exception &ex) {
-          LOG_ERROR_STR("Error writing subband " << globalSubbandIdx << ", dropping all subsequent blocks: " << ex.what());
-          return;
-        }
-      }
-
-      SmartPtr<SubbandProcOutputData> data;
-
-      // Process pool elements until end-of-output
-      while ((data = inputQueue.remove()) != NULL) {
-        const struct BlockID id = data->blockID;
-        ASSERT( globalSubbandIdx == id.globalSubbandIdx );
-
-        if (data->emit_correlatedData) {
-          ASSERT(ps.settings.correlator.enabled);
-          ASSERT(outputStream.get());
-
-          LOG_DEBUG_STR("[" << id << "] Writing start");
-
-          // Write block to outputProc 
-          try {
-            writeTimer.start();
-            for (size_t i = 0; i < data->correlatedData.subblocks.size(); ++i)
-              data->correlatedData.subblocks[i]->write(outputStream.get(), true);
-            writeTimer.stop();
-          } catch (Exception &ex) {
-            // No reconnect, as outputProc doesn't yet re-listen when the conn drops.
-            LOG_ERROR_STR("Error writing subband " << id.globalSubbandIdx << ", dropping all subsequent blocks: " << ex.what());
-            return;
-          }
-
-          if (id.localSubbandIdx == 0 || id.localSubbandIdx == subbandIndices.size() - 1)
-            LOG_INFO_STR("[" << id << "] Done"); 
-          else
-            LOG_DEBUG_STR("[" << id << "] Done"); 
-        }
-
-        outputQueue.append(data);
-        ASSERT(!data);
-      }
     }
   }
 }
+

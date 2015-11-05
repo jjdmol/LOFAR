@@ -21,9 +21,9 @@
 #ifndef LOFAR_COINTERFACE_TABTRANSPOSE_H
 #define LOFAR_COINTERFACE_TABTRANSPOSE_H
 
-#include <cstring>
-#include <map>
 #include <iostream>
+#include <map>
+#include <cstring>
 #include <Common/Thread/Thread.h>
 #include <Common/Thread/Mutex.h>
 #include <Common/Thread/Condition.h>
@@ -159,7 +159,7 @@ namespace LOFAR
 
         ~BlockCollector();
 
-        /*
+	      /*
          * Add a subband of any block.
          */
         void addSubband( SmartPtr<Subband> &subband );
@@ -182,7 +182,7 @@ namespace LOFAR
         std::map<size_t, SmartPtr<Block> > blocks;
 
         BestEffortQueue< SmartPtr<Subband> > inputQueue;
-        BestEffortQueue< SmartPtr<Block> >   outputQueue;
+        Queue< SmartPtr<Block> >             outputQueue;
         Pool<BeamformedData> &outputPool;
 
         const size_t fileIdx;
@@ -321,6 +321,7 @@ namespace LOFAR
       /*
        * MultiSender sends data to various receivers.
        */
+
       class MultiSender {
       public:
         // A host to send data to, that is, enough information
@@ -349,11 +350,9 @@ namespace LOFAR
         // Set up a TAB sender to multiple hosts:
         //
         // hostMap:          the mapping fileIdx -> Host
-        // parset:           the parset (i.e. observation configuration)
+        // canDrop:          whether data dropping is allowed
         // maxRetentionTime: drop data older than this from the queue
-        // bind_local_iface: local NIC to bind to (or "" for any)
-        MultiSender( const HostMap &hostMap, const Parset &parset,
-                     double maxRetentionTime = 3.0, const std::string &bind_local_iface = "" );
+        MultiSender( const HostMap &hostMap, bool canDrop = false, double maxRetentionTime = 3.0 );
         ~MultiSender();
 
         // Send the data from the queues to the receiving hosts. Will run until
@@ -364,24 +363,17 @@ namespace LOFAR
         void process( OMPThreadSet *threadSet = 0 );
 
         // Add a subband for sending. Ownership of the data is taken.
-        //
-        // Returns `true' if the subband was appended without dropping data.
-        // Returns `false' if a subband was dropped to make space for this one.
-        bool append( SmartPtr<struct Subband> &subband );
+        void append( SmartPtr<struct Subband> &subband );
 
         // Flush the queues.
         void finish();
-
-        // Report the number of files we're managing
-        size_t nrFiles() const { return hostMap.size(); }
 
       protected:
         // fileIdx -> host mapping
         const HostMap hostMap;
 
-        const Parset &itsParset;
-
-        std::map<size_t, RunningStatistics> drop_rates; // [fileIdx]
+        // if we're allowed to drop in the first place
+        const bool canDrop;
 
         // MultiSender has a queue per host it sends to. If it appends an element
         // to a queue, it will discard the head if it is older than maxRententionTime.
@@ -390,14 +382,13 @@ namespace LOFAR
         // 'maxRetentionTime' seconds.
         const double maxRetentionTime;
 
-        // Local NIC to bind network connections to, or "" if no binding is required
-        const std::string bind_local_iface;
+        std::map<size_t, RunningStatistics> drop_rates; // [fileIdx]
 
         // Set of hosts to connect to (the list of unique values in hostMap)
         std::vector<struct Host> hosts;
 
         // A queue for data to be sent to each host
-        std::map<struct Host, SmartPtr< Queue< SmartPtr<struct Subband> > > > queues;
+	      std::map<struct Host, SmartPtr< Queue< SmartPtr<struct Subband> > > > queues;
       };
 
     } // namespace TABTranspose

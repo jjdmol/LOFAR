@@ -32,6 +32,7 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/Storage/StorageProcesses.h>
+#include <GPUProc/Storage/SSH.h>
 
 char pubkey[1024];
 char privkey[1024];
@@ -56,8 +57,6 @@ void test_protocol()
     THROW_SYSCALL("getcwd");
 
   p.add("Observation.ObsID",                 "12345");
-  p.add("Observation.startTime",             "2015-01-01 00:00:00");
-  p.add("Observation.stopTime",              "2015-01-01 00:01:00");
   p.add("Cobalt.OutputProc.userName",        USER);
   p.add("Cobalt.OutputProc.sshPublicKey",    pubkey);
   p.add("Cobalt.OutputProc.sshPrivateKey",   privkey);
@@ -88,10 +87,16 @@ void test_protocol()
   	    // Give Storage time to log its parset
 	    sleep(2);
 	
-	    sp.forwardFinalMetaData();
+	    // Give 10 seconds to exchange final meta data
+	    sp.forwardFinalMetaData(time(0) + 10);
 	
 	    // Give 10 seconds to wrap up
 	    sp.stop(time(0) + 10);
+	
+	    // Obtain LTA feedback
+	    ParameterSet feedbackLTA(sp.feedbackLTA());
+	
+	    ASSERT(feedbackLTA.getString("foo","") == "bar");
   }
 }
 
@@ -101,8 +106,16 @@ int main()
 
   // prevent stalls
   alarm(60);
+
+  SSH_Init();
+
+  if (!discover_ssh_keys(pubkey, sizeof pubkey, privkey, sizeof privkey))
+    return 3;
+
  
   test_protocol();
+
+  SSH_Finalize();
 
   return 0;
 }

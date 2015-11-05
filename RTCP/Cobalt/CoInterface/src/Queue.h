@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@
 #include <CoInterface/TimeFuncs.h>
 #include <CoInterface/RunningStatistics.h>
 
-#include <deque>
+#include <list>
 #include <time.h>
 #include <string>
 
@@ -43,7 +43,7 @@ template <typename T> class Queue
 {
   public:
     // Create a named queue
-    Queue(const std::string &name, bool warnIfEmptyOnRemove = false);
+    Queue(const std::string &name);
 
     // Log queue statistics
     ~Queue();
@@ -67,7 +67,6 @@ template <typename T> class Queue
     unsigned size() const;
     bool     empty() const;
     struct timespec oldest() const;
-    std::string name() const;
 
   private:
     Queue(const Queue&);
@@ -92,8 +91,6 @@ template <typename T> class Queue
     // The average queue size on append() (excluding the inserted element)
     RunningStatistics queue_size_on_append;
 
-    const bool warn_if_empty;
-
     struct Element {
       T value;
       struct timespec arrival_time;
@@ -101,7 +98,7 @@ template <typename T> class Queue
 
     mutable Mutex              itsMutex;
     Condition	                 itsNewElementAppended;
-    std::deque<struct Element> itsQueue;
+    std::list<struct Element>  itsQueue;
 
     // append() without grabbing itsMutex
     void     unlocked_append(const T&, bool timed);
@@ -117,15 +114,14 @@ template <typename T> class Queue
 };
 
 
-template <typename T> Queue<T>::Queue(const std::string &name, bool warnIfEmptyOnRemove)
+template <typename T> Queue<T>::Queue(const std::string &name)
 :
   itsName(name),
   itsSize(0),
   retention_time("s"),
   remove_on_empty_queue("%"),
   remove_wait_time("s"),
-  queue_size_on_append("elements"),
-  warn_if_empty(warnIfEmptyOnRemove)
+  queue_size_on_append("elements")
 {
 }
 
@@ -178,7 +174,7 @@ template <typename T> inline void Queue<T>::unlocked_append(const T& element, bo
   e.arrival_time = timed ? TimeSpec::now() : TimeSpec::big_bang;
 
   // Record the queue size
-  queue_size_on_append.push(itsSize);
+  queue_size_on_append.push(itsQueue.size());
 
   push_back(e);
 }
@@ -240,11 +236,8 @@ template <typename T> inline T Queue<T>::remove(const struct timespec &deadline,
 
   ScopedLock scopedLock(itsMutex);
 
-  const bool beganEmpty = itsSize == 0;
+  const bool beganEmpty = itsQueue.empty();
   const struct timespec begin = TimeSpec::now();
-
-  if (beganEmpty && warn_if_empty)
-    LOG_WARN_STR("remove() called on empty queue: " << name());
 
   while (itsQueue.empty())
     if (!itsNewElementAppended.wait(itsMutex, deadline))
@@ -290,12 +283,6 @@ template <typename T> inline struct timespec Queue<T>::oldest() const
   ScopedLock scopedLock(itsMutex);
 
   return itsQueue.empty() ? TimeSpec::now() : itsQueue.front().arrival_time;
-}
-
-
-template <typename T> inline std::string Queue<T>::name() const
-{
-  return itsName;
 }
 
 } // namespace Cobalt
