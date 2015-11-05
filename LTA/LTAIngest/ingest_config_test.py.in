@@ -50,16 +50,11 @@ else:
   master = False
 
 ## Make directories if needed, should include trailing /
-logroot = '@LTAINGEST_LOG_ROOT_DIR@'
-if not os.path.exists(logroot) and logroot[:4] != '/tmp':
-  print 'changing test ingest logroot from %s to /tmp/ingest/' % logroot
-  logroot = '/tmp/ingest/'
-
-jobsdir   = os.path.join(logroot, 'jobs/')
-retrydir  = os.path.join(logroot, 'jobs_retry/')
-faileddir = os.path.join(logroot, 'log/failed/')
-logdir    = os.path.join(logroot, 'log/')
-donedir   = os.path.join(logroot, 'log/done/')
+jobsdir   = '/tmp/ingest/jobs/'
+retrydir  = '/tmp/ingest/jobs_retry/'
+faileddir = '/tmp/ingest/log/failed/'
+logdir    = '/tmp/ingest/log/'
+donedir   = '/tmp/ingest/log/done/'
 
 if not os.path.exists(jobsdir):
   os.makedirs(jobsdir)

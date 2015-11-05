@@ -18,8 +18,8 @@ elseif(LTAINGEST_BUILD_TARGET STREQUAL "lotar")
   set(LTAINGEST_LOG_ROOT_DIR "/home/lofarlocal/log/ingest/")
   set(LTAINGEST_DATA_DIR "/home/lofarlocal/.ingest/")
 elseif(LTAINGEST_BUILD_TARGET STREQUAL "test")
-  set(LTAINGEST_LOG_ROOT_DIR "/log/ingesttest/")
-  set(LTAINGEST_DATA_DIR "/log/ingesttest/")
+  set(LTAINGEST_LOG_ROOT_DIR "/tmp/ingest/")
+  set(LTAINGEST_DATA_DIR "/tmp/ingest/")
   set(MOM3SCHEMA "lofartest_sas099_mom3_two")
 else()
   message(SEND_ERROR "Unknown LTAINGEST_BUILD_TARGET given: '${LTAINGEST_BUILD_TARGET}'.")
@@ -340,8 +340,9 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/ingest_install_logrotate_crontab.sh @ONLY)
 
 #install ingest_install_logrotate_crontab.sh in bin
-lofar_add_bin_scripts(
-  ${CMAKE_CURRENT_BINARY_DIR}/ingest_install_logrotate_crontab.sh)
+install(PROGRAMS
+  ${CMAKE_CURRENT_BINARY_DIR}/ingest_install_logrotate_crontab.sh
+  DESTINATION bin)
 
   
 add_subdirectory(test)
