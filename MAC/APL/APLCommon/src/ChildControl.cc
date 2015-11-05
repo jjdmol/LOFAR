@@ -41,8 +41,6 @@
 using namespace boost;
 
 namespace LOFAR {
-  using namespace Controller_Protocol;
-  using namespace StartDaemon_Protocol;
   using namespace GCF::TM;
   namespace APLCommon {
 

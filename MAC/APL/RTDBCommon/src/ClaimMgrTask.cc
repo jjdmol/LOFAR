@@ -30,8 +30,6 @@
 #include "CM_Protocol.ph"
 
 namespace LOFAR {
-  using namespace CM_Protocol;
-  using namespace DP_Protocol;
   using namespace GCF::TM;
   using namespace GCF::PVSS;
   using namespace GCF::RTDB;

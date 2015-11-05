@@ -48,7 +48,7 @@ class LOFARnode(object):
         self.logport = int(logport)
         self.outputs = {}
         self.environment = os.environ
-        self.resourceMonitor = UsageStats(self.logger, 10.0 * 60.0)  # collect stats each 10 minutes      
+        self.resourceMonitor = UsageStats(self.logger)      
 
     def run_with_logging(self, *args):
         """
@@ -119,38 +119,22 @@ class LOFARnodeTCP(LOFARnode):
             else:
                 break
 
-    def __fetch_arguments(self, tries=5, min_timeout=1.0, max_timeout=5.0):
+    def __fetch_arguments(self):
         """
         Connect to a remote job dispatch server (an instance of
         jobserver.JobSocketReceive) and obtain all the details necessary to
         run this job.
         """
-        while True:
-            tries -= 1
-            try:
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                self.__try_connect(s)
-                message = "GET %d" % self.job_id
-                s.sendall(struct.pack(">L", len(message)) + message)
-                chunk = s.recv(4)
-                slen = struct.unpack(">L", chunk)[0]
-                chunk = s.recv(slen)
-                while len(chunk) < slen:
-                    chunk += s.recv(slen - len(chunk))
-                self.arguments = pickle.loads(chunk)
-            except socket.error, e:
-                print "Failed to get recipe arguments from server"
-                if tries > 0:
-                    timeout = random.uniform(min_timeout, max_timeout)
-                    print("Retrying in %f seconds (%d more %s)." %
-                          (timeout, tries, "try" if tries == 1 else "tries"))
-                    time.sleep(timeout)
-                else:
-                    # we tried 5 times, abort with original exception
-                    raise 
-            else:
-                # no error, thus break the loop
-                break  #
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.__try_connect(s)
+        message = "GET %d" % self.job_id
+        s.sendall(struct.pack(">L", len(message)) + message)
+        chunk = s.recv(4)
+        slen = struct.unpack(">L", chunk)[0]
+        chunk = s.recv(slen)
+        while len(chunk) < slen:
+            chunk += s.recv(slen - len(chunk))
+        self.arguments = pickle.loads(chunk)
 
     def __send_results(self):
         """

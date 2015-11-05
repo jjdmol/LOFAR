@@ -30,8 +30,8 @@
 #include <Common/Thread/Queue.h>
 #include <Common/Thread/Thread.h>
 #include <Common/LofarLogger.h>
-#include <Stream/StreamFactory.h>
 #include <ApplCommon/PosixTime.h>
+#include <CoInterface/Stream.h>
 #include <CoInterface/SmartPtr.h>
 #include "RSP.h"
 #include "PacketReader.h"
@@ -41,7 +41,7 @@ using namespace Cobalt;
 
 time_t parseTime(const char *str)
 {
-  return LOFAR::to_time_t(boost::posix_time::time_from_string(str));
+  return to_time_t(boost::posix_time::time_from_string(str));
 }
 
 void usage()
@@ -171,7 +171,7 @@ int main(int argc, char **argv)
           reader.readPackets(p->packets);
           writeQueue.append(p);
         }
-      } catch(EndOfStreamException&) {
+      } catch(Stream::EndOfStreamException&) {
       }
 
       writeQueue.append(NULL);

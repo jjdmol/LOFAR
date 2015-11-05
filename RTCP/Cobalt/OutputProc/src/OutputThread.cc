@@ -107,7 +107,8 @@ namespace LOFAR
     template<typename T> OutputThread<T>::OutputThread(const Parset &parset,
           unsigned streamNr, Pool<T> &outputPool,
           RTmetadata &mdLogger, const std::string &mdKeyPrefix,
-          const std::string &logPrefix, const std::string &targetDirectory)
+          const std::string &logPrefix, const std::string &targetDirectory,
+          const std::string &LTAfeedbackPrefix)
       :
       itsParset(parset),
       itsStreamNr(streamNr),
@@ -115,6 +116,7 @@ namespace LOFAR
       itsMdKeyPrefix(mdKeyPrefix),
       itsLogPrefix(logPrefix),
       itsTargetDirectory(targetDirectory),
+      itsLTAfeedbackPrefix(LTAfeedbackPrefix),
       itsBlocksWritten(0),
       itsBlocksDropped(0),
       itsNrExpectedBlocks(0),
@@ -227,7 +229,7 @@ namespace LOFAR
       ParameterSet result;
 
       try {
-        result.adoptCollection(itsWriter->configuration());
+        result.adoptCollection(itsWriter->configuration(), itsLTAfeedbackPrefix);
       } catch (Exception &ex) {
         LOG_ERROR_STR(itsLogPrefix << "Could not obtain feedback for LTA: " << ex);
       }
@@ -262,7 +264,8 @@ namespace LOFAR
           mdLogger,
           mdKeyPrefix,
           logPrefix + "[SubbandOutputThread] ",
-          targetDirectory)
+          targetDirectory,
+          LTAFeedback::correlatedPrefix(streamNr))
     {
     }
 
@@ -326,7 +329,8 @@ namespace LOFAR
           mdLogger,
           mdKeyPrefix,
           logPrefix + "[TABOutputThread] ",
-          targetDirectory)
+          targetDirectory,
+          LTAFeedback::beamFormedPrefix(streamNr))
     {
     }
 

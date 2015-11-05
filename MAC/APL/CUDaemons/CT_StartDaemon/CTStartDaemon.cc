@@ -41,7 +41,6 @@
 using namespace LOFAR::GCF::TM;
 
 namespace LOFAR {
-  using namespace StartDaemon_Protocol;
   namespace CUDaemons {
 
 //
@@ -265,10 +264,10 @@ int32 CTStartDaemon::startController(uint16			cntlrType,
 									parentService.c_str());
 	LOG_INFO_STR("About to start: " << startCmd);
 
-	int	result = system (startCmd.c_str());
+	int32	result = system (startCmd.c_str());
 	LOG_INFO_STR ("Result of start = " << result);
 
-	if (result != 0) {
+	if (result == -1) {
 		return (SD_RESULT_START_FAILED);
 	}
 	

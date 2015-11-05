@@ -38,7 +38,6 @@ ServiceBroker			- 		M	Y	LOFAR_PermSW_Daemons_ServiceBroker
 SASGateway			-		M	Y	LOFAR_PermSW_Daemons_SASGateway
 PVSSGateway			-		M	Y	LOFAR_PermSW_Daemons_PVSSGateway
 SoftwareMonitor			-		M	Y	LOFAR_PermSW_Daemons_SoftwareMonitor
-FeedbackService			-		M	Y	LOFAR_PermSW_Daemons_FeedbackService
 CTStartDaemon			-		M	Y	LOFAR_PermSW_CTStartDaemon
 MACScheduler			MS		M	Y	LOFAR_PermSW_MACScheduler
 CRTriggerControl		CRT		M	Y	LOFAR_PermSW_CRTriggerControl
@@ -64,7 +63,6 @@ ServiceBroker			- 		C	Y	LOFAR_PermSW_Daemons_ServiceBroker
 SoftwareMonitor			-		C	Y	LOFAR_PermSW_Daemons_SoftwareMonitor
 SASGateway			-		C	Y	LOFAR_PermSW_Daemons_SASGateway
 PVSSGateway			-		C	Y	LOFAR_PermSW_Daemons_PVSSGateway
-MessageRouter			-		C	Y	LOFAR_PermSW_Daemons_MessageRouter
 CTStartDaemon			-		C	Y	LOFAR_PermSW_CTStartDaemon
 CEPObsSW			-		C	N	LOFAR_ObsSW
 CEPObservation			-		C	N	LOFAR_ObsSW_@observation@

@@ -43,7 +43,6 @@
 // Avoid 'using namespace' in headerfiles
 
 namespace LOFAR {
-  using namespace KVT_Protocol;
   namespace MACIO {
 
 // \addtogroup MACIO

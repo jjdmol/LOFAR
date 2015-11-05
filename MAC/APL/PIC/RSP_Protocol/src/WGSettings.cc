@@ -105,13 +105,19 @@ size_t WGSettings::getSize() const
 size_t WGSettings::pack  (char* buffer) const
 {
   size_t offset = 0;
-  return MSH_pack(buffer, offset, m_registers);
+  
+  MSH_pack(buffer, offset, m_registers);
+
+  return offset;
 }
 
 size_t WGSettings::unpack(const char *buffer)
 {
   size_t offset = 0;
-  return MSH_unpack(buffer, offset, m_registers);
+
+  MSH_unpack(buffer, offset, m_registers);
+
+  return offset;
 }
 
 Array<int32, 1> WGSettings::preset(int index)

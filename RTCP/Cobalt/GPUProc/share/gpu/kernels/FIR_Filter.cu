@@ -37,19 +37,12 @@
 #endif
 
 #ifdef INPUT_IS_STATIONDATA
-// Each SampleType is HALF a COMPLEX sample (so real OR imag)
 #  if NR_BITS_PER_SAMPLE == 16
 typedef signed short SampleType;
 #  elif NR_BITS_PER_SAMPLE == 8
 typedef signed char SampleType;
-#  elif NR_BITS_PER_SAMPLE == 4
-// Input samples are half a byte, requiring a special implementation.
-// The HistorySamples will store each input as a full byte though,
-// to avoid unnecessary marshalling and unmarshalling, and locking
-// between different threads that write real and imag of the same (complex) sample.
-typedef signed char SampleType;
 #  else
-#    error Precondition violated: NR_BITS_PER_SAMPLE == 4 || NR_BITS_PER_SAMPLE == 8 || NR_BITS_PER_SAMPLE == 16
+#    error Precondition violated: NR_BITS_PER_SAMPLE == 8 || NR_BITS_PER_SAMPLE == 16
 #  endif
 #else
 typedef float SampleType;
@@ -71,13 +64,8 @@ typedef float SampleType;
 
 #ifdef INPUT_IS_STATIONDATA
 // Data comes from station: icomplex[stab][sample][pol]
-#  if NR_BITS_PER_SAMPLE == 4
-typedef signed char (*SampledDataType)[NR_STABS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS][NR_POLARIZATIONS];
-#define SAMPLE(time) extractRI((*sampledData)[station][time][channel][pol], ri)
-#  else
 typedef SampleType (*SampledDataType)[NR_STABS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS][NR_POLARIZATIONS * COMPLEX];
 #define SAMPLE(time) (*sampledData)[station][time][channel][pol_ri]
-#endif
 
 #else
 
@@ -120,7 +108,7 @@ typedef const float (*WeightsType)[NR_CHANNELS][NR_TAPS];
  * NR_STABS                | >= 1                        | number of antenna fields (correlator), or number of tight array beams (tabs) (beamformer)
  * NR_TAPS                 | 16                          | number of FIR filtering coefficients
  * NR_SAMPLES_PER_CHANNEL  | multiple of NR_TAPS and > 0 | number of input samples per channel
- * NR_BITS_PER_SAMPLE      | 4, 8 or 16                  | number of bits of signed integral value type of sampledDataPtr
+ * NR_BITS_PER_SAMPLE      | 8 or 16                     | number of bits of signed integral value type of sampledDataPtr (TODO: support 4)
  * NR_CHANNELS             | multiple of 16 and > 0      | number of frequency channels per subband
  * NR_POLARIZATIONS        | 2                           | number of polarizations
  * COMPLEX                 | 2                           | size of complex in number of floats/doubles

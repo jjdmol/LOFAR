@@ -64,7 +64,6 @@ updateGPUProc(string dp1, string observationName,
   int gpu = (substr(dp1,strpos(dp1,\"CobaltGPUProc\")+13,2));
   CBTstr.text = cbt;
   GPUstr.text = gpu;
-  string refname = observationName+cbt+gpu;
 
   if (!invalid) {
     setValue(\"observationName\", \"text\", observationName);
@@ -80,7 +79,7 @@ updateGPUProc(string dp1, string observationName,
     setValue(\"dropping\", \"backCol\",\"Lofar_invalid\");
   }
   
-  addSubbands(refname, subband, written, dropped, invalid);
+  addSubbands(subband, written, dropped, invalid);
   
 }
 " 0
@@ -142,19 +141,19 @@ void rClick(string dp) {
 }
 
 // add subbandinformation
-void addSubbands(string refname, dyn_int subbands, dyn_float written, dyn_float dropped, bool invalid) {
+void addSubbands(dyn_int subbands, dyn_float written, dyn_float dropped, bool invalid) {
   LOG_DEBUG(\"GPUProcDetail.pnl:addSubbands\");
   
   dyn_string subbandRefNames;
    if (dynlen(oldSubbandRefNames) > 0) {
     clearOldSubbandRefNames();
   }    
-  int xPos_AddSymbol = 265; 
+  int xPos_AddSymbol = 220; 
   int ref = 1;
   string addPanelName    = \"objects/Processes/GPUProcSubbandInfo.pnl\";
   //loop over list and prepare panel with all subband objects   
   for (int i=1; i<= dynlen(subbands); i++) {
-    subbandRefNames[ref]=refname+ref;
+    subbandRefNames[ref]=\"subband\"+(subbands[i]);
     
     // sometimes it is possible that the trigger for this function is faster then
     // cobalt has written all the buffers, so we will get an index out of range
@@ -208,7 +207,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 0 3 259 17
+E E 0 1 1 2 1 E U  1 E 0 3 214 17
 1 25 0 "" 1
 0
 6 18
@@ -224,7 +223,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 155 -25 1 E 90 30 100 40
+E E 0 1 1 2 1 E 1 0 1 110 -25 1 E 90 30 100 40
 2 20
 "observationName"
 ""
@@ -295,12 +294,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 102 4 222 17
+E E 0 1 1 2 1 E U  0 E 102 4 162 17
 0 2 2 "0s" 0 0 0 192 0 0  102 4 1
 1
 LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
 0 1
-LANG:1 23 correlated & beamformer
+LANG:1 10 beamformed
 0
 LAYER, 1 
 1

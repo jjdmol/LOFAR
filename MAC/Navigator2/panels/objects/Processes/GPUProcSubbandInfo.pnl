@@ -9,38 +9,23 @@ PANEL,-1 -1 114 79 N "_3DFace" 5
 "$written"
 "main()
 {
-        
-  float dropped = $dropped;
-  float written = $written;  
+                 
   if ($invalid) {
     subbandInfo.backCol(\"Lofar_invalid\");
     subbandInfo.toolTipText = \"\";
   } else {
-    // calc % dropped
-    float percdropped = dropped / (written + dropped) * 100;
-    subbandInfo.backCol(getColor(percdropped));
-
+    if ($dropped > 0) {
+      subbandInfo.backCol(\"Lofar_broken\");
+    } else if ($written > 0) {
+      subbandInfo.backCol(\"Lofar_operational\");
+    }
     tooltip = \"Observation: \" + $observation + \"\\n\" +
               \"Subband: \" + $subband + \"\\n\" +
               \"Written: \" + $written + \"\\n\" +
               \"Dropped: \" + $dropped; 
     subbandInfo.toolTipText(tooltip);  
   }
-}
-
-string getColor(float val) {
-  string color = \"Lofar_off\";
-  if (val <= 0.1) color = \"Lofar_operational\";
-  if (val > 0.1 && val <= 0.5) {
-    color = \"Lofar_maintenance\";
-  } else if (val > 0.5 && val <= 5.0) {
-    color = \"Lofar_suspicious\";
-  } else if (val > 5.0) {
-    color = \"Lofar_broken\";
-  }
-  return color;
-}
-" 0
+}" 0
  E E E E 1 -1 -1 0  0 0
 ""0  1
 E "string tooltip = \"\";

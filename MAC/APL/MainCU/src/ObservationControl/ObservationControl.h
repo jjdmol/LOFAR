@@ -171,7 +171,6 @@ private:
 	uint32					itsTreeID;
 	uint32					itsHeartBeatItv;
 	uint32					itsForcedQuitDelay;
-	uint32					itsFinalStateDelay;
 	uint32					itsClaimPeriod;
 	uint32					itsPreparePeriod;
 	int32					itsLateLimit;		// after how many seconds a requested state should have been reached.

@@ -48,8 +48,7 @@ public:
 		DONE,
 		FAIL,
 		WAIT_1,
-		WAIT_2,
-		WAIT_3
+		WAIT_2
 	};
 	static const int MAX_REGISTER_ERROR = 3;
 
@@ -111,7 +110,6 @@ public:
 	void schedule_read	   (int i = -1) { tran(WRITE, READ,		   i); clearError(i);}
 	void schedule_wait1read(int i = -1) { tran(WRITE, WAIT_1,	   i); clearError(i);}
 	void schedule_wait2read(int i = -1) { tran(WRITE, WAIT_2,	   i); clearError(i);}
-	void schedule_wait3read(int i = -1) { tran(WRITE, WAIT_3,	   i); clearError(i);}
 	void read_ack   	   (int i = -1) { tran(READ,  DONE,		   i); clearError(i);}
 	void write_ack  	   (int i = -1) { tran(WRITE, DONE,		   i); clearError(i);}
 	void read_error 	   (int i = -1) { tran(READ,  READ_ERROR,  i); addError(i); }
@@ -137,12 +135,14 @@ public:
 
 	size_t pack(char* buffer) const {
 		size_t offset = 0;
-		return MSH_pack(buffer, offset, m_state);
+		MSH_pack(buffer, offset, m_state);
+		return offset;
 	}
 
 	size_t unpack(const char* buffer) {
 		size_t offset = 0;
-		return MSH_unpack(buffer, offset, m_state);
+		MSH_unpack(buffer, offset, m_state);
+		return offset;
 	}
 
 private:
