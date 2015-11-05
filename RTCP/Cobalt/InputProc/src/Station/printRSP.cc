@@ -68,7 +68,7 @@ void report( const string &filename )
       // read payload
       f.read( &packet.payload, packet.packetSize() - sizeof (RSP::Header) );
     }
-  } catch(EndOfStreamException &) {
+  } catch(Stream::EndOfStreamException &) {
   }
 
 }

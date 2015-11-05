@@ -21,25 +21,25 @@
 #include "SASConnection.h"
 #include "Controller.h"
 #include "sasstatusdialog.h"
+
 using std::string;
 using std::vector;
 using std::map;
 
-SASConnection::SASConnection(void)
-	: itsController(0), itsUploadDialog(0)
-{
-    QSqlDatabase::addDatabase( "QPSQL", "SASDB" );
-}
-
 SASConnection::SASConnection(Controller *controller)
-	: itsController(controller)
+    : itsController(controller),
+      itsUploadDialog(new SASUploadDialog(0, itsController)),
+      statDlg(0),
+      dbConnection(Controller::theSchedulerSettings.getSASUserName(),
+                   Controller::theSchedulerSettings.getSASPassword(),
+                    Controller::theSchedulerSettings.getSASHostName(),
+                    Controller::theSchedulerSettings.getSASDatabase())
 {
-    QSqlDatabase::addDatabase( "QPSQL", "SASDB" );
-	itsUploadDialog = new SASUploadDialog(0, itsController);
+
 }
 
 SASConnection::~SASConnection() {
-	QSqlDatabase::database( "SASDB" ).close();
+    QSqlDatabase::database( "SASDB" ).close();
 	QSqlDatabase::removeDatabase( "SASDB" );
 
 	if (itsUploadDialog) {
@@ -47,18 +47,10 @@ SASConnection::~SASConnection() {
 	}
 }
 
-void SASConnection::init(const QString &username, const QString &password, const QString &DBName, const QString &hostname) {
-	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
-	QSqlDatabase::database( "SASDB" ).close();
-	QSqlDatabase::removeDatabase( "SASDB" );
-	sasDB = QSqlDatabase::addDatabase("QPSQL","SASDB");
-
-	itsSASUserName = username;
-	itsSASPassword = password;
-    sasDB.setHostName(hostname);
-    sasDB.setDatabaseName(DBName);
-    sasDB.setUserName("postgres");
-    sasDB.setPassword("");
+void SASConnection::init(const QString &username,
+                         const QString &password,
+                         const QString &DBName,
+                         const QString &hostname) {
 }
 
 void SASConnection::cleanup(void) {
@@ -71,40 +63,28 @@ void SASConnection::cleanup(void) {
 	itsSASdeletedTrees.clear();
 }
 
-int SASConnection::testConnect(const QString &username, const QString &password, const QString &DBname, const QString &hostname) {
-	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
-	sasDB.close();
-	QSqlDatabase::removeDatabase( "SASDB" );
-	sasDB = QSqlDatabase::addDatabase("QPSQL","SASDB");
-	sasDB.setUserName("postgres");
-	sasDB.setPassword("");
-	sasDB.setHostName(hostname);
-	sasDB.setDatabaseName(DBname);
-
-	if (!sasDB.open()) {
-		return -1; // could not connect to SAS database
-	}
-	else {
-		QSqlQuery query(sasDB);
-		query.exec("SELECT OTDBlogin('" + username + "','" + password + "')");
-		if (query.next()) {
-			if (query.value(0).toUInt() == 0) { // check authentication token (should not be zero)
-				return -2; // no write permissions to SAS DB
-			}
-		}
-		else return -3; // could not execute query on database
-		query.finish();
-	}
-	//cleanup test connection to database
-	return 0; // test OK.
+// Clears the internal connection to sasdb
+// reinit the connection and attempt connection to OTDB tables
+// test authentication
+// exit negative values on value zero on succes
+// Exit values are used at the receiving side for selection of stuff to display
+// refactoring:
+// Name does not cover functionality
+int SASConnection::testConnect(const QString &username,
+       const QString &password, const QString &DBname, const QString &hostname)
+{
+    dbConnection.disconnect();
+    dbConnection = SASDatabaseConnection(username, password, DBname, hostname);
+    return dbConnection.testAuthentication();
 }
 
 
-QString SASConnection::lastConnectionError(void) const {
-	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
-	return sasDB.lastError().text();
+QString SASConnection::lastConnectionError(void)  {
+    return dbConnection.lastError();
 }
 
+// Create a connection with database using credentials from the scheduler
+// settings
 int SASConnection::connect(void) {
 	return connect(Controller::theSchedulerSettings.getSASUserName(),
 			Controller::theSchedulerSettings.getSASPassword(),
@@ -112,57 +92,46 @@ int SASConnection::connect(void) {
 			Controller::theSchedulerSettings.getSASHostName());
 }
 
-int SASConnection::connect(const QString &user, const QString &password, const QString &DBName, const QString &hostName) {
-	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
-	QVariant value;
-	if (!sasDB.open()) {  // sasDB could not be opened, re-init connection
-		init(user, password, DBName, hostName);
-		if (!sasDB.open()) {
-			debugErr("sssssss","Could not establish SAS connection! Settings used:\n",
-					"Username: ", sasDB.userName().toStdString().c_str(),
-					", database: ", sasDB.databaseName().toStdString().c_str(),
-					", hostname: ", sasDB.hostName().toStdString().c_str()
-			);
-			return -1; // could not connect to SAS database
-		}
-	}
-	if (sasDB.isOpen()) {
-		QSqlQuery query(sasDB);
-		if (itsAuthToken.isEmpty()) {
-			query.exec("SELECT OTDBlogin('" + itsSASUserName + "','" + itsSASPassword + "')");
-			if (query.next()) {
-				itsAuthToken = query.value(0).toString();
-				if (itsAuthToken.isEmpty()) {
-					return -2; // no write permissions to SAS DB
-				}
-			}
-			query.finish();
-		}
+// Create a connection with SASDB
+//
+// If connection is not in a correct state
+// recreate the connection
+// exit with the exit state of testAuthentication() if not 0
+// Assign
+// refactor notes:
+// mixture of control and model.
+// side effects not clear from function name.
+// Candidate for refactoring using pqxx
+int SASConnection::connect(const QString &user, const QString &password,
+                           const QString &DBName, const QString &hostName)
+{
+    // If not in a valid state reconnect
+    if (dbConnection.testAuthentication() != 0)
+        dbConnection = SASDatabaseConnection(user, password, hostName, DBName);
 
-/*
-		if (itsDataslotTemplateIDstr.isEmpty()) {
-			// get the node ID of the dataslotsinfo node in the default template tree (needed to be able to create and save dataslot info for new trees)
-			query.exec("SELECT nodeid from getVTitemList(" + QString::number(Controller::theSchedulerSettings.getSchedulerDefaultTemplate()) + ",'DataslotInfo')");
-			if (query.next()) {
-				itsDataslotTemplateIDstr = query.value(0).toString();
-			}
-			query.finish();
-		}
-*/
+    // Get the output of the auth test for the new connection
+    int authReturn = dbConnection.testAuthentication();
+    if ( authReturn != 0)
+        return authReturn;  // Return the error code
 
-		// get the list of campaigns from SAS
-		getCampaignsFromSAS();
-	}
-	return 0;
+    // If the connect is good, get the authToken from the dbConnection
+    itsAuthToken = dbConnection.getAuthToken();
+
+    // get the list of campaigns from SAS
+    getCampaignsFromSAS();
+
+    return 0;
 }
 
 
 int SASConnection::getModifiedVICTrees(const QDateTime &afterdate) {
 	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
 
-	// check which trees still exist in sas database and remove them from itsSASVicTrees if they don't exist anymore
-	std::vector<unsigned> existingVICs;
-	QSqlQuery query("SELECT treeid FROM gettreelist('" + QString::number(VIC_TREE) + "','0',0,'','','')", sasDB);
+    // check which trees still exist in sas database and remove them from itsSASVicTrees if they don't exist anymore
+    std::vector<unsigned> existingVICs;
+    QSqlQuery query("SELECT treeid FROM gettreelist('"
+                    + QString::number(VIC_TREE)
+                    + "','0',0,'','','')", sasDB);
 	if (query.isActive()) {
 		while (query.next()) {
 			existingVICs.push_back(query.value(0).toUInt());
@@ -266,31 +235,36 @@ int SASConnection::getModifiedVICTrees(const QDateTime &afterdate) {
 }
 
 void SASConnection::updateLastDownloadDate(void) {
-	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
-	QSqlQuery query("SELECT now()", sasDB);
+
+    QSqlQuery query = dbConnection.now();
 	if (query.isActive()) {
 		if (query.next()) {
-			itsLastDownloadDate = QDateTime::fromString(query.value(0).toString(),"yyyy-MM-ddThh:mm:ss"); // one second added because some sas stored procedures will return changes *equal to* and greater this modification date, not
+            itsLastDownloadDate = QDateTime::fromString(query.value(0).toString(),
+        "yyyy-MM-ddThh:mm:ss");
 		}
 	}
 	query.finish();
 }
 
-// function getAllSASTasksWithinPeriod gets all OTDB trees (not complete vic trees but only their metadata) within the specified period
-// This function will also check if the tree depends (has predecessors) on other trees and will the also download those predecessor trees
-int SASConnection::getAllSASTasksWithinPeriod(int treeType, const AstroDateTime &begindate, const AstroDateTime &enddate) {
+// function getAllSASTasksWithinPeriod gets all OTDB trees (not complete
+// vic trees but only their metadata) within the specified period
+// This function will also check if the tree depends (has predecessors)
+// on other trees and will the also download those predecessor trees
+// refactoringL
+// This converts sql to data. Part of the model.
+int SASConnection::getAllSASTasksWithinPeriod(int treeType,
+          const AstroDateTime &begindate, const AstroDateTime &enddate)
+{
     int retVal(0);
-	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
-	itsSASVicTrees.clear();
-	QDateTime start_date = begindate.toQDateTime(), end_date = enddate.toQDateTime();
+    itsSASVicTrees.clear();
+    QString start_date = begindate.toQDateTime().toString("yyyy-MM-dd hh:mm:ss");
+    QString end_date = enddate.toQDateTime().toString("yyyy-MM-dd hh:mm:ss");
+    QSqlQuery query = dbConnection.getTreesInPeriod(start_date, end_date, treeType );
 
-	QSqlQuery query("SELECT * from getTreesInPeriod('" +
-					QString::number(treeType) + "','" +
-					start_date.toString("yyyy-MM-dd hh:mm:ss") + "','" +
-					end_date.toString("yyyy-MM-dd hh:mm:ss") + "')", sasDB);
-
-	if (query.isActive()) {
-		while (query.next()) {
+    if (query.isActive())
+    {
+        while (query.next())
+        {
 			OTDBtree tree(query);
 			itsSASVicTrees.insert(std::map<unsigned, OTDBtree>::value_type(tree.treeID(), tree));
 		}
@@ -345,12 +319,9 @@ void SASConnection::translateMomPredecessors(IDvector &predecessors) {
 }
 
 bool SASConnection::fetchAllPredecessorTasks(void) {
-	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
 	bool bResult(true);
 	QString IDonly;
-	QSqlQuery query(sasDB);
 	std::map<unsigned, OTDBtree> itsTmpSASVicTrees1(itsSASVicTrees), itsTmpSASVicTrees2;
-
     const QString & ObsIDPrefix(Controller::theSchedulerSettings.getObservationIDprefix());
 
 	bool fetchPredecessor(false);
@@ -362,7 +333,9 @@ bool SASConnection::fetchAllPredecessorTasks(void) {
 			// fetch all predecessor trees from the current tree and put them in itsTmpSASVicTrees2 and in itsSASVicTrees
 			// first get the predecessor list from the current task
 			const SAS_task_status &state(it_1->second.state());
-			query.exec("SELECT limits from getVHitemList(" + QString::number(it_1->first) + ",'LOFAR.ObsSW.Observation.Scheduler.predecessors')");
+            QSqlQuery query = dbConnection.limitsFromGetVHitemList(
+                        QString::number(it_1->first));
+
 			if (query.next()) {
 				std::vector<QString> predecessors(string2VectorOfStrings(query.value(0).toString()));
 				query.finish();
@@ -441,6 +414,7 @@ bool SASConnection::fetchAllPredecessorTasks(void) {
 
 int SASConnection::createNewTree(Task &task) {
     // step 1: create a new template tree from a default template tree
+
 	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
 	QSqlQuery query(sasDB);
 	QString authToken(itsAuthToken);
@@ -832,20 +806,6 @@ std::pair<bool, Task *> SASConnection::getTaskFromSAS(int treeID, OTDBtree otdb_
         return retVal;
 }
 
-void SASConnection::updateDefaultTemplates(void) {
-	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
-	Controller::theSchedulerSettings.updateDefaultTemplates();
-	// also update the default dataslot node id, used for creating data slots in VIC trees.
-/*
-	QSqlQuery query(sasDB);
-	query.exec("SELECT nodeid from getVTitemList(" + QString::number(Controller::theSchedulerSettings.getSchedulerDefaultTemplate()) + ",'DataslotInfo')");
-	if (query.next()) {
-		itsDataslotTemplateIDstr = query.value(0).toString();
-	}
-	query.finish();
-*/
-}
-
 
 void SASConnection::clearItsSASTasks(void) {
     for (SAStasks::iterator it = itsSASTasks.begin(); it != itsSASTasks.end(); ++it) {
@@ -854,70 +814,77 @@ void SASConnection::clearItsSASTasks(void) {
     itsSASTasks.clear();
 }
 
+// Do a refresh of the current stored SAS data
+// FIRST: Clears current tasks stored.
+// Return false if no connection true if there are no errors
+// display progress dialog
+// model view controll is mixed.
+// candidate for splitting if multi functions.
 bool SASConnection::downloadAllSASTasks(void) {
 	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
 	itsSASVicTrees.clear();
     clearItsSASTasks();
 
-	if (sasDB.isOpen()) {
-		updateDefaultTemplates();
-		// show the progress dialog
-		itsProgressDialog.clear();
-		itsProgressDialog.show();
-		itsProgressDialog.setWindowTitle("Download running schedule from SAS database");
-		itsProgressDialog.addText(QObject::tr("Start Download SAS schedule procedure"));
-		itsProgressDialog.addText(QObject::tr("Starting inventory of tasks to download from SAS database..."));
-		AstroDateTime endDate = Controller::theSchedulerSettings.getLatestSchedulingDay() + AstroTime("23:59:59");
+    if ( ! sasDB.isOpen())
+      return false;
 
-		QDateTime prevLastDownloadDate(itsLastDownloadDate);
-		updateLastDownloadDate();
+    Controller::theSchedulerSettings.updateDefaultTemplates();
+    // show the progress dialog
+    itsProgressDialog.clear();
+    itsProgressDialog.show();
+    itsProgressDialog.setWindowTitle("Download running schedule from SAS database");
+    itsProgressDialog.addText(QObject::tr("Start Download SAS schedule procedure"));
+    itsProgressDialog.addText(QObject::tr("Starting inventory of tasks to download from SAS database..."));
+    AstroDateTime endDate = Controller::theSchedulerSettings.getLatestSchedulingDay() + AstroTime("23:59:59");
 
-		int retVal(getAllSASTasksWithinPeriod(VIC_TREE, Controller::theSchedulerSettings.getEarliestSchedulingDay(), endDate));
-		if (retVal == -1) {
-			itsProgressDialog.addError(QObject::tr("ERROR: could not fetch tasks from SAS. Aborting download!"));
-			itsProgressDialog.enableClose();
-			itsLastDownloadDate = prevLastDownloadDate;
-			return false;
-		}
-		else if (retVal == -2) {
-			itsProgressDialog.addText(QObject::tr("Warning: Not all predecessor tasks were found in the SAS database."));
-		}
-		size_t nrOfSASTrees = itsSASVicTrees.size();
-		if (nrOfSASTrees) {
-			itsProgressDialog.addText(QObject::tr("Check complete. Number of tasks to download (within scheduling period): ") +
-					QString::number(nrOfSASTrees));
-			itsProgressDialog.addText(QObject::tr("Downloading tasks..."));
-		}
-		else {
-			itsProgressDialog.addText(QObject::tr("Inventory complete. There are no tasks to download from SAS within the schedule period."));
-		}
+    QDateTime prevLastDownloadDate(itsLastDownloadDate);
+    updateLastDownloadDate();
 
-		if (nrOfSASTrees) {
-			// copy SAS tree's to regular task objects in itsSASTasks map
-			size_t count(0);
-            std::pair<bool, Task *> retVal;
-            for (std::map<unsigned, OTDBtree>::const_iterator it = itsSASVicTrees.begin(); it != itsSASVicTrees.end(); ++it) {
-				retVal = getTaskFromSAS(it->first, it->second);
-                if (retVal.second) {
-                    itsSASTasks.insert(SAStasks::value_type(it->first, retVal.second));
-                }
-                itsProgressDialog.setProgressPercentage((++count * 100) / nrOfSASTrees);
-			}
+    int retVal(getAllSASTasksWithinPeriod(VIC_TREE, Controller::theSchedulerSettings.getEarliestSchedulingDay(), endDate));
+    if (retVal == -1) {
+        itsProgressDialog.addError(QObject::tr("ERROR: could not fetch tasks from SAS. Aborting download!"));
+        itsProgressDialog.enableClose();
+        itsLastDownloadDate = prevLastDownloadDate;
+        return false;
+    }
+    else if (retVal == -2) {
+        itsProgressDialog.addText(QObject::tr("Warning: Not all predecessor tasks were found in the SAS database."));
+    }
+    size_t nrOfSASTrees = itsSASVicTrees.size();
+    if (nrOfSASTrees) {
+        itsProgressDialog.addText(QObject::tr("Check complete. Number of tasks to download (within scheduling period): ") +
+                                  QString::number(nrOfSASTrees));
+        itsProgressDialog.addText(QObject::tr("Downloading tasks..."));
+    }
+    else {
+        itsProgressDialog.addText(QObject::tr("Inventory complete. There are no tasks to download from SAS within the schedule period."));
+    }
 
-			itsProgressDialog.addText(QObject::tr("Task download complete."));
-			itsProgressDialog.addText(QObject::tr("Number of downloaded valid tasks: ") + QString::number(itsSASTasks.size()));
-		}
-		// now insert the downloaded tasks into the schedule if required
-        if (!itsSASTasks.empty()) {
-			itsProgressDialog.addText(QObject::tr("Inserting tasks in scheduler..."));
-			itsController->mergeDownloadedSASTasks();
-			itsProgressDialog.addText(QObject::tr("Tasks inserted."));
-			itsProgressDialog.addText(QObject::tr("Download schedule from SAS completed successfully."));
-		}
-		itsProgressDialog.enableClose();
-		return true;
-	}
-	else return false; // no connection to SAS database
+    if (nrOfSASTrees) {
+        // copy SAS tree's to regular task objects in itsSASTasks map
+        size_t count(0);
+        std::pair<bool, Task *> retVal;
+        for (std::map<unsigned, OTDBtree>::const_iterator it = itsSASVicTrees.begin(); it != itsSASVicTrees.end(); ++it) {
+            retVal = getTaskFromSAS(it->first, it->second);
+            if (retVal.second) {
+                itsSASTasks.insert(SAStasks::value_type(it->first, retVal.second));
+            }
+            itsProgressDialog.setProgressPercentage((++count * 100) / nrOfSASTrees);
+        }
+
+        itsProgressDialog.addText(QObject::tr("Task download complete."));
+        itsProgressDialog.addText(QObject::tr("Number of downloaded valid tasks: ") + QString::number(itsSASTasks.size()));
+    }
+    // now insert the downloaded tasks into the schedule if required
+    if (!itsSASTasks.empty()) {
+        itsProgressDialog.addText(QObject::tr("Inserting tasks in scheduler..."));
+        itsController->mergeDownloadedSASTasks();
+        itsProgressDialog.addText(QObject::tr("Tasks inserted."));
+        itsProgressDialog.addText(QObject::tr("Download schedule from SAS completed successfully."));
+    }
+    itsProgressDialog.enableClose();
+    return true;
+
 }
 
 
@@ -928,246 +895,240 @@ void SASConnection::showProgressUploadDialog(void) {
 }
 
 
-bool SASConnection::checkSynchronizeNeeded(void) {
-	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
-	if (sasDB.isOpen()) {
-		updateDefaultTemplates();
-		itsProgressDialog.addText(QObject::tr("Start synchronize SAS schedule procedure"));
-		itsProgressDialog.addText(QObject::tr("Checking for changes in SAS database..."));
 
-		int retVal(getModifiedVICTrees(itsLastDownloadDate));
 
-		if (retVal == -1) {
-			itsProgressDialog.addError(QObject::tr("ERROR: could not fetch tasks from SAS. Aborting synchronize!"));
-			return false;
-		}
-
-		size_t nrOfModifiedSASTrees = itsSASmodifiedTasks.size();
-		if (nrOfModifiedSASTrees != 0) {
-			itsProgressDialog.addText(QObject::tr("Check complete. Number of modified tasks in SAS database: ") +
-					QString::number(nrOfModifiedSASTrees));
-			return true;
-		}
-		else {
-			itsProgressDialog.addText(QObject::tr("Check complete. No modified tasks needed to be downloaded."));
-			return true;
-		}
-	}
-	else {
-		itsProgressDialog.addError(QObject::tr("ERROR: Not connected to SAS database. Aborting synchronize!"));
-		return false;
-	}
-}
-
-bool SASConnection::startSynchronizeProcedure(const SchedulerData &scheduler_data) {
+bool SASConnection::startSynchronizeProcedure(
+        const SchedulerData &scheduler_data) {
 	// ------------------------------- STEP 1 -------------------------------
-	// Do a new download from SAS database so that any intermediate changes are also taken into account
+    // Do a new download from SAS database so that any intermediate changes
+    // are also taken into account
 	bool issueChangeConflict(false);
 
-	if (checkSynchronizeNeeded()) {
-		itsProgressDialog.addText(QObject::tr("Start compare with SAS database schedule..."));
-		itsNewSchedulerTasks.clear();
-		itsChangedTasks.clear();
-		itsUploadDialog->clear(); // resets the upload dialog
+    if (!checkSynchronizeNeeded())
+    {
+        itsProgressDialog.enableClose();
+        return false;
+    }
 
-		// itsSASVicTrees contains all previously downloaded trees including modifications that have just been detected
-		// vic trees that don't exist anymore in SAS have been deleted already from itsSASVicTrees and
-		// their tree ID have been inserted in itsSASdeletedTrees
-		// itsSASmodifiedTrees contain all tasks with modifications since last download
+    // GUI
+    itsProgressDialog.addText(QObject::tr(
+                        "Start compare with SAS database schedule..."));
+    itsNewSchedulerTasks.clear();
+    itsChangedTasks.clear();
+    itsUploadDialog->clear(); // resets the upload dialog
 
-		// ------------------------------- STEP 1 -------------------------------
-		const scheduledTasksMap &scheduled_tasks = scheduler_data.getScheduledTasks();
-		unsigned treeID;
-		for (scheduledTasksMap::const_iterator it = scheduled_tasks.begin(); it != scheduled_tasks.end(); ++it) {
-			treeID = it->second->getSASTreeID();
-			if (treeID == 0) { // new task added by scheduler
-				// add to new scheduler tasks
-				itsNewSchedulerTasks.push_back(it->second->getID());
-				itsUploadDialog->addNewSchedulerTask(*(it->second));
-			}
-		}
-		const reservationsMap &reservations = scheduler_data.getReservations();
-		for (reservationsMap::const_iterator it = reservations.begin(); it != reservations.end(); ++it) {
-			treeID = it->second->getSASTreeID();
-			if (treeID == 0) { // new task added by scheduler
-				// add to new scheduler tasks
-				itsNewSchedulerTasks.push_back(it->second->getID());
-				itsUploadDialog->addNewSchedulerTask(*(it->second));
-			}
-		}
-		const unscheduledTasksDeque &unscheduled_tasks = scheduler_data.getUnscheduledTasks();
-		for (unscheduledTasksDeque::const_iterator it = unscheduled_tasks.begin(); it != unscheduled_tasks.end(); ++it) {
-			treeID = (*it)->getSASTreeID();
-			if (treeID == 0) { // new task added by scheduler
-					// add to new scheduler tasks
-					itsNewSchedulerTasks.push_back((*it)->getID());
-					itsUploadDialog->addNewSchedulerTask(**it);
-					// For these tasks a new tree has to be build using the SAS DB API
-			}
-		}
-		const pipelinesMap &pipeline_tasks = scheduler_data.getPipelineTasks();
-		for (pipelinesMap::const_iterator it = pipeline_tasks.begin(); it != pipeline_tasks.end(); ++it) {
-			treeID = it->second->getSASTreeID();
-			if (treeID == 0) { // new task added by scheduler
-				// add to new scheduler tasks
-				itsNewSchedulerTasks.push_back(it->second->getID());
-				itsUploadDialog->addNewSchedulerTask(*(it->second));
-			}
-		}
-
-
-		// ------------------------------- STEP 2 -------------------------------
-		// check for differences that need to be uploaded to SAS
-
-		bool difDetected;
-		SAStasks::const_iterator sit;
-		std::vector<unsigned> new_tasks;
-        for (std::map<unsigned, OTDBtree>::const_iterator it = itsSASVicTrees.begin(); it != itsSASVicTrees.end(); ++it) {
-            task_diff diff;
-			const unsigned &treeID(it->first);
-			if (find(itsTreesToDelete.begin(), itsTreesToDelete.end(), it->first) == itsTreesToDelete.end()) { // don't consider trees that have to be deleted here
-				sit = itsSASTasks.find(treeID);
-				if (sit != itsSASTasks.end()) {
-					// diff between current! SAS task state (at upload time) and previous SAS task state at download time
-					// to prevent changing a task that in the meantime had a status change in SAS
-                    if (it->second.state() == sit->second->SASTree().state()) {
-						// only allow changes to tasks with state < FINISHED
-							const Task *pTask = scheduler_data.getTask(treeID, ID_SAS);
-							if (pTask) {
-                                difDetected = pTask->diff(sit->second, diff); // diff between task currently in scheduler memory and the previously! downloaded SAS task
-								if (difDetected) {
-                                    QString difstr = pTask->diffString(diff);
-									if (itsSASmodifiedTasks.find(treeID) == itsSASmodifiedTasks.end()) {
-										itsUploadDialog->addChangedTask(*pTask, difstr);
-										itsChangedTasks.insert(changedTasks::value_type(treeID, diff));
-									}
-									else { // the task was also externally modified, issue change conflict
-										itsUploadDialog->addChangedTask(*pTask, difstr, true);
-										issueChangeConflict = true;
-									}
-								}
-								else {
-									itsUploadDialog->addUnchangedTask(*pTask);
-								}
-							}
-					}
-					else {
-						// special case the tree state was changed externally in sas database
-						// check if this task was also changed by the user, if not just download without warning
-						// if it was changed also by the user then warning that the changes will be lost and the task will be downloaded again
-//						externallyChangedTasks.push_back(it->treeID());
-						const Task *pTask = scheduler_data.getTask(treeID, ID_SAS);
-						if (pTask) {
-                            difDetected = pTask->diff(sit->second, diff);
-							if (difDetected) {
-                                QString difstr = pTask->diffString(diff);
-								itsUploadDialog->addChangedTask(*pTask, difstr, true);
-								issueChangeConflict = true;
-							}
-						}
-					}
-				}
-                else {
-                    // new tree in the SAS database detected, download it in the scheduler
-                    new_tasks.push_back(treeID);
-                }
-			}
-		}
+    // itsSASVicTrees contains all previously downloaded trees including modifications that have just been detected
+    // vic trees that don't exist anymore in SAS have been deleted already from itsSASVicTrees and
+    // their tree ID have been inserted in itsSASdeletedTrees
+    // itsSASmodifiedTrees contain all tasks with modifications since last download
+    // ------------------------------- STEP 1 -------------------------------
+    const scheduledTasksMap &scheduled_tasks = scheduler_data.getScheduledTasks();
+    unsigned treeID;
+    for (scheduledTasksMap::const_iterator it = scheduled_tasks.begin(); it != scheduled_tasks.end(); ++it) {
+        treeID = it->second->getSASTreeID();
+        if (treeID == 0) { // new task added by scheduler
+            // add to new scheduler tasks
+            itsNewSchedulerTasks.push_back(it->second->getID());
+            itsUploadDialog->addNewSchedulerTask(*(it->second));
+        }
+    }
+    const reservationsMap &reservations = scheduler_data.getReservations();
+    for (reservationsMap::const_iterator it = reservations.begin(); it != reservations.end(); ++it) {
+        treeID = it->second->getSASTreeID();
+        if (treeID == 0) { // new task added by scheduler
+            // add to new scheduler tasks
+            itsNewSchedulerTasks.push_back(it->second->getID());
+            itsUploadDialog->addNewSchedulerTask(*(it->second));
+        }
+    }
+    const unscheduledTasksDeque &unscheduled_tasks = scheduler_data.getUnscheduledTasks();
+    for (unscheduledTasksDeque::const_iterator it = unscheduled_tasks.begin(); it != unscheduled_tasks.end(); ++it) {
+        treeID = (*it)->getSASTreeID();
+        if (treeID == 0) { // new task added by scheduler
+            // add to new scheduler tasks
+            itsNewSchedulerTasks.push_back((*it)->getID());
+            itsUploadDialog->addNewSchedulerTask(**it);
+            // For these tasks a new tree has to be build using the SAS DB API
+        }
+    }
+    const pipelinesMap &pipeline_tasks = scheduler_data.getPipelineTasks();
+    for (pipelinesMap::const_iterator it = pipeline_tasks.begin(); it != pipeline_tasks.end(); ++it) {
+        treeID = it->second->getSASTreeID();
+        if (treeID == 0) { // new task added by scheduler
+            // add to new scheduler tasks
+            itsNewSchedulerTasks.push_back(it->second->getID());
+            itsUploadDialog->addNewSchedulerTask(*(it->second));
+        }
+    }
 
 
-        SAStasks::iterator sasit;
-        Task *pCloneTask;
-		// update externally modified tasks in scheduler now
-        for (std::map<unsigned, Task *>::const_iterator sit = itsSASmodifiedTasks.begin(); sit != itsSASmodifiedTasks.end(); ++sit) {
-			// replace the task in itsSAStasks with the updated task from SAS
-            sasit = itsSASTasks.find(sit->first);
-            if (sasit != itsSASTasks.end()) {
-                pCloneTask = cloneTask(sit->second);
-                if (pCloneTask) {
-                    delete sasit->second;
-                    sasit->second = pCloneTask;
-                }
+    // ------------------------------- STEP 2 -------------------------------
+    // check for differences that need to be uploaded to SAS
+    bool difDetected;
+    SAStasks::const_iterator sit;
+    std::vector<unsigned> new_tasks;
+    for (std::map<unsigned, OTDBtree>::const_iterator it = itsSASVicTrees.begin(); it != itsSASVicTrees.end(); ++it) {
+        task_diff diff;
+        const unsigned &treeID(it->first);
+
+        // don't consider trees that have to be deleted here
+        if (find(itsTreesToDelete.begin(), itsTreesToDelete.end(),
+                 it->first) != itsTreesToDelete.end())
+            continue;
+
+        // If it is a new tree insert and continue
+        sit = itsSASTasks.find(treeID);
+        if (sit == itsSASTasks.end())
+        {
+            new_tasks.push_back(treeID);
+            continue;
+        }
+
+        // diff between current! SAS task state (at upload time) and previous
+        // SAS task state at download time to prevent changing a task that in
+        // the meantime had a status change in SAS
+        if (it->second.state() == sit->second->SASTree().state()) {
+            // only allow changes to tasks with state < FINISHED
+            const Task *pTask = scheduler_data.getTask(treeID, ID_SAS);
+            if (!pTask)
+                continue;
+
+            // diff between task currently in scheduler memory and the
+            // previously! downloaded SAS task
+            difDetected = pTask->diff(sit->second, diff);
+
+            // if no changes detected
+            if (!difDetected) {
+                itsUploadDialog->addUnchangedTask(*pTask);
+                continue;
             }
-            itsController->synchronizeTask(sit->second);
-            if (find(new_tasks.begin(), new_tasks.end(), sit->first) != new_tasks.end()) {
-                itsUploadDialog->addNewSASTask(sit->second);
-			}
-		}
 
-		// ------------------------------- STEP 4 -------------------------------
-		// Add the trees that have to be deleted from SAS
-		for (std::vector<unsigned>::const_iterator it = itsTreesToDelete.begin(); it != itsTreesToDelete.end(); ++it) {
-			sasit = itsSASTasks.find(*it);
-			if (sasit != itsSASTasks.end()) {
-                itsUploadDialog->addDeletedSchedulerTask(sasit->second);
-			}
-		}
+            // Test if changed in sasmodified tasks
+            QString difstr = pTask->diffString(diff);
+            if (itsSASmodifiedTasks.find(treeID) == itsSASmodifiedTasks.end()) {
+                itsUploadDialog->addChangedTask(*pTask, difstr);
+                itsChangedTasks.insert(changedTasks::value_type(treeID, diff));
+            }
+            else { // the task was also externally modified, issue change conflict
+                itsUploadDialog->addChangedTask(*pTask, difstr, true);
+                issueChangeConflict = true;
+            }
 
-		// add the tasks that have been deleted from sas in the upload dialog
-		for (std::vector<unsigned>::const_iterator dsit = itsSASdeletedTrees.begin(); dsit != itsSASdeletedTrees.end(); ++dsit) {
-			const Task *pTask = scheduler_data.getTask(*dsit, ID_SAS);
-            itsUploadDialog->addDeletedSASTask(pTask);
-            // directly delete the task from the scheduler because the tree does not exist anymore and nothing can be done abuot that (no cancel option)
-            sasit = itsSASTasks.find(*dsit);
-            if (sasit != itsSASTasks.end()) {
+        }
+        else {
+            // special case the tree state was changed externally in sas database
+            // check if this task was also changed by the user, if not just
+            // download without warning  if it was changed also by the user
+            // then warning that the changes will be lost and the task will be
+            // downloaded again
+            const Task *pTask = scheduler_data.getTask(treeID, ID_SAS);
+            if (!pTask)  // nothing found
+                continue;
+
+            //
+            difDetected = pTask->diff(sit->second, diff);
+
+            if (difDetected)
+            {
+                QString difstr = pTask->diffString(diff);
+                itsUploadDialog->addChangedTask(*pTask, difstr, true);
+                issueChangeConflict = true;
+
+            }
+        }
+    }
+
+
+    SAStasks::iterator sasit;
+    Task *pCloneTask;
+    // update externally modified tasks in scheduler now
+    for (std::map<unsigned, Task *>::const_iterator sit = itsSASmodifiedTasks.begin();
+         sit != itsSASmodifiedTasks.end(); ++sit) {
+        // replace the task in itsSAStasks with the updated task from SAS
+        sasit = itsSASTasks.find(sit->first);
+        if (sasit != itsSASTasks.end()) {
+            pCloneTask = cloneTask(sit->second);
+            if (pCloneTask) {
                 delete sasit->second;
-                itsSASTasks.erase(sasit);
+                sasit->second = pCloneTask;
             }
-            itsController->expungeTask(*dsit);
-		}
-		itsSASdeletedTrees.clear();
+        }
+        itsController->synchronizeTask(sit->second);
+        if (find(new_tasks.begin(), new_tasks.end(),
+                 sit->first) != new_tasks.end()) {
+            itsUploadDialog->addNewSASTask(sit->second);
+        }
+    }
 
-		// ALL DONE
-		itsProgressDialog.addText(QObject::tr("Compare finished."));
-		itsProgressDialog.hide();
-		itsUploadDialog->show();
+    // ------------------------------- STEP 4 -------------------------------
+    // Add the trees that have to be deleted from SAS
+    for (std::vector<unsigned>::const_iterator it = itsTreesToDelete.begin();
+         it != itsTreesToDelete.end(); ++it) {
+        sasit = itsSASTasks.find(*it);
+        if (sasit != itsSASTasks.end()) {
+            itsUploadDialog->addDeletedSchedulerTask(sasit->second);
+        }
+    }
 
-		if (issueChangeConflict) {
-			QMessageBox::warning(0, QObject::tr("External changes detected"),
-					QObject::tr("Some task changes cannot be applied because their status has been changed in SAS. These tasks are marked red in the changed tasks table.\nThey have been updated to their current state in SAS.\nYou will have to redo the changes you made to these tasks"));
-		}
+    // add the tasks that have been deleted from sas in the upload dialog
+    for (std::vector<unsigned>::const_iterator dsit = itsSASdeletedTrees.begin();
+         dsit != itsSASdeletedTrees.end(); ++dsit) {
+        const Task *pTask = scheduler_data.getTask(*dsit, ID_SAS);
+        itsUploadDialog->addDeletedSASTask(pTask);
+        // directly delete the task from the scheduler because the tree does
+        // not exist anymore and nothing can be done abuot that (no cancel option)
+        sasit = itsSASTasks.find(*dsit);
+        if (sasit != itsSASTasks.end()) {
+            delete sasit->second;
+            itsSASTasks.erase(sasit);
+        }
+        itsController->expungeTask(*dsit);
+    }
+    itsSASdeletedTrees.clear();
 
-		return true;
-	}
-	else {
-		itsProgressDialog.enableClose();
-		return false;
-	}
+    // ALL DONE
+    itsProgressDialog.addText(QObject::tr("Compare finished."));
+    itsProgressDialog.hide();
+    itsUploadDialog->show();
+
+    if (issueChangeConflict) {
+        QMessageBox::warning(0, QObject::tr("External changes detected"),
+                             QObject::tr("Some task changes cannot be applied because their status has been changed in SAS. These tasks are marked red in the changed tasks table.\nThey have been updated to their current state in SAS.\nYou will have to redo the changes you made to these tasks"));
+    }
+
+    return true;
 }
 
+// Adds a tree to the delete stack.
+// issues a debug warning if already in the stack
 void SASConnection::addToTreesToDelete(unsigned treeID, unsigned task_id) {
-	if (find(itsTreesToDelete.begin(), itsTreesToDelete.end(), treeID) == itsTreesToDelete.end()) {
-		itsTreesToDelete.push_back(treeID);
+    if (find(itsTreesToDelete.begin(), itsTreesToDelete.end(), treeID) !=
+            itsTreesToDelete.end())
+    {
+        debugWarn("sis", "task ", task_id,
+                  "was already added to the list of SAS trees to delete");
+        return;
 	}
-	else {
-		debugWarn("sis", "task ", task_id, "was already added to the list of SAS trees to delete");
-	}
+    itsTreesToDelete.push_back(treeID);
 }
 
-void SASConnection::removeFromSASTaskToDelete(unsigned treeID) {
-	if (treeID) {
-		std::vector<unsigned>::iterator it = find(itsTreesToDelete.begin(), itsTreesToDelete.end(), treeID);
-		if (it != itsTreesToDelete.end()) {
-			itsTreesToDelete.erase(it);
-		}
-		else {
-			debugWarn("sis", "tree ", treeID, "was not found in the list of SAS trees to delete");
-		}
-	}
-}
+// Inverse of addToTreesToDelete
+// removes a tree from the delete stack.
+// issues a debug warning of tree is not on the stack
+void SASConnection::removeFromSASTaskToDelete(unsigned treeID) {    
+    if (!treeID)
+        return;
 
-/*
-void SASConnection::addChangedIDTasks(const changedIDTasks &changedIDTasks) {
-	for (changedIDTasks::const_iterator it = changedIDTasks.begin(); it != changedIDTasks.end(); ++it) {
-		itsChangedIDTasks.push_back(*it);
-		const Task *pTask(itsController->getTask(it->newTaskID));
-		if (pTask) {
-		itsProgressDialog.addText(QString("Tree ") + QString::number(pTask->getSASTreeID()) +
-				" has non unique task ID " + QString::number(it->oldTaskID) + ". Task ID is changed to " + QString::number(it->newTaskID));
-		}
-	}
+    std::vector<unsigned>::iterator it = find(itsTreesToDelete.begin(),
+                                              itsTreesToDelete.end(), treeID);
+    if (it == itsTreesToDelete.end())
+    {   // if nothing found
+        debugWarn("sis", "tree ", treeID, "was not found in the list of SAS trees to delete");
+        return;
+    }
+
+    itsTreesToDelete.erase(it);
 }
-*/
 
 bool SASConnection::deleteTrees(void) {
 	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
@@ -1774,13 +1735,7 @@ bool SASConnection::getSchedulerInfo(int tree_id, Task &task) {
 	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
 	QSqlQuery query(sasDB);
 
-	// task description
-//	task.setTaskDescription(SAS_tree.description());
-//	task.setSASTreeID(SAS_tree.treeID());
-//    task.setSASTree(SAS_tree);
-//	task.setType(SAS_tree.processType(), SAS_tree.processSubType(), SAS_tree.strategy());
-
-	// duration, start and stop time
+    // duration, start and stop time
 	query.exec("SELECT limits from getVHitemList(" + treeID + ",'LOFAR.ObsSW.Observation.Scheduler.taskDuration')");
 	if (query.next()) {
 		unsigned secondsDuration = query.value(0).toUInt();
@@ -1796,67 +1751,6 @@ bool SASConnection::getSchedulerInfo(int tree_id, Task &task) {
 	}
 	query.finish();
 
-/*
-	bool startSet(SAS_tree.startTime().isSet()), endSet(SAS_tree.stopTime().isSet());
-	if (startSet && endSet) {
-		task.setScheduledPeriod(SAS_tree.startTime(), SAS_tree.stopTime());
-	}
-	else if (!startSet & !endSet) { // this is true when the task has just been approved from MoM and no start and end times are defined
-		query.exec("SELECT limits from getVHitemList(" + treeID + ",'LOFAR.ObsSW.Observation.Scheduler.taskDuration')");
-		if (query.next()) {
-			unsigned secondsDuration = query.value(0).toUInt();
-			if (secondsDuration) {
-				AstroTime duration;
-				duration = duration.addSeconds(secondsDuration);
-				task.setDuration(duration);
-			}
-		}
-		else {
-			itsProgressDialog.addError(QString("Error: Scheduler.taskDuration node of SAS tree: ") + treeID + " could not be fetched");
-			bResult = false;
-		}
-		query.finish();
-	}
-	else if (startSet & !endSet) {
-		query.exec("SELECT limits from getVHitemList(" + treeID + ",'LOFAR.ObsSW.Observation.Scheduler.taskDuration')");
-		if (query.next()) {
-			unsigned secondsDuration = query.value(0).toUInt();
-			if (secondsDuration) {
-				AstroTime duration;
-				duration = duration.addSeconds(secondsDuration);
-				task.setDuration(duration);
-			}
-		}
-		else {
-			itsProgressDialog.addError(QString("Warning: Scheduler.taskDuration node of SAS tree: ") + treeID + " could not be fetched");
-			bResult = false;
-		}
-		query.finish();
-	}
-	else if (!startSet & endSet) {
-		query.exec("SELECT limits from getVHitemList(" + treeID + ",'LOFAR.ObsSW.Observation.Scheduler.taskDuration')");
-		if (query.next()) {
-			unsigned secondsDuration = query.value(0).toUInt();
-			if (secondsDuration) {
-				AstroTime duration;
-				task.setDuration(duration.addSeconds(secondsDuration));
-				task.setScheduledStart(SAS_tree.stopTime() - duration);
-			}
-			else {
-				task.setScheduledStart(SAS_tree.stopTime());
-				task.setDuration(AstroTime(0));
-			}
-		}
-		else {
-			itsProgressDialog.addError(QString("Warning: Scheduler.taskDuration node of SAS tree: ") + treeID + " could not be fetched");
-			bResult = false;
-		}
-		query.finish();
-	}
-*/
-
-	// status is set according to the SAS status from SAS_tree
-//	task.setStatusSAS(SAS_tree.state());
 
     // TODO: remove backwards compatible task type, this is replaced by processType meta-data
     // taskType
@@ -2249,52 +2143,67 @@ QString SASConnection::getMetaData(int treeID) {
     return parset;
 }
 
+
+// COnnect to the database and delete a task
+// Check if the tree exists in the database
+//
 bool SASConnection::abortTask(int treeID) {
 	// get the current status of the tree from SAS
 	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
-	QSqlQuery query("select state from gettreeinfo(" + QString::number(treeID) + ", false)", sasDB);
-	if (query.next()) {
-		int state = query.value(0).toInt();
-		if ((state == SAS_STATE_ACTIVE) | (state == SAS_STATE_QUEUED)) {
-			//if the status is SAS_STATE_QUEUED or SAS_STATE_ACTIVE then allow the abort
-			return setTreeState(treeID, SAS_STATE_ABORTED);
-		}
-		else {
-			debugWarn("sis","SASConnection:abortTask, tree:", treeID, " is not queued nor active, it could not be aborted");
-			return false;
-		}
-	}
-	else {
-        std::cerr << "SASConnection::abortTask: Error, could not get the tree state of tree: " << treeID << std::endl << query.lastError().text().toStdString() << std::endl;
-		return false;
-	}
+    QSqlQuery query("select state from gettreeinfo(" +
+                    QString::number(treeID) + ", false)", sasDB);
+    if (!query.next())
+    {
+        debugWarn("sis","SASConnection:abortTask, tree:", treeID,
+                  " could not get the state of tree, error:",
+                  query.lastError().text().toStdString().c_str());
+
+        return false;
+    }
+
+    int state = query.value(0).toInt();
+
+    if ((state != SAS_STATE_ACTIVE) && (state != SAS_STATE_QUEUED))
+    {
+        debugWarn("sis","SASConnection:abortTask, tree:", treeID,
+                  " is not queued nor active, it could not be aborted");
+        return false;
+    }
+    //if the status is SAS_STATE_QUEUED or SAS_STATE_ACTIVE then allow the abort
+    return setTreeState(treeID, SAS_STATE_ABORTED);
 }
 
+
+// Sets a tree to onhold in the database and in the internal 'data stores'
+// Returns valse if state could not be set in the database else true
 bool SASConnection::setTaskOnHold(int treeID) {
-	if (setTreeState(treeID, SAS_STATE_ON_HOLD)) {
-		SAStasks::iterator it = itsSASTasks.find(treeID);
-		if (it != itsSASTasks.end()) {
-            it->second->setStatus(Task::ON_HOLD);
-		}
-		std::map<unsigned, OTDBtree>::iterator sit = itsSASVicTrees.find(treeID);
-		if (sit != itsSASVicTrees.end()) {
-            sit->second.setState(SAS_STATE_ON_HOLD);
-		}
-		return true;
-	}
-	else return false;
+    if (!setTreeState(treeID, SAS_STATE_ON_HOLD))
+        return false;
+
+    SAStasks::iterator it = itsSASTasks.find(treeID);
+    if (it != itsSASTasks.end()) {
+        it->second->setStatus(Task::ON_HOLD);
+    }
+
+    std::map<unsigned, OTDBtree>::iterator sit = itsSASVicTrees.find(treeID);
+    if (sit != itsSASVicTrees.end()) {
+        sit->second.setState(SAS_STATE_ON_HOLD);
+    }
+    return true;
 }
 
+
+// For each of the supplied trees set the status on hold in the database
+// and internal datastores. uses setTaskOnHold
+// return the and of the individual setTaskOnHold operations
 bool SASConnection::setTasksOnHold(const std::vector<int> trees) {
 	bool bResult(true);
-	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
-	if (sasDB.open()) {
-		for (std::vector<int>::const_iterator it = trees.begin(); it != trees.end(); ++it) {
-			bResult &= setTaskOnHold(*it);
-		}
-	}
-	else return false;
-
+    // Database connection is checked internally
+    for (std::vector<int>::const_iterator it = trees.begin();
+         it != trees.end(); ++it)
+    {
+        bResult &= setTaskOnHold(*it);
+    }
 	return bResult;
 }
 
@@ -2501,11 +2410,23 @@ bool SASConnection::saveStationSettings(int treeID, const StationTask &task, con
             if (task.getStationClock() == clock_160Mhz) {
 				//clock mode
                 if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.clockMode","<<Clock160")) return false;
+				// channelWidth
+				if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.channelWidth", STR_CLOCK160_CHANNELWIDTH)) return false;
+				// samplesPerSecond
+				if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.samplesPerSecond", STR_CLOCK160_SAMPLESPERSECOND)) return false;
+				// subbandWidth
+				if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.subbandWidth", STR_CLOCK160_SUBBANDWIDTH)) return false;
 				// systemClock
 				if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.sampleClock", STR_CLOCK160_SAMPLECLOCK)) return false;
 			}
 			else {
                 if (!setNodeValue(treeID,"LOFAR.ObsSW.Observation.clockMode","<<Clock200")) return false;
+				// channelWidth
+				if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.channelWidth", STR_CLOCK200_CHANNELWIDTH)) return false;
+				// samplesPerSecond
+				if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.samplesPerSecond", STR_CLOCK200_SAMPLESPERSECOND)) return false;
+				// subbandWidth
+				if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.subbandWidth", STR_CLOCK200_SUBBANDWIDTH)) return false;
 				// systemClock
 				if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.sampleClock", STR_CLOCK200_SAMPLECLOCK)) return false;
 			}
@@ -2546,11 +2467,23 @@ bool SASConnection::saveStationSettings(int treeID, const StationTask &task, con
         if (task.getStationClock() == clock_160Mhz) {
 			//clock mode
             if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.clockMode","<<Clock160")) return false;
+			// channelWidth
+			if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.channelWidth", STR_CLOCK160_CHANNELWIDTH)) return false;
+			// samplesPerSecond
+			if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.samplesPerSecond", STR_CLOCK160_SAMPLESPERSECOND)) return false;
+			// subbandWidth
+			if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.subbandWidth", STR_CLOCK160_SUBBANDWIDTH)) return false;
 			// systemClock
 			if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.sampleClock", STR_CLOCK160_SAMPLECLOCK)) return false;
 		}
 		else {
             if (!setNodeValue(treeID,"LOFAR.ObsSW.Observation.clockMode","<<Clock200")) return false;
+			// channelWidth
+			if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.channelWidth", STR_CLOCK200_CHANNELWIDTH)) return false;
+			// samplesPerSecond
+			if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.samplesPerSecond", STR_CLOCK200_SAMPLESPERSECOND)) return false;
+			// subbandWidth
+			if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.subbandWidth", STR_CLOCK200_SUBBANDWIDTH)) return false;
 			// systemClock
 			if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.sampleClock", STR_CLOCK200_SAMPLECLOCK)) return false;
 		}
@@ -2559,10 +2492,12 @@ bool SASConnection::saveStationSettings(int treeID, const StationTask &task, con
 		// TBB piggyback allowed?
         const Observation *obs = dynamic_cast<const Observation *>(&task);
         if (obs) {
+            if (diff->TBBPiggybackAllowed)
                 bResult &= setNodeValue(treeID, "LOFAR.ObsSW.Observation.ObservationControl.StationControl.tbbPiggybackAllowed",
                                         (obs->getTBBPiggybackAllowed() ? "true" : "false"));
-                bResult &= setNodeValue(treeID, "LOFAR.ObsSW.Observation.ObservationControl.StationControl.aartfaacPiggybackAllowed",
-                                        (obs->getAartfaacPiggybackAllowed() ? "true" : "false"));
+            if (diff->AartfaacPiggybackAllowed)
+                 bResult &= setNodeValue(treeID, "LOFAR.ObsSW.Observation.ObservationControl.StationControl.aartfaacPiggybackAllowed",
+                                         (obs->getAartfaacPiggybackAllowed() ? "true" : "false"));
         }
     }
 
@@ -3159,7 +3094,7 @@ bool SASConnection::setTreeState(int treeID, int SAS_state) const {
 		return true;
 	}
 	else {
-		debugErr("ssss", "SAS DB ", query.lastError().text().toStdString().c_str(),
+        debugErr("SASConnection::setTreeState", "SAS DB ", query.lastError().text().toStdString().c_str(),
 				" query:", query.lastQuery().toStdString().c_str());
 		return false;
 	}
@@ -4558,6 +4493,19 @@ void SASConnection::determineUploadedDateRange(void) {
     }
 }
 
+
+// For all requested changes on the task, commit them to SAS
+// Performs a check if sas has changed.
+// updates gui with progress
+// 1. upload changes existing tasks
+// 2. add new tasks
+// 3. delete tasks
+// 4. reset internal state (last change, clean temp datamembers)
+// refactoring:
+// THis function does to much and should be split (allong the four steps)
+// mix of gui, model and control
+// contains sql queries
+//
 bool SASConnection::commitScheduleToSAS(SchedulerData &data) {
 	bool bResult(true);
 	int treeID;
@@ -4566,89 +4514,129 @@ bool SASConnection::commitScheduleToSAS(SchedulerData &data) {
 	itsProgressDialog.disableClose();
 	itsProgressDialog.show();
 	itsProgressDialog.setProgressPercentage(0);
-	size_t totalTrees(itsNewSchedulerTasks.size() + itsTreesToDelete.size() + itsChangedTasks.size());
+    size_t totalTrees(itsNewSchedulerTasks.size() + itsTreesToDelete.size()
+                      + itsChangedTasks.size());
 	size_t count(0);
 	vector<unsigned> removeTasks;
     itsChangedDates.clear();
 
-	// ------------------------------------STEP 2 -----------------------------------------------
+    // ---------------------STEP 1 --------------------------------------------
 	// upload changed task properties of tasks with changes
     Task *pCloneTask;
 	if (!itsChangedTasks.empty()) {
 		itsProgressDialog.addText("Uploading task changes...");
-		for (changedTasks::const_iterator it = itsChangedTasks.begin(); it != itsChangedTasks.end(); ++it) {
+        for (changedTasks::const_iterator it = itsChangedTasks.begin();
+             it != itsChangedTasks.end(); ++it) {
             unsigned treeID(it->first);
             Task *pTask = data.getTaskForChange(treeID, ID_SAS);
-			if (pTask) {
-				if (saveTaskToSAS(treeID, *pTask, &(it->second))) { // first = treeID, second is the task, third = task changes
-                    // update itsSAStasks if changes are uploaded successfully
-                    storePublishDates(pTask);
-                    SAStasks::iterator sit = itsSASTasks.find(treeID);
-                    if (sit != itsSASTasks.end()) {
-                        delete sit->second;
-                        itsSASTasks.erase(sit);
-                    }
-                    pCloneTask = cloneTask(pTask); // create a cloned task for future compare of changes in itsSASTasks
-                    if (pCloneTask) {
-                        itsSASTasks[treeID] = pCloneTask;
-                    }
-					itsSASVicTrees[treeID] = pTask->SASTree();
-                    itsProgressDialog.addText(QString("successful uploaded changes for tree:") + QString::number(treeID));
-                    removeTasks.push_back(treeID);
-                }
-				else {
-                    itsProgressDialog.addError(QString("failed to save changes to tree:") + QString::number(treeID));
-					itsProgressDialog.addError(itsLastErrorString);
-					bResult = false;
-				}
-			}
+            if (!pTask)
+                continue;  // Nothing done do not update progress
+
+            // attempt to task to sas
+            if (!saveTaskToSAS(treeID, *pTask, &(it->second)))
+            {
+                itsProgressDialog.addError(
+                       QString("failed to save changes to tree:")
+                       + QString::number(treeID));
+                itsProgressDialog.addError(itsLastErrorString);
+                bResult = false;
+                continue;
+            }
+
+            // update itsSAStasks if changes are uploaded successfully
+            storePublishDates(pTask);
+            SAStasks::iterator sit = itsSASTasks.find(treeID);
+            if (sit != itsSASTasks.end()) {
+                delete sit->second;
+                itsSASTasks.erase(sit);
+            }
+
+            // create a cloned task for future compare of changes in itsSASTasks
+            pCloneTask = cloneTask(pTask);
+            if (pCloneTask) {
+                itsSASTasks[treeID] = pCloneTask;
+            }
+            itsSASVicTrees[treeID] = pTask->SASTree();
+
+            itsProgressDialog.addText(
+                        QString("successful uploaded changes for tree:")
+                        + QString::number(treeID));
+            removeTasks.push_back(treeID);
 			itsProgressDialog.setProgressPercentage(++count/totalTrees*100);
 		}
+
 		// remove the correctly uploaded changedIDTasks
-		for (vector<unsigned>::const_iterator it = removeTasks.begin(); it != removeTasks.end(); ++it) {
+        for (vector<unsigned>::const_iterator it = removeTasks.begin();
+             it != removeTasks.end(); ++it) {
 			itsChangedTasks.erase(*it);
 		}
 		removeTasks.clear();
 	}
 
-	// ------------------------------------STEP 2 -----------------------------------------------
+    // ------------------------------------STEP 2 --------------------
 	// add all new tasks to the SAS database
 	if (!itsNewSchedulerTasks.empty()) {
 		itsProgressDialog.addText("Creating trees for new tasks...");
 		int parentTree;
-		for (std::vector<unsigned>::const_iterator it = itsNewSchedulerTasks.begin(); it != itsNewSchedulerTasks.end(); ++it) {
+        for (std::vector<unsigned>::const_iterator it = itsNewSchedulerTasks.begin();
+                         it != itsNewSchedulerTasks.end(); ++it) {
 			Task *pTask = data.getTaskForChange(*it);
-			if (pTask) {
-				// check which default template should be used for creating the tree (it could have been changed)
-				parentTree = Controller::theSchedulerSettings.getSASDefaultTreeID(pTask);
-				pTask->setOriginalTreeID(parentTree);
-				treeID = createNewTree(*pTask);
-				if (treeID != 0) {
-					// download the OTDBtree properties from the just created task from SAS to make sure we have an exact copy of what is in SAS
-					QSqlQuery query("select * from gettreeinfo(" + QString::number(treeID) + ", false)", sasDB);
-					if (query.next()) {
-						OTDBtree otdb_tree(query);
-						query.finish();
-                        pTask->setSASTree(otdb_tree);
-					}
-                    storePublishDates(pTask); // have to do this BEFORE changing itsSASVicTrees below
-                    itsSASTasks[treeID] = cloneTask(pTask); // create a cloned task for future compare of changes in itsSASTasks
-					itsSASVicTrees.insert(std::map<unsigned, OTDBtree>::value_type(treeID, pTask->SASTree()));
-					removeTasks.push_back(*it);
-					itsProgressDialog.addText(QString("created new tree:") + QString::number(treeID) + " for task:" + QString::number(pTask->getID()));
-                }
-				else { // error not able to create VIC tree
-					itsProgressDialog.addError(QString("failed to create new VIC tree for task:") + QString::number(pTask->getID()));
-					bResult = false;
-				}
-				itsProgressDialog.setProgressPercentage(++count/totalTrees*100);
-			}
+            // No task returned continue
+            if (!pTask)
+                continue;
+
+            // check which default template should be used for creating the tree
+            // (it could have been changed)
+            parentTree = Controller::theSchedulerSettings.getSASDefaultTreeID(pTask);
+            pTask->setOriginalTreeID(parentTree);
+            treeID = createNewTree(*pTask);
+
+            // error not able to create VIC tree
+            if (treeID == 0)
+            {
+                itsProgressDialog.addError(
+                       QString("failed to create new VIC tree for task:")
+                               + QString::number(pTask->getID()));
+                bResult = false;
+                continue; // Nothing done do not update progress
+            }
+
+            // download the OTDBtree properties from the just created task
+            //from SAS to make sure we have an exact copy of what is in SAS
+            QSqlQuery query("select * from gettreeinfo("
+                            + QString::number(treeID) + ", false)", sasDB);
+            if (query.next()) {
+                OTDBtree otdb_tree(query);
+                query.finish();
+                pTask->setSASTree(otdb_tree);
+            }
+
+            // have to do this BEFORE changing itsSASVicTrees below
+            storePublishDates(pTask);
+
+            // create a cloned task for future compare of changes in itsSASTasks
+            itsSASTasks[treeID] = cloneTask(pTask);
+            itsSASVicTrees.insert(
+                  std::map<unsigned, OTDBtree>::value_type(
+                        treeID, pTask->SASTree()));
+            removeTasks.push_back(*it);
+
+            // display in dialog
+            itsProgressDialog.addText(QString("created new tree:")
+                + QString::number(treeID) + " for task:"
+                + QString::number(pTask->getID()));
+            itsProgressDialog.setProgressPercentage(++count/totalTrees*100);
 		}
 		// remove the correctly uploaded changedIDTasks
-		for (vector<unsigned>::const_iterator it = removeTasks.begin(); it != removeTasks.end(); ++it) {
-			for (std::vector<unsigned>::iterator cit = itsNewSchedulerTasks.begin(); cit != itsNewSchedulerTasks.end(); ++cit) {
-				if (*cit == *it) itsNewSchedulerTasks.erase(cit);
-				break;
+        for (vector<unsigned>::const_iterator it = removeTasks.begin();
+             it != removeTasks.end(); ++it) {
+            for (std::vector<unsigned>::iterator cit = itsNewSchedulerTasks.begin();
+                 cit != itsNewSchedulerTasks.end(); ++cit) {
+                if (*cit == *it)
+                    itsNewSchedulerTasks.erase(cit);
+
+                // TODO: is this correct? after the first hit it will exit?
+                break;
 			}
 		}
 		removeTasks.clear();
@@ -4660,10 +4648,14 @@ bool SASConnection::commitScheduleToSAS(SchedulerData &data) {
 		itsProgressDialog.addText("Deleting tasks...");
 	}
 	QSqlQuery query(sasDB);
-	for (std::vector<unsigned>::const_iterator it = itsTreesToDelete.begin(); it != itsTreesToDelete.end(); ++it) {
-		if (query.exec("SELECT deleteTree(" +
-				itsAuthToken + "," +
-				QString::number(*it) + ")")) {
+    for (std::vector<unsigned>::const_iterator it = itsTreesToDelete.begin();
+         it != itsTreesToDelete.end(); ++it) {
+
+        bool resultQueryDeleteTree = query.exec(
+               "SELECT deleteTree(" + itsAuthToken + ","
+                + QString::number(*it) + ")");
+
+        if (resultQueryDeleteTree) {
             // store the changed dates for the auto publish functionality
             SAStasks::iterator sit = itsSASTasks.find(*it);
             if (sit != itsSASTasks.end()) {
@@ -4672,12 +4664,16 @@ bool SASConnection::commitScheduleToSAS(SchedulerData &data) {
                 itsSASTasks.erase(sit);
             }
 			itsSASVicTrees.erase(*it);
-			itsProgressDialog.addText(QString("deleted tree:") + QString::number(*it));
+            itsProgressDialog.addText(QString("deleted tree:")
+                                      + QString::number(*it));
 		}
-		else {
-			debugErr("ssss", "SAS DB ", query.lastError().text().toStdString().c_str(),
+        else
+        {  // display error in dialog
+            debugErr("ssss", "SAS DB ",
+                     query.lastError().text().toStdString().c_str(),
 					" query:", query.lastQuery().toStdString().c_str());
-			itsProgressDialog.addError(QString("failed to delete tree:") + QString::number(*it) +
+            itsProgressDialog.addError(QString("failed to delete tree:")
+                                       + QString::number(*it) +
 					" (" + query.lastError().text() + ")");
 			bResult = false;
 		}
@@ -4737,13 +4733,7 @@ std::vector<DefaultTemplate> SASConnection::getDefaultTemplates(void) {
 		}
 	}
 	query.finish();
-	// also fetch the node ID of the dataslotsinfo node in the default template tree (needed to be able to create and save dataslot info for new trees)
 
-//	query.exec("SELECT nodeid from getVTitemList(" + QString::number(Controller::theSchedulerSettings.getSASDefaultTreeID()) + ",'DataslotInfo')");
-//	if (query.next()) {
-//		itsDataslotTemplateIDstr = query.value(0).toString();
-//	}
-//	query.finish();
 
 	return templates;
 }
@@ -4788,306 +4778,200 @@ const Task *SASConnection::fetchPredecessorObservation(const QString predStr) {
     return 0;
 }
 
-/*
+
+// Performs a check of the SASconnection
+// It depends on variables set after  a download. So it has hidden dependencies
+// contains queries
+// contains gui
+// It still contains a 9 level deep if then structure
+// This is a good basis for a test.
 bool SASConnection::checkSASStatus(void) {
+    bool bResult(true);
     QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
+
+    statDlg.show();
     int result = connect();
-    if (result == 0) { // connection ok // write permission ok
-        QString processType("Pipeline"), processSubType("Averaging Pipeline"), strategy("");
-        SAS_task_status firstState(SAS_STATE_FINISHED);
-        bool empty(true);
-        QString query("SELECT * from getTreesInPeriod('" + QString::number(VIC_TREE) + "','" +
-                      Controller::theSchedulerSettings.getEarliestSchedulingDay().toString().c_str() + "','" +
-                      Controller::theSchedulerSettings.getLatestSchedulingDay().toString().c_str() +
-                      "') WHERE state=" + QString::number(firstState));
-        if (!processType.isEmpty()) {
-            empty = false;
-            query += " AND processtype='" + processType + "'";
+    // connection ok // write permission ok
+    if (result == 0)
+    {
+        // Display current status in dialog
+        statDlg.addText("SAS connection OK.");
+        statDlg.addText("SAS write permissions OK");
+        // checking functions
+        statDlg.addText("Checking SAS database functions:");
+
+        // Check some random timespan if we can query the db
+        QSqlQuery query(sasDB);
+        bool resultQuerygetTreesInPeriod = query.exec(
+                   "SELECT * from getTreesInPeriod('"
+                   + QString::number(VIC_TREE)
+                   + "','2010-01-01 00:00:00', '2010-01-01 23:59:59')");
+        if (resultQuerygetTreesInPeriod) {
+            statDlg.addText("function: 'getTreesInPeriod' OK");
         }
-        if (!processSubType.isEmpty()) {
-            if (!empty) {
-                query += " AND ";
-            }
-            query += "processsubtype='" + processSubType + "'";
-            empty = false;
+        else {
+            statDlg.addError("function: 'getTreesInPeriod' ERROR");
+            statDlg.addError(sasDB.lastError().text());
+            bResult = false;
+            // TODO: we should exit here, the db connection is broken
         }
-        if (!strategy.isEmpty()){
-            if (!empty) {
-                query += " AND ";
-            }
-            query += "strategy='" + strategy + "'";
-            empty = false;
+        query.finish();
+
+        int schedulerDefaultTemplateID =
+              Controller::theSchedulerSettings.getSchedulerDefaultTemplate();
+        QString SASDefaultTreeIDstr = QString::number(schedulerDefaultTemplateID);
+        bool resultQuerygetvtitemlist =
+        query.exec(QString("SELECT * from getvtitemlist(")
+                   + SASDefaultTreeIDstr + ",'taskID')");
+        if (!resultQuerygetvtitemlist)
+        {   // error detected
+            statDlg.addError("function: 'getvtitemlist' ERROR");
+            statDlg.addError(sasDB.lastError().text());
         }
+        else if (!query.next())
+        {   // error detected
+            statDlg.addError(QString("function: 'SAS default VIC template tree ")
+                  + SASDefaultTreeIDstr
+                  + " Not found. (Is the default template treeID correct?)");
+            bResult = false;
+        }
+        else
+        {
+            statDlg.addText(QString("function: 'SAS default template tree ")
+                             + SASDefaultTreeIDstr + " OK");
+            int newTreeID(0);
 
-        //query += " ORDER BY starttime LIMIT 50";
-
-        std::cout << query.toStdString() << std::endl;
-
-        std::map<unsigned, Task *> tasks;
-        QSqlQuery sqlquery(sasDB);
-        if (sqlquery.exec(query)) {
-            if (sqlquery.isActive()) {
-                while (sqlquery.next()) {
-                    OTDBtree tree(sqlquery);
-                    std::pair<bool, Task *> retVal = getTaskFromSAS(tree.treeID(), tree);
-                    if (retVal.second) {
-                        tasks.insert(std::map<unsigned, Task *>::value_type(tree.treeID(), retVal.second));
-                    }
-                }
-                sqlquery.finish();
+            bool resultQueryinstanciateVHtree =
+                   query.exec(QString("SELECT * from instanciateVHtree(")
+                          +  itsAuthToken + "," + SASDefaultTreeIDstr + ")");
+            if (!resultQueryinstanciateVHtree)
+            {   // error detected
+                statDlg.addError("function: 'instanciateVHtree' ERROR");
+                statDlg.addError(sasDB.lastError().text());
+                bResult = false;
             }
-            else {
-                sqlquery.finish();
-                return -1;// could not fetch any task from SAS query not valid
-            }
-
-            // gather statistics about the tasks
-            const CalibrationPipeline *calPipe(0);
-//            float factor;
-            QString outstr;
-            const Observation *predecessor(0);
-            if (!tasks.empty()) {
-                std::cout << outstr.toStdString() << "writing file 'statistics.csv'" << std::endl;
-
-            for (std::map<unsigned, Task *>::const_iterator it = tasks.begin(); it != tasks.end(); ++it) {
-
-                AstroDateTime timedif(it->second->SASTree().stopTime() - it->second->SASTree().startTime());
-                //unsigned estdur(it->second->getDuration().totalSeconds());
-                unsigned realdur(timedif.totalSeconds());
-//                if (estdur >= realdur) factor = estdur / realdur;
-//                else factor = realdur / estdur;
-
-                outstr += it->second->SASTree().startTime().date().toString().c_str() + QString(", ")
-                + QString::number(it->second->getSASTreeID()) + QString(", ")
-                        + it->second->getProjectID() + QString(", ")
-                        + it->second->getTaskName() + QString(", ")
-//                        + it->second->getStatusStr() + QString(", ")
-//                        + it->second->getDuration().toString().c_str() + QString(", ")
-//                        + QString::number(it->second->getDuration().totalSeconds()) + ", "
-                        + timedif.time().toString().c_str() + QString(", ")
-                        + QString::number(timedif.totalSeconds());
-//                        + QString::number(factor,'f',1);
-
-                calPipe = dynamic_cast<const CalibrationPipeline *>(it->second);
-                if (calPipe) {
-                    QString demixSources = calPipe->demixingSettings().demixAlways();
-                    outstr += QString(", [") + demixSources.replace(',',';') + "], ";
+            else
+            {
+                query.next();
+                newTreeID = query.value(query.record().indexOf(
+                                            "instanciateVHtree")).toInt();
+                if (!newTreeID)
+                {   // error detected
+                    statDlg.addError(
+                        "function: 'instanciateVHtree' could not create tree ERROR");
+                    statDlg.addError(sasDB.lastError().text());
+                    bResult = false;
                 }
-                else {
-                    outstr += ", [], ";
-                }
-
-                // fetch the predecessor observation
-                predecessor = dynamic_cast<const Observation *>(fetchPredecessorObservation(it->second->getPredecessorsString()));
-                if (predecessor) { // found the predecessor observation
-                    unsigned predDur(predecessor->getDuration().totalSeconds());
-                    outstr += QString::number(predDur) + ", ";
-                    if (realdur >= predDur) {
-                        outstr += QString::number((float)realdur / predDur, 'f', 1);
+                else
+                {
+                    statDlg.addText("function: 'instanciateVHtree' OK");
+                    // check getVHitemList
+                    vector<OTDBnode> fieldList = getItemList(newTreeID,
+                              "LOFAR.ObsSW.Observation.Scheduler.taskID");
+                    if (fieldList.size() != 1)
+                    {   // error detected
+                        statDlg.addError("function: 'getVHitemList' ERROR returned multiple taskID fields for one tree!");
+                        bResult = false;
                     }
-                    else {
-                        outstr += QString::number((float)predDur / realdur, 'f', 1);
-                    }
+                    else
+                    { // should be unique property
+                        statDlg.addText("function: 'getVHitemList' OK");
+                        // check updateVTnode function
+                        bool resultQueryupdateVTnode =
+                             query.exec("SELECT updateVTnode("
+                                 + itsAuthToken + ","
+                                 + QString::number(newTreeID) + ","
+                                 + QString::number(fieldList.front().nodeID())
+                                 + ",'1','100')");
+                        if (!resultQueryupdateVTnode)
+                        {    // error detected
+                            statDlg.addError("function: 'updateVTnode' ERROR");
+                            statDlg.addError(sasDB.lastError().text());
+                            bResult = false;
+                        }
+                        else
+                        {
+                            // check if update ok
+                            query.next();
+                            bool resultQueryupdatevtnode = query.value(
+                               query.record().indexOf("updatevtnode")).toBool();
 
-                    outstr += ", " + QString::number(predecessor->getRTCPsettings().channelsPerSubband) + ", "
-                            + QString::number(predecessor->getRTCPsettings().correlatorIntegrationTime) + ", ";
-                    const StationTask *pStation = static_cast<const StationTask *>(predecessor);
-                    outstr += QString::number(pStation->getNrVirtualStations()) + ", ";
-                    outstr += QString(pStation->getAntennaModeStr()).left(3);
+                            if (!resultQueryupdatevtnode)
+                            {   // error detected
+                                statDlg.addError("function: 'updateVTnode' ERROR");
+                                statDlg.addError(sasDB.lastError().text());
+                                bResult = false;
+                            }
+                            else
+                            {   // error detected
+                                statDlg.addText("function: 'updateVTnode' OK");
 
-                    const Pipeline *pipe(dynamic_cast<const Pipeline *>(it->second));
-                    if (pipe) {
-
-                        const std::map<dataProductTypes, TaskStorage::inputDataProduct> &inputdata(pipe->storage()->getInputDataProducts());
-                        const std::map<dataProductTypes, TaskStorage::inputDataProduct>::const_iterator iit = inputdata.find(DP_CORRELATED_UV);
-                        if (iit != inputdata.end()) {
-                            if (!iit->second.identifications.isEmpty()) {
-                                QString inputIdent(iit->second.identifications.at(0)); // should have only one identification for Correlated data input
-//                                outstr += ", " + inputIdent;
-                                const std::map<dataProductTypes, TaskStorage::outputDataProduct> &predData(predecessor->storage()->getOutputDataProducts());
-                                const std::map<dataProductTypes, TaskStorage::outputDataProduct>::const_iterator oit = predData.find(DP_CORRELATED_UV);
-                                if (oit != predData.end()) {
-                                    if (!oit->second.identifications.isEmpty()) {
-                                        int beamIdx(oit->second.identifications.indexOf(inputIdent)); // which beam index?
-                                        const std::map<unsigned, DigitalBeam> &beams(predecessor->getDigitalBeams());
-                                        const std::map<unsigned, DigitalBeam>::const_iterator bit = beams.find(beamIdx);
-                                        if (bit != beams.end()) {
-                                            outstr += ", " + QString::number(bit->second.nrSubbands());
-                                        }
-                                    }
+                                // check function getSchedulerInfo
+                                query.finish();
+                                int taskid(-1);
+                                bool resultQuerygetSchedulerInfo = query.exec("SELECT * from getSchedulerInfo(" + QString::number(newTreeID) + ")");
+                                if (!resultQuerygetSchedulerInfo)
+                                {   // error detected
+                                    statDlg.addError("function: 'getSchedulerInfo' ERROR (Can also be caused by a wrong SAS Scheduler master template tree)");
+                                    statDlg.addError(sasDB.lastError().text());
+                                    bResult = false;
                                 }
 
+                                else
+                                {
+                                    query.next();
+                                    taskid = query.value(query.record().indexOf("taskID")).toUInt();
+                                    if (taskid == 100) {
+                                        statDlg.addText("function: 'getSchedulerInfo' OK");
+                                    }
+                                    else {
+                                        statDlg.addError("function: 'getSchedulerInfo' did not return the expected value!");
+                                        bResult = false;
+                                    }
+                                }
                             }
+                        }
+
+                    }
+
+                    // check deleteTree function
+                    if (newTreeID) {
+                        if (!query.exec("SELECT deleteTree(" +
+                                        itsAuthToken + "," +
+                                        QString::number(newTreeID) + ")")) {
+                            statDlg.addError("function: 'deleteTree' ERROR");
+                            statDlg.addError(sasDB.lastError().text());
+                        }
+                        else {
+                            statDlg.addText("function: 'deleteTree' OK");
                         }
                     }
                 }
-
-                outstr += "\n";
             }
-
-
-                QFile file("statistics.csv");
-                file.open(QIODevice::ReadWrite);
-                file.write(outstr.toStdString().c_str());
-                file.close();
-            }
-
         }
 
     }
-    return true;
+    else if (result == -1) {
+        // no connection to SAS database
+        statDlg.addError("SAS connection ERROR: ");
+        statDlg.addError(sasDB.lastError().text());
+        bResult = false;
+    }
+    else if (result == -2) {
+        // connection ok but no write permissions to SAS database
+        statDlg.addText("SAS connection OK.");
+        statDlg.addError("SAS write permissions ERROR. No write permissions to database! Please check SAS User name and password.");
+        bResult = false;
+    }
+
+    if (bResult) {
+        statDlg.addText("Everything OK!");
+    }
+    else {
+        statDlg.addText("ERRORS detected!");
+    }
+    return bResult;
 }
-*/
-
-
-bool SASConnection::checkSASStatus(void) {
-	bool bResult(true);
-	QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
-	SASStatusDialog * statDlg = new SASStatusDialog();
-	statDlg->show();
-	int result = connect();
-	if (result == 0) { // connection ok // write permission ok
-		statDlg->addText("SAS connection OK.");
-		statDlg->addText("SAS write permissions OK");
-		// checking functions
-		statDlg->addText("Checking SAS database functions:");
-		QSqlQuery query(sasDB);
-		if (query.exec("SELECT * from getTreesInPeriod('" +
-						QString::number(VIC_TREE) + "','2010-01-01 00:00:00', '2010-01-01 23:59:59')")) {
-			statDlg->addText("function: 'getTreesInPeriod' OK");
-		}
-		else {
-			statDlg->addError("function: 'getTreesInPeriod' ERROR");
-			statDlg->addError(sasDB.lastError().text());
-			bResult = false;
-		}
-		query.finish();
-		int schedulerDefaultTemplateID = Controller::theSchedulerSettings.getSchedulerDefaultTemplate();
-		QString SASDefaultTreeIDstr = QString::number(schedulerDefaultTemplateID);
-		if (query.exec(QString("SELECT * from getvtitemlist(") + SASDefaultTreeIDstr + ",'taskID')")) {
-			if (query.next()) {
-				statDlg->addText(QString("function: 'SAS default template tree ") + SASDefaultTreeIDstr + " OK");
-				int newTreeID(0);
-				if (query.exec(QString("SELECT * from instanciateVHtree(")  +
-						itsAuthToken + "," + SASDefaultTreeIDstr + ")")) {
-					query.next();
-					newTreeID = query.value(query.record().indexOf("instanciateVHtree")).toInt();
-					if (newTreeID) {
-						statDlg->addText("function: 'instanciateVHtree' OK");
-						// check getVHitemList
-						vector<OTDBnode> fieldList = getItemList(newTreeID, "LOFAR.ObsSW.Observation.Scheduler.taskID");
-						if (fieldList.size() == 1) { // should be unique property
-							statDlg->addText("function: 'getVHitemList' OK");
-						// check updateVTnode function
-						if (query.exec("SELECT updateVTnode(" +
-								itsAuthToken + "," +
-								QString::number(newTreeID) + "," +
-								QString::number(fieldList.front().nodeID()) + ",'1','100')")) {
-							// check if update ok
-							query.next();
-							if (query.value(query.record().indexOf("updatevtnode")).toBool()) {
-								statDlg->addText("function: 'updateVTnode' OK");
-
-								// check function getSchedulerInfo
-								query.finish();
-								int taskid(-1);
-								if (query.exec("SELECT * from getSchedulerInfo(" + QString::number(newTreeID) + ")")) {
-									query.next();
-									taskid = query.value(query.record().indexOf("taskID")).toUInt();
-									if (taskid == 100) {
-										statDlg->addText("function: 'getSchedulerInfo' OK");
-									}
-									else {
-										statDlg->addError("function: 'getSchedulerInfo' did not return the expected value!");
-										bResult = false;
-									}
-								}
-								else {
-									statDlg->addError("function: 'getSchedulerInfo' ERROR (Can also be caused by a wrong SAS Scheduler master template tree)");
-									statDlg->addError(sasDB.lastError().text());
-									bResult = false;
-								}
-							}
-							else {
-								statDlg->addError("function: 'updateVTnode' ERROR");
-								statDlg->addError(sasDB.lastError().text());
-								bResult = false;
-							}
-						}
-						else {
-							statDlg->addError("function: 'updateVTnode' ERROR");
-							statDlg->addError(sasDB.lastError().text());
-							bResult = false;
-						}
-
-						}
-						else {
-							statDlg->addError("function: 'getVHitemList' ERROR returned multiple taskID fields for one tree!");
-							bResult = false;
-						}
-						// check deleteTree function
-						if (newTreeID) {
-							if (!query.exec("SELECT deleteTree(" +
-									itsAuthToken + "," +
-									QString::number(newTreeID) + ")")) {
-								statDlg->addError("function: 'deleteTree' ERROR");
-								statDlg->addError(sasDB.lastError().text());
-							}
-							else {
-								statDlg->addText("function: 'deleteTree' OK");
-							}
-						}
-					}
-					else {
-						statDlg->addError("function: 'instanciateVHtree' could not create tree ERROR");
-						statDlg->addError(sasDB.lastError().text());
-						bResult = false;
-					}
-				}
-				else {
-					statDlg->addError("function: 'instanciateVHtree' ERROR");
-					statDlg->addError(sasDB.lastError().text());
-					bResult = false;
-				}
-			}
-			else {
-				statDlg->addError(QString("function: 'SAS default VIC template tree ") + SASDefaultTreeIDstr + " Not found. (Is the default template treeID correct?)");
-//				statDlg->addError(sasDB.lastError().text());
-				bResult = false;
-			}
-		}
-		else {
-			statDlg->addError("function: 'getvtitemlist' ERROR");
-			statDlg->addError(sasDB.lastError().text());
-		}
-	}
-	else if (result == -1) {
-		// no connection to SAS database
-		statDlg->addError("SAS connection ERROR: ");
-		statDlg->addError(sasDB.lastError().text());
-		bResult = false;
-	}
-	else if (result == -2) {
-		// connection ok but no write permissions to SAS database
-		statDlg->addText("SAS connection OK.");
-		statDlg->addError("SAS write permissions ERROR. No write permissions to database! Please check SAS User name and password.");
-		bResult = false;
-	}
-//	else if (result == 3) {
-//		statDlg->addError("SAS connection ERROR:");
-//		statDlg->addError("Error: could not get clock settings from SAS database.");
-//		bResult = false;
-//	}
-
-	if (bResult) {
-		statDlg->addText("Everything OK!");
-	}
-	else {
-		statDlg->addText("ERRORS detected!");
-	}
-	return bResult;
-}
-
 
 std::string getSasTextState(int sas_state) {
 	switch (sas_state) {
@@ -5139,3 +5023,60 @@ std::string getSasTextState(int sas_state) {
 	}
 	return task_states_str[Task::IDLE];
 }
+
+//*****************************************************************************
+// From here GUI / View functionality
+
+
+// Makes connection with the SASDB and checks if there are tasks changed that
+// should be update locally.
+// Returns false on problems with connection with the SAS database
+// True otherwise (if there are changes is only shown in progress window
+// refactoring comments:
+// This is function is used on a single location
+// controller
+// Side effects
+// gui
+// Candidate for removal. Does not do anything, exit value is true or
+// false on external errors.
+bool SASConnection::checkSynchronizeNeeded(void) {
+    QSqlDatabase sasDB = QSqlDatabase::database( "SASDB" );
+    if (!sasDB.isOpen())
+    {
+        itsProgressDialog.addError(QObject::tr(
+                "ERROR: Not connected to SAS database. Aborting synchronize!"));
+        return false;
+    }
+
+    Controller::theSchedulerSettings.updateDefaultTemplates();
+
+    itsProgressDialog.addText(QObject::tr(
+                                "Start synchronize SAS schedule procedure"));
+    itsProgressDialog.addText(QObject::tr(
+                                 "Checking for changes in SAS database..."));
+
+    // This function downloads the modified tasks
+    int retVal(getModifiedVICTrees(itsLastDownloadDate));
+
+
+    if (retVal == -1) {
+        itsProgressDialog.addError(QObject::tr(
+             "ERROR: could not fetch tasks from SAS. Aborting synchronize!"));
+        return false;
+    }
+
+    // Now check the number of modified tasks. And display this as text string
+    size_t nrOfModifiedSASTrees = itsSASmodifiedTasks.size();
+    if (nrOfModifiedSASTrees != 0) {
+        itsProgressDialog.addText(QObject::tr(
+             "Check complete. Number of modified tasks in SAS database: ") +
+                                  QString::number(nrOfModifiedSASTrees));
+        return true;
+    }
+    else {
+        itsProgressDialog.addText(QObject::tr(
+                "Check complete. No modified tasks needed to be downloaded."));
+        return true;
+    }
+}
+

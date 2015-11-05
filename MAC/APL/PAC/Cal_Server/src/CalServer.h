@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -29,7 +29,6 @@
 #include <Common/lofar_string.h>
 #include <APL/CAL_Protocol/ACC.h>
 #include <APL/CAL_Protocol/SubArray.h>
-#include <APL/RSP_Protocol/RCUSettings.h>
 #include "Source.h"
 #include "DipoleModel.h"
 #include "SubArrays.h"
@@ -43,7 +42,6 @@ namespace LOFAR {
   using GCF::TM::GCFTCPPort;
   using GCF::TM::GCFPortInterface;
   using GCF::TM::GCFTimerPort;
-  
   namespace CAL {
 
 // forward declarations
@@ -71,7 +69,7 @@ public:
 	void remove_client(GCFPortInterface* port);
 
 	// increment RCU usagecounters and enable newly used RCUs
-	void _enableRCUs(SubArray*	subarray, RSP_Protocol::RCUSettings rcu_settings, int delay);
+	void _enableRCUs(SubArray*	subarray, int delay);
 
 	// decrement RCU usagecounters and disable unused RCUs
 	void _disableRCUs(SubArray*	subarray);

@@ -18,6 +18,7 @@
 #include <sstream>
 #include <map>
 #include <algorithm>
+#include <cstdlib> // Needed getenv
 #include "astrotime.h"
 #include "astrodatetime.h"
 #include "task.h"
@@ -65,316 +66,6 @@ void DataHandler::checkTask(Task *task) {
 	}
 }
 
-/*
-bool DataHandler::readCSVFile(const QString &filename, SchedulerData &data)
-{
-    if (!filename.isEmpty())
-    {
-        ifstream file(filename.toStdString().c_str());
-        if (file) {
-            Task *pt(0);
-            char buf[50];
-            char buf2[500];
-            string line;
-            int bsize = sizeof(buf);
-            stringstream sstr;
-            // variables needed to create a task:
-            unsigned int tid=0, pid=0, clock=0, ngt_time_wght=0, uVal(0);
-            int task_status_int = -1, task_mode_int = -1, iVal(0);
-            string target, status, strdt, task_mode_str;
-            double priority = 0.0f;
-            bool bool_value;
-            processSubTypes subType = PST_UNKNOWN;
-
-            while (!file.eof()) {
-                tid=0; pid=0; clock=0; ngt_time_wght=0;
-                iVal = 0;
-                uVal = 0;
-                target = ""; status = ""; strdt = "";
-                priority = 0.0f;
-                // read taskID
-                file.getline(buf, bsize, ',');
-
-                // if this is a commented line '#' then skip it
-                if (buf[0] == '#') { getline(file, line); continue; }
-                //else { file.getline(buf, bsize, ','); }
-
-                sstr.str("");
-                sstr.clear();
-                sstr << buf;
-                sstr >> tid;
-                if (tid == 0) { // tid == 0 means we are probably at the end of the file now
-                    continue;
-                }
-
-                // read task type
-                getline(file, strdt, ',');
-                string subtypestr;
-                getline(file, subtypestr, ',');
-
-                if (strdt != "") {
-                    Task::task_type type = taskTypeFromString(strdt);
-                    switch (type) {
-                    case Task::OBSERVATION:
-                        pt = data.newObservation(tid);
-                        if (!pt) {
-                            cerr << "Creating new observaton failed because task ID: " << tid << " already exists." << endl;
-                            file.getline(buf2, sizeof(buf2)); // skip this line
-                            continue;
-                        }
-                        break;
-                    case Task::PIPELINE:
-                        subType = stringToProcessSubType(subtypestr.c_str());
-                        switch (subType) {
-                        case PST_AVERAGING_PIPELINE:
-                        case PST_CALIBRATION_PIPELINE:
-                            pt = data.newCalibrationPipeline(tid, false);
-                            break;
-                        case PST_IMAGING_PIPELINE:
-                        case PST_MSSS_IMAGING_PIPELINE:
-                            pt = data.newImagingPipeline(tid, false);
-                            break;
-                        case PST_PULSAR_PIPELINE:
-                            pt = data.newPulsarPipeline(tid, false);
-                            break;
-                        default:
-                            pt = data.newPipeline(tid, false);
-                            break;
-                        }
-                        if (!pt) {
-                            cerr << "Creating new pipeline failed because task ID: " << tid << " already exists." << endl;
-                            file.getline(buf2, sizeof(buf2)); // skip this line
-                            continue;
-                        }
-                        break;
-                    case Task::RESERVATION:
-                        break;
-                    case Task::MAINTENANCE:
-                        break;
-                    case Task::SYSTEM:
-                        break;
-                    default:
-                        cerr << "Unknown task type for task ID: " << tid << " . Skipping." << endl;
-                        file.getline(buf2, sizeof(buf2)); // skip this line
-                        continue;
-                    }
-                    if (!pt) {
-                        cerr << "Creating new task failed because task ID: " << tid << " already exists." << endl;
-                        file.getline(buf2, sizeof(buf2)); // skip this line
-                        continue;
-                    }
-                }
-                else {
-                    cerr << "Could not read task type for task ID: " << tid << ". Skipping." << endl;
-                    file.getline(buf2, sizeof(buf2)); // skip this line
-                    continue;
-                }
-
-                // read SAS ID
-                sstr.str("");
-                sstr.clear();
-                file.getline(buf, bsize, ',');
-                sstr << buf;
-                sstr >> iVal;
-                pt->setSASTreeID(iVal);
-
-                // read MoM ID
-                sstr.str("");
-                sstr.clear();
-                file.getline(buf, bsize, ',');
-                sstr << buf;
-                sstr >> iVal;
-                pt->setMoMID(iVal);
-
-                // read Group ID
-                sstr.str("");
-                sstr.clear();
-                file.getline(buf, bsize, ',');
-                sstr << buf;
-                sstr >> uVal;
-                pt->setGroupID(uVal);
-
-                // read project name
-                getline(file, strdt, ',');
-                if (strdt != "") {
-                    pt->setProjectName(strdt);
-                }
-                // read task name
-                getline(file, strdt, ',');
-                if (strdt != "") {
-                    pt->setTaskName(strdt);
-                }
-                // read contact name
-                getline(file, strdt, ',');
-                if (strdt != "") {
-                    pt->setContactName(strdt);
-                }
-                // read contact phone
-                getline(file, strdt, ',');
-                if (strdt != "") {
-                    pt->setContactPhone(strdt);
-                }
-                // read contact e-mail
-                getline(file, strdt, ',');
-                if (strdt != "") {
-                    pt->setContactEmail(strdt);
-                }
-                // read Predecessor ID
-                sstr.str("");
-                sstr.clear();
-                file.getline(buf, bsize, ',');
-                sstr << buf;
-                sstr >> pid;
-                if (pid) {
-                    // read predecessor minimum time difference
-                    getline(file, strdt,',');
-                    // read predecessor maximum time difference
-                    getline(file, strdt,',');
-                    pt->addPredecessor(pid);
-                }
-                else {
-                    getline(file, strdt,',');
-                    getline(file, strdt,',');
-                }
-
-                // read task status
-                sstr.str("");
-                sstr.clear();
-                file.getline(buf, bsize, ',');
-                sstr << buf;
-                sstr >> task_status_int;
-
-                // read task duration
-                getline(file, strdt, ',');
-                if (strdt != "") {
-                    pt->setDuration(strdt);
-                }
-
-                // read planned start
-                getline(file, strdt, ',');
-                if (strdt != "") {
-                    pt->setScheduledStart(strdt);
-                }
-
-                // read planned end
-                getline(file, strdt, ',');
-                if (strdt != "") {
-                    pt->setScheduledEnd(strdt);
-                }
-
-                // read first possible date
-                getline(file, strdt, ',');
-                if (strdt != "") {
-                    pt->setWindowFirstDay(strdt);
-                }
-
-                // read last possible date
-                getline(file, strdt, ',');
-                if (strdt != "") {
-                    pt->setWindowLastDay(strdt);
-                }
-
-                // read scheduling time window minimum time
-                getline(file, strdt, ',');
-                if (strdt != "") {
-                    pt->setWindowMinTime(strdt);
-                }
-
-                // read scheduling time window maximum time
-                getline(file, strdt, ',');
-                if (strdt != "") {
-                    pt->setWindowMaxTime(strdt);
-                }
-
-                // read fixed day boolean
-                bool_value = false;
-                sstr.str("");
-                sstr.clear();
-                file.getline(buf, bsize, ',');
-                sstr << buf;
-                sstr >> bool_value;
-                pt->setFixDay(bool_value);
-
-                // read fixed time boolean
-                bool_value = false;
-                sstr.str("");
-                sstr.clear();
-                file.getline(buf, bsize, ',');
-                sstr << buf;
-                sstr >> bool_value;
-                pt->setFixTime(bool_value);
-
-                // read priority
-                sstr.str("");
-                sstr.clear();
-                file.getline(buf, bsize, ',');
-                sstr << buf;
-                sstr >> priority;
-                pt->setPriority(priority);
-
-                // unscheduled reason
-                getline(file, strdt, ',');
-                if (strdt != "") {
-                    pt->setReason(strdt);
-                }
-
-                // if this is an observation
-                if (pt->isObservation()) {
-                    Observation *pObs = dynamic_cast<Observation *>(pt);
-                    // read antenna mode
-                    task_mode_int = -1;
-                    sstr.str("");
-                    sstr.clear();
-                    file.getline(buf, bsize, ',');
-                    sstr << buf;
-                    sstr >> task_mode_int;
-                    if (task_mode_int != -1) { // if task mode was specified as an integer in the file
-                        pObs->setAntennaMode(static_cast<station_antenna_mode>(task_mode_int));
-                    }
-                    else { // if task mode was specified as a string in the file
-                        sstr.clear();
-                        sstr.seekp(0, std::ios::beg);
-                        sstr >> task_mode_str;
-                        pObs->setAntennaMode(task_mode_str);
-                    }
-                    // read station names
-                    getline(file, strdt, ',');
-                    if (strdt != "") {
-                        pObs->setStations(strdt.c_str(),';');
-                    }
-                    // read clock frequency
-                    sstr.str("");
-                    sstr.clear();
-                    file.getline(buf, bsize, ',');
-                    sstr << buf;
-                    sstr >> clock;
-                    pObs->setStationClock(clock);
-                    // read night-time weight factor
-                    sstr.str("");
-                    sstr.clear();
-                    file.getline(buf, bsize, ',');
-                    sstr << buf;
-                    sstr >> ngt_time_wght;
-                    pObs->setNightTimeWeightFactor(ngt_time_wght);
-                }
-                else { // skip to next line (task) in file
-                    file.getline(buf2, sizeof(buf2)); // skip this line
-                    continue;
-                }
-                // now check if this task has enough valid data to be scheduled, if not put on hold
-                checkTask(pt);
-                pt->calculateDataFiles();
-            }
-            file.close();
-        }
-        else {
-            cerr << "Could not open file " << filename.toStdString() << "." << endl;
-        }
-        return true;
-    }
-    return false;
-}
-*/
 
 bool DataHandler::writeCSVFile(const QString &filename, const std::vector<const Task *> tasks) {
     QFile file(filename);
@@ -479,11 +170,31 @@ bool DataHandler::saveSchedule(const QString &filename, const SchedulerData &dat
 		return false;
 }
 
+// Returns the default settingsfile installed in the LOFARROT/share/scheduler
+// if available. If not found returns the default name of the scheduler settings
+// file. (old behaviour)
+std::string DataHandler::getDefaultSettingsPath()
+{
+    std::string path;
+
+    char * lofarRoot = getenv("LOFARROOT");
+    // Test if env returned the lofarroot variable
+    if (lofarRoot) //linux specific path concat. Is ugly
+        path = string(lofarRoot)+ "/share/scheduler/" + PROGRAM_DEFAULT_SETTINGS_FILENAME;
+
+    else // LOFARROOT not found
+        path = string(PROGRAM_DEFAULT_SETTINGS_FILENAME);
+
+    return path;
+}
+
 bool DataHandler::loadProgramPreferences(void) {
 	ifstream file;
 	bool loadDefaults;
+
 	file.open(PROGRAM_PREFERENCES_FILENAME, std::ios::binary);
-	if (file.is_open()) {
+    if (file.is_open())
+    {
 		try {
 			read_primitive<bool>(file, loadDefaults);
 			Controller::theSchedulerSettings.setLoadDefaultSettingsOnStartup(loadDefaults);
@@ -495,7 +206,8 @@ bool DataHandler::loadProgramPreferences(void) {
 		}
 		file.close();
 		if (loadDefaults) {
-			if (loadSettings(PROGRAM_DEFAULT_SETTINGS_FILENAME)) {
+            std::string defaultSettingsPath = getDefaultSettingsPath();
+            if (loadSettings(QString(defaultSettingsPath.c_str()))) {
 				return true;
 			}
 			else return false;

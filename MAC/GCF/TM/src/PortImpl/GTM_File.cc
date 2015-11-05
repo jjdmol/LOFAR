@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -119,18 +119,16 @@ void GTMFile::doWork()
 
 void GTMFile::setBlocking(bool	blocking) const
 {
-	if (_fd <= -1)
+	if (_fd < -1)
 		return;
 
 	int flags = fcntl(_fd, F_GETFL);
 
 	if (blocking) {
-		fcntl(_fd, F_SETFL, flags & ~O_NONBLOCK);
-	} else {
 		fcntl(_fd, F_SETFL, flags | O_NONBLOCK);
+	} else {
+		fcntl(_fd, F_SETFL, flags & ~O_NONBLOCK);
 	}
-
-	LOG_DEBUG_STR("FD " << _fd << " set to " << (blocking ? "blocking" : "non blocking"));
 }
 
 //

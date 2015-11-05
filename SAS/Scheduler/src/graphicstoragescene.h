@@ -19,14 +19,14 @@
 #include <QGraphicsScene>
 #include "GraphicTimeLine.h"
 
-class Controller;
-
+// TODO remove zombie code
+// Is only used to forward stuff to the itsTimeLine
 class GraphicStorageScene : public QGraphicsScene
 {
     Q_OBJECT
 
 public:
-	GraphicStorageScene(Controller *controller);
+    GraphicStorageScene();
     ~GraphicStorageScene();
 
 	int getTimeLineWidth(void) {return static_cast<int>(itsTimeLine->getWidth());}
@@ -35,7 +35,6 @@ public:
 private:
     Ui::GraphicStorageSceneClass ui;
 	QGraphicsView *itsParentView;
-    Controller *itsController;
 	GraphicTimeLine *itsTimeLine;
 	int itsTimeLineZeroPos; // corresponds to time line zero position
 };

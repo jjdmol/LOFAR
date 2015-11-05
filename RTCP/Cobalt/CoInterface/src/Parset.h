@@ -1,5 +1,5 @@
 //# Parset.h: class/struct that holds the Parset information
-//# Copyright (C) 2008-2015  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -69,11 +69,6 @@ namespace LOFAR
       //
       // key: Observation.ObsID
       unsigned observationID;
-
-      // The MoM observation number
-      //
-      // key: Observation.momID
-      unsigned momID;
 
       // Command stream, or null: if not used
       //
@@ -268,8 +263,7 @@ namespace LOFAR
         // NIC(s) to bind to (comma seperated)
         //
         // E.g. "mlx4_0", "mlx4_1", "eth0", etc
-        std::string mpi_nic; // for MPI
-        std::string out_nic; // to outputProc
+        std::string nic;
       };
 
       std::vector<struct Node> nodes;
@@ -672,7 +666,6 @@ namespace LOFAR
 
       void                        write(Stream *) const;
 
-      double                      getRealStopTime() const;
       unsigned                    nrTabStations() const;
       unsigned                    nrMergedStations() const;
       std::vector<std::string>    mergedStationNames() const;
@@ -680,15 +673,13 @@ namespace LOFAR
       double                      sampleDuration() const;
       unsigned                    nrBitsPerSample() const;
       size_t                      nrBytesPerComplexSample() const;
-      std::vector<double>         position(const string &name) const;
       MultiDimArray<double,2>     positions() const;
       std::string                 positionType() const;
       unsigned                    dedispersionFFTsize() const;
 
       std::vector<std::string>    allStationNames() const;
 
-      unsigned                    nrObsOutputTypes() const;
-      bool                        outputThisType(OutputType) const;
+      bool outputThisType(OutputType) const;
 
       unsigned nrStreams(OutputType, bool force = false) const;
       std::string getHostName(OutputType, unsigned streamNr) const;
@@ -712,6 +703,7 @@ namespace LOFAR
       void                        addPosition(string stName);
       double                      getTime(const std::string &name, const std::string &defaultValue) const;
 
+      std::vector<double>         position(const string &name) const;
       std::vector<double>         centroidPos(const string &stations) const;
 
       std::vector<struct ObservationSettings::FileLocation> getFileLocations(const std::string outputType) const;

@@ -16,7 +16,6 @@
 
 #define SCHEDULER_VERSION "v2.6"
 
-#define HAS_SAS_CONNECTION
 #define DEBUG_SCHEDULER
 
 // undefine to compile away the debug output:
@@ -52,12 +51,20 @@
 
 #define MINIMUM_CORRELATOR_INTEGRATION_TIME 0.1 // minimum correlator integration time in seconds (typically minimum is 0.1 sec)
 
+#define CLOCK160_CHANNELWIDTH		    610.3515625
+#define STR_CLOCK160_CHANNELWIDTH	   "610.3515625"
 #define CLOCK160_SAMPLESPERSECOND	    155648
 #define STR_CLOCK160_SAMPLESPERSECOND "155648"
+#define CLOCK160_SUBBANDWIDTH			156.250
+#define STR_CLOCK160_SUBBANDWIDTH 	   "156.250"
 #define CLOCK160_SAMPLECLOCK		    160
 #define STR_CLOCK160_SAMPLECLOCK	   "160"
+#define CLOCK200_CHANNELWIDTH		    762.939453125
+#define STR_CLOCK200_CHANNELWIDTH	   "762.939453125"
 #define CLOCK200_SAMPLESPERSECOND	    196608
 #define STR_CLOCK200_SAMPLESPERSECOND "196608"
+#define CLOCK200_SUBBANDWIDTH		    195.3125
+#define STR_CLOCK200_SUBBANDWIDTH	   "195.3125"
 #define CLOCK200_SAMPLECLOCK		    200
 #define STR_CLOCK200_SAMPLECLOCK	   "200"
 
@@ -130,7 +137,7 @@ typedef std::map<std::string ,campaignInfo> campaignMap;
 // first.second = column
 // second = changed value
 
-#define PROGRAM_DEFAULT_SETTINGS_FILENAME ".default_settings.set"
+#define PROGRAM_DEFAULT_SETTINGS_FILENAME "default_settings.set"
 #define PROGRAM_PREFERENCES_FILENAME ".scheduler_preferences.pre"
 
 // The following two defines must be kept 'synchronized'

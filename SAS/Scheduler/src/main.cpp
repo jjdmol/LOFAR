@@ -10,12 +10,15 @@
  * URL            : $URL: https://svn.astron.nl/ROD/trunk/LOFAR_Scheduler/main.cpp $
  *
  */
+#include <lofar_config.h>
+
+#include <Common/Exception.h>
+#include <Common/LofarLogger.h>
 
 
 #include "schedulerLib.h"
 
-//todo:
-//#define SCHEDULER_TEST
+LOFAR::Exception::TerminateHandler th(LOFAR::Exception::terminate);
 
 int main(int argc, char *argv[])
 {

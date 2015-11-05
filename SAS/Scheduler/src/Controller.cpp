@@ -21,7 +21,6 @@
 #include "schedulergui.h"
 #include "Scheduler.h"
 #include "schedulersettings.h"
-#include "GraphicResourceScene.h"
 #include "conflictdialog.h"
 #include "taskcopydialog.h"
 #include "DigitalBeam.h"
@@ -33,10 +32,12 @@
 #include <vector>
 #include <cmath>
 #include <limits>
-#ifdef HAS_SAS_CONNECTION
+
 #include "SASConnection.h"
-#endif
+
 #include "DataMonitorConnection.h"
+
+#include "signalhandler.h"
 
 extern QString currentUser;
 
@@ -49,12 +50,14 @@ using std::pair;
 #define STORE_UNDO false
 #define STORE_REDO true
 
+// Why o why a global variable?
 SchedulerSettings Controller::theSchedulerSettings = SchedulerSettings();
 unsigned Controller::itsFileVersion = 0;
 
 Controller::Controller(QApplication &app) :
     application(&app) , gui(0), itsSettingsDialog(0),
-    possiblySaveMessageBox(0),itsConflictDialog(0)
+    possiblySaveMessageBox(0),itsConflictDialog(0),    
+    itsSignalHandler(0),doNotSaveScheduleFlag(false)
 {
     itsAutoPublishAllowed = currentUser == "lofarsys" ? true : false;
 #if defined Q_OS_WINDOWS || _DEBUG_
@@ -67,15 +70,21 @@ Controller::Controller(QApplication &app) :
 	gui = new SchedulerGUI(this);
 	itsSettingsDialog = new ScheduleSettingsDialog(this);
 	itsConflictDialog = new ConflictDialog(this);
-#ifdef HAS_SAS_CONNECTION
+
+    // connection to the Data Monitor
+    itsDMConnection = new DataMonitorConnection(this);
+    itsDataHandler = new DataHandler(this);
+    itsDataHandler->setFileName("");
+
+    // Load data from the datafile will contain parameter used by the sas
+    // connection
+    loadProgramPreferences();
+
+
 	itsSASConnection = new SASConnection(this);
-	itsSASConnection->setLastDownloadDate(QDateTime(Controller::theSchedulerSettings.getEarliestSchedulingDay().toQDate()));
-#endif
-	// connection to the Data Monitor
-	itsDMConnection = new DataMonitorConnection(this);
-	itsDataHandler = new DataHandler(this);
-	itsDataHandler->setFileName("");
-	loadProgramPreferences();
+    itsSASConnection->setLastDownloadDate(
+         QDateTime(Controller::theSchedulerSettings.getEarliestSchedulingDay().toQDate()));
+
 	connectSignals();
 	vector<std::string> headers;
 	for (unsigned i = 0; i < NR_DATA_HEADERS; ++i) {
@@ -140,13 +149,15 @@ void Controller::connectSignals(void)
 //#endif
 
 	// subscribe to signals from the gui->
-	gui->connect(gui->getSchedulerGUIClass().action_New_schedule, SIGNAL(triggered()), this, SLOT(newSchedule()));
+    gui->connect(gui->getSchedulerGUIClass().action_New_schedule,
+                 SIGNAL(triggered()), this, SLOT(newSchedule()));
 	gui->connect(gui->getSchedulerGUIClass().action_Save_schedule, SIGNAL(triggered()), this, SLOT(saveSchedule()));
 	gui->connect(gui->getSchedulerGUIClass().action_Save_schedule_as, SIGNAL(triggered()), this, SLOT(saveScheduleAs()));
 	gui->connect(gui->getSchedulerGUIClass().action_Open_Schedule, SIGNAL(triggered()), this, SLOT(openSchedule()));
 //	gui->connect(gui->getSchedulerGUIClass().action_Open_task_list, SIGNAL(triggered()), this, SLOT(openTaskList()));
     gui->connect(gui->getSchedulerGUIClass().action_Save_task_list, SIGNAL(triggered()), this, SLOT(saveTaskListAs()));
-	gui->connect(gui->getSchedulerGUIClass().action_Close_schedule, SIGNAL(triggered()), this, SLOT(closeSchedule()));
+    gui->connect(gui->getSchedulerGUIClass().action_Close_schedule, SIGNAL(triggered()),
+                 this, SLOT(closeSchedule()));
 	gui->connect(gui->getSchedulerGUIClass().action_Create_initial_schedule, SIGNAL(triggered()), this, SLOT(createInitialSchedule()));
 	gui->connect(gui->getSchedulerGUIClass().action_Optimize_schedule, SIGNAL(triggered()), this, SLOT(optimizeSchedule()));
 	gui->connect(gui->getSchedulerGUIClass().action_Schedule_Settings, SIGNAL(triggered()), this, SLOT(openSettingsDialog()));
@@ -166,42 +177,48 @@ void Controller::connectSignals(void)
 	gui->connect(gui->getTableDelegate(), SIGNAL(tableItemChanged(unsigned, data_headers, const QVariant &, const QModelIndex &)), this, SLOT(applyTableItemChange(unsigned, data_headers, const QVariant &, const QModelIndex &)));
 	gui->connect(itsSettingsDialog, SIGNAL(actionSaveSettings()), this, SLOT(closeSettingsDialog()));
 	scheduler.connect(&scheduler, SIGNAL(optimizeIterationFinished(unsigned)), this, SLOT(updateStatusBarOptimize(unsigned)));
-//	gui->scene()->connect(gui->scene(), SIGNAL(taskRescheduleRequest(unsigned, AstroDateTime, bool)), this, SLOT(moveTaskRequest(unsigned, const AstroDateTime &)));
-//	gui->taskDialog()->connect(gui->taskDialog(), SIGNAL(taskChanged(Task &, bool)), this, SLOT(updateTask(Task &, bool)));
-//	gui->taskDialog()->connect(gui->taskDialog(), SIGNAL(abortTask(unsigned int)), this, SLOT(abortTask(unsigned int)));
-//	gui->taskDialog()->connect(gui->taskDialog(), SIGNAL(addNewTask(const Task &)), this, SLOT(createTask(const Task &)));
-//	gui->taskDialog()->connect(gui->taskDialog(), SIGNAL(addNewReservation(const Task &)), this, SLOT(createReservation(const Task &)));
-//	gui->taskDialog()->connect(gui->taskDialog(), SIGNAL(checkPredecessor(unsigned)), this, SLOT(checkPredecessor(unsigned)));
-//	gui->connect(gui->getSchedulerGUIClass().action_Align_left, SIGNAL(triggered()), this, SLOT(alignLeft()));
-// thrash bin connections
 	gui->connect(gui->getSchedulerGUIClass().action_Thrashcan, SIGNAL(triggered()), this, SLOT(showThrashBin()));
 	itsThrashBin.connect(&itsThrashBin, SIGNAL(restoreTasksRequest(const std::vector<unsigned> &)), this, SLOT(restoreTasks(const std::vector<unsigned> &)));
 	itsThrashBin.connect(&itsThrashBin, SIGNAL(thrashBinIsEmpty()), this, SLOT(thrashBinEmpty()));
 	itsThrashBin.connect(&itsThrashBin, SIGNAL(thrashBinContainsItems()), this, SLOT(thrashBinNotEmpty()));
-	itsThrashBin.connect(&itsThrashBin, SIGNAL(destroyTasks(std::vector<unsigned>)), this, SLOT(doDestroyTasks(std::vector<unsigned>)));
+    itsThrashBin.connect(&itsThrashBin, SIGNAL(destroyTasks(std::vector<unsigned>)),
+                         this, SLOT(doDestroyTasks(std::vector<unsigned>)));
 
-#ifdef HAS_SAS_CONNECTION
+
 	gui->connect(gui->getSchedulerGUIClass().action_DownloadSASSchedule, SIGNAL(triggered()), this, SLOT(downloadSASSchedule()));
 	gui->connect(gui->getSchedulerGUIClass().action_SyncSASSchedule, SIGNAL(triggered()), this, SLOT(InitSynchronizeSASSchedule()));
-	gui->connect(gui->getSchedulerGUIClass().actionCheck_SAS_status, SIGNAL(triggered()), this, SLOT(checkSASStatus()));
-#endif
-
+    gui->connect(gui->getSchedulerGUIClass().actionCheck_SAS_status, SIGNAL(triggered()),
+                 this, SLOT(checkSASStatus()));
 }
 
 const AstroDateTime &Controller::now(void) {
 	QDateTime currentTime = QDateTime::currentDateTimeUtc();
-	itsTimeNow = AstroDateTime(currentTime.date().day(), currentTime.date().month(), currentTime.date().year(),
-			currentTime.time().hour(), currentTime.time().minute(), currentTime.time().second());
+    itsTimeNow = AstroDateTime(currentTime.date().day(),
+                               currentTime.date().month(),
+                               currentTime.date().year(),
+                               currentTime.time().hour(),
+                               currentTime.time().minute(),
+                               currentTime.time().second());
 	return itsTimeNow;
 }
 
-#ifdef HAS_SAS_CONNECTION
 
-void Controller::checkSASStatus(void) const {
-	itsSASConnection->checkSASStatus();
+
+void Controller::checkSASStatus(void)
+{
+    // itsSignalHandler is 'instantiated' after the other connections
+    // are added, therefore add the feedback signal here
+    connect(this,             SIGNAL(statusSASDialogFeedback(bool)),
+            itsSignalHandler, SLOT(statusSASDialogFeedback(bool)));
+    bool result = itsSASConnection->checkSASStatus();
+
+    // send information back to the signalhandler
+    emit statusSASDialogFeedback(result);
 }
 
-void Controller::setSASConnectionSettings(const QString &username, const QString &password, const QString &DBname, const QString &hostname) {
+void Controller::setSASConnectionSettings(const QString &username,
+                 const QString &password, const QString &DBname,
+                 const QString &hostname) {
 	Controller::theSchedulerSettings.setSASConnectionSettings(username, password, DBname, hostname);
 }
 
@@ -224,6 +241,8 @@ void Controller::downloadSASSchedule(void) {
 	storeScheduleUndo(QObject::tr("Download SAS schedule"));
 	if (checkSASSettings()) {
 		gui->setStatusText("Now downloading running schedule from SAS...");
+        // WHy use an init function? The Sas COnnection should be up or in a state
+        //
 		itsSASConnection->init(theSchedulerSettings.getSASUserName(),
 							theSchedulerSettings.getSASPassword(),
 							theSchedulerSettings.getSASDatabase(),
@@ -502,7 +521,7 @@ QString Controller::lastSASError(void) const {
 	return itsSASConnection->lastConnectionError();
 }
 
-#endif // HAS_SAS_CONNECTION
+
 /*
 void Controller::checkPredecessor(unsigned predecessor_id) const {
 	if (data.predecessorExists(predecessor_id)) {
@@ -758,7 +777,7 @@ void Controller::deleteSelectedTasks(void) {
 			// have to block signals from GUI otherwise it will send signals when deleting graphicTasks from its view,
 			// (i.e. it will generate signal selectionChanged which in turn is coupled to SLOT graphicResourceScene::handleRubberBandSelection()
 			// which will indirectly alter (clear) the selection from the Controller while the following FOR loop is still active
-			gui->scene()->blockSignals(true);
+            gui->sceneBlockSignals(true);
 			for (vector<unsigned>::iterator it = itsSelectedTasks.begin(); it != itsSelectedTasks.end(); ++it) { // do the actual deletion
                 Task *delTask(data.deleteTask(*it, ID_SCHEDULER, false));
                 if (delTask) {
@@ -770,7 +789,7 @@ void Controller::deleteSelectedTasks(void) {
                     gui->deleteTaskFromGUI(*it); // will cause signals to be generated if we don't block them (see remark just before FOR loop)
                 }
 			}
-			gui->scene()->blockSignals(false);
+            gui->sceneBlockSignals(false);
 
 			if (!deletedTasks.empty()) {
 				itsThrashBin.addTasks(deletedTasks);
@@ -1990,7 +2009,8 @@ void Controller::redo(void) {
 			if (!itsDeletedTasksRedoStack.empty()) {
                 vector<Task *> deletedTasks;
 				vector<unsigned> &taskIDvec = itsDeletedTasksRedoStack.back();
-                gui->scene()->blockSignals(true);
+
+                gui->sceneBlockSignals(true);
                 unsigned treeID;
                 for (vector<unsigned>::iterator it = taskIDvec.begin(); it != taskIDvec.end(); ++it) {
                     Task *delTask(data.deleteTask(*it, ID_SCHEDULER, false));
@@ -2006,7 +2026,8 @@ void Controller::redo(void) {
 						debugWarn("si","Redo delete: could not find task: ", *it); // should never occur
 					}
 				}
-                gui->scene()->blockSignals(false);
+                gui->sceneBlockSignals(false);
+
                 if (!deletedTasks.empty()) {
                     itsDeletedTasks.push_back(deletedTasks);
                     itsThrashBin.addTasks(deletedTasks);
@@ -2036,6 +2057,12 @@ bool Controller::checkSettings() const {
 	return true;
 }
 
+
+void Controller::setDoNotSaveSchedule()
+{
+    doNotSaveScheduleFlag = true;
+}
+
 // Dialogbox asking for saving of schedule project
 int Controller::possiblySaveDialog()
 {
@@ -2061,6 +2088,12 @@ int Controller::possiblySaveDialog()
 // TODO: The return value of this function mixes error state and selected choices.
 bool Controller::possiblySave()
 {
+    // Flag that can be set from the outside world.
+    // Used to skip the save dialog which does not play well with the signaling
+    // mechanism. 'test hook'
+    if (doNotSaveScheduleFlag)
+        return true;
+
     // check in SchedulingData if save required
     if (!data.getSaveRequired() )
         return true;
@@ -2431,48 +2464,6 @@ void Controller::fixTaskErrors() {
 	}
 }
 
-/*
-void Controller::tryRescheduleTask(unsigned task_id, AstroDateTime start_time) {
-	// check if multiple tasks are selected, if so try to 'shift' them all
-	if (multipleSelected())  {
-		const Task *pTask(data.getTask(task_id));
-		AstroDateTime new_start;
-		AstroTime dif = pTask->getScheduledStart().timeDifference(start_time);
-		bool negative = start_time < pTask->getScheduledStart() ? true : false;
-		storeScheduleUndo("Reschedule of multiple tasks");
-		bool save_required(true);
-		for (std::vector<unsigned>::const_iterator it = itsSelectedTasks.begin(); it != itsSelectedTasks.end(); ++it) {
-			const Task *task(data.getTask(*it));
-			if (negative) {
-				new_start = task->getScheduledStart() - dif;
-			}
-			else {
-				new_start = task->getScheduledStart() + dif;
-			}
-			if (!scheduler.tryRescheduleTask(*it, new_start)) {
-				undo();
-				deleteLastStoredUndo();
-				save_required = false;
-				break;
-			}
-		}
-		setSaveRequired(save_required);
-	}
-	else {
-		// TODO: check if the move of the task is not beyond the predecessor limits (if the task has predecessors)
-		storeTaskUndo(task_id, QString("Reschedule task ") + QString::number(task_id));
-		if (scheduler.tryRescheduleTask(task_id, start_time)) {
-			setSaveRequired(true);
-		}
-		else {
-			deleteLastStoredUndo();
-		}
-	}
-	for (std::vector<unsigned>::const_iterator it = itsSelectedTasks.begin(); it != itsSelectedTasks.end(); ++it) {
-		gui->updateTask(*it,Task::OBSERVATION);
-	}
-}
-*/
 
 void Controller::rescheduleTask(unsigned task_id, AstroDateTime new_start) {
 	const Task *pTask = data.getTask(task_id);
@@ -2878,100 +2869,6 @@ void Controller::synchronizeTask(const Task *pTask) {
     updateStatusBar();
 }
 
-/*
-void Controller::synchronizeTask(const Task &task) {
-	unsigned treeID(task.getSASTreeID()), taskID(task.getID());
-	Task::task_status state(task.getStatus());
-	Task *schedulerTask = data.getTaskForChange(treeID, ID_SAS);
-	if (schedulerTask) {
-		Task::task_status prev_status(schedulerTask->getStatus());
-
-		if ((prev_status >= Task::PRESCHEDULED) && (prev_status <= Task::ACTIVE)) { // if task was scheduled on stations
-			data.unscheduleTask(taskID);
-		}
-		if (prev_status >= Task::FINISHED && state < Task::FINISHED) {
-			Task *pTask(data.moveTaskFromInactive(taskID));
-			if (pTask) {
-				schedulerTask = pTask;
-			}
-		}
-
-		taskID = schedulerTask->getID();
-        *schedulerTask = task; // THIS DOES NOT WORK FOR DERIVED CLASSES BECAUSE THEIR PROPERTIES ARE NOT COPIED (ONLY THE BASE CLASS PROPERTIES ARE COPIED THROUGH BASE POINTERS!!!)
-		schedulerTask->setID(taskID);
-	}
-    else { // task not found in scheduler , create it now
-		if (task.isPipeline()) {
-            schedulerTask = data.newPipeline(taskID, static_cast<const Pipeline &>(task).pipelinetype(), OVERRIDE_SAS_TASKIDS); // this should always succeed because OVERRIDE_SAS_TASKIDS is true
-			if (schedulerTask) {
-				taskID = schedulerTask->getID();
-				*schedulerTask = task;
-				schedulerTask->setID(taskID);
-                setInputFilesForPipeline(schedulerTask);
-				schedulerTask->calculateDataFiles();
-			}
-			else {
-				std::cerr << "Controller::synchronizeTask: Could not create Pipeline task for tree:" << treeID << std::endl;
-				return;
-			}
-		}
-		else { // TODO: Also tasks of type SYSTEM are for the moment created here to prevent SEGFAULTs. But it should maybe be created in another way than with newTask?
-			schedulerTask = data.newTask(taskID, OVERRIDE_SAS_TASKIDS); // this should always succeed because OVERRIDE_SAS_TASKIDS is true
-			if (schedulerTask) {
-				taskID = schedulerTask->getID();
-				*schedulerTask = task;
-				schedulerTask->setID(taskID);
-			}
-			else {
-				std::cerr << "Controller::synchronizeTask: Could not create task for tree:" << treeID << std::endl;
-				return;
-			}
-		}
-	}
-
-	if (task.isScheduled()) {
-		data.scheduleTask(schedulerTask);
-		Task *pTask = data.getTaskForChange(taskID);
-		pTask->setStatus(task.getStatus());
-	}
-	else {
-		if (state >= Task::FINISHED) {
-			data.moveTaskToInactive(taskID);
-		}
-	}
-
-	gui->updateTask(treeID, ID_SAS, task.getType());
-	updateStatusBar();
-}
-*/
-
-/*
-void Controller::abortTask(unsigned int taskID) {
-	Task *pTask = data.getScheduledTaskForChange(taskID);
-	if (pTask) {
-		Task::task_status status = pTask->getStatus();
-		if ((status == Task::ACTIVE) | (status == Task::STARTING) | (status == Task::SCHEDULED)) {
-			QString taskStr = tr("Aborting task (") + QString::number(taskID) + ") " + pTask->getTaskName() + ", SAS_ID:" + QString::number(pTask->getSASTreeID());
-			if (QMessageBox::question(0, taskStr,
-					taskStr + "\n" + tr("The abort will be instantaneously committed to SAS.\nThe abort cannot be undone.\nDo you really want to abort the task?"),
-					QMessageBox::Yes,
-					QMessageBox::No) == QMessageBox::Yes) {
-				if (itsSASConnection->abortTask(pTask->getSASTreeID())) {
-					pTask->setStatus(Task::ABORTED);
-					data.moveTaskToInactive(taskID);
-					gui->updateTask(taskID);
-					updateStatusBar();
-				}
-				else {
-					QMessageBox::critical(0, tr("Could not abort the task"),
-							tr("Could not abort the task. Probably the task is not in the ACTIVE or STARTING state"));
-				}
-			}
-		}
-	}
-}
-*/
-
 const char *Controller::getReservationName(unsigned reservation_id) const {
 	const Task *pRes = data.getReservation(reservation_id);
 	if (pRes) return pRes->getTaskName();
@@ -3321,14 +3218,9 @@ std::pair<unscheduled_reasons, QString> Controller::doPreScheduleChecks(Task *ta
             }
         }
 
-//        if (pPipe->isCalibrationPipeline() &&
-//            !task->storage()->getEqualityInputOutputProducts())
-//        {
-//            error.first = INPUT_OUTPUT_LOCATION_MISMATCH1;
-//            error.second = unscheduled_reason_str[INPUT_OUTPUT_LOCATION_MISMATCH2];
-//            return error;
-//        }
-
+        // TODO: setInputFilesForPipeline should probably not be done here. Only set the input files when a task is downloaded from SAS or when it is just loaded from disk
+        // now the enabled flags (user selection) gets reset by calling setInputFilesForPipeline which is also a bug. This should not be the case
+        error = setInputFilesForPipeline(pPipe);
 
 		if (error.first != NO_ERROR) return error;
 	}
@@ -3339,21 +3231,6 @@ std::pair<unscheduled_reasons, QString> Controller::doPreScheduleChecks(Task *ta
             task->storage()->generateFileList();
         }
 	}
-//    // Check here if the input output locations are the same
-//    // Check added due to #8174
-//    if (task->isPipeline())
-//    {
-//        // TODO: This is incredibly ugly!!!
-//        Pipeline *pipeline = dynamic_cast<Pipeline *>(task);
-
-//        if (pipeline->isCalibrationPipeline() &&
-//            !task->storage()->getEqualityInputOutputProducts())
-//        {
-//            error.first = INPUT_OUTPUT_LOCATION_MISMATCH2;
-//            error.second = unscheduled_reason_str[INPUT_OUTPUT_LOCATION_MISMATCH2];
-//            return error;
-//        }
-//    }
 
 	// if we arrrive here no errors in the task
 	task->clearReason();
@@ -4092,23 +3969,6 @@ bool Controller::doScheduleChecks(Task *pTask) {
 		QMessageBox::warning(gui, tr("Cannot schedule the task"),result.second);
 		return false;
 	}
-
-//    if (pTask->isPipeline())
-//    {
-//        // TODO: This is incredibly ugly!!!
-//        Pipeline *pipeline = dynamic_cast<Pipeline *>(pTask);
-
-//        if (pipeline->isCalibrationPipeline() &&
-//            !pTask->storage()->getEqualityInputOutputProducts())
-//        {
-//            QMessageBox::warning(gui,
-//              tr("Error during scheduling")
-//                     ,"Task input and output are different, #8174, LOC3. Retry assigning resources");
-//            return false;
-
-//        }
-//    }
-
 
 	return true;
 }

@@ -90,7 +90,7 @@ TEST(propagateFlags)
   CorrelatorStep::Flagger::propagateFlags(parset, inputFlags, output);
 
   // now perform weighting of the data based on the number of valid samples
-  CorrelatorStep::Flagger::applyNrValidSamples(parset, *output.subblocks[0]);  
+  CorrelatorStep::Flagger::applyNrValidSampless(parset, *output.subblocks[0]);  
   // *********************************************************************************************
 
   // Now validate the functionality:
@@ -176,8 +176,8 @@ TEST(calcNrValidSamples4Channels)
   parset.updateSettings();
 
   // Input flags: an array of sparseset
-  MultiDimArray<LOFAR::SparseSet<unsigned>, 1> flagsPerChannel(
-          boost::extents[parset.settings.correlator.stations.size()]);
+  MultiDimArray<LOFAR::SparseSet<unsigned>, 2> flagsPerChannel(
+          boost::extents[parset.settings.correlator.nrChannels][parset.settings.correlator.stations.size()]);
 
   // Output object
   SubbandProcOutputData::CorrelatedData output(1,
@@ -187,8 +187,8 @@ TEST(calcNrValidSamples4Channels)
                      *context);
 
   //insert same cases
-  flagsPerChannel[0].include(100,111);//A.
-  flagsPerChannel[1].include(111,120);//E. second station flags
+  flagsPerChannel[1][0].include(100,111);//A.
+  flagsPerChannel[1][1].include(111,120);//E. second station flags
   
   //propageFlags
   CorrelatorStep::Flagger::calcNrValidSamples(parset, flagsPerChannel, output);
@@ -228,8 +228,8 @@ TEST(calcNrValidSamples1Channels)
 
   parset.updateSettings();
   // Input flags: an array of sparseset
-  MultiDimArray<LOFAR::SparseSet<unsigned>, 1> flagsPerChannel(
-          boost::extents[parset.settings.correlator.stations.size()]);
+  MultiDimArray<LOFAR::SparseSet<unsigned>, 2> flagsPerChannel(
+          boost::extents[parset.settings.correlator.nrChannels][parset.settings.correlator.stations.size()]);
 
   // Output object
   SubbandProcOutputData::CorrelatedData output(1,
@@ -239,8 +239,8 @@ TEST(calcNrValidSamples1Channels)
                      *context);
 
   //insert same cases
-  flagsPerChannel[0].include(100,111);//A.
-  flagsPerChannel[1].include(111,120);//E. second station flags
+  flagsPerChannel[0][0].include(100,111);//A.
+  flagsPerChannel[0][1].include(111,120);//E. second station flags
   
   //propageFlags
   CorrelatorStep::Flagger::calcNrValidSamples(parset, flagsPerChannel, output);
@@ -252,7 +252,7 @@ TEST(calcNrValidSamples1Channels)
   CHECK_EQUAL(247u, output.subblocks[0]->getNrValidSamples(2,0)); // 9 flagged in station 2  
 }
 
-TEST(applyNrValidSamples)
+TEST(applyNrValidSampless)
 {
   // Create a parset with the needed parameters
   Parset parset;
@@ -292,7 +292,7 @@ TEST(applyNrValidSamples)
   output.subblocks[0]->setNrValidSamples(0,1,n_valid_samples); //baseline 0, channel 1
   output.subblocks[0]->setNrValidSamples(1,1,256); //baseline 1, channel 1
   output.subblocks[0]->setNrValidSamples(2,1,0); //baseline 0, channel 1
-  CorrelatorStep::Flagger::applyNrValidSamples(parset, *output.subblocks[0]);
+  CorrelatorStep::Flagger::applyNrValidSampless(parset, *output.subblocks[0]);
 
   // 4 channels: therefore the chanel zero should be zero
   CHECK_EQUAL(std::complex<float>(0,0), visibilities[0][0][0][0]);
@@ -311,7 +311,7 @@ TEST(applyNrValidSamples)
   CHECK_EQUAL(std::complex<float>(0,0), visibilities[2][1][1][1]);
 }
 
-TEST(applyNrValidSamples2)
+TEST(applyNrValidSamples)
 {
     // on channel so the zero channel should be filled with the flags!!
   // Create a parset with the needed parameters
@@ -351,21 +351,12 @@ TEST(applyNrValidSamples2)
            visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2] = std::complex<float>(1,0);
         
   //  multiply all polarization in sb 0 channel 0 with 0,5
-  CorrelatorStep::Flagger::applyWeight(0, parset.settings.correlator.nrChannels, 0.5, *output.subblocks[0]);
+  CorrelatorStep::Flagger::applyWeight(0,0,0.5, *output.subblocks[0]);
 
-  //ch 0 should be (0, 0)
-  CHECK_EQUAL(std::complex<float>(0,0),   visibilities[0][0][0][0]);
-  CHECK_EQUAL(std::complex<float>(0,0),   visibilities[0][0][0][1]);
-  CHECK_EQUAL(std::complex<float>(0,0),   visibilities[0][0][1][0]);
-  CHECK_EQUAL(std::complex<float>(0,0),   visibilities[0][0][1][1]);
-  //ch 1 should be (0.5, 0)
-  CHECK_EQUAL(std::complex<float>(0.5,0), visibilities[0][1][0][0]);
-  CHECK_EQUAL(std::complex<float>(0.5,0), visibilities[0][1][0][1]);
-  CHECK_EQUAL(std::complex<float>(0.5,0), visibilities[0][1][1][0]);
-  CHECK_EQUAL(std::complex<float>(0.5,0), visibilities[0][1][1][1]);
-  //baseline 1 should be untouched
+  //sb 0 should be (0.5, 0)
+  CHECK_EQUAL(std::complex<float>(0.5,0), visibilities[0][0][0][0]);
+  //still be 1.0
   CHECK_EQUAL(std::complex<float>(1,0),   visibilities[1][0][0][0]);
-  CHECK_EQUAL(std::complex<float>(1,0),   visibilities[1][1][0][0]);
    
 }
 

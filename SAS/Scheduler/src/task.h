@@ -104,8 +104,6 @@ enum unscheduled_reasons {
 	INPUT_DATA_PRODUCT_NOT_FOUND,
 	INCOMPATIBLE_DEMIX_SETTINGS,
     UNKNOWN_DEMIX_SOURCE,
-    INPUT_OUTPUT_LOCATION_MISMATCH1,
-    INPUT_OUTPUT_LOCATION_MISMATCH2,
 	UNSCHEDULED_REASON_END
 };
 #define NR_REASONS	UNSCHEDULED_REASON_END
@@ -228,10 +226,10 @@ public:
 
 	Task();
     Task(unsigned task_id);
-#ifdef HAS_SAS_CONNECTION
+
     Task(unsigned task_id, const OTDBtree &SAS_tree); // constructor used for incomplete SAS tasks that have no stored scheduler properties
 	Task(const QSqlQuery &query, const OTDBtree &SAS_tree);
-#endif
+
 	virtual ~Task();
 
     friend QDataStream& operator<< (QDataStream &out, const Task &task); // used for writing data to binary file
@@ -246,7 +244,8 @@ public:
         }
 	}
 
-    virtual Task & operator=(const Task &);
+    // removed to prevent build errors all over the place
+    //virtual Task & operator=(const Task &);
 	bool operator==(unsigned int taskID) const {return (this->getID() == taskID);}
 
     virtual bool diff(const Task *other, task_diff &dif) const;
@@ -423,11 +422,11 @@ protected:
 	AstroDate lastPossibleDay; // time window last possible scheduling date
 
 	// SAS parameters
-//#ifdef HAS_SAS_CONNECTION
+
 	OTDBtree itsSASTree;
 public :
 	const OTDBtree &SASTree(void) const {return itsSASTree;}
-//#endif
+
 };
 
 

@@ -8,7 +8,5 @@ set(_tests
 
 foreach(_test ${_tests})
   lofar_add_test(${_test})
-  if(BUILD_TESTING)
-    set_tests_properties(${_test} PROPERTIES RUN_SERIAL ON)
-  endif(BUILD_TESTING)
+  set_tests_properties(${_test} PROPERTIES RUN_SERIAL ON)
 endforeach(_test ${_tests})

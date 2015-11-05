@@ -14,8 +14,8 @@
 #include "graphicstoragescene.h"
 
 
-GraphicStorageScene::GraphicStorageScene(Controller *controller)
-: itsParentView(0), itsController(controller)
+GraphicStorageScene::GraphicStorageScene()
+: itsParentView(0)
 {
 }
 

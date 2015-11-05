@@ -68,8 +68,9 @@ public:
 	QString openProjectDialog();
 	QString saveProjectDialog();
 
-	// handle to the scene for the controller to be able to connect signals
-	GraphicResourceScene * scene(void) const {return itsGraphicResourceScene;}
+    // Forward of Blocksignal functionilty using a function
+    // this to remove dependency of Controller on GraphicResourceScene
+    bool sceneBlockSignals(bool flag);
 
 	// Scheduler table methods
 	void newTable(SchedulerData const & data);

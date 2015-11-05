@@ -12,12 +12,21 @@
  *
  */
 
+#include <lofar_config.h>
+
 #include "Scheduler/schedulerLib.h"
 
 #include <time.h>
 #include <string>
 #include <iostream>
+#include <exception>
 #include <QtCore>
+
+#include <Common/Exception.h>
+#include <Common/LofarLogger.h>
+
+LOFAR::Exception::TerminateHandler th(LOFAR::Exception::terminate);
+
 
 // Example scheduler integration test.
 // We start the scheduler in the main thread but also start a thread containing
@@ -25,9 +34,13 @@
 // TODO: The majority of this source is boilerplate.
 // refactor to remove duplicate code between tests.
 
-// The exercising of the scheduler should happen in a thread. The gui runs in
-// the main thread. TODO: This is the cause of errors: The event loop
-// might get corrupted.
+//************** receiving signal back: **********************************
+// In this case a queued connection is used, therefore you’re required to run
+// an event loop in the thread the Thread object is living in.
+// http://qt-project.org/wiki/ThreadsEventsQObjects
+
+
+
 class TestThread : public QThread
 {
     // Very shallow wrapper around the run function
@@ -39,24 +52,32 @@ private:
         // make the next step conditional
         sleep(3);
 
-//        // Step 1: Press download button
-//        signalForward("DownloadSASSchedule","");
-//        sleep(5);
 
-//        // Step 2: Press close button
-//        signalForward("DownloadSASScheduleClose","");
-//        sleep(3);
+        // Step 1: Press download button
+        signalForward("DownloadSASSchedule","");
+        sleep(5);
 
-//        // Assert that the sas connection worked...?
-//        // We need faulty state then
+
+        // Step 2: Press close button
+        signalForward("DownloadSASScheduleClose","");
+        sleep(3);
+
+        // Step 3: checkSASStatus
+        signalForward("checkSASStatus","");
+        sleep(5);
+
+        // validate sas status
+        bool result = getStatusSASDialogFeedbackResult();
+        if (!result)
+            THROW(LOFAR::Exception, "Test of SAS status return an problem") ;
+
+        // Close the status window
+        signalForward("closeCheckSASStatusDialog", "");
+        sleep(1);
 
         // step 4: Press close application button
         signalForward("MainWindowClose","");
-        sleep(2);
-        // step 5: press no button, do not save
-        signalForward("PresNoInSaveDialog", ",");
-
-        // Assertain correct correct closure of program.
+        //sleep(2);
     }
 };
 
@@ -71,7 +92,7 @@ int main(int argc, char *argv[])
     int exit_value  = main_function(argc, argv);
 
     test1.quit();
-    test1.wait();  // It takes about 3 seconds for the thread to be distructed
+    test1.wait();  // It takes about 3 seconds for the thread to be destructed
 
     return exit_value;
 }

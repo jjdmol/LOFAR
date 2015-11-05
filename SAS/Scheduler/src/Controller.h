@@ -69,8 +69,7 @@ public:
 
 	// interface members to SchedulerGUI
 	void start(void); // show the SchedulerGUI
-//	unsigned getCurrentUndoLevel(void) const {return current_undo_level;};
-	bool fixTasks();
+
 	const Task *getScheduledTask(unsigned taskID) const {return data.getScheduledTask(taskID);}
 	const Task *getInactiveTask(unsigned taskID) const {return data.getInactiveTask(taskID);}
 	const Task *getUnscheduledTask(unsigned taskID) const {return data.getUnscheduledTask(taskID);}
@@ -124,6 +123,9 @@ public:
 //	const Task *createSASErrorTask(const OTDBtree& SAS_tree, unsigned task_id = 0); // creates a new unscheduled task with some properties set by the erronneus SAS task tree.
     QString getSasDatabaseName(void) const {return theSchedulerSettings.getSASDatabase();}
 
+    // Test hook returning a pointer to the possiblySaveMessageBox or zero
+    // if it not exists.
+    QMessageBox *getPossiblySaveMessageBox(){return possiblySaveMessageBox;}
 	void unscheduleSelectedTasks(void);
 	void setSelectedTasksOnHold(void);
 
@@ -177,7 +179,8 @@ public:
 	bool createTask(const Task &task);
     bool createReservation(const Task *reservation);
     void createPipeline(const Pipeline *pipeline);
-	std::vector<DefaultTemplate> getDefaultTemplatesFromSAS(void) {return itsSASConnection->getDefaultTemplates();}
+    std::vector<DefaultTemplate> getDefaultTemplatesFromSAS(void) {
+        return itsSASConnection->getDefaultTemplates();}
 	void defaultTemplatesUpdated(void) {gui->loadProcessTypes();}
 	void setStatusText(const char *text) {gui->setStatusText(text);}
 	void clearStatusText(void) {gui->clearStatusText();}
@@ -185,6 +188,8 @@ public:
     void setAutoPublish(bool enabled) {theSchedulerSettings.setAutoPublish(enabled);}
     bool autoPublishAllowed(void) {return itsAutoPublishAllowed;}
 
+    void setSignalHandler(SignalHandler* signalHandler)
+        {itsSignalHandler = signalHandler;}
 #ifdef DEBUG_SCHEDULER
 	void printSelectedTasks(const std::string &callerName) const;
 #endif
@@ -194,13 +199,11 @@ public:
 	bool calculateDataSlots(void);
 
 
-#ifdef HAS_SAS_CONNECTION
 	QString lastSASError(void) const;
 	bool checkSASSettings(void);
 	int checkSASconnection(const QString &username, const QString &password, const QString &DBname, const QString &hostname);
 	void setSASConnectionSettings(const QString &username, const QString &password, const QString &DBname, const QString &hostname);
 	void commitScheduleToSAS(void);
-#endif
 
 private:
 	bool doScheduleChecks(Task *);
@@ -236,11 +239,16 @@ private:
 
 signals:
 	void schedulerSettingsChanged(void);
+    void statusSASDialogFeedback(bool);
 
 public slots:
-	void quit(void); // exit Scheduler application after some checks
+    // exit Scheduler application after some checks
+    void quit(void);
+
 	void deleteSelectedTasks(void);
-//	void abortTask(unsigned int taskID);
+
+    // Set a flag signalling a closure of the scheduler without saving
+    void setDoNotSaveSchedule();
 
 private slots:
 	void tableSortingChanged(void); // the sorting column and/or order was changed
@@ -263,7 +271,7 @@ private slots:
 	void applyTableItemChange(unsigned, data_headers, const QVariant &, const QModelIndex &); // keep track of all changes to the schedule table made by the user
 	void fixTaskErrors(void);
 	void updateStatusBarOptimize(unsigned);
-//	void tryRescheduleTask(unsigned, AstroDateTime);
+
 //	void alignLeft(void);
 	void showThrashBin(void);
 	void thrashBinEmpty(void) const {gui->setEmptyThrashIcon();}
@@ -277,34 +285,34 @@ private slots:
 	void newSchedule(void);
 	int assignResources(bool showResult = true);
 
-#ifdef HAS_SAS_CONNECTION
+
 	void downloadSASSchedule(void);
 	void InitSynchronizeSASSchedule(void);
-	void checkSASStatus(void) const;
-#endif
+    void checkSASStatus(void);
+
 
 public:
 	static SchedulerSettings theSchedulerSettings; // everyone can access these settings
 	static unsigned itsFileVersion; // used for storing the last read input file version
 
 private:
-    QMessageBox *possiblySaveMessageBox;
+
 	QApplication *application;
 	Scheduler scheduler;
 	SchedulerGUI *gui;
 	ScheduleSettingsDialog *itsSettingsDialog;
+    QMessageBox *possiblySaveMessageBox;
 	ConflictDialog *itsConflictDialog;
 	SchedulerData data;
 	DataHandler *itsDataHandler;
+    SignalHandler *itsSignalHandler;
 
 	AstroDateTime itsTimeNow;
 	std::vector<unsigned> itsSelectedTasks;
 	Thrashbin itsThrashBin;
 
-#ifdef HAS_SAS_CONNECTION
 	// connection to SAS database
 	SASConnection *itsSASConnection;
-#endif
 
 	DataMonitorConnection *itsDMConnection;
 
@@ -319,6 +327,7 @@ private:
 	std::vector<std::vector<unsigned> > itsDeletedTasksRedoStack;
 
     bool itsAutoPublishAllowed;
+    bool doNotSaveScheduleFlag;
 };
 
 #endif /* CONTROLLER_H_ */

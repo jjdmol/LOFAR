@@ -32,6 +32,9 @@
 #include "pulsarpipeline.h"
 #include "imagingpipeline.h"
 #include "longbaselinepipeline.h"
+#include "sasstatusdialog.h"
+#include "databaseconnections/sasdatabaseconnection.h"
+
 class Controller;
 class SchedulerData;
 class CEPCleanMainWindow;
@@ -62,44 +65,89 @@ typedef std::vector<changedIDTask> changedIDTasks;
 
 class SASConnection {
 public:
-	SASConnection();
 	SASConnection(Controller *controller);
 	virtual ~SASConnection();
 
-	void init(const QString &username, const QString &password, const QString &DBName, const QString &hostname);
-	void setLastDownloadDate(const QDateTime &date) { itsLastDownloadDate = date; }
+    void init(const QString &username, const QString &password,
+              const QString &DBName, const QString &hostname);
+    void setLastDownloadDate(const QDateTime &date) {
+       itsLastDownloadDate = date; }
 	void cleanup(void); // do a cleanup
-	int connect(void);
-	int connect(const QString &username, const QString &password, const QString &database, const QString &host);
-	int testConnect(const QString &username, const QString &password, const QString &DBname, const QString &hostname);
-	void disconnect(void) {	QSqlDatabase::database( "SASDB" ).close(); QSqlDatabase::removeDatabase( "SASDB" ); }
-	bool downloadAllSASTasks(void/*bool mode = DOWNLOAD_MODE*/);
-	bool checkSynchronizeNeeded(void);
-	std::vector<unsigned> getUsedSASTaskIDs(void) const;// {return itsSASTaskIDs;}
-    const std::pair<AstroDate, AstroDate> &getUploadedDateRange(void) const {return itsUploadedDateRange;}
 
+    // *************** Dirty connection with database ***************
+	int connect(void);
+    int connect(const QString &username, const QString &password,
+                const QString &database, const QString &host);
+
+    int testConnect(const QString &username, const QString &password,
+                    const QString &DBname, const QString &hostname);   
+
+    // ***************Clean connections with database ***************
+    void disconnect(void) {	QSqlDatabase::database( "SASDB" ).close();
+                            QSqlDatabase::removeDatabase( "SASDB" ); }
+
+    // ***************dirty model functionality***************
+    bool downloadAllSASTasks(void);
+
+    // ****** clean model functionality  ***************
+    std::vector<unsigned> getUsedSASTaskIDs(void) const;
+
+    // addToTreesToDelete: used by Controller when a task is deleted from the scheduler
+    void addToTreesToDelete(unsigned treeID, unsigned task_id);
+
+    // used by Controller when a previously deleted task is undeleted to
+    //add it back to the record of SAS tasks
+    void removeFromSASTaskToDelete(unsigned treeID);
+
+    // aborts a vic tree that is active or queued
+    bool abortTask(int treeID);
+
+    // set the tree to the ON_HOLD state,
+    // the tree to SAS_STATE_ON_HOLD status in the database and
+    // sets the itsSASVicTrees to SAS_STATE_ON_HOLD
+    bool setTaskOnHold(int treeID);
+
+    // set multiple trees on hold
+    bool setTasksOnHold(const std::vector<int> trees);
+
+    // *************** dirty GUI / VIEW ***************
+	bool checkSynchronizeNeeded(void);
+
+    // *************** clean GUI / view ***************
+    // opens the clean upload dialog
+    void showProgressUploadDialog(void);
+
+    // hides the upload progress dialog
+    void closeProgressUploadDialog(void) {itsProgressDialog.hide();}
+
+    SASProgressDialog &progressDialog(void) {return itsProgressDialog;}
+
+    // *************** getters: ***************
+    const std::pair<AstroDate, AstroDate> &getUploadedDateRange(void) const {
+       return itsUploadedDateRange;}
     void setAutoPublishEnabled(bool enable) {itsUploadDialog->setAutoPublishEnabled(enable);}
     bool autoPublish(void) const {return itsUploadDialog->autoPublish();}
-	// addToTreesToDelete: used by Controller when a task is deleted from the scheduler
-	void addToTreesToDelete(unsigned treeID, unsigned task_id);
-	// used by Controller when a previously deleted task is undeleted to add it back to the record of SAS tasks
-	void removeFromSASTaskToDelete(unsigned treeID);
 	// get the SAS authentication token from the SAS database
 	const QString &getAuthToken(void) const {return itsAuthToken;}
+    const SAStasks &SASTasks(void) const {return itsSASTasks;}
 
-	bool abortTask(int treeID); // aborts a vic tree that is active or queued
-	bool setTaskOnHold(int treeID);// {return setTreeState(treeID, SAS_STATE_ON_HOLD);} // set the tree to the ON_HOLD state
-	bool setTasksOnHold(const std::vector<int> trees); // set multiple trees on hold
-	const SAStasks &SASTasks(void) const {return itsSASTasks;}
-	// opens the clean upload dialog
-	void showProgressUploadDialog(void);
-	// hides the upload progress dialog
-	void closeProgressUploadDialog(void) {itsProgressDialog.hide();}
-	SASProgressDialog &progressDialog(void) {return itsProgressDialog;}
+    // Return SASStatus dialog 
+    SASStatusDialog& getSASStatusDialog(){ return statDlg;}
+
+    // *************** CORE controller functionality DIRTY***************
+    // Large and unstructed functionality
 	//  start checking for changes that will be committed to the SAS database and the schedule
 	bool startSynchronizeProcedure(const SchedulerData &scheduler_data);
-	// commit the schedule to the SAS database and create and alter tasks in the database
-	bool commitScheduleToSAS(SchedulerData &data);
+
+    // commit the schedule to the SAS database and create and alter tasks in the database
+    bool commitScheduleToSAS(SchedulerData &data);
+
+
+
+
+
+
+
 	// check SAS connection status, database status, database access rights, database integrity and show this in a status dialog
 	bool checkSASStatus(void);
 	// shows the history of state changes in a separate dialog
@@ -127,7 +175,7 @@ public:
     // translates all mom IDs in the supplied IDvector to SAS ids and directly updates the IDvector
     void translateMomPredecessors(IDvector &predecessors);
 
-	QString lastConnectionError(void) const;
+    QString lastConnectionError(void);
 	OTDBtree getTreeInfo(int treeID) const;
     QString getTreeParset(int treeID); // gets the complete tree (parset) as a string
     QString getMetaData(int treeID);
@@ -155,7 +203,6 @@ private:
 	bool getScheduledTimes(int treeID, Task &task);
     bool getSchedulerInfo(int tree_id, Task &task);
 	void getCampaignInfo(Task &task);
-	void updateDefaultTemplates(void);
     void updateMoMToSasIDmapping(void); // updates the map used for translating Mom IDs to SAS IDs
     void storePublishDates(const Task *pTask);
     void clearItsSASTasks(void);
@@ -277,6 +324,8 @@ private:
 
 	QString itsSASUserName, itsSASPassword;
     QString itsLastErrorString;
+    SASStatusDialog statDlg;
+    SASDatabaseConnection dbConnection;
 };
 
 std::string getSasTextState(int sas_state);

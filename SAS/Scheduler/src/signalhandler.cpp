@@ -16,16 +16,51 @@
 
 #include <iostream>
 
-
-
-SignalHandler::SignalHandler(QApplication *app, Controller *c)
+//************** receiving signal back: **********************************
+// In this case a queued connection is used, therefore you’re required to run
+// an event loop in the thread the Thread object is living in.
+// http://qt-project.org/wiki/ThreadsEventsQObjects
+// https://samdutton.wordpress.com/2008/10/03/debugging-signals-and-slots-in-qt/
+SignalHandler::SignalHandler(QApplication &app, Controller &c)
 {
-    itsApplication = app;
-    itsController = c;
+    itsApplication = &app;
+    itsController = &c;
+
+    itsController->setSignalHandler(this);
     // Create the connection between the SignalHandler class and the possible
     // items to action upon.
-    //connect(itsController->gui->getSchedulerGUIClass().action_DownloadSASSchedule,
-    //       SIGNAL(triggered()), itsController, SLOT(downloadSASSchedule()));
+
+    connectSignals();
+}
+
+void SignalHandler::connectSignals(void)
+{
+    connect(this,                          // This QObject signal
+            SIGNAL(mainWindowClose()),     // Function in this object
+            itsController,                 // The target object
+            SLOT(quit()));                 // The slot to 'call'
+
+    connect(this,          SIGNAL(downloadSASSchedule()),
+            itsController, SLOT(downloadSASSchedule()));
+
+    //TODO: I'm not happy with this dereferenced pointer pointer magix
+    connect(this,          SIGNAL(closeSASScheduleDownloadDialog()),
+            &(itsController->itsSASConnection->progressDialog()), SLOT(close()));
+
+    connect(this,          SIGNAL(doNotSaveSchedule()),
+            itsController, SLOT(setDoNotSaveSchedule()));
+
+    connect(this,          SIGNAL(checkSASStatus()),
+            itsController, SLOT(checkSASStatus()));
+
+    connect(this,          SIGNAL(closeCheckSASStatusDialog()),
+            &(itsController->itsSASConnection->getSASStatusDialog()), SLOT(close()));
+
+}
+
+bool SignalHandler::getStatusSASDialogFeedbackResult()
+{
+    return statusSASDialogFeedbackResult;
 }
 
 int SignalHandler::signalForward(std::string action, std::string /*parameter*/)
@@ -37,51 +72,20 @@ int SignalHandler::signalForward(std::string action, std::string /*parameter*/)
     std::cerr << "Received command: " << action << std::endl;
 
     if (action == "DownloadSASSchedule")
-        emit itsController->gui->getSchedulerGUIClass(
-                ).action_DownloadSASSchedule->trigger();
+        emit downloadSASSchedule();
     else if (action == "DownloadSASScheduleClose")
-    {
-
-        QApplication::sendEvent(
-            &itsController->itsSASConnection->progressDialog(),
-                    new QCloseEvent());
-        // TODO: Might cause an xevent que mixup
-        // Xlib: sequence lost (0x1037e > 0x381) in reply type 0x9!
-        //(google gives comparable/same erros
-        // and the possible cause
-    }
+        emit closeSASScheduleDownloadDialog();
     else if (action == "MainWindowClose")
-    {
-        QApplication::sendEvent(
-                    itsApplication,
-                    new QCloseEvent());
-
+    {   // The save dialog does not play nice with the with the signal system
+        // Set a noSave flag and then close
+        emit doNotSaveSchedule();
+        emit mainWindowClose();
     }
-    // This action does not work. Saving this as a starting point for a next
-    // atempt.
-    else if (action == "PresNoInSaveDialog")
-    {
-        QMessageBox* box = itsController->possiblySaveMessageBox;
-        std::cout << "debug 1" << std::endl;
-        if (!box)  // If null pointer we cannot press a button in the dialog
-            return 0;
-        std::cout << "debug 2" << std::endl;
+    else if (action == "checkSASStatus")
+        emit checkSASStatus();
+    else if (action == "closeCheckSASStatusDialog")
+        emit closeCheckSASStatusDialog();
 
-        //TODO: Emit a "do not save button clicked event"
-
-        //QAbstractButton* noButton = box->button(QMessageBox::No);
-        //QPushButton* noButton = dynamic_cast<QPushButton*>(box->button(QMessageBox::No));
-
-        //std::cout << "result: " << box->result() << std::endl;
-        //box->setResult(QMessageBox::No);
-        //std::cout << "result: " << box->result() << std::endl;
-
-        //QPushButton* pushButton = box->findChild<QPushButton*>();
-        //std::cout << "debug 3" << std::endl;
-        //std::cout << "Found buttons: " << pushButton << std::cout;
-
-
-    }
 
     else{ // If an unknown action string is received return 1
         // TODO: Add to logfile line that unknown signal was received.
@@ -92,4 +96,9 @@ int SignalHandler::signalForward(std::string action, std::string /*parameter*/)
     return 0;
 }
 
-
+// TODO: Refactor into a generic feedback handler?
+void SignalHandler::statusSASDialogFeedback(bool result)
+{
+    std::cerr << "Received statusSASDialogFeedback: " << result << std::endl;
+    statusSASDialogFeedbackResult = result;
+}

@@ -76,10 +76,8 @@ const char *unscheduled_reason_str[NR_REASONS] = {
 		"skyImages = input MS subbands / (subbands_per_image * slices_per_image) (needs to be integer value)",
 		"No data output type selected (coherent/incoherent/correlated)",
 		"A required input data product could not be found within the predecessor tasks",
-        "demix freq.step and time step should be multiples of resp. averaging freq.step and time step",       
-        "one of the specified sources to be demixed is unknown",
-        "Mismatch between input and output node location, retry assigning resources: LOC 1",
-        "Mismatch between input and output node location, retry assigning resources: LOC 2",
+        "demix freq.step and time step should be multiples of resp. averaging freq.step and time step",
+        "one of the specified sources to be demixed is unknown"
 };
 
 const char * TASK_CONFLICTS[_END_CONFLICTS_] = {
@@ -441,42 +439,6 @@ QDataStream& operator>> (QDataStream &in, Task &task) {
 	return in;
 }
 
-Task & Task::operator=(const Task &other) {
-    if (this != &other) {
-        itsProjectID = other.itsProjectID;
-        itsProjectName = other.itsProjectName;
-        itsProjectPI = other.itsProjectPI;
-        itsProjectCO_I = other.itsProjectCO_I;
-        itsTaskName = other.itsTaskName;
-        itsContactName = other.itsContactName;
-        itsContactPhone = other.itsContactPhone;
-        itsContactEmail = other.itsContactEmail;
-        taskID = other.taskID;
-        itsPriority = other.itsPriority;
-        itsStatus = other.itsStatus;
-        itsTaskType = other.itsTaskType;
-        fixed_day = other.fixed_day;
-        fixed_time = other.fixed_time;
-        itsPenalty = other.itsPenalty;
-        penaltyCalculationNeeded = other.penaltyCalculationNeeded;
-        itsReason = other.itsReason;
-        itsShiftDirection = other.itsShiftDirection;
-        itsPredecessors = other.itsPredecessors;
-        itsSuccessors = other.itsSuccessors;
-        itsConflicts = other.itsConflicts;
-        predecessorMinTimeDif = other.predecessorMinTimeDif;
-        predecessorMaxTimeDif = other.predecessorMaxTimeDif;
-        windowMinTime = other.windowMinTime;
-        windowMaxTime = other.windowMaxTime;
-        scheduledStart = other.scheduledStart;
-        scheduledEnd = other.scheduledEnd;
-        itsDuration = other.itsDuration;
-        firstPossibleDay = other.firstPossibleDay;
-        lastPossibleDay = other.lastPossibleDay;
-        itsSASTree = other.itsSASTree;
-    }
-    return *this;
-}
 
 void Task::syncStartStopTimes(void) {
     itsSASTree.setStartTime(scheduledStart);
