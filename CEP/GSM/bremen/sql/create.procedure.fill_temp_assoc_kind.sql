@@ -5,8 +5,11 @@ update temp_associations
    set xtr_count = (select count(xtrsrc_id2)
                       from temp_associations as ta
                      where ta.xtrsrc_id2 = temp_associations.xtrsrc_id2
-                       and ta.image_id = i_image_id),
-       run_count = (select count(runcat_id)
+                       and ta.image_id = i_image_id)
+ where image_id = i_image_id;
+
+update temp_associations
+   set run_count = (select count(runcat_id)
                       from temp_associations as ta
                      where ta.runcat_id = temp_associations.runcat_id
                        and ta.image_id = i_image_id)

@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -25,12 +25,12 @@
 
 -- creates the OTDB event and action tables
 
-DROP TABLE IF EXISTS OTDBevent    CASCADE;
-DROP TABLE IF EXISTS OTDBaction   CASCADE;
-DROP TABLE IF EXISTS eventStatus  CASCADE;
-DROP TABLE IF EXISTS actionStatus CASCADE;
-DROP SEQUENCE IF EXISTS	OTDBeventID;
-DROP SEQUENCE IF EXISTS	OTDBactionID;
+DROP TABLE OTDBevent    CASCADE;
+DROP TABLE OTDBaction   CASCADE;
+DROP TABLE eventStatus  CASCADE;
+DROP TABLE actionStatus CASCADE;
+DROP SEQUENCE	OTDBeventID;
+DROP SEQUENCE	OTDBactionID;
 
 
 --

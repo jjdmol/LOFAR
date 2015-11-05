@@ -14,7 +14,7 @@ add_library(_cbdsm MODULE
   num_util/num_util.cpp)
 
 target_link_libraries(_cbdsm
-  ${BOOST_LIBRARIES}
+  ${Boost_PYTHON_LIBRARY}
   minpack
   port3
 )

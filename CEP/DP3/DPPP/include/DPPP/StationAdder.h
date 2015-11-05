@@ -105,14 +105,12 @@ namespace LOFAR {
       DPInput*        itsInput;
       string          itsName;
       DPBuffer        itsBuf;
-      DPBuffer        itsBufTmp;
       ParameterRecord itsStatRec;     // stations definitions
       vector<casa::Vector<int> > itsParts;  // the stations in each superstation
       vector<vector<int> > itsBufRows; // old baseline rows in each new baseline
       uint            itsMinNPoint  ;  // flag data if too few unflagged data
       bool            itsMakeAutoCorr; // also form new auto-correlations?
       bool            itsSumAutoCorr;  // sum auto- or cross-correlations?
-      bool            itsDoAverage;    // average or sum?
       bool            itsUseWeight;    // false = use weight 1 per station
       UVWCalculator   itsUVWCalc;
       NSTimer         itsTimer;

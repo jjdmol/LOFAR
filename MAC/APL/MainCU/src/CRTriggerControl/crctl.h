@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -26,13 +26,13 @@
 #define _CRCTL_H_
 
 #include <APL/CR_Protocol/CR_Protocol.ph>
+#include <APL/RTCCommon/NsTimestamp.h>
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_DevicePort.h>
 #include <GCF/TM/GCF_TimerPort.h>
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_list.h>
 #include <Common/lofar_string.h>
-#include <Common/NsTimestamp.h>
 #include <cstdio>
 
 
@@ -151,9 +151,9 @@ public:
     virtual ~StopCmd() { }
     virtual void send();
     virtual GCFEvent::TResult ack(GCFEvent& e);
-    void setStopTime(NsTimestamp time) { itsStopTime = time; }
+    void setStopTime(RTC::NsTimestamp time) { itsStopTime = time; }
 private:
-    NsTimestamp itsStopTime;
+    RTC::NsTimestamp itsStopTime;
 };
 
 //-----------------------------------------------------------------------------
@@ -164,13 +164,13 @@ public:
     virtual ~ReadCmd() { }
     virtual void send();
     virtual GCFEvent::TResult ack(GCFEvent& e);
-    void setTime(NsTimestamp time) { itsReadTime = time; }
-    void setTimeBefore(NsTimestamp time) { itsTimeBefore = time; }
-    void setTimeAfter(NsTimestamp time) { itsTimeAfter = time; }
+    void setTime(RTC::NsTimestamp time) { itsReadTime = time; }
+    void setTimeBefore(RTC::NsTimestamp time) { itsTimeBefore = time; }
+    void setTimeAfter(RTC::NsTimestamp time) { itsTimeAfter = time; }
 private:
-    NsTimestamp itsReadTime;
-    NsTimestamp itsTimeBefore;
-    NsTimestamp itsTimeAfter;
+    RTC::NsTimestamp itsReadTime;
+    RTC::NsTimestamp itsTimeBefore;
+    RTC::NsTimestamp itsTimeAfter;
 };
 
 //-----------------------------------------------------------------------------

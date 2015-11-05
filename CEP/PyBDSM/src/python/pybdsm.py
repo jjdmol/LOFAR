@@ -40,7 +40,7 @@ def inp(cur_cmd=None):
     success = _set_pars_from_prompt()
     if not success:
         return
-    if cur_cmd is not None:
+    if cur_cmd != None:
         if not hasattr(cur_cmd, 'arg_list'):
             print '\033[31;1mERROR\033[0m: not a valid task'
             return
@@ -65,7 +65,7 @@ def go(cur_cmd=None):
     success = _set_pars_from_prompt()
     if not success:
         return
-    if cur_cmd is None:
+    if cur_cmd == None:
         if not hasattr(_img, '_current_cmd'):
             print '\033[31;1mERROR\033[0m: no task is set'
             return
@@ -84,7 +84,7 @@ def default(cur_cmd=None):
     given, the parameters of the current task are reset.
     """
     global _img
-    if cur_cmd is None:
+    if cur_cmd == None:
         if not hasattr(_img, '_current_cmd'):
             print '\033[31;1mERROR\033[0m: no task is set'
             return
@@ -114,11 +114,10 @@ def tget(filename=None):
     Below is an example of how to edit a save file by hand:
 
       BDSM [1]: import pickle
-      BDSM [2]: with open('savefile.sav', 'r') as savefile:
-      BDSM [3]:     pars = pickle.load(savefile)
+      BDSM [2]: savefile = open('savefile.sav', 'w')
+      BDSM [3]: pars = pickle.load(savefile)
       BDSM [4]: pars['rms_box'] = (80, 20)  --> change rms_box parameter
-      BDSM [5]: with open('savefile.sav', 'w') as savefile:
-      BDSM [6]:     pickle.dump(pars, savefile) --> save changes
+      BDSM [5]: pickle.dump(pars, savefile) --> save changes
 
     """
     try:
@@ -134,7 +133,7 @@ def tget(filename=None):
     if hasattr(filename, 'arg_list'):
         filename = None
 
-    if filename is None or filename == '':
+    if filename == None or filename == '':
         if os.path.isfile('pybdsm.last'):
             filename = 'pybdsm.last'
         else:
@@ -170,11 +169,10 @@ def tput(filename=None, quiet=False):
     Below is an example of how to edit a save file by hand:
 
       BDSM [1]: import pickle
-      BDSM [2]: with open('savefile.sav', 'r') as savefile:
-      BDSM [3]:     pars = pickle.load(savefile)
+      BDSM [2]: savefile = open('savefile.sav', 'w')
+      BDSM [3]: pars = pickle.load(savefile)
       BDSM [4]: pars['rms_box'] = (80, 20)  --> change rms_box parameter
-      BDSM [5]: with open('savefile.sav', 'w') as savefile:
-      BDSM [6]:     pickle.dump(pars, savefile) --> save changes
+      BDSM [5]: pickle.dump(pars, savefile) --> save changes
 
     """
     try:
@@ -186,7 +184,7 @@ def tput(filename=None, quiet=False):
     success = _set_pars_from_prompt()
     if not success:
         return
-    if filename is None or filename == '':
+    if filename == None or filename == '':
         filename = 'pybdsm.last'
 
     # convert opts to dictionary
@@ -250,7 +248,7 @@ def _replace_vals_in_namespace(opt_names=None):
     global _img
     f = sys._getframe(len(inspect.stack())-1)
     f_dict = f.f_locals
-    if opt_names is None:
+    if opt_names == None:
         opt_names = _img.opts.get_names()
     if isinstance(opt_names, str):
         opt_names = [opt_names]
@@ -430,8 +428,8 @@ def write_catalog(**kwargs):
     included in the output file varies with the format used. Use
     "help 'format'" for more information.
 
-    Parameters: outfile, format, srcroot, bbs_patches, incl_chan, clobber,
-                catalog_type, incl_empty, correct_proj, bbs_patches_mask
+    Parameters: outfile, format, srcroot, bbs_patches, incl_wavelet, clobber,
+                catalog_type, incl_empty
 
     For more information about a parameter, use help.  E.g.,
       > help 'bbs_patches'
@@ -454,15 +452,14 @@ def write_catalog(**kwargs):
         print "\n\033[31;1mAborted\033[0m"
 
 write_catalog.arg_list = ['bbs_patches', 'format', 'outfile', 'srcroot',
-                          'incl_chan', 'clobber', 'catalog_type', 'incl_empty',
-                          'correct_proj', 'bbs_patches_mask']
+                          'incl_chan', 'clobber', 'catalog_type', 'incl_empty']
 write_catalog.use_groups = False
 
 
 def export_image(**kwargs):
     """Write an image to disk.
 
-    Parameters: outfile, img_type, img_format, mask_dilation, pad_image, clobber
+    Parameters: filename, img_type, img_format, incl_wavelet, clobber
 
     For more information about a parameter, use help.  E.g.,
       > help 'img_type'
@@ -484,8 +481,8 @@ def export_image(**kwargs):
     except KeyboardInterrupt:
         print "\n\033[31;1mAborted\033[0m"
 
-export_image.arg_list = ['outfile', 'img_type', 'img_format', 'mask_dilation',
-                         'pad_image', 'clobber']
+export_image.arg_list = ['outfile', 'img_type', 'img_format',
+                         'clobber']
 export_image.use_groups = False
 
 
@@ -522,7 +519,7 @@ class bdsmDocHelper(pydoc.Helper):
                 else:
                     valstr = str(default_val)
                 default_val_text = 'Default value: ' + valstr
-                if opt.group() is not None and opt.group() != 'hidden':
+                if opt.group() != None and opt.group() != 'hidden':
                     group_text = '\nBelongs to group: ' + opt.group()
                 else:
                     group_text = ''
@@ -662,22 +659,20 @@ def _opts_completer(self, event):
 # asking them to update.
 from lofar.bdsm._version import __version__, __revision__, changelog
 
-# Query the Hamburg Observatory FTP server. Tar file must be named
-# "PyBDSM-version#.tar.gz":
+# Query the STRW FTP server. Tar file must be named "PyBDSM-version#.tar.gz":
 #   e.g., "PyBDSM-1.3.1.tar.gz".
-# Check whether called from the LOFAR CEPI/II/III. If so, skip check.
+# Check whether called from the LOFAR CEPI/II. If so, skip check.
 import os
 aps_local_val = os.environ.get('APS_LOCAL')
-check_for_newer = True
-if aps_local_val is None and check_for_newer:
+if aps_local_val == None:
     try:
         import ftplib
         from distutils.version import StrictVersion
         f = ftplib.FTP()
-        f.connect("ftp.hs.uni-hamburg.de", timeout=2.0)
+        f.connect("ftp.strw.leidenuniv.nl")
         f.login()
         file_list = []
-        file_list = f.nlst('pub/outgoing/rafferty/PyBDSM')
+        file_list = f.nlst('pub/rafferty/PyBDSM')
         f.close()
         ftp_version = ''
         for file in file_list:
@@ -691,7 +686,7 @@ if aps_local_val is None and check_for_newer:
         elif StrictVersion(__version__) < StrictVersion(ftp_version):
             print '\n' + '*' * 72
             print "There appears to be a newer version of PyBDSM available at:"
-            print "    ftp://ftp.hs.uni-hamburg.de/pub/outgoing/rafferty/PyBDSM/"
+            print "    ftp://ftp.strw.leidenuniv.nl/pub/rafferty/PyBDSM/"
             print "Please consider updating your installation"
             print '*' * 72
     except:
@@ -731,13 +726,9 @@ _set_current_cmd(process_image)
 # greater is in common use.
 try:
     # IPython >= 0.11
-    from distutils.version import LooseVersion
-    from IPython import __version__ as ipython_version
-    if LooseVersion(ipython_version) < LooseVersion('1.0.0'):
-        from IPython.frontend.terminal.embed import InteractiveShellEmbed
-    else:
-        from IPython.terminal.embed import InteractiveShellEmbed
+    from IPython.frontend.terminal.embed import InteractiveShellEmbed
     from IPython.config.loader import Config
+    from IPython import __version__ as ipython_version
     cfg = Config()
     prompt_config = cfg.PromptManager
     if ipython_version == '0.11':
@@ -755,3 +746,5 @@ except ImportError:
     ipshell = IPShellEmbed(argv=argv, banner=banner, user_ns=locals())
     ipshell.IP.set_hook('complete_command', _opts_completer, re_key = '.*')
 ipshell()
+
+

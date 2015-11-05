@@ -24,8 +24,8 @@
 #include <lofar_config.h>
 #include <iostream>
 
-#include "DH_Example.h"
 #include <Transport/TH_Mem.h>
+#include <DH_Example.h>
 #include <Transport/Connection.h>
 #include <Common/LofarLogger.h>
 

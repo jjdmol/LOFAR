@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -100,10 +100,6 @@
 #include "SetBitModeCmd.h"
 #include "GetBitModeCmd.h"
 #include "UpdBitModeCmd.h"
-#include "SetSDOModeCmd.h"
-#include "GetSDOModeCmd.h"
-#include "SetSDOCmd.h"
-#include "GetSDOCmd.h"
 
 #include "RSUWrite.h"
 #include "BSWrite.h"
@@ -147,10 +143,6 @@
 #include "TimestampWrite.h"
 #include "BMWrite.h"
 #include "BMRead.h"
-#include "SDOModeWrite.h"
-#include "SDOModeRead.h"
-#include "SDOWrite.h"
-#include "SDORead.h"
 
 #include "RawEvent.h"
 #include "Sequencer.h"
@@ -173,8 +165,6 @@
 #define PPS_FETCH_TIMEOUT { 3, 0 }
 
 namespace LOFAR {
-	using namespace EPA_Protocol;
-	using namespace RSP_Protocol;
 	using namespace GCF::TM;
 	namespace RSP {
 	using namespace blitz;
@@ -213,12 +203,14 @@ RSPDriver::RSPDriver(string name) :
 	ssp->setMaxRspBoards  (sc.nrRSPs);
 	ssp->setNrRspBoards   (sc.nrRSPs);
 	ssp->setSplitter      (sc.hasSplitters);
-	ssp->setAartfaac      (sc.hasAartfaac);
 	LOG_DEBUG_STR (*ssp);
 
-	LOG_DEBUG("Setting up cable characteristics from CableAttenuation.conf and CableDelays.conf");
-	RCUCables		cables("CableAttenuation.conf", "CableDelays.conf");
+	LOG_DEBUG("Setting up cable characteristics from Attenuation.conf and CableDelays.conf");
+	RCUCables		cables("Attenuation.conf", "CableDelays.conf");
 	CableSettings::createInstance(cables);
+
+	LOG_DEBUG("Trying to load delay settings for synchronising the PPS between the subracks");
+    readPPSdelaySettings();
 
 	int mode = GET_CONFIG("RSPDriver.SYNC_MODE", i);
 	if (mode < SYNC_SOFTWARE || mode > SYNC_PPS) {
@@ -284,6 +276,53 @@ RSPDriver::~RSPDriver()
 	delete [] m_boardPorts;
 }
 
+//
+// readPPSdelaySettings()
+//
+void RSPDriver::readPPSdelaySettings()
+{
+	ConfigLocator	CL;
+	string	filename = (CL.locate(GET_CONFIG_STRING("RSPDriver.PPSdelayFile")));
+	LOG_DEBUG_STR("Trying to load the PPS delay settings from file: " << filename);
+
+	// setup default values first
+	int	nrRspBoards = StationSettings::instance()->nrRspBoards();
+	itsPPSsyncDelays.resize(nrRspBoards * NR_BLPS_PER_RSPBOARD);
+	itsPPSsyncDelays = 0;
+
+	ifstream	ppsFile;
+	ppsFile.open(filename.c_str());
+	if (!ppsFile.good()) {
+		ppsFile.close();
+		LOG_WARN_STR("File " << filename << " could not be opened, cannot synchronise PPS pulses");
+		return;
+	}
+
+	// Skip comment lines
+	string	line;
+	getline(ppsFile, line);
+	while (line != "" && ppsFile.peek() == '#') {
+		getline(ppsFile, line);
+	}
+
+	// read values
+	blitz::Array<int, 1>	delayValues;
+	ppsFile >> delayValues;
+	ppsFile.close();
+
+	// Check number if values read in
+	if (delayValues.extent(firstDim) == nrRspBoards * NR_BLPS_PER_RSPBOARD) {
+		itsPPSsyncDelays = delayValues;
+	}
+	else {
+		LOG_ERROR_STR("File " << filename << " contains " << delayValues.extent(firstDim)
+					  << " values, expected " << nrRspBoards * NR_BLPS_PER_RSPBOARD 
+					  << " values, WILL NOT USE THEM!");
+	}
+	LOG_INFO_STR("PPSsyncDelays: " << itsPPSsyncDelays);
+}
+
+
 // ------------------------------ Boardpool related commands ------------------------------
 //
 // openBoards()
@@ -338,7 +377,6 @@ bool RSPDriver::isBoardPort(GCFPortInterface& port)
  * - STATUS  (RSP Status): read RSP status info   // StatusRead
  * - VERSION (RSP Status): read RSP version info  // VersionRead
  * - BITMODE (RSP Status): read RSP nofbeam info  // BMRead
- * - SDOMODE (RSP Status): read RSP SDO     info  // SDOModeRead
  * - TDS:     write TDS control settings          // TDSResultWrite/TDSProtocolWrite
  * - TDSSTATUS: read TDS status                   // TDSStatusWrite/TDSStatusRead
  * - RSU:     write RSU settings                  // RSUWrite
@@ -360,7 +398,6 @@ bool RSPDriver::isBoardPort(GCFPortInterface& port)
  * - Serdes:  write splitter settings             // SerdesWrite/SerdesRead
  * - Raw:     write/read raw datablocks           // RawBlockWrite/RawBlockRead
  * - Latency: read latency of serdes rings        // LatencyRead
- * - SDO:     write subband data out selection    // SDOWrite/(SDORead for testing)
  * - Timestamp: write timestmap                   // Always the last command!
  */
 void RSPDriver::addAllSyncActions()
@@ -387,15 +424,7 @@ void RSPDriver::addAllSyncActions()
 			ASSERT(bitmoderead);
 			m_scheduler.addSyncAction(bitmoderead);
 		}
-        if (StationSettings::instance()->hasAartfaac() && GET_CONFIG("RSPDriver.READ_SDOMODE", i)) {
-			SDOModeWrite* sdomodewrite = new SDOModeWrite(m_boardPorts[boardid], boardid);
-			ASSERT(sdomodewrite);
-			m_scheduler.addSyncAction(sdomodewrite);
-			SDOModeRead* sdomoderead = new SDOModeRead(m_boardPorts[boardid], boardid);
-			ASSERT(sdomoderead);
-			m_scheduler.addSyncAction(sdomoderead);
-		}
-        
+
 		// Schedule register writes for soft PPS if configured.
 		//
 		// - This means disabling the external sync on all FPGA's
@@ -481,16 +510,14 @@ void RSPDriver::addAllSyncActions()
         			ASSERT(bstread);
         			m_scheduler.addSyncAction(bstread);
 		        }
-		        if (StationSettings::instance()->hasSplitter()) {
-                    // for Ring-1
-                    if (boardid == GET_CONFIG(formatString("RSPDriver.LANE_%02d_BLET_OUT", (10+lane)).c_str(), i)) {
-                        LOG_DEBUG(formatString("add bstread for board %d, lane %d", boardid, (10+lane)));
-                        BstRead* bstread = 0;
-                        bstread = new BstRead(m_boardPorts[boardid], boardid, (10+lane));
-                        ASSERT(bstread);
-                        m_scheduler.addSyncAction(bstread);
-                    }
-                }
+		        // for Ring-1
+		        if (boardid == GET_CONFIG(formatString("RSPDriver.LANE_%02d_BLET_OUT", (10+lane)).c_str(), i)) {
+		            LOG_DEBUG(formatString("add bstread for board %d, lane %d", boardid, (10+lane)));
+        			BstRead* bstread = 0;
+        			bstread = new BstRead(m_boardPorts[boardid], boardid, (10+lane));
+        			ASSERT(bstread);
+        			m_scheduler.addSyncAction(bstread);
+		        }
 		    }
 		}
 
@@ -540,11 +567,13 @@ void RSPDriver::addAllSyncActions()
 			}
 		}
 
-		// write Spectral Invertion and SDOenable information
+		// write Spectral Invertion information
 		if (GET_CONFIG("RSPDriver.WRITE_SI", i)) {
-            BypassWrite* bypasswrite = new BypassWrite(m_boardPorts[boardid], boardid);
-            ASSERT(bypasswrite);
-            m_scheduler.addSyncAction(bypasswrite);
+			for (int blp = 0; blp < NR_BLPS_PER_RSPBOARD; blp++) {
+				BypassWrite* bypasswrite = new BypassWrite(m_boardPorts[boardid], boardid, blp);
+				ASSERT(bypasswrite);
+				m_scheduler.addSyncAction(bypasswrite);
+			}
 		}
 
 		if (GET_CONFIG("RSPDriver.WRITE_TBB", i)) {
@@ -574,24 +603,6 @@ void RSPDriver::addAllSyncActions()
 			}
 		}
 
-        if (StationSettings::instance()->hasAartfaac()) {
-            for (int action = 0; action < 2; action++) {
-                if (action == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i)) {
-                    if (GET_CONFIG("RSPDriver.WRITE_SDO", i)) {
-                        SDOWrite* sdowrite = new SDOWrite(m_boardPorts[boardid], boardid);
-                        ASSERT(sdowrite);
-                        m_scheduler.addSyncAction(sdowrite);
-                    }
-                }
-                else {
-                    if (GET_CONFIG("RSPDriver.READ_SDO", i)) {
-                        SDORead* sdoread = new SDORead(m_boardPorts[boardid], boardid);
-                        ASSERT(sdoread);
-                        m_scheduler.addSyncAction(sdoread);
-                    }
-                }
-            }
-        }
 		//
 		// Depending on the value of RSPDriver.LOOPBACK_MODE either the
 		// WRITE is done first or the READ is done first.
@@ -670,10 +681,9 @@ void RSPDriver::addAllSyncActions()
 		}
 
 		// Always add CRsync because it is used in the init sequence
-		//int	sliceBegin = boardid * NR_BLPS_PER_RSPBOARD;
-		//int sliceEnd   = sliceBegin + NR_BLPS_PER_RSPBOARD - 1;
-		//CRSyncWrite* CrWrite = new CRSyncWrite(m_boardPorts[boardid], boardid, itsPPSsyncDelays(Range(sliceBegin, sliceEnd)));
-		CRSyncWrite* CrWrite = new CRSyncWrite(m_boardPorts[boardid], boardid);
+		int	sliceBegin = boardid * NR_BLPS_PER_RSPBOARD;
+		int sliceEnd   = sliceBegin + NR_BLPS_PER_RSPBOARD - 1;
+		CRSyncWrite* CrWrite = new CRSyncWrite(m_boardPorts[boardid], boardid, itsPPSsyncDelays(Range(sliceBegin, sliceEnd)));
 		ASSERT(CrWrite);
 		m_scheduler.addSyncAction(CrWrite);
 
@@ -729,9 +739,11 @@ void RSPDriver::addAllSyncActions()
 
 		// read Spectral Invertion information
 		//    if (GET_CONFIG("RSPDriver.READ_SI", i)) {
-		//        BypassRead* bypassread = new BypassRead(m_boardPorts[boardid], boardid);
-		//        ASSERT(bypassread);
+		//      for (int blp = 0; blp < NR_BLPS_PER_RSPBOARD; blp++) {
+		//        BypassRead* bypassread = new BypassRead(m_boardPorts[boardid], boardid, blp);
+		//          ASSERT(bypassread);
 		//        m_scheduler.addSyncAction(bypassread);
+		//	  }
 		//    }
 
 		if (GET_CONFIG("RSPDriver.SPLITTER", i) == 1) {
@@ -767,8 +779,6 @@ void RSPDriver::addAllSyncActions()
 			ASSERT(timestampwrite);
 			m_scheduler.addSyncAction(timestampwrite);
 		}
-        
-        
 	} // for (boardid...)
 }
 
@@ -1062,11 +1072,7 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 		case RSP_GETBITMODE:			rsp_getBitMode(event,port);         break;
 		case RSP_SUBBITMODE:			rsp_subBitMode(event,port);         break;
 		case RSP_UNSUBBITMODE:			rsp_unsubBitMode(event,port);       break;
-        case RSP_SETSDOMODE:			rsp_setSDOMode(event,port);         break;
-		case RSP_GETSDOMODE:			rsp_getSDOMode(event,port);         break;
-        case RSP_SETSDO:    			rsp_setSDO(event,port);             break;
-		case RSP_GETSDO:	    		rsp_getSDO(event,port);             break;
-        
+
 		case F_TIMER: {
 		if (&port == &m_boardPorts[0]) {
 			// If SYNC_MODE == SOFTWARE|FAST then run the scheduler
@@ -1640,16 +1646,6 @@ void RSPDriver::rsp_setrsu(GCFEvent& event, GCFPortInterface& port)
 {
 	Ptr<SetRSUCmd> command = new SetRSUCmd(event, port, Command::WRITE);
 
-    if (Sequencer::getInstance().isActive()) {
-		LOG_INFO("SETRSU: sequencer busy");
-
-		RSPSetrsuackEvent ack;
-		ack.timestamp = Timestamp(0,0);
-		ack.status = RSP_BUSY;
-		port.send(ack);
-		return;
-	}
-    
 	if (!command->validate()) {
 		LOG_ERROR("SETRSU: invalid parameter");
 
@@ -1938,7 +1934,6 @@ void RSPDriver::rsp_getconfig(GCFEvent& event, GCFPortInterface& port)
 	ack.n_rspboards   = StationSettings::instance()->nrRspBoards();
 	ack.max_rspboards = StationSettings::instance()->maxRspBoards();
     ack.hasSplitter   = StationSettings::instance()->hasSplitter();
-    ack.hasAartfaac   = StationSettings::instance()->hasAartfaac();
 	port.send(ack);
 }
 
@@ -1948,16 +1943,6 @@ void RSPDriver::rsp_getconfig(GCFEvent& event, GCFPortInterface& port)
 void RSPDriver::rsp_setclock(GCFEvent& event, GCFPortInterface& port)
 {
 	Ptr<SetClocksCmd> command = new SetClocksCmd(event, port, Command::WRITE);
-
-	if (Sequencer::getInstance().isActive()) {
-		LOG_INFO("SETCLOCK: sequencer busy");
-
-		RSPSetclockackEvent ack;
-		ack.timestamp = Timestamp(0,0);
-		ack.status = RSP_BUSY;
-		port.send(ack);
-		return;
-	}
 
 	if (!command->validate()) {
 		LOG_ERROR("SETCLOCK: invalid parameter");
@@ -1979,17 +1964,7 @@ void RSPDriver::rsp_getclock(GCFEvent& event, GCFPortInterface& port)
 {
 	Ptr<GetClocksCmd> command = new GetClocksCmd(event, port, Command::READ);
 
-	if (Sequencer::getInstance().isActive()) {
-		LOG_INFO("GETCLOCK: sequencer busy");
-
-		RSPGetclockackEvent ack;
-		ack.timestamp = Timestamp(0,0);
-		ack.status = RSP_BUSY;
-		port.send(ack);
-		return;
-	}
-    
-    if (!command->validate()) {
+	if (!command->validate()) {
 		LOG_ERROR("GETCLOCK: invalid parameter");
 
 		RSPGetclockackEvent ack;
@@ -2567,7 +2542,7 @@ void RSPDriver::rsp_setBitMode(GCFEvent& event, GCFPortInterface& port)
 }
 
 //
-// rsp_getBitMode(event, port)
+// rsp_getDatastream(event, port)
 //
 void RSPDriver::rsp_getBitMode(GCFEvent& event, GCFPortInterface& port)
 {
@@ -2635,86 +2610,6 @@ void RSPDriver::rsp_unsubBitMode(GCFEvent& event, GCFPortInterface& port)
 	}
 
 	port.send(ack);
-}
-
-//
-// rsp_setSDOMode(event, port)
-//
-void RSPDriver::rsp_setSDOMode(GCFEvent& event, GCFPortInterface& port)
-{
-	Ptr<SetSDOModeCmd> command = new SetSDOModeCmd(event, port, Command::WRITE);
-
-	if (!command->validate()) {
-		LOG_ERROR("SetSDOMode: invalid parameter");
-
-		RSPSetsdomodeackEvent ack;
-		ack.timestamp = Timestamp(0,0);
-		ack.status = RSP_FAILURE;
-		port.send(ack);
-		return;
-	}
-	// command is ok, schedule it.
-	m_scheduler.enter(Ptr<Command>(&(*command)));
-}
-
-//
-// rsp_getSDOMode(event, port)
-//
-void RSPDriver::rsp_getSDOMode(GCFEvent& event, GCFPortInterface& port)
-{
-	Ptr<GetSDOModeCmd> command = new GetSDOModeCmd(event, port, Command::READ);
-
-	if (!command->validate()) {
-		LOG_ERROR("GetSDOMode: invalid parameter");
-
-		RSPGetsdomodeackEvent ack;
-		ack.timestamp = Timestamp(0,0);
-		ack.status = RSP_FAILURE;
-		port.send(ack);
-		return;
-	}
-	// command is ok, schedule it.
-	m_scheduler.enter(Ptr<Command>(&(*command)));
-}
-
-//
-// rsp_setSDO(event, port)
-//
-void RSPDriver::rsp_setSDO(GCFEvent& event, GCFPortInterface& port)
-{
-	Ptr<SetSDOCmd> command = new SetSDOCmd(event, port, Command::WRITE);
-
-	if (!command->validate()) {
-		LOG_ERROR("SetSDO: invalid parameter");
-
-		RSPSetsdoackEvent ack;
-		ack.timestamp = Timestamp(0,0);
-		ack.status = RSP_FAILURE;
-		port.send(ack);
-		return;
-	}
-	// command is ok, schedule it.
-	m_scheduler.enter(Ptr<Command>(&(*command)));
-}
-
-//
-// rsp_getSDO(event, port)
-//
-void RSPDriver::rsp_getSDO(GCFEvent& event, GCFPortInterface& port)
-{
-	Ptr<GetSDOCmd> command = new GetSDOCmd(event, port, Command::READ);
-
-	if (!command->validate()) {
-		LOG_ERROR("GetSDO: invalid parameter");
-
-		RSPGetsdoackEvent ack;
-		ack.timestamp = Timestamp(0,0);
-		ack.status = RSP_FAILURE;
-		port.send(ack);
-		return;
-	}
-	// command is ok, schedule it.
-	m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 

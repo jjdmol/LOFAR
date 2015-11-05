@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import logging
 import math
+import healpy
 import os
 
 import monetdb.sql as db
@@ -11,12 +12,7 @@ from src.gsmlogger import get_gsm_logger
 from src.sqllist import get_sql, get_svn_version, GLOBALS
 from src.grouper import Grouper
 from src.updater import run_update
-from src.utils import get_pixels, load_parameters
-from src.matcher import MatcherF90, MatcherSQL
-from src.resolveFlux import FluxResolver
-from src.resolveQuad import QuadResolver
-from src.resolveSimple import SimpleResolver
-
+from src.ini_load import load_parameters
 
 class GSMPipeline(object):
     """
@@ -47,8 +43,7 @@ class GSMPipeline(object):
         except db.Error as exc:
             self.log.error("Failed to connect: %s" % exc)
             raise exc
-        self.options = load_parameters('%s/settings.ini' % 
-                                       os.path.dirname(__file__))
+        self.options = load_parameters('%s/settings.ini' % os.path.dirname(__file__))
         self.log.debug('Pipeline parameters: %s' % self.options)
         self.log.info('Pipeline started.')
 
@@ -88,7 +83,6 @@ class GSMPipeline(object):
         """
         Detect/update and store groups of sources for later processing.
         """
-        #Update groups by merging overlapping patches.
         cursor = self.conn.get_cursor(get_sql("GroupFinder"))
         grouper = Grouper(cursor.fetchall())
         while grouper.is_completed():
@@ -97,30 +91,19 @@ class GSMPipeline(object):
                                       grouper.group,
                                       ",".join(map(str, grouper.runcatset))))
             grouper.cleanup()
-        for resolver in [SimpleResolver]:
-            self.run_resolver(resolver)
         self.conn.execute(get_sql("GroupFill"))
 
-    def run_resolver(self, resolve_class):
-        #Running resolver
-        resolver = resolve_class(self.conn)
-        for group_id in self.conn.get_cursor(get_sql("GroupCycle")):
-            if not resolver.run_resolve(group_id[0]):
-                #Failed to resolve
-                self.log.debug("Group id %s not resolved by %s." % 
-                                   (group_id[0], resolver.__class__.__name__))
-                self.conn.log.debug("Group id %s not resolved." % group_id[0])
-                self.conn.execute_set(get_sql("GroupUpdate runcat",
-                                      group_id[0]))
-            else:
-                self.log.debug("Group id %s resolved by %s."  % 
-                                   (group_id[0], resolver.__class__.__name__))
-                self.conn.log.debug("Group id %s resolved." % group_id[0])
+    def get_pixels(self, centr_ra, centr_decl, fov_radius):
+        """
+        Get a list of HEALPIX zones that contain a given image.
+        """
+        vector = healpy.ang2vec(math.radians(90.0 - centr_decl),
+                                math.radians(centr_ra))
+        pixels = healpy.query_disc(32, vector, math.radians(fov_radius),
+                                   inclusive=True, nest=True)
+        return str(pixels.tolist())[1:-1]
 
     def update_image_pointing(self, image_id):
-        """
-        Update image pointing to average ra/decl of all sources.
-        """
         avg_x, avg_y, avg_z, count = self.conn.exec_return(
                             get_sql('Image properties selector', image_id),
                                      single_column=False)
@@ -137,11 +120,9 @@ class GSMPipeline(object):
         already.
         """
         self.conn.start()
-        status, band, stokes, fov_radius, \
-        centr_ra, centr_decl, run_loaded, bmaj = \
+        status, band, stokes, fov_radius, centr_ra, centr_decl, run_loaded, bmaj = \
         self.conn.exec_return("""
-        select status, band, stokes, fov_radius, 
-               centr_ra, centr_decl, run_id, bmaj
+        select status, band, stokes, fov_radius, centr_ra, centr_decl, run_id, bmaj
           from images
          where imageid = %s;""" % image_id, single_column=False)
         if not run_id:
@@ -149,33 +130,24 @@ class GSMPipeline(object):
         if status == 1:
             raise ImageStateError('Image %s in state 1 (Ok). Cannot process' %
                                   image_id)
+        pix = self.get_pixels(centr_ra, centr_decl, fov_radius + 0.5)
         GLOBALS.update({'i': image_id, 'r': run_id,
                         'b': band, 's': stokes})
         if not sources_loaded:
             self.conn.execute(get_sql('insert_extractedsources'))
             self.conn.execute(get_sql('insert dummysources'))
         if bmaj:
-            max_assoc = float(bmaj)
+            max_assoc = bmaj
         else:
-            max_assoc = float(self.options.get('maximum_association_distance'))
-        self.log.debug('Using options: %s' % self.options)
-        self.log.debug('Final max_assoc_dist %s' % max_assoc)
-        
-        #Now do the matching!
-        if self.options.get('matcher') == 'F90':
-            matcher_class = MatcherF90
-        else:
-            matcher_class = MatcherSQL
-        matcher = matcher_class(self.conn, max_assoc, 
-                  self.options.get('match_distance'),
-                  self.options.get('match_distance_extended'),
-                  get_pixels(centr_ra, centr_decl, fov_radius + 0.5))
-        matcher.match(image_id)
-
+            max_assoc = self.options.get('maximum_association_distance')
+        self.conn.execute(get_sql('Associate point',
+                                  math.sin(max_assoc), 
+                                  self.options.get('match_distance'), pix))
+        self.conn.execute_set(get_sql('Associate extended',
+                                  math.sin(max_assoc), 
+                                  self.options.get('match_distance_extended'),
+                                  pix))
         self.conn.call_procedure("fill_temp_assoc_kind(%s);" % image_id)
-        #Process many-to-many;
-        self.run_grouper()
-
         # Process one-to-one associations;
         self.conn.execute(get_sql('add 1 to 1'))
         #process one-to-many associations;
@@ -183,6 +155,9 @@ class GSMPipeline(object):
         self.conn.execute_set(get_sql('update flux_fraction'))
         #process many-to-one associations;
         self.conn.execute_set(get_sql('add N to 1'))
+        #Process many-to-many;
+        self.run_grouper()
+
         #updating runningcatalog
         run_update(self.conn, 'update runningcatalog')
         run_update(self.conn, 'update runningcatalog extended')

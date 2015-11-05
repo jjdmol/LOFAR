@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -80,11 +80,12 @@ public:
 	int getStatus() { return (itsStatus); }
 
 private:
-	// receiveEvent(aSocket)
+	// static receiveEvent(aSocket)
 	GCFEvent*	receiveEvent(Socket*	aSocket);
 
-	// sendEvent(Event*)
-	void sendEvent(Socket*	aSocket, GCFEvent*	anEvent);
+	// static sendEvent(Socket*, Event*)
+	void sendEvent(Socket*		aSocket,
+						  GCFEvent*		anEvent);
 
 	// _internal routines: see source code for description
 	string	_makeServiceName(const string&	aServiceMask, int32		aNumber);
@@ -111,13 +112,6 @@ private:
 	int32			itsStatus;
 	bool			itsSyncComm;
 	bool			itsIsServer;
-
-	// receiveEvent variables
-	int32			itsBtsToRead;
-	int32			itsTotalBtsRead;
-	int32			itsReadState;
-	GCFEvent*		itsEventHdr;
-	char*			itsEventBuf;
 };
 
 

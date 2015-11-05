@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -48,9 +48,6 @@
 using namespace boost::posix_time;
 
 namespace LOFAR {
-	using namespace Controller_Protocol;
-	using namespace DP_Protocol;
-	using namespace CM_Protocol;
 	using namespace APLCommon;
 	using namespace GCF::TM;
 	using namespace GCF::PVSS;
@@ -110,11 +107,10 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	itsProcessType   = globalParameterSet()->getString("Observation.processType", "Observation");
 
 	// Values from my conf file
-	itsLateLimit       = globalParameterSet()->getTime  ("ObservationControl.lateLimit", 15);
-	itsFailedLimit     = globalParameterSet()->getTime  ("ObservationControl.failedLimit", 30);
-	itsHeartBeatItv	   = globalParameterSet()->getTime  ("ObservationControl.heartbeatInterval", 10);
-	itsFinalStateDelay = globalParameterSet()->getTime  ("ObservationControl.finalStateDelay", 10);
-	string reportType  = globalParameterSet()->getString("ObservationControl.reportType", "Full");
+	itsLateLimit     = globalParameterSet()->getTime  ("ObservationControl.lateLimit", 15);
+	itsFailedLimit   = globalParameterSet()->getTime  ("ObservationControl.failedLimit", 30);
+	itsHeartBeatItv	 = globalParameterSet()->getTime  ("ObservationControl.heartbeatInterval", 10);
+	string reportType= globalParameterSet()->getString("ObservationControl.reportType", "Full");
 	if 		(reportType == "Full")		itsFullReport = true;
 	else if (reportType == "Changes")	itsChangeReport = true;
 
@@ -254,7 +250,7 @@ void	ObservationControl::setState(CTState::CTstateNr		newState)
 				reportState = RTDB_OBJ_STATE_BROKEN;
 				break;
 			default:
-				message = formatString("Unknown reason(%d)", itsQuitReason);
+				message = "Unknown reason";
 				reportState = RTDB_OBJ_STATE_BROKEN;
 			}
 		}
@@ -277,20 +273,16 @@ void	ObservationControl::setState(CTState::CTstateNr		newState)
 void ObservationControl::registerResultMessage(const string& cntlrName, int	result, CTState::CTstateNr	state)
 {
 	// always handle a quited-msg from a controller.
-	CTState		cts;
 	if (state == CTState::QUITED) {
 		_updateChildInfo(cntlrName, state);
-		if (result != CT_RESULT_NO_ERROR && result != CT_RESULT_LOST_CONNECTION) {	// serious problem
-			map<string, ChildProc>::iterator iter = itsChildInfo.find(cntlrName);
-			if ((iter != itsChildInfo.end()) && (iter->second.type != CNTLRTYPE_STATIONCTRL)) {	// not from a station?
-				LOG_INFO_STR("Setting QuitReason to " << result << ", controller=" << cntlrName << ",state=" << cts.name(state));
-				itsQuitReason = result;
-			}
+		if (result != CT_RESULT_NO_ERROR && result != CT_RESULT_LOST_CONNECTION) {
+			itsQuitReason = result;
 		}
 		return;
 	}
 
 	// does the message belong to the current state?
+	CTState		cts;
 	CTState::CTstateNr	requestedState = cts.stateAck(itsState);
 	if (state != requestedState) {
 		if (state < requestedState) {
@@ -509,7 +501,6 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			itsChildsInError = 0;
 			itsStartTimer    = 0;
 			LOG_INFO("Requesting all childs to go operation state");
-			itsQuitReason = CT_RESULT_NO_ERROR;		// clear startup errors.
 			itsChildControl->requestState(CTState::RESUMED, "");
 			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 		}
@@ -639,7 +630,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 GCFEvent::TResult ObservationControl::finishing_state(GCFEvent& 		event, 
 													  GCFPortInterface& port)
 {
-	LOG_INFO_STR ("finishing_state:" << eventName(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("finishing_state:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -659,8 +650,6 @@ GCFEvent::TResult ObservationControl::finishing_state(GCFEvent& 		event,
 		setState(CTState::QUITED);
 
 		// inform MACScheduler we are going down
-		LOG_INFO_STR("Waiting " << itsFinalStateDelay << " seconds before reporting final state...");
-		sleep (itsFinalStateDelay);
 		CONTROLQuitedEvent	msg;
 		msg.cntlrName = getName();
 		msg.result 	  = itsQuitReason;
@@ -815,27 +804,25 @@ void  ObservationControl::doHeartBeatTask()
 		time_t	now   = to_time_t(second_clock::universal_time());
 		time_t	stop  = to_time_t(itsStopTime);
 
-		if (!nrChilds || (now < stop && !centralControllerOk)) {
-            // while not yet in shutdown sequence this situation is wrong!
-            if (itsState < CTState::RESUMED) {
-                LOG_FATAL("Too few stations left or no central controller, FORCING QUIT OF OBSERVATION");
-                itsQuitReason = CT_RESULT_LOST_CONNECTION;
-            }
-            else { // we are in the shutdown sequence
-                if (!nrChilds) {
-                    LOG_INFO("Lost connection with last childcontroller, quiting...");
-                }
-            }
-            // start shutdown sequence if not already in it
-            if (itsState < CTState::SUSPEND) {
-                itsTimerPort->cancelTimer(itsStopTimer);
-                itsStopTimer = itsTimerPort->setTimer(0.0);
-            }
-            else {
-                TRAN(ObservationControl::finishing_state);
-            }
-            return;
-        }
+		if (!nrChilds || (now < stop && ((itsProcessType == "Observation" && !nrStations) || !centralControllerOk))) {
+			if (!nrChilds) {
+				LOG_INFO("Lost connection with last childcontroller, quiting...");
+			}
+			else {
+				LOG_FATAL("Too less stations left or no central controller, FORCING QUIT OF OBSERVATION");
+				if (itsState < CTState::RESUME) {
+					itsQuitReason = CT_RESULT_LOST_CONNECTION;
+				}
+			}
+			if (itsState < CTState::RESUME) {
+				itsTimerPort->cancelTimer(itsStopTimer);
+				itsStopTimer = itsTimerPort->setTimer(0.0);
+			}
+			else {
+				TRAN(ObservationControl::finishing_state);
+			}
+			return;
+		}
 	}
 
 	LOG_TRACE_FLOW_STR("itsBusyControllers=" << itsBusyControllers);
@@ -844,7 +831,7 @@ void  ObservationControl::doHeartBeatTask()
 	if (lateCntlrs.empty()) {
 		LOG_DEBUG_STR("All (" << nrChilds << ") controllers are up to date");
 		if (itsState >= CTState::QUIT) {
-			LOG_INFO_STR("Time for me to shutdown");
+			LOG_DEBUG_STR("Time for me to shutdown");
 			TRAN(ObservationControl::finishing_state);
 			return;
 		}
@@ -988,20 +975,14 @@ void ObservationControl::_databaseEventHandler(GCFEvent& event)
 			string  command = ((GCFPVString*) (dpEvent.value._pValue))->getValue();
 			if (command == "ABORT") {
 				LOG_INFO("Received manual request for abort, accepting it.");
-				itsQuitReason = CT_RESULT_MANUAL_ABORT;
+				if (itsState < CTState::RESUME) {
+					itsQuitReason = CT_RESULT_MANUAL_ABORT;
+				}
 				itsTimerPort->cancelTimer(itsStopTimer);	// cancel old timer
 				itsStopTimer = itsTimerPort->setTimer(0.0);	// expire immediately
-			}
-			else if (command == "FINISH") {
-				LOG_INFO("Received manual request for finish, accepting it.");
-				itsQuitReason = CT_RESULT_NO_ERROR;
-				itsTimerPort->cancelTimer(itsStopTimer);	// cancel old timer
-				itsStopTimer = itsTimerPort->setTimer(0.0);	// expire immediately
-			}
-			else {
-				LOG_INFO_STR ("Received unknown command " << command << ". Ignoring it.");
 			}
 			return;
+			LOG_INFO_STR ("Received unknown command " << command << ". Ignoring it.");
 		}
 
 		// When datapoint does not concern the observation itself, where are done

@@ -14,7 +14,6 @@ else:
     BASE_LOG_DIR = os.path.join(os.getenv('HOME'), 'prog', 'GSM')
 
 USE_CONSOLE = False
-LOG_LEVEL = logging.DEBUG
 
 
 def get_gsm_logger(log_name, file_name, use_console=USE_CONSOLE):
@@ -24,7 +23,7 @@ def get_gsm_logger(log_name, file_name, use_console=USE_CONSOLE):
     if log_name in LOGGERS:
         return LOGGERS[log_name]
     logger = logging.getLogger(log_name)
-    logger.setLevel(LOG_LEVEL)
+    logger.setLevel(logging.INFO)
     formatter = logging.Formatter(
                     '%(asctime)-6s: %(name)s - %(levelname)s - %(message)s')
     file_handler = logging.FileHandler(filename=os.path.join(BASE_LOG_DIR,
@@ -59,6 +58,5 @@ def set_all_levels(level):
     """
     Set output level for all loggers.
     """
-    LOG_LEVEL = level
     for logger in LOGGERS.itervalues():
         logger.setLevel(level)

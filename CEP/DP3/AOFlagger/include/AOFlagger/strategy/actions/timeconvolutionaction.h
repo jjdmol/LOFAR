@@ -168,9 +168,8 @@ namespace rfiStrategy {
 			bool UseHammingWindow() const { return _useHammingWindow; }
 			void SetUseHammingWindow(bool useHammingWindow) { _useHammingWindow = useHammingWindow; }
 private:
-			class IterationData
+			struct IterationData
 			{
-                        public:
 				ArtifactSet
 					*artifacts;
 				size_t

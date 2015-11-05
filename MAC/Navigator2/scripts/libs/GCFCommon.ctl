@@ -2,7 +2,7 @@
 //
 //  Copyright (C) 2002-2004
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -51,7 +51,6 @@ global mapping stateNumber;
 global bool       g_initializing          = true;     // to show if initialise is ready
 global string     g_initProcess           = "";       // holds last finished init process
 global bool       g_standAlone            = false;    // can be used to check if we are in standalone mode (== station only mode)
-global int        g_MaxNrClaims           = 250;      // the maximal nr of claims handled by the claimmanager
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -178,13 +177,12 @@ int getStateNumber(string aState) {
 void showSelfState(string aDP) {
   	// check if the required datapoint for this view are accessible
   	if (dpExists(aDP+".status.state")) {
-          if (dpConnect("updateSelfState",aDP + ".status.state",
-                        aDP + ".status.message", 
+          if (dpConnect("updateSelfState",aDP + ".status.state", 
                         aDP + ".status.state:_online.._invalid")==-1) {
             setValue("selfState.light","backCol","Lofar_invalid");
           }
           if (!navFunct_dpReachable(aDP+".status.state")) {
-           updateSelfState("",0,"","","",true);
+           updateSelfState("",0,"",true);
           }              
   	} 
   	else {
@@ -208,7 +206,7 @@ void showChildState(string aDP) {
       	    setValue("childStateBorder","foreCol","Lofar_invalid");
           } 
           if (!navFunct_dpReachable(aDP+".status.childState")) {
-            updateChildState("",0,"","","",true);
+            updateChildState("",0,"",true);
           }              
   	} 
   	else {
@@ -249,29 +247,20 @@ updateChildState(string dp1, int state, string dp2, bool invalid) {
 //
 // Added 3-3-2007 A.Coolen
 ///////////////////////////////////////////////////////////////////////////
-updateSelfState(string dp1, int state, 
-                string dp2, string msg,
-                string dp3, bool invalid) {
-  string SymbolCol;
+updateSelfState(string dp1, int state, string dp2, bool invalid) {
+  	string SymbolCol;
 
-  if (invalid) {
-    if (dp1 == "") {
-      SymbolCol = "Lofar_dpOffline";
-    } else {
-      SymbolCol = "Lofar_invalid";
-    }
-  }
-  else {
-    SymbolCol = getStateColor(state);
-  }
-  setValue("selfState.light", "backCol", SymbolCol);
-
-  // get the old tooltip because it contains the baseDP
-  string tooltip="";
-  getValue("light","toolTipText",tooltip);
-  dyn_string aS = strsplit(tooltip," ");
-  tooltip =aS[1] + " <br>Last status message: "+msg;
-  setValue("light","toolTipText",tooltip);
+  	if (invalid) {
+          if (dp1 == "") {
+       	    SymbolCol = "Lofar_dpOffline";
+          } else {
+       	    SymbolCol = "Lofar_invalid";
+          }
+  	}
+  	else {
+      	  SymbolCol = getStateColor(state);
+  	}
+  	setValue("selfState.light", "backCol", SymbolCol);
 }
 
 bool waitInitProcess(string procName) {

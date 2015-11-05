@@ -7,8 +7,6 @@ import argparse
 import copy
 import re
 from os import path
-from src.sqllist import re_sub
-
 try:
     import monetdb.sql as db
     try:
@@ -18,7 +16,7 @@ try:
         import monetdb.monetdb_exceptions as me
     HAS_MONET = True
 except ImportError:
-    HAS_MONET = False
+    HAS_MONET =False
 
 try:
     import psycopg2
@@ -28,6 +26,9 @@ except ImportError:
     HAS_POSTGRESQL = False
 import subprocess
 
+def re_sub(regexp, sub_to, sub_from, flags=0):
+    prog = re.compile(regexp, flags)
+    return prog.sub(sub_to, sub_from)
 
 class Recreator(object):
     """
@@ -49,7 +50,7 @@ class Recreator(object):
     def __init__(self, database="test", use_monet=True):
         self.monet = use_monet
         if use_monet:
-            db_port = 50000
+            db_port = 52000
             db_autocommit = True
         db_host = "localhost"
         db_dbase = database
@@ -62,8 +63,8 @@ class Recreator(object):
                                    port=db_port,
                                    autocommit=db_autocommit)
         else:
-            connect = psycopg2.connect(host=db_host, user=db_user, 
-                                       password=db_passwd, database=db_dbase)
+            connect = psycopg2.connect(host=db_host, user=db_user, password=db_passwd,
+                                       database=db_dbase)
             connect.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             self.conn = connect.cursor()
 
@@ -161,10 +162,6 @@ class Recreator(object):
         self.conn.execute(sql_lines)
 
     def reload_frequencies(self):
-        """
-        Load frequencies tables from file "sql/tables/freq.dat".
-        Use bulk load from MonetDB/PostgreSQL.
-        """
         if self.monet:
             self.conn.execute("copy into frequencybands from '%s';" %
                               path.realpath('sql/tables/freq.dat'))
@@ -180,10 +177,6 @@ class Recreator(object):
                 sp.stdin.write(line)
             sp.communicate()
         print 'Frequencies loaded'
-
-    def run_set(self, aset, subroutine):
-        for item in aset:
-            subroutine(item)
 
     def run(self):
         error_set = []
@@ -211,20 +204,22 @@ class Recreator(object):
             drop_tables = copy.copy(self.TABLES)
             drop_tables.reverse()
             print '=' * 20
-            self.run_set(drop_tables, self.drop_table)
+            for table in drop_tables:
+                self.drop_table(table)
             print '=' * 20
-            self.run_set(self.TABLES, self.create_table)
+            for table in self.TABLES:
+                self.create_table(table)
             if not self.monet:
                 self.run_sql_file('sql/pg/indices.sql')
                 print 'Indices recreated'
-                self.run_sql_file('sql/pg/pg_comments.sql')
-                print 'Comments added'
             print '=' * 20
-            self.run_set(self.PROCEDURES, self.create_procedure)
-            self.run_set(self.VIEWS, self.create_view)
+            for procedure in self.PROCEDURES:
+                self.create_procedure(procedure)
+            for view in self.VIEWS:
+                self.create_view(view)
             self.reload_frequencies()
-        except db.Error, exc:
-            raise exc
+        except db.Error, e:
+            raise e
         self.conn.close()
         return 0
 

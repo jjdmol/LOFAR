@@ -147,7 +147,7 @@ prelude = << PRELUDE_END
   };
   
 
-  struct BoardStatus // total size 268 bytes
+  struct BoardStatus // total size 252 bytes
   {
     RSPStatus  rsp;
     ETHStatus  eth;
@@ -175,10 +175,6 @@ prelude = << PRELUDE_END
     RADStatus  lane2_beamlet; 
     RADStatus  lane3_crosslet;
     RADStatus  lane3_beamlet;
-    RADStatus  lane0_subband;
-    RADStatus  lane1_subband;
-    RADStatus  lane2_subband;
-    RADStatus  lane3_subband;
     TESTStatus rcuh_test; 
   };
 
@@ -198,12 +194,6 @@ prelude = << PRELUDE_END
     uint8 bm_select;  // select bitmode, 0=16bit 1=8bit 2=4bit
   };
 
-  struct RSRSDOMode
-  {
-	uint8 bm_max;     // bitmode supported by hardware 0=16bit 1=8bit 2=4bit (read only!)
-    uint8 bm_select;  // select bitmode, 0=16bit 1=8bit 2=4bit
-  };
-  
   struct RSUReconfig
   {
     uint8 page      :3;       // page selection
@@ -221,22 +211,17 @@ prelude = << PRELUDE_END
 
   struct DIAGBypass
   {
-    uint8 dc_disable  :1; // enable DC block (high pass filter processing)
-    uint8 pfs_bypass  :1; // bypass PFS
-    uint8 pft_bypass  :1; // bypass PFT
-    uint8 bf_bypass   :1; // bypass BF
-    uint8 six_enable  :1; // enable spectral inversion processing X pol
-    uint8 siy_enable  :1; // enable spectral inversion processing Y pol
-    uint8 use_sync    :1; // use (soft)sync, useful when WG single slice mode is used
-    uint8 use_resync  :1; // use (soft)sync realigned to BLP output sync to preserve X,Y order in DIAG results buffer
+    uint8 dc_disable :1; // enable DC block (high pass filter processing)
+    uint8 pfs_bypass :1; // bypass PFS
+    uint8 pft_bypass :1; // bypass PFT
+    uint8 bf_bypass  :1; // bypass BF
+    uint8 six_enable :1; // enable spectral inversion processing X pol
+    uint8 siy_enable :1; // enable spectral inversion processing Y pol
+    uint8 use_sync   :1; // use (soft)sync, useful when WG single slice mode is used
+    uint8 use_resync :1; // use (soft)sync realigned to BLP output sync to preserve X,Y order in DIAG results buffer
 
-    uint8 fft_disable :1; // disable FFT phase switching
-    uint8 ap_result   :2; // select BLP for DIAG result buffer
-    uint8 bp_result   :1; // select cdo output to DIAG buffer
-    uint8 page_swap   :1; // select sync method
-    uint8 beamlet_dis :1; // disable RAD tx beamlet for BST and CDO
-    uint8 crosslet_dis:1; // disable RAD tx crosslet for XST
-    uint8 sdo_disable :1; // enable RAD tx subband for SDO
+    uint8 fft_disable:1; // disable FFT phase switching
+	uint8 ffi		 :7;
   };
 
   struct DIAGSelftest
@@ -537,20 +522,6 @@ event = {
   };
 };
 
-event = {
-  noheader;
-  signal = RSR_SDOMODE;
-  dir = INOUT; // read-write register
-  param = {
-    name = "hdr";
-    type = "MEPHeader";
-    userdefined;
-  };
-  param = {
-    name = "sdomode";
-    type = "struct RSRSDOMode";
-  };
-};
 
 event = {
   noheader;
@@ -716,21 +687,6 @@ event = {
   param = {
     name = "subbands";
     type = "uint16[MEPHeader::SS_SELECT_SIZE / sizeof(uint16)]";
-  };
-};
-
-event = {
-  noheader;
-  signal = SDO_SELECT;
-  dir = INOUT; // read-write register
-  param = {
-    name = "hdr";
-    type = "MEPHeader";
-    userdefined;
-  };
-  param = {
-    name = "subbands";
-    type = "uint16[MEPHeader::SDO_SELECT_SIZE / sizeof(uint16)]";
   };
 };
 

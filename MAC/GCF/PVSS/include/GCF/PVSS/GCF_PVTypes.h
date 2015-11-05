@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -33,24 +33,5 @@
 #include <GCF/PVSS/GCF_PVInteger.h>
 #include <GCF/PVSS/GCF_PVString.h>
 #include <GCF/PVSS/GCF_PVUnsigned.h>
-
-namespace LOFAR {
-  namespace GCF {
-	namespace PVSS {
-
-GCFPValue*	createPValue(const bool		someVal);
-GCFPValue*	createPValue(const char		someVal);
-GCFPValue*	createPValue(const uint		someVal);
-GCFPValue*	createPValue(const int		someVal);
-GCFPValue*	createPValue(const float	someVal);
-GCFPValue*	createPValue(const double	someVal);
-GCFPValue*	createPValue(const char*	someVal);
-GCFPValue*	createPValue(const string&	someVal);
-GCFPValue*	createPValue(const time_t	someVal);
-
-  } // namespace PVS
- } // namespace GCF
-} // namespace LOFAR
-
 
 #endif

@@ -67,7 +67,7 @@ public:
       itsNCorr(ncorr), itsFlag(flag)
   {
     // Define start time 0.5 (= 3 - 0.5*5) and time interval 5.
-    info().init (ncorr, nchan, ntime, 0.5, 5., string(), string());
+    info().init (ncorr, nchan, ntime, 0.5, 5., string());
     // Fill the baseline stations; use 4 stations.
     // So they are called 00 01 02 03 10 11 12 13 20, etc.
     Vector<Int> ant1(nbl);
@@ -225,7 +225,7 @@ private:
   }
 
   int itsCount;
-  int itsNTime, itsNBl, itsNChan, itsNCorr;
+  int itsNTime, itsNBl, itsNChan, itsNCorr, itsNAvgTime, itsNAvgChan;
   bool itsFlag, itsClear, itsUseComplement;
 };
 
@@ -309,7 +309,7 @@ private:
   }
 
   int itsCount;
-  int itsNTime, itsNBl, itsNChan, itsNCorr;
+  int itsNTime, itsNBl, itsNChan, itsNCorr, itsNAvgTime, itsNAvgChan;
 };
 
 // Test flagging a few baselines, freqs, and channels.
@@ -401,7 +401,7 @@ private:
   }
 
   int itsCount;
-  int itsNTime, itsNBl, itsNChan, itsNCorr;
+  int itsNTime, itsNBl, itsNChan, itsNCorr, itsNAvgTime, itsNAvgChan;
   bool itsFlag;
 };
 
