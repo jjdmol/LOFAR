@@ -53,7 +53,7 @@ void usage_exit(void)
 void killchild(int sig)
 {
   /* keep compiler happy */
-  (void)sig;
+  sig = sig;
   
   fprintf(stderr, "LimitExec: %s has exceeded time limit (%d s) "
           "and will be killed\n", g_progname, g_seconds);

@@ -1,8 +1,8 @@
-/* ParamExtensionDialog.java
+/* BeamDialog.java
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -40,7 +40,10 @@ public class ParamExtensionDialog extends javax.swing.JDialog {
      *
      * @param   parent                  Frame where this dialog belongs
      * @param   modal                   Should the Dialog be modal or not
+     * @param   usedBeamlets            Bitset of all used beamlets(in case edit, the old ones have been xorred allready)
      * @param   selection               Vector of all Beam parameters
+     * @param   directionTypeChoices    String with all possible choices + default for combobox
+     * @param   edit                    indicates edit or add mode
      */
     public ParamExtensionDialog(java.awt.Frame parent, boolean modal, String[] selection) {
 

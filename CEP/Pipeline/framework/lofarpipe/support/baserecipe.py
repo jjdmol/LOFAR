@@ -8,21 +8,20 @@
 from ConfigParser import NoOptionError, NoSectionError
 from ConfigParser import SafeConfigParser as ConfigParser
 from threading import Event
+from functools import partial
 
 import os
 import sys
+import inspect
 import logging
 import errno
-import xml.dom.minidom as xml
 
 import lofarpipe.support.utilities as utilities
-from lofarpipe.support.lofarexceptions import PipelineException, PipelineRecipeFailed
+import lofarpipe.support.lofaringredient as ingredient
+from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.cuisine.WSRTrecipe import WSRTrecipe
-from lofarpipe.cuisine.cook import CookError
 from lofarpipe.support.lofaringredient import RecipeIngredients, LOFARinput, LOFARoutput
-from lofarpipe.support.data_map import DataMap
-from lofarpipe.support.xmllogging import add_child_to_active_stack_head
-
+from lofarpipe.support.remotecommand import run_remote_command
 
 class BaseRecipe(RecipeIngredients, WSRTrecipe):
     """
@@ -42,11 +41,6 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
         super(BaseRecipe, self).__init__()
         self.error = Event()
         self.error.clear()
-        # Environment variables we like to pass on to the node script.
-        self.environment = dict(
-            (k, v) for (k, v) in os.environ.iteritems()
-                if k.endswith('PATH') or k.endswith('ROOT') or k == 'QUEUE_PREFIX'
-        )
 
     @property
     def __file__(self):
@@ -143,21 +137,11 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
         outputs = LOFARoutput()
 
         # Cook the recipe and return the results"
-        try:
-            self.cook_recipe(recipe, inputs, outputs)
-        except CookError:
+        if self.cook_recipe(recipe, inputs, outputs):
             self.logger.warn(
                 "%s reports failure (using %s recipe)" % (configblock, recipe)
             )
-            raise PipelineRecipeFailed("%s failed" % configblock)
-
-        # Get the (optional) node xml information
-        if "return_xml" in outputs:
-            return_node = xml.parseString(
-                                outputs['return_xml']).documentElement
-            # If no active stack, fail silently.
-            add_child_to_active_stack_head(self, return_node)
-
+            raise PipelineRecipeFailed("%s failed", configblock)
         return outputs
 
     def _read_config(self):
@@ -234,7 +218,7 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
             )
         else:
             self.config.set("DEFAULT", "working_directory", self.inputs['working_directory'])
-
+            
         try:
             self.recipe_path = [
                 os.path.join(root, 'master') for root in utilities.string_to_list(
@@ -243,7 +227,6 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
             ]
         except NoOptionError:
             self.recipe_path = []
-
 
         # At this point, the recipe inputs must be complete. If not, exit.
         if not self.inputs.complete():
@@ -258,12 +241,4 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
             self._setup_logging()
 
         self.logger.debug("Pipeline start time: %s" % self.inputs['start_time'])
-
-    def _store_data_map(self, path, data_map, message=""):
-        """
-        Write data_map to path, display debug error message on the logger
-        """
-        data_map.save(path)
-        self.logger.debug("Wrote data_map <{0}>: {1}".format(
-                path, message))
 

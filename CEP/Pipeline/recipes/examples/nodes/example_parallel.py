@@ -6,7 +6,7 @@
 # ------------------------------------------------------------------------------
 
 import sys
-from lofarpipe.support.lofarnode import LOFARnodeTCP
+from lofarpipe.support.lofarnode import LOFARnode
 
 class example_parallel(LOFARnodeTCP):
     def run(self, *args):

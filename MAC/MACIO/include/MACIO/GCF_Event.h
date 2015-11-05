@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ namespace LOFAR {
  * file contains definitions of GCFEvent sub classes, one for each event. 
  */
 
-#define SIZEOF_EVENT(e) ((uint32) (sizeof((e).signal) + sizeof((e).length) + (e).length))
+#define SIZEOF_EVENT(e) ((ssize_t) (sizeof((e).signal) + sizeof((e).length) + (e).length))
 
 class GCFEvent
 {

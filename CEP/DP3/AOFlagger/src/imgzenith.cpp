@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
 	casa::Table antennaTable(table.antenna());
 	casa::MPosition::ROScalarColumn antPositionColumn(antennaTable, "POSITION");
 	casa::ROScalarColumn<casa::String> antNameColumn(antennaTable, "NAME");
-        std::vector<casa::MPosition> antennaPositions(antennaTable.nrow());
+	casa::MPosition antennaPositions[antennaTable.nrow()];
 	for(unsigned i = 0;i<antennaTable.nrow();++i)
 	{
 		antennaPositions[i] = antPositionColumn(i);
@@ -150,8 +150,8 @@ int main(int argc, char *argv[])
 	bool *isRFI[polarizationCount];
 	for(unsigned p = 0; p < polarizationCount; ++p)
 	{
-		isRFI[p] = new bool[band.channels.size()];
-		samples[p] = new std::complex<float>[band.channels.size()];
+		isRFI[p] = new bool[band.channelCount];
+		samples[p] = new std::complex<float>[band.channelCount];
 	}
 
 	unsigned row = 0;
@@ -210,7 +210,7 @@ int main(int argc, char *argv[])
 				casa::Array<casa::Complex>::const_iterator dataIter = dataArray.begin();
 				casa::Array<bool>::const_iterator flagIter = flagArray.begin();
 				
-				for(unsigned channel = 0; channel<band.channels.size(); ++channel)
+				for(unsigned channel = 0; channel<band.channelCount; ++channel)
 				{
 					for(unsigned p = 0; p < polarizationCount; ++p)
 					{

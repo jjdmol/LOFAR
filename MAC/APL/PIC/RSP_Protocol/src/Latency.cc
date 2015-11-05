@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -36,19 +36,25 @@ using namespace LOFAR;
 using namespace RSP_Protocol;
 using namespace EPA_Protocol;
 
-size_t Latency::getSize() const
+unsigned int Latency::getSize()
 {
-  return MSH_size(itsLatency);
+  return MSH_ARRAY_SIZE(itsLatency, EPA_Protocol::RADLatency);
 }
 
-size_t Latency::pack  (char* buffer) const
+unsigned int Latency::pack  (void* buffer)
 {
-  size_t offset = 0;
-  return MSH_pack(buffer, offset, itsLatency);
+  unsigned int offset = 0;
+  
+  MSH_PACK_ARRAY(buffer, offset, itsLatency, EPA_Protocol::RADLatency);
+
+  return offset;
 }
 
-size_t Latency::unpack(const char *buffer)
+unsigned int Latency::unpack(void *buffer)
 {
-  size_t offset = 0;
-  return MSH_unpack(buffer, offset, itsLatency);
+  unsigned int offset = 0;
+  
+  MSH_UNPACK_ARRAY(buffer, offset, itsLatency, EPA_Protocol::RADLatency, 1);
+
+  return offset;
 }

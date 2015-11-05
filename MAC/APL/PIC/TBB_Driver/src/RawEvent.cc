@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 	
 	GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
 	TbbSettings *TS = TbbSettings::instance();
-	int32 boardnr;
+	int32 boardnr;    
 	// Receive a raw packet
 	//ssize_t size = port.recv(buf.payload, ETH_DATA_LEN);
 	ssize_t size = port.recv(&buf.opcode, ETH_DATA_LEN);
@@ -86,9 +86,9 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 			break;
 		case oc_TRIGGER:
 		    boardnr = TS->port2Board(&port);
-		    // check if more triggers can be handled this second
 		    if (TS->isTriggersLeft(boardnr)) {
-			    TS->setTriggerInfo(boardnr, buf.payload);
+			    memcpy(buf.payload,&boardnr,4);
+			    TS->setTriggerInfo(buf.payload);
 			    return(status);
 			    //buf.event.signal = TP_TRIGGER;
 			    //buf.event.length = 44;

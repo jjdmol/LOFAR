@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -22,19 +22,15 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <Common/StringUtil.h>
 
 #include <APL/RTCCommon/Timestamp.h>
 
 #include <math.h>
 #include <time.h>
 
-//using namespace LOFAR;
-//using namespace RTC;
-//using namespace std;
-
-namespace LOFAR {
-  namespace RTC {
+using namespace LOFAR;
+using namespace RTC;
+using namespace std;
 
 void Timestamp::setNow(double delay)
 {
@@ -45,12 +41,25 @@ void Timestamp::setNow(double delay)
    * For future use it may be required to have higher
    * precision than seconds.
    */
-  m_tv.tv_usec += (int)(1e6 * (delay - trunc(delay)));
-  if (m_tv.tv_usec > (int)(1e6))
+#if 0
+  m_tv.tv_usec = 0;
+#else
+  m_tv.tv_usec += (int)(10e6 * (delay - trunc(delay)));
+  if (m_tv.tv_usec > (int)(10e6))
   {
-      m_tv.tv_usec -= (int)(1e6);
+      m_tv.tv_usec -= (int)(10e6);
       m_tv.tv_sec++;
   }
+#endif
+}
+
+std::ostream& LOFAR::RTC::operator<< (std::ostream& os, const Timestamp& ts)
+{
+  char timestring[256];
+  time_t seconds = (time_t)ts.sec();
+
+  strftime(timestring, 255, "%s - %a, %d %b %Y %H:%M:%S  %z", gmtime(&seconds));
+  return os << timestring; // << "." << ts.usec();
 }
 
 void Timestamp::convertToMJD(double& mjd, double& fraction)
@@ -65,18 +74,4 @@ void Timestamp::convertToMJD(double& mjd, double& fraction)
   }
   // 40587 modified Julian day number = 00:00:00 January 1, 1970, GMT.
   mjd += 40587;
-}
-
-  } // namepsace RTC
-} // namespace LOFAR
-
-std::ostream& LOFAR::RTC::operator<< (std::ostream& os, const Timestamp& ts)
-{
-  char timestring[256];
-  char zonestring[16];
-  time_t seconds = (time_t)ts.sec();
-
-  strftime(timestring, 255, "%s - %a, %d %b %Y %H:%M:%S", gmtime(&seconds));
-  strftime(zonestring,  15, "  %z", gmtime(&seconds));
-  return os << timestring << formatString(".%06d", ts.usec()) << zonestring;
 }

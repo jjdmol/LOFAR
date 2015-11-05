@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -37,7 +37,6 @@
 --
 CREATE OR REPLACE FUNCTION getTemplateOrigin(INT4)
   RETURNS INT4 AS '
-    --  $Id$
 	DECLARE
 		vTemplateID		INT4;
 		vName			OTDBtree.name%TYPE;
@@ -78,7 +77,6 @@ CREATE OR REPLACE FUNCTION getTemplateOrigin(INT4)
 --
 CREATE OR REPLACE FUNCTION resolveVHparam(INT4, TEXT)
   RETURNS TEXT AS '
-    --  $Id$
 	DECLARE
 		vDotpos		INTEGER;
 		vNodeName	VARCHAR(200);
@@ -179,7 +177,6 @@ CREATE OR REPLACE FUNCTION resolveVHparam(INT4, TEXT)
 --
 CREATE OR REPLACE FUNCTION instanciateVHparams(INT4, INT4, INT4, TEXT)
   RETURNS VOID AS '
-    --  $Id$
 	DECLARE
 		vParam	RECORD;
 
@@ -218,7 +215,6 @@ CREATE OR REPLACE FUNCTION instanciateVHparams(INT4, INT4, INT4, TEXT)
 --
 CREATE OR REPLACE FUNCTION instanciateVHleafNode(INT4, INT4, INT4, INT2, TEXT)
   RETURNS INT4 AS '
-    --  $Id$
 	DECLARE
 		vNode			RECORD;
 		vNewNodeID		VICtemplate.nodeID%TYPE;
@@ -282,7 +278,6 @@ CREATE OR REPLACE FUNCTION instanciateVHleafNode(INT4, INT4, INT4, INT2, TEXT)
 --
 CREATE OR REPLACE FUNCTION instanciateVHsubTree(INT4, INT4, INT4, TEXT)
   RETURNS INT4 AS '
-    --  $Id$
 	DECLARE
 	  vNode				RECORD;
 	  vVTnode			RECORD;
@@ -371,7 +366,6 @@ CREATE OR REPLACE FUNCTION instanciateVHsubTree(INT4, INT4, INT4, TEXT)
 --
 CREATE OR REPLACE FUNCTION instanciateVHtree(INT4, INT4)
   RETURNS INT4 AS $$
-    --  $Id$
 	DECLARE
 		vFunction  CONSTANT		INT2 := 1;
 		TTVHtree   CONSTANT		INT2 := 30;

@@ -28,7 +28,7 @@
 #define LOFAR_PARMDB_SOURCEDB_H
 
 //# Includes
-#include <ParmDB/SourceData.h>
+#include <ParmDB/SourceInfo.h>
 #include <ParmDB/PatchInfo.h>
 #include <ParmDB/ParmDBMeta.h>
 #include <ParmDB/ParmDB.h>
@@ -100,11 +100,6 @@ namespace BBS {
                            double ra, double dec,
                            bool check) = 0;
 
-    // Update the ra/dec and apparent brightness of a patch.
-    virtual void updatePatch (uint patchId, 
-                              double apparentBrightness,
-                              double ra, double dec) = 0;
-
     // Add a source to a patch.
     // Its ra and dec and default parameters will be stored as default
     // values in the associated ParmDB tables. The names of the parameters
@@ -112,20 +107,15 @@ namespace BBS {
     // The map should contain the parameters belonging to the source type.
     // Missing parameters will default to 0.
     // <br>Optionally it is checked if the source already exists.
-    // <group>
     virtual void addSource (const SourceInfo& sourceInfo,
                             const string& patchName,
                             const ParmMap& defaultParameters,
                             double ra, double dec,
                             bool check) = 0;
-    virtual void addSource (const SourceData& source,
-                            bool check) = 0;
-    // </group>
 
     // Add a source which forms a patch in itself (with the same name).
     // <br>Optionally it is checked if the patch or source already exists.
     virtual void addSource (const SourceInfo& sourceInfo,
-                            const string& patchName,
                             int catType,
                             double apparentBrightness,
                             const ParmMap& defaultParameters,
@@ -148,9 +138,6 @@ namespace BBS {
     // Get the sources belonging to the given patch.
     virtual vector<SourceInfo> getPatchSources (const string& patchName) = 0;
 
-    // Get all data of the sources belonging to the given patch.
-    virtual vector<SourceData> getPatchSourceData (const string& patchName) = 0;
-
     // Get the source type of the given source.
     virtual SourceInfo getSource (const string& sourceName) = 0;
 
@@ -166,16 +153,6 @@ namespace BBS {
 
     const ParmDBMeta& getParmDBMeta() const
       { return itsParmDB.getParmDBMeta(); }
-
-    // Get the next source from the table.
-    // An exception is thrown if there are no more sources.
-    virtual void getNextSource (SourceData& src) = 0;
-
-    // Tell if we are the end of the file.
-    virtual bool atEnd() = 0;
-
-    // Reset to the beginning of the file.
-    virtual void rewind() = 0;
 
   private:
     int    itsCount;
@@ -220,11 +197,11 @@ namespace BBS {
       { itsRep->checkDuplicates(); }
 
     // Find non-unique patch names.
-    vector<string> findDuplicatePatches() const
+    vector<string> findDuplicatePatches()
       { return itsRep->findDuplicatePatches(); }
 
     // Find non-unique source names.
-    vector<string> findDuplicateSources() const
+    vector<string> findDuplicateSources()
       { return itsRep->findDuplicateSources(); }
 
     // Test if the patch already exists.
@@ -246,13 +223,6 @@ namespace BBS {
       { return itsRep->addPatch (patchName, catType, apparentBrightness,
                                  ra, dec, check); }
 
-    // Update the ra/dec and apparent brightness of a patch.
-    void updatePatch (uint patchId, 
-                      double apparentBrightness,
-                      double ra, double dec)
-      { itsRep->updatePatch (patchId, apparentBrightness, ra, dec); }
-
-
     // Add a source to a patch.
     // Its ra and dec and default parameters will be stored as default
     // values in the associated ParmDB tables. The names of the parameters
@@ -260,7 +230,6 @@ namespace BBS {
     // The map should contain the parameters belonging to the source type.
     // Not all parameters need to be present. The ParmDB classes will
     // use a default of 0 for missing ones.
-    // <group>
     void addSource (const SourceInfo& sourceInfo,
                     const string& patchName,
                     const ParmMap& defaultParameters,
@@ -268,19 +237,15 @@ namespace BBS {
                     bool check = true)
       { itsRep->addSource (sourceInfo, patchName,
                            defaultParameters, ra, dec, check); }
-    void addSource (const SourceData& source, bool check = true)
-      { itsRep->addSource (source, check); }
-    // </group>
 
     // Add a source which forms a patch in itself (with the same name).
     void addSource (const SourceInfo& sourceInfo,
-                    const string& patchName,
                     int catType,
                     double apparentBrightness,
                     const ParmMap& defaultParameters,
                     double ra=-1e9, double dec=-1e9,
                     bool check = true)
-      { itsRep->addSource (sourceInfo, patchName, catType, apparentBrightness,
+      { itsRep->addSource (sourceInfo, catType, apparentBrightness,
                            defaultParameters, ra, dec, check); }
 
     // Get patch names in order of category and decreasing apparent flux.
@@ -305,10 +270,6 @@ namespace BBS {
     vector<SourceInfo> getPatchSources (const string& patchName) const
       { return itsRep->getPatchSources (patchName); }
 
-    // Get all data of the sources belonging to the given patch.
-    vector<SourceData> getPatchSourceData (const string& patchName) const
-      { return itsRep->getPatchSourceData (patchName); }
-
     // Get the source info of the given source.
     SourceInfo getSource (const string& sourceName) const
       { return itsRep->getSource (sourceName); }
@@ -328,19 +289,6 @@ namespace BBS {
     // Get the name and type of the SourceDB.
     const ParmDBMeta& getParmDBMeta() const
       { return itsRep->getParmDBMeta(); }
-
-    // Get the next source from the table.
-    // An exception is thrown if there are no more sources.
-    void getNextSource (SourceData& src)
-      { itsRep->getNextSource (src); }
-
-    // Tell if we are the end of the file.
-    bool atEnd()
-      { return itsRep->atEnd(); }
-
-    // Reset to the beginning of the file.
-    void rewind()
-      { itsRep->rewind(); }
 
   private:
     // Create a SourceDB object for an existing SourceDBRep.

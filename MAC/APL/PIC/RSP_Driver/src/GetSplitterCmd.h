@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -69,8 +69,8 @@ public:
 	virtual bool readFromCache() const { return (false); }
 
 	// tables needed by UpdSplitterCmd
-	static unsigned char SERDES_ON_RESP[];
-	static unsigned char SERDES_OFF_RESP[];
+	static char SERDES_ON_RESP[];
+	static char SERDES_OFF_RESP[];
 	static int  SERDES_ON_RESP_LEN;
 	static int  SERDES_OFF_RESP_LEN;
 

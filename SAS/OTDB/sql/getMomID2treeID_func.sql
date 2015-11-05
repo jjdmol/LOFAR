@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2012
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -32,12 +32,10 @@
 -- Types:	none
 --
 
-DROP TYPE IF EXISTS treeIDmomID CASCADE;
 CREATE TYPE treeIDmomID AS (treeID INTEGER, momID INTEGER);
 
 CREATE OR REPLACE FUNCTION getMomID2treeID()
   RETURNS SETOF treeIDmomID AS $$
-    --  $Id: addComponentToVT_func.sql 19935 2012-01-25 09:06:14Z mol $
 	DECLARE
 		vRecord		RECORD;
 

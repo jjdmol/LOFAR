@@ -22,7 +22,6 @@
 
 #include <vector>
 #include <set>
-#include <stack>
 
 #include <AOFlagger/strategy/imagesets/imageset.h>
 
@@ -79,6 +78,10 @@ namespace rfiStrategy {
 				return "Fits file";
 			}
 			virtual std::string File();
+			virtual TimeFrequencyData *LoadData(const ImageSetIndex &index);
+			virtual size_t GetPart(const ImageSetIndex &) {
+				return 0;
+			}
 			const std::vector<std::pair<size_t,size_t> > &Baselines() const throw() { return _baselines; }
 			size_t BandCount() { return _bandCount; }
 			class AntennaInfo GetAntennaInfo(unsigned antennaIndex) { return _antennaInfos[antennaIndex]; }
@@ -86,55 +89,54 @@ namespace rfiStrategy {
 			{
 				throw BadUsageException("Fits format is not supported for writing flags yet");
 			}
-			virtual void AddReadRequest(const ImageSetIndex &index)
+			virtual size_t GetAntenna1(const ImageSetIndex &index) {
+				return _baselines[static_cast<const FitsImageSetIndex&>(index)._baselineIndex].first;
+			}
+			virtual size_t GetAntenna2(const ImageSetIndex &index) {
+				return _baselines[static_cast<const FitsImageSetIndex&>(index)._baselineIndex].second;
+			}
+			virtual void AddReadRequest(const ImageSetIndex &)
 			{
-				_baselineData.push(loadData(index));
+				throw BadUsageException("Not implemented");
 			}
 			virtual void PerformReadRequests()
 			{
+				throw BadUsageException("Not implemented");
 			}
 			virtual BaselineData *GetNextRequested()
 			{
-				BaselineData *data = new BaselineData(_baselineData.top());
-				_baselineData.pop();
-				return data;
+				throw BadUsageException("Not implemented");
 			}
-			virtual void AddWriteFlagsTask(const ImageSetIndex &index, std::vector<Mask2DCPtr> &flags);
-			virtual void PerformWriteFlagsTask();
+			virtual void AddWriteFlagsTask(const ImageSetIndex &, std::vector<Mask2DCPtr> &)
+			{
+				throw BadUsageException("Not implemented");
+			}
+			virtual void PerformWriteFlagsTask()
+			{
+				throw BadUsageException("Not implemented");
+			}
 			virtual void PerformWriteDataTask(const ImageSetIndex &, std::vector<Image2DCPtr>, std::vector<Image2DCPtr>)
 			{
 				throw BadUsageException("Not implemented");
 			}
-			
 		private:
-			BaselineData loadData(const ImageSetIndex &index);
-			
-			size_t getAntenna1(const ImageSetIndex &index) {
-				return _baselines[static_cast<const FitsImageSetIndex&>(index)._baselineIndex].first;
-			}
-			size_t getAntenna2(const ImageSetIndex &index) {
-				return _baselines[static_cast<const FitsImageSetIndex&>(index)._baselineIndex].second;
-			}
-			
-			void ReadPrimarySingleTable(TimeFrequencyData &data, TimeFrequencyMetaData &metaData);
-			void ReadTable(TimeFrequencyData &data, TimeFrequencyMetaData &metaData, size_t bandIndex);
-			void ReadAntennaTable(TimeFrequencyMetaData &metaData);
-			void ReadFrequencyTable(TimeFrequencyData &data, TimeFrequencyMetaData &metaData);
+			void ReadTable();
+			void ReadAntennaTable();
+			void ReadFrequencyTable();
 			void ReadCalibrationTable();
-			void ReadSingleDishTable(TimeFrequencyData &data, TimeFrequencyMetaData &metaData, size_t ifIndex);
-			TimeFrequencyData ReadPrimaryGroupTable(size_t baselineIndex, int band, int stokes, TimeFrequencyMetaData &metaData);
-			
-			void saveSingleDishFlags(std::vector<Mask2DCPtr> &flags);
+			void ReadPrimaryTable(size_t baselineIndex, int band, int stokes);
+			TimeFrequencyMetaDataCPtr LoadMetaData(ImageSetIndex &index);
 			
 			class FitsFile *_file;
+			TimeFrequencyData *_data;
 			std::vector<std::pair<size_t,size_t> > _baselines;
 			size_t _bandCount;
+			std::vector<double> _observationTimes;
+			std::vector<UVW> _uvw;
 			std::vector<AntennaInfo> _antennaInfos;
 			std::vector<BandInfo> _bandInfos;
 			size_t _currentBaselineIndex, _currentBandIndex;
 			double _frequencyOffset;
-			
-			std::stack<BaselineData> _baselineData;
 	};
 
 }

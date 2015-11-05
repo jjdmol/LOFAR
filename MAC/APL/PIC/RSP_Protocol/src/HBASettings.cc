@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -31,19 +31,25 @@ using namespace blitz;
 using namespace LOFAR;
 using namespace RSP_Protocol;
 
-size_t HBASettings::getSize() const
+unsigned int HBASettings::getSize()
 {
-  return MSH_size(m_delay);
+  return MSH_ARRAY_SIZE(m_delay, uint8);
 }
 
-size_t HBASettings::pack  (char* buffer) const
+unsigned int HBASettings::pack  (void* buffer)
 {
-  size_t offset = 0;
-  return MSH_pack(buffer, offset, m_delay);
+  unsigned int offset = 0;
+  
+  MSH_PACK_ARRAY(buffer, offset, m_delay, uint8);
+
+  return offset;
 }
 
-size_t HBASettings::unpack(const char *buffer)
+unsigned int HBASettings::unpack(void *buffer)
 {
-  size_t offset = 0;
-  return MSH_unpack(buffer, offset, m_delay);
+  unsigned int offset = 0;
+
+  MSH_UNPACK_ARRAY(buffer, offset, m_delay, uint8, 2);
+
+  return offset;
 }

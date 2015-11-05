@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -38,15 +38,15 @@
 -- Needs the tables:
 --		param_type, unit, OTDBtree
 
-DROP TABLE IF EXISTS PIChierarchy CASCADE;
-DROP TABLE IF EXISTS PICkvt 		CASCADE;
-DROP TABLE IF EXISTS PICparamref  CASCADE;
-DROP SEQUENCE IF EXISTS PICparamrefID;
-DROP SEQUENCE IF EXISTS PIChierarchID;
-DROP INDEX IF EXISTS PIChierarchy_treeid_nodeid_indx;
-DROP INDEX IF EXISTS pic_kvt_id;
-DROP INDEX IF EXISTS pic_kvt_id_time_indx;
-DROP INDEX IF EXISTS pic_kvt_time;
+DROP TABLE PIChierarchy CASCADE;
+DROP TABLE PICkvt 		CASCADE;
+DROP TABLE PICparamref  CASCADE;
+DROP SEQUENCE PICparamrefID;
+DROP SEQUENCE PIChierarchID;
+DROP INDEX PIChierarchy_treeid_nodeid_indx;
+DROP INDEX pic_kvt_id;
+DROP INDEX pic_kvt_id_time_indx;
+DROP INDEX pic_kvt_time;
 
 --
 -- The PIC reference table is the representation of the master PIC 
@@ -58,7 +58,6 @@ DROP INDEX IF EXISTS pic_kvt_time;
 CREATE SEQUENCE PICparamrefID;
 
 CREATE TABLE PICparamref (
-    --  $Id$
 	paramID		INT4			NOT NULL DEFAULT nextval('PICparamrefID'),
 	PVSSname	VARCHAR(150)	NOT NULL,
 	par_type	INT2			REFERENCES param_type(ID),
@@ -66,7 +65,8 @@ CREATE TABLE PICparamref (
 	pruning		INT2			DEFAULT 10,
 	description	TEXT,
 
-	CONSTRAINT	paramID_uniq		PRIMARY KEY(paramID),
+	CONSTRAINT      param_PK	 	PRIMARY KEY (paramID),
+	CONSTRAINT	paramID_uniq		UNIQUE(paramID),
 	CONSTRAINT	paramname_uniq		UNIQUE(PVSSname)
 ) WITHOUT OIDS;
 
@@ -80,7 +80,6 @@ CREATE TABLE PICparamref (
 CREATE SEQUENCE	PIChierarchID;
 
 CREATE TABLE PIChierarchy (
-    --  $Id$
 	treeID		INT4			NOT NULL REFERENCES OTDBtree(treeID),
 	nodeID		INT4			NOT NULL DEFAULT nextval('PIChierarchID'),
 	parentID	INT4			NOT NULL, --  REFERENCES PIChierachy(nodeID),
@@ -89,11 +88,12 @@ CREATE TABLE PIChierarchy (
 	index		INT2			NOT NULL DEFAULT -1,
 	leaf		BOOLEAN			DEFAULT TRUE,
 
-	CONSTRAINT	param_uniq_in_tree	PRIMARY KEY(treeID, nodeID)
+	CONSTRAINT	param_uniq_in_tree	UNIQUE(treeID, nodeID)
 ) WITHOUT OIDS;
 
 -- Index: pichierarchy_treeid_nodeid_indx
---CREATE UNIQUE INDEX PIChierarchy_treeid_nodeid_indx ON PIChierarchy(treeid, nodeid);
+
+CREATE UNIQUE INDEX PIChierarchy_treeid_nodeid_indx ON PIChierarchy(treeid, nodeid);
 
 --
 -- PIC Key Values Time sets.
@@ -103,14 +103,16 @@ CREATE TABLE PIChierarchy (
 -- because in simultaneous observations different PIC reference trees
 -- can be used. A change in value is important for all observations.
 CREATE TABLE PICkvt (
-    --  $Id$
 	paramID		INT4			NOT NULL REFERENCES PICparamref(paramID), 
 	value		TEXT			NOT NULL,
 	time		TIMESTAMP		DEFAULT now(),
 
-	CONSTRAINT	pickvt_uniq		PRIMARY KEY(paramID, time)
+	CONSTRAINT	pickvt_uniq		UNIQUE(paramID, time)
 ) WITHOUT OIDS;
 
 CREATE INDEX PIC_kvt_id   ON PICkvt(paramID);
 CREATE INDEX PIC_kvt_time ON PICkvt(time);
---CREATE UNIQUE INDEX PIC_kvt_id_time_indx ON pickvt(paramid, "time");
+CREATE UNIQUE INDEX PIC_kvt_id_time_indx ON pickvt(paramid, "time");
+
+
+

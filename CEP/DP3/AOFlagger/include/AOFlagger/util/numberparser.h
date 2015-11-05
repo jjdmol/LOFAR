@@ -22,12 +22,6 @@
 
 #include <cmath>
 
-//# pow10 seems to be undefined on OS-X
-#ifdef __APPLE__
-# define pow10(x) pow(10., (x))
-#endif
-
-
 class NumberParsingException : public std::runtime_error
 {
 	public:
@@ -124,9 +118,6 @@ class NumberParser
 				return val;
 		}
 		
-		/**
-		 * @throws NumberParsingException when @c str can not be parsed.
-		 */
 		template<typename T>
 		static T toSignedInteger(const char *str)
 		{

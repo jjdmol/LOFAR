@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -31,19 +31,25 @@ using namespace blitz;
 using namespace LOFAR;
 using namespace RSP_Protocol;
 
-size_t Statistics::getSize() const
+unsigned int Statistics::getSize()
 {
-  return MSH_size(m_statistics);
+  return MSH_ARRAY_SIZE(m_statistics, double);
 }
 
-size_t Statistics::pack  (char* buffer) const
+unsigned int Statistics::pack  (void* buffer)
 {
-  size_t offset = 0;
-  return MSH_pack(buffer, offset, m_statistics);
+  unsigned int offset = 0;
+
+  MSH_PACK_ARRAY(buffer, offset, m_statistics, double);
+
+  return offset;
 }
 
-size_t Statistics::unpack(const char*buffer)
+unsigned int Statistics::unpack(void *buffer)
 {
-  size_t offset = 0;
-  return MSH_unpack(buffer, offset, m_statistics);
+  unsigned int offset = 0;
+
+  MSH_UNPACK_ARRAY(buffer, offset, m_statistics, double, 2);
+
+  return offset;
 }

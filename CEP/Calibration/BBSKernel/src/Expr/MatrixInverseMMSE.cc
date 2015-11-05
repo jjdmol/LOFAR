@@ -41,10 +41,9 @@ const JonesMatrix::View MatrixInverseMMSE::evaluateImpl(const Grid&,
 {
     JonesMatrix::View result;
 
-    // Add the variance of the nuisance term to the elements on the diagonal.
-    const double variance = itsSigma * itsSigma;
-    Matrix diag0 = arg0(0, 0) + variance;
-    Matrix diag1 = arg0(1, 1) + variance;
+    // Add the sigma of the noise to the elements on the diagonal.
+    Matrix diag0 = arg0(0, 0) + itsSigma;
+    Matrix diag1 = arg0(1, 1) + itsSigma;
 
     // Compute inverse in the usual way.
     Matrix invDet(1.0 / (diag0 * diag1 - arg0(0, 1) * arg0(1, 0)));

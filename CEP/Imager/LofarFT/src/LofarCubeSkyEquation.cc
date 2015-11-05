@@ -41,11 +41,7 @@
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
-#if defined(casacore)
-#include <lattices/LEL/LatticeExpr.h>
-#else
 #include <lattices/Lattices/LatticeExpr.h>
-#endif
 
 #include <synthesis/MeasurementComponents/SkyModel.h>
 #include <LofarFT/LofarCubeSkyEquation.h>
@@ -266,7 +262,7 @@ void LofarCubeSkyEquation::init(FTMachine& ft){
      iftm_p[0]=ift_;
      ftm_p[0]->setMiscInfo(0);
      iftm_p[0]->setMiscInfo(0);
-//      cout<<"nmod="<<nmod<<endl;
+     cout<<"nmod="<<nmod<<endl;
      //if(nmod != (2 * sm_->numberOfTaylorTerms() - 1)) /* MFS */
      //  throw(AipsError("No multifield with a-projection allowed"));
      for (Int k=1; k < (nmod); ++k){
@@ -894,7 +890,6 @@ void LofarCubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 	//	Timers tOrigChunks=Timers::getTime();
         rvi_p->originChunks();
         rvi_p->origin();
-        // Always use CORRECTED_DATA if it's there!
         Bool useCorrected= !(vb->msColumns().correctedData().isNull());
 
 	//	Timers tVBInValid=Timers::getTime();
@@ -1083,7 +1078,6 @@ void LofarCubeSkyEquation::initializePutSlice(const VisBuffer& vb,
     }
     iftm_p[model]->initializeToSky(*(imPutSlice_p[model]),weightSlice_p[model],
 				   vb);
-    //    ftm_p[model]->initGridThreads(iftm_p[model]->itsGriddedData);
     dirDep= dirDep || (ftm_p[model]->name() == "MosaicFT");
   }
   assertSkyJones(vb, -1);
@@ -1375,8 +1369,8 @@ VisBuffer& LofarCubeSkyEquation::getSlice(VisBuffer& result,
 void
 LofarCubeSkyEquation::finalizeGetSlice(){
   //// place-holders.... there is nothing to do after degridding
-  for (Int model=0; model < sm_->numberOfModels(); ++model)
-    ftm_p[model]->finalizeToVis();
+  //      for (Int model=0; model < sm_->numberOfModels(); ++model)
+  //        ftm_p[model]->finalizeToVis();
 }
 
 

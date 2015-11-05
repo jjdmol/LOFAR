@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tGrid
+./runctest.sh tGrid > tGrid.log 2>&1

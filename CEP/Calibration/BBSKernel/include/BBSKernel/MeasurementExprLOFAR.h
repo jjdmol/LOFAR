@@ -77,7 +77,6 @@ public:
         const VisBuffer::Ptr &buffer,
         const BaselineMask &mask,
         bool inverse = false,
-        bool useMMSE = false,
         double sigmaMMSE = 0.0);
 
     // \name MeasurementExpr interface implementation
@@ -117,7 +116,6 @@ private:
         const BufferMap &buffers,
         const ModelConfig &config,
         const VisBuffer::Ptr &buffer,
-        bool useMMSE,
         double sigmaMMSE);
 
     void setCorrelations(bool circular);

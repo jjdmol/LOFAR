@@ -22,7 +22,6 @@
 
 #include <unistd.h>
 
-#include <stdexcept>
 #include <string>
 #include <vector>
 /**
@@ -115,11 +114,9 @@ class Plot {
 		char _tmpPlotFile[16];
 		void Write(int fd, const std::string &str)
 		{
-			if(write(fd, str.c_str(), str.length()) != (int) str.length())
-				throw std::runtime_error("write() reported an error");
+			write(fd, str.c_str(), str.length());
 		}
 		void CloseCurFd();
-		void ExecuteCmd(const std::string &cmd) const;
 		std::vector<std::string> _lineFiles, _lineTitles;
 		std::vector<Type> _lineTypes;
 

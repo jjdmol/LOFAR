@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ package nl.astron.lofar.sas.otbcomponents;
 
 import java.rmi.RemoteException;
 import java.util.Enumeration;
-import java.util.ArrayList;
+import java.util.Vector;
 import javax.swing.DefaultListModel;
 import javax.swing.border.TitledBorder;
 import nl.astron.lofar.lofarutils.LofarUtils;
@@ -34,7 +34,7 @@ import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import org.apache.log4j.Logger;
 /**
  * Panel to view (and edit) lists
- * The lists are being send and retained from the panel via a ArrayList like string:
+ * The lists are being send and retained from the panel via a Vector like string:
  * [item1,item2,item3]
  *
  * @created 13-07-2006, 14:50
@@ -43,7 +43,7 @@ import org.apache.log4j.Logger;
  *
  * @version $Id$
  */
-public final class StorageSelectionPanel extends javax.swing.JPanel {
+public class StorageSelectionPanel extends javax.swing.JPanel {
     
     
     static Logger logger = Logger.getLogger(StorageSelectionPanel.class);
@@ -90,19 +90,19 @@ public final class StorageSelectionPanel extends javax.swing.JPanel {
     private DefaultListModel itsUsedModel             = new DefaultListModel();
     private DefaultListModel itsAvailableModel        = new DefaultListModel();
     private jOTDBtree itsTree                         = null;
-    private ArrayList<String> itsStorageNodeList             = new ArrayList<>();
-    private ArrayList<String> itsUsedStorageNodeList         = new ArrayList<>();
-    private ArrayList<String> itsAvailableStorageNodeList    = new ArrayList<>();
+    private Vector<String> itsStorageNodeList             = new Vector<String>();
+    private Vector<String> itsUsedStorageNodeList         = new Vector<String>();
+    private Vector<String> itsAvailableStorageNodeList    = new Vector<String>();
 
     
     public void init() {
         AvailableStorageNodeList.setModel(itsAvailableModel);
         UsedStorageNodeList.setModel(itsUsedModel);
         try {
-            ArrayList<jOTDBtree> aTreeList = new ArrayList(OtdbRmi.getRemoteOTDB().getTreeList(OtdbRmi.getRemoteTypes().getTreeType("hardware"),
-                    OtdbRmi.getRemoteTypes().getClassif("operational")));
+            Vector aTreeList = OtdbRmi.getRemoteOTDB().getTreeList(OtdbRmi.getRemoteTypes().getTreeType("hardware"),
+                    OtdbRmi.getRemoteTypes().getClassif("operational"));
            for (int k = 0; k < aTreeList.size(); k++) {
-                jOTDBtree tInfo = aTreeList.get(k);
+                jOTDBtree tInfo = (jOTDBtree) aTreeList.elementAt(k);
                 if (OtdbRmi.getTreeState().get(tInfo.state).equals("active")) {
                     itsTree = tInfo;
                     break;
@@ -116,11 +116,16 @@ public final class StorageSelectionPanel extends javax.swing.JPanel {
             }
 
             // Now we have the operational PIC tree, we need to search for the available StorageNodes
-            ArrayList<jOTDBnode> storagenodes = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(itsTree.treeID(), "LOFAR_PermSW_Storage"));
-            for (jOTDBnode aRingNode:storagenodes) {
-                ArrayList<jOTDBnode> childs = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(itsTree.treeID() ,aRingNode.nodeID(), 1));
+            Vector storagenodes = OtdbRmi.getRemoteMaintenance().getItemList(itsTree.treeID(), "LOFAR_PermSW_Storage");
+            Enumeration e = storagenodes.elements();
+            while (e.hasMoreElements()) {
+                
+                jOTDBnode aRingNode = (jOTDBnode) e.nextElement();
+                Vector childs = OtdbRmi.getRemoteMaintenance().getItemList(itsTree.treeID() ,aRingNode.nodeID(), 1);
 
-                for (jOTDBnode aNode:childs) { 
+                Enumeration ec = childs.elements();
+                while (ec.hasMoreElements()) {
+                   jOTDBnode aNode = (jOTDBnode) ec.nextElement();
                  
                    if (!aNode.leaf) {
                        // split the name
@@ -402,14 +407,14 @@ public final class StorageSelectionPanel extends javax.swing.JPanel {
     /**
      * @return the itsUsedStorageNodeList
      */
-    public ArrayList<String> getUsedStorageNodeList() {
+    public Vector<String> getUsedStorageNodeList() {
         return itsUsedStorageNodeList;
     }
 
     /**
      * @param itsUsedStorageNodeList the itsUsedStorageNodeList to set
      */
-    public void setUsedStorageNodeList(ArrayList<String> itsUsedStorageNodeList) {
+    public void setUsedStorageNodeList(Vector<String> itsUsedStorageNodeList) {
         this.itsUsedStorageNodeList = itsUsedStorageNodeList;
         this.itsUsedModel.clear();
         for (int i=0; i<itsUsedStorageNodeList.size();i++) {

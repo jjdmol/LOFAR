@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -23,9 +23,8 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <Common/Exception.h>
 #include <Common/ParameterSet.h>
-#include <Common/LofarBitModeInfo.h>
+#include <Common/lofar_bitset.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_list.h>
 #include <ApplCommon/AntennaSets.h>
@@ -50,7 +49,6 @@
 #define	BEAMLET_RING_OFFSET		1000
 
 using namespace blitz;
-using namespace std;
 namespace LOFAR {
   using namespace RTC;
   using namespace CAL_Protocol;
@@ -220,9 +218,10 @@ GCFEvent::TResult beamctl::create_subarray(GCFEvent& event, GCFPortInterface& po
 	switch (event.signal) {
 	case F_ENTRY: {
 		CALStartEvent start;
+		AntennaSets*	AS(globalAntennaSets());
 		start.name   = BEAMCTL_BEAM + formatString("_%d", getpid());
-		start.parent = globalAntennaSets()->antennaField(itsAntSet);
-		start.subset = getRCUMask() & globalAntennaSets()->RCUallocation(itsAntSet);
+		start.parent = AS->antennaField(itsAntSet);
+		start.subset = getRCUMask();
 		start.rcumode().resize(1);
 		start.rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)itsRCUmode);
 
@@ -276,7 +275,7 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& event, GCFPortInterface& port)
 		IBSBeamallocEvent 	alloc;
 		alloc.beamName	   = BEAMCTL_BEAM + formatString("_%d", getpid());
 		alloc.antennaSet   = itsAntSet;
-		alloc.rcumask	   = getRCUMask() & globalAntennaSets()->RCUallocation(itsAntSet);
+		alloc.rcumask	   = getRCUMask();
 		// assume beamletnumbers are right so the ring can be extracted from those numbers.
 		// when the user did this wrong the BeamServer will complain.
 		alloc.ringNr	   = itsBeamlets.front() >= BEAMLET_RING_OFFSET;
@@ -694,7 +693,6 @@ bool beamctl::parseOptions(int	myArgc, char** myArgv)
 		{ "anadir", 	 required_argument, 0, 'A' },
 		{ "subbands",  	 required_argument, 0, 's' },
 		{ "beamlets",  	 required_argument, 0, 'b' },
-		{ "remotehost",  required_argument, 0, 'J' },
 		{ "calinfo",  	 no_argument,       0, 'c' },
 		{ "help",      	 no_argument,       0, 'h' },
 		{ 0, 0, 0, 0 },
@@ -768,22 +766,15 @@ bool beamctl::parseOptions(int	myArgc, char** myArgv)
 		break;
 
 		case 's': {
-			itsSubbands = strtolist(optarg, MAX_SUBBANDS);
+			itsSubbands = strtolist(optarg, LOFAR::MAX_SUBBANDS);
 			cout << "subbands : "; printList(itsSubbands);
 		}
 		break;
 
 		case 'b': {
-			// assume lowest bitmode, if this is not the case the BeamServer will complain...
-			itsBeamlets = strtolist(optarg, BEAMLET_RING_OFFSET + maxBeamlets(MIN_BITS_PER_SAMPLE));
+			itsBeamlets = strtolist(optarg, BEAMLET_RING_OFFSET + LOFAR::MAX_BEAMLETS);
 			cout << "beamlets : "; printList(itsBeamlets);
 		}
-		break;
-
-		case 'J': 
-			cout << "remotehost : " << optarg << endl;
-			itsCalServer->setHostName (optarg);
-			itsBeamServer->setHostName(optarg);
 		break;
 
 		case 'c':
@@ -810,19 +801,12 @@ using namespace LOFAR;
 using namespace BS;
 using namespace GCF::TM;
 
-// Use a terminate handler that can produce a backtrace.
-Exception::TerminateHandler t(Exception::terminate);
-
 //
 // main
 //
 int main(int argc, char** argv)
 {
 	GCFScheduler::instance()->init(argc, argv, "beamctl");
-
-	ASSERTSTR(BEAMLET_RING_OFFSET > maxBeamlets(MIN_BITS_PER_SAMPLE), 
-				formatString("(%d>%d) beamctl is not suitable for handling %d bit mode. Revise program.", 
-				BEAMLET_RING_OFFSET, maxBeamlets(MIN_BITS_PER_SAMPLE), MIN_BITS_PER_SAMPLE));
 
 	try {
 		beamctl beamctlTask("beamctl");

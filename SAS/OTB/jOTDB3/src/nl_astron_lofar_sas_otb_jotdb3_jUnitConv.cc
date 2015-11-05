@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ JNIEXPORT jshort JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jUnitConv_get__Ljav
   const char* chars = env->GetStringUTFChars (aConv, 0);
   const string str (chars);
   
-  short ret(0);
+  short ret;
   try {
     ret = ((UnitConv*)getCObjectPtr(env,jUnitConv,"_UnitConv"))->get (str);
   
@@ -88,7 +88,7 @@ JNIEXPORT jshort JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jUnitConv_get__Ljav
  * Signature: (S)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jUnitConv_get__S(JNIEnv *env, jobject jUnitConv, jshort aConv) {
-  jstring jstr(0);
+  jstring jstr;
   try {
     jstr= env->NewStringUTF (((UnitConv*)getCObjectPtr(env,jUnitConv,"_UnitConv"))->get(aConv).c_str());
   } catch (exception &ex) {
@@ -180,7 +180,7 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jUnitConv_top(JNIEnv 
  * Signature: ()Z
  */
 JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jUnitConv_next(JNIEnv *env, jobject jUnitConv) {
-  jboolean aBool(0);
+  jboolean aBool;
   try {
     aBool=((UnitConv*)getCObjectPtr(env,jUnitConv,"_UnitConv"))->next();
   } catch (exception &ex) {

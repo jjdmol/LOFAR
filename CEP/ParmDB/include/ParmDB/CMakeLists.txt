@@ -12,7 +12,6 @@ set(inst_HEADERS
   ParmCache.h
   ParmDBMeta.h
   ParmDB.h
-  ParmDBBlob.h
   ParmDBCasa.h
   ParmDBLocker.h
   Parm.h
@@ -21,12 +20,9 @@ set(inst_HEADERS
   ParmFacadeDistr.h
   ParmFacade.h
   PatchInfo.h
-  SourceData.h
-  SourceDB.h
-  SourceDBBlob.h
-  SourceDBCasa.h
   SourceInfo.h
-)
+  SourceDB.h
+  SourceDBCasa.h)
 
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 

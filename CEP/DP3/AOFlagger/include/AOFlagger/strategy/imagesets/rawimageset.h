@@ -103,6 +103,7 @@ namespace rfiStrategy {
 			}
 			virtual void AddReadRequest(const ImageSetIndex &index)
 			{
+				const RawImageSetIndex &rawIndex = static_cast<const RawImageSetIndex&>(index);
 				float data[122100];
 				_reader.Read(0, 122100, data);
 				Image2DPtr image = Image2D::CreateUnsetImagePtr(122100, 1);

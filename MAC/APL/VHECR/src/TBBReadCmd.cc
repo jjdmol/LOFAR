@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -25,22 +25,20 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/lofar_datetime.h>
 #include <VHECR/TBBReadCmd.h>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace LOFAR {
   namespace VHECR {
 
-using namespace boost::posix_time;
-
 //
 // TBBReadCmd(...)
 //
-TBBReadCmd::TBBReadCmd (uint32	rcuNr, 	uint32	time, 	uint32	sampleNr,
+TBBReadCmd::TBBReadCmd (uint32	rcuNr, 	uint32	time, 	uint32	sampleTime,
 						uint32	prePages, 	uint32	postPages) :
 	itsRcuNr	 (rcuNr),
 	itsTime 	 (time),
-	itsSampleNr  (sampleNr),
+	itsSampleTime(sampleTime),
 	itsPrePages	 (prePages),
 	itsPostPages (postPages)
 {}
@@ -51,7 +49,7 @@ TBBReadCmd::TBBReadCmd (uint32	rcuNr, 	uint32	time, 	uint32	sampleNr,
 TBBReadCmd::TBBReadCmd() :
 	itsRcuNr	 (0),
 	itsTime 	 (0),
-	itsSampleNr  (0),
+	itsSampleTime(0),
 	itsPrePages	 (0),
 	itsPostPages (0)
 {}
@@ -62,11 +60,11 @@ TBBReadCmd::TBBReadCmd() :
 TBBReadCmd& TBBReadCmd::operator=(const TBBReadCmd& that)
 {
 	if (this != &that) { 
-		this->itsRcuNr 	    = that.itsRcuNr; 
-		this->itsTime 	    = that.itsTime; 
-		this->itsSampleNr   = that.itsSampleNr; 
-		this->itsPrePages   = that.itsPrePages; 
-		this->itsPostPages  = that.itsPostPages;
+		this->itsRcuNr 	   = that.itsRcuNr; 
+		this->itsTime 	   = that.itsTime; 
+		this->itsSampleTime= that.itsSampleTime; 
+		this->itsPrePages  = that.itsPrePages; 
+		this->itsPostPages = that.itsPostPages; 
 	} 
 
 	return (*this); 
@@ -77,11 +75,12 @@ TBBReadCmd& TBBReadCmd::operator=(const TBBReadCmd& that)
 //#
 ostream& TBBReadCmd::print(ostream&	os) const
 {
-	os << "RCUnr      : " << itsRcuNr << endl;
-	os << "Time       : " << to_simple_string(from_time_t(itsTime)) << endl;
-	os << "SampleNr   : " << itsSampleNr << endl;
-	os << "Pre pages  : " << itsPrePages << endl;
-	os << "Post pages : " << itsPostPages << endl;
+	os << "RCUnr     : " << itsRcuNr << endl;
+	os << "Time      : " << to_simple_string(from_time_t(itsTime)) << endl;
+	os << "SampleTime: " << itsSampleTime << endl;
+	os << "Pre pages : " << itsPrePages << endl;
+	os << "Post pages: " << itsPostPages << endl;
+
 	return (os);
 }
 

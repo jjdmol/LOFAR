@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id$
+//#  $Id: Thread.h 16592 2010-10-22 13:04:23Z mol $
 
 #include <lofar_config.h>
 #include <Common/Thread/Thread.h>
@@ -31,14 +31,7 @@ namespace LOFAR {
 
 #ifdef USE_THREADS
 
-ThreadMap &ThreadMap::instance() {
-  // this leaks, but we have no way of properly enforcing that all
-  // threads are destructed before the global map is.
-
-  static ThreadMap *globalThreadMap = new ThreadMap();
-
-  return *globalThreadMap;
-}
+ThreadMap globalThreadMap;
 
 void ThreadMap::report() {
   ScopedLock sl(mutex);

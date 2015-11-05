@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -75,21 +75,21 @@ AntennaGains::~AntennaGains()
 	delete m_mutex;
 }
 
-size_t AntennaGains::getSize() const
+unsigned int AntennaGains::getSize()
 {
   return 
-      MSH_size(m_gains)
-    + MSH_size(m_quality)
+      MSH_ARRAY_SIZE(m_gains, complex<double>)
+    + MSH_ARRAY_SIZE(m_quality, double)
     + sizeof(bool);
 }
 
-size_t AntennaGains::pack(char* buffer) const
+unsigned int AntennaGains::pack(void* buffer)
 {
-  size_t offset = 0;
+  unsigned int offset = 0;
 
   lock();
-  offset = MSH_pack(buffer, offset, m_gains);
-  offset = MSH_pack(buffer, offset, m_quality);
+  MSH_PACK_ARRAY(buffer, offset, m_gains, complex<double>);
+  MSH_PACK_ARRAY(buffer, offset, m_quality, double);
   memcpy((char*)buffer + offset, &m_done, sizeof(bool));
   offset += sizeof(bool);
   unlock();
@@ -97,13 +97,13 @@ size_t AntennaGains::pack(char* buffer) const
   return offset;
 }
 
-size_t AntennaGains::unpack(const char* buffer)
+unsigned int AntennaGains::unpack(void* buffer)
 {
-  size_t offset = 0;
+  unsigned int offset = 0;
 
   lock();
-  offset = MSH_unpack(buffer, offset, m_gains);
-  offset = MSH_unpack(buffer, offset, m_quality);
+  MSH_UNPACK_ARRAY(buffer, offset, m_gains, complex<double>, 3);
+  MSH_UNPACK_ARRAY(buffer, offset, m_quality, double, 3);
   memcpy(&m_done, (char*)buffer + offset, sizeof(bool));
   offset += sizeof(bool);
   unlock();

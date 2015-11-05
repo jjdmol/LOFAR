@@ -38,7 +38,7 @@ namespace LOFAR { namespace BBS {
   // @{
 
   // ParmFacade is the high level interface to the Parameter Data Base.
-  // The current version assumes it is a Casacore table; with a few extra
+  // The current version assumes it is an AIPS++ table; with a few extra
   // constructor arguments it can easily be changed to other types of
   // databases.
   //
@@ -59,11 +59,10 @@ namespace LOFAR { namespace BBS {
   {
   public:
     // Make a connection to the given ParmTable.
-    // If create=true, a new local ParmTable is created.
-    // Otherwise the local or distributed ParmTable must exist.
-    // A distributed ParmTable should be given by means of the VDS-file as
+    // The ParmTable can be a single one, but it can also be a distributed
+    // ParmTable. The latter should be given by means of the VDS-file as
     // created by the scripts setupparmdb and setupsourcedb.
-    ParmFacade (const string& tableName, bool create=false);
+    ParmFacade (const string& tableName);
 
     // The destructor closes the parm table.
     ~ParmFacade();
@@ -80,9 +79,8 @@ namespace LOFAR { namespace BBS {
 
     // Get parameter names in the table matching the pattern.
     // An empty name pattern is the same as * (all parm names).
-    vector<string> getNames (const string& parmNamePattern = string(),
-                             bool includeDefaults = false) const
-    { return itsRep->getNames (parmNamePattern, includeDefaults); }
+    vector<string> getNames (const string& parmNamePattern = string()) const
+      { return itsRep->getNames (parmNamePattern); }
 
     // Get default parameter names in the table matching the pattern.
     // An empty name pattern is the same as * (all parm names).
@@ -105,15 +103,13 @@ namespace LOFAR { namespace BBS {
                                                double freqStep,
                                                double timev1, double timev2,
                                                double timeStep,
-                                               bool asStartEnd=false,
-                                               bool includeDefaults=false);
+                                               bool asStartEnd=false);
     map<string, vector<double> > getValuesMap (const string& parmNamePattern,
                                                double freqv1, double freqv2,
                                                double timev1, double timev2,
-                                               bool asStartEnd=false,
-                                               bool includeDefaults=false)
+                                               bool asStartEnd=false)
       { return getValuesMap (parmNamePattern, freqv1, freqv2, 0,
-                             timev1, timev2, asStartEnd, includeDefaults); }
+                             timev1, timev2, asStartEnd); }
     // </group>
 
     // Get the values of the given parameters on the given regular grid
@@ -125,16 +121,13 @@ namespace LOFAR { namespace BBS {
     casa::Record getValues (const string& parmNamePattern,
                             double freqv1, double freqv2, double freqStep,
                             double timev1, double timev2, double timeStep,
-                            bool asStartEnd=true,
-                            bool includeDefaults=false)
+                            bool asStartEnd=true)
       { return itsRep->getValues (parmNamePattern, freqv1, freqv2, freqStep,
-                                  timev1, timev2, timeStep, asStartEnd,
-                                  includeDefaults); }
+                                  timev1, timev2, timeStep, asStartEnd); }
     casa::Record getValues (const string& parmNamePattern,
                             double freqv1=-1e30, double freqv2=1e30,
                             double timev1=-1e30, double timev2=1e30,
-                            bool asStartEnd=true,
-                            bool includeDefaults=false);
+                            bool asStartEnd=true);
     // </group>
 
     // Get the values of the given parameters on the given grid where v1/v2
@@ -145,10 +138,9 @@ namespace LOFAR { namespace BBS {
                             const vector<double>& freqv2,
                             const vector<double>& timev1,
                             const vector<double>& timev2,
-                            bool asStartEnd=true,
-                            bool includeDefaults=false)
+                            bool asStartEnd=true)
       { return itsRep->getValues (parmNamePattern, freqv1, freqv2,
-                                  timev1, timev2, asStartEnd, includeDefaults); }
+                                  timev1, timev2, asStartEnd); }
 
     // Get the values of the given parameters for the given domain.
     // The Record contains a map of parameter name to subrecords.
@@ -177,61 +169,6 @@ namespace LOFAR { namespace BBS {
       { return itsRep->getCoeff (parmNamePattern, freqv1, freqv2,
                                  timev1, timev2, asStartEnd); }
 
-    // Clear the tables, thus remove all parameter values and default values.
-    void clearTables()
-      { itsRep->clearTables(); }
-
-    // Add one or more default values.
-    // The name of each field in the record is the parameter name.
-    // The values are subrecords containing the parameter values, etc.
-    // <br>By default it checks if the name does not exist.
-    void addDefValues (const casa::Record& rec, bool check=true)
-      { return itsRep->addDefValues (rec, check); }
-
-    // Delete the default value records for the given parameters.
-    void deleteDefValues (const string& parmNamePattern)
-      { return itsRep->deleteDefValues (parmNamePattern); }
-
-    // Flush the possible changes to disk.
-    void flush (bool fsync=false)
-      { itsRep->flush(fsync); }
-
-
-    // The following functions are only implemented for a local ParmDB.
-    // The ParmFacadeDistr functions throw an exception.
-
-    // Writelock and unlock the database tables.
-    // The user does not need to lock/unlock, but it can increase performance
-    // if many small accesses have to be done.
-    // <group>
-    void lock (bool lockForWrite)
-      { itsRep->lock (lockForWrite); }
-    void unlock()
-      { itsRep->unlock(); }
-    // </group>
-
-    // Get the default step values for the frequency and time axis.
-    vector<double> getDefaultSteps() const
-      { return itsRep->getDefaultSteps(); }
-
-    // Set the default step values for the frequency and time axis.
-    void setDefaultSteps (const vector<double>& steps)
-      { itsRep->setDefaultSteps (steps); }
-
-    // Add the values for the given parameter names and domain.
-    // The name of each field in the record is the parameter name.
-    // The values are subrecords containing the domains, parameter values, etc.
-    // <br>It checks if no values exist for the parameters and domains yet.
-    void addValues (const casa::Record& rec)
-      { itsRep->addValues (rec); }
-
-    // Delete the records for the given parameters and domain.
-    void deleteValues (const string& parmNamePattern,
-                       double freqv1=-1e30, double freqv2=1e30,
-                       double timev1=-1e30, double timev2=1e30,
-                       bool asStartEnd = true)
-      { itsRep->deleteValues (parmNamePattern, freqv1, freqv2,
-                              timev1, timev2, asStartEnd); }
 
   private:
     // Convert a record to a map.

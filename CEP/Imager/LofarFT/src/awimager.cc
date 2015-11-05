@@ -28,8 +28,10 @@
 //# Includes
 #include <lofar_config.h>
 #include <LofarFT/LofarImager.h>
+#include <LofarFT/Package__Version.h>
 #include <Common/InputParSet.h>
-#include <Common/Exception.h>
+#include <Common/LofarLogger.h>
+#include <Common/SystemUtil.h>
 
 #include <images/Images/PagedImage.h>
 #include <images/Images/HDF5Image.h>
@@ -48,10 +50,13 @@
 #include <casa/sstream.h>
 
 using namespace casa;
+using namespace LOFAR;
 
-// Use a terminate handler that can produce a backtrace.
-LOFAR::Exception::TerminateHandler t(LOFAR::Exception::terminate);
+// Define handler that tries to print a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
+
+// Define some common functions.
 IPosition handlePos (const IPosition& pos, const IPosition& def)
 {
   if (pos.nelements() == 0) {
@@ -198,41 +203,41 @@ void applyFactors (PagedImage<Float>& image, const Array<Float>& factors)
 
 void correctImages (const String& restoName, const String& modelName,
                     const String& residName, const String& imgName,
-                    LOFAR::LofarImager&,
-                    Bool CorrectElement, Bool CorrectWPlanes, Bool doRestored)
+                    LOFAR::LofarImager& imager, Bool CorrectElement)
 {
   // Copy the images to .corr ones.
   {
+    Directory restoredIn(restoName);
+    restoredIn.copy (restoName+".corr");
     Directory modelIn(modelName);
     modelIn.copy (modelName+".corr");
     Directory residualIn(residName);
     residualIn.copy (residName+".corr");
   }
   // Open the images.
+  PagedImage<Float> restoredImage(restoName+".corr");
   PagedImage<Float> modelImage(modelName+".corr");
   PagedImage<Float> residualImage(residName+".corr");
-  // AlwaysAssert (residualImage.shape() == modelImage.shape()  &&
-  //              restoredImage.shape() == modelImage.shape(), SynthesisError);
+  AlwaysAssert (residualImage.shape() == modelImage.shape()  &&
+                restoredImage.shape() == modelImage.shape(), SynthesisError);
 
   // Get average primary beam and spheroidal.
   Matrix<Float> avgPB = LOFAR::LofarConvolutionFunction::getAveragePB(imgName+"0");
   Matrix<Float> spheroidCut = LOFAR::LofarConvolutionFunction::getSpheroidCut(imgName+"0");
-
-  // String nameii("Spheroid_cut_im_element.img");
-  // ostringstream nameiii(nameii);
-  // PagedImage<Float> tmpi(nameiii.str().c_str());
-  // Slicer slicei(IPosition(4,0,0,0,0), tmpi.shape(), IPosition(4,1,1,1,1));
-  // Array<Float> spheroidCutElement;
-  // tmpi.doGetSlice(spheroidCutElement, slicei);
-
+  String nameii("Spheroid_cut_im_element.img");
+  ostringstream nameiii(nameii);
+  PagedImage<Float> tmpi(nameiii.str().c_str());
+  Slicer slicei(IPosition(4,0,0,0,0), tmpi.shape(), IPosition(4,1,1,1,1));
+  Array<Float> spheroidCutElement;
+  tmpi.doGetSlice(spheroidCutElement, slicei);
   // Use the inner part of the beam and spheroidal.
-  Int nximg = residualImage.shape()[0];
+  Int nximg = restoredImage.shape()[0];
   Int nxpb  = avgPB.shape()[0];
   Int nxsph = spheroidCut.shape()[0];
-  //AlwaysAssert (restoredImage.shape()[1] == nximg  &&
-  //              avgPB.shape()[1] == nxpb  &&
-  //              spheroidCut.shape()[1] == nxsph  &&
-  //              nxsph >= nximg  &&  nxpb >= nximg, SynthesisError);
+  AlwaysAssert (restoredImage.shape()[1] == nximg  &&
+                avgPB.shape()[1] == nxpb  &&
+                spheroidCut.shape()[1] == nxsph  &&
+                nxsph >= nximg  &&  nxpb >= nximg, SynthesisError);
   // Get inner parts of beam and spheroid.
   Int offpb  = (nxpb  - nximg) / 2;
   Int offsph = (nxsph - nximg) / 2;
@@ -240,38 +245,31 @@ void correctImages (const String& restoName, const String& modelName,
                                        IPosition(2, nximg, nximg)));
   Array<Float> sphinner = spheroidCut(Slicer(IPosition(2, offsph, offsph),
                                              IPosition(2, nximg, nximg)));
-  Array<Float> ones(IPosition(sphinner.shape()),1.);
   Array<Float> factors;
-  // Array<Float> sphinner_el = (spheroidCutElement(Slicer(IPosition(4, offsph, offsph,0,0),
-  // 							  IPosition(4, nximg, nximg,1,1)))).nonDegenerate();
-
-  // if(CorrectElement){
-  //   factors = sphinner_el *sphinner / sqrt(pbinner);//sphinner_el * sphinner / sqrt(pbinner);
-  // } else{
-  //   factors = ones / sqrt(pbinner);//sphinner_el * sphinner / sqrt(pbinner);
-  // }
-  //if(CorrectWPlanes){factors *= sphinner;}
-
-  factors = ones / sqrt(pbinner);
-  cout<<"Final normalisation"<<endl;
+  if(CorrectElement){
+    Array<Float> sphinner_el = (spheroidCutElement(Slicer(IPosition(4, offsph, offsph,0,0),
+							  IPosition(4, nximg, nximg,1,1)))).nonDegenerate();
+    factors = sphinner_el *sphinner / sqrt(pbinner);//sphinner_el * sphinner / sqrt(pbinner);
+  } else{
+    
+    factors = sphinner / sqrt(pbinner);//sphinner_el * sphinner / sqrt(pbinner);
+  }
+  applyFactors (restoredImage, factors);
   applyFactors (modelImage, factors);
   applyFactors (residualImage, factors);
-  if(doRestored){
-    cout<<"... restored image too ..."<<endl;
-    Directory restoredIn(restoName);
-    restoredIn.copy (restoName+".corr");
-    PagedImage<Float> restoredImage(restoName+".corr");
-    applyFactors (restoredImage, factors);
-  }
 }
 
 
-int main (Int argc, char** argv)
+int main(int argc, char *argv[])
 {
-  try {
+  try
+  {
+    TEST_SHOW_VERSION (argc, argv, LofarFT);
+    INIT_LOGGER(basename(string(argv[0])));
+    Version::show<LofarFTVersion> (cout);
     LOFAR::InputParSet inputs;
     // define the input structure
-    inputs.setVersion("2011Oct05-CT/SvdT/JvZ/GvD");
+    ///    inputs.setVersion("2012Mar-CT/SvdT/JvZ/GvD");
     inputs.create ("ms", "",
 		   "Name of input MeasurementSet",
 		   "string");
@@ -300,7 +298,7 @@ int main (Int argc, char** argv)
 		   "Name of psf image file (default is <imagename>.psf",
 		   "string");
     inputs.create ("data", "DATA",
-		   "Name of DATA column to use (if operation is not \"image\", CORRECTED_DATA is always used!)",
+		   "Name of DATA column to use",
 		   "string");
     inputs.create ("mode", "mfs",
 		   "Imaging mode (mfs, channel, or velocity)",
@@ -329,7 +327,7 @@ int main (Int argc, char** argv)
     inputs.create ("timewindow", "300.0",
                    "width of time window (in sec) where AW-term is constant",
                    "double");
-    inputs.create ("wmax", "10000.0",
+    inputs.create ("wmax", "500.0",
 		   "omit data with w-term > wmax (in meters)",
 		   "float");
     inputs.create ("muellergrid", "all",
@@ -391,7 +389,7 @@ int main (Int argc, char** argv)
 		   "string");
     inputs.create ("operation", "image",
                    ///		   "Operation (empty,image,clark,hogbom,csclean,multiscale,entropy)",
-		   "Operation (empty,image,csclean,predict,psf,mfclark,multiscale)",
+		   "Operation (empty,image,csclean,predict,psf)",
 		   "string");
     inputs.create ("niter", "1000",
 		   "Number of clean iterations",
@@ -459,12 +457,15 @@ int main (Int argc, char** argv)
     inputs.create ("applyIonosphere", "false",
                    "apply ionospheric correction",
                    "bool");
-    inputs.create ("parmdbname", "instrument",
-                   "Name of parmdb (default is instrument",
-                   "string");
+    inputs.create ("applyBeam", "true",
+                   "apply beam (array factor)",
+                   "bool");
     inputs.create ("splitbeam", "true",
                    "Evaluate station beam and element beam separately (splitbeam = true is faster)",
                    "bool");
+    // inputs.create ("ApplyElement", "false",
+    // 		   "Apply the element beam",
+    // 		   "bool");
     inputs.create ("PBCut", "1e-2",
 		   "Level below which the dirty images will be set to zero. Expressed in units of peak primary beam.",
 		   "Double");
@@ -474,61 +475,18 @@ int main (Int argc, char** argv)
     inputs.create ("cyclespeedup", "-1",
 		   "Cycle Factor. See Casa definition.",
 		   "Double");
-    inputs.create ("ModelImPredict", "",
-		   "Input Model image for the predict",
-		   "string");
     inputs.create ("PsfImage", "",
 		   "Input PSF image for the cleaning",
 		   "string");
-    inputs.create ("ApplyElement", "0",
-		   "If turned to true, apply the element beam every TWElement.",
-		   "int");
-    inputs.create ("ApplyBeamCode", "0",
-		   "0: arrayfactor and elementbeam (default), 1: only arrayfactor, 2: only elementbeam, 3: no arrayfactor, no elementbeam",
+    inputs.create ("StepApplyElement", "0",
+		   "If turned to >0, apply the element beam every N number of timewindows.",
 		   "int");
     inputs.create ("UseMasks", "true",
 		   "When the element beam is applied (StepApplyElement), the addictional step of convolving the grid can be made more efficient by computing masks. If true, it will create a directory in which it stores the masks.",
 		   "bool");
-    inputs.create ("UVmin", "0",
-		   "Minimum UV distance (klambda)",
-		   "Double");
-    inputs.create ("UVmax", "1000",
-		   "Maximum UV distance (klambda)",
-		   "Double");
     inputs.create ("RowBlock", "0",
 		   "In certain obscure circounstances (taql, selection using uvdist), the RowBlocking used by the imager calculated from the timewindow value is not correct. This parameter can be used to specify the RowBlocking.",
 		   "int");
-    inputs.create ("MakeDirtyCorr", "false",
-		   "Image plane correction.",
-		   "bool");
-    inputs.create ("UseWSplit", "true",
-		   "W split.",
-		   "bool");
-    inputs.create ("TWElement", "20.",
-		   "Timewindow for applying the element beam in hours. ChunkSize otherwise.",
-		   "Double");
-    inputs.create ("SpheSupport", "15",
-		   "Spheroidal/Aterm Support.",
-		   "Double");
-    inputs.create ("t0", "-1",
-		   "tmin in minutes since beginning.",
-		   "Double");
-    inputs.create ("t1", "-1",
-		   "tmax in minutes since beginning.",
-		   "Double");
-    inputs.create ("SingleGridMode", "true",
-		   "If set to true, then the FTMachine uses only one grid.",
-		   "bool");
-    inputs.create ("FindNWplanes", "true",
-		   "If set to true, then find the optimal number of W-planes, given spheroid support, wmax and field of view.",
-		   "bool");
-    inputs.create ("ChanBlockSize", "0",
-                   "Channel block size. Use if you want to use a different CF per block of channels.",
-                   "int");
-    inputs.create ("antenna", "",
-                   "Baseline selection string.",
-                   "string");
-    
     // inputs.create ("FillFactor", "1",
     // 		   "Fraction of the data that will be selected from the selected MS. (don't use it yet)",
     // 		   "Double");
@@ -539,16 +497,14 @@ int main (Int argc, char** argv)
     // Get the input specification.
     Bool fixed          = inputs.getBool("fixed");
     Bool UseLIG         = inputs.getBool("UseLIG");
-    Bool UseWSplit         = inputs.getBool("UseWSplit");
     Bool UseEJones      = inputs.getBool("UseEJones");
-    Bool MakeDirtyCorr  = inputs.getBool("MakeDirtyCorr");
     Bool applyIonosphere = inputs.getBool("applyIonosphere");
-    String parmdbname = inputs.getString("parmdbname");
+    Bool applyBeam = inputs.getBool("applyBeam");
     Bool splitbeam = inputs.getBool("splitbeam");
+    Bool ApplyElement   ;//= inputs.getBool("ApplyElement");
     Bool constrainFlux  = inputs.getBool("constrainflux");
     Bool preferVelocity = inputs.getBool("prefervelocity");
     Bool displayProgress= inputs.getBool("displayprogress");
-
     Long cachesize   = inputs.getInt("cachesize");
     Int fieldid      = inputs.getInt("field");
     Vector<Int> spwid(inputs.getIntVector("spwid"));
@@ -566,8 +522,7 @@ int main (Int argc, char** argv)
     Int verbose      = inputs.getInt("verbose");
     Int maxsupport   = inputs.getInt("maxsupport");
     Int oversample   = inputs.getInt("oversample");
-    Int StepApplyElement   = inputs.getInt("ApplyElement");
-    Int ApplyBeamCode   = inputs.getInt("ApplyBeamCode");
+    Int StepApplyElement   = inputs.getInt("StepApplyElement");
     if ((StepApplyElement%2 == 0)&&((StepApplyElement%2 != 0))) {
       StepApplyElement++;
     }
@@ -612,21 +567,9 @@ int main (Int argc, char** argv)
     Double cyclespeedup  = inputs.getDouble("cyclespeedup");
     Matrix<Bool> muelgrid   = readMueller (inputs.getString("muellergrid"), stokes, true);
     Matrix<Bool> mueldegrid = readMueller (inputs.getString("muellerdegrid"), stokes, false);
-    String ModelImPredict    = inputs.getString("ModelImPredict");
     String PsfImage    = inputs.getString("PsfImage");
     Bool Use_masks    = inputs.getBool("UseMasks");
     Int RowBlock   = inputs.getInt("RowBlock");
-    Double UVmin   = inputs.getDouble("UVmin");
-    Double UVmax   = inputs.getDouble("UVmax");
-    Double TWElement   = inputs.getDouble("TWElement");
-    Double SpheSupport = inputs.getDouble("SpheSupport");
-    Double t0 = inputs.getDouble("t0");
-    Double t1 = inputs.getDouble("t1");
-    Bool SingleGridMode    = inputs.getBool("SingleGridMode");
-    Bool FindNWplanes    = inputs.getBool("FindNWplanes");
-    Int ChanBlockSize   = inputs.getInt("ChanBlockSize");
-    String antenna   = inputs.getString("antenna");
-    
     //Double FillFactor= 1.;//inputs.getDouble("FillFactor");
 
     // Check and interpret input values.
@@ -679,29 +622,18 @@ int main (Int argc, char** argv)
     if (psfName.empty()) {
       psfName = imgName + ".psf";
     }
-    
-    if (weight == "robust") 
-    {
+    if (weight == "robust") {
       weight = "briggs";
-    } 
-    else if (weight == "robustabs") 
-    {
+    } else if (weight == "robustabs") {
       weight = "briggsabs";
     }
-    
-    // rmode for weighting (only valid for weight "uniform" "superuniform" "briggs")
-    // anything but "norm" or "abs" means (super)uniform weighting
-    String rmode; 
-    if (weight == "briggs") 
-    {
-      rmode  = "norm";
-    }
-    else if (weight == "briggsabs") 
-    {
+    string rmode = "norm";
+    if (weight == "briggsabs") {
       weight = "briggs";
       rmode  = "abs";
+    } else if (weight == "uniform") {
+      rmode = "none";
     }
-    
     bool doShift = False;
     MDirection phaseCenter;
     if (! phasectr.empty()) {
@@ -709,22 +641,10 @@ int main (Int argc, char** argv)
       phaseCenter = readDirection (phasectr);
     }
     operation.downcase();
-    ASSERTSTR (operation=="empty" || 
-                  operation=="image" || 
-                  operation=="csclean"|| 
-                  operation=="msmfs"||
-                  operation=="predict"||
-                  operation=="psf"||
-                  operation=="mfclark"||
-                  operation=="multiscale", 
-                  "Unknown operation");
-
-    if (operation!="image") {
-      // Skip assert if imageType=="observed" because it is the default
-      ASSERTSTR (imageType=="corrected" || imageType=="observed",
-                 "When operation is not \"image\", CORRECTED_DATA is used");
-    }
-
+    AlwaysAssertExit (operation=="empty" || operation=="image" ||
+                      operation=="csclean" || operation=="msmfs" ||
+                      operation=="predict" || operation=="psf");
+    ///AlwaysAssertExit (operation=="empty" || operation=="image" || operation=="hogbom" || operation=="clark" || operation=="csclean" || operation=="multiscale" || operation =="entropy");
     IPosition maskBlc, maskTrc;
     Quantity threshold;
     Quantity sigma;
@@ -759,11 +679,10 @@ int main (Int argc, char** argv)
     params.define ("oversample", oversample);
     params.define ("imagename", imgName);
     params.define ("UseLIG", UseLIG);
-    params.define ("UseWSplit", UseWSplit);
     params.define ("UseEJones", UseEJones);
+    //params.define ("ApplyElement", ApplyElement);
     params.define ("PBCut", PBCut);
     params.define ("StepApplyElement", StepApplyElement);
-    params.define ("ApplyBeamCode", ApplyBeamCode);
     Bool PredictFT(false);
     if(operation=="predict"){PredictFT=true;}
     params.define ("PredictFT", PredictFT);
@@ -772,20 +691,8 @@ int main (Int argc, char** argv)
     params.define ("RowBlock", RowBlock);
     params.define ("doPSF", doPSF);
     params.define ("applyIonosphere", applyIonosphere);
-    params.define ("parmdbname", parmdbname);
+    params.define ("applyBeam", applyBeam);
     params.define ("splitbeam", splitbeam);
-    params.define ("MakeDirtyCorr", MakeDirtyCorr);
-    params.define ("UVmin", UVmin);
-    params.define ("UVmax", UVmax);
-    params.define ("TWElement", TWElement);
-    params.define ("SpheSupport", SpheSupport);
-    params.define ("t0", t0);
-    params.define ("t1", t1);
-    params.define ("SingleGridMode", SingleGridMode);
-    params.define ("FindNWplanes", FindNWplanes);
-    params.define ("ChanBlockSize", ChanBlockSize);
-
-    
     //params.define ("FillFactor", FillFactor);
     
     LOFAR::LofarImager imager(ms, params);
@@ -798,10 +705,7 @@ int main (Int argc, char** argv)
 
     ROArrayColumn<Double> chfreq(window.chanFreq());
 
-    if (verbose) cout<<"Number of channels: "<<chfreq(0).shape()[0]<<endl;
-    if(ChanBlockSize!=0){
-      AlwaysAssert (((chfreq(0).shape()[0]%ChanBlockSize)==0)&(ChanBlockSize<chfreq(0).shape()[0]), AipsError);
-    }
+    cout<<"Number of channels: "<<chfreq(0).shape()[0]<<endl;
 
     Vector<Int> chansel(1);
     chansel(0)=chfreq(0).shape()[0];
@@ -821,7 +725,7 @@ int main (Int argc, char** argv)
                     String(),                       // timerng
                     String(),                       // fieldnames
                     Vector<Int>(),                  // antIndex
-                    antenna,                        // antnames
+                    String(),                       // antnames
                     String(),                       // spwstring
                     uvdist,                       // uvdist
                     String(),                       // scan
@@ -868,235 +772,234 @@ int main (Int argc, char** argv)
                         MPosition(),                  // mLocation
                         padding,                      // padding
                         wplanes);                     // wprojplanes
-      imager.ft(Vector<String>(1, ModelImPredict), "",
+      imager.ft(Vector<String>(1, modelName), "",
 		False);
     } else{
 
-      // Create empty image?
-      if (operation == "empty" ) {
-        makeEmpty (imager, imgName, fieldid);
-      } else {
+    // Create empty image?
+    if (operation == "empty" ) {
+      makeEmpty (imager, imgName, fieldid);
+    } else {
 
-        // Define weighting.
-        if (weight != "default") {
-          imager.weight (weight,                      // type
-                         rmode,                       // rmode
-                         Quantity(noise, "Jy"),       // briggsabs noise
-                         robust,                      // robust
-                         Quantity(0, "rad"),          // fieldofview
-                         0);                          // npixels
-        }
+      // Define weighting.
+      if (weight != "default") {
+        imager.weight (weight,                      // type
+                       rmode,                       // rmode
+                       Quantity(noise, "Jy"),       // briggsabs noise
+                       robust,                      // robust
+                       Quantity(0, "rad"),          // fieldofview
+                       0);                          // npixels
+      }
 
-        // If multiscale, set its parameters.
-        if (operation == "multiscale") {
-          String scaleMethod;
-          Vector<Float> userVector(userScaleSizes.shape());
-          convertArray (userVector, userScaleSizes);
-          if (userScaleSizes.size() > 1) {
-            scaleMethod = "uservector";
-          } else {
-            scaleMethod = "nscales";
-          }
-          imager.setscales(scaleMethod, nscales, userVector);
-        }
-        if (! filter.empty()) {
-          imager.filter ("gaussian", bmajor, bminor, bpa);
-        }
-        String ftmachine("ft");
-        if (wplanes > 0) {
-          ftmachine = "wproject";
-        }
-        imager.setoptions(ftmachine,                    // ftmachine
-                          cachesize*1024*(1024/8),      // cache
-                          16,                           // tile
-                          "SF",                         // gridfunction
-                          MPosition(),                  // mLocation
-                          padding,                      // padding
-                          wplanes);                     // wprojplanes
-
-        if (operation == "image") {
-          Timer timer;
-          PrecTimer precTimer;
-          precTimer.start();
-          imager.makeimage (imageType, imgName);
-          precTimer.stop();
-          timer.show ("makeimage");
-          imager.showTimings (cout, precTimer.getReal());
-
-          // Convert result to fits if needed.
-          if (! fitsName.empty()) {
-            String error;
-            PagedImage<float> img(imgName);
-            if (! ImageFITSConverter::ImageToFITS (error,
-                                                   img,
-                                                   fitsName,
-                                                   64,         // memoryInMB
-                                                   preferVelocity)) {
-              throw AipsError(error);
-            }
-          }
-
-          // Convert to HDF5 if needed.
-          if (! hdf5Name.empty()) {
-            PagedImage<float> pimg(imgName);
-            HDF5Image<float>  himg(pimg.shape(), pimg.coordinates(), hdf5Name);
-            himg.copyData (pimg);
-            himg.setUnits     (pimg.units());
-            himg.setImageInfo (pimg.imageInfo());
-            himg.setMiscInfo  (pimg.miscInfo());
-            // Delete PagedImage if HDF5 is used.
-            Table::deleteTable (imgName);
-          }
-
+      // If multiscale, set its parameters.
+      if (operation == "multiscale") {
+        String scaleMethod;
+        Vector<Float> userVector(userScaleSizes.shape());
+        convertArray (userVector, userScaleSizes);
+        if (userScaleSizes.size() > 1) {
+          scaleMethod = "uservector";
         } else {
-          // Do the cleaning.
-          if (! maskName.empty()) {
-            if (maskValue >= 0) {
-              PagedImage<float> pimg(imgName);
-              maskBlc = handlePos (maskBlc, IPosition(pimg.ndim(), 0));
-              maskTrc = handlePos (maskTrc, pimg.shape() - 1);
-              imager.boxmask (maskName,
-                              maskBlc.asVector(),
-                              maskTrc.asVector(),
-                              maskValue);
-            }
-          }
-          Timer timer;
-          PrecTimer precTimer;
-          precTimer.start();
-          if (operation == "entropy") {
-            imager.mem(operation,                       // algorithm
-                       niter,                           // niter
-                       sigma,                           // sigma
-                       targetFlux,                      // targetflux
-                       constrainFlux,                   // constrainflux
-                       displayProgress,                 // displayProgress
-                       Vector<String>(1, modelName),    // model
-                       Vector<Bool>(1, fixed),          // fixed
-                       "",                              // complist
-                       Vector<String>(1, priorName),    // prior
-                       Vector<String>(1, maskName),     // mask
-                       Vector<String>(1, restoName),    // restored
-                       Vector<String>(1, residName));   // residual
-          }
-          if (operation == "msmfs") {
-            //uInt nterms(2);
+          scaleMethod = "nscales";
+        }
+        imager.setscales(scaleMethod, nscales, userVector);
+      }
+      if (! filter.empty()) {
+        imager.filter ("gaussian", bmajor, bminor, bpa);
+      }
+      String ftmachine("ft");
+      if (wplanes > 0) {
+        ftmachine = "wproject";
+      }
+      imager.setoptions(ftmachine,                    // ftmachine
+                        cachesize*1024*(1024/8),      // cache
+                        16,                           // tile
+                        "SF",                         // gridfunction
+                        MPosition(),                  // mLocation
+                        padding,                      // padding
+                        wplanes);                     // wprojplanes
 
-            //imager.settaylorterms(nterms,5.95e+07);
-            imager.settaylorterms(nterms,RefFreq);
-            String scaleMethod;
-            Vector<Float> userVector(1); userVector(0)=0;
-            convertArray (userVector, userScaleSizes);
-            if (userScaleSizes.size() > 1) {
-              scaleMethod = "uservector";
-            } else {
-              scaleMethod = "nscales";
-            }
-            imager.setscales(scaleMethod, 1, userVector);
-            makeEmpty (imager, imgName, 0);
-            Directory filee(imgName);
+      if (operation == "image") {
+        Timer timer;
+        PrecTimer precTimer;
+        precTimer.start();
+        imager.makeimage (imageType, imgName);
+        precTimer.stop();
+        timer.show ("makeimage");
+        imager.showTimings (cout, precTimer.getReal());
+
+        // Convert result to fits if needed.
+        if (! fitsName.empty()) {
+          String error;
+          PagedImage<float> img(imgName);
+          if (! ImageFITSConverter::ImageToFITS (error,
+                                                 img,
+                                                 fitsName,
+                                                 64,         // memoryInMB
+                                                 preferVelocity)) {
+            throw AipsError(error);
+          }
+        }
+
+        // Convert to HDF5 if needed.
+        if (! hdf5Name.empty()) {
+          PagedImage<float> pimg(imgName);
+          HDF5Image<float>  himg(pimg.shape(), pimg.coordinates(), hdf5Name);
+          himg.copyData (pimg);
+          himg.setUnits     (pimg.units());
+          himg.setImageInfo (pimg.imageInfo());
+          himg.setMiscInfo  (pimg.miscInfo());
+          // Delete PagedImage if HDF5 is used.
+          Table::deleteTable (imgName);
+        }
+
+      } else {
+        // Do the cleaning.
+        if (! maskName.empty()) {
+          if (maskValue >= 0) {
+            PagedImage<float> pimg(imgName);
+            maskBlc = handlePos (maskBlc, IPosition(pimg.ndim(), 0));
+            maskTrc = handlePos (maskTrc, pimg.shape() - 1);
+            imager.boxmask (maskName,
+                            maskBlc.asVector(),
+                            maskTrc.asVector(),
+                            maskValue);
+          }
+        }
+        Timer timer;
+        PrecTimer precTimer;
+        precTimer.start();
+        if (operation == "entropy") {
+          imager.mem(operation,                       // algorithm
+                     niter,                           // niter
+                     sigma,                           // sigma
+                     targetFlux,                      // targetflux
+                     constrainFlux,                   // constrainflux
+                     displayProgress,                 // displayProgress
+                     Vector<String>(1, modelName),    // model
+                     Vector<Bool>(1, fixed),          // fixed
+                     "",                              // complist
+                     Vector<String>(1, priorName),    // prior
+                     Vector<String>(1, maskName),     // mask
+                     Vector<String>(1, restoName),    // restored
+                     Vector<String>(1, residName));   // residual
+        }
+        if (operation == "msmfs") {
+	  //uInt nterms(2);
+
+	  //imager.settaylorterms(nterms,5.95e+07);
+	  imager.settaylorterms(nterms,RefFreq);
+	  String scaleMethod;
+	  Vector<Float> userVector(1); userVector(0)=0;
+	  convertArray (userVector, userScaleSizes);
+	  if (userScaleSizes.size() > 1) {
+	    scaleMethod = "uservector";
+	  } else {
+	    scaleMethod = "nscales";
+	  }
+	  imager.setscales(scaleMethod, 1, userVector);
+	  cout<<imgName<<endl;
+	  makeEmpty (imager, imgName, 0);
+	  Directory filee(imgName);
 
 	  
-            Vector<String> modelNames(nterms);
-            for(Int i=0;i<nterms;++i){
-              modelNames(i)="test.img.model.tt"+String::toString(i);
+	  Vector<String> modelNames(nterms);
+	  for(uInt i=0;i<nterms;++i){
+	    modelNames(i)="test.img.model.tt"+String::toString(i);
 	    
-              Directory filee0(modelNames(i));
-              File file_model0(modelNames(i));
-              if(file_model0.exists()){filee0.removeRecursive();};
-              Path model0(modelNames(i)); 
-              filee.copy(model0);
-            };
+	    Directory filee0(modelNames(i));
+	    File file_model0(modelNames(i));
+	    if(file_model0.exists()){filee0.removeRecursive();};
+	    Path model0(modelNames(i)); 
+	    filee.copy(model0);
+	  };
 
-            //	  assert(false);
+	  //	  assert(false);
 
-            imager.clean("msmfs",                     // algorithm,
-                         niter,                         // niter
-                         gain,                          // gain
-                         threshold,                     // threshold
-                         displayProgress,               // displayProgress
-                         //Vector<String>(1, modelName),  // model
-                         modelNames,
-                         Vector<Bool>(1, fixed),        // fixed
-                         "",                            // complist
-                         Vector<String>(1, maskName),   // mask
-                         Vector<String>(1, restoName),  // restored
-                         Vector<String>(1, residName),  // residual
-                         Vector<String>(1, psfName));   // psf
+          imager.clean("msmfs",                     // algorithm,
+                       niter,                         // niter
+                       gain,                          // gain
+                       threshold,                     // threshold
+                       displayProgress,               // displayProgress
+                       //Vector<String>(1, modelName),  // model
+                       modelNames,
+                       Vector<Bool>(1, fixed),        // fixed
+                       "",                            // complist
+                       Vector<String>(1, maskName),   // mask
+                       Vector<String>(1, restoName),  // restored
+                       Vector<String>(1, residName),  // residual
+                       Vector<String>(1, psfName));   // psf
 	  
-          }
-          else {
-            Vector<String> modelNames(2);
-            modelNames[0]="model.main";
-            modelNames[1]="model.outlier";
-            File Dir_masks_file("JAWS_products");
-            Directory Dir_masks("JAWS_products");
-            if(Dir_masks_file.exists()){
-              Dir_masks.removeRecursive();
-            }
-            if(Use_masks){
-              Dir_masks.create();
-            }
-            // Vector<String> Namelist(5);
-            // Namelist[0]=".spheroid_cut_im";
-            // Namelist[1]=".residual";
-            // Namelist[2]=".residual.corr";
-            // Namelist[3]=".restored";
-            // Namelist[4]=".restored.corr";
-            // //Namelist[5]="0.avgpb";
-            // for(uInt i=0; i<Namelist.size(); ++i){
-            //   String avgpb_name(imgName + Namelist[i]);
-            //   File avgpb_name_file(avgpb_name);
-            //   Directory avgpb_name_dir(avgpb_name);
-            //   cout<<avgpb_name<<endl;
-            //   if(avgpb_name_file.exists()){
-            //     cout<<"... remove"<<endl;
-            //     avgpb_name_dir.removeRecursive();
-            //   }
-            // }
-            // Regex rx1 (Regex::fromPattern ("*.avgpb"));
-            // Vector<String> avgpbfiles;
-            // avgpbfiles=Directory::find(rx1);
+	}
+	else {
+	  Vector<String> modelNames(2);
+	  modelNames[0]="model.main";
+	  modelNames[1]="model.outlier";
+	  File Dir_masks_file("JAWS_masks_degrid");
+	  Directory Dir_masks("JAWS_masks_degrid");
+	  if(Dir_masks_file.exists()){
+	    Dir_masks.removeRecursive();
+	  }
+	  if(Use_masks){
+	    Dir_masks.create();
+	  }
+	  // Vector<String> Namelist(5);
+	  // Namelist[0]=".spheroid_cut_im";
+ 	  // Namelist[1]=".residual";
+	  // Namelist[2]=".residual.corr";
+	  // Namelist[3]=".restored";
+	  // Namelist[4]=".restored.corr";
+	  // //Namelist[5]="0.avgpb";
+	  // for(uInt i=0; i<Namelist.size(); ++i){
+	  //   String avgpb_name(imgName + Namelist[i]);
+	  //   File avgpb_name_file(avgpb_name);
+	  //   Directory avgpb_name_dir(avgpb_name);
+	  //   cout<<avgpb_name<<endl;
+	  //   if(avgpb_name_file.exists()){
+	  //     cout<<"... remove"<<endl;
+	  //     avgpb_name_dir.removeRecursive();
+	  //   }
+	  // }
+	  // Regex rx1 (Regex::fromPattern ("*.avgpb"));
+	  // Vector<String> avgpbfiles;
+	  // avgpbfiles=Directory::find(rx1);
 
-            imager.clean(operation,                     // algorithm,
-                         niter,                         // niter
-                         gain,                          // gain
-                         threshold,                     // threshold
-                         displayProgress,               // displayProgress
-                         Vector<String>(1, modelName),  // model
-                         //  modelNames,
-                         Vector<Bool>(1, fixed),        // fixed
-                         "",                            // complist
-                         Vector<String>(1, maskName),   // mask
-                         Vector<String>(1, restoName),  // restored
-                         Vector<String>(1, residName),  // residual
-                         Vector<String>(1, psfName));   // psf
+          imager.clean(operation,                     // algorithm,
+                       niter,                         // niter
+                       gain,                          // gain
+                       threshold,                     // threshold
+                       displayProgress,               // displayProgress
+                       Vector<String>(1, modelName),  // model
+		      //  modelNames,
+                       Vector<Bool>(1, fixed),        // fixed
+                       "",                            // complist
+                       Vector<String>(1, maskName),   // mask
+                       Vector<String>(1, restoName),  // restored
+                       Vector<String>(1, residName),  // residual
+                       Vector<String>(1, psfName));   // psf
 
-          }
-          // Do the final correction for primary beam and spheroidal.
-          bool ApplyElement = (StepApplyElement>0);
-          Bool doRestored = (niter>0);
-          correctImages (restoName, modelName, residName, imgName, imager,
-                         ApplyElement, UseWSplit, doRestored);
-          precTimer.stop();
-          timer.show ("clean");
-          ///        imager.showTimings (cout, precTimer.getReal());
-          // Convert result to fits if needed.
-          if (! fitsName.empty()) {
-            String error;
-            PagedImage<float> img(restoName);
-            if (! ImageFITSConverter::ImageToFITS (error,
-                                                   img,
-                                                   fitsName,
-                                                   64,         // memoryInMB
-                                                   preferVelocity)) {
-              throw AipsError(error);
-            }
+        }
+        // Do the final correction for primary beam and spheroidal.
+	ApplyElement=false;
+	if(StepApplyElement>0){ApplyElement=true;}
+        correctImages (restoName, modelName, residName, imgName, imager, ApplyElement);
+        precTimer.stop();
+        timer.show ("clean");
+	///        imager.showTimings (cout, precTimer.getReal());
+        // Convert result to fits if needed.
+        if (! fitsName.empty()) {
+          String error;
+          PagedImage<float> img(restoName);
+          if (! ImageFITSConverter::ImageToFITS (error,
+                                                 img,
+                                                 fitsName,
+                                                 64,         // memoryInMB
+                                                 preferVelocity)) {
+            throw AipsError(error);
           }
         }
       }
     }
-  }catch (AipsError& x) {
+    } }catch (AipsError& x) {
     cout << x.getMesg() << endl;
     return 1;
   }

@@ -26,7 +26,6 @@
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/StreamUtil.h>
 #include <Common/LofarLogger.h>
-#include <Common/lofar_iomanip.h>
 #include <Common/ParameterSet.h>
 
 namespace LOFAR
@@ -50,7 +49,7 @@ namespace LOFAR
       SingleStep(name, parent)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      read(parSet, "Step." + name + ".");
+      read(parSet.makeSubset("Step." + name + "."));
     }
 
 
@@ -72,13 +71,7 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       SingleStep::print(os);
       Indent id;
-      os << endl << indent << "Use MMSE: " << boolalpha << itsUseMMSE
-        << noboolalpha;
-      if(itsUseMMSE)
-      {
-        Indent id;
-        os << endl << indent << "Sigma: " << itsSigmaMMSE;
-      }
+      os << endl << indent << "MMSE noise variance: " << itsSigmaMMSE;
     }
 
 
@@ -95,12 +88,6 @@ namespace LOFAR
     }
 
 
-    bool CorrectStep::useMMSE() const
-    {
-      return itsUseMMSE;
-    }
-
-
     double CorrectStep::sigmaMMSE() const
     {
       return itsSigmaMMSE;
@@ -113,23 +100,20 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       SingleStep::write(ps);
-      const string prefix("Step." + name() + ".Correct.");
-      ps.replace(prefix + "MMSE.Enable", toString(itsUseMMSE));
-      ps.replace(prefix + "MMSE.Sigma", toString(itsSigmaMMSE));
+      const string prefix("Step." + name() + ".");
+      ps.replace(prefix + "NoiseVarianceMMSE", toString(itsSigmaMMSE));
       LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
     }
 
 
-    void CorrectStep::read(const ParameterSet& ps, const string prefix)
+    void CorrectStep::read(const ParameterSet& ps)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      SingleStep::read(ps, prefix);
-      //ParameterSet pss(ps.makeSubset("Correct."));
-      itsUseMMSE = ps.getBool(prefix+"MMSE.Enable", false);
-      itsSigmaMMSE = ps.getDouble(prefix+"MMSE.Sigma", 0.0);
+      SingleStep::read(ps);
+      itsSigmaMMSE = ps.getDouble("NoiseVarianceMMSE", 0.0);
       if(itsSigmaMMSE < 0.0)
       {
-        THROW(BBSControlException, "MMSE.Sigma should be positive: "
+        THROW(BBSControlException, "Noise variance should be positive: "
           << itsSigmaMMSE);
       }
     }

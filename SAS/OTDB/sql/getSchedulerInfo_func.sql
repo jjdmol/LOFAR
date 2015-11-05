@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2010
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 --  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 --
 
-DROP TYPE IF EXISTS schedulerInfo CASCADE;
+DROP TYPE schedulerInfo CASCADE;
 
 CREATE TYPE schedulerInfo AS (
 	contactEmail           VARCHAR(40),
@@ -32,13 +32,13 @@ CREATE TYPE schedulerInfo AS (
 	lastPossibleDay        INT4,
 	late                   BOOLEAN,
 	nightTimeWeightFactor  INT4,
-	predecessors           TEXT,
+	predecessor            INT4,
 	predMaxTimeDif         VARCHAR(10),
 	predMinTimeDif         VARCHAR(10),
 	priority               FLOAT,
-	reason                 TEXT,
+	reason                 VARCHAR(40),
 	referenceFrame         INT4,
-	reservation            INT4,
+        reservation            INT4,
 	storageSelectionMode   INT4,
 	taskDuration           INT4,
 	taskID                 INT4,
@@ -65,14 +65,14 @@ CREATE OR REPLACE FUNCTION getSchedulerInfo(INT4)
 	FETCH fieldList INTO vRecord.lastPossibleDay;
 	FETCH fieldList INTO vRecord.late;
 	FETCH fieldList INTO vRecord.nightTimeWeightFactor;
-	FETCH fieldList INTO vRecord.predecessors;
+	FETCH fieldList INTO vRecord.predecessor;
 	FETCH fieldList INTO vRecord.predMaxTimeDif;
 	FETCH fieldList INTO vRecord.predMinTimeDif;
 	FETCH fieldList INTO vRecord.priority;
 	FETCH fieldList INTO vRecord.reason;
-	FETCH fieldList INTO vRecord.referenceFrame;
-	FETCH fieldList INTO vRecord.reservation;
-	FETCH fieldList INTO vRecord.storageSelectionMode;
+        FETCH fieldList INTO vRecord.referenceFrame;
+        FETCH fieldList INTO vRecord.reservation;
+        FETCH fieldList INTO vRecord.storageSelectionMode;
 	FETCH fieldList INTO vRecord.taskDuration;
 	FETCH fieldList INTO vRecord.taskID;
 	FETCH fieldList INTO vRecord.taskName;

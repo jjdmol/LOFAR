@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tStreamUtil
+./runctest.sh tStreamUtil 2>&1 > tStreamUtil.log

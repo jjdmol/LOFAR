@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2010
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -60,6 +60,7 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
         this.addColumn("angle 1");
         this.addColumn("angle 2");
         this.addColumn("coordtype");
+        this.addColumn("maxDur");
         this.addColumn("rank");
     }
     
@@ -137,6 +138,7 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
                              anAnaBeam.getAngle1(),
                              anAnaBeam.getAngle2(),
                              anAnaBeam.getCoordType(),
+                             anAnaBeam.getMaximizeDuration(),
                              anAnaBeam.getRank()};
         this.addRow(newRow);
         itsAnaBeams.trimToSize();
@@ -162,6 +164,7 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
         this.setValueAt(aNewAnaBeam.getAngle1(),row,1);
         this.setValueAt(aNewAnaBeam.getAngle2(),row,2);
         this.setValueAt(aNewAnaBeam.getCoordType(),row,3);
+        this.setValueAt(aNewAnaBeam.getMaximizeDuration(),row,4);
         this.setValueAt(aNewAnaBeam.getRank(),row,5);
         
         isChanged=true;

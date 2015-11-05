@@ -31,11 +31,6 @@
 
 using namespace LOFAR;
 
-void showSTS(Observation::StreamToStorage	sts)
-{
-	cout << formatString("DP[%d]:%s, Str[%d]:%s, Pset:%d, Node:%s, Dir: %s, Adder:%d, writer:%d\n", sts.dataProductNr, sts.dataProduct.c_str(), sts.streamNr, sts.filename.c_str(), sts.sourcePset, sts.destStorageNode.c_str(), sts.destDirectory.c_str(), sts.adderNr, sts.writerNr);
-}
-
 int main (int argc, char* argv[]) 
 {
 	INIT_LOGGER(argv[0]);
@@ -52,10 +47,6 @@ int main (int argc, char* argv[])
 			cout << "getRCUbitset(96,96,HBA_XXX) = " << someObs.getRCUbitset(96,96,"HBA_XXX") << endl;	// Core
 			vector<int>	b2b = someObs.getBeamAllocation("CS002");
 			cout << "BeamAlloc for CS002 : " << b2b << endl;
-			int	nrStreams = someObs.streamsToStorage.size();
-			for (int i = 0; i < nrStreams; i++) {
-				showSTS(someObs.streamsToStorage[i]);
-			}
 			return (0);
 		}
 
@@ -86,9 +77,9 @@ int main (int argc, char* argv[])
 		parSet1.add("ObsSW.OLAP.CNProc.phaseOnePsets", "[]");
 		parSet1.add("ObsSW.OLAP.CNProc.phaseTwoPsets", "[]");
 		parSet1.add("ObsSW.OLAP.CNProc.phaseThreePsets", "[]");
-		parSet1.add("ObsSW.Observation.DataProducts.Output_CoherentStokes.enabled", "true");
-		parSet1.add("ObsSW.Observation.DataProducts.Output_CoherentStokes.filenames", "[beam0.h5,beam1.h5]");
-		parSet1.add("ObsSW.Observation.DataProducts.Output_CoherentStokes.locations", "[/,/]");
+		parSet1.add("ObsSW.Observation.DataProducts.Output_Beamformed.enabled", "true");
+		parSet1.add("ObsSW.Observation.DataProducts.Output_Beamformed.filenames", "[beam0.h5,beam1.h5]");
+		parSet1.add("ObsSW.Observation.DataProducts.Output_Beamformed.locations", "[/,/]");
 		try {
 			Observation obs4(&parSet1, false);
 			cerr << "Expected a exception because 'locations' where specified wrong" << endl;
@@ -97,7 +88,7 @@ int main (int argc, char* argv[])
 		catch (Exception& e) {
 			cout << "Exception on wrong specified locations works OK" << endl;
 		}
-		parSet1.replace("ObsSW.Observation.DataProducts.Output_CoherentStokes.locations", "[a:b,c:d]");
+		parSet1.replace("ObsSW.Observation.DataProducts.Output_Beamformed.locations", "[a:b,c:d]");
 
 		cout << ">>>" << endl; // off
 		cout << "### TESTING CONFLICT ROUTINE ###" << endl;
@@ -126,12 +117,6 @@ int main (int argc, char* argv[])
 		Observation  conflictObs5(&conflictPS5, false);
 		ASSERTSTR(!obs2.conflicts(conflictObs5), "File 5 should NOT have had a conflict");
 		cout << "No conflict found in file 5 which is oke." << endl;
-
-		// test conflicts in bit mode
-		ParameterSet conflictPS6("tObservation.in_conflict6");
-		Observation  conflictObs6(&conflictPS6, false);
-		ASSERTSTR(obs2.conflicts(conflictObs6), "File 6 should have had a bit mode conflict");
-
 		cout << "<<<" << endl; // on
 
 		// basic test on RCU bitsets
@@ -181,13 +166,6 @@ int main (int argc, char* argv[])
 		cout << "NEW SYNTAX" << endl;
 		cout << newObs << endl;
 		cout << "<<<" << endl; // on
-
-    // These observations bugged before:
-		ParameterSet p103821("tObservation.in_parset_obs103821");
-		Observation  o103821(&p103821,true);
-		cout << "OBS 103821" << endl;
-		cout << o103821 << endl;
-		cout << "<<<" << endl;
 
 	}
 	catch (Exception& e) {

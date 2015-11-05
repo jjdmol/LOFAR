@@ -25,7 +25,7 @@
 #include <DPPP/UVWFlagger.h>
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
-#include <Common/ParameterSet.h>
+#include <DPPP/ParSet.h>
 #include <Common/StreamUtil.h>
 #include <Common/LofarLogger.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -42,12 +42,11 @@ namespace LOFAR {
   namespace DPPP {
 
     UVWFlagger::UVWFlagger (DPInput* input,
-                            const ParameterSet& parset,
-                            const string& prefix)
+                            const ParSet& parset, const string& prefix)
       : itsInput       (input),
         itsName        (prefix),
         itsNTimes      (0),
-        itsFlagCounter (input->msName(), parset, prefix+"count.")
+        itsFlagCounter (input, parset, prefix+"count.")
     {
       itsRangeUVm = fillUVW (parset, prefix, "uvm", true);
       itsRangeUm  = fillUVW (parset, prefix, "um", false);
@@ -63,6 +62,9 @@ namespace LOFAR {
                  "One or more u,v,w ranges in UVWFlagger has to be filled in");
       itsCenter = parset.getStringVector (prefix+"phasecenter",
                                           vector<string>());
+      if (! itsCenter.empty()) {
+        handleCenter();
+      }
     }
 
     UVWFlagger::~UVWFlagger()
@@ -109,28 +111,23 @@ namespace LOFAR {
       }
     }
 
-    void UVWFlagger::updateInfo (const DPInfo& infoIn)
+    void UVWFlagger::updateInfo (DPInfo& info)
     {
-      info() = infoIn;
-      info().setWriteFlags();
+      info.setNeedWrite();
       // Convert the given frequencies to possibly averaged frequencies.
       // Divide it by speed of light to get reciproke of wavelengths.
-      itsRecWavel = infoIn.chanFreqs() / casa::C::c;
-      // Handle the phase center (if given).
-      if (! itsCenter.empty()) {
-        handleCenter();
-      }
+      itsRecWavel = itsInput->chanFreqs (info.nchanAvg()) / casa::C::c;
       // Initialize the flag counters.
-      itsFlagCounter.init (getInfo());
+      itsFlagCounter.init (info.nbaselines(), info.nchan(), info.ncorr());
     }
 
     bool UVWFlagger::process (const DPBuffer& buf)
     {
       itsTimer.start();
-      // Because no buffers are kept, we can reference the filled arrays
-      // in the input buffer instead of copying them.
-      itsBuffer.referenceFilled (buf);
-      Cube<bool>& flags = itsBuffer.getFlags();
+      DPBuffer out(buf);
+      // The flags will be changed, so make sure we have a unique array.
+      Cube<bool>& flags = out.getFlags();
+      flags.unique();
       // Loop over the baselines and flag as needed.
       const IPosition& shape = flags.shape();
       uint nrcorr = shape[0];
@@ -141,7 +138,7 @@ namespace LOFAR {
       // Input uvw coordinates are only needed if no new phase center is used.
       Matrix<double> uvws;
       if (itsCenter.empty()) {
-        uvws.reference (itsInput->fetchUVW (buf, itsBuffer, itsTimer));
+        uvws.reference (itsInput->fetchUVW(buf, buf.getRowNrs(), itsTimer));
       }
       const double* uvwPtr = uvws.data();
       bool* flagPtr = flags.data();
@@ -150,8 +147,8 @@ namespace LOFAR {
         if (! itsCenter.empty()) {
           // A different phase center is given, so calculate UVW for it.
           NSTimer::StartStop ssuvwtimer(itsUVWTimer);
-          Vector<double> uvw = itsUVWCalc.getUVW (getInfo().getAnt1()[i],
-                                                  getInfo().getAnt2()[i],
+          Vector<double> uvw = itsUVWCalc.getUVW (itsInput->getAnt1()[i],
+                                                  itsInput->getAnt2()[i],
                                                   buf.getTime());
           uvwPtr = uvw.data();
           ///cout << "uvw = " << uvw << endl;
@@ -204,7 +201,7 @@ namespace LOFAR {
       // Let the next step do its processing.
       itsTimer.stop();
       itsNTimes++;
-      getNextStep()->process (itsBuffer);
+      getNextStep()->process (out);
       return true;
     }
 
@@ -243,7 +240,7 @@ namespace LOFAR {
       }
     }
 
-    vector<double> UVWFlagger::fillUVW (const ParameterSet& parset,
+    vector<double> UVWFlagger::fillUVW (const ParSet& parset,
                                         const string& prefix,
                                         const string& name,
                                         bool square)
@@ -334,8 +331,8 @@ namespace LOFAR {
         phaseCenter = MDirection(q0, q1, type);
       }
       // Create the UVW calculator.
-      itsUVWCalc = UVWCalculator (phaseCenter, getInfo().arrayPos(),
-                                  getInfo().antennaPos());
+      itsUVWCalc = UVWCalculator (phaseCenter, itsInput->arrayPos(),
+                                  itsInput->antennaPos());
     }
 
   } //# end namespace

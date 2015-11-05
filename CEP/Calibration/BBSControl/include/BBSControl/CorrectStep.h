@@ -68,11 +68,8 @@ namespace LOFAR
       // Return the operation type of \c *this as a string.
       virtual const string& operation() const;
 
-      // Returns true if MMSE is enabled.
-      bool useMMSE() const;
-
-      // Return the approximated standard deviation of the nuisance term to use
-      // when computing the inverse of a Jones matrix for correction.
+      // Return the approximated noise variance to use when computing the
+      // inverse of a Jones matrix.
       double sigmaMMSE() const;
 
     private:
@@ -82,13 +79,10 @@ namespace LOFAR
       // Read the contents from the ParameterSet \a ps into \c *this,
       // overriding the default values, "inherited" from the parent step
       // object.
-      virtual void read(const ParameterSet& ps, const std::string prefix);
+      virtual void read(const ParameterSet& ps);
 
-      // Flag to turn MMSE correction on / off.
-      bool itsUseMMSE;
-
-      // Approximation of the standard deviation of the nuisance term. Used for
-      // computing a robust inverse of the cummulative Jones matrices.
+      // Approximation of the variance of the noise. Used for computing a robust
+      // inverse of the cummulative Jones matrices.
       double itsSigmaMMSE;
     };
 

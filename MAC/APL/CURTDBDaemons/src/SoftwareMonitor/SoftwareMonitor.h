@@ -2,7 +2,7 @@
 //
 //  Copyright (C) 2008
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -112,7 +112,6 @@ private:
 	// list with all the running processes.
 	typedef multimap<string, int>	processMap_t;
 	processMap_t				itsProcessMap;	// list that represents 'ps -ef'
-	time_t						itsPMtime;		// time the map was requested.
 
 	// mapping from observationNumber to DP(sub)name
 	struct ObsInfo {

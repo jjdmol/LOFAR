@@ -33,9 +33,9 @@
 
 namespace LOFAR {
 
-  class ParameterSet;
-
   namespace DPPP {
+    class ParSet;
+
     // @ingroup NDPPP
 
     // This class is a DPStep class counting the number of flags per
@@ -48,7 +48,7 @@ namespace LOFAR {
     public:
       // Construct the object.
       // Parameters are obtained from the parset using the given prefix.
-      Counter (DPInput*, const ParameterSet&, const string& prefix);
+      Counter (DPInput*, const ParSet&, const string& prefix);
 
       virtual ~Counter();
 
@@ -60,7 +60,7 @@ namespace LOFAR {
       virtual void finish();
 
       // Update the general info.
-      virtual void updateInfo (const DPInfo&);
+      virtual void updateInfo (DPInfo&);
 
       // Show the step parameters.
       virtual void show (std::ostream&) const;
@@ -70,6 +70,7 @@ namespace LOFAR {
 
     private:
       //# Data members.
+      DPInput*    itsInput;
       string      itsName;
       bool        itsFlagData;
       uint        itsCount;

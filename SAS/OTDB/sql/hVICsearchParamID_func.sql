@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -36,7 +36,6 @@
 --
 CREATE OR REPLACE FUNCTION hVICsearchParamID(VARCHAR(150))
   RETURNS INT4 AS '
-    --  $Id$
 	DECLARE
 	  vDotPos		INT4;
 	  vFieldnr		INT4;

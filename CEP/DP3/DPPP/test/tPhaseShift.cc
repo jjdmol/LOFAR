@@ -25,7 +25,7 @@
 #include <DPPP/PhaseShift.h>
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
-#include <Common/ParameterSet.h>
+#include <DPPP/ParSet.h>
 #include <Common/StringUtil.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
@@ -49,15 +49,11 @@ public:
     : itsCount(0), itsNTime(ntime), itsNBl(nbl), itsNChan(nchan),
       itsNCorr(ncorr), itsFlag(flag)
   {
-    info().init (ncorr, nchan, ntime, 0., 10., string(), string());
-    MDirection phaseCenter(Quantity(45,"deg"), Quantity(30,"deg"),
-                           MDirection::J2000);
-    info().set (MPosition(), phaseCenter, phaseCenter, phaseCenter);
+    itsPhaseCenter = MDirection(Quantity(45,"deg"), Quantity(30,"deg"),
+                                MDirection::J2000);
     // Define the frequencies.
-    Vector<double> chanWidth (nchan, 100000.);
-    Vector<double> chanFreqs (nchan);
-    indgen (chanFreqs, 1050000., 100000.);
-    info().set (chanFreqs, chanWidth);
+    itsChanFreqs.resize (nchan);
+    indgen (itsChanFreqs, 1050000., 100000.);
     // Fill the baseline stations.
     // Determine nr of stations using:  na*(na+1)/2 = nbl
     // If many baselines, divide into groups of 6 to test if
@@ -72,14 +68,14 @@ public:
       grpszant = nant;
       grpszbl  = nbl;
     }
-    Vector<Int> ant1(nbl);
-    Vector<Int> ant2(nbl);
+    itsAnt1.resize (nbl);
+    itsAnt2.resize (nbl);
     int st1 = 0;
     int st2 = 0;
     int lastant = grpszant;
     for (int i=0; i<nbl; ++i) {
-      ant1[i] = st1;
-      ant2[i] = st2;
+      itsAnt1[i] = st1;
+      itsAnt2[i] = st2;
       if (i%grpszbl == grpszbl-1) {
         st1 = lastant;
         st2 = lastant;
@@ -90,10 +86,6 @@ public:
         }
       }
     }
-    Vector<String> antNames(nant);
-    vector<MPosition> antPos(nant);
-    Vector<double> antDiam(nant, 70.);
-    info().set (antNames, antDiam, antPos, ant1, ant2);
     itsStatUVW.resize (3, nant);
     for (int i=0; i<nant; ++i) {
       itsStatUVW(0,i) = 0.01 + i*0.02;
@@ -105,14 +97,13 @@ public:
   void fillUVW (Matrix<double>& uvw, int count)
   {
     for (int i=0; i<itsNBl; ++i) {
-      uvw(0,i) = (itsStatUVW(0,getInfo().getAnt2()[i]) + count*0.002 -
-                  (itsStatUVW(0,getInfo().getAnt1()[i]) + count*0.002));
-      uvw(1,i) = (itsStatUVW(1,getInfo().getAnt2()[i]) + count*0.004 -
-                  (itsStatUVW(1,getInfo().getAnt1()[i]) + count*0.004));
-      uvw(2,i) = (itsStatUVW(2,getInfo().getAnt2()[i]) + count*0.006 -
-                  (itsStatUVW(2,getInfo().getAnt1()[i]) + count*0.006));
-      cout <<getInfo().getAnt1()[i]<<' '<<getInfo().getAnt2()[i]<<' '
-           <<uvw(0,i)<<' '<<uvw(1,i)<<' '<<uvw(2,i)<<endl;
+      uvw(0,i) = (itsStatUVW(0,itsAnt2[i]) + count*0.002 -
+                  (itsStatUVW(0,itsAnt1[i]) + count*0.002));
+      uvw(1,i) = (itsStatUVW(1,itsAnt2[i]) + count*0.004 -
+                  (itsStatUVW(1,itsAnt1[i]) + count*0.004));
+      uvw(2,i) = (itsStatUVW(2,itsAnt2[i]) + count*0.006 -
+                  (itsStatUVW(2,itsAnt1[i]) + count*0.006));
+      cout <<itsAnt1[i]<<' '<<itsAnt2[i]<<' '<<uvw(0,i)<<' '<<uvw(1,i)<<' '<<uvw(2,i)<<endl;
     }
   }
 
@@ -149,9 +140,15 @@ private:
     return true;
   }
 
-  virtual void updateInfo (const DPInfo&) {}
   virtual void finish() {getNextStep()->finish();}
   virtual void show (std::ostream&) const {}
+  virtual void updateInfo (DPInfo& info)
+    // Use startchan=8 and timeInterval=5
+  {
+    info.init (itsNCorr, 8, itsNChan, itsNBl, itsNTime, 5);
+    MDirection dir(Quantity(45,"deg"), Quantity(30,"deg"), MDirection::J2000);
+    info.setPhaseCenter (dir, true);
+  }
 
   int itsCount, itsNTime, itsNBl, itsNChan, itsNCorr;
   bool itsFlag;
@@ -194,10 +191,9 @@ private:
 
   virtual void finish() {}
   virtual void show (std::ostream&) const {}
-  virtual void updateInfo (const DPInfo& infoIn)
+  virtual void updateInfo (DPInfo& info)
   {
-    info() = infoIn;
-    MVDirection dir = infoIn.phaseCenter().getValue();
+    MVDirection dir = info.phaseCenter().getValue();
     ASSERT (near(dir.getLong("deg").getValue(), 45.));
     ASSERT (near(dir.getLat("deg").getValue(), 30.));
   }
@@ -246,10 +242,9 @@ private:
 
   virtual void finish() {}
   virtual void show (std::ostream&) const {}
-  virtual void updateInfo (const DPInfo& infoIn)
+  virtual void updateInfo (DPInfo& info)
   {
-    info() = infoIn;
-    MVDirection dir = infoIn.phaseCenter().getValue();
+    MVDirection dir = info.phaseCenter().getValue();
     ASSERT (near(dir.getLong("deg").getValue(), 50.));
     ASSERT (near(dir.getLat("deg").getValue(), 35.));
   }
@@ -265,7 +260,12 @@ private:
 void execute (const DPStep::ShPtr& step1)
 {
   // Set DPInfo.
-  step1->setInfo (DPInfo());
+  DPInfo info;
+  DPStep::ShPtr step = step1;
+  while (step) {
+    step->updateInfo (info);
+    step = step->getNextStep();
+  }
   // Execute the steps.
   DPBuffer buf;
   while (step1->process(buf));

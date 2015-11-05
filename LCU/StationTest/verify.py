@@ -45,12 +45,6 @@ verify.add_option('--fpga', type='string', dest='fpId',
   # On RSP and BLP is equivalent to an AP, but generaly an AP could implement multiple BLP
 verify.add_option('--pol', type='string', dest='polId',
   help='Polarization id: x, y or x,y', default='x,y')
-verify.add_option('--pp', type='string', dest='ppId',
-  help='Polarization-phase id: xr, xi, yr or yi', default='xr')
-verify.add_option('--bm', type='int', dest='beamMode',
-  help='Beam mode', default=0)
-verify.add_option('--sm', type='int', dest='sdoMode',
-  help='SDO mode', default=0)
   
 # - Testcase specific options
 #   Define the testcase specific options here, rather than passing an --args
@@ -58,7 +52,7 @@ verify.add_option('--sm', type='int', dest='sdoMode',
 #   The disadvantage is that for every new options also this verify.py needs to
 #   be updated.
 verify.add_option('--pid', type='string', dest='pid',
-  help='Process ID: rsp, eth, mep, diag, bs, rcuh, rsu, ado, rad, rcuh_test, all', default='all')
+  help='Process ID: rsp, eth, mep, diag, bs, rcuh, rsu, ado, rad, all', default='all')
 verify.add_option('--data', type='string', dest='data',
   help='Data values(s) to write or verify read', default='40')
 verify.add_option('--hexdata', type='string', dest='hexdata',
@@ -69,8 +63,6 @@ verify.add_option('--rand', action='store_true', dest='rand',
   help='Use random data values')
 verify.add_option('--read', action='store_true', dest='read',
   help='Run the testcase read only')
-verify.add_option('--interface', type='string', dest='interface',
-  help='Interface: tx, rx', default='rx')
 verify.add_option('--pps_edge', type='string', dest='pps_edge',
   help='Capture PPS on rising or falling clock edge: r, f', default='r')
 verify.add_option('--pps_delay', type='int', dest='pps_delay',
@@ -135,7 +127,6 @@ for fp in v.strId:
     verify.error('Option --fp has invalid FPGA id %s' % fp)
 
 v.polId = v.opts.polId.split(',')
-v.ppId = v.opts.ppId.split(',')
 
 # Pass the testcase specific options on directly, to avoid having to edit
 # testcase.py for every new option. Rename with prefix arg_ so it is easier
@@ -153,7 +144,6 @@ for di in hexdata_str:
 arg_count               = v.opts.count
 arg_rand                = v.opts.rand
 arg_read                = v.opts.read
-arg_interface           = v.opts.interface
 arg_pps_edge            = v.opts.pps_edge
 arg_pps_delay           = v.opts.pps_delay
 arg_diag_mode           = v.opts.diag_mode
@@ -192,8 +182,6 @@ for te in v.testname:
   tc = testcase.Testcase(v.opts.verbosity,
                          te,
                          v.opts.repeat,
-                         v.opts.beamMode,
-                         v.opts.sdoMode,
                          v.rspId, v.bpId, v.blpId,
                          v.tbbId, v.tpId, v.mpId,
                          v.polId)

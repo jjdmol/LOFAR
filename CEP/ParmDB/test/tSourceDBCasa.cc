@@ -22,7 +22,6 @@
 
 #include <lofar_config.h>
 #include <ParmDB/SourceDBCasa.h>
-#include <Common/StreamUtil.h>
 #include <Common/LofarLogger.h>
 #include <tables/Tables/TableRecord.h>
 #include <iostream>
@@ -102,29 +101,27 @@ void testSources()
   Table t2("tSourceDBCasa_tmp.tab/SOURCES/PATCHES");
   ASSERT (t1.nrow() == 0);
   ASSERT (t2.nrow() == 4);
-  ASSERT (pdb.addPatch ("patch1a", 1, 2., 1.0, -1.0) == 4);
-  ASSERT (pdb.addPatch ("patch2a", 2, 3., 1.1, -1.1) == 5);
   ParmMap defValues;
-  defValues.define ("I", ParmValueSet(ParmValue(2)));
-  defValues.define ("Q", ParmValueSet(ParmValue(0)));
-  defValues.define ("U", ParmValueSet(ParmValue(0.2)));
-  defValues.define ("V", ParmValueSet(ParmValue(0)));
+  defValues.define ("fluxI", ParmValueSet(ParmValue(2)));
+  defValues.define ("fluxQ", ParmValueSet(ParmValue(0)));
+  defValues.define ("fluxU", ParmValueSet(ParmValue(0)));
+  defValues.define ("fluxV", ParmValueSet(ParmValue(0)));
   defValues.define ("SpectralIndex:0", ParmValueSet(ParmValue(1.5)));
   defValues.define ("RotMeas", ParmValueSet(ParmValue(0.75)));
   defValues.define ("PolAng",  ParmValueSet(ParmValue(0.3)));
   defValues.define ("PolFrac", ParmValueSet(ParmValue(0.5)));
   // Add to an existing patch.
-  pdb.addSource (SourceInfo("sun", SourceInfo::POINT, "SUN"),
-                 "patch1a", defValues);
-  pdb.addSource (SourceInfo("src1", SourceInfo::POINT, "J2000", 1, 1e9, true),
-                 "patch2a", defValues,
+  pdb.addSource (SourceInfo("sun", SourceInfo::SUN),
+                 "patch1", defValues);
+  pdb.addSource (SourceInfo("src1", SourceInfo::POINT, 1, 1e9, true),
+                 "patch2", defValues,
                  1., -1.);
   ASSERT (t1.nrow() == 2);
-  ASSERT (t2.nrow() == 6);
+  ASSERT (t2.nrow() == 4);
   // Try adding to an unknown patch.
   bool ok = false;
   try {
-    pdb.addSource (SourceInfo("src100", SourceInfo::POINT, "J2000"), "patch20",
+    pdb.addSource (SourceInfo("src100", SourceInfo::POINT), "patch20",
                    defValues);
   } catch (std::exception& x) {
     cout << "Expected exception: " << x.what() << endl;
@@ -141,14 +138,14 @@ void testSources()
   }
   ASSERT (ok);
   ASSERT (t1.nrow() == 2);
-  ASSERT (t2.nrow() == 6);
+  ASSERT (t2.nrow() == 4);
   // Now add a source as a patch and as a source to that patch.
-  pdb.addSource (SourceInfo("src2", SourceInfo::POINT), "src2",
-                 3, 2.5, defValues, 1.1, -1.1);
-  pdb.addSource (SourceInfo("src2a", SourceInfo::DISK), "src2",
-                 defValues, 1.101, -1.101);
+  pdb.addSource (SourceInfo("src2", SourceInfo::POINT), 3, 2.5, defValues,
+                 1.1, -1.1);
+  pdb.addSource (SourceInfo("src2a", SourceInfo::DISK), "src2", defValues,
+                 1.101, -1.101);
   ASSERT (t1.nrow() == 4);
-  ASSERT (t2.nrow() == 7);
+  ASSERT (t2.nrow() == 5);
   ASSERT (pdb.sourceExists ("sun"));
   ASSERT (!pdb.sourceExists ("moon"));
   ASSERT (pdb.sourceExists ("src1"));
@@ -165,10 +162,10 @@ void testSources()
     ASSERT (info1.getUseRotationMeasure() == true);
   }
   // Now add a duplicate source name (do not check).
-  pdb.addSource (SourceInfo("src1", SourceInfo::POINT), "patch2a", defValues,
+  pdb.addSource (SourceInfo("src1", SourceInfo::POINT), "patch2", defValues,
                  1.2, -1.2, false);
   ASSERT (t1.nrow() == 5);
-  ASSERT (t2.nrow() == 7);
+  ASSERT (t2.nrow() == 5);
   ok = false;
   try {
     pdb.checkDuplicates();
@@ -180,20 +177,18 @@ void testSources()
   // Now remove src1 (which has duplicates).
   pdb.deleteSources ("src1");
   ASSERT (t1.nrow() == 3);
-  ASSERT (t2.nrow() == 7);
+  ASSERT (t2.nrow() == 5);
   pdb.checkDuplicates();
   // Get some sources.
   SourceInfo info1 = pdb.getSource("sun");
   ASSERT (info1.getName() == "sun");
-  ASSERT (info1.getType() == SourceInfo::POINT);
-  ASSERT (info1.getRefType() == "SUN");
+  ASSERT (info1.getType() == SourceInfo::SUN);
   ASSERT (info1.getSpectralIndexNTerms() == 0);
   ASSERT (info1.getSpectralIndexRefFreq() == 0.);
   ASSERT (info1.getUseRotationMeasure() == false);
   vector<SourceInfo> vinfo1 = pdb.getSources("s*");
   ASSERT(vinfo1.size() == 3);
-  ASSERT(vinfo1[0].getName()=="sun" && vinfo1[0].getType()==SourceInfo::POINT &&
-         vinfo1[0].getRefType()=="SUN");
+  ASSERT(vinfo1[0].getName()=="sun" && vinfo1[0].getType()==SourceInfo::SUN);
   ASSERT(vinfo1[1].getName()=="src2" && vinfo1[1].getType()==SourceInfo::POINT);
   ASSERT(vinfo1[2].getName()=="src2a" && vinfo1[2].getType()==SourceInfo::DISK);
   vector<SourceInfo> vinfo2 = pdb.getPatchSources("src2");
@@ -204,7 +199,7 @@ void testSources()
 
 void checkParms()
 {
-  // Test if associated ParmDB table is correct.
+  // Test writing sources.
   ParmDB pdb(ParmDBMeta("casa", "tSourceDBCasa_tmp.tab"), false);
   Table t1("tSourceDBCasa_tmp.tab/DEFAULTVALUES");
   Table t2("tSourceDBCasa_tmp.tab/NAMES");
@@ -215,73 +210,37 @@ void checkParms()
   ParmMap v;
   pdb.getDefValues (v, "*");
   ASSERT (v.size() == 28);
-  ASSERT (v["I:sun"].getFirstParmValue().getValues().data()[0] == 2);
-  ASSERT (v["Q:sun"].getFirstParmValue().getValues().data()[0] == 0);
-  ASSERT (v["U:sun"].getFirstParmValue().getValues().data()[0] == 0.2);
-  ASSERT (v["V:sun"].getFirstParmValue().getValues().data()[0] == 0);
+  ASSERT (v["fluxI:sun"].getFirstParmValue().getValues().data()[0] == 2);
+  ASSERT (v["fluxQ:sun"].getFirstParmValue().getValues().data()[0] == 0);
+  ASSERT (v["fluxU:sun"].getFirstParmValue().getValues().data()[0] == 0);
+  ASSERT (v["fluxV:sun"].getFirstParmValue().getValues().data()[0] == 0);
   ASSERT (v["SpectralIndex:0:sun"].getFirstParmValue().getValues().data()[0] == 1.5);
   ASSERT (v["RotMeas:sun"].getFirstParmValue().getValues().data()[0] == 0.75);
   ASSERT (v["PolAng:sun"].getFirstParmValue().getValues().data()[0] == 0.3);
   ASSERT (v["PolFrac:sun"].getFirstParmValue().getValues().data()[0] == 0.5);
   ASSERT (v["Ra:src2"].getFirstParmValue().getValues().data()[0] == 1.1);
   ASSERT (v["Dec:src2"].getFirstParmValue().getValues().data()[0] == -1.1);
-  ASSERT (v["I:src2"].getFirstParmValue().getValues().data()[0] == 2);
-  ASSERT (v["Q:src2"].getFirstParmValue().getValues().data()[0] == 0);
-  ASSERT (v["U:src2"].getFirstParmValue().getValues().data()[0] == 0.2);
-  ASSERT (v["V:src2"].getFirstParmValue().getValues().data()[0] == 0);
+  ASSERT (v["fluxI:src2"].getFirstParmValue().getValues().data()[0] == 2);
+  ASSERT (v["fluxQ:src2"].getFirstParmValue().getValues().data()[0] == 0);
+  ASSERT (v["fluxU:src2"].getFirstParmValue().getValues().data()[0] == 0);
+  ASSERT (v["fluxV:src2"].getFirstParmValue().getValues().data()[0] == 0);
   ASSERT (v["SpectralIndex:0:src2"].getFirstParmValue().getValues().data()[0] == 1.5);
   ASSERT (v["RotMeas:src2"].getFirstParmValue().getValues().data()[0] == 0.75);
   ASSERT (v["PolAng:src2"].getFirstParmValue().getValues().data()[0] == 0.3);
   ASSERT (v["PolFrac:src2"].getFirstParmValue().getValues().data()[0] == 0.5);
   ASSERT (v["Ra:src2a"].getFirstParmValue().getValues().data()[0] == 1.101);
   ASSERT (v["Dec:src2a"].getFirstParmValue().getValues().data()[0] == -1.101);
-  ASSERT (v["I:src2a"].getFirstParmValue().getValues().data()[0] == 2);
-  ASSERT (v["Q:src2a"].getFirstParmValue().getValues().data()[0] == 0);
-  ASSERT (v["U:src2a"].getFirstParmValue().getValues().data()[0] == 0.2);
-  ASSERT (v["V:src2a"].getFirstParmValue().getValues().data()[0] == 0);
+  ASSERT (v["fluxI:src2a"].getFirstParmValue().getValues().data()[0] == 2);
+  ASSERT (v["fluxQ:src2a"].getFirstParmValue().getValues().data()[0] == 0);
+  ASSERT (v["fluxU:src2a"].getFirstParmValue().getValues().data()[0] == 0);
+  ASSERT (v["fluxV:src2a"].getFirstParmValue().getValues().data()[0] == 0);
   ASSERT (v["Ra:src2a"].getPertRel() == false);
   ASSERT (v["Dec:src2a"].getPertRel() == false);
-  ASSERT (v["I:src2a"].getPertRel() == true);
+  ASSERT (v["fluxI:src2a"].getPertRel() == true);
   ASSERT (v["SpectralIndex:0:src2a"].getFirstParmValue().getValues().data()[0] == 1.5);
   ASSERT (v["RotMeas:src2a"].getFirstParmValue().getValues().data()[0] == 0.75);
   ASSERT (v["PolAng:src2a"].getFirstParmValue().getValues().data()[0] == 0.3);
   ASSERT (v["PolFrac:src2a"].getFirstParmValue().getValues().data()[0] == 0.5);
-}
-
-void showData()
-{
-  SourceDB sdb(ParmDBMeta("", "tSourceDBCasa_tmp.tab"), false);
-  sdb.lock();
-  sdb.rewind();
-  SourceData sdata;
-  while (! sdb.atEnd()) {
-    sdb.getNextSource (sdata);
-    cout << endl;
-    cout << "Source name:    " << sdata.getInfo().getName() << endl;
-    cout << "Patch name:     " << sdata.getPatchName() << endl;
-    cout << "Source type:    " << sdata.getInfo().getType() << endl;
-    cout << "Reftype:        " << sdata.getInfo().getRefType() << endl;
-    cout << "RA:             " << sdata.getRa() << endl;
-    cout << "DEC:            " << sdata.getDec() << endl;
-    cout << "I:              " << sdata.getI() << endl;
-    cout << "Q:              " << sdata.getQ() << endl;
-    cout << "U:              " << sdata.getU() << endl;
-    cout << "V:              " << sdata.getV() << endl;
-    cout << "Major axis:     " << sdata.getMajorAxis() << endl;
-    cout << "Minor axis:     " << sdata.getMinorAxis() << endl;
-    cout << "Orientation:    " << sdata.getOrientation() << endl;
-    cout << "Spectral index: " << sdata.getInfo().getSpectralIndexNTerms()
-         << "  " << sdata.getSpectralIndex() << endl;
-    cout << "SpInx RefFreq:  " << sdata.getInfo().getSpectralIndexRefFreq() << endl;
-    cout << "Use RM:         " << sdata.getInfo().getUseRotationMeasure() << endl;
-    cout << "PolAngle:       " << sdata.getPolarizationAngle() << endl;
-    cout << "PolFrac:        " << sdata.getPolarizedFraction() << endl;
-    cout << "RM:             " << sdata.getRotationMeasure() << endl;
-    cout << "Shapelet I:     " << sdata.getInfo().getShapeletCoeffI() << endl;
-    cout << "Shapelet Q:     " << sdata.getInfo().getShapeletCoeffQ() << endl;
-    cout << "Shapelet U:     " << sdata.getInfo().getShapeletCoeffU() << endl;
-    cout << "Shapelet V:     " << sdata.getInfo().getShapeletCoeffV() << endl;
-  }
 }
 
 int main()
@@ -292,7 +251,6 @@ int main()
     testPatches();
     testSources();
     checkParms();
-    showData();
   } catch (exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
     return 1;

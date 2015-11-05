@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -37,8 +37,6 @@
 using namespace log4cplus;
 using namespace log4cplus::helpers;
 namespace LOFAR {
-  using namespace LOG_Protocol;
-  using namespace DP_Protocol;
   using namespace MACIO;
   namespace GCF {
     using namespace TM;
@@ -157,10 +155,11 @@ GCFEvent::TResult LogProcessor::operational(GCFEvent&			event,
 	LOG_DEBUG_STR("operational:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
+	static unsigned long garbageTimerID = 0;
 
 	switch (event.signal) {
 	case F_ENTRY:
-		itsTimerPort->setTimer(1.0, 5.0); 
+		garbageTimerID = itsTimerPort->setTimer(1.0, 5.0); 
 		// Register my own logging too.
 		LOG_INFO("MACProcessScope: LOFAR_PermSW_Daemons_LogProcessor");
 	
@@ -311,7 +310,7 @@ GCFEvent::TResult LogProcessor::operational(GCFEvent&			event,
 		answer.seqnr  = logEvent.seqnr;
 		answer.result = PVSS::SA_NO_ERROR;
 		for (uint32 i = 0; i < logEvent.msgCount; i++) {
-			PVSSresult	result(PVSS::SA_NO_ERROR);
+			PVSSresult	result;
 // = itsDPservice->setValue(logEvent.DPnames.theVector[i], 
 //											GCFPVString(logEvent.messages.theVector[i]));
 			switch (result) {
