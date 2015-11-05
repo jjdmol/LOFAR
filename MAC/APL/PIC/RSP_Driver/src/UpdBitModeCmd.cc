@@ -27,7 +27,6 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <blitz/array.h>
 
-#include "Sequencer.h"
 #include "StationSettings.h"
 #include "UpdBitModeCmd.h"
 
@@ -64,9 +63,6 @@ void UpdBitModeCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
 
 void UpdBitModeCmd::complete(CacheBuffer& cache)
 {
-  if (Sequencer::getInstance().isActive()) {
-    return;
-  }
   if (cache.getBitsPerSample() != itsCurrentBitsPerSample) {
 
     RSPUpdbitmodeEvent ack;
