@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2010
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -49,6 +49,7 @@ class AntennaField
 {
 public:
 	explicit AntennaField (const string&	filename);
+	explicit AntennaField (const string&	filename, vector<string> additionalFields);
 	virtual ~AntennaField();
 
 	// all about the bits
@@ -85,25 +86,32 @@ public:
 	int ringNr(const string& fieldName) const
 		{ return ((fieldName == "HBA1") ? 1 : 0); }
 
+	// translate name of antennaField to index in blitzArrays
+	int name2Index(const string& fieldName) const
+          { return itsAntField.name2Index (fieldName); }
+
+	// translate index of antennaField to its name
+	string index2Name(uint index) const
+          { return itsAntField.index2Name (index); }
+
+	// return the number of antennafields read in.
+	int maxFields() const
+          { return itsAntField.maxFields(); }
+
 private:
 	// Copying is not allowed
 	AntennaField();
 	AntennaField(const AntennaField&	that);
 	AntennaField& operator=(const AntennaField& that);
 
-	// translate name of antennaField to index in blitzArrays
-	int name2Index(const string& fieldName) const
-          { return itsAntField.name2Index (fieldName); }
+	// 'constructor' function
+	void init();
 
-        // Create Blitz arrays referencing the AFArray data.
-        void makeArray1d (AntField::AFArray& array,
-                          blitz::Array<double,1>& out);
-        void makeArray2d (AntField::AFArray& array,
-                          blitz::Array<double,2>& out);
-        void makeArray3d (AntField::AFArray& array,
-                          blitz::Array<double,3>& out);
-        void makeRCUPos (AntField::AFArray& array,
-                         blitz::Array<double,2>& out);
+	// Create Blitz arrays referencing the AFArray data.
+   	void makeArray1d (AntField::AFArray& array, blitz::Array<double,1>& out);
+   	void makeArray2d (AntField::AFArray& array, blitz::Array<double,2>& out);
+   	void makeArray3d (AntField::AFArray& array, blitz::Array<double,3>& out);
+   	void makeRCUPos  (AntField::AFArray& array, blitz::Array<double,2>& out);
 
 
 	//# --- Datamembers ---

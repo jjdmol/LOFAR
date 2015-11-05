@@ -1,0 +1,21 @@
+StationID    = 1
+nr RSPboards = 24
+nr TBboards  = 12
+HBA split    = 1
+wide LBAs    = 1
+Aartfaac     = 0
+nr antenna types = 2
+antenna types= [LBA,HBA]
+field LBA: 96
+field HBA: 96
+StationID    = 1
+nr RSPboards = 24
+nr TBboards  = 12
+HBA split    = 1
+wide LBAs    = 1
+Aartfaac     = 0
+nr antenna types = 3
+antenna types= [LBA,HBA,NNF]
+field LBA: 96
+field HBA: 96
+field NNF: 17

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -56,27 +56,5 @@ int main (int, char*	argv[])
 	catch (Exception& ex) {
 		LOG_INFO_STR("Expected exception:" << ex.what());
 	}
-
-	try {
-		CableAttenuation	CA4("tCableAttenuation.in_4");
-	}
-	catch (Exception& ex) {
-		LOG_INFO_STR("Expected exception:" << ex.what());
-	}
-
-	try {
-		CableAttenuation	CA5("tCableAttenuation.in_5");
-	}
-	catch (Exception& ex) {
-		LOG_INFO_STR("Expected exception:" << ex.what());
-	}
-
-	try {
-		CableAttenuation	CA6("tCableAttenuation.in_6");
-	}
-	catch (Exception& ex) {
-		LOG_INFO_STR("Expected exception:" << ex.what());
-	}
-
 }
 

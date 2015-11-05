@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -38,7 +38,6 @@
 const uint UDP_BUFFER_SIZE = 1600;
 
 namespace LOFAR {
-  using namespace SB_Protocol;
   namespace GCF {
     using namespace SB;
     namespace TM {
@@ -173,6 +172,7 @@ bool GCFTCPPort::open()
 			ASSERTSTR (SAP == getType(), "Unknown TPCsocket type " << getType());
 			_pSocket = new GTMTCPSocket(*this, itsUseUDP);
 			ASSERTSTR(_pSocket, "Could not create GTMTCPSocket for port " << getName());
+			_pSocket->setBlocking(false);
 		}
 	}
 
@@ -249,7 +249,13 @@ bool GCFTCPPort::open()
 //
 void GCFTCPPort::autoOpen(uint	nrRetries, double	timeout, double	reconnectInterval)
 {
-	itsAutoOpen = true;
+	itsAutoOpen 	  = true;
+	itsAutoOpenTimer  = 0;
+	itsAutoRetryTimer = 0;
+	itsAutoRetries    = nrRetries ? nrRetries : -1;		// nrRetries == 0 means forever.
+	itsAutoRetryItv   = reconnectInterval;
+
+	LOG_TRACE_STAT_STR("autoOpen:" << nrRetries << "," << timeout << "," << reconnectInterval);
 
 	if (open()) {							// first try to open it
 		return;
@@ -258,15 +264,9 @@ void GCFTCPPort::autoOpen(uint	nrRetries, double	timeout, double	reconnectInterv
 	// It is not open yet. But the call to open() activated the ServiceBroker task to do it job.
 	// All we have to do is copy the user settings, (start a timer) and wait.
 
-	itsAutoOpenTimer  = 0;
-	itsAutoRetryTimer = 0;
-	itsAutoRetries    = nrRetries;
-	itsAutoRetryItv   = reconnectInterval;
 	if (timeout > 0.0) {		// absolute max auto-open time specified? Set timer for doomsday.
 		itsAutoOpenTimer = _pTimerHandler->setTimer(*this, (uint64)(1000000.0*timeout), 0, &itsAutoOpenTimer);
-		if (itsAutoRetries == 0) {
-			itsAutoRetries = -1;		// to let the timeout timer running
-		}
+		LOG_TRACE_STAT("open:Setting autoOpen timer");
 	}
 }
 
@@ -286,6 +286,7 @@ void GCFTCPPort::_handleDisconnect()
 	// retries left?
 	if (itsAutoOpen) {
 		if (itsAutoRetries != 0) {
+			LOG_TRACE_STAT("disco:Setting autoOpen timer");
 			itsAutoRetryTimer = _pTimerHandler->setTimer(*this, (uint64)(1000000.0*itsAutoRetryItv), 0, &itsAutoRetryTimer);
 			return;
 		}
@@ -358,7 +359,7 @@ GCFEvent::TResult	GCFTCPPort::dispatch(GCFEvent&	event)
 		}
 		if (TEptr->arg == &itsConnectTimer) {
 		    LOG_INFO_STR("GCFTCPPort:connect(" << _portNumber << "@" << _host << ") still in progress");
-			_connect(_portNumber, _host);
+			_pSocket->connect(_portNumber, _host);
 			return (GCFEvent::HANDLED);
 		}
 	}
@@ -458,33 +459,22 @@ void GCFTCPPort::serviceInfo(unsigned int result, unsigned int portNumber, const
 	LOG_DEBUG(formatString ("Can now connect '%s' to remote SPP [%s:%s@%s:%d].",
 							makeServiceName().c_str(), _addr.taskname.c_str(), _addr.portname.c_str(),
 							host.c_str(), portNumber));
+
 	// Note: _pSocket is of type GTMTCPSocket
 	if (!_pSocket->open(portNumber)) {
 		_handleDisconnect();
 	}
 
-    // Set socket to non-blocking to prevent stalls, but ONLY when connecting to other systems,
-    // to prevent waiting for connection timers on localhost. Many scripts depend on localhost
-    // connections to be nearly instant.
-    if (!isLocalhost()) {
-      _pSocket->setBlocking(false);
-    }
+    // Set socket to non-blocking to prevent stalls
+    _pSocket->setBlocking(false);
 
-    // Start connect sequence
-    _connect(portNumber, host);
-}
-
-// Try once again to connect, and make sure itsConnectTimer is active if
-// the connection is still pending.
-void GCFTCPPort::_connect(unsigned int portNumber, const string& host)
-{
 	switch (_pSocket->connect(portNumber, host)) {
 	case -1: _handleDisconnect(); break;	// error
 	case 0:  
-		LOG_DEBUG_STR("GCFTCPPort:connect(" << portNumber << "@" << host << ") still in progress");
+		LOG_INFO_STR("GCFTCPPort:connect(" << portNumber << "@" << host << ") still in progress");
 		// start 1 second interval timer to poll connect result
 		if (!itsConnectTimer) {
-			itsConnectTimer = _pTimerHandler->setTimer(*this, (uint64)(200000.0), (uint64)(200000.0), &itsConnectTimer);
+			itsConnectTimer = _pTimerHandler->setTimer(*this, (uint64)(1000000.0), (uint64)(1000000.0), &itsConnectTimer);
 		}
 		break;							// in progress
 	case 1:  _handleConnect(); break;		// successfull

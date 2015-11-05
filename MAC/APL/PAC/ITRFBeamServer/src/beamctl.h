@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@
 #include <Common/LofarTypes.h>
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_list.h>
+#include <Common/lofar_vector.h>
 #include <GCF/TM/GCF_Control.h>
 #include <APL/IBS_Protocol/Pointing.h>
 
@@ -36,7 +37,6 @@ namespace LOFAR {
   using GCF::TM::GCFPort;
   using GCF::TM::GCFTCPPort;
   using GCF::TM::GCFPortInterface;
-  using IBS_Protocol::Pointing;
   namespace BS {
 
 class beamctl : public GCFTask
@@ -68,8 +68,10 @@ private:
 	bitset<MAX_RCUS> 	getRCUMask() const;
 	list<int> 			strtolist(const char* str, int max) const;
 	void 		 		printList(list<int>&		theList) const;
-	void 				usage() const;
+	void 				usage(bool expert = false) const;
 	void send_direction(double	longitude, double	latitude, const string&	dirType, bool	isAnalogue);
+	void 				interpretParset(const string& filename);
+	void 				addPointing    (char c, const string&		arg);
 
 	// ports
 	GCFTCPPort*		itsCalServer;
@@ -87,6 +89,10 @@ private:
 	list<Pointing>	itsDigPointings;
 	list<Pointing>	itsAnaPointings;
 	bool			itsCalInfo;			// request for calibrationinformation
+
+	// NenuFar
+	int				itsHighPassFilter;
+	vector<string>	itsExtraInfo;
 
 	int 	itsSkyScanTotalTime;
 	int 	itsSkyScanPointTime;

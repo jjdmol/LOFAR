@@ -30,6 +30,7 @@
 
 //# Includes
 #include <Common/lofar_fstream.h>
+#include <Common/lofar_vector.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 
@@ -48,8 +49,10 @@ namespace LOFAR {
 class StationConfig
 {
 public:
-	StationConfig();
+	explicit StationConfig(const string& filename = "RemoteStation.conf");
 	~StationConfig();
+
+	int nrAntennas(const string& antTypeName) const;
 
 private:
 	// Copying is not allowed.
@@ -58,14 +61,15 @@ private:
 
 public:
 	//# Data members
-	int		stationID;
-	int		nrRSPs;
-	int		nrTBBs;
-	int		nrLBAs;
-	int		nrHBAs;
-	bool	hasSplitters;
-	bool	hasAartfaac;
-	bool	hasWideLBAs;
+	int				stationID;
+	int				nrRSPs;
+	int				nrTBBs;
+	bool			hasSplitters;
+	bool			hasAartfaac;
+	bool			hasWideLBAs;
+	vector<string>	antTypes;
+	vector<int>		antCounts;
+	int				nrTypes;
 };
 
 // Make one instance of the Station configuration globally accessable.

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -34,10 +34,10 @@
 #include "DigitalBeam.h"
 #include "AnaBeamMgr.h"
 #include "StatCal.h"
+#include "NenuFarAdmin.h"
 
 namespace LOFAR {
   using namespace CASATools;
-  using namespace IBS_Protocol;
   using GCF::TM::GCFTask;
   using GCF::TM::GCFPort;
   using GCF::TM::GCFTCPPort;
@@ -77,7 +77,7 @@ private:
 public:
 	// The constructor of the BeamServer task.
 	// @param name The name of the task.
-	explicit BeamServer(const string& name, long timestamp = 0);
+	explicit BeamServer(const string& name, NenuFarAdmin*	nnfAdmin, long timestamp = 0);
 	~BeamServer();
 
 private:
@@ -89,13 +89,14 @@ private:
 
 	// Create new beam and update administration
 	DigitalBeam*	checkBeam(GCFPortInterface* 					port,
-					string 								name, 
-					string 								subarrayname, 
-					IBS_Protocol::Beamlet2SubbandMap	allocation,
-					bitset<LOFAR::MAX_RCUS>				rcumask,
-					uint								ringNr,
-					uint								rcuMode,
-					int*								beamError);
+							  string 								name, 
+							  string 								subarrayname, 
+							  IBS_Protocol::Beamlet2SubbandMap		allocation,
+							  bitset<LOFAR::MAX_RCUS>				rcumask,
+							  uint									ringNr,
+							  uint									rcuMode,
+							  const vector<string>&					extraOptions,
+							  int*									beamError);
 
 	// Destroy beam of specified transaction.
 	// @param bt the beamtransaction specifying the beam to destroy
@@ -133,6 +134,11 @@ private:
 	// The beamfree state. In this state the BeamServer unsubscribes
 	// with the calibration server for the specified beam.
 	GCFEvent::TResult beamfree_state(GCFEvent& e, GCFPortInterface& p);
+
+	// functions for clean shutdown.
+	static void sigintHandler(int signum);
+	void finish();
+	GCFEvent::TResult finishing_state(GCFEvent&	e, GCFPortInterface& p);
 
 	// action methods
 
@@ -232,6 +238,7 @@ private:
 	bool						itsSplitterOn;			// state of the ringsplitter
 	map<string, DigitalBeam*> 	itsBeamPool;			//
 	AnaBeamMgr*					itsAnaBeamMgr;			// for managing the analogue beams
+	NenuFarAdmin*				itsNenuFarAdmin;		// interface with optional NenuFarIO task.
 
 	StatCal*					itsCalTableMode1;		// table for mode 1 and 2
 	StatCal*					itsCalTableMode3;		// table for mode 3 and 4

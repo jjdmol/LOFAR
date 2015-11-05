@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/hexdump.h>
 #include "CableAttenuation.h"
 #include <boost/algorithm/string.hpp>
 
@@ -48,10 +49,29 @@ CableAttenuation::CableAttenuation(const string&	filename)
 	caStream.open(theFile.c_str(), ifstream::in);
 	ASSERTSTR(caStream, "Unable to open the file '" << theFile << "'");
 
-	// parse the file
+	// First parse the file to count the lines. 
+	// (Incrementing 2 dimensional blitz-arrays doesn't work the it should.)
 	string	line;
-	int		prevRcuMode(-1);
+	int		nrLines(0);
+	getline(caStream, line);
+	while(caStream) {
+		if (line[0] != '#' && line[0] != ' ' && line[0] != '\0') {
+			nrLines++;
+		}
+		getline(caStream, line);
+	} // while
+
+	// Allocate the arrays.
+	itsCableLengths.resize(nrLines);
+	itsCableLengths = 0;
+	itsAtts.resize(MAX_RCU_MODE + 1, nrLines);
+	itsAtts = 0.0;
+	
+	// Finally parse the file
 	int		nrOfColumns(-1);
+	int		lineIndex  (0);
+	caStream.clear();			// rewind file and start scan
+	caStream.seekg(0);
 	getline(caStream, line);
 	while(caStream) {
 		LOG_TRACE_VAR_STR("rawline:>" << line << "<");
@@ -59,46 +79,28 @@ CableAttenuation::CableAttenuation(const string&	filename)
 			// syntax: rcumode <serie of cable-lengths
 			vector<string>	column;
 			boost::replace_all(line, "\t", " ");
-			boost::split(column, line, boost::is_any_of(" "),boost::token_compress_on);
+			size_t	lineLen;
+			do {
+				lineLen = line.size();
+				boost::replace_all(line, "  ", " ");
+			} while (lineLen != line.size());
+			boost::split(column, line, boost::is_any_of(" "));
+			ASSERTSTR(column.size() == 8, "Each line needs 8 columns(" << column.size() << "):" << line);
 
-			// First line (with rcumode 0) contains the cable lengths
-			if (prevRcuMode == -1) {
-				nrOfColumns = column.size();
-				LOG_TRACE_STAT_STR("Found " << nrOfColumns << " columns on line 0");
-				ASSERTSTR(nrOfColumns > 1, "Minimal 1 cable length expected");
-				ASSERTSTR(strToInt(column[0]) == 0, "Table must begin with line for rcumode 0");
-
-				// alloc storage and store cable lengths in seperate array.
-				itsAtts.resize(MAX_RCU_MODE + 1, nrOfColumns-1);
-				itsAtts = 0.0;
-				itsCableLengths.resize(nrOfColumns-1);
-				itsCableLengths = 0;
-				for (int colNr = 1; colNr < nrOfColumns; colNr++) {
-					itsCableLengths(colNr-1) = strToInt(column[colNr]);
-				}
-				LOG_DEBUG_STR("Cable lenghts: " << itsCableLengths);
+			// copy info to arrays
+			itsCableLengths(lineIndex)=strToInt(column[0]);
+			nrOfColumns = column.size();
+			for (int colNr = 1; colNr < nrOfColumns; colNr++) {
+				itsAtts(colNr, lineIndex) = strToFloat(column[colNr]);
+//				cout << colNr << "," << lineIndex << " = " << strToFloat(column[colNr]) << endl;
 			}
-			else {
-				// not the first line, do some sanity checks before storing the atts.
-				int rcuMode = strToInt(column[0]);
-				ASSERTSTR(rcuMode == prevRcuMode + 1, "Expected line with rcumode " << prevRcuMode + 1 << " instead of " << rcuMode);
-				ASSERTSTR((int)column.size() == nrOfColumns, "Expected " << nrOfColumns << " fields on line: " << line << " ; found " << (int)column.size() << " fields");
-				ASSERTSTR(rcuMode <= MAX_RCU_MODE, 
-							"RCUmode " << rcuMode << " not in range [0.." << MAX_RCU_MODE << "]");
-
-				// copy values to internal array.
-				for (int colNr = 1; colNr < nrOfColumns; colNr++) {
-					itsAtts(prevRcuMode + 1, colNr - 1) = strToFloat(column[colNr]);
-				}
-			}
-			// update admin and go on
-			prevRcuMode++;
+			lineIndex++;
 		}
 		getline(caStream, line);
 	} // while
 	caStream.close();
 
-	ASSERTSTR(prevRcuMode == MAX_RCU_MODE, "Expected settings for all " << MAX_RCU_MODE << " rcumodes.");
+	LOG_DEBUG_STR("Cable lenghts: " << itsCableLengths);
 	LOG_DEBUG_STR(itsAtts);
 }
 
@@ -139,13 +141,7 @@ float	CableAttenuation::getAttenuation(int	cableLength, int	rcuMode) const
 {
 	ASSERTSTR(rcuMode >= 0 && rcuMode <= MAX_RCU_MODE, 
 							"RCUmode " << rcuMode << " not in range [0.." << MAX_RCU_MODE << "]");
-	float Attenuation;
-	if (cableLength == 0){
-	  Attenuation = 0;
-	} else {
-	  Attenuation = itsAtts(rcuMode, cableLen2Index(cableLength));
-	}
-	return Attenuation;
+	return (itsAtts(rcuMode, cableLen2Index(cableLength)));
 }
 
 } // namespace LOFAR

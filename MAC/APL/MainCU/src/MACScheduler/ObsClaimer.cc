@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -52,8 +52,6 @@ using namespace boost::posix_time;
 using namespace std;
 
 namespace LOFAR {
-	using namespace DP_Protocol;
-	using namespace CM_Protocol;
 	using namespace APLCommon;
 	namespace MainCU {
 
@@ -276,7 +274,7 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 				theObsPS->setValue(PN_OBS_STOP_TIME,		GCFPVString (to_iso_extended_string(from_time_t(theObs.stopTime))), 0.0, false);
 				theObsPS->setValue(PN_OBS_BAND_FILTER, 		GCFPVString (theObs.filter), 		  0.0, false);
 				theObsPS->setValue(PN_OBS_NYQUISTZONE, 		GCFPVInteger(theObs.nyquistZone), 	  0.0, false);
-				theObsPS->setValue(PN_OBS_ANTENNA_ARRAY,	GCFPVString (theObs.antennaArray), 	  0.0, false);
+				theObsPS->setValue(PN_OBS_ANTENNA_ARRAY,	GCFPVString (theObs.antennaField), 	  0.0, false);
 				theObsPS->setValue(PN_OBS_RECEIVER_LIST, 	GCFPVString (theObs.receiverList), 	  0.0, false);
 				theObsPS->setValue(PN_OBS_SAMPLE_CLOCK, 	GCFPVInteger(theObs.sampleClock), 	  0.0, false);
 

@@ -169,7 +169,7 @@ namespace LOFAR
         int nrChannelsPerSubband = NR_CHANNELS;
         int nrStations = NR_STATIONS; 
         unsigned totalNrThreads = nrChannelsPerSubband * NR_POLARIZATIONS * 2; //ps.nrChannelsPerSubband()
-        dim3 globalWorkSize(totalNrThreads, nrStations); //ps.settings.antennaFields.size()
+        dim3 globalWorkSize(totalNrThreads, nrStations); //ps.nrStations()
 
         int MAXNRCUDATHREADS = 512;
         size_t maxNrThreads = MAXNRCUDATHREADS;

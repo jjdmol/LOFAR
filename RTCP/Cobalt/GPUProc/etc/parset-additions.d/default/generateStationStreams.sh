@@ -46,26 +46,21 @@ BEGIN {
   board = $2;
   line = $0;
   
-  if (prevstat != "" && (stat != prevstat || board != prevboard)) {
-    for (i = 0; i < 4; ++i)
-      print prevlines[int(i / (4/rsp_seen))];
+  if (stat == prevstat && board == prevboard) {
+    rsp_seen++;
+  } else {
+    for (i = 0; i < 4 - rsp_seen; ++i)
+      print prevline;
 
-    rsp_seen = 0;
-  }
+    rsp_seen = 1;
+  };
 
-  prevlines[rsp_seen++] = line;
+  print line;
 
   prevline = line;
   prevstat = stat;
   prevboard = board;
-}
-
-END {
-  for (i = 0; i < 4; ++i)
-    print prevlines[int(i / (4/rsp_seen))];
-}
-
-' | tee test | perl -ne '
+}' | perl -ne '
 /^(\w+) RSP_([01])\s+([^ \t\n]+)\s+([^ \t\n]+)/ || next;
 
 # Each station is represented by 4 lines, one for each

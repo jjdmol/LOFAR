@@ -85,7 +85,7 @@ namespace LOFAR
       // Collection of functions to tranfer the input flags to the output.
       // \c propagateFlags can be called parallel to the kernels.
       // After the data is copied from the the shared buffer
-      // \c applyNrValidSamples can be used to weight the visibilities
+      // \c applyWeights can be used to weight the visibilities
       class Flagger
       {
       public:
@@ -93,39 +93,39 @@ namespace LOFAR
         // samples and save this in output
         static void propagateFlags(Parset const & parset,
           MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
-          SubbandProcOutputData::CorrelatedData &output);
+          LOFAR::Cobalt::CorrelatedData &output);
 
         // 1.1 Convert the flags per station to channel flags, change time scale
         // if nchannel > 1
         static void convertFlagsToChannelFlags(Parset const &ps,
           MultiDimArray<SparseSet<unsigned>, 1> const &inputFlags,
-          MultiDimArray<SparseSet<unsigned>, 1> &flagsPerChannel);
+          MultiDimArray<SparseSet<unsigned>, 2> &flagsPerChannel);
 
         // 2. Calculate the weight based on the number of flags and apply this
         // weighting to all output values
-        static void applyNrValidSamples(Parset const &parset, LOFAR::Cobalt::CorrelatedData &output);
+        static void applyWeights(Parset const &parset, LOFAR::Cobalt::CorrelatedData &output);
 
         // 1.2 Calculate the number of flagged samples and set this on the
         // output dataproduct This function is aware of the used filter width a
         // corrects for this.
         static void
-        calcNrValidSamples(Parset const &parset,
-                    MultiDimArray<SparseSet<unsigned>, 1> const &flagsPerChannel,
-                    SubbandProcOutputData::CorrelatedData &output);
+        calcWeights(Parset const &parset,
+                    MultiDimArray<SparseSet<unsigned>, 2>const &flagsPerChannel,
+                    LOFAR::Cobalt::CorrelatedData &output);
 
-        // 2.1 Apply the supplied weight to the complex values in the channels
-        // for the given baseline. If nrChannels > 1, visibilities for channel 0 will be set to 0.0.
-        static void applyWeight(unsigned baseline, unsigned nrChannels,
+        // 2.1 Apply the supplied weight to the complex values in the channel
+        // and baseline
+        static void applyWeight(unsigned baseline, unsigned channel,
                                 float weight, LOFAR::Cobalt::CorrelatedData &output);
       private:
         template<typename T>
-        static void applyNrValidSamples(Parset const &parset, LOFAR::Cobalt::CorrelatedData &output);
+        static void applyWeights(Parset const &parset, LOFAR::Cobalt::CorrelatedData &output);
 
         template<typename T>
         static void
-        calcNrValidSamples(Parset const &parset,
-                    MultiDimArray<SparseSet<unsigned>, 1> const &flagsPerChannel,
-                    SubbandProcOutputData::CorrelatedData &output);
+        calcWeights(Parset const &parset,
+                    MultiDimArray<SparseSet<unsigned>, 2>const &flagsPerChannel,
+                    LOFAR::Cobalt::CorrelatedData &output);
 
       };
 

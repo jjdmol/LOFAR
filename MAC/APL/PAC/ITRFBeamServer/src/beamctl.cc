@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -63,10 +63,11 @@ namespace LOFAR {
 //
 beamctl::beamctl(const string&	name) :
 	GCFTask((State)&beamctl::checkUserInput, name), 
-	itsCalServer	(0),
-	itsBeamServer	(0),
-	itsRCUmode		(-1),
-	itsCalInfo		(false)
+	itsCalServer	 (0),
+	itsBeamServer	 (0),
+	itsRCUmode		 (-1),
+	itsCalInfo		 (false),
+	itsHighPassFilter(-1)
 {
 	registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_STRINGS);
 	registerProtocol(IBS_PROTOCOL, IBS_PROTOCOL_STRINGS);
@@ -292,6 +293,18 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& event, GCFPortInterface& port)
 			}
 			alloc.allocation()[(*itb) % BEAMLET_RING_OFFSET] = (*its);
 		}
+
+		// Add optional extra values that were passed in the parsetfile.
+		if (!itsExtraInfo.empty()) {
+			alloc.extra = itsExtraInfo;
+		}
+
+		// Add NenuFar specific information
+		if (itsHighPassFilter != -1) {
+			alloc.extra.push_back(formatString("hpf=%d\n", itsHighPassFilter));
+		}
+
+		// Finally send the information.
 		itsBeamServer->send(alloc);
 
 		LOG_INFO_STR("name        : " << alloc.beamName);
@@ -515,7 +528,7 @@ void beamctl::send_direction(double	longitude, double	latitude, const string&	di
 }
 
 
-void beamctl::usage() const
+void beamctl::usage(bool	expert) const
 {
 	cout <<
 		"Usage: beamctl <rcuspec> <dataspec> <digpointing> [<digpointing> ...] FOR LBA ANTENNAS\n"
@@ -540,6 +553,7 @@ void beamctl::usage() const
 		"                    # SKYSCAN will scan the sky with a L x M grid in the (l,m) plane\n"
 		"  --anadir=longitude,latitude,type[,duration]\n"
 		"                    # direction of the analogue HBA beam\n"
+		"  --parset=<file>   # the <file> contains all the settings for beamctl.\n"
 		"  --help            # print this usage\n"
 		"\n"
 		"The order of the arguments is trivial.\n"
@@ -549,6 +563,14 @@ void beamctl::usage() const
 		"specified by --rcumode. Another connection is made to the BeamServer to create a\n"
 		"beam on the selected antennafield pointing in the direction specified with --digdir.\n"
 	<< endl;
+
+	if (expert) {
+		cout <<
+		"\n"
+		"For NenuFar the arguments --hpf and --anadir are also allowed for LBA antenna commands.\n"
+		"  --hpf=<filter>  # 0:Off, 15|20|25: value for the highpassfilter of NenuFar.\n"
+		"\n" << endl;
+	}
 }
 
 bitset<LOFAR::MAX_RCUS> beamctl::getRCUMask() const
@@ -637,6 +659,27 @@ void beamctl::printList(list<int>&		theList) const
 	cout << endl;
 }
 
+void beamctl::addPointing(char c, const string&		arg)
+{
+	Timestamp	ts;
+	double		lat, lon;
+	int			duration(0);	// forever
+	char		dirType[20];
+	int	nargs = sscanf(arg.c_str(), "%lf,%lf,%[A-Za-z0-9],%d", &lon, &lat, dirType, &duration);
+	if (nargs < 3) {
+		cerr << "Error: invalid number of parameters for pointing" << endl;
+		return;
+	}
+	if (c == 'D')  {
+		Pointing	pt(lon, lat, dirType, ts, duration);
+		itsDigPointings.push_back(pt);
+	}
+	else {
+		Pointing	pt(lon, lat, dirType, ts, duration);
+		itsAnaPointings.push_back(pt);
+	}
+}
+
 bool beamctl::checkOptions()
 {
 	if (itsCalInfo) {
@@ -672,8 +715,56 @@ bool beamctl::checkOptions()
 		return (false);
 	}
 
+	// HighPass filter of NenuFar can only have 4 values.
+	if (itsHighPassFilter >= 0 && itsHighPassFilter != 15 && itsHighPassFilter != 20 && itsHighPassFilter != 25) {
+		cerr << "hpf can only have the values 0, 15, 20 or 25!" << endl;
+		return (false);
+	}
 	return (true);
 }
+
+//
+// interpret parset
+//
+void beamctl::interpretParset(const string& filename)
+{
+	ParameterSet	ps;
+	ps.adoptFile(filename);
+	ParameterSet::iterator	iter	= ps.begin();
+	ParameterSet::iterator	end		= ps.end();
+	while (iter != end) {
+		if (iter->first == "antennaset") {
+			itsAntSet = iter->second.get();
+		}
+		else if (iter->first == "rcus") {
+			itsRCUs = strtolist(iter->second.get().c_str(), LOFAR::MAX_RCUS);
+		}
+		else if (iter->first == "rcumode") {
+			itsRCUmode = iter->second.getInt();
+		}
+		else if (iter->first == "digdir") {
+			addPointing('D', iter->second.get());
+		}
+		else if (iter->first == "anadir") {
+			addPointing('A', iter->second.get());
+		}
+		else if (iter->first == "subbands") {
+			itsSubbands = strtolist(iter->second.get().c_str(), MAX_SUBBANDS);
+		}
+		else if (iter->first == "beamlets") {
+			itsBeamlets = strtolist(iter->second.get().c_str(), BEAMLET_RING_OFFSET + maxBeamlets(MIN_BITS_PER_SAMPLE));
+		}
+		else if (iter->first == "hpf") {
+			itsHighPassFilter = iter->second.getInt();
+		}
+		else {
+			cout << "non LOFAR option: " << iter->first << endl;
+			itsExtraInfo.push_back(formatString("%s=%s\n", iter->first.c_str(), iter->second.get().c_str()));
+		}
+		++iter;
+	}
+}
+
 
 //
 // parseOptions
@@ -696,18 +787,19 @@ bool beamctl::parseOptions(int	myArgc, char** myArgv)
 		{ "beamlets",  	 required_argument, 0, 'b' },
 		{ "remotehost",  required_argument, 0, 'J' },
 		{ "calinfo",  	 no_argument,       0, 'c' },
+		{ "hpf",	  	 required_argument, 0, 'H' },
+		{ "parset",	  	 required_argument, 0, 'p' },
 		{ "help",      	 no_argument,       0, 'h' },
+		{ "experthelp",	 no_argument,       0, 'X' },
 		{ 0, 0, 0, 0 },
 	};
 
 	Timestamp		lastDigPtTime;
 	Timestamp		lastAnaPtTime;
-	lastDigPtTime.setNow();
-	lastAnaPtTime.setNow();
 	optind = 0; // reset option parsing
 	while (true) {
 		int option_index = 0;
-		int c = getopt_long(myArgc, myArgv, "a:r:m:A:D:s:b:ch", long_options, &option_index);
+		int c = getopt_long(myArgc, myArgv, "a:r:m:A:D:s:b:p:H:chX", long_options, &option_index);
 		if (c == -1) {
 			break;
 		}
@@ -727,58 +819,34 @@ bool beamctl::parseOptions(int	myArgc, char** myArgv)
 		case 'a': {		// antennaset
 			itsAntSet = optarg;
 			cout << "antennaSet : " << itsAntSet << endl;
-		}
-		break;
+		} break;
 
 		case 'r': {		// optional rcu subset
 			itsRCUs = strtolist(optarg, LOFAR::MAX_RCUS);
 			cout << "rcus     : ";  printList(itsRCUs);
-		}
-		break;
+		} break;
 
 		case 'm': {		// optional rcumode
 			itsRCUmode = atoi(optarg);
 			cout << "rcumode  : " << itsRCUmode << endl;
-		}
-		break;
+		} break;
 
 		case 'A': 
 		case 'D':  {
-			double	lat, lon;
-			int		duration(0);	// forever
-			char	dirType[20];
-			int	nargs = sscanf(optarg, "%lf,%lf,%[A-Za-z0-9],%d", &lon, &lat, dirType, &duration);
-			if (nargs < 3) {
-				cerr << "Error: invalid number of parameters for " << long_options[option_index].name << endl;
-			} else {
-				if (c == 'D')  {
-					Pointing	pt(lon, lat, dirType, lastDigPtTime, duration);
-					itsDigPointings.push_back(pt);
-					cout << "digdir   : " << pt << endl;
-					lastDigPtTime = pt.endTime();
-				}
-				else {
-					Pointing	pt(lon, lat, dirType, lastAnaPtTime, duration);
-					itsAnaPointings.push_back(pt);
-					cout << "anadir   : " << pt << endl;
-					lastAnaPtTime = pt.endTime();
-				}
-			}
-		}
-		break;
+			addPointing(c, optarg);
+		} break;
+
 
 		case 's': {
 			itsSubbands = strtolist(optarg, MAX_SUBBANDS);
 			cout << "subbands : "; printList(itsSubbands);
-		}
-		break;
+		} break;
 
 		case 'b': {
 			// assume lowest bitmode, if this is not the case the BeamServer will complain...
 			itsBeamlets = strtolist(optarg, BEAMLET_RING_OFFSET + maxBeamlets(MIN_BITS_PER_SAMPLE));
 			cout << "beamlets : "; printList(itsBeamlets);
-		}
-		break;
+		} break;
 
 		case 'J': 
 			cout << "remotehost : " << optarg << endl;
@@ -790,12 +858,27 @@ bool beamctl::parseOptions(int	myArgc, char** myArgv)
 			itsCalInfo = true;
 			break;
 
+		case 'H':	// hpf
+			itsHighPassFilter = atoi(optarg);
+			break;
+
+		case 'p':	// parset
+			interpretParset(optarg);
+			break;
+
+		case 'X':
+			usage(true);
+			GCFScheduler::instance()->stop();
+			return (false);
+		break;
+
 		case 'h':
 		default:
 			usage();
 			GCFScheduler::instance()->stop();
 			return (false);
 		break;
+
 		} // switch (c)
 	} 
 

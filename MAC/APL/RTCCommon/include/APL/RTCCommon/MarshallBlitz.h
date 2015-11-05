@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ template<typename T, int N> size_t MSH_size( const blitz::Array<T,N> &array )
 
 // PACK blitz::array<...>
 // first copy the dimensions of the array, then the array itself.
-template<typename T, int N> size_t MSH_pack( char *bufptr, size_t offset, const blitz::Array<T,N> &array )
+template<typename T, int N> void MSH_pack( char *bufptr, size_t &offset, const blitz::Array<T,N> &array )
 {
     for (int dim = blitz::firstDim; dim < blitz::firstDim + N; dim++) {
         LOFAR::int32 extent = array.extent(dim);
@@ -55,11 +55,10 @@ template<typename T, int N> size_t MSH_pack( char *bufptr, size_t offset, const 
             exit(EXIT_FAILURE);
         }
     }
-	return (offset);
 }
 
 // UNPACK blitz::array<...>
-template<typename T, int N> size_t MSH_unpack( const char *bufptr, size_t offset, blitz::Array<T,N> &array )
+template<typename T, int N> void MSH_unpack( const char *bufptr, size_t &offset, blitz::Array<T,N> &array )
 {
 	blitz::TinyVector<int, N> extent;
 
@@ -75,7 +74,6 @@ template<typename T, int N> size_t MSH_unpack( const char *bufptr, size_t offset
 
 	memcpy(array.data(), bufptr + offset, array.size() * sizeof(T));
 	offset += array.size() * sizeof(T);
-	return (offset);
 }
 
 #endif /* MARSHALLBLITZ_H_ */

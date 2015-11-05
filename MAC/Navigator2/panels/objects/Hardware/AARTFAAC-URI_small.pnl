@@ -19,18 +19,18 @@ PANEL,-1 -1 169 75 N "_3DFace" 2
   }
     
   if (strpos(baseDP,\"_Cabinet\") > -1){
-    baseDP += \"_URIboard\" + uNr;         
+    baseDP += \"_UriBoard\" + uNr;         
   } else {
-    baseDP += \"_Cabinet\" + cNr + \"_URIboard\" + uNr;         
+    baseDP += \"_Cabinet\" + cNr + \"_UriBoard\" + uNr;         
   }
   
 
-  setValue(\"uriTxt\",\"text\",\"URIboard: \"+uNr);
+  setValue(\"uriTxt\",\"text\",\"UriBoard: \"+uNr);
 
   // pass baseDP to selfstate Object to work with
   setValue(\"selfState.light\",\"toolTipText\",baseDP);
 
-  if (dpExists(baseDP) && navFunct_hasAARTFAAC(sysName) ){
+  if (dpExists(baseDP) ){
     // connect for selfUpdates
     showSelfState(baseDP);
   } else {
@@ -83,7 +83,7 @@ void click() {
   // set delay in case double click was meant
   delay(0, 100); 
   if (!bDoubleClicked) {
-    navPanel_setEvent(\"URIboard\"+uNr,\"EventClick\");
+    navPanel_setEvent(\"UriBoard\"+uNr,\"EventClick\");
   }
 }
 
@@ -95,7 +95,7 @@ void dblClick() {
   if (dpExists(baseDP) ) {
     LOG_DEBUG(\"AARTFAAC-URI_small:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
     g_currentDatapoint=baseDP;
-    navPanel_setEvent(\"URIboard\"+uNr,\"ChangePanel\"); 
+    navPanel_setEvent(\"UriBoard\"+uNr,\"ChangePanel\"); 
   }
   
   // set delay to avoid click event will be triggered
@@ -105,7 +105,7 @@ void dblClick() {
 
 // routine for right mouse click
 void rClick() {
-  navPanel_setEvent(\"URIboard\"+uNr,\"EventRightClick\");
+  navPanel_setEvent(\"UriBoard\"+uNr,\"EventRightClick\");
 }" 0
  2
 "CBRef" "1"
@@ -140,17 +140,15 @@ LANG:1 0
 "dashclr"N "_Transparent"
 "main()
 {
-  if (navFunct_hasAARTFAAC(sysName)) {
-    dpConnect( \"UriCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
-  }
+  dpConnect( \"UriCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
 }
 
 void UriCallback(string dp1, bool aTrig) {
   
   LOG_DEBUG(\"AARTFAAC-URI_small:UriCallback| ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
-  LOG_DEBUG(\"AARTFAAC-URI_small:UriCallback|Found highlight : \" + highlight + \" Looking for: URIboard\" + uNr);
+  LOG_DEBUG(\"AARTFAAC-URI_small:UriCallback|Found highlight : \" + highlight + \" Looking for: UriBoard\" + uNr);
   bool bHighlight=false;
-  if (dynContains(highlight,\"URIboard\"+uNr)) {
+  if (dynContains(highlight,\"UriBoard\"+uNr)) {
     bHighlight=true;
   }
   LOG_DEBUG(\"AARTFAAC-URI_small:UriCallback|Highlight request: \"+bHighlight);

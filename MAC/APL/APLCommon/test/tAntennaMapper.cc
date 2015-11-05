@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -61,6 +61,12 @@ int main (int, char *argv[])
 	cout << endl << "Europa station with full HW and full LBA and HBA" << endl;
 	doTest(5, 	 AntennaMapper::AT_LBA, AMEurope);
 	doTest(5+48, AntennaMapper::AT_LBA, AMEurope);
+	doTest(5, 	 AntennaMapper::AT_HBA, AMEurope);
+	
+	cout << endl << "NenuFar station with full HW and full LBA and HBA and NenuFar antennas" << endl;
+	doTest(5, 	 AntennaMapper::AT_LBA, AMEurope);
+	doTest(5+48, AntennaMapper::AT_LBA, AMEurope);
+	doTest(5+96, AntennaMapper::AT_LBA, AMEurope);
 	doTest(5, 	 AntennaMapper::AT_HBA, AMEurope);
 	
 	return (0);

@@ -4,5 +4,5 @@ include(PythonInstall)
 
 python_install(
   __init__.py
-  MsgBus.py
-  DESTINATION LAPS/)
+  Bus.py
+  DESTINATION LAPS/MsgBus)

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -53,8 +53,20 @@ namespace LOFAR {
   // itsxxxRCUPos[rcu,xyz] because some programs are antenna based,
   // while others are rcu based.
   //
-  AntField::AntField(const string& filename, bool mustExist)
-  {
+AntField::AntField(const string& filename, vector<string> additionalFields, bool mustExist) :
+	itsAdditionalFields(additionalFields),
+	itsMaxNrFields     (MAX_FIELDS + itsAdditionalFields.size())
+{
+	init (filename, mustExist);
+}
+
+AntField::AntField(const string& filename, bool mustExist) :
+	itsMaxNrFields (MAX_FIELDS)
+{
+	init (filename, mustExist);
+}
+
+void AntField::init(const string& filename, bool mustExist) {
     // Locate the file (only done if no absolute path given).
     ConfigLocator cl;
     string   fullFilename(cl.locate(filename));
@@ -66,11 +78,11 @@ namespace LOFAR {
     }
 
     // Reserve space for expected info.
-    itsAntPos.resize         (MAX_FIELDS);
-    itsFieldCentres.resize   (MAX_FIELDS);
-    itsNormVectors.resize    (MAX_FIELDS);
-    itsRotationMatrix.resize (MAX_FIELDS);
-    itsRCULengths.resize     (MAX_FIELDS);
+    itsAntPos.resize         (itsMaxNrFields);
+    itsFieldCentres.resize   (itsMaxNrFields);
+    itsNormVectors.resize    (itsMaxNrFields);
+    itsRotationMatrix.resize (itsMaxNrFields);
+    itsRCULengths.resize     (itsMaxNrFields);
 
     // Fill in zeroes if the file does not exist.
     if (inputStream.good()) {
@@ -116,8 +128,7 @@ namespace LOFAR {
       fieldName = fields[fields.size()-1];
       fieldIndex = name2Index(fieldName);
       ASSERTSTR(fieldIndex >= 0,
-                "Only LBA, HBA, HBA0, and HBA1 allowed for antenna field "
-                "(not '" << fieldName << "')");
+				"'" << fieldName << "' is an illegal fieldname, allowed are LBA,HBA,HBA0,HBA1" << itsAdditionalFields);
       if (fields.size() == 2) {
         // NORMAL_VECTOR or ROTATION_MATRIX
         if (fields[0].find("NORMAL_VECTOR") != string::npos) {
@@ -130,6 +141,7 @@ namespace LOFAR {
                     << getShape(nVect));
           LOG_DEBUG_STR(fieldName << " NORM_VECTOR is " << getData(nVect));
           continue;
+
         } else if (fields[0].find("ROTATION_MATRIX") != string::npos) {
           AFArray& rMat = itsRotationMatrix[fieldIndex];
           readBlitzArray<2> (rMat, inputStream);
@@ -140,10 +152,11 @@ namespace LOFAR {
                     << getShape(rMat));
           LOG_DEBUG_STR(fieldName << " ROTATION_MATRIX is " << getData(rMat));
           continue;
+
         } else {
-          LOG_ERROR_STR("Unknown keyword '" << fields[0] << "' in "
-                        << fullFilename);
+          LOG_ERROR_STR("Unknown keyword '" << fields[0] << "' in " << fullFilename);
         }
+
       } else { // expect centre position
         AFArray& centrePos = itsFieldCentres[fieldIndex];
         readBlitzArray<1> (centrePos, inputStream);
@@ -152,8 +165,7 @@ namespace LOFAR {
                   << " in " << fullFilename
                   << "' should be a 1 dimensional array with 3 values, not "
                   << getShape(centrePos));
-        LOG_DEBUG_STR(fieldName << " Center is  at"
-                      << getData(centrePos));
+        LOG_DEBUG_STR(fieldName << " Center is  at" << getData(centrePos));
       }
 
       // TODO?
@@ -162,7 +174,7 @@ namespace LOFAR {
       // For now we require that LBA and HBA must be defined always.
       
       // Positions are not given for the HBA subfields.
-      if (fieldName != "LBA"  &&  fieldName != "HBA") {
+      if (fieldName != "LBA"  &&  fieldName != "HBA" && !isAdditionalField(fieldName)) {
         continue;
       }
 
@@ -191,7 +203,7 @@ namespace LOFAR {
 
   void AntField::setZeroes (const string& fileName)
   {
-    // Determine statiuon type (core, remote, or other).
+    // Determine station type (core, remote, or other).
     string bname(basename(fileName));
     string stype(bname.substr(0,2));
     int nlba = 96;
@@ -205,7 +217,7 @@ namespace LOFAR {
       initArray (itsAntPos[HBA0_IDX], 24, 2, 3);
       initArray (itsAntPos[HBA1_IDX], 24, 2, 3);
     }
-    for (int i=0; i<MAX_FIELDS; ++i) {
+    for (int i = 0; i<itsMaxNrFields; ++i) {	// TODO
       if (stype == "CS"  ||  i < HBA0_IDX) {
         initArray (itsFieldCentres[i], 3);
         initArray (itsNormVectors[i], 3);
@@ -255,7 +267,27 @@ namespace LOFAR {
     if (fieldName == "HBA")  return(HBA_IDX);
     if (fieldName == "HBA0") return(HBA0_IDX);
     if (fieldName == "HBA1") return(HBA1_IDX);
+	for (size_t i = 0; i < itsAdditionalFields.size(); ++i) {
+		if (itsAdditionalFields[i] == fieldName) {
+			return (MAX_FIELDS + i);
+		}
+	}
     return (-1);
+  }
+
+  string AntField::index2Name(uint	index) const
+  {
+	switch (index) {
+	case LBA_IDX:	return("LBA");
+	case HBA_IDX:	return("HBA");
+	case HBA0_IDX:	return("HBA0");
+	case HBA1_IDX:	return("HBA1");
+	default:
+		if (index-MAX_FIELDS < itsAdditionalFields.size()) {
+			return (itsAdditionalFields[index-MAX_FIELDS]);
+		}
+	}
+	return ("");
   }
 
   void AntField::makeRCULen (int fieldIndex)
@@ -304,7 +336,7 @@ namespace LOFAR {
 
   int AntField::maxFields() const
   {
-    return MAX_FIELDS;
+    return (itsMaxNrFields);
   }
 
   int AntField::nrAnts(const string& fieldName) const
@@ -313,4 +345,14 @@ namespace LOFAR {
     return (shape.empty()  ?  0 : shape[0]);
   }
 
+bool AntField::isAdditionalField(const string& fieldName)
+{
+	for (size_t i = 0; i < itsAdditionalFields.size(); ++i) {
+		if (itsAdditionalFields[i] == fieldName) {
+			return (true);
+		}
+	}
+	return (false);
+}
+	
 } // namespace LOFAR

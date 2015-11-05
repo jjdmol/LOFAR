@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -49,9 +49,6 @@ using namespace boost::posix_time;
 
 namespace LOFAR {
 	using namespace APLCommon;
-	using namespace DP_Protocol;
-	using namespace Controller_Protocol;
-	using namespace CAL_Protocol;
 	namespace StationCU {
 	
 // static pointer to this object for signal handler
@@ -667,7 +664,7 @@ bool	CalibrationControl::startCalibration()
 
 	// inform operator about these values.
 	itsPropertySet->setValue(PN_CC_BEAM_NAMES,	 GCFPVDynArr(LPT_DYNSTRING, beamNameArr));
-	itsPropertySet->setValue(PN_CC_ANTENNA_ARRAY,GCFPVString(itsObsPar->antennaArray));
+	itsPropertySet->setValue(PN_CC_ANTENNA_ARRAY,GCFPVString(itsObsPar->antennaField));
 	itsPropertySet->setValue(PN_CC_FILTER,		 GCFPVString(itsObsPar->filter));
 	itsPropertySet->setValue(PN_CC_NYQUISTZONE,	 GCFPVInteger(itsObsPar->nyquistZone));
 	itsPropertySet->setValue(PN_CC_RCUS,		 GCFPVString(

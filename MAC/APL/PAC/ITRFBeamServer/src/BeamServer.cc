@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@
 
 #include <getopt.h>
 #include <iostream>
+#include <signal.h>
 #include <sstream>
 #include <time.h>
 #include <fstream>
@@ -59,16 +60,18 @@ namespace LOFAR {
   using namespace RTC;
   using namespace IBS_Protocol;
   using namespace RSP_Protocol;
-  using namespace CAL_Protocol;
   using namespace GCF::TM;
   namespace BS {
 
 int	gBeamformerGain = 0;
 
+// static pointer used for signal handler.
+static BeamServer*	thisBeamServer = 0;
+	
 //
 // BeamServer(name)
 //
-BeamServer::BeamServer(const string& name, long	timestamp) : 
+BeamServer::BeamServer(const string& name, NenuFarAdmin*	nnfAdmin, long	timestamp) : 
 	GCFTask((State)&BeamServer::con2rspdriver, name),
 	itsCurrentBitsPerSample (MAX_BITS_PER_SAMPLE),
 	itsCurrentMaxBeamlets   (maxBeamlets(itsCurrentBitsPerSample)),
@@ -79,6 +82,7 @@ BeamServer::BeamServer(const string& name, long	timestamp) :
 	itsCalServer			(0),
 	itsBeamsModified		(false),
 	itsAnaBeamMgr			(0),
+	itsNenuFarAdmin			(nnfAdmin),
 	itsCalTableMode1		(0),
 	itsCalTableMode3		(0),
 	itsCalTableMode5		(0),
@@ -154,7 +158,6 @@ BeamServer::BeamServer(const string& name, long	timestamp) :
 	else {
 		LOG_WARN("Static calibration is disabled!");
 	}
-
 }
 
 //
@@ -192,11 +195,11 @@ GCFEvent::TResult BeamServer::con2rspdriver(GCFEvent& event, GCFPortInterface& p
 
 		// load the antenna positions
 		ASSERTSTR(globalAntennaField(), "Could not load the antennaposition file");
-		LOG_DEBUG("Loaded antenna postions file");
-		LOG_DEBUG_STR("LBA rcu=" << globalAntennaField()->RCUPos("LBA"));
-		LOG_DEBUG_STR("HBA rcu=" << globalAntennaField()->RCUPos("HBA"));
-		LOG_DEBUG_STR("HBA0 rcu=" << globalAntennaField()->RCUPos("HBA0"));
-		LOG_DEBUG_STR("HBA1 rcu=" << globalAntennaField()->RCUPos("HBA1"));
+		LOG_DEBUG("Loaded antenna positions file");
+		for (int i = 0; i < globalAntennaField()->maxFields(); i++) {
+			string fieldname(globalAntennaField()->index2Name(i));
+			LOG_DEBUG_STR(fieldname << " rcu=" << globalAntennaField()->RCUPos(fieldname));
+		}
 	} break;
 
 	case F_ENTRY: {
@@ -482,6 +485,15 @@ GCFEvent::TResult BeamServer::con2calserver(GCFEvent& event, GCFPortInterface& p
 			(itsListener->getState() != GCFPortInterface::S_CONNECTED)) {
 			itsListener->open();
 		}
+
+		// Now that we are connected, setup signalhandlers for nice shutdown if not done before.
+		if (!thisBeamServer) {
+			thisBeamServer = this;
+			signal (SIGINT,  BeamServer::sigintHandler);	// ctrl-c
+			signal (SIGTERM, BeamServer::sigintHandler);	// kill
+			signal (SIGABRT, BeamServer::sigintHandler);	// kill -6
+		}
+
 		TRAN(BeamServer::enabled);
 	}
 	break;
@@ -899,6 +911,9 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& event, GCFPortInterface& 
 
 	switch (event.signal) {
 	case F_ENTRY: {
+		// always cancel beam in third party administration
+		itsNenuFarAdmin->abortBeam(itsBeamTransaction.getBeam()->name());
+
 		// unsubscribe
 		CALUnsubscribeEvent unsubscribe;
 		unsubscribe.name 	= itsBeamTransaction.getBeam()->name();
@@ -979,6 +994,56 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& event, GCFPortInterface& 
 	return (GCFEvent::HANDLED);
 }
 
+//
+// sigintHandler(signum)
+//
+void BeamServer::sigintHandler(int signum)
+{
+	LOG_WARN (formatString("SIGINT signal detected (%d)",signum));
+
+	// Note we can't call TRAN here because the siginthandler does not know our object.
+	if (thisBeamServer) {
+		thisBeamServer->finish();
+	}
+}
+
+//
+// finish
+//
+void BeamServer::finish()
+{
+	TRAN(BeamServer::finishing_state);
+}
+
+//
+// finishing_state(event, port)
+//
+// cleanup third party administration
+//
+GCFEvent::TResult BeamServer::finishing_state(GCFEvent& 		event, 
+											  GCFPortInterface& port)
+{
+	LOG_INFO_STR ("finishing_state:" << eventName(event) << "@" << port.getName());
+	switch (event.signal) {
+	case F_ENTRY: {
+		itsNenuFarAdmin->abortAllBeams();
+		itsDigHeartbeat->cancelAllTimers();
+		itsAnaHeartbeat->cancelAllTimers();
+		itsConnectTimer->cancelAllTimers();
+		itsConnectTimer->setTimer(1.0);	// give 3rd party task time to send it.
+		break;
+	}
+  
+    case F_TIMER:
+      GCFScheduler::instance()->stop();
+      break;
+    
+	default:
+		LOG_DEBUG("finishing_state, default");
+	}
+	return (GCFEvent::HANDLED);
+}
+
 // ------------------------------ internal routines ------------------------------
 
 //
@@ -989,7 +1054,8 @@ bool BeamServer::beamalloc_start(IBSBeamallocEvent& ba,
 {
 	// allocate the beam
 	int		beamError(IBS_NO_ERR);
-	DigitalBeam* beam = checkBeam(&port, ba.beamName, ba.antennaSet, ba.allocation, ba.rcumask, ba.ringNr, ba.rcuMode, &beamError);
+	DigitalBeam* beam = checkBeam(&port, ba.beamName, ba.antennaSet, ba.allocation, ba.rcumask, 
+										 ba.ringNr,   ba.rcuMode,    ba.extra, 		&beamError);
 
 	if (!beam) {
 		LOG_FATAL_STR("BEAMALLOC: failed to allocate beam " << ba.beamName << " on " << ba.antennaSet);
@@ -1090,6 +1156,12 @@ int BeamServer::beampointto_action(IBSPointtoEvent&		ptEvent,
 	// note we don't know if we added the beam before, just do it again and ignore returnvalue.
 	itsAnaBeamMgr->addBeam(AnalogueBeam(ptEvent.beamName, beamIter->second->antennaSetName(), 
 									beamIter->second->rcuMask(), ptEvent.rank));
+
+	// Update the NenuFar administration
+	itsNenuFarAdmin->addBeam(ptEvent.beamName, beamIter->second->antennaSetName(), beamIter->second->rcuMask(), ptEvent.rank,
+							 ptEvent.pointing, beamIter->second->extraOptions());
+
+	// Finally update our own analogue beam administration
 	if (!itsAnaBeamMgr->addPointing(ptEvent.beamName, ptEvent.pointing)) {
 		return (IBS_UNKNOWN_BEAM_ERR);
 	}
@@ -1202,6 +1274,7 @@ void BeamServer::destroyAllBeams(GCFPortInterface* port)
 	set<DigitalBeam*>::iterator end      = itsClientBeams[port].end();
 	while (beamIter != end) {
 		LOG_INFO_STR("Stopping beam " << (*beamIter)->name());
+		itsNenuFarAdmin->abortBeam((*beamIter)->name());
 		_releaseBeamlets((*beamIter)->allocation(), (*beamIter)->ringNr());
 		_unregisterBeamRCUs(**beamIter);
 		DigitalBeam*	beam = *beamIter;
@@ -1220,13 +1293,14 @@ void BeamServer::destroyAllBeams(GCFPortInterface* port)
 // checkBeam(beamTransaction, port , name, subarray, beamletAllocation)
 //
 DigitalBeam* BeamServer::checkBeam(GCFPortInterface* 				port,
-						  std::string 						name, 
-						  std::string 						antennaSetName, 
-						  IBS_Protocol::Beamlet2SubbandMap	allocation,
-						  bitset<LOFAR::MAX_RCUS>		    rcumask,
-						  uint								ringNr,
-						  uint								rcuMode,
-						  int*								beamError)
+								   std::string 						name, 
+								   std::string 						antennaSetName, 
+								   IBS_Protocol::Beamlet2SubbandMap	allocation,
+								   bitset<LOFAR::MAX_RCUS>		    rcumask,
+								   uint								ringNr,
+								   uint								rcuMode,
+								   const vector<string>&			extraOptions,
+								   int*								beamError)
 {
 	LOG_TRACE_FLOW_STR("checkBeam(port=" << port->getName() << ", name=" << name << ", subarray=" << antennaSetName 
 										<< ", ring=" << ringNr);
@@ -1284,7 +1358,7 @@ DigitalBeam* BeamServer::checkBeam(GCFPortInterface* 				port,
 		return (0);
 	}
 
-	DigitalBeam* beam = new DigitalBeam(name, antennaSetName, allocation, rcumask, ringNr, rcuMode);
+	DigitalBeam* beam = new DigitalBeam(name, antennaSetName, allocation, rcumask, ringNr, rcuMode, extraOptions);
 
 	if (beam) { // register new beam
 		itsClientBeams[port].insert(beam);
@@ -1613,23 +1687,25 @@ void BeamServer::compute_weights(Timestamp weightTime)
 
 	int beamletsPerPlane = maxBeamletsPerPlane(itsCurrentBitsPerSample);
 	// Check both LBA and HBA antennas
-	for (uint	fieldNr = 0; fieldNr < 4; fieldNr++) {
-		string	fieldName;
-		switch(fieldNr) {			// TODO: needs improvement
-			case 0: fieldName = "LBA";	break;
-			case 1: fieldName = "HBA";	break;
-			case 2: fieldName = "HBA0";	break;
-			case 3: fieldName = "HBA1";	break;
-		}
-		bool LBAfield = (fieldNr == 0);
+	uint	nrFields = globalAntennaField()->maxFields();
+	for (uint	fieldNr = 0; fieldNr < nrFields; fieldNr++) {
+		string	fieldName(globalAntennaField()->index2Name(fieldNr));	// LBA, HBA, HBA0, HBA1, NNF, ...
 
 		LOG_DEBUG_STR("Checking " << fieldName << " antennas");
 		// Any beams on this antenna field?
-		if ((LBAfield && !itsNrLBAbeams) || (!LBAfield && !itsNrHBAbeams)) {
+		map<string, DigitalBeam*>::iterator	beamIter = itsBeamPool.begin();
+		map<string, DigitalBeam*>::iterator	end		 = itsBeamPool.end();
+		for ( ; beamIter != end; ++beamIter) {
+			// must be of the same antenna field.
+			if (globalAntennaSets()->antennaField(beamIter->second->antennaSetName()) == fieldName) {
+				break;
+			}
+		}
+		if (beamIter == end) {
 			LOG_DEBUG_STR("No beams defined for these antennas");
 			continue;
 		}
-
+			
 		// Get ITRF position of the RCU's [rcu, xyz]
 		blitz::Array<double, 2> rcuPosITRF = gAntField->RCUPos(fieldName);
 		if (rcuPosITRF.size() == 0) {
@@ -1658,8 +1734,8 @@ void BeamServer::compute_weights(Timestamp weightTime)
 //		LOG_DEBUG_STR("J2000RCUPos@fullLength=" << rcuJ2000Pos);
 
 		// for all beams using this field
-		map<string, DigitalBeam*>::iterator	beamIter = itsBeamPool.begin();
-		map<string, DigitalBeam*>::iterator	end		 = itsBeamPool.end();
+		beamIter = itsBeamPool.begin();
+		end		 = itsBeamPool.end();
 		for ( ; beamIter != end; ++beamIter) {
 			// must be of the same antenna field.
 			if (globalAntennaSets()->antennaField(beamIter->second->antennaSetName()) != fieldName) {

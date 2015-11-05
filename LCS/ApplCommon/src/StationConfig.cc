@@ -26,6 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/ParameterSet.h>
+#include <Common/StreamUtil.h>
 #include <ApplCommon/StationConfig.h>
 
 namespace LOFAR {
@@ -44,28 +45,47 @@ StationConfig* globalStationConfig()
 //
 // Constructor
 //
-StationConfig::StationConfig()
+StationConfig::StationConfig(const string& filename)
 {
 	// Try to find the configurationfile
 	ConfigLocator   CL;
-	string          fileName(CL.locate("RemoteStation.conf"));
-	ASSERTSTR(!fileName.empty(), "Cannot find the station configurationfile 'RemoteStation.conf'");
+	string          fileName(CL.locate(filename));
+	ASSERTSTR(!fileName.empty(), "Cannot find the station configurationfile '" << filename << "'");
 
 	ParameterSet    StationInfo(fileName);
 	stationID	 = StationInfo.getInt ("RS.STATION_ID");
 	nrRSPs		 = StationInfo.getInt ("RS.N_RSPBOARDS");
 	nrTBBs		 = StationInfo.getInt ("RS.N_TBBOARDS");
-	nrLBAs		 = StationInfo.getInt ("RS.N_LBAS");
-	nrHBAs		 = StationInfo.getInt ("RS.N_HBAS");
 	hasSplitters = StationInfo.getBool("RS.HBA_SPLIT");
 	hasAartfaac  = StationInfo.getBool("RS.AARTFAAC");
 	hasWideLBAs	 = StationInfo.getBool("RS.WIDE_LBAS");
+	if (StationInfo.isDefined("RS.ANT_TYPES")) {
+		antTypes = StationInfo.getStringVector("RS.ANT_TYPES");
+	}
+	else {
+		antTypes.push_back("LBA");
+		antTypes.push_back("HBA");
+	}
+	nrTypes = antTypes.size();
+	for (int i = 0; i < nrTypes; ++i) {
+		antCounts.push_back(StationInfo.getInt(formatString("RS.N_%sS", antTypes[i].c_str())));
+	}
+	LOG_DEBUG_STR("AntennaFields: " << antTypes << ", counts: " << antCounts << 
+			formatString(" and %ssplitters", (hasSplitters ? "" : "NO ")));
 
-	LOG_DEBUG(formatString("Stations has %d LBA and %d HBA antennas and %ssplitters",
-											nrLBAs, nrHBAs, (hasSplitters ? "" : "NO ")));
 }
 
 StationConfig::~StationConfig()
 { }
+
+int StationConfig::nrAntennas(const string& antTypeName) const
+{
+	for (size_t i = 0; i < antTypes.size(); ++i) {
+		if (antTypes[i] == antTypeName) {
+			return (antCounts[i]);
+		}
+	}
+	return (0);
+}
 
 } // namespace LOFAR

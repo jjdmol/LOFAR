@@ -68,10 +68,6 @@ inline bool Trigger::test()
 
 inline void Trigger::trigger()
 {
-  // Make repeated triggering very cheap
-  if (triggered) 
-    return;
-
   ScopedLock lock(mutex);
 
   triggered = true;

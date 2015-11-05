@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
 
   // "distribute" subbands over 1 node
   vector<size_t> subbands;
-  for (size_t sb = 0; sb < ps.settings.subbands.size(); sb++)
+  for (size_t sb = 0; sb < ps.nrSubbands(); sb++)
   {
     subbands.push_back(sb);
   }
@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
   // Init the pipeline *before* touching MPI. MPI doesn't like fork().
   // So do kernel compilation (reqs fork()) first.
   // Don't bother passing a hostname to (or start()ing) the mdLogger.
-  MACIO::RTmetadata rtmd(ps.settings.observationID, "", "");
+  MACIO::RTmetadata rtmd(ps.observationID(), "", "");
   SmartPtr<Pipeline> pipeline = new Pipeline(ps, subbands, devices,
       MPI_receive_pool, rtmd, "rtmd key prefix");
 

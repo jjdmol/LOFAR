@@ -52,7 +52,7 @@
 
 #  Copyright (C) 2008-2010
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
-#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -93,7 +93,8 @@ if(NOT LOFAR_PACKAGE_INCLUDED)
     if(NOT DEFINED BUILD_${_pkg} OR BUILD_${_pkg})
       add_dependencies(${PACKAGE_NAME} ${_pkg})
       set(PACKAGE_NAME ${_pkg})
-      if(NOT TARGET ${_pkg})
+      get_target_property(_target_exists ${_pkg} TYPE)
+      if(NOT _target_exists)
         string(REGEX REPLACE ";?REQUIRED$" "" _srcdir "${ARGN}")
         string(REGEX MATCH "REQUIRED$" _required "${ARGN}")
         if(_srcdir MATCHES "^$")
@@ -133,7 +134,7 @@ if(NOT LOFAR_PACKAGE_INCLUDED)
             message(STATUS ${_errmsg})
           endif(_required)
         endif(EXISTS ${_srcdir})
-      endif(NOT TARGET ${_pkg})
+      endif(NOT _target_exists)
     endif(NOT DEFINED BUILD_${_pkg} OR BUILD_${_pkg})
   endfunction(lofar_add_package _pkg)
 
@@ -145,9 +146,10 @@ if(NOT LOFAR_PACKAGE_INCLUDED)
       "Usage: lofar_package(pkg [version] [DEPENDS depend ...])\n")
 
     # Define a target for the current package, if it is not defined yet.
-    if(NOT TARGET ${_pkg})    
+    get_target_property(_target_exists ${_pkg} TYPE)
+    if(NOT _target_exists)
       add_custom_target(${_pkg})
-    endif(NOT TARGET ${_pkg})
+    endif(NOT _target_exists)
 
     # Get the optional version number; a string of dot-separated numbers
     string(REGEX REPLACE ";?DEPENDS.*" "" ${_pkg}_VERSION "${ARGN}")

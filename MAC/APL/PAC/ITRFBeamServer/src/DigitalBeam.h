@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 #include <lofar_config.h>
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_string.h>
+#include <Common/lofar_vector.h>
 #include <APL/RTCCommon/Timestamp.h>
 #include <APL/IBS_Protocol/Beamlet2SubbandMap.h>
 #include <APL/CAL_Protocol/AntennaGains.h>
@@ -55,7 +56,8 @@ public:
 			    const IBS_Protocol::Beamlet2SubbandMap&	allocation, 
 			    const bitset<MAX_RCUS>&					rcuMask,
 			    uint 									ringNr,
-				uint									rcuMode);
+				uint									rcuMode,
+				const vector<string>&					extraOptions);
 
 	// Default destructor.
 	virtual ~DigitalBeam();
@@ -70,11 +72,14 @@ public:
 	// Get the current calibration values.
 //	const CAL::AntennaGains& getCalibration() const;
 
-	// Get number of ringSegment
+	// Get number of the ringSegment
 	uint ringNr() const	{ return (itsRingNr); }
 
-	// Get rcuMode of beam
+	// Get rcuMode of the beam
 	uint rcuMode() const	{ return (itsRCUmode); }
+
+	// Get extra options of the beam
+	vector<string> extraOptions() const	{ return (itsExtraOptions); }
 
 	// Set handle (=uniq ID) from the CalServer
 	void  calibrationHandle(void	*handle) { itsCShandle = handle; }
@@ -105,6 +110,9 @@ private:
 	// calserver handle	
 	// will become obsolete when new ITRF CalServer is used.
 	void*		itsCShandle;
+
+	// extra info for third party systems
+	vector<string>	itsExtraOptions;
 
 };
 

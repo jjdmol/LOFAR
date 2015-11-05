@@ -13,6 +13,7 @@ PANEL,-1 -1 1200 823 N "_3DFace" 0
   baseDP=g_currentDatapoint;
   sysName = dpSubStr(g_currentDatapoint,DPSUB_SYS);
 
+  DebugN(\"init: sysName: \", sysName);
   
   if (navFunct_getRingFromStation(sysName) == \"Core\") {
     isCore=true;
@@ -230,6 +231,8 @@ void calcViewboxSize() {
 
 void redraw(string mode) {
   
+  DebugN(\"redraw-undocked: \", undocked);
+  DebugN(\"redraw-sysName : \", sysName);
   
   float maxXOffsetValue=1.;
   float maxYOffsetValue=1.;
@@ -383,6 +386,7 @@ void updateField() {
   */
   
 
+  DebugN( \"updateField sysName: \" , sysName);
   string field=sysName+\"LOFAR_PIC_StationInfo.\";
   if (dpExists(field+txt+\".centerX:_online.._value\")) {
     // found match, save found strings and redraw screen

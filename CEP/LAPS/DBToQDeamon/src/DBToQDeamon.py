@@ -19,7 +19,7 @@
 # $Id$
 import os,sys,time,pg
 from optparse import OptionParser
-import LAPS.MsgBus
+import laps.MsgBus
 
 
 def createParsetFile(treeID, nodeID, fileName):
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     otdb = pg.connect(user="postgres", host=dbHost, dbname=dbName)
 
     # connect to messaging system
-    msgbus = LAPS.MsgBus.Bus("LAPS.retrieved.parsets")
+    msgbus = laps.MsgBus.Bus()
 
     # Check if a component LOFAR of this version exists
     treeList = otdb.query("select treeID from getTreeGroup(5,60)").dictresult()
@@ -74,13 +74,7 @@ if __name__ == '__main__':
         topNodeID = otdb.query("select nodeid from getTopNode(%s)" % t['treeid']).getresult()[0][0]
         parset = otdb.query("select * from exportTree(%s, %s, %s)" % (1, t['treeid'], topNodeID)).getresult()
         ###print parset[0][0]
-
-	### send( message , subject )
-        while True:
-		# 1000 msg / sec ?
-		time.sleep(0.01) 
-		msgbus.send(parset[0][0],"Observation%d" %(t['treeid']))
-
+        msgbus.send(parset[0][0],"Observation%d" %(t['treeid']))
 
         ### set state to 'queued'
         ### otdb.query("select * from setTreeState(1, %s, 500, false)" % t['treeid'])

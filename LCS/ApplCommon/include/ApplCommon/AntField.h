@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2010
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -60,6 +60,7 @@ namespace LOFAR {
     // not exist. Otherwise an error message is logged and zero data is filled
     // in for the various arrays.
     explicit AntField (const string& filename, bool mustExist=true);
+    explicit AntField (const string& filename, vector<string> additionalFields, bool mustExist=true);
 
     ~AntField();
 
@@ -123,6 +124,9 @@ namespace LOFAR {
     // Translate name of antennaField to index in array vectors.
     int name2Index(const string& fieldName) const;
 
+    // Translate index of an antenna field to the name of antennaField 
+    string index2Name(uint	index) const;
+
     // Get max nr of fields
     int maxFields() const;
 
@@ -167,6 +171,9 @@ namespace LOFAR {
     AntField(const AntField& that);
     AntField& operator=(const AntField& that);
 
+	// 'constructor' code.
+    void init (const string& filename, bool mustExist);
+
     // Read the arrays from the file.
     void readFile (istream& inputStream, const string& fullFilename);
 
@@ -184,6 +191,9 @@ namespace LOFAR {
     // Create info for HBA0 or HBA1 subfield.
     void makeSubField (int fieldIndex);
 
+	// Test is given name is a name of an additional field.
+	bool isAdditionalField (const string& fieldName);
+
     //# --- Datamembers ---
     // Note: we use a vector<AFArray> so every array can have its own size.
     vector<AFArray> itsFieldCentres;	// [ (x,y,z) ]
@@ -192,6 +202,9 @@ namespace LOFAR {
     vector<AFArray> itsRotationMatrix;	// [ 3, 3 ]
     // During calculations we often need the length of the vectors.
     vector<AFArray> itsRCULengths;
+
+	vector<string>	itsAdditionalFields;
+	int				itsMaxNrFields;
   };
 
   // @}

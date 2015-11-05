@@ -47,7 +47,7 @@ namespace LOFAR
     BeamFormerTransposeKernel::Parameters::Parameters(const Parset& ps) :
       Kernel::Parameters("beamFormerTranspose"),
       nrChannels(ps.settings.beamFormer.nrHighResolutionChannels),
-      nrSamplesPerChannel(ps.settings.blockSize / nrChannels),
+      nrSamplesPerChannel(ps.nrSamplesPerSubband() / nrChannels),
       nrTABs(ps.settings.beamFormer.maxNrCoherentTABsPerSAP())
     {
       dumpBuffers = 
