@@ -76,7 +76,7 @@ LANG:1 0
 13 320
 "PUSH_BUTTON10"
 ""
-1 950 371 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 511 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 155 0 0 0 0 0
 E E E
@@ -87,7 +87,7 @@ LANG:1 0
 0
 1
 LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  948 369 1098 396
+0  948 509 1098 536
 
 T 
 1
@@ -137,7 +137,7 @@ LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
 2 6
 "PRIMITIVE_TEXT4"
 ""
-1 1236 409.3240071683281 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 964 396.8815591721578 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 6 0 0 0 0 0
 E E E
@@ -156,7 +156,7 @@ LANG:1 18 Initiating Object:
 2 7
 "PRIMITIVE_TEXT5"
 ""
-1 1241 396.4233462865291 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 967 377.7757142804825 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 7 0 0 0 0 0
 E E E
@@ -175,7 +175,7 @@ LANG:1 15 Event Received:
 2 8
 "PRIMITIVE_TEXT6"
 ""
-1 1241 426.3243640761156 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 967 418.0177004080704 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 8 0 0 0 0 0
 E E E
@@ -461,87 +461,87 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 3 1 2 1 E  261 644 279 642
-1 884 0 "" 0
+1 835 0 "" 0
 0
-1 885 1 "" 0
+1 836 1 "" 0
 0
-1 886 2 "" 0
+1 837 2 "" 0
 0
-1 887 4 "" 0
+1 838 4 "" 0
 0
-1 888 5 "" 0
+1 839 5 "" 0
 0
-1 889 6 "" 0
+1 840 6 "" 0
 0
-1 890 7 "" 0
+1 841 7 "" 0
 0
-1 891 7 "" 1
+1 842 7 "" 1
 0
-1 892 7 "" 2
+1 843 7 "" 2
 0
-1 893 7 "" 3
+1 844 7 "" 3
 0
-1 894 7 "" 4
+1 845 7 "" 4
 0
-1 895 9 "" 0
+1 846 9 "" 0
 0
-1 896 9 "" 1
+1 847 9 "" 1
 0
-1 897 9 "" 2
+1 848 9 "" 2
 0
-1 898 9 "" 3
+1 849 9 "" 3
 0
-1 899 9 "" 4
+1 850 9 "" 4
 0
-1 900 12 "" 0
+1 851 12 "" 0
 0
-1 901 12 "" 1
+1 852 12 "" 1
 0
-1 902 12 "" 2
+1 853 12 "" 2
 0
-1 903 12 "" 3
+1 854 12 "" 3
 0
-1 904 12 "" 4
+1 855 12 "" 4
 0
-1 905 14 "" 0
+1 856 14 "" 0
 0
-1 906 14 "" 1
+1 857 14 "" 1
 0
-1 907 14 "" 2
+1 858 14 "" 2
 0
-1 908 14 "" 3
+1 859 14 "" 3
 0
-1 909 14 "" 4
+1 860 14 "" 4
 0
-1 910 17 "" 0
+1 861 17 "" 0
 0
-1 911 17 "" 1
+1 862 17 "" 1
 0
-1 912 17 "" 2
+1 863 17 "" 2
 0
-1 913 17 "" 3
+1 864 17 "" 3
 0
-1 914 17 "" 4
+1 865 17 "" 4
 0
-1 915 18 "" 0
+1 866 18 "" 0
 0
-1 916 18 "" 1
+1 867 18 "" 1
 0
-1 917 18 "" 2
+1 868 18 "" 2
 0
-1 918 18 "" 3
+1 869 18 "" 3
 0
-1 919 18 "" 4
+1 870 18 "" 4
 0
-1 920 19 "" 0
+1 871 19 "" 0
 0
-1 921 19 "" 1
+1 872 19 "" 1
 0
-1 922 19 "" 2
+1 873 19 "" 2
 0
-1 923 19 "" 3
+1 874 19 "" 3
 0
-1 924 19 "" 4
+1 875 19 "" 4
 0
 4 87
 "LINE21"
@@ -599,7 +599,7 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 3 1 2 1 E  184 290 196 290
-1 925 20 "" 0
+1 876 20 "" 0
 0
 14 134
 "txt_datapoint"
@@ -620,7 +620,7 @@ LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
 2 135
 "PRIMITIVE_TEXT11"
 ""
-1 1466.082645446156 237.4157717744857 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 1069.377234756191 272.578802767559 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 125 0 0 0 0 0
 E E E
@@ -639,7 +639,7 @@ LANG:1 18 Active Datapoint:
 13 178
 "PUSH_BUTTON1"
 ""
-1 950 168 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 308 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 127 0 0 0 0 0
 E E E
@@ -650,7 +650,7 @@ LANG:1 0
 0
 1
 LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  948 166 1098 193
+0  948 306 1098 333
 
 T 
 1
@@ -663,7 +663,7 @@ LANG:1 19 show g_observations
 13 179
 "PUSH_BUTTON2"
 ""
-1 17 517 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 17 657 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 129 0 0 0 0 0
 E E E
@@ -674,7 +674,7 @@ LANG:1 0
 0
 1
 LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  948 195 1098 222
+0  948 335 1098 362
 
 T 
 1
@@ -687,7 +687,7 @@ LANG:1 14 show highlight
 13 180
 "PUSH_BUTTON3"
 ""
-1 950 226 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 366 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 131 0 0 0 0 0
 E E E
@@ -698,7 +698,7 @@ LANG:1 0
 0
 1
 LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  948 224 1098 251
+0  948 364 1098 391
 
 T 
 1
@@ -780,7 +780,7 @@ LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
 13 227
 "PUSH_BUTTON5"
 ""
-1 950 140 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 280 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 140 0 0 0 0 0
 E E E
@@ -791,7 +791,7 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0  948 138 1098 164
+0  948 278 1098 304
 
 T 
 1
@@ -818,7 +818,7 @@ E E 1 3 1 2 1 E  940 10 940 640
 13 316
 "PUSH_BUTTON6"
 ""
-1 950 255 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 395 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 147 0 0 0 0 0
 E E E
@@ -829,7 +829,7 @@ LANG:1 0
 0
 1
 LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  948 253 1098 280
+0  948 393 1098 420
 
 T 
 1
@@ -845,7 +845,7 @@ LANG:1 18 show g_stationList
 13 317
 "PUSH_BUTTON7"
 ""
-1 950 284 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 424 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 149 0 0 0 0 0
 E E E
@@ -856,7 +856,7 @@ LANG:1 0
 0
 1
 LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  948 282 1098 309
+0  948 422 1098 449
 
 T 
 1
@@ -872,7 +872,7 @@ LANG:1 18 show g_cabinetList
 13 318
 "PUSH_BUTTON8"
 ""
-1 950 313 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 453 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 151 0 0 0 0 0
 E E E
@@ -883,7 +883,7 @@ LANG:1 0
 0
 1
 LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  948 311 1098 338
+0  948 451 1098 478
 
 T 
 1
@@ -899,7 +899,7 @@ LANG:1 18 show g_subrackList
 13 319
 "PUSH_BUTTON9"
 ""
-1 950 342 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 482 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 153 0 0 0 0 0
 E E E
@@ -910,7 +910,7 @@ LANG:1 0
 0
 1
 LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  948 340 1098 367
+0  948 480 1098 507
 
 T 
 1
@@ -926,7 +926,7 @@ LANG:1 14 show g_RSPList
 13 321
 "PUSH_BUTTON11"
 ""
-1 950 400 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 540 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 157 0 0 0 0 0
 E E E
@@ -937,7 +937,7 @@ LANG:1 0
 0
 1
 LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  948 398 1098 425
+0  948 538 1098 565
 
 T 
 1
@@ -953,7 +953,7 @@ LANG:1 14 show g_RCUList
 13 364
 "PUSH_BUTTON12"
 ""
-1 950 430 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 570 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 159 0 0 0 0 0
 E E E
@@ -964,7 +964,7 @@ LANG:1 0
 0
 1
 LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  948 428 1112 455
+0  948 568 1112 595
 
 T 
 1
@@ -980,7 +980,7 @@ LANG:1 23 show g_observationsList
 13 451
 "PUSH_BUTTON15"
 ""
-1 950 520 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 600 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 164 0 0 0 0 0
 E E E
@@ -991,7 +991,7 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0  948 518 1098 544
+0  948 598 1098 624
 
 T 
 1
@@ -1190,7 +1190,7 @@ LANG:1 8 Response
 2 548
 "PRIMITIVE_TEXT3"
 ""
-1 721.9999999999993 764 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 721.9999999999996 764 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 190 0 0 0 0 0
 E E E
@@ -1225,7 +1225,7 @@ LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
 13 592
 "PUSH_BUTTON18"
 ""
-1 950 110 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 250 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 194 0 0 0 0 0
 E E E
@@ -1236,7 +1236,7 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0  948 108 1098 134
+0  948 248 1098 274
 
 T 
 1
@@ -1249,7 +1249,7 @@ LANG:1 20 show strClaimedObj's
 13 635
 "PUSH_BUTTON19"
 ""
-1 950 490 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 630 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 196 0 0 0 0 0
 E E E
@@ -1260,7 +1260,7 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0  948 488 1098 514
+0  948 628 1098 654
 
 T 
 1
@@ -1273,17 +1273,17 @@ LANG:1 20 show g_processesList
   }
 }" 0
  E E E
-1 926 21 "" 0
+1 877 21 "" 0
 0
-1 927 21 "" 1
+1 878 21 "" 1
 0
-1 928 21 "" 2
+1 879 21 "" 2
 0
-1 929 21 "" 3
+1 880 21 "" 3
 0
-1 930 21 "" 4
+1 881 21 "" 4
 0
-1 931 22 "" 0
+1 882 22 "" 0
 0
 4 685
 "LINE28"
@@ -1370,6 +1370,49 @@ LANG:1 12 alarmmessage
 LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
 0  18 792 304 815
 3 "0s" 0 0 0 0 0 -1  E E E
+13 785
+"PUSH_BUTTON20"
+""
+1 950 20 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+208 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  948 18 1072 44
+
+T 
+1
+LANG:1 15 Logger Settings
+"// SimpleCtrlScriptStart {valid}
+main()
+{
+  EP_childPanelOn();
+}
+
+EP_childPanelOn()
+{
+  ChildPanelOnCentralModal(\"objects/lofar_logger.pnl\",
+      \"Lofar Logger settings\",
+      makeDynString(\"\"));
+}
+
+// SimpleCtrlScript {EP_childPanelOn}
+// Function {ChildPanelOnCentralModal}
+// File {objects/lofar_logger.pnl}
+// Panel {Lofar Logger settings}
+// Parent {}
+// Module {}
+// OffsetX {0}
+// OffsetY {0}
+// SimpleCtrlScriptEnd {EP_childPanelOn}
+" 0
+ E E E
 13 834
 "PUSH_BUTTON21"
 ""
@@ -1398,33 +1441,6 @@ LANG:1 4 free
  if (ret < 0) DebugN(\"something went wrong resetting DP \"+NAME.txt+ \" \" + getLastError());  
 
   
-}" 0
- E E E
-13 883
-"PUSH_BUTTON22"
-""
-1 950 460 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
- E E
-210 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-0
-1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0  948 458 1098 484
-
-T 
-1
-LANG:1 20 show g_pipelinesList
-"main()
-{
-  LOG_DEBUG(\"Event_Viewer.pnl show g_pipelinesList\");
-  for (int i=1; i<= dynlen(g_pipelinesList);i++) {
-    DebugN(\"g_pipelinesList: \"+ g_pipelinesList[i]);
-  }
 }" 0
  E E E
 0

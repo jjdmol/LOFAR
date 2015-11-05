@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -37,8 +37,6 @@
 using namespace log4cplus;
 using namespace log4cplus::helpers;
 namespace LOFAR {
-  using namespace LOG_Protocol;
-  using namespace DP_Protocol;
   using namespace MACIO;
   namespace GCF {
     using namespace TM;

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -53,8 +53,7 @@ StationSettings::StationSettings() :
 	itsNrRspBoards(0),
 	itsNrBlps(0),
 	itsNrRcus(0),
-	itsHasSplitter(false),
-	itsHasAartfaac(false)
+	itsHasSplitter(false)
 {
 
 }
@@ -93,7 +92,6 @@ ostream& StationSettings::print (ostream& os) const
 	os << "Nr BLPs      : " << itsNrBlps         << endl;
 	os << "Nr RCUs      : " << itsNrRcus         << endl;
 	os << "Splitters    : " << (itsHasSplitter ? "Yes" : "No") << endl;
-	os << "Aartfaac     : " << (itsHasAartfaac ? "Yes" : "No") << endl;
 
 	return (os);
 }

@@ -24,7 +24,6 @@
 #include <cstddef>
 
 #include <Common/LofarTypes.h>
-#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
@@ -68,66 +67,7 @@ namespace LOFAR
 
 
     /*
-     * Get the log2 of the supplied number.
-     *
-     * n must be a power of two.
-     */
-    inline static unsigned log2(unsigned n)
-    {
-      ASSERT(powerOfTwo(n));
-
-      unsigned log;
-
-      for (log = 0; 1U << log != n; log ++)
-        ; // do nothing, the creation of the log is a side effect of the for loop
-
-      return log;
-    }
-
-
-    /*
-     * Returns ceil(n/divisor).
-     */
-    template <typename T>
-    inline static T ceilDiv(T n, T divisor)
-    {
-      return (n + divisor - 1) / divisor;
-    }
-
-
-    /*
-     * Returns the greatest common divisor of a and b.
-     * T must be an integral type.
-     * a, b > 0.
-     */
-    template <typename T>
-    inline static T gcd(T a, T b)
-    {
-      while (a != 0) {
-        T tmp = a;
-        a = b % a;
-        b = tmp;
-      }
-
-      return b;
-    }
-
-
-    /*
-     * Returns the least common multiple of a and b (may overflow T).
-     * T must be an integral type.
-     * a, b > 0.
-     */
-    template <typename T>
-    inline static T lcm(T a, T b)
-    {
-      return a / gcd(a, b) * b;
-    }
-
-
-    /*
      * Returns `value' rounded up to `alignment'.
-     * T must be an integral type.
      */
     template <typename T>
     inline static T align(T value, size_t alignment)
@@ -143,7 +83,6 @@ namespace LOFAR
 
     /*
      * Returns `value' rounded up to `alignment', in bytes.
-     * T must be an integral type.
      */
     template <typename T>
     inline static T *align(T *value, size_t alignment)
@@ -154,7 +93,6 @@ namespace LOFAR
 
     /*
      * Returns true if `value' is aligned to `alignment'.
-     * T must be an integral type.
      */
     template <typename T>
     inline static bool aligned(T value, size_t alignment)
@@ -165,7 +103,6 @@ namespace LOFAR
 
     /*
      * Returns true if `value' is aligned to `alignment', in bytes.
-     * T must be an integral type.
      */
     template <typename T>
     inline static bool aligned(T *value, size_t alignment)

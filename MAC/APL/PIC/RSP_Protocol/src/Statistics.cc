@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -39,11 +39,17 @@ size_t Statistics::getSize() const
 size_t Statistics::pack  (char* buffer) const
 {
   size_t offset = 0;
-  return MSH_pack(buffer, offset, m_statistics);
+
+  MSH_pack(buffer, offset, m_statistics);
+
+  return offset;
 }
 
 size_t Statistics::unpack(const char*buffer)
 {
   size_t offset = 0;
-  return MSH_unpack(buffer, offset, m_statistics);
+
+  MSH_unpack(buffer, offset, m_statistics);
+
+  return offset;
 }

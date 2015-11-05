@@ -1,5 +1,5 @@
-//# tTABTranspose.cc
-//# Copyright (C) 2012-2014  ASTRON (Netherlands Institute for Radio Astronomy)
+//# tParset.cc
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -20,26 +20,19 @@
 
 #include <lofar_config.h>
 
-#include <ctime>
-
 #include <Common/LofarLogger.h>
-#include <Common/Timer.h>
 #include <Stream/StringStream.h>
 #include <CoInterface/TABTranspose.h>
 
 #include <UnitTest++.h>
 #include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
 #include <omp.h>
-
-#include "tParsetDefault.h"
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace LOFAR::Cobalt::TABTranspose;
 using namespace std;
 using boost::format;
-using boost::lexical_cast;
 
 SUITE(Block) {
   TEST(OrderedArrival) {
@@ -139,13 +132,12 @@ struct Fixture {
 
   Fixture()
   :
-    outputPool("Fixture::outputPool", true),
     ctr(outputPool, 0, nrSubbands, nrChannels, nrSamples)
   {
     for (size_t i = 0; i < nrBlocks; ++i) {
       outputPool.free.append(new BeamformedData(
         boost::extents[nrSamples][nrSubbands][nrChannels],
-        boost::extents[nrSubbands][nrChannels]), false);
+        boost::extents[nrSubbands][nrChannels]));
     }
   }
 };
@@ -218,52 +210,6 @@ SUITE(BlockCollector) {
     ctr.finish();
     CHECK_EQUAL(nrBlocks + 1, outputPool.filled.size());
     CHECK_EQUAL(0UL,          outputPool.free.size());
-  }
-
-  TEST_FIXTURE(Fixture, OutOfOrder) {
-    // we add different subbands for each block to allow for any arrival order to be tried.
-    // for each block, we add one subband and consider the rest to be lost, to keep the test simple.
-
-    // max of 2 blocks in flight
-    BlockCollector ctr_loss(outputPool, 0, nrSubbands, nrChannels, nrSamples, 0, 2);
-
-    // we add blocks [1,3], enough to keep in flight
-    {
-      SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
-      sb->id.block = 1;
-      sb->id.subband = 0;
-      ctr_loss.addSubband(sb);
-    }
-    {
-      SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
-      sb->id.block = 3;
-      sb->id.subband = 1;
-      ctr_loss.addSubband(sb);
-    }
-
-    // we let block 0 arrive, which could (erroneously) emit block 1
-    // in favour of block 0.
-    {
-      SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
-      sb->id.block = 0;
-      sb->id.subband = 2;
-      ctr_loss.addSubband(sb);
-    }
-
-    // if ok, we now have [1,3] still, and should be able to add block 2,
-    // causing block 1 to be emitted.
-    {
-      SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
-      sb->id.block = 2;
-      sb->id.subband = 3;
-      ctr_loss.addSubband(sb);
-    }
-
-    // emit remaining blocks: [2,3]
-    ctr_loss.finish();
-
-    // should have emitted blocks [1,2,3], plus terminating NULL
-    CHECK_EQUAL(4UL, outputPool.filled.size());
   }
 
   TEST_FIXTURE(Fixture, Loss_OneSubband) {
@@ -403,11 +349,11 @@ SUITE(SendReceive) {
     Receiver::CollectorMap collectors;
 
     for (size_t i = 0; i < nrTABs; ++i) {
-      outputPools[i] = new Pool<BeamformedData>(str(format("OneToOne::outputPool[%u]") % i), true);
+      outputPools[i] = new Pool<BeamformedData>;
       for (size_t b = 0; b < nrBlocks; ++b) {
         outputPools[i]->free.append(new BeamformedData(
           boost::extents[nrSamples][nrSubbands][nrChannels],
-          boost::extents[nrSubbands][nrChannels]), false);
+          boost::extents[nrSubbands][nrChannels]));
       }
 
       collectors[i] = new BlockCollector(*outputPools[i], i, nrSubbands, nrChannels, nrSamples);
@@ -478,8 +424,8 @@ SUITE(MultiReceiver) {
 
     // Connect with multiple clients
     {
-      PortBroker::ClientStream cs1("localhost", PortBroker::DEFAULT_PORT, "foo-1", time(0) + 1);
-      PortBroker::ClientStream cs2("localhost", PortBroker::DEFAULT_PORT, "foo-2", time(0) + 1);
+      PortBroker::ClientStream cs1("localhost", PortBroker::DEFAULT_PORT, "foo-1", 1);
+      PortBroker::ClientStream cs2("localhost", PortBroker::DEFAULT_PORT, "foo-2", 1);
 
       // Disconnect them too! (~cs)
     }
@@ -497,7 +443,7 @@ SUITE(MultiReceiver) {
 
     // Connect
     {
-      PortBroker::ClientStream cs("localhost", PortBroker::DEFAULT_PORT, "foo-1", time(0) + 1);
+      PortBroker::ClientStream cs("localhost", PortBroker::DEFAULT_PORT, "foo-1", 1);
 
       // Send one block
       {
@@ -525,41 +471,17 @@ SUITE(MultiReceiver) {
 
   TEST(MultiSender) {
     MultiSender::HostMap hostMap;
-    Parset ps = makeDefaultTestParset();
-    ps.replace("Cobalt.realTime", "false");
-    ps.updateSettings();
-    MultiSender msender(hostMap, ps);
+    MultiSender msender(hostMap, 3, false);
   }
 
   TEST(Transpose) {
-    // We use the even fileIdx to simulate a sparse set.
-    // Do create enough filenames. (Ab)use the subbandsPerFile (multiple parts) feature for that.
-    #define SPARSITY 2
-    #define FILEIDX(tabNr) ((tabNr)*SPARSITY)
-
     LOG_DEBUG_STR("Transpose test started");
 
     const int nrSubbands = 4;
     const size_t nrBlocks = 2;
-    const int nrTABs = 2; // keep in sync w/ ps filenames below (others are auto-derived)
+    const int nrTABs = 2;
     const size_t nrSamples = 16;
     const size_t nrChannels = 1;
-
-    // Adapt a copy of the default parset to conform to the above specs.
-    Parset ps = makeDefaultTestParset();
-    ps.replace("Observation.DataProducts.Output_Correlated.enabled", "false");
-    ps.replace("Cobalt.realTime", "false");
-    ps.replace("Observation.Beam[0].subbandList", "[21.." + lexical_cast<string>(21 + nrSubbands - 1) + "]");
-    ps.replace("Observation.Dataslots.CS001LBA.RSPBoardList", "[" + lexical_cast<string>(nrSubbands) + "*0]");
-    ps.replace("Observation.Dataslots.CS001LBA.DataslotList", "[0.." + lexical_cast<string>(nrSubbands - 1) + "]");
-    ps.replace("Observation.Beam[0].nrTiedArrayBeams", lexical_cast<string>(nrTABs));
-    ps.replace("Cobalt.BeamFormer.CoherentStokes.subbandsPerFile", lexical_cast<string>(nrSubbands / SPARSITY));
-    ps.replace("Observation.DataProducts.Output_CoherentStokes.filenames", // size must be SPARSITY * nrTABs
-               "[L12345_SAP000_B000_S000_P000_bf.h5, L12345_SAP000_B000_S000_P001_bf.h5, L12345_SAP000_B001_S000_P000_bf.h5, L12345_SAP000_B001_S000_P001_bf.h5]");
-    ps.replace("Observation.DataProducts.Output_CoherentStokes.locations", "[" + lexical_cast<string>(SPARSITY * nrTABs) + "*localhost:tParset-data/]");
-    ps.replace("Cobalt.blockSize", lexical_cast<string>(nrSamples * nrChannels));
-    ps.replace("Cobalt.BeamFormer.CoherentStokes.nrChannelsPerSubband", lexical_cast<string>(nrSamples));
-    ps.updateSettings();
 
     // Give both senders and receivers multiple tasks,
     // but not all the same amount.
@@ -580,7 +502,10 @@ SUITE(MultiReceiver) {
         for (int r = 0; r < nrReceivers; ++r) {
           LOG_DEBUG_STR("Receiver thread " << r);
 
-          LOG_DEBUG_STR("Populating outputPools");
+          // Set up pool where all data ends up
+          Pool<Block> outputPool;
+
+          LOG_DEBUG_STR("Populating outputPool");
 
           // collect our TABs
           std::map<size_t, SmartPtr< Pool<BeamformedData> > > outputPools;
@@ -590,14 +515,14 @@ SUITE(MultiReceiver) {
             if (t % nrReceivers != r)
               continue;
 
-            outputPools[t] = new Pool<BeamformedData>(str(format("MultiReceiver::Transpose::outputPool[%u]") % t), true);
+            outputPools[t] = new Pool<BeamformedData>;
 
             for (size_t i = 0; i < nrBlocks; ++i) {
               outputPools[t]->free.append(new BeamformedData(
                 boost::extents[nrSamples][nrSubbands][nrChannels],
-                boost::extents[nrSubbands][nrChannels]), false);
+                boost::extents[nrSubbands][nrChannels]));
             }
-            collectors[FILEIDX(t)] = new BlockCollector(*outputPools[t], FILEIDX(t), nrSubbands, nrChannels, nrSamples, nrBlocks);
+            collectors[t] = new BlockCollector(*outputPools[t], t, nrSubbands, nrChannels, nrSamples, nrBlocks);
           }
 
           LOG_DEBUG_STR("Starting receiver " << r);
@@ -615,7 +540,7 @@ SUITE(MultiReceiver) {
               continue;
 
             // Check if all blocks arrived, plus NULL marker.
-            collectors[FILEIDX(t)]->finish();
+            collectors[t]->finish();
             CHECK_EQUAL(nrBlocks + 1UL, outputPools[t]->filled.size());
 
             for (size_t b = 0; b < nrBlocks; ++b) {
@@ -648,10 +573,10 @@ SUITE(MultiReceiver) {
             host.brokerPort = PortBroker::DEFAULT_PORT;
             host.service = str(format("foo-%s-%s") % r % s);
 
-            hostMap[FILEIDX(t)] = host;
+            hostMap[t] = host;
           }
 
-          MultiSender msender(hostMap, ps);
+          MultiSender msender(hostMap, 3, false);
 
 #         pragma omp parallel sections num_threads(2)
           {
@@ -672,7 +597,7 @@ SUITE(MultiReceiver) {
                   // Send all TABs
                   for (int t = 0; t < nrTABs; ++t) {
                     SmartPtr<Subband> subband = new Subband(nrSamples, nrChannels);
-                    subband->id.fileIdx = FILEIDX(t);
+                    subband->id.fileIdx = t;
                     subband->id.block = b;
                     subband->id.subband = sb;
 

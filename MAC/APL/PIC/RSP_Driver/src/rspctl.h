@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -43,7 +43,6 @@
 #include <boost/dynamic_bitset.hpp>
 
 namespace LOFAR {
-	using namespace RSP_Protocol;
 	using GCF::TM::GCFTask;
 	using GCF::TM::GCFPort;
 	using GCF::TM::GCFTCPPort;
@@ -598,23 +597,6 @@ private:
 };
 
 //
-// class SDOenableCommand
-//
-class SDOenableCommand : public Command
-{
-public:
-	SDOenableCommand(GCFPortInterface& port);
-	virtual ~SDOenableCommand() {}
-	virtual void send();
-	virtual GCFEvent::TResult ack(GCFEvent& e);
-	void setEnable(bool sdoOn) {
-		m_sdoOn = sdoOn;
-	}
-private:
-	bool    m_sdoOn;
-};
-
-//
 // class DataStreamCommand
 //
 class DataStreamCommand : public Command
@@ -653,43 +635,6 @@ private:
 	vector<uint>    itsBitVersionArray;
 };
 
-//
-// class SDOCommand
-//
-class SDOCommand : public Command
-{
-public:
-	SDOCommand(GCFPortInterface& port);
-	virtual ~SDOCommand() {}
-	virtual void send();
-	virtual GCFEvent::TResult ack(GCFEvent& e);
-	void setSubbandList(std::list<int> subbandlist) {
-		itsSubbandlist = subbandlist;
-	}
-private:
-	std::list<int>      itsSubbandlist;
-	int					itsBitsPerSample;
-};
-
-//
-// class SDOmodeCommand
-//
-class SDOmodeCommand : public Command
-{
-public:
-	SDOmodeCommand(GCFPortInterface& port);
-	virtual ~SDOmodeCommand() {}
-	virtual void send();
-	virtual GCFEvent::TResult ack(GCFEvent& e);
-	void sdomode(const int	sdomode) { itsSDOmode = sdomode; }
-	uint sdomode() const 			 { return itsSDOmode; }
-	vector<uint> getSDOmode() const    { return(itsSDOmodeArray); }
-	vector<uint> getSDOVersion() const { return(itsSDOVersionArray); }
-private:
-	uint    		itsSDOmode;
-	vector<uint>    itsSDOmodeArray;
-	vector<uint>    itsSDOVersionArray;
-};
 
 //
 // class RegisterStateCommand

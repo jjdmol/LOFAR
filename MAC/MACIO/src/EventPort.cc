@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -35,7 +35,6 @@
 //#include "GSB_Defines.h"
 
 namespace LOFAR {
-  using namespace SB_Protocol;
   namespace MACIO {
 
 // Note: the difference with GCF-ports is that this port is only based on the
@@ -74,15 +73,7 @@ EventPort::EventPort(const string&		aServiceMask,
 	itsBrokerSocket = new Socket("ServiceBroker", itsHost, toString(MAC_SERVICEBROKER_PORT));
 	ASSERTSTR(itsBrokerSocket, "can't allocate socket to serviceBroker");
 
-  // Some clients expect us to connect(), but clean up in case of errors, because
-  // the destructor won't run!
-  try {
-    _setupConnection();
-  } catch(...) {
-    itsBrokerSocket->close();
-    delete itsBrokerSocket;
-    throw;
-  }
+	_setupConnection();
 }
 
 //
@@ -91,17 +82,17 @@ EventPort::EventPort(const string&		aServiceMask,
 EventPort::~EventPort()
 {
 	if (itsSocket) {
-		itsSocket->close();
+		itsSocket->shutdown();
 		delete itsSocket;
 	};
 
 	if (itsListenSocket) {
-		itsListenSocket->close();
+		itsListenSocket->shutdown();
 		delete itsListenSocket;
 	};
 
 	if (itsBrokerSocket) {
-		itsBrokerSocket->close();
+		itsBrokerSocket->shutdown();
 		delete itsBrokerSocket;
 	};
 
@@ -259,8 +250,7 @@ int32 EventPort::_waitForSBAnswer()
 		LOG_INFO_STR("Service " << itsServiceName << " is at port " << itsPort);
 
 		// close connection with Broker.
-		itsBrokerSocket->close();
-    delete itsBrokerSocket;
+		itsBrokerSocket->shutdown();
 		itsBrokerSocket = 0;
 	}
 
