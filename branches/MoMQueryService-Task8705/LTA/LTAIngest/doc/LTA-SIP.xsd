@@ -1,0 +1,1210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema targetNamespace="http://www.astron.nl/SIP-Lofar" version="2.6.0" xmlns="http://www.astron.nl/SIP-Lofar" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:annotation>
+		<xs:documentation>
+		XML Schema for data model Submission Information Package LOFAR Long Term Archive
+		
+		The basic layout of a SIP is to have the Project that owns the data described, the DataProduct
+		that is being ingested, and the process (Observation or PipelineRun) that generated it.
+		If the generating process is a PipelineRun, then it will usually have input DataProducts. These
+		will recursively be described in the relatedDataProduct entries, with the processes that generated
+		them. These relatedDataProducts do not need to have been ingested into the archive themselves. It is
+		sufficient that there are described, with their related Obsrvation/Pipelines in this document to
+		be able to recreate the full provenance of the DataProduct.
+		</xs:documentation>
+	</xs:annotation>
+	<xs:annotation>
+		<xs:documentation>============================Generic Types============================
+		
+		Below are generic types that are used at various places within the document. It basically contains descriptions
+		of units like Frequency, Length, Time, astronomical entities like Equinox, Pointing and Angle
+		and some useful container types like lists and indentifiers.
+		</xs:documentation>
+	</xs:annotation>
+	<xs:simpleType name="FrequencyUnit">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Hz"/>
+			<xs:enumeration value="kHz"/>
+			<xs:enumeration value="MHz"/>
+			<xs:enumeration value="GHz"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="Frequency">
+		<xs:simpleContent>
+			<xs:extension base="xs:double">
+				<xs:attribute name="units" type="FrequencyUnit" use="required"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:simpleType name="LengthUnit">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="m"/>
+			<xs:enumeration value="km"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="Length">
+		<xs:simpleContent>
+			<xs:extension base="xs:double">
+				<xs:attribute name="units" type="LengthUnit" use="required"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:simpleType name="TimeUnit">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="s"/>
+			<xs:enumeration value="ms"/>
+			<xs:enumeration value="us"/>
+			<xs:enumeration value="ns"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="Time">
+		<xs:simpleContent>
+			<xs:extension base="xs:double">
+				<xs:attribute name="units" type="TimeUnit" use="required"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:simpleType name="AngleUnit">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="radians"/>
+			<xs:enumeration value="degrees"/>
+			<xs:enumeration value="arcsec"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="Angle">
+		<xs:simpleContent>
+			<xs:extension base="xs:double">
+				<xs:attribute name="units" type="AngleUnit" use="required"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:simpleType name="PixelUnit">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Jy/beam"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="Pixel">
+		<xs:simpleContent>
+			<xs:extension base="xs:double">
+				<xs:attribute name="units" type="PixelUnit" use="required"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:simpleType name="ListOfDouble">
+		<xs:list itemType="xs:double"/>
+	</xs:simpleType>
+	<xs:simpleType name="ListOfString">
+		<xs:list itemType="xs:string"/>
+	</xs:simpleType>
+	<xs:simpleType name="ListOfSubbands">
+		<xs:list itemType="xs:unsignedShort"/>
+	</xs:simpleType>
+	<xs:complexType name="ListOfFrequencies">
+		<xs:sequence>
+			<xs:element name="frequencies" type="ListOfDouble"/>
+			<xs:element name="unit" type="FrequencyUnit"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>Generic identifier type. Currently two sources are supported: MoM and SAS
+		</xs:documentation>
+	</xs:annotation>
+	<xs:complexType name="IdentifierType">
+		<xs:sequence>
+			<xs:element name="source" type="xs:string"/>
+			<xs:element name="identifier" type="xs:string"/>
+			<xs:element name="name" minOccurs="0" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="EquinoxType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="B1950"/>
+			<xs:enumeration value="J2000"/>
+			<xs:enumeration value="SUN"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:annotation>
+		<xs:documentation>Pointing, either RA/DEC or AZ/EL, can't be coded as a choice due to Eclipse parser limitations.</xs:documentation>
+	</xs:annotation>
+	<xs:complexType name="Pointing">
+		<xs:sequence>
+			<xs:choice>
+				<xs:element name="rightAscension" type="Angle"/>
+				<xs:element name="azimuth" type="Angle"/>
+			</xs:choice>
+			<xs:choice>
+				<xs:element name="declination" type="Angle"/>
+				<xs:element name="altitude" type="Angle"/>
+			</xs:choice>
+			<xs:element name="equinox" type="EquinoxType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>============================Stations============================
+	
+		Below is information related to Stations and AntennaFields. Stations have one or more AntennaFields, each of which is
+		a single sensing element within the array for most observation types. AntennaFields are the end points for baselines in
+		Interferometry mode, the array elements in Beam Formed mode, etc. Only Transient Buffer Mode reads the individual antennas.
+		</xs:documentation>
+	</xs:annotation>
+	<xs:annotation>
+		<xs:documentation>Usually the coordinates of a station will by in x,y,z in ITRF, but we also have the option to use coordinates on a sphere.</xs:documentation>
+	</xs:annotation>
+	<xs:complexType name="Coordinates">
+		<xs:sequence>
+			<xs:element name="coordinateSystem">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:enumeration value="WGS84"/>
+						<xs:enumeration value="ITRF2000"/>
+						<xs:enumeration value="ITRF2005"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:choice>
+				<xs:sequence>
+					<xs:element name="x" type="Length"/>
+					<xs:element name="y" type="Length"/>
+					<xs:element name="z" type="Length"/>
+				</xs:sequence>
+				<xs:sequence>
+					<xs:element name="radius" type="Length"/>
+					<xs:element name="longitude" type="Angle"/>
+					<xs:element name="latitude" type="Angle"/>
+				</xs:sequence>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>
+		AntennaFields per station are currently either 2 (HBA/LBA) or 3 for core stations (HBA0/HBA1/LBA).
+		When the signals from HBA0 and HBA1 are combined, they show up as HBA in the SIP, not HBA0+HBA1.
+		</xs:documentation>
+	</xs:annotation>
+	<xs:simpleType name="AntennaFieldType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="HBA0"/>
+			<xs:enumeration value="HBA1"/>
+			<xs:enumeration value="HBA"/>
+			<xs:enumeration value="LBA"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:annotation>
+		<xs:documentation>Currently Superterp is not a separate type here.</xs:documentation>
+	</xs:annotation>
+	<xs:simpleType name="StationTypeType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Core"/>
+			<xs:enumeration value="Remote"/>
+			<xs:enumeration value="International"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="AntennaField">
+		<xs:sequence>
+			<xs:element name="name" type="AntennaFieldType"/>
+			<xs:element name="location" type="Coordinates"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Stations">
+		<xs:sequence>
+			<xs:element maxOccurs="unbounded" name="station" type="Station"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>Currently only one (LBA/HBA/HBA0/HBA1) or two (HBA0+HBA1) antennafields can be active at the same time.</xs:documentation>
+	</xs:annotation>
+	<xs:complexType name="Station">
+		<xs:sequence>
+			<xs:element name="name" type="xs:string"/>
+			<xs:element name="stationType" type="StationTypeType"/>
+			<xs:element minOccurs="1" maxOccurs="2" name="antennaField" type="AntennaField"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>============================Process============================
+			
+		Below is the generic Process class. Currently it has two subclasses: Observation and PipelineRun.
+		All processes are currently run in Tier0, specified in MoM/Scheduler and controlled by SAS/MAC.
+		processIdentifier: MoM Id
+		observationId: SAS VIC Tree Id (Note that it's not called observationId-entifier)
+		strategyName/Description: Strategy template for observing/processing, known within SAS as the default template
+		</xs:documentation>
+	</xs:annotation>
+	<xs:annotation>
+		<xs:documentation>Currently only one relation type is defined (GroupID), but others are likely to be added, like Target-Calibrator, Slice.
+		Please note that this also can apply to Sub-Array Pointings.</xs:documentation>
+	</xs:annotation>
+	<xs:simpleType name="ProcessRelationType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="GroupID"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="ProcessRelation">
+		<xs:sequence>
+			<xs:element name="relationType" type="ProcessRelationType"/>
+			<xs:element name="identifier" type="IdentifierType"/>
+			<xs:element minOccurs="0" name="name" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ProcessRelations">
+		<xs:sequence>
+			<xs:element minOccurs="0" maxOccurs="unbounded" name="relation" type="ProcessRelation"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Process">
+		<xs:sequence>
+			<xs:element name="processIdentifier" type="IdentifierType"/>
+			<xs:element name="observationId" type="IdentifierType"/>
+			<xs:element minOccurs="0" name="parset" type="IdentifierType"/>
+			<xs:element name="strategyName" type="xs:string"/>
+			<xs:element name="strategyDescription" type="xs:string"/>
+			<xs:element name="startTime" type="xs:dateTime"/>
+			<xs:element name="duration" type="xs:duration"/>
+			<xs:element name="relations" type="ProcessRelations"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>============================Observation============================
+			
+		Below is information related to the Observation process.
+		</xs:documentation>
+	</xs:annotation>
+	<xs:simpleType name="FilterSelectionType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="10-70 MHz"/>
+			<xs:enumeration value="10-90 MHz"/>
+			<xs:enumeration value="30-70 MHz"/>
+			<xs:enumeration value="30-90 MHz"/>
+			<xs:enumeration value="110-190 MHz"/>
+			<xs:enumeration value="170-230 MHz"/>
+			<xs:enumeration value="210-250 MHz"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="ClockType">
+		<xs:simpleContent>
+			<xs:restriction base="Frequency">
+				<xs:enumeration value="160"/>
+				<xs:enumeration value="200"/>
+				<xs:attribute fixed="MHz" name="units" type="FrequencyUnit" use="required"/>
+			</xs:restriction>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:simpleType name="AntennaSetType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="HBA Zero"/>
+			<xs:enumeration value="HBA One"/>
+			<xs:enumeration value="HBA Dual"/>
+			<xs:enumeration value="HBA Joined"/>
+			<xs:enumeration value="LBA Outer"/>
+			<xs:enumeration value="LBA Inner"/>
+			<xs:enumeration value="LBA Sparse Even"/>
+			<xs:enumeration value="LBA Sparse Odd"/>
+			<xs:enumeration value="LBA X"/>
+			<xs:enumeration value="LBA Y"/>
+			<xs:enumeration value="HBA Zero Inner"/>
+			<xs:enumeration value="HBA One Inner"/>
+			<xs:enumeration value="HBA Dual Inner"/>
+			<xs:enumeration value="HBA Joined Inner"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="StationSelectionType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Single"/>
+			<xs:enumeration value="Core"/>
+			<xs:enumeration value="Dutch"/>
+			<xs:enumeration value="International"/>
+			<xs:enumeration value="Custom"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ObservingModeType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Interferometer"/>
+			<xs:enumeration value="Beam Observation"/>
+			<xs:enumeration value="TBB (standalone)"/>
+			<xs:enumeration value="TBB (piggyback)"/>
+			<xs:enumeration value="Direct Data Storage"/>
+			<xs:enumeration value="Non Standard"/>
+			<xs:enumeration value="Unknown"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="TimeSystemType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="UTC"/>
+			<xs:enumeration value="LST"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:annotation>
+		<xs:documentation>Observation is one of the core classes of the SIP. It describes one of the main datagenerating processes.
+		The big difference with a PipelineRun process is in that an Observation has no input dataproducts as it is a 
+		direct measurement of the physical process.
+	
+		Notes:Is unsignedShort enough for numberOftransientBufferBoardEvents?
+		Backward compatibility with the BlueGene: With old BG observations channelWidth and channelsPerSubband are set at Observation level and not at RealTimeProcess level.
+		For BG frequencyDownsamplingFactor and numberOfCollapsedChannels are set.
+		For Cobalt observations the reverse is true: channelWidth and channelsPerSubband are only set at RealTimeProcess level and not at Observation level.
+		For Cobalt frequencyDownsamplingFactor en numberOfCollapsedChannels are not set.
+		</xs:documentation>
+	</xs:annotation>
+	<xs:complexType name="Observation">
+		<xs:complexContent>
+			<xs:extension base="Process">
+				<xs:sequence>
+					<xs:element name="observingMode" type="ObservingModeType"/>
+					<xs:element minOccurs="0" name="observationDescription" type="xs:string"/>
+					<xs:element name="instrumentFilter" type="FilterSelectionType"/>
+					<xs:element name="clock" type="ClockType"/>
+					<xs:element name="stationSelection" type="StationSelectionType"/>
+					<xs:element name="antennaSet" type="AntennaSetType"/>
+					<xs:element name="timeSystem" type="TimeSystemType"/>
+					<xs:element minOccurs="0" name="channelWidth" type="Frequency"/><!--BlueGene compatibility-->
+					<xs:element minOccurs="0" name="channelsPerSubband" type="xs:unsignedShort"/><!--BlueGene compatibility-->
+					<xs:element name="numberOfStations" type="xs:unsignedByte"/>
+					<xs:element name="stations" type="Stations"/>
+					<xs:element name="numberOfSubArrayPointings" type="xs:unsignedShort"/>
+					<xs:element minOccurs="0" name="subArrayPointings" type="SubArrayPointings"/>
+					<xs:element name="numberOftransientBufferBoardEvents" type="xs:unsignedShort"/>
+					<xs:element minOccurs="0" name="transientBufferBoardEvents" type="TransientBufferBoardEvents"/>
+					<xs:element name="numberOfCorrelatedDataProducts" type="xs:unsignedShort"/>
+					<xs:element name="numberOfBeamFormedDataProducts" type="xs:unsignedShort"/>
+					<xs:element name="numberOfBitsPerSample" type="xs:unsignedShort"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="DirectDataMeasurement">
+		<xs:complexContent>
+			<xs:extension base="Process">
+				<xs:sequence>
+					<xs:element name="observingMode" type="ObservingModeType"/>
+					<xs:element name="station" type="Station"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>===================Generic/Unspecified======================
+	
+		Please note that the difference between Generic and Unspecified is that the first describes a non standard process, while the second describes an unknown
+		process. The latter is mostly used when there are partial errors during the ingest of data into the archive.
+		</xs:documentation>
+	</xs:annotation>
+	<xs:complexType name="GenericMeasurement">
+		<xs:complexContent>
+			<xs:extension base="Process">
+				<xs:sequence>
+					<xs:element name="observingMode" type="ObservingModeType"/>
+					<xs:element name="description" type="xs:string"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="UnspecifiedProcess">
+		<xs:complexContent>
+			<xs:extension base="Process">
+				<xs:sequence>
+					<xs:element name="observingMode" type="ObservingModeType"/>
+					<xs:element name="description" type="xs:string"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>============================Online Processing============================
+		
+		This describes the various types of realtime/online processing that can happen after the data is sent from the stations to
+		the central processing. It's still part of the Observation.
+		</xs:documentation>
+	</xs:annotation>
+	<xs:simpleType name="ProcessingType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Correlator"/>
+			<xs:enumeration value="Coherent Stokes"/>
+			<xs:enumeration value="Incoherent Stokes"/>
+			<xs:enumeration value="Fly's Eye"/>
+			<xs:enumeration value="Non Standard"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="MeasurementType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Test"/>
+			<xs:enumeration value="Tune Up"/>
+			<xs:enumeration value="Calibration"/>
+			<xs:enumeration value="Target"/>
+			<xs:enumeration value="All Sky"/>
+			<xs:enumeration value="Miscellaneous"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="Processing">
+		<xs:sequence>
+			<xs:element minOccurs="0" name="correlator" type="Correlator"/>
+			<xs:element minOccurs="0" name="coherentStokes" type="CoherentStokes"/>
+			<xs:element minOccurs="0" name="incoherentStokes" type="IncoherentStokes"/>
+			<xs:element minOccurs="0" name="flysEye" type="FlysEye"/>
+			<xs:element minOccurs="0" name="nonStandard" type="NonStandard"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="RealTimeProcess">
+		<xs:sequence>
+			<xs:element name="processingType" type="ProcessingType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Correlator">
+		<xs:complexContent>
+			<xs:extension base="RealTimeProcess">
+				<xs:sequence>
+					<xs:element name="integrationInterval" type="Time"/>
+					<xs:element minOccurs="0" name="channelWidth" type="Frequency"/><!--BlueGene compatibility-->
+					<xs:element minOccurs="0" name="channelsPerSubband" type="xs:unsignedShort"/><!--BlueGene compatibility-->
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>The CoherentStokes and IncoherentStokes do further processing on the data after the polyphase filter
+		on the BlueGene. The numberOfColapsedChannels is what is actually written to disk, the frequencyDownsamplingFactor is thus
+		Observation:channelsPerSubband divided by the numberOfcolapsedChannels.
+		There is also downsampling in time from the rawSamplingTime coming out of the polyphasefilter, usually in nanoseconds, using the timeDownsamplingFactor to
+		get to the samplingTime. The timeDownsamplingFactor can be quite large, with the resulting samplingtime in the miliseconds.
+		
+		Also note that within the same Observation, these settings can be different for CoherentStokes and IncoherentStokes. if both types are being generated.
+		</xs:documentation>
+	</xs:annotation>
+	<xs:complexType name="CoherentStokes">
+		<xs:complexContent>
+			<xs:extension base="RealTimeProcess">
+				<xs:sequence>
+					<xs:element name="rawSamplingTime" type="Time"/>
+					<xs:element name="timeDownsamplingFactor" type="xs:unsignedInt"/>
+					<xs:element name="samplingTime" type="Time"/>
+					<xs:element minOccurs="0" name="frequencyDownsamplingFactor" type="xs:unsignedShort"/><!--BlueGene compatibility-->
+					<xs:element minOccurs="0" name="numberOfCollapsedChannels" type="xs:unsignedShort"/><!--BlueGene compatibility-->
+					<xs:element name="stokes" type="PolarizationType" maxOccurs="4"/>
+					<xs:element name="numberOfStations" type="xs:unsignedByte"/>
+					<xs:element name="stations" type="Stations"/>
+					<xs:element minOccurs="0" name="channelWidth" type="Frequency"/><!--BlueGene compatibility-->
+					<xs:element minOccurs="0" name="channelsPerSubband" type="xs:unsignedShort"/><!--BlueGene compatibility-->
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="IncoherentStokes">
+		<xs:complexContent>
+			<xs:extension base="RealTimeProcess">
+				<xs:sequence>
+					<xs:element name="rawSamplingTime" type="Time"/>
+					<xs:element name="timeDownsamplingFactor" type="xs:unsignedInt"/>
+					<xs:element name="samplingTime" type="Time"/>
+					<xs:element minOccurs="0" name="frequencyDownsamplingFactor" type="xs:unsignedShort"/><!--BlueGene compatibility-->
+					<xs:element minOccurs="0" name="numberOfCollapsedChannels" type="xs:unsignedShort"/><!--BlueGene compatibility-->
+					<xs:element name="stokes" type="PolarizationType" maxOccurs="4"/>
+					<xs:element name="numberOfStations" type="xs:unsignedByte"/>
+					<xs:element name="stations" type="Stations"/>
+					<xs:element minOccurs="0" name="channelWidth" type="Frequency"/><!--BlueGene compatibility-->
+					<xs:element minOccurs="0" name="channelsPerSubband" type="xs:unsignedShort"/><!--BlueGene compatibility-->
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="FlysEye">
+		<xs:complexContent>
+			<xs:extension base="RealTimeProcess">
+				<xs:sequence>
+					<xs:element name="rawSamplingTime" type="Time"/>
+					<xs:element name="timeDownsamplingFactor" type="xs:unsignedInt"/>
+					<xs:element name="samplingTime" type="Time"/>
+					<xs:element name="stokes" type="PolarizationType" maxOccurs="4"/>
+					<xs:element minOccurs="0" name="channelWidth" type="Frequency"/><!--BlueGene compatibility-->
+					<xs:element minOccurs="0" name="channelsPerSubband" type="xs:unsignedShort"/><!--BlueGene compatibility-->
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="NonStandard">
+		<xs:complexContent>
+			<xs:extension base="RealTimeProcess">
+				<xs:sequence>
+					<xs:element name="channelWidth" type="Frequency"/>
+					<xs:element name="channelsPerSubband" type="xs:unsignedShort"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="TransientBufferBoardEvents">
+		<xs:sequence>
+			<xs:element maxOccurs="unbounded" name="transientBufferBoardEvent" type="TransientBufferBoardEvent"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TransientBufferBoardEvent">
+		<xs:sequence>
+			<xs:element name="eventSource" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SubArrayPointings">
+		<xs:sequence>
+			<xs:element maxOccurs="unbounded" name="subArrayPointing" type="SubArrayPointing"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>SubArrayPointing is one of the core classes of the SIP. It contains important information on 
+		what direction the telescope is pointing and what object was the target as well as the length of time the patch
+		of sky was was observed.
+		
+		See the XML standard for the format of xs::duration.
+		</xs:documentation>
+	</xs:annotation>
+	<xs:complexType name="SubArrayPointing">
+		<xs:sequence>
+			<xs:element name="pointing" type="Pointing"/>
+			<xs:element name="beamNumber" type="xs:unsignedShort"/>
+			<xs:element minOccurs="0" name="measurementDescription" type="xs:string"/>
+			<xs:element name="subArrayPointingIdentifier" type="IdentifierType"/>
+			<xs:element name="measurementType" type="MeasurementType"/>
+			<xs:element name="targetName" type="xs:string"/>
+			<xs:element name="startTime" type="xs:dateTime"/>
+			<xs:element name="duration" type="xs:duration"/>
+			<xs:element name="numberOfProcessing" type="xs:unsignedShort"/>
+			<xs:element minOccurs="0" name="processing" type="Processing"/>
+			<xs:element name="numberOfCorrelatedDataProducts" type="xs:unsignedShort"/>
+			<xs:element name="numberOfBeamFormedDataProducts" type="xs:unsignedShort"/>
+			<xs:element name="relations" type="ProcessRelations"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DataSources">
+		<xs:annotation>
+			<xs:documentation>============================Pipeline============================
+	
+			This section describes the various pipelines.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="dataProductIdentifier" type="IdentifierType" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PipelineRun">
+		<xs:complexContent>
+			<xs:extension base="Process">
+				<xs:sequence>
+					<xs:element name="pipelineName" type="xs:string"/>
+					<xs:element name="pipelineVersion" type="xs:string"/>
+					<xs:element name="sourceData" type="DataSources"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>This definition might not be entirely finished as the ImagingPipeline is still being worked on.</xs:documentation>
+	</xs:annotation>
+	<xs:complexType name="ImagingPipeline">
+		<xs:complexContent>
+			<xs:extension base="PipelineRun">
+				<xs:sequence>
+					<xs:element minOccurs="0" name="frequencyIntegrationStep" type="xs:unsignedShort"/>
+					<xs:element minOccurs="0" name="timeIntegrationStep" type="xs:unsignedShort"/>
+					<xs:element minOccurs="0" name="skyModelDatabase" type="xs:string"/>
+					<xs:element minOccurs="0" name="demixing" type="xs:boolean"/>
+					<xs:element name="imagerIntegrationTime" type="Time"/>
+					<xs:element name="numberOfMajorCycles" type="xs:unsignedShort"/>
+					<xs:element name="numberOfInstrumentModels" type="xs:unsignedShort"/>
+					<xs:element name="numberOfCorrelatedDataProducts" type="xs:unsignedShort"/>
+					<xs:element name="numberOfSkyImages" type="xs:unsignedShort"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="CalibrationPipeline">
+		<xs:complexContent>
+			<xs:extension base="PipelineRun">
+				<xs:sequence>
+					<xs:element minOccurs="0" name="frequencyIntegrationStep" type="xs:unsignedShort"/>
+					<xs:element minOccurs="0" name="timeIntegrationStep" type="xs:unsignedShort"/>
+					<xs:element minOccurs="0" name="flagAutoCorrelations" type="xs:boolean"/>
+					<xs:element minOccurs="0" name="demixing" type="xs:boolean"/>
+					<xs:element name="skyModelDatabase" type="xs:string"/>
+					<xs:element name="numberOfInstrumentModels" type="xs:unsignedShort"/>
+					<xs:element name="numberOfCorrelatedDataProducts" type="xs:unsignedShort"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="AveragingPipeline">
+		<xs:complexContent>
+			<xs:extension base="PipelineRun">
+				<xs:sequence>
+					<xs:element name="frequencyIntegrationStep" type="xs:unsignedShort"/>
+					<xs:element name="timeIntegrationStep" type="xs:unsignedShort"/>
+					<xs:element name="flagAutoCorrelations" type="xs:boolean"/>
+					<xs:element name="demixing" type="xs:boolean"/>
+					<xs:element name="numberOfCorrelatedDataProducts" type="xs:unsignedShort"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>Pulsar pipeline. Which pulsars are selected for processing is a complex system</xs:documentation>
+	</xs:annotation>
+	<xs:simpleType name="PulsarSelectionType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Pulsars in observation specs, file or SAP"/><!--Default-->
+			<xs:enumeration value="Pulsars in observation specs"/><!--parset-->
+			<xs:enumeration value="Pulsar specified in dataproduct"/><!--meta-->
+			<xs:enumeration value="Brightest known pulsar in SAP"/><!--sapfind-->
+			<xs:enumeration value="Three brightest known pulsars in SAP"/><!--sapfind3-->
+			<xs:enumeration value="Brightest known pulsar in TAB"/><!--tabfind-->
+			<xs:enumeration value="Pulsars in observation specs, file and brightest in SAP and TAB"/><!--tabfind+-->
+			<xs:enumeration value="Specified pulsar list"/><!--given list, comma separated-->
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="PulsarPipeline">
+		<xs:complexContent>
+			<xs:extension base="PipelineRun">
+				<xs:sequence>
+					<xs:element name="pulsarSelection" type="PulsarSelectionType"/>
+					<xs:element name="pulsars" type="ListOfString"/>
+					<xs:element name="doSinglePulseAnalysis" type="xs:boolean"/><!--single-pulse-->
+					<xs:element name="convertRawTo8bit" type="xs:boolean"/><!--raw-to-8bit-->
+					<xs:element name="subintegrationLength" type="Time"/><!--tsubint-->
+					<xs:element name="skipRFIExcision" type="xs:boolean"/><!--norfi-->
+					<xs:element name="skipDataFolding" type="xs:boolean"/><!--nofold-->
+					<xs:element name="skipOptimizePulsarProfile" type="xs:boolean"/><!--nopdmp-->
+					<xs:element name="skipConvertRawIntoFoldedPSRFITS" type="xs:boolean"/><!--skip-dspsr-->
+					<xs:element name="runRotationalRAdioTransientsAnalysis" type="xs:boolean"/><!--rrats RRAT capitals on purpose-->
+					<xs:element name="skipDynamicSpectrum" type="xs:boolean"/><!--skip-dynamic-spectrum-->
+					<xs:element name="skipPreFold" type="xs:boolean"/><!--skip-prefold-->
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="CosmicRayPipeline">
+		<xs:complexContent>
+			<xs:extension base="PipelineRun"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="LongBaselinePipeline">
+		<xs:complexContent>
+			<xs:extension base="PipelineRun">
+				<xs:sequence>
+					<xs:element name="subbandsPerSubbandGroup" type="xs:unsignedShort"/>
+					<xs:element name="subbandGroupsPerMS" type="xs:unsignedShort"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="GenericPipeline">
+		<xs:complexContent>
+			<xs:extension base="PipelineRun"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>============================DataProduct============================
+	
+		This section describes the dataproducts.
+		</xs:documentation>
+	</xs:annotation>
+	<xs:simpleType name="DataProductType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Correlator data"/>
+			<xs:enumeration value="Beam Formed data"/>
+			<xs:enumeration value="Transient Buffer Board data"/>
+			<xs:enumeration value="Sky Image"/>
+			<xs:enumeration value="Pixel Map"/>
+			<xs:enumeration value="Direct Data Storage data"/>
+			<xs:enumeration value="Dynamic Spectra data"/>
+			<xs:enumeration value="Instrument Model"/>
+			<xs:enumeration value="Sky Model"/>
+			<xs:enumeration value="Pulsar pipeline output"/>
+			<xs:enumeration value="Pulsar pipeline summary output"/>
+			<xs:enumeration value="Non Standard"/>
+			<xs:enumeration value="Unknown"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ChecksumAlgorithm">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="MD5"/>
+			<xs:enumeration value="Adler32"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="ChecksumType">
+		<xs:sequence>
+			<xs:element name="algorithm" type="ChecksumAlgorithm"/>
+			<xs:element name="value" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>We plan to support three types of file formats currently in the LTA.</xs:documentation>
+	</xs:annotation>
+	<xs:simpleType name="FileFormatType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="FITS"/>
+			<xs:enumeration value="AIPS++/CASA"/>
+			<xs:enumeration value="HDF5"/>
+			<xs:enumeration value="PULP"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:annotation>
+		<xs:documentation>This very well defined yet! type probably needs to be an enumeration</xs:documentation>
+	</xs:annotation>
+	<xs:complexType name="TBBTrigger">
+		<xs:sequence>
+			<xs:element name="type" type="xs:string"/>
+			<xs:element name="value" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>From AIPS++/CASA: None=0,I=1,Q=2,U=3,V=4,RR=5,RL=6,LR=7,LL=8,XX=9,XY=10,YX=11,YY=12</xs:documentation>
+	</xs:annotation>
+	<xs:simpleType name="PolarizationType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="None"/>
+			<xs:enumeration value="I"/>
+			<xs:enumeration value="Q"/>
+			<xs:enumeration value="U"/>
+			<xs:enumeration value="V"/>
+			<xs:enumeration value="RR"/>
+			<xs:enumeration value="RL"/>
+			<xs:enumeration value="LR"/>
+			<xs:enumeration value="LL"/>
+			<xs:enumeration value="XX"/>
+			<xs:enumeration value="XY"/>
+			<xs:enumeration value="YX"/>
+			<xs:enumeration value="YY"/>
+			<xs:enumeration value="Xre"/>
+			<xs:enumeration value="Xim"/>
+			<xs:enumeration value="Yre"/>
+			<xs:enumeration value="Yim"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:annotation>
+		<xs:documentation>Base class of the various DataProducts</xs:documentation>
+	</xs:annotation>
+	<xs:complexType name="DataProduct">
+		<xs:sequence>
+			<xs:element name="dataProductType" type="DataProductType"/>
+			<xs:element name="dataProductIdentifier" type="IdentifierType"/>
+			<xs:element minOccurs="0" name="storageTicket" type="xs:string"/>
+			<xs:element name="size" type="xs:unsignedLong"/><!--Bytes-->
+			<xs:element maxOccurs="unbounded" minOccurs="0" name="checksum" type="ChecksumType"/>
+			<xs:element name="fileName" type="xs:string"/>
+			<xs:element name="fileFormat" type="FileFormatType"/>
+			<xs:element name="processIdentifier" type="IdentifierType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>======================Interferometer===========================
+	
+		subArrayPointingIdentifier (also knows as MeasurementIdentifier within MoM) is not an optional parameter as the
+		LTA catalog needs it because it can't otherwise find this information because of limits in the PipelineRun model.
+		See the XML standard for the format of xs::duration.
+		</xs:documentation>
+	</xs:annotation>
+	<xs:complexType name="CorrelatedDataProduct">
+		<xs:complexContent>
+			<xs:extension base="DataProduct">
+				<xs:sequence>
+					<xs:element name="subArrayPointingIdentifier" type="IdentifierType"/>
+					<xs:element name="subband" type="xs:unsignedShort"/>
+					<xs:element minOccurs="0" name="stationSubband" type="xs:unsignedShort"/>
+					<xs:element name="startTime" type="xs:dateTime"/>
+					<xs:element name="duration" type="xs:duration"/>
+					<xs:element name="integrationInterval" type="Time"/>
+					<xs:element name="centralFrequency" type="Frequency"/>
+					<xs:element name="channelWidth" type="Frequency"/>
+					<xs:element name="channelsPerSubband" type="xs:unsignedShort"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>This currently describes the ParmDB. No fields are defined because in the model is functions
+		as a link between Calibrator and Target observations and doesn't contain any searchable metadata at the moment.
+		</xs:documentation>
+	</xs:annotation>
+	<xs:complexType name="InstrumentModelDataProduct">
+		<xs:complexContent>
+			<xs:extension base="DataProduct"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>This currently describes the SourceDB. No fields are defined because in the model is functions
+		as a link between Calibrator and Target observations and doesn't contain any searchable metadata at the moment.
+		</xs:documentation>
+	</xs:annotation>
+	<xs:complexType name="SkyModelDataProduct">
+		<xs:complexContent>
+			<xs:extension base="DataProduct"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>=====================TransientBufferBoard=====================
+		
+		The timeStamp contains the exact number of seconds from Observation::startTime
+		</xs:documentation>
+	</xs:annotation>
+	<xs:complexType name="TransientBufferBoardDataProduct">
+		<xs:complexContent>
+			<xs:extension base="DataProduct">
+				<xs:sequence>
+					<xs:element name="numberOfSamples" type="xs:unsignedInt"/>
+					<xs:element name="timeStamp" type="xs:unsignedInt"/>
+					<xs:element name="triggerParameters" type="TBBTrigger"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>=====================BeamFormed=====================
+	
+		This section describes BeamFormed dataproducts. The important part is that this is where all the individual ArrayBeams are
+		described, the actual BeamFormedDataProduct is basically just a container.
+		</xs:documentation>
+	</xs:annotation>
+	<xs:complexType name="ArrayBeams">
+		<xs:sequence>
+			<xs:element maxOccurs="unbounded" name="arrayBeam" type="ArrayBeam"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>SamplingTime is the duration of a single sample usually in ms or ns.</xs:documentation>
+	</xs:annotation>
+	<xs:complexType name="ArrayBeam">
+		<xs:sequence>
+			<xs:element name="subArrayPointingIdentifier" type="IdentifierType"/>
+			<xs:element name="beamNumber" type="xs:unsignedShort"/>
+			<xs:element name="dispersionMeasure" type="xs:double"/>
+			<xs:element name="numberOfSubbands" type="xs:unsignedShort"/>
+			<xs:element name="stationSubbands" type="ListOfSubbands"/>
+			<xs:element name="samplingTime" type="Time"/>
+			<xs:element name="centralFrequencies" type="ListOfFrequencies"/>
+			<xs:element name="channelWidth" type="Frequency"/>
+			<xs:element name="channelsPerSubband" type="xs:unsignedShort"/>
+			<xs:element name="stokes" type="PolarizationType" maxOccurs="4"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>The pointing is the actual pointing of the ArrayBeam
+		The offset is the difference in the pointing of the ArrayBeam and the SubArrayPointing
+		</xs:documentation>
+	</xs:annotation>
+	<xs:complexType name="CoherentStokesBeam">
+		<xs:complexContent>
+			<xs:extension base="ArrayBeam">
+				<xs:sequence>
+					<xs:element name="pointing" type="Pointing"/>
+					<xs:element name="offset" type="Pointing"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="IncoherentStokesBeam">
+		<xs:complexContent>
+			<xs:extension base="ArrayBeam">
+				<xs:sequence/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="FlysEyeBeam">
+		<xs:complexContent>
+			<xs:extension base="ArrayBeam">
+				<xs:sequence>
+					<xs:element name="station" type="Station"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="BeamFormedDataProduct">
+		<xs:complexContent>
+			<xs:extension base="DataProduct">
+				<xs:sequence>
+					<xs:element name="numberOfBeams" type="xs:unsignedShort"/>
+					<xs:element minOccurs="0" name="beams" type="ArrayBeams"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>=====================Pulsar Pipeline Dataproducts=====================
+		
+		PULP is a name for the output of the pulsar pipeline, it contains a list of small files.
+		It also contains pointers back to the observation/SAP/beam that the raw data came out of.
+		</xs:documentation>
+	</xs:annotation>
+	<xs:simpleType name="PulsarPipelineDataType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="CoherentStokes"/>
+			<xs:enumeration value="IncoherentStokes"/>
+			<xs:enumeration value="ComplexVoltages"/>
+			<xs:enumeration value="SummaryCoherentStokes"/>
+			<xs:enumeration value="SummaryIncoherentStokes"/>
+			<xs:enumeration value="SummaryComplexVoltages"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="PulpSummaryDataProduct">
+		<xs:complexContent>
+			<xs:extension base="DataProduct">
+				<xs:sequence>
+					<xs:element name="fileContent" type="ListOfString"/>
+					<xs:element name="dataType" type="PulsarPipelineDataType"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="PulpDataProduct">
+		<xs:complexContent>
+			<xs:extension base="DataProduct">
+				<xs:sequence>
+					<xs:element name="fileContent" type="ListOfString"/>
+					<xs:element name="dataType" type="PulsarPipelineDataType"/>
+					<xs:element name="arrayBeam" type="ArrayBeam"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>===================Generic/Unspecified======================
+	
+		Please note that the difference between Generic and Unspecified is that the first describes a non standard dataproduct, while the second describes an unknown
+		dataproduct. The latter is mostly used when there are partial errors during the ingest of data into the archive.
+		</xs:documentation>
+	</xs:annotation>
+	<xs:complexType name="GenericDataProduct">
+		<xs:complexContent>
+			<xs:extension base="DataProduct"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="UnspecifiedDataProduct">
+		<xs:complexContent>
+			<xs:extension base="DataProduct"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>===================Images======================
+	
+		Below are structures related to image type dataproducts. The main dataproduct here is the SkyImage, which contains three levels
+		of data. At the top there is the general information, below that there are coordinate types and those have one or more axes.
+		</xs:documentation>
+	</xs:annotation>
+	<xs:complexType name="Axis">
+		<xs:sequence>
+			<xs:element name="number" type="xs:unsignedShort"/>
+			<xs:element name="name" type="xs:string"/>
+			<xs:element name="units" type="xs:string"/>
+			<xs:element name="length" type="xs:unsignedInt"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="LinearAxis">
+		<xs:complexContent>
+			<xs:extension base="Axis">
+				<xs:sequence>
+					<xs:element name="increment" type="xs:double"/>
+					<xs:element name="referencePixel" type="xs:double"/>
+					<xs:element name="referenceValue" type="xs:double"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="TabularAxis">
+		<xs:complexContent>
+			<xs:extension base="Axis">
+				<xs:sequence/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="Coordinate">
+		<xs:sequence/>
+	</xs:complexType>
+	<xs:simpleType name="RaDecSystem">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="ICRS"/>
+			<xs:enumeration value="FK5"/>
+			<xs:enumeration value="FK4"/>
+			<xs:enumeration value="FK4-NO-E"/>
+			<xs:enumeration value="GAPPT"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="LocationFrame">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="GEOCENTER"/>
+			<xs:enumeration value="BARYCENTER"/>
+			<xs:enumeration value="HELIOCENTER"/>
+			<xs:enumeration value="TOPOCENTER"/>
+			<xs:enumeration value="LSRK"/>
+			<xs:enumeration value="LSRD"/>
+			<xs:enumeration value="GALACTIC"/>
+			<xs:enumeration value="LOCAL_GROUP"/>
+			<xs:enumeration value="RELOCATABLE"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:annotation>
+		<xs:documentation>The DirectionCoordinate defines the RA and DEC axes and their projection on the celestial sphere.</xs:documentation>
+	</xs:annotation>
+	<xs:complexType name="DirectionCoordinate">
+		<xs:complexContent>
+			<xs:extension base="Coordinate">
+				<xs:sequence>
+					<xs:element minOccurs="2" maxOccurs="2" name="directionLinearAxis" type="LinearAxis"/>
+					<xs:element name="PC0_0" type="xs:double"/>
+					<xs:element name="PC0_1" type="xs:double"/>
+					<xs:element name="PC1_0" type="xs:double"/>
+					<xs:element name="PC1_1" type="xs:double"/>
+					<xs:element name="equinox" type="xs:string"/>
+					<xs:element name="raDecSystem" type="RaDecSystem"/>
+					<xs:element name="projection" type="xs:string"/>
+					<xs:element name="projectionParameters" type="ListOfDouble"/>
+					<xs:element name="longitudePole" type="Angle"/>
+					<xs:element name="latitudePole" type="Angle"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:simpleType name="SpectralQuantityType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Frequency"/>
+			<xs:enumeration value="Energy"/>
+			<xs:enumeration value="Wavenumber"/>
+			<xs:enumeration value="VelocityRadio"/>
+			<xs:enumeration value="VelocityOptical"/>
+			<xs:enumeration value="VelocityAppRadial"/>
+			<xs:enumeration value="Redshift"/>
+			<xs:enumeration value="WaveLengthVacuum"/>
+			<xs:enumeration value="WaveLengthAir"/>
+			<xs:enumeration value="BetaFactor"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="SpectralQuantity">
+		<xs:sequence>
+			<xs:element name="type" type="SpectralQuantityType"/>
+			<xs:element name="value" type="xs:double"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SpectralCoordinate">
+		<xs:complexContent>
+			<xs:extension base="Coordinate">
+				<xs:sequence>
+					<xs:choice>
+						<xs:element name="spectralLinearAxis" type="LinearAxis"/>
+						<xs:element name="spectralTabularAxis" type="TabularAxis"/>
+					</xs:choice>
+					<xs:element name="spectralQuantity" type="SpectralQuantity"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="TimeCoordinate">
+		<xs:complexContent>
+			<xs:extension base="Coordinate">
+				<xs:sequence>
+					<xs:choice>
+						<xs:element name="timeLinearAxis" type="LinearAxis"/>
+						<xs:element name="timeTabularAxis" type="TabularAxis"/>
+					</xs:choice>
+					<xs:element name="equinox" type="EquinoxType"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="PolarizationCoordinate">
+		<xs:complexContent>
+			<xs:extension base="Coordinate">
+				<xs:sequence>
+					<xs:element name="polarizationTabularAxis" type="TabularAxis"/>
+					<xs:element maxOccurs="4" name="polarization" type="PolarizationType"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>PixelMap is a generic base class. Currently only SkyImage is derived from it, but in the future others will be, lik DynamicSpectra
+		The limit of 999 is based on the limits in the FITS standard. In practice it's not likely to be reached.
+		</xs:documentation>
+	</xs:annotation>
+	<xs:complexType name="PixelMapDataProduct">
+		<xs:complexContent>
+			<xs:extension base="DataProduct">
+				<xs:sequence>
+					<xs:element name="numberOfAxes" type="xs:unsignedShort"/>
+					<xs:element name="numberOfCoordinates" type="xs:unsignedShort"/>
+					<xs:element maxOccurs="999" name="coordinate" type="Coordinate"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>The SkyImage has two pointings: One for the actual image, encoded in the axes of 
+		the DirectionCoordinate, and an observationPointing, which is the direction the telescope was actually facing. This need not
+		be the same although it often will be.
+		
+		Usually a SkyImage will have one DirectionCoordinate, one PolarizationCoordinate and one SpectralCoordinate.
+		</xs:documentation>
+	</xs:annotation>
+	<xs:complexType name="SkyImageDataProduct">
+		<xs:complexContent>
+			<xs:extension base="PixelMapDataProduct">
+				<xs:sequence>
+					<xs:element name="locationFrame" type="LocationFrame"/>
+					<xs:element name="timeFrame" type="xs:string"/>
+					<xs:element name="observationPointing" type="Pointing"/>
+					<xs:element name="restoringBeamMajor" type="Angle"/>
+					<xs:element name="restoringBeamMinor" type="Angle"/>
+					<xs:element name="rmsNoise" type="Pixel"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>============================Parset============================
+	
+		This section describes the Parset. It's an optional section, given that not all processes that will be run to generate data might have
+		been run from SAS/MAC in the future. At the moment practically all processes should have a parset as we only run stuff on CEP/Tier 0.
+		</xs:documentation>
+	</xs:annotation>
+	<xs:complexType name="Parset">
+		<xs:sequence>
+			<xs:element name="identifier" type="IdentifierType"/>
+			<xs:element name="contents" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>============================Project============================
+		
+		This section describes Project information.
+		</xs:documentation>
+	</xs:annotation>
+	<xs:simpleType name="Telescope">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="LOFAR"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:annotation>
+		<xs:documentation>The assumption is that all processes leading to the dataproduct are in the same project or public.
+		A dataproduct that would be created from non-public data from different projects is not modelled in the archive.</xs:documentation>
+	</xs:annotation>
+	<xs:complexType name="Project">
+		<xs:sequence>
+			<xs:element name="projectCode" type="xs:string"/>
+			<xs:element name="primaryInvestigator" type="xs:string"/>
+			<xs:element name="coInvestigator" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="contactAuthor" type="xs:string"/>
+			<xs:element name="telescope" type="Telescope"/>
+			<xs:element name="projectDescription" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:annotation>
+		<xs:documentation>============================LTASip root element============================
+	
+		This is the root of the LTA SIP. It should have at least one Observation or PipelineRun, describing the process that generated the
+		dataProduct.
+		</xs:documentation>
+	</xs:annotation>
+	<xs:element name="ltaSip" type="LTASip"/>
+	<xs:complexType name="LTASip">
+		<xs:sequence>
+			<xs:element name="sipGeneratorVersion" type="xs:string"/>
+			<xs:element name="project" type="Project"/>
+			<xs:element name="dataProduct" type="DataProduct"/>
+			<xs:element maxOccurs="unbounded" minOccurs="0" name="observation" type="Observation"/>
+			<xs:element maxOccurs="unbounded" minOccurs="0" name="pipelineRun" type="PipelineRun"/>
+			<xs:element maxOccurs="unbounded" minOccurs="0" name="unspecifiedProcess" type="UnspecifiedProcess"/>
+			<xs:element name="relatedDataProduct" type="DataProduct" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element maxOccurs="unbounded" minOccurs="0" name="parset" type="Parset"/>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>
