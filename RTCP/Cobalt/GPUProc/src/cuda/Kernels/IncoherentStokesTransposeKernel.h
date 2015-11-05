@@ -33,7 +33,7 @@ namespace LOFAR
     //# Forward declarations
     class Parset;
 
-    class IncoherentStokesTransposeKernel : public CompiledKernel
+    class IncoherentStokesTransposeKernel : public Kernel
     {
     public:
       // Name of the CUDA kernel source file.
@@ -41,12 +41,6 @@ namespace LOFAR
 
       // Name of the kernel function to invoke.
       static const std::string theirFunction;
-
-      enum BufferType
-      {
-        INPUT_DATA,
-        OUTPUT_DATA
-      };
 
       // Parameters that must be passed to the constructor of the
       // IncoherentStokesTransposeKernel class.
@@ -60,8 +54,12 @@ namespace LOFAR
 
         // Size of the square shared memory tile to be used.
         const unsigned tileSize;
+      };
 
-        size_t bufferSize(BufferType bufferType) const;
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA
       };
 
       IncoherentStokesTransposeKernel(const gpu::Stream &stream,
@@ -72,6 +70,10 @@ namespace LOFAR
     };
 
     //# --------  Template specializations for KernelFactory  -------- #//
+
+    template<> size_t
+    KernelFactory<IncoherentStokesTransposeKernel>::
+    bufferSize(BufferType bufferType) const;
 
     template<> CompileDefinitions
     KernelFactory<IncoherentStokesTransposeKernel>::

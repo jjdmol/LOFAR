@@ -37,10 +37,12 @@
 #include <string>
 #include <boost/format.hpp>
 
+#ifdef HAVE_MPI
 #include <mpi.h>
 #include <InputProc/Transpose/MPISendStation.h>
 #include <InputProc/Transpose/MapUtil.h>
 #include <InputProc/Transpose/MPIUtil.h>
+#endif
 
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
@@ -175,20 +177,8 @@ namespace LOFAR {
         md.flags = md.flags.invert(0, nrSamples);
 
         // Write the meta data into the fixed buffer.
-        mpi_metaData[sb]     = md;
-        mpi_metaData[sb].EOS = false;
+        mpi_metaData[sb] = md;
       }
-    }
-
-    template<typename SampleT>
-    void MPIData<SampleT>::setEOS() {
-      // Make sure all data is flagged
-      reset(block);
-      serialiseMetaData();
-
-      // Set EOS bit.
-      for (size_t sb = 0; sb < mpi_metaData.size(); ++sb) 
-        mpi_metaData[sb].EOS = true;
     }
 
     template struct MPIData< SampleType<i16complex> >;
@@ -276,17 +266,6 @@ namespace LOFAR {
         outputQueue.append(mpiData);
         ASSERT(!mpiData);
       }
-
-      // Repop from outputQueue to signal EOS
-      mpiData = outputQueue.remove();
-      ASSERT(mpiData.get());
-
-      mpiData->block++; // lets be nice and retain an increasing block number
-      mpiData->setEOS();
-
-      LOG_DEBUG_STR(logPrefix << "Sending EOS");
-      sendBlock(*mpiData);
-      LOG_DEBUG_STR(logPrefix << "EOS sent");
 
       // report average loss
       const double avgloss = nrProcessedSamples == 0 ? 0.0 : 100.0 * nrFlaggedSamples / nrProcessedSamples;

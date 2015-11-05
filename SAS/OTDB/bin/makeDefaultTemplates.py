@@ -265,17 +265,6 @@ if __name__ == '__main__':
             print "   DefaultTemplate %s starts at %s (version %d) : %s" % \
                    (dfltTemplate['treeid'], nodeDefID['name'], nodeInfo[0]['version'], dfltTemplate['name'])
 
-    # Wrap all modifications in a transaction, to avoid leaving behind a broken database
-    otdb.query("BEGIN")
-
-    # make all obsolete default templates non-default
-    print "=> Making all obsolete default templates non-default"
-    for dfltTemplate in dfltTemplateIDs:
-        state       = otdb.query("select state from getTreeInfo(%s, 'false')" % dfltTemplate['treeid']).getresult()[0][0]
-        if state == 1200 :
-            print "    Moving obsolete DefaultTemplate ", dfltTemplate['treeid']
-            otdb.query("select * from assignTemplateName(1, %s, NULL)" % (dfltTemplate['treeid'],))
-
     # second step create temporarely parsetfiles from all DefaultTemplates
     print "=> Creating temporarely parsetfiles from the DefaultTemplates..."
     for treeID in dfltTmplInfo:
@@ -309,15 +298,12 @@ if __name__ == '__main__':
 	print "  Could not find old master template ID. Stopping now"
 	otdb.close()
 	sys.exit(1)
-
+	
     # for each old default template make a new template
     print "   TreeID of new master template = %s" % newMasterID
     print "=> Creating new default templates for version %d" % newVersion
     for treeID in dfltTmplInfo:
         createNewDefaultTemplate(treeID, oldMasterID, newMasterID, dfltTmplInfo[treeID])
-
-    # Write all changes to the database
-    otdb.query("COMMIT")
 
     otdb.close()
     sys.exit(0)

@@ -304,14 +304,8 @@ int run(const ParameterSet &options, const OptionParser::ArgumentList &args)
         NextChunkCommand nextCmd(msFreqRange.first, msFreqRange.second, start,
           end);
 
-        uint numChunks=(msTimeRange.second-msTimeRange.first)/(end-start);
-        uint chunkNum=chunkStart/chunkSize;
-
         LOG_DEBUG_STR("Executing a " << nextCmd.type() << " command:" << endl
           << nextCmd);
-        LOG_INFO_STR("Starting chunk "<<chunkNum<<" of "<<numChunks<<" ("<<
-                     (chunkNum*100)/numChunks<<"%)");
-
         CommandResult result = nextCmd.accept(handler);
 
         if(!result)

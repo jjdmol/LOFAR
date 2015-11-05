@@ -31,17 +31,11 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    class IntToFloatKernel : public CompiledKernel
+    class IntToFloatKernel : public Kernel
     {
     public:
       static std::string theirSourceFile;
       static std::string theirFunction;
-
-      enum BufferType
-      {
-        INPUT_DATA,
-        OUTPUT_DATA
-      };
 
       // Parameters that must be passed to the constructor of the
       // IntToFloatKernel class.
@@ -53,8 +47,12 @@ namespace LOFAR
         unsigned nrBytesPerComplexSample() const;
 
         unsigned nrSamplesPerSubband;
+      };
 
-        size_t bufferSize(BufferType bufferType) const;
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA
       };
 
       IntToFloatKernel(const gpu::Stream &stream,
@@ -65,6 +63,9 @@ namespace LOFAR
     };
 
     //# --------  Template specializations for KernelFactory  -------- #//
+
+    template<> size_t
+    KernelFactory<IntToFloatKernel>::bufferSize(BufferType bufferType) const;
 
     template<> CompileDefinitions
     KernelFactory<IntToFloatKernel>::compileDefinitions() const;

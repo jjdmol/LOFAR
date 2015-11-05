@@ -105,19 +105,20 @@ TEST(DataValidity)
   // Buffers
   gpu::DeviceMemory devInput(context, factory.bufferSize(CorrelatorKernel::INPUT_DATA));
   gpu::DeviceMemory devOutput(context, factory.bufferSize(CorrelatorKernel::OUTPUT_DATA));
+  CorrelatorKernel::Buffers buffers(devInput, devOutput);
 
   // Kernel
-  std::auto_ptr<CorrelatorKernel> kernel(factory.create(stream, devInput, devOutput));
+  std::auto_ptr<CorrelatorKernel> kernel(factory.create(stream, buffers));
 
   // Fill input
   BlockID blockID;
 
-  MultiDimArrayHostBuffer<fcomplex, 4> hostInput(boost::extents[NR_STATIONS][ps.settings.correlator.nrChannels][ps.settings.correlator.nrSamplesPerIntegration()][NR_POLARIZATIONS], context);
-  MultiDimArrayHostBuffer<fcomplex, 4> hostOutput(boost::extents[ps.nrBaselines()][ps.settings.correlator.nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS], context);
+  MultiDimArrayHostBuffer<fcomplex, 4> hostInput(boost::extents[NR_STATIONS][ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel()][NR_POLARIZATIONS], context);
+  MultiDimArrayHostBuffer<fcomplex, 4> hostOutput(boost::extents[ps.nrBaselines()][ps.nrChannelsPerSubband()][NR_POLARIZATIONS][NR_POLARIZATIONS], context);
 
   for (size_t st = 0; st < NR_STATIONS; st++) {
-    for (size_t ch = 0; ch < ps.settings.correlator.nrChannels; ch++) {
-      for (size_t t = 0; t < ps.settings.correlator.nrSamplesPerIntegration(); t++) {
+    for (size_t ch = 0; ch < ps.nrChannelsPerSubband(); ch++) {
+      for (size_t t = 0; t < ps.nrSamplesPerChannel(); t++) {
         /*
          * NOTE: Using higher values will result in imprecision,
          * causing the output to be less predictable.
@@ -134,7 +135,7 @@ TEST(DataValidity)
   stream.readBuffer(hostOutput, devOutput, true);
 
   // Verify output
-  const size_t nrSamples = ps.settings.correlator.nrSamplesPerIntegration();
+  const size_t nrSamples = ps.nrSamplesPerChannel();
   for (size_t st1 = 0; st1 < NR_STATIONS; st1++) {
     for (size_t st2 = 0; st2 <= st1; st2++) {
       const unsigned bl = ::baseline(st1, st2);
@@ -142,7 +143,7 @@ TEST(DataValidity)
       LOG_INFO_STR("Checking baseline " << bl << " = (" << st1 << ", " << st2 << ")");
 
       // Start checking at ch = 1, because channel 0 is skipped
-      for (size_t ch = 1; ch < ps.settings.correlator.nrChannels; ch++) {
+      for (size_t ch = 1; ch < ps.nrChannelsPerSubband(); ch++) {
         LOG_INFO_STR("Checking channel " << ch);
 
 	// NOTE: XY and YX polarizations have been swapped (see issue #5640)

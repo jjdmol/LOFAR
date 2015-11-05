@@ -89,9 +89,7 @@ if(NOT NUMPY_FOUND)
   endif(NUMPY_FOUND)
   
   # Find the f2py program
-  find_program(F2PY_EXECUTABLE f2py 
-      HINTS ${F2PY_ROOT}
-      PATH_SUFFIXES bin)
+  find_program(F2PY_EXECUTABLE f2py)
 
 endif(NOT NUMPY_FOUND)
 

@@ -78,8 +78,8 @@ def create_directory(dirname):
 
 def delete_directory(dirname):
     """
-    Recursively delete a directory tree: Without failing if the dir does not
-    exist
+    Recursively delete a directory tree: Without failing if the dir does not 
+    exist    
     """
     try:
         shutil.rmtree(dirname)
@@ -251,8 +251,7 @@ def spawn_process(cmd, logger, cwd = None, env = None, max_tries = 2, max_timeou
             break
     return process
 
-def catch_segfaults(cmd, cwd, env, logger, max = 1, cleanup = lambda: None,
-                    usageStats = None):
+def catch_segfaults(cmd, cwd, env, logger, max = 1, cleanup = lambda: None):
     """
     Run cmd in cwd with env, sending output to logger.
 
@@ -264,15 +263,6 @@ def catch_segfaults(cmd, cwd, env, logger, max = 1, cleanup = lambda: None,
             logger.debug("Retrying...")
         logger.debug("Running: %s" % (' '.join(cmd),))
         process = spawn_process(cmd, logger, cwd, env)
-        #add the created process to the usageStat object
-        if usageStats:
-            usageStats.addPID(process.pid)
-
-        if 'casa' in cmd[0]:
-	    import time
-            while process.returncode is None:
-                process.poll()
-                time.sleep(1)
         sout, serr = process.communicate()
         log_process_output(cmd[0], sout, serr, logger)
         if process.returncode == 0:

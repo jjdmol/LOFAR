@@ -42,8 +42,7 @@ namespace LOFAR
     string FFTShiftKernel::theirSourceFile = "FFTShift.cu";
     string FFTShiftKernel::theirFunction = "FFTShift";
 
-    FFTShiftKernel::Parameters::Parameters(const Parset& ps, unsigned nrSTABs, unsigned nrChannels, const std::string &name):
-      Kernel::Parameters(name),
+    FFTShiftKernel::Parameters::Parameters(const Parset& ps, unsigned nrSTABs, unsigned nrChannels):
       nrSTABs(nrSTABs),
 
       nrChannels(nrChannels),
@@ -56,26 +55,11 @@ namespace LOFAR
             ps.settings.observationID);
     }
 
-
-    size_t FFTShiftKernel::Parameters::bufferSize(BufferType bufferType) const
-    {
-      switch (bufferType) {
-      case FFTShiftKernel::INPUT_DATA:  // fall tru
-      case FFTShiftKernel::OUTPUT_DATA:
-        return (size_t)nrSTABs * NR_POLARIZATIONS *
-          nrChannels * nrSamplesPerChannel *
-          sizeof(std::complex<float>);
-          
-      default:
-        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
-      }
-    }
-
     FFTShiftKernel::FFTShiftKernel(const gpu::Stream& stream,
                                    const gpu::Module& module,
                                    const Buffers& buffers,
                                    const Parameters& params) :
-      CompiledKernel(stream, gpu::Function(module, theirFunction), buffers, params)
+      Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       setArg(0, buffers.input);
 
@@ -97,6 +81,22 @@ namespace LOFAR
     }
 
     //--------  Template specializations for KernelFactory  --------//
+
+    template<> size_t 
+      KernelFactory<FFTShiftKernel>::bufferSize(BufferType bufferType) const
+    {
+      switch (bufferType) {
+      case FFTShiftKernel::INPUT_DATA:  // fall tru
+      case FFTShiftKernel::OUTPUT_DATA:
+        return (size_t)itsParameters.nrSTABs * NR_POLARIZATIONS *
+          itsParameters.nrChannels *
+          itsParameters.nrSamplesPerChannel *
+            sizeof(std::complex<float>);
+          
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
 
     template<> CompileDefinitions
       KernelFactory<FFTShiftKernel>::compileDefinitions() const
