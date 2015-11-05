@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <name>Lofar Utilities :: Plotter GUI</name>
+
+  <parent>
+    <groupId>nl.astron.lofar.lib</groupId>
+    <artifactId>lofar-lib-parent</artifactId>
+    <version>1.8.2-SNAPSHOT</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>plotter</artifactId>
+  
+  
+  <!-- Specification for the SCM used by the project, such as CVS, Subversion, etc. -->
+  <scm>
+    <connection>scm:svn:https://svn.astron.nl/LOFAR/trunk/JAVA/GUI/Plotter</connection>
+    <developerConnection>scm:svn:https://svn.astron.nl/LOFAR/trunk/JAVA/GUI/Plotter</developerConnection>
+  </scm>
+
+
+  <!-- Information required to build a project. -->
+  <build>
+    <sourceDirectory>src</sourceDirectory>
+    <resources>
+      <resource>
+        <directory>src</directory>
+        <excludes>
+          <exclude>**/*.java</exclude>
+        </excludes>
+      </resource>
+
+      <resource>
+        <directory>PlotterConfig/src</directory>
+        <excludes>
+          <exclude>**/*.java</exclude>
+        </excludes>
+      </resource>
+    </resources>
+
+  </build>
+
+</project>

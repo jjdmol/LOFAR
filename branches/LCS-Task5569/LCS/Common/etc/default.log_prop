@@ -1,0 +1,5 @@
+log4cplus.rootLogger=INFO, CONSOLE
+log4cplus.appender.CONSOLE=log4cplus::ConsoleAppender
+log4cplus.appender.CONSOLE.logToStdErr=true
+log4cplus.appender.CONSOLE.layout=log4cplus::PatternLayout
+log4cplus.appender.CONSOLE.layout.ConversionPattern=%-5p %c{3} [%b:%L] - %m%n

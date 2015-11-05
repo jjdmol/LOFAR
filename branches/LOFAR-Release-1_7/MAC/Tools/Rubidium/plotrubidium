@@ -1,0 +1,31 @@
+#!/bin/bash
+#
+# V1.0, M.J.Norden, 18-09-2012
+# Usage: plotrubidium yyyymmdd
+#
+
+if [ "$1" != "" ]; then
+   cp /var/log/ntpstats/rubidium_log.$1 /localhome/data/rubidium_log
+   
+else 
+   cp /var/log/ntpstats/rubidium_log /localhome/data/rubidium_log
+   echo "Usage: plotrubidium yyyymmdd"
+   sleep 1
+   
+fi
+/usr/bin/gnuplot <<\EOF
+set grid ytics
+set xtics 7200
+set mxtics 4
+set autoscale
+#set title "Hier komt datum"
+set ylabel "difference between GPS and Rubidium [nsec]"
+set xlabel "date-time (UT)"
+set timefmt "%Y-%m-%dT%H:%M:%S"
+set xdata time
+set format x "%d %b-%H:%M"
+plot "/localhome/data/rubidium_log" using 1:5 every 20 notitle; 
+pause 300
+reread
+EOF
+

@@ -1,0 +1,55 @@
+prog1 -arg a b
+status=0
+localhost
+node1#/usr/local/xyx0,node1:/usr,/usr/local/xyx0.vds
+node2#/usr/local/xyx1,node1:/usr,/usr/local/xyx1.vds
+node1#/usr/local/xyx2,node1:/usr,/usr/local/xyx2.vds
+
+mpirun -np 4 -machinefile tstartdproc_tmp.out1 prog1  -arg a b
+status=0
+localhost
+node1
+node2
+node1
+
+status=0
+localhost
+node1#/usr/local/xyx0,node1:/usr,/usr/local/xyx0.vds
+node2#/usr/local/xyx1,node1:/usr,/usr/local/xyx1.vds
+node1#/usr/local/xyx2,node1:/usr,/usr/local/xyx2.vds
+socketrun 1 tstartdproc_tmp.out2 'localhost' 3851 1 0  prog1 /tstartdproc_tmp.out2.envfile -arg a b
+ssh -x -n localhost prog1 socket localhost 3851 4 0 '.' '.' '.' '/tstartdproc_tmp.out2.envfile'  '-arg' 'a b'  &
+ssh -x -n node1 prog1 socket localhost 3851 4 1 '/usr/local/xyx0' 'node1:/usr' '/usr/local/xyx0.vds' '/tstartdproc_tmp.out2.envfile'  '-arg' 'a b'  &
+ssh -x -n node2 prog1 socket localhost 3851 4 2 '/usr/local/xyx1' 'node1:/usr' '/usr/local/xyx1.vds' '/tstartdproc_tmp.out2.envfile'  '-arg' 'a b'  &
+ssh -x -n node1 prog1 socket localhost 3851 4 3 '/usr/local/xyx2' 'node1:/usr' '/usr/local/xyx2.vds' '/tstartdproc_tmp.out2.envfile'  '-arg' 'a b'  &
+
+status=1
+localhost#/usr/local/xyx0,node1:/usr,/usr/local/xyx0.vds
+localhost#/usr/local/xyx1,node1:/usr,/usr/local/xyx1.vds
+localhost#/usr/local/xyx2,node1:/usr,/usr/local/xyx2.vds
+socketrun 0 tstartdproc_tmp.out3 'localhost' 3851 1 1 /tstartdproc_tmp.log3b /tstartdproc.in_run /tstartdproc_tmp.out3.envfile
+ssh -x -n localhost /tstartdproc.in_run socket localhost 3851 3 0 '/usr/local/xyx0' 'node1:/usr' '/usr/local/xyx0.vds' '/tstartdproc_tmp.out3.envfile'   &
+ssh -x -n localhost /tstartdproc.in_run socket localhost 3851 3 1 '/usr/local/xyx1' 'node1:/usr' '/usr/local/xyx1.vds' '/tstartdproc_tmp.out3.envfile'   &
+ssh -x -n localhost /tstartdproc.in_run socket localhost 3851 3 2 '/usr/local/xyx2' 'node1:/usr' '/usr/local/xyx2.vds' '/tstartdproc_tmp.out3.envfile'   &
+Remote process (pid=nn) with rank 1 ended with error status 1
+Killing the other remote processes ...
+ssh -x localhost kill -9 >>> 20373 <<<
+ssh -x localhost kill -9 >>> 20385 <<<
+sleep for 30 seconds
+tstartdproc 30 0
+pid=nn
+>>>
+/Users/diepen/sim/LOFAR/CEP/MWCommon/src/runlogpid: line 52: 20373 Killed                  $program "$@"
+<<<
+status=137
+sleep for 5 seconds
+tstartdproc 5 1
+pid=nn
+status=1
+sleep for 30 seconds
+tstartdproc 30 0
+pid=nn
+>>>
+/Users/diepen/sim/LOFAR/CEP/MWCommon/src/runlogpid: line 52: 20385 Killed                  $program "$@"
+<<<
+status=137

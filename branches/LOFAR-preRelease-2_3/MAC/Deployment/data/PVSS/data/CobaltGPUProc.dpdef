@@ -1,0 +1,18 @@
+# Observation
+observationName		string
+
+# Type of data (Correlated/Beamformed)
+dataProductType		string
+
+# Subband number
+subband     int
+
+# Dropping output?
+dropping		bool
+
+# Data written (seconds)
+written			float
+
+# Data dropped (seconds)
+dropped			float
+

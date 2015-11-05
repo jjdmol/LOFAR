@@ -1,0 +1,1732 @@
+V 11
+1
+LANG:1 23 CEP_CobaltRack_detailed
+PANEL,-1 -1 1200 823 N "_3DFace" 0
+"main()
+{
+  // Initialise the Panel
+  navPanel_initPanel(\"fw_viewBox\");
+
+  baseDP         = g_currentDatapoint;
+
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+
+  // connect for childUpdates
+  showChildState(baseDP);
+  // connect for selfUpdates
+  showSelfState(baseDP);
+
+  
+  reload();
+
+}
+
+void prepareHardwareList() {
+  // set the hardware selectable items
+  dyn_dyn_anytype tab;
+  int z;
+  
+  
+  // For this panel midplanes should be selectable so we get them for the treelist
+  
+  dpQuery(\"SELECT '_original.._value' FROM '\"+baseDP+\"_*.status.state' REMOTE '\"+sysName+\"' WHERE _DPT=\\\"CobaltNode\\\" \", tab);
+  LOG_TRACE(\"CEP_CobaltRack_detailed.pnl:prepareHardwareList|tab: \"+tab);
+  
+  dyn_string aDS=navFunct_getDynString(tab, 2,1);
+  dynSortAsc(aDS);
+      
+  dynAppend(g_stationList,navFunct_bareDBName(sysName));
+  dynAppend(g_cobaltRackList,rackNr);
+  
+  for(z=1;z<=dynlen(aDS);z++){
+    
+    // strip .status.state and systemname from result
+    string aS = dpSubStr(aDS[z],DPSUB_SYS_DP);
+
+    // Remainder should be *CobaltNode?_CobaltNIC? combinations, split on _ 
+    dyn_string spl=strsplit(aS,\"_\");
+    string cobaltnode = spl[dynlen(spl)];
+    strreplace(cobaltnode,\"CBT\",\"\");
+    int c= cobaltnode;
+
+    dynAppend(g_cobaltNodeList,c);
+  }
+  
+}
+
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+  LOG_DEBUG(\"CEP_CobaltRack_detailed.pnl:doAction| Action required. found: \" + anAction);
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG(\"CEP_CobaltRack_detailed.pnl:doAction|found actionString: \" + actionString);
+  
+  // Reload
+  if (actionString[1] == \"Reload\") {
+    reload();
+  } else if (actionString[1] == \"DistChanged\") {
+    // for dist system bound hardware only, if the distsystem went offline we need to replace 
+    // the screen with a broken connection screen.
+    if (!g_initializing) {
+    
+      // check if this syst is in the connectionlist and down
+      int iPos=dynContains(g_connections[\"NAME\"],sysName);
+      if (iPos > 0) {
+        if (!g_connections[\"UP\"][iPos]) {
+          navPanel_setEvent(\"invalid DP\",\"ChangePanel\");
+        }
+      }
+    }
+    return;
+  }
+}
+
+void reload() {
+  
+  navFunct_clearGlobalLists();
+  
+  // set the hardware selectable items for this screen
+  prepareHardwareList();
+  
+  // set panel to ready
+  g_objectReady=true;
+ 
+  
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"CEP_CobaltRack_detailed.pnl\",\"Update\");
+
+}
+" 0
+ E E E E 1 -1 -1 0  188 128
+""0  1
+E "#uses \"navPanel.ctl\"
+string      baseDP         = \"\";
+int rackNr = 0;
+
+
+
+bool    bDoubleClicked  = false;
+
+// routine for single mouse click
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {  
+    navPanel_setEvent(\"Cobalt\",\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true;   
+  
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"CEP_CobaltRack_detailed.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    g_currentDatapoint=baseDP;
+    navPanel_setEvent(\"Cobalt\",\"ChangePanel\");
+  }
+  
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}
+
+// routine for right mouse click
+void rClick() {
+  navPanel_setEvent(\"Cobalt\",\"EventRightClick\");
+}" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+1
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+1 1588 4 "" 12
+0
+1 1589 4 "" 13
+0
+1 1590 4 "" 14
+0
+1 1591 5 "" 12
+0
+1 1592 5 "" 13
+0
+1 1593 5 "" 14
+0
+1 1708 9 "" 12
+0
+1 1709 9 "" 13
+0
+1 1710 9 "" 14
+0
+1 1711 10 "" 12
+0
+1 1712 10 "" 13
+0
+1 1713 10 "" 14
+0
+1 1828 14 "" 12
+0
+1 1829 14 "" 13
+0
+1 1830 14 "" 14
+0
+1 1831 15 "" 12
+31 "transform" 0 0 1 0 1 0 -10
+0
+1 1832 15 "" 13
+31 "transform" 0 0 1 0 1 0 -10
+0
+1 1833 15 "" 14
+31 "transform" 0 0 1 0 1 0 -10
+0
+4 361
+"LINE13"
+""
+1 504.9999999999999 130 E E E 1 E 1 E N "STD_valve_open" E N {255,255,255} E E
+ E E
+103 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  505 130 505 140
+4 362
+"LINE14"
+""
+1 388.9999999999999 141 E E E 1 E 1 E N "STD_valve_open" E N {255,255,255} E E
+ E E
+104 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  389 141 622 141
+6 366
+"RECTANGLE15"
+""
+1 100 460 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+108 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 0 1 2 1 E 0.2222222222222222 0 0.3333333333333333 472.7777777777778 -13.33333333333331 2  1 0  "pictures/arrowDown.gif" 4294967295 E 100 460 190 550
+6 367
+"RECTANGLE16"
+""
+1 100 460 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+109 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"hoverfclr" "N \"_Transparent\""
+"hoverbclr" "N \"_Transparent\""
+"dashclr"N "_Transparent"
+E E 0 0 1 2 1 E 0.2222222222222222 0 0.3333333333333333 357.7777777777778 -13.33333333333331 2  1 0  "pictures/arrowDown.gif" 4294967295 E 100 460 190 550
+6 368
+"RECTANGLE17"
+""
+1 100 460 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+110 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 0 1 2 1 E 0.2222222222222222 0 0.3333333333333333 587.7777777777778 -13.33333333333331 2  1 0  "pictures/arrowDown.gif" 4294967295 E 100 460 190 550
+4 729
+"LINE15"
+""
+1 155 130 E E E 1 E 1 E N "STD_valve_open" E N {255,255,255} E E
+ E E
+111 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  155 130 155 140
+4 730
+"LINE16"
+""
+1 39.00000000000001 141 E E E 1 E 1 E N "STD_valve_open" E N {255,255,255} E E
+ E E
+112 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  39 141 272 141
+6 731
+"RECTANGLE18"
+""
+1 100 460 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+113 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 0 1 2 1 E 0.2222222222222222 0 0.3333333333333333 122.7777777777778 -13.33333333333331 2  1 0  "pictures/arrowDown.gif" 4294967295 E 100 460 190 550
+6 732
+"RECTANGLE19"
+""
+1 100 460 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+114 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"hoverfclr" "N \"_Transparent\""
+"hoverbclr" "N \"_Transparent\""
+"dashclr"N "_Transparent"
+E E 0 0 1 2 1 E 0.2222222222222222 0 0.3333333333333333 7.777777777777779 -13.33333333333331 2  1 0  "pictures/arrowDown.gif" 4294967295 E 100 460 190 550
+6 733
+"RECTANGLE20"
+""
+1 100 460 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+115 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 0 1 2 1 E 0.2222222222222222 0 0.3333333333333333 237.7777777777778 -13.33333333333331 2  1 0  "pictures/arrowDown.gif" 4294967295 E 100 460 190 550
+4 734
+"LINE17"
+""
+1 860 130 E E E 1 E 1 E N "STD_valve_open" E N {255,255,255} E E
+ E E
+116 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  860 130 860 140
+4 735
+"LINE18"
+""
+1 739 141 E E E 1 E 1 E N "STD_valve_open" E N {255,255,255} E E
+ E E
+117 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  739 141 972 141
+6 736
+"RECTANGLE21"
+""
+1 100 460 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+118 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 0 1 2 1 E 0.2222222222222222 0 0.3333333333333333 827.7777777777778 -13.33333333333331 2  1 0  "pictures/arrowDown.gif" 4294967295 E 100 460 190 550
+6 737
+"RECTANGLE22"
+""
+1 100 460 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+119 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"hoverfclr" "N \"_Transparent\""
+"hoverbclr" "N \"_Transparent\""
+"dashclr"N "_Transparent"
+E E 0 0 1 2 1 E 0.2222222222222222 0 0.3333333333333333 707.7777777777778 -13.33333333333331 2  1 0  "pictures/arrowDown.gif" 4294967295 E 100 460 190 550
+6 738
+"RECTANGLE23"
+""
+1 100 460 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+120 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 0 1 2 1 E 0.2222222222222222 0 0.3333333333333333 937.7777777777778 -13.33333333333331 2  1 0  "pictures/arrowDown.gif" 4294967295 E 100 460 190 550
+4 1099
+"LINE19"
+""
+1 154.9992552876097 290.0089324483334 E E E 1 E 1 E N "magenta" E N {255,255,255} E E
+ E E
+121 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  155 290 155 280
+4 1100
+"LINE20"
+""
+1 271.0000737703006 279.0179394759553 E E E 1 E 1 E N "magenta" E N {255,255,255} E E
+ E E
+122 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  271 279 38 279
+6 1101
+"RECTANGLE24"
+""
+1 100 460 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+123 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 0 1 2 1 E -0.2222222216065539 -1.65417762101257e-005 2.481266431518841e-005 -0.3333333324098323 187.2108079749043 433.3446639421117 2  1 0  "pictures/arrowUp.gif" 4294967295 E 100 460 190 550
+6 1102
+"RECTANGLE25"
+""
+1 100 460 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+124 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"hoverfclr" "N \"_Transparent\""
+"hoverbclr" "N \"_Transparent\""
+"dashclr"N "_Transparent"
+E E 0 0 1 2 1 E -0.2222222216065539 -1.654177621012608e-005 2.481266431518836e-005 -0.3333333324098323 302.2108076424438 433.3535965012651 2  1 0  "pictures/arrowUp.gif" 4294967295 E 100 460 190 550
+6 1103
+"RECTANGLE26"
+""
+1 100 460 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+125 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 0 1 2 1 E -0.2222222216065539 -1.65417762101257e-005 2.481266431518841e-005 -0.3333333324098323 72.21080827966026 433.3364757628877 2  1 0  "pictures/arrowUp.gif" 4294967295 E 100 460 190 550
+4 1464
+"LINE21"
+""
+1 504.9992552876096 290.0089324483333 E E E 1 E 1 E N "magenta" E N {255,255,255} E E
+ E E
+126 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  505 290 505 280
+4 1465
+"LINE22"
+""
+1 621.0000737703006 279.0179394759553 E E E 1 E 1 E N "magenta" E N {255,255,255} E E
+ E E
+127 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  621 279 388 279
+6 1466
+"RECTANGLE27"
+""
+1 100 460 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+128 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 0 1 2 1 E -0.2222222216065539 -1.654177621012563e-005 2.481266431518841e-005 -0.3333333324098309 537.2108079749042 433.3446639421111 2  1 0  "pictures/arrowUp.gif" 4294967295 E 100 460 190 550
+6 1467
+"RECTANGLE28"
+""
+1 100 460 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+129 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"hoverfclr" "N \"_Transparent\""
+"hoverbclr" "N \"_Transparent\""
+"dashclr"N "_Transparent"
+E E 0 0 1 2 1 E -0.2222222216065539 -1.654177621012601e-005 2.481266431518836e-005 -0.3333333324098309 652.2108076424437 433.3535965012645 2  1 0  "pictures/arrowUp.gif" 4294967295 E 100 460 190 550
+6 1468
+"RECTANGLE29"
+""
+1 100 460 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+130 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 0 1 2 1 E -0.2222222216065539 -1.654177621012563e-005 2.481266431518841e-005 -0.3333333324098309 422.2108082796602 433.336475762887 2  1 0  "pictures/arrowUp.gif" 4294967295 E 100 460 190 550
+4 1469
+"LINE23"
+""
+1 854.9992552876097 290.0089324483333 E E E 1 E 1 E N "magenta" E N {255,255,255} E E
+ E E
+131 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  855 290 855 280
+4 1470
+"LINE24"
+""
+1 971.0000737703006 279.0179394759553 E E E 1 E 1 E N "magenta" E N {255,255,255} E E
+ E E
+132 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  971 279 738 279
+6 1471
+"RECTANGLE30"
+""
+1 100 460 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+133 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 0 1 2 1 E -0.2222222216065539 -1.654177621012563e-005 2.481266431518841e-005 -0.3333333324098309 887.2108079749042 433.3446639421111 2  1 0  "pictures/arrowUp.gif" 4294967295 E 100 460 190 550
+6 1472
+"RECTANGLE31"
+""
+1 100 460 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+134 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"hoverfclr" "N \"_Transparent\""
+"hoverbclr" "N \"_Transparent\""
+"dashclr"N "_Transparent"
+E E 0 0 1 2 1 E -0.2222222216065539 -1.654177621012601e-005 2.481266431518836e-005 -0.3333333324098309 1002.210807642444 433.3535965012645 2  1 0  "pictures/arrowUp.gif" 4294967295 E 100 460 190 550
+6 1473
+"RECTANGLE32"
+""
+1 100 460 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+135 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 0 1 2 1 E -0.2222222216065539 -1.654177621012563e-005 2.481266431518841e-005 -0.3333333324098309 772.2108082796602 433.336475762887 2  1 0  "pictures/arrowUp.gif" 4294967295 E 100 460 190 550
+6 1835
+"RECTANGLE33"
+""
+1 220 70 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+137 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -20 0 2  1 0  "pictures/arrowLeft.gif" 4294967295 E 220 70 250 90
+6 1836
+"RECTANGLE34"
+""
+1 220 70 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+138 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 210 0 2  1 0  "pictures/arrowRight.gif" 4294967295 E 220 70 250 90
+4 1837
+"LINE25"
+""
+1 230 80 E E E 1 E 1 E N "Lofar_suspicious" E N {255,255,255} E E
+ E E
+139 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  228 80 434 80
+6 1838
+"RECTANGLE35"
+""
+1 220 70 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+140 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 330 0 2  1 0  "pictures/arrowLeft.gif" 4294967295 E 220 70 250 90
+6 1839
+"RECTANGLE36"
+""
+1 220 70 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+141 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 560 0 2  1 0  "pictures/arrowRight.gif" 4294967295 E 220 70 250 90
+4 1840
+"LINE26"
+""
+1 580 80 E E E 1 E 1 E N "Lofar_suspicious" E N {255,255,255} E E
+ E E
+142 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  578 80 784 80
+6 1841
+"RECTANGLE37"
+""
+1 220 70 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+143 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -20 260 2  1 0  "pictures/arrowLeft.gif" 4294967295 E 220 70 250 90
+6 1842
+"RECTANGLE38"
+""
+1 220 70 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+144 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 210 260 2  1 0  "pictures/arrowRight.gif" 4294967295 E 220 70 250 90
+4 1843
+"LINE27"
+""
+1 230 340 E E E 1 E 1 E N "Lofar_suspicious" E N {255,255,255} E E
+ E E
+145 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  228 340 434 340
+6 1844
+"RECTANGLE39"
+""
+1 220 70 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+146 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 330 260 2  1 0  "pictures/arrowLeft.gif" 4294967295 E 220 70 250 90
+6 1845
+"RECTANGLE40"
+""
+1 220 70 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+147 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 560 260 2  1 0  "pictures/arrowRight.gif" 4294967295 E 220 70 250 90
+4 1846
+"LINE28"
+""
+1 580 340 E E E 1 E 1 E N "Lofar_suspicious" E N {255,255,255} E E
+ E E
+148 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  578 340 784 340
+6 1848
+"RECTANGLE42"
+""
+1 220 20 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+150 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -30 30 2  1 0  "pictures/arrowDown.gif" 4294967295 E 220 20 240 50
+6 1849
+"RECTANGLE43"
+""
+1 220 20 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+151 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 580 30 2  1 0  "pictures/arrowDown.gif" 4294967295 E 220 20 240 50
+4 1850
+"LINE29"
+""
+1 205.9223300970874 10 E E E 1 E 1 E N "Lofar_suspicious" E N {255,255,255} E E
+ E E
+152 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  200 10 810 10
+4 1851
+"LINE30"
+""
+1 200.0021424733288 59.51456310679608 E E E 1 E 1 E N "Lofar_suspicious" E N {255,255,255} E E
+ E E
+153 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  200 60 200 10
+4 1852
+"LINE31"
+""
+1 810.0021424733288 59.5145631067961 E E E 1 E 1 E N "Lofar_suspicious" E N {255,255,255} E E
+ E E
+154 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  810 60 810 10
+6 1853
+"RECTANGLE44"
+""
+1 220 20 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+155 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -30 320 2  1 0  "pictures/arrowUp.gif" 4294967295 E 220 20 240 50
+6 1854
+"RECTANGLE45"
+""
+1 220 20 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+156 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 580 320 2  1 0  "pictures/arrowUp.gif" 4294967295 E 220 20 240 50
+4 1855
+"LINE32"
+""
+1 205.9223300970874 418 E E E 1 E 1 E N "Lofar_suspicious" E N {255,255,255} E E
+ E E
+157 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  200 418 810 418
+4 1856
+"LINE33"
+""
+1 200.0021424733288 417.5145631067962 E E E 1 E 1 E N "Lofar_suspicious" E N {255,255,255} E E
+ E E
+158 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  200 418 200 368
+4 1857
+"LINE34"
+""
+1 810.0021424733288 417.5145631067961 E E E 1 E 1 E N "Lofar_suspicious" E N {255,255,255} E E
+ E E
+159 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  810 418 810 368
+1 1474 1 "" 23
+0
+1 1475 1 "" 25
+0
+1 1476 1 "" 26
+0
+1 1477 1 "" 27
+0
+1 1478 1 "" 28
+0
+1 1479 1 "" 29
+0
+1 1480 1 "" 30
+0
+1 1481 1 "0" 1
+0
+1 1482 1 "" 32
+0
+1 1483 1 "" 33
+0
+1 1484 1 "" 34
+0
+1 1485 1 "" 35
+0
+1 1486 1 "" 36
+0
+1 1487 1 "" 37
+0
+1 1488 1 "" 38
+0
+1 1489 1 "" 39
+0
+1 1490 1 "" 40
+0
+1 1491 1 "" 41
+0
+1 1492 1 "" 42
+0
+1 1493 1 "" 43
+0
+1 1494 1 "" 44
+0
+1 1495 1 "" 45
+0
+1 1496 1 "" 46
+0
+1 1497 1 "" 47
+0
+1 1498 1 "" 48
+0
+1 1499 1 "" 49
+0
+1 1500 1 "" 50
+0
+1 1501 1 "" 51
+0
+1 1502 1 "" 52
+0
+1 1503 1 "" 53
+0
+1 1504 1 "" 54
+0
+1 1505 1 "" 55
+0
+1 1506 1 "" 56
+0
+1 1507 1 "" 57
+0
+1 1508 1 "" 59
+0
+1 1509 1 "" 61
+0
+1 1510 1 "" 62
+0
+1 1511 1 "" 63
+0
+1 1512 2 "" 23
+0
+1 1513 2 "" 25
+0
+1 1514 2 "" 26
+0
+1 1515 2 "" 27
+0
+1 1516 2 "" 28
+0
+1 1517 2 "" 29
+0
+1 1518 2 "" 30
+0
+1 1519 2 "0" 1
+0
+1 1520 2 "" 32
+0
+1 1521 2 "" 33
+0
+1 1522 2 "" 34
+0
+1 1523 2 "" 35
+0
+1 1524 2 "" 36
+0
+1 1525 2 "" 37
+0
+1 1526 2 "" 38
+0
+1 1527 2 "" 39
+0
+1 1528 2 "" 40
+0
+1 1529 2 "" 41
+0
+1 1530 2 "" 42
+0
+1 1531 2 "" 43
+0
+1 1532 2 "" 44
+0
+1 1533 2 "" 45
+0
+1 1534 2 "" 46
+0
+1 1535 2 "" 47
+0
+1 1536 2 "" 48
+0
+1 1537 2 "" 49
+0
+1 1538 2 "" 50
+0
+1 1539 2 "" 51
+0
+1 1540 2 "" 52
+0
+1 1541 2 "" 53
+0
+1 1542 2 "" 54
+0
+1 1543 2 "" 55
+0
+1 1544 2 "" 56
+0
+1 1545 2 "" 57
+0
+1 1546 2 "" 59
+0
+1 1547 2 "" 61
+0
+1 1548 2 "" 62
+0
+1 1549 2 "" 63
+0
+1 1550 3 "" 23
+0
+1 1551 3 "" 25
+0
+1 1552 3 "" 26
+0
+1 1553 3 "" 27
+0
+1 1554 3 "" 28
+0
+1 1555 3 "" 29
+0
+1 1556 3 "" 30
+0
+1 1557 3 "0" 1
+0
+1 1558 3 "" 32
+0
+1 1559 3 "" 33
+0
+1 1560 3 "" 34
+0
+1 1561 3 "" 35
+0
+1 1562 3 "" 36
+0
+1 1563 3 "" 37
+0
+1 1564 3 "" 38
+0
+1 1565 3 "" 39
+0
+1 1566 3 "" 40
+0
+1 1567 3 "" 41
+0
+1 1568 3 "" 42
+0
+1 1569 3 "" 43
+0
+1 1570 3 "" 44
+0
+1 1571 3 "" 45
+0
+1 1572 3 "" 46
+0
+1 1573 3 "" 47
+0
+1 1574 3 "" 48
+0
+1 1575 3 "" 49
+0
+1 1576 3 "" 50
+0
+1 1577 3 "" 51
+0
+1 1578 3 "" 52
+0
+1 1579 3 "" 53
+0
+1 1580 3 "" 54
+0
+1 1581 3 "" 55
+0
+1 1582 3 "" 56
+0
+1 1583 3 "" 57
+0
+1 1584 3 "" 59
+0
+1 1585 3 "" 61
+0
+1 1586 3 "" 62
+0
+1 1587 3 "" 63
+0
+1 1594 6 "" 23
+0
+1 1595 6 "" 25
+0
+1 1596 6 "" 26
+0
+1 1597 6 "" 27
+0
+1 1598 6 "" 28
+0
+1 1599 6 "" 29
+0
+1 1600 6 "" 30
+0
+1 1601 6 "0" 1
+0
+1 1602 6 "" 32
+0
+1 1603 6 "" 33
+0
+1 1604 6 "" 34
+0
+1 1605 6 "" 35
+0
+1 1606 6 "" 36
+0
+1 1607 6 "" 37
+0
+1 1608 6 "" 38
+0
+1 1609 6 "" 39
+0
+1 1610 6 "" 40
+0
+1 1611 6 "" 41
+0
+1 1612 6 "" 42
+0
+1 1613 6 "" 43
+0
+1 1614 6 "" 44
+0
+1 1615 6 "" 45
+0
+1 1616 6 "" 46
+0
+1 1617 6 "" 47
+0
+1 1618 6 "" 48
+0
+1 1619 6 "" 49
+0
+1 1620 6 "" 50
+0
+1 1621 6 "" 51
+0
+1 1622 6 "" 52
+0
+1 1623 6 "" 53
+0
+1 1624 6 "" 54
+0
+1 1625 6 "" 55
+0
+1 1626 6 "" 56
+0
+1 1627 6 "" 57
+0
+1 1628 6 "" 59
+0
+1 1629 6 "" 61
+0
+1 1630 6 "" 62
+0
+1 1631 6 "" 63
+0
+1 1632 7 "" 23
+0
+1 1633 7 "" 25
+0
+1 1634 7 "" 26
+0
+1 1635 7 "" 27
+0
+1 1636 7 "" 28
+0
+1 1637 7 "" 29
+0
+1 1638 7 "" 30
+0
+1 1639 7 "0" 1
+0
+1 1640 7 "" 32
+0
+1 1641 7 "" 33
+0
+1 1642 7 "" 34
+0
+1 1643 7 "" 35
+0
+1 1644 7 "" 36
+0
+1 1645 7 "" 37
+0
+1 1646 7 "" 38
+0
+1 1647 7 "" 39
+0
+1 1648 7 "" 40
+0
+1 1649 7 "" 41
+0
+1 1650 7 "" 42
+0
+1 1651 7 "" 43
+0
+1 1652 7 "" 44
+0
+1 1653 7 "" 45
+0
+1 1654 7 "" 46
+0
+1 1655 7 "" 47
+0
+1 1656 7 "" 48
+0
+1 1657 7 "" 49
+0
+1 1658 7 "" 50
+0
+1 1659 7 "" 51
+0
+1 1660 7 "" 52
+0
+1 1661 7 "" 53
+0
+1 1662 7 "" 54
+0
+1 1663 7 "" 55
+0
+1 1664 7 "" 56
+0
+1 1665 7 "" 57
+0
+1 1666 7 "" 59
+0
+1 1667 7 "" 61
+0
+1 1668 7 "" 62
+0
+1 1669 7 "" 63
+0
+1 1670 8 "" 23
+0
+1 1671 8 "" 25
+0
+1 1672 8 "" 26
+0
+1 1673 8 "" 27
+0
+1 1674 8 "" 28
+0
+1 1675 8 "" 29
+0
+1 1676 8 "" 30
+0
+1 1677 8 "0" 1
+0
+1 1678 8 "" 32
+0
+1 1679 8 "" 33
+0
+1 1680 8 "" 34
+0
+1 1681 8 "" 35
+0
+1 1682 8 "" 36
+0
+1 1683 8 "" 37
+0
+1 1684 8 "" 38
+0
+1 1685 8 "" 39
+0
+1 1686 8 "" 40
+0
+1 1687 8 "" 41
+0
+1 1688 8 "" 42
+0
+1 1689 8 "" 43
+0
+1 1690 8 "" 44
+0
+1 1691 8 "" 45
+0
+1 1692 8 "" 46
+0
+1 1693 8 "" 47
+0
+1 1694 8 "" 48
+0
+1 1695 8 "" 49
+0
+1 1696 8 "" 50
+0
+1 1697 8 "" 51
+0
+1 1698 8 "" 52
+0
+1 1699 8 "" 53
+0
+1 1700 8 "" 54
+0
+1 1701 8 "" 55
+0
+1 1702 8 "" 56
+0
+1 1703 8 "" 57
+0
+1 1704 8 "" 59
+0
+1 1705 8 "" 61
+0
+1 1706 8 "" 62
+0
+1 1707 8 "" 63
+0
+1 1714 11 "" 23
+0
+1 1715 11 "" 25
+0
+1 1716 11 "" 26
+0
+1 1717 11 "" 27
+0
+1 1718 11 "" 28
+0
+1 1719 11 "" 29
+0
+1 1720 11 "" 30
+0
+1 1721 11 "0" 1
+0
+1 1722 11 "" 32
+0
+1 1723 11 "" 33
+0
+1 1724 11 "" 34
+0
+1 1725 11 "" 35
+0
+1 1726 11 "" 36
+0
+1 1727 11 "" 37
+0
+1 1728 11 "" 38
+0
+1 1729 11 "" 39
+0
+1 1730 11 "" 40
+0
+1 1731 11 "" 41
+0
+1 1732 11 "" 42
+0
+1 1733 11 "" 43
+0
+1 1734 11 "" 44
+0
+1 1735 11 "" 45
+0
+1 1736 11 "" 46
+0
+1 1737 11 "" 47
+0
+1 1738 11 "" 48
+0
+1 1739 11 "" 49
+0
+1 1740 11 "" 50
+0
+1 1741 11 "" 51
+0
+1 1742 11 "" 52
+0
+1 1743 11 "" 53
+0
+1 1744 11 "" 54
+0
+1 1745 11 "" 55
+0
+1 1746 11 "" 56
+0
+1 1747 11 "" 57
+0
+1 1748 11 "" 59
+0
+1 1749 11 "" 61
+0
+1 1750 11 "" 62
+0
+1 1751 11 "" 63
+0
+1 1752 12 "" 23
+0
+1 1753 12 "" 25
+0
+1 1754 12 "" 26
+0
+1 1755 12 "" 27
+0
+1 1756 12 "" 28
+0
+1 1757 12 "" 29
+0
+1 1758 12 "" 30
+0
+1 1759 12 "0" 1
+0
+1 1760 12 "" 32
+0
+1 1761 12 "" 33
+0
+1 1762 12 "" 34
+0
+1 1763 12 "" 35
+0
+1 1764 12 "" 36
+0
+1 1765 12 "" 37
+0
+1 1766 12 "" 38
+0
+1 1767 12 "" 39
+0
+1 1768 12 "" 40
+0
+1 1769 12 "" 41
+0
+1 1770 12 "" 42
+0
+1 1771 12 "" 43
+0
+1 1772 12 "" 44
+0
+1 1773 12 "" 45
+0
+1 1774 12 "" 46
+0
+1 1775 12 "" 47
+0
+1 1776 12 "" 48
+0
+1 1777 12 "" 49
+0
+1 1778 12 "" 50
+0
+1 1779 12 "" 51
+0
+1 1780 12 "" 52
+0
+1 1781 12 "" 53
+0
+1 1782 12 "" 54
+0
+1 1783 12 "" 55
+0
+1 1784 12 "" 56
+0
+1 1785 12 "" 57
+0
+1 1786 12 "" 59
+0
+1 1787 12 "" 61
+0
+1 1788 12 "" 62
+0
+1 1789 12 "" 63
+0
+1 1790 13 "" 23
+0
+1 1791 13 "" 25
+0
+1 1792 13 "" 26
+0
+1 1793 13 "" 27
+0
+1 1794 13 "" 28
+0
+1 1795 13 "" 29
+0
+1 1796 13 "" 30
+0
+1 1797 13 "0" 1
+0
+1 1798 13 "" 32
+0
+1 1799 13 "" 33
+0
+1 1800 13 "" 34
+0
+1 1801 13 "" 35
+0
+1 1802 13 "" 36
+0
+1 1803 13 "" 37
+0
+1 1804 13 "" 38
+0
+1 1805 13 "" 39
+0
+1 1806 13 "" 40
+0
+1 1807 13 "" 41
+0
+1 1808 13 "" 42
+0
+1 1809 13 "" 43
+0
+1 1810 13 "" 44
+0
+1 1811 13 "" 45
+0
+1 1812 13 "" 46
+0
+1 1813 13 "" 47
+0
+1 1814 13 "" 48
+0
+1 1815 13 "" 49
+0
+1 1816 13 "" 50
+0
+1 1817 13 "" 51
+0
+1 1818 13 "" 52
+0
+1 1819 13 "" 53
+0
+1 1820 13 "" 54
+0
+1 1821 13 "" 55
+0
+1 1822 13 "" 56
+0
+1 1823 13 "" 57
+0
+1 1824 13 "" 59
+0
+1 1825 13 "" 61
+0
+1 1826 13 "" 62
+0
+1 1827 13 "" 63
+0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 1 "PANEL_REF1" -1
+"objects\\Hardware\\CEP_CobaltNode_detailed_small.pnl" 36 275 T 88 0.4651162790697674 0 0.4324324324324325 -9.302325581395348 96.48648648648647
+1
+"$nodeNr""1"
+3 2 "PANEL_REF2" -1
+"objects\\Hardware\\CEP_CobaltNode_detailed_small.pnl" 276 275 T 89 0.4651162790697674 0 0.4324324324324325 -10.93023255813952 96.48648648648653
+1
+"$nodeNr""2"
+3 3 "PANEL_REF3" -1
+"objects\\Hardware\\CEP_CobaltNode_detailed_small.pnl" 516 275 T 90 0.4651162790697674 0 0.4324324324324325 -12.55813953488378 96.48648648648653
+1
+"$nodeNr""3"
+3 4 "PANEL_REF4" -1
+"objects\\Hardware\\CEP_CobaltRouter_small.pnl" 330 80 T 91 1 0 1 -214 20
+1
+"$router""CBT-01"
+3 5 "PANEL_REF5" -1
+"objects\\Hardware\\CEP_CobaltRouter_small.pnl" 330 480 T 92 1 0 1 -215 -120
+1
+"$router""CBT-01"
+3 6 "PANEL_REF6" -1
+"objects\\Hardware\\CEP_CobaltNode_detailed_small.pnl" 36 275 T 93 0.4651162790697674 0 0.4324324324324325 340.6976744186046 96.4864864864867
+1
+"$nodeNr""4"
+3 7 "PANEL_REF7" -1
+"objects\\Hardware\\CEP_CobaltNode_detailed_small.pnl" 276 275 T 94 0.4651162790697674 0 0.4324324324324325 339.0697674418604 96.4864864864867
+1
+"$nodeNr""5"
+3 8 "PANEL_REF8" -1
+"objects\\Hardware\\CEP_CobaltNode_detailed_small.pnl" 516 275 T 95 0.4651162790697674 0 0.4324324324324325 337.4418604651161 96.4864864864867
+1
+"$nodeNr""6"
+3 9 "PANEL_REF9" -1
+"objects\\Hardware\\CEP_CobaltRouter_small.pnl" 330 80 T 96 1 0 1 136 19.99999999999999
+1
+"$router""CBT-02"
+3 10 "PANEL_REF10" -1
+"objects\\Hardware\\CEP_CobaltRouter_small.pnl" 330 480 T 97 1 0 1 135 -120
+1
+"$router""CBT-02"
+3 11 "PANEL_REF11" -1
+"objects\\Hardware\\CEP_CobaltNode_detailed_small.pnl" 36 275 T 98 0.4651162790697674 0 0.4324324324324325 686.2558139534884 96.08108108108105
+1
+"$nodeNr""7"
+3 12 "PANEL_REF12" -1
+"objects\\Hardware\\CEP_CobaltNode_detailed_small.pnl" 276 275 T 99 0.4651162790697674 0 0.4324324324324325 684.6279069767443 96.08108108108105
+1
+"$nodeNr""8"
+3 13 "PANEL_REF13" -1
+"objects\\Hardware\\CEP_CobaltNode_detailed_small.pnl" 516 275 T 100 0.4651162790697674 0 0.4324324324324325 683 96.08108108108105
+1
+"$nodeNr""9"
+3 14 "PANEL_REF14" -1
+"objects\\Hardware\\CEP_CobaltRouter_small.pnl" 330 80 T 101 1 0 1 486 20
+1
+"$router""CBT-03"
+3 15 "PANEL_REF15" -1
+"objects\\Hardware\\CEP_CobaltRouter_small.pnl" 330 480 T 102 1 0 1 486 -110
+1
+"$router""CBT-03"
+1 16 "SHAPE_GROUP16" -1
+5 0 
+367 366 368 361 362 
+
+1 17 "SHAPE_GROUP17" -1
+5 0 
+732 731 733 729 730 
+
+1 18 "SHAPE_GROUP18" -1
+5 0 
+737 736 738 734 735 
+
+1 19 "SHAPE_GROUP19" -1
+5 0 
+1102 1101 1103 1099 1100 
+
+1 20 "SHAPE_GROUP20" -1
+5 0 
+1467 1466 1468 1464 1465 
+
+1 21 "SHAPE_GROUP21" -1
+5 0 
+1472 1471 1473 1469 1470 
+
+0

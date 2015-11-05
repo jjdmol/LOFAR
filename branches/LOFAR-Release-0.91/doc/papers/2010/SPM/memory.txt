@@ -1,0 +1,206 @@
+reeds bekend:
+
+
+access patterns (data-access book genoemd door reviewer)
+embedded, signal processing
+mem optimizations through caching, data prefetching and software pipelining
+ook parallel / multi-processor 
+parallel maakt memory problem larger, data gaat niet alleen van core naar mem hierarchy, maar ook tussen cores.
+focus op multimedia, maar zeker toepasbaar op signal processing
+
+
+
+hardware:
+  caches
+  cache lines
+  associativity
+  hardware prefetching (10.1.1.117.6719.pdf)
+
+software:
+  compiler / runtime system
+    cache-aware dynamic memory allocation (dsa.pdf)
+    access patterns (data-access book genoemd door reviewer)
+    padding of arrays (Bacon94Framework.ps)
+    compilers, suif (10.1.1.81.349.pdf, todaes97_panda_compilecache.pdf)
+  algorithmic
+    wij doen het met de hand, compilers nog niet goed genoeg. OpenCL helpt misschien, door runtime compilation.
+
+gpus:
+
+massively multi-threaded
+coalescing (different threads read/write subsequent addresses)
+order of magnitute more impact than on normal shared mem machines (10-100x slowdown if coalescing not right)
+banking of shared memory
+texture cache
+SMT to overlap delays
+Alles nodig voor goede performance, compilers doen dit (nog) niet.
+
+
+embedded: niet massively threaded, lagere clock, mem/processing gap is veel kleiner (gflops/byte GPU is x keer groter)
+
+
+Boek genoemd door reviewer
+--------------------------
+
+@Book{data-access,
+  author = 	 {Catthoor, F. and Danckaert, K. and Kulkarni, K.K. and Brockmeyer, E. and Kjeldsberg, P.G. and van Achteren, T. and Omnes, T.},
+  ALTeditor = 	 {},
+  title = 	 {Data Access and Storage Management for Embedded Programmable Processors},
+  publisher = 	 {Kluwer Academic Publishers},
+  year = 	 {2002},
+  OPTkey = 	 {},
+  OPTvolume = 	 {},
+  OPTnumber = 	 {},
+  OPTseries = 	 {},
+  OPTaddress = 	 {},
+  OPTedition = 	 {},
+  OPTmonth = 	 {},
+  note = 	 {ISBN: 978-0-7923-7689-7},
+  OPTannote = 	 {}
+}
+
+
+dsa.pdf
+-------
+
+SURVEY
+
+Dynamic Storage Allocation: A Survey and Critical Review
+Source 	Lecture Notes In Computer Science; Vol. 986 archive
+Proceedings of the International Workshop on Memory Management table of contents
+Pages: 1 - 116  
+Year of Publication: 1995
+ISBN:3-540-60368-9
+Authors 	
+Paul R. Wilson 	
+Mark S. Johnstone 	
+Michael Neely 	
+David Boles 	
+Publisher 	
+Springer-Verlag  London, UK
+Bibliometrics 	
+Downloads (6 Weeks): n/a,   Downloads (12 Months): n/a,   Citation Count: 95 
+http://portal.acm.org/citation.cfm?id=664690&dl=GUIDE&coll=GUIDE&CFID=53855195&CFTOKEN=80924574
+
+
+
+10.1.1.81.349.pdf
+-----------------
+A data locality optimizing algorithm (1991) [643 citations — 17 self]
+Download:
+http://suif.stanford.edu/papers/wolf91a.ps
+DBLP
+CACHED:
+Download as a PDF | Download as a PS
+by Michael E. Wolf ,  Monica S. Lam 
+This paper proposes an algorithm that improves the local-
+ity of a loop nest by transforming the code via interchange,
+reversal, skewing and tiling. The loop transformation al-
+gorithm is based on two concepts: a mathematical for-
+mulation of reuse and locality, and a loop transformation
+theory that unifies the various transforms as unimodular
+matrix transformations.
+   The algorithm has been implemented in the SUIF (Stan-
+ford University Intermediate Format) compiler, and is suc-
+cessful in optimizing codes such as matrix multiplica-
+tion, successive over-relaxation (SOR), LU decomposition
+without pivoting, and Givens QR factorization. Perfor-
+mance evaluation indicates that locality optimization is es-
+pecially crucial for scaling up the performance of parallel
+code.
+
+
+Bacon94Framework.ps
+-------------------
+padding van arrays
+
+A compiler framework for restructuring data declarations to enhance cache and TLB effectiveness
+Full text 	PdfPdf (298 KB)
+Source 	IBM Centre for Advanced Studies Conference archive
+Proceedings of the 1994 conference of the Centre for Advanced Studies on Collaborative research table of contents
+Toronto, Ontario, Canada
+Page: 3  
+Year of Publication: 1994
+Authors 	
+David F. Bacon 	 Application Development Technology Institute, IBM Software Solutions Division, 555 Bailey Avenue, San Jose, CA
+Jyh-Herng Chow 	 Application Development Technology Institute, IBM Software Solutions Division, 555 Bailey Avenue, San Jose, CA
+Dz-ching R. Ju 	 Application Development Technology Institute, IBM Software Solutions Division, 555 Bailey Avenue, San Jose, CA
+Kalyan Muthukumar 	 Application Development Technology Institute, IBM Software Solutions Division, 555 Bailey Avenue, San Jose, CA
+Vivek Sarkar 	 Application Development Technology Institute, IBM Software Solutions Division, 555 Bailey Avenue, San Jose, CA
+Sponsors 	
+NRC : National Research Council - Canada
+: Natural Sciences and Engineering Research Council
+: Industry Canada
+IBM Canada : IBM Canada
+Publisher 	
+IBM Press  
+
+
+todaes97_panda_compilecache.pdf
+-------------------------------
+cache-aware compiler embedded 
+
+Memory Data Organization for Improved Cache Performance in Embedded Processor Applications
+PREETI RANJAN PANDA, NIKIL D. DUTT, and ALEXANDRU NICOLAU
+University of California at Irvine
+
+Code generation for embedded processors opens up the possibility for several performance
+optimization techniques that have been ignored by traditional compilers due to compilation
+time constraints. We present techniques that take into account the parameters of the data
+caches for organizing scalar and array variables declared in embedded code into memory, with
+the objective of improving data cache performance. We present techniques for clustering
+variables to minimize compulsory cache misses, and for solving the memory assignment
+problem to minimize conflict cache misses. Our experiments with benchmark code kernels
+from DSP and other domains on the CW4001 embedded processor from LSI Logic indicate
+significant improvements in data cache performance by the application of our memory
+organization technique.
+@ARTICLE{Panda96memorydata,
+    author = {Preeti Ranjan Panda and Nikil D. Dutt and Alexandru Nicolau},
+    title = {Memory Data Organization for Improved Cache Performance in Embedded Processor Applications},
+    journal = {ACM Transactions on Design Automation of Electronic Systems},
+    year = {1996},
+    volume = {2},
+    pages = {384--409}
+}
+
+10.1.1.117.6719.pdf
+-------------------
+
+Effective Hardware-based Data Prefetching for High-performance Processors (1995) [165 citations — 2 self]
+Download:
+http://cs.ucsb.edu/~arch/cs254/papers/chen-baer.pd
+by Tien-fu Chen ,  Jean-loup Baer
+IEEE Transactions on Computers
+
+@ARTICLE{Chen95effectivehardware-based,
+    author = {Tien-fu Chen and Jean-loup Baer},
+    title = {Effective Hardware-based Data Prefetching for High-performance Processors},
+    journal = {IEEE Transactions on Computers},
+    year = {1995},
+    volume = {44},
+    pages = {609--623}
+}
+ 
+Abstract:
+
+Abstract-Memory latency and bandwidth are progressing at a much slower
+pace than processor performance. In this paper, we describe and
+evaluate the performance of three variations of a hardware function
+unit whose goal is to assist a data cache in prefetching data accesses
+so that memory latency is hidden as often as possible. The basic idea
+of the prefetching scheme is to keep track of data access patterns in
+a Reference Prediction Table (RPT) organized as an instruction
+cache. The three designs differ mostly on the timing of the
+prefetching. In the simplest scheme (basic), prefetches can be
+generated one iteration ahead of actual use. The lookahead variation
+takes advantage of a lookahead pro-gram counter that ideally stays one
+memory latency time ahead of the real program counter and that is used
+as the control mecha-nism to generate the prefetches. Finally the
+correlated scheme uses a more sophisticated design to detect patterns
+across loop levels. These designs are evaluated by simulating the ten
+SPEC benchmarks on a cycle-by-cycle basis. The results show that 1)
+the three hardware prefetching schemes all yield significant
+reductions in the data access penalty when compared with regu-lar
+caches, 2) the benefits are greater when the hardware assist augments
+small on-chip caches, and 3) the lookahead scheme is the preferred one
+cost-performance wise.

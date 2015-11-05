@@ -1,0 +1,6 @@
+# Specific options
+option(USE_BACKTRACE "No backtrace" OFF)
+option(USE_LOG4CPLUS "log4cxx is used" OFF)
+option(USE_LOG4CXX "log4cxx is used" OFF)
+option(USE_SHMEM "No shmem" OFF)
+option(BUILD_DOCUMENTATION "Doxygen" ON)

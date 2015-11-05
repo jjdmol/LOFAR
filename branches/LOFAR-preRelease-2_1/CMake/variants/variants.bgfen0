@@ -1,0 +1,42 @@
+## -*- CMake -*-
+##
+## Host specific variants file. 
+## Settings in this file extend or override those in the global variants file.
+##
+## $Id$
+
+#set(CMAKE_SYSTEM_NAME BlueGeneP)
+
+# Define compiler suites.
+#list(APPEND LOFAR_COMPILER_SUITES GNUBGP)
+
+# Define build variants.
+#list(APPEND LOFAR_BUILD_VARIANTS CN ION)
+
+# Options
+option(USE_LOG4CPLUS            "Use Log4Cplus"               OFF)
+option(USE_MPI                  "Use MPI"                     ON)
+option(USE_PQXX                 "Use libpqxx"                 OFF)
+
+# Station software and the like apparently cannot (yet) handle shared libs.
+option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
+
+# Host specific paths to third party packages
+set(CASACORE_ROOT_DIR /globalhome/lofarsystem/packages/root/bgp_ion/casacore)
+set(CASACORE_MAKE_REQUIRED_EXTERNALS_OPTIONAL ON)
+set(MASS_ROOT_DIR /opt/mass)
+set(FFTW2_ROOT_DIR /globalhome/lofarsystem/packages/fftw-2.1.5-single-precision)
+set(BOOST_ROOT_DIR /globalhome/lofarsystem/packages/root/bgp_ion/boost)
+set(LIBSSH2_ROOT_DIR /globalhome/lofarsystem/packages/root/bgp_ion/libssh2)
+
+set(BLITZ_ROOT_DIR /globalhome/lofarsystem/packages/root/bgfen/blitz)
+set(LOG4CPLUS_ROOT_DIR /globalhome/lofarsystem/packages/root/bgfen/log4cplus)
+
+set(VALGRIND_ROOT_DIR /globalhome/mol/root-ppc)
+
+# Ignore warnings matching the following pattern(s)
+set(CTEST_CUSTOM_WARNING_EXCEPTION
+  "/boost/date_time/(gregorian|posix_time)/conversion.hpp:[0-9]+: warning: missing initializer for member"
+  "/mpicxx.h:[0-9]+: warning: unused parameter"
+)
+

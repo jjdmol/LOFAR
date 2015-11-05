@@ -1,0 +1,1598 @@
+--wrmux[1] is wrmux[1] at LC1_24_A4
+--operation mode is normal
+
+wrmux[1] = fftwritedatareal[1] & (writereal[1] # !write) # !fftwritedatareal[1] & write & writereal[1];
+
+
+--14 is 14 at LC6_24_A4
+--operation mode is normal
+
+14 = write # fftwriteenable;
+
+
+--wamux[1] is wamux[1] at LC2_24_A1
+--operation mode is normal
+
+wamux[1] = fftwriteaddress[1] & (writeaddress[1] # !write) # !fftwriteaddress[1] & write & writeaddress[1];
+
+
+--wamux[2] is wamux[2] at LC3_23_A4
+--operation mode is normal
+
+wamux[2] = write & writeaddress[2] # !write & fftwriteaddress[2];
+
+
+--wamux[3] is wamux[3] at LC2_24_A3
+--operation mode is normal
+
+wamux[3] = writeaddress[3] & (write # fftwriteaddress[3]) # !writeaddress[3] & !write & fftwriteaddress[3];
+
+
+--wamux[4] is wamux[4] at LC6_23_A4
+--operation mode is normal
+
+wamux[4] = write & writeaddress[4] # !write & fftwriteaddress[4];
+
+
+--wamux[5] is wamux[5] at LC5_23_A4
+--operation mode is normal
+
+wamux[5] = write & writeaddress[5] # !write & fftwriteaddress[5];
+
+
+--wamux[6] is wamux[6] at LC7_23_A4
+--operation mode is normal
+
+wamux[6] = write & writeaddress[6] # !write & fftwriteaddress[6];
+
+
+--wamux[7] is wamux[7] at LC9_23_A4
+--operation mode is normal
+
+wamux[7] = write & writeaddress[7] # !write & fftwriteaddress[7];
+
+
+--wamux[8] is wamux[8] at LC10_23_A4
+--operation mode is normal
+
+wamux[8] = write & writeaddress[8] # !write & fftwriteaddress[8];
+
+
+--ramux[1] is ramux[1] at LC3_24_A2
+--operation mode is normal
+
+ramux[1] = fftreadaddress[1] & (readaddress[1] # !read) # !fftreadaddress[1] & read & readaddress[1];
+
+
+--ramux[2] is ramux[2] at LC7_24_A2
+--operation mode is normal
+
+ramux[2] = readaddress[2] & (read # fftreadaddress[2]) # !readaddress[2] & !read & fftreadaddress[2];
+
+
+--ramux[3] is ramux[3] at LC5_1_A3
+--operation mode is normal
+
+ramux[3] = fftreadaddress[3] & (readaddress[3] # !read) # !fftreadaddress[3] & read & readaddress[3];
+
+
+--ramux[4] is ramux[4] at LC6_1_A3
+--operation mode is normal
+
+ramux[4] = readaddress[4] & (read # fftreadaddress[4]) # !readaddress[4] & !read & fftreadaddress[4];
+
+
+--ramux[5] is ramux[5] at LC7_1_A3
+--operation mode is normal
+
+ramux[5] = fftreadaddress[5] & (readaddress[5] # !read) # !fftreadaddress[5] & read & readaddress[5];
+
+
+--ramux[6] is ramux[6] at LC10_1_A3
+--operation mode is normal
+
+ramux[6] = readaddress[6] & (read # fftreadaddress[6]) # !readaddress[6] & !read & fftreadaddress[6];
+
+
+--ramux[7] is ramux[7] at LC3_1_A3
+--operation mode is normal
+
+ramux[7] = fftreadaddress[7] & (readaddress[7] # !read) # !fftreadaddress[7] & read & readaddress[7];
+
+
+--ramux[8] is ramux[8] at LC9_1_A3
+--operation mode is normal
+
+ramux[8] = readaddress[8] & (read # fftreadaddress[8]) # !readaddress[8] & !read & fftreadaddress[8];
+
+
+--C1_q[0] is lpm_ram_dp:$00002|altdpram:sram|q[0] at EC6_1_A4
+C1_q[0]_data_in = wrmux[1];
+C1_q[0]_write_enable = 14;
+C1_q[0]_clock_0 = GLOBAL(sysclk);
+C1_q[0]_clock_1 = GLOBAL(sysclk);
+C1_q[0]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C1_q[0]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C1_q[0] = RAM_SLICE(C1_q[0]_data_in, C1_q[0]_write_enable, C1_q[0]_clock_0, C1_q[0]_clock_1, , , , , VCC, C1_q[0]_write_address, C1_q[0]_read_address);
+
+
+--wrmux[2] is wrmux[2] at LC10_24_A4
+--operation mode is normal
+
+wrmux[2] = fftwritedatareal[2] & (writereal[2] # !write) # !fftwritedatareal[2] & write & writereal[2];
+
+
+--C1_q[1] is lpm_ram_dp:$00002|altdpram:sram|q[1] at EC3_1_A4
+C1_q[1]_data_in = wrmux[2];
+C1_q[1]_write_enable = 14;
+C1_q[1]_clock_0 = GLOBAL(sysclk);
+C1_q[1]_clock_1 = GLOBAL(sysclk);
+C1_q[1]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C1_q[1]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C1_q[1] = RAM_SLICE(C1_q[1]_data_in, C1_q[1]_write_enable, C1_q[1]_clock_0, C1_q[1]_clock_1, , , , , VCC, C1_q[1]_write_address, C1_q[1]_read_address);
+
+
+--wrmux[3] is wrmux[3] at LC8_24_A4
+--operation mode is normal
+
+wrmux[3] = writereal[3] & (write # fftwritedatareal[3]) # !writereal[3] & !write & fftwritedatareal[3];
+
+
+--C1_q[2] is lpm_ram_dp:$00002|altdpram:sram|q[2] at EC1_1_A4
+C1_q[2]_data_in = wrmux[3];
+C1_q[2]_write_enable = 14;
+C1_q[2]_clock_0 = GLOBAL(sysclk);
+C1_q[2]_clock_1 = GLOBAL(sysclk);
+C1_q[2]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C1_q[2]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C1_q[2] = RAM_SLICE(C1_q[2]_data_in, C1_q[2]_write_enable, C1_q[2]_clock_0, C1_q[2]_clock_1, , , , , VCC, C1_q[2]_write_address, C1_q[2]_read_address);
+
+
+--wrmux[4] is wrmux[4] at LC7_24_A4
+--operation mode is normal
+
+wrmux[4] = fftwritedatareal[4] & (writereal[4] # !write) # !fftwritedatareal[4] & write & writereal[4];
+
+
+--C1_q[3] is lpm_ram_dp:$00002|altdpram:sram|q[3] at EC8_1_A4
+C1_q[3]_data_in = wrmux[4];
+C1_q[3]_write_enable = 14;
+C1_q[3]_clock_0 = GLOBAL(sysclk);
+C1_q[3]_clock_1 = GLOBAL(sysclk);
+C1_q[3]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C1_q[3]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C1_q[3] = RAM_SLICE(C1_q[3]_data_in, C1_q[3]_write_enable, C1_q[3]_clock_0, C1_q[3]_clock_1, , , , , VCC, C1_q[3]_write_address, C1_q[3]_read_address);
+
+
+--wrmux[5] is wrmux[5] at LC2_24_A4
+--operation mode is normal
+
+wrmux[5] = fftwritedatareal[5] & (writereal[5] # !write) # !fftwritedatareal[5] & write & writereal[5];
+
+
+--C1_q[4] is lpm_ram_dp:$00002|altdpram:sram|q[4] at EC2_1_A4
+C1_q[4]_data_in = wrmux[5];
+C1_q[4]_write_enable = 14;
+C1_q[4]_clock_0 = GLOBAL(sysclk);
+C1_q[4]_clock_1 = GLOBAL(sysclk);
+C1_q[4]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C1_q[4]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C1_q[4] = RAM_SLICE(C1_q[4]_data_in, C1_q[4]_write_enable, C1_q[4]_clock_0, C1_q[4]_clock_1, , , , , VCC, C1_q[4]_write_address, C1_q[4]_read_address);
+
+
+--wrmux[6] is wrmux[6] at LC3_24_A4
+--operation mode is normal
+
+wrmux[6] = fftwritedatareal[6] & (writereal[6] # !write) # !fftwritedatareal[6] & write & writereal[6];
+
+
+--C1_q[5] is lpm_ram_dp:$00002|altdpram:sram|q[5] at EC4_1_A4
+C1_q[5]_data_in = wrmux[6];
+C1_q[5]_write_enable = 14;
+C1_q[5]_clock_0 = GLOBAL(sysclk);
+C1_q[5]_clock_1 = GLOBAL(sysclk);
+C1_q[5]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C1_q[5]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C1_q[5] = RAM_SLICE(C1_q[5]_data_in, C1_q[5]_write_enable, C1_q[5]_clock_0, C1_q[5]_clock_1, , , , , VCC, C1_q[5]_write_address, C1_q[5]_read_address);
+
+
+--wrmux[7] is wrmux[7] at LC4_24_A4
+--operation mode is normal
+
+wrmux[7] = fftwritedatareal[7] & (writereal[7] # !write) # !fftwritedatareal[7] & writereal[7] & write;
+
+
+--C1_q[6] is lpm_ram_dp:$00002|altdpram:sram|q[6] at EC5_1_A4
+C1_q[6]_data_in = wrmux[7];
+C1_q[6]_write_enable = 14;
+C1_q[6]_clock_0 = GLOBAL(sysclk);
+C1_q[6]_clock_1 = GLOBAL(sysclk);
+C1_q[6]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C1_q[6]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C1_q[6] = RAM_SLICE(C1_q[6]_data_in, C1_q[6]_write_enable, C1_q[6]_clock_0, C1_q[6]_clock_1, , , , , VCC, C1_q[6]_write_address, C1_q[6]_read_address);
+
+
+--wrmux[8] is wrmux[8] at LC5_24_A4
+--operation mode is normal
+
+wrmux[8] = writereal[8] & (write # fftwritedatareal[8]) # !writereal[8] & !write & fftwritedatareal[8];
+
+
+--C1_q[7] is lpm_ram_dp:$00002|altdpram:sram|q[7] at EC7_1_A4
+C1_q[7]_data_in = wrmux[8];
+C1_q[7]_write_enable = 14;
+C1_q[7]_clock_0 = GLOBAL(sysclk);
+C1_q[7]_clock_1 = GLOBAL(sysclk);
+C1_q[7]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C1_q[7]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C1_q[7] = RAM_SLICE(C1_q[7]_data_in, C1_q[7]_write_enable, C1_q[7]_clock_0, C1_q[7]_clock_1, , , , , VCC, C1_q[7]_write_address, C1_q[7]_read_address);
+
+
+--wrmux[9] is wrmux[9] at LC9_24_A4
+--operation mode is normal
+
+wrmux[9] = writereal[9] & (fftwritedatareal[9] # write) # !writereal[9] & fftwritedatareal[9] & !write;
+
+
+--C1_q[8] is lpm_ram_dp:$00002|altdpram:sram|q[8] at EC7_1_A3
+C1_q[8]_data_in = wrmux[9];
+C1_q[8]_write_enable = 14;
+C1_q[8]_clock_0 = GLOBAL(sysclk);
+C1_q[8]_clock_1 = GLOBAL(sysclk);
+C1_q[8]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C1_q[8]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C1_q[8] = RAM_SLICE(C1_q[8]_data_in, C1_q[8]_write_enable, C1_q[8]_clock_0, C1_q[8]_clock_1, , , , , VCC, C1_q[8]_write_address, C1_q[8]_read_address);
+
+
+--wrmux[10] is wrmux[10] at LC8_24_A1
+--operation mode is normal
+
+wrmux[10] = fftwritedatareal[10] & (writereal[10] # !write) # !fftwritedatareal[10] & write & writereal[10];
+
+
+--C1_q[9] is lpm_ram_dp:$00002|altdpram:sram|q[9] at EC1_1_A1
+C1_q[9]_data_in = wrmux[10];
+C1_q[9]_write_enable = 14;
+C1_q[9]_clock_0 = GLOBAL(sysclk);
+C1_q[9]_clock_1 = GLOBAL(sysclk);
+C1_q[9]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C1_q[9]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C1_q[9] = RAM_SLICE(C1_q[9]_data_in, C1_q[9]_write_enable, C1_q[9]_clock_0, C1_q[9]_clock_1, , , , , VCC, C1_q[9]_write_address, C1_q[9]_read_address);
+
+
+--wrmux[11] is wrmux[11] at LC7_24_A1
+--operation mode is normal
+
+wrmux[11] = writereal[11] & (write # fftwritedatareal[11]) # !writereal[11] & !write & fftwritedatareal[11];
+
+
+--C1_q[10] is lpm_ram_dp:$00002|altdpram:sram|q[10] at EC2_1_A1
+C1_q[10]_data_in = wrmux[11];
+C1_q[10]_write_enable = 14;
+C1_q[10]_clock_0 = GLOBAL(sysclk);
+C1_q[10]_clock_1 = GLOBAL(sysclk);
+C1_q[10]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C1_q[10]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C1_q[10] = RAM_SLICE(C1_q[10]_data_in, C1_q[10]_write_enable, C1_q[10]_clock_0, C1_q[10]_clock_1, , , , , VCC, C1_q[10]_write_address, C1_q[10]_read_address);
+
+
+--wrmux[12] is wrmux[12] at LC3_24_A1
+--operation mode is normal
+
+wrmux[12] = writereal[12] & (write # fftwritedatareal[12]) # !writereal[12] & !write & fftwritedatareal[12];
+
+
+--C1_q[11] is lpm_ram_dp:$00002|altdpram:sram|q[11] at EC8_1_A1
+C1_q[11]_data_in = wrmux[12];
+C1_q[11]_write_enable = 14;
+C1_q[11]_clock_0 = GLOBAL(sysclk);
+C1_q[11]_clock_1 = GLOBAL(sysclk);
+C1_q[11]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C1_q[11]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C1_q[11] = RAM_SLICE(C1_q[11]_data_in, C1_q[11]_write_enable, C1_q[11]_clock_0, C1_q[11]_clock_1, , , , , VCC, C1_q[11]_write_address, C1_q[11]_read_address);
+
+
+--wrmux[13] is wrmux[13] at LC6_24_A1
+--operation mode is normal
+
+wrmux[13] = writereal[13] & (write # fftwritedatareal[13]) # !writereal[13] & !write & fftwritedatareal[13];
+
+
+--C1_q[12] is lpm_ram_dp:$00002|altdpram:sram|q[12] at EC4_1_A1
+C1_q[12]_data_in = wrmux[13];
+C1_q[12]_write_enable = 14;
+C1_q[12]_clock_0 = GLOBAL(sysclk);
+C1_q[12]_clock_1 = GLOBAL(sysclk);
+C1_q[12]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C1_q[12]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C1_q[12] = RAM_SLICE(C1_q[12]_data_in, C1_q[12]_write_enable, C1_q[12]_clock_0, C1_q[12]_clock_1, , , , , VCC, C1_q[12]_write_address, C1_q[12]_read_address);
+
+
+--wrmux[14] is wrmux[14] at LC4_24_A1
+--operation mode is normal
+
+wrmux[14] = writereal[14] & (write # fftwritedatareal[14]) # !writereal[14] & !write & fftwritedatareal[14];
+
+
+--C1_q[13] is lpm_ram_dp:$00002|altdpram:sram|q[13] at EC6_1_A1
+C1_q[13]_data_in = wrmux[14];
+C1_q[13]_write_enable = 14;
+C1_q[13]_clock_0 = GLOBAL(sysclk);
+C1_q[13]_clock_1 = GLOBAL(sysclk);
+C1_q[13]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C1_q[13]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C1_q[13] = RAM_SLICE(C1_q[13]_data_in, C1_q[13]_write_enable, C1_q[13]_clock_0, C1_q[13]_clock_1, , , , , VCC, C1_q[13]_write_address, C1_q[13]_read_address);
+
+
+--wrmux[15] is wrmux[15] at LC5_24_A1
+--operation mode is normal
+
+wrmux[15] = writereal[15] & (write # fftwritedatareal[15]) # !writereal[15] & !write & fftwritedatareal[15];
+
+
+--C1_q[14] is lpm_ram_dp:$00002|altdpram:sram|q[14] at EC5_1_A1
+C1_q[14]_data_in = wrmux[15];
+C1_q[14]_write_enable = 14;
+C1_q[14]_clock_0 = GLOBAL(sysclk);
+C1_q[14]_clock_1 = GLOBAL(sysclk);
+C1_q[14]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C1_q[14]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C1_q[14] = RAM_SLICE(C1_q[14]_data_in, C1_q[14]_write_enable, C1_q[14]_clock_0, C1_q[14]_clock_1, , , , , VCC, C1_q[14]_write_address, C1_q[14]_read_address);
+
+
+--wrmux[16] is wrmux[16] at LC10_24_A1
+--operation mode is normal
+
+wrmux[16] = writereal[16] & (write # fftwritedatareal[16]) # !writereal[16] & !write & fftwritedatareal[16];
+
+
+--C1_q[15] is lpm_ram_dp:$00002|altdpram:sram|q[15] at EC7_1_A1
+C1_q[15]_data_in = wrmux[16];
+C1_q[15]_write_enable = 14;
+C1_q[15]_clock_0 = GLOBAL(sysclk);
+C1_q[15]_clock_1 = GLOBAL(sysclk);
+C1_q[15]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C1_q[15]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C1_q[15] = RAM_SLICE(C1_q[15]_data_in, C1_q[15]_write_enable, C1_q[15]_clock_0, C1_q[15]_clock_1, , , , , VCC, C1_q[15]_write_address, C1_q[15]_read_address);
+
+
+--wimux[1] is wimux[1] at LC9_24_A1
+--operation mode is normal
+
+wimux[1] = fftwritedataimag[1] & (writeimag[1] # !write) # !fftwritedataimag[1] & write & writeimag[1];
+
+
+--C2_q[0] is lpm_ram_dp:$00004|altdpram:sram|q[0] at EC3_1_A1
+C2_q[0]_data_in = wimux[1];
+C2_q[0]_write_enable = 14;
+C2_q[0]_clock_0 = GLOBAL(sysclk);
+C2_q[0]_clock_1 = GLOBAL(sysclk);
+C2_q[0]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C2_q[0]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C2_q[0] = RAM_SLICE(C2_q[0]_data_in, C2_q[0]_write_enable, C2_q[0]_clock_0, C2_q[0]_clock_1, , , , , VCC, C2_q[0]_write_address, C2_q[0]_read_address);
+
+
+--wimux[2] is wimux[2] at LC9_24_A3
+--operation mode is normal
+
+wimux[2] = fftwritedataimag[2] & (writeimag[2] # !write) # !fftwritedataimag[2] & write & writeimag[2];
+
+
+--C2_q[1] is lpm_ram_dp:$00004|altdpram:sram|q[1] at EC3_1_A3
+C2_q[1]_data_in = wimux[2];
+C2_q[1]_write_enable = 14;
+C2_q[1]_clock_0 = GLOBAL(sysclk);
+C2_q[1]_clock_1 = GLOBAL(sysclk);
+C2_q[1]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C2_q[1]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C2_q[1] = RAM_SLICE(C2_q[1]_data_in, C2_q[1]_write_enable, C2_q[1]_clock_0, C2_q[1]_clock_1, , , , , VCC, C2_q[1]_write_address, C2_q[1]_read_address);
+
+
+--wimux[3] is wimux[3] at LC8_24_A3
+--operation mode is normal
+
+wimux[3] = writeimag[3] & (write # fftwritedataimag[3]) # !writeimag[3] & !write & fftwritedataimag[3];
+
+
+--C2_q[2] is lpm_ram_dp:$00004|altdpram:sram|q[2] at EC1_1_A3
+C2_q[2]_data_in = wimux[3];
+C2_q[2]_write_enable = 14;
+C2_q[2]_clock_0 = GLOBAL(sysclk);
+C2_q[2]_clock_1 = GLOBAL(sysclk);
+C2_q[2]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C2_q[2]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C2_q[2] = RAM_SLICE(C2_q[2]_data_in, C2_q[2]_write_enable, C2_q[2]_clock_0, C2_q[2]_clock_1, , , , , VCC, C2_q[2]_write_address, C2_q[2]_read_address);
+
+
+--wimux[4] is wimux[4] at LC7_24_A3
+--operation mode is normal
+
+wimux[4] = writeimag[4] & (write # fftwritedataimag[4]) # !writeimag[4] & !write & fftwritedataimag[4];
+
+
+--C2_q[3] is lpm_ram_dp:$00004|altdpram:sram|q[3] at EC2_1_A3
+C2_q[3]_data_in = wimux[4];
+C2_q[3]_write_enable = 14;
+C2_q[3]_clock_0 = GLOBAL(sysclk);
+C2_q[3]_clock_1 = GLOBAL(sysclk);
+C2_q[3]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C2_q[3]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C2_q[3] = RAM_SLICE(C2_q[3]_data_in, C2_q[3]_write_enable, C2_q[3]_clock_0, C2_q[3]_clock_1, , , , , VCC, C2_q[3]_write_address, C2_q[3]_read_address);
+
+
+--wimux[5] is wimux[5] at LC3_24_A3
+--operation mode is normal
+
+wimux[5] = fftwritedataimag[5] & (writeimag[5] # !write) # !fftwritedataimag[5] & write & writeimag[5];
+
+
+--C2_q[4] is lpm_ram_dp:$00004|altdpram:sram|q[4] at EC8_1_A3
+C2_q[4]_data_in = wimux[5];
+C2_q[4]_write_enable = 14;
+C2_q[4]_clock_0 = GLOBAL(sysclk);
+C2_q[4]_clock_1 = GLOBAL(sysclk);
+C2_q[4]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C2_q[4]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C2_q[4] = RAM_SLICE(C2_q[4]_data_in, C2_q[4]_write_enable, C2_q[4]_clock_0, C2_q[4]_clock_1, , , , , VCC, C2_q[4]_write_address, C2_q[4]_read_address);
+
+
+--wimux[6] is wimux[6] at LC6_24_A3
+--operation mode is normal
+
+wimux[6] = writeimag[6] & (write # fftwritedataimag[6]) # !writeimag[6] & !write & fftwritedataimag[6];
+
+
+--C2_q[5] is lpm_ram_dp:$00004|altdpram:sram|q[5] at EC4_1_A3
+C2_q[5]_data_in = wimux[6];
+C2_q[5]_write_enable = 14;
+C2_q[5]_clock_0 = GLOBAL(sysclk);
+C2_q[5]_clock_1 = GLOBAL(sysclk);
+C2_q[5]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C2_q[5]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C2_q[5] = RAM_SLICE(C2_q[5]_data_in, C2_q[5]_write_enable, C2_q[5]_clock_0, C2_q[5]_clock_1, , , , , VCC, C2_q[5]_write_address, C2_q[5]_read_address);
+
+
+--wimux[7] is wimux[7] at LC4_24_A3
+--operation mode is normal
+
+wimux[7] = fftwritedataimag[7] & (writeimag[7] # !write) # !fftwritedataimag[7] & write & writeimag[7];
+
+
+--C2_q[6] is lpm_ram_dp:$00004|altdpram:sram|q[6] at EC6_1_A3
+C2_q[6]_data_in = wimux[7];
+C2_q[6]_write_enable = 14;
+C2_q[6]_clock_0 = GLOBAL(sysclk);
+C2_q[6]_clock_1 = GLOBAL(sysclk);
+C2_q[6]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C2_q[6]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C2_q[6] = RAM_SLICE(C2_q[6]_data_in, C2_q[6]_write_enable, C2_q[6]_clock_0, C2_q[6]_clock_1, , , , , VCC, C2_q[6]_write_address, C2_q[6]_read_address);
+
+
+--wimux[8] is wimux[8] at LC10_24_A3
+--operation mode is normal
+
+wimux[8] = writeimag[8] & (write # fftwritedataimag[8]) # !writeimag[8] & !write & fftwritedataimag[8];
+
+
+--C2_q[7] is lpm_ram_dp:$00004|altdpram:sram|q[7] at EC1_1_A2
+C2_q[7]_data_in = wimux[8];
+C2_q[7]_write_enable = 14;
+C2_q[7]_clock_0 = GLOBAL(sysclk);
+C2_q[7]_clock_1 = GLOBAL(sysclk);
+C2_q[7]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C2_q[7]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C2_q[7] = RAM_SLICE(C2_q[7]_data_in, C2_q[7]_write_enable, C2_q[7]_clock_0, C2_q[7]_clock_1, , , , , VCC, C2_q[7]_write_address, C2_q[7]_read_address);
+
+
+--wimux[9] is wimux[9] at LC5_24_A3
+--operation mode is normal
+
+wimux[9] = writeimag[9] & (write # fftwritedataimag[9]) # !writeimag[9] & !write & fftwritedataimag[9];
+
+
+--C2_q[8] is lpm_ram_dp:$00004|altdpram:sram|q[8] at EC5_1_A3
+C2_q[8]_data_in = wimux[9];
+C2_q[8]_write_enable = 14;
+C2_q[8]_clock_0 = GLOBAL(sysclk);
+C2_q[8]_clock_1 = GLOBAL(sysclk);
+C2_q[8]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C2_q[8]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C2_q[8] = RAM_SLICE(C2_q[8]_data_in, C2_q[8]_write_enable, C2_q[8]_clock_0, C2_q[8]_clock_1, , , , , VCC, C2_q[8]_write_address, C2_q[8]_read_address);
+
+
+--wimux[10] is wimux[10] at LC9_24_A2
+--operation mode is normal
+
+wimux[10] = fftwritedataimag[10] & (writeimag[10] # !write) # !fftwritedataimag[10] & write & writeimag[10];
+
+
+--C2_q[9] is lpm_ram_dp:$00004|altdpram:sram|q[9] at EC8_1_A2
+C2_q[9]_data_in = wimux[10];
+C2_q[9]_write_enable = 14;
+C2_q[9]_clock_0 = GLOBAL(sysclk);
+C2_q[9]_clock_1 = GLOBAL(sysclk);
+C2_q[9]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C2_q[9]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C2_q[9] = RAM_SLICE(C2_q[9]_data_in, C2_q[9]_write_enable, C2_q[9]_clock_0, C2_q[9]_clock_1, , , , , VCC, C2_q[9]_write_address, C2_q[9]_read_address);
+
+
+--wimux[11] is wimux[11] at LC5_24_A2
+--operation mode is normal
+
+wimux[11] = writeimag[11] & (fftwritedataimag[11] # write) # !writeimag[11] & fftwritedataimag[11] & !write;
+
+
+--C2_q[10] is lpm_ram_dp:$00004|altdpram:sram|q[10] at EC2_1_A2
+C2_q[10]_data_in = wimux[11];
+C2_q[10]_write_enable = 14;
+C2_q[10]_clock_0 = GLOBAL(sysclk);
+C2_q[10]_clock_1 = GLOBAL(sysclk);
+C2_q[10]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C2_q[10]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C2_q[10] = RAM_SLICE(C2_q[10]_data_in, C2_q[10]_write_enable, C2_q[10]_clock_0, C2_q[10]_clock_1, , , , , VCC, C2_q[10]_write_address, C2_q[10]_read_address);
+
+
+--wimux[12] is wimux[12] at LC2_24_A2
+--operation mode is normal
+
+wimux[12] = fftwritedataimag[12] & (writeimag[12] # !write) # !fftwritedataimag[12] & write & writeimag[12];
+
+
+--C2_q[11] is lpm_ram_dp:$00004|altdpram:sram|q[11] at EC4_1_A2
+C2_q[11]_data_in = wimux[12];
+C2_q[11]_write_enable = 14;
+C2_q[11]_clock_0 = GLOBAL(sysclk);
+C2_q[11]_clock_1 = GLOBAL(sysclk);
+C2_q[11]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C2_q[11]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C2_q[11] = RAM_SLICE(C2_q[11]_data_in, C2_q[11]_write_enable, C2_q[11]_clock_0, C2_q[11]_clock_1, , , , , VCC, C2_q[11]_write_address, C2_q[11]_read_address);
+
+
+--wimux[13] is wimux[13] at LC8_24_A2
+--operation mode is normal
+
+wimux[13] = fftwritedataimag[13] & (writeimag[13] # !write) # !fftwritedataimag[13] & write & writeimag[13];
+
+
+--C2_q[12] is lpm_ram_dp:$00004|altdpram:sram|q[12] at EC5_1_A2
+C2_q[12]_data_in = wimux[13];
+C2_q[12]_write_enable = 14;
+C2_q[12]_clock_0 = GLOBAL(sysclk);
+C2_q[12]_clock_1 = GLOBAL(sysclk);
+C2_q[12]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C2_q[12]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C2_q[12] = RAM_SLICE(C2_q[12]_data_in, C2_q[12]_write_enable, C2_q[12]_clock_0, C2_q[12]_clock_1, , , , , VCC, C2_q[12]_write_address, C2_q[12]_read_address);
+
+
+--wimux[14] is wimux[14] at LC4_24_A2
+--operation mode is normal
+
+wimux[14] = writeimag[14] & (write # fftwritedataimag[14]) # !writeimag[14] & !write & fftwritedataimag[14];
+
+
+--C2_q[13] is lpm_ram_dp:$00004|altdpram:sram|q[13] at EC7_1_A2
+C2_q[13]_data_in = wimux[14];
+C2_q[13]_write_enable = 14;
+C2_q[13]_clock_0 = GLOBAL(sysclk);
+C2_q[13]_clock_1 = GLOBAL(sysclk);
+C2_q[13]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C2_q[13]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C2_q[13] = RAM_SLICE(C2_q[13]_data_in, C2_q[13]_write_enable, C2_q[13]_clock_0, C2_q[13]_clock_1, , , , , VCC, C2_q[13]_write_address, C2_q[13]_read_address);
+
+
+--wimux[15] is wimux[15] at LC10_24_A2
+--operation mode is normal
+
+wimux[15] = fftwritedataimag[15] & (writeimag[15] # !write) # !fftwritedataimag[15] & write & writeimag[15];
+
+
+--C2_q[14] is lpm_ram_dp:$00004|altdpram:sram|q[14] at EC3_1_A2
+C2_q[14]_data_in = wimux[15];
+C2_q[14]_write_enable = 14;
+C2_q[14]_clock_0 = GLOBAL(sysclk);
+C2_q[14]_clock_1 = GLOBAL(sysclk);
+C2_q[14]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C2_q[14]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C2_q[14] = RAM_SLICE(C2_q[14]_data_in, C2_q[14]_write_enable, C2_q[14]_clock_0, C2_q[14]_clock_1, , , , , VCC, C2_q[14]_write_address, C2_q[14]_read_address);
+
+
+--wimux[16] is wimux[16] at LC6_24_A2
+--operation mode is normal
+
+wimux[16] = fftwritedataimag[16] & (writeimag[16] # !write) # !fftwritedataimag[16] & write & writeimag[16];
+
+
+--C2_q[15] is lpm_ram_dp:$00004|altdpram:sram|q[15] at EC6_1_A2
+C2_q[15]_data_in = wimux[16];
+C2_q[15]_write_enable = 14;
+C2_q[15]_clock_0 = GLOBAL(sysclk);
+C2_q[15]_clock_1 = GLOBAL(sysclk);
+C2_q[15]_write_address = WR_ADDR(wamux[1], wamux[2], wamux[3], wamux[4], wamux[5], wamux[6], wamux[7], wamux[8]);
+C2_q[15]_read_address = RD_ADDR(ramux[1], ramux[2], ramux[3], ramux[4], ramux[5], ramux[6], ramux[7], ramux[8]);
+C2_q[15] = RAM_SLICE(C2_q[15]_data_in, C2_q[15]_write_enable, C2_q[15]_clock_0, C2_q[15]_clock_1, , , , , VCC, C2_q[15]_write_address, C2_q[15]_read_address);
+
+
+--write is write at Pin_A6
+--operation mode is input
+
+write = INPUT();
+
+
+--writereal[1] is writereal[1] at Pin_H31
+--operation mode is input
+
+writereal[1] = INPUT();
+
+
+--fftwritedatareal[1] is fftwritedatareal[1] at Pin_D28
+--operation mode is input
+
+fftwritedatareal[1] = INPUT();
+
+
+--sysclk is sysclk at Pin_T2
+--operation mode is input
+
+sysclk = INPUT();
+
+
+--fftwriteenable is fftwriteenable at Pin_C25
+--operation mode is input
+
+fftwriteenable = INPUT();
+
+
+--writeaddress[1] is writeaddress[1] at Pin_D11
+--operation mode is input
+
+writeaddress[1] = INPUT();
+
+
+--fftwriteaddress[1] is fftwriteaddress[1] at Pin_H3
+--operation mode is input
+
+fftwriteaddress[1] = INPUT();
+
+
+--writeaddress[2] is writeaddress[2] at Pin_K32
+--operation mode is input
+
+writeaddress[2] = INPUT();
+
+
+--fftwriteaddress[2] is fftwriteaddress[2] at Pin_B23
+--operation mode is input
+
+fftwriteaddress[2] = INPUT();
+
+
+--writeaddress[3] is writeaddress[3] at Pin_B25
+--operation mode is input
+
+writeaddress[3] = INPUT();
+
+
+--fftwriteaddress[3] is fftwriteaddress[3] at Pin_B22
+--operation mode is input
+
+fftwriteaddress[3] = INPUT();
+
+
+--writeaddress[4] is writeaddress[4] at Pin_H34
+--operation mode is input
+
+writeaddress[4] = INPUT();
+
+
+--fftwriteaddress[4] is fftwriteaddress[4] at Pin_B29
+--operation mode is input
+
+fftwriteaddress[4] = INPUT();
+
+
+--writeaddress[5] is writeaddress[5] at Pin_N30
+--operation mode is input
+
+writeaddress[5] = INPUT();
+
+
+--fftwriteaddress[5] is fftwriteaddress[5] at Pin_C26
+--operation mode is input
+
+fftwriteaddress[5] = INPUT();
+
+
+--writeaddress[6] is writeaddress[6] at Pin_B33
+--operation mode is input
+
+writeaddress[6] = INPUT();
+
+
+--fftwriteaddress[6] is fftwriteaddress[6] at Pin_E26
+--operation mode is input
+
+fftwriteaddress[6] = INPUT();
+
+
+--writeaddress[7] is writeaddress[7] at Pin_A31
+--operation mode is input
+
+writeaddress[7] = INPUT();
+
+
+--fftwriteaddress[7] is fftwriteaddress[7] at Pin_M31
+--operation mode is input
+
+fftwriteaddress[7] = INPUT();
+
+
+--writeaddress[8] is writeaddress[8] at Pin_D30
+--operation mode is input
+
+writeaddress[8] = INPUT();
+
+
+--fftwriteaddress[8] is fftwriteaddress[8] at Pin_L30
+--operation mode is input
+
+fftwriteaddress[8] = INPUT();
+
+
+--readaddress[1] is readaddress[1] at Pin_A9
+--operation mode is input
+
+readaddress[1] = INPUT();
+
+
+--read is read at Pin_B15
+--operation mode is input
+
+read = INPUT();
+
+
+--fftreadaddress[1] is fftreadaddress[1] at Pin_C14
+--operation mode is input
+
+fftreadaddress[1] = INPUT();
+
+
+--readaddress[2] is readaddress[2] at Pin_A11
+--operation mode is input
+
+readaddress[2] = INPUT();
+
+
+--fftreadaddress[2] is fftreadaddress[2] at Pin_C11
+--operation mode is input
+
+fftreadaddress[2] = INPUT();
+
+
+--readaddress[3] is readaddress[3] at Pin_A20
+--operation mode is input
+
+readaddress[3] = INPUT();
+
+
+--fftreadaddress[3] is fftreadaddress[3] at Pin_B24
+--operation mode is input
+
+fftreadaddress[3] = INPUT();
+
+
+--readaddress[4] is readaddress[4] at Pin_M33
+--operation mode is input
+
+readaddress[4] = INPUT();
+
+
+--fftreadaddress[4] is fftreadaddress[4] at Pin_P31
+--operation mode is input
+
+fftreadaddress[4] = INPUT();
+
+
+--readaddress[5] is readaddress[5] at Pin_J33
+--operation mode is input
+
+readaddress[5] = INPUT();
+
+
+--fftreadaddress[5] is fftreadaddress[5] at Pin_L34
+--operation mode is input
+
+fftreadaddress[5] = INPUT();
+
+
+--readaddress[6] is readaddress[6] at Pin_E20
+--operation mode is input
+
+readaddress[6] = INPUT();
+
+
+--fftreadaddress[6] is fftreadaddress[6] at Pin_H30
+--operation mode is input
+
+fftreadaddress[6] = INPUT();
+
+
+--readaddress[7] is readaddress[7] at Pin_A27
+--operation mode is input
+
+readaddress[7] = INPUT();
+
+
+--fftreadaddress[7] is fftreadaddress[7] at Pin_M34
+--operation mode is input
+
+fftreadaddress[7] = INPUT();
+
+
+--readaddress[8] is readaddress[8] at Pin_M32
+--operation mode is input
+
+readaddress[8] = INPUT();
+
+
+--fftreadaddress[8] is fftreadaddress[8] at Pin_D21
+--operation mode is input
+
+fftreadaddress[8] = INPUT();
+
+
+--writereal[2] is writereal[2] at Pin_B30
+--operation mode is input
+
+writereal[2] = INPUT();
+
+
+--fftwritedatareal[2] is fftwritedatareal[2] at Pin_B28
+--operation mode is input
+
+fftwritedatareal[2] = INPUT();
+
+
+--writereal[3] is writereal[3] at Pin_C28
+--operation mode is input
+
+writereal[3] = INPUT();
+
+
+--fftwritedatareal[3] is fftwritedatareal[3] at Pin_R33
+--operation mode is input
+
+fftwritedatareal[3] = INPUT();
+
+
+--writereal[4] is writereal[4] at Pin_A30
+--operation mode is input
+
+writereal[4] = INPUT();
+
+
+--fftwritedatareal[4] is fftwritedatareal[4] at Pin_B31
+--operation mode is input
+
+fftwritedatareal[4] = INPUT();
+
+
+--writereal[5] is writereal[5] at Pin_E27
+--operation mode is input
+
+writereal[5] = INPUT();
+
+
+--fftwritedatareal[5] is fftwritedatareal[5] at Pin_L32
+--operation mode is input
+
+fftwritedatareal[5] = INPUT();
+
+
+--writereal[6] is writereal[6] at Pin_C27
+--operation mode is input
+
+writereal[6] = INPUT();
+
+
+--fftwritedatareal[6] is fftwritedatareal[6] at Pin_T31
+--operation mode is input
+
+fftwritedatareal[6] = INPUT();
+
+
+--writereal[7] is writereal[7] at Pin_B32
+--operation mode is input
+
+writereal[7] = INPUT();
+
+
+--fftwritedatareal[7] is fftwritedatareal[7] at Pin_K33
+--operation mode is input
+
+fftwritedatareal[7] = INPUT();
+
+
+--writereal[8] is writereal[8] at Pin_E28
+--operation mode is input
+
+writereal[8] = INPUT();
+
+
+--fftwritedatareal[8] is fftwritedatareal[8] at Pin_C29
+--operation mode is input
+
+fftwritedatareal[8] = INPUT();
+
+
+--writereal[9] is writereal[9] at Pin_F34
+--operation mode is input
+
+writereal[9] = INPUT();
+
+
+--fftwritedatareal[9] is fftwritedatareal[9] at Pin_L31
+--operation mode is input
+
+fftwritedatareal[9] = INPUT();
+
+
+--writereal[10] is writereal[10] at Pin_B3
+--operation mode is input
+
+writereal[10] = INPUT();
+
+
+--fftwritedatareal[10] is fftwritedatareal[10] at Pin_L1
+--operation mode is input
+
+fftwritedatareal[10] = INPUT();
+
+
+--writereal[11] is writereal[11] at Pin_E11
+--operation mode is input
+
+writereal[11] = INPUT();
+
+
+--fftwritedatareal[11] is fftwritedatareal[11] at Pin_E9
+--operation mode is input
+
+fftwritedatareal[11] = INPUT();
+
+
+--writereal[12] is writereal[12] at Pin_T3
+--operation mode is input
+
+writereal[12] = INPUT();
+
+
+--fftwritedatareal[12] is fftwritedatareal[12] at Pin_E2
+--operation mode is input
+
+fftwritedatareal[12] = INPUT();
+
+
+--writereal[13] is writereal[13] at Pin_G3
+--operation mode is input
+
+writereal[13] = INPUT();
+
+
+--fftwritedatareal[13] is fftwritedatareal[13] at Pin_C5
+--operation mode is input
+
+fftwritedatareal[13] = INPUT();
+
+
+--writereal[14] is writereal[14] at Pin_R6
+--operation mode is input
+
+writereal[14] = INPUT();
+
+
+--fftwritedatareal[14] is fftwritedatareal[14] at Pin_G4
+--operation mode is input
+
+fftwritedatareal[14] = INPUT();
+
+
+--writereal[15] is writereal[15] at Pin_C8
+--operation mode is input
+
+writereal[15] = INPUT();
+
+
+--fftwritedatareal[15] is fftwritedatareal[15] at Pin_T1
+--operation mode is input
+
+fftwritedatareal[15] = INPUT();
+
+
+--writereal[16] is writereal[16] at Pin_P3
+--operation mode is input
+
+writereal[16] = INPUT();
+
+
+--fftwritedatareal[16] is fftwritedatareal[16] at Pin_T5
+--operation mode is input
+
+fftwritedatareal[16] = INPUT();
+
+
+--writeimag[1] is writeimag[1] at Pin_J5
+--operation mode is input
+
+writeimag[1] = INPUT();
+
+
+--fftwritedataimag[1] is fftwritedataimag[1] at Pin_G1
+--operation mode is input
+
+fftwritedataimag[1] = INPUT();
+
+
+--writeimag[2] is writeimag[2] at Pin_A32
+--operation mode is input
+
+writeimag[2] = INPUT();
+
+
+--fftwritedataimag[2] is fftwritedataimag[2] at Pin_N31
+--operation mode is input
+
+fftwritedataimag[2] = INPUT();
+
+
+--writeimag[3] is writeimag[3] at Pin_L33
+--operation mode is input
+
+writeimag[3] = INPUT();
+
+
+--fftwritedataimag[3] is fftwritedataimag[3] at Pin_A21
+--operation mode is input
+
+fftwritedataimag[3] = INPUT();
+
+
+--writeimag[4] is writeimag[4] at Pin_K35
+--operation mode is input
+
+writeimag[4] = INPUT();
+
+
+--fftwritedataimag[4] is fftwritedataimag[4] at Pin_C24
+--operation mode is input
+
+fftwritedataimag[4] = INPUT();
+
+
+--writeimag[5] is writeimag[5] at Pin_E22
+--operation mode is input
+
+writeimag[5] = INPUT();
+
+
+--fftwritedataimag[5] is fftwritedataimag[5] at Pin_P33
+--operation mode is input
+
+fftwritedataimag[5] = INPUT();
+
+
+--writeimag[6] is writeimag[6] at Pin_G32
+--operation mode is input
+
+writeimag[6] = INPUT();
+
+
+--fftwritedataimag[6] is fftwritedataimag[6] at Pin_E21
+--operation mode is input
+
+fftwritedataimag[6] = INPUT();
+
+
+--writeimag[7] is writeimag[7] at Pin_H35
+--operation mode is input
+
+writeimag[7] = INPUT();
+
+
+--fftwritedataimag[7] is fftwritedataimag[7] at Pin_H32
+--operation mode is input
+
+fftwritedataimag[7] = INPUT();
+
+
+--writeimag[8] is writeimag[8] at Pin_E23
+--operation mode is input
+
+writeimag[8] = INPUT();
+
+
+--fftwritedataimag[8] is fftwritedataimag[8] at Pin_T32
+--operation mode is input
+
+fftwritedataimag[8] = INPUT();
+
+
+--writeimag[9] is writeimag[9] at Pin_K30
+--operation mode is input
+
+writeimag[9] = INPUT();
+
+
+--fftwritedataimag[9] is fftwritedataimag[9] at Pin_R32
+--operation mode is input
+
+fftwritedataimag[9] = INPUT();
+
+
+--writeimag[10] is writeimag[10] at Pin_A13
+--operation mode is input
+
+writeimag[10] = INPUT();
+
+
+--fftwritedataimag[10] is fftwritedataimag[10] at Pin_E13
+--operation mode is input
+
+fftwritedataimag[10] = INPUT();
+
+
+--writeimag[11] is writeimag[11] at Pin_B10
+--operation mode is input
+
+writeimag[11] = INPUT();
+
+
+--fftwritedataimag[11] is fftwritedataimag[11] at Pin_H4
+--operation mode is input
+
+fftwritedataimag[11] = INPUT();
+
+
+--writeimag[12] is writeimag[12] at Pin_J2
+--operation mode is input
+
+writeimag[12] = INPUT();
+
+
+--fftwritedataimag[12] is fftwritedataimag[12] at Pin_B12
+--operation mode is input
+
+fftwritedataimag[12] = INPUT();
+
+
+--writeimag[13] is writeimag[13] at Pin_B14
+--operation mode is input
+
+writeimag[13] = INPUT();
+
+
+--fftwritedataimag[13] is fftwritedataimag[13] at Pin_A14
+--operation mode is input
+
+fftwritedataimag[13] = INPUT();
+
+
+--writeimag[14] is writeimag[14] at Pin_A16
+--operation mode is input
+
+writeimag[14] = INPUT();
+
+
+--fftwritedataimag[14] is fftwritedataimag[14] at Pin_B16
+--operation mode is input
+
+fftwritedataimag[14] = INPUT();
+
+
+--writeimag[15] is writeimag[15] at Pin_K6
+--operation mode is input
+
+writeimag[15] = INPUT();
+
+
+--fftwritedataimag[15] is fftwritedataimag[15] at Pin_E15
+--operation mode is input
+
+fftwritedataimag[15] = INPUT();
+
+
+--writeimag[16] is writeimag[16] at Pin_E14
+--operation mode is input
+
+writeimag[16] = INPUT();
+
+
+--fftwritedataimag[16] is fftwritedataimag[16] at Pin_M4
+--operation mode is input
+
+fftwritedataimag[16] = INPUT();
+
+
+--readreal[1] is readreal[1] at Pin_J32
+--operation mode is output
+
+readreal[1] = OUTPUT(C1_q[0]);
+
+
+--readreal[2] is readreal[2] at Pin_E25
+--operation mode is output
+
+readreal[2] = OUTPUT(C1_q[1]);
+
+
+--readreal[3] is readreal[3] at Pin_D25
+--operation mode is output
+
+readreal[3] = OUTPUT(C1_q[2]);
+
+
+--readreal[4] is readreal[4] at Pin_E29
+--operation mode is output
+
+readreal[4] = OUTPUT(C1_q[3]);
+
+
+--readreal[5] is readreal[5] at Pin_A34
+--operation mode is output
+
+readreal[5] = OUTPUT(C1_q[4]);
+
+
+--readreal[6] is readreal[6] at Pin_D26
+--operation mode is output
+
+readreal[6] = OUTPUT(C1_q[5]);
+
+
+--readreal[7] is readreal[7] at Pin_C30
+--operation mode is output
+
+readreal[7] = OUTPUT(C1_q[6]);
+
+
+--readreal[8] is readreal[8] at Pin_C6
+--operation mode is output
+
+readreal[8] = OUTPUT(C1_q[7]);
+
+
+--readreal[9] is readreal[9] at Pin_A24
+--operation mode is output
+
+readreal[9] = OUTPUT(C1_q[8]);
+
+
+--readreal[10] is readreal[10] at Pin_C7
+--operation mode is output
+
+readreal[10] = OUTPUT(C1_q[9]);
+
+
+--readreal[11] is readreal[11] at Pin_E10
+--operation mode is output
+
+readreal[11] = OUTPUT(C1_q[10]);
+
+
+--readreal[12] is readreal[12] at Pin_A5
+--operation mode is output
+
+readreal[12] = OUTPUT(C1_q[11]);
+
+
+--readreal[13] is readreal[13] at Pin_A2
+--operation mode is output
+
+readreal[13] = OUTPUT(C1_q[12]);
+
+
+--readreal[14] is readreal[14] at Pin_C10
+--operation mode is output
+
+readreal[14] = OUTPUT(C1_q[13]);
+
+
+--readreal[15] is readreal[15] at Pin_D10
+--operation mode is output
+
+readreal[15] = OUTPUT(C1_q[14]);
+
+
+--readreal[16] is readreal[16] at Pin_B7
+--operation mode is output
+
+readreal[16] = OUTPUT(C1_q[15]);
+
+
+--readimag[1] is readimag[1] at Pin_E7
+--operation mode is output
+
+readimag[1] = OUTPUT(C2_q[0]);
+
+
+--readimag[2] is readimag[2] at Pin_D22
+--operation mode is output
+
+readimag[2] = OUTPUT(C2_q[1]);
+
+
+--readimag[3] is readimag[3] at Pin_A23
+--operation mode is output
+
+readimag[3] = OUTPUT(C2_q[2]);
+
+
+--readimag[4] is readimag[4] at Pin_B21
+--operation mode is output
+
+readimag[4] = OUTPUT(C2_q[3]);
+
+
+--readimag[5] is readimag[5] at Pin_C21
+--operation mode is output
+
+readimag[5] = OUTPUT(C2_q[4]);
+
+
+--readimag[6] is readimag[6] at Pin_A26
+--operation mode is output
+
+readimag[6] = OUTPUT(C2_q[5]);
+
+
+--readimag[7] is readimag[7] at Pin_D20
+--operation mode is output
+
+readimag[7] = OUTPUT(C2_q[6]);
+
+
+--readimag[8] is readimag[8] at Pin_A10
+--operation mode is output
+
+readimag[8] = OUTPUT(C2_q[7]);
+
+
+--readimag[9] is readimag[9] at Pin_D23
+--operation mode is output
+
+readimag[9] = OUTPUT(C2_q[8]);
+
+
+--readimag[10] is readimag[10] at Pin_C16
+--operation mode is output
+
+readimag[10] = OUTPUT(C2_q[9]);
+
+
+--readimag[11] is readimag[11] at Pin_D15
+--operation mode is output
+
+readimag[11] = OUTPUT(C2_q[10]);
+
+
+--readimag[12] is readimag[12] at Pin_E16
+--operation mode is output
+
+readimag[12] = OUTPUT(C2_q[11]);
+
+
+--readimag[13] is readimag[13] at Pin_B5
+--operation mode is output
+
+readimag[13] = OUTPUT(C2_q[12]);
+
+
+--readimag[14] is readimag[14] at Pin_D14
+--operation mode is output
+
+readimag[14] = OUTPUT(C2_q[13]);
+
+
+--readimag[15] is readimag[15] at Pin_D16
+--operation mode is output
+
+readimag[15] = OUTPUT(C2_q[14]);
+
+
+--readimag[16] is readimag[16] at Pin_C12
+--operation mode is output
+
+readimag[16] = OUTPUT(C2_q[15]);
+
+
+--fftreaddatareal[1] is fftreaddatareal[1] at Pin_J30
+--operation mode is output
+
+fftreaddatareal[1] = OUTPUT(C1_q[0]);
+
+
+--fftreaddatareal[2] is fftreaddatareal[2] at Pin_A29
+--operation mode is output
+
+fftreaddatareal[2] = OUTPUT(C1_q[1]);
+
+
+--fftreaddatareal[3] is fftreaddatareal[3] at Pin_B27
+--operation mode is output
+
+fftreaddatareal[3] = OUTPUT(C1_q[2]);
+
+
+--fftreaddatareal[4] is fftreaddatareal[4] at Pin_D29
+--operation mode is output
+
+fftreaddatareal[4] = OUTPUT(C1_q[3]);
+
+
+--fftreaddatareal[5] is fftreaddatareal[5] at Pin_C31
+--operation mode is output
+
+fftreaddatareal[5] = OUTPUT(C1_q[4]);
+
+
+--fftreaddatareal[6] is fftreaddatareal[6] at Pin_D27
+--operation mode is output
+
+fftreaddatareal[6] = OUTPUT(C1_q[5]);
+
+
+--fftreaddatareal[7] is fftreaddatareal[7] at Pin_A33
+--operation mode is output
+
+fftreaddatareal[7] = OUTPUT(C1_q[6]);
+
+
+--fftreaddatareal[8] is fftreaddatareal[8] at Pin_E8
+--operation mode is output
+
+fftreaddatareal[8] = OUTPUT(C1_q[7]);
+
+
+--fftreaddatareal[9] is fftreaddatareal[9] at Pin_C22
+--operation mode is output
+
+fftreaddatareal[9] = OUTPUT(C1_q[8]);
+
+
+--fftreaddatareal[10] is fftreaddatareal[10] at Pin_B6
+--operation mode is output
+
+fftreaddatareal[10] = OUTPUT(C1_q[9]);
+
+
+--fftreaddatareal[11] is fftreaddatareal[11] at Pin_A4
+--operation mode is output
+
+fftreaddatareal[11] = OUTPUT(C1_q[10]);
+
+
+--fftreaddatareal[12] is fftreaddatareal[12] at Pin_D9
+--operation mode is output
+
+fftreaddatareal[12] = OUTPUT(C1_q[11]);
+
+
+--fftreaddatareal[13] is fftreaddatareal[13] at Pin_D6
+--operation mode is output
+
+fftreaddatareal[13] = OUTPUT(C1_q[12]);
+
+
+--fftreaddatareal[14] is fftreaddatareal[14] at Pin_B4
+--operation mode is output
+
+fftreaddatareal[14] = OUTPUT(C1_q[13]);
+
+
+--fftreaddatareal[15] is fftreaddatareal[15] at Pin_C9
+--operation mode is output
+
+fftreaddatareal[15] = OUTPUT(C1_q[14]);
+
+
+--fftreaddatareal[16] is fftreaddatareal[16] at Pin_B9
+--operation mode is output
+
+fftreaddatareal[16] = OUTPUT(C1_q[15]);
+
+
+--fftreaddataimag[1] is fftreaddataimag[1] at Pin_A7
+--operation mode is output
+
+fftreaddataimag[1] = OUTPUT(C2_q[0]);
+
+
+--fftreaddataimag[2] is fftreaddataimag[2] at Pin_B20
+--operation mode is output
+
+fftreaddataimag[2] = OUTPUT(C2_q[1]);
+
+
+--fftreaddataimag[3] is fftreaddataimag[3] at Pin_A22
+--operation mode is output
+
+fftreaddataimag[3] = OUTPUT(C2_q[2]);
+
+
+--fftreaddataimag[4] is fftreaddataimag[4] at Pin_A28
+--operation mode is output
+
+fftreaddataimag[4] = OUTPUT(C2_q[3]);
+
+
+--fftreaddataimag[5] is fftreaddataimag[5] at Pin_C20
+--operation mode is output
+
+fftreaddataimag[5] = OUTPUT(C2_q[4]);
+
+
+--fftreaddataimag[6] is fftreaddataimag[6] at Pin_C23
+--operation mode is output
+
+fftreaddataimag[6] = OUTPUT(C2_q[5]);
+
+
+--fftreaddataimag[7] is fftreaddataimag[7] at Pin_B26
+--operation mode is output
+
+fftreaddataimag[7] = OUTPUT(C2_q[6]);
+
+
+--fftreaddataimag[8] is fftreaddataimag[8] at Pin_C13
+--operation mode is output
+
+fftreaddataimag[8] = OUTPUT(C2_q[7]);
+
+
+--fftreaddataimag[9] is fftreaddataimag[9] at Pin_A25
+--operation mode is output
+
+fftreaddataimag[9] = OUTPUT(C2_q[8]);
+
+
+--fftreaddataimag[10] is fftreaddataimag[10] at Pin_A12
+--operation mode is output
+
+fftreaddataimag[10] = OUTPUT(C2_q[9]);
+
+
+--fftreaddataimag[11] is fftreaddataimag[11] at Pin_C15
+--operation mode is output
+
+fftreaddataimag[11] = OUTPUT(C2_q[10]);
+
+
+--fftreaddataimag[12] is fftreaddataimag[12] at Pin_B13
+--operation mode is output
+
+fftreaddataimag[12] = OUTPUT(C2_q[11]);
+
+
+--fftreaddataimag[13] is fftreaddataimag[13] at Pin_A3
+--operation mode is output
+
+fftreaddataimag[13] = OUTPUT(C2_q[12]);
+
+
+--fftreaddataimag[14] is fftreaddataimag[14] at Pin_A8
+--operation mode is output
+
+fftreaddataimag[14] = OUTPUT(C2_q[13]);
+
+
+--fftreaddataimag[15] is fftreaddataimag[15] at Pin_A15
+--operation mode is output
+
+fftreaddataimag[15] = OUTPUT(C2_q[14]);
+
+
+--fftreaddataimag[16] is fftreaddataimag[16] at Pin_B11
+--operation mode is output
+
+fftreaddataimag[16] = OUTPUT(C2_q[15]);
+
+

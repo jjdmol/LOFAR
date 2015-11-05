@@ -1,0 +1,377 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,-1 -1 1077 780 N "_3DFace" 0
+"main()
+{
+  // Initialise the Panel
+  navPanel_initPanel(\"fw_viewBox\");
+  
+  reload();  
+}
+
+void prepareHardwareList() {
+  dynAppend(g_stationList,\"CS001\");  
+  dynAppend(g_stationList,\"CS002\");  
+  dynAppend(g_stationList,\"CS003\");  
+  dynAppend(g_stationList,\"CS004\");  
+  dynAppend(g_stationList,\"CS005\");  
+  dynAppend(g_stationList,\"CS006\");  
+  dynAppend(g_stationList,\"CS007\");  
+//  dynAppend(g_stationList,\"CS010\");
+  dynAppend(g_stationList,\"CS011\");   
+//  dynAppend(g_stationList,\"CS012\");
+  dynAppend(g_stationList,\"CS013\");
+//  dynAppend(g_stationList,\"CS014\");  
+//  dynAppend(g_stationList,\"CS016\");
+  dynAppend(g_stationList,\"CS017\");  
+//  dynAppend(g_stationList,\"CS018\");  
+//  dynAppend(g_stationList,\"CS020\");
+  dynAppend(g_stationList,\"CS021\");  
+//  dynAppend(g_stationList,\"CS022\");
+//  dynAppend(g_stationList,\"CS023\");  
+  dynAppend(g_stationList,\"CS024\");    
+  dynAppend(g_stationList,\"CS026\");   
+  dynAppend(g_stationList,\"CS028\");
+  dynAppend(g_stationList,\"CS030\");
+  dynAppend(g_stationList,\"CS031\");
+  dynAppend(g_stationList,\"CS032\");  
+  dynAppend(g_stationList,\"CS101\");
+  dynAppend(g_stationList,\"CS103\");  
+  dynAppend(g_stationList,\"CS201\");  
+  dynAppend(g_stationList,\"CS301\");  
+  dynAppend(g_stationList,\"CS302\");
+  dynAppend(g_stationList,\"CS401\");
+  dynAppend(g_stationList,\"CS501\");
+}
+
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+  LOG_DEBUG(\"LOFAR_Core.pnl:doAction| Action required. found: \" + anAction);
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG(\"LOFAR_Core.pnl:doAction|found actionString: \" + actionString);
+  
+  // Reload
+  if (actionString[1] == \"Reload\") {
+    reload();
+  }
+}
+
+void reload() {
+  
+  navFunct_clearGlobalLists();
+  
+  // set the hardware selectable items for this screen
+  prepareHardwareList();
+  
+  // set panel to ready
+  g_objectReady=true;
+    
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"LOFAR_Core.pnl\",\"Update\");
+
+}" 0
+ E E E E 1 -1 -1 0  20 740
+""0  1
+E "#uses \"navPanel.ctl\"
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 6
+"Border3"
+""
+1 30 0 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E 1 0 1.021505376344086 0 0 2  1 0  "pictures/LOFAR_Core.jpg" 13434828 E 0 0 1008 744
+1 7 13 "" 2
+0
+1 8 13 "1" 1
+0
+1 9 13 "" 1
+0
+1 10 20 "" 2
+0
+1 11 20 "1" 1
+0
+1 12 20 "" 1
+0
+1 13 21 "" 2
+0
+1 14 21 "1" 1
+0
+1 15 21 "" 1
+0
+1 16 22 "" 2
+0
+1 17 22 "1" 1
+0
+1 18 22 "" 1
+0
+1 19 23 "" 2
+0
+1 20 23 "1" 1
+0
+1 21 23 "" 1
+0
+1 22 24 "" 2
+0
+1 23 24 "1" 1
+0
+1 24 24 "" 1
+0
+1 25 25 "" 2
+0
+1 26 25 "1" 1
+0
+1 27 25 "" 1
+0
+1 28 26 "" 2
+0
+1 29 26 "1" 1
+0
+1 30 26 "" 1
+0
+1 31 27 "" 2
+0
+1 32 27 "1" 1
+0
+1 33 27 "" 1
+0
+1 34 28 "" 2
+0
+1 35 28 "1" 1
+0
+1 36 28 "" 1
+0
+1 37 29 "" 2
+0
+1 38 29 "1" 1
+0
+1 39 29 "" 1
+0
+1 40 30 "" 2
+0
+1 41 30 "1" 1
+0
+1 42 30 "" 1
+0
+1 43 31 "" 2
+0
+1 44 31 "1" 1
+0
+1 45 31 "" 1
+0
+1 46 34 "" 2
+0
+1 47 34 "1" 1
+0
+1 48 34 "" 1
+0
+1 49 35 "" 2
+0
+1 50 35 "1" 1
+0
+1 51 35 "" 1
+0
+1 52 38 "" 2
+0
+1 53 38 "1" 1
+0
+1 54 38 "" 1
+0
+1 55 43 "" 2
+0
+1 56 43 "1" 1
+0
+1 57 43 "" 1
+0
+1 58 44 "" 2
+0
+1 59 44 "1" 1
+0
+1 60 44 "" 1
+0
+1 61 49 "" 2
+0
+1 62 49 "1" 1
+0
+1 63 49 "" 1
+0
+1 64 50 "" 2
+0
+1 65 50 "1" 1
+0
+1 66 50 "" 1
+0
+1 67 51 "" 2
+0
+1 68 51 "1" 1
+0
+1 69 51 "" 1
+0
+1 70 52 "" 2
+0
+1 71 52 "1" 1
+0
+1 72 52 "" 1
+0
+1 73 53 "" 2
+0
+1 74 53 "1" 1
+0
+1 75 53 "" 1
+0
+1 76 54 "" 2
+0
+1 77 54 "1" 1
+0
+1 78 54 "" 1
+0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 13 "PANEL_REF14"
+"objects\\Hardware\\Station_small.pnl" 457 486 T 34 0.7424242424242424 0 0.7407407407407407 88.17799150929585 -22.85844132607411
+1
+"$Station""CS002"
+3 20 "PANEL_REF21"
+"objects\\Hardware\\Station_small.pnl" 457 486 T 42 0.7424242424242424 0 0.7407407407407407 78.17799150929585 -52.85844132607411
+1
+"$Station""CS003"
+3 21 "PANEL_REF22"
+"objects\\Hardware\\Station_small.pnl" 457 486 T 43 0.7424242424242424 0 0.7407407407407407 78.17799150929585 -2.8584413260741
+1
+"$Station""CS004"
+3 22 "PANEL_REF23"
+"objects\\Hardware\\Station_small.pnl" 457 486 T 44 0.7424242424242424 0 0.7072354607860037 98.17799150929591 24.00673939508379
+1
+"$Station""CS005"
+3 23 "PANEL_REF24"
+"objects\\Hardware\\Station_small.pnl" 457 486 T 45 0.7424242424242424 0 0.7407407407407407 118.1779915092959 -12.8584413260741
+1
+"$Station""CS006"
+3 24 "PANEL_REF25"
+"objects\\Hardware\\Station_small.pnl" 457 486 T 46 0.7424242424242424 0 0.7407407407407407 108.1779915092959 -32.8584413260741
+1
+"$Station""CS007"
+3 25 "PANEL_REF26"
+"objects\\Hardware\\Station_small.pnl" 457 486 T 47 0.7424242424242424 0 0.7407407407407407 298.1779915092959 37.14155867392589
+1
+"$Station""CS201"
+3 26 "PANEL_REF27"
+"objects\\Hardware\\Station_small.pnl" 457 486 T 48 0.7424242424242424 0 0.7407407407407407 68.17799150929585 247.1415586739259
+1
+"$Station""CS301"
+3 27 "PANEL_REF28"
+"objects\\Hardware\\Station_small.pnl" 457 486 T 49 0.7424242424242424 0 0.7407407407407407 558.1779915092959 -62.85844132607414
+1
+"$Station""CS103"
+3 28 "PANEL_REF29"
+"objects\\Hardware\\Station_small.pnl" 457 486 T 50 0.7424242424242424 0 0.7407407407407407 -21.82200849070415 -92.8584413260741
+1
+"$Station""CS021"
+3 29 "PANEL_REF30"
+"objects\\Hardware\\Station_small.pnl" 457 486 T 51 0.7424242424242424 0 0.7407407407407407 -41.82200849070415 -232.8584413260741
+1
+"$Station""CS030"
+3 30 "PANEL_REF31"
+"objects\\Hardware\\Station_small.pnl" 457 486 T 52 0.7424242424242424 0 0.7407407407407407 -121.8220084907042 17.14155867392589
+1
+"$Station""CS401"
+3 31 "PANEL_REF32"
+"objects\\Hardware\\Station_small.pnl" 457 486 T 53 0.7424242424242424 0 0.7407407407407407 -51.82200849070415 57.14155867392589
+1
+"$Station""CS032"
+3 34 "PANEL_REF35"
+"objects\\Hardware\\Station_small.pnl" 457 486 T 55 0.7424242424242424 0 0.7407407407407407 -201.8220084907042 337.1415586739259
+1
+"$Station""CS302"
+3 35 "PANEL_REF36"
+"objects\\Hardware\\Station_small.pnl" 417 67 T 56 0.7241379310344828 0 0.7241379310344828 65.80907546226885 -21.08747626186907
+1
+"$Station""CS501"
+3 38 "PANEL_REF39"
+"objects\\Hardware\\Station_small.pnl" 617 167 T 59 0.7241379310344828 0 0.7241379310344828 150.9814892553723 6.49873063468263
+1
+"$Station""CS101"
+3 43 "PANEL_REF44"
+"objects\\Hardware\\Station_small.pnl" 577 317 T 64 0.7241379310344828 0 0.7241379310344828 139.9470064967516 87.87804097951025
+1
+"$Station""CS017"
+3 44 "PANEL_REF45"
+"objects\\Hardware\\Station_small.pnl" 657 307 T 65 0.7241379310344828 0 0.7241379310344828 152.015972013993 75.1194202898551
+1
+"$Station""CS026"
+3 49 "PANEL_REF50"
+"objects\\Hardware\\Station_small.pnl" 447 447 T 70 0.7241379310344828 0 0.7241379310344828 84.0849375312344 123.7401099450276
+1
+"$Station""CS001"
+3 50 "PANEL_REF51"
+"objects\\Hardware\\Station_small.pnl" 527 527 T 71 0.7241379310344828 0 0.7241379310344828 116.1539030484758 155.8090754622688
+1
+"$Station""CS024"
+3 51 "PANEL_REF52"
+"objects/Hardware\\Station_small.pnl" 487 357 T 71 0.7241379310344828 0 0.7241379310344828 135.1400566383475 99.40935056281384
+1
+"$Station""CS011"
+3 52 "PANEL_REF53"
+"objects/Hardware\\Station_small.pnl" 387 257 T 72 0.7241379310344828 0 0.7241379310344828 107.5538497417958 71.8231436662621
+1
+"$Station""CS013"
+3 53 "PANEL_REF54"
+"objects/Hardware\\Station_small.pnl" 517 47 T 73 0.7241379310344828 0 0.7241379310344828 143.3952823588206 13.39528235882057
+1
+"$Station""CS028"
+3 54 "PANEL_REF55"
+"objects/Hardware\\Station_small.pnl" 277 257 T 74 0.7241379310344828 0 0.7241379310344828 77.20902215558886 71.82314366626211
+1
+"$Station""CS031"
+0

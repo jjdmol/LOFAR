@@ -1,0 +1,16 @@
+## -*- CMake -*-
+##
+## Host specific variants file. 
+## Settings in this file extend or override those in the global variants file.
+##
+## $Id: variants.fs5 25763 2013-07-25 09:33:20Z mol $
+
+option(USE_LOG4CPLUS "Use Log4Cplus" ON)
+option(USE_OPENMP    "Use OpenMP"    ON)
+option(USE_MPI       "Use MPI"       ON)
+option(USE_CUDA      "Use CUDA"      ON)
+
+set(CASACORE_ROOT_DIR /globalhome/mol/root-x86_64)
+set(DAL_ROOT_DIR /globalhome/mol/root-x86_64)
+set(MPI_ROOT_DIR /opt/openmpi)
+

@@ -1,0 +1,10 @@
+# $Id: CMakeLists.txt 14773 2010-01-09 14:42:06Z loose $
+
+lofar_package(Common 3.3)
+
+include(LofarFindPackage)
+lofar_find_package(Boost REQUIRED)
+lofar_find_package(Readline)
+
+add_subdirectory(include/Common)
+add_subdirectory(src)

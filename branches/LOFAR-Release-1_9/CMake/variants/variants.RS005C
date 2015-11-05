@@ -1,0 +1,34 @@
+# Preset rs002 specific options
+option(USE_BACKTRACE     "Use backtrace" OFF)
+option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
+
+# Path to Postgres C API
+set(PQ_ROOT_DIR /usr/local/pgsql)
+
+# Search Lapack in /usr first, because Lapack library in /usr/local is broken!
+set(CPPLAPACK_ROOT_DIR /usr)
+
+# log4cplus-1.0.4 root dir
+set(LOG4CPLUS_ROOT_DIR /usr/local/log4cplus)
+
+# Path to PVSS
+set(PVSS_PROJ_DIR /opt/pvss/pvssproj)
+set(PVSS_DEFINITIONS "-Wno-deprecated")
+
+# Path to Matlab
+set(MATLAB_ROOT_DIR /usr/local/matlab-2008a)
+
+# Path to JAVA
+set(ENV{JAVA_HOME} /usr/local/jdk1.6.0_29)
+
+# Ignore warnings matching the following pattern(s)
+set(CTEST_CUSTOM_WARNING_EXCEPTION
+  "/boost/date_time/time_facet.hpp:[0-9]+: warning: unused parameter"
+  "/boost/date_time/time.hpp:[0-9]+: warning: unused parameter"
+  "/boost/tuple/detail/tuple_basic.hpp:[0-9]+: warning: unused parameter"
+  "/boost/python/object/value_holder.hpp:[0-9]+: warning: unused parameter"
+  "/boost/dynamic_bitset/dynamic_bitset.hpp:"
+  "/matlab-2008a/extern/include/mclcppclass.h"
+  "/pvss2_v3.7/api/include/(Basics|Datapoint|Manager|Messages)/"
+  "/opt/WinCC_OA/3.10/api/include/(Basics|Datapoint|Manager|Messages)/"
+)

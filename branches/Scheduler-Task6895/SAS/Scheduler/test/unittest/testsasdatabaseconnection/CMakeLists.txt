@@ -1,0 +1,6 @@
+# $Id$
+
+qt4_generate_moc(testsasdatabaseconnection.cpp testsasdatabaseconnection.moc)
+add_executable(testsasdatabaseconnection testsasdatabaseconnection.cpp testsasdatabaseconnection.moc)
+target_link_libraries(testsasdatabaseconnection lofar_scheduler ${QT_LIBRARIES})
+add_test(testsasdatabaseconnection testsasdatabaseconnection)

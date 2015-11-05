@@ -1,0 +1,5 @@
+#!/usr/bin/gnuplot
+set grid ytics
+plot "/var/log/ntpstats/loopstats" using 2:3 axis x1y1 w lines lt 3 title "clock offset", '' using 2:5 w lines lt 1 title "RMS jitter"
+pause 30
+reread

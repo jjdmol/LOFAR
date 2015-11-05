@@ -1,0 +1,265 @@
+V 11
+1
+LANG:1 0 
+PANEL,-1 -1 1200 823 N "_3DFace" 0
+"main()
+{
+  
+  // empty the processesList
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".observationsList\")) {
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".observationsList\",makeDynString(\"\"));
+  }  
+  
+  // Initialise the Panel
+  navPanel_initPanel(\"fw_viewBox\");
+
+  baseDP = g_currentDatapoint+\"_PermSW_MACScheduler\";
+  syst   = dpSubStr(baseDP,DPSUB_SYS);
+    
+   // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+  
+  // connect for selfUpdates
+  showSelfState(baseDP);
+  
+  reload();
+}
+
+void preparePipelinesList() {
+  // check if the required datapoint for this view are enabled and accessible
+  if (dpExists(baseDP+\".plannedObservations\")) {
+    if (dpConnect(\"updatePipelinesList\", baseDP +\".plannedObservations:_online.._value\",
+                                         baseDP +\".activeObservations:_online.._value\",
+                                         baseDP +\".finishedObservations:_online.._value\",
+                                         baseDP +\".plannedObservations:_online.._invalid\")== -1) {
+      LOG_ERROR(\"Observations.pnl:preparePipelinesList| Couldn't connect to\" + baseDP+\".plannedObservations\");
+    }
+  } else {
+    if (!isStandalone()) LOG_ERROR(\"Pipelines.pnl:preparePipelinesList|\"+baseDP+\".plannedObservations doesn't exist\");
+  }	
+}
+
+void updatePipelinesList(string dp1, dyn_string plannedObs,
+                         string dp2, dyn_string activeObs,
+                         string dp3, dyn_string finishedObs,
+                         string dp4, bool invalid)
+{
+  for (int i=dynlen(plannedObs); i > 0; i--) {
+    if (navFunct_isObservation(plannedObs[i])) dynRemove(plannedObs,i);
+  }
+  for (int i=dynlen(activeObs); i > 0; i--) {
+    if (navFunct_isObservation(activeObs[i])) dynRemove(activeObs,i);
+  }
+  for (int i=dynlen(finishedObs); i > 0; i--) {
+    if (navFunct_isObservation(finishedObs[i])) dynRemove(finishedObs,i);
+  }
+
+  dynSortAsc(plannedObs);
+  dynSortAsc(activeObs);
+  dynSortAsc(finishedObs);
+  
+  dynClear(g_pipelinesList);
+  dynAppend(g_pipelinesList,plannedObs);
+  dynAppend(g_pipelinesList,activeObs);
+  dynAppend(g_pipelinesList,finishedObs);
+}
+
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+  LOG_DEBUG(\"Pipelines.pnl:doAction| Action required. found: \" + anAction);
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG(\"Pipelines.pnl:doAction|found actionString: \" + actionString);
+  
+  // Reload
+  if (actionString[1] == \"Reload\") {
+    reload();
+  }
+}
+
+void reload() {
+  
+  navFunct_clearGlobalLists();
+  
+  // set the observation selectable items
+  preparePipelinesList();
+
+  // set panel to ready
+  g_objectReady=true;
+  
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"Pipelines.pnl\",\"Update\");
+}
+
+" 0
+ E E E E 1 -1 -1 0  10 10
+""0  1
+E "#uses \"navPanel.ctl\"
+#uses \"MainCU_Processes.ctl\"
+
+string baseDP = \"\";
+string syst   = \"\";
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+2 133
+"PRIMITIVE_TEXT11"
+""
+1 310 430 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+28 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 310 430 311 443
+0 2 2 "0s" 0 0 0 192 0 0  310 430 1
+1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0 1
+LANG:1 0 
+2 206
+"PRIMITIVE_TEXT12"
+""
+1 4420 0 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+35 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 440 0 512 20
+0 2 2 "0s" 0 0 0 192 0 0  440 0 1
+1
+LANG:1 33 MS Shell Dlg,-1,16,5,75,0,0,0,0,0
+0 1
+LANG:1 9 Pipelines
+1 215 0 "" 1
+0
+2 212
+"PRIMITIVE_TEXT14"
+""
+1 -8.506170520633333 0 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+42 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 0.9848484848484849 0 1 -2.87878787878788 0 1 E 35 30 140 43
+0 2 2 "0s" 0 0 0 194 0 0  140 30 1
+1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
+LANG:1 18 Planned Pipelines:
+2 213
+"PRIMITIVE_TEXT15"
+""
+1 0 0 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+44 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 35 290 130 303
+0 2 2 "0s" 0 0 0 194 0 0  130 290 1
+1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
+LANG:1 17 Active Pipelines:
+2 214
+"PRIMITIVE_TEXT16"
+""
+1 0 0 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+46 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 34 560 140 573
+0 2 2 "0s" 0 0 0 194 0 0  140 560 1
+1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
+LANG:1 19 Finished Pipelines:
+1 216 7 "" 0
+0
+1 217 8 "" 0
+0
+1 218 9 "" 0
+0
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+3 0 "selfState" -1
+"objects\\lofar_self_state.pnl" 10 11 T 37 1 0 1 -4 -5
+0
+3 7 "plannedPipelinesTable" -1
+"objects\\Observations\\Pipeline_small.pnl" 0 40 T 47 1 0 1 2 3
+1
+"$name""plannedObservations"
+3 8 "activeObservationsTable" -1
+"objects\\Observations\\Pipeline_small.pnl" 0 310 T 48 1 0 1 2 0
+1
+"$name""activeObservations"
+3 9 "finishedPipelinesTable" -1
+"objects\\Observations\\Pipeline_small.pnl" 10 580 T 49 1 0 1 -8 0
+1
+"$name""finishedObservations"
+0

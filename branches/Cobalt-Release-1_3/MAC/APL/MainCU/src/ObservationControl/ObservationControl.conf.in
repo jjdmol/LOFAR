@@ -1,0 +1,30 @@
+#
+# Manage amount of logging
+#
+# Full: report state of each childController every heartbeat [default]
+# Changes : report state-changes of the childControllers only
+#
+#ObservationControl.reportType = Changes
+
+#
+# Intervaltime how often the ObservationController should report the current state
+# and checks its quality measures.
+#
+ObservationControl.heartbeatInterval = 10s
+
+#
+# Timeout values to control when a state-change is late or is treated as a failure.
+#
+ObservationControl.lateLimit   = 15s
+ObservationControl.failedLimit = 30s
+
+#
+# Report state of all childs (Full) or only the state changes (Changes).
+#
+ObservationControl.reportType = Full
+
+#
+# Time we will wait at most for the metadata to arrive in SAS after Quit was send.
+#
+ObservationControl.emergencyTimeout = 1h
+

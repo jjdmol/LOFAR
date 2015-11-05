@@ -1,0 +1,184 @@
+V 11
+1
+LANG:1 0 
+PANEL,-1 -1 975 7500 N "_3DFace" 0
+"main()
+{
+  // Initialise the Panel
+  navPanel_initPanel(\"fw_viewBox\");
+  baseDP         = g_currentDatapoint;
+  dpGet(baseDP+\".observationName\",observationNr);
+  observationName=\"Observation\"+observationNr;
+  strModuleName   = myModuleName();
+  
+   
+  reload();
+
+}
+
+void prepareProcesses() {
+  dyn_string result;
+  string connectTo=MainDBName+claimManager_nameToRealName(\"LOFAR_ObsSW_\"+observationName);
+  dynAppend(result,\",\"+observationName+\",\"+connectTo);    
+
+  string nr=\"\";
+  string oldNr=\"\";
+  for  (int i=1; i<= dynlen(inputBuffers); i++) {
+    nr  = substr(inputBuffers[i],strpos(inputBuffers[i],\"PSIONode\")+8,2);
+    if (nr != oldNr) {
+      dynAppend(result,connectTo+\",IONode\"+nr+\",\"+CEPDBName+\"LOFAR_PermSW_PSIOnode\"+nr);    
+      oldNr=nr;
+    }
+    dynAppend(result,CEPDBName+\"LOFAR_PermSW_PSIOnode\"+nr+\",InputBuffer,\"+inputBuffers[i]);    
+    dynAppend(g_processesList,inputBuffers[i]);
+  }  
+  
+  // write result to the db so various panels can reset themselves  
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",result);
+  
+  LOG_DEBUG(\"ObservationInputBuffers.pnl:prepareProcesses|processList found: \"+ result);    
+  
+}
+
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+  LOG_DEBUG(\"ObservationInputBuffers.pnl:doAction| Action required. found: \" + anAction);
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG(\"ObservationInputBuffers.pnl:doAction|found actionString: \" + actionString);
+  
+  // Reload
+  if (actionString[1] == \"Reload\") {
+    reload();
+  }
+}
+
+void reload() {
+  
+  navFunct_clearGlobalLists();
+ 
+  addInputBuffers();
+  
+  // set the observation selectable items
+  prepareProcesses();
+  
+  redraw();
+
+  // set panel to ready
+  g_objectReady=true;
+  
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"ObservationInputBuffers.pnl\",\"Update\");
+}
+
+void addInputBuffers() {
+
+  // get all the InputBuffers used by this observation
+  inputBuffers = navFunct_getInputBuffersForObservation(observationName);  
+
+}" 0
+ E E E E 1 -1 -1 0  0 0
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string baseDP=\"\";
+string observationNr;
+string observationName;
+dyn_string inputBuffers;
+bool connected = false;
+dyn_string IBRefNames;
+string strModuleName;
+
+
+void clearIBRefNames() {
+  // remove all symbols because new ones will be added
+  for (int i=1; i <= dynlen(IBRefNames); i++) {
+    removeSymbol(strModuleName,\"\",IBRefNames[i]);
+  }
+  dynClear(IBRefNames);
+}
+
+void redraw() {
+  string barColor = \"_3DFace\";
+  if (dynlen(IBRefNames) > 0) {
+    clearIBRefNames();
+  }    
+  int xPos_AddSymbol = 0; 
+  int yPos_AddSymbol = 0; 
+  int ref = 1;
+  string addPanelName    = \"objects/Processes/inputBuffer.pnl\";
+  //loop over list and prepare panel with all inputBuffer objects   
+  for (int i=1; i<= dynlen(inputBuffers); i++) {
+    if ((float)i/2. != floor(i/2.)) {
+      barColor = \"lightgrey\";
+    } else {
+      barColor = \"_3DFace\";
+    }
+    IBRefNames[ref]=\"IB\"+(ref);
+      
+    if (  addSymbol(  strModuleName,                   // Stay in this modul
+                      \"\",                              // Name of this panel
+                      addPanelName,                    // Panel to add
+                      IBRefNames[ref],            // Ref of the addedPanel
+                      makeDynString( \"$inputBuffer:\" + inputBuffers[i],
+                                     \"$barColor:\"    + barColor) ,     // Define all $values
+                      xPos_AddSymbol,                  // Xpos of the AddedSymbol
+                      yPos_AddSymbol,                  // Ypos of the AddedSymbol
+                      0,                               // angle
+                      1    ,1                          // zoomX , zoomY
+        ) < 0 ) {
+	  LOG_ERROR(\"ObservationInputBuffers.pnl:redraw|Error Appending inputBuffer for: \" + inputBuffers[i] + \" in this panel.\");
+          }
+    yPos_AddSymbol += 14;
+    ref++;
+  }
+
+}
+  
+  
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

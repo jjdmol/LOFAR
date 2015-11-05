@@ -1,0 +1,5 @@
+name			string
+claim			:Claim
+receiverBitmap		string
+HBABitmap		string
+LBABitmap		string

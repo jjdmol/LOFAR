@@ -1,0 +1,69 @@
+#!/bin/bash
+#
+# chkconfig: 2345 30 70
+#
+# description: This takes care of starting and stopping \
+#		/opt/lofar/sbin/rubidium_logger.py
+#
+
+# Source function library.
+. /etc/init.d/functions
+
+
+RETVAL=0
+prog="/opt/lofar/sbin/rubidium_logger.py"
+
+start() {
+        # Start program
+        if [ -e /opt/lofar/sbin/rubidium_logger.py ]; then
+          echo -n $"Starting $prog: "
+          daemon $prog
+  	  RETVAL=$?
+        else
+          RETVAL=1
+        fi
+        echo
+        [ $RETVAL -eq 0 ] && touch /var/lock/subsys/rubidium
+	return $RETVAL
+}
+
+stop() {
+        echo -n $"Shutting down $prog: "
+	killproc $prog
+	RETVAL=$?
+	
+        echo
+        [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/rubidium
+	return $RETVAL
+}
+
+# See how we were called.
+case "$1" in
+  start)
+	start
+        ;;
+  stop)
+	stop
+        ;;
+  status)
+	status $prog
+	RETVAL=$?
+	;;
+  restart|reload)
+	stop
+	start
+	RETVAL=$?
+	;;
+  condrestart)
+	if [ -f /var/lock/subsys/rubidium ]; then
+	    stop
+	    start
+	    RETVAL=$?
+	fi
+	;;
+  *)
+        echo $"Usage: $0 {start|stop|restart|condrestart|status}"
+        exit 1
+esac
+
+exit $RETVAL

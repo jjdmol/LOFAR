@@ -1,0 +1,5 @@
+station		string
+RSPBoard	int
+IP		string
+MAC		string
+

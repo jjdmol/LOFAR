@@ -1,0 +1,253 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,191 108 185 63 N "_3DFace" 1
+"$BeamNr"
+E E E E E 1 -1 -1 0  20 20
+""0  1
+E E 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+21 0
+"SpinButton1"
+""
+1 20 20 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+""  18 18 82 45
+0
+
+"// SimpleCtrlScriptStart {invalid}
+main()
+{
+  EP_textFieldIn();
+}
+
+EP_textFieldIn()
+{
+dyn_errClass err;
+string sDPonline = \"System1:PAC_VT\"+ $BeamNr +\"_BF\"+ $BeamNr +\"_directionAngle1.:_online.._value\";
+
+  if( !dpExists( sDPonline))
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"EP_textFieldInCB\",
+            sDPonline);
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+
+EP_textFieldInCB(string dp, float fNewValue)
+{
+  setValue(\"\", \"text\", dpValToString(dp, fNewValue, TRUE) );
+}
+
+// SimpleCtrlScript {EP_textFieldIn}
+// DP {System1:Beam1.Beam1_Azimuth}
+// DPConfig {:_online.._value}
+// DPType {float}
+// UseDPUnit {TRUE}
+// UseDPFormat {TRUE}
+// SimpleCtrlScriptEnd {EP_textFieldIn}
+" 0
+
+"// SimpleCtrlScriptStart {invalid}
+main()
+{
+  EP_textFieldOut();
+}
+
+EP_textFieldOut()
+{
+float fNewValue;
+dyn_errClass err;
+string sTmp;
+string sFormat, sDp;
+string sDPoriginal = \"System1:PAC_VT\"+ $BeamNr +\"_BF\"+ $BeamNr +\"_directionAngle1.:_original.._value\";
+
+  getValue(\"\", \"text\", sTmp);
+  sscanf(sTmp, \"%f\", fNewValue);
+
+  sDp = dpSubStr(sDPoriginal,  DPSUB_SYS_DP_EL);
+  if ( strpos(sDp,\".\") < 1 )
+    sDp += \".\";
+
+  sFormat = dpGetFormat( sDp );
+  if( !checkStringFormat(sTmp, sFormat) )
+  {
+    ChildPanelOnCentral( \"vision/MessageWarning\",
+                         getCatStr( \"e_para\", \"warning\" ),
+                         makeDynString( getCatStr( \"e_para\", \"wrongFormat\" )));
+    return;
+  }
+
+  dpSetWait(sDPoriginal, sTmp);
+  err = getLastError();
+  if (dynlen(err) > 0)
+    errorDialog(err);
+}
+
+// SimpleCtrlScript {EP_textFieldOut}
+// DP {System1:Beam1.Beam1_Azimuth}
+// Config {:_original.._value}
+// DPType {float}
+// SimpleCtrlScriptEnd {EP_textFieldOut}
+" 0
+
+E
+
+N 0 350 5 0 0 1
+21 1
+"SpinButton2"
+""
+1 100 20 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+""  98 18 162 45
+0
+
+"// SimpleCtrlScriptStart {invalid}
+main()
+{
+  EP_textFieldIn();
+}
+
+EP_textFieldIn()
+{
+dyn_errClass err;
+string sDPonline = \"System1:PAC_VT\"+ $BeamNr +\"_BF\"+ $BeamNr +\"_directionAngle2.:_online.._value\";
+
+  if( !dpExists( sDPonline))
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"EP_textFieldInCB\",
+            sDPonline);
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+
+EP_textFieldInCB(string dp, float fNewValue)
+{
+  setValue(\"\", \"text\", dpValToString(dp, fNewValue, TRUE) );
+}
+
+// SimpleCtrlScript {EP_textFieldIn}
+// DP {System1:Beam1.Beam1_Azimuth}
+// DPConfig {:_online.._value}
+// DPType {float}
+// UseDPUnit {TRUE}
+// UseDPFormat {TRUE}
+// SimpleCtrlScriptEnd {EP_textFieldIn}
+" 0
+
+"// SimpleCtrlScriptStart {invalid}
+main()
+{
+  EP_textFieldOut();
+}
+
+EP_textFieldOut()
+{
+float fNewValue;
+dyn_errClass err;
+string sTmp;
+string sFormat, sDp;
+string sDPoriginal = \"System1:PAC_VT\"+ $BeamNr +\"_BF\"+ $BeamNr +\"_directionAngle2.:_original.._value\";
+
+  getValue(\"\", \"text\", sTmp);
+  sscanf(sTmp, \"%f\", fNewValue);
+
+  sDp = dpSubStr(sDPoriginal,  DPSUB_SYS_DP_EL);
+  if ( strpos(sDp,\".\") < 1 )
+    sDp += \".\";
+
+  sFormat = dpGetFormat( sDp );
+  if( !checkStringFormat(sTmp, sFormat) )
+  {
+    ChildPanelOnCentral( \"vision/MessageWarning\",
+                         getCatStr( \"e_para\", \"warning\" ),
+                         makeDynString( getCatStr( \"e_para\", \"wrongFormat\" )));
+    return;
+  }
+
+  dpSetWait(sDPoriginal, sTmp);
+  err = getLastError();
+  if (dynlen(err) > 0)
+    errorDialog(err);
+}
+
+// SimpleCtrlScript {EP_textFieldOut}
+// DP {System1:Beam1.Beam1_Azimuth}
+// Config {:_original.._value}
+// DPType {float}
+// SimpleCtrlScriptEnd {EP_textFieldOut}
+" 0
+
+E
+
+N 0 89 5 0 1 1
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

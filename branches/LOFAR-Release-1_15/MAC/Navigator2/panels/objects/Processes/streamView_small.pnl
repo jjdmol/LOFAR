@@ -1,0 +1,200 @@
+V 11
+1
+LANG:1 0 
+PANEL,-1 -1 114 72 N "_3DFace" 2
+"$observation"
+"$streamNr"
+"main()
+{
+  stream = \"stream\"+$streamNr;
+  observation = $observation;
+  
+  // we just need to make clear the type of this baseDP to get the right panel.
+  // The panel itself will sort out the list of inputbuffers belonging to it
+  baseDP =CEPDBName+\"LOFAR_PermSW_PSIONode00_InputBuffer\";
+
+  reload();
+}
+  
+private void reload() {
+  
+  // get all the InputBuffers used by this observation
+  inputBuffers = navFunct_getInputBuffersForObservation(observation);
+  
+  if ($streamNr == 1) {
+    string obsDP = claimManager_nameToRealName(\"LOFAR_ObsSW_\"+observation);
+    LOG_DEBUG(\"streamView_small.pnl:reload|obsDP: \"+obsDP+\" observation :\"+observation+\" InputBuffers: \"+inputBuffers);
+  }
+
+  // change all found DP's to contain all the elements that contain the stream.percBad
+  if (connected) {
+    dpDisconnect(\"streamCB\",connectTo);
+    dynClear(connectTo);
+  }
+
+  for (int i=1; i<= dynlen(inputBuffers); i++) {
+    dynAppend(connectTo,inputBuffers[i]+\".\"+stream+\".percBad:_online.._value\");
+  }
+  if (dynlen(inputBuffers) > 0) baseDP = inputBuffers[1];
+  
+  // check if the required datapoint for this view are enabled and accessible
+  if (navFunct_dpReachable(CEPDBName) && dynlen(connectTo)>0 ){
+    if (dpConnect(\"streamCB\", connectTo) == -1) {
+      setValue(\"streamObject\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    }
+  } else {
+    setValue(\"streamObject\", \"backCol\", \"Lofar_dpOffline\");
+  }
+}
+
+void streamCB(dyn_string dps, dyn_float values)
+{
+  // Here we get all bad values and we have to determine how many are wrong. if a station has more then 10% bad data (i.e. a single value in the values list
+  // exceeds 10%, or more then 10% of the stations have bad data we need to set the color to red, if bad data occurs but its lower then the above mentioned
+  // values we set the color to orange, and if no bad percentages occur the color is green.
+  
+  string toolTipText = observation+\" - \"+stream+\"<br>\";
+  
+  int count=0;
+  string color = \"Lofar_operational\";
+  
+  for (int i = 1; i<= dynlen(values); i++) {
+    float val = values[i];
+    string dp = dps[i];
+    if (val > 0.0) {
+      color = \"Lofar_suspicious\";
+      string station;
+      int nr  = substr(dp,strpos(dp,\"PSIONode\")+8,2);
+      string IONodeDP = navFunct_IONode2DPName(nr);
+      dpGet(IONodeDP+\".usedStation\",station);
+      toolTipText+=station+\"</t> :\"+val+\"<br>\";
+      count++;
+      if (val > 10.0) {
+        color = \"Lofar_broken\";
+      }
+    }
+  }
+  if (count > dynlen(values)/10) {
+    color = \"Lofar_broken\";
+    toolTipText +=\"<br>\"+(float)(dynlen(values)/count)+\" % stations with bad values<br>\";
+  }
+
+  setValue(\"streamObject\",\"toolTipText\",toolTipText);
+  setValue(\"streamObject\", \"backCol\", color);
+
+ }" 0
+ E "main(int x, int y)
+{
+  click();
+}" 0
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+ 1 -1 -1 0  0 0
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string baseDP=\"\";
+string stream;
+string observation;
+dyn_string connectTo;
+dyn_string inputBuffers;
+bool connected = false;
+bool bDoubleClicked  = false;
+
+// routine for single mouse click
+void click() {
+
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true;   
+ 
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"streamView_small.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    g_currentDatapoint=baseDP;
+    //we also have to set the tabctrl to think this was initiated from the ProcessesTab, otherwise we will get the wrong panel.
+    navPanel_setEvent(\"Processes\",\"ChangeTab\");
+  }
+
+  
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}                       
+
+// routine for right mouse click
+void rClick() {
+
+}                       " 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+6 0
+"streamObject"
+""
+1 230 150 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+0 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  1 E 0 0 24 13
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

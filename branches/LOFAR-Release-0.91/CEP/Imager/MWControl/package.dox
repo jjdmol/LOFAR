@@ -1,0 +1,9 @@
+// \ingroup Imager
+
+// \defgroup MWControl MWControl
+// MWControl contains the code to read commands from a parset file
+// and execute them in the Master/Worker framework of package MWComon.
+//
+// It has classes to execute the BBSControl functionality, but it has
+// not been really implemented yet.
+// The test programs do a dry test of the functionality.

@@ -1,0 +1,574 @@
+V 10
+1
+LANG:1 20 Colors used by LOFAR
+PANEL,-1 -1 512 362 N "_3DFace" 0
+E E E E E 1 -1 -1 0  30 110
+""0  1
+E E 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+6 31
+"RECTANGLE15"
+""
+1 0 10 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+58 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 3 2 1 E 1 0 1 1 -9 1 E 0 10 510 370
+2 1
+"PRIMITIVE_TEXT1"
+""
+1 10 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 10 10 153 27
+0 2 2 "0s" 0 0 0 192 0 0  10 10 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 20 Lofar General Colors
+2 2
+"PRIMITIVE_TEXT2"
+""
+1 10 130 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 10 130 141 147
+0 2 2 "0s" 0 0 0 192 0 0  10 130 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 19 Lofar Status Colors
+6 3
+"RECTANGLE1"
+""
+1 110 30 E E E 1 E 1 E N {0,0,0} E N "Lofar_dpdoesnotexist" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 21 Lofar_dpdoesnotexists
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -100 1 1 E 110 30 184 44
+2 4
+"PRIMITIVE_TEXT3"
+""
+1 100 34 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 100 34 324 48
+0 2 2 "0s" 0 0 0 192 0 0  100 34 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 48 The datapoint you are looking for does not exist
+6 5
+"RECTANGLE2"
+""
+1 110 30 E E E 1 E 1 E N {0,0,0} E N "Lofar_dpOffline" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 15 Lofar_dpOffline
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -100 20 1 E 110 30 184 44
+2 6
+"PRIMITIVE_TEXT4"
+""
+1 100 53 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 100 53 390 67
+0 2 2 "0s" 0 0 0 192 0 0  100 53 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 63 The system where that datapoint belongs to is currently offline
+6 7
+"RECTANGLE3"
+""
+1 110 30 E E E 1 E 1 E N {0,0,0} E N "Lofar_invalid" E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 13 Lofar_invalid
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -100 39 1 E 110 30 184 44
+2 8
+"PRIMITIVE_TEXT5"
+""
+1 100 72 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+13 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 100 72 350 86
+0 2 2 "0s" 0 0 0 192 0 0  100 72 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 54 The datapoint you are looking for has an invalid state
+6 9
+"RECTANGLE4"
+""
+1 110 30 E E E 1 E 1 E N {0,0,0} E N "Lofar_highLight" E E
+ E E
+15 0 0 0 0 0
+E E E
+0
+1
+LANG:1 15 Lofar_highlight
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -100 58 1 E 110 30 184 44
+2 10
+"PRIMITIVE_TEXT6"
+""
+1 100 91 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+17 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 100 91 245 105
+0 2 2 "0s" 0 0 0 192 0 0  100 91 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 32 The highlight color for symbols.
+6 11
+"RECTANGLE5"
+""
+1 110 30 E E E 1 E 1 E N {0,0,0} E N "Lofar_off" E E
+ E E
+19 0 0 0 0 0
+E E E
+0
+1
+LANG:1 9 Lofar_off
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -100 120 1 E 110 30 184 44
+2 12
+"PRIMITIVE_TEXT7"
+""
+1 100 152 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+21 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 100 152 289 166
+0 2 2 "0s" 0 0 0 192 0 0  100 152 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 41 The object is currently not used by Lofar
+6 13
+"RECTANGLE6"
+""
+1 110 30 E E E 1 E 1 E N {0,0,0} E N "Lofar_operational" E E
+ E E
+23 0 0 0 0 0
+E E E
+0
+1
+LANG:1 17 Lofar_operational
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -100 140 1 E 110 30 184 44
+2 14
+"PRIMITIVE_TEXT8"
+""
+1 100 172 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+25 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 100 172 262 186
+0 2 2 "0s" 0 0 0 192 0 0  100 172 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 35 The object is currently working ok.
+6 15
+"RECTANGLE7"
+""
+1 110 30 E E E 1 E 1 E N {0,0,0} E N "Lofar_maintenance" E E
+ E E
+27 0 0 0 0 0
+E E E
+0
+1
+LANG:1 17 Lofar_maintenance
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -100 160 1 E 110 30 184 44
+2 16
+"PRIMITIVE_TEXT9"
+""
+1 100 192 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+29 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 100 192 282 206
+0 2 2 "0s" 0 0 0 192 0 0  100 192 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 39 The object is currently in maintenance.
+6 17
+"RECTANGLE8"
+""
+1 110 30 E E E 1 E 1 E N {0,0,0} E N "Lofar_test" E E
+ E E
+31 0 0 0 0 0
+E E E
+0
+1
+LANG:1 10 Lofar_test
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -100 180 1 E 110 30 184 44
+2 18
+"PRIMITIVE_TEXT10"
+""
+1 100 212 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+33 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 100 212 267 226
+0 2 2 "0s" 0 0 0 192 0 0  100 212 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 37 The object is currently in test mode.
+6 19
+"RECTANGLE9"
+""
+1 110 30 E E E 1 E 1 E N {0,0,0} E N "Lofar_suspicious" E E
+ E E
+35 0 0 0 0 0
+E E E
+0
+1
+LANG:1 16 Lofar_suspicious
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -100 200 1 E 110 30 184 44
+2 20
+"PRIMITIVE_TEXT11"
+""
+1 100 232 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+37 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 100 232 351 246
+0 2 2 "0s" 0 0 0 192 0 0  100 232 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 50 The object is marked suspicious, and acknowledged.
+6 21
+"RECTANGLE10"
+""
+1 110 30 E E E 1 E 1 E N {0,0,0} E N "Lofar_suspicious_went" E E
+ E E
+39 0 0 0 0 0
+E E E
+0
+1
+LANG:1 21 Lofar_suspicious_went
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -100 220 1 E 110 30 184 44
+2 22
+"PRIMITIVE_TEXT12"
+""
+1 100 252 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+41 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 100 252 491 266
+0 2 2 "0s" 0 0 0 192 0 0  100 252 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 80 The object was marked suspicious, but this state went again without acknowledge.
+6 23
+"RECTANGLE11"
+""
+1 110 30 E E E 1 E 1 E N {0,0,0} E N "Lofar_suspicious_came" E E
+ E E
+43 0 0 0 0 0
+E E E
+0
+1
+LANG:1 21 Lofar_suspicious_came
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -100 240 1 E 110 30 184 44
+2 24
+"PRIMITIVE_TEXT13"
+""
+1 100 272 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+45 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 100 272 410 286
+0 2 2 "0s" 0 0 0 192 0 0  100 272 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 61 The object was marked suspicious, and has to be acknowledged.
+6 25
+"RECTANGLE12"
+""
+1 110 30 E E E 1 E 1 E N {0,0,0} E N "Lofar_broken" E E
+ E E
+47 0 0 0 0 0
+E E E
+0
+1
+LANG:1 12 Lofar_broken
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -100 260 1 E 110 30 184 44
+2 26
+"PRIMITIVE_TEXT14"
+""
+1 100 292 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+49 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 100 292 347 306
+0 2 2 "0s" 0 0 0 192 0 0  100 292 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 50 The object is in alarm, and has been acknowledged.
+6 27
+"RECTANGLE13"
+""
+1 110 30 E E E 1 E 1 E N {0,0,0} E N "Lofar_broken_went" E E
+ E E
+51 0 0 0 0 0
+E E E
+0
+1
+LANG:1 17 Lofar_broken_went
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -100 280 1 E 110 30 184 44
+2 28
+"PRIMITIVE_TEXT15"
+""
+1 100 312 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+53 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 100 312 429 326
+0 2 2 "0s" 0 0 0 192 0 0  100 312 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 69 The object is in alarm, but the alarm went again without acknowledge.
+6 29
+"RECTANGLE14"
+""
+1 110 30 E E E 1 E 1 E N {0,0,0} E N "Lofar_broken_came" E E
+ E E
+55 0 0 0 0 0
+E E E
+0
+1
+LANG:1 17 Lofar_broken_came
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -100 300 1 E 110 30 184 44
+2 30
+"PRIMITIVE_TEXT16"
+""
+1 100 332 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+57 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 100 332 344 346
+0 2 2 "0s" 0 0 0 192 0 0  100 332 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 50 The object is in alarm and has to be acknowledged.
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

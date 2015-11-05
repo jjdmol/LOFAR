@@ -1,0 +1,27 @@
+<message>
+   <header>
+      <system>LOFAR</system>
+      <version>1.0.0</version>
+      <protocol>
+         <name>task.feedback.state</name>
+         <version>1.0.0</version>
+      </protocol>
+      <source>
+         <name>Cobalt/GPUProc/send_state</name>
+         <user></user>
+         <uuid></uuid>
+         <timestamp></timestamp>
+         <summary>State feedback</summary>
+      </source>
+      <ids>
+         <momid>0</momid>
+         <sasid>76966</sasid>
+      </ids>
+   </header>
+   <payload>
+<task>
+  <type>observation</type>
+  <state>finished</state>
+</task>
+   </payload>
+</message>

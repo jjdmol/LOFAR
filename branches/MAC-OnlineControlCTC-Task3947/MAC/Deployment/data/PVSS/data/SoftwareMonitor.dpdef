@@ -1,0 +1,16 @@
+# SoftwareMonitor
+SWLevel		int
+
+#
+# Next points are needed for dataparameterization Do not alter them unless you know what you are doing. tabs are essential in these
+#
+
+!# DbArchiveInfo
+!ElementName			TypeName	DetailNr	_archive.._type	_archive.._archive	_archive.._class
+!_mp_SoftwareMonitor.SWLevel	SoftwareMonitor			45	1
+!_mp_SoftwareMonitor.SWLevel	SoftwareMonitor	1		15		_ValueArchive_2
+!
+!# DpValue
+!ElementName	TypeName	_original.._value
+!_dt_SoftwareMonitor.Leaf	_DynamicDatapoints	"_mp_SoftwareMonitor.logMsg:_archive", "_mp_SoftwareMonitor.SWLevel:_archive"
+!_dt_SoftwareMonitor.DynamicAttribute	_DynamicDatapoints	"_da_none", "_da_none"

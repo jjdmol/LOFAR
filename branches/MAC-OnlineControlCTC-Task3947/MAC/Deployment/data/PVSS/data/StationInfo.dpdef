@@ -1,0 +1,63 @@
+stationID		int
+N_RSPBoards		int
+N_TBBoards		int
+N_LBAS			int
+N_HBAS			int
+HBA_Split		bool
+wide_LBAS		bool
+power48On		bool
+power220On		bool
+datastream0		bool
+datastream1		bool
+Cabinet.X		float
+Cabinet.Y		float
+Cabinet.Z		float
+HBA.centerX		float
+HBA.centerY		float
+HBA.centerZ		float
+HBA.HBA0.centerX		float
+HBA.HBA0.centerY		float
+HBA.HBA0.centerZ		float
+HBA.HBA0.NormalVector.X		float
+HBA.HBA0.NormalVector.Y		float
+HBA.HBA0.NormalVector.Z		float
+HBA.HBA0.RotationMatrix.X	floatArr
+HBA.HBA0.RotationMatrix.Y	floatArr
+HBA.HBA0.RotationMatrix.Z	floatArr
+HBA.HBA0.rotation		float
+HBA.HBA1.centerX		float
+HBA.HBA1.centerY		float
+HBA.HBA1.centerZ		float
+HBA.HBA1.NormalVector.X		float
+HBA.HBA1.NormalVector.Y		float
+HBA.HBA1.NormalVector.Z		float
+HBA.HBA1.RotationMatrix.X	floatArr
+HBA.HBA1.RotationMatrix.Y	floatArr
+HBA.HBA1.RotationMatrix.Z	floatArr
+HBA.HBA1.rotation		float
+LBA.centerX		float
+LBA.centerY		float
+LBA.centerZ		float
+LBA.NormalVector.X		float
+LBA.NormalVector.Y		float
+LBA.NormalVector.Z		float
+LBA.RotationMatrix.X	floatArr
+LBA.RotationMatrix.Y	floatArr
+LBA.RotationMatrix.Z	floatArr
+
+
+#
+# Next points are needed for dataparameterization Do not alter them unless you know what you are doing. tabs are essential in these
+#
+
+!# DbArchiveInfo
+!ElementName			TypeName	DetailNr	_archive.._type	_archive.._archive	_archive.._class
+!_mp_StationInfo.datastream0	SoftwareMonitor			45	1
+!_mp_StationInfo.datastream0	SoftwareMonitor	1		15		_ValueArchive_2
+!_mp_StationInfo.datastream1	SoftwareMonitor			45	1
+!_mp_StationInfo.datastream1	SoftwareMonitor	1		15		_ValueArchive_2
+!
+!# DpValue
+!ElementName	TypeName	_original.._value
+!_dt_StationInfo.Leaf	_DynamicDatapoints	"_mp_StationInfo.datastream0:_archive", "_mp_StationInfo.datastream1:_archive"
+!_dt_StationInfo.DynamicAttribute	_DynamicDatapoints	"_da_none", "_da_none"

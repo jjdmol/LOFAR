@@ -1,0 +1,9 @@
+[general]
+pvss_path = "/opt/pvss/pvss2_v3.7"
+proj_path = "/opt/pvss/pvssproj/Navigator_MCU099"
+proj_version = "3.7"
+langs = "en_US.iso88591"
+data = "MCU099"
+event = "MCU099"
+userName = "root"
+password = ""

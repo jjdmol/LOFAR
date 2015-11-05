@@ -1,0 +1,55 @@
+#!/bin/sh
+
+# runlogpid: Start a process and log its pid and exit status.
+#
+# Copyright (C) 2009
+# ASTRON (Netherlands Institute for Radio Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+#
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# The LOFAR software suite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+#
+# @author Ger van Diepen <diepen AT astron nl>
+#
+# $Id$
+
+
+# run as: runlogpid logfile program [arg1 arg2 ...]
+#
+#   logfile     name of the log file to use.
+#   program     program to start
+#   arg-i       extra arguments directly passed to the program started.
+#
+
+# Get name of logfile and program.
+envfile=$1
+shift
+rank=$1
+shift
+program=$1
+shift
+logfile=$envfile.pid-$rank
+
+
+# Start the program and log its pid (in a separate file).
+$program "$@" &
+pid=$!
+echo "$program $*" > $logfile
+echo "pid=$pid" >> $logfile
+
+# Wait for the program to end and log its exit status.
+wait $pid >> $logfile 2>&1
+status=$?
+echo "status=$status" >> $logfile
+exit $status

@@ -1,0 +1,6 @@
+// \ingroup LCS
+// \defgroup Stream Stream
+//
+// The %Stream package provides low-level support for streaming data to files
+// or sockets, using file descriptors. 
+

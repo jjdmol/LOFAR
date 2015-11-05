@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+
+<EthernetType>
+  <status>
+    <MACType>MACUnsigned</MACType>
+  </status>
+  <packetsReceived>
+    <MACType>MACUnsigned</MACType>
+  </packetsReceived>
+  <packetsError>
+    <MACType>MACUnsigned</MACType>
+  </packetsError>
+  <lastError>
+    <MACType>MACUnsigned</MACType>
+  </lastError>
+  <ffi0>
+    <MACType>MACUnsigned</MACType>
+  </ffi0>
+  <ffi1>
+    <MACType>MACUnsigned</MACType>
+  </ffi1>
+  <ffi2>
+    <MACType>MACUnsigned</MACType>
+  </ffi2>
+</EthernetType>

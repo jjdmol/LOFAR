@@ -1,0 +1,14 @@
+#
+# Uniboard Ring Interface  (URI Board)
+#
+
+# static informatiion
+firmVersion			string
+hwVersion			string
+
+# process information
+hscStatus			string
+inputVoltage			float
+boardVoltage			float
+boardCurrent			float
+URIstatus			string

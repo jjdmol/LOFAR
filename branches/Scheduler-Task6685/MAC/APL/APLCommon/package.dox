@@ -1,0 +1,15 @@
+// \ingroup APL
+// \defgroup APLCommon Common tasks and functions for MAC software.
+//
+// The APLCommon package contains common functions and tasks to make building
+// MAC controllers a lot easier.
+
+// @{
+
+// \defgroup ChildControl Does all the communication with a child-controllers.
+
+// \defgroup ParentControl Does all the communication with the parent-controller.
+
+// \defgroup StationInfo Collection of functions that are aware of the name-conventions of MAC.
+
+// @}

@@ -1,0 +1,351 @@
+V 11
+1
+LANG:1 0 
+PANEL,-1 -1 450 72 N "_3DFace" 2
+"$station"
+"$streamNr"
+"main()
+{
+  stream = \"stream\"+$streamNr;
+  station=$station;
+  
+  string streamDP = station+\":LOFAR_PIC_StationInfo\";  // check if the stream datapoint for this view are enabled and accessible
+  // the streams determine if a certain part of this object is actually involved in a measurement
+  if (dpExists(streamDP)) {
+    if (dpConnect(\"updateStreamCB\", streamDP +\".datastream0:_online.._value\",
+                                    streamDP +\".datastream1:_online.._value\",
+                                    streamDP +\".datastream0:_online.._invalid\") == -1) {
+      LOG_ERROR(\"stationStreamView_small.pnl:main|Couldn't connect to: \"+streamDP+\" \"+getLastError());
+      setValue(\"stationStreamObject0\", \"backCol\", \"Lofar_off\");
+      setValue(\"stationStreamObject1\", \"backCol\", \"Lofar_off\");
+      setValue(\"stationStreamObject0\", \"foreCol\", \"Lofar_off\");
+      setValue(\"stationStreamObject1\", \"foreCol\", \"Lofar_off\");
+
+    }
+  } else {
+    setValue(\"stationStreamObject0\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"stationStreamObject1\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"stationStreamObject0\", \"foreCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"stationStreamObject1\", \"foreCol\", \"Lofar_dpdoesnotexist\");
+  }	
+}
+
+void updateStreamCB(string dp1, bool s0,
+              string dp2, bool s1,
+              string dp3, bool invalid) {
+
+  // change all found DP's to contain all the elements that contain the stream.percBad
+  if (connected && dynlen(connectTo) > 0 ) {
+    dpDisconnect(\"monitorStreamsCB\",connectToSave);
+    dynClear(connectToSave);
+    connected = false;
+  }
+
+  if (!invalid) {
+    stream0=s0;
+    stream1=s1;
+    reload();
+  } else {
+    setValue(\"stationStreamObject0\", \"backCol\", \"Lofar_invalid\");
+    setValue(\"stationStreamObject1\", \"backCol\", \"Lofar_invalid\");
+    setValue(\"stationStreamObject0\", \"foreCol\", \"Lofar_invalid\");
+    setValue(\"stationStreamObject1\", \"foreCol\", \"Lofar_invalid\");  
+  }
+}
+  
+private void reload() {
+  
+  // get all the InputBuffers used by this station
+  inputBuffers = navFunct_getInputBuffersForStation(station);
+  
+  if (dynlen(connectToSave) > 0) {
+    dpDisconnect(\"monitorStreamsCB\", connectToSave);
+    dynClear(connectToSave);
+  }
+
+  for (int i=1; i<= dynlen(inputBuffers); i++) {
+    // We need to know if this station is involved in an active observation to see if the inputbuffers are showing real values.
+    // if not connected then we grey out the symbol
+    if (navFunct_stationInObservation(station,\"active\")) {
+      dynAppend(connectTo,inputBuffers[i]+\".\"+stream+\".percBad:_online.._value\");
+    } else {
+      setValue(\"stationStreamObject0\", \"backCol\", \"Lofar_off\");
+      setValue(\"stationStreamObject1\", \"backCol\", \"Lofar_off\");
+      setValue(\"stationStreamObject0\", \"foreCol\", \"Lofar_off\");
+      setValue(\"stationStreamObject1\", \"foreCol\", \"Lofar_off\");
+    }
+  }
+  // check if the required datapoint for this view are enabled and accessible
+  if (navFunct_dpReachable(CEPDBName) && dynlen(connectTo)>0 ){
+    // if connect fails we turn the object off
+    if (dpConnect(\"monitorStreamsCB\", connectTo) == -1) {
+      setValue(\"stationStreamObject0\", \"backCol\", \"Lofar_off\");
+      setValue(\"stationStreamObject1\", \"backCol\", \"Lofar_off\");
+      setValue(\"stationStreamObject0\", \"foreCol\", \"Lofar_off\");
+      setValue(\"stationStreamObject1\", \"foreCol\", \"Lofar_off\");
+    }
+  } else {
+    // make a difference between an unreachable database or an empty connect list
+    if (dynlen(connectTo) <= 0) {
+      setValue(\"stationStreamObject0\", \"backCol\", \"Lofar_off\");
+      setValue(\"stationStreamObject1\", \"backCol\", \"Lofar_off\");
+      setValue(\"stationStreamObject0\", \"foreCol\", \"Lofar_off\");
+      setValue(\"stationStreamObject1\", \"foreCol\", \"Lofar_off\");
+    } else {
+      setValue(\"stationStreamObject0\", \"backCol\", \"Lofar_dpOffline\");
+      setValue(\"stationStreamObject1\", \"backCol\", \"Lofar_dpOffline\");
+      setValue(\"stationStreamObject0\", \"foreCol\", \"Lofar_dpOffline\");
+      setValue(\"stationStreamObject1\", \"foreCol\", \"Lofar_dpOffline\");
+    }
+  }
+  connectToSave=connectTo;
+  dynClear(connectTo);
+}
+
+
+// this function is called when one of the inputbuffer stream values changes
+// only stations involved in an actively running observation are included in this call
+void monitorStreamsCB(dyn_string dps, dyn_float values)
+{
+  
+  string toolTipText = station+\"  \"+stream;
+  int count=0;
+  string color = \"Lofar_operational\";
+  dyn_string toollist;
+
+  // Here we get all bad values and we have to determine how many are wrong. if a station has more then 10% bad data (i.e. a single value in the values list
+  // exceeds 10%, or more then 10% of the stations have bad data we need to set the color to red, if bad data occurs but its lower then the above mentioned
+  // values we set the color to orange, and if no bad percentages occur the color is green.
+  
+
+  bool rsp0found = false;
+  bool rsp1found = false;  
+  for (int i = 1; i<= dynlen(values); i++) {
+
+    string usedStation;
+    string usedRSP=\"\";
+    int rsppos = 0;
+
+    float val = values[i];
+    string dp = dps[i];
+    string ionode = substr(dp,strpos(dp,\"PSIONode\"),10);
+
+    //in case of the corestations we will have two HBA outputs, determined by the RSP we are connected to so find out what RSPBoard we are connected to
+    int nr  = substr(dp,strpos(dp,\"PSIONode\")+8,2);
+    string IONodeDP = navFunct_IONode2DPName(nr);
+    dpGet(IONodeDP+\".usedStation\",usedStation);
+    dpGet(IONodeDP+\".usedRSP\",usedRSP);
+    if (usedRSP == \"RSP1\") {
+      rsp1found = true;
+      rsppos = 1;
+    } else {
+      rsp0found = true;
+      rsppos = 0;
+    }
+    
+    if (val == 0.0) {
+      color = \"Lofar_operational\";      
+    } else if (val > 0.0 && val < 33.0) {
+      color = \"Lofar_test\";
+    } else if (val >= 33.0 && val < 66.0) {
+      color = \"Lofar_maintenance\";
+    } else if (val >= 66.0 && val < 100.0) {
+      color = \"Lofar_suspicious\";
+    } else if (val >= 100.0) {
+      color = \"Lofar_broken\";
+    }                                                                                                                                                                                                                          
+    toolTipText+=\"  HBA\"+rsppos+\"<br>--------------<br>\";     
+    if (val > 0.0) {
+      string aS=station+\"</t> :\"+val+\"<br>\";
+      dynAppend(toollist,aS);
+      count++;
+    }
+    
+    
+    if (strpos(station,\"CS\") < 0) {
+      rsp0found=true;
+      rsp1found=true;
+      setValue(\"stationStreamObject0\", \"backCol\", color);
+      setValue(\"stationStreamObject0\", \"foreCol\", color);
+      setValue(\"stationStreamObject1\", \"backCol\", color);
+      setValue(\"stationStreamObject1\", \"foreCol\", color);
+    } else {
+      rsp0found=true;
+      rsp1found=false;
+      if ((rsppos == 0 && stream0)  || (rsppos ==1 && stream1)) {
+        setValue(\"stationStreamObject\"+rsppos, \"backCol\", color);
+        setValue(\"stationStreamObject\"+rsppos, \"foreCol\", color);
+      } else {
+        setValue(\"stationStreamObject\"+rsppos, \"backCol\", \"Lofar_off\");
+        setValue(\"stationStreamObject\"+rsppos, \"foreCol\", \"Lofar_off\");
+      }
+    }
+  }
+  
+  // check what HBA part was available
+  if (dynlen(values) <= 1) {
+    if (!rsp0found) {
+      setValue(\"stationStreamObject0\",\"backCol\",\"Lofar_off\");
+      setValue(\"stationStreamObject0\",\"foreCol\",\"Lofar_off\");
+    }
+    if (!rsp1found) {
+      setValue(\"stationStreamObject1\",\"backCol\",\"Lofar_off\");
+      setValue(\"stationStreamObject1\",\"foreCol\",\"Lofar_off\");
+    }
+  }
+  
+  if (!count) {
+    toolTipText += \"All ok\";
+  } else {
+    toolTipText += toollist;
+  }
+
+  setValue(\"stationStreamObject0\",\"toolTipText\",toolTipText);
+  setValue(\"stationStreamObject1\",\"toolTipText\",toolTipText);
+}" 0
+ E "main(int x, int y)
+{
+  click();
+}" 0
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+ 1 -1 -1 0  0 0
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string baseDP=\"\";
+string stream = \"\";
+bool stream0 = false;
+bool stream1 = false;
+string station = \"\";
+dyn_string connectTo;
+dyn_string connectToSave;
+dyn_string inputBuffers;
+bool connected = false;
+bool bDoubleClicked  = false;
+
+// routine for single mouse click
+void click() {
+
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true;   
+ 
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"stationStreamView_small.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    g_currentDatapoint=baseDP;
+    //we also have to set the tabctrl to think this was initiated from the ProcessesTab, otherwise we will get the wrong panel.
+    navPanel_setEvent(\"Processes\",\"ChangeTab\");
+  }
+
+  
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}                       
+
+// routine for right mouse click
+void rClick() {
+
+}                       " 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+6 0
+"RECTANGLE1"
+""
+1 230 150 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+0 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  1 E 0 0 14 9
+6 2
+"stationStreamObject0"
+""
+1 130 20 E E E 1 E 1 E N "_Transparent" E N "_3DFace" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 0 1 2 1 E 1 0 1 1 1 1 E 0 0 6 7
+6 3
+"stationStreamObject1"
+""
+1 130 20 E E E 1 E 1 E N "_Transparent" E N "_3DFace" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 0 1 2 1 E 1 0 1 0 1 1 E 7 0 13 7
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

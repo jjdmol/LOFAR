@@ -1,0 +1,13 @@
+# $Id$
+
+lofar_package(MACIO 1.0 DEPENDS ApplCommon Common)
+
+include(LofarFindPackage)
+lofar_find_package(Boost COMPONENTS date_time)
+
+include_directories(${CMAKE_BINARY_DIR}/include/MAC)
+
+add_subdirectory(autogen)
+add_subdirectory(include/MACIO)
+add_subdirectory(src)
+add_subdirectory(test)

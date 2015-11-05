@@ -1,0 +1,3 @@
+option(USE_LOG4CPLUS "Do not use LOG4CPLUS" OFF)
+set(CASACORE_ROOT_DIR /home/duscha/LOFAR/usg/lofarsoft/release)
+set(CMAKE_INSTALL_PREFIX /opt/lofar CACHE FILEPATH "install prefix")

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# make sure runctest compares both stdout and stderr for this test
+./tSSH 2>&1 || exit $?
+

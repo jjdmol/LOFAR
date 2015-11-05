@@ -1,0 +1,247 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,-1 -1 235 131 N "_3DFace" 1
+"$name"
+"main()
+{
+
+
+  //delay while navigator instance is being prepared, shouldn't be needed, but this way we at least have a trigger when something goes wrong
+  int retry=0;
+  while (navigator_initializing() & retry < 60) {
+    delay(0,100);
+    retry++;
+    if (retry >= 60) {
+      LOG_FATAL(\"navigator_locator.pnl:Initialize|locator retry longer then 2 minutes, navigatorInstance still not ready?\");
+      break;
+    }
+  }
+
+  // Check if Action point exists and connect to it if
+  // it does. The action Point is the call back for this object
+  itsActionDp    = DPNAME_NAVIGATOR + g_navigatorID + \".\"+$name+\".action\";
+  itsEventDp     = DPNAME_NAVIGATOR + g_navigatorID + \".\"+$name+\".event\";
+  itsSelectionDp = DPNAME_NAVIGATOR + g_navigatorID + \".\"+$name+\".selection\";
+  
+  if ( dpExists(itsActionDp) ) {
+    dpConnect(\"doAction\",false,itsActionDp);
+    LOCATORACTIONDP=itsActionDp;
+  }               
+
+}
+
+void initialize() {  
+  LOG_TRACE(\"navigator_locator.pnl:Initialize|entered\");
+  initTable();
+  LOG_TRACE(\"navigator_locator.pnl:Initialize|end\");
+        
+}
+
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+
+  LOG_TRACE(\"navigator_locator.pnl:doAction|Action found:\" + anAction);
+  
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG(\"navigator_locator.pnl:doAction|found actionString: \" + actionString);
+  // ChangeSelection requires 1 param and will change itsSelection and calls initTable again
+  if (actionString[1] == \"ChangeSelection\") {
+    changeSelection(actionString[2]);
+    return;
+  }
+  
+  // Initialize
+  if (actionString[1] == \"Initialize\") {
+    initialize();
+    return;
+  }
+  
+  // Update
+  
+}
+
+
+//
+// Set the table to the chosen tree
+//
+void initTable() {
+  LOG_TRACE(\"navigator_locator.pnl:initTable|entered\");
+  
+  //Empty de tree
+  Locator.clear();
+
+  typeList=navFunct_dpGetFullPathAsTypes(g_currentDatapoint);
+  
+  if (dynlen(typeList) <=0 ) {
+    return;
+  }
+ 
+  // fill the Locator with the datatypes derived from the current active datapoint
+  for (int i=1; i <= dynlen(typeList); i++) {
+
+    // Now check if the dptypes also have panels connected to them.
+    // if not, do not append in backtrace choices
+    // panels are stored on user,tab, dpType
+
+    if (dpExists(ACTIVE_USER+\".\"+typeList[i]+\"_\"+ACTIVE_TAB)) {
+      Locator.appendItem(\"\",i,typeList[i]);
+      Locator.ensureItemVisible(i);
+      Locator.setSelectedItem(i,true);
+    }
+  }
+  
+  
+  LOG_TRACE(\"navigator_locator.pnl:initTable|end\");
+  
+}
+//
+// changeSelection Action will set itsSelection to new selection and calls initTable
+//
+void changeSelection(string aSelection) {
+  LOG_TRACE(\"navigator_locator.pnl:ChangeSelection| entered :\" + aSelection);
+  initTable();
+}" 0
+ E E E E 1 0 0 0  10 10
+""0  1
+E "dyn_string typeList;
+
+//Global mainpoint holders
+string 	   itsActionDp	   = \"\";
+string 	   itsEventDp      = \"\";
+dyn_string itsSelectionDp  = \"\";
+bool       bDoubleClicked  = false;
+
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    setEvent(typeSelector.text+\":Locator:\"+Locator.selectedItems(),\"EventClick\");
+  }
+}
+
+void dblClick(string id,int column) {
+  // indicate this is a doubleClick
+  bDoubleClicked = true; 
+   
+  // double click indicates that we want to go to the selected level.
+  // to do this we need to determine a new g_currentDatapoint derived from the current one and the level that
+  // we clicked (backwards) in the typeList.
+  string dp=navFunct_getDPFromTypePath(typeList,id);
+  LOG_DEBUG(\"navigator_locator.pnl:doubleClicked|dp:\"+dp);
+
+  // check if we have an existing datapoint and if it's not the same as b4
+  // if it is different, fire the chain to go back and change panels.
+  if (dpExists(dp) ) {
+    if (g_currentDatapoint != dp) {
+      g_currentDatapoint = dp;  
+      setEvent(\"Locator:\"+Locator.getText(id,column),\"ChangePanel\");
+    }
+  } else {
+      LOG_ERROR(\"navigator_locator.pnl:doubleClicked|Error, new determined DP doesn't exist!! : \"+dp);
+  }
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;
+}
+
+void rClick() {
+  setEvent(typeSelector.text+\":Locator:\"+Locator.selectedItems(),\"EventRightClick\");
+}
+  
+void setEvent(dyn_string aSelection,string event) {
+  if (navigator_initializing()) {
+    return;
+  }
+  string anEvent=$name+\"|\"+event;
+  if (dpExists(itsEventDp)) {
+     dpSet(itsEventDp,anEvent);
+  } else {
+    LOG_ERROR(\"navigator_locator.pnl:setEvent|\"+itsEventDp + \" Does not exist yet\");     
+  }
+  if (dpExists(itsSelectionDp)) {
+    dpSet(itsSelectionDp,aSelection);
+  } else {
+    LOG_ERROR(\"navigator_locator.pnl:setEvent|\"+itsSelectionDp + \" Does not exist yet\");     
+  }
+}" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+29 2
+"Locator"
+""
+1 5 5 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+ 0 0 202 105
+10 TreeWidget
+7
+0 "expanded" "(string id)"
+""
+0 "collapsed" "(string id)"
+""
+0 "selectionChanged" "(string id)"
+""
+0 "clicked" "(string id, int column)"
+"  click();"
+0 "doubleClicked" "(string id, int column)"
+"  dblClick(id,column);"
+0 "rightClicked" "(string id, int column)"
+"  rClick();"
+0 "itemRenamed" "(string id, int column, string text)"
+""
+"main()
+{        
+  Locator.addColumn(\"Locator\");
+  Locator.setColumnWidth(0,201);    
+}" 0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

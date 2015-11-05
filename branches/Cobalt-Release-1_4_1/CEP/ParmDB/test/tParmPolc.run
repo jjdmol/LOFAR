@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# Create a ParmDB with a few polcs in it.
+../src/parmdbm <<EOF
+create table='tParmPolc_tmp.pdb'
+add Clock:DE601HBA domain=[0,10,0,10], values=[7.36616e-08,1.28864e-07], ny=2, type='polc'
+add Clock:DE601HBA domain=[0,10,10,20], values=[8.36616e-08,0.28864e-07], ny=2, type='polc'
+EOF
+
+./tParmPolc

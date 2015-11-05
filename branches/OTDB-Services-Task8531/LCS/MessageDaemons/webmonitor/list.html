@@ -1,0 +1,153 @@
+<html>
+<meta name="viewport" content="width=device-width, initial-scale=0.5, maximum-scale=0.5, user-scalable=0">
+<head>
+<style>
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+</style>
+</head>
+
+<body>
+<div id="overview">LOFAR Message Queue Monitor. Waiting for data ...</div>
+
+<script type='text/javascript'>
+
+var COUNTER=0;
+
+function asrow(text,style)
+{
+    var out="";
+    out+="<td " + style + " >" + text + "</td>";
+    return out;
+}
+
+function Parse_QPID_State(qpidstate)
+{
+    var today = new Date();
+    var datestamp = "<p> Browser Time: "+today+"</p>";
+    var result = "";
+    var outtext="";
+    var warntext="";
+    var locustext="";
+    var headertext="<table><tr><td>BROKER</td><td>QUEUE NAME</td><td>WAITING</td><td>PROCESSED</td><td>CONNECTED</td></tr>";
+    var footertext="</table>";
+    console.log(qpidstate);
+    // simple check for validity of JSON input
+    if ( qpidstate.search('amqp') != -1)
+    {
+        // parse JSON to object
+        var obj = eval('(' + qpidstate + ')');
+        for (var key in obj) {
+            // Retrieve datestamp if available
+            if (key == "datestamp") {
+                datestamp="<p>Sampled at UTC:"+obj[key]+"</p>";
+            } else
+            for (var subkey in obj[key]) {
+               // filter queue names for LOFAR defined queues
+               if ( subkey.match(/(mom.|lofar|otdb|mac)/g) != null ) {
+                  var result = "";
+                  var numwaiting=parseInt(obj[key][subkey]);
+                  result += obj[key][subkey];
+                  // use Red background if queue has messages
+                  color='style="color: #000000; background-color: #ffffff"';
+                  if (numwaiting>0) {
+                        color='style="color: #000000; background-color: #ff0000"';
+                  }
+                  // split all items in a table column
+                  result=result.replace(",","</td><td " + color + " >");
+                  result=result.replace(",","</td><td " + color + ">");
+                  var statustext="<tr "+ color +">"+asrow(key,color) + asrow(subkey,color) + asrow(result,color) + "</tr>";
+                  // assure locusXXX nodes are filtered and only shown if queue has messages
+                  var IsLocusNode=(key.indexOf("locus")!=-1);
+                  if (IsLocusNode==true){
+                      if (numwaiting>0) {
+                         locustext+=statustext;
+                      }
+                  } else {
+                      if (numwaiting>0) {
+                         warntext+=statustext;
+                      } else {
+                         outtext+=statustext;
+                      }
+                  }
+
+               }
+            }
+        }
+    }
+    result=datestamp+headertext+warntext+locustext+outtext+footertext;
+    document.getElementById("overview").innerHTML=result;
+}
+function readtext_from_file(urlname)
+{
+   var request = new XMLHttpRequest();
+   request.open("GET", urlname , false);
+   request.send(null);
+   return request.responseText;
+}
+
+
+var teller=0;
+function doAnim()
+{
+  requestAnimationFrameID = requestAnimationFrame(doAnim);
+}
+
+var myVar=setInterval(function () {myTimer()}, 5000);
+
+function myTimer() {
+   var request = new XMLHttpRequest();
+   request.open("GET", "/qpid" , true);
+   request.onreadystatechange=function()
+   {
+      if (request.readyState == 4)
+      {
+         Parse_QPID_State(request.responseText);
+      }
+   }
+   request.send(null);
+}
+
+
+// touch handlers for touch devices rerouted as mouse clicks.
+function touchHandlerDummy(e)
+{
+    e.preventDefault();
+    return false;
+}
+
+function touchHandler(event)
+{
+    var touches = event.changedTouches,
+        first = touches[0],
+        type = "";
+         switch(event.type)
+    {
+        case "touchstart": type = "mousedown"; break;
+        case "touchmove":  type="mousemove"; break;        
+        case "touchend":   type="mouseup"; break;
+        default: return;
+    }
+
+    var simulatedEvent = document.createEvent("MouseEvent");
+    simulatedEvent.initMouseEvent(type, true, true, window, 1, 
+                              first.screenX, first.screenY, 
+                              first.clientX, first.clientY, false, 
+                              false, false, false, 0/*left*/, null);
+    first.target.dispatchEvent(simulatedEvent);
+    event.preventDefault();
+}
+
+function touchinit() 
+{
+    document.addEventListener("touchstart", touchHandler, true);
+    document.addEventListener("touchmove", touchHandler, true);
+    document.addEventListener("touchend", touchHandler, true);
+    document.addEventListener("touchcancel", touchHandler, true);    
+}
+touchinit()
+</script>
+</body>
+</html>

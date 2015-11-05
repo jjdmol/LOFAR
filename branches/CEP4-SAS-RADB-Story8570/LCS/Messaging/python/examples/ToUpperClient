@@ -1,0 +1,24 @@
+#!/usr/bin/python
+
+from lofar.messaging.RPC import RPC
+
+# Simple RPC client for Service 'ToUpper'
+
+# Used settings
+ServiceName="ToUpper"
+BusName="simpletest"
+NumRequests=10
+Test="Hello World ToUpper "
+
+# Initialize a Remote Procedure Call object
+RPCService=RPC(BusName,ServiceName,timeout=10)
+
+# 'with' tells the RPC object to connect to the bus
+with RPCService:
+ for requestnr in range(NumRequests):
+   # execute the RPC Service
+   replymessage=RPCService(Test+str(requestnr))
+
+   # show the result from the RPC client
+   print replymessage
+

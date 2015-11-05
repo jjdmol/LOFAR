@@ -1,0 +1,849 @@
+V 11
+1
+LANG:1 0 
+PANEL,-1 -1 1003 715 N "_3DFace" 0
+"main()
+{
+  // Initialise the Panel
+  navPanel_initPanel(\"fw_viewBox\");
+
+  baseDP = g_currentDatapoint;
+  
+  // check existance of default savepoint in database and load defaults.
+  if (dpExists(MainDBName+\"rootSaves\")) {
+    if (dpConnect(\"updateDefaultSaves\",true,MainDBName+\"rootSaves.Queries.Query\",
+                                            MainDBName+\"rootSaves.Queries.Short\") == -1) {
+      LOG_ERROR( \"LOFAR_Query.pnl:main|ERROR: Couldn't connect to rootSaves!!! \"  + getLastError() );
+      return;
+    } 
+    // check if ACTIVE_USER has a savePoint in the database allready.
+    if (ACTIVE_USER != \"root\") {
+      // if not, then create the point
+      if (!dpExists(MainDBName+ACTIVE_USER+\"Saves\")) {
+        LOG_DEBUG(\"LOFAR_Query.pnl:main| creating \"+ACTIVE_USER+\"Saves DP\");
+        if (dpCreate(MainDBName+ACTIVE_USER+\"Saves\",\"NavigatorUserSaves\",MainDBID) == -1) {
+          LOG_ERROR( \"LOFAR_Query.pnl:main|ERROR: Couldn't create \"+ACTIVE_USER+\" Saves!!! \"  + getLastError() );
+          return;
+        }
+      }
+      if (dpConnect(\"updateUserSaves\",true,MainDBName+ACTIVE_USER+\"Saves.Queries.Query\",
+                                           MainDBName+ACTIVE_USER+\"Saves.Queries.Short\") == -1) {
+        LOG_ERROR( \"LOFAR_Query.pnl:main|ERROR: Couldn't connect to rootSaves!!! \"  + getLastError() );
+        return;
+      }   
+    }    
+  } else {
+    LOG_DEBUG(\"LOFAR_Query.pnl:main| No default rootSaves DP available\");
+  }
+  
+  
+  reload();
+   
+}
+
+void updateDefaultSaves(string dp1, dyn_string query,
+                        string dp2, dyn_string sh) {
+  
+    // Clear mapping
+  mappingClear(defaultSaves);
+  defaultSaves[ \"QUERY\" ]    = makeDynString();                    
+  defaultSaves[ \"SHORT\" ]    = makeDynString();
+
+  int iPos=1;  
+  for (int i = 1; i<= dynlen(query); i++) {
+      iPos=dynAppend(defaultSaves[ \"QUERY\" ] , query[i]);
+      defaultSaves[ \"SHORT\" ][iPos]  = sh[i];
+  }      
+  updatePD();
+}
+
+void updateUserSaves(string dp1, dyn_string query,
+                     string dp2, dyn_string sh) {
+  
+    // Clear mapping
+  mappingClear(userSaves);
+  userSaves[ \"QUERY\" ]    = makeDynString();                    
+  userSaves[ \"SHORT\" ]    = makeDynString();
+
+  int iPos=1;  
+  for (int i = 1; i<= dynlen(query); i++) {
+      iPos=dynAppend(userSaves[ \"QUERY\" ] , query[i]);
+      userSaves[ \"SHORT\" ][iPos]  = sh[i];
+  }      
+  updatePD();
+}
+
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+  LOG_DEBUG(\"LOFAR_Query.pnl:doAction| Action required. found: \" + anAction);
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG(\"LOFAR_Query.pnl:doAction|found actionString: \" + actionString);
+  
+  // Reload
+  if (actionString[1] == \"Reload\") {
+    reload();
+  }
+}
+
+void reload() {
+  
+  navFunct_clearGlobalLists(); 
+ 
+  // do all actions
+  updatePD();
+  // set panel to ready
+  g_objectReady=true;
+  
+  
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"LOFAR_Query.pnl\",\"Update\");
+}
+" 0
+ E E E E 1 -1 -1 0  40 100
+""0  1
+E "#uses \"navPanel.ctl\"
+    
+string baseDP=\"\";
+string query=\"\";
+string selection = \"\";
+bool   bDoubleClicked  = false;
+
+mapping defaultSaves;
+mapping userSaves;
+
+mapping results;
+dyn_string systemNames;
+dyn_uint systemIds;
+             
+// routine for single mouse click
+void click(int row) {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    string obs = resultTable.cellValueRC(row,\"Datapoint\");
+    navPanel_setEvent(obs,\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick(int row) {
+  // indicate this is a doubleClick
+  bDoubleClicked = true; 
+
+  string dp = dpSubStr(resultTable.cellValueRC(row,\"Datapoint\"),DPSUB_SYS_DP);
+  if (dpExists(dp) ) {
+    baseDP=dp;
+    LOG_DEBUG(\"LOFAR_Query.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \" + baseDP);
+    g_currentDatapoint=baseDP;
+    navPanel_setEvent(\"queryPanel\",\"ChangePanel\");  
+  }
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;
+}
+
+// routine for right mouse click
+void rClick(int row) {
+  navPanel_setEvent(\"queryPanel\",\"EventRightClick\");
+}
+
+
+void comboClick(string sel) {
+  if (!dynContains(selectionCombobox.items(),sel)) {
+    sel=\"\";
+  }
+  dpSet(MainDBName+ACTIVE_USER+\"Saves.Queries.LastQuery\",sel);
+  if (sel == \"\") return;
+
+  // set selectedline active
+  setValue(\"selectionCombobox\",\"text\",sel);
+  int iPos =  dynContains( defaultSaves[ \"SHORT\" ], sel );
+  if (iPos  <= 0) {
+    iPos = dynContains( userSaves[ \"SHORT\" ], sel);
+    if (iPos <= 0) {
+      LOG_ERROR(\"LOFAR_Query.pnl:click| Couldn't find \"+sel+\" in savemappings : \",getLastError());
+      return;
+    } 
+    query = userSaves[ \"QUERY\" ][iPos];
+  } else {
+    query = defaultSaves[ \"QUERY\" ][iPos];
+  }      
+  rebuildTable();
+}
+
+void rebuildTable(){
+  setValue(\"queryText\",\"text\",query);
+  dynClear(systemNames);
+  dynClear(systemIds);
+  mappingClear(results);
+  
+  if (query == \"\" ) return;
+  
+  // check if REMOTE ALL is used in the query, queries normally don't accept REMOTE ALL,
+  // so we need to set up a multitreaded answer cycle
+  if (strpos(query,\"REMOTE\") >= 0  && strpos(query,\"ALL\") >=0) {
+    
+    // get all available systemnames
+    getSystemNames(systemNames,systemIds);
+    
+    // remove systemnames that are down
+    dyn_int del;
+    for (int i=1; i <= dynlen(systemIds); i++) {
+      if (navFunct_isOnline(systemIds[i])) continue;
+      dynAppend(del,systemIds[i]);
+    }
+    
+    for (int i=1; i<= dynlen(del); i++) {
+      int iPos = dynContains(systemIds,del[i]);
+      dynRemove(systemIds,iPos);
+      dynRemove(systemNames,iPos);
+    }    
+    
+    for (int i=1 ; i <= dynlen(systemNames) ; i++) {
+      string newQuery=query;
+      strreplace(newQuery,\"ALL\",\"\\'\"+systemNames[i]+\":\\'\");
+      startThread(\"doQuery\", systemNames[i], newQuery);
+    }
+    
+    queryingText.visible(true);
+    // wait until we got all results
+    while (mappinglen(results) < dynlen(systemNames)) {
+      delay(0,50);
+    }
+  } else {
+    dyn_dyn_anytype temp;
+    dpQuery(query,temp);
+    results[\"QUERY\"]= temp;
+  }
+  
+  LOG_TRACE(\"LOFAR_Query.pnl:rebuildTable|found results: \",results);
+  fillTable();
+}
+
+void doQuery(string systemName, string query) {
+  dyn_dyn_anytype temp;
+  dpQuery(query,temp);
+  addResult(systemName, temp);
+}
+
+synchronized addResult(string systemName, const dyn_dyn_anytype &values) {
+  results[systemName] = values;
+}
+
+void fillTable() {
+  
+  resultTable.deleteAllLines();
+  
+  dyn_string DPs;
+  dyn_string values;
+  dyn_string DPsorted;
+  
+  // Loop over results and add to table
+  for (int i = 1; i<=mappinglen(results); i++) {
+    dyn_dyn_anytype aResult=mappingGetValue(results,i);
+    for (int nr = 2; nr <= dynlen (aResult);nr++) {
+      //get the DP and the value that go with this result
+     
+      dynAppend(DPs,aResult[nr][1]);
+      dynAppend(DPsorted,aResult[nr][1]);
+      dynAppend(values,aResult[nr][2]);
+   }
+  }
+  
+  // sort the resulting DP's in alphabetical order
+  dynSortAsc(DPsorted);
+  
+  //fill resultTable with sorted results.
+  // on system change iterate over the color
+
+  queryingText.visible(false);
+
+  string oldSys = \"\";
+  string col = \"\";
+  for (int i=1; i<= dynlen(DPsorted); i++) {
+    
+    string sys=dpSubStr(DPsorted[i],DPSUB_SYS);
+    if (oldSys != sys) {
+      if (col == \"white\") {
+        col = \"_3DFace\";
+      } else {
+        col = \"white\";
+      } 
+      oldSys=sys;   
+    }
+    dyn_string d1 =makeDynString(DPsorted[i],col);
+    int iPos= dynContains(DPs,DPsorted[i]);
+    dyn_string d2= makeDynString(\"\",col);
+    if (iPos <= dynlen(values) ) { 
+      d2 =makeDynString(values[iPos],col);
+    }
+    resultTable.appendLine(\"Datapoint\",d1,\"Value\",d2);
+    
+  }
+  string lenTxt=\"Datapoints found: \" + resultTable.lineCount();
+  setValue(\"foundText\",\"text\",lenTxt );
+  setValue(\"dateText\",\"text\",getCurrentTime());
+}
+
+void updatePD() {
+  selectionCombobox.deleteAllItems();
+  
+  // loop over defaultSaves and UserSaves and fill PullDown menu
+  if (mappinglen(defaultSaves) > 0) {
+    for (int i=1; i <= dynlen(defaultSaves[ \"QUERY\" ]); i++) {
+      selectionCombobox.appendItem(defaultSaves[ \"SHORT\"][i]);
+    }
+  }
+
+  if (mappinglen(userSaves) > 0 ) {
+    for (int i=1; i <= dynlen(userSaves[ \"QUERY\" ]); i++) {
+      selectionCombobox.appendItem(userSaves[ \"SHORT\"][i]);
+    }
+  }
+  string oldQuery=\"\";
+  dpGet(MainDBName+ACTIVE_USER+\"Saves.Queries.LastQuery\",oldQuery);
+  if (oldQuery != \"\") {
+    comboClick(oldQuery);
+    } else {
+      selectionCombobox.selectedPos(1);
+    }
+}
+  " 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+25 0
+"resultTable"
+""
+1 20 280 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ "main(int row, string column)
+{
+  rclick(row);
+}" 0
+ "main(int row, string column)
+{
+   dblClick(row);
+}" 0
+
+0 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  18 278 982 639
+"main()
+{
+  resultTable.tableMode(TABLE_SELECT_BROWSE);
+  
+  // connect for highlight mechanism
+  dpConnect( \"queryTableCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+}
+
+void queryTableCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"LOFAR_Query.pnl:queryTableCallback|ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"LOFAR_Query.pnl:queryTableCallback|Found highlight : \" + highlight);
+  int lineNr=-1;
+  for (int i=0; i< resultTable.lineCount(); i++) {
+    resultTable.currentCell(i,0);
+    if (dynContains(highlight,resultTable.cellValueRC(i,\"Datapoint\"))) {
+      resultTable.cellBackCol(\"Lofar_highLight\");
+      lineNr=i;
+    } else {
+      resultTable.cellBackCol(\"white\");
+    }      
+  }
+}" 0
+"main(int row, string column, string value)
+{
+  click(row);
+}" 0
+ 1 0 1 2 0 "Datapoint" 77 1 0 "s" 1
+LANG:1 9 Datapoint
+E
+1
+LANG:1 0 
+
+709 "Value" 24 1 0 "s" 1
+LANG:1 5 Value
+E
+1
+LANG:1 0 
+
+230 
+14 14 10 10
+1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0 0 1 1 1 7
+1 0
+22 1
+"selectionCombobox"
+""
+1 18 50 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  16 48 220 69
+0
+
+E
+"main()
+{
+  comboClick(this.selectedText());
+}" 0
+
+E
+ 1 0
+2 2
+"PRIMITIVE_TEXT1"
+""
+1 20 30 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 20 30 155 43
+0 2 2 "0s" 0 0 0 192 0 0  20 30 1
+1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
+LANG:1 23 Frequently used queries
+14 3
+"queryText"
+""
+1 20 130 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  18 128 912 162
+3 "0s" 0 0 0 0 0 -1  E E E
+2 5
+"PRIMITIVE_TEXT2"
+""
+1 20 112 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 20 112 65 128
+0 2 2 "0s" 0 0 0 192 0 0  20 112 1
+1
+LANG:1 33 MS Shell Dlg,-1,13,5,75,0,0,0,0,0
+0 1
+LANG:1 6 Query:
+13 6
+"queryButton"
+""
+1 20 192 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  18 190 82 216
+
+T 
+1
+LANG:1 5 Query
+"main()
+{
+  query=queryText.text();
+  rebuildTable();
+}" 0
+ E E E
+2 7
+"foundText"
+""
+1 10 650 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 10 650 106 663
+0 2 2 "0s" 0 0 0 192 0 0  10 650 1
+1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0 1
+LANG:1 20 Datapoints  found: 0
+13 8
+"saveQueryButton"
+""
+1 100 192 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 32 MS Shell Dlg,8,-1,5,50,0,0,0,0,0
+0  98 190 172 216
+
+T 
+1
+LANG:1 10 Save query
+"main()
+{
+  if (queryText.text() == \"\") return;
+  
+  saveShortNameInput.visible(true);
+  cancelSaveButton.visible(true);
+  saveShortText.visible(true);
+  returnText.visible(true);
+  
+}" 0
+ E E E
+13 9
+"removeQueryButton"
+""
+1 20 223 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 58 Only user queries are allowed to be removed from the list.
+
+0
+1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  18 221 142 247
+
+T 
+1
+LANG:1 22 remove query from list
+"main()
+{
+  // check if a selection has been made
+  if (selectionCombobox.selectedText() != 0 && 
+      selectionCombobox.selectedText() != \"\") {
+    
+    //search position in mapping
+    if (ACTIVE_USER == \"root\") {
+      int iPos =  dynContains( defaultSaves[ \"SHORT\" ], selectionCombobox.selectedText() );
+      if (iPos <= 0) return;
+    
+      // remove from mapping
+      dynRemove(defaultSaves [ \"SHORT\" ],iPos);
+      dynRemove(defaultSaves [ \"QUERY\" ],iPos);
+      
+      // save in DB
+      if (dpSet(MainDBName+ACTIVE_USER+\"Saves.Queries.Query\",defaultSaves[\"QUERY\"],  
+                MainDBName+ACTIVE_USER+\"Saves.Queries.Short\",defaultSaves[\"SHORT\"],
+                MainDBName+ACTIVE_USER+\"Saves.Queries.LastQuery\",\"\") ==  -1) {
+        LOG_ERROR( \"LOFAR_Query.pnl:removeQueryButton click|ERROR: \"+getLastError());
+      }
+    } else {
+      int iPos =  dynContains( userSaves[ \"SHORT\" ], selectionCombobox.selectedText() );
+      if (iPos <= 0) return;
+    
+      // remove from mapping
+      dynRemove(userSaves [ \"SHORT\" ],iPos);
+      dynRemove(userSaves [ \"QUERY\" ],iPos);
+      
+      // save in DB
+      if (dpSet(MainDBName+ACTIVE_USER+\"Saves.Queries.Query\",userSaves[\"QUERY\"],  
+                MainDBName+ACTIVE_USER+\"Saves.Queries.Short\",userSaves[\"SHORT\"],
+                MainDBName+ACTIVE_USER+\"Saves.Queries.LastQuery\",\"\") ==  -1) {
+        LOG_ERROR( \"LOFAR_Query.pnl:removeQueryButton click|ERROR: \"+getLastError());
+      }
+    }
+    query=\"\";
+    resultTable.deleteAllLines();
+    string lenTxt=\"Datapoints found: \" + resultTable.lineCount();
+    setValue(\"foundText\",\"text\",\"Datapoints found: \" + lenTxt );
+
+    selectionCombobox.deletePos(selectionCombobox.selectedPos());
+    selectionCombobox.selectedPos(1);
+    rebuildTable();
+  }
+}" 0
+ E E E
+14 10
+"saveShortNameInput"
+""
+1 180 192 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+10 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  178 190 512 216
+3 "0s" 0 0 0 0 0 -1  E E "main()
+{
+  string newText = this.text();
+  
+  if (ACTIVE_USER != \"root\") {
+    if (newText == \"\" || dynContains(userSaves[\"SHORT\"],newText) || dynContains(defaultSaves[\"SHORT\"],newText)) {
+      errorMsgText.visible(true);
+    } else {
+      errorMsgText.visible(false);
+      int iPos=dynAppend(userSaves[ \"QUERY\" ] , queryText.text());
+      userSaves[ \"SHORT\" ][iPos]  = this.text();
+
+      if (dpSet(MainDBName+ACTIVE_USER+\"Saves.Queries.Query\",userSaves[\"QUERY\"],  
+                MainDBName+ACTIVE_USER+\"Saves.Queries.Short\",userSaves[\"SHORT\"],
+                MainDBName+ACTIVE_USER+\"Saves.Queries.LastQuery\",this.text()) ==  -1) {
+        LOG_ERROR( \"LOFAR_Query.pnl:saveShortNameInput|ERROR: \"+getLastError());
+      }
+      this.text(\"\");
+      this.visible(false);
+      cancelSaveButton.visible(false);
+      errorMsgText.visible(false);
+      saveShortText.visible(false);
+      returnText.visible(false);
+    }
+  } else {
+    if (newText == \"\" || dynContains(defaultSaves[\"SHORT\"],newText)) {
+      errorMsgText.visible(true);
+    } else {
+      errorMsgText.visible(false);
+      int iPos=dynAppend(defaultSaves[ \"QUERY\" ] , queryText.text());
+      defaultSaves[ \"SHORT\" ][iPos]  = this.text();
+
+      if (dpSet(MainDBName+ACTIVE_USER+\"Saves.Queries.Query\",defaultSaves[\"QUERY\"],  
+                MainDBName+ACTIVE_USER+\"Saves.Queries.Short\",defaultSaves[\"SHORT\"],
+                MainDBName+ACTIVE_USER+\"Saves.Queries.LastQuery\",this.text()) ==  -1) {
+        LOG_ERROR( \"LOFAR_Query.pnl:saveShortNameInput|ERROR: \"+getLastError());
+      }
+      this.text(\"\");
+      this.visible(false);
+      cancelSaveButton.visible(false);
+      errorMsgText.visible(false);
+      saveShortText.visible(false);
+      returnText.visible(false);
+    }
+  }
+}" 0
+
+2 11
+"errorMsgText"
+""
+1 600 195 E E E 1 E 0 E N "Red" E N "_3DFace" E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 600 195 946 211
+0 2 2 "0s" 0 0 0 192 0 0  600 195 1
+1
+LANG:1 33 MS Shell Dlg,-1,13,5,75,0,0,0,0,0
+0 1
+LANG:1 53 !!!Input error, no shortname or existing shortname!!!
+13 12
+"cancelSaveButton"
+""
+1 180 222 E E E 1 E 0 E N "_ButtonText" E N "_Button" E E
+ E E
+12 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  178 220 272 246
+
+T 
+1
+LANG:1 11 Cancel save
+"main()
+{
+  saveShortNameInput.text(\"\");
+  saveShortNameInput.visible(false);
+  cancelSaveButton.visible(false);
+  errorMsgText.visible(false);
+  saveShortText.visible(false);
+  returnText.visible(false);
+}" 0
+ E E E
+2 14
+"saveShortText"
+""
+1 200 170 E E E 1 E 0 E N "_WindowText" E N "_3DFace" E E
+ E E
+14 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 200 170 468 186
+0 2 2 "0s" 0 0 0 192 0 0  200 170 1
+1
+LANG:1 33 MS Shell Dlg,-1,13,5,50,0,0,0,0,0
+0 1
+LANG:1 45 Give unique short name to save this query by.
+2 17
+"returnText"
+""
+1 520 198 E E E 1 E 0 E N "_WindowText" E N "_3DFace" E E
+ E E
+17 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 520 198 575 211
+0 2 2 "0s" 0 0 0 192 0 0  520 198 1
+1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0 1
+LANG:1 12 press return
+2 18
+"queryingText"
+""
+1 250 50 E E E 1 E 0 E N "Red" E N "_3DText" E E
+ E E
+18 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 250 50 329 66
+1 2 2 "0s" 0 0 0 192 0 0  250 50 1
+1
+LANG:1 33 MS Shell Dlg,-1,13,5,75,0,0,0,0,0
+0 1
+LANG:1 8 QUERYING
+2 19
+"PRIMITIVE_TEXT3"
+""
+1 190 650 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+19 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 190 650 266 663
+0 2 2 "0s" 0 0 0 192 0 0  190 650 1
+1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0 1
+LANG:1 16 Last Query time:
+2 20
+"dateText"
+""
+1 280 650 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+20 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 280 650 313 663
+0 2 2 "0s" 0 0 0 192 0 0  280 650 1
+1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0 1
+LANG:1 7 xxx:xxx
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0
