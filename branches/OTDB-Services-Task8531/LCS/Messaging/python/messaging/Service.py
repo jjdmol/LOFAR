@@ -250,6 +250,18 @@ class Service(object):
             reply_msg.show()
 
         # send the result to the RPC client
+        if '/' in reply_to:
+            # sometimes clients (JAVA) setup the reply_to field as "exchange/key; {options}"
+            # make sure we can deal with that.
+	    tmpaddress=reply_to.split('/')[1]
+            with ToBus(tmpaddress[0]) as dest:
+                subject = tmpaddress[1]
+                if ';' in subject:
+                    subject = subject.split(';')[0]
+                ToSend.subject=subject
+                dest.send(ToSend)
+            return
+
         if isinstance(self.reply_bus,ToBus):
             reply_msg.subject = reply_to
             self.reply_bus.send(reply_msg)
