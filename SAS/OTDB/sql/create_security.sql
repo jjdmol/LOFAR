@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -27,9 +27,9 @@
 --		 Possibly introduce usergroups as well.
 --
 
-DROP TABLE IF EXISTS OTDBaccess CASCADE;
-DROP TABLE IF EXISTS OTDBuser   CASCADE;
-DROP SEQUENCE IF EXISTS	OTDBuserID;
+DROP TABLE OTDBaccess CASCADE;
+DROP TABLE OTDBuser   CASCADE;
+DROP SEQUENCE	OTDBuserID;
 
 --
 -- The OTDBuser table contains some admistrative info about the user.
@@ -37,7 +37,6 @@ DROP SEQUENCE IF EXISTS	OTDBuserID;
 CREATE SEQUENCE	OTDBuserID;
 
 CREATE TABLE OTDBuser (
-    --  $Id$
 	userID		INT4			NOT NULL DEFAULT nextval('OTDBuserID'),
 	username	VARCHAR(20)		NOT NULL,
 	password	VARCHAR(20)		NOT NULL,
@@ -63,7 +62,6 @@ INSERT INTO OTDBuser (username, password, role)
 -- what arguments
 --
 CREATE TABLE OTDBaccess (
-    --  $Id$
 	userID		INT4			NOT NULL REFERENCES OTDBuser(userID),
 	task		INT4			NOT NULL DEFAULT 0,
 	value		INT4			NOT NULL DEFAULT 0

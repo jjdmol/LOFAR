@@ -32,7 +32,6 @@
 #include <DPPP/DPBuffer.h>
 #include <DPPP/Patch.h>
 #include <DPPP/PhaseShift.h>
-#include <DPPP/Filter.h>
 
 #include <casa/Arrays/Cube.h>
 #include <casa/Quanta/Quantum.h>
@@ -46,9 +45,9 @@
 
 namespace LOFAR {
 
-  class ParameterSet;
-
   namespace DPPP {
+    class ParSet;
+
     // @ingroup NDPPP
 
     typedef vector<Patch::ConstPtr> PatchList;
@@ -68,7 +67,7 @@ namespace LOFAR {
     public:
       // Construct the object.
       // Parameters are obtained from the parset using the given prefix.
-      Demixer (DPInput*, const ParameterSet&, const string& prefix);
+      Demixer (DPInput*, const ParSet&, const string& prefix);
 
       // Process the data.
       // It keeps the data.
@@ -103,9 +102,6 @@ namespace LOFAR {
                         uint nChanOut,
                         uint nChanAvg);
 
-      // Do the demixing.
-      void handleDemix();
-
       // Deproject the sources without a model.
       void deproject (casa::Array<casa::DComplex>& factors,
                       vector<MultiResultStep*> avgResults,
@@ -117,30 +113,18 @@ namespace LOFAR {
       // Export the solutions to a ParmDB.
       void dumpSolutions();
 
-      // Merge the data of the selected baselines from the subtract buffer
-      // into the full buffer.
-      void mergeSubtractResult();
-
       //# Data members.
       DPInput*                              itsInput;
       string                                itsName;
-      DPBuffer                              itsBufTmp;
       string                                itsSkyName;
       string                                itsInstrumentName;
-      double                                itsDefaultGain;
-      size_t                                itsMaxIter;
-      BaselineSelection                     itsSelBL;
-      Filter                                itsFilter;
       vector<PhaseShift*>                   itsPhaseShifts;
-      //# Phase shift and average steps for demix.
+      //# Phase shift and average steps.
       vector<DPStep::ShPtr>                 itsFirstSteps;
       //# Result of phase shifting and averaging the directions of interest
       //# at the demix resolution.
       vector<MultiResultStep*>              itsAvgResults;
-      DPStep::ShPtr                         itsAvgStepSubtr;
-      Filter*                               itsFilterSubtr;
       //# Result of averaging the target at the subtract resolution.
-      MultiResultStep*                      itsAvgResultFull;
       MultiResultStep*                      itsAvgResultSubtr;
       //# Ignore target in demixing?
       bool                                  itsIgnoreTarget;
@@ -193,14 +177,12 @@ namespace LOFAR {
       PatchList                             itsPatchList;
       Position                              itsPhaseRef;
       vector<Baseline>                      itsBaselines;
-      vector<int>                           itsUVWSplitIndex;
       casa::Vector<double>                  itsFreqDemix;
       casa::Vector<double>                  itsFreqSubtr;
       vector<double>                        itsUnknowns;
-      vector<double>                        itsPrevSolution;
+      vector<double>                        itsLastKnowns;
       uint                                  itsTimeIndex;
       uint                                  itsNConverged;
-      FlagCounter                           itsFlagCounter;
 
       //# Timers.
       NSTimer                               itsTimer;

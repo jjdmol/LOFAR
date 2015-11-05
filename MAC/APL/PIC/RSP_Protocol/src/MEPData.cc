@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -31,20 +31,21 @@ using namespace LOFAR;
 using namespace EPA_Protocol;
 using namespace std;
 
-size_t MEPData::getSize() const
+unsigned int MEPData::getSize()
 {
   return m_count;
 }
 
-size_t MEPData::pack  (char* buffer) const
+unsigned int MEPData::pack  (void* buffer)
 {
   memcpy(buffer, m_dataptr, m_count);
   return m_count;
 }
 
-size_t MEPData::unpack(const char* buffer)
+unsigned int MEPData::unpack(void* buffer)
 {
-  if (m_count && m_dataptr) {
+  if (m_count && m_dataptr)
+  {
     memcpy(m_dataptr, buffer, m_count);
   }
   return m_count;

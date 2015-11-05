@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2006
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,8 @@
 --  $Id$
 --
 
--- -- setSchedule (authToken, treeID, aStartTime, aStopTime)
+--
+-- setSchedule (authToken, treeID, aStartTime, aStopTime)
 --
 -- Authorisation: yes
 --
@@ -32,7 +33,6 @@
 --
 CREATE OR REPLACE FUNCTION setSchedule(INT4, INT4, VARCHAR(20), VARCHAR(20))
   RETURNS BOOLEAN AS $$
-    --  $Id$
 	DECLARE
 		vFunction				INT2 := 1;
 		TSactive				CONSTANT INT2 := 600;
@@ -86,95 +86,15 @@ CREATE OR REPLACE FUNCTION setSchedule(INT4, INT4, VARCHAR(20), VARCHAR(20))
 				stoptime  = vStopTime
 		WHERE	treeID = $2;
 
-		UPDATE  vicHierarchy
-		SET	  	value = vStartTime
-		WHERE   treeID = $2
-		AND	  	name LIKE '%.Observation.startTime';
-			
-		UPDATE  vicHierarchy
-		SET	  	value = vStopTime
-		WHERE   treeID = $2
-		AND	  	name LIKE '%.Observation.stopTime';
+		UPDATE	vicHierarchy
+		SET		value = vStartTime
+		WHERE	treeID = $2
+		AND		name LIKE '%.Observation.startTime';
 
-		RETURN TRUE;
-	END;
-$$ LANGUAGE plpgsql;
-
--- -- setSchedule (authToken, treeID, aStartTime, aStopTime, insideTreeAlso)
---
--- Authorisation: yes
---
--- Tables:	otdbtree	update
---
--- Types:	none
---
-CREATE OR REPLACE FUNCTION setSchedule(INT4, INT4, VARCHAR(20), VARCHAR(20), BOOLEAN)
-  RETURNS BOOLEAN AS $$
-    --  $Id$
-	DECLARE
-		vFunction				INT2 := 1;
-		TSactive				CONSTANT INT2 := 600;
-		TThierarchy				CONSTANT INT2 := 30;
-		vIsAuth					BOOLEAN;
-		vAuthToken				ALIAS FOR $1;
-		vCampaignID				campaign.id%TYPE;
-		vTreeType				OTDBtree.treetype%TYPE;
-		vState					OTDBtree.state%TYPE;
-		vStartTime				timestamp;
-		vStopTime				timestamp;
-
-	BEGIN
-		-- check Timestamps
-		IF $3 = '' THEN
-			vStartTime := NULL;
-		ELSE
-			vStartTime := $3;
-		END IF;
-		IF $4 = '' THEN
-			vStopTime := NULL;
-		ELSE
-			vStopTime := $4;
-		END IF;
-		-- check authorisation(authToken, treeID, func, none)
-		vIsAuth := FALSE;
-		SELECT isAuthorized(vAuthToken, $2, vFunction, 0) 
-		INTO   vIsAuth;
-		IF NOT vIsAuth THEN
-			RAISE EXCEPTION 'Not authorized.';
-			RETURN FALSE;
-		END IF;
-		
-		-- Only non-active VH trees can be scheduled.
-		SELECT 	treetype, state
-		INTO   	vTreeType, vState
-		FROM	OTDBtree
-		WHERE	treeID = $2;
-
-        IF vTreeType <> TThierarchy  THEN
-		  RAISE EXCEPTION 'Only VH trees can be scheduled.';
-		END IF;
-
-		IF vState = TSactive THEN
-		  RAISE EXCEPTION 'Tree may not be active';
-		END IF;
-
-		-- Finally update tree
-		UPDATE	OTDBtree
-		SET		starttime = vStartTime,
-				stoptime  = vStopTime
-		WHERE	treeID = $2;
-
-		IF $5 = true THEN
-		  UPDATE  vicHierarchy
-		  SET	  value = vStartTime
-		  WHERE   treeID = $2
-		  AND	  name LIKE '%.Observation.startTime';
-			
-		  UPDATE  vicHierarchy
-		  SET	  value = vStopTime
-		  WHERE   treeID = $2
-		  AND	  name LIKE '%.Observation.stopTime';
-		END IF;
+		UPDATE	vicHierarchy
+		SET		value = vStopTime
+		WHERE	treeID = $2
+		AND		name LIKE '%.Observation.stopTime';
 
 		RETURN TRUE;
 	END;

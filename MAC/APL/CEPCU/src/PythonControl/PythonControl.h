@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -26,11 +26,11 @@
 //# Common Includes
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
+#include <Common/lofar_datetime.h>
 #include <Common/LofarLogger.h>
-#include <Common/ParameterSet.h>
 
-//# MsgBus Includes
-#include <MessageBus/FromBus.h>
+//# ACC Includes
+#include <Common/ParameterSet.h>
 
 //# GCF Includes
 #include <GCF/TM/GCF_Control.h>
@@ -73,7 +73,7 @@ public:
 	
 	// Interrupthandler for switching to finisingstate when exiting the program
 	static void signalHandler (int	signum);
-	void	    finish		  (int	result);
+	void	    finish();
 
 private:
 	// avoid defaultconstruction and copying
@@ -85,29 +85,22 @@ private:
 						  int			obsID,
 						  const string&	pythonHost,
 						  const string&	parentService);
-	bool 	_stopPython  ( int			obsID,
-						  const string&	pythonHost);
 	void	_databaseEventHandler(GCFEvent&				event);
+	void	_passMetadatToOTDB();
 
 	// ----- datamembers -----
    	RTDBPropertySet*           	itsPropertySet;
 	bool					  	itsPropertySetInitialized;
 
 	string					itsMyName;
-	int						itsObsID;
 
 	// pointer to parent control task
 	ParentControl*			itsParentControl;
 	GCFITCPort*				itsParentPort;
 
 	GCFTimerPort*			itsTimerPort;
-	GCFTimerPort*			itsQueueTimer;
-	GCFTimerPort*			itsForcedQuitTimer;
 
 	GCFTCPPort*				itsListener;
-
-	FromBus*				itsMsgQueue;
-	int						itsFeedbackResult;
 
 	GCFTCPPort*				itsPythonPort;
 	string					itsPythonName;
@@ -117,7 +110,9 @@ private:
 	CTState::CTstateNr		itsState;
 
 	// conf-file variables
-	double					itsForceTimeout;
+	string					itsFeedbackFile;
+	double					itsFeedbackWaittime;
+	string					itsKVTLoggerHost;
 };
 
   }  //CEPCU

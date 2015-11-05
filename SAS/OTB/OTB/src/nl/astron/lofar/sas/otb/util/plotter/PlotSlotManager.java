@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ import org.apache.log4j.Logger;
  * @created May 24, 2006, 11:12 AM
  * @author pompert
  */
-public final class PlotSlotManager{
+public class PlotSlotManager{
     
     public static final String REFRESH_FULL = "REFRESHFULL";
     public static final String REFRESH_SINGLE = "REFRESHSINGLE";
@@ -53,7 +53,7 @@ public final class PlotSlotManager{
      * @param amountOfSlots The amount of PlotSlots to be managed in the PlotSlot collection.
      */
     public PlotSlotManager(int amountOfSlots) {
-        itsPlotSlots = new LinkedList<>();
+        itsPlotSlots = new LinkedList<PlotSlot>();
         setAmountOfSlots(amountOfSlots,true);
     }
     /**
@@ -361,9 +361,9 @@ public final class PlotSlotManager{
         Object[] listeners = myListenerList.getListenerList();
         ActionEvent action = null;
         if(id == -1){
-            action = new ActionEvent(this,id,PlotSlotManager.REFRESH_FULL);
+            action = new ActionEvent(this,id,this.REFRESH_FULL);
         }else{
-            action = new ActionEvent(this,id,PlotSlotManager.REFRESH_SINGLE);
+            action = new ActionEvent(this,id,this.REFRESH_SINGLE);
         }
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==java.awt.event.ActionListener.class) {

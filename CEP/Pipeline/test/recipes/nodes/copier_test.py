@@ -38,7 +38,7 @@ class copierTest(unittest.TestCase):
 
     def tearDown(self):
         pass
-        shutil.rmtree(self.test_path)
+        #shutil.rmtree(self.test_path)
 
 #    # refactor of copier means this test is not needed anymore. Comment out for 
 #    # now
@@ -49,7 +49,7 @@ class copierTest(unittest.TestCase):
 #        rsync return value
 #        
 #        """
-#        temp_dir = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
+#        temp_dir = tempfile.mkdtemp()
 #        path_to_unowned_dir = "/home/klijntest/testdir"  #
 #        file_to_copy = open(os.path.join(temp_dir, "test.txt"), 'w')
 #        file_to_copy.close()

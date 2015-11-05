@@ -30,11 +30,10 @@
 #include <DPPP/DPInfo.h>
 #include <DPPP/EstimateMixed.h>
 #include <DPPP/PhaseShift.h>
+#include <DPPP/ParSet.h>
 #include <DPPP/Simulate.h>
 #include <DPPP/SourceDBUtil.h>
 #include <DPPP/SubtractMixed.h>
-#include <DPPP/MSReader.h>
-#include <DPPP/Simulator.h>
 
 #include <ParmDB/Axis.h>
 #include <ParmDB/SourceDB.h>
@@ -43,7 +42,6 @@
 #include <ParmDB/ParmCache.h>
 #include <ParmDB/Parm.h>
 
-#include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
 #include <Common/OpenMP.h>
 #include <Common/StreamUtil.h>
@@ -68,20 +66,16 @@ namespace LOFAR {
     namespace
     {
       string toString (double value);
+      double getAngle (const String& value);
     } //# end unnamed namespace
 
     Demixer::Demixer (DPInput* input,
-                      const ParameterSet& parset,
-                      const string& prefix)
+                      const ParSet& parset, const string& prefix)
       : itsInput          (input),
         itsName           (prefix),
         itsSkyName        (parset.getString(prefix+"skymodel", "sky")),
         itsInstrumentName (parset.getString(prefix+"instrumentmodel",
-                                            "instrument")),
-        itsDefaultGain    (parset.getDouble(prefix+"defaultgain",1.0)),
-        itsMaxIter        (parset.getInt(prefix+"maxiter",50)),
-        itsSelBL          (parset, prefix, false, "cross"),
-        itsFilter         (input, itsSelBL),
+                                           "instrument")),
         itsAvgResultSubtr (0),
         itsIgnoreTarget   (parset.getBool  (prefix+"ignoretarget", false)),
         itsTargetSource   (parset.getString(prefix+"targetsource", string())),
@@ -143,9 +137,6 @@ namespace LOFAR {
                  "An empty name is given for the sky and/or instrument model");
       ASSERTSTR (!itsIgnoreTarget || itsTargetSource.empty(),
                  "Target source name cannot be given if ignoretarget=true");
-      // Add a null step as last step in the filter.
-      DPStep::ShPtr nullStep(new NullStep());
-      itsFilter.setNextStep (nullStep);
       // Default nr of time chunks is maximum number of threads.
       if (itsNTimeChunk == 0) {
         itsNTimeChunk = OpenMP::maxThreads();
@@ -187,26 +178,18 @@ namespace LOFAR {
       itsFactors.resize      (itsNTimeChunk);
       itsFactorsSubtr.resize (itsNTimeChunkSubtr);
       itsPhaseShifts.reserve (itsNDir-1);   // not needed for target direction
-      itsFirstSteps.reserve  (itsNDir);
+      itsFirstSteps.reserve  (itsNDir+1);   // one extra for itsAvgSubtr
       itsAvgResults.reserve  (itsNDir);
 
-      // Create the solve and subtract steps for the sources to be removed.
-      // Solving consists of the following steps:
-      // - select the requested baselines (longer baselines may need no demix)
-      // - phaseshift selected data to each demix source
-      // - average selected data in each direction, also original phasecenter.
-      // - determine and average demix factors for all directions
-      // - predict and solve in each direction. It is possible to predict
-      //   more directions than to solve (for strong sources in field).
-      // Subtract consists of the following steps:
-      // - average all data (possibly different averaging than used in solve)
-      // - determine and average demix factors (using select output in solve)
-      // - select the requested baselines
-      // - subtract sources for selected data
-      // - merge subtract result into averaged data. This is not needed if
-      //   no selection is done.
-      // Note that multiple time chunks are handled jointly, so a
-      // MultiResultStep is used to catch the results of all time chunks.
+      // Create the steps for the sources to be removed.
+      // Demixing consists of the following steps:
+      // - phaseshift data to each demix source
+      // - average data in each direction, also for original phasecenter.
+      // - determine demix factors for all directions
+      // - use BBS to predict and solve in each direction. It is possible to
+      //   predict more directions than to solve (for strong sources in field).
+      // - use BBS to subtract the solved sources using the demix factors.
+      //   The averaging used here can be smaller than used when solving.
       for (uint i=0; i<itsNDir-1; ++i) {
         // First make the phaseshift and average steps for each demix source.
         // The resultstep gets the result.
@@ -241,18 +224,12 @@ namespace LOFAR {
       itsAvgResults.push_back (targetAvgRes);
 
       // Create the data average step for the subtract.
-      // The entire average result is needed for the next NDPPP step.
-      // Only the selected baselines need to be subtracted, so add a
-      // filter step as the last one.
-      itsAvgStepSubtr = DPStep::ShPtr(new Averager(input, prefix,
-                                                   itsNChanAvgSubtr,
-                                                   itsNTimeAvgSubtr));
-      itsAvgResultFull  = new MultiResultStep(itsNTimeChunkSubtr);
-      itsFilterSubtr    = new Filter(input, itsSelBL);
+      DPStep::ShPtr targetAvgSubtr(new Averager(input, prefix,
+                                                itsNChanAvgSubtr,
+                                                itsNTimeAvgSubtr));
       itsAvgResultSubtr = new MultiResultStep(itsNTimeChunkSubtr);
-      itsAvgStepSubtr->setNextStep (DPStep::ShPtr(itsAvgResultFull));
-      itsAvgResultFull->setNextStep (DPStep::ShPtr(itsFilterSubtr));
-      itsFilterSubtr->setNextStep (DPStep::ShPtr(itsAvgResultSubtr));
+      targetAvgSubtr->setNextStep (DPStep::ShPtr(itsAvgResultSubtr));
+      itsFirstSteps.push_back (targetAvgSubtr);
 
 //      while(itsCutOffs.size() < itsNModel) {
 //        itsCutOffs.push_back(0.0);
@@ -265,37 +242,11 @@ namespace LOFAR {
       info() = infoIn;
 
       // Get size info.
-      itsNChanIn = infoIn.nchan();
-      itsNCorr   = infoIn.ncorr();
+      itsNStation = infoIn.antennaNames().size();
+      itsNChanIn  = infoIn.nchan();
+      itsNBl      = infoIn.nbaselines();
+      itsNCorr    = infoIn.ncorr();
       ASSERTSTR (itsNCorr==4, "Demixing requires data with 4 polarizations");
-
-      // Handle possible data selection.
-      itsFilter.setInfo (infoIn);
-      const DPInfo& infoSel = itsFilter.getInfo();
-      // NB. The number of baselines and stations refer to the number of
-      // selected baselines and the number of unique stations that participate
-      // in the selected baselines.
-      itsNBl = infoSel.nbaselines();
-      itsNStation = infoSel.antennaUsed().size();
-
-      // Re-number the station IDs in the selected baselines, removing gaps in
-      // the numbering due to unused stations.
-      const vector<int> &antennaMap = infoSel.antennaMap();
-      for (uint i=0; i<itsNBl; ++i) {
-        itsBaselines.push_back(Baseline(antennaMap[infoSel.getAnt1()[i]],
-          antennaMap[infoSel.getAnt2()[i]]));
-      }
-
-      // Prepare conversion from relative to absolute UVW
-      casa::Vector<casa::Int> newAnt1(itsNBl);
-      casa::Vector<casa::Int> newAnt2(itsNBl);
-      for (uint i=0; i<itsNBl; ++i) {
-        newAnt1[i]=antennaMap[infoSel.getAnt1()[i]];
-        newAnt2[i]=antennaMap[infoSel.getAnt2()[i]];
-      }
-      itsUVWSplitIndex = nsetupSplitUVW (itsNStation,newAnt1,newAnt2);
-
-      // Allocate buffers used to compute the smearing factors.
       itsFactorBuf.resize (IPosition(4, itsNCorr, itsNChanIn, itsNBl,
                                      itsNDir*(itsNDir-1)/2));
       itsFactorBufSubtr.resize (IPosition(4, itsNCorr, itsNChanIn, itsNBl,
@@ -303,23 +254,25 @@ namespace LOFAR {
 
       // Adapt averaging to available nr of channels and times.
       // Use a copy of the DPInfo, otherwise it is updated multiple times.
-      DPInfo infoDemix(infoSel);
-      itsNTimeAvg = std::min (itsNTimeAvg, infoSel.ntime());
+      DPInfo infoDemix(infoIn);
+      itsNTimeAvg = std::min (itsNTimeAvg, infoIn.ntime());
       itsNChanAvg = infoDemix.update (itsNChanAvg, itsNTimeAvg);
       itsNChanOut = infoDemix.nchan();
       itsTimeIntervalAvg = infoDemix.timeInterval();
       itsNTimeDemix      = infoDemix.ntime();
+      for (size_t i=0; i<infoIn.getAnt1().size(); ++i) {
+        itsBaselines.push_back (Baseline(infoIn.getAnt1()[i],
+                                         infoIn.getAnt2()[i]));
+      }
 
       // Let the internal steps update their data.
       for (uint i=0; i<itsFirstSteps.size(); ++i) {
-        itsFirstSteps[i]->setInfo (infoSel);
+        itsFirstSteps[i]->setInfo (infoIn);
       }
-      itsAvgStepSubtr->setInfo (infoIn);
       // Update the info of this object.
       info().setNeedVisData();
-      info().setWriteData();
-      info().setWriteFlags();
-      itsNTimeAvgSubtr = std::min (itsNTimeAvgSubtr, infoSel.ntime());
+      info().setNeedWrite();
+      itsNTimeAvgSubtr = std::min (itsNTimeAvgSubtr, infoIn.ntime());
       itsNChanAvgSubtr = info().update (itsNChanAvgSubtr, itsNTimeAvgSubtr);
       itsNChanOutSubtr = info().nchan();
       ASSERTSTR (itsNChanAvg % itsNChanAvgSubtr == 0,
@@ -343,22 +296,20 @@ namespace LOFAR {
 
       // Intialize the unknowns.
       itsUnknowns.resize(itsNTimeDemix * itsNModel * itsNStation * 8);
-      itsPrevSolution.resize(itsNModel * itsNStation * 8);
-      vector<double>::iterator it = itsPrevSolution.begin();
-      vector<double>::iterator it_end = itsPrevSolution.end();
+      itsLastKnowns.resize(itsNModel * itsNStation * 8);
+      vector<double>::iterator it = itsLastKnowns.begin();
+      vector<double>::iterator it_end = itsLastKnowns.end();
       while(it != it_end)
       {
-        *it++ = itsDefaultGain;
+        *it++ = 1.0;
         *it++ = 0.0;
         *it++ = 0.0;
         *it++ = 0.0;
         *it++ = 0.0;
         *it++ = 0.0;
-        *it++ = itsDefaultGain;
+        *it++ = 1.0;
         *it++ = 0.0;
       }
-      // Initialize the flag counters.
-      itsFlagCounter.init (getInfo());
     }
 
     void Demixer::show (std::ostream& os) const
@@ -366,33 +317,10 @@ namespace LOFAR {
       os << "Demixer " << itsName << std::endl;
       os << "  skymodel:           " << itsSkyName << std::endl;
       os << "  instrumentmodel:    " << itsInstrumentName << std::endl;
-      os << "  default gain:       " << itsDefaultGain << std::endl;
-      os << "  max iterations:     " << itsMaxIter << std::endl;
-      itsSelBL.show (os);
-      if (itsSelBL.hasSelection()) {
-        os << "    demixing " << itsFilter.getInfo().nbaselines()
-           << " out of " << getInfo().nbaselines() << " baselines   ("
-           << itsFilter.getInfo().antennaUsed().size()
-           << " out of " << getInfo().antennaUsed().size()
-           << " stations)" << std::endl;
-      }
       os << "  targetsource:       " << itsTargetSource << std::endl;
       os << "  subtractsources:    " << itsSubtrSources << std::endl;
-      uint inx=0;
-      for (uint i=0; i<itsSubtrSources.size(); ++i ) {
-        os << "                        "
-           << itsPhaseShifts[inx++]->getPhaseCenter() << std::endl;
-      }
       os << "  modelsources:       " << itsModelSources << std::endl;
-      for (uint i=0; i<itsModelSources.size(); ++i ) {
-        os << "                        "
-           << itsPhaseShifts[inx++]->getPhaseCenter() << std::endl;
-      }
       os << "  extrasources:       " << itsExtraSources << std::endl;
-      for (uint i=0; i<itsExtraSources.size(); ++i ) {
-        os << "                        "
-           << itsPhaseShifts[inx++]->getPhaseCenter() << std::endl;
-      }
 //      os << "  elevationcutoffs: " << itsCutOffs << std::endl;
 //      os << "  jointsolve:     " << itsJointSolve << std::endl;
       os << "  propagatesolutions: " << std::boolalpha << itsPropagateSolutions
@@ -447,28 +375,29 @@ namespace LOFAR {
       // Update the count.
       itsNTimeIn++;
       // Make sure all required data arrays are filled in.
-      ///      itsBufTmp.referenceFilled (buf);
-      itsBufTmp.copy (buf);
-      itsInput->fetchUVW (buf, itsBufTmp, itsTimer);
-      itsInput->fetchWeights (buf, itsBufTmp, itsTimer);
-      itsInput->fetchFullResFlags (buf, itsBufTmp, itsTimer);
+      DPBuffer newBuf(buf);
+      RefRows refRows(newBuf.getRowNrs());
+      if (newBuf.getUVW().empty()) {
+        newBuf.setUVW(itsInput->fetchUVW(newBuf, refRows, itsTimer));
+      }
+      if (newBuf.getWeights().empty()) {
+        newBuf.setWeights(itsInput->fetchWeights(newBuf, refRows, itsTimer));
+      }
+      if (newBuf.getFullResFlags().empty()) {
+        newBuf.setFullResFlags(itsInput->fetchFullResFlags(newBuf, refRows,
+                                                           itsTimer));
+      }
 
-      // Do the filter step first.
-      itsFilter.process (itsBufTmp);
-      const DPBuffer& selBuf = itsFilter.getBuffer();
-      // Do the next steps (phaseshift and average) on the filter output.
+      // Do the initial steps (phaseshift and average).
       itsTimerPhaseShift.start();
       for (int i=0; i<int(itsFirstSteps.size()); ++i) {
-        itsFirstSteps[i]->process(selBuf);
+        itsFirstSteps[i]->process(newBuf);
       }
-      // Do the average and filter step for the output for all data.
-      itsAvgStepSubtr->process (itsBufTmp);
       itsTimerPhaseShift.stop();
 
-      // For each itsNTimeAvg times, calculate the phase rotation per direction
-      // for the selected data.
+      // For each itsNTimeAvg times, calculate the phase rotation per direction.
       itsTimerDemix.start();
-      addFactors (selBuf, itsFactorBuf);
+      addFactors (newBuf, itsFactorBuf);
       if (itsNTimeIn % itsNTimeAvg == 0) {
         makeFactors (itsFactorBuf, itsFactors[itsNTimeOut],
                      itsAvgResults[0]->get()[itsNTimeOut].getWeights(),
@@ -480,8 +409,8 @@ namespace LOFAR {
         itsNTimeOut++;
       }
       // Subtract is done with different averaging parameters, so calculate the
-      // factors for it (again for selected data only).
-      addFactors (selBuf, itsFactorBufSubtr);
+      // factors for it.
+      addFactors (newBuf, itsFactorBufSubtr);
       if (itsNTimeIn % itsNTimeAvgSubtr == 0) {
         makeFactors (itsFactorBufSubtr, itsFactorsSubtr[itsNTimeOutSubtr],
                      itsAvgResultSubtr->get()[itsNTimeOutSubtr].getWeights(),
@@ -495,16 +424,40 @@ namespace LOFAR {
       // Estimate gains and subtract source contributions when sufficient time
       // slots have been collected.
       if (itsNTimeOut == itsNTimeChunk) {
-        handleDemix();
+        if(itsNModel > 0) {
+          itsTimerSolve.start();
+          demix();
+          itsTimerSolve.stop();
+        }
+
+        // Clear the input buffers.
+        for (size_t i=0; i<itsAvgResults.size(); ++i) {
+          itsAvgResults[i]->clear();
+        }
+
+        // Let the next step process the data.
+        for (uint i=0; i<itsNTimeOutSubtr; ++i) {
+          itsTimer.stop();
+          getNextStep()->process (itsAvgResultSubtr->get()[i]);
+          itsTimer.start();
+        }
+
+        // Clear the output buffer.
+        itsAvgResultSubtr->clear();
+
+        // Reset counters.
+        itsNTimeIn       = 0;
+        itsNTimeOut      = 0;
+        itsNTimeOutSubtr = 0;
+        itsTimeIndex += itsNTimeChunk;
       }
+
       itsTimer.stop();
       return true;
     }
 
     void Demixer::finish()
     {
-      cerr << "  " << itsNTimeIn << " time slots to finish in Demixer ..."
-           << endl;
       itsTimer.start();
 
       // Process remaining entries.
@@ -514,7 +467,6 @@ namespace LOFAR {
         for (int i=0; i<int(itsFirstSteps.size()); ++i) {
           itsFirstSteps[i]->finish();
         }
-        itsAvgStepSubtr->finish();
         itsTimerPhaseShift.stop();
         // Only average if there is some unaveraged data.
         itsTimerDemix.start();
@@ -540,7 +492,26 @@ namespace LOFAR {
         itsFactorsSubtr.resize(itsNTimeOutSubtr);
 
         // Demix the source directions.
-        handleDemix();
+        if(itsNModel > 0) {
+          itsTimerSolve.start();
+          demix();
+          itsTimerSolve.stop();
+        }
+
+        // Clear the input buffers.
+        for (size_t i=0; i<itsAvgResults.size(); ++i) {
+          itsAvgResults[i]->clear();
+        }
+
+        // Let the next step process the data.
+        for (uint i=0; i<itsNTimeOutSubtr; ++i) {
+          itsTimer.stop();
+          getNextStep()->process (itsAvgResultSubtr->get()[i]);
+          itsTimer.start();
+        }
+
+        // Clear the output buffer.
+        itsAvgResultSubtr->clear();
       }
 
       // Write solutions to disk in ParmDB format.
@@ -552,66 +523,6 @@ namespace LOFAR {
 
       // Let the next steps finish.
       getNextStep()->finish();
-    }
-
-    void Demixer::handleDemix()
-    {
-      if(itsNModel > 0) {
-        itsTimerSolve.start();
-        demix();
-        itsTimerSolve.stop();
-        // If selection was done, merge the subtract results back into the
-        // buffer.
-      }
-      // If needed, merge in the deselected baselines.
-      if (itsSelBL.hasSelection()) {
-        mergeSubtractResult();
-      }
-
-      // Clear the input buffers.
-      for (size_t i=0; i<itsAvgResults.size(); ++i) {
-        itsAvgResults[i]->clear();
-      }
-      // Let the next step process the data.
-      for (uint i=0; i<itsNTimeOutSubtr; ++i) {
-        itsTimer.stop();
-        DPBuffer* bufptr;
-        if (itsSelBL.hasSelection()) {
-          bufptr = &(itsAvgResultFull->get()[i]);
-        } else {
-          bufptr = &(itsAvgResultSubtr->get()[i]);
-        }
-        MSReader::flagInfNaN (bufptr->getData(), bufptr->getFlags(),
-                              itsFlagCounter);
-        getNextStep()->process (*bufptr);
-        itsTimer.start();
-      }
-
-      // Clear the output buffer.
-      itsAvgResultFull->clear();
-      itsAvgResultSubtr->clear();
-
-      // Reset counters.
-      itsNTimeIn       = 0;
-      itsNTimeOut      = 0;
-      itsNTimeOutSubtr = 0;
-      itsTimeIndex += itsNTimeChunk;
-    }
-
-    void Demixer::mergeSubtractResult()
-    {
-      // Merge the selected baselines from the subtract buffer into the
-      // full buffer. Do it for all timestamps.
-      for (uint i=0; i<itsNTimeOutSubtr; ++i) {
-        const Array<Complex>& arr = itsAvgResultSubtr->get()[i].getData();
-        size_t nr = arr.shape()[0] * arr.shape()[1];
-        const Complex* in = arr.data();
-        Complex* out = itsAvgResultFull->get()[i].getData().data();
-        for (size_t j=0; j<itsFilter.getIndicesBL().size(); ++j) {
-          size_t inx = itsFilter.getIndicesBL()[j];
-          memcpy (out+inx*nr, in+j*nr, nr*sizeof(Complex));
-        }
-      }
     }
 
     void Demixer::addFactors (const DPBuffer& newBuf,
@@ -738,7 +649,6 @@ namespace LOFAR {
           dirnr++;
         }
       }
-      ///cout<<"makefactors "<<weightSums<<bufOut;
     }
 
     void Demixer::deproject (Array<DComplex>& factors,
@@ -831,11 +741,11 @@ namespace LOFAR {
     namespace {
       struct ThreadPrivateStorage
       {
-        vector<double>                unknowns;
-        casa::Matrix<double>          uvw;
-        vector<casa::Cube<dcomplex> > model;
-        casa::Cube<dcomplex>          model_subtr;
-        size_t                        count_converged;
+        vector<double>    unknowns;
+        vector<double>    uvw;
+        vector<dcomplex>  model;
+        vector<dcomplex>  model_subtr;
+        size_t            count_converged;
       };
 
       void initThreadPrivateStorage(ThreadPrivateStorage &storage,
@@ -843,12 +753,9 @@ namespace LOFAR {
         size_t nChannelSubtr)
       {
         storage.unknowns.resize(nDirection * nStation * 8);
-        storage.uvw.resize(3, nStation);
-        storage.model.resize(nDirection);
-        for (uint dir=0;dir<nDirection; ++dir) {
-          storage.model[dir].resize(4, nChannel, nBaseline);
-        }
-        storage.model_subtr.resize(4, nChannelSubtr, nBaseline);
+        storage.uvw.resize(nStation * 3);
+        storage.model.resize(nDirection * nBaseline * nChannel * 4);
+        storage.model_subtr.resize(nBaseline * nChannelSubtr * 4);
         storage.count_converged = 0;
       }
     } //# end unnamed namespace
@@ -856,8 +763,8 @@ namespace LOFAR {
     void Demixer::demix()
     {
       const size_t nThread = OpenMP::maxThreads();
-      const size_t nTime = itsAvgResults[0]->size();
-      const size_t nTimeSubtr = itsAvgResultSubtr->size();
+      const size_t nTime = itsAvgResults[0]->get().size();
+      const size_t nTimeSubtr = itsAvgResultSubtr->get().size();
       const size_t multiplier = itsNTimeAvg / itsNTimeAvgSubtr;
       const size_t nDr = itsNModel;
       const size_t nDrSubtr = itsSubtrSources.size();
@@ -866,6 +773,7 @@ namespace LOFAR {
       const size_t nCh = itsFreqDemix.size();
       const size_t nChSubtr = itsFreqSubtr.size();
       const size_t nCr = 4;
+      const size_t nSamples = nBl * nCh * nCr;
 
       vector<ThreadPrivateStorage> threadStorage(nThread);
       for(vector<ThreadPrivateStorage>::iterator it = threadStorage.begin(),
@@ -873,16 +781,13 @@ namespace LOFAR {
       {
         initThreadPrivateStorage(*it, nDr, nSt, nBl, nCh, nChSubtr);
 
-        // Copy the previous solution to the thread private vectors of unknowns.
-        // When solution propagation is disabled, itsPrevSolution is never
-        // updated. It then contains 1.0+0.0i for the diagonal terms and
-        // 0.0+0.0i for the off-diagonal terms. Thus, when solution propagation
-        // is disabled this statement effectively re-initializes the thread
-        // private vectors of unknowns.
-        copy(itsPrevSolution.begin(), itsPrevSolution.end(),
-          it->unknowns.begin());
+        // Copy solutions from global solution array to thread private solution
+        // array (solution propagation between chunks).
+        copy(itsLastKnowns.begin(), itsLastKnowns.end(), it->unknowns.begin());
       }
 
+      const_cursor<double> cr_freq = casa_const_cursor(itsFreqDemix);
+      const_cursor<double> cr_freqSubtr = casa_const_cursor(itsFreqSubtr);
       const_cursor<Baseline> cr_baseline(&(itsBaselines[0]));
 
 #pragma omp parallel for
@@ -891,35 +796,26 @@ namespace LOFAR {
         const size_t thread = OpenMP::threadNum();
         ThreadPrivateStorage &storage = threadStorage[thread];
 
-        // If solution propagation is disabled, re-initialize the thread-private
-        // vector of unknowns.
-        if(!itsPropagateSolutions)
-        {
-          copy(itsPrevSolution.begin(), itsPrevSolution.end(),
-            storage.unknowns.begin());
-        }
-
         // Simulate.
         //
         // Model visibilities for each direction of interest will be computed
         // and stored.
+        size_t stride_uvw[2] = {1, 3};
+        cursor<double> cr_uvw_split(&(storage.uvw[0]), 2, stride_uvw);
+
         size_t stride_model[3] = {1, nCr, nCr * nCh};
-        fill(storage.model.begin(), storage.model.end(), 0.);
+        fill(storage.model.begin(), storage.model.end(), dcomplex());
         for(size_t dr = 0; dr < nDr; ++dr)
         {
-          nsplitUVW(itsUVWSplitIndex, itsBaselines, itsAvgResults[dr]->get()[ts].getUVW(), storage.uvw);
-          ///cout<<"uvw"<<dr<<'='<<storage.uvw<<endl;
+          const_cursor<double> cr_uvw =
+            casa_const_cursor(itsAvgResults[dr]->get()[ts].getUVW());
+          splitUVW(nSt, nBl, cr_baseline, cr_uvw, cr_uvw_split);
 
-          Simulator simulator(itsPatchList[dr]->position(), nSt, nBl, nCh,
-                              itsBaselines, itsFreqDemix, storage.uvw,
-                              storage.model[dr]);
-          for(size_t i = 0; i < itsPatchList[dr]->nComponents(); ++i)
-          {
-            simulator.simulate(itsPatchList[dr]->component(i));
-          }
-
+          cursor<dcomplex> cr_model(&(storage.model[dr * nSamples]), 3,
+            stride_model);
+          simulate(itsPatchList[dr]->position(), itsPatchList[dr], nSt,
+            nBl, nCh, cr_baseline, cr_freq, cr_uvw_split, cr_model);
         }
-        ///cout<<"modelvis="<<storage.model<<endl;
 
         // Estimate Jones matrices.
         //
@@ -935,7 +831,6 @@ namespace LOFAR {
         const_cursor<float> cr_weight =
           casa_const_cursor(itsAvgResults[0]->get()[ts].getWeights());
         const_cursor<dcomplex> cr_mix = casa_const_cursor(itsFactors[ts]);
-        ///cout << "demixfactor "<<ts<<" = "<<itsFactors[ts]<<endl;
 
         vector<const_cursor<fcomplex> > cr_data(nDr);
         vector<const_cursor<dcomplex> > cr_model(nDr);
@@ -944,13 +839,12 @@ namespace LOFAR {
           cr_data[dr] =
             casa_const_cursor(itsAvgResults[dr]->get()[ts].getData());
           cr_model[dr] =
-            const_cursor<dcomplex>(storage.model[dr].data(), 3,
+            const_cursor<dcomplex>(&(storage.model[dr * nSamples]), 3,
             stride_model);
         }
 
         bool converged = estimate(nDr, nSt, nBl, nCh, cr_baseline, cr_data,
-          cr_model, cr_flag, cr_weight, cr_mix, &(storage.unknowns[0]),
-          itsMaxIter);
+          cr_model, cr_flag, cr_weight, cr_mix, &(storage.unknowns[0]));
         if(converged)
         {
           ++storage.count_converged;
@@ -970,13 +864,15 @@ namespace LOFAR {
           for(size_t dr = 0; dr < nDrSubtr; ++dr)
           {
             // Re-use simulation used for estimating Jones matrices if possible.
-            cursor<dcomplex> cr_model_subtr(storage.model[dr].data(),
+            cursor<dcomplex> cr_model_subtr(&(storage.model[dr * nSamples]),
               3, stride_model);
 
             // Re-simulate if required.
             if(multiplier != 1 || nCh != nChSubtr)
             {
-              nsplitUVW(itsUVWSplitIndex, itsBaselines, itsAvgResultSubtr->get()[ts_subtr].getUVW(), storage.uvw);
+              const_cursor<double> cr_uvw =
+                casa_const_cursor(itsAvgResultSubtr->get()[ts_subtr].getUVW());
+              splitUVW(nSt, nBl, cr_baseline, cr_uvw, cr_uvw_split);
 
               // Rotate the UVW coordinates for the target direction to the
               // direction of source to subtract. This is required because at
@@ -985,30 +881,25 @@ namespace LOFAR {
               // resolution of the residual is equal to the resolution at which
               // the Jones matrices were estimated, of course).
               rotateUVW(itsPhaseRef, itsPatchList[dr]->position(), nSt,
-                        storage.uvw.data());
+                cr_uvw_split);
 
               // Zero the visibility buffer.
-              storage.model_subtr=dcomplex();
+              fill(storage.model_subtr.begin(), storage.model_subtr.end(),
+                dcomplex());
 
               // Simulate visibilities at the resolution of the residual.
               size_t stride_model_subtr[3] = {1, nCr, nCr * nChSubtr};
-              cr_model_subtr = cursor<dcomplex>(storage.model_subtr.data(), 3,
+              cr_model_subtr = cursor<dcomplex>(&(storage.model_subtr[0]), 3,
                 stride_model_subtr);
-
-              Simulator simulator(itsPatchList[dr]->position(), nSt, nBl,
-                                  nChSubtr, itsBaselines, itsFreqSubtr,
-                                  storage.uvw, storage.model_subtr);
-              for(size_t i = 0; i < itsPatchList[dr]->nComponents(); ++i)
-              {
-                simulator.simulate(itsPatchList[dr]->component(i));
-              }
+              simulate(itsPatchList[dr]->position(), itsPatchList[dr], nSt, nBl,
+                nChSubtr, cr_baseline, cr_freqSubtr, cr_uvw_split,
+                cr_model_subtr);
             }
 
             // Apply Jones matrices.
             size_t stride_unknowns[2] = {1, 8};
             const_cursor<double> cr_unknowns(&(storage.unknowns[dr * nSt * 8]),
               2, stride_unknowns);
-
             apply(nBl, nChSubtr, cr_baseline, cr_unknowns, cr_model_subtr);
 
             // Subtract the source contribution from the data.
@@ -1028,11 +919,8 @@ namespace LOFAR {
             // [0, nDrSubtr).
             const IPosition &stride_mix_subtr =
               itsFactorsSubtr[ts_subtr].steps();
-            size_t stride_mix_subtr_slice[3] = {
-              static_cast<size_t>(stride_mix_subtr[2]),
-              static_cast<size_t>(stride_mix_subtr[3]),
-              static_cast<size_t>(stride_mix_subtr[4])
-            };
+            size_t stride_mix_subtr_slice[3] = {stride_mix_subtr[2],
+              stride_mix_subtr[3], stride_mix_subtr[4]};
             ASSERT(stride_mix_subtr_slice[0] == itsNDir * itsNDir
               && stride_mix_subtr_slice[1] == itsNDir * itsNDir * nCr
               && stride_mix_subtr_slice[2] == itsNDir * itsNDir * nCr * nChSubtr);
@@ -1058,7 +946,7 @@ namespace LOFAR {
       {
         copy(&(itsUnknowns[(itsTimeIndex + nTime - 1) * nDr * nSt * 8]),
           &(itsUnknowns[(itsTimeIndex + nTime) * nDr * nSt * 8]),
-          itsPrevSolution.begin());
+          itsLastKnowns.begin());
       }
 
       // Update convergence count.
@@ -1090,40 +978,42 @@ namespace LOFAR {
       resolution[1] = itsTimeIntervalAvg;
       parmDB.setDefaultSteps(resolution);
 
-      // Map station indices in the solution array to the corresponding antenna
-      // names. This is required because solutions are only produced for
-      // stations that participate in one or more baselines. Due to the baseline
-      // selection or missing baselines, solutions may be available for less
-      // than the total number of station available in the observation.
-      const DPInfo &info = itsFilter.getInfo();
-      const vector<int> &antennaUsed = info.antennaUsed();
-      const Vector<String> &antennaNames = info.antennaNames();
+      // Convert station names from casa::String to std::string.
+      ASSERT(getInfo().antennaNames().size() == itsNStation);
+      vector<string> stations(itsNStation);
+      copy(getInfo().antennaNames().begin(), getInfo().antennaNames().end(),
+          stations.begin());
 
       vector<BBS::Parm> parms;
       for(size_t dr = 0; dr < itsNModel; ++dr) {
         for(size_t st = 0; st < itsNStation; ++st) {
-          string name(antennaNames[antennaUsed[st]]);
-          string suffix(name + ":" + itsAllSources[dr]);
+          parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
+            "DirectionalGain:0:0:Real:" + stations[st] + ":"
+            + itsAllSources[dr])));
+          parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
+            "DirectionalGain:0:0:Imag:" + stations[st] + ":"
+            + itsAllSources[dr])));
 
           parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
-            "DirectionalGain:0:0:Real:" + suffix)));
+            "DirectionalGain:0:1:Real:" + stations[st] + ":"
+            + itsAllSources[dr])));
           parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
-            "DirectionalGain:0:0:Imag:" + suffix)));
+            "DirectionalGain:0:1:Imag:" + stations[st] + ":"
+            + itsAllSources[dr])));
 
           parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
-            "DirectionalGain:0:1:Real:" + suffix)));
+            "DirectionalGain:1:0:Real:" + stations[st] + ":"
+            + itsAllSources[dr])));
           parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
-            "DirectionalGain:0:1:Imag:" + suffix)));
+            "DirectionalGain:1:0:Imag:" + stations[st] + ":"
+            + itsAllSources[dr])));
 
           parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
-            "DirectionalGain:1:0:Real:" + suffix)));
+            "DirectionalGain:1:1:Real:" + stations[st] + ":"
+            + itsAllSources[dr])));
           parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
-            "DirectionalGain:1:0:Imag:" + suffix)));
-
-          parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
-            "DirectionalGain:1:1:Real:" + suffix)));
-          parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
-            "DirectionalGain:1:1:Imag:" + suffix)));
+            "DirectionalGain:1:1:Imag:" + stations[st] + ":"
+            + itsAllSources[dr])));
         }
       }
 
@@ -1154,6 +1044,22 @@ namespace LOFAR {
         ostringstream os;
         os << setprecision(16) << value;
         return os.str();
+      }
+
+      double getAngle (const String& value)
+      {
+        double angle;
+        Quantity q;
+        ASSERTSTR (Quantity::read (q, value),
+                   "Demixer: " + value + " is not a proper angle");
+        if (q.getUnit().empty()) {
+          angle = q.getValue() / 180. * C::pi;
+        } else {
+          ASSERTSTR (q.getFullUnit().getValue() == UnitVal::ANGLE,
+                     "Demixer: " + value + " is not a proper angle");
+          angle = q.getValue("rad");
+        }
+        return angle;
       }
     } //# end unnamed namespace
 

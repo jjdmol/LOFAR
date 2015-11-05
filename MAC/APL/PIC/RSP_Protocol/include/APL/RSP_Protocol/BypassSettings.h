@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -33,7 +33,6 @@
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 
 namespace LOFAR {
-  using namespace EPA_Protocol;
   namespace RSP_Protocol {
 
 // Note: Bypass registers are per BP, so each register has info for the X
@@ -49,34 +48,19 @@ public:
 	public:
 		Control() { 
 			memset(&bypass,0,sizeof(bypass));
-			bypass.raw.dc_disable = 1;
-			bypass.raw.sdo_disable = 1;
-            si_set = false;
-            sdo_set = false;
+			bypass.dc_disable = 1;
 		}
 		~Control() {}
 
-		void setXSI(bool	on)  { bypass.raw.six_enable = on ? 1 : 0; si_set = true;}
-		void setYSI(bool	on)  { bypass.raw.siy_enable = on ? 1 : 0; si_set = true; }
-		void setSDO(bool	on)  { bypass.raw.sdo_disable = on ? 0 : 1; sdo_set = true;}
-		bool getXSI() const 	 { return bypass.raw.six_enable; }
-		bool getYSI() const 	 { return bypass.raw.siy_enable; }
-		bool getSDO() const 	 { return (bypass.raw.sdo_disable ? false : true); }
-        bool isSIset() const     { return si_set; }
-        bool isSDOset() const    { return sdo_set; }
-        void resetSIset()        { si_set = false; }  
-        void resetSDOset()       { sdo_set = false; }
-        
-		uint16	getAsUint16() const	{ return bypass.as_uint; }
-		DIAGBypass	getRaw()  const	{ return bypass.raw; }
-		void setRaw(const DIAGBypass	newBypass) { bypass.raw = newBypass; }
+		void setXSI(bool	on) { bypass.six_enable = on ? 1 : 0; }
+		void setYSI(bool	on) { bypass.siy_enable = on ? 1 : 0; }
+		bool getXSI() const 	{ return (bypass.six_enable); }
+		bool getYSI() const 	{ return (bypass.siy_enable); }
+		uint16	getAsUint16() const	{ return (*((uint16*) &bypass)); } // Yak
+		DIAGBypass	getRaw()  const	{ return (bypass); }
+		void setRaw(const DIAGBypass	newBypass) { bypass = newBypass; }
 	private:
-		bool si_set;
-		bool sdo_set;
-        union {
-			EPA_Protocol::DIAGBypass	raw;
-			uint16	as_uint;
-		} bypass;
+		EPA_Protocol::DIAGBypass	bypass;
 	};
 
 	/* get reference to diag settings array */
@@ -86,9 +70,9 @@ public:
 	//
 	// marshalling methods
 	//
-	size_t getSize() const;
-	size_t pack  (char* buffer) const;
-	size_t unpack(const char *buffer);
+	unsigned int getSize();
+	unsigned int pack  (void* buffer);
+	unsigned int unpack(void *buffer);
   	//@}
 
 private:

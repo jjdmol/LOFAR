@@ -35,7 +35,7 @@ nof_beamlets_ap = rsp.c_nof_beamlets_ap   # = 252, including reflets
 c_ss_reflets_size = rsp.c_pol * nof_reflets_ap
 c_ss_size         = rsp.c_pol * nof_beamlets_ap
 
-c_ss_gap          = rsp.c_slice_size - rsp.c_cpx * c_ss_size
+c_ss_gap          = rsp.c_slice_size - rsp.c_cpx * rsp.c_pol * nof_beamlets_ap
 
 
 ################################################################################
@@ -44,6 +44,7 @@ rspId   = tc.rspId
 blpId   = tc.blpId
 bmBanks = tc.bmBanks
 
+repeat = tc.repeat
 tc.setResult('PASSED')   # self checking test, so start assuming it will run PASSED
 
 tc.appendLog(11,'')

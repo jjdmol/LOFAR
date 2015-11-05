@@ -22,13 +22,13 @@
 //# $Id:
 
 #include <lofar_config.h>
-#include <BBSControl/CommandHandlerEstimator.h>
-#include <BBSControl/CalSession.h>
-#include <BBSControl/OptionParser.h>
-#include <BBSControl/Util.h>
-#include <BBSControl/Package__Version.h>
 #include <Common/SystemUtil.h>
 #include <Common/Exception.h>
+#include <BBSControl/Package__Version.h>
+#include <BBSControl/CalSession.h>
+#include <BBSControl/CommandHandlerEstimator.h>
+#include <BBSControl/OptionParser.h>
+#include <BBSControl/Util.h>
 
 using namespace LOFAR;
 using namespace LOFAR::BBS;
@@ -188,7 +188,7 @@ int run(const ParameterSet &options, const OptionParser::ArgumentList&)
       session.postResult(command.first, result);
 
       // If an error occurred, log a descriptive message and exit.
-      if(!result)
+      if(result.is(CommandResult::ERROR))
       {
         LOG_ERROR_STR("Error executing " << command.second->type()
           << " command: " << result.message());

@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -25,15 +25,13 @@
 #ifndef BEAMLET2SUBBANDMAP_H_
 #define BEAMLET2SUBBANDMAP_H_
 
-#include <MACIO/Marshalling.tcc>
+#include <MACIO/Marshalling.h>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 
-#include <Common/LofarConstants.h>
 #include <Common/LofarTypes.h>
-#include <Common/lofar_bitset.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
-#include <boost/dynamic_bitset.hpp>
+#include <Common/lofar_bitset.h>
 
 namespace LOFAR {
   namespace IBS_Protocol {
@@ -54,14 +52,14 @@ public:
 
 	/*@{*/
 	// marshalling methods
-	size_t getSize() const;
-	size_t pack  (char* buffer) const;
-	size_t unpack(const char *buffer);
+	unsigned int getSize();
+	unsigned int pack  (void* buffer);
+	unsigned int unpack(void *buffer);
 	/*@}*/
 
 	// other methods
 	bitset<MAX_SUBBANDS> getSubbandBitset() const;
-	boost::dynamic_bitset<>   getBeamletBitset(const int maxBeamlets) const;
+	bitset<MAX_BEAMLETS> getBeamletBitset() const;
 
 	ostream& print (ostream& os) const;
 

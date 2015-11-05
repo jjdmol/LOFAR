@@ -232,7 +232,7 @@ class Opts(object):
                                  "use sigma clipping\nIf thresh = 'hard', "\
                                  "then a hard threshold is assumed, given by thresh_pix. "\
                                  "If thresh = 'fdr', then the False Detection Rate algorithm of "\
-                                 "Hancock et al. (2002) is used to calculate the value of "\
+                                 "Hopkins et al. (2002) is used to calculate the value of "\
                                  "thresh_pix. If thresh is None, then the false detection "\
                                  "probability is first calculated, and if the number of false "\
                                  "source pixels is more than fdr_ratio times the estimated "\
@@ -341,7 +341,7 @@ class Opts(object):
     fdr_alpha = Float(0.05,
                              doc = "Alpha for FDR algorithm for thresholds\n"\
                                  "If thresh is 'fdr', then the estimate of fdr_alpha "\
-                                 "(see Hancock et al. 2002 for details) is stored "\
+                                 "(see Hopkins et al. 2002 for details) is stored "\
                                  "in this parameter.",
                              group = "advanced_opts")
     fdr_ratio = Float(0.1,
@@ -349,9 +349,8 @@ class Opts(object):
                                  "if #false_pix / #source_pix < fdr_ratio, " \
                                  "thresh = 'hard' else thresh = 'fdr'",
                              group = "advanced_opts")
-    kappa_clip = Option(None, Float(),
-                             doc = "Kappa for clipped mean and rms. None => calculate "\
-                                 "inside program\n"\
+    kappa_clip = Float(3,
+                             doc = "Kappa for clipped mean and rms\n"\
                                  "The value of this is the factor used for Kappa-alpha "\
                                  "clipping, as in AIPS. For an image with few source "\
                                  "pixels added on to (Gaussian) noise pixels, the "\
@@ -411,38 +410,11 @@ class Opts(object):
     aperture = Option(None, Float(),
                              doc = "Radius of aperture in pixels inside which aperture fluxes are measured "\
                                  "for each source. None => no aperture fluxes measured\n" \
-                                 "This is a float and sets the radius (in pixels) inside "\
-                                 "which the aperture flux is measured for each source. "\
-                                 "Depending on the value of aperture_posn, the aperture is centered either "\
-                                 "on the centroid or the peak of the source. Errors are calculated "\
+                                 "This is a float and sets the radius (in pixels) inside "
+                                 "which the aperture flux is measured for each source. "
+                                 "The aperture is centered "
+                                 "on the centroid of the source. Errors are calculated "
                                  "from the mean of the rms map inside the aperture.",
-                             group = "advanced_opts")
-    aperture_posn = Enum('centroid', 'peak',
-                             doc = "Position the aperture (if aperture is not None) on: "\
-                                 "'centroid' or 'peak' of the source.\n"\
-                                 "This parameter determines how the aperture is "\
-                                 "positioned relative to the source. If 'centroid', "\
-                                 "the aperture is centered on the source centroid. If "\
-                                 "'peak', the aperture is centered on the source peak. "\
-                                 "If aperture=None (i.e., no aperture radius is specified), "\
-                                 "this parameter is ignored.",
-                             group = "advanced_opts")
-    src_ra_dec = Option(None, List(Tuple(Float(), Float())),
-                            doc = "List of source positions at which fitting is done.  "\
-                                 "E.g., src_ra_dec = [(197.1932, 47.9188), (196.5573, 42.4852)].\n"\
-                                 "This parameter defines the center positions at which "\
-                                 "fitting will be done. The size of the region used for "\
-                                 "the fit is given by the src_radius_pix parameter. "\
-                                 "Positions should be given as a list of RA and Dec, "\
-                                 "in degrees, one set per source. These positions will "\
-                                 "override the normal island finding module.",
-                             group = "advanced_opts")
-    src_radius_pix = Option(None, Float(),
-                             doc = "Radius of the island (if src_ra_dec is not None) in pixels. "\
-                                 "None => radius is set to the FWHM of the beam major axis.\n"\
-                                 "This parameter determines the size of the region used "\
-                                 "to fit the source positions specified by the src_ra_dec "\
-                                 "parameter.",
                              group = "advanced_opts")
     ini_gausfit = Enum('default', 'simple', 'nobeam',
                              doc = "Initial guess for Gaussian "\
@@ -464,21 +436,6 @@ class Opts(object):
                                  "For wavelet images, the value used for the original "\
                                  "image is used for wavelet order j <= 3 and 'nobeam' for "\
                                  "higher orders.",
-                             group = "advanced_opts")
-    ini_method = Enum('intensity', 'curvature',
-                             doc = "Method by which inital guess for fitting of Gaussians "\
-                                 "is chosen: 'intensity' or 'curvature'\n"\
-                                 "If 'intensity', the inital guess described in the help for "\
-                                 "the ini_gausfit parameter is calculated using the intensity "\
-                                 "(ch0) image. If 'curvature', it is done using the curvature "\
-                                 "map (see Hancock et al. 2012).",
-                             group = "advanced_opts")
-    fix_to_beam = Bool(False,
-                             doc = "Fix major and minor axes and PA of Gaussians to beam?\n"\
-                                 "If True, then during fitting the major and minor axes "\
-                                 "and PA of the Gaussians are fixed to the beam. Only the "\
-                                 "amplitude and position are fit. If False, all parameters "\
-                                 "are fit.",
                              group = "advanced_opts")
     fittedimage_clip = Float(0.1,
                              doc = "Sigma for clipping Gaussians " \
@@ -518,19 +475,6 @@ class Opts(object):
                                  "single source. If False, grouping is controlled "\
                                  "by the group_tol parameter.",
                              group = "advanced_opts")
-    group_method = Enum('intensity', 'curvature',
-                             doc = "Group Gaussians into sources using 'intensity' map "\
-                                 "or 'curvature' map\n"\
-                                 "Gaussians are deemed to be a part of "\
-                                 "the same source if: 1. no pixel on the line joining "\
-                                 "the centers of any pair of Gaussians has a (Gaussian-"\
-                                 "reconstructed) value less than the island threshold, and "\
-                                 "2. the centers are separated by a distance less than "\
-                                 "half the sum of their FWHMs along the line joining them.\n"\
-                                 "If 'curvature', the above comparisons are done on the "\
-                                 "curature map (see Hancock et al. 2012). If 'intensity', "\
-                                 "the comparisons are done on the intensity map.",
-                             group = "advanced_opts")
     group_tol = Float(1.0,
                              doc = "Tolerance for grouping of Gaussians into sources: "\
                                  "larger values will result in larger sources\n"\
@@ -543,13 +487,11 @@ class Opts(object):
                                  "PA of the line joining them, they belong to the "\
                                  "same island.",
                              group = "advanced_opts")
-    blank_limit = Option(None, Float(),
-                             doc = "Limit in Jy/beam below which pixels are blanked. "\
-                                "None => no such blanking is done\n"\
-                                "All pixels in the ch0 image with a value less than the "\
-                                "specified limit and with at least 4 neighboring pixels "\
-                                "with values also less than this limit are blanked. "\
-                                "If None, any such pixels are left unblanked. "\
+    blank_zeros = Bool(False,
+                             doc = "Blank zeros in the image\n"\
+                                "If True, all pixels with a value of 0 are blanked."\
+                                "If False, any such pixels are left unblanked (and "\
+                                "hence will affect the rms and mean maps, etc.) "\
                                 "Pixels with a value of NaN are always blanked.",
                              group = "advanced_opts")
     detection_image = String(doc = "Detection image file name used only for detecting "\
@@ -580,14 +522,6 @@ class Opts(object):
                              doc = "Number of cores to use during fitting, None => "\
                                 "use all\n"\
                                 "Sets the number of cores to use during fitting.",
-                             group = "advanced_opts")
-    do_cache = Bool(False,
-                             doc = "Cache internally derived images to disk\n" \
-                                 "This option controls whether internally "\
-                                 "derived images are stored in memory or are "\
-                                 "cached to disk. Caching can reduce the amount "\
-                                 "of memory used, and is therefore useful when "\
-                                 "analyzing large images.",
                              group = "advanced_opts")
 
     #--------------------------------ADAPTIVE RMS_BOX OPTIONS--------------------------------
@@ -637,7 +571,7 @@ class Opts(object):
     atrous_lpf = Enum('b3', 'tr',
                              doc = "Low pass filter, either 'b3' or "\
                                  "'tr', for B3 spline or Triangle\n"\
-                                 "This is the low pass filter, which can be "\
+                                 "This is the low pass filter, which can currently be "\
                                  "either the B3 spline or the Triangle function, which "\
                                  "is used to generate the a-trous wavelets. The B3 "\
                                  "spline is [1, 4, 6, 4, 1] and the triangle is "\
@@ -647,26 +581,9 @@ class Opts(object):
     atrous_bdsm_do = Bool(True,
                              doc = "Perform source extraction on each wavelet "\
                                  "scale\n"\
-                                 "If True, fitting is done on each wavelet scale "\
-                                 "(or sum of scales if atrous_sum is True). If False, "\
-                                 "no fitting is done.",
-                             group = "atrous_do")
-    atrous_orig_isl = Bool(False,
-                             doc = "Restrict wavelet Gaussians to islands found "\
-                                 "in original image\n"\
-                                 "If True, all wavelet Gaussians must lie within "\
-                                 "the boundaries of islands found in the original "\
-                                 "image. If False, new islands that are found only in "\
-                                 "the wavelet images are included in the final "\
-                                 "fit.",
-                             group = "atrous_do")
-    atrous_sum = Bool(True,
-                             doc = "Fit to the sum of remaining wavelet scales\n"\
-                                 "If True, fitting is done on an image that is the sum "\
-                                 "of the remaining wavelet scales. Using the sum will "\
-                                 "generally result in improved signal. If False, "\
-                                 "fitting is done on only the wavelet scale under "\
-                                 "consideration.",
+                                 "Unless this is set to True, the image cannot be "\
+                                 "decomposed into a Pyramidal set of sources for "\
+                                 "morphological transforms.",
                              group = "atrous_do")
 
     #--------------------------------FLAGGING OPTIONS--------------------------------
@@ -703,7 +620,7 @@ class Opts(object):
                                  "flag_maxsnr times the image value at the peak "\
                                  "is flagged. The flag value is increased by 2.",
                              group = "flagging_opts")
-    flag_maxsize_isl = Float(2.0,
+    flag_maxsize_isl = Float(1.0,
                              doc = "Flag Gaussian if x, y bounding box "\
                                  "around sigma-contour is factor times island bbox\n"\
                                  "Any fitted Gaussian whose maximum x-dimension is "\
@@ -790,19 +707,16 @@ class Opts(object):
                              group = 'multichan_opts')
     collapse_ch0 = Int(0,
                              doc = "Number of the channel for source extraction, "\
-                                 "if collapse_mode = 'single', starting from 0",
+                                 "if collapse_mode = 'single'",
                              group = 'multichan_opts')
     collapse_av = List(None,
                              doc = "List of channels to average if collapse_mode "\
-                                 "= 'average', starting from 0. E.g., collapse_av "\
-                                 "= [0, 1, 5]. [] => all\n"\
+                                 "= 'average'; None => all\n"\
                                  "This parameter is a list of channels to be averaged "\
                                  "to produce the continuum image for performing source "\
                                  "extraction, if collapse_mode is 'average'. If the "\
-                                 "value is an empty list ([]), then all channels are used. Else, the "\
-                                 "value is a Python list of channel numbers, starting "\
-                                 "from 0 (i.e., the first channel has number 0, the "\
-                                 "second has number 1, etc.).",
+                                 "value is None, then all channels are used. Else, the "\
+                                 "value is a Python list of channel numbers.",
                              group = 'multichan_opts')
     collapse_wt = Enum('unity', 'rms',
                              doc = "Weighting: 'unity' or 'rms'. "\
@@ -841,31 +755,22 @@ class Opts(object):
                                  "'gaussian' => each Gaussian gets its own "\
                                  "patch. 'source' => all Gaussians belonging "\
                                  "to a single source are grouped into one patch. "\
-                                 "'mask' => use mask file specified by bbs_patches_mask\n"\
+                                 "'mask' => use mask file (bbs_patches_mask)\n"\
                                  "When the Gaussian catalogue is written as a "\
                                  "BBS-readable sky file, this determines whether "\
                                  "all Gaussians are in a single patch, there are "\
                                  "no patches, all Gaussians for a given source "\
-                                 "are in a separate patch, each Gaussian gets "\
-                                 "its own patch, or a mask image is used to define "\
-                                 "the patches.\n"\
+                                 "are in a separate patch, or each Gaussian gets "\
+                                 "its own patch.\n"\
                                  "If you wish to have patches defined by island, "\
-                                 "then set group_by_isl = True (under advanced_opts) "\
+                                 "then set group_by_isl=True (under advanced_opts) "\
                                  "before fitting to force all Gaussians in an "\
                                  "island to be in a single source. Then set "\
                                  "bbs_patches='source' when writing the catalog.",
                              group = "output_opts")
     bbs_patches_mask = Option(None, String(),
-                             doc = "Name of the mask file (of same size as input "\
-                                 "image) that defines the patches if bbs_patches "\
-                                 "= 'mask'\nA mask file may be used to define the "\
-                                 "patches in the output BBS sky model. The mask "\
-                                 "image should be 1 inside the patches and 0 "\
-                                 "elsewhere and should be the same size as the "\
-                                 "input image (before any trim_box is applied). Any "\
-                                 "Gaussians that fall outside of the patches "\
-                                 "will be ignored and will not appear in the "\
-                                 "output sky model.",
+                             doc = "Name of the mask file to use to define the BBS "\
+                                 "patches (FITS or CASA format)",
                              group = "output_opts")
     solnname = Option(None, String(),
                              doc = "Name of the run, to be prepended "\
@@ -974,11 +879,6 @@ class Opts(object):
                                  "considered 'unresolved' and are used further to "\
                                  "estimate the PSFs.",
                              group = "psf_vary_do")
-    psf_smooth = Option(None, Float(),
-                             doc = "Size of Gaussian to use for smoothing of "\
-                                 "interpolated images in arcsec. None => no "\
-                                 "smoothing",
-                             group = "psf_vary_do")
     psf_snrcut = Float(10.0,
                              doc = "Minimum SNR for statistics\n"\
                                  "Only Gaussians with SNR greater than this are "\
@@ -1070,22 +970,6 @@ class Opts(object):
                              doc = "Restrict sources to "\
                                  "be only of type 'S'",
                              group = "psf_vary_do")
-    psf_stype_only = Bool(True,
-                             doc = "Restrict sources to "\
-                                 "be only of type 'S'",
-                             group = "psf_vary_do")
-    psf_fwhm = Option(None, Tuple(Float(), Float(), Float()),
-                             doc = "FWHM of the PSF. Specify as (maj, "\
-                                 "min, pos ang E of N) in degrees. "\
-                                 "E.g., psf_fwhm = (0.06, 0.02, 13.3). None => "\
-                                 "estimate from image\n"\
-                                 "If the size of the PSF is specified with this option, "\
-                                 "the PSF and its variation acrosss the image are "\
-                                 "assumed to be constant and are not estimated "\
-                                 "from the image. Instead, all sources "\
-                                 "are deconvolved with the specified PSF.",
-                             group = "psf_vary_do")
-
 
     #-----------------------------SHAPELET OPTIONS--------------------------------
     shapelet_basis = Enum("cartesian", "polar",
@@ -1106,18 +990,12 @@ class Opts(object):
                                  "found by least-squares fitting of the shapelet basis "\
                                  "functions to the image.",
                              group = "shapelet_do")
-    shapelet_gresid = Bool(False,
-                             doc = "Use Gaussian residual image for shapelet "\
-                                 "decomposition?\n"\
-                                 "If True, then the shapelet decomposition is done "\
-                                 "on the Gaussian residual image rather that the "\
-                                 "ch0 image.",
-                             group = "shapelet_do")
+
 
     #-------------------------SPECTRAL INDEX OPTIONS--------------------------------
     flagchan_rms = Bool(True,
                              doc = "Flag channels before (averaging and) "\
-                                 "extracting spectral index, if their rms is "\
+                                 "extracting spectral index, if their rms if "\
                                  "more than 5 (clipped) sigma outside the median "\
                                  "rms over all channels, but only if <= 10% of "\
                                  "channels\n"\
@@ -1150,7 +1028,7 @@ class Opts(object):
                                  "there is insufficient SNR, neighboring channels "\
                                  "are averaged to attempt to obtain the target SNR. "\
                                  "Channels with SNRs below this will be flagged if "\
-                                 "flagchan_snr = True\n"\
+                                 "flagchan_snr=True.\n"\
                                  "The maximum allowable number of channels to average "\
                                  "is determined by the specind_maxchan parameter.",
                              group = "spectralindex_do")
@@ -1161,23 +1039,15 @@ class Opts(object):
                              group = "hidden")
     outfile = Option(None, String(),
                              doc = "Output file name. None => file is named "\
-                                 "automatically; 'SAMP' => send to SAMP hub "\
+                                 "automatically; 'SAMP' => send to SAMP Hub "\
                                  "(e.g., to TOPCAT, ds9, or Aladin)",
-                             group = 'hidden')
-    broadcast = Bool(False,
-                             doc = "Broadcast Gaussian and source IDs and "\
-                                 "coordinates to SAMP hub when a Gaussian is "\
-                                 "clicked?\nNote that for the "\
-                                 "IDs to be useful, a catalog must have been sent "\
-                                 "to the SAMP hub previously using the write_catalog "\
-                                 "task (with outfile = 'SAMP').",
                              group = 'hidden')
     clobber = Bool(False,
                              doc = "Overwrite existing file?",
                              group = 'hidden')
-    format = Enum('fits', 'ds9', 'ascii', 'bbs', 'star', 'kvis', 'sagecal', 'csv', 'casabox',
+    format = Enum('bbs', 'ds9', 'fits', 'ascii', 'star', 'kvis',
                              doc = "Format of output catalog: 'bbs', "\
-                                 "'ds9', 'fits', 'star', 'kvis', 'ascii', 'csv', 'casabox', or 'sagecal'\n"\
+                                 "'ds9', 'fits', 'star', 'kvis', or 'ascii'\n"\
                                  "The following formats are supported:\n"\
                                  "'bbs' - BlackBoard Selfcal sky model format "\
                                  "(Gaussian list only)\n"\
@@ -1188,7 +1058,6 @@ class Opts(object):
                                  "'star' - AIPS STAR format (Gaussian list only)\n"\
                                  "'kvis' - kvis format (Gaussian list only)\n"\
                                  "'ascii' - simple text file\n"\
-                                 "'sagecal' - SAGECAL format (Gaussian list only)\n"\
                                  "Catalogues with the 'fits' and 'ascii' formats "\
                                  "include all available information (see headers "\
                                  "of the output file for column definitions). The "\
@@ -1196,58 +1065,31 @@ class Opts(object):
                                  "information.",
                              group = 'hidden')
     srcroot = Option(None, String(),
-                             doc = "Root name for entries in the output catalog "\
-                                 "(BBS format only). None => use image file name",
+                             doc = "Root name for entries in the output catalog. "\
+                                 "None => use image file name",
                              group = 'hidden')
     incl_chan = Bool(False,
                              doc = "Include flux densities from each channel "\
                                  "(if any)?",
                              group = 'hidden')
-    incl_empty = Bool(False,
-                             doc = "Include islands without any valid Gaussians "\
-                                 "(source list only)?\n"\
-                                 "If True, islands for which Gaussian fitting "\
-                                 "failed will be included in the output catalog. "\
-                                 "In these cases, the source IDs "\
-                                 "are negative.",
-                             group = 'hidden')
-    force_output = Bool(False,
-                             doc = "Force creation of output file, even if the "\
-                                 "catalog is empty?\n"\
-                                 "If True, the output catalog will be created, "\
-                                 "even if there are no sources. In this case, "\
-                                 "the catalog will have a header but no entries.",
-                             group = 'hidden')
-    catalog_type = Enum('srl', 'gaul', 'shap',
+    catalog_type = Enum('gaul', 'shap', 'srl',
                              doc = "Type of catalog to write:  'gaul' - Gaussian "\
                                  "list, 'srl' - source list (formed "\
                                  "by grouping Gaussians), 'shap' - shapelet "\
                                  "list (FITS format only)",
                              group = 'hidden')
-    correct_proj = Bool(True,
-                             doc = "Correct source parameters for image projection (BBS format only)?\n"\
-                                 "If True, the source parameters in the output catalog will be "\
-                                 "corrected for first-order projection effects. If False, "\
-                                 "no correction is done. In this case, the position angle "\
-                                 "is relative to the +y axis, NOT true north, and source sizes "\
-                                 "are calculated assuming a constant pixel scale (equal to the "
-                                 "scale at the image center).\n "\
-                                 "If True, the position angle and source size "\
-                                 "are corrected using the average pixel size and "
-                                 "angle offset (between the +y axis and north) at "\
-                                 "the location of the source center.",
-                             group = 'hidden')
     img_format = Enum('fits', 'casa',
-                             doc = "Format of output image: 'fits' or 'casa'",
+                             doc = "Format of output image: 'fits' or "\
+                                 "'casa' (at the moment only 'fits' is "\
+                                 "supported)",
                              group = 'hidden')
     img_type = Enum('gaus_resid', 'shap_resid', 'rms', 'mean', 'gaus_model',
                              'shap_model', 'ch0', 'pi', 'psf_major', 'psf_minor',
-                             'psf_pa', 'psf_ratio', 'psf_ratio_aper', 'island_mask',
+                             'psf_pa',
                              doc = "Type of image to export: 'gaus_resid', "\
                                  "'shap_resid', 'rms', 'mean', 'gaus_model', "\
                                  "'shap_model', 'ch0', 'pi', 'psf_major', "\
-                                 "'psf_minor', 'psf_pa', 'psf_ratio', 'psf_ratio_aper', "\
-                                 "'island_mask'\nThe following images "\
+                                 "'psf_minor', 'psf_pa'\nThe following images "\
                                  "can be exported:\n"\
                                  "'ch0' - image used for source detection\n"\
                                  "'rms' - rms map image\n"\
@@ -1257,30 +1099,10 @@ class Opts(object):
                                  "'gaus_model' - Gaussian model image\n"\
                                  "'shap_resid' - Shapelet model residual image\n"\
                                  "'shap_model' - Shapelet model image\n"\
-                                 "'psf_major' - PSF major axis FWHM image (FWHM in arcsec)\n"\
-                                 "'psf_minor' - PSF minor axis FWHM image (FWHM in arcsec)\n"\
-                                 "'psf_pa' - PSF position angle image (degrees east of north)\n"\
-                                 "'psf_ratio' - PSF peak-to-total flux ratio (in units of 1/beam)\n"\
-                                 "'psf_ratio_aper' - PSF peak-to-aperture flux ratio (in units of 1/beam)\n"\
-                                 "'island_mask' - Island mask image (0 = outside island, 1 = inside island)",
+                                 "'psf_major' - PSF major axis FWHM (in pixels) image\n"\
+                                 "'psf_minor' - PSF minor axis FWHM (in pixels) image\n"\
+                                 "'psf_pa' - PSF position angle (E from N in degrees) image\n",
                              group = 'hidden')
-    mask_dilation = Int(0,
-                             doc = "Number of iterations to use for island-mask dilation. "\
-                                 "0 => no dilation\nThis option determines the number of "\
-                                 "dilation iterations to use when making the island mask. "\
-                                 "More iterations implies larger masked regions (one iteration "\
-                                 "expands the size of features in the mask by one pixel in all "\
-                                 "directions). After dilation, a closing operation is performed "\
-                                 "(using a structure array the size of the beam) to remove gaps "\
-                                 "and holes in the mask that are smaller than the beam.",
-                             group = "hidden")
-    pad_image = Bool(False,
-                             doc = "Pad image (with zeros) to original size\nIf True, the output "\
-                                 "image is padded to be the same size as the original "\
-                                 "image (without any trimming defined by the trim_box "\
-                                 "parameter). If False, the output image will have the "\
-                                 "size specified by the trim_box parameter.",
-                             group = "hidden")
     ch0_image = Bool(True,
                              doc = "Show the ch0 image. This is the image used for "\
                                  "source detection",
@@ -1324,11 +1146,11 @@ class Opts(object):
                              group = "hidden")
     psf_major = Bool(False,
                              doc = "Show the PSF major axis variation (values are "\
-                                 "FWHM in arcsec)",
+                                 "FWHM in pixels)",
                              group = "hidden")
     psf_minor = Bool(False,
                              doc = "Show the FWHM of PSF minor axis variation (values are "\
-                                 "FWHM in arcsec)",
+                                 "FWHM in pixels)",
                              group = "hidden")
     psf_pa = Bool(False,
                              doc = "Show the PSF position angle variation (values are "\
@@ -1378,7 +1200,7 @@ class Opts(object):
                 # and then try to parse it
                 if hasattr(self, k):
                     if isinstance(self.__getattribute__(k), bool):
-                        if isinstance(v, bool) or v is None:
+                        if isinstance(v, bool):
                             # just enter the bool into the parameter
                             pass
                         elif isinstance(v, basestring):
@@ -1404,7 +1226,7 @@ class Opts(object):
         a string of a single opt name.
 
         If None, set all opts to default values."""
-        if opt_names is None:
+        if opt_names == None:
             TCInit(self)
         else:
             if isinstance(opt_names, str):
@@ -1427,21 +1249,13 @@ class Opts(object):
 
         return res
 
-    def to_list(self, group=None):
-        """Returns a sorted list of (name, TC object) tuples for all opts.
-
-        If the group name is specified, only opts that belong to that group
-        are returned.
-        """
+    def to_list(self):
+        """Returns a sorted list of (name, TC object) tuples for all opts."""
         import tc
         opts_list = []
         for k, v in self.__class__.__dict__.iteritems():
             if isinstance(v, tc.TC):
-                if group is not None:
-                    if v.group() == group:
-                        opts_list.append((k, v))
-                else:
-                    opts_list.append((k, v))
+                opts_list.append((k, v))
         opts_list = sorted(opts_list)
         return opts_list
 
@@ -1454,21 +1268,13 @@ class Opts(object):
                 opts_dict.update({k: self.__getattribute__(k)})
         return opts_dict
 
-    def get_names(self, group=None):
-        """Returns a sorted list of names for all opts.
-
-        If the group name is specified, only opts that belong to that group
-        are returned.
-        """
+    def get_names(self):
+        """Returns a sorted list of names of all opts."""
         import tc
         opts_list = []
         for k, v in self.__class__.__dict__.iteritems():
             if isinstance(v, tc.TC):
-                if group is not None:
-                    if v.group() == group:
-                        opts_list.append(k)
-                else:
-                    opts_list.append(k)
+                opts_list.append(k)
         opts_list = sorted(opts_list)
         return opts_list
 

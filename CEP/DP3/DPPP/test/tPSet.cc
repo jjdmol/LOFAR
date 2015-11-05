@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 #include <DPPP/PreFlagger.h>
 #include <DPPP/DPInfo.h>
-#include <Common/ParameterSet.h>
+#include <DPPP/ParSet.h>
 #include <Common/LofarLogger.h>
 #include <casa/Arrays/ArrayIO.h>
 #include <casa/Quanta/MVTime.h>
@@ -43,9 +43,9 @@ class TestInput: public DPInput
 {
 public:
   TestInput(int nbl, int nchan, int ncorr)
-    : itsNChan(nchan), itsNCorr(ncorr)
+    : itsNBl(nbl), itsNChan(nchan), itsNCorr(ncorr)
   {
-    info().init (itsNCorr, itsNChan, 0, 0, 50, string(), string());
+    info().init (itsNCorr, itsNChan, 0, 0, 50, string());
     // Fill the baseline stations; use 4 stations.
     // So they are called 00 01 02 03 10 11 12 13 20, etc.
     Vector<Int> ant1(nbl);
@@ -68,8 +68,7 @@ public:
     antNames[2] = "cs01.s01";
     antNames[3] = "cs01.s02";
     vector<MPosition> antPos(4);
-    Vector<double> antDiam(4, 70.);
-    info().set (antNames, antDiam, antPos, ant1, ant2);
+    info().set (antNames, antPos, ant1, ant2);
     Vector<double> chanWidth(nchan, 100000);
     Vector<double> chanFreqs(nchan);
     indgen (chanFreqs, 1050000., 100000.);
@@ -80,7 +79,7 @@ private:
   virtual void finish() {}
   virtual void show (std::ostream&) const {}
 
-  int itsNChan, itsNCorr;
+  int itsNBl, itsNChan, itsNCorr;
 };
 
 

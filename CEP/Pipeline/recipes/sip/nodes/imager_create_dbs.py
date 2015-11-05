@@ -51,54 +51,45 @@ class imager_create_dbs(LOFARnodeTCP):
        There is a single sourcedb for a concatenated measurement set/ image
     3. Each individual timeslice needs a place to collect parameters: This is
        done in the paramdb. 
-    4. Add the created databases as meta information to the measurment set
-       
-    5. Assign the outputs of the script
+    4. Assign the outputs of the script
     
     """
     def run(self, concatenated_measurement_set, sourcedb_target_path,
             monet_db_hostname, monet_db_port, monet_db_name, monet_db_user,
             monet_db_password, assoc_theta, parmdb_executable, slice_paths,
             parmdb_suffix, environment, working_directory, makesourcedb_path,
-            source_list_path_extern, major_cycle):
+            source_list_path_extern):
 
         self.logger.info("Starting imager_create_dbs Node")
         self.environment.update(environment)
 
         #*******************************************************************
         # 1. get a sourcelist: from gsm or from file
-        source_list, append = self._create_source_list(
-            source_list_path_extern,sourcedb_target_path, 
-            concatenated_measurement_set,monet_db_hostname, 
-            monet_db_port, monet_db_name, monet_db_user,
-            monet_db_password, assoc_theta)       
+        source_list, append = self._create_source_list(source_list_path_extern,
+            sourcedb_target_path, concatenated_measurement_set,
+            monet_db_hostname, monet_db_port, monet_db_name, monet_db_user,
+            monet_db_password, assoc_theta)
 
         #*******************************************************************
         # 2convert it to a sourcedb (casa table)
         if self._create_source_db(source_list, sourcedb_target_path,
-                                  working_directory, makesourcedb_path,
+                                  working_directory, makesourcedb_path, 
                                   append) == None:
             self.logger.error("failed creating sourcedb")
             return 1
 
         #*******************************************************************
         # 3. Create a empty parmdb for each timeslice\
-        parmdbs = self._create_parmdb_for_timeslices(parmdb_executable,
+        parmdbms = self._create_parmdb_for_timeslices(parmdb_executable,
                                     slice_paths, parmdb_suffix)
-        if parmdbs == None:
+        if parmdbms == None:
             self.logger.error("failed creating paramdb for slices")
             return 1
 
-        # *******************************************************************
-        # Add the create databases to the measurments set,
-        self._add_dbs_to_ms(concatenated_measurement_set, sourcedb_target_path,
-                            parmdbs, major_cycle)
-
-
         #*******************************************************************
-        # 5. Assign the outputs
+        # 4. Assign the outputs
         self.outputs["sourcedb"] = sourcedb_target_path
-        self.outputs["parmdbs"] = parmdbs
+        self.outputs["parmdbms"] = parmdbms
         return 0
 
     def _create_source_list(self, source_list_path_extern, sourcedb_target_path,
@@ -127,8 +118,7 @@ class imager_create_dbs(LOFARnodeTCP):
             append = False
         else:
             source_list = source_list_path_extern
-            append = False # Nicolas Should this be true or false? 
-            # later steps should not contain the original bootstrapping input
+            append = True
 
         return source_list, append
 
@@ -161,7 +151,7 @@ class imager_create_dbs(LOFARnodeTCP):
                  os.path.basename(executable)
             ) as logger:
                 catch_segfaults(cmd, working_directory, self.environment,
-                                            logger, cleanup=None)
+                                            logger, cleanup = None)
 
         except subprocess.CalledProcessError, called_proc_error:
             self.logger.error("Execution of external failed:")
@@ -382,132 +372,17 @@ class imager_create_dbs(LOFARnodeTCP):
             if ra_c < 0:  #gsm utils break when using negative ra_c ergo add 360
                 ra_c += 360.0
             decl_c = float(decl_c) * (180 / math.pi)
-            self.logger.debug("external call to gsm module:")
-            self.logger.debug("gsm.expected_fluxes_in_fov(conn, {0} , {1}, {2}, {3}, {4}, {5})".format(
-                ra_c, decl_c, float(fov_radius), float(assoc_theta), sourcelist, "storespectraplots=False"))
 
             gsm.expected_fluxes_in_fov(conn, ra_c ,
                         decl_c, float(fov_radius),
                         float(assoc_theta), sourcelist,
                         storespectraplots=False)
-            self.logger.debug(gsm.__file__)
-
         except Exception, exception:
             self.logger.error("expected_fluxes_in_fov raise exception: " +
                               str(exception))
             return 1
 
-        # validate the retrieve sourcelist
-        fp = open(sourcelist)
-        sourcelist_corrected = self._validate_and_correct_sourcelist(fp.read())
-        fp.close()
-
-        if sourcelist_corrected != None:
-            self.logger.debug("Found duplicates in the sourcelist!")
-            self.logger.debug("Creating a new sourcelist")
-            #if a corrected sourcelist is created.
-            # move original sourcelist
-            shutil.move(sourcelist, sourcelist + "_with_duplicates")
-            # write correcte sourcelist at that location
-            fp = open(sourcelist, "w",)
-            fp.write(sourcelist_corrected)
-            self.logger.debug("Moved sourcelist and create a new sourcelist")
-            fp.close()
-        else:
-            self.logger.debug("Sourcelist did not contain duplicates")
         return 0
-
-    def _validate_and_correct_sourcelist(self, sourcelist):
-        """
-        Create a sourcelist with non duplicate entries based on the
-        supplied sourcelist
-        Return None of no duplicate found        
-        """
-        all_lines = sourcelist.split("\n")
-        header = ""
-        all_entries_list = []
-        for line in all_lines:
-            #skip the whiteline
-            if len(line) == 0:
-                continue
-            # get the header
-            if line[0] == "#":
-                header = line
-                continue
-            # unpack the values
-            all_entries_list.append(line.split(","))
-
-        # Get the names for the entries
-        entrie_names = []
-        for entrie in all_entries_list:
-            entrie_names.append(entrie[0]) #name is first index in entrie
-
-        #enumerate over all names-1
-        duplicate_entry_idx = 0
-        for idx, name in enumerate(entrie_names[:-1]):
-            if name in entrie_names[idx + 1:]:
-                # If duplicate change current entrie to unique name
-                entrie_names[idx] = name + "_duplicate_{0}".format(duplicate_entry_idx)
-                duplicate_entry_idx += 1
-
-        # now put back the possible changed name
-        for entrie, entrie_name in zip(all_entries_list,
-                                entrie_names) :
-            entrie[0] = entrie_name
-
-        # Write the new sourcelist if we found duplicate entries!
-        if duplicate_entry_idx > 0:
-            new_lines = []
-            # add header
-            new_lines.append(header)
-            # empty line
-            new_lines.append("")
-            # entries with non duplicate names
-            for entrie in all_entries_list:
-                new_lines.append(",".join(entrie))
-            # return the sourcelist
-            return "\n".join(new_lines)
-
-        return None
-
-    def _add_dbs_to_ms(self, concatenated_measurement_set, sourcedb_target_path,
-                            parmdbs_path, major_cycle):
-        """
-        Add the in this recipe created sourcedb and instrument table(parmdb)
-        to the local measurementset.
-        """
-        self.logger.info("Adding sourcemodel and instrument model to output ms.")
-        # Create the base meta information directory        
-        meta_directory = concatenated_measurement_set + "_selfcal_information"
-        if not os.path.exists(meta_directory):
-             os.makedirs(meta_directory)
-
-        # Cycle dir
-        cycle_directory = os.path.join(meta_directory,
-                                "cycle_" + str(major_cycle))
-        if not os.path.exists(cycle_directory):
-             os.makedirs(cycle_directory)
-
-        #COpy the actual data. parmdbs_path is a list!
-        sourcedb_directory = os.path.join(cycle_directory,
-               os.path.basename(sourcedb_target_path))
-        if os.path.exists(sourcedb_directory):
-            shutil.rmtree(sourcedb_directory)  # delete dir to assure copy succeeds
-        shutil.copytree(sourcedb_target_path, sourcedb_directory)
-
-        #parmdbs_path is a list!
-        for parmdb_entry in parmdbs_path:
-            try:
-                parmdb_directory = os.path.join(cycle_directory,
-                    os.path.basename(parmdb_entry))
-                # delete dir to assure copy succeeds
-                if os.path.exists(parmdb_directory):
-                    shutil.rmtree(parmdb_directory)
-                shutil.copytree(parmdb_entry, parmdb_directory)
-            except:
-                self.logger.warn("Failed copying parmdb:")
-                self.logger.warn(parmdb_entry)
-                continue    # slices might be missing, not an exit error
 
 
 if __name__ == "__main__":
@@ -515,5 +390,3 @@ if __name__ == "__main__":
     _jobid, _jobhost, _jobport = sys.argv[1:4]
     sys.exit(imager_create_dbs(
         _jobid, _jobhost, _jobport).run_with_stored_arguments())
-
-

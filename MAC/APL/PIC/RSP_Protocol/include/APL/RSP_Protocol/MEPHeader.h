@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -114,10 +114,9 @@ public:
 	static const uint8 CEP       = 0x10; /* CEP management             [RSP    ] */
 	static const uint8 LCU       = 0x11; /* LCU management             [RSP    ] */
 	static const uint8 RAD       = 0x12; /* RAD management             [RSP    ] */
-	static const uint8 SDO       = 0x13; /* Subband Data Out select    [    BLP] */
 
 	static const int MIN_PID = RSR; /* loops over PID should be from */ 
-	static const int MAX_PID = SDO; /* pid = MIN_PID; pid <= MAX_PID */
+	static const int MAX_PID = RAD; /* pid = MIN_PID; pid <= MAX_PID */
 	/*@}*/
 
 	/*@{*/
@@ -125,8 +124,6 @@ public:
 	static const uint8 RSR_STATUS       = 0x00;
 	static const uint8 RSR_VERSION      = 0x01;
 	static const uint8 RSR_TIMESTAMP    = 0x02;
-	static const uint8 RSR_BEAMMODE     = 0x03;
-	static const uint8 RSR_SDOMODE      = 0x04;
 
 	static const uint8 RSU_FLASHRW      = 0x01;
 	static const uint8 RSU_FLASHERASE   = 0x02;
@@ -199,8 +196,6 @@ public:
 	static const uint8 RAD_BP           = 0x00;
 	static const uint8 RAD_LATENCY      = 0x01;
 
-	static const uint8 SDO_SELECT       = 0x00;
-    
 	static const int MIN_REGID          = 0x00;
 	static const int MAX_REGID          = XST_NR_STATS - 1;
 	/*@}*/
@@ -231,9 +226,6 @@ public:
 	static const uint16 N_BEAMLETS       = N_SERDES_LANES * N_DATA_SLOTS;
 	static const uint16 XLET_SIZE        = N_POL * sizeof(std::complex<uint32>);
 	static const uint16 WEIGHT_SIZE      = N_POL * sizeof(std::complex<uint16>);
-	static const uint16 MAX_N_BANKS      = 4;
-	static const uint16 N_SDO_SUBBANDS   = 36;
-    
 
 	// TBB related constants
 	static const uint16 TBB_MAXPAYLOADSIZE     = 1948; // available TBB payload bytes
@@ -247,8 +239,6 @@ public:
 	static const uint16 RSR_STATUS_SIZE       = 252;
 	static const uint16 RSR_VERSION_SIZE      = 2;
 	static const uint16 RSR_TIMESTAMP_SIZE    = 4;
-	static const uint16 RSR_BEAMMODE_SIZE     = 2;
-	static const uint16 RSR_SDOMODE_SIZE      = 2;
 
 	static const uint16 RSU_FLASHRW_SIZE      = 1024;
 	static const uint16 RSU_FLASHERASE_SIZE   = 1;
@@ -263,7 +253,7 @@ public:
 	static const uint16 DIAG_RESULTS_SIZE     = 4096; // also 8192 ?
 	static const uint16 DIAG_SELFTEST_SIZE    = 4;
 
-	static const uint16 SS_SELECT_SIZE        = (N_LOCAL_XLETS + N_BEAMLETS) * N_POL * sizeof(uint16); // = 1008
+	static const uint16 SS_SELECT_SIZE        = (N_LOCAL_XLETS + N_BEAMLETS) * N_POL * sizeof(uint16); // = 960?
 
 	static const uint16 BF_XROUT_SIZE         = (N_LOCAL_XLETS + N_BEAMLETS) * WEIGHT_SIZE;
 	static const uint16 BF_XIOUT_SIZE         = (N_LOCAL_XLETS + N_BEAMLETS) * WEIGHT_SIZE;
@@ -298,16 +288,13 @@ public:
 	static const uint16 TDS_RESULT_SIZE       = 1024;
 
 	// Placeholder register for future TBB control via the RSP board.
-	static const uint16 TBB_SETTINGS_SIZE     = 8;
-	static const uint16 TBB_BANDSEL_SIZE      = 64;
-                                              
-	// Size of the RAD_BP register.           
-	static const uint16 RAD_BP_SIZE           = 4; // four bytes = 32 bits, 8 bits per lane
-	static const uint16 RAD_LATENCY_SIZE      = 18; // 2 x 4 lanes (beamlet and crosslet) and 1 ring = 9 x 2bytes = 18 bytes
-	                                          
-    static const uint16 SDO_SELECT_SIZE       = 144; // 9 x 2 polaritys x 4 lanes x uint16 = 144 bytes
+	static const uint16 TBB_SETTINGS_SIZE = 8;
+	static const uint16 TBB_BANDSEL_SIZE  = 64;
 
-    
+	// Size of the RAD_BP register.
+	static const uint16 RAD_BP_SIZE      = 4; // four bytes = 32 bits, 8 bits per lane
+	static const uint16 RAD_LATENCY_SIZE = 18; // 2 x 4 lanes (beamlet and crosslet) and 1 ring = 9 x 2bytes = 18 bytes
+
 	// Registers too large to send in a single ethernet frame
 	// (> 1500 bytes) will be sent in a number of fragments of this size.
 	static const uint16 FRAGMENT_SIZE        = 1024;
@@ -324,9 +311,9 @@ public:
 
 	/*@{*/
 	// marshalling methods
-	size_t getSize() const;
-	size_t pack  (char* buffer) const;
-	size_t unpack(const char *buffer);
+	unsigned int getSize();
+	unsigned int pack  (void* buffer);
+	unsigned int unpack(void *buffer);
 	/*@}*/
 
 	// MEP 4.x header fields
@@ -376,8 +363,6 @@ public:
 	static const FieldsType RSR_STATUS_HDR;
 	static const FieldsType RSR_VERSION_HDR;
 	static const FieldsType RSR_TIMESTAMP_HDR;
-	static const FieldsType RSR_BEAMMODE_HDR;
-    static const FieldsType RSR_SDOMODE_HDR;
 
 	static const FieldsType RSU_FLASHRW_HDR;
 	static const FieldsType RSU_FLASHERASE_HDR;
@@ -398,7 +383,7 @@ public:
 	static const FieldsType BF_XIOUT_HDR;
 	static const FieldsType BF_YROUT_HDR;
 	static const FieldsType BF_YIOUT_HDR;
-	
+
 	static const FieldsType BST_POWER_HDR;
 
 	static const FieldsType SST_POWER_HDR;
@@ -435,24 +420,11 @@ public:
 	static const FieldsType RAD_BP_HDR;
 	static const FieldsType RAD_LATENCY_HDR;
 	
-    static const FieldsType SDO_SELECT_HDR;
-    
 	static const FieldsType RSP_RAWDATA_WRITE;
 	static const FieldsType RSP_RAWDATA_READ;
 
 	/*@}*/
-	// Output function for operator <<
-	ostream& print (ostream& os) const;
-
 };
-
-//
-// operator <<
-//
-inline ostream& operator<< (ostream& os, const MEPHeader& hdr)
-{
-	return (hdr.print(os));
-}
 
   }; // namespace EPA_PROTOCOL
 }; // namespace LOFAR

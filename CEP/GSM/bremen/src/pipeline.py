@@ -1,29 +1,21 @@
 #!/usr/bin/env python
-import logging
-import math
-import os
-
 import monetdb.sql as db
-
 from src.errors import SourceException, ImageStateError
 from src.gsmconnectionmanager import GSMConnectionManager
 from src.gsmlogger import get_gsm_logger
-from src.sqllist import get_sql, get_svn_version, GLOBALS
+from src.sqllist import get_sql, get_svn_version
 from src.grouper import Grouper
 from src.updater import run_update
-from src.utils import get_pixels, load_parameters
-from src.matcher import MatcherF90, MatcherSQL
-from src.resolveFlux import FluxResolver
-from src.resolveQuad import QuadResolver
-from src.resolveSimple import SimpleResolver
+import logging
+import math
+import healpy
 
 
 class GSMPipeline(object):
     """
     General pipeline class.
     """
-    def __init__(self, custom_cm=None, use_monet=None,
-                 profile=False,
+    def __init__(self, custom_cm=None, use_monet=None, profile=False,
                  **params):
         """
         @param custom_cm: allows to pass an object to be used as connection
@@ -43,13 +35,9 @@ class GSMPipeline(object):
             if profile:
                 self.conn.profile = True
                 self.conn.log.setLevel(logging.DEBUG)
-            self.conn.commit()
         except db.Error as exc:
             self.log.error("Failed to connect: %s" % exc)
             raise exc
-        self.options = load_parameters('%s/settings.ini' % 
-                                       os.path.dirname(__file__))
-        self.log.debug('Pipeline parameters: %s' % self.options)
         self.log.info('Pipeline started.')
 
     def reopen_connection(self, **params):
@@ -78,9 +66,9 @@ class GSMPipeline(object):
         Process single parset file.
         """
         self.conn.start()
+        self.conn.execute("delete from detections;")
         parset.process(self.conn)
-        self.parset = parset
-        self.process_image(parset.image_id, parset.run_id)
+        self.process_image(parset.image_id)
         self.log.info('Parset %s done.' % parset.filename)
         return parset.image_id
 
@@ -88,7 +76,6 @@ class GSMPipeline(object):
         """
         Detect/update and store groups of sources for later processing.
         """
-        #Update groups by merging overlapping patches.
         cursor = self.conn.get_cursor(get_sql("GroupFinder"))
         grouper = Grouper(cursor.fetchall())
         while grouper.is_completed():
@@ -97,104 +84,71 @@ class GSMPipeline(object):
                                       grouper.group,
                                       ",".join(map(str, grouper.runcatset))))
             grouper.cleanup()
-        for resolver in [SimpleResolver]:
-            self.run_resolver(resolver)
         self.conn.execute(get_sql("GroupFill"))
 
-    def run_resolver(self, resolve_class):
-        #Running resolver
-        resolver = resolve_class(self.conn)
-        for group_id in self.conn.get_cursor(get_sql("GroupCycle")):
-            if not resolver.run_resolve(group_id[0]):
-                #Failed to resolve
-                self.log.debug("Group id %s not resolved by %s." % 
-                                   (group_id[0], resolver.__class__.__name__))
-                self.conn.log.debug("Group id %s not resolved." % group_id[0])
-                self.conn.execute_set(get_sql("GroupUpdate runcat",
-                                      group_id[0]))
-            else:
-                self.log.debug("Group id %s resolved by %s."  % 
-                                   (group_id[0], resolver.__class__.__name__))
-                self.conn.log.debug("Group id %s resolved." % group_id[0])
-
-    def update_image_pointing(self, image_id):
+    def get_pixels(self, centr_ra, centr_decl, fov_radius):
         """
-        Update image pointing to average ra/decl of all sources.
+        Get a list of HEALPIX zones that contain a given image.
         """
-        avg_x, avg_y, avg_z, count = self.conn.exec_return(
-                            get_sql('Image properties selector', image_id),
-                                     single_column=False)
-        avg_x, avg_y, avg_z = avg_x / count, avg_y / count, avg_z / count
-        decl = math.asin(avg_z)
-        ra = math.atan2(avg_x, avg_y)
-        self.conn.execute(get_sql('Image properties updater',
-                                  ra, decl, image_id))
+        vector = healpy.ang2vec(math.radians(90.0 - centr_decl),
+                                math.radians(centr_ra))
+        pixels = healpy.query_disc(64, vector, math.radians(fov_radius),
+                                   inclusive=True, nest=True)
+        return str(pixels.tolist())[1:-1]
 
-    def process_image(self, image_id, run_id=None, sources_loaded=False):
+    def process_image(self, image_id, sources_loaded=False):
         """
         Process single image.
         @sources_loaded: True if there are records in the extractedsources
         already.
         """
         self.conn.start()
-        status, band, stokes, fov_radius, \
-        centr_ra, centr_decl, run_loaded, bmaj = \
+        status, band, stokes, fov_radius, centr_ra, centr_decl = \
         self.conn.exec_return("""
-        select status, band, stokes, fov_radius, 
-               centr_ra, centr_decl, run_id, bmaj
+        select status, band, stokes, fov_radius, centr_ra, centr_decl
           from images
          where imageid = %s;""" % image_id, single_column=False)
-        if not run_id:
-            run_id = run_loaded
         if status == 1:
             raise ImageStateError('Image %s in state 1 (Ok). Cannot process' %
                                   image_id)
-        GLOBALS.update({'i': image_id, 'r': run_id,
-                        'b': band, 's': stokes})
+        self.conn.execute("delete from temp_associations;")
+        pix = self.get_pixels(centr_ra, centr_decl, fov_radius)
         if not sources_loaded:
-            self.conn.execute(get_sql('insert_extractedsources'))
-            self.conn.execute(get_sql('insert dummysources'))
-        if bmaj:
-            max_assoc = float(bmaj)
-        else:
-            max_assoc = float(self.options.get('maximum_association_distance'))
-        self.log.debug('Using options: %s' % self.options)
-        self.log.debug('Final max_assoc_dist %s' % max_assoc)
-        
-        #Now do the matching!
-        if self.options.get('matcher') == 'F90':
-            matcher_class = MatcherF90
-        else:
-            matcher_class = MatcherSQL
-        matcher = matcher_class(self.conn, max_assoc, 
-                  self.options.get('match_distance'),
-                  self.options.get('match_distance_extended'),
-                  get_pixels(centr_ra, centr_decl, fov_radius + 0.5))
-        matcher.match(image_id)
-
-        self.conn.call_procedure("fill_temp_assoc_kind(%s);" % image_id)
-        #Process many-to-many;
-        self.run_grouper()
-
+            self.conn.execute(get_sql('insert_extractedsources', image_id))
+            self.conn.execute(get_sql('insert dummysources', image_id))
+        self.conn.execute(get_sql('Associate point',
+                                  image_id, math.sin(0.025), 1.0, pix))
+        self.conn.execute_set(get_sql('Associate extended',
+                                      image_id, math.sin(0.025), 0.5,
+                                      band, stokes, pix))
+        self.conn.call_procedure("fill_temp_assoc_kind();")
         # Process one-to-one associations;
         self.conn.execute(get_sql('add 1 to 1'))
         #process one-to-many associations;
         self.conn.execute(get_sql('add 1 to N'))
         self.conn.execute_set(get_sql('update flux_fraction'))
         #process many-to-one associations;
-        self.conn.execute_set(get_sql('add N to 1'))
+        self.conn.execute_set(get_sql('add N to 1', band))
+        #Process many-to-many;
+        self.run_grouper()
+
         #updating runningcatalog
-        run_update(self.conn, 'update runningcatalog')
-        run_update(self.conn, 'update runningcatalog extended')
-        self.conn.execute(get_sql('update runningcatalog XYZ'))
+        run_update(self.conn, 'update runningcatalog', image_id)
+        run_update(self.conn, 'update runningcatalog extended', image_id)
+        self.conn.execute(get_sql('update runningcatalog XYZ', image_id))
         #First update, then insert new (!!!)
-        run_update(self.conn, 'update runningcatalog_fluxes')
-        self.conn.execute(get_sql('insert new bands for point sources'))
+        run_update(self.conn, 'update runningcatalog_fluxes',
+                             image_id)
+        self.conn.execute(get_sql('insert new bands for point sources',
+                                  image_id, band))
         #inserting new sources
-        self.conn.execute_set(get_sql('Insert new sources'))
-        self.conn.execute_set(get_sql('Join extended'))
+        self.conn.execute_set(get_sql('Insert new sources', image_id))
+        self.conn.execute_set(get_sql('Join extended', image_id))
         #update image status and save current svn verion.
-        self.conn.execute_set(get_sql('Cleanup', get_svn_version()))
-        if self.parset.recalculate_pointing:
-            self.update_image_pointing(image_id)
+        self.conn.execute("""
+update images
+   set status = 1,
+       process_date = current_timestamp,
+       svn_version = %s
+ where imageid = %s""" % (get_svn_version(), image_id))
         self.conn.commit()

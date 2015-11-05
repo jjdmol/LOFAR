@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -163,15 +163,17 @@ bool AntennaSets::_adoptSelector(const string&	selector, const string& antennaFi
 
 		// next get the pattern
 		string	pattern;
+		uint	patLen(0);
 		while (sIdx < strLen && !isdigit(selector[sIdx])) {
-			pattern += selector[sIdx];
+			pattern[patLen] = selector[sIdx];
+			patLen++;
 			sIdx++;
 		}
-		ASSERTSTR(pattern.length(), "Expected a pattern at position " << sIdx << " of selector " << selector);
+		ASSERTSTR(patLen, "Expected a pattern at position " << sIdx << " of selector " << selector);
 
 		// now we have both the loopcount and the pattern, apply it to Set.
 		for (uint l = 0; l < loopCnt; l++) {
-			for (uint p = 0; p < pattern.length(); p++) {
+			for (uint p = 0; p < patLen; p++) {
 				char	input = pattern[p];
 				ASSERTSTR(input=='l' || input=='h' || input=='H' || input=='.', 
 						"character '" << input << 

@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,10 +22,10 @@
 
 package nl.astron.lofar.sas.otb.util;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.Vector;
 
 /**
  * This (singleton) class maintains a list of available panels that can be shown on a given (VIC)name in the ResultBrowser.
@@ -41,8 +41,8 @@ import java.util.Set;
  */
 public class ResultPanelHelper {
    
-    private HashMap<String,ArrayList<String> > itsPanelMap;
-    private ArrayList<String> itsArrayList;
+    private HashMap<String,Vector<String> > itsPanelMap;
+    private Vector<String> itsVector;
     private static ResultPanelHelper ref;
     
     /** Creates a new instance of ResultPanelHelper */
@@ -63,63 +63,63 @@ public class ResultPanelHelper {
     }
     
     private void initMap() {
-        itsPanelMap = new HashMap< >();
+        itsPanelMap = new HashMap<String, Vector<String> >();
         
         //generic panels
-        itsArrayList = new ArrayList<>();
+        itsVector = new Vector<String>();
         addBasePanels();
-        itsPanelMap.put("*",itsArrayList);
+        itsPanelMap.put("*",itsVector);
 
         //ParmDB
- //       itsArrayList = new ArrayList<>();
- //       itsArrayList.add("nl.astron.lofar.sas.otbcomponents.ParmDBConfigPanel");
- //       itsPanelMap.put("ParmDB",itsArrayList);
- //       itsArrayList = new ArrayList<>();
- //       itsArrayList.add("nl.astron.lofar.sas.otbcomponents.ParmDBPlotPanel");
- //       itsPanelMap.put("ParmDBValues",itsArrayList);
+        itsVector = new Vector<String>();
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParmDBConfigPanel");
+        itsPanelMap.put("ParmDB",itsVector);
+        itsVector = new Vector<String>();
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParmDBPlotPanel");
+        itsPanelMap.put("ParmDBValues",itsVector);
         
         // Observation
-        itsArrayList = new ArrayList<>();
-        itsArrayList.add("nl.astron.lofar.sas.otbcomponents.userpanels.ObservationPanel");
-        itsPanelMap.put("Observation",itsArrayList);
+        itsVector = new Vector<String>();
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.userpanels.ObservationPanel");
+        itsPanelMap.put("Observation",itsVector);
         addParSetAndLogPanels();
-     
-        //Cobalt
-        itsArrayList = new ArrayList<>();
-        itsArrayList.add("nl.astron.lofar.sas.otbcomponents.userpanels.CobaltPanel");
-        itsPanelMap.put("Cobalt",itsArrayList);        
+
+        //OLAP
+        itsVector = new Vector<String>();
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.userpanels.OlapPanel");
+        itsPanelMap.put("OLAP",itsVector);        
         addParSetAndLogPanels();
         
         //TBB
-        itsArrayList = new ArrayList<>();
-        itsArrayList.add("nl.astron.lofar.sas.otbcomponents.userpanels.TBBConfigPanel");
-        itsPanelMap.put("TBB",itsArrayList);
+        itsVector = new Vector<String>();
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.userpanels.TBBConfigPanel");
+        itsPanelMap.put("TBB",itsVector);
         addParSetAndLogPanels();
 
         //Imager
- //       itsArrayList = new ArrayList<>();
- //       itsArrayList.add("nl.astron.lofar.sas.otbcomponents.userpanels.ImagerPanel");
- //       itsPanelMap.put("Imager",itsArrayList);
- //       addParSetAndLogPanels();
+        itsVector = new Vector<String>();
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.userpanels.ImagerPanel");
+        itsPanelMap.put("Imager",itsVector);
+        addParSetAndLogPanels();
     }
     
     
     private void addBasePanels() {
         //generic node panel
-        itsArrayList.add("nl.astron.lofar.sas.otbcomponents.NodeViewPanel");
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.NodeViewPanel");
         //generic parameter & meta data panel
-        itsArrayList.add("nl.astron.lofar.sas.otbcomponents.ParameterViewPanel");
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParameterViewPanel");
         addParSetAndLogPanels();
         //generic parameter including Metadata panel
     }
     
     private void addParSetAndLogPanels() {
         //generic parset view panel
-        itsArrayList.add("nl.astron.lofar.sas.otbcomponents.ParSetViewPanel");
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParSetViewPanel");
         //parset+ metadata view panel
-        itsArrayList.add("nl.astron.lofar.sas.otbcomponents.ParSetMetaViewPanel");
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParSetMetaViewPanel");
         //generic logging panel
-        itsArrayList.add("nl.astron.lofar.sas.otbcomponents.LogParamPanel");
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.LogParamPanel");
     }
     
     /**
@@ -130,8 +130,8 @@ public class ResultPanelHelper {
      *              if aKey = ""  all NON default panels are returned
      * @return the Vector that contains all panels for this key
      */
-    public ArrayList<String> getPanels(String aKey) {
-        ArrayList<String> returnVector = null;
+    public Vector getPanels(String aKey) {
+        Vector returnVector = null;
         Iterator i = itsPanelMap.keySet().iterator();
         while(i.hasNext()){
             String key = (String)i.next();

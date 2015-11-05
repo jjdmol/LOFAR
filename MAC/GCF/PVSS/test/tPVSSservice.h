@@ -2,7 +2,7 @@
 //
 //  Copyright (C) 2003
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -62,13 +62,12 @@ class tGSAService : public GCFTask
   GCFEvent::TResult test8	 (GCFEvent& e, GCFPortInterface& p);
   GCFEvent::TResult test9	 (GCFEvent& e, GCFPortInterface& p);
   GCFEvent::TResult test10	 (GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult testCreateMdpe			(GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult testWriteMdpe			(GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult testWriteMdpeTimed		(GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult testWriteDynArray		(GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult testWriteMultipleDynArr	(GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult testQuerySingle			(GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult testQueryUnsubscribe	(GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult testCreateMdpe		(GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult testWriteMdpe		(GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult testWriteMdpeTimed	(GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult testWriteDynArray	(GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult testQuerySingle		(GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult testQueryUnsubscribe(GCFEvent& e, GCFPortInterface& p);
 
  private:
 

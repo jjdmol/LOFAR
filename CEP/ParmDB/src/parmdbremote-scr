@@ -44,7 +44,6 @@ if test -d "$wd"; then
   export PATH
 fi
 
-# Start parmdbremote in the background, so it exits immediately
-# and the ssh connection created by startdistproc is ended.
-# Write stdout/err in a file, otherwise ssh won't exit.
-parmdbremote "$2" "$3" "$6" > "parmdbremote.log_${USER}_$$" 2>&1 &   # host,port,parmdb-part
+parmdbremote "$2" "$3" "$6"    # host,port,parmdb-part
+
+rm -f "$envfile"

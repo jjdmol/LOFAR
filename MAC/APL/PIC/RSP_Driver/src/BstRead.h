@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ namespace LOFAR {
       /**
        * Constructors for a BstRead object.
        */
-      BstRead(GCFPortInterface& board_port, int board_id, int lane_id);
+      BstRead(GCFPortInterface& board_port, int board_id);
 	  
       /* Destructor for BstRead. */
       virtual ~BstRead();
@@ -59,9 +59,6 @@ namespace LOFAR {
       virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
     private:
-      int itsLaneId;
-      int itsRealLaneId;
-      
       EPA_Protocol::MEPHeader m_hdr;
     };
   };

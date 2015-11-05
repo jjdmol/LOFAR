@@ -3,7 +3,7 @@
 #
 # Run the tests to test a LOFAR station
 # H. Meulman
-# Version 0.19               9-nov-2012	SVN*****
+# Version 0.14                17-feb-2012	SVN*****
 
 # 24 sep: local log directory aangepast
 # 27 sept: 	- Toevoeging delay voor tbbdriver polling
@@ -31,13 +31,7 @@
 # 27 jan 2012: Store logfiles in /localhome/stationtest/data in "local mode"
 # 17 feb 2012: Added detection of oscillating tiles.
 # 9 mar 2012: Devide by 0 error solved in HBAtest
-# 13 Apr 2012: added LBAdatatest directory. Also directorys need to change permissions to work with USER0.
-# 20 Apr 2012: Logging suspicious tiles and elements in HBA modem test
-# 13 Sep 2012: Added for user0..9 sys.path.append("/opt/stationtest/modules")
-# 9 Nov 2012: New remote stations added: RS210 RS305 RS310 RS407 and RS409
-#             CS302 changed in Core station
-#             Write permissions changed from the log files for all users
-#             Added LBA statistics High and Low limmit. Changed it to 158% and 63%
+# 13 sept 2012: Added for user0..9 sys.path.append("/opt/stationtest/modules")
 
 # todo:
 # - Als meer dan 10 elementen geen rf signaal hebben, keur dan hele tile af
@@ -70,14 +64,12 @@ import numpy
 debug=0
 clkoffset=1
 
-#factor = 30	# station statistics fault window: Antenna average + and - factor = 100 +/- 30
-factorHL = 158	# LBA statistics high limmit
-factorLL = 63	# LBA statistics low limmit
+factor = 30	# station statistics fault window: Antenna average + and - factor = 100 +/- 30
 
 InternationalStations = ('DE601C','DE602C','DE603C','DE604C','DE605C','FR606C','SE607C','UK608C')
-RemoteStations = ('RS106C','RS205C','RS208C','RS210C','RS305C','RS306C','RS307C','RS310C','RS406C','RS407C','RS409C','RS503C')
-CoreStations = ('CS001C','CS002C','CS003C','CS004C','CS005C','CS006C','CS007C','CS011C','CS013C','CS017C','CS021C','CS024C','CS026C','CS028C','CS030C','CS031','CS032C','CS101C','CS103C','CS201C','CS301C','CS302C','CS401C','CS501C')
-NoHBAelementtestPossible = ('DE601C','DE602C','DE603C','DE605C','FR606C','SE607C','UK608C') # 
+RemoteStations = ('CS302C','RS106C','RS205C','RS208C','RS306C','RS307C','RS406C','RS503C')
+CoreStations = ('CS001C','CS002C','CS003C','CS004C','CS005C','CS006C','CS007C','CS011C','CS013C','CS017C','CS021C','CS024C','CS026C','CS028C','CS030C','CS031','CS032C','CS101C','CS103C','CS201C','CS301C','CS401C','CS501C')
+NoHBAelementtestPossible = ('DE601C','DE602C','DE603C','DE605C','FR606C','SE607C','UK608C')
 NoHBANaStestPossible = ('')
 HBASubband = dict( 	DE601C=155,\
 			DE602C=155,\
@@ -85,7 +77,7 @@ HBASubband = dict( 	DE601C=155,\
 			DE604C=474,\
 			DE605C=479,\
 			FR606C=155,\
-			SE607C=287,\
+			SE607C=155,\
 			UK608C=155)
 
 # Do not change:
@@ -107,7 +99,7 @@ Remote = 2
 International = 3
 StIDlist = os.popen3('hostname -s')[1].readlines()		# Name of the station
 StID = str(StIDlist[0].strip('\n'))
-print ('StationID = %s' % StID)
+if debug: print ('StationID = %s' % StID)
 if StID in InternationalStations: StationType = International	# International station
 if StID in RemoteStations: StationType = Remote			# Remote Station
 if StID in CoreStations: StationType = Core			# Core Station
@@ -348,7 +340,7 @@ def GotoSwlevel2():
 				time.sleep(120)
 				res = os.popen3('rspctl --datastream=0')[1].readlines()
 				print res
-#				time.sleep(90)  # Tijdelijk toe gevoegd voor nieuwe tbbdriver. Deze loopt vast tijdens pollen
+				#time.sleep(90)  # Tijdelijk toe gevoegd voor nieuwe tbbdriver. Deze loopt vast tijdens pollen
 #				CheckTBB()	# Tijdelijk weg gelaten voor nieuwe tbbdriver. Deze loopt vast tijdens pollen
 #fromprg.close()
 				break
@@ -722,13 +714,10 @@ def CheckRSPVersion():
 	RSPgold = open(RSPgoldfile,'r').readlines()			# Read RSP Version gold
 	RSPversion = os.popen3('rspctl --version')[1].readlines()	# Get RSP Versions
 #	res = cli.command('./rsp_version.sh')
-#	debug=1
 	if debug:
-		print ('RSPgold = ', RSPgold)
 		for RSPnumber in range(len(RSPgold)):
 			if RSPgold[RSPnumber] == RSPversion[RSPnumber]: print ('RSP OK = ', RSPnumber)
 			else: print ('RSPNOK = ', RSPnumber)
-#	debug=0
 # store subreck testlog			
 	for RSPnumber in range(len(RSPgold)):
 		if RSPgold[RSPnumber] != RSPversion[RSPnumber]: 
@@ -1260,8 +1249,7 @@ def LBAtest():
 	sr.setId('LBAmd1>: ')
 	sub_time=[]
 	sub_file=[]
-#	dir_name = './lbadatatest/' #Work directory will be cleaned
-	dir_name = '/opt/stationtest/test/hbatest/lbadatatest/' #Work directory will be cleaned
+	dir_name = './lbadatatest/' #Work directory will be cleaned
 	if not (os.path.exists(dir_name)):
 		os.mkdir(dir_name)
 	rmfile = '*.log'
@@ -1376,7 +1364,7 @@ def LBAtest():
 			for rcuind in range(num_rcu) :
 				if debug: print 'RCU: ' + str(rcuind) + ' factor: ' + str(round(meet_data[rcuind]*100/average_lba))
         		        f_logfac.write(str(rcuind) + ' ' + str(round(meet_data[rcuind]*100/average_lba)) + '\n')  
-				if (round(meet_data[rcuind]*100/average_lba)) < factorLL or (round((meet_data[rcuind]*100/average_lba))) > factorHL:
+				if (round(meet_data[rcuind]*100/average_lba)) < 100-factor or (round((meet_data[rcuind]*100/average_lba))) > 100+factor:
 					
 					# Store in log file
         		                f_log.write('RCU: ' + str(rcuind)+ ' factor: ' + str(round(meet_data[rcuind]*100/average_lba)) + '\n')
@@ -1502,7 +1490,7 @@ def LBAtest():
 		for rcuind in range(num_rcu) :
 			if debug: print 'RCU: ' + str(rcuind) + ' factor: ' + str(round(meet_data[rcuind]*100/average_lba))
         	        f_logfac.write(str(rcuind) + ' ' + str(round(meet_data[rcuind]*100/average_lba)) + '\n')  
-			if (round(meet_data[rcuind]*100/average_lba)) < factorLL or (round((meet_data[rcuind]*100/average_lba))) > factorHL:
+			if (round(meet_data[rcuind]*100/average_lba)) < 100-factor or (round((meet_data[rcuind]*100/average_lba))) > 100+factor:
 				
 				# Store in log file
         	                f_log.write('RCU: ' + str(rcuind)+ ' factor: ' + str(round(meet_data[rcuind]*100/average_lba)) + '\n')
@@ -1555,7 +1543,7 @@ def LBAtest():
 	rm_files(dir_name,'*')
 #	os.popen("killall beamctl")
 	if debug:
-		print ('Factor should be inbetween %d and %d. ' % (int(factorLL), int(factorHL)))
+		print ('Factor should be inbetween %d and %d. ' % (int(100-factor), int(100+factor)))
 		print 'Factor 100 is average of all antennas.'
 	return
 
@@ -1573,7 +1561,7 @@ def HBAModemTest():
 	global Priority
 	global ModemFail
 	
-#	debug=1
+	debug=0
 	
 	sr.setId('HBAmdt>: ')
 	print ('HBA ModemTest')
@@ -1625,61 +1613,6 @@ def HBAModemTest():
 				#if debug: print ('ModemFail      = ',ModemFail) 
 				if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
 				if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
-				st_log.write('HBAmdt>: Sv=%s Pr=%s, Tile %s - RCU %s; Suspicious.\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], TileNr, RCUNr))
-				sr.setResult('FAILED')
-				
-			else:		#Anders keur elementen af als fout.
-				for ElementNumber in range(4, 20):
-					if (ModemReply[ElementNumber] != ModemReplyGold[ElementNumber] and isodd(RCUNr)):
-						print ('Tile %s - RCU %s; Element %s; Suspicious. : (%s, %s)' % (TileNr, RCUNr, ElementNumber-3, ModemReply[ElementNumber], ModemReplyGold[ElementNumber]))
-						# store station testlog	
-						if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
-						if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
-						st_log.write('HBAmdt>: Sv=%s Pr=%s, Tile %s - RCU %s; Element %s Suspicious. : (%s, %s)\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], TileNr, RCUNr, ElementNumber-3, ModemReply[ElementNumber], ModemReplyGold[ElementNumber]))
-						sr.setResult('FAILED')
-#			print ('ModemFail      = ',ModemFail) 
-
-	try:
-		f=open('/opt/stationtest/test/hbatest/hba_modem3.log','rb')
-	except:
-		print ('Import error')
-		if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
-		if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
-		st_log.write('HBAmdt>: Sv=%s Pr=%s, No modem-logfile found!\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest]))
-		return
-	time.sleep(1)
-	
-	for line in f:
-		ModemReply=line
-		ModemReplyGold=['HBA', '95', 'real', 'delays=', '253', '253', '253', '253', '253', '253', '253', '253', '253', '253', '253', '253', '253', '253', '253', '253']
-		if debug: print ('line = ',line[0])
-		if line[0] == 'H':		# Check of regel geldig is!
-			ModemReply=line.replace('[',' ').replace('].',' ').split()
-			RCUNr=int(ModemReply[1])
-			TileNr=RCUNr/2
-			if debug:
-				print ('line           = ',line)
-				print ('ModemReply     = ',ModemReply)
-				print ('ModemReplyGold = ',ModemReplyGold)
-				print ('RCUNr          = ',RCUNr)
-				print ('TileNr         = ',TileNr)
-	
-# Check if HBA modems work!
-			count=0
-			for ElementNumber in range(4, 20):
-#				print ModemReplyGold[ElementNumber]
-				if ModemReply[ElementNumber] != ModemReplyGold[ElementNumber]:
-					count+=1
-					ModemFail[TileNr]=1 # global variabele om in HBA element test de RF meting over te slaan.
-
-#					
-			if (count > 10 and isodd(RCUNr)): 	#Als er meer dan 10 fouten in zitten, keur dan hele tile af!
-				print ('Tile %s - RCU %s; Broken. No modem communication' % (TileNr,RCUNr))
-				
-				# store station testlog	
-				#if debug: print ('ModemFail      = ',ModemFail) 
-				if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
-				if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
 				st_log.write('HBAmdt>: Sv=%s Pr=%s, Tile %s - RCU %s; Broken. No modem communication\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], TileNr, RCUNr))
 				sr.setResult('FAILED')
 				
@@ -1693,6 +1626,7 @@ def HBAModemTest():
 						st_log.write('HBAmdt>: Sv=%s Pr=%s, Tile %s - RCU %s; Element %s Broken. No modem communication : (%s, %s)\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], TileNr, RCUNr, ElementNumber-3, ModemReply[ElementNumber], ModemReplyGold[ElementNumber]))
 						sr.setResult('FAILED')
 #			print ('ModemFail      = ',ModemFail) 
+	
 	return
 
 
@@ -1955,7 +1889,7 @@ def HBANaStest():
 				HBAfail[HBAoscRCU[Subnr]] = 1
 				HBAfact[HBAoscRCU[Subnr]] = HBAoscFactor[Subnr]
 				
-		#for Subnr in range(0,512): print('Osc factors Subnr %s = %s, of RCU %s (Fail=%s)' % (Subnr,HBAoscFactor[Subnr],HBAoscRCU[Subnr],HBAfail[HBAoscRCU[Subnr]]))
+		for Subnr in range(0,512): print('Osc factors Subnr %s = %s, of RCU %s (Fail=%s)' % (Subnr,HBAoscFactor[Subnr],HBAoscRCU[Subnr],HBAfail[HBAoscRCU[Subnr]]))
 		
 		# Save in log file
 		for RCUnr in range(0,num_rcu):
@@ -2279,10 +2213,6 @@ st_log.write('TestTm>: %02dm:%02ds\n' % (dt/60 % 60, dt % 60))
 st_log.close()
 time.sleep(1)
 res = os.popen3('swlevel 1')[1].readlines()	# Put station in current saving mode.....
-
-# Change write permissions for al log files
-res = os.popen3("chmod g+w %s" % (TestlogName))[1].readlines()
-#res = os.popen3("chmod 755 %s" % (TestlogName))[1].readlines()
 
 # Finaly move temporary logfile to final logfile
 res = os.popen3("scp -rp %s %s" % (TestlogName , HistlogName))[1].readlines()

@@ -37,7 +37,6 @@ namespace BBS
 // \addtogroup Expr
 // @{
 
-// Node to give a parameter from a parmdb
 class ExprParm: public NullaryExpr<Scalar>
 {
 public:

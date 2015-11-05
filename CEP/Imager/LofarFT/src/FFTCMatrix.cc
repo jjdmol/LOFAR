@@ -30,23 +30,20 @@
 
 namespace LOFAR {
 
-  bool FFTCMatrix::theirInitDone = false;
+  bool FFTCMatrix::theirWisdomRead = false;
 
   FFTCMatrix::FFTCMatrix()
     : itsData      (0),
       itsPlan      (0),
       itsSize      (0),
       itsReserved  (0),
-      itsNThreads  (0),
       itsIsForward (false)
   {
-    // If the first time, set to multi-threading and
-    // read the wisdom from the system file.
-    if (!theirInitDone) {
+    // If the first time, read the wisdom from the system file.
+    if (!theirWisdomRead) {
 #pragma omp critical(fftcmatrix_init)
       {
-        if (!theirInitDone) {
-          fftwf_init_threads();
+        if (!theirWisdomRead) {
           FILE* file = fopen (casa::Path("$HOME/fftwisdom2d.txt").
                               expandedName().c_str(), "r");
           if (!file) {
@@ -67,7 +64,7 @@ namespace LOFAR {
             fftw_import_wisdom_from_file (file);
             fclose (file);
           }
-          theirInitDone = true;
+          theirWisdomRead = true;
         }
       } // end omp critical
     }
@@ -117,28 +114,24 @@ namespace LOFAR {
     }
   }
 
-  void FFTCMatrix::plan (size_t size, bool forward, int nthreads,
-                         unsigned flags)
+  void FFTCMatrix::plan (size_t size, bool forward, unsigned flags)
   {
     ASSERTSTR (size > 0, "FFTCMatrix size must be positive");
     // Only make a new plan when different from previous one.
     // FFTW's plan function is not thread-safe, so guard it.
-    if (itsPlan == 0  ||  size != itsSize  ||
-        nthreads != itsNThreads  ||  forward != itsIsForward) {
+    if (itsPlan == 0  ||  size != itsSize  ||  forward != itsIsForward) {
 #pragma omp critical(fftcmatrix_plan)
       {
         if (size > itsReserved) {
           reserve (size);
         }
         itsSize = size;
-        itsNThreads = nthreads;
         itsIsForward = forward;
         int direction = (forward  ?  FFTW_FORWARD : FFTW_BACKWARD);
         if (itsPlan) {
           fftwf_destroy_plan (itsPlan);
           itsPlan = 0;
         }
-        fftwf_plan_with_nthreads (nthreads);
         itsPlan = fftwf_plan_dft_2d(itsSize, itsSize,
                                     reinterpret_cast<fftwf_complex*>(itsData),
                                     reinterpret_cast<fftwf_complex*>(itsData),
@@ -183,41 +176,33 @@ namespace LOFAR {
     }
   }
 
-  void FFTCMatrix::forward (size_t size, std::complex<float>* data,
-                            int nthreads,
-			    unsigned flags)
+  void FFTCMatrix::forward (size_t size, std::complex<float>* data)
   {
-    plan (size, true, nthreads, flags);
+    plan (size, true);
     flip (data, itsData, true);
     fftwf_execute (itsPlan);
     flip (itsData, data, false);
   }
 
-  void FFTCMatrix::backward (size_t size, std::complex<float>* data,
-                             int nthreads,
-			     unsigned flags)
+  void FFTCMatrix::backward (size_t size, std::complex<float>* data)
   {
-    plan (size, false, nthreads, flags);
+    plan (size, false);
     flip (data, itsData, true);
     fftwf_execute (itsPlan);
     scaledFlip (itsData, data, false, 1./(size*size));
   }
 
-  void FFTCMatrix::normalized_forward (size_t size, std::complex<float>* data,
-                                       int nthreads,
-				       unsigned flags)
+  void FFTCMatrix::normalized_forward (size_t size, std::complex<float>* data)
   {
-    plan (size, true, nthreads, flags);
+    plan (size, true);
     flip (data, itsData, true);
     fftwf_execute (itsPlan);
     scaledFlip (itsData, data, false, 1./(size*size));
   }
 
-void FFTCMatrix::normalized_backward (size_t size, std::complex<float>* data,
-                                      int nthreads,
-				      unsigned flags)
+  void FFTCMatrix::normalized_backward (size_t size, std::complex<float>* data)
   {
-    plan (size, false, nthreads, flags);
+    plan (size, false);
     flip (data, itsData, true);
     fftwf_execute (itsPlan);
     flip (itsData, data, false);

@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -41,7 +41,7 @@ import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
  * @version $Id$
  * @updated
  */
-public final class SamplePanel extends javax.swing.JPanel 
+public class SamplePanel extends javax.swing.JPanel 
                        implements IPluginPanel {
 
     static Logger logger = Logger.getLogger(SamplePanel.class);
@@ -371,20 +371,21 @@ public final class SamplePanel extends javax.swing.JPanel
 
     private void buttonPanelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanelActionPerformed
         logger.debug("actionPerformed: " + evt);
-        switch (evt.getActionCommand()) {
-            case "New Tree":
+        
+        if(evt.getActionCommand().equals("New Tree")) {
             // initialize the tree
             // create a sample root node. This should be retrieved from the OTDB of course.
             jOTDBnode otdbNode = new jOTDBnode(0,0,0,0);
             otdbNode.name = "Node_" + treeCounter++;
+
             // put the OTDBnode in a wrapper for the tree
             TreeNode otdbTreeNode = new TreeNode(ResultTreeManager.getInstance(itsMainFrame.getUserAccount()),otdbNode);
+            
             // and create a new root
             treePanel.newRootNode(otdbTreeNode);
-                break;
-            case "Back to Main":
+        }
+        else if(evt.getActionCommand().equals("Back to Main")) {
             itsMainFrame.showPanel(MainPanel.getFriendlyNameStatic());
-                break;
         }
     }//GEN-LAST:event_buttonPanelActionPerformed
     

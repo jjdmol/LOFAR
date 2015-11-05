@@ -316,17 +316,13 @@ The advanced options are:
       :term:`aperture` ............ None : Radius of aperture in pixels inside which aperture
                                    fluxes are measured for each source. None => no aperture
                                    fluxes measured
-      :term:`aperture_posn` .. 'centroid': Position the aperture (if aperture is not None) on: 'centroid' or
-                                   'peak' of the source.
-      :term:`blank_limit` ......... None : Limit in Jy/beam below which pixels are blanked. None => no such
-                                   blanking is done
+      :term:`blank_zeros` ........ False : Blank zeros in the image
       :term:`bmpersrc_th` ......... None : Theoretical estimate of number of beams per
                                    source. None => calculate inside program
       :term:`check_outsideuniv` .. False : Check for pixels outside the universe
       :term:`detection_image` ........ '': Detection image file name used only for
                                    detecting islands of emission. Source
                                    measurement is still done on the main image
-      :term:`do_cache` ........... False : Cache internally derived images to disk
       :term:`do_mc_errors` ....... False : Estimate uncertainties for 'M'-type sources
                                    using Monte Carlo method
       :term:`fdr_alpha` ........... 0.05 : Alpha for FDR algorithm for thresholds
@@ -334,17 +330,12 @@ The advanced options are:
                                    fdr_ratio, thresh = 'hard' else thresh = 'fdr'
       :term:`fittedimage_clip` ..... 0.1 : Sigma for clipping Gaussians while creating fitted
                                    image
-      :term:`fix_to_beam` ........ False : Fix major and minor axes and PA of Gaussians to beam?
       :term:`group_by_isl` ....... False : Group all Gaussians in each island into a single
                                    source
-      :term:`group_method` .. 'intensity': Group Gaussians into sources using 'intensity' map or
-                                   'curvature' map
       :term:`group_tol` ............ 1.0 : Tolerance for grouping of Gaussians into sources:
                                    larger values will result in larger sources
       :term:`ini_gausfit` ..... 'default': Initial guess for Gaussian parameters: 'default',
                                    'fbdsm', or 'nobeam'
-      :term:`ini_method` .... 'intensity': Method by which inital guess for fitting of Gaussians is chosen:
-                                   'intensity' or 'curvature'
       :term:`kappa_clip` ........... 3.0 : Kappa for clipped mean and rms
       :term:`minpix_isl` .......... None : Minimal number of pixels with emission per island.
                                    None -> calculate inside program
@@ -366,10 +357,6 @@ The advanced options are:
                                    always done for wavelet images
       :term:`splitisl_maxsize` .... 50.0 : If island size in beam area is more than this,
                                    consider splitting island. Min value is 50
-      :term:`src_ra_dec` .......... None : List of source positions at which fitting is done.  E.g.,
-                                   src_ra_dec = [(197.1932, 47.9188), (196.5573, 42.4852)].
-      :term:`src_radius_pix` ...... None : Radius of the island (if src_ra_dec is not None) in pixels. None
-                                   => radius is set to the FWHM of the beam major axis.
       :term:`stop_at` ............. None : Stops after: 'isl' = island finding step or 'read'
                                    = image reading step
       :term:`trim_box` ............ None : Do source detection on only a part of the image.
@@ -382,22 +369,12 @@ The advanced options are:
     aperture
         This parameter is a float (default is ``None``) that sets the radius (in
         pixels) inside which the aperture flux is measured for each source.
-        The aperture is centered on the either the centroid or the peak of the
-        source (depending on the value of the ``aperture_posn`` option). Errors
-        are calculated from the mean of the rms map inside the aperture.
+        The aperture is centered on the centroid of the source. Errors are
+        calculated from the mean of the rms map inside the aperture.
 
-    aperture_posn
-        This parameter is a string (default is ``'centroid'``) that sets the
-        how the aperture is positioned relative to the source. If 'centroid',
-        the aperture is centered on the source centroid.
-        If 'peak', the aperture is centered on the source peak. If aperture=None
-        (i.e., no aperture radius is specified), this parameter is ignored.
-
-    blank_limit
-        This parameter is a float (default is ``None``) that sets the limit in
-        Jy/beam below which pixels are blanked. All pixels in the ch0 image with
-        a value less than the specified limit and with at least 4 neighboring
-        pixels with values also less than this limit are blanked. If ``None``,
+    blank_zeros
+        This parameter is a Boolean (default is ``False``). If ``True``, all
+        pixels in the input image with values of 0.0 are blanked. If ``False``,
         any such pixels are left unblanked (and hence will affect the rms and
         mean maps, etc.). Pixels with a value of NaN are always blanked.
 
@@ -433,12 +410,6 @@ The advanced options are:
         a FITS or CASA 2-, 3-, or 4-D cube and must have the same size and WCS
         parameters as the main image.
 
-    do_cache
-        This parameter is a Boolean (default is ``False``) that controls
-        whether internally derived images are stored in memory or are cached
-        to disk. Caching can reduce the amount of memory used, and is
-        therefore useful when analyzing large images.
-
     do_mc_errors
         This parameter is a Boolean (default is ``False``). If ``True``,
         uncertainties on the sizes and positions of 'M'-type sources due to
@@ -470,150 +441,90 @@ The advanced options are:
         of the Gaussian falls to a value of ``fitted_image_clip`` times the
         local rms, b pixels from the peak.
 
-    fix_to_beam
-        This parameter is a Boolean (default is ``False``). If True, then during
-        fitting the major and minor axes and PA of the Gaussians are fixed to
-        the beam. Only the amplitude and position are fit. If False, all
-        parameters are fit.
-
     group_by_isl
         This parameter is a Boolean (default is ``False``). If True, all
         Gaussians in the island belong to a single source. If False, grouping is
         controlled by the group_tol parameter.
 
-    group_method
-        This parameter is a string (default is ``'intensity'``). Gaussians are
-        deemed to be a part of the same source if: 1. no pixel on the line
-        joining the centers of any pair of Gaussians has a
-        (Gaussian-reconstructed) value less than the island threshold, and 2.
-        the centers are separated by a distance less than half the sum of their
-        FWHMs along the line joining them. If ``'curvature'``, the above
-        comparisons are done on the curature map (see Hancock et al. 2012). If
-        ``'intensity'``, the comparisons are done on the intensity map.
-
     group_tol
-        This parameter is a float (default is 1.0) that sets the tolerance for
-        grouping of Gaussians into sources: larger values will result in larger
-        sources. Sources are created by grouping nearby Gaussians as follows:
-        (1) If the minimum value between two Gaussians in an island is more than
-        ``group_tol * thresh_isl * rms_clip``\, and (2) if the centres are
-        seperated by a distance less than 0.5*``group_tol`` of the sum of their
-        FWHMs along the PA of the line joining them, they belong to the same
-        island.
+        This parameter is a float (default is 1.0) that sets the tolerance for grouping of Gaussians into sources: larger values will
+        result in larger sources. Sources are created by grouping nearby Gaussians as follows: (1) If the
+        minimum value between two Gaussians in an island is more than ``group_tol * thresh_isl * rms_clip``\, and (2) if the centres are seperated by a
+        distance less than 0.5*``group_tol`` of the sum of their FWHMs along the PA
+        of the line joining them, they belong to the same island.
 
     ini_gausfit
-        This parameter is a string (default is ``'default'``). These are three
-        different ways of estimating the initial guess for fitting of Gaussians
-        to an island of emission. If ``'default'``, the maximum number of
-        Gaussians is estimated from the number of peaks in the island. An
-        initial guess is made for the parameters of these Gaussians before final
-        fitting is done. This method should produce the best results when there
-        are no large sources present. If ``'simple'``, the maximum number of
+        This parameter is a string (default is ``'default'``). These are three different ways of estimating the initial guess for
+        fitting of Gaussians to an island of emission. If ``'default'``, the maximum
+        number of Gaussians is estimated from the number of peaks in the island.
+        An initial guess is made for the parameters of these Gaussians before
+        final fitting is done. This method should produce the best results when
+        there are no large sources present. If ``'simple'``, the maximum number of
         Gaussians per island is set to 25, and no initial guess for the Gaussian
         parameters is made. Lastly, the ``'nobeam'`` method is similar to the
-        ``'default'`` method, but no information about the beam is used. This
-        method is best used when source sizes are expected to be very different
-        from the beam and is generally slower than the other methods. For
-        wavelet images, the value used for the original image is used for
-        wavelet order j <= 3 and ``'nobeam'`` for higher orders.
-
-    ini_method
-        This parameter is a string (default is ``'intensity'``). If
-        ``'intensity'``, the inital guess described in the help for the
-        ``ini_gausfit`` parameter is calculated using the intensity (ch0) image.
-        If ``'curvature'``, it is done using the curvature map (see Hancock et
-        al. 2012).
+        ``'default'`` method, but no information about the beam is used. This method
+        is best used when source sizes are expected to be very different from
+        the beam and is generally slower than the other methods. For wavelet
+        images, the value used for the original image is used for wavelet order
+        j <= 3 and ``'nobeam'`` for higher orders.
 
     kappa_clip
-        This parameter is a float (default is 3.0) that is the factor used for
-        Kappa-alpha clipping, as in AIPS. For an image with few source pixels
-        added on to (Gaussian) noise pixels, the dispersion of the underlying
-        noise will need to be determined. This is done iteratively, whereby the
-        actual dispersion is first computed. Then, all pixels whose value
-        exceeds kappa clip times this rms are excluded and the rms is computed
-        again. This process is repeated until no more pixels are excluded. For
-        well behaved noise statistics, this process will converge to the true
-        noise rms with a value for this parameter ~3-5. A large fraction of
-        source pixels, less number of pixels in total, or significant
-        non-Gaussianity of the underlying noise will all lead to non-convergence.
+        This parameter is a float (default is 3.0) that is the factor used for Kappa-alpha clipping, as in
+        AIPS. For an image with few source pixels added on to (Gaussian) noise
+        pixels, the dispersion of the underlying noise will need to be
+        determined. This is done iteratively, whereby the actual dispersion is
+        first computed. Then, all pixels whose value exceeds kappa clip times
+        this rms are excluded and the rms is computed again. This process is
+        repeated until no more pixels are excluded. For well behaved noise
+        statistics, this process will converge to the true noise rms with a
+        value for this parameter ~3-5. A large fraction of source pixels, less
+        number of pixels in total, or significant non-Gaussianity of the
+        underlying noise will all lead to non-convergence.
 
     minpix_isl
-        This parameter is an integer (default is ``None``) that sets the minimum
-        number of pixels in an island for the island to be included. If
-        ``None``, the number of pixels is set to 1/3 of the area of an
-        unresolved source using the beam and pixel size information in the image
-        header. It is set to 6 pixels for all wavelet images.
+        This parameter is an integer (default is ``None``) that sets the minimum number of pixels in an island
+        for the island to be included. If ``None``, the number of pixels is set to 1/3 of the area of an unresolved source
+        using the beam and pixel size information in the image header. It is set
+        to 6 pixels for all wavelet images.
 
     ncores
-        This parameter is an integer (default is ``None``) that sets the number
-        of cores to use during fitting. If ``None``, all available cores are
-        used (one core is reserved for plotting).
+        This parameter is an integer (default is ``None``) that sets the number of cores to use during fitting. If ``None``, all available cores are used (one core is reserved for plotting).
 
     peak_fit
-        This parameter is a Boolean (default is ``True``). When True, PyBDSM
-        will identify and fit peaks of emission in large islands iteratively
-        (the size of islands for which peak fitting is done is controlled with
-        the peak_maxsize option), using a maximum of 10 Gaussians per iteration.
-        Enabling this option will generally speed up fitting (by factors of many
-        for large islands), but may result in somewhat higher residuals.
+        This parameter is a Boolean (default is ``True``). When True, PyBDSM will identify and fit peaks of emission in large islands iteratively (the size of islands for which peak fitting is done is controlled with the peak_maxsize option), using a maximum of 10 Gaussians per iteration. Enabling this option will generally speed up fitting (by factors of many for large islands), but may result in somewhat higher residuals.
 
     peak_maxsize
-        This parameter is a float (default is 30.0). If island size in beam area
-        is more than this value, attempt to fit peaks iteratively (if ``peak_fit
-        = True``). The minimum value is 30.
+        This parameter is a float (default is 30.0). If island size in beam area is more than this value, attempt to fit peaks
+        iteratively (if ``peak_fit = True``). The minimum value is 30.
 
     rms_value
-        This parameter is a float (default is ``None``) that sets the value of
-        constant rms in Jy/beam to use if ``rms_map = False``. If ``None``, the
-        value is calculated inside the program.
+        This parameter is a float (default is ``None``) that sets the value of constant rms in Jy/beam to use if ``rms_map = False``. If ``None``, the value is
+        calculated inside the program.
 
     spline_rank
-        This parameter is an integer (default is 3) that sets the order of the
-        interpolating spline function to interpolate the background rms and mean
-        maps over the entire image.
+        This parameter is an integer (default is 3) that sets the order of the interpolating spline function
+        to interpolate the background rms and mean maps over the entire image.
 
         .. note::
 
-            Bicubic interpolation (the default) can cause ringing artifacts to
-            appear in the rms and mean maps in regions where sharp changes
-            occur. These artifacts can result in regions with negative values.
-            If you find such artifacts, try changing the :term:`spline_rank`
-            parameter.
+            Bicubic interpolation (the default) can cause ringing artifacts to appear in the rms and mean maps in regions where sharp changes occur. These artifacts can result in regions with negative values. If you find such artifacts, try changing the :term:`spline_rank` parameter.
 
     split_isl
-        This parameter is a Boolean (default is ``True``). If ``True``, an
-        island is split if it is too large, has a large convex deficiency and it
-        opens well. If it doesn't open well, then ``isl.mean =
-        isl.clipped_mean``, and is taken for fitting. Splitting, if needed, is
-        always done for wavelet images
+        This parameter is a Boolean (default is ``True``). If ``True``, an island is split if it is too large, has a large convex deficiency and it
+        opens well. If it doesn't open well, then ``isl.mean = isl.clipped_mean``,
+        and is taken for fitting. Splitting, if needed, is always done for
+        wavelet images
 
     splitisl_maxsize
-        This parameter is a float (default is 50.0). If island size in beam area
-        is more than this, consider splitting island. The minimum value is 50.
-
-    src_ra_dec
-        This parameter is a list of tuples (default is ``None``) that defines
-        the center positions at which fitting will be done. The size of the
-        region used for the fit is given by the ``src_radius_pix`` parameter.
-        Positions should be given as a list of RA and Dec, in degrees, one set
-        per source. These positions will override the normal island finding
-        module.
-
-    src_radius_pix
-        This parameter is a float (default is ``None``) that determines the size
-        of the region used to fit the source positions specified by the
-        ``src_ra_dec`` parameter. If ``None``, the radius is set to the FWHM of
-        the beam major axis.
+        This parameter is a float (default is 50.0). If island size in beam area is more than this, consider splitting
+        island. The minimum value is 50.
 
     stop_at
-        This parameter is a string (default is ``None``) that stops an analysis
-        after: 'isl' = island finding step or 'read' = image reading step.
+        This parameter is a string (default is ``None``) that stops an analysis after: 'isl' = island finding step or 'read' = image reading step.
 
     trim_box
-        This parameter is a tuple (default is ``None``) that defines a subregion
-        of the image on which to do source detection. It is specified as (xmin,
-        xmax, ymin, ymax) in pixels. E.g., ``trim_box = (120, 840, 15, 895)``\.
-        If ``None``, the entire image is used.
+        This parameter is a tuple (default is ``None``) that defines a subregion of the image on which to do source detection. It is specified as (xmin, xmax,
+        ymin, ymax) in pixels. E.g., ``trim_box = (120, 840, 15, 895)``\. If ``None``, the entire image is used.
 
 
 .. _flagging_opts:
@@ -633,7 +544,7 @@ The options for flagging of Gaussians are:
     flagging_opts ......... True : Show options for Gaussian flagging
       :term:`flag_bordersize` ........ 0 : Flag Gaussian if centre is outside border -
                                    flag_bordersize pixels
-      :term:`flag_maxsize_bm` ..... 25.0 : Flag Gaussian if area greater than flag_maxsize_bm
+      :term:`flag_maxsize_bm` ..... 50.0 : Flag Gaussian if area greater than flag_maxsize_bm
                                    times beam area
       :term:`flag_maxsize_isl` ..... 1.0 : Flag Gaussian if x, y bounding box around
                                    sigma-contour is factor times island bbox
@@ -709,16 +620,15 @@ The output options are:
                                    patches. 'single' => all Gaussians in one patch.
                                    'gaussian' => each Gaussian gets its own patch.
                                    'source' => all Gaussians belonging to a single
-                                   source are grouped into one patch. 'mask' => use mask
-                                   file specified by bbs_patches_mask
-      :term:`bbs_patches_mask` .... None : Name of the mask file (of same size as input image)
-                                   that defines the patches if bbs_patches = 'mask'
+                                   source are grouped into one patch
       :term:`indir` ............... None : Directory of input FITS files. None => get from
                                    filename
       :term:`opdir_overwrite` .. 'overwrite': 'overwrite'/'append': If output_all=True,
                                    delete existing files or append a new directory
       :term:`output_all` ......... False : Write out all files automatically to directory
                                    'filename_pybdsm'
+      :term:`output_fbdsm` ....... False : write out fBDSM format output files for use in
+                                   Anaamika
       :term:`plot_allgaus` ....... False : Make a plot of all Gaussians at the end
       :term:`plot_islands` ....... False : Make separate plots of each island during fitting
                                    (for large images, this may take a long time and a
@@ -738,15 +648,15 @@ The output options are:
 .. glossary::
 
     bbs_patches
-        This parameter is a string (default is ``None``) that sets the type of patch to use in BBS-formatted catalogs. When the Gaussian catalogue is written as a BBS-readable sky file, this option determines whether all Gaussians are in a single patch (``'single'``), there are no patches (``None``), all Gaussians for a given source are in a separate patch (``'source'``), each Gaussian gets its own patch (``'gaussian'``), or a mask image is used to define the patches (``'mask'``).
+        This parameter is a string (default is ``None``) that sets the type of patch to use in BBS-formatted catalogs. When the Gaussian catalogue is written as a BBS-readable sky file, this
+        determines whether all Gaussians are in a single patch (``'single'``), there are no
+        patches (``None``), all Gaussians for a given source are in a separate patch (``'source'``), or
+        each Gaussian gets its own patch (``'gaussian'``).
 
         If you wish to have patches defined by island, then set
         ``group_by_isl = True`` before fitting to force all
         Gaussians in an island to be in a single source. Then set
         ``bbs_patches = 'source'`` when writing the catalog.
-
-    bbs_patches_mask
-        This parameter is a string (default is ``None``) that sets the file name of the mask file to use to define patches in BBS-formatted catalogs. The mask image should be 1 inside the patches and 0 elsewhere and should be the same size as the input image (before any ``trim_box`` is applied). Any Gaussians that fall outside of the patches will be ignored and will not appear in the output sky model.
 
     indir
         This parameter is a string (default is ``None``) that sets the directory of input FITS files. If ``None``, the directory is defined by the input filename.
@@ -756,6 +666,9 @@ The output options are:
 
     output_all
         This parameter is a Boolean (default is ``False``). If ``True``\, all output products are written automatically to the directory ``'filename_pybdsm'``.
+
+    output_fbdsm
+        This parameter is a Boolean (default is ``False``). If ``True``\, write out fBDSM format output files for use in Anaamika.
 
     plot_allgaus
         This parameter is a Boolean (default is ``False``). If ``True``\, make a plot of all Gaussians at the end.
@@ -838,7 +751,7 @@ The options concerning multichannel images are:
         constant value of the beam is taken instead.
 
     beam_spectrum
-        This parameter is a list of tuples (default is ``None``) that sets the FWHM of synthesized beam per channel. Specify as [(bmaj_ch1, bmin_ch1,
+        his parameter is a list of tuples (default is ``None``) that sets the FWHM of synthesized beam per channel. Specify as [(bmaj_ch1, bmin_ch1,
         bpa_ch1), (bmaj_ch2, bmin_ch2, bpa_ch2), etc.] in degrees. E.g.,
         ``beam_spectrum = [(0.01, 0.01, 45.0), (0.02, 0.01, 34.0)]`` for two
         channels.
@@ -887,9 +800,7 @@ The wavelet module performs the following steps:
 
 * For each scale (*j*), the appropriate *à trous* wavelet transformation is made (see Holschneider et al. 1989 for details). Additionally, the "remainder" image (called the *c_J* image) is also made. This image includes all emission not included in the other wavelet images.
 
-* Depending on the value of the ``atrous_sum`` option, fitting is done to either an image that is a sum over all scales equal to or larger than the scale under consideration (``atrous_sum = True``) or to an image of a single scale (``atrous_sum = False``). Fitting to the sum over all larger scales will generally result in increased signal to noise.
-
-* If ``atrous_bdsm = True``, an rms map and a mean map are made for each wavelet image and Gaussians are fit in the normal way. Gaussians can be optionally restricted to lie within islands found from the initial image. If a wavelet island overlaps spatially with an existing island, the two islands are merged together to form a single island. The wavelet Gaussians can then be included in source catalogs (see :ref:`write_catalog`).
+* If ``atrous_bdsm = True``, an rms map and a mean map are made for each wavelet image and Gaussians are fit in the normal way. These wavelet Gaussians can then be included in source catalogs (see :ref:`write_catalog`).
 
 The options for this module are as follows:
 
@@ -902,15 +813,11 @@ The options for this module are as follows:
                                    inside program
       :term:`atrous_lpf` ........... 'b3': Low pass filter, either 'b3' or 'tr', for B3
                                    spline or Triangle
-      :term:`atrous_orig_isl` .... False : Restrict wavelet Gaussians to islands found in
-                                   original image
-      :term:`atrous_sum` .......... True : Fit to the sum of images of the remaining wavelet
-                                   scales
 
 .. glossary::
 
     atrous_bdsm_do
-        This parameter is a Boolean (default is ``False``). If ``True``, PyBDSM performs source extraction on each wavelet scale.
+        This parameter is a Boolean (default is ``False``). If ``True``\, PyBDSM performs source extraction on each wavelet scale.
 
     atrous_jmax
         This parameter is an integer (default is 0) which is the maximum order of the *à trous* wavelet
@@ -925,19 +832,11 @@ The options for this module are as follows:
         3-4 times smaller than the smallest image dimension.
 
     atrous_lpf
-        This parameter is a string (default is ``'b3'``) that sets the low pass filter, which can be either the B3 spline
+        This parameter is a string (default is ``'b3'``) that sets the low pass filter, which can currently be either the B3 spline
         or the triangle function, which is used to generate the *à trous*
         wavelets. The B3 spline is [1, 4, 6, 4, 1] and the triangle is [1, 2,
         1], normalised so that the sum is unity. The lengths of the filters are
         hence 5 and 3 respectively.
-
-    atrous_orig_isl
-        This parameter is a Boolean (default is ``False``). If ``True``, all wavelet Gaussians must lie within the boundaries of islands found in the original image. If ``False``, new islands that are found only
-        in the wavelet images are included in the final fit.
-
-    atrous_sum
-        This parameter is a Boolean (default is ``True``). If ``True``, fitting is done on an image that is the sum of the remaining wavelet scales. Using the sum will generally result in improved signal.
-        If ``False``, fitting is done on only the wavelet scale under consideration.
 
 .. _psf_vary_do:
 
@@ -951,7 +850,7 @@ If ``psf_vary_do = True``, then the spatial variations in the PSF are estimated 
 
 * The unresolved sources within each tile that have SNRs greater than ``psf_snrcutstack`` are then stacked to form a high-SNR PSF. For each tile, this PSF is fit with a Gaussian to recover its size. The significance of the variation in the sizes across the image is quantified.
 
-* If the variation is significant, the major axis, minor axis, and position angle are then interpolated across the image. Smoothing can be applied to these images to smooth out artifacts due to noise and the interpolation. Additionally, images are made of the ratio of peak-to-total flux and peak-to-aperture flux (if an aperture is specified). These ratio images provide conversions from total flux to peak flux for point sources. In the absence of smearing effects, these ratios should be around unity. However, if ionospheric effects are present, significant smearing can be present. In this case, these ratio images can be useful, for example, in determining the sensitivity at a particular location in the image to a point source with a given total flux.
+* If the variation is significant, the major axis, minor axis, and position angle are then interpolated across the image. Where there is sufficient information, the interpolation is done using Delaunay triangulation; otherwise, the values within the tiles defined by tessellation are simply set to those of the appropriate PSF.
 
 * Lastly, the deconvolved source sizes are adjusted to include the PSF variation as a function of position.
 
@@ -969,8 +868,6 @@ The options for this module are as follows:
       :term:`psf_nsig` ............. 3.0 : Kappa for clipping within each bin
       :term:`psf_over` ............... 2 : Factor of nyquist sample for binning bmaj, etc. vs
                                    SNR
-      :term:`psf_smooth` .......... None : Size of Gaussian to use for smoothing of
-                                   interpolated images in arcsec. None => no smoothing
       :term:`psf_snrcut` .......... 10.0 : Minimum SNR for statistics
       :term:`psf_snrcutstack` ..... 15.0 : Unresolved sources with higher SNR taken for
                                    stacked psfs
@@ -1009,9 +906,6 @@ The options for this module are as follows:
     psf_over
         This parameter is an integer (default is 2). When constructing a set of 'unresolved' sources for psf estimation, this parameter controls the factor of nyquist sample for binning bmaj, etc. vs SNR.
 
-    psf_smooth
-        This parameter is a float (default is ``None``) that sets the smoothing scale (in arcsec) used to smooth the interpolated images. Generally, artifacts due to noise and the interpolation can be significantly reduced if the smoothing scale is similar to the typical source separation scale.
-
     psf_snrcut
         This parameter is a float (default is 10.0). Only Gaussians with SNR greater than this are considered for processing.
         The minimum value is 5.0
@@ -1036,7 +930,7 @@ If ``spectralindex_do = True`` (and the input image has more than one frequency)
 
 * The rms maps for the remaining channels are determined.
 
-* Neighboring channels are averaged to attempt to obtain the target SNR per channel for a given source, set by the ``specind_snr`` parameter.
+* Neighboring channels are averages to attempt to obtain the target SNR per channel for a given source, set by the ``specind_snr`` parameter.
 
     .. note::
 

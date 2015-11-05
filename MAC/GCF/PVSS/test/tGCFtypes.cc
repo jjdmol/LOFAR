@@ -2,7 +2,7 @@
 //
 //  Copyright (C) 2007
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -36,30 +36,22 @@ int main(int, char* argv[]) {
 	unsigned char*	blob = &buffer[0];
 
 	GCFPVBool		myBool1(true);
-	cout << "myBool = " << myBool1 << endl;
 	GCFPVBlob		myBlob1(blob, sizeof(*blob), true);
-	cout << "myBlob = " << myBlob1 << endl;
 	GCFPVChar		myChar1('A');
-	cout << "myChar = " << myChar1 << endl;
 	GCFPVDouble		myDouble1(3.14);
-	cout << "myDouble = " << myDouble1 << endl;
 	GCFPVInteger	myInt1(-34567);
-	cout << "myInt = " << myInt1 << endl;
 	GCFPVString		myString1("Some test string");
-	cout << "myString = " << myString1 << endl;
 	GCFPVUnsigned	myUnsigned1(76543);
-	cout << "myUnsigned = " << myUnsigned1 << endl;
 
-	GCFPVDynArr	testArr(LPT_STRING);
+	GCFPValueArray	testArr;
 	testArr.push_back(new GCFPVString("aap"));
 	testArr.push_back(new GCFPVString("noot"));
 	testArr.push_back(new GCFPVString("mies"));
 	testArr.push_back(new GCFPVString("wim"));
 	testArr.push_back(new GCFPVString("zus"));
-	cout << "testArr = " << testArr << endl;
 
-	GCFPVDynArr		originalArr(testArr);
-	GCFPVDynArr		indenticalArr(testArr);
+	GCFPVDynArr		originalArr(LPT_STRING, testArr);
+	GCFPVDynArr		indenticalArr(LPT_STRING, testArr);
 	ASSERTSTR (originalArr == indenticalArr, "originalArr and indenticalArr are NOT identical");
 	cout << "originalArr and indenticalArr are identical" << endl;
 
@@ -69,7 +61,7 @@ int main(int, char* argv[]) {
 	cout << "originalArr and copiedArr are identical" << endl;
 
 	testArr.push_back(new GCFPVString("teun"));
-	GCFPVDynArr		differentArr(testArr);
+	GCFPVDynArr		differentArr(LPT_STRING, testArr);
 	ASSERTSTR (originalArr != differentArr, "originalArr and differentArr ARE identical");
 	cout << "originalArr and differentArr are not identical" << endl;
 	

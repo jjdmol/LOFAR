@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 //#
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/Exception.h>
 #include <Common/SystemUtil.h>
 #include <APL/APLCommon/ChildControl.h>
 #include <APL/APLCommon/ParentControl.h>
@@ -32,6 +33,9 @@ using namespace LOFAR;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::APLCommon;
 using namespace LOFAR::StationCU;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char* argv[])
 {

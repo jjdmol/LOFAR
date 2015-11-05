@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006-2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -27,8 +27,10 @@
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>					// rtrim
 #include <Common/SystemUtil.h>
-#include <ApplCommon/LofarDirs.h>
+#include <Common/ParameterSet.h>					// indexValue
 #include <APL/APLCommon/ControllerDefines.h>
+#include <ApplCommon/LofarDirs.h>
+#include <ApplCommon/StationInfo.h>
 #include "Controller_Protocol.ph"
 
 #include <boost/config.hpp>
@@ -36,7 +38,6 @@
 using namespace boost;
 
 namespace LOFAR {
-  using namespace Controller_Protocol;
   namespace APLCommon {
 
 typedef struct cntlrDefinition {
@@ -161,6 +162,26 @@ bool	isSharedController(uint16		cntlrType)
 }
 
 //
+// getObservationNr(controllerName)
+//
+// Get the ObservationNr from the controllername.
+uint32	getObservationNr (const string&	controllerName)
+{
+	return (indexValue(controllerName, "{}"));
+}
+
+//
+// getInstanceNr(controllername)
+//
+// Get the instanceNr from the controllername.
+uint16	getInstanceNr (const string&	controllerName)
+{
+	string		cntlrName (controllerName);		// destroyable copy
+	rtrim(cntlrName, "{}0123456789");
+	return (indexValue(cntlrName, "[]"));
+}
+
+//
 // getControllerType(controllerName)
 //
 // Get the controllerType from the controllername.
@@ -211,6 +232,114 @@ string observationParset(int	obsID)
 }
 
 //
+// createPropertySetName(propSetMask)
+//
+//  A PropSetMask may contain the markers:
+//	@ring@
+//	@station@
+//  @instance@
+//	@observation@
+//	@cabinet@
+//	@subrack@
+//	@RSPboard@
+//	@TBboard@
+//	@rcu@
+//      @bgp@
+//      @midplane@
+//      @ionode@
+//      @osrack@
+//      @ossubcluster@
+//      @storagenode@
+//      @offlinenode@
+//  @inputbuffer@
+//  @adder@
+//  @storage@
+//
+string	createPropertySetName(const string&		propSetMask,
+							  const string&		controllerName,
+							  const string&		realDPname)
+{
+	string	psName(propSetMask);		// editable copy
+	string::size_type	pos;
+	// when name contains @ring@_@station@ cut out this marker and prepend hostname
+	// stationname+:  -> LOFAR_ObsSW_@ring@_@station@_CalCtrl_xxx --> CS010:LOFAR_ObsSW_CalCtrl_xxx
+	if ((pos = psName.find("@ring@_@station@_")) != string::npos) {
+		psName.erase(pos, 17);
+		psName = PVSSDatabaseName(myHostname(false)) + ":" + psName;
+	}
+
+	if ((pos = psName.find("@ring@")) != string::npos) {
+		psName.replace(pos, 6, stationRingName());
+	}
+
+	if ((pos = psName.find("@station@")) != string::npos) {
+		psName.replace(pos, 9, PVSSDatabaseName(myHostname(false)));
+	}
+
+	if ((pos = psName.find("@instance@")) != string::npos) {
+		uint16	instanceNr = getInstanceNr(controllerName);
+		if (instanceNr) {
+			psName.replace(pos, 10, lexical_cast<string>(instanceNr));
+		}
+		else {
+			psName.replace(pos, 10, "");	
+		}
+	}
+
+	if ((pos = psName.find("LOFAR_ObsSW_@observation@")) != string::npos) {
+		psName.replace(pos, 25, realDPname);
+	}
+
+	if ((pos = psName.find("@cabinet@")) != string::npos) {
+		psName.replace(pos, 9, string("Cabinet%d"));
+	}
+	if ((pos = psName.find("@subrack@")) != string::npos) {
+		psName.replace(pos, 9, string("Subrack%d"));
+	}
+	if ((pos = psName.find("@RSPBoard@")) != string::npos) {
+		psName.replace(pos, 10, string("RSPBoard%d"));
+	}
+	if ((pos = psName.find("@TBBoard@")) != string::npos) {
+		psName.replace(pos, 9, string("TBBoard%d"));
+	}
+	if ((pos = psName.find("@rcu@")) != string::npos) {
+		psName.replace(pos, 5, string("RCU%d"));
+	}
+	if ((pos = psName.find("@bgp@")) != string::npos) {
+		psName.replace(pos, 5, string("BGP%d"));
+	}
+	if ((pos = psName.find("@midplane@")) != string::npos) {
+		psName.replace(pos, 10, string("Midplane%d"));
+	}
+	if ((pos = psName.find("@ionode@")) != string::npos) {
+		psName.replace(pos, 8, string("IONode%d"));
+	}
+	if ((pos = psName.find("@osrack@")) != string::npos) {
+		psName.replace(pos, 8, string("OSRack%d"));
+	}
+	if ((pos = psName.find("@ossubcluster@")) != string::npos) {
+		psName.replace(pos, 14, string("OSSubcluster%d"));
+	}
+	if ((pos = psName.find("@storagenode@")) != string::npos) {
+		psName.replace(pos, 13, string("StorageNode%d"));
+	}
+	if ((pos = psName.find("@offlinenode@")) != string::npos) {
+		psName.replace(pos, 13, string("OfflineNode%d"));
+	}
+	if ((pos = psName.find("@inputbuffer@")) != string::npos) {
+		psName.replace(pos, 13, string("InputBuffer%d"));
+	}
+	if ((pos = psName.find("@adder@")) != string::npos) {
+		psName.replace(pos, 7, string("Adder%d"));
+	}
+	if ((pos = psName.find("@storage@")) != string::npos) {
+		psName.replace(pos, 9, string("Storage%d"));
+	}
+		
+	return (psName);
+}
+
+//
 // sendControlResult(port, CONTROLsignal, cntlrName, result)
 //
 // Construct a message that matches the given signal and send it on the port.
@@ -223,79 +352,86 @@ bool sendControlResult(GCF::TM::GCFPortInterface&	port,
 					   uint16						result)
 {
 	switch (signal) {
-	case CONTROL_STARTED: {
-//		CONTROLStartedEvent	answer;
-//		answer.cntlrName = cntlrName;
-//		return (port.send(answer) > 0);
-	} break;
 	case CONTROL_CONNECT:
 	case CONTROL_CONNECTED: {
-		CONTROLConnectedEvent	answer;
-		answer.cntlrName = cntlrName;
-		answer.result	 = result;
-		return (port.send(answer) > 0);
-	} break;
+			CONTROLConnectedEvent	answer;
+			answer.cntlrName = cntlrName;
+			answer.result	 = result;
+			return (port.send(answer) > 0);
+		}
+		break;
 	case CONTROL_RESYNC:
 	case CONTROL_RESYNCED: {
-		CONTROLResyncedEvent	answer;
-		answer.cntlrName = cntlrName;
-		answer.result	 = result;
-		return (port.send(answer) > 0);
-	} break;
+			CONTROLResyncedEvent	answer;
+			answer.cntlrName = cntlrName;
+			answer.result	 = result;
+			return (port.send(answer) > 0);
+			port.send(answer);
+		}
+		break;
 	case CONTROL_SCHEDULE:
 	case CONTROL_SCHEDULED: {
-		CONTROLScheduledEvent	answer;
-		answer.cntlrName = cntlrName;
-		answer.result	 = result;
-		return (port.send(answer) > 0);
-	} break;
+			CONTROLScheduledEvent	answer;
+			answer.cntlrName = cntlrName;
+			answer.result	 = result;
+			return (port.send(answer) > 0);
+		}
+		break;
 	case CONTROL_CLAIM:
 	case CONTROL_CLAIMED: {
-		CONTROLClaimedEvent	answer;
-		answer.cntlrName = cntlrName;
-		answer.result	 = result;
-		return (port.send(answer) > 0);
-	} break;
+			CONTROLClaimedEvent	answer;
+			answer.cntlrName = cntlrName;
+			answer.result	 = result;
+			return (port.send(answer) > 0);
+		}
+		break;
 	case CONTROL_PREPARE:
 	case CONTROL_PREPARED: {
-		CONTROLPreparedEvent	answer;
-		answer.cntlrName = cntlrName;
-		answer.result	 = result;
-		return (port.send(answer) > 0);
-	} break;
+			CONTROLPreparedEvent	answer;
+			answer.cntlrName = cntlrName;
+			answer.result	 = result;
+			return (port.send(answer) > 0);
+		}
+		break;
 	case CONTROL_RESUME:
 	case CONTROL_RESUMED: {
-		CONTROLResumedEvent	answer;
-		answer.cntlrName = cntlrName;
-		answer.result	 = result;
-		return (port.send(answer) > 0);
-	} break;
+			CONTROLResumedEvent	answer;
+			answer.cntlrName = cntlrName;
+			answer.result	 = result;
+			return (port.send(answer) > 0);
+		}
+		break;
 	case CONTROL_SUSPEND:
 	case CONTROL_SUSPENDED: {
-		CONTROLSuspendedEvent	answer;
-		answer.cntlrName = cntlrName;
-		answer.result	 = result;
-		return (port.send(answer) > 0);
-	} break;
+			CONTROLSuspendedEvent	answer;
+			answer.cntlrName = cntlrName;
+			answer.result	 = result;
+			return (port.send(answer) > 0);
+		}
+		break;
 	case CONTROL_RELEASE:
 	case CONTROL_RELEASED: {
-		CONTROLReleasedEvent	answer;
-		answer.cntlrName = cntlrName;
-		answer.result	 = result;
-		return (port.send(answer) > 0);
-	} break;
+			CONTROLReleasedEvent	answer;
+			answer.cntlrName = cntlrName;
+			answer.result	 = result;
+			return (port.send(answer) > 0);
+		}
+		break;
 	case CONTROL_QUIT:
 	case CONTROL_QUITED: {
-		CONTROLQuitedEvent	answer;
-		answer.cntlrName = cntlrName;
-		answer.result	 = result;
-		return (port.send(answer) > 0);
-	} break;
+			CONTROLQuitedEvent	answer;
+			answer.cntlrName = cntlrName;
+			answer.result	 = result;
+			return (port.send(answer) > 0);
+		}
+		break;
 	default:
-		ASSERTSTR(false, formatString("State %04X is not supported by 'sendControlResult'", signal));
+		ASSERTSTR(false, 
+			formatString("State %04X is not supported by 'sendControlResult'", signal));
+
 	}
 
-    return (false); // satisfy compiler        
+        return false; // satisfy compiler        
 }
 
 

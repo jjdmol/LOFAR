@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -44,20 +44,14 @@
 #include "PVSSDatapointDefs.h"
 #include <StationCU/Package__Version.h>
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::RTDB;
 using namespace LOFAR::APL::RTDBCommon;
-using namespace boost::posix_time;
 using namespace std;
 
 namespace LOFAR {
 	using namespace APLCommon;
-	using namespace DP_Protocol;
-	using namespace Controller_Protocol;
-	using namespace IBS_Protocol;
 	namespace StationCU {
 
 #define MAX2(a,b)	((a)>(b)?(a):(b))
@@ -256,8 +250,7 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 		itsParentControl->activateObservationTimers(msg.cntlrName, startTime, stopTime);
 
 		LOG_INFO ("Killing running beamctl's if any");
-		int retval = system ("killall beamctl");
-		(void)retval;
+		system ("killall beamctl");
 
 		LOG_INFO ("Going to started state");
 		TRAN(BeamControl::started_state);				// go to next state.
@@ -627,9 +620,6 @@ GCFEvent::TResult BeamControl::sendPointings_state(GCFEvent& event, GCFPortInter
 		LOG_DEBUG_STR(ptEvent);
 	}
 	break;
-
-	case F_EXIT:
-		break;
 
 	case IBS_POINTTOACK: {
 		IBSPointtoackEvent ack(event);

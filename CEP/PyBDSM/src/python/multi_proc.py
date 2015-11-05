@@ -9,17 +9,16 @@ Adapted from a module by Brian Refsdal at SAO, available at AstroPython
 
 """
 import numpy
-_multi = False
-_ncpus = 1
+_multi=False
+_ncpus=1
 
 try:
     # May raise ImportError
     import multiprocessing
-    _multi = True
+    _multi=True
 
     # May raise NotImplementedError
-    _ncpus = min(multiprocessing.cpu_count(), 8)
-
+    _ncpus = multiprocessing.cpu_count()
 except:
     pass
 
@@ -55,15 +54,13 @@ def worker(f, ii, chunk, out_q, err_q, lock, bar, bar_state):
         vals.append(result)
 
         # update statusbar
-        if bar is not None:
+        if bar != None:
             if bar_state['started']:
                 bar.pos = bar_state['pos']
                 bar.spin_pos = bar_state['spin_pos']
-                bar.started = bar_state['started']
-                increment = bar.increment()
-                bar_state['started'] = bar.started
-                bar_state['pos'] += increment
-                bar_state['spin_pos'] += increment
+                bar.increment()
+                bar_state['pos'] += 1
+                bar_state['spin_pos'] += 1
                 if bar_state['spin_pos'] >= 4:
                     bar_state['spin_pos'] = 0
 
@@ -108,14 +105,11 @@ def run_tasks(procs, err_q, out_q, num):
     results=[None]*num;
     for i in range(num):
         idx, result = out_q.get()
-        results[idx] = result
+        results[idx] = numpy.array(result, dtype=object)
 
     # Remove extra dimension added by array_split
-    result_list = []
-    for result in results:
-            result_list += result
+    return numpy.concatenate(results).tolist()
 
-    return result_list
 
 
 def parallel_map(function, sequence, numcores=None, bar=None, weights=None):
@@ -145,19 +139,13 @@ def parallel_map(function, sequence, numcores=None, bar=None, weights=None):
     size = len(sequence)
 
     if not _multi or size == 1:
-        results = map(function, sequence)
-        if bar is not None:
-            bar.stop()
-        return results
+        return map(function, sequence)
 
-
-    # Set default number of cores to use. Try to leave one core free for pyplot.
+    # Set default number of cores to use. Leave one core free for pyplot.
     if numcores is None:
         numcores = _ncpus - 1
     if numcores > _ncpus - 1:
         numcores = _ncpus - 1
-    if numcores < 1:
-        numcores = 1
 
     # Returns a started SyncManager object which can be used for sharing
     # objects between processes. The returned manager object corresponds
@@ -172,7 +160,7 @@ def parallel_map(function, sequence, numcores=None, bar=None, weights=None):
     err_q = manager.Queue()
     lock = manager.Lock()
     bar_state = manager.dict()
-    if bar is not None:
+    if bar != None:
         bar_state['pos'] = bar.pos
         bar_state['spin_pos'] = bar.spin_pos
         bar_state['started'] = bar.started
@@ -183,7 +171,7 @@ def parallel_map(function, sequence, numcores=None, bar=None, weights=None):
         numcores = size
 
     # group sequence into numcores-worth of chunks
-    if weights is None or numcores == size:
+    if weights == None or numcores == size:
         # No grouping specified (or there are as many cores as
         # processes), so divide into equal chunks
         sequence = numpy.array_split(sequence, numcores)
@@ -195,15 +183,11 @@ def parallel_map(function, sequence, numcores=None, bar=None, weights=None):
         for indx, weight in enumerate(weights):
             temp_sum += weight
             if temp_sum > weight_per_core:
-                cut_values.append(indx+1)
+                cut_values.append(indx)
                 temp_sum = weight
         if len(cut_values) > numcores - 1:
             cut_values = cut_values[0:numcores-1]
         sequence = numpy.array_split(sequence, cut_values)
-
-    # Make sure there are no empty chunks at the end of the sequence
-    while len(sequence[-1]) == 0:
-        sequence.pop()
 
     procs = [multiprocessing.Process(target=worker,
              args=(function, ii, chunk, out_q, err_q, lock, bar, bar_state))
@@ -211,9 +195,12 @@ def parallel_map(function, sequence, numcores=None, bar=None, weights=None):
 
     try:
         results = run_tasks(procs, err_q, out_q, len(sequence))
-        if bar is not None:
+        if bar != None:
             if bar.started:
-                bar.stop()
+                bar.pos = bar_state['pos']
+                bar.spin_pos = bar_state['spin_pos']
+                while bar.pos < bar.max:
+                    bar.increment()
         return results
 
     except KeyboardInterrupt:

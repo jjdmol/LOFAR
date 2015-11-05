@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 #include <DPPP/FlagCounter.h>
 #include <DPPP/DPInput.h>
-#include <Common/ParameterSet.h>
+#include <DPPP/ParSet.h>
 #include <Common/StreamUtil.h>
 #include <Common/LofarLogger.h>
 #include <tables/Tables/Table.h>
@@ -50,8 +50,7 @@ namespace LOFAR {
     {}
 
     FlagCounter::FlagCounter (const string& msName,
-                              const ParameterSet& parset,
-                              const string& prefix)
+                              const ParSet& parset, const string& prefix)
     {
       itsWarnPerc = parset.getDouble (prefix+"warnperc", 0);
       itsShowFF   = parset.getBool   (prefix+"showfullyflagged", false);
@@ -95,6 +94,14 @@ namespace LOFAR {
       std::fill (itsChanCounts.begin(),itsChanCounts.end(), 0);
       std::fill (itsCorrCounts.begin(),itsCorrCounts.end(), 0);
     }
+
+    /*
+    void FlagCounter::init (const FlagCounter& that)
+    {
+      init (that.itsBLCounts.size(), that.itsChanCounts.size(),
+            that.itsCorrCounts.size());
+    }
+    */
 
     void FlagCounter::add (const FlagCounter& that)
     {

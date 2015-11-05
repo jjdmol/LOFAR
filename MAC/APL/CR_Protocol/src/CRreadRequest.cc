@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2011
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <APL/CR_Protocol/CRreadRequest.h>
-#include <MACIO/Marshalling.tcc>
+#include <MACIO/Marshalling.h>
 
 namespace LOFAR {
   namespace CR_Protocol {
@@ -40,27 +40,27 @@ ostream& CRreadRequest::print (ostream& os) const
 
 
 // --- marshalling methods --- 
-size_t CRreadRequest::getSize()
+unsigned int CRreadRequest::getSize()
 {
-	return(MSH_size(stationList) + MSH_size(rcuList) + readTime.getSize() + timeBefore.getSize() + timeAfter.getSize());
+	return(MSH_STRING_SIZE(stationList) + MSH_STRING_SIZE(rcuList) + readTime.getSize() + timeBefore.getSize() + timeAfter.getSize());
 }
 
-size_t CRreadRequest::pack  (char* buffer) const
+unsigned int CRreadRequest::pack  (void* buffer)
 {
-	size_t offset = 0;
-	offset = MSH_pack(buffer, offset, stationList);	
-	offset = MSH_pack(buffer, offset, rcuList);	
+	unsigned int	offset(0);
+	MSH_PACK_STRING(buffer, offset, stationList);	
+	MSH_PACK_STRING(buffer, offset, rcuList);	
 	offset += readTime.pack((char*)(buffer)+offset);
 	offset += timeBefore.pack((char*)(buffer)+offset);
 	offset += timeAfter.pack((char*)(buffer)+offset);
 	return (offset);
 }
 
-size_t CRreadRequest::unpack(const char *buffer)
+unsigned int CRreadRequest::unpack(void *buffer)
 {
-	size_t offset = 0;
-	offset = MSH_unpack(buffer, offset, stationList);	
-	offset = MSH_unpack(buffer, offset, rcuList);	
+	unsigned int	offset(0);
+	MSH_UNPACK_STRING(buffer, offset, stationList);	
+	MSH_UNPACK_STRING(buffer, offset, rcuList);	
 	offset += readTime.unpack((char*)(buffer)+offset);
 	offset += timeBefore.unpack((char*)(buffer)+offset);
 	offset += timeAfter.unpack((char*)(buffer)+offset);

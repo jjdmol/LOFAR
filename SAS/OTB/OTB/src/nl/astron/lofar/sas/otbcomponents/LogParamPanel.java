@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -510,21 +510,19 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
     public void composeTimeString(String time) {
         // Set the dateformat OTDB takes
         SimpleDateFormat id = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm",itsLocale);
-        switch (time) {
-            case "start":
-                if (itsStartTime != null) {
-                  LogParamStartTimeText.setText(id.format(itsStartTime).replace("T", " "));
-                } else {
-                    LogParamStartTimeText.setText("not-a-date-time");
-                }
-                break;
-            case "stop":
-                if (itsStopTime != null) {
-                    LogParamEndTimeText.setText(id.format(itsStopTime).replace("T", " "));
-                } else {
-                    LogParamEndTimeText.setText("not-a-date-time");
-                }
-                break;
+        if (time.equals("start")) {
+            if (itsStartTime != null) {
+              LogParamStartTimeText.setText(id.format(itsStartTime).replace("T", " "));
+            } else {
+                LogParamStartTimeText.setText("not-a-date-time");
+            }
+              
+        } else if (time.equals("stop")) {
+            if (itsStopTime != null) {
+                LogParamEndTimeText.setText(id.format(itsStopTime).replace("T", " "));
+            } else {
+                LogParamEndTimeText.setText("not-a-date-time");
+            }
         }
     }   
     private void setTime() {

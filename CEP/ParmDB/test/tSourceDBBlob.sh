@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tSourceDBBlob
+./runctest.sh tSourceDBBlob > tSourceDBBlob.log 2>&1

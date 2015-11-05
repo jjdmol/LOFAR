@@ -2,7 +2,9 @@
 
 lofar_package(StaticMetaData 1.0)
 
-lofar_add_sbin_scripts(createFiles)
+install(PROGRAMS 
+  createFiles 
+  DESTINATION sbin)
 
 # These files end up in ${prefix}/etc
 file(GLOB sysconf_data *.conf)
@@ -20,9 +22,11 @@ file(GLOB staticmeta_data
   AntennaArrays/*.conf
   AntennaPos/*.conf
   CableDelays/*.conf
+  HBADeltas/*.conf
   iHBADeltas/*.conf
   AntennaFields/*.conf
-  Attenuation/*.conf)
+  TBBConnections.dat
+  RSPConnections_CCU.dat)
 install(FILES
   ${staticmeta_data}
   DESTINATION etc/StaticMetaData)

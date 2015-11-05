@@ -9,10 +9,21 @@ required by 'execute').
 """
 try:
     import matplotlib.pyplot as pl
-    has_pl = True
-except (RuntimeError, ImportError):
-    print "\033[31;1mWARNING\033[0m: Matplotlib pyplot could not be imported. Plotting is disabled."
-    has_pl = False
+except RuntimeError:
+    # Set use of AGG backend to avoid problems when there
+    # is no DISPLAY variable set
+    import sys
+    modules = []
+    for module in sys.modules:
+        if module.startswith('matplotlib'):
+            modules.append(module)
+    for module in modules:
+        sys.modules.pop(module)
+    import matplotlib as mpl
+    mpl.use('Agg')
+except ImportError:
+    print "\033[31;1mWARNING\033[0m: Matplotlib not found. Plotting is disabled."
+
 from readimage import Op_readimage
 from collapse import Op_collapse
 from preprocess import Op_preprocess
@@ -30,7 +41,6 @@ from wavelet_atrous import Op_wavelet_atrous
 from psf_vary import Op_psf_vary
 from cleanup import Op_cleanup
 from _version import __version__, __revision__
-import gc
 
 default_chain = [Op_readimage(),
                  Op_collapse(),
@@ -40,8 +50,8 @@ default_chain = [Op_readimage(),
                  Op_islands(),
                  Op_gausfit(),
                  Op_wavelet_atrous(),
-                 Op_shapelets(),
                  Op_gaul2srl(),
+                 Op_shapelets(),
                  Op_spectralindex(),
                  Op_polarisation(),
                  Op_make_residimage(),
@@ -60,11 +70,11 @@ def execute(chain, opts):
     from image import Image
     import mylogger
 
-    if 'quiet' in opts:
+    if opts.has_key('quiet'):
         quiet = opts['quiet']
     else:
         quiet = False
-    if 'debug' in opts:
+    if opts.has_key('debug'):
         debug = opts['debug']
     else:
         debug = False
@@ -98,7 +108,6 @@ def _run_op_list(img, chain):
     from interface import raw_input_no_history
     from gausfit import Op_gausfit
     import mylogger
-    import gc
 
     ops = []
     stopat = img.opts.stop_at
@@ -115,14 +124,13 @@ def _run_op_list(img, chain):
     mylog = mylogger.logging.getLogger("PyBDSM.Init")
     mylog.info("PyBDSM version %s (LUS revision %s)"
                              % (__version__, __revision__))
-    par_msg = "Non-default input parameters:\n"
+    mylog.info("Non-default input parameters:")
     user_opts = img.opts.to_list()
     for user_opt in user_opts:
         k, v = user_opt
         val = img.opts.__getattribute__(k)
         if val != v._default and v.group() != 'hidden':
-            par_msg += '    %-20s = %s\n' % (k, repr(val))
-    mylog.info(par_msg[:-1]) # -1 is to trim final newline
+            mylog.info('    %-20s : %s' % (k, repr(val)))
 
     # Run all op's
     dc = '\033[34;1m'
@@ -130,7 +138,7 @@ def _run_op_list(img, chain):
     for op in ops:
         if isinstance(op, Op_gausfit) and img.opts.interactive:
             print dc + '--> Displaying islands and rms image...' + nc
-            if max(img.ch0_arr.shape) > 4096:
+            if max(img.ch0.shape) > 4096:
                 print dc + '--> Image is large. Showing islands only.' + nc
                 img.show_fit(rms_image=False, mean_image=False, ch0_image=False,
                     ch0_islands=True, gresid_image=False, sresid_image=False,
@@ -148,9 +156,8 @@ def _run_op_list(img, chain):
         op.__start_time = time()
         op(img)
         op.__stop_time = time()
-        gc.collect()
 
-    if img.opts.interactive and not img._pi:
+    if img.opts.interactive and not hasattr(img, '_pi'):
         print dc + 'Fitting complete. Displaying results...' + nc
         if img.opts.shapelet_do:
             show_smod = True
@@ -162,7 +169,7 @@ def _run_op_list(img, chain):
             show_spec = True
         else:
             show_spec = False
-        if max(img.ch0_arr.shape) > 4096:
+        if max(img.ch0.shape) > 4096:
             print dc + '--> Image is large. Showing Gaussian residual image only.' + nc
             img.show_fit(rms_image=False, mean_image=False, ch0_image=False,
                 ch0_islands=False, gresid_image=True, sresid_image=False,
@@ -187,7 +194,7 @@ def _run_op_list(img, chain):
 
     # Log all internally derived parameters
     mylog = mylogger.logging.getLogger("PyBDSM.Final")
-    par_msg = "Internally derived parameters:\n"
+    mylog.info("Internally derived input parameters:")
     import inspect
     import types
 
@@ -200,8 +207,7 @@ def _run_op_list(img, chain):
                                                              types.NoneType, tuple,
                                                              list)):
 
-                        par_msg += '    %-20s : %s\n' % (attr[0], repr(used))
-    mylog.info(par_msg[:-1]) # -1 is to trim final newline
+                        mylog.info('    %-20s : %s' % (attr[0], repr(used)))
 
     return True
 
@@ -232,7 +238,7 @@ def process_image(input, **kwargs):
     # If load_pars fails (returns None), assume that input is an image file. If it's not a
     # valid image file (but is an existing file), an error will be raised
     # by img.process() during reading of the file.
-    if img is None:
+    if img == None:
         if os.path.exists(input):
             img = Image({'filename': input})
         else:

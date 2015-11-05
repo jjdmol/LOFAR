@@ -2,7 +2,7 @@
  * TBBConfigPanel.java
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -30,8 +30,10 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.rmi.RemoteException;
-import java.util.BitSet;
 import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Enumeration;
+import java.util.Vector;
 import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -453,7 +455,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     }
     
     /**
-     * Fills the StringArrayLists with the values from the Database
+     * Fills the StringVectors with the values from the Database
      * Also does some base GUI settings on the Input fields
      * @param parent the parent node of the node to be displayed
      * @param aParam the parameter of the node to be displayed if applicable
@@ -688,60 +690,60 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         int index=0;
           
         // OperatingMode
-        if (!itsOperatingModes.get(index).equals("")) {
-           inputOperatingMode.setSelectedItem(itsOperatingModes.get(index));
+        if (!itsOperatingModes.elementAt(index).equals("")) {
+           inputOperatingMode.setSelectedItem(itsOperatingModes.elementAt(index));
         }
         // TriggerMode
-        if (!itsTriggerModes.get(index).equals("")) {
-           inputTriggerMode.setSelectedItem(itsTriggerModes.get(index));
+        if (!itsTriggerModes.elementAt(index).equals("")) {
+           inputTriggerMode.setSelectedItem(itsTriggerModes.elementAt(index));
         }
         // Baselevel
-         inputBaselevel.setText(itsBaselevels.get(index));
+         inputBaselevel.setText(itsBaselevels.elementAt(index));
             
          // Startlevel
-         inputStartlevel.setText(itsStartlevels.get(index));
+         inputStartlevel.setText(itsStartlevels.elementAt(index));
  
          // Stoplevel
-         inputStoplevel.setText(itsStoplevels.get(index));
+         inputStoplevel.setText(itsStoplevels.elementAt(index));
             
          // Filter
-         if (!itsFilters.get(index).equals("")) {
-             inputFilter.setSelectedItem(itsFilters.get(index));
+         if (!itsFilters.elementAt(index).equals("")) {
+             inputFilter.setSelectedItem(itsFilters.elementAt(index));
          }
 
          // Window
-         if (!itsWindows.get(index).equals("")) {
-            inputWindow.setSelectedItem(itsWindows.get(index));
+         if (!itsWindows.elementAt(index).equals("")) {
+            inputWindow.setSelectedItem(itsWindows.elementAt(index));
          }
             
          // Coeff0
-         inputFilter0Coeff0.setText(itsFilter0Coeff0s.get(index));
+         inputFilter0Coeff0.setText(itsFilter0Coeff0s.elementAt(index));
 
          // Coeff1
-         inputFilter0Coeff1.setText(itsFilter0Coeff1s.get(index));
+         inputFilter0Coeff1.setText(itsFilter0Coeff1s.elementAt(index));
 
          // Coeff2
-         inputFilter0Coeff2.setText(itsFilter0Coeff2s.get(index));
+         inputFilter0Coeff2.setText(itsFilter0Coeff2s.elementAt(index));
 
          // Coeff3
-         inputFilter0Coeff3.setText(itsFilter0Coeff3s.get(index));
+         inputFilter0Coeff3.setText(itsFilter0Coeff3s.elementAt(index));
 
          // Coeff0
-         inputFilter1Coeff0.setText(itsFilter1Coeff0s.get(index));
+         inputFilter1Coeff0.setText(itsFilter1Coeff0s.elementAt(index));
 
          // Coeff1
-         inputFilter1Coeff1.setText(itsFilter1Coeff1s.get(index));
+         inputFilter1Coeff1.setText(itsFilter1Coeff1s.elementAt(index));
 
          // Coeff2
-         inputFilter1Coeff2.setText(itsFilter1Coeff2s.get(index));
+         inputFilter1Coeff2.setText(itsFilter1Coeff2s.elementAt(index));
 
          // Coeff3
-         inputFilter1Coeff3.setText(itsFilter1Coeff3s.get(index));
+         inputFilter1Coeff3.setText(itsFilter1Coeff3s.elementAt(index));
          // RCUs
-         inputRCUs.setText(itsRCUs.get(index));
+         inputRCUs.setText(itsRCUs.elementAt(index));
         
          // subbandList
-         inputSubbandList.setText(itsSubbandList.get(index));
+         inputSubbandList.setText(itsSubbandList.elementAt(index));
     }
     
     /** fill the RCU bitset to see what RCU's have been set. To be able to determine later if a given RCU is indeed free.
@@ -749,7 +751,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     private void fillRCUBitset() {
         itsUsedRCUList.clear();
         for (int i=1;i<itsRCUs.size();i++) {
-            BitSet aNewBitSet=rcuToBitSet(LofarUtils.expandedArrayString(itsRCUs.get(i)));
+            BitSet aNewBitSet=rcuToBitSet(LofarUtils.expandedArrayString(itsRCUs.elementAt(i)));
             
             // check if no duplication between the two bitsets
             if (itsUsedRCUList.intersects(aNewBitSet)) {
@@ -973,7 +975,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             // Keep the 1st one, it's the default TBBsetting
             try {
                 for (i=1; i< itsTBBsettings.size(); i++) {
-                    OtdbRmi.getRemoteMaintenance().deleteNode(itsTBBsettings.get(i));
+                    OtdbRmi.getRemoteMaintenance().deleteNode(itsTBBsettings.elementAt(i));
                 }
             } catch (RemoteException ex) {
                 logger.error("Error during deletion of defaultNode: "+ex);
@@ -1008,55 +1010,55 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                             String aKeyName = LofarUtils.keyName(aHWNode.name);
                             switch (aKeyName) {
                                 case "operatingMode":
-                                aHWNode.limits=itsOperatingModes.get(i);
+                                aHWNode.limits=itsOperatingModes.elementAt(i);
                                     break;
                                 case "triggerMode":
-                                aHWNode.limits=itsTriggerModes.get(i);
+                                aHWNode.limits=itsTriggerModes.elementAt(i);
                                     break;
                                 case "baselevel":
-                                aHWNode.limits=itsBaselevels.get(i);
+                                aHWNode.limits=itsBaselevels.elementAt(i);
                                     break;
                                 case "startlevel":
-                                aHWNode.limits=itsStartlevels.get(i);
+                                aHWNode.limits=itsStartlevels.elementAt(i);
                                     break;
                                 case "stoplevel":
-                                aHWNode.limits=itsStoplevels.get(i);
+                                aHWNode.limits=itsStoplevels.elementAt(i);
                                     break;
                                 case "filter":
-                                aHWNode.limits=itsFilters.get(i);
+                                aHWNode.limits=itsFilters.elementAt(i);
                                     break;
                                 case "window":
-                                aHWNode.limits=itsWindows.get(i);
+                                aHWNode.limits=itsWindows.elementAt(i);
                                     break;
                                 case "filter0_coeff0":
-                                aHWNode.limits=itsFilter0Coeff0s.get(i);
+                                aHWNode.limits=itsFilter0Coeff0s.elementAt(i);
                                     break;
                                 case "filter0_coeff1":
-                                aHWNode.limits=itsFilter0Coeff1s.get(i);
+                                aHWNode.limits=itsFilter0Coeff1s.elementAt(i);
                                     break;
                                 case "filter0_coeff2":
-                                aHWNode.limits=itsFilter0Coeff2s.get(i);
+                                aHWNode.limits=itsFilter0Coeff2s.elementAt(i);
                                     break;
                                 case "filter0_coeff3":
-                                aHWNode.limits=itsFilter0Coeff3s.get(i);
+                                aHWNode.limits=itsFilter0Coeff3s.elementAt(i);
                                     break;
                                 case "filter1_coeff0":
-                                aHWNode.limits=itsFilter1Coeff0s.get(i);
+                                aHWNode.limits=itsFilter1Coeff0s.elementAt(i);
                                     break;
                                 case "filter1_coeff1":
-                                aHWNode.limits=itsFilter1Coeff1s.get(i);
+                                aHWNode.limits=itsFilter1Coeff1s.elementAt(i);
                                     break;
                                 case "filter1_coeff2":
-                                aHWNode.limits=itsFilter1Coeff2s.get(i);
+                                aHWNode.limits=itsFilter1Coeff2s.elementAt(i);
                                     break;
                                 case "filter1_coeff3":
-                                aHWNode.limits=itsFilter1Coeff3s.get(i);
+                                aHWNode.limits=itsFilter1Coeff3s.elementAt(i);
                                     break;
                                 case "RCUs":
-                                aHWNode.limits=itsRCUs.get(i);
+                                aHWNode.limits=itsRCUs.elementAt(i);
                                     break;
                                 case "subbandList":
-                                aHWNode.limits=itsSubbandList.get(i);
+                                aHWNode.limits=itsSubbandList.elementAt(i);
                                     break;
                             }
                             saveNode(aHWNode);
@@ -1654,25 +1656,25 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
 
     
     // TBBsettings
-    private ArrayList<jOTDBnode> itsTBBsettings = new ArrayList<>();
+    private Vector<jOTDBnode> itsTBBsettings = new Vector<>();
     // All TBBsetting nodes
-    private ArrayList<String>    itsOperatingModes = new ArrayList<>();
-    private ArrayList<String>    itsTriggerModes = new ArrayList<>();
-    private ArrayList<String>    itsBaselevels= new ArrayList<>();
-    private ArrayList<String>    itsStartlevels= new ArrayList<>();
-    private ArrayList<String>    itsStoplevels= new ArrayList<>();
-    private ArrayList<String>    itsFilters= new ArrayList<>();
-    private ArrayList<String>    itsWindows= new ArrayList<>();
-    private ArrayList<String>    itsFilter0Coeff0s= new ArrayList<>();
-    private ArrayList<String>    itsFilter0Coeff1s= new ArrayList<>();
-    private ArrayList<String>    itsFilter0Coeff2s= new ArrayList<>();
-    private ArrayList<String>    itsFilter0Coeff3s= new ArrayList<>();
-    private ArrayList<String>    itsFilter1Coeff0s= new ArrayList<>();
-    private ArrayList<String>    itsFilter1Coeff1s= new ArrayList<>();
-    private ArrayList<String>    itsFilter1Coeff2s= new ArrayList<>();
-    private ArrayList<String>    itsFilter1Coeff3s= new ArrayList<>();
-    private ArrayList<String>    itsRCUs= new ArrayList<>();
-    private ArrayList<String>    itsSubbandList= new ArrayList<>();
+    private Vector<String>    itsOperatingModes = new Vector<>();
+    private Vector<String>    itsTriggerModes = new Vector<>();
+    private Vector<String>    itsBaselevels= new Vector<>();
+    private Vector<String>    itsStartlevels= new Vector<>();
+    private Vector<String>    itsStoplevels= new Vector<>();
+    private Vector<String>    itsFilters= new Vector<>();
+    private Vector<String>    itsWindows= new Vector<>();
+    private Vector<String>    itsFilter0Coeff0s= new Vector<>();
+    private Vector<String>    itsFilter0Coeff1s= new Vector<>();
+    private Vector<String>    itsFilter0Coeff2s= new Vector<>();
+    private Vector<String>    itsFilter0Coeff3s= new Vector<>();
+    private Vector<String>    itsFilter1Coeff0s= new Vector<>();
+    private Vector<String>    itsFilter1Coeff1s= new Vector<>();
+    private Vector<String>    itsFilter1Coeff2s= new Vector<>();
+    private Vector<String>    itsFilter1Coeff3s= new Vector<>();
+    private Vector<String>    itsRCUs= new Vector<>();
+    private Vector<String>    itsSubbandList= new Vector<>();
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables

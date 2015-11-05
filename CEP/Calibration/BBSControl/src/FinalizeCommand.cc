@@ -71,7 +71,7 @@ namespace LOFAR
     }
 
 
-    void FinalizeCommand::read(const ParameterSet&, const string)
+    void FinalizeCommand::read(const ParameterSet&)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
     }

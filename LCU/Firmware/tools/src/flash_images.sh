@@ -11,7 +11,7 @@ SyntaxError()
 	exit 1
 }
 
-if [ $# == 0 ]; then 
+if [ ${#argv} == 0 ]; then 
   SyntaxError
 fi
 

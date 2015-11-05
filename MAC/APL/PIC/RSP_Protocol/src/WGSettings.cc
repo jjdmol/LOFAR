@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -97,21 +97,27 @@ void WGSettings::initWaveformPresets()
   LOG_DEBUG_STR("ramp=" << WGSettings::m_presets(PRESET_RAMP, Range::all()));
 }
 
-size_t WGSettings::getSize() const
+unsigned int WGSettings::getSize()
 {
-  return MSH_size(m_registers);
+  return MSH_ARRAY_SIZE(m_registers, WGRegisterType);
 }
 
-size_t WGSettings::pack  (char* buffer) const
+unsigned int WGSettings::pack  (void* buffer)
 {
-  size_t offset = 0;
-  return MSH_pack(buffer, offset, m_registers);
+  unsigned int offset = 0;
+  
+  MSH_PACK_ARRAY(buffer, offset, m_registers, WGRegisterType);
+
+  return offset;
 }
 
-size_t WGSettings::unpack(const char *buffer)
+unsigned int WGSettings::unpack(void *buffer)
 {
-  size_t offset = 0;
-  return MSH_unpack(buffer, offset, m_registers);
+  unsigned int offset = 0;
+
+  MSH_UNPACK_ARRAY(buffer, offset, m_registers, WGRegisterType, 1);
+
+  return offset;
 }
 
 Array<int32, 1> WGSettings::preset(int index)

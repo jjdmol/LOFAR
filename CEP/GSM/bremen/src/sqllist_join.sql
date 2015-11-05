@@ -7,13 +7,11 @@ update runningcatalog
                                temp_associations tt
                          where ta.runcat_id = runningcatalog.parent_runcat_id
                            and ta.xtrsrc_id = tt.xtrsrc_id
-                           and ta.image_id = [i]
                            and ta.kind = 5),
        last_update_date = current_timestamp
  where exists (select ta.kind
                  from temp_associations ta
                 where ta.runcat_id = runningcatalog.parent_runcat_id
-                  and ta.image_id = [i]
                   and ta.kind = 5)
    and parent_runcat_id is not null;
 
@@ -24,12 +22,10 @@ update assocxtrsources
                            temp_associations tt
                      where ta.runcat_id = assocxtrsources.runcat_id
                        and ta.xtrsrc_id = tt.xtrsrc_id
-                       and ta.image_id = [i]
                        and ta.kind = 5)
  where exists (select ta.kind
                  from temp_associations ta
                 where ta.runcat_id = assocxtrsources.runcat_id
-                  and ta.image_id = [i]
                   and ta.kind = 5);
 
 --mark obsolete sources as deleted
@@ -39,7 +35,6 @@ update runningcatalog
  where exists (select ta.kind
                  from temp_associations ta
                 where ta.runcat_id = runningcatalog.runcatid
-                  and ta.image_id = [i]
                   and ta.kind = 5)
    and not exists (select a.lr_method
                      from assocxtrsources a
@@ -51,7 +46,6 @@ update runningcatalog
  where exists (select ta.kind
                  from temp_associations ta
                 where ta.runcat_id = runningcatalog.runcatid
-                  and ta.image_id = [i]
                   and ta.kind = 5)
    and exists (select a.lr_method
                  from assocxtrsources a
@@ -68,13 +62,12 @@ select i.band, i.stokes, e.xtrsrcid, 1, zone,
        images i,
        temp_associations ta,
        runningcatalog r
- where e.image_id = [i]
-   and i.imageid = [i]
+ where e.image_id = {0}
+   and i.imageid = e.image_id
    and e.source_kind = 1
    and e.xtrsrcid = ta.xtrsrc_id
    and ta.kind = 5 --there is only one association
    and ta.lr_method = 3 --this indicates that there is a cross-band association
-   and ta.image_id = [i]
    and r.runcatid = ta.runcat_id
    and not r.deleted
 order by e.xtrsrcid;
@@ -86,7 +79,6 @@ select xtrsrc_id, r.runcatid, 0, 4, 0, 0
   from temp_associations ta,
        runningcatalog r
  where ta.kind = 5
-   and ta.image_id = [i]
    and r.parent_runcat_id = ta.runcat_id
    and r.first_xtrsrc_id = ta.xtrsrc_id
 union
@@ -94,7 +86,6 @@ select xtrsrc_id, r.parent_runcat_id, 0, 4, 0, 0
   from temp_associations ta,
        runningcatalog r
  where ta.kind = 5
-   and ta.image_id = [i]
    and r.parent_runcat_id = ta.runcat_id
    and r.first_xtrsrc_id = ta.xtrsrc_id;
 
@@ -107,13 +98,12 @@ select r.runcatid, i.band, 1,
        images i,
        runningcatalog r,
        temp_associations ta
- where e.image_id = [i]
+ where e.image_id = {0}
    and i.imageid = e.image_id
    and r.first_xtrsrc_id = e.xtrsrcid
    and r.band is not null --this is not a cross-band source
    and ta.runcat_id = r.parent_runcat_id
    and ta.xtrsrc_id = e.xtrsrcid
-   and ta.image_id = [i]
    and ta.kind = 5;
 
 update runningcatalog
@@ -122,11 +112,6 @@ update runningcatalog
                       where a.runcat_id = runningcatalog.runcatid),
        $$get_column_update_total(['ra', 'decl', 'g_minor', 'g_major', 'g_pa'])$$
  where not deleted
-   and exists (select ta.kind
-                 from temp_associations ta
-                where ta.runcat_id = runningcatalog.runcatid
-                  and ta.image_id = [i]
-                  and ta.kind = 5)
    and source_kind = 4;
 
 update runningcatalog
@@ -134,9 +119,4 @@ update runningcatalog
        last_update_date = current_timestamp,
        source_kind = 1
  where not deleted
-   and exists (select ta.kind
-                 from temp_associations ta
-                where ta.runcat_id = runningcatalog.runcatid
-                  and ta.image_id = [i]
-                  and ta.kind = 5)
    and source_kind = 4;

@@ -33,9 +33,9 @@
 
 namespace LOFAR {
 
-  class ParameterSet;
-
   namespace DPPP {
+    class ParSet;
+
     // @ingroup NDPPP
 
     // This class is a DPInput step reading the data from a MeasurementSet.
@@ -128,10 +128,7 @@ namespace LOFAR {
 
       // Construct the object for the given MS.
       // Parameters are obtained from the parset using the given prefix.
-      Filter (DPInput* input, const ParameterSet&, const string& prefix);
-
-      // Construct the object for the given MS and baseline selection.
-      Filter (DPInput* input, const BaselineSelection&);
+      Filter (DPInput* input, const ParSet&, const string& prefix);
 
       virtual ~Filter();
 
@@ -151,52 +148,16 @@ namespace LOFAR {
       // Show the timings.
       virtual void showTimings (std::ostream&, double duration) const;
 
-      // If needed, remove the deleted stations from the subtables
-      // and renumber the remaining stations.
-      virtual void addToMS (const string& msName);
-
-      // Does the filter step has an actual selection?
-      bool hasSelection() const
-        { return itsDoSelect; }
-
-      // Get the indices of the selected baselines.
-      const vector<uint>& getIndicesBL() const
-        { return itsSelBL; }
-
-      // Get the buffer.
-      const DPBuffer& getBuffer() const
-        { return itsBuf; }
-
     private:
-      // Create the mapping from old to new id (e.g. ANTENNA_ID).
-      // The removed ids get a mapping -1.
-      casa::Vector<casa::Int>
-      createIdMap (casa::uInt nrId,
-                   const casa::Vector<casa::uInt>& removedIds) const;
-
-      // Remove rows with deleted stations from a subtable.
-      // Renumber the ANTENNA_ID of the remaining rows.
-      // It fills nrId with the original number of rows in the subtable
-      // and returns the vector of removed row numbers.
-      casa::Vector<casa::uInt>
-      renumberSubTable (const casa::Table& ms, const casa::String& name,
-                        const casa::String& colName,
-                        const casa::Vector<casa::uInt>& removedAnt,
-                        const casa::Vector<casa::Int>& antMap,
-                        casa::uInt& nrId) const;
-
       //# Data members.
       DPInput*          itsInput;
       string            itsName;
       DPBuffer          itsBuf;
-      DPBuffer          itsBufTmp;
       casa::String      itsStartChanStr;  //# startchan expression
       casa::String      itsNrChanStr;     //# nchan expression
-      bool              itsRemoveAnt;     //# Remove from ANTENNA table?
       BaselineSelection itsBaselines;
       uint              itsStartChan;
       vector<uint>      itsSelBL;         //# Index of baselines to select
-      bool              itsDoSelect;      //# Any selection?
       NSTimer           itsTimer;
     };
 
