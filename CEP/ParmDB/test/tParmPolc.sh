@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tParmPolc
+./runctest.sh tParmPolc > tParmPolc.log 2>&1

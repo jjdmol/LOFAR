@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -108,6 +108,7 @@ do {						\
  * Function to convert the complex semi-floating point representation used by the
  * EPA firmware to a complex<double>.
  */
+BZ_DECLARE_FUNCTION_RET(convert_cuint32_to_cdouble, complex<double>)
 inline complex<double> convert_cuint32_to_cdouble(complex<uint32> val)
 {
   int64 val64_re, val64_im;
@@ -118,7 +119,6 @@ inline complex<double> convert_cuint32_to_cdouble(complex<uint32> val)
   // convert two int64's to complex double
   return complex<double>(val64_re, val64_im);
 }
-BZ_DECLARE_FUNCTION_RET(convert_cuint32_to_cdouble, complex<double>)
 
 //
 // The layout of cross-correlations in the register on RSP boards

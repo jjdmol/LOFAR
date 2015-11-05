@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -39,7 +39,6 @@
 #include <Common/lofar_vector.h>
 #include <Common/LofarLogger.h>
 #include <ApplCommon/Observation.h>
-#include <MessageBus/ToBus.h>
 
 //# ACC Includes
 #include <OTDB/OTDBconnection.h>
@@ -48,8 +47,6 @@
 #include <Common/ParameterSet.h>
 
 #include "ObsClaimer.h"
-
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 // forward declaration
 
@@ -64,8 +61,6 @@ namespace LOFAR {
 	using	APLCommon::ChildControl;
 	namespace MainCU {
 
-using boost::posix_time::ptime;
-using boost::posix_time::min_date_time;
 
 class MACScheduler : public GCFTask
 {
@@ -108,7 +103,6 @@ private:
 	void _updatePlannedList();
 	void _updateActiveList();
 	void _updateFinishedList();
-	void _setParsetOnMsgBus(const string&	filename) const;
 
 	// ----- DATA MEMBERS -----
 	// Our own propertySet in PVSS to inform the operator
@@ -132,9 +126,8 @@ private:
 	public:
 		ptime	modTime;
 		bool	prepReady;
-		bool	parsetDistributed;
-		schedInfo(ptime t, bool p) : modTime(t), prepReady(p), parsetDistributed(false) {};
-		schedInfo() : modTime(min_date_time), prepReady(false), parsetDistributed(false) {};
+		schedInfo(ptime t, bool p) : modTime(t), prepReady(p) {};
+		schedInfo() : modTime(min_date_time), prepReady(false) {};
 	};
 	typedef map<int /*obsID*/, schedInfo /*prepReady*/>	ObsList;
 	typedef map<int ,schedInfo>::iterator				OLiter;
@@ -166,10 +159,8 @@ private:
 	uint32				itsQueuePeriod;			// period between queueing and start
       
 	// OTDB related variables.
-   	OTDB::OTDBconnection*	itsOTDBconnection;	// connection to the database
+   	OTDB::OTDBconnection*	itsOTDBconnection;		// connection to the database
 
-	// Messagebus related variables
-	ToBus*					itsMsgQueue;		// Bus used for sending
 };
 
   };//MainCU

@@ -1,7 +1,7 @@
-V 11
+V 10
 1
 LANG:1 12 Event Viewer
-PANEL,-1 -1 1200 843 N "_3DFace" 0
+PANEL,-1 -1 1165 830 N "_3DFace" 0
 "main()
 {
   int retry=0;
@@ -76,7 +76,7 @@ LANG:1 0
 13 320
 "PUSH_BUTTON10"
 ""
-1 950 371 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 511 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 155 0 0 0 0 0
 E E E
@@ -86,12 +86,14 @@ LANG:1 0
 
 0
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  948 369 1098 396
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 948 509 1098 536
 
 T 
 1
-LANG:1 14 show g_TBBList
+LANG:1 15 show g_TBBList
+
 "main()
 {
   LOG_DEBUG(\"Event_Viewer.pnl show g_TBBList\");
@@ -115,8 +117,9 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E E 0 2 1 0 1 E 0.986193293885602 0 0.450511945392491 395.138067061144 298.549488054608 0 E 10 1 518 295
 1
-LANG:1 32 Arial Black,-1,13,5,75,0,0,0,0,0
-0 1
+LANG:1 99 -*-Arial Black-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,758,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+1
 LANG:1 19 Navigator Framework
 14 3
 "text_event"
@@ -131,13 +134,14 @@ LANG:1 0
 
 0
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  555 346 899 369
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 555 346 899 369
 3 "0s" 0 0 0 0 0 -1  E E E
 2 6
 "PRIMITIVE_TEXT4"
 ""
-1 1236 409.3240071683281 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 556 378.569139327545 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 6 0 0 0 0 0
 E E E
@@ -147,16 +151,17 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1.00763358778626 136 3.16793893129752 1 E 283 371 384 386
+E E 0 1 1 2 1 E 1 0 1.00763358778626 136 3.16793893129752 1 E 283 371 384 387
 0 2 2 "0s" 0 0 0 192 0 0  283 371 1
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0 1
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+1
 LANG:1 18 Initiating Object:
 2 7
 "PRIMITIVE_TEXT5"
 ""
-1 1241 396.4233462865291 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 556 350.330691684634 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 7 0 0 0 0 0
 E E E
@@ -166,16 +171,17 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1.00763358778626 137 6.40458015267157 1 E 282 340 379 355
+E E 0 1 1 2 1 E 1 0 1.00763358778626 137 6.40458015267157 1 E 282 340 379 356
 0 2 2 "0s" 0 0 0 192 0 0  282 340 1
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0 1
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+1
 LANG:1 15 Event Received:
 2 8
 "PRIMITIVE_TEXT6"
 ""
-1 1241 426.3243640761156 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 556 405.792203251558 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 8 0 0 0 0 0
 E E E
@@ -185,11 +191,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1.00763358778626 137 0.946564885495969 1 E 282 400 342 415
+E E 0 1 1 2 1 E 1 0 1.00763358778626 137 0.946564885495969 1 E 282 400 342 416
 0 2 2 "0s" 0 0 0 192 0 0  282 400 1
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0 1
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+1
 LANG:1 10 Selection:
 14 9
 "text_initiator"
@@ -204,8 +211,9 @@ LANG:1 0
 
 0
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  555 374 899 397
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 555 374 899 397
 3 "0s" 0 0 0 0 0 -1  E E E
 14 11
 "text_selection"
@@ -220,8 +228,9 @@ LANG:1 0
 
 0
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  555 401 899 424
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 555 401 899 424
 3 "0s" 0 0 0 0 0 -1  E E E
 4 18
 "LINE4"
@@ -461,87 +470,87 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 3 1 2 1 E  261 644 279 642
-1 884 0 "" 0
+1 786 0 "" 0
 0
-1 885 1 "" 0
+1 787 1 "" 0
 0
-1 886 2 "" 0
+1 788 2 "" 0
 0
-1 887 4 "" 0
+1 789 4 "" 0
 0
-1 888 5 "" 0
+1 790 5 "" 0
 0
-1 889 6 "" 0
+1 791 6 "" 0
 0
-1 890 7 "" 0
+1 792 7 "" 0
 0
-1 891 7 "" 1
+1 793 7 "" 1
 0
-1 892 7 "" 2
+1 794 7 "" 2
 0
-1 893 7 "" 3
+1 795 7 "" 3
 0
-1 894 7 "" 4
+1 796 7 "" 4
 0
-1 895 9 "" 0
+1 797 9 "" 0
 0
-1 896 9 "" 1
+1 798 9 "" 1
 0
-1 897 9 "" 2
+1 799 9 "" 2
 0
-1 898 9 "" 3
+1 800 9 "" 3
 0
-1 899 9 "" 4
+1 801 9 "" 4
 0
-1 900 12 "" 0
+1 802 12 "" 0
 0
-1 901 12 "" 1
+1 803 12 "" 1
 0
-1 902 12 "" 2
+1 804 12 "" 2
 0
-1 903 12 "" 3
+1 805 12 "" 3
 0
-1 904 12 "" 4
+1 806 12 "" 4
 0
-1 905 14 "" 0
+1 807 14 "" 0
 0
-1 906 14 "" 1
+1 808 14 "" 1
 0
-1 907 14 "" 2
+1 809 14 "" 2
 0
-1 908 14 "" 3
+1 810 14 "" 3
 0
-1 909 14 "" 4
+1 811 14 "" 4
 0
-1 910 17 "" 0
+1 812 17 "" 0
 0
-1 911 17 "" 1
+1 813 17 "" 1
 0
-1 912 17 "" 2
+1 814 17 "" 2
 0
-1 913 17 "" 3
+1 815 17 "" 3
 0
-1 914 17 "" 4
+1 816 17 "" 4
 0
-1 915 18 "" 0
+1 817 18 "" 0
 0
-1 916 18 "" 1
+1 818 18 "" 1
 0
-1 917 18 "" 2
+1 819 18 "" 2
 0
-1 918 18 "" 3
+1 820 18 "" 3
 0
-1 919 18 "" 4
+1 821 18 "" 4
 0
-1 920 19 "" 0
+1 822 19 "" 0
 0
-1 921 19 "" 1
+1 823 19 "" 1
 0
-1 922 19 "" 2
+1 824 19 "" 2
 0
-1 923 19 "" 3
+1 825 19 "" 3
 0
-1 924 19 "" 4
+1 826 19 "" 4
 0
 4 87
 "LINE21"
@@ -599,7 +608,7 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 3 1 2 1 E  184 290 196 290
-1 925 20 "" 0
+1 827 20 "" 0
 0
 14 134
 "txt_datapoint"
@@ -614,13 +623,14 @@ LANG:1 0
 
 0
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  555 320 899 343
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 555 320 899 343
 3 "0s" 0 0 0 0 0 -1  E E E
 2 135
 "PRIMITIVE_TEXT11"
 ""
-1 1466.082645446156 237.4157717744857 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 565.633663366337 324.330691684634 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 125 0 0 0 0 0
 E E E
@@ -630,16 +640,17 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1.06930693069307 0 1.00763358778626 117.594059405941 -19.5954198473284 1 E 282 340 391 355
+E E 0 1 1 2 1 E 1.06930693069307 0 1.00763358778626 117.594059405941 -19.5954198473284 1 E 282 340 391 356
 0 2 2 "0s" 0 0 0 192 0 0  282 340 1
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0 1
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+1
 LANG:1 18 Active Datapoint: 
 13 178
 "PUSH_BUTTON1"
 ""
-1 950 168 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 308 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 127 0 0 0 0 0
 E E E
@@ -649,8 +660,9 @@ LANG:1 0
 
 0
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  948 166 1098 193
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 948 306 1098 333
 
 T 
 1
@@ -663,7 +675,7 @@ LANG:1 19 show g_observations
 13 179
 "PUSH_BUTTON2"
 ""
-1 17 517 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 17 657 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 129 0 0 0 0 0
 E E E
@@ -673,8 +685,9 @@ LANG:1 0
 
 0
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  948 195 1098 222
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 948 335 1098 362
 
 T 
 1
@@ -687,7 +700,7 @@ LANG:1 14 show highlight
 13 180
 "PUSH_BUTTON3"
 ""
-1 950 226 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 366 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 131 0 0 0 0 0
 E E E
@@ -697,12 +710,14 @@ LANG:1 0
 
 0
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  948 224 1098 251
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 948 364 1098 391
 
 T 
 1
-LANG:1 13 show g_alarms
+LANG:1 14 show g_alarms
+
 "main()
 {
   LOG_DEBUG(\"Event_Viewer.pnl showMapping for g_alarms\");
@@ -722,8 +737,9 @@ LANG:1 9 Datapoint
 
 0
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  18 728 305 751
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 18 728 305 751
 3 "0s" 0 0 0 0 0 -1  E E E
 13 182
 "PUSH_BUTTON4"
@@ -738,8 +754,9 @@ LANG:1 0
 
 0
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  180 759 304 786
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 180 759 304 786
 
 T 
 1
@@ -774,13 +791,14 @@ LANG:1 5 state
 
 0
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  19 760 71 783
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 19 760 71 783
 3 "4d" 4 0 0 0 0 -1  E E E
 13 227
 "PUSH_BUTTON5"
 ""
-1 950 140 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 280 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 140 0 0 0 0 0
 E E E
@@ -790,8 +808,9 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0  948 138 1098 164
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 948 278 1098 304
 
 T 
 1
@@ -818,7 +837,7 @@ E E 1 3 1 2 1 E  940 10 940 640
 13 316
 "PUSH_BUTTON6"
 ""
-1 950 255 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 395 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 147 0 0 0 0 0
 E E E
@@ -828,12 +847,14 @@ LANG:1 0
 
 0
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  948 253 1098 280
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 948 393 1098 420
 
 T 
 1
-LANG:1 18 show g_stationList
+LANG:1 19 show g_stationList
+
 "main()
 {
   LOG_DEBUG(\"Event_Viewer.pnl show g_stationList\");
@@ -845,7 +866,7 @@ LANG:1 18 show g_stationList
 13 317
 "PUSH_BUTTON7"
 ""
-1 950 284 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 424 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 149 0 0 0 0 0
 E E E
@@ -855,12 +876,14 @@ LANG:1 0
 
 0
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  948 282 1098 309
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 948 422 1098 449
 
 T 
 1
-LANG:1 18 show g_cabinetList
+LANG:1 19 show g_cabinetList
+
 "main()
 {
   LOG_DEBUG(\"Event_Viewer.pnl show g_cabinetList\");
@@ -872,7 +895,7 @@ LANG:1 18 show g_cabinetList
 13 318
 "PUSH_BUTTON8"
 ""
-1 950 313 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 453 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 151 0 0 0 0 0
 E E E
@@ -882,12 +905,14 @@ LANG:1 0
 
 0
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  948 311 1098 338
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 948 451 1098 478
 
 T 
 1
-LANG:1 18 show g_subrackList
+LANG:1 19 show g_subrackList
+
 "main()
 {
   LOG_DEBUG(\"Event_Viewer.pnl show g_subrackList\");
@@ -899,7 +924,7 @@ LANG:1 18 show g_subrackList
 13 319
 "PUSH_BUTTON9"
 ""
-1 950 342 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 482 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 153 0 0 0 0 0
 E E E
@@ -909,12 +934,14 @@ LANG:1 0
 
 0
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  948 340 1098 367
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 948 480 1098 507
 
 T 
 1
-LANG:1 14 show g_RSPList
+LANG:1 15 show g_RSPList
+
 "main()
 {
   LOG_DEBUG(\"Event_Viewer.pnl show g_RSPList\");
@@ -926,7 +953,7 @@ LANG:1 14 show g_RSPList
 13 321
 "PUSH_BUTTON11"
 ""
-1 950 400 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 540 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 157 0 0 0 0 0
 E E E
@@ -936,12 +963,14 @@ LANG:1 0
 
 0
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  948 398 1098 425
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 948 538 1098 565
 
 T 
 1
-LANG:1 14 show g_RCUList
+LANG:1 15 show g_RCUList
+
 "main()
 {
   LOG_DEBUG(\"Event_Viewer.pnl show g_RCUList\");
@@ -953,7 +982,7 @@ LANG:1 14 show g_RCUList
 13 364
 "PUSH_BUTTON12"
 ""
-1 950 430 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 570 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 159 0 0 0 0 0
 E E E
@@ -963,12 +992,14 @@ LANG:1 0
 
 0
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  948 428 1112 455
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 948 568 1112 595
 
 T 
 1
-LANG:1 23 show g_observationsList
+LANG:1 24 show g_observationsList
+
 "main()
 {
   LOG_DEBUG(\"Event_Viewer.pnl show g_observationsList\");
@@ -980,7 +1011,7 @@ LANG:1 23 show g_observationsList
 13 451
 "PUSH_BUTTON15"
 ""
-1 950 520 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 600 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 164 0 0 0 0 0
 E E E
@@ -990,8 +1021,9 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0  948 518 1098 544
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 948 598 1098 624
 
 T 
 1
@@ -1002,10 +1034,30 @@ LANG:1 18 show g_connections
   showMapping(g_connections,\"g_connections\");
 }" 0
  E E E
+2 494
+"PRIMITIVE_TEXT1"
+""
+1 730 684 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+166 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 2 1 E U  1 E 730 684 810 708
+0 2 2 "0s" 0 0 0 64 0 0  730 684 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 10 Type name:
 2 495
 "PRIMITIVE_TEXT2"
 ""
-1 720 680 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 730 708 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 168 0 0 0 0 0
 E E E
@@ -1015,16 +1067,17 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 2 1 1 2 1 E U  1 E 720 680 800 704
-0 2 2 "0s" 0 0 0 64 0 0  720 680 1
+E E 2 1 1 2 1 E U  1 E 730 708 810 732
+0 2 2 "0s" 0 0 0 64 0 0  730 708 1
 1
-LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
-0 1
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 16 New object name:
 13 496
 "PUSH_BUTTON16"
 ""
-1 720 710 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 954 676 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 170 0 0 0 0 0
 E E E
@@ -1034,8 +1087,9 @@ LANG:1 0
 
 0
 1
-LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
-0  718 708 802 738
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 952 674 1036 734
 
 T 
 1
@@ -1043,7 +1097,7 @@ LANG:1 5 claim
 "main()
 {
   dpSet(
-      \"ClaimManager.request.typeName\"      , \"Observation\",
+      \"ClaimManager.request.typeName\"      , TYPE.text,
       \"ClaimManager.request.newObjectName\" , NAME.text );
   
   dyn_string dpNamesWait   = makeDynString(\"ClaimManager.response.newObjectName:_original.._value\");
@@ -1057,51 +1111,72 @@ LANG:1 5 claim
   int status = dpWaitForValue( dpNamesWait, conditions, dpNamesReturn, returnValues, 25 );
   
   if ( status == -1 ) {
-		DebugN( \"Event_Viewer.pnl:Error in dpWaitFor Value\" );
+		LOG_DEBUG( \"Event_Viewer.pnl:Error in dpWaitFor Value\" );
 
-		DebugN( \"Event_Viewer.pnl:dpNamesWait : \" + dpNamesWait );
+		LOG_DEBUG( \"Event_Viewer.pnl:dpNamesWait : \" + dpNamesWait );
 
-		DebugN( \"Event_Viewer.pnl:conditions : \" + conditions );
+		LOG_DEBUG( \"Event_Viewer.pnl:conditions : \" + conditions );
 
-		DebugN( \"Event_Viewer.pnl:dpNamesReturn : \" + dpNamesReturn );
+		LOG_DEBUG( \"Event_Viewer.pnl:dpNamesReturn : \" + dpNamesReturn );
 
-		DebugN( \"returnValues : \" + returnValues );
+		LOG_DEBUG( \"returnValues : \" + returnValues );
 	} else if ( dynlen(getLastError()) != 0 ) {
 
-		DebugN( \"Event_Viewer.pnl:Error returned in message dpWaitForValue\" );
+		LOG_DEBUG( \"Event_Viewer.pnl:Error returned in message dpWaitForValue\" );
 
 		// Reaction: e.g. output
 
-		DebugN( getLastError() );
+		LOG_DEBUG( getLastError() );
 
-		DebugN( \"Event_Viewer.pnl:dpNamesWait : \" + dpNamesWait );
+		LOG_DEBUG( \"Event_Viewer.pnl:dpNamesWait : \" + dpNamesWait );
 
-		DebugN( \"Event_Viewer.pnl:conditions : \" + conditions );
+		LOG_DEBUG( \"Event_Viewer.pnl:conditions : \" + conditions );
 
-		DebugN( \"dpNamesReturn : \" + dpNamesReturn );
+		LOG_DEBUG( \"dpNamesReturn : \" + dpNamesReturn );
 
-		DebugN( \"Event_Viewer.pnl:returnValues : \" + returnValues );
+		LOG_DEBUG( \"Event_Viewer.pnl:returnValues : \" + returnValues );
 	} else {
-		DebugN( \"Event_Viewer.pnl:dpWaitForValue : everything ok\" );
+		LOG_DEBUG( \"Event_Viewer.pnl:dpWaitForValue : everything ok\" );
 
-		DebugN( \"Event_Viewer.pnl:dpNamesWait : \" + dpNamesWait );
+		LOG_DEBUG( \"Event_Viewer.pnl:dpNamesWait : \" + dpNamesWait );
 
-		DebugN( \"Event_Viewer.pnl:conditions : \" + conditions );
+		LOG_DEBUG( \"Event_Viewer.pnl:conditions : \" + conditions );
 
-		DebugN( \"Event_Viewer.pnl:dpNamesReturn : \" + dpNamesReturn );
+		LOG_DEBUG( \"Event_Viewer.pnl:dpNamesReturn : \" + dpNamesReturn );
 
-		DebugN( \"Event_Viewer.pnl:returnValues : \" + returnValues );
+		LOG_DEBUG( \"Event_Viewer.pnl:returnValues : \" + returnValues );
        
-    DebugN(\"Set txt_response to: \"+ returnValues[3]);
+    LOG_DEBUG(\"Set txt_response to: \"+ returnValues[3]);
     setValue(\"txt_response\",\"text\",returnValues[3]);
 
 		}
 }" 0
  E E E
+14 497
+"TYPE"
+""
+1 866 676 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+172 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 864 674 948 702
+3 "0s" 0 0 0 0 0 -1  E "main()
+{
+  this.text = \"Observation\";
+}" 0
+ E
 14 498
 "NAME"
 ""
-1 820 680 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 866 708 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 174 0 0 0 0 0
 E E E
@@ -1111,8 +1186,9 @@ LANG:1 0
 
 0
 1
-LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
-0  818 678 1032 706
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 864 706 948 734
 3 "0s" 0 0 0 0 0 -1  E E E
 30 499
 "FRAME2"
@@ -1129,8 +1205,9 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E E 0 0 1 0 1 E 0.825 0 0.88888888888889 703.4 654.6666666666666 0 E 8 6 409 97
 1
-LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
-0 1
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 5 Claim
 13 504
 "PUSH_BUTTON17"
@@ -1145,8 +1222,9 @@ LANG:1 0
 
 0
 1
-LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
-0  1048 668 1154 742
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 1048 668 1154 742
 
 T 
 1
@@ -1184,13 +1262,14 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E E 0 0 1 0 1 E 1.1 0 0.6666666666666674 701.2000000000001 736 0 E 8 6 409 97
 1
-LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
-0 1
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 8 Response
 2 548
 "PRIMITIVE_TEXT3"
 ""
-1 721.9999999999993 764 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 721.9999999999999 764 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 190 0 0 0 0 0
 E E E
@@ -1203,8 +1282,9 @@ LANG:1 0
 E E 2 1 1 2 1 E 0.9999999999999999 0 1 0 0 1 E 722 764 802 788
 0 2 2 "0s" 0 0 0 64 0 0  722 764 1
 1
-LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
-0 1
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
 LANG:1 3 DP:
 14 549
 "txt_response"
@@ -1219,13 +1299,14 @@ LANG:1 0
 
 0
 1
-LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
-0  768 762 1142 790
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 768 762 1142 790
 3 "0s" 0 0 0 0 0 -1  E E E
 13 592
 "PUSH_BUTTON18"
 ""
-1 950 110 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 250 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 194 0 0 0 0 0
 E E E
@@ -1235,8 +1316,9 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0  948 108 1098 134
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 948 248 1098 274
 
 T 
 1
@@ -1249,7 +1331,7 @@ LANG:1 20 show strClaimedObj's
 13 635
 "PUSH_BUTTON19"
 ""
-1 950 490 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 630 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 196 0 0 0 0 0
 E E E
@@ -1259,12 +1341,14 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0  948 488 1098 514
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 948 628 1098 654
 
 T 
 1
-LANG:1 20 show g_processesList
+LANG:1 21 show g_processesList
+
 "main()
 {
   LOG_DEBUG(\"Event_Viewer.pnl show g_processesList\");
@@ -1273,17 +1357,17 @@ LANG:1 20 show g_processesList
   }
 }" 0
  E E E
-1 926 21 "" 0
+1 828 21 "" 0
 0
-1 927 21 "" 1
+1 829 21 "" 1
 0
-1 928 21 "" 2
+1 830 21 "" 2
 0
-1 929 21 "" 3
+1 831 21 "" 3
 0
-1 930 21 "" 4
+1 832 21 "" 4
 0
-1 931 22 "" 0
+1 833 22 "" 0
 0
 4 685
 "LINE28"
@@ -1340,8 +1424,9 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  78 748 172 802
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 78 748 172 802
 1
 T 
 1
@@ -1367,15 +1452,16 @@ LANG:1 12 alarmmessage
 
 0
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  18 792 304 815
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 18 792 304 815
 3 "0s" 0 0 0 0 0 -1  E E E
-13 834
-"PUSH_BUTTON21"
+13 785
+"PUSH_BUTTON20"
 ""
-1 830 710 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 20 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
-209 0 0 0 0 0
+208 0 0 0 0 0
 E E E
 0
 1
@@ -1383,49 +1469,37 @@ LANG:1 0
 
 0
 1
-LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
-0  828 708 912 738
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 948 18 1072 44
 
 T 
 1
-LANG:1 4 free
-"main()
+LANG:1 16 Logger Settings
+
+"// SimpleCtrlScriptStart {valid}
+main()
 {
-  int ret = dpSet(
-      \"ClaimManager.reset.typeName\"      , \"Observation\",
-      \"ClaimManager.reset.objectName\" , NAME.text );
+  EP_childPanelOn();
+}
 
- if (ret < 0) DebugN(\"something went wrong resetting DP \"+NAME.txt+ \" \" + getLastError());  
-
-  
-}" 0
- E E E
-13 883
-"PUSH_BUTTON22"
-""
-1 950 460 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
- E E
-210 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-0
-1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0  948 458 1098 484
-
-T 
-1
-LANG:1 20 show g_pipelinesList
-"main()
+EP_childPanelOn()
 {
-  LOG_DEBUG(\"Event_Viewer.pnl show g_pipelinesList\");
-  for (int i=1; i<= dynlen(g_pipelinesList);i++) {
-    DebugN(\"g_pipelinesList: \"+ g_pipelinesList[i]);
-  }
-}" 0
+  ChildPanelOnCentralModal(\"objects/lofar_logger.pnl\",
+      \"Lofar Logger settings\",
+      makeDynString(\"\"));
+}
+
+// SimpleCtrlScript {EP_childPanelOn}
+// Function {ChildPanelOnCentralModal}
+// File {objects/lofar_logger.pnl}
+// Panel {Lofar Logger settings}
+// Parent {}
+// Module {}
+// OffsetX {0}
+// OffsetY {0}
+// SimpleCtrlScriptEnd {EP_childPanelOn}
+" 0
  E E E
 0
 LAYER, 1 
@@ -1456,67 +1530,67 @@ LAYER, 7
 1
 LANG:1 0 
 0
-3 0 "PANEL_REF1" -1
+3 0 "PANEL_REF1"
 "objects\\Test\\Action.pnl" 158 150 T 105 1 0 1 -81 -32
 1
 "$name""fw_viewSelection"
-3 1 "PANEL_REF2" -1
+3 1 "PANEL_REF2"
 "objects\\Test\\Action.pnl" 390 150 T 106 1 0 1 -10 32
 1
 "$name""fw_topDetailSelection"
-3 2 "PANEL_REF3" -1
+3 2 "PANEL_REF3"
 "objects\\Test\\Action.pnl" 668 220 T 107 1 0 1 -78 4
 1
 "$name""fw_bottomDetailSelection"
-3 4 "PANEL_REF5" -1
+3 4 "PANEL_REF5"
 "objects\\Test\\Action.pnl" 649 450 T 108 1 0 1 -77 -3
 1
 "$name""fw_locator"
-3 5 "PANEL_REF6" -1
+3 5 "PANEL_REF6"
 "objects\\Test\\Action.pnl" 413 460 T 109 1 0 1 -43 220
 1
 "$name""fw_progressBar"
-3 6 "PANEL_REF7" -1
+3 6 "PANEL_REF7"
 "objects\\Test\\Action.pnl" 189 450 T 110 1 0 1 -39 130
 1
 "$name""fw_headLines"
-3 7 "PANEL_REF8" -1
+3 7 "PANEL_REF8"
 "objects\\Test\\Event.pnl" 15 8 T 111 1 0 1 -5 0
 1
 "$name""fw_viewSelection"
-3 9 "PANEL_REF10" -1
+3 9 "PANEL_REF10"
 "objects\\Test\\Event.pnl" 377 7 T 112 1 0 1 0 1
 1
 "$name""fw_topDetailSelection"
-3 12 "PANEL_REF13" -1
+3 12 "PANEL_REF13"
 "objects\\Test\\Event.pnl" 541 104 T 113 1 0 1 31 -1
 1
 "$name""fw_bottomDetailSelection"
-3 14 "PANEL_REF15" -1
+3 14 "PANEL_REF15"
 "objects\\Test\\Event.pnl" 578 531 T 114 U 
 1
 "$name""fw_locator"
-3 17 "PANEL_REF18" -1
+3 17 "PANEL_REF18"
 "objects\\Test\\Event.pnl" 334 642 T 115 1 0 1 -4 86
 1
 "$name""fw_progressBar"
-3 18 "PANEL_REF19" -1
+3 18 "PANEL_REF19"
 "objects\\Test\\Event.pnl" -2 533 T 116 1 0 1 2 105
 1
 "$name""fw_headLines"
-3 19 "PANEL_REF20" -1
+3 19 "PANEL_REF20"
 "objects\\Test\\Event.pnl" 0 205 T 116 1 0 1 -10 3
 1
 "$name""fw_viewBox"
-3 20 "PANEL_REF21" -1
+3 20 "PANEL_REF21"
 "objects\\Test\\Action.pnl" 207 346 T 122 1 0 1 -117 -26
 1
 "$name""fw_viewBox"
-3 21 "PANEL_REF22" -1
+3 21 "PANEL_REF22"
 "objects\\Test\\Event.pnl" 0 205 T 197 1 0 1 10 253
 1
 "$name""fw_fastJumper"
-3 22 "PANEL_REF23" -1
+3 22 "PANEL_REF23"
 "objects\\Test\\Action.pnl" 207 346 T 198 1 0 1 -117 64
 1
 "$name""fw_fastJumper"

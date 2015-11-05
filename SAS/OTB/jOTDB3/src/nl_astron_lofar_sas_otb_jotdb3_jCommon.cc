@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -25,7 +25,8 @@
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <jOTDB3/nl_astron_lofar_sas_otb_jotdb3_jCommon.h>
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/posix_time/ptime.hpp>
+#include <boost/date_time/posix_time/time_formatters.hpp>
 #include <string>
 #include <iostream>
 #include <map>

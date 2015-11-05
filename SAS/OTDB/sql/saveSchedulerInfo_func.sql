@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2010
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -36,7 +36,6 @@
 --
 CREATE OR REPLACE FUNCTION saveSchedulerInfo(INT4, INT4, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT)
   RETURNS BOOLEAN AS $$ 
-    --  $Id: addComponentToVT_func.sql 19935 2012-01-25 09:06:14Z mol $
 	DECLARE
 		TThierarchy CONSTANT	INT2 := 30;
 		vFunction   CONSTANT	INT2 := 1;

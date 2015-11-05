@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/lofar_datetime.h>
 #include <OTDB/Campaign.h>
 #include <OTDB/misc.h>
 
@@ -70,7 +71,7 @@ CampaignInfo Campaign::getCampaign(const string&	name)
 
 	work	xAction(*(itsConn->getConn()), "getCampaign");
 	try {
-		result	res = xAction.exec("SELECT * FROM getCampaign('" + escapeQuotes(name) + "')");
+		result	res = xAction.exec("SELECT * FROM getCampaign('" + name + "')");
 		return (CampaignInfo(res[0]));
 	}
 	catch (std::exception&	ex) {
@@ -96,7 +97,7 @@ CampaignInfo Campaign::getCampaign(int32	ID)
 
 	work	xAction(*(itsConn->getConn()), "getCampaign");
 	try {
-		result	res = xAction.exec("SELECT * FROM getCampaign(" + toString(ID) + ")");
+		result	res = xAction.exec("SELECT * FROM getCampaign('" + toString(ID) + "')");
 		return (CampaignInfo(res[0]));
 	}
 	catch (std::exception&	ex) {

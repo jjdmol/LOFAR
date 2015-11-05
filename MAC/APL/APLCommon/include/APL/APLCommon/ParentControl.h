@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <Common/lofar_string.h>
+#include <Common/lofar_datetime.h>
 #include <Common/lofar_list.h>
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_TCPPort.h>
@@ -36,8 +37,6 @@
 #include <GCF/TM/GCF_TimerPort.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include "CTState.h"
-
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 // Avoid 'using namespace' in headerfiles
 
@@ -50,8 +49,6 @@ namespace LOFAR {
   using GCF::TM::GCFPortInterface;
   using APLCommon::CTState;
   namespace APLCommon {
-
-using boost::posix_time::ptime;
 
 // \addtogroup APLCommon
 // @{

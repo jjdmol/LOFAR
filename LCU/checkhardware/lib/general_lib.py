@@ -6,8 +6,6 @@ from subprocess import (Popen, PIPE)
 import time
 import os
 
-general_version = '0913'
-
 def writeMessage(msg):
     res = sendCmd('wall', msg)
     return
@@ -15,17 +13,6 @@ def writeMessage(msg):
 # Return date string in the following format YYYYMMDD
 def getShortDateStr(tm=time.gmtime()):
     return (time.strftime("%Y%m%d", tm))
-
-# Return time string in the following format HH:MM:SS
-def getDateStr(tm=time.gmtime()):
-    return (time.strftime("%d-%m-%Y", tm))    
-    
-# Return time string in the following format HH:MM:SS
-def getTimeStr(tm=time.gmtime()):
-    return (time.strftime("%H:%M:%S", tm))
-# Return time string in the following format HH:MM:SS
-def getDateTimeStr(tm=time.gmtime()):
-    return (time.strftime("%d-%m-%YT%H:%M:%S", tm))    
 
 # Run cmd with args and return response 
 def sendCmd(cmd='', args=''):
@@ -92,17 +79,19 @@ class cTestLogger(cLogger):
     def __init__(self, logdir):
         filename = getHostName() + "_StationTest" + '.csv'
         cLogger.__init__(self, logdir, filename)
+        cLogger.info(self, "# Station test for station %s" %(getHostName()))
              
     def addLine(self, info):
-        cLogger.info(self, info)
+        cLogger.info(self, info)      
+
 
 class cStationLogger(cLogger):
-    def __init__(self, logdir, filetime=time.gmtime()):
+    def __init__(self, logdir):
         filename = "stationtest_" + getHostName() + '.log'        
         cLogger.__init__(self, logdir, filename)
         cLogger.info(self, "StID  >: %s" %(getHostName()))
         cLogger.info(self, "Lgfl  >: %s" %(os.path.join(logdir,filename)))
-        testdate = time.strftime("%a, %d %b %Y %H:%M:%S", filetime)
+        testdate = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
         cLogger.info(self, "Time  >: %s" %(testdate))
     
     def addLine(self, info):

@@ -76,9 +76,7 @@ namespace LOFAR {
     {
       info() = infoIn;
       info().setNeedVisData();
-      info().setWriteData();
-      info().setWriteFlags();
-      info().setMetaChanged();
+      info().setNeedWrite();
       itsTimeInterval = infoIn.timeInterval();
       // Adapt averaging to available nr of channels and times.
       itsNTimeAvg = std::min (itsNTimeAvg, infoIn.ntime());
@@ -109,26 +107,29 @@ namespace LOFAR {
         return true;
       }
       itsTimer.start();
+      RefRows rowNrs(buf.getRowNrs());
       // Sum the data in time applying the weights.
       // The summing in channel and the averaging is done in function average.
       if (itsNTimes == 0) {
         // The first time we assign because that is faster than first clearing
         // and adding thereafter.
-        itsBuf.getData().assign (buf.getData());
-        itsBuf.getFlags().assign (buf.getFlags());
-        itsBuf.getUVW().assign (itsInput->fetchUVW(buf, itsBuf, itsTimer));
-        itsBuf.getWeights().assign (itsInput->fetchWeights(buf, itsBuf, itsTimer));
-        IPosition shapeIn = buf.getData().shape();
+        itsBuf.getUVW()     = itsInput->fetchUVW (buf, rowNrs, itsTimer);
+        itsBuf.getWeights() = itsInput->fetchWeights (buf, rowNrs, itsTimer);
+        Cube<bool> fullResFlags(itsInput->fetchFullResFlags (buf, rowNrs,
+                                                             itsTimer));
+        itsBuf.getData()    = buf.getData();
+        IPosition shapeIn   = buf.getData().shape();
         itsNPoints.resize (shapeIn);
         itsAvgAll.reference (buf.getData() * itsBuf.getWeights());
         itsWeightAll.resize (shapeIn);
         itsWeightAll = itsBuf.getWeights();
         // Take care of the fullRes flags.
         // We have to shape the output array and copy to a part of it.
-        const Cube<bool>& fullResFlags =
-          itsInput->fetchFullResFlags (buf, itsBufTmp, itsTimer);
         IPosition ofShape = fullResFlags.shape();
         ofShape[1] *= itsNTimeAvg;      // more time entries, same chan and bl
+        // Make it unique in case FullRes is referenced elsewhere.
+        // (itsBuf.FullRes is referenced when set in buf by average())
+        itsBuf.getFullResFlags().unique();
         itsBuf.getFullResFlags().resize (ofShape);
         itsBuf.getFullResFlags() = true; // initialize for times missing at end
         copyFullResFlags (fullResFlags, buf.getFlags(), 0);
@@ -164,12 +165,10 @@ namespace LOFAR {
         // For now we assume that all timeslots have the same nr of baselines,
         // so check if the buffer sizes are the same.
         ASSERT (itsBuf.getData().shape() == buf.getData().shape());
-        itsBufTmp.referenceFilled (buf);
-        itsBuf.getUVW() += itsInput->fetchUVW (buf, itsBufTmp, itsTimer);
-        copyFullResFlags (itsInput->fetchFullResFlags (buf, itsBufTmp, itsTimer),
+        itsBuf.getUVW() += itsInput->fetchUVW (buf, rowNrs, itsTimer);
+        copyFullResFlags (itsInput->fetchFullResFlags(buf, rowNrs, itsTimer),
                           buf.getFlags(), itsNTimes);
-        const Cube<float>& weights =
-          itsInput->fetchWeights (buf, itsBufTmp, itsTimer);
+        Cube<float> weights(itsInput->fetchWeights(buf, rowNrs, itsTimer));
         // Ignore flagged points.
         Array<Complex>::const_contiter indIter = buf.getData().cbegin();
         Array<float>::const_contiter   inwIter = weights.cbegin();
@@ -201,9 +200,9 @@ namespace LOFAR {
       // Do the averaging if enough time steps have been processed.
       itsNTimes += 1;
       if (itsNTimes >= itsNTimeAvg) {
-        average();
+        DPBuffer buf = average();
         itsTimer.stop();
-        getNextStep()->process (itsBufOut);
+        getNextStep()->process (buf);
         itsNTimes = 0;
       } else {
         itsTimer.stop();
@@ -216,24 +215,25 @@ namespace LOFAR {
       // Average remaining entries.
       if (itsNTimes > 0) {
         itsTimer.start();
-        average();
+        DPBuffer buf = average();
         itsTimer.stop();
-        getNextStep()->process (itsBufOut);
+        getNextStep()->process (buf);
         itsNTimes = 0;
       }
       // Let the next steps finish.
       getNextStep()->finish();
     }
 
-    void Averager::average()
+    DPBuffer Averager::average() const
     {
       IPosition shp = itsBuf.getData().shape();
       uint nchanin = shp[1];
       uint npin = shp[0] * nchanin;
       shp[1] = (shp[1] + itsNChanAvg - 1) / itsNChanAvg;
-      itsBufOut.getData().resize (shp);
-      itsBufOut.getWeights().resize (shp);
-      itsBufOut.getFlags().resize (shp);
+      DPBuffer buf;
+      buf.getData().resize (shp);
+      buf.getWeights().resize (shp);
+      buf.getFlags().resize (shp);
       uint ncorr = shp[0];
       uint nchan = shp[1];
       int  nbl   = shp[2];
@@ -246,9 +246,9 @@ namespace LOFAR {
         const float* inwght = itsBuf.getWeights().data() + k*npin;
         const float* inallw = itsWeightAll.data() + k*npin;
         const int* innp = itsNPoints.data() + k*npin;
-        Complex* outdata = itsBufOut.getData().data() + k*npout;
-        float* outwght = itsBufOut.getWeights().data() + k*npout;
-        bool* outflags = itsBufOut.getFlags().data() + k*npout;
+        Complex* outdata = buf.getData().data() + k*npout;
+        float* outwght = buf.getWeights().data() + k*npout;
+        bool* outflags = buf.getFlags().data() + k*npout;
         for (uint i=0; i<ncorr; ++i) {
           uint inxi = i;
           uint inxo = i;
@@ -283,12 +283,13 @@ namespace LOFAR {
         }
       }
       // Set the remaining values in the output buffer.
-      itsBufOut.setTime     (itsBuf.getTime());
-      itsBufOut.setExposure (itsBuf.getExposure());
-      itsBufOut.setFullResFlags (itsBuf.getFullResFlags());
+      buf.setTime     (itsBuf.getTime());
+      buf.setExposure (itsBuf.getExposure());
+      buf.setFullResFlags (itsBuf.getFullResFlags());
       // The result UVWs are the average of the input.
       // If ever needed, UVWCalculator can be used to calculate the UVWs.
-      itsBufOut.setUVW (itsBuf.getUVW() / double(itsNTimes));
+      buf.setUVW (itsBuf.getUVW() / double(itsNTimes));
+      return buf;
     }
 
     void Averager::copyFullResFlags (const Cube<bool>& fullResFlags,

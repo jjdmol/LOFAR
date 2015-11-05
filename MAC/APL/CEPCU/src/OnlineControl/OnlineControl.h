@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -26,24 +26,20 @@
 //# Common Includes
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
+#include <Common/lofar_datetime.h>
 #include <Common/LofarLogger.h>
-#include <Common/ParameterSet.h>
 
-//# MessageBus Includes
-#include <MessageBus/FromBus.h>
+//# ACC Includes
+#include <Common/ParameterSet.h>
 
 //# GCF Includes
 #include <GCF/TM/GCF_Control.h>
-#include <GCF/PVSS/PVSSservice.h>
-#include <GCF/PVSS/PVSSresponse.h>
 #include <GCF/RTDB/RTDB_PropertySet.h>
 
 //# local includes
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/ParentControl.h>
 #include <APL/APLCommon/CTState.h>
-
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 // forward declaration
 
@@ -56,11 +52,8 @@ using	GCF::TM::GCFITCPort;
 using	GCF::TM::GCFPort;
 using	GCF::TM::GCFPortInterface;
 using	GCF::TM::GCFTask;
-using	GCF::PVSS::PVSSservice;
-using	GCF::PVSS::PVSSresponse;
 using	GCF::RTDB::RTDBPropertySet;
 using	APLCommon::ParentControl;
-using boost::posix_time::ptime;
 
 class OnlineControl : public GCFTask
 {
@@ -73,13 +66,13 @@ public:
 	// Connect to BGPAppl propset and start remaining tasks.
    	GCFEvent::TResult propset_state (GCFEvent& e, GCFPortInterface& p);
 	// Normal control mode. 
-   	GCFEvent::TResult active_state    (GCFEvent& e, GCFPortInterface& p);
-	GCFEvent::TResult finishing_state (GCFEvent& event, GCFPortInterface& port);
-	GCFEvent::TResult completing_state(GCFEvent& event, GCFPortInterface& port);
+   	GCFEvent::TResult active_state  (GCFEvent& e, GCFPortInterface& p);
+	// Finishing mode. 
+	GCFEvent::TResult finishing_state(GCFEvent& event, GCFPortInterface& port);
 	
 	// Interrupthandler for switching to finisingstate when exiting the program
 	static void signalHandler (int	signum);
-	void	    finish(int	result);
+	void	    finish();
 
 private:
 	// avoid defaultconstruction and copying
@@ -87,36 +80,29 @@ private:
 	OnlineControl(const OnlineControl&);
    	OnlineControl& operator=(const OnlineControl&);
 
-	uint32	_startApplications();
-	void	_stopApplications();
+	uint32	_doBoot();
+	void	_setupBGPmappingTables();
 	void   	_finishController	 (uint16_t 				result);
-   	void	_handleDisconnect	 (GCFPortInterface& 	port);
+   	void	_connectedHandler	 (GCFPortInterface& 	port);
+   	void	_disconnectedHandler (GCFPortInterface& 	port);
 	void	_setState	  		 (CTState::CTstateNr	newState);
 	void	_databaseEventHandler(GCFEvent&				event);
-	void	_clearCobaltDatapoints();
+	void	_passMetadatToOTDB   ();
 
 	// ----- datamembers -----
-	string						itsMyName;
-	int							itsObsID;
    	RTDBPropertySet*           	itsPropertySet;
+   	RTDBPropertySet*           	itsBGPApplPropSet;
 	bool					  	itsPropertySetInitialized;
-	PVSSservice*				itsPVSSService;
-	PVSSresponse*				itsPVSSResponse;
 
 	// pointer to parent control task
 	ParentControl*			itsParentControl;
 	GCFITCPort*				itsParentPort;
 
 	GCFTimerPort*			itsTimerPort;
-	GCFTimerPort*			itsForcedQuitTimer;
 
 	GCFTCPPort*				itsLogControlPort;
 
 	CTState::CTstateNr		itsState;
-
-	FromBus*				itsMsgQueue;
-	GCFTimerPort*			itsQueueTimer;
-	int						itsFeedbackResult;
 
 	// ParameterSet variables
 	string					itsTreePrefix;
@@ -126,8 +112,6 @@ private:
 	uint16					itsStopTimerID;
 	uint16					itsFinishTimerID;
 	bool					itsInFinishState;
-	bool					itsFeedbackAvailable;
-	double					itsForceTimeout;
 };
 
   };//CEPCU

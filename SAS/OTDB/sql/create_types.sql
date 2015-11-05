@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -26,16 +26,15 @@
 -- Creates the general types equal to the types in OTDBtypes.h
 --
 
-DROP TYPE IF EXISTS	treeInfo		CASCADE;
-DROP TYPE IF EXISTS	stateInfo		CASCADE;
-DROP TYPE IF EXISTS	OTDBnode		CASCADE;
-DROP TYPE IF EXISTS	OTDBparamDef	CASCADE;
-DROP TYPE IF EXISTS	OTDBvalue		CASCADE;
-DROP TYPE IF EXISTS	OTDBnodeDef		CASCADE;
-DROP TYPE IF EXISTS	campaignInfo	CASCADE;
+DROP TYPE	treeInfo		CASCADE;
+DROP TYPE	stateInfo		CASCADE;
+DROP TYPE	OTDBnode		CASCADE;
+DROP TYPE	OTDBparamDef	CASCADE;
+DROP TYPE	OTDBvalue		CASCADE;
+DROP TYPE	OTDBnodeDef		CASCADE;
+DROP TYPE	campaignInfo	CASCADE;
 
 CREATE TYPE treeInfo AS (
-    --  $Id$
 	treeID				INT4,			-- OTDBtree.treeID%TYPE,
 	momID				INT4,
 	groupID				INT4,
@@ -56,7 +55,6 @@ CREATE TYPE treeInfo AS (
 );
 
 CREATE TYPE stateInfo AS (
-    --  $Id$
 	treeID			INT4,			-- OTDBtree.treeID%TYPE,
 	momID			INT4,			-- OTDBtree.momID%TYPE,
 	state			INT2,			-- treestate.ID%TYPE,
@@ -65,11 +63,10 @@ CREATE TYPE stateInfo AS (
 );
 
 CREATE TYPE OTDBnode AS (
-    --  $Id$
 	nodeID			INT4,
 	parentID		INT4,
 	paramDefID		INT4,
-	name			VARCHAR(150),
+	name			VARCHAR(40),
 	index			SMALLINT,
 	leaf			BOOLEAN,
 	instances		INT2,			-- only filled for VIC template
@@ -78,9 +75,8 @@ CREATE TYPE OTDBnode AS (
 );
 
 -- make constructor for OTDBnode
-CREATE OR REPLACE FUNCTION makeOTDBnode(INT4,INT4,INT4,VARCHAR(150),INT2,BOOLEAN,INT2,TEXT,TEXT)
+CREATE OR REPLACE FUNCTION makeOTDBnode(INT4,INT4,INT4,VARCHAR(40),INT2,BOOLEAN,INT2,TEXT,TEXT)
   RETURNS OTDBnode AS $$
-    --  $Id$
 	DECLARE
 	  vResult	RECORD;
 
@@ -92,10 +88,9 @@ $$ LANGUAGE plpgsql;
 
 
 CREATE TYPE OTDBparamDef AS (
-    --  $Id$
 	paramID			INT4,
 	nodeID			INT4,
-	name			VARCHAR(150),
+	name			VARCHAR(40),
 	par_type		INT2,			-- param_type.ID%TYPE,
 	unit			INT2,
 	pruning			INT2,
@@ -107,18 +102,16 @@ CREATE TYPE OTDBparamDef AS (
 
 
 CREATE TYPE OTDBvalue AS (
-    --  $Id$
 	paramID			INT4,
 	name			VARCHAR(150),
 	value			TEXT,
-	time			timestamp
+	time			timestamp(0)
 );
 
 
 CREATE TYPE OTDBnodeDef AS (
-    --  $Id$
 	nodeID			INT4,
-	name			VARCHAR(150),
+	name			VARCHAR(40),
 	version			INT4,
 	classif			INT2,
 	constraints		TEXT,
@@ -126,7 +119,6 @@ CREATE TYPE OTDBnodeDef AS (
 );
 
 CREATE TYPE campaignInfo AS (
-    --  $Id$
     ID          INT2,
     name        VARCHAR(30),
     title       VARCHAR(100),
@@ -136,7 +128,6 @@ CREATE TYPE campaignInfo AS (
 );
 
 CREATE TYPE templateInfo AS (
-    --  $Id$
 	treeID			INT4,
 	name			VARCHAR(32),
 	processType		VARCHAR(20),

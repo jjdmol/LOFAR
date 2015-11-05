@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -68,7 +68,8 @@ class GTMFile
     virtual int setFD (int fd);
     virtual void doWork ();
 
-	void setBlocking(bool	blocking) const;
+	void setBlocking(bool	blocking) const {
+		if (_fd >= 0) fcntl(_fd, F_SETFL, blocking ? 0 : O_NONBLOCK); }
     
   protected: // helper methods
     void forwardEvent (GCFEvent& event);

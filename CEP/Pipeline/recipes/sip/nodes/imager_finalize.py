@@ -31,16 +31,15 @@ class imager_finalize(LOFARnodeTCP):
     2. Convert the image to hdf5 and fits image
     3. Filling of the HDF5 root group
     4. Export fits image to msss image server
-    5. Export sourcelist to msss server, copy the sourcelist to hdf5 location
-    6. Return the outputs
+    4. Return the outputs
     """
-    def run(self, awimager_output, ms_per_image, sourcelist, target,
+    def run(self, awimager_output, raw_ms_per_image, sourcelist, target,
             output_image, minbaseline, maxbaseline, processed_ms_dir,
             fillrootimagegroup_exec, environment, sourcedb):
         self.environment.update(environment)
         """
         :param awimager_output: Path to the casa image produced by awimager 
-        :param ms_per_image: The X (90) measurements set scheduled to 
+        :param raw_ms_per_image: The X (90) measurements set scheduled to 
             create the image
         :param sourcelist: list of sources found in the image 
         :param target: <unused>
@@ -55,7 +54,7 @@ class imager_finalize(LOFARnodeTCP):
         :rtype: self.outputs['image'] path to the produced hdf5 image
         """
         with log_time(self.logger):
-            ms_per_image_map = DataMap.load(ms_per_image)
+            raw_ms_per_image_map = DataMap.load(raw_ms_per_image)
 
             # *****************************************************************
             # 1. add image info                      
@@ -64,28 +63,28 @@ class imager_finalize(LOFARnodeTCP):
             # TODO: BUG!! the meta data might contain files that were copied
             # but failed in imager_bbs 
             processed_ms_paths = []
-            for item in ms_per_image_map:
+            for item in raw_ms_per_image_map:
                 path = item.file
-                ms_file_name = os.path.split(path)[1]
-                #if the ms is in the processed dir (additional check)
-                if (ms_file_name in file_list):
+                raw_ms_file_name = os.path.split(path)[1]
+                #if the raw ms is in the processed dir (additional check)
+                if (raw_ms_file_name in file_list):
                     # save the path
                     processed_ms_paths.append(os.path.join(processed_ms_dir,
-                                                            ms_file_name))
+                                                            raw_ms_file_name))
             #add the information the image
             try:
                 addimg.addImagingInfo(awimager_output, processed_ms_paths,
                     sourcedb, minbaseline, maxbaseline)
 
             except Exception, error:
-                self.logger.warn("addImagingInfo Threw Exception:")
-                self.logger.warn(error)
+                self.logger.error("addImagingInfo Threw Exception:")
+                self.logger.error(error)
                 # Catch raising of already done error: allows for rerunning
                 # of the recipe
                 if "addImagingInfo already done" in str(error):
                     pass
                 else:
-                    raise Exception(error) 
+                    raise Exception(error) #Exception: Key Name unknown 
                 #The majority of the tables is updated correctly
 
             # ***************************************************************
@@ -111,12 +110,11 @@ class imager_finalize(LOFARnodeTCP):
             # create target location
             fits_output = output_image + ".fits"
             # To allow reruns a possible earlier version needs to be removed!
-            # image2fits fails if not done!!
             if os.path.exists(fits_output):
                 os.unlink(fits_output)
 
             try:
-                temp_dir = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
+                temp_dir = tempfile.mkdtemp()
                 with CatchLog4CPlus(temp_dir,
                     self.logger.name + '.' + os.path.basename(awimager_output),
                             "image2fits") as logger:
@@ -143,8 +141,8 @@ class imager_finalize(LOFARnodeTCP):
             (stdoutdata, stderrdata) = proc.communicate()
 
             exit_status = proc.returncode
-            self.logger.info(stdoutdata)
-            self.logger.info(stderrdata)
+            self.logger.error(stdoutdata)
+            self.logger.error(stderrdata)
 
             #if copy failed log the missing file
             if  exit_status != 0:
@@ -161,7 +159,6 @@ class imager_finalize(LOFARnodeTCP):
                 opener = urllib2.build_opener(mph.MultipartPostHandler)
                 filedata = {"file": open(fits_output, "rb")}
                 opener.open(url, filedata, timeout=2)
-
                 # HTTPError needs to be caught first.
             except urllib2.HTTPError as httpe:
                 self.logger.warn("HTTP status is: {0}".format(httpe.code))
@@ -180,18 +177,10 @@ class imager_finalize(LOFARnodeTCP):
             # 5. export the sourcelist to the msss server
             url = "http://tanelorn.astron.nl:8000/upload_srcs"
             try:
-                # Copy file to output location
-                new_sourcelist_path = output_image + ".sourcelist"
-                if os.path.exists(new_sourcelist_path):
-                    os.unlink(new_sourcelist_path)
-
-                shutil.copy(sourcelist, new_sourcelist_path)
-                self.logger.info(
-                            "Starting upload of sourcelist data to server!")
+                self.logger.info("Starting upload of sourcelist data to server!")
                 opener = urllib2.build_opener(mph.MultipartPostHandler)
-                filedata = {"file": open(new_sourcelist_path, "rb")}
+                filedata = {"file": open(sourcelist, "rb")}
                 opener.open(url, filedata, timeout=2)
-
                 # HTTPError needs to be caught first.
             except urllib2.HTTPError as httpe:
                 self.logger.warn("HTTP status is: {0}".format(httpe.code))

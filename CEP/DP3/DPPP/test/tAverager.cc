@@ -87,7 +87,7 @@ private:
   virtual void updateInfo (const DPInfo&)
   {
     // Use timeInterval=5
-    info().init (itsNCorr, itsNChan, itsNTime, 100, 5, string(), string());
+    info().init (itsNCorr, itsNChan, itsNTime, 100, 5, string());
     // Define the frequencies.
     Vector<double> chanFreqs(itsNChan);
     Vector<double> chanWidth(itsNChan, 100000.);
@@ -157,7 +157,7 @@ private:
       indgen (uvw, 100*(itsCount*itsNAvgTime + 0.5*(itsNAvgTime-1)));
       ASSERT (allNear(buf.getUVW(), uvw, 1e-5));
     }
-    cout <<buf.getFullResFlags()<< fullResFlags;
+    ///cout <<buf.getFullResFlags()<< fullResFlags;
     ASSERT (allEQ(buf.getFullResFlags(), fullResFlags));
     ++itsCount;
     return true;
@@ -225,15 +225,15 @@ private:
     return true;
   }
 
-  virtual void getUVW (const casa::RefRows&, double, DPBuffer& buf)
+  virtual casa::Matrix<double> getUVW (const casa::RefRows&)
   {
-    buf.getUVW().resize (3, itsNrBl);
-    indgen (buf.getUVW());
+    Matrix<double> uvw(3,itsNrBl);
+    indgen (uvw);
+    return uvw;
   }
-  virtual bool getFullResFlags (const casa::RefRows&, DPBuffer& buf)
+  virtual casa::Cube<bool> getFullResFlags (const casa::RefRows&)
   {
-    buf.getFullResFlags().assign (itsFullResFlags);
-    return true;
+    return itsFullResFlags;
   }
 
   virtual void finish() {getNextStep()->finish();}
@@ -241,7 +241,7 @@ private:
   virtual void updateInfo (const DPInfo&)
   {
     // Use timeInterval=5
-    info().init (itsNrCorr, itsNrChan, itsNrTime, 100, 5, string(), string());
+    info().init (itsNrCorr, itsNrChan, itsNrTime, 100, 5, string());
     // Define the frequencies.
     Vector<double> chanFreqs(itsNrChan);
     Vector<double> chanWidth(itsNrChan, 100000.);

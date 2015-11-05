@@ -22,6 +22,7 @@
 from _pyparameterset import PyParameterValue
 from _pyparameterset import PyParameterSet
 
+
 class parametervalue(PyParameterValue):
     """
     The Python interface to ParameterValue
@@ -72,7 +73,6 @@ class parameterset(PyParameterSet):
         filename
           If a filename is given, the object is filled from that parset file.
           If a bool is given, it is treated as argument caseInsensitive.
-          If a dict is given, it is a set of parameter values.
         caseInsensitive
           True = parameter names are case insensitive
 
@@ -85,10 +85,6 @@ class parameterset(PyParameterSet):
         elif isinstance(filename, bool):
             # Here filename argument means caseInsensitive
             PyParameterSet.__init__ (self, filename, 0, 0);
-        elif isinstance(filename, dict):
-            # Here filename argument means caseInsensitive
-            PyParameterSet.__init__ (self, caseInsensitive, 0, 0);
-            self.adoptDict (filename)
         else:
             PyParameterSet.__init__ (self, filename, caseInsensitive);
 
@@ -140,16 +136,6 @@ class parameterset(PyParameterSet):
         for key in self.keys():
             d[key] = self.get(key).get()
         return d
-
-    def adoptArgv(self, argv):
-        for arg in argv:
-            kv = arg.split('=', 1)
-            if len(kv) == 2:
-                self.replace (kv[0], kv[1])
-
-    def adoptDict(self, parms):
-        for (k,v) in parms.iteritems():
-            self.replace (k, v)
 
     def get(self, key):
         """Get the parametervalue object of a parameter."""

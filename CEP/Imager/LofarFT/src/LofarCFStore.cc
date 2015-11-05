@@ -25,7 +25,6 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id$
-#include <lofar_config.h>
 #include <LofarFT/LofarCFStore.h>
 namespace LOFAR{
 

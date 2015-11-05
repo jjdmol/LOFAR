@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+
 class Grouper(object):
     """
     Group finder for GSM.

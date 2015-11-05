@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -24,19 +24,21 @@
 #include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarConstants.h>
+#include <Common/lofar_datetime.h>
 #include <Common/StringUtil.h>
 #include <Common/hexdump.h>
-#include <ApplCommon/StationInfo.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSinfo.h>
 #include <MACIO/MACServiceInfo.h>
+#include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <ApplCommon/StationConfig.h>
 #include <APL/RTDBCommon/RTDButilities.h>
 #include <EC_Protocol.ph>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <GCF/TM/GCF_RawPort.h>
+//#include <APL/APLCommon/StationInfo.h>
 #include <signal.h>
 
 #include "ECMonitor.h"
@@ -54,8 +56,6 @@ namespace LOFAR {
 	using namespace GCF::RTDB;
 	using namespace APLCommon;
 	using namespace APL::RTDBCommon;
-	using namespace EC_Protocol;
-	using namespace DP_Protocol;
 	namespace StationCU {
 
 //
@@ -352,28 +352,28 @@ GCFEvent::TResult ECMonitor::askSettings(GCFEvent& event, GCFPortInterface& port
 		LOG_DEBUG_STR("EC_CMD_ACK: " << ack);
 		sts_settings settings;
 		memcpy(&settings, &ack.payload, ack.payloadSize);
-   
+
 		// move the information to the database.
 		string  infoStr;
 		double   value;
 		for (int cab = 0; cab < itsNrCabs; cab++) {
 			if (itsCabs[cab] == 0) { continue; }
-			value = static_cast<double>(settings.cab[cab].min_ctrl_temp) / 100.0;
+			value = static_cast<double>(settings.cab[cab].temp_min) / 10.0;
 			itsCabs[cab]->setValue(PN_CAB_TEMP_MIN, GCFPVDouble(value), 0.0, false);
 
 			//value = static_cast<double>(settings.cab[cab].temp_min_min) / 10.0;
 			//itsCabs[cab]->setValue(PN_CAB_TEMP_MIN_MIN, GCFPVDouble(value), 0.0, false);
 
-			value = static_cast<double>(settings.cab[cab].warn_1_temp) / 100.0;
+			value = static_cast<double>(settings.cab[cab].temp_max) / 10.0;
 			itsCabs[cab]->setValue(PN_CAB_TEMP_MAX, GCFPVDouble(value), 0.0, false);
 
-			value = static_cast<double>(settings.cab[cab].warn_2_temp) / 100.0;
+			value = static_cast<double>(settings.cab[cab].temp_max_max) / 10.0;
 			itsCabs[cab]->setValue(PN_CAB_TEMP_MAX_MAX, GCFPVDouble(value), 0.0, false);
 
-			value = static_cast<double>(settings.cab[cab].max_hum) / 100.0;
+			value = static_cast<double>(settings.cab[cab].humidity_max) / 10.0;
 			itsCabs[cab]->setValue(PN_CAB_HUMIDITY_MAX, GCFPVDouble(value), 0.0, false);
 
-			value = static_cast<double>(settings.cab[cab].trip_hum) / 100.0;
+			value = static_cast<double>(settings.cab[cab].humidity_max_max) / 10.0;
 			itsCabs[cab]->setValue(PN_CAB_HUMIDITY_MAX_MAX, GCFPVDouble(value), 0.0, false);
 
 			itsCabs[cab]->flush();
@@ -464,19 +464,19 @@ GCFEvent::TResult ECMonitor::askStatus(GCFEvent& event, GCFPortInterface& port)
 			if (itsCabs[cab] == 0) { continue; }
 			itsCabs[cab]->setValue(PN_CAB_CONTROL_MODE, GCFPVString(ctrlMode(sts_stat.cab[cab].mode)), 0.0, false);
 
-			if (sts_stat.cab[cab].state & CAB_HEATER_ACTIVE)        { iState = -2; }
-			else if (sts_stat.cab[cab].state & CAB_TRIP_TEMP)     { iState = 2; }
-			else if (sts_stat.cab[cab].state & CAB_MIN_CTRL_TEMP) { iState = -1; }
-			else if (sts_stat.cab[cab].state & CAB_MAX_CTRL_TEMP) { iState = 1; }
+			if (sts_stat.cab[cab].state & CAB_TEMP_HEATER)        { iState = -2; }
+			else if (sts_stat.cab[cab].state & CAB_TEMP_TRIP)     { iState = 2; }
+			else if (sts_stat.cab[cab].state & CAB_TEMP_MIN_CTRL) { iState = -1; }
+			else if (sts_stat.cab[cab].state & CAB_TEMP_MAX_CTRL) { iState = 1; }
 			else { iState = 0; }
 			itsCabs[cab]->setValue(PN_CAB_TEMP_ALARM, GCFPVBool(iState), 0.0, false);
 
-			if (sts_stat.cab[cab].state & CAB_TRIP_HUMIDITY) { iState = 2; }
-			else if (sts_stat.cab[cab].state & CAB_MAX_HUMIDITY) { iState = 1; }
+			if (sts_stat.cab[cab].state & CAB_HUMIDITY_TRIP) { iState = 2; }
+			else if (sts_stat.cab[cab].state & CAB_HUMIDITY_MAX) { iState = 1; }
 			else { iState = 0; }
 			itsCabs[cab]->setValue(PN_CAB_HUMIDITY_ALARM, GCFPVBool(iState), 0.0, false);
 
-			bState = (sts_stat.cab[cab].state & CAB_BROKEN_TEMP_SENSOR)?false:true;
+			bState = (sts_stat.cab[cab].state & CAB_TEMPERATURE_SENSOR)?false:true;
 			itsCabs[cab]->setValue(PN_CAB_TEMPERATURE_SENSOR, GCFPVBool(bState), 0.0, false);
 
 			bState = (sts_stat.cab[cab].state & CAB_HUMIDITY_CONTROL)?false:true;

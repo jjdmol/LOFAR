@@ -33,7 +33,8 @@ class vdsmaker(LOFARnodeTCP):
                 if not os.access(executable, os.X_OK):
                     raise ExecutableMissing(executable)
                 cmd = [executable, clusterdesc, infile, outfile]
-                return catch_segfaults(cmd, None, None, self.logger).returncode
+                result = catch_segfaults(cmd, None, None, self.logger).returncode
+                self.outputs["result"] = result
             except ExecutableMissing, e:
                 self.logger.error("%s not found" % (e.args[0]))
                 return 1

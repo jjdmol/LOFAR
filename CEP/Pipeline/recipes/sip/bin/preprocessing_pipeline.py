@@ -30,9 +30,19 @@ class preprocessing_pipeline(control):
 
     def __init__(self):
         super(preprocessing_pipeline, self).__init__()
+        self.parset = parameterset()
         self.input_data = []
         self.output_data = []
         self.io_data_mask = []
+        self.parset_feedback_file = None
+
+
+    def usage(self):
+        """
+        Display usage
+        """
+        print >> sys.stderr, "Usage: %s [options] <parset-file>" % sys.argv[0]
+        return 1
 
 
     def _get_io_product_specs(self):
@@ -99,6 +109,28 @@ class preprocessing_pipeline(control):
 #                )
 #            )
 
+    def go(self):
+        """
+        Read the parset-file that was given as input argument;
+        set jobname, and input/output data products before calling the
+        base-class's `go()` method.
+        """
+        try:
+            parset_file = os.path.abspath(self.inputs['args'][0])
+        except IndexError:
+            return self.usage()
+        self.parset.adoptFile(parset_file)
+        self.parset_feedback_file = parset_file + "_feedback"
+
+        # Set job-name to basename of parset-file w/o extension, if it's not
+        # set on the command-line with '-j' or '--job-name'
+        if not self.inputs.has_key('job_name'):
+            self.inputs['job_name'] = (
+                os.path.splitext(os.path.basename(parset_file))[0])
+
+        # Call the base-class's `go()` method.
+        return super(preprocessing_pipeline, self).go()
+
 
     @mail_log_on_exception
     def pipeline_logic(self):
@@ -136,46 +168,13 @@ class preprocessing_pipeline(control):
             ', '.join(str(f) for f in self.input_data))
 
         # *********************************************************************
-        # 2. Create VDS-file and databases. The latter are needed when doing
-        #    demixing within DPPP.
+        # 2. Create VDS-file; it will contain important input-data for NDPPP
         with duration(self, "vdsmaker"):
             gvds_file = self.run_task("vdsmaker", input_data_mapfile)['gvds']
 
         # Read metadata (start, end times, pointing direction) from GVDS.
         with duration(self, "vdsreader"):
             vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
-
-        # Create a parameter database that will be used by the NDPPP demixing
-        with duration(self, "setupparmdb"):
-            parmdb_mapfile = self.run_task(
-                "setupparmdb", input_data_mapfile,
-                mapfile=os.path.join(mapfile_dir, 'dppp.parmdb.mapfile'),
-                suffix='.dppp.parmdb'
-            )['mapfile']
-                
-        # Create a source database from a user-supplied sky model
-        # The user-supplied sky model can either be a name, in which case the
-        # pipeline will search for a file <name>.skymodel in the default search
-        # path $LOFARROOT/share/pipeline/skymodels; or a full path.
-        # It is an error if the file does not exist.
-        skymodel = py_parset.getString('PreProcessing.SkyModel')
-        if not os.path.isabs(skymodel):
-            skymodel = os.path.join(
-                # This should really become os.environ['LOFARROOT']
-                self.config.get('DEFAULT', 'lofarroot'),
-                'share', 'pipeline', 'skymodels', skymodel + '.skymodel'
-            )
-        if not os.path.isfile(skymodel):
-            raise PipelineException("Skymodel %s does not exist" % skymodel)
-        with duration(self, "setupsourcedb"):
-            sourcedb_mapfile = self.run_task(
-                "setupsourcedb", input_data_mapfile,
-                mapfile=os.path.join(mapfile_dir, 'dppp.sourcedb.mapfile'),
-                skymodel=skymodel,
-                suffix='.dppp.sourcedb',
-                type='blob'
-            )['mapfile']
-
 
         # *********************************************************************
         # 3. Average and flag data, using NDPPP.
@@ -189,29 +188,19 @@ class preprocessing_pipeline(control):
                 (input_data_mapfile, output_data_mapfile),
                 data_start_time=vdsinfo['start_time'],
                 data_end_time=vdsinfo['end_time'],
-                demix_always=
-                    py_parset.getStringVector('PreProcessing.demix_always'),
-                demix_if_needed=
-                    py_parset.getStringVector('PreProcessing.demix_if_needed'),
-                parset=ndppp_parset,
-                parmdb_mapfile=parmdb_mapfile,
-                sourcedb_mapfile=sourcedb_mapfile
-            )
+                parset=ndppp_parset)
 
         # *********************************************************************
         # 6. Create feedback file for further processing by the LOFAR framework
-        # Create a parset containing the metadata
-        metadata_file = "%s_feedback_Correlated" % (self.parset_file,)
+        # (MAC)
+        # Create a parset-file containing the metadata for MAC/SAS
         with duration(self, "get_metadata"):
             self.run_task("get_metadata", output_data_mapfile,
+                parset_file=self.parset_feedback_file,
                 parset_prefix=(
                     self.parset.getString('prefix') +
                     self.parset.fullModuleName('DataProducts')),
-                product_type="Correlated",
-                metadata_file=metadata_file)
-
-        self.send_feedback_processing(parameterset())
-        self.send_feedback_dataproducts(parameterset(metadata_file))
+                product_type="Correlated")
 
         return 0
 
