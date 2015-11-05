@@ -281,7 +281,7 @@ class SendReceiveMessage(unittest.TestCase):
         """
         Test send/receive of an ServiceMessage, containing a byte array.
         """
-        content = struct.pack("17B", *(ord(c)+32 for c in "A service message"))
+        content = {"request": "Do Something", "argument": "Very Often"}
         self._test_sendrecv(ServiceMessage(content, reply_to=QUEUE))
 
 
