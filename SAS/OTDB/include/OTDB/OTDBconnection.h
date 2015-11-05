@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -32,14 +32,11 @@
 #include <OTDB/TreeState.h>
 #include <OTDB/DefaultTemplate.h>
 #include <Common/lofar_vector.h>
-#include <Common/lofar_map.h>
-#include <pqxx/connection>
+
+using namespace pqxx;
 
 namespace LOFAR {
   namespace OTDB {
-
-using boost::posix_time::min_date_time;
-using boost::posix_time::max_date_time;
 
 // \addtogroup OTDB
 // @{
@@ -107,11 +104,6 @@ public:
 									   const ptime& beginDate = ptime(min_date_time),
 									   const ptime& endDate   = ptime(max_date_time));
 
-	// To get a list of all OTDB trees modified after given timestamp
-	vector<OTDBtree> getModifiedTrees(const ptime&	after, treeType	aTreeType = 0);
-
-	// Get a map to translate MoMIds to treeID's
-    map<uint, uint> getMomID2treeIDMap();
 
 	// Get a new unique groupID
 	uint32	newGroupID();
@@ -122,7 +114,7 @@ public:
 	//# --- accessor functions ---
 	inline string errorMsg() const;
 	inline uint32 getAuthToken() const;
-	inline pqxx::connection* getConn() const;
+	inline connection* getConn() const;
 	inline string getDBName() const;
 
 private:
@@ -135,9 +127,9 @@ private:
 	string		itsPassword;
 	string		itsDatabase;
 	string		itsHost;
-	string		itsPort;
+	string      	itsPort;
 	bool		itsIsConnected;
-	pqxx::connection*	itsConnection;
+	connection*	itsConnection;
 	uint32		itsAuthToken;
 	string		itsError;
 };
@@ -167,7 +159,7 @@ inline uint32 OTDBconnection::getAuthToken() const
 //# a non copyable object, making it difficult to define a call like:
 //# work(*)	OTDBconnection::transaction(transactionName);
 //#
-inline pqxx::connection* OTDBconnection::getConn() const
+inline connection* OTDBconnection::getConn() const
 {
 	return (itsConnection);
 }

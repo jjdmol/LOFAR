@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -26,13 +26,11 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
-#include <Common/Exception.h>
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
 #include <MACIO/MACServiceInfo.h>
 #include "calinfo.h" 
 
 namespace LOFAR {
-  using namespace CAL_Protocol;
   using namespace GCF;
   using namespace GCF::TM;
   namespace CAL {
@@ -137,9 +135,6 @@ using namespace LOFAR;
 using namespace LOFAR::GCF;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::CAL;
-
-// Use a terminate handler that can produce a backtrace.
-Exception::TerminateHandler t(Exception::terminate);
 
 int main(int	argc,	char*	argv[])
 {

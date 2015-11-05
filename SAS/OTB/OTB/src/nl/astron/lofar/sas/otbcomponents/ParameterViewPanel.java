@@ -1,7 +1,7 @@
 /*
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -213,13 +213,10 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
      */
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
         /// TEST ONLY ///
-        switch (evt.getActionCommand()) {
-            case "Choice 1":
-                logger.debug("Param Choice 1 chosen");
-                break;
-            case "Choice 2":
-                logger.debug("Param Choice 2 chosen");
-                break;
+        if (evt.getActionCommand().equals("Choice 1")) {
+            logger.debug("Param Choice 1 chosen");
+        }  else if (evt.getActionCommand().equals("Choice 2")) {
+            logger.debug("Param Choice 2 chosen");
         }
     }
 

@@ -76,8 +76,6 @@
 #include <BBSKernel/Apply.h>
 #include <BBSKernel/Estimate.h>
 
-#include <casa/OS/Path.h>
-
 namespace LOFAR
 {
   namespace BBS
@@ -681,8 +679,7 @@ namespace LOFAR
         try
         {
           StationExprLOFAR::Ptr expr(new StationExprLOFAR(*itsSourceDB,
-            itsBuffers, command.modelConfig(), chunk, true, command.useMMSE(),
-            command.sigmaMMSE()));
+            itsBuffers, command.modelConfig(), chunk, true));
           apply(expr, chunk, blMask);
         }
         catch(Exception &ex)
@@ -698,8 +695,7 @@ namespace LOFAR
         try
         {
           model.reset(new MeasurementExprLOFAR(*itsSourceDB, itsBuffers,
-            command.modelConfig(), chunk, blMask, true, command.useMMSE(),
-            command.sigmaMMSE()));
+            command.modelConfig(), chunk, blMask, true));
         }
         catch(Exception &ex)
         {

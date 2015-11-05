@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@
 -- Check is to given combination of username and password is valid
 CREATE OR REPLACE FUNCTION OTDBlogin(VARCHAR(80), VARCHAR(80))
   RETURNS INT4 AS '
-    --  $Id$
 	DECLARE
 		vUserNr		INT4;
 
@@ -55,7 +54,6 @@ CREATE OR REPLACE FUNCTION OTDBlogin(VARCHAR(80), VARCHAR(80))
 -- Check if the user is allowed to perform a task
 CREATE OR REPLACE FUNCTION OTDBauthenticate(INTEGER, INTEGER, INTEGER)
   RETURNS INT4 AS '
-    --  $Id$
 	DECLARE
 
 	BEGIN

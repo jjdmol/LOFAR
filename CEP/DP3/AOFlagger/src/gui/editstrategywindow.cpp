@@ -20,7 +20,6 @@
 #include <iostream>
 
 #include <gtkmm/stock.h>
-#include <gtkmm/messagedialog.h>
 
 #include <AOFlagger/strategy/actions/iterationaction.h>
 #include <AOFlagger/strategy/actions/strategyaction.h>
@@ -43,7 +42,6 @@
 #include <AOFlagger/gui/strategyframes/foreachcomplexcomponentframe.h>
 #include <AOFlagger/gui/strategyframes/frequencyconvolutionframe.h>
 #include <AOFlagger/gui/strategyframes/fringestoppingframe.h>
-#include <AOFlagger/gui/strategyframes/highpassfilterframe.h>
 #include <AOFlagger/gui/strategyframes/iterationframe.h>
 #include <AOFlagger/gui/strategyframes/plotframe.h>
 #include <AOFlagger/gui/strategyframes/resamplingframe.h>
@@ -298,9 +296,6 @@ void EditStrategyWindow::onSelectionChanged()
 			case FrequencyConvolutionActionType:
 				showRight(new FrequencyConvolutionFrame(*static_cast<rfiStrategy::FrequencyConvolutionAction*>(selectedAction), *this));
 				break;
-			case HighPassFilterActionType:
-				showRight(new HighPassFilterFrame(*static_cast<rfiStrategy::HighPassFilterAction*>(selectedAction), *this));
-				break;
 			case PlotActionType:
 				showRight(new StrategyPlotFrame(*static_cast<rfiStrategy::PlotAction*>(selectedAction), *this));
 				break;
@@ -522,17 +517,11 @@ void EditStrategyWindow::onOpenClicked()
 		StrategyReader reader;
 		std::string filename(dialog.get_filename());
 		Strategy *oldStrategy = _strategy;
-		try {
-			_strategy = reader.CreateStrategyFromFile(filename);
-			_msWindow.SetStrategy(_strategy);
-			delete oldStrategy;
-			_store->clear();
-			fillStore();
-		} catch(std::exception &e)
-		{
-			Gtk::MessageDialog dialog(*this, e.what(), false, Gtk::MESSAGE_ERROR);
-			dialog.run();
-		}
+		_strategy = reader.CreateStrategyFromFile(filename);
+		_msWindow.SetStrategy(_strategy);
+		delete oldStrategy;
+		_store->clear();
+		fillStore();
 	}
 }
 

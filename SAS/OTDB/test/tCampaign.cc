@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2010
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -30,7 +30,6 @@
 #include <OTDB/OTDBconnection.h>
 #include <OTDB/Campaign.h>
 #include <libgen.h>             // for basename
-#include <cstring>
 
 using namespace LOFAR;
 using namespace LOFAR::OTDB;
@@ -111,12 +110,9 @@ int main (int	argc, char*	argv[]) {
 		showCampaignList(campList);
 		ASSERTSTR(campList.size(),"No campaign list found");
 
-		LOG_INFO("Adding 'ruud's campaign'");
-		CampaignInfo	CI("ruud's campaign", "campaign of me", "me", "no-one", "also me");
-		LOG_INFO_STR(CI);
+		LOG_INFO("Adding 'my campaign'");
+		CampaignInfo	CI("my campaign", "campaign of me", "me", "no-one", "also me");
 		LOG_INFO_STR("new recordID = " << camp.saveCampaign(CI));
-		LOG_INFO("AFTER SAVECAMPAIGN");
-#if 0
 		campList = camp.getCampaignList();
 		showCampaignList(campList);
 		ASSERTSTR(campList.size(),"No campaign list found");
@@ -137,7 +133,6 @@ int main (int	argc, char*	argv[]) {
 		showCampaignList(campList);
 		ASSERTSTR(campList.size(),"No campaign list found");
 
-#endif
 #if 0		
 		LOG_INFO("Trying to change the state of the tree to active(400)");
 		bool 	actionOK = tm.setTreeState(treeID, TSconv.get("active"));

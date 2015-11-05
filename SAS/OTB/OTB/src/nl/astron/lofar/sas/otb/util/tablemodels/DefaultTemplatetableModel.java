@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,6 +24,8 @@ package nl.astron.lofar.sas.otb.util.tablemodels;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Vector;
 import nl.astron.lofar.sas.otb.jotdb3.jDefaultTemplate;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBtree;
 import nl.astron.lofar.sas.otb.util.*;
@@ -52,7 +54,7 @@ public class DefaultTemplatetableModel extends javax.swing.table.AbstractTableMo
     /** Creates a new instance of PICtableModel */
     public DefaultTemplatetableModel(OtdbRmi otdbRmi) {
         this.otdbRmi = otdbRmi;
- //       fillTable();
+        fillTable();
     }
 
     /** Refreshes 1 row from table out of the database
@@ -191,14 +193,13 @@ public class DefaultTemplatetableModel extends javax.swing.table.AbstractTableMo
      */
     public Object getValueAt(int r, int c) {
         try {
-            if (data != null && data.length > 0) {
+            if (data.length > 0) {
                 return data[r][c];
             } else {
                 return null;
             }
         }
         catch(ArrayIndexOutOfBoundsException e) {
-            logger.error("ArrayIndex out of bound exception for getValueAt("+r+","+c+"): "+e);
             return null;
         }
     }

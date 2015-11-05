@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -73,12 +73,10 @@ private:
    	GCFEvent::TResult connect2RSP_state		  (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult startListener_state	  (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult subscribeClock_state 	  (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult subscribeBitmode_state 	  (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult subscribeSplitter_state (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult active_state    		  (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult defaultMessageHandling  (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult setClock_state  		  (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult setBitmode_state  		  (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult setSplitters_state 	  (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult finishing_state  		  (GCFEvent& e, GCFPortInterface& p);
 
@@ -94,10 +92,6 @@ private:
 	void cancelClockSubscription();
 	void requestClockSetting();
 	void sendClockSetting();
-	void requestBitmodeSubscription();
-	void cancelBitmodeSubscription();
-	void requestBitmodeSetting();
-	void sendBitmodeSetting();
 	void requestSplitterSubscription();
 	void cancelSplitterSubscription();
 	void requestSplitterSetting();
@@ -117,22 +111,14 @@ private:
 
 	GCFTCPPort*				itsCommandPort;
 	list<GCFPortInterface*>	itsClientList;
-    
-    GCFPortInterface*       itsLastCommandClient;
 
 	// ParameterSet variables
 	string					itsTreePrefix;
 	uint32					itsInstanceNr;
 	time_t					itsStartTime;		// timestamp the controller was started
 
-    unsigned                itsNrRSPs;
-
 	void*					itsClockSubscription;
-	uint32					itsClock; // 200 or 160
-
-	void*					itsBitmodeSubscription;
-	uint16					itsBitmode; // 16 or 8 or 4
-	uint16					itsBitmodeVersion; // supported bitmode: 0 = 16, 1 = 16/8, 2 = 16/8/4
+	int32					itsClock;
 
 	bool					itsSplitterRequest;
 	bitset<MAX_RSPBOARDS>	itsSplitters;

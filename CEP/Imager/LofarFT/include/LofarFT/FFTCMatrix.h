@@ -116,9 +116,8 @@ namespace LOFAR {
     //  <li> FFTW_MEASURE will do some actual FFTs to find the best plan.
     //  <li> FFTW_PATIENT will do more FFTs to find the best plan.
     //  <li> FFTW_EXHAUSTIVE will do even more FFTs (and take a lot of time).
-    // </ul> 
-    void plan (size_t size, bool forward, int nthreads=1,
-               unsigned flags=FFTW_ESTIMATE);
+    //  <li> 
+    void plan (size_t size, bool forward, unsigned flags=FFTW_ESTIMATE);
 
     // Do the FFT.
     // The output is scaled (with 1/size^2) if done in the backward direction.
@@ -132,18 +131,10 @@ namespace LOFAR {
     // It first makes the plan, thereafter does the FFT.
     // These function are similar to fft and normalized_fft but use the
     // given data array.
-    void forward (size_t size, std::complex<float>* data,
-                  int nthreads=1,
-		  unsigned flags=FFTW_ESTIMATE);
-    void backward (size_t size, std::complex<float>* data,
-                   int nthreads=1,
-		   unsigned flags=FFTW_ESTIMATE);
-    void normalized_forward (size_t size, std::complex<float>* data,
-                             int nthreads=1,
-			     unsigned flags=FFTW_ESTIMATE);
-    void normalized_backward (size_t size, std::complex<float>* data,
-                              int nthreads=1,
-			      unsigned flags=FFTW_ESTIMATE);
+    void forward (size_t size, std::complex<float>* data);
+    void backward (size_t size, std::complex<float>* data);
+    void normalized_forward (size_t size, std::complex<float>* data);
+    void normalized_backward (size_t size, std::complex<float>* data);
 
     ///  private:
     // Flip the quadrants as needed for the FFT.
@@ -189,9 +180,8 @@ namespace LOFAR {
     fftwf_plan           itsPlan;
     size_t               itsSize;
     size_t               itsReserved;
-    int                  itsNThreads;
     bool                 itsIsForward;
-    static bool          theirInitDone;
+    static bool          theirWisdomRead;
   };
 
 }   //# end namespace

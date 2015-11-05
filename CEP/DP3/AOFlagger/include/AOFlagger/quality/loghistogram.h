@@ -29,18 +29,11 @@
 
 #include <AOFlagger/util/serializable.h>
 
-//# pow10 seems to be undefined on OS-X
-#ifdef __APPLE__
-# define pow10(x) pow(10., (x))
-#endif
-
-
 class LogHistogram : public Serializable
 {
 	private:
-		class AmplitudeBin : public Serializable
+		struct AmplitudeBin : public Serializable
 		{
-                public:
 			AmplitudeBin() :
 				count(0)
 			{
@@ -252,40 +245,6 @@ class LogHistogram : public Serializable
 			return (sumXY - sumX*sumY/n)/(sumXSquare - (sumX*sumX/n));
 		}
 		
-		
-		double PowerLawExponent(double startAmplitude) const
-		{
-			const long double xMin = startAmplitude;
-			long double termSum = 0.0;
-			long double termCount = 0.0;
-			for(const_iterator i=begin();i!=end();++i)
-			{
-				const long double x = i.value();
-				if(x >= startAmplitude)
-				{
-					const long double count = i.unnormalizedCount();
-					const long double thisTerm = logl(x / xMin);
-					termCount += count;
-					termSum += thisTerm * count;
-				}
-			}
-			return (double) (-1.0L - termCount / termSum);
-		}
-		
-		double PowerLawExponentStdError(double startAmplitude, double expEstimator) const
-		{
-			long double termCount = 0.0;
-			for(const_iterator i=begin();i!=end();++i)
-			{
-				if(i.value() >= startAmplitude)
-				{
-					const long double count = i.unnormalizedCount();
-					termCount += count;
-				}
-			}
-			return (double) ((-expEstimator - 1.0L) / sqrtl(termCount));
-		}
-		
 		double NormalizedSlopeOffset(double startAmplitude, double endAmplitude, double slope) const
 		{
 			unsigned long n = 0;
@@ -398,18 +357,6 @@ class LogHistogram : public Serializable
 				const double b = (i->binStart + i->binEnd) * 0.5; // TODO somewhat inefficient...
 				getBin(getCentralAmplitude(b)).count = (unsigned long) i->count;
 			}
-		}
-		
-		void Rescale(double factor)
-		{
-			std::map<double, AmplitudeBin> newAmplitudes;
-			std::map<double, AmplitudeBin>::iterator position = newAmplitudes.begin();
-			for(std::map<double, AmplitudeBin>::const_iterator i=_amplitudes.begin();
-					i!=_amplitudes.end();++i)
-			{
-				position = newAmplitudes.insert(position, std::pair<double, AmplitudeBin>(getCentralAmplitude(i->first * factor), i->second));
-			}
-			_amplitudes = newAmplitudes;
 		}
 		
 		class const_iterator

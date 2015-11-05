@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -35,8 +35,7 @@
 -- Types:	OTDBnode
 --
 CREATE OR REPLACE FUNCTION updateVTnode(INT4, INT4, INT4, INT2, TEXT)
-  RETURNS BOOLEAN AS $$
-    --  $Id$
+  RETURNS BOOLEAN AS '
 	DECLARE
 		TTtemplate  CONSTANT	INT2 := 20;
 		TThierarchy CONSTANT	INT2 := 30;
@@ -52,7 +51,7 @@ CREATE OR REPLACE FUNCTION updateVTnode(INT4, INT4, INT4, INT2, TEXT)
 		SELECT isAuthorized(vAuthToken, $2, vFunction, 0) 
 		INTO   vIsAuth;
 		IF NOT vIsAuth THEN
-			RAISE EXCEPTION 'Not authorized';
+			RAISE EXCEPTION \'Not authorized\';
 			RETURN FALSE;
 		END IF;
 
@@ -62,36 +61,36 @@ CREATE OR REPLACE FUNCTION updateVTnode(INT4, INT4, INT4, INT2, TEXT)
 		FROM	OTDBtree
 		WHERE	treeID = $2;
 		IF NOT FOUND THEN
-		  RAISE EXCEPTION 'Tree % does not exist', $1;
+		  RAISE EXCEPTION \'Tree % does not exist\', $1;
 		END IF;
 
 		IF vTreeType = TTtemplate THEN
 			-- get ParentID of node to duplicate
-			vLimits := replace($5, E'\\\'', E'');
+			vLimits := replace($5, \'\\\'\', \'\');
 			UPDATE	VICtemplate
 			SET		instances = $4,
 					limits    = vLimits
 			WHERE	treeID = $2
 			AND 	nodeID = $3;
 			IF NOT FOUND THEN
-			  RAISE EXCEPTION 'Node % of template-tree could not be updated', $3;
+			  RAISE EXCEPTION \'Node % of template-tree could not be updated\', $3;
 			  RETURN FALSE;
 			END IF;
 		ELSEIF vTreeType = TThierarchy THEN
-			vLimits := replace($5, E'\\\'', E'');
+			vLimits := replace($5, \'\\\'\', \'\');
 			UPDATE	VIChierarchy
-			SET	value = vLimits
+			SET		value = vLimits
 			WHERE	treeID = $2
 			AND 	nodeID = $3;
 			IF NOT FOUND THEN
-			  RAISE EXCEPTION 'Node % of VIC-tree could not be updated', $3;
+			  RAISE EXCEPTION \'Node % of VIC-tree could not be updated\', $3;
 			  RETURN FALSE;
 			END IF;
 		ELSE
-			RAISE EXCEPTION 'Nodes of PIC trees can not be updated';
+			RAISE EXCEPTION \'Nodes of PIC trees can not be updated\';
 		END IF;
 
 		RETURN TRUE;
 	END;
-$$ LANGUAGE plpgsql;
+' LANGUAGE plpgsql;
 

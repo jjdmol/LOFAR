@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
+#include <Common/lofar_datetime.h>
 #include <Common/ParameterSet.h>
 #include <OTDB/TreeMaintenance.h>
 #include <OTDB/TreeValue.h>
@@ -35,13 +36,10 @@
 #include <OTDB/TreeStateConv.h>
 #include <OTDB/ClassifConv.h>
 #include <libgen.h>             // for basename
-#include <cstring>
-
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 using namespace LOFAR;
 using namespace LOFAR::OTDB;
-using namespace boost::posix_time;
+
 
 //
 // showTreeList

@@ -1,3 +1,3 @@
 #!/bin/sh
 
-./runctest.sh tConvert
+./runctest.sh tConvert > tConvert.log 2>&1

@@ -1,9 +1,8 @@
 //#  GetStatsCmd.cc: implementation of the GetStatsCmd class
-//#  GetStatsCmd.cc: implementation of the GetStatsCmd class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -23,7 +22,6 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <Common/LofarBitModeInfo.h>
 
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RTCCommon/PSAccess.h>
@@ -63,11 +61,9 @@ void GetStatsCmd::ack(CacheBuffer& cache)
 		ack.stats().resize(m_event->rcumask.count(), cache.getSubbandStats()().extent(secondDim));
 	}
 	else {
-		ack.stats().resize(m_event->rcumask.count(), maxBeamlets(cache.getBitsPerSample()));
+		ack.stats().resize(m_event->rcumask.count(), MAX_BEAMLETS);
 	}
 
-    int activePlanes = (MAX_BITS_PER_SAMPLE / cache.getBitsPerSample());
-	
 	unsigned int result_device = 0;
 	for (unsigned int cache_device = 0; cache_device < m_n_devices; cache_device++) {
 		if (m_event->rcumask[cache_device]) {
@@ -79,24 +75,20 @@ void GetStatsCmd::ack(CacheBuffer& cache)
 			case Statistics::BEAMLET_POWER:
 				// NOTE: MEPHeader::N_BEAMLETS = 4x62 but userside MAX_BEAMLETS may be different
 				//       In other words: getBeamletWeights can contain more data than ack.weights
-				if (MEPHeader::N_BEAMLETS == maxBeamlets(cache.getBitsPerSample())) {
+				if (MEPHeader::N_BEAMLETS == MAX_BEAMLETS) {
 					ack.stats()(result_device, Range::all()) = cache.getBeamletStats()()(cache_device, Range::all());
 				}
 				else {
-					for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
-    					for (int plane = 0; plane < activePlanes; plane++) {
-    						int	swstart(lane*maxBeamletsPerRSP(cache.getBitsPerSample()) + plane*maxDataslotsPerRSP(cache.getBitsPerSample()));
-    						int hwstart(lane*MEPHeader::N_BEAMLETS + plane*MEPHeader::N_BEAMLETS/4);
-    						
-    						ack.stats()(result_device, Range(swstart,swstart+maxDataslotsPerRSP(cache.getBitsPerSample())-1)) = 
-    							cache.getBeamletStats()()(cache_device, Range(hwstart, hwstart+maxDataslotsPerRSP(cache.getBitsPerSample())-1));
-    						
-    						if (cache_device == 0) {
-    							LOG_DEBUG_STR("Getstats:move(" << hwstart << ".." << hwstart+maxDataslotsPerRSP(cache.getBitsPerSample()-1) << ") to (" 
-    														   << swstart << ".." << swstart+maxDataslotsPerRSP(cache.getBitsPerSample()-1) << ")");
-    						}
-    					}
-    				}
+					for (int rsp = 0; rsp < 4; rsp++) {
+						int	swstart(rsp*MAX_BEAMLETS_PER_RSP);
+						int hwstart(rsp*MEPHeader::N_BEAMLETS/4);
+						ack.stats()(result_device, Range(swstart,swstart+MAX_BEAMLETS_PER_RSP-1)) = 
+							cache.getBeamletStats()()(cache_device, Range(hwstart, hwstart+MAX_BEAMLETS_PER_RSP-1));
+						if (cache_device == 0) {
+							LOG_DEBUG_STR("Getstats:move(" << hwstart << ".." << hwstart+MAX_BEAMLETS_PER_RSP << ") to (" 
+														   << swstart << ".." << swstart+MAX_BEAMLETS_PER_RSP << ")");
+						}
+					}
 				}
 				LOG_DEBUG_STR("GetStats(cache[0]): " << cache.getBeamletStats()()(0,Range::all()));
 				

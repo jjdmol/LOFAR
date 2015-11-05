@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -238,9 +238,7 @@ PVSSresult	RTDBPropertySet::flush()
 	}
 
 	// write to database
-	stringstream		os;
-	writeVector(os, dpeNames, ",", "[", "]");
-	LOG_DEBUG_STR("Updating: " << os.str());
+	LOG_DEBUG_STR("Updating: " << dpeNames);
 	return (itsService->dpeSetMultiple(itsScope, dpeNames, dpeValues));
 }
 
@@ -389,7 +387,6 @@ RTDBPropertySet::Property* RTDBPropertySet::_getProperty (const string& propName
 void RTDBPropertySet::dpCreated(const string&	propName, PVSSresult		result)
 {
 	LOG_TRACE_FLOW_STR("RTDBPropertySet::dpCreated(" << propName << "," << result << ")");
-	(void)propName;
 
 	// Now that DP exists in the database we can access the elements.
 	_createAllProperties();

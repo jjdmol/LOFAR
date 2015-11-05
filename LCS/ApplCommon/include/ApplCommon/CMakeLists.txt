@@ -4,10 +4,7 @@
 set(inst_HEADERS
   AntField.h
   AntennaSets.h
-  LofarDirs.h
   Observation.h
-  PosixTime.h
-  PVSSDatapointDefs.h
   StationConfig.h
   StationDatatypes.h
   StationInfo.h)

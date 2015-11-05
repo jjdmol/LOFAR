@@ -32,7 +32,6 @@
 #include <AOFlagger/quality/rayleighfitter.h>
 
 HistogramPage::HistogramPage() :
-	_expander("Side bar"),
 	_histogramTypeFrame("Histogram"),
 	_totalHistogramButton("Total"),
 	_rfiHistogramButton("RFI"),
@@ -161,9 +160,7 @@ HistogramPage::HistogramPage() :
 	_slopeFrame.add(_slopeBox);
 	_sideBox.pack_start(_slopeFrame, Gtk::PACK_SHRINK);
 	
-	_expander.add(_sideBox);
-	
-	pack_start(_expander, Gtk::PACK_SHRINK);
+	pack_start(_sideBox, Gtk::PACK_SHRINK);
 	
 	_plotWidget.SetPlot(_plot);
 	pack_start(_plotWidget, Gtk::PACK_EXPAND_WIDGET);
@@ -501,8 +498,6 @@ void HistogramPage::addSlopeText(std::stringstream &str, const LogHistogram &his
 
 	const double
 		slope = histogram.NormalizedSlope(minRange, maxRange),
-		powerLawExp = histogram.PowerLawExponent(minRange),
-		powerLawExpError = histogram.PowerLawExponentStdError(minRange, powerLawExp),
 		offset = histogram.NormalizedSlopeOffset(minRange, maxRange, slope),
 		error = histogram.NormalizedSlopeStdError(minRange, maxRange, slope),
 		errorB = histogram.NormalizedSlopeStdDevBySampling(minRange, maxRange, slope, deltaS),
@@ -510,9 +505,7 @@ void HistogramPage::addSlopeText(std::stringstream &str, const LogHistogram &his
 		lowerLimit = histogram.PowerLawLowerLimit(minRange, slope, pow10(offset), rfiRatio),
 		lowerError = fabs(lowerLimit - histogram.PowerLawLowerLimit(minRange, slope - error, pow10(offset), rfiRatio)),
 		lowerLimit2 = histogram.PowerLawLowerLimit2(minRange, slope, pow10(offset), rfiRatio);
-	str << slope << "±" << error << "\n/±" << errorB << "\nb=" << pow10(offset)
-		<< "\nPL:"
-		<< powerLawExp << "±" << powerLawExpError << "\n["
+	str << '\n' << slope << "±" << error << "\n/±" << errorB << "\n["
 		<< log10(lowerLimit) << "±" << lowerError << ';' << log10(upperLimit) << ']' << '\n'
 		<< log10(lowerLimit2);
 }

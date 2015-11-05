@@ -28,7 +28,6 @@
 #include <MS/Package__Version.h>
 #include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
-#include <Common/Exception.h>
 
 #include <casa/Quanta/MVTime.h>
 #include <casa/Quanta/MVAngle.h>
@@ -49,9 +48,6 @@ using namespace LOFAR;
 using namespace casa;
 using namespace std;
 
-// Use a terminate handler that can produce a backtrace.
-Exception::TerminateHandler t(Exception::terminate);
-
 // Define the variables shared between the functions.
 vector<double> itsRa;
 vector<double> itsDec;
@@ -59,7 +55,6 @@ Matrix<double> itsAntPos;
 bool   itsWriteAutoCorr;
 bool   itsWriteImagerCol;
 bool   itsDoSinglePart;
-int    itsNCorr;
 int    itsNPart;
 int    itsNBand;
 int    itsNFreq;
@@ -99,7 +94,6 @@ void readParms (const string& parset)
     ASSERT (MVAngle::read (qn, decStr[i], true));
     itsDec.push_back (qn.getValue ("rad"));
   }
-  itsNCorr = params.getInt32 ("NPolarizations", 4);
   itsNBand = params.getInt32 ("NBands");
   itsNFreq = params.getInt32 ("NFrequencies");
   itsNTime = params.getInt32 ("NTimes");
@@ -112,7 +106,6 @@ void readParms (const string& parset)
   itsTileSizeFreq = params.getInt32 ("TileSizeFreq", -1);
   itsTileSize = params.getInt32 ("TileSize", -1);
   // Determine nr of bands per part.
-  ASSERT (itsNCorr==1 || itsNCorr==2 || itsNCorr==4);
   ASSERT (itsNPart > 0);
   ASSERT (itsNBand > 0);
   if (itsNBand > itsNPart) {
@@ -174,14 +167,14 @@ void readParms (const string& parset)
 void createMS (int nband, int bandnr, const string& msName)
 {
   int nfpb = itsNFreq/itsNBand;
-  MSCreate msmaker(msName, itsStartTime, itsStepTime, nfpb, itsNCorr,
+  MSCreate msmaker(msName, itsStartTime, itsStepTime, nfpb, 4,
                    itsAntPos, itsAntennaTableName, itsWriteAutoCorr,
 		   itsTileSizeFreq, itsTileSize, itsFlagColumn, itsNFlags,
                    itsMapFlagBits);
   for (int i=0; i<nband; ++i) {
     // Determine middle of band.
     double freqRef = itsStartFreq[bandnr] + nfpb*itsStepFreq[bandnr]/2;
-    msmaker.addBand (itsNCorr, nfpb, freqRef, itsStepFreq[bandnr]);
+    msmaker.addBand (4, nfpb, freqRef, itsStepFreq[bandnr]);
     ++bandnr;
   }
   for (uint i=0; i<itsRa.size(); ++i) {
@@ -267,8 +260,8 @@ int main (int argc, char** argv)
       // Print vdsName, so script can capture it.
       cout << "vds=" << vdsName << endl;
     }
-  } catch (Exception& ex) {
-    cerr << "Unexpected exception in " << argv[0] << ": " << ex << endl;
+  } catch (std::exception& x) {
+    cout << "Unexpected exception in " << argv[0] << ": " << x.what() << endl;
     return 1;
   }
   return 0;

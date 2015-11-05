@@ -21,13 +21,64 @@
 //# $Id$
 
 #include <lofar_config.h>
+#include <Common/lofar_fstream.h>
+#include <Common/lofar_string.h>
 #include <BBSKernel/Instrument.h>
 #include <BBSKernel/Exceptions.h>
+
+#include <measures/Measures/MeasConvert.h>
+#include <measures/Measures/MCPosition.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
+
+AntennaField::AntennaField(const string &name, const Vector3 &position,
+    const Vector3 &p, const Vector3 &q, const Vector3 &r)
+    :   itsName(name),
+        itsPosition(position),
+        itsActiveElementCount(0)
+{
+    itsAxes[P] = p;
+    itsAxes[Q] = q;
+    itsAxes[R] = r;
+}
+
+const string &AntennaField::name() const
+{
+    return itsName;
+}
+
+const Vector3 &AntennaField::position() const
+{
+    return itsPosition;
+}
+
+const Vector3 &AntennaField::axis(Axis axis) const
+{
+    return itsAxes[axis];
+}
+
+bool AntennaField::isHBA() const
+{
+    return itsName != "LBA";
+}
+
+void AntennaField::appendTileElement(const Vector3 &offset)
+{
+    itsTileElements.push_back(offset);
+}
+
+void AntennaField::appendElement(const Element &element)
+{
+    itsElements.push_back(element);
+
+    if(!element.flag[0] || !element.flag[1])
+    {
+        ++itsActiveElementCount;
+    }
+}
 
 Station::Station(const string &name, const casa::MPosition &position)
     :   itsName(name),
@@ -35,8 +86,21 @@ Station::Station(const string &name, const casa::MPosition &position)
 {
 }
 
-Station::~Station()
+Station::Station(const string &name, const casa::MPosition &position,
+    const AntennaField::Ptr &field0)
+    :   itsName(name),
+        itsPosition(position)
 {
+    itsFields.push_back(field0);
+}
+
+Station::Station(const string &name, const casa::MPosition &position,
+    const AntennaField::Ptr &field0, const AntennaField::Ptr &field1)
+    :   itsName(name),
+        itsPosition(position)
+{
+    itsFields.push_back(field0);
+    itsFields.push_back(field1);
 }
 
 const string &Station::name() const
@@ -47,6 +111,41 @@ const string &Station::name() const
 const casa::MPosition &Station::position() const
 {
     return itsPosition;
+}
+
+bool Station::isPhasedArray() const
+{
+    return !itsFields.empty();
+}
+
+unsigned int Station::nField() const
+{
+    return itsFields.size();
+}
+
+size_t Station::nElement() const
+{
+    size_t count = 0;
+    for(unsigned int i = 0; i < nField(); ++i)
+    {
+        count += field(i)->nElement();
+    }
+    return count;
+}
+
+size_t Station::nActiveElement() const
+{
+    size_t count = 0;
+    for(unsigned int i = 0; i < nField(); ++i)
+    {
+        count += field(i)->nActiveElement();
+    }
+    return count;
+}
+
+AntennaField::ConstPtr Station::field(unsigned int i) const
+{
+    return itsFields[i];
 }
 
 Instrument::Instrument(const string &name, const casa::MPosition &position)

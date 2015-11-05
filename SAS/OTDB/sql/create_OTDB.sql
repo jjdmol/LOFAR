@@ -24,7 +24,6 @@
 \i getExecutableTrees_func.sql
 \i getTreeGroup_func.sql
 \i getTreesInPeriod_func.sql
-\i getModifiedTrees_func.sql
 
 -- PICtree
 \i create_PIC_tables.sql
@@ -63,8 +62,6 @@
 -- VIChierarchy
 \i getVHitemList_func.sql
 \i exportTree_func.sql
-\i exportResultTree_func.sql
-\i exportMetadata_func.sql
 \i searchVHinPeriod_func.sql
 \i setSchedule_func.sql
 
@@ -79,8 +76,6 @@
 \i classify_func.sql
 \i setMomInfo_func.sql
 \i setDescription_func.sql
-\i getMomID2treeID_func.sql
-\i create_rules.sql
 
 -- campaign
 \i campaignAPI.sql

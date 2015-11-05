@@ -3,7 +3,7 @@
 --
 -- Copyright (C) 2008
 -- ASTRON (Netherlands  Foundation for Research in Astronomy)
--- P.O.Box  2, 7990  AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+-- P.O.Box  2, 7990  AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 -- This program is   free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as  published by
@@ -200,12 +200,7 @@ INSERT INTO station VALUES ('DE602', 'UnterWeilenbach (Garching)');
 INSERT INTO station VALUES ('DE603', 'Tautenburg');
 INSERT INTO station VALUES ('DE604', 'Potsdam');
 INSERT INTO station VALUES ('DE605', 'Juelich');
-INSERT INTO station VALUES ('DE609', 'Norderstedt');
 INSERT INTO station VALUES ('FR606', 'Nancy');
 INSERT INTO station VALUES ('SE607', 'Onsala');
 INSERT INTO station VALUES ('UK608', 'Chillbolton');
-INSERT INTO station VALUES ('FI609', 'Kaira');
-INSERT INTO station VALUES ('PL610', '');
-INSERT INTO station VALUES ('PL611', '');
-INSERT INTO station VALUES ('PL612', 'Baldy');
 

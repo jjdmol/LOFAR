@@ -1,7 +1,0 @@
-import xmlrpclib
-url = 'https://awtier0:tier123@lofar-ingest-test.target.rug.nl:19443'
-client = xmlrpclib.ServerProxy(url)
-client.GetStorageTicket('MSSS','test.filename.MS',1,'1','TEST_0001','1234',False)
-{'primary_uri_rnd': 'srm://srm.grid.sara.nl:8443/pnfs/grid.sara.nl/data/lofar/ops/test/msss/1234/test.filename_1de8b275.MS', 'primary_uri': 'srm://srm.grid.sara.nl:8443/pnfs/grid.sara.nl/data/lofar/ops/test/msss/1234', 'result': 'ok', 'error': '', 'secondary_uri': '', 'ticket': 'BF6FE08B8D775266E043C416A9C31B5D', 'secondary_uri_rnd': ''}
-client.UpdateUriState('MSSS','BF6FE08B8D775266E043C416A9C31B5D','srm://srm.grid.sara.nl:8443/pnfs/grid.sara.nl/data/lofar/ops/test/msss/1234',-10)
-{'primary_uri_rnd': '', 'primary_uri': '', 'result': '', 'error': 'LTA Ingest Service; an exception was raised in UpdateUriState; No StorageTicketResource found for ticket BF6FE08B8D775266E043C416A9C31B5D', 'secondary_uri': '', 'ticket': '', 'secondary_uri_rnd': ''}

@@ -30,7 +30,6 @@
 
 #include <BBSKernel/BaselineMask.h>
 #include <BBSKernel/CorrelationMask.h>
-#include <BBSKernel/Interval.h>
 #include <BBSKernel/MeasurementExpr.h>
 #include <BBSKernel/SolverInterfaceTypes.h>
 #include <BBSKernel/Types.h>

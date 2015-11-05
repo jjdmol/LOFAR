@@ -77,13 +77,6 @@ namespace BBS {
   ParmDBCasa::~ParmDBCasa()
   {}
 
-  void ParmDBCasa::flush (bool fsync)
-  {
-    itsTables[0].flush (fsync, false);
-    itsTables[1].flush (fsync, false);
-    itsTables[2].flush (fsync, false);
-  }
-
   void ParmDBCasa::lock (bool lockForWrite)
   {
     itsTables[0].lock (lockForWrite);
@@ -570,7 +563,7 @@ namespace BBS {
     pertCol.put (rownr, pset.getPerturbation());
     prelCol.put (rownr, pset.getPertRel());
     maskCol.put (rownr, pset.getSolvableMask());
-    //   table.flush();   // Why this flush? Makes things slow.
+    table.flush();
     return id;
   }
 

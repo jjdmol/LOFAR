@@ -21,9 +21,8 @@
 #define GUI_QUALITY__GRAYSCALEPLOTPAGE_H
 
 #include <gtkmm/box.h>
-#include <gtkmm/expander.h>
-#include <gtkmm/frame.h>
 #include <gtkmm/window.h>
+#include <gtkmm/frame.h>
 #include <gtkmm/radiobutton.h>
 
 #include <AOFlagger/gui/imagewidget.h>
@@ -79,22 +78,10 @@ class GrayScalePlotPage : public Gtk::HBox {
 				_imageWidget.SetScaleOption(ImageWidget::NormalScale);
 			 _imageWidget.Update();
 		}
-		void onNormalizeAxesButtonClicked()
-		{
-			UpdateImage();
-		}
-		void onChangeNormMethod()
-		{
-			if(_normalizeYAxisButton.get_active())
-				UpdateImage();
-		}
-		Image2DCPtr normalizeXAxis(Image2DCPtr input);
-		Image2DCPtr normalizeYAxis(Image2DCPtr input);
 		
 		void setToSelectedPolarization(TimeFrequencyData &data);
 		void setToSelectedPhase(TimeFrequencyData &data);
 		
-		Gtk::Expander _expander;
 		Gtk::VBox _sideBox;
 		
 		Gtk::Frame _statisticKindFrame;
@@ -116,8 +103,7 @@ class GrayScalePlotPage : public Gtk::HBox {
 		Gtk::VBox _plotBox;
 		
 		Gtk::RadioButton _rangeMinMaxButton, _rangeWinsorizedButton, _rangeSpecified;
-		Gtk::CheckButton _logarithmicScaleButton, _normalizeXAxisButton, _normalizeYAxisButton;
-		Gtk::RadioButton _meanNormButton, _winsorNormButton, _medianNormButton;
+		Gtk::CheckButton _logarithmicScaleButton;
 		Gtk::Button _plotPropertiesButton;
 		
 		QualityTablesFormatter::StatisticKind _selectStatisticKind;

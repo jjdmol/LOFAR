@@ -83,10 +83,10 @@ void AOQPlotWindow::Open(const std::string &filename)
 	_openOptionsWindow.ShowForFile(filename);
 }
 
-void AOQPlotWindow::onOpenOptionsSelected(std::string filename, bool downsampleTime, bool downsampleFreq, size_t timeCount, size_t freqCount, bool correctHistograms)
+void AOQPlotWindow::onOpenOptionsSelected(std::string filename, bool downsampleTime, bool downsampleFreq, size_t timeCount, size_t freqCount)
 {
 	_filename = filename;
-	readStatistics(downsampleTime, downsampleFreq, timeCount, freqCount, correctHistograms);
+	readStatistics(downsampleTime, downsampleFreq, timeCount, freqCount);
 	_baselinePlotPage.SetStatistics(_statCollection, _antennas);
 	_antennaePlotPage.SetStatistics(_statCollection, _antennas);
 	_bLengthPlotPage.SetStatistics(_statCollection, _antennas);
@@ -118,7 +118,7 @@ void AOQPlotWindow::close()
 	}
 }
 
-void AOQPlotWindow::readStatistics(bool downsampleTime, bool downsampleFreq, size_t timeSize, size_t freqSize, bool correctHistograms)
+void AOQPlotWindow::readStatistics(bool downsampleTime, bool downsampleFreq, size_t timeSize, size_t freqSize)
 {
 	close();
 	
@@ -129,7 +129,7 @@ void AOQPlotWindow::readStatistics(bool downsampleTime, bool downsampleFreq, siz
 		_histCollection = new HistogramCollection();
 		aoRemote::ProcessCommander commander(*observation);
 		commander.PushReadAntennaTablesTask();
-		commander.PushReadQualityTablesTask(_statCollection, _histCollection, correctHistograms);
+		commander.PushReadQualityTablesTask(_statCollection, _histCollection);
 		commander.Run();
 		if(!commander.Errors().empty())
 		{
@@ -150,10 +150,9 @@ void AOQPlotWindow::readStatistics(bool downsampleTime, bool downsampleFreq, siz
 			Gtk::MessageDialog dialog(*this, s.str(), false, Gtk::MESSAGE_ERROR);
 			dialog.run();
 		}
+		delete observation;
 		
 		_antennas = commander.Antennas();
-		
-		delete observation;
 	}
 	else {
 		MeasurementSet *ms = new MeasurementSet(_filename);

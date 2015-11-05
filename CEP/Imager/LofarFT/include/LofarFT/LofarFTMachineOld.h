@@ -53,6 +53,7 @@ using namespace casa;
 
 namespace LOFAR {
 
+class casa::UVWMachine;
 // <summary>  An FTMachine for Gridded Fourier transforms </summary>
 
 // <use visibility=export>
@@ -193,7 +194,6 @@ public:
   // Finalize transform to Sky plane: flushes the image
   // cache and shows statistics if it is being used. DOES NOT
   // DO THE FINAL TRANSFORM!
-  using casa::FTMachine::finalizeToSky;
   void finalizeToSky();
 
 
@@ -202,13 +202,11 @@ public:
 
 
   // Put coherence to grid by gridding.
-  using casa::FTMachine::put;
   void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
            FTMachine::Type type=FTMachine::OBSERVED);
 
 
   // Make the entire image
-  using casa::FTMachine::makeImage;
   void makeImage(FTMachine::Type type,
 		 VisSet& vs,
 		 ImageInterface<Complex>& image,

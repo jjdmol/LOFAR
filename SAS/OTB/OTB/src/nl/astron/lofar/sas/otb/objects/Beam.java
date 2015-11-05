@@ -5,6 +5,8 @@
 package nl.astron.lofar.sas.otb.objects;
 
 import java.util.ArrayList;
+import java.util.BitSet;
+import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.util.IBeam;
 
 /**
@@ -35,6 +37,14 @@ public class Beam implements IBeam {
         this.itsAngle2 = anAngle2;
     }
 
+    public String getBeamletList() {
+        return itsBeamletList;
+    }
+
+    public void setBeamletList(String aBeamletList) {
+        this.itsBeamletList = aBeamletList;
+    }
+
     public String getDirectionType() {
         return itsDirectionType;
     }
@@ -49,6 +59,14 @@ public class Beam implements IBeam {
 
     public void setDuration(String aDuration) {
         this.itsDuration = aDuration;
+    }
+
+    public String getMaximizeDuration() {
+        return itsMaximizeDuration;
+    }
+
+    public void setMaximizeDuration(String aMaximizeDuration) {
+        this.itsMaximizeDuration = aMaximizeDuration;
     }
 
     public String getMomID() {
@@ -134,6 +152,9 @@ public class Beam implements IBeam {
         this.itsDirectionTypeChoices = directionTypeChoices;
     }
     
+    public BitSet getBeamletBitSet() {
+        return LofarUtils.beamletToBitSet(LofarUtils.expandedArrayString(itsBeamletList));
+    }
     
     public String getTreeType() {
         return itsTreeType;
@@ -156,7 +177,9 @@ public class Beam implements IBeam {
         clone.itsDirectionType = itsDirectionType;
         clone.itsStartTime = itsStartTime;
         clone.itsDuration = itsDuration;
+        clone.itsMaximizeDuration = itsMaximizeDuration;
         clone.itsSubbandList = itsSubbandList;
+        clone.itsBeamletList = itsBeamletList;
         clone.itsMomID = itsMomID;
         clone.itsNrTiedArrayBeams = itsNrTiedArrayBeams;     // 
         clone.itsNrTabRings = itsNrTabRings;
@@ -181,7 +204,9 @@ public class Beam implements IBeam {
     private String                   itsDirectionType;
     private String                   itsStartTime;
     private String                   itsDuration;
+    private String                   itsMaximizeDuration;
     private String                   itsSubbandList;
+    private String                   itsBeamletList;
     private String                   itsMomID;
     private String                   itsNrTiedArrayBeams="1";     // 
     private String                   itsNrTabRings;

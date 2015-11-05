@@ -2,7 +2,7 @@
 //#
 //# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //# This program is free software; you can redistribute it and/or modify
 //# it under the terms of the GNU General Public License as published by
@@ -179,22 +179,6 @@ const Scalar::View AsPolar::evaluateImpl(const Grid&, const Scalar::View &mod,
 {
     Scalar::View result;
     result.assign(tocomplex(mod() * cos(arg()), mod() * sin(arg())));
-    return result;
-}
-
-// -------------------------------------------------------------------------- //
-// - Implementation: AsPolar                                                - //
-// -------------------------------------------------------------------------- //
-
-AsPhasor::AsPhasor(const Expr<Scalar>::ConstPtr &phase)
-    : BasicUnaryExpr<Scalar, Scalar>(phase)
-{
-}
-
-const Scalar::View AsPhasor::evaluateImpl(const Grid&, const Scalar::View &phase) const
-{
-    Scalar::View result;
-    result.assign(tocomplex(cos(phase()), sin(phase())));
     return result;
 }
 

@@ -30,7 +30,6 @@
 //# Includes
 #include <Common/ParameterSetImpl.h>
 #include <Common/KVpair.h>
-#include <Common/lofar_smartptr.h>
 
 namespace LOFAR {
 
@@ -123,28 +122,21 @@ public:
 	// Adds the Key-Values pair in the given file to the current
 	// collection. Each key will be prefixed with the optional argument \a
 	// thePrefix.
-        // <br> Note that no dot is added to the prefix.
 	void	adoptFile      (const string&               theFilename,
 				const string&               thePrefix = "");
 
 	// Adds the Key-Values pair in the given buffer to the current
 	// collection. Each key will be prefixed with the optional argument \a
 	// thePrefix.
-        // <br> Note that no dot is added to the prefix.
 	void	adoptBuffer    (const string&               theBuffer,
 				const string&               thePrefix = "");
 
 	// Adds the Key-Values pair in the given collection to the current 
 	// collection. Each key will be prefixed with the optional argument \a
 	// thePrefix.
-        // <br> Note that no dot is added to the prefix.
         // <br>If theCollection is this collection, nothing will be done.
 	void	adoptCollection(const ParameterSet&         theCollection,
 				const string&               thePrefix = "");
-
-        // Adds the Key-Values pairs in the argument list.
-        // It ignores arguments not having the Key=Value syntax.
-        void    adoptArgv      (int nr, char const * const argv[]);
 	// @}
 
 
@@ -173,16 +165,12 @@ public:
 	// parameters that start with the given baseKey. The baseKey is cut off 
 	// from the Keynames in the created subset, the optional prefix is put
 	// before all keys in the subset.
-        // <br>It is important to note that no dot is added to the prefix, so
-        // it has to be given explicitly. So when giving a prefix like "pre",
-        // a key "pre.key" gets ".key" and "prefix.key" get "fix.key".
 	ParameterSet	makeSubset(const string& baseKey,
 								   const string& prefix = "") const;
 
 	// Subtract a subset from the current ParameterSet. Every parameter
 	// whose key starts with the given name will be removed from the
 	// ParameterSet.
-        // <br> Similarly to makeSubset, no dot is added to the prefix.
 	void	subtractSubset(const string& fullPrefix);
 	// @}
 
@@ -345,10 +333,6 @@ public:
 
 	// @}
 
-        // Get all unused parameter names, thus the names of parameters
-        // that have not been asked for.
-        vector<string> unusedKeys() const;
-
 	// \name Printing
 	// Mostly for debug purposes the collection can be printed.
 	// @{
@@ -359,10 +343,13 @@ public:
 
 private:
 	// Construct from an existing impl object.
-        explicit ParameterSet (const shared_ptr<ParameterSetImpl>& set)
+	explicit ParameterSet (ParameterSetImpl* set)
 	  { itsSet = set; }
 
-        shared_ptr<ParameterSetImpl> itsSet;
+	// Decrement the refcount and delete the impl if the count is zero.
+	void unlink();
+
+	ParameterSetImpl* itsSet;
 };
 
 
@@ -429,11 +416,6 @@ inline void	ParameterSet::adoptBuffer	(const string& theBuffer, const string& th
 inline void	ParameterSet::adoptCollection	(const ParameterSet& theCollection, const string& thePrefix)
 {
 	itsSet->adoptCollection (*theCollection.itsSet, thePrefix);
-}
-
-  inline void	ParameterSet::adoptArgv  	(int nr, const char * const argv[])
-{
-        itsSet->adoptArgv (nr, argv);
 }
 
 inline void	ParameterSet::writeFile   (const string& theFilename, bool append) const
@@ -867,11 +849,6 @@ inline vector<time_t> ParameterSet::getTimeVector(const string& aKey,
                                                   bool expandable) const
 {
         return itsSet->getTimeVector(aKey, aValue, expandable);
-}
-
-inline vector<string> ParameterSet::unusedKeys() const
-{
-        return itsSet->unusedKeys();
 }
 
 } // namespace LOFAR

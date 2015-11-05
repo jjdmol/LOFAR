@@ -27,14 +27,12 @@
 #include <LMWCommon/MWError.h>
 #include <Common/StringUtil.h>
 #include <Common/LofarLogger.h>
-#include <Common/Exception.h>
 #include <iostream>
 
 using namespace LOFAR::CEP;
 using namespace LOFAR;
+using namespace std;
 
-// Use a terminate handler that can produce a backtrace.
-Exception::TerminateHandler t(Exception::terminate);
 
 void makeFile (const vector<string>& fileSys, const vector<string>& fileNames,
                const vector<string>& names, WorkersDesc& workers,
@@ -218,8 +216,8 @@ int main (int argc, const char* argv[])
     } else {
       makeFromFile (argv[st], workers, cluster, type);
     }
-  } catch (Exception& ex) {
-    cerr << "Unexpected exception: " << ex << endl;
+  } catch (std::exception& x) {
+    cerr << "Unexpected exception: " << x.what() << endl;
     return 1;
   }
   return 0;

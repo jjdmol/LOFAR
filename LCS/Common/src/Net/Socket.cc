@@ -41,7 +41,12 @@
 #include <signal.h>
 #include <errno.h>
 #include <fcntl.h>
+
+#ifdef HAVE_NETDB_H 
+// netdb is not available on BGL; all code using netdb will be 
+// conditionally included using the HAVE_BGL definition;
 #include <netdb.h>
+#endif
 
 #if !defined(HAVE_GETPROTOBYNAME_R)
   #ifdef USE_THREADS
@@ -291,15 +296,18 @@ int32 Socket::initClient (const string&	hostname,
 	itsHost		= hostname;
 	itsPort		= service;
 
+	struct sockaddr*	addrPtr;
 	if (itsType == UNIX) {
 		if(initUnixSocket(itsIsServer) < 0) {
 			return(itsErrno);
 		}
+		addrPtr = (struct sockaddr*) &itsUnixAddr;
 	} 
 	else  { 		// networked socket (type TCP or UDP)
 		if(initTCPSocket(itsIsServer) < 0) {
 			return(itsErrno);
 		}
+		addrPtr = (struct sockaddr*) &itsTCPAddr;
 	}
 		
 	setBlocking(itsIsBlocking);		// be sure the blockingmode is used
@@ -369,6 +377,7 @@ int32 Socket::initTCPSocket(bool	asServer)
 	itsTCPAddr.sin_family = AF_INET;
 	itsTCPAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
+#ifndef HAVE_BGL
     // Construct hints for various getaddrinfo lookups
     struct addrinfo       hints;
 
@@ -381,12 +390,20 @@ int32 Socket::initTCPSocket(bool	asServer)
       hints.ai_socktype = SOCK_STREAM;
       hints.ai_protocol = IPPROTO_TCP;
     }
+#endif
 
 	// as Client we must resolve the hostname to connect to.
 	if (!asServer) {
 		uint32				IPbytes;
 		// try if hostname is hard ip address
 		if ((IPbytes = inet_addr(itsHost.c_str())) == INADDR_NONE) {
+#ifdef HAVE_BGL
+		  {
+		    LOG_ERROR(formatString("Socket:Hostname (%s) can not be resolved",
+														itsHost.c_str()));
+		    return (itsErrno = BADHOST);
+		  }
+#else
 		  struct addrinfo*		hostEnt;		// server host entry
 
 		  // No, try to resolve the name
@@ -399,12 +416,21 @@ int32 Socket::initTCPSocket(bool	asServer)
 		  memcpy (&IPbytes, &reinterpret_cast<struct sockaddr_in *>(hostEnt->ai_addr)->sin_addr, sizeof IPbytes);
 
           freeaddrinfo(hostEnt);
+#endif
 		}
 		memcpy ((char*) &itsTCPAddr.sin_addr.s_addr, (char*) &IPbytes, 
 															sizeof IPbytes);
 	}
 			
 	// try to resolve the service
+#ifdef HAVE_BGL
+	itsProtocolType = 6;		// assume tcp
+	if (!(itsTCPAddr.sin_port = htons((uint16)atoi(itsPort.c_str())))) {
+		LOG_ERROR(formatString("Socket:Portnr/service(%s) can not be resolved",
+													itsPort.c_str()));
+		return (itsErrno = PORT);
+	}
+#else
 	struct addrinfo*	servEnt;		// service info entry
 
 	if (getaddrinfo(NULL, itsPort.c_str(), &hints, &servEnt) != 0) {
@@ -455,6 +481,8 @@ int32 Socket::initTCPSocket(bool	asServer)
 	if (!protoEnt) {
 	  return (itsErrno = PROTOCOL);
 	}
+#endif
+
 #endif
 
 	// Finally time to open the real socket
@@ -568,6 +596,9 @@ int32 Socket::connect (int32 waitMs)
 		return (itsErrno = INPROGRESS);
 	}
 
+#ifdef HAVE_BGL
+	errno = 0;
+#else
 #if defined(__sun)
 	char		connRes [16];
 	int			resLen = sizeof(connRes);
@@ -583,6 +614,7 @@ int32 Socket::connect (int32 waitMs)
 	}
 	errno = connRes;					// put it were it belongs
 #endif
+#endif	// HAVE_BGL
 
 	if (errno != 0) {					// not yet connected
 		LOG_DEBUG(formatString("Socket(%d):delayed connect failed also, err=%d(%s)",
@@ -701,6 +733,7 @@ Socket* Socket::accept(int32	waitMs)
 		return (0);
 	}
 
+#ifndef HAVE_BGL
 # if defined(__sun)
 	char		connRes [16];
 	int			resLen = sizeof(connRes);
@@ -722,6 +755,7 @@ Socket* Socket::accept(int32	waitMs)
 		setErrno(INPROGRESS);
 		return (0);
 	}
+#endif // HAVE_BGL
 
 	newSocketID = ::accept(itsSocketID, addrPtr, &addrLen);
 	ASSERT (newSocketID > 0);
@@ -761,6 +795,7 @@ int32 Socket::shutdown (bool receive, bool send)
 	ASSERTSTR (receive || send, "neither receive nor send specified");
 
 	itsErrno = SK_OK;					// assume no failure
+#ifndef HAVE_BGL
 	if (itsSocketID < 0) { 
 		return (itsErrno = NOINIT); 
 	}
@@ -779,6 +814,7 @@ int32 Socket::shutdown (bool receive, bool send)
  	if (send && receive) {				// update administration
 		itsIsConnected = false;
  	}
+#endif
 	return (itsErrno);
 }
 
@@ -793,9 +829,11 @@ int32 Socket::setBlocking (bool block)
 	}
 
 	if (itsSocketID >= 0) {					// we must have a socket ofcourse
+#if !defined HAVE_BGL && !defined HAVE_BGP
 		if (fcntl (itsSocketID, F_SETFL, block ? 0 : O_NONBLOCK) < 0) {
 			return (setErrno(SOCKOPT));
 		}
+#endif
 		itsIsBlocking = block;					// register user wish
 		LOG_TRACE_COND(formatString("Socket(%d):setBlocking(%s)", 
 									itsSocketID, block ? "true" : "false"));
@@ -1161,6 +1199,9 @@ int32 Socket::setDefaults ()
 
 	setBlocking(itsIsBlocking);				// be sure blocking mode is right.
 
+#ifdef HAVE_BGL
+	return (setErrno(SK_OK));
+#else
 	uint32 			val = 1;
 	struct linger 	lin = { 1, 1 };
 
@@ -1185,6 +1226,7 @@ int32 Socket::setDefaults ()
 	}
 
 	return (SK_OK);
+#endif  // HAVE_BGL
 }
 
 #endif  // USE_NOSOCKETS

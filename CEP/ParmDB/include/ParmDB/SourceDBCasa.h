@@ -29,7 +29,6 @@
 
 //# Includes
 #include <ParmDB/SourceDB.h>
-#include <ParmDB/PatchInfo.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_set.h>
 #include <tables/Tables/Table.h>
@@ -83,11 +82,6 @@ namespace BBS {
                            double ra, double dec,
                            bool check);
 
-    // Update the ra/dec and apparent brightness of a patch.
-    virtual void updatePatch (uint patchId, 
-                              double apparentBrightness,
-                              double ra, double dec);
-
     // Add a source to a patch.
     // Its ra and dec and default parameters will be stored as default
     // values in the associated ParmDB tables. The names of the parameters
@@ -95,20 +89,15 @@ namespace BBS {
     // The map should contain the parameters belonging to the source type.
     // Missing parameters will default to 0.
     // <br>Optionally it is checked if the patch already exists.
-    // <group>
     virtual void addSource (const SourceInfo& sourceInfo,
                             const string& patchName,
                             const ParmMap& defaultParameters,
                             double ra, double dec,
                             bool check);
-    virtual void addSource (const SourceData& source,
-                            bool check);
-    // </group>
 
     // Add a source which forms a patch in itself (with the same name).
     // <br>Optionally it is checked if the patch or source already exists.
     virtual void addSource (const SourceInfo& sourceInfo,
-                            const string& patchName,
                             int catType,
                             double apparentBrightness,
                             const ParmMap& defaultParameters,
@@ -121,18 +110,9 @@ namespace BBS {
     virtual vector<string> getPatches (int category, const string& pattern,
                                        double minBrightness,
                                        double maxBrightness);
-
-    // Get the info of all patches (name, ra, dec).
-    virtual vector<PatchInfo> getPatchInfo (int category,
-                                            const string& pattern,
-                                            double minBrightness,
-                                            double maxBrightness);
-
+;
     // Get the sources belonging to the given patch.
     virtual vector<SourceInfo> getPatchSources (const string& patchName);
-
-    // Get all data of the sources belonging to the given patch.
-    virtual vector<SourceData> getPatchSourceData (const string& patchName);
 
     // Get the source info of the given source.
     virtual SourceInfo getSource (const string& sourceName);
@@ -146,16 +126,6 @@ namespace BBS {
     // Clear database or table
     virtual void clearTables();
 
-    // Get the next source from the table.
-    // An exception is thrown if there are no more sources.
-    virtual void getNextSource (SourceData& src);
-
-    // Tell if we are the end of the file.
-    virtual bool atEnd();
-
-    // Reset to the beginning of the file.
-    virtual void rewind();
-
   private:
     // Create the source and patch table.
     void createTables (const string& tableName);
@@ -165,10 +135,6 @@ namespace BBS {
                  uint patchId,
                  const ParmMap& defaultParameters,
                  double ra, double dec);
-
-    // Write the patch info in the given row.
-    void writePatch (double apparentBrightness,
-                     double ra, double dec, uint rownr);
 
     // Find the duplicate patches or sources.
     vector<string> findDuplicates (casa::Table& table,
@@ -181,22 +147,12 @@ namespace BBS {
     // Read all sources from the table and return them as a vector.
     std::vector<SourceInfo> readSources (const casa::Table& table);
 
-    // Create the patches subset matching the given arguments.
-    casa::Table selectPatches (int category,
-                               const string& pattern,
-                               double minBrightness,
-                               double maxBrightness) const;
-
-    // Read a default parameter.
-    double getDefaultParmValue(const string& name);
-
     //# Data members
     casa::Table      itsPatchTable;
     casa::Table      itsSourceTable;
     set<std::string> itsPatchSet;
     set<std::string> itsSourceSet;
     bool             itsSetsFilled;
-    casa::Vector<casa::uInt> itsRowNr;
   };
 
   // @}

@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -31,7 +31,6 @@
 --
 CREATE OR REPLACE FUNCTION removeVTparameters(INT4)
   RETURNS VOID AS '
-    --  $Id$
 	BEGIN
 		DELETE
 		FROM	VICtemplate
@@ -50,7 +49,6 @@ CREATE OR REPLACE FUNCTION removeVTparameters(INT4)
 --
 CREATE OR REPLACE FUNCTION removeVTleafNode(INT4)
   RETURNS VOID AS '
-    --  $Id$
 	BEGIN
 		-- remove parameters
 		PERFORM removeVTparameters($1);
@@ -73,7 +71,6 @@ CREATE OR REPLACE FUNCTION removeVTleafNode(INT4)
 --
 CREATE OR REPLACE FUNCTION removeVTsubTree(INT4)
   RETURNS VOID AS '
-    --  $Id$
 	DECLARE
 		vChild		RECORD;
 
@@ -108,7 +105,6 @@ CREATE OR REPLACE FUNCTION removeVTsubTree(INT4)
 --
 CREATE OR REPLACE FUNCTION removeVTnode(INT4, INT4, INT4)
   RETURNS BOOLEAN AS '
-    --  $Id$
 	DECLARE
 		vFunction		INT2 := 1;
 		vIsAuth			BOOLEAN;

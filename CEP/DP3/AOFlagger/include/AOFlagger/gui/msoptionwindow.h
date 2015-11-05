@@ -25,7 +25,6 @@
 #include <gtkmm/window.h>
 #include <gtkmm/box.h>
 #include <gtkmm/button.h>
-#include <gtkmm/entry.h>
 #include <gtkmm/radiobutton.h>
 #include <gtkmm/buttonbox.h>
 #include <gtkmm/frame.h>
@@ -52,14 +51,11 @@ class MSOptionWindow : public Gtk::Window {
 		Gtk::Button _openButton;
 		Gtk::Frame _dataKindFrame, _polarisationFrame, _partitioningFrame;
 		Gtk::VBox _dataKindBox, _polarisationBox, _partitioningBox;
-		Gtk::HBox _otherColumnBox;
-		Gtk::RadioButton _observedDataButton, _correctedDataButton, _modelDataButton, _residualDataButton, _otherColumnButton;
-		Gtk::Entry _otherColumnEntry;
+		Gtk::RadioButton _observedDataButton, _correctedDataButton, _modelDataButton, _residualDataButton, _weightsButton;
 		Gtk::RadioButton _allDipolePolarisationButton, _autoDipolePolarisationButton, _stokesIPolarisationButton;
 		Gtk::RadioButton _noPartitioningButton, _max2500ScansButton, _max10000ScansButton, _max25000ScansButton,
 			_max100000ScansButton;
-		Gtk::RadioButton _directReadButton, _indirectReadButton, _memoryReadButton;
-		Gtk::CheckButton _readUVWButton;
+		Gtk::CheckButton _indirectReadButton, _readUVWButton;
 };
 
 #endif

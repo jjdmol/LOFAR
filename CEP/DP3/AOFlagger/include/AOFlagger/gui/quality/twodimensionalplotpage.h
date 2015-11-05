@@ -22,7 +22,6 @@
 
 #include <gtkmm/box.h>
 #include <gtkmm/checkbutton.h>
-#include <gtkmm/expander.h>
 #include <gtkmm/frame.h>
 
 #include <AOFlagger/quality/qualitytablesformatter.h>
@@ -113,12 +112,11 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 		void onPlotPropertiesClicked();
 		void onDataExportClicked();
 		
-		Gtk::Expander _expander;
 		Gtk::VBox _sideBox;
 		
 		Gtk::Frame _statisticFrame;
 		Gtk::VBox _statisticBox;
-		Gtk::CheckButton _countButton, _meanButton, _stdDevButton, _varianceButton, _dCountButton, _dMeanButton, _dStdDevButton,  _rfiPercentageButton, _snrButton;
+		Gtk::CheckButton _countButton, _meanButton, _stdDevButton, _dCountButton, _dMeanButton, _dStdDevButton,  _rfiPercentageButton, _snrButton;
 		
 		Gtk::Frame _polarizationFrame;
 		Gtk::VBox _polarizationBox;

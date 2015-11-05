@@ -40,8 +40,6 @@
 #include <AOFlagger/strategy/actions/fringestopaction.h>
 #include <AOFlagger/strategy/actions/imageraction.h>
 #include <AOFlagger/strategy/actions/iterationaction.h>
-#include <AOFlagger/strategy/actions/highpassfilteraction.h>
-#include <AOFlagger/strategy/actions/normalizevarianceaction.h>
 #include <AOFlagger/strategy/actions/plotaction.h>
 #include <AOFlagger/strategy/actions/quickcalibrateaction.h>
 #include <AOFlagger/strategy/actions/rawappenderaction.h>
@@ -157,17 +155,11 @@ namespace rfiStrategy {
 			case FringeStopActionType:
 				writeFringeStopAction(static_cast<const FringeStopAction&>(action));
 				break;
-			case HighPassFilterActionType:
-				writeHighPassFilterAction(static_cast<const HighPassFilterAction&>(action));
-				break;
 			case ImagerActionType:
 				writeImagerAction(static_cast<const ImagerAction&>(action));
 				break;
 			case IterationBlockType:
 				writeIterationBlock(static_cast<const IterationBlock&>(action));
-				break;
-			case NormalizeVarianceActionType:
-				writeNormalizeVarianceAction(static_cast<const NormalizeVarianceAction&>(action));
 				break;
 			case PlotActionType:
 				writePlotAction(static_cast<const PlotAction&>(action));
@@ -213,11 +205,6 @@ namespace rfiStrategy {
 				break;
 			case WriteFlagsActionType:
 				writeWriteFlagsAction(static_cast<const WriteFlagsAction&>(action));
-				break;
-			case ForEachSimulatedBaselineActionType:
-			case ResamplingActionType:
-			case SpatialCompositionActionType:
-				throw std::runtime_error("Strategy contains an action for which saving is not supported");
 				break;
 		}
 		End();
@@ -399,16 +386,6 @@ namespace rfiStrategy {
 		Write<int>("max-window-size", action.MaxWindowSize());
 	}
 
-	void StrategyWriter::writeHighPassFilterAction(const HighPassFilterAction &action)
-	{
-		Attribute("type", "HighPassFilterAction");
-		Write<num_t>("horizontal-kernel-sigma-sq", action.HKernelSigmaSq());
-		Write<num_t>("vertical-kernel-sigma-sq", action.VKernelSigmaSq());
-		Write<int>("window-width", action.WindowWidth());
-		Write<int>("window-height", action.WindowHeight());
-		Write<int>("mode", action.Mode());
-	}
-
 	void StrategyWriter::writeImagerAction(const ImagerAction &)
 	{
 		Attribute("type", "ImagerAction");
@@ -422,13 +399,7 @@ namespace rfiStrategy {
 		writeContainerItems(action);
 	}
 
-	void StrategyWriter::writeNormalizeVarianceAction(const NormalizeVarianceAction &action)
-	{
-		Attribute("type", "NormalizeVarianceAction");
-		Write<double>("median-filter-size-in-s", action.MedianFilterSizeInS());
-	}
-
-	void StrategyWriter::writePlotAction(const PlotAction &action)
+	void StrategyWriter::writePlotAction(const class PlotAction &action)
 	{
 		Attribute("type", "PlotAction");
 		Write<int>("plot-kind", action.PlotKind());
