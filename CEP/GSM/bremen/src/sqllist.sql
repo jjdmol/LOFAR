@@ -8,38 +8,9 @@ select max(imageid) from images;
 
 --#insert image
 insert into images (ds_id, tau, band, imagename, status,
-                    centr_ra, centr_decl, fov_radius, svn_version, run_id,
-                    bmaj, bmin, bpa)
+                    centr_ra, centr_decl, fov_radius, svn_version)
 select 0, 1, {1}, '{0}' as imagename, 0,
-       {2}, {3}, {4}, {5}, {6},
-       {7}, {8}, {9}
-
---#Cleanup
-delete from detections where run_id = [r];
---delete from temp_associations where image_id = [i];
-
-update runs
-   set status = 1,
-       end_date = current_timestamp
- where runid = [r];
-
-update images
-   set status = 1,
-       process_date = current_timestamp,
-       svn_version = {0}
- where imageid = [i];
-
---#Image properties selector
-select sum(x), sum(y), sum(z), count(*)
-  from extractedsources
- where image_id = [i]
-   and xtrsrcid2 is null;
-
---#Image properties updater
-update images
-   set centr_ra = {0},
-       centr_decl = {1}
- where imageid = {2};
+       {2}, {3}, {4}, {5}
 
 
 --#insert_extractedsources
@@ -49,28 +20,18 @@ insert into extractedsources (image_id, zone, ra, decl, ra_err, decl_err,
                               source_kind,
                               g_minor, g_minor_err, g_major, g_major_err,
                               g_pa, g_pa_err, healpix_zone)
-select [i], cast(floor(ldecl) as integer) as zone, lra, ldecl, lra_err, ldecl_err,
+select {0}, cast(floor(ldecl) as integer) as zone, lra, ldecl, lra_err, ldecl_err,
        cos(radians(ldecl))*cos(radians(lra)),
        cos(radians(ldecl))*sin(radians(lra)),
        sin(radians(ldecl)), 3.0, lf_peak, lf_peak_err, lf_int, lf_int_err,
-       case when g_major is null or
-                 --ldecl_err > g_major or
-                 g_pa_err = 0.0 or
-                 g_major_err = 0.0 or
-                 g_minor_err = 0.0 or
-                 g_major = 0.0 or
-                 (im.bmaj is not null and g_major < im.bmaj) then 0
+       case when g_major is null or ldecl_err > g_major or g_pa_err = 0.0 or g_major_err = 0.0 or g_minor_err = 0.0 then 0
             else 1 end,
        g_minor, g_minor_err, g_major, g_major_err,
        g_pa, g_pa_err, healpix_zone
-from detections d, images im
+from detections
 where lf_int_err > 0
   and lf_int > 0
-  and lf_peak_err > 0
-  and lra_err > 0
-  and ldecl_err > 0
-  and d.run_id = [r]
-  and im.imageid = [i];
+  and lf_peak_err > 0;
 
 
 --#insert dummysources
@@ -87,7 +48,7 @@ select image_id, zone, ra - 360.0, decl, ra_err, decl_err,
        g_minor, g_minor_err, g_major, g_major_err,
        g_pa, g_pa_err, xtrsrcid, healpix_zone
   from extractedsources
- where image_id = [i]
+ where image_id = {0}
    and ra > 360 - 1/cos(radians(decl))
    and ra > 180
 union
@@ -98,37 +59,29 @@ select image_id, zone, ra + 360.0, decl, ra_err, decl_err,
        g_minor, g_minor_err, g_major, g_major_err,
        g_pa, g_pa_err, xtrsrcid, healpix_zone
   from extractedsources
- where image_id = [i]
+ where image_id = {0}
    and ra < 1/cos(radians(decl))
    and ra < 180;
 
 --#update flux_fraction
---Split flux in case of N-to-1 association.
---Old source is splitted proportionaly to fluxes of new detections.
---***for point sources only
---First calculate sum of the new fluxes
+--for point sources only
 update temp_associations
    set flux_fraction = (select sum(e.f_int)
                           from extractedsources e,
                                temp_associations ta
                          where e.xtrsrcid = ta.xtrsrc_id
-                           and ta.image_id = [i]
                            and ta.runcat_id = temp_associations.runcat_id)
  where kind = 3
-   and image_id = [i]
    and lr_method < 3;
 
---Then calculate fractions
 update temp_associations
    set flux_fraction = (select e.f_int/ta.flux_fraction
                           from extractedsources e,
                                temp_associations ta
                          where e.xtrsrcid = ta.xtrsrc_id
-                           and ta.image_id = [i]
                            and ta.xtrsrc_id = temp_associations.xtrsrc_id
                            and ta.runcat_id = temp_associations.runcat_id)
  where kind = 3
-   and image_id = [i]
    and lr_method < 3;
 
 --#add 1 to 1
@@ -138,14 +91,12 @@ insert into assocxtrsources(xtrsrc_id, runcat_id, distance_arcsec, lr_method, r)
 select ta.xtrsrc_id, ta.runcat_id, ta.distance_arcsec, ta.lr_method, ta.r
   from temp_associations ta
  where kind = 1
-   and image_id = [i]
 union
 select ta.xtrsrc_id, r.parent_runcat_id, ta.distance_arcsec, 3, ta.r
   from temp_associations ta,
        runningcatalog r
  where ta.kind = 1
    and ta.lr_method = 2
-   and ta.image_id = [i]
    and r.runcatid = ta.runcat_id;
 
 
@@ -157,11 +108,9 @@ insert into assocxtrsources(xtrsrc_id, runcat_id, distance_arcsec, lr_method, r)
 select ta.xtrsrc_id, ta.runcat_id, ta.distance_arcsec, ta.lr_method, ta.r
   from temp_associations ta
  where ta.kind = 2
-   and ta.image_id = [i]
    and ta.distance_arcsec = (select min(tb.distance_arcsec)
                                from temp_associations tb
                               where tb.xtrsrc_id = ta.xtrsrc_id
-                                and tb.image_id = [i]
                                 and tb.kind = 2
                             )
 union
@@ -169,13 +118,11 @@ select ta.xtrsrc_id, r.parent_runcat_id, ta.distance_arcsec, ta.lr_method, ta.r
   from temp_associations ta,
        runningcatalog r
  where ta.kind = 2
-   and ta.image_id = [i]
    and r.runcatid = ta.runcat_id
    and r.band is not null
    and ta.distance_arcsec = (select min(tb.distance_arcsec)
                                from temp_associations tb
                               where tb.xtrsrc_id = ta.xtrsrc_id
-                                and tb.image_id = [i]
                                 and tb.kind = 2
                             );
 
@@ -191,14 +138,12 @@ select e.xtrsrcid, 1, zone,
   from extractedsources e,
        temp_associations ta
  where ta.xtrsrc_id = e.xtrsrcid
-   and ta.image_id = [i]
    and ta.kind = 3
    and ta.lr_method = 1
    and ta.xtrsrc_id not in (select tx.min_id
                               from (select tb.runcat_id, min(tb.xtrsrc_id) as min_id
                                       from temp_associations tb
                                      where tb.kind = 3
-                                       and tb.image_id = [i]
                                   group by tb.runcat_id) tx);
 
 --extended sources - per-band match
@@ -216,13 +161,11 @@ select r.band, r.stokes, r.parent_runcat_id,
  where ta.xtrsrc_id = e.xtrsrcid
    and ta.kind = 3
    and ta.lr_method = 2
-   and ta.image_id = [i]
    and r.runcatid = ta.runcat_id
    and ta.xtrsrc_id not in (select tx.min_id
                               from (select tb.runcat_id, min(tb.xtrsrc_id) as min_id
                                       from temp_associations tb
                                      where tb.kind = 3
-                                       and tb.image_id = [i]
                                   group by tb.runcat_id) tx);
 
 --extended sources - cross-band match
@@ -239,7 +182,6 @@ select i.band, i.stokes, ta.runcat_id,
        images i
  where ta.xtrsrc_id = e.xtrsrcid
    and ta.kind = 3
-   and ta.image_id = [i]
    and ta.lr_method = 3
    and i.imageid = e.image_id;
 
@@ -253,7 +195,6 @@ select r.runcatid, r.band, r.stokes, 1,
  where ta.xtrsrc_id = e.xtrsrcid
    and r.first_xtrsrc_id = e.xtrsrcid
    and r.parent_runcat_id is not null
-   and ta.image_id = [i]
    and ta.kind = 3
    and ta.lr_method = 3;
 
@@ -268,7 +209,6 @@ select a.xtrsrc_id, r.runcatid, $$get_distance('r', 'e')$$, 4, 0.0, a.weight*ta.
        runningcatalog r
  where a.runcat_id = ta.runcat_id
    and e.xtrsrcid = a.xtrsrc_id
-   and ta.image_id = [i]
    and r.first_xtrsrc_id = ta.xtrsrc_id
    and not r.deleted
    and ta.kind = 3;
@@ -279,8 +219,7 @@ select ta.xtrsrc_id, r.runcatid, 0.0, ta.lr_method, 0.0
   from temp_associations ta,
        runningcatalog r
  where r.first_xtrsrc_id = ta.xtrsrc_id
-   and (r.band is null or r.band = [b])
-   and ta.image_id = [i]
+   and (r.band is null or r.band = {0})
    and ta.runcat_id <> r.runcatid --not to the old sources(!!!)
    and ta.kind = 3;
 
@@ -295,13 +234,11 @@ select e.xtrsrcid, ta.runcat_id,
  where ta.kind = 3
    and ta.xtrsrc_id = e.xtrsrcid
    and not r.deleted
-   and ta.image_id = [i]
    and r.runcatid = ta.runcat_id
    and ta.xtrsrc_id in (select tx.min_id
                           from (select tb.runcat_id, min(tb.xtrsrc_id) as min_id
                                   from temp_associations tb
                                  where tb.kind = 3
-                                   and tb.image_id = [i]
                               group by tb.runcat_id) tx)
 union
 select e.xtrsrcid, r.parent_runcat_id,
@@ -311,7 +248,6 @@ select e.xtrsrcid, r.parent_runcat_id,
        temp_associations ta,
        runningcatalog r
  where ta.kind = 3
-   and ta.image_id = [i]
    and ta.xtrsrc_id = e.xtrsrcid
    and not r.deleted
    and r.source_kind = 1
@@ -326,7 +262,6 @@ select e.xtrsrcid, r.runcatid,
        runningcatalog r
  where ta.kind = 3
    and ta.xtrsrc_id = e.xtrsrcid
-   and ta.image_id = [i]
    and not r.deleted
    and r.source_kind = 1
    and r.runcatid = ta.runcat_id
@@ -342,7 +277,6 @@ SET    weight = weight * (SELECT ta.flux_fraction
                                  AND ta.xtrsrc_id = a.xtrsrc_id
                                  AND r.first_xtrsrc_id <> ta.xtrsrc_id
                                  AND r.runcatid = ta.runcat_id
-                                 and ta.image_id = [i]
                                  AND ta.lr_method < 3
                                  AND ta.kind = 3)
 WHERE EXISTS (SELECT ta.flux_fraction
@@ -354,7 +288,6 @@ WHERE EXISTS (SELECT ta.flux_fraction
                       AND r.first_xtrsrc_id <> ta.xtrsrc_id
                       AND r.runcatid = ta.runcat_id
                       AND ta.lr_method < 3
-                      and ta.image_id = [i]
                       AND ta.kind = 3);
 
 --update old fluxes with new weights
@@ -365,9 +298,8 @@ update runningcatalog_fluxes
                       temp_associations ta
                 where e.xtrsrcid = ta.xtrsrc_id
                   and ta.runcat_id = runningcatalog_fluxes.runcat_id
-                  and ta.image_id = [i]
                   and ta.kind = 3)
-   and band <> [b];
+   and band <> {0};
 
 update runningcatalog_fluxes
    set $$get_column_update_second(['f_peak', 'f_int'])$$
@@ -376,9 +308,8 @@ update runningcatalog_fluxes
                       temp_associations ta
                 where e.xtrsrcid = ta.xtrsrc_id
                   and ta.runcat_id = runningcatalog_fluxes.runcat_id
-                  and ta.image_id = [i]
                   and ta.kind = 3)
-   and band <> [b];
+   and band <> {0};
 
 --insert old fluxes for new sources
 insert into runningcatalog_fluxes(runcat_id, band, datapoints,
@@ -396,6 +327,5 @@ select r.runcatid, f.band, f.datapoints,
        temp_associations ta
  where ta.runcat_id = f.runcat_id
    and ta.xtrsrc_id = r.first_xtrsrc_id
-   and ta.image_id = [i]
-   and f.band <> [b]
+   and f.band <> {0}
    and ta.kind = 3 ;

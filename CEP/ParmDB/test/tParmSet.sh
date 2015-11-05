@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tParmSet
+./runctest.sh tParmSet > tParmSet.log 2>&1

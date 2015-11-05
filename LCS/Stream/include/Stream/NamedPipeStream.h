@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: NamedPipeStream.h 14057 2009-09-18 12:26:29Z diepen $
 
 #ifndef LOFAR_LCS_STREAM_NAMED_PIPE_STREAM_H
 #define LOFAR_LCS_STREAM_NAMED_PIPE_STREAM_H

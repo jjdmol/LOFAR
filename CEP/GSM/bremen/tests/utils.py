@@ -1,13 +1,8 @@
 #!/usr/bin/python
 import unittest
-import sys
 from src.queries import get_svn_version, makelistable
 
 class UtilsTest(unittest.TestCase):
-    if sys.version_info < (2, 7):
-        def assertIsInstance(self, par1, par2):
-            self.assertTrue(isinstance(par1, par2))
-
     def test_svn(self):
         self.assertIsInstance(get_svn_version(), int)
 

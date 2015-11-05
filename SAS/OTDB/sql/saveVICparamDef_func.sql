@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -37,7 +37,6 @@
 CREATE OR REPLACE FUNCTION saveVICparamDef(INT4, INT4, VARCHAR(150), INT2, 
 							INT2, INT2, INT2, BOOLEAN, TEXT, TEXT)
   RETURNS INT4 AS '
-    --  $Id$
 	DECLARE
 		vParamID		VICparamDef.paramID%TYPE;
 		vName			VICparamDef.name%TYPE;

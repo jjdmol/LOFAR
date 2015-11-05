@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tQueue
+./runctest.sh tQueue 2>&1 > tQueue.log

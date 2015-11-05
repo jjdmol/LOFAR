@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tCorrect
+./runctest.sh tCorrect > tCorrect.log 2>&1

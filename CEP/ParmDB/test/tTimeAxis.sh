@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tTimeAxis
+./runctest.sh tTimeAxis > tTimeAxis.log 2>&1

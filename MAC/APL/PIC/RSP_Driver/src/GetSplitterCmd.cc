@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ using namespace RTC;
 // NOTE: The foolowing three table should match with each other.
 //	The first table contains the registers we want the read back,
 //	the second and third contain the expected values of these registers.
-static unsigned char ASK_SERDES_CMD[] = {
+static char ASK_SERDES_CMD[] = {
 //	0x00, 0x00,
 //	0x00, 0xC0,
 	0x90, 0xD0,
@@ -53,7 +53,7 @@ static unsigned char ASK_SERDES_CMD[] = {
 };
 static int ASK_SERDES_CMD_LEN = sizeof(ASK_SERDES_CMD);
 
-unsigned char GetSplitterCmd::SERDES_ON_RESP[] = {
+char GetSplitterCmd::SERDES_ON_RESP[] = {
 	0x04, 0x05,
 	0x06, 0x07,
 	0x08, 0x09,
@@ -63,7 +63,7 @@ unsigned char GetSplitterCmd::SERDES_ON_RESP[] = {
 };
 int GetSplitterCmd::SERDES_ON_RESP_LEN = sizeof(GetSplitterCmd::SERDES_ON_RESP);
 
-unsigned char GetSplitterCmd::SERDES_OFF_RESP[] = {
+char GetSplitterCmd::SERDES_OFF_RESP[] = {
 	0x00, 0x01,
 	0x02, 0x03,
 	0x08, 0x09,

@@ -34,7 +34,6 @@
 #include <BBSControl/Util.h>
 #include <BBSKernel/MeasurementAIPS.h>
 #include <BBSKernel/ParmManager.h>
-#include <Common/OpenMP.h>
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
 #include <Common/SystemUtil.h>
@@ -72,9 +71,7 @@ int main(int argc, char *argv[])
   parser.addOptionWithArgument("ParmDB", "-P", "--parmdb", "Path to an"
     " alternative parameter database. By default MS/instrument will be used.");
   parser.addOptionWithArgument("LogPath", "-l", "--log-path", "Path where"
-    " solver statistic logs are stored. By default MS/ is used.");
-  parser.addOptionWithArgument("NumThreads", "-t", "--numthreads",
-    " Number of threads to use in solve steps.");
+    " solver statictic logs are stored. By default MS/ is used.");
 
 #ifdef HAVE_PQXX
   parser.addOption("Distributed", "-D", "--distributed", "Run in distributed"
@@ -225,10 +222,6 @@ int run(const ParameterSet &options, const OptionParser::ArgumentList &args)
   }
   LOG_INFO_STR("Chunk size (sample): " << chunkSize);
 
-  // Set the max number of threads to use (currently only applies to Solve)
-  int numThreads = options.getInt("NumThreads", parset.getInt("NumThreads", 1));
-  OpenMP::setNumThreads(numThreads);
-
   // Construct process group that consists of a single process (this process).
   ProcessGroup group;
   pair<double, double> msFreqRange = ms->grid()[FREQ]->range();
@@ -240,7 +233,7 @@ int run(const ParameterSet &options, const OptionParser::ArgumentList &args)
   casa::Path logPath(options.getString("LogPath", args[1]));
   CommandHandlerReducer handler(group, ms, parmDB, sourceDB, logPath);
 
-  // Fake initialization.
+  // Fake intialization.
   InitializeCommand initCmd(strategy);
   CommandResult initResult = initCmd.accept(handler);
   if(!initResult)
@@ -304,14 +297,8 @@ int run(const ParameterSet &options, const OptionParser::ArgumentList &args)
         NextChunkCommand nextCmd(msFreqRange.first, msFreqRange.second, start,
           end);
 
-        uint numChunks=(msTimeRange.second-msTimeRange.first)/(end-start);
-        uint chunkNum=chunkStart/chunkSize;
-
         LOG_DEBUG_STR("Executing a " << nextCmd.type() << " command:" << endl
           << nextCmd);
-        LOG_INFO_STR("Starting chunk "<<chunkNum<<" of "<<numChunks<<" ("<<
-                     (chunkNum*100)/numChunks<<"%)");
-
         CommandResult result = nextCmd.accept(handler);
 
         if(!result)

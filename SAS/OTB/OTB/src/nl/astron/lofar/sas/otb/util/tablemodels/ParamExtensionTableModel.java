@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@
 
 package nl.astron.lofar.sas.otb.util.tablemodels;
 
-import java.util.ArrayList;
+import java.util.Vector;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import org.apache.log4j.Logger;
 
@@ -48,8 +48,8 @@ public class ParamExtensionTableModel extends javax.swing.table.DefaultTableMode
 
     private String itsTreeType = null;
 
-    private ArrayList<String> itsKeys    = new ArrayList<>();
-    private ArrayList<String> itsValues  = new ArrayList<>();
+    private Vector<String> itsKeys    = new Vector<String>();
+    private Vector<String> itsValues  = new Vector<String>();
 
     private boolean isChanged=false;
 
@@ -97,7 +97,7 @@ public class ParamExtensionTableModel extends javax.swing.table.DefaultTableMode
             } else {
                 itsValues.add("");
             }
-            String[] newRow = {itsKeys.get(i),itsValues.get(i)};
+            String[] newRow = {itsKeys.elementAt(i),itsValues.elementAt(i)};
             this.addRow(newRow);
         }
 
@@ -109,7 +109,7 @@ public class ParamExtensionTableModel extends javax.swing.table.DefaultTableMode
  
     /** get TableValues
      *
-     * @param  anAngles1   ArrayList<String> of all direction 1 angles
+     * @param  anAngles1   Vector<String> of all direction 1 angles
      *
      * @return True if succes else False
      */
@@ -142,8 +142,8 @@ public class ParamExtensionTableModel extends javax.swing.table.DefaultTableMode
             return true;
         }
 
-        itsKeys.add(aKey);
-        itsValues.add(aVal);
+        itsKeys.addElement(aKey);
+        itsValues.addElement(aVal);
 
         String[] newRow = {aKey, aVal};
         this.addRow(newRow);
@@ -160,10 +160,10 @@ public class ParamExtensionTableModel extends javax.swing.table.DefaultTableMode
         if (row < this.getRowCount() && row >= 0) {
             //Key
             this.setValueAt(newRow[0],row,0);
-            itsKeys.set(row,newRow[0]);
+            itsKeys.setElementAt(newRow[0], row);
             //Value
             this.setValueAt(newRow[1],row,1);
-            itsValues.set(row,newRow[1]);
+            itsValues.setElementAt(newRow[1], row);
         } else {
             logger.error("Error in updateRow, illegal rownumber supplied");
             return false;
@@ -196,8 +196,8 @@ public class ParamExtensionTableModel extends javax.swing.table.DefaultTableMode
 
     public void removeAllRows() {
         this.setRowCount(0);
-        itsKeys.clear();
-        itsValues.clear();
+        itsKeys.removeAllElements();
+        itsValues.removeAllElements();
         isChanged=true;
     }
 

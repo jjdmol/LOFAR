@@ -31,7 +31,12 @@
 #include <ParmDB/ParmDB.h>
 #include <casa/Arrays/Array.h>
 #include <tables/Tables/Table.h>
-#include <tables/Tables/ArrayColumn.h>
+
+//# Forward Declarations
+namespace casa {
+  template<typename T> class ArrayColumn;
+  template<typename T> class ROArrayColumn;
+}
 
 
 namespace LOFAR {

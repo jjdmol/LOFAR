@@ -27,14 +27,13 @@
 // @file
 // @brief Class to handle the baseline selection
 
+#include <DPPP/ParSet.h>
 #include <DPPP/DPInfo.h>
+#include <Common/ParameterValue.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 
 namespace LOFAR {
-  class ParameterSet;
-  class ParameterValue;
-
   namespace DPPP {
 
     // Class containing a few static functions to parse a baseline selection
@@ -48,31 +47,25 @@ namespace LOFAR {
       // Construct from the parset using the given prefix.
       // The keys used are:
       // <ul>
-      //  <li> baseline: for a baseline selection (e.g. CS*&)
+      //  <li> baseline: for a baseline selection
       //  <li> corrtype: for correlation selection (auto, cross, or empty)
       //  <li> blrange:  ranges of baseline lengths (in m)
       //  <li> minbl:    minimum baseline length (in m); only if minmax=true
       //  <li> maxbl:    maximum baseline length (in m); only if minmax=true
       // </ul>
-      BaselineSelection (const ParameterSet&, const string& prefix,
+      BaselineSelection (const ParSet&, const string& prefix,
                          bool minmax=false,
-			 const string& defaultCorrType=string(),
-                         const string& defaultBaseline=string());
+			 const string& defaultCorrType=string());
 
       // Is there any selection?
       bool hasSelection() const;
 
       // Show the parameters.
-      // Optional extra blanks can be put before the value.
-      void show (ostream& os, const string& blanks = string()) const;
+      void show (ostream& os) const;
 
       // Form the selection matrix telling for each baseline if it is selected.
-      // If no selection is made, all values in the matrix are true.
+      // An empty matrix is returned if no selection was made.
       casa::Matrix<bool> apply (const DPInfo& info) const;
-
-      // Form the selection vector telling if a baseline in the DPInfo object
-      // is selected.
-      casa::Vector<bool> applyVec (const DPInfo& info) const;
 
     private:
       // Convert the baseline selection string.
@@ -93,6 +86,8 @@ namespace LOFAR {
       //# Data members
       string itsStrBL;
       string itsCorrType;
+      double itsMinBL;
+      double itsMaxBL;
       vector<double> itsRangeBL;
     };
 
@@ -100,3 +95,4 @@ namespace LOFAR {
 }
 
 #endif
+

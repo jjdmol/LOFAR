@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -42,11 +42,10 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/LofarLogger.h>
+#include <Common/lofar_datetime.h>
 
 //# ACC Includes
 #include <Common/ParameterSet.h>
-
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 // forward declaration
 
@@ -64,8 +63,6 @@ namespace LOFAR {
 	using	APLCommon::ParentControl;
 	using	APLCommon::CTState;
 	namespace MainCU {
-
-using boost::posix_time::ptime;
 
 class ObservationControl : public GCFTask
 {
@@ -160,7 +157,6 @@ private:
 	uint32					itsClaimTimer;
 	uint32					itsPrepareTimer;
 	uint32					itsStartTimer;
-	uint32					itsSuspendTimer;
 	uint32					itsStopTimer;
 	uint32					itsForcedQuitTimer;
 	uint32					itsHeartBeatTimer;
@@ -171,7 +167,6 @@ private:
 	uint32					itsTreeID;
 	uint32					itsHeartBeatItv;
 	uint32					itsForcedQuitDelay;
-	uint32					itsFinalStateDelay;
 	uint32					itsClaimPeriod;
 	uint32					itsPreparePeriod;
 	int32					itsLateLimit;		// after how many seconds a requested state should have been reached.

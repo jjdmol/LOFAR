@@ -25,7 +25,7 @@
 #include <DPPP/PhaseShift.h>
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
-#include <Common/ParameterSet.h>
+#include <DPPP/ParSet.h>
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -43,16 +43,14 @@ namespace LOFAR {
   namespace DPPP {
 
     PhaseShift::PhaseShift (DPInput* input,
-                            const ParameterSet& parset,
-                            const string& prefix)
+                            const ParSet& parset, const string& prefix)
       : itsInput   (input),
         itsName    (prefix),
         itsCenter  (parset.getStringVector(prefix+"phasecenter"))
     {}
 
     PhaseShift::PhaseShift (DPInput* input,
-                            const ParameterSet& parset,
-                            const string& prefix,
+                            const ParSet& parset, const string& prefix,
                             const vector<string>& defVal)
       : itsInput   (input),
         itsName    (prefix),
@@ -66,8 +64,7 @@ namespace LOFAR {
     {
       info() = infoIn;
       info().setNeedVisData();
-      info().setWriteData();
-      info().setMetaChanged();
+      info().setNeedWrite();
       // Default phase center is the original one.
       MDirection newDir(itsInput->getInfo().phaseCenter());
       ////      bool original = true;
@@ -120,12 +117,18 @@ namespace LOFAR {
     bool PhaseShift::process (const DPBuffer& buf)
     {
       itsTimer.start();
-      ///itsBuf.referenceFilled (buf);
-      itsBuf.copy (buf);
-      itsInput->fetchUVW (buf, itsBuf, itsTimer);
-      int ncorr  = itsBuf.getData().shape()[0];
-      int nchan  = itsBuf.getData().shape()[1];
-      int nbl    = itsBuf.getData().shape()[2];
+      DPBuffer newBuf(buf);
+      RefRows rowNrs(newBuf.getRowNrs());
+      if (newBuf.getUVW().empty()) {
+        newBuf.getUVW().reference (itsInput->fetchUVW (newBuf, rowNrs,
+                                                       itsTimer));
+      }
+      // Make sure no other object references the DATA and UVW arrays.
+      newBuf.getData().unique();
+      newBuf.getUVW().unique();
+      int ncorr  = newBuf.getData().shape()[0];
+      int nchan  = newBuf.getData().shape()[1];
+      int nbl    = newBuf.getData().shape()[2];
       DBGASSERT (itsPhasors.nrow() == uint(nchan)  &&
                  itsPhasors.ncolumn() == uint(nbl));
       const double* mat1 = itsMat1.data();
@@ -134,8 +137,8 @@ namespace LOFAR {
       //# to process.
 #pragma omp parallel for
       for (int i=0; i<nbl; ++i) {
-        Complex*  __restrict__ data    = itsBuf.getData().data() + i*nchan*ncorr;
-        double*   __restrict__ uvw     = itsBuf.getUVW().data() + i*3;
+        Complex*  __restrict__ data    = newBuf.getData().data() + i*nchan*ncorr;
+        double*   __restrict__ uvw     = newBuf.getUVW().data() + i*3;
         DComplex* __restrict__ phasors = itsPhasors.data() + i*nchan;
         double u = uvw[0]*mat1[0] + uvw[1]*mat1[3] + uvw[2]*mat1[6];
         double v = uvw[0]*mat1[1] + uvw[1]*mat1[4] + uvw[2]*mat1[7];
@@ -160,7 +163,7 @@ namespace LOFAR {
         uvw += 3;
       }  //# end omp parallel for
       itsTimer.stop();
-      getNextStep()->process (itsBuf);
+      getNextStep()->process (newBuf);
       return true;
     }
 

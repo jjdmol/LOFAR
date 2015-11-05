@@ -12,6 +12,7 @@ from string import Template
 
 import os
 import time
+import resource
 import threading
 import logging
 import re
@@ -212,7 +213,6 @@ def log_time(logger):
 
     :param logger: logger to which timing information should be sent.
     """
-    import resource
     def get_rusage():
         return [
             x + y for x, y in zip(

@@ -22,18 +22,13 @@
 
 // This program writes patch and source information into a SourceDB.
 // The input is read from an ASCII file that can be formatted in various ways.
-// By default the ra/dec/flux of a patch is determined from the sources it
-// contains by adding the fluxes and taking the flux-weighted average of the
-// ra/dec in xyz-coordinates.
 //
 // The program can be run as:
 //   makesourcedb in=inname out=outname format="fmt" append=true/false (or 1/0)
-//                average=true/false
 // in      gives the input file name
 // out     gives the sourcedb name which will be created or appended
-// format  defines the format of the input file
 // append  defines if the sourcedb is created or appended (default is appended)
-// average defines if the average patch ra/dec are calculated (default is true)
+// format  defines the format of the input file
 // center  defines the field center (ra and dec) of a search cone or box
 // radius  defines the radius if searching using a cone
 // width   defines the widths in ra and dec if searching using a box
@@ -120,7 +115,7 @@
 // If such a column is not given, it defaults to J2000. The reference type
 // given must be a valid casacore measures type (which is case-insensitive).
 
-// See the various test/tmakesourcedb files for an example.
+// See the various test/tmakesourcdb files for an example.
 
 #include <lofar_config.h>
 #include <ParmDB/SourceDB.h>
@@ -817,11 +812,8 @@ void calcRMParam (double& polfrac, double& polang,
 }
 
 void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
-              const string& prefix, const string& suffix,
               bool check, int& nrpatch, int& nrsource,
-              int& nrpatchfnd, int& nrsourcefnd,
-              map<string,PatchSumInfo>& patchSumInfo,
-              const SearchInfo& searchInfo)
+              int& nrpatchfnd, int& nrsourcefnd, const SearchInfo& searchInfo)
 {
   //  cout << line << endl;
   // Hold the values.
@@ -965,25 +957,16 @@ void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
   if (srcName.empty()) {
     ASSERTSTR (!patch.empty(), "Source and/or patch name must be filled in");
     if (matchSearchInfo (ra, dec, searchInfo)) {
-      uint patchId = pdb.addPatch (patch, cat, fluxI, ra, dec, check);
+      pdb.addPatch (patch, cat, fluxI, ra, dec, check);
       nrpatchfnd++;
-      // Create an entry to collect the ra/dec/flux of the sources in the patch.
-      patchSumInfo.insert (make_pair(patch, PatchSumInfo(patchId)));
     }
     nrpatch++;
   } else {
     if (matchSearchInfo (ra, dec, searchInfo)) {
       if (patch.empty()) {
-        // Patch name is source name plus possible prefix and suffix.
-        pdb.addSource (srcInfo, prefix + srcInfo.getName() + suffix,
-                       cat, fluxI, fieldValues, ra, dec, check);
+        pdb.addSource (srcInfo, cat, fluxI, fieldValues, ra, dec, check);
       } else {
         pdb.addSource (srcInfo, patch, fieldValues, ra, dec, check);
-        // Add ra/dec/flux to patch sum info.
-        map<string,PatchSumInfo>::iterator iter = patchSumInfo.find(patch);
-        ASSERTSTR (iter!=patchSumInfo.end(), "Patch name " + patch +
-               " not defined before source using it");
-        iter->second.add (ra, dec, fluxI);
       }
       nrsourcefnd++;
     }
@@ -992,8 +975,8 @@ void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
 }
 
 void make (const string& in, const string& out, const string& outType,
-           const string& format, const string& prefix, const string& suffix,
-           bool append, bool average, bool check, const SearchInfo& searchInfo)
+           const string& format, bool append, bool check,
+           const SearchInfo& searchInfo)
 {
   // Analyze the format string.
   SdbFormat sdbf = getFormat (format);
@@ -1005,7 +988,6 @@ void make (const string& in, const string& out, const string& outType,
   int nrsource    = 0;
   int nrpatchfnd  = 0;
   int nrsourcefnd = 0;
-  map<string,PatchSumInfo> patchSumInfo;
   if (! in.empty()) {
     ifstream infile(in.c_str());
     ASSERTSTR (infile, "File " << in << " could not be opened");
@@ -1033,22 +1015,11 @@ void make (const string& in, const string& out, const string& outType,
         }
       }
       if (!skip) {
-        process (line, pdb, sdbf, prefix, suffix, check, nrpatch, nrsource,
-                 nrpatchfnd, nrsourcefnd, patchSumInfo, searchInfo);
+        process (line, pdb, sdbf, check, nrpatch, nrsource,
+                 nrpatchfnd, nrsourcefnd, searchInfo);
       }
       // Read next line
       getInLine (infile, line);
-    }
-  }
-  // Write the calculated ra/dec/flux of the patches.
-  if (average) {
-    for (map<string,PatchSumInfo>::const_iterator iter=patchSumInfo.begin();
-         iter!=patchSumInfo.end(); ++iter) {
-      const PatchSumInfo& info = iter->second;
-      if (info.getFlux() != 0) {
-        pdb.updatePatch (info.getPatchId(), info.getFlux(),
-                         info.getRa(), info.getDec());
-      }
     }
   }
   cout << "Wrote " << nrpatchfnd << " patches (out of " << nrpatch << ") and "
@@ -1119,7 +1090,7 @@ int main (int argc, char* argv[])
   try {
     // Get the inputs.
     Input inputs(1);
-    inputs.version ("GvD 2013-May-16");
+    inputs.version ("GvD 2012-Jul-10");
     inputs.create("in", "",
                   "Input file name", "string");
     inputs.create("out", "",
@@ -1131,14 +1102,6 @@ int main (int argc, char* argv[])
                   "string");
     inputs.create("append", "true",
                   "Append to possibly existing sourcedb?", "bool");
-    inputs.create("average", "true",
-                  "Calculate average patch ra/dec and total flux?", "bool");
-    inputs.create("patchprefix", "",
-                  "Add this prefix to patch name if taken from source name",
-                  "string");
-    inputs.create("patchsuffix", "",
-                  "Add this suffix to patch name if taken from source name",
-                  "string");
     inputs.create("check", "false",
                   "Check immediately for duplicate entries?", "bool");
     inputs.create("center", "",
@@ -1159,13 +1122,10 @@ int main (int argc, char* argv[])
     string in = inputs.getString("in");
     string out = inputs.getString("out");
     ASSERTSTR (!out.empty(), "no output sourcedb name given");
-    string outType = toLower(inputs.getString("outtype"));
+    string outType = inputs.getString("outtype");
     string format = inputs.getString("format");
-    string prefix = inputs.getString("patchprefix");
-    string suffix = inputs.getString("patchsuffix");
-    bool append   = inputs.getBool("append");
-    bool average  = inputs.getBool("average");
-    bool check    = inputs.getBool("check");
+    bool append = inputs.getBool("append");
+    bool check  = inputs.getBool("check");
     string center = inputs.getString ("center");
     string radius = inputs.getString ("radius");
     string width  = inputs.getString ("width");
@@ -1187,7 +1147,7 @@ int main (int argc, char* argv[])
       cerr << "No format string found; using default format" << endl;
       format = "Name,Type,Ra,Dec,I,Q,U,V,MajorAxis,MinorAxis,Orientation";
     }
-    make (in, out, outType, format, prefix, suffix, append, average, check,
+    make (in, out, outType, format, append, check,
           getSearchInfo (center, radius, width));
   } catch (Exception& x) {
     cerr << "Caught LOFAR exception: " << x << endl;

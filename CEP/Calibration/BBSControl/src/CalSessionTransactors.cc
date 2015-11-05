@@ -768,7 +768,7 @@ void PQGetCommand::on_commit()
                 << " command object");
         }
 
-        cmd->read(ps,"");
+        cmd->read(ps);
         *itsCommand = make_pair(id, cmd);
     }
 }

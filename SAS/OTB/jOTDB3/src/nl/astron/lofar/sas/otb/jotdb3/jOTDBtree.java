@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -56,7 +56,6 @@ public class jOTDBtree implements java.io.Serializable
     public short classification; // development / test / operational
     public String creator;
     public String creationDate;	
-    public String modificationDate;	
     public short type;			// hardware / VItemplate / VHtree
     public short state;			// idle / configure / ... / active / ...
     public String processType;          // Maintenance / Reservation / Observation / ..

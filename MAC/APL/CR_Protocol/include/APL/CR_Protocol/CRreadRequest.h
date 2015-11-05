@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2011
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
 #ifndef CR_READ_REQUEST_H_
 #define CR_READ_REQUEST_H_
 
-#include <Common/NsTimestamp.h>
+#include <APL/RTCCommon/NsTimestamp.h>
 
 namespace LOFAR {
   namespace CR_Protocol {
@@ -34,9 +34,9 @@ public:
 	//@{
 	// Constructors and destructors for a pointing.
 	CRreadRequest(const string& aStationList, const string& aRCUlist,
-						NsTimestamp aReadTime, 
-						NsTimestamp aTimeBefore, 
-						NsTimestamp aTimeAfter) : 
+						RTC::NsTimestamp aReadTime, 
+						RTC::NsTimestamp aTimeBefore, 
+						RTC::NsTimestamp aTimeAfter) : 
 		stationList(aStationList), rcuList(aRCUlist), readTime(aReadTime), timeBefore(aTimeBefore), timeAfter(aTimeAfter) {};
 	CRreadRequest() {};
 	~CRreadRequest() {};
@@ -53,11 +53,11 @@ public:
 	//@}
 
 	// --- datamembers ---
-	string       stationList;
-	string       rcuList;
-	NsTimestamp  readTime;
-	NsTimestamp  timeBefore;
-	NsTimestamp  timeAfter;
+	string            stationList;
+	string            rcuList;
+	RTC::NsTimestamp  readTime;
+	RTC::NsTimestamp  timeBefore;
+	RTC::NsTimestamp  timeAfter;
 };
 
 //

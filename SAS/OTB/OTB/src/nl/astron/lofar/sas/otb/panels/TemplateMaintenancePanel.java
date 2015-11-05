@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,9 +22,9 @@
 package nl.astron.lofar.sas.otb.panels;
 
 import java.rmi.RemoteException;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.Vector;
 import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -231,8 +231,8 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
         logger.debug("actionPerformed: " + evt);
         logger.debug("Trigger: " + evt.getActionCommand());
-        switch (evt.getActionCommand()) {
-            case "Delete":
+        if (evt.getActionCommand().equals("Delete")) {
+
             //Check  if the selected node isn't a leaf
             if (itsSelectedNode != null && !itsSelectedNode.leaf && itsSelectedNode.instances <= 1 ) {
                 if (JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this node ?", "Delete Tree", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION) {
@@ -242,7 +242,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
 
                           
                             // We have to find the defaultNode for this deleted node and decrease the number of instances
-                                ArrayList<jOTDBnode> aList = new ArrayList<>(OtdbRmi.getRemoteMaintenance().getItemList(itsTreeID, itsSelectedNode.name));
+                            Vector<jOTDBnode> aList = OtdbRmi.getRemoteMaintenance().getItemList(itsTreeID, itsSelectedNode.name);
                             Iterator<jOTDBnode> it = aList.iterator ();
                             jOTDBnode aDefaultNode=null;
                             short maxIdx=0;
@@ -268,8 +268,8 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                     }
                 }
             }
-                break;
-            case "Duplicate":
+        } else if (evt.getActionCommand().equals("Duplicate")) {
+
             //Check  if the selected node isn't a leaf and it is a default node (index = -1)
             if (itsSelectedNode != null && !itsSelectedNode.leaf && itsSelectedNode.index==-1) {
                 String answer = JOptionPane.showInputDialog(this, "What is the index for the new subtree?", "Enter indexNumber", JOptionPane.QUESTION_MESSAGE);
@@ -302,11 +302,9 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                     }
                 }
             }
-                break;
-            case "Exit":
+        } else if (evt.getActionCommand().equals("Exit")) {
             itsMainFrame.unregisterPlugin(this.getFriendlyName());
             itsMainFrame.showPanel(MainPanel.getFriendlyNameStatic());
-                break;
         }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
 
@@ -314,11 +312,11 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
         logger.debug("actionPerformed: " + evt);
         logger.debug("Trigger: " + evt.getActionCommand());
         try {
-            ArrayList<jOTDBnode> aL = new ArrayList<>(OtdbRmi.getRemoteMaintenance().getItemList(itsTreeID, evt.getActionCommand()));
+            Vector aL = OtdbRmi.getRemoteMaintenance().getItemList(itsTreeID, evt.getActionCommand());
             logger.debug("nr nodes found: " + aL.size());
             logger.debug("nodes: " + aL);
             if (aL.size() > 0) {
-                changeSelection(aL.get(0));
+                changeSelection((jOTDBnode) aL.elementAt(0));
             } else {
                 logger.warn("No panels for this choice");
             }
@@ -361,7 +359,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
         jTabbedPane1.removeAll();
 
         // Check if the nodename uses specific panels and create them
-        ArrayList<String> aPanelList = null;
+        Vector aPanelList = null;
         if (itsPanelHelper.isKey(LofarUtils.keyName(aNode.name))) {
             aPanelList = itsPanelHelper.getPanels(LofarUtils.keyName(aNode.name));
         } else {
@@ -388,7 +386,19 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                 logger.debug("Getting panel for: " + aPanelName);
                 try {
                     p = (JPanel) Class.forName(aPanelName).newInstance();
-                } catch (        ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
+                } catch (ClassNotFoundException ex) {
+                    String aS="Error during getPanel: " + ex;
+                    logger.error(aS);
+                    itsMainFrame.setNormalCursor();
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                    return;
+                } catch (InstantiationException ex) {
+                    String aS="Error during getPanel: " + ex;
+                    logger.error(aS);
+                    itsMainFrame.setNormalCursor();
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                    return;
+                } catch (IllegalAccessException ex) {
                     String aS="Error during getPanel: " + ex;
                     logger.error(aS);
                     itsMainFrame.setNormalCursor();
@@ -447,12 +457,12 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                 }
                 try {
                     // only deletion possible when no instances left
-                    ArrayList<jOTDBnode> aList = new ArrayList<>(OtdbRmi.getRemoteMaintenance().getItemList(itsTreeID, itsSelectedNode.name));
+                    Vector<jOTDBnode> aList = OtdbRmi.getRemoteMaintenance().getItemList(itsTreeID, itsSelectedNode.name);
                     
                     // count all found nodes with then same parentid as the selected node
                     int cnt=0;
-                    for ( jOTDBnode anElement: aList) {
-                        if (itsSelectedNode.parentID() == anElement.parentID()) cnt++;
+                    for ( int i=0; i < aList.size(); i++ ) {
+                        if (itsSelectedNode.parentID() == aList.elementAt(i).parentID()) cnt++;
                     }
 
                     if (aNode.index == -1 && cnt <= 1) {

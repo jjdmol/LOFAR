@@ -47,8 +47,8 @@ namespace LOFAR
     class ConverterCommand;
     class DH_Request;
     class DH_Result;
-    struct RequestData;
-    struct ResultData;
+    class RequestData;
+    class ResultData;
     
     // \addtogroup AMCBase
     // @{

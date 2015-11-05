@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ import java.io.Serializable;
 
 /**
  * This class provides a way to copy large files over RMI connections.
- * based upon code found on the java developers network written by ejs.
+ * based upoin code found on the java developers network written by ejs.
  * @created 13-06-2006
  * @author ejs
  * @version $Id$
@@ -52,7 +52,7 @@ public class SerializableFileContents implements Serializable
      throws IOException
     {
 	out.defaultWriteObject();
-        try (FileInputStream in = new FileInputStream(file)) {
+	FileInputStream in = new FileInputStream(file);
 	byte[] buffer = new byte[8192];
 	int count;
 	while ((count = in.read(buffer)) > 0)
@@ -61,14 +61,14 @@ public class SerializableFileContents implements Serializable
 		out.write(buffer,0,count);
 	    }
 	out.writeInt(count);
-    }
+	in.close();
     }
  
     private void readObject(java.io.ObjectInputStream in)
 	throws IOException, ClassNotFoundException
     {
 	in.defaultReadObject();
-        try (FileOutputStream out = new FileOutputStream(file)) {
+	FileOutputStream out = new FileOutputStream(file);
 	int count;
 	while ((count = in.readInt()) > 0)
 	    {
@@ -76,7 +76,7 @@ public class SerializableFileContents implements Serializable
 		in.readFully(buffer);
 		out.write(buffer,0,count);
 	    }
-    }
+	out.close();
     }
 }
 

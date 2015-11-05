@@ -36,7 +36,7 @@ int main()
 #include <Common/LofarLogger.h>
 #include <Transport/TH_Socket.h>
 #include <Transport/Connection.h>
-#include "DH_Socket.h"
+#include <DH_Socket.h>
 
 using namespace LOFAR;
 
@@ -136,7 +136,7 @@ int32 doTest(int32	testnr)
 
 	if (readerRole == listenerAtDest) {
 		// open server socket, but force that client is first
-		sleep(2);
+		sleep(3);
 		testSocket = new TH_Socket(service, blocking);
 	}
 	else {
@@ -147,8 +147,8 @@ int32 doTest(int32	testnr)
 	// make the connection
 	LOG_INFO("Setting up connection...");
 	while (!testSocket->init()) {
-		LOG_INFO("no connection yet, retry in 100 msec");
-		usleep(100000);
+		LOG_INFO("no connection yet, retry in 1 second");
+		sleep (1);
 	}
 	LOG_INFO("Connection made succesfully");
 
@@ -161,7 +161,7 @@ int32 doTest(int32	testnr)
 		if (bidirectional) {
 			Connection	writeConn("write", theDH, 0, testSocket);
 			LOG_INFO("Sleeping for 5 seconds to test async comm");
-			sleep(4);					// be sure read is active for max errors
+			sleep(5);					// be sure read is active for max errors
 			LOG_TRACE_COND ("About to write data");
 			result += sendData(writeConn, true);	    // data in reverse order
 		}
@@ -239,7 +239,7 @@ int main (int32 argc, char*	argv[]) {
 			blocking ? "" : "non",
 			bidirectional ? "bi" : "uni"));
 	
-                usleep(200000);
+		sleep(2);
 		result += doTest(testnr);
 	}
 

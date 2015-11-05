@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -29,13 +29,13 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <OTDB/OTDBtypes.h>
-#include <pqxx/result>
-#include <boost/date_time/posix_time/ptime.hpp>
+#include <Common/lofar_datetime.h>
+#include <pqxx/pqxx>
+
+using namespace boost::posix_time;
 
 namespace LOFAR {
   namespace OTDB {
-
-using boost::posix_time::ptime;
 
 // \addtogroup OTDB
 // @{

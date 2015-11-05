@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tDataConvert
+./runctest.sh tDataConvert 2>&1 > tDataConvert.log

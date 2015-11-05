@@ -3,7 +3,7 @@
 lofar_package(TestCtlr 1.0 DEPENDS Common ApplCommon APLCommon MACIO GCFTM)
 
 include(LofarFindPackage)
-lofar_find_package(Boost REQUIRED date_time)
+lofar_find_package(Boost REQUIRED)
 
 add_definitions(-DBOOST_DISABLE_THREADS)
 

@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from src.sqllist import get_sql, GLOBALS
+from src.sqllist import get_sql
 from src.updater import run_update
 from src.pipeline import GSMPipeline
 
@@ -13,7 +13,6 @@ class Reprocessor(GSMPipeline):
         """
         Remove all data from runningcatalog/runningcatalog_fluxes.
         """
-        GLOBALS['i'] = image_id
         self.log.info('removing data from image %s' % image_id)
         self.conn.start()
         for sql in ['deduct runningcatalog',
@@ -23,10 +22,11 @@ class Reprocessor(GSMPipeline):
                     'deduct runningcatalog_fluxes',
                     'deduct runningcatalog_fluxes non-zero']:
             run_update(self.conn, sql, image_id)
-        self.conn.execute(get_sql('deduct cleanup'))
-        self.conn.execute(get_sql('update runningcatalog XYZ'))
+        self.conn.execute(get_sql('deduct cleanup', image_id))
+        self.conn.execute(get_sql('update runningcatalog XYZ', image_id))
         if delete_observations:
-            self.conn.execute(get_sql('deduct remove extractedsources'))
+            self.conn.execute(get_sql('deduct remove extractedsources',
+                                      image_id))
             image_status = 99
         else:
             image_status = 2
@@ -42,15 +42,12 @@ update images
         Remove old and insert new data.
         Do not reload the data and do not touch extractedsources.
         """
-        GLOBALS['i'] = image_id
         self.remove_image(image_id)
         self.process_image(image_id, sources_loaded=True)
         self.conn.execute("""
 update images
    set reprocessing = reprocessing + 1
  where imageid = %s""" % image_id)
-        self.conn.execute("delete from temp_associations where image_id = %s;"
-                          % image_id)
         self.conn.commit()
 
     def full_reprocess_image(self, image_id, new_parset):
@@ -60,7 +57,6 @@ update images
         New image_id will be created with the new parset,
         with the old image switched to status=99.
         """
-        GLOBALS['i'] = image_id
         self.remove_image(image_id, delete_observations=True)
         self.run_parset(new_parset)
         self.conn.execute("""

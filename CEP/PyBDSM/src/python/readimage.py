@@ -1,15 +1,16 @@
 """Module readimage.
 
-Defines operation Op_readimage which initializes image and WCS
+Defines operation Op_readimage which loads image from FITS file or uses Pyrap
 
 The current implementation tries to reduce input file to 2D if
-possible, as this makes more sense atm. One more important thing
-to note -- in its default configuration pyfits will read data
+possible, as this makes more sence atm. One more important thing
+to note -- in it's default configuration pyfits will read data
 in non-native format, so we have to convert it before usage. See
 the read_image_from_file in functions.py for details.
 
-Lastly, wcs and spectal information are stored in the PyWCS
-object img.wcs_obj.
+Lastly, wcs and spectal information are stored in img.wcs_obj and
+img.freq_pars to remove any FITS-specific calls to the header,
+etc. in other modules.
 """
 
 import numpy as N
@@ -17,11 +18,9 @@ from image import *
 from functions import read_image_from_file
 import mylogger
 import sys
-import shutil
-import tempfile
 
 Image.imagename = String(doc="Identifier name for output files")
-Image.filename = String(doc="Name of input file without extension")
+Image.filename = String(doc="Name of input file without FITS extension")
 Image.bbspatchnum = Int(doc="To keep track of patch number for bbs file "\
                             "for seperate patches per source")
 Image.frequency = Float(doc="Frequency in the header")
@@ -30,12 +29,14 @@ Image.j = Int(doc="Wavelet order j, 0 for normal run")
 Image.freq_pars = Tuple((0.0, 0.0, 0.0),
                         doc="Frequency prarmeters from the header: (crval, cdelt, crpix)")
 Image.waveletimage = Bool(doc="Whether a wavelet transform image of not")
+Image.pixel_beamarea = Float(doc="Beam area in pixel")
 Image.equinox = Float(2000.0, doc='Equinox of input image from header')
 
 class Op_readimage(Op):
     """Image file loader
 
-    Loads image and configures wcslib machinery for it.
+    Loads fits file 'opts.fits_name' and configures
+    wcslib machinery for it.
     """
     def __call__(self, img):
         import time, os
@@ -44,15 +45,15 @@ class Op_readimage(Op):
         if img.opts.filename == '':
             raise RuntimeError('Image file name not specified.')
 
-        # Check for trailing "/" in file name (since CASA images are directories).
+        # Check for trailing "/" in filename (since CASA images are directories).
         # Although the general rule is to not alter the values in opts (only the
         # user should be able to alter these), in this case there is no harm in
-        # replacing the file name in opts with the '/' trimmed off.
+        # replacing the filename in opts with the '/' trimmed off.
         if img.opts.filename[-1] == '/':
             img.opts.filename = img.opts.filename[:-1]
 
         # Determine indir if not explicitly given by user (in img.opts.indir)
-        if img.opts.indir is None:
+        if img.opts.indir == None:
             indir = os.path.dirname(img.opts.filename)
             if indir == '':
                 indir = './'
@@ -60,50 +61,12 @@ class Op_readimage(Op):
         else:
             img.indir = img.opts.indir
 
-        # Try to trim common extensions from filename and store various
-        # paths
-        root, ext = os.path.splitext(img.opts.filename)
-        if ext in ['.fits', '.FITS', '.image']:
-            fname = root
-        elif ext in ['.gz', '.GZ']:
-            root2, ext2 = os.path.splitext(root)
-            if ext2 in ['.fits', '.FITS', '.image']:
-                fname = root2
-            else:
-                fname = root
-        else:
-            fname = img.opts.filename
-        img.filename = img.opts.filename
-        img.parentname = fname
-        img.imagename = fname + '.pybdsm'
-        img.basedir = './' + fname + '_pybdsm/'
-
-        # Read in data and header
         image_file = os.path.basename(img.opts.filename)
         result = read_image_from_file(image_file, img, img.indir)
-        if result is None:
+        if result == None:
             raise RuntimeError("Cannot open file " + repr(image_file) + ". " + img._reason)
         else:
             data, hdr = result
-
-        # Check whether caching is to be used. If it is, set up a
-        # temporary directory. The temporary directory will be
-        # removed automatically upon exit.
-        if img.opts.do_cache:
-            img.do_cache = True
-        else:
-            img.do_cache = False
-        if img.do_cache:
-            mylog.info('Using disk caching.')
-            tmpdir = img.parentname+'_tmp'
-            if not os.path.exists(tmpdir):
-                os.makedirs(tmpdir)
-            img._tempdir_parent = TempDir(tmpdir)
-            img.tempdir = TempDir(tempfile.mkdtemp(dir=tmpdir))
-            import atexit, shutil
-            atexit.register(shutil.rmtree, img._tempdir_parent, ignore_errors=True)
-        else:
-            img.tempdir = None
 
         # Store data and header in img. If polarisation_do = False, only store pol == 'I'
         img.nchan = data.shape[1]
@@ -117,13 +80,11 @@ class Op_readimage(Op):
         if img.opts.polarisation_do and data.shape[0] == 1:
             img.opts.polarisation_do = False
             mylog.warning('Image has Stokes I only. Polarisation module disabled.')
-
         if img.opts.polarisation_do or data.shape[0] == 1:
-            img.image_arr = data
+            img.image = data
         else:
-            img.image_arr = data[0, :].reshape(1, data.shape[1], data.shape[2], data.shape[3])
+            img.image = data[0, :].reshape(1, data.shape[1], data.shape[2], data.shape[3])
         img.header = hdr
-        img.shape = data.shape
         img.j = 0
 
         ### initialize wcs conversion routines
@@ -131,191 +92,173 @@ class Op_readimage(Op):
         self.init_beam(img)
         self.init_freq(img)
         year, code = self.get_equinox(img)
-        if year is None:
+        if year == None:
             mylog.info('Equinox not found in image header. Assuming J2000.')
             img.equinox = 2000.0
         else:
             mylog.info('Equinox of image is %f.' % year)
             img.equinox = year
 
+        # Try to trim common extensions from filename
+        root, ext = os.path.splitext(img.opts.filename)
+        if ext in ['.fits', '.FITS', '.image']:
+            fname = root
+        elif ext in ['.gz', '.GZ']:
+            root2, ext2 = os.path.splitext(root)
+            if ext2 in ['.fits', '.FITS', '.image']:
+                fname = root2
+        else:
+            fname = img.opts.filename
+        img.filename = img.opts.filename
+        img.parentname = fname
+        img.imagename = fname + '.pybdsm'
         if img.opts.output_all:
             # Set up directory to write output to
+            basedir = './' + fname + '_pybdsm'
             opdir = img.opts.opdir_overwrite
             if opdir not in ['overwrite', 'append']:
                 img.opts.opdir_overwrite = 'append'
-            if opdir == 'append':
-                mylog.info('Appending output files to directory ' + img.basedir)
-            else:
-                mylog.info('Overwriting output files (if any) in directory ' + img.basedir)
-                if os.path.isdir(img.basedir):
-                    os.system("rm -fr " + img.basedir + '/*')
-            if not os.path.isdir(img.basedir):
-                os.makedirs(img.basedir)
-
-            # Now add solname (if any) and time to basedir
-            if img.opts.solnname is not None:
-                img.basedir += img.opts.solnname + '_'
+                mylog.info('Appending output files in directory ' + basedir)
+            img.basedir = basedir + '/'
+            if img.opts.solnname != None: img.basedir += img.opts.solnname + '_'
             img.basedir += time.strftime("%d%b%Y_%H.%M.%S")
 
-            # Make the final output directory
-            if not os.path.isdir(img.basedir):
-                os.makedirs(img.basedir)
+            if os.path.isfile(basedir): os.system("rm -fr " + basedir)
+            if not os.path.isdir(basedir): os.mkdir(basedir)
+            if opdir == 'overwrite': os.system("rm -fr " + basedir + "/*")
+            os.mkdir(img.basedir)
 
-        del data
+        # Check for zeros and blank if img.opts.blank_zeros is True
+        if img.opts.blank_zeros:
+            zero_pixels = N.where(img.image[0] == 0.0)
+            mylog.info('Blanking %i zeros in image' % len(zero_pixels[1]))
+            img.image[0][zero_pixels] = N.nan
+
         img.completed_Ops.append('readimage')
         return img
 
     def init_wcs(self, img):
-        """Initialize wcs pixel <=> sky conversion routines.
+        """Initialize wcs pixel <=> sky conversion routines, and
+        store them as img.pix2sky & img.sky2pix.
+
+        Thanks to transpose operation done to image earlier we can use
+        p2s & s2p transforms directly.
+
+        Both WCSLIB (from LOFAR svn) and PyWCS (http://stsdas.stsci.edu/
+        astrolib/pywcs/, available from https://trac6.assembla.com/astrolib)
+        are supported.
         """
+        try:
+            import wcslib
+            img.use_wcs = 'wcslib'
+        except ImportError, ewcslib:
+            try:
+                import pywcs
+                img.use_wcs = 'pywcs'
+            except ImportError, e:
+                # Expose original exception details to outside world
+                raise RuntimeError(
+                    "Either WCSLIB or PyWCS is required."
+                    " Original error: \n {0}\n {1}".format(str(ewcslib), str(e)))
         from math import pi
-        import warnings
 
         hdr = img.header
+        if img.use_wcs == 'wcslib':
+            t = wcslib.wcs()
+        elif img.use_wcs == 'pywcs':
+            t = pywcs.WCS(naxis=2)
 
-        try:
-            from astropy.wcs import WCS
-            t = WCS(hdr)
-            t.wcs.fix()
-        except ImportError, err:
-            import warnings
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore",category=DeprecationWarning)
-                from pywcs import WCS
-                t = WCS(hdr)
-                t.wcs.fix()
+        if img.use_io == 'fits':
+          crval = [hdr['crval1'], hdr['crval2']]
+          crpix = [hdr['crpix1'], hdr['crpix2']]
+          cdelt = [hdr['cdelt1'], hdr['cdelt2']]
+          acdelt = [abs(hdr['cdelt1']), abs(hdr['cdelt2'])]
+          ctype = [hdr['ctype1'], hdr['ctype2']]
+          if 'crota1' in hdr:
+            crota = [hdr['crota1'], hdr['crota2']]
+          else:
+            crota = [0.0, 0.0]
+          if 'cunit1' in hdr:
+            cunit = [hdr['cunit1'], hdr['cunit2']]
+          else:
+            cunit = []
 
-        acdelt = [abs(hdr['cdelt1']), abs(hdr['cdelt2'])]
+        if img.use_io == 'rap':
+          wcs_dict = hdr['coordinates']['direction0']
+          coord_dict = {'degree' : 1.0, 'arcsec' : 1.0 / 3600, 'rad' : 180.0 / pi}
+          iterlist = range(2)
+          co_conv = [coord_dict[wcs_dict['units'][i]] for i in iterlist]
+          crval = [wcs_dict.get('crval')[i] * co_conv[i] for i in iterlist]
+          crpix = [wcs_dict.get('crpix')[i] for i in iterlist]
+          cdelt = [wcs_dict.get('cdelt')[i] * co_conv[i] for i in iterlist]
+          acdelt = [abs(wcs_dict.get('cdelt')[i]) * co_conv[i] for i in iterlist]
+          ctype = ['RA---' + wcs_dict.get('projection'), 'DEC--' + wcs_dict.get('projection')]
+          if wcs_dict.has_key('crota1'):
+            crota = [wcs_dict.get('crota')[i] for i in iterlist]
+          else:
+            crota = [0.0, 0.0]
+          if wcs_dict.has_key('cunit1'):
+            cunit = [wcs_dict.get('cunit')[i] for i in iterlist]
+          else:
+            cunit = []
 
-        # Here we define p2s and s2p to allow celestial coordinate
-        # transformations. Transformations for other axes (e.g.,
-        # spectral) are striped out.
-        def p2s(self, xy):
-            xy = list(xy)
-            for i in range(self.naxis-2):
-                xy.append(0)
-            if hasattr(self, 'wcs_pix2world'):
-                try:
-                    xy_arr = N.array([xy[0:2]])
-                    sky = self.wcs_pix2world(xy_arr, 0)
-                except:
-                    xy_arr = N.array([xy])
-                    sky = self.wcs_pix2world(xy_arr, 0)
-            else:
+        # Check if user has specified a subimage. If so, adjust crpix
+        if img.opts.trim_box != None:
+            xmin, xmax, ymin, ymax = img.trim_box
+            crpix[0] -= xmin
+            crpix[1] -= ymin
+
+        if img.use_wcs == 'wcslib':
+            t.crval = tuple(crval)
+            t.crpix = tuple(crpix)
+            t.cdelt = tuple(cdelt)
+            t.acdelt = tuple(acdelt)
+            t.ctype = tuple(ctype)
+            t.crota = tuple(crota)
+            if cunit != []:
+                t.cunit = tuple(cunit)
+            t.wcsset()
+            img.wcs_obj = t
+            img.pix2sky = t.p2s
+            img.sky2pix = t.s2p
+        elif img.use_wcs == 'pywcs':
+            # Here we define new p2s and s2p methods to match those of wcslib.
+            # Note that, due to a bug in pywcs version 1.10-4.7, the
+            # "ra_dec_order" option cannot be used. When the bug is fixed,
+            # this option should probably be re-enabled.
+            def p2s(self, xy):
                 xy_arr = N.array([xy])
-                sky = self.wcs_pix2sky(xy_arr, 0)
-            return sky.tolist()[0][0:2]
-
-        def s2p(self, rd):
-            rd = list(rd)
-            for i in range(self.naxis-2):
-                rd.append(1) # For some reason, 0 gives nans with astropy in some situations
-            if hasattr(self, 'wcs_world2pix'):
-                try:
-                    rd_arr = N.array([rd[0:2]])
-                    pix = self.wcs_world2pix(rd_arr, 0)
-                except:
-                    rd_arr = N.array([rd])
-                    pix = self.wcs_world2pix(rd_arr, 0)
-            else:
+                sky = self.wcs_pix2sky(xy_arr, 0)#, ra_dec_order=True)
+                return sky.tolist()[0]
+            def s2p(self, rd):
                 rd_arr = N.array([rd])
-                pix = self.wcs_sky2pix(rd_arr, 0)
-            return pix.tolist()[0][0:2]
-
-        # Here we define functions to transform Gaussian parameters (major axis,
-        # minor axis, pos. angle) from the image plane to the celestial sphere.
-        # These transforms are valid only at the Gaussian's center and ignore
-        # any change across the extent of the Gaussian.
-        def gaus2pix(x, location=None, use_wcs=True):
-            """ Converts Gaussian parameters in deg to pixels.
-
-            x - (maj [deg], min [deg], pa [deg])
-            location - specifies the location in pixels (x, y) for which
-                transform is desired
-            Input beam angle should be degrees CCW from North.
-            The output beam angle is degrees CCW from the +y axis of the image.
-            """
-            if use_wcs:
-                bmaj, bmin, bpa = x
-                brot = self.get_rot(img, location) # rotation delta CCW (in degrees) between N and +y axis of image
-
-                s1 = self.angdist2pixdist(img, bmaj, bpa, location=location)
-                s2 = self.angdist2pixdist(img, bmin, bpa + 90.0, location=location)
-                th = bpa + brot
-                if s1 < s2:
-                    s1, s2 = s2, s1
-                    th += 90.0
-                th = divmod(th, 180)[1] ### th lies between 0 and 180
-                return (s1, s2, th)
-            else:
-                return img.beam2pix(x)
-
-        def pix2gaus(x, location=None, use_wcs=True):
-            """ Converts Gaussian parameters in pixels to deg.
-
-            x - (maj [pix], min [pix], pa [deg])
-            location - specifies the location in pixels (x, y) for which
-                transform is desired
-            Input beam angle should be degrees CCW from the +y axis of the image.
-            The output beam angle is degrees CCW from North.
-            """
-            if use_wcs:
-                s1, s2, th = x
-                if s1 == 0.0 and s2 == 0.0:
-                    return (0.0, 0.0, 0.0)
-                brot = self.get_rot(img, location) # rotation delta CCW (in degrees) between N and +y axis of image
-
-                th_rad = th / 180.0 * N.pi
-                bmaj = self.pixdist2angdist(img, s1, th, location=location)
-                bmin = self.pixdist2angdist(img, s2, th + 90.0, location=location)
-                bpa = th - brot
-                if bmaj < bmin:
-                    bmaj, bmin = bmin, bmaj
-                    bpa += 90.0
-                bpa = divmod(bpa, 180)[1] ### bpa lies between 0 and 180
-                return (bmaj, bmin, bpa)
-            else:
-                return img.pix2beam(x)
-
-        def pix2coord(pix, location=None, use_wcs=True):
-            """Converts size along x and y (in pixels) to size in RA and Dec (in degrees)
-
-            Currently, this function is only used to convert errors on x, y position
-            to errors in RA and Dec.
-            """
-            if use_wcs:
-                # Account for projection effects
-                x, y = pix
-                brot = self.get_rot(img, location) # rotation delta CCW (in degrees) between N and +y axis of image
-                ra_dist_pix = N.sqrt( (x * N.cos(brot * N.pi / 180.0))**2 + (y * N.sin(brot * N.pi / 180.0))**2 )
-                dec_dist_pix = N.sqrt( (x * N.sin(brot * N.pi / 180.0))**2 + (y * N.cos(brot * N.pi / 180.0))**2 )
-                s1 = self.pixdist2angdist(img, ra_dist_pix, 90.0 - brot, location=location)
-                s2 = self.pixdist2angdist(img, dec_dist_pix, 0.0 - brot, location=location)
-            else:
-                x, y = pix
-                s1 = abs(x * cdelt1)
-                s2 = abs(y * cdelt2)
-            return (s1, s2)
-
-        if hasattr(t, 'wcs_pix2world'):
-            instancemethod = type(t.wcs_pix2world)
-        else:
+                pix = self.wcs_sky2pix(rd_arr, 0)#, ra_dec_order=True)
+                return pix.tolist()[0]
             instancemethod = type(t.wcs_pix2sky)
-        t.p2s = instancemethod(p2s, t, WCS)
-        if hasattr(t, 'wcs_world2pix'):
-            instancemethod = type(t.wcs_world2pix)
-        else:
+            t.p2s = instancemethod(p2s, t, pywcs.WCS)
             instancemethod = type(t.wcs_sky2pix)
-        t.s2p = instancemethod(s2p, t, WCS)
+            t.s2p = instancemethod(s2p, t, pywcs.WCS)
 
-        img.wcs_obj = t
-        img.wcs_obj.acdelt = acdelt
-        img.pix2sky = t.p2s
-        img.sky2pix = t.s2p
-        img.gaus2pix = gaus2pix
-        img.pix2gaus = pix2gaus
-        img.pix2coord = pix2coord
+            t.wcs.crval = crval
+            t.wcs.crpix = crpix
+            t.wcs.cdelt = cdelt
+            t.wcs.ctype = ctype
+            t.wcs.crota = crota
+            if cunit != []:
+                t.wcs.cunit = cunit
 
+            img.wcs_obj = t
+            img.wcs_obj.acdelt = acdelt
+            img.wcs_obj.crval = crval
+            img.wcs_obj.crpix = crpix
+            img.wcs_obj.cdelt = cdelt
+            img.wcs_obj.ctype = ctype
+            img.wcs_obj.crota = crota
+            if cunit != []:
+                img.wcs_obj.cunit = cunit
+
+            img.pix2sky = t.p2s
+            img.sky2pix = t.s2p
 
     def init_beam(self, img):
         """Initialize beam parameters, and conversion routines
@@ -327,73 +270,92 @@ class Op_readimage(Op):
         cdelt1, cdelt2 = img.wcs_obj.acdelt[0:2]
 
         ### define beam conversion routines:
-        def beam2pix(x):
-            """ Converts beam in deg to pixels. Use when no dependence on
-            position is appropriate.
+        def beam2pix(x, location=None):
+            """ Converts beam in deg to pixels.
 
-            Input beam angle should be degrees CCW from North at image center.
+            location specifies the location in pixels (x, y) for which beam is desired
+            Input beam angle should be degrees CCW from North.
             The output beam angle is degrees CCW from the +y axis of the image.
             """
             bmaj, bmin, bpa = x
+            brot = self.get_rot(img, location) # beam rotation delta CCW (in degrees) between N and +y axis of image
+
             s1 = abs(bmaj / cdelt1)
             s2 = abs(bmin / cdelt2)
-            th = bpa
+            th = bpa + brot
             return (s1, s2, th)
 
-        def pix2beam(x):
-            """ Converts beam in pixels to deg. Use when no dependence on
-            position is appropriate.
+        def pix2coord(pix):
+            x, y = pix
+            s1 = abs(x * cdelt1)
+            s2 = abs(y * cdelt2)
+            return (s1, s2)
 
+        def pix2beam(x, location=None):
+            """ Converts beam in pixels to deg.
+
+            location specifies the location in pixels (x, y) for which beam is desired
             Input beam angle should be degrees CCW from the +y axis of the image.
-            The output beam angle is degrees CCW from North at image center.
+            The output beam angle is degrees CCW from North.
             """
             s1, s2, th = x
             bmaj = abs(s1 * cdelt1)
             bmin = abs(s2 * cdelt2)
-            bpa = th
+            brot = self.get_rot(img, location) # beam rotation delta CCW (in degrees) between N and +y axis of image
+            bpa = th - brot
             if bmaj < bmin:
                 bmaj, bmin = bmin, bmaj
-                bpa += 90.0
+                bpa += 90
             bpa = divmod(bpa, 180)[1] ### bpa lies between 0 and 180
-            return [bmaj, bmin, bpa]
-
-        def pixel_beam():
-            """Returns the beam in sigma units in pixels"""
-            pbeam = beam2pix(img.beam)
-            return (pbeam[0]/fwsig, pbeam[1]/fwsig, pbeam[2])
-
-        def pixel_beamarea():
-            """Returns the beam area in pixels"""
-            pbeam = beam2pix(img.beam)
-            return 1.1331 * pbeam[0] * pbeam[1]
+            return (bmaj, bmin, bpa)
 
         ### Get the beam information from the header
         found = False
         if img.opts.beam is not None:
             beam = img.opts.beam
         else:
-            try:
-                beam = (hdr['BMAJ'], hdr['BMIN'], hdr['BPA'])
-                found = True
-            except:
-                ### try see if AIPS as put the beam in HISTORY as usual
-               for h in hdr.get_history():
-                  # Check if h is a string or a FITS Card object (long headers are
-                  # split into Cards as of PyFITS 3.0.4)
-                  if not isinstance(h, str):
-                    hstr = h.value
-                  else:
-                    hstr = h
-                  if N.all(['BMAJ' in hstr, 'BMIN' in hstr, 'BPA' in hstr, 'CLEAN' in hstr]):
-                    try:
-                        dum, dum, dum, bmaj, dum, bmin, dum, bpa = hstr.split()
-                    except ValueError:
-                        try:
-                            dum, dum, bmaj, dum, bmin, dum, bpa, dum, dum = hstr.split()
-                        except ValueError:
-                            break
-                    beam = (float(bmaj), float(bmin), float(bpa))
+            if img.use_io == 'rap':
+                iminfo = hdr['imageinfo']
+                if iminfo.has_key('restoringbeam'):
+                    beaminfo = iminfo['restoringbeam']
+                    if beaminfo.has_key('major') and beaminfo.has_key('minor') and beaminfo.has_key('major'):
+                        bmaj = beaminfo['major']['value']
+                        bmin = beaminfo['minor']['value']
+                        bpa = beaminfo['positionangle']['value']
+                        # make sure all values are in degrees
+                        if beaminfo['major']['unit'] == 'arcsec':
+                            bmaj = bmaj / 3600.0
+                        if beaminfo['minor']['unit'] == 'arcsec':
+                            bmin = bmin / 3600.0
+                        if beaminfo['major']['unit'] == 'rad':
+                            bmaj = bmaj * 180.0 / N.pi
+                        if beaminfo['minor']['unit'] == 'rad':
+                            bmin = bmin * 180.0 / N.pi
+                        beam = (bmaj, bmin, bpa) # all degrees
+                        found = True
+            if img.use_io == 'fits':
+                try:
+                    beam = (hdr['BMAJ'], hdr['BMIN'], hdr['BPA'])
                     found = True
+                except:
+                    ### try see if AIPS as put the beam in HISTORY as usual
+                   for h in hdr.get_history():
+                      # Check if h is a string or a FITS Card object (long headers are
+                      # split into Cards as of PyFITS 3.0.4)
+                      if not isinstance(h, str):
+                        hstr = h.value
+                      else:
+                        hstr = h
+                      if N.all(['BMAJ' in hstr, 'BMIN' in hstr, 'BPA' in hstr, 'CLEAN' in hstr]):
+                        try:
+                            dum, dum, dum, bmaj, dum, bmin, dum, bpa = hstr.split()
+                        except ValueError:
+                            try:
+                                dum, dum, bmaj, dum, bmin, dum, bpa, dum, dum = hstr.split()
+                            except ValueError:
+                                break
+                        beam = (float(bmaj), float(bmin), float(bpa))
+                        found = True
             if not found: raise RuntimeError("No beam information found in image header.")
 
         ### convert beam into pixels (at image center)
@@ -403,88 +365,57 @@ class Op_readimage(Op):
         ### and store it
         img.pix2beam = pix2beam
         img.beam2pix = beam2pix
-        img.beam = beam   # FWHM size in degrees
-        img.pixel_beam = pixel_beam   # IN SIGMA UNITS in pixels
-        img.pixel_beamarea = pixel_beamarea
+        img.pix2coord = pix2coord
+        img.beam = beam   # FWHM size
+        img.pixel_beam = pbeam   # IN SIGMA UNITS
+        img.pixel_beamarea = 1.1331 * img.pixel_beam[0] * img.pixel_beam[1] * fwsig * fwsig # area of restoring beam in pixels
         mylogger.userinfo(mylog, 'Beam shape (major, minor, pos angle)',
-                          '(%.5e, %.5e, %s) degrees' % (beam[0], beam[1],
+                          '(%s, %s, %s) degrees' % (round(beam[0], 5),
+                                                    round(beam[1], 5),
                                                     round(beam[2], 1)))
 
     def init_freq(self, img):
-        """Initialize frequency parameters and store them.
-
-        Basically, PyBDSM uses two frequency parameters:
-
-            img.frequency - the reference frequency in Hz of the ch0 image
-            img.freq_pars - the crval, crpix, and cdelt values for the
-                            frequency axis in Hz
-
-        If the input frequency info (in the WCS) is not in Hz, it is
-        converted.
-        """
-        try:
-            from astropy.wcs import WCS
-        except ImportError, err:
-            import warnings
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", category=DeprecationWarning)
-                from pywcs import WCS
-
+        """Initialize frequency parameters and store them"""
         mylog = mylogger.logging.getLogger("PyBDSM.InitFreq")
-        if img.opts.frequency_sp is not None and img.image_arr.shape[1] > 1:
+        if img.opts.frequency_sp != None and img.image.shape[1] > 1:
             # If user specifies multiple frequencies, then let
             # collapse.py do the initialization
             img.frequency = img.opts.frequency_sp[0]
             img.freq_pars = (0.0, 0.0, 0.0)
             mylog.info('Using user-specified frequencies.')
-        elif img.opts.frequency is not None and img.image_arr.shape[1] == 1:
+        elif img.opts.frequency != None and img.image.shape[1] == 1:
             img.frequency = img.opts.frequency
             img.freq_pars = (img.frequency, 0.0, 0.0)
             mylog.info('Using user-specified frequency.')
         else:
-            spec_indx = img.wcs_obj.wcs.spec
-            if spec_indx == -1:
-                raise RuntimeError('No frequency information found in image header.')
-            else:
-                # Here we define p2f and f2p to allow pixel to frequency
-                # transformations. Transformations for other axes (e.g.,
-                # celestial) are striped out.
-                #
-                # First, convert frequency to Hz if needed:
-                img.wcs_obj.wcs.sptr('FREQ-???')
-                def p2f(self, spec_pix):
-                    spec_list = [0] * self.naxis
-                    spec_list[spec_indx] = spec_pix
-                    spec_pix_arr = N.array([spec_list])
-                    if hasattr(self, 'wcs_pix2world'):
-                        freq = self.wcs_pix2world(spec_pix_arr, 0)
-                    else:
-                        freq = self.wcs_pix2sky(spec_pix_arr, 0)
-                    return freq.tolist()[0][spec_indx]
-                def f2p(self, freq):
-                    freq_list = [0] * self.naxis
-                    freq_list[spec_indx] = freq
-                    freq_arr = N.array([freq_list])
-                    if hasattr(self, 'wcs_world2pix'):
-                        pix = self.wcs_world2pix(freq_arr, 0)
-                    else:
-                        pix = self.wcs_sky2pix(freq_arr, 0)
-                    return pix.tolist()[0][spec_indx]
-                if hasattr(img.wcs_obj, 'wcs_pix2world'):
-                    instancemethod = type(img.wcs_obj.wcs_pix2world)
-                else:
-                    instancemethod = type(img.wcs_obj.wcs_pix2sky)
-                img.wcs_obj.p2f = instancemethod(p2f, img.wcs_obj, WCS)
-                if hasattr(img.wcs_obj, 'wcs_world2pix'):
-                    instancemethod = type(img.wcs_obj.wcs_world2pix)
-                else:
-                    instancemethod = type(img.wcs_obj.wcs_sky2pix)
-                img.wcs_obj.f2p = instancemethod(f2p, img.wcs_obj, WCS)
+            found = False
+            hdr = img.header
+            if img.use_io == 'rap':
+                if hdr['coordinates'].has_key('spectral2'):
+                    found = True
+                    spec_dict = hdr['coordinates']['spectral2']['wcs']
+                    crval, cdelt, crpix = spec_dict.get('crval'), \
+                        spec_dict.get('cdelt'), spec_dict.get('crpix')
+                    ff = crval + cdelt * (1. - crpix)
 
-                if img.opts.frequency is not None:
+            if img.use_io == 'fits':
+                nax = hdr['naxis']
+                if nax > 2:
+                    for i in range(nax):
+                        s = str(i + 1)
+                        if hdr['ctype' + s][0:4] == 'FREQ':
+                            found = True
+                            crval, cdelt, crpix = hdr['CRVAL' + s], \
+                                hdr['CDELT' + s], hdr['CRPIX' + s]
+                            ff = crval + cdelt * (1. - crpix)
+            if found:
+                if img.opts.frequency != None:
                     img.frequency = img.opts.frequency
                 else:
-                    img.frequency = img.wcs_obj.p2f(0)
+                    img.frequency = ff
+                img.freq_pars = (crval, cdelt, crpix)
+            else:
+                raise RuntimeError('No frequency information found in image header.')
 
     def get_equinox(self, img):
         """Gets the equinox from the header.
@@ -500,117 +431,62 @@ class Op_readimage(Op):
         """
         code = -1
         year = None
-        hdr = img.header
-        if 'EQUINOX' in hdr:
-            year = hdr['EQUINOX']
-            if isinstance(year, str):     # Check for 'J2000' or 'B1950' values
-                tst = year[:1]
-                if (tst == 'J') or (tst == 'B'):
-                    year = float(year[1:])
-                    if tst == 'J': code = 3
-                    if tst == 'B': code = 2
+        if img.use_io == 'rap':
+            hdr = img.header['coordinates']['direction0']
+            code = -1
+            year = None
+            if hdr.has_key('system'):
+                year = hdr['system']
+                if isinstance(year, str):     # Check for 'J2000' or 'B1950' values
+                    tst = year[:1]
+                    if (tst == 'J') or (tst == 'B'):
+                        year = float(year[1:])
+                        if tst == 'J': code = 3
+                        if tst == 'B': code = 2
+                else:
+                    code = 0
+        if img.use_io == 'fits':
+            hdr = img.header
+            if 'EQUINOX' in hdr:
+                year = hdr['EQUINOX']
+                if isinstance(year, str):     # Check for 'J2000' or 'B1950' values
+                    tst = year[:1]
+                    if (tst == 'J') or (tst == 'B'):
+                        year = float(year[1:])
+                        if tst == 'J': code = 3
+                        if tst == 'B': code = 2
+                else:
+                    code = 0
             else:
-                code = 0
-        else:
-            if 'EPOCH' in hdr: # Check EPOCH if EQUINOX not found
-                year = float(hdr['EPOCH'])
-                code = 1
-            else:
-                if 'RADECSYS' in hdr:
-                    sys = hdr['RADECSYS']
-                    code = 4
-                    if sys[:3] == 'ICR': year = 2000.0
-                    if sys[:3] == 'FK5': year = 2000.0
-                    if sys[:3] == 'FK4': year = 1950.0
+                if 'EPOCH' in hdr: # Check EPOCH if EQUINOX not found
+                    year = hdr['EPOCH']
+                    code = 1
+                else:
+                    if 'RADECSYS' in hdr:
+                        sys = hdr['RADECSYS']
+                        code = 4
+                        if sys[:3] == 'ICR': year = 2000.0
+                        if sys[:3] == 'FK5': year = 2000.0
+                        if sys[:3] == 'FK4': year = 1950.0
         return year, code
 
     def get_rot(self, img, location=None):
         """Returns CCW rotation angle (in degrees) between N and +y axis of image
 
-        location specifies the location in pixels (x, y) for which angle is desired
+        location specifies the location in pixels (x, y) for which beam is desired
         """
-        if location is None:
-            x1 = img.image_arr.shape[2] / 2.0
-            y1 = img.image_arr.shape[3] / 2.0
+        if location == None:
+            x1 = int(img.image.shape[2] / 2.0)
+            y1 = int(img.image.shape[3] / 2.0)
         else:
             x1, y1 = location
-        ra, dec = img.pix2sky([x1, y1])
-        delta_dec = self.pixdist2angdist(img, 1.0, 0.0, location=[x1, y1])  # approx. size in degrees of 1 pixel
-        if dec + delta_dec > 90.0:
-            # shift towards south instead
-            delta_dec *= -1.0
-        x2, y2 = img.sky2pix([ra, dec + delta_dec])
+        delta_x = 0
+        delta_y = 10
         try:
-            rot_ang_rad = N.arctan2(y2-y1, x2-x1) - N.pi / 2.0
-            if delta_dec < 0.0:
-                rot_ang_rad -= N.pi
+            w1 = img.pix2sky((x1, y1))
+            w2 = img.pix2sky((x1 + delta_x, y1 + delta_y))
+            rot_ang_rad = N.arctan2((w2[0] - w1[0]) , (w2[1] - w1[1]))
         except:
             rot_ang_rad = 0.0
         return rot_ang_rad * 180.0 / N.pi
-
-    def angdist2pixdist(self, img, angdist, pa, location=None):
-        """Returns the distance in pixels for a given angular distance in degrees
-
-        pa - position angle in degrees east of north
-        location - x and y location of center
-        """
-        import functions as func
-
-        if location is None:
-            x1 = int(img.image_arr.shape[2] / 2.0)
-            y1 = int(img.image_arr.shape[3] / 2.0)
-        else:
-            x1, y1 = location
-
-        pa_pix = self.get_rot(img, location)
-        x0 = x1 - 10.0 * N.sin( (pa + pa_pix) * N.pi / 180.0 )
-        y0 = y1 - 10.0 * N.cos( (pa + pa_pix) * N.pi / 180.0 )
-        ra0, dec0 = img.pix2sky([x0, y0])
-        x2 = x1 + 10.0 * N.sin( (pa + pa_pix) * N.pi / 180.0 )
-        y2 = y1 + 10.0 * N.cos( (pa + pa_pix) * N.pi / 180.0 )
-        ra2, dec2 = img.pix2sky([x2, y2])
-
-        angdist12 = func.angsep(ra0, dec0, ra2, dec2) # degrees
-        pixdist12 = N.sqrt( (x0 - x2)**2 + (y0 - y2)**2 ) # pixels
-        if angdist12 > 0.0:
-            result = angdist * pixdist12 / angdist12
-            if N.isnan(result) or result <= 0.0:
-                result = N.mean(img.wcs_obj.acdelt[0:2])
-        else:
-            result = N.mean(img.wcs_obj.acdelt[0:2])
-        return result
-
-    def pixdist2angdist(self, img, pixdist, pa, location=None):
-        """Returns the angular distance in degrees for a given distance in pixels
-
-        pa - position angle in degrees CCW from +y axis
-        location - x and y location of center
-        """
-        import functions as func
-
-        if location is None:
-            x1 = int(img.image_arr.shape[2] / 2.0)
-            y1 = int(img.image_arr.shape[3] / 2.0)
-        else:
-            x1, y1 = location
-
-        x0 = x1 - pixdist / 2.0 * N.sin(pa * N.pi / 180.0)
-        y0 = y1 - pixdist / 2.0 * N.cos(pa * N.pi / 180.0)
-        ra0, dec0 = img.pix2sky([x0, y0])
-        x2 = x1 + pixdist / 2.0 * N.sin(pa * N.pi / 180.0)
-        y2 = y1 + pixdist / 2.0 * N.cos(pa * N.pi / 180.0)
-        ra2, dec2 = img.pix2sky([x2, y2])
-
-        angdist12 = func.angsep(ra0, dec0, ra2, dec2) # degrees
-        return angdist12
-
-
-class TempDir(str):
-    """Container for temporary directory for image caching.
-
-    Directory is deleted when garbage collected/zero references """
-    def __del__(self):
-        import os
-        if os.path.exists(self.__str__()):
-            shutil.rmtree(self.__str__())
 

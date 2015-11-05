@@ -70,12 +70,12 @@ namespace LOFAR {
         } else if (itsValue[i] == ')') {
           nrpar--;
         } else if (itsValue[i] == '[') {
-          ASSERTSTR (nrpar == 0, "Unbalanced () around '" << itsValue << '\'');
+          ASSERTSTR (nrpar == 0, "Unbalanced () om '" << itsValue << '\'');
           nrbracket++;
         } else if (itsValue[i] == ']') {
           nrbracket--;
         } else if (itsValue[i] == '{') {
-          ASSERTSTR (nrpar == 0, "Unbalanced () around '" << itsValue << '\'');
+          ASSERTSTR (nrpar == 0, "Unbalanced () om '" << itsValue << '\'');
           nrbrace++;
         } else if (itsValue[i] == '}') {
           nrbrace--;
@@ -100,12 +100,8 @@ namespace LOFAR {
   {
     uint st   = 1;
     uint last = itsValue.size() - 1;
-    // An empty string is an empty vector.
-    if (itsValue.empty()) {
-      return vector<ParameterValue>();
-    }
     // A single value if there is no opening and closing bracket.
-    if (!(itsValue[0] == '['  &&  itsValue[last] == ']')) {
+    if (itsValue.empty() || !(itsValue[0] == '['  &&  itsValue[last] == ']')) {
       return vector<ParameterValue> (1, *this);
     }
     ASSERTSTR (itsValue.size() >= 2  &&  itsValue[0] == '['  &&
@@ -339,7 +335,7 @@ time_t ParameterValue::StringToTime_t (const string& aString)
   char   unit[1024];
   unit[0] = '\0';
   if (sscanf (aString.c_str(), "%ld%s", &theTime, unit) < 1) {
-    THROW (APSException, aString + " is not a time value");
+    THROW (APSException, aString + " is not an time value");
   }
   switch (unit[0]) {
   case 's':

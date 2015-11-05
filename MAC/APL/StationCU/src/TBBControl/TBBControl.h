@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 //# Common Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_string.h>
+#include <Common/lofar_datetime.h>
 #include <APL/APLCommon/AntennaField.h>
 
 //# ACC Includes
@@ -106,7 +107,7 @@ public:
     StopRequest();
     ~StopRequest(){};
     RCUset_t rcuSet;
-    NsTimestamp stopTime;
+    RTC::NsTimestamp stopTime;
 private:
 };
 
@@ -116,9 +117,9 @@ public:
     ReadRequest();
     ~ReadRequest(){};
     int    rcuNr;
-    NsTimestamp readTime;
-    NsTimestamp timeBefore;
-    NsTimestamp timeAfter;
+    RTC::NsTimestamp readTime;
+    RTC::NsTimestamp timeBefore;
+    RTC::NsTimestamp timeAfter;
     int    cepDelay;
     int    cepDatapaths;
     bool   readActive;
@@ -237,7 +238,7 @@ private:
 
     bool isBoardUsed(int board);
     
-    //ParameterSet*       itsParameterSet;
+    ParameterSet*       itsParameterSet;
     RTDBPropertySet*    itsPropertySet;
     bool                itsPropertySetInitialized;
     int                 itsNrTBBs;

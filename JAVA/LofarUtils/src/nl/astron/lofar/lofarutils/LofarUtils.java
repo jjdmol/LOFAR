@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -307,6 +307,34 @@ public abstract class LofarUtils {
             aComboBox.setSelectedIndex(0);
         }
         aComboBox.validate();
+    }
+
+    static public BitSet beamletToBitSet(String aS) {
+
+        BitSet aBitSet = new BitSet(216);
+
+        if (aS == null || aS.length() <= 2) {
+            return aBitSet;
+        }
+        //remove [] from string
+        String beamlets = aS.substring(aS.indexOf("[") + 1, aS.lastIndexOf("]"));
+
+        // split into seperate beamlet nr's
+        String[] beamletList = beamlets.split("[,]");
+
+        //fill bitset
+
+        for (int j = 0; j < beamletList.length; j++) {
+            int val;
+            try {
+                val = Integer.parseInt(beamletList[j]);
+                aBitSet.set(val);
+            } catch (NumberFormatException ex) {
+                System.out.println("Error converting beamlet numbers");
+
+            }
+        }
+        return aBitSet;
     }
 
     static public String ltrim(String aS, String matchSet) {

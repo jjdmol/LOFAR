@@ -25,8 +25,6 @@
 #include <DPPP/BaselineSelection.h>
 #include <DPPP/DPLogger.h>
 #include <MS/BaselineSelect.h>
-#include <Common/ParameterSet.h>
-#include <Common/ParameterValue.h>
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
 
@@ -39,12 +37,11 @@ namespace LOFAR {
     BaselineSelection::BaselineSelection()
     {}
 
-    BaselineSelection::BaselineSelection (const ParameterSet& parset,
+    BaselineSelection::BaselineSelection (const ParSet& parset,
                                           const string& prefix,
                                           bool minmax,
-					  const string& defaultCorrType,
-                                          const string& defaultBaseline)
-      : itsStrBL    (parset.getString (prefix + "baseline", defaultBaseline)),
+					  const string& defaultCorrType)
+      : itsStrBL    (parset.getString (prefix + "baseline", "")),
         itsCorrType (parset.getString (prefix + "corrtype", defaultCorrType)),
         itsRangeBL  (parset.getDoubleVector (prefix + "blrange",
                                              vector<double>()))
@@ -71,12 +68,12 @@ namespace LOFAR {
                itsCorrType.empty()  &&  itsRangeBL.empty());
     }
 
-    void BaselineSelection::show (ostream& os, const string& blanks) const
+    void BaselineSelection::show (ostream& os) const
     {
       os << "  Baseline selection:" << std::endl;
-      os << "    baseline:     " << blanks << itsStrBL << std::endl;
-      os << "    corrtype:     " << blanks << itsCorrType << std::endl;
-      os << "    blrange:      " << blanks << itsRangeBL << std::endl;
+      os << "    baseline:     " << itsStrBL << std::endl;
+      os << "    corrtype:     " << itsCorrType << std::endl;
+      os << "    blrange:      " << itsRangeBL << std::endl;
     }
 
     Matrix<bool> BaselineSelection::apply (const DPInfo& info) const
@@ -97,41 +94,12 @@ namespace LOFAR {
       return selectBL;
     }
 
-    Vector<bool> BaselineSelection::applyVec (const DPInfo& info) const
-    {
-      Matrix<bool> sel = apply(info);
-      Vector<bool> vec;
-      vec.resize (info.nbaselines());
-      for (uint i=0; i<info.nbaselines(); ++i) {
-        vec[i] = sel(info.getAnt1()[i], info.getAnt2()[i]);
-      }
-      return vec;
-    }
-
     void BaselineSelection::handleBL (Matrix<bool>& selectBL,
                                       const DPInfo& info) const
     {
       // Handle the value(s) in the baseline selection string.
       ParameterValue pvBL(itsStrBL);
-      // The value can be a vector or an MSSelection string.
-      // Alas the ParameterValue vector test cannot be used, because
-      // the first character of a MSSelection string can also be [.
-      // So if the first is [ and a ] is found before the end and before
-      // another [, it must be a MSSelection string.
-      bool mssel = true;
-      if (itsStrBL[0] == '[') {
-        String::size_type rb = itsStrBL.find (']');
-        ASSERTSTR (rb != string::npos,
-                   "Baseline selection " + itsStrBL +
-                   " has no ending ]");
-        if (rb == itsStrBL.size()-1) {
-          mssel = false;
-        } else {
-          String::size_type lb = itsStrBL.find ('[', 1);
-          mssel = (lb == string::npos  ||  lb > rb);
-        }
-      }
-      if (!mssel) {
+      if (pvBL.isVector()) {
         // Specified as a vector of antenna name patterns.
         selectBL = selectBL && handleBLVector (pvBL, info.antennaNames());
       } else {

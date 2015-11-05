@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 #include <DPPP/BaselineSelection.h>
 #include <DPPP/DPInfo.h>
-#include <Common/ParameterSet.h>
+#include <DPPP/ParSet.h>
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
 #include <casa/Arrays/ArrayLogical.h>
@@ -40,7 +40,7 @@ using namespace std;
 DPInfo makeInfo (int nbl)
 {
   DPInfo info;
-  info.init (4, 16, 1, 0.5, 5., string(), string());
+  info.init (4, 16, 1, 0.5, 5., string());
   // Fill the baseline stations; use 4 stations.
   // So they are called 00 01 02 03 10 11 12 13 20, etc.
   Vector<Int> ant1(nbl);
@@ -84,8 +84,7 @@ DPInfo makeInfo (int nbl)
   vals[0] = 3828713; vals[1] = 442878; vals[2] = 5064926;
   antPos[3] = MPosition(Quantum<Vector<double> >(vals,"m"),
                         MPosition::ITRF);
-  Vector<double> antDiam(4, 70.);
-  info.set (antNames, antDiam, antPos, ant1, ant2);
+  info.set (antNames, antPos, ant1, ant2);
   return info;
 }
 

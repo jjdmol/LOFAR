@@ -71,8 +71,5 @@ EOF
 # Run our script on the output of make
 make $@ 2>&1 | perl -n $SCRIPT
 
-MAKESTATUS=${PIPESTATUS[0]}
-
 rm -f $SCRIPT
 
-exit $MAKESTATUS

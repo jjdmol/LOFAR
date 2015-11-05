@@ -38,9 +38,8 @@
 class LogHistogram : public Serializable
 {
 	private:
-		class AmplitudeBin : public Serializable
+		struct AmplitudeBin : public Serializable
 		{
-                public:
 			AmplitudeBin() :
 				count(0)
 			{

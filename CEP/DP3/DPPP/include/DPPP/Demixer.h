@@ -46,9 +46,9 @@
 
 namespace LOFAR {
 
-  class ParameterSet;
-
   namespace DPPP {
+    class ParSet;
+
     // @ingroup NDPPP
 
     typedef vector<Patch::ConstPtr> PatchList;
@@ -68,7 +68,7 @@ namespace LOFAR {
     public:
       // Construct the object.
       // Parameters are obtained from the parset using the given prefix.
-      Demixer (DPInput*, const ParameterSet&, const string& prefix);
+      Demixer (DPInput*, const ParSet&, const string& prefix);
 
       // Process the data.
       // It keeps the data.
@@ -124,11 +124,8 @@ namespace LOFAR {
       //# Data members.
       DPInput*                              itsInput;
       string                                itsName;
-      DPBuffer                              itsBufTmp;
       string                                itsSkyName;
       string                                itsInstrumentName;
-      double                                itsDefaultGain;
-      size_t                                itsMaxIter;
       BaselineSelection                     itsSelBL;
       Filter                                itsFilter;
       vector<PhaseShift*>                   itsPhaseShifts;
@@ -193,14 +190,12 @@ namespace LOFAR {
       PatchList                             itsPatchList;
       Position                              itsPhaseRef;
       vector<Baseline>                      itsBaselines;
-      vector<int>                           itsUVWSplitIndex;
       casa::Vector<double>                  itsFreqDemix;
       casa::Vector<double>                  itsFreqSubtr;
       vector<double>                        itsUnknowns;
       vector<double>                        itsPrevSolution;
       uint                                  itsTimeIndex;
       uint                                  itsNConverged;
-      FlagCounter                           itsFlagCounter;
 
       //# Timers.
       NSTimer                               itsTimer;

@@ -25,7 +25,7 @@
 #define DPPP_DPSTEP_H
 
 // @file
-// @brief Class to hold code for virtual base class for Flaggers in DPPP
+// @brief Class to hold code for virtual base class for Flaggers in IDPPP
 
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
@@ -67,12 +67,6 @@ namespace LOFAR {
       // Define the shared pointer for this type.
       typedef shared_ptr<DPStep> ShPtr;
 
-      // Constructor to initialize.
-      DPStep()
-        : itsPrevStep(0)
-      {}
-
-      // Destructor.
       virtual ~DPStep();
 
       // Process the data.
@@ -93,7 +87,7 @@ namespace LOFAR {
         { return itsInfo; }
 
       // Add some data to the MeasurementSet written/updated.
-      // The default implementation only calls addToMS from the previous step
+      // The default implementation does nothing.
       virtual void addToMS (const string& msName);
 
       // Show the step parameters.
@@ -107,19 +101,9 @@ namespace LOFAR {
       // The default implementation does nothing.
       virtual void showTimings (std::ostream&, double duration) const;
 
-      // Set the previous step.
-      void setPrevStep (DPStep* prevStep)
-      { itsPrevStep = prevStep; }
-
-      // Get the previous step.
-      DPStep* getPrevStep () const
-      { return itsPrevStep; }
-
       // Set the next step.
-      void setNextStep (DPStep::ShPtr nextStep)
-        { itsNextStep = nextStep;
-          nextStep->setPrevStep(this);
-        }
+      void setNextStep (const DPStep::ShPtr& nextStep)
+        { itsNextStep = nextStep; }
 
       // Get the next step.
       const DPStep::ShPtr& getNextStep() const
@@ -136,8 +120,6 @@ namespace LOFAR {
 
       //# Data members.
       DPStep::ShPtr itsNextStep;
-      DPStep*       itsPrevStep; // Normal pointer for back links, prevent
-                                 // two shared pointers to same object
       DPInfo        itsInfo;
     };
 
@@ -172,7 +154,7 @@ namespace LOFAR {
 
     // This class defines step in the DPPP pipeline that keeps the result
     // to make it possible to get the result of another step.
-    // It keeps the result and calls process of the next step.
+    // It only keeps the buffer, but does not process it in next steps.
 
     class ResultStep: public DPStep
     {
@@ -200,7 +182,7 @@ namespace LOFAR {
 
       // Clear the buffer.
       void clear()
-      { itsBuffer = DPBuffer(); }
+        { itsBuffer.clear(); }
 
     private:
       DPBuffer itsBuffer;
@@ -212,14 +194,14 @@ namespace LOFAR {
 
     // This class defines step in the DPPP pipeline that keeps the result
     // to make it possible to get the result of another step.
-    // It keeps the result and calls process of the next step.
+    // It only keeps buffers, but does not process them in next steps.
     // Buffers are accumulated until cleared.
 
     class MultiResultStep: public DPStep
     {
     public:
       // Create the object. By default it sets its next step to the NullStep.
-      MultiResultStep (uint size);
+      MultiResultStep (uint reserveSize);
 
       virtual ~MultiResultStep();
 
@@ -239,17 +221,12 @@ namespace LOFAR {
       vector<DPBuffer>& get()
         { return itsBuffers; }
 
-      // Get the size of the result.
-      size_t size() const
-        { return itsSize; }
-
       // Clear the buffers.
       void clear()
-        { itsSize = 0; }
+        { itsBuffers.clear(); }
 
     private:
       vector<DPBuffer> itsBuffers;
-      size_t           itsSize;
     };
 
   } //# end namespace

@@ -25,14 +25,24 @@ class get_metadata(LOFARnodeTCP):
                 self.logger.error("Dataset %s does not exist" % (infile))
                 return 1
 
+#            # Get the product metadata. If data product type was not specified,
+#            # derive it from the input filename's extension.
+#            if not product_type:
+#                ext = os.path.splitext(infile)[1]
+#                if ext == ".MS": product_type = "Correlated"
+#                elif ext == ".INST": product_type = "InstrumentModel"
+#                elif ext == ".IM": product_type = "SkyImage"
+#            if not product_type:
+#                self.logger.error("File %s has unknown product type" % infile)
+#                return 1
+
             self.logger.debug("Product type: %s" % product_type)
             if product_type == "Correlated":
-                self.outputs = metadata.Correlated(self.logger, infile).data()
+                self.outputs = metadata.Correlated(infile).data()
             elif product_type == "InstrumentModel":
-                self.outputs = metadata.InstrumentModel(self.logger, 
-                                                        infile).data()
+                self.outputs = metadata.InstrumentModel(infile).data()
             elif product_type == "SkyImage":
-                self.outputs = metadata.SkyImage(self.logger, infile).data()
+                self.outputs = metadata.SkyImage(infile).data()
             else:
                 self.logger.error("Unknown product type: %s" % product_type)
                 return 1

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -47,9 +47,8 @@ public interface jTreeValueInterface extends Remote
     // public boolean addKVTparamSet(jParamterSet aPS) throws RemoteException;
 
 
-    // Query for getting list of broken hardware on a certain time, or between a certain time range
-    public Vector<jOTDBvalue> getBrokenHardware (String aStartTime, String aStopTime) throws RemoteException;
-    public Vector<jOTDBvalue> getBrokenHardware (String aStartTime) throws RemoteException;
+    // Query for getting list of broken hardware on a certain time.
+    public Vector<jOTDBvalue> getBrokenHardware (String atTime) throws RemoteException;
     public Vector<jOTDBvalue> getBrokenHardware () throws RemoteException;
 
     

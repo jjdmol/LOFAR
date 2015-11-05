@@ -6,18 +6,16 @@
 #                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
 
-import copy
 import os
 import sys
 
 from lofarpipe.support.control import control
 from lofarpipe.support.lofarexceptions import PipelineException
-from lofarpipe.support.data_map import DataMap, validate_data_maps
-#from lofarpipe.support.group_data import tally_data_map
+from lofarpipe.support.group_data import store_data_map, validate_data_maps, \
+        load_data_map
+from lofarpipe.support.group_data import tally_data_map
 from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
-from lofarpipe.support.loggingdecorators import mail_log_on_exception, duration
-
 
 class msss_target_pipeline(control):
     """
@@ -29,16 +27,14 @@ class msss_target_pipeline(control):
     
     1. Prepare phase, collect data from parset and input mapfiles
     2. Copy the instrument files to the correct node, create new file with
-       succesfull copied MS's.
+       succesfull copied mss.
     3. Create database needed for performing work: 
-       - VDS, describing data on the nodes sourcedb, 
-       - SourceDB for skymodel (A-team)
-       - ParmDB for outputtting solutions
+       Vds, descibing data on the nodes sourcedb, For skymodel (A-team)
+       parmdb for outputtting solutions
     4. Run NDPPP to demix the A-Team sources
-    5. Run BBS using the instrument file from the target observation, to
-       correct for instrumental effects
-    6. Copy the MS's to their final output destination.
-    7. Create feedback for further processing by the LOFAR framework
+    5. Run bss using the instrument file from the target observation, to correct for instrumental effects
+    6. Second dppp run for  flaging NaN's in the MS. 
+    7. Create feedback file for further processing by the LOFAR framework (MAC)
 
     **Per subband-group, the following output products will be delivered:**
 
@@ -48,8 +44,19 @@ class msss_target_pipeline(control):
 
     def __init__(self):
         control.__init__(self)
+        self.parset = parameterset()
         self.input_data = {}
         self.output_data = {}
+        self.io_data_mask = []
+        self.parset_feedback_file = None
+
+
+    def usage(self):
+        """
+        Display usage information
+        """
+        print >> sys.stderr, "Usage: %s [options] <parset-file>" % sys.argv[0]
+        return 1
 
 
     def _get_io_product_specs(self):
@@ -57,36 +64,35 @@ class msss_target_pipeline(control):
         Get input- and output-data product specifications from the
         parset-file, and do some sanity checks.
         """
-        dps = self.parset.makeSubset(
-            self.parset.fullModuleName('DataProducts') + '.'
-        )
-        self.input_data['data'] = DataMap([
-            tuple(os.path.join(location, filename).split(':')) + (skip,)
+        odp = self.parset.makeSubset('ObsSW.Observation.DataProducts.')
+        self.input_data['data'] = [
+            tuple(os.path.join(location, filename).split(':'))
                 for location, filename, skip in zip(
-                    dps.getStringVector('Input_Correlated.locations'),
-                    dps.getStringVector('Input_Correlated.filenames'),
-                    dps.getBoolVector('Input_Correlated.skip'))
-        ])
+                    odp.getStringVector('Input_Correlated.locations'),
+                    odp.getStringVector('Input_Correlated.filenames'),
+                    odp.getBoolVector('Input_Correlated.skip'))
+                if not skip
+        ]
         self.logger.debug("%d Input_Correlated data products specified" %
                           len(self.input_data['data']))
-
-        self.input_data['instrument'] = DataMap([
-            tuple(os.path.join(location, filename).split(':')) + (skip,)
+        self.input_data['instrument'] = [
+            tuple(os.path.join(location, filename).split(':'))
                 for location, filename, skip in zip(
-                    dps.getStringVector('Input_InstrumentModel.locations'),
-                    dps.getStringVector('Input_InstrumentModel.filenames'),
-                    dps.getBoolVector('Input_InstrumentModel.skip'))
-        ])
+                    odp.getStringVector('Input_InstrumentModel.locations'),
+                    odp.getStringVector('Input_InstrumentModel.filenames'),
+                    odp.getBoolVector('Input_InstrumentModel.skip'))
+                if not skip
+        ]
         self.logger.debug("%d Input_InstrumentModel data products specified" %
                           len(self.input_data['instrument']))
-                          
-        self.output_data['data'] = DataMap([
-            tuple(os.path.join(location, filename).split(':')) + (skip,)
+        self.output_data['data'] = [
+            tuple(os.path.join(location, filename).split(':'))
                 for location, filename, skip in zip(
-                    dps.getStringVector('Output_Correlated.locations'),
-                    dps.getStringVector('Output_Correlated.filenames'),
-                    dps.getBoolVector('Output_Correlated.skip'))
-        ])
+                    odp.getStringVector('Output_Correlated.locations'),
+                    odp.getStringVector('Output_Correlated.filenames'),
+                    odp.getBoolVector('Output_Correlated.skip'))
+                if not skip
+        ]
         self.logger.debug("%d Output_Correlated data products specified" %
                           len(self.output_data['data']))
 
@@ -102,6 +108,58 @@ class msss_target_pipeline(control):
         ):  raise PipelineException(
                 "Validation of input/output data product specification failed!"
             )
+        # Validate input data, by searching the cluster for files
+        self._validate_input_data()
+        # Update input- and output-data product specifications if needed.
+        if not all(self.io_data_mask):
+            self.logger.info("Updating input/output product specifications")
+            self.input_data['data'] = [f for (f, m)
+                in zip(self.input_data['data'], self.io_data_mask) if m
+            ]
+            self.input_data['instrument'] = [f for (f, m)
+                in zip(self.input_data['instrument'], self.io_data_mask) if m
+            ]
+            self.output_data['data'] = [f for (f, m)
+                in zip(self.output_data['data'], self.io_data_mask) if m
+            ]
+
+
+    def _validate_input_data(self):
+        """
+        Search for the requested input files and mask the files in
+        `self.input_data{}` that could not be found on the system.
+        """
+        # Use filename glob-pattern as defined in LOFAR-USG-ICD-005.
+        data_mask = tally_data_map(
+            self.input_data['data'], 'L*_SB???_uv.MS', self.logger
+        )
+        # Log a warning if not all input data files were found.
+        if not all(data_mask):
+            self.logger.warn(
+                "The following input data files were not found: %s" %
+                ', '.join(
+                    ':'.join(f) for (f, m) in zip(
+                        self.input_data['data'], data_mask
+                    ) if not m
+                )
+            )
+        # Use filename glob-pattern as defined in LOFAR-USG-ICD-005.
+        inst_mask = tally_data_map(
+            self.input_data['instrument'], 'L*_SB???_inst.INST', self.logger
+        )
+        # Log a warning if not all input instrument files were found.
+        if not all(inst_mask):
+            self.logger.warn(
+                "The following input instrument files were not found: %s" %
+                ', '.join(
+                    ':'.join(f) for (f, m) in zip(
+                        self.input_data['instrument'], inst_mask
+                    ) if not m
+                )
+            )
+
+        # Set the IO data mask
+        self.io_data_mask = [x and y for (x, y) in zip(data_mask, inst_mask)]
 
 
     def _create_target_map_for_instruments(self):
@@ -113,12 +171,14 @@ class msss_target_pipeline(control):
         scratch_dir = os.path.join(
             self.inputs['working_directory'], self.inputs['job_name'])
 
-        target_locations = copy.deepcopy(self.input_data['instrument'])
-        for data, target in zip(self.input_data['data'], target_locations):
-            target.host = data.host
-            target.file = os.path.join(
-                scratch_dir, os.path.basename(target.file)
-            )
+        target_locations = []
+        for instrument_pair, data_pair \
+            in zip(self.input_data['instrument'], self.input_data['data']):
+            path_instr = instrument_pair[1]
+            host_data = data_pair[0]
+            # target location == working dir instrument file name
+            target_path = os.path.join(scratch_dir, os.path.basename(path_instr))
+            target_locations.append((host_data, target_path))
 
         return target_locations
 
@@ -133,10 +193,10 @@ class msss_target_pipeline(control):
 
         #Write the two needed maps to file
         source_path = os.path.join(copier_map_path, "source_instruments.map")
-        self.input_data['instrument'].save(source_path)
+        store_data_map(source_path, self.input_data['instrument'])
 
         target_path = os.path.join(copier_map_path, "target_instruments.map")
-        target_map.save(target_path)
+        store_data_map(target_path, target_map)
 
         copied_files_path = os.path.join(copier_map_path, "copied_instruments.map")
 
@@ -148,20 +208,45 @@ class msss_target_pipeline(control):
                       mapfiles_dir=copier_map_path,
                       mapfile=copied_files_path)['mapfile_target_copied']
 
-        # Some copy action might fail; the skip fields in the other map-files
-        # need to be updated these to reflect this.
-        self.input_data['instrument'] = DataMap.load(copied_instruments_mapfile)
-        for data, inst, outp in zip(
-            self.input_data['data'],
-            self.input_data['instrument'],
-            self.output_data['data']
-        ):
-            data.skip = inst.skip = outp.skip = (
-                data.skip or inst.skip or outp.skip
+        # Some copy action might fail, these files need to be removed from
+        # both the data and the instrument file!!
+        copied_instruments_map = load_data_map(copied_instruments_mapfile)
+        new_instrument_map = []
+        new_input_data_map = []
+        new_output_data_map = []
+        for instrument_pair, input_data_pair, output_data_pair in \
+            zip(target_map, self.input_data['data'], self.output_data['data']):
+            if instrument_pair in copied_instruments_map:
+                new_instrument_map.append(instrument_pair)
+                new_input_data_map.append(input_data_pair)
+                new_output_data_map.append(output_data_pair)
+            # else: Do not process further in the recipe
+
+        self.input_data['instrument'] = new_instrument_map
+        self.input_data['data'] = new_input_data_map
+        self.output_data['data'] = new_output_data_map
+
+
+    def go(self):
+        """
+        Read the parset-file that was given as input argument, and set the
+        jobname before calling the base-class's `go()` method.
+        """
+        try:
+            parset_file = os.path.abspath(self.inputs['args'][0])
+        except IndexError:
+            return self.usage()
+        self.parset.adoptFile(parset_file)
+        self.parset_feedback_file = parset_file + "_feedback"
+        # Set job-name to basename of parset-file w/o extension, if it's not
+        # set on the command-line with '-j' or '--job-name'
+        if not self.inputs.has_key('job_name'):
+            self.inputs['job_name'] = (
+                os.path.splitext(os.path.basename(parset_file))[0]
             )
+        return super(msss_target_pipeline, self).go()
 
 
-    @mail_log_on_exception
     def pipeline_logic(self):
         """
         Define the individual tasks that comprise the current pipeline.
@@ -193,18 +278,20 @@ class msss_target_pipeline(control):
         # update both intrument and datamap to contain only successes!
         self._copy_instrument_files(mapfile_dir)
 
+
         # Write input- and output data map-files.
         data_mapfile = os.path.join(mapfile_dir, "data.mapfile")
-        self.input_data['data'].save(data_mapfile)
+        store_data_map(data_mapfile, self.input_data['data'])
         copied_instrument_mapfile = os.path.join(mapfile_dir, "copied_instrument.mapfile")
-        self.input_data['instrument'].save(copied_instrument_mapfile)
+        store_data_map(copied_instrument_mapfile,
+                       self.input_data['instrument'])
         self.logger.debug(
             "Wrote input data mapfile: %s" % data_mapfile
         )
 
         # Save copied files to a new mapfile
         corrected_mapfile = os.path.join(mapfile_dir, "corrected_data.mapfile")
-        self.output_data['data'].save(corrected_mapfile)
+        store_data_map(corrected_mapfile, self.output_data['data'])
         self.logger.debug(
             "Wrote output corrected data mapfile: %s" % corrected_mapfile
         )
@@ -215,118 +302,101 @@ class msss_target_pipeline(control):
             return 0
 
         self.logger.debug("Processing: %s" %
-            ', '.join(str(f) for f in self.input_data['data'])
+            ', '.join(':'.join(f) for f in self.input_data['data'])
         )
 
         # *********************************************************************
         # 3. Create database needed for performing work: 
-        #    - GVDS, describing data on the compute nodes
-        #    - SourceDB, for skymodel (A-team)
-        #    - ParmDB for outputtting solutions
-        with duration(self, "vdsmaker"):
-            gvds_file = self.run_task("vdsmaker", data_mapfile)['gvds']
+        #    Vds, descibing data on the nodes
+        #    sourcedb, For skymodel (A-team)
+        #    parmdb for outputtting solutions
+        # Produce a GVDS file describing the data on the compute nodes.
+        gvds_file = self.run_task("vdsmaker", data_mapfile)['gvds']
 
         # Read metadata (e.g., start- and end-time) from the GVDS file.
-        with duration(self, "vdsreader"):
-            vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
+        vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
 
         # Create an empty parmdb for DPPP
-        with duration(self, "setupparmdb"):
-            parmdb_mapfile = self.run_task("setupparmdb", data_mapfile)['mapfile']
+        parmdb_mapfile = self.run_task("setupparmdb", data_mapfile)['mapfile']
 
         # Create a sourcedb to be used by the demixing phase of DPPP
-        # The user-supplied sky model can either be a name, in which case the
-        # pipeline will search for a file <name>.skymodel in the default search
-        # path $LOFARROOT/share/pipeline/skymodels; or a full path.
-        # It is an error if the file does not exist.
-        skymodel = py_parset.getString('PreProcessing.SkyModel')
-        if not os.path.isabs(skymodel):
-            skymodel = os.path.join(
-                # This should really become os.environ['LOFARROOT']
+        # The path to the A-team sky model is currently hard-coded.
+        sourcedb_mapfile = self.run_task(
+            "setupsourcedb", data_mapfile,
+            skymodel=os.path.join(
                 self.config.get('DEFAULT', 'lofarroot'),
-                'share', 'pipeline', 'skymodels', skymodel + '.skymodel'
+                'share', 'pipeline', 'skymodels', 'Ateam_LBA_CC.skymodel'
             )
-        if not os.path.isfile(skymodel):
-            raise PipelineException("Skymodel %s does not exist" % skymodel)
-        with duration(self, "setupsourcedb"):
-            sourcedb_mapfile = self.run_task(
-                "setupsourcedb", data_mapfile,
-                skymodel=skymodel,
-                suffix='.dppp.sourcedb',
-                type='blob'
-            )['mapfile']
+        )['mapfile']
 
         # *********************************************************************
         # 4. Run NDPPP to demix the A-Team sources
         # Create a parameter-subset for DPPP and write it to file.
-        ndppp_parset = os.path.join(parset_dir, "NDPPP.parset")
-        py_parset.makeSubset('DPPP.').writeFile(ndppp_parset)
+        ndppp_parset = os.path.join(parset_dir, "NDPPP[0].parset")
+        py_parset.makeSubset('DPPP[0].').writeFile(ndppp_parset)
 
         # Run the Default Pre-Processing Pipeline (DPPP);
-        with duration(self, "ndppp"):
-            dppp_mapfile = self.run_task("ndppp",
-                data_mapfile,
-                data_start_time=vdsinfo['start_time'],
-                data_end_time=vdsinfo['end_time'],
-                demix_always=
-                    py_parset.getStringVector('PreProcessing.demix_always'),
-                demix_if_needed=
-                    py_parset.getStringVector('PreProcessing.demix_if_needed'),
-                parset=ndppp_parset,
-                parmdb_mapfile=parmdb_mapfile,
-                sourcedb_mapfile=sourcedb_mapfile,
-                mapfile=os.path.join(mapfile_dir, 'dppp.mapfile')
-            )['mapfile']
+        dppp_mapfile = self.run_task("ndppp",
+            data_mapfile,
+            data_start_time=vdsinfo['start_time'],
+            data_end_time=vdsinfo['end_time'],
+            parset=ndppp_parset,
+            parmdb_mapfile=parmdb_mapfile,
+            sourcedb_mapfile=sourcedb_mapfile,
+            mapfile=os.path.join(mapfile_dir, 'dppp[0].mapfile')
+        )['mapfile']
+
+#        demix_mapfile = dppp_mapfile
+#        # Demix the relevant A-team sources
+#        demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
 
         # ********************************************************************
         # 5. Run bss using the instrument file from the target observation
         # Create an empty sourcedb for BBS
-        with duration(self, "setupsourcedb"):
-            sourcedb_mapfile = self.run_task(
-                "setupsourcedb", data_mapfile
-            )['mapfile']
+        sourcedb_mapfile = self.run_task(
+            "setupsourcedb", data_mapfile
+        )['mapfile']
 
         # Create a parameter-subset for BBS and write it to file.
         bbs_parset = os.path.join(parset_dir, "BBS.parset")
         py_parset.makeSubset('BBS.').writeFile(bbs_parset)
 
         # Run BBS to calibrate the target source(s).
-        with duration(self, "bbs_reducer"):
-            bbs_mapfile = self.run_task("bbs_reducer",
-                dppp_mapfile,
-                parset=bbs_parset,
-                instrument_mapfile=copied_instrument_mapfile,
-                sky_mapfile=sourcedb_mapfile
-            )['data_mapfile']
+        bbs_mapfile = self.run_task("bbs_reducer",
+            dppp_mapfile,
+            parset=bbs_parset,
+            instrument_mapfile=copied_instrument_mapfile,
+            sky_mapfile=sourcedb_mapfile
+        )['mapfile']
 
         # *********************************************************************
-        # 6. Copy the MS's to their final output destination.
-        # When the copier recipe has run, the map-file named in
-        # corrected_mapfile will contain an updated map of output files.
-        with duration(self, "copier"):
-            self.run_task("copier",
-                mapfile_source=bbs_mapfile,
-                mapfile_target=corrected_mapfile,
-                mapfiles_dir=mapfile_dir,
-                mapfile=corrected_mapfile
-            )
+        # 6. Second dppp run for  flaging NaN's in the MS.  
+        # Create another parameter-subset for a second DPPP run.
+        ndppp_parset = os.path.join(parset_dir, "NDPPP[1].parset")
+        py_parset.makeSubset('DPPP[1].').writeFile(ndppp_parset)
 
-        # *********************************************************************
-        # 7. Create feedback for further processing by the LOFAR framework
-        metadata_file = "%s_feedback_Correlated" % (self.parset_file,)
-        with duration(self, "get_metadata"):
-            self.run_task("get_metadata", corrected_mapfile,
-                parset_prefix=(
-                    self.parset.getString('prefix') +
-                    self.parset.fullModuleName('DataProducts')
-                ),
-                product_type="Correlated",
-                metadata_file=metadata_file)
+        # Do a second run of DPPP, just to flag NaN's from the MS. Store the
+        # results in the files specified in the corrected data map-file
+        # WARNING: This will create a new MS with a DATA column containing the
+        # CORRECTED_DATA column of the original MS.
+        self.run_task("ndppp",
+            (bbs_mapfile, corrected_mapfile),
+            clobber=False,
+            suffix='',
+            parset=ndppp_parset,
+            mapfile=os.path.join(mapfile_dir, 'dppp[1].mapfile')
+        )
 
-        self.send_feedback_processing(parameterset())
-        self.send_feedback_dataproducts(parameterset(metadata_file))
-
-        return 0
+        # 7. Create feedback file for further processing by the LOFAR framework
+        # (MAC)
+        # Create a parset-file containing the metadata for MAC/SAS
+        self.run_task("get_metadata", corrected_mapfile,
+            parset_file=self.parset_feedback_file,
+            parset_prefix=(
+                self.parset.getString('prefix') +
+                self.parset.fullModuleName('DataProducts')
+            ),
+            product_type="Correlated")
 
 
 if __name__ == '__main__':

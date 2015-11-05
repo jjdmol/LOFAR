@@ -19,16 +19,18 @@ class ConnectionTest(SwitchableTest):
         self.assertTrue(conn.established())
 
     def test_fail_connection(self):
-        self.assertRaises((MonetDatabaseError, psycopg2.OperationalError),
-            self.cm.get_connection, database='test_nonexistent',
-                                    username='test1',
-                                    password='test1')
+        with self.assertRaises((MonetDatabaseError,
+                                psycopg2.OperationalError)):
+            self.cm.get_connection(database='test_nonexistent',
+                                   username='test1',
+                                   password='test1')
 
     def test_bad_sql(self):
         conn = self.cm.get_connection(database='test')
         self.assertTrue(conn.established())
-        self.assertRaises((MonetDatabaseError, psycopg2.DatabaseError),
-                          conn.execute, 'select abracadabra from xxxtable;')
+        with self.assertRaises((MonetDatabaseError,
+                               psycopg2.DatabaseError)):
+            conn.execute('select abracadabra from xxxtable;')
         conn.rollback()
         bad_sql = """update assocxtrsources
    set weight = weight*(select ta.flux_fraction
@@ -51,7 +53,8 @@ class ConnectionTest(SwitchableTest):
                     and ta.lr_method = 1
                     and ta.kind = 3);"""
         if self.is_monet:
-            self.assertRaises(MonetDatabaseError, conn.execute, bad_sql)
+            with self.assertRaises(MonetDatabaseError):
+                conn.execute(bad_sql)
             self.assertFalse(conn.established())
 
     def test_store_properties(self):

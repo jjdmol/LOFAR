@@ -24,12 +24,8 @@
 #include <ParmDB/SourceDBBlob.h>
 #include <ParmDB/ParmMap.h>
 #include <Common/Exception.h>
-
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Sort.h>
 #include <iostream>
 
-using namespace casa;
 using namespace std;
 
 namespace LOFAR {
@@ -116,29 +112,24 @@ namespace BBS {
                                double ra, double dec,
                                bool)
   {
-    // Write at the end of the file.
     ASSERTSTR (itsCanWrite, "SourceDBBlob: file is not writable");
     itsFile.seekp (0, ios::end);
-    uint filePos = itsFile.tellp();
-    *itsBlobOut << PatchInfo(patchName, ra, dec, catType, apparentBrightness);
+    int16 cType = catType;
+    itsBlobOut->putStart ("patch", 1);
+    *itsBlobOut << patchName << cType << apparentBrightness << ra << dec;
+    itsBlobOut->putEnd();
     itsEndPos = itsFile.tellp();
-    return filePos;
+    return 0;
   }
 
-  void SourceDBBlob::updatePatch (uint filePos,
-                                  double apparentBrightness,
-                                  double ra, double dec)
+  void SourceDBBlob::skipPatch()
   {
-    // First read the blob to get name and category.
-    itsFile.seekp (filePos, ios::beg);
-    PatchInfo info;
-    *itsBlobIn >> info;
-    // Write the calculated position and flux of the patches.
-    info.setRa (ra);
-    info.setDec (dec);
-    info.setApparentBrightness (apparentBrightness);
-    itsFile.seekp (filePos, ios::beg);
-    *itsBlobOut << info;
+    string patchName;
+    int16 cType;
+    double apparentBrightness, ra, dec;
+    itsBlobIn->getStart ("patch");
+    *itsBlobIn >> patchName >> cType >> apparentBrightness >> ra >> dec;
+    itsBlobIn->getEnd();
   }
 
   void SourceDBBlob::addSource (const SourceInfo& sourceInfo,
@@ -155,112 +146,43 @@ namespace BBS {
     itsEndPos = itsFile.tellp();
   }
 
-  void SourceDBBlob::addSource (const SourceData& source, bool)
-  {
-    source.writeSource (*itsBlobOut);
-  }
-
   void SourceDBBlob::addSource (const SourceInfo& sourceInfo,
-                                const string& patchName,
-                                int catType,
-                                double apparentBrightness,
+                                int,
+                                double,
                                 const ParmMap& defaultParameters,
                                 double ra, double dec,
                                 bool check)
   {
-    addPatch (patchName, catType, apparentBrightness, ra, dec, check);
-    addSource (sourceInfo, patchName, defaultParameters, ra, dec, check);
+    addSource (sourceInfo, sourceInfo.getName(), defaultParameters,
+               ra, dec, check);
   }
 
   void SourceDBBlob::deleteSources (const string&)
   {
-    THROW (Exception, "SourceDBBlob::deleteSources not possible");
+    THROW (Exception, "SourceDBBlob::deleteSources not possible yet");
   }
 
-  vector<string> SourceDBBlob::getPatches (int category, const string& pattern,
-                                           double minBrightness,
-                                           double maxBrightness)
+  vector<string> SourceDBBlob::getPatches (int, const string&,
+                                           double,
+                                           double)
   {
-    // If not done yet, read all data from the file.
-    readAll();
-    Regex regex;
-    if (pattern.size() > 0) {
-      regex = Regex::fromPattern(pattern);
-    }
-    // Fill the patch names selecting only the required ones.
-    vector<String> names;
-    vector<Int> categories;
-    vector<double> brightness;
-    names.reserve (itsPatches.size());
-    categories.reserve (itsPatches.size());
-    brightness.reserve (itsPatches.size());
-    for (map<string,PatchInfo>::const_iterator iter=itsPatches.begin();
-         iter!=itsPatches.end(); ++iter) {
-      if ((category < 0       ||  iter->second.getCategory() == category)  &&
-          (minBrightness < 0  ||  iter->second.apparentBrightness() >= minBrightness)  &&
-          (maxBrightness < 0  ||  iter->second.apparentBrightness() <= maxBrightness)  &&
-          (pattern.size() == 0  ||  String(iter->first).matches (regex))) {
-        names.push_back (iter->first);
-        categories.push_back (iter->second.getCategory());
-        brightness.push_back (iter->second.apparentBrightness());
-      }
-    }
-    // Sort in order of category, brightness, name.
-    vector<string> nmout;
-    if (! names.empty()) {
-      Sort sort;
-      sort.sortKey (&(categories[0]), TpInt);
-      sort.sortKey (&(brightness[0]), TpDouble, 0, Sort::Descending);
-      sort.sortKey (&(names[0]), TpString);
-      Vector<uInt> index(names.size());
-      sort.sort (index, names.size());
-      nmout.reserve (names.size());
-      for (uint i=0; i<names.size(); ++i) {
-        nmout.push_back (names[index[i]]);
-      }
-    }
-    return nmout;
+    THROW (Exception, "SourceDBBlob::getPatches not implemented");
+    return vector<string>();
   }
 
-  vector<PatchInfo> SourceDBBlob::getPatchInfo (int category,
-                                                const string& pattern,
-                                                double minBrightness,
-                                                double maxBrightness)
+  vector<PatchInfo> SourceDBBlob::getPatchInfo (int,
+                                                const string&,
+                                                double,
+                                                double)
   {
-    vector<string> names = getPatches(category, pattern, minBrightness,
-                                      maxBrightness);
-    vector<PatchInfo> info;
-    info.reserve (names.size());
-    for (vector<string>::const_iterator iter=names.begin();
-         iter!=names.end(); ++iter) {
-      info.push_back (itsPatches.find(*iter)->second);
-    }
-    return info;
+    THROW (Exception, "SourceDBBlob::getPatchInfo not implemented");
+    return vector<PatchInfo>();
   }
 
-  vector<SourceInfo> SourceDBBlob::getPatchSources (const string& patchName)
+  vector<SourceInfo> SourceDBBlob::getPatchSources (const string&)
   {
-    // If not done yet, read all data from the file.
-    readAll();
-    vector<SourceInfo> info;
-    map<string,vector<SourceData> >::const_iterator iter =
-      itsSources.find(patchName);
-    if (iter != itsSources.end()) {
-      const vector<SourceData>& sources = iter->second;
-      info.reserve (sources.size());
-      for (vector<SourceData>::const_iterator srciter=sources.begin();
-         srciter!=sources.end(); ++srciter) {
-        info.push_back (srciter->getInfo());
-      }
-    }
-    return info;
-  }
-
-  vector<SourceData> SourceDBBlob::getPatchSourceData (const string& patchName)
-  {
-    // If not done yet, read all data from the file.
-    readAll();
-    return itsSources[patchName];
+    THROW (Exception, "SourceDBBlob::getPatchSources not implemented");
+    return vector<SourceInfo>();
   }
 
   SourceInfo SourceDBBlob::getSource (const string&)
@@ -292,35 +214,9 @@ namespace BBS {
         break;
       }
       // Skip the patch info.
-      PatchInfo info;
-      *itsBlobIn >> info;
+      skipPatch();
     }
     src.readSource (*itsBlobIn);
-  }
-
-  void SourceDBBlob::readAll()
-  {
-    // Only read if not done yet.
-    if (itsSources.size() > 0) {
-      return;
-    }
-    // Keep current position.
-    int64 pos = itsFile.tellg();
-    // Read from beginning till end.
-    rewind();
-    while (itsFile.tellg() < itsEndPos) {
-      if (itsBlobIn->getNextType() == "patch") {
-        PatchInfo info;
-        *itsBlobIn >> info;
-        itsPatches.insert (make_pair(info.getName(), info));
-      } else {
-        SourceData info;
-        info.readSource (*itsBlobIn);
-        itsSources[info.getPatchName()].push_back (info);
-      }
-    }
-    // Reset original position.
-    itsFile.seekp (pos);
   }
 
 } // namespace BBS

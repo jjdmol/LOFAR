@@ -26,12 +26,8 @@
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobOStream.h>
 #include <Common/Exception.h>
-
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Quanta/MVAngle.h>
 #include <iostream>
 
-using namespace casa;
 using namespace std;
 
 namespace LOFAR {
@@ -50,15 +46,10 @@ namespace BBS {
       itsRa        (ra),
       itsDec       (dec)
   {}
-
   void SourceData::setParm (const ParmMap& parms, const string& name,
                             double defValue, double& value)
   {
-    // Try to find the parameter with its name and suffixed with source name.
     ParmMap::const_iterator iter = parms.find(name);
-    if (iter == parms.end()) {
-      iter = parms.find(name + ':' + itsInfo.getName());
-    }
     if (iter != parms.end()) {
       const casa::Array<double>& arr =
         iter->second.getFirstParmValue().getValues();
@@ -92,39 +83,7 @@ namespace BBS {
     }
   }
 
-  void SourceData::makeParm (ParmMap& parms, const string& name,
-                             double value, bool pertRel) const
-  {
-    ParmValueSet pvs(ParmValue(value), ParmValue::Scalar, 1e-6, pertRel);
-    parms.define (name, pvs);
-  }
-
-  void SourceData::getParms (ParmMap& parms) const
-  {
-    makeParm (parms, "Ra", itsRa, true);
-    makeParm (parms, "Dec", itsDec, true);
-    makeParm (parms, "I", itsI);
-    makeParm (parms, "Q", itsQ);
-    makeParm (parms, "U", itsU);
-    makeParm (parms, "V", itsV);
-    if (itsInfo.getType() == SourceInfo::GAUSSIAN) {
-      makeParm (parms, "MajorAxis", itsMajorAxis);
-      makeParm (parms, "MinorAxis", itsMinorAxis);
-      makeParm (parms, "Orientation", itsOrientation);
-    }
-    if (itsInfo.getUseRotationMeasure()) {
-      makeParm (parms, "PolarizationAngle", itsPolAngle);
-      makeParm (parms, "PolarizedFraction", itsPolFrac);
-      makeParm (parms, "RotationMeasure", itsRM);
-    }
-    for (uint i=0; i<itsSpInx.size(); ++i) {
-      ostringstream ostr;
-      ostr << "SpectralIndex:" << i;
-      makeParm (parms, ostr.str(), itsSpInx[i]);
-    }
-  }
-
-  void SourceData::writeSource (BlobOStream& bos) const
+  void SourceData::writeSource (BlobOStream& bos)
   {
     bos.putStart ("source", 1);
     itsInfo.write (bos);
@@ -163,41 +122,6 @@ namespace BBS {
       itsSpInx.resize(0);
     }
     bis.getEnd();
-  }
-
-  void SourceData::print (ostream& os) const
-  {
-    os << "  ";
-    MVAngle(itsRa).print (os, MVAngle::Format(MVAngle::TIME, 9));
-    os << ' ';
-    MVAngle(itsDec).print (os, MVAngle::Format(MVAngle::ANGLE, 9));
-    os << ' ' << itsInfo.getRefType();
-    os << "  " << itsInfo.getName() << ' ' << itsInfo.getType();
-    os << "  iquv=(" << itsI << ',' << itsQ << ',' << itsU <<',' << itsV << ')';
-    os << endl;
-    if (itsInfo.getType() == SourceInfo::GAUSSIAN) {
-      os << "    major=" << itsMajorAxis << " arcsec  minor=" << itsMinorAxis
-         << " arcsec  orientation=" << itsOrientation << " deg" << endl;
-    }
-    if (itsInfo.getSpectralIndexNTerms() > 0) {
-      os << "    nspinx=" << itsInfo.getSpectralIndexNTerms()
-         << " reffreq=" << itsInfo.getSpectralIndexRefFreq()/1e6 << " MHz"
-         << endl;
-    }
-    if (itsInfo.getUseRotationMeasure()) {
-      os << "    polangle=" << itsPolAngle << "  polfrac=" << itsPolFrac
-         << "  rm=" << itsRM << endl;
-    }
-    if (itsInfo.getType() == SourceInfo::SHAPELET) {
-      os << "    shapelet I " << itsInfo.getShapeletScaleI()
-         << itsInfo.getShapeletCoeffI()
-         << "             Q " << itsInfo.getShapeletScaleQ()
-         << itsInfo.getShapeletCoeffQ()
-         << "             U " << itsInfo.getShapeletScaleU()
-         << itsInfo.getShapeletCoeffU()
-         << "             V " << itsInfo.getShapeletScaleV()
-         << itsInfo.getShapeletCoeffV();
-    }
   }
 
 } // namespace BBS

@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tEmbraceStMan
+./runctest.sh tEmbraceStMan 2>&1 > tEmbraceStMan.log

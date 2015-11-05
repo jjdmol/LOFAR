@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# V1.1, M.J.Norden, 02-11-2012
+# V1.0, M.J.Norden, 18-09-2012
 # Usage: plotclock yyyymmdd
 #
 
@@ -8,8 +8,7 @@ if [ "$1" != "" ]; then
    cp /var/log/ntpstats/loopstats.$1 /localhome/data/loopstats
    
 else 
-   now="`date +%Y%m%d`"
-   cp /var/log/ntpstats/loopstats.$now /localhome/data/loopstats
+   cp /var/log/ntpstats/loopstats /localhome/data/loopstats
    echo "Usage: plotclock yyyymmdd"
    sleep 1
    

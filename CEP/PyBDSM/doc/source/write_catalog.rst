@@ -8,7 +8,7 @@ The properties of the fitted Gaussians, sources, and shapelets may be written in
 
 .. note::
 
-    For BBS and SAGECAL formats, the output catalogs always use the J2000 equinox. If the input image does not have an equinox of J2000, the coordinates of sources will be precessed to J2000. Catalogs in other formats will have the equinox of the image.
+    For BBS format, the output catalogs always use the J2000 equinox. If the input image does not have an equinox of J2000, the coordinates of sources will be precessed to J2000. Catalogs in other formats will have the equinox of the image.
 
 The task parameters are as follows:
 
@@ -23,20 +23,14 @@ The task parameters are as follows:
                                    patches. 'single' => all Gaussians in one patch.
                                    'gaussian' => each Gaussian gets its own patch.
                                    'source' => all Gaussians belonging to a single
-                                   source are grouped into one patch. 'mask' => use mask
-                                   file specified by bbs_patches_mask
-    :term:`bbs_patches_mask` ...... None : Name of the mask file (of same size as input image)
-                                   that defines the patches if bbs_patches = 'mask'
-    :term:`catalog_type` .......... 'srl': Type of catalog to write:  'gaul' - Gaussian
+                                   source are grouped into one patch
+    :term:`catalog_type` ......... 'gaul': Type of catalog to write:  'gaul' - Gaussian
                                    list, 'srl' - source list (formed by grouping
-                                   Gaussians), 'shap' - shapelet list (FITS
-                                   format only)
+                                   Gaussians), 'shap' - shapelet list (not yet
+                                   supported)
     :term:`clobber` .............. False : Overwrite existing file?
-    :term:`correct_proj` .......... True : Correct source parameters for image projection
-                                   (BBS format only)?
-    :term:`format` ............... 'fits': Format of output Gaussian list: 'bbs', 'ds9',
-                                   'fits', 'star', 'kvis', 'ascii', 'csv', 'casabox', or
-                                   'sagecal'
+    :term:`format` ................ 'bbs': Format of output Gaussian list: 'bbs', 'ds9',
+                                   'fits', 'star', 'kvis', or 'ascii'
     :term:`incl_chan` ............ False : Include fluxes from each channel (if any)?
     :term:`incl_empty` ........... False : Include islands without any valid Gaussians
                                    (source list only)?
@@ -51,18 +45,18 @@ Each of the parameters is described in detail below.
         This parameter is a string (default is ``None``) that sets the name of the output file. If ``None``, the file is named automatically. If 'SAMP' the full catalog (i.e., ``format = 'fits'``) is sent to a running SAMP Hub (e.g., to TOPCAT or Aladin).
 
     bbs_patches
-        This parameter is a string (default is ``None``) that sets the type of patch to use in BBS-formatted catalogs. When the Gaussian catalogue is written as a BBS-readable sky file, this option determines whether all Gaussians are in a single patch (``'single'``), there are no patches (``None``), all Gaussians for a given source are in a separate patch (``'source'``), each Gaussian gets its own patch (``'gaussian'``), or a mask image is used to define the patches (``'mask'``).
+        This parameter is a string (default is ``None``) that sets the type of patch to use in BBS-formatted catalogs. When the Gaussian catalogue is written as a BBS-readable sky file, this
+        determines whether all Gaussians are in a single patch (``'single'``), there are no
+        patches (``None``), all Gaussians for a given source are in a separate patch (``'source'``), or
+        each Gaussian gets its own patch (``'gaussian'``).
 
         If you wish to have patches defined by island, then set
         ``group_by_isl = True`` before fitting to force all
         Gaussians in an island to be in a single source. Then set
         ``bbs_patches = 'source'`` when writing the catalog.
 
-    bbs_patches_mask
-        This parameter is a string (default is ``None``) that sets the file name of the mask file to use to define patches in BBS-formatted catalogs. The mask image should be 1 inside the patches and 0 elsewhere and should be the same size as the input image (before any ``trim_box`` is applied). Any Gaussians that fall outside of the patches will be ignored and will not appear in the output sky model.
-
     catalog_type
-        This parameter is a string (default is ``'srl'``) that sets the type of catalog to write:  ``'gaul'`` - Gaussian list, ``'srl'`` - source list
+        This parameter is a string (default is ``'gaul'``) that sets the type of catalog to write:  ``'gaul'`` - Gaussian list, ``'srl'`` - source list
         (formed by grouping Gaussians), ``'shap'`` - shapelet list (``'fits'`` format only)
 
         .. note::
@@ -72,20 +66,8 @@ Each of the parameters is described in detail below.
     clobber
         This parameter is a Boolean (default is ``False``) that determines whether existing files are overwritten or not.
 
-    correct_proj
-        This parameter is a Boolean (default is ``True``) that determines
-        whether the source parameters in the output catalog will be corrected
-        for first-order projection effects. If ``False``, no correction is done. In
-        this case, the position angle is relative to the +y axis, NOT true
-        north, and source sizes are calculated assuming a constant pixel scale
-        (equal to the scale at the image center).
-
-        If ``True``, the position angle and source size are corrected using the
-        average pixel size and angle offset (between the +y axis and north) at
-        the location of the source center.
-
     format
-        This parameter is a string (default is ``'fits'``) that sets the format of the output catalog. The following formats are supported:
+        This parameter is a string (default is ``'bbs'``) that sets the format of the output catalog. The following formats are supported:
 
         * ``'bbs'`` - BlackBoard Selfcal sky model format (Gaussian list only)
 
@@ -97,15 +79,9 @@ Each of the parameters is described in detail below.
 
         * ``'kvis'`` - kvis format (Gaussian list only)
 
-        * ``'ascii'`` - simple text file with spaces separating the values
+        * ``'ascii'`` - simple text file
 
-        * ``'csv'`` - Comma-separated Values (CSV) text file
-
-        * ``'casabox'`` - CASA region file (boxes only)
-
-        * ``'sagecal'`` - SAGECAL sky model format (Gaussian list only)
-
-        Catalogues with the ``'fits'``, ``'ascii'``, and ``'csv'`` formats include all available
+        Catalogues with the ``'fits'`` and ``'ascii'`` formats include all available
         information (see :ref:`output_cols` for column definitions). The
         other formats include only a subset of the full information.
 
@@ -113,7 +89,7 @@ Each of the parameters is described in detail below.
         This parameter is a Boolean (default is ``False``) that determines whether the total flux densities of each source measured in each channel by the spectral index module are included in the output.
 
     incl_empty
-        This parameter is a Boolean (default is ``False``) that determines whether islands without any valid Gaussians are included in the output catalog. This option is only available for source lists. If True, islands for which Gaussian fitting failed will be included in the output catalog. In these cases, the source IDs are negative and only a subset of the standard columns will be populated (columns requiring information from Gaussian fits are left blank).
+        This parameter is a Boolean (default is ``False``) that determines whether islands without any valid Gaussians are included in the output catalog. This option is only available for source lists. If True, islands for which Gaussian fitting failed will be included in the output catalog. In these cases, the source IDs are negative.
 
     srcroot
         This parameter is a string (default is ``None``) that sets the root for source names in the output catalog.
@@ -126,7 +102,7 @@ Definition of output columns
 The information included in the Gaussian and source catalogs varies by format and can include the following quantities.
 
 .. note::
-    For ACSII, CSV, and FITS formats, the reference frequency (in Hz) and equinox are stored in the header of the catalog. The header in ASCII and CSV catalogs is the first few lines of the catalog. For FITS catalogs, this information is stored in the comments as well as in the FREQ0 and EQUINOX keywords in the primary header.
+    For ACSII and FITS formats, the reference frequency (in Hz) and equinox are stored in the header of the catalog. The header in ASCII catalogs is the first few lines of the catalog. For FITS catalogs, this information is stored in the comments as well as in the FREQ0 and EQUINOX keywords in the primary header.
 
 * **Gaus_id:** a unique number that identifies the Gaussian, starting from zero
 
@@ -192,18 +168,6 @@ The information included in the Gaussian and source catalogs varies by format an
 
 * **E_PA:** the 1-:math:`\sigma` error on the position angle of the major axis of the source, in degrees
 
-* **Maj_img_plane:** the FWHM of the major axis of the source in the image plane, in degrees
-
-* **E_Maj_img_plane:** the 1-:math:`\sigma` error on the FWHM of the major axis of the source in the image plane, in degrees
-
-* **Min_img_plane:** the FWHM of the minor axis of the source in the image plane, in degrees
-
-* **E_Min_img_plane:** the 1-:math:`\sigma` error on the FWHM of the minor axis of the source in the image plane, in degrees
-
-* **PA_img_plane:** the position angle in the image plane of the major axis of the source measured east of north, in degrees
-
-* **E_PA_img_plane:** the 1-:math:`\sigma` error on the position angle in the image plane of the major axis of the source, in degrees
-
 * **DC_Maj:** the FWHM of the deconvolved major axis of the source, in degrees
 
 * **E_DC_Maj:** the 1-:math:`\sigma` error on the FWHM of the deconvolved major axis of the source, in degrees
@@ -215,18 +179,6 @@ The information included in the Gaussian and source catalogs varies by format an
 * **DC_PA:** the position angle of the deconvolved major axis of the source measured east of north, in degrees
 
 * **E_DC_PA:** the 1-:math:`\sigma` error on the position angle of the deconvolved major axis of the source, in degrees
-
-* **DC_Maj_img_plane:** the FWHM of the deconvolved major axis of the source in the image plane, in degrees
-
-* **E_DC_Maj_img_plane:** the 1-:math:`\sigma` error on the FWHM of the deconvolved major axis of the source in the image plane, in degrees
-
-* **DC_Min_img_plane:** the FWHM of the deconvolved minor axis of the source in the image plane, in degrees
-
-* **E_DC_Min_img_plane:** the 1-:math:`\sigma` error on the FWHM of the deconvolved minor axis of the source in the image plane, in degrees
-
-* **DC_PA_img_plane:** the position angle in the image plane of the deconvolved major axis of the source measured east of north, in degrees
-
-* **E_DC_PA_img_plane:** the 1-:math:`\sigma` error on the position angle in the image plane of the deconvolved major axis of the source, in degrees
 
 * **Isl_Total_flux:** the total, integrated Stokes I flux density of the island in which the source is located, in Jy. This value is calculated from the sum of all non-masked pixels in the island with values above ``thresh_isl``
 

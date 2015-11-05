@@ -85,7 +85,7 @@ class DataProduct(object):
     """
     Base class for data product metadata.
     """
-    def __init__(self, logger):
+    def __init__(self):
         self._data = {
             'size' : 0,
             'fileFormat' : "",
@@ -93,7 +93,6 @@ class DataProduct(object):
             'location' : "",
             'percentageWritten' : 0
         }
-        self.logger = logger
 
 
     def data(self):
@@ -129,8 +128,8 @@ class Correlated(DataProduct):
     Class representing the metadata associated with UV-correlated data.
     The optional argument `filename` is the name of the Measurement Set.
     """
-    def __init__(self, logger, filename=None):
-        super(Correlated, self).__init__(logger)
+    def __init__(self, filename=None):
+        super(Correlated, self).__init__()
         self._data.update({
             'startTime' : "not-a-datetime",
             'duration' : 0.0,
@@ -151,8 +150,8 @@ class Correlated(DataProduct):
         """
         super(Correlated, self).collect(filename)
         try:
-            main = pyrap.tables.table(filename, ack=False)
-            spw = pyrap.tables.table(main.getkeyword('SPECTRAL_WINDOW'), ack=False)
+            main = pyrap.tables.table(filename)
+            spw = pyrap.tables.table(main.getkeyword('SPECTRAL_WINDOW'))
             exposure = main.getcell('EXPOSURE', 0)
             startTime = main.getcell('TIME', 0) - 0.5 * exposure
             endTime = main.getcell('TIME', main.nrows() - 1) + 0.5 * exposure
@@ -175,10 +174,9 @@ class Correlated(DataProduct):
                 'subband' : int(spw.getcell('NAME', 0)[3:]),
                 'stationSubband' : 0         ### NOT CORRECT! ###
             })
-        except Exception, error:
+        except RuntimeError, error:
             print >> sys.stderr, (
-                "%s: %s\n\twhile processing file %s" % 
-                (type(error).__name__, error, filename)
+                "Exception: %s\n\twhile processing file %s" % (error, filename)
             )
 
 
@@ -187,12 +185,12 @@ class InstrumentModel(DataProduct):
     """
     Class representing the metadata associated with an instrument model.
     """
-    def __init__(self, logger, filename=None):
+    def __init__(self, filename=None):
         """
         Constructor. The optional argument `filename` is the name of the
         Measurement Set containing the instrument model.
         """
-        DataProduct.__init__(self, logger)
+        DataProduct.__init__(self)
         if filename: 
             self.collect(filename)
 
@@ -202,8 +200,7 @@ class InstrumentModel(DataProduct):
         Collect instrument model metadata from the Measurement Set `filename`.
         """
         super(InstrumentModel, self).collect(filename)
-        if self._data['size'] > 0:
-            self._data['percentageWritten'] = 100
+        self._data['percentageWritten'] = 100
 
 
 
@@ -211,12 +208,12 @@ class SkyImage(DataProduct):
     """
     Class representing the metadata associated with a sky image.
     """
-    def __init__(self, logger,  filename=None):
+    def __init__(self, filename=None):
         """
         Constructor. The optional argument `filename` is the name of the
         CASA Image containing the sky image.
         """
-        DataProduct.__init__(self, logger)
+        DataProduct.__init__(self)
         self._data.update({
             'numberOfAxes' : 0,
             'nrOfDirectionCoordinates' : 0,
@@ -224,13 +221,7 @@ class SkyImage(DataProduct):
             'nrOfPolarizationCoordinates' : 0,
             'coordinateTypes' : [],
             'locationFrame' : "GEOCENTER",
-            'timeFrame' : "",
-            'restoringBeamMajorUnit' : "arcsec",
-            'restoringBeamMajorValue' : 0,
-            'restoringBeamMinorUnit' : "arcsec",
-            'restoringBeamMinorValue' : 0,
-            'rmsNoiseValue' : 0,
-            'rmsNoiseUnit' : ""
+            'timeFrame' : ""
         })
         if filename: 
             self.collect(filename)
@@ -244,25 +235,10 @@ class SkyImage(DataProduct):
         try:
             image = pyrap.images.image(filename)
             coord = image.coordinates()
-            beaminfo = image.imageinfo()['restoringbeam']
-            npix = image.shape()[2]         # Assume square dimensions
-            dircrd = image.coordinates()["direction"]
-            radec_cellsz_rad = dircrd.get_increment()[0]  # [ra, dec] (ind. for lofar)
-
             self._data.update({
                 'numberOfAxes' : image.ndim(),
                 'coordinateTypes' : coord._names,
                 'timeFrame' : coord.get_obsdate()['refer'],
-                'restoringBeamMajorUnit' : beaminfo['major']['unit'],
-                'restoringBeamMajorValue' : beaminfo['major']['value'],
-                'restoringBeamMinorUnit' : beaminfo['minor']['unit'],
-                'restoringBeamMinorValue' : beaminfo['minor']['value'],
-                'rmsNoiseValue' : image.attrgetrow(
-                    'LOFAR_QUALITY', 'QUALITY_MEASURE', 'RMS_NOISE_I'
-                )['VALUE'],
-                'rmsNoiseUnit' : image.unit(),
-                'npix' : npix,
-                'cellsize' : str(radec_cellsz_rad) + "rad"
             })
             if 'direction' in coord._names:
                 direction = coord.get_coordinate('direction')
@@ -287,16 +263,9 @@ class SkyImage(DataProduct):
                 'Pointing' : self._get_pointing(image),
                 'percentageWritten' : 100
             })
-            imagerIntegrationTime = image.attrget(
-                    'LOFAR_OBSERVATION', 'OBSERVATION_INTEGRATION_TIME', 0)
-            self._data.update({
-                'imagerIntegrationTime':imagerIntegrationTime
-            })
-            self.logger.info("Succes fully collecting meta data for skyimage")
-        except Exception, error:
+        except RuntimeError, error:
             print >> sys.stderr, (
-                "%s: %s\n\twhile processing file %s" % 
-                (type(error).__name__, error, filename)
+                "Exception: %s\n\twhile processing file %s" % (error, filename)
             )
 
 
@@ -315,7 +284,7 @@ class SkyImage(DataProduct):
     @staticmethod
     def _get_direction_coord(direction):
         data = {
-            'nrOfDirectionLinearAxes' : len(direction.get_axes()),
+            'nrDirectionLinearAxis' : len(direction.get_axes()),
             'PC0_0' : direction._coord['pc'][0][0],
             'PC0_1' : direction._coord['pc'][0][1],
             'PC1_0' : direction._coord['pc'][1][0],
@@ -388,6 +357,5 @@ class SkyImage(DataProduct):
 if __name__ == "__main__":
     Correlated('sample_uv.MS').as_parameterset().writeFile('Correlated.parset')
     InstrumentModel('sample_inst.INST').as_parameterset().writeFile('InstrumentModel.parset')
-    SkyImage('sample_sky.IM').as_parameterset().writeFile('SkyImage_IM.parset')
-    SkyImage('sample_sky.h5').as_parameterset().writeFile('SkyImage_h5.parset')
+    SkyImage('sample_sky.IM').as_parameterset().writeFile('SkyImage.parset')
 
