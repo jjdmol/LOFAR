@@ -6,7 +6,7 @@
 
 #  Copyright (C) 2008-2010
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
-#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ if(NOT DEFINED LOFAR_VARIANTS_INCLUDED)
   set(variants_file "${CMAKE_MODULE_PATH}/variants/variants.${_hostname}")
   
   if (EXISTS ${variants_file})
-    message(STATUS "Loading host-specific variants file: ${variants_file}")
+    message(STATUS "Loading host-specific variants file")
     include(${variants_file})
   endif (EXISTS ${variants_file})
   

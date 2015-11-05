@@ -5,29 +5,14 @@ GET_ALL_VERSIONS=0
 SET_VERSION=""
 LIST_VERSIONS=0
 
+if [ -z "$HOSTS" ]; then
+  HOSTS="cbm001 cbm002 cbm003 cbm004 cbm005 cbm006 cbm007 cbm008"
+fi
+
 function error() {
   echo "$@" >&2
   exit 1
 }
-
-if [ -z "$HOSTS" ]; then
-  case `hostname` in
-    cbt001|cbt002|cbt003|cbt004|cbt005|cbt006|cbt007|cbt008)
-      # Production system -- switch test system as well, in case we use cbm009/cbm010!
-      HOSTS="cbm001 cbm002 cbm003 cbm004 cbm005 cbm006 cbm007 cbm008 cbm009 cbm010"
-      ;;
-
-    cbt009|cbt010)
-      # Test system
-      HOSTS="cbm009 cbm010"
-      ;;
-
-    *)
-      echo "WARNING: Cannot derive \$HOSTS variable. Will only operate on localhost"
-      HOSTS="localhost"
-      ;;
-  esac
-fi
 
 function usage() {
   echo "$0 [-l] [-g] [-G] [-s VERSION]"
@@ -59,7 +44,6 @@ while getopts "hgGls:" opt; do
         ;;
   esac
 done
-[ $OPTIND -eq 1 ] && usage
 
 COBALT_VERSIONS_DIR=/localhome/lofar/lofar_versions
 
@@ -70,11 +54,9 @@ if [ $LIST_VERSIONS -eq 1 ]; then
   ls -1 $COBALT_VERSIONS_DIR
 fi
 
-CURRENT_VERSION=`readlink -f /opt/lofar | awk -F/ '{ print $NF; }'`
-
 # Get current Cobalt version
 if [ $GET_VERSION -eq 1 ]; then
-  echo "$CURRENT_VERSION"
+  readlink -f /opt/lofar | awk -F/ '{ print $NF; }'
 fi
 
 # Get current Cobalt version on ALL hosts
@@ -87,24 +69,10 @@ fi
 
 # Set current Cobalt version
 if [ -n "$SET_VERSION" ]; then
+  [ -d $COBALT_VERSIONS_DIR/$SET_VERSION ] || error "Cobalt version $SET_VERSION not found."
+
   echo "Switching Cobalt to $SET_VERSION"
 
-  function set_version {
-    VERSION="$1"
-    for HOST in $HOSTS; do
-      echo "$HOST"
-      ssh $HOST "[ -d \"${COBALT_VERSIONS_DIR}/${VERSION}\" ] && ln -sfT \"${COBALT_VERSIONS_DIR}/${VERSION}\" /localhome/lofarsystem/lofar/current" || return 1
-    done
-
-    return 0
-  }
-
-  if ! set_version "$SET_VERSION"; then
-    echo "------------------------------------------------------------------------------"
-    echo "ERROR Switching to $SET_VERSION. Switching back to $CURRENT_VERSION"
-    echo "------------------------------------------------------------------------------"
-
-    set_version "$CURRENT_VERSION"
-  fi
+  HOSTS="$HOSTS" RELEASE_NAME="$SET_VERSION" Cobalt_setcurrent.sh
 fi
 

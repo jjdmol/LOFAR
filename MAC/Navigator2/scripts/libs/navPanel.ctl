@@ -2,7 +2,7 @@
 //
 //  Copyright (C) 2002-2004
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -57,9 +57,6 @@ global bool VhEnable=FALSE;
 global bool bandSelLbaHba=FALSE;
 global bool VddVccEnable=FALSE;
 
-bool undocked = false;
-
-
 // ****************************************
 // Name : navPanel_initPanel
 // ****************************************
@@ -74,13 +71,6 @@ void navPanel_initPanel(string objectName) {
   
   // sets global to busy
   g_objectReady=false;
-  
-  undocked = false;
-  
-  //check if the panle is in the framework or started via the undock button.
-  if (isDollarDefined("$undocked") ){
-    undocked = $undocked;
-  }
   
   itsNavigatorObject = objectName;
   itsActionDp    = DPNAME_NAVIGATOR + g_navigatorID + "." + objectName + ".action";  

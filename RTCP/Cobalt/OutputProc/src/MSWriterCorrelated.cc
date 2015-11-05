@@ -30,7 +30,6 @@
 #include <Common/SystemUtil.h>
 #include <MSLofar/FailedTileInfo.h>
 #include <CoInterface/CorrelatedData.h>
-#include <CoInterface/LTAFeedback.h>
 
 #include <tables/Tables/Table.h>
 #include <casa/Quanta/MVTime.h>
@@ -55,11 +54,6 @@ namespace LOFAR
       itsMSname(msName),
       itsParset(parset)
     {
-      // Add file-specific processing feedback
-      LTAFeedback fb(itsParset.settings);
-      itsConfiguration.adoptCollection(fb.correlatedFeedback(subbandIndex));
-      itsConfigurationPrefix = fb.correlatedPrefix(subbandIndex);
-
       if (LofarStManVersion > 1) {
         string seqfilename = str(format("%s/table.f0seqnr") % msName);
 
@@ -126,9 +120,9 @@ namespace LOFAR
 
       itsNrBlocksWritten++;
 
-      itsConfiguration.replace(itsConfigurationPrefix + "size",     str(format("%u") % getDataSize()));
-      itsConfiguration.replace(itsConfigurationPrefix + "duration", str(format("%f") % ((data->sequenceNumber() + 1) * itsParset.settings.correlator.integrationTime())));
-      itsConfiguration.replace(itsConfigurationPrefix + "percentageWritten", str(format("%u") % percentageWritten()));
+      itsConfiguration.replace("size",     str(format("%u") % getDataSize()));
+      itsConfiguration.replace("duration", str(format("%f") % ((data->sequenceNumber() + 1) * itsParset.IONintegrationTime())));
+      itsConfiguration.replace("percentageWritten", str(format("%u") % percentageWritten()));
     }
 
 

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2007-2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -239,11 +239,11 @@ main()
     if (strpos(dynStr_fileContent[index],"RS.HBA_SPLIT")>-1) {
       dyn_string value = strsplit(dynStr_fileContent[index],"=");
       if (dynlen(value) > 1) {
-        if (substr(strltrim(value[2]," "),0,1) == "N" ||
-            substr(strltrim(value[2]," "),0,1) == "n" ||
-            substr(strltrim(value[2]," "),0,1) == "F" ||
-            substr(strltrim(value[2]," "),0,1) == "f") {
-          if( dpSet("LOFAR_PIC_StationInfo.HBA_Split",false) < 0) DebugN("failed set"); 
+        if (substr(value[2],0,1) == "N" ||
+            substr(value[2],0,1) == "n" ||
+            substr(value[2],0,1) == "F" ||
+            substr(value[2],0,1) == "f") {
+          dpSet("LOFAR_PIC_StationInfo.HBA_Split",false);
         } else {
           dpSet("LOFAR_PIC_StationInfo.HBA_Split",true);
         }
@@ -254,10 +254,10 @@ main()
     if (strpos(dynStr_fileContent[index],"RS.WIDE_LBAS")>-1) {
       dyn_string value = strsplit(dynStr_fileContent[index],"=");
       if (dynlen(value) > 1) {
-        if (substr(strltrim(value[2]," "),0,1) == "N" ||
-            substr(strltrim(value[2]," "),0,1) == "n" ||
-            substr(strltrim(value[2]," "),0,1) == "F" ||
-            substr(strltrim(value[2]," "),0,1) == "f") {
+        if (substr(value[2],0,1) == "N" ||
+            substr(value[2],0,1) == "n" ||
+            substr(value[2],0,1) == "F" ||
+            substr(value[2],0,1) == "f") {
           dpSet("LOFAR_PIC_StationInfo.wide_LBAS",false);
         } else {
           dpSet("LOFAR_PIC_StationInfo.wide_LBAS",true);
@@ -268,10 +268,10 @@ main()
     if (strpos(dynStr_fileContent[index],"RS.AARTFAAC")>-1) {
       dyn_string value = strsplit(dynStr_fileContent[index],"=");
       if (dynlen(value) > 1) {
-        if (substr(strltrim(value[2]," "),0,1) == "N" ||
-            substr(strltrim(value[2]," "),0,1) == "n" ||
-            substr(strltrim(value[2]," "),0,1) == "F" ||
-            substr(strltrim(value[2]," "),0,1) == "f") {
+        if (substr(value[2],0,1) == "N" ||
+            substr(value[2],0,1) == "n" ||
+            substr(value[2],0,1) == "F" ||
+            substr(value[2],0,1) == "f") {
           dpSet("LOFAR_PIC_StationInfo.AARTFAAC",false);
         } else {
           dpSet("LOFAR_PIC_StationInfo.AARTFAAC",true);

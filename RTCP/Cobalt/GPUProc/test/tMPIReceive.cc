@@ -47,7 +47,7 @@ int main(int argc, char **argv)
   Parset ps(parsetFile);
 
   SubbandDistribution subbandDistribution; // rank -> [subbands]
-  for (size_t subband = 0; subband < ps.settings.subbands.size(); ++subband) 
+  for (size_t subband = 0; subband < ps.nrSubbands(); ++subband) 
   {
     int receiverRank = subband % mpi.size();
     subbandDistribution[receiverRank].push_back(subband);
@@ -77,8 +77,8 @@ int main(int argc, char **argv)
   MPIReceiver MPI_receiver(MPI_receive_pool,  // pool to insert data into
     subbandIndices,                           // what to process
     isThisSubbandZero,
-    ps.settings.blockSize,
-    ps.settings.antennaFields.size(),
+    ps.nrSamplesPerSubband(),
+    ps.nrStations(),
     ps.nrBitsPerSample());
 
   cout << "Processing subbands " << subbandDistribution[mpi.rank()] << endl;
@@ -89,8 +89,8 @@ int main(int argc, char **argv)
     {
       // Read and forward station data
       // This is the code that send the data over the MPI line
-#pragma omp parallel for num_threads(ps.settings.antennaFields.size())
-      for (size_t stat = 0; stat < ps.settings.antennaFields.size(); ++stat) {
+#pragma omp parallel for num_threads(ps.nrStations())
+      for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
 
         // Determine if this station should start a pipeline for 
         // station..
@@ -105,7 +105,7 @@ int main(int argc, char **argv)
           continue;
         }
 
-        MACIO::RTmetadata rtmd(ps.settings.observationID, "", "");
+        MACIO::RTmetadata rtmd(ps.observationID(), "", "");
         sendInputToPipeline(ps, stat, subbandDistribution,
                             rtmd, "rtmd key prefix");
         cout << "First ended" << endl;

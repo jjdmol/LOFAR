@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ public:
     
     void readTBBdata(std::vector<TBBReadCmd>	cmdVector);
     void addTrigger(const TBBTrigger&	trigger);
-    //void readAntennaPositions(string fileName, string antennaSelection);
+    void readAntennaPositions(string fileName, string antennaSelection);
     
   /*!
 \brief Put the parameters from the parset file into the VHECRTast object
@@ -66,7 +66,7 @@ public:
 \param MaxFitVariance - Maximum variance (``badness of fit'') of the direction fit to still accept a trigger. 
 \param ParamExtension - String with "keyword=value;" pairs for additional parameters during development.
   */
-    void setParameters(string AntennaSet, int Clock,
+    void setParameters(string AntennaSet, string AntennaPositionsFile, int Clock,
                      int NoCoincChann=48, float CoincidenceTime=1e-6, int DoDirectionFit=0, 
                      float MinElevation=30., float MaxFitVariance=100., string ParamExtension="",
                      float forcedDeadTime=10.);
@@ -80,12 +80,14 @@ public:
         double phi;
         double mse;
     };
+    string itsOutputFilename;
+    string itsConfigurationFile;
   
     uint32 totalCoincidences, badFits;
 
 private:
-    // string itsAntennaPositionsFile;
-    // string itsAntennaSelection;
+    string itsAntennaPositionsFile;
+    string itsAntennaSelection;
     //uint32 itsDoDirectionFit;
     double itsForcedDeadTime;
     //uint32 itsNoCoincidenceChannels;
@@ -111,6 +113,7 @@ Only opens output file if not already opened!
     ParameterSet*  itsParameterSet;
     VHECRsettings* itsSettings;
     
+    FILE * itsLogfile;
     // avoid defaultconstruction and copying
     VHECRTask(const VHECRTask&);
     VHECRTask& operator=(const VHECRTask&);
@@ -142,7 +145,8 @@ Only opens output file if not already opened!
     };
   
       
-    // positionStruct antennaPositions[96]; // much faster than vector<position> !!
+    positionStruct antennaPositions[96]; // much faster than vector<position> !!
+    void readConfigFile();
     string readableTime(const uint64 date);
 
     // All buffered triggers
@@ -156,8 +160,8 @@ Only opens output file if not already opened!
     void printCoincidence(int coincidenceIndex);
 
     int coincidenceCheck(uint32 latestindex, uint32 nChannles, double timeWindow);
-    fitResultStruct fitDirectionToCoincidence(int coincidenceIndex, int nofChannels);
-    void fitDirectionAndDistanceToCoincidence(int coincidenceIndex, int nofChannels);
+    fitResultStruct fitDirectionToCoincidence(int coincidenceIndex, uint32 nofChannels);
+    void fitDirectionAndDistanceToCoincidence(int coincidenceIndex, uint32 nofChannels);
 };
     };//VHECR
 };//LOFAR

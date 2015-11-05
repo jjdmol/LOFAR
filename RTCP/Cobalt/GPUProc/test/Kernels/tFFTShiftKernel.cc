@@ -97,7 +97,7 @@ TEST(BufferSizes)
     sut.parset.settings.beamFormer.coherentSettings;
   CHECK_EQUAL(sut.nrChannels, settings.nrChannels);
   CHECK_EQUAL(4U, settings.nrStokes);
-  CHECK_EQUAL(sut.nrStations, sut.parset.settings.antennaFields.size());
+  CHECK_EQUAL(sut.nrStations, sut.parset.nrStations());
 }
 
 

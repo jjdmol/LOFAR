@@ -2,11 +2,7 @@
 
 # Handle options USE_CUDA and USE_OPENCL.
 if(USE_CUDA AND NOT USE_OPENCL)
-  set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc MACIO BrokenAntennaInfo MessageBus)
-
-  # We use runtime compilation, except for 2 tests compiled by nvcc.
-  # nvcc passes our C++ flags to GCC for C compilation printing spurious warnings. Suppress.
-  set(CUDA_PROPAGATE_HOST_FLAGS OFF)
+  set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc MACIO BrokenAntennaInfo)
   lofar_find_package(CUDA 4.1 REQUIRED)
   lofar_find_package(CUDADriver REQUIRED)
 
@@ -38,7 +34,7 @@ if(USE_CUDA AND NOT USE_OPENCL)
   endif()
 
 elseif(USE_OPENCL AND NOT USE_CUDA)
-  set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc MACIO BrokenAntennaInfo OpenCL_FFT MessageBus)
+  set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc MACIO BrokenAntennaInfo OpenCL_FFT)
   lofar_find_package(OpenCL REQUIRED)
   add_definitions(-DUSE_OPENCL)
 else()

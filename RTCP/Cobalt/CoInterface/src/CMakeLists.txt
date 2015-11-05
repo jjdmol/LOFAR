@@ -12,7 +12,6 @@ lofar_add_library(cointerface
   Allocator.cc
   CorrelatedData.cc
   BlockID.cc
-  BudgetTimer.cc
   FinalMetaData.cc
   LTAFeedback.cc
   Stream.cc
@@ -21,7 +20,6 @@ lofar_add_library(cointerface
   TABTranspose.cc
   TimeFuncs.cc
   RingCoordinates.cc
-  SelfDestructTimer.cc
 )
 
 lofar_add_bin_program(versioncointerface versioncointerface.cc)

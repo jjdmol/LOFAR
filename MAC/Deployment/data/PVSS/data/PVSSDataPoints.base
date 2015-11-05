@@ -19,6 +19,7 @@
 #----------------------------------------------------------------------------
 LOFAR				-		M	N	LOFAR
 PIC				-		M	N	LOFAR_PIC
+AARTFAAC			-		M	Y	LOFAR_PIC_AARTFAAC
 Ring				-		M	N	LOFAR_PIC_@ring@
 Station				-		M	Y	LOFAR_PIC_@ring@_@station@
 WAN				-		M	N	LOFAR_PIC_WAN
@@ -38,7 +39,6 @@ ServiceBroker			- 		M	Y	LOFAR_PermSW_Daemons_ServiceBroker
 SASGateway			-		M	Y	LOFAR_PermSW_Daemons_SASGateway
 PVSSGateway			-		M	Y	LOFAR_PermSW_Daemons_PVSSGateway
 SoftwareMonitor			-		M	Y	LOFAR_PermSW_Daemons_SoftwareMonitor
-FeedbackService			-		M	Y	LOFAR_PermSW_Daemons_FeedbackService
 CTStartDaemon			-		M	Y	LOFAR_PermSW_CTStartDaemon
 MACScheduler			MS		M	Y	LOFAR_PermSW_MACScheduler
 CRTriggerControl		CRT		M	Y	LOFAR_PermSW_CRTriggerControl
@@ -64,7 +64,6 @@ ServiceBroker			- 		C	Y	LOFAR_PermSW_Daemons_ServiceBroker
 SoftwareMonitor			-		C	Y	LOFAR_PermSW_Daemons_SoftwareMonitor
 SASGateway			-		C	Y	LOFAR_PermSW_Daemons_SASGateway
 PVSSGateway			-		C	Y	LOFAR_PermSW_Daemons_PVSSGateway
-MessageRouter			-		C	Y	LOFAR_PermSW_Daemons_MessageRouter
 CTStartDaemon			-		C	Y	LOFAR_PermSW_CTStartDaemon
 CEPObsSW			-		C	N	LOFAR_ObsSW
 CEPObservation			-		C	N	LOFAR_ObsSW_@observation@
@@ -74,22 +73,21 @@ CobaltRack			-		C	N	LOFAR_PIC_Cobalt
 CobaltNode			-		C	N	LOFAR_PIC_Cobalt_@cobaltnode@
 CobaltNIC			CNI		C	Y	LOFAR_PIC_Cobalt_@cobaltnode@_@cobaltnic@
 CobaltStationField		-		C	N	LOFAR_PermSW_@stationfield@
-OSCobaltNode			-		C	N	LOFAR_ObsSW_@observation@_@oscobaltnode@
+OSCobaltNode			-		C	N	LOFAR_PermSW_@oscobaltnode@
 CobaltStationInput		CSI		C	Y	LOFAR_PermSW_@stationfield@_CobaltStationInput
 CobaltGPUProc			CGP		C	Y	LOFAR_ObsSW_@observation@_@oscobaltnode@_@cobaltgpuproc@
 CobaltOutputProc		COP		C	Y	LOFAR_ObsSW_@observation@_CobaltOutputProc
 #
 StnLOFAR			-		S	N	LOFAR
 StnPIC				-		S	N	LOFAR_PIC
-AARTFAAC			AF		S	Y	LOFAR_PIC_AARTFAAC
 Cabinet				CAB		S	N	LOFAR_PIC_@cabinet@
 SubRack				SRCK		S	N	LOFAR_PIC_@cabinet@_@subrack@
 RSPBoard			RSP		S	N	LOFAR_PIC_@cabinet@_@subrack@_@RSPBoard@
 RCU				RCU		S	N	LOFAR_PIC_@cabinet@_@subrack@_@RSPBoard@_@rcu@
 TBBoard				TBB		S	Y	LOFAR_PIC_@cabinet@_@subrack@_@TBBoard@
-UniBoard	                UNI		S	N	LOFAR_PIC_Cabinet1_UniBoard_@uniboard@
+UniBoard	                UNI		S	N	LOFAR_PIC_Cabinet1_UniBoard
 FPGA		                FPGA		S	Y	LOFAR_PIC_Cabinet1_UniBoard_@fpga@
-URIBoard			URI		S	Y	LOFAR_PIC_@uriboard@
+UriBoard			URI		S	Y	LOFAR_PIC_@uriboard@
 LBAAntenna                      LBA             S       Y       LOFAR_PIC_@lbaantenna@
 HBAAntenna                      HBA             S       N       LOFAR_PIC_@hbaantenna@
 StationInfo			STI		S	Y	LOFAR_PIC_StationInfo
