@@ -32,41 +32,31 @@ public:
     Pipeline(unsigned id, const OTDBtree &SAS_tree);
 
     ~Pipeline();
+    // used for writing data to binary file
+    friend QDataStream& operator<< (QDataStream &out, const Pipeline &task);
+    // used for reading data from binary file
+    friend QDataStream& operator>> (QDataStream &in, Pipeline &task);
 
-    friend QDataStream& operator<< (QDataStream &out, const Pipeline &task); // used for writing data to binary file
-    friend QDataStream& operator>> (QDataStream &in, Pipeline &task); // used for reading data from binary file
+    Pipeline & operator=(const Pipeline &other);
 
-    Pipeline & operator=(const Pipeline &other) {
-        if (this != &other) {
-            Task::operator=(other);
-            itsPipelineType = other.itsPipelineType;
-            delete itsStorage;
-            itsStorage = new TaskStorage(this, other.storage());
-        }
-        return *this;
-    }
-
-    virtual void clone(const Task *other) {
-        if (this != other) {
-            const Pipeline *pOther = dynamic_cast<const Pipeline *>(other);
-            if (pOther) {
-                unsigned myTaskID = taskID;
-                *this = *pOther;
-                taskID = myTaskID;
-            }
-        }
-    }
+    virtual void clone(const Task *other);
 
     pipelineType pipelinetype(void) const {return itsPipelineType;}
-    bool isCalibrationPipeline(void) const {return itsPipelineType == PIPELINE_CALIBRATION;}
-    bool isImagingPipeline(void) const {return itsPipelineType == PIPELINE_IMAGING;}
-    bool isPulsarPipeline(void) const {return itsPipelineType == PIPELINE_PULSAR;}
-    bool isLongBaselinePipeline(void) const {return itsPipelineType == PIPELINE_LONGBASELINE;}
+    bool isCalibrationPipeline(void) const
+        {return itsPipelineType == PIPELINE_CALIBRATION;}
+    bool isImagingPipeline(void) const
+        {return itsPipelineType == PIPELINE_IMAGING;}
+    bool isPulsarPipeline(void) const
+        {return itsPipelineType == PIPELINE_PULSAR;}
+    bool isLongBaselinePipeline(void) const
+        {return itsPipelineType == PIPELINE_LONGBASELINE;}
 
     // calculate the output data sizes for pipeline
-    const std::map<dataProductTypes, TaskStorage::outputDataProduct> &generateFileList(void) {return itsStorage->generateFileList();}
+    const std::map<dataProductTypes, TaskStorage::outputDataProduct> &generateFileList(void)
+        {return itsStorage->generateFileList();}
 
-    virtual const std::vector<storageResult> &getStorageCheckResult(void) const { return itsStorage->getStorageCheckResult(); }
+    virtual const std::vector<storageResult> &getStorageCheckResult(void) const
+        { return itsStorage->getStorageCheckResult(); }
     inline bool hasStorage(void) const {return true;}
     TaskStorage *storage(void) {return itsStorage;}
     const TaskStorage *storage(void) const {return itsStorage;}
@@ -76,6 +66,13 @@ public:
 
     void calculateDataFiles(void);
 
+    //getters
+    inline const QString &getPipelineSoftwareVersion(void) const
+        {return itsPipelineSoftwareVersion;}
+        //setters
+    inline void setPipelineSoftwareVersion(const QString &pipelineSoftwareVersion)
+        {itsPipelineSoftwareVersion = pipelineSoftwareVersion;}
+
 private:
     virtual void calculateDataSize(void) {}
 
@@ -83,6 +80,7 @@ private:
 protected:
     TaskStorage *itsStorage;
     pipelineType itsPipelineType;
+    QString itsPipelineSoftwareVersion;
 };
 
 #endif // PIPELINE_H

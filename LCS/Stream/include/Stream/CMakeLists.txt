@@ -7,8 +7,7 @@ set (inst_HEADERS
   PortBroker.h
   SharedMemoryStream.h
   SocketStream.h
-  Stream.h
-  StreamFactory.h)
+  Stream.h)
 
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 

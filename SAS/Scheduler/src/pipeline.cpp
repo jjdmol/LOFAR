@@ -14,14 +14,20 @@
 #include "pipeline.h"
 
 Pipeline::Pipeline()
-    : Task(), itsStorage(0), itsPipelineType(PIPELINE_UNKNOWN)
+    :
+      Task(),
+      itsStorage(0),
+      itsPipelineType(PIPELINE_UNKNOWN)
 {
     itsTaskType = Task::PIPELINE;
     itsStorage = new TaskStorage(this);
 }
 
 Pipeline::Pipeline(const Pipeline &other)
-    : Task(other), itsStorage(0), itsPipelineType(other.pipelinetype())
+    : Task(other),
+      itsStorage(0),
+      itsPipelineType(other.pipelinetype()),
+      itsPipelineSoftwareVersion(other.getPipelineSoftwareVersion())
 {
     itsTaskType = Task::PIPELINE;
     itsStorage = new TaskStorage(this, other.storage());
@@ -40,7 +46,9 @@ Pipeline::Pipeline(const QSqlQuery &query, const OTDBtree &SAS_tree)
 {
     itsTaskType = Task::PIPELINE;
     itsStorage = new TaskStorage(this);
-    itsStorage->itsStorageSelectionMode = static_cast<storage_selection_mode>(query.value(query.record().indexOf("storageSelectionMode")).toInt());
+    itsStorage->itsStorageSelectionMode =
+        static_cast<storage_selection_mode>(
+        query.value(query.record().indexOf("storageSelectionMode")).toInt());
 }
 
 Pipeline::Pipeline(unsigned id, const OTDBtree &SAS_tree)
@@ -80,7 +88,12 @@ QDataStream& operator>> (QDataStream &in, Pipeline &task) {
         quint8 type;
         in >> type;
         task.itsPipelineType = (pipelineType) type;
+
+        // TODO: Save pipeline version in the stream thingyjig
+
     }
+
+
     return in;
 }
 
@@ -171,7 +184,10 @@ bool Pipeline::diff(const Task *other, task_diff &dif) const {
     const Pipeline *otherPipe(dynamic_cast<const Pipeline *>(other));
     if (otherPipe) {
         bool storageDif(itsStorage->diff(otherPipe->storage(), dif));
-        return (taskDif || storageDif);
+        dif.pipelineSoftwareVersion =
+            getPipelineSoftwareVersion() != otherPipe->getPipelineSoftwareVersion();
+        return (taskDif || storageDif || dif.pipelineSoftwareVersion);
+
     }
     else return taskDif;
 }
@@ -193,3 +209,24 @@ QString Pipeline::diffString(const task_diff &dif) const {
     return difstr;
 }
 
+Pipeline & Pipeline::operator=(const Pipeline &other) {
+        if (this != &other) {
+            Task::operator=(other);
+            itsPipelineType = other.itsPipelineType;
+            delete itsStorage;
+            itsStorage = new TaskStorage(this, other.storage());
+            itsPipelineSoftwareVersion = other.getPipelineSoftwareVersion();
+        }
+        return *this;
+    }
+
+virtual void Pipeline::clone(const Task *other) {
+    if (this != other) {
+        const Pipeline *pOther = dynamic_cast<const Pipeline *>(other);
+        if (pOther) {
+            unsigned myTaskID = taskID;
+            *this = *pOther;
+            taskID = myTaskID;
+        }
+    }
+}

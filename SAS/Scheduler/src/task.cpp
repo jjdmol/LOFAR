@@ -76,10 +76,8 @@ const char *unscheduled_reason_str[NR_REASONS] = {
 		"skyImages = input MS subbands / (subbands_per_image * slices_per_image) (needs to be integer value)",
 		"No data output type selected (coherent/incoherent/correlated)",
 		"A required input data product could not be found within the predecessor tasks",
-        "demix freq.step and time step should be multiples of resp. averaging freq.step and time step",       
-        "one of the specified sources to be demixed is unknown",
-        "Mismatch between input and output node location, retry assigning resources: LOC 1",
-        "Mismatch between input and output node location, retry assigning resources: LOC 2",
+        "demix freq.step and time step should be multiples of resp. averaging freq.step and time step",
+        "one of the specified sources to be demixed is unknown"
 };
 
 const char * TASK_CONFLICTS[_END_CONFLICTS_] = {
@@ -121,7 +119,7 @@ const char *SAS_item_names[NR_TASK_PROPERTIES] = {"task_id", "antenna mode", "cl
             "imaging specify fov", "imaging fov", "imaging npix", "imaging cellsize", "subbands_per_subbandgroup", "subbandgroups_per_MS",
             "demix always", "demix_if_needed", "demix_skyModel", "demix_freqstep", "demix_timestep",
             "avg.freqstep", "avg.timestep", "cal_skyModel", "pulsar pipeline settings", "enabled output data types",
-            "output storage settings", "output data products", "TBB piggyback", "Aartfaac piggyback", "input data products", "description"};
+            "output storage settings", "output data products", "TBB piggyback", "Aartfaac piggyback", "input data products", "description", "Pipeline Version"};
 
 const char * DATA_TYPES[_END_DATA_TYPES] = {"I", "IQUV", "XXYY", "UNDEFINED"};
 

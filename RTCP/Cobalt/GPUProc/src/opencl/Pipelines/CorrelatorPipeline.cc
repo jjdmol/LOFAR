@@ -29,7 +29,6 @@
 #include <Stream/Stream.h>
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
-#include <Stream/StreamDescriptor.h>
 #include <CoInterface/CorrelatedData.h>
 #include <CoInterface/Stream.h>
 

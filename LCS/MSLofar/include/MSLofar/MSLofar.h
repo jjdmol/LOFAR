@@ -132,12 +132,6 @@ namespace LOFAR {
     // subtables. See the Table class for a description of the sync argument.
     void flush (casa::Bool sync=casa::False);
 
-    // Remove MEASINFO keywords TabVarTypes and TabVarCodes, because
-    // old CASA cannot handle them since Dirk Petry added frequency
-    // type Undefined.
-    static void removeMeasKeys (casa::Table& table,
-                                const casa::String& colName);
-
   private:
     //# keep references to the subtables
     MSLofarAntenna     antenna_p;

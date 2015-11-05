@@ -55,12 +55,11 @@ namespace Cobalt
     while (ifile.getline(buf, parseBufSize).good()) {
       string sbuf(buf);
 
-      size_t pos = sbuf.find('#'); // line comments
+      size_t pos = sbuf.find('#');           // line comments
       sbuf = sbuf.substr(0, pos);
       vector<string> tokens(StringUtil::tokenize(sbuf, ws));
 
-      // We expect 3 tokens (columns): stationName (0), board (1), destNode (2).
-      // Ignore other tokens and "empty" lines.
+      // We expect 3 tokens (columns): stationName (0), board (1), destNode (2); ignore other tokens and "empty" lines.
       if (tokens.size() >= 3) {
         itsMapping.insert(make_pair(tokens[2], make_pair(tokens[0], tokens[1])));
       }

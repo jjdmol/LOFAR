@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -24,6 +24,9 @@
 #define LOFAR_COINTERFACE_BUDGET_TIMER_H
 
 #include <Common/Timer.h>
+#include <Common/LofarLogger.h>
+
+#include <iomanip>
 
 namespace LOFAR {
 
@@ -47,6 +50,45 @@ namespace LOFAR {
 
         double prev_elapsed;
     };
+
+    BudgetTimer::BudgetTimer(
+        const std::string &name,
+        double budget,
+        bool print_on_destruction,
+        bool log_on_destruction):
+      NSTimer(name, print_on_destruction, log_on_destruction),
+      budget(budget),
+      prev_elapsed(0.0)
+    {
+    }
+
+    BudgetTimer::~BudgetTimer()
+    {
+      if (print_on_destruction) {
+        const double realTimePerc = 100.0 * getAverage() / budget;
+
+        if (log_on_destruction) {
+          LOG_INFO_STR(std::left << std::setw(25) << itsName << ": ran at " << realTimePerc << "% of run-time budget");
+        } else {
+          // TODO
+        }
+      }
+    }
+
+    void BudgetTimer::stop()
+    {
+      NSTimer::stop();
+
+      // Calculate duration of last run
+      const double elapsed = getElapsed() - prev_elapsed;
+      prev_elapsed = getElapsed();
+
+      if (budget > 0.0 && elapsed > budget) {
+        const double realTimePerc = 100.0 * elapsed / budget;
+        LOG_WARN_STR("Run-time budget exceeded: " << itsName << " ran at " << realTimePerc << "% (took " << elapsed << " s, budget is " << budget << " s)");
+      }
+    }
+
 
   } // namespace Cobalt
 

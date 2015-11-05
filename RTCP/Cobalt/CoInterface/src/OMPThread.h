@@ -162,8 +162,6 @@ namespace LOFAR
 
         if ((retval = pthread_setname_np(pthread_self(), name.substr(0,15).c_str())) != 0)
           throw SystemCallException("pthread_setname_np", retval, THROW_ARGS);
-#else
-        (void)name;
 #endif
       }
 

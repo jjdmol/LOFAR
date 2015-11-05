@@ -13,8 +13,8 @@ function error() {
 if [ -z "$HOSTS" ]; then
   case `hostname` in
     cbt001|cbt002|cbt003|cbt004|cbt005|cbt006|cbt007|cbt008)
-      # Production system -- switch test system as well, in case we use cbm009/cbm010!
-      HOSTS="cbm001 cbm002 cbm003 cbm004 cbm005 cbm006 cbm007 cbm008 cbm009 cbm010"
+      # Production system
+      HOSTS="cbm001 cbm002 cbm003 cbm004 cbm005 cbm006 cbm007 cbm008"
       ;;
 
     cbt009|cbt010)
@@ -70,11 +70,9 @@ if [ $LIST_VERSIONS -eq 1 ]; then
   ls -1 $COBALT_VERSIONS_DIR
 fi
 
-CURRENT_VERSION=`readlink -f /opt/lofar | awk -F/ '{ print $NF; }'`
-
 # Get current Cobalt version
 if [ $GET_VERSION -eq 1 ]; then
-  echo "$CURRENT_VERSION"
+  readlink -f /opt/lofar | awk -F/ '{ print $NF; }'
 fi
 
 # Get current Cobalt version on ALL hosts
@@ -89,22 +87,9 @@ fi
 if [ -n "$SET_VERSION" ]; then
   echo "Switching Cobalt to $SET_VERSION"
 
-  function set_version {
-    VERSION="$1"
-    for HOST in $HOSTS; do
-      echo "$HOST"
-      ssh $HOST "[ -d \"${COBALT_VERSIONS_DIR}/${VERSION}\" ] && ln -sfT \"${COBALT_VERSIONS_DIR}/${VERSION}\" /localhome/lofarsystem/lofar/current" || return 1
-    done
-
-    return 0
-  }
-
-  if ! set_version "$SET_VERSION"; then
-    echo "------------------------------------------------------------------------------"
-    echo "ERROR Switching to $SET_VERSION. Switching back to $CURRENT_VERSION"
-    echo "------------------------------------------------------------------------------"
-
-    set_version "$CURRENT_VERSION"
-  fi
+  for HOST in $HOSTS; do
+    echo "$HOST"
+    ssh $HOST "ln -sfT \"${COBALT_VERSIONS_DIR}/${SET_VERSION}\" /localhome/lofarsystem/lofar/current" || exit 1
+  done
 fi
 
