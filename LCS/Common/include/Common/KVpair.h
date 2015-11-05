@@ -28,9 +28,8 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <ctime>
-#include <utility>
-#include <iosfwd>
+#include <Common/lofar_map.h>
+#include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
 #include <Common/LofarTypes.h>
 
@@ -40,14 +39,9 @@ namespace LOFAR {
 // @{
 
 // Implements a KV pair as a pair<string, string>.
-class KVpair : public std::pair<string, string>
+class KVpair : public pair<string, string>
 {
 public:
-	// Note: while this class is not PVSS specific, it is mostly (only?)
-	// used by the PVSSGateway, which uses valueType to map the enum values
-	// below to PVSS types to query (write).
-	// If you add types at all without PVSS support, document that below,
-	// so that PVSS users can avoid them.
 	KVpair(const string& aKey, const string& aValue, bool genTimestamp = false, bool timestampInKeyname = false);
 	KVpair(const string& aKey, const char*   aValue, bool genTimestamp = false, bool timestampInKeyname = false);
 	KVpair(const string& aKey, bool			 aValue, bool genTimestamp = false, bool timestampInKeyname = false);
@@ -55,6 +49,7 @@ public:
 	KVpair(const string& aKey, double		 aValue, bool genTimestamp = false, bool timestampInKeyname = false);
 	KVpair(const string& aKey, float		 aValue, bool genTimestamp = false, bool timestampInKeyname = false);
 	KVpair(const string& aKey, time_t		 aValue, bool genTimestamp = false, bool timestampInKeyname = false);
+	KVpair(const string& aKey, const vector<int>&    aValue, bool genTimestamp = false, bool timestampInKeyname = false); 
 
 	KVpair();
 	~KVpair();
@@ -71,7 +66,8 @@ public:
 	int16	valueType;	
 
 	enum {
-		VT_UNKNOWN = 0, VT_STRING, VT_BOOL, VT_INT, VT_DOUBLE, VT_FLOAT, VT_TIME_T
+		VT_UNKNOWN = 0, VT_STRING, VT_BOOL, VT_INT, VT_DOUBLE, VT_FLOAT, VT_TIME_T,
+		VT_VECTOR = 0x100
 	};
 };
 

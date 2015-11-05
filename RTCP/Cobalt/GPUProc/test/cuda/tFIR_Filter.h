@@ -52,8 +52,6 @@ typedef signed char SampleType;
 #include <exception>
 #include <cuda.h>
 
-#include <CoInterface/Align.h>
-
 extern cudaError_t FIR_filter_wrapper(float *DevFilteredData,
   float const *DevSampledData,
   float const *DevWeightsData);
@@ -169,11 +167,11 @@ namespace LOFAR
         int nrChannelsPerSubband = NR_CHANNELS;
         int nrStations = NR_STATIONS; 
         unsigned totalNrThreads = nrChannelsPerSubband * NR_POLARIZATIONS * 2; //ps.nrChannelsPerSubband()
-        dim3 globalWorkSize(totalNrThreads, nrStations); //ps.settings.antennaFields.size()
+        dim3 globalWorkSize(totalNrThreads, nrStations); //ps.nrStations()
 
         int MAXNRCUDATHREADS = 512;
         size_t maxNrThreads = MAXNRCUDATHREADS;
-        unsigned nrPasses = ceilDiv(totalNrThreads, maxNrThreads);
+        unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
         dim3 localWorkSize(totalNrThreads / nrPasses, 1); 
 
 

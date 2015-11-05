@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -52,8 +52,15 @@ int main (int	argc, char*	argv[])
 	// Always bring up he logger first
 	ConfigLocator	aCL;
 	string			progName(basename(argv[0]));
+#ifdef HAVE_LOG4CPLUS
         string			logPropFile(progName + ".log_prop");
 	INIT_VAR_LOGGER (aCL.locate(logPropFile).c_str(), progName + "-" + argv[1]);
+#elif HAVE_LOG4COUT        
+        INIT_LOGGER_WITH_SYSINFO(progName);
+#else
+        string logPropFile(progName + ".debug");
+        INIT_LOGGER (aCL.locate(logPropFile).c_str());	
+#endif
 	LOG_DEBUG_STR("Initialized logsystem with: " << aCL.locate(logPropFile));
 
 	// Check invocation syntax

@@ -198,7 +198,7 @@ bool compareValues(complex<T> v1, complex<T> v2, double epsilon, size_t pos,
       }
       if (imagFactor > maxFactors.imag()) {
         maxFactors.imag(imagFactor);
-      } else if (imagFactor < minFactors.imag()) {
+      } else if (realFactor < minFactors.imag()) {
         minFactors.imag(imagFactor);
       }
     }
@@ -234,8 +234,7 @@ void printCommonFactorMessage(const complex<T>& maxFactors,
   const T facEps = (T)1e-1; // very loose as values can be of any magnitude
   bool realEq = fpEquals(maxFactors.real(), minFactors.real(), facEps);
   bool imagEq = fpEquals(maxFactors.imag(), minFactors.imag(), facEps);
-  T avgRealFac = 0.0;
-  T avgImagFac = 0.0;
+  T avgRealFac, avgImagFac;
   if (realEq) {
     avgRealFac = (T)0.5 * (maxFactors.real() + minFactors.real());
     cerr << "All errors of real vals for this pair of files are within "
@@ -249,8 +248,8 @@ void printCommonFactorMessage(const complex<T>& maxFactors,
          << (T)1.0 / avgImagFac << ')' << endl;
   }
   if (realEq && imagEq && fpEquals(avgRealFac, -avgImagFac, facEps))
-    cerr << "Common real and imag factors appear to (also) differ roughly by "
-         << "a factor -1.0 (likely conjugation error)" << endl;
+      cerr << "Common real and imag factors appear to (also) differ roughly by "
+           << "a factor -1.0 (likely conjugation error)" << endl;
   if (!(realEq && imagEq))
     cerr << "No clear common factor among all errors: maxFactors="
          << maxFactors << "; minFactors=" << minFactors << endl;

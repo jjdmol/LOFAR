@@ -97,8 +97,6 @@ namespace LOFAR
       } header;
 
       // Payload, allocated for maximum size.
-      // Actual size depends on the header (nrBeamlets, nrBlocks). It changed in
-      // the past (61 vs 60) and may be less for tests and old pre-recorded data
       union Payload {
         char data[8130];
 
@@ -167,9 +165,6 @@ namespace LOFAR
 
       unsigned bitMode() const
       {
-        if (header.version < 3)
-          return 16;
-
         switch (header.sourceInfo2 & 0x3) {
         default:
         case 0x0: return 16;

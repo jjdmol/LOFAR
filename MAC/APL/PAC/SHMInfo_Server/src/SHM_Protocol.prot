@@ -8,8 +8,10 @@ prefix = "SHM"; // for the signal names
 id = "(LOFAR::MACIO::F_APL_PROTOCOL+5)"; 
 include = '<Common/LofarTypes.h>';
 
+//MAXMOD
 include = '<XCStatistics.h>';
 include = '<RspStatus.h>';
+//include = '<XCSubbandSelection.h>';  MAXMOD-TEST removal
 
 // The "SHM" (MAC Information Server) protocol describes all possible
 // interactions between the MAC (Monitoring-And-Control) and SHM

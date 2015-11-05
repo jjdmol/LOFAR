@@ -1,6 +1,5 @@
 # $Id$
 
 lofar_package(LCU_MAC 
-  DEPENDS MACTools Firmware-Tools PPSTune StaticMetaData StationCU 
-          PIC PAC CUDaemons CURTDBDaemons)
-
+  DEPENDS StationCU PIC PAC CUDaemons CURTDBDaemons
+    Firmware-Tools MACTools StaticMetaData)

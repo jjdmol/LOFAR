@@ -31,11 +31,21 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    class FFTShiftKernel : public CompiledKernel
+    class FFTShiftKernel : public Kernel
     {
     public:
       static std::string theirSourceFile;
       static std::string theirFunction;
+
+      // Parameters that must be passed to the constructor of the
+      // IntToFloatKernel class.
+      struct Parameters : Kernel::Parameters
+      {
+        Parameters(const Parset& ps);
+        // unsigned nrBitsPerSample;
+        // unsigned nrChannels;
+        // unsigned nrBytesPerComplexSample;
+      };
 
       enum BufferType
       {
@@ -43,35 +53,19 @@ namespace LOFAR
         OUTPUT_DATA
       };
 
-      // Parameters that must be passed to the constructor of the
-      // IntToFloatKernel class.
-      struct Parameters : Kernel::Parameters
-      {
-        Parameters(const Parset& ps, unsigned nrSTABs, unsigned nrChannels, const std::string &name = "FFT-shift");
-        unsigned nrSTABs;
-
-        unsigned nrChannels;
-        unsigned nrSamplesPerChannel;
-
-        size_t bufferSize(BufferType bufferType) const;
-      };
-
-      // Construct a FFTShift kernel.
-      // \pre The number of samples per channel must be even.
-      // \pre The product of the number of stations, the number of
-      // polarizations, the number of channels per subband, and the number of
-      // samples per channel must be divisible by the maximum number of threads
-      // per block (typically 1024).
       FFTShiftKernel(const gpu::Stream &stream,
-                     const gpu::Module &module,
-                     const Buffers &buffers,
-                     const Parameters &param);
+                             const gpu::Module &module,
+                             const Buffers &buffers,
+                             const Parameters &param);
     };
 
     //# --------  Template specializations for KernelFactory  -------- #//
 
+    template<> size_t
+      KernelFactory<FFTShiftKernel>::bufferSize(BufferType bufferType) const;
+
     template<> CompileDefinitions
-    KernelFactory<FFTShiftKernel>::compileDefinitions() const;
+      KernelFactory<FFTShiftKernel>::compileDefinitions() const;
   }
 
 }

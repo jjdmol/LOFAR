@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2004-2012
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -28,8 +28,6 @@
 #include <Common/ParameterSet.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <MACIO/MACServiceInfo.h>
-#include <MessageBus/ToBus.h>
-#include <MessageBus/Protocols/TaskSpecificationSystem.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/ControllerDefines.h>
@@ -49,14 +47,10 @@ using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::RTDB;
 using namespace LOFAR::OTDB;
-using namespace LOFAR::Protocols;
 using namespace boost::posix_time;
 using namespace std;
 
 namespace LOFAR {
-	using namespace Controller_Protocol;
-	using namespace DP_Protocol;
-	using namespace CM_Protocol;
 	using namespace APLCommon;
 	namespace MainCU {
 
@@ -83,8 +77,7 @@ MACScheduler::MACScheduler() :
 	itsNextFinishedTime	(0),
 	itsNrPlanned		(0),
 	itsNrActive			(0),
-	itsOTDBconnection	(0),
-	itsMsgQueue			(0)
+	itsOTDBconnection	(0)
 {
 	LOG_TRACE_OBJ ("MACscheduler construction");
 
@@ -100,8 +93,7 @@ MACScheduler::MACScheduler() :
 	itsMaxPlanned    = globalParameterSet()->getTime("maxPlannedList",  30);
 	itsMaxFinished   = globalParameterSet()->getTime("maxFinishedList", 40);
 
-	ASSERTSTR(itsMaxPlanned + itsMaxFinished < MAX_CONCURRENT_OBSERVATIONS, 
-				"maxPlannedList + maxFinishedList should be less than " << MAX_CONCURRENT_OBSERVATIONS);
+	ASSERTSTR(itsMaxPlanned + itsMaxFinished < MAX_CONCURRENT_OBSERVATIONS, "maxPlannedList + maxFinishedList should be less than " << MAX_CONCURRENT_OBSERVATIONS);
 
 	// Read the schedule periods for starting observations.
 	itsQueuePeriod 		= globalParameterSet()->getTime("QueuePeriod");
@@ -109,22 +101,19 @@ MACScheduler::MACScheduler() :
 
 	// attach to child control task
 	itsChildControl = ChildControl::instance();
-	itsChildPort = new GCFITCPort (*this, *itsChildControl, "childITCport", GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
+	itsChildPort = new GCFITCPort (*this, *itsChildControl, "childITCport", 
+									GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
 	ASSERTSTR(itsChildPort, "Cannot allocate ITCport for childcontrol");
 	itsChildPort->open();		// will result in F_CONNECTED
 
 	// create an PVSSprepare Task
 	itsClaimerTask = new ObsClaimer(this);
 	ASSERTSTR(itsClaimerTask, "Cannot construct a ObsClaimerTask");
-	itsClaimerPort = new GCFITCPort (*this, *itsClaimerTask, "ObsClaimerPort", GCFPortInterface::SAP, CM_PROTOCOL);
+	itsClaimerPort = new GCFITCPort (*this, *itsClaimerTask, "ObsClaimerPort",
+									GCFPortInterface::SAP, CM_PROTOCOL);
 
 	// need port for timers
 	itsTimerPort = new GCFTimerPort(*this, "Timerport");
-
-	// setup MsgQueue
-	string queueName = globalParameterSet()->getString("ParsetQueuename");
-	ASSERTSTR(!queueName.empty(), "Queuename for distributing parameterSets not specified");
-	itsMsgQueue = new ToBus(queueName);
 
 	registerProtocol(CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
 	registerProtocol(DP_PROTOCOL, 		  DP_PROTOCOL_STRINGS);
@@ -144,10 +133,6 @@ MACScheduler::~MACScheduler()
 
 	if (itsOTDBconnection) {
 		delete itsOTDBconnection;
-	}
-
-	if (itsMsgQueue) {
-		delete itsMsgQueue;
 	}
 }
 
@@ -210,7 +195,7 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 
 	case F_ENTRY: {
 		// Get access to my own propertyset.
-		LOG_INFO_STR ("Activating my propertySet(" << PSN_MAC_SCHEDULER << ")");
+		LOG_DEBUG_STR ("Activating my propertySet(" << PSN_MAC_SCHEDULER << ")");
 		itsPropertySet = new RTDBPropertySet(PSN_MAC_SCHEDULER,
 											 PST_MAC_SCHEDULER,
 											 PSAT_CW,
@@ -249,7 +234,7 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 		string password	= pParamSet->getString("OTDBpassword");
 		string hostname	= pParamSet->getString("OTDBhostname");
 
-		LOG_INFO_STR ("Trying to connect to the OTDB on " << hostname);
+		LOG_DEBUG_STR ("Trying to connect to the OTDB on " << hostname);
 		itsOTDBconnection= new OTDBconnection(username, password, DBname, hostname);
 		ASSERTSTR (itsOTDBconnection, "Memory allocation error (OTDB)");
 		ASSERTSTR (itsOTDBconnection->connect(),
@@ -445,7 +430,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 	case CONTROL_CONNECTED: {
 		// The observationController has registered itself at childControl.
 		CONTROLConnectedEvent conEvent(event);
-		LOG_INFO_STR(conEvent.cntlrName << " is connected, updating SAS)");
+		LOG_DEBUG_STR(conEvent.cntlrName << " is connected, updating SAS)");
 
 		// Ok, controller is really up, update SAS so that obs will not appear in
 		// in the SAS list again.
@@ -508,9 +493,6 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		else {
 			tm.setTreeState(theObs->second, tsc.get("aborted"));
 		}
-
-		// free claimed observation in PVSS
-		itsClaimerTask->freeObservation(observationName(theObs->second));
 
 		// update our administration
 		LOG_INFO_STR("Removing observation " << quitedEvent.cntlrName << " from activeList");
@@ -676,7 +658,7 @@ void MACScheduler::_updatePlannedList()
 			}
 			else {
 				// Claim a DP in PVSS and write obssettings to it so the operator can see it.
-				LOG_INFO_STR("Requesting preparation of PVSS for " << obsName);
+				LOG_DEBUG_STR("Requesting preparation of PVSS for " << obsName);
 				itsClaimerTask->prepareObservation(obsName);
 				itsPreparedObs[obsID] = schedInfo(modTime, false);	// requested claim but no answer yet.
 			}
@@ -692,7 +674,7 @@ void MACScheduler::_updatePlannedList()
 //		LOG_DEBUG_STR(obsName << " starts over " << timeBeforeStart << " seconds");
 		if (timeBeforeStart > 0 && timeBeforeStart <= (int)itsQueuePeriod) {
 			if (itsPreparedObs[obsID].prepReady == false) {
-				LOG_INFO_STR("Observation " << obsID << " must be started but is not claimed yet.");
+				LOG_ERROR_STR("Observation " << obsID << " must be started but is not claimed yet.");
 			}
 			else {
 				// starttime of observation lays in queuePeriod. Start the controller-chain,
@@ -701,7 +683,7 @@ void MACScheduler::_updatePlannedList()
 				//		 the observation will not be returned in the 'plannedDBlist' anymore.
 				string	cntlrName(controllerName(CNTLRTYPE_OBSERVATIONCTRL, 0, obsID));
 				if (itsControllerMap.find(cntlrName) == itsControllerMap.end()) {
-					LOG_INFO_STR("Requesting start of " << cntlrName);
+					LOG_DEBUG_STR("Requesting start of " << cntlrName);
 					itsChildControl->startChild(CNTLRTYPE_OBSERVATIONCTRL, 
 												obsID, 
 												0,		// instanceNr
@@ -711,10 +693,6 @@ void MACScheduler::_updatePlannedList()
 					// add controller to our 'monitor' administration
 					itsControllerMap[cntlrName] =  obsID;
 					LOG_DEBUG_STR("itsControllerMap[" << cntlrName << "]=" <<  obsID);
-					if (!itsPreparedObs[obsID].parsetDistributed) {
-						_setParsetOnMsgBus(observationParset(obsID));
-						itsPreparedObs[obsID].parsetDistributed = true;
-					}
 				}
 				else {
 					LOG_DEBUG_STR("Observation " << obsID << " is already (being) started");
@@ -828,21 +806,6 @@ void MACScheduler::_updateFinishedList()
 	}
 }
 
-//
-// _setParsetOnMsgBus(parsetFile)
-//
-void MACScheduler::_setParsetOnMsgBus(const string&	filename) const
-{
-	// open file
-	ParameterSet	obsSpecs(filename);
-	string			obsPrefix = obsSpecs.fullModuleName("Observation");
-	string			momID = obsSpecs.getString(obsPrefix + ".momID");
-	string			sasID = obsSpecs.getString(obsPrefix + ".otdbID");
-
-    //                      from, forUser, summary, protocol, protocolVersion, momID, sasID
-	TaskSpecificationSystem	outMsg("LOFAR.MACScheduler", "", "", momID, sasID, obsSpecs);
-	itsMsgQueue->send(outMsg);
-}
 
 //
 // _connectedHandler(port)

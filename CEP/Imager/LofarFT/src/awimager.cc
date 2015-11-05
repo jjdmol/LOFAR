@@ -300,7 +300,7 @@ int main (Int argc, char** argv)
 		   "Name of psf image file (default is <imagename>.psf",
 		   "string");
     inputs.create ("data", "DATA",
-		   "Name of DATA column to use (if operation is not \"image\", CORRECTED_DATA is always used!)",
+		   "Name of DATA column to use",
 		   "string");
     inputs.create ("mode", "mfs",
 		   "Imaging mode (mfs, channel, or velocity)",
@@ -391,7 +391,7 @@ int main (Int argc, char** argv)
 		   "string");
     inputs.create ("operation", "image",
                    ///		   "Operation (empty,image,clark,hogbom,csclean,multiscale,entropy)",
-		   "Operation (empty,image,csclean,predict,psf,mfclark,multiscale)",
+		   "Operation (empty,image,csclean,predict,psf,mfclark)",
 		   "string");
     inputs.create ("niter", "1000",
 		   "Number of clean iterations",
@@ -484,7 +484,7 @@ int main (Int argc, char** argv)
 		   "If turned to true, apply the element beam every TWElement.",
 		   "int");
     inputs.create ("ApplyBeamCode", "0",
-		   "0: arrayfactor and elementbeam (default), 1: only arrayfactor, 2: only elementbeam, 3: no arrayfactor, no elementbeam",
+		   "Ask developers.",
 		   "int");
     inputs.create ("UseMasks", "true",
 		   "When the element beam is applied (StepApplyElement), the addictional step of convolving the grid can be made more efficient by computing masks. If true, it will create a directory in which it stores the masks.",
@@ -679,29 +679,16 @@ int main (Int argc, char** argv)
     if (psfName.empty()) {
       psfName = imgName + ".psf";
     }
-    
-    if (weight == "robust") 
-    {
+    if (weight == "robust") {
       weight = "briggs";
-    } 
-    else if (weight == "robustabs") 
-    {
+    } else if (weight == "robustabs") {
       weight = "briggsabs";
     }
-    
-    // rmode for weighting (only valid for weight "uniform" "superuniform" "briggs")
-    // anything but "norm" or "abs" means (super)uniform weighting
-    String rmode; 
-    if (weight == "briggs") 
-    {
-      rmode  = "norm";
-    }
-    else if (weight == "briggsabs") 
-    {
+    string rmode = "norm";
+    if (weight == "briggsabs") {
       weight = "briggs";
       rmode  = "abs";
     }
-    
     bool doShift = False;
     MDirection phaseCenter;
     if (! phasectr.empty()) {
@@ -709,22 +696,8 @@ int main (Int argc, char** argv)
       phaseCenter = readDirection (phasectr);
     }
     operation.downcase();
-    ASSERTSTR (operation=="empty" || 
-                  operation=="image" || 
-                  operation=="csclean"|| 
-                  operation=="msmfs"||
-                  operation=="predict"||
-                  operation=="psf"||
-                  operation=="mfclark"||
-                  operation=="multiscale", 
-                  "Unknown operation");
-
-    if (operation!="image") {
-      // Skip assert if imageType=="observed" because it is the default
-      ASSERTSTR (imageType=="corrected" || imageType=="observed",
-                 "When operation is not \"image\", CORRECTED_DATA is used");
-    }
-
+    AlwaysAssertExit (operation=="empty" || operation=="image" || operation=="csclean"|| operation=="msmfs"||operation=="predict"||operation=="psf"||operation=="mfclark");
+    ///AlwaysAssertExit (operation=="empty" || operation=="image" || operation=="hogbom" || operation=="clark" || operation=="csclean" || operation=="multiscale" || operation =="entropy");
     IPosition maskBlc, maskTrc;
     Quantity threshold;
     Quantity sigma;
@@ -798,9 +771,9 @@ int main (Int argc, char** argv)
 
     ROArrayColumn<Double> chfreq(window.chanFreq());
 
-    if (verbose) cout<<"Number of channels: "<<chfreq(0).shape()[0]<<endl;
+    cout<<"Number of channels: "<<chfreq(0).shape()[0]<<endl;
     if(ChanBlockSize!=0){
-      AlwaysAssert (((chfreq(0).shape()[0]%ChanBlockSize)==0)&(ChanBlockSize<chfreq(0).shape()[0]), AipsError);
+      AlwaysAssertExit (((chfreq(0).shape()[0]%ChanBlockSize)==0)&(ChanBlockSize<chfreq(0).shape()[0]));
     }
 
     Vector<Int> chansel(1);

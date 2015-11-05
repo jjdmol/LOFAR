@@ -1,5 +1,3 @@
-# $Id$
-
 # The user with which to log into the storage cluster. If empty, is set to $USER.
 Cobalt.OutputProc.userName = 
 
@@ -10,8 +8,8 @@ Cobalt.OutputProc.sshPrivateKey =
 
 # The executable of the process to start.
 # which thus needs to be found in $PATH after login.
-Cobalt.OutputProc.executable = source /data/home/lofarsys/production/lofar_cobalt/lofarinit.sh; outputProc
+Cobalt.OutputProc.executable = @CMAKE_INSTALL_PREFIX@/bin/outputProc
 
 # The directory where OutputProc can find the StaticMetaData
-Cobalt.OutputProc.StaticMetaDataDirectory = /data/home/lofarsys/production/lofar_cobalt/etc
+Cobalt.OutputProc.StaticMetaDataDirectory = @CMAKE_INSTALL_PREFIX@/etc
 

@@ -241,10 +241,15 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
             // Ionosphere.
             if(config.useIonosphere())
             {
+                // Create an AZ, EL expression for the centroid direction of the
+                // patch.
+//                 Expr<Vector<2> >::Ptr exprAzEl =
+//                     makeAzElExpr(instrument->station(j)->position(),
+//                     exprPatch->position());
+
                 exprDDE[j] = compose(exprDDE[j],
                     makeIonosphereExpr(instrument->station(j),
-                    instrument->position(), exprPatchPositionITRF,
-                    exprIonosphere));
+                    instrument->position(), exprPatchPositionITRF, exprIonosphere));
             }
         }
 
@@ -548,8 +553,7 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                 {
                     stationExpr[i] = compose(stationExpr[i],
                         makeIonosphereExpr(instrument->station(i),
-                        instrument->position(), exprRefPhaseITRF,
-                        exprIonosphere));
+                        instrument->position(), exprRefPhaseITRF, exprIonosphere));
                 }
             }
         }
@@ -623,8 +627,7 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                 {
                     stationExpr[i] = compose(stationExpr[i],
                         makeIonosphereExpr(instrument->station(i),
-                        instrument->position(), exprPatchPositionITRF,
-                        exprIonosphere));
+                        instrument->position(), exprPatchPositionITRF, exprIonosphere));
                 }
             }
         }
@@ -860,9 +863,7 @@ void MeasurementExprLOFAR::setCorrelations(bool circular)
     if(circular)
     {
         LOG_DEBUG_STR("Visibilities will be simulated using circular-RL"
-            " correlations. Instrument tables are interpreted as linear"
-            " so when applying them the visibilities will be converted to"
-            " linear and back.");
+            " correlations.");
         itsCorrelations.append(Correlation::RR);
         itsCorrelations.append(Correlation::RL);
         itsCorrelations.append(Correlation::LR);

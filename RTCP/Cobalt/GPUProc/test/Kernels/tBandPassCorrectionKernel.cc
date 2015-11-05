@@ -26,6 +26,7 @@
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
 #include <GPUProc/Kernels/BandPassCorrectionKernel.h>
+#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
 #include <GPUProc/PerformanceCounter.h>
 #include <CoInterface/BlockID.h>
 
@@ -53,19 +54,23 @@ int main() {
   params.nrDelayCompensationChannels = 64; // unused
   params.nrHighResolutionChannels = 4096;
   params.nrSamplesPerChannel = 
-    ps.settings.blockSize / params.nrHighResolutionChannels;
+    ps.nrSamplesPerSubband() / params.nrHighResolutionChannels;
 
   KernelFactory<BandPassCorrectionKernel> factory(params);
 
   // Get the buffers as created by factory
   gpu::DeviceMemory 
     inputData(ctx, factory.bufferSize(BandPassCorrectionKernel::INPUT_DATA)),
-    filteredData(ctx, factory.bufferSize(BandPassCorrectionKernel::OUTPUT_DATA));
+    filteredData(ctx, factory.bufferSize(BandPassCorrectionKernel::OUTPUT_DATA)),
+    bandPassCorrectionWeights(ctx, factory.bufferSize(BandPassCorrectionKernel::BAND_PASS_CORRECTION_WEIGHTS));
 
-  auto_ptr<BandPassCorrectionKernel> kernel(factory.create(stream, inputData, filteredData));
+  BandPassCorrectionKernel::Buffers buffers(inputData, filteredData, bandPassCorrectionWeights);
 
+  auto_ptr<BandPassCorrectionKernel> kernel(factory.create(stream, buffers));
+
+  PerformanceCounter counter(ctx);
   BlockID blockId;
-  kernel->enqueue(blockId);
+  kernel->enqueue(blockId, counter);
   stream.synchronize();
 
   return 0;

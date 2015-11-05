@@ -21,11 +21,7 @@
 //# $Id$
 
 #include <ms/MeasurementSets/MeasurementSet.h>
-#if defined(casacore)
-#include <ms/MSOper/MSSummary.h>
-#else
 #include <ms/MeasurementSets/MSSummary.h>
-#endif
 #include <tables/Tables/TableParse.h>
 #include <casa/Containers/Record.h>
 #include <casa/Inputs/Input.h>

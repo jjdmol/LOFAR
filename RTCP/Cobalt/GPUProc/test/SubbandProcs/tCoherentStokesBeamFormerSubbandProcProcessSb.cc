@@ -27,12 +27,11 @@
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
-#include <CoInterface/fpequals.h>
 #include <GPUProc/gpu_utils.h>
-#include <GPUProc/SubbandProcs/SubbandProc.h>
-#include <GPUProc/SubbandProcs/KernelFactories.h>
+#include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
+#include <GPUProc/SubbandProcs/BeamFormerFactories.h>
 
-#include "../Kernels/KernelTestHelpers.h"
+#include "../fpequals.h"
 
 using namespace std;
 using namespace LOFAR::Cobalt;
@@ -57,9 +56,8 @@ template<typename T> T inputSignal(size_t t)
 #endif
 }
 
-int main(/*int argc, char *argv[]*/) {
-  const char *testName = "tCoherentStokesBeamFormerSubbandProcProcessSb";
-  INIT_LOGGER(testName);
+int main() {
+  INIT_LOGGER("tCoherentStokesBeamFormerSubbandProcProcessSb");
 
   try {
     gpu::Platform pf;
@@ -75,27 +73,12 @@ int main(/*int argc, char *argv[]*/) {
 
   Parset ps("tCoherentStokesBeamFormerSubbandProcProcessSb.parset");
 
-//  Parset ps;
-  KernelParameters params;
-  // override the faults
-/*
-  params.nStation = 5;
-  params.nrChannels = 4096;
-  params.nTimeBlocks = 16;
-  params.nrTabs = 2;
-  params.stokesType = "I";
-  params.nrDelayCompensationChannels = 64;
-  params.nrChannelsPerSubband = 1;
-
-  parseCommandlineParameters(argc, argv, ps, params, testName);
-*/
-
   // Input array sizes
-  const size_t nrBeams = ps.settings.SAPs.size();
-  const size_t nrStations = ps.settings.antennaFields.size();
+  const size_t nrBeams = ps.nrBeams();
+  const size_t nrStations = ps.nrStations();
   const size_t nrPolarisations = ps.settings.nrPolarisations;
   const size_t maxNrTABsPerSAP = ps.settings.beamFormer.maxNrTABsPerSAP();
-  const size_t nrSamplesPerSubband = ps.settings.blockSize;
+  const size_t nrSamplesPerSubband = ps.nrSamplesPerSubband();
   const size_t nrBitsPerSample = ps.settings.nrBitsPerSample;
   const size_t nrBytesPerComplexSample = ps.nrBytesPerComplexSample();
 
@@ -122,11 +105,12 @@ int main(/*int argc, char *argv[]*/) {
     "\n  fft2Size = " << fft2Size);
 
   // Output array sizes
-  const size_t nrStokes = ps.settings.beamFormer.coherentSettings.nrStokes;
+  const size_t nrStokes = ps.settings.beamFormer.incoherentSettings.nrStokes;
   const size_t nrChannels = 
-    ps.settings.beamFormer.coherentSettings.nrChannels;
+    ps.settings.beamFormer.incoherentSettings.nrChannels;
   const size_t nrSamples = 
-    ps.settings.beamFormer.coherentSettings.nrSamples;
+    ps.settings.beamFormer.incoherentSettings.nrSamples(
+      ps.settings.nrSamplesPerSubband());
 
   LOG_INFO_STR(
     "Output info:" <<
@@ -141,17 +125,26 @@ int main(/*int argc, char *argv[]*/) {
   // correction (but that kernel will run to convert int to float and to
   // transform the data order).
 
-  KernelFactories factories(ps);
-  SubbandProc bwq(ps, ctx, factories);
+  BeamFormerFactories factories(ps);
+  BeamFormerSubbandProc bwq(ps, ctx, factories);
 
   SubbandProcInputData in(
     nrBeams, nrStations, nrPolarisations, maxNrTABsPerSAP, 
     nrSamplesPerSubband, nrBytesPerComplexSample, ctx);
 
+  //// Initialize with a single pulse on t=0
+  //// both stations
+  //reinterpret_cast<i16complex&>(in.inputSamples[0][0][0][0]) =
+  //            i16complex(1,1);
+
+  //reinterpret_cast<i16complex&>(in.inputSamples[1][0][0][0]) =
+  //  i16complex(1, 1);
+
   // Initialize synthetic input to input signal
-  for (size_t st = 0; st < nrStations; st++) {
-    for (size_t i = 0; i < nrSamplesPerSubband; i++) {
-      size_t pol = i % nrPolarisations;
+  for (size_t st = 0; st < nrStations; st++)
+  for (size_t i = 0; i < nrSamplesPerSubband; i++)
+  for (size_t pol = 0; pol < nrPolarisations; pol++)
+  {
     switch (nrBitsPerSample) {
     case 8:
       reinterpret_cast<i8complex&>(in.inputSamples[st][i][pol][0]) =
@@ -164,7 +157,6 @@ int main(/*int argc, char *argv[]*/) {
     default:
       break;
     }
-  }
   }
 
   // Initialize subbands partitioning administration (struct BlockID). We only
@@ -193,10 +185,10 @@ int main(/*int argc, char *argv[]*/) {
   for (size_t i = 0; i < in.tabDelays.num_elements(); i++)
     in.tabDelays.get<float>()[i] = 0.0f;
 
-  SubbandProcOutputData out(ps, ctx);
+  BeamFormedData out(nrStokes, nrChannels, nrSamples, maxNrTABsPerSAP, ctx);
 
-  for (size_t i = 0; i < out.coherentData.num_elements(); i++)
-    out.coherentData.get<float>()[i] = 42.0f;
+  for (size_t i = 0; i < out.num_elements(); i++)
+    out.get<float>()[i] = 42.0f;
 
   // Don't bother initializing out.blockID; processSubband() doesn't need it.
 
@@ -210,34 +202,31 @@ int main(/*int argc, char *argv[]*/) {
 
   // We can calculate the expected output values, since we're supplying a
   // complex sine/cosine input signal. We only have Stokes-I, so the output
-  // should be: (nrStations * amp * scaleFactor * fft1Size * fft2Size) ** 2
+  // should be: (nrStation * amp * scaleFactor * fft1Size * fft2Size)^2
   // - amp is set to the maximum possible value for the bit-mode:
   //   i.e. 127 for 8-bit and 32767 for 16-bit mode
   // - scaleFactor is the scaleFactor applied by the IntToFloat kernel. 
   //   It is 16 for 8-bit mode and 1 for 16-bit mode.
-  // Hence, each output sample should be (nrStations from parset): 
-  // - for 16-bit input: (5 * 32767 * 1 * 64 * 64) ** 2 = 450332475365785600
-  // - for 8-bit input: (5 * 127 * 16 * 64 * 64) ** 2 = 1731838187929600
+  // Hence, each output sample should be: 
+  // - for 16-bit input: 2 * (2 * 32767 * 1 * 64 * 64) ^2 = 144106392117051392
+  // - for 8-bit input: 2 *(2 * 127 * 16 * 64 * 64)^2 = 554188220137472
 
-  float outVal = 
-    (nrStations * amplitude * scaleFactor * fft1Size * fft2Size) *
-    (nrStations * amplitude * scaleFactor * fft1Size * fft2Size);
-  cout << "outVal = " << setprecision(12) << outVal << endl;
+  float outVal = (nrStations * amplitude * scaleFactor * fft1Size * fft2Size) *
+    (nrStations * amplitude * scaleFactor * fft1Size * fft2Size) * nrStations;
+  cout << "outVal = " << outVal << endl;
+  cout << "nrStokes:  " << nrStokes << endl
+      << "nrSamples:  " << nrSamples << endl
+      << "nrChannels:  " << nrChannels << endl;
 
-  // Skip output validation when started with commandline parsed parameters!
-  if (!params.parameterParsed)
-  {
-    cout << "Validating output" << endl;
-    for (size_t tab = 0; tab < maxNrTABsPerSAP; tab++)
+  for (size_t tab = 0; tab < maxNrTABsPerSAP; tab++)
     for (size_t s = 0; s < nrStokes; s++)
     for (size_t t = 0; t < nrSamples; t++)
     for (size_t c = 0; c < nrChannels; c++)
     {
-      ASSERTSTR(fpEquals(out.coherentData[tab][s][t][c], outVal, 1e-4f),
-        "out.coherentData[" << tab << "][" << s << "][" << t << "][" << c << "] = " << setprecision(12) <<
-        out.coherentData[tab][s][t][c] << "; outVal = " << outVal);
+      ASSERTSTR(fpEquals(out[tab][s][t][c], outVal, 1e-4f),
+        "out[" << tab << "][" << s << "][" << t << "][" << c << "] = " << setprecision(12) <<
+        out[tab][s][t][c] << "; outVal = " << outVal);
     }
-  }
   return 0;
 }
 

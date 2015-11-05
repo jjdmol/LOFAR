@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -57,8 +57,7 @@ public:
 	int32 nrRcus();			// nrRspBoards * NR_RCUS_PER_RSPBOARD
 
 	bool  hasSplitter();
-    bool  hasAartfaac();
-    
+
 	ostream& print (ostream& os) const;
 
 	friend class RSPDriver;
@@ -67,7 +66,6 @@ protected:	// note RSPDriver must be able to set them
 	void setNrRspBoards   (int32 nrBlps);
 	void setMaxRspBoards  (int32 nrBlps);
 	void setSplitter      (bool hasSplitter) { itsHasSplitter = hasSplitter; }
-	void setAartfaac      (bool hasAartfaac) { itsHasAartfaac = hasAartfaac; }
 
 private:
 	// Copying is not allowed
@@ -81,8 +79,7 @@ private:
 	int32	itsNrRcus;
 
 	bool	itsHasSplitter;
-    bool    itsHasAartfaac;
-    
+
 	static StationSettings* theirStationSettings;
 };
 
@@ -93,7 +90,6 @@ inline	int32 StationSettings::nrBlps()			{ return (itsNrBlps); }
 inline	int32 StationSettings::nrRcus()			{ return (itsNrRcus); }
 
 inline	bool  StationSettings::hasSplitter()	{ return(itsHasSplitter); }
-inline	bool  StationSettings::hasAartfaac()	{ return(itsHasAartfaac); }
 
 //#
 //# operator<<

@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -38,11 +38,7 @@ DROP SEQUENCE IF EXISTS	OTDBgroupID;
 DROP TABLE IF EXISTS StateHistory CASCADE;
 DROP INDEX IF EXISTS otdbtree_treeid_indx;
 
-CREATE SEQUENCE	OTDBtreeID START 1;
--- Create a new start number based on current time. To prevent overlap in treeid's
--- The subtraction is to end up with a number of order 100,000 
-SELECT setval('OTDBtreeID',(select (EXTRACT(EPOCH FROM NOW())/60-23000000) :: bigint),false);
-
+CREATE SEQUENCE	OTDBtreeID START 6112;
 CREATE SEQUENCE	OTDBgroupID START 1;
 
 CREATE TABLE OTDBtree (

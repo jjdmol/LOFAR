@@ -96,7 +96,6 @@ public:
      */
     void addField(const AntennaField::ConstPtr &field);
 
-
     /*!
      *  \brief Return the number of available antenna fields.
      */

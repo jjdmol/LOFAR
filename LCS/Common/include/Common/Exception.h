@@ -31,7 +31,11 @@
 #include <string>
 #include <iosfwd>
 
+//#ifdef HAVE_BOOST
 # include <boost/shared_ptr.hpp>
+//#else
+//# error "The Boost libraries are required. See http://www.boost.org/"
+//#endif
 
 #ifdef HAVE_BACKTRACE
 # include <Common/Backtrace.h>
@@ -184,7 +188,7 @@ namespace LOFAR
   public:							\
     excp(const std::string& text, const std::string& file="",	\
          int line=0, const std::string& function="",		\
-         LOFAR::Backtrace* bt=0) :					\
+         Backtrace* bt=0) :					\
       super(text, file, line, function, bt) {}			\
       virtual const std::string& type() const {			\
         static const std::string itsType(#excp);		\

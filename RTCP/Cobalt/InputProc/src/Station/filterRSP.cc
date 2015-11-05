@@ -30,8 +30,8 @@
 #include <Common/Thread/Queue.h>
 #include <Common/Thread/Thread.h>
 #include <Common/LofarLogger.h>
-#include <Stream/StreamFactory.h>
 #include <ApplCommon/PosixTime.h>
+#include <CoInterface/Stream.h>
 #include <CoInterface/SmartPtr.h>
 #include "RSP.h"
 #include "PacketReader.h"
@@ -41,7 +41,7 @@ using namespace Cobalt;
 
 time_t parseTime(const char *str)
 {
-  return LOFAR::to_time_t(boost::posix_time::time_from_string(str));
+  return to_time_t(boost::posix_time::time_from_string(str));
 }
 
 void usage()
@@ -62,14 +62,12 @@ void usage()
 
 struct packetSet {
   vector<struct RSP> packets;
+  vector<bool>       valid;
 };
 
 int main(int argc, char **argv)
 {
   INIT_LOGGER("filterRSP");
-
-  // Force printing times in UTC
-  setenv("TZ", "UTC", 1);
 
   int opt;
 
@@ -142,6 +140,7 @@ int main(int argc, char **argv)
   for (size_t i = 0; i < 256; ++i) {
     SmartPtr<packetSet> p = new packetSet;
     p->packets.resize(256);
+    p->valid.resize(p->packets.size());
 
     readQueue.append(p);
   }
@@ -168,10 +167,10 @@ int main(int argc, char **argv)
 
         while (!writerDone && (p = readQueue.remove()) != NULL) {
           // Read packets and queue them
-          reader.readPackets(p->packets);
+          reader.readPackets(p->packets, p->valid);
           writeQueue.append(p);
         }
-      } catch(EndOfStreamException&) {
+      } catch(Stream::EndOfStreamException&) {
       }
 
       writeQueue.append(NULL);
@@ -184,10 +183,10 @@ int main(int argc, char **argv)
       // Keep reading until NULL
       while ((p = writeQueue.remove()) != NULL) {
         for (size_t i = 0; i < p->packets.size(); ++i) {
-          struct RSP &packet = p->packets[i];
-
-          if (packet.payloadError())
+          if (!p->valid[i])
             continue;
+
+          struct RSP &packet = p->packets[i];
 
           // **** Apply FROM filter ****
           if (from > 0 && packet.header.timestamp < from)

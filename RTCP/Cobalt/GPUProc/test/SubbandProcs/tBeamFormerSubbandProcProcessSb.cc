@@ -17,7 +17,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: tCorrelatorSubbandProcProcessSb.cc 26496 2013-09-11 12:58:23Z mol $
 
 #include <lofar_config.h>
 
@@ -27,19 +27,15 @@
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
-#include <CoInterface/fpequals.h>
 #include <GPUProc/gpu_utils.h>
-#include <GPUProc/SubbandProcs/SubbandProc.h>
-#include <GPUProc/SubbandProcs/KernelFactories.h>
+#include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
+#include <GPUProc/SubbandProcs/BeamFormerFactories.h>
+
+#include "../fpequals.h"
 
 using namespace std;
 using namespace LOFAR::Cobalt;
 using namespace LOFAR::TYPES;
-
-float sqr(float x)
-{
-  return x * x;
-}
 
 template<typename T> T inputSignal(size_t t)
 {
@@ -78,10 +74,11 @@ int main() {
   Parset ps("tBeamFormerSubbandProcProcessSb.parset");
 
   // Input array sizes
-  const size_t nrBeams = ps.settings.SAPs.size();
-  const size_t nrStations = ps.settings.antennaFields.size();
+  const size_t nrBeams = ps.nrBeams();
+  const size_t nrStations = ps.nrStations();
   const size_t nrPolarisations = ps.settings.nrPolarisations;
-  const size_t nrSamplesPerSubband = ps.settings.blockSize;
+  const size_t maxNrTABsPerSAP = ps.settings.beamFormer.maxNrTABsPerSAP();
+  const size_t nrSamplesPerSubband = ps.nrSamplesPerSubband();
   const size_t nrBitsPerSample = ps.settings.nrBitsPerSample;
   const size_t nrBytesPerComplexSample = ps.nrBytesPerComplexSample();
 
@@ -100,11 +97,27 @@ int main() {
     "\n  nrBeams = " << nrBeams <<
     "\n  nrStations = " << nrStations <<
     "\n  nrPolarisations = " << nrPolarisations <<
+    "\n  maxNrTABsPerSAP = " << maxNrTABsPerSAP <<
     "\n  nrSamplesPerSubband = " << nrSamplesPerSubband <<
     "\n  nrBitsPerSample = " << nrBitsPerSample <<
     "\n  nrBytesPerComplexSample = " << nrBytesPerComplexSample <<
     "\n  fft1Size = " << fft1Size <<
     "\n  fft2Size = " << fft2Size);
+
+  // Output array sizes
+  const size_t nrStokes = ps.settings.beamFormer.incoherentSettings.nrStokes;
+  const size_t nrChannels = 
+    ps.settings.beamFormer.incoherentSettings.nrChannels;
+  const size_t nrSamples = 
+    ps.settings.beamFormer.incoherentSettings.nrSamples(
+      ps.settings.nrSamplesPerSubband());
+
+  LOG_INFO_STR(
+    "Output info:" <<
+    "\n  nrStokes = " << nrStokes <<
+    "\n  nrChannels = " << nrChannels <<
+    "\n  nrSamples = " << nrSamples <<
+    "\n  scaleFactor = " << scaleFactor);
 
   // Create very simple kernel programs, with predictable output. Skip as much
   // as possible. Nr of channels/sb from the parset is 1, so the PPF will not
@@ -112,15 +125,18 @@ int main() {
   // correction (but that kernel will run to convert int to float and to
   // transform the data order).
 
-  KernelFactories factories(ps);
-  SubbandProc bwq(ps, ctx, factories);
+  BeamFormerFactories factories(ps);
+  BeamFormerSubbandProc bwq(ps, ctx, factories);
 
-  SubbandProcInputData in(ps, ctx);
+  SubbandProcInputData in(
+    nrBeams, nrStations, nrPolarisations, maxNrTABsPerSAP, 
+    nrSamplesPerSubband, nrBytesPerComplexSample, ctx);
 
   // Initialize synthetic input to input signal
-  for (size_t st = 0; st < nrStations; st++) {
-    for (size_t i = 0; i < nrSamplesPerSubband; i++) {
-      size_t pol = i % nrPolarisations;
+  for (size_t st = 0; st < nrStations; st++)
+    for (size_t i = 0; i < nrSamplesPerSubband; i++)
+      for (size_t pol = 0; pol < nrPolarisations; pol++)
+      {
         switch(nrBitsPerSample) {
         case 8:
           reinterpret_cast<i8complex&>(in.inputSamples[st][i][pol][0]) =
@@ -134,7 +150,6 @@ int main() {
           break;
         }
       }
-  }
 
   // Initialize subbands partitioning administration (struct BlockID). We only
   // do the 1st block of whatever.
@@ -162,12 +177,10 @@ int main() {
   for (size_t i = 0; i < in.tabDelays.num_elements(); i++)
     in.tabDelays.get<float>()[i] = 0.0f;
 
-  SubbandProcOutputData out(ps, ctx);
+  BeamFormedData out(maxNrTABsPerSAP * nrStokes, nrChannels, nrSamples, ctx);
 
-  for (size_t i = 0; i < out.coherentData.num_elements(); i++)
-    out.coherentData.get<float>()[i] = 42.0f;
-  for (size_t i = 0; i < out.incoherentData.num_elements(); i++)
-    out.incoherentData.get<float>()[i] = 42.0f;
+  for (size_t i = 0; i < out.num_elements(); i++)
+    out.get<float>()[i] = 42.0f;
 
   // Don't bother initializing out.blockID; processSubband() doesn't need it.
 
@@ -179,53 +192,29 @@ int main() {
 
   // Output verification
 
-  // *** COHERENT STOKES ***
-
-  // Coherent Stokes takes the stokes of the sums of all fields (stokes(sum(x))).
   // We can calculate the expected output values, since we're supplying a
   // complex sine/cosine input signal. We only have Stokes-I, so the output
-  // should be: nrStations * (amp * scaleFactor * fft1Size * fft2Size) ** 2
-  // - amp is set to the maximum possible value for the bit-mode:
-  //   i.e. 127 for 8-bit and 32767 for 16-bit mode
-  // - scaleFactor is the scaleFactor applied by the IntToFloat kernel. 
-  //   It is 16 for 8-bit mode and 1 for 16-bit mode.
-  // Hence, each output sample should be (nrStations from parset): 
-  // - for 16-bit input: (2 * 32767 * 1 * 64 * 64)^2 = 72053196058525696
-  // - for 8-bit input: (2 * 127 * 16 * 64 * 64)^2 = 277094110068736
-
-  float coh_outVal = sqr(nrStations * amplitude * scaleFactor * fft1Size * fft2Size);
-  cout << "coherent outVal = " << coh_outVal << endl;
-
-  for (size_t t = 0; t < ps.settings.beamFormer.coherentSettings.nrSamples; t++)
-    for (size_t c = 0; c < ps.settings.beamFormer.coherentSettings.nrChannels; c++)
-      ASSERTSTR(fpEquals(out.coherentData[0][0][t][c], coh_outVal, 1e-4f), 
-                "out.coherentData[0][0][" << t << "][" << c << "] = " << 
-                setprecision(12) << out.coherentData[0][0][t][c] << 
-                "; outVal = " << coh_outVal);
-
-  // *** INCOHERENT STOKES ***
-
-  // Incoherent Stokes sums the stokes of each field (sum(stokes(x))).
-  // We can calculate the expected output values, since we're supplying a
-  // complex sine/cosine input signal. We only have Stokes-I, so the output
-  // should be: nrStation * (amp * scaleFactor * fft1Size * fft2Size)^2
+  // should be: (nrStation * amp * scaleFactor * fft1Size * fft2Size)^2
   // - amp is set to the maximum possible value for the bit-mode:
   //   i.e. 127 for 8-bit and 32767 for 16-bit mode
   // - scaleFactor is the scaleFactor applied by the IntToFloat kernel. 
   //   It is 16 for 8-bit mode and 1 for 16-bit mode.
   // Hence, each output sample should be: 
-  // - for 16-bit input: 2 * (32767 * 1 * 64 * 64)^2 = 36026598029262848
-  // - for 8-bit input: 2 * (127 * 16 * 64 * 64)^2 = 138547055034368
+  // - for 16-bit input: (2 * 32767 * 1 * 64 * 64)^2 = 72053196058525696
+  // - for 8-bit input: (2 * 127 * 16 * 64 * 64)^2 = 277094110068736
 
-  float incoh_outVal = nrStations * sqr(amplitude * scaleFactor * fft1Size * fft2Size);
-  cout << "incoherent outVal = " << incoh_outVal << endl;
+  float outVal = 
+    nrStations * amplitude * scaleFactor * fft1Size * fft2Size *
+    nrStations * amplitude * scaleFactor * fft1Size * fft2Size; 
+  cout << "outVal = " << outVal << endl;
 
-  for (size_t t = 0; t < ps.settings.beamFormer.incoherentSettings.nrSamples; t++)
-    for (size_t c = 0; c < ps.settings.beamFormer.incoherentSettings.nrChannels; c++)
-      ASSERTSTR(fpEquals(out.incoherentData[0][0][t][c], incoh_outVal, 1e-4f), 
-                "out.incoherentData[0][0][" << t << "][" << c << "] = " << 
-                setprecision(12) << out.incoherentData[0][0][t][c] << 
-                "; outVal = " << incoh_outVal);
+  for (size_t s = 0; s < nrStokes; s++)
+    for (size_t t = 0; t < nrSamples; t++)
+      for (size_t c = 0; c < nrChannels; c++)
+        ASSERTSTR(fpEquals(out[0][s][t][c], outVal, 1e-4f), 
+                  "out[" << s << "][" << t << "][" << c << "] = " << 
+                  setprecision(12) << out[0][s][t][c] << 
+                  "; outVal = " << outVal);
   
   return 0;
 }

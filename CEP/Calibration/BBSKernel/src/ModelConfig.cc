@@ -133,13 +133,15 @@ const string &BeamConfig::asString(Mode in)
 
 BeamConfig::BeamConfig()
     :   itsMode(DEFAULT),
-        itsUseChannelFreq(false)
+        itsUseChannelFreq(false),
+        itsConjugateAF(false)
 {
 }
 
-BeamConfig::BeamConfig(Mode mode, bool useChannelFreq)
+BeamConfig::BeamConfig(Mode mode, bool useChannelFreq, bool conjugateAF)
     :   itsMode(mode),
-        itsUseChannelFreq(useChannelFreq)
+        itsUseChannelFreq(useChannelFreq),
+        itsConjugateAF(conjugateAF)
 {
 }
 
@@ -151,6 +153,11 @@ BeamConfig::Mode BeamConfig::mode() const
 bool BeamConfig::useChannelFreq() const
 {
     return itsUseChannelFreq;
+}
+
+bool BeamConfig::conjugateAF() const
+{
+    return itsConjugateAF;
 }
 
 // -------------------------------------------------------------------------- //
@@ -523,7 +530,9 @@ ostream &operator<<(ostream &out, const BeamConfig &obj)
 {
     out << indent << "Mode: " << BeamConfig::asString(obj.mode())
         << endl << indent << "Use channel frequency: " << boolalpha
-        << obj.useChannelFreq() << noboolalpha;
+        << obj.useChannelFreq() << noboolalpha
+        << endl << indent << "Conjugate array factor: " << boolalpha
+        << obj.conjugateAF() << noboolalpha;
     return out;
 }
 

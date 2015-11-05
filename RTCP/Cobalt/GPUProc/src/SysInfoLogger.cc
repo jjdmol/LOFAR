@@ -37,7 +37,7 @@ namespace LOFAR
     :
       from(from),
       to(to),
-      thread(this, &SysInfoLogger::mainLoop, "SysInfoLogger")
+      thread(this, &SysInfoLogger::mainLoop)
     {
     }
 

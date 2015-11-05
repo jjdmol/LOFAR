@@ -9,10 +9,7 @@ PANEL,-1 -1 1200 823 N "_3DFace" 0
   // Initialise the Panel
   navPanel_initPanel(\"fw_viewBox\");
   
-  
   baseDP=g_currentDatapoint;
-  sysName = dpSubStr(g_currentDatapoint,DPSUB_SYS);
-
   
   if (navFunct_getRingFromStation(sysName) == \"Core\") {
     isCore=true;
@@ -179,7 +176,6 @@ void updatePositions(string dp1, float cX,
 E "#uses \"navPanel.ctl\"
 
 string baseDP=\"\";
-string sysName = \"\";
 bool isCore=false;
 bool isRemote=false;
 bool isEurope=false;
@@ -230,7 +226,6 @@ void calcViewboxSize() {
 
 void redraw(string mode) {
   
-  
   float maxXOffsetValue=1.;
   float maxYOffsetValue=1.;
   float expandFactorX;
@@ -243,7 +238,7 @@ void redraw(string mode) {
   
   navFunct_clearGlobalLists();
   
-  if (!undocked) g_stationList[1] = navFunct_bareDBName(sysName);
+  g_stationList[1] = navFunct_bareDBName(sysName);
   
   LOG_DEBUG(\"Station.pnl:redraw|Mode: \"+mode);
 
@@ -320,8 +315,8 @@ void redraw(string mode) {
                navFunct_receiver2Subrack(XRCU)+\"_RSPBoard\"+navFunct_receiver2RSP(XRCU)+\"_RCU\"+XRCU;
     string yDP=baseDP+\"_PIC_Cabinet\"+navFunct_receiver2Cabinet(YRCU)+\"_Subrack\"+
                navFunct_receiver2Subrack(YRCU)+\"_RSPBoard\"+navFunct_receiver2RSP(YRCU)+\"_RCU\"+YRCU;
-    if (mode == \"HBA\" && !undocked)  dynAppend(g_HBAList,i-1);
-    if (mode == \"LBA\" && !undocked)  dynAppend(g_LBAList,i-1);
+    if (mode == \"HBA\")  dynAppend(g_HBAList,i-1);
+    if (mode == \"LBA\")  dynAppend(g_LBAList,i-1);
     refNames[ref]=\"ant\"+(ref);
     xPos_AddSymbol = (mainpanel_midX+shiftFactorX) + (antennaOffsetsX[i] * expandFactorX);
     yPos_AddSymbol = (mainpanel_midY+shiftFactorY) - (antennaOffsetsY[i] * expandFactorY);
@@ -333,8 +328,7 @@ void redraw(string mode) {
 		      makeDynString( \"$aNr:\" + (i-1) ,     // Define all $values
 		                     \"$aX:\" + antennaOffsetsX[i]  ,    
 		                     \"$aY:\" + antennaOffsetsY[i]  ,
-		                     \"$aZ:\"  + antennaOffsetsZ[i] ,
-                        \"$sysName:\" + sysName) ,                  // of particular addedpanel
+		                     \"$aZ:\"  + antennaOffsetsZ[i]),                  // of particular addedpanel
 		      xPos_AddSymbol,                  // Xpos of the AddedSymbol
 		      yPos_AddSymbol,                  // Ypos of the AddedSymbol
 		      angle,                           // angle
@@ -383,25 +377,26 @@ void updateField() {
   */
   
 
-  string field=sysName+\"LOFAR_PIC_StationInfo.\";
-  if (dpExists(field+txt+\".centerX:_online.._value\")) {
+  
+  string field=sysName+\"LOFAR_PIC_StationInfo.\"+txt;
+  if (dpExists(field+\".centerX:_online.._value\")) {
     // found match, save found strings and redraw screen
-    dpGet(field+txt+\".centerX:_online.._value\",centerX,
-          field+txt+\".centerY:_online.._value\",centerY,
-          field+txt+\".centerZ:_online.._value\",centerZ);
+    dpGet(field+\".centerX:_online.._value\",centerX,
+          field+\".centerY:_online.._value\",centerY,
+          field+\".centerZ:_online.._value\",centerZ);
     dpGet(X,antennaOffsetsX);          
     dpGet(Y,antennaOffsetsY);          
     dpGet(Z,antennaOffsetsZ);
-    dpGet(field+\"N_RSPBoards\",NRSP);         
-    dpGet(field+\"N_TBBoards\",NTBB);         
-    dpGet(field+\"N_LBAS\",NLBA);         
-    dpGet(field+\"N_HBAS\",NHBA);         
-    dpGet(field+\"HBA_Split\",HBASplit);         
-    dpGet(field+\"wide_LBAS\",WideLBAs);
+    dpGet(sysName+\"LOFAR_PIC_StationInfo.N_RSPBoards\",NRSP);         
+    dpGet(sysName+\"LOFAR_PIC_StationInfo.N_TBBoards\",NTBB);         
+    dpGet(sysName+\"LOFAR_PIC_StationInfo.N_LBAS\",NLBA);         
+    dpGet(sysName+\"LOFAR_PIC_StationInfo.N_HBAS\",NHBA);         
+    dpGet(sysName+\"LOFAR_PIC_StationInfo.HBA_Split\",HBASplit);         
+    dpGet(sysName+\"LOFAR_PIC_StationInfo.wide_LBAS\",WideLBAs);
  
     redraw(txt);
   } else {
-    LOG_ERROR(\"Station.pnl:updateField|Error, couldn't find:\"+field+txt+\".centerX:_online.._value\");
+    LOG_ERROR(\"Station.pnl:updateField|Error, couldn't find:\"+field+\".centerOX:_online.._value\");
   }
 }
 

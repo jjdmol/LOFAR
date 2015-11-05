@@ -23,11 +23,11 @@
 
 #include <Common/LofarLogger.h>
 #include <Common/LofarTypes.h>
-#include <CoInterface/fpequals.h>
 #include <CoInterface/Parset.h>
 #include <GPUProc/gpu_utils.h>
-#include <GPUProc/SubbandProcs/KernelFactories.h>
-#include <GPUProc/SubbandProcs/SubbandProc.h>
+#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
+
+#include "../fpequals.h"
 
 using namespace std;
 using namespace LOFAR;
@@ -51,12 +51,12 @@ int main() {
   Parset ps("tCorrelatorSubbandProcProcessSb.parset");
 
   // Input info
-  const size_t nrBeams = ps.settings.SAPs.size();
-  const size_t nrStations = ps.settings.antennaFields.size();
+  const size_t nrBeams = ps.nrBeams();
+  const size_t nrStations = ps.nrStations();
   const size_t nrPolarisations = ps.settings.nrPolarisations;
   const size_t maxNrTABsPerSAP = ps.settings.beamFormer.maxNrTABsPerSAP();
-  const size_t nrSamplesPerChannel = ps.settings.correlator.nrSamplesPerIntegration();
-  const size_t nrSamplesPerSubband = ps.settings.blockSize;
+  const size_t nrSamplesPerChannel = ps.nrSamplesPerChannel();
+  const size_t nrSamplesPerSubband = ps.nrSamplesPerSubband();
   const size_t nrBitsPerSample = ps.settings.nrBitsPerSample;
   const size_t nrBytesPerComplexSample = ps.nrBytesPerComplexSample();
   const fcomplex inputValue(1,1);
@@ -68,14 +68,15 @@ int main() {
   const size_t nrBaselines = nrStations * (nrStations + 1) / 2;
   const size_t nrBlocksPerIntegration = 
     ps.settings.correlator.nrBlocksPerIntegration;
-  const size_t nrChannelsPerSubband = ps.settings.correlator.nrChannels;
-  const size_t integrationSteps = ps.settings.correlator.nrSamplesPerIntegration();
+  const size_t nrChannelsPerSubband = ps.nrChannelsPerSubband();
+  const size_t integrationSteps = ps.integrationSteps();
   const size_t scaleFactor = nrBitsPerSample == 16 ? 1 : 16;
 
   // The output is the correlation-product of two inputs (with identical
-  // `inputValue`).
+  // `inputValue`) and the number of integration blocks, scaled by 1e-6.
   const fcomplex outputValue = 
-    norm(inputValue) * scaleFactor * scaleFactor;
+    norm(inputValue) * scaleFactor * scaleFactor *
+    nrBlocksPerIntegration * 1e-6;
 
   // Create very simple kernel programs, with predictable output. Skip as much
   // as possible. Nr of channels/sb from the parset is 1, so the PPF will not
@@ -83,14 +84,15 @@ int main() {
   // correction (but that kernel will run to convert int to float and to
   // transform the data order).
 
-  KernelFactories factories(ps, 1);
-  SubbandProc cwq(ps, ctx, factories);
+  CorrelatorFactories factories(ps);
+  CorrelatorSubbandProc cwq(ps, ctx, factories);
 
   SubbandProcInputData in(
     nrBeams, nrStations, nrPolarisations, maxNrTABsPerSAP,
     nrSamplesPerSubband, nrBytesPerComplexSample, ctx);
 
-  SubbandProcOutputData out(ps, ctx);
+  CorrelatedDataHostBuffer out(
+    nrStations, nrChannelsPerSubband, integrationSteps, ctx);
 
   LOG_INFO_STR(
     "\nInput info:" <<
@@ -115,7 +117,7 @@ int main() {
     "\n  scaleFactor = " << scaleFactor << 
     "\n  outputValue = " << outputValue <<
     "\n  ----------------------------" <<
-    "\n  Total bytes = " << out.correlatedData.subblocks[0]->visibilities.size());
+    "\n  Total bytes = " << out.size());
 
   // Initialize synthetic input to all (1, 1).
   for (size_t st = 0; st < nrStations; st++)
@@ -150,13 +152,14 @@ int main() {
   for (size_t i = 0; i < in.phase0s.size(); i++)
     in.phase0s.get<float>()[i] = 0.0f;
 
+  bool integrationDone(false);
   size_t block(0);
 
   LOG_INFO("Processing ...");
-  for (block = 0; block < nrBlocksPerIntegration && !out.emit_correlatedData; block++) {
+  for (block = 0; block < nrBlocksPerIntegration && !integrationDone; block++) {
     LOG_DEBUG_STR("Processing block #" << block);
     cwq.processSubband(in, out);
-    cwq.postprocessSubband(out);
+    integrationDone = cwq.postprocessSubband(out);
   }
   ASSERT(block == nrBlocksPerIntegration);
 
@@ -165,9 +168,9 @@ int main() {
     for (size_t c = 0; c < nrChannelsPerSubband; c++)
       for (size_t pol0 = 0; pol0 < nrPolarisations; pol0++)
         for (size_t pol1 = 0; pol1 < nrPolarisations; pol1++)
-          ASSERTSTR(fpEquals(out.correlatedData.subblocks[0]->visibilities[b][c][pol0][pol1], outputValue),
+          ASSERTSTR(fpEquals(out[b][c][pol0][pol1], outputValue),
                     "out[" << b << "][" << c << "][" << pol0 << 
-                    "][" << pol1 << "] = " << out.correlatedData.subblocks[0]->visibilities[b][c][pol0][pol1] << 
+                    "][" << pol1 << "] = " << out[b][c][pol0][pol1] << 
                     "; outputValue = " << outputValue);
 
   LOG_INFO("Test OK");

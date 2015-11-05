@@ -29,6 +29,7 @@
 #include <CoInterface/MultiDimArray.h>
 #include <CoInterface/SparseSet.h>
 #include <CoInterface/Allocator.h>
+#include <CoInterface/BlockID.h>
 #include <Stream/Stream.h>
 
 namespace LOFAR
@@ -46,6 +47,9 @@ namespace LOFAR
     public:
       static const uint32_t magic = 0xda7a;
       static const size_t alignment = 512;
+
+      // Freely modified by GPUProc (only)
+      struct BlockID blockID;
 
       // the CPU which fills the datastructure sets the peerMagicNumber,
       // because other CPUs will overwrite it with a read(s,true) call from
@@ -118,6 +122,9 @@ namespace LOFAR
     protected:
       virtual void readData(Stream *, unsigned);
       virtual void writeData(Stream *, unsigned);
+
+    private:
+      //bool	 itsHaveWarnedLittleEndian;
     };
 
 
@@ -166,6 +173,8 @@ namespace LOFAR
       :
       samples(extents, alignment, allocator),
       flags(flagsExtents) // e.g., for FilteredData [nrChannels][nrStations], sparse dimension [nrSamplesPerIntegration]
+
+      //itsHaveWarnedLittleEndian(false)
     {
     }
 

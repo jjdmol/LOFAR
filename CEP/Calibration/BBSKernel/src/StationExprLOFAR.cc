@@ -25,13 +25,20 @@
 #include <BBSKernel/StationExprLOFAR.h>
 #include <BBSKernel/Exceptions.h>
 #include <BBSKernel/MeasurementExprLOFARUtil.h>
+#include <BBSKernel/Expr/AzEl.h>
 #include <BBSKernel/Expr/CachePolicy.h>
+#include <BBSKernel/Expr/Delay.h>
+#include <BBSKernel/Expr/EquatorialCentroid.h>
 #include <BBSKernel/Expr/ExprAdaptors.h>
+#include <BBSKernel/Expr/FaradayRotation.h>
+#include <BBSKernel/Expr/ITRFDirection.h>
 #include <BBSKernel/Expr/Literal.h>
 #include <BBSKernel/Expr/MatrixInverse.h>
 #include <BBSKernel/Expr/MatrixInverseMMSE.h>
 #include <BBSKernel/Expr/MatrixMul2.h>
 #include <BBSKernel/Expr/ScalarMatrixMul.h>
+#include <BBSKernel/Expr/StationBeamFormer.h>
+#include <BBSKernel/Expr/TileArrayFactor.h>
 
 namespace LOFAR
 {
@@ -183,8 +190,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                 {
                     itsExpr[i] = compose(itsExpr[i],
                         makeIonosphereExpr(instrument->station(i),
-                        instrument->position(), exprRefPhaseITRF,
-                        exprIonosphere));
+                        instrument->position(), exprRefPhaseITRF, exprIonosphere));
                 }
             }
         }
@@ -258,8 +264,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                 {
                     itsExpr[i] = compose(itsExpr[i],
                         makeIonosphereExpr(instrument->station(i),
-                        instrument->position(), exprPatchPositionITRF,
-                        exprIonosphere));
+                        instrument->position(), exprPatchPositionITRF, exprIonosphere));
                 }
             }
         }
