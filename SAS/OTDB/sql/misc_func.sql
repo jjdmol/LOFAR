@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -129,9 +129,9 @@ CREATE OR REPLACE FUNCTION VersionNrValue(VARCHAR(50))
 		vPatch			INT4;
 				
 	BEGIN
-		vRelease := substring($1 from E'([0-9]+)\.[0-9]+\.[0-9]+');
-		vUpdate  := substring($1 from E'[0-9]+\.([0-9]+)\.[0-9]+');
-		vPatch   := substring($1 from E'[0-9]+\.[0-9]+\.([0-9]+)');
+		vRelease := substring($1 from '([0-9]+)\.[0-9]+\.[0-9]+');
+		vUpdate  := substring($1 from '[0-9]+\.([0-9]+)\.[0-9]+');
+		vPatch   := substring($1 from '[0-9]+\.[0-9]+\.([0-9]+)');
 		
 		RETURN vRelease * 10000 + (vUpdate%100)*100 + vPatch%100;
 	END;

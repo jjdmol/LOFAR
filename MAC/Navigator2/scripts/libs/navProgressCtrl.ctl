@@ -2,7 +2,7 @@
 //
 //  Copyright (C) 2002-2015
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -44,8 +44,7 @@
 void navProgressCtrl_handleObservation(string selection){
   LOG_TRACE("navProgressCtrl.ctl:navProgressCtrl_handleObservation|entered with: "+selection);
 
-  string toolText="";
-  float percentDone=0;
+  string toolText=selection;
   
   int startpos =strpos(selection,"Observation");
 
@@ -58,28 +57,12 @@ void navProgressCtrl_handleObservation(string selection){
   
   // find  starttime and endtime and current time and calculate %done
   
-  string sStart, sStop;
   time start,stop;
-  dpGet(obsDP+".startTime",sStart);
-  dpGet(obsDP+".stopTime",sStop);
-  if (!navFunct_lofarDate2PVSSDate(sStart,start)) {
-      LOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation|illegal startTime: "+sStart);
-  // change progressBar
-  dpSet(PROGRESSBARACTIONDP,"Update|"+percentDone+"|"+toolText);
-      return;
-    }
-  if (!navFunct_lofarDate2PVSSDate(sStop,stop))  {
-      LOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation|illegal stopTime: "+sStop);
-      return;
-    }
-  
+  dpGet(obsDP+".startTime",start);
+  dpGet(obsDP+".stopTime",stop);
   LOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation| start: "+start);  
-  LOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation| stop:" +stop);
-
-    
-  toolText=selection + 
-           "<br> start: " + sStart+
-           "<br> stop : " + sStop;
+  LOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation| stop:" +stop);  
+  
   int duration=period(stop) - period(start);
 
   LOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation| Duration: "+duration);
@@ -88,18 +71,13 @@ void navProgressCtrl_handleObservation(string selection){
   LOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation| percent: "+percent);  
 
   int finished=period(getCurrentTime())-period(start);
-  
   LOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation| finished: "+finished);  
   
-  if (percent >0 && percent <= 100) {
+  float percentDone=0;
+  if (percent > 0) {
     percentDone = finished/percent;
   }
-  if (percentDone > 100) {
-    percentDone = 100;
-  } else if (percentDone < 0) {
-    percentDone=0;
-  }
-  LOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation| PercentDone: "+percentDone);
+  DLOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation| PercentDone: "+percentDone);
   // change progressBar
   dpSet(PROGRESSBARACTIONDP,"Update|"+percentDone+"|"+toolText);
   

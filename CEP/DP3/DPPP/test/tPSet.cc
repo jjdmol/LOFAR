@@ -43,9 +43,9 @@ class TestInput: public DPInput
 {
 public:
   TestInput(int nbl, int nchan, int ncorr)
-    : itsNChan(nchan), itsNCorr(ncorr)
+    : itsNBl(nbl), itsNChan(nchan), itsNCorr(ncorr)
   {
-    info().init (itsNCorr, itsNChan, 0, 0, 50, string(), string());
+    info().init (itsNCorr, itsNChan, 0, 0, 50, string());
     // Fill the baseline stations; use 4 stations.
     // So they are called 00 01 02 03 10 11 12 13 20, etc.
     Vector<Int> ant1(nbl);
@@ -80,7 +80,7 @@ private:
   virtual void finish() {}
   virtual void show (std::ostream&) const {}
 
-  int itsNChan, itsNCorr;
+  int itsNBl, itsNChan, itsNCorr;
 };
 
 

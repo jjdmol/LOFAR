@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License along
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
-# $Id: __init__.py 17341 2011-02-07 07:15:52Z diepen $
+# $Id$
 
 
 # Plot the NDPPP count results by frequency or baseline.

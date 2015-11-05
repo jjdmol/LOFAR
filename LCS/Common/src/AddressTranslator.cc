@@ -28,7 +28,8 @@
 #include <Common/Backtrace.h>
 #include <Common/SymbolTable.h>
 #include <map>
-#include <cstdlib>
+#include <iostream>
+#include <iomanip>
 #include <cstring>
 #include <boost/shared_ptr.hpp>
 
@@ -58,6 +59,9 @@ namespace LOFAR
   }
 #endif
 
+  // Initialize to true, so that backtrace printing stops at main() function.
+  bool AddressTranslator::stopAtMain = true;
+
   AddressTranslator::AddressTranslator()
   {
   }
@@ -66,23 +70,26 @@ namespace LOFAR
   {
   }
 
-  void AddressTranslator::operator()(std::vector<Backtrace::TraceLine>& trace,
-                                     void* const* addr, int size) 
+  void AddressTranslator::operator()(std::ostream& os, void* const* addr, 
+                                     unsigned int size)
   {
-    // Initialize \a size elements of vector \a trace to avoid reallocations.
-    trace.resize(size);
-  
-#ifdef HAVE_BFD
     ScopedLock sc(mutex);
+    unsigned int lineCount = 0;
 
-    for (int i = 0; i < size; i++) {
+    // Save the current fmtflags
+    std::ios::fmtflags flags(os.flags());
+    os.setf(std::ios::left);
 
+    for (unsigned int i = 0; i < size; i++) {
+
+      found = false;
+#ifdef HAVE_BFD
       pc = reinterpret_cast<bfd_vma>(addr[i]);
 
       // Walk through list of shared objects (ref. man dl_iterate_phdr(3)).
       // The callback function #find_matching_file() will set #bfdFile and
       // #base_addr.
-      if (!dl_iterate_phdr(find_matching_file, this)) continue;
+      dl_iterate_phdr(find_matching_file, this);
 
       // Lookup the SymbolTable using #base_addr as key. Create a new entry
       // if the symbol table of #bfdFile is not yet present in the map.
@@ -102,46 +109,24 @@ namespace LOFAR
 
       // Calculate offset address inside the matching shared object.
       pc -= base_addr;
-      found = false;
 
       // Call the function #find_address_in_section() for each section
       // attached to the BFD \a abfd. This function will set #filename,
       // #functionname, #line and #found.
       bfd_map_over_sections(abfd, find_address_in_section, this);
 
-      if (found) {
-        // Unwind inlined functions to get the source information of the first
-        // non-inlined function. In general, this will improve the usefulness
-        // of the backtrace information.
-        while(bfd_find_inliner_info(abfd, &filename, &functionname, &line));
-        
-        if (functionname && *functionname) {
-# ifdef __GNUG__
-          char* realname = abi::__cxa_demangle(functionname, 0, 0, 0);
-          if (realname) {
-            trace[i].function = realname;
-            free(realname);
-          }
-          else {
-            trace[i].function = functionname;
-          }
-# else
-          trace[i].function = functionname;
-# endif
-        }
-        if (filename) {
-          const char* h = strrchr(filename,'/');
-          if (h) {
-            filename = h+1;
-          }
-          trace[i].file = filename;
-        }
-        trace[i].line = line;
+      // printTraceLine will return true if hits \c main() \e and #stopAtMain
+      // is \c true.
+      if (printTraceLine(os, lineCount++, addr[i])) break;
+
+      // Unwind inlined functions.
+      while(bfd_find_inliner_info(abfd, &filename, &functionname, &line)) {
+        printTraceLine(os, lineCount++);
       }
-    }
-#else
-    (void) addr;  // suppress `unused parameter' warning
 #endif
+    }
+    // Restore the fmtflags
+    os.flags(flags);
     return;
   }
 
@@ -168,7 +153,7 @@ namespace LOFAR
         ElfW(Addr) vaddr = phdr->p_vaddr + info->dlpi_addr;
         if (pc >= vaddr && pc < vaddr + phdr->p_memsz) {
           // We found a match
-          if(info->dlpi_name && *info->dlpi_name) {
+          if (info->dlpi_name && *info->dlpi_name) {
             bfdFile = info->dlpi_name;
           } else {
             bfdFile = "/proc/self/exe";
@@ -182,16 +167,16 @@ namespace LOFAR
   }
     
 
-  void AddressTranslator::find_address_in_section(bfd*      abfd,
-						  asection* section,
-						  void*     data)
+  void AddressTranslator::find_address_in_section(bfd* abfd,
+                                                  asection* section,
+                                                  void* data)
   {
     AddressTranslator* obj = static_cast<AddressTranslator*>(data);
     obj->do_find_address_in_section(abfd, section);
   }
 
-  void AddressTranslator::do_find_address_in_section(bfd*       abfd, 
-						     asection*  section)
+  void AddressTranslator::do_find_address_in_section(bfd* abfd,
+                                                     asection*  section)
   {
     if (found)
       return;
@@ -207,8 +192,46 @@ namespace LOFAR
     if (pc >= vma + size)
       return;
 
-    found = bfd_find_nearest_line (abfd, section, syms, pc - vma, 
-				   &filename, &functionname, &line);
+    found = bfd_find_nearest_line (abfd, section, syms, pc - vma,
+                                   &filename, &functionname, &line);
+  }
+
+
+  bool AddressTranslator::printTraceLine(std::ostream& os,
+                                         unsigned int count, 
+                                         void* const addr)
+  {
+    if (count > 0)
+      os << std::endl;
+    os << "#" << std::setw(2) << count;
+    if (addr)
+      os << " " << addr;
+    std::string function = demangle(functionname);
+    os << " in " << function;
+    if (filename && line)
+      os << " at " << filename << ":" << line;
+    else
+      os << " from " << bfdFile;
+    return stopAtMain && function == "main";
+  }
+
+  std::string AddressTranslator::demangle(const char* name)
+  {
+    std::string demangled("??");
+    if (name && *name) {
+# ifdef __GNUG__
+      char* dmgl = abi::__cxa_demangle(name, 0, 0, 0);
+      if (dmgl) {
+        demangled = dmgl;
+        free(dmgl);
+      } else {
+        demangled = name;
+      }
+# else
+      demangled = name;
+# endif
+    }
+    return demangled;
   }
 
 #endif

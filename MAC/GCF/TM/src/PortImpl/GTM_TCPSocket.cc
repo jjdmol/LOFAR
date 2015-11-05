@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -104,8 +104,8 @@ ssize_t GTMTCPSocket::send(void* buf, size_t count)
 			if (errno == ECONNRESET) {
 				return (0);
 			}
-			if (errno != EINTR && errno != EAGAIN) {
-				LOG_WARN(LOFAR::formatString ( "send, error(%d): %s", errno, strerror(errno)));
+			if (errno != EINTR) {
+				LOG_WARN(LOFAR::formatString ( "send, error: %s", strerror(errno)));
 				return -1;
 			}
 		}
@@ -141,8 +141,8 @@ ssize_t GTMTCPSocket::recv(void* buf, size_t count, bool raw)
 		}
 
 		if (received == -1) {
-			if (errno != EINTR && errno != EAGAIN) {
-				LOG_WARN(formatString ( "recv, error(%d): %s", errno, strerror(errno)));
+			if (errno != EINTR) {
+				LOG_WARN(formatString ( "recv, error: %s", strerror(errno)));
 				return -1;
 			}
 		}
@@ -171,7 +171,7 @@ bool GTMTCPSocket::open(unsigned int /*portNumber*/)
 		close();
 	}
 
-  // close socket on execve
+    // close socket on execve
 	if (::fcntl(_fd, F_SETFD, FD_CLOEXEC) != 0) {
 		close();
 	}
@@ -215,8 +215,8 @@ int GTMTCPSocket::connect(unsigned int portNumber, const string& host)
 			return (-1);	
 		}
 
-    // socket is non-blocking, and still connecting
 		itsConnecting = true;
+
 	} else {
 		// poll an existing connection
 		fd_set fds;

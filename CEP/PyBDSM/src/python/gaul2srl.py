@@ -21,7 +21,6 @@ from gausfit import Gaussian
 from interface import wrap
 import mylogger
 import numpy as N
-
 N.seterr(divide='raise')
 
 nsrc = Int(doc="Number of sources in the image")
@@ -39,7 +38,7 @@ class Op_gaul2srl(Op):
         mylog = mylogger.logging.getLogger("PyBDSM."+img.log+"Gaul2Srl")
         mylogger.userinfo(mylog, 'Grouping Gaussians into sources')
         img.aperture = img.opts.aperture
-        if img.aperture is not None and img.aperture <= 0.0:
+        if img.aperture != None and img.aperture <= 0.0:
             mylog.warn('Specified aperture is <= 0. Skipping aperture fluxes.')
             img.aperture = None
 
@@ -101,7 +100,7 @@ class Op_gaul2srl(Op):
                 message += 'should be fit, try adjusting the flagging options (use\n'\
                            'show_fit with "ch0_flagged=True" to see the flagged Gaussians)\n'\
                            'or enabling the wavelet module (with "atrous_do=True").'
-            message += '\nTo include empty islands in output source catalogs, set\n'\
+            message += '\nTo include these islands in output source catalogs, set\n'\
                         'incl_empty=True in the write_catalog task.'
             mylog.warning(message)
 
@@ -119,9 +118,7 @@ class Op_gaul2srl(Op):
         peak_flux_centroid = peak_flux_max = [g.peak_flux, g.peak_fluxE]
         posn_sky_centroid = posn_sky_max = [g.centre_sky, g.centre_skyE]
         size_sky = [g.size_sky, g.size_skyE]
-        size_sky_uncorr = [g.size_sky_uncorr, g.size_skyE]
         deconv_size_sky = [g.deconv_size_sky, g.deconv_size_skyE]
-        deconv_size_sky_uncorr = [g.deconv_size_sky_uncorr, g.deconv_size_skyE]
         bbox = img.islands[g.island_id].bbox
         ngaus = 1
         island_id = g.island_id
@@ -132,7 +129,7 @@ class Op_gaul2srl(Op):
         aper_flux = func.ch0_aperture_flux(img, g.centre_pix, img.aperture)
 
         source_prop = list([code, total_flux, peak_flux_centroid, peak_flux_max, aper_flux, posn_sky_centroid, \
-             posn_sky_max, size_sky, size_sky_uncorr, deconv_size_sky, deconv_size_sky_uncorr, bbox, ngaus, island_id, gaussians])
+             posn_sky_max, size_sky, deconv_size_sky, bbox, ngaus, island_id, gaussians])
         source = Source(img, source_prop)
 
         if g.gaussian_idx == -1:
@@ -207,6 +204,19 @@ class Op_gaul2srl(Op):
         """ Whether two gaussians belong to the same source or not. """
         import functions as func
 
+        def same_island_aegean(pair, g_list, subim, delc, tol=0.5):
+            """Groups Gaussians using the Aegean curvature algorithm
+            (Hancock et al. 2012)
+
+            The Aegean algorithm uses a curvature map to identify regions of negative
+            curvature. These regions then define distinct sources.
+            """
+            import scipy.signal as sg
+
+            # Make average curavature map:
+            curv_kernal = N.array([[1, 1, 1],[1, -8, 1],[1, 1, 1]])
+            curv_map = sg.convolve2d(subim, curv_kernal)
+
         def same_island_min(pair, g_list, subim, delc, tol=0.5):
             """ If the minimum of the reconstructed fluxes along the line joining the peak positions
                 is greater than thresh_isl times the rms_clip, they belong to different islands. """
@@ -241,7 +251,7 @@ class Op_gaul2srl(Op):
                 yline = N.round(min(pix1[1],pix2[1])+N.arange(maxline))
                 xline = N.round((pix1[0]-pix2[0])/(pix1[1]-pix2[1])* \
                        (min(pix1[1],pix2[1])+N.arange(maxline)-pix1[1])+pix1[0])
-              rpixval = N.zeros(maxline, dtype=N.float32)
+              rpixval = N.zeros(maxline)
               xbig = N.where(xline >= N.size(subim,0))
               xline[xbig] = N.size(subim,0) - 1
               ybig = N.where(yline >= N.size(subim,1))
@@ -291,8 +301,6 @@ class Op_gaul2srl(Op):
             same_isl1_cont = True
             same_isl2 = True
         else:
-            if img.opts.group_method == 'curvature':
-                subim = -1.0 * func.make_curvature_map(subim)
             tol = img.opts.group_tol
             same_isl1_min, same_isl1_cont = same_island_min(pair, g_list, subim, delc, tol)
             same_isl2 = same_island_dist(pair, g_list, tol/2.0)
@@ -326,7 +334,7 @@ class Op_gaul2srl(Op):
                                         # fit gaussian around this posn
         blc = N.zeros(2); trc = N.zeros(2)
         n, m = subim_src.shape[0:2]
-        bm_pix = N.array([img.pixel_beam()[0]*fwsig, img.pixel_beam()[1]*fwsig, img.pixel_beam()[2]])
+        bm_pix = N.array([img.pixel_beam[0]*fwsig, img.pixel_beam[1]*fwsig, img.pixel_beam[2]])
         ssubimsize = max(N.int(N.round(N.max(bm_pix[0:2])*2))+1, 5)
         blc[0] = max(0, maxx-(ssubimsize-1)/2); blc[1] = max(0, maxy-(ssubimsize-1)/2)
         trc[0] = min(n, maxx+(ssubimsize-1)/2); trc[1] = min(m, maxy+(ssubimsize-1)/2)
@@ -382,15 +390,13 @@ class Op_gaul2srl(Op):
             # Invalid pixel wcs coordinate
             sra, sdec = 0.0, 0.0
             mra, mdec = 0.0, 0.0
-
-        # "deconvolve" the sizes
+                                        # "deconvolve" the sizes
         gaus_c = [mompara[3], mompara[4], mompara[5]]
         gaus_bm = [bm_pix[0], bm_pix[1], bm_pix[2]]
         gaus_dc, err = func.deconv2(gaus_bm, gaus_c)
-        deconv_size_sky = img.pix2gaus(gaus_dc, [mompara[1]+delc[0], mompara[2]+delc[1]])
-        deconv_size_sky_uncorr = img.pix2gaus(gaus_dc, [mompara[1]+delc[0], mompara[2]+delc[1]], use_wcs=False)
+        deconv_size_sky = img.pix2beam(gaus_dc, [mompara[1]+delc[0], mompara[2]+delc[1]])
 
-        # update all objects etc
+                                        # update all objects etc
         tot = 0.0
         totE_sq = 0.0
         for g in g_sublist:
@@ -398,8 +404,7 @@ class Op_gaul2srl(Op):
             totE_sq += g.total_fluxE**2
         totE = sqrt(totE_sq)
         size_pix = [mompara[3], mompara[4], mompara[5]]
-        size_sky = img.pix2gaus(size_pix, [mompara[1]+delc[0], mompara[2]+delc[1]])
-        size_sky_uncorr = img.pix2gaus(size_pix, [mompara[1]+delc[0], mompara[2]+delc[1]], use_wcs=False)
+        size_sky = img.pix2beam(size_pix, [mompara[1]+delc[0], mompara[2]+delc[1]])
 
         # Estimate uncertainties in source size and position due to
         # errors in the constituent Gaussians using a Monte Carlo technique.
@@ -412,12 +417,12 @@ class Op_gaul2srl(Op):
 
         if img.opts.do_mc_errors:
             nMC = 20
-            mompara0_MC = N.zeros(nMC, dtype=N.float32)
-            mompara1_MC = N.zeros(nMC, dtype=N.float32)
-            mompara2_MC = N.zeros(nMC, dtype=N.float32)
-            mompara3_MC = N.zeros(nMC, dtype=N.float32)
-            mompara4_MC = N.zeros(nMC, dtype=N.float32)
-            mompara5_MC = N.zeros(nMC, dtype=N.float32)
+            mompara0_MC = N.zeros(nMC, dtype=float)
+            mompara1_MC = N.zeros(nMC, dtype=float)
+            mompara2_MC = N.zeros(nMC, dtype=float)
+            mompara3_MC = N.zeros(nMC, dtype=float)
+            mompara4_MC = N.zeros(nMC, dtype=float)
+            mompara5_MC = N.zeros(nMC, dtype=float)
             for i in range(nMC):
                 # Reconstruct source from component Gaussians. Draw the Gaussian
                 # parameters from random distributions given by their errors.
@@ -479,8 +484,8 @@ class Op_gaul2srl(Op):
         isl_id = isl.island_id
         source_prop = list(['M', [tot, totE], [s_peak, isl.rms], [maxpeak, isl.rms],
                       [aper_flux, aper_fluxE], [[sra, sdec],
-                      [sraE, sdecE]], [[mra, mdec], [sraE, sdecE]], [size_sky, size_skyE], [size_sky_uncorr, size_skyE],
-                      [deconv_size_sky, deconv_size_skyE], [deconv_size_sky_uncorr, deconv_size_skyE], isl.bbox, len(g_sublist),
+                      [sraE, sdecE]], [[mra, mdec], [sraE, sdecE]], [size_sky, size_skyE],
+                      [deconv_size_sky, deconv_size_skyE], isl.bbox, len(g_sublist),
                       isl_id, g_sublist])
         source = Source(img, source_prop)
 
@@ -497,7 +502,7 @@ class Op_gaul2srl(Op):
     def make_subim(self, subn, subm, g_list, delc, mc=False):
         import functions as func
 
-        subim = N.zeros((subn, subm), dtype=N.float32)
+        subim = N.zeros((subn, subm))
         x, y = N.indices((subn, subm))
         for g in g_list:
             params = func.g2param(g)
@@ -522,7 +527,7 @@ class Op_gaul2srl(Op):
         subn = boxx.stop-boxx.start; subm = boxy.stop-boxy.start
         x, y = N.indices((subn, subm))
                                         # construct image of each source in the island
-        src_image = N.zeros((subn, subm, nsrc), dtype=N.float32)
+        src_image = N.zeros((subn, subm, nsrc))
         nn = 1
         for isrc in range(nsrc):
             if nsrc == 1:
@@ -601,18 +606,6 @@ class Source(object):
     deconv_size_skyE    = List(Float(), doc="Error on deconvolved shape of the source FWHM, BPA, deg",
                                colname=['E_DC_Maj', 'E_DC_Min', 'E_DC_PA'], units=['deg', 'deg',
                               'deg'])
-    size_sky_uncorr   = List(Float(), doc="Shape in image plane of the gaussian FWHM, PA, deg",
-                      colname=['Maj_img_plane', 'Min_img_plane', 'PA_img_plane'], units=['deg', 'deg',
-                      'deg'])
-    size_skyE_uncorr  = List(Float(), doc="Error on shape in image plane of the gaussian FWHM, PA, deg",
-                      colname=['E_Maj_img_plane', 'E_Min_img_plane', 'E_PA_img_plane'], units=['deg', 'deg',
-                      'deg'])
-    deconv_size_sky_uncorr = List(Float(), doc="Deconvolved shape in image plane of the gaussian FWHM, PA, deg",
-                      colname=['DC_Maj_img_plane', 'DC_Min_img_plane', 'DC_PA_img_plane'], units=['deg', 'deg',
-                      'deg'])
-    deconv_size_skyE_uncorr = List(Float(), doc="Error on deconvolved shape in image plane of the gaussian FWHM, PA, deg",
-                      colname=['E_DC_Maj_img_plane', 'E_DC_Min_img_plane', 'E_DC_PA_img_plane'], units=['deg', 'deg',
-                      'deg'])
     rms_isl             = Float(doc="Island rms Jy/beam", colname='Isl_rms', units='Jy/beam')
     mean_isl            = Float(doc="Island mean Jy/beam", colname='Isl_mean', units='Jy/beam')
     total_flux_isl      = Float(doc="Island total flux from sum of pixels", colname='Isl_Total_flux', units='Jy')
@@ -633,8 +626,7 @@ class Source(object):
     def __init__(self, img, sourceprop):
 
         code, total_flux, peak_flux_centroid, peak_flux_max, aper_flux, posn_sky_centroid, \
-                     posn_sky_max, size_sky, size_sky_uncorr, deconv_size_sky, \
-                     deconv_size_sky_uncorr, bbox, ngaus, island_id, gaussians = sourceprop
+                     posn_sky_max, size_sky, deconv_size_sky, bbox, ngaus, island_id, gaussians = sourceprop
         self.code = code
         self.total_flux, self.total_fluxE = total_flux
         self.peak_flux_centroid, self.peak_flux_centroidE = peak_flux_centroid
@@ -642,9 +634,7 @@ class Source(object):
         self.posn_sky_centroid, self.posn_sky_centroidE = posn_sky_centroid
         self.posn_sky_max, self.posn_sky_maxE = posn_sky_max
         self.size_sky, self.size_skyE = size_sky
-        self.size_sky_uncorr, self.size_skyE_uncorr = size_sky_uncorr
         self.deconv_size_sky, self.deconv_size_skyE = deconv_size_sky
-        self.deconv_size_sky_uncorr, self.deconv_size_skyE_uncorr = deconv_size_sky_uncorr
         self.bbox = bbox
         self.ngaus = ngaus
         self.island_id = island_id

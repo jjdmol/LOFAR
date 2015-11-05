@@ -21,16 +21,16 @@ class Observatorium
 		}
 		double ChannelWidthHz() const { return _channelWidthHz; }
 		
-		const class BandInfo &BandInfo() const
+		const struct BandInfo &BandInfo() const
 		{
 			return _bandInfo;
 		}
 	protected:
-		class BandInfo &GetBandInfo() { return _bandInfo; }
+		struct BandInfo &GetBandInfo() { return _bandInfo; }
 	private:
 		std::vector<AntennaInfo> _antennae;
 		double _channelWidthHz;
-		class BandInfo _bandInfo;
+		struct BandInfo _bandInfo;
 };
 
 struct WSRTObservatorium : public Observatorium

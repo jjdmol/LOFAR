@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tAxisMapping
+./runctest.sh tAxisMapping > tAxisMapping.log 2>&1

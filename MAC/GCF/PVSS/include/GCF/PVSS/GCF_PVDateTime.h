@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -45,7 +45,6 @@ public:
 
 	/** Changes the value of this object */
 	virtual TGCFResult setValue(double newVal);
-	void 			   setValue(time_t newVal, uint16 milliSec = 0);
 
 	/** 
 	* Changes the value of this object by means of a stringbuffer, 
@@ -93,7 +92,7 @@ inline bool GCFPVDateTime::operator==(const GCFPValue&	that) const {
 			(getValue() == ((GCFPVDateTime *) &that)->getValue()));
 }
 
-  } // namespace PVS
+  } // namespace Common
  } // namespace GCF
 } // namespace LOFAR
 #endif

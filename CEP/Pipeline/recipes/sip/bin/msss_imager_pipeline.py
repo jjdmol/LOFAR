@@ -77,7 +77,7 @@ class msss_imager_pipeline(control):
        and results are collected an added to the casa image. The images created
        are converted from casa to HDF5 and copied to the correct output
        location.
-    7. Export meta data: meta data is generated ready for
+    7. Export meta data: An outputfile with meta data is generated ready for
        consumption by the LTA and/or the LOFAR framework.
 
 
@@ -93,13 +93,40 @@ class msss_imager_pipeline(control):
         Initialize member variables and call superclass init function
         """
         control.__init__(self)
+        self.parset = parameterset()
         self.input_data = DataMap()
         self.target_data = DataMap()
         self.output_data = DataMap()
         self.scratch_directory = None
+        self.parset_feedback_file = None
         self.parset_dir = None
         self.mapfile_dir = None
 
+    def usage(self):
+        """
+        Display usage information
+        """
+        print >> sys.stderr, "Usage: %s <parset-file>  [options]" % sys.argv[0]
+        return 1
+
+    def go(self):
+        """
+        Read the parset-file that was given as input argument, and set the
+        jobname before calling the base-class's `go()` method.
+        """
+        try:
+            parset_file = os.path.abspath(self.inputs['args'][0])
+        except IndexError:
+            return self.usage()
+        self.parset.adoptFile(parset_file)
+        self.parset_feedback_file = parset_file + "_feedback"
+        # Set job-name to basename of parset-file w/o extension, if it's not
+        # set on the command-line with '-j' or '--job-name'
+        if not 'job_name' in self.inputs:
+            self.inputs['job_name'] = (
+                os.path.splitext(os.path.basename(parset_file))[0]
+            )
+        return super(msss_imager_pipeline, self).go()
 
     @mail_log_on_exception
     def pipeline_logic(self):
@@ -134,7 +161,7 @@ class msss_imager_pipeline(control):
         # Input measure ment sets
         input_mapfile = os.path.join(self.mapfile_dir, "uvdata.mapfile")
         self.input_data.save(input_mapfile)
-        # storedata_map(input_mapfile, self.input_data)
+        #storedata_map(input_mapfile, self.input_data)
         self.logger.debug(
             "Wrote input UV-data mapfile: {0}".format(input_mapfile))
 
@@ -150,57 +177,43 @@ class msss_imager_pipeline(control):
         self.logger.debug(
             "Wrote output sky-image mapfile: {0}".format(output_image_mapfile))
 
-        # TODO: This is a backdoor option to manually add beamtables when these
-        # are missing on the provided ms. There is NO use case for users of the
-        # pipeline
-        add_beam_tables = self.parset.getBool(
-                                    "Imaging.addBeamTables", False)
-
         # ******************************************************************
         # (1) prepare phase: copy and collect the ms
-        concat_ms_map_path, timeslice_map_path, ms_per_image_map_path, \
+        concat_ms_map_path, timeslice_map_path, raw_ms_per_image_map_path, \
             processed_ms_dir = self._prepare_phase(input_mapfile,
-                                    target_mapfile, add_beam_tables)
+                                    target_mapfile)
 
+        #We start with an empty source_list
+        source_list = ""  # path to local sky model (list of 'found' sources)
         number_of_major_cycles = self.parset.getInt(
                                     "Imaging.number_of_major_cycles")
-
-        # We start with an empty source_list map. It should contain n_output
-        # entries all set to empty strings
-        source_list_map_path = os.path.join(self.mapfile_dir,
-                                        "initial_sourcelist.mapfile")
-        source_list_map = DataMap.load(target_mapfile) # copy the output map
-        for item in source_list_map:
-            item.file = ""             # set all to empty string
-        source_list_map.save(source_list_map_path)
-
         for idx_loop in range(number_of_major_cycles):
             # *****************************************************************
             # (2) Create dbs and sky model
             parmdbs_path, sourcedb_map_path = self._create_dbs(
                         concat_ms_map_path, timeslice_map_path,
-                        source_list_map_path = source_list_map_path,
-                        skip_create_dbs = False)
+                        source_list=source_list,
+                        skip_create_dbs=False)
 
             # *****************************************************************
             # (3)  bbs_imager recipe.
             bbs_output = self._bbs(timeslice_map_path, parmdbs_path,
-                        sourcedb_map_path, skip = False)
+                        sourcedb_map_path, skip=False)
 
-            # TODO: Extra recipe: concat timeslices using pyrap.concatms
+            # TODO: Extra recipe: concat timeslices using pyrap.concatms 
             # (see prepare)
 
             # *****************************************************************
             # (4) Get parameters awimager from the prepare_parset and inputs
             aw_image_mapfile, maxbaseline = self._aw_imager(concat_ms_map_path,
                         idx_loop, sourcedb_map_path,
-                        skip = False)
+                        skip=False)
 
             # *****************************************************************
             # (5) Source finding
             sourcelist_map, found_sourcedb_path = self._source_finding(
-                    aw_image_mapfile, idx_loop, skip = False)
-            # should the output be a sourcedb? instead of a sourcelist
+                    aw_image_mapfile, idx_loop, skip=False)
+            #should the output be a sourcedb? instead of a sourcelist
 
         # TODO: minbaseline should be a parset value as is maxbaseline..
         minbaseline = 0
@@ -208,29 +221,20 @@ class msss_imager_pipeline(control):
         # *********************************************************************
         # (6) Finalize:
         placed_data_image_map = self._finalize(aw_image_mapfile,
-            processed_ms_dir, ms_per_image_map_path, sourcelist_map,
+            processed_ms_dir, raw_ms_per_image_map_path, sourcelist_map,
             minbaseline, maxbaseline, target_mapfile, output_image_mapfile,
             found_sourcedb_path)
 
         # *********************************************************************
         # (7) Get metadata
-        # create a parset with information that is available on the toplevel
-        toplevel_meta_data = parameterset()
-        toplevel_meta_data.replace("numberOfMajorCycles", 
-                                           str(number_of_major_cycles))
-
-        # Create a parset containing the metadata for MAC/SAS at nodes
-        metadata_file = "%s_feedback_SkyImage" % (self.parset_file,)
+        # Create a parset-file containing the metadata for MAC/SAS
         self.run_task("get_metadata", placed_data_image_map,
-            parset_prefix = (
+            parset_file=self.parset_feedback_file,
+            parset_prefix=(
                 full_parset.getString('prefix') +
                 full_parset.fullModuleName('DataProducts')
             ),
-            product_type = "SkyImage",
-            metadata_file = metadata_file)
-
-        self.send_feedback_processing(toplevel_meta_data)
-        self.send_feedback_dataproducts(parameterset(metadata_file))
+            product_type="SkyImage")
 
         return 0
 
@@ -263,8 +267,8 @@ class msss_imager_pipeline(control):
         self.logger.debug("%d Output_SkyImage data products specified" %
                           len(self.output_data))
 
-        # # Sanity checks on input- and output data product specifications
-        # if not validate_data_maps(self.input_data, self.output_data):
+        ## Sanity checks on input- and output data product specifications
+        #if not validate_data_maps(self.input_data, self.output_data):
         #    raise PipelineException(
         #        "Validation of input/output data product specification failed!"
         #    )#Turned off untill DataMap is extended..
@@ -279,9 +283,9 @@ class msss_imager_pipeline(control):
 
     @xml_node
     def _finalize(self, awimager_output_map, processed_ms_dir,
-                  ms_per_image_map, sourcelist_map, minbaseline,
+                  raw_ms_per_image_map, sourcelist_map, minbaseline,
                   maxbaseline, target_mapfile,
-                  output_image_mapfile, sourcedb_map, skip = False):
+                  output_image_mapfile, sourcedb_map, skip=False):
         """
         Perform the final step of the imager:
         Convert the output image to hdf5 and copy to output location
@@ -296,24 +300,24 @@ class msss_imager_pipeline(control):
         if skip:
             return placed_image_mapfile
         else:
-            # run the awimager recipe
+            #run the awimager recipe
             placed_image_mapfile = self.run_task("imager_finalize",
-                target_mapfile, awimager_output_map = awimager_output_map,
-                    ms_per_image_map = ms_per_image_map,
-                    sourcelist_map = sourcelist_map,
-                    sourcedb_map = sourcedb_map,
-                    minbaseline = minbaseline,
-                    maxbaseline = maxbaseline,
-                    target_mapfile = target_mapfile,
-                    output_image_mapfile = output_image_mapfile,
-                    processed_ms_dir = processed_ms_dir,
-                    placed_image_mapfile = placed_image_mapfile
+                target_mapfile, awimager_output_map=awimager_output_map,
+                    raw_ms_per_image_map=raw_ms_per_image_map,
+                    sourcelist_map=sourcelist_map,
+                    sourcedb_map=sourcedb_map,
+                    minbaseline=minbaseline,
+                    maxbaseline=maxbaseline,
+                    target_mapfile=target_mapfile,
+                    output_image_mapfile=output_image_mapfile,
+                    processed_ms_dir=processed_ms_dir,
+                    placed_image_mapfile=placed_image_mapfile
                     )["placed_image_mapfile"]
 
         return placed_image_mapfile
 
     @xml_node
-    def _source_finding(self, image_map_path, major_cycle, skip = True):
+    def _source_finding(self, image_map_path, major_cycle, skip=True):
         """
         Perform the sourcefinding step
         """
@@ -346,25 +350,25 @@ class msss_imager_pipeline(control):
         else:
             self.run_task("imager_source_finding",
                         image_map_path,
-                        bdsm_parset_file_run1 = parset_path_pass_1,
-                        bdsm_parset_file_run2x = parset_path_pass_2,
-                        working_directory = self.scratch_directory,
-                        catalog_output_path = catalog_path,
-                        mapfile = source_list_map,
-                        sourcedb_target_path = sourcedb_path,
-                        sourcedb_map_path = sourcedb_map_path
+                        bdsm_parset_file_run1=parset_path_pass_1,
+                        bdsm_parset_file_run2x=parset_path_pass_2,
+                        working_directory=self.scratch_directory,
+                        catalog_output_path=catalog_path,
+                        mapfile=source_list_map,
+                        sourcedb_target_path=sourcedb_path,
+                        sourcedb_map_path=sourcedb_map_path
                          )
 
             return source_list_map, sourcedb_map_path
 
     @xml_node
     def _bbs(self, timeslice_map_path, parmdbs_map_path, sourcedb_map_path,
-              skip = False):
+              skip=False):
         """
         Perform a calibration step. First with a set of sources from the
         gsm and in later iterations also on the found sources
         """
-        # create parset for bbs run
+        #create parset for bbs run
         parset = self.parset.makeSubset("BBS.")
         parset_path = self._write_parset_to_file(parset, "bbs",
                         "Parset for calibration with a local sky model")
@@ -397,17 +401,17 @@ class msss_imager_pipeline(control):
 
         self.run_task("imager_bbs",
                       timeslice_map_path,
-                      parset = parset_path,
-                      instrument_mapfile = parmdbs_map_path,
-                      sourcedb_mapfile = sourcedb_map_path,
-                      mapfile = output_mapfile,
-                      working_directory = self.scratch_directory)
+                      parset=parset_path,
+                      instrument_mapfile=parmdbs_map_path,
+                      sourcedb_mapfile=sourcedb_map_path,
+                      mapfile=output_mapfile,
+                      working_directory=self.scratch_directory)
 
         return output_mapfile
 
     @xml_node
     def _aw_imager(self, prepare_phase_output, major_cycle, sky_path,
-                   skip = False):
+                   skip=False):
         """
         Create an image based on the calibrated, filtered and combined data.
         """
@@ -435,35 +439,29 @@ class msss_imager_pipeline(control):
                                     "output map for awimager recipe")
 
         mask_patch_size = self.parset.getInt("Imaging.mask_patch_size")
-        autogenerate_parameters = self.parset.getBool(
-                                    "Imaging.auto_imaging_specs")
-        specify_fov = self.parset.getBool(
-                                    "Imaging.specify_fov")
+
         if skip:
             pass
         else:
-            # run the awimager recipe
+            #run the awimager recipe
             self.run_task("imager_awimager", prepare_phase_output,
-                          parset = aw_image_parset_path,
-                          mapfile = output_mapfile,
-                          output_image = intermediate_image_path,
-                          mask_patch_size = mask_patch_size,
-                          sourcedb_path = sky_path,
-                          working_directory = self.scratch_directory,
-                          autogenerate_parameters = autogenerate_parameters,
-                          specify_fov = specify_fov)
+                          parset=aw_image_parset_path,
+                          mapfile=output_mapfile,
+                          output_image=intermediate_image_path,
+                          mask_patch_size=mask_patch_size,
+                          sourcedb_path=sky_path,
+                          working_directory=self.scratch_directory)
 
         return output_mapfile, max_baseline
 
     @xml_node
-    def _prepare_phase(self, input_ms_map_path, target_mapfile,
-        add_beam_tables):
+    def _prepare_phase(self, input_ms_map_path, target_mapfile):
         """
         Copy ms to correct location, combine the ms in slices and combine
         the time slices into a large virtual measurement set
         """
         # Create the dir where found and processed ms are placed
-        # ms_per_image_map_path contains all the original ms locations:
+        # raw_ms_per_image_map_path contains all the original ms locations:
         # this list contains possible missing files
         processed_ms_dir = os.path.join(self.scratch_directory, "subbands")
 
@@ -473,30 +471,29 @@ class msss_imager_pipeline(control):
                     "prepare_imager_ndppp", "parset for ndpp recipe")
 
         # create the output file paths
-        # [1] output -> prepare_output
+        #[1] output -> prepare_output
         output_mapfile = self._write_datamap_to_file(None, "prepare_output")
         time_slices_mapfile = self._write_datamap_to_file(None,
                                                     "prepare_time_slices")
-        ms_per_image_mapfile = self._write_datamap_to_file(None,
-                                                         "ms_per_image")
+        raw_ms_per_image_mapfile = self._write_datamap_to_file(None,
+                                                         "raw_ms_per_image")
 
         # get some parameters from the imaging pipeline parset:
         slices_per_image = self.parset.getInt("Imaging.slices_per_image")
         subbands_per_image = self.parset.getInt("Imaging.subbands_per_image")
 
         outputs = self.run_task("imager_prepare", input_ms_map_path,
-                parset = ndppp_parset_path,
-                target_mapfile = target_mapfile,
-                slices_per_image = slices_per_image,
-                subbands_per_image = subbands_per_image,
-                mapfile = output_mapfile,
-                slices_mapfile = time_slices_mapfile,
-                ms_per_image_mapfile = ms_per_image_mapfile,
-                working_directory = self.scratch_directory,
-                processed_ms_dir = processed_ms_dir,
-                add_beam_tables = add_beam_tables)
+                parset=ndppp_parset_path,
+                target_mapfile=target_mapfile,
+                slices_per_image=slices_per_image,
+                subbands_per_image=subbands_per_image,
+                mapfile=output_mapfile,
+                slices_mapfile=time_slices_mapfile,
+                raw_ms_per_image_mapfile=raw_ms_per_image_mapfile,
+                working_directory=self.scratch_directory,
+                processed_ms_dir=processed_ms_dir)
 
-        # validate that the prepare phase produced the correct data
+        #validate that the prepare phase produced the correct data
         output_keys = outputs.keys()
         if not ('mapfile' in output_keys):
             error_msg = "The imager_prepare master script did not"\
@@ -509,20 +506,20 @@ class msss_imager_pipeline(control):
                                                         'slices_mapfile')
             self.logger.error(error_msg)
             raise PipelineException(error_msg)
-        if not ('ms_per_image_mapfile' in output_keys):
+        if not ('raw_ms_per_image_mapfile' in output_keys):
             error_msg = "The imager_prepare master script did not"\
                     "return correct data. missing: {0}".format(
-                                                'ms_per_image_mapfile')
+                                                'raw_ms_per_image_mapfile')
             self.logger.error(error_msg)
             raise PipelineException(error_msg)
 
         # Return the mapfiles paths with processed data
-        return output_mapfile, outputs["slices_mapfile"], ms_per_image_mapfile, \
+        return output_mapfile, outputs["slices_mapfile"], raw_ms_per_image_mapfile, \
             processed_ms_dir
 
     @xml_node
-    def _create_dbs(self, input_map_path, timeslice_map_path, source_list_map_path,
-                    skip_create_dbs = False):
+    def _create_dbs(self, input_map_path, timeslice_map_path, source_list="",
+                    skip_create_dbs=False):
         """
         Create for each of the concatenated input measurement sets
         an instrument model and parmdb
@@ -536,24 +533,24 @@ class msss_imager_pipeline(control):
         sourcedb_map_path = self._write_datamap_to_file(None, "sky_files",
                     "source db output mapfile")
 
-        # run the master script
+        #run the master script
         if skip_create_dbs:
             pass
         else:
             self.run_task("imager_create_dbs", input_map_path,
-                        monetdb_hostname = parset.getString("monetdb_hostname"),
-                        monetdb_port = parset.getInt("monetdb_port"),
-                        monetdb_name = parset.getString("monetdb_name"),
-                        monetdb_user = parset.getString("monetdb_user"),
-                        monetdb_password = parset.getString("monetdb_password"),
-                        assoc_theta = parset.getString("assoc_theta"),
-                        sourcedb_suffix = ".sourcedb",
-                        slice_paths_mapfile = timeslice_map_path,
-                        parmdb_suffix = ".parmdb",
-                        parmdbs_map_path = parmdbs_map_path,
-                        sourcedb_map_path = sourcedb_map_path,
-                        source_list_map_path = source_list_map_path,
-                        working_directory = self.scratch_directory)
+                        monetdb_hostname=parset.getString("monetdb_hostname"),
+                        monetdb_port=parset.getInt("monetdb_port"),
+                        monetdb_name=parset.getString("monetdb_name"),
+                        monetdb_user=parset.getString("monetdb_user"),
+                        monetdb_password=parset.getString("monetdb_password"),
+                        assoc_theta=parset.getString("assoc_theta"),
+                        sourcedb_suffix=".sourcedb",
+                        slice_paths_mapfile=timeslice_map_path,
+                        parmdb_suffix=".parmdb",
+                        parmdbs_map_path=parmdbs_map_path,
+                        sourcedb_map_path=sourcedb_map_path,
+                        source_list_path=source_list,
+                        working_directory=self.scratch_directory)
 
         return parmdbs_map_path, sourcedb_map_path
 
@@ -566,39 +563,39 @@ class msss_imager_pipeline(control):
         """
         parset_dir = os.path.join(
             self.config.get("layout", "job_directory"), "parsets")
-        # create the parset dir if it does not exist
+        #create the parset dir if it does not exist
         create_directory(parset_dir)
 
-        # write the content to a new parset file
+        #write the content to a new parset file
         parset_path = os.path.join(parset_dir,
                          "{0}.parset".format(parset_name))
         parset.writeFile(parset_path)
 
-        # display a debug log entrie with path and message
+        #display a debug log entrie with path and message
         self.logger.debug("Wrote parset to path <{0}> : {1}".format(
                                parset_path, message))
 
         return parset_path
 
-    def _write_datamap_to_file(self, datamap, mapfile_name, message = ""):
+    def _write_datamap_to_file(self, datamap, mapfile_name, message=""):
         """
         Write the suplied the suplied map to the mapfile.
         directory in the jobs dir with the filename suplied in mapfile_name.
         Return the full path to the created file.
-        If suplied data is None then the file is touched if not existing, but
+        Id supllied data is None then the file is touched if not existing, but
         existing files are kept as is
         """
 
         mapfile_dir = os.path.join(
             self.config.get("layout", "job_directory"), "mapfiles")
-        # create the mapfile_dir if it does not exist
+        #create the mapfile_dir if it does not exist
         create_directory(mapfile_dir)
 
-        # write the content to a new parset file
+        #write the content to a new parset file
         mapfile_path = os.path.join(mapfile_dir,
                          "{0}.map".format(mapfile_name))
 
-        # display a debug log entrie with path and message
+        #display a debug log entrie with path and message
         if datamap != None:
             datamap.save(mapfile_path)
 

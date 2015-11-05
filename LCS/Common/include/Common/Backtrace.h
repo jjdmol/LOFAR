@@ -43,9 +43,6 @@
 
 namespace LOFAR
 {
-  //# Forward declarations
-  class SymbolTable;
-
   // \ingroup Common
   // @{
 
@@ -53,13 +50,6 @@ namespace LOFAR
   // to print them in a human readable form.
   class Backtrace {
   public:
-    // Layout of a trace line
-    struct TraceLine {
-      TraceLine() : function("??"), file("??"), line(0) {}
-      std::string function;
-      std::string file;
-      unsigned line;
-    };
     // Constructor. Calls backtrace() to fill \c itsAddr with the return
     // addresses of the current program state.
     Backtrace();
@@ -67,10 +57,6 @@ namespace LOFAR
     // Print the current backtrace in human readable form into the output
     // stream \a os.
     void print(std::ostream& os) const;
-
-    // Indicates whether we should stop printing a backtrace when we reach
-    // main(), or not.
-    static bool stopAtMain;
 
   private:
     // Maximum number of return addresses that we are willing to handle. Add
@@ -83,10 +69,6 @@ namespace LOFAR
 
     // Actual number of return addresses returned by backtrace().
     unsigned itsNrAddr;
-
-    // Traceback info containing function name, filename, and line number.
-    // This vector will be filled by AddressTranslator.operator().
-    mutable std::vector<TraceLine> itsTrace;
   };
 
   // Print the backtrace \a st to the output stream \a os.

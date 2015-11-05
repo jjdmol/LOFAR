@@ -84,8 +84,7 @@ void testBM (const string& antSet,
     // Optionally add OBSERVATION table.
     if (makeObs) {
       TableDesc td;
-      td.addColumn (ArrayColumnDesc<Double> ("TIME_RANGE", IPosition(1,2),
-					     ColumnDesc::FixedShape));
+      td.addColumn (ArrayColumnDesc<Double> ("TIME_RANGE", IPosition(1,2)));
       TableQuantumDesc tq(td, "TIME_RANGE", Unit("s"));
       tq.write (td);
       SetupNewTable stab3("tBeamTables_tmp.ms/OBSERVATION",
@@ -155,8 +154,7 @@ int main()
     testBM ("HBA_ONE",  "HBA", "1");
     testBM ("HBA_ONE_INNER",  "HBA", "1");
   } catch (std::exception& x) {
-    cerr << "Unexpected exception: " << x.what() << endl;
-    return 1;
+    cout << "Unexpected exception: " << x.what() << endl;
   }
   return 0;
 }

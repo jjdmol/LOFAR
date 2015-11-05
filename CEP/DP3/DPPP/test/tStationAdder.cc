@@ -41,6 +41,7 @@ using namespace std;
 
 // Simple class to generate input arrays.
 // It can only set all flags to true or all to false.
+// Weights are always 1.
 // It can be used with different nr of times, channels, etc.
 class TestInput: public DPInput
 {
@@ -49,7 +50,7 @@ public:
     : itsCount(0), itsNTime(ntime), itsNBl(nbl), itsNChan(nchan),
       itsNCorr(ncorr)
   {
-    info().init (ncorr, nchan, ntime, 0., 5., string(), string());
+    info().init (ncorr, nchan, ntime, 0., 5., string());
     // Fill the baseline stations; use 4 stations.
     // So they are called 00 01 02 03 10 11 12 13 20, etc.
     Vector<Int> ant1(nbl);
@@ -140,9 +141,9 @@ private:
 class TestOutput: public DPStep
 {
 public:
-  TestOutput(int ntime, int nbl, int nchan, int ncorr, bool sumauto)
+  TestOutput(int ntime, int nbl, int nchan, int ncorr)
     : itsCount(0), itsNTime(ntime), itsNBl(nbl), itsNChan(nchan),
-      itsNCorr(ncorr), itsSumAuto(sumauto)
+      itsNCorr(ncorr)
   {}
 private:
   void addData (Cube<Complex>& to, const Cube<Complex>& from, int bl)
@@ -163,26 +164,9 @@ private:
     indgen (weights, 0.5f, 0.01f);
     Cube<Complex> databl0 (itsNCorr, itsNChan, 1);
     Cube<Complex> databl1 (itsNCorr, itsNChan, 1);
-    // "{ns:[rs01.s01, rs02.s01, cs01.s02]}" was given resulting in 2 new
-    // baselines (ns-ns and cs01.s01-ns). 
-    // Thus adding the baselines below.
-    float weight=0;
-    if (itsSumAuto) {
-      // add autocorr to form new autocorr
-      addData (databl0, data, 0);
-      addData (databl0, data, 5);
-      addData (databl0, data, 15);
-      weight = 3;
-    } else {
-      // add crosscorr to form new autocorr
-      addData (databl0, data, 1);
-      addData (databl0, data, 3);
-      addData (databl0, data, 4);
-      addData (databl0, data, 7);
-      addData (databl0, data, 12);
-      addData (databl0, data, 13);
-      weight = 6;
-    }
+    addData (databl0, data, 0);
+    addData (databl0, data, 5);
+    addData (databl0, data, 15);
     addData (databl1, data, 8);
     addData (databl1, data, 9);
     addData (databl1, data, 11);
@@ -206,10 +190,10 @@ private:
     ASSERT (allEQ (buf.getFullResFlags(), false));
     // Now check data of new baselines.
     end[2] = itsNBl;
-    ASSERT (allNear (buf.getData()(IPosition(3,0,0,itsNBl), end), databl0/weight, 1e-5));
-    ASSERT (allNear (buf.getWeights()(IPosition(3,0,0,itsNBl), end), weight, 1e-5));
+    ASSERT (allNear (buf.getData()(IPosition(3,0,0,itsNBl), end), databl0, 1e-5));
+    ASSERT (allNear (buf.getWeights()(IPosition(3,0,0,itsNBl), end), 3.f, 1e-5));
     end[2] = itsNBl+1;
-    ASSERT (allNear (buf.getData()(IPosition(3,0,0,itsNBl+1), end), databl1/6.f, 1e-5));
+    ASSERT (allNear (buf.getData()(IPosition(3,0,0,itsNBl+1), end), databl1, 1e-5));
     ASSERT (allNear (buf.getWeights()(IPosition(3,0,0,itsNBl+1), end), 6.f, 1e-5));
     itsCount++;
     return true;
@@ -249,19 +233,7 @@ private:
   }
 
   int itsCount;
-  int itsNTime, itsNBl, itsNChan, itsNCorr;
-  bool itsSumAuto;
-};
-
-// Class that throws an error when process() is called
-class ThrowStep: public DPStep
-{
-    virtual void finish() {}
-    virtual void show (std::ostream&) const {}
-    virtual bool process (const DPBuffer&) {
-      cout<<"Previous step should have thrown an error!"<<endl;
-      return true;
-    }
+  int itsNTime, itsNBl, itsNChan, itsNCorr, itsNAvgTime, itsNAvgChan;
 };
 
 // Class to check result of flagged, unaveraged TestInput run by test2.
@@ -276,25 +248,13 @@ private:
   void addData (Cube<Complex>& to, const Cube<Complex>& from,
                 Cube<Float>& tow, const Cube<Float>& weights, int bl)
   {
-    Cube<Complex> tmp=from.copy();
-    Cube<Complex>::iterator tmpit=tmp.begin();
-    Cube<Float>::const_iterator weightit=weights.begin();
-    for (; tmpit!=to.end() && weightit!=weights.end(); tmpit++, weightit++) {
-      *tmpit *= *weightit;
-    }
-    to += tmp(IPosition(3,0,0,bl), IPosition(3,to.nrow()-1,to.ncolumn()-1,bl));
+    to += from(IPosition(3,0,0,bl), IPosition(3,to.nrow()-1,to.ncolumn()-1,bl));
     tow += weights(IPosition(3,0,0,bl), IPosition(3,to.nrow()-1,to.ncolumn()-1,bl));
   }
   void addConjData (Cube<Complex>& to, const Cube<Complex>& from,
                     Cube<Float>& tow, const Cube<Float>& weights, int bl)
   {
-    Cube<Complex> tmp=from.copy();
-    Cube<Complex>::iterator tmpit=tmp.begin();
-    Cube<Float>::const_iterator weightit=weights.begin();
-    for (; tmpit!=to.end() && weightit!=weights.end(); tmpit++, weightit++) {
-      *tmpit *= *weightit;
-    }
-    to += conj(tmp(IPosition(3,0,0,bl), IPosition(3,to.nrow()-1,to.ncolumn()-1,bl)));
+    to += conj(from(IPosition(3,0,0,bl), IPosition(3,to.nrow()-1,to.ncolumn()-1,bl)));
     tow += weights(IPosition(3,0,0,bl), IPosition(3,to.nrow()-1,to.ncolumn()-1,bl));
   }
   virtual bool process (const DPBuffer& buf)
@@ -315,7 +275,6 @@ private:
     Cube<Float> weightbl2 (itsNCorr, itsNChan, 1, 0.);
     Cube<Float> weightbl3 (itsNCorr, itsNChan, 1, 0.);
     Cube<Float> weightbl4 (itsNCorr, itsNChan, 1, 0.);
-    // "{ns1:[rs01.s01, rs02.s01], ns2:[cs01.s02, cs01.s01]}" was given.
     addData (databl0, data, weightbl0, weights, 8);
     addData (databl0, data, weightbl0, weights, 9);
     addData (databl1, data, weightbl1, weights, 12);
@@ -400,41 +359,9 @@ private:
   }
 
   int itsCount;
-  int itsNTime, itsNBl, itsNChan, itsNCorr;
+  int itsNTime, itsNBl, itsNChan, itsNCorr, itsNAvgTime, itsNAvgChan;
 };
 
-// Class to check result of TestInput run by test4.
-class TestOutput4: public DPStep
-{
-public:
-  TestOutput4(int ntime, int nbl, int nchan, int /*ncorr*/)
-    : itsNTime(ntime), itsNBl(nbl), itsNChan(nchan)
-  {}
-private:
-  virtual bool process (const DPBuffer&)
-  {
-    return true;
-  }
-
-  virtual void finish() {}
-  virtual void show (std::ostream&) const {}
-  virtual void updateInfo (const DPInfo& infoIn)
-  {
-    info() = infoIn;
-    ASSERT (int(infoIn.origNChan())==itsNChan);
-    ASSERT (int(infoIn.nchan())==itsNChan);
-    ASSERT (int(infoIn.ntime())==itsNTime);
-    ASSERT (infoIn.timeInterval()==5);
-    ASSERT (int(infoIn.nchanAvg())==1);
-    ASSERT (int(infoIn.ntimeAvg())==1);
-    ASSERT (int(infoIn.nbaselines())==itsNBl);
-    ASSERT (int(infoIn.antennaNames().size())==4);
-    ASSERT (int(infoIn.antennaDiam().size())==4);
-    ASSERT (int(infoIn.antennaPos().size())==4);
-  }
-
-  int itsNTime, itsNBl, itsNChan;
-};
 
 // Execute steps.
 void execute (const DPStep::ShPtr& step1)
@@ -449,10 +376,10 @@ void execute (const DPStep::ShPtr& step1)
 }
 
 // Test adding 3 stations.
-void test1(int ntime, int nbl, int nchan, int ncorr, bool sumauto)
+void test1(int ntime, int nbl, int nchan, int ncorr)
 {
   cout << "test1: ntime=" << ntime << " nrbl=" << nbl << " nchan=" << nchan
-       << " ncorr=" << ncorr << " sumauto=" << sumauto << endl;
+       << " ncorr=" << ncorr << endl;
   // Create the steps.
   TestInput* in = new TestInput(ntime, nbl, nchan, ncorr);
   DPStep::ShPtr step1(in);
@@ -460,13 +387,9 @@ void test1(int ntime, int nbl, int nchan, int ncorr, bool sumauto)
   parset.add ("stations",
               "{ns:[rs01.s01, rs02.s01, cs01.s02]}");
   parset.add ("autocorr", "true");
-  if (!sumauto) {
-    parset.add ("sumauto", "false");
-  }
-  parset.add ("average", "true");
   parset.add ("useweights", "false");
   DPStep::ShPtr step2(new StationAdder(in, parset, ""));
-  DPStep::ShPtr step3(new TestOutput(ntime, nbl, nchan, ncorr, sumauto));
+  DPStep::ShPtr step3(new TestOutput(ntime, nbl, nchan, ncorr));
   step1->setNextStep (step2);
   step2->setNextStep (step3);
   execute (step1);
@@ -484,7 +407,6 @@ void test2(int ntime, int nbl, int nchan, int ncorr)
   parset.add ("stations",
               "{ns1:[rs01.s01, rs02.s01], ns2:[cs01.s02, cs01.s01]}");
   parset.add ("autocorr", "false");
-  parset.add ("average", "false");
   DPStep::ShPtr step2(new StationAdder(in, parset, ""));
   DPStep::ShPtr step3(new TestOutput2(ntime, nbl, nchan, ncorr));
   step1->setNextStep (step2);
@@ -501,11 +423,8 @@ void test3 (const string& stations)
   ParameterSet parset;
   parset.add ("stations", stations);
   parset.add ("autocorr", "true");
-  parset.add ("average", "false");
   DPStep::ShPtr step2(new StationAdder(in, parset, ""));
-  DPStep::ShPtr step3(new ThrowStep());
   step1->setNextStep (step2);
-  step2->setNextStep (step3);
   bool ok = true;
   try {
     execute (step1);
@@ -514,24 +433,6 @@ void test3 (const string& stations)
     ok = false;
   }
   ASSERT (!ok);
-}
-
-// Test making a superstation out of nonexisting stations (should do nothing)
-void test4(int ntime, int nbl, int nchan, int ncorr)
-{
-  cout << "test4: ntime=" << ntime << " nrbl=" << nbl << " nchan=" << nchan
-       << " ncorr=" << ncorr << endl;
-  // Create the steps.
-  TestInput* in = new TestInput(ntime, nbl, nchan, ncorr);
-  DPStep::ShPtr step1(in);
-  ParameterSet parset;
-  parset.add ("stations",
-              "{ns1:nonexistingstationpattern}");
-  DPStep::ShPtr step2(new StationAdder(in, parset, ""));
-  DPStep::ShPtr step3(new TestOutput4(ntime, nbl, nchan, ncorr));
-  step1->setNextStep (step2);
-  step2->setNextStep (step3);
-  execute (step1);
 }
 
 void testPatterns()
@@ -556,21 +457,19 @@ void testPatterns()
 
 int main()
 {
-  INIT_LOGGER ("tStationAdder");
+  INIT_LOGGER ("tUVWFlagger");
   try {
     // Test the station selection patterns.
     testPatterns();
     // Test must be done with with 16 baselines.
-    test1( 10,  16, 32, 4, true);
-    test1( 10,  16, 32, 4, false);
+    test1( 10,  16, 32, 4);
     test2( 10,  16, 32, 4);
     // Unknown station.
-    //test3("{ns1:unknown, ns2:[cs01.s02, cs01.s01]}");
+    test3("{ns1:rs01.s1, ns2:[cs01.s02, cs01.s01]}");
     // New station already used.
     test3("{ns1:[rs01.s01, rs02.s01], cs01.s02:[cs01.s02, cs01.s01]}");
     // Old station doubly used.
     test3("{ns1:[rs01.s01, rs02.s01], ns2:[rs01.s01, cs01.s01]}");
-    test4( 10, 16, 32, 4);
   } catch (std::exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
     return 1;

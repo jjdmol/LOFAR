@@ -19,7 +19,6 @@ import Queue
 import SocketServer
 import cPickle as pickle
 
-from lofarpipe.support.lofarexceptions import PipelineQuit
 from lofarpipe.support.pipelinelogging import log_process_output
 from lofarpipe.support.utilities import spawn_process
 
@@ -83,10 +82,12 @@ class JobStreamHandler(SocketServer.StreamRequestHandler):
             (job_id, self.request.getpeername())
         )
         results = pickle.loads(pickled_results)
-
+        self.server.logger.debug("Results for job {0} : {1}".format(
+                job_id, results))
         # Use update to insert the result value from the node. (do not replace)
         self.server.jobpool[job_id].results.update(results)
-
+        self.server.logger.debug("Joined results for job {0} : {1}".format(
+                job_id, self.server.jobpool[job_id].results))
 
     def handle_log_record(self, chunk):
         record = logging.makeLogRecord(pickle.loads(chunk))
@@ -167,6 +168,6 @@ def job_server(logger, jobpool, error):
         yield jobserver.server_address
     except KeyboardInterrupt:
         jobserver.stop()
-        raise PipelineQuit()
+        raise
     jobserver.stop()
     [handler.flush() for handler in logger.handlers]

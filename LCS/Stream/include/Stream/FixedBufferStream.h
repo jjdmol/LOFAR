@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: NullStream.h 15458 2010-04-15 15:32:36Z romein $
 
 #ifndef LOFAR_LCS_STREAM_STRING_STREAM_H
 #define LOFAR_LCS_STREAM_STRING_STREAM_H
@@ -42,9 +42,11 @@ class FixedBufferStream : public Stream
     virtual size_t tryWrite(const void *ptr, size_t size);
 
   private:
+    char * const itsStart;
     char * const itsEnd;
 
     char *itsHead;
+    char *itsTail;
 };
 
 } // namespace LOFAR

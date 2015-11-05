@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2012
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -26,8 +26,8 @@
 -- Creates a rule for updating the modificationDate of the OTDBtree table.
 --
 
-DROP RULE IF EXISTS ruleUpdateVIC on vichierarchy;
-DROP RULE IF EXISTS ruleUpdateTemplate on victemplate;
+DROP RULE ruleUpdateVIC on vichierarchy;
+DROP RULE ruleUpdateTemplate on victemplate;
 
 CREATE RULE ruleUpdateVIC AS ON UPDATE
 	TO vichierarchy WHERE NEW.value <> OLD.value

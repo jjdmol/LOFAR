@@ -157,7 +157,7 @@ size_t MeasurementSet::AntennaCount()
 	return count;
 }
 
-class AntennaInfo MeasurementSet::GetAntennaInfo(unsigned antennaId)
+struct AntennaInfo MeasurementSet::GetAntennaInfo(unsigned antennaId)
 {
 	casa::MeasurementSet ms(_location);
 	casa::Table antennaTable = ms.antenna();
@@ -235,7 +235,7 @@ size_t MeasurementSet::FieldCount()
 	return fieldCount;
 }
 
-class FieldInfo MeasurementSet::GetFieldInfo(unsigned fieldIndex)
+struct FieldInfo MeasurementSet::GetFieldInfo(unsigned fieldIndex)
 {
 	casa::MeasurementSet ms(_location);
 	casa::Table fieldTable = ms.field();

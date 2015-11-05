@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh testLogger
+./runctest.sh testLogger 2>&1 > testLogger.log

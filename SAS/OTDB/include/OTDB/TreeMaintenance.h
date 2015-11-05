@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -142,8 +142,7 @@ public:
 								  uint32		depth);
 	// Get a list of nodes based on a namefragment. Use '%' as wildchar.
 	vector<OTDBnode> getItemList (treeIDType	aTreeID,
-								  const string&	aNameFragment,
-								  bool			isRegex = false);
+								  const string&	aNameFragment);
 
 	// Duplicates the given node (and its parameters and children)
 	// in the template database. The duplicate gets the new index.
@@ -191,11 +190,6 @@ public:
 							  nodeIDType		topItem,
 							  const string&		filename);
 
-	// Export all reported metadata from the given VIC tree
-	bool	exportMetadata (treeIDType			aTreeID,
-					  		const string&		filename,
-							bool				uniqKeys = true);
-
 	//# --- Finally some general tree maintenance ---
 	// Delete a tree (of any kind) from the database.
 	bool		deleteTree(treeIDType		aTreeID);
@@ -217,8 +211,7 @@ public:
 	// constraints/validations for the current type must be fulfilled.
 	// When errors occur these can be retrieved with the errorMsg function.
 	bool	setTreeState(treeIDType		aTreeID,
-						 treeState		aState,
-						 bool			allow_endtime_update = true);
+						 treeState		aState);
 
 	// Update the description of a tree.
 	bool	setDescription(treeIDType	aTreeID,
@@ -227,8 +220,7 @@ public:
 	// Set the scheduling times of the tree
 	bool	setSchedule(treeIDType		aTreeID,
 				        const string&	aStartTime,
-				        const string& 	aStopTime,
-						bool			inTreeAlso = true);
+				        const string& 	aStopTime);
 
 	// Whenever an error occurs in one the OTDB functions the message can
 	// be retrieved with this function.

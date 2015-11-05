@@ -26,7 +26,6 @@
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
 #include <DPPP/DPLogger.h>
-#include <StationResponse/LofarMetaDataUtil.h>
 #include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
 
@@ -39,11 +38,7 @@
 #include <measures/TableMeasures/ScalarMeasColumn.h>
 #include <measures/TableMeasures/ArrayMeasColumn.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
-#if defined(casacore)
-#include <ms/MSSel/MSSelection.h>
-#else
 #include <ms/MeasurementSets/MSSelection.h>
-#endif
 #include <casa/Containers/Record.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Quanta/MVTime.h>
@@ -56,21 +51,21 @@ namespace LOFAR {
   namespace DPPP {
 
     MSReader::MSReader()
-      : itsReadVisData   (False),
-        itsLastMSTime    (0),
-        itsNrRead        (0),
-        itsNrInserted    (0)
+      : itsReadVisData (False),
+        itsLastMSTime  (0),
+        itsNrRead      (0),
+        itsNrInserted  (0)
     {}
 
     MSReader::MSReader (const string& msName,
                         const ParameterSet& parset,
                         const string& prefix,
                         bool missingData)
-      : itsReadVisData   (False),
-        itsMissingData   (missingData),
-        itsLastMSTime    (0),
-        itsNrRead        (0),
-        itsNrInserted    (0)
+      : itsReadVisData (False),
+        itsMissingData (missingData),
+        itsLastMSTime  (0),
+        itsNrRead      (0),
+        itsNrInserted  (0)
     {
       NSTimer::StartStop sstime(itsTimer);
       // Get info from parset.
@@ -79,13 +74,8 @@ namespace LOFAR {
       itsNrChanStr        = parset.getString (prefix+"nchan", "0");
       string startTimeStr = parset.getString (prefix+"starttime", "");
       string endTimeStr   = parset.getString (prefix+"endtime", "");
-      itsTimeTolerance    = parset.getDouble (prefix+"timetolerance", 1e-2);
       itsUseFlags         = parset.getBool   (prefix+"useflag", true);
       itsDataColName      = parset.getString (prefix+"datacolumn", "DATA");
-      itsWeightColName    = parset.getString (prefix+"weightcolumn",
-                                              "WEIGHT_SPECTRUM");
-      itsModelColName     = parset.getString (prefix+"modelcolumn",
-                                              "MODEL_DATA");
       itsAutoWeight       = parset.getBool   (prefix+"autoweight", false);
       itsAutoWeightForce  = parset.getBool   (prefix+"forceautoweight", false);
       itsNeedSort         = parset.getBool   (prefix+"sort", false);
@@ -93,41 +83,40 @@ namespace LOFAR {
       // Try to open the MS and get its full name.
       if (itsMissingData  &&  !Table::isReadable (msName)) {
         DPLOG_WARN_STR ("MeasurementSet " << msName
-            << " not found; dummy data used");
+			<< " not found; dummy data used");
         return;
       }
       itsMS = MeasurementSet (msName, TableLock::AutoNoReadLocking);
-      itsSelMS = itsMS;
       itsMSName = itsMS.tableName();
       // See if a selection on band needs to be done.
       // We assume that DATA_DESC_ID and SPW_ID map 1-1.
       if (itsSpw >= 0) {
-        DPLOG_INFO_STR (" MSReader selecting spectral window " << itsSpw << " ...");
-        Table subset = itsSelMS (itsSelMS.col("DATA_DESC_ID") == itsSpw);
+	DPLOG_INFO_STR (" MSReader selecting spectral window " << itsSpw << " ...");
+        Table subset = itsMS (itsMS.col("DATA_DESC_ID") == itsSpw);
         // If not all is selected, use the selection.
-        if (subset.nrow() < itsSelMS.nrow()) {
+        if (subset.nrow() < itsMS.nrow()) {
           ASSERTSTR (subset.nrow() > 0, "Band " << itsSpw << " not found in "
                      << itsMSName);
-          itsSelMS = subset;
+          itsMS = subset;
         }
       } else {
         itsSpw = 0;
       }
       // See if a selection on baseline needs to be done.
       if (! itsSelBL.empty()) {
-        DPLOG_INFO_STR (" MSReader selecting baselines ...");
+	DPLOG_INFO_STR (" MSReader selecting baselines ...");
         MSSelection select;
         // Set given selection strings.
         select.setAntennaExpr (itsSelBL);
         // Create a table expression for an MS representing the selection.
-        MeasurementSet ms(itsSelMS);
+        MeasurementSet ms(itsMS);
         TableExprNode node = select.toTableExprNode (&ms);
-        Table subset = itsSelMS(node);
+        Table subset = itsMS(node);
         // If not all is selected, use the selection.
-        if (subset.nrow() < itsSelMS.nrow()) {
+        if (subset.nrow() < itsMS.nrow()) {
           ASSERTSTR (subset.nrow() > 0, "Baselines " << itsSelBL
                      << "not found in " << itsMSName);
-          itsSelMS = subset;
+          itsMS = subset;
         }
       }
       // Prepare the MS access and get time info.
@@ -214,18 +203,9 @@ namespace LOFAR {
 
     bool MSReader::process (const DPBuffer&)
     {
-      if (itsNrRead == 0) {
-        if (itsReadVisData) {
-          itsBuffer.getData().resize (itsNrCorr, itsNrChan, itsNrBl);
-        }
-        if (itsUseFlags) {
-          itsBuffer.getFlags().resize (itsNrCorr, itsNrChan, itsNrBl);
-        }
-        ///cout<<(void*)(itsBuffer.getData().data())<<" upd"<<endl;
-      }
       {
         NSTimer::StartStop sstime(itsTimer);
-        ///        itsBuffer.clear();
+        itsBuffer.clear();
         // Use time from the current time slot in the MS.
         bool useIter = false;
         while (!itsIter.pastEnd()) {
@@ -234,16 +214,14 @@ namespace LOFAR {
           // Skip time slot and give warning if MS data is not in time order.
           if (mstime < itsLastMSTime) {
             LOG_WARN_STR ("Time at rownr "
-                          << itsIter.table().rowNumbers(itsMS)[0]
+                          << itsIter.table().rowNumbers()[0]
                           << " of MS " << itsMSName
                           << " is less than previous time slot");
           } else {
             // Use the time slot if near or < nexttime, but > starttime.
             // In this way we cater for irregular times in some WSRT MSs.
-            if (nearAbs(mstime, itsNextTime, itsTimeTolerance)) {
-              useIter = true;
-              break;
-            } else if (mstime > itsFirstTime  &&  mstime < itsNextTime) {
+            if (near(mstime, itsNextTime)  ||
+                (mstime > itsFirstTime  &&  mstime < itsNextTime)) {
               itsFirstTime -= itsNextTime-mstime;
               itsNextTime = mstime;
               useIter = true;
@@ -269,45 +247,41 @@ namespace LOFAR {
           // Need to insert a fully flagged time slot.
           itsBuffer.setRowNrs (Vector<uint>());
           itsBuffer.setExposure (itsTimeInterval);
+          itsBuffer.getData().resize  (itsNrCorr, itsNrChan, itsNrBl);
+          itsBuffer.getFlags().resize (itsNrCorr, itsNrChan, itsNrBl);
+          itsBuffer.getData() = Complex();
           itsBuffer.getFlags() = true;
-          if (itsReadVisData){
-            itsBuffer.getData() = Complex();
-          }
+          // Calculate UVWs for them. Setup UVW object if not done yet.
+          calcUVW();
           itsNrInserted++;
         } else {
           itsBuffer.setRowNrs (itsIter.table().rowNumbers(itsMS, True));
           if (itsMissingData) {
             // Data column not present, so fill a fully flagged time slot.
             itsBuffer.setExposure (itsTimeInterval);
+            itsBuffer.getData().resize  (itsNrCorr, itsNrChan, itsNrBl);
+            itsBuffer.getFlags().resize (itsNrCorr, itsNrChan, itsNrBl);
+            itsBuffer.getData() = Complex();
             itsBuffer.getFlags() = true;
-            if (itsReadVisData) {
-              itsBuffer.getData() = Complex();
-            }
           } else {
             // Set exposure.
             itsBuffer.setExposure (ROScalarColumn<double>
                                    (itsIter.table(), "EXPOSURE")(0));
             // Get data and flags from the MS.
-            ///            if (itsNrRead%50 < 4) {
-            ///              cout<<(void*)(itsBuffer.getData().data())<<" rd1"<<endl;
-            ///}
             if (itsReadVisData) {
               ROArrayColumn<Complex> dataCol(itsIter.table(), itsDataColName);
               if (itsUseAllChan) {
-                dataCol.getColumn (itsBuffer.getData());
+                itsBuffer.setData (dataCol.getColumn());
               } else {
-                dataCol.getColumn (itsColSlicer, itsBuffer.getData());
+                itsBuffer.setData (dataCol.getColumn(itsColSlicer));
               }
             }
-            ///if (itsNrRead%50 < 4) {
-            ///cout<<(void*)(itsBuffer.getData().data())<<" rd2"<<endl;
-            ///}
             if (itsUseFlags) {
               ROArrayColumn<bool> flagCol(itsIter.table(), "FLAG");
               if (itsUseAllChan) {
-                flagCol.getColumn (itsBuffer.getFlags());
+                itsBuffer.setFlags (flagCol.getColumn());
               } else {
-                flagCol.getColumn(itsColSlicer, itsBuffer.getFlags());
+                itsBuffer.setFlags (flagCol.getColumn(itsColSlicer));
               }
               // Set flags if FLAG_ROW is set.
               ROScalarColumn<bool> flagrowCol(itsIter.table(), "FLAG_ROW");
@@ -324,8 +298,25 @@ namespace LOFAR {
               itsBuffer.getFlags() = false;
             }
             // Flag invalid data (NaN, infinite).
-            flagInfNaN(itsBuffer.getData(), itsBuffer.getFlags(),
-                       itsFlagCounter);
+            const Complex* dataPtr = itsBuffer.getData().data();
+            bool* flagPtr = itsBuffer.getFlags().data();
+            for (uint i=0; i<itsBuffer.getData().size();) {
+              for (uint j=i; j<i+itsNrCorr; ++j) {
+                bool flag = (!isFinite(dataPtr[j].real())  ||
+                             !isFinite(dataPtr[j].imag()));
+                if (flag) {
+                  itsFlagCounter.incrCorrelation(j-i);
+                }
+                if (flag  ||  flagPtr[j]) {
+                  // Flag all correlations if a single one is flagged.
+                  for (uint k=i; k<i+itsNrCorr; ++k) {
+                    flagPtr[k] = true;
+                  }
+                  break;
+                }
+              }
+              i += itsNrCorr;
+            }
           }
           itsLastMSTime = itsNextTime;
           itsNrRead++;
@@ -340,31 +331,6 @@ namespace LOFAR {
       // Do not add to previous time, because it introduces round-off errors.
       itsNextTime = itsFirstTime + (itsNrRead+itsNrInserted) * itsTimeInterval;
       return true;
-    }
-
-    void MSReader::flagInfNaN(const casa::Cube<casa::Complex>& dataCube,
-                              casa::Cube<bool>& flagsCube,
-                              FlagCounter& flagCounter) {
-      int ncorr=dataCube.shape()[0];
-      const Complex* dataPtr = dataCube.data();
-      bool* flagPtr = flagsCube.data();
-      for (uint i=0; i<dataCube.size();) {
-        for (uint j=i; j<i+ncorr; ++j) {
-          bool flag = (!isFinite(dataPtr[j].real())  ||
-                       !isFinite(dataPtr[j].imag()));
-          if (flag) {
-            flagCounter.incrCorrelation(j-i);
-          }
-          if (flag  ||  flagPtr[j]) {
-            // Flag all correlations if a single one is flagged.
-            for (uint k=i; k<i+ncorr; ++k) {
-              flagPtr[k] = true;
-            }
-            break;
-          }
-        }
-        i += ncorr;
-      }
     }
 
     void MSReader::finish()
@@ -390,15 +356,14 @@ namespace LOFAR {
         os << "  ncorrelations:  " << getInfo().ncorr() << std::endl;
         uint nrbl = getInfo().nbaselines();
         os << "  nbaselines:     " << nrbl << std::endl;
-        os << "  ntimes:         " << itsSelMS.nrow() / nrbl << std::endl;
+        os << "  ntimes:         " << itsMS.nrow() / nrbl << std::endl;
         os << "  time interval:  " << getInfo().timeInterval() << std::endl;
         os << "  DATA column:    " << itsDataColName;
         if (itsMissingData) {
           os << "  (not present)";
         }
         os << std::endl;
-        os << "  WEIGHT column:  " << itsWeightColName << std::endl;
-        os << "  autoweight:     " << boolalpha << itsAutoWeight << std::endl;
+        os << "  autoweight:     " << itsAutoWeight << std::endl;
       }
     }
 
@@ -421,25 +386,15 @@ namespace LOFAR {
     void MSReader::prepare (double& firstTime, double& lastTime,
                             double& interval)
     {
-      ASSERT (itsSelMS.nrow() > 0);
+      ASSERT (itsMS.nrow() > 0);
+      // Test if WEIGHT_SPECTRUM is present.
       TableDesc tdesc = itsMS.tableDesc();
-
       itsHasWeightSpectrum = false;
-      // if weightcolname is specified to "WEIGHT" then this is used, even
-      // if a weight_spectrum is present.
-      if (itsWeightColName!="WEIGHT") {
-        // Test if specified weight column or WEIGHT_SPECTRUM is present.
-        if (tdesc.isColumn(itsWeightColName)) {
-          // The column is there, but it might not contain values. Test row 0.
-          itsHasWeightSpectrum =
-            ROArrayColumn<float>(itsSelMS, itsWeightColName).isDefined(0);
-          if (!itsHasWeightSpectrum && itsWeightColName!="WEIGHT_SPECTRUM") {
-            LOG_WARN ("Specified weight column " + itsWeightColName +
-                "is not a valid column, using WEIGHT instead");
-          }
-        }
+      if (tdesc.isColumn("WEIGHT_SPECTRUM")) {
+        // The column is there, but it might not contain values. Test row 0.
+        itsHasWeightSpectrum =
+          ROArrayColumn<float>(itsMS, "WEIGHT_SPECTRUM").isDefined(0);
       }
-
       // Test if the data column is present.
       if (tdesc.isColumn (itsDataColName)) {
         itsMissingData = false;
@@ -453,7 +408,6 @@ namespace LOFAR {
                              " is missing in " + itsMSName));
         }
       }
-
       // Test if the full resolution flags are present.
       itsHasFullResFlags = tdesc.isColumn("LOFAR_FULL_RES_FLAG");
       if (itsHasFullResFlags) {
@@ -485,14 +439,14 @@ namespace LOFAR {
       } else if (!useRaw && itsAutoWeight) {
         THROW (Exception, "Using autoweight=true cannot be done on DPPP-ed MS");
       }
-      // If not in order, sort the table selection (also on baseline).
-      Table sortms(itsSelMS);
+      // If not in order, sort the main table (also on baseline).
+      Table sortms(itsMS);
       Block<String> sortCols(3);
       sortCols[0] = "TIME";
       sortCols[1] = "ANTENNA1";
       sortCols[2] = "ANTENNA2";
       if (needSort) {
-        sortms = itsSelMS.sort(sortCols);
+        sortms = itsMS.sort(sortCols);
       }
       // Get first and last time and interval from MS.
       firstTime = ROScalarColumn<double>(sortms, "TIME")(0);
@@ -503,7 +457,7 @@ namespace LOFAR {
                                TableIterator::Ascending,
                                TableIterator::NoSort);
       // Find the nr of corr, chan, and baseline.
-      IPosition shp (ROArrayColumn<Complex>(itsSelMS, "DATA").shape(0));
+      IPosition shp (ROArrayColumn<Complex>(itsMS, "DATA").shape(0));
       itsNrCorr = shp[0];
       itsNrChan = shp[1];
       itsNrBl   = itsIter.table().nrow();
@@ -532,12 +486,6 @@ namespace LOFAR {
       // Set antenna/baseline info.
       info().set (nameCol.getColumn(), diamCol.getColumn(), antPos,
                   ant1col.getColumn(), ant2col.getColumn());
-
-      if (itsAutoWeight) {
-        info().setNeedVisData();
-        info().setWriteWeights();
-      }
-
       // Read the phase reference position from the FIELD subtable.
       // Only use the main value from the PHASE_DIR array.
       // The same for DELAY_DIR and LOFAR_TILE_BEAM_DIR.
@@ -574,17 +522,8 @@ namespace LOFAR {
     {
       // Set the info.
       uint ntime = uint((itsLastTime - itsFirstTime)/itsTimeInterval + 1.5);
-      // Read the antenna set.
-      Table obstab(itsMS.keywordSet().asTable("OBSERVATION"));
-      string antennaSet;
-      if (obstab.nrow() > 0  &&
-          obstab.tableDesc().isColumn ("LOFAR_ANTENNA_SET")) {
-        antennaSet = ROScalarColumn<String>(obstab, "LOFAR_ANTENNA_SET")(0);
-      }
       info().init (itsNrCorr, itsNrChan, ntime, itsStartTime,
-                   itsTimeInterval, itsMSName, antennaSet);
-      info().setDataColName(itsDataColName);
-      info().setWeightColName(itsWeightColName);
+                   itsTimeInterval, itsMSName);
       // Read the center frequencies of all channels.
       Table spwtab(itsMS.keywordSet().asTable("SPECTRAL_WINDOW"));
       ROArrayColumn<double> freqCol  (spwtab, "CHAN_FREQ");
@@ -618,7 +557,7 @@ namespace LOFAR {
         // Skip time slot and give warning if MS data is not in time order.
         if (mstime < itsLastMSTime) {
           LOG_WARN_STR ("Time at rownr "
-                        << itsIter.table().rowNumbers(itsMS)[0]
+                        << itsIter.table().rowNumbers()[0]
                         << " of MS " << itsMSName
                         << " is less than previous time slot");
         } else {
@@ -649,78 +588,76 @@ namespace LOFAR {
       }
     }
 
-    void MSReader::calcUVW (double time, DPBuffer& buf)
+    void MSReader::calcUVW()
     {
-      Matrix<double>& uvws = buf.getUVW();
-      uvws.resize (3, itsNrBl);
+      Matrix<double> uvws(3, itsNrBl);
       const Vector<Int>& ant1 = getInfo().getAnt1();
       const Vector<Int>& ant2 = getInfo().getAnt2();
       for (uint i=0; i<itsNrBl; ++i) {
-        uvws.column(i) = itsUVWCalc.getUVW (ant1[i], ant2[i], time);
+        uvws.column(i) = itsUVWCalc.getUVW (ant1[i], ant2[i], itsNextTime);
       }
+      itsBuffer.setUVW (uvws);
     }
 
-    void MSReader::getUVW (const RefRows& rowNrs, double time, DPBuffer& buf)
+    Matrix<double> MSReader::getUVW (const RefRows& rowNrs)
     {
       NSTimer::StartStop sstime(itsTimer);
-      // Calculate UVWs if empty rownrs (i.e., missing data).
-      if (rowNrs.rowVector().empty()) {
-        calcUVW (time, buf);
-      } else {
-        ROArrayColumn<double> dataCol(itsMS, "UVW");
-        dataCol.getColumnCells (rowNrs, buf.getUVW());
-      }
+      // Empty rownrs cannot happen for data, because in that case the buffer
+      // should contain UVW for a missing time slot.
+      ASSERT (! rowNrs.rowVector().empty());
+      ROArrayColumn<double> dataCol(itsMS, "UVW");
+      return dataCol.getColumnCells (rowNrs);
     }
 
-    void MSReader::getWeights (const RefRows& rowNrs, DPBuffer& buf)
+    Cube<float> MSReader::getWeights (const RefRows& rowNrs,
+                                      const DPBuffer& buf)
     {
       NSTimer::StartStop sstime(itsTimer);
-      Cube<float>& weights = buf.getWeights();
-      // Resize if needed (probably when called for first time).
-      if (weights.empty()) {
-        weights.resize (itsNrCorr, itsNrChan, itsNrBl);
-      }
       if (rowNrs.rowVector().empty()) {
         // rowNrs can be empty if a time slot was inserted.
+        Cube<float> weights(itsNrCorr, itsNrChan, itsNrBl);
         weights = 0;
-      } else {
-        // Get weights for entire spectrum if present.
-        if (itsHasWeightSpectrum) {
-          ROArrayColumn<float> wsCol(itsMS, itsWeightColName);
-          // Using getColumnCells(rowNrs,itsColSlicer) fails for LofarStMan.
-          // Hence work around it.
-          if (itsUseAllChan) {
-            wsCol.getColumnCells (rowNrs, weights);
-          } else {
-            Cube<float> w = wsCol.getColumnCells (rowNrs);
-            weights = w(itsArrSlicer);
-          }
-        } else {
-          // No spectrum present; get global weights and assign to each channel.
-          ROArrayColumn<float> wCol(itsMS, "WEIGHT");
-          Matrix<float> inArr = wCol.getColumnCells (rowNrs);
-          float* inPtr  = inArr.data();
-          float* outPtr = weights.data();
-          for (uint i=0; i<itsNrBl; ++i) {
-            // Set global weights to 1 if zero. Some old MSs need that.
-            for (uint k=0; k<itsNrCorr; ++k) {
-              if (inPtr[k] == 0.) {
-                inPtr[k] = 1.;
-              }
-            }
-            for (uint j=0; j<itsNrChan; ++j) {
-              for (uint k=0; k<itsNrCorr; ++k) {
-                *outPtr++ = inPtr[k];
-              }
-            }
-            inPtr += itsNrCorr;
-          }
-        }
-        if (itsAutoWeight) {
-          // Adapt weights using autocorrelations.
-          autoWeight (weights, buf);
-        }
+        return weights;
       }
+      Cube<float> weights;
+      // Get weights for entire spectrum if present.
+      if (itsHasWeightSpectrum) {
+        ROArrayColumn<float> wsCol(itsMS, "WEIGHT_SPECTRUM");
+        // Using getColumnCells(rowNrs,itsColSlicer) fails for LofarStMan.
+        // Hence work around it.
+        weights.reference (wsCol.getColumnCells (rowNrs));
+        if (!itsUseAllChan) {
+          // Make a copy, so the weights are consecutive in memory.
+          weights.reference (weights(itsArrSlicer).copy());
+        }
+      } else {
+        // No spectrum present; get global weights and assign to each channel.
+        ROArrayColumn<float> wCol(itsMS, "WEIGHT");
+        Matrix<float> inArr = wCol.getColumnCells (rowNrs);
+        Cube<float> outArr(itsNrCorr, itsNrChan, itsNrBl);
+        float* inPtr  = inArr.data();
+        float* outPtr = outArr.data();
+        for (uint i=0; i<itsNrBl; ++i) {
+          // If global weights are zero, set them to 1. Some old MSs need that.
+          for (uint k=0; k<itsNrCorr; ++k) {
+            if (inPtr[k] == 0.) {
+              inPtr[k] = 1.;
+            }
+          }
+          for (uint j=0; j<itsNrChan; ++j) {
+            for (uint k=0; k<itsNrCorr; ++k) {
+              *outPtr++ = inPtr[k];
+            }
+          }
+          inPtr += itsNrCorr;
+        }
+        weights.reference (outArr);
+      }
+      if (itsAutoWeight) {
+        // Adapt weights using autocorrelations.
+        autoWeight (weights, buf);
+      }
+      return weights;
     }
 
     void MSReader::autoWeight (Cube<float>& weights, const DPBuffer& buf)
@@ -771,26 +708,15 @@ namespace LOFAR {
       }
     }
 
-    bool MSReader::getFullResFlags (const RefRows& rowNrs, DPBuffer& buf)
+    Cube<bool> MSReader::getFullResFlags (const RefRows& rowNrs)
     {
       NSTimer::StartStop sstime(itsTimer);
-      Cube<bool>& flags = buf.getFullResFlags();
-      int norigchan = itsNrChan * itsFullResNChanAvg;
-      // Resize if needed (probably when called for first time).
-      if (flags.empty()) {
-        flags.resize (norigchan, itsFullResNTimeAvg, itsNrBl);
-      }
-      // Return false if no fullRes flags available.
-      if (!itsHasFullResFlags) {
-        flags = false;
-        return false;
-      }
-      // Flag everything if data rows are missing.
-      if (rowNrs.rowVector().empty()) {
-        flags = true;
-        return true;
+      // Return empty array if no fullRes flags.
+      if (!itsHasFullResFlags  ||  rowNrs.rowVector().empty()) {
+        return Cube<bool>();
       }
       ROArrayColumn<uChar> fullResFlagCol(itsMS, "LOFAR_FULL_RES_FLAG");
+      int norigchan = itsNrChan * itsFullResNChanAvg;
       int origstart = itsStartChan * itsFullResNChanAvg;
       Array<uChar> chars = fullResFlagCol.getColumnCells (rowNrs);
       // The original flags are kept per channel, not per corr.
@@ -799,62 +725,63 @@ namespace LOFAR {
       // ntimeavg is the nr of times used when averaging.
       // Return it as Cube<bool>[norigchan,ntimeavg,nrbl].
       IPosition chShape = chars.shape();
-      ASSERT (chShape[1] == itsFullResNTimeAvg  &&  chShape[2] == itsNrBl);
+      IPosition ofShape(3, norigchan, chShape[1], chShape[2]);
+      Cube<bool> flags(ofShape);
       // Now expand the bits to bools.
       // If all bits to convert are contiguous, do it all in one go.
       // Otherwise we have to iterate.
-      if (norigchan == chShape[0]*8) {
+      if (ofShape[0] == chShape[0]*8) {
         Conversion::bitToBool (flags.data(), chars.data(), flags.size());
       } else {
-        ASSERT (norigchan < chShape[0]*8);
+        ASSERT (ofShape[0] < chShape[0]*8);
         const uChar* charsPtr = chars.data();
         bool* flagsPtr = flags.data();
-        for (int i=0; i<chShape[1]*chShape[2]; ++i) {
-          Conversion::bitToBool (flagsPtr, charsPtr, origstart, norigchan);
-          flagsPtr += norigchan;
+        for (int i=0; i<ofShape[1]*ofShape[2]; ++i) {
+          Conversion::bitToBool (flagsPtr, charsPtr, origstart, ofShape[0]);
+          flagsPtr += ofShape[0];
           charsPtr += chShape[0];
         }
       }
-      return true;
+      return flags;
     }
 
-    void MSReader::getModelData (const casa::RefRows& rowNrs,
-                                 casa::Cube<casa::Complex>& arr)
+    /*
+    Cube<Complex> MSReader::getData (const String& columnName,
+                                     const RefRows& rowNrs)
     {
       NSTimer::StartStop sstime(itsTimer);
-      if (rowNrs.rowVector().empty()) {
-        arr.resize (itsNrCorr, itsNrChan, itsNrBl);
-        arr = Complex();
-      } else {
-        ROArrayColumn<Complex> modelCol(itsMS, itsModelColName);
-        if (itsUseAllChan) {
-          modelCol.getColumnCells (rowNrs, arr);
-        } else {
-          modelCol.getColumnCells (rowNrs, itsColSlicer, arr);
-        }
-      }
+      // Empty rownrs cannot happen for data, because in that case the buffer
+      // should contain data for a missing time slot.
+      ASSERT (! rowNrs.rowVector().empty());
+      ROArrayColumn<Complex> dataCol(itsMS, columnName);
+      // Also work around LofarStMan/getColumnCells slice problem.
+      Cube<Complex> data = dataCol.getColumnCells (rowNrs);
+      return (itsUseAllChan ? data : data(itsArrSlicer));
     }
+    */
 
-    void MSReader::fillBeamInfo (vector<StationResponse::Station::Ptr>& vec,
-                                 const Vector<String>& antNames)
+    void MSReader::putFlags (const RefRows& rowNrs,
+                             const Cube<bool>& flags)
     {
-      // Get the names of all stations in the MS.
-      const Vector<String>& allNames = getInfo().antennaNames();
-      // Create a vector holding the beam info of all stations.
-      vector<StationResponse::Station::Ptr> beams (allNames.size());
-      StationResponse::readStations (itsMS, beams.begin());
-      // Copy only the ones for which the station name matches.
-      // Note: the order of the station names in both vectors match.
-      vec.resize (antNames.size());
-      uint ant = 0;
-      for (uint i=0; i<allNames.size(); ++i) {
-        if (ant < antNames.size()  &&  allNames[i] == antNames[ant]) {
-          vec[ant] = beams[i];
-          ant++;
-        }
+      if (! rowNrs.rowVector().empty()) {
+        itsMS.reopenRW();
+        ArrayColumn<bool> flagCol(itsMS, "FLAG");
+        ScalarColumn<bool> flagRowCol(itsMS, "FLAG_ROW");
+        // Loop over all rows of this subset.
+	// (it also avoids StandardStMan putCol with RefRows problem).
+        Vector<uint> rows = rowNrs.convert();
+        ReadOnlyArrayIterator<bool> flagIter (flags, 2);
+        for (uint i=0; i<rows.size(); ++i) {
+          flagCol.putSlice (rows[i], itsColSlicer, flagIter.array());
+          // If a new flag in a row is clear, the ROW_FLAG should not be set.
+          // If all new flags are set, we leave it because we might have a
+          // subset of the channels, so other flags might still be clear.
+          if (anyEQ (flagIter.array(), False)) {
+            flagRowCol.put (rows[i], False);
+          }
+          flagIter.next();
+	}
       }
-      ASSERTSTR (ant == vec.size(), "MSReader::fillBeamInfo -"
-                 " some stations miss the beam info");
     }
 
   } //# end namespace

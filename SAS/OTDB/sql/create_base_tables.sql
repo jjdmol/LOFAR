@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -21,18 +21,18 @@
 --
 --  $Id$
 --
-DROP TABLE IF EXISTS classification CASCADE;
-DROP TABLE IF EXISTS constr_type 	  CASCADE;
-DROP TABLE IF EXISTS param_type 	  CASCADE;
-DROP TABLE IF EXISTS pvss_type 	  CASCADE;
-DROP TABLE IF EXISTS validation 	  CASCADE;
-DROP TABLE IF EXISTS unit		 	  CASCADE;
-DROP TABLE IF EXISTS treetype 	  CASCADE;
-DROP TABLE IF EXISTS treestate 	  CASCADE;
+DROP TABLE classification CASCADE;
+DROP TABLE constr_type 	  CASCADE;
+DROP TABLE param_type 	  CASCADE;
+DROP TABLE pvss_type 	  CASCADE;
+DROP TABLE validation 	  CASCADE;
+DROP TABLE unit		 	  CASCADE;
+DROP TABLE treetype 	  CASCADE;
+DROP TABLE treestate 	  CASCADE;
 
-DROP SEQUENCE IF EXISTS			  campaignID;
-DROP TABLE IF EXISTS campaign 	  CASCADE;
-DROP TABLE IF EXISTS operator 	  CASCADE;
+DROP SEQUENCE			  campaignID;
+DROP TABLE campaign 	  CASCADE;
+DROP TABLE operator 	  CASCADE;
 
 --
 -- Classification table
@@ -252,7 +252,6 @@ INSERT INTO treestate VALUES (350, 'prescheduled');
 INSERT INTO treestate VALUES (400, 'scheduled');
 INSERT INTO treestate VALUES (500, 'queued');
 INSERT INTO treestate VALUES (600, 'active');
-INSERT INTO treestate VALUES (900, 'completing');
 INSERT INTO treestate VALUES (1000, 'finished');
 INSERT INTO treestate VALUES (1100, 'aborted');
 INSERT INTO treestate VALUES (1150, 'error');
@@ -302,7 +301,7 @@ INSERT INTO operator VALUES (2, 'gargamel', '0123456789');
 --
 -- All allowed combinations of processType, processSubtype and strategy
 --
---DROP TABLE IF EXISTS processTypes;
+--DROP TABLE processTypes;
 --CREATE TABLE processTypes  (
 --	processType		VARCHAR(20)	  NOT NULL DEFAULT '',
 --	processSubtype	VARCHAR(50)   NOT NULL DEFAULT '',

@@ -11,7 +11,7 @@ class BBSFileTest(SwitchableTest):
     Test for BBS-format file input.
     """
     def setUp(self):
-        super(BBSFileTest, self).setUp()
+        self.cm = GSMConnectionManager()
         self.conn = self.cm.get_connection()
 
     def test_first_file(self):

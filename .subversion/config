@@ -137,12 +137,9 @@ enable-auto-props = yes
 *.bat = svn:eol-style=CRLF;svn:keywords=Author Date Id Revision
 *.bib = svn:eol-style=native
 *.bmp = svn:mime-type=image/bmp
-*.bst = svn:eol-style=native
-*.bz2 = svn:mime-type=application/x-bzip2
-*.c = svn:eol-style=native;svn:keywords=Author Date Id Revision
+*.bz2 = svn:mime-type=application/x-bzip
 *.cc = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.cfg = svn:eol-style=native
-*.cl = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.cls = svn:eol-style=native
 *.cmake = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.comp = svn:eol-style=native;svn:keywords=Author Date Id Revision
@@ -150,8 +147,7 @@ enable-auto-props = yes
 *.cpp = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.csh = svn:eol-style=native;svn:executable;svn:keywords=Author Date Id Revision
 *.css = svn:eol-style=native
-*.cu = svn:eol-style=native;svn:keywords=Author Date Id Revision
-*.cuh = svn:eol-style=native;svn:keywords=Author Date Id Revision
+*.c = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.cxx = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.doc = svn:mime-type=application/msword
 *.dox = svn:eol-style=native
@@ -163,12 +159,11 @@ enable-auto-props = yes
 *.hh = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.hpp = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.h = svn:eol-style=native;svn:keywords=Author Date Id Revision
-*.htm = svn:eol-style=native
 *.html = svn:eol-style=native
+*.htm = svn:eol-style=native
 *.hxx = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.idl = svn:eol-style=native
 *.in = svn:eol-style=native
-*.ipynb = svn:eol-style=native
 *.java = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.jpg = svn:mime-type=image/jpeg
 *.js = svn:eol-style=native
@@ -185,14 +180,10 @@ enable-auto-props = yes
 *.ppt = svn:mime-type=application/vnd.ms-powerpoint
 *.py = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.rtf = svn:mime-type=application/rtf
-*.run = svn:eol-style=LF;svn:executable;svn:keywords=Author Date Id Revision
+*.run = svn:eol-style=native;svn:executable
+*.sh = svn:eol-style=native;svn:executable;svn:keywords=Author Date Id Revision
 *.S = svn:eol-style=native;svn:keywords=Author Date Id Revision
-*.sh = svn:eol-style=LF;svn:executable;svn:keywords=Author Date Id Revision
 *.stdout = svn:eol-style=native
-*.sty = svn:eol-style=native
-*.svg = svn:mime-type=image/svg-xml
-*.svgz = svn:mime-type=image/svg-xml
-*.tar = svn:mime-type=application/x-tar
 *.tcc = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.tex = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.tgz = svn:mime-type=application/x-compressed-tar
@@ -202,8 +193,10 @@ enable-auto-props = yes
 *.yy = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.zip = svn:mime-type=application/zip
 AUTHORS = svn:eol-style=native
+ChangeLog = svn:eol-style=native
 COPYING = svn:eol-style=native
 INSTALL = svn:eol-style=native
+NEWS = svn:eol-style=native
 README = svn:eol-style=native
 Doxyfile = svn:eol-style=native
 Makefile = svn:eol-style=native;svn:keywords=Author Date Id Revision

@@ -8,7 +8,7 @@ Below is an example of running PyBDSM on an image composed primarily of point so
 
     $ pybdsm
 
-    PyBDSM version 1.7.0 (LOFAR revision 20883)
+    PyBDSM version 1.1 (LOFAR revision 20883)
     ========================================================================
     PyBDSM commands
       inp task ............ : Set current task and list parameters
@@ -139,33 +139,26 @@ Lastly, the plot window is closed, and the source catalog is written out to an A
     WRITE_CATALOG: Write the Gaussian, source, or shapelet list to a file.
     ================================================================================
     outfile ............... None : Output file name. None => file is named
-                                   automatically; 'SAMP' => send to SAMP hub (e.g.,
-                                   to TOPCAT, ds9, or Aladin)
+                                   automatically
     bbs_patches ........... None : For BBS format, type of patch to use: None => no
                                    patches. 'single' => all Gaussians in one patch.
                                    'gaussian' => each Gaussian gets its own patch.
                                    'source' => all Gaussians belonging to a single
                                    source are grouped into one patch
-    bbs_patches_mask ...... None : Name of the mask file (of same size as input image)
-                                   that defines the patches if bbs_patches = 'mask'
-    catalog_type .......... 'srl': Type of catalog to write:  'gaul' - Gaussian
+    catalog_type ......... 'gaul': Type of catalog to write:  'gaul' - Gaussian
                                    list, 'srl' - source list (formed by grouping
                                    Gaussians), 'shap' - shapelet list
     clobber .............. False : Overwrite existing file?
-    correct_proj .......... True : Correct source parameters for image projection
-                                   (BBS format only)?
-    format ............... 'fits': Format of output catalog: 'bbs', 'ds9', 'fits',
-                                   'star', 'kvis', or 'ascii', 'csv', 'casabox',
-                                   or 'sagecal'
-    incl_chan ............ False : Include flux densities from each channel (if any)?
-    incl_empty ........... False : Include islands without any valid Gaussians (source
-                                   list only)?
+    format ................ 'bbs': Format of output catalog: 'bbs', 'ds9', 'fits',
+                                   'star', 'kvis', or 'ascii'
     srcroot ............... None : Root name for entries in the output catalog. None
                                    => use image file name
 
-    BDSM [7]: format='ascii'
+    BDSM [7]: catalog_type='srl'
 
-    BDSM [8]: go
+    BDSM [8]: format='ascii'
+
+    BDSM [9]: go
     ---------> go()
     --> Wrote ASCII file 'VLSS.fits.pybdsm.srl'
 
@@ -234,6 +227,7 @@ You can use the complete functionality of PyBDSM within Python scripts (see :ref
      If you are working on the LOFAR CEP I/II clusters, then at some point before running the script, you will need to do::
 
         $ use LofIm
+        $ use Pythonlibs
 
 ::
 
@@ -243,7 +237,7 @@ You can use the complete functionality of PyBDSM within Python scripts (see :ref
     # catalogs and residual and model images for each input image. Call it
     # with "python pybdsm_example.py"
 
-    from lofar import bdsm
+    import lofar.bdsm as bdsm
 
     # Define the list of images to process and the parameter save file
     input_images = ['a2597.fits', 'a2256_1.fits', 'a2256_2.fits',
@@ -292,11 +286,32 @@ At this point, make sure that TOPCAT is started and its SAMP hub is running (act
 
 ::
 
-    BDSM [2]: inp write_catalog
+    BSDM [2]: inp write_catalog
+    --------> inp(write_catalog)
+    WRITE_CATALOG: Write the Gaussian, source, or shapelet list to a file.
+    ================================================================================
+    outfile ............... None : Output file name. None => file is named
+                                   automatically; 'SAMP' => send to SAMP hub (e.g.,
+                                   to TOPCAT, ds9, or Aladin)
+    bbs_patches ........... None : For BBS format, type of patch to use: None => no
+                                   patches. 'single' => all Gaussians in one patch.
+                                   'gaussian' => each Gaussian gets its own patch.
+                                   'source' => all Gaussians belonging to a single
+                                   source are grouped into one patch
+    catalog_type ......... 'gaul': Type of catalog to write:  'gaul' - Gaussian
+                                   list, 'srl' - source list (formed by grouping
+                                   Gaussians), 'shap' - shapelet list
+    clobber .............. False : Overwrite existing file?
+    format ................ 'bbs': Format of output catalog: 'bbs', 'ds9', 'fits',
+                                   'star', 'kvis', or 'ascii'
+    srcroot ............... None : Root name for entries in the output catalog. None
+                                   => use image file name
 
     BDSM [3]: outfile='SAMP'
 
-    BDSM [4]: go
+    BDSM [4]: catalog_type='srl'
+
+    BDSM [5]: go
     ---------> go()
     --> Table sent to SAMP hub.
 

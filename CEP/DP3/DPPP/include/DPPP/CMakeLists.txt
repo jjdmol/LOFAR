@@ -2,22 +2,18 @@
 
 # List of header files that will be installed.
 set(inst_HEADERS
-  DPRun.h DPStep.h DPInput.h DPBuffer.h DPInfo.h ApplyCal.h
+  DPRun.h DPStep.h DPInput.h DPBuffer.h DPInfo.h
   DPLogger.h ProgressMeter.h FlagCounter.h
   UVWCalculator.h BaselineSelection.h
   MSReader.h MSWriter.h MSUpdater.h Counter.h
   Averager.h MedFlagger.h PreFlagger.h UVWFlagger.h AORFlagger.h
-  StationAdder.h ScaleData.h Filter.h
+  StationAdder.h Filter.h
   PhaseShift.h Demixer.h
   Cursor.h CursorUtilCasa.h Position.h Stokes.h SourceDBUtil.h
   Apply.h EstimateMixed.h Simulate.h Simulator.h SubtractMixed.h Baseline.h
   ModelComponent.h PointSource.h GaussianSource.h Patch.h
   ModelComponentVisitor.h
-  DemixerNew.h DemixInfo.h DemixWorker.h
-  ApplyBeam.h ApplyBeam.tcc
-  Predict.h
-  GainCal.h
-)
+  FlaggerStatistics.h)
 
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
