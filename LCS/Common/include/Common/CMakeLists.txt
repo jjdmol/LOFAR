@@ -11,7 +11,6 @@ install(FILES
   Backtrace.h
   CasaLogSink.h
   CheckConfig.h
-  compiler.h
   ComplexBuiltinFP.h
   ComplexBuiltinInt.h
   ComplexC99.h
@@ -28,9 +27,9 @@ install(FILES
   KVpair.h
   lofar_algorithm.h
   lofar_bitset.h
-  LofarBitModeInfo.h
   LofarConstants.h
   lofar_complex.h
+  lofar_datetime.h
   lofar_deque.h
   lofar_fstream.h
   lofar_iomanip.h
@@ -56,15 +55,12 @@ install(FILES
   LofarTypedefs.h
   LofarTypes.h
   lofar_vector.h
-  Mmap.h
   Numeric.h
-  NsTimestamp.h
   ObjectFactory.h
   OpenMP.h
-  ParameterRecord.h
+  ParameterValue.h
   ParameterSet.h
   ParameterSetImpl.h
-  ParameterValue.h
   PrettyUnits.h
   Process.h
   ReadLine.h

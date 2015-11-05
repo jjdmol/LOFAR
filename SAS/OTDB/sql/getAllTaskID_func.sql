@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2010
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@
 
 CREATE OR REPLACE FUNCTION getAllTaskID()
   RETURNS SETOF INTEGER AS $$
-    --  $Id: addComponentToVT_func.sql 19935 2012-01-25 09:06:14Z mol $
 	DECLARE
 		vRecord		RECORD;
 
@@ -31,7 +30,7 @@ CREATE OR REPLACE FUNCTION getAllTaskID()
 	  FOR vRecord IN 
 	    SELECT CAST(value AS INTEGER) 
 	    FROM VICHIERARCHY 
-	    WHERE NAME = 'LOFAR.ObsSW.Observation.Scheduler.taskID' 
+	    WHERE NAME LIKE '%taskID' 
 	    ORDER BY VALUE 
 	    LOOP
 	  	  RETURN NEXT vRecord.value;

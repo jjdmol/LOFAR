@@ -3,7 +3,7 @@
 lofar_package(MACIO 1.0 DEPENDS Common)
 
 include(LofarFindPackage)
-lofar_find_package(Boost COMPONENTS date_time)
+lofar_find_package(Boost)
 
 include_directories(${CMAKE_BINARY_DIR}/include/MAC)
 

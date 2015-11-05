@@ -139,15 +139,13 @@ namespace LOFAR
       return (altzone + timezone);
 #elif defined(__APPLE__)
       time_t tim = time (NULL);
-      struct tm tm_info;
-      localtime_r (&tim, &tm_info);
-      return tm_info.tm_gmtoff;
+      struct tm *tm_info = localtime (&tim);
+      return tm_info->tm_gmtoff;
 #else
       int dst = 0;
       time_t tim = time (NULL);
-      struct tm tm_info;
-      localtime_r (&tim, &tm_info);
-      if (tm_info.tm_isdst > 0) {
+      struct tm *tm_info = localtime (&tim);
+      if (tm_info->tm_isdst > 0) {
         dst = 3600;
       }
       return dst - timezone;

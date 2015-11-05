@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -31,10 +31,9 @@
 #include <unistd.h>
 
 namespace LOFAR {
-  using namespace SB_Protocol;
-  namespace GCF {
-    using namespace TM;
-    namespace SB {
+ namespace GCF {
+  using namespace TM;
+  namespace SB {
 
 //
 // Initialize static elements
@@ -53,7 +52,6 @@ GTMSBHandler::GTMSBHandler()
 //
 ServiceBrokerTask::ServiceBrokerTask() :
 	GCFTask((State)&ServiceBrokerTask::operational, sSBTaskName),
-	itsSeqnr		   (0),
 //	itsMaxResponse (15),
 	itsMaxConnectTime  (1),
 	itsMaxResponseTime (5),
@@ -207,7 +205,6 @@ void ServiceBrokerTask::deletePort(GCFTCPPort& aPort)
 	ALiter		end  = tmpActionList.end();
 	ALiter		iter = tmpActionList.begin();
 	while (iter != end) {
-		LOG_TRACE_COND_STR("deletePort checking: " << iter->print());
 		if (iter->pPort != &aPort) {			// copy others only
 			itsActionList.push_back(*iter);
 		}
@@ -293,9 +290,14 @@ void ServiceBrokerTask::_logResult(uint16	 	result,
 //
 unsigned short ServiceBrokerTask::_registerAction(Action action)
 {
+	// reset number when list is empty
+	if (itsActionList.empty()) {
+		itsSeqnr = 0;
+	}
+	
 	action.seqnr = ++itsSeqnr;
 	itsActionList.push_back(action);
-	LOG_TRACE_COND_STR("RegisterAction: " << action.print());
+
 	return (itsSeqnr);
 }
 
@@ -339,7 +341,6 @@ void ServiceBrokerTask::_doActionList(const string&	hostname)
 	ALiter		end  = tmpActionList.end();
 	ALiter		iter = tmpActionList.begin();
 	while (iter != end) {
-		LOG_TRACE_COND_STR("doActionList checking: " << iter->print());
 		// only process the actions for this host
 		if (iter->hostname != hostname) {
 			itsActionList.push_back(*iter);		// restore in original list.
@@ -383,7 +384,6 @@ void ServiceBrokerTask::_lostBroker(const string& hostname)
 	ALiter		end  = tmpActionList.end();
 	ALiter		iter = tmpActionList.begin();
 	while (iter != end) {
-		LOG_TRACE_COND_STR("_lostBroker checking: " << iter->print());
 		// only process the actions for this host
 		if (iter->hostname != hostname) {
 			itsActionList.push_back(*iter);		// restore in original list.
@@ -453,7 +453,6 @@ ServiceBrokerTask::ALiter	ServiceBrokerTask::_findAction(uint16	seqnr)
 	ALiter	end  = itsActionList.end();
 	ALiter	iter = itsActionList.begin();
 	while (iter != end) {
-		LOG_TRACE_COND_STR("_findAction checking: " << iter->print());
 		if (iter->seqnr == seqnr) {
 			return (iter);
 		}
@@ -497,7 +496,6 @@ void ServiceBrokerTask::_reconnectBrokers()
 				tmp->second.port->open();						// might result in F_CONN or F_DISCONN
 			}
 			else {
-				LOG_DEBUG_STR("Removing servicebroker for " << tmp->first << " from brokermap");
 				itsBrokerMap.erase(tmp);
 			}
 		}
@@ -546,7 +544,6 @@ void ServiceBrokerTask::_checkActionList(const string&	hostname)
 	time_t	currentTime = time(0);
 	// check for which actions we are late.
 	while (iter != end) {
-		LOG_TRACE_COND_STR("_checkActionList checking: " << iter->print());
 		bool	actionHandled(false);
 		if (iter->hostname == hostname) {
 			switch (iter->type) {

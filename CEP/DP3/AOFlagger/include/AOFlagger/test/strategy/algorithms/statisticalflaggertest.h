@@ -109,7 +109,7 @@ inline void StatisticalFlaggerTest::TestTimeDilation::operator()()
 	AssertEquals(maskToString(mask), "xx xx     ");
 
 	StatisticalFlagger::DensityTimeFlagger(mask, 0.5);
-	AssertTrue(mask->Value(2,0), "Fill hole");
+	AssertEquals(mask->Value(2,0), true, "Fill hole");
 	
 	mask = Mask2D::CreateSetMaskPtr<false>(40, 1);
 	//             0    5    0    5    0    5    0    5    
@@ -162,7 +162,7 @@ inline void StatisticalFlaggerTest::TestFrequencyDilation::operator()()
 	AssertEquals(maskToString(mask), "xx xx     ");
 
 	StatisticalFlagger::DensityFrequencyFlagger(mask, 0.5);
-	AssertTrue(mask->Value(0,2), "Fill hole");
+	AssertEquals(mask->Value(0,2), true, "Fill hole");
 	
 	mask = Mask2D::CreateSetMaskPtr<false>(1, 40);
 	//             0    5    0    5    0    5    0    5    

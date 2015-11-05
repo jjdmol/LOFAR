@@ -24,25 +24,16 @@
 #include <AOFlagger/test/testingtools/unittest.h>
 
 #include <AOFlagger/strategy/algorithms/mitigationtester.h>
-#include <AOFlagger/strategy/algorithms/siroperator.h>
+#include <AOFlagger/strategy/algorithms/scaleinvariantdilation.h>
 #include <AOFlagger/strategy/algorithms/thresholdmitigater.h>
 
-#include <AOFlagger/strategy/actions/baselineselectionaction.h>
 #include <AOFlagger/strategy/actions/changeresolutionaction.h>
-#include <AOFlagger/strategy/actions/combineflagresultsaction.h>
 #include <AOFlagger/strategy/actions/foreachcomplexcomponentaction.h>
 #include <AOFlagger/strategy/actions/foreachpolarisationaction.h>
-#include <AOFlagger/strategy/actions/frequencyselectionaction.h>
-#include <AOFlagger/strategy/actions/highpassfilteraction.h>
 #include <AOFlagger/strategy/actions/iterationaction.h>
-#include <AOFlagger/strategy/actions/plotaction.h>
-#include <AOFlagger/strategy/actions/setflaggingaction.h>
-#include <AOFlagger/strategy/actions/setimageaction.h>
 #include <AOFlagger/strategy/actions/slidingwindowfitaction.h>
-#include <AOFlagger/strategy/actions/statisticalflagaction.h>
 #include <AOFlagger/strategy/actions/strategyaction.h>
 #include <AOFlagger/strategy/actions/sumthresholdaction.h>
-#include <AOFlagger/strategy/actions/timeselectionaction.h>
 
 #include <AOFlagger/strategy/control/artifactset.h>
 
@@ -54,23 +45,16 @@ class DefaultStrategySpeedTest : public UnitTest {
 	public:
 		DefaultStrategySpeedTest() : UnitTest("Default strategy speed test")
 		{
-			if(false)
+			if(true)
 			{
-				AddTest(TimeLoopUntilAmplitude(), "Timing loop until amplitude");
-				AddTest(TimeLoop(), "Timing loop");
-				AddTest(TimeSumThreshold(), "Timing SumThreshold method");
-				AddTest(TimeRankOperator(), "Timing scale-invariant rank operator");
-				//AddTest(TimeSumThresholdN(), "Timing varying SumThreshold method");
-			}
+			AddTest(TimeLoopUntilAmplitude(), "Timing loop until amplitude");
+			AddTest(TimeLoop(), "Timing loop");
 			AddTest(TimeSlidingWindowFit(), "Timing sliding window fit");
-			AddTest(TimeHighPassFilter(), "Timing high-pass filter");
+			AddTest(TimeSumThreshold(), "Timing sum threshold method");
+			AddTest(TimeRankOperator(), "Timing scale invariant rank operator");
+			}
+			AddTest(TimeSumThresholdN(), "Timing varying sum threshold method");
 			AddTest(TimeStrategy(), "Timing strategy");
-			AddTest(TimeSSEHighPassFilterStrategy(), "Timing SSE high-pass filter strategy");
-		}
-		
-		DefaultStrategySpeedTest(const std::string &) : UnitTest("Default strategy speed test")
-		{
-			AddTest(TimeSumThresholdN(), "Timing varying SumThreshold method");
 		}
 		
 	private:
@@ -79,10 +63,6 @@ class DefaultStrategySpeedTest : public UnitTest {
 			void operator()();
 		};
 		struct TimeSlidingWindowFit : public Asserter
-		{
-			void operator()();
-		};
-		struct TimeHighPassFilter : public Asserter
 		{
 			void operator()();
 		};
@@ -103,10 +83,6 @@ class DefaultStrategySpeedTest : public UnitTest {
 			void operator()();
 		};
 		struct TimeRankOperator : public Asserter
-		{
-			void operator()();
-		};
-		struct TimeSSEHighPassFilterStrategy : public Asserter
 		{
 			void operator()();
 		};
@@ -194,53 +170,6 @@ inline void DefaultStrategySpeedTest::TimeSlidingWindowFit::operator()()
 	Stopwatch watch(true);
 	strategy.Perform(artifacts, progressListener);
 	AOLogger::Info << "Sliding window fit took (loop + fit): " << watch.ToString() << '\n';
-}
-
-inline void DefaultStrategySpeedTest::TimeHighPassFilter::operator()()
-{
-	rfiStrategy::ArtifactSet artifacts(0);
-	rfiStrategy::ActionBlock *current;
-
-	rfiStrategy::Strategy strategy;
-	
-	rfiStrategy::ForEachPolarisationBlock *fepBlock = new rfiStrategy::ForEachPolarisationBlock();
-	strategy.Add(fepBlock);
-	current = fepBlock;
-
-	rfiStrategy::ForEachComplexComponentAction *focAction = new rfiStrategy::ForEachComplexComponentAction();
-	focAction->SetOnAmplitude(true);
-	focAction->SetOnImaginary(false);
-	focAction->SetOnReal(false);
-	focAction->SetOnPhase(false);
-	focAction->SetRestoreFromAmplitude(false);
-	current->Add(focAction);
-	current = focAction;
-
-	rfiStrategy::IterationBlock *iteration = new rfiStrategy::IterationBlock();
-	iteration->SetIterationCount(2);
-	iteration->SetSensitivityStart(4.0);
-	current->Add(iteration);
-	current = iteration;
-	
-	rfiStrategy::ChangeResolutionAction *changeResAction2 = new rfiStrategy::ChangeResolutionAction();
-	changeResAction2->SetTimeDecreaseFactor(3);
-	changeResAction2->SetFrequencyDecreaseFactor(3);
-
-	rfiStrategy::HighPassFilterAction *hpAction = new rfiStrategy::HighPassFilterAction();
-	hpAction->SetHKernelSigmaSq(2.5);
-	hpAction->SetWindowWidth(10);
-	hpAction->SetVKernelSigmaSq(5.0);
-	hpAction->SetWindowHeight(15);
-	hpAction->SetMode(rfiStrategy::HighPassFilterAction::StoreRevised);
-	changeResAction2->Add(hpAction);
-
-	current->Add(changeResAction2);
-	
-	prepareStrategy(artifacts);
-	DummyProgressListener progressListener;
-	Stopwatch watch(true);
-	strategy.Perform(artifacts, progressListener);
-	AOLogger::Info << "High-pass filter took (loop + fit): " << watch.ToString() << '\n';
 }
 
 inline void DefaultStrategySpeedTest::TimeLoop::operator()()
@@ -373,18 +302,18 @@ inline void DefaultStrategySpeedTest::TimeSumThresholdN::operator()()
 		
 		Mask2DPtr maskA = Mask2D::CreateCopy(artifacts.OriginalData().GetSingleMask());
 		Stopwatch watchA(true);
-		ThresholdMitigater::HorizontalSumThresholdLargeReference(input, maskA, length, threshold);
+		ThresholdMitigater::HorizontalSumThresholdLarge(input, maskA, length, threshold);
 		AOLogger::Info << "Horizontal, length " << length << ": " << watchA.ToString() << '\n';
-		
-		Mask2DPtr maskC = Mask2D::CreateCopy(artifacts.OriginalData().GetSingleMask());
-		Stopwatch watchC(true);
-		ThresholdMitigater::HorizontalSumThresholdLargeSSE(input, maskC, length, threshold);
-		AOLogger::Info << "Horizontal SSE, length " << length << ": " << watchC.ToString() << '\n';
 		
 		Mask2DPtr maskB = Mask2D::CreateCopy(artifacts.OriginalData().GetSingleMask());
 		Stopwatch watchB(true);
 		ThresholdMitigater::VerticalSumThresholdLargeReference(input, maskB, length, threshold);
 		AOLogger::Info << "Vertical, length " << length << ": " << watchB.ToString() << '\n';
+		
+		//Stopwatch watchC(true);
+		//Mask2DPtr newMask = maskB->CreateXYFlipped();
+		//Image2DPtr newImage = input->CreateXYFlipped();
+		//AOLogger::Info << "Flip XY" << length << ": " << watchC.ToString() << '\n';
 		
 		Mask2DPtr maskD = Mask2D::CreateCopy(artifacts.OriginalData().GetSingleMask());
 		Stopwatch watchD(true);
@@ -408,8 +337,8 @@ inline void DefaultStrategySpeedTest::TimeRankOperator::operator()()
 	Mask2DPtr input = Mask2D::CreateCopy(artifacts.ContaminatedData().GetSingleMask());
 	
 	Stopwatch operatorTimer(true);
-	SIROperator::OperateHorizontally(input, 0.2);
-	SIROperator::OperateVertically(input, 0.2);
+	ScaleInvariantDilation::DilateHorizontally(input, 0.2);
+	ScaleInvariantDilation::DilateVertically(input, 0.2);
 	operatorTimer.Pause();
 	
 	long double operatorTime = operatorTimer.Seconds();
@@ -421,91 +350,5 @@ inline void DefaultStrategySpeedTest::TimeRankOperator::operator()()
 		<< ", " << ( operatorTime * 100.0 / totalTime) << "%\n";
 }
 
-inline void DefaultStrategySpeedTest::TimeSSEHighPassFilterStrategy::operator()()
-{
-	rfiStrategy::Strategy *strategy = new rfiStrategy::Strategy();
-	rfiStrategy::ActionBlock &block = *strategy;
-	rfiStrategy::ActionBlock *current;
-
-	block.Add(new rfiStrategy::SetFlaggingAction());
-
-	rfiStrategy::ForEachPolarisationBlock *fepBlock = new rfiStrategy::ForEachPolarisationBlock();
-	block.Add(fepBlock);
-	current = fepBlock;
-
-	rfiStrategy::ForEachComplexComponentAction *focAction = new rfiStrategy::ForEachComplexComponentAction();
-	focAction->SetOnAmplitude(true);
-	focAction->SetOnImaginary(false);
-	focAction->SetOnReal(false);
-	focAction->SetOnPhase(false);
-	focAction->SetRestoreFromAmplitude(false);
-	current->Add(focAction);
-	current = focAction;
-
-	rfiStrategy::IterationBlock *iteration = new rfiStrategy::IterationBlock();
-	iteration->SetIterationCount(2);
-	iteration->SetSensitivityStart(4.0);
-	current->Add(iteration);
-	current = iteration;
-	
-	rfiStrategy::SumThresholdAction *t2 = new rfiStrategy::SumThresholdAction();
-	t2->SetBaseSensitivity(1.0);
-	current->Add(t2);
-
-	rfiStrategy::CombineFlagResults *cfr2 = new rfiStrategy::CombineFlagResults();
-	current->Add(cfr2);
-
-	cfr2->Add(new rfiStrategy::FrequencySelectionAction());
-	cfr2->Add(new rfiStrategy::TimeSelectionAction());
-
-	current->Add(new rfiStrategy::SetImageAction());
-	rfiStrategy::ChangeResolutionAction
-		*changeResAction2 = new rfiStrategy::ChangeResolutionAction();
-	changeResAction2->SetTimeDecreaseFactor(3);
-	changeResAction2->SetFrequencyDecreaseFactor(3);
-
-	rfiStrategy::HighPassFilterAction *hpAction = new rfiStrategy::HighPassFilterAction();
-	hpAction->SetHKernelSigmaSq(2.5);
-	hpAction->SetWindowWidth(10*2+1);
-	hpAction->SetVKernelSigmaSq(5.0);
-	hpAction->SetWindowHeight(15*2+1);
-	hpAction->SetMode(rfiStrategy::HighPassFilterAction::StoreRevised);
-	changeResAction2->Add(hpAction);
-
-	current->Add(changeResAction2);
-
-	current = focAction;
-	rfiStrategy::SumThresholdAction *t3 = new rfiStrategy::SumThresholdAction();
-	current->Add(t3);
-	
-	rfiStrategy::PlotAction *plotPolarizationStatistics = new rfiStrategy::PlotAction();
-	plotPolarizationStatistics->SetPlotKind(rfiStrategy::PlotAction::PolarizationStatisticsPlot);
-	block.Add(plotPolarizationStatistics);
-	
-	rfiStrategy::SetFlaggingAction
-		*setFlagsInAllPolarizations = new rfiStrategy::SetFlaggingAction();
-	setFlagsInAllPolarizations->SetNewFlagging(rfiStrategy::SetFlaggingAction::PolarisationsEqual);
-	
-	block.Add(setFlagsInAllPolarizations);
-	block.Add(new rfiStrategy::StatisticalFlagAction());
-	block.Add(new rfiStrategy::TimeSelectionAction());
-
-	rfiStrategy::BaselineSelectionAction
-		*baselineSelection = new rfiStrategy::BaselineSelectionAction();
-	baselineSelection->SetPreparationStep(true);
-	block.Add(baselineSelection);
-
-	rfiStrategy::SetFlaggingAction *orWithOriginals = new rfiStrategy::SetFlaggingAction();
-	orWithOriginals->SetNewFlagging(rfiStrategy::SetFlaggingAction::OrOriginal);
-	block.Add(orWithOriginals);
-
-	rfiStrategy::ArtifactSet artifacts(0);
-	prepareStrategy(artifacts);
-	DummyProgressListener progressListener;
-	Stopwatch watch(true);
-	strategy->Perform(artifacts, progressListener);
-	AOLogger::Info << "Default strategy took: " << watch.ToString() << '\n';
-	delete strategy;
-}
 
 #endif

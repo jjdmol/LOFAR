@@ -2,7 +2,7 @@
 //#
 //# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //# This program is free software; you can redistribute it and/or modify
 //# it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@ template <typename T_EXPR_VALUE>
 class AsExpr;
 
 // Adaptor class to bundle multiple Expr<Scalar> into a single Expr<Vector<N> >.
+template <>
 template <unsigned int LENGTH>
 class AsExpr<Vector<LENGTH> >: public Expr<Vector<LENGTH> >
 {
@@ -153,22 +154,6 @@ public:
 protected:
     virtual const Scalar::View evaluateImpl(const Grid&,
         const Scalar::View &mod, const Scalar::View &arg) const;
-};
-
-// Adaptor class to transform a real Expr<Scalar> into a complex
-// Expr<Scalar> phasor, where the input Expr represents the complex argument
-// (phase).
-class AsPhasor: public BasicUnaryExpr<Scalar, Scalar>
-{
-public:
-    typedef shared_ptr<AsPhasor>        Ptr;
-    typedef shared_ptr<const AsPhasor>  ConstPtr;
-
-    AsPhasor(const Expr<Scalar>::ConstPtr &phase);
-
-protected:
-    virtual const Scalar::View evaluateImpl(const Grid&,
-        const Scalar::View &phase) const;
 };
 
 // @}

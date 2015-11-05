@@ -1,0 +1,4 @@
+# ClockControl
+connected			bool
+requestedClock		int
+actualClock			int

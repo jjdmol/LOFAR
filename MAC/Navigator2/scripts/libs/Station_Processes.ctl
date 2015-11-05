@@ -2,7 +2,7 @@
 //
 //  Copyright (C) 2002-2004
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -144,8 +144,8 @@ bool Station_Processes_UpdateStationControllers() {
   LOG_TRACE("Station_Processes.ctl:updateStationControllers|selected station: "+ station_selectedStation +" New: "+ newSelectedStation);
 
   // check if selection is made, and the selection is indeed a new one
-  if (newSelectedStation != "") {
-    if (strpos(newSelectedStation,":") < 0) {
+  if (newSelectedStation != 0) {
+    if (strtok(newSelectedStation,":") < 0) {
       station_selectedStation=newSelectedStation+":";
     } else {
       station_selectedStation=newSelectedStation;
@@ -153,7 +153,7 @@ bool Station_Processes_UpdateStationControllers() {
   }
   
   stationDBName.text(station_selectedStation);
-  
+    
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","BeamControlPanel",
         DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(station_obsBaseDP,station_selectedStation));
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","CalibrationControlPanel",
@@ -192,12 +192,8 @@ bool Station_Processes_UpdateProcessesList() {
   if(station_selectedObservation != "") {
     // get the real name from the selected Observation
     string obsDP=claimManager_nameToRealName("LOFAR_ObsSW_"+station_selectedObservation);
-
-    if (station_selectedStation == "" ||station_selectedStation == ":" ) {
-     station_selectedStation = dpSubStr(g_currentDatapoint,DPSUB_SYS);
-    }   
     
-    if (strpos(station_selectedStation,":") < 0) { 
+    if (strtok(station_selectedStation,":") < 0) { 
       station_selectedStation+=":";
     }
     if (strpos(obsDP,station_selectedStation) < 0) {     
@@ -209,7 +205,6 @@ bool Station_Processes_UpdateProcessesList() {
 
     //select all Ctrl under Station:LOFAR_PermSW_'station_selectedObservation'
     string query="SELECT '_original.._value' FROM '"+obsDP+"_*.status.state' REMOTE '"+station_selectedStation+"'";
-    
     LOG_DEBUG("Station_Processes.ctl:updateProcessesList|Query: "+ query);
     dpQuery(query, tab);
     LOG_TRACE("Station_Processes.ctl:updateProcessesList|Station Controllers Found: "+ tab);

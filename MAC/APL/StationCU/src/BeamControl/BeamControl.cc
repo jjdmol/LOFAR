@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
 #include <Common/Version.h>
-#include <ApplCommon/LofarDirs.h>
 #include <ApplCommon/Observation.h>
 #include <ApplCommon/StationConfig.h>
 #include <ApplCommon/StationInfo.h>
@@ -44,20 +43,14 @@
 #include "PVSSDatapointDefs.h"
 #include <StationCU/Package__Version.h>
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::RTDB;
 using namespace LOFAR::APL::RTDBCommon;
-using namespace boost::posix_time;
 using namespace std;
 
 namespace LOFAR {
 	using namespace APLCommon;
-	using namespace DP_Protocol;
-	using namespace Controller_Protocol;
-	using namespace IBS_Protocol;
 	namespace StationCU {
 
 #define MAX2(a,b)	((a)>(b)?(a):(b))
@@ -256,8 +249,7 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 		itsParentControl->activateObservationTimers(msg.cntlrName, startTime, stopTime);
 
 		LOG_INFO ("Killing running beamctl's if any");
-		int retval = system ("killall beamctl");
-		(void)retval;
+		system ("killall beamctl");
 
 		LOG_INFO ("Going to started state");
 		TRAN(BeamControl::started_state);				// go to next state.
@@ -473,24 +465,23 @@ GCFEvent::TResult BeamControl::allocBeams_state(GCFEvent& event, GCFPortInterfac
 		// digital part
 		if (!itsObs->beams.empty()) {			// fill digital part if any
 			StationConfig		sc;
-			beamAllocEvent.ringNr = ((sc.hasSplitters && (beamAllocEvent.antennaSet.substr(0,7) == "HBA_ONE")) ? 1 : 0);
+			beamAllocEvent.ringNr = ((sc.hasSplitters && (beamAllocEvent.antennaSet == "HBA_ONE")) ? 1 : 0);
 
-			vector<int> beamBeamlets = itsObs->getBeamlets(beamIdx);
-			if (itsObs->beams[beamIdx].subbands.size() != beamBeamlets.size()) {
+			if (itsObs->beams[beamIdx].subbands.size() != itsObs->beams[beamIdx].beamlets.size()) {
 				LOG_FATAL_STR("size of subbandList (" << itsObs->beams[beamIdx].subbands.size() << ") != " <<
-								"size of beamletList (" << beamBeamlets.size() << ")");
+								"size of beamletList (" << itsObs->beams[beamIdx].beamlets.size() << ")");
 				setState(CTState::CLAIMED);
 				sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), CT_RESULT_BEAMALLOC_FAILED);
 				TRAN(BeamControl::claimed_state);
 				return (GCFEvent::HANDLED);
 			}
 			LOG_DEBUG_STR("nr Subbands:" << itsObs->beams[beamIdx].subbands.size());
-			LOG_DEBUG_STR("nr Beamlets:" << beamBeamlets.size());
+			LOG_DEBUG_STR("nr Beamlets:" << itsObs->beams[beamIdx].beamlets.size());
 
 			// construct subband to beamlet map
-			vector<int32>::iterator beamletIt = beamBeamlets.begin();
+			vector<int32>::iterator beamletIt = itsObs->beams[beamIdx].beamlets.begin();
 			vector<int32>::iterator subbandIt = itsObs->beams[beamIdx].subbands.begin();
-			while (beamletIt != beamBeamlets.end() && subbandIt != itsObs->beams[beamIdx].subbands.end()) {
+			while (beamletIt != itsObs->beams[beamIdx].beamlets.end() && subbandIt != itsObs->beams[beamIdx].subbands.end()) {
 				LOG_DEBUG_STR("alloc[" << *beamletIt << "]=" << *subbandIt);
 				beamAllocEvent.allocation()[*beamletIt++] = *subbandIt++;
 			}
@@ -627,9 +618,6 @@ GCFEvent::TResult BeamControl::sendPointings_state(GCFEvent& event, GCFPortInter
 		LOG_DEBUG_STR(ptEvent);
 	}
 	break;
-
-	case F_EXIT:
-		break;
 
 	case IBS_POINTTOACK: {
 		IBSPointtoackEvent ack(event);
@@ -829,7 +817,7 @@ void BeamControl::beamsToPVSS()
 		writeVector(os, itsObs->beams[i].subbands);
 		subbandArr.push_back   (new GCFPVString  (os.str()));
 		os.clear();
-		writeVector(os, itsObs->getBeamlets(i));
+		writeVector(os, itsObs->beams[i].beamlets);
 		beamletArr.push_back   (new GCFPVString  (os.str()));
 		angle1Arr.push_back	   (new GCFPVDouble  (itsObs->beams[i].pointings[0].angle1));
 		angle2Arr.push_back	   (new GCFPVDouble  (itsObs->beams[i].pointings[0].angle2));

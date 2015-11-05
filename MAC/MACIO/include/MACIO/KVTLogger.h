@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2010
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -30,8 +30,6 @@
 //# Includes
 #include <MACIO/GCF_Event.h>
 #include <MACIO/EventPort.h>
-#include <Common/lofar_vector.h>
-#include <Common/lofar_string.h>
 
 // Avoid 'using namespace' in headerfiles
 
@@ -57,8 +55,7 @@ public:
 	~KVTLogger();
 
 	// log()
-	bool log(const string& key, const string& value, double secsEpoch1970);
-	bool log(const vector<string> key, const vector<string> value, const vector<double> times);
+	void log(const string& key, const string& value, double secsEpoch1970);
 
 private:
 	KVTLogger();
@@ -72,7 +69,7 @@ private:
 	uint32			itsObsID;
 	string			itsRegisterName;
 	bool			itsLoggingEnabled;
-	int32			itsSeqnr;
+	uint32			itsSeqnr;
 	EventPort*		itsKVTport;
 };
 

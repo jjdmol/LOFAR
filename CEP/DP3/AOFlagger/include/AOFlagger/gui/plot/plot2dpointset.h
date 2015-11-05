@@ -44,23 +44,15 @@ class Plot2DPointSet{
 		
 		void SetXIsTime(const bool xIsTime) { _xIsTime = xIsTime; }
 		bool XIsTime() const { return _xIsTime; }
-		
-		const std::string XUnits() const { return _xDesc; }
-		const std::string YUnits() const { return _yDesc; }
 
-		const std::string &XDesc() const { return _xDesc; }
-		void SetXDesc(std::string xDesc) { _xDesc = xDesc; }
+		const std::string &XUnits() const { return _xUnits; }
+		void SetXUnits(std::string xUnits) { _xUnits = xUnits; }
 
-		const std::string &YDesc() const { return _yDesc; }
-		void SetYDesc(std::string yDesc) { _yDesc = yDesc; }
+		const std::string &YUnits() const { return _yUnits; }
+		void SetYUnits(std::string yUnits) { _yUnits = yUnits; }
 
 		enum DrawingStyle DrawingStyle() const { return _drawingStyle; }
 		void SetDrawingStyle(enum DrawingStyle drawingStyle) { _drawingStyle = drawingStyle; }
-
-		void Clear()
-		{
-			_points.clear();
-		}
 
 		void PushDataPoint(double x, double y)
 		{
@@ -103,18 +95,6 @@ class Plot2DPointSet{
 			}
 			return max;
 		}
-		double MaxPositiveY() const
-		{
-			double max = 0.0;
-			for(std::vector<Point2D>::const_iterator i = _points.begin();i!=_points.end();++i)
-			{
-				if((i->y > max) && std::isfinite(i->y)) max = i->y;
-			}
-			if(max == 0.0)
-				return std::numeric_limits<double>::quiet_NaN();
-			else
-				return max;
-		}
 		double MinY() const
 		{
 			if(_points.empty())
@@ -123,26 +103,6 @@ class Plot2DPointSet{
 			for(std::vector<Point2D>::const_iterator i = _points.begin();i!=_points.end();++i)
 			{
 				if((i->y < min || (!std::isfinite(min))) && std::isfinite(i->y) ) min = i->y;
-			}
-			return min;
-		}
-		double MinPositiveY() const
-		{
-			std::vector<Point2D>::const_iterator i;
-			double min = 0.0;
-			// Find first positive element
-			for(i = _points.begin();i!=_points.end();++i)
-			{
-				if((i->y > 0.0) && std::isfinite(i->y))
-				{
-					min = i->y;
-					break;
-				}
-			}
-			if(min == 0.0) return std::numeric_limits<double>::quiet_NaN();
-			for(;i!=_points.end();++i)
-			{
-				if((i->y > 0.0) && (i->y < min) && std::isfinite(i->y)) min = i->y;
 			}
 			return min;
 		}
@@ -168,17 +128,9 @@ class Plot2DPointSet{
 		{
 			return MinY();
 		}
-		double YRangePositiveMin() const
-		{
-			return MinPositiveY();
-		}
 		double YRangeMax() const
 		{
 			return MaxY();
-		}
-		double YRangePositiveMax() const
-		{
-			return MaxPositiveY();
 		}
 		void SetTickLabels(const std::vector<std::string> &tickLabels)
 		{
@@ -200,13 +152,6 @@ class Plot2DPointSet{
 		{
 			return _rotateUnits;
 		}
-		/**
-		 * Set the range that this point set minimally wants to have visualized. Other point sets might
-		 * request a larger range, which might enlarge this request.
-		 */
-		void SetYRange(double yMin, double yMax)
-		{
-		}
 	private:
 		struct Point2D
 		{
@@ -220,8 +165,8 @@ class Plot2DPointSet{
 
 		std::vector<Point2D> _points;
 		std::string _label;
-		std::string _xDesc;
-		std::string _yDesc;
+		std::string _xUnits;
+		std::string _yUnits;
 		bool _xIsTime;
 		std::vector<std::string> _tickLabels;
 		bool _rotateUnits;

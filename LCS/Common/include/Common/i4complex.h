@@ -33,33 +33,16 @@ namespace LOFAR {
         i4complex() {}
 
 	i4complex(double real, double imag) {
-          int r = (int) rint(real);
-          int i = (int) rint(imag);
-
-          // clip to [-7..7] to center dynamic range around 0
-          if (r <= -8) r = -7;
-          if (i <= -8) i = -7;
-          if (r >= 8)  r = 7;
-          if (i >= 8)  i = 7;
-
-	  value = (r & 0xF) | ((i & 0xF) << 4);
+	  value = ((int) rint(real - .5) & 0xF) | (((int) rint(imag - .5) & 0xF) << 4);
 	}
 
 	double real() const {
-	  return ((signed char) (value << 4) >> 4); // extend sign
+	  return ((signed char) (value << 4) >> 4) + .5; // extend sign
 	}
 
 	double imag() const {
-	  return (value >> 4);
+	  return (value >> 4) + .5;
 	}
-
-  bool operator == (const i4complex &other) const {
-    return value == other.value;
-  }
-
-  bool operator != (const i4complex &other) const {
-    return value != other.value;
-  }
 
 	i4complex conj() const {
 	  return i4complex(value ^ 0xF0);
@@ -78,16 +61,16 @@ namespace LOFAR {
   inline TYPES::i4complex makei4complex(double real, double imag)
     { return TYPES::i4complex(real, imag); }
 
-  inline double real(const TYPES::i4complex &v)
+  inline double real(TYPES::i4complex v)
     { return v.real(); }
 
-  inline double imag(const TYPES::i4complex &v)
+  inline double imag(TYPES::i4complex v)
     { return v.imag(); }
 
-  inline TYPES::i4complex conj(const TYPES::i4complex &x)
+  inline TYPES::i4complex conj(TYPES::i4complex x)
     { return x.conj(); }
 
-  inline ostream& operator<< (ostream& os, const TYPES::i4complex x)
+  inline ostream& operator<< (ostream& os, TYPES::i4complex x)
     { os << '(' << real(x) << ',' << imag(x) << ')'; return os; }
 }
 

@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
 
 package nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement;
 
-import java.util.ArrayList;
+import java.util.Vector;
 
 /**
  * The BBSStep represents an instance of a BBS Step with a given name. For each
@@ -41,7 +41,7 @@ public class BBSStep implements Cloneable, Comparable{
     //Possible parent step
     private BBSStep parentStep = null;
     //Contained substeps
-    private ArrayList<BBSStep> childSteps;
+    private Vector<BBSStep> childSteps;
     //Step Name
     private String name;
     
@@ -52,7 +52,7 @@ public class BBSStep implements Cloneable, Comparable{
      */
     public BBSStep(String name) {
         this.name=name;
-        childSteps = new ArrayList<>();
+        childSteps = new Vector<BBSStep>();
         parentStep = null;
     }
     /**
@@ -96,13 +96,13 @@ public class BBSStep implements Cloneable, Comparable{
         return parentStep != null;
     }
     /**
-     * Returns a ArrayList of BBSStep objects that are childs of this BBSStep<br><br>
+     * Returns a Vector of BBSStep objects that are childs of this BBSStep<br><br>
      * -Returns null if the child steps have never been set<br>
-     * -Returns empty ArrayList is no child steps are associated.
+     * -Returns empty vector is no child steps are associated.
      *
-     * @return ArrayList of BBSStep objects that are children of this BBSStep
+     * @return Vector of BBSStep objects that are children of this BBSStep
      */
-    public ArrayList<BBSStep> getChildSteps(){
+    public Vector<BBSStep> getChildSteps(){
         return childSteps;
     }
     /**
@@ -213,7 +213,7 @@ public class BBSStep implements Cloneable, Comparable{
             if(indexOfChild >= 0 && indexOfChild < childSteps.size()){
                 BBSStep currentStepInIndex = childSteps.get(indexOfChild);
                 if(child.getName().equals(currentStepInIndex.getName())){
-                    BBSStep remove = this.childSteps.remove(indexOfChild);
+                    this.childSteps.removeElementAt(indexOfChild);
                     childSteps.trimToSize();
                 }
             }
@@ -240,7 +240,7 @@ public class BBSStep implements Cloneable, Comparable{
             if(oldIndexOfChild >= 0 && oldIndexOfChild < childSteps.size()){
                 BBSStep currentStepInIndex = childSteps.get(oldIndexOfChild);
                 if(child.getName().equals(currentStepInIndex.getName())){
-                    BBSStep remove = this.childSteps.remove(oldIndexOfChild);
+                    this.childSteps.removeElementAt(oldIndexOfChild);
                     this.childSteps.add(newIndexOfChild,currentStepInIndex);
                     childSteps.trimToSize();
                 }

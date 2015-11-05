@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: NewHandler.h 17606 2011-03-22 12:49:57Z mol $
 
 #ifndef LOFAR_COMMON_NEWHANDLER_H
 #define LOFAR_COMMON_NEWHANDLER_H
@@ -27,7 +27,6 @@
 //
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
-#include <new>
 #include <Common/Exception.h>
 
 namespace LOFAR {

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -23,11 +23,10 @@
 #ifndef BEAMSERVER_H_
 #define BEAMSERVER_H_
 
-#include <Common/lofar_bitset.h>
-#include <Common/lofar_list.h>
-#include <Common/lofar_map.h>
-#include <Common/lofar_set.h>
 #include <Common/lofar_string.h>
+#include <Common/lofar_set.h>
+#include <Common/lofar_map.h>
+#include <Common/lofar_list.h>
 #include <GCF/TM/GCF_Control.h>
 #include <APL/IBS_Protocol/IBS_Protocol.ph>
 #include <CASATools/CasaConverter.h>
@@ -37,7 +36,6 @@
 
 namespace LOFAR {
   using namespace CASATools;
-  using namespace IBS_Protocol;
   using GCF::TM::GCFTask;
   using GCF::TM::GCFPort;
   using GCF::TM::GCFTCPPort;
@@ -92,7 +90,7 @@ private:
 					string 								name, 
 					string 								subarrayname, 
 					IBS_Protocol::Beamlet2SubbandMap	allocation,
-					bitset<LOFAR::MAX_RCUS>				rcumask,
+					LOFAR::bitset<LOFAR::MAX_RCUS>		rcumask,
 					uint								ringNr,
 					uint								rcuMode,
 					int*								beamError);
@@ -109,9 +107,6 @@ private:
 
 	// Take a subscription on the splitter state.
 	GCFEvent::TResult subscribeSplitter(GCFEvent& e, GCFPortInterface& p);
-
-	// Take a subscription on the bitmode
-	GCFEvent::TResult subscribeBitmode(GCFEvent& event, GCFPortInterface& port);
 
 	// Try to connect to the CalServer
 	GCFEvent::TResult con2calserver(GCFEvent& e, GCFPortInterface& p);
@@ -184,13 +179,6 @@ private:
 
 	// ### data members ###
 
-	// 'constant' containing the current number of bits each datasample has.
-	// This value determines how many beamlets a RSPBoard produces (and how large some of
-	// our arrays become). The function maxBeamletsPerRSP in Common/LofarBitModeInfo.h calculates
-	// the maxBeamlets 'constant' we are used to work with before bitsperSample was a variable value.
-	int		itsCurrentBitsPerSample;
-	int		itsCurrentMaxBeamlets;
-
 	// BeamletAllocation
 	typedef struct BeamletAllocation {
 		int						subbandNr;
@@ -200,8 +188,8 @@ private:
 	vector<BeamletAlloc_t>		itsBeamletAllocation;
 
 	// Weights array [MAX_RCUS, MAX_BEAMLETS]
-	blitz::Array<std::complex<double>,  3> itsWeights;
-	blitz::Array<std::complex<int16_t>, 3> itsWeights16;
+	blitz::Array<std::complex<double>,  2> itsWeights;
+	blitz::Array<std::complex<int16_t>, 2> itsWeights16;
 
 	// RCU Allocations in the AntennaArrays. Remember that each RCU can participate 
 	// in more than one beam.
@@ -241,7 +229,6 @@ private:
 	
 	// constants
 	uint   	itsMaxRCUs;				//
-	uint   	itsMaxRSPboards;		//
 	bool	itsSetHBAEnabled;		//
 	bool	itsSetWeightsEnabled;	//
 	bool	itsSetSubbandsEnabled;	//

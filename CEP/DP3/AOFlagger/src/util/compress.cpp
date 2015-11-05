@@ -140,54 +140,46 @@ Image2DPtr Compress::Read(std::ifstream &stream, Image2DPtr image, Mask2DCPtr ma
 			}
 		}
 	}
-	return Image2DPtr();
 }
 
 unsigned long Compress::RawSize()
 {
 	Initialize();
-	ExecuteCmd("cp compress.bin compress.raw");
+	system("cp compress.bin compress.raw");
 	return Size("compress.raw");
 }
 
 unsigned long Compress::FlacSize()
 {
 	Initialize();
-	ExecuteCmd("flac -f -8 --bps=24 --endian=little --channels=1 --sample-rate=128000 --sign=signed --lax -o compress.flac compress.bin");
+	system("flac -f -8 --bps=24 --endian=little --channels=1 --sample-rate=128000 --sign=signed --lax -o compress.flac compress.bin");
 	return Size("compress.flac");
 }
 
 unsigned long Compress::ZipSize()
 {
 	Initialize();
-	ExecuteCmd("zip -9 compress.zip compress.bin");
+	system("zip -9 compress.zip compress.bin");
 	return Size("compress.zip");
 }
 
 unsigned long Compress::Size(const std::string &file)
 {
-	ExecuteCmd((std::string("ls -lh ") + file).c_str());
-	ExecuteCmd((std::string("rm ") + file).c_str());
+	system((std::string("ls -lh ") + file).c_str());
+	system((std::string("rm ") + file).c_str());
 	return 0;
 }
 
 unsigned long Compress::GzSize()
 {
 	Initialize();
-	ExecuteCmd("gzip -9 -c compress.bin > compress.gz");
+	system("gzip -9 -c compress.bin > compress.gz");
 	return Size("compress.gz");
 }
 
 unsigned long Compress::Bz2Size()
 {
 	Initialize();
-	ExecuteCmd("bzip2 -9 -c compress.bin > compress.bz2");
+	system("bzip2 -9 -c compress.bin > compress.bz2");
 	return Size("compress.bz2");
 }
-
-void Compress::ExecuteCmd(const std::string &str)
-{
-	if(system(str.c_str()) != 0)
-		throw std::runtime_error("system() returned non-zero");
-}
-

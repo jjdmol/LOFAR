@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 #include <DPPP/PreFlagger.h>
 #include <DPPP/DPInfo.h>
-#include <Common/ParameterSet.h>
+#include <DPPP/ParSet.h>
 #include <Common/LofarLogger.h>
 #include <casa/Arrays/ArrayIO.h>
 #include <casa/Quanta/MVTime.h>
@@ -43,18 +43,17 @@ class TestInput: public DPInput
 {
 public:
   TestInput(int nbl, int nchan, int ncorr)
-    : itsNChan(nchan), itsNCorr(ncorr)
+    : itsNBl(nbl), itsNChan(nchan), itsNCorr(ncorr)
   {
-    info().init (itsNCorr, itsNChan, 0, 0, 50, string(), string());
     // Fill the baseline stations; use 4 stations.
     // So they are called 00 01 02 03 10 11 12 13 20, etc.
-    Vector<Int> ant1(nbl);
-    Vector<Int> ant2(nbl);
+    itsAnt1.resize (nbl);
+    itsAnt2.resize (nbl);
     int st1 = 0;
     int st2 = 0;
     for (int i=0; i<nbl; ++i) {
-      ant1[i] = st1;
-      ant2[i] = st2;
+      itsAnt1[i] = st1;
+      itsAnt2[i] = st2;
       if (++st2 == 4) {
         st2 = 0;
         if (++st1 == 4) {
@@ -62,25 +61,22 @@ public:
         }
       }
     }
-    Vector<String> antNames(4);
-    antNames[0] = "rs01.s01";
-    antNames[1] = "rs02.s01";
-    antNames[2] = "cs01.s01";
-    antNames[3] = "cs01.s02";
-    vector<MPosition> antPos(4);
-    Vector<double> antDiam(4, 70.);
-    info().set (antNames, antDiam, antPos, ant1, ant2);
-    Vector<double> chanWidth(nchan, 100000);
-    Vector<double> chanFreqs(nchan);
-    indgen (chanFreqs, 1050000., 100000.);
-    info().set (chanFreqs, chanWidth);
+    itsAntNames.resize(4);
+    itsAntNames[0] = "rs01.s01";
+    itsAntNames[1] = "rs02.s01";
+    itsAntNames[2] = "cs01.s01";
+    itsAntNames[3] = "cs01.s02";
+    itsChanFreqs.resize (nchan);
+    indgen (itsChanFreqs, 1050000., 100000.);
+    itsStartTime = 0;
   }
 private:
   virtual bool process (const DPBuffer&) { return false; }
   virtual void finish() {}
   virtual void show (std::ostream&) const {}
+  virtual void updateInfo (DPInfo&) {}
 
-  int itsNChan, itsNCorr;
+  int itsNBl, itsNChan, itsNCorr;
 };
 
 
@@ -106,7 +102,6 @@ void TestPSet::testNone()
   cout << "testNone" << endl;
   ParameterSet parset;
   PreFlagger::PSet pset (in, parset, "");
-  pset.updateInfo (in->getInfo());
   ASSERT (!(pset.itsFlagOnBL   || pset.itsFlagOnAmpl || pset.itsFlagOnPhase ||
             pset.itsFlagOnReal || pset.itsFlagOnImag ||
             pset.itsFlagOnAzEl || pset.itsFlagOnUV));
@@ -121,7 +116,6 @@ void TestPSet::testBL()
     ParameterSet parset;
     parset.add ("baseline", "[rs01.*, rs02.s01]");
     PreFlagger::PSet pset (in, parset, "");
-    pset.updateInfo (in->getInfo());
     ASSERT (!(pset.itsFlagOnAmpl || pset.itsFlagOnPhase || pset.itsFlagOnReal ||
               pset.itsFlagOnImag || pset.itsFlagOnAzEl  || pset.itsFlagOnUV) &&
             pset.itsFlagOnBL);
@@ -139,7 +133,6 @@ void TestPSet::testBL()
     parset.add ("corrtype", "auto");
     parset.add ("baseline", "[rs01.*, [*s*.*2], rs02.s01]");
     PreFlagger::PSet pset (in, parset, "");
-    pset.updateInfo (in->getInfo());
     // Make sure the matrix is correct.
     const Matrix<bool>& mat = pset.itsFlagBL;
     ASSERT (mat.shape() == IPosition(2,4,4));
@@ -154,7 +147,6 @@ void TestPSet::testBL()
     parset.add ("corrtype", "CROSS");
     parset.add ("baseline", "[[rs*, *s*.*1], [cs01.s01,cs01.s02]]");
     PreFlagger::PSet pset (in, parset, "");
-    pset.updateInfo (in->getInfo());
     // Make sure the matrix is correct.
     const Matrix<bool>& mat = pset.itsFlagBL;
     ASSERT (mat.shape() == IPosition(2,4,4));
@@ -170,7 +162,6 @@ void TestPSet::testBL()
     ParameterSet parset;
     parset.add ("corrtype", "crossx");
     PreFlagger::PSet pset (in, parset, "");
-    pset.updateInfo (in->getInfo());
   } catch (std::exception& x) {
     err = true;
     cout << "  " << x.what() << endl; 
@@ -182,7 +173,6 @@ void TestPSet::testBL()
     ParameterSet parset;
     parset.add ("baseline", "[[a,b,c]]");
     PreFlagger::PSet pset (in, parset, "");
-    pset.updateInfo (in->getInfo());
   } catch (std::exception& x) {
     err = true;
     cout << "  " << x.what() << endl; 
@@ -194,7 +184,6 @@ void TestPSet::testBL()
     ParameterSet parset;
     parset.add ("baseline", "[[a,b], [ ] ]");
     PreFlagger::PSet pset (in, parset, "");
-    pset.updateInfo (in->getInfo());
   } catch (std::exception& x) {
     err = true;
     cout << "  " << x.what() << endl; 
@@ -206,12 +195,14 @@ void TestPSet::testChan()
 {
   TestInput* in = new TestInput(16, 32, 4);
   DPStep::ShPtr step1(in);
+  DPInfo info;
+  info.init (4, 0, 32, 16, 10, 1.);
   {
     cout << "testChan 1" << endl;
     ParameterSet parset;
     parset.add ("chan", "[11..13, 4]");
     PreFlagger::PSet pset (in, parset, "");
-    pset.updateInfo (in->getInfo());
+    pset.updateInfo (info);
     ASSERT (pset.itsChannels.size() == 4);
     ASSERT (pset.itsChannels[0] == 4);
     ASSERT (pset.itsChannels[1] == 11);
@@ -231,7 +222,7 @@ void TestPSet::testChan()
     ParameterSet parset;
     parset.add ("freqrange", "[ 1.1 .. 1.2 MHz, 1.5MHz+-65000Hz]");
     PreFlagger::PSet pset (in, parset, "");
-    pset.updateInfo (in->getInfo());
+    pset.updateInfo (info);
     ASSERT (pset.itsChannels.size() == 3);
     ASSERT (pset.itsChannels[0] == 1);
     ASSERT (pset.itsChannels[1] == 4);
@@ -243,7 +234,7 @@ void TestPSet::testChan()
     parset.add ("chan", "[11..13, 4]");
     parset.add ("freqrange", "[ 1.1 .. 1.2 MHz, 1.5MHz+-65000Hz]");
     PreFlagger::PSet pset (in, parset, "");
-    pset.updateInfo (in->getInfo());
+    pset.updateInfo (info);
     ASSERT (pset.itsChannels.size() == 1);
     ASSERT (pset.itsChannels[0] == 4);
   }
@@ -258,7 +249,6 @@ void TestPSet::testTime()
     ParameterSet parset;
     parset.add ("abstime", "[1mar2009/12:00:00..2mar2009/13:00:00]");
     PreFlagger::PSet pset (in, parset, "");
-    pset.updateInfo (in->getInfo());
     ASSERT (pset.itsATimes.size() == 2);
     Quantity q;
     MVTime::read (q, "1mar2009/12:00:00");
@@ -270,7 +260,6 @@ void TestPSet::testTime()
     ParameterSet parset;
     parset.add ("reltime", "[12:00:00..13:00:00, 16:00 +- 2min ]");
     PreFlagger::PSet pset (in, parset, "");
-    pset.updateInfo (in->getInfo());
     ASSERT (pset.itsRTimes.size() == 4);
     ASSERT (pset.itsRTimes[0] == 12*3600);
     ASSERT (pset.itsRTimes[1] == 13*3600);
@@ -282,7 +271,6 @@ void TestPSet::testTime()
     ParameterSet parset;
     parset.add ("timeofday", "[22:00:00..2:00:00, 23:30 +- 1h ]");
     PreFlagger::PSet pset (in, parset, "");
-    pset.updateInfo (in->getInfo());
     ASSERT (pset.itsTimes.size() == 8);
     ASSERT (pset.itsTimes[0] == -1);
     ASSERT (pset.itsTimes[1] == 2*3600);
@@ -298,7 +286,6 @@ void TestPSet::testTime()
     ParameterSet parset;
     parset.add ("timeslot", "[2..4, 10]");
     PreFlagger::PSet pset (in, parset, "");
-    pset.updateInfo (in->getInfo());
     ASSERT (pset.itsTimeSlot.size() == 4);
     ASSERT (pset.itsTimeSlot[0] == 2);
     ASSERT (pset.itsTimeSlot[1] == 3);
@@ -312,7 +299,6 @@ void TestPSet::testTime()
     ParameterSet parset;
     parset.add ("reltime", "[12:00:00]");
     PreFlagger::PSet pset (in, parset, "");
-    pset.updateInfo (in->getInfo());
   } catch (std::exception& x) {
     err = true;
     cout << "  " << x.what() << endl; 
@@ -324,7 +310,6 @@ void TestPSet::testTime()
     ParameterSet parset;
     parset.add ("reltime", "[12:00:00..11:00:00]");
     PreFlagger::PSet pset (in, parset, "");
-    pset.updateInfo (in->getInfo());
   } catch (std::exception& x) {
     err = true;
     cout << "  " << x.what() << endl; 
@@ -336,7 +321,6 @@ void TestPSet::testTime()
     ParameterSet parset;
     parset.add ("abstime", "[12:00:00..13:00:00]");
     PreFlagger::PSet pset (in, parset, "");
-    pset.updateInfo (in->getInfo());
   } catch (std::exception& x) {
     err = true;
     cout << "  " << x.what() << endl; 
@@ -354,7 +338,6 @@ void TestPSet::testMinMax()
     parset.add ("amplmin", "[23,,,45]");
     parset.add ("amplmax", "112.5");
     PreFlagger::PSet pset (in, parset, "");
-    pset.updateInfo (in->getInfo());
     ASSERT (pset.itsFlagOnAmpl);
     ASSERT (pset.itsAmplMin.size() == 4);
     ASSERT (pset.itsAmplMax.size() == 4);
@@ -372,7 +355,6 @@ void TestPSet::testMinMax()
     ParameterSet parset;
     parset.add ("phasemin", "[23]");
     PreFlagger::PSet pset (in, parset, "");
-    pset.updateInfo (in->getInfo());
     ASSERT (pset.itsFlagOnPhase);
     ASSERT (pset.itsAmplMin.size() == 4);
     ASSERT (pset.itsAmplMax.size() == 4);
@@ -390,7 +372,6 @@ void TestPSet::testMinMax()
     ParameterSet parset;
     parset.add ("uvmmin", "23");
     PreFlagger::PSet pset (in, parset, "");
-    pset.updateInfo (in->getInfo());
     ASSERT (pset.itsFlagOnUV);
     ASSERT (near(pset.itsMinUV, 23.*23.));
     ASSERT (near(pset.itsMaxUV, 1e30));
@@ -400,7 +381,6 @@ void TestPSet::testMinMax()
     ParameterSet parset;
     parset.add ("uvmmax", "23");
     PreFlagger::PSet pset (in, parset, "");
-    pset.updateInfo (in->getInfo());
     ASSERT (pset.itsFlagOnUV);
     ASSERT (pset.itsMinUV < 0.);
     ASSERT (near(pset.itsMaxUV, 23.*23.));
@@ -411,7 +391,6 @@ void TestPSet::testMinMax()
     parset.add ("uvmmin", "23");
     parset.add ("uvmmax", "123");
     PreFlagger::PSet pset (in, parset, "");
-    pset.updateInfo (in->getInfo());
     ASSERT (pset.itsFlagOnUV);
     ASSERT (near(pset.itsMinUV, 23.*23.));
     ASSERT (near(pset.itsMaxUV, 123.*123.));

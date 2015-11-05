@@ -20,8 +20,6 @@
 #ifndef COMBINE_FLAG_RESULTS_H
 #define COMBINE_FLAG_RESULTS_H
 
-#include <AOFlagger/util/progresslistener.h>
-
 #include <AOFlagger/strategy/control/artifactset.h>
 #include <AOFlagger/strategy/control/actioncontainer.h>
 

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
+#include <Common/lofar_datetime.h>
 #include <Common/StringUtil.h>
 #include <OTDB/OTDBconnection.h>
 #include <OTDB/TreeState.h>
@@ -33,11 +34,8 @@
 #include <OTDB/TreeMaintenance.h>
 #include <libgen.h>             // for basename
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-
 using namespace LOFAR;
 using namespace LOFAR::OTDB;
-using namespace boost::posix_time;
 
 //
 // show tree result
@@ -45,18 +43,17 @@ using namespace boost::posix_time;
 void showTreeList(const vector<OTDBtree>&	trees) {
 
 
-	cout << "treeID|Classif|Creator   |Creationdate        |Type|Campaign|Starttime           |ModiDate" << endl;
-	cout << "------+-------+----------+--------------------+----+--------+--------------------+--------------------" << endl;
+	cout << "treeID|Classif|Creator   |Creationdate        |Type|Campaign|Starttime" << endl;
+	cout << "------+-------+----------+--------------------+----+--------+------------------" << endl;
 	for (uint32	i = 0; i < trees.size(); ++i) {
-		string row(formatString("%6d|%7d|%-10.10s|%-20.20s|%4d|%-8.8s|%-20.20s|%s",
+		string row(formatString("%6d|%7d|%-10.10s|%-20.20s|%4d|%-8.8s|%s",
 			trees[i].treeID(),
 			trees[i].classification,
 			trees[i].creator.c_str(),
 			to_simple_string(trees[i].creationDate).c_str(),
 			trees[i].type,
 			trees[i].campaign.c_str(),
-			to_simple_string(trees[i].starttime).c_str(),
-			to_simple_string(trees[i].modificationDate).c_str()));
+			to_simple_string(trees[i].starttime).c_str()));
 		cout << row << endl;
 	}
 
@@ -243,34 +240,6 @@ int main (int	argc, char*	argv[]) {
 			}
 
 			cout << DTlist.size() << " records" << endl << endl;
-		}
-
-		LOG_INFO("=== Testing MoM 2 treeID converter ===");
-	 	LOG_INFO("getMomID2treeID()");
-		map<uint, uint> theMap = conn.getMomID2treeIDMap();
-		if (theMap.size() == 0) {
-			LOG_INFO_STR("Error:" << conn.errorMsg());
-		}
-		else {
-			cout << "   MoMID |  treeID" << endl;
-			cout << "---------+--------" << endl;
-			map<uint,uint>::const_iterator   end  = theMap.end();
-			map<uint,uint>::const_iterator   iter = theMap.begin();
-			while (iter != end) {
-				string row(formatString("%8d |%8d", iter->first, iter->second));
-				cout << row << endl;
-				iter++;
-			}
-			cout << theMap.size() << " records" << endl << endl;
-		}
-
-		LOG_INFO("getModifiedTrees('2012-11-05 14:12:30',0)");
-		treeList = conn.getModifiedTrees(time_from_string("2012-11-05 14:12:30"), 0);
-		if (treeList.size() == 0) {
-			LOG_INFO_STR("Error:" << conn.errorMsg());
-		}
-		else {
-			showTreeList(treeList);
 		}
 	}
 	catch (std::exception&	ex) {

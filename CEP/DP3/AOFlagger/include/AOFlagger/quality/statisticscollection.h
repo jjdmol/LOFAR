@@ -70,47 +70,43 @@ class StatisticsCollection : public Serializable
 			_centralFrequencies.insert(std::pair<unsigned, double>(band, centralFrequency));
 		}
 		
-		void Add(unsigned antenna1, unsigned antenna2, double time, unsigned band, int polarization, const float *reals, const float *imags, const bool *isRFI, const bool* origFlags, unsigned nsamples, unsigned step, unsigned stepRFI, unsigned stepFlags)
+		void Add(unsigned antenna1, unsigned antenna2, double time, unsigned band, int polarization, const float *reals, const float *imags, const bool *isRFI, unsigned nsamples, unsigned step, unsigned stepRFI)
 		{
 			if(nsamples == 0) return;
 			
 			const double centralFrequency = _centralFrequencies.find(band)->second;
 			
-			addTimeAndBaseline(antenna1, antenna2, time, centralFrequency, polarization, reals, imags, isRFI, origFlags, nsamples, step, stepRFI, stepFlags, false);
+			addTimeAndBaseline(antenna1, antenna2, time, centralFrequency, polarization, reals, imags, isRFI, nsamples, step, stepRFI, false);
 			if(antenna1 != antenna2)
-			  addFrequency(band, polarization, reals, imags, isRFI, origFlags, nsamples, step, stepRFI, stepFlags, false, false);
+				addFrequency(band, polarization, reals, imags, isRFI, nsamples, step, stepRFI, false, false);
 			
 			// Allocate vector with length nsamples, so there is
 			// a diff element, even if nsamples=1.
 			std::vector<float> diffReals(nsamples);
 			std::vector<float> diffImags(nsamples);
-			bool *diffRFIFlags  = new bool[nsamples];
-			bool *diffOrigFlags = new bool[nsamples];
+			bool *diffRFIFlags = new bool[nsamples];
 			for (unsigned i=0;i<nsamples-1;++i)
 			{
 				diffReals[i] = (reals[(i+1)*step] - reals[i*step]) * M_SQRT1_2;
 				diffImags[i] = (imags[(i+1)*step] - imags[i*step]) * M_SQRT1_2;
 				diffRFIFlags[i] = isRFI[i*stepRFI] | isRFI[(i+1)*stepRFI];
-				diffOrigFlags[i] = origFlags[i*stepFlags] | origFlags[(i+1)*stepFlags];
 			}
-			addTimeAndBaseline(antenna1, antenna2, time, centralFrequency, polarization, &(diffReals[0]), &(diffImags[0]), diffRFIFlags, diffOrigFlags, nsamples-1, 1, 1, 1, true);
+			addTimeAndBaseline(antenna1, antenna2, time, centralFrequency, polarization, &(diffReals[0]), &(diffImags[0]), diffRFIFlags, nsamples-1, 1, 1, true);
 			if(antenna1 != antenna2)
 			{
-			  addFrequency(band, polarization, &(diffReals[0]), &(diffImags[0]), diffRFIFlags, diffOrigFlags, nsamples-1, 1, 1, 1, true, false);
-			  addFrequency(band, polarization, &(diffReals[0]), &(diffImags[0]), diffRFIFlags, diffOrigFlags, nsamples-1, 1, 1, 1, true, true);
+				addFrequency(band, polarization, &(diffReals[0]), &(diffImags[0]), diffRFIFlags, nsamples-1, 1, 1, true, false);
+				addFrequency(band, polarization, &(diffReals[0]), &(diffImags[0]), diffRFIFlags, nsamples-1, 1, 1, true, true);
 			}
 			delete[] diffRFIFlags;
-			delete[] diffOrigFlags;
 		}
 		
 		void Add(unsigned antenna1, unsigned antenna2, double time, unsigned band, int polarization, const std::vector<std::complex<float> > &samples, const bool *isRFI)
 		{
 			const float *dataPtr =
 				reinterpret_cast<const float*>(&(samples[0]));
-			bool origFlag = false;
 			Add(antenna1, antenna2, time, band, polarization,
 					 dataPtr, dataPtr+1,   // real and imag parts
-			    isRFI, &origFlag, samples.size(), 2, 1, 0);
+					 isRFI, samples.size(), 2, 1);
 		}
 		
 		void Save(QualityTablesFormatter &qualityData) const
@@ -125,11 +121,6 @@ class StatisticsCollection : public Serializable
 			loadTime<false>(qualityData);
 			loadFrequency<false>(qualityData);
 			loadBaseline<false>(qualityData);
-		}
-		
-		void LoadTimeStatisticsOnly(QualityTablesFormatter &qualityData)
-		{
-			loadTime<false>(qualityData);
 		}
 		
 		void Add(QualityTablesFormatter &qualityData)
@@ -341,12 +332,12 @@ class StatisticsCollection : public Serializable
 			}
 		};
 		
-		StatisticsCollection & operator=(const StatisticsCollection &/*source*/) // don't allow assignment
+		StatisticsCollection & operator=(const StatisticsCollection &source) // don't allow assignment
 		{
 			return *this;
 		}
 
-		void addTimeAndBaseline(unsigned antenna1, unsigned antenna2, double time, double centralFrequency, int polarization, const float *reals, const float *imags, const bool *isRFI, const bool* origFlags, unsigned nsamples, unsigned step, unsigned stepRFI, unsigned stepFlags, bool isDiff)
+		void addTimeAndBaseline(unsigned antenna1, unsigned antenna2, double time, double centralFrequency, int polarization, const float *reals, const float *imags, const bool *isRFI, unsigned nsamples, unsigned step, unsigned stepRFI, bool isDiff)
 		{
 			unsigned long rfiCount = 0;
 			unsigned long count = 0;
@@ -354,7 +345,6 @@ class StatisticsCollection : public Serializable
 			long double sumP2_R = 0.0, sumP2_I = 0.0;
 			for(unsigned j=0;j<nsamples;++j)
 			{
-			    if (!origFlags[j*stepFlags]) {
 				unsigned i = j*step;
 				if(std::isfinite(reals[i]) && std::isfinite(imags[i]))
 				{
@@ -371,7 +361,6 @@ class StatisticsCollection : public Serializable
 						sumP2_I += iVal*iVal;
 					}
 				}
-			    }
 			}
 			
 			if(antenna1 != antenna2)
@@ -398,25 +387,22 @@ class StatisticsCollection : public Serializable
 			}
 		}
 		
-		void addFrequency(unsigned band, int polarization, const float *reals, const float *imags, const bool *isRFI, const bool *origFlags, unsigned nsamples, unsigned step, unsigned stepRFI, unsigned stepFlags, bool isDiff, bool shiftOneUp)
+		void addFrequency(unsigned band, int polarization, const float *reals, const float *imags, const bool *isRFI, unsigned nsamples, unsigned step, unsigned stepRFI, bool isDiff, bool shiftOneUp)
 		{
 			std::vector<DefaultStatistics *> &bandStats = _bands.find(band)->second;
 			const unsigned fAdd = shiftOneUp ? 1 : 0;
 			for(unsigned j=0;j<nsamples;++j)
 			{
-				if (!origFlags[j*stepFlags])
+				unsigned f = j*step;
+				if(std::isfinite(reals[f]) && std::isfinite(imags[f]))
 				{
-					unsigned f = j*step;
-					if(std::isfinite(reals[f]) && std::isfinite(imags[f]))
+					DefaultStatistics &freqStat = *bandStats[j + fAdd];
+					if(isRFI[j*stepRFI])
 					{
-						DefaultStatistics &freqStat = *bandStats[j + fAdd];
-						if(isRFI[j*stepRFI])
-						{
-							addToStatistic(freqStat, polarization, 0, 0.0, 0.0, 0.0, 0.0, 1, isDiff);
-						} else {
-							const long double r = reals[f], i = imags[f];
-							addToStatistic(freqStat, polarization, 1, r, i, r*r, i*i, 0, isDiff);
-						}
+						addToStatistic(freqStat, polarization, 0, 0.0, 0.0, 0.0, 0.0, 1, isDiff);
+					} else {
+						const long double r = reals[f], i = imags[f];
+						addToStatistic(freqStat, polarization, 1, r, i, r*r, i*i, 0, isDiff);
 					}
 				}
 			}
@@ -424,13 +410,13 @@ class StatisticsCollection : public Serializable
 		
 		void initializeEmptyStatistics(QualityTablesFormatter &qualityData, QualityTablesFormatter::StatisticDimension dimension) const
 		{
-			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::RFICountStatistic, _polarizationCount);
-			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::CountStatistic, _polarizationCount);
-			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::SumStatistic, _polarizationCount);
-			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::SumP2Statistic, _polarizationCount);
-			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::DCountStatistic, _polarizationCount);
-			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::DSumStatistic, _polarizationCount);
-			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::DSumP2Statistic, _polarizationCount);
+			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::RFICountStatistic);
+			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::CountStatistic);
+			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::SumStatistic);
+			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::SumP2Statistic);
+			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::DCountStatistic);
+			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::DSumStatistic);
+			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::DSumP2Statistic);
 		}
 		
 		void saveEachStatistic(StatisticSaver &saver, const DefaultStatistics &stat, const Indices &indices) const
@@ -779,13 +765,12 @@ class StatisticsCollection : public Serializable
 			_timeStatistics.clear();
 			size_t count = (size_t) UnserializeUInt64(stream);
 			
-			std::map<double, DoubleStatMap>::iterator insertPos = _timeStatistics.begin();
 			for(size_t i=0;i<count;++i)
 			{
 				double frequency = UnserializeDouble(stream);
-				insertPos =
-					_timeStatistics.insert(insertPos, std::pair<double, DoubleStatMap>(frequency, DoubleStatMap()));
-				unserializeDoubleStatMap(stream, insertPos->second);
+				std::map<double, DoubleStatMap>::iterator iterator =
+					_timeStatistics.insert(std::pair<double, DoubleStatMap>(frequency, DoubleStatMap())).first;
+				unserializeDoubleStatMap(stream, iterator->second);
 			}
 		}
 		
@@ -819,13 +804,12 @@ class StatisticsCollection : public Serializable
 			_baselineStatistics.clear();
 			size_t count = (size_t) UnserializeUInt64(stream);
 			
-			std::map<double, BaselineStatisticsMap>::iterator insertPos = _baselineStatistics.begin();
 			for(size_t i=0;i<count;++i)
 			{
 				double frequency = UnserializeDouble(stream);
-				insertPos = _baselineStatistics.insert(
-					insertPos, std::pair<double, BaselineStatisticsMap>(frequency, BaselineStatisticsMap(_polarizationCount)));
-				insertPos->second.Unserialize(stream);
+				std::map<double, BaselineStatisticsMap>::iterator iterator =
+					_baselineStatistics.insert(std::pair<double, BaselineStatisticsMap>(frequency, BaselineStatisticsMap(_polarizationCount))).first;
+				iterator->second.Unserialize(stream);
 			}
 		}
 		
@@ -846,13 +830,12 @@ class StatisticsCollection : public Serializable
 		{
 			size_t count = (size_t) UnserializeUInt64(stream);
 			
-			std::map<double, DefaultStatistics>::iterator insertPos = statMap.begin();
 			for(size_t i=0;i<count;++i)
 			{
 				double key = UnserializeDouble(stream);
-				insertPos =
-					statMap.insert(insertPos, std::pair<double, DefaultStatistics>(key, DefaultStatistics(_polarizationCount)));
-				insertPos->second.Unserialize(stream);
+				std::map<double, DefaultStatistics>::iterator iterator =
+					statMap.insert(std::pair<double, DefaultStatistics>(key, DefaultStatistics(_polarizationCount))).first;
+				iterator->second.Unserialize(stream);
 			}
 		}
 		

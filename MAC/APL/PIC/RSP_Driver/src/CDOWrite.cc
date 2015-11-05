@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <Common/LofarBitModeInfo.h>
 
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
@@ -76,11 +75,11 @@ uint32 CDOWrite::string2ip_uint32(const char* ipstring)
 	return result;
 }
 
-void CDOWrite::setup_udpip_header(uint32 l_srcip, uint32 l_dstip, uint16 l_dstport)
+void CDOWrite::setup_udpip_header(uint32 l_srcip, uint32 l_dstip)
 {
 	uint32 payload_size = EPA_CEP_OUTPUT_HEADER_SIZE
 		+ (GET_CONFIG("RSPDriver.CDO_N_BLOCKS", i) 
-			 * (MEPHeader::N_PHASEPOL * maxDataslotsPerRSP(Cache::getInstance().getBack().getBitsPerSample())) 
+			 * (MEPHeader::N_PHASEPOL * GET_CONFIG("RSPDriver.CDO_N_BEAMLETS", i)) 
 			 * EPA_CEP_BEAMLET_SIZE);
 
   //
@@ -103,7 +102,7 @@ void CDOWrite::setup_udpip_header(uint32 l_srcip, uint32 l_dstip, uint16 l_dstpo
 	m_udpip_hdr.ip.hdrchksum = compute_ip_checksum(&m_udpip_hdr.ip, sizeof(m_udpip_hdr.ip));
 
 	m_udpip_hdr.udp.srcport     = htons(BASEUDPPORT + getBoardId());
-	m_udpip_hdr.udp.dstport     = htons(l_dstport);
+	m_udpip_hdr.udp.dstport     = htons(BASEUDPPORT + getBoardId());
 	m_udpip_hdr.udp.length      = htons(sizeof(m_udpip_hdr.udp) + payload_size);
 	m_udpip_hdr.udp.checksum    = htons(0); // disable check summing
 }
@@ -193,42 +192,31 @@ void CDOWrite::sendrequest()
 		cdo.ffi              = 0xDDCC;
 
 		cdo.nof_blocks       = GET_CONFIG("RSPDriver.CDO_N_BLOCKS", i);
-		
-		//GET_CONFIG("RSPDriver.CDO_N_BEAMLETS", i);
-		cdo.nof_beamlets     = maxDataslotsPerRSP(Cache::getInstance().getBack().getBitsPerSample());
+		cdo.nof_beamlets     = GET_CONFIG("RSPDriver.CDO_N_BEAMLETS", i);
 
 		if (output_lane >= 0) {
 
 			// parse source and destination MAC- and IP-addresses
-			char srcmacfmt[64], srcmac[64], dstmac[64], dstip[64], srcip[64], dstport[64];
+			char srcmacfmt[64], srcmac[64], dstmac[64], dstip[64], srcip[64];
 			uint32 l_srcip, l_dstip;
-      uint16 l_dstport;
 			
 			snprintf(srcmacfmt, 64, "RSPDriver.LANE_%02d_SRCMAC", output_lane);
 			snprintf(srcmac,    64, GET_CONFIG_STRING(srcmacfmt), GET_CONFIG("RS.STATION_ID", i));
 			snprintf(dstmac, 64, "RSPDriver.LANE_%02d_DSTMAC", output_lane);
 			snprintf(srcip,  64, "RSPDriver.LANE_%02d_SRCIP", output_lane);
 			snprintf(dstip,  64, "RSPDriver.LANE_%02d_DSTIP", output_lane);
-			snprintf(dstport,64, "RSPDriver.LANE_%02d_DSTPORT", output_lane);
 			l_srcip = string2ip_uint32(GET_CONFIG_STRING(srcip));
 			l_dstip = string2ip_uint32(GET_CONFIG_STRING(dstip));
-
-      try {
-        l_dstport = GET_CONFIG(dstport, i);
-      } catch(LOFAR::APSException &ex) {
-        // key not found - use default
-        l_dstport = BASEUDPPORT + getBoardId();
-      }
 			
 			LOG_INFO(formatString("CDO: RSP=%d, lane=%d(%d), src=[%s,%s], dst=[%s,%s,%d]",
 								getBoardId(),
 								output_lane, lane,
 								srcmac, GET_CONFIG_STRING(srcip),
-								GET_CONFIG_STRING(dstmac), GET_CONFIG_STRING(dstip), l_dstport));
+								GET_CONFIG_STRING(dstmac), GET_CONFIG_STRING(dstip), BASEUDPPORT+getBoardId()));
 					
 			// settings
 			cdo.control.enable = GET_CONFIG("RSPDriver.CDO_ENABLE", i);
-			if (Cache::getInstance().getBack().isCepEnabled(output_lane >= 10 ? 1 : 0) == false) {
+			if (Cache::getInstance().getBack().isCepEnabled() == false) {
 				cdo.control.enable = 0;
 			}
 			cdo.control.lane       = lane;
@@ -244,7 +232,7 @@ void CDOWrite::sendrequest()
 			string2ip(GET_CONFIG_STRING(dstip), cdo.dst_ip);
 				
 			// setup UDP/IP header
-			setup_udpip_header(l_srcip, l_dstip, l_dstport);
+			setup_udpip_header(l_srcip, l_dstip);
 			
 		}
 		else {

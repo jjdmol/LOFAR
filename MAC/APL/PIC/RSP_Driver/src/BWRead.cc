@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -42,8 +42,8 @@ using namespace RSP;
 using namespace EPA_Protocol;
 
 BWRead::BWRead(GCFPortInterface& board_port, int board_id, int blp, int regid)
-  : SyncAction(board_port, board_id, MEPHeader::BF_N_FRAGMENTS*(MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE)),
-    m_blp(blp), m_regid(regid), itsBank(0), m_remaining(0), m_offset(0)
+  : SyncAction(board_port, board_id, MEPHeader::BF_N_FRAGMENTS),
+    m_blp(blp), m_regid(regid), m_remaining(0), m_offset(0)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -54,13 +54,8 @@ BWRead::~BWRead()
 
 void BWRead::sendrequest()
 {
-  int activeBanks = (MAX_BITS_PER_SAMPLE / Cache::getInstance().getBack().getBitsPerSample());
-  if (getCurrentIndex() >= (activeBanks*MEPHeader::BF_N_FRAGMENTS)) {
-      setContinue(true);
-  }
   uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + m_blp;
-  itsBank = (getCurrentIndex() / MEPHeader::BF_N_FRAGMENTS) ;
-  
+
   if (m_regid < MEPHeader::BF_XROUT || m_regid > MEPHeader::BF_YIOUT)
   {
     LOG_FATAL("invalid regid");
@@ -68,53 +63,37 @@ void BWRead::sendrequest()
   }
 
   // reset m_offset and m_remaining for each register
-  if (0 == (getCurrentIndex()%MEPHeader::BF_N_FRAGMENTS)) {
+  if (0 == getCurrentIndex()) {
     m_remaining = MEPHeader::BF_XROUT_SIZE; // representative for XR, XI, YR, YI size
     m_offset = 0;
   }
 
-  LOG_DEBUG(formatString(">>>> BWRead(%s) global_blp=%d, regid=%d, plane=%d",
+  LOG_DEBUG(formatString(">>>> BWRead(%s) global_blp=%d, regid=%d",
 			 getBoardPort().getName().c_str(),
 			 global_blp,
-			 m_regid,
-			 itsBank));
+			 m_regid));
   
   // send next BF configure message
   EPAReadEvent bfcoefs;
       
   size_t size = MIN(MEPHeader::FRAGMENT_SIZE, m_remaining);
-  switch (m_regid) {
+  switch (m_regid)
+  {
     case MEPHeader::BF_XROUT:
-      bfcoefs.hdr.set( MEPHeader::READ, 
-                       1 << m_blp,
-                       MEPHeader::BF,
-                       MEPHeader::BF_XROUT+(itsBank*4),
-                       size,
-                       m_offset);
+      bfcoefs.hdr.set(MEPHeader::BF_XROUT_HDR, 1 << m_blp,
+		      MEPHeader::READ, size, m_offset);
       break;
     case MEPHeader::BF_XIOUT:
-      bfcoefs.hdr.set( MEPHeader::READ, 
-                       1 << m_blp,
-                       MEPHeader::BF,
-                       MEPHeader::BF_XIOUT+(itsBank*4),
-                       size,
-                       m_offset);  
+      bfcoefs.hdr.set(MEPHeader::BF_XIOUT_HDR, 1 << m_blp,
+		      MEPHeader::READ, size, m_offset);
       break;
     case MEPHeader::BF_YROUT:
-      bfcoefs.hdr.set( MEPHeader::READ, 
-                       1 << m_blp,
-                       MEPHeader::BF,
-                       MEPHeader::BF_YROUT+(itsBank*4),
-                       size,
-                       m_offset);
+      bfcoefs.hdr.set(MEPHeader::BF_YROUT_HDR, 1 << m_blp,
+		      MEPHeader::READ, size, m_offset);
       break;
     case MEPHeader::BF_YIOUT:
-      bfcoefs.hdr.set( MEPHeader::READ, 
-                       1 << m_blp,
-                       MEPHeader::BF,
-                       MEPHeader::BF_YIOUT+(itsBank*4),
-                       size,
-                       m_offset);
+      bfcoefs.hdr.set(MEPHeader::BF_YIOUT_HDR, 1 << m_blp,
+		      MEPHeader::READ, size, m_offset);
       break;
   }
 
@@ -129,7 +108,7 @@ void BWRead::sendrequest_status()
 
 GCFEvent::TResult BWRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if ((event.signal < EPA_BF_COEFS_READ) || (event.signal > (EPA_BF_COEFS_READ+15)))
+  if (EPA_BF_COEFS_READ != event.signal)
   {
     LOG_WARN("BWRead::handleack: unexpected ack");
     return GCFEvent::NOT_HANDLED;
@@ -165,7 +144,7 @@ GCFEvent::TResult BWRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
     // substract cache contents from weights
     // if there is a difference, log a warning
     //
-    weights -= Cache::getInstance().getBack().getBeamletWeights()()(0, Range(global_blp * 2, global_blp * 2 + 1), itsBank, target_range);
+    weights -= Cache::getInstance().getBack().getBeamletWeights()()(0, Range(global_blp * 2, global_blp * 2 + 1), target_range);
 
     complex<int16> errorsum(sum(weights));
     if (complex<int16>(0) != errorsum)
@@ -177,11 +156,11 @@ GCFEvent::TResult BWRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
   else
   {
     // X
-    Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2, itsBank, target_range)
+    Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2, target_range)
       = weights(Range::all(), 0);
 
     // Y
-    Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2 + 1, itsBank, target_range)
+    Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2 + 1, target_range)
       = weights(Range::all(), 1);
   }
   

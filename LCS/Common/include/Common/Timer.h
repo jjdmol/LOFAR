@@ -28,7 +28,7 @@
 
 #include <cstdlib>
 #include <cstring>
-#include <iosfwd>
+#include <iostream>
 
 #include <Common/LofarLogger.h>
 
@@ -83,14 +83,8 @@ namespace LOFAR {
     // Get the elapsed time (in seconds).
     double getElapsed() const;
 
-    // Get the average time (in seconds) between start/stop.
-    double getAverage() const;
-
     // Get the total number of times start/stop is done.
     unsigned long long getCount() const;
-
-    // Accumulate timer statistics.
-    NSTimer &operator+=(const NSTimer &other);
 
     // Internal class to do an automatic start/stop.
     class StartStop {
@@ -104,7 +98,7 @@ namespace LOFAR {
         NSTimer& itsTimer;
     };
 
-  protected:
+  private:
     void print_time(std::ostream &, const char *which, double time) const;
 
     union {
@@ -146,22 +140,9 @@ namespace LOFAR {
     count      = 0;
   }
 
-  inline double NSTimer::getAverage() const
-  {
-    return getElapsed() / getCount();
-  }
-
   inline unsigned long long NSTimer::getCount() const
   {
     return count;
-  }
-
-  inline NSTimer &NSTimer::operator+=(const NSTimer &other)
-  {
-    total_time += other.total_time;
-    count += other.count;
-
-    return *this;
   }
 
   inline NSTimer::NSTimer(const std::string& name, bool print_on_destruction, bool log_on_destruction)
@@ -178,7 +159,7 @@ namespace LOFAR {
     if (print_on_destruction) {
       if (log_on_destruction) {
         std::stringstream logStr;
-        LOG_INFO_STR(print(logStr).rdbuf());
+        LOG_DEBUG_STR(print(logStr).rdbuf());
       } else
         std::clog << *this << std::endl;
     }

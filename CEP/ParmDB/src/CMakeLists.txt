@@ -14,7 +14,6 @@ set(parmdb_LIB_SRCS
   ParmCache.cc
   ParmDBMeta.cc
   ParmDB.cc
-  ParmDBBlob.cc
   ParmDBCasa.cc
   ParmDBLocker.cc
   ParmDBLog.cc
@@ -23,10 +22,7 @@ set(parmdb_LIB_SRCS
   ParmFacadeLocal.cc
   ParmFacadeDistr.cc
   ParmFacade.cc
-  PatchInfo.cc
-  SourceData.cc
   SourceDB.cc
-  SourceDBBlob.cc
   SourceDBCasa.cc
   SourceInfo.cc
 )
@@ -36,10 +32,7 @@ set(parmdb_PROGRAMS
   parmdbm
   parmdbremote
   parmexportcal
-  makesourcedb
-  mergesourcedb
-  showsourcedb
-)
+  makesourcedb)
 
 lofar_add_library(parmdb ${parmdb_LIB_SRCS})
 
@@ -47,10 +40,11 @@ foreach(prog ${parmdb_PROGRAMS})
   lofar_add_bin_program(${prog} ${prog}.cc)
 endforeach(prog ${parmdb_PROGRAMS})
 
-lofar_add_bin_scripts(
+install(PROGRAMS
   setupparmdb
   setupparmdb-part
   setupsourcedb
   setupsourcedb-part
   startparmdbdistr
-  parmdbremote-scr)
+  parmdbremote-scr
+  DESTINATION bin)

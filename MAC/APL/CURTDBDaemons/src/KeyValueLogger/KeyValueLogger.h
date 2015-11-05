@@ -1,8 +1,8 @@
 //#  KeyValueLogger.h: 
 //#
-//#  Copyright (C) 2007-2011
+//#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -34,9 +34,6 @@
 #include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/RTDB/DPservice.h>
-#include <OTDB/OTDBconnection.h>
-#include <OTDB/OTDBtypes.h>
-#include <OTDB/TreeValue.h>
 #include <log4cplus/helpers/socketbuffer.h>
 
 // Avoid 'using namespace' in headerfiles
@@ -65,7 +62,6 @@ private:
 
 	// state methods
 	GCFEvent::TResult initial     (GCFEvent& e, TM::GCFPortInterface& p);
-	GCFEvent::TResult connect2SAS (GCFEvent& e, TM::GCFPortInterface& p);
 	GCFEvent::TResult operational (GCFEvent& e, TM::GCFPortInterface& p);
 
 	// helper methods
@@ -76,13 +72,7 @@ private:
 	// data members        
 	TM::GCFTCPPort*			itsListener;	// application inpt
 	RTDB::DPservice*		itsDPservice;	// connection to PVSS
-	OTDB::OTDBconnection*	itsSASservice;
 	TM::GCFTimerPort*		itsTimerPort;	// timer
-
-	string					itsSASdbname;
-	string					itsSAShostname;
-	OTDB::treeIDType		itsPICtreeID;
-	OTDB::TreeValue*		itsKVTgate;
 
 	typedef map<TM::GCFPortInterface*, LogClient> 	LogClientMap;
 	LogClientMap 	 		itsClients;

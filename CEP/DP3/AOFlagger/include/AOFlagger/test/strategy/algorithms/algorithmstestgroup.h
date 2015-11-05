@@ -23,12 +23,10 @@
 #include <AOFlagger/test/testingtools/testgroup.h>
 
 #include <AOFlagger/test/strategy/algorithms/convolutionstest.h>
-#include <AOFlagger/test/strategy/algorithms/dilationtest.h>
 #include <AOFlagger/test/strategy/algorithms/eigenvaluetest.h>
-#include <AOFlagger/test/strategy/algorithms/highpassfiltertest.h>
 #include <AOFlagger/test/strategy/algorithms/noisestatisticstest.h>
 #include <AOFlagger/test/strategy/algorithms/noisestatisticscollectortest.h>
-#include <AOFlagger/test/strategy/algorithms/siroperatortest.h>
+#include <AOFlagger/test/strategy/algorithms/scaleinvariantdilationtest.h>
 #include <AOFlagger/test/strategy/algorithms/statisticalflaggertest.h>
 #include <AOFlagger/test/strategy/algorithms/sumthresholdtest.h>
 #include <AOFlagger/test/strategy/algorithms/thresholdtoolstest.h>
@@ -40,12 +38,10 @@ class AlgorithmsTestGroup : public TestGroup {
 		virtual void Initialize()
 		{
 			Add(new ConvolutionsTest());
-			Add(new DilationTest());
 			Add(new EigenvalueTest());
-			Add(new HighPassFilterTest());
 			Add(new NoiseStatisticsTest());
 			Add(new NoiseStatisticsCollectorTest());
-			Add(new SIROperatorTest());
+			Add(new ScaleInvariantDilationTest());
 			Add(new StatisticalFlaggerTest());
 			Add(new SumThresholdTest());
 			Add(new ThresholdToolsTest());

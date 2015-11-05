@@ -1,10 +1,11 @@
 # $Id$
 
-lofar_package(BBSKernel 1.0 DEPENDS Blob Common ParmDB StationResponse)
+lofar_package(BBSKernel 1.0 DEPENDS Blob Common ParmDB)
 
 include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED)
-lofar_find_package(Casacore REQUIRED COMPONENTS casa measures ms scimath tables)
+lofar_find_package(Casacore REQUIRED COMPONENTS 
+  casa measures ms scimath tables images)
 
 # Uncomment to check for unsafe conversions (gcc), for example conversion of
 # size_t to unsigned int (truncation).

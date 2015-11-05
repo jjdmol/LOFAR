@@ -26,24 +26,19 @@
 
 #include <iostream>
 
-#include <xmmintrin.h>
-
 Image2D::Image2D(size_t width, size_t height) :
 	_width(width),
 	_height(height),
 	_stride((((width-1)/4)+1)*4)
 {
 	if(_width == 0) _stride=0;
-	unsigned allocHeight = ((((height-1)/4)+1)*4);
-	if(height == 0) allocHeight = 0;
 #ifdef __APPLE__
         // OS-X has no posix_memalign, but malloc always uses 16-byte alignment.
-        _dataConsecutive = (num_t*)malloc(_stride * allocHeight * sizeof(num_t));
+        _dataConsecutive = (num_t*)malloc(_stride * height * sizeof(num_t));
 #else
-	if(posix_memalign((void **) &_dataConsecutive, 16, _stride * allocHeight * sizeof(num_t)) != 0)
-		throw std::bad_alloc();
+	posix_memalign((void **) &_dataConsecutive, 16, _stride * height * sizeof(num_t));
 #endif	
-	_dataPtr = new num_t*[allocHeight];
+	_dataPtr = new num_t*[height];
 	for(size_t y=0;y<height;++y)
 	{
 		_dataPtr[y] = &_dataConsecutive[_stride * y];
@@ -51,15 +46,6 @@ Image2D::Image2D(size_t width, size_t height) :
 		// initialize them to zero to prevent valgrind to report unset values when they
 		// are used in SSE instructions.
 		for(size_t x=_width;x<_stride;++x)
-		{
-			_dataPtr[y][x] = 0.0;
-		}
-	}
-	for(size_t y=height;y<allocHeight;++y)
-	{
-		_dataPtr[y] = &_dataConsecutive[_stride * y];
-		// (see remark above about initializing to zero)
-		for(size_t x=0;x<_stride;++x)
 		{
 			_dataPtr[y][x] = 0.0;
 		}
@@ -83,8 +69,9 @@ Image2D *Image2D::CreateFromSum(const Image2D &imageA, const Image2D &imageB)
 {
 	if(imageA.Width() != imageB.Width() || imageA.Height() != imageB.Height())
 		throw IOException("Images do not match in size");
-	Image2D *image = new Image2D(imageA.Width(), imageA.Height());
-	const size_t total = imageA._stride * imageA.Height();
+	const size_t width = imageA.Width(), height = imageA.Height();
+	Image2D *image = new Image2D(width, height);
+	const size_t total = imageA._stride * height;
 	for(size_t i=0;i<total;++i) {
 		image->_dataConsecutive[i] = imageA._dataConsecutive[i] + imageB._dataConsecutive[i];
 	}
@@ -95,18 +82,11 @@ Image2D *Image2D::CreateFromDiff(const Image2D &imageA, const Image2D &imageB)
 {
 	if(imageA.Width() != imageB.Width() || imageA.Height() != imageB.Height())
 		throw IOException("Images do not match in size");
-	Image2D *image = new Image2D(imageA.Width(), imageA.Height());
-	const float *lhsPtr = &(imageA._dataConsecutive[0]);
-	const float *rhsPtr = &(imageB._dataConsecutive[0]);
-	float *destPtr = &(image->_dataConsecutive[0]);
-	const float *end = lhsPtr + imageA._stride * imageA._height;
-	while(lhsPtr < end)
-	{
-		// (*destPtr) = (*lhsPtr) - (*rhsPtr);
-		_mm_store_ps(destPtr, _mm_sub_ps(_mm_load_ps(lhsPtr), _mm_load_ps(rhsPtr)));
-		lhsPtr += 4;
-		rhsPtr += 4;
-		destPtr += 4;
+	const size_t width = imageA.Width(), height = imageA.Height();
+	Image2D *image = new Image2D(width, height);
+	const size_t total = imageA._stride * height;
+	for(size_t i=0;i<total;++i) {
+		image->_dataConsecutive[i] = imageA._dataConsecutive[i] - imageB._dataConsecutive[i];
 	}
 	return image;
 }
@@ -124,17 +104,6 @@ void Image2D::SetValues(const Image2D &source)
 	const size_t size = _stride*_height;
 	for(size_t i=0;i<size;++i) {
 		_dataConsecutive[i] = source._dataConsecutive[i];
-	}
-}
-
-void Image2D::SetAll(num_t value)
-{
-	const __m128 value4 = _mm_set_ps(value, value, value, value);
-	float *ptr = &_dataConsecutive[0];
-	const float *end = ptr + _stride * _height;
-	while(ptr < end) {
-		_mm_store_ps(ptr, value4);
-		ptr += 4;
 	}
 }
 
@@ -255,7 +224,7 @@ num_t Image2D::GetMode() const
 
 num_t Image2D::GetRMS(size_t xOffset, size_t yOffset, size_t width, size_t height) const
 {
-	size_t count = 0;
+	size_t long count = 0;
 	num_t total = 0.0;
 	for(size_t y=yOffset;y<height+yOffset;++y)
 	{
@@ -395,30 +364,6 @@ void Image2D::MultiplyValues(num_t factor)
 	for(size_t i=0;i<size;++i)
 	{
 		_dataConsecutive[i] *= factor;
-	}
-}
-
-void Image2D::SubtractAsRHS(const Image2DCPtr &lhs)
-{
-	float *thisPtr = &_dataConsecutive[0];
-	const float *otherPtr = &(lhs->_dataConsecutive[0]);
-	float *end = thisPtr + _stride * _height;
-/* #ifdef __AVX__
-	while(thisPtr < end)
-	{
-		// (*thisPtr) = (*otherPtr) - (*thisPtr);
-		_mm_store256_ps(thisPtr, _mm_sub256_ps(_mm_load256_ps(otherPtr), _mm_load256_ps(thisPtr)));
-		thisPtr += 8;
-		otherPtr += 8;
-	}
-#else // Use slower SSE instructions
-*/
-	while(thisPtr < end)
-	{
-		// (*thisPtr) = (*otherPtr) - (*thisPtr);
-		_mm_store_ps(thisPtr, _mm_sub_ps(_mm_load_ps(otherPtr), _mm_load_ps(thisPtr)));
-		thisPtr += 4;
-		otherPtr += 4;
 	}
 }
 

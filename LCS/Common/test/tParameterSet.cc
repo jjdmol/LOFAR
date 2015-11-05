@@ -1,4 +1,4 @@
-//# tParameterSet.cc: Program to test the ParameterSet class.
+//# tParameterSet.cc: Simple testprogrm to test the ParameterSet class.
 //#
 //# Copyright (C) 2002-2003
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -102,7 +102,6 @@ int doIt(KeyCompare::Mode mode)
     ASSERT(myPS.getTime("Time", 15) == 15);
     ASSERT(myPS.getTime("Time", 18000) == 18000);
     ASSERT(myPS["emptyvec"].getVector().size() == 0);
-    ASSERT(myPS.getVector("emptyvec").size() == 0);
     ASSERT(myPS.getUint32Vector("emptyvec").size() == 0);
 
     {
@@ -227,36 +226,11 @@ int doIt(KeyCompare::Mode mode)
 
     // Iterate through all keys.
     cout << endl << "Iterate over all keys ..." << endl;
-    for (ParameterSet::iterator iter = myPS.begin(); iter != myPS.end(); iter++) {
+    for (ParameterSet::iterator iter = myPS.begin();
+	 iter != myPS.end();
+	 iter++) {
       cout << iter->first << endl;
     }
-	cout << endl;
-
-	cout << "locateModule('g')   : " << myPS.locateModule("g")    << endl;
-	cout << "locateModule('F')   : " << myPS.locateModule("F")    << endl;
-	cout << "locateModule('F.g') : " << myPS.locateModule("F.g")  << endl;
-	cout << "locateModule('e.g') : " << myPS.locateModule("e.g")  << endl;
-	cout << "locateModule('3.4') : " << myPS.locateModule("3.4")  << endl;
-	cout << "locateModule('4.5') : " << myPS.locateModule("4.5")  << endl;
-	cout << "locateModule('33.4'): " << myPS.locateModule("33.4") << endl;
-	cout << "locateModule('3.44'): " << myPS.locateModule("3.44") << endl;
-	cout << "locateModule('abc.def'): " << myPS.locateModule("abc.def") << endl;
-	cout << "locateModule('abc.de'): " << myPS.locateModule("abc.de") << endl;
-	cout << "locateModule('bc.def'): " << myPS.locateModule("bc.def") << endl;
-	cout << "locateModule('pietje.puk'): " << myPS.locateModule("pietje.puk") << endl;
-
-	cout << "fullModuleName('g')   : " << myPS.fullModuleName("g")    << endl;
-	cout << "fullModuleName('F')   : " << myPS.fullModuleName("F")    << endl;
-	cout << "fullModuleName('F.g') : " << myPS.fullModuleName("F.g")  << endl;
-	cout << "fullModuleName('e.g') : " << myPS.fullModuleName("e.g")  << endl;
-	cout << "fullModuleName('3.4') : " << myPS.fullModuleName("3.4")  << endl;
-	cout << "fullModuleName('4.5') : " << myPS.fullModuleName("4.5")  << endl;
-	cout << "fullModuleName('33.4'): " << myPS.fullModuleName("33.4") << endl;
-	cout << "fullModuleName('3.44'): " << myPS.fullModuleName("3.44") << endl;
-	cout << "fullModuleName('abc.def'): " << myPS.fullModuleName("abc.def") << endl;
-	cout << "fullModuleName('abc.de'): " << myPS.fullModuleName("abc.de") << endl;
-	cout << "fullModuleName('bc.def'): " << myPS.fullModuleName("bc.def") << endl;
-	cout << "fullModuleName('pietje.puk'): " << myPS.fullModuleName("pietje.puk") << endl;
 
     // Adopt itself with a prefix should work.
     int nrKeys = myPS.size();
@@ -272,33 +246,6 @@ int doIt(KeyCompare::Mode mode)
   return 0;
 }
 
-void testUsed()
-{
-  ParameterSet parset;
-  const char* argv1[] = {"name", "k1=v1", "k2={k2=v2}", "-re"};
-  parset.adoptArgv (4, argv1);
-  ASSERT (parset.getString("k1") == "v1");
-  vector<string> unused = parset.unusedKeys();
-  ASSERT (unused.size()==1 && unused[0]=="k2");
-  ASSERT (parset.getString("k2") == "{k2=v2}");
-  unused = parset.unusedKeys();
-  ASSERT (unused.size()==0);
-  const char* argv2[] = {"s1.k1=v1a", "s1.sk1.k2=v2a"};
-  parset.adoptArgv (2, argv2);
-  unused = parset.unusedKeys();
-  ASSERT (unused.size()==2);
-  // Take a subset and check that such keys are marked as used.
-  ParameterSet subset = parset.makeSubset ("s1.");
-  unused = parset.unusedKeys();
-  // Check the subset.
-  ASSERT (unused.size()==0);
-  unused = subset.unusedKeys();
-  ASSERT (unused.size()==2);
-  ASSERT (subset.getString("k1") == "v1a");
-  ASSERT (subset.getString("sk1.k2") == "v2a");
-  unused = subset.unusedKeys();
-  ASSERT (unused.size()==0);
-}
 
 int main()
 {
@@ -306,7 +253,6 @@ int main()
   uint fails(0);
   fails += doIt(KeyCompare::NORMAL);
   fails += doIt(KeyCompare::NOCASE);
-  testUsed();
   if (fails > 0) {
     cout << fails << " test(s) failed" << endl;
     return 1;

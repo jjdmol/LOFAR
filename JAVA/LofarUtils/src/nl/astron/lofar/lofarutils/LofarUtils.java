@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,9 +24,6 @@ package nl.astron.lofar.lofarutils;
 
 
 import java.awt.Component;
-import java.awt.KeyboardFocusManager;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.text.Collator;
 import java.util.BitSet;
 import java.util.regex.Pattern;
@@ -35,7 +32,6 @@ import javax.swing.Icon;
 import javax.swing.JComboBox;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
-import javax.swing.text.JTextComponent;
 
 /**
  * This panel contains a TreePanel and some textfields that display information
@@ -309,6 +305,34 @@ public abstract class LofarUtils {
         aComboBox.validate();
     }
 
+    static public BitSet beamletToBitSet(String aS) {
+
+        BitSet aBitSet = new BitSet(216);
+
+        if (aS == null || aS.length() <= 2) {
+            return aBitSet;
+        }
+        //remove [] from string
+        String beamlets = aS.substring(aS.indexOf("[") + 1, aS.lastIndexOf("]"));
+
+        // split into seperate beamlet nr's
+        String[] beamletList = beamlets.split("[,]");
+
+        //fill bitset
+
+        for (int j = 0; j < beamletList.length; j++) {
+            int val;
+            try {
+                val = Integer.parseInt(beamletList[j]);
+                aBitSet.set(val);
+            } catch (NumberFormatException ex) {
+                System.out.println("Error converting beamlet numbers");
+
+            }
+        }
+        return aBitSet;
+    }
+
     static public String ltrim(String aS, String matchSet) {
         String reg = "^[" + matchSet + "]*";
         return Pattern.compile(reg).matcher(aS).replaceAll("");
@@ -455,6 +479,7 @@ public abstract class LofarUtils {
 
         } catch (Exception ex) {
             System.out.println("Error in CompactedArrayString: " + ex.getMessage());
+            ex.printStackTrace();
             return orgStr;
         }
 
@@ -508,6 +533,7 @@ public abstract class LofarUtils {
             }
         } catch (Exception ex) {
             System.out.println("Error in CompactedArrayString: " + ex.getMessage());
+            ex.printStackTrace();
             return orgStr;
         }
 
@@ -851,54 +877,4 @@ public abstract class LofarUtils {
             return "";
         }
     }
-    
-        static public class TextSelector {
-
-            private static FocusHandler installedInstance;
-
-            /**
-             * Install an PropertyChangeList listener to the default focus manager
-             * and selects text when a text component is focused.       
-             */
-            public static void install() {
-                //already installed
-                if (installedInstance != null) {
-                    return;
-                }
-
-                installedInstance = new FocusHandler();
-
-                KeyboardFocusManager kfm = KeyboardFocusManager.getCurrentKeyboardFocusManager();
-
-
-
-                kfm.addPropertyChangeListener("focusOwner", installedInstance);
-            }
-
-            public static void uninstall() {
-                if (installedInstance != null) {
-                    KeyboardFocusManager kfm = KeyboardFocusManager.getCurrentKeyboardFocusManager();
-                    kfm.removePropertyChangeListener("focusOwner", installedInstance);
-                }
-            }
-
-            private static class FocusHandler implements PropertyChangeListener {
-
-            @Override
-                public void propertyChange(PropertyChangeEvent evt) {
-                    if (evt.getNewValue() instanceof JTextComponent) {
-                        JTextComponent text = (JTextComponent) evt.getNewValue();
-                       //select text if the component is editable
-                        //and the caret is at the end of the text
-                        if (text.isEditable()) {
-//                                && text.getDocument().getLength() == text.getCaretPosition()) {
-
-                            text.select(0,text.getDocument().getLength());
-                        }
-                    }
-                }
-            }
-        }
-
-
-}   
+}

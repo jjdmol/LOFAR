@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -29,15 +29,10 @@
 #include <Common/lofar_fstream.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
-#include <Common/lofar_iomanip.h>
-#include <Common/Exception.h>
 #include <OTDB/TreeMaintenance.h>
 
 using namespace LOFAR;
 using namespace LOFAR::OTDB;
-
-// Use a terminate handler that can produce a backtrace.
-Exception::TerminateHandler t(Exception::terminate);
 
 int main (int	argc, char*	argv[]) {
 
@@ -124,8 +119,8 @@ int main (int	argc, char*	argv[]) {
 			}
 		}
 	}
-	catch (Exception&	ex) {
-		cerr << "Unexpected exception: " << ex << endl;
+	catch (std::exception&	ex) {
+		cout << "Unexpected exception: " << ex.what() << endl;
 		return (1);		// return !0 on failure
 	}
 

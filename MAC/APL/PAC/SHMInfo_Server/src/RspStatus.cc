@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -39,21 +39,27 @@ using namespace EPA_Protocol;
 
 namespace LOFAR {
   namespace SHM_Protocol {
-    size_t RspStatus::getSize() const
+    unsigned int RspStatus::getSize()
     {
-      return MSH_size(m_board_status);
+      return MSH_ARRAY_SIZE(m_board_status, EPA_Protocol::BoardStatus);
     }
     
-    size_t RspStatus::pack  (char* buffer) const
+    unsigned int RspStatus::pack  (void* buffer)
     {
-      size_t offset = 0;
-      return MSH_pack(buffer, offset, m_board_status);
+      unsigned int offset = 0;
+      
+      MSH_PACK_ARRAY(buffer, offset, m_board_status, EPA_Protocol::BoardStatus);
+      
+      return offset;
     }
     
-    size_t RspStatus::unpack(const char *buffer)
+    unsigned int RspStatus::unpack(void *buffer)
     {
-      size_t offset = 0;
-      return MSH_unpack(buffer, offset, m_board_status);
+      unsigned int offset = 0;
+      
+      MSH_UNPACK_ARRAY(buffer, offset, m_board_status, EPA_Protocol::BoardStatus, 1);
+      
+      return offset;
     }
   }
 }

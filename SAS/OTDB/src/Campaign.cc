@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -25,12 +25,8 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/lofar_datetime.h>
 #include <OTDB/Campaign.h>
-#include <OTDB/misc.h>
-
-#include <pqxx/transaction>
-
-using namespace pqxx;
 
 namespace LOFAR {
   namespace OTDB {
@@ -70,7 +66,7 @@ CampaignInfo Campaign::getCampaign(const string&	name)
 
 	work	xAction(*(itsConn->getConn()), "getCampaign");
 	try {
-		result	res = xAction.exec("SELECT * FROM getCampaign('" + escapeQuotes(name) + "')");
+		result	res = xAction.exec("SELECT * FROM getCampaign('" + name + "')");
 		return (CampaignInfo(res[0]));
 	}
 	catch (std::exception&	ex) {
@@ -96,7 +92,7 @@ CampaignInfo Campaign::getCampaign(int32	ID)
 
 	work	xAction(*(itsConn->getConn()), "getCampaign");
 	try {
-		result	res = xAction.exec("SELECT * FROM getCampaign(" + toString(ID) + ")");
+		result	res = xAction.exec("SELECT * FROM getCampaign('" + toString(ID) + "')");
 		return (CampaignInfo(res[0]));
 	}
 	catch (std::exception&	ex) {
@@ -151,12 +147,10 @@ int32 Campaign::saveCampaign(const CampaignInfo&	aCampaign)
 
 	work	xAction(*(itsConn->getConn()), "saveCampaign");
 	try {
-		string	query(formatString(
+		result	res = xAction.exec(formatString(
 			"SELECT saveCampaign(%d,'%s','%s','%s','%s','%s')", 
-					aCampaign.ID(), 	  escapeQuotes(aCampaign.name).c_str(), 
-					escapeQuotes(aCampaign.title).c_str(), escapeQuotes(aCampaign.PI).c_str(), 
-					escapeQuotes(aCampaign.CO_I).c_str(), escapeQuotes(aCampaign.contact).c_str()));
-		result	res = xAction.exec(query);
+					aCampaign.ID(), 	  aCampaign.name.c_str(), aCampaign.title.c_str(), 
+					aCampaign.PI.c_str(), aCampaign.CO_I.c_str(), aCampaign.contact.c_str()));
 
 		// Analyze result
 		int32	newID;
@@ -170,7 +164,7 @@ int32 Campaign::saveCampaign(const CampaignInfo&	aCampaign)
 		
 	}
 	catch (std::exception&	ex) {
-		itsError = string("Exception during saveCampaign:") + ex.what();
+		itsError = string("Exception during getCampaignList:") + ex.what();
 		LOG_FATAL(itsError);
 	}
 

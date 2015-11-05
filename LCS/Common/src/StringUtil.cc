@@ -26,6 +26,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarTypes.h>
 #include <Common/StringUtil.h>
+#include <Common/lofar_algorithm.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_iomanip.h>
 #include <Common/lofar_map.h>
@@ -69,22 +70,7 @@ vector<string> StringUtil::split(const string& s, char c)
 		i = j + 1;
     }
     return (v);
-}
-
-vector<string> StringUtil::tokenize(const string& str, const string& delims) {
-    vector<string>    tokens;
-    string::size_type pos = 0;
-    string::size_type pos0;
-
-    while ( (pos0 = str.find_first_not_of(delims, pos)) != string::npos ) {
-        pos = str.find_first_of(delims, pos0 + 1);
-        if (pos - pos0 > 0) { // If pos == string::npos then substr() clamps.
-            tokens.push_back(str.substr(pos0, pos - pos0));
-        }
-    }
-
-    return tokens;
-}
+  }
 
 //
 // formatString(format, ...) --> string up to 10Kb
@@ -123,7 +109,7 @@ const string formatlString(const	char* format, ...) {
 //
 // timeString(aTime [,format]) --> string
 //
-// Define a global function that convert a timestamp into a human-readable 
+// Define a global function that convert a timestamp into a humanreadable 
 // format.
 //
 const string timeString(time_t		aTime, 
@@ -131,17 +117,8 @@ const string timeString(time_t		aTime,
 							 const char*	format)
 {
 	char	theTimeString [256];
-	struct tm tm;
-
-	if (gmt) {
-		gmtime_r(&aTime, &tm);
-	} else {
-		localtime_r(&aTime, &tm);
-	}
-	if (strftime(theTimeString, sizeof(theTimeString), format, &tm) == 0) {
-		strncpy(theTimeString, "unk timestamp", sizeof(theTimeString));
-		theTimeString[sizeof(theTimeString)-1] = '\0'; // defensive
-	}
+	strftime(theTimeString, 256, format, gmt ? gmtime(&aTime) 
+														: localtime(&aTime));
 
 	return (theTimeString);
 }
@@ -516,7 +493,7 @@ uint64 strToUint64 (const string& aString) throw(Exception)
 string compactedArrayString(const string&	orgStr)
 {
 	string	baseString(orgStr);			// destroyable copy
-	ltrim(baseString, " 	[");		// strip off brackets
+	ltrim(baseString, " 	[");		// strip of brackets
 	rtrim(baseString, " 	]");
 
 	// and split into a vector
@@ -605,11 +582,11 @@ string compactedArrayString(const string&	orgStr)
 	return (result+"]");
 }
 
-string stripBrackets(const string& orgStr)
+string stripBraces(const string& orgStr)
 {
   string baseString(orgStr); // destroyable copy
-  ltrim(baseString, " \t["); // strip off brackets
-  rtrim(baseString, " \t]");
+  ltrim(baseString, " 	["); // strip of brackets
+  rtrim(baseString, " 	]");
   
   return baseString;
 }

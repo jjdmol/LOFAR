@@ -33,16 +33,16 @@ def getStationList():
 # MAIN
 #
 if __name__ == '__main__':
-    print "Connecting to database ", dbName
+    print "Connecting to database coordtest"
     db = pg.connect(user="postgres", host=dbHost, dbname=dbName)
     
     pol = 2 # number of polarizations
     for station in getStationList():
         print findStationInfo(station)
-        if (len(findStationInfo(station)) < 13):
+        if (len(findStationInfo(station)) < 12):
             continue
-        (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal, Aartfaac ) = findStationInfo(station)
-        if height[0] != '0':
+        (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(station)
+        if long != '0.0':
             print "updating %s to the coordinate database " % station
             for lba in xrange(0, int(nrLBA)*2):
                 db.query("select * from add_object('%s', '%s', %d)" % ( name, "LBA", lba ))

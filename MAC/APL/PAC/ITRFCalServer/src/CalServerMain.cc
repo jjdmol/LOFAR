@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -29,7 +29,6 @@
 #include <Common/LofarConstants.h>
 #include <Common/lofar_bitset.h>
 #include <Common/ParameterSet.h>
-#include <Common/Exception.h>
 #include <Common/Version.h>
 
 #include <APL/LBA_Calibration/lba_calibration.h>		// the matlab stuff
@@ -39,15 +38,14 @@
 #include "ACCcache.h"
 #include "ACMProxy.h"
 #include "LBACalibration.h"
+//#include "Package__Version.h"
+
 
 
 using namespace LOFAR;
 using namespace GCF::TM;
 using namespace RTC;
 using namespace ICAL;
-
-// Use a terminate handler that can produce a backtrace.
-Exception::TerminateHandler t(Exception::terminate);
 
 //
 // MAIN

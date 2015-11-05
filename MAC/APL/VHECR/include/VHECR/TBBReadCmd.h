@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ class TBBReadCmd
 {
 public:
 	// Most likely way to construct the trigger.
-	TBBReadCmd (uint32	rcuNr,		uint32	time, 	uint32	sampleNr,
+	TBBReadCmd (uint32	rcuNr,		uint32	time, 	uint32	sampleTime,
 				uint32	prePages,	uint32	postPages);
 
 	// default construction
@@ -58,10 +58,10 @@ public:
 	// Note that the members are public, we use it as a struct.
 	uint32	itsRcuNr;
 	uint32	itsTime;
-	uint32	itsSampleNr;
+	uint32	itsSampleTime;
 	uint32	itsPrePages;
 	uint32	itsPostPages;
-	
+
 	//# print function for operator<<
 	ostream&	print(ostream&	os) const;
 };

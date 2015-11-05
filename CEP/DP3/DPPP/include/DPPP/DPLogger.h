@@ -71,7 +71,4 @@ namespace LOFAR {
     std::cout << str << endl;          \
   }
 
-#define LOGCOUT(msg) \
-  { std::ostringstream ostr; ostr<<msg; printf("%s\n", ostr.str().c_str()); }
-
 #endif

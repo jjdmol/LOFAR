@@ -98,11 +98,10 @@ class ImageWidget : public Gtk::DrawingArea {
 		double StartVertical() const { return _startVertical; }
 		double EndVertical() const { return _endVertical; }
 		void SetSegmentedImage(SegmentedImageCPtr segmentedImage) { _segmentedImage = segmentedImage; }
-		TimeFrequencyMetaDataCPtr GetMetaData();
+		TimeFrequencyMetaDataCPtr GetMetaData() { return _metaData; }
 		void SetMetaData(TimeFrequencyMetaDataCPtr metaData) { _metaData = metaData; }
 
 		sigc::signal<void, size_t, size_t> &OnMouseMovedEvent() { return _onMouseMoved; }
-		sigc::signal<void> &OnMouseLeaveEvent() { return _onMouseLeft; }
 		sigc::signal<void, size_t, size_t> &OnButtonReleasedEvent() { return _onButtonReleased; }
 		
 		num_t Max() const { return _max; }
@@ -127,22 +126,10 @@ class ImageWidget : public Gtk::DrawingArea {
 			_showColorScale = showColorScale;
 		}
 		
-		bool ShowXAxisDescription() const { return _showXAxisDescription; }
-		void SetShowXAxisDescription(bool showXAxisDescription)
+		bool ShowAxisDescriptions() const { return _showAxisDescriptions; }
+		void SetShowAxisDescriptions(bool showAxisDescriptions)
 		{
-			_showXAxisDescription = showXAxisDescription;
-		}
-		
-		bool ShowYAxisDescription() const { return _showYAxisDescription; }
-		void SetShowYAxisDescription(bool showYAxisDescription)
-		{
-			_showYAxisDescription = showYAxisDescription;
-		}
-		
-		bool ShowZAxisDescription() const { return _showZAxisDescription; }
-		void SetShowZAxisDescription(bool showZAxisDescription)
-		{
-			_showZAxisDescription = showZAxisDescription;
+			_showAxisDescriptions = showAxisDescriptions;
 		}
 		
 		void Clear();
@@ -164,22 +151,6 @@ class ImageWidget : public Gtk::DrawingArea {
 		{
 			_zAxisDescription = description;
 		}
-		
-		bool ManualXAxisDescription() const { return _manualXAxisDescription; }
-		void SetManualXAxisDescription(bool manualDesc)
-		{
-			_manualXAxisDescription = manualDesc;
-		}
-		bool ManualYAxisDescription() const { return _manualYAxisDescription; }
-		void SetManualYAxisDescription(bool manualDesc)
-		{
-			_manualYAxisDescription = manualDesc;
-		}
-		bool ManualZAxisDescription() const { return _manualZAxisDescription; }
-		void SetManualZAxisDescription(bool manualDesc)
-		{
-			_manualZAxisDescription = manualDesc;
-		}
 
 	private:
 		void findMinMax(Image2DCPtr image, Mask2DCPtr mask, num_t &min, num_t &max);
@@ -189,7 +160,6 @@ class ImageWidget : public Gtk::DrawingArea {
 		bool toUnits(double mouseX, double mouseY, int &posX, int &posY);
 		bool onExposeEvent(GdkEventExpose* ev);
 		bool onMotion(GdkEventMotion *event);
-		bool onLeave(GdkEventCrossing *event);
 		bool onButtonReleased(GdkEventButton *event);
 		class ColorMap *createColorMap();
 
@@ -215,20 +185,13 @@ class ImageWidget : public Gtk::DrawingArea {
 		enum ScaleOption _scaleOption;
 		bool _showXYAxes;
 		bool _showColorScale;
-		bool _showXAxisDescription;
-		bool _showYAxisDescription;
-		bool _showZAxisDescription;
+		bool _showAxisDescriptions;
 		num_t _max, _min;
 		enum Range _range;
 		Cairo::Filter _cairoFilter;
 		std::string _xAxisDescription, _yAxisDescription, _zAxisDescription;
-		bool _manualXAxisDescription;
-		bool _manualYAxisDescription;
-		bool _manualZAxisDescription;
-		bool _mouseIsIn;
 
 		sigc::signal<void, size_t, size_t> _onMouseMoved;
-		sigc::signal<void> _onMouseLeft;
 		sigc::signal<void, size_t, size_t> _onButtonReleased;
 };
 

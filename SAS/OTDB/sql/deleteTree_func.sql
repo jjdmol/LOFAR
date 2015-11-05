@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -38,7 +38,6 @@
 --
 CREATE OR REPLACE FUNCTION deleteTree(INT4, INT4)
   RETURNS VOID AS $$
-    --  $Id$
 	DECLARE
 		vFunction		INT2 := 1;
 		TThardware 		CONSTANT INT2 := 10;
@@ -70,10 +69,6 @@ CREATE OR REPLACE FUNCTION deleteTree(INT4, INT4)
 		DELETE FROM StateHistory
 		WHERE  treeID = $2;
 
-		-- make sure that there are not kvt's left that refer to this tree
-		DELETE FROM VICkvt
-		WHERE treeID = $2;
-
 		-- delete tree		
 		IF vOldTree.treetype = TThardware THEN
 		  DELETE FROM PIChierarchy
@@ -85,6 +80,10 @@ CREATE OR REPLACE FUNCTION deleteTree(INT4, INT4)
 		  DELETE FROM VIChierarchy
 		  WHERE	 treeID = $2;
 		END IF;
+
+		-- make sure that there are not kvt's left that refer to this tree
+		DELETE FROM VICkvt
+		WHERE treeID = $2;
 
 		-- Finally delete tree entry
 		DELETE FROM OTDBtree

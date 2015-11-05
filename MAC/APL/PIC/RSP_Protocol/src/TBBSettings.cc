@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -31,19 +31,25 @@ using namespace blitz;
 using namespace LOFAR;
 using namespace RSP_Protocol;
 
-size_t TBBSettings::getSize() const
+unsigned int TBBSettings::getSize()
 {
-  return MSH_size(m_bandsel);
+  return MSH_ARRAY_SIZE(m_bandsel, bitset<MEPHeader::N_SUBBANDS>);
 }
 
-size_t TBBSettings::pack  (char* buffer) const
+unsigned int TBBSettings::pack  (void* buffer)
 {
-  size_t offset = 0;
-  return MSH_pack(buffer, offset, m_bandsel);
+  unsigned int offset = 0;
+  
+  MSH_PACK_ARRAY(buffer, offset, m_bandsel, bitset<MEPHeader::N_SUBBANDS>);
+
+  return offset;
 }
 
-size_t TBBSettings::unpack(const char *buffer)
+unsigned int TBBSettings::unpack(void *buffer)
 {
-  size_t offset = 0;
-  return MSH_unpack(buffer, offset, m_bandsel);
+  unsigned int offset = 0;
+
+  MSH_UNPACK_ARRAY(buffer, offset, m_bandsel, bitset<MEPHeader::N_SUBBANDS>, 1);
+
+  return offset;
 }

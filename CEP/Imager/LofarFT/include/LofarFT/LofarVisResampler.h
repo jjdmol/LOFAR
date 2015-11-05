@@ -55,13 +55,7 @@
 #include <measures/Measures/MCDirection.h>
 #include <measures/Measures/MCPosition.h>
 #include <ms/MeasurementSets/MSAntenna.h>
-#if defined(casacore)
-#include <ms/MSSel/MSAntennaParse.h>
-#include <ms/MSSel/MSSelection.h>
-#else
 #include <ms/MeasurementSets/MSAntennaParse.h>
-#include <ms/MeasurementSets/MSSelection.h>
-#endif
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <ms/MeasurementSets/MSDataDescription.h>
 #include <ms/MeasurementSets/MSDataDescColumns.h>
@@ -73,14 +67,11 @@
 #include <ms/MeasurementSets/MSPolColumns.h>
 #include <ms/MeasurementSets/MSSpectralWindow.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
+#include <ms/MeasurementSets/MSSelection.h>
 #include <measures/Measures/MeasTable.h>
 
 #include <lattices/Lattices/ArrayLattice.h>
-#if defined(casacore)
-#include <lattices/LatticeMath/LatticeFFT.h>
-#else
 #include <lattices/Lattices/LatticeFFT.h>
-#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <casa/vector.h>
@@ -96,6 +87,7 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
   {
   public:
     LofarVisResampler(): AWVisResampler()  {}
+    LofarVisResampler(const CFStore& cfs): AWVisResampler(cfs)      {}
     virtual ~LofarVisResampler()                                    {}
 
     virtual VisibilityResamplerBase* clone()
@@ -118,54 +110,12 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
                           const Bool& dopsf, LofarCFStore& cfs)
     {DataToGridImpl_p(griddedData, vbs, rows, rbeg, rend, sumwt,dopsf,cfs);}
 
-    //Linear interpolation tries
-    void lofarDataToGrid_linear (Array<Complex>& griddedData, LofarVBStore& vbs,
-                          const Vector<uInt>& rows,
-                          Int rbeg, Int rend,
-                          Matrix<Double>& sumwt,
-                          const Bool& dopsf, LofarCFStore& cfs)
-    {DataToGridImpl_linear_p(griddedData, vbs, rows, rbeg, rend, sumwt,dopsf,cfs);}
-    void lofarDataToGrid_linear (Array<DComplex>& griddedData, LofarVBStore& vbs,
-                          const Vector<uInt>& rows,
-                          Int rbeg, Int rend,
-                          Matrix<Double>& sumwt,
-                          const Bool& dopsf, LofarCFStore& cfs)
-    {DataToGridImpl_linear_p(griddedData, vbs, rows, rbeg, rend, sumwt,dopsf,cfs);}
-
-    //End Linear interpolation tries
-
-
     void lofarGridToData(LofarVBStore& vbs,
                          const Array<Complex>& grid,
                          const Vector<uInt>& rows,
                          Int rbeg, Int rend,
                          LofarCFStore& cfs);
 
-    template <class T>
-    void lofarDataToGrid_interp(Array<T>& grid,  LofarVBStore& vbs,
-				const Vector<uInt>& rows,
-				Matrix<Double>& sumwt,
-				const Bool& dopsf,
-				LofarCFStore& cfs);//,
-				//vector<Float> wvec, Float wStep, Float wcf, vector<Complex> vecCorr);
-
-    void lofarGridToData_interp(LofarVBStore& vbs,
-                         const Array<Complex>& grid,
-                         const Vector<uInt>& rows,
-                         //Int rbeg, Int rend,
-				LofarCFStore& cfs);//,
-				//vector<Float> wvec, Float wStep, Float wcf, vector<Complex> vecCorr);
-
-    void lofarGridToData_linear(LofarVBStore& vbs,
-                         const Array<Complex>& grid,
-                         const Vector<uInt>& rows,
-                         Int rbeg, Int rend,
-                         LofarCFStore& cfs0,
-                         LofarCFStore& cfs1);
-
-    Vector<uInt> ChanCFMap;
-    void setChanCFMaps(Vector<uInt> ChanMap)
-    {ChanCFMap=ChanMap.copy();}
 
     virtual void setCFMaps(const Vector<Int>& cfMap, const Vector<Int>& conjCFMap)
     {cfMap_p.assign(cfMap); conjCFMap_p.assign(conjCFMap);}
@@ -211,13 +161,6 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
     //
     template <class T>
     void DataToGridImpl_p(Array<T>& griddedData, LofarVBStore& vb,
-                          const Vector<uInt>& rows,
-                          Int rbeg, Int rend,
-			  Matrix<Double>& sumwt,const Bool& dopsf,
-                          LofarCFStore& cfs);
-
-    template <class T>
-    void DataToGridImpl_linear_p(Array<T>& griddedData, LofarVBStore& vb,
                           const Vector<uInt>& rows,
                           Int rbeg, Int rend,
 			  Matrix<Double>& sumwt,const Bool& dopsf,

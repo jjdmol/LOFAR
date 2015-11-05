@@ -38,14 +38,11 @@ using namespace casa;
 namespace LOFAR {
   namespace BBS {
 
-    ParmFacade::ParmFacade (const string& tableName, bool create)
+    ParmFacade::ParmFacade (const string& tableName)
     {
-      // If create, only a local ParmDB can be done.
-      // If it is an existing table, open it directly.
+      // If it is a table, open it directly.
       // Otherwise it is a distributed ParmDB.
-      if (create) {
-        itsRep = ParmFacadeRep::ShPtr(new ParmFacadeLocal(tableName, create));
-      } else if (Table::isReadable(tableName)) {
+      if (Table::isReadable(tableName)) {
         itsRep = ParmFacadeRep::ShPtr(new ParmFacadeLocal(tableName));
       } else {
         itsRep = ParmFacadeRep::ShPtr(new ParmFacadeDistr(tableName));
@@ -58,8 +55,7 @@ namespace LOFAR {
     Record ParmFacade::getValues (const string& parmNamePattern,
                                   double freqv1, double freqv2,
                                   double timev1, double timev2,
-                                  bool asStartEnd,
-                                  bool includeDefaults)
+                                  bool asStartEnd)
     {
       double sfreq = freqv1;
       double efreq = freqv2;
@@ -81,7 +77,7 @@ namespace LOFAR {
       if (stime < rng[2]) stime = rng[2];
       if (etime > rng[3]) etime = rng[3];
       return itsRep->getValues (parmNamePattern, sfreq, efreq, 0,
-                                stime, etime, 0, true, includeDefaults);
+                                stime, etime, 0, true);
     }
 
     // Get the parameter values for the given parameters and domain.
@@ -89,12 +85,12 @@ namespace LOFAR {
     ParmFacade::getValuesMap (const string& parmNamePattern,
                               double freqv1, double freqv2, double freqStep,
                               double timev1, double timev2, double timeStep,
-                              bool asStartEnd, bool includeDefaults)
+                              bool asStartEnd)
     {
       return record2Map (getValues (parmNamePattern,
                                     freqv1, freqv2, freqStep,
                                     timev1, timev2, timeStep,
-                                    asStartEnd, includeDefaults));
+                                    asStartEnd));
     }
 
     map<string,vector<double> >

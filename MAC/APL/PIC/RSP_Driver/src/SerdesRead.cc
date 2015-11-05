@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -138,12 +138,12 @@ GCFEvent::TResult SerdesRead::handleack(GCFEvent& event, GCFPortInterface& /*por
 		EPAMdioDataEvent	answer(event);
 		//LOG_INFO(formatString("SerdesRead::handleack: %02x %02x", answer.data[0], answer.data[1]));
 		if (dataOffset == 0) {
-			backBuf.newCommand((unsigned char*)&answer.data[0], 2);
-			frontBuf.newCommand((unsigned char*)&answer.data[0], 2);
+			backBuf.newCommand((char*)&answer.data[0], 2);
+			frontBuf.newCommand((char*)&answer.data[0], 2);
 		}
 		else {
-			backBuf.appendCommand((unsigned char*)&answer.data[0], 2);
-			frontBuf.appendCommand((unsigned char*)&answer.data[0], 2);
+			backBuf.appendCommand((char*)&answer.data[0], 2);
+			frontBuf.appendCommand((char*)&answer.data[0], 2);
 		}
 
 		return GCFEvent::HANDLED;

@@ -66,11 +66,6 @@ class SummaryPage : public Gtk::HBox {
 			_statCollection->GetGlobalCrossBaselineStatistics(statistics);
 			buffer->insert(buffer->end(), "Statistics of cross-correlated baselines\n");
 			addText(statistics);
-			
-			buffer->insert(buffer->end(), "\nAverages over cross-correlated baselines\n");
-			std::ostringstream s;
-			addBaselineAverages(s);
-			buffer->insert(buffer->end(), s.str());
 
 			_statCollection->GetGlobalAutoBaselineStatistics(statistics);
 			buffer->insert(buffer->end(), "\nStatistics of auto-correlated baselines\n");
@@ -84,8 +79,6 @@ class SummaryPage : public Gtk::HBox {
 			unsigned long totalRFICount = 0;
 			unsigned long totalCount = 0;
 			const unsigned polarizationCount = statistics.PolarizationCount();
-			double stdDev[polarizationCount];
-			double dStdDev[polarizationCount];
 			double variance[polarizationCount];
 			double dVariance[polarizationCount];
 			for(unsigned p=0;p<polarizationCount;++p)
@@ -94,68 +87,18 @@ class SummaryPage : public Gtk::HBox {
 				totalCount += statistics.rfiCount[p] + statistics.count[p];
 				variance[p] = StatisticsDerivator::VarianceAmplitude(statistics.count[p], statistics.sum[p], statistics.sumP2[p]);
 				dVariance[p] = StatisticsDerivator::VarianceAmplitude(statistics.dCount[p], statistics.dSum[p], statistics.dSumP2[p]);
-				stdDev[p] = StatisticsDerivator::StandardDeviationAmplitude(statistics.count[p], statistics.sum[p], statistics.sumP2[p]);
-				dStdDev[p] = StatisticsDerivator::StandardDeviationAmplitude(statistics.dCount[p], statistics.dSum[p], statistics.dSumP2[p]);
 			}
 			
 			double rfiRatioValue = round(((double) totalRFICount * 10000.0 / (double) totalCount)) * 0.01;
 			
 			std::ostringstream s;
 			s << "Total RFI ratio = " << rfiRatioValue << "%\n";
-			s << "Standard deviation amplitude = ";
-			addValues(stdDev, polarizationCount, s);
-			s << " Jy\nDifferential stddev amplitude = ";
-			addValues(dStdDev, polarizationCount, s);
-			s << " Jy\nVariance amplitude = ";
+			s << "Variance amplitude = ";
 			addValues(variance, polarizationCount, s);
 			s << " Jy\nDifferential variance amplitude = ";
 			addValues(dVariance, polarizationCount, s);
 			s << " Jy\n";
 			buffer->insert(buffer->end(), s.str());
-		}
-		
-		void addBaselineAverages(std::ostringstream &s)
-		{
-			const BaselineStatisticsMap &map = _statCollection->BaselineStatistics();
-			std::vector<std::pair <unsigned, unsigned> > list = map.BaselineList();
-			double totalStdDev[map.PolarizationCount()], totalSNR[map.PolarizationCount()];
-			size_t count[map.PolarizationCount()];
-			for(size_t p=0;p<map.PolarizationCount();++p)
-			{
-				totalStdDev[p] = 0.0;
-				totalSNR[p] = 0.0;
-				count[p] = 0;
-			}
-			for(std::vector<std::pair <unsigned, unsigned> >::const_iterator i=list.begin(); i!=list.end(); ++i)
-			{
-				unsigned a1=i->first, a2=i->second;
-				if(a1 != a2)
-				{
-					const DefaultStatistics &stat = map.GetStatistics(a1, a2);
-					for(size_t p=0;p<map.PolarizationCount();++p)
-					{
-						const double
-							thisStdDev = StatisticsDerivator::GetStatisticAmplitude(QualityTablesFormatter::StandardDeviationStatistic, stat, p),
-							thisSNR = StatisticsDerivator::GetStatisticAmplitude(QualityTablesFormatter::SignalToNoiseStatistic, stat, p);
-						if(std::isfinite(thisStdDev) && std::isfinite(thisSNR))
-						{
-							totalStdDev[p] += thisStdDev;
-							totalSNR[p] += thisSNR;
-							++count[p];
-						}
-					}
-				}
-			}
-			for(size_t p=0;p<map.PolarizationCount();++p)
-			{
-				totalStdDev[p] /= (double) count[p];
-				totalSNR[p] /= (double) count[p];
-			}
-			s << "Average standard deviation = ";
-			addValues(totalStdDev, map.PolarizationCount(), s);
-			s << " Jy\nAverage signal to noise ratio = ";
-			addValues(totalSNR, map.PolarizationCount(), s);
-			s << " Jy\n(calculated with BaselineMean/BaselineDStdDev)\n";
 		}
 
 		void addValues(const double *values, unsigned polarizationCount, std::ostringstream &s)

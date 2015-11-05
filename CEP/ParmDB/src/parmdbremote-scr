@@ -29,22 +29,21 @@ if test $# != 10; then
   echo "                           wd"
   exit 1
 fi
-envfile="$9"
-wd="${10}"
+envfile=$9
+wd=${10}
 
 # Initialize environment.
 if test "$envfile" != ""; then
-  . "$envfile"
+  . $envfile
 fi
 
 # cd to work directory and add . to PATH for test purposes (make check).
-if test -d "$wd"; then
-  cd "$wd"
-  PATH=".:$PATH"
+if test -d $wd; then
+  cd $wd
+  PATH=.:$PATH
   export PATH
 fi
 
-# Start parmdbremote in the background, so it exits immediately
-# and the ssh connection created by startdistproc is ended.
-# Write stdout/err in a file, otherwise ssh won't exit.
-parmdbremote "$2" "$3" "$6" > "parmdbremote.log_${USER}_$$" 2>&1 &   # host,port,parmdb-part
+parmdbremote $2 $3 $6    # host,port,parmdb-part
+
+rm -f $envfile

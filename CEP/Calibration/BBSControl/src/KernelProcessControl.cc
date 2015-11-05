@@ -76,8 +76,6 @@
 #include <BBSKernel/Apply.h>
 #include <BBSKernel/Estimate.h>
 
-#include <casa/OS/Path.h>
-
 namespace LOFAR
 {
   namespace BBS
@@ -174,8 +172,8 @@ namespace LOFAR
 
         string key = ps->getString("BBDB.Key", "default");
         itsCalSession.reset(new CalSession(key,
-          ps->getString("BBDB.Name", (getenv("USER") ? : "")),
-          ps->getString("BBDB.User", "postgres"),
+          ps->getString("BBDB.Name"),
+          ps->getString("BBDB.User"),
           ps->getString("BBDB.Password", ""),
           ps->getString("BBDB.Host", "localhost"),
           ps->getString("BBDB.Port", "")));
@@ -476,7 +474,7 @@ namespace LOFAR
       VisBuffer::Ptr chunk(itsBuffers["DATA"]);
 
       // Load precomputed visibilities if required.
-      loadPrecomputedVis(command.modelConfig().sources());
+      loadPrecomputedVis(command.modelConfig().getSources());
 
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
@@ -512,9 +510,6 @@ namespace LOFAR
       evaluator.dumpStats(oss);
       LOG_DEBUG(oss.str());
 
-      // Flag NaN's introduced in the output (if any).
-      chunk->flagsNaN();
-
       // Write output if required.
       if(!command.outputColumn().empty())
       {
@@ -538,7 +533,7 @@ namespace LOFAR
       VisBuffer::Ptr chunk(itsBuffers["DATA"]);
 
       // Load precomputed visibilities if required.
-      loadPrecomputedVis(command.modelConfig().sources());
+      loadPrecomputedVis(command.modelConfig().getSources());
 
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
@@ -575,14 +570,12 @@ namespace LOFAR
       evaluator.dumpStats(oss);
       LOG_DEBUG(oss.str());
 
-      // Flag NaN's introduced in the output (if any).
-      chunk->flagsNaN();
-
       // Write output if required.
       if(!command.outputColumn().empty())
       {
-        itsMeasurement->write(chunk, itsChunkSelection, command.outputColumn(),
-          command.writeCovariance(), command.writeFlags(), 1);
+        itsMeasurement->write(chunk, itsChunkSelection,
+          command.outputColumn(), command.writeCovariance(),
+          command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -601,7 +594,7 @@ namespace LOFAR
       VisBuffer::Ptr chunk(itsBuffers["DATA"]);
 
       // Load precomputed visibilities if required.
-      loadPrecomputedVis(command.modelConfig().sources());
+      loadPrecomputedVis(command.modelConfig().getSources());
 
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
@@ -638,14 +631,12 @@ namespace LOFAR
       evaluator.dumpStats(oss);
       LOG_DEBUG(oss.str());
 
-      // Flag NaN's introduced in the output (if any).
-      chunk->flagsNaN();
-
       // Write output if required.
       if(!command.outputColumn().empty())
       {
-        itsMeasurement->write(chunk, itsChunkSelection, command.outputColumn(),
-          command.writeCovariance(), command.writeFlags(), 1);
+        itsMeasurement->write(chunk, itsChunkSelection,
+          command.outputColumn(), command.writeCovariance(),
+          command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -664,7 +655,7 @@ namespace LOFAR
       VisBuffer::Ptr chunk(itsBuffers["DATA"]);
 
       // Load precomputed visibilities if required.
-      loadPrecomputedVis(command.modelConfig().sources());
+      loadPrecomputedVis(command.modelConfig().getSources());
 
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
@@ -681,8 +672,7 @@ namespace LOFAR
         try
         {
           StationExprLOFAR::Ptr expr(new StationExprLOFAR(*itsSourceDB,
-            itsBuffers, command.modelConfig(), chunk, true, command.useMMSE(),
-            command.sigmaMMSE()));
+            itsBuffers, command.modelConfig(), chunk, true));
           apply(expr, chunk, blMask);
         }
         catch(Exception &ex)
@@ -698,8 +688,7 @@ namespace LOFAR
         try
         {
           model.reset(new MeasurementExprLOFAR(*itsSourceDB, itsBuffers,
-            command.modelConfig(), chunk, blMask, true, command.useMMSE(),
-            command.sigmaMMSE()));
+            command.modelConfig(), chunk, blMask, true));
         }
         catch(Exception &ex)
         {
@@ -725,14 +714,12 @@ namespace LOFAR
         LOG_DEBUG(oss.str());
       }
 
-      // Flag NaN's introduced in the output (if any).
-      chunk->flagsNaN();
-
       // Write output if required.
       if(!command.outputColumn().empty())
       {
-        itsMeasurement->write(chunk, itsChunkSelection, command.outputColumn(),
-          command.writeCovariance(), command.writeFlags(), 1);
+        itsMeasurement->write(chunk, itsChunkSelection,
+          command.outputColumn(), command.writeCovariance(),
+          command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -763,7 +750,7 @@ namespace LOFAR
       VisBuffer::Ptr chunk(itsBuffers["DATA"]);
 
       // Load precomputed visibilities if required.
-      loadPrecomputedVis(command.modelConfig().sources());
+      loadPrecomputedVis(command.modelConfig().getSources());
 
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());

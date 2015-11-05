@@ -143,11 +143,11 @@ namespace LOFAR
       virtual void write(ParameterSet& ps) const;
 
       // Read the contents from the ParameterSet \a ps into \c *this.
-      virtual void read(const ParameterSet& ps, const std::string prefix);
+      virtual void read(const ParameterSet& ps);
 
-      void setUVRange(const ParameterSet& ps, const std::string prefix);
-      void setResampleCellSize(const ParameterSet& ps, const std::string prefix);
-      void setDirection(const ParameterSet& ps, const std::string prefix);
+      void setUVRange(const ParameterSet& ps);
+      void setResampleCellSize(const ParameterSet& ps);
+      void setDirection(const ParameterSet& ps);
 
       // Name of solving mode to use.
       string                itsMode;

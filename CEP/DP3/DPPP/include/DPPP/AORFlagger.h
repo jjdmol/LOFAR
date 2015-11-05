@@ -1,4 +1,4 @@
-//# AORFlagger.h: DPPP step class to flag data using rficonsole's functionality
+//# AORFlagger.h: DPPP step class to flag data usibng rficonsole's functionality
 //# Copyright (C) 2010
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -31,17 +31,14 @@
 #include <DPPP/DPBuffer.h>
 #include <DPPP/FlagCounter.h>
 #include <Common/lofar_vector.h>
-#include <Common/lofar_smartptr.h>
-#include <AOFlagger/msio/image2d.h>
-#include <AOFlagger/msio/mask2d.h>
+#include <AOFlagger/strategy/actions/strategyaction.h>
 #include <AOFlagger/util/progresslistener.h>
-#include <AOFlagger/quality/statisticscollection.h>
 
 namespace LOFAR {
 
-  class ParameterSet;
-
   namespace DPPP {
+    class ParSet;
+
     // @ingroup NDPPP
 
     // This class is a DPStep class flagging data points based on the
@@ -71,7 +68,7 @@ namespace LOFAR {
     public:
       // Construct the object.
       // Parameters are obtained from the parset using the given prefix.
-      AORFlagger (DPInput*, const ParameterSet&, const string& prefix);
+      AORFlagger (DPInput*, const ParSet&, const string& prefix);
 
       virtual ~AORFlagger();
 
@@ -82,12 +79,9 @@ namespace LOFAR {
       // Finish the processing of this step and subsequent steps.
       virtual void finish();
 
-      // Write the statistics into the MS.
-      virtual void addToMS (const string& msName);
-
       // Update the general info.
       // It is used to adjust the parms if needed.
-      virtual void updateInfo (const DPInfo&);
+      virtual void updateInfo (DPInfo&);
 
       // Show the step parameters.
       virtual void show (std::ostream&) const;
@@ -107,46 +101,33 @@ namespace LOFAR {
       void flagBaseline (uint leftOverlap, uint windowSize,
                          uint rightOverlap, uint bl,
                          FlagCounter& counter,
-                         rfiStrategy::Strategy&,
-                         StatisticsCollection& rfiStats);
-
-      // Add the flags to the statistics.
-      void addStats (StatisticsCollection& rfiStats,
-                     const Image2DPtr& reals, const Image2DPtr& imags,
-                     const Mask2DCPtr& mask, const Mask2DPtr& origFlags,
-                     int bl, uint polarization);
+			 rfiStrategy::Strategy&);
 
       // Fill the rfi strategy.
-      void fillStrategy (boost::shared_ptr<rfiStrategy::Strategy>&);
+      void fillStrategy (rfiStrategy::Strategy&);
 
       //# Data members.
+      DPInput*         itsInput;
       string           itsName;
       uint             itsBufIndex;
       uint             itsNTimes;
       uint             itsNTimesToDo;
-      string           itsStrategyName;
       uint             itsWindowSize;
       uint             itsOverlap;       //# extra time slots on both sides
       double           itsOverlapPerc;
       double           itsMemory;        //# Usable memory in GBytes
       double           itsMemoryPerc;
-      double           itsMemoryNeeded;  //# Memory needed for data/flags
       bool             itsPulsarMode;
       bool             itsPedantic;
       bool             itsDoAutoCorr;
-      bool             itsDoRfiStats;
       vector<DPBuffer> itsBuf;
       FlagCounter      itsFlagCounter;
       NSTimer          itsTimer;
-      NSTimer          itsQualityTimer;  //# quality writing timer
       NSTimer          itsComputeTimer;  //# move/flag timer
       double           itsMoveTime;      //# data move timer (sum all threads)
       double           itsFlagTime;      //# flag timer (sum of all threads)
-      double           itsQualTime;      //# quality timer (sum of all threads)
-      boost::shared_ptr<rfiStrategy::Strategy> itsStrategy;
+      rfiStrategy::Strategy itsStrategy;
       DummyProgressListener itsProgressListener;
-      StatisticsCollection  itsRfiStats;
-      casa::Vector<double>  itsFreqs;
     };
 
   } //# end namespace

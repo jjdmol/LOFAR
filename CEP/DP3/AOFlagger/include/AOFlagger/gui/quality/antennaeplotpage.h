@@ -53,9 +53,9 @@ class AntennaePlotPage : public TwoDimensionalPlotPage {
 			return _statistics;
 		}
 		
-		virtual void StartLine(Plot2D &plot, const std::string &name, const std::string &yAxisDesc)
+		virtual void StartLine(Plot2D &plot, const std::string &name)
 		{
-			Plot2DPointSet &pointSet = plot.StartLine(name, "Antenna index", yAxisDesc, false, Plot2DPointSet::DrawColumns);
+			Plot2DPointSet &pointSet = plot.StartLine(name, "Antenna index", "Value", false, Plot2DPointSet::DrawColumns);
 			
 			std::vector<std::string> labels;
 			for(std::vector<AntennaInfo>::const_iterator i=_antennas.begin();i!=_antennas.end();++i)

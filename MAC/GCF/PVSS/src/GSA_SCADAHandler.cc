@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -22,9 +22,10 @@
 //#  $Id$
 
 #include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include "GSA_SCADAHandler.h"
 #include <GSA_Resources.h>
-#include <Common/LofarLogger.h>		// MUST be after GSA file because of namespace clash
 #include <GCF/TM/GCF_Scheduler.h>
 //#include <Common/ParameterSet.h>
 

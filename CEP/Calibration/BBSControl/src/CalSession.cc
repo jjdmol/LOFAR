@@ -25,14 +25,24 @@
 #include <BBSControl/CalSession.h>
 #include <BBSControl/CalSessionTransactors.h>
 #include <BBSControl/Exceptions.h>
-#include <BBSControl/Step.h>
+
 #include <LMWCommon/VdsDesc.h>
+
 #include <Common/LofarLogger.h>
 #include <Common/lofar_numeric.h>
 #include <Common/lofar_string.h>
+
 #include <Common/ParameterSet.h>
-#include <pqxx/except>
+#include <BBSControl/Step.h>
+
+// gethostname() and getpid()
+#include <unistd.h>
+
+// numeric_limits<int32>
+// TODO: Create lofar_limits.h in Common.
 #include <limits>
+
+#include <pqxx/except>
 
 // Now here's an ugly kludge: libpqxx defines four different top-level
 // exception classes. In order to avoid a lot of code duplication we clumped
@@ -42,22 +52,22 @@
 #if defined(CATCH_PQXX_AND_RETHROW)
 # error CATCH_PQXX_AND_RETHROW is already defined and should not be redefined
 #else
-# define CATCH_PQXX_AND_RETHROW                 \
-  catch (pqxx::broken_connection& e) {              \
-    THROW (DatabaseException, "pqxx::broken_connection:\n"  \
-       << e.what());                    \
-  }                             \
-  catch (pqxx::sql_error& e) {                  \
-    THROW (DatabaseException, "pqxx::sql_error:\n"      \
-       << "Query: " << e.query() << endl << e.what());  \
-  }                             \
-  catch (pqxx::in_doubt_error& e) {             \
-    THROW (DatabaseException, "pqxx::in_doubt_error:\n"     \
-       << e.what());                    \
-  }                             \
-  catch (pqxx::internal_error& e) {             \
-    THROW (DatabaseException, "pqxx::internal_error:\n"     \
-       << e.what());                    \
+# define CATCH_PQXX_AND_RETHROW					\
+  catch (pqxx::broken_connection& e) {				\
+    THROW (DatabaseException, "pqxx::broken_connection:\n"	\
+	   << e.what());					\
+  }								\
+  catch (pqxx::sql_error& e) {					\
+    THROW (DatabaseException, "pqxx::sql_error:\n"		\
+	   << "Query: " << e.query() << endl << e.what());	\
+  }								\
+  catch (pqxx::in_doubt_error& e) {				\
+    THROW (DatabaseException, "pqxx::in_doubt_error:\n"		\
+	   << e.what());					\
+  }								\
+  catch (pqxx::internal_error& e) {				\
+    THROW (DatabaseException, "pqxx::internal_error:\n"		\
+	   << e.what());					\
   }
 #endif
 
@@ -87,12 +97,21 @@ namespace
     }
 }
 
+ostream& operator<<(ostream& os, const ProcessId &obj)
+{
+    return os << obj.hostname << ":" << obj.pid;
+}
+
 CalSession::CalSession(const string &key, const string &db, const string &user,
     const string &password, const string &host, const string &port)
-    :   itsSessionId(-1),
-        itsProcessId(ProcessId::id()),
-        itsRegisterDirty(true)
+    :   itsSessionId(-1)
 {
+    // Determine the ProcessId of this worker.
+    char hostname[512];
+    int status = gethostname(hostname, 512);
+    ASSERT(status == 0);
+    itsProcessId = ProcessId(string(hostname), getpid());
+
     // Build connection string.
     string opts("dbname='" + db + "' user='" + user + "' host='" + host + "'");
     if(!port.empty()) {
@@ -117,6 +136,10 @@ CalSession::CalSession(const string &key, const string &db, const string &user,
     syncWorkerRegister(true);
 }
 
+CalSession::~CalSession()
+{
+}
+
 ProcessId CalSession::getProcessId() const
 {
     return itsProcessId;
@@ -124,9 +147,8 @@ ProcessId CalSession::getProcessId() const
 
 bool CalSession::registerAsControl()
 {
-    itsRegisterDirty = true;
-
     int32 status = -1;
+
     try
     {
         itsConnection->perform(PQRegisterAsControl(itsSessionId, itsProcessId,
@@ -140,9 +162,8 @@ bool CalSession::registerAsControl()
 bool CalSession::registerAsKernel(const string &filesys, const string &path,
     const Axis::ShPtr &freqAxis, const Axis::ShPtr &timeAxis)
 {
-    itsRegisterDirty = true;
-
     int32 status = -1;
+
     try
     {
         itsConnection->perform(PQRegisterAsKernel(itsSessionId, itsProcessId,
@@ -155,9 +176,8 @@ bool CalSession::registerAsKernel(const string &filesys, const string &path,
 
 bool CalSession::registerAsSolver(size_t port)
 {
-    itsRegisterDirty = true;
-
     int32 status = -1;
+
     try
     {
         itsConnection->perform(PQRegisterAsSolver(itsSessionId, itsProcessId,
@@ -171,6 +191,7 @@ bool CalSession::registerAsSolver(size_t port)
 void CalSession::setState(State state)
 {
     int32 status = -1;
+
     try
     {
         itsConnection->perform(PQSetState(itsSessionId, itsProcessId, state,
@@ -188,6 +209,7 @@ CalSession::State CalSession::getState() const
 {
     int32 status = -1;
     State result;
+
     try
     {
         itsConnection->perform(PQGetState(itsSessionId, status, result));
@@ -205,6 +227,7 @@ CalSession::State CalSession::getState() const
 void CalSession::setTimeAxis(const Axis::ShPtr &axis)
 {
     int32 status = -1;
+
     try
     {
         itsConnection->perform(PQSetAxisTime(itsSessionId, itsProcessId, axis,
@@ -222,6 +245,7 @@ Axis::ShPtr CalSession::getTimeAxis()
 {
     int32 status = -1;
     Axis::ShPtr axis;
+
     try
     {
         itsConnection->perform(PQGetAxisTime(itsSessionId, status, axis));
@@ -239,6 +263,7 @@ Axis::ShPtr CalSession::getTimeAxis()
 void CalSession::setParset(const ParameterSet &parset) const
 {
     int32 status = -1;
+
     try
     {
         itsConnection->perform(PQSetParset(itsSessionId, itsProcessId, parset,
@@ -256,6 +281,7 @@ ParameterSet CalSession::getParset() const
 {
     int32 status = -1;
     ParameterSet parset;
+
     try
     {
         itsConnection->perform(PQGetParset(itsSessionId, status, parset));
@@ -272,8 +298,6 @@ ParameterSet CalSession::getParset() const
 
 void CalSession::initWorkerRegister(const CEP::VdsDesc &vds, bool useSolver)
 {
-    itsRegisterDirty = true;
-
     try
     {
         itsConnection->perform(PQInitWorkerRegister(itsSessionId, itsProcessId,
@@ -284,9 +308,8 @@ void CalSession::initWorkerRegister(const CEP::VdsDesc &vds, bool useSolver)
 
 void CalSession::setWorkerIndex(const ProcessId &worker, size_t index)
 {
-    itsRegisterDirty = true;
-
     int32 status = -1;
+
     try
     {
         itsConnection->perform(PQSetWorkerIndex(itsSessionId, itsProcessId,
@@ -306,6 +329,7 @@ CommandId CalSession::postCommand(const Command& cmd, WorkerType addressee)
 {
     int32 status = -1;
     CommandId id(-1);
+
     try
     {
         itsConnection->perform(PQPostCommand(itsSessionId, itsProcessId,
@@ -326,6 +350,7 @@ pair<CommandId, shared_ptr<Command> > CalSession::getCommand() const
     int32 status = -1;
     pair<CommandId, shared_ptr<Command> > cmd(CommandId(-1),
         shared_ptr<Command>());
+
     try
     {
         itsConnection->perform(PQGetCommand(itsSessionId, itsProcessId, status,
@@ -347,6 +372,7 @@ void CalSession::postResult(const CommandId &id, const CommandResult &result)
     const
 {
     int32 status = -1;
+
     try
     {
         itsConnection->perform(PQPostResult(itsSessionId, itsProcessId, id,
@@ -360,12 +386,12 @@ void CalSession::postResult(const CommandId &id, const CommandResult &result)
     }
 }
 
-CalSession::CommandStatus CalSession::getCommandStatus(const CommandId &id)
-  const
+CommandStatus CalSession::getCommandStatus(const CommandId &id) const
 {
     int32 status = -1;
     WorkerType addressee;
     CommandStatus cmdStatus;
+
     try
     {
         itsConnection->perform(PQGetCommandStatus(id, status, addressee,
@@ -386,6 +412,7 @@ vector<pair<ProcessId, CommandResult> > CalSession::getResults(const CommandId
     &id) const
 {
     vector<pair<ProcessId, CommandResult> > results;
+
     try
     {
         itsConnection->perform(PQGetResults(id, results));
@@ -457,7 +484,7 @@ bool CalSession::isSolver(const ProcessId &id) const
 
 size_t CalSession::getIndex() const
 {
-    // Note: syncWorkerRegister() already called via getIndex(ProcessId).
+    // Note: syncWorkerRegister() already called via getWorkerIndex(ProcessId).
     return getIndex(getProcessId());
 }
 
@@ -540,6 +567,7 @@ Axis::ShPtr CalSession::getFreqAxis(const ProcessId &id) const
 
     int32 status = -1;
     Axis::ShPtr axis;
+
     try
     {
         itsConnection->perform(PQGetWorkerAxisFreq(itsSessionId, id, status,
@@ -567,6 +595,7 @@ Axis::ShPtr CalSession::getTimeAxis(const ProcessId &id) const
 
     int32 status = -1;
     Axis::ShPtr axis;
+
     try
     {
         itsConnection->perform(PQGetWorkerAxisTime(itsSessionId, id, status,
@@ -624,31 +653,29 @@ ProcessId CalSession::getWorkerByIndex(WorkerType type, size_t index) const
 
 void CalSession::syncWorkerRegister(bool force) const
 {
-    if(force
-        || itsRegisterDirty
-        || waitForTrigger(Trigger::WorkerRegisterModified, 0))
+    if(!force && !waitForTrigger(Trigger::WorkerRegisterModified, 0))
     {
-        vector<size_t> tmpSlotCount;
-        vector<Worker> tmpRegister;
+        return;
+    }
 
-        try
-        {
-            itsConnection->perform(PQGetWorkerRegister(itsSessionId,
-                tmpSlotCount, tmpRegister));
-        }
-        CATCH_PQXX_AND_RETHROW;
+    vector<size_t> tmpSlotCount;
+    vector<Worker> tmpRegister;
 
-        itsSlotCount = tmpSlotCount;
-        itsRegister = tmpRegister;
+    try
+    {
+        itsConnection->perform(PQGetWorkerRegister(itsSessionId, tmpSlotCount,
+            tmpRegister));
+    }
+    CATCH_PQXX_AND_RETHROW;
 
-        // Recreate the mapping from ProcessId to index in the register.
-        itsRegisterMap.clear();
-        for(size_t i = 0; i < itsRegister.size(); ++i)
-        {
-            itsRegisterMap[itsRegister[i].id] = i;
-        }
+    itsSlotCount = tmpSlotCount;
+    itsRegister = tmpRegister;
 
-        itsRegisterDirty = false;
+    // Recreate the mapping from ProcessId to index in the register.
+    itsRegisterMap.clear();
+    for(size_t i = 0; i < itsRegister.size(); ++i)
+    {
+        itsRegisterMap[itsRegister[i].id] = i;
     }
 }
 
@@ -716,14 +743,15 @@ bool CalSession::waitForTrigger(Trigger::Type type, double timeOut) const
     else
     {
         LOG_TRACE_COND("Waiting for notification");
+        unsigned int notifs;
         if(timeOut < 0)
         {
-            itsConnection->await_notification();
+            notifs = itsConnection->await_notification();
         }
         else
         {
             timeval tv = asTimeval(timeOut);
-            itsConnection->await_notification(tv.tv_sec, tv.tv_usec);
+            notifs = itsConnection->await_notification(tv.tv_sec, tv.tv_usec);
         }
     }
 

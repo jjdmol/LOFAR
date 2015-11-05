@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.rmi.RemoteException;
 import java.util.*;
+import java.util.logging.Level;
 import javax.swing.*;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import org.apache.log4j.Logger;
@@ -43,7 +44,7 @@ import nl.astron.lofar.sas.otbcomponents.*;
  * @version $Id$
  * @updated 
  */
-public final class MainFrame extends javax.swing.JFrame {
+public class MainFrame extends javax.swing.JFrame {
 
     // Create a Log4J logger instance
     static Logger logger = Logger.getLogger(MainFrame.class);
@@ -61,8 +62,6 @@ public final class MainFrame extends javax.swing.JFrame {
     private String itsUserName             = "";
 
     private String itsServiceName          = "";
-    
-    private boolean isEnded                = false;
 
 
     
@@ -111,7 +110,7 @@ public final class MainFrame extends javax.swing.JFrame {
         itsDBName=database;
         itsUserName=user;
 
-        itsPlugins = new HashMap<>();
+        itsPlugins = new HashMap<String,PluginPanelInfo>();
 
         itsSharedVars = new SharedVars(this);
         itsStorageLocation = new StorageLocation(SharedVars.getOTDBrmi());
@@ -137,16 +136,19 @@ public final class MainFrame extends javax.swing.JFrame {
         
 
         
+        
+        
             showPanel(MainPanel.getFriendlyNameStatic());
         } catch(NoServerConnectionException ex ) {
             String aS="No Server Connection "+ex;
             logger.error(aS);
-            LofarUtils.showErrorPanel(this.getOwner(),aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             exit();
             throw ex;
         } catch (NotLoggedInException ex ) {
             String aS="Not logged in "+ex;
             logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             exit();
             throw ex;
         }
@@ -243,7 +245,7 @@ public final class MainFrame extends javax.swing.JFrame {
 
             return p;
         }
-        catch(ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+        catch(Exception e) {
             String aS= e.getMessage();
             logger.fatal(aS);
             LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_death.gif")));
@@ -399,6 +401,7 @@ public final class MainFrame extends javax.swing.JFrame {
         jToolBarPlugins = new javax.swing.JToolBar();
         jMenuBarMainFrame = new javax.swing.JMenuBar();
         jMenuFile = new javax.swing.JMenu();
+        jMenuItemLogout = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JSeparator();
         jMenuItemExit = new javax.swing.JMenuItem();
         jMenuPlugins = new javax.swing.JMenu();
@@ -417,6 +420,15 @@ public final class MainFrame extends javax.swing.JFrame {
 
         jMenuFile.setMnemonic('f');
         jMenuFile.setText("File"); // NOI18N
+
+        jMenuItemLogout.setMnemonic('l');
+        jMenuItemLogout.setText("Logout"); // NOI18N
+        jMenuItemLogout.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemLogoutActionPerformed(evt);
+            }
+        });
+        jMenuFile.add(jMenuItemLogout);
         jMenuFile.add(jSeparator1);
 
         jMenuItemExit.setMnemonic('x');
@@ -453,6 +465,25 @@ public final class MainFrame extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void jMenuItemLogoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLogoutActionPerformed
+        logger.info("Logout requested");
+        logout();
+        setVisible(false);
+        try {
+            login();
+            setVisible(true);
+            showPanel(MainPanel.getFriendlyNameStatic());
+        } catch (NoServerConnectionException e) {
+            String aS= "No Server connection"+e.getMessage();
+            logger.fatal(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_death.gif")));
+        } catch (NotLoggedInException e) {
+            String aS= "Not logged in "+e.getMessage();
+            logger.fatal(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_death.gif")));
+        }
+    }//GEN-LAST:event_jMenuItemLogoutActionPerformed
+
     private void jMenuItemExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemExitActionPerformed
         exit();
     }//GEN-LAST:event_jMenuItemExitActionPerformed
@@ -469,23 +500,20 @@ public final class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_formWindowClosing
 
     public void exit() {
-        if (!isEnded) {
-            logger.info("Exit requested");
-            logout();
-            setVisible(false);  
-           // remove used rmi connections from server
-            try {
-                if ( OtdbRmi.getRemoteOTDBaccess() != null) {
-                    OtdbRmi.getRemoteOTDBaccess().logout(OtdbRmi.getRMIRegistryName());
-                }
-            } catch (RemoteException ex) {
-                String aS= "Remote Exception "+ex.getMessage();
-                logger.error(aS);
-                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+        logger.info("Exit requested");
+        logout();
+        setVisible(false);
+        // remove used rmi connections from server
+        try {
+            if ( OtdbRmi.getRemoteOTDBaccess() != null) {
+                OtdbRmi.getRemoteOTDBaccess().logout(OtdbRmi.getRMIRegistryName());
             }
-            this.dispose();
-            isEnded=true;
+        } catch (RemoteException ex) {
+            String aS= "Remote Exception "+ex.getMessage();
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
         }
+        this.dispose();
     }
     
     /** Event handler called when a button in the button panel is called
@@ -633,7 +661,7 @@ public final class MainFrame extends javax.swing.JFrame {
             public void run() {
                 try {
                     new MainFrame("","","","").setVisible(true);
-                } catch (NoServerConnectionException | NotLoggedInException e) {
+                } catch (Exception e) {
                     System.out.println(e);
                 } finally {
                     System.out.println("We really need to go");
@@ -652,6 +680,7 @@ public final class MainFrame extends javax.swing.JFrame {
     private javax.swing.JMenu jMenuFile;
     private javax.swing.JMenuItem jMenuItemCoordChange;
     private javax.swing.JMenuItem jMenuItemExit;
+    private javax.swing.JMenuItem jMenuItemLogout;
     private javax.swing.JMenu jMenuPlugins;
     private javax.swing.JMenu jMenuTools;
     private javax.swing.JSeparator jSeparator1;

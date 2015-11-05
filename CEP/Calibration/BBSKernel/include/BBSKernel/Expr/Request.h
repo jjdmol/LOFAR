@@ -59,7 +59,7 @@ private:
     Box                 itsDomain;
     vector<Grid>        itsGrid;
 
-    static RequestId    theirId; // Note: not thread safe! Cache per thread?
+    static RequestId    theirId;
 };
 
 // @}

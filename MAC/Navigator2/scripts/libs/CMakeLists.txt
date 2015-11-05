@@ -2,8 +2,7 @@
 
 install(FILES
   GCFAlarm.ctl
-  GCFCommon_prod.ctl
-  GCFCommon_test.ctl
+  GCFCommon.ctl
   GCFCWD.ctl
   GCFLogging.ctl
   navFunct.ctl

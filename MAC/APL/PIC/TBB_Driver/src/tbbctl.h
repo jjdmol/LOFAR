@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 #define TBBCTL_H_
 
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
-#include <Common/NsTimestamp.h>
+
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
 #include <GCF/TM/GCF_TimerPort.h>
@@ -36,8 +36,8 @@
 #include <cstdio>
 
 
+
 namespace LOFAR {
-  using namespace TBB_Protocol;
   using GCF::TM::GCFTask;
   using GCF::TM::GCFPort;
   using GCF::TM::GCFTimerPort;
@@ -46,7 +46,7 @@ namespace LOFAR {
 
 GCFTimerPort* itsCmdTimer;
 
-static const int TBBCTL_VERSION = 251;
+static const int TBBCTL_VERSION = 239;
 
 // MAX_N_TBBOARDS and MAX_N_RCUS come from TBB_protocol.ph
 
@@ -516,26 +516,16 @@ public:
 	virtual ~ReadCmd() { }
 	virtual void send();
 	virtual GCFEvent::TResult ack(GCFEvent& e);
-	void setTime(double time) { itsTime.set(time); }
-	void setTimeBefore(double time) { itsTimeBefore.set(time); }
-	void setTimeAfter(double time) { itsTimeAfter.set(time); }
-	/*
 	void setSecondsTime(uint32 secondstime) { itsSecondsTime = secondstime; }
-	void setSampleNr(uint32 samplenr) { itsSampleNr = samplenr; }
+	void setSampleTime(uint32 sampletime) { itsSampleTime = sampletime; }
 	void setPrePages(uint32 prepages) { itsPrePages = prepages; }
 	void setPostPages(uint32 postpages) { itsPostPages = postpages; }
-	*/
 private:
 	uint32 itsStage;
-	NsTimestamp itsTime;
-    NsTimestamp itsTimeBefore;
-	NsTimestamp itsTimeAfter;
-	/*
 	uint32 itsSecondsTime;
-	uint32 itsSampleNr;
+	uint32 itsSampleTime;
 	uint32 itsPrePages;
 	uint32 itsPostPages;
-	*/
 };
 
 //-----------------------------------------------------------------------------
@@ -547,22 +537,12 @@ public:
 	virtual void send();
 	virtual GCFEvent::TResult ack(GCFEvent& e);
 	void setPages(uint32 pages) { itsPages = pages; }
-	void setTime(double time) { itsTime.set(time); }
-	void setTimeBefore(double time) { itsTimeBefore.set(time); }
-	void setTimeAfter(double time) { itsTimeAfter.set(time); }
-
 private:
 	int itsStage;
 	int itsRcu;
-	int itsBoard;
-	uint32 itsPages;
-	NsTimestamp itsTime;
-    NsTimestamp itsTimeBefore;
-	NsTimestamp itsTimeAfter;
-	/*
 	uint32 itsSecondsTime;
-	uint32 itsSampleNr;
-	*/
+	uint32 itsSampleTime;
+	uint32 itsPages;
 };
 
 //-----------------------------------------------------------------------------

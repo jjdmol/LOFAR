@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -365,12 +365,12 @@ GCFEvent::TResult RSPTest::test005(GCFEvent& e, GCFPortInterface& port)
 
 	  ss.subbands.setType(SubbandSelection::BEAMLET);
       
-      ss.subbands.beamlets().resize(1, 10); // 10 subbands selected
+      ss.subbands().resize(1, 10); // 10 subbands selected
 
-      LOG_INFO_STR("dim subbands=" << ss.subbands.beamlets().dimensions());
+      LOG_INFO_STR("dim subbands=" << ss.subbands().dimensions());
       
       // set all values to 0x77
-      ss.subbands.beamlets() = 0x77;
+      ss.subbands() = 0x77;
       
       TESTC_ABORT(m_server.send(ss), RSPTest::final);
     }
@@ -495,8 +495,7 @@ GCFEvent::TResult RSPTest::test007(GCFEvent& e, GCFPortInterface& port)
       TESTC_ABORT(ack.status == RSP_SUCCESS, RSPTest::final);
       LOG_INFO_STR("ack.time=" << ack.timestamp);
 
-      LOG_INFO_STR("subbands.crosslets=" << ack.subbands.crosslets());
-      LOG_INFO_STR("subbands.beamlets =" << ack.subbands.beamlets());
+      LOG_INFO_STR("subbands=" << ack.subbands());
       
       TRAN(RSPTest::test008);
     }
@@ -1032,8 +1031,7 @@ GCFEvent::TResult RSPTest::test013(GCFEvent& e, GCFPortInterface& port)
       TESTC_ABORT(upd.status == RSP_SUCCESS, RSPTest::final);
       LOG_INFO_STR("upd.time=" << upd.timestamp);
       LOG_INFO_STR("upd.handle=" << upd.handle);
-      LOG_INFO_STR("upd.subbands.crosslets=" << upd.subbands.crosslets());
-      LOG_INFO_STR("upd.subbands.beamlets =" << upd.subbands.beamlets());
+      LOG_INFO_STR("upd.subbands=" << upd.subbands());
 
       if (updcount++ > 2) // two seconds
       {

@@ -34,7 +34,6 @@
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
 #include <Common/LofarConstants.h>
-#include <ctime>
 
 namespace LOFAR {
 
@@ -53,8 +52,7 @@ class Observation
 public:
 	Observation();
 	~Observation();
-//	explicit	Observation (const ParameterSet*		aParSet, bool	hasDualHBA = false);
-	explicit	Observation (const ParameterSet*		aParSet, bool	hasDualHBA, unsigned nrBGPIOnodes = 64);
+	explicit	Observation (ParameterSet*		aParSet, bool	hasDualHBA = false);
 
 	// global function for converting filtername to nyquist zone
 	static uint nyquistzoneFromFilter(const string&	filterName);
@@ -68,16 +66,11 @@ public:
 
 	// Returns a bitset containing the RCU's requested by the observation.
 	bitset<MAX_RCUS> getRCUbitset(int nrLBAs, int nrHBAs, const string& anAntennaSet);
-
-	// Support for dynamic dataslot allocation
-	vector<int>	getBeamAllocation(const string&	stationName = "") const;
-	vector<int>	getBeamlets (uint beamIdx, const string&	stationName = "") const;
+	// TEMP HACK
+	string getAntennaArrayName(bool hasSplitters) const;
 
 	// for operator <<
 	ostream& print (ostream&	os) const;
-
-	// TEMP HACK
-	string getAntennaFieldName(bool hasSplitters, uint32 beamIdx = 0) const;
 
 	// data types
 	typedef bitset<MAX_RCUS> 	  RCUset_t;
@@ -93,17 +86,6 @@ public:
 		int				duration;
 	};
 		
-	class TiedArrayBeam {
-	public:
-		TiedArrayBeam() {};
-		~TiedArrayBeam() {};
-		double			angle1;
-		double			angle2;
-		string			directionType;
-		double			dispersionMeasure;
-		bool			coherent;
-	};
-		
 	class Beam {
 	public:
 		Beam() {};
@@ -115,22 +97,18 @@ public:
 				this->pointings  = that.pointings;
 				this->momID 	 = that.momID;
 				this->subbands 	 = that.subbands;
+				this->beamlets 	 = that.beamlets;
 			}
 			return (*this);
 		}
-		// -- datamembers --
-		string					name;
-		string					target;
-		string					antennaSet;
-		vector<Pointing>		pointings;
 
-		int						momID;
-		vector<int>				subbands;
+		string				name;
+		string				antennaSet;
+		vector<Pointing>	pointings;
 
-		int						nrTABs;
-		int						nrTABrings;
-		double					TABringSize;	// Radians
-		vector<TiedArrayBeam>	TABs;
+		int					momID;
+		vector<int>			subbands;
+		vector<int>			beamlets;
 	};
 
 	class AnaBeam {
@@ -146,7 +124,7 @@ public:
 			}
 			return (*this);
 		};
-		// -- datamembers --
+
 		string				name;
 		string				antennaSet;
 		vector<Pointing>	pointings;
@@ -157,18 +135,13 @@ public:
     class StreamToStorage {
     public:
         string dataProduct;
-        unsigned dataProductNr;
-
         unsigned streamNr;
         string filename;
 
         unsigned sourcePset;
-
         string destStorageNode;
         string destDirectory;
-
-        unsigned adderNr;
-        unsigned writerNr;
+          
     };
 
 	//# Datamembers
@@ -180,50 +153,34 @@ public:
 	vector<string>	stations;
 	int				nrSlotsInFrame;
 	int				sampleClock;		// 160 | 200
-    int             bitsPerSample;      // 4 | 8 | 16
 	string			filter;				// LBA_30_80, LBA_10_90, HBA_110_190, etc.
 	string			MSNameMask;
 	string			realPVSSdatapoint;
 
 	// old way of specifying antennas
 	string			antennaArray;
+private:
+	RCUset_t		RCUset;				// set with participating receivers, use getRCUbitset to get this value.
 
+public:
 	// new way of selecting antennas
 	string			antennaSet;			// like LBA_INNER, LBA_OUTER, etc.
 	bool			useLongBaselines;
 	bool			splitterOn;			// On or Off
 	bool			dualMode;			// HBA_DUAL selected
 
-	// beams
 	vector<Beam>	beams;
 	vector<AnaBeam>	anaBeams;
+	vector<int>		beamlet2beams;		// to which beam each beamlet belongs
+	vector<int>		beamlet2subbands;	// which subband is mapped to each beamlet.
 
     vector<StreamToStorage> streamsToStorage; 
-
-	// type of observation
-	string			processType;
-	string			processSubtype;
-	string			strategy;
 
 	// couple of values of the virtual instrument as compacted strings
 	string			receiverList;
 	string			stationList;
 	string			BGLNodeList; 	 
 	string			storageNodeList;
-
-private:
-	bool			_isStationName(const string&	hostname) const;
-	bool 			_hasDataSlots (const ParameterSet*	aPS) const;
-
-	RCUset_t		RCUset;				// set with participating receivers, use getRCUbitset to get this value.
-
-	// many(!) vectors for dataslot allocation
-	bool			itsHasDataslots;	// old or new type of parset
-	bool			itsStnHasDualHBA;	// 
-	ParameterSet	itsDataslotParset;	// subset of parset with dataslotinfo for getxxxAllocation()
-	vector<int>		itsSlotTemplate;	// clean template with the slots that may be used.
-	vector<uint>	itsBeamSlotList;	// beamnumber vector
-	vector<int>		beamlet2beams;		// OLD:to which beam each beamlet belongs
 };
 
 //#

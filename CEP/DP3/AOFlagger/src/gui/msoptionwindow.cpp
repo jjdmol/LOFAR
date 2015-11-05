@@ -21,7 +21,6 @@
 #include <iostream>
 
 #include <gtkmm/messagedialog.h>
-#include <gtkmm/stock.h>
 
 #include <AOFlagger/gui/msoptionwindow.h>
 
@@ -35,12 +34,11 @@ MSOptionWindow::MSOptionWindow(MSWindow &msWindow, const std::string &filename) 
 	Gtk::Window(),
 	_msWindow(msWindow),
 	_filename(filename),
-	_openButton(Gtk::Stock::OPEN),
+	_openButton("Open"),
 	_dataKindFrame("Columns to read"),
 	_polarisationFrame("Polarisation to read"),
 	_partitioningFrame("Partitioning"),
 	_observedDataButton("Observed"), _correctedDataButton("Corrected"), _modelDataButton("Model"), _residualDataButton("Residual"),
-	_otherColumnButton("Other:"),
 	_allDipolePolarisationButton("Dipole (xx,xy,yx,yy separately)"),
 	_autoDipolePolarisationButton("Dipole auto-correlations (xx and yy)"),
 	_stokesIPolarisationButton("Stokes I"),
@@ -49,9 +47,7 @@ MSOptionWindow::MSOptionWindow(MSWindow &msWindow, const std::string &filename) 
 	_max10000ScansButton("Split when >10.000 scans"),
 	_max25000ScansButton("Split when >25.000 scans"),
 	_max100000ScansButton("Split when >100.000 scans"),
-	_directReadButton("Direct IO"),
-	_indirectReadButton("Indirect IO"),
-	_memoryReadButton("Memory-mode IO"),
+	_indirectReadButton("Indirect read"),
 	_readUVWButton("Read UVW")
 {
 	set_title("Options for opening a measurement set");
@@ -61,27 +57,25 @@ MSOptionWindow::MSOptionWindow(MSWindow &msWindow, const std::string &filename) 
 
 	_openButton.signal_clicked().connect(sigc::mem_fun(*this, &MSOptionWindow::onOpen));
 	_bottomButtonBox.pack_start(_openButton);
+	_openButton.show();
 
-	_leftVBox.pack_start(_directReadButton);
 	_leftVBox.pack_start(_indirectReadButton);
-	_leftVBox.pack_start(_memoryReadButton);
-	Gtk::RadioButton::Group group;
-	_directReadButton.set_group(group);
-	_indirectReadButton.set_group(group);
-	_memoryReadButton.set_group(group);
-	_directReadButton.set_active(true);
+	_indirectReadButton.show();
 
 	_leftVBox.pack_start(_readUVWButton);
 	_readUVWButton.set_active(true);
+	_readUVWButton.show();
 
 	_leftVBox.pack_start(_bottomButtonBox);
+	_bottomButtonBox.show();
 
 	_topHBox.pack_start(_leftVBox);
+	_leftVBox.show();
 
 	initPartitioningButtons();
 
 	add(_topHBox);
-	show_all();
+	_topHBox.show();
 }
 
 MSOptionWindow::~MSOptionWindow()
@@ -94,20 +88,24 @@ void MSOptionWindow::initDataTypeButtons()
 	_correctedDataButton.set_group(group);
 	_modelDataButton.set_group(group);
 	_residualDataButton.set_group(group);
-	_otherColumnButton.set_group(group);
 
 	_dataKindBox.pack_start(_observedDataButton);
 	_dataKindBox.pack_start(_correctedDataButton);
 	_dataKindBox.pack_start(_modelDataButton);
 	_dataKindBox.pack_start(_residualDataButton);
-	
-	_otherColumnBox.pack_start(_otherColumnButton);
-	_otherColumnBox.pack_start(_otherColumnEntry);
-	_dataKindBox.pack_start(_otherColumnBox);
 
+	_dataKindBox.show();
 	_dataKindFrame.add(_dataKindBox);
 
+	_dataKindFrame.show();
 	_leftVBox.pack_start(_dataKindFrame);
+
+	_observedDataButton.show();
+	_correctedDataButton.show();
+	_modelDataButton.show();
+	_residualDataButton.show();
+
+	_dataKindFrame.show();
 }
 
 void MSOptionWindow::initPolarisationButtons()
@@ -122,6 +120,12 @@ void MSOptionWindow::initPolarisationButtons()
 
 	_polarisationFrame.add(_polarisationBox);
 	_leftVBox.pack_start(_polarisationFrame);
+
+	_allDipolePolarisationButton.show();
+	_autoDipolePolarisationButton.show();
+	_stokesIPolarisationButton.show();
+	_polarisationBox.show();
+	_polarisationFrame.show();
 }
 
 void MSOptionWindow::initPartitioningButtons()
@@ -155,11 +159,9 @@ void MSOptionWindow::onOpen()
 	std::cout << "Opening " << _filename << std::endl;
 	try
 	{
-		BaselineIOMode ioMode = DirectReadMode;
-		if(_indirectReadButton.get_active()) ioMode = IndirectReadMode;
-		else if(_memoryReadButton.get_active()) ioMode = MemoryReadMode;
+		bool indirectRead = _indirectReadButton.get_active();
 		bool readUVW = _readUVWButton.get_active();
-		rfiStrategy::ImageSet *imageSet = rfiStrategy::ImageSet::Create(_filename, ioMode);
+		rfiStrategy::ImageSet *imageSet = rfiStrategy::ImageSet::Create(_filename, indirectRead);
 		if(dynamic_cast<rfiStrategy::MSImageSet*>(imageSet) != 0)
 		{
 			rfiStrategy::MSImageSet *msImageSet = static_cast<rfiStrategy::MSImageSet*>(imageSet);
@@ -175,8 +177,6 @@ void MSOptionWindow::onOpen()
 				msImageSet->SetDataColumnName("DATA");
 				msImageSet->SetSubtractModel(true);
 			}
-			else if(_otherColumnButton.get_active())
-				msImageSet->SetDataColumnName(_otherColumnEntry.get_text());
 	
 			if(_allDipolePolarisationButton.get_active())
 				msImageSet->SetReadAllPolarisations();

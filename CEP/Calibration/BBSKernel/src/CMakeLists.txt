@@ -2,6 +2,8 @@
 
 include(LofarPackageVersion)
 
+add_subdirectory(Contrib)
+
 lofar_add_library(bbskernel
   Package__Version.cc
   Apply.cc
@@ -22,20 +24,20 @@ lofar_add_library(bbskernel
   PatchExpr.cc
   Solver.cc
   SolverInterfaceTypes.cc
+  StationResponse.cc
   StationExprLOFAR.cc
-  StationLOFAR.cc
   UVWFlagger.cc
   VisBuffer.cc
   VisDimensions.cc
   VisEquator.cc
   VisSelection.cc
+  Expr/AntennaFieldAzEl.cc
   Expr/AzEl.cc
   Expr/CachePolicy.cc
   Expr/Cache.cc
   Expr/ConditionNumber.cc
   Expr/Delay.cc
   Expr/Element.cc
-  Expr/ElevationCut.cc
   Expr/EquatorialCentroid.cc
   Expr/Expr.cc
   Expr/ExprAdaptors.cc
@@ -49,6 +51,7 @@ lofar_add_library(bbskernel
   Expr/FlagArray.cc
   Expr/GaussianCoherence.cc
   Expr/GaussianSource.cc
+  Expr/HamakerDipole.cc
   Expr/IonPhaseShift.cc
   Expr/ITRFDirection.cc
   Expr/LinearToCircularRL.cc
@@ -58,7 +61,6 @@ lofar_add_library(bbskernel
   Expr/MatrixComplexArr.cc
   Expr/MatrixComplexSca.cc
   Expr/MatrixInverse.cc
-  Expr/MatrixInverseMMSE.cc
   Expr/MatrixMul2.cc
   Expr/MatrixMul3.cc
   Expr/MatrixRealArr.cc
@@ -73,16 +75,19 @@ lofar_add_library(bbskernel
   Expr/PolynomialLayer.cc
   Expr/Request.cc
   Expr/Resampler.cc
-  Expr/Rotation.cc
   Expr/ScalarMatrixMul.cc
   Expr/Scope.cc
   Expr/ShapeletCoherence.cc
   Expr/ShapeletSource.cc
   Expr/Source.cc
   Expr/SpectralIndex.cc
-  Expr/StationResponse.cc
+  Expr/StationBeamFormer.cc
   Expr/StationShift.cc
   Expr/StationUVW.cc
   Expr/StokesRM.cc
   Expr/TECU2Phase.cc
+  Expr/TileArrayFactor.cc
   Expr/Timer.cc)
+
+# Because we're using dlopen()
+target_link_libraries(bbskernel ${CMAKE_DL_LIBS})

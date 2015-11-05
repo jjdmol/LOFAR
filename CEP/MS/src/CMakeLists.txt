@@ -16,6 +16,7 @@ set(ms_PROGRAMS
   combinevds
   makems
   msplay
+  msselect
   msoverview
 )
 
@@ -25,15 +26,12 @@ foreach(prog ${ms_PROGRAMS})
   lofar_add_bin_program(${prog} ${prog}.cc)
 endforeach(prog ${ms_PROGRAMS})
 
-lofar_add_bin_scripts(
+install(PROGRAMS
   mssplit
   makemsdistr
   makemsdistr-part
   movemss
-  ls_nostderr
-  expandcalps
-  expandimageps
-  expandtargetps)
+  DESTINATION bin)
 
 # Python modules.
 python_install(
