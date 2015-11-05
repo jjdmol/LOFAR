@@ -306,12 +306,6 @@ namespace LOFAR {
  	     boost::python::arg("prefix")=""),
             "Add the parameters from a parset file and prefix their names "
             "with the given prefix.")
-      .def ("adoptBuffer", &ParameterSet::adoptBuffer,
- 	    (boost::python::arg("buffer"),
- 	     boost::python::arg("prefix")=""),
-            "Add the parameters from a string buffer and prefix their names "
-            "with the given prefix.\nKey-value pairs must be separated by "
-            "newlines.")
       .def ("adoptCollection", &PyParameterSet::adoptCollection,
  	    (boost::python::arg("parameterset"),
  	     boost::python::arg("prefix")=""),

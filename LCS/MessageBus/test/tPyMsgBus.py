@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 #
 # Test the basic functionality of FromBus and ToBus, both
 # to send and to forward messages.
@@ -7,7 +7,7 @@
 # but messages won't arrive. We consider that case also in this test.
 #
 
-from lofar.messagebus.messagebus import FromBus, ToBus, MESSAGING_ENABLED
+from lofar.messagebus.msgbus import FromBus, ToBus, MESSAGING_ENABLED
 from lofar.messagebus.message import Message, MessageContent
 
 # Send a message (send MessageContent)
