@@ -2,9 +2,9 @@ BEGIN;
 INSERT INTO unit VALUES (0, 'station'),(1, 'bytes');
 INSERT INTO resource_type VALUES (0, 'station', 0),(1, 'storage', 1);
 INSERT INTO resource VALUES (0, 'CS001', 0), (1,'CS002', 0), (2, 'cep4_storage', 1);
-INSERT INTO resource_to_resource_group VALUES (0, 0, 0),(1, 1, 0), (2, 2, 1);
 INSERT INTO resource_group_type VALUES (0, 'stations'),(1, 'cluster');
 INSERT INTO resource_group VALUES (0, 'CORE', 0),(1, 'CEP4', 1);
+INSERT INTO resource_to_resource_group VALUES (0, 0, 0),(1, 1, 0), (2, 2, 1);
 INSERT INTO resource_group_to_resource_group VALUES (0, 0, NULL),(1, 1, NULL);
 INSERT INTO resource_claim_status VALUES (0, 'CLAIMED'),(1, 'ALLOCATED');
 INSERT INTO resource_claim VALUES (0, 0, 0, '2015-11-05 12:00:00', '2015-11-05 12:30:00', 0, '2015-11-06 12:00:00', 1),
