@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -91,7 +91,7 @@ GCFEvent::TResult RCUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*
     LOG_WARN("RCUWrite::handleack:: unexpected ack");
     return GCFEvent::NOT_HANDLED;
   }
-  
+
   EPAWriteackEvent ack(event);
 
   uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + getCurrentIndex();

@@ -92,7 +92,7 @@ namespace LOFAR
       virtual void write(ParameterSet& ps) const;
 
       // Read the contents from the ParameterSet \a ps into \c *this.
-      virtual void read(const ParameterSet& ps, const std::string prefix);
+      virtual void read(const ParameterSet& ps);
 
       // Write the individual Step objects in \a itsSteps, which make up
       // this MultiStep, to the ParameterSet \a ps.
@@ -100,7 +100,7 @@ namespace LOFAR
 
       // Read the individual Step objects, which make up this MultiStep,
       // from the ParameterSet \a ps and store them in \a itsSteps.
-      void readSteps(const ParameterSet& ps, const std::string prefix);
+      void readSteps(const ParameterSet& ps);
 
       // Check to see if there's an infinite recursion present in the
       // definition of a MultiStep. This can happen when one of the steps

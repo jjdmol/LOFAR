@@ -26,7 +26,7 @@
 #include <omp.h>
 
 #include <Common/LofarLogger.h>
-#include <Stream/StreamFactory.h>
+#include <CoInterface/Stream.h>
 #include <CoInterface/OMPThread.h>
 
 #include <InputProc/Station/PacketFactory.h>
@@ -103,7 +103,7 @@ int main( int, char **argv )
           struct RSP packet;
 
           if (!reader.readPacket(packet)) {
-            const unsigned boardNr = 0;
+            const unsigned boardNr = 0; // irrel, for logStats only
             reader.logStatistics(boardNr, rtmd, "rtmd key prefix");
 
             ASSERT(false);

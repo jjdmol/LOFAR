@@ -161,14 +161,19 @@ qt4_wrap_cpp(scheduler_MOC_SRCS ${scheduler_MOC_HDRS})
 qt4_wrap_ui(scheduler_UI_HDRS ${scheduler_UIS})
 qt4_add_resources(scheduler_RC_SRCS ${scheduler_RCS})
 
-lofar_add_library(lofar_scheduler
+add_library(lofar_scheduler
   ${scheduler_SRCS} 
   ${scheduler_MOC_SRCS} 
   ${scheduler_UI_HDRS})
 
 target_link_libraries(lofar_scheduler ${QT_LIBRARIES})
 
-lofar_add_bin_program(scheduler
+add_executable(scheduler
   main.cpp
   ${scheduler_RC_SRCS})
 
+target_link_libraries(scheduler lofar_scheduler)
+
+install(TARGETS lofar_scheduler scheduler 
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION ${LOFAR_LIBDIR})

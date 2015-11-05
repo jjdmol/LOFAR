@@ -33,7 +33,6 @@
 #include <Stream/Stream.h>
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
-#include <Stream/StreamFactory.h>
 
 #include <CoInterface/Align.h>
 #include <CoInterface/BudgetTimer.h>
@@ -128,7 +127,7 @@ namespace LOFAR
          const std::vector<gpu::Device> &devices, 
          Pool<struct MPIRecvData> &pool,
          RTmetadata &mdLogger, const std::string &mdKeyPrefix,
-         unsigned hostID)
+         int hostID)
       :
       subbandProcs(std::max(1UL, (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size())),
       ps(ps),
@@ -146,8 +145,7 @@ namespace LOFAR
       // be in bulk: if processing is cheap, all subbands will be output right after they have been received.
       //
       // Allow queue to drop items older than 3 seconds.
-      multiSender(hostMap(ps, subbandIndices, hostID), ps, 3.0, hostID < ps.settings.nodes.size() ? ps.settings.nodes.at(hostID).out_nic : ""),
-      hostID(hostID)
+      multiSender(hostMap(ps, subbandIndices, hostID), ps, 3.0)
     {
       ASSERTSTR(!devices.empty(), "Not bound to any GPU!");
 
@@ -802,11 +800,10 @@ namespace LOFAR
       SmartPtr<Stream> outputStream;
 
       if (ps.settings.correlator.enabled) {
-        const string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, globalSubbandIdx,
-          hostID < ps.settings.nodes.size() ? ps.settings.nodes.at(hostID).out_nic : "");
+        const string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, globalSubbandIdx);
 
         try {
-          outputStream = createStream(desc, false, 0);
+          outputStream = createStream(desc, false);
         } catch (Exception &ex) {
           LOG_ERROR_STR("Error writing subband " << globalSubbandIdx << ", dropping all subsequent blocks: " << ex.what());
           return;
