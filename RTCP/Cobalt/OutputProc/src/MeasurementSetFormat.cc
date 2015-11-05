@@ -525,11 +525,6 @@ namespace LOFAR
       msspwCol.freqGroupName().put(0, "");
       msspwCol.flagRow().put(0, False);
 
-      // Remove a few keywords from the MEASINFO, because old CASA cannot
-      // deal with them since Dirk Petry added type Undefined.
-      MSLofar::removeMeasKeys (msspw, "REF_FREQUENCY");
-      MSLofar::removeMeasKeys (msspw, "CHAN_FREQ");
-
       msspw.flush();
     }
 
@@ -574,7 +569,7 @@ namespace LOFAR
       // Fill the columns
       msproc.addRow();
       msprocCol.type().put (0, "CORRELATOR");
-      msprocCol.subType().put (0, "LOFAR-COBALT");
+      msprocCol.subType().put (0, "CEP");
       msprocCol.typeId().put (0, -1);
       msprocCol.modeId().put (0, -1);
       msprocCol.flagRow().put (0, False);

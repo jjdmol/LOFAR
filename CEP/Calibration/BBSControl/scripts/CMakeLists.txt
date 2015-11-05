@@ -18,8 +18,7 @@ python_install(
   plotcorrmatrix.py
   DESTINATION lofar/bbs)
 
-lofar_add_bin_scripts(
-  addImagingColumns.py
-  parmdbplot.py
-  casapy2bbs.py
-  solverdialog.py)
+install(PROGRAMS addImagingColumns.py DESTINATION bin)
+install(PROGRAMS parmdbplot.py DESTINATION bin)
+install(PROGRAMS casapy2bbs.py DESTINATION bin)
+install(PROGRAMS solverdialog.py DESTINATION bin)
