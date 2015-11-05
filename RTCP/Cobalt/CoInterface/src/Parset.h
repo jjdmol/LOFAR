@@ -1,5 +1,5 @@
 //# Parset.h: class/struct that holds the Parset information
-//# Copyright (C) 2008-2015  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -36,6 +36,7 @@
 #include <Common/StringUtil.h>
 #include <Common/StreamUtil.h>
 #include <Stream/Stream.h>
+#include <CoInterface/BeamCoordinates.h>
 #include <CoInterface/OutputTypes.h>
 #include <CoInterface/MultiDimArray.h>
 
@@ -46,10 +47,6 @@ namespace LOFAR
   {
 
     enum StokesType { STOKES_I = 0, STOKES_IQUV, STOKES_XXYY, INVALID_STOKES = -1 };
-
-    StokesType stokesType( const std::string &name );
-    size_t nrStokes( StokesType type );
-    std::string stokesType( StokesType type );
 
     // All settings relevant for an observation (well, it should become that,
     // we don't copy all Parset values yet!).
@@ -62,23 +59,13 @@ namespace LOFAR
       // Whether the observation runs at real time. Non-real time
       // observations are not allowed to lose data.
       //
-      // key: Cobalt.realTime
+      // key: OLAP.realTime
       bool realTime;
 
       // The SAS/MAC observation number
       //
       // key: Observation.ObsID
       unsigned observationID;
-
-      // The MoM observation number
-      //
-      // key: Observation.momID
-      unsigned momID;
-
-      // Command stream, or null: if not used
-      //
-      // key: Cobalt.commandStream
-      std::string commandStream;
 
       // Specified observation start time, in seconds since 1970.
       //
@@ -101,15 +88,13 @@ namespace LOFAR
       // The bandwidth of a single subband, in Hz
       double subbandWidth() const;
 
-      // The length of an input sample, in s
-      double sampleDuration() const;
-
       // The number of samples in one block of one subband.
       //
       // key: Cobalt.blockSize
       size_t blockSize;
 
-      size_t nrBlocks() const;
+      // Alias for blockSize
+      size_t nrSamplesPerSubband() const;
 
       // The number of seconds represented by each block.
       double blockDuration() const;
@@ -128,17 +113,17 @@ namespace LOFAR
       struct Corrections {
         // Whether the station band pass should be corrected for
         //
-        // key: Cobalt.correctBandPass
+        // key: OLAP.correctBandPass
         bool bandPass;
 
         // Whether the station clock offsets should be corrected for
         //
-        // key: Cobalt.correctClocks
+        // key: OLAP.correctClocks
         bool clock;
 
         // Whether to dedisperse tied-array beams
         //
-        // key: Cobalt.BeamFormer.coherentDedisperseChannels
+        // key: OLAP.coherentDedisperseChannels
         bool dedisperse;
       };
       
@@ -147,7 +132,7 @@ namespace LOFAR
       struct DelayCompensation {
         // Whether geometric delays should be compensated for
         //
-        // key: Cobalt.delayCompensation
+        // key: OLAP.delayCompensation
         bool enabled;
 
         // The ITRF position to compensate delays to
@@ -159,7 +144,7 @@ namespace LOFAR
       struct DelayCompensation delayCompensation;
 
       /*
-       * Station / Antenna field information
+       * Station information
        */
 
       // The selected antenna set (LBA, HBA_DUAL, HBA_ZERO, etc)
@@ -172,10 +157,10 @@ namespace LOFAR
       // key: Observation.bandFilter
       std::string bandFilter;
 
-      struct AntennaField {
-        // The name of the antenna field (CS001LBA, etc)
+      struct Station {
+        // The name of the station (CS001LBA, etc)
         //
-        // key: OLAP.storageStationNames[antennaFieldIdx]
+        // key: OLAP.storageStationNames[stationIdx]
         std::string name;
 
         // The input streams descriptors
@@ -183,7 +168,7 @@ namespace LOFAR
         // key: PIC.Core.CS001LBA.RSP.ports
         std::vector<std::string> inputStreams;
 
-        // The node name on which this antenna field is received
+        // The node name on which this station is received
         //
         // key: PIC.Core.CS001LBA.RSP.receiver
         std::string receiver;
@@ -193,13 +178,13 @@ namespace LOFAR
         // key: PIC.Core.CS001LBA.clockCorrectionTime
         double clockCorrection;
 
-        // The phase center for which the antenna field beams are corrected, in
+        // The phase center for which the station beams are corrected, in
         // ITRF [x,y,z].
         //
         // key: PIC.Core.CS001LBA.phaseCenter
         std::vector<double> phaseCenter;
 
-        // The phase correction for this antenna field, in radians.
+        // The phase correction for this station, in radians.
         //
         // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.phase0.X
         // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.phase0.Y
@@ -231,17 +216,12 @@ namespace LOFAR
         std::vector<unsigned> rspSlotMap;  // [subband]
       };
 
-      // All antenna fields specified as input
+      // All stations specified as input
       //
       // length: len(OLAP.storageStationNames)
-      std::vector<struct AntennaField> antennaFields;
+      std::vector<struct Station> stations;
 
-      // A list of the stations used in the observation
-      //
-      // key: Observation.VirtualInstrument.stationList
-      std::string rawStationList;
-
-      ssize_t antennaFieldIndex(const std::string &name) const;
+      ssize_t stationIndex(const std::string &name) const;
 
       /*
        * Resources information:
@@ -267,49 +247,11 @@ namespace LOFAR
 
         // NIC(s) to bind to (comma seperated)
         //
-        // E.g. "mlx4_0", "mlx4_1", "eth0", etc
-        std::string mpi_nic; // for MPI
-        std::string out_nic; // to outputProc
+        // E.g. 'mlx4_0', 'mlx_4_1', 'eth0', etc
+        std::string nic;
       };
 
       std::vector<struct Node> nodes;
-
-      /*
-       * Spectral resolution information
-       */
-
-      struct Subband {
-        // Index (e.g. 0..243)
-        //
-        // set to: equals the index in the subbands vector
-        unsigned idx;
-
-
-        // Index of this subband in the SAP it is part of
-        //
-        // Calculated based on  Observation.Beam[x].subbandList
-        unsigned idxInSAP;
-
-        // Index at station (e.g. 100..343)
-        //
-        // key: Observation.subbandList[idx]
-        unsigned stationIdx;
-
-        // SAP number
-        //
-        // key: Observation.beamList[idx]
-        unsigned SAP;
-
-        // Central frequency (Hz)
-        //
-        // set to: subbandWidth() * (512 * (nyquistZone() - 1) + stationIdx)
-        double centralFrequency;
-      };
-
-      // The list of subbands
-      //
-      // length: len(Observation.subbandList)
-      std::vector<struct Subband> subbands;
 
       /*
        * Pointing information
@@ -322,8 +264,8 @@ namespace LOFAR
 
         // Two angles within the coordinate type (RA/DEC, etc)
         //
-        // key: *.angle1
-        // key: *.angle2
+        // key: *.absoluteAngle1
+        // key: *.absoluteAngle2
         double angle1;
         double angle2;
       };
@@ -334,19 +276,16 @@ namespace LOFAR
         // key: Observation.Beam[sapIdx].*
         struct Direction direction;
 
-        // The list of subbands in this SAP
+
+        // The list of sabbands in this SAP
         //
         // key: Observation.Beam[idx].subbandList 
-        std::vector<struct Subband> subbands;
+        std::vector<unsigned> subbandIndices;
 
         // Name of target
         //
         // key: Observation.Beam[sapIdx].target
         std::string target;
-
-        // Return the list of indices of our subbands
-        // within the global settings.subbands list.
-        vector<unsigned> subbandIndices() const;
       };
 
       // All station beams
@@ -369,6 +308,45 @@ namespace LOFAR
       // The analog beam, if any
       struct AnaBeam anaBeam;
 
+      /*
+       * Spectral resolution information
+       */
+
+      struct Subband {
+        // Index (f.e. 0..243)
+        //
+        // set to: equals the index in the subbands vector
+        unsigned idx;
+
+
+        // Index of this subband in the SAP it is part of
+        //
+        // Calculated based on  Observation.Beam[x].subbandList
+        unsigned idxInSAP;
+
+        // Index at station (f.e. 100..343)
+        //
+        // key: Observation.subbandList[idx]
+        unsigned stationIdx;
+
+        // SAP number
+        //
+        // key: Observation.beamList[idx]
+        unsigned SAP;
+
+        // Central frequency (Hz)
+        //
+        // set to: subbandWidth() * (512 * (nyquistZone() - 1) + stationIdx)
+        double centralFrequency;
+      };
+
+      // The list of subbands
+      //
+      // length: len(Observation.subbandList)
+      std::vector<struct Subband> subbands;
+
+      size_t nrSubbands(size_t SAP) const;
+
       struct FileLocation {
         string host;
         string directory;
@@ -388,7 +366,7 @@ namespace LOFAR
 
         // Number of requested frequency channels per subband
         //
-        // key: Cobalt.Correlator.nrChannelsPerSubband
+        // key: Observation.channelsPerSubband
         unsigned nrChannels;
 
         // The bandwidth of a single channel, in Hz
@@ -399,34 +377,21 @@ namespace LOFAR
         // The number of samples in one block of one channel.
         //
         // key: OLAP.CNProc.integrationSteps
-        size_t nrSamplesPerBlock;
+        size_t nrSamplesPerChannel;
 
         // The number of blocks to integrate to obtain the final
         // integration time.
         //
-        // If >1, the integration time is longer than the blockSize.
-        //
-        // key: Cobalt.Correlator.nrBlocksPerIntegration
+        // key: OLAP.IONProc.integrationSteps
         size_t nrBlocksPerIntegration;
-
-        // The number of subblocks to produce per block.
-        //
-        // If >1, the integration time is shorter than the blockSize.
-        //
-        // key: Cobalt.Correlator.nrIntegrationsPerBlock
-        size_t nrIntegrationsPerBlock;
-
-        // The number of integrations that will be emitted between
-        // the start and end time of the observation. This is the
-        // expected number of CorrelatedData blocks written in the
-        // MeasurementSet.
-        size_t nrIntegrations;
-
-        // The number of samples to integrate over.
-        size_t nrSamplesPerIntegration() const;
 
         // The total integration time of all blocks, in seconds.
         double integrationTime() const;
+
+        // The number of blocks in this observation.
+        //
+        // set to: floor((stopTime - startTime) / integrationTime())
+        size_t nrBlocksPerObservation;
 
         struct Station {
           // The name of this (super)station
@@ -449,8 +414,6 @@ namespace LOFAR
         std::vector<struct Station> stations;
 
         struct File {
-          size_t streamNr;
-
           struct FileLocation location;
         };
 
@@ -477,7 +440,6 @@ namespace LOFAR
           size_t sapNr;
           size_t tabNr;
           size_t stokesNr;
-          size_t partNr;
           bool coherent;
 
           // this TAB is the ....th coherent TAB in this SAP
@@ -487,11 +449,6 @@ namespace LOFAR
           size_t incoherentIdxInSAP;
 
           struct FileLocation location;
-
-          // this file stores [firstSubbandIdx, lastSubbandIdx)
-          // interpretation is same as in globalSubbandIdx, i.e. [0, 488)
-          unsigned firstSubbandIdx;
-          unsigned lastSubbandIdx; // exclusive
         };
 
         // The list of files to write, one file
@@ -538,6 +495,12 @@ namespace LOFAR
           // size: Observation.Beam[sap].nrTiedArrayBeams
           std::vector<struct TAB> TABs;
 
+          // Return the number of coherentstokes tabs, 
+          size_t nrCoherentTAB() const;
+
+          // Return the number of incoherentstokes tabs
+          size_t nrIncoherentTAB() const;
+
           // calculated at construction time
           size_t nrCoherent;
           size_t nrIncoherent;
@@ -550,11 +513,6 @@ namespace LOFAR
         //
         // size: len(Observation.nrBeams)
         std::vector<struct SAP> SAPs;
-
-        // Return whether there are any (in)coherent TABs specified in the
-        // observation. These functions are valid even if enabled == false.
-        bool anyCoherentTABs() const;
-        bool anyIncoherentTABs() const;
 
         size_t maxNrTABsPerSAP() const;
         size_t maxNrCoherentTABsPerSAP() const;
@@ -586,8 +544,8 @@ namespace LOFAR
           // key: *.timeIntegrationFactor
           size_t timeIntegrationFactor;
 
-          // The number of samples per channel
-          size_t nrSamples;
+          // return the number of samples per channel
+          size_t nrSamples(size_t inputBlockSize) const;
 
           // The number of subbands to store in each file.
           // The last file can have fewer subbands.
@@ -598,18 +556,18 @@ namespace LOFAR
 
         // Settings for Coherent Stokes output
         //
-        // key: Cobalt.BeamFormer.CoherentStokes.*
+        // key: OLAP.CNProc_CoherentStokes.*
         struct StokesSettings coherentSettings;
 
         // Settings for Incoherent Stokes output
         //
-        // key: Cobalt.BeamFormer.IncoherentStokes.*
+        // key: OLAP.CNProc_IncoherentStokes.*
         struct StokesSettings incoherentSettings;
 
 
         // Size of FFT for coherent dedispersion
         //
-        // key: Cobalt.BeamFormer.dedispersionFFTsize
+        // key: OLAP.CNProc.dedispersionFFTsize
         size_t dedispersionFFTsize;
       };
 
@@ -635,15 +593,12 @@ namespace LOFAR
       // Constructs the antenna fields ("CS001", "HBA0") etc from a set of stations
       // ("CS001", "CS002") and the antenna set.
       static std::vector<struct AntennaFieldName>
-      antennaFieldNames(const std::vector<std::string> &stations,
-                        const std::string &antennaSet);
+      antennaFields(const std::vector<std::string> &stations,
+                    const std::string &antennaSet);
 
       // List of host names to start outputProc on
       std::vector<std::string> outputProcHosts;
     }; // struct ObservationSettings
-
-    // Reads a ParameterSet from a Stream
-    void readParameterSet(Stream &, ParameterSet &);
 
 
     // The Parset class is a public struct that can be used as base-class
@@ -654,9 +609,8 @@ namespace LOFAR
     public:
       Parset();
       Parset(const std::string &name);
-      
-      // Read a parset from a Stream
       Parset(Stream *);
+
 
       // Transform the parset into an ObservationSettings object
       struct ObservationSettings observationSettings() const;
@@ -672,34 +626,70 @@ namespace LOFAR
 
       void                        write(Stream *) const;
 
-      double                      getRealStopTime() const;
+      unsigned                    observationID() const;
+      double                      startTime() const;
+      double                      stopTime() const;
+
+      unsigned    nrCorrelatedBlocks() const;
+      unsigned    nrBeamFormedBlocks() const;
+
+      unsigned                    nrStations() const;
       unsigned                    nrTabStations() const;
       unsigned                    nrMergedStations() const;
       std::vector<std::string>    mergedStationNames() const;
       unsigned                    nrBaselines() const;
+      unsigned                    nrCrossPolarisations() const;
+      unsigned                    clockSpeed() const; // Hz
+      double                      subbandBandwidth() const;
       double                      sampleDuration() const;
       unsigned                    nrBitsPerSample() const;
       size_t                      nrBytesPerComplexSample() const;
-      std::vector<double>         position(const string &name) const;
       MultiDimArray<double,2>     positions() const;
       std::string                 positionType() const;
       unsigned                    dedispersionFFTsize() const;
+      unsigned                    CNintegrationSteps() const;
+      unsigned                    IONintegrationSteps() const;
+      unsigned                    integrationSteps() const;
 
+      double                      CNintegrationTime() const;
+      double                      IONintegrationTime() const;
+      unsigned                    nrSamplesPerChannel() const;
+      unsigned                    nrSamplesPerSubband() const;
+      unsigned                    nrChannelsPerSubband() const;
+      double                      channelWidth() const;
+      bool                        delayCompensation() const;
+      bool                        correctClocks() const;
+      bool                        correctBandPass() const;
       std::vector<std::string>    allStationNames() const;
 
-      unsigned                    nrObsOutputTypes() const;
-      bool                        outputThisType(OutputType) const;
+      bool outputThisType(OutputType) const;
 
       unsigned nrStreams(OutputType, bool force = false) const;
       std::string getHostName(OutputType, unsigned streamNr) const;
       std::string getFileName(OutputType, unsigned streamNr) const;
       std::string getDirectoryName(OutputType, unsigned streamNr) const;
 
+      std::string                 bandFilter() const;
+      std::string                 antennaSet() const;
+
+      unsigned                    nrBeams() const;
+
+      size_t                      nrSubbands() const;
+
       double channel0Frequency( size_t subband, size_t nrChannels ) const;
+
+      bool                        realTime() const;
 
       std::vector<double>         itsStPositions;
 
       std::string                 PVSS_TempObsName() const;
+
+      // Return the global, non file specific, LTA feedback parameters.
+      // \note Details about the meaning of the different meta-data parameters
+      // can be found in the XSD that describes the Submission Information
+      // Package (sip) for the LTA.
+      // \see http://proposal.astron.nl/schemas/LTA-SIP.xsd
+      Parset                      getGlobalLTAFeedbackParameters() const;
 
     private:
       const std::string itsName;
@@ -712,22 +702,24 @@ namespace LOFAR
       void                        addPosition(string stName);
       double                      getTime(const std::string &name, const std::string &defaultValue) const;
 
+      std::vector<double>         position(const string &name) const;
       std::vector<double>         centroidPos(const string &stations) const;
 
       std::vector<struct ObservationSettings::FileLocation> getFileLocations(const std::string outputType) const;
 
-      // Returns whether nodeName has to participate in the observation
-      // given antenna fields, antenna mode, and configured antenna field streams.
-      // The nodeName is e.g. "cbt001_0", or "gpu01_0", or "localhost".
-      bool                        nodeReadsAntennaFieldData(const struct ObservationSettings& settings,
-                                                            const std::string& nodeName) const;
-
       double                      distanceVec3(const std::vector<double>& pos,
-                                               const std::vector<double>& ref) const;
+                                      const std::vector<double>& ref) const;
       double                      maxDelayDistance(const struct ObservationSettings& settings) const;
       double                      maxObservationFrequency(const struct ObservationSettings& settings,
                                                           double subbandWidth) const;
       unsigned                    calcNrDelayCompensationChannels(const struct ObservationSettings& settings) const;
+
+      // If a parset key is renamed, this function allows the old
+      // name to be used as a fall-back.
+      //
+      // Returns the name of the key in the parset, or `newname' if
+      // neither key is defined.
+      std::string renamedKey(const std::string &newname, const std::string &oldname) const;
     };
   } // namespace Cobalt
 } // namespace LOFAR

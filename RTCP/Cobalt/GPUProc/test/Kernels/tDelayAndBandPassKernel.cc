@@ -20,33 +20,27 @@
 
 #include <lofar_config.h>
 
+#include <Common/LofarLogger.h>
+#include <CoInterface/Parset.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
+#include <GPUProc/BandPass.h>
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
+#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
 #include <GPUProc/PerformanceCounter.h>
 #include <CoInterface/BlockID.h>
-#include <CoInterface/Parset.h>
-#include <Common/LofarLogger.h>
-
-#include "KernelTestHelpers.h"
 
 using namespace std;
 using namespace LOFAR::Cobalt;
 
-int main(int argc, char *argv[])
-{
-  const char * testName = "tDelayAndBandPassKernel";
-  INIT_LOGGER(testName);
-  Parset ps;
-  KernelParameters params;
-  parseCommandlineParameters(argc, argv, ps, params, testName);
+int main() {
+  INIT_LOGGER("tDelayAndBandPassKernel");
 
   // Set up gpu environment
   try {
     gpu::Platform pf;
     cout << "Detected " << pf.size() << " GPU devices" << endl;
-  }
-  catch (gpu::GPUException& e) {
+  } catch (gpu::GPUException& e) {
     cerr << "No GPU device(s) found. Skipping tests." << endl;
     return 3;
   }
@@ -55,24 +49,29 @@ int main(int argc, char *argv[])
   gpu::Context ctx(device);
   gpu::Stream stream(ctx);
 
-  DelayAndBandPassKernel::Parameters dbpparams(ps, false);
-  KernelFactory<DelayAndBandPassKernel> factory(dbpparams);
+  Parset ps("tDelayAndBandPassKernel.in_parset");
+  KernelFactory<DelayAndBandPassKernel> factory(ps);
 
-  gpu::DeviceMemory
+  gpu::DeviceMemory 
     inputData(ctx, factory.bufferSize(DelayAndBandPassKernel::INPUT_DATA)),
-    filteredData(ctx, factory.bufferSize(DelayAndBandPassKernel::OUTPUT_DATA));
+    filteredData(ctx, factory.bufferSize(DelayAndBandPassKernel::OUTPUT_DATA)),
+    delaysAtBegin(ctx, factory.bufferSize(DelayAndBandPassKernel::DELAYS)),
+    delaysAfterEnd(ctx, factory.bufferSize(DelayAndBandPassKernel::DELAYS)),
+    phase0s(ctx, factory.bufferSize(DelayAndBandPassKernel::PHASE_ZEROS)),
+    bandPassCorrectionWeights(ctx, factory.bufferSize(DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS));
 
-  auto_ptr<DelayAndBandPassKernel> kernel(factory.create(stream, inputData, filteredData));
+  DelayAndBandPassKernel::Buffers buffers(inputData, filteredData, delaysAtBegin, delaysAfterEnd, phase0s, bandPassCorrectionWeights);
 
+  auto_ptr<DelayAndBandPassKernel> kernel(factory.create(stream, buffers));
 
   size_t subbandIdx = 0;
   float centralFrequency = ps.settings.subbands[subbandIdx].centralFrequency;
   size_t SAP = ps.settings.subbands[subbandIdx].SAP;
+  PerformanceCounter counter(ctx);
   BlockID blockId;
-  kernel->enqueue(blockId, centralFrequency, SAP);
+  kernel->enqueue(blockId,  centralFrequency, SAP);
   stream.synchronize();
 
   return 0;
 }
-
 

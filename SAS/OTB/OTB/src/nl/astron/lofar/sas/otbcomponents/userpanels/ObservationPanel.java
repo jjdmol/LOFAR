@@ -2,7 +2,7 @@
  * ObservationPanel.java
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -412,6 +412,14 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         if(parentName.equals("Observation")){        
             // Observation Specific parameters
             switch (aKeyName) {
+                case "channelsPerSubband":
+                    inputNrChannelsPerSubband.setToolTipText(aParam.description);
+                    itsChannelsPerSubband=aNode;
+                    if (isRef && aParam != null) {
+                        inputNrChannelsPerSubband.setText(aNode.limits + " : " + aParam.limits);
+                   } else {
+                        inputNrChannelsPerSubband.setText(aNode.limits);
+                   }break;
                 case "nrBitsPerSample":
                     inputNrBitsPerSample.setToolTipText(aParam.description);
                     itsNrBitsPerSample=aNode;
@@ -616,6 +624,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
       setStationList(antennaConfigPanel.getStationList());
       // Observation Specific parameters
+      inputNrChannelsPerSubband.setText(itsChannelsPerSubband.limits);
       inputNrBitsPerSample.setText(itsNrBitsPerSample.limits);
       inputDescription.setText("");
       inputTreeDescription.setText(itsOldTreeDescription);
@@ -789,6 +798,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     @Override
     public void setAllEnabled(boolean enabled) {
         this.inputDescription.setEnabled(enabled);
+        this.inputNrChannelsPerSubband.setEnabled(enabled);
         this.inputTreeDescription.setEnabled(enabled);
     }
     
@@ -1147,7 +1157,17 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         }
 
+
+
+
+
+
+        
         // Generic Observation
+        if (itsChannelsPerSubband != null && !inputNrChannelsPerSubband.getText().equals(itsChannelsPerSubband.limits)) {
+            itsChannelsPerSubband.limits = inputNrChannelsPerSubband.getText();
+            saveNode(itsChannelsPerSubband);
+        }
         if (itsNrBitsPerSample != null && !inputNrBitsPerSample.getText().equals(itsNrBitsPerSample.limits)) {
             itsNrBitsPerSample.limits = inputNrBitsPerSample.getText();
             saveNode(itsNrBitsPerSample);
@@ -1768,6 +1788,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         descriptionScrollPane = new javax.swing.JScrollPane();
         inputDescription = new javax.swing.JTextArea();
         jPanel10 = new javax.swing.JPanel();
+        inputNrChannelsPerSubband = new javax.swing.JTextField();
+        labelNrChannelsPerSubband = new javax.swing.JLabel();
         labelNrBitsPerSample = new javax.swing.JLabel();
         inputNrBitsPerSample = new javax.swing.JTextField();
         jPanel3 = new javax.swing.JPanel();
@@ -1837,6 +1859,15 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
         jPanel10.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Generic Observation Input", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
 
+        inputNrChannelsPerSubband.setToolTipText("This field will be removes as soon as the input in the AntennaConfig tab wil be used for receiver selection.");
+        inputNrChannelsPerSubband.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                inputNrChannelsPerSubbandFocusGained(evt);
+            }
+        });
+
+        labelNrChannelsPerSubband.setText("# Channels per Subband");
+
         labelNrBitsPerSample.setText("# Bits per Sample");
 
         inputNrBitsPerSample.setToolTipText("This field will be removes as soon as the input in the AntennaConfig tab wil be used for receiver selection.");
@@ -1851,18 +1882,30 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         jPanel10Layout.setHorizontalGroup(
             jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel10Layout.createSequentialGroup()
-                .add(labelNrBitsPerSample, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 146, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(inputNrBitsPerSample, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 196, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(335, Short.MAX_VALUE))
+                .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jPanel10Layout.createSequentialGroup()
+                        .add(labelNrChannelsPerSubband)
+                        .add(18, 18, 18))
+                    .add(jPanel10Layout.createSequentialGroup()
+                        .add(labelNrBitsPerSample, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 158, Short.MAX_VALUE)
+                        .add(35, 35, 35)))
+                .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, inputNrBitsPerSample)
+                    .add(inputNrChannelsPerSubband, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE))
+                .addContainerGap())
         );
         jPanel10Layout.setVerticalGroup(
             jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel10Layout.createSequentialGroup()
+                .add(32, 32, 32)
+                .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(labelNrChannelsPerSubband)
+                    .add(inputNrChannelsPerSubband, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                 .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(labelNrBitsPerSample)
                     .add(inputNrBitsPerSample, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(24, Short.MAX_VALUE))
         );
 
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Digital Beam Configuration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
@@ -1936,7 +1979,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel3Layout.createSequentialGroup()
                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(beamConfigurationPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1352, Short.MAX_VALUE)
+                    .add(beamConfigurationPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1350, Short.MAX_VALUE)
                     .add(jPanel3Layout.createSequentialGroup()
                         .add(addBeamButton)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -2067,7 +2110,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                         .add(loadAnaBeamsButton))
                     .add(anaBeamConfigurationPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 1348, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(16, Short.MAX_VALUE))
+                .addContainerGap(12, Short.MAX_VALUE))
         );
         anaBeamConfigurationLayout.setVerticalGroup(
             anaBeamConfigurationLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -2092,7 +2135,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                         .add(10, 10, 10)
                         .add(treeDescriptionScrollPane))
                     .add(org.jdesktop.layout.GroupLayout.LEADING, anaBeamConfiguration, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1374, Short.MAX_VALUE)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1372, Short.MAX_VALUE)
                     .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel2Layout.createSequentialGroup()
                         .addContainerGap()
                         .add(jPanel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 185, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -2100,7 +2143,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                         .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(jPanel2Layout.createSequentialGroup()
                                 .add(jPanel10, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 472, Short.MAX_VALUE))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 854, Short.MAX_VALUE))
                             .add(descriptionScrollPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1159, Short.MAX_VALUE))))
                 .addContainerGap(115, Short.MAX_VALUE))
         );
@@ -2116,7 +2159,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     .add(jPanel2Layout.createSequentialGroup()
                         .add(jPanel10, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .add(descriptionScrollPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 105, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                        .add(descriptionScrollPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 54, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                 .add(treeDescriptionScrollPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 101, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .add(199, 199, 199))
@@ -2222,6 +2265,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         deleteAnaBeam();
 }//GEN-LAST:event_deleteAnaBeamButtonActionPerformed
 
+    private void inputNrChannelsPerSubbandFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_inputNrChannelsPerSubbandFocusGained
+        changeDescription(itsChannelsPerSubband);
+}//GEN-LAST:event_inputNrChannelsPerSubbandFocusGained
+
     private void loadBeamsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadBeamsButtonActionPerformed
         loadBeamFile("Beams");
     }//GEN-LAST:event_loadBeamsButtonActionPerformed
@@ -2266,6 +2313,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private BeamFileDialog                    beamFileDialog = null;
     
     // Observation Specific parameters
+    private jOTDBnode itsChannelsPerSubband=null;
     private jOTDBnode itsNrBeams=null;
     private jOTDBnode itsNrAnaBeams=null;
     private jOTDBnode itsNrBeamformers=null;
@@ -2320,6 +2368,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JButton editBeamButton;
     private javax.swing.JTextArea inputDescription;
     private javax.swing.JTextField inputNrBitsPerSample;
+    private javax.swing.JTextField inputNrChannelsPerSubband;
     private javax.swing.JTextArea inputTreeDescription;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
@@ -2330,6 +2379,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JLabel labelNrBitsPerSample;
+    private javax.swing.JLabel labelNrChannelsPerSubband;
     private javax.swing.JButton loadAnaBeamsButton;
     private javax.swing.JButton loadBeamsButton;
     private javax.swing.JButton showBeamButton;

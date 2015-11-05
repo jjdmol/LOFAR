@@ -21,7 +21,7 @@
 #include <lofar_config.h>
 
 #include <Common/LofarLogger.h>
-#include <CoInterface/CorrelatedData.h>
+#include <CoInterface/DataFactory.h>
 #include <CoInterface/FinalMetaData.h>
 #include <CoInterface/StreamableData.h>
 #include <CoInterface/Parset.h>
@@ -42,9 +42,11 @@ int main()
     MSWriterCorrelated writer("", "tMSWriterCorrelated.in_1/SB000.MS", parset, 0);
 
     // Write some data
-    CorrelatedData data(parset.nrMergedStations(), parset.settings.correlator.nrChannels, parset.settings.correlator.nrSamplesPerIntegration(), heapAllocator, 512);
+    StreamableData *data = newStreamableData(parset, CORRELATED_DATA, 0);
 
-    writer.write(&data);
+    writer.write(data);
+
+    delete data;
 
     // Add broken tile information
     FinalMetaData fmd;

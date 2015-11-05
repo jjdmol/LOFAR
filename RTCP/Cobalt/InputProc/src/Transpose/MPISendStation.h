@@ -30,6 +30,8 @@
 #include <CoInterface/SmartPtr.h>
 
 #include <InputProc/RSPTimeStamp.h>
+#include <InputProc/Buffer/Block.h>
+#include <InputProc/Buffer/BufferSettings.h>
 #include "MPIProtocol.h"
 #include "MPIUtil.h"
 
@@ -55,23 +57,33 @@ namespace LOFAR
     public:
       // Create a sender of blocks over MPI.
       //
+      // settings
+      //   The station to send info from.
+      //
       // stationIdx
       //   The station index within this observation.
       // beamletDistribution
       //   The distribution of beamlets:
       //     key   = receiver MPI rank
       //     value = beamlets to send in [0, ps.nrSubbands())
-      MPISendStation( size_t stationIdx, int targetRank, const std::vector<size_t> &beamlets, size_t nrSamples );
+      MPISendStation( const struct BufferSettings &settings, size_t stationIdx, int targetRank, const std::vector<size_t> &beamlets );
 
       ~MPISendStation();
 
       // Send one block. The caller is responsible for matching the number of
       // posted receiveBlocks.
       template<typename T>
-      void sendBlock( const T *data, MPIProtocol::MetaData *metaData );
+      void sendBlock( const struct Block<T> &block, std::vector<SubbandMetaData> &metaData );
+
+      // Cache for the header to send
+      SmartPtr<MPIProtocol::Header, SmartPtrMPI<MPIProtocol::Header> > header;
+
+      // Cache for meta data to send
+      SmartPtr<MPIProtocol::MetaData, SmartPtrMPI<MPIProtocol::MetaData> > metaDatas;
 
     private:
       const std::string logPrefix;
+      const BufferSettings &settings;
 
       // Station number in observation [0..nrStations)
       const size_t stationIdx;
@@ -82,15 +94,18 @@ namespace LOFAR
       // Which beamlets to send
       const std::vector<size_t> beamlets;
 
-      const size_t nrSamples;
-
     public:
-      // Send beamlet data to the given rank (async).
+      // Construct and send a header to the given rank (async).
       template<typename T>
-      MPI_Request sendData( const T* buffer );
+      MPI_Request sendHeader( const struct Block<T> &block );
+
+      // Send beamlet data (in 1 or 2 transfers) to the given rank (async).
+      // Returns the number of MPI_Requests made.
+      template<typename T>
+      unsigned sendData( unsigned beamlet, const struct Block<T>::Beamlet &ib, MPI_Request requests[2] );
 
       // Send flags data to the given rank (async).
-      MPI_Request sendMetaData( const MPIProtocol::MetaData *metaData );
+      MPI_Request sendMetaData( unsigned beamlet, const struct MPIProtocol::MetaData &metaData );
     };
 
   }

@@ -39,10 +39,8 @@
 
 #include <casa/Arrays/Cube.h>
 #include <casa/Quanta/Quantum.h>
-#include <measures/Measures/MeasureHolder.h>
 #include <measures/Measures/MeasFrame.h>
 #include <measures/Measures/MeasConvert.h>
-#include <measures/Measures/MPosition.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MCDirection.h>
 
@@ -68,9 +66,7 @@ namespace LOFAR {
       DemixWorker (DPInput*,
                    const string& prefix,
                    const DemixInfo& info,
-                   const DPInfo& dpinfo,
-		   int workernr);
-
+                   const DPInfo& dpinfo);
 
       // Process the data in the input buffers and store the result in the
       // output buffers.
@@ -215,7 +211,6 @@ namespace LOFAR {
       void mergeSubtractResult();
 
       //# Data members.
-      int                                   itsWorkerNr;
       const DemixInfo*                      itsMix;
       vector<PhaseShift*>                   itsOrigPhaseShifts;
       //# Phase shift and average steps for demix.
@@ -235,11 +230,6 @@ namespace LOFAR {
       vector<Patch::ConstPtr>               itsDemixList;
       //# The info needed to calculate the station beams.
       vector<StationResponse::Station::Ptr> itsAntBeamInfo;
-      //# Measure objects unique to this worker (thread).
-      //# This is needed because they are not thread-safe.
-      casa::MPosition                       itsArrayPos;
-      casa::MDirection                      itsDelayCenter;
-      casa::MDirection                      itsTileBeamDir;
 
       //# Variables set by setupDemix and used by handleDemix.
       uint                                  itsNDir;
@@ -298,7 +288,7 @@ namespace LOFAR {
       EstimateNew                           itsEstimate;
       //# Variables for the predict.
       casa::Matrix<double>                  itsUVW;
-      vector<casa::Cube<dcomplex> >         itsModelVis;
+      vector<dcomplex>                      itsModelVis;
       uint                                  itsNTimeOut;
       uint                                  itsNTimeOutSubtr;
       uint                                  itsTimeIndex;

@@ -9,7 +9,7 @@ import numpy as np
 import logging
 from time import sleep
 
-test_version = '0815'
+test_version = '1113'
 
 logger = None
 def init_data_lib():
@@ -21,96 +21,25 @@ def init_data_lib():
 class cRCUdata:
     global logger
     def __init__(self, n_rcus, minvalue=1):
-        self.n_rcus   = n_rcus
+        self.n_rcus = n_rcus
+        self.frames = 0
+        self.clock = 200.0
         self.minvalue = minvalue
-        self.active_rcus = range(self.n_rcus)
-        self.subband_mask = []  # subband_mask selects subbands to block
-        self.active_rcus_changed = False
-        self.reset()
-        self.reset_masks()
-
-    def reset(self):
-        self.ssData = np.ones((self.n_rcus, 1, 512), np.float64)
-        self.testSignal_X   = -1.0
-        self.testSubband_X  = 0
-        self.testSignal_Y   = -1.0
-        self.testSubband_Y  = 0
-        self.frames   = 0
-        self.clock    = 200.0
-        self.rec_time = 0
-    
-    def reset_masks(self):
-        logger.debug('reset rcu mask')
-        self.rcu_mask = []  # rcu_mask selects rcus to block
-
-    def getRecTime(self):
-        return self.rec_time
-        
-    def setActiveRcus(self, rcus):
-        self.active_rcus = rcus
-
-    def setInActiveRcu(self, rcu):
-        logger.debug('delete rcu %d from active-rcu list' % rcu) 
-        if rcu in self.active_rcus:
-            self.active_rcus.remove(rcu)
-            self.add_to_rcu_mask(rcu)
-            self.active_rcus_changed = True
-    
-    def getActiveRcus(self, pol='XY'):
-        rcus = []
-        for i in self.active_rcus:
-            if pol in ('X', 'x') and i % 2 == 0:
-                rcus.append(i)
-            if pol in ('Y', 'y') and i % 2 == 1:
-                rcus.append(i)
-            if pol in ('XY', 'xy'):
-                rcus.append(i)        
-        return (rcus)
-
-    def isActiveRcusChanged(self):
-        return self.active_rcus_changed
-    
-    def resetActiveRcusChanged(self):
-        self.active_rcus_changed = False
-        
-    def add_to_rcu_mask(self, rcu):
-        if rcu not in self.rcu_mask:
-            self.rcu_mask.append(rcu)
-            logger.debug('bad-rcu-mask=%s' % str(sorted(self.rcu_mask)))
-            
-    def setMask(self, blocked_subbands):
-        self.subband_mask = blocked_subbands
-
-    def getMask(self):
-        return (self.subband_mask)
-    
-    def record(self, rec_time=2, read=True, slow=False):
+        self.ssData = np.ones((n_rcus, 1, 512), np.float64)
+        self.testSignal_X = -1.0
+        self.testSubband_X = 0
+        self.testSignal_Y = -1.0
+        self.testSubband_Y = 0
+        self.mean_spectra = np.zeros((512), float)
+    # TODO:
+    # lees als record time = 10seconden lees dan iedere keer 1a2 seconden en append aan data matrix. 
+    def record(self, rec_time=2, read=True):
         removeAllDataFiles()
-        self.reset()
-        self.rec_time = rec_time
-        
-        if slow == True:
-            x_list = []
-            y_list = []
-            for i in sorted(self.active_rcus):
-                if i % 2 == 0:
-                    x_list.append(i)
-                else:
-                    y_list.append(i)    
-            rcus = selectStr(x_list)
-            logger.debug("Wait %d seconds while recording X data" %(rec_time))
-            rspctl('--statistics --duration=%d --integration=1 --directory=%s --select=%s' %(rec_time, dataDir(), rcus), wait=0.0)
-            
-            rcus = selectStr(y_list)
-            logger.debug("Wait %d seconds while recording Y data" %(rec_time))
-            rspctl('--statistics --duration=%d --integration=1 --directory=%s --select=%s' %(rec_time, dataDir(), rcus), wait=0.0)
-        else:    
-            rcus = selectStr(self.active_rcus)
-            logger.debug("Wait %d seconds while recording XY data" %(rec_time))
-            rspctl('--statistics --duration=%d --integration=1 --directory=%s --select=%s' %(rec_time, dataDir(), rcus), wait=0.0)
-            
-        if read == True:
+        logger.debug("Wait %d seconds while recording data" %(rec_time))
+        rspctl('--statistics --duration=%d --integration=1 --directory=%s --select=0:%d' %(rec_time, dataDir(), self.n_rcus-1), wait=0.0)
+        if read:
             self.readFiles()
+            self.mean_spectra = np.median(np.mean(self.ssData, axis=1), axis=0)
     
     def readFile(self, full_filename):
         sleep(0.02)
@@ -125,86 +54,50 @@ class cRCUdata:
         
     def readFiles(self):
         files_in_dir = sorted(os.listdir(dataDir()))
-        if len(files_in_dir) == 0:
-            logger.warn('No data recorded !!')
-            self.reset()
-            return
-        data_shape = self.readFile(os.path.join(dataDir(),files_in_dir[0])).shape
-        ssdata = np.zeros((self.n_rcus, data_shape[0],data_shape[1]), dtype=np.float64)
-        for file_name in files_in_dir:
-            #path, filename = os.split(file_name)
-            rcu = int(file_name.split('.')[0][-3:])
-            ssdata[rcu,:,:] = self.readFile(os.path.join(dataDir(),file_name))
-            #logger.debug("%s  rcu=%d" %(file_name, rcu))
+        ssdata = np.array([self.readFile(os.path.join(dataDir(),file_name)) for file_name in files_in_dir])
         # mask zero values and convert to dBm
         self.ssData = np.log10(np.ma.masked_less(ssdata, self.minvalue)) * 10.0
         # do not use subband 0
         self.ssData[:,:,0] = np.ma.masked
     
-    # subbands is list to mask
-    def getMaskedData(self):
-        data = self.ssData.copy()
-        for sb in self.subband_mask:
-            data[:,:,sb] = np.ma.masked
-        for rcu in range(self.n_rcus):
-            if rcu in self.rcu_mask:
-                data[rcu,:,:] = np.ma.masked
-        return (data)
-
-    def getMeanSpectra(self, pol='XY'):
-        if pol in ('XY', 'xy'):
-            return (self.ssData[:,:,:].mean(axis=1).mean(axis=0))
-        if pol in (0, 'X', 'x'):
-            return (self.ssData[0::2,:,:].mean(axis=1).mean(axis=0))
-        if pol in (1, 'Y', 'y'):
-            return (self.ssData[1::2,:,:].mean(axis=1).mean(axis=0))
-    
-    def getMedianSpectra(self, pol='XY'):
-        if pol in ('XY', 'xy'):
-            return (np.median(np.mean(self.ssData, axis=1), axis=0))
-        if pol in (0, 'X', 'x'):
-            return (np.median(np.mean(self.ssData[0::2,:,:], axis=1), axis=0))
-        if pol in (1, 'Y', 'y'):
-            return (np.median(np.mean(self.ssData[1::2,:,:], axis=1), axis=0))    
-    
-    def getSpectra(self, rcu):
-        return(np.mean(self.ssData[rcu,:,:], axis=0))
+    # sb_select list with selected subbands
+    def setMask(self, sb_select):
+        for sb in range(512):
+            if sb in sb_select:
+                # do not mask
+                continue
+            self.ssData[:,:,sb] = np.ma.masked
+        return
         
+    def getMeanSpectra(self):
+        return (self.mean_spectra)
+    
     def getSubbands(self, rcu):
-        return (self.getMaskedData()[int(rcu),:,:].mean(axis=0))
+        return (self.ssData[int(rcu),:,:].mean(axis=0))
     
-    def getSubbandX(self, subband=None):
-        if subband is None:
-            return (self.getMaskedData()[0::2,:,self.testSubband_Y].mean(axis=1))
-        return (self.getMaskedData()[0::2,:,subband].mean(axis=1))
+    def getSubbandX(self):
+        return (self.ssData[0::2,:,self.testSubband_Y].mean(axis=1))
     
-    def getSubbandY(self, subband=None):
-        if subband is None:
-            return (self.getMaskedData()[1::2,:,self.testSubband_Y].mean(axis=1))
-        return (self.getMaskedData()[1::2,:,subband].mean(axis=1))
+    def getSubbandY(self):
+        return (self.ssData[1::2,:,self.testSubband_Y].mean(axis=1))
                        
-    def getAll(self, pol='XY'):
-        if pol in ('XY', 'xy'):
-            return (self.getMaskedData())
-        if pol in ('x','X',0):
-            return (self.getMaskedData()[0::2,:,:])
-        if pol in ('y','Y',1):
-            return (self.getMaskedData()[1::2,:,:])        
+    def getAll(self):
+        return (self.ssData[:,:,:])
     
     def getAllX(self):
-        return (self.getMaskedData()[0::2,:,:])
+        return (self.ssData[0::2,:,:])
     
     def getAllY(self):
-        return (self.getMaskedData()[1::2,:,:])
+        return (self.ssData[1::2,:,:])
            
     def getMedianRcu(self, rcu):
-        return(np.ma.median(self.getMaskedData()[int(rcu),:,:].mean(axis=0)))
+        return(np.ma.median(self.ssData[int(rcu),:,:].mean(axis=0)))
 
     def searchTestSignal(self, subband=-1, minsignal=75.0, maxsignal=100.0):
         # ss = median for all band over all rcu's
         # forget subband 0    
-        ssX = np.ma.median(self.getMaskedData()[::2,:,:].mean(axis=1),axis=0)
-        ssY = np.ma.median(self.getMaskedData()[1::2,:,:].mean(axis=1),axis=0)
+        ssX = np.ma.median(self.ssData[::2,:,:].mean(axis=1),axis=0)
+        ssY = np.ma.median(self.ssData[1::2,:,:].mean(axis=1),axis=0)
         
         if subband != -1:
             if ssX[subband] > minsignal and ssY[subband] > minsignal:
@@ -217,7 +110,7 @@ class cRCUdata:
                 logger.debug("Test signal on subband %d not strong enough X=%3.1fdB Y=%3.1fdB" %(subband, ssX[subband], ssY[subband]))
                 
         # no subband given or not in requested range, look for better
-        for i in range(0,ssX.shape[0],1):
+        for i in range(1,ssX.shape[0],1):
             if ssX[i] > minsignal  and ssX[i] < maxsignal and ssX[i] > self.testSignal_X:
                 self.testSignal_X = ssX[i]
                 self.testSubband_X = i

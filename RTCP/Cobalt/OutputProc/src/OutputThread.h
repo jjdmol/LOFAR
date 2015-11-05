@@ -27,7 +27,6 @@
 #include <vector>
 
 #include <Stream/FileStream.h>
-#include <MACIO/RTmetadata.h>
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/StreamableData.h>
 #include <CoInterface/TABTranspose.h>
@@ -40,8 +39,6 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    using MACIO::RTmetadata;
-
     /*
      * OutputThread<T> manages the writing of data blocks to disk. It is
      * responsible for:
@@ -54,9 +51,7 @@ namespace LOFAR
     template<typename T> class OutputThread
     {
     public:
-      OutputThread(const Parset &parset, unsigned streamNr, Pool<T> &outputPool,
-                   RTmetadata &mdLogger, const std::string &mdKeyPrefix,
-                   const std::string &logPrefix, const std::string &targetDirectory);
+      OutputThread(const Parset &, unsigned streamNr, Pool<T> &outputPool, const std::string &logPrefix, const std::string &targetDirectory, const std::string &LTAfeedbackPrefix);
 
       virtual ~OutputThread();
 
@@ -75,21 +70,15 @@ namespace LOFAR
       // Return the LTA feedback produced by this writer.
       ParameterSet feedbackLTA() const;
 
-      unsigned       streamNr() const { return itsStreamNr; }
-
     protected:
       void checkForDroppedData(StreamableData *);
       void doWork();
-      void logInitialStreamMetadataEvents(const std::string& dataProductType,
-                                          const std::string& fileName,
-                                          const std::string& directoryName);
 
       const Parset &itsParset;
       const unsigned itsStreamNr;
-      RTmetadata &itsMdLogger; // non-const to be able to use its log()
-      const std::string itsMdKeyPrefix;
       const std::string itsLogPrefix;
       const std::string itsTargetDirectory;
+      const std::string itsLTAfeedbackPrefix;
 
       size_t itsBlocksWritten, itsBlocksDropped;
       size_t itsNrExpectedBlocks;
@@ -102,37 +91,28 @@ namespace LOFAR
 
 
     /*
-     * SubbandOutputThread specialises in creating LOFAR MeasurementSet (MS)
-     * files for correlated (uv) data.
+     * SubbandOutputThread specialises in creating LOFAR MeasurementSets (MS).
      */
     class SubbandOutputThread: public OutputThread<StreamableData>
     {
     public:
-      SubbandOutputThread(const Parset &parset, unsigned streamNr,
-                          Pool<StreamableData> &outputPool,
-                          RTmetadata &mdLogger, const std::string &mdKeyPrefix,
-                          const std::string &logPrefix,
-                          const std::string &targetDirectory = "");
+      SubbandOutputThread(const Parset &, unsigned streamNr, Pool<StreamableData> &outputPool, const std::string &logPrefix, const std::string &targetDirectory = "");
 
-      virtual void createMS();
+      void           createMS();
     };
 
 
 
     /*
-     * TABOutputThread specialises in creating LOFAR HDF5
-     * files for beamformed data (according to the ICD003 doc).
+     * TABOutputThread specialises in creating LOFAR HDF5 files corresponding
+     * to ICD003.
      */
-    class TABOutputThread: public OutputThread<TABTranspose::BeamformedData>
+    class TABOutputThread: public OutputThread<TABTranspose::Block>
     {
     public:
-      TABOutputThread(const Parset &parset, unsigned streamNr,
-                      Pool<TABTranspose::BeamformedData> &outputPool,
-                      RTmetadata &mdLogger, const std::string &mdKeyPrefix,
-                      const std::string &logPrefix,
-                      const std::string &targetDirectory = "");
+      TABOutputThread(const Parset &, unsigned streamNr, Pool<TABTranspose::Block> &outputPool, const std::string &logPrefix, const std::string &targetDirectory = "");
 
-      virtual void createMS();
+      void           createMS();
     };
 
 

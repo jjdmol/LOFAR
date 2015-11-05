@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -72,14 +72,6 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_READ,          /* READ     */
       EPA_RSR_BEAMMODE,  /* WRITE    */
       EPA_RSR_BEAMMODE,  /* READACK  */
-      EPA_WRITEACK,      /* WRITEACK */
-    },
-    
-    /* reg = 0x04 (RSR_SUBBAND_DATA_OUTPUT_MODE) */
-    { 0,
-      EPA_READ,          /* READ     */
-      EPA_RSR_SDOMODE,   /* WRITE    */
-      EPA_RSR_SDOMODE,   /* READACK  */
       EPA_WRITEACK,      /* WRITEACK */
     },
   },
@@ -847,37 +839,6 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
     },
   },
 
-   /* pid = 0x13 (SDO) */
-  {
-    /* reg = 0x00 (Subband 0 Select parameters) */
-    { 0,
-      EPA_READ,      /* READ    */
-      EPA_SDO_SELECT, /* WRITE   */
-      EPA_SDO_SELECT, /* READACK */
-      EPA_WRITEACK,  /* WRITEACK */
-    },
-    /* reg = 0x01 (Subband Select parameters) */
-    { 0,
-      EPA_READ,      /* READ    */
-      EPA_SDO_SELECT+1, /* WRITE   */
-      EPA_SDO_SELECT+1, /* READACK */
-      EPA_WRITEACK,  /* WRITEACK */
-    },
-    /* reg = 0x02 (Subband Select parameters) */
-    { 0,
-      EPA_READ,      /* READ    */
-      EPA_SDO_SELECT+2, /* WRITE   */
-      EPA_SDO_SELECT+2, /* READACK */
-      EPA_WRITEACK,  /* WRITEACK */
-    },
-    /* reg = 0x03 (Subband Select parameters) */
-    { 0,
-      EPA_READ,      /* READ    */
-      EPA_SDO_SELECT+3, /* WRITE   */
-      EPA_SDO_SELECT+3, /* READACK */
-      EPA_WRITEACK,  /* WRITEACK */
-    },
-  },
 
 };
 

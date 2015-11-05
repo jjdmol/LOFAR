@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: cpu_utils.h 25651 2013-07-12 12:19:11Z mol $
 
 // \file
 // Include for processor optimalizetion functionality

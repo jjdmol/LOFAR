@@ -20,13 +20,13 @@
 
 #include <lofar_config.h>
 
+#include <CoInterface/DataFactory.h>
+#include <CoInterface/StreamableData.h>
 #include <CoInterface/Parset.h>
 
 #ifdef HAVE_DAL
 #include <OutputProc/MSWriterDAL.h>
 #endif
-
-#include <cstring>
 
 using namespace std;
 using namespace LOFAR;
@@ -38,30 +38,13 @@ int main()
   Parset parset("tMSWriterDAL.parset");
 
   {
-    const size_t fileNo = 0;
+    MSWriterDAL<float,3> writer("tMSWriterDAL_tmp.h5", parset, 0);
 
-    MSWriterDAL<float,3> writer("tMSWriterDAL_tmp.h5", parset, fileNo);
+    StreamableData *data = newStreamableData(parset, BEAM_FORMED_DATA, 0);
 
-    const ObservationSettings::BeamFormer::File &file =
-      parset.settings.beamFormer.files[fileNo];
+    writer.write(data);
 
-    const ObservationSettings::BeamFormer::StokesSettings &sset =
-      file.coherent
-      ? parset.settings.beamFormer.coherentSettings
-      : parset.settings.beamFormer.incoherentSettings;
-
-    const size_t nrSubbands = parset.settings.SAPs[file.sapNr].subbands.size();
-
-    SampleData<float,3,2> data(
-        boost::extents[sset.nrSamples][nrSubbands][sset.nrChannels],
-        boost::extents[nrSubbands][sset.nrChannels]);
-
-    memset(data.samples.origin(), 0, data.samples.num_elements() * sizeof *data.samples.origin());
-
-    writer.write(&data);
-
-    // Dump feedback data to stdout
-    cout << writer.configuration() << endl;
+    delete data;
   }
 #else
   cout << "Built without DAL, skipped actual test code." << endl;

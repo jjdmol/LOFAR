@@ -17,7 +17,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: tCorrelatorSubbandProcProcessSb.cc 26496 2013-09-11 12:58:23Z mol $
 
 #include <lofar_config.h>
 
@@ -27,10 +27,11 @@
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
-#include <CoInterface/fpequals.h>
 #include <GPUProc/gpu_utils.h>
-#include <GPUProc/SubbandProcs/SubbandProc.h>
-#include <GPUProc/SubbandProcs/KernelFactories.h>
+#include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
+#include <GPUProc/SubbandProcs/BeamFormerFactories.h>
+
+#include "../fpequals.h"
 
 using namespace std;
 using namespace LOFAR::Cobalt;
@@ -79,7 +80,7 @@ int main() {
 
   // Input array sizes
   const size_t nrBeams = ps.settings.SAPs.size();
-  const size_t nrStations = ps.settings.antennaFields.size();
+  const size_t nrStations = ps.settings.stations.size();
   const size_t nrPolarisations = ps.settings.nrPolarisations;
   const size_t nrSamplesPerSubband = ps.settings.blockSize;
   const size_t nrBitsPerSample = ps.settings.nrBitsPerSample;
@@ -112,8 +113,8 @@ int main() {
   // correction (but that kernel will run to convert int to float and to
   // transform the data order).
 
-  KernelFactories factories(ps);
-  SubbandProc bwq(ps, ctx, factories);
+  BeamFormerFactories factories(ps);
+  BeamFormerSubbandProc bwq(ps, ctx, factories);
 
   SubbandProcInputData in(ps, ctx);
 
@@ -162,7 +163,7 @@ int main() {
   for (size_t i = 0; i < in.tabDelays.num_elements(); i++)
     in.tabDelays.get<float>()[i] = 0.0f;
 
-  SubbandProcOutputData out(ps, ctx);
+  BeamFormedData out(ps, ctx);
 
   for (size_t i = 0; i < out.coherentData.num_elements(); i++)
     out.coherentData.get<float>()[i] = 42.0f;
@@ -181,7 +182,6 @@ int main() {
 
   // *** COHERENT STOKES ***
 
-  // Coherent Stokes takes the stokes of the sums of all fields (stokes(sum(x))).
   // We can calculate the expected output values, since we're supplying a
   // complex sine/cosine input signal. We only have Stokes-I, so the output
   // should be: nrStations * (amp * scaleFactor * fft1Size * fft2Size) ** 2
@@ -190,37 +190,36 @@ int main() {
   // - scaleFactor is the scaleFactor applied by the IntToFloat kernel. 
   //   It is 16 for 8-bit mode and 1 for 16-bit mode.
   // Hence, each output sample should be (nrStations from parset): 
-  // - for 16-bit input: (2 * 32767 * 1 * 64 * 64)^2 = 72053196058525696
-  // - for 8-bit input: (2 * 127 * 16 * 64 * 64)^2 = 277094110068736
+  // - for 16-bit input: 5 * (32767 * 1 * 64 * 64) ** 2 = 90066495073157120
+  // - for 8-bit input: 5 * (127 * 16 * 64 * 64) ** 2 = 346367637585920
 
-  float coh_outVal = sqr(nrStations * amplitude * scaleFactor * fft1Size * fft2Size);
+  float coh_outVal = nrStations * sqr(nrStations * amplitude * scaleFactor * fft1Size * fft2Size) / 2;
   cout << "coherent outVal = " << coh_outVal << endl;
 
-  for (size_t t = 0; t < ps.settings.beamFormer.coherentSettings.nrSamples; t++)
+  for (size_t t = 0; t < ps.settings.beamFormer.coherentSettings.nrSamples(ps.settings.blockSize); t++)
     for (size_t c = 0; c < ps.settings.beamFormer.coherentSettings.nrChannels; c++)
       ASSERTSTR(fpEquals(out.coherentData[0][0][t][c], coh_outVal, 1e-4f), 
-                "out.coherentData[0][0][" << t << "][" << c << "] = " << 
+                "out.incoherentData[0][0][" << t << "][" << c << "] = " << 
                 setprecision(12) << out.coherentData[0][0][t][c] << 
                 "; outVal = " << coh_outVal);
 
   // *** INCOHERENT STOKES ***
 
-  // Incoherent Stokes sums the stokes of each field (sum(stokes(x))).
   // We can calculate the expected output values, since we're supplying a
   // complex sine/cosine input signal. We only have Stokes-I, so the output
-  // should be: nrStation * (amp * scaleFactor * fft1Size * fft2Size)^2
+  // should be: (nrStation * amp * scaleFactor * fft1Size * fft2Size)^2
   // - amp is set to the maximum possible value for the bit-mode:
   //   i.e. 127 for 8-bit and 32767 for 16-bit mode
   // - scaleFactor is the scaleFactor applied by the IntToFloat kernel. 
   //   It is 16 for 8-bit mode and 1 for 16-bit mode.
   // Hence, each output sample should be: 
-  // - for 16-bit input: 2 * (32767 * 1 * 64 * 64)^2 = 36026598029262848
-  // - for 8-bit input: 2 * (127 * 16 * 64 * 64)^2 = 138547055034368
+  // - for 16-bit input: (2 * 32767 * 1 * 64 * 64)^2 = 72053196058525696
+  // - for 8-bit input: (2 * 127 * 16 * 64 * 64)^2 = 277094110068736
 
-  float incoh_outVal = nrStations * sqr(amplitude * scaleFactor * fft1Size * fft2Size);
+  float incoh_outVal = sqr(nrStations * amplitude * scaleFactor * fft1Size * fft2Size) / 2;
   cout << "incoherent outVal = " << incoh_outVal << endl;
 
-  for (size_t t = 0; t < ps.settings.beamFormer.incoherentSettings.nrSamples; t++)
+  for (size_t t = 0; t < ps.settings.beamFormer.incoherentSettings.nrSamples(ps.settings.blockSize); t++)
     for (size_t c = 0; c < ps.settings.beamFormer.incoherentSettings.nrChannels; c++)
       ASSERTSTR(fpEquals(out.incoherentData[0][0][t][c], incoh_outVal, 1e-4f), 
                 "out.incoherentData[0][0][" << t << "][" << c << "] = " << 

@@ -1,3 +1,4 @@
+
 //# tSubbandWriter.cc
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -22,17 +23,15 @@
 
 #include <string>
 #include <cstdlib>
-#include <string>
 #include <omp.h>
-
+#include <UnitTest++.h>
 #include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
 
-#include <Stream/StreamFactory.h>
-#include <Stream/PortBroker.h>
+#include <CoInterface/DataFactory.h>
 #include <CoInterface/CorrelatedData.h>
 #include <CoInterface/Stream.h>
 #include <OutputProc/SubbandWriter.h>
+#include <Stream/PortBroker.h>
 
 #include <MSLofar/FailedTileInfo.h>
 #include <tables/Tables/Table.h>
@@ -40,7 +39,8 @@
 #include <tables/Tables/ArrayColumn.h>
 #include <casa/Quanta/MVTime.h>
 
-#include <UnitTest++.h>
+#include <boost/lexical_cast.hpp>
+#include <string>
 
 using namespace std;
 using namespace LOFAR;
@@ -48,8 +48,7 @@ using namespace Cobalt;
 using namespace casa;
 using boost::format;
 
-unsigned obsId = 54321;
-MACIO::RTmetadata rtmd(54321, "", "");
+unsigned obsId = 0;
 
 SUITE(SubbandWriter)
 {
@@ -85,12 +84,12 @@ SUITE(SubbandWriter)
 
   TEST_FIXTURE(OneBeam, Construction)
   {
-    SubbandWriter w(ps, 0, rtmd, "", "");
+    SubbandWriter w(ps, 0, "");
   }
 
   TEST_FIXTURE(OneBeam, IO)
   {
-    SubbandWriter w(ps, 0, rtmd, "", "");
+    SubbandWriter w(ps, 0, "");
 
     // process, and provide input
 #   pragma omp parallel sections
@@ -106,13 +105,13 @@ SUITE(SubbandWriter)
 
         SmartPtr<Stream> inputStream = createStream(sendDesc, false, 0);
 
-        CorrelatedData data(ps.nrMergedStations(), ps.settings.correlator.nrChannels, ps.settings.correlator.nrSamplesPerIntegration(), heapAllocator, 512);
+        SmartPtr<CorrelatedData> data = dynamic_cast<CorrelatedData*>(newStreamableData(ps, CORRELATED_DATA, 0));
 
-        for (size_t i = 0; i < data.visibilities.num_elements(); ++i) {
-          *(data.visibilities.origin() + i) = complex<float>(i, 2*i);
+        for (size_t i = 0; i < data->visibilities.num_elements(); ++i) {
+          *(data->visibilities.origin() + i) = complex<float>(i, 2*i);
         }
 
-        data.write(inputStream, true, 1);
+        data->write(inputStream, true, 1);
       }
     }
 
@@ -120,19 +119,18 @@ SUITE(SubbandWriter)
     {
       FileStream f("tWriter.out_raw/table.f0data");
 
-      CorrelatedData data(ps.nrMergedStations(), ps.settings.correlator.nrChannels, ps.settings.correlator.nrSamplesPerIntegration(), heapAllocator, 512);
+      SmartPtr<CorrelatedData> data = dynamic_cast<CorrelatedData*>(newStreamableData(ps, CORRELATED_DATA, 0));
+      data->read(&f, true, 512);
 
-      data.read(&f, true, 512);
-
-      for (size_t i = 0; i < data.visibilities.num_elements(); ++i) {
-        CHECK_EQUAL(complex<float>(i, 2*i), *(data.visibilities.origin() + i));
+      for (size_t i = 0; i < data->visibilities.num_elements(); ++i) {
+        CHECK_EQUAL(complex<float>(i, 2*i), *(data->visibilities.origin() + i));
       }
     }
   }
 
   TEST_FIXTURE(OneBeam, FinalMetaData)
   {
-    SubbandWriter w(ps, 0, rtmd, "", "");
+    SubbandWriter w(ps, 0, "");
 
     // process
 #   pragma omp parallel sections

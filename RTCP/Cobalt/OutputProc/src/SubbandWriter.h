@@ -23,6 +23,7 @@
 
 #include <string>
 
+#include <Common/Thread/Queue.h>
 #include <CoInterface/OutputTypes.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/Pool.h>
@@ -46,10 +47,8 @@ namespace LOFAR
     class SubbandWriter
     {
     public:
-      SubbandWriter(const Parset &parset,
+      SubbandWriter(const Parset &,
                     unsigned streamNr,
-                    RTmetadata &mdLogger,
-                    const std::string &mdKeyPrefix,
                     const std::string &logPrefix);
 
       void process();
@@ -58,12 +57,8 @@ namespace LOFAR
 
       ParameterSet feedbackLTA() const;
 
-      unsigned streamNr() const { return itsStreamNr; }
-
     private:
-      static const unsigned maxReceiveQueueSize = 60;
-
-      const unsigned itsStreamNr;
+      static const unsigned maxReceiveQueueSize = 3;
 
       Pool<StreamableData> itsOutputPool;
 

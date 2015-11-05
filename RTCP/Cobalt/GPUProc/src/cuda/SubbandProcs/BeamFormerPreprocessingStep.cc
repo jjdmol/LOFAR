@@ -21,6 +21,7 @@
 #include <lofar_config.h>
 
 #include "BeamFormerPreprocessingStep.h"
+#include "BeamFormerFactories.h"
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_wrapper.h>
@@ -31,128 +32,162 @@
 
 #include <iomanip>
 
+// Set to true to get detailed buffer informatio
+#if 0
+#define DUMPBUFFER(a,b) dumpBuffer((a),  (b))
+#else
+#define DUMPBUFFER(a,b)
+#endif
+
 namespace LOFAR
 {
   namespace Cobalt
   {
-    BeamFormerPreprocessingStep::Factories::Factories(const Parset &ps) :
-        intToFloat(ps),
-
-        firstFFT(FFT_Kernel::Parameters(
-          ps.settings.beamFormer.nrDelayCompensationChannels,
-          ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize,
-          true,
-          "FFT (beamformer, 1st)")),
-        fftShift(FFTShiftKernel::Parameters(ps,
-          ps.settings.antennaFields.size(),
-          ps.settings.beamFormer.nrDelayCompensationChannels,
-          "FFT-shift (beamformer)")),
-
-        delayCompensation(DelayAndBandPassKernel::Parameters(ps, false)),
-
-        secondFFT(FFT_Kernel::Parameters(
-          ps.settings.beamFormer.nrHighResolutionChannels /
-          ps.settings.beamFormer.nrDelayCompensationChannels,
-          ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize,
-          true,
-          "FFT (beamformer, 2nd)")),
-
-        bandPassCorrection(BandPassCorrectionKernel::Parameters(ps))
-    {
-    }
 
     BeamFormerPreprocessingStep::BeamFormerPreprocessingStep(
       const Parset &parset,
       gpu::Stream &i_queue,
       gpu::Context &context,
-      Factories &factories,
+      BeamFormerFactories &factories,
+      boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
       boost::shared_ptr<gpu::DeviceMemory> i_devA,
-      boost::shared_ptr<gpu::DeviceMemory> i_devB)
+      boost::shared_ptr<gpu::DeviceMemory> i_devB,
+      boost::shared_ptr<gpu::DeviceMemory> i_devNull)
       :
-      ProcessStep(parset, i_queue)
+      BeamFormerSubbandProcStep(parset, i_queue)
     {
+      devInput=i_devInput;
       devA=i_devA;
       devB=i_devB;
-      (void)context;
+      devNull=i_devNull;
+      initMembers(context, factories);
+    }
 
-      doSecondFFT = 
-        (ps.settings.beamFormer.nrHighResolutionChannels /
-         ps.settings.beamFormer.nrDelayCompensationChannels) > 1;
+    BeamFormerPreprocessingStep::~BeamFormerPreprocessingStep()
+    {}
+
+    void BeamFormerPreprocessingStep::initMembers(gpu::Context &context,
+      BeamFormerFactories &factories){
+      // intToFloat: input -> B
+      intToFloatBuffers = std::auto_ptr<IntToFloatKernel::Buffers>(
+        new IntToFloatKernel::Buffers(devInput->inputSamples, *devB));
 
       intToFloatKernel = std::auto_ptr<IntToFloatKernel>(
-        factories.intToFloat.create(queue, *devA, *devB));
+        factories.intToFloat.create(queue, *intToFloatBuffers));
 
       // FFTShift: B -> B
+      firstFFTShiftBuffers = std::auto_ptr<FFTShiftKernel::Buffers>(
+        new FFTShiftKernel::Buffers(*devB, *devB));
+
       firstFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
-        factories.fftShift.create(queue, *devB, *devB));
+        factories.fftShift.create(queue, *firstFFTShiftBuffers));
 
       // FFT: B -> B
-      firstFFT = std::auto_ptr<FFT_Kernel>(
-        factories.firstFFT.create(queue, *devB, *devB));
+      firstFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(queue,
+        ps.settings.beamFormer.nrDelayCompensationChannels,
+        (ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
+        ps.settings.beamFormer.nrDelayCompensationChannels),
+        true, *devB));
 
       // delayComp: B -> A
+      delayCompensationBuffers = std::auto_ptr<DelayAndBandPassKernel::Buffers>(
+        new DelayAndBandPassKernel::Buffers(*devB, *devA, devInput->delaysAtBegin,
+        devInput->delaysAfterEnd,
+        devInput->phase0s, *devNull));
+
       delayCompensationKernel = std::auto_ptr<DelayAndBandPassKernel>(
-        factories.delayCompensation.create(queue, *devB, *devA));
+        factories.delayCompensation.create(queue, *delayCompensationBuffers));
 
+      // FFTShift: A -> A
+      secondFFTShiftBuffers = std::auto_ptr<FFTShiftKernel::Buffers>(
+        new FFTShiftKernel::Buffers(*devA, *devA));
 
-      // Only perform second FFTshift and FFT if we have to.
-      if (doSecondFFT) {
+      secondFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
+        factories.fftShift.create(queue, *secondFFTShiftBuffers));
+      // FFT: A -> A
+      unsigned secondFFTnrFFTs = ps.nrStations() * NR_POLARIZATIONS *
+        ps.nrSamplesPerSubband() /
+        (ps.settings.beamFormer.nrHighResolutionChannels /
+        ps.settings.beamFormer.nrDelayCompensationChannels);
 
-        // FFTShift: A -> A
-        secondFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
-          factories.fftShift.create(queue, *devA, *devA));
-
-        // FFT: A -> A
-        secondFFT = std::auto_ptr<FFT_Kernel>(
-          factories.secondFFT.create(queue, *devA, *devA));
-      }
+      secondFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(queue,
+        ps.settings.beamFormer.nrHighResolutionChannels /
+        ps.settings.beamFormer.nrDelayCompensationChannels,
+        secondFFTnrFFTs, true, *devA));
 
       // bandPass: A -> B
+      devBandPassCorrectionWeights = std::auto_ptr<gpu::DeviceMemory>(
+        new gpu::DeviceMemory(context,
+        factories.bandPassCorrection.bufferSize(
+        BandPassCorrectionKernel::BAND_PASS_CORRECTION_WEIGHTS)));
+
+      bandPassCorrectionBuffers =
+        std::auto_ptr<BandPassCorrectionKernel::Buffers>(
+        new BandPassCorrectionKernel::Buffers(*devA, *devB,
+        *devBandPassCorrectionWeights));
+
       bandPassCorrectionKernel = std::auto_ptr<BandPassCorrectionKernel>(
-        factories.bandPassCorrection.create(queue, *devA, *devB));
+        factories.bandPassCorrection.create(queue, *bandPassCorrectionBuffers));
 
     }
 
-    void BeamFormerPreprocessingStep::writeInput(const SubbandProcInputData &input)
-    {
-      if (ps.settings.delayCompensation.enabled)
-      {
-        queue.writeBuffer(delayCompensationKernel->delaysAtBegin,
-          input.delaysAtBegin, false);
-        queue.writeBuffer(delayCompensationKernel->delaysAfterEnd,
-          input.delaysAfterEnd, false);
-        queue.writeBuffer(delayCompensationKernel->phase0s,
-          input.phase0s, false);
-      }
-    }
-
-    void BeamFormerPreprocessingStep::process(const SubbandProcInputData &input)
+    void BeamFormerPreprocessingStep::process(BlockID blockID,
+      unsigned subband)
     {
 
       //****************************************
       // Enqueue the kernels
       // Note: make sure to call the right enqueue() for each kernel.
       // Otherwise, a kernel arg may not be set...
-      intToFloatKernel->enqueue(input.blockID);
+      LOG_INFO_STR("********************************************");
+      LOG_INFO_STR("debug 20");
+      DUMPBUFFER(intToFloatBuffers.input, "intToFloatBuffers.input.dat");
+      intToFloatKernel->enqueue(blockID);
 
-      firstFFTShiftKernel->enqueue(input.blockID);
+      firstFFTShiftKernel->enqueue(blockID);
+      DUMPBUFFER(firstFFTShiftBuffers.output, "firstFFTShiftBuffers.output.dat");
 
-      firstFFT->enqueue(input.blockID);
+      firstFFT->enqueue(blockID);
+      DUMPBUFFER(delayCompensationBuffers.input, "firstFFT.output.dat");
 
-      // The centralFrequency and SAP immediate kernel args must outlive kernel runs.
       delayCompensationKernel->enqueue(
-        input.blockID,
-        ps.settings.subbands[input.blockID.globalSubbandIdx].centralFrequency,
-        ps.settings.subbands[input.blockID.globalSubbandIdx].SAP);
+        blockID,
+        ps.settings.subbands[subband].centralFrequency,
+        ps.settings.subbands[subband].SAP);
+      DUMPBUFFER(delayCompensationBuffers.output, "delayCompensationBuffers.output.dat");
 
-      if (doSecondFFT) {
-        secondFFTShiftKernel->enqueue(input.blockID);
+      secondFFTShiftKernel->enqueue(blockID);
+      DUMPBUFFER(secondFFTShiftBuffers.output, "secondFFTShiftBuffers.output.dat");
 
-        secondFFT->enqueue(input.blockID);
-      }
+      secondFFT->enqueue(blockID);
+      //DUMPBUFFER(bandPassCorrectionBuffers.input, "secondFFT.output.dat");
 
       bandPassCorrectionKernel->enqueue(
-        input.blockID);
+        blockID);
+    }
+
+
+    void BeamFormerPreprocessingStep::printStats()
+    {
+      // Print the individual counter stats: mean and stDev
+      LOG_INFO_STR(
+        "**** BeamFormerSubbandProc FirstStage GPU mean and stDev ****" << endl <<
+        std::setw(20) << "(intToFloatKernel)" << intToFloatKernel->itsCounter.stats << endl <<
+        //std::setw(20) << "(firstFFTShift)" << firstFFTShift.stats << endl <<
+        std::setw(20) << "(firstFFT)" << firstFFT->itsCounter.stats << endl <<
+        std::setw(20) << "(delayCompensationKernel)" << delayCompensationKernel->itsCounter.stats << endl <<
+        //std::setw(20) << "(secondFFTShift)" << secondFFTShift.stats << endl <<
+        std::setw(20) << "(secondFFT)" << secondFFT->itsCounter.stats << endl <<
+        std::setw(20) << "(bandPassCorrectionKernel)" << bandPassCorrectionKernel->itsCounter.stats << endl);
+    }
+
+    void BeamFormerPreprocessingStep::logTime()
+    {
+      intToFloatKernel->itsCounter.logTime();
+      firstFFT->itsCounter.logTime();
+      delayCompensationKernel->itsCounter.logTime();
+      secondFFT->itsCounter.logTime();
+      bandPassCorrectionKernel->itsCounter.logTime();
     }
   }
 }
