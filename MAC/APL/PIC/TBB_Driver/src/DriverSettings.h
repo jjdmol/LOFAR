@@ -40,7 +40,7 @@ namespace LOFAR {
 static const int DRIVER_VERSION = 251;
 
 enum BoardStateT {noBoard,
-				  setDefaultImage, defaultImageSet,
+				  setImage1, image1Set,
 				  checkAlive, boardAlive,
 				  checkStatus, statusChecked,
 				  clearBoard, boardCleared,
@@ -248,7 +248,6 @@ public:
 	uint32 getMemorySize(int32 boardnr);
 	void setMemorySize(int32 boardnr,uint32 pages);
 	
-	uint32 getDefaultImageNr();
 	uint32 getImageNr(int32 boardnr);
 	void setImageNr(int32 boardnr, uint32 image);
 	
@@ -275,7 +274,6 @@ private:
 
 	// --- Datamembers ---  
 	int32  itsDriverVersion;
-    uint32 itsDefaultImageNr;
 	int32  itsMaxBoards;	// constants
 	int32  itsMaxChannels;
 	int32  itsMpsOnBoard;
@@ -475,7 +473,6 @@ inline	void TbbSettings::setDstMacCep(int32 channelnr, string mac) { itsChannelI
 //---- inline functions for board information ------------
 inline	uint32 TbbSettings::getMemorySize(int32 boardnr) { return (itsBoardInfo[boardnr].memorySize); }
 inline	void TbbSettings::setMemorySize(int32 boardnr,uint32 pages) { itsBoardInfo[boardnr].memorySize = pages; }
-inline	uint32 TbbSettings::getDefaultImageNr() { return (itsDefaultImageNr); }
 inline	uint32 TbbSettings::getImageNr(int32 boardnr) { return (itsBoardInfo[boardnr].imageNr); }
 inline	void TbbSettings::setImageNr(int32 boardnr,uint32 image) { itsBoardInfo[boardnr].imageNr = image; }
 inline	uint32 TbbSettings::getImageState(int32 boardnr) { return (itsBoardInfo[boardnr].configState & 0x1); }
