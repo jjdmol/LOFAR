@@ -158,9 +158,10 @@ class LofarMessage(object):
             self.__dict__['_qpid_msg'] = content
         else:
             try:
-                self.__dict__['_qpid_msg'] = qpid.messaging.Message(content)
-                if self.__dict__['_qpid_msg'].content_type is None:
-                    self.__dict__['_qpid_msg'].content_type='text/plain'
+                if isinstance(content,basestring):
+		    self.__dict__['_qpid_msg'] = qpid.messaging.Message(unicode(content))
+                else:
+                    self.__dict__['_qpid_msg'] = qpid.messaging.Message(content)
 
             except KeyError:
                 raise InvalidMessage(
@@ -244,10 +245,11 @@ class EventMessage(LofarMessage):
     will be stored in a persistent queue for later delivery.
     """
 
-    def __init__(self, context, content=None):
+    def __init__(self, content=None, context=None):
         super(EventMessage, self).__init__(content)
-        self.durable = True
-        self.subject = context
+        if (context!=None):
+            self.durable = True
+            self.subject = context
 
 
 class MonitoringMessage(LofarMessage):
