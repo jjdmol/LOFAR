@@ -26,6 +26,7 @@
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
 #include <DPPP/MSReader.h>
+#include <DPPP/MSPollingReader.h>
 #include <DPPP/MultiMSReader.h>
 #include <DPPP/MSWriter.h>
 #include <DPPP/MSUpdater.h>
@@ -33,6 +34,7 @@
 #include <DPPP/Averager.h>
 #include <DPPP/MedFlagger.h>
 #include <DPPP/AORFlagger.h>
+#include <DPPP/SlidingFlagger.h>
 #include <DPPP/PreFlagger.h>
 #include <DPPP/UVWFlagger.h>
 #include <DPPP/PhaseShift.h>
@@ -41,7 +43,6 @@
 #include <DPPP/StationAdder.h>
 #include <DPPP/ScaleData.h>
 #include <DPPP/ApplyCal.h>
-#include <DPPP/Predict.h>
 #include <DPPP/GainCal.h>
 #include <DPPP/Filter.h>
 #include <DPPP/Counter.h>
@@ -102,7 +103,7 @@ namespace LOFAR {
       NSTimer nstimer;
       nstimer.start();
       ParameterSet parset;
-      if (parsetName!="") {
+      if (! parsetName.empty()) {
         parset.adoptFile(parsetName);
       }
       // Adopt possible parameters given at the command line.
@@ -119,8 +120,6 @@ namespace LOFAR {
         DPLOG_WARN_STR ("Parameter checkparset should be an integer value");
         checkparset = parset.getBool ("checkparset") ? 1:0;
       }
-
-      bool showcounts = parset.getBool ("showcounts", true);
 
       // Create the steps and fill their DPInfo objects.
       DPStep::ShPtr firstStep = makeSteps (parset);
@@ -181,14 +180,12 @@ namespace LOFAR {
       lastStep->addToMS("");
 
       // Show the counts where needed.
-      if (showcounts) {
       step = firstStep;
-        while (step) {
-          ostringstream os;
-          step->showCounts (os);
-          DPLOG_INFO (os.str(), true);
-          step = step->getNextStep();
-        }
+      while (step) {
+        ostringstream os;
+        step->showCounts (os);
+        DPLOG_INFO (os.str(), true);
+        step = step->getNextStep();
       }
       // Show the overall timer.
       nstimer.stop();
@@ -257,13 +254,20 @@ namespace LOFAR {
 
       // Get the steps.
       vector<string> steps = parset.getStringVector ("steps");
+      bool usePollingRead  = parset.getBool ("msin.concurrent", false);
       // Currently the input MS must be given.
       // In the future it might be possible to have a simulation step instead.
       // Create MSReader step if input ms given.
       MSReader* reader = 0;
       if (inNames.size() == 1) {
-        reader = new MSReader (inNames[0], parset, "msin.");
+        if (usePollingRead) {
+          reader = new MSPollingReader (inNames[0], parset, "msin.");
+        } else {
+          reader = new MSReader (inNames[0], parset, "msin.");
+        }
       } else {
+        ASSERTSTR (!usePollingRead,
+                   "A single MS must be used if msin.concurrent=true is given");
         reader = new MultiMSReader (inNames, parset, "msin.");
       }
       casa::Path pathIn (reader->msName());
@@ -288,6 +292,8 @@ namespace LOFAR {
         } else if (type == "aoflagger"  ||  type == "aoflag"
                    ||  type == "rficonsole") {
           step = DPStep::ShPtr(new AORFlagger (reader, parset, prefix));
+        } else if (type == "slidingflagger"  ||  type == "slidingflag") {
+          step = DPStep::ShPtr(new SlidingFlagger (reader, parset, prefix));
         } else if (type == "preflagger"  ||  type == "preflag") {
           step = DPStep::ShPtr(new PreFlagger (reader, parset, prefix));
         } else if (type == "uvwflagger"  ||  type == "uvwflag") {
@@ -308,15 +314,12 @@ namespace LOFAR {
           step = DPStep::ShPtr(new Filter (reader, parset, prefix));
         } else if (type == "applycal"  ||  type == "correct") {
           step = DPStep::ShPtr(new ApplyCal (reader, parset, prefix));
-        } else if (type == "predict") {
-          step = DPStep::ShPtr(new Predict (reader, parset, prefix));
         } else if (type == "applybeam") {
           step = DPStep::ShPtr(new ApplyBeam (reader, parset, prefix));
         } else if (type == "gaincal"  ||  type == "calibrate") {
           step = DPStep::ShPtr(new GainCal (reader, parset, prefix));
         } else if (type == "out" || type=="output") {
-          step = makeOutputStep(reader, parset, prefix,
-                                inNames.size()>1, currentMSName);
+          step = makeOutputStep(reader, parset, prefix, currentMSName);
         } else {
           // Maybe the step is defined in a dynamic library.
           step = findStepCtor(type) (reader, parset, prefix);
@@ -328,8 +331,7 @@ namespace LOFAR {
           firstStep = step;
         }
       }
-      step = makeOutputStep(reader, parset, "msout.",
-                            inNames.size()>1, currentMSName);
+      step = makeOutputStep(reader, parset, "msout.", currentMSName);
       lastStep->setNextStep (step);
       lastStep = step;
 
@@ -349,7 +351,6 @@ namespace LOFAR {
     DPStep::ShPtr DPRun::makeOutputStep (MSReader* reader,
                                          const ParameterSet& parset,
                                          const string& prefix,
-                                         bool multipleInputs,
                                          casa::String& currentMSName)
     {
       DPStep::ShPtr step;
@@ -381,8 +382,8 @@ namespace LOFAR {
         // Create MSUpdater.
         // Take care the history is not written twice.
         // Note that if there is nothing to write, the updater won't do anything.
-        ASSERTSTR (! multipleInputs,
-                   "No update can be done if multiple input MSs are used");
+        ASSERTSTR (reader->canUpdateMS(),
+                   "The reader does not allow an update of " + outName);
         step = DPStep::ShPtr(new MSUpdater(reader, outName, parset, prefix,
                                            outName!=currentMSName));
       } else {

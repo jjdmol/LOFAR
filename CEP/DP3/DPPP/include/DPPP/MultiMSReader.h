@@ -154,6 +154,9 @@ namespace LOFAR {
       // Show the timings.
       virtual void showTimings (std::ostream&, double duration) const;
 
+      // The input MS cannot be updated for MultiMSReader.
+      virtual bool canUpdateMS() const;
+
       // Read the UVW at the given row numbers.
       virtual void getUVW (const casa::RefRows& rowNrs,
                            double time,
@@ -192,7 +195,6 @@ namespace LOFAR {
       vector<DPBuffer>      itsBuffers;
       uint                  itsFillNChan; //# nr of chans for missing MSs
       FlagCounter           itsFlagCounter;
-      bool                  itsRegularChannels; // Are resulting channels regularly spaced
     };
 
   } //# end namespace

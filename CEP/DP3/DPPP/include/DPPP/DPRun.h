@@ -79,8 +79,9 @@ namespace LOFAR {
       // If there is a writer, the reader needs to read the visibility data.
       // reader should be the original reader
       static DPStep::ShPtr makeOutputStep(MSReader* reader,
-          const ParameterSet& parset, const string& prefix, bool multipleInputs,
-          casa::String& currentMSName);
+                                          const ParameterSet& parset,
+                                          const string& prefix,
+                                          casa::String& currentMSName);
 
       // The map to create a step object from its type name.
       static std::map<std::string, StepCtor*> theirStepMap;

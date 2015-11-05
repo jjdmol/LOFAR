@@ -56,29 +56,34 @@ namespace LOFAR {
   namespace DPPP {
 
     MSReader::MSReader()
-      : itsReadVisData   (False),
-        itsLastMSTime    (0),
-        itsNrRead        (0),
-        itsNrInserted    (0)
+      : itsReadVisData (False),
+        itsLastMSTime  (0),
+        itsNrRead      (0),
+        itsNrInserted  (0),
+        itsSkipRead    (true),
+        itsPastEnd     (false)
     {}
 
     MSReader::MSReader (const string& msName,
                         const ParameterSet& parset,
                         const string& prefix,
-                        bool missingData)
-      : itsReadVisData   (False),
-        itsMissingData   (missingData),
-        itsLastMSTime    (0),
-        itsNrRead        (0),
-        itsNrInserted    (0)
+                        bool missingData,
+                        bool doOpen)
+      : itsReadVisData (False),
+        itsMissingData (missingData),
+        itsLastMSTime  (0),
+        itsNrRead      (0),
+        itsNrInserted  (0),
+        itsSkipRead    (true),
+        itsPastEnd     (false)
     {
       NSTimer::StartStop sstime(itsTimer);
       // Get info from parset.
       itsSpw              = parset.getInt    (prefix+"band", -1);
       itsStartChanStr     = parset.getString (prefix+"startchan", "0");
       itsNrChanStr        = parset.getString (prefix+"nchan", "0");
-      string startTimeStr = parset.getString (prefix+"starttime", "");
-      string endTimeStr   = parset.getString (prefix+"endtime", "");
+      itsStartTimeStr     = parset.getString (prefix+"starttime", "");
+      itsEndTimeStr       = parset.getString (prefix+"endtime", "");
       itsTimeTolerance    = parset.getDouble (prefix+"timetolerance", 1e-2);
       itsUseFlags         = parset.getBool   (prefix+"useflag", true);
       itsDataColName      = parset.getString (prefix+"datacolumn", "DATA");
@@ -90,6 +95,13 @@ namespace LOFAR {
       itsAutoWeightForce  = parset.getBool   (prefix+"forceautoweight", false);
       itsNeedSort         = parset.getBool   (prefix+"sort", false);
       itsSelBL            = parset.getString (prefix+"baseline", string());
+      if (doOpen) {
+        openMS (msName);
+      }
+    }
+
+    void MSReader::openMS (const string& msName)
+    {
       // Try to open the MS and get its full name.
       if (itsMissingData  &&  !Table::isReadable (msName)) {
         DPLOG_WARN_STR ("MeasurementSet " << msName
@@ -138,17 +150,19 @@ namespace LOFAR {
       // They can also be used to select part of the MS.
       Quantity qtime;
       itsFirstTime = startTime;
-      if (!startTimeStr.empty()) {
-        if (!MVTime::read (qtime, startTimeStr)) {
-          THROW (LOFAR::Exception, startTimeStr << " is an invalid date/time");
+      if (!itsStartTimeStr.empty()) {
+        if (!MVTime::read (qtime, itsStartTimeStr)) {
+          THROW (LOFAR::Exception,
+                 itsStartTimeStr << " is an invalid date/time");
         }
         itsFirstTime = qtime.getValue("s");
         ASSERT (itsFirstTime <= endTime);
       }
       itsLastTime = endTime;
-      if (!endTimeStr.empty()) {
-        if (!MVTime::read (qtime, endTimeStr)) {
-          THROW (LOFAR::Exception, endTimeStr << " is an invalid date/time");
+      if (!itsEndTimeStr.empty()) {
+        if (!MVTime::read (qtime, itsEndTimeStr)) {
+          THROW (LOFAR::Exception,
+                 itsEndTimeStr << " is an invalid date/time");
         }
         itsLastTime = qtime.getValue("s");
       }
@@ -212,6 +226,37 @@ namespace LOFAR {
       itsReadVisData = readVisData;
     }
 
+    bool MSReader::getNext()
+    {
+      // If end of data has been reached, set to nothing to read.
+      // Note: this can be executed multiple times in case trailing
+      // time slots have to be inserted.
+      if (itsPastEnd) {
+        itsSkipRead = true;
+        return false;
+      }
+      // The iterator might be on the right spot already.
+      // (e.g. the first time or if a time slot was inserted).
+      if (itsSkipRead) {
+        itsSkipRead = false;
+        return true;
+      }
+      // If there is a next time slot, return success.
+      if (doGetNext()) {
+        return true;
+      }
+      // End-of-data has been reached, thus nothing to read.
+      itsPastEnd  = true;
+      itsSkipRead = true;
+      return false;
+    }
+
+    bool MSReader::doGetNext()
+    {
+      itsIter.next();
+      return ! itsIter.pastEnd();
+    }
+
     bool MSReader::process (const DPBuffer&)
     {
       if (itsNrRead == 0) {
@@ -225,10 +270,8 @@ namespace LOFAR {
       }
       {
         NSTimer::StartStop sstime(itsTimer);
-        ///        itsBuffer.clear();
         // Use time from the current time slot in the MS.
-        bool useIter = false;
-        while (!itsIter.pastEnd()) {
+        while (getNext()) {
           // Take time from row 0 in subset.
           double mstime = ROScalarColumn<double>(itsIter.table(), "TIME")(0);
           // Skip time slot and give warning if MS data is not in time order.
@@ -240,23 +283,21 @@ namespace LOFAR {
           } else {
             // Use the time slot if near or < nexttime, but > starttime.
             // In this way we cater for irregular times in some WSRT MSs.
-            if (nearAbs(mstime, itsNextTime, itsTimeTolerance)) {
-              useIter = true;
-              break;
-            } else if (mstime > itsFirstTime  &&  mstime < itsNextTime) {
+            if (nearAbs(mstime, itsNextTime, itsTimeTolerance)  ||
+                (mstime > itsFirstTime  &&  mstime < itsNextTime)) {
               itsFirstTime -= itsNextTime-mstime;
               itsNextTime = mstime;
-              useIter = true;
               break;
             }
             if (mstime > itsNextTime) {
               // A time slot seems to be missing; insert one.
+              // The next time no read should be done.
+              itsSkipRead = true;
               break;
             }
           }
           // Skip this time slot.
           itsLastMSTime = mstime;
-          itsIter.next();
         }
         // Stop if at the end.
         if (itsNextTime > itsLastTime  &&  !near(itsNextTime, itsLastTime)) {
@@ -265,7 +306,7 @@ namespace LOFAR {
         // Fill the buffer.
         itsBuffer.setTime (itsNextTime);
         ///cout << "read time " <<itsBuffer.getTime() - 4472025855.0<<endl;
-        if (!useIter) {
+        if (itsSkipRead) {
           // Need to insert a fully flagged time slot.
           itsBuffer.setRowNrs (Vector<uint>());
           itsBuffer.setExposure (itsTimeInterval);
@@ -329,7 +370,6 @@ namespace LOFAR {
           }
           itsLastMSTime = itsNextTime;
           itsNrRead++;
-          itsIter.next();
         }
         ASSERTSTR (itsBuffer.getFlags().shape()[2] == int(itsNrBl),
                    "#baselines is not the same for all time slots in the MS");
@@ -375,6 +415,11 @@ namespace LOFAR {
     void MSReader::show (std::ostream& os) const
     {
       os << "MSReader" << std::endl;
+      showParm (os, itsSelMS.nrow() / getInfo().nbaselines());
+    }
+
+    void MSReader::showParm (std::ostream& os, uint ntimes) const
+    {
       os << "  input MS:       " << itsMSName << std::endl;
       if (itsMS.isNull()) {
         os << "    *** MS does not exist ***" << std::endl;
@@ -390,7 +435,7 @@ namespace LOFAR {
         os << "  ncorrelations:  " << getInfo().ncorr() << std::endl;
         uint nrbl = getInfo().nbaselines();
         os << "  nbaselines:     " << nrbl << std::endl;
-        os << "  ntimes:         " << itsSelMS.nrow() / nrbl << std::endl;
+        os << "  ntimes:         " << ntimes << std::endl;
         os << "  time interval:  " << getInfo().timeInterval() << std::endl;
         os << "  DATA column:    " << itsDataColName;
         if (itsMissingData) {
@@ -416,6 +461,11 @@ namespace LOFAR {
       os << "  ";
       FlagCounter::showPerc1 (os, itsTimer.getElapsed(), duration);
       os << " MSReader" << endl;
+    }
+
+    bool MSReader::canUpdateMS() const
+    {
+      return true;
     }
 
     void MSReader::prepare (double& firstTime, double& lastTime,
@@ -612,7 +662,7 @@ namespace LOFAR {
 
     void MSReader::skipFirstTimes()
     {
-      while (!itsIter.pastEnd()) {
+      while (getNext()) {
         // Take time from row 0 in subset.
         double mstime = ROScalarColumn<double>(itsIter.table(), "TIME")(0);
         // Skip time slot and give warning if MS data is not in time order.
@@ -645,8 +695,9 @@ namespace LOFAR {
         }
         // Skip this time slot.
         itsLastMSTime = mstime;
-        itsIter.next();
       }
+      // First time slot to process has already been read, so don't read again.
+      itsSkipRead = true;
     }
 
     void MSReader::calcUVW (double time, DPBuffer& buf)

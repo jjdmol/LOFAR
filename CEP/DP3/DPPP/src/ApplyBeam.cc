@@ -28,7 +28,6 @@
 //#include <iomanip>
 #include <Common/ParameterSet.h>
 #include <Common/Timer.h>
-#include <Common/StringUtil.h>
 #include <Common/OpenMP.h>
 #include <DPPP/DPInfo.h>
 #include <DPPP/FlagCounter.h>
@@ -54,31 +53,14 @@ namespace LOFAR {
   namespace DPPP {
 
     ApplyBeam::ApplyBeam(DPInput* input, const ParameterSet& parset,
-                     const string& prefix, bool substep)
+                     const string& prefix)
         :
           itsInput(input),
           itsName(prefix),
+          itsInvert(parset.getBool(prefix + "invert", true)),
           itsUseChannelFreq(parset.getBool(prefix + "usechannelfreq", true)),
           itsDebugLevel(parset.getInt(prefix + "debuglevel", 0))
     {
-      // only read 'invert' parset key if it is a separate step
-      // if applybeam is called from gaincal/predict, the invert key should always be false
-      if (substep) {
-        itsInvert=false;
-      } else {
-        itsInvert=parset.getBool(prefix + "invert", true);
-      }
-      string mode=toLower(parset.getString(prefix + "beammode","default"));
-      ASSERT (mode=="default" || mode=="array_factor" || mode=="element");
-      if (mode=="default") {
-        itsMode=DEFAULT;
-      } else if (mode=="array_factor") {
-        itsMode=ARRAY_FACTOR;
-      } else if (mode=="element") {
-        itsMode=ELEMENT;
-      } else {
-        THROW(Exception, "Beammode should be DEFAULT, ARRAY_FACTOR or ELEMENT");
-      }
     }
 
     ApplyBeam::ApplyBeam()
@@ -127,13 +109,6 @@ namespace LOFAR {
     void ApplyBeam::show(std::ostream& os) const
     {
       os << "ApplyBeam " << itsName << endl;
-      os << "  mode:              ";
-      if (itsMode==DEFAULT)
-        os<<"default";
-      else if (itsMode==ARRAY_FACTOR)
-        os<<"array_factor";
-      else os<<"element";
-      os << endl;
       os << "  use channelfreq:   " << boolalpha << itsUseChannelFreq << endl;
       os << "  invert:            " << boolalpha << itsInvert << endl;
     }
@@ -170,7 +145,7 @@ namespace LOFAR {
       StationResponse::vector3r_t srcdir = refdir;
       applyBeam(info(), time, data, srcdir, refdir, tiledir,
                 itsAntBeamInfo[thread], itsBeamValues[thread],
-                itsUseChannelFreq, itsInvert, itsMode);
+                itsUseChannelFreq, itsInvert);
 
       itsTimer.stop();
       getNextStep()->process(itsBuffer);
