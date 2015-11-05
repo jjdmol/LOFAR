@@ -10,12 +10,7 @@
 PROTON_SOURCE="http://svn.apache.org/repos/asf/qpid/proton/branches/0.8"
 QPID_SOURCE="http://svn.apache.org/repos/asf/qpid/branches/0.30/qpid/"
 
-SOURCE_DIR=`dirname "$0"`
-echo "$SOURCE_DIR"
-exit 1
-
-QPID_INSTALLDIR=/opt/qpid-0.30
-QPID_SYMLINK=/opt/qpid
+QPID_INSTALLDIR=/localhome/lofar/qpid
 
 # ********************************************
 #  Install latest PROTON & QPID
@@ -81,9 +76,6 @@ pushd qpid/tools >/dev/null
 ./setup.py build > setup_build.log
 ./setup.py install --home=$QPID_INSTALLDIR > setup_install.log
 
-# Go back to original dir
-popd >/dev/null
-
 echo "  Creating .profile..."
 PYTHONVERSION=`python -c 'import platform; print "%s.%s" % platform.python_version_tuple()[0:2]'`
 cat > $QPID_INSTALLDIR/.profile << EOF
@@ -92,12 +84,7 @@ export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:$QPID_INSTALLDIR/lib:$QPID_INSTALLDIR/l
 export PYTHONPATH=\$PYTHONPATH:$QPID_INSTALLDIR/lib/python/:$QPID_INSTALLDIR/lib/python$PYTHONVERSION/site-packages/
 EOF
 
-echo "  Installing configuration files..."
-cp $SOURCE_DIR/qpidd.conf $QPID_INSTALLDIR/etc/qpid/
-
-echo "  Creating symlink $QPID_SYMLINK..."
-ln -sfT $QPID_INSTALLDIR $QPID_SYMLINK
-
 echo "  Cleaning up..."
+popd >/dev/null
 rm -rf "$QPID_BUILDDIR"
 

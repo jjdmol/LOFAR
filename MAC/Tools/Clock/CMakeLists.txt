@@ -4,4 +4,4 @@ if(HAVE_SYS_TIMEPPS_H)
   lofar_add_sbin_program(ppsctl ppsctl.c)
 endif(HAVE_SYS_TIMEPPS_H)
 
-lofar_add_sbin_scripts(plotclock)
+install(PROGRAMS plotclock DESTINATION sbin)

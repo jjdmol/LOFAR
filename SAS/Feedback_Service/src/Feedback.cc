@@ -165,8 +165,6 @@ GCFEvent::TResult Feedback::operational_state(GCFEvent& event, GCFPortInterface&
 			GCFScheduler::instance()->stop();		// TODO better solution
 		}
 
-		MessageContent content(msg.qpidMsg());
-
 		if (!itsOTDBconn->connect()) {
 			LOG_ERROR("Lost connection with OTDB, starting reconnect cycle");
 			delete itsOTDBconn;
@@ -177,7 +175,7 @@ GCFEvent::TResult Feedback::operational_state(GCFEvent& event, GCFPortInterface&
 		}
 
 		// Yeah, still connected.
-		if (passKVpairsToOTDB(atoi(content.sasid.get().c_str()), content.payload.get())) {
+		if (passKVpairsToOTDB(atoi(msg.sasid().c_str()), msg.payload())) {
 			itsMsgQueue->ack(msg);
 			LOG_DEBUG("Message processed successful");
 		}
