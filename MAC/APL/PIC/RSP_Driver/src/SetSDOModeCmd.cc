@@ -29,7 +29,7 @@
 
 #include "StationSettings.h"
 #include "SetSDOModeCmd.h"
-//#include "Sequencer.h"
+#include "Sequencer.h"
 #include "Cache.h"
 
 using namespace blitz;

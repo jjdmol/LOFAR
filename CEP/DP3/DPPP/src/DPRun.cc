@@ -41,7 +41,6 @@
 #include <DPPP/StationAdder.h>
 #include <DPPP/ScaleData.h>
 #include <DPPP/ApplyCal.h>
-#include <DPPP/Predict.h>
 #include <DPPP/GainCal.h>
 #include <DPPP/Filter.h>
 #include <DPPP/Counter.h>
@@ -120,8 +119,6 @@ namespace LOFAR {
         checkparset = parset.getBool ("checkparset") ? 1:0;
       }
 
-      bool showcounts = parset.getBool ("showcounts", true);
-
       // Create the steps and fill their DPInfo objects.
       DPStep::ShPtr firstStep = makeSteps (parset);
       // Show the steps.
@@ -181,14 +178,12 @@ namespace LOFAR {
       lastStep->addToMS("");
 
       // Show the counts where needed.
-      if (showcounts) {
       step = firstStep;
-        while (step) {
-          ostringstream os;
-          step->showCounts (os);
-          DPLOG_INFO (os.str(), true);
-          step = step->getNextStep();
-        }
+      while (step) {
+        ostringstream os;
+        step->showCounts (os);
+        DPLOG_INFO (os.str(), true);
+        step = step->getNextStep();
       }
       // Show the overall timer.
       nstimer.stop();
@@ -308,8 +303,6 @@ namespace LOFAR {
           step = DPStep::ShPtr(new Filter (reader, parset, prefix));
         } else if (type == "applycal"  ||  type == "correct") {
           step = DPStep::ShPtr(new ApplyCal (reader, parset, prefix));
-        } else if (type == "predict") {
-          step = DPStep::ShPtr(new Predict (reader, parset, prefix));
         } else if (type == "applybeam") {
           step = DPStep::ShPtr(new ApplyBeam (reader, parset, prefix));
         } else if (type == "gaincal"  ||  type == "calibrate") {

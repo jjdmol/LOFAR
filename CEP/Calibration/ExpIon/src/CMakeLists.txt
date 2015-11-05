@@ -2,11 +2,7 @@
 
 include(PythonInstall)
 
-lofar_add_bin_scripts(
-  calibrate-ion
-  readms-part.sh
-  readms-part.py
-  parmdbwriter.py)
+install(PROGRAMS calibrate-ion readms-part.sh readms-part.py parmdbwriter.py DESTINATION bin)
 
 lofar_add_library(_baselinefitting MODULE baselinefitting.cc)
 
