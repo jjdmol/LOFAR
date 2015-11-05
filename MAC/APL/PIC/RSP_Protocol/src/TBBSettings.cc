@@ -39,11 +39,17 @@ size_t TBBSettings::getSize() const
 size_t TBBSettings::pack  (char* buffer) const
 {
   size_t offset = 0;
-  return MSH_pack(buffer, offset, m_bandsel);
+  
+  MSH_pack(buffer, offset, m_bandsel);
+
+  return offset;
 }
 
 size_t TBBSettings::unpack(const char *buffer)
 {
   size_t offset = 0;
-  return MSH_unpack(buffer, offset, m_bandsel);
+
+  MSH_unpack(buffer, offset, m_bandsel);
+
+  return offset;
 }

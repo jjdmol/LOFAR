@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2015
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
-#include <MessageBus/MessageBus.h>
 #include <GCF/TM/GCF_Control.h>
 
 #include "Feedback.h"
@@ -39,8 +38,6 @@ int main(int argc, char* argv[])
 {
 	try {
 		GCFScheduler::instance()->init(argc, argv, "FeedbackService");
-    
-    MessageBus::init();
 
 		Feedback	fbTask;
 		fbTask.start(); 					// make initial transition

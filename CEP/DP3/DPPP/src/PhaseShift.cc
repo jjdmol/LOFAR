@@ -66,8 +66,7 @@ namespace LOFAR {
     {
       info() = infoIn;
       info().setNeedVisData();
-      info().setWriteData();
-      info().setMetaChanged();
+      info().setNeedWrite();
       // Default phase center is the original one.
       MDirection newDir(itsInput->getInfo().phaseCenter());
       ////      bool original = true;

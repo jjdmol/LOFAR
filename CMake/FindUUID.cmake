@@ -1,6 +1,6 @@
 # - Try to find libuuid: A library to generate UUIDs
 # Variables used by this module:
-#  UUID_ROOT_DIR     - UUID root directory
+#  UUID_ROOT_DIR     - QPID root directory
 # Variables defined by this module:
 #  UUID_FOUND        - system has UUID
 #  UUID_INCLUDE_DIR  - the UUID include directory (cached)

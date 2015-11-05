@@ -27,7 +27,6 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <blitz/array.h>
 
-#include "Sequencer.h"
 #include "StationSettings.h"
 #include "GetSplitterCmd.h"
 #include "UpdSplitterCmd.h"
@@ -81,10 +80,7 @@ void UpdSplitterCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
 //
 void UpdSplitterCmd::complete(CacheBuffer& cache)
 {
-	if (Sequencer::getInstance().isActive()) {
-        return;
-    }
-    // check if we need to continue
+	// check if we need to continue
 //	LOG_INFO_STR("itsSplitterOn=" << itsSplitterOn << ", cache.isSplitterActive=" << (cache.isSplitterActive() ? 1 : 0));
 	if (itsSplitterOn == (cache.isSplitterActive() ? 1 : 0)) {	// state didn't change?
 		return;

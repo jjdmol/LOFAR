@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2015
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@
 #include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Control.h>
 #include <OTDB/OTDBconnection.h>
-#include <MessageBus/FromBus.h>
+#include <MessageBus/MsgBus.h>
 
 // Avoid 'using namespace' in headerfiles
 

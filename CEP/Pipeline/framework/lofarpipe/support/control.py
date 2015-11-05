@@ -15,8 +15,10 @@ from lofarpipe.support.stateful import StatefulRecipe
 from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.xmllogging import get_active_stack
 from lofar.parameterset import parameterset
-import lofar.messagebus.messagebus as messagebus
-from lofar.messagebus.protocols import TaskFeedbackDataproducts, TaskFeedbackProcessing, TaskFeedbackState
+import lofar.messagebus.msgbus
+from lofar.messagebus.protocols.taskfeedbackdataproducts import TaskFeedbackDataproducts
+from lofar.messagebus.protocols.taskfeedbackprocessing import TaskFeedbackProcessing
+from lofar.messagebus.protocols.taskfeedbackstate import TaskFeedbackState
 
 #                                             Standalone Pipeline Control System
 # ------------------------------------------------------------------------------
@@ -55,7 +57,7 @@ class control(StatefulRecipe):
         """
 
         if self.feedback_method == "messagebus":
-          bus = messagebus.ToBus("lofar.task.feedback.processing")
+          bus = lofar.messagebus.msgbus.ToBus("lofar.task.feedback.processing")
           msg = TaskFeedbackProcessing(
             "lofarpipe.support.control",
             "",
@@ -74,7 +76,7 @@ class control(StatefulRecipe):
         """
 
         if self.feedback_method == "messagebus":
-          bus = messagebus.ToBus("lofar.task.feedback.dataproducts")
+          bus = lofar.messagebus.msgbus.ToBus("lofar.task.feedback.dataproducts")
           msg = TaskFeedbackDataproducts(
             "lofarpipe.support.control",
             "",
@@ -94,7 +96,7 @@ class control(StatefulRecipe):
         """
 
         if self.feedback_method == "messagebus":
-          bus = messagebus.ToBus("lofar.task.feedback.state")
+          bus = lofar.messagebus.msgbus.ToBus("lofar.task.feedback.state")
           msg = TaskFeedbackState(
             "lofarpipe.support.control",
             "",
@@ -114,15 +116,15 @@ class control(StatefulRecipe):
     def go(self):
         # Read the parset-file that was given as input argument
         try:
-            self.parset_file = os.path.abspath(self.inputs['args'][0])
+            parset_file = os.path.abspath(self.inputs['args'][0])
         except IndexError:
             return self.usage()
-        self.parset.adoptFile(self.parset_file)
+        self.parset.adoptFile(parset_file)
         # Set job-name to basename of parset-file w/o extension, if it's not
         # set on the command-line with '-j' or '--job-name'
         if not 'job_name' in self.inputs:
             self.inputs['job_name'] = (
-                os.path.splitext(os.path.basename(self.parset_file))[0]
+                os.path.splitext(os.path.basename(parset_file))[0]
             )
 
         # we can call our parent now that we have a job_name
@@ -134,7 +136,7 @@ class control(StatefulRecipe):
         except:
           self.feedback_method = "messagebus"
 
-        if self.feedback_method == "messagebus" and not messagebus.MESSAGING_ENABLED:
+        if self.feedback_method == "messagebus" and not lofar.messagebus.msgbus.enabled:
           self.logger.error("Feedback over messagebus requested, but messagebus support is not enabled or functional")
           return 1
 
@@ -166,12 +168,10 @@ class control(StatefulRecipe):
 
             # Emit process status
             self._send_feedback_status(1)
-            self.logger.error("LOFAR Pipeline finished unsuccesfully.");
             return 1
         else:
             # Emit process status
             self._send_feedback_status(0)
-            self.logger.info("LOFAR Pipeline finished succesfully.");
             return 0
         finally:
             # always print a xml stats file

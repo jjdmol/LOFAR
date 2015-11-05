@@ -44,11 +44,17 @@ size_t Latency::getSize() const
 size_t Latency::pack  (char* buffer) const
 {
   size_t offset = 0;
-  return MSH_pack(buffer, offset, itsLatency);
+  
+  MSH_pack(buffer, offset, itsLatency);
+
+  return offset;
 }
 
 size_t Latency::unpack(const char *buffer)
 {
   size_t offset = 0;
-  return MSH_unpack(buffer, offset, itsLatency);
+  
+  MSH_unpack(buffer, offset, itsLatency);
+
+  return offset;
 }

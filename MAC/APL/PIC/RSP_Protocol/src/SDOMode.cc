@@ -39,11 +39,17 @@ size_t SDOModeInfo::getSize() const
 size_t SDOModeInfo::pack  (char* buffer) const
 {
   size_t offset = 0;
-  return MSH_pack(buffer, offset, itsSDOModeInfo);
+
+  MSH_pack(buffer, offset, itsSDOModeInfo);
+
+  return offset;
 }
 
 size_t SDOModeInfo::unpack(const char *buffer)
 {
   size_t offset = 0;
-  return MSH_unpack(buffer, offset, itsSDOModeInfo);
+
+  MSH_unpack(buffer, offset, itsSDOModeInfo);
+
+  return offset;
 }

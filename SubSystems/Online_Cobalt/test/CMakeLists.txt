@@ -13,19 +13,15 @@ set(_tests
   tStatusFeedback
   tProductionParsets
   tstartBGL
-  )
+)
 
 foreach(_test ${_tests})
   lofar_add_test(${_test})
-  if(BUILD_TESTING)
-    set_tests_properties(${_test} PROPERTIES RUN_SERIAL ON)
-  endif(BUILD_TESTING)
+  set_tests_properties(${_test} PROPERTIES RUN_SERIAL ON)
 endforeach(_test ${_tests})
 
 lofar_add_test(tRTmetadataToFile DEPENDS tRTmetadata PVSSGateway_Stub Service_Broker)
-if(BUILD_TESTING)
-  set_tests_properties(tRTmetadataToFile PROPERTIES RUN_SERIAL ON)
-endif(BUILD_TESTING)
+set_tests_properties(tRTmetadataToFile PROPERTIES RUN_SERIAL ON)
 
 add_subdirectory(Correlator)
 add_subdirectory(Beamformer)

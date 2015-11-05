@@ -126,12 +126,6 @@ int SpectralWindow::rcumode() const
 	}
 }
 
-uint32 SpectralWindow::raw_rcumode() const
-{
-    LOG_DEBUG (formatString("rcumode(%06X)", m_rcucontrol));
-    return (m_rcucontrol);
-}
-
 //
 // print
 //
@@ -154,9 +148,9 @@ size_t SpectralWindow::getSize() const
 
 size_t SpectralWindow::pack(char* buffer) const
 {
-  size_t offset = 0;
+  uint32 offset = 0;
 
-  offset = MSH_pack(buffer, offset, m_name);
+  MSH_pack(buffer, offset, m_name);
   memcpy(buffer + offset, &m_sampling_freq, sizeof(m_sampling_freq));
   offset += sizeof(m_sampling_freq);
   memcpy(buffer + offset, &m_nyquist_zone, sizeof(m_nyquist_zone));
@@ -171,9 +165,9 @@ size_t SpectralWindow::pack(char* buffer) const
 
 size_t SpectralWindow::unpack(const char* buffer)
 {
-  size_t offset = 0;
+  uint32 offset = 0;
 
-  offset = MSH_unpack(buffer, offset, m_name);
+  MSH_unpack(buffer, offset, m_name);
   memcpy(&m_sampling_freq, buffer + offset, sizeof(m_sampling_freq));
   offset += sizeof(m_sampling_freq);
   memcpy(&m_nyquist_zone, buffer + offset, sizeof(m_nyquist_zone));
