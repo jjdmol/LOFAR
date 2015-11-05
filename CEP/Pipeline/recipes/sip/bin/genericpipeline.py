@@ -193,9 +193,8 @@ class GenericPipeline(control):
                 typeval = step.getString('type')
             except:
                 typeval = ''
-            adds = None
             if stepname in step_parset_obj:
-                adds = self._construct_step_parset(inputdict,
+                self._construct_step_parset(inputdict,
                                              step_parset_obj[stepname],
                                              resultdicts,
                                              step_parset_files[stepname],
@@ -204,8 +203,6 @@ class GenericPipeline(control):
             if kind_of_step == 'recipe':
                 if self.task_definitions.get(typeval, 'recipe') == 'executable_args':
                     inputdict['stepname'] = stepname
-                    if adds:
-                        inputdict.update(adds)
 
             self._construct_cmdline(inputargs, step, resultdicts)
 
@@ -359,8 +356,9 @@ class GenericPipeline(control):
 
             # breaking the loopstep
             # if the step has the keyword for loopbreaks assign the value
-            if activeloop[0] in resultdicts and resultdict is not None and 'break' in resultdict:
-                resultdicts[activeloop[0]]['break'] = resultdict['break']
+            if resultdict is not None and 'break' in resultdict:
+                if resultdict['break']:
+                    resultdicts[activeloop[0]]['break'] = resultdict['break']
 
     # *********************************************************************
     # build the inputs for the master recipes.
@@ -480,8 +478,7 @@ class GenericPipeline(control):
             if k == 'flags':
                 argsparset.remove(k)
         argsparset.writeFile(filename)
-        return additional
-        #inoutdict.update(additional)
+        inoutdict.update(additional)
 
     def _get_parset_dicts(self):
         return {}

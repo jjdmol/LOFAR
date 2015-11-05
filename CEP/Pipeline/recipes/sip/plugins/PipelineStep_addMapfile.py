@@ -1,7 +1,7 @@
 import os
 from lofarpipe.support.data_map import DataMap
 from lofarpipe.support.data_map import DataProduct
-from lofarpipe.support.parset import Parset
+
 
 # mandatory arguments:
 # cmdline for type of mapfile creation
@@ -125,10 +125,8 @@ def _create_mapfile_pythonlist(folder):
     return maps
 
 def _create_mapfile_from_parset(parset, identifier):
-    pars = Parset()
-    pars.adoptFile(parset)
-    dps = pars.makeSubset(
-        pars.fullModuleName('DataProducts') + '.'
+    dps = parset.makeSubset(
+        parset.fullModuleName('DataProducts') + '.'
     )
     datamap = DataMap([
         tuple(os.path.join(location, filename).split(':')) + (skip,)
