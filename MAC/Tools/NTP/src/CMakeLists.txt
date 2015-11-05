@@ -1,3 +1,3 @@
 # $Id$
 
-lofar_add_sbin_scripts(resetNTPcoords)
+install(PROGRAMS resetNTPcoords DESTINATION sbin)

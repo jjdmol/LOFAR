@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
-#include <MessageBus/MessageBus.h>
+#include <MessageBus/MsgBus.h>
 
 #include "MACScheduler.h"
 
