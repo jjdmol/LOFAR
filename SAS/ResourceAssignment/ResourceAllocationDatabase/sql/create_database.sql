@@ -13,9 +13,26 @@
 -- USE resourceassignment;
 
 BEGIN;
-SET CONSTRAINTS ALL DEFERRED;
 
+-- This is insanity, but will hopefully work
+DROP TABLE IF EXISTS resource_group_availability;
+DROP TABLE IF EXISTS resource_availability;
+DROP TABLE IF EXISTS resource_capacity;
+DROP TABLE IF EXISTS resource_claim;
+DROP TABLE IF EXISTS resource_claim_status;
+DROP TABLE IF EXISTS task;
+DROP TABLE IF EXISTS specification;
+DROP TABLE IF EXISTS task_type;
+DROP TABLE IF EXISTS task_status;
+DROP TABLE IF EXISTS resource_group_to_resource_group;
+DROP TABLE IF EXISTS resource_to_resource_group;
+DROP TABLE IF EXISTS resource_group;
+DROP TABLE IF EXISTS resource_group_type;
+DROP TABLE IF EXISTS resource;
+DROP TABLE IF EXISTS resource_type;
 DROP TABLE IF EXISTS unit;
+-- I can not get this to do something useful instead: SET CONSTRAINTS ALL DEFERRED;
+
 CREATE TABLE unit (
   id serial NOT NULL,
   units text NOT NULL,
@@ -24,7 +41,6 @@ CREATE TABLE unit (
 ALTER TABLE unit
   OWNER TO renting;
 
-DROP TABLE IF EXISTS resource_type;
 CREATE TABLE resource_type (
   id serial NOT NULL,
   name text NOT NULL,
@@ -34,7 +50,6 @@ CREATE TABLE resource_type (
 ALTER TABLE resource_type
   OWNER TO renting;
 
-DROP TABLE IF EXISTS resource;
 CREATE TABLE resource (
   id serial NOT NULL,
   name text NOT NULL,
@@ -44,7 +59,6 @@ CREATE TABLE resource (
 ALTER TABLE resource
   OWNER TO renting;
 
-DROP TABLE IF EXISTS resource_group_type;
 CREATE TABLE resource_group_type (
   id serial NOT NULL,
   name text NOT NULL,
@@ -53,7 +67,6 @@ CREATE TABLE resource_group_type (
 ALTER TABLE resource_group_type
   OWNER TO renting;
 
-DROP TABLE IF EXISTS resource_group;
 CREATE TABLE resource_group (
   id serial NOT NULL,
   name text NOT NULL,
@@ -63,7 +76,6 @@ CREATE TABLE resource_group (
 ALTER TABLE resource_group
   OWNER TO renting;
 
-DROP TABLE IF EXISTS resource_to_resource_group;
 CREATE TABLE resource_to_resource_group (
   id serial NOT NULL,
   child_id integer NOT NULL REFERENCES resource DEFERRABLE INITIALLY IMMEDIATE,
@@ -73,7 +85,6 @@ CREATE TABLE resource_to_resource_group (
 ALTER TABLE resource_to_resource_group
   OWNER TO renting;
 
-DROP TABLE IF EXISTS resource_group_to_resource_group;
 CREATE TABLE resource_group_to_resource_group (
   id serial NOT NULL,
   child_id integer NOT NULL REFERENCES resource_group DEFERRABLE INITIALLY IMMEDIATE,
@@ -83,7 +94,6 @@ CREATE TABLE resource_group_to_resource_group (
 ALTER TABLE resource_group_to_resource_group
   OWNER TO renting;
 
-DROP TABLE IF EXISTS task_status;
 CREATE TABLE task_status (
   id serial NOT NULL,
   name text NOT NULL,
@@ -92,7 +102,6 @@ CREATE TABLE task_status (
 ALTER TABLE task_status
   OWNER TO renting;
 
-DROP TABLE IF EXISTS task_type;
 CREATE TABLE task_type (
   id serial NOT NULL,
   name text NOT NULL,
@@ -101,7 +110,6 @@ CREATE TABLE task_type (
 ALTER TABLE task_type
   OWNER TO renting;
 
-DROP TABLE IF EXISTS specification;
 CREATE TABLE specification (
   id serial NOT NULL,
   content text,
@@ -110,7 +118,6 @@ CREATE TABLE specification (
 ALTER TABLE specification
   OWNER TO renting;
 
-DROP TABLE IF EXISTS task;
 CREATE TABLE task (
   id serial NOT NULL,
   mom_id integer,
@@ -123,7 +130,6 @@ CREATE TABLE task (
 ALTER TABLE task
   OWNER TO renting;
 
-DROP TABLE IF EXISTS resource_claim_status;
 CREATE TABLE resource_claim_status (
   id serial NOT NULL,
   name text NOT NULL,
@@ -132,7 +138,6 @@ CREATE TABLE resource_claim_status (
 ALTER TABLE resource_claim_status
   OWNER TO renting;
 
-DROP TABLE IF EXISTS resource_claim;
 CREATE TABLE resource_claim (
   id serial NOT NULL,
   resource_id integer NOT NULL REFERENCES resource DEFERRABLE INITIALLY IMMEDIATE,
@@ -149,7 +154,6 @@ CREATE TABLE resource_claim (
 ALTER TABLE resource_claim
   OWNER TO renting;
 
-DROP TABLE IF EXISTS resource_capacity;
 CREATE TABLE resource_capacity (
   id serial NOT NULL,
   resource_id integer NOT NULL REFERENCES resource DEFERRABLE INITIALLY IMMEDIATE,
@@ -160,7 +164,6 @@ CREATE TABLE resource_capacity (
 ALTER TABLE resource_capacity
   OWNER TO renting;
 
-DROP TABLE IF EXISTS resource_availability;
 CREATE TABLE resource_availability (
   id serial NOT NULL,
   resource_id integer NOT NULL REFERENCES resource DEFERRABLE INITIALLY IMMEDIATE,
@@ -170,7 +173,6 @@ CREATE TABLE resource_availability (
 ALTER TABLE resource_availability
   OWNER TO renting;
 
-DROP TABLE IF EXISTS resource_group_availability;
 CREATE TABLE resource_group_availability (
   id serial NOT NULL,
   resource_group_id integer NOT NULL REFERENCES resource_group DEFERRABLE INITIALLY IMMEDIATE,
