@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -55,9 +55,9 @@ private:
 
 	friend class RCUResultRead;
 
-	static const int PROTOCOL_WRITE_SIZE = 15;
+	static const int PROTOCOL_WRITE_SIZE = 10;
 	static const int PROTOCOL_READ_SIZE  = 4;
-	static const int RESULT_WRITE_SIZE	 = 7; 
+	static const int RESULT_WRITE_SIZE	 = 6; 
 	static const int RESULT_READ_SIZE  	 = 5; 
 
 	// construct i2c sequence

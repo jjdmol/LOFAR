@@ -39,64 +39,29 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    Kernel::Parameters::Parameters(const std::string &name) :
-      name(name),
+    Kernel::Parameters::Parameters() :
       dumpBuffers(false)
     {
     }
-
 
     Kernel::~Kernel()
     {
     }
 
-
     Kernel::Kernel(const gpu::Stream& stream, 
-                   const Buffers &buffers,
-                   const Parameters &params)
-      : 
-      itsCounter(stream.getContext(), params.name),
-      itsStream(stream),
-      itsBuffers(buffers),
-      itsParameters(params)
-    {
-    }
-
-    void Kernel::enqueue(const BlockID &blockId)
-    {
-      // record duration of last invocation (or noop
-      // if there was none)
-      itsCounter.recordStart(itsStream);
-      launch();
-      itsCounter.recordStop(itsStream);
-
-      if (itsParameters.dumpBuffers && blockId.block >= 0) {
-        itsStream.synchronize();
-        dumpBuffers(blockId);
-      }
-    }
-
-    void Kernel::dumpBuffers(const BlockID &blockId) const
-    {
-      dumpBuffer(itsBuffers.output,
-                 str(boost::format(itsParameters.dumpFilePattern) %
-                     blockId.globalSubbandIdx %
-                     blockId.block));
-    }
-
-
-    CompiledKernel::CompiledKernel(
-                   const gpu::Stream& stream, 
                    const gpu::Function& function,
                    const Buffers &buffers,
                    const Parameters &params)
       : 
-      Kernel(stream, buffers, params),
       gpu::Function(function),
-      maxThreadsPerBlock(getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK))
+      itsCounter(_context),
+      maxThreadsPerBlock(function.getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK)),
+      itsStream(stream),
+      itsBuffers(buffers),
+      itsParameters(params)
     {
       LOG_INFO_STR(
-        "Function " << name() << ":" << 
+        "Function " << function.name() << ":" << 
         "\n  nr. of registers used : " <<
         getAttribute(CU_FUNC_ATTRIBUTE_NUM_REGS) <<
         "\n  nr. of bytes of shared memory used (static) : " <<
@@ -104,21 +69,9 @@ namespace LOFAR
       );
     }
 
-
-    CompiledKernel::~CompiledKernel()
-    {
-    }
-
-
-    void CompiledKernel::launch() const
-    {
-      itsStream.launchKernel(*this, itsGridDims, itsBlockDims);
-    }
-
-
-    void CompiledKernel::setEnqueueWorkSizes(gpu::Grid globalWorkSize, 
-                                             gpu::Block localWorkSize,
-                                             string* errorStrings)
+    void Kernel::setEnqueueWorkSizes(gpu::Grid globalWorkSize, 
+                                     gpu::Block localWorkSize,
+                                     string* errorStrings)
     {
       const gpu::Device device(_context.getDevice());
       gpu::Grid grid;
@@ -183,7 +136,7 @@ namespace LOFAR
       itsBlockDims = localWorkSize;
     }
 
-    unsigned CompiledKernel::getNrBlocksPerMultiProc(unsigned dynSharedMemBytes) const
+    unsigned Kernel::getNrBlocksPerMultiProc(unsigned dynSharedMemBytes) const
     {
       // See NVIDIA's CUDA_Occupancy_Calculator.xls
       // TODO: Take warp allocation granularity into account. (Or only use a multiple of 32.)
@@ -198,8 +151,7 @@ namespace LOFAR
         case 1:
         case 2:  maxBlocksPerMultiProc =  8; break;
         case 3:  maxBlocksPerMultiProc = 16; break;
-        case 5:  maxBlocksPerMultiProc = 32; break;
-        default: maxBlocksPerMultiProc = 32; break; // guess; unknown for future hardware
+        default: maxBlocksPerMultiProc = 16; break; // guess; unknown for future hardware
       }
       factor = maxBlocksPerMultiProc;
 
@@ -225,10 +177,8 @@ namespace LOFAR
           unsigned nrRegsPerWarp = nrRegsPerThread * warpSize;
           unsigned regsGranularity;
           switch (computeCapMajor) {
-            // case 1 is dealt with above under the 'if'
-            case 2:  regsGranularity = 64;  break;
-            case 3:
-            case 5:  regsGranularity = 256; break;
+            case 2:  regsGranularity = 128; break;
+            case 3:  regsGranularity = 256; break;
             default: regsGranularity = 256; break; // guess; unknown for future hardware
           }
           nrRegsPerWarp = (nrRegsPerWarp + regsGranularity - 1) & ~(regsGranularity - 1); // assumes regsGranularity is a pow of 2
@@ -248,8 +198,7 @@ namespace LOFAR
         switch (computeCapMajor) {
           case 1:  shMemGranularity = 512; break;
           case 2:  shMemGranularity = 128; break;
-          case 3:
-          case 5:  shMemGranularity = 256; break;
+          case 3:  shMemGranularity = 256; break;
           default: shMemGranularity = 256; break; // guess; unknown for future hardware
         }
         shMem = (shMem + shMemGranularity - 1) & ~(shMemGranularity - 1); // assumes shMemGranularity is a pow of 2
@@ -262,7 +211,7 @@ namespace LOFAR
       return factor;
     }
 
-    double CompiledKernel::predictMultiProcOccupancy(unsigned dynSharedMemBytes) const
+    double Kernel::predictMultiProcOccupancy(unsigned dynSharedMemBytes) const
     {
       const gpu::Device device(_context.getDevice());
       //const unsigned nrMPs = device.getMultiProcessorCount();
@@ -278,6 +227,31 @@ namespace LOFAR
       unsigned maxNrWarpsPerMP = maxThreadsPerMP / warpSize;
 
       return static_cast<double>(nrWarps) / maxNrWarpsPerMP;
+    }
+
+    void Kernel::enqueue(const BlockID &blockId) const
+    {
+      itsStream.recordEvent(itsCounter.start);
+      itsStream.launchKernel(*this, itsGridDims, itsBlockDims);
+      itsStream.recordEvent(itsCounter.stop);
+
+      if (itsParameters.dumpBuffers && blockId.block >= 0) {
+        itsStream.synchronize();
+        dumpBuffers(blockId);
+      }
+    }
+
+    void Kernel::dumpBuffers(const BlockID &blockId) const
+    {
+      dumpBuffer(itsBuffers.output,
+                 str(boost::format(itsParameters.dumpFilePattern) %
+                     blockId.globalSubbandIdx %
+                     blockId.block));
+    }
+
+    PerformanceCounter &Kernel::getCounter()
+    {
+      return itsCounter;
     }
 
   }

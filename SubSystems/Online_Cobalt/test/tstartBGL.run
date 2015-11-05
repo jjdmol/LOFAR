@@ -59,6 +59,8 @@ echo "Test 5: normal run"
 echo "        (expects success)"
 echo "***************************"
 # Add the connection information for this test
+echo "Cobalt.Feedback.host=localhost" >> tstartBGL.in_parset
+echo "Cobalt.Feedback.remotePath=$LOFARROOT/var/run" >> tstartBGL.in_parset
 echo "Cobalt.FinalMetaDataGatherer.host=localhost" >> tstartBGL.in_parset
 startBGL.sh 1 2 3 tstartBGL.in_parset 1000 || error "startBGL.sh failed"
 
@@ -69,28 +71,16 @@ sleep 1
 
 # PID file must be gone after 30s
 TIMEOUT=30
-while [ "$TIMEOUT" -gt 0 -a -e $LOFARROOT/var/run/rtcp-1000.pid ]
+while [ "$TIMEOUT" -gt 0 && -e $LOFARROOT/var/run/rtcp-1000.pid ]
 do
   sleep 1
   TIMEOUT=$((TIMEOUT - 1))
 done
 
-# PID file must NOT be present
-[ -e $LOFARROOT/var/run/rtcp-1000.pid ] && error "Found lingering $LOFARROOT/var/run/rtcp-1000.pid"
+[ -e $LOFARROOT/var/run/rtcp-1000.pid ] || error "Found lingering $LOFARROOT/var/run/rtcp-1000.pid"
 
 # Log file must be present
 [ -r $LOFARROOT/var/log/rtcp-1000.log ] || error "Cannot read $LOFARROOT/var/log/rtcp-1000.log"
-
-echo "***************************"
-echo "Test 6: stop a run"
-echo "        (expects success)"
-echo "***************************"
-# Add the connection information for this test
-echo "Cobalt.FinalMetaDataGatherer.host=localhost" >> tstartBGL.in_parset
-
-# Run forever
-echo "Observation.stopTime=2100-01-01 00:00:00" >> tstartBGL.in_parset
-startBGL.sh 1 2 3 tstartBGL.in_parset 1000 || error "startBGL.sh failed"
 
 # We expect rtcp to still run, because it takes several
 # seconds to initialise. If rtcp is already done, stopBGL.sh
@@ -103,19 +93,4 @@ startBGL.sh 1 2 3 tstartBGL.in_parset 1000 || error "startBGL.sh failed"
 #   - if rtcp crashes, stopBGL.sh will error
 #   - if stopBGL.sh malfunctions, rtcp will linger
 stopBGL.sh 1 1000 || error "stopBGL.sh failed"
-
-# PID file must be gone after 30s
-TIMEOUT=30
-while [ "$TIMEOUT" -gt 0 -a -e $LOFARROOT/var/run/rtcp-1000.pid ]
-do
-  sleep 1
-  TIMEOUT=$((TIMEOUT - 1))
-done
-
-# PID file must NOT be present
-[ -e $LOFARROOT/var/run/rtcp-1000.pid ] && error "Found lingering $LOFARROOT/var/run/rtcp-1000.pid"
-
-# If we get here, everything went ok. Clear any error of the last command we executed.
-exit 0
-
 

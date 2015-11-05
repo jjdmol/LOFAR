@@ -1,5 +1,5 @@
 //# Parset.h: class/struct that holds the Parset information
-//# Copyright (C) 2008-2015  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -47,10 +47,6 @@ namespace LOFAR
 
     enum StokesType { STOKES_I = 0, STOKES_IQUV, STOKES_XXYY, INVALID_STOKES = -1 };
 
-    StokesType stokesType( const std::string &name );
-    size_t nrStokes( StokesType type );
-    std::string stokesType( StokesType type );
-
     // All settings relevant for an observation (well, it should become that,
     // we don't copy all Parset values yet!).
  
@@ -69,16 +65,6 @@ namespace LOFAR
       //
       // key: Observation.ObsID
       unsigned observationID;
-
-      // The MoM observation number
-      //
-      // key: Observation.momID
-      unsigned momID;
-
-      // Command stream, or null: if not used
-      //
-      // key: Cobalt.commandStream
-      std::string commandStream;
 
       // Specified observation start time, in seconds since 1970.
       //
@@ -101,15 +87,13 @@ namespace LOFAR
       // The bandwidth of a single subband, in Hz
       double subbandWidth() const;
 
-      // The length of an input sample, in s
-      double sampleDuration() const;
-
       // The number of samples in one block of one subband.
       //
       // key: Cobalt.blockSize
       size_t blockSize;
 
-      size_t nrBlocks() const;
+      // Alias for blockSize
+      size_t nrSamplesPerSubband() const;
 
       // The number of seconds represented by each block.
       double blockDuration() const;
@@ -236,11 +220,6 @@ namespace LOFAR
       // length: len(OLAP.storageStationNames)
       std::vector<struct AntennaField> antennaFields;
 
-      // A list of the stations used in the observation
-      //
-      // key: Observation.VirtualInstrument.stationList
-      std::string rawStationList;
-
       ssize_t antennaFieldIndex(const std::string &name) const;
 
       /*
@@ -268,8 +247,7 @@ namespace LOFAR
         // NIC(s) to bind to (comma seperated)
         //
         // E.g. "mlx4_0", "mlx4_1", "eth0", etc
-        std::string mpi_nic; // for MPI
-        std::string out_nic; // to outputProc
+        std::string nic;
       };
 
       std::vector<struct Node> nodes;
@@ -399,34 +377,21 @@ namespace LOFAR
         // The number of samples in one block of one channel.
         //
         // key: OLAP.CNProc.integrationSteps
-        size_t nrSamplesPerBlock;
+        size_t nrSamplesPerChannel;
 
         // The number of blocks to integrate to obtain the final
         // integration time.
         //
-        // If >1, the integration time is longer than the blockSize.
-        //
         // key: Cobalt.Correlator.nrBlocksPerIntegration
         size_t nrBlocksPerIntegration;
 
-        // The number of subblocks to produce per block.
-        //
-        // If >1, the integration time is shorter than the blockSize.
-        //
-        // key: Cobalt.Correlator.nrIntegrationsPerBlock
-        size_t nrIntegrationsPerBlock;
-
-        // The number of integrations that will be emitted between
-        // the start and end time of the observation. This is the
-        // expected number of CorrelatedData blocks written in the
-        // MeasurementSet.
-        size_t nrIntegrations;
-
-        // The number of samples to integrate over.
-        size_t nrSamplesPerIntegration() const;
-
         // The total integration time of all blocks, in seconds.
         double integrationTime() const;
+
+        // The number of blocks in this observation.
+        //
+        // set to: floor((stopTime - startTime) / integrationTime())
+        size_t nrBlocksPerObservation;
 
         struct Station {
           // The name of this (super)station
@@ -449,8 +414,6 @@ namespace LOFAR
         std::vector<struct Station> stations;
 
         struct File {
-          size_t streamNr;
-
           struct FileLocation location;
         };
 
@@ -538,6 +501,12 @@ namespace LOFAR
           // size: Observation.Beam[sap].nrTiedArrayBeams
           std::vector<struct TAB> TABs;
 
+          // Return the number of coherentstokes tabs, 
+          size_t nrCoherentTAB() const;
+
+          // Return the number of incoherentstokes tabs
+          size_t nrIncoherentTAB() const;
+
           // calculated at construction time
           size_t nrCoherent;
           size_t nrIncoherent;
@@ -550,11 +519,6 @@ namespace LOFAR
         //
         // size: len(Observation.nrBeams)
         std::vector<struct SAP> SAPs;
-
-        // Return whether there are any (in)coherent TABs specified in the
-        // observation. These functions are valid even if enabled == false.
-        bool anyCoherentTABs() const;
-        bool anyIncoherentTABs() const;
 
         size_t maxNrTABsPerSAP() const;
         size_t maxNrCoherentTABsPerSAP() const;
@@ -672,34 +636,70 @@ namespace LOFAR
 
       void                        write(Stream *) const;
 
-      double                      getRealStopTime() const;
+      unsigned                    observationID() const;
+      double                      startTime() const;
+      double                      stopTime() const;
+
+      unsigned    nrCorrelatedBlocks() const;
+      unsigned    nrBeamFormedBlocks() const;
+
+      unsigned                    nrStations() const;
       unsigned                    nrTabStations() const;
       unsigned                    nrMergedStations() const;
       std::vector<std::string>    mergedStationNames() const;
       unsigned                    nrBaselines() const;
+      unsigned                    nrCrossPolarisations() const;
+      unsigned                    clockSpeed() const; // Hz
+      double                      subbandBandwidth() const;
       double                      sampleDuration() const;
       unsigned                    nrBitsPerSample() const;
       size_t                      nrBytesPerComplexSample() const;
-      std::vector<double>         position(const string &name) const;
       MultiDimArray<double,2>     positions() const;
       std::string                 positionType() const;
       unsigned                    dedispersionFFTsize() const;
+      unsigned                    CNintegrationSteps() const;
+      unsigned                    IONintegrationSteps() const;
+      unsigned                    integrationSteps() const;
 
+      double                      CNintegrationTime() const;
+      double                      IONintegrationTime() const;
+      unsigned                    nrSamplesPerChannel() const;
+      unsigned                    nrSamplesPerSubband() const;
+      unsigned                    nrChannelsPerSubband() const;
+      double                      channelWidth() const;
+      bool                        delayCompensation() const;
+      bool                        correctClocks() const;
+      bool                        correctBandPass() const;
       std::vector<std::string>    allStationNames() const;
 
-      unsigned                    nrObsOutputTypes() const;
-      bool                        outputThisType(OutputType) const;
+      bool outputThisType(OutputType) const;
 
       unsigned nrStreams(OutputType, bool force = false) const;
       std::string getHostName(OutputType, unsigned streamNr) const;
       std::string getFileName(OutputType, unsigned streamNr) const;
       std::string getDirectoryName(OutputType, unsigned streamNr) const;
 
+      std::string                 bandFilter() const;
+      std::string                 antennaSet() const;
+
+      unsigned                    nrBeams() const;
+
+      size_t                      nrSubbands() const;
+
       double channel0Frequency( size_t subband, size_t nrChannels ) const;
+
+      bool                        realTime() const;
 
       std::vector<double>         itsStPositions;
 
       std::string                 PVSS_TempObsName() const;
+
+      // Return the global, non file specific, LTA feedback parameters.
+      // \note Details about the meaning of the different meta-data parameters
+      // can be found in the XSD that describes the Submission Information
+      // Package (sip) for the LTA.
+      // \see http://proposal.astron.nl/schemas/LTA-SIP.xsd
+      Parset                      getGlobalLTAFeedbackParameters() const;
 
     private:
       const std::string itsName;
@@ -712,6 +712,7 @@ namespace LOFAR
       void                        addPosition(string stName);
       double                      getTime(const std::string &name, const std::string &defaultValue) const;
 
+      std::vector<double>         position(const string &name) const;
       std::vector<double>         centroidPos(const string &stations) const;
 
       std::vector<struct ObservationSettings::FileLocation> getFileLocations(const std::string outputType) const;

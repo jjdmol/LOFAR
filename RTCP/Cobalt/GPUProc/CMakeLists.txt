@@ -2,11 +2,10 @@
 
 # Handle options USE_CUDA and USE_OPENCL.
 if(USE_CUDA AND NOT USE_OPENCL)
-  set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc MACIO BrokenAntennaInfo MessageBus)
+  # We need at least CMake 2.8 for CUDA support
+  cmake_minimum_required(VERSION 2.8)
 
-  # We use runtime compilation, except for 2 tests compiled by nvcc.
-  # nvcc passes our C++ flags to GCC for C compilation printing spurious warnings. Suppress.
-  set(CUDA_PROPAGATE_HOST_FLAGS OFF)
+  set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc MACIO BrokenAntennaInfo)
   lofar_find_package(CUDA 4.1 REQUIRED)
   lofar_find_package(CUDADriver REQUIRED)
 
@@ -38,7 +37,7 @@ if(USE_CUDA AND NOT USE_OPENCL)
   endif()
 
 elseif(USE_OPENCL AND NOT USE_CUDA)
-  set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc MACIO BrokenAntennaInfo OpenCL_FFT MessageBus)
+  set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc MACIO BrokenAntennaInfo OpenCL_FFT)
   lofar_find_package(OpenCL REQUIRED)
   add_definitions(-DUSE_OPENCL)
 else()
@@ -50,7 +49,7 @@ lofar_package(GPUProc 1.0 DEPENDS ${_gpuproc_deps})
 
 lofar_find_package(OpenMP REQUIRED)
 lofar_find_package(Boost REQUIRED)
-lofar_find_package(MPI REQUIRED)
+lofar_find_package(MPI)
 #lofar_find_package(ALGLIB)
 lofar_find_package(LibNuma)
 lofar_find_package(FFTW3 COMPONENTS single double threads REQUIRED)

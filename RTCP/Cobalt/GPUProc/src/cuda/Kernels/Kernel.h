@@ -34,13 +34,10 @@ namespace LOFAR
   namespace Cobalt
   {
     //# Forward declarations
+    class Parset;
     struct BlockID;
 
-    /*
-     * A wrapper for a generic kernel that can be executed on a GPU, and transforms
-     * data from an input buffer to an output buffer.
-     */
-    class Kernel
+    class Kernel : public gpu::Function
     {
     public:
       // Parameters that must be passed to the constructor of this Kernel class.
@@ -49,9 +46,7 @@ namespace LOFAR
       // or drop opt)
       struct Parameters
       {
-        Parameters(const std::string &name);
-
-        std::string name;
+        Parameters();
 
         bool dumpBuffers;
         std::string dumpFilePattern;
@@ -74,62 +69,22 @@ namespace LOFAR
         gpu::DeviceMemory output;
       };
 
-      void enqueue(const BlockID &blockId);
+      void enqueue(const BlockID &blockId) const;
 
-      // Warning: user has to make sure the Kernel is not running!
-      RunningStatistics getStats() { return itsCounter.getStats(); }
-
-    protected:
-      // Construct a kernel.
-      Kernel(const gpu::Stream& stream,
-             const Buffers &buffers,
-             const Parameters &params);
-
-      // Explicit destructor, because the implicitly generated one is public.
-      virtual ~Kernel();
+      PerformanceCounter &getCounter();
 
       // Performance counter for work done by this kernel
       PerformanceCounter itsCounter;
 
-      size_t nrOperations, nrBytesRead, nrBytesWritten;
-
-      // Launch the actual kernel
-      virtual void launch() const = 0;
-
-      // The GPU Stream associated with this kernel.
-      gpu::Stream itsStream;
-
-      // Keep a local (reference counted) copy of the buffers we're using
-      Buffers itsBuffers;
-
-      // The parameters as given to the constructor.
-      Parameters itsParameters;
-
-    private:
-      // Dump output buffer of a this kernel to disk. Use \a blockId to
-      // distinguish between the different blocks and subbands.
-      // \attention This method is for debugging purposes only, as it has a
-      // severe impact on performance.
-      void dumpBuffers(const BlockID &blockId) const;
-    };
-
-    /*
-     * A Kernel that is actually a CUDA JIT compiled function.
-     */
-    class CompiledKernel : public Kernel, public gpu::Function
-    {
     protected:
       // Construct a kernel.
-      CompiledKernel(
-             const gpu::Stream& stream,
+      Kernel(const gpu::Stream& stream,
              const gpu::Function& function,
              const Buffers &buffers,
              const Parameters &params);
 
       // Explicit destructor, because the implicitly generated one is public.
-      virtual ~CompiledKernel();
-
-      void launch() const;
+      ~Kernel();
 
       // Set the passed execution configuration if supported on the hardware
       // in the stream for this kernel.
@@ -153,13 +108,32 @@ namespace LOFAR
       // Note: Higher occupancy does not necessarily mean higher performance.
       double predictMultiProcOccupancy(unsigned dynSharedMemBytes = 0) const;
 
+
       const unsigned maxThreadsPerBlock;
+      size_t nrOperations, nrBytesRead, nrBytesWritten;
+
     private:
+      // The GPU Stream associated with this kernel.
+      gpu::Stream itsStream;
+
+      // Keep a local (reference counted) copy of the buffers we're using
+      Buffers itsBuffers;
+
+      // The parameters as given to the constructor.
+      Parameters itsParameters;
+
       // The grid of blocks dimensions for kernel execution.
       gpu::Grid itsGridDims;
 
       // The block of threads dimensions for kernel execution.
       gpu::Block itsBlockDims;
+
+
+      // Dump output buffer of a this kernel to disk. Use \a blockId to
+      // distinguish between the different blocks and subbands.
+      // \attention This method is for debugging purposes only, as it has a
+      // severe impact on performance.
+      void dumpBuffers(const BlockID &blockId) const;
     };
   }
 }

@@ -36,14 +36,14 @@ using namespace LOFAR::Cobalt;
 
 // Note: To compute (predicted) occupancy, we don't need to run any kernels.
 
-struct MyKernel : CompiledKernel {
+struct MyKernel : Kernel {
   MyKernel(const gpu::Stream& stream, const gpu::Module& module,
            const string& fname,
            const Buffers& buffers, const Parameters& parameters)
-  : CompiledKernel(stream, gpu::Function(module, fname), buffers, parameters) { }
+  : Kernel(stream, gpu::Function(module, fname), buffers, parameters) { }
 
   struct Parameters : Kernel::Parameters {
-    Parameters(const Parset& ps): Kernel::Parameters("MyKernel") { (void)ps; }
+    Parameters(const Parset& ps) { (void)ps; }
   };
 
   struct Buffers : Kernel::Buffers {
@@ -51,8 +51,8 @@ struct MyKernel : CompiledKernel {
   };
 
   // for the test, expose some protected members from Kernel
-  using CompiledKernel::setEnqueueWorkSizes;
-  using CompiledKernel::predictMultiProcOccupancy;
+  using Kernel::setEnqueueWorkSizes;
+  using Kernel::predictMultiProcOccupancy;
 };
 
 int blkLimit(MyKernel& kernel) {

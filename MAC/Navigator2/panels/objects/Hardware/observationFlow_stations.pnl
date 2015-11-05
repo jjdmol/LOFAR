@@ -255,6 +255,7 @@ void observationsCallback(string dp1, bool aTrig) {
   }
   if (selectedObservations) {
     observationsList= obsList;
+    DebugN(\"selectedObservations: \"+obsList);
   }
   connectObservations();
 }" 0

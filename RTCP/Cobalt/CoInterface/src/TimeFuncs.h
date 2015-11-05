@@ -23,7 +23,6 @@
 
 #include <ctime>
 #include <climits>
-#include <string>
 #include <sys/time.h>
 
 namespace LOFAR
@@ -56,11 +55,6 @@ namespace LOFAR
       // Provides (in)equality for timespecs
       bool operator==(const struct timespec &a, const struct timespec &b);
       bool operator!=(const struct timespec &a, const struct timespec &b);
-    }
-
-    namespace TimeDouble {
-      // Convert seconds to a string, with either second or millisecond precision
-      std::string toString(double seconds, bool milliseconds = true);
     }
   }
 }

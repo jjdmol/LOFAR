@@ -85,7 +85,7 @@ void read_rsp(Stream& is, ostream& os, unsigned bitMode, unsigned nrSubbands)
       }
       os << endl;
     }
-  } catch (EndOfStreamException&) { }
+  } catch (Stream::EndOfStreamException&) { }
 }
 
 int main()

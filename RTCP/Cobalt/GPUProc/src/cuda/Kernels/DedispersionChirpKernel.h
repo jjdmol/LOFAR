@@ -32,7 +32,7 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    class DedispersionChirpKernel : public CompiledKernel
+    class DedispersionChirpKernel : public Kernel
     {
     public:
       DedispersionChirpKernel(const Parset &ps,

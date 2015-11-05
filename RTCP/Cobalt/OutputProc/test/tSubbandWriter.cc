@@ -22,17 +22,14 @@
 
 #include <string>
 #include <cstdlib>
-#include <string>
 #include <omp.h>
-
+#include <UnitTest++.h>
 #include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
 
-#include <Stream/StreamFactory.h>
-#include <Stream/PortBroker.h>
 #include <CoInterface/CorrelatedData.h>
 #include <CoInterface/Stream.h>
 #include <OutputProc/SubbandWriter.h>
+#include <Stream/PortBroker.h>
 
 #include <MSLofar/FailedTileInfo.h>
 #include <tables/Tables/Table.h>
@@ -40,7 +37,8 @@
 #include <tables/Tables/ArrayColumn.h>
 #include <casa/Quanta/MVTime.h>
 
-#include <UnitTest++.h>
+#include <boost/lexical_cast.hpp>
+#include <string>
 
 using namespace std;
 using namespace LOFAR;
@@ -106,7 +104,7 @@ SUITE(SubbandWriter)
 
         SmartPtr<Stream> inputStream = createStream(sendDesc, false, 0);
 
-        CorrelatedData data(ps.nrMergedStations(), ps.settings.correlator.nrChannels, ps.settings.correlator.nrSamplesPerIntegration(), heapAllocator, 512);
+        CorrelatedData data(ps.nrMergedStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), heapAllocator, 512);
 
         for (size_t i = 0; i < data.visibilities.num_elements(); ++i) {
           *(data.visibilities.origin() + i) = complex<float>(i, 2*i);
@@ -120,7 +118,7 @@ SUITE(SubbandWriter)
     {
       FileStream f("tWriter.out_raw/table.f0data");
 
-      CorrelatedData data(ps.nrMergedStations(), ps.settings.correlator.nrChannels, ps.settings.correlator.nrSamplesPerIntegration(), heapAllocator, 512);
+      CorrelatedData data(ps.nrMergedStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), heapAllocator, 512);
 
       data.read(&f, true, 512);
 

@@ -67,12 +67,17 @@ int main(int argc, char *argv[])
   BeamFormerKernel::Parameters bfparams(ps);
   KernelFactory<BeamFormerKernel> factory(bfparams);
 
-  DeviceMemory
+  DeviceMemory devDelaysMemory(ctx, factory.bufferSize(BeamFormerKernel::BEAM_FORMER_DELAYS)),
     devBandPassCorrectedMemory(ctx, factory.bufferSize(BeamFormerKernel::INPUT_DATA)),
     devComplexVoltagesMemory(ctx, factory.bufferSize(BeamFormerKernel::OUTPUT_DATA));
+
+
+  BeamFormerKernel::Buffers buffers(devBandPassCorrectedMemory, 
+                                    devComplexVoltagesMemory,
+                                     devDelaysMemory);
   
   // kernel
-  auto_ptr<BeamFormerKernel> kernel(factory.create(stream, devBandPassCorrectedMemory, devComplexVoltagesMemory));
+  auto_ptr<BeamFormerKernel> kernel(factory.create(stream, buffers));
 
   float subbandFreq = 60e6f;
   unsigned sap = 0;

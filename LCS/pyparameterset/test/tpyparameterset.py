@@ -67,7 +67,7 @@ print ps.version("top")
 print ps.version()
 print "<<<"
 ps.add ("a.b", "7")
-ps.add ("a.b.lange_naam", "dit is nu een andere naam geworden zonder extra spaties aan het einde want die gaan verloren bij wegschrijven + teruglezen")
+ps.add ("a.b.lange_naam", "dit is nu een andere naam geworden met extra spaties aan het einde  ")
 ps.add ("a.b.c", "5")
 ps.add ("a.b.double", "3.1415926")
 ps.add ("a.b.bool", "true")
@@ -88,12 +88,3 @@ print pss.makeSubset('b.', 'aa.bb.').keys()
 print pss.makeSubset('b.').size()
 print pss.makeSubset('cc').keys()    # should be empty
 print len(pss.makeSubset('cc'))
-
-# Check str()
-print str(ps)
-
-# Check picking/unpickling
-import cPickle as pickle
-s = pickle.dumps(ps)
-ps2 = pickle.loads(s)
-assert str(ps) == str(ps2)

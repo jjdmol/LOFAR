@@ -32,18 +32,11 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    class BandPassCorrectionKernel : public CompiledKernel
+    class BandPassCorrectionKernel : public Kernel
     {
     public:
       static std::string theirSourceFile;
       static std::string theirFunction;
-
-      enum BufferType
-      {
-        INPUT_DATA,
-        OUTPUT_DATA,
-        BAND_PASS_CORRECTION_WEIGHTS
-      };
 
       // Parameters that must be passed to the constructor of the
       // BandPassCorrectionKernel class.
@@ -58,8 +51,27 @@ namespace LOFAR
         unsigned nrSamplesPerChannel;
 
         bool correctBandPass;
+      };
 
-        size_t bufferSize(BandPassCorrectionKernel::BufferType bufferType) const;
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA,
+        BAND_PASS_CORRECTION_WEIGHTS
+      };
+
+      // Buffers that must be passed to the constructor of the
+      // BandPassCorrection class.
+      struct Buffers : Kernel::Buffers
+      {
+        Buffers(const gpu::DeviceMemory& in, 
+                const gpu::DeviceMemory& out,
+                const gpu::DeviceMemory& bandPassCorrectionWeights) :
+          Kernel::Buffers(in, out), 
+          bandPassCorrectionWeights(bandPassCorrectionWeights)
+        {}
+
+        gpu::DeviceMemory bandPassCorrectionWeights;
       };
 
       BandPassCorrectionKernel(const gpu::Stream &stream,
@@ -67,12 +79,12 @@ namespace LOFAR
                                const Buffers &buffers,
                                const Parameters &param);
 
-    private:
-      // The bandpass weights to apply on each channel
-      gpu::DeviceMemory bandPassCorrectionWeights;
     };
 
     //# --------  Template specializations for KernelFactory  -------- #//
+
+    template<> size_t
+    KernelFactory<BandPassCorrectionKernel>::bufferSize(BufferType bufferType) const;
 
     template<> CompileDefinitions
     KernelFactory<BandPassCorrectionKernel>::compileDefinitions() const;

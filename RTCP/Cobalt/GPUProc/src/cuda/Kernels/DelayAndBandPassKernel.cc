@@ -45,7 +45,6 @@ namespace LOFAR
     string DelayAndBandPassKernel::theirFunction = "applyDelaysAndCorrectBandPass";
 
     DelayAndBandPassKernel::Parameters::Parameters(const Parset& ps, bool correlator) :
-      Kernel::Parameters(correlator ? "delayAndBandPass" : "delayCompensation"),
       nrStations(ps.settings.antennaFields.size()),
       nrBitsPerSample(ps.settings.nrBitsPerSample),
       inputIsStationData(correlator && ps.settings.correlator.nrChannels == 1
@@ -88,41 +87,11 @@ namespace LOFAR
     }
 
 
-    size_t DelayAndBandPassKernel::Parameters::bufferSize(BufferType bufferType) const {
-      switch (bufferType) {
-      case DelayAndBandPassKernel::INPUT_DATA: 
-        return 
-          (size_t) nrStations * NR_POLARIZATIONS * 
-            nrSamplesPerSubband() * nrBytesPerComplexSample();
-      case DelayAndBandPassKernel::OUTPUT_DATA:
-        return
-          (size_t) nrStations * NR_POLARIZATIONS * 
-            nrSamplesPerSubband() * sizeof(std::complex<float>);
-      case DelayAndBandPassKernel::DELAYS:
-        return 
-          (size_t) nrSAPs * nrStations * 
-            NR_POLARIZATIONS * sizeof(double);
-      case DelayAndBandPassKernel::PHASE_ZEROS:
-        return
-          (size_t) nrStations * NR_POLARIZATIONS * sizeof(double);
-      case DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS:
-        return
-          correctBandPass ? (size_t) nrChannels * sizeof(float) : 1UL;
-      default:
-        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
-      }
-    }
-
-
     DelayAndBandPassKernel::DelayAndBandPassKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      CompiledKernel(stream, gpu::Function(module, theirFunction), buffers, params),
-      delaysAtBegin(stream.getContext(), params.bufferSize(DELAYS)),
-      delaysAfterEnd(stream.getContext(), params.bufferSize(DELAYS)),
-      phase0s(stream.getContext(), params.bufferSize(PHASE_ZEROS)),
-      bandPassCorrectionWeights(stream.getContext(), params.bufferSize(BAND_PASS_CORRECTION_WEIGHTS))
+      Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       LOG_DEBUG_STR("DelayAndBandPassKernel:" <<
                     " delayCompensation=" <<
@@ -137,10 +106,10 @@ namespace LOFAR
 
       setArg(0, buffers.output);
       setArg(1, buffers.input);
-      setArg(4, delaysAtBegin);
-      setArg(5, delaysAfterEnd);
-      setArg(6, phase0s);
-      setArg(7, bandPassCorrectionWeights);
+      setArg(4, buffers.delaysAtBegin);
+      setArg(5, buffers.delaysAfterEnd);
+      setArg(6, buffers.phase0s);
+      setArg(7, buffers.bandPassCorrectionWeights);
 
       setEnqueueWorkSizes( gpu::Grid(256,
                                      params.nrChannels == 1 ?
@@ -156,9 +125,9 @@ namespace LOFAR
       // Initialise bandpass correction weights
       if (params.correctBandPass)
       {
-        gpu::HostMemory bpWeights(stream.getContext(), bandPassCorrectionWeights.size());
+        gpu::HostMemory bpWeights(stream.getContext(), buffers.bandPassCorrectionWeights.size());
         BandPass::computeCorrectionFactors(bpWeights.get<float>(), params.nrChannels);
-        stream.writeBuffer(bandPassCorrectionWeights, bpWeights, true);
+        stream.writeBuffer(buffers.bandPassCorrectionWeights, bpWeights, true);
       }
     }
 
@@ -172,6 +141,33 @@ namespace LOFAR
     }
 
     //--------  Template specializations for KernelFactory  --------//
+
+    template<> size_t 
+    KernelFactory<DelayAndBandPassKernel>::bufferSize(BufferType bufferType) const
+    {
+      switch (bufferType) {
+      case DelayAndBandPassKernel::INPUT_DATA: 
+        return 
+          (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
+            itsParameters.nrSamplesPerSubband() * itsParameters.nrBytesPerComplexSample();
+      case DelayAndBandPassKernel::OUTPUT_DATA:
+        return
+          (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
+            itsParameters.nrSamplesPerSubband() * sizeof(std::complex<float>);
+      case DelayAndBandPassKernel::DELAYS:
+        return 
+          (size_t) itsParameters.nrSAPs * itsParameters.nrStations * 
+            NR_POLARIZATIONS * sizeof(double);
+      case DelayAndBandPassKernel::PHASE_ZEROS:
+        return
+          (size_t) itsParameters.nrStations * NR_POLARIZATIONS * sizeof(double);
+      case DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS:
+        return
+          (size_t) itsParameters.nrChannels * sizeof(float);
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
 
     template<> CompileDefinitions
     KernelFactory<DelayAndBandPassKernel>::compileDefinitions() const

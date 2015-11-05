@@ -60,7 +60,7 @@ namespace LOFAR
       prevBlock(-1),
       prevSAP(-1),
       devInput(ps.nrBeams(),
-                ps.settings.antennaFields.size(),
+                ps.nrStations(),
                 NR_POLARIZATIONS,
                 ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
                 ps.nrBytesPerComplexSample(),
@@ -68,13 +68,13 @@ namespace LOFAR
 
                 // reserve enough space in inputSamples for the output of
                 // the delayAndBandPassKernel.
-                ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>)),
+                ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>)),
       devFilteredData(queue,
                       CL_MEM_READ_WRITE,
 
                       // reserve enough space for the output of the
                       // firFilterKernel,
-                      std::max(ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
+                      std::max(ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
                       // and the correlatorKernel.
                                ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>))),
       devFIRweights(queue,
@@ -132,7 +132,7 @@ namespace LOFAR
       for(size_t i = 0; i < nrInputDatas; ++i) {
         inputPool.free.append(new SubbandProcInputData(
                 ps.nrBeams(),
-                ps.settings.antennaFields.size(),
+                ps.nrStations(),
                 NR_POLARIZATIONS,
                 ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
                 ps.nrBytesPerComplexSample(),
@@ -142,7 +142,7 @@ namespace LOFAR
       // put enough objects in the outputPool to operate
       for(size_t i = 0; i < 3; ++i) {
         outputPool.free.append(new CorrelatedDataHostBuffer(
-                ps.settings.antennaFields.size(),
+                ps.nrStations(),
                 ps.nrChannelsPerSubband(),
                 ps.integrationSteps(),
                 devFilteredData,
@@ -211,7 +211,7 @@ namespace LOFAR
 
       // Object for storing transformed flags
       MultiDimArray<SparseSet<unsigned>, 2> flagsPerChannel(
-        boost::extents[numberOfChannels][parset.settings.antennaFields.size()]);
+        boost::extents[numberOfChannels][parset.nrStations()]);
 
       // First transform the flags to channel flags: taking in account 
       // reduced resolution in time and the size of the filter
@@ -241,7 +241,7 @@ namespace LOFAR
       unsigned numberOfChannels = parset.nrChannelsPerSubband();
       unsigned log2NrChannels = get2LogOfNrChannels(numberOfChannels);
       //Convert the flags per sample to flags per channel
-      for (unsigned station = 0; station < parset.settings.antennaFields.size(); station ++) 
+      for (unsigned station = 0; station < parset.nrStations(); station ++) 
       {
         // get the flag ranges
         const SparseSet<unsigned>::Ranges &ranges = inputFlags[station].getRanges();
@@ -301,7 +301,7 @@ namespace LOFAR
       CorrelatedData &output)
     {
       // loop the stations
-      for (unsigned stat2 = 0; stat2 < parset.settings.antennaFields.size(); stat2 ++) {
+      for (unsigned stat2 = 0; stat2 < parset.nrStations(); stat2 ++) {
         for (unsigned stat1 = 0; stat1 <= stat2; stat1 ++) {
           unsigned bl = baseline(stat1, stat2);
 

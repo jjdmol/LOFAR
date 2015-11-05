@@ -40,9 +40,8 @@ node  Output_IncoherentStokes	4.0.0  development  	'node constraint'  "Incoheren
 par  rawSamplingTime 	        O    dbl    seconds      10    0    0      	- 	''
 par  samplingTime               O    dbl    seconds      10    0    0      -       ''
 par  timeDownsamplingFactor     O    uint   -            10    0    0      	-       ''
+par  nrOfColapsedChannels       O    uint   -            10    0    0      	-       ''
 par  stokes				        O    vtext  -            10    0    'I;IQUV;XXYY'      	-       ''
-par  channelsPerSubband         O    uint   -            10    0    0     -  ''
-par  channelWidth               O    dbl    Hz           10    0    0     -  ''
 #par  stations?                   O   vtext -            10     0    ''   -  ''
 #par start time?
 #par duration?

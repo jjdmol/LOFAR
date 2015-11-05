@@ -28,7 +28,7 @@
 #include <CoInterface/Parset.h>
 #include <CoInterface/OMPThread.h>
 #include <InputProc/Transpose/MPIUtil.h>
-#include <GPUProc/Pipelines/Pipeline.h>
+#include <GPUProc/Pipelines/CorrelatorPipeline.h>
 #include <GPUProc/Station/StationInput.h>
 
 using namespace std;
@@ -66,31 +66,60 @@ int main(int argc, char *argv[]) {
 
   // "distribute" subbands over 1 node
   vector<size_t> subbands;
-  for (size_t sb = 0; sb < ps.settings.subbands.size(); sb++)
+  for (size_t sb = 0; sb < ps.nrSubbands(); sb++)
   {
     subbands.push_back(sb);
   }
 
-  Pool<struct MPIRecvData> MPI_receive_pool("MPI_receive_pool", true);
+  Pool<struct MPIRecvData> MPI_receive_pool("MPI_receive_pool");
 
 
 
   // Init the pipeline *before* touching MPI. MPI doesn't like fork().
   // So do kernel compilation (reqs fork()) first.
   // Don't bother passing a hostname to (or start()ing) the mdLogger.
-  MACIO::RTmetadata rtmd(ps.settings.observationID, "", "");
-  SmartPtr<Pipeline> pipeline = new Pipeline(ps, subbands, devices,
+  MACIO::RTmetadata rtmd(ps.observationID(), "", "");
+  SmartPtr<Pipeline> pipeline = new CorrelatorPipeline(ps, subbands, devices,
       MPI_receive_pool, rtmd, "rtmd key prefix");
 
+  //pipeline->allocateResources();
   mpi.init(argc, argv);
 
-  MPI_receive_pool.filled.append(NULL);
+  SubbandDistribution subbandDistribution; // rank -> [subbands]
 
+  for (size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
+    int receiverRank = subband % mpi.size();
+
+    subbandDistribution[receiverRank].push_back(subband);
+  }
+  const std::vector<size_t>  subbandIndices(subbandDistribution[mpi.rank()]);
+  MPIReceiver MPI_receiver(MPI_receive_pool,
+    subbandDistribution[mpi.rank()],
+    std::find(subbandIndices.begin(),
+    subbandIndices.end(), 0U) != subbandIndices.end(),
+    ps.nrSamplesPerSubband(),
+    ps.nrStations(),
+    ps.nrBitsPerSample());
+
+#pragma omp parallel sections num_threads(2)
+  {
+#pragma omp section
+    {
+      size_t nrBlocks = floor((ps.settings.stopTime - ps.settings.startTime) / ps.settings.blockDuration());
+
+      MPI_receiver.receiveInput(nrBlocks);
+    }
+
+#pragma omp section
+    {
   // no data, so no need to run a sender:
   // receiver(s) from processObservation() will fwd a end of data NULL pool item immediately.
   // idem for storage proc: we'll get a failed to connect to storage log msg, but don't care.
-  pipeline->processObservation();
-  pipeline = 0;
+      pipeline->processObservation();
+      pipeline = 0;
+    }
+
+  }
 
   return 0;
 }

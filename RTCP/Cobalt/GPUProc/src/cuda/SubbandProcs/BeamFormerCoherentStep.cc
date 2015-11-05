@@ -32,9 +32,19 @@
 #include <CoInterface/Parset.h>
 
 #include "SubbandProc.h"
+
+#include "BeamFormerSubbandProcStep.h"
 #include "BeamFormerCoherentStep.h"
+#include "BeamFormerFactories.h"
 
 #include <iomanip>
+
+// Set to true to get detailed buffer informatio
+#if 0
+#define DUMPBUFFER(a,b) dumpBuffer((a),  (b))
+#else
+#define DUMPBUFFER(a,b)
+#endif
 
 namespace LOFAR
 {
@@ -44,17 +54,9 @@ namespace LOFAR
     BeamFormerCoherentStep::Factories::Factories(const Parset &ps, size_t nrSubbandsPerSubbandProc) :
       beamFormer(BeamFormerKernel::Parameters(ps)),
       coherentTranspose(CoherentStokesTransposeKernel::Parameters(ps)),
-
-      coherentInverseFFT(FFT_Kernel::Parameters(
-        ps.settings.beamFormer.nrHighResolutionChannels,
-        ps.settings.beamFormer.maxNrCoherentTABsPerSAP() * NR_POLARIZATIONS * ps.settings.blockSize,
-        false,
-        "FFT (coherent, inverse)")),
       coherentInverseFFTShift(FFTShiftKernel::Parameters(ps,
         ps.settings.beamFormer.maxNrCoherentTABsPerSAP(),
-        ps.settings.beamFormer.nrHighResolutionChannels,
-        "FFT-shift (coherent, inverse)")),
-
+        ps.settings.beamFormer.nrHighResolutionChannels)),
       coherentFirFilter(
         ps.settings.beamFormer.coherentSettings.nrChannels > 1
         ? new KernelFactory<FIR_FilterKernel>(FIR_FilterKernel::Parameters(ps,
@@ -62,18 +64,8 @@ namespace LOFAR
             false,
             nrSubbandsPerSubbandProc,
             ps.settings.beamFormer.coherentSettings.nrChannels,
-            static_cast<float>(ps.settings.beamFormer.coherentSettings.nrChannels),
-            "FIR (coherent, final)"))
+            static_cast<float>(ps.settings.beamFormer.coherentSettings.nrChannels)))
         : NULL),
-      coherentFinalFFT(
-        ps.settings.beamFormer.coherentSettings.nrChannels > 1
-        ? new KernelFactory<FFT_Kernel>(FFT_Kernel::Parameters(
-            ps.settings.beamFormer.coherentSettings.nrChannels,
-            ps.settings.beamFormer.maxNrCoherentTABsPerSAP() * NR_POLARIZATIONS * ps.settings.blockSize,
-            true,
-            "FFT (coherent, final)"))
-        : NULL),
-
       coherentStokes(CoherentStokesKernel::Parameters(ps))
     {
     }
@@ -83,107 +75,161 @@ namespace LOFAR
       gpu::Stream &i_queue,
       gpu::Context &context,
       Factories &factories,
-      boost::shared_ptr<gpu::DeviceMemory> i_devB)
+      boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
+      boost::shared_ptr<gpu::DeviceMemory> i_devA,
+      boost::shared_ptr<gpu::DeviceMemory> i_devB,
+      boost::shared_ptr<gpu::DeviceMemory> i_devC,
+      boost::shared_ptr<gpu::DeviceMemory> i_devD,
+      boost::shared_ptr<gpu::DeviceMemory> i_devBeamFormerDelays)
       :
-      ProcessStep(parset, i_queue),
-      coherentStokesPPF(factories.coherentFirFilter != NULL),
-      devC(context, factories.beamFormer.bufferSize(BeamFormerKernel::OUTPUT_DATA)),
-      devD(context, factories.beamFormer.bufferSize(BeamFormerKernel::OUTPUT_DATA)),
-      outputCounter(context, "output (coherent)")
+      BeamFormerSubbandProcStep(parset, i_queue),
+      coherentStokesPPF(factories.coherentFirFilter != NULL)
     {
+      devInput = i_devInput;
+      devA = i_devA;
       devB = i_devB;
+      devC = i_devC;
+      devD = i_devD;
+      devBeamFormerDelays = i_devBeamFormerDelays;
+      initMembers(context, factories);
+    }
+
+    void BeamFormerCoherentStep::initMembers(gpu::Context &context,
+      Factories &factories)
+    {
+    beamFormerBuffers = std::auto_ptr<BeamFormerKernel::Buffers>(
+      new BeamFormerKernel::Buffers(*devB, *devA, *devBeamFormerDelays));
 
     beamFormerKernel = std::auto_ptr<BeamFormerKernel>(
-      factories.beamFormer.create(queue, *devB, devD));
+      factories.beamFormer.create(queue, *beamFormerBuffers));
 
-    // transpose after beamforming: A -> C
+    // transpose after beamforming: A -> C/D
+    //
+    // Output buffer: 
+    // 1ch: C
+    // PPF: D
+
+    coherentTransposeBuffers = std::auto_ptr<CoherentStokesTransposeKernel::Buffers>(
+      new CoherentStokesTransposeKernel::Buffers(*devA, coherentStokesPPF ? *devD : *devC));
+
     coherentTransposeKernel = std::auto_ptr<CoherentStokesTransposeKernel>(
       factories.coherentTranspose.create(
-      queue, devD, devC));
+      queue, *coherentTransposeBuffers));
 
-    // inverse FFT: C -> C (in-place)
-    inverseFFT = std::auto_ptr<FFT_Kernel>(
-      factories.coherentInverseFFT.create(
-        queue, devC, devC));
+    const size_t nrSamples = ps.settings.beamFormer.maxNrCoherentTABsPerSAP() * NR_POLARIZATIONS * ps.settings.blockSize;
 
-    // fftshift: C -> C (in-place)
+    // inverse FFT: C/D -> C/D (in-place)
+    inverseFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(
+      queue, ps.settings.beamFormer.nrHighResolutionChannels,
+      nrSamples, false, coherentStokesPPF ? *devD : *devC));
+
+    // fftshift: C/D -> C/D (in-place)
+    inverseFFTShiftBuffers = std::auto_ptr<FFTShiftKernel::Buffers>(
+      new FFTShiftKernel::Buffers(coherentStokesPPF ? *devD : *devC, coherentStokesPPF ? *devD : *devC));
+
     inverseFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
-      factories.coherentInverseFFTShift.create(
-        queue, devC, devC));
+      factories.coherentInverseFFTShift.create(queue, *inverseFFTShiftBuffers));
 
+    // FIR filter: D -> C
+    //
+    // Input buffer:
+    // 1ch: - (no FIR will be done)
+    // PPF: D
+    //
+    // Output buffer:
+    // 1ch: - (no FIR will be done)
+    // PPF: C
     if (coherentStokesPPF) {
-      // FIR filter: C -> D
-      firFilterKernel = std::auto_ptr<FIR_FilterKernel>(
-        factories.coherentFirFilter->create(queue, devC, devD));
+      devFilterWeights = std::auto_ptr<gpu::DeviceMemory>(
+        new gpu::DeviceMemory(context,
+        factories.coherentFirFilter->bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)));
 
-      // final FFT: D -> C
-      coherentFinalFFT = std::auto_ptr<FFT_Kernel>(
-        factories.coherentFinalFFT->create(queue, devD, devC));
+      devFilterHistoryData = std::auto_ptr<gpu::DeviceMemory>(
+        new gpu::DeviceMemory(context,
+        factories.coherentFirFilter->bufferSize(FIR_FilterKernel::HISTORY_DATA)));
+
+      firFilterBuffers = std::auto_ptr<FIR_FilterKernel::Buffers>(
+        new FIR_FilterKernel::Buffers(*devD, *devC, *devFilterWeights, *devFilterHistoryData));
+
+      firFilterKernel = std::auto_ptr<FIR_FilterKernel>(
+        factories.coherentFirFilter->create(queue, *firFilterBuffers));
+
+      // final FFT: C -> C (in-place) = firFilterBuffers.output
+      finalFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(
+        queue, ps.settings.beamFormer.coherentSettings.nrChannels,
+        nrSamples, true, *devC));
     }
 
     // coherentStokes: C -> D
+    //
+    // 1ch: input comes from inverseFFT in C
+    // Nch: input comes from finalFFT in C
+
+    coherentStokesBuffers = std::auto_ptr<CoherentStokesKernel::Buffers>(
+      new CoherentStokesKernel::Buffers(*devC, *devD));
+
     coherentStokesKernel = std::auto_ptr<CoherentStokesKernel>(
-      factories.coherentStokes.create(queue,
-      devC, devD));
+      factories.coherentStokes.create(queue, *coherentStokesBuffers));
   }
 
-  gpu::DeviceMemory BeamFormerCoherentStep::outputBuffer() {
-    return devD;
-  }
-
-
-size_t BeamFormerCoherentStep::nrCoherent(const BlockID &blockID) const
+void BeamFormerCoherentStep::logTime()
 {
-  unsigned SAP = ps.settings.subbands[blockID.globalSubbandIdx].SAP;
+  if (coherentStokesPPF) {
+    firFilterKernel->itsCounter.logTime();
+    finalFFT->itsCounter.logTime();
+  }
 
-  return ps.settings.beamFormer.SAPs[SAP].nrCoherent;
+  beamFormerKernel->itsCounter.logTime();
+  coherentTransposeKernel->itsCounter.logTime();
+  inverseFFT->itsCounter.logTime();
+  coherentStokesKernel->itsCounter.logTime();
+  //visibilities.logTime(); //transfer
+
 }
 
 
-void BeamFormerCoherentStep::writeInput(const SubbandProcInputData &input)
+void BeamFormerCoherentStep::printStats()
 {
-  if (nrCoherent(input.blockID) == 0)
-    return;
+  // Print the individual counter stats: mean and stDev
+  LOG_INFO_STR(
+    "**** BeamFormerSubbandProc coherent stage GPU mean and stDev ****" << endl <<
+    std::setw(20) << "(firFilterKernel)" << (coherentStokesPPF ? firFilterKernel->itsCounter.stats : RunningStatistics()) << endl <<
+    std::setw(20) << "(finalFFT)" << (coherentStokesPPF ? finalFFT->itsCounter.stats : RunningStatistics()) << endl <<
+    std::setw(20) << "(beamformer)" << beamFormerKernel->itsCounter.stats << endl <<
+    std::setw(20) << "(coherentTranspose)" << coherentTransposeKernel->itsCounter.stats << endl <<
+    std::setw(20) << "(inverseFFT)" << inverseFFT->itsCounter.stats << endl <<
+    std::setw(20) << "(inverseFFTShift)" << inverseFFTShiftKernel->itsCounter.stats << endl <<
+    std::setw(20) << "(coherentStokes)" << coherentStokesKernel->itsCounter.stats << endl);
 
-  // Upload the new beamformerDelays (pointings) to the GPU 
-  queue.writeBuffer(beamFormerKernel->beamFormerDelays, input.tabDelays, false);
 }
 
 
-void BeamFormerCoherentStep::process(const SubbandProcInputData &input)
+void BeamFormerCoherentStep::process(BlockID blockID,
+  unsigned subband)
 {
-  if (nrCoherent(input.blockID) == 0)
-    return;
-
   // The centralFrequency and SAP immediate kernel args must outlive kernel runs.
-  beamFormerKernel->enqueue(input.blockID,
-    ps.settings.subbands[input.blockID.globalSubbandIdx].centralFrequency,
-    ps.settings.subbands[input.blockID.globalSubbandIdx].SAP);
+  beamFormerKernel->enqueue(blockID,
+    ps.settings.subbands[subband].centralFrequency,
+    ps.settings.subbands[subband].SAP);
 
-  coherentTransposeKernel->enqueue(input.blockID);
+  coherentTransposeKernel->enqueue(blockID);
+  DUMPBUFFER(coherentTransposeBuffers.output, "coherentTransposeBuffers.output.dat");
 
-  inverseFFT->enqueue(input.blockID);
+  inverseFFT->enqueue(blockID);
+  DUMPBUFFER(inverseFFTShiftBuffers.input, "inverseFFTBuffers.output.dat");
 
-  inverseFFTShiftKernel->enqueue(input.blockID);
+  inverseFFTShiftKernel->enqueue(blockID);
+  DUMPBUFFER(inverseFFTShiftBuffers.output, "inverseFFTShift.output.dat");
 
   if (coherentStokesPPF) {
     // The subbandIdx immediate kernel arg must outlive kernel runs.
-    firFilterKernel->enqueue(input.blockID,
-      input.blockID.subbandProcSubbandIdx);
-    coherentFinalFFT->enqueue(input.blockID);
+    firFilterKernel->enqueue(blockID,
+      blockID.subbandProcSubbandIdx);
+    finalFFT->enqueue(blockID);
   }
 
-  coherentStokesKernel->enqueue(input.blockID);
-}
-
-
-void BeamFormerCoherentStep::readOutput(SubbandProcOutputData &output)
-{
-  if (nrCoherent(output.blockID) == 0)
-    return;
-
-  output.coherentData.resizeOneDimensionInplace(0, nrCoherent(output.blockID));
-  queue.readBuffer(output.coherentData, outputBuffer(), outputCounter, false);
+  DUMPBUFFER(coherentStokesBuffers.input, "coherentStokesBuffers.input.dat");
+  coherentStokesKernel->enqueue(blockID);
 }
 
 
