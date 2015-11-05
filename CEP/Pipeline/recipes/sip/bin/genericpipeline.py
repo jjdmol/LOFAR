@@ -2,7 +2,6 @@
 import os
 import sys
 import copy
-import re
 from lofarpipe.support.parset import Parset
 from lofarpipe.support.control import control
 
@@ -96,7 +95,7 @@ class GenericPipeline(control):
         return super(GenericPipeline, self).go()
 
 #    def pipeline_logic(self):
-#        print 'Dummy because of wrapping inside the framework'
+#        print 'Dummy because of stupid wrapping inside the framework'
 #        if overwrite:
 #            self.execute_pipeline()
 
@@ -152,22 +151,19 @@ class GenericPipeline(control):
         # initial parameters to be saved in resultsdict so that recipes have access to this step0
         # double init values. 'input' should be considered deprecated
         # self.name would be consistent to use in subpipelines
-        input_dictionary = {
+        resultdicts = {'input': {
             'parset': parset_file,
             'parsetobj': self.parset,
+            'job_dir': job_dir,
             'parset_dir': parset_dir,
-            'mapfile_dir': mapfile_dir}
+            'mapfile_dir': mapfile_dir}}
 
-        resultdicts = {}
-        for section in self.config.sections():
-            tmp_dict = {}
-            for entry in self.config.items(section):
-                input_dictionary[entry[0]] = entry[1]
-                tmp_dict[entry[0]] = entry[1]
-            resultdicts.update({section: copy.deepcopy(tmp_dict)})
-
-        resultdicts.update({'input': input_dictionary})
-        resultdicts.update({self.name: input_dictionary})
+        resultdicts.update({self.name: {
+            'parset': parset_file,
+            'parsetobj': self.parset,
+            'job_dir': job_dir,
+            'parset_dir': parset_dir,
+            'mapfile_dir': mapfile_dir}})
 
         if 'pipeline.mapfile' in self.parset.keys:
             resultdicts['input']['mapfile'] = str(self.parset['pipeline.mapfile'])
@@ -193,19 +189,21 @@ class GenericPipeline(control):
                 typeval = step.getString('type')
             except:
                 typeval = ''
-            adds = None
+            #self._construct_cmdline(inputargs, step, resultdicts)
+
+            additional_input = {}
+
             if stepname in step_parset_obj:
-                adds = self._construct_step_parset(inputdict,
-                                             step_parset_obj[stepname],
-                                             resultdicts,
-                                             step_parset_files[stepname],
-                                             stepname)
+                additional_input = self._construct_step_parset(step_parset_obj[stepname],
+                                                               resultdicts,
+                                                               step_parset_files[stepname],
+                                                               stepname)
+
             # stepname not a valid input for old recipes
             if kind_of_step == 'recipe':
                 if self.task_definitions.get(typeval, 'recipe') == 'executable_args':
-                    inputdict['stepname'] = stepname
-                    if adds:
-                        inputdict.update(adds)
+                    inputdict = {'stepname': stepname}
+                    inputdict.update(additional_input)
 
             self._construct_cmdline(inputargs, step, resultdicts)
 
@@ -214,6 +212,7 @@ class GenericPipeline(control):
 
 
             self._construct_input(inputdict, step, resultdicts)
+
             # hack, popping 'type' is necessary, why? because you deleted kind already in parsets
             try:
                 inputdict.pop('type')
@@ -359,8 +358,9 @@ class GenericPipeline(control):
 
             # breaking the loopstep
             # if the step has the keyword for loopbreaks assign the value
-            if activeloop[0] in resultdicts and resultdict is not None and 'break' in resultdict:
-                resultdicts[activeloop[0]]['break'] = resultdict['break']
+            if resultdict is not None and 'break' in resultdict:
+                if resultdict['break']:
+                    resultdicts[activeloop[0]]['break'] = resultdict['break']
 
     # *********************************************************************
     # build the inputs for the master recipes.
@@ -374,17 +374,21 @@ class GenericPipeline(control):
         else:
             argsparset = controlparset.makeSubset(controlparset.fullModuleName('imaginary') + '.')
         # \hack
-        self._replace_output_keyword(inoutdict, argsparset, argsparset.keys(), resdicts)
+
+        self._replace_output_keyword(inoutdict, argsparset, resdicts)
 
     def _construct_cmdline(self, inoutargs, controlparset, resdicts):
-        inoutdict = {}
         argsparset = controlparset.makeSubset(controlparset.fullModuleName('cmdline') + '.')
-        self._replace_output_keyword(inoutdict, argsparset, argsparset.keys(), resdicts)
-        for k in inoutdict.keys():
-            inoutargs.append(inoutdict[k])
-        for k in controlparset.keys():
-            if 'cmdline' in k:
-                controlparset.remove(k)
+        for k in argsparset.keys():
+            if argsparset.getString(k).__contains__('.output.'):
+                step, outvar = argsparset.getString(k).split('.output.')
+                inoutargs.append(resdicts[step][outvar])
+            else:
+                inoutargs.append(argsparset.getString(k))
+        try:
+            controlparset.remove('cmdline.inmap')
+        except:
+            pass
 
     def _construct_steps(self, step_name_list, step_control_dict, step_parset_files, step_parset_obj, parset_dir):
         step_list_copy = (copy.deepcopy(step_name_list))
@@ -402,8 +406,12 @@ class GenericPipeline(control):
                 stepname += str(number)
             step_name_list[counter] = stepname
             step_control_dict[stepname] = subparset
-            if fullparset.fullModuleName('argument'):
-                stepparset = fullparset.makeSubset(fullparset.fullModuleName('argument') + '.')
+            # double implementation for intermediate backward compatibility
+            if fullparset.fullModuleName('parsetarg') or fullparset.fullModuleName('argument'):
+                if fullparset.fullModuleName('parsetarg'):
+                    stepparset = fullparset.makeSubset(fullparset.fullModuleName('parsetarg') + '.')
+                if fullparset.fullModuleName('argument'):
+                    stepparset = fullparset.makeSubset(fullparset.fullModuleName('argument') + '.')
                 # *********************************************************************
                 # save parsets
                 # either a filename is given in the main parset
@@ -439,49 +447,88 @@ class GenericPipeline(control):
                 step_parset_files[stepname] = step_parset
                 step_parset_obj[stepname] = stepparset
 
-    def _replace_output_keyword(self, inoutdict, argsparset, keyorder, resdicts):
-        addvals = {'inputkeys': [], 'mapfiles_in': [], 'arguments': []}
-        regobj = re.compile('([\w\+_-]+)\.output\.([\w\+._-]+)')
-        for k in keyorder:
+    def _replace_output_keyword(self, inoutdict, argsparset, resdicts):
+        for k in argsparset.keys():
             keystring = argsparset.getString(k)
-            hitlist = regobj.findall(keystring)
-            if hitlist:
-                for hit in hitlist:
-                    keystring = regobj.sub(str(resdicts[hit[0]][hit[1]]), keystring, 1)
-                    if 'mapfile' in hit[1] and not 'mapfile' in k:
-                        addvals['inputkeys'].append(resdicts[hit[0]][hit[1]])
-                        addvals['mapfiles_in'].append(resdicts[hit[0]][hit[1]])
-                inoutdict[k] = keystring
+            if keystring.__contains__('.output.'):
+                if keystring.__contains__(','):
+                    keystring = keystring.rstrip(']')
+                    keystring = keystring.lstrip('[')
+                    vec = []
+                    for item in keystring.split(','):
+                        if item.__contains__('.output.'):
+                            step, outvar = item.split('.output.')
+                            vec.append(resdicts[step][outvar])
+                        else:
+                            vec.append(item)
+                    inoutdict[k] = vec
+                else:
+                    step, outvar = argsparset.getString(k).split('.output.')
+                    if '+' in outvar:
+                        tmplist = str(outvar).split('+')
+                        inoutdict[k] = resdicts[step][tmplist[0]] + tmplist[1]
+                    else:
+                        inoutdict[k] = resdicts[step][outvar]
             else:
                 inoutdict[k] = argsparset.getString(k)
-            if k == 'flags':
-                addvals['arguments'] = keystring
-            if 'outputkey' in keystring:
-                addvals['outputkey'] = 'outputkey'
-        return addvals
 
-    def _construct_step_parset(self, inoutdict, argsparset, resdicts, filename, stepname):
+    def _construct_step_parset(self, argsparset, resdicts, filename, stepname):
+        addvals = {'inputkeys': [], 'mapfiles_in': [], 'arguments': []}
+        # hack for original order of args
         tmp_keys = argsparset.keys()
         ordered_keys = []
-        parsetdict = {}
         for orig in self.parset.keys:
             for item in tmp_keys:
-                if not str(orig).startswith('#'):
-                    if (stepname + '.') in orig and ('argument.'+item in orig and not 'argument.'+item+'.' in orig):
-                        ordered_keys.append(item)
-                        continue
-        # add keys from parset files that were not in the original list
-        for item in argsparset.keys():
-            if not item in ordered_keys:
-                ordered_keys.append(item)
-        additional = self._replace_output_keyword(parsetdict, argsparset, ordered_keys, resdicts)
-        for k in argsparset.keys():
-            argsparset.replace(k, parsetdict[k])
-            if k == 'flags':
-                argsparset.remove(k)
+                if (stepname + '.') in orig and ('argument.'+item in orig and not 'argument.'+item+'.' in orig):
+                    ordered_keys.append(item)
+                    continue
+        # \hack
+        for k in ordered_keys:
+            valuestring = argsparset.getString(k)
+            if valuestring.__contains__('.output.'):
+                if valuestring.__contains__(','):
+                    valuestring = valuestring.rstrip(']')
+                    valuestring = valuestring.lstrip('[')
+                    vec = []
+                    for item in valuestring.split(','):
+                        if item.__contains__('.output.'):
+                            step, outvar = item.split('.output.')
+                            vec.append(resdicts[step][outvar])
+                            if 'mapfile' in str(outvar):
+                                addvals['inputkeys'].append(resdicts[step][outvar])
+                                addvals['mapfiles_in'].append(resdicts[step][outvar])
+                        else:
+                            vec.append(item)
+                    argsparset.replace(k, str(vec))
+                    if k == 'flags':
+                        addvals['arguments'] = vec
+                        argsparset.remove(k)
+                else:
+                    step, outvar = argsparset.getString(k).split('.output.')
+                    #more ugly hacks... really needs clearly structured replacement method...
+                    if '+' in outvar:
+                        tmplist = str(outvar).split('+')
+                        argsparset.replace(k, str(resdicts[step][tmplist[0]]) + tmplist[1])
+                    else:
+                        argsparset.replace(k, str(resdicts[step][outvar]))
+                    #if isinstance(resdicts[step][outvar], str):
+                    if 'mapfile' in str(outvar):
+                        addvals['inputkeys'].append(resdicts[step][outvar])
+                        addvals['mapfiles_in'].append(resdicts[step][outvar])
+                    if k == 'flags':
+                        addvals['arguments'] = str(argsparset[k])
+                        argsparset.remove(k)
+            else:
+                if k == 'flags':
+                    addvals['arguments'] = str(argsparset[k])
+                    argsparset.remove(k)
+
+            #direct usage of outputkey
+            if valuestring.__contains__('outputkey'):
+                addvals['outputkey'] = 'outputkey'
+
         argsparset.writeFile(filename)
-        return additional
-        #inoutdict.update(additional)
+        return addvals
 
     def _get_parset_dicts(self):
         return {}
