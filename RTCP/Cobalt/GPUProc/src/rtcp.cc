@@ -1,5 +1,5 @@
 //# rtcp.cc: Real-Time Central Processor application, GPU cluster version
-//# Copyright (C) 2012-2015  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -23,18 +23,18 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
-#include <csignal>
 #include <ctime>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <unistd.h>
+#include <signal.h>
+#include <iostream>
+#include <vector>
+#include <string>
+#include <omp.h>
+#include <time.h>
 #include <sys/resource.h>
 #include <sys/mman.h>
-#include <unistd.h>
-#include <omp.h>
-
-#include <string>
-#include <vector>
-#include <iostream>
 
 #ifdef HAVE_LIBNUMA
 #include <numa.h>
@@ -52,8 +52,7 @@
 #include <Common/SystemUtil.h>
 #include <Common/StringUtil.h>
 #include <Common/Thread/Trigger.h>
-#include <MessageBus/MessageBus.h>
-#include <MessageBus/ToBus.h>
+#include <MessageBus/MsgBus.h>
 #include <MessageBus/Protocols/TaskFeedbackProcessing.h>
 #include <ApplCommon/PVSSDatapointDefs.h>
 #include <ApplCommon/StationInfo.h>
@@ -74,6 +73,7 @@
 #include <GPUProc/Station/StationInput.h>
 #include <GPUProc/Station/StationNodeAllocation.h>
 #include "Pipelines/Pipeline.h"
+//#include "Pipelines/UHEP_Pipeline.h"
 #include "Storage/StorageProcesses.h"
 
 #include <GPUProc/cpu_utils.h>
@@ -101,19 +101,22 @@ const time_t defaultRtcpTimeout = 5 * 60;
 
 static void usage(const char *argv0)
 {
-  cout << "RTCP: Real-Time Central Processing of the LOFAR radio telescope." << endl;
-  cout << "RTCP provides correlation for the Standard Imaging mode and" << endl;
-  cout << "beam-forming for the Pulsar mode." << endl;
-  cout << "GPUProc version " << GPUProcVersion::getVersion() << " r" << GPUProcVersion::getRevision() << endl;
-  cout << endl;
-  cout << "Usage: " << argv0 << " parset" << " [-p]" << endl;
-  cout << endl;
-  cout << "  -p: enable profiling" << endl;
-  cout << "  -h: print this message" << endl;
+  cerr << "RTCP: Real-Time Central Processing of the LOFAR radio telescope." << endl;
+  cerr << "RTCP provides correlation for the Standard Imaging mode and" << endl;
+  cerr << "beam-forming for the Pulsar mode." << endl;
+  // one of the roll-out scripts greps for the version x.y
+  cerr << "GPUProc version " << GPUProcVersion::getVersion() << " r" << GPUProcVersion::getRevision() << endl;
+  cerr << endl;
+  cerr << "Usage: " << argv0 << " parset" << " [-p]" << endl;
+  cerr << endl;
+  cerr << "  -p: enable profiling" << endl;
+  cerr << "  -h: print this message" << endl;
 }
 
 int main(int argc, char **argv)
 {
+  LOFAR::Cobalt::MPI mpi;
+
   /*
    * Parse command-line options
    */
@@ -142,36 +145,29 @@ int main(int argc, char **argv)
   }
 
   /*
-   * Initialise the system environment
+   * Whether we've encountered an error; observation will
+   * be set to ABORTED by OnlineControl if so.
    */
-
-  // Ignore SIGPIPE, as we handle disconnects ourselves
-  struct sigaction sa;
-  sigemptyset(&sa.sa_mask);
-  sa.sa_flags = 0;
-  sa.sa_handler = SIG_IGN;
-  if (sigaction(SIGPIPE, &sa, NULL) < 0)
-    THROW_SYSCALL("sigaction(SIGPIPE, <SIG_IGN>)");
-
-  // Make sure all time is dealt with and reported in UTC
-  if (setenv("TZ", "UTC", 1) < 0)
-    THROW_SYSCALL("setenv(TZ)");
-
-  LOFAR::Cobalt::MPI mpi;
+  int abortObservation = 0;
 
   /*
    * Initialise logger.
    */
 
+#ifdef HAVE_LOG4CPLUS
   // Set ${MPIRANK}, which is used by our log_prop file.
   if (setenv("MPIRANK", str(format("%02d") % mpi.rank()).c_str(), 1) < 0)
-    THROW_SYSCALL("setenv(MPIRANK)");
+  {
+    perror("error setting MPIRANK");
+    return EXIT_FAILURE;
+  }
 
   // Use LOG_*() for c-strings (incl cppstr.c_str()), and LOG_*_STR() for std::string.
   INIT_LOGGER("rtcp");
-
+#else
+  INIT_LOGGER_WITH_SYSINFO(str(format("rtcp@%02d") % mpi.rank()));
+#endif
   LOG_INFO_STR("GPUProc version " << GPUProcVersion::getVersion() << " r" << GPUProcVersion::getRevision());
-  LOG_INFO_STR("MPI rank " << mpi.rank() << " out of " << mpi.size() << " hosts");
 
   LOG_INFO("===== INIT =====");
 
@@ -208,15 +204,20 @@ int main(int argc, char **argv)
   // Don't connect to PVSS for non-real-time observations -- they have no proper flow control
   MACIO::RTmetadata mdLogger(ps.settings.observationID, mdRegisterName, ps.settings.realTime ? mdHostName : "");
 
-  // Remove limits on pinned (locked) memory
-  struct rlimit unlimited = { RLIM_INFINITY, RLIM_INFINITY };
-  if (setrlimit(RLIMIT_MEMLOCK, &unlimited) < 0)
-  {
-    if (ps.settings.realTime)
-      THROW_SYSCALL("setrlimit(RLIMIT_MEMLOCK, unlimited)");
-    else
-      LOG_WARN("Cannot setrlimit(RLIMIT_MEMLOCK, unlimited)");
-  }
+  LOG_INFO_STR("MPI rank " << mpi.rank() << " out of " << mpi.size() << " hosts");
+
+  /*
+   * Initialise the system environment
+   */
+
+  // Ignore SIGPIPE, as we handle disconnects ourselves
+  if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
+    THROW_SYSCALL("signal(SIGPIPE)");
+
+  // Make sure all time is dealt with and reported in UTC
+  if (setenv("TZ", "UTC", 1) < 0)
+    THROW_SYSCALL("setenv(TZ)");
+
 
   /* Tuning parameters */
 
@@ -244,6 +245,16 @@ int main(int argc, char **argv)
     "\n  rtcpTimeout          : " << rtcpTimeout << "s");
 
   setSelfDestructTimer(ps, rtcpTimeout);
+
+  // Remove limits on pinned (locked) memory
+  struct rlimit unlimited = { RLIM_INFINITY, RLIM_INFINITY };
+  if (setrlimit(RLIMIT_MEMLOCK, &unlimited) < 0)
+  {
+    if (ps.settings.realTime)
+      THROW_SYSCALL("setrlimit(RLIMIT_MEMLOCK, unlimited)");
+    else
+      LOG_WARN("Cannot setrlimit(RLIMIT_MEMLOCK, unlimited)");
+  }
 
   /*
    * Initialise OpenMP
@@ -330,10 +341,10 @@ int main(int argc, char **argv)
     }
 
     // Select on the local NUMA InfiniBand interface (OpenMPI only, for now)
-    if (mynode.mpi_nic != "") {
-      LOG_DEBUG_STR("Binding MPI to interface " << mynode.mpi_nic);
+    if (mynode.nic != "") {
+      LOG_DEBUG_STR("Binding to interface " << mynode.nic);
 
-      if (setenv("OMPI_MCA_btl_openib_if_include", mynode.mpi_nic.c_str(), 1) < 0)
+      if (setenv("OMPI_MCA_btl_openib_if_include", mynode.nic.c_str(), 1) < 0)
         THROW_SYSCALL("setenv(OMPI_MCA_btl_openib_if_include)");
     }
   } else {
@@ -349,7 +360,7 @@ int main(int argc, char **argv)
                  devices[i].getComputeCapabilityMajor() << "." <<
                  devices[i].getComputeCapabilityMinor() <<
                  " global memory: " << (devices[i].getTotalGlobalMem() / 1024 / 1024) << " Mbyte");
-
+#if 1
   // Bindings are done -- Lock everything in memory
   if (mlockall(MCL_CURRENT | MCL_FUTURE) < 0)
   {
@@ -360,6 +371,7 @@ int main(int argc, char **argv)
   } else {
     LOG_DEBUG("All memory is now pinned.");
   }
+#endif
 
   LOG_INFO("----- Initialising Pipeline");
 
@@ -374,14 +386,15 @@ int main(int argc, char **argv)
 
   Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_receive_pool", ps.settings.realTime);
 
-  const std::vector<size_t> subbandIndices(subbandDistribution[mpi.rank()]);
+  const std::vector<size_t>  subbandIndices(subbandDistribution[mpi.rank()]);
 
   MPIReceiver MPI_receiver(MPI_receive_pool,
-                           subbandIndices,
-      std::find(subbandIndices.begin(), subbandIndices.end(), 0U) != subbandIndices.end(),
-                           ps.settings.blockSize,
-                           ps.settings.antennaFields.size(),
-                           ps.nrBitsPerSample());
+                     subbandIndices,
+    std::find(subbandIndices.begin(), 
+              subbandIndices.end(), 0U) != subbandIndices.end(),
+              ps.settings.blockSize,
+              ps.settings.antennaFields.size(),
+              ps.nrBitsPerSample());
       
   SmartPtr<Pipeline> pipeline;
 
@@ -392,7 +405,7 @@ int main(int argc, char **argv)
     pipeline = NULL;
   } else {
     pipeline = new Pipeline(ps, subbandIndices, devices,
-                            MPI_receive_pool, mdLogger, mdKeyPrefix, mpi.rank());
+                                      MPI_receive_pool, mdLogger, mdKeyPrefix, mpi.rank());
   } 
 
   // After pipeline creation (post-fork()), allow creation of a thread to send
@@ -550,15 +563,7 @@ int main(int argc, char **argv)
     }
   }
 
-  // Delete pipeline to release resources before next obs tries to allocate.
-  // COMPLETING stage can take a while. (Better use proper functions & scopes.)
-  pipeline = NULL;
-
-  /*
-   * Whether we've encountered an error; observation will
-   * be set to ABORTED by OnlineControl if so.
-   */
-  int exitStatus = EXIT_SUCCESS;
+  pipeline = 0;
 
   /*
    * COMPLETING stage
@@ -570,8 +575,7 @@ int main(int argc, char **argv)
 
     // retrieve and forward final meta data
     if (!storageProcesses->forwardFinalMetaData()) {
-      LOG_ERROR("Forwarding final metadata failed");
-      exitStatus = EXIT_FAILURE;
+      abortObservation = 1;
     }
 
     LOG_INFO("Stopping Storage processes");
@@ -595,10 +599,10 @@ int main(int argc, char **argv)
     bus.send(msg);
 
     // final cleanup
-    storageProcesses = NULL;
+    storageProcesses = 0;
   }
+  LOG_INFO("===== SUCCESS =====");
 
-  LOG_INFO_STR("===== EXITING WITH STATUS " << exitStatus << " =====");
-  return exitStatus;
+  return abortObservation ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
