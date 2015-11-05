@@ -1,2 +1,0 @@
-#LTAIngest CMakeLists.txt configures various files based on the LTAINGEST_BUILD_TARGET
-set(LTAINGEST_BUILD_TARGET "lexar") 

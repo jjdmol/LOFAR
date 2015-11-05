@@ -1,2 +1,0 @@
-#!/bin/sh
-mpirun.sh -host localhost -np 4 tMPITransfer

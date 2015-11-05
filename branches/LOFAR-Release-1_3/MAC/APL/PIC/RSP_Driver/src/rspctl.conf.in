@@ -1,5 +1,0 @@
-#
-# Configuration of the RSPCtl communication ports.
-#
-mac.ns.RSPCtl.server.type=TCP
-mac.top.RSPCtl.server.remoteservice=RSPDriver:acceptor_v3

@@ -1,8 +1,0 @@
-#!/bin/bash
-
-createbus.sh add testPipelineMCQDaemon 5672 $(hostname) 
-
-python testPipelineMCQDaemon.py
-
-# the a bus structure to be used by the test program
-createbus.sh del testPipelineMCQDaemon 5672 $(hostname) ignore

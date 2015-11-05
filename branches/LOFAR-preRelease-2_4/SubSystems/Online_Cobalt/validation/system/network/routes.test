@@ -1,3 +1,0 @@
-#!/bin/bash
-
-diff <(sort routes.`hostname`) <(ip route | sort) || exit 1

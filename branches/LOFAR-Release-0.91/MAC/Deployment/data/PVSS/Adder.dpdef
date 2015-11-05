@@ -1,8 +1,0 @@
-# Adder
-dropping			bool
-nrBlocksDropped		int
-dataProductType		string
-fileName		string
-storageNode		string
-directory		string
-observationName		string

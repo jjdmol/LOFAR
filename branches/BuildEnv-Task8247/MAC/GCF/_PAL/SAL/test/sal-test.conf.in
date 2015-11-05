@@ -1,2 +1,0 @@
-mac.ns.ECHO.server.type=TCP
-mac.top.PING.client.remoteservice=ECHO:server
