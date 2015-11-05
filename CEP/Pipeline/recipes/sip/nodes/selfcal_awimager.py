@@ -426,7 +426,7 @@ class selfcal_awimager(LOFARnodeTCP):
       if nbpixel % 2 ==1:
           nbpixel = nbpixel + 1		
       
-      robust	= 0 #round(1.0 - (3.0 * scaling_factor), 2)
+      robust	= round(1.0 - (3.0 * scaling_factor), 2)
 
       UVmax	= round((wavelenght) / 
                        (pixPerBeam * pixsize / 3600.0 * math.pi / 180.0 ) / 

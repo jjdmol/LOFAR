@@ -258,7 +258,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
                                                             host))
                 output_item.file = "failed"
                 output_item.skip = True
-                parmdbs_item.file = []
+                parmdbs_item.file = ["failed"]
                 parmdbs_item.skip = True
 
             # Else it succeeded and we can write te results

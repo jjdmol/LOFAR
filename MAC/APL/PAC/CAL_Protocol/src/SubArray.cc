@@ -210,13 +210,13 @@ size_t SubArray::getSize() const
 
 size_t SubArray::pack(char* buffer) const
 {
-	size_t offset = 0;
+	uint32 offset = 0;
 
-	offset = MSH_pack(buffer, offset, m_name);
-	offset = MSH_pack(buffer, offset, m_geoloc);
-	offset = MSH_pack(buffer, offset, m_pos);
-	offset = MSH_pack(buffer, offset, m_rcuindex);
-	offset = MSH_pack(buffer, offset, itsRCUmask);
+	MSH_pack(buffer, offset, m_name);
+	MSH_pack(buffer, offset, m_geoloc);
+	MSH_pack(buffer, offset, m_pos);
+	MSH_pack(buffer, offset, m_rcuindex);
+	MSH_pack(buffer, offset, itsRCUmask);
 	offset += m_spw.pack(buffer + offset);
 
 	return offset;
@@ -224,13 +224,13 @@ size_t SubArray::pack(char* buffer) const
 
 size_t SubArray::unpack(const char* buffer)
 {
-	size_t offset = 0;
+	uint32 offset = 0;
 
-	offset = MSH_unpack(buffer, offset, m_name);
-	offset = MSH_unpack(buffer, offset, m_geoloc);
-	offset = MSH_unpack(buffer, offset, m_pos);
-	offset = MSH_unpack(buffer, offset, m_rcuindex);
-	offset = MSH_unpack(buffer, offset, itsRCUmask);
+	MSH_unpack(buffer, offset, m_name);
+	MSH_unpack(buffer, offset, m_geoloc);
+	MSH_unpack(buffer, offset, m_pos);
+	MSH_unpack(buffer, offset, m_rcuindex);
+	MSH_unpack(buffer, offset, itsRCUmask);
 	offset += m_spw.unpack(buffer + offset);
 
 	return offset;
@@ -245,13 +245,15 @@ size_t SubArrayMap::getSize() const
 
 size_t SubArrayMap::pack(char* buffer) const
 {
-	size_t offset = 0;
-	return MSH_pack(buffer, offset, (*this));
+	uint32 offset = 0;
+	MSH_pack(buffer, offset, (*this));
+	return (offset);
 }
 
 size_t SubArrayMap::unpack(const char* buffer)
 {
-	size_t offset = 0;
-	return MSH_unpack(buffer, offset, (*this));
+	uint32 offset = 0;
+	MSH_unpack(buffer, offset, (*this));
+	return (offset);
 }
 

@@ -55,9 +55,6 @@ using namespace std;
 
 namespace LOFAR {
 	using namespace APLCommon;
-	using namespace DP_Protocol;
-	using namespace Controller_Protocol;
-	using namespace IBS_Protocol;
 	namespace StationCU {
 
 #define MAX2(a,b)	((a)>(b)?(a):(b))
@@ -627,9 +624,6 @@ GCFEvent::TResult BeamControl::sendPointings_state(GCFEvent& event, GCFPortInter
 		LOG_DEBUG_STR(ptEvent);
 	}
 	break;
-
-	case F_EXIT:
-		break;
 
 	case IBS_POINTTOACK: {
 		IBSPointtoackEvent ack(event);

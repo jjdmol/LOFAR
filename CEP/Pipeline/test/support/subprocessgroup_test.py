@@ -28,7 +28,7 @@ class SubProcessGroupTest(unittest.TestCase):
     def test_limit_number_of_proc(self):
         process_group = SubProcessGroup(polling_interval=1)
 
-        # wait for 2 seconds
+        # wait for 5 seconds
         cmd = "sleep 2"
         start_time = time.time()
         # Quickly start a large number of commands, assur

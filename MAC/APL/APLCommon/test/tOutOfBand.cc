@@ -30,7 +30,6 @@
 #include "Controller_Protocol.ph"
 
 using namespace LOFAR;
-using namespace LOFAR::Controller_Protocol;
 using namespace LOFAR::APLCommon;
 
 typedef struct stateFlow_t {

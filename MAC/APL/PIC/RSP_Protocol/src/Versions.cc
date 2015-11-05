@@ -41,15 +41,19 @@ size_t Versions::getSize() const
 size_t Versions::pack  (char* buffer) const
 {
   size_t offset = 0;
-  offset = MSH_pack(buffer, offset, m_bp_versions);
-  offset = MSH_pack(buffer, offset, m_ap_versions);
+
+  MSH_pack(buffer, offset, m_bp_versions);
+  MSH_pack(buffer, offset, m_ap_versions);
+
   return offset;
 }
 
 size_t Versions::unpack(const char *buffer)
 {
   size_t offset = 0;
-  offset = MSH_unpack(buffer, offset, m_bp_versions);
-  offset = MSH_unpack(buffer, offset, m_ap_versions);
+
+  MSH_unpack(buffer, offset, m_bp_versions);
+  MSH_unpack(buffer, offset, m_ap_versions);
+
   return offset;
 }

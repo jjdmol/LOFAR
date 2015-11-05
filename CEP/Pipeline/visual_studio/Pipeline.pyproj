@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
@@ -29,12 +29,29 @@
     <Content Include="framework\lofarpipe\process_monitoring\config\poll_execute.sh" />
     <Content Include="framework\lofarpipe\process_monitoring\example\poll_execute.sh" />
     <Content Include="framework\lofarpipe\process_monitoring\example\testfile" />
+    <Content Include="helper_scripts\pipeline_commisioning.txt" />
     <Content Include="mac\CMakeLists.txt" />
     <Content Include="recipes\CMakeLists.txt" />
     <Content Include="test\CMakeLists.txt" />
+    <Compile Include="helper_scripts\aggregate_stats.py" />
+    <Compile Include="helper_scripts\create_selfcal_parset.py" />
+    <Compile Include="helper_scripts\state_to_stats.py" />
     <Compile Include="recipes\sip\bin\long_baseline_pipeline.py" />
+    <Compile Include="recipes\sip\bin\selfcal_imager_pipeline.py" />
+    <Compile Include="recipes\sip\helpers\data_quality.py" />
     <Compile Include="recipes\sip\master\long_baseline.py" />
+    <Compile Include="recipes\sip\master\selfcal_awimager.py" />
+    <Compile Include="recipes\sip\master\selfcal_bbs.py" />
+    <Compile Include="recipes\sip\master\selfcal_finalize.py" />
     <Compile Include="recipes\sip\nodes\long_baseline.py" />
+    <Compile Include="recipes\sip\nodes\selfcal_awimager.py" />
+    <Compile Include="recipes\sip\nodes\selfcal_bbs.py" />
+    <Compile Include="recipes\sip\nodes\selfcal_create_dbs.py" />
+    <Compile Include="recipes\sip\nodes\selfcal_finalize.py" />
+    <Compile Include="recipes\sip\nodes\selfcal_prepare.py" />
+    <Compile Include="test\recipes\master\selfcal_prepare_test.py" />
+    <Compile Include="test\regression_tests\regression_test_runner.py" />
+    <Compile Include="test\support\subprocessgroup_test.py" />
     <Compile Include="test\__init__.py" />
     <Compile Include="deploy\deprecated\fabfile.py" />
     <Compile Include="deploy\deprecated\start_cluster.py" />
@@ -245,6 +262,7 @@
     <Folder Include="framework\lofarpipe\process_monitoring\example\" />
     <Folder Include="framework\lofarpipe\support" />
     <Folder Include="framework\lofarpipe\support\deprecated" />
+    <Folder Include="helper_scripts\" />
     <Folder Include="mac" />
     <Folder Include="mac\ep" />
     <Folder Include="mac\ep\control" />

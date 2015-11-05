@@ -28,9 +28,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <ctime>
 #include <utility>
-#include <iosfwd>
 #include <Common/lofar_string.h>
 #include <Common/LofarTypes.h>
 

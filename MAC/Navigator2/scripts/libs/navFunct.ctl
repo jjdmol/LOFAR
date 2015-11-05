@@ -48,6 +48,7 @@
 // navFunct_fillStationLists                  : fill global lists with core/europe and remote stations
 // navFunct_findFirstOne                      : Returns the number of a given array that is true for a certain range
 // navFunct_formatInt                         : returns a string with the int preceeded by zeros
+// navFunct_getAddersForObservation           : returns all the Adders that are in use for an observation
 // navFunct_getArmFromStation                 : Returns the armposition code from a stationName
 // navFunct_getDPFromTypePath                 : Returns Dpname derived from currentDatapoint,typeList and chosen type
 // navFunct_getDynString                      : Returns a dynString from a dyn_dyn[index]
@@ -1892,8 +1893,8 @@ void navFunct_fillStationLists() {
 //                                 "RS306","RS307","RS308","RS309","RS310","RS311",
 //                                 "RS404","RS406","RS407","RS408","RS409","RS410","RS411","RS412","RS413",
 //                                 "RS503","RS506","RS507","RS508","RS509");
-//  europeStations = makeDynString("DE601","DE602","DE603","DE604","DE605","DE609","FR606","PL610","PL611","PL612","SE607","UK608");
-  europeStations = makeDynString("DE601","DE602","DE603","DE604","DE605","DE609","FR606","PL610","PL611","PL612","SE607","UK608");
+//  europeStations = makeDynString("DE601","DE602","DE603","DE604","DE605",,"DE609""FR606","SE607","UK608");
+  europeStations = makeDynString("DE601","DE602","DE603","DE604","DE605","DE609","FR606","SE607","UK608");
   superTerpStations = makeDynString("CS002","CS003","CS004","CS005","CS006","CS007");
   cs0nnCoreStations = makeDynString("CS001",
                                     "CS011","CS013","CS017",
@@ -2274,6 +2275,35 @@ dyn_string navFunct_getInputBuffersForStation(string station) {
   }
   dynSort(inputBuffers);
   return inputBuffers;
+}
+
+// ***************************
+// navFunct_getAddersForObservation
+// ***************************
+// obsName : the observation in question
+//
+// Returns a dyn_string containing all Adders used by this observation
+// ***************************
+// 
+dyn_string navFunct_getAddersForObservation(string obsName) {
+  //  we only need the number from the observation
+  if (strpos(obsName,"Observation") >= 0) {
+    strreplace(obsName,"Observation","");
+  }
+  dyn_string adders;
+  dyn_dyn_anytype tab;
+  if (!navFunct_dpReachable(CEPDBName)) return adders;
+  string query="SELECT '_online.._value' FROM 'LOFAR_*_Adder*.observationName' REMOTE '"+CEPDBName+"' WHERE '_online.._value' == \""+obsName+"\"";
+  //DebugN("query: "+query);
+  dpQuery(query,tab);
+  //DebugN("Result:"+result);
+  for(int z=2;z<=dynlen(tab);z++) {
+    string dp=dpSubStr(tab[z][1],DPSUB_SYS_DP);
+    // avoid doubles
+    dynAppend(adders,dp);
+  }
+  dynSort(adders);
+  return adders;
 }
 
 // ***************************

@@ -29,7 +29,6 @@
 #include <cstring>
 #include <iomanip>
 #include <iostream>
-#include <new>
 #include <execinfo.h>
 
 namespace LOFAR

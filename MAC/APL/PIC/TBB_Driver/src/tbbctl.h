@@ -37,7 +37,6 @@
 
 
 namespace LOFAR {
-  using namespace TBB_Protocol;
   using GCF::TM::GCFTask;
   using GCF::TM::GCFPort;
   using GCF::TM::GCFTimerPort;
@@ -554,7 +553,6 @@ public:
 private:
 	int itsStage;
 	int itsRcu;
-	int itsBoard;
 	uint32 itsPages;
 	NsTimestamp itsTime;
     NsTimestamp itsTimeBefore;

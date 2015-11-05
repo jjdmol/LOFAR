@@ -116,7 +116,7 @@ class imager_finalize(LOFARnodeTCP):
                 os.unlink(fits_output)
 
             try:
-                temp_dir = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
+                temp_dir = tempfile.mkdtemp()
                 with CatchLog4CPlus(temp_dir,
                     self.logger.name + '.' + os.path.basename(awimager_output),
                             "image2fits") as logger:

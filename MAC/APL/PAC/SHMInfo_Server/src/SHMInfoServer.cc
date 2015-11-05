@@ -33,12 +33,10 @@
 #include "SHMSession.h"
 #include "SHM_Protocol.ph"
 #include "SHMInfoServer.h"
+//MAXMOD add for antenna coords
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
 
 namespace LOFAR {
-	using namespace RSP_Protocol;
-	using namespace CAL_Protocol;
-	using namespace SHM_Protocol;
 	using namespace MACIO;
 	using namespace GCF::TM;
 	namespace AMI {

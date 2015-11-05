@@ -1,5 +1,5 @@
 //# Parset.cc
-//# Copyright (C) 2008-2015  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -321,7 +321,6 @@ namespace LOFAR
       // Generic information
       settings.realTime = getBool("Cobalt.realTime", false);
       settings.observationID = getUint32("Observation.ObsID", 0);
-      settings.momID         = getUint32("Observation.momID", 0);
       settings.commandStream = getString("Cobalt.commandStream", "null:");
       settings.startTime = getTime("Observation.startTime", "2013-01-01 00:00:00");
       settings.stopTime  = getTime("Observation.stopTime",  "2013-01-01 00:01:00");
@@ -479,8 +478,7 @@ namespace LOFAR
 
         node.hostName = getString(prefix + "host", "localhost");
         node.cpu      = getUint32(prefix + "cpu",  0);
-        node.mpi_nic  = getString(prefix + "mpi_nic",  "");
-        node.out_nic  = getString(prefix + "out_nic",  "");
+        node.nic      = getString(prefix + "nic",  "");
         node.gpus     = getUint32Vector(prefix + "gpus", vector<unsigned>(1,0)); // default to [0]
 
         settings.nodes.push_back(node);
@@ -513,8 +511,6 @@ namespace LOFAR
         // TODO: Super-station beam former is unused, so will likely be
         // implemented differently. The code below is only there to show how
         // the OLAP.* keys used to be interpreted.
-        //
-        // Note: then, also adapt TODO in writeCommonLofarAttributes()
 
         // OLAP.CNProc.tabList[i] = j <=> superstation j contains (input) station i
         vector<unsigned> tabList = getUint32Vector("OLAP.CNProc.tabList", emptyVectorUnsigned, true);
@@ -680,10 +676,6 @@ namespace LOFAR
           struct ObservationSettings::BeamFormer::SAP &sap = settings.beamFormer.SAPs[i];
           struct ObservationSettings::SAP &obsSap = settings.SAPs[i];
 
-          // Clear counters
-          sap.nrCoherent = 0;
-          sap.nrIncoherent = 0;
-
           size_t nrTABs    = getUint32(str(format("Observation.Beam[%u].nrTiedArrayBeams") % i), 0);
           size_t nrTABSParset = nrTABs;
           size_t nrRings   = getUint32(str(format("Observation.Beam[%u].nrTabRings") % i), 0);
@@ -762,7 +754,7 @@ namespace LOFAR
                 // Note that RingCoordinates provide *relative* coordinates, and
                 // we need absolute ones.
                 tab.direction.type = ptrRingCoords->coordTypeAsString();
-                tab.direction.angle1 = obsSap.direction.angle1 + pointing.first; // TODO: missing projection bug (also below for angle2)
+                tab.direction.angle1 = obsSap.direction.angle1 + pointing.first;
                 tab.direction.angle2 = obsSap.direction.angle2 + pointing.second;
                 // One dispersion measure for all TABs in rings is inconvenient,
                 // but not used anyway. Unclear if setting to 0.0 is better/worse.
@@ -1083,14 +1075,6 @@ namespace LOFAR
     }
 
 
-    // The real stop time can be a bit further than the one actually specified,
-    // because we process in blocks.
-    double Parset::getRealStopTime() const 
-    {
-      return settings.startTime +
-             settings.nrBlocks() * settings.blockDuration();
-    }
-
     std::string Parset::getHostName(OutputType outputType, unsigned streamNr) const
     {
       if (outputType == CORRELATED_DATA)
@@ -1211,7 +1195,7 @@ namespace LOFAR
 
     double Parset::getTime(const std::string &name, const std::string &defaultValue) const
     {
-      return LOFAR::to_time_t(boost::posix_time::time_from_string(getString(name, defaultValue)));
+      return to_time_t(boost::posix_time::time_from_string(getString(name, defaultValue)));
     }
 
     std::string Parset::name() const
@@ -1280,23 +1264,6 @@ namespace LOFAR
     unsigned Parset::nrBitsPerSample() const
     {
       return settings.nrBitsPerSample;
-    }
-
-    unsigned Parset::nrObsOutputTypes() const
-    {
-      unsigned nr = 0;
-
-      if (settings.correlator.enabled) {
-        nr += 1;
-      }
-      if (settings.beamFormer.anyCoherentTABs()) {
-        nr += 1;
-      }
-      if (settings.beamFormer.anyIncoherentTABs()) {
-        nr += 1;
-      }
-
-      return nr;
     }
 
     bool Parset::outputThisType(OutputType outputType) const

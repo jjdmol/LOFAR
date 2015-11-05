@@ -27,7 +27,7 @@ class selfcal_bbs(LOFARnodeTCP):
     2. For each measurement set to calibrate start a subprocess
     3. Check if the processes finished correctly
     4. (added by Nicolas vilchez) concat in time the final MS
-    5. (added by N.Vilchez) copy time slices directory to a new one       
+    5. (added by N.Vilchez) copy time slives directory to a new one       
     """
     
     def run(self, bbs_executable, parset, ms_list_path, parmdb_list_path,

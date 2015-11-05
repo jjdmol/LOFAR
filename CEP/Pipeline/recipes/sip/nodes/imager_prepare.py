@@ -82,6 +82,7 @@ class imager_prepare(LOFARnodeTCP):
                     time_slices_per_image, processed_ms_map, subbands_per_group,
                     processed_ms_dir, parset, ndppp_executable)
 
+
             # If no timeslices were created, bail out with exit status 1
             if len(time_slices_path_list) == 0:
                 self.logger.error("No timeslices were created.")
@@ -217,7 +218,6 @@ class imager_prepare(LOFARnodeTCP):
         Muckable function running the dppp executable.
         Wraps dppp with catchLog4CPLus and catch_segfaults
         """
-        # TODO: cpu limited is static at this location
         environment['OMP_NUM_THREADS'] = str(8)
         self.logger.debug("Using %s threads for ndppp" % 8)
         with CatchLog4CPlus(working_dir, self.logger.name +
@@ -225,22 +225,6 @@ class imager_prepare(LOFARnodeTCP):
                   os.path.basename(ndppp)) as logger:
             catch_segfaults(cmd, working_dir, environment,
                    logger, cleanup = None, usageStats=self.resourceMonitor)
-
-    def _get_nchan_from_ms(self, file):
-        """
-        Wrapper for pt call to retrieve the number of channels in a ms
-
-        Uses Pyrap functionality throws 'random' exceptions.
-        """
-
-        # open the datasetassume same nchan for all sb
-        table = pt.table(file)  # 
-           
-        # get the data column, get description, get the 
-        # shape, first index returns the number of channels
-        nchan = str(pt.tablecolumn(table, 'DATA').getdesc()["shape"][0])
-
-        return nchan
 
     def _run_dppp(self, working_dir, time_slice_dir_path, slices_per_image,
                   processed_ms_map, subbands_per_image, collected_ms_dir_name, 
@@ -266,7 +250,6 @@ class imager_prepare(LOFARnodeTCP):
             # filling with zeros           
             ndppp_input_ms = []
             nchan_known = False
-
             for item in processed_ms_map[start_slice_range:end_slice_range]:
                 if item.skip:
                     ndppp_input_ms.append("SKIPPEDSUBBAND")
@@ -274,15 +257,20 @@ class imager_prepare(LOFARnodeTCP):
                     # From the first non skipped filed get the nchan
                     if not nchan_known:
                         try:
-                            # We want toAutomatically average the number 
-                            # of channels in the output to 1, get the current
-                            # nr of channels
-                            nchan_input = self._get_nchan_from_ms(item.file)
+                            # Automatically average the number of channels in 
+                            # the output to 1
+                            # open the datasetassume same nchan for all sb
+                            table = pt.table(item.file)  # 
+            
+                            # get the data column, get description, get the 
+                            # shape, first index returns the number of channels
+                            nchan_input = str(
+                                pt.tablecolumn(table, 
+                                               'DATA').getdesc()["shape"][0])
                             nchan_known = True
 
                         # corrupt input measurement set
-                        except Exception, e:
-                            self.logger.warn(str(e))
+                        except:
                             item.skip = True
                             ndppp_input_ms.append("SKIPPEDSUBBAND")
                             continue

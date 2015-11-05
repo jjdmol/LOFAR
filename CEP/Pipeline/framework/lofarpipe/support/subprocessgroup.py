@@ -62,9 +62,9 @@ class SubProcessGroup(object):
             or as a list of strings
             """
 
-            if isinstance(cmd_in, str): 
+            if type(cmd_in) == type(""): #todo ugly
                 cmd = cmd_in.split()
-            elif isinstance(cmd_in, list):
+            elif type(cmd_in) == type([]):
                 cmd = cmd_in
             else:
                 raise Exception("SubProcessGroup.run() expects a string or" +
@@ -138,7 +138,7 @@ class SubProcessGroup(object):
                    
                 # if there are less then the allowed processes running and
                 # we have waiting processes start another on
-                while (self.running_process_count < self.max_concurrent_processes 
+                if (self.running_process_count < self.max_concurrent_processes 
                     and
                     len(self.processes_waiting_for_execution) != 0): 
                     # Get the last process

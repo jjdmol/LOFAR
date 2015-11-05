@@ -33,7 +33,7 @@
 #include <fstream>
 
 using namespace LOFAR;
-using namespace TBB_Protocol;
+	//using namespace GCFCommon;
 using namespace TBB;
 
 // rcu to channel conversion, rcu-0 is on channel-2
@@ -111,9 +111,6 @@ void TbbSettings::getTbbSettings()
 	setMaxBoards(n_tbboards);
 	//setMaxBoards(MAX_N_TBBOARDS);
 	
-    try { itsDefaultImageNr = globalParameterSet()->getInt32("TBBDriver.DEFAULT_IMAGE"); }
-	catch (APSException&) { LOG_INFO_STR(formatString("TBBDriver.DEFAULT_IMAGE not found")); }
-    
 	try { itsSaveTriggersToFile = globalParameterSet()->getInt32("TBBDriver.SAVE_TRIGGERS_TO_FILE"); }
 	catch (APSException&) { LOG_INFO_STR(formatString("TBBDriver.SAVE_TRIGGERS_TO_FILE not found")); }
 	

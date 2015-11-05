@@ -49,9 +49,6 @@ using namespace boost::posix_time;
 
 namespace LOFAR {
 	using namespace APLCommon;
-	using namespace DP_Protocol;
-	using namespace Controller_Protocol;
-	using namespace CAL_Protocol;
 	namespace StationCU {
 	
 // static pointer to this object for signal handler

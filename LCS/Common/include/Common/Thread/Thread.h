@@ -27,6 +27,7 @@
 
 #ifdef USE_THREADS
 
+#include <features.h>
 #include <pthread.h>
 #include <signal.h>
 #include <sched.h>
@@ -309,27 +310,19 @@ template <typename T> inline void Thread::stub(Args<T> *args)
   // can be reused once the thread finishes.
   Cancellation::ScopedRegisterThread rt;
 
-  ThreadLogger threadLogger;
+  LOGGER_ENTER_THREAD();
 
   LOG_DEBUG_STR(logPrefix << "Thread started");
 
   ThreadMap::ScopedRegistration sr(ThreadMap::instance(), args->name);
 
   try {
-#if defined(_LIBCPP_VERSION)
-    int retval;
-
-    // Set name WITHIN the thread, to avoid race conditions
-    if ((retval = pthread_setname_np(args->name.substr(0,15).c_str())) != 0)
-      throw SystemCallException("pthread_setname_np", retval, THROW_ARGS);
-#else
-# if defined(_GNU_SOURCE) && __GLIBC_PREREQ(2, 12)
+#if defined(_GNU_SOURCE) && __GLIBC_PREREQ(2, 12)
     int retval;
 
     // Set name WITHIN the thread, to avoid race conditions
     if ((retval = pthread_setname_np(pthread_self(), args->name.substr(0,15).c_str())) != 0)
       throw SystemCallException("pthread_setname_np", retval, THROW_ARGS);
-# endif
 #endif
 
     // allow cancellation from here, to guarantee finished.up()
@@ -359,12 +352,16 @@ template <typename T> inline void Thread::stub(Args<T> *args)
 
     finished.up();
 
+    LOGGER_EXIT_THREAD();
+
     throw;
   }
 
   finished.up();
 
   LOG_DEBUG_STR(logPrefix << "Thread stopped");
+
+  LOGGER_EXIT_THREAD();
 }
 
 template <typename T> inline void *Thread::stub(void *arg)
