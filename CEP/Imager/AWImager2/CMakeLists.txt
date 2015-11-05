@@ -4,7 +4,7 @@ lofar_package(AWImager2 DEPENDS Common ParmDB StationResponse)
 
 include(LofarFindPackage)
 
-lofar_find_package(Casa COMPONENTS synthesis)
+lofar_find_package(Casa COMPONENTS synthesis components)
 
 if(${CASA_FOUND})
   lofar_find_package(Casacore REQUIRED COMPONENTS images msfits coordinates python)
