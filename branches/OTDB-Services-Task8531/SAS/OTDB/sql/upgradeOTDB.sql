@@ -9,3 +9,4 @@ CREATE INDEX statehist_creation_idx ON statehistory(creation);
 
 -- Load modified/improved functions
 \i exportTree_func.sql
+\i getTreeGroup_func.sql
