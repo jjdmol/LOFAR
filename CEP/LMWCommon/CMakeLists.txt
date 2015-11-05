@@ -7,6 +7,5 @@ lofar_find_package(Boost REQUIRED)
 lofar_find_package(Casacore COMPONENTS casa REQUIRED)
 
 add_subdirectory(include/LMWCommon)
-add_subdirectory(share)
 add_subdirectory(src)
 add_subdirectory(test)

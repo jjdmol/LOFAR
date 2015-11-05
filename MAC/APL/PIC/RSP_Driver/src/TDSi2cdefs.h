@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -404,24 +404,30 @@
 namespace LOFAR {
   namespace RSP {
 
+	extern uint8 tds_160MHz_result[
+#ifndef DISABLE_PROGRAMPLL
+					  TDS_INIT_RESULT_SIZE
+					+ TDS_PROGRAMPLLS_RESULT_SIZE
+#endif
+					+ TDS_160MHZ_RESULT_SIZE
+					+ TDS_C_END_RESULT_SIZE];
 
-    extern uint8 tds_pll_result[ TDS_INIT_RESULT_SIZE
-			                   + TDS_PROGRAMPLLS_RESULT_SIZE ];
-                    
-	extern uint8 tds_160MHz_result[ TDS_160MHZ_RESULT_SIZE
-					              + TDS_C_END_RESULT_SIZE ];
+	extern uint8 tds_200MHz_result[ 
+#ifndef DISABLE_PROGRAMPLL
+					  TDS_INIT_RESULT_SIZE
+					+ TDS_PROGRAMPLLS_RESULT_SIZE
+#endif
+					+ TDS_200MHZ_RESULT_SIZE
+					+ TDS_C_END_RESULT_SIZE];
 
-	extern uint8 tds_200MHz_result[ TDS_200MHZ_RESULT_SIZE
-					              + TDS_C_END_RESULT_SIZE ];
-
-	extern uint8 tds_off_result[ TDS_VCXO_OFF_RESULT_SIZE
-                               + TDS_OFF_RESULT_SIZE
-                               + TDS_C_END_RESULT_SIZE ];
+	extern uint8 tds_off_result[  TDS_VCXO_OFF_RESULT_SIZE
+								+ TDS_OFF_RESULT_SIZE
+								+ TDS_C_END_RESULT_SIZE];
 
 	extern uint8 tds_readstatus_result[ TDS_READ_LOCKDETECT_RESULT_SIZE
 									  + TDS_READ_VOLT_RESULT_SIZE
 									  + TDS_READ_SPU_RESULT_SIZE
-									  + TDS_C_END_RESULT_SIZE ];
+									  + TDS_C_END_RESULT_SIZE];
   };
 };
      

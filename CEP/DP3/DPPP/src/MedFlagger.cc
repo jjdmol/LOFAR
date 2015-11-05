@@ -25,7 +25,7 @@
 #include <DPPP/MedFlagger.h>
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
-#include <Common/ParameterSet.h>
+#include <DPPP/ParSet.h>
 #include <Common/StreamUtil.h>
 #include <Common/LofarLogger.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -42,8 +42,7 @@ namespace LOFAR {
   namespace DPPP {
 
     MedFlagger::MedFlagger (DPInput* input,
-                            const ParameterSet& parset,
-                            const string& prefix)
+                            const ParSet& parset, const string& prefix)
       : itsInput         (input),
         itsName          (prefix),
         itsThresholdStr  (parset.getString (prefix+"threshold", "1")),
@@ -51,7 +50,7 @@ namespace LOFAR {
         itsTimeWindowStr (parset.getString (prefix+"timewindow", "1")),
         itsNTimes        (0),
         itsNTimesDone    (0),
-        itsFlagCounter   (input->msName(), parset, prefix+"count."),
+        itsFlagCounter   (input, parset, prefix+"count."),
         itsMoveTime      (0),
         itsMedianTime    (0)
     {
@@ -60,6 +59,25 @@ namespace LOFAR {
       itsApplyAutoCorr = parset.getBool  (prefix+"applyautocorr", false);
       itsMinBLength    = parset.getDouble(prefix+"blmin", -1);
       itsMaxBLength    = parset.getDouble(prefix+"blmax", 1e30);
+      // Determine baseline indices of autocorrelations.
+      const Vector<Int>& ant1 = itsInput->getAnt1();
+      const Vector<Int>& ant2 = itsInput->getAnt2();
+      int nant = 1 + std::max (max(ant1), max(ant2));
+      itsAutoCorrIndex.resize (nant);
+      std::fill (itsAutoCorrIndex.begin(), itsAutoCorrIndex.end(), -1);
+      itsNrAutoCorr = 0;
+      for (uint i=0; i<ant1.size(); ++i) {
+        if (ant1[i] == ant2[i]) {
+          itsAutoCorrIndex[ant1[i]] = i;
+          itsNrAutoCorr++;
+        }
+      }
+      if (itsApplyAutoCorr) {
+        ASSERTSTR (itsNrAutoCorr > 0, "applyautocorr=True cannot be used if "
+                   "the data does not contain autocorrelations");
+      }
+      // Calculate the baseline lengths.
+      itsBLength = itsInput->getBaselineLengths();
     }
 
     MedFlagger::~MedFlagger()
@@ -85,7 +103,8 @@ namespace LOFAR {
     {
       os << endl << "Flags set by MADFlagger " << itsName;
       os << endl << "=======================" << endl;
-      itsFlagCounter.showBaseline (os, itsNTimes);
+      itsFlagCounter.showBaseline (os, itsInput->getAnt1(),
+                                   itsInput->getAnt2(), itsNTimes);
       itsFlagCounter.showChannel  (os, itsNTimes);
       itsFlagCounter.showCorrelation (os, itsNTimes);
     }
@@ -108,36 +127,17 @@ namespace LOFAR {
       os << " of it spent in calculating medians" << endl;
     }
 
-    void MedFlagger::updateInfo (const DPInfo& infoIn)
+    void MedFlagger::updateInfo (DPInfo& info)
     {
-      info() = infoIn;
-      info().setNeedVisData();
-      info().setWriteFlags();
-      // Get baseline indices of autocorrelations.
-      itsAutoCorrIndex = info().getAutoCorrIndex();
-      itsNrAutoCorr    = 0;
-      for (uint i=0; i<itsAutoCorrIndex.size(); ++i) {
-        if (itsAutoCorrIndex[i] >= 0) {
-          itsNrAutoCorr++;
-        }
-      }
-      if (itsApplyAutoCorr) {
-        ASSERTSTR (itsNrAutoCorr > 0, "applyautocorr=True cannot be used if "
-                   "the data does not contain autocorrelations");
-      }
-      // Calculate the baseline lengths.
-      itsBLength = info().getBaselineLengths();
+      info.setNeedVisData();
+      info.setNeedWrite();
+
       // Evaluate the window size expressions.
-      getExprValues (infoIn.nchan(), infoIn.ntime());
+      getExprValues (info.nchan(), info.ntime());
       itsBuf.resize (itsTimeWindow);
-      itsAmpl.resize (itsTimeWindow);
-      for (size_t i=0; i<itsAmpl.size(); ++i) {
-        itsAmpl[i].resize (infoIn.ncorr(), infoIn.nchan(),
-                           infoIn.nbaselines());
-      }
       // Set or check the correlations to flag on.
       vector<uint> flagCorr;
-      uint ncorr = infoIn.ncorr();
+      uint ncorr = info.ncorr();
       if (itsFlagCorr.empty()) {
         // No correlations given means use them all.
         for (uint i=0; i<ncorr; ++i) {
@@ -159,7 +159,7 @@ namespace LOFAR {
       }
       itsFlagCorr = flagCorr;
       // Initialize the flag counters.
-      itsFlagCounter.init (getInfo());
+      itsFlagCounter.init (info.nbaselines(), info.nchan(), info.ncorr());
     }
 
     bool MedFlagger::process (const DPBuffer& buf)
@@ -168,10 +168,12 @@ namespace LOFAR {
       // Accumulate in the time window.
       // The buffer is wrapped, thus oldest entries are overwritten.
       uint index = itsNTimes % itsTimeWindow;
-      itsBuf[index].copy (buf);
-      DPBuffer& dbuf = itsBuf[index];
+      itsBuf[index] = buf;
       // Calculate amplitudes if needed.
-      amplitude (itsAmpl[index], dbuf.getData());
+      DPBuffer& dbuf = itsBuf[index];
+      if (dbuf.getAmplitudes().empty()) {
+        dbuf.setAmplitudes (amplitude(dbuf.getData()));
+      }
       // Fill flags if needed.
       if (dbuf.getFlags().empty()) {
         dbuf.getFlags().resize (dbuf.getData().shape());
@@ -265,8 +267,8 @@ namespace LOFAR {
     {
       ///cout << "flag: " <<itsNTimes<<' '<<itsNTimesDone<<' ' <<index << timeEntries << endl;
       // Get antenna numbers in case applyautocorr is true.
-      const Vector<Int>& ant1 = getInfo().getAnt1();
-      const Vector<Int>& ant2 = getInfo().getAnt2();
+      const Vector<Int>& ant1 = itsInput->getAnt1();
+      const Vector<Int>& ant2 = itsInput->getAnt2();
       // Result is 'copy' of the entry at the given time index.
       DPBuffer buf (itsBuf[index]);
       IPosition shp = buf.getData().shape();
@@ -276,7 +278,7 @@ namespace LOFAR {
       int nrbl   = shp[2];    // OpenMP 2.5 needs signed iteration variables
       uint ntime = timeEntries.size();
       // Get pointers to data and flags.
-      const float* bufDataPtr = itsAmpl[index].data();
+      const float* bufDataPtr = buf.getAmplitudes().data();
       bool* bufFlagPtr = buf.getFlags().data();
       float MAD = 1.4826;   //# constant determined by Pandey
       itsComputeTimer.start();
@@ -284,74 +286,74 @@ namespace LOFAR {
       // This can be done in parallel.
 #pragma omp parallel
       {
-        // Create a temporary buffer (per thread) to hold data for determining
-        // the medians.
-        // Also create thread-private counter and timer objects.
-        Block<float> tempBuf(itsFreqWindow*ntime);
-        FlagCounter counter;
-        counter.init (getInfo());
-        NSTimer moveTimer;
-        NSTimer medianTimer;
-        float Z1, Z2;
-        // The for loop can be parallellized. This must be done dynamically,
-        // because the execution time of each iteration can vary a lot.
+	// Create a temporary buffer (per thread) to hold data for determining
+	// the medians.
+	// Also create thread-private counter and timer objects.
+	Block<float> tempBuf(itsFreqWindow*ntime);
+	FlagCounter counter;
+	NSTimer moveTimer;
+	NSTimer medianTimer;
+	float Z1, Z2;
+	// The for loop can be parallellized. This must be done dynamically,
+	// because the execution time of each iteration can vary a lot.
 #pragma omp for schedule(dynamic)
-        // GCC-4.3 only supports OpenMP 2.5 that needs signed iteration
-        // variables.
-        for (int ib=0; ib<nrbl; ++ib) {
-          const float* dataPtr = bufDataPtr + ib*blsize;
-          bool* flagPtr = bufFlagPtr + ib*blsize;
-          double threshold = itsThresholdArr[ib];
-          // Do only autocorrelations if told so.
-          // Otherwise do baseline only if length within min-max.
-          if ((!itsApplyAutoCorr  &&  itsBLength[ib] >= itsMinBLength  &&
-              itsBLength[ib] <= itsMaxBLength)  ||
-              (itsApplyAutoCorr  &&  ant1[ib] == ant2[ib])) {
-            for (uint ic=0; ic<nchan; ++ic) {
-              bool corrIsFlagged = false;
-              // Iterate over given correlations.
-              for (vector<uint>::const_iterator iter = itsFlagCorr.begin();
-                  iter != itsFlagCorr.end(); ++iter) {
-                uint ip = *iter;
-                // If one correlation is flagged, all of them will be flagged.
-                // So no need to check others.
-                if (flagPtr[ip]) {
-                  corrIsFlagged = true;
-                  break;
-                }
-                // Calculate values from the median.
-                computeFactors (timeEntries, ib, ic, ip, nchan, ncorr,
-                    Z1, Z2, tempBuf.storage(),
-                    moveTimer, medianTimer);
-                if (dataPtr[ip] > Z1 + threshold * Z2 * MAD) {
-                  corrIsFlagged = true;
-                  counter.incrBaseline(ib);
-                  counter.incrChannel(ic);
-                  counter.incrCorrelation(ip);
-                  break;
-                }
-              }
-              if (corrIsFlagged) {
-                for (uint ip=0; ip<ncorr; ++ip) {
-                  flagPtr[ip] = true;
-                }
-              }
-              dataPtr += ncorr;
-              flagPtr += ncorr;
-            }
-          } else {
-            dataPtr += nchan*ncorr;
-            flagPtr += nchan*ncorr;
-          }
-        } // end of OMP for
+	// GCC-4.3 only supports OpenMP 2.5 that needs signed iteration
+	// variables.
+	for (int ib=0; ib<nrbl; ++ib) {
+	  counter.init (itsFlagCounter);
+	  const float* dataPtr = bufDataPtr + ib*blsize;
+	  bool* flagPtr = bufFlagPtr + ib*blsize;
+	  double threshold = itsThresholdArr[ib];
+	  // Do only autocorrelations if told so.
+	  // Otherwise do baseline only if length within min-max.
+	  if ((!itsApplyAutoCorr  &&  itsBLength[ib] >= itsMinBLength  &&
+	       itsBLength[ib] <= itsMaxBLength)  ||
+	      (itsApplyAutoCorr  &&  ant1[ib] == ant2[ib])) {
+	    for (uint ic=0; ic<nchan; ++ic) {
+	      bool corrIsFlagged = false;
+	      // Iterate over given correlations.
+	      for (vector<uint>::const_iterator iter = itsFlagCorr.begin();
+		   iter != itsFlagCorr.end(); ++iter) {
+		uint ip = *iter;
+		// If one correlation is flagged, all of them will be flagged.
+		// So no need to check others.
+		if (flagPtr[ip]) {
+		  corrIsFlagged = true;
+		  break;
+		}
+		// Calculate values from the median.
+		computeFactors (timeEntries, ib, ic, ip, nchan, ncorr,
+				Z1, Z2, tempBuf.storage(),
+				moveTimer, medianTimer);
+		if (dataPtr[ip] > Z1 + threshold * Z2 * MAD) {
+		  corrIsFlagged = true;
+		  counter.incrBaseline(ib);
+		  counter.incrChannel(ic);
+		  counter.incrCorrelation(ip);
+		  break;
+		}
+	      }
+	      if (corrIsFlagged) {
+		for (uint ip=0; ip<ncorr; ++ip) {
+		  flagPtr[ip] = true;
+		}
+	      }
+	      dataPtr += ncorr;
+	      flagPtr += ncorr;
+	    }
+	  } else {
+	    dataPtr += nchan*ncorr;
+	    flagPtr += nchan*ncorr;
+	  }
 #pragma omp critical(medflagger_updatecounts)
-        {
-          // Add the counters to the overall object.
-          itsFlagCounter.add (counter);
-          // Add the timings.
-          itsMoveTime   += moveTimer.getElapsed();
-          itsMedianTime += medianTimer.getElapsed();
-        } // end of OMP critical
+	  {
+	    // Add the counters to the overall object.
+	    itsFlagCounter.add (counter);
+	    // Add the timings.
+	    itsMoveTime   += moveTimer.getElapsed();
+	    itsMedianTime += medianTimer.getElapsed();
+	  } // end of OMP critical
+	} // end of OMP for
       } // end of OMP parallel
 
       itsComputeTimer.stop();
@@ -434,10 +436,9 @@ namespace LOFAR {
       const uint* endIter = iter + itsTimeWindowArr[bl];
       for (; iter!=endIter; ++iter) {
         const DPBuffer& inbuf = itsBuf[*iter];
-        const Cube<float>& ampl = itsAmpl[*iter];
         // Get pointers to given baseline and correlation.
         uint offset = bl*nchan*ncorr + corr;
-        const float* dataPtr = ampl.data() + offset;
+        const float* dataPtr = inbuf.getAmplitudes().data() + offset;
         const bool*  flagPtr = inbuf.getFlags().data() + offset;
         // Now move data from the two channel parts.
         for (int i=s1*ncorr; i<e1*ncorr; i+=ncorr) {

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -152,7 +152,6 @@ private:
 							   uint16				result);
 	void _removeAction		  (const string&		aName,
 							   CTState::CTstateNr	requestedState);
-	void _printStartDaemonMap(const string& actionname);
 
 	#define	findController(cntlrName)	\
 			ControllerAdmin::instance()->findController(cntlrName)
@@ -168,8 +167,8 @@ private:
 	map <string, GCFTCPPort*>	itsStartDaemonMap;	// map<hostname,sdconnection>
 	typedef map<string, GCFTCPPort*>::iterator			SDiter;
 	typedef map<string, GCFTCPPort*>::const_iterator	const_SDiter;
-	int32						itsStartupRetryInterval;
-	int32						itsMaxStartupRetries;
+	uint32						itsStartupRetryInterval;
+	uint32						itsMaxStartupRetries;
 
 	list<ControllerInfo>*		itsCntlrList;		// admin. of child controllers
 

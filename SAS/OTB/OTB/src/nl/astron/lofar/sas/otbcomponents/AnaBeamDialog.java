@@ -2,7 +2,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ package nl.astron.lofar.sas.otbcomponents;
 import javax.swing.border.TitledBorder;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
-import nl.astron.lofar.sas.otb.objects.AnaBeam;
 import org.apache.log4j.Logger;
 
 
@@ -48,13 +47,29 @@ public class AnaBeamDialog extends javax.swing.JDialog {
      * @param   rankChoices             String with all possible choices + default for combobox
      * @param   edit                    indicates edit or add mode
      */
-    public AnaBeamDialog(java.awt.Frame parent, boolean modal,AnaBeam anAnaBeam,boolean edit ) {
+    public AnaBeamDialog(java.awt.Frame parent, boolean modal,String[] selection, String directionTypeChoices,
+            String rankChoices, boolean edit ) {
 
         super(parent, modal);
         initComponents();
-        LofarUtils.setPopupComboChoices(inputDirectionType,anAnaBeam.getDirectionTypeChoices());
-        LofarUtils.setPopupComboChoices(inputRank,anAnaBeam.getRankChoices());
-        itsAnaBeam = anAnaBeam;
+        LofarUtils.setPopupComboChoices(inputDirectionType,directionTypeChoices);
+        LofarUtils.setPopupComboChoices(inputRank,rankChoices);
+        itsDirectionType=selection[0];
+        itsTarget=selection[1];
+        itsAngle1=selection[2];
+        itsAngle2=selection[3];
+        itsCoordType=selection[4];
+        itsDuration=selection[5];
+        itsMaxDur=selection[6];
+        if (!itsMaxDur.equals("Missing")) {
+            inputMaxDur.setVisible(true);
+            inputMaxDur.setSelected(LofarUtils.StringToBoolean(itsMaxDur));
+        } else {
+            inputMaxDur.setVisible(false);
+        }
+
+        itsStartTime=selection[7];
+        itsRank=selection[8];
         editting=edit;
         initialize();
     }
@@ -62,11 +77,17 @@ public class AnaBeamDialog extends javax.swing.JDialog {
 
     private void initialize() {
 
-        inputDirectionType.setSelectedItem(itsAnaBeam.getDirectionType());
-        inputAngle1.setText(itsAnaBeam.getAngle1());
-        inputAngle2.setText(itsAnaBeam.getAngle2());
-        coordTypeChange.setSelectedItem(itsAnaBeam.getCoordType());
-        inputRank.setSelectedItem(itsAnaBeam.getRank());
+        inputDirectionType.setSelectedItem(itsDirectionType);
+        inputAngle1.setText(itsAngle1);
+        inputAngle2.setText(itsAngle2);
+        coordTypeChange.setSelectedItem(itsCoordType);
+        if (itsMaxDur.equals("")) {
+            inputMaxDur.setVisible(true);
+            inputMaxDur.setSelected(LofarUtils.StringToBoolean(itsMaxDur));
+        } else {
+            inputMaxDur.setVisible(false);
+        }
+        inputRank.setSelectedItem(itsRank);
     }
     
     public boolean hasChanged() {
@@ -102,9 +123,11 @@ public class AnaBeamDialog extends javax.swing.JDialog {
         labelDirectionType = new javax.swing.JLabel();
         inputRank = new javax.swing.JComboBox();
         coordTypeChange = new javax.swing.JComboBox();
+        inputMaxDur = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("LOFAR View TreeInfo");
+        setAlwaysOnTop(true);
         setModal(true);
         setName("loadFileDialog"); // NOI18N
         setResizable(false);
@@ -148,6 +171,8 @@ public class AnaBeamDialog extends javax.swing.JDialog {
             }
         });
 
+        inputMaxDur.setText("Maximize  Duration");
+
         org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -178,7 +203,11 @@ public class AnaBeamDialog extends javax.swing.JDialog {
                         .add(labelRank, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 93, Short.MAX_VALUE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(inputRank, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 75, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .add(266, 266, 266))))
+                        .add(266, 266, 266))
+                    .add(jPanel1Layout.createSequentialGroup()
+                        .add(97, 97, 97)
+                        .add(inputMaxDur)
+                        .addContainerGap(226, Short.MAX_VALUE))))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -196,11 +225,13 @@ public class AnaBeamDialog extends javax.swing.JDialog {
                         .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                             .add(labelAngle2)
                             .add(inputAngle2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                        .add(31, 31, 31)
+                        .add(6, 6, 6)
+                        .add(inputMaxDur)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                             .add(inputRank, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                             .add(labelRank))
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 39, Short.MAX_VALUE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 35, Short.MAX_VALUE)
                         .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                             .add(cancelButton)
                             .add(saveButton)))
@@ -223,33 +254,46 @@ public class AnaBeamDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_saveButtonActionPerformed
     
     private void checkChanged() {
-        if (!itsAnaBeam.getDirectionType().equals(inputDirectionType.getSelectedItem().toString())) {
+        if (!itsDirectionType.equals(inputDirectionType.getSelectedItem().toString())) {
             isChanged=true;
         }
-        if (!itsAnaBeam.getAngle1().equals(inputAngle1.getText())) {
+        if (!itsAngle1.equals(inputAngle1.getText())) {
             isChanged=true;
         }
-        if (!itsAnaBeam.getAngle2().equals(inputAngle2.getText())) {
+        if (!itsAngle2.equals(inputAngle2.getText())) {
             isChanged=true;
         }
-        if (!itsAnaBeam.getCoordType().equals(coordTypeChange.getSelectedItem().toString())) {
+        if (!itsCoordType.equals(coordTypeChange.getSelectedItem().toString())) {
             isChanged=true;
         }
-        if (!itsAnaBeam.getRank().equals(inputRank.getSelectedItem().toString())) {
+        if (inputMaxDur.isVisible()) {
+            if (!itsMaxDur.equals(LofarUtils.BooleanToString(inputMaxDur.isSelected()))) {
+                isChanged=true;
+            }
+        }
+        if (!itsRank.equals(inputRank.getSelectedItem().toString())) {
             isChanged=true;
         }
     }
     
-    public AnaBeam getAnaBeam() {
+    public String[] getBeam() {
 
-        itsAnaBeam.setDirectionType(inputDirectionType.getSelectedItem().toString());
-        itsAnaBeam.setAngle1(inputAngle1.getText());
-        itsAnaBeam.setAngle2(inputAngle2.getText());
-        itsAnaBeam.setCoordType(coordTypeChange.getSelectedItem().toString());
-        itsAnaBeam.setRank(inputRank.getSelectedItem().toString());
-
+        String aS= "Missing";
+        if(!itsMaxDur.equals("Missing")) {
+            aS=LofarUtils.BooleanToString(inputMaxDur.isSelected());
+        }
+        String[] newRow = {inputDirectionType.getSelectedItem().toString(),
+        itsTarget,
+        inputAngle1.getText(),
+        inputAngle2.getText(),
+        coordTypeChange.getSelectedItem().toString(),
+        itsDuration,
+        aS,
+        itsStartTime,
+        inputRank.getSelectedItem().toString()
+        };
         
-        return itsAnaBeam;
+        return newRow;
     }
     
     private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelButtonActionPerformed
@@ -263,27 +307,21 @@ public class AnaBeamDialog extends javax.swing.JDialog {
         if (evt.getActionCommand().equals("comboBoxChanged")) {
             String ch = coordTypeChange.getSelectedItem().toString();
             String tmpch = ch;
-            String tmpcoord = itsAnaBeam.getCoordType();
-            if ((inputAngle1.getText().isEmpty() && inputAngle1.getText().isEmpty()) || ch.equals(itsAnaBeam.getCoordType())) {
+            String tmpcoord = itsCoordType;
+            if ((inputAngle1.getText().isEmpty() && inputAngle1.getText().isEmpty()) || ch.equals(itsCoordType)) {
                 return;
             }
             try {
                 if (!inputAngle1.getText().isEmpty()) {
-                    switch (ch) {
-                        case "dmsdms":
-                            tmpch = "dms";
-                            break;
-                        case "hmsdms":
-                            tmpch = "hms";
-                            break;
+                    if (ch.equals("dmsdms")) {
+                        tmpch = "dms";
+                    } else if (ch.equals("hmsdms")) {
+                        tmpch = "hms";
                     }
-                    switch (itsAnaBeam.getCoordType()) {
-                        case "hmsdms":
-                            tmpcoord = "hms";
-                            break;
-                        case "dmsdms":
-                            tmpcoord = "dms";
-                            break;
+                    if (itsCoordType.equals("hmsdms")) {
+                        tmpcoord = "hms";
+                    } else if (itsCoordType.equals("dmsdms")) {
+                        tmpcoord = "dms";
                     }
                     inputAngle1.setText(LofarUtils.changeCoordinate(tmpcoord, tmpch, inputAngle1.getText()));
                 }
@@ -291,12 +329,12 @@ public class AnaBeamDialog extends javax.swing.JDialog {
                     if (ch.equals("dmsdms") || ch.equals("hmsdms")) {
                         tmpch = "dms";
                     }
-                    if (itsAnaBeam.getCoordType().equals("hmsdms") || itsAnaBeam.getCoordType().equals("dmsdms")) {
+                    if (itsCoordType.equals("hmsdms") || itsCoordType.equals("dmsdms")) {
                         tmpcoord = "dms";
                     }
                     inputAngle2.setText(LofarUtils.changeCoordinate(tmpcoord, tmpch, inputAngle2.getText()));
                 }
-                itsAnaBeam.setCoordType(ch);
+                itsCoordType = ch;
             } catch (NumberFormatException ex) {
                 String aS = "Error in angle input format :" + ex;
                 logger.error(aS);
@@ -305,10 +343,19 @@ public class AnaBeamDialog extends javax.swing.JDialog {
         }
 }//GEN-LAST:event_coordTypeChangeActionPerformed
     
-        
+    
     private MainFrame itsMainFrame = null;
-    private boolean   isChanged=false;
-    private AnaBeam   itsAnaBeam;
+    private boolean isChanged=false;
+    
+    private String    itsDirectionType  = "";
+    private String    itsTarget         = "";
+    private String    itsAngle1         = "";
+    private String    itsAngle2         = "";
+    private String    itsCoordType      = "";
+    private String    itsDuration       = "";
+    private String    itsMaxDur         = "";
+    private String    itsStartTime      = "";
+    private String    itsRank           = "";
     private boolean   editting          = false;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -317,6 +364,7 @@ public class AnaBeamDialog extends javax.swing.JDialog {
     private javax.swing.JTextField inputAngle1;
     private javax.swing.JTextField inputAngle2;
     private javax.swing.JComboBox inputDirectionType;
+    private javax.swing.JCheckBox inputMaxDur;
     private javax.swing.JComboBox inputRank;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JLabel labelAngle1;

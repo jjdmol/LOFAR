@@ -17,7 +17,6 @@ install(FILES
   ExprSet.h
   IndexedSequence.h
   Instrument.h
-  Interval.h
   IonosphereExpr.h
   Measurement.h
   MeasurementAIPS.h
@@ -30,8 +29,8 @@ install(FILES
   PatchExpr.h
   Solver.h
   SolverInterfaceTypes.h
+  StationResponse.h
   StationExprLOFAR.h
-  StationLOFAR.h
   Types.h
   UVWFlagger.h
   VisBuffer.h
@@ -40,6 +39,7 @@ install(FILES
   VisSelection.h
   DESTINATION include/${PACKAGE_NAME})
 install(FILES
+  Expr/AntennaFieldAzEl.h
   Expr/AzEl.h
   Expr/BasicExpr.h
   Expr/Cache.h
@@ -47,7 +47,6 @@ install(FILES
   Expr/ConditionNumber.h
   Expr/Delay.h
   Expr/Element.h
-  Expr/ElevationCut.h
   Expr/EquatorialCentroid.h
   Expr/Expr.h
   Expr/ExprId.h
@@ -63,6 +62,7 @@ install(FILES
   Expr/FlagIf.h
   Expr/GaussianCoherence.h
   Expr/GaussianSource.h
+  Expr/HamakerDipole.h
   Expr/IonPhaseShift.h
   Expr/ITRFDirection.h
   Expr/LinearToCircularRL.h
@@ -72,7 +72,6 @@ install(FILES
   Expr/MatrixComplexArr.h
   Expr/MatrixComplexSca.h
   Expr/MatrixInverse.h
-  Expr/MatrixInverseMMSE.h
   Expr/MatrixMul2.h
   Expr/MatrixMul3.h
   Expr/MatrixRealArr.h
@@ -89,17 +88,17 @@ install(FILES
   Expr/RefCounting.h
   Expr/Request.h
   Expr/Resampler.h
-  Expr/Rotation.h
   Expr/ScalarMatrixMul.h
   Expr/Scope.h
   Expr/ShapeletCoherence.h
   Expr/ShapeletSource.h
   Expr/Source.h
   Expr/SpectralIndex.h
-  Expr/StationResponse.h
+  Expr/StationBeamFormer.h
   Expr/StationShift.h
   Expr/StationUVW.h
   Expr/StokesRM.h
   Expr/TECU2Phase.h
+  Expr/TileArrayFactor.h
   Expr/Timer.h
   DESTINATION include/${PACKAGE_NAME}/Expr)

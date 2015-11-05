@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tgetparsetvalue
+./runctest.sh tgetparsetvalue > tgetparsetvalue.log 2>&1

@@ -292,8 +292,8 @@ void TimestepAccessor::emptyWriteBuffer()
 			{
 				for(unsigned p=0;p<_polarizationCount;++p)
 				{
-					(*dataIterator).real(item.data.realData[p][currentIndex]);
-					(*dataIterator).imag(item.data.imagData[p][currentIndex]);
+					(*dataIterator).real() = item.data.realData[p][currentIndex];
+					(*dataIterator).imag() = item.data.imagData[p][currentIndex];
 					++dataIterator;
 				}
 				++currentIndex;
@@ -314,8 +314,7 @@ void TimestepAccessor::lock(unsigned setIndex)
 		std::ostringstream s;
 		s << "ssh node079 -C \"~/LOFAR-build/bin/aosynchronisation lock-unique \"" << setIndex << " 2> /dev/null\n";
 		std::string str = s.str();
-		if(system(str.c_str()) != 0)
-			throw std::runtime_error("system() returned nonzero");
+		system(str.c_str());
 	}
 }
 
@@ -326,8 +325,7 @@ void TimestepAccessor::unlock(unsigned setIndex)
 		std::ostringstream s;
 		s << "ssh node079 -C \"~/LOFAR-build/bin/aosynchronisation release-unique \"" << setIndex << " 2> /dev/null\n";
 		std::string str = s.str();
-		if(system(str.c_str()) != 0)
-			throw std::runtime_error("system() returned nonzero");
+		system(str.c_str());
 	}
 }
 

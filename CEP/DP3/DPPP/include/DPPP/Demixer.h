@@ -27,31 +27,17 @@
 // @file
 // @brief DPPP step class to average in time and/or freq
 
-#include <DPPP/Baseline.h>
 #include <DPPP/DPInput.h>
 #include <DPPP/DPBuffer.h>
-#include <DPPP/Patch.h>
-#include <DPPP/PhaseShift.h>
-#include <DPPP/Filter.h>
-
+#include <DPPP/Averager.h>
 #include <casa/Arrays/Cube.h>
-#include <casa/Quanta/Quantum.h>
-#include <measures/Measures/MDirection.h>
-#include <measures/Measures/MPosition.h>
-#include <measures/Measures/MEpoch.h>
-#include <measures/Measures/MeasFrame.h>
-#include <measures/Measures/MeasConvert.h>
-#include <measures/Measures/MCDirection.h>
-#include <measures/Measures/MCPosition.h>
 
 namespace LOFAR {
 
-  class ParameterSet;
-
   namespace DPPP {
-    // @ingroup NDPPP
+    class ParSet;
 
-    typedef vector<Patch::ConstPtr> PatchList;
+    // @ingroup NDPPP
 
     // This class is a DPStep class to subtract the strong A-team sources.
     // It is based on the demixing.py script made by Bas vd Tol and operates
@@ -68,7 +54,9 @@ namespace LOFAR {
     public:
       // Construct the object.
       // Parameters are obtained from the parset using the given prefix.
-      Demixer (DPInput*, const ParameterSet&, const string& prefix);
+      Demixer (DPInput*, const ParSet&, const string& prefix);
+
+      virtual ~Demixer();
 
       // Process the data.
       // It keeps the data.
@@ -79,138 +67,39 @@ namespace LOFAR {
       virtual void finish();
 
       // Update the general info.
-      virtual void updateInfo (const DPInfo&);
+      virtual void updateInfo (DPInfo&);
 
       // Show the step parameters.
       virtual void show (std::ostream&) const;
-
-      // Show the counts.
-      virtual void showCounts (std::ostream&) const;
 
       // Show the timings.
       virtual void showTimings (std::ostream&, double duration) const;
 
     private:
-      // Add the decorrelation factor contribution for each time slot.
-      void addFactors (const DPBuffer& newBuf,
-                       casa::Array<casa::DComplex>& factorBuf);
+      // Demix and return the result.
+      DPBuffer demix() const;
 
-      // Calculate the decorrelation factors by averaging them.
-      // Apply the P matrix to deproject the sources without a model.
-      void makeFactors (const casa::Array<casa::DComplex>& bufIn,
-                        casa::Array<casa::DComplex>& bufOut,
-                        const casa::Cube<float>& weightSums,
-                        uint nChanOut,
-                        uint nChanAvg);
-
-      // Do the demixing.
-      void handleDemix();
-
-      // Deproject the sources without a model.
-      void deproject (casa::Array<casa::DComplex>& factors,
-                      vector<MultiResultStep*> avgResults,
-                      uint resultIndex);
-
-      // Solve gains and subtract sources.
-      void demix();
-
-      // Export the solutions to a ParmDB.
-      void dumpSolutions();
-
-      // Merge the data of the selected baselines from the subtract buffer
-      // into the full buffer.
-      void mergeSubtractResult();
+      // Subtract sources and return the result.
+      DPBuffer subtract() const;
 
       //# Data members.
-      DPInput*                              itsInput;
-      string                                itsName;
-      DPBuffer                              itsBufTmp;
-      string                                itsSkyName;
-      string                                itsInstrumentName;
-      double                                itsDefaultGain;
-      size_t                                itsMaxIter;
-      BaselineSelection                     itsSelBL;
-      Filter                                itsFilter;
-      vector<PhaseShift*>                   itsPhaseShifts;
-      //# Phase shift and average steps for demix.
-      vector<DPStep::ShPtr>                 itsFirstSteps;
-      //# Result of phase shifting and averaging the directions of interest
-      //# at the demix resolution.
-      vector<MultiResultStep*>              itsAvgResults;
-      DPStep::ShPtr                         itsAvgStepSubtr;
-      Filter*                               itsFilterSubtr;
-      //# Result of averaging the target at the subtract resolution.
-      MultiResultStep*                      itsAvgResultFull;
-      MultiResultStep*                      itsAvgResultSubtr;
-      //# Ignore target in demixing?
-      bool                                  itsIgnoreTarget;
-      //# Name of the target. Empty if no model is available for the target.
-      string                                itsTargetSource;
-      vector<string>                        itsSubtrSources;
-      vector<string>                        itsModelSources;
-      vector<string>                        itsExtraSources;
-      vector<string>                        itsAllSources;
-//      vector<double>                        itsCutOffs;
-      bool                                  itsPropagateSolutions;
-      uint                                  itsNDir;
-      uint                                  itsNModel;
-      uint                                  itsNStation;
-      uint                                  itsNBl;
-      uint                                  itsNCorr;
-      uint                                  itsNChanIn;
-      uint                                  itsNTimeIn;
-      uint                                  itsNTimeDemix;
-      uint                                  itsNChanAvgSubtr;
-      uint                                  itsNTimeAvgSubtr;
-      uint                                  itsNChanOutSubtr;
-      uint                                  itsNTimeOutSubtr;
-      uint                                  itsNTimeChunk;
-      uint                                  itsNTimeChunkSubtr;
-      uint                                  itsNChanAvg;
-      uint                                  itsNTimeAvg;
-      uint                                  itsNChanOut;
-      uint                                  itsNTimeOut;
-      double                                itsTimeIntervalAvg;
-
-      //# Accumulator used for computing the demixing weights at the demix
-      //# resolution. The shape of this buffer is #correlations x #channels
-      //# x #baselines x #directions x #directions (fastest axis first).
-      casa::Array<casa::DComplex>           itsFactorBuf;
-      //# Buffer of demixing weights at the demix resolution. Each Array is a
-      //# cube of shape #correlations x #channels x #baselines of matrices of
-      //# shape #directions x #directions.
-      vector<casa::Array<casa::DComplex> >  itsFactors;
-
-      //# Accumulator used for computing the demixing weights. The shape of this
-      //# buffer is #correlations x #channels x #baselines x #directions
-      //# x #directions (fastest axis first).
-      casa::Array<casa::DComplex>           itsFactorBufSubtr;
-      //# Buffer of demixing weights at the subtract resolution. Each Array is a
-      //# cube of shape #correlations x #channels x #baselines of matrices of
-      //# shape #directions x #directions.
-      vector<casa::Array<casa::DComplex> >  itsFactorsSubtr;
-
-      PatchList                             itsPatchList;
-      Position                              itsPhaseRef;
-      vector<Baseline>                      itsBaselines;
-      vector<int>                           itsUVWSplitIndex;
-      casa::Vector<double>                  itsFreqDemix;
-      casa::Vector<double>                  itsFreqSubtr;
-      vector<double>                        itsUnknowns;
-      vector<double>                        itsPrevSolution;
-      uint                                  itsTimeIndex;
-      uint                                  itsNConverged;
-      FlagCounter                           itsFlagCounter;
-
-      //# Timers.
-      NSTimer                               itsTimer;
-      NSTimer                               itsTimerPhaseShift;
-      NSTimer                               itsTimerDemix;
-      NSTimer                               itsTimerSolve;
-      NSTimer                               itsTimerDump;
+      DPInput*              itsInput;
+      string                itsName;
+      DPStep::ShPtr         itsAverager;
+      ResultStep*           itsAvgResult;
+      vector<DPStep::ShPtr> itsFirstSteps;
+      vector<DPStep::ShPtr> itsSecondSteps;
+      vector<ResultStep*>   itsDemixInputs;
+      vector<ResultStep*>   itsSubtractInputs;
+      vector<string>        itsSources;
+      uint                  itsNChanAvg;
+      uint                  itsNTimeAvg;
+      uint                  itsHalfWindow;
+      double                itsThreshold;
+      NSTimer               itsTimer;
     };
 
   } //# end namespace
-} //# end namespace
+}
 
 #endif

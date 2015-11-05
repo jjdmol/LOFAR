@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -30,7 +30,6 @@
 #include <string.h>
 #include <iostream>
 #include <limits.h>
-#include <cmath>
 
 namespace LOFAR {
 namespace RTC
@@ -45,13 +44,12 @@ namespace RTC
 	   */
 	  Timestamp() { m_tv.tv_sec = 0; m_tv.tv_usec = 0; }
 	  explicit Timestamp(struct timeval tv) : m_tv(tv) { m_tv.tv_usec = 0; }
-	  Timestamp(long seconds, long useconds) { m_tv.tv_sec = seconds; m_tv.tv_usec = (useconds%1000000); }
-	  explicit Timestamp(double UTCtime) { set(UTCtime); }
+	  Timestamp(long seconds, long useconds) { m_tv.tv_sec = seconds; m_tv.tv_usec = useconds; }
 
 	  /**
 	   * Copy constructor.
 	   */
-	  Timestamp(const Timestamp& copy) { m_tv = copy.m_tv; } // m_tv.tv_usec = 0; }
+	  Timestamp(const Timestamp& copy) { m_tv = copy.m_tv; m_tv.tv_usec = 0; }
 
 	  /* Destructor for Timestamp. */
 	  virtual ~Timestamp() {}
@@ -63,7 +61,6 @@ namespace RTC
 	   * be modifed.
 	   */
 	  void set(const struct timeval& tv);
-	  void set(const double dbl);
 	  
 	  /*@{*/
 	  /**
@@ -77,7 +74,7 @@ namespace RTC
 	   * Get the timestamp value. If the pointer is 0
 	   * this method does nothing.
 	   */
-	  void get(struct timeval* tv) const;
+	  void get(struct timeval* tv);
 
 	  /**
 	   * Convert to modified Julian Date for use in AMC::TimeCoord constructor.
@@ -96,12 +93,7 @@ namespace RTC
 	  Timestamp& operator=(const Timestamp& rhs);
 	  Timestamp  operator-(long delay) const;
 	  Timestamp  operator+(long delay) const;
-	  Timestamp& operator-=(long delay);
 	  Timestamp& operator+=(long delay);
-	  Timestamp  operator-(double delay) const;
-	  Timestamp  operator+(double delay) const;
-	  Timestamp& operator-=(double delay);
-	  Timestamp& operator+=(double delay);
 	  bool       operator>(const Timestamp& rhs) const;
 	  bool       operator<(const Timestamp& rhs) const;
 	  bool       operator<=(const Timestamp& rhs) const;
@@ -123,7 +115,7 @@ namespace RTC
 	   */
 	  long sec()  const;
 	  long usec() const;
-	  static Timestamp maxTime() { return (Timestamp(INT_MAX, 999999)); };
+	  static Timestamp maxTime() { return (Timestamp(LONG_MAX, 999999)); };
 	  /*@}*/
 
 public:
@@ -131,9 +123,9 @@ public:
 	  /**
 	   * marshalling methods
 	   */
-	  size_t getSize() const;
-	  size_t pack  (char* buffer) const;
-	  size_t unpack(const char *buffer);
+	  unsigned int getSize();
+	  unsigned int pack  (void* buffer);
+	  unsigned int unpack(void *buffer);
 	  /*@}*/
 
 private:
@@ -150,24 +142,20 @@ private:
    * Inline methods.
    */
   inline void Timestamp::set(const struct timeval& tv)  { m_tv = tv; }
-  inline void Timestamp::set(const double UTCtime) {
-	m_tv.tv_sec = (long)trunc(UTCtime);
-	m_tv.tv_usec= (long)((UTCtime-trunc(UTCtime))*1e6);
-  }
-  inline void Timestamp::get(struct timeval *tv) const { if (tv) *tv = m_tv; }
+  inline void Timestamp::get(struct timeval *tv)        { if (tv) *tv = m_tv;          }
 
-  inline size_t Timestamp::getSize() const
+  inline unsigned int Timestamp::getSize()
   {
     return sizeof(struct timeval);
   }
 
-  inline size_t Timestamp::pack  (char* buffer) const
+  inline unsigned int Timestamp::pack  (void* buffer)
   {
     memcpy(buffer, &m_tv, sizeof(struct timeval));
     return sizeof(struct timeval);
   }
 
-  inline size_t Timestamp::unpack(const char *buffer)
+  inline unsigned int Timestamp::unpack(void *buffer)
   {
     memcpy(&m_tv, buffer, sizeof(struct timeval));
     return sizeof(struct timeval);
@@ -176,7 +164,7 @@ private:
   inline Timestamp& Timestamp::operator=(const Timestamp& rhs)
   {
     m_tv = rhs.m_tv;
-//    m_tv.tv_usec = 0;
+    m_tv.tv_usec = 0;
     return *this;
   }
 
@@ -194,39 +182,11 @@ private:
     return ts;
   }
 
-  inline Timestamp& Timestamp::operator-=(long delay)
-  {
-	m_tv.tv_sec -= delay;
-	return (*this);
-  }
-
   inline Timestamp& Timestamp::operator+=(long delay)
   {
 	m_tv.tv_sec += delay;
 	return (*this);
   }
-
-inline Timestamp Timestamp::operator-(double delay) const
-{
-	return (Timestamp((double)(*this) - delay));
-}
-
-inline Timestamp Timestamp::operator+(double delay) const
-{
-	return (Timestamp((double)(*this) + delay));
-}
-
-inline Timestamp& Timestamp::operator+=(double delay)
-{
-	set((double)(*this) + delay);
-	return (*this);
-}
-
-inline Timestamp& Timestamp::operator-=(double delay)
-{
-	set((double)(*this) - delay);
-	return (*this);
-}
 
   inline bool Timestamp::operator>(const Timestamp& rhs) const
   {
@@ -260,7 +220,7 @@ inline Timestamp& Timestamp::operator-=(double delay)
   
   inline Timestamp::operator double() const
   {
-    return (static_cast<double>(m_tv.tv_sec)+static_cast<double>(m_tv.tv_usec/1e6));
+    return (static_cast<double>(m_tv.tv_sec)+static_cast<double>(m_tv.tv_usec/1000000.0));
   }
 
   inline long Timestamp::sec()  const { return m_tv.tv_sec;  }

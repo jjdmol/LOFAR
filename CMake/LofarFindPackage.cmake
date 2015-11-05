@@ -15,7 +15,7 @@
 
 #  Copyright (C) 2008-2010
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
-#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -78,12 +78,9 @@ function(lofar_find_package _package)
       add_definitions(${${_PKG}_DEFINITIONS})
       if(${_PKG}_INCLUDE_DIRS)
         include_directories(${${_PKG}_INCLUDE_DIRS})
-        set(${_PKG}_INCLUDE_DIRS ${${_PKG}_INCLUDE_DIRS} PARENT_SCOPE)
       else(${_PKG}_INCLUDE_DIRS)
         include_directories(${${_PKG}_INCLUDE_DIR})
-        set(${_PKG}_INCLUDE_DIR ${${_PKG}_INCLUDE_DIR} PARENT_SCOPE)
       endif(${_PKG}_INCLUDE_DIRS)
-      set(${_PKG}_LIBRARIES ${${_PKG}_LIBRARIES} PARENT_SCOPE)
       set(LOFAR_EXTRA_LIBRARIES ${LOFAR_EXTRA_LIBRARIES} ${${_PKG}_LIBRARIES}
         PARENT_SCOPE)
     else(${_PKG}_FOUND)

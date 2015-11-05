@@ -207,54 +207,49 @@ void	FileLocator::removePath  (const string& aPath)
 // locate(aFile): string
 //
 // Tries to find the file in the current searchpath. 
+// Returns the input argument, if that's an absolute path or an empty string.
 // Return full filename if found, or else an empty string.
 //
 string	FileLocator::locate		(const string& aFile)
 {
-	// return immediately if aFile is empty
-	if(aFile.empty()) return string();
+	// return immediately if aFile is empty or contains an absolute path
+	if(aFile.empty() || aFile[0] == '/') {
 		// DILEMMA: the filelocator is often used to locate the log_prop file.
 		//			using LOG_xxx here will result in an errormessage in that case.
 		// SOLUTION: in global-init.cxx a variable 'initialized' is used in l4cp
 		//			 to keep the state of the log-package. Make this var accessable.
 //		LOG_DEBUG_STR ("Filename contains a /, returning inputname : " << aFile);
+		return (aFile);
+	}
 
-	struct stat		fileStat;
-	int 			result;
-	
-	// If aFile contains an absolute path, simply test for its existence.
-	if(aFile[0] == '/') {
-		result = stat(aFile.c_str(), &fileStat);
-		return (result == 0 ? aFile : string());
-	}
-	// Otherwise, search the path chain
-	else {
-		iterator	iter     = itsPaths.begin();
-		iterator	chainEnd = itsPaths.end();
-		while (iter != chainEnd) {
-			// when itsSubdir is filled each test much be performed also with subdir
-			for (int test = 0; test <= (itsSubdir.empty() ? 0 : 1); test++) {
-				string			fullname;
-				fullname = *iter + (*iter != "/" ? "/" : "");
-				if (test == 0) {	// basedir?
-					fullname += aFile;
-				}
-				else {				// test subdir
-					fullname += itsSubdir + "/" + aFile;
-				}
-				result = stat(fullname.c_str(), &fileStat);
-				if (result == 0) { // found?
-					return (fullname);
-				}
+	// search the path chain
+	iterator	iter     = itsPaths.begin();
+	iterator	chainEnd = itsPaths.end();
+	while (iter != chainEnd) {
+		// when itsSubdir is filled each test much be performed also with subdir
+		for (int32 test = 0; test <= (itsSubdir.empty() ? 0 : 1); test++) {
+			struct stat		fileStat;
+			string			fullname;
+			fullname = *iter + (*iter != "/" ? "/" : "");
+			if (test == 0) {	// basedir?
+				fullname += aFile;
 			}
-			++iter;
+			else {				// test subdir
+				fullname += itsSubdir + "/" + aFile;
+			}
+			int result = stat(fullname.c_str(), &fileStat);
+			if (result == 0) { // found?
+				return (fullname);
+			}
 		}
-		// not found, return empty string.
-		// See DILEMMA.
-//		LOG_DEBUG_STR ("Filename not found in " << getPath() << 
-//					   ", returning empty string");
-		return string();
+		++iter;
 	}
+
+	// not found, return original file
+	// See DILEMMA.
+//	LOG_DEBUG_STR ("Filename not found in " << getPath() << 
+//				   ", returning empty string");
+	return string();
 }
 
 //
@@ -295,8 +290,7 @@ string FileLocator::resolveInput(const string&	input)
 	string::size_type		startPos = 0;
 	string		result;
 	do {
-    result.append(input.substr(startPos, dollarPos-startPos)); // add part till $
-
+		result   = input.substr(startPos, dollarPos);	// add part till $
 		startPos = dollarPos+1;
 		string::size_type	slashPos = input.find("/", dollarPos);
 		string::size_type	colonPos = input.find(":", dollarPos);
@@ -315,7 +309,7 @@ string FileLocator::resolveInput(const string&	input)
 			if (!valPtr) {
 				LOG_WARN_STR("Environment variable " << \
 						input.substr(startPos, endPos-startPos) <<  \
-						" cannot be resolved, excluding it from search path!");
+						" can not be solved, excluding it from search path!");
 			}
 			else {
 				result.append(valPtr);
@@ -328,7 +322,7 @@ string FileLocator::resolveInput(const string&	input)
 					getenv(input.substr(startPos, slashPos-startPos).c_str());
 			if (!valPtr) {
 				LOG_WARN_STR("Environment variable " <<
-						input.substr(startPos, slashPos-startPos) <<
+						input.substr(startPos, endPos-startPos) <<
 						" can not be solved, excluding it from search path!");
 			}
 			else {

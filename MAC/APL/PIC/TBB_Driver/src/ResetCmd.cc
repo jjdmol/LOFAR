@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -75,25 +75,31 @@ void ResetCmd::saveTbbEvent(GCFEvent& event)
 	while ((itsBoardMask & (1 << itsBoardNr)) == 0) {
 		itsBoardNr++;
 		if (itsBoardNr >= TS->maxBoards()) { 
-			setDone(true);
 			break;	
 		}
+	}
+	
+	if (itsBoardNr < TS->maxBoards()) {
+		setBoardNr(itsBoardNr);
+	} else {
+		setDone(true);
 	}
 }
 
 // ----------------------------------------------------------------------------
 void ResetCmd::sendTpEvent()
 {
+	
 	TPResetEvent tp_event;
 	tp_event.opcode = oc_RESET;
 	tp_event.status = 0;
 
-	if (TS->boardPort(itsBoardNr).isConnected()) {
-		TS->boardPort(itsBoardNr).send(tp_event);
-		TS->setBoardUsed(itsBoardNr);
-		TS->boardPort(itsBoardNr).setTimer(5.0);
+	if (TS->boardPort(getBoardNr()).isConnected()) {
+		TS->boardPort(getBoardNr()).send(tp_event);
+		TS->setBoardUsed(getBoardNr());
+		TS->boardPort(getBoardNr()).setTimer(5.0);
 	}
-	LOG_DEBUG_STR("Reset is send to boardnr " << itsBoardNr);
+	LOG_DEBUG_STR("Reset is send to boardnr " << getBoardNr());
 }
 
 // ----------------------------------------------------------------------------
@@ -101,13 +107,13 @@ void ResetCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		TS->setBoardState(itsBoardNr,noBoard);
+		TS->setBoardState(getBoardNr(),noBoard);
 	}	else {
 		TPResetAckEvent tp_ack(event);
-		TS->setImageNr(itsBoardNr, 0);
-		itsStatus[itsBoardNr] = tp_ack.status;
+		TS->setImageNr(getBoardNr(), 0);
+		itsStatus[getBoardNr()] = tp_ack.status;
 		if (tp_ack.status != 0) {
-			TS->setBoardState(itsBoardNr,boardError);
+			TS->setBoardState(getBoardNr(),boardError);
 		}
 	}
 	
@@ -116,10 +122,14 @@ void ResetCmd::saveTpAckEvent(GCFEvent& event)
 	while ((itsBoardMask & (1 << itsBoardNr)) == 0) {
 		itsBoardNr++;
 		if (itsBoardNr >= TS->maxBoards()) { 
-			setSleepTime(10.0);
-		    setDone(true);
 			break;
 		}	
+	}
+	if (itsBoardNr < TS->maxBoards()) {
+		setBoardNr(itsBoardNr);
+	} else {
+		setSleepTime(10.0);
+		setDone(true);
 	}
 }
 

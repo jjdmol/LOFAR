@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -22,26 +22,20 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+#
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <jni.h>
 #include <jOTDB3/nl_astron_lofar_sas_otb_jotdb3_jCommon.h>
 #include <jOTDB3/nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection.h>
-#include <OTDB/Campaign.h>
-#include <OTDB/ClassifConv.h>
 #include <OTDB/OTDBconnection.h>
-#include <OTDB/ParamTypeConv.h>
-#include <OTDB/TreeMaintenance.h>
-#include <OTDB/TreeStateConv.h>
-#include <OTDB/TreeTypeConv.h>
-#include <OTDB/UnitConv.h>
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/posix_time/ptime.hpp>
+#include <boost/date_time/posix_time/time_formatters.hpp>
 #include <string>
 #include <iostream>
 
 
 using namespace boost::posix_time;
-using namespace LOFAR;
 using namespace LOFAR::OTDB;
 using namespace std;
 
@@ -60,8 +54,6 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_initO
   const string p (pass);
   const string d (db);
   const string h (hn);
-  const char* n(0);
-  jstring str(0);
 
   try {
     OTDBconnection* aPtr = new OTDBconnection(u, p, d, h);
@@ -74,20 +66,15 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_initO
     jfieldID fid_jOTDBconn_name = env->GetFieldID (class_jOTDBconn, "itsName", "Ljava/lang/String;");
     
     // itsName
-    str = (jstring)env->GetObjectField (jOTDBconnection, fid_jOTDBconn_name);
+    jstring str = (jstring)env->GetObjectField (jOTDBconnection, fid_jOTDBconn_name);
     jboolean isCopy;
-    n = env->GetStringUTFChars (str, &isCopy);
+    const char* n = env->GetStringUTFChars (str, &isCopy);
     const string name (n);
 
-    std::map<std::string,void *>::iterator iter;    
+ 
 
-    theirC_ObjectMap.erase(name+"_OTDBconnection");
     theirC_ObjectMap[name+"_OTDBconnection"]=(void *)aPtr;
 
-    LOG_DEBUG("after connect: theirC_ObjectMap contains: ");
-    for (iter=theirC_ObjectMap.begin();iter!=theirC_ObjectMap.end(); ++iter) {
-        LOG_DEBUG_STR(iter->second << " " << iter->first);
-    }
 
     env->ReleaseStringUTFChars (str, n);
 
@@ -102,13 +89,12 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_initO
     env->ReleaseStringUTFChars(passwd, pass);
     env->ReleaseStringUTFChars(database, db);
     env->ReleaseStringUTFChars(hostname, hn);
-    env->ReleaseStringUTFChars(str, n);
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
   }
 }
 
 JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_isConnected(JNIEnv *env, jobject jOTDBconnection) {
-  jboolean connected(0);
+  jboolean connected;
 
   try {
     connected = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))->isConnected();
@@ -122,7 +108,7 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_i
 
 
 JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_connect(JNIEnv *env, jobject jOTDBconnection) {
-  jboolean connected(0);
+  jboolean connected;
   try {
     connected = (jboolean)((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))->connect();
   } catch (exception &ex) {
@@ -134,85 +120,28 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_c
 }
 
 JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_disconnect(JNIEnv *env, jobject jOTDBconnection) {
-    jstring str(0);
-    const char* n(0);
-  try {
-    std::map<std::string,void *>::iterator iter;
 
+  try {
     ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))->disconnect();
 
     jclass class_jOTDBconn = env->GetObjectClass (jOTDBconnection);
     jfieldID fid_jOTDBconn_name = env->GetFieldID (class_jOTDBconn, "itsName", "Ljava/lang/String;");
     
     // itsName
-    str = (jstring)env->GetObjectField (jOTDBconnection, fid_jOTDBconn_name);
+    jstring str = (jstring)env->GetObjectField (jOTDBconnection, fid_jOTDBconn_name);
     jboolean isCopy;
-    n = env->GetStringUTFChars (str, &isCopy);
+    const char* n = env->GetStringUTFChars (str, &isCopy);
     const string name (n);
-    env->ReleaseStringUTFChars(str, n);
 
-    bool found = false;
-    std::map<std::string,void *>::iterator itr;
-    std::map<std::string,void *>::iterator end;
-    itr = theirC_ObjectMap.begin();
-    end = theirC_ObjectMap.end();
-    while (itr != end) {
-        std::string n = itr->first;
-        if (itr->first.find(name)!= string::npos ){
-            LOG_DEBUG_STR( " found match " << itr->first);
-            if (!found) found=true;
-            std::map<std::string,void *>::iterator tmpitr = itr;
-            itr++;
-            // free memory
-            vector<string> spl = StringUtil::split(tmpitr->first,'_');
-            int cnt = spl.size();
-            string objectclass = spl[cnt-1];
-            bool flag = false;
-            if (objectclass=="Campaign") {
-                delete (Campaign*)(tmpitr->second);
-                flag = true;
-            } else if (objectclass=="ClassifConv") {
-                delete (ClassifConv*)(tmpitr->second);
-                flag = true;
-            } else if (objectclass=="OTDBconnection") {
-                delete (OTDBconnection*)(tmpitr->second);
-                flag = true;
-            } else if (objectclass=="ParamTypeConv") {
-                delete (ParamTypeConv*)(tmpitr->second);
-                flag = true;
-            } else if (objectclass=="TreeMaintenance") {
-                delete (TreeMaintenance*)(tmpitr->second);
-                flag = true;
-            } else if (objectclass=="TreeStateConv") {
-                delete (TreeStateConv*)(tmpitr->second);
-                flag = true;
-            } else if (objectclass=="TreeTypeConv") {
-                delete (TreeTypeConv*)(tmpitr->second);
-                flag = true;
-            } else if (objectclass=="UnitConv") {
-                delete (UnitConv*)(tmpitr->second);
-                flag = true;
-            }
-            if (!flag) {
-                LOG_ERROR_STR(itr->first << " Failed to free memory");
-            }
-            theirC_ObjectMap.erase(tmpitr);
-        } else {
-            itr++;
-        }
-    }
-    if (!found) {
-         LOG_DEBUG_STR(name << " not found in theirC_ObjectMap");
-    }
-
-    LOG_DEBUG("after disconnect: theirC_ObjectMap contains: ");
-    for (iter=theirC_ObjectMap.begin();iter!=theirC_ObjectMap.end(); ++iter) {
-        LOG_DEBUG_STR(iter->second << " " << iter->first);
-    }
+    std::map<std::string,void *>::iterator iter = theirC_ObjectMap.find(name+"_OTDBconnection");
+    if( iter != theirC_ObjectMap.end() ) 
+       theirC_ObjectMap.erase(iter);
+    else
+       cout << "Key is not in myMap" << '\n';
 
   } catch (exception &ex) {
     cout << "Exception during OTDBconnection::disconnect "<< ex.what() << endl;
-    env->ReleaseStringUTFChars(str, n);
+    
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
   }
 
@@ -251,7 +180,7 @@ jstring processType, jstring processSubtype, jstring strategy) {
   const char* pst = env->GetStringUTFChars (processSubtype, 0);
   const char* st = env->GetStringUTFChars (strategy, 0);
 
-  jobject itemVector(0);
+  jobject itemVector;
   try {
     vector<OTDBtree> trees = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))->getTreeList(treeType, classifType, groupID, pt,pst, st);
     vector<OTDBtree>::iterator treeIterator;
@@ -288,7 +217,7 @@ jstring processType, jstring processSubtype) {
   const char* pt = env->GetStringUTFChars (processType, 0);
   const char* pst = env->GetStringUTFChars (processSubtype, 0);
 
-  jobject itemVector(0);
+  jobject itemVector;
   try {
     vector<OTDBtree> trees = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))->getTreeList(treeType, classifType, groupID, pt, pst);
     vector<OTDBtree>::iterator treeIterator;
@@ -322,7 +251,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
 jstring processType) {
   const char* pt = env->GetStringUTFChars (processType, 0);
 
-  jobject itemVector(0);
+  jobject itemVector;
   try {
     vector<OTDBtree> trees = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))->getTreeList(treeType, classifType, groupID, pt);
     vector<OTDBtree>::iterator treeIterator;
@@ -352,7 +281,7 @@ jstring processType) {
 
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getTreeList__SSI (JNIEnv *env, jobject jOTDBconnection, jshort treeType, jshort classifType, jint groupID) {
 
-  jobject itemVector(0);
+  jobject itemVector;
   try {
     vector<OTDBtree> trees = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))->getTreeList(treeType, classifType, groupID);
     vector<OTDBtree>::iterator treeIterator;
@@ -380,7 +309,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
 
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getTreeList__SS (JNIEnv *env, jobject jOTDBconnection, jshort treeType, jshort classifType) {
 
-  jobject itemVector(0);
+  jobject itemVector;
   try {
     vector<OTDBtree> trees = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))->getTreeList(treeType, classifType);
     vector<OTDBtree>::iterator treeIterator;
@@ -409,7 +338,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
 
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getTreeList__S (JNIEnv *env, jobject jOTDBconnection, jshort treeType) {
 
-  jobject itemVector(0);
+  jobject itemVector;
   try {
     vector<OTDBtree> trees = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))->getTreeList(treeType);
     vector<OTDBtree>::iterator treeIterator;
@@ -440,7 +369,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
   const char* bd = env->GetStringUTFChars (beginDate, 0);
   const char* ed = env->GetStringUTFChars (endDate, 0);
 
-  jobject statesVector(0);
+  jobject statesVector;
   vector<TreeState> states;
   try {
 
@@ -476,7 +405,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getStateList__IZLjava_lang_String_2 (JNIEnv *env, jobject jOTDBconnection, jint treeID, jboolean isMomID, jstring beginDate) {
   const char* bd = env->GetStringUTFChars (beginDate, 0);
 
-  jobject statesVector(0);
+  jobject statesVector;
   vector<TreeState> states;
   try {
 
@@ -509,7 +438,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
 
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getStateList__IZ(JNIEnv *env, jobject jOTDBconnection, jint treeID, jboolean isMomID) {
 
-  jobject statesVector(0);
+  jobject statesVector;
   vector<TreeState> states;
   try {
 
@@ -539,7 +468,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
 
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getStateList__I (JNIEnv *env, jobject jOTDBconnection, jint treeID) {
 
-  jobject statesVector(0);
+  jobject statesVector;
   vector<TreeState> states;
   try {
 
@@ -568,7 +497,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
 }
 
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getDefaultTemplates(JNIEnv *env, jobject jOTDBconnection){
-  jobject itemVector(0);
+  jobject itemVector;
   try {
     vector<DefaultTemplate> templates = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))->getDefaultTemplates();
     vector<DefaultTemplate>::iterator templateIterator;
@@ -595,7 +524,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
 }
 
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getExecutableTrees__S (JNIEnv *env, jobject jOTDBconnection, jshort classifType) {
-  jobject itemVector(0);
+  jobject itemVector;
   try {
     vector<OTDBtree> trees = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))->getExecutableTrees(classifType);
     vector<OTDBtree>::iterator treeIterator;
@@ -622,7 +551,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
 }
 
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getExecutableTrees__ (JNIEnv *env, jobject jOTDBconnection) {
-  jobject itemVector(0);
+  jobject itemVector;
   try {
     vector<OTDBtree> trees = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))->getExecutableTrees();
     vector<OTDBtree>::iterator treeIterator;
@@ -649,7 +578,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
 }
 
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getTreeGroup(JNIEnv *env, jobject jOTDBconnection, jint groupType, jint periodInMinutes) {
-  jobject itemVector(0);
+  jobject itemVector;
   try {
     vector<OTDBtree> trees = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))->getTreeGroup(groupType,periodInMinutes);
     vector<OTDBtree>::iterator treeIterator;
@@ -679,7 +608,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
   const char* bd = env->GetStringUTFChars (beginDate, 0);
   const char* ed = env->GetStringUTFChars (endDate, 0);
 
-  jobject treeVector(0);
+  jobject treeVector;
   try {
 
     vector<OTDBtree> trees = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))
@@ -713,7 +642,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getTreesInPeriod(JNIEnv *env, jobject jOTDBconnection, jshort treeType , jstring beginDate){
   const char* bd = env->GetStringUTFChars (beginDate, 0);
 
-  jobject treeVector(0);
+  jobject treeVector;
   try {
 
     vector<OTDBtree> trees = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))
@@ -744,7 +673,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
 
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getTreesInPeriod(JNIEnv *env, jobject jOTDBconnection, jshort treeType){
 
-  jobject treeVector(0);
+  jobject treeVector;
   try {
 
     vector<OTDBtree> trees = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))
@@ -770,72 +699,8 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
   return(treeVector);
 }
 
-JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getModifiedTrees__Ljava_lang_String_2S
-  (JNIEnv *env, jobject jOTDBconnection, jstring after, jshort treeType) {
-  jobject treeVector(0);
-
-  const char* ad = env->GetStringUTFChars (after, 0);
-  try {
-
-    vector<OTDBtree> trees = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))
-                       ->getModifiedTrees(time_from_string(ad),treeType);
-    vector<OTDBtree>::iterator treeIterator;
-
-
-    // Construct java Vector
-    jclass class_Vector = env->FindClass("java/util/Vector");
-    jmethodID mid_Vector_cons = env->GetMethodID(class_Vector, "<init>", "()V");
-    treeVector = env->NewObject(class_Vector, mid_Vector_cons);
-    jmethodID mid_Vector_add = env->GetMethodID(class_Vector, "add", "(Ljava/lang/Object;)Z");
-
-    for (treeIterator = trees.begin(); treeIterator != trees.end(); treeIterator++) {
-      env->CallObjectMethod(treeVector, mid_Vector_add,convertOTDBtree(env, *treeIterator ));
-    }
-    env->ReleaseStringUTFChars(after, ad);
-
-  } catch (exception &ex) {
-    cout << "Exception during OTDBconnection::getModifiedTrees(" << after << "," << treeType << ") "<< ex.what() << endl;
-    env->ReleaseStringUTFChars(after, ad);
-
-    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
-  }
-  return(treeVector);
-}
-
-JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getModifiedTrees__Ljava_lang_String_2
-  (JNIEnv *env, jobject jOTDBconnection, jstring after) {
-  jobject treeVector(0);
-
-  const char* ad = env->GetStringUTFChars (after, 0);
-  try {
-
-    vector<OTDBtree> trees = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))
-                       ->getModifiedTrees(time_from_string(ad));
-    vector<OTDBtree>::iterator treeIterator;
-
-
-    // Construct java Vector
-    jclass class_Vector = env->FindClass("java/util/Vector");
-    jmethodID mid_Vector_cons = env->GetMethodID(class_Vector, "<init>", "()V");
-    treeVector = env->NewObject(class_Vector, mid_Vector_cons);
-    jmethodID mid_Vector_add = env->GetMethodID(class_Vector, "add", "(Ljava/lang/Object;)Z");
-
-    for (treeIterator = trees.begin(); treeIterator != trees.end(); treeIterator++) {
-      env->CallObjectMethod(treeVector, mid_Vector_add,convertOTDBtree(env, *treeIterator ));
-    }
-    env->ReleaseStringUTFChars(after, ad);
-
-  } catch (exception &ex) {
-
-    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
-  }
-  return(treeVector);
-}
-
-
-
 JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_newGroupID(JNIEnv *env, jobject jOTDBconnection) {
-  jint token(0);
+  jint token;
   try {
     token = (jint)((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))->newGroupID();
   } catch (exception &ex) {
@@ -848,7 +713,7 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_newGr
 
 
 JNIEXPORT jstring JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_errorMsg(JNIEnv *env, jobject jOTDBconnection) {
-  jstring jstr(0);
+  jstring jstr;
   try {
     jstr = env->NewStringUTF(((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))->errorMsg().c_str());
   } catch (exception &ex) {
@@ -861,7 +726,7 @@ JNIEXPORT jstring JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_er
 
 
 JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getAuthToken(JNIEnv *env, jobject jOTDBconnection) {
-  jint token(0);
+  jint token;
   try {
     token = (jint)((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))->getAuthToken();
   } catch (exception &ex) {
@@ -873,7 +738,7 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getAu
 }
 
 JNIEXPORT jstring JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getDBName(JNIEnv *env, jobject jOTDBconnection) {
-  jstring jstr(0);
+  jstring jstr;
   try {
         string aString= ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))->getDBName();
         jstr = env->NewStringUTF(aString.c_str());

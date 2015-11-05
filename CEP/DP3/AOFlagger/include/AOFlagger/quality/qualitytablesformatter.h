@@ -21,7 +21,6 @@
 #define MSIO_QUALITY_DATA_H
 
 #include <ms/MeasurementSets/MeasurementSet.h>
-#include <tables/Tables/TableRecord.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
@@ -41,7 +40,6 @@ class QualityTablesFormatter {
 			RFISumStatistic,
 			RFIMeanStatistic,
 			RFIRatioStatistic,
-			RFIPercentageStatistic,
 			FlaggedCountStatistic,
 			FlaggedRatioStatistic,
 			SumP2Statistic,
@@ -49,7 +47,6 @@ class QualityTablesFormatter {
 			SumP4Statistic,
 			VarianceStatistic,
 			VarianceOfVarianceStatistic,
-			StandardDeviationStatistic,
 			SkewnessStatistic,
 			KurtosisStatistic, 
 			SignalToNoiseStatistic,
@@ -60,7 +57,6 @@ class QualityTablesFormatter {
 			DSumP4Statistic,
 			DVarianceStatistic,
 			DVarianceOfVarianceStatistic,
-			DStandardDeviationStatistic,
 			DCountStatistic,
 			BadSolutionCountStatistic,
 			CorrectCountStatistic,
@@ -191,26 +187,26 @@ class QualityTablesFormatter {
 			return hasOneEntry(table, kindIndex);
 		}
 		
-		void InitializeEmptyStatistic(enum StatisticDimension dimension, enum StatisticKind kind, unsigned polarizationCount)
+		void InitializeEmptyStatistic(enum StatisticDimension dimension, enum StatisticKind kind)
 		{
 			if(!TableExists(KindNameTable))
-				createKindNameTable();
+				InitializeEmptyTable(KindNameTable);
 			
 			QualityTable table = DimensionToTable(dimension);
 			if(!TableExists(table))
-				InitializeEmptyTable(table, polarizationCount);
+				InitializeEmptyTable(table);
 			else
 			{
 				removeStatisticFromStatTable(table, kind);
 			}
 		}
 		
-		void InitializeEmptyTable(enum QualityTable table, unsigned polarizationCount)
+		void InitializeEmptyTable(enum QualityTable table)
 		{
 			if(TableExists(table))
 				removeEntries(table);
 			else
-				createTable(table, polarizationCount);
+				createTable(table);
 		}
 		
 		void RemoveTable(enum QualityTable table)
@@ -219,10 +215,8 @@ class QualityTablesFormatter {
 			{
 				Close();
 				openMainTable(true);
-				if(_measurementSet->keywordSet().isDefined(TableToName(table)))
-					_measurementSet->rwKeywordSet().removeField(TableToName(table));
-				if(_measurementSet->isReadable(TableToFilename(table)))
-					casa::Table::deleteTable(TableToFilename(table));
+				_measurementSet->rwKeywordSet().removeField(TableToName(table));
+				casa::Table::deleteTable(TableToFilename(table));
 			}
 		}
 		
@@ -296,71 +290,28 @@ class QualityTablesFormatter {
 		void removeKindNameEntry(enum StatisticKind kind);
 		void removeEntries(enum QualityTable table);
 		
-		/**
-			* Add the time column to the table descriptor. Used by create..Table() methods.
-			* It holds "Measure"s of time, which is what casacore defines as a value including
-			* a unit and a reference frame.
-			*/
 		void addTimeColumn(casa::TableDesc &tableDesc);
-		
-		/**
-		 * Add the frequency column to the table descriptor. Used by create..Table() methods.
-		 * It holds "Quantum"s of frequency, which is what casacore defines as a value including
-		 * a unit (Hertz).
-		 */
 		void addFrequencyColumn(casa::TableDesc &tableDesc);
+		void addValueColumn(casa::TableDesc &tableDesc);
 		
-		/**
-		 * Add value column to the table descriptor. Used by create..Table() methods.
-		 * It consist of an array of statistics, each element holds a polarization.
-		 */
-		void addValueColumn(casa::TableDesc &tableDesc, unsigned polarizationCount);
-		
-		void createTable(enum QualityTable table, unsigned polarizationCount)
+		void createTable(enum QualityTable table)
 		{
 			switch(table)
 			{
 				case KindNameTable:              createKindNameTable(); break;
-				case TimeStatisticTable:         createTimeStatisticTable(polarizationCount); break;
-				case FrequencyStatisticTable:    createFrequencyStatisticTable(polarizationCount); break;
-				case BaselineStatisticTable:     createBaselineStatisticTable(polarizationCount); break;
-				case BaselineTimeStatisticTable: createBaselineTimeStatisticTable(polarizationCount); break;
+				case TimeStatisticTable:         createTimeStatisticTable(); break;
+				case FrequencyStatisticTable:    createFrequencyStatisticTable(); break;
+				case BaselineStatisticTable:     createBaselineStatisticTable(); break;
+				case BaselineTimeStatisticTable: createBaselineTimeStatisticTable(); break;
 				default: break;
 			}
 		}
 		
-		/**
-		 * Will add an empty table to the measurement set named "QUALITY_KIND_NAME" and
-		 * initialize its default column.
-		 * This table can hold a list of quality statistic types that are referred to in
-		 * the statistic value tables.
-		 */
 		void createKindNameTable();
-		/**
-		 * Will add an empty table to the measurement set named "QUALITY_TIME_STATISTIC" and
-		 * initialize its default column.
-		 * This table can hold several statistic kinds per time step. 
-		 * @param polarizationCount specifies the nr polarizations. This is required for the
-		 * shape of the value column.
-		 */
-		void createTimeStatisticTable(unsigned polarizationCount);
-		/**
-		 * Will add an empty table to the measurement set named "QUALITY_FREQUENCY_STATISTIC" and
-		 * initialize its default column.
-		 * This table can hold several statistic kinds per time step. 
-		 * @param polarizationCount specifies the nr polarizations. This is required for the
-		 * shape of the value column.
-		 */
-		void createFrequencyStatisticTable(unsigned polarizationCount);
-		/**
-		 * Will add an empty table to the measurement set named "QUALITY_BASELINE_STATISTIC" and
-		 * initialize its default column.
-		 * This table can hold several statistic kinds per time step. 
-		 * @param polarizationCount specifies the nr polarizations. This is required for the
-		 * shape of the value column.
-		 */
-		void createBaselineStatisticTable(unsigned polarizationCount);
-		void createBaselineTimeStatisticTable(unsigned polarizationCount);
+		void createTimeStatisticTable();
+		void createFrequencyStatisticTable();
+		void createBaselineStatisticTable();
+		void createBaselineTimeStatisticTable();
 		unsigned findFreeKindIndex(casa::Table &kindTable);
 		
 		void openMainTable(bool needWrite);

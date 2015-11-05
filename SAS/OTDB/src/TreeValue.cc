@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -25,13 +25,8 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/lofar_datetime.h>
 #include <OTDB/TreeValue.h>
-
-#include <pqxx/transaction>
-#include <boost/date_time/posix_time/posix_time.hpp>
-
-using namespace pqxx;
-using namespace boost::posix_time;
 
 namespace LOFAR {
   namespace OTDB {
@@ -105,17 +100,11 @@ bool TreeValue::addKVT (const string&	key,
 		}
 		return (insertResult);
 	}
-	catch (broken_connection&  ex) {
-		itsError = string("Exception during insert of KVT:") + ex.what();
-		LOG_ERROR(itsError);
-		itsConn->disconnect();
-		return (false);
-	}
 	catch (std::exception&	ex) {
 		// [080508] tables now have constraints on duplicate keys. Don't report the errors
 		// to the operator anymore, only to the DEBUGger.
 		itsError = string("Exception during insert of KVT:") + ex.what();
-		LOG_WARN(itsError);
+		LOG_DEBUG(itsError);
 		return (false);
 	}
 
@@ -252,8 +241,6 @@ vector<OTDBvalue> TreeValue::searchInPeriod (nodeIDType		topNode,
 //
 vector<OTDBvalue> TreeValue::getSchedulableItems (nodeIDType	TODO_topNode)
 {
-	(void)TODO_topNode;
-
 	LOG_INFO("TreeValue::getSchedulableItems is not yet implemented");
 
 	vector<OTDBvalue>	empty;
@@ -263,7 +250,7 @@ vector<OTDBvalue> TreeValue::getSchedulableItems (nodeIDType	TODO_topNode)
 //
 // getBrokenHardware([timestamp])
 //
-vector<OTDBvalue> TreeValue::getBrokenHardware(const ptime&	fromTime, const ptime& toTime)
+vector<OTDBvalue> TreeValue::getBrokenHardware(const ptime&	atTime)
 {
 	vector<OTDBvalue>	resultVec;
 
@@ -273,15 +260,12 @@ vector<OTDBvalue> TreeValue::getBrokenHardware(const ptime&	fromTime, const ptim
 		return (resultVec);
 	}
 
-	string	startTime((fromTime.is_not_a_date_time()) ? "" : to_simple_string(fromTime));
-	string	endTime  ((toTime.is_not_a_date_time())   ? "" : to_simple_string(toTime));
-
-	LOG_TRACE_FLOW_STR("TV:getBrokenHardware(" << startTime << "," << endTime << ")");
+	LOG_TRACE_FLOW_STR("TV:getBrokenHardware(" << to_simple_string(atTime) << ")");
 
 	// construct a query that calls a stored procedure.
 	work	xAction(*(itsConn->getConn()), "getBrokenHardware");
 	try {
-		string	query("SELECT * from getBrokenHardware('" + startTime + "','" + endTime + "')");
+		string	query("SELECT * from getBrokenHardware('" + to_simple_string(atTime) + "')");
 		result res = xAction.exec(query);
 		// check result
 		result::size_type	nrRecords = res.size();
@@ -292,22 +276,15 @@ vector<OTDBvalue> TreeValue::getBrokenHardware(const ptime&	fromTime, const ptim
 		// list contains single records [A]  or double records[B]:
 		// [A] value always > 10 : its still broken
 		// [B] 1st record value <= 10, 2nd record (always same name) always > 10
-		//     if timestamp 1st record < checkTime 'its OK skip this and next line' else is broken skip this line
-
-		// first determine checkTime: 
-		// - broken AT ... : second time is not given --> we must check against the begintime
-		// - broken in period ... : secondtime is given --> we should use that time for checking
-		ptime	checkTime((toTime.is_not_a_date_time()) ? fromTime : toTime);
-
-		// loop over the records.
+		//     if timestamp 1st record < atTime 'its OK skip this and next line' else is broken skip this line
 		for (result::size_type	i = 0; i < nrRecords; ++i) {
 			OTDBvalue	theKVT(res[i]);
 			if (atoi(theKVT.value.c_str()) > 10) {	// [A]
 				resultVec.push_back(theKVT);
 			}
 			else {	// [B]
-				if (++i < nrRecords) {	// next record
-					if (theKVT.time > checkTime) {
+				if (++i < nrRecords) {
+					if (theKVT.time > atTime) {
 						OTDBvalue	nextKVT(res[i]);
 						ASSERTSTR(nextKVT.nodeID() == theKVT.nodeID(), 
 								"Expected same paramID: " << nextKVT.nodeID() << "!=" << theKVT.nodeID());
@@ -326,6 +303,7 @@ vector<OTDBvalue> TreeValue::getBrokenHardware(const ptime&	fromTime, const ptim
 
 	return (resultVec);
 }
+
 
 
   } // namespace OTDB

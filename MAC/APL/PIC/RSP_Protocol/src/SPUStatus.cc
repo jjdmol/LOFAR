@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -36,19 +36,25 @@ using namespace LOFAR;
 using namespace RSP_Protocol;
 using namespace EPA_Protocol;
 
-size_t SPUStatus::getSize() const
+unsigned int SPUStatus::getSize()
 {
-  return MSH_size(itsSPUStatus);
+  return MSH_ARRAY_SIZE(itsSPUStatus, EPA_Protocol::SPUBoardStatus);
 }
 
-size_t SPUStatus::pack  (char* buffer) const
+unsigned int SPUStatus::pack  (void* buffer)
 {
-  size_t offset = 0;
-  return MSH_pack(buffer, offset, itsSPUStatus);
+  unsigned int offset = 0;
+  
+  MSH_PACK_ARRAY(buffer, offset, itsSPUStatus, EPA_Protocol::SPUBoardStatus);
+
+  return offset;
 }
 
-size_t SPUStatus::unpack(const char *buffer)
+unsigned int SPUStatus::unpack(void *buffer)
 {
-  size_t offset = 0;
-  return MSH_unpack(buffer, offset, itsSPUStatus);
+  unsigned int offset = 0;
+  
+  MSH_UNPACK_ARRAY(buffer, offset, itsSPUStatus, EPA_Protocol::SPUBoardStatus, 1);
+
+  return offset;
 }

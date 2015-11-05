@@ -4,5 +4,5 @@
 rficonsole
 ==========
 
-.. autoclass:: lofarpipe.recipes.master.rficonsole.rficonsole
+.. autoclass:: rficonsole.rficonsole
    :show-inheritance:

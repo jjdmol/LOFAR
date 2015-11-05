@@ -1,6 +1,6 @@
 //# Observation.cc: class for easy access to observation definitions
 //#
-//# Copyright (C) 2006-2012
+//# Copyright (C) 2006
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -25,21 +25,13 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <ApplCommon/PosixTime.h>
-#include <Common/lofar_set.h>
-#include <Common/lofar_string.h>
-#include <Common/lofar_vector.h>
+#include <Common/lofar_datetime.h>
 #include <Common/StreamUtil.h>
-#include <Common/SystemUtil.h>
-#include <Common/LofarBitModeInfo.h>
 #include <ApplCommon/Observation.h>
-
-#include <Common/lofar_map.h>
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include <Common/lofar_set.h>
 #include <boost/format.hpp>
 
 using boost::format;
-using namespace boost::posix_time;
 
 namespace LOFAR {
 
@@ -53,76 +45,56 @@ Observation::Observation() :
 	stopTime(0),
 	nyquistZone(0),
 	sampleClock(0),
-	splitterOn(false),
-	itsStnHasDualHBA(false)
-{ }
+	splitterOn(false)
+{
+}
 
 //
-// Observation(ParameterSet*, [hasDualHBA]))
+// Observation(ParameterSet*)
 //
-Observation::Observation(const ParameterSet*		aParSet,
-						 bool				hasDualHBA,
-						 unsigned			nrBGPIOnodes) :
+Observation::Observation(ParameterSet*		aParSet,
+						 bool				hasDualHBA) :
 	name(),
 	obsID(0),
 	startTime(0),
 	stopTime(0),
 	nyquistZone(0),
 	sampleClock(0),
-    bitsPerSample(0),
-	splitterOn(false),
-	itsStnHasDualHBA(hasDualHBA)
+	splitterOn(false)
 {
 	// analyse ParameterSet.
 	string prefix = aParSet->locateModule("Observation") + "Observation.";
 	LOG_TRACE_VAR_STR("'Observation' located at: " << prefix);
 
-	string olapprefix = aParSet->locateModule("OLAP") + "OLAP.";
-	LOG_TRACE_VAR_STR("'OLAP' located at: " << olapprefix);
-
 	name  = aParSet->getString(prefix+"name", "");
 	obsID = aParSet->getInt32("_treeID", 0);
 	realPVSSdatapoint = aParSet->getString("_DPname","NOT_THE_REAL_DPNAME");
-
-	// Start and stop times
+#if !defined HAVE_BGL
 	try {
 		if (aParSet->isDefined(prefix+"startTime")) {
-			startTime = LOFAR::to_time_t(time_from_string(aParSet->getString(prefix+"startTime")));
+			startTime = to_time_t(time_from_string(aParSet->getString(prefix+"startTime")));
 		}
 	} catch( boost::bad_lexical_cast ) {
 		THROW( Exception, prefix << "startTime cannot be parsed as a valid time string. Please use YYYY-MM-DD HH:MM:SS[.hhh]." );
 	}
 	try {
 		if (aParSet->isDefined(prefix+"stopTime")) {
-			stopTime = LOFAR::to_time_t(time_from_string(aParSet->getString(prefix+"stopTime")));
+			stopTime = to_time_t(time_from_string(aParSet->getString(prefix+"stopTime")));
 		}
 	} catch( boost::bad_lexical_cast ) {
 		THROW( Exception, prefix << "stopTime cannot be parsed as a valid time string. Please use YYYY-MM-DD HH:MM:SS[.hhh]." );
 	}
-
-	// stationlist(s)
+#endif
 	if (aParSet->isDefined(prefix+"VirtualInstrument.stationList")) {
 		stationList = aParSet->getString(prefix+"VirtualInstrument.stationList");
 		stations    = aParSet->getStringVector(prefix+"VirtualInstrument.stationList", true);	// true:expandable
 		std::sort(stations.begin(), stations.end());
 	}
 
-	// miscellaneous
-	sampleClock   = aParSet->getUint32(prefix+"sampleClock",  0);
-	filter 		  = aParSet->getString(prefix+"bandFilter",   "");
-	antennaArray  = aParSet->getString(prefix+"antennaArray", "");
-	processType   = aParSet->getString(prefix+"processType", "");
-	processSubtype= aParSet->getString(prefix+"processSubtype", "");
-	strategy	  = aParSet->getString(prefix+"strategy", "");
-
-    if (aParSet->isDefined(prefix+"nrBitsPerSample")) {
-      bitsPerSample = aParSet->getUint32(prefix+"nrBitsPerSample", 16);
-    } else {
-      // backward compatibility
-      LOG_WARN("Could not find Observation.nrBitsPerSample, using depricated OLAP.nrBitsPerSample");
-      bitsPerSample = aParSet->getUint32(olapprefix+"nrBitsPerSample", 16);
-    }
-
+	sampleClock = aParSet->getUint32(prefix+"sampleClock",  0);
+	filter 		= aParSet->getString(prefix+"bandFilter",   "");
+	antennaArray= aParSet->getString(prefix+"antennaArray", "");
+	MSNameMask  = aParSet->getString(prefix+"MSNameMask",   "");
 	nyquistZone = nyquistzoneFromFilter(filter);
 
 	// new way of specifying the receivers and choosing the antenna array.
@@ -131,14 +103,11 @@ Observation::Observation(const ParameterSet*		aParSet,
 
 	// auto select the right antennaArray when antennaSet variable is used.
 	if (!antennaSet.empty()) {
-		antennaArray = antennaSet.substr(0,3);	// LBA or HBA
+		antennaArray = antennaSet.substr(0,3);
 	}
-	splitterOn = ((antennaSet.substr(0,8) == "HBA_ZERO") || (antennaSet.substr(0,7) == "HBA_ONE") || 
-				  (antennaSet.substr(0,8) == "HBA_DUAL"));
-	dualMode   =  (antennaSet.substr(0,8) == "HBA_DUAL");
-	bool innerMode = (antennaSet.find("_INNER") != string::npos);
+	splitterOn = ((antennaSet == "HBA_ZERO") || (antennaSet == "HBA_ONE") || (antennaSet == "HBA_DUAL"));
+	dualMode   = (antennaSet == "HBA_DUAL");
 
-	// RCU information
 	RCUset.reset();							// clear RCUset by default.
 	if (aParSet->isDefined(prefix+"receiverList")) {
 		receiverList = aParSet->getString(prefix+"receiverList");
@@ -151,25 +120,21 @@ Observation::Observation(const ParameterSet*		aParSet,
 	BGLNodeList     = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.BGLNodeList","[]"));
 	storageNodeList = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.storageNodeList","[]"));
 
-	// construct array with usable (-1) slots and unusable(999) slots. Unusable slots arise
-	// when nrSlotsInFrame differs from maxBeamletsPerRSP.
-	itsSlotTemplate.resize (maxBeamlets(bitsPerSample), -1);	// assume all are usable.
-	nrSlotsInFrame = aParSet->getInt(prefix+"nrSlotsInFrame", maxBeamletsPerRSP(bitsPerSample));
-    for (int rsp = 0; rsp < 4; rsp++) {
-        for (int bl = nrSlotsInFrame; bl < maxBeamletsPerRSP(bitsPerSample); bl++) {
-            itsSlotTemplate[rsp * maxBeamletsPerRSP(bitsPerSample) + bl] = 999;
-        }
-    }
-
-	// determine if DataslotLists are available in this parset
-	itsHasDataslots = _hasDataSlots(aParSet);
-	if (itsHasDataslots) {
-		itsDataslotParset = aParSet->makeSubset(prefix+"Dataslots.");		// save subset for later
+	// allocate beamlet 2 beam mapping and reset to -1
+	beamlet2beams.resize   (MAX_BEAMLETS, -1);
+	beamlet2subbands.resize(MAX_BEAMLETS, -1);
+	// when nrSlotsInFrame differs from MAX_BEAMLETS_PER_RSP mark the gaps at the end of each RSPboard.
+	nrSlotsInFrame = aParSet->getInt(prefix+"nrSlotsInFrame");
+	if (nrSlotsInFrame != MAX_BEAMLETS_PER_RSP) {
+		for (int rsp = 0; rsp < 4; rsp++) {
+			for (int bl = nrSlotsInFrame; bl < MAX_BEAMLETS_PER_RSP; bl++) {
+				beamlet2beams   [rsp*MAX_BEAMLETS_PER_RSP + bl] = 999;
+				beamlet2subbands[rsp*MAX_BEAMLETS_PER_RSP + bl] = 999;
+			}
+		}
 	}
-	else {	// init old arrays.
-		itsDataslotParset = aParSet->makeSubset(prefix+"Beam", "Beam");		// save subset for later
-		beamlet2beams = itsSlotTemplate;
-	}
+	
+	set<uint32> subbands;		
 		
 	//
 	// NOTE: THE DATAMODEL USED IN SAS IS NOT RIGHT. IT SUPPORTS ONLY 1 POINTING PER BEAM.
@@ -185,7 +150,6 @@ Observation::Observation(const ParameterSet*		aParSet,
 	//		 once in the HBA_ONE antennaSet.
 
 	// loop over all digital beams
-	vector<int>		BeamBeamlets;
 	int32	nrBeams = aParSet->getInt32(prefix+"nrBeams", 0);		// theoretical number
 	while (nrBeams > 0 && !aParSet->isDefined(prefix+formatString("Beam[%d].angle1", nrBeams-1))) {	// check reality
 		nrBeams--;
@@ -193,49 +157,41 @@ Observation::Observation(const ParameterSet*		aParSet,
 	for (int32 beamIdx(0) ; beamIdx < nrBeams; beamIdx++) {
 		Beam	newBeam;
 		string	beamPrefix(prefix+formatString("Beam[%d].", beamIdx));
-		newBeam.momID	 		 = aParSet->getInt        (beamPrefix+"momID", 0);
-		newBeam.target	 		 = aParSet->getString     (beamPrefix+"target", "");
-		newBeam.subbands 		 = aParSet->getInt32Vector(beamPrefix+"subbandList", vector<int32>(), true);// true:expand
+		newBeam.momID	 = aParSet->getInt(beamPrefix+"momID", 0);
+		newBeam.subbands = aParSet->getInt32Vector(beamPrefix+"subbandList", vector<int32>(), true);	// true:expandable
+		newBeam.beamlets = aParSet->getInt32Vector(beamPrefix+"beamletList", vector<int32>(), true);	// true:expandable
+		if (newBeam.subbands.size() != newBeam.beamlets.size()) {
+			THROW (Exception, "Number of subbands(" << newBeam.subbands.size() << 
+							  ") != number of beamlets(" << newBeam.beamlets.size() << 
+							  ") in beam " << beamIdx);
+		}
 		newBeam.name = getBeamName(beamIdx);
 		newBeam.antennaSet = antennaSet;
 		if (dualMode) {
-			newBeam.antennaSet = string("HBA_ZERO") + (innerMode ? "_INNER" : "");
+			newBeam.antennaSet = "HBA_ZERO";
 			if (hasDualHBA) {
 				newBeam.name += "_0";
 			}
 		}
 
-		// Only ONE pointing per beam.
+		// ONLY one pointing per beam.
 		Pointing		newPt;
 		newPt.angle1 		= aParSet->getDouble(beamPrefix+"angle1", 0.0);
 		newPt.angle2 		= aParSet->getDouble(beamPrefix+"angle2", 0.0);
 		newPt.directionType = aParSet->getString(beamPrefix+"directionType", "");
-		newPt.duration	    = aParSet->getInt	(beamPrefix+"duration", 0);
+		newPt.duration	    = aParSet->getInt(beamPrefix+"duration", 0);
 		newPt.startTime 	= startTime;	// assume time of observation itself
+#if !defined HAVE_BGL
 		try {
 			string	timeStr = aParSet->getString(beamPrefix+"startTime","");
 			if (!timeStr.empty() && timeStr != "0") {
-				newPt.startTime = LOFAR::to_time_t(time_from_string(timeStr));
+				newPt.startTime = to_time_t(time_from_string(timeStr));
 			}
 		} catch (boost::bad_lexical_cast) {
 			LOG_ERROR_STR("Starttime of pointing of beam " << beamIdx << " not valid, using starttime of observation");
 		}
+#endif
 		newBeam.pointings.push_back(newPt);
-
-		// Add TiedArrayBeam information
-		newBeam.nrTABs	    = aParSet->getInt   (beamPrefix+"nrTiedArrayBeams", 0);
-		newBeam.nrTABrings  = aParSet->getInt   (beamPrefix+"nrTabRings", 0);
-		newBeam.TABringSize = aParSet->getDouble(beamPrefix+"tabRingSize", 0.0);
-		for (int32	tabIdx(0); tabIdx < newBeam.nrTABs; tabIdx++) {
-			TiedArrayBeam	newTAB;
-			string	tabPrefix(beamPrefix+formatString("TiedArrayBeam[%d].", tabIdx));
-			newTAB.angle1			 = aParSet->getDouble(tabPrefix+"angle1", 0.0);
-			newTAB.angle2			 = aParSet->getDouble(tabPrefix+"angle2", 0.0);
-			newTAB.directionType     = aParSet->getString(tabPrefix+"directionType", "");
-			newTAB.dispersionMeasure = aParSet->getDouble(tabPrefix+"dispersionMeasure", 0.0);
-			newTAB.coherent 		 = aParSet->getBool  (tabPrefix+"coherent", false);
-			newBeam.TABs.push_back(newTAB);
-		}
 
 		// Finally add the beam to the vector
 		beams.push_back(newBeam);
@@ -243,34 +199,24 @@ Observation::Observation(const ParameterSet*		aParSet,
 		// Duplicate beam on second HBA subfield when in HBA_DUAL mode.
 		if (dualMode && hasDualHBA) {
 			newBeam.name	   = getBeamName(beamIdx) + "_1";
-			newBeam.antennaSet = string("HBA_ONE") + (innerMode ? "_INNER" : "");
+			newBeam.antennaSet = "HBA_ONE";
 			beams.push_back(newBeam);
 		}
 
-		// finally update vector with beamnumbers
-//		if (_isStationName(myHostname(false))) {
-			int	nrSubbands = newBeam.subbands.size();
-			if (!itsHasDataslots) {		// old situation
-				BeamBeamlets = aParSet->getInt32Vector(beamPrefix+"beamletList", vector<int32>(), true);	// true:expandable
-				int nrBeamlets = BeamBeamlets.size();
-				ASSERTSTR(nrBeamlets == nrSubbands, "Number of beamlets(" << nrBeamlets << ") != nr of subbands(" << nrSubbands << ") for Beam " << beamIdx);
-				for (int  i = 0; i < nrBeamlets; ++i) {
-					if (beamlet2beams[BeamBeamlets[i]] != -1) {
-						stringstream	os;
-						os << "beamlet2beams   : "; writeVector(os, beamlet2beams,    ",", "[", "]"); os << endl;
-						LOG_ERROR_STR(os.str());
-						THROW (Exception, "beamlet " << i << "(" << BeamBeamlets[i] << ") of beam " << beamIdx << " clashes with beamlet of other beam"); 
-					}
-					beamlet2beams[BeamBeamlets[i]] = beamIdx;
-				} // for all beamlets
+		// finally update beamlet 2 beam mapping.
+		for (int32  i = newBeam.beamlets.size()-1 ; i > -1; i--) {
+			if (beamlet2beams[newBeam.beamlets[i]] != -1) {
+				stringstream	os;
+				os << "beamlet2beams   : "; writeVector(os, beamlet2beams,    ",", "[", "]"); os << endl;
+				os << "beamlet2subbands: "; writeVector(os, beamlet2subbands, ",", "[", "]"); os << endl << endl;
+				LOG_ERROR_STR(os.str());
+				THROW (Exception, "beamlet " << i << "(" << newBeam.beamlets[i] << ") of beam " << beamIdx << " clashes with beamlet of other beam"); 
 			}
-			else { // new situation
-				for (int  i = 0; i < nrSubbands; ++i) {	// Note nrBeamlets=nrSubbands
-					itsBeamSlotList.push_back(beamIdx);
-				}
-			} // itsHasDataslots
-//		} // on a station
-	} // for all digital beams
+			beamlet2beams   [newBeam.beamlets[i]] = beamIdx;
+			beamlet2subbands[newBeam.beamlets[i]] = newBeam.subbands[i];
+			subbands.insert(newBeam.subbands[i]);
+		}
+	} // for
 
 	// loop over al analogue beams
 	int32	nrAnaBeams = aParSet->getInt32(prefix+"nrAnaBeams", 0);		// theoretical number
@@ -284,7 +230,7 @@ Observation::Observation(const ParameterSet*		aParSet,
 		newBeam.name 	   = getAnaBeamName();
 		newBeam.antennaSet = antennaSet;
 		if (dualMode) {
-			newBeam.antennaSet = string("HBA_ZERO") + (innerMode ? "_INNER" : "");
+			newBeam.antennaSet = "HBA_ZERO";
 			if (hasDualHBA) {
 				newBeam.name += "_0";
 			}
@@ -297,14 +243,16 @@ Observation::Observation(const ParameterSet*		aParSet,
 		newPt.directionType = aParSet->getString(beamPrefix+"directionType", "");
 		newPt.duration	    = aParSet->getInt   (beamPrefix+"duration", 0);
 		newPt.startTime 	= startTime;	// assume time of observation itself
+#if !defined HAVE_BGL
 		try {
 			string	timeStr = aParSet->getString(beamPrefix+"startTime","");
 			if (!timeStr.empty() && timeStr != "0") {
-				newPt.startTime = LOFAR::to_time_t(time_from_string(timeStr));
+				newPt.startTime = to_time_t(time_from_string(timeStr));
 			}
 		} catch (boost::bad_lexical_cast) {
 			LOG_ERROR_STR("Starttime of pointing of analogue beam " << beamIdx << " not valid, using starttime of observation");
 		}
+#endif
 		newBeam.pointings.push_back(newPt);
 		
 		// add beam to the analogue beam vector
@@ -313,241 +261,74 @@ Observation::Observation(const ParameterSet*		aParSet,
 		// Duplicate beam on second HBA subfield when in HBA_DUAL mode.
 		if (dualMode && hasDualHBA) {
 			newBeam.name	   = getBeamName(beamIdx) + "_1";
-			newBeam.antennaSet = string("HBA_ONE") + (innerMode ? "_INNER" : "");
+			newBeam.antennaSet = "HBA_ONE";
 			anaBeams.push_back(newBeam);
 		}
-	} // for all analogue beams
+	}
 
+#if 0
         // loop over all data products and generate all data flows
-	if (!olapprefix.empty()) {		// offline Pipelines don't have OLAP in the parset.
-		const char *dataProductNames[] = { "Beamformed", "Correlated" };
-		unsigned dataProductPhases[]   = { 3,            2 };
-        unsigned dataProductNrs[]      = { 2,            1 };
-		size_t nrDataProducts = sizeof dataProductNames / sizeof dataProductNames[0];
+	string olapprefix = aParSet->locateModule("OLAP") + "OLAP.";
+        const char *dataProductNames[] = { "CoherentStokes", "IncoherentStokes", "Beamformed", "Correlated", "Filtered" };
+        unsigned dataProductPhases[]   = { 3,                2,                  3,            2,            2          };
+        size_t nrDataProducts = sizeof dataProductNames / sizeof dataProductNames[0];
 
-        const unsigned nrPsets = nrBGPIOnodes;
+        // by default, use all psets
+        std::vector<unsigned> phaseTwoPsets;
+        if (aParSet->isDefined(olapprefix+"CNProc.phaseTwoPsets"))
+          phaseTwoPsets = aParSet->getUint32Vector(olapprefix+"CNProc.phaseTwoPsets", true);
+        if (phaseTwoPsets.empty()) 
+          for (unsigned p = 0; p < 64; p++)
+            phaseTwoPsets.push_back(p);
 
-		// by default, use all psets
-		vector<unsigned> phaseTwoPsets;
-		if (aParSet->isDefined(olapprefix+"CNProc.phaseTwoPsets")) {
-			phaseTwoPsets = aParSet->getUint32Vector(olapprefix+"CNProc.phaseTwoPsets", true);
-		}
-		if (phaseTwoPsets.empty())  {
-			for (unsigned p = 0; p < nrPsets; p++) {
-				phaseTwoPsets.push_back(p);
-			}
-		}
+        // by default, use all psets
+        std::vector<unsigned> phaseThreePsets;
+        if (aParSet->isDefined(olapprefix+"CNProc.phaseThreePsets"))
+          phaseTwoPsets = aParSet->getUint32Vector(olapprefix+"CNProc.phaseThreePsets", true);
+        if (phaseThreePsets.empty()) 
+          for (unsigned p = 0; p < 64; p++)
+            phaseThreePsets.push_back(p);
 
-		// by default, use all psets
-		vector<unsigned> phaseThreePsets;
-		if (aParSet->isDefined(olapprefix+"CNProc.phaseThreePsets")) {
-			phaseThreePsets = aParSet->getUint32Vector(olapprefix+"CNProc.phaseThreePsets", true);
-		}
-		if (phaseThreePsets.empty())  {
-			for (unsigned p = 0; p < nrPsets; p++) {
-				phaseThreePsets.push_back(p);
-			}
-		}
+        for (size_t d = 0; d < nrDataProducts; d ++) {
+          bool enabled = aParSet->getBool(prefix+str(format("DataProducts.Output_%s.enabled") % dataProductNames[d]), false);
 
-    // =========================================
-    // Collapse CoherentStokes and IncoherentStokes nto Beamformed, as RTCP
-    // expects.
-    // =========================================
-    //
-    bool flysEye = aParSet->getBool(olapprefix+"PencilInfo.flysEye", false);
+          if (!enabled)
+            continue;
 
-    // Count #stations; HBA_DUAL core stations count twice
-    vector<string> stations = aParSet->getStringVector(prefix+"VirtualInstrument.stationList", true);
-    bool isHBAdual = aParSet->getString(prefix+"antennaSet").substr(0,8) == "HBA_DUAL";
-    size_t nrStations = 0;
-    if (isHBAdual) {
-      for (size_t s = 0; s < stations.size(); ++s) {
-        if (stations[s].substr(0,2) == "CS")
-          nrStations += 2;
-        else
-          nrStations += 1;
-      }
-    } else {
-      nrStations = stations.size();
-    }
+          // phase 2: files are ordered by beam, subband  
+          // phase 3: files are ordered by beam, pencil, stokes, part
 
-    unsigned nrCoherentStokes = aParSet->getString(olapprefix+"CNProc_CoherentStokes.which", "").size();
-    unsigned nrCoherentSubbandsPerFile = aParSet->getUint32(olapprefix+"CNProc_CoherentStokes.subbandsPerFile", 1024);
-    unsigned nrIncoherentStokes = aParSet->getString(olapprefix+"CNProc_IncoherentStokes.which", "").size();
-    unsigned nrIncoherentSubbandsPerFile = aParSet->getUint32(olapprefix+"CNProc_IncoherentStokes.subbandsPerFile", 1024);
+          // The .locations parset value contains the storage nodes which
+          // will store each file.
 
-    // obtain file/location lists
-    vector<string> empty;
-    vector<string> bfFiles     = aParSet->getStringVector(prefix+"DataProducts.Output_Beamformed.filenames", empty, true);
-    vector<string> bfLocations = aParSet->getStringVector(prefix+"DataProducts.Output_Beamformed.locations", empty, true);
-    vector<string> csFiles     = aParSet->getStringVector(prefix+"DataProducts.Output_CoherentStokes.filenames", empty, true);
-    vector<string> csLocations = aParSet->getStringVector(prefix+"DataProducts.Output_CoherentStokes.locations", empty, true);
-    vector<string> isFiles     = aParSet->getStringVector(prefix+"DataProducts.Output_IncoherentStokes.filenames", empty, true);
-    vector<string> isLocations = aParSet->getStringVector(prefix+"DataProducts.Output_IncoherentStokes.locations", empty, true);
+          // The I/O node will allocate the files in order depth-wise.
+          // That is, we determine the maximum number of files to output per
+          // pset, and then proceed to fill up the I/O nodes starting from
+          // the first pset. Each data product is treated individually.
 
-    LOG_DEBUG_STR("nr bf files: " << bfFiles.size());
-    LOG_DEBUG_STR("nr cs files: " << csFiles.size());
-    LOG_DEBUG_STR("nr is files: " << isFiles.size());
+          std::vector<std::string> filenames = aParSet->getStringVector(prefix+str(format("DataProducts.Output_%s.filenames") % dataProductNames[d]));
+          std::vector<std::string> locations = aParSet->getStringVector(prefix+str(format("DataProducts.Output_%s.locations") % dataProductNames[d]));
+          std::vector<unsigned> &psets = dataProductPhases[d] == 2 ? phaseTwoPsets : phaseThreePsets;
 
-    // erase lists of not enabled outputs
-	  if(!aParSet->getBool(prefix+"DataProducts.Output_Beamformed.enabled", false)) {
-      bfFiles.clear();
-      bfLocations.clear();
-    }
-	  if(!aParSet->getBool(prefix+"DataProducts.Output_CoherentStokes.enabled", false)) {
-      csFiles.clear();
-      csLocations.clear();
-    }
-	  if(!aParSet->getBool(prefix+"DataProducts.Output_IncoherentStokes.enabled", false)) {
-      isFiles.clear();
-      isLocations.clear();
-    }
+          unsigned numFiles = filenames.size();
+          unsigned filesPerPset = (numFiles + psets.size() - 1) / psets.size();
 
-    if (!csFiles.empty() || !isFiles.empty()) {
-      // ONLY Merge lists if not already done so (f.e. by RTCP/Run/LOFAR/Parset.py)
+          for (size_t i = 0; i < filenames.size(); i++) {
+            StreamToStorage a;
 
-      // chose the right coherent stokes set
-      if(aParSet->getString(olapprefix+"CNProc_CoherentStokes.which", "") == "XXYY") {
-	csFiles = bfFiles;
-	csLocations = bfLocations;
-      }
+            a.dataProduct = dataProductNames[d];
+            a.streamNr = i;
+            a.filename = filenames[i];
+            a.sourcePset = psets[i / filesPerPset];
 
-      // erase the target list
-      bfFiles.clear();
-      bfLocations.clear();
+            std::vector<std::string> locparts = StringUtil::split(locations[i],':');
+            a.destStorageNode = locparts[0];
+            a.destDirectory = locparts[1];
 
-      // set indices to scan the coherent and incoherent lists
-      size_t coherentIdx = 0;
-      size_t incoherentIdx = 0;
-
-      // iterate over the beams and tied array beams to reconstruct the
-      // Beamformed lists.
-      if (csFiles.size() > 0 || isFiles.size() > 0 ) {
-	for (unsigned b = 0; b < beams.size(); ++b) {
-	  Beam &beam = beams[b];
-
-	  // skip duplicate beams in dual mode
-		      if (beam.name.find("_1") != string::npos)
-	      continue;
-
-	  size_t nrSubbands = beam.subbands.size();
-
-	  // number of files we'll create per TAB
-	  size_t nrCoherentFiles = (int)ceil(1.0 * nrSubbands / nrCoherentSubbandsPerFile) * nrCoherentStokes;
-	  size_t nrIncoherentFiles = (int)ceil(1.0 * nrSubbands / nrIncoherentSubbandsPerFile) * nrIncoherentStokes;
-
-	  LOG_DEBUG_STR("beam " << b << " has " << nrCoherentFiles << " files/cs and " << nrIncoherentFiles << " files/is");
-
-	  // process in defined order: 1. manual 2. rings 3. fly's eye
-
-	  // manual TABs
-	  LOG_DEBUG_STR("beam " << b << " has " << beam.TABs.size() << " manual TABs");
-	  for (unsigned t = 0; t < beam.TABs.size(); ++t) {
-	    TiedArrayBeam &tab = beam.TABs[t];
-
-	    if (tab.coherent) {
-	      for (unsigned f = 0; f < nrCoherentFiles; ++f) {
-		bfFiles.push_back(csFiles[coherentIdx]);
-		bfLocations.push_back(csLocations[coherentIdx]);
-		coherentIdx++;
-	      }
-	    } else {
-	      for (unsigned f = 0; f < nrIncoherentFiles; ++f) {
-		bfFiles.push_back(isFiles[incoherentIdx]);
-		bfLocations.push_back(isLocations[incoherentIdx]);
-		incoherentIdx++;
-	      }
-	    }
-
-	  }
-
-	  // ring TABs
-	  if (beam.nrTABrings > 0) {
-	    // for (n-1) rings, we get 3n(n-1) + 1 tabs
-	    size_t n = beam.nrTABrings + 1;
-	    size_t nrRingTABs = 3 * n * (n-1) + 1;
-
-	    LOG_DEBUG_STR("beam " << b << " has " << nrRingTABs << " ring TABs");
-
-	    for (unsigned t = 0; t < nrRingTABs; ++t) {
-	      // ring TABs are always coherent
-	      for (unsigned f = 0; f < nrCoherentFiles; ++f) {
-		bfFiles.push_back(csFiles[coherentIdx]);
-		bfLocations.push_back(csLocations[coherentIdx]);
-		coherentIdx++;
-	      }
-	    }
-	  }
-
-	  // fly's eye
-	  if (flysEye) {
-	    LOG_DEBUG_STR("beam " << b << " has " << nrStations << " fly's eye TABs");
-	    for (unsigned t = 0; t < nrStations; ++t) {
-	      // fly's eye TABs are always coherent
-	      for (unsigned f = 0; f < nrCoherentFiles; ++f) {
-		bfFiles.push_back(csFiles[coherentIdx]);
-		bfLocations.push_back(csLocations[coherentIdx]);
-		coherentIdx++;
-	      }
-	    }
-	  }
-	}
-      }
-    }
-
-		std::map<unsigned,    unsigned> filesPerIONode;
-		std::map<std::string, unsigned> filesPerStorage;
-
-		for (size_t d = 0; d < nrDataProducts; d ++) {
-      // if beam formed (d==0), use calculated list
-			bool enabled = d == 0 ? bfFiles.size() > 0 : aParSet->getBool(prefix+str(format("DataProducts.Output_%s.enabled") % dataProductNames[d]), false);
-
-			if (!enabled)
-				continue;
-
-			// phase 2: files are ordered by beam, subband  
-			// phase 3: files are ordered by beam, pencil, stokes, part
-
-			// The .locations parset value contains the storage nodes which
-			// will store each file.
-
-			// The I/O node will allocate the files in order depth-wise.
-			// That is, we determine the maximum number of files to output per
-			// pset, and then proceed to fill up the I/O nodes starting from
-			// the first pset. Each data product is treated individually.
-
-			vector<string> filenames = d == 0 ? bfFiles : aParSet->getStringVector(prefix+str(format("DataProducts.Output_%s.filenames") % dataProductNames[d]), true);
-			vector<string> locations = d == 0 ? bfLocations : aParSet->getStringVector(prefix+str(format("DataProducts.Output_%s.locations") % dataProductNames[d]), true);
-			vector<unsigned> &psets = dataProductPhases[d] == 2 ? phaseTwoPsets : phaseThreePsets;
-
-			ASSERTSTR(filenames.size() == locations.size(), "Parset provides " << filenames.size() << " filenames but only " << locations.size() << " locations.");
-
-			unsigned numFiles = filenames.size();
-			unsigned filesPerPset = (numFiles + psets.size() - 1) / psets.size();
-
-			for (size_t i = 0; i < filenames.size(); i++) {
-				StreamToStorage a;
-
-				a.dataProduct = dataProductNames[d];
-				a.dataProductNr = dataProductNrs[d];
-				a.streamNr = i;
-				a.filename = filenames[i];
-				a.sourcePset = psets[i / filesPerPset];
-
-				vector<string> locparts = StringUtil::split(locations[i],':');
-			    ASSERTSTR(locparts.size() == 2, "A DataProduct location must be of the format host:directory (but I found " << locations[i] << ")");
-
-				a.destStorageNode = locparts[0];
-				a.destDirectory = locparts[1];
-
-				// use a static allocation for now, starting at 0 for each pset/locus node
-				a.adderNr  = filesPerIONode[a.sourcePset]++;
-				a.writerNr = filesPerStorage[locparts[0]]++;
-
-				streamsToStorage.push_back(a);
-			} // for filenames
-		} // for nrDataProducts
-	}
+            streamsToStorage.push_back(a);
+          }
+        }
+#endif
 }
 
 
@@ -564,6 +345,11 @@ Observation::~Observation()
 // check if the given Observation conflicts with this one
 bool	Observation::conflicts(const	Observation&	other) const
 {
+#if defined HAVE_BGL
+	LOG_WARN("BG/P code cannot check for conflicts between observations!!!");
+	return (false);
+#endif
+
 	// if observations don't overlap they don't conflict per definition.
 	if ((other.stopTime <= startTime) || (other.startTime >= stopTime)) {
 		return (false);
@@ -572,12 +358,6 @@ bool	Observation::conflicts(const	Observation&	other) const
 	// Observation overlap, check clock
 	if (other.sampleClock != sampleClock) {
 		LOG_INFO_STR("Clock of observation " << obsID << " and " << other.obsID << " conflict");
-		return (true);
-	}
-
-	// Observation overlap, check bit mode
-	if (other.bitsPerSample != bitsPerSample) {
-		LOG_INFO_STR("Bit mode of observation " << obsID << " and " << other.obsID << " conflict");
 		return (true);
 	}
 
@@ -598,6 +378,17 @@ bool	Observation::conflicts(const	Observation&	other) const
 		}
 	}
 
+	// check beamlets overlap
+	int		maxBeamlets = beamlet2beams.size();
+	for (int bl = 0; bl < maxBeamlets; bl++) {
+		if (beamlet2beams[bl] != -1 && other.beamlet2beams[bl] != -1) {
+			LOG_INFO_STR("Conflict in beamlets between observation " << obsID <<
+						 " and " << other.obsID);
+			LOG_DEBUG_STR("First conflicting beamlet: " << bl);
+			return (true);
+		}
+	}
+
 	// for now also check nr of slots in frame. In the future we might allow
 	// different slotsinFrame for each RSPboard but for now we treat it as a conflict.
 	if (nrSlotsInFrame != other.nrSlotsInFrame) {
@@ -605,19 +396,6 @@ bool	Observation::conflicts(const	Observation&	other) const
 					other.nrSlotsInFrame << " for resp. observation " << obsID << 
 					" and " << other.obsID);
 		return (true);
-	}
-
-	// check beamlets overlap
-	vector<int> thisb2b = getBeamAllocation();
-	vector<int> thatb2b = other.getBeamAllocation();
-	int		maxBeamlets = thisb2b.size();
-	for (int bl = 0; bl < maxBeamlets; bl++) {
-		if (thisb2b[bl] != -1 && thatb2b[bl] != -1 && thisb2b[bl] != 999) {
-			LOG_INFO_STR("Conflict in beamlets between observation " << obsID <<
-						 " and " << other.obsID);
-			LOG_DEBUG_STR("First conflicting beamlet: " << bl);
-			return (true);
-		}
 	}
 
 	return (false);	// no conflicts
@@ -649,117 +427,9 @@ bitset<MAX_RCUS> Observation::getRCUbitset(int nrLBAs, int nrHBAs, const string&
 }
 
 //
-// getBeamAllocation(stationname)
+// TEMP HACK TO GET THE ANTENNAARRAYNAME
 //
-// Return station specific beamlet2beam vector.
-//
-vector<int> Observation::getBeamAllocation(const string& stationName) const
-{
-	vector<int>		b2b;
-
-	// construct stationname if not given by user.
-	string	station(stationName);
-	if (station.empty()) {
-		station = myHostname(false);
-		char	lastChar(*(--(station.end())));
-		if (lastChar == 'C' || lastChar == 'T') {
-			station.erase(station.length()-1, 1);		// station.pop_back();
-		}
-	}
-	if (!_isStationName(station)) {					// called on a non-station machine?
-		return (b2b);									// return an empty vector
-	}
-
-	if (!itsHasDataslots) {
-		return (beamlet2beams);	// return old mapping so it keeps working
-	}
-
-	// is DSL for this station available?
-	string	fieldName = getAntennaFieldName(itsStnHasDualHBA);
-	string	dsl(str(format("%s%s.DataslotList") % station % fieldName));
-	string	rbl(str(format("%s%s.RSPBoardList") % station % fieldName));
-	if (!itsDataslotParset.isDefined(dsl) || !itsDataslotParset.isDefined(rbl)) {
-		LOG_ERROR_STR("No dataslots defined for " << station << antennaArray);
-		return (b2b);
-	}
-	vector<int>	RSPboardList = itsDataslotParset.getIntVector(rbl,true);
-	vector<int>	DataslotList = itsDataslotParset.getIntVector(dsl,true);
-
-	ASSERTSTR (RSPboardList.size() == DataslotList.size(), "RSPBoardlist (" << RSPboardList << 
-			") differs size of DataslotList(" << DataslotList << ") for station " << station);
-	ASSERTSTR (RSPboardList.size() == itsBeamSlotList.size(), RSPboardList.size() << 
-			" dataslot allocations, but beams specify " << itsBeamSlotList.size() << " for station " << station);
-
-	// initialize arrays
-	b2b = itsSlotTemplate;
-
-	// fill with required information
-	for (int i = RSPboardList.size()-1; i >= 0; --i) {
-		int	idx = RSPboardList[i] * maxBeamletsPerRSP(bitsPerSample) + DataslotList[i];
-		if (b2b[idx] != -1) {
-			THROW (Exception, "beamlet " << i << " of beam " << itsBeamSlotList[i] << " clashes with beamlet of other beam(" << b2b[idx] << ")"); 
-		}
-		else {
-			b2b[idx] = itsBeamSlotList[i];
-		}
-	}
-
-	return (b2b);
-}
-
-//
-// getBeamlets(beamNr, [stationName])
-//
-vector<int>	Observation::getBeamlets (uint beamIdx, const string&	stationName) const
-{
-	uint	parsetIdx = (dualMode && itsStnHasDualHBA) ? beamIdx/2 : beamIdx;
-	string	fieldName = getAntennaFieldName(itsStnHasDualHBA, beamIdx);
-
-	// construct stationname if not given by user.
-	string	station(stationName);
-	if (station.empty()) {
-		station = myHostname(false);
-		char	lastChar(*(--(station.end())));
-		if (lastChar == 'C' || lastChar == 'T') {
-			station.erase(station.length()-1, 1);		// station.pop_back();
-		}
-	}
-		
-	vector<int>	result;
-	if (!_isStationName(station)) {					// called on a non-station machine?
-		return (result);								// return an empty vector
-	}
-
-	if (!itsHasDataslots) {
-		// both fields use the same beamlet mapping
-		return (itsDataslotParset.getInt32Vector(str(format("Beam[%d].beamletList") % parsetIdx), vector<int32>(), true));	// true:expandable
-	}
-
-	// is DSL for this station available?
-	// both fields have their own beamlet mapping
-	string	dsl(str(format("%s%s.DataslotList") % station % fieldName));
-	string	rbl(str(format("%s%s.RSPBoardList") % station % fieldName));
-	if (!itsDataslotParset.isDefined(dsl) || !itsDataslotParset.isDefined(rbl)) {
-		return (result);
-	}
-	vector<int>	RSPboardList = itsDataslotParset.getIntVector(rbl,true);
-	vector<int>	DataslotList = itsDataslotParset.getIntVector(dsl,true);
-	uint	nrEntries = itsBeamSlotList.size();
-	for (uint i = 0; i < nrEntries; ++i) {
-		if (itsBeamSlotList[i] == parsetIdx) {
-			result.push_back(RSPboardList[i] * maxBeamletsPerRSP(bitsPerSample) + DataslotList[i]);
-		}
-	}
-	return (result);
-}
-
-
-//
-// TEMP HACK TO GET THE ANTENNAFIELDNAME
-//
-// Except for the beamIdx dependancy we should look in the antennaSet file.
-//
-string Observation::getAntennaFieldName(bool hasSplitters, uint32	beamIdx) const
+string Observation::getAntennaArrayName(bool hasSplitters) const
 {
 	string	result;
 	if (antennaSet.empty()) {
@@ -778,10 +448,9 @@ string Observation::getAntennaFieldName(bool hasSplitters, uint32	beamIdx) const
 	}
 
 	// station has splitters
-	if (result.substr(0,8) == "HBA_ZERO") 	return ("HBA0");
-	if (result.substr(0,7) == "HBA_ONE") 	return ("HBA1");
-	if (result.substr(0,10)== "HBA_JOINED")	return ("HBA");
-	if (result.substr(0,8) == "HBA_DUAL")	return (beamIdx % 2 == 0 ? "HBA0" : "HBA1");
+	if (result == "HBA_ZERO") 	return ("HBA0");
+	if (result == "HBA_ONE") 	return ("HBA1");
+	if (result == "HBA_JOINED")	return ("HBA");
 	return ("HBA");
 }	
 
@@ -796,41 +465,6 @@ string Observation::getBeamName(uint32	beamIdx) const
 string Observation::getAnaBeamName() const
 {
 	return (formatString("observation[%d]anabeam", obsID));
-}
-
-
-//
-// _isStationName(name)
-//
-bool Observation::_isStationName(const string&	hostname) const
-{
-	// allow AA999, AA999C and AA999T
-	if (hostname.length() != 5 && hostname.length() != 6) 
-		return (false);
-
-	// We make a rough guess about the vality of the hostname.
-	// If we want to check more secure we have to implement all allowed stationnames
-	return (isalpha(hostname[0]) && isalpha(hostname[1]) &&
-			isdigit(hostname[2]) && isdigit(hostname[3]) && isdigit(hostname[4]));
-}
-
-//
-// _hasDataSlots
-//
-bool Observation::_hasDataSlots(const ParameterSet*	aPS) const
-{
-	ParameterSet::const_iterator	iter = aPS->begin();
-	ParameterSet::const_iterator	end  = aPS->end();
-	while (iter != end) {
-		string::size_type	pos(iter->first.find("Dataslots."));
-		// if begin found, what is after it?
-		if (pos != string::npos && iter->first.find("Dataslots.DataslotInfo.") == string::npos) {	
-			return _isStationName((iter->first.substr(pos+10,5)));
-		}
-		iter++;	// try next line
-	}
-	
-	return (false);
 }
 
 //
@@ -870,18 +504,20 @@ ostream& Observation::print (ostream&	os) const
 	os << endl;
 	os << "Observation  : " << name << endl;
     os << "ObsID        : " << obsID << endl;
+#if !defined HAVE_BGL
     os << "starttime    : " << to_simple_string(from_time_t(startTime)) << endl;
     os << "stoptime     : " << to_simple_string(from_time_t(stopTime)) << endl;
+#endif
     os << "stations     : " << stations << endl;
 //    os << "stations     : "; writeVector(os, stations, ",", "[", "]"); os << endl;
     os << "antennaArray : " << antennaArray << endl;
     os << "antenna set  : " << antennaSet << endl;
     os << "receiver set : " << RCUset << endl;
     os << "sampleClock  : " << sampleClock << endl;
-    os << "bits/sample  : " << bitsPerSample << endl;
     os << "filter       : " << filter << endl;
     os << "splitter     : " << (splitterOn ? "ON" : "OFF") << endl;
     os << "nyquistZone  : " << nyquistZone << endl << endl;
+    os << "Meas.set     : " << MSNameMask << endl << endl;
 
 	os << "(Receivers)  : " << receiverList << endl;
 	os << "Stations     : " << stationList << endl;
@@ -891,26 +527,23 @@ ostream& Observation::print (ostream&	os) const
     os << "nrBeams      : " << beams.size() << endl;
 	for (size_t	b(0) ; b < beams.size(); b++) {
 		os << "Beam[" << b << "].name       : " << beams[b].name << endl;
-		os << "Beam[" << b << "].target     : " << beams[b].target << endl;
 		os << "Beam[" << b << "].antennaSet : " << beams[b].antennaSet << endl;
 		os << "Beam[" << b << "].momID      : " << beams[b].momID << endl;
 		os << "Beam[" << b << "].subbandList: "; writeVector(os, beams[b].subbands, ",", "[", "]"); os << endl;
-		os << "Beam[" << b << "].beamletList: "; writeVector(os, getBeamlets(b), ",", "[", "]"); os << endl;
+		os << "Beam[" << b << "].beamletList: "; writeVector(os, beams[b].beamlets, ",", "[", "]"); os << endl;
 		os << "nrPointings : " << beams[b].pointings.size() << endl;
 		for (size_t p = 0; p < beams[b].pointings.size(); ++p) {
 			const Pointing*		pt = &(beams[b].pointings[p]);
+#if defined HAVE_BGL
+			os << formatString("Beam[%d].pointing[%d]: %f, %f, %s\n", b, p, pt->angle1, pt->angle2, pt->directionType.c_str());
+#else
 			os << formatString("Beam[%d].pointing[%d]: %f, %f, %s, %s\n", b, p, pt->angle1, pt->angle2, 
 				pt->directionType.c_str(), to_simple_string(from_time_t(pt->startTime)).c_str());
-		}
-		os << "nrTABs      : " << beams[b].nrTABs << endl;
-		os << "nrTABrings  : " << beams[b].nrTABrings << endl;
-		os << "TABringsize : " << beams[b].TABringSize << endl;
-		for (int t = 0; t < beams[b].nrTABs; ++t) {
-			const TiedArrayBeam*	tab = &(beams[b].TABs[t]);
-			os << formatString ("Beam[%d].TAB[%d]: %f, %f, %s, %f, %scoherent\n", b, t, tab->angle1, tab->angle2, tab->directionType.c_str(), tab->dispersionMeasure, (tab->coherent ? "" : "in"));
+#endif
 		}
 	}
-	os << "beamlet2beams   : "; writeVector(os, getBeamAllocation(), ",", "[", "]"); os << endl;
+	os << "beamlet2beams   : "; writeVector(os, beamlet2beams,    ",", "[", "]"); os << endl;
+	os << "beamlet2subbands: "; writeVector(os, beamlet2subbands, ",", "[", "]"); os << endl << endl;
 
     os << "nrAnaBeams   : " << anaBeams.size() << endl;
 	for (size_t	b(0) ; b < anaBeams.size(); b++) {
@@ -923,21 +556,6 @@ ostream& Observation::print (ostream&	os) const
 			os << formatString("anaBeam[%d].pointing[%d]: %f, %f, %s\n", b, p, pt->angle1, pt->angle2, pt->directionType.c_str());
 		}
 	}
-
-  os << "nrStreamsToStorage: " << streamsToStorage.size() << endl;
-	for (size_t	s(0) ; s < streamsToStorage.size(); s++) {
-    const StreamToStorage &str = streamsToStorage[s];
-
-    os << "streamsToStorage[" << s << "].dataProduct:     " << str.dataProduct << endl;
-    os << "streamsToStorage[" << s << "].dataProductNr:   " << str.dataProductNr << endl;
-    os << "streamsToStorage[" << s << "].streamNr:        " << str.streamNr << endl;
-    os << "streamsToStorage[" << s << "].filename:        " << str.filename << endl;
-    os << "streamsToStorage[" << s << "].sourcePset:      " << str.sourcePset << endl;
-    os << "streamsToStorage[" << s << "].destStorageNode: " << str.destStorageNode << endl;
-    os << "streamsToStorage[" << s << "].destDirectory:   " << str.destDirectory << endl;
-    os << "streamsToStorage[" << s << "].adderNr:         " << str.adderNr << endl;
-    os << "streamsToStorage[" << s << "].writerNr:        " << str.writerNr << endl;
-  }
 
 	return (os);
 }

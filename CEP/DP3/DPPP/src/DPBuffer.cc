@@ -29,8 +29,7 @@ namespace LOFAR {
   namespace DPPP {
 
     DPBuffer::DPBuffer()
-      : itsTime     (0),
-        itsExposure (0)
+      : itsTime(0)
     {}
 
     DPBuffer::DPBuffer (const DPBuffer& that)
@@ -41,10 +40,10 @@ namespace LOFAR {
     DPBuffer& DPBuffer::operator= (const DPBuffer& that)
     {
       if (this != &that) {
-        itsTime     = that.itsTime;
-        itsExposure = that.itsExposure;
+        itsTime = that.itsTime;
         itsRowNrs.reference (that.itsRowNrs);
         itsData.reference (that.itsData);
+        itsAmpl.reference (that.itsAmpl);
         itsFlags.reference (that.itsFlags);
         itsWeights.reference (that.itsWeights);
         itsUVW.reference (that.itsUVW);
@@ -53,52 +52,15 @@ namespace LOFAR {
       return *this;
     }
 
-    void DPBuffer::copy (const DPBuffer& that)
+    void DPBuffer::clear()
     {
-      if (this != &that) {
-        itsTime     = that.itsTime;
-        itsExposure = that.itsExposure;
-        itsRowNrs.assign (that.itsRowNrs);
-        if (! that.itsData.empty()) {
-          itsData.assign (that.itsData);
-        }
-        if (! that.itsFlags.empty()) {
-          itsFlags.assign (that.itsFlags);
-        }
-        if (! that.itsWeights.empty()) {
-          itsWeights.assign (that.itsWeights);
-        }
-        if (! that.itsUVW.empty()) {
-          itsUVW.assign (that.itsUVW);
-        }
-        if (! that.itsFullResFlags.empty()) {
-          itsFullResFlags.assign (that.itsFullResFlags);
-        }
-      }
-    }
-
-    void DPBuffer::referenceFilled (const DPBuffer& that)
-    {
-      if (this != &that) {
-        itsTime     = that.itsTime;
-        itsExposure = that.itsExposure;
-        itsRowNrs.reference (that.itsRowNrs);
-        if (! that.itsData.empty()) {
-          itsData.reference (that.itsData);
-        }
-        if (! that.itsFlags.empty()) {
-          itsFlags.reference (that.itsFlags);
-        }
-        if (! that.itsWeights.empty()) {
-          itsWeights.reference (that.itsWeights);
-        }
-        if (! that.itsUVW.empty()) {
-          itsUVW.reference (that.itsUVW);
-        }
-        if (! that.itsFullResFlags.empty()) {
-          itsFullResFlags.reference (that.itsFullResFlags);
-        }
-      }
+      itsRowNrs.resize();
+      itsData.resize();
+      itsAmpl.resize();
+      itsFlags.resize();
+      itsWeights.resize();
+      itsUVW.resize();
+      itsFullResFlags.resize();
     }
 
     void DPBuffer::mergeFullResFlags (Cube<bool>& fullResFlags,

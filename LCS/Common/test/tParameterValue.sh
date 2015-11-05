@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tParameterValue
+./runctest.sh tParameterValue > tParameterValue.log 2>&1

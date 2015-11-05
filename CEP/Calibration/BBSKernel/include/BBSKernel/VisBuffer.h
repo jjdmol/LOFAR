@@ -106,7 +106,6 @@ public:
     void flagsOrWithMask(flag_t mask);
     void flagsSet(flag_t value);
     void flagsNot();
-    void flagsNaN();
     // @}
 
     // Station UVW coordinates in meters.
@@ -135,7 +134,6 @@ private:
     VisDimensions           itsDims;
 };
 
-// Mapping from name to visbuffer, used to have visbuffers as source models
 typedef map<string, VisBuffer::Ptr> BufferMap;
 
 // @}

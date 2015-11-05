@@ -12,15 +12,12 @@ CHECK_CXX_COMPILER_FLAG("-march=native" COMPILER_SUPPORTS_MARCH_NATIVE)
 
 # -march=native speeds up the flagger with about 6% - 7%, but is not supported prior gcc 4.2.
 # Hence, only enable it if it is supported.
-# Disabled setting of -march=native, because it breaks binary compatibility between CEP-I and CEP-II hardware.
-#if(COMPILER_SUPPORTS_MARCH_NATIVE)
-#  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
-#else()
-#  message(STATUS " CXX compiler does not support -march=native : your code will not be optimized with -march=native.")
-#  message(STATUS " This probably means your gcc is old ( < 4.2).")
-#endif(COMPILER_SUPPORTS_MARCH_NATIVE)
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2")
+if(COMPILER_SUPPORTS_MARCH_NATIVE)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+else()
+  message(STATUS " CXX compiler does not support -march=native : your code will not be optimized with -march=native.")
+  message(STATUS " This probably means your gcc is old ( < 4.2).")
+endif(COMPILER_SUPPORTS_MARCH_NATIVE)
 
 include(CheckIncludeFileCXX)
 
@@ -34,28 +31,18 @@ endif(BOOST_ASIO_H_FOUND)
 # To enable assembly .s files:
 #enable_language(ASM-ATT)
 
-if(GTKMM_FOUND)
-  add_definitions(-DHAVE_GTKMM)
-endif(GTKMM_FOUND)
-
-if(GSL_FOUND)
-  add_definitions(-DHAVE_GSL)
-  link_libraries(${GSL_LIBRARIES})
-endif(GSL_FOUND)
-
-if(SIGCXX_FOUND)
-  include_directories(${SIGCXX_INCLUDE_DIRS})
-endif(SIGCXX_FOUND)
-
 lofar_add_bin_program(rfihistory rfihistory.cpp)
 
+lofar_add_bin_program(aofrequencyfilter aofrequencyfilter.cpp util/rng.cpp msio/timestepaccessor.cpp util/aologger.cpp)
+
 lofar_add_bin_program(aorefscript aorefscript.cpp)
+
+lofar_add_bin_program(aosynchronisation aosynchronisation.cpp)
 
 set(GUI_PLOT_FILES
   gui/plot/colorscale.cpp
   gui/plot/horizontalplotscale.cpp
   gui/plot/plot2d.cpp
-  gui/plot/plotpropertieswindow.cpp
   gui/plot/plotwidget.cpp
   gui/plot/verticalplotscale.cpp)
 
@@ -78,8 +65,6 @@ set(GUI_FILES
   gui/progresswindow.cpp
   gui/rawoptionwindow.cpp
   gui/tfstatoptionwindow.cpp
-  gui/quality/datawindow.cpp
-  gui/quality/histogrampage.cpp
   ${GUI_PLOT_FILES})
 
 set(MSIO_FILES
@@ -92,7 +77,6 @@ set(MSIO_FILES
   msio/indirectbaselinereader.cpp
   msio/mask2d.cpp
   msio/measurementset.cpp
-  msio/memorybaselinereader.cpp
   msio/pngfile.cpp
   msio/rspreader.cpp
   msio/samplerow.cpp
@@ -105,9 +89,6 @@ set(MSIO_FILES
   msio/timestepaccessor.cpp)
   
 set(QUALITY_FILES
-  quality/histogramcollection.cpp
-  quality/histogramtablesformatter.cpp
-  quality/rayleighfitter.cpp
   quality/qualitytablesformatter.cpp)
 
 set(REMOTEAO_FILES
@@ -120,26 +101,20 @@ set(STRATEGY_ACTION_FILES
   strategy/actions/foreachmsaction.cpp
   strategy/actions/frequencyselectionaction.cpp
   strategy/actions/fringestopaction.cpp
-	strategy/actions/highpassfilteraction.cpp
   strategy/actions/imageraction.cpp
-  strategy/actions/normalizevarianceaction.cpp
   strategy/actions/plotaction.cpp
   strategy/actions/slidingwindowfitaction.cpp
   strategy/actions/spatialcompositionaction.cpp
   strategy/actions/statisticalflagaction.cpp
   strategy/actions/strategyaction.cpp
   strategy/actions/svdaction.cpp
-  strategy/actions/timeconvolutionaction.cpp
   strategy/actions/timeselectionaction.cpp
   strategy/actions/writeflagsaction.cpp)
 
 set(STRATEGY_ALGORITHMS_FILES
-  strategy/algorithms/baselineselector.cpp
-	strategy/algorithms/baselinetimeplaneimager.cpp
   strategy/algorithms/eigenvalue.cpp
   strategy/algorithms/fringestoppingfitter.cpp
   strategy/algorithms/fringetestcreater.cpp
-	strategy/algorithms/highpassfilter.cpp
   strategy/algorithms/localfitmethod.cpp
   strategy/algorithms/methoditerator.cpp
   strategy/algorithms/mitigationtester.cpp
@@ -152,20 +127,15 @@ set(STRATEGY_ALGORITHMS_FILES
   strategy/algorithms/thresholdconfig.cpp
   strategy/algorithms/thresholdmitigater.cpp
   strategy/algorithms/thresholdtools.cpp
-  strategy/algorithms/timefrequencystatistics.cpp
-  strategy/plots/antennaflagcountplot.cpp
-  strategy/plots/frequencyflagcountplot.cpp)
+  strategy/algorithms/timefrequencystatistics.cpp)
 
-if(GTKMM_FOUND)
 set(STRATEGY_PLOTS_FILES
+  strategy/plots/antennaflagcountplot.cpp
+  strategy/plots/frequencyflagcountplot.cpp
   strategy/plots/frequencypowerplot.cpp
   strategy/plots/iterationsplot.cpp
   strategy/plots/rfiplots.cpp
-  strategy/plots/timeflagcountplot.cpp
-  util/multiplot.cpp)
-else()
- set(STRATEGY_PLOTS_FILES)
-endif(GTKMM_FOUND)
+  strategy/plots/timeflagcountplot.cpp)
 
 set(STRATEGY_CONTROL_FILES
   strategy/control/actionblock.cpp
@@ -196,6 +166,7 @@ set(UTIL_FILES
   util/compress.cpp
   util/ffttools.cpp
   util/integerdomain.cpp
+  util/multiplot.cpp
   util/plot.cpp
   util/rng.cpp
   util/statwriter.cpp
@@ -234,19 +205,13 @@ if(GTKMM_FOUND)
 		gui/plot/plotpropertieswindow.cpp
 		gui/quality/aoqplotwindow.cpp
 		gui/quality/baselineplotpage.cpp
-		gui/quality/datawindow.cpp
 		gui/quality/grayscaleplotpage.cpp
-		gui/quality/histogrampage.cpp
 		gui/quality/timefrequencyplotpage.cpp
 		gui/quality/twodimensionalplotpage.cpp
 		gui/imagewidget.cpp
 		gui/imagepropertieswindow.cpp
 		)
 		target_link_libraries(aoqplot ${GTKMM_LIBRARIES})
-		lofar_add_bin_program(badstations badstations.cpp ${REMOTE_FILES})
-		target_link_libraries(badstations ${GTKMM_LIBRARIES})
-		lofar_add_bin_program(aofrequencyfilter aofrequencyfilter.cpp ${REMOTE_FILES})
-		target_link_libraries(aofrequencyfilter ${GTKMM_LIBRARIES})
 	endif(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)
 else()
   message(WARNING " The graphical user interface library GTKMM was not found; rfigui and aoqplot will not be compiled.")
@@ -260,7 +225,6 @@ lofar_add_bin_program(msinfo msinfo.cpp)
 lofar_add_bin_program(ns2bbs ns2bbs.cpp)
 lofar_add_bin_program(colormapper colormapper.cpp)
 lofar_add_bin_program(versionaoflagger versionaoflagger.cc Package__Version.cc)
-lofar_add_bin_program(imgzenith imgzenith.cpp imaging/zenithimager.cpp)
 
 if(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)
   lofar_add_bin_program(aoquality aoquality.cpp ${REMOTE_FILES})

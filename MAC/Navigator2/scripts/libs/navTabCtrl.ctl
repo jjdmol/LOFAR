@@ -2,7 +2,7 @@
 //
 //  Copyright (C) 2002-2004
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -151,19 +151,15 @@ dyn_string navTabCtrl_getViewPanels()
     }
   
     if (dpExists(panelConfigDP)) {
-      LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_getViewPanels|looking for: "+ panelConfigDP);
       if (dpGet(panelConfigDP,dpViews)==-1) {
 	LOG_ERROR("navTabCtrl.ctl:navTabCtrl_getViewPanels|Error obtaining panelViews: " + getLastError());
       } else {
-        if (dynlen(dpViews) > 0) {
-          LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_getViewPanels|found views: "+ dpViews);
         found=true;
         return dpViews;
       }
-      }
-    }
+    } else {
    	LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_getViewPanels|panelConfigDP doesn't exist: "+ panelConfigDP);
-    
+    }
     // Strip last element and retry
     // check if g_currentDatapoint < DB:LOFAR,
     // if so, reset and leave
@@ -298,9 +294,6 @@ bool navTabCtrl_showView(int panelNr=1)
     }
     LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_showView|Trying to load panel: "+splitName[1]);
     setValue(tabCtrl,"namedRegisterPanel", ACTIVE_TAB, splitName[1], makeDynString(""));
-    
-    // store active panelname in global for later use
-    g_activePanel = splitName[1];
     tabCtrlHasPanel=true;
     
     // fill and disable/enable the panelChoice combobox
@@ -375,9 +368,6 @@ void navTabCtrl_fillPanelChoice(dyn_string panels,int panelNr) {
 ///////////////////////////////////////////////////////////////////////////
 void navTabCtrl_saveAndRestoreCurrentDP(string newtab) {
 
-  LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_saveAndRestoreCurrentDP| curDP: "+g_currentDatapoint);
-  LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_saveAndRestoreCurrentDP| ACTIVE_TAB: "+ACTIVE_TAB);
-  LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_saveAndRestoreCurrentDP| newtab: "+newtab);
   if (ACTIVE_TAB == "Hardware" ) {
     g_lastHardwareDatapoint = g_currentDatapoint;
   } else  if (ACTIVE_TAB == "Processes" ) {
@@ -404,8 +394,6 @@ void navTabCtrl_saveAndRestoreCurrentDP(string newtab) {
   } else {
     g_currentDatapoint = MainDBName+"LOFAR";
   }     
-  LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_saveAndRestoreCurrentDP|curDP after change: ",g_currentDatapoint);
-  
 }
 
 

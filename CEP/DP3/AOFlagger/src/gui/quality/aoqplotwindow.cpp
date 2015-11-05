@@ -18,17 +18,14 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include <AOFlagger/gui/quality/aoqplotwindow.h>
-
 #include <limits>
 
-#include <gtkmm/main.h>
 #include <gtkmm/messagedialog.h>
+
+#include <AOFlagger/gui/quality/aoqplotwindow.h>
 
 #include <AOFlagger/msio/measurementset.h>
 
-#include <AOFlagger/quality/histogramtablesformatter.h>
-#include <AOFlagger/quality/histogramcollection.h>
 #include <AOFlagger/quality/statisticscollection.h>
 
 #include <AOFlagger/remote/clusteredobservation.h>
@@ -61,10 +58,7 @@ AOQPlotWindow::AOQPlotWindow() :
 	_notebook.append_page(_summaryPage, "Summary");
 	_summaryPage.show();
 	
-	_notebook.append_page(_histogramPage, "Histograms");
-	
 	_vBox.pack_start(_notebook);
-	_notebook.signal_switch_page().connect(sigc::mem_fun(*this, &AOQPlotWindow::onSwitchPage));
 	_notebook.show();
 	
 	_vBox.pack_end(_statusBar, Gtk::PACK_SHRINK);
@@ -73,31 +67,27 @@ AOQPlotWindow::AOQPlotWindow() :
 	
 	add(_vBox);
 	_vBox.show();
-	
-	_openOptionsWindow.SignalOpen().connect(sigc::mem_fun(*this, &AOQPlotWindow::onOpenOptionsSelected));
-	signal_hide().connect(sigc::mem_fun(*this, &AOQPlotWindow::onHide));
 }
 
 void AOQPlotWindow::Open(const std::string &filename)
 {
-	_openOptionsWindow.ShowForFile(filename);
-}
-
-void AOQPlotWindow::onOpenOptionsSelected(std::string filename, bool downsampleTime, bool downsampleFreq, size_t timeCount, size_t freqCount, bool correctHistograms)
-{
 	_filename = filename;
-	readStatistics(downsampleTime, downsampleFreq, timeCount, freqCount, correctHistograms);
+	readStatistics();
 	_baselinePlotPage.SetStatistics(_statCollection, _antennas);
 	_antennaePlotPage.SetStatistics(_statCollection, _antennas);
 	_bLengthPlotPage.SetStatistics(_statCollection, _antennas);
 	_timePlotPage.SetStatistics(_statCollection, _antennas);
 	_frequencyPlotPage.SetStatistics(_statCollection, _antennas);
-	_timeFrequencyPlotPage.SetStatistics(_fullStats);
+	//if(_fullStats->AllTimeStatistics().size() > 1)
+	//{
+		_timeFrequencyPlotPage.SetStatistics(_fullStats);
+	//	_timeFrequencyPlotPage.set_sensitive(true);
+	//} else {
+	//	_timeFrequencyPlotPage.set_sensitive(false);
+	//}
 	_summaryPage.SetStatistics(_statCollection);
-	if(_histogramPage.is_visible())
-		_histogramPage.SetStatistics(*_histCollection);
-	show();
 }
+
 
 void AOQPlotWindow::close()
 {
@@ -110,15 +100,14 @@ void AOQPlotWindow::close()
 		_frequencyPlotPage.CloseStatistics();
 		_timeFrequencyPlotPage.CloseStatistics();
 		_summaryPage.CloseStatistics();
-		_histogramPage.CloseStatistics();
 		delete _statCollection;
-		delete _histCollection;
 		delete _fullStats;
 		_isOpen = false;
+		
 	}
 }
 
-void AOQPlotWindow::readStatistics(bool downsampleTime, bool downsampleFreq, size_t timeSize, size_t freqSize, bool correctHistograms)
+void AOQPlotWindow::readStatistics()
 {
 	close();
 	
@@ -126,34 +115,25 @@ void AOQPlotWindow::readStatistics(bool downsampleTime, bool downsampleFreq, siz
 	{
 		aoRemote::ClusteredObservation *observation = aoRemote::ClusteredObservation::Load(_filename);
 		_statCollection = new StatisticsCollection();
-		_histCollection = new HistogramCollection();
 		aoRemote::ProcessCommander commander(*observation);
 		commander.PushReadAntennaTablesTask();
-		commander.PushReadQualityTablesTask(_statCollection, _histCollection, correctHistograms);
+		commander.PushReadQualityTablesTask(_statCollection);
 		commander.Run();
 		if(!commander.Errors().empty())
 		{
 			std::stringstream s;
 			s << commander.Errors().size() << " error(s) occured while querying the nodes or measurement sets in the given observation. This might be caused by a failing node, an unreadable measurement set, or maybe the quality tables are not available. The errors reported are:\n\n";
-			size_t count = 0;
-			for(std::vector<std::string>::const_iterator i=commander.Errors().begin();i!=commander.Errors().end() && count < 30;++i)
+			for(std::vector<std::string>::const_iterator i=commander.Errors().begin();i!=commander.Errors().end();++i)
 			{
 				s << "- " << *i << '\n';
-				++count;
-			}
-			if(commander.Errors().size() > 30)
-			{
-				s << "... and " << (commander.Errors().size()-30) << " more.\n";
 			}
 			s << "\nThe program will continue, but this might mean that the statistics are incomplete. If this is the case, fix the issues and reopen the observation.";
-			std::cerr << s.str() << std::endl;
-			Gtk::MessageDialog dialog(*this, s.str(), false, Gtk::MESSAGE_ERROR);
+			Gtk::MessageDialog dialog(s.str(), false, Gtk::MESSAGE_ERROR);
 			dialog.run();
 		}
+		delete observation;
 		
 		_antennas = commander.Antennas();
-		
-		delete observation;
 	}
 	else {
 		MeasurementSet *ms = new MeasurementSet(_filename);
@@ -164,29 +144,15 @@ void AOQPlotWindow::readStatistics(bool downsampleTime, bool downsampleFreq, siz
 			_antennas.push_back(ms->GetAntennaInfo(a));
 		delete ms;
 
-		QualityTablesFormatter qualityTables(_filename);
+		QualityTablesFormatter formatter(_filename);
 		_statCollection = new StatisticsCollection(polarizationCount);
-		_statCollection->Load(qualityTables);
-		
-		HistogramTablesFormatter histogramTables(_filename);
-		_histCollection = new HistogramCollection(polarizationCount);
-		if(histogramTables.HistogramsExist())
-		{
-			_histCollection->Load(histogramTables);
-		}
+		_statCollection->Load(formatter);
 	}
-	setShowHistograms(!_histCollection->Empty());
-	if(downsampleTime)
-	{
-		std::cout << "Lowering time resolution..." << std::endl;
-		_statCollection->LowerTimeResolution(timeSize);
-	}
+	std::cout << "Lowering time resolution..." << std::endl;
+	_statCollection->LowerTimeResolution(1000);
 
-	if(downsampleFreq)
-	{
-		std::cout << "Lowering frequency resolution..." << std::endl;
-		_statCollection->LowerFrequencyResolution(freqSize);
-	}
+	std::cout << "Lowering frequency resolution..." << std::endl;
+	_statCollection->LowerFrequencyResolution(1000);
 
 	std::cout << "Integrating baseline statistics to one channel..." << std::endl;
 	_statCollection->IntegrateBaselinesToOneChannel();

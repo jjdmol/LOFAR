@@ -65,18 +65,13 @@ namespace rfiStrategy {
 			: _data(data), _metaData(metaData), _index(0)
 			{
 			}
-			BaselineData(TimeFrequencyMetaDataCPtr metaData)
-			: _data(), _metaData(metaData), _index(0)
-			{
-			}
 			BaselineData()
 			: _data(), _metaData(), _index(0)
 			{
 			}
 			BaselineData(const BaselineData &source)
-			: _data(source._data), _metaData(source._metaData), _index(0)
+			: _data(source._data), _metaData(source._metaData), _index(source._index->Copy())
 			{
-				if(source._index != 0) _index = source._index->Copy();
 			}
 			~BaselineData()
 			{
@@ -94,7 +89,7 @@ namespace rfiStrategy {
 			const TimeFrequencyData &Data() const { return _data; }
 			void SetData(const TimeFrequencyData &data) { _data = data; }
 			
-			TimeFrequencyMetaDataCPtr MetaData() const { return _metaData; }
+			TimeFrequencyMetaDataCPtr MetaData() { return _metaData; }
 			void SetMetaData(TimeFrequencyMetaDataCPtr metaData) { _metaData = metaData; }
 
 			const ImageSetIndex &Index() const { return *_index; }
@@ -131,7 +126,7 @@ namespace rfiStrategy {
 			{
 				throw std::runtime_error("Not implemented");
 			}
-			static class ImageSet *Create(const std::string &file, BaselineIOMode ioMode, bool readUVW=false);
+			static class ImageSet *Create(const std::string &file, bool indirectReader=false, bool readUVW=false);
 			static bool IsFitsFile(const std::string &file);
 			static bool IsRCPRawFile(const std::string &file);
 			static bool IsTKPRawFile(const std::string &file);
@@ -140,7 +135,6 @@ namespace rfiStrategy {
 			static bool IsTimeFrequencyStatFile(const std::string &file);
 			static bool IsMSFile(const std::string &file);
 			static bool IsNoiseStatFile(const std::string &file);
-			static bool IsHarishFile(const std::string &file);
 
 			virtual void AddReadRequest(const ImageSetIndex &index) = 0;
 			virtual void PerformReadRequests() = 0;

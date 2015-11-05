@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tPSet
+./runctest.sh tPSet > tPSet.log 2>&1

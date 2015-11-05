@@ -3,7 +3,7 @@
 //
 //  Copyright (C) 2007
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -31,7 +31,6 @@
 #include "tPropertySet.h"
 
 namespace LOFAR {
-  using namespace DP_Protocol;
   namespace GCF {
   using namespace TM;
   using namespace PVSS;
@@ -422,25 +421,18 @@ GCFEvent::TResult tPropertySet::WriteDelayTest(GCFEvent& e, GCFPortInterface& /*
 		result1 = itsPropSet->setValue("uintVal",   "6903", 0.0, false);
 		result2 = itsPropSet->setValue("stringVal", "Delayed write", 0.0, false);
 		gTestPassed = (result1 == SA_NO_ERROR) && (result2 == SA_NO_ERROR);
-		LOG_DEBUG_STR("First part of WriteDelayTest " << (gTestPassed ? "was successful" : "FAILED"));
-		if (gTestPassed) {
-			// reset variables for second part.
-			nrWriteTests = 1;
-			gTestPassed = false;
-			LOG_DEBUG_STR("Calling flush");
-			itsPropSet->flush();
-			itsTimerPort->setTimer(2.0);
-		}
-		else {
-			TRAN(tPropertySet::final);
-		}
+		nrWriteTests = 2;
+		itsTimerPort->setTimer(2.0);
 	}
 	break;
 
 	case F_TIMER:
+		LOG_DEBUG_STR("First part of WriteDelayTest " << (gTestPassed ? "was successful" : "FAILED"));
 		if (gTestPassed) {
-			LOG_DEBUG_STR("ALL TESTS PASSED SUCCESSFUL!");
+			LOG_DEBUG_STR("Calling flush");
+			itsPropSet->flush();
 		}
+		itsTimerPort->setTimer(2.0);
 		TRAN(tPropertySet::final);
 	break;
 

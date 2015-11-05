@@ -84,8 +84,6 @@ namespace LOFAR
       void print(ostream& os) const;
 
     private:
-      bool findGlobalSolveStep() const;
-
       // Name of the input column.
       string                            itsInputColumn;
 

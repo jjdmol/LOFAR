@@ -29,16 +29,26 @@
 
 #include <BBSControl/Command.h>
 #include <BBSControl/CommandResult.h>
-#include <BBSControl/Exceptions.h>
 #include <BBSControl/Types.h>
-#include <BBSControl/ProcessId.h>
-#include <BBSKernel/Interval.h>
-#include <ParmDB/Axis.h>
+#include <BBSKernel/Types.h>
+
+#include <Common/LofarTypes.h>
+#include <Common/LofarLogger.h>
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_string.h>
-#include <pqxx/connection>
-#include <pqxx/trigger>
+
+#include <ParmDB/Axis.h>
+
+//# TODO: Create lofar_functional.h in Common.
 #include <functional>
+
+#if defined(HAVE_PQXX)
+# include <pqxx/connection>
+# include <pqxx/trigger>
+#else
+# error libpqxx, the C++ API to PostgreSQL, is required
+#endif
+
 
 namespace LOFAR
 {
@@ -55,6 +65,48 @@ class PQGetWorkerRegister;
 
 // \addtogroup BBSControl
 // @{
+
+// ProcessId is an id that can be used to uniquely identify processes running on
+// different hosts.
+struct ProcessId
+{
+    ProcessId()
+        :   pid(-1)
+    {
+    }
+
+    ProcessId(const string &hostname, int64 pid)
+        :   hostname(hostname),
+            pid(pid)
+    {
+    }
+
+    // ProcessIds are sorted on pid first as this is a faster comparison.
+    bool operator<(const ProcessId &rhs) const
+    {
+        return pid < rhs.pid || (pid == rhs.pid && hostname < rhs.hostname);
+    }
+
+    bool operator==(const ProcessId &rhs) const
+    {
+        return pid == rhs.pid && hostname == rhs.hostname;
+    }
+
+    string  hostname;
+    int64   pid;
+};
+
+// Output ProcessId in human-readable form.
+ostream& operator<<(ostream& os, const ProcessId &obj);
+
+// Status of a Command.
+struct CommandStatus
+{
+    // Number of workers that finished the command.
+    unsigned int    finished;
+    // Number of workers that reported failure.
+    unsigned int    failed;
+};
 
 class CalSession
 {
@@ -77,18 +129,10 @@ public:
         N_WorkerType
     };
 
-    // Status of a Command.
-    struct CommandStatus
-    {
-        // Number of workers that finished the command.
-        unsigned int    finished;
-        // Number of workers that reported failure.
-        unsigned int    failed;
-    };
-
     CalSession(const string &key, const string &db, const string &user,
         const string &password = "", const string &host = "localhost",
         const string &port = "");
+    ~CalSession();
 
     ProcessId getProcessId() const;
 
@@ -293,7 +337,6 @@ private:
     mutable vector<size_t>          itsSlotCount;
     mutable map<ProcessId, size_t>  itsRegisterMap;
     mutable vector<Worker>          itsRegister;
-    mutable bool                    itsRegisterDirty;
 
     // Triggers that have been registered with the database.
     // \note Triggers cannot be copied, so we must use a shared pointer.

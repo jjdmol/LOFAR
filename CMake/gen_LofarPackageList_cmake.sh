@@ -4,7 +4,7 @@
 #
 #  Copyright (C) 2009
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
-#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -28,13 +28,13 @@
 
 # Get the LOFAR source directory root
 script_dir=$(cd $(dirname $0) && pwd)
-lofar_root=$script_dir/..
+lofar_root=$(echo $script_dir | sed -e "s|\(.*/LOFAR\)/.*|\1|")
 
 # Just a safety net; this script must be inside the LOFAR tree.
-#if test "$script_dir" = "$lofar_root"; then
-#  echo "ERROR: $(basename $0) MUST be inside the LOFAR source tree!"
-#  exit 1
-#fi
+if test "$script_dir" = "$lofar_root"; then
+  echo "ERROR: $(basename $0) MUST be inside the LOFAR source tree!"
+  exit 1
+fi
 
 # Open the output file
 exec 3> $script_dir/LofarPackageList.cmake
@@ -59,16 +59,13 @@ if(NOT DEFINED LOFAR_PACKAGE_LIST_INCLUDED)
   set(LOFAR_PACKAGE_LIST_INCLUDED TRUE)
 EOF
 
-# Guarantee we always sort the same way by setting the collate order to C.
-export LC_COLLATE="C"
-
 # Set internal field separator (IFS) to newline only.
 IFS='
 '
 
 # Add a trailing slash to the directory path $lofar_root to ensure that, if
 # it is a symbolic link, it is translated to the directory it links to.
-for f in $(find $lofar_root/ -name CMakeLists.txt | sort)
+for f in $(find $lofar_root/ -name CMakeLists.txt)
 do
   # get directory name relative to $lofar_root
   bdir=$(dirname $f | sed "s|$lofar_root/\?||")

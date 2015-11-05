@@ -2,7 +2,7 @@
 //#
 //# Copyright (C) 2002-2003
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //# This program is free software; you can redistribute it and/or modify
 //# it under the terms of the GNU General Public License as published by
@@ -21,13 +21,16 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <Manager.hxx>
+#include <Common/lofar_string.h>
+#include <Common/StringUtil.h>
+
 #include <DpMsgAnswer.hxx>
 #include <DpMsgHotLink.hxx>
 #include <DpHLGroup.hxx>
 #include <DpVCItem.hxx>
 #include <ErrHdl.hxx>
 #include <ErrClass.hxx>
+#include <Manager.hxx>
 #include <FloatVar.hxx>
 #include <CharVar.hxx>
 #include <TextVar.hxx>
@@ -38,41 +41,36 @@
 #include <AnyTypeVar.hxx>
 #include <DpIdentifierVar.hxx>
 
-#include <Common/lofar_string.h>
-#include <Common/StringUtil.h>
-
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSservice.h>
 #include <GCF/PVSS/PVSSresponse.h>
 #include <GCF/PVSS/PVSSresult.h>
 #include <GCF/PVSS/PVSSinfo.h>
 
-#include "GSA_SCADAHandler.h"
 #include "GSA_WaitForAnswer.h"
+#include "GSA_SCADAHandler.h"
 
 namespace LOFAR {
 	namespace GCF {
 		namespace PVSS {
 
 static const char*	SALErrors[]  = {
-	"No error",						// SA_NO_ERROR
-    "",								// SA_SCHEDULED
-	"Propertyname is missing",		// SA_PROPNAME_MISSING
-	"Datapointtype unknown",		// SA_DPTYPE_UNKNOWN
-	"MAC variabletype unknown",		// SA_MACTYPE_UNKNOWN
-	"Creation of DP failed",		// SA_CREATEPROP_FAILED
-	"Deletion of DP failed",		// SA_DELETEPROP_FAILED
-	"Subscribtion on DP failed",	// SA_SUBSCRIBEPROP_FAILED
-	"Unsubscribtion of DP failed",	// SA_UNSUBSCRIBEPROP_FAILED
-	"Set DP value failed",			// SA_SETPROP_FAILED
-	"Get DP value failed",			// SA_GETPROP_FAILED
-	"Subscribe on query failed",	// SA_QUERY_SUBSC_FAILED
-	"Unsubscribe of query failed",	// SA_QUERY_UNSUBSC_FAILED
-	"PVSS datbase not running",		// SA_SCADA_NOT_AVAILABLE
-	"DP does not exist",			// SA_PROP_DOES_NOT_EXIST
-	"DP already exists",			// SA_PROP_ALREADY_EXIST
-	"MAC variabletype mismatch",	// SA_MACTYPE_MISMATCH
-	"No such detapoint element"		// SA_ELEMENTS_MISSING
+	"No error",						//  SA_NO_ERROR
+	"Propertyname is missing",		//  SA_PROPNAME_MISSING
+	"Datapointtype unknown",		//  SA_DPTYPE_UNKNOWN
+	"MAC variabletype unknown",		//  SA_MACTYPE_UNKNOWN
+	"Creation of DP failed",		//  SA_CREATEPROP_FAILED
+	"Deletion of DP failed",		//  SA_DELETEPROP_FAILED
+	"Subscribtion on DP failed",	//  SA_SUBSCRIBEPROP_FAILED
+	"Unsubscribtion of DP failed",	//  SA_UNSUBSCRIBEPROP_FAILED
+	"Set DP value failed",			//  SA_SETPROP_FAILED
+	"Get DP value failed",			//  SA_GETPROP_FAILED
+	"Subscribe on query failed",	//  SA_QUERY_SUBSC_FAILED
+	"Unsubscribe of query failed",	//  SA_QUERY_UNSUBSC_FAILED
+	"PVSS datbase not running",		//  SA_SCADA_NOT_AVAILABLE
+	"DP does not exist",			//  SA_PROP_DOES_NOT_EXIST
+	"DP already exists",			//  SA_PROP_ALREADY_EXIST
+	"MAC variabletype mismatch"		//  SA_MACTYPE_MISMATCH
 };
 
 //
@@ -80,7 +78,7 @@ static const char*	SALErrors[]  = {
 //
 string PVSSerrstr(PVSSresult	resultNr)
 {
-	if ((resultNr < SA_NO_ERROR) || (resultNr > SA_ELEMENTS_MISSING)) {
+	if ((resultNr < SA_NO_ERROR) || (resultNr > SA_MACTYPE_MISMATCH)) {
 		return ("???");
 	}
 
@@ -497,6 +495,36 @@ void PVSSservice::_processQueryResult(Variable*		firstVar,
 		DPtimes.push_back (timePtr);
 		valuePtr = 0;
 		timePtr = 0;
+
+#if 0
+		// ---------- REO: Not the faintest ideas where we need to next code for ----------
+		TimeVar	ts = *(TimeVar*) pTempVar;
+		LOG_TRACE_VAR_STR("TimeStamp = " << pTempVar->formatValue(""));
+
+		PVSSinfo::_lastTimestamp.tv_sec = ts.getSeconds();
+		PVSSinfo::_lastTimestamp.tv_usec = ts.getMilli() * 1000;
+
+		// extract the originator mananger ID of the changed DP (column 4)
+		if ((pTempVar = extractArrayValue(*secondVar, row, 4)) == 0)  {
+			LOG_ERROR_STR("Extracting Manager from row " << row << " failed");
+			return;
+		}
+		if (pTempVar->isA() != UINTEGER_VAR)  {
+			LOG_ERROR_STR("Column 4 on row " << row << 
+						  " is not an IntegerVar type but has VarType " << 
+						  Variable::getTypeName(pTempVar->isA()));
+			return;
+		}
+		UIntegerVar* pManIdInt = (UIntegerVar*) pTempVar;
+		LOG_TRACE_VAR_STR("ManagerID = " << pTempVar->formatValue(""));
+
+		ManagerIdentifier manId;
+		manId.convFromInt(pManIdInt->getValue());
+		PVSSinfo::_lastManNum  = manId.getManNum();
+		PVSSinfo::_lastManType = manId.getManType();
+		PVSSinfo::_lastSysNr   = manId.getSystem();
+		// ---------- REO: end of obscure code ----------
+#endif
 	} // for row
 
 	if (!passSeperate) {
@@ -835,7 +863,7 @@ PVSSresult PVSSservice::dpeSet(const string& 	dpeName,
 	ASSERT(itsSCADAHandler);
 	// DB must be active
 	if ((result = itsSCADAHandler->isOperational()) != SA_NO_ERROR) {
-		LOG_FATAL(formatString("Unable to set value of property: '%s' -> database down", dpeName.c_str()));
+		LOG_FATAL(formatString("Unable to set value of property: '%s'", dpeName.c_str()));
 	}
 	// Property must exist
 	else if (!PVSSinfo::propExists(dpeName)) {
@@ -843,10 +871,10 @@ PVSSresult PVSSservice::dpeSet(const string& 	dpeName,
 		result = SA_PROP_DOES_NOT_EXIST;
 	}
 	else if ((result = getDpId(pvssDpName, dpId)) != SA_NO_ERROR) {
-		LOG_ERROR(formatString("Unable to set value of property: '%s' -> DP unknown", dpeName.c_str()));
+		LOG_ERROR(formatString("Unable to set value of property: '%s'", dpeName.c_str()));
 	}
 	else if ((result = convertMACToPVSS(value, &pVar, dpId)) != SA_NO_ERROR) {
-		LOG_ERROR_STR("Unable to set value of property: '" << dpeName << "' -> " << PVSSerrstr(result));
+		LOG_ERROR(formatString("Unable to set value of property: '%s'", dpeName.c_str()));
 	}
 	else {
 		GSAWaitForAnswer* pWFA(0);
@@ -1153,7 +1181,7 @@ PVSSresult PVSSservice::dpQueryUnsubscribe(uint32 queryId)
 	if ((result = itsSCADAHandler->isOperational()) != SA_NO_ERROR) {
 		LOG_FATAL (formatString("Unable to unsubscribe: '%d'", queryId));
 	}
-	else if (!Manager::dpQueryDisconnect(queryId, itsWFA)) {
+	else if (!Manager::dpQueryDisconnect(queryId, itsWFA, PVSS_FALSE)) {
 		ErrHdl::error(ErrClass::PRIO_SEVERE,		// It is a severe error
 					  ErrClass::ERR_PARAM,			// wrong name: blame others
 					  ErrClass::UNEXPECTEDSTATE,	// fits all
@@ -1350,7 +1378,7 @@ PVSSresult PVSSservice::convertMACToPVSS(const GCFPValue& macValue,
 			Variable* pItemValue(0);
 			VariableType type(NOTYPE_VAR);
 			// the type for the new FPValue must be determined 
-			// separate, because the array could be empty
+			// separat, because the array could be empty
 			switch (macValue.getType()) {
 			case LPT_DYNBOOL:
 				if (elTypeId == DPELEMENT_DYNBIT) type = BIT_VAR;
@@ -1380,7 +1408,6 @@ PVSSresult PVSSservice::convertMACToPVSS(const GCFPValue& macValue,
 				break;
 			}
 			if (type == NOTYPE_VAR) {
-				LOG_ERROR_STR("Conversion of dyn_type " << macValue.getType() << " not implemented");
 				// type mismatch so stop with converting data
 				break;
 			}
@@ -1419,12 +1446,10 @@ PVSSresult PVSSservice::convertMACToPVSS(const GCFPValue& macValue,
 					delete pItemValue;
 					pItemValue = 0;
 				}
-			} // for
-		} // in DYN_ARR range
-		else {
-			LOG_ERROR_STR("Conversion of variable type " << macValue.getType() << " not implemented");
-			result = SA_MACTYPE_UNKNOWN;
+			}
 		}
+		else
+			result = SA_MACTYPE_UNKNOWN;
 		break;
 	}
 	if (result == SA_NO_ERROR && *pVar == 0) {

@@ -25,7 +25,6 @@
 
 
 #include <Common/ParameterSet.h>
-#include <Common/ParameterRecord.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
 
@@ -79,7 +78,7 @@ ParameterSet::ParameterSet(const char*	theFilename,
 // Copying is allowed.
 //
 ParameterSet::ParameterSet(const ParameterSet& that)
-  : itsSet (that.itsSet)
+  : itsSet (that.itsSet->incrCount())
 {}
 
 //
@@ -88,21 +87,26 @@ ParameterSet::ParameterSet(const ParameterSet& that)
 ParameterSet& 
 ParameterSet::operator=(const ParameterSet& that)
 {
-  if (this != &that) {
-    itsSet = that.itsSet;
-  }
-  return (*this);
+	if (this != &that) {
+	  unlink();
+	  itsSet = that.itsSet->incrCount();
+	}
+	return (*this);
 }
 
 //
 //	Destructor
 //
 ParameterSet::~ParameterSet()
-{}
-
-ParameterRecord ParameterSet::getRecord (const string& aKey) const
 {
-  return get(aKey).getRecord();
+  unlink();
+}
+
+void ParameterSet::unlink()
+{
+  if (itsSet->decrCount() == 0) {
+    delete itsSet;
+  }
 }
 
 //
@@ -110,8 +114,8 @@ ParameterRecord ParameterSet::getRecord (const string& aKey) const
 //
 std::ostream&	operator<< (std::ostream& os, const ParameterSet &thePS)
 {
-  os << *thePS.itsSet;
-  return os;
+	os << *thePS.itsSet;
+	return os;
 }
 
 } // namespace LOFAR

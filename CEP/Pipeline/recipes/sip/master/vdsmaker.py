@@ -8,14 +8,17 @@
 from __future__ import with_statement
 import sys
 import os
+import tempfile
+import errno
 import subprocess
 
+import lofarpipe.support.utilities as utilities
 import lofarpipe.support.lofaringredient as ingredient
-from lofarpipe.support.utilities import create_directory
+
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.data_map import DataMap
+from lofarpipe.support.group_data import load_data_map
 from lofarpipe.support.pipelinelogging import log_process_output
 
 class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
@@ -24,13 +27,9 @@ class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
     see the ``unlink`` input parameter) describing a collection of
     MeasurementSets.
 
-    1. Load data from disk, create the output vds paths
-    2. Call the vdsmaker node script to generate the vds files
-    3. Combine the vds files in a gvds file (master side operation)
-    
-    **Command line arguments**
+    **Arguments**
 
-    A mapfile describing the measurementsets to be processed.
+    A mapfile describing the data to be processed.
     """
     inputs = {
         'gvds': ingredient.StringField(
@@ -66,60 +65,42 @@ class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
     }
 
     def go(self):
-        """
-        Contains functionality of the vdsmaker
-        """
         super(vdsmaker, self).go()
-        # **********************************************************************
-        # 1. Load data from disk create output files
-        args = self.inputs['args']
-        self.logger.debug("Loading input-data mapfile: %s" % args[0])
-        data = DataMap.load(args[0])
 
-        # Skip items in `data` that have 'skip' set to True
-        data.iterator = DataMap.SkipIterator
+        #                           Load file <-> compute node mapping from disk
+        # ----------------------------------------------------------------------
+        self.logger.debug("Loading map from %s" % self.inputs['args'][0])
+        data = load_data_map(self.inputs['args'][0])
 
-        # Create output vds names
-        vdsnames = [
-            os.path.join(
-                self.inputs['directory'], os.path.basename(item.file) + '.vds'
-            ) for item in data
-        ]
-
-        # *********************************************************************
-        # 2. Call vdsmaker 
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
         jobs = []
-        for inp, vdsfile in zip(data, vdsnames):
+        vdsnames = []
+        for host, ms in data:
+            vdsnames.append(
+                "%s/%s.vds" % (self.inputs['directory'], os.path.basename(ms.rstrip('/')))
+            )
             jobs.append(
                 ComputeJob(
-                    inp.host, command,
+                    host, command,
                     arguments=[
-                        inp.file,
+                        ms,
                         self.config.get('cluster', 'clusterdesc'),
-                        vdsfile,
+                        vdsnames[-1],
                         self.inputs['makevds']
                     ]
                 )
             )
         self._schedule_jobs(jobs, max_per_node=self.inputs['nproc'])
-        vdsnames = [
-            vds for vds, job in zip(vdsnames, jobs) 
-            if job.results['returncode'] == 0
-        ]
-        if not vdsnames:
-            self.logger.error("All makevds processes failed. Bailing out!")
+
+        if self.error.isSet():
+            self.logger.warn("Failed vdsmaker process detected")
             return 1
 
-        # *********************************************************************
-        # 3. Combine VDS files to produce GDS
+        # Combine VDS files to produce GDS
         failure = False
         self.logger.info("Combining VDS files")
         executable = self.inputs['combinevds']
         gvds_out = self.inputs['gvds']
-        # Create the gvds directory for output files, needed for combine
-        create_directory(os.path.dirname(gvds_out))
-
         try:
             command = [executable, gvds_out] + vdsnames
             combineproc = subprocess.Popen(
@@ -131,34 +112,27 @@ class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
             sout, serr = combineproc.communicate()
             log_process_output(executable, sout, serr, self.logger)
             if combineproc.returncode != 0:
-                raise subprocess.CalledProcessError(
-                    combineproc.returncode, command
-                )
+                raise subprocess.CalledProcessError(combineproc.returncode, command)
             self.outputs['gvds'] = gvds_out
-            self.logger.info("Wrote combined VDS file: %s" % gvds_out)
         except subprocess.CalledProcessError, cpe:
-            self.logger.exception(
-                "combinevds failed with status %d: %s" % (cpe.returncode, serr)
-            )
+            self.logger.exception("combinevds failed with status %d: %s" % (cpe.returncode, serr))
             failure = True
-        except OSError, err:
-            self.logger.error("Failed to spawn combinevds (%s)" % str(err))
+        except OSError, e:
+            self.logger.error("Failed to spawn combinevds (%s)" % str(e))
             failure = True
         finally:
             if self.inputs["unlink"]:
                 self.logger.debug("Unlinking temporary files")
-                for name in vdsnames:
-                    os.unlink(name)
+                for file in vdsnames:
+                    os.unlink(file)
             self.logger.info("vdsmaker done")
-
         if failure:
-            self.logger.info("Error was set, exit vds maker with error state")
+            self.logger.info("Failure was set")
             return 1
         elif not self.outputs.complete():
             self.logger.info("Outputs incomplete")
         else:
             return 0
-
 
 if __name__ == '__main__':
     sys.exit(vdsmaker().main())

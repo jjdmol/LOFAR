@@ -26,7 +26,3 @@ class PipelineQuit(PipelineException):
 
 class ClusterError(PipelineException):
     pass
-    
-class DataMapError(PipelineException):
-    pass
-

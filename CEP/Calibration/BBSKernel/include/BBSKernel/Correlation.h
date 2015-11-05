@@ -64,8 +64,8 @@ public:
     // Check if the correlation is circular (i.e. one of RR, RL, LR, LL).
     static bool isCircular(Type in);
 
-    // Convert the input argument to the corresponding Correlation. If the input
-    // is out of bounds, N_Type is returned.
+    // Convert the input argument to the corresponding Correlation. If the input is
+    // out of bounds, N_Type is returned.
     static Type asCorrelation(unsigned int in);
 
     // Convert the input argument to the corresponding Correlation. If the input

@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -48,8 +48,7 @@ public:
 		DONE,
 		FAIL,
 		WAIT_1,
-		WAIT_2,
-		WAIT_3
+		WAIT_2
 	};
 	static const int MAX_REGISTER_ERROR = 3;
 
@@ -111,7 +110,6 @@ public:
 	void schedule_read	   (int i = -1) { tran(WRITE, READ,		   i); clearError(i);}
 	void schedule_wait1read(int i = -1) { tran(WRITE, WAIT_1,	   i); clearError(i);}
 	void schedule_wait2read(int i = -1) { tran(WRITE, WAIT_2,	   i); clearError(i);}
-	void schedule_wait3read(int i = -1) { tran(WRITE, WAIT_3,	   i); clearError(i);}
 	void read_ack   	   (int i = -1) { tran(READ,  DONE,		   i); clearError(i);}
 	void write_ack  	   (int i = -1) { tran(WRITE, DONE,		   i); clearError(i);}
 	void read_error 	   (int i = -1) { tran(READ,  READ_ERROR,  i); addError(i); }
@@ -131,18 +129,20 @@ public:
 	RegisterState& operator=(const RegisterState& state);
 
 	/* marshalling methods */
-	size_t getSize() const {
-		return MSH_size(m_state);
+	unsigned int getSize() {
+		return MSH_ARRAY_SIZE(m_state, State);
 	}
 
-	size_t pack(char* buffer) const {
-		size_t offset = 0;
-		return MSH_pack(buffer, offset, m_state);
+	unsigned int pack(void* buffer) {
+		unsigned int offset = 0;
+		MSH_PACK_ARRAY(buffer, offset, m_state, State);
+		return offset;
 	}
 
-	size_t unpack(const char* buffer) {
-		size_t offset = 0;
-		return MSH_unpack(buffer, offset, m_state);
+	unsigned int unpack(void* buffer) {
+		unsigned int offset = 0;
+		MSH_UNPACK_ARRAY(buffer, offset, m_state, State, 1);
+		return offset;
 	}
 
 private:

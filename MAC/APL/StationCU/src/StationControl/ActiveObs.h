@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -60,13 +60,10 @@ namespace LOFAR {
 class ActiveObs : public GCFTask
 {
 public:
-	ActiveObs (const string&	name,
-			   State			initial,
+	ActiveObs (const string&			name,
+			   State					initial,
 			   ParameterSet*	aPS,
-			   const string&	LBAbitmap,
-			   const string&	HBAbitmap,
-			   bool				hasSplitters,
-			   GCFTask&			task);
+			   GCFTask&					task);
 	virtual ~ActiveObs();
 
 	void					start()		{ initFsm();	}
@@ -97,8 +94,6 @@ private:
 	RTDBPropertySet*			itsPropertySet;
 	GCFTimerPort*				itsPropSetTimer;
 
-	GCFTimerPort*				itsGuardTimer;
-
 	string						itsName;
 	GCFTask*					itsTask;
 	int32						itsInstanceNr;
@@ -113,8 +108,6 @@ private:
 	bool						itsReadyFlag;
 	CTState::CTstateNr			itsReqState;
 	CTState::CTstateNr			itsCurState;
-	string						itsLBAs;
-	string						itsHBAs;
 };
 
 //#

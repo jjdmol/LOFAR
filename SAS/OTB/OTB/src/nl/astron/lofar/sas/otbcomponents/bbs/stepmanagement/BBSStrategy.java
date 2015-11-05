@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
 
 package nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement;
 
-import java.util.ArrayList;
+import java.util.Vector;
 
 /**
  * Representation of the BBS Strategy to contain all BBS Strategy steps.
@@ -35,13 +35,13 @@ import java.util.ArrayList;
 public class BBSStrategy{
     
     //Contained substeps
-    private ArrayList<BBSStep> childSteps;
+    private Vector<BBSStep> childSteps;
     
     /** 
      * Creates a new instance of BBSStrategy 
      */
     public BBSStrategy() {
-        childSteps = new ArrayList<>();
+        childSteps = new Vector<BBSStep>();
     }
     
     /**
@@ -51,7 +51,7 @@ public class BBSStrategy{
      *
      * @return Vector of BBSStep objects that are children of this BBSStep
      */
-    public ArrayList<BBSStep> getChildSteps(){
+    public Vector<BBSStep> getChildSteps(){
         return childSteps;
     }    
     
@@ -122,7 +122,7 @@ public class BBSStrategy{
             if(indexOfChild >= 0 && indexOfChild < childSteps.size()){
                 BBSStep currentStepInIndex = childSteps.get(indexOfChild);
                 if(child.getName().equals(currentStepInIndex.getName())){
-                    this.childSteps.remove(indexOfChild);
+                    this.childSteps.removeElementAt(indexOfChild);
                     childSteps.trimToSize();
                 }
             }
@@ -149,7 +149,7 @@ public class BBSStrategy{
             if(oldIndexOfChild >= 0 && oldIndexOfChild < childSteps.size()){
                 BBSStep currentStepInIndex = childSteps.get(oldIndexOfChild);
                 if(child.getName().equals(currentStepInIndex.getName())){
-                    this.childSteps.remove(oldIndexOfChild);
+                    this.childSteps.removeElementAt(oldIndexOfChild);
                     this.childSteps.add(newIndexOfChild,currentStepInIndex);
                     childSteps.trimToSize();
                 }

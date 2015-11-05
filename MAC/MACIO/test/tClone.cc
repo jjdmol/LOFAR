@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -30,7 +30,6 @@
 #include "Clone_Protocol.ph"
 
 using namespace LOFAR;
-using namespace LOFAR::Clone_Protocol;
 using namespace LOFAR::MACIO;
 
 int main (int	/*argc*/, char* argv[]) 
@@ -69,12 +68,12 @@ int main (int	/*argc*/, char* argv[])
 
 	LOG_INFO("Cloning an event with a stringVector");
 	CloneVectorEvent	theOrgVector;
-	theOrgVector.SV.push_back("aap");
-	theOrgVector.SV.push_back("noot");
-	theOrgVector.SV.push_back("mies");
-	theOrgVector.SV.push_back("wim");
-	theOrgVector.SV.push_back("zus");
-	theOrgVector.SV.push_back("jet");
+	theOrgVector.SV.theVector.push_back("aap");
+	theOrgVector.SV.theVector.push_back("noot");
+	theOrgVector.SV.theVector.push_back("mies");
+	theOrgVector.SV.theVector.push_back("wim");
+	theOrgVector.SV.theVector.push_back("zus");
+	theOrgVector.SV.theVector.push_back("jet");
 	LOG_INFO_STR(theOrgVector);
 
 	CloneVectorEvent*	theClonedVector = theOrgVector.clone();

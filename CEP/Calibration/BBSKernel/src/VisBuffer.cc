@@ -24,7 +24,6 @@
 #include <lofar_config.h>
 #include <BBSKernel/VisBuffer.h>
 #include <BBSKernel/Exceptions.h>
-#include <BBSKernel/EstimateUtil.h>
 
 #include <Common/lofar_algorithm.h>
 #include <Common/LofarLogger.h>
@@ -37,7 +36,6 @@
 #include <measures/Measures/MCPosition.h>
 #include <measures/Measures/MCBaseline.h>
 #include <casa/Quanta/MVuvw.h>
-#include <casa/BasicSL/Complex.h>
 
 namespace LOFAR
 {
@@ -205,38 +203,6 @@ void VisBuffer::flagsNot()
         it != end; ++it)
     {
         *it = ~(*it);
-    }
-}
-
-void VisBuffer::flagsNaN()
-{
-    if(!hasFlags())
-    {
-        return;
-    }
-
-    typedef boost::multi_array<dcomplex, 4>::element* sample_iterator;
-    typedef boost::multi_array<flag_t, 4>::element* flag_iterator;
-
-    flag_iterator flag_it = flags.data();
-    for(sample_iterator sample_it = samples.data(), sample_end = samples.data()
-        + samples.num_elements(); sample_it != sample_end;)
-    {
-        // If any of the correlations is NaN, flag all correlations.
-        for(size_t i = 0; i < nCorrelations(); i++)
-        {
-            if(casa::isNaN(sample_it[i]))
-            {
-                for(size_t j = 0; j < nCorrelations(); j++)
-                {
-                    flag_it[j] |= 1;
-                }
-
-                break;
-            }
-        }
-        flag_it += nCorrelations();
-        sample_it += nCorrelations();
     }
 }
 

@@ -3,7 +3,7 @@
 #
 # Run the tests to test a LOFAR station
 # H. Meulman
-# Version 0.19               9-nov-2012	SVN*****
+# Version 0.10                22-nov-2011	SVN*****
 
 # 24 sep: local log directory aangepast
 # 27 sept: 	- Toevoeging delay voor tbbdriver polling
@@ -23,21 +23,8 @@
 # 18 mrt 2011: Als alle LBA's niet werken, wordt error gelogd. (average < 4000000)
 # 30 mrt 2011: TBBversion_int.gold aangepast voor internationale stations.
 # 7 sep 2011: Bug removed. On the remote stations LBA mode 1 will now also be tested.
-# oct 2011: added CS028 and CS031
-# 22 nov 2011: TBB versie aanpassen naar 2.39
-# 22 nov 2011: Changed filename to not overwrite testdata subrack test
-# 12 jan 2012: Reject LBA antennas when signal differs more than 10dB up. These antennas shoeld not contribute to the average
-# 26 jan 2012: Reject LBA antennas when signal differs less than 3dB down. These antennas shoeld not contribute to the average
-# 27 jan 2012: Store logfiles in /localhome/stationtest/data in "local mode"
-# 17 feb 2012: Added detection of oscillating tiles.
-# 9 mar 2012: Devide by 0 error solved in HBAtest
-# 13 Apr 2012: added LBAdatatest directory. Also directorys need to change permissions to work with USER0.
-# 20 Apr 2012: Logging suspicious tiles and elements in HBA modem test
-# 13 Sep 2012: Added for user0..9 sys.path.append("/opt/stationtest/modules")
-# 9 Nov 2012: New remote stations added: RS210 RS305 RS310 RS407 and RS409
-#             CS302 changed in Core station
-#             Write permissions changed from the log files for all users
-#             Added LBA statistics High and Low limmit. Changed it to 158% and 63%
+# added CS028 and CS031
+# 22 nov 2011 TBB versie aanpassen naar 2.39
 
 # todo:
 # - Als meer dan 10 elementen geen rf signaal hebben, keur dan hele tile af
@@ -45,12 +32,10 @@
 # - =='LOCKED' in 160 en 200 MHz clock test over een aantal keren!
 # Loggen absolute waarden van alle antennes (LBH LBL eb HBA)
 # BIST toevoegen RSP boards
-# Cabinet temperatuur monitoren
 
 
 
 import sys
-sys.path.append("/opt/stationtest/modules")
 from optparse import OptionParser
 import cli
 import testlog
@@ -70,22 +55,19 @@ import numpy
 debug=0
 clkoffset=1
 
-#factor = 30	# station statistics fault window: Antenna average + and - factor = 100 +/- 30
-factorHL = 158	# LBA statistics high limmit
-factorLL = 63	# LBA statistics low limmit
+factor = 30	# station statistics fault window: Antenna average + and - factor = 100 +/- 30
 
 InternationalStations = ('DE601C','DE602C','DE603C','DE604C','DE605C','FR606C','SE607C','UK608C')
-RemoteStations = ('RS106C','RS205C','RS208C','RS210C','RS305C','RS306C','RS307C','RS310C','RS406C','RS407C','RS409C','RS503C')
-CoreStations = ('CS001C','CS002C','CS003C','CS004C','CS005C','CS006C','CS007C','CS011C','CS013C','CS017C','CS021C','CS024C','CS026C','CS028C','CS030C','CS031','CS032C','CS101C','CS103C','CS201C','CS301C','CS302C','CS401C','CS501C')
-NoHBAelementtestPossible = ('DE601C','DE602C','DE603C','DE605C','FR606C','SE607C','UK608C') # 
-NoHBANaStestPossible = ('')
+RemoteStations = ('CS302C','RS106C','RS205C','RS208C','RS306C','RS307C','RS406C','RS503C')
+CoreStations = ('CS001C','CS002C','CS003C','CS004C','CS005C','CS006C','CS007C','CS011C','CS013C','CS017C','CS021C','CS024C','CS026C','CS028C','CS030C','CS031','CS032C','CS101C','CS103C','CS201C','CS301C','CS401C','CS501C')
+NoHBAelementtestPossible = ('DE601C','DE602C','DE603C','DE605C','FR606C','SE607C','UK608C')
 HBASubband = dict( 	DE601C=155,\
 			DE602C=155,\
 			DE603C=284,\
 			DE604C=474,\
 			DE605C=479,\
 			FR606C=155,\
-			SE607C=287,\
+			SE607C=155,\
 			UK608C=155)
 
 # Do not change:
@@ -107,7 +89,7 @@ Remote = 2
 International = 3
 StIDlist = os.popen3('hostname -s')[1].readlines()		# Name of the station
 StID = str(StIDlist[0].strip('\n'))
-print ('StationID = %s' % StID)
+if debug: print ('StationID = %s' % StID)
 if StID in InternationalStations: StationType = International	# International station
 if StID in RemoteStations: StationType = Remote			# Remote Station
 if StID in CoreStations: StationType = Core			# Core Station
@@ -115,36 +97,18 @@ if debug: print ('StationType = %d' % StationType)
 if StationType == 0: print ('Error: StationType = %d (Unknown station)' % StationType)
 
 # Path
-if os.path.exists('/globalhome'): 
-	print('ILT mode')
-	if StationType == International: 
-		RSPgoldfile=('/misc/home/etc/stationtest/gold/rsp_version_int.gold')
-		TBBgoldfile=('/misc/home/etc/stationtest/gold/tbb_version_int.gold')
-		TDS=[0,4,8,12,16,20]
-	else: 
-		RSPgoldfile=('/misc/home/etc/stationtest/gold/rsp_version.gold')
-		TBBgoldfile=('/misc/home/etc/stationtest/gold/tbb_version.gold')
-		TDS=[0,4,8]
-	TBBmgoldfile=('/misc/home/etc/stationtest/gold/tbb_memory.gold')
-	#LogPath=('/misc/home/log/')
-	TestLogPath=('/misc/home/log/')	# Logging remote (on Kis001)
-	#TestLogPath=('/opt/stationtest/data/')	# Logging local (on station)
-
+if StationType == International: 
+	RSPgoldfile=('/misc/home/etc/stationtest/gold/rsp_version_int.gold')
+	TBBgoldfile=('/misc/home/etc/stationtest/gold/tbb_version_int.gold')
+	TDS=[0,4,8,12,16,20]
 else: 
-	print('Local mode')
-	if StationType == International: 
-		RSPgoldfile=('/opt/stationtest/gold/rsp_version_int.gold')
-		TBBgoldfile=('/opt/stationtest/gold/tbb_version_int.gold')
-		TDS=[0,4,8,12,16,20]
-	else: 
-		RSPgoldfile=('/opt/stationtest/gold/rsp_version.gold')
-		TBBgoldfile=('/opt/stationtest/gold/tbb_version.gold')
-		TDS=[0,4,8]
-	TBBmgoldfile=('/opt/stationtest/gold/tbb_memory.gold')
-	#LogPath=('/misc/home/log/')
-	#TestLogPath=('/misc/home/log/')	# Logging remote (on Kis001)
-	TestLogPath=('/opt/stationtest/data/')	# Logging local (on station)
-	
+	RSPgoldfile=('/misc/home/etc/stationtest/gold/rsp_version.gold')
+	TBBgoldfile=('/misc/home/etc/stationtest/gold/tbb_version.gold')
+	TDS=[0,4,8]
+TBBmgoldfile=('/misc/home/etc/stationtest/gold/tbb_memory.gold')
+#LogPath=('/misc/home/log/')
+TestLogPath=('/misc/home/log/')	# Logging remote (on Kis001)
+#TestLogPath=('/opt/stationtest/data/')	# Logging local (on station)
 #HistLogPath=('/opt/stationtest/data/')	# Logging local (on station)
 HistLogPath=('/localhome/stationtest/data/')	# Logging local (on station)
 
@@ -345,10 +309,10 @@ def GotoSwlevel2():
 				if debug:
 					for line in res2:
 						print ('%s' % line.rstrip('\n'))
-				time.sleep(120)
+				time.sleep(30)
 				res = os.popen3('rspctl --datastream=0')[1].readlines()
 				print res
-#				time.sleep(90)  # Tijdelijk toe gevoegd voor nieuwe tbbdriver. Deze loopt vast tijdens pollen
+				time.sleep(90)  # Tijdelijk toe gevoegd voor nieuwe tbbdriver. Deze loopt vast tijdens pollen
 #				CheckTBB()	# Tijdelijk weg gelaten voor nieuwe tbbdriver. Deze loopt vast tijdens pollen
 #fromprg.close()
 				break
@@ -722,13 +686,10 @@ def CheckRSPVersion():
 	RSPgold = open(RSPgoldfile,'r').readlines()			# Read RSP Version gold
 	RSPversion = os.popen3('rspctl --version')[1].readlines()	# Get RSP Versions
 #	res = cli.command('./rsp_version.sh')
-#	debug=1
 	if debug:
-		print ('RSPgold = ', RSPgold)
 		for RSPnumber in range(len(RSPgold)):
 			if RSPgold[RSPnumber] == RSPversion[RSPnumber]: print ('RSP OK = ', RSPnumber)
 			else: print ('RSPNOK = ', RSPnumber)
-#	debug=0
 # store subreck testlog			
 	for RSPnumber in range(len(RSPgold)):
 		if RSPgold[RSPnumber] != RSPversion[RSPnumber]: 
@@ -1260,8 +1221,7 @@ def LBAtest():
 	sr.setId('LBAmd1>: ')
 	sub_time=[]
 	sub_file=[]
-#	dir_name = './lbadatatest/' #Work directory will be cleaned
-	dir_name = '/opt/stationtest/test/hbatest/lbadatatest/' #Work directory will be cleaned
+	dir_name = './lbadatatest/' #Work directory will be cleaned
 	if not (os.path.exists(dir_name)):
 		os.mkdir(dir_name)
 	rmfile = '*.log'
@@ -1287,7 +1247,6 @@ def LBAtest():
 	f_log = file('/opt/stationtest/test/hbatest/LBA_elements.log', 'w')
 	f_log.write(' ************ \n \n LOG File for LBA element test \n \n *************** \n')
 	f_logfac = file('/opt/stationtest/test/hbatest/LBA_factors.log', 'w')
-	f_loglin = file('/opt/stationtest/test/hbatest/LBA_lin.log', 'w')
 	f_logdown = file('/opt/stationtest/test/hbatest/LBA_down.log', 'w')	# log number that indicates if LBA antenna is falen over (down)
 # initialize data arrays
 	ref_data=range(0, num_rcu)
@@ -1332,18 +1291,14 @@ def LBAtest():
 	 	files = open_dir(dir_name)
 	
         	# start processing the element measurements
-		averagesum=1
-		Rejected_antennas=0
+		averagesum=0
 		for file_cnt in range(len(files)) :
 			f, frames_to_process, rcu_nr  = open_file(files, file_cnt)
         	       	if frames_to_process > 0 : 
 				sst_data = read_frame(f)
         	       		sst_subband = sst_data[subband_nr]
 				meet_data[rcu_nr] = sst_subband
-				if ((sst_subband>75000000) and (sst_subband<1500000000)): # average LCU is about 150.000.000. Reject antennes met grotere afwijking dan 10dB en kleiner dan 3dB
-					averagesum=averagesum+sst_subband
-				else:
-					Rejected_antennas=Rejected_antennas+1
+				averagesum=averagesum+sst_subband
 				if debug:
 		                	if rcu_nr==0:
         	               			print ' waarde sst_subband 0 is ' + str(sst_subband)
@@ -1351,32 +1306,23 @@ def LBAtest():
         	        			print ' waarde sst_subband 2 is ' + str(sst_subband)
 					if rcu_nr==50:
 						print ' waarde sst_subband 50 is ' + str(sst_subband)
-
 			f.close
-		if (num_rcu-Rejected_antennas) <> 0: average_lba=averagesum/(num_rcu-Rejected_antennas) # to avoid devide by zero when all antenna's are wrong!
-		else: average_lba = 0
+		average_lba=averagesum/num_rcu
 #		if debug: 
 		print 'average = ' + str(average_lba)
-		print 'Number of rejected antennas = ' + str(Rejected_antennas)
-		f_loglin.write('Number of rejected antennas for mode 1 = ' + str(Rejected_antennas) + '\n')  
 		if average_lba < 4000000:
 			print ('LBA levels to low in mode 1!!!')
 #			if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
 #			if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
 			st_log.write('LBAmd1>: Sv=%s Pr=%s, LBA levels to low!!!\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest]))
 			return
-
-		for rcuind in range(num_rcu) :			# Log lineair value of data
-			print 'RCU: ' + str(rcuind) + ' factor: ' + str(meet_data[rcuind])
-		        f_loglin.write(str(rcuind) + ' ' + str(meet_data[rcuind]) + '\n')  
-
-	
+		
 		f_log.write('\nrcumode 1: \n')
 		if average_lba <> 0:
 			for rcuind in range(num_rcu) :
 				if debug: print 'RCU: ' + str(rcuind) + ' factor: ' + str(round(meet_data[rcuind]*100/average_lba))
         		        f_logfac.write(str(rcuind) + ' ' + str(round(meet_data[rcuind]*100/average_lba)) + '\n')  
-				if (round(meet_data[rcuind]*100/average_lba)) < factorLL or (round((meet_data[rcuind]*100/average_lba))) > factorHL:
+				if (round(meet_data[rcuind]*100/average_lba)) < 100-factor or (round((meet_data[rcuind]*100/average_lba))) > 100+factor:
 					
 					# Store in log file
         		                f_log.write('RCU: ' + str(rcuind)+ ' factor: ' + str(round(meet_data[rcuind]*100/average_lba)) + '\n')
@@ -1459,19 +1405,14 @@ def LBAtest():
  	files = open_dir(dir_name)
 
         # start processing the element measurements
-	averagesum=1
-	Rejected_antennas=0
+	averagesum=0
 	for file_cnt in range(len(files)) :
 		f, frames_to_process, rcu_nr  = open_file(files, file_cnt)
                	if frames_to_process > 0 : 
 			sst_data = read_frame(f)
                		sst_subband = sst_data[subband_nr]
 			meet_data[rcu_nr] = sst_subband
-			if ((sst_subband>75000000) and (sst_subband<1500000000)): # average LCU is 150.000.000. Reject antennes met grotere afwijking dan 10dB en kleiner dan 3dB
-				averagesum=averagesum+sst_subband
-			else:
-				Rejected_antennas=Rejected_antennas+1
-			#averagesum=averagesum+sst_subband
+			averagesum=averagesum+sst_subband
 			if debug:
 	                	if rcu_nr==0:
                        			print ' waarde sst_subband 0 is ' + str(sst_subband)
@@ -1480,12 +1421,9 @@ def LBAtest():
 				if rcu_nr==50:
 					print ' waarde sst_subband 50 is ' + str(sst_subband)
 		f.close
-	if (num_rcu-Rejected_antennas) <> 0: average_lba=averagesum/(num_rcu-Rejected_antennas) # to avoid devide by zero when all antenna's are wrong!
-	else: average_lba = 0
+	average_lba=averagesum/num_rcu
 #	if debug: 
 	print 'average = ' + str(average_lba)
-	print 'Number of rejected antennas = ' + str(Rejected_antennas)
-	f_loglin.write('Number of rejected antennas for mode 3 = ' + str(Rejected_antennas) + '\n')  
 	if average_lba < 4000000:
 		print ('LBA levels to low in mode 3!!!')
 #		if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
@@ -1493,16 +1431,12 @@ def LBAtest():
 		st_log.write('LBAmd3>: Sv=%s Pr=%s, LBA levels to low!!!\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest]))
 		return
 			
-	for rcuind in range(num_rcu) :			# Log lineair value of data
-		print 'RCU: ' + str(rcuind) + ' factor: ' + str(meet_data[rcuind])
-	        f_loglin.write(str(rcuind) + ' ' + str(meet_data[rcuind]) + '\n')  
-	
 	f_log.write('\nrcumode 3: \n')
 	if average_lba <> 0:
 		for rcuind in range(num_rcu) :
 			if debug: print 'RCU: ' + str(rcuind) + ' factor: ' + str(round(meet_data[rcuind]*100/average_lba))
         	        f_logfac.write(str(rcuind) + ' ' + str(round(meet_data[rcuind]*100/average_lba)) + '\n')  
-			if (round(meet_data[rcuind]*100/average_lba)) < factorLL or (round((meet_data[rcuind]*100/average_lba))) > factorHL:
+			if (round(meet_data[rcuind]*100/average_lba)) < 100-factor or (round((meet_data[rcuind]*100/average_lba))) > 100+factor:
 				
 				# Store in log file
         	                f_log.write('RCU: ' + str(rcuind)+ ' factor: ' + str(round(meet_data[rcuind]*100/average_lba)) + '\n')
@@ -1551,11 +1485,10 @@ def LBAtest():
 	
         f_log.close
 	f_logfac.close
-	f_loglin.close
 	rm_files(dir_name,'*')
 #	os.popen("killall beamctl")
 	if debug:
-		print ('Factor should be inbetween %d and %d. ' % (int(factorLL), int(factorHL)))
+		print ('Factor should be inbetween %d and %d. ' % (int(100-factor), int(100+factor)))
 		print 'Factor 100 is average of all antennas.'
 	return
 
@@ -1573,7 +1506,7 @@ def HBAModemTest():
 	global Priority
 	global ModemFail
 	
-#	debug=1
+	debug=0
 	
 	sr.setId('HBAmdt>: ')
 	print ('HBA ModemTest')
@@ -1625,61 +1558,6 @@ def HBAModemTest():
 				#if debug: print ('ModemFail      = ',ModemFail) 
 				if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
 				if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
-				st_log.write('HBAmdt>: Sv=%s Pr=%s, Tile %s - RCU %s; Suspicious.\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], TileNr, RCUNr))
-				sr.setResult('FAILED')
-				
-			else:		#Anders keur elementen af als fout.
-				for ElementNumber in range(4, 20):
-					if (ModemReply[ElementNumber] != ModemReplyGold[ElementNumber] and isodd(RCUNr)):
-						print ('Tile %s - RCU %s; Element %s; Suspicious. : (%s, %s)' % (TileNr, RCUNr, ElementNumber-3, ModemReply[ElementNumber], ModemReplyGold[ElementNumber]))
-						# store station testlog	
-						if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
-						if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
-						st_log.write('HBAmdt>: Sv=%s Pr=%s, Tile %s - RCU %s; Element %s Suspicious. : (%s, %s)\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], TileNr, RCUNr, ElementNumber-3, ModemReply[ElementNumber], ModemReplyGold[ElementNumber]))
-						sr.setResult('FAILED')
-#			print ('ModemFail      = ',ModemFail) 
-
-	try:
-		f=open('/opt/stationtest/test/hbatest/hba_modem3.log','rb')
-	except:
-		print ('Import error')
-		if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
-		if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
-		st_log.write('HBAmdt>: Sv=%s Pr=%s, No modem-logfile found!\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest]))
-		return
-	time.sleep(1)
-	
-	for line in f:
-		ModemReply=line
-		ModemReplyGold=['HBA', '95', 'real', 'delays=', '253', '253', '253', '253', '253', '253', '253', '253', '253', '253', '253', '253', '253', '253', '253', '253']
-		if debug: print ('line = ',line[0])
-		if line[0] == 'H':		# Check of regel geldig is!
-			ModemReply=line.replace('[',' ').replace('].',' ').split()
-			RCUNr=int(ModemReply[1])
-			TileNr=RCUNr/2
-			if debug:
-				print ('line           = ',line)
-				print ('ModemReply     = ',ModemReply)
-				print ('ModemReplyGold = ',ModemReplyGold)
-				print ('RCUNr          = ',RCUNr)
-				print ('TileNr         = ',TileNr)
-	
-# Check if HBA modems work!
-			count=0
-			for ElementNumber in range(4, 20):
-#				print ModemReplyGold[ElementNumber]
-				if ModemReply[ElementNumber] != ModemReplyGold[ElementNumber]:
-					count+=1
-					ModemFail[TileNr]=1 # global variabele om in HBA element test de RF meting over te slaan.
-
-#					
-			if (count > 10 and isodd(RCUNr)): 	#Als er meer dan 10 fouten in zitten, keur dan hele tile af!
-				print ('Tile %s - RCU %s; Broken. No modem communication' % (TileNr,RCUNr))
-				
-				# store station testlog	
-				#if debug: print ('ModemFail      = ',ModemFail) 
-				if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
-				if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
 				st_log.write('HBAmdt>: Sv=%s Pr=%s, Tile %s - RCU %s; Broken. No modem communication\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], TileNr, RCUNr))
 				sr.setResult('FAILED')
 				
@@ -1693,332 +1571,8 @@ def HBAModemTest():
 						st_log.write('HBAmdt>: Sv=%s Pr=%s, Tile %s - RCU %s; Element %s Broken. No modem communication : (%s, %s)\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], TileNr, RCUNr, ElementNumber-3, ModemReply[ElementNumber], ModemReplyGold[ElementNumber]))
 						sr.setResult('FAILED')
 #			print ('ModemFail      = ',ModemFail) 
+	
 	return
-
-
-################################################################################
-# Function HBA Noise and Spurious
-#
-# Failure modes to detect:
-# - Large oscillations on a single tile
-# - Spurious on a single tile
-# - To high and to low noise levels on a single tile over wide range of subbands
-# - Fluctuating noise levels on a single tile over wide range of subbands
-#
-# Ignore subbands:
-# - Large signals on all tiles (Close-by radio transmitter)
-# - Subbands outside frequencyband of 120 to 180 MHz (mode5)
-#
-# Detecting methods:
-# - Large oscillations on one single tile
-#   Fail when subband is not ignored and
-#        when subband signal of one tile is larger then the average of all tiles by a factor of "HBAoscLim"
-# - Spurious on a single tile
-#   Fail when subband is not ignored and
-#        when subband signal of one tile is larger then the average of all tiles by a factor of "HBAspurLim"
-# - To high and to low noise levels on a single tile over wide range of subbands
-#   Fail when subband is not ignored and
-#	 when the average levels of a range of subbands is higher or lower than the average levels of a range of the subbands of all tiles by a factor of "HBAnoiseLim"
-# - Fluctuating noise levels on a single tile over wide range of subbands
-#   Fail when subband is not ignored and
-#	 when maximun subband value minus the minimum subband value of the multiple captures differ by a factor of "HBAfluctLim"
-#
-# Determine subband average of multiple captures
-#   Ignore when subband is ignored and
-#	   when the subband of all captures is larger then "HBAnominal * IgnoreHBAsubbHiLim" or
-#	   when the subband of all captures is smaller then "HBAnominal * IgnoreHBAsubbLoLim"
-#
-# Signal levels
-# Inband noise = 9.2 E+6
-# Ouband noise = 920 E+3
-# P2000 (subband 155) = 1.5 E+12
-#
-
-def HBANaStest():
-	SeverityOfThisTest=2
-	PriorityOfThisTest=2
-	global Severity
-	global Priority
-	
-#	Limmits:
-	HBAoscLim = 10000			# To determine high signal levels due to oscillation 
-	HBAspurLim = 3			# To determine increased signal levels due to Summator spurious
-	HBAnoiseLim = 3			# To determine to high or to low noise levels du to bad connectivity or defect elements
-	IgnoreHBAsubbHiLim = 10		# Ignore subbands that have a signal level of "HBAnominal" * this factor higher than this factor on all tiles (to determine average)
-	IgnoreHBAsubbLoLim = 0.2	# Ignore subbands that have a signal level of this factor lower than this factor on all tiles (to determine average)
-	HBAnominal = 9200000		# Nominal value of subband 150
-	
-	HBANaSdata = []			# 2D array with captured lineair data of all HBA tiles
-	HBANaSarray = []		# 3D array with multiple captures of lineair data of all HBA tiles
-
-	
-	CaptureIterations = 1		# How many times the HBA spectrum will be captured!
-	SubbStart = 98			# Ignore subbands below
-	SubbStop = 420			# Ignore subbands above
-#	SubbStart = 0
-#	SubbStop = 512
-	ctrlword = 253
-	
-	Ignore = 1
-	
-	HBANaSfile=('/opt/stationtest/data/HBANaS.csv')
-	NaS_log = file(HBANaSfile, 'w')
-		
-	if StID in NoHBANaStestPossible: 
-		print ('No HBA elementtest Possible!!!')
-		if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
-		if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
-		st_log.write('HBAmd5>: Sv=%s Pr=%s, No HBA elementtest Possible!!!\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest]))
-	else:
-		debug=0
-		
-		print ('HBA Noise Spurious and Oscillation check')
-		sr.setId('HBAosc>: ')	
-		subband_nr=155
-		if StationType == International: subband_nr = HBASubband[StID]
-		if debug: print (' subband_nr of %s = %d %d' % (StID,subband_nr,HBASubband[StID]))
-
-		sub_time=[]
-		sub_file=[]
-		dir_name = '/opt/stationtest/test/hbatest/hbadatatest/' #Work directory will be cleaned
-		if not(os.path.exists(dir_name)):
-			os.mkdir(dir_name)
-		rmfile = '*.log'
-		hba_elements=16
-		sleeptime=10
-		
-		ctrl_string='='
-
-		print ' Dir name is ' + dir_name
-		os.chdir(dir_name)
-		if len(sys.argv) < 3 :
-			if StationType == International:
-				num_rcu=192
-			else:
-				num_rcu=96
-		else :
-			num_rcu = int(sys.argv[2])
-		print ' Number of RCUs is ' + str(num_rcu)
-		## initialize data arrays
-		ref_data=range(0, num_rcu)
-		
-		# Determine Subbands to be ignored: manualy part!
-		IgnoreHBA = [0 for i in range(512)]	# 1 = ignore subband...
-		for i in range(0,SubbStart): IgnoreHBA[i]=1
-		for i in range(SubbStop,512): IgnoreHBA[i]=1
-		#print ('IgnoreHBA: %s' % (IgnoreHBA))
-
-		##os.popen("rspctl --clock=200")
-		##print 'Clock is set to 200 MHz'
-		##time.sleep(10)
-		##---------------------------------------------
-		## capture reference data (all HBA elements off)
-
-		switchon_hba()
-		##os.popen("rspctl --rcumode=5 2>/dev/null")
-		##os.popen("rspctl --rcuenable=1 2>/dev/null")
-		time.sleep(2)
-	##	To simulate a defect antenna:
-		#if debug==2:
-			#os.popen3("rspctl --rcu=0x10037880 --sel=50:53")
-			#time.sleep(1)
-		for ind in range(hba_elements) :
-			ctrl_string=ctrl_string + '253,'
-		strlength=len(ctrl_string)
-		ctrl_string=ctrl_string[0:strlength-1]
-		print('rspctl --hbadelay' + ctrl_string + ' 2>/dev/null')
-		cmd_str='rspctl --hbadelay' + ctrl_string + ' 2>/dev/null'
-		os.popen(cmd_str)
-
-		time.sleep(sleeptime)
-		#res = os.popen3('rspctl --rcumode=0 --sel=52:53,66:67')[1].readlines()	# for test
-		#time.sleep(sleeptime)
-		#time.sleep(sleeptime)
-		
-		# T E S T ! ! !
-#		print('rspctl --hbadelay=253,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2 2>/dev/null')
-#		cmd_str=('rspctl --hbadelay=253,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2 2>/dev/null')
-#		os.popen(cmd_str)
-#		res = os.popen3('rspctl --rcumode=0 --sel=10,11,94,95')[1].readlines()
-#		time.sleep(sleeptime)
-		
-		# Capture HBA data
-		for i in range(0,CaptureIterations):
-			rm_files(dir_name,'*')	
-			HBANaSdata = [[0 for j in range(512)] for k in range(num_rcu)]
-			print ('Capture HBA data nr %s of %s' % (i+1,CaptureIterations))
-			rec_stat(dir_name,num_rcu)
-			#rm_files(dir_name,rmfile)
-			# get list of all files in dir_name
-			files = open_dir(dir_name)
-			print (files)
-			# start processing the measurement
-			for file_cnt in range(len(files)) :
-				f, frames_to_process, rcu_nr  = open_file(files, file_cnt)
-				if frames_to_process > 0 : 
-					sst_data = read_frame(f)
-					#print ('Number or RCUs processed: ' + str(rcu_nr))
-					#sst_subband = sst_data[subband_nr]
-					#ref_data[rcu_nr] = sst_subband
-					#HBANaSdata.append(sst_data)
-					for subnr in range(0, 512): HBANaSdata[rcu_nr][subnr] = sst_data[subnr]
-				f.close
-			#print('file_cnt = %s' % len(files))
-			#print('HBANaSdata = %s' % HBANaSdata)
-			#print('From RCU %s subband nr %s = %s' % (0,155,HBANeSdata[0][155]))
-			#print('From RCU %s subband nr %s = %s' % (0,150,HBANeSdata[0][150]))
-			HBANaSarray.append(HBANaSdata)
-		print('Capture %s from RCU %s subband nr %s = %s' % (0,0,155,HBANaSarray[0][0][155]))
-		print('Capture %s from RCU %s subband nr %s = %s' % (0,54,155,HBANaSarray[0][54][155]))
-		print('Capture %s from RCU %s subband nr %s = %s' % (0,94,154,HBANaSarray[0][94][154]))
-		print('Capture %s from RCU %s subband nr %s = %s' % (0,66,155,HBANaSarray[0][66][155]))
-		
-		##---------------------------------------------
-		## compute hba data for all tiles
-		#noRCU = 96
-		#noEll = 16
-		#HBAlist = [[0 for i in range(noEll)] for j in range(noRCU)]	# Array (list) with HBA antenna elements. 0=OK 1=defect
-
-		# calculate average of multiple captures of all RCU's
-		# Determine subband average of multiple captures
-		#   Ignore when subband is ignored and
-		#	   when the subband of all captures is larger then "HBAnominal * IgnoreHBAsubbHiLim" or
-		#	   when the subband of all captures is smaller then "HBAnominal * IgnoreHBAsubbLoLim"
-		HBAaverageSubb = [0 for i in range(512)]
-		HBAfail = [0 for i in range(num_rcu)]
-		HBAfact = [0 for i in range(num_rcu)]
-		HBAoscFactor = [0 for i in range(512)]		# Subband with highest signal value = factor
-		HBAoscRCU = [0 for i in range(512)]		# RCU with highest signal
-		
-		for Subnr in range(0,512):
-			CountIgnore = 0
-			NaS_log.write('SubbNr %s;' % (Subnr))
-			# Ignore when the subband of all captures is larger then "HBAnominal * IgnoreHBAsubbHiLim"
-			for RCUnr in range(0,num_rcu):
-				# Get the average of the subband signals over multiple captures
-				SubbValue = 0
-				for Capt in range(0,CaptureIterations):
-					SubbValue = SubbValue + HBANaSarray[Capt][RCUnr][Subnr]
-				SubbValue  = SubbValue  / CaptureIterations
-				NaS_log.write('%s;' % (SubbValue))
-				if (SubbValue > (HBAnominal * IgnoreHBAsubbHiLim)): CountIgnore+=1	# Count to High
-				elif (SubbValue < (HBAnominal * IgnoreHBAsubbLoLim)): CountIgnore+=1	# Count to Low
-				else:HBAaverageSubb[Subnr] = HBAaverageSubb[Subnr] + SubbValue
-			if CountIgnore > (num_rcu / 2): IgnoreHBA[Subnr]=1 # Ignore subband when the subband signal of more than half of the RCU's is to high
-			if (num_rcu-CountIgnore) != 0: HBAaverageSubb[Subnr] = (HBAaverageSubb[Subnr] / (num_rcu-CountIgnore))
-			else: HBAaverageSubb[Subnr] = HBAnominal
-			NaS_log.write(';\n')
-			#if IgnoreHBA[RCUnr] == 1: print ('RCUnr %s Subnr %s = %s' % (RCUnr,Subnr,HBAaverageSubb[Subnr]))
-		#print(HBAaverageSubb)
-		#print('HBAaverageSubb[] = %s' % HBAaverageSubb)
-		#for i in range(512): 
-			#if IgnoreHBA[i] == Ignore: 
-			#print('IgnoreHBA[%s] = %s  HBAaverageSubb = %s' % (i,IgnoreHBA[i],HBAaverageSubb[i]))
-		for i in range(CaptureIterations): 
-			print('Capture %s from RCU %s subband nr %s = %s' % (i,0,150,HBANaSarray[i][0][150]))
-		print('The average of all captures of All RCUs of subband nr %s = %s' % (150,HBAaverageSubb[150]))
-		print('Capture %s from RCU %s subband nr %s = %s' % (0,66,338,HBANaSarray[0][66][338]))
-		
-		# - Large oscillations on one single tile
-		#   Fail when subband is not ignored and
-		#        when subband signal of one tile is larger then the average of all tiles by a factor of "HBAoscLim"
-		
-		# for test:
-		#IgnoreHBA[155] = 0
-		#HBAaverageSubb[155] = HBAnominal
-		
-		
-		for RCUnr in range(0,num_rcu):
-			for Subnr in range(0,512):
-				if IgnoreHBA[Subnr] != Ignore: # Ignore when the subband of all captures is larger then "HBAnominal * IgnoreHBAsubbHiLim"
-					# Get the average of the subband signals over multiple captures and test if to high
-					SubbValue = 0
-					for Capt in range(0,CaptureIterations):
-						SubbValue = SubbValue + HBANaSarray[Capt][RCUnr][Subnr]
-					SubbValue  = SubbValue  / CaptureIterations
-					if (SubbValue/HBAnominal) > (HBAoscFactor[Subnr]):	# Remember highest osc factor
-						HBAoscFactor[Subnr] = round(SubbValue/HBAnominal)
-						HBAoscRCU[Subnr]=RCUnr				# Remember RCU number with highest osc factor
-				
-					#if (SubbValue > (HBAaverageSubb[Subnr] * HBAoscLim)): 			# Detect oscillations
-					#if (SubbValue > (HBAnominal * HBAoscLim)): 			# Detect oscillations
-					#	HBAfail[RCUnr] = 1
-						#if (SubbValue/HBAaverageSubb[Subnr]) > (HBAoscFactor[RCUnr]):	# Remember highest osc factor
-						#	HBAoscFactor[RCUnr] = round(SubbValue/HBAaverageSubb[Subnr])
-					#	if (SubbValue/HBAnominal) > (HBAoscFactor[RCUnr]):	# Remember highest osc factor
-					#		HBAoscFactor[RCUnr] = round(SubbValue/HBAnominal)
-		
-		for Subnr in range(0,512):
-			#for RCUnr in range(0,num_rcu):
-			
-			if (HBAoscFactor[Subnr] > HBAoscLim):
-				HBAfail[HBAoscRCU[Subnr]] = 1
-				HBAfact[HBAoscRCU[Subnr]] = HBAoscFactor[Subnr]
-				
-		#for Subnr in range(0,512): print('Osc factors Subnr %s = %s, of RCU %s (Fail=%s)' % (Subnr,HBAoscFactor[Subnr],HBAoscRCU[Subnr],HBAfail[HBAoscRCU[Subnr]]))
-		
-		# Save in log file
-		for RCUnr in range(0,num_rcu):
-			if HBAfail[RCUnr] == 1:
-				if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
-				if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
-				st_log.write('HBAosc>: Sv=%s Pr=%s, Tile %s - RCU %s; Large oscillation (Factor = %s, CtrlWord = %s)\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], str(RCUnr/2), RCUnr, str(HBAfact[RCUnr]), ctrlword))
-				sr.setResult('FAILED')
-		print('HBAosc>: Sv=%s Pr=%s, Tile %s - RCU %s; Large oscillation (Factor = %s, CtrlWord = %s)\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], str(66/2), 66, str(HBAfact[66]), ctrlword))
-
-#		for k in range(0,512):
-#			for j in range(0,num_rcu):
-#				NaS_log.write('%s;' % (k,j+1))
-#				try: 
-#					for i in range(0,100): hist_log.write('%s;' % (HBAlists[i][k][j]))
-#				except: 
-#					hist_log.write('\n')
-		NaS_log.close
-		
-				
-				
-		##---------------------------------------------
-		## capture hba element data for all elements
-		#for temp_ctrl in ctrl_word:
-			#print 'Capture data for control word: ' + str(temp_ctrl)
-			## init log file
-			#filename='/opt/stationtest/test/hbatest/HBA_elements_' + str(temp_ctrl)
-			#f_log = file(filename, 'w')
-			#writestring=' ************ \n \n LOG File for HBA element test (used ctrl word for active element:' + str(temp_ctrl) +' \n \n *************** \n \n'
-			#f_log.write(writestring)
-			#filename='/opt/stationtest/test/hbatest/HBA_factors_' + str(temp_ctrl)
-			#f_logfac = file(filename, 'w')
-	
-			#for element in range(hba_elements) :
-				#meet_data=capture_data(dir_name,num_rcu,hba_elements,temp_ctrl,sleeptime,subband_nr,element)
-	
-				##Find the factor
-				#data_tmp=10*numpy.log10(meet_data)
-				#data_tmp=numpy.sort(data_tmp)
-				#median=data_tmp[len(data_tmp)/2]
-				#factor=median/2
-				#print 'Processing element ' + str(element) + ' using a limit of ' + str(round(factor,1)) + ' dB'
-				##Write results to file
-				#for rcuind in range(num_rcu) :
-					#f_logfac.write(str(element+1) + ' ' + str(rcuind) + ' ' + str(round(meet_data[rcuind]/ref_data[rcuind])) + '\n')  
-					#if meet_data[rcuind] < factor*ref_data[rcuind] :        
-						#if rcuind == 0 :
-							#tilenumb=0
-						#else:
-							#tilenumb=int(rcuind/2)
-						#f_log.write('Element ' + str(element+1) + ', Tile ' + str(tilenumb) + ' in RCU: ' + str(rcuind)+ ' factor: ' + str(round(meet_data[rcuind]/ref_data[rcuind])) + '\n')
-						
-						## store station testlog	
-						#if ModemFail[tilenumb] != 1:
-							#if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
-							#if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
-							#st_log.write('HBAmd5>: Sv=%s Pr=%s, Tile %s - RCU %s; Element %s Broken. RF-signal to low : (Factor = %s, CtrlWord = %s)\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest], str(tilenumb), rcuind, str(element+1), str(round(meet_data[rcuind]/ref_data[rcuind])), temp_ctrl))
-							#sr.setResult('FAILED')
-				
-		#f_log.close
-		#f_logfac.close
-	return	
-
 
 ################################################################################
 # Function HBA test
@@ -2184,8 +1738,7 @@ def HBAtest():
 				print 'Processing element ' + str(element) + ' using a limit of ' + str(round(factor,1)) + ' dB'
 				#Write results to file
 				for rcuind in range(num_rcu) :
-					#print ('ref_data = %d rcuind = %d' % (ref_data[rcuind],rcuind))
-					if ref_data[rcuind] != 0: f_logfac.write(str(element+1) + ' ' + str(rcuind) + ' ' + str(round(meet_data[rcuind]/ref_data[rcuind])) + '\n')
+					f_logfac.write(str(element+1) + ' ' + str(rcuind) + ' ' + str(round(meet_data[rcuind]/ref_data[rcuind])) + '\n')  
 					if meet_data[rcuind] < factor*ref_data[rcuind] :        
 						if rcuind == 0 :
 							tilenumb=0
@@ -2203,10 +1756,7 @@ def HBAtest():
 		f_log.close
 		f_logfac.close
 	return	
-
-
-
-
+					
 ################################################################################
 # Function WriteAll: To leave message on the station!
 #
@@ -2248,8 +1798,6 @@ res = os.popen3('rspctl --rcuprsg=0')[1].readlines()
 LBAtest()			# Check LBH and LBL antenna's in mode 1 and 3 ST
 HBAModemTest()			# Test of the HBA server modems
 HBAtest()			# Check HBA tiles in mode 5
-HBANaStest()			# HBA Noise and Spurious
-
 
 Message=('!!!     The test is ready and the station can be used again!                       !!!')
 WriteAll(Message)
@@ -2279,10 +1827,6 @@ st_log.write('TestTm>: %02dm:%02ds\n' % (dt/60 % 60, dt % 60))
 st_log.close()
 time.sleep(1)
 res = os.popen3('swlevel 1')[1].readlines()	# Put station in current saving mode.....
-
-# Change write permissions for al log files
-res = os.popen3("chmod g+w %s" % (TestlogName))[1].readlines()
-#res = os.popen3("chmod 755 %s" % (TestlogName))[1].readlines()
 
 # Finaly move temporary logfile to final logfile
 res = os.popen3("scp -rp %s %s" % (TestlogName , HistlogName))[1].readlines()

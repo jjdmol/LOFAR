@@ -12,10 +12,9 @@ id = "(LOFAR::MACIO::F_APL_PROTOCOL+14)";
 include = '<sys/time.h>';
 include = '<linux/types.h>';
 include = '<Common/LofarTypes.h>';
-include = '<Common/LofarConstants.h>';
 include = '<Common/lofar_bitset.h>';
 
-include = '<Common/NsTimestamp.h>';
+include = '<APL/RTCCommon/Timestamp.h>';
 
 prelude = << PRELUDE_END
 
@@ -332,9 +331,16 @@ event = {
 		type = "int32";
 	};
 	param = {
-		name = "nstimestamp";
-		type = "NsTimestamp";
-		userdefined;
+		name = "sequence_nr";
+		type = "uint32";
+	};
+	param = {
+		name = "time";
+		type = "uint32";
+	};
+	param = {
+		name = "sample_nr";
+		type = "uint32";
 	};
 	param = {
 		name = "trigger_sum";
@@ -521,9 +527,16 @@ event = {
 		type = "int32";
 	};
 	param = {
-		name = "nstimestamp";
-		type = "NsTimestamp";
-		userdefined;
+		name = "sequence_nr";
+		type = "uint32";
+	};
+	param = {
+		name = "time";
+		type = "uint32";
+	};
+	param = {
+		name = "sample_nr";
+		type = "uint32";
 	};
 	param = {
 		name = "trigger_sum";
@@ -560,36 +573,21 @@ event = {
 		name = "rcu";
 		type = "int32";
 	};
-//	param = {
-//		name = "secondstime";
-//		type = "uint32";
-//	};
-//	param = {
-//		name = "samplenr";
-//		type = "uint32";
-//	};
-//	param = {
-//		name = "prepages";
-//		type = "uint32";
-//	};
-//	param = {
-//		name = "postpages";
-//		type = "uint32";
-//	};
 	param = {
-		name = "nstimestamp";
-		type = "NsTimestamp";
-		userdefined;
+		name = "secondstime";
+		type = "uint32";
 	};
 	param = {
-		name = "nstimebefore";
-		type = "NsTimestamp";
-		userdefined;
+		name = "sampletime";
+		type = "uint32";
 	};
 	param = {
-		name = "nstimeafter";
-		type = "NsTimestamp";
-		userdefined;
+		name = "prepages";
+		type = "uint32";
+	};
+	param = {
+		name = "postpages";
+		type = "uint32";
 	};
 };
 

@@ -55,7 +55,6 @@ RS207      TBB_0      locus050
 RS208      TBB_0      locus051
 RS210      TBB_0      locus052
 #
-RS305      TBB_0      locus082
 RS306      TBB_0      locus053
 RS307      TBB_0      locus054
 RS308      TBB_0      locus055
@@ -89,9 +88,6 @@ DE605      TBB_0      locus077
 FR606      TBB_0      locus078
 SE607      TBB_0      locus079
 UK608      TBB_0      locus080
-DE609      TBB_0      locus081
-
-# Non-ILT Stations (for completeness)
 FI609      TBB_0      locus081
 # Test entries can follow here
 

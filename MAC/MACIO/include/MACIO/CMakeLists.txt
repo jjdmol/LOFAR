@@ -6,10 +6,9 @@ set(inst_HEADERS
   GCF_Event.h
   KVTLogger.h
   MACServiceInfo.h
-  Marshalling.tcc
+  Marshalling.h
   ProtocolDefs.h
   StringVector.h
-  DoubleVector.h
 )
 
 # Create symbolic link to include directory.

@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -79,12 +79,17 @@ private:
 		string 			servicename;
 		string			hostname;
 		time_t			timestamp;
-
-		string print() const {
-			stringstream	oss;
-			oss << "Action[" << seqnr << ": " << type << ", " << servicename << "@" << hostname << "]";
-			return (oss.str());
-		}
+		action_t& operator= (const action_t& other) {        
+			if (this != &other) {
+				seqnr		= other.seqnr;
+				type		= other.type;
+				pPort		= other.pPort;
+				servicename = other.servicename;          
+				hostname	= other.hostname;
+				timestamp	= other.timestamp;
+			}
+			return (*this);
+		}      
     } Action;
 	typedef struct service_t {
 		string		servicename;

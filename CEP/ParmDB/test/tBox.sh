@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tBox
+./runctest.sh tBox > tBox.log 2>&1

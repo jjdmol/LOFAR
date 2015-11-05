@@ -34,9 +34,9 @@ class TimePlotPage : public TwoDimensionalPlotPage {
 			return GetStatCollection()->TimeStatistics();
 		}
 		
-		virtual void StartLine(Plot2D &plot, const std::string &name, const std::string &yAxisDesc)
+		virtual void StartLine(Plot2D &plot, const std::string &name)
 		{
-			plot.StartLine(name, "Time", yAxisDesc, true);
+			plot.StartLine(name, "Time", "Value", true);
 		}
 };
 

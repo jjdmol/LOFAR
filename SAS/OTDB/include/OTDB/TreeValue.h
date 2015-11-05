@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -39,8 +39,6 @@ namespace LOFAR {
 
 // \addtogroup OTDB
 // @{
-
-using boost::posix_time::not_a_date_time;
 
 //# --- Forward Declarations ---
 //# classes mentioned as parameter or returntype without virtual functions.
@@ -86,8 +84,7 @@ public:
 						 bool			mostRecentOnly=false);
 
 	// Query for getting list of broken hardware on a certain time.
-	vector<OTDBvalue> getBrokenHardware(const ptime& fromTime = ptime(not_a_date_time),
-        	                            const ptime& toTime   = ptime(not_a_date_time));
+	vector<OTDBvalue> getBrokenHardware(const ptime&	atTime = ptime(max_date_time));
 
 	//# SAS queries
 	// For scheduling the VIC tree on the OTDB tree SAS must know what

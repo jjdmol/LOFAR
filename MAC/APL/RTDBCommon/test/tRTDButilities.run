@@ -1,8 +1,0 @@
-#!/bin/sh -xe
-
-trap 'STATUS=$?; teardown; exit $STATUS' 0 1 2 3 15
-
-. testFuncs.sh
-setup
-pvss_import_dplist $srcdir/tRTDButilities.dpl
-./tRTDButilities

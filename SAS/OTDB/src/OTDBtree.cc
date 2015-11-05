@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2011
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -25,10 +25,9 @@
 
 //# Includes
 #include<Common/LofarLogger.h>
+#include<Common/lofar_datetime.h>
 #include<OTDB/OTDBtree.h>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
-using namespace boost::posix_time;
 using namespace pqxx;
 
 namespace LOFAR {
@@ -48,9 +47,6 @@ OTDBtree::OTDBtree(const result::tuple&		row)
 	string crea;
 	row["creationDate"].to(crea);
 	creationDate = time_from_string(crea);
-	string modif;
-	row["modificationDate"].to(modif);
-	modificationDate = time_from_string(modif);
 	row["type"].to(type);
 	row["state"].to(state);
 
@@ -85,7 +81,6 @@ ostream& OTDBtree::print (ostream& os) const
 	os << "classification  : " << classification	<< endl;
 	os << "creator         : " << creator			<< endl;
 	os << "creationdate    : " << creationDate		<< endl;
-	os << "modificationdate: " << modificationDate	<< endl;
 	os << "tree type       : " << type				<< endl;
 	os << "state           : " << state				<< endl;
 	os << "original tree   : " << originalTree		<< endl;

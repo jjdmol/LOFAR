@@ -1,11 +1,9 @@
-#                                                        LOFAR IMAGING PIPELINE
+#                                                         LOFAR IMAGING PIPELINE
 #
-#                                               BBS (BlackBoard Selfcal) recipe
-#                                                        John Swinbank, 2009-10
-#                                                     swinbank@transientskp.org
-#                                                    Wouter Klijn, 2012
-#                                                            klijn@astron.nl
-# -----------------------------------------------------------------------------
+#                                                BBS (BlackBoard Selfcal) recipe
+#                                                         John Swinbank, 2009-10
+#                                                      swinbank@transientskp.org
+# ------------------------------------------------------------------------------
 
 from __future__ import with_statement
 import subprocess
@@ -21,7 +19,7 @@ from lofar.parameterset import parameterset
 
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.group_data import load_data_map, store_data_map
-from lofarpipe.support.group_data import validate_data_maps
+from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.pipelinelogging import log_process_output
 from lofarpipe.support.remotecommand import run_remote_command
@@ -29,17 +27,16 @@ from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.jobserver import job_server
 import lofarpipe.support.utilities as utilities
 import lofarpipe.support.lofaringredient as ingredient
-from lofarpipe.support.utilities import create_directory
 
 
 class new_bbs(BaseRecipe):
     """
-    **This bbs recipe still uses the oldstyle bbs with global control**
-    **New versions will have stand alone capability**
-
     The bbs recipe coordinates running BBS on a group of MeasurementSets. It
     runs both GlobalControl and KernelControl; as yet, SolverControl has not
     been integrated.
+
+    The recipe will also run the sourcedb and parmdb recipes on each of the
+    input MeasuementSets.
 
     **Arguments**
 
@@ -55,6 +52,11 @@ class new_bbs(BaseRecipe):
             '--kernel-exec',
             dest="kernel_exec",
             help="BBS Kernel executable"
+        ),
+        'initscript': ingredient.FileField(
+            '--initscript',
+            dest="initscript",
+            help="Initscript to source (ie, lofarinit.sh)"
         ),
         'parset': ingredient.FileField(
             '-p', '--parset',
@@ -95,10 +97,6 @@ class new_bbs(BaseRecipe):
             '--data-mapfile',
             help="Full path to the mapfile containing the names of the "
                  "data files that were processed by BBS (clobbered if exists)"
-        ),
-        'gvds': ingredient.StringField(
-            '-g', '--gvds',
-            help="Path for output GVDS file"
         )
     }
     outputs = {
@@ -109,9 +107,9 @@ class new_bbs(BaseRecipe):
 
     def __init__(self):
         super(new_bbs, self).__init__()
-        self.bbs_map = list()
         self.parset = parameterset()
         self.killswitch = threading.Event()
+
 
     def _set_input(self, in_key, ps_key):
         """
@@ -120,19 +118,20 @@ class new_bbs(BaseRecipe):
         """
         try:
             self.inputs[in_key] = self.parset.getString(ps_key)
-        except RuntimeError, exceptionobject:
-            self.logger.warn(str(exceptionobject))
+        except RuntimeError, e:
+            self.logger.warn(str(e))
+
 
     def _make_bbs_map(self):
         """
         This method bundles the contents of three different map-files.
-        All three map-files contain a list of tuples of hostname and filename.
-        The contents of these files are related by index in the list. They
+        All three map-files contain a per-node list of filenames as parset.
+        The contents of these files are related. The elements of the lists
         form triplets of MS-file, its associated instrument model and its
         associated sky model.
 
-        The data structure `self.bbs_map` is a list of tuples, where each
-        tuple is a pair of hostname and the aforementioned triplet.
+        The returned data structure `bbs_map` is a list of tuples, where
+        each tuple is a pair of hostname and the aforementioned triplet.
 
         For example:
         bbs_map[0] = ('locus001',
@@ -140,50 +139,63 @@ class new_bbs(BaseRecipe):
             '/data/scratch/loose/L29697/L29697_SAP000_SB000_uv.MS.instrument',
             '/data/scratch/loose/L29697/L29697_SAP000_SB000_uv.MS.sky')
         )
-
-        Returns `False` if validation of the three map-files fails, otherwise
-        returns `True`.
         """
         self.logger.debug("Creating BBS map-file using: %s, %s, %s" %
                           (self.inputs['args'][0],
                            self.inputs['instrument_mapfile'],
                            self.inputs['sky_mapfile']))
-        data_map = load_data_map(self.inputs['args'][0])
-        instrument_map = load_data_map(self.inputs['instrument_mapfile'])
-        sky_map = load_data_map(self.inputs['sky_mapfile'])
-
-        if not validate_data_maps(data_map, instrument_map, sky_map):
-            self.logger.error("Validation of input data mapfiles failed")
-            return False
-
+        data_map = parameterset(self.inputs['args'][0])
+        instrument_map = parameterset(self.inputs['instrument_mapfile'])
+        sky_map = parameterset(self.inputs['sky_mapfile'])
+        bbs_map = []
+        for host in data_map.keys():
+            data = data_map.getStringVector(host, [])
+            instrument = instrument_map.getStringVector(host, [])
+            sky = sky_map.getStringVector(host, [])
+            triplets = zip(data, instrument, sky)
+            for triplet in triplets:
+                bbs_map.append((host, triplet))
+            # Error handling and reporting
+            if not len(data) == len(instrument) == len(sky):
+                self.logger.warn(
+                    "Number of data files (%d) does not match with number of "
+                    "instrument files (%d) or number of skymodel files (%d) "
+                    "on %s" % (len(data), len(instrument), len(sky), host))
+                if len(triplets) > 0:
+                    msg = "The following triplets will be used: "
+                    msg += ", ".join([str(t) for t in triplets])
+                    self.logger.warn(msg)
+                if len(triplets) < len(data):
+                    msg = "The following data files will not be processed: "
+                    msg += ", ".join([str(t) for t in data[len(triplets):]])
+                    self.logger.warn(msg)
         # Store data mapfile containing list of files to be processed by BBS.
+        data_map = []
+        for (host, triplet) in bbs_map:
+            data_map.append((host, triplet[0]))
         store_data_map(self.inputs['data_mapfile'], data_map)
 
-        self.bbs_map = [
-            (dat[0], (dat[1], ins[1], sky[1]))
-            for dat, ins, sky in zip(data_map, instrument_map, sky_map)
-        ]
+        return bbs_map
 
-        return True
 
     def go(self):
         self.logger.info("Starting BBS run")
         super(new_bbs, self).go()
 
-        #                Check for relevant input parameters in the parset-file
-        # ---------------------------------------------------------------------
+        #                 Check for relevant input parameters in the parset-file
+        # ----------------------------------------------------------------------
         self.logger.debug("Reading parset from %s" % self.inputs['parset'])
         self.parset = parameterset(self.inputs['parset'])
 
-        self._set_input('db_host', 'BBDB.Host')
-        self._set_input('db_user', 'BBDB.User')
-        self._set_input('db_name', 'BBDB.Name')
-        self._set_input('db_key', 'BBDB.Key')
+        self._set_input('db_host', 'BBSControl.BBDB.Host')
+        self._set_input('db_user', 'BBSControl.BBDB.User')
+        self._set_input('db_name', 'BBSControl.BBDB.Name')
+        self._set_input('db_key', 'BBSControl.BBDB.Key')
 
         #self.logger.debug("self.inputs = %s" % self.inputs)
 
-        #                                         Clean the blackboard database
-        # ---------------------------------------------------------------------
+        #                                          Clean the blackboard database
+        # ----------------------------------------------------------------------
         self.logger.info(
             "Cleaning BBS database for key '%s'" % (self.inputs['db_key'])
         )
@@ -201,49 +213,32 @@ class new_bbs(BaseRecipe):
                 self.inputs['db_key']
             )
 
-        #                  Create a bbs_map describing the file mapping on disk
-        # ---------------------------------------------------------------------
-        if not self._make_bbs_map():
-            return 1
+        #                   Create a bbs_map describing the file mapping on disk
+        # ----------------------------------------------------------------------
+        bbs_map = self._make_bbs_map()
 
         # Produce a GVDS file, describing the data that must be processed.
         gvds_file = self.run_task(
             "vdsmaker",
-            self.inputs['data_mapfile'],
-            gvds=self.inputs['gvds']
+            self.inputs['data_mapfile']
         )['gvds']
 
         #      Construct a parset for BBS GlobalControl by patching the GVDS
         #           file and database information into the supplied template
         # ------------------------------------------------------------------
         self.logger.debug("Building parset for BBS control")
-        # Create a location for parsets
-        job_directory = self.config.get(
-                            "layout", "job_directory")
-        parset_directory = os.path.join(job_directory, "parsets")
-        create_directory(parset_directory)
-
-        # patch the parset and copy result to target location remove tempfile
-        try:
-            bbs_parset = utilities.patch_parset(
-                self.parset,
-                {
-                    'Observation': gvds_file,
-                    'BBDB.Key': self.inputs['db_key'],
-                    'BBDB.Name': self.inputs['db_name'],
-                    'BBDB.User': self.inputs['db_user'],
-                    'BBDB.Host': self.inputs['db_host'],
-                    #'BBDB.Port': self.inputs['db_name'],
-                }
-            )
-            bbs_parset_path = os.path.join(parset_directory,
-                                           "bbs_control.parset")
-            shutil.copyfile(bbs_parset, bbs_parset_path)
-            self.logger.debug("BBS control parset is %s" % (bbs_parset_path,))
-
-        finally:
-            # Always remove the file in the tempdir
-            os.remove(bbs_parset)
+        bbs_parset = utilities.patch_parset(
+            self.parset.makeSubset("BBSControl."),
+            {
+                'Observation': gvds_file,
+                'BBDB.Key': self.inputs['db_key'],
+                'BBDB.Name': self.inputs['db_name'],
+                'BBDB.User': self.inputs['db_user'],
+                'BBDB.Host': self.inputs['db_host'],
+                #'BBDB.Port': self.inputs['db_name'],
+            }
+        )
+        self.logger.debug("BBS control parset is %s" % (bbs_parset,))
 
         try:
             #        When one of our processes fails, we set the killswitch.
@@ -274,17 +269,22 @@ class new_bbs(BaseRecipe):
             #                                          with our own threads.
             # --------------------------------------------------------------
             command = "python %s" % (self.__file__.replace('master', 'nodes'))
+            env = {
+                "LOFARROOT": utilities.read_initscript(self.logger, self.inputs['initscript'])["LOFARROOT"],
+                "PYTHONPATH": self.config.get('deploy', 'engine_ppath'),
+                "LD_LIBRARY_PATH": self.config.get('deploy', 'engine_lpath')
+            }
             jobpool = {}
             bbs_kernels = []
-            with job_server(self.logger, jobpool, self.error) as(jobhost,
-                                                                   jobport):
+            with job_server(self.logger, jobpool, self.error) as (jobhost, jobport):
                 self.logger.debug("Job server at %s:%d" % (jobhost, jobport))
-                for job_id, details in enumerate(self.bbs_map):
+                for job_id, details in enumerate(bbs_map):
                     host, files = details
                     jobpool[job_id] = ComputeJob(
                         host, command,
                         arguments=[
                             self.inputs['kernel_exec'],
+                            self.inputs['initscript'],
                             files,
                             self.inputs['db_key'],
                             self.inputs['db_name'],
@@ -295,15 +295,16 @@ class new_bbs(BaseRecipe):
                     bbs_kernels.append(
                         threading.Thread(
                             target=self._run_bbs_kernel,
-                            args=(host, command, job_id, jobhost, str(jobport))
+                            args=(host, command, env, job_id,
+                                jobhost, str(jobport)
+                            )
                         )
                     )
                 self.logger.info("Starting %d threads" % len(bbs_kernels))
-                for thread in bbs_kernels:
-                    thread.start()
+                [thread.start() for thread in bbs_kernels]
                 self.logger.debug("Waiting for all kernels to complete")
-                for thread in bbs_kernels:
-                    thread.join()
+                [thread.join() for thread in bbs_kernels]
+
 
             #         When GlobalControl finishes, our work here is done
             # ----------------------------------------------------------
@@ -311,17 +312,16 @@ class new_bbs(BaseRecipe):
             bbs_control.join()
         finally:
             os.unlink(bbs_parset)
-
-        if self.killswitch.isSet():
-            #  If killswitch is set, then one of our processes failed so
-            #                                   the whole run is invalid
-            # ----------------------------------------------------------
-            return 1
+            if self.killswitch.isSet():
+                #  If killswitch is set, then one of our processes failed so
+                #                                   the whole run is invalid
+                # ----------------------------------------------------------
+                return 1
 
         self.outputs['mapfile'] = self.inputs['data_mapfile']
         return 0
 
-    def _run_bbs_kernel(self, host, command, *arguments):
+    def _run_bbs_kernel(self, host, command, env, *arguments):
         """
         Run command with arguments on the specified host using ssh. Return its
         return code.
@@ -335,15 +335,14 @@ class new_bbs(BaseRecipe):
                 self.logger,
                 host,
                 command,
-                self.environment,
+                env,
                 arguments=arguments
             )
-        except OSError:
+        except Exception, e:
             self.logger.exception("BBS Kernel failed to start")
             self.killswitch.set()
             return 1
-        result = self._monitor_process(bbs_kernel_process,
-                                       "BBS Kernel on %s" % host)
+        result = self._monitor_process(bbs_kernel_process, "BBS Kernel on %s" % host)
         sout, serr = bbs_kernel_process.communicate()
         serr = serr.replace("Connection to %s closed.\r\n" % host, "")
         log_process_output("SSH session (BBS kernel)", sout, serr, self.logger)
@@ -354,8 +353,9 @@ class new_bbs(BaseRecipe):
         Run BBS Global Control and wait for it to finish. Return its return
         code.
         """
+        env = utilities.read_initscript(self.logger, self.inputs['initscript'])
         self.logger.info("Running BBS GlobalControl")
-        working_dir = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
+        working_dir = tempfile.mkdtemp()
         with CatchLog4CPlus(
             working_dir,
             self.logger.name + ".GlobalControl",
@@ -371,14 +371,12 @@ class new_bbs(BaseRecipe):
                         ],
                         self.logger,
                         cwd=working_dir,
-                        env=self.environment
+                        env=env
                     )
                     # _monitor_process() needs a convenient kill() method.
-                    bbs_control_process.kill = lambda : os.kill(
-                                    bbs_control_process.pid, signal.SIGKILL)
+                    bbs_control_process.kill = lambda : os.kill(bbs_control_process.pid, signal.SIGKILL)
                 except OSError, e:
-                    self.logger.error(
-                            "Failed to spawn BBS Control (%s)" % str(e))
+                    self.logger.error("Failed to spawn BBS Control (%s)" % str(e))
                     self.killswitch.set()
                     return 1
                 finally:
@@ -405,33 +403,22 @@ class new_bbs(BaseRecipe):
         while True:
             try:
                 returncode = process.poll()
-                # Process still running
-                if returncode == None:
+                if returncode == None:                   # Process still running
                     time.sleep(1)
-
-                # Process broke!
-                elif returncode != 0:
+                elif returncode != 0:                           # Process broke!
                     self.logger.warn(
-                        "%s returned code %d; aborting run" % (name,
-                                                            returncode)
+                        "%s returned code %d; aborting run" % (name, returncode)
                     )
                     self.killswitch.set()
                     break
-
-                # Process exited cleanly
-                else:
+                else:                                   # Process exited cleanly
                     self.logger.info("%s clean shutdown" % (name))
                     break
-
-                # Other process failed; abort
-                if self.killswitch.isSet():
+                if self.killswitch.isSet():        # Other process failed; abort
                     self.logger.warn("Killing %s" % (name))
                     process.kill()
                     returncode = process.wait()
                     break
-
-            # Catch All exceptions: we need to take down all processes whatever
-            # is throw
             except:
                 # An exception here is likely a ctrl-c or similar. Whatever it
                 # is, we bail out.

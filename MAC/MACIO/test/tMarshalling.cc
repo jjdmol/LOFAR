@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -27,11 +27,11 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_map.h>
-#include <Common/lofar_vector.h>
 #include <Common/hexdump.h>
-#include <MACIO/Marshalling.tcc>
+#include <APL/RTCCommon/Marshalling.h>
 #include "tMarshalling.h"
 
+using namespace LOFAR;
 
 namespace LOFAR {
 
@@ -40,26 +40,29 @@ SubArray::SubArray(int i, double d, string s) :
 {
 }
 
-size_t SubArray::getSize() const {
-	return (sizeof(int) + sizeof(double) + MSH_size(someString));
+unsigned int SubArray::getSize() {
+	return (sizeof(int) + sizeof(double) + MSH_STRING_SIZE(someString));
 }
 
-size_t SubArray::pack(char*	buffer) const {
-	size_t	offset = 0;
-	memcpy(buffer+offset, &someInt, sizeof(int));
+unsigned int SubArray::pack(void*	buffer) {
+	unsigned int	offset = 0;
+	memcpy(((char*)(buffer)+offset), &someInt, sizeof(int));
 	offset += sizeof (int);
-	memcpy(buffer+offset, &someDouble, sizeof(double));
+	memcpy(((char*)(buffer)+offset), &someDouble, sizeof(double));
 	offset += sizeof (double);
-	return MSH_pack(buffer, offset, someString);
+	MSH_PACK_STRING(buffer, offset, someString);
+
+	return (offset);
 }
 
-size_t SubArray::unpack(const char*	buffer) {
-	size_t offset = 0;
-	memcpy(&someInt, buffer+offset, sizeof(int));
+unsigned int SubArray::unpack(void*	buffer) {
+	unsigned int	offset = 0;
+	memcpy(&someInt, ((char*)(buffer))+offset, sizeof(int));
 	offset += sizeof(int);
-	memcpy(&someDouble, buffer+offset, sizeof(double));
+	memcpy(&someDouble, ((char*)(buffer))+offset, sizeof(double));
 	offset += sizeof(double);
-	return MSH_unpack(buffer, offset, someString);
+	MSH_UNPACK_STRING(buffer, offset, someString);
+	return (offset);
 }
 
 SubArrayNC::SubArrayNC(int i, double d, string s) :
@@ -67,113 +70,122 @@ SubArrayNC::SubArrayNC(int i, double d, string s) :
 {
 }
 
-size_t SubArrayNC::getSize() const {
-	return (sizeof(int) + sizeof(double) + MSH_size(someString));
+unsigned int SubArrayNC::getSize() {
+	return (sizeof(int) + sizeof(double) + MSH_STRING_SIZE(someString));
 }
 
-size_t SubArrayNC::pack(char*	buffer) const {
-	size_t	offset = 0;
-	memcpy(buffer+offset, &someInt, sizeof(int));
+unsigned int SubArrayNC::pack(void*	buffer) {
+	unsigned int	offset = 0;
+	memcpy(((char*)(buffer)+offset), &someInt, sizeof(int));
 	offset += sizeof (int);
-	memcpy(buffer+offset, &someDouble, sizeof(double));
+	memcpy(((char*)(buffer)+offset), &someDouble, sizeof(double));
 	offset += sizeof (double);
-	return MSH_pack(buffer, offset, someString);
+	MSH_PACK_STRING(buffer, offset, someString);
+
+	return (offset);
 }
 
-size_t SubArrayNC::unpack(const char*	buffer) {
-	size_t	offset = 0;
-	memcpy(&someInt, buffer+offset, sizeof(int));
+unsigned int SubArrayNC::unpack(void*	buffer) {
+	unsigned int	offset = 0;
+	memcpy(&someInt, ((char*)(buffer))+offset, sizeof(int));
 	offset += sizeof(int);
-	memcpy(&someDouble, buffer+offset, sizeof(double));
+	memcpy(&someDouble, ((char*)(buffer))+offset, sizeof(double));
 	offset += sizeof(double);
-	return MSH_unpack(buffer, offset, someString);
+	MSH_UNPACK_STRING(buffer, offset, someString);
+	return (offset);
 }
 
 
 } // namespace LOFAR
 
-using namespace LOFAR;
-using namespace std;
-
-int main (int	/*argc*/, char**	/*argv[]*/)
+int main (int	argc, char*	argv[])
 {
 	// string test
 	string	tstString("Dit is een teststring");
 	cout << "Testing string: " << tstString << endl;
-	cout << "size = " << MSH_size(tstString) << endl;
+
+	cout << "size = " << MSH_STRING_SIZE(tstString) << endl;
 
 	char	buf[4096];
-	size_t	offset1(0);
-	offset1 = MSH_pack(buf, offset1, tstString);
+	int32	offset(0);
+	MSH_PACK_STRING(buf, offset, tstString);
 	cout << "packed: " << endl;
-	hexdump(buf, offset1);
+	hexdump(buf, offset);
 
 	string	newString;
-	size_t offset2(0);
-	offset2 = MSH_unpack(buf, offset2, newString);
+	offset = 0;
+	MSH_UNPACK_STRING(buf, offset, newString);
 	cout << "unpacked: " << newString << endl;
-	ASSERTSTR (offset1 == offset2 && tstString == newString, "Failure 1 in strings");
 
-
-	// bitset test1
-	LOFAR::bitset<35>	bs1;
+	// bitmap test1
+	bitset<32>	bs1;
 	bs1.reset();
 	bs1.set(0);
 	bs1.set(5);
 	bs1.set(20);
-	cout << "Testing bitset<35>: " << bs1 << endl;
-	cout << "size = " << MSH_size(bs1) << endl;
+	cout << "Testing bitset<32>" << bs1 << endl;
+	
+	cout << "size = " << MSH_BITSET_SIZE(bs1) << endl;
 
 	bzero(buf, 4096);
-	offset1 = 0;
-	offset1 = MSH_pack(buf, offset1, bs1);
+	offset = 0;
+	MSH_PACK_BITSET(buf, offset, bs1);
 	cout << "packed:" << endl;
-	hexdump(buf, offset1);
+	hexdump(buf, offset);
 
-	LOFAR::bitset<35>	bs2;
-	offset2 = 0;
-	offset2 = MSH_unpack(buf, offset2, bs2);
-	cout << "size = " << offset2 << endl;
+	bitset<32>	bs2;
+	offset = 0;
+	MSH_UNPACK_BITSET(buf, offset, bs2);
 	cout << "unpacked: " << bs2 << endl;
-	ASSERTSTR (offset1 == offset2, "Failure in offset var of bitsets");
-	ASSERTSTR (bs1 == bs2, "Failure in bitsets");
 
-
-	// dynamic bitmap 
-	boost::dynamic_bitset<>	dbs1(25);
-	dbs1.set(0);
-	dbs1.set(5);
-	dbs1.set(6);
-	dbs1.set(20);
-	cout << "Testing dynamic_bitset<25>" << endl << dbs1 << endl;
-	cout << "size = " << MSH_size(dbs1) << endl;
+	// blitz array <double>
+	blitz::Array<double, 2>		ba1(2,4);
+	ba1 = 	10,	11,
+			20, 21,
+			30, 31,
+			40, 41;
+	cout << "Testing blitz::Array<double, 2>" << ba1 << endl;
+	
+	cout << "size = " << MSH_ARRAY_SIZE(ba1, double) << endl;
 
 	bzero(buf, 4096);
-	offset1 = 0;
-	offset1 = MSH_pack(&buf[0], offset1, dbs1);
+	offset = 0;
+	MSH_PACK_ARRAY(buf, offset, ba1, double);
 	cout << "packed:" << endl;
-	hexdump(buf, offset1);
+	hexdump(buf, offset);
 
-	boost::dynamic_bitset<>	dbs2;
-	offset2 = 0;
-	offset2 = MSH_unpack(&buf[0], offset2, dbs2);
-	cout << "unpacked: " << dbs2 << endl;
-	cout << "size = " << dbs2.size() << endl;
-	cout << "offset1 = " << offset1 << endl;
-	cout << "offset2 = " << offset2 << endl;
-	ASSERTSTR (offset1 == offset2 && dbs1 == dbs2, "Failure in dynamic bitsets");
+	blitz::Array<double, 2>		ba2(2,4);
+	offset = 0;
+	MSH_UNPACK_ARRAY(buf, offset, ba2, double, 2);
+	cout << "unpacked: " << ba2 << endl;
 
+	// blitz array <int>
+	blitz::Array<int, 2>		emptyArr;
+	cout << "Testing EMPTY blitz::Array<int, 2>" << emptyArr << endl;
+	
+	cout << "size = " << MSH_ARRAY_SIZE(emptyArr, int) << endl;
+
+	bzero(buf, 4096);
+	offset = 0;
+	MSH_PACK_ARRAY(buf, offset, emptyArr, int);
+	cout << "packed:" << endl;
+	hexdump(buf, offset);
+
+	blitz::Array<int, 2>		empty2;
+	offset = 0;
+	MSH_UNPACK_ARRAY(buf, offset, empty2, int, 2);
+	cout << "unpacked: " << empty2 << endl;
 
 	// SubArray		
 	SubArray		SA1(25, 3.14, "stringetje");
 	cout << "Testing SubArray class:" << SA1.someInt << "," << SA1.someDouble 
 										<< "," << SA1.someString << endl;
 	
-	size_t	size(SA1.getSize());
+	unsigned int	size(SA1.getSize());
 	cout << "size = " << size << endl;
 
 	bzero(buf, 4096);
-	uint32 offset = 0;
+	offset = 0;
 	SA1.pack(buf);
 	cout << "packed:" << endl;
 	hexdump(buf, size);
@@ -183,7 +195,6 @@ int main (int	/*argc*/, char**	/*argv[]*/)
 	SA2.unpack(buf);
 	cout << "unpacked: " << SA2.someInt << "," << SA2.someDouble 
 										<< "," << SA2.someString << endl;
-
 
 
 	// map<string, subArray>
@@ -199,20 +210,19 @@ int main (int	/*argc*/, char**	/*argv[]*/)
 		iter++;
 	}
 
-	size_t	mapsize;
-	mapsize = MSH_size(ms1);
+	unsigned int	mapsize;
+	MSH_SIZE_MAP_STRING_CLASS(mapsize, ms1, SubArray);
 	cout << "size = " << mapsize << endl;
 
 	bzero(buf, 4096);
 	offset = 0;
-	offset = MSH_pack(buf, offset, ms1);
-	ASSERTSTR (offset == mapsize, "Size error in map<string, SubArray>");
+	MSH_PACK_MAP_STRING_CLASS(buf, offset, ms1, SubArray);
 	cout << "packed:" << endl;
-	hexdump(buf, offset);
+	hexdump(buf, mapsize);
 
 	map<string, SubArray>		ms2;
 	offset = 0;
-	offset = MSH_unpack(buf, offset, ms2);
+	MSH_UNPACK_MAP_STRING_CLASS(buf, offset, ms2, SubArray);
 	cout << "Unpacked map<string, SubArray>: " << endl;
 	map<string, SubArray>::iterator	iter2 = ms2.begin();
 	map<string, SubArray>::iterator	end2  = ms2.end();
@@ -236,20 +246,19 @@ int main (int	/*argc*/, char**	/*argv[]*/)
 		iternc++;
 	}
 
-	size_t	mapncsize;
-	mapncsize = MSH_size(msanc1);
+	unsigned int	mapncsize;
+	MSH_SIZE_MAP_STRING_CLASSPTR(mapncsize, msanc1, SubArrayNC);
 	cout << "size = " << mapncsize << endl;
 
 	bzero(buf, 4096);
 	offset = 0;
-	offset = MSH_pack(buf, offset, msanc1);
-	ASSERTSTR (offset == mapncsize, "Size error in map<string, SubArrayNC*>");
+	MSH_PACK_MAP_STRING_CLASSPTR(buf, offset, msanc1, SubArrayNC);
 	cout << "packed:" << endl;
-	hexdump(buf, offset);
+	hexdump(buf, mapncsize);
 
 	map<string, SubArrayNC*>		msanc2;
 	offset = 0;
-	offset = MSH_unpack(buf, offset, msanc2);
+	MSH_UNPACK_MAP_STRING_CLASSPTR(buf, offset, msanc2, SubArrayNC);
 	cout << "Unpacked map<string, SubArrayNC*>: " << endl;
 	iternc = msanc2.begin();
 	endnc  = msanc2.end();
@@ -275,20 +284,19 @@ int main (int	/*argc*/, char**	/*argv[]*/)
 		itersv++;
 	}
 
-	size_t svsize;
-	svsize = MSH_size(sv1);
+	unsigned int	svsize;
+	MSH_SIZE_VECTOR_STRING(svsize, sv1);
 	cout << "size = " << svsize << endl;
 
 	bzero(buf, 4096);
-	offset1 = 0;
-	offset1 = MSH_pack(buf, offset1, sv1);
-	ASSERTSTR (offset1 == svsize, "Size error in vector<string>");
+	offset = 0;
+	MSH_PACK_VECTOR_STRING(buf, offset, sv1);
 	cout << "packed:" << endl;
 	hexdump(buf, svsize);
 
 	vector<string>	sv2;
-	offset2 = 0;
-	offset2 = MSH_unpack(buf, offset2, sv2);
+	offset = 0;
+	MSH_UNPACK_VECTOR_STRING(buf, offset, sv2);
 	cout << "Unpacked vector<string>" << endl;
 	itersv = sv2.begin();
 	endsv  = sv2.end();
@@ -298,46 +306,6 @@ int main (int	/*argc*/, char**	/*argv[]*/)
 		i++;
 		itersv++;
 	}
-	ASSERTSTR (offset1 == offset2 && sv1 == sv2, "Failure in vector<string>");
 
-
-	// vector<double>
-	vector<double>		dv1;
-	dv1.push_back(3.145926);
-	dv1.push_back(0.0);
-	dv1.push_back(0.00004567);
-	cout << "Testing vector<double>" << endl;
-	vector<double>::iterator	iterdv = dv1.begin();
-	vector<double>::iterator	enddv  = dv1.end();
-	i = 0;
-	while (iterdv != enddv) {
-		cout << "vector[" << i << "]:" << *iterdv << endl;
-		i++;
-		iterdv++;
-	}
-
-	size_t dvsize;
-	dvsize = MSH_size(dv1);
-	cout << "size = " << dvsize << endl;
-
-	bzero(buf, 4096);
-	offset1 = 0;
-	offset1 = MSH_pack(buf, offset1, dv1);
-	ASSERTSTR (offset1 == dvsize, "Size error in vector<double>");
-	cout << "packed:" << endl;
-	hexdump(buf, dvsize);
-
-	vector<double>	dv2;
-	offset2 = 0;
-	offset2 = MSH_unpack(buf, offset2, dv2);
-	cout << "Unpacked vector<double>" << endl;
-	iterdv = dv2.begin();
-	enddv  = dv2.end();
-	i = 0;
-	while (iterdv != enddv) {
-		cout << "vector[" << i << "]:" << *iterdv << endl;
-		i++;
-		iterdv++;
-	}
-	ASSERTSTR (offset1 == offset2 && dv1 == dv2, "Failure in vector<double>");
+	return (0);
 }

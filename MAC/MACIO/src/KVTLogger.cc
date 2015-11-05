@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2010
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ KVTLogger::KVTLogger(uint32				observationID,
 	itsObsID		 (observationID),
 	itsRegisterName	 (registrationName),
 	itsLoggingEnabled(false),
-	itsSeqnr		 (-1),
+	itsSeqnr		 (0),
 	itsKVTport		 (0)
 {
 	// Try to setup a connection with the KeyValueLogger
@@ -66,41 +66,17 @@ KVTLogger::~KVTLogger()
 }
 
 
-bool KVTLogger::log(const string& key, const string& value, double secsEpoch1970)
+void KVTLogger::log(const string& key, const string& value, double secsEpoch1970)
 {
 	if (!itsLoggingEnabled) {
-		return (false);
+		return;
 	}
 
 	KVTSendMsgEvent		logEvent;
-	logEvent.seqnr     = --itsSeqnr;	// use negative seqnrs to avoid ack messages
-	logEvent.key       = key;
-	logEvent.value     = value;
-	logEvent.timestamp = secsEpoch1970;
+	logEvent.seqnr = ++itsSeqnr;
+	logEvent.key   = formatString("%s{%20.6f}", key.c_str(), secsEpoch1970);
+	logEvent.value = value;
 	itsKVTport->send(&logEvent);
-	return (true);
-}
-
-bool KVTLogger::log(const vector<string> keys, const vector<string> values, const vector<double> times)
-{
-	if (!itsLoggingEnabled) {
-		return (false);
-	}
-
-	size_t	nrElements = keys.size();
-	if (values.size() != nrElements || times.size() != nrElements) {
-		LOG_FATAL(formatString("Trying to send unequal length of vectors: k=%d, v=%d, t=%d",nrElements, values.size(), times.size()));
-		return (false);
-	}
-
-	KVTSendMsgPoolEvent		logEvent;
-	logEvent.seqnr     = --itsSeqnr;	// use negative seqnrs to avoid ack messages
-	logEvent.nrElements= nrElements;
-	logEvent.keys      = keys;
-	logEvent.values    = values;
-	logEvent.times     = times;
-	itsKVTport->send(&logEvent);
-	return (true);
 }
 
 // -------------------- Internal routines --------------------
@@ -115,24 +91,20 @@ bool KVTLogger::_setupConnection()
 		return (false);
 	}
 
-	LOG_DEBUG("Sending register event");
 	KVTRegisterEvent	regEvent;
 	regEvent.obsID = itsObsID;
 	regEvent.name  = itsRegisterName;
+
 	itsKVTport->send(&regEvent);
 
-	LOG_DEBUG("Waiting for register acknowledgement");
 	GCFEvent*	ackPtr;
-	while ((ackPtr = itsKVTport->receive()) == 0) {		// may be a async socket.
-		usleep(10);
-	}
+	ackPtr = itsKVTport->receive();
 	KVTRegisterAckEvent	ack(*ackPtr);
 	if (ack.obsID != itsObsID || ack.name != itsRegisterName) {
-		LOG_FATAL_STR("IDENTITY ERROR: LOGGING OF KEY-VALUE PAIRS IS NOT POSSIBLE!");
+		LOG_FATAL_STR("LOGGING OF KEY-VALUE PAIRS IS NOT POSSIBLE!");
 		return (false);
 	}
 
-	LOG_INFO_STR("Connected to and registered at the KeyValueLogger");
 	return (true);
 }
  

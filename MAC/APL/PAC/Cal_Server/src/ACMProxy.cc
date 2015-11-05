@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -256,8 +256,8 @@ GCFEvent::TResult ACMProxy::initializing(GCFEvent& e, GCFPortInterface& port)
 		m_update_subband = 0;
 
 		ss.subbands.setType(SubbandSelection::XLET);
-		ss.subbands.crosslets().resize(1, 1);
-		ss.subbands.crosslets() = m_request_subband;
+		ss.subbands().resize(1, 1);
+		ss.subbands() = m_request_subband;
 
 		LOG_DEBUG_STR("REQ: XC subband " << m_request_subband << " @ " << ss.timestamp);
 		m_rspdriver.send(ss);
@@ -281,8 +281,8 @@ GCFEvent::TResult ACMProxy::initializing(GCFEvent& e, GCFPortInterface& port)
 			}
 	    
 			ss.subbands.setType(SubbandSelection::XLET);
-			ss.subbands.crosslets().resize(1, 1);
-			ss.subbands.crosslets() = m_request_subband;
+			ss.subbands().resize(1, 1);
+			ss.subbands() = m_request_subband;
 
 			LOG_DEBUG_STR("REQ: XC subband " << m_request_subband << " @ " << ss.timestamp);
 			port.send(ss);
@@ -376,8 +376,8 @@ GCFEvent::TResult ACMProxy::receiving(GCFEvent& e, GCFPortInterface& port)
 		  }
 			
 		  ss.subbands.setType(SubbandSelection::XLET);
-		  ss.subbands.crosslets().resize(1, 1);
-		  ss.subbands.crosslets() = m_request_subband;
+		  ss.subbands().resize(1, 1);
+		  ss.subbands() = m_request_subband;
 
 		  LOG_DEBUG_STR("REQ: XC subband " << m_request_subband << " @ " << ss.timestamp);
 		  port.send(ss);

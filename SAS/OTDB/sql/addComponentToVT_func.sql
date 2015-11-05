@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 
 --
 -- helper function
--- instanciateVTleafNode(orgNodeID, newTreeID, newParentID, newName, instances):newNodeID
+-- instanciateVTleafNode(orgNodeID, newTreeID, newParentID, newName):newNodeID
 --
 -- Constructs a VT node from the given VC nodeID.
 -- 
@@ -36,9 +36,8 @@
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION instanciateVTleafNode(INT4, INT4, INT4, VARCHAR(150), INT2)
-  RETURNS INT4 AS $$
-    --  $Id$
+CREATE OR REPLACE FUNCTION instanciateVTleafNode(INT4, INT4, INT4, VARCHAR(150))
+  RETURNS INT4 AS '
 	DECLARE
 		vNode		RECORD;
 		vNewNodeID	VICtemplate.nodeID%TYPE;
@@ -49,19 +48,19 @@ CREATE OR REPLACE FUNCTION instanciateVTleafNode(INT4, INT4, INT4, VARCHAR(150),
 	  FROM 		VICnodeDef
 	  WHERE		nodeID = $1;
 
-	  vNewNodeID := nextval('VICtemplateID');
+	  vNewNodeID := nextval(\'VICtemplateID\');
 	  INSERT 
 	  INTO	 VICtemplate(treeID, nodeID, parentID, originID, 
 						 name, leaf, instances, limits)
 	  VALUES ($2, vNewNodeID, $3, vNode.nodeID,  
-			  $4, false, $5, vNode.constraints);
+			  $4, false, 1, vNode.constraints);
 	  -- note: nodeId and index are defaulted.
 
 	  PERFORM instanciateVTparams($1, $2, vNewNodeID);
 
 	  RETURN vNewNodeID;
 	END;
-$$ LANGUAGE plpgsql;
+' LANGUAGE plpgsql;
 
 
 -- addComponentToVT(authToken, orgNodeID, newTreeID, newParentID, newName): newNodeID
@@ -78,8 +77,7 @@ $$ LANGUAGE plpgsql;
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4, VARCHAR(150))
-  RETURNS INT4 AS $$
-    --  $Id$
+  RETURNS INT4 AS '
 	DECLARE
 	  vFunction  		CONSTANT INT2 := 1;
 	  TTtemplate 		CONSTANT INT2 := 20;
@@ -92,7 +90,6 @@ CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4, VARCHAR(150)
 	  vVersion			VICnodedef.version%TYPE;
 	  vParentRefID		VICtemplate.originID%TYPE;
 	  vDummy			VICparamDef.paramID%TYPE;
-	  vInstances		INT2;
 	  vNewName			VARCHAR(150);
 
 	BEGIN
@@ -101,7 +98,7 @@ CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4, VARCHAR(150)
 	  SELECT isAuthorized(vAuthToken, $3, vFunction, 0)
 	  INTO	 vIsAuth;
 	  IF NOT vIsAuth THEN
-		RAISE EXCEPTION 'Not authorized';
+		RAISE EXCEPTION \'Not authorized\';
 	  END IF;
 
 	  -- check tree type
@@ -110,10 +107,10 @@ CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4, VARCHAR(150)
 	  FROM	 OTDBtree
 	  WHERE	 treeID = $3;
 	  IF NOT FOUND THEN
-		RAISE EXCEPTION 'Tree % does not exist', $3;
+		RAISE EXCEPTION \'Tree % does not exist\', $3;
 	  END IF;
 	  IF vTreeType <> TTtemplate THEN
-		RAISE EXCEPTION 'Tree % is not a template tree', $3;
+		RAISE EXCEPTION \'Tree % is not a template tree\', $3;
 	  END IF;
 
 	  -- check if parent node exist when not adding top node
@@ -124,10 +121,10 @@ CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4, VARCHAR(150)
 	    WHERE  treeID = $3
 	    AND	   nodeID = $4;
 	    IF NOT FOUND THEN
-		  RAISE EXCEPTION 'Node % does not exist in tree %', $4, $3;
+		  RAISE EXCEPTION \'Node % does not exist in tree %\', $4, $3;
 	    END IF;
 	    IF vLeaf = TRUE THEN
-		  RAISE EXCEPTION 'Node % is a parameter, not a node.', $4;
+		  RAISE EXCEPTION \'Node % is a parameter, not a node.\', $4;
 	    END IF;
 	  END IF;
 
@@ -137,39 +134,28 @@ CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4, VARCHAR(150)
 	  FROM	 VICnodeDef
 	  WHERE	 nodeid = $2;
 	  IF NOT FOUND THEN
-		RAISE EXCEPTION 'Original node not found in components.';
+		RAISE EXCEPTION \'Original node not found in components.\';
 	  END IF;
 
 	  -- check if this node may be a child from the parent.
-      BEGIN
-	    IF $4 <> 0 THEN
-	      -- first get definition of parent
-		  SELECT originID
-		  INTO   vParentRefID
-		  FROM   VICtemplate
-		  WHERE  nodeID = $4;
-		  -- we assume it exists, because it was added before!
+	  IF $4 <> 0 THEN
+	    -- first get definition of parent
+		SELECT originID
+		INTO   vParentRefID
+		FROM   VICtemplate
+		WHERE  nodeID = $4;
+		-- we assume it exists, because it was added before!
 
-		  -- note: limits contains `instances` default.
-		  SELECT paramid,CAST(limits AS INT2)
-		  INTO   vDummy,vInstances
-		  FROM   VICparamDef
-		  WHERE  nodeID = vParentRefID
-		  AND	   name = childNodeName(vNodeName, vVersion);
-		  IF NOT FOUND THEN
-		    RAISE EXCEPTION 'Node % cannot be a child from parent %', 
+		SELECT paramid
+		INTO   vDummy
+		FROM   VICparamDef
+		WHERE  nodeID = vParentRefID
+		AND	   name = childNodeName(vNodeName, vVersion);
+		IF NOT FOUND THEN
+		  RAISE EXCEPTION \'Node % cannot be a child from parent %\', 
 							vNodeName, $4;
-		  END IF;
-	    ELSE -- $4 == 0: top node
-		  SELECT CAST(limits AS INT2)
-		  INTO   vInstances
-		  FROM   VICparamDef
-		  WHERE  name = childNodeName(vNodeName, vVersion);
-	    END IF;
-	  EXCEPTION  -- catch possible exception of cast
-		WHEN invalid_text_representation THEN
-		  vInstances := 1;
-	  END;
+		END IF;
+	  END IF;
 
 	  -- if no newname was specified use existing one
 	  IF length($5) < 2 THEN
@@ -179,9 +165,9 @@ CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4, VARCHAR(150)
 	  END IF;
 	  
 	  -- finally copy the node (orgNode, tree, parent, newname)
-	  vNewNodeID := instanciateVTleafNode($2, $3, $4, vNewName, vInstances);
+	  vNewNodeID := instanciateVTleafnode($2, $3, $4, vNewName);
 
 	  RETURN vNewNodeID;
 	END;
-$$ LANGUAGE plpgsql;
+' LANGUAGE plpgsql;
 

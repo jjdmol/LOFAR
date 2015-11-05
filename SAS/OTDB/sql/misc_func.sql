@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -34,8 +34,7 @@
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION isAuthorized(INT4, INT4, INT2, INT4)
-  RETURNS BOOLEAN AS $$
-    --  $Id$
+  RETURNS BOOLEAN AS '
 	DECLARE
 		vTreeType		OTDBtree.treetype%TYPE;
 		vState			OTDBtree.state%TYPE;
@@ -49,7 +48,7 @@ CREATE OR REPLACE FUNCTION isAuthorized(INT4, INT4, INT2, INT4)
 		  FROM	 OTDBtree
 		  WHERE	 treeID = $2;
 		  IF NOT FOUND THEN
-		    RAISE EXCEPTION 'Tree % does not exist!', $2;
+		    RAISE EXCEPTION \'Tree % does not exist!\', $2;
 		    RETURN FALSE;
 		  END IF;
 		END IF;
@@ -58,7 +57,7 @@ CREATE OR REPLACE FUNCTION isAuthorized(INT4, INT4, INT2, INT4)
 		SELECT whoIs($1)
 		INTO   vCallerID;
 		IF NOT FOUND OR vCallerID = 0 THEN
-			RAISE EXCEPTION 'Illegal authorisation token';
+			RAISE EXCEPTION \'Illegal authorisation token\';
 			RETURN FALSE;
 		END IF;
 
@@ -67,7 +66,7 @@ CREATE OR REPLACE FUNCTION isAuthorized(INT4, INT4, INT2, INT4)
 
 		RETURN TRUE;		-- for now everthing is allowed
 	END;
-$$ LANGUAGE plpgsql;
+' LANGUAGE plpgsql;
 
 
 --
@@ -83,7 +82,6 @@ $$ LANGUAGE plpgsql;
 --
 CREATE OR REPLACE FUNCTION whoIs(INT4)
   RETURNS INT4 AS '
-    --  $Id$
 	BEGIN
 		RETURN 1;		-- for now return userid 1
 	END;
@@ -102,12 +100,11 @@ CREATE OR REPLACE FUNCTION whoIs(INT4)
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION VersionNrString(INT4)
-  RETURNS VARCHAR(20) AS $$
-    --  $Id$
+  RETURNS VARCHAR(20) AS '
 	BEGIN
-		RETURN $1/10000 || '.' || ($1/100)%100 || '.' || $1%100;
+		RETURN $1/10000 || \'.\' || ($1/100)%100 || \'.\' || $1%100;
 	END;
-$$ LANGUAGE plpgsql IMMUTABLE;
+' LANGUAGE plpgsql IMMUTABLE;
 
 --
 -- VersionNrValue(versionnr_string)
@@ -121,21 +118,20 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION VersionNrValue(VARCHAR(50))
-  RETURNS INT4 AS $$
-    --  $Id$
+  RETURNS INT4 AS '
 	DECLARE
 		vRelease		INT4;
 		vUpdate			INT4;
 		vPatch			INT4;
 				
 	BEGIN
-		vRelease := substring($1 from E'([0-9]+)\.[0-9]+\.[0-9]+');
-		vUpdate  := substring($1 from E'[0-9]+\.([0-9]+)\.[0-9]+');
-		vPatch   := substring($1 from E'[0-9]+\.[0-9]+\.([0-9]+)');
+		vRelease := substring($1 from \'([0-9]+)\.[0-9]+\.[0-9]+\');
+		vUpdate  := substring($1 from \'[0-9]+\.([0-9]+)\.[0-9]+\');
+		vPatch   := substring($1 from \'[0-9]+\.[0-9]+\.([0-9]+)\');
 		
 		RETURN vRelease * 10000 + (vUpdate%100)*100 + vPatch%100;
 	END;
-$$ LANGUAGE plpgsql IMMUTABLE;
+' LANGUAGE plpgsql IMMUTABLE;
 
 --
 -- getVersionNr (nodename)
@@ -149,12 +145,11 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION getVersionNr(VARCHAR(150))
-  RETURNS INT4 AS $$
-    --  $Id$
+  RETURNS INT4 AS '
 	BEGIN
-		RETURN VersionNrValue(substring($1 from '%{#"%#"}' for '#'));
+		RETURN VersionNrValue(substring($1 from \'%{#"%#"}\' for \'#\'));
 	END;
-$$ LANGUAGE plpgsql IMMUTABLE;
+' LANGUAGE plpgsql IMMUTABLE;
 
 --
 -- childNodeName (name, versionnr)
@@ -169,12 +164,11 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION childNodeName(VARCHAR(150), INT4)
-  RETURNS VARCHAR(150) AS $$
-    --  $Id$
+  RETURNS VARCHAR(150) AS '
 	BEGIN
-		RETURN '#' || $1 || '{' || VersionNrString($2) || '}';
+		RETURN \'#\' || $1 || \'{\' || VersionNrString($2) || \'}\';
 	END;
-$$ LANGUAGE plpgsql IMMUTABLE;
+' LANGUAGE plpgsql IMMUTABLE;
 
 --
 -- cleanNodeName (name)
@@ -189,46 +183,15 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION cleanNodeName(VARCHAR(150))
-  RETURNS TEXT AS $$
-    --  $Id$
+  RETURNS TEXT AS '
 	BEGIN
-		IF substr($1, length($1)) = '}' THEN
-			RETURN ltrim(substr($1, 1, strpos($1,'{')-1), '#');
+		IF substr($1, length($1)) = \'}\' THEN
+			RETURN ltrim(substr($1, 1, strpos($1,\'{\')-1), \'#\');
 		ELSE
-			RETURN ltrim($1,'#');
+			RETURN ltrim($1,\'#\');
 		END IF;
 	END;
-$$ LANGUAGE plpgsql IMMUTABLE;
-
-
---
--- strippedNodeName (name)
---
--- Returns the basic node name without its namespace:
--- # is stripped of at begin and trailing {xx} is removed.
--- 
--- Authorisation: n/a
---
--- Tables:	none
---
--- Types:	none
---
-CREATE OR REPLACE FUNCTION strippedNodeName(VARCHAR(150))
-  RETURNS TEXT AS $$
-    --  $Id$
-	DECLARE
-		vColonPos	INT;
-		vName		VARCHAR(150);
-	BEGIN
-		vName     := cleanNodeName($1);
-		vColonPos := position(':' in vName);
-		IF vColonPos > 0 THEN
-			RETURN(substr(vName,vColonPos+1));
-		ELSE
-			RETURN(vName);
-		END IF;
-	END;
-$$ LANGUAGE plpgsql IMMUTABLE;
+' LANGUAGE plpgsql IMMUTABLE;
 
 
 --
@@ -241,12 +204,11 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION isReference(TEXT)
-  RETURNS BOOLEAN AS $$
-    --  $Id$
+  RETURNS BOOLEAN AS '
 	BEGIN
-		RETURN substr($1, 1, 2) = '>>';
+		RETURN substr($1, 1, 2) = \'>>\';
 	END;
-$$ LANGUAGE plpgsql IMMUTABLE;
+' LANGUAGE plpgsql IMMUTABLE;
 
 --
 -- calcArraySize (arraystring)
@@ -258,22 +220,21 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION calcArraySize(TEXT)
-  RETURNS TEXT AS $$
-    --  $Id$
+  RETURNS TEXT AS '
 	DECLARE
 		vSize		INTEGER;
 		vArray		TEXT;
 
 	BEGIN
-		vArray := ltrim($1,'[ ');
-		vArray := rtrim(vArray,'] ');
+		vArray := ltrim($1,\'[ \');
+		vArray := rtrim(vArray,\'] \');
 		vSize := 0;
 		WHILE length(vArray) > 0 LOOP
 			-- remove element
-			vArray := ltrim(vArray, 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_ "[]{}+%<>.');
+			vArray := ltrim(vArray, \'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_ "[]{}+%<>.\');
 			vSize := vSize + 1;					-- count element
-			vArray := ltrim(vArray, ',');		-- strip comma
+			vArray := ltrim(vArray, \',\');		-- strip comma
 		END LOOP;
 		RETURN vSize;
 	END;
-$$ LANGUAGE plpgsql IMMUTABLE;
+' LANGUAGE plpgsql IMMUTABLE;

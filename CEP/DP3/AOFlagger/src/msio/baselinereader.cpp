@@ -65,8 +65,7 @@ void BaselineReader::initObservationTimes()
 		for(std::set<double>::const_iterator i=times.begin();i!=times.end();++i)
 		{
 			_observationTimes.insert(std::pair<double,size_t>(*i, index));
-			_observationTimesVector.push_back(*i);
-			++index;
+			++index; 
 		}
 	}
 }

@@ -38,6 +38,7 @@
 #include <BBSKernel/VisBuffer.h>
 #include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/Expr.h>
+#include <BBSKernel/Expr/HamakerDipole.h>
 #include <BBSKernel/Expr/Scope.h>
 #include <BBSKernel/Expr/Source.h>
 #include <ParmDB/ParmDB.h>
@@ -63,7 +64,7 @@ public:
     MeasurementExprLOFAR(SourceDB &sourceDB,
         const BufferMap &buffers,
         const ModelConfig &config,
-        const Instrument::ConstPtr &instrument,
+        const Instrument::Ptr &instrument,
         const BaselineSeq &baselines,
         double refFreq,
         const casa::MDirection &refPhase,
@@ -76,9 +77,7 @@ public:
         const ModelConfig &config,
         const VisBuffer::Ptr &buffer,
         const BaselineMask &mask,
-        bool inverse = false,
-        bool useMMSE = false,
-        double sigmaMMSE = 0.0);
+        bool inverse = false);
 
     // \name MeasurementExpr interface implementation
     // These methods form an implementation of the MeasurementExpr interface
@@ -106,7 +105,7 @@ private:
     void makeForwardExpr(SourceDB &sourceDB,
         const BufferMap &buffers,
         const ModelConfig &config,
-        const Instrument::ConstPtr &instrument,
+        const Instrument::Ptr &instrument,
         double refFreq,
         const casa::MDirection &refPhase,
         const casa::MDirection &refDelay,
@@ -116,9 +115,7 @@ private:
     void makeInverseExpr(SourceDB &sourceDB,
         const BufferMap &buffers,
         const ModelConfig &config,
-        const VisBuffer::Ptr &buffer,
-        bool useMMSE,
-        double sigmaMMSE);
+        const VisBuffer::Ptr &buffer);
 
     void setCorrelations(bool circular);
 

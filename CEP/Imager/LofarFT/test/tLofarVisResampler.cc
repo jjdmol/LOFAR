@@ -20,7 +20,6 @@
 //#
 //# $Id$
 
-#include <lofar_config.h>
 #include <LofarFT/LofarVisResampler.h>
 #include <LofarFT/LofarCFStore.h>
 #include <Common/OpenMP.h>

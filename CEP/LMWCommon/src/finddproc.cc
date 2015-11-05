@@ -27,14 +27,12 @@
 #include <LMWCommon/MWError.h>
 #include <Common/StringUtil.h>
 #include <Common/LofarLogger.h>
-#include <Common/Exception.h>
 #include <iostream>
 
 using namespace LOFAR::CEP;
 using namespace LOFAR;
+using namespace std;
 
-// Use a terminate handler that can produce a backtrace.
-Exception::TerminateHandler t(Exception::terminate);
 
 void makeFile (const vector<string>& fileSys, const vector<string>& fileNames,
                const vector<string>& names, WorkersDesc& workers,
@@ -104,24 +102,12 @@ void makeFromFile (const string& vdsName, WorkersDesc& workers,
   makeFile (fileSys, fileNames, names, workers, cluster, type);
 }
 
-void makeFromDirs (int ndir, const string& dirStr, WorkersDesc& workers,
+void makeFromDirs (const string& dirStr, WorkersDesc& workers,
                    const ClusterDesc& cluster, NodeDesc::NodeType type)
 {
   const vector<NodeDesc>& nodes = cluster.getNodes();
   // Split string.
-  vector<string> dirnm = StringUtil::split(dirStr, ',');
-  // Extend the string to the nr of directories.
-  vector<string> dirs;
-  if (ndir > 0) {
-    dirs.reserve (ndir);
-    uint inx = 0;
-    for (int i=0; i<ndir; ++i) {
-      dirs.push_back (dirnm[inx++]);
-      if (inx >= dirnm.size()) inx = 0;
-    }
-  } else {
-    dirs = dirnm;
-  }
+  vector<string> dirs = StringUtil::split(dirStr, ',');
   // Create a list of FileSys from the dirs.
   vector<string> fileSys, fileNames;
   fileSys.reserve (dirs.size());
@@ -153,7 +139,6 @@ int main (int argc, const char* argv[])
   try {
     int nhead = 0;
     bool useDirs = false;
-    int ndir = 0;
     NodeDesc::NodeType type = NodeDesc::Compute;
     int st = 1;
     if (argc > st  &&  string(argv[st]) == "-storage") {
@@ -165,11 +150,6 @@ int main (int argc, const char* argv[])
       istr >> nhead;
       st += 2;
     }
-    if (argc > st+1  &&  string(argv[st]) == "-ndir") {
-      istringstream istr(argv[st+1]);
-      istr >> ndir;
-      st += 2;
-    }
     if (argc > st  &&  string(argv[st]) == "-dirs") {
       useDirs = true;
       ++st;
@@ -177,7 +157,7 @@ int main (int argc, const char* argv[])
     if (argc < st+2) {
       cerr << "Run as:  finddproc [-storage] [-nhead n] vdsdescname clusterdescname"
 	   << endl;
-      cerr << "    or   finddproc [-storage] [-nhead n] [-ndir n] -dirs directories clusterdescname"
+      cerr << "    or   finddproc [-storage] [-nhead n] -dirs directories clusterdescname"
            << endl;
       cerr << "             directories is a single argument separated by commas."
            << endl;
@@ -214,12 +194,12 @@ int main (int argc, const char* argv[])
     // First list the processes on head nodes.
     makeFromHead (nhead, workers);
     if (useDirs) {
-      makeFromDirs (ndir, argv[st], workers, cluster, type);
+      makeFromDirs (argv[st], workers, cluster, type);
     } else {
       makeFromFile (argv[st], workers, cluster, type);
     }
-  } catch (Exception& ex) {
-    cerr << "Unexpected exception: " << ex << endl;
+  } catch (std::exception& x) {
+    cerr << "Unexpected exception: " << x.what() << endl;
     return 1;
   }
   return 0;

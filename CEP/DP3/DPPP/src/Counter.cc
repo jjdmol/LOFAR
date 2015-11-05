@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 #include <DPPP/Counter.h>
 #include <DPPP/DPInfo.h>
-#include <Common/ParameterSet.h>
+#include <DPPP/ParSet.h>
 #include <iostream>
 
 using namespace casa;
@@ -33,14 +33,12 @@ namespace LOFAR {
   namespace DPPP {
 
     Counter::Counter (DPInput* input,
-                      const ParameterSet& parset,
-                      const string& prefix)
-      : itsName        (prefix),
+                      const ParSet& parset, const string& prefix)
+      : itsInput       (input),
+        itsName        (prefix),
         itsCount       (0),
-        itsFlagCounter (input->msName(), parset, prefix)
-    {
-      itsFlagData = parset.getBool (prefix+"flagdata", false);
-    }
+        itsFlagCounter (input, parset, prefix)
+    {}
 
     Counter::~Counter()
     {}
@@ -54,19 +52,15 @@ namespace LOFAR {
     {
       os << endl << "Cumulative flag counts in Counter " << itsName;
       os << endl << "=================================" << endl;
-      itsFlagCounter.showBaseline (os, itsCount);
+      itsFlagCounter.showBaseline (os, itsInput->getAnt1(),
+                                   itsInput->getAnt2(), itsCount);
       itsFlagCounter.showChannel  (os, itsCount);
     }
 
-    void Counter::updateInfo (const DPInfo& infoIn)
+    void Counter::updateInfo (DPInfo& info)
     {
-      info() = infoIn;
-      // Visibility data must be read if needed, so NaNs are flagged.
-      if (itsFlagData) {
-        info().setNeedVisData();
-      }
       // Initialize the flag counters.
-      itsFlagCounter.init (infoIn);
+      itsFlagCounter.init (info.nbaselines(), info.nchan(), info.ncorr());
     }
 
     bool Counter::process (const DPBuffer& buf)

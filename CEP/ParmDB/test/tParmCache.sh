@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tParmCache
+./runctest.sh tParmCache > tParmCache.log 2>&1

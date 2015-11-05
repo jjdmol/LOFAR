@@ -51,7 +51,6 @@ namespace LOFAR {
     coordinateAxesQuant_p.attach    (msAntennaField, "COORDINATE_AXES");
     elementOffset_p.attach          (msAntennaField, "ELEMENT_OFFSET");
     elementOffsetQuant_p.attach     (msAntennaField, "ELEMENT_OFFSET");
-    elementRCU_p.attach             (msAntennaField, "ELEMENT_RCU");
     elementFlag_p.attach            (msAntennaField, "ELEMENT_FLAG");
     tileRotation_p.attach           (msAntennaField, "TILE_ROTATION");
     tileRotationQuant_p.attach      (msAntennaField, "TILE_ROTATION");
@@ -85,7 +84,6 @@ namespace LOFAR {
     coordinateAxesQuant_p.attach    (msAntennaField, "COORDINATE_AXES");
     elementOffset_p.attach          (msAntennaField, "ELEMENT_OFFSET");
     elementOffsetQuant_p.attach     (msAntennaField, "ELEMENT_OFFSET");
-    elementRCU_p.attach             (msAntennaField, "ELEMENT_RCU");
     elementFlag_p.attach            (msAntennaField, "ELEMENT_FLAG");
     tileRotation_p.attach           (msAntennaField, "TILE_ROTATION");
     tileRotationQuant_p.attach      (msAntennaField, "TILE_ROTATION");

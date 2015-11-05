@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
+#include <Common/lofar_datetime.h>
 #include <Common/ParameterSet.h>
 #include <OTDB/TreeMaintenance.h>
 #include <OTDB/TreeValue.h>
@@ -35,13 +36,9 @@
 #include <OTDB/TreeStateConv.h>
 #include <OTDB/ClassifConv.h>
 #include <libgen.h>             // for basename
-#include <cstring>
-
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 using namespace LOFAR;
 using namespace LOFAR::OTDB;
-using namespace boost::posix_time;
 
 
 //
@@ -180,7 +177,8 @@ int main (int	argc, char*	argv[]) {
 		
 		LOG_INFO("Trying to set the schedule time to 2006-01-20 12:00:00.000");
 		LOG_INFO("THIS SHOULD FAIL BECAUSE STATUS IS ACTIVE");
-		if (tm.setSchedule (treeID, "2006-01-20 12:00:00.000", "2006-01-20 14:53:12.000")) {
+		if (tm.setSchedule (treeID, time_from_string("2006-01-20 12:00:00.000"),
+								time_from_string("2006-01-20 14:53:12.000"))) {
 			ASSERTSTR(false, "THIS SHOULD HAVE FAILED");
 			return(1);
 		}
@@ -192,7 +190,8 @@ int main (int	argc, char*	argv[]) {
 		LOG_INFO_STR(treeInfo);
 		
 		LOG_INFO("Retrying to set the schedule time to 2006-01-20 12:00:00");
-		tm.setSchedule (treeID, "2006-01-20 12:00:00.000", "2006-01-20 14:53:12.000");
+		tm.setSchedule (treeID, time_from_string("2006-01-20 12:00:00.000"),
+								time_from_string("2006-01-20 14:53:12.000"));
 		treeInfo = conn.getTreeInfo(treeID);
 		LOG_INFO_STR(treeInfo);
 		

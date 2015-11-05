@@ -1,4 +1,4 @@
-# __init__.py: Top level .py file for python parametersetinterface
+# __init__.py: Top level .py file for python parameterset interface
 # Copyright (C) 2008
 # ASTRON (Netherlands Institute for Radio Astronomy)
 # P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -19,15 +19,16 @@
 #
 # $Id$
 
-from _pyparameterset import PyParameterValue
+from _pyparameterset import ParameterValue
 from _pyparameterset import PyParameterSet
 
-class parametervalue(PyParameterValue):
+
+class parametervalue(ParameterValue):
     """
     The Python interface to ParameterValue
     """
 
-    def __init__(self, value, trim=True, _copyObj=False):
+    def __init__(self, value, trim=True):
         """ Create the parametervalue object.
 
         value
@@ -36,27 +37,11 @@ class parametervalue(PyParameterValue):
           True = remove leading/trailing whitespace from value.
 
           """
-        if _copyObj == True:
-            # Copy constructor
-            PyParameterValue.__init__ (self, value)
-        else:
-            PyParameterValue.__init__ (self, value, trim);
+        ParameterValue.__init__ (self, value, trim);
 
     def __str__(self):
         """Get the full parameter value."""
         return self.get()
-
-    def expand(self):
-        """Expand the value."""
-        return parametervalue(self._expand(), _copyObj=True)
-
-    def getVector(self):
-        """Get the value as a vector of values."""
-        return [parametervalue(v, _copyObj=True) for v in self._getVector()]
-        
-    def getRecord(self):
-        """Get the value as a record (as a parameterset object)."""
-        return parameterset (self._getRecord(), _copyObj=True)
 
 
 
@@ -72,7 +57,6 @@ class parameterset(PyParameterSet):
         filename
           If a filename is given, the object is filled from that parset file.
           If a bool is given, it is treated as argument caseInsensitive.
-          If a dict is given, it is a set of parameter values.
         caseInsensitive
           True = parameter names are case insensitive
 
@@ -85,10 +69,6 @@ class parameterset(PyParameterSet):
         elif isinstance(filename, bool):
             # Here filename argument means caseInsensitive
             PyParameterSet.__init__ (self, filename, 0, 0);
-        elif isinstance(filename, dict):
-            # Here filename argument means caseInsensitive
-            PyParameterSet.__init__ (self, caseInsensitive, 0, 0);
-            self.adoptDict (filename)
         else:
             PyParameterSet.__init__ (self, filename, caseInsensitive);
 
@@ -98,7 +78,7 @@ class parameterset(PyParameterSet):
 
     def __getitem__(self, key):
         """Get the parametervalue object of a parameter."""
-        return parametervalue (self._get(key), _copyObj=True)
+        return self._get (key)
 
     def makeSubset (self, baseKey, prefix=''):
         """Return a subset as a new parameterset object.
@@ -121,39 +101,13 @@ class parameterset(PyParameterSet):
         ps = self._makeSubset (baseKey, prefix)
         return parameterset (ps, _copyObj=True)
 
-    def getVector(self, key):
-        """Get the value as a vector of values."""
-        return [parametervalue(v, _copyObj=True) for v in self._getVector(key)]
-        
-    def getRecord (self, key):
-        """Get the value as a record."""
-        ps = self._getRecord (key)
-        return parameterset (ps, _copyObj=True)
-
     def keys(self):
-        """Get the list of all parameter names."""
+        """Get a sorted list of all parameter names."""
         return self.keywords()
-
-    def dict(self):
-        """Turn the parset into a dict"""
-        d = {}
-        for key in self.keys():
-            d[key] = self.get(key).get()
-        return d
-
-    def adoptArgv(self, argv):
-        for arg in argv:
-            kv = arg.split('=', 1)
-            if len(kv) == 2:
-                self.replace (kv[0], kv[1])
-
-    def adoptDict(self, parms):
-        for (k,v) in parms.iteritems():
-            self.replace (k, v)
 
     def get(self, key):
         """Get the parametervalue object of a parameter."""
-        return parametervalue (self._get(key), _copyObj=True)
+        return self._get (key)
 
     def getBoolVector(self, key, default=None, expandable=False):
         """Get the value as a list of boolean values.

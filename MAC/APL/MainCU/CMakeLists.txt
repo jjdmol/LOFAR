@@ -1,7 +1,7 @@
 # $Id$
 
 # Do not split the following line, otherwise makeversion will fail!
-lofar_package(MainCU 1.0 DEPENDS Common MessageBus OTDB MACIO GCFTM GCFPVSS GCFRTDB APLCommon RTDBCommon ApplCommon CR_Protocol)
+lofar_package(MainCU 1.0 DEPENDS Common OTDB MACIO GCFTM GCFPVSS GCFRTDB APLCommon RTDBCommon ApplCommon)
 
 include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED COMPONENTS date_time)

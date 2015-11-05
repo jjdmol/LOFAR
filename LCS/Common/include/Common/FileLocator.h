@@ -44,7 +44,7 @@ namespace LOFAR {
 class FileLocator
 {
 public:
-	#define		BASE_SEARCH_DIR		"$LOFARROOT:/opt/lofar"
+	#define		BASE_SEARCH_DIR		".:..:/opt/lofar:/opt/lofar/share"
 
 	typedef list<string>::iterator		iterator;
 
@@ -81,12 +81,11 @@ public:
 	inline string	getSubdir();
 
 	//# Finally where it is all about.
-	// Try to locate \a aFile.
-	// If \a aFile is an absolute path, then simply check for its presence. 
-	// If \a aFile is a relative path, then use the current search path to
-	// locate \a aFile.
-	// If \a aFile is found, return its full pathname, otherwise an return
-	// an empty string.
+	// Tries to locate \a aFile in the search path.
+	// If \a aFile is found, then the full path name is returned; else an
+	// empty string is returned.
+	// If \a aFile contains an absolute path (i.e., it starts with a '/'),
+	// or equals is an empty string, then the input argument is returned.
 	string	locate		   (const string& aFile);
 
 private:

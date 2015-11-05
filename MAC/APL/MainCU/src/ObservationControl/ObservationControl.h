@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -42,11 +42,10 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/LofarLogger.h>
+#include <Common/lofar_datetime.h>
 
 //# ACC Includes
 #include <Common/ParameterSet.h>
-
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 // forward declaration
 
@@ -64,8 +63,6 @@ namespace LOFAR {
 	using	APLCommon::ParentControl;
 	using	APLCommon::CTState;
 	namespace MainCU {
-
-using boost::posix_time::ptime;
 
 class ObservationControl : public GCFTask
 {
@@ -130,23 +127,17 @@ private:
 	// State administration. Note: administration is done by ChildControl, to simplify reports
 	// about the states we keep a copy of it.
 	typedef struct ChildProc {
-		ChildProc() : type(APLCommon::CNTLRTYPE_NO_TYPE), requestTime(0), requestedState(CTState::NOSTATE), 
-					  currentState(CTState::NOSTATE), reportedState(CTState::NOSTATE) {};
-		ChildProc(int aType, CTState::CTstateNr curState, CTState::CTstateNr reqState, time_t reqTime) : 
-					type(aType), requestTime(reqTime), requestedState(reqState), 
-					currentState(curState), reportedState(CTState::NOSTATE) {};
+		ChildProc() : type(APLCommon::CNTLRTYPE_NO_TYPE), state(CTState::NOSTATE) {};
+		ChildProc(int aType, CTState::CTstateNr aState) : type(aType), state(aState) {};
 		uint16				type;
-		time_t				requestTime;		// time last statechange was requested
-		CTState::CTstateNr	requestedState;	
-		CTState::CTstateNr	currentState;
-		CTState::CTstateNr	reportedState;		// state eported in logfiles.
+		CTState::CTstateNr	state;
+		CTState::CTstateNr	reportedState;
 	} ChildProc;
 	map<string, ChildProc>	itsChildInfo;
 	bool					itsFullReport;		// report every child every heartbeat
 	bool					itsChangeReport;	// report only changed states
 
 	CTState::CTstateNr		itsState;
-	CTState::CTstateNr		itsLastReportedState;	// to SAS
 	uint32					itsNrStations;
 	uint32					itsNrOnlineCtrls;
 	uint32					itsNrOfflineCtrls;
@@ -160,22 +151,17 @@ private:
 	uint32					itsClaimTimer;
 	uint32					itsPrepareTimer;
 	uint32					itsStartTimer;
-	uint32					itsSuspendTimer;
 	uint32					itsStopTimer;
 	uint32					itsForcedQuitTimer;
 	uint32					itsHeartBeatTimer;
 
 	// ParameterSet variables
-	string					itsProcessType;
 	string					itsTreePrefix;
 	uint32					itsTreeID;
 	uint32					itsHeartBeatItv;
 	uint32					itsForcedQuitDelay;
-	uint32					itsFinalStateDelay;
 	uint32					itsClaimPeriod;
 	uint32					itsPreparePeriod;
-	int32					itsLateLimit;		// after how many seconds a requested state should have been reached.
-	int32					itsFailedLimit;		// after how many seconds a late state change is treated as failure.
 	ptime					itsStartTime;
 	ptime					itsStopTime;
 };

@@ -223,7 +223,7 @@ uInt tConstructors(const String& msName)
 {
     uInt errCount = 0;
     // test default constructor
-    MSLofar tms0;
+    MSLofar tms0();
 
     // existing table on disk, with correct type
     MSLofar tms1(msName);
@@ -279,7 +279,7 @@ uInt tConstructors(const String& msName)
     {
       // Test MSAntenna constructors, as test of all MSTable derived classes
       // Test default constructor
-      MSAntenna msant1;
+      MSAntenna msant1();
       
       // make two tableDescs
       {
@@ -377,15 +377,21 @@ uInt tConstructors(const String& msName)
       } 
       if (!thrown) errCount++;
       
+      
       // make table invalid before destruction
-      // Older casacore throws exception, newer logs a message.
+      thrown=False;
       try {
-        SetupNewTable newtab("tMSLofar2_tmp.msAnt","antTD",Table::New);
-        MSAntenna msant(newtab);
-        msant.markForDelete();
-        msant.renameColumn("myPos",MSAntenna::columnName(MSAntenna::POSITION));
-      } catch (AipsError) {
-      }
+	SetupNewTable newtab("tMSLofar2_tmp.msAnt","antTD",Table::New);
+	MSAntenna msant(newtab);
+	msant.markForDelete();
+	msant.renameColumn("myPos",MSAntenna::columnName(MSAntenna::POSITION));
+      } catch (AipsError x) {
+	thrown = True;
+      } 
+      // This throws the wrong exception: "Table: cannot rename a column"
+      // There seems to be no way to make the table invalid, as both
+      // removeColumn and renameColumn throw an exception.
+      if (!thrown) errCount++;
     }
 
     //cleanup
