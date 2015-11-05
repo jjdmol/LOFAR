@@ -20,8 +20,6 @@
 
 #include <lofar_config.h>
 
-#include <ctime>
-
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
 #include <Stream/StringStream.h>
@@ -478,8 +476,8 @@ SUITE(MultiReceiver) {
 
     // Connect with multiple clients
     {
-      PortBroker::ClientStream cs1("localhost", PortBroker::DEFAULT_PORT, "foo-1", time(0) + 1);
-      PortBroker::ClientStream cs2("localhost", PortBroker::DEFAULT_PORT, "foo-2", time(0) + 1);
+      PortBroker::ClientStream cs1("localhost", PortBroker::DEFAULT_PORT, "foo-1", 1);
+      PortBroker::ClientStream cs2("localhost", PortBroker::DEFAULT_PORT, "foo-2", 1);
 
       // Disconnect them too! (~cs)
     }
@@ -497,7 +495,7 @@ SUITE(MultiReceiver) {
 
     // Connect
     {
-      PortBroker::ClientStream cs("localhost", PortBroker::DEFAULT_PORT, "foo-1", time(0) + 1);
+      PortBroker::ClientStream cs("localhost", PortBroker::DEFAULT_PORT, "foo-1", 1);
 
       // Send one block
       {

@@ -11,8 +11,7 @@ import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.data_map import DataMap, MultiDataMap, \
-                                       validate_data_maps, align_data_maps
+from lofarpipe.support.data_map import DataMap, MultiDataMap, validate_data_maps
 
 
 class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
@@ -96,12 +95,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         'sourcedb_map_path': ingredient.StringField(
             '--sourcedb-map-path',
             help="path to mapfile containing produced sourcedb files"
-        ),
-        'major_cycle': ingredient.IntField(
-            '--major_cycle',
-            default=0,
-            help = "The number of the current cycle"
-        ),
+        )
     }
 
     outputs = {
@@ -125,7 +119,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
             assoc_theta = None
 
         # Load mapfile data from files
-        self.logger.info(self.inputs["slice_paths_mapfile"])
+        self.logger.error(self.inputs["slice_paths_mapfile"])
         slice_paths_map = MultiDataMap.load(self.inputs["slice_paths_mapfile"])
         input_map = DataMap.load(self.inputs['args'][0])
         source_list_map = DataMap.load(self.inputs['source_list_map_path'])
@@ -135,8 +129,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # Run the nodes with now collected inputs
         jobs, output_map = self._run_create_dbs_node(
-                 input_map, slice_paths_map, assoc_theta,
-                 source_list_map)
+                 input_map, slice_paths_map, assoc_theta, source_list_map)
 
         # Collect the output of the node scripts write to (map) files
         return self._collect_and_assign_outputs(jobs, output_map,
@@ -185,13 +178,11 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # Update the skip fields of the four maps. If 'skip' is True in any of
         # these maps, then 'skip' must be set to True in all maps.
-        align_data_maps(input_map, output_map, slice_paths_map, 
-                        source_list_map)
-
-        source_list_map.iterator = slice_paths_map.iterator = \
-               input_map.iterator = DataMap.SkipIterator
-        for (input_item, slice_item, source_list_item) in zip(
-                                  input_map, slice_paths_map,source_list_map):
+        for w, x, y, s in zip(input_map, output_map, slice_paths_map, source_list_map ):
+            w.skip = x.skip = y.skip = s.skip = ( w.skip or x.skip or
+                                                 y.skip or s.skip )
+        slice_paths_map.iterator = input_map.iterator = DataMap.SkipIterator
+        for (input_item, slice_item, source_list_item) in zip(input_map, slice_paths_map,source_list_map):
             host_ms, concat_ms = input_item.host, input_item.file
             host_slice, slice_paths = slice_item.host, slice_item.file
 
@@ -214,8 +205,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
                          self.environment,
                          self.inputs["working_directory"],
                          self.inputs["makesourcedb_path"],
-                         source_list_item.file,
-                         self.inputs["major_cycle"]]
+                         source_list_item.file]
 
             jobs.append(ComputeJob(host_ms, node_command, arguments))
         # Wait the nodes to finish
@@ -253,12 +243,12 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
             # The current job has to be skipped (due to skip field)
             # Or if the node failed:
             if not node_succeeded:
-                self.logger.warn("Warning failed selfcalCreateDBs run "
+                self.logger.warn("Warning failed ImagerCreateDBs run "
                     "detected: No sourcedb file created, {0} continue".format(
                                                             host))
                 output_item.file = "failed"
                 output_item.skip = True
-                parmdbs_item.file = []
+                parmdbs_item.file = ["failed"]
                 parmdbs_item.skip = True
 
             # Else it succeeded and we can write te results

@@ -30,6 +30,25 @@ WORKSPACE=$PWD                                                          # Direct
 HOST1=$2
 HOST2=$3  # not always need
 
+# Exit if pipeline we are currently not regression testing: imager pipelines
+# They are currently in active development and the regression test data has not yet been created
+# also the total running time is in the order of 5 hours, which might not be a good idea for a automatic integration test
+
+if [ "$PIPELINE" == "msss_imager_pipeline" ]
+then
+    echo "----------------------------------------------------------------------------------------------------"
+    echo "Warning! This pipeline is in active development and is currently not supported in regression testing"
+    exit 0
+fi
+
+if [ "$PIPELINE" == "imaging_pipeline" ]
+then
+    echo "----------------------------------------------------------------------------------------------------"
+    echo "Warning! This pipeline is in active development and is currently not supported in regression testing"
+    exit 0
+fi
+
+
 # test if we started in the correct directory
 # we need to be able to grab and change installed files for full functionality
 if [ ! -f lofarinit.sh ]
@@ -88,7 +107,6 @@ mkdir -p $"$WORKSPACE/installed/var/run/pipeline"
 use Lofar               # this is a weak point in the script we should be able to run without
 use Pythonlibs
 . $"$WORKSPACE/lofarinit.sh"  
-. /data/qpid/.profile
 
 # *****************************************************
 # 3) Clear old data:
@@ -150,12 +168,6 @@ sed -i  $"s|input_path2_placeholder|$WORKING_DIR/input_data|g" $"$WORKING_DIR/$P
 # output data paths will find all output paths
 sed -i  $"s|output_path1_placeholder|$WORKING_DIR/output_data|g" $"$WORKING_DIR/$PIPELINE.parset"
 sed -i  $"s|output_path2_placeholder|$WORKING_DIR/output_data|g" $"$WORKING_DIR/$PIPELINE.parset"
-
-# setup the qpid environment (is a no-op if qpid is not installed)
-source $WORKSPACE/bin/MessageFuncs.sh
-create_queue lofar.task.feedback.state
-create_queue lofar.task.feedback.dataproducts
-create_queue lofar.task.feedback.processing
 
 # *********************************************************************
 # 5) Run the pipeline

@@ -65,7 +65,7 @@ class MAC_control(control):
         try:
             super(MAC_control, self).run_task(configblock, datafiles)
         except PipelineException, message:
-            self.logger.warn(message)
+            self.logger.error(message)
 #            raise PipelineQuit
 
     def go(self):

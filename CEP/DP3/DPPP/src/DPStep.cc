@@ -44,10 +44,8 @@ namespace LOFAR {
     void DPStep::updateInfo (const DPInfo& infoIn)
       { info() = infoIn; }
 
-    void DPStep::addToMS (const string& msName)
-    {
-      if (itsPrevStep) itsPrevStep->addToMS(msName);
-    }
+    void DPStep::addToMS (const string&)
+    {}
 
     void DPStep::showCounts (std::ostream&) const
     {}
@@ -93,11 +91,10 @@ namespace LOFAR {
     {}
 
 
-    MultiResultStep::MultiResultStep (uint size)
-      : itsSize (0)
+    MultiResultStep::MultiResultStep (uint reserveSize)
     {
       setNextStep (DPStep::ShPtr (new NullStep()));
-      itsBuffers.resize (size);
+      itsBuffers.reserve (reserveSize);
     }
 
     MultiResultStep::~MultiResultStep()
@@ -105,9 +102,7 @@ namespace LOFAR {
 
     bool MultiResultStep::process (const DPBuffer& buf)
     {
-      ASSERT (itsSize < itsBuffers.size());
-      itsBuffers[itsSize].copy (buf);
-      itsSize++;
+      itsBuffers.push_back (buf);
       getNextStep()->process (buf);
       return true;
     }

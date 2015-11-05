@@ -1,3 +1,2 @@
 #!/bin/sh
-
-./runctest.sh tRTDBPerformance
+./tRTDBPerformance 100

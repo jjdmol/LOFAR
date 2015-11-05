@@ -33,7 +33,6 @@
 #include <Stream/Stream.h>
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
-#include <Stream/StreamFactory.h>
 
 #include <CoInterface/Align.h>
 #include <CoInterface/BudgetTimer.h>
@@ -128,7 +127,7 @@ namespace LOFAR
          const std::vector<gpu::Device> &devices, 
          Pool<struct MPIRecvData> &pool,
          RTmetadata &mdLogger, const std::string &mdKeyPrefix,
-         unsigned hostID)
+         int hostID)
       :
       subbandProcs(std::max(1UL, (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size())),
       ps(ps),
@@ -146,37 +145,36 @@ namespace LOFAR
       // be in bulk: if processing is cheap, all subbands will be output right after they have been received.
       //
       // Allow queue to drop items older than 3 seconds.
-      multiSender(hostMap(ps, subbandIndices, hostID), ps, 3.0, hostID < ps.settings.nodes.size() ? ps.settings.nodes.at(hostID).out_nic : ""),
-      hostID(hostID)
+      multiSender(hostMap(ps, subbandIndices, hostID), ps, 3.0)
     {
       ASSERTSTR(!devices.empty(), "Not bound to any GPU!");
 
       // Write data point(s) for monitoring (PVSS).
-      itsMdLogger.log(itsMdKeyPrefix + PN_CGP_OBSERVATION_NAME,
-                      boost::lexical_cast<string>(ps.settings.observationID));
+      itsMdLogger.log(itsMdKeyPrefix + PN_CGP_OBSERVATION_NAME, boost::lexical_cast<string>(ps.settings.observationID));
       for (unsigned i = 0; i < subbandIndices.size(); ++i) {
-        const string sbStr = '[' + boost::lexical_cast<string>(i) + ']';
-
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_SUBBAND + sbStr, (int)subbandIndices[i]);
-
-        // After obs start these dynarray data points are written _conditionally_, so init.
-        // While we only have to write the last index (PVSSGateway will zero the rest),
-        // we'd have to find out who has the last subband. Don't bother, just init all.
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPING + sbStr, 0);
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_WRITTEN  + sbStr, 0.0f);
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPED  + sbStr, 0.0f);
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_SUBBAND + '[' + boost::lexical_cast<string>(i) + ']',
+                        (int)subbandIndices[i]);
       }
 
       string dataProductType;
-      if (ps.settings.correlator.enabled && ps.settings.beamFormer.enabled) {
-        dataProductType = "Correlated + Beamformed";
-      } else if (ps.settings.correlator.enabled) {
-        dataProductType = "Correlated";
-      } else if (ps.settings.beamFormer.enabled) {
-        dataProductType = "Beamformed";
-      } else {
-        dataProductType = "None";
+
+      switch (1 * (int)ps.settings.beamFormer.enabled
+            + 2 * (int)ps.settings.correlator.enabled) {
+        case 3:
+          dataProductType = "Correlated + Beamformed";
+          break;
+        case 2:
+          dataProductType = "Correlated";
+          break;
+        case 1:
+          dataProductType = "Beamformed";
+          break;
+        case 0:
+        default:
+          dataProductType = "None";
+          break;
       }
+
       itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DATA_PRODUCT_TYPE, dataProductType);
     }
 
@@ -766,17 +764,16 @@ namespace LOFAR
          */
         const double blockDuration = ps.settings.blockDuration();
 
-        // Prevent division by zero for observations without beamformer
+        // Prevent division by zero for observations without beam former
         const size_t nrFiles = std::max(multiSender.nrFiles(), 1UL);
 
-        const string localSbStr = '[' + lexical_cast<string>(id.localSubbandIdx) + ']';
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPING + localSbStr,
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPING + '[' + lexical_cast<string>(id.localSubbandIdx) + ']',
                         correlatorLoss.dropping || beamFormerLoss.dropping);
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_WRITTEN  + localSbStr,
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_WRITTEN  + '[' + lexical_cast<string>(id.localSubbandIdx) + ']',
                         static_cast<float>(correlatorLoss.blocksWritten * blockDuration) +
                         static_cast<float>(beamFormerLoss.blocksWritten * blockDuration / nrFiles)
                        );
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPED  + localSbStr,
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPED  + '[' + lexical_cast<string>(id.localSubbandIdx) + ']',
                         static_cast<float>(correlatorLoss.blocksDropped * blockDuration) +
                         static_cast<float>(beamFormerLoss.blocksDropped * blockDuration / nrFiles)
                        );
@@ -802,11 +799,10 @@ namespace LOFAR
       SmartPtr<Stream> outputStream;
 
       if (ps.settings.correlator.enabled) {
-        const string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, globalSubbandIdx,
-          hostID < ps.settings.nodes.size() ? ps.settings.nodes.at(hostID).out_nic : "");
+        const string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, globalSubbandIdx);
 
         try {
-          outputStream = createStream(desc, false, 0);
+          outputStream = createStream(desc, false);
         } catch (Exception &ex) {
           LOG_ERROR_STR("Error writing subband " << globalSubbandIdx << ", dropping all subsequent blocks: " << ex.what());
           return;

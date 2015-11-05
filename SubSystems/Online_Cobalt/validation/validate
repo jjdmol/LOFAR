@@ -16,30 +16,15 @@ CAN_SUDO=$?
 function runTest() {
   TEST=$1
 
-  echo "----------------------------------------------------------------"
-  echo " Running test: $TEST"
-  echo " Working dir:  `pwd`"
-  echo "        User:  `whoami`"
-  echo "        Host:  `hostname`"
-  echo "        Time:  `date +"%F %T"`"
-  echo "----------------------------------------------------------------"
-
   if [ "${TEST%%.root.test}" == "${TEST}" ]; then
-    bash -v $TEST
-    RESULT=$?
+    $TEST
   else
     if [ $CAN_SUDO -eq 0 ]; then
-      sudo -n bash -v $TEST
-      RESULT=$?
+      sudo -n $TEST
     else
       return 42
     fi
   fi
-
-  echo "----------------------------------------------------------------"
-  echo " Exit code: $RESULT"
-  echo "----------------------------------------------------------------"
-  return $RESULT
 }
 
 NRTESTS=0
@@ -52,12 +37,10 @@ cd `dirname $0`
 echo "Running on `hostname`:`pwd`"
 echo ""
 
-LOGSUFFIX="`hostname`.log.`date +%FT%T`"
-
 # Run all tests
 for TEST in `find $TESTSETS -name '*.test' -type f -a -executable`
 do
-  LOGFILE="$TEST.$LOGSUFFIX"
+  LOGFILE="$TEST.`hostname`.log"
 
   printf "%40s: " "$TEST"
   (cd `dirname $TEST` && runTest ./`basename $TEST`) > $LOGFILE 2>&1

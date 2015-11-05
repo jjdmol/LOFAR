@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -107,7 +107,7 @@ private:
 	vector<RTDBPropertySet*>	itsRSPs;
 	vector<RTDBPropertySet*>	itsRCUs;
 	RTDBPropertySet*		itsStationInfo;
-	RTDBPropertySet*		itsAartfaacInfo;
+	RTDBPropertySet*			itsAartfaacInfo;
 
 	blitz::Array<uint,1>		itsRCUstates;		// actual status of the RCUs
 	blitz::Array<bool,2>		itsRCUInputStates;	// enable state of the three RCU inputs

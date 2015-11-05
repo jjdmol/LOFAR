@@ -49,7 +49,7 @@ class Op_islands(Op):
         opts = img.opts
 
         minsize = opts.minpix_isl
-        if minsize is None:
+        if minsize == None:
             minsize = int(img.pixel_beamarea()/3.0) # 1/3 of beam area in pixels
             if minsize < 6:
                 minsize = 6 # Need at least 6 pixels to obtain good fits
@@ -98,7 +98,7 @@ class Op_islands(Op):
             img.minpix_isl = det_img.minpix_isl
             mylogger.userinfo(mylog, "\nContinuing processing using primary image")
         else:
-            if opts.src_ra_dec is not None:
+            if opts.src_ra_dec != None:
                 mylogger.userinfo(mylog, "Constructing islands at user-supplied source locations")
                 img.islands = self.coords_to_isl(img, opts)
             else:
@@ -205,7 +205,7 @@ class Op_islands(Op):
 
         coords = opts.src_ra_dec # list of RA and Dec tuples
         isl_radius_pix = opts.src_radius_pix
-        if isl_radius_pix is None:
+        if isl_radius_pix == None:
             isl_radius_pix = img.beam2pix(img.beam)[0] # twice beam major axis radius at half max (= FWHM)
 
         res = []
@@ -318,10 +318,10 @@ class Island(object):
                 noise_mask[mask[bbox]] = True
                 isl_mask[mask[bbox]] = True
         else:
-            if origin is None:
+            if origin == None:
                 origin = [b.start for b in bbox]
             isl_mask = mask
-            if noise_mask is None:
+            if noise_mask == None:
                 noise_mask = mask
             data = img
             bbox_rms_im = rms
@@ -393,11 +393,11 @@ class Island(object):
     def copy(self, pixel_beamarea, image=None, mean=None, rms=None):
         mask = self.mask_active
         noise_mask = self.mask_noisy
-        if image is None:
+        if image == None:
             image = self.image
-        if mean is None:
+        if mean == None:
             mean = N.zeros(mask.shape, dtype=N.float32) + self.mean
-        if rms is None:
+        if rms == None:
             rms =  N.zeros(mask.shape, dtype=N.float32) + self.rms
 
         bbox = self.bbox

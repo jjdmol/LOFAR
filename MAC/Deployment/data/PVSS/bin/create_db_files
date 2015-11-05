@@ -4,7 +4,7 @@
 #
 # Copyright (C) 2006
 # ASTRON (Netherlands Foundation for Research in Astronomy)
-# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -93,16 +93,15 @@ concatfile()
 #
 create_ring_station_list()
 {
-        # Only create info for existing stations, which have a height != 0 in StationInfo.dat
 	# stationname ID stationType ...
 	cleanlist ${STATIONINFOFILE} | awk '{ 
-		if ($3 == "C" && substr($6,1,1) != "0") {
+		if ($3 == "C") {
 			print "Core_"$1
 		}
-		else if ($3 == "R" && substr($6,1,1) != "0") {
+		else if ($3 == "R") {
 			print "Remote_"$1
 		}
-		else if (substr($6,1,1) != "0") {
+		else {
 			print "Europe_"$1
 		}
 	} ' >>/tmp/rslist
@@ -115,16 +114,15 @@ create_ring_station_list()
 #
 create_stationfield_list()
 {
-        # Only create info for existing stations, which have a height != 0 in StationInfo.dat
 	# stationname ID stationType ...
 	cleanlist ${STATIONINFOFILE} | awk '{ 
-		if ($3 == "C" && substr($6,1,1) != "0") {
+		if ($3 == "C") {
 			print $1"HBA0"
 			print $1"HBA1"
 			print $1"HBA"
-       		        print $1"LBA"
+       		print $1"LBA"
 		}
-		else if (substr($6,1,1) != "0") {
+		else {
 			print $1"HBA"
 			print $1"LBA"
 		}
@@ -248,7 +246,7 @@ substitute_cobaltnode_cobaltnic()
 	{
 		hasCobaltNIC=index($1,"@cobaltnode@_@cobaltnic@");
 		if (hasCobaltNIC > 0) {
-			for (cnic=0; cnic<40; cnic++) {
+			for (cnic=0; cnic<36; cnic++) {
 			    cnode = int(cnic/4)+1;    
 			    dpname=$1;
 			    
@@ -300,7 +298,7 @@ substitute_oscobaltnode()
 	{
 		hasCobaltNode=index($1,"@oscobaltnode@");
 		if (hasCobaltNode > 0) {
-			for (cnode=1; cnode<11; cnode++) {
+			for (cnode=1; cnode<10; cnode++) {
 				dpname=$1;
                                 newname = sprintf("OSCBT%03d",cnode);
                                 sub("@oscobaltnode@", newname, dpname);
@@ -348,10 +346,9 @@ substitute_cobaltnode()
 	{
 		hasCobaltNode=index($1,"@cobaltnode@");
 		if (hasCobaltNode > 0) {
-			for (cnode=1; cnode<11; cnode++) {
+			for (cnode=1; cnode<10; cnode++) {
 				dpname=$1;
-                                newname = sprintf("CBT%03d",cnode);
-  				sub("@cobaltnode@", newname, dpname);
+				sub("@cobaltnode@", "CBT00"cnode, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -419,58 +416,25 @@ substitute_CtrlDebug()
 #
 substitute_uriboard()
 {
-  
-	awk -v nrURIs=$NRURIS -v hasAartFaac=$AARTFAAC '
+	awk -v nrURIs=$NRURIS '
 	{
 		hasuri=index($1,"@uriboard@");
-		if (hasuri > 0 ) {
-                     if (hasAartFaac == 1) {
+		if (hasfpga > 0) {
 			for (uriNr = 0; uriNr < nrURIs; uriNr++) {
 				dpname=$1;
 				cNr=0;
 				if (uriNr > 1) cNr = 1
-				newname = sprintf("Cabinet%1d_URIBoard%1d",cNr,uriNr);
+				newname = sprintf("Cabinet%1d_UriBoard%1d",cNr,uriNr);
 				sub("@uriboard@", newname, dpname);
 				print dpname"	"$2;
-			    }
-		     }
-                     else {
-			print "	";
-                       }
-                     }
+				}
+			}
 		else {
 			print $1"	"$2;
 		}
 	} '
 }
 
-
-
-#
-# substitute_uniboard
-#
-# syntax of the lines must be: dp dpt
-#
-substitute_uniboard()
-{
-	awk -v hasAartFaac=$AARTFAAC '
-	{
-            hasuni=index($1,"_@uniboard@");
-	    if (hasuni > 0 ) {
-                if (hasAartFaac == 1) {
-		    dpname=$1;
-		    sub("_@uniboard@", "", dpname);
-		    print dpname"	"$2;
-	        }
-                else {
-                   print "	";
-                }
-            }
-            else {
-		  print $1"	"$2;
-                 }
-	} '
-}
 #
 # substitute_fpga
 #
@@ -478,11 +442,10 @@ substitute_uniboard()
 #
 substitute_fpga()
 {
-	awk -v nrFPGAs=$NRFPGAS -v hasAartFaac=$AARTFAAC '
+	awk -v nrFPGAs=$NRFPGAS '
 	{
 		hasfpga=index($1,"@fpga@");
 		if (hasfpga > 0) {
-                     if (hasAartFaac == 1) {
 			for (fpgaNr = 0; fpgaNr < nrFPGAs; fpgaNr++) {
 				dpname=$1;
 				newname = sprintf("FPGA%1d",fpgaNr);
@@ -490,10 +453,6 @@ substitute_fpga()
 				print dpname"	"$2;
 				}
 			}
-                     else {
-			print "	";
-                       }
-                     }
 		else {
 			print $1"	"$2;
 		}
@@ -1110,7 +1069,6 @@ create_dp_file()
 				substitute_Cabinet_SubRack | \
 				substitute_fpga | \
 				substitute_uriboard | \
-		                substitute_uniboard | \
 				substitute_Cabinet | \
 				substitute_cluster_node | \
 				substitute_cluster | \
@@ -1490,20 +1448,15 @@ WANSWITCHLIST=`create_wan_switch_list`
 
 # FPGA and URIboard numbers
 let NRFPGAS=8
-let NRURIS=3
+let NRURI=3
 
 let NRRSPBOARDS=0
 let NRLBAS=0
 let NRHBAS=0
-let AARTFAAC=0
 if [ "${DBTYPE}" == "S" ]; then
 	let NRRSPBOARDS=`grep -s ${STNNAME}[[:space:]]  ${STATIONINFOFILE} | awk '{ print $7 }'`
 	let NRLBAS=`grep -s ${STNNAME}[[:space:]] ${STATIONINFOFILE} | awk '{ print $9 }'`
 	let NRHBAS=`grep -s ${STNNAME}[[:space:]] ${STATIONINFOFILE} | awk '{ print $10 }'`
-	HASAARTFAAC=`grep -s ${STNNAME}[[:space:]] ${STATIONINFOFILE} | awk '{ print $13 }'`	
-	if [ "${HASAARTFAAC}" == "Yes" ]; then
-		let AARTFAAC=1
-	fi
 fi
 
 # create the desired files

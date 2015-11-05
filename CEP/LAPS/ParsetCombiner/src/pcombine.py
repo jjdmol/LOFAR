@@ -29,7 +29,6 @@
 # pcombine file1 file2 [file3 ..] [-o output_file.xml]
 
 import sys, getopt, xml.dom.minidom, re
-import LAPS.MsgBus
 
 def generate_data_xml(io, parset):
     if io == 'i':
@@ -55,28 +54,29 @@ def generate_data_xml(io, parset):
     
     
 def getPredecessors(parset):
-    #return parset.split('\n', 1)[0]
     try:
-        for line in parset.split('\n'):
-	    if 'predecessors' in line.split('=',1)[0]:
-                 predecessorline = line.split('=',1)[1].rstrip('\n').strip('[]').split(',')
-		 return ','.join([l.strip('MSO') for l in predecessorline]).replace(' ','')
-        #predecessorLine = [line for line in parset if line.split('=',1)[0] == 'predecessors']
-        #p = predecessorLine[0].split('=')[1].rstrip('\n').strip('[]').split(',')
-        #return ','.join([l.strip('MSO') for l in p]).replace(' ','')
+        predecessorLine = [line for line in parset if line.split('=')[0][-12:] == 'predecessors']
+        p = predecessorLine[0].split('=')[1].rstrip('\n').strip('[]').split(',')
+        return ','.join([l.strip('MSO') for l in p]).replace(' ','')
     except:
-        raise Exception('\033[91m' + 'could not get predecessors from predecessor line:' + str(predecessorline) + '\033[0m')
+        raise Exception('\033[91m' + 'could not get predecessors from predecessor line:' + str(predecessorLine) + '\033[0m')
    
 def create_xml(input_files):
     # generate pipeline xml block
     pipeline_xml = ''
-    for parset,fileName in input_files:
+    for fileName in input_files:
+        # read the parset file
+        parsetFile = open(fileName, 'r')
+        parset = parsetFile.readlines()
+        parsetFile.close()
+
         # generate predecessors xml tag
         predecessors = getPredecessors(parset)
         # generate inputs
         inputs = generate_data_xml('i', parset)
         # generate outputs
         outputs = generate_data_xml('o', parset)
+    
         obsID = int(fileName.replace('Observation',''))
         pipeline_xml += """\
 <pipeline>\
@@ -98,30 +98,36 @@ def create_xml(input_files):
 
 def print_usage():
    print 'pcombine.py [-o <outputfile.xml>] parset [parset2 parset3 ..]'
+  
 
-
-def write_output_xml(dom ):
-    # ofile = open(outputfile, 'w')
-    # print >>ofile, dom.toprettyxml()
-    return dom.toprettyxml()
-
+def write_output_xml(dom, outputfile):
+    ofile = open(outputfile, 'w')
+    print >>ofile, dom.toprettyxml()
+  
 
 def main(argv):
 
-    parsetqueue = LAPS.MsgBus.Bus("LAPS.resolved.parsets")
-    xmlqueue = LAPS.MsgBus.Bus("LAPS.DPUservice.incoming")
-    while True:
-       parsets=[]
+    outputfile = 'output.xml'
 
-       parsets.append( parsetqueue.get() )
-       parsets.append( parsetqueue.get() )
+    try:
+        opts, input_files = getopt.getopt(argv,"ho:",["ofile="])
+    except getopt.GetoptError:
+        print_usage()
+        sys.exit(2)
+     
+    if not input_files:
+        raise Exception('\033[91m' + 'no input parset file(s) specified' + '\033[0m')
+  
+    for opt, arg in opts:
+        if opt == '-h':
+            print_usage()
+            sys.exit()
+        elif opt in ("-o", "--ofile"):
+            outputfile = arg
 
-       dom = create_xml(parsets)
-       xmlout = write_output_xml(dom)
-
-       xmlqueue.send(xmlout,"XMLout")
-       parsetqueue.ack()
-
-
+    dom = create_xml(input_files)
+    write_output_xml(dom, outputfile)
+  
+  
 if __name__ == "__main__":
    main(sys.argv[1:])
