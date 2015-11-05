@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2013-2014
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -35,7 +35,6 @@
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
 #include <Common/KVpair.h>
-#include <Common/LofarLogger.h>
 #include <Common/Thread/Thread.h>
 #include <Common/Thread/Mutex.h>
 #include <Common/Thread/Condition.h>
@@ -43,7 +42,6 @@
 // Avoid 'using namespace' in headerfiles
 
 namespace LOFAR {
-  using namespace KVT_Protocol;
   namespace MACIO {
 
 // \addtogroup MACIO

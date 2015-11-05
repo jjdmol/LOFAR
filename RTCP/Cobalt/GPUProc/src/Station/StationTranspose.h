@@ -32,8 +32,10 @@
 #include <InputProc/RSPTimeStamp.h>
 #include <InputProc/Station/RSP.h>
 
+#ifdef HAVE_MPI
 #include <InputProc/Transpose/MPIProtocol.h>
 #include <InputProc/Transpose/MPIUtil.h>
+#endif
 
 namespace LOFAR {
   namespace Cobalt {
@@ -90,11 +92,6 @@ namespace LOFAR {
        * NOTE: The flags are inverted from metaData to mpi_metaData.
        */
       void serialiseMetaData();
-
-      /*
-       * Turns this block into an EOS packet.
-       */
-      void setEOS();
 
       /*
        * Write a certain RSP packet into mpi_samples, and update

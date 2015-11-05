@@ -29,6 +29,7 @@
 #include <Common/Thread/Condition.h>
 #include <Stream/Stream.h>
 #include <Stream/PortBroker.h>
+#include <MACIO/RTmetadata.h>
 #include "RunningStatistics.h"
 #include "BestEffortQueue.h"
 #include "MultiDimArray.h"
@@ -43,6 +44,8 @@ namespace LOFAR
   {
     namespace TABTranspose
     {
+      using MACIO::RTmetadata;
+
       /*
        * A piece of data belonging to a certain subband.
        *
@@ -182,7 +185,7 @@ namespace LOFAR
         std::map<size_t, SmartPtr<Block> > blocks;
 
         BestEffortQueue< SmartPtr<Subband> > inputQueue;
-        BestEffortQueue< SmartPtr<Block> >   outputQueue;
+        Queue< SmartPtr<Block> >             outputQueue;
         Pool<BeamformedData> &outputPool;
 
         const size_t fileIdx;
@@ -350,10 +353,12 @@ namespace LOFAR
         //
         // hostMap:          the mapping fileIdx -> Host
         // parset:           the parset (i.e. observation configuration)
+        // mdLogger:         MACIO/PVSS metadata logger for monitoring
+        // mdKeyPrefix:      prefix needed to log MAC/PVSS events
         // maxRetentionTime: drop data older than this from the queue
-        // bind_local_iface: local NIC to bind to (or "" for any)
         MultiSender( const HostMap &hostMap, const Parset &parset,
-                     double maxRetentionTime = 3.0, const std::string &bind_local_iface = "" );
+                     RTmetadata &mdLogger, const std::string &mdKeyPrefix,
+                     double maxRetentionTime = 3.0 );
         ~MultiSender();
 
         // Send the data from the queues to the receiving hosts. Will run until
@@ -364,16 +369,10 @@ namespace LOFAR
         void process( OMPThreadSet *threadSet = 0 );
 
         // Add a subband for sending. Ownership of the data is taken.
-        //
-        // Returns `true' if the subband was appended without dropping data.
-        // Returns `false' if a subband was dropped to make space for this one.
-        bool append( SmartPtr<struct Subband> &subband );
+        void append( SmartPtr<struct Subband> &subband );
 
         // Flush the queues.
         void finish();
-
-        // Report the number of files we're managing
-        size_t nrFiles() const { return hostMap.size(); }
 
       protected:
         // fileIdx -> host mapping
@@ -383,15 +382,17 @@ namespace LOFAR
 
         std::map<size_t, RunningStatistics> drop_rates; // [fileIdx]
 
+        // Logging for monitoring (PVSS).
+        RTmetadata &itsMdLogger; // non-const to be able to use its log()
+        const std::string itsMdKeyPrefix;
+        size_t itsBlocksWritten, itsBlocksDropped;
+
         // MultiSender has a queue per host it sends to. If it appends an element
         // to a queue, it will discard the head if it is older than maxRententionTime.
         //
         // That way, the queue size remains limited to at most the data produced in
         // 'maxRetentionTime' seconds.
         const double maxRetentionTime;
-
-        // Local NIC to bind network connections to, or "" if no binding is required
-        const std::string bind_local_iface;
 
         // Set of hosts to connect to (the list of unique values in hostMap)
         std::vector<struct Host> hosts;

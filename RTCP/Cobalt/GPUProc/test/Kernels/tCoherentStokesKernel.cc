@@ -113,7 +113,7 @@ TEST(BufferSizes)
   CHECK_EQUAL(sut.timeIntegrationFactor, settings.timeIntegrationFactor);
   CHECK_EQUAL(sut.nrChannels, settings.nrChannels);
   CHECK_EQUAL(4U, settings.nrStokes);
-  CHECK_EQUAL(sut.nrStations, sut.parset.settings.antennaFields.size());
+  CHECK_EQUAL(sut.nrStations, sut.parset.nrStations());
   CHECK_EQUAL(sut.nrInputSamples, settings.nrSamples);
 }
 
@@ -136,8 +136,7 @@ struct SUTWrapper:  ParsetSUT
   MultiDimArrayHostBuffer<fcomplex, 4> hInput;
   MultiDimArrayHostBuffer<float, 4> hOutput;
   MultiDimArrayHostBuffer<float, 4> hRefOutput;
-  gpu::DeviceMemory inputBuffer;
-  gpu::DeviceMemory outputBuffer;
+  CoherentStokesKernel::Buffers buffers;
   scoped_ptr<CoherentStokesKernel> kernel;
 
   SUTWrapper(size_t inrChannels = 16,
@@ -162,9 +161,12 @@ struct SUTWrapper:  ParsetSUT
     hRefOutput(
       boost::extents[nrTabs][nrStokes][nrOutputSamples][nrChannels],
       context),
-    inputBuffer(context, factory.bufferSize(CoherentStokesKernel::INPUT_DATA)),
-    outputBuffer(context, factory.bufferSize(CoherentStokesKernel::OUTPUT_DATA)),
-    kernel(factory.create(stream, inputBuffer, outputBuffer))
+    buffers(
+      gpu::DeviceMemory(
+        context, factory.bufferSize(CoherentStokesKernel::INPUT_DATA)),
+      gpu::DeviceMemory(
+        context, factory.bufferSize(CoherentStokesKernel::OUTPUT_DATA))),
+    kernel(factory.create(stream, buffers))
   {
     initializeHostBuffers();
   }
@@ -174,11 +176,11 @@ struct SUTWrapper:  ParsetSUT
   void initializeHostBuffers()
   {
     cout << "\nInitializing host buffers..."
-         << "\n  buffers.input.size()  = " << setw(7) << inputBuffer.size()
-         << "\n  buffers.output.size() = " << setw(7) << outputBuffer.size()
+         << "\n  buffers.input.size()  = " << setw(7) << buffers.input.size()
+         << "\n  buffers.output.size() = " << setw(7) << buffers.output.size()
          << endl;
-    CHECK_EQUAL(inputBuffer.size(), hInput.size());
-    CHECK_EQUAL(outputBuffer.size(), hOutput.size());
+    CHECK_EQUAL(buffers.input.size(), hInput.size());
+    CHECK_EQUAL(buffers.output.size(), hOutput.size());
     fill(hInput.data(), hInput.data() + hInput.num_elements(), 0.0f);
     fill(hOutput.data(), hOutput.data() + hOutput.num_elements(), 42);
     fill(hRefOutput.data(), hRefOutput.data() + hRefOutput.num_elements(), 0.0f);
@@ -189,11 +191,11 @@ struct SUTWrapper:  ParsetSUT
     // Dummy BlockID
     BlockID blockId;
     // Copy input data from host- to device buffer synchronously
-    stream.writeBuffer(inputBuffer, hInput, true);
+    stream.writeBuffer(buffers.input, hInput, true);
     // Launch the kernel
     kernel->enqueue(blockId);
     // Copy output data from device- to host buffer synchronously
-    stream.readBuffer(hOutput, outputBuffer, true);
+    stream.readBuffer(hOutput, buffers.output, true);
   }
 
 };
@@ -352,7 +354,7 @@ TEST(BasicIntegrationTest)
                  16); // itimeIntegrationFactor
 
   // Set the input
-  for (size_t idx = 0; idx < sut.hInput.num_elements(); ++idx)
+  for (size_t idx = 0; idx < sut.hInput.size(); ++idx)
     sut.hInput.data()[idx] = fcomplex(1.0f, 0.0f);
 
 
@@ -361,7 +363,7 @@ TEST(BasicIntegrationTest)
   sut.runKernel();
 
   // Expected output
-  for (size_t idx = 0; idx < sut.hRefOutput.num_elements(); ++idx)
+  for (size_t idx = 0; idx < sut.hRefOutput.size() / (size_t) 2; ++idx)
   {
     sut.hRefOutput.data()[idx * 2] = 2.0f * NR_SAMPLES_PER_CHANNEL;
     sut.hRefOutput.data()[idx * 2 + 1 ] = 0.0f;
@@ -395,22 +397,14 @@ TEST(Coherent2DifferentValuesAllDimTest)
                  NR_TABS,  
                  INTEGRATION_SIZE); 
   // Set the input
-  for (size_t idx = 0; idx < sut.hInput.num_elements(); ++idx)
+  for (size_t idx = 0; idx < sut.hInput.size(); ++idx)
     sut.hInput.data()[idx] = fcomplex(1.0f, 2.0f);
-
-  cout << "hInput: ";
-  printBlockFormat(cout, sut.hInput);
-  cout << endl;
 
   // Host buffers are properly initialized for this test. Just run the kernel. 
   sut.runKernel();
 
-  cout << "hOutput: ";
-  printBlockFormat(cout, sut.hOutput);
-  cout << endl;
-
   // Expected output
-  size_t value_repeat = NR_CHANNELS * NR_SAMPLES_PER_OUTPUT_CHANNEL;
+  size_t value_repeat = NR_SAMPLES_PER_OUTPUT_CHANNEL;
   cout << "value_repeat: "  << value_repeat << endl;
   // For stokes parameters
   size_t size_tab = value_repeat * 4;
@@ -426,71 +420,11 @@ TEST(Coherent2DifferentValuesAllDimTest)
     }
   }
 
-  cout << "hRefOutput: ";
-  printBlockFormat(cout, sut.hRefOutput);
-  cout << endl;
-
   CHECK_ARRAY_EQUAL(sut.hRefOutput.data(),
                     sut.hOutput.data(),
                     sut.hOutput.num_elements()); 
 }
 
-TEST(NSAMPLES_196608)
-{
-  LOG_INFO("Test NSAMPLES_196608");
-
-  size_t NR_CHANNELS = 16;
-  size_t NR_SAMPLES_PER_OUTPUT_CHANNEL = 1536;
-  size_t NR_STATIONS = 46;
-  size_t NR_TABS = 1;
-  size_t INTEGRATION_SIZE = 8;
-
-  SUTWrapper sut(NR_CHANNELS,
-                 NR_SAMPLES_PER_OUTPUT_CHANNEL,
-                 NR_STATIONS,
-                 NR_TABS,
-                 INTEGRATION_SIZE);
-
-  // Set the input
-  for (size_t idx = 0; idx < sut.hInput.num_elements(); ++idx)
-    sut.hInput.data()[idx] = fcomplex(1.0f, 2.0f);
-
-  cout << "hInput: ";
-  printBlockFormat(cout, sut.hInput);
-  cout << endl;
-
-  // Host buffers are properly initialized for this test. Just run the kernel. 
-  sut.runKernel();
-
-  cout << "hOutput: ";
-  printBlockFormat(cout, sut.hOutput);
-  cout << endl;
-
-  // Expected output
-  size_t value_repeat = NR_CHANNELS * NR_SAMPLES_PER_OUTPUT_CHANNEL;
-  cout << "value_repeat: "  << value_repeat << endl;
-  // For stokes parameters
-  size_t size_tab = value_repeat * 4;
-  for (size_t idx_tab = 0; idx_tab < NR_TABS; ++idx_tab)
-  {
-    // I
-    for (size_t idx_value_repeat = 0 ; idx_value_repeat < value_repeat; ++idx_value_repeat)
-    {
-      sut.hRefOutput.data()[idx_tab * size_tab + idx_value_repeat]                    = 10.0f * INTEGRATION_SIZE;
-      sut.hRefOutput.data()[idx_tab * size_tab + value_repeat + idx_value_repeat]     = 0.0f;
-      sut.hRefOutput.data()[idx_tab * size_tab + value_repeat * 2 + idx_value_repeat] = 10.0f * INTEGRATION_SIZE;
-      sut.hRefOutput.data()[idx_tab * size_tab + value_repeat * 3 +idx_value_repeat]  = 0.0f;
-    }
-  }
-
-  cout << "hRefOutput: ";
-  printBlockFormat(cout, sut.hRefOutput);
-  cout << endl;
-
-  CHECK_ARRAY_EQUAL(sut.hRefOutput.data(),
-                    sut.hOutput.data(),
-                    sut.hOutput.num_elements()); 
-}
 
 int main(int argc, char *argv[])
 {
@@ -531,8 +465,12 @@ int main(int argc, char *argv[])
                   coherentStokesOutputMem(ctx,
                    factory.bufferSize(CoherentStokesKernel::OUTPUT_DATA));
 
+
+  CoherentStokesKernel::Buffers buffers(coherentStokesInputMem,
+              coherentStokesOutputMem);
+
   // kernel
-  auto_ptr<CoherentStokesKernel> kernel(factory.create(stream, coherentStokesInputMem, coherentStokesOutputMem));
+  auto_ptr<CoherentStokesKernel> kernel(factory.create(stream, buffers));
 
   BlockID blockId;
   // run

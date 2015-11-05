@@ -45,9 +45,8 @@ namespace LOFAR
     string BeamFormerTransposeKernel::theirFunction = "transpose";
 
     BeamFormerTransposeKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters("beamFormerTranspose"),
       nrChannels(ps.settings.beamFormer.nrHighResolutionChannels),
-      nrSamplesPerChannel(ps.settings.blockSize / nrChannels),
+      nrSamplesPerChannel(ps.nrSamplesPerSubband() / nrChannels),
       nrTABs(ps.settings.beamFormer.maxNrCoherentTABsPerSAP())
     {
       dumpBuffers = 
@@ -58,26 +57,12 @@ namespace LOFAR
 
     }
 
-    
-    size_t BeamFormerTransposeKernel::Parameters::bufferSize(BufferType bufferType) const
-    {
-      switch (bufferType) {
-      case BeamFormerTransposeKernel::INPUT_DATA: 
-      case BeamFormerTransposeKernel::OUTPUT_DATA:
-        return
-          (size_t) nrChannels * nrSamplesPerChannel * 
-            NR_POLARIZATIONS * nrTABs * sizeof(std::complex<float>);
-      default:
-        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
-      }
-    }
-
     BeamFormerTransposeKernel::
     BeamFormerTransposeKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      CompiledKernel(stream, gpu::Function(module, theirFunction), buffers, params)
+      Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       ASSERT(params.nrSamplesPerChannel % 16 == 0);
       setArg(0, buffers.output);
@@ -93,6 +78,20 @@ namespace LOFAR
     }
 
     //--------  Template specializations for KernelFactory  --------//
+
+    template<> size_t 
+    KernelFactory<BeamFormerTransposeKernel>::bufferSize(BufferType bufferType) const
+    {
+      switch (bufferType) {
+      case BeamFormerTransposeKernel::INPUT_DATA: 
+      case BeamFormerTransposeKernel::OUTPUT_DATA:
+        return
+          (size_t) itsParameters.nrChannels * itsParameters.nrSamplesPerChannel * 
+            NR_POLARIZATIONS * itsParameters.nrTABs * sizeof(std::complex<float>);
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
 
     template<> CompileDefinitions
     KernelFactory<BeamFormerTransposeKernel>::compileDefinitions() const

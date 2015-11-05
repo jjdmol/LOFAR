@@ -43,8 +43,7 @@ namespace LOFAR
     string FIR_FilterKernel::theirSourceFile = "FIR_Filter.cu";
     string FIR_FilterKernel::theirFunction = "FIR_filter";
 
-    FIR_FilterKernel::Parameters::Parameters(const Parset& ps, unsigned nrSTABs, bool inputIsStationData, unsigned nrSubbands, unsigned nrChannels, float scaleFactor, const std::string &name) :
-      Kernel::Parameters(name),
+    FIR_FilterKernel::Parameters::Parameters(const Parset& ps, unsigned nrSTABs, bool inputIsStationData, unsigned nrSubbands, unsigned nrChannels, float scaleFactor) :
       nrSTABs(nrSTABs),
       nrBitsPerSample(ps.settings.nrBitsPerSample),
 
@@ -82,47 +81,18 @@ namespace LOFAR
       return (nrTaps - 1) * nrChannels;
     }
 
-    size_t FIR_FilterKernel::Parameters::bufferSize(BufferType bufferType) const
-    {
-      switch (bufferType) {
-      case FIR_FilterKernel::INPUT_DATA: 
-        return
-          (size_t) nrSamplesPerSubband() *
-            nrSTABs * NR_POLARIZATIONS * 
-            nrBytesPerComplexSample();
-      case FIR_FilterKernel::OUTPUT_DATA:
-        return
-          (size_t) nrSamplesPerSubband() * nrSTABs * 
-            NR_POLARIZATIONS * sizeof(std::complex<float>);
-      case FIR_FilterKernel::FILTER_WEIGHTS:
-        return 
-          (size_t) nrChannels * nrTaps *
-            sizeof(float);
-      case FIR_FilterKernel::HISTORY_DATA:
-        // History is split over 2 bytes in 4-bit mode, to avoid unnecessary packing/unpacking
-        return
-          (size_t) nrSubbands *
-            nrHistorySamples() * nrSTABs * 
-            NR_POLARIZATIONS * (nrBitsPerSample == 4 ? 2U : nrBytesPerComplexSample());
-      default:
-        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
-      }
-    }
-
     FIR_FilterKernel::FIR_FilterKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      CompiledKernel(stream, gpu::Function(module, theirFunction), buffers, params),
+      Kernel(stream, gpu::Function(module, theirFunction), buffers, params),
       params(params),
-      filterWeights(stream.getContext(), params.bufferSize(FILTER_WEIGHTS)),
-      historySamples(stream.getContext(), params.bufferSize(HISTORY_DATA)),
       historyFlags(boost::extents[params.nrSubbands][params.nrSTABs])
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
-      setArg(2, filterWeights);
-      setArg(3, historySamples);
+      setArg(2, buffers.filterWeights);
+      setArg(3, buffers.historySamples);
 
       unsigned totalNrThreads = params.nrChannels * NR_POLARIZATIONS * 2;
       unsigned nrPasses = ceilDiv(totalNrThreads, maxThreadsPerBlock);
@@ -152,10 +122,10 @@ namespace LOFAR
       filterBank.negateWeights();
       filterBank.scaleWeights(params.scaleFactor);
 
-      gpu::HostMemory firWeights(stream.getContext(), filterWeights.size());
+      gpu::HostMemory firWeights(stream.getContext(), buffers.filterWeights.size());
       std::memcpy(firWeights.get<void>(), filterBank.getWeights().origin(),
                   firWeights.size());
-      stream.writeBuffer(filterWeights, firWeights, true);
+      stream.writeBuffer(buffers.filterWeights, firWeights, true);
 
       // start with all history samples flagged
       for (size_t n = 0; n < historyFlags.num_elements(); ++n)
@@ -163,7 +133,7 @@ namespace LOFAR
 
       // set all history samples to 0, to prevent adding uninitialised data
       // to the stream
-      historySamples.set(0);
+      buffers.historySamples.set(0);
     }
 
     void FIR_FilterKernel::enqueue(const BlockID &blockId,
@@ -194,6 +164,33 @@ namespace LOFAR
     }
 
     //--------  Template specializations for KernelFactory  --------//
+
+    template<> size_t 
+    KernelFactory<FIR_FilterKernel>::bufferSize(BufferType bufferType) const
+    {
+      switch (bufferType) {
+      case FIR_FilterKernel::INPUT_DATA: 
+        return
+          (size_t) itsParameters.nrSamplesPerSubband() *
+            itsParameters.nrSTABs * NR_POLARIZATIONS * 
+            itsParameters.nrBytesPerComplexSample();
+      case FIR_FilterKernel::OUTPUT_DATA:
+        return
+          (size_t) itsParameters.nrSamplesPerSubband() * itsParameters.nrSTABs * 
+            NR_POLARIZATIONS * sizeof(std::complex<float>);
+      case FIR_FilterKernel::FILTER_WEIGHTS:
+        return 
+          (size_t) itsParameters.nrChannels * itsParameters.nrTaps *
+            sizeof(float);
+      case FIR_FilterKernel::HISTORY_DATA:
+        return
+          (size_t) itsParameters.nrSubbands *
+            itsParameters.nrHistorySamples() * itsParameters.nrSTABs * 
+            NR_POLARIZATIONS * itsParameters.nrBytesPerComplexSample();
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
 
     template<> CompileDefinitions
     KernelFactory<FIR_FilterKernel>::compileDefinitions() const

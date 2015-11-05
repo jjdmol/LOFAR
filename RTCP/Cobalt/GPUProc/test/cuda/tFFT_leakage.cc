@@ -95,7 +95,7 @@ int main() {
   const int fftSize = 256;
 
   // GPU buffers and plans
-  gpu::HostMemory inout(ctx, ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.nrSamplesPerSubband()   * sizeof(fcomplex));
+  gpu::HostMemory inout(ctx, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband()   * sizeof(fcomplex));
   gpu::DeviceMemory d_inout(ctx, size  * sizeof(fcomplex));
 
 
@@ -103,19 +103,19 @@ int main() {
 #define NR_POLARIZATIONS 2
 
   SubbandProcInputData::DeviceBuffers devInput(ps.nrBeams(),
-    ps.settings.antennaFields.size(),
+    ps.nrStations(),
     NR_POLARIZATIONS,
     ps.nrSamplesPerSubband(),
     ps.nrBytesPerComplexSample(),
     ctx,
     // reserve enough space in inputSamples for the output of
     // the delayAndBandPassKernel.
-    ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>));
+    ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>));
 
   DeviceMemory devFilteredData(ctx,
     // reserve enough space for the output of the
     // firFilterKernel,
-    std::max(ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
+    std::max(ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
     // and the correlatorKernel.
     ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>)));
 
@@ -129,7 +129,7 @@ int main() {
   std::memcpy(fbBuffer.get<void>(), filterBank.getWeights().origin(), fbBytes);
 
 
-  HostMemory outFiltered(ctx, ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>));
+  HostMemory outFiltered(ctx, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>));
  
   std::vector<gpu::Device> devices(1,device);
   flags_type flags(defaultFlags());

@@ -65,9 +65,6 @@ namespace LOFAR
         // The metaData blob.
         char blob[SubbandMetaData::MAXMARSHALLSIZE];
 
-        // This block signals End-Of-Stream -- don't use the data
-        bool EOS;
-
         struct MetaData &operator=(const SubbandMetaData &metaData) {
           FixedBufferStream str(blob, sizeof blob);
           metaData.write(&str);

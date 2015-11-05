@@ -39,7 +39,6 @@
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
 #include <Stream/FileStream.h>
-#include <Stream/StreamFactory.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/OMPThread.h>
 #include <CoInterface/TimeFuncs.h>
@@ -71,13 +70,13 @@ namespace LOFAR {
       stationID(StationID::parseFullFieldName(ps.settings.antennaFields.at(stationIdx).name)),
       logPrefix(str(format("[station %s] ") % stationID.name())),
 
-      startTime(ps.settings.startTime * ps.settings.subbandWidth(), ps.settings.clockHz()),
-      stopTime(ps.settings.stopTime * ps.settings.subbandWidth(), ps.settings.clockHz()),
+      startTime(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed()),
+      stopTime(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed()),
 
       nrSamples(ps.settings.blockSize),
-      nrBlocks(ps.settings.nrBlocks()),
+      nrBlocks((stopTime - startTime) / nrSamples),
 
-      metaDataPool(str(format("StationMetaData::metaDataPool [station %s]") % stationID.name()), false),
+      metaDataPool(str(format("StationMetaData::metaDataPool [station %s]") % stationID.name())),
 
       subbands(values(subbandDistribution))
     {
@@ -90,7 +89,7 @@ namespace LOFAR {
      * Output: metaDataPool.filled
      */
     template <typename SampleT>
-    void StationMetaData<SampleT>::computeMetaData(Trigger *stopSwitch)
+    void StationMetaData<SampleT>::computeMetaData()
     {
       /*
        * Allocate buffer elements.
@@ -102,11 +101,9 @@ namespace LOFAR {
 
       /*
        * Set up delay compensation.
-       *
-       * NOTE: We start at block -1 to initalise the FIR's HistorySamples!
        */
 
-      Delays delays(ps, stationIdx, startTime - nrSamples, nrSamples);
+      Delays delays(ps, stationIdx, startTime, nrSamples);
 
       // We keep track of the delays at the beginning and end of each block.
       // After each block, we'll swap the afterEnd delays into atBegin.
@@ -117,15 +114,7 @@ namespace LOFAR {
       // Get delays at begin of first block
       delays.getNextDelays(*delaysAtBegin);
 
-      /*
-       * Generate all the blocks. Again, start at block -1.
-       */
       for (ssize_t block = -1; block < (ssize_t)nrBlocks; ++block) {
-        if (stopSwitch && stopSwitch->test()) {
-          LOG_WARN_STR(logPrefix << "Requested to stop");
-          break;
-        }
-
         LOG_DEBUG_STR(logPrefix << str(format("[block %d] Retrieving delays") % block));
 
         // Fetch end delays (start delays are set by the previous block, or
@@ -173,7 +162,7 @@ namespace LOFAR {
       beamletIndices(generateBeamletIndices())
     {
       for (size_t i = 0; i < nrBoards; ++i) {
-        rspDataPool.push_back(new Pool<RSPData>(str(format("StationInput::rspDataPool[%u] [station %s]") % i % stationID.name()), ps.settings.realTime));
+        rspDataPool.push_back(new Pool<RSPData>(str(format("StationInput::rspDataPool[%u] [station %s]") % i % stationID.name())));
       }
 
       // Log all input descriptions
@@ -202,7 +191,7 @@ namespace LOFAR {
       for(size_t n = 0; n < result.num_elements(); ++n)
         result.origin()[n] = -1;
 
-      for(size_t i = 0; i < targetSubbands.size(); ++i) {
+      for(size_t i = 0; i < ps.nrSubbands(); ++i) {
         // The subband stored at position i
         const size_t sb = targetSubbands.at(i);
 
@@ -240,8 +229,8 @@ namespace LOFAR {
       }
 
       if (desc == "factory:") {
-        const TimeStamp from(ps.settings.startTime * ps.settings.subbandWidth(), ps.settings.clockHz());
-        const TimeStamp to(ps.settings.stopTime * ps.settings.subbandWidth(), ps.settings.clockHz());
+        const TimeStamp from(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed());
+        const TimeStamp to(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed());
 
         const struct BoardMode mode(ps.settings.nrBitsPerSample, ps.settings.clockMHz);
         PacketFactory factory(mode);
@@ -274,8 +263,7 @@ namespace LOFAR {
 
       try {
         SmartPtr<Stream> stream = inputStream(board);
-        PacketReader reader(str(format("%s[board %s] ") % logPrefix % board),
-                            *stream, mode);
+        PacketReader reader(str(format("%s[board %s] ") % logPrefix % board), *stream, mode);
 
         Queue< SmartPtr<RSPData> > &inputQueue = rspDataPool[board]->free;
         Queue< SmartPtr<RSPData> > &outputQueue = rspDataPool[board]->filled;
@@ -296,7 +284,7 @@ namespace LOFAR {
 
           outputQueue.append(rspData);
         }
-      } catch (EndOfStreamException &ex) {
+      } catch (Stream::EndOfStreamException &ex) {
         // Ran out of data
         LOG_INFO_STR( logPrefix << "End of stream");
 
@@ -339,7 +327,6 @@ namespace LOFAR {
     #   pragma omp parallel for num_threads(nrBoards)
         for (size_t board = 0; board < nrBoards; board++) {
           //NSTimer copyRSPTimer(str(format("%s [board %i] copy RSP -> block") % logPrefix % board), true, true);
-          OMPThread::ScopedName sn(str(format("%s wr %u") % ps.settings.antennaFields.at(stationIdx).name % board));
 
           Queue< SmartPtr<RSPData> > &inputQueue = rspDataPool[board]->filled;
           Queue< SmartPtr<RSPData> > &outputQueue = rspDataPool[board]->free;
@@ -411,7 +398,7 @@ namespace LOFAR {
             // Retry until we have a valid packet
             while (!readers[board]->readPacket(last_packets[board]))
               ;
-          } catch (EndOfStreamException &ex) {
+          } catch (Stream::EndOfStreamException &ex) {
             // Ran out of data
             LOG_INFO_STR( logPrefix << "End of stream");
 
@@ -520,7 +507,7 @@ namespace LOFAR {
     {
       OMPThreadSet packetReaderThreads;
 
-      if (ps.settings.realTime) {
+      if (ps.realTime()) {
         // Each board has its own pool to reduce lock contention
         for (size_t board = 0; board < nrBoards; ++board)
           for (size_t i = 0; i < 16; ++i)
@@ -528,13 +515,8 @@ namespace LOFAR {
       } else {
         // We just process one packet at a time, merging all the streams into rspDataPool[0].
         for (size_t i = 0; i < 16; ++i)
-          rspDataPool[0]->free.append(new RSPData(NONRT_PACKET_BATCH_SIZE), false);
+          rspDataPool[0]->free.append(new RSPData(1), false);
       }
-
-      // Make sure we only read RSP packets when we're ready to actually process them. Otherwise,
-      // the rspDataPool[*]->free queues will starve, causing both WARNings and blocking the
-      // reading of the RSP packets we do need.
-      Trigger startSwitch;
 
       #pragma omp parallel sections num_threads(2)
       {
@@ -552,26 +534,16 @@ namespace LOFAR {
          */
         #pragma omp section
         {
-          OMPThread::ScopedName sn(str(format("%s rd") % ps.settings.antennaFields.at(stationIdx).name));
-
           LOG_INFO_STR(logPrefix << "Processing packets");
 
-          // Wait until RSP packets can actually be processed
-          startSwitch.wait();
-
-          if (ps.settings.realTime) {
+          if (ps.realTime()) {
             #pragma omp parallel for num_threads(nrBoards)
             for(size_t board = 0; board < nrBoards; board++) {
-              try {
-                OMPThreadSet::ScopedRun sr(packetReaderThreads);
-                OMPThread::ScopedName sn(str(format("%s rd %u") % ps.settings.antennaFields.at(stationIdx).name % board));
+              OMPThreadSet::ScopedRun sr(packetReaderThreads);
 
-                Thread::ScopedPriority sp(SCHED_FIFO, 10);
+              Thread::ScopedPriority sp(SCHED_FIFO, 10);
 
-                readRSPRealTime(board, mdLogger, mdKeyPrefix);
-              } catch(OMPThreadSet::CannotStartException &ex) {
-                LOG_INFO_STR( logPrefix << "Stopped");
-              }
+              readRSPRealTime(board, mdLogger, mdKeyPrefix);
             }
           } else {
             readRSPNonRealTime(mdLogger, mdKeyPrefix);
@@ -583,7 +555,6 @@ namespace LOFAR {
          */
         #pragma omp section
         {
-          OMPThread::ScopedName sn(str(format("%s wr") % ps.settings.antennaFields.at(stationIdx).name));
           //Thread::ScopedPriority sp(SCHED_FIFO, 10);
 
           /*
@@ -599,10 +570,7 @@ namespace LOFAR {
           while((current = next ? next : inputQueue.remove()) != NULL) {
             next = inputQueue.remove();
 
-            // We can now process RSP packets
-            startSwitch.trigger();
-
-            if (ps.settings.realTime) {
+            if (ps.realTime()) {
               writeRSPRealTime<SampleT>(*current, next);
             } else {
               writeRSPNonRealTime<SampleT>(*current, next);
@@ -625,10 +593,7 @@ namespace LOFAR {
           for (size_t i = 0; i < nrBoards; ++i)
             rspDataPool[i]->free.prepend(NULL);
 
-          // Make sure we don't get stuck in startup
-          startSwitch.trigger();
-
-          if (ps.settings.realTime) {
+          if (ps.realTime()) {
             // kill reader threads
             LOG_INFO_STR( logPrefix << "Stopping all boards" );
             packetReaderThreads.killAll();
@@ -640,10 +605,13 @@ namespace LOFAR {
 
     template<typename SampleT> void sendInputToPipeline(const Parset &ps, 
             size_t stationIdx, const SubbandDistribution &subbandDistribution,
-            MACIO::RTmetadata &mdLogger, const string &mdKeyPrefix, Trigger *stopSwitch)
+            MACIO::RTmetadata &mdLogger, const string &mdKeyPrefix)
     {
       // sanity check: Find out if we should actual start working here.
       StationMetaData<SampleT> sm(ps, stationIdx, subbandDistribution);
+      if (sm.nrBlocks == 0) {  // Nothing to process -- stop
+        return;
+      }
 
       StationInput si(ps, stationIdx, subbandDistribution);
 
@@ -671,9 +639,7 @@ namespace LOFAR {
          */
         #pragma omp section
         {
-          OMPThread::ScopedName sn(str(format("%s meta") % ps.settings.antennaFields.at(stationIdx).name));
-
-          sm.computeMetaData(stopSwitch);
+          sm.computeMetaData();
           LOG_INFO_STR(logPrefix << "StationMetaData: done");
         }
 
@@ -684,8 +650,6 @@ namespace LOFAR {
          */
         #pragma omp section
         {
-          OMPThread::ScopedName sn(str(format("%s proc") % ps.settings.antennaFields.at(stationIdx).name));
-
           si.processInput<SampleT>( sm.metaDataPool.filled, mpiQueue,
                                     mdLogger, mdKeyPrefix );
           LOG_INFO_STR(logPrefix << "StationInput: done");
@@ -698,8 +662,6 @@ namespace LOFAR {
          */
         #pragma omp section
         {
-          OMPThread::ScopedName sn(str(format("%s send") % ps.settings.antennaFields.at(stationIdx).name));
-
           sender.sendBlocks<SampleT>( mpiQueue, sm.metaDataPool.free );
           LOG_INFO_STR(logPrefix << "MPISender: done");
         } 
@@ -710,26 +672,26 @@ namespace LOFAR {
 
     void sendInputToPipeline(const Parset &ps, size_t stationIdx, 
                              const SubbandDistribution &subbandDistribution,
-                             MACIO::RTmetadata &mdLogger, const string &mdKeyPrefix, Trigger *stopSwitch)
+                             MACIO::RTmetadata &mdLogger, const string &mdKeyPrefix)
     {
       switch (ps.nrBitsPerSample()) {
         default:
         case 16: 
           sendInputToPipeline< SampleType<i16complex> >(ps, stationIdx,
                                                         subbandDistribution,
-                                                        mdLogger, mdKeyPrefix, stopSwitch);
+                                                        mdLogger, mdKeyPrefix);
           break;
 
         case 8: 
           sendInputToPipeline< SampleType< i8complex> >(ps, stationIdx,
                                                         subbandDistribution,
-                                                        mdLogger, mdKeyPrefix, stopSwitch);
+                                                        mdLogger, mdKeyPrefix);
           break;
 
         case 4: 
           sendInputToPipeline< SampleType< i4complex> >(ps, stationIdx,
                                                         subbandDistribution,
-                                                        mdLogger, mdKeyPrefix, stopSwitch);
+                                                        mdLogger, mdKeyPrefix);
           break;
       }
     }

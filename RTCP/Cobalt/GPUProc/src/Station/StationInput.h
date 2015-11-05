@@ -27,7 +27,7 @@
 #include <cstring>
 
 #include <Stream/Stream.h>
-#include <Common/Thread/Trigger.h>
+#include <Common/Thread/Semaphore.h>
 #include <MACIO/RTmetadata.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/Pool.h>
@@ -51,7 +51,7 @@ namespace LOFAR {
     public:
       StationMetaData( const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution );
 
-      void computeMetaData(Trigger *stopSwitch = NULL);
+      void computeMetaData();
 
     private:
       const Parset &ps;
@@ -86,9 +86,7 @@ namespace LOFAR {
     private:
       // Each packet is expected to have 16 samples per subband, i.e. ~80 us worth of data @ 200 MHz.
       // So 512 packets is ~40 ms of data.
-      static const unsigned RT_PACKET_BATCH_SIZE = 512;
-
-      static const unsigned NONRT_PACKET_BATCH_SIZE = 1;
+      static const size_t RT_PACKET_BATCH_SIZE = 512;
 
       // Data received from an RSP board
       struct RSPData {
@@ -163,8 +161,7 @@ namespace LOFAR {
     void sendInputToPipeline(const Parset &ps, size_t stationIdx,
                              const SubbandDistribution &subbandDistribution,
                              MACIO::RTmetadata &mdLogger,
-                             const std::string &mdKeyPrefix,
-                             Trigger *stopSwitch = NULL);
+                             const std::string &mdKeyPrefix);
   }
 }
 

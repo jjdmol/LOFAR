@@ -33,10 +33,10 @@ class copierTest(unittest.TestCase):
 
     def setUp(self):
         self.imager_create_dbs = copierWrapper()
-        self.test_path = temp_path = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
+        self.test_path = temp_path = tempfile.mkdtemp()
 
     def tearDown(self):
-        shutil.rmtree(self.test_path)
+        #shutil.rmtree(self.test_path)
         pass
 
     def test_validate_mapfiles_norename(self):
@@ -120,10 +120,10 @@ class MasterNodeInterfaceTest(unittest.TestCase):
         super(MasterNodeInterfaceTest, self).__init__(arg)
 
     def setUp(self):
-        self.test_path = temp_path = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
+        self.test_path = temp_path = tempfile.mkdtemp()
 
     def tearDown(self):
-        shutil.rmtree(self.test_path)
+        #shutil.rmtree(self.test_path)
         pass
 
     def test__init__raise_exception(self):
