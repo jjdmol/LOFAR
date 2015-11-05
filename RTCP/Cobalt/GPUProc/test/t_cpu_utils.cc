@@ -24,6 +24,7 @@
 
 #include <cstring>
 #include <sched.h>
+#include <mpi.h>
 #include <string>
 #include <iostream>
 
@@ -48,7 +49,7 @@ static int test(const unsigned nprocs, unsigned cpuId)
 
   // expect alternating on cbt nodes
   // (the original test code intended this, but was broken in many ways (still a poor idea to make it so specific))
-  int expect = !cpuId;
+  unsigned expect = !cpuId;
   for (unsigned i = 0; i < nprocs; i++) {
     if (CPU_ISSET(i, &mask) != expect) {
       LOG_FATAL_STR("cpuId=" << cpuId << " Found that core " << i << " is" << (!expect ? " " : " NOT ") <<
@@ -66,10 +67,9 @@ int main()
   INIT_LOGGER("t_cpu_utils");
 
   string name(LOFAR::myHostname(false));
-  if (strncmp(name.c_str(), "cbt", sizeof("cbt")-1) &&
-      strncmp(name.c_str(), "drg", sizeof("drg")-1))
+  if (strncmp(name.c_str(), "cbt", sizeof("cbt")-1))
   {
-    cout << "Test is not running on cbt* (COBALT) or drg* (DRAGNET) nodes and therefore skipped: " << name << endl;
+    cout << "Test is not running on cobalt hardware and therefore skipped: " << name << endl;
     return 0;
   }
 

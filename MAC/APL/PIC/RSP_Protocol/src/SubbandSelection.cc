@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -47,8 +47,8 @@ size_t SubbandSelection::pack(char* buffer) const
 {
   size_t offset = 0;
 
-  offset = MSH_pack(buffer, offset, itsCrosslets);
-  offset = MSH_pack(buffer, offset, itsBeamlets);
+  MSH_pack(buffer, offset, itsCrosslets);
+  MSH_pack(buffer, offset, itsBeamlets);
   memcpy(buffer + offset, &m_type, sizeof(uint16));
   offset += sizeof(uint16);
   
@@ -59,8 +59,8 @@ size_t SubbandSelection::unpack(const char *buffer)
 {
   size_t offset = 0;
 
-  offset = MSH_unpack(buffer, offset, itsCrosslets);
-  offset = MSH_unpack(buffer, offset, itsBeamlets);
+  MSH_unpack(buffer, offset, itsCrosslets);
+  MSH_unpack(buffer, offset, itsBeamlets);
   memcpy(&m_type, buffer + offset, sizeof(uint16));
   offset += sizeof(uint16);
 

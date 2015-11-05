@@ -42,19 +42,22 @@ namespace LOFAR
       setArg(0, buffer);
       setArg(1, DMs);
 
+      unsigned maxNrThreads;
+      //getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
+      maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
       unsigned fftSize = ps.dedispersionFFTsize();
 
       gpu::Grid globalWorkSize(fftSize, ps.nrSamplesPerChannel() / fftSize, ps.nrChannelsPerSubband());
       //std::cout << "globalWorkSize = NDRange(" << fftSize << ", " << ps.nrSamplesPerChannel() / fftSize << ", " << ps.nrChannelsPerSubband() << ')' << std::endl;
       gpu::Block localWorkSize;
 
-      if (fftSize <= maxThreadsPerBlock) {
-        localWorkSize = gpu::Block(fftSize, 1, maxThreadsPerBlock / fftSize);
-        //std::cout << "localWorkSize = NDRange(" << fftSize << ", 1, " << maxThreadsPerBlock / fftSize << ')' << std::endl;
+      if (fftSize <= maxNrThreads) {
+        localWorkSize = gpu::Block(fftSize, 1, maxNrThreads / fftSize);
+        //std::cout << "localWorkSize = NDRange(" << fftSize << ", 1, " << maxNrThreads / fftSize << ')' << std::endl;
       } else {
         unsigned divisor;
 
-        for (divisor = 1; fftSize / divisor > maxThreadsPerBlock || fftSize % divisor != 0; divisor++)
+        for (divisor = 1; fftSize / divisor > maxNrThreads || fftSize % divisor != 0; divisor++)
           ;
 
         localWorkSize = gpu::Block(fftSize / divisor, 1, 1);

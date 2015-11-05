@@ -27,16 +27,19 @@
 #include <CoInterface/Parset.h>
 #include <Stream/Stream.h>
 
+
 namespace LOFAR
 {
   namespace Cobalt
   {
 
+    // Create a stream from a descriptor
+    Stream *createStream(const std::string &descriptor, bool asReader, time_t deadline = 0);
+
     uint16 storageBrokerPort(int observationID);
     std::string getStorageControlDescription(int observationID, int rank);
 
-    // The returned descriptor can be supplied to LCS/Stream StreamFactory.h
-    std::string getStreamDescriptorBetweenIONandStorage(const Parset &parset, OutputType outputType, unsigned streamNr, const std::string &bind_local_iface = "");
+    std::string getStreamDescriptorBetweenIONandStorage(const Parset &parset, OutputType outputType, unsigned streamNr);
 
   } // namespace Cobalt
 } // namespace LOFAR

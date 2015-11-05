@@ -2,10 +2,13 @@
 
 lofar_add_bin_program(CEPHardwareMonitor 
   CEPHardwareMonitorMain.cc
+  BlueGeneMonitor.cc
   ClusterMonitor.cc)
 
 install(FILES
   CEPHardwareMonitor.conf
   DESTINATION etc)
 
-lofar_add_sbin_scripts(zabbix_get)
+install(PROGRAMS
+  zabbix_get
+  DESTINATION sbin)
