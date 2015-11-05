@@ -40,12 +40,10 @@
 
 using LOFAR::map;
 
-#if not(defined(_LIBCPP_VERSION))
 // needs to be defined
 union semun {
     int val;
 };
-#endif
 
 /* definitions */
 #define SHMID_REGISTRY_INITIAL_SIZE 32
