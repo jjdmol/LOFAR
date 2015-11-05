@@ -34,7 +34,7 @@
 #include <GPUProc/Kernels/FFT_Kernel.h>
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
 
-#include <CoInterface/Parset.h>
+#include "Interface/Parset.h"
 #include <GPUProc/FilterBank.h>
 #include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
 #include <GPUProc/cuda/Pipelines/Pipeline.h>
@@ -93,9 +93,10 @@ int main() {
 
   const size_t size = 128 * 1024;
   const int fftSize = 256;
+  const unsigned nrFFTs = size / fftSize;
 
   // GPU buffers and plans
-  gpu::HostMemory inout(ctx, ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.nrSamplesPerSubband()   * sizeof(fcomplex));
+  gpu::HostMemory inout(ctx, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband()   * sizeof(fcomplex));
   gpu::DeviceMemory d_inout(ctx, size  * sizeof(fcomplex));
 
 
@@ -103,19 +104,19 @@ int main() {
 #define NR_POLARIZATIONS 2
 
   SubbandProcInputData::DeviceBuffers devInput(ps.nrBeams(),
-    ps.settings.antennaFields.size(),
+    ps.nrStations(),
     NR_POLARIZATIONS,
-    ps.nrSamplesPerSubband(),
+    ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
     ps.nrBytesPerComplexSample(),
     ctx,
     // reserve enough space in inputSamples for the output of
     // the delayAndBandPassKernel.
-    ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>));
+    ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>));
 
   DeviceMemory devFilteredData(ctx,
     // reserve enough space for the output of the
     // firFilterKernel,
-    std::max(ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
+    std::max(ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
     // and the correlatorKernel.
     ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>)));
 
@@ -129,7 +130,7 @@ int main() {
   std::memcpy(fbBuffer.get<void>(), filterBank.getWeights().origin(), fbBytes);
 
 
-  HostMemory outFiltered(ctx, ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>));
+  HostMemory outFiltered(ctx, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>));
  
   std::vector<gpu::Device> devices(1,device);
   flags_type flags(defaultFlags());
@@ -144,7 +145,7 @@ int main() {
     devInput.inputSamples,
     devFIRweights);
 
-  FFT_Kernel fftFwdKernel(ctx, fftSize, size, true, devFilteredData);
+  FFT_Kernel fftFwdKernel(ctx, fftSize, nrFFTs, true, devFilteredData);
 
   fstream amplitudes("amplitudes.output",  std::fstream::out);
   double freq_begin = 4.0;
@@ -152,8 +153,9 @@ int main() {
   double freq_steps = 37.0;
   amplitudes << "freq_begin," << "freq_end," << "freq_steps," << "fftSize" << endl;
   amplitudes << freq_begin << ","<< freq_end << "," << freq_steps << "," << fftSize << endl;
+  size_t numberInputSamples = (ps.nrHistorySamples() + ps.nrSamplesPerSubband()) ;
   MultiDimArrayHostBuffer<i16complex,2 > inputDataRaw(
-    boost::extents[ps.nrSamplesPerSubband()][2], ctx);
+    boost::extents[(ps.nrHistorySamples() + ps.nrSamplesPerSubband())][2], ctx);
 
   // Initialize the input data with a sinus
   for( double freq = freq_begin; freq <= freq_end; freq += 1.0/freq_steps) //dus niet 128 hz  // eenheid in fft window widths
@@ -164,7 +166,7 @@ int main() {
     const double amplitude = 32767.0;
 
     // init buffers
-    for (size_t i = 0; i < ps.nrSamplesPerSubband(); i++) {
+    for (size_t i = 0; i < numberInputSamples; i++) {
       const double phase = (double)i * 2.0 * M_PI * freq / fftSize;
       const double real = amplitude * cos(phase);
       const double imag = amplitude * sin(phase);

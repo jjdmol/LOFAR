@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 1200 823 N "_3DFace" 0
+PANEL,-1 -1 1016 732 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel
@@ -253,141 +253,151 @@ E E 0 1 1 2 1 E U  1 E 415 212 449 225
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 0 1
 LANG:1 6 logMsg
-1 252 21 "" 4
+1 252 20 "" 4
 0
-1 253 21 "" 3
+1 253 20 "" 3
 0
-1 254 21 "0" 1
+1 254 20 "0" 1
 0
-1 255 21 "" 2
+1 255 20 "" 2
 0
-1 256 21 "" 6
+1 256 20 "" 6
 0
-1 257 22 "" 4
+1 257 21 "" 4
 0
-1 258 22 "" 3
+1 258 21 "" 3
 0
-1 259 22 "0" 1
+1 259 21 "0" 1
 0
-1 260 22 "" 2
+1 260 21 "" 2
 0
-1 261 22 "" 6
+1 261 21 "" 6
 0
-1 262 25 "" 4
+1 262 22 "" 4
 0
-1 263 25 "" 3
+1 263 22 "" 3
 0
-1 264 25 "0" 1
+1 264 22 "0" 1
 0
-1 265 25 "" 2
+1 265 22 "" 2
 0
-1 266 25 "" 6
+1 266 22 "" 6
 0
-1 267 28 "" 4
+1 267 25 "" 4
 0
-1 268 28 "" 3
+1 268 25 "" 3
 0
-1 269 28 "0" 1
+1 269 25 "0" 1
 0
-1 270 28 "" 2
+1 270 25 "" 2
 0
-1 271 28 "" 6
+1 271 25 "" 6
 0
-1 272 31 "" 1
+1 272 28 "" 4
 0
-1 273 31 "" 4
+1 273 28 "" 3
 0
-1 274 31 "" 5
+1 274 28 "0" 1
 0
-1 275 31 "" 46
+1 275 28 "" 2
 0
-1 276 31 "" 47
+1 276 28 "" 6
 0
-1 277 31 "" 48
+1 277 31 "" 1
 0
-1 278 31 "" 80
+1 278 31 "" 4
 0
-1 279 31 "20" 4
+1 279 31 "" 5
 0
-1 280 31 "20" 3
+1 280 31 "" 46
 0
-1 281 31 "20.0" 1
+1 281 31 "" 47
 0
-1 282 31 "20" 6
+1 282 31 "" 48
 0
-1 283 31 "20" 2
+1 283 31 "" 80
 0
-1 284 31 "21" 4
+1 284 31 "20" 4
 0
-1 285 31 "21" 3
+1 285 31 "20" 3
 0
-1 286 31 "21.0" 1
+1 286 31 "20.0" 1
 0
-1 287 31 "21" 6
+1 287 31 "20" 6
 0
-1 288 31 "21" 2
+1 288 31 "20" 2
 0
-1 289 31 "22" 4
+1 289 31 "21" 4
 0
-1 290 31 "22" 3
+1 290 31 "21" 3
 0
-1 291 31 "22.0" 1
+1 291 31 "21.0" 1
 0
-1 292 31 "22" 6
+1 292 31 "21" 6
 0
-1 293 31 "22" 2
+1 293 31 "21" 2
 0
-1 294 31 "" 97
+1 294 31 "22" 4
 0
-1 295 32 "" 4
+1 295 31 "22" 3
 0
-1 296 32 "" 3
+1 296 31 "22.0" 1
 0
-1 297 32 "0" 1
+1 297 31 "22" 6
 0
-1 298 32 "" 2
+1 298 31 "22" 2
 0
-1 299 32 "" 6
+1 299 31 "" 97
 0
-1 300 34 "" 4
+1 300 32 "" 4
 0
-1 301 34 "" 3
+1 301 32 "" 3
 0
-1 302 34 "0" 1
+1 302 32 "0" 1
 0
-1 303 34 "" 2
+1 303 32 "" 2
 0
-1 304 34 "" 6
+1 304 32 "" 6
 0
-1 305 36 "" 4
+1 305 34 "" 4
 0
-1 306 36 "" 3
+1 306 34 "" 3
 0
-1 307 36 "0" 1
+1 307 34 "0" 1
 0
-1 308 36 "" 2
+1 308 34 "" 2
 0
-1 309 36 "" 6
+1 309 34 "" 6
 0
-1 310 37 "" 4
+1 310 36 "" 4
 0
-1 311 37 "" 3
+1 311 36 "" 3
 0
-1 312 37 "0" 1
+1 312 36 "0" 1
 0
-1 313 37 "" 2
+1 313 36 "" 2
 0
-1 314 37 "" 6
+1 314 36 "" 6
 0
-1 315 38 "" 4
+1 315 37 "" 4
 0
-1 316 38 "" 3
+1 316 37 "" 3
 0
-1 317 38 "0" 1
+1 317 37 "0" 1
 0
-1 318 38 "" 2
+1 318 37 "" 2
 0
-1 319 38 "" 6
+1 319 37 "" 6
+0
+1 320 38 "" 4
+0
+1 321 38 "" 3
+0
+1 322 38 "0" 1
+0
+1 323 38 "" 2
+0
+1 324 38 "" 6
 0
 2 230
 "PRIMITIVE_TEXT15"
@@ -472,43 +482,47 @@ LANG:1 0
 "objects\\Processes\\daemon_small.pnl" 0 140 T 26 1 0 1 0 -41
 1
 "$name""SASGateway"
+3 20 "PANEL_REF21" -1
+"objects\\Processes\\controller_small.pnl" 0 280 T 35 1 0 1 0 -50
+1
+"$name""AMCServer"
 3 21 "PANEL_REF22" -1
-"objects\\Processes\\controller_small.pnl" 0 270 T 35 1 0 1 0 80
+"objects\\Processes\\controller_small.pnl" 0 270 T 35 1 0 1 0 -12
 1
 "$name""BeamServer"
 3 22 "PANEL_REF23" -1
-"objects\\Processes\\controller_small.pnl" 0 330 T 36 1 0 1 0 -10
+"objects\\Processes\\controller_small.pnl" 0 330 T 36 1 0 1 0 -44
 1
 "$name""CalServer"
 3 25 "PANEL_REF26" -1
-"objects\\Processes\\controller_small.pnl" 0 380 T 37 1 0 1 0 30
+"objects\\Processes\\controller_small.pnl" 0 380 T 37 1 0 1 0 -66
 1
 "$name""SHMInfoServer"
 3 28 "PANEL_REF29" -1
-"objects\\Processes\\controller_small.pnl" 10 430 T 39 1 0 1 -10 -170
+"objects\\Processes\\controller_small.pnl" 10 430 T 39 1 0 1 -10 -88
 1
 "$name""RSPDriver"
 3 31 "PANEL_REF32" -1
 "objects\\Processes\\ObsSW_Station.pnl" 100 502 T 39 1 0 1 -100 20.00000000000001
 0
 3 32 "PANEL_REF33" -1
-"objects\\Processes\\controller_small.pnl" 10 470 T 40 1 0 1 -10 -180
+"objects\\Processes\\controller_small.pnl" 10 470 T 40 1 0 1 -10 -100
 1
 "$name""TBBDriver"
 3 34 "PANEL_REF35" -1
-"objects\\Processes\\controller_small.pnl" 10 470 T 40 1 0 1 -10 -30
+"objects\\Processes\\controller_small.pnl" 10 470 T 40 1 0 1 -10 -72
 1
 "$name""StationControl"
 3 36 "PANEL_REF37" -1
-"objects\\Processes\\controller_small.pnl" 10 470 T 42 1 0 0.9653979238754328 -10 16.2629757785466
+"objects\\Processes\\controller_small.pnl" 10 470 T 42 1 0 0.9653979238754328 -10 -26.7370242214534
 1
 "$name""ClockControl"
 3 37 "PANEL_REF38" -1
-"objects\\Processes\\controller_small.pnl" 10 470 T 43 1 0 1 -10 -90
+"objects\\Processes\\controller_small.pnl" 10 470 T 43 1 0 1 -10 -15
 1
 "$name""HardwareMonitor"
 3 38 "PANEL_REF39" -1
-"objects\\Processes\\controller_small.pnl" 10 470 T 44 1 0 1 -10 -240
+"objects\\Processes\\controller_small.pnl" 10 470 T 44 1 0 1 -10 14
 1
 "$name""SoftwareMonitor"
 0

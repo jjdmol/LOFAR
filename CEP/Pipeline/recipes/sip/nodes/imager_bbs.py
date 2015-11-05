@@ -40,8 +40,7 @@ class imager_bbs(LOFARnodeTCP):
         source_db = sky_list[0].file[0] # the sourcedb is the first file entry
 
         try:
-            bbs_process_group = SubProcessGroup(self.logger,
-                                  self.resourceMonitor)
+            bbs_process_group = SubProcessGroup(self.logger)
             # *****************************************************************
             # 2. start the bbs executable with data
             for (measurement_set, parmdm) in zip(ms_map[0].file,
@@ -62,9 +61,6 @@ class imager_bbs(LOFARnodeTCP):
             if bbs_process_group.wait_for_finish() != None:
                 self.logger.error(
                             "Failed bbs run detected Aborting")
-                return 1    # If bbs failed we need to abort: the concat
-                            # is now corrupt
-
         except OSError, exception:
             self.logger.error("Failed to execute bbs: {0}".format(str(
                                                                     exception)))

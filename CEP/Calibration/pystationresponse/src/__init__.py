@@ -19,15 +19,15 @@
 #
 # $Id$
 
-import _stationresponse
+from _stationresponse import StationResponse
 
-class stationresponse(object):
+class stationresponse(StationResponse):
     """
     The Python interface to the LOFAR station beam model.
     """
 
-    def __init__ (self, msname, inverse = False, useElementResponse = True,
-        useArrayFactor = True, useChanFreq = False):
+    def __init__ (self, msname, inverse = False, useElementBeam = True,
+        useArrayFactor = True, useChannelFreq = False, conjugateAF = False):
         """Create a stationresponse object that can be used to evaluate the
         LOFAR beam for the given Measurement Set.
 
@@ -39,17 +39,19 @@ class stationresponse(object):
           Name of the Measurement Set.
         `inverse`
           Compute the inverse of the LOFAR beam (default False).
-        `useElementResponse`
+        `useElementBeam`
           Include the effect of the dual dipole (element) beam (default True).
         `useArrayFactor`
           Include the effect of the station and tile array factor (default
           True).
-        `useChanFreq`
+        `useChannelFreq`
           Compute the phase shift for the station beamformer using the channel
           frequency instead of the subband reference frequency. This option
           should be enabled for Measurement Sets that contain multiple subbands
           compressed to single channels inside a single spectral window
           (default: False).
+        `conjugateAF`
+          Conjugate the station and tile array factors (default False).
 
         For example::
 
@@ -64,12 +66,12 @@ class stationresponse(object):
             time = subtable.getcell("TIME", 0)
             print time, response.evaluateChannel(time, 0, 0)
         """
-        self._response = _stationresponse.StationResponse(msname, inverse,
-          useElementResponse, useArrayFactor, useChanFreq)
+        StationResponse.__init__ (self, msname, inverse, useElementBeam,
+          useArrayFactor, useChannelFreq, conjugateAF)
 
     def version (self, type='other'):
         """Show the software version."""
-        return self._response.version (type)
+        return self._version (type)
 
     def setRefDelay (self, ra, dec):
         """Set the reference direction used by the station beamformer. By
@@ -80,7 +82,7 @@ class stationresponse(object):
         `dec`
           Declination (in radians, J2000)
         """
-        self._response.setRefDelay(ra, dec)
+        self._setRefDelay(ra, dec)
 
     def setRefTile (self, ra, dec):
         """Set the reference direction used by the analog tile beamformer
@@ -93,7 +95,7 @@ class stationresponse(object):
         `dec`
           Declination (in radians, J2000)
         """
-        self._response.setRefTile(ra, dec)
+        self._setRefTile(ra, dec)
 
     def setDirection (self, ra, dec):
         """Set the direction of interest (can be and often will be different
@@ -104,7 +106,7 @@ class stationresponse(object):
         `dec`
           Declination (in radians, J2000)
         """
-        self._response.setDirection(ra, dec)
+        self._setDirection(ra, dec)
 
     def evaluate (self, time):
         """Compute the beam Jones matrix for all stations and channels at the
@@ -114,7 +116,7 @@ class stationresponse(object):
         `time`
           Time (MJD in seconds)
         """
-        return self._response.evaluate0(time)
+        return self._evaluate0 (time)
 
     def evaluateStation (self, time, station):
         """Compute the beam Jones matrix for all channels at the given time for
@@ -126,7 +128,7 @@ class stationresponse(object):
         `station`
           Station number (as in the ANTENNA table of the Measurement Set).
         """
-        return self._response.evaluate1(time, station)
+        return self._evaluate1 (time, station)
 
     def evaluateChannel (self, time, station, channel):
         """Compute the beam Jones matrix for the given time, station, and
@@ -142,19 +144,4 @@ class stationresponse(object):
           Channel number (as in the SPECTRAL_WINDOW table of the Measurement
           Set).
         """
-        return self._response.evaluate2(time, station, channel)
-    
-    def evaluateFreq (self, time, station, freq):
-        """Compute the beam Jones matrix for the given time, station, and
-        frequency. The result is returned as a 2-dim complex numpy array with
-        shape: 2 x 2.
-
-        `time`
-          Time (MJD in seconds).
-        `station`
-          Station number (as defined in the ANTENNA table of the Measurement
-          Set).
-        `frequency`
-          Frequency to compute beam at (in Hz)
-        """
-        return self._response.evaluate3(time, station, freq)
+        return self._evaluate2 (time, station, channel)

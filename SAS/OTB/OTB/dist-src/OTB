@@ -2,16 +2,17 @@
 #
 # Script to start, stop, restart and ask status of the OTB server and client
 #
-# Run as user lofarsys or user tomcat on any host that runs the OTB (sas001/sas099)
+# Run as user lofarsys on any host that runs the OTB (sas001/sas099)
 #
 
+
+adapter_logdir=/opt/tomcat/mom-otdb-adapter-logs/
 adapter_logdir=/opt/tomcat/mom-otdb-adapter/logs
 otdb_conf_file=/opt/tomcat/mom-otdb-adapter/conf/config-otdb.xml
 
 syntaxerror()
 {
     echo "Usage: OTB [start|stop|status|serverstart|serverstop|serverstatus] [port]"
-    echo "       Run OTB as user lofarsys or user tomcat (depending on your needs)"
 }
 
 status()
@@ -44,7 +45,7 @@ else
 fi
 echo "Using port $port1 for this client"
 
-export OTB_DIR=/opt/otdb/otb/client
+export OTB_DIR=/opt/sas/otb/client
 export JAVA_HOME=/usr/java/jdk1.7.0_02
 
 echo
@@ -89,17 +90,10 @@ if [ ${#client_users[@]} == 0 ]; then
   echo "No OTB clients running that use port $port"
   exit
 else
-  count=0
   for client_pid in ${client_pids[@]}
   do
-    echo -n "Found OTB started by user ${client_users[${count}]} with PID $client_pid;"
-    if [ "${USER}" == "lofarsys" ]; then  
-      echo " killing it now"
-      sudo kill $client_pid
-    else
-      echo " not allowed to kill the process"
-    fi
-    let count+=1
+    echo "Found OTB with PID $client_pid; killing it now"
+    sudo kill $client_pid
   done
 fi
 }
@@ -128,13 +122,6 @@ for user_port in "${user_ports[@]}"
 
 serverstart()
 {
-
-# OTB Servers are always running as user tomcat
-if [ "$USER" != "tomcat" ]; then 
-  sudo -u tomcat /opt/otdb/OTB serverstart $*
-  exit
-fi
-
 # Check if portnumber is added to commandline; if yes, use it.
 if [ -z $1 ]; then
   port1=12500
@@ -145,7 +132,7 @@ else
 fi
 echo "Using port $port1 and $port2 for this server"
 
-export OTB_DIR=/opt/otdb/otb/server
+export OTB_DIR=/opt/sas/otb/server
 export JAVA_HOME=/usr/java/jdk1.7.0_02
 
 echo
@@ -180,13 +167,6 @@ fi
 
 serverstop()
 {
-
-# OTB Servers are always running as user tomcat
-if [ "$USER" != "tomcat" ]; then
-  sudo -u tomcat /opt/otdb/OTB serverstop $*
-  exit
-fi
-
 if [ -z $1 ]; then
   port=12500
 else
@@ -204,14 +184,10 @@ else
   user=`echo $user_port | awk '{print $1}'`
   pid=`echo $user_port | awk '{print $2}'`
   echo "Found server running by user $user with PID $pid; killing it now"
-  if [ "$user" == "lofarsys" -a ${USER} == "lofarsys" ]; then
+  if [ "$user" == "lofarsys" ]; then
      kill $pid
-  elif [ "$user" == "tomcat" -a ${USER} == "tomcat" ]; then
-     kill $pid
-  elif [ "$user" == "lofarsys" ]; then 
-    sudo -u $user kill $pid
   else
-    echo "Cannot stop running server (no permissions)"
+    sudo -u $user kill $pid
   fi
 fi
 
@@ -220,8 +196,8 @@ fi
 
 # ========== MAIN ===========
 
-if [ "${USER}" != "lofarsys" -a "${USER}" != "tomcat" ]; then
-  echo You must be user lofarsys or user tomcat to run this
+if [ "$USER" != "lofarsys" ]; then 
+  echo "You must be lofarsys to run this"
   exit
 fi 
 

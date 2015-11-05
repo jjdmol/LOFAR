@@ -31,11 +31,19 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    class BeamFormerTransposeKernel : public CompiledKernel
+    class BeamFormerTransposeKernel : public Kernel
     {
     public:
       static std::string theirSourceFile;
       static std::string theirFunction;
+
+      // Parameters that must be passed to the constructor of the
+      // BeamFormerKernel class.
+      struct Parameters : Kernel::Parameters
+      {
+        Parameters(const Parset& ps);
+        size_t nrTABs;
+      };
 
       enum BufferType
       {
@@ -43,27 +51,16 @@ namespace LOFAR
         OUTPUT_DATA
       };
 
-      // Parameters that must be passed to the constructor of the
-      // BeamFormerKernel class.
-      struct Parameters : Kernel::Parameters
-      {
-        Parameters(const Parset& ps);
-        unsigned nrChannels;
-        unsigned nrSamplesPerChannel;
-
-        unsigned nrTABs;
-
-        size_t bufferSize(BufferType bufferType) const;
-      };
-
       BeamFormerTransposeKernel(const gpu::Stream &stream,
                              const gpu::Module &module,
                              const Buffers &buffers,
                              const Parameters &param);
-
     };
 
-    //# --------  Template specializations for KernelFactory  -------- #//
+    // Specialization of the KernelFactory for
+    // BeamFormerTransposeKernel
+    template<> size_t
+    KernelFactory<BeamFormerTransposeKernel>::bufferSize(BufferType bufferType) const;
 
     template<> CompileDefinitions
     KernelFactory<BeamFormerTransposeKernel>::compileDefinitions() const;

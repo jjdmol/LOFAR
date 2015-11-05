@@ -14,9 +14,7 @@ def load_and_compare_data_sets(ms1, ms2):
     # create a target array with the same length as the datacolumn
     div_array = numpy.zeros((n_row, 1, n_complex_vis), dtype=numpy.complex64)
     ms1_array = ms1.getcol('DATA')
-    # TODO: WHy are different collomns compared?
-    # is this an issue in the test dataset??
-    ms2_array = ms2.getcol('CORRECTED_DATA')
+    ms2_array = ms2.getcol('DATA')
 
     div_max = 0
     for idx in xrange(n_row):
@@ -28,8 +26,8 @@ def load_and_compare_data_sets(ms1, ms2):
 
             div_array[idx][0][idy] = div_value
     print "maximum different value between measurement sets: {0}".format(div_max)
-    # Use a delta of about float precision
-    if numpy.abs(div_max) > 1e-6:
+
+    if div_max != 0:
         print "The measurement sets are contained a different value"
         print "failed delta test!"
         return False

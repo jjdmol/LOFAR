@@ -25,7 +25,7 @@
 #include <Common/LofarTypes.h>
 #include <Stream/FixedBufferStream.h>
 #include <CoInterface/SubbandMetaData.h>
-#include <InputProc/Buffer/StationID.h>
+#include <InputProc/Buffer/BufferSettings.h>
 
 namespace LOFAR
 {
@@ -39,11 +39,11 @@ namespace LOFAR
         // Originating station
         StationID station;
 
-        // Rank of originating data
-        int sourceRank;
-
         // Block will span [from,to)
         int64 from, to;
+
+        // Block is prefixed by past samples (before `from')
+        size_t nrHistorySamples;
 
         // Number of beamlets that will be sent
         size_t nrBeamlets;
@@ -62,11 +62,8 @@ namespace LOFAR
       };
 
       struct MetaData {
-        // The metaData blob.
-        char blob[SubbandMetaData::MAXMARSHALLSIZE];
-
-        // This block signals End-Of-Stream -- don't use the data
-        bool EOS;
+        // The metaData blob
+        char blob[4096];
 
         struct MetaData &operator=(const SubbandMetaData &metaData) {
           FixedBufferStream str(blob, sizeof blob);
@@ -84,7 +81,7 @@ namespace LOFAR
         }
       };
 
-      enum tag_types { CONTROL = 1, BEAMLET = 2, METADATA = 3 };
+      enum tag_types { CONTROL = 0, BEAMLET = 1, METADATA = 2 };
 
       // MPI tag which identifies each block.
       union tag_t {

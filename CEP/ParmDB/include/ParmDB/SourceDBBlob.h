@@ -85,11 +85,6 @@ namespace BBS {
                            double ra, double dec,
                            bool check);
 
-    // Update the ra/dec and apparent brightness of a patch.
-    virtual void updatePatch (uint patchId, 
-                              double apparentBrightness,
-                              double ra, double dec);
-
     // Add a source to a patch.
     // Its ra and dec and default parameters will be stored as default
     // values in the associated ParmDB tables. The names of the parameters
@@ -160,6 +155,12 @@ namespace BBS {
     virtual void rewind();
 
   private:
+    // Skip the patch info in the file.
+    void skipPatch();
+
+    // Read a patch entry.
+    PatchInfo readPatch();
+
     // Read all patches and sources filling the maps.
     void readAll();
 

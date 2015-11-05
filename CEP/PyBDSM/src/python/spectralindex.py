@@ -259,6 +259,7 @@ class Op_spectralindex(Op):
         of all channels, flag them.
 
         """
+
         # crms_rms and median dont include rms=0 channels
         nchan = len(crms)
         mean, rms, cmean, crms_rms, cnt = _cbdsm.bstat(crms, zeroflags, cutoff)
@@ -302,19 +303,19 @@ class Op_spectralindex(Op):
 
         shp = img.image_arr.shape
         sbeam = img.opts.beam_spectrum
-        if sbeam is not None and len(sbeam) != shp[1]: sbeam = None  # sanity check
-        if sbeam is None:
+        if sbeam != None and len(sbeam) != shp[1]: sbeam = None  # sanity check
+        if sbeam == None:
             sbeam = [img.beam]*shp[1]
 
         img.beam_spectrum = sbeam
         img.freq = N.zeros(shp[1])
         crval, cdelt, crpix = img.freq_pars
         if img.wcs_obj.wcs.spec == -1 and \
-                img.opts.frequency_sp is None:
+                img.opts.frequency_sp == None:
             raise RuntimeError("Frequency info not found in header "\
                                    "and frequencies not specified by user")
         else:
-            if img.opts.frequency_sp is None:
+            if img.opts.frequency_sp == None:
                 for ichan in range(shp[1]):
                     img.freq[ichan] = img.wcs_obj.p2f(ichan)
             else:
@@ -406,8 +407,8 @@ class Op_spectralindex(Op):
         clipped rms is too high, the channel is averaged with as many neighboring
         channels as necessary to obtain at least the desired rms. This is done
         until the number of OK channels is 2. The averaging is done first at
-        the frequency extremes, as the frequency range of the resulting averaged
-        flux array will be maximized.
+        the frequency extremes, as frequency range the resulting averaged flux array
+        will be maximized.
 
         For example, if the desired rms is 0.1 and the list of rms's is:
 

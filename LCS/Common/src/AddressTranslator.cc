@@ -82,7 +82,7 @@ namespace LOFAR
       // Walk through list of shared objects (ref. man dl_iterate_phdr(3)).
       // The callback function #find_matching_file() will set #bfdFile and
       // #base_addr.
-      if (!dl_iterate_phdr(find_matching_file, this)) continue;
+      dl_iterate_phdr(find_matching_file, this);
 
       // Lookup the SymbolTable using #base_addr as key. Create a new entry
       // if the symbol table of #bfdFile is not yet present in the map.

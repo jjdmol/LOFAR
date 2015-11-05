@@ -22,25 +22,14 @@
 
 #include "MSWriterNull.h"
 
-#include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
-
-using boost::format;
-
 namespace LOFAR
 {
   namespace Cobalt
   {
 
 
-    MSWriterNull::MSWriterNull(const Parset &parset )
-    :
-      itsParset(parset)
+    MSWriterNull::MSWriterNull ()
     {
-      itsConfiguration.add("size", "0");
-      itsConfiguration.add("percentageWritten", "0");
-      itsConfiguration.add("startTime", parset.getString("Observation.startTime"));
-      itsConfiguration.add("duration", "0");
     }
 
 
@@ -49,16 +38,10 @@ namespace LOFAR
     }
 
 
-    void MSWriterNull::write(StreamableData *data)
+    void MSWriterNull::write(StreamableData *)
     {
-      // We do not know why the creation of the propper writer failed.
-      // Assume nothing and only report that we did not write anything
-      itsConfiguration.replace("percentageWritten", str(format("%u") % 0));
-      itsConfiguration.replace("size", str(format("%u") % getDataSize()));
-      itsConfiguration.replace("duration", 
-          str(format("%f") % ((data->sequenceNumber() + 1) *
-            itsParset.settings.correlator.integrationTime())));
     }
+
 
   } // namespace Cobalt
 } // namespace LOFAR

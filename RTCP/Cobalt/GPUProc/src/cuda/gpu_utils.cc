@@ -25,7 +25,6 @@
 
 #include <cstdlib>    // for getenv()
 #include <cstdio>     // for popen(), pclose(), fgets()
-#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <boost/format.hpp>
@@ -269,14 +268,9 @@ namespace LOFAR
     CompileFlags defaultCompileFlags()
     {
       CompileFlags flags;
-      flags.insert("-o /dev/stdout");
+      flags.insert("-o -"); // buggy on CUDA 5.0 and 5.5RC (TODO)
       flags.insert("-ptx");
-
-      // For now, keep optimisations the same to detect changes in
-      // output with reference.
-      flags.insert("--restrict");
-      flags.insert("-O3");
-
+      flags.insert("-use_fast_math"); // TODO: disable for some kernels?
       flags.insert(str(format("-I%s") % includePath()));
       return flags;
     }
@@ -391,9 +385,9 @@ namespace LOFAR
           infoLogSize = infoLog.size();
         }
         infoLog[infoLogSize - 1] = '\0';
-        LOG_DEBUG_STR( "Build info for '" << srcFilename 
+        cout << "Build info for '" << srcFilename 
              << "' (build time: " << jitWallTime 
-             << " ms):" << endl << &infoLog[0] );
+             << " ms):" << endl << &infoLog[0] << endl;
 
         return module;
       } catch (gpu::CUDAException& exc) {
@@ -401,20 +395,11 @@ namespace LOFAR
           errorLogSize = errorLog.size();
         }
         errorLog[errorLogSize - 1] = '\0';
-        LOG_FATAL_STR( "Build errors for '" << srcFilename 
+        cerr << "Build errors for '" << srcFilename 
              << "' (build time: " << jitWallTime 
-             << " ms):" << endl << &errorLog[0] );
+             << " ms):" << endl << &errorLog[0] << endl;
         throw;
       }
-    }
-
-    void dumpBuffer(const gpu::DeviceMemory &deviceMemory, 
-                    const std::string &dumpFile)
-    {
-      LOG_INFO_STR("Dumping device memory to file: " << dumpFile);
-      gpu::HostMemory hostMemory(deviceMemory.fetch());
-      std::ofstream ofs(dumpFile.c_str(), std::ios::binary);
-      ofs.write(hostMemory.get<char>(), hostMemory.size());
     }
 
   } // namespace Cobalt

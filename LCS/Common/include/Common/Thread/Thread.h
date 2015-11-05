@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -29,7 +29,6 @@
 
 #include <pthread.h>
 #include <signal.h>
-#include <sched.h>
 
 #include <Common/LofarLogger.h>
 #include <Common/SystemCallException.h>
@@ -60,7 +59,7 @@ class Thread
     //
     // The thread is joined in the destructor of the Thread object
       
-    template <typename T> Thread(T *object, void (T::*method)(), const std::string &name = "<anon>", const std::string &logPrefix = "", size_t stackSize = 0);
+    template <typename T> Thread(T *object, void (T::*method)(), const std::string &logPrefix = "", size_t stackSize = 0);
 
     // ~Thread() is NOT virtual, because Thread should NOT be inherited. An
     // DerivedThread class would partially destruct itself before reaching
@@ -75,100 +74,24 @@ class Thread
     bool		  wait(const struct timespec &);
     bool      isDone();
 
-
-    // Returns whether the thread threw an exception. This function will wait for the thread
-    // to finish.
-    bool      caughtException();
-
-    class ScopedPriority
-    {
-    public:
-      /* see man pthread_setschedparam */
-      ScopedPriority(int policy, int priority)
-      {
-        int retval;
-
-        if ((retval = pthread_getschedparam(pthread_self(), &origPolicy, &origParam)) != 0)
-          throw SystemCallException("pthread_getschedparam", retval, THROW_ARGS);
-
-        struct sched_param newParam;
-        newParam.sched_priority = priority;
-
-        if ((retval = pthread_setschedparam(pthread_self(), policy, &newParam)) != 0)
-          try {
-            throw SystemCallException("pthread_setschedparam", retval, THROW_ARGS);
-          } catch (Exception &ex) {
-            LOG_WARN_STR("Could not change thread priority to policy " << policyName(policy) << " priority " << priority << ": " << ex.what());
-          }
-      }
-
-      ~ScopedPriority()
-      {
-        int retval;
-
-        if ((retval = pthread_setschedparam(pthread_self(), origPolicy, &origParam)) != 0)
-          try {
-            throw SystemCallException("pthread_setschedparam", retval, THROW_ARGS);
-          } catch (Exception &ex) {
-            LOG_ERROR_STR("Exception in destructor: " << ex);
-          }
-      }
-
-    private:
-      int origPolicy;
-      struct sched_param origParam;
-
-      std::string policyName(int policy) const
-      {
-        switch(policy) {
-          case SCHED_OTHER:
-            return "SCHED_OTHER (normal)";
-
-#ifdef SCHED_BATCH
-          case SCHED_BATCH:
-            return "SCHED_BATCH (cpu intensive)";
-#endif
-
-#ifdef SCHED_IDLE
-          case SCHED_IDLE:
-            return "SCHED_IDLE (idle)";
-#endif
-
-          case SCHED_FIFO:
-            return "SCHED_FIFO (real time)";
-
-          case SCHED_RR:
-            return "SCHED_RR (real time)";
-
-          default:
-            return "(unknown)";
-        };
-      }
-    };
-
   private:
     Thread(const Thread&);
     Thread& operator=(const Thread&);
 
     template <typename T> struct Args {
-      Args(T *object, void (T::*method)(), Thread *thread, const std::string &name) : object(object), method(method), thread(thread), name(name) {}
+      Args(T *object, void (T::*method)(), Thread *thread) : object(object), method(method), thread(thread) {}
 
       T	     *object;
       void   (T::*method)();
       Thread *thread;
-
-      std::string name;
     };
 
     template <typename T> void	      stub(Args<T> *);
     template <typename T> static void *stub(void *);
 
     const std::string logPrefix;
-    const std::string name;
-    Semaphore	      started, finished;
+    Semaphore	      finished;
     pthread_t	      thread;
-
-    bool              caught_exception;
 };
 
 class ThreadMap {
@@ -202,11 +125,9 @@ private:
   Mutex   mutex;
 };
 
-template <typename T> inline Thread::Thread(T *object, void (T::*method)(), const std::string &name, const std::string &logPrefix, size_t stackSize)
+template <typename T> inline Thread::Thread(T *object, void (T::*method)(), const std::string &logPrefix, size_t stackSize)
 :
-  logPrefix(logPrefix),
-  name(name),
-  caught_exception(false)
+  logPrefix(logPrefix)
 {
   int retval;
 
@@ -219,13 +140,13 @@ template <typename T> inline Thread::Thread(T *object, void (T::*method)(), cons
     if ((retval = pthread_attr_setstacksize(&attr, stackSize)) != 0)
       throw SystemCallException("pthread_attr_setstacksize", retval, THROW_ARGS);
 
-    if ((retval = pthread_create(&thread, &attr, &Thread::stub<T>, new Args<T>(object, method, this, name))) != 0)
+    if ((retval = pthread_create(&thread, &attr, &Thread::stub<T>, new Args<T>(object, method, this))) != 0)
       throw SystemCallException("pthread_create", retval, THROW_ARGS);
 
     if ((retval = pthread_attr_destroy(&attr)) != 0)
       throw SystemCallException("pthread_attr_destroy", retval, THROW_ARGS);
   } else {
-    if ((retval = pthread_create(&thread, 0, &Thread::stub<T>, new Args<T>(object, method, this, name))) != 0)
+    if ((retval = pthread_create(&thread, 0, &Thread::stub<T>, new Args<T>(object, method, this))) != 0)
       throw SystemCallException("pthread_create", retval, THROW_ARGS);
   }
 }
@@ -241,16 +162,13 @@ inline Thread::~Thread()
     try {
       throw SystemCallException("pthread_join", retval, THROW_ARGS);
     } catch (Exception &ex) {
-      LOG_ERROR_STR("Exception in destructor: " << ex);
+      LOG_FATAL_STR("Exception in destructor: " << ex);
     }
 }
 
 
 inline void Thread::cancel()
 {
-  started.down();
-  started.up(); // allow multiple cancels
-
   (void)pthread_cancel(thread); // could return ESRCH ==> ignore
 }
 
@@ -294,47 +212,19 @@ inline bool Thread::isDone()
 }
 
 
-inline bool Thread::caughtException()
-{
-  // thread must be finished for caught_exception to make sense
-  wait();
-
-  return caught_exception;
-}
-
-
 template <typename T> inline void Thread::stub(Args<T> *args)
 {
   // (un)register WITHIN the thread, since the thread id
   // can be reused once the thread finishes.
   Cancellation::ScopedRegisterThread rt;
 
-  ThreadLogger threadLogger;
+  LOGGER_ENTER_THREAD();
 
   LOG_DEBUG_STR(logPrefix << "Thread started");
 
-  ThreadMap::ScopedRegistration sr(ThreadMap::instance(), args->name);
+  ThreadMap::ScopedRegistration sr(ThreadMap::instance(), logPrefix);
 
   try {
-#if defined(_LIBCPP_VERSION)
-    int retval;
-
-    // Set name WITHIN the thread, to avoid race conditions
-    if ((retval = pthread_setname_np(args->name.substr(0,15).c_str())) != 0)
-      throw SystemCallException("pthread_setname_np", retval, THROW_ARGS);
-#else
-# if defined(_GNU_SOURCE) && __GLIBC_PREREQ(2, 12)
-    int retval;
-
-    // Set name WITHIN the thread, to avoid race conditions
-    if ((retval = pthread_setname_np(pthread_self(), args->name.substr(0,15).c_str())) != 0)
-      throw SystemCallException("pthread_setname_np", retval, THROW_ARGS);
-# endif
-#endif
-
-    // allow cancellation from here, to guarantee finished.up()
-    started.up();
-
     (args->object->*args->method)();
   } catch (Exception &ex) {
     // split exception message into lines to be able to add the logPrefix to each line
@@ -344,20 +234,18 @@ template <typename T> inline void Thread::stub(Args<T> *args)
     std::string		     exstr = exstrs.str();
 
     boost::split(exlines, exstr, boost::is_any_of("\n"));
-    LOG_ERROR_STR(logPrefix << "Caught Exception: " << exlines[0]);
+    LOG_FATAL_STR(logPrefix << "Caught Exception: " << exlines[0]);
 
     for (unsigned i = 1; i < exlines.size(); i ++)
-      LOG_ERROR_STR(logPrefix << exlines[i]);
-
-    caught_exception = true;
+      LOG_FATAL_STR(logPrefix << exlines[i]);
   } catch (std::exception &ex) {
-    LOG_ERROR_STR(logPrefix << "Caught std::exception: " << ex.what());
-
-    caught_exception = true;
+    LOG_FATAL_STR(logPrefix << "Caught std::exception: " << ex.what());
   } catch (...) {
     LOG_DEBUG_STR(logPrefix << "Thread cancelled");
 
     finished.up();
+
+    LOGGER_EXIT_THREAD();
 
     throw;
   }
@@ -365,6 +253,8 @@ template <typename T> inline void Thread::stub(Args<T> *args)
   finished.up();
 
   LOG_DEBUG_STR(logPrefix << "Thread stopped");
+
+  LOGGER_EXIT_THREAD();
 }
 
 template <typename T> inline void *Thread::stub(void *arg)
