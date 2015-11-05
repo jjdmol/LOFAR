@@ -164,7 +164,7 @@ TEST(HistoryFlags)
 
   // Flag only the last sample
   inputFlags[0].reset();
-  inputFlags[0].include(ps.settings.blockSize - 1);
+  inputFlags[0].include(ps.nrSamplesPerSubband() - 1);
 
   // insert and update history flags
   kernel->prefixHistoryFlags(inputFlags, 0);
@@ -190,12 +190,12 @@ TEST(HistoryFlags)
 
   // next block
   inputFlags[0].reset();
-  inputFlags[0].include(0, ps.settings.blockSize);
+  inputFlags[0].include(0, ps.nrSamplesPerSubband());
   kernel->prefixHistoryFlags(inputFlags, 0);
 
   // the number of flagged samples should have remained unchanged (the last
   // block had no flags)
-  CHECK_EQUAL(ps.settings.blockSize, inputFlags[0].count());
+  CHECK_EQUAL(ps.nrSamplesPerSubband(), inputFlags[0].count());
 
   /*
    * Block 3: no samples are flagged

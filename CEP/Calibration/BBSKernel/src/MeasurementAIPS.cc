@@ -43,13 +43,7 @@
 #include <measures/Measures/MeasTable.h>
 #include <measures/Measures/MeasConvert.h>
 #include <ms/MeasurementSets/MSAntenna.h>
-#if defined(casacore)
-#include <ms/MSSel/MSAntennaParse.h>
-#include <ms/MSSel/MSSelection.h>
-#else
 #include <ms/MeasurementSets/MSAntennaParse.h>
-#include <ms/MeasurementSets/MSSelection.h>
-#endif
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <ms/MeasurementSets/MSDataDescription.h>
 #include <ms/MeasurementSets/MSDataDescColumns.h>
@@ -61,6 +55,7 @@
 #include <ms/MeasurementSets/MSPolColumns.h>
 #include <ms/MeasurementSets/MSSpectralWindow.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
+#include <ms/MeasurementSets/MSSelection.h>
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/ArrColDesc.h>
 #include <tables/Tables/ExprNode.h>
@@ -719,17 +714,9 @@ void MeasurementAIPS::initDimensions()
 
     ASSERT(frequency.nelements() == nFreq);
     ASSERT(width.nelements() == nFreq);
-
-    // Check that channels have no gaps and are evenly spaced
-    // (this is not prevented by the MS 2.0 standard).
-    if (frequency.nelements()>1) {
-      Vector<Double> upFreq = frequency(Slice(1,frequency.nelements()-1));
-      Vector<Double> lowFreq = frequency(Slice(0,frequency.nelements()-1));
-      Double freqstep0=upFreq(0)-lowFreq(0);
-      ASSERTSTR(allEQ(upFreq-lowFreq,freqstep0),
-                "Channels are not evenly spaced. This is not supported.");
-    }
-
+    // TODO: Technically, checking for equal channel widths is not enough,
+    // because there could still be gaps between channels even though the
+    // widths are all equal (this is not prevented by the MS 2.0 standard).
     ASSERTSTR(allEQ(width, width(0)),
         "Channels width is not the same for all channels. This is not supported"
         " yet.");

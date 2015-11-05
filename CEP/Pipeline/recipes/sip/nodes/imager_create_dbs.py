@@ -51,27 +51,24 @@ class imager_create_dbs(LOFARnodeTCP):
        There is a single sourcedb for a concatenated measurement set/ image
     3. Each individual timeslice needs a place to collect parameters: This is
        done in the paramdb. 
-    4. Add the created databases as meta information to the measurment set
-       
-    5. Assign the outputs of the script
+    4. Assign the outputs of the script
     
     """
     def run(self, concatenated_measurement_set, sourcedb_target_path,
             monet_db_hostname, monet_db_port, monet_db_name, monet_db_user,
             monet_db_password, assoc_theta, parmdb_executable, slice_paths,
             parmdb_suffix, environment, working_directory, makesourcedb_path,
-            source_list_path_extern, major_cycle):
+            source_list_path_extern):
 
         self.logger.info("Starting imager_create_dbs Node")
         self.environment.update(environment)
 
         #*******************************************************************
         # 1. get a sourcelist: from gsm or from file
-        source_list, append = self._create_source_list(
-            source_list_path_extern,sourcedb_target_path, 
-            concatenated_measurement_set,monet_db_hostname, 
-            monet_db_port, monet_db_name, monet_db_user,
-            monet_db_password, assoc_theta)       
+        source_list, append = self._create_source_list(source_list_path_extern,
+            sourcedb_target_path, concatenated_measurement_set,
+            monet_db_hostname, monet_db_port, monet_db_name, monet_db_user,
+            monet_db_password, assoc_theta)
 
         #*******************************************************************
         # 2convert it to a sourcedb (casa table)
@@ -89,14 +86,8 @@ class imager_create_dbs(LOFARnodeTCP):
             self.logger.error("failed creating paramdb for slices")
             return 1
 
-        # *******************************************************************
-        # Add the create databases to the measurments set,
-        self._add_dbs_to_ms(concatenated_measurement_set, sourcedb_target_path,
-                            parmdbs, major_cycle)
-
-
         #*******************************************************************
-        # 5. Assign the outputs
+        # 4. Assign the outputs
         self.outputs["sourcedb"] = sourcedb_target_path
         self.outputs["parmdbs"] = parmdbs
         return 0
@@ -127,8 +118,7 @@ class imager_create_dbs(LOFARnodeTCP):
             append = False
         else:
             source_list = source_list_path_extern
-            append = False # Nicolas Should this be true or false? 
-            # later steps should not contain the original bootstrapping input
+            append = True
 
         return source_list, append
 
@@ -470,44 +460,7 @@ class imager_create_dbs(LOFARnodeTCP):
 
         return None
 
-    def _add_dbs_to_ms(self, concatenated_measurement_set, sourcedb_target_path,
-                            parmdbs_path, major_cycle):
-        """
-        Add the in this recipe created sourcedb and instrument table(parmdb)
-        to the local measurementset.
-        """
-        self.logger.info("Adding sourcemodel and instrument model to output ms.")
-        # Create the base meta information directory        
-        meta_directory = concatenated_measurement_set + "_selfcal_information"
-        if not os.path.exists(meta_directory):
-             os.makedirs(meta_directory)
 
-        # Cycle dir
-        cycle_directory = os.path.join(meta_directory,
-                                "cycle_" + str(major_cycle))
-        if not os.path.exists(cycle_directory):
-             os.makedirs(cycle_directory)
-
-        #COpy the actual data. parmdbs_path is a list!
-        sourcedb_directory = os.path.join(cycle_directory,
-               os.path.basename(sourcedb_target_path))
-        if os.path.exists(sourcedb_directory):
-            shutil.rmtree(sourcedb_directory)  # delete dir to assure copy succeeds
-        shutil.copytree(sourcedb_target_path, sourcedb_directory)
-
-        #parmdbs_path is a list!
-        for parmdb_entry in parmdbs_path:
-            try:
-                parmdb_directory = os.path.join(cycle_directory,
-                    os.path.basename(parmdb_entry))
-                # delete dir to assure copy succeeds
-                if os.path.exists(parmdb_directory):
-                    shutil.rmtree(parmdb_directory)
-                shutil.copytree(parmdb_entry, parmdb_directory)
-            except:
-                self.logger.warn("Failed copying parmdb:")
-                self.logger.warn(parmdb_entry)
-                continue    # slices might be missing, not an exit error
 
 
 if __name__ == "__main__":

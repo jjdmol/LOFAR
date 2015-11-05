@@ -15,17 +15,15 @@ lofar_add_test(tBeamFormerKernel tBeamFormerKernel.cc KernelTestHelpers.cc)
 
 # Trick tests that compile kernels that need to be installed into thinking
 # that they can find the kernels using the LOFARROOT environment variable.
-if(BUILD_TESTING)
-  set_tests_properties(
-    tIntToFloatKernel
-    tDelayAndBandPassKernel
-    tBandPassCorrectionKernel
-    tBeamFormerKernel
-    PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
-    )
-endif(BUILD_TESTING)
+set_tests_properties(
+  tIntToFloatKernel
+  tDelayAndBandPassKernel
+  tBandPassCorrectionKernel
+  tBeamFormerKernel
+  PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
+)
 
-if(UNITTEST++_FOUND AND BUILD_TESTING)
+if(UNITTEST++_FOUND)
   lofar_add_test(tCorrelatorKernel tCorrelatorKernel.cc)
   lofar_add_test(tDelayAndBandPassKernel2 tDelayAndBandPassKernel2.cc)
   lofar_add_test(tBandPassCorrectionKernel2 tBandPassCorrectionKernel2.cc)

@@ -38,9 +38,6 @@ namespace LOFAR
       void recordStart(const gpu::Stream &stream);
       void recordStop(const gpu::Stream &stream);
 
-      // Warning: user must make sure that the counter is not running!
-      RunningStatistics getStats() { logTime(); return stats; }
-
     private:
       const std::string name;
 

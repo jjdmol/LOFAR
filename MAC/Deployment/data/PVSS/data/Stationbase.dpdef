@@ -12,8 +12,6 @@ Navigator.Navigator	1#
 		dpResetStates	5#
 		dpResetMsgs	9#
 		rereadAlarms	23#
-	alarmSettings	1#
-		emails	9#
 		
 TypeName
 NavigatorInstance.NavigatorInstance	1#
@@ -173,7 +171,6 @@ ElementName	TypeName	_original.._value
 scriptInfo.transferMPs.runDone	ScriptInfo	0
 _ValueArchive_2.size.maxDpElGet	_ValueArchive	1250
 _ValueArchive_2.size.maxDpElSet	_ValueArchive	1250
-__navigator.alarmSettings.emails	Navigator	"observer@astron.nl"
 standalone.StnLOFAR_Hardware	NavPanelConfig	"Hardware/Station.pnl"
 standalone.StnPIC_Hardware	NavPanelConfig	"Hardware/Station_Cabinet.pnl"
 standalone.Cabinet_Hardware	NavPanelConfig	"Hardware/Station_Cabinet_detailed.pnl"

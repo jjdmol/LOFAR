@@ -76,9 +76,6 @@ namespace LOFAR
 
       void enqueue(const BlockID &blockId);
 
-      // Warning: user has to make sure the Kernel is not running!
-      RunningStatistics getStats() { return itsCounter.getStats(); }
-
     protected:
       // Construct a kernel.
       Kernel(const gpu::Stream& stream,

@@ -2,7 +2,7 @@
 //
 //  Copyright (C) 2002-2004
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -94,8 +94,9 @@ string claimManager_nameToRealName( string strName )
 
 string claimManager_realNameToName( string strName )
 {
+  
   // Do we know the 'Claimed' name
-  int iPos = dynContains( strClaimDPName, dpSubStr(strName,DPSUB_DP) );
+  int iPos = dynContains( strClaimDPName, strName );
   
   if( iPos < 1 )
     return "";

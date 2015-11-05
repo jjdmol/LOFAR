@@ -23,8 +23,8 @@
 #include "CommandThread.h"
 
 #include <Common/LofarLogger.h>
-#include <Stream/StreamFactory.h>
 #include <CoInterface/MultiDimArray.h>
+#include <CoInterface/Stream.h>
 #include <InputProc/Transpose/MPIProtocol.h>
 #include <InputProc/Transpose/MPIUtil.h>
 
@@ -59,17 +59,8 @@ namespace LOFAR {
         LOG_INFO_STR("[CommandThread] Received command: '" << command << "'");
 
         return command;
-      } catch(EndOfStreamException &) {
+      } catch(Stream::EndOfStreamException &) {
         LOG_INFO("[CommandThread] Connection reset by peer");
-      } catch(OMPThreadSet::CannotStartException &) {
-        /* stop() was called */
-        LOG_INFO("[CommandThread] Stopped");
-      } catch(SystemCallException &ex) {
-        if (ex.error == EINTR)
-          /* False positive: stop() was called */
-          LOG_INFO("[CommandThread] Stopped");
-        else
-          LOG_ERROR_STR("[CommandThread] Caught exception: " << ex.what());
       } catch(Exception &ex) {
         LOG_ERROR_STR("[CommandThread] Caught exception: " << ex.what());
       }
