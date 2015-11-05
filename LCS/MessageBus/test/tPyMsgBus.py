@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 #
 # Test the basic functionality of FromBus and ToBus, both
 # to send and to forward messages.

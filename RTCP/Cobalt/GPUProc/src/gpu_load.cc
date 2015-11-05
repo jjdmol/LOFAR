@@ -34,6 +34,8 @@ using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 
 int main(int argc, char **argv) {
+  INIT_LOGGER("gpu_load");
+
   if (argc != 2) {
     cout << "Usage: " << argv[0] << " parset" << endl;
     return 1;
@@ -47,13 +49,11 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  INIT_LOGGER("gpu_load");
-
-  Parset ps(argv[1]);
-
   gpu::Device device(0);
   vector<gpu::Device> devices(1, device);
   gpu::Context ctx(device);
+
+  Parset ps(argv[1]);
 
   // Input info
   const size_t nrBeams = ps.settings.SAPs.size();
