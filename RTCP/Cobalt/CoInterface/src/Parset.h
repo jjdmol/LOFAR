@@ -268,8 +268,7 @@ namespace LOFAR
         // NIC(s) to bind to (comma seperated)
         //
         // E.g. "mlx4_0", "mlx4_1", "eth0", etc
-        std::string mpi_nic; // for MPI
-        std::string out_nic; // to outputProc
+        std::string nic;
       };
 
       std::vector<struct Node> nodes;
