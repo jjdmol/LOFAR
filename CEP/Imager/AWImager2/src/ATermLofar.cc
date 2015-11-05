@@ -187,15 +187,26 @@ namespace
   void rescale(Cube<DComplex> &response);
 } //# unnamed namespace
   
-ATermLofar::ATermLofar(const MeasurementSet& ms, const ParameterSet& parset) :
+ATermLofar::ATermLofar(const MeasurementSet& ms, const ParameterSet& parset, bool readStations) :
   itsVerbose(parset.getInt("verbose",0))
 {
-  // Read station information.
-  readStations(ms, std::back_inserter(itsStations));
+  if (readStations) {
+    // Read station information.
+    readStations(ms, std::back_inserter(itsStations));
+  }
 
   // Read reference position and directions.
-  itsPosition0 = readObservatoryPosition(ms, 0,
-    toMPositionITRF(itsStations.front()->position()));
+  if (readStations)
+  {
+    itsPosition0 = readObservatoryPosition(ms, 0,
+      toMPositionITRF(itsStations.front()->position()));
+  }
+  else
+  {
+    MPosition default_lofar_pos;
+    MeasTable::Observatory(default_lofar_pos,"LOFAR");
+    itsPosition0 = readObservatoryPosition(ms, 0, default_lofar_pos);
+  }
   itsStation0 = readDelayReference(ms, 0);
   itsTile0 = readTileReference(ms, 0);
 
