@@ -25,8 +25,6 @@
 
 #include <cstring>
 #include <vector>
-#include <time.h>    // for time()
-#include <unistd.h>  // for alarm()
 #include <omp.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
@@ -34,22 +32,17 @@
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <Common/Exceptions.h>
-#include <MessageBus/ToBus.h>
-#include <MessageBus/Protocols/TaskFeedbackDataproducts.h>
 #include <Stream/PortBroker.h>
 #include <ApplCommon/PVSSDatapointDefs.h>
 #include <ApplCommon/StationInfo.h>
 #include <MACIO/RTmetadata.h>
 #include <CoInterface/Exceptions.h>
-#include <CoInterface/OMPThread.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/FinalMetaData.h>
 #include <CoInterface/Stream.h>
 #include <CoInterface/SmartPtr.h>
-#include <CoInterface/SelfDestructTimer.h>
 #include "SubbandWriter.h"
 #include "OutputThread.h"
-#include "IOPriority.h"
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -59,9 +52,6 @@ using boost::lexical_cast;
 
 namespace LOFAR {
   namespace Cobalt {
-
-// Deadline for the wrap up after the obs end, in seconds.
-const time_t defaultOutputProcTimeout = 300;
 
 static string formatDataPointLocusName(const string& hostname)
 {
@@ -77,25 +67,6 @@ static string formatDataPointLocusName(const string& hostname)
   return nodeValue;
 }
 
-size_t getMaxRunTime(const Parset &parset)
-{
-  if (!parset.settings.realTime)
-    return 0;
-
-  // Deadline for outputProc, in seconds.
-  const time_t outputProcTimeout = 
-    parset.ParameterSet::getTime("Cobalt.Tuning.outputProcTimeout",
-           defaultOutputProcTimeout);
-
-  const time_t now = time(0);
-  const double stopTime = parset.settings.stopTime;
-
-  if (now < stopTime + outputProcTimeout)
-    return stopTime + outputProcTimeout - now;
-  else
-    return 0;
-}
-
 bool process(Stream &controlStream, unsigned myRank)
 {
   bool success(true);
@@ -105,26 +76,6 @@ bool process(Stream &controlStream, unsigned myRank)
   ASSERT(myRank < hostnames.size());
   string myHostName = hostnames[myRank];
 
-  if (parset.settings.realTime) {
-    /*
-     * Real-time observation
-     */
-
-    // Acquire elevated IO and CPU priorities
-    setIOpriority();
-    setRTpriority();
-
-    // Prevent swapping of our buffers
-    lockInMemory(16UL * 1024UL * 1024UL * 1024UL); // limit memory to 16 GB
-
-    // Deadline for outputProc, in seconds.
-    const time_t outputProcTimeout = 
-      parset.ParameterSet::getTime("Cobalt.Tuning.outputProcTimeout",
-             defaultOutputProcTimeout);
-
-    setSelfDestructTimer(parset, outputProcTimeout);
-  }
-
   // Send id string to the MAC Log Processor as context for further LOGs.
   // Also use it for MAC/PVSS data point logging as a key name prefix.
   // For outputProc there are no conv specifications (%xx) to be filled in.
@@ -132,10 +83,9 @@ bool process(Stream &controlStream, unsigned myRank)
   LOG_INFO_STR("MACProcessScope: " << mdKeyPrefix);
   mdKeyPrefix.push_back('.'); // keys look like: "keyPrefix.subKeyName[x]"
 
-  const string mdRegisterName = string(PST_COBALT_OUTPUT_PROC) + ":" +
-                                lexical_cast<string>(parset.settings.observationID) + "@" + myHostName;
+  const string mdRegisterName = PST_COBALT_OUTPUT_PROC;
   const string mdHostName = parset.getString("Cobalt.PVSSGateway.host", "");
-  MACIO::RTmetadata mdLogger(parset.settings.observationID, mdRegisterName, mdHostName);
+  MACIO::RTmetadata mdLogger(parset.observationID(), mdRegisterName, mdHostName);
   mdLogger.start();
 
   {
@@ -159,7 +109,7 @@ bool process(Stream &controlStream, unsigned myRank)
                      formatDataPointLocusName(myHostName));
 
         string logPrefix = str(format("[obs %u correlated stream %3u] ")
-                               % parset.settings.observationID % fileIdx);
+                               % parset.observationID() % fileIdx);
 
         SubbandWriter *writer = new SubbandWriter(parset, fileIdx, mdLogger, mdKeyPrefix, logPrefix);
         subbandWriters.push_back(writer);
@@ -190,7 +140,7 @@ bool process(Stream &controlStream, unsigned myRank)
         const size_t nrChannels = stokes.nrChannels;
         const size_t nrSamples = stokes.nrSamples;
 
-        outputPools[fileIdx] = new Pool<TABTranspose::BeamformedData>(str(format("process::outputPool [file %u]") % fileIdx), parset.settings.realTime);
+        outputPools[fileIdx] = new Pool<TABTranspose::BeamformedData>(str(format("process::outputPool [file %u]") % fileIdx));
 
         // Create and fill an outputPool for this fileIdx
         for (size_t i = 0; i < 10; ++i) {
@@ -202,10 +152,10 @@ bool process(Stream &controlStream, unsigned myRank)
 
         // Create a collector for this fileIdx
         collectors[fileIdx] = new TABTranspose::BlockCollector(
-          *outputPools[fileIdx], fileIdx, nrSubbands, nrChannels, nrSamples, parset.settings.nrBlocks(), parset.settings.realTime ? 5 : 0);
+          *outputPools[fileIdx], fileIdx, nrSubbands, nrChannels, nrSamples, parset.nrBeamFormedBlocks(), parset.realTime() ? 5 : 0);
 
         string logPrefix = str(format("[obs %u beamformed stream %3u] ")
-                                                    % parset.settings.observationID % fileIdx);
+                                                    % parset.observationID() % fileIdx);
 
         TABOutputThread *writer = new TABOutputThread(parset, fileIdx, *outputPools[fileIdx], mdLogger, mdKeyPrefix, logPrefix);
         tabWriters.push_back(writer);
@@ -227,8 +177,6 @@ bool process(Stream &controlStream, unsigned myRank)
       // Done signal from controller, by sending the final meta data
 #     pragma omp section
       {
-        OMPThread::ScopedName sn("finalMetaData");
-
         // Add final meta data (broken tile information, etc)
         // that is obtained after the end of an observation.
         LOG_INFO_STR("Waiting for final meta data");
@@ -240,7 +188,7 @@ bool process(Stream &controlStream, unsigned myRank)
           LOG_ERROR_STR("Failed to read broken tile information: " << err);
         }
 
-        if (parset.settings.realTime) {
+        if (parset.realTime()) {
           // Real-time observations: stop now. MultiReceiver::kill
           // will stop the TABWriters.
           mr.kill(0);
@@ -257,26 +205,17 @@ bool process(Stream &controlStream, unsigned myRank)
       // SubbandWriters
 #     pragma omp section
       {
-        OMPThread::ScopedName sn("subbandWr");
-
 #       pragma omp parallel for num_threads(subbandWriters.size())
-        for (int i = 0; i < (int)subbandWriters.size(); ++i) {
-          OMPThread::ScopedName sn(str(format("subbandWr %u") % subbandWriters[i]->streamNr()));
-
+        for (int i = 0; i < (int)subbandWriters.size(); ++i)
           subbandWriters[i]->process();
-        }
       }
 
       // TABWriters
 #     pragma omp section
       {
-        OMPThread::ScopedName sn("tabWr");
-
 #       pragma omp parallel for num_threads(tabWriters.size())       
-        for (int i = 0; i < (int)tabWriters.size(); ++i) {
-          OMPThread::ScopedName sn(str(format("tabWr %u") % tabWriters[i]->streamNr()));
+        for (int i = 0; i < (int)tabWriters.size(); ++i)
           tabWriters[i]->process();
-        }
       }
     }
 
@@ -297,44 +236,21 @@ bool process(Stream &controlStream, unsigned myRank)
      * LTA FEEDBACK
      */
 
+    LOG_DEBUG_STR("Retrieving LTA feedback");
+    Parset feedbackLTA;
+
+    for (size_t i = 0; i < subbandWriters.size(); ++i)
+      feedbackLTA.adoptCollection(subbandWriters[i]->feedbackLTA());
+    for (size_t i = 0; i < tabWriters.size(); ++i)
+      feedbackLTA.adoptCollection(tabWriters[i]->feedbackLTA());
+
     LOG_DEBUG_STR("Forwarding LTA feedback");
-
-    ToBus bus("lofar.task.feedback.dataproducts");
-
-    const std::string myName = str(boost::format("Cobalt/OutputProc on %s") % myHostName);
-
-    for (size_t i = 0; i < subbandWriters.size(); ++i) {
-      Protocols::TaskFeedbackDataproducts msg(
-        myName,
-        "",
-        str(boost::format("Feedback for Correlated Data, subband %s") % subbandWriters[i]->streamNr()),
-        str(format("%s") % parset.settings.momID),
-        str(format("%s") % parset.settings.observationID),
-        subbandWriters[i]->feedbackLTA());
-
-      bus.send(msg);
+    try {
+      feedbackLTA.write(&controlStream);
+    } catch (LOFAR::Exception &err) {
+      success = false;
+      LOG_ERROR_STR("Failed to forward LTA feedback information: " << err);
     }
-
-    for (size_t i = 0; i < tabWriters.size(); ++i) {
-      Protocols::TaskFeedbackDataproducts msg(
-        myName,
-        "",
-        str(boost::format("Feedback for Beamformed Data, file nr %s") % tabWriters[i]->streamNr()),
-        str(format("%s") % parset.settings.momID),
-        str(format("%s") % parset.settings.observationID),
-        tabWriters[i]->feedbackLTA());
-
-      bus.send(msg);
-    }
-
-    /*
-     * SIGN OFF
-     */
-
-    bool sentFeedback = true;
-
-    controlStream.write(&sentFeedback, sizeof sentFeedback);
-    controlStream.write(&success, sizeof success);
 
     return success;
   }

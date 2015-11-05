@@ -45,9 +45,6 @@ namespace LOFAR
 
       // insert a new value
       void push(double sample);
-
-      // the unit of measurement, as configured
-      std::string unit() const;
       
       // number of inserted samples
       size_t count() const;
@@ -77,7 +74,7 @@ namespace LOFAR
       void print(std::ostream& os) const;
 
     private:
-      std::string _unit;
+      std::string unit;
 
       size_t counter;
       double _mean;

@@ -20,8 +20,6 @@
 
 #include <lofar_config.h>
 
-#include <ctime>
-
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
 #include <Stream/StringStream.h>
@@ -139,7 +137,7 @@ struct Fixture {
 
   Fixture()
   :
-    outputPool("Fixture::outputPool", true),
+    outputPool("Fixture::outputPool"),
     ctr(outputPool, 0, nrSubbands, nrChannels, nrSamples)
   {
     for (size_t i = 0; i < nrBlocks; ++i) {
@@ -403,7 +401,7 @@ SUITE(SendReceive) {
     Receiver::CollectorMap collectors;
 
     for (size_t i = 0; i < nrTABs; ++i) {
-      outputPools[i] = new Pool<BeamformedData>(str(format("OneToOne::outputPool[%u]") % i), true);
+      outputPools[i] = new Pool<BeamformedData>(str(format("OneToOne::outputPool[%u]") % i));
       for (size_t b = 0; b < nrBlocks; ++b) {
         outputPools[i]->free.append(new BeamformedData(
           boost::extents[nrSamples][nrSubbands][nrChannels],
@@ -478,8 +476,8 @@ SUITE(MultiReceiver) {
 
     // Connect with multiple clients
     {
-      PortBroker::ClientStream cs1("localhost", PortBroker::DEFAULT_PORT, "foo-1", time(0) + 1);
-      PortBroker::ClientStream cs2("localhost", PortBroker::DEFAULT_PORT, "foo-2", time(0) + 1);
+      PortBroker::ClientStream cs1("localhost", PortBroker::DEFAULT_PORT, "foo-1", 1);
+      PortBroker::ClientStream cs2("localhost", PortBroker::DEFAULT_PORT, "foo-2", 1);
 
       // Disconnect them too! (~cs)
     }
@@ -497,7 +495,7 @@ SUITE(MultiReceiver) {
 
     // Connect
     {
-      PortBroker::ClientStream cs("localhost", PortBroker::DEFAULT_PORT, "foo-1", time(0) + 1);
+      PortBroker::ClientStream cs("localhost", PortBroker::DEFAULT_PORT, "foo-1", 1);
 
       // Send one block
       {
@@ -528,7 +526,8 @@ SUITE(MultiReceiver) {
     Parset ps = makeDefaultTestParset();
     ps.replace("Cobalt.realTime", "false");
     ps.updateSettings();
-    MultiSender msender(hostMap, ps);
+    MACIO::RTmetadata rtmd(ps.observationID(), "", "");
+    MultiSender msender(hostMap, ps, rtmd, "rtmd key prefix");
   }
 
   TEST(Transpose) {
@@ -590,7 +589,7 @@ SUITE(MultiReceiver) {
             if (t % nrReceivers != r)
               continue;
 
-            outputPools[t] = new Pool<BeamformedData>(str(format("MultiReceiver::Transpose::outputPool[%u]") % t), true);
+            outputPools[t] = new Pool<BeamformedData>(str(format("MultiReceiver::Transpose::outputPool[%u]") % t));
 
             for (size_t i = 0; i < nrBlocks; ++i) {
               outputPools[t]->free.append(new BeamformedData(
@@ -651,7 +650,8 @@ SUITE(MultiReceiver) {
             hostMap[FILEIDX(t)] = host;
           }
 
-          MultiSender msender(hostMap, ps);
+          MACIO::RTmetadata rtmd(ps.observationID(), "", "");
+          MultiSender msender(hostMap, ps, rtmd, "rtmd key prefix");
 
 #         pragma omp parallel sections num_threads(2)
           {

@@ -100,8 +100,9 @@ void runTest( gpu::Context &ctx, gpu::Stream &stream )
   fill(hOutput.data(), hOutput.data() + hOutput.num_elements(), fcomplex());
 
   // Create kernel
+  IncoherentStokesTransposeKernel::Buffers buffers(dInput, dOutput);
   auto_ptr<IncoherentStokesTransposeKernel> 
-    kernel(factory.create(stream, dInput, dOutput));
+    kernel(factory.create(stream, buffers));
 
   // Run kernel
   stream.writeBuffer(dInput, hInput, false);

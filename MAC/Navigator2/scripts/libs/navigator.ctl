@@ -2,7 +2,7 @@
 //
 //  Copyright (C) 2002-2004
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -46,17 +46,14 @@
 
 global bool       g_objectReady           = true;     // Can be used for timing by objects
 
-global string     g_currentDatapoint          = MainDBName+"LOFAR_PIC_Europe";
-global string     g_lastHardwareDatapoint     = MainDBName+"LOFAR_PIC_Europe";
-global string     g_lastProcessesDatapoint    = MainDBName+"LOFAR_PermSW";
+global string     g_currentDatapoint      = MainDBName+"LOFAR_PIC_Europe";
+global string     g_lastHardwareDatapoint = MainDBName+"LOFAR_PIC_Europe";
+global string     g_lastProcessesDatapoint = MainDBName+"LOFAR_PermSW";
 global string     g_lastObservationsDatapoint = MainDBName+"LOFAR_ObsSW";
-global string     g_lastPipelinesDatapoint    = MainDBName+"LOFAR_ObsSW";
-global string     g_activePanel               = "main.pnl";
 
 
 
 global dyn_string g_observationsList;  // holds active observations
-global dyn_string g_pipelinesList;     // holds active pipelines
 global dyn_string g_processesList;     // holds active software
 global mapping    g_observations;      //
 
@@ -64,9 +61,6 @@ global dyn_string g_stationList;       // holds valid stations for choices in th
 // Station based globals
 global dyn_int    g_cabinetList;       // holds valid cabinets for choices in the viewBox
 global dyn_int    g_subrackList;       // holds valid subracks for choices in the viewBox
-global dyn_int    g_uriBoardList;      // holds valid uriBoards for choices in the viewBox
-global dyn_int    g_uniBoardList;      // holds valid uniBoards for choices in the viewBox
-global dyn_int    g_FPGAList;          // holds valid fpgas for choices in the viewBox
 global dyn_int    g_RSPList;           // holds valid RSP's for choices in the viewBox
 global dyn_int    g_TBBList;           // holds valid TBB's for choices in the viewBox
 global dyn_int    g_RCUList;           // holds valid RCU's for choices in the viewBox
@@ -115,11 +109,10 @@ void navigator_handleEventInitialize()
     } else {
     g_standAlone       = true;    // can be used to check if we are in standalone mode (== station only mode)
   }
-  g_currentDatapoint          = MainDBName+"LOFAR";
-  g_lastHardwareDatapoint     = MainDBName+"LOFAR";
-  g_lastProcessesDatapoint    = MainDBName+"LOFAR_PermSW";
+  g_currentDatapoint      = MainDBName+"LOFAR";
+  g_lastHardwareDatapoint = MainDBName+"LOFAR";
+  g_lastProcessesDatapoint = MainDBName+"LOFAR_PermSW";
   g_lastObservationsDatapoint = MainDBName+"LOFAR_ObsSW";
-  g_lastPipelinesDatapoint    = MainDBName+"LOFAR_ObsSW";
     
   // Set the global statecolors/colornames, we need to do this before we 
   //start the rest of the framework, because the other processes need these

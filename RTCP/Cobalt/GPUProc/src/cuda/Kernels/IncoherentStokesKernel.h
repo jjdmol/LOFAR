@@ -32,17 +32,11 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    class IncoherentStokesKernel : public CompiledKernel
+    class IncoherentStokesKernel : public Kernel
     {
     public:
       static std::string theirSourceFile;
       static std::string theirFunction;
-
-      enum BufferType
-      {
-        INPUT_DATA,
-        OUTPUT_DATA
-      };
 
       // Parameters that must be passed to the constructor of the
       // IncoherentStokesKernel class.
@@ -56,8 +50,12 @@ namespace LOFAR
 
         unsigned nrStokes;
         unsigned timeIntegrationFactor;
+      };
 
-        size_t bufferSize(BufferType bufferType) const;
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA
       };
 
       IncoherentStokesKernel(const gpu::Stream &stream,
@@ -68,6 +66,9 @@ namespace LOFAR
     };
 
     //# --------  Template specializations for KernelFactory  -------- #//
+
+    template<> size_t
+    KernelFactory<IncoherentStokesKernel>::bufferSize(BufferType bufferType) const;
 
     template<> CompileDefinitions
     KernelFactory<IncoherentStokesKernel>::compileDefinitions() const;

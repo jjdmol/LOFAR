@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2014
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -470,11 +470,7 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 
 	case RSP_SETRCUACK: {
 		RSPSetrcuackEvent ack(e);
-		if (ack.status == RSP_Protocol::RSP_BUSY) {
-			// We could be switching off the RCU during a clock switch for the next
-			// observation. In that case, we don't need to try again.
-			LOG_INFO_STR("Failed to set RCU control register: RSP is busy.");
-		} else if (ack.status != RSP_Protocol::RSP_SUCCESS) {
+		if (ack.status != RSP_Protocol::RSP_SUCCESS) {
 			LOG_FATAL_STR("Failed to set RCU control register.");
 			exit (EXIT_FAILURE);
 		}
@@ -718,12 +714,18 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 			else {
 				m_subarrays.schedule_add(subarray);
 
+				bitset<MAX_RCUS> validmask;
+
+				for (uint rcu = 0; rcu < m_n_rcus; ++rcu) {
+					validmask.set(rcu);   // select rcu
+				}
+
 				// calibration will start within one second
 				// set the spectral inversion right
 				RSPSetbypassEvent	specInvCmd;
 				bool				SIon(start.rcumode()(0).getNyquistZone() == 2);// on or off?
 				specInvCmd.timestamp = Timestamp(0,0);
-				specInvCmd.rcumask   = start.subset;
+				specInvCmd.rcumask   = start.subset & validmask;
 				specInvCmd.settings().resize(1);
 				specInvCmd.settings()(0).setXSI(SIon);
 				specInvCmd.settings()(0).setYSI(SIon);
@@ -731,11 +733,57 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 								<< " setting spectral inversion " << ((SIon) ? "ON" : "OFF"));
 				itsRSPDriver->send(specInvCmd);
 
-                RCUSettings rcu_settings;
-                rcu_settings().resize(1);
-                rcu_settings()(0) = start.rcumode()(0);
-                				
-                _enableRCUs(subarray, rcu_settings, SCHEDULING_DELAY + 4);
+				//
+				// set the control register of the RCU's
+				// if in HBA mode turn on HBAs in groups to prevent resetting of boards
+				//
+
+				RSPSetrcuEvent setrcu;
+				bitset<MAX_RCUS> testmask;
+				Timestamp timeStamp;
+
+	//			#define N_PWR_RCUS_PER_STEP 12
+				#define N_PWR_RCUS_PER_STEP 8
+
+				int nPwrRCUs = m_n_rcus / 2;  // only the even rcus deliver power to the HBAs
+				int steps    = nPwrRCUs / N_PWR_RCUS_PER_STEP;  // 4 steps for NL stations, 8 steps for IS stations
+				int jump     = m_n_rcus / N_PWR_RCUS_PER_STEP;  // jump = 8 for NL stations and 16 for IS stations
+
+				if (steps == 0) { steps = 1; }  // limit for test cabinet
+				if (jump < 2) { jump = 2; }     // limit for test cabinet
+
+				// if LBA mode select all rcus in one step
+				if (start.rcumode()(0).getMode() <= 4) {
+					steps = 1;
+					jump = 2;
+				}
+				int delay(0);
+				for (int step = 0; step < steps; ++step) {
+					validmask.reset();
+					// select 12 even(X) rcus and 12 odd(Y) rcus
+					for (uint rcu = (step * 2); rcu < m_n_rcus; rcu += jump) {
+						validmask.set(rcu);   // select X (HBA power supply)
+						validmask.set(rcu+1); // select Y
+					}
+
+					// if any rcus in this masker send command
+					testmask = start.subset & validmask;
+					if (testmask.any()) {
+						delay = SCHEDULING_DELAY + step;
+						timeStamp.setNow(delay);
+						setrcu.timestamp = timeStamp; // in steps of 1 second
+
+						//TODO: Step20.2: might have to send 2 settings e.g. when using all X-pols
+
+						setrcu.rcumask = start.subset & validmask;
+						setrcu.settings().resize(1);
+						setrcu.settings()(0) = start.rcumode()(0);
+
+						LOG_DEBUG(formatString("Sending RSP_SETRCU(%08X)", start.rcumode()(0).getRaw()));
+						itsRSPDriver->send(setrcu);
+					} // if in mask
+				} // for steps
+				_enableRCUs(subarray, delay + 4);
 			} // conflict?
 		}
 	}
@@ -875,9 +923,9 @@ GCFEvent::TResult CalServer::handle_cal_getsubarray(GCFEvent& e, GCFPortInterfac
 }
 
 //
-//  (subarray*)
+// _enableRCUs(subarray*)
 //
-void CalServer::_enableRCUs(SubArray*	subarray, RCUSettings rcu_settings, int delay)
+void CalServer::_enableRCUs(SubArray*	subarray, int delay)
 {
 	// increment the usecount of the receivers
 	SubArray::RCUmask_t	rcuMask = subarray->getRCUMask();
@@ -903,7 +951,6 @@ void CalServer::_enableRCUs(SubArray*	subarray, RCUSettings rcu_settings, int de
 		enableCmd.timestamp = timeStamp;
 		enableCmd.rcumask   = rcus2switchOn;
 		enableCmd.settings().resize(1);
-        enableCmd.settings()(0) = rcu_settings()(0);
 		enableCmd.settings()(0).setEnable(true);
 		sleep (1);
 		LOG_INFO("Enabling some rcu's because they are used for the first time");

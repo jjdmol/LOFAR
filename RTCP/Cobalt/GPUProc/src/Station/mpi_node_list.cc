@@ -36,10 +36,10 @@ using boost::format;
 
 void usage(char **argv)
 {
-  cout << "usage: " << argv[0] << " [-n] parset" << endl;
-  cout << endl;
-  cout << "-n: print node list" << endl;
-  cout << endl;
+  cerr << "usage: " << argv[0] << " [-n] parset" << endl;
+  cerr << endl;
+  cerr << "-n: print node list" << endl;
+  cerr << endl;
 }
 
 void print_node_list(Parset &ps)
@@ -56,6 +56,8 @@ void print_node_list(Parset &ps)
 
 int main(int argc, char **argv)
 {
+  INIT_LOGGER("mpi_node_list");
+
   bool nodelist = false;
 
   // parse all command-line options
@@ -77,8 +79,6 @@ int main(int argc, char **argv)
     usage(argv);
     exit(1);
   }
-
-  INIT_LOGGER("mpi_node_list");
 
   // Create a parameters set object based on the inputs
   Parset ps(argv[optind]);

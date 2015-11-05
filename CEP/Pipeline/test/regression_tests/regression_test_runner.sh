@@ -85,10 +85,9 @@ mkdir -p $"$WORKSPACE/installed/var/run/pipeline"
 
 # set up environment
 . /opt/cep/login/bashrc # source the login of use commands
-use Lofar               # this is a weak point in the script we should be able to run without
+use LofIm               # this is a weak point in the script we should be able to run without
 use Pythonlibs
 . $"$WORKSPACE/lofarinit.sh"  
-. /data/qpid/.profile
 
 # *****************************************************
 # 3) Clear old data:
@@ -99,8 +98,8 @@ rm $"$WORKSPACE/installed/var/run/pipeline/"* -rf   # log and state files
 echo "Clearing working directory"
 # Assure working directory exists
 # and remove all files in these dirs
-ssh $HOST $"mkdir $WORKING_DIR -p" 
-ssh $HOST $"rm $WORKING_DIR/* -rf" 
+ssh lce072 $"mkdir $WORKING_DIR -p" 
+ssh lce072 $"rm $WORKING_DIR/* -rf" 
 
 ssh $HOST1 $"mkdir $WORKING_DIR -p" 
 ssh $HOST1 $"rm $WORKING_DIR/* -rf" 
@@ -132,7 +131,7 @@ echo "Configuring the input parset and configuration files for cep!"
 
 # TODO: This script only work on CEP1!!
 # insert the cluserdesc for test cluster (default install is for cep2)
-sed -i 's/cep2.clusterdesc/cep2_test.clusterdesc/g' $"$WORKING_DIR/pipeline.cfg"
+sed -i 's/cep2.clusterdesc/cep1_test.clusterdesc/g' $"$WORKING_DIR/pipeline.cfg"
 # specify the new working directory
 sed -i $"s|working_directory = /data/scratch/$USER|working_directory = $WORKING_DIR|g" $"$WORKING_DIR/pipeline.cfg"
 
@@ -150,12 +149,6 @@ sed -i  $"s|input_path2_placeholder|$WORKING_DIR/input_data|g" $"$WORKING_DIR/$P
 # output data paths will find all output paths
 sed -i  $"s|output_path1_placeholder|$WORKING_DIR/output_data|g" $"$WORKING_DIR/$PIPELINE.parset"
 sed -i  $"s|output_path2_placeholder|$WORKING_DIR/output_data|g" $"$WORKING_DIR/$PIPELINE.parset"
-
-# setup the qpid environment (is a no-op if qpid is not installed)
-source $WORKSPACE/bin/MessageFuncs.sh
-create_queue lofar.task.feedback.state
-create_queue lofar.task.feedback.dataproducts
-create_queue lofar.task.feedback.processing
 
 # *********************************************************************
 # 5) Run the pipeline

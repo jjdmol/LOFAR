@@ -9,7 +9,7 @@ adding to the changelog will naturally do this.
 """
 
 # Version number
-__version__ = '1.8.4'
+__version__ = '1.8.2'
 
 # Store svn Revision number. For this to work, one also needs to do:
 #
@@ -26,30 +26,8 @@ def changelog():
     """
     PyBDSM Changelog.
     -----------------------------------------------------------------------
-    2015/08/06 - Version 1.8.4
 
-    2015/08/06 - Improved speed of wavelet module.
-
-    2015/08/06 - Added option to use PyFFTW in wavelet module if available.
-
-    2015/08/06 - Fix to IPython version check.
-
-    2015/08/06 - Fix to bug that caused a failure to write shapelet models
-        in FITS format.
-
-    2014/11/07 - Fix to bug that caused a crash when both atrous_do = True
-        and output_all = True. Fixed a bug that caused a crash on machines
-        with only one core.
-
-    2014/09/26 - Version 1.8.3
-
-    2014/09/26 - Fix to bug that caused a crash when using the wavelet
-        module and all Gaussians in an island were flagged.
-
-    2014/07/03 - Mask will now be expanded to match input image shape. Fix
-        to bug that caused image read failure when image lacks a Stokes axis.
-
-    2014/05/14 - Version 1.8.2
+    2014/01/14 - Version 1.8.2
 
     2014/05/15 - Fix to bug in CASA masks generated with export_image() that
         caused cleaning to fail in CASA 4.2 and above.

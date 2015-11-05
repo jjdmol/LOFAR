@@ -29,7 +29,6 @@
 #include <Stream/Stream.h>
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
-#include <Stream/StreamDescriptor.h>
 #include <CoInterface/CorrelatedData.h>
 #include <CoInterface/Stream.h>
 
@@ -204,8 +203,8 @@ namespace LOFAR
       size_t blockSize = ps.nrHistorySamples() + ps.nrSamplesPerSubband();
 
       // SEND: For now, the n stations are sent by the first n ranks.
-      vector<int> stationRanks(ps.settings.antennaFields.size());
-      for (size_t stat = 0; stat < ps.settings.antennaFields.size(); ++stat) {
+      vector<int> stationRanks(ps.nrStations());
+      for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
         stationRanks[stat] = stat;
       }
 
@@ -220,9 +219,9 @@ namespace LOFAR
 
       // Create a block object to hold all information for receiving one
       // block.
-      vector<struct MPIReceiveStations::Block<SampleT> > blocks(ps.settings.antennaFields.size());
+      vector<struct MPIReceiveStations::Block<SampleT> > blocks(ps.nrStations());
 
-      for (size_t stat = 0; stat < ps.settings.antennaFields.size(); ++stat) {
+      for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
         blocks[stat].beamlets.resize(ps.nrSubbands());
       }
 
@@ -249,7 +248,7 @@ namespace LOFAR
           data->subband = subband;
 
           // Incorporate it in the receiver's input set.
-          for (size_t stat = 0; stat < ps.settings.antennaFields.size(); ++stat) {
+          for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
             blocks[stat].beamlets[subband].samples = reinterpret_cast<SampleT*>(&data->inputSamples[stat][0][0][0]);
           }
 
@@ -268,7 +267,7 @@ namespace LOFAR
           SmartPtr<SubbandProcInputData> data = inputDatas[subband].data;
 
           // Translate the metadata as provided by receiver
-          for (size_t stat = 0; stat < ps.settings.antennaFields.size(); ++stat) {
+          for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
             SubbandMetaData &metaData = blocks[stat].beamlets[subband].metaData;
 
             // extract and apply the flags

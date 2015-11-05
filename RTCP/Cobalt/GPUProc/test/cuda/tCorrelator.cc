@@ -44,7 +44,7 @@ using LOFAR::Exception;
 
 unsigned NR_STATIONS = 4;
 unsigned NR_CHANNELS = 16;
-unsigned NR_SAMPLES_PER_INTEGRATION = 64;
+unsigned NR_SAMPLES_PER_CHANNEL = 64;
 unsigned NR_POLARIZATIONS = 2;
 unsigned COMPLEX = 2;
 unsigned NR_BASELINES = (NR_STATIONS * (NR_STATIONS + 1) / 2);
@@ -70,8 +70,7 @@ HostMemory runTest(gpu::Context ctx,
   definitions["NR_STATIONS_PER_THREAD"] = lexical_cast<string>(nrStationsPerThread);
   definitions["NR_STATIONS"] = lexical_cast<string>(NR_STATIONS);
   definitions["NR_CHANNELS"] = lexical_cast<string>(NR_CHANNELS);
-  definitions["NR_SAMPLES_PER_INTEGRATION"] = lexical_cast<string>(NR_SAMPLES_PER_INTEGRATION);
-  definitions["NR_INTEGRATIONS"] = "1";
+  definitions["NR_SAMPLES_PER_CHANNEL"] = lexical_cast<string>(NR_SAMPLES_PER_CHANNEL);
   definitions["NR_POLARIZATIONS"] = lexical_cast<string>(NR_POLARIZATIONS);
   definitions["COMPLEX"] = lexical_cast<string>(COMPLEX);
 
@@ -82,7 +81,7 @@ HostMemory runTest(gpu::Context ctx,
 
   // *************************************************************
   // Create the data arrays
-  size_t sizeCorrectedData = NR_STATIONS * NR_CHANNELS * NR_SAMPLES_PER_INTEGRATION * NR_POLARIZATIONS * COMPLEX * sizeof(float);
+  size_t sizeCorrectedData = NR_STATIONS * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX * sizeof(float);
   DeviceMemory devCorrectedMemory(ctx, sizeCorrectedData);
   HostMemory rawCorrectedData = getInitializedArray(ctx, sizeCorrectedData, 0.0f);
 
@@ -144,7 +143,7 @@ int main()
   Stream cuStream(ctx);
 
   // Create data members
-  MultiDimArray<float, 3> inputData(boost::extents[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_INTEGRATION * NR_POLARIZATIONS * COMPLEX]);
+  MultiDimArray<float, 3> inputData(boost::extents[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX]);
   MultiDimArray<float, 3> outputData(boost::extents[NR_BASELINES][NR_CHANNELS][NR_POLARIZATIONS * NR_POLARIZATIONS * COMPLEX]);
   float * outputOnHostPtr;
 
@@ -193,9 +192,9 @@ int main()
     // With zero delay the output should be the highest. A fringe :D
 
     // 1. First create a random channel with a length that is large enough
-    // It should be length NR_SAMPLES_PER_INTEGRATION plus padding at both side to encompass the delay
+    // It should be length NR_SAMPLES_PER_CHANNEL plus padding at both side to encompass the delay
     unsigned padding = 7; // We have 15 channels with content 2 * 7 delays + delay 0
-    unsigned lengthRandomData = NR_SAMPLES_PER_INTEGRATION * NR_POLARIZATIONS * COMPLEX + 2 * (padding + 1) * 4;
+    unsigned lengthRandomData = NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX + 2 * (padding + 1) * 4;
     vector<float> randomInputData(lengthRandomData);
 
     // Create the random signal, seed random generator with zero
@@ -212,7 +211,7 @@ int main()
       for (unsigned idx_channel = 0; idx_channel < 16; ++idx_channel)
       {
         for (unsigned idx_datapoint = 0;
-             idx_datapoint< NR_SAMPLES_PER_INTEGRATION * NR_POLARIZATIONS * COMPLEX;
+             idx_datapoint< NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX;
              ++idx_datapoint)
         {
           // Pick from the random array the same number of samples

@@ -97,7 +97,7 @@ TEST(BufferSizes)
     sut.parset.settings.beamFormer.coherentSettings;
   CHECK_EQUAL(sut.nrChannels, settings.nrChannels);
   CHECK_EQUAL(4U, settings.nrStokes);
-  CHECK_EQUAL(sut.nrStations, sut.parset.settings.antennaFields.size());
+  CHECK_EQUAL(sut.nrStations, sut.parset.nrStations());
 }
 
 
@@ -114,6 +114,7 @@ struct SUTWrapper : ParsetSUT
   MultiDimArrayHostBuffer<fcomplex, 4> hOutput;
   MultiDimArrayHostBuffer<fcomplex, 4> hRefOutput;
   gpu::DeviceMemory deviceMemory;
+  FFTShiftKernel::Buffers buffers;
   scoped_ptr<FFTShiftKernel> kernel;
 
   SUTWrapper(size_t inrChannels , size_t inrStations,
@@ -135,7 +136,8 @@ struct SUTWrapper : ParsetSUT
       boost::extents[inrStations][NR_POLARIZATIONS][nrChannels][inrOutputinSamplesPerSuband],
       context),
     deviceMemory(context, factory.bufferSize(FFTShiftKernel::INPUT_DATA)),
-    kernel(factory.create(stream, deviceMemory, deviceMemory))
+    buffers(deviceMemory, deviceMemory),
+    kernel(factory.create(stream, buffers))
   {
     initializeHostBuffers();
   }
@@ -157,12 +159,12 @@ struct SUTWrapper : ParsetSUT
     cout << "Kernel buffersize set to: " << factory.bufferSize(
               FFTShiftKernel::INPUT_DATA) << endl;
     cout << "\nInitializing host buffers..." << endl
-      << " buffers.input.size()  = " << setw(7) << deviceMemory.size() << endl
+      << " buffers.input.size()  = " << setw(7) << buffers.input.size() << endl
       << " hInput.size()  = " << setw(7) << hInput.size() << endl
-      << " buffers.output.size() = " << setw(7) << deviceMemory.size() 
+      << " buffers.output.size() = " << setw(7) << buffers.output.size() 
       << endl;
-    CHECK_EQUAL(deviceMemory.size(), hInput.size());
-    CHECK_EQUAL(deviceMemory.size(), hOutput.size());
+    CHECK_EQUAL(buffers.input.size(), hInput.size());
+    CHECK_EQUAL(buffers.output.size(), hOutput.size());
     fill(hInput.data(), hInput.data() + hInput.num_elements(),
              fcomplex(0.0f, 0.0f));
     fill(hRefOutput.data(), hRefOutput.data() + hRefOutput.num_elements(),
@@ -174,11 +176,11 @@ struct SUTWrapper : ParsetSUT
     // Dummy BlockID
     BlockID blockId;
     // Copy input data from host- to device buffer synchronously
-    stream.writeBuffer(deviceMemory, hInput, true);
+    stream.writeBuffer(buffers.input, hInput, true);
     // Launch the kernel
     kernel->enqueue(blockId);
     // Copy output data from device- to host buffer synchronously
-    stream.readBuffer(hOutput, deviceMemory, true);
+    stream.readBuffer(hOutput, buffers.output, true);
   }
 
 };

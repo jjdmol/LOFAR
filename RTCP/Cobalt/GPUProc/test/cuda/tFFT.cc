@@ -30,9 +30,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarTypes.h>
 #include <CoInterface/BlockID.h>
-#include <CoInterface/SmartPtr.h>
 #include <GPUProc/Kernels/FFT_Kernel.h>
-#include <GPUProc/KernelFactory.h>
 #include <GPUProc/PerformanceCounter.h>
 
 using namespace std;
@@ -92,11 +90,8 @@ int main() {
   // Dummy Block-ID
   BlockID blockId;
 
-  KernelFactory<FFT_Kernel> factoryFwd(FFT_Kernel::Parameters(fftSize, size, true));
-  KernelFactory<FFT_Kernel> factoryBwd(FFT_Kernel::Parameters(fftSize, size, false));
-
-  SmartPtr<FFT_Kernel> fftFwdKernel(factoryFwd.create(stream, d_inout, d_inout));
-  SmartPtr<FFT_Kernel> fftBwdKernel(factoryBwd.create(stream, d_inout, d_inout));
+  FFT_Kernel fftFwdKernel(stream, fftSize, size, true, d_inout);
+  FFT_Kernel fftBwdKernel(stream, fftSize, size, false, d_inout);
 
   // FFTW buffers and plans
   ASSERT(fftw_init_threads() != 0);
@@ -130,7 +125,7 @@ int main() {
     // Forward FFT: compute and I/O
     stream.writeBuffer(d_inout, inout);
         
-    fftFwdKernel->enqueue(blockId);
+    fftFwdKernel.enqueue(blockId);
     stream.readBuffer(inout, d_inout, true);
     stream.synchronize();
     // do a call to the stats functionality 
@@ -148,7 +143,7 @@ int main() {
     }
 
     // Backward FFT: compute and I/O
-    fftFwdKernel->enqueue(blockId);
+    fftFwdKernel.enqueue(blockId);
     stream.synchronize();
     stream.readBuffer(inout, d_inout, true);
 
@@ -189,7 +184,7 @@ int main() {
 
     // GPU: Forward FFT: compute and I/O
     stream.writeBuffer(d_inout, inout);
-    fftFwdKernel->enqueue(blockId);
+    fftFwdKernel.enqueue(blockId);
     stream.readBuffer(inout, d_inout, true);
 
     // FFTW: Forward FFT
