@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -43,16 +43,10 @@ CableSettings* CableSettings::instance()
 	return (theirCableSettings);
 }
 
-void CableSettings::createInstance(const RCUCables &cableObject)
-{
-	ASSERTSTR(!theirCableSettings, "CableSetting information is already initialised");
-	theirCableSettings = new CableSettings(cableObject);
-}
-
 //
 // CableSettings(cableObject)
 //
-CableSettings::CableSettings(const RCUCables	&cableObject)
+CableSettings::CableSettings(const RCUCables*	cableObject)
 {
 	int	nrRCUs = StationSettings::instance()->nrRcus();
 	itsAtts.resize(nrRCUs, NR_RCU_MODES+1);
@@ -60,13 +54,15 @@ CableSettings::CableSettings(const RCUCables	&cableObject)
 
 	// Construct arrays cantaining with the smallest Atts and delays that are possible.
 	for (int	mode = 0; mode <= NR_RCU_MODES; mode++) {
-		float	largestAtt   = cableObject.getLargestAtt(mode);
-		float	largestDelay = cableObject.getLargestDelay(mode);
+		float	largestAtt   = cableObject->getLargestAtt(mode);
+		float	largestDelay = cableObject->getLargestDelay(mode);
 		for (int	rcu = 0; rcu < nrRCUs; rcu++) {
-			itsAtts  (rcu, mode) = largestAtt   - cableObject.getAtt  (rcu,mode);
-			itsDelays(rcu, mode) = largestDelay - cableObject.getDelay(rcu,mode);
+			itsAtts  (rcu, mode) = largestAtt   - cableObject->getAtt  (rcu,mode);
+			itsDelays(rcu, mode) = largestDelay - cableObject->getDelay(rcu,mode);
 		}
 	}
+
+	theirCableSettings = this;
 
 	LOG_DEBUG_STR("Attenuations: rcus x modes");
 	LOG_DEBUG_STR(itsAtts);

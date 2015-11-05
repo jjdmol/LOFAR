@@ -2,7 +2,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -32,7 +32,9 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.Icon;
 import javax.swing.JOptionPane;
+import javax.swing.JTextField;
 import nl.astron.lofar.lofarutils.DateTimeChooser;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
@@ -51,7 +53,7 @@ import org.apache.log4j.Logger;
  *
  * @version $Id$
  */
-public final class TreeInfoDialog extends javax.swing.JDialog {
+public class TreeInfoDialog extends javax.swing.JDialog {
     static Logger logger = Logger.getLogger(TreeInfoDialog.class);
     static String name = "TreeInfoDialog";
     
@@ -537,7 +539,6 @@ public final class TreeInfoDialog extends javax.swing.JDialog {
         classificationInput.setSelectedItem(itsClassification);
         creatorInput.setText(itsTree.creator);
         creationDateInput.setText(itsTree.creationDate.replace("T", " "));
-        modificationDateInput.setText(itsTree.modificationDate.replace("T", " "));
         typeInput.setText((String)OtdbRmi.getTreeType().get(itsTree.type));
         stateInput.setSelectedItem(itsTreeState);
         originalTreeIDInput.setText(String.valueOf(itsTree.originalTree));
@@ -574,8 +575,8 @@ public final class TreeInfoDialog extends javax.swing.JDialog {
                     if (!aTreeState.equals(stateInput.getSelectedItem().toString())) {
                         aTree.state=OtdbRmi.getRemoteTypes().getTreeState(stateInput.getSelectedItem().toString());
                         hasChanged=true;
-                        if (!OtdbRmi.getRemoteMaintenance().setTreeState(aTree.treeID(), aTree.state,false)) {
-                            String aS="Error during setTreeState("+aTree.treeID()+","+aTree.state+",false): "+OtdbRmi.getRemoteMaintenance().errorMsg();
+                        if (!OtdbRmi.getRemoteMaintenance().setTreeState(aTree.treeID(), aTree.state)) {
+                            String aS="Error during setTreeState("+aTree.treeID()+","+aTree.state+"): "+OtdbRmi.getRemoteMaintenance().errorMsg();
                             logger.error(aS);
                             LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                             succes=false;
@@ -610,8 +611,8 @@ public final class TreeInfoDialog extends javax.swing.JDialog {
                 if (!itsTreeState.equals(stateInput.getSelectedItem().toString())) {
                     hasChanged=true;
                     itsTree.state=OtdbRmi.getRemoteTypes().getTreeState(stateInput.getSelectedItem().toString());
-                    if (!OtdbRmi.getRemoteMaintenance().setTreeState(itsTree.treeID(), itsTree.state,false)) {
-                        String aS="Error during setTreeState("+itsTree.treeID()+","+itsTree.state+",false): "+OtdbRmi.getRemoteMaintenance().errorMsg();
+                    if (!OtdbRmi.getRemoteMaintenance().setTreeState(itsTree.treeID(), itsTree.state)) {
+                        String aS="Error during setTreeState("+itsTree.treeID()+","+itsTree.state+"): "+OtdbRmi.getRemoteMaintenance().errorMsg();
                         logger.error(aS);
                         LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                         succes=false;
@@ -763,13 +764,12 @@ public final class TreeInfoDialog extends javax.swing.JDialog {
         strategyInput = new javax.swing.JTextField();
         descriptionInput = new javax.swing.JTextArea();
         processSubTypeInput = new javax.swing.JTextField();
-        jLabel12 = new javax.swing.JLabel();
-        modificationDateInput = new javax.swing.JTextField();
 
         jTextField1.setText("jTextField1");
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("LOFAR View TreeInfo");
+        setAlwaysOnTop(true);
         setModal(true);
         setName("loadFileDialog"); // NOI18N
         setResizable(false);
@@ -793,7 +793,7 @@ public final class TreeInfoDialog extends javax.swing.JDialog {
                 cancelButtonActionPerformed(evt);
             }
         });
-        getContentPane().add(cancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 650, 120, -1));
+        getContentPane().add(cancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 650, 100, -1));
 
         saveButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png"))); // NOI18N
         saveButton.setText("Apply");
@@ -804,7 +804,7 @@ public final class TreeInfoDialog extends javax.swing.JDialog {
                 saveButtonActionPerformed(evt);
             }
         });
-        getContentPane().add(saveButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 650, 100, -1));
+        getContentPane().add(saveButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 650, 90, -1));
 
         jLabel1.setText("ID:");
         getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, -1, 20));
@@ -854,7 +854,7 @@ public final class TreeInfoDialog extends javax.swing.JDialog {
 
         creationDateInput.setToolTipText("Date this entry was created");
         creationDateInput.setEnabled(false);
-        getContentPane().add(creationDateInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 290, 170, -1));
+        getContentPane().add(creationDateInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 290, 440, -1));
 
         jLabel11.setText("Type:");
         getContentPane().add(jLabel11, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 320, -1, 20));
@@ -881,7 +881,7 @@ public final class TreeInfoDialog extends javax.swing.JDialog {
 
         topLabel.setColumns(20);
         topLabel.setEditable(false);
-        topLabel.setFont(new java.awt.Font("Tahoma", 1, 11));
+        topLabel.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
         topLabel.setRows(2);
         topLabel.setText("Tree Meta Data");
         topLabel.setOpaque(false);
@@ -974,7 +974,7 @@ public final class TreeInfoDialog extends javax.swing.JDialog {
                 showCampaignButtonMouseClicked(evt);
             }
         });
-        getContentPane().add(showCampaignButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(460, 410, 120, -1));
+        getContentPane().add(showCampaignButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(460, 410, 90, -1));
 
         nameLabel.setText("Name:");
         getContentPane().add(nameLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 50, -1, 20));
@@ -1006,7 +1006,7 @@ public final class TreeInfoDialog extends javax.swing.JDialog {
         processTypeInput.setToolTipText("processType");
         getContentPane().add(processTypeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 140, 130, -1));
 
-        processSubTypeLabel.setText("  \"   SubType:");
+        processSubTypeLabel.setText("ProcessSubType:");
         getContentPane().add(processSubTypeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 170, -1, 20));
 
         strategyLabel.setText("Strategy:");
@@ -1020,13 +1020,6 @@ public final class TreeInfoDialog extends javax.swing.JDialog {
         descriptionInput.setToolTipText("Set Description for this tree");
         getContentPane().add(descriptionInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 580, 550, 60));
         getContentPane().add(processSubTypeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 170, 450, -1));
-
-        jLabel12.setText("ModificationDate:");
-        getContentPane().add(jLabel12, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 290, -1, 20));
-
-        modificationDateInput.setToolTipText("Date this entry was modified last");
-        modificationDateInput.setEnabled(false);
-        getContentPane().add(modificationDateInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(430, 290, 170, -1));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -1295,14 +1288,12 @@ public final class TreeInfoDialog extends javax.swing.JDialog {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
-    private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextField jTextField1;
-    private javax.swing.JTextField modificationDateInput;
     private javax.swing.JTextField momIDInput;
     private javax.swing.JLabel momIDLabel;
     private javax.swing.JTextField nameInput;

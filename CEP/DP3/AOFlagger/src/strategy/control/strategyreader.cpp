@@ -41,7 +41,6 @@
 #include <AOFlagger/strategy/actions/frequencyconvolutionaction.h>
 #include <AOFlagger/strategy/actions/frequencyselectionaction.h>
 #include <AOFlagger/strategy/actions/fringestopaction.h>
-#include <AOFlagger/strategy/actions/highpassfilteraction.h>
 #include <AOFlagger/strategy/actions/imageraction.h>
 #include <AOFlagger/strategy/actions/iterationaction.h>
 #include <AOFlagger/strategy/actions/normalizevarianceaction.h>
@@ -278,8 +277,6 @@ Action *StrategyReader::parseAction(xmlNode *node)
 		newAction = parseFrequencySelectionAction(node);
 	else if(typeStr == "FringeStopAction")
 		newAction = parseFringeStopAction(node);
-	else if(typeStr == "HighPassFilterAction")
-		newAction = parseHighPassFilterAction(node);
 	else if(typeStr == "ImagerAction")
 		newAction = parseImagerAction(node);
 	else if(typeStr == "IterationBlock")
@@ -562,17 +559,6 @@ Action *StrategyReader::parseFringeStopAction(xmlNode *node)
 	newAction->SetOnlyFringeStop(getBool(node, "only-fringe-stop"));
 	newAction->SetMinWindowSize(getInt(node, "min-window-size"));
 	newAction->SetMaxWindowSize(getInt(node, "max-window-size"));
-	return newAction;
-}
-
-Action *StrategyReader::parseHighPassFilterAction(xmlNode *node)
-{
-	HighPassFilterAction *newAction = new HighPassFilterAction();
-	newAction->SetHKernelSigmaSq(getDouble(node, "horizontal-kernel-sigma-sq"));
-	newAction->SetVKernelSigmaSq(getDouble(node, "vertical-kernel-sigma-sq"));
-	newAction->SetWindowWidth(getInt(node, "window-width"));
-	newAction->SetWindowHeight(getInt(node, "window-height"));
-	newAction->SetMode((enum HighPassFilterAction::Mode) getInt(node, "mode"));
 	return newAction;
 }
 

@@ -25,8 +25,6 @@
 //#
 //# $Id$
 
-#include <lofar_config.h>
-
 #include <casa/Containers/Record.h>
 #include <casa/HDF5/HDF5File.h>
 #include <casa/HDF5/HDF5Group.h>
@@ -36,17 +34,12 @@
 
 #include <Common/SystemUtil.h>
 #include <Common/LofarLogger.h>
-#include <Common/Exception.h>
 
 #include <ostream>
 #include <sstream>
 
 using namespace casa;
-using namespace LOFAR;
 using namespace std;
-
-// Use a terminate handler that can produce a backtrace.
-Exception::TerminateHandler t(Exception::terminate);
 
 // Convert time to FITS format string.
 String time2String (const Quantity& time, int ndecimals)
@@ -123,13 +116,13 @@ void fill (const String& imageName)
   rootRec.define ("OBSERVATION_START_MJD",
                   startTime.getValue("d"));
   rootRec.define ("OBSERVATION_START_UTC",
-                  time2String(startTime, 9) + 'Z');     // Z means UTC
+                  time2String(startTime, 6));
   Quantity endTime(obsRec.asDouble("OBSERVATION_END"),
                    *obsRec.asArrayString("OBSERVATION_END_UNIT").data());
   rootRec.define ("OBSERVATION_END_MJD",
                   endTime.getValue("d"));
   rootRec.define ("OBSERVATION_END_UTC",
-                  time2String(endTime, 9) + 'Z');       // Z means UTC
+                  time2String(endTime, 6));
   rootRec.define ("OBSERVATION_NOF_STATIONS",
                   Int(stationNames.size()));
   rootRec.define ("OBSERVATION_STATIONS_LIST",
@@ -154,7 +147,7 @@ void fill (const String& imageName)
   Quantity clockFreq(obsRec.asDouble("CLOCK_FREQUENCY"),
                      *obsRec.asArrayString("CLOCK_FREQUENCY_UNIT").data());
   rootRec.define ("CLOCK_FREQUENCY",
-                  clockFreq.getValue("MHz"));
+                  cenFreq.getValue("MHz"));
   rootRec.define ("CLOCK_FREQUENCY_UNIT",
                   "MHz");
   rootRec.define ("ANTENNA_SET",
@@ -188,8 +181,7 @@ int main (int argc, char* argv[])
     }
     fill (argv[1]);
     cout << "Filled Root group in HDF5 image " << argv[1] << endl;
-  } catch (Exception& ex) {
-    cerr << ex << endl;
+  } catch (std::exception& x) {
     return 1;
   }
   return 0;

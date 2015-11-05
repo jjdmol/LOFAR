@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -36,14 +36,14 @@ import org.apache.log4j.Logger;
  *
  * @updated
  */
-public final class ButtonPanel extends javax.swing.JPanel {
+public class ButtonPanel extends javax.swing.JPanel {
     
     static Logger logger = Logger.getLogger(ButtonPanel.class);
     static String name = "ButtonPanel";
     
     /** Creates new form BeanForm */
     public ButtonPanel() {
-        buttons = new HashMap<>();
+        buttons = new HashMap<String,JButton>();
         initComponents();
         hasPlaceHolder=true;
     }
@@ -139,7 +139,7 @@ public final class ButtonPanel extends javax.swing.JPanel {
             jPanelButtons.remove(buttons.get(aKey));
             buttons.remove(aKey);            
          }
-         if (buttons.isEmpty()) {
+         if (buttons.size() == 0) {
             jPanelButtons.add(buttonsPlaceHolder);
             hasPlaceHolder=true;
          }

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2010
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -37,9 +37,9 @@ using namespace RTC;
 using namespace BS;
 using namespace IBS_Protocol;
 
-int main(int, char*	argv[]) 
+int main(int	argc, char*	argv[]) 
 {
-	INIT_LOGGER(argv[0]);
+	INIT_LOGGER("tAnaBeamMgr");
 
 	// set up some rcuMask for the tests. Mask 1+2 or 2+3 can be scheduled at the same time.
 	// 1: 0000 0000 1111

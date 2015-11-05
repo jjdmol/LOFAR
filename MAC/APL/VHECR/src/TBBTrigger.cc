@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/lofar_datetime.h>
 #include <Common/StringUtil.h>
 
 #include "VHECR/TBBTrigger.h" // path for online use
@@ -35,12 +36,12 @@ namespace LOFAR {
 //
 // TBBTrigger(...)
 //
-	  TBBTrigger::TBBTrigger (uint32	rcuNr, 		uint32	time, 		uint32	sampleNr, NsTimestamp nsTimestamp,
+TBBTrigger::TBBTrigger (uint32	rcuNr, 	uint32	seqNr, 		uint32	time, 		uint32	sampleNr, 
 						uint32	sum, 	uint32	nrSamples,	uint32	peakValue,	uint32	missed) :
 	itsRcuNr	(rcuNr),
+	itsSeqNr	(seqNr),
 	itsTime 	(time),
 	itsSampleNr	(sampleNr),
-	itsNsTimestamp(nsTimestamp),
 	itsSum		(sum),
 	itsNrSamples(nrSamples),
 	itsPeakValue(peakValue),
@@ -52,9 +53,9 @@ namespace LOFAR {
 //
 TBBTrigger::TBBTrigger() :
 	itsRcuNr	(0),
+	itsSeqNr	(0),
 	itsTime 	(0),
 	itsSampleNr	(0),
-	itsNsTimestamp(0),
 	itsSum		(0),
 	itsNrSamples(0),
 	itsPeakValue(0),
@@ -68,9 +69,9 @@ TBBTrigger& TBBTrigger::operator=(const TBBTrigger& that)
 {
 	if (this != &that) { 
 		this->itsRcuNr 	   = that.itsRcuNr; 
+		this->itsSeqNr 	   = that.itsSeqNr; 
 		this->itsTime 	   = that.itsTime; 
 		this->itsSampleNr  = that.itsSampleNr; 
-		this->itsNsTimestamp = that.itsNsTimestamp;
 		this->itsSum 	   = that.itsSum; 
 		this->itsNrSamples = that.itsNrSamples; 
 		this->itsPeakValue = that.itsPeakValue; 
@@ -85,17 +86,16 @@ TBBTrigger& TBBTrigger::operator=(const TBBTrigger& that)
 //#
 ostream& TBBTrigger::print(ostream&	os) const
 {
-	os << "RCUnr      : " << itsRcuNr << endl;
-		char	*timeStr = ctime((const time_t*)&itsTime);
+	os << "RCUnr     : " << itsRcuNr << endl;
+	os << "SeqNr     : " << itsSeqNr << endl;
+	char	*timeStr = ctime((const time_t*)&itsTime);
 	timeStr[strlen(timeStr)-1] = '\0';
-	os << "Time       : " << timeStr << endl;
-	os << "SampleNr   : " << itsSampleNr << endl;
-	os << "Time sec   : " << itsNsTimestamp.sec() << endl;
-	os << "Time nsec  : " << itsNsTimestamp.nsec() << endl;
-	os << "Sum        : " << itsSum << endl;
-	os << "Nr samples : " << itsNrSamples << endl;
-	os << "Peakvalue  : " << itsPeakValue << endl;
-	os << "Missed     : " << itsMissed << endl;
+	os << "Time      : " << timeStr << endl;
+	os << "SampleNr  : " << itsSampleNr << endl;
+	os << "Sum       : " << itsSum << endl;
+	os << "Nr samples: " << itsNrSamples << endl;
+	os << "Peakvalue : " << itsPeakValue << endl;
+	os << "Missed    : " << itsMissed << endl;
 
 	return (os);
 }

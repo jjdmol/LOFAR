@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -116,21 +116,21 @@ public class CreateDefaultTemplateDialog extends javax.swing.JDialog {
             }
         });
         getContentPane().add(jButtonOK, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 350, -1, -1));
-        getContentPane().add(nameInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(220, 200, 300, -1));
+        getContentPane().add(nameInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 200, 300, -1));
 
         jLabel2.setText("ProcessType:");
         getContentPane().add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 230, -1, -1));
-        getContentPane().add(processTypeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(220, 230, 300, -1));
+        getContentPane().add(processTypeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 230, 300, -1));
 
         jLabel3.setText("ProcessSubtype:");
         getContentPane().add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 260, -1, -1));
-        getContentPane().add(processSubtypeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(220, 260, 300, -1));
+        getContentPane().add(processSubtypeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 260, 300, -1));
 
         jLabel4.setText("Strategy:");
         getContentPane().add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 290, -1, -1));
-        getContentPane().add(strategyInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(220, 290, 300, -1));
+        getContentPane().add(strategyInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 290, 300, -1));
 
-        jLabel5.setFont(new java.awt.Font("Tahoma", 1, 14));
+        jLabel5.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         jLabel5.setText("Create new Default Template");
         getContentPane().add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 10, 220, -1));
 

@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -21,18 +21,18 @@
 --
 --  $Id$
 --
-DROP TABLE IF EXISTS classification CASCADE;
-DROP TABLE IF EXISTS constr_type 	  CASCADE;
-DROP TABLE IF EXISTS param_type 	  CASCADE;
-DROP TABLE IF EXISTS pvss_type 	  CASCADE;
-DROP TABLE IF EXISTS validation 	  CASCADE;
-DROP TABLE IF EXISTS unit		 	  CASCADE;
-DROP TABLE IF EXISTS treetype 	  CASCADE;
-DROP TABLE IF EXISTS treestate 	  CASCADE;
+DROP TABLE classification CASCADE;
+DROP TABLE constr_type 	  CASCADE;
+DROP TABLE param_type 	  CASCADE;
+DROP TABLE pvss_type 	  CASCADE;
+DROP TABLE validation 	  CASCADE;
+DROP TABLE unit		 	  CASCADE;
+DROP TABLE treetype 	  CASCADE;
+DROP TABLE treestate 	  CASCADE;
 
-DROP SEQUENCE IF EXISTS			  campaignID;
-DROP TABLE IF EXISTS campaign 	  CASCADE;
-DROP TABLE IF EXISTS operator 	  CASCADE;
+DROP SEQUENCE			  campaignID;
+DROP TABLE campaign 	  CASCADE;
+DROP TABLE operator 	  CASCADE;
 
 --
 -- Classification table
@@ -40,7 +40,6 @@ DROP TABLE IF EXISTS operator 	  CASCADE;
 -- Assigns a level of 'maturity' to a node or tree
 --
 CREATE TABLE classification (
-    --  $Id$
 	ID			INT2			NOT NULL,
 	name		VARCHAR(15)		NOT NULL,
 
@@ -58,7 +57,6 @@ INSERT INTO classification VALUES (4, 'example');
 -- Defines the ways the node+parameter constraints can be checked.
 --
 CREATE TABLE constr_type (
-    --  $Id$
 	ID			INT2			NOT NULL,
 	name		VARCHAR(10)		NOT NULL,
 
@@ -77,7 +75,6 @@ INSERT INTO constr_type VALUES (3, 'exec');
 -- so that it can check the values that are entered.
 --
 CREATE TABLE param_type (
-    --  $Id$
 	ID			INT2			NOT NULL,
 	name		VARCHAR(5)		NOT NULL,
 
@@ -137,7 +134,6 @@ INSERT INTO param_type VALUES (315, 'pdate');
 -- in the param_type table.
 --
 CREATE TABLE pvss_type (
-    --  $Id$
 	ID			INT2			NOT NULL,
 	name		VARCHAR(5)		NOT NULL REFERENCES param_type(name),
 
@@ -165,7 +161,6 @@ INSERT INTO pvss_type VALUES (25, 'text');
 -- TODO: Check contents of the table.
 --
 CREATE TABLE validation (
-    --  $Id$
 	ID			INT2			NOT NULL,
 	name		VARCHAR(10)		NOT NULL,
 
@@ -186,7 +181,6 @@ INSERT INTO validation VALUES (3, 'resource');
 -- TODO: Extend table with a lot more records.
 --
 CREATE TABLE unit (
-    --  $Id$
 	ID			INT2			NOT NULL,
 	name 		VARCHAR(10)		NOT NULL,
 	label		VARCHAR(5),
@@ -218,7 +212,6 @@ INSERT INTO unit values (15, 'degrees',  'deg', '',			false);
 -- 
 -- Define the kind of tree the information refers to.
 CREATE TABLE treetype (
-    --  $Id$
 	ID			INT2			NOT NULL,
 	name		VARCHAR(10)		NOT NULL,
 
@@ -235,7 +228,6 @@ INSERT INTO treetype VALUES (30, 'VHtree');
 -- Define states for trees that indicate the phase of the
 -- lifecycle the tree is in.
 CREATE TABLE treestate (
-    --  $Id$
 	ID			INT2			NOT NULL,
 	name		VARCHAR(20)		NOT NULL,
 
@@ -252,7 +244,6 @@ INSERT INTO treestate VALUES (350, 'prescheduled');
 INSERT INTO treestate VALUES (400, 'scheduled');
 INSERT INTO treestate VALUES (500, 'queued');
 INSERT INTO treestate VALUES (600, 'active');
-INSERT INTO treestate VALUES (900, 'completing');
 INSERT INTO treestate VALUES (1000, 'finished');
 INSERT INTO treestate VALUES (1100, 'aborted');
 INSERT INTO treestate VALUES (1150, 'error');
@@ -267,7 +258,6 @@ INSERT INTO treestate VALUES (1200, 'obsolete');
 --
 CREATE SEQUENCE	campaignID;
 CREATE TABLE campaign (
-    --  $Id$
 	ID			INT2			NOT NULL DEFAULT NEXTVAL('campaignID'),
 	name		VARCHAR(30)		NOT NULL,
 	title		VARCHAR(100)	NOT NULL,
@@ -286,7 +276,6 @@ INSERT INTO campaign(id, name, title, PI) VALUES (0, 'no campaign', 'not related
 -- Names and ID of the operater allowed to manage the trees.
 --
 CREATE TABLE operator (
-    --  $Id$
 	ID			INT4			NOT NULL,
 	name		VARCHAR(30)		NOT NULL,
 	telephone	VARCHAR(10)		NOT NULL,
@@ -302,7 +291,7 @@ INSERT INTO operator VALUES (2, 'gargamel', '0123456789');
 --
 -- All allowed combinations of processType, processSubtype and strategy
 --
---DROP TABLE IF EXISTS processTypes;
+--DROP TABLE processTypes;
 --CREATE TABLE processTypes  (
 --	processType		VARCHAR(20)	  NOT NULL DEFAULT '',
 --	processSubtype	VARCHAR(50)   NOT NULL DEFAULT '',

@@ -79,7 +79,7 @@ ParameterSet::ParameterSet(const char*	theFilename,
 // Copying is allowed.
 //
 ParameterSet::ParameterSet(const ParameterSet& that)
-  : itsSet (that.itsSet)
+  : itsSet (that.itsSet->incrCount())
 {}
 
 //
@@ -89,7 +89,8 @@ ParameterSet&
 ParameterSet::operator=(const ParameterSet& that)
 {
   if (this != &that) {
-    itsSet = that.itsSet;
+    unlink();
+    itsSet = that.itsSet->incrCount();
   }
   return (*this);
 }
@@ -98,7 +99,17 @@ ParameterSet::operator=(const ParameterSet& that)
 //	Destructor
 //
 ParameterSet::~ParameterSet()
-{}
+{
+  unlink();
+}
+
+void ParameterSet::unlink()
+{
+  if (itsSet->decrCount() == 0) {
+    delete itsSet;
+  }
+}
+
 
 ParameterRecord ParameterSet::getRecord (const string& aKey) const
 {

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -35,8 +35,9 @@ using namespace LOFAR;
 using namespace RSP;
 using namespace EPA_Protocol;
 
-BypassRead::BypassRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, NR_BLPS_PER_RSPBOARD /* BP */)
+BypassRead::BypassRead(GCFPortInterface& board_port, int board_id, int	bpNr)
+  : SyncAction(board_port, board_id, NR_BLPS_PER_RSPBOARD),
+	itsBPNr	  (bpNr)
 {
 	memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -49,7 +50,7 @@ void BypassRead::sendrequest()
 {
 	// Message per rcu.
 	EPAReadEvent bypassread;
-	bypassread.hdr.set(MEPHeader::DIAG_BYPASS_HDR, (1 << getCurrentIndex()), MEPHeader::READ);
+	bypassread.hdr.set(MEPHeader::DIAG_BYPASS_HDR, itsBPNr << getCurrentIndex(), MEPHeader::READ);
 
 	m_hdr = bypassread.hdr;
 	getBoardPort().send(bypassread);
@@ -74,9 +75,12 @@ GCFEvent::TResult BypassRead::handleack(GCFEvent& event, GCFPortInterface& /*por
 		LOG_ERROR("BypassRead::handleack: invalid ack");
 		return (GCFEvent::NOT_HANDLED);
 	}
-    
-    uint16 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + getCurrentIndex();
-    LOG_DEBUG_STR("BypassRead: handleack: bp= " << global_blp);
-    Cache::getInstance().getBack().getBypassSettings()()(global_blp).setRaw(bypassAckMsg.bypass);
+
+	uint16 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) 
+						+ getCurrentIndex();
+
+	LOG_DEBUG_STR("BypassRead: handleack: bp= " << global_blp);
+	Cache::getInstance().getBack().getBypassSettings()()(global_blp).setRaw(bypassAckMsg.bypass);
+
 	return (GCFEvent::HANDLED);
 }

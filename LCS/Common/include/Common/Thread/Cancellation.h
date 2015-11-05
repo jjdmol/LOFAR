@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id$
+//#  $Id: Thread.h 16592 2010-10-22 13:04:23Z mol $
 
 #ifndef LOFAR_LCS_COMMON_CANCELLATION_H
 #define LOFAR_LCS_COMMON_CANCELLATION_H
@@ -86,9 +86,7 @@ private:
     thread_state(): refcount(0), oldstate(false) {}
   };
 
-  typedef std::map<pthread_t, struct thread_state> thread_states_t;
-
-  static thread_states_t& getThreadStates(); 
+  static std::map<pthread_t, struct thread_state> thread_states; 
 
   // register threads explicitly to avoid the state maps growing unbounded
   // note that the main thread won't be registered since there is no way
@@ -177,7 +175,7 @@ inline void Cancellation::push_disable() {
 
   // map::operator[] will call the default constructor
   // if myid is not in the map
-  struct thread_state &state = getThreadStates()[myid];
+  struct thread_state &state = thread_states[myid];
 
   if (state.refcount++ == 0)
     state.oldstate = disable();
@@ -191,7 +189,7 @@ inline void Cancellation::pop_disable() {
 
   ScopedLock sl;
 
-  struct thread_state &state = getThreadStates()[myid];
+  struct thread_state &state = thread_states[myid];
 
   if (--state.refcount == 0)
     set( state.oldstate );
@@ -203,7 +201,7 @@ inline void Cancellation::pop_disable() {
 inline void Cancellation::register_thread( pthread_t id ) {
   ScopedLock sl;
 
-  getThreadStates()[id] = thread_state();
+  thread_states[id] = thread_state();
 }
 #endif  
 
@@ -212,7 +210,7 @@ inline void Cancellation::register_thread( pthread_t id ) {
 inline void Cancellation::unregister_thread( pthread_t id ) {
   ScopedLock sl;
 
-  getThreadStates().erase(id);
+  thread_states.erase(id);
 }
 #endif  
 

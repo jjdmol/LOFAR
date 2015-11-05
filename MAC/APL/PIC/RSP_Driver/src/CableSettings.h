@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -47,10 +47,10 @@ namespace LOFAR {
 class CableSettings
 {
 public:
+	CableSettings (const RCUCables*	CableObject);
 	~CableSettings() ;
 
 	static CableSettings* instance();
-	static void createInstance(const RCUCables &CableObject);
 
 	// Returns the attenuation array
 	inline blitz::Array<float, 2>&	getAtts()	{ return itsAtts; }
@@ -65,9 +65,6 @@ private:
 	CableSettings();
 	CableSettings(const CableSettings&	that);
 	CableSettings& operator=(const CableSettings& that);
-
-	// Only createInstance can instantiate
-	CableSettings (const RCUCables &CableObject);
 
 	//# --- Datamembers ---
 	blitz::Array<float,	2>	itsAtts;

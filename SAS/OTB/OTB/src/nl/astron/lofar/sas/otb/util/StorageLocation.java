@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ public class StorageLocation {
     }
     
     public String getMACInteractionMonitorPath() {
-        String path = "/tmp/OTB/MAC2OTB/";
+        String path = new String("/tmp/OTB/MAC2OTB/");
         if(itsOtdbRmi == null) {
             logger.info("Not using OTDB to get storage location");
         }
@@ -54,7 +54,7 @@ public class StorageLocation {
     }
     
     public String getMACInteractionWritePath() {
-        String path = "/tmp/OTB/OTB2MAC/";
+        String path = new String("/tmp/OTB/OTB2MAC/");
         if(itsOtdbRmi == null) {
             logger.info("Not using OTDB to get storage location");
         }

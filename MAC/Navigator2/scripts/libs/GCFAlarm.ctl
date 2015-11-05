@@ -2,7 +2,7 @@
 //
 //  Copyright (C) 2002-2004
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -191,30 +191,6 @@ int stateToStatus(int aState) {
 }
 
 
-// *******************************************
-// Name : sendAlarm
-// *******************************************
-// Description:
-//    sends an Alarm to the database
-//
-//
-// *******************************************
-void sendAlarm(string aDPName,string aMessage,bool force) {
-  
-  int aStateNr = BROKEN_CAME;
 
-  if (dpExists(aDPName) && aMessage != "") {
-    dpSet( "__navObjectState.DPName",aDPName+".status.state",
-           "__navObjectState.stateNr",aStateNr,
-           "__navObjectState.message",aMessage,
-           "__navObjectState.force",force);
-  } else {
-    if (aMessage == "") {
-      LOG_ERROR("GCFAlarm.ctl:sendAlarm|ERROR: empty message for alarm ");
-    } else {
-      LOG_ERROR("GCFAlarm.ctl:sendAlarm|ERROR: non existing DP for alarm: "+aDPName);
-    }
-  }
-}
 
 

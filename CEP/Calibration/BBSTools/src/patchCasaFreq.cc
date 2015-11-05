@@ -8,7 +8,6 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>   // for ASSERT and ASSERTSTR?
 #include <Common/SystemUtil.h>    // needed for basename
-#include <Common/Exception.h>
 
 // STL/C++ includes
 #include <iostream>
@@ -42,8 +41,6 @@ using namespace std;
 using namespace casa;
 using namespace LOFAR;
 
-// Use a terminate handler that can produce a backtrace.
-Exception::TerminateHandler t(Exception::terminate);
 
 double patchImageFreq(const string &imageName, double reffreq);
 void usage(const char *programname);
@@ -56,7 +53,7 @@ int main(int argc, char **argv)
   if(argc < 3)        // if not enough parameters given, display usage information
   {
       usage(argv[0]);
-      return 0;
+      exit(0);
   }
   else      // Handle file arguments: MS image image (and options, e.g. -w 512)
   {
@@ -69,7 +66,7 @@ int main(int argc, char **argv)
       originalfrequency << " Hz)" << endl;
   }
 
-  return 0;
+  exit(0);
 }
 
 

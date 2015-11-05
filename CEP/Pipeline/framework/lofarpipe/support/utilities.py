@@ -3,47 +3,22 @@
 #                                                               Utility routines
 #                                                         John Swinbank, 2009-10
 #                                                      swinbank@transientskp.org
-#                                                          Marcel Loose, 2011-12
-#                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
 
 from __future__ import with_statement
 
+from subprocess import Popen, CalledProcessError, PIPE
 from itertools import islice, repeat, chain, izip
 from contextlib import closing, contextmanager
 from time import sleep
 from random import randint
-import warnings
 
 import os
 import errno
 import shutil
-import sys
-
-try:
-    import subprocess27 as subprocess
-    print >> sys.stderr, __file__, ": Using Python 2.7 subprocess module!"
-except ImportError:
-    import subprocess
-    print >> sys.stderr, __file__, ": Using default subprocess module!"
+import subprocess
 
 from lofarpipe.support.pipelinelogging import log_process_output
-
-def deprecated(func):
-    """
-    This is a decorator which can be used to mark functions as deprecated.
-    It will result in a warning being emmitted when the function is used.
-    Ref.: http://code.activestate.com/recipes/391367-deprecated/
-    """
-    def new_func(*args, **kwargs):
-        warnings.warn("Call to deprecated function %s." % func.__name__,
-                      category=DeprecationWarning,
-                      stacklevel=2)
-        return func(*args, **kwargs)
-    new_func.__name__ = func.__name__
-    new_func.__doc__ = func.__doc__
-    new_func.__dict__.update(func.__dict__)
-    return new_func
 
 #                                                                  Compatibility
 #                               The following used to be defined in this module;
@@ -74,25 +49,14 @@ def create_directory(dirname):
             os.makedirs(dirname)
     except OSError, failure:
         if failure.errno != errno.EEXIST:
-            raise failure
-
-def delete_directory(dirname):
-    """
-    Recursively delete a directory tree: Without failing if the dir does not
-    exist
-    """
-    try:
-        shutil.rmtree(dirname)
-    except OSError, e:
-        if not e.errno == errno.ENOENT:
-            raise e
+            raise
 
 def disk_usage(*paths):
     """
     Return the disk usage in bytes by the file(s) in ``paths``.
     """
     cmd = ['du', '-s', '-b']
-    proc = subprocess.Popen(cmd + list(paths), stdout = subprocess.PIPE)
+    proc = Popen(cmd + list(paths), stdout=PIPE)
     sout = proc.communicate()[0]
     if sout:
         return sum([int(s.split('\t')[0]) for s in sout.strip().split('\n')])
@@ -158,7 +122,7 @@ except ImportError:
         izip_longest('ABCD', 'xy', fillvalue='-') --> Ax By C- D-
         """
         fillvalue = None
-        def sentinel(counter = ([fillvalue] * (len(args) - 1)).pop):
+        def sentinel(counter = ([fillvalue]*(len(args)-1)).pop):
             yield counter()         # yields the fillvalue, or raises IndexError
         fillers = repeat(fillvalue)
         iters = [chain(it, sentinel(), fillers) for it in args]
@@ -187,7 +151,7 @@ def group_iterable(iterable, size):
 #                                                                  Miscellaneous
 # ------------------------------------------------------------------------------
 
-def read_initscript(logger, filename, shell = "/bin/sh"):
+def read_initscript(logger, filename, shell="/bin/sh"):
     """
     Return a dict of the environment after sourcing the given script in a shell.
     """
@@ -198,11 +162,11 @@ def read_initscript(logger, filename, shell = "/bin/sh"):
         logger.debug("Reading environment from %s" % filename)
         p = subprocess.Popen(
             ['. %s ; env' % (filename)],
-            shell = True,
-            executable = shell,
-            stdout = subprocess.PIPE,
-            stderr = subprocess.PIPE,
-            close_fds = True
+            shell=True,
+            executable=shell,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            close_fds=True
         )
         so, se = p.communicate()
         environment = [x.split('=', 1) for x in so.strip().split('\n')]
@@ -215,7 +179,7 @@ def string_to_list(my_string):
     """
     return [x.strip() for x in my_string.strip('[] ').split(',') if x.strip()]
 
-def spawn_process(cmd, logger, cwd = None, env = None, max_tries = 2, max_timeout = 30):
+def spawn_process(cmd, logger, cwd=None, env=None, max_tries=2, max_timeout=30):
     """
     Tries to spawn a process.
 
@@ -230,8 +194,8 @@ def spawn_process(cmd, logger, cwd = None, env = None, max_tries = 2, max_timeou
         logger.debug(
             "Spawning subprocess: cmd=%s, cwd=%s, env=%s" % (cmd, cwd, env))
         try:
-            process = subprocess.Popen(
-                cmd, cwd = cwd, env = env, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE
+            process = Popen(
+                cmd, cwd=cwd, env=env, stdin=PIPE, stdout=PIPE, stderr=PIPE
             )
         except OSError, e:
             logger.warn(
@@ -251,8 +215,7 @@ def spawn_process(cmd, logger, cwd = None, env = None, max_tries = 2, max_timeou
             break
     return process
 
-def catch_segfaults(cmd, cwd, env, logger, max = 1, cleanup = lambda: None,
-                    usageStats = None):
+def catch_segfaults(cmd, cwd, env, logger, max=1, cleanup=lambda: None):
     """
     Run cmd in cwd with env, sending output to logger.
 
@@ -264,15 +227,6 @@ def catch_segfaults(cmd, cwd, env, logger, max = 1, cleanup = lambda: None,
             logger.debug("Retrying...")
         logger.debug("Running: %s" % (' '.join(cmd),))
         process = spawn_process(cmd, logger, cwd, env)
-        #add the created process to the usageStat object
-        if usageStats:
-            usageStats.addPID(process.pid)
-
-        if 'casa' in cmd[0]:
-	    import time
-            while process.returncode is None:
-                process.poll()
-                time.sleep(1)
         sout, serr = process.communicate()
         log_process_output(cmd[0], sout, serr, logger)
         if process.returncode == 0:
@@ -283,10 +237,10 @@ def catch_segfaults(cmd, cwd, env, logger, max = 1, cleanup = lambda: None,
             tries += 1
             continue
         else:
-            raise subprocess.CalledProcessError(
+            raise CalledProcessError(
                 process.returncode, cmd[0]
             )
     if tries > max:
         logger.error("Too many segfaults from %s; aborted" % (cmd[0]))
-        raise subprocess.CalledProcessError(process.returncode, cmd[0])
+        raise CalledProcessError(process.returncode, cmd[0])
     return process

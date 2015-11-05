@@ -28,18 +28,10 @@
 // @brief General info about DPPP data processing attributes like averaging
 
 #include <Common/LofarTypes.h>
-#include <Common/lofar_vector.h>
 #include <measures/Measures/MDirection.h>
-#include <measures/Measures/MPosition.h>
-#include <measures/Measures/MeasureHolder.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Containers/Record.h>
 
 namespace LOFAR {
   namespace DPPP {
-
-    //# Forward declarations.
-    class DPInput;
 
     // @ingroup NDPPP
 
@@ -56,247 +48,74 @@ namespace LOFAR {
       DPInfo();
 
       // Set the initial info from the input.
-      void init (uint ncorr, uint nchan,
-                 uint ntime, double startTime, double timeInterval,
-                 const string& msName, const string& antennaSet);
+      void init (uint ncorr, uint startChan, uint nchan, uint nbaselines,
+                 uint ntime, double timeInterval);
 
-      // Set nr of channels.
-      void setNChan (uint nchan)
-        { itsNChan = nchan; }
-
-      // Set the frequency info.
-      // An empty resolutions or effectiveBW is default to chanWidths.
-      // If totalBW is 0, it is set to the sum of effectiveBW.
-      // If refFreq is 0, it is set to the middle of chanFreqs (mean if even).
-      void set (const casa::Vector<double>& chanFreqs,
-                const casa::Vector<double>& chanWidths,
-                const casa::Vector<double>& resolutions= casa::Vector<double>(),
-                const casa::Vector<double>& effectiveBW= casa::Vector<double>(),
-                double totalBW = 0,
-                double refFreq = 0);
-
-      // Set array info.
-      void set (const casa::MPosition& arrayPos,
-                const casa::MDirection& phaseCenter,
-                const casa::MDirection& delayCenter,
-                const casa::MDirection& tileBeamDir);
-
-      // Set the info for the given antennae and baselines.
-      void set (const casa::Vector<casa::String>& antNames,
-                const casa::Vector<casa::Double>& antDiam,
-                const vector<casa::MPosition>& antPos,
-                const casa::Vector<casa::Int>& ant1,
-                const casa::Vector<casa::Int>& ant2);
-
-      // Set the name of the data column
-      void setDataColName(const casa::String& dataColName) {
-        itsDataColName=dataColName;
-      }
-
-      // Set the name of the weight column
-      void setWeightColName(const casa::String& weightColName) {
-        itsWeightColName=weightColName;
-      }
-
-      // Update the info for the given average factors.
+      // Update the info from the given average factors.
       // If chanAvg is higher than the actual nr of channels, it is reset.
       // The same is true for timeAvg.
       // It returns the possibly reset nr of channels to average.
       uint update (uint chanAvg, uint timeAvg);
-
-      // Update the info from the given selection parameters.
-      // Optionally unused stations are really removed from the antenna lists.
-      void update (uint startChan, uint nchan,
-                   const vector<uint>& baselines, bool remove);
-
-      // Remove unused stations from the antenna lists.
-      void removeUnusedAnt();
 
       // Set the phase center.
       // If original=true, it is set to the original phase center.
       void setPhaseCenter (const casa::MDirection& phaseCenter, bool original)
         { itsPhaseCenter=phaseCenter; itsPhaseCenterIsOriginal = original; }
 
-
       // Get the info.
-      const string& msName() const
-        { return itsMSName; }
-      const string& antennaSet() const
-        { return itsAntennaSet; }
       uint ncorr() const
         { return itsNCorr; }
-      uint nchan() const
-        { return itsNChan; }
-      uint startchan() const
+      uint startChan() const
         { return itsStartChan; }
       uint origNChan() const
         { return itsOrigNChan; }
+      uint nchan() const
+        { return itsNChan; }
       uint nchanAvg() const
         { return itsChanAvg; }
-      uint nantenna() const
-        { return itsAntNames.size(); }
       uint nbaselines() const
-        { return itsAnt1.size(); }
+        { return itsNBl; }
       uint ntime() const
         { return itsNTime; }
       uint ntimeAvg() const
         { return itsTimeAvg; }
-      double startTime() const
-        { return itsStartTime; }
       double timeInterval() const
         { return itsTimeInterval; }
-      const casa::Vector<casa::Int>& getAnt1() const
-        { return itsAnt1; }
-      const casa::Vector<casa::Int>& getAnt2() const
-        { return itsAnt2; }
-      const casa::Vector<casa::String>& antennaNames() const
-        { return itsAntNames; }
-      const casa::Vector<casa::Double>& antennaDiam() const
-        { return itsAntDiam; }
-      const vector<casa::MPosition>& antennaPos() const
-        { return itsAntPos; }
-      const casa::MPosition& arrayPos() const
-        { return itsArrayPos; }
-      const casa::MPosition arrayPosCopy() const
-        {  return copyMeasure(casa::MeasureHolder(itsArrayPos)).asMPosition(); }
-      const casa::MDirection& phaseCenter() const
-        { return itsPhaseCenter; }
-      const casa::MDirection phaseCenterCopy() const
-      {  return copyMeasure(casa::MeasureHolder(itsPhaseCenter)).asMDirection(); }
-      bool phaseCenterIsOriginal() const
-        { return itsPhaseCenterIsOriginal; }
-      const casa::MDirection& delayCenter() const
-        { return itsDelayCenter; }
-      const casa::MDirection delayCenterCopy() const
-        { return copyMeasure(casa::MeasureHolder(itsDelayCenter)).asMDirection(); }
-      const casa::MDirection& tileBeamDir() const
-        { return itsTileBeamDir; }
-      const casa::MDirection tileBeamDirCopy() const
-        { return copyMeasure(casa::MeasureHolder(itsTileBeamDir)).asMDirection(); }
-      const casa::Vector<double>& chanFreqs() const
-        { return itsChanFreqs; }
-      const casa::Vector<double>& chanWidths() const
-        { return itsChanWidths; }
-      const casa::Vector<double>& resolutions() const
-        { return itsResolutions; }
-      const casa::Vector<double>& effectiveBW() const
-        { return itsEffectiveBW; }
-      const casa::String& getDataColName() const
-        { return itsDataColName; }
-      const casa::String& getWeightColName() const
-        { return itsWeightColName; }
-      double totalBW() const
-        { return itsTotalBW; }
-      double refFreq() const
-        { return itsRefFreq; }
-
-      // Get the antenna numbers actually used in the (selected) baselines.
-      // E.g. [0,2,5,6]
-      const vector<int>& antennaUsed() const
-        { return itsAntUsed; }
-
-      // Get the indices of all antennae in the used antenna vector above.
-      // -1 means that the antenna is not used.
-      // E.g. [0,-1,1,-1,-1,2,3] for the example above.
-      const vector<int>& antennaMap() const
-        { return itsAntMap; }
 
       // Are the visibility data needed?
       bool needVisData() const
         { return itsNeedVisData; }
-      // Does the last step need to write data and/or flags?
+      // Does the last step need to write?
       bool needWrite() const
-        { return itsWriteData || itsWriteFlags || itsWriteWeights; }
-      bool writeData() const
-        { return itsWriteData; }
-      bool writeFlags() const
-        { return itsWriteFlags; }
-      bool writeWeights() const
-        { return itsWriteWeights; }
-      // Has the meta data been changed in a step (precluding an update)?
-      bool metaChanged() const
-        { return itsMetaChanged; }
+        { return itsNeedWrite; }
 
       // Set if visibility data needs to be read.
       void setNeedVisData()
-        { itsNeedVisData = true; }
-      // Set if data needs to be written.
-      void setWriteData()
-        { itsWriteData = true; }
-      void setWriteFlags()
-        { itsWriteFlags = true; }
-      void setWriteWeights()
-        { itsWriteWeights = true; }
-      // Clear all write flags.
-      void clearWrites()
-        { itsWriteData = itsWriteFlags = itsWriteWeights = false; }
-      // Set change of meta data.
-      void setMetaChanged()
-        { itsMetaChanged = true; }
-      void clearMetaChanged()
-        { itsMetaChanged = false; }
+        { itsNeedVisData = true; } 
+      // Set if the last step needs to write.
+      void setNeedWrite()
+        { itsNeedWrite = true; }
 
-      // Get the baseline table index of the autocorrelations.
-      // A negative value means there are no autocorrelations for that antenna.
-      const vector<int>& getAutoCorrIndex() const;
-
-      // Get the lengths of the baselines (in meters).
-      const vector<double>& getBaselineLengths() const;
-
-      // Convert to a Record.
-      // The names of the fields in the record are the data names without 'its'.
-      casa::Record toRecord() const;
-
-      // Update the DPInfo object from a Record.
-      // It is possible that only a few fields are defined in the record.
-      void fromRecord (const casa::Record& rec);
+      // Get the phase center info.
+      const casa::MDirection& phaseCenter() const
+        { return itsPhaseCenter; }
+      bool phaseCenterIsOriginal() const
+        { return itsPhaseCenterIsOriginal; }
 
     private:
-      // Set which antennae are actually used.
-      void setAntUsed();
-
-      // Creates a real copy of a casa::Measure by exporting to a Record
-      static casa::MeasureHolder copyMeasure(const casa::MeasureHolder fromMeas);
-
-      //# Data members.
       bool   itsNeedVisData;    //# Are the visibility data needed?
-      bool   itsWriteData;      //# Must the data be written?
-      bool   itsWriteFlags;     //# Must the flags be written?
-      bool   itsWriteWeights;   //# Must the weights be written?
-      bool   itsMetaChanged;    //# Are meta data changed? (e.g., by averaging)
-      string itsMSName;
-      casa::String itsDataColName;
-      casa::String itsWeightColName;
-      string itsAntennaSet;
+      bool   itsNeedWrite;      //# Does the last step need to write?
       uint   itsNCorr;
       uint   itsStartChan;
       uint   itsOrigNChan;
       uint   itsNChan;
       uint   itsChanAvg;
+      uint   itsNBl;
       uint   itsNTime;
       uint   itsTimeAvg;
-      double itsStartTime;
       double itsTimeInterval;
       casa::MDirection itsPhaseCenter;
       bool             itsPhaseCenterIsOriginal;
-      casa::MDirection itsDelayCenter;
-      casa::MDirection itsTileBeamDir;
-      casa::MPosition  itsArrayPos;
-      casa::Vector<double>       itsChanFreqs;
-      casa::Vector<double>       itsChanWidths;
-      casa::Vector<double>       itsResolutions;
-      casa::Vector<double>       itsEffectiveBW;
-      double                     itsTotalBW;
-      double                     itsRefFreq;
-      casa::Vector<casa::String> itsAntNames;
-      casa::Vector<casa::Double> itsAntDiam;
-      vector<casa::MPosition>    itsAntPos;
-      vector<int>                itsAntUsed;
-      vector<int>                itsAntMap;
-      casa::Vector<casa::Int>    itsAnt1;          //# ant1 of all baselines
-      casa::Vector<casa::Int>    itsAnt2;          //# ant2 of all baselines
-      mutable vector<double>     itsBLength;       //# baseline lengths
-      mutable vector<int>        itsAutoCorrIndex; //# autocorr index per ant
     };
 
   } //# end namespace

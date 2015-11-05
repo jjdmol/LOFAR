@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -52,11 +52,10 @@ class GCFTCPPort : public GCFRawPort
 public:// consturctors && destructors
     /// params see constructor of GCFPortInterface    
     GCFTCPPort (GCFTask& 		task,
-				const string&	name,
-				TPortType 		type,
-				int 			protocol, 
-				bool 			transportRawData = false,
-				bool			useUDP = false);
+						 const string&	name,
+						 TPortType 		type,
+						 int 			protocol, 
+						 bool 			transportRawData = false);
     
     /** default constructor 
      * GCFPortInterface params are:
@@ -76,7 +75,7 @@ public:// consturctors && destructors
                const string& name, 
                TPortType 	 type, 
                int 			 protocol, 
-               bool 		 transportRawData = false);
+               bool 		 transportRawData = false); 
 
     // open/close methods
     virtual bool open ();
@@ -84,8 +83,8 @@ public:// consturctors && destructors
       
     // send/recv functions
     virtual ssize_t send (GCFEvent& event);
-    virtual ssize_t send (void* buf, size_t count);		// for RAW ports
-    virtual ssize_t recv (void* buf, size_t count);
+    virtual ssize_t recv (void* buf,
+                          size_t count);
 
 	// Special auto-open mode that does the retries itself
 	// nrRetries		: -1 = infinite ; How often to retry the open when it fails.
@@ -105,11 +104,7 @@ public:// consturctors && destructors
     void setHostName  (const string& hostname);
     void setPortNumber(unsigned int portNumber);
     string getHostName();
-    bool isLocalhost() const;
     unsigned int getPortNumber();
-
-	// support of UDP
-	void useUDP(bool useIt) { itsUseUDP = useIt; }
 
 private:  
     /// copying is not allowed.
@@ -123,11 +118,8 @@ private:
     void serviceInfo(unsigned int result, unsigned int portNumber, const string& host);
     void serviceGone();
 
-    void _connect(unsigned int portNumber, const string& host);
-
 	void _handleConnect();
 	void _handleDisconnect();
-	GCFEvent::TResult _recvUDPevent();
     
 	// ----- Data Members -----
 protected: 
@@ -138,7 +130,6 @@ private:
     TPeerAddr				_addr;
     string					_host;
     unsigned int			_portNumber;
-	bool					itsUseUDP;
 	bool					itsFixedPortNr;
 	bool					itsAutoOpen;
 	unsigned int			itsAutoOpenTimer;
@@ -170,12 +161,6 @@ inline void GCFTCPPort::setPortNumber(unsigned int portNumber)
 inline string GCFTCPPort::getHostName()
 {
 	return _host;
-}
-
-inline bool GCFTCPPort::isLocalhost() const
-{
-  // Note: setHostname converts 'localhost' and '' to myHostname(false)
-	return _host == myHostname(false) || _host == myHostname(true);
 }
 
 inline unsigned int GCFTCPPort::getPortNumber()

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -24,10 +24,9 @@
 #define ANABEAMMGR_H_
 
 #include <lofar_config.h>
-#include <Common/lofar_bitset.h>
+#include <Common/lofar_string.h>
 #include <Common/lofar_list.h>
 #include <Common/lofar_map.h>
-#include <Common/lofar_string.h>
 #include <ApplCommon/StationConfig.h>
 #include <GCF/TM/GCF_PortInterface.h>
 #include <APL/RTCCommon/Timestamp.h>
@@ -126,7 +125,7 @@ private:
 	RTC::Timestamp				itsTargetTime;
 
 	// RCUs participating in the active beams
-	bitset<MAX_RCUS>		itsActiveRCUs;
+	bitset<MAX_RCUS>			itsActiveRCUs;
 
 	// queue of future pointings as delivered by the user.
 	map<string, AnalogueBeam>	itsBeams;

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -29,7 +29,6 @@
 #include "DPanswer.h"
 
 namespace LOFAR {
-  using namespace DP_Protocol;
   using namespace MACIO;
   namespace GCF {
     namespace RTDB {
@@ -142,10 +141,40 @@ void DPanswer::dpQueryChanged(uint32 queryId,		PVSSresult result,
 //
 void DPanswer::_dispatchEvent(GCFEvent&	event)
 {
-	if (itsTask) {		// allow empty taskPointers
-		event.pack();
-		itsTask->doEvent(event, gDummyPort);
+	if (!itsTask) {		// allow empty taskPointers
+		return;
 	}
+#if 0
+	// save signal from original event.
+	uint16			signal(event.signal);
+	const uint32	GCFEVENT_LEN = sizeof(GCFEvent);
+
+	// serialize object.
+	uint32		requiredLength;
+	char* 		packedBuffer = (char*)event.pack(requiredLength);
+
+	// get length from packed eventbuffer (we already know the signal)
+	uint32		length;
+	memcpy(&length,packedBuffer+sizeof(signal),sizeof(length));
+
+	// reconstruct the event in the newEventBuffer.
+	char *newEventBuffer = new char[GCFEVENT_LEN + length];
+	ASSERTSTR(newEventBuffer, "Can't allocate buffer for event of type " << signal);
+
+	GCFEvent* pActualEvent = (GCFEvent*)newEventBuffer;	// cast buffer to a EventPtr
+	pActualEvent->signal = signal;
+	pActualEvent->length = length;
+	memcpy(newEventBuffer + GCFEVENT_LEN, packedBuffer + sizeof(signal) + sizeof(length), length);
+
+	// Finally we can send the reconstructed event.
+	itsTask->doEvent(*pActualEvent, gDummyPort);
+
+	// and delete it again.
+	delete newEventBuffer;
+#else
+	event.pack();
+	itsTask->doEvent(event, gDummyPort);
+#endif
 }
 
   } // namespace RTDB

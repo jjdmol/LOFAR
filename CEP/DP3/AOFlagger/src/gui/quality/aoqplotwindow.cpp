@@ -128,8 +128,9 @@ void AOQPlotWindow::readStatistics(bool downsampleTime, bool downsampleFreq, siz
 		_statCollection = new StatisticsCollection();
 		_histCollection = new HistogramCollection();
 		aoRemote::ProcessCommander commander(*observation);
+		commander.SetCorrectHistograms(correctHistograms);
 		commander.PushReadAntennaTablesTask();
-		commander.PushReadQualityTablesTask(_statCollection, _histCollection, correctHistograms);
+		commander.PushReadQualityTablesTask(_statCollection, _histCollection);
 		commander.Run();
 		if(!commander.Errors().empty())
 		{
@@ -150,10 +151,9 @@ void AOQPlotWindow::readStatistics(bool downsampleTime, bool downsampleFreq, siz
 			Gtk::MessageDialog dialog(*this, s.str(), false, Gtk::MESSAGE_ERROR);
 			dialog.run();
 		}
+		delete observation;
 		
 		_antennas = commander.Antennas();
-		
-		delete observation;
 	}
 	else {
 		MeasurementSet *ms = new MeasurementSet(_filename);

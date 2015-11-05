@@ -3,7 +3,7 @@
 //
 //  Copyright (C) 2007
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -33,7 +33,6 @@
 #include "DPresponse.h"
 
 namespace LOFAR {
-  using namespace DP_Protocol;
   namespace GCF {
   using namespace TM;
   using namespace PVSS;
@@ -95,9 +94,7 @@ GCFEvent::TResult tDPservice::createDPS(GCFEvent& e, GCFPortInterface& /*p*/)
 		gTestPassed = false;
 		gCreateCounter = 2;
 		itsPVSSservice->dpCreate("test_int", "TestInt");	// NOTE: direct with PVSSservice!
-		LOG_INFO_STR("gCreateCounter=" << gCreateCounter);
 		itsPVSSservice->dpCreate("test_PS",  "TestPS");
-		LOG_INFO_STR("gCreateCounter=" << gCreateCounter);
 		itsTimerPort->setTimer(3.0); // max time for this test.
 	}
 	break;
@@ -107,7 +104,7 @@ GCFEvent::TResult tDPservice::createDPS(GCFEvent& e, GCFPortInterface& /*p*/)
 			LOG_DEBUG("Allocation of DPservice was successful");
 		}
 		else {
-			ASSERTSTR(false, "Not all DP were created, gCreateCounter=" << gCreateCounter);
+			ASSERTSTR(false, "Not all DP were created.");
 		}
 		TRAN(tDPservice::WriteTest);
 	break;

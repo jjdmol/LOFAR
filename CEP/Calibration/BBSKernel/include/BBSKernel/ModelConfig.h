@@ -39,59 +39,10 @@ namespace BBS
 // \addtogroup BBSKernel
 // @{
 
-// Configuration options specific to the clock.
-class ClockConfig
-{
-public:
-    ClockConfig();
-    ClockConfig(bool splitClock);
-
-    bool splitClock() const;
-
-private:
-    bool itsSplitClock;
-};
-
-// Configuration options specific to the direction independent gain model.
-class GainConfig
-{
-public:
-    explicit GainConfig(bool phasors = false);
-    bool phasors() const;
-
-private:
-    bool    itsPhasors;
-};
-
-// Configuration options specific to the direction dependent gain model.
-class DirectionalGainConfig
-{
-public:
-    explicit DirectionalGainConfig(bool phasors = false);
-    bool phasors() const;
-
-private:
-    bool    itsPhasors;
-};
-
-// Configuration options specific to the elevation cut-off.
-class ElevationCutConfig
-{
-public:
-    ElevationCutConfig();
-    ElevationCutConfig(double threshold);
-
-    double threshold() const;
-
-private:
-    double itsThreshold;
-};
-
 // Configuration options specific to the beam model.
 class BeamConfig
 {
 public:
-    int notdef;
     enum Mode
     {
         DEFAULT,
@@ -101,10 +52,11 @@ public:
     };
 
     BeamConfig();
-    BeamConfig(Mode mode, bool useChannelFreq);
+    BeamConfig(Mode mode, bool useChannelFreq, bool conjugateAF);
 
     Mode mode() const;
     bool useChannelFreq() const;
+    bool conjugateAF() const;
 
     static bool isDefined(Mode in);
     static Mode asMode(const string &in);
@@ -113,13 +65,13 @@ public:
 private:
     Mode            itsMode;
     bool            itsUseChannelFreq;
+    bool            itsConjugateAF;
 };
 
 // Configuration options specific to the ionospheric model.
 class IonosphereConfig
 {
 public:
-    int notdef;
     enum ModelType
     {
         MIM,
@@ -142,6 +94,19 @@ private:
     unsigned int    itsDegree;
 };
 
+// Configuration options specific to the elevation cut-off.
+class ElevationCutConfig
+{
+public:
+    ElevationCutConfig();
+    ElevationCutConfig(double threshold);
+
+    double threshold() const;
+
+private:
+    double itsThreshold;
+};
+
 // Configuration options specific to the condition number flagger.
 class FlaggerConfig
 {
@@ -161,32 +126,23 @@ class ModelConfig
 public:
     ModelConfig();
 
+    bool usePhasors() const;
+    void setPhasors(bool value = true);
+
     bool useBandpass() const;
     void setBandpass(bool value = true);
 
     bool useClock() const;
-    void setClockConfig(const ClockConfig &config);
-    const ClockConfig &getClockConfig() const;
-    void clearClockConfig();
+    void setClock(bool value = true);
 
     bool useGain() const;
-    void setGainConfig(const GainConfig &config);
-    const GainConfig &getGainConfig() const;
-    void clearGainConfig();
+    void setGain(bool value = true);
 
     bool useTEC() const;
     void setTEC(bool value = true);
 
-    bool useCommonRotation() const;
-    void setCommonRotation(bool value = true);
-
-    bool useCommonScalarPhase() const;
-    void setCommonScalarPhase(bool value = true);
-
     bool useDirectionalGain() const;
-    void setDirectionalGainConfig(const DirectionalGainConfig &config);
-    const DirectionalGainConfig &getDirectionalGainConfig() const;
-    void clearDirectionalGainConfig();
+    void setDirectionalGain(bool value = true);
 
     bool useElevationCut() const;
     void setElevationCutConfig(const ElevationCutConfig &config);
@@ -203,12 +159,6 @@ public:
 
     bool useFaradayRotation() const;
     void setFaradayRotation(bool value = true);
-
-    bool useRotation() const;
-    void setRotation(bool value = true);
-
-    bool useScalarPhase() const;
-    void setScalarPhase(bool value = true);
 
     bool useIonosphere() const;
     void setIonosphereConfig(const IonosphereConfig &config);
@@ -229,45 +179,36 @@ public:
 private:
     enum ModelOptions
     {
+        PHASORS,
         BANDPASS,
         CLOCK,
         GAIN,
         TEC,
-        COMMON_ROTATION,
-        COMMON_SCALAR_PHASE,
         DIRECTIONAL_GAIN,
         ELEVATION_CUT,
         BEAM,
         DIRECTIONAL_TEC,
         FARADAY_ROTATION,
-        ROTATION,
-        SCALAR_PHASE,
         IONOSPHERE,
         FLAGGER,
         CACHE,
         N_ModelOptions
     };
 
-    bool                    itsModelOptions[N_ModelOptions];
+    bool                itsModelOptions[N_ModelOptions];
 
-    ClockConfig             itsConfigClock;
-    GainConfig              itsConfigGain;
-    DirectionalGainConfig   itsConfigDirectionalGain;
-    ElevationCutConfig      itsConfigElevationCut;
-    BeamConfig              itsConfigBeam;
-    IonosphereConfig        itsConfigIonosphere;
-    FlaggerConfig           itsConfigFlagger;
+    ElevationCutConfig  itsConfigElevationCut;
+    BeamConfig          itsConfigBeam;
+    IonosphereConfig    itsConfigIonosphere;
+    FlaggerConfig       itsConfigFlagger;
 
-    vector<string>          itsSources;
+    vector<string>      itsSources;
 };
 
-ostream &operator<<(ostream &out, const ClockConfig &obj);
-ostream &operator<<(ostream &out, const GainConfig &obj);
-ostream &operator<<(ostream &out, const DirectionalGainConfig &obj);
-ostream &operator<<(ostream &out, const ElevationCutConfig &obj);
-ostream &operator<<(ostream &out, const BeamConfig &obj);
-ostream &operator<<(ostream &out, const IonosphereConfig &obj);
 ostream &operator<<(ostream &out, const FlaggerConfig &obj);
+ostream &operator<<(ostream &out, const IonosphereConfig &obj);
+ostream &operator<<(ostream &out, const BeamConfig &obj);
+ostream &operator<<(ostream &out, const ElevationCutConfig &obj);
 ostream &operator<<(ostream &out, const ModelConfig &obj);
 
 // @}

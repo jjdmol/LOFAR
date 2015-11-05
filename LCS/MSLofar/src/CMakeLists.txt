@@ -20,10 +20,8 @@ lofar_add_library(mslofar
   MSLofar.cc
 #  MeasurementSet.cc
   BeamTables.cc
-  FailedTileInfo.cc
 )
 
 lofar_add_bin_program(versionmslofar versionmslofar.cc)
 lofar_add_bin_program(makebeamtables makebeamtables.cc)
-lofar_add_bin_program(addfailedtileinfo addfailedtileinfo.cc)
 

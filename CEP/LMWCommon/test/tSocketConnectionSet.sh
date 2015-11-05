@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tSocketConnectionSet
+./runctest.sh tSocketConnectionSet > tSocketConnectionSet.log 2>&1

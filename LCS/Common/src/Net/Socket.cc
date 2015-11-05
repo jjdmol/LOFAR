@@ -291,15 +291,18 @@ int32 Socket::initClient (const string&	hostname,
 	itsHost		= hostname;
 	itsPort		= service;
 
+	struct sockaddr*	addrPtr;
 	if (itsType == UNIX) {
 		if(initUnixSocket(itsIsServer) < 0) {
 			return(itsErrno);
 		}
+		addrPtr = (struct sockaddr*) &itsUnixAddr;
 	} 
 	else  { 		// networked socket (type TCP or UDP)
 		if(initTCPSocket(itsIsServer) < 0) {
 			return(itsErrno);
 		}
+		addrPtr = (struct sockaddr*) &itsTCPAddr;
 	}
 		
 	setBlocking(itsIsBlocking);		// be sure the blockingmode is used
@@ -793,9 +796,11 @@ int32 Socket::setBlocking (bool block)
 	}
 
 	if (itsSocketID >= 0) {					// we must have a socket ofcourse
+#if !defined HAVE_BGP
 		if (fcntl (itsSocketID, F_SETFL, block ? 0 : O_NONBLOCK) < 0) {
 			return (setErrno(SOCKOPT));
 		}
+#endif
 		itsIsBlocking = block;					// register user wish
 		LOG_TRACE_COND(formatString("Socket(%d):setBlocking(%s)", 
 									itsSocketID, block ? "true" : "false"));

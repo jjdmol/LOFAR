@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 #include <Common/hexdump.h>
 #include <ApplCommon/AntennaSets.h>
 
-#include <MACIO/Marshalling.tcc>
+#include <MACIO/Marshalling.h>
 #include <APL/RTCCommon/MarshallBlitz.h>
 #include <APL/ICAL_Protocol/SubArray.h>
 
@@ -188,56 +188,60 @@ ostream& SubArray::print (ostream& os) const
 //
 // ---------- pack and unpack routines ----------
 //
-size_t SubArray::getSize() const
+unsigned int SubArray::getSize()
 {
   return
-      MSH_size(itsName)
-    + MSH_size(itsAntennaSet)
-    + MSH_size(itsRCUmask)
+      MSH_STRING_SIZE(itsName)
+    + MSH_STRING_SIZE(itsAntennaSet)
+    + MSH_BITSET_SIZE(itsRCUmask)
     + itsSPW.getSize();
 }
 
-size_t SubArray::pack(char* buffer) const
+unsigned int SubArray::pack(void* buffer)
 {
-	size_t offset = 0;
+	unsigned int offset = 0;
 
-	offset = MSH_pack(buffer, offset, itsName);
-	offset = MSH_pack(buffer, offset, itsAntennaSet);
-	offset = MSH_pack(buffer, offset, itsRCUmask);
-	offset += itsSPW.pack(buffer + offset);
+	MSH_PACK_STRING(buffer, offset, itsName);
+	MSH_PACK_STRING(buffer, offset, itsAntennaSet);
+	MSH_PACK_BITSET(buffer, offset, itsRCUmask);
+	offset += itsSPW.pack(((char*)buffer) + offset);
 
 	return offset;
 }
 
-size_t SubArray::unpack(const char* buffer)
+unsigned int SubArray::unpack(void* buffer)
 {
-	size_t offset = 0;
+	unsigned int offset = 0;
 
-	offset = MSH_unpack(buffer, offset, itsName);
-	offset = MSH_unpack(buffer, offset, itsAntennaSet);
-	offset = MSH_unpack(buffer, offset, itsRCUmask);
-	offset += itsSPW.unpack(buffer + offset);
+	MSH_UNPACK_STRING(buffer, offset, itsName);
+	MSH_UNPACK_STRING(buffer, offset, itsAntennaSet);
+	MSH_UNPACK_BITSET(buffer, offset, itsRCUmask);
+	offset += itsSPW.unpack(((char*)buffer) + offset);
 
 	return offset;
 }
 
 // -------------------- SubArrayMap --------------------
 
-size_t SubArrayMap::getSize() const
+unsigned int SubArrayMap::getSize()
 {
-	return MSH_size(*this);
+	unsigned int	offset = 0;
+	MSH_SIZE_MAP_STRING_CLASSPTR(offset, (*this), SubArray);
+	return (offset);
 }
 
-size_t SubArrayMap::pack(char* buffer) const
+unsigned int SubArrayMap::pack(void* buffer)
 {
-	size_t	offset = 0;
-	return MSH_pack(buffer, offset, (*this));
+	unsigned int	offset = 0;
+	MSH_PACK_MAP_STRING_CLASSPTR(buffer, offset, (*this), SubArray);
+	return (offset);
 }
 
-size_t SubArrayMap::unpack(const char* buffer)
+unsigned int SubArrayMap::unpack(void* buffer)
 {
-	size_t offset = 0;
-	return MSH_unpack(buffer, offset, (*this));
+	unsigned int offset = 0;
+	MSH_UNPACK_MAP_STRING_CLASSPTR(buffer, offset, (*this), SubArray);
+	return (offset);
 }
 
   } // namespace ICAL

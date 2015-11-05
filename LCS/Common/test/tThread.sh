@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tThread
+./runctest.sh tThread 2>&1 > tThread.log

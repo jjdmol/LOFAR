@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
 package nl.astron.lofar.sas.otb.util.tablemodels;
 
 import java.rmi.RemoteException;
-import java.util.ArrayList;
+import java.util.Vector;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.SharedVars;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBvalue;
@@ -64,22 +64,20 @@ public class LogParamTableModel extends javax.swing.table.AbstractTableModel {
         }            
         try {
             OtdbRmi.getRemoteValue().setTreeID(aMainFrame.getSharedVars().getTreeID());
-            ArrayList<jOTDBvalue> aLogList=new ArrayList<>(OtdbRmi.getRemoteValue().searchInPeriod(aNodeID,
+            Vector aLogList=OtdbRmi.getRemoteValue().searchInPeriod(aNodeID,
                     aMainFrame.getSharedVars().getLogParamLevel(),
                     aMainFrame.getSharedVars().getLogParamStartTime(),
                     aMainFrame.getSharedVars().getLogParamEndTime(),
-                    aMainFrame.getSharedVars().getLogParamMostRecent()));
+                    aMainFrame.getSharedVars().getLogParamMostRecent());
             if (aLogList==null || aLogList.size()<1 ) {
                 logger.warn("No matches for this searchInPeriod");
                 return true;
             }
             data = new Object[aLogList.size()][headers.length];
-            int k=0;
-            for (jOTDBvalue log:aLogList) {
-               data[k][0]=log.name;
-               data[k][1]=log.value;
-               data[k][2]=log.time;
-               k++;
+            for (int k=0; k< aLogList.size();k++) {
+               data[k][0]=((jOTDBvalue)aLogList.elementAt(k)).name;
+               data[k][1]=((jOTDBvalue)aLogList.elementAt(k)).value;
+               data[k][2]=((jOTDBvalue)aLogList.elementAt(k)).time;
             }
             fireTableDataChanged();
         } catch (RemoteException e) {

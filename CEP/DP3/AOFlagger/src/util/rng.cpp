@@ -104,19 +104,14 @@ double RNG::IntegrateGaussian(long double upperLimit)
 	return integral / std::sqrt(2.0L * M_PIl);
 }
 
-double RNG::EvaluateGaussian(double x, double sigmaSquared)
+double RNG::EvaluateGaussian(double x, double sigma)
 {
-	return 1.0 / (sigmaSquared * std::sqrt(2.0L*M_PI)) * std::exp(-0.5*x*x/sigmaSquared);
+	return 1.0 / (sigma * std::sqrt(2.0L*M_PI)) * std::exp(-0.5*x*x/sigma);
 }
 
-long double RNG::EvaluateGaussian(long double x, long double sigmaSquared)
+long double RNG::EvaluateGaussian(long double x, long double sigma)
 {
-	return 1.0L / (sigmaSquared * std::sqrt(2.0L*M_PI)) * std::exp(-0.5L*x*x/sigmaSquared);
-}
-
-double RNG::EvaluateUnnormalizedGaussian(double x, double sigmaSquared)
-{
-	return std::exp(-0.5*x*x/sigmaSquared);
+	return 1.0L / (sigma * std::sqrt(2.0L*M_PI)) * std::exp(-0.5L*x*x/sigma);
 }
 
 double RNG::EvaluateGaussian2D(long double x1, long double x2, long double sigmaX1, long double sigmaX2)

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -39,53 +39,53 @@ int main (int	argc, char* argv[])
 	AntennaSets	theAS("tAntennaSet.in_1");	// read the AntennaSets.conf file into memory
 
 	// Show the names of the sets.
-	cout << "The AntennaSets.conf file containes the following sets:"
-             << endl;
+	LOG_DEBUG_STR("The AntennaSets.conf file containes the following sets:");
 	vector<string>	theNames = theAS.antennaSetList();
 	for (uint idx = 0; idx < theNames.size(); idx++) {
-          cout << idx << " : " << theNames[idx] << " : " << (theAS.usesLBAfield(theNames[idx], 0) ? "LBA" : "HBA")
-               << " on field " << theAS.antennaField(theNames[idx],0) << endl;
+		LOG_DEBUG_STR(idx << " : " << theNames[idx] << " : " << (theAS.usesLBAfield(theNames[idx], 0) ? "LBA" : "HBA")
+						<< " on field " << theAS.antennaField(theNames[idx],0));
 	}
 
 	// test namelookup
-	cout << "HBA_UNKNOWN is " << (theAS.isAntennaSet("HBA_UNKNOWN") ? "" : "NOT ") << "a set" << endl;
-	cout << "LBA_SPARSE  is " << (theAS.isAntennaSet("LBA_SPARSE") ? "" : "NOT ") << "a set" << endl;
+	LOG_DEBUG_STR("HBA_UNKNOWN is " << (theAS.isAntennaSet("HBA_UNKNOWN") ? "" : "NOT ") << "a set");
+	LOG_DEBUG_STR("LBA_SPARSE  is " << (theAS.isAntennaSet("LBA_SPARSE") ? "" : "NOT ") << "a set");
 
 	// show all configurations
 	for (uint idx = 0; idx < theNames.size(); idx++) {
-          cout << endl << "********** " << theNames[idx] << "**********" << endl;
-          cout << "RCUs EUROPE:" << theAS.RCUinputs(theNames[idx], 2) <<endl;
-		cout << "RCUs REMOTE:" << theAS.RCUinputs(theNames[idx], 1) << endl;
-		cout << "RCUs CORE  :" << theAS.RCUinputs(theNames[idx], 0) << endl;
-		cout << "AntPos EUROPE:" << theAS.positionIndex(theNames[idx], 2) << endl;
-		cout << "AntPos REMOTE:" << theAS.positionIndex(theNames[idx], 1) << endl;
-		cout << "AntPos CORE  :" << theAS.positionIndex(theNames[idx], 0) << endl;
+		LOG_DEBUG_STR("********** " << theNames[idx] << "**********");
+		LOG_DEBUG_STR("RCUs EUROPE:" << theAS.RCUinputs(theNames[idx], 2));
+		LOG_DEBUG_STR("RCUs REMOTE:" << theAS.RCUinputs(theNames[idx], 1));
+		LOG_DEBUG_STR("RCUs CORE  :" << theAS.RCUinputs(theNames[idx], 0));
+		LOG_DEBUG_STR("AntPos EUROPE:" << theAS.positionIndex(theNames[idx], 2));
+		LOG_DEBUG_STR("AntPos REMOTE:" << theAS.positionIndex(theNames[idx], 1));
+		LOG_DEBUG_STR("AntPos CORE  :" << theAS.positionIndex(theNames[idx], 0));
 
 		// unfortunately strings are printed starting at element 0 and bitsets viceversa
 		// to be able to show it logical to the user we must reverse the bitset
 		bitset<MAX_RCUS>	theRealBS  = theAS.LBAallocation(theNames[idx], 2);
 		bitset<MAX_RCUS>	thePrintableBS;
 		for (int i = 0; i < MAX_RCUS; i++) { thePrintableBS[MAX_RCUS-1-i] = theRealBS[i]; }
-		cout << "LBAs EUROPE:" << thePrintableBS << endl;
+		LOG_DEBUG_STR("LBAs EUROPE:" << thePrintableBS);
 		theRealBS  = theAS.LBAallocation(theNames[idx], 1);
 		for (int i = 0; i < MAX_RCUS; i++) { thePrintableBS[MAX_RCUS-1-i] = theRealBS[i]; }
-		cout << "LBAs REMOTE:" << thePrintableBS << endl;
+		LOG_DEBUG_STR("LBAs REMOTE:" << thePrintableBS);
 		theRealBS  = theAS.LBAallocation(theNames[idx], 0);
 		for (int i = 0; i < MAX_RCUS; i++) { thePrintableBS[MAX_RCUS-1-i] = theRealBS[i]; }
-		cout << "LBAs CORE  :" << thePrintableBS << endl;
+		LOG_DEBUG_STR("LBAs CORE  :" << thePrintableBS);
 
 		theRealBS  = theAS.HBAallocation(theNames[idx], 2);
 		for (int i = 0; i < MAX_RCUS; i++) { thePrintableBS[MAX_RCUS-1-i] = theRealBS[i]; }
-		cout << "HBAs EUROPE:" << thePrintableBS << endl;
+		LOG_DEBUG_STR("HBAs EUROPE:" << thePrintableBS);
 		theRealBS  = theAS.HBAallocation(theNames[idx], 1);
 		for (int i = 0; i < MAX_RCUS; i++) { thePrintableBS[MAX_RCUS-1-i] = theRealBS[i]; }
-		cout << "HBAs REMOTE:" << thePrintableBS << endl;
+		LOG_DEBUG_STR("HBAs REMOTE:" << thePrintableBS);
 		theRealBS  = theAS.HBAallocation(theNames[idx], 0);
 		for (int i = 0; i < MAX_RCUS; i++) { thePrintableBS[MAX_RCUS-1-i] = theRealBS[i]; }
-		cout << "HBAs CORE  :" << thePrintableBS << endl;
+		LOG_DEBUG_STR("HBAs CORE  :" << thePrintableBS);
 	}
 
-        cout << endl << "----- Finally testing some corrupt AntennaSet files, expecting 5 exceptions... -----" << endl;
+	LOG_DEBUG(" ");
+	LOG_DEBUG("----- Finally testing some corrupt AntennaSet files, expecting 5 exceptions... -----");
 	uint nrExceptions(0);
 	try {
 		AntennaSets	theWrongAS("tAntennaSet.in_2");	// wrong line format

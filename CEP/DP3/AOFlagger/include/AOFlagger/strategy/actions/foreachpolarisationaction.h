@@ -35,8 +35,7 @@ namespace rfiStrategy {
 		public:
 			ForEachPolarisationBlock() :
 				_onXX(true), _onXY(true), _onYX(true), _onYY(true),
-				_onStokesI(false), _onStokesQ(false), _onStokesU(false), _onStokesV(false),
-				_changeRevised(false)
+				_onStokesI(false), _onStokesQ(false), _onStokesU(false), _onStokesV(false)
 			{
 			}
 			virtual ~ForEachPolarisationBlock()
@@ -111,7 +110,7 @@ namespace rfiStrategy {
 
 							setPolarizationData(polarizationIndex, oldContaminatedData, artifacts.ContaminatedData());
 							setPolarizationData(polarizationIndex, oldOriginalData, artifacts.OriginalData());
-							if(changeRevised && _changeRevised)
+							if(changeRevised)
 								setPolarizationData(polarizationIndex, oldRevisedData, artifacts.RevisedData());
 
 							progress.OnEndTask(*this);
@@ -157,7 +156,6 @@ namespace rfiStrategy {
 			bool OnStokesV() const { return _onStokesV; }
 		private:
 			bool _onXX, _onXY, _onYX, _onYY, _onStokesI, _onStokesQ, _onStokesU, _onStokesV;
-			bool _changeRevised;
 			
 			bool isPolarizationSelected(PolarisationType polarization)
 			{

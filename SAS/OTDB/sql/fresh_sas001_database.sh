@@ -8,7 +8,7 @@ set -x
 
 export DBNAME=LOFAR_1
 export DBUSER=postgres
-export DBHOST=sasdb
+export DBHOST=sas001
 export DBPORT=5432
 
 # The following commands assume that the user who executes this script has super user 

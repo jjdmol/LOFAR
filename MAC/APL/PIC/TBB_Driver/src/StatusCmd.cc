@@ -1,7 +1,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -111,9 +111,8 @@ void StatusCmd::saveTpAckEvent(GCFEvent& event)
 			itsTmp2[getBoardNr()] = tp_ack.Tmp2;
 			itsTmp3[getBoardNr()] = tp_ack.Tmp3;
 			itsCurrentImage[getBoardNr()] = TS->getImageNr(getBoardNr());
-			itsFlashState[getBoardNr()] = ((tp_ack.info[5] >> 8) & 0x7f);
-			TS->setFlashState(getBoardNr(), (tp_ack.info[5] >> 11) & 0x07);
-			itsWatchDogMode[getBoardNr()] = ((tp_ack.info[5] >> 16) & 0x1);
+			itsFlashState[getBoardNr()] = ((tp_ack.info[5] >> 8) & 0xff);
+			itsWatchDogMode[getBoardNr()] = ((tp_ack.info[5] >> 16) & 0xf);
 			itsPgood[getBoardNr()] = tp_ack.info[0];
 				
 			LOG_DEBUG_STR(formatString("Status info = 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x",

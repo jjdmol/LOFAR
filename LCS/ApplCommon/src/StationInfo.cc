@@ -25,7 +25,6 @@
 
 #include <Common/lofar_string.h>
 #include <Common/LofarTypes.h>
-#include <Common/ParameterSet.h>	// indexValue
 #include <Common/StringUtil.h>
 #include <Common/SystemUtil.h>
 #include <ApplCommon/StationInfo.h>
@@ -139,144 +138,6 @@ string	realHostname(const string&	someName)
 	return (someName+'C');
 }
 
-//
-// getObservationNr(controllerName)
-//
-// Get the ObservationNr from the controllername.
-uint32	getObservationNr (const string&	controllerName)
-{
-	return (indexValue(controllerName, "{}"));
-}
-
-//
-// getInstanceNr(controllername)
-//
-// Get the instanceNr from the controllername.
-uint16	getInstanceNr (const string&	controllerName)
-{
-	string		cntlrName (controllerName);		// destroyable copy
-	rtrim(cntlrName, "{}0123456789");
-	return (indexValue(cntlrName, "[]"));
-}
-
-//
-// createPropertySetName(propSetMask)
-//
-//  A PropSetMask may contain the markers:
-//	@ring@
-//	@station@
-//      @instance@
-//	@observation@
-//	@cabinet@
-//	@subrack@
-//	@RSPboard@
-//	@TBboard@
-//	@rcu@
-//      @osrack@
-//      @ossubcluster@
-//      @storagenode@
-//      @offlinenode@
-//	@fpga@
-//	@uriboard@
-//  @cobaltnode@
-//  @cobaltnic@
-//  @oscobaltnode@
-//  @stationfield@
-//  @cobaltgpuproc@
-//
-string	createPropertySetName(const string&		propSetMask,
-							  const string&		controllerName,
-							  const string&		realDPname)
-{
-	string	psName(propSetMask);		// editable copy
-	string::size_type	pos;
-	// when name contains @ring@_@station@ cut out this marker and prepend hostname
-	// stationname+:  -> LOFAR_ObsSW_@ring@_@station@_CalCtrl_xxx --> CS010:LOFAR_ObsSW_CalCtrl_xxx
-	if ((pos = psName.find("@ring@_@station@_")) != string::npos) {
-		psName.erase(pos, 17);
-		psName = PVSSDatabaseName(myHostname(false)) + ":" + psName;
-	}
-
-	if ((pos = psName.find("@ring@")) != string::npos) {
-		psName.replace(pos, 6, stationRingName());
-	}
-
-	if ((pos = psName.find("@station@")) != string::npos) {
-		psName.replace(pos, 9, PVSSDatabaseName(myHostname(false)));
-	}
-
-	if ((pos = psName.find("@instance@")) != string::npos) {
-		uint16	instanceNr = getInstanceNr(controllerName);
-		if (instanceNr) {
-			psName.replace(pos, 10, lexical_cast<string>(instanceNr));
-		}
-		else {
-			psName.replace(pos, 10, "");	
-		}
-	}
-
-	if ((pos = psName.find("LOFAR_ObsSW_@observation@")) != string::npos) {
-		psName.replace(pos, 25, realDPname);
-	}
-
-	if ((pos = psName.find("@cabinet@")) != string::npos) {
-		psName.replace(pos, 9, string("Cabinet%d"));
-	}
-	if ((pos = psName.find("@subrack@")) != string::npos) {
-		psName.replace(pos, 9, string("Subrack%d"));
-	}
-	if ((pos = psName.find("@RSPBoard@")) != string::npos) {
-		psName.replace(pos, 10, string("RSPBoard%d"));
-	}
-	if ((pos = psName.find("@TBBoard@")) != string::npos) {
-		psName.replace(pos, 9, string("TBBoard%d"));
-	}
-	if ((pos = psName.find("@rcu@")) != string::npos) {
-		psName.replace(pos, 5, string("RCU%d"));
-	}
-	if ((pos = psName.find("@locusnode@")) != string::npos) {
-		psName.replace(pos, 11, string("LocusNode%03d"));
-	}
-	if ((pos = psName.find("@osrack@")) != string::npos) {
-		psName.replace(pos, 8, string("OSRack%d"));
-	}
-	if ((pos = psName.find("@ossubcluster@")) != string::npos) {
-		psName.replace(pos, 14, string("OSSubcluster%d"));
-	}
-	if ((pos = psName.find("@storagenode@")) != string::npos) {
-		psName.replace(pos, 13, string("StorageNode%d"));
-	}
-	if ((pos = psName.find("@offlinenode@")) != string::npos) {
-		psName.replace(pos, 13, string("OfflineNode%d"));
-	}
-	if ((pos = psName.find("@cobaltnode@")) != string::npos) {
-		psName.replace(pos, 12, string("CBT%03d"));
-	}
-	if ((pos = psName.find("@cobaltnic@")) != string::npos) {
-		psName.replace(pos, 11, string("CobaltNIC%02d"));
-	}
-	if ((pos = psName.find("@oscobaltnode@")) != string::npos) {
-		psName.replace(pos, 14, string("OSCBT%03d"));
-	}
-	if ((pos = psName.find("@pscobaltnode@")) != string::npos) {
-		psName.replace(pos, 14, string("PSCBT%03d"));
-	}
-	if ((pos = psName.find("@cobaltgpuproc@")) != string::npos) {
-		psName.replace(pos, 15, string("CobaltGPUProc%02d"));
-	}
-	if ((pos = psName.find("@stationfield@")) != string::npos) {
-		psName.replace(pos, 14, string("%s"));
-	}
-	if ((pos = psName.find("@fpga@")) != string::npos) {
-		psName.replace(pos, 6, string("FPGA%d"));
-	}
-	if ((pos = psName.find("@uriboard@")) != string::npos) {
-		psName.replace(pos, 10, string("Cabinet%d_URIboard%d"));
-	}
-
-	return (psName);
-}
-
 #if defined HAVE_BOOST_REGEX
 
 //
@@ -286,32 +147,32 @@ string	createPropertySetName(const string&		propSetMask,
 //
 // SAS :  LOFAR.PIC.<RING>.<SYSTEM>.xxx
 // PVSS:  <SYSTEM>:LOFAR_PIC_xxx
+//        ^       ^      ^
+//        |       |      +-- locationPos + locationLen
+//        |       +-- colon
+//        +-- systemLen
 //
 // NOTE: instead of PIC the DPname may contain PermSW or ObsSW_Observation<n>
 //
 string PVSS2SASname(const string&	PVSSname)
 {
 	const char*		structure_match = "(([A-Z]{2,3}[0-9]{3}[A-Z]?):LOFAR_(PIC|PermSW)_)|"		// 1,2,3
-									  "(([A-Z]{2,3}[0-9]{3}[A-Z]?):LOFAR_(PIC|PermSW)\\.)";		// 4,5,6
+									  "(([A-Z]{2,3}[0-9]{3}[A-Z]?):LOFAR_(PIC|PermSW)\\.)";	// 4,5,6
 	const char*		location_match  = "(RCU[0-9]{3})|"									// 1
-									  "(LBA[0-9]{3})|"									// 2 LBA999
-									  "(HBA[0-9]{2})|"									// 3 HBA99
-									  "_(CS[0-9]{3}[A-Z]?)_|" 							// 4 CS999
-									  "_(RS[0-9]{3}[A-Z]?)_|"							// 5 RS999
-									  "_([ABD-QS-Z][A-Z][0-9]{3}[A-Z]?)_|"				// 6 XX999
-									  "_([A-Z]{3}[0-9]{3}[A-Z]?)_";						// 7 XXX999
+									  "_(CS[0-9]{3}[A-Z]?)_|" 							// 2 CS999
+									  "_(RS[0-9]{3}[A-Z]?)_|"							// 3 RS999
+									  "_([ABD-QS-Z][A-Z][0-9]{3}[A-Z]?)_|"				// 4 XX999
+									  "_([A-Z]{3}[0-9]{3}[A-Z]?)_";						// 5 XXX999
 	const char*		separator_match = "(_)|(\\.)";
 	const char*		boundary_match  = "(^([^_]+)_)";
 
 	const char*		structure_repl  = "(?1LOFAR_$3_$2_)"	// LOFAR_PIC_RS002
 									  "(?4LOFAR_$6.)";		// LOFAR_PIC
 	const char*		location_repl	= "(?1$&)"				// ignore RCU999
-									  "(?2$&)"
-									  "(?3$&)"
-									  "(?4_Core$&)"			 
-									  "(?5_Remote$&)"
-									  "(?6_Europe$&)"
-									  "(?7_Control$&)";
+									  "(?2_Core$&)"			 
+									  "(?3_Remote$&)"
+									  "(?4_Europe$&)"
+									  "(?5_Control$&)";
 	const char*		separator_repl  = "(?1.)(?2_)";			// swap separators
 	const char*		boundary_repl   = "$2.";				// reverse separator on object-field edge
 

@@ -2,7 +2,7 @@
 //
 //  Copyright (C) 2002-2004
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -42,21 +42,17 @@
 #uses "navConfig.ctl"
 #uses "navFunct.ctl"
 #uses "navTabCtrl.ctl"
-#uses "navProgressCtrl.ctl"
 
 global bool       g_objectReady           = true;     // Can be used for timing by objects
 
-global string     g_currentDatapoint          = MainDBName+"LOFAR_PIC_Europe";
-global string     g_lastHardwareDatapoint     = MainDBName+"LOFAR_PIC_Europe";
-global string     g_lastProcessesDatapoint    = MainDBName+"LOFAR_PermSW";
+global string     g_currentDatapoint      = MainDBName+"LOFAR_PIC_Europe";
+global string     g_lastHardwareDatapoint = MainDBName+"LOFAR_PIC_Europe";
+global string     g_lastProcessesDatapoint = MainDBName+"LOFAR_PermSW";
 global string     g_lastObservationsDatapoint = MainDBName+"LOFAR_ObsSW";
-global string     g_lastPipelinesDatapoint    = MainDBName+"LOFAR_ObsSW";
-global string     g_activePanel               = "main.pnl";
 
 
 
 global dyn_string g_observationsList;  // holds active observations
-global dyn_string g_pipelinesList;     // holds active pipelines
 global dyn_string g_processesList;     // holds active software
 global mapping    g_observations;      //
 
@@ -64,21 +60,17 @@ global dyn_string g_stationList;       // holds valid stations for choices in th
 // Station based globals
 global dyn_int    g_cabinetList;       // holds valid cabinets for choices in the viewBox
 global dyn_int    g_subrackList;       // holds valid subracks for choices in the viewBox
-global dyn_int    g_uriBoardList;      // holds valid uriBoards for choices in the viewBox
-global dyn_int    g_uniBoardList;      // holds valid uniBoards for choices in the viewBox
-global dyn_int    g_FPGAList;          // holds valid fpgas for choices in the viewBox
 global dyn_int    g_RSPList;           // holds valid RSP's for choices in the viewBox
 global dyn_int    g_TBBList;           // holds valid TBB's for choices in the viewBox
 global dyn_int    g_RCUList;           // holds valid RCU's for choices in the viewBox
-global dyn_int    g_HBAList;           // holds valid HBAAntenna's for choices in the viewBox
-global dyn_int    g_LBAList;           // holds valid LBAAntenna's for choices in the viewBox
 // CEP based globals
+global dyn_int    g_BGPRackList;       // holds valid bgpracks for choices in viewBox
+global dyn_int    g_BGPMidplaneList;   // holds valid bgpmidplanes for choices in viewBox
+global dyn_int    g_IONodeList;        // holds valid ionodes for choices in viewBox
 global dyn_int    g_OSRackList;        // holds valid Offline/Storageracks for choices in view
-global dyn_int    g_locusNodeList;     // holds valid storagenodes for choices in view
-global dyn_int    g_cobaltRackList;    // holds valid cobaltracks for choices in viewBox
-global dyn_int    g_cobaltNodeList;    // holds valid cobaltnodes for choices in viewBox
-global dyn_int    g_cobaltNICList;     // holds valid cobaltNICs for choices in viewBox
-
+global dyn_int    g_OSSubclusterList;  // holds valid OSSubclusters for choices in view
+global dyn_int    g_storageNodeList;   // holds valid storagenodes for choices in view
+global dyn_int    g_offlineNodeList;   // holds valid offlinenodes for choices in view
 
 global dyn_string strPlannedObs;
 global dyn_string strHighlight;        // contains highlight info for mainpanels
@@ -88,11 +80,6 @@ global string     panelSelection       = ""; // holds selected panel
 global dyn_string coreStations;
 global dyn_string remoteStations;
 global dyn_string europeStations;
-global dyn_string superTerpStations;
-global dyn_string cs0nnCoreStations;
-global dyn_string csx01CoreStations;
-
-global string savePath = "./";
 
 
 //======================== Action Handlers =======================================
@@ -106,20 +93,17 @@ void navigator_handleEventInitialize()
   LOG_TRACE("navigator.ctl:navigator_handleEventInitialize|entered");
   g_initializing = true;
   
+
+  // first we need to check if we are on the MainCU or a stationDB, if we are on a stationDB we are in standalone mode
+  if (getSystemName() != MainDBName) {
     MainDBName         = getSystemName();
     MainDBID           = getSystemId();
-  // first we need to check if we are on the MainCU or a stationDB, if we are on a stationDB we are in standalone mode
-  if (strpos(MainDBName,"MCU") >= 0) {
-    CEPDBName          = MainDBName;
-    strreplace(CEPDBName,"MCU","CCU");
-    } else {
     g_standAlone       = true;    // can be used to check if we are in standalone mode (== station only mode)
+    g_currentDatapoint      = MainDBName+"LOFAR";
+    g_lastHardwareDatapoint = MainDBName+"LOFAR";
+    g_lastProcessesDatapoint = MainDBName+"LOFAR_PermSW";
+    g_lastObservationsDatapoint = MainDBName+"LOFAR_ObsSW";
   }
-  g_currentDatapoint          = MainDBName+"LOFAR";
-  g_lastHardwareDatapoint     = MainDBName+"LOFAR";
-  g_lastProcessesDatapoint    = MainDBName+"LOFAR_PermSW";
-  g_lastObservationsDatapoint = MainDBName+"LOFAR_ObsSW";
-  g_lastPipelinesDatapoint    = MainDBName+"LOFAR_ObsSW";
     
   // Set the global statecolors/colornames, we need to do this before we 
   //start the rest of the framework, because the other processes need these
@@ -143,11 +127,9 @@ void navigator_handleEventInitialize()
     DebugN("ERROR: Logsystem hasn't been found.");
   }
   
-  
   // Do a dpQueryConnectSingle() so that we get a permanent list of claims
   // we can use this to translate a claimed name into a real datapoint name
   claimManager_queryConnectClaims();
-  
   
 
   // we need to wait until the claim system was able to finish all connections and callbacks
@@ -158,15 +140,16 @@ void navigator_handleEventInitialize()
   // fill global stations lists
   navFunct_fillStationLists();
   
+ 
   // Init the connection Watchdog
   GCFCWD_Init();
-
 
   // we need to wait until the connection watchdog has been initialised
   if (!waitInitProcess("GCFCWDFinished")) {
     LOG_FATAL("navigator.ctl:navigator_handleEventInitialize|Couldn't finish GCFCWD_Init() , leaving");
   }
 
+  
 
   // set user to root for now, has to be taken from PVSS login later
   // since the names are caseinsensitive, convert to lowercase for 
@@ -182,7 +165,6 @@ void navigator_handleEventInitialize()
   // Initilaize the alarm system
   initNavigatorAlarms();
 
-
   // we need to wait until the alarmSystem has been initialised
   if (!waitInitProcess("initNavigatorAlarmsFinished")) {
     LOG_FATAL("navigator.ctl:navigator_handleEventInitialize|Couldn't finish initNavigatorAlarmsFinished() , leaving");
@@ -197,12 +179,10 @@ void navigator_handleEventInitialize()
     LOG_FATAL("navigator.ctl:navigator_handleEventInitialize|Couldn't finish queryConnectObservationsFinished() , leaving");
   }
 
-
     // set initialized ready
   g_initializing = false;
 
   LOG_TRACE("navigator.ctl:navigator_handleEventInitialize|end");
-  
 }
 
 ///////////////////////////////////////////////////////////////////////////

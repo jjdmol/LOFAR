@@ -140,7 +140,7 @@ class SolverQuery:
             if iteration is "last":
                 #print "readParameter(): last"   # DEBUG
                 # Fetch requested parameter for time and freq where LASTITER=TRUE
-                taqlcmd = "SELECT * FROM " + self.tablename + " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= "+ str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND LASTITER=TRUE ORDER BY STARTTIME"
+                taqlcmd = "SELECT * FROM " + self.tablename + " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= "+ str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND LASTITER=TRUE"
                 result=pt.taql(taqlcmd)  
                 parameter=result.getcol(parameter_name)
 
@@ -150,9 +150,6 @@ class SolverQuery:
                   starttimes = resultTime.getcol('STARTTIME')
                 else:
                   starttimes = result.getcol('STARTTIME')
-
-                #print "sq::starttimes =", starttimes                 # DEBUG
-                #print "sq::starttimes.sort() =", starttimes.sort()   # DEBUG
 
                 #print "readParameter(): len(parameter): ", len(parameter)  # DEBUG
                 #print "readParameter() result.nrows() = ", result.nrows()
@@ -171,7 +168,7 @@ class SolverQuery:
                 parameter=result.getcol(parameter_name)
 
                 if self.convertTime == True:
-                  taqlcmd= "SELECT STARTTIME FROM " + self.tablename + " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= "+ str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND LASTITER=TRUE ORDER BY STARTTIME"              
+                  taqlcmd= "SELECT STARTTIME FROM " + self.tablename + " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= "+ str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND LASTITER=TRUE"              
                   resultTime=pt.taql(taqlcmd)
                   starttimes = resultTime.getcol('STARTTIME')
                 else:
@@ -193,7 +190,7 @@ class SolverQuery:
                 if self.convertTime == False:
                   starttimes = result.getcol('STARTTIME')
                 else:
-                  taqlcmd="SELECT CTOD(STARTTIME s) FROM " + self.tablename + " ORDER BY STARTTIME"
+                  taqlcmd="SELECT CTOD(STARTTIME s) FROM " + self.tablename
                   resultTime=pt.taql(timecmd)
                   starttimes = resultTime.getcol('STARTTIME')
 
@@ -988,7 +985,7 @@ class SolverQuery:
     # Measurementset
     #
     def getStartTimes(self):
-        taqlcmd="SELECT UNIQUE STARTTIME FROM " + self.tablename + " ORDER BY STARTTIME"
+        taqlcmd="SELECT UNIQUE STARTTIME FROM " + self.tablename
         self.startTimes=pt.taql(taqlcmd)
 
 
@@ -1004,7 +1001,7 @@ class SolverQuery:
     # The slice is defined by a startIdx and an endIdx
     # default return value is the whole list
     #
-    # startIdx         - start index to take slice (default=0), this can also be a time stamp of type float
+    # startIdx         - start index to take slice (default=0), this can also be a time stamp of type flaot
     # endIdx           - end index to take slice (default='end'), this can also be a time stamp of type float
     #
     def getMidTimes(self, startIdx=0, endIdx="end"):
@@ -1076,7 +1073,7 @@ class SolverQuery:
     # Measurementset
     #
     def setStartFreqs(self):
-        taqlcmd="SELECT UNIQUE STARTFREQ FROM " + self.tablename + " ORDER BY STARTTIME"
+        taqlcmd="SELECT UNIQUE STARTFREQ FROM " + self.tablename
         self.startFreqs=pt.taql(taqlcmd)
 
 

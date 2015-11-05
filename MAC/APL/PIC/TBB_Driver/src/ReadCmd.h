@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -27,7 +27,6 @@
 
 #include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Control.h>
-#include <Common/NsTimestamp.h>
 
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
 #include "TP_Protocol.ph"
@@ -60,21 +59,11 @@ public:
 
 private:
 	TbbSettings *TS;
-	
 	uint32 itsSecondstime;
-	uint32 itsSampleNr;
+	uint32 itsSampletime;
 	uint32 itsPrepages;
 	uint32 itsPostpages;
-	
 	int32  itsStage;
-	uint32 itsLastSavedSecond;
-	uint32 itsLastSavedSampleNr;
-	uint32 itsLastSavedNrOfSamples;
-	uint32 itsLastSavedSampleFreq;
-	
-	NsTimestamp itsTimestamp;
-	NsTimestamp itsTimeBefore;
-	NsTimestamp itsTimeAfter;
 };
 
 	} // end TBB namespace

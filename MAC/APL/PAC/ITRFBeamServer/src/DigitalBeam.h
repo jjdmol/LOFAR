@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -24,7 +24,6 @@
 #define DIGITALBEAM_H_
 
 #include <lofar_config.h>
-#include <Common/lofar_bitset.h>
 #include <Common/lofar_string.h>
 #include <APL/RTCCommon/Timestamp.h>
 #include <APL/IBS_Protocol/Beamlet2SubbandMap.h>

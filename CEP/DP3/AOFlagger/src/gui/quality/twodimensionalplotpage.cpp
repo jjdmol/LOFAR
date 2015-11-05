@@ -36,7 +36,6 @@ TwoDimensionalPlotPage::TwoDimensionalPlotPage() :
 	_countButton("Count"),
 	_meanButton("Mean"),
 	_stdDevButton("StdDev"),
-	_varianceButton("Variance"),
 	_dCountButton("DCount"),
 	_dMeanButton("DMean"),
 	_dStdDevButton("DStdDev"),
@@ -92,7 +91,6 @@ unsigned TwoDimensionalPlotPage::selectedKindCount() const
 	if(_countButton.get_active()) ++count;
 	if(_meanButton.get_active()) ++count;
 	if(_stdDevButton.get_active()) ++count;
-	if(_varianceButton.get_active()) ++count;
 	if(_dCountButton.get_active()) ++count;
 	if(_dMeanButton.get_active()) ++count;
 	if(_dStdDevButton.get_active()) ++count;
@@ -113,8 +111,6 @@ void TwoDimensionalPlotPage::updatePlot()
 			plotStatistic(QualityTablesFormatter::MeanStatistic);
 		if(_stdDevButton.get_active())
 			plotStatistic(QualityTablesFormatter::StandardDeviationStatistic);
-		if(_varianceButton.get_active())
-			plotStatistic(QualityTablesFormatter::VarianceStatistic);
 		if(_dCountButton.get_active())
 			plotStatistic(QualityTablesFormatter::DCountStatistic);
 		if(_dMeanButton.get_active())
@@ -243,9 +239,6 @@ void TwoDimensionalPlotPage::initStatisticKindButtons()
 	_stdDevButton.set_active(true);
 	_statisticBox.pack_start(_stdDevButton, Gtk::PACK_SHRINK);
 	
-	_varianceButton.signal_clicked().connect(sigc::mem_fun(*this, &TwoDimensionalPlotPage::updatePlot));
-	_statisticBox.pack_start(_varianceButton, Gtk::PACK_SHRINK);
-	
 	_dCountButton.signal_clicked().connect(sigc::mem_fun(*this, &TwoDimensionalPlotPage::updatePlot));
 	_statisticBox.pack_start(_dCountButton, Gtk::PACK_SHRINK);
 	
@@ -368,7 +361,6 @@ std::string TwoDimensionalPlotPage::getYDesc() const
 		if(_countButton.get_active()) kind = QualityTablesFormatter::CountStatistic;
 		if(_meanButton.get_active()) kind = QualityTablesFormatter::MeanStatistic;
 		if(_stdDevButton.get_active()) kind = QualityTablesFormatter::StandardDeviationStatistic;
-		if(_varianceButton.get_active()) kind = QualityTablesFormatter::VarianceStatistic;
 		if(_dCountButton.get_active()) kind = QualityTablesFormatter::DCountStatistic;
 		if(_dMeanButton.get_active()) kind = QualityTablesFormatter::DMeanStatistic;
 		if(_dStdDevButton.get_active()) kind = QualityTablesFormatter::DStandardDeviationStatistic;

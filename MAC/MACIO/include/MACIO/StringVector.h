@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -30,8 +30,8 @@
 //# Includes
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
-#include <MACIO/Marshalling.tcc>
 #include <Common/StreamUtil.h>
+#include <MACIO/Marshalling.h>
 
 // Avoid 'using namespace' in headerfiles
 
@@ -49,9 +49,9 @@ public:
 	StringVector() {};
 	~StringVector() {};
 
-	uint32 getSize() const;
-	uint32 pack  (char	*buffer) const;
-	uint32 unpack(char	*buffer);
+	unsigned int getSize();
+	unsigned int pack  (void	*buffer);
+	unsigned int unpack(void	*buffer);
 	ostream& print (ostream& os) const;
 
 	vector<string>&	operator()()
@@ -66,24 +66,26 @@ private:
 // @}
 
 // getSize()
-inline uint32 StringVector::getSize() const
+inline unsigned int StringVector::getSize()
 {
-	return (MSH_size(theVector));
+	unsigned int	offset = 0;
+	MSH_SIZE_VECTOR_STRING(offset, theVector);
+	return (offset);
 }
 
 // pack()
-inline uint32 StringVector::pack(char	*buffer) const
+inline unsigned int StringVector::pack(void	*buffer)
 {
-	uint32 offset = 0;
-	MSH_pack(buffer, offset, theVector);
+	unsigned int offset = 0;
+	MSH_PACK_VECTOR_STRING(buffer, offset, theVector);
 	return (offset);
 }
 
 // unpack()
-inline uint32 StringVector::unpack(char	*buffer)
+inline unsigned int StringVector::unpack(void	*buffer)
 {
-	uint32 offset = 0;
-	MSH_unpack(buffer, offset, theVector);
+	unsigned int offset = 0;
+	MSH_UNPACK_VECTOR_STRING(buffer, offset, theVector);
 	return (offset);
 }
 
