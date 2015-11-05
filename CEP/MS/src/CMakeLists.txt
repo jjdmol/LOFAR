@@ -25,7 +25,7 @@ foreach(prog ${ms_PROGRAMS})
   lofar_add_bin_program(${prog} ${prog}.cc)
 endforeach(prog ${ms_PROGRAMS})
 
-lofar_add_bin_scripts(
+install(PROGRAMS
   mssplit
   makemsdistr
   makemsdistr-part
@@ -33,7 +33,8 @@ lofar_add_bin_scripts(
   ls_nostderr
   expandcalps
   expandimageps
-  expandtargetps)
+  expandtargetps
+  DESTINATION bin)
 
 # Python modules.
 python_install(

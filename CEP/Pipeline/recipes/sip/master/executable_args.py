@@ -8,7 +8,7 @@
 import copy
 import sys
 import os
-import errno
+
 import lofarpipe.support.lofaringredient as ingredient
 
 from lofarpipe.support.baserecipe import BaseRecipe
@@ -74,12 +74,6 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
             '--mapfiles-in',
             help="List of the input mapfiles containing the names of the "
                  "data to run the recipe on",
-            default=[],
-            optional=True
-        ),
-        'mapfiles_as_string': ingredient.ListField(
-            '--mapfiles_as_string',
-            help="List of the input mapfiles to ignore and just use the name string instead.",
             default=[],
             optional=True
         ),
@@ -266,7 +260,7 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
                 self.inputs['mapfiles_out'].append(os.path.join(mapfile_dir, self.inputs['stepname'] + name + '.' + 'mapfile'))
                 for item in outputmapfiles[-1]:
                     item.file = os.path.join(
-                        work_dir,
+                        mapfile_dir,
                         os.path.splitext(os.path.basename(item.file))[0] + '.' + self.inputs['stepname'] + name
                     )
             self.inputs['mapfile_out'] = self.inputs['mapfiles_out'][0]
@@ -281,8 +275,8 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
                 parsetdict[k] = str(parset[k])
 
         # construct multiple input data
-        if self.inputs['inputkey'] and not self.inputs['inputkey'] in self.inputs['inputkeys']:
-            self.inputs['inputkeys'].insert(0, self.inputs['inputkey'])
+        if not self.inputs['inputkeys'] and self.inputs['inputkey']:
+            self.inputs['inputkeys'].append(self.inputs['inputkey'])
 
         if not self.inputs['outputkeys'] and self.inputs['outputkey']:
             self.inputs['outputkeys'].append(self.inputs['outputkey'])
@@ -294,16 +288,10 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
 
         filedict = {}
         if self.inputs['inputkeys'] and not self.inputs['skip_infile']:
-            for key, filemap, mapname in zip(self.inputs['inputkeys'], inputmapfiles, inlist):
-                if not mapname in self.inputs['mapfiles_as_string']:
-                    filedict[key] = []
-                    for inp in filemap:
-                        filedict[key].append(inp.file)
-                else:
-                    if key != mapname:
-                        filedict[key] = []
-                        for inp in filemap:
-                            filedict[key].append(mapname)
+            for key, filemap in zip(self.inputs['inputkeys'], inputmapfiles):
+                filedict[key] = []
+                for inp in filemap:
+                    filedict[key].append(inp.file)
 
         if self.inputs['outputkey']:
             filedict[self.inputs['outputkey']] = []
@@ -322,23 +310,27 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
             arglist_copy = copy.deepcopy(arglist)
             parsetdict_copy = copy.deepcopy(parsetdict)
 
+            #if keylist:
+                #for name, value in zip(keylist, inputlist):
             if filedict:
                 for name, value in filedict.iteritems():
-                    replaced = False
+                    #if arglist_copy and name in arglist_copy:
                     if arglist_copy:
-                        for arg in arglist:
-                            if name == arg:
-                                ind = arglist_copy.index(arg)
-                                arglist_copy[ind] = arglist_copy[ind].replace(name, value[i])
-                                replaced = True
-                    if parsetdict_copy:
-                        if name in parsetdict_copy.values():
-                            for k, v in parsetdict_copy.iteritems():
-                                if v == name:
-                                    parsetdict_copy[k] = value[i]
-                        else:
-                            if not replaced:
-                                parsetdict_copy[name] = value[i]
+                        yes = False
+                        for bla in arglist:
+                            if name in bla:
+                                ind = arglist_copy.index(bla)
+                                yes = True
+                        if yes:
+                            arglist_copy[ind] = arglist_copy[ind].replace(name, value[i])
+                        #ind = arglist_copy.index(name)
+                        #arglist_copy[ind] = value[i]
+                    elif name in parsetdict_copy.values():
+                        for k, v in parsetdict_copy.iteritems():
+                            if v == name:
+                                parsetdict_copy[k] = value[i]
+                    else:
+                        parsetdict_copy[name] = value[i]
 
             jobs.append(
                 ComputeJob(
@@ -351,6 +343,7 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
                         work_dir,
                         self.inputs['parsetasfile'],
                         args_format,
+                        #self.inputs['working_directory'],
                         self.environment
                     ]
                 )
@@ -371,19 +364,10 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # temp solution. write all output dict entries to a mapfile
         #mapfile_dir = os.path.join(self.config.get("layout", "job_directory"), "mapfiles")
-        #check directory for stand alone mode
-        if not os.path.isdir(mapfile_dir):
-            try:
-                os.mkdir(mapfile_dir, )
-            except OSError as exc:  # Python >2.5
-                if exc.errno == errno.EEXIST and os.path.isdir(mapfile_dir):
-                    pass
-                else:
-                    raise
         for k, v in jobresultdict.items():
             dmap = DataMap(v)
-            dmap.save(os.path.join(mapfile_dir, self.inputs['stepname'] + '.' + k + '.mapfile'))
-            resultmap[k + '.mapfile'] = os.path.join(mapfile_dir, self.inputs['stepname'] + '.' + k + '.mapfile')
+            dmap.save(os.path.join(mapfile_dir, k + '.mapfile'))
+            resultmap[k + '.mapfile'] = os.path.join(mapfile_dir, k + '.mapfile')
         self.outputs.update(resultmap)
         # *********************************************************************
         # Check job results, and create output data map file

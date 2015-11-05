@@ -38,7 +38,6 @@ namespace LOFAR {
     namespace RSP {
 
 #define STARTUP_WAIT   10
-#define CLOCK_WAIT     5
 #define TDWRITE_WAIT   1
 #define TDREAD_TIMEOUT 3
 #define RSUCLEAR_WAIT  5
@@ -60,7 +59,7 @@ namespace LOFAR {
  *   |  |      writePLL_state <--------------------------.  |        WRITE_TIMEOUT
  *   |  |      readPLL_state  ---------> readError ------'  |        TDREAD_TIMEOUT
  *   |  |                                                   |        
- *   |  '----> writeClock_state <------------------------.  |        CLOCK_WAIT
+ *   |  '----> writeClock_state <------------------------.  |        STARTUP_WAIT
  *   |         readClock_state --------> readError ------'  |        TDREAD_TIMEOUT
  *   |  .------- ok <----------'                            |        
  *   |  |                                                   |        
@@ -143,7 +142,6 @@ GCFEvent::TResult Sequencer::idle_state(GCFEvent& event, GCFPortInterface& /*por
             }
             else if (itsCurSeq == SEQ_RSPCLEAR) {
                 LOG_DEBUG(">> Start sequencer *rspclear*");
-                Cache::getInstance().reset();
                 TRAN(Sequencer::RSUclear_state);
             }
         }
@@ -390,7 +388,7 @@ GCFEvent::TResult Sequencer::writeClock_state(GCFEvent& event, GCFPortInterface&
         break;
 
     case F_TIMER:
-        if (itsTimer++ > CLOCK_WAIT && Cache::getInstance().getState().tdwrite().isMatchAll(RegisterState::IDLE)) {
+        if (itsTimer++ > STARTUP_WAIT && Cache::getInstance().getState().tdwrite().isMatchAll(RegisterState::IDLE)) {
             TRAN(Sequencer::readClock_state);
         }
         break;
@@ -546,9 +544,6 @@ GCFEvent::TResult Sequencer::setAll_state(GCFEvent& event, GCFPortInterface& /*p
         //       the repeated writes till all APs have the right delay.
         Cache::getInstance().getState().cdo().reset();
         Cache::getInstance().getState().cdo().write();
-        
-        // next settings will be written after sequencer is ready
-        
         if (StationSettings::instance()->hasAartfaac()) {
             Cache::getInstance().getState().sdoState().reset();
             Cache::getInstance().getState().sdoState().write();
