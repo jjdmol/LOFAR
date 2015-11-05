@@ -28,7 +28,6 @@
 #include <MessageBus/XMLDoc.h>
 
 #include <Common/LofarLogger.h>
-#include <Common/StringUtil.h>
 
 #ifdef HAVE_LIBXMLXX
 #include <sstream>
@@ -39,7 +38,6 @@ using namespace xmlpp;
 #endif
 
 using namespace std;
-using namespace LOFAR::StringUtil;
 
 namespace LOFAR {
 
@@ -93,14 +91,7 @@ XMLDoc::XMLDoc(const XMLDoc &other, const std::string &key)
     THROW(XMLException, "Could not parse XML: " << e.what());
   }
 #else
-  const string content = other.getXMLvalue(key);
-
-  // Extract root element (last element in 'key')
-  const vector<string> labels = split(key, '/');
-  ASSERT(!labels.empty());
-  const string root_element = labels[labels.size()-1];
-
-  itsContent = formatString("<%s>%s</%s>", root_element.c_str(), other.getXMLvalue(key).c_str(), root_element.c_str());
+  itsDocument = other.getXMLvalue(key);
 #endif
 }
 
@@ -151,7 +142,7 @@ string XMLDoc::getXMLvalue(const string& key) const
     // search begin tag
     begin  = itsContent.find(startTag, offset);
     if (begin == string::npos) {
-      THROW(XMLException, "XML element not found (could not find begin tag): " << key);
+      return ("???");
     }
     offset = begin;
   }
@@ -160,7 +151,7 @@ string XMLDoc::getXMLvalue(const string& key) const
   begin+=startTag.size();
   end = itsContent.find(stopTag, begin);
   if (end == string::npos) {
-    THROW(XMLException, "XML element not found (could not find end tag): " << key);
+    return ("???");
   }
   return (itsContent.substr(begin, end - begin));
 #endif

@@ -42,12 +42,9 @@ RSPDriver.PPS_DELAY=10000
 RSPDriver.PPS_TRIGGER=1
 
 #
-# Files with delays for each AP for finetuning the sychronisation to the PPS.
-# Each clock has its own file.
+# File with delays for each AP for finetuning the sychronisation to the PPS.
 #
-RSPDriver.PPSdelayFile = "PPSdelays.conf"    # Backwards compatibility (LOFAR 2.11 and earlier)
-RSPDriver.PPSdelayFile160 = "PPSdelays160.conf"
-RSPDriver.PPSdelayFile200 = "PPSdelays200.conf"
+RSPDriver.PPSdelayFile = "PPSdelays.conf"
 
 #
 # Specify the MAC addresses of the control port (MAC) of RSP boards
@@ -206,24 +203,6 @@ RSPDriver.LANE_13_DSTPORT = @LANE_13_PORT@
 # ring and without.
 #
 RSPDriver.IGNORE_REMOTE_DATA=0
-
-# ATTENUATION SETTINGS
-# --------------------
-# For each RCUMODE a fixed attenuation offset is set in dB. 
-# The Attenuation stepsize that can be controlled in the hardware 
-# of the station is also provided.
-#
-# ATT_STEP_SIZE = <stepsize>
-# FIXED_ATT_MODE_<rcumode> = <offset>
-#
-RSPDriver.ATT_STEP_SIZE = @ATT_STEP_SIZE@
-RSPDriver.FIXED_ATT_MODE_1 = @ATT_MODE_1@
-RSPDriver.FIXED_ATT_MODE_2 = @ATT_MODE_2@
-RSPDriver.FIXED_ATT_MODE_3 = @ATT_MODE_3@
-RSPDriver.FIXED_ATT_MODE_4 = @ATT_MODE_4@
-RSPDriver.FIXED_ATT_MODE_5 = @ATT_MODE_5@
-RSPDriver.FIXED_ATT_MODE_6 = @ATT_MODE_6@
-RSPDriver.FIXED_ATT_MODE_7 = @ATT_MODE_7@
 
 #
 # CDO Control

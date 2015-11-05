@@ -1,4 +1,3 @@
-<?xml version="1.0"?>
 <message>
    <header>
       <system>LOFAR</system>
@@ -10,18 +9,19 @@
       <source>
          <name>Cobalt/GPUProc/send_state</name>
          <user></user>
-         <uuid>0d53dcf4-80b0-4a13-9bf5-8695650957fa</uuid>
-         <timestamp>2015-06-25T09:30:24</timestamp>
+         <uuid></uuid>
+         <timestamp></timestamp>
          <summary>State feedback</summary>
       </source>
       <ids>
-         <momid>-1</momid>
+         <momid>0</momid>
          <sasid>76966</sasid>
       </ids>
    </header>
-   <payload><task>
+   <payload>
+<task>
   <type>observation</type>
   <state>finished</state>
-</task></payload>
+</task>
+   </payload>
 </message>
-

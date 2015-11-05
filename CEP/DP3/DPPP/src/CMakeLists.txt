@@ -11,15 +11,12 @@ lofar_add_library(dppp
   MSReader.cc MultiMSReader.cc MSWriter.cc MSUpdater.cc Counter.cc
   Averager.cc MedFlagger.cc AORFlagger.cc PreFlagger.cc UVWFlagger.cc
   StationAdder.cc ScaleData.cc Filter.cc PhaseShift.cc
-  Demixer.cc 
-  Position.cc Stokes.cc SourceDBUtil.cc
+  Demixer.cc Position.cc Stokes.cc SourceDBUtil.cc
   Apply.cc EstimateMixed.cc EstimateNew.cc Simulate.cc Simulator.cc
   SubtractMixed.cc SubtractNew.cc
   ModelComponent.cc PointSource.cc GaussianSource.cc Patch.cc
   ModelComponentVisitor.cc GainCal.cc
   DemixerNew.cc DemixInfo.cc DemixWorker.cc
-  Predict.cc
-  ApplyBeam.cc
 )
 
 lofar_add_bin_program(NDPPP NDPPP.cc)
@@ -30,7 +27,9 @@ install(CODE "EXECUTE_PROCESS(
   )"
 )
 
-lofar_add_bin_scripts(taqlflagger)
+install(PROGRAMS
+  taqlflagger
+  DESTINATION bin)
 
 # Python modules.
 python_install(

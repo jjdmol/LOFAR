@@ -15,7 +15,7 @@ from lofarpipe.support.stateful import StatefulRecipe
 from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.xmllogging import get_active_stack
 from lofar.parameterset import parameterset
-import lofar.messagebus.messagebus as messagebus
+import lofar.messagebus.messagebus as massagebus
 from lofar.messagebus.protocols import TaskFeedbackDataproducts, TaskFeedbackProcessing, TaskFeedbackState
 
 #                                             Standalone Pipeline Control System

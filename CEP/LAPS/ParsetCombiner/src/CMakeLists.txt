@@ -1,3 +1,7 @@
 # $Id$
 
-lofar_add_bin_scripts(pcombine.py)
+
+install(PROGRAMS
+  pcombine.py
+
+  DESTINATION bin)
