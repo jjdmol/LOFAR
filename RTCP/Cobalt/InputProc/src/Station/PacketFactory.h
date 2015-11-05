@@ -22,8 +22,8 @@
 #ifndef LOFAR_INPUT_PROC_PACKETFACTORY_H
 #define LOFAR_INPUT_PROC_PACKETFACTORY_H
 
-#include <InputProc/RSPTimeStamp.h>
-#include <InputProc/Buffer/BoardMode.h>
+#include <InputProc/Buffer/BufferSettings.h>
+#include <CoInterface/RSPTimeStamp.h>
 
 #include "RSP.h"
 
@@ -31,30 +31,31 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    // Generic factory for creating standard RSP packets.
+    /* Generate RSP packets */
+
     class PacketFactory
     {
     public:
-      PacketFactory( const BoardMode &mode );
-
+      PacketFactory( const BufferSettings &settings );
       virtual ~PacketFactory();
 
-      // Fill an RSP packet for a certain RSP board and time stamp.
-      // \return \c true if successful, \c false otherwise.
-      bool makePacket( RSP &packet, const TimeStamp &timestamp, size_t boardNr);
+      /*
+       * Fill an RSP packet for a certain RSP board and time stamp.
+       */
+      virtual void makePacket( struct RSP &packet, const TimeStamp &timestamp, size_t boardNr);
 
     protected:
-      const BoardMode boardMode;
+      const BufferSettings &settings;
 
-      // Fill RSP packet header.
-      // \return \c true if successful, \c false otherwise.
-      virtual bool makeHeader( RSP &packet, const TimeStamp &timestamp, size_t boardNr);
+      /*
+       * Fill packet.header.
+       */
+      virtual void makeHeader( struct RSP &packet, const TimeStamp &timestamp, size_t boardNr);
 
-      // Fill RSP packet payload.
-      // \return \c true if successful, \c false otherwise.
-      // \attention This method creates dummy data. Please override it in a
-      // derived class if you want to have useful payload data.
-      virtual bool makePayload( RSP &packet );
+      /*
+       * Fill packet.payload. Called after makeHeader().
+       */
+      virtual void makePayload( struct RSP &packet );
     };
 
   }

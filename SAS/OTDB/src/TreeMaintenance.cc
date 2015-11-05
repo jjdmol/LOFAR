@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -1170,7 +1170,7 @@ bool	TreeMaintenance::setMomInfo (treeIDType		aTreeID,
 				aTreeID,
 				aMomID,
 				aGroupID,
-				escapeQuotes(aCampaign).c_str()));
+				aCampaign.c_str()));
 
 		// Analyse result
 		bool		updateOK;
@@ -1245,8 +1245,7 @@ bool	TreeMaintenance::setClassification(treeIDType	aTreeID,
 // constraints/validations for the current type must be fulfilled.
 // When errors occur these can be retrieved with the errorMsg function.
 bool	TreeMaintenance::setTreeState(treeIDType		aTreeID,
-									  treeState			aState,
-									  bool				allow_endtime_update)
+									  treeState			aState)
 {
 	// Check connection
 	if (!itsConn->connect()) {
@@ -1255,18 +1254,16 @@ bool	TreeMaintenance::setTreeState(treeIDType		aTreeID,
 	}
 
 	LOG_TRACE_FLOW_STR("TM:setTreeState(" << aTreeID << ","
-										  << aState << ","
-										  << (allow_endtime_update ? "true" : "false") << ")");
+										  << aState << ")");
 
 	work 	xAction(*(itsConn->getConn()), "setTreeState");
 	try {
 		// build and execute query
 		result res = xAction.exec(
-					formatString("SELECT setTreeState(%d,%d,%d::int2,'%s')",
+					formatString("SELECT setTreeState(%d,%d,%d::int2)",
 							itsConn->getAuthToken(),
 							aTreeID,
-							aState,
-							allow_endtime_update ? "true" : "false"));
+							aState));
 							
 		// Analyse result.
 		bool		succes;

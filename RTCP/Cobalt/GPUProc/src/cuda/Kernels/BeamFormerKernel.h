@@ -23,59 +23,21 @@
 
 #include <CoInterface/Parset.h>
 
-#include <GPUProc/Kernels/Kernel.h>
-#include <GPUProc/KernelFactory.h>
+#include "Kernel.h"
 #include <GPUProc/gpu_wrapper.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    class BeamFormerKernel : public CompiledKernel
+    class BeamFormerKernel : public Kernel
     {
     public:
-      static std::string theirSourceFile;
-      static std::string theirFunction;
-
-      enum BufferType
-      {
-        INPUT_DATA,
-        OUTPUT_DATA,
-        BEAM_FORMER_DELAYS
-      };
-
-      // Parameters that must be passed to the constructor of the
-      // BeamFormerKernel class.
-      struct Parameters : Kernel::Parameters
-      {
-        Parameters(const Parset& ps);
-        unsigned nrStations;
-        unsigned nrChannels;
-        unsigned nrSamplesPerChannel;
-
-        unsigned nrSAPs;
-        unsigned nrTABs;
-        double subbandBandwidth;
-        bool doFlysEye;
-
-        size_t bufferSize(BufferType bufferType) const;
-      };
-
-      BeamFormerKernel(const gpu::Stream &stream,
-                             const gpu::Module &module,
-                             const Buffers &buffers,
-                             const Parameters &param);
-
-      void enqueue(const BlockID &blockId, 
-                   double subbandFrequency, unsigned SAP);
-
-      gpu::DeviceMemory beamFormerDelays;
+      BeamFormerKernel(const Parset &ps, gpu::Module &program, gpu::DeviceMemory &devComplexVoltages,
+                       gpu::DeviceMemory &devCorrectedData, gpu::DeviceMemory &devBeamFormerWeights);
     };
 
-    //# --------  Template specializations for KernelFactory  -------- #//
 
-    template<> CompileDefinitions
-    KernelFactory<BeamFormerKernel>::compileDefinitions() const;
   }
 }
 

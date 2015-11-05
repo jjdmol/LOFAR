@@ -22,6 +22,8 @@ public class CoreStationLayout extends javax.swing.JPanel {
     private boolean HBARightSquareSelected=false;
     private boolean LBAInnerCircleSelected=false;
     private boolean LBAOuterCircleSelected=false;
+    private boolean LBALongBaselineLeftSelected=false;
+    private boolean LBALongBaselineRightSelected=false;
 
     /** Creates new form CoreStationLayout */
     public CoreStationLayout() {
@@ -51,6 +53,20 @@ public class CoreStationLayout extends javax.swing.JPanel {
                 ActionEvent event = new ActionEvent(this,-1,"LBAOuterCircle");
                 fireActionListenerActionPerformed(event);  }
         });
+        LBALongBaselineRight = new nl.astron.lofar.sas.otbcomponents.RoundButton();
+        LBALongBaselineRight.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ActionEvent event = new ActionEvent(this,-1,"LBALongBaselineRight");
+                fireActionListenerActionPerformed(event);
+            }
+        });
+        LBALongBaselineLeft = new nl.astron.lofar.sas.otbcomponents.RoundButton();
+        LBALongBaselineLeft.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ActionEvent event = new ActionEvent(this,-1,"LBALongBaselineLeft");
+                fireActionListenerActionPerformed(event);
+            }
+        });
         HBALeftSquare = new nl.astron.lofar.sas.otbcomponents.SquareButton();
         HBALeftSquare.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -66,7 +82,7 @@ public class CoreStationLayout extends javax.swing.JPanel {
             }
         });
 
-        setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Core", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 14))); // NOI18N
+        setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Core", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 14)));
         setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 1, 24));
@@ -82,6 +98,8 @@ public class CoreStationLayout extends javax.swing.JPanel {
         LBAInnerCircle.setSelected(true);
         add(LBAInnerCircle, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 120, 50, 50));
         add(LBAOuterCircle, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 90, 110, 110));
+        add(LBALongBaselineRight, new org.netbeans.lib.awtextra.AbsoluteConstraints(230, 200, 10, 10));
+        add(LBALongBaselineLeft, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 200, 10, 10));
 
         HBALeftSquare.setText("24");
         HBALeftSquare.setEnabled(false);
@@ -104,6 +122,8 @@ public class CoreStationLayout extends javax.swing.JPanel {
     private nl.astron.lofar.sas.otbcomponents.SquareButton HBALeftSquare;
     private nl.astron.lofar.sas.otbcomponents.SquareButton HBARightSquare;
     private nl.astron.lofar.sas.otbcomponents.RoundButton LBAInnerCircle;
+    private nl.astron.lofar.sas.otbcomponents.RoundButton LBALongBaselineLeft;
+    private nl.astron.lofar.sas.otbcomponents.RoundButton LBALongBaselineRight;
     private nl.astron.lofar.sas.otbcomponents.RoundButton LBAOuterCircle;
     private javax.swing.JLabel LBAOuterCircleText;
     private javax.swing.JLabel jLabel1;
@@ -201,6 +221,34 @@ public class CoreStationLayout extends javax.swing.JPanel {
         LBAOuterCircle.repaint();
     }
 
+    public boolean isLBALongBaselineLeftEnabled() {
+        return LBALongBaselineLeft.isEnabled();
+    }
+
+    public void setLBALongBaselineLeftEnabled(boolean b) {
+        if (!b && LBALongBaselineLeft.isSelected()) {
+            setLBALongBaselineLeftSelected(false);
+        }
+        LBALongBaselineLeft.setEnabled(b);
+        LBALongBaselineLeft.invalidate();
+        LBALongBaselineLeft.repaint();
+    }
+
+    public boolean isLBALongBaselineRightEnabled() {
+        return LBALongBaselineRight.isEnabled();
+    }
+
+    public void setLBALongBaselineRightEnabled(boolean b) {
+        if (!b && LBALongBaselineRight.isSelected()) {
+            setLBALongBaselineRightSelected(false);
+        }
+        LBALongBaselineRight.setEnabled(b);
+        LBALongBaselineRight.invalidate();
+        LBALongBaselineRight.repaint();
+    }    
+    
+    
+    
     public boolean isHBALeftSquareSelected() {
         return HBALeftSquareSelected;
     }
@@ -262,4 +310,34 @@ public class CoreStationLayout extends javax.swing.JPanel {
         LBAOuterCircle.repaint();
     }
 
+    public boolean isLBALongBaselineLeftSelected() {
+        return LBALongBaselineLeftSelected;
+    }
+
+    public void setLBALongBaselineLeftSelected(boolean b) {
+        LBALongBaselineLeftSelected=b;
+        if (b) {
+            LBALongBaselineLeft.setBackground(Color.green);
+        } else {
+            LBALongBaselineLeft.setBackground(getBackground());
+        }
+        LBALongBaselineLeft.invalidate();
+        LBALongBaselineLeft.repaint();
+
+    }
+
+    public boolean isLBALongBaselineRightSelected() {
+        return LBALongBaselineRightSelected;
+    }
+
+    public void setLBALongBaselineRightSelected(boolean b) {
+        LBALongBaselineRightSelected=b;
+        if (b) {
+            LBALongBaselineRight.setBackground(Color.green);
+        } else {
+            LBALongBaselineRight.setBackground(getBackground());
+        }
+        LBALongBaselineRight.invalidate();
+        LBALongBaselineRight.repaint();
+    }
 }

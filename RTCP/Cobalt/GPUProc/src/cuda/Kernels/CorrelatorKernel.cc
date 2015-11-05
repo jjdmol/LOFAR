@@ -22,117 +22,166 @@
 
 #include "CorrelatorKernel.h"
 
-#include <GPUProc/gpu_utils.h>
-#include <CoInterface/BlockID.h>
-#include <CoInterface/Config.h>
+#include <vector>
+#include <algorithm>
+
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
+#include <CoInterface/Align.h>
 
-#include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
-
-#include <fstream>
-
-using boost::format;
-using boost::lexical_cast;
+#include <GPUProc/global_defines.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    string CorrelatorKernel::theirSourceFile = "Correlator.cu";
-    string CorrelatorKernel::theirFunction = "correlate";
-
-    CorrelatorKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters("correlator"),
-      nrStations(ps.settings.antennaFields.size()),
-      // For Cobalt (= up to 80 antenna fields), the 2x2 kernel gives the best
-      // performance.
-      nrStationsPerThread(2),
-
-      nrChannels(ps.settings.correlator.nrChannels),
-      nrSamplesPerIntegration(ps.settings.correlator.nrSamplesPerBlock / ps.settings.correlator.nrIntegrationsPerBlock),
-      nrIntegrationsPerBlock(ps.settings.correlator.nrIntegrationsPerBlock)
+#if !defined USE_NEW_CORRELATOR
+    CorrelatorKernel::CorrelatorKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program, gpu::DeviceMemory &devVisibilities, gpu::DeviceMemory &devCorrectedData)
+      :
+# if defined USE_4X4
+      Kernel(ps, program, "correlate_4x4")
+# elif defined USE_3X3
+      Kernel(ps, program, "correlate_3x3")
+# elif defined USE_2X2
+      Kernel(ps, program, "correlate_2x2")
+# else
+      Kernel(ps, program, "correlate")
+# endif
     {
-      dumpBuffers = 
-        ps.getBool("Cobalt.Kernels.CorrelatorKernel.dumpOutput", false);
-      dumpFilePattern = 
-        str(format("L%d_SB%%03d_BL%%03d_CorrelatorKernel.dat") % 
-            ps.settings.observationID);
-    }
+      setArg(0, devVisibilities);
+      setArg(1, devCorrectedData);
 
-    unsigned CorrelatorKernel::Parameters::nrBaselines() const {
-      return nrStations * (nrStations + 1) / 2;
-    }
+      size_t maxNrThreads, preferredMultiple;
+      //getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
+      maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
 
-    size_t CorrelatorKernel::Parameters::nrSamplesPerBlock() const {
-      return nrSamplesPerIntegration * nrIntegrationsPerBlock;
-    }
-
-
-    size_t CorrelatorKernel::Parameters::bufferSize(BufferType bufferType) const
-    {
-      switch (bufferType) {
-      case CorrelatorKernel::INPUT_DATA:
-        return
-          (size_t) nrChannels * nrSamplesPerBlock() * nrStations * 
-            NR_POLARIZATIONS * sizeof(std::complex<float>);
-      case CorrelatorKernel::OUTPUT_DATA:
-        return 
-          (size_t) nrIntegrationsPerBlock * nrBaselines() * nrChannels * 
-            NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
-      default: 
-        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      //std::vector<cl_context_properties> properties;
+      //queue.getInfo<CL_QUEUE_CONTEXT>().getInfo(CL_CONTEXT_PROPERTIES, &properties);
+      //if (gpu::Platform((cl_platform_id) properties[1]).getInfo<CL_PLATFORM_NAME>() == "AMD Accelerated Parallel Processing") {
+      gpu::Platform pf; // Redecl not so great. Generalize for OpenCL later, then remove prev commented lines
+      if (pf.getName() == "AMD Accelerated Parallel Processing")
+        preferredMultiple = 256;
+      } else {
+        //getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &preferredMultiple);
+        preferredMultiple = 64; // FOR NVIDIA CUDA, there is no call to get this. Could check what the NV OCL pf says, but set to 64 for now. Generalize later.
       }
-    }
 
-    CorrelatorKernel::CorrelatorKernel(const gpu::Stream& stream,
-                                       const gpu::Module& module,
-                                       const Buffers& buffers,
-                                       const Parameters& params) :
-      CompiledKernel(stream, gpu::Function(module, theirFunction), buffers, params)
-    {
-      setArg(0, buffers.output);
-      setArg(1, buffers.input);
-
-      unsigned preferredMultiple = 64; // FOR NVIDIA CUDA, there is no call to get this. Could check what the NV OCL pf says, but set to 64 for now. Generalize later (TODO).
-
-      // Knowing the number of stations/thread, we can divide up our baselines
-      // in bigger blocks (of stationsPerThread each).
-      unsigned nrMacroStations = ceilDiv(params.nrStations, params.nrStationsPerThread);
-      unsigned nrBlocks = nrMacroStations * (nrMacroStations + 1) / 2;
-
-      unsigned nrPasses = ceilDiv(nrBlocks, maxThreadsPerBlock);
-      unsigned nrThreads = ceilDiv(nrBlocks, nrPasses);
-      nrThreads = align(nrThreads, preferredMultiple);
-
+# if defined USE_4X4
+      unsigned quartStations = (ps.nrStations() + 2) / 4;
+      unsigned nrBlocks = quartStations * (quartStations + 1) / 2;
+# elif defined USE_3X3
+      unsigned thirdStations = (ps.nrStations() + 2) / 3;
+      unsigned nrBlocks = thirdStations * (thirdStations + 1) / 2;
+# elif defined USE_2X2
+      unsigned halfStations = (ps.nrStations() + 1) / 2;
+      unsigned nrBlocks = halfStations * (halfStations + 1) / 2;
+# else
+      unsigned nrBlocks = ps.nrBaselines();
+# endif
+      unsigned nrPasses = (nrBlocks + maxNrThreads - 1) / maxNrThreads;
+      unsigned nrThreads = (nrBlocks + nrPasses - 1) / nrPasses;
+      nrThreads = (nrThreads + preferredMultiple - 1) / preferredMultiple * preferredMultiple;
       //LOG_DEBUG_STR("nrBlocks = " << nrBlocks << ", nrPasses = " << nrPasses << ", preferredMultiple = " << preferredMultiple << ", nrThreads = " << nrThreads);
 
-      unsigned nrUsableChannels = std::max(params.nrChannels - 1, 1U);
-      setEnqueueWorkSizes( gpu::Grid(nrPasses * nrThreads, nrUsableChannels),
-                           gpu::Block(nrThreads, 1) );
+      unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
+      globalWorkSize = gpu::Grid(nrPasses * nrThreads, nrUsableChannels);
+      localWorkSize = gpu::Block(nrThreads, 1);
+
+      nrOperations = (size_t) nrUsableChannels * ps.nrBaselines() * ps.nrSamplesPerChannel() * 32;
+      nrBytesRead = (size_t) nrPasses * ps.nrStations() * nrUsableChannels * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>);
+      nrBytesWritten = (size_t) ps.nrBaselines() * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
     }
 
-    //--------  Template specializations for KernelFactory  --------//
+#else
 
 
-    template<> CompileDefinitions
-    KernelFactory<CorrelatorKernel>::compileDefinitions() const
+    CorrelatorKernel::CorrelatorKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program, gpu::DeviceMemory &devVisibilities, gpu::DeviceMemory &devCorrectedData)
+      :
+# if defined USE_2X2
+      Kernel(ps, program, "correlate")
+# else
+#  error not implemented
+# endif
     {
-      CompileDefinitions defs =
-        KernelFactoryBase::compileDefinitions(itsParameters);
+      setArg(0, devVisibilities);
+      setArg(1, devCorrectedData);
 
-      defs["NR_STATIONS"] = lexical_cast<string>(itsParameters.nrStations);
-      defs["NR_STATIONS_PER_THREAD"] = lexical_cast<string>(itsParameters.nrStationsPerThread);
+      unsigned nrRectanglesPerSide = (ps.nrStations() - 1) / (2 * 16);
+      unsigned nrRectangles = nrRectanglesPerSide * (nrRectanglesPerSide + 1) / 2;
+      //LOG_DEBUG_STR("nrRectangles = " << nrRectangles);
 
-      defs["NR_CHANNELS"] = lexical_cast<string>(itsParameters.nrChannels);
-      defs["NR_INTEGRATIONS"] =
-        lexical_cast<string>(itsParameters.nrIntegrationsPerBlock);
-      defs["NR_SAMPLES_PER_INTEGRATION"] = 
-        lexical_cast<string>(itsParameters.nrSamplesPerIntegration);
+      unsigned nrBlocksPerSide = (ps.nrStations() + 2 * 16 - 1) / (2 * 16);
+      unsigned nrBlocks = nrBlocksPerSide * (nrBlocksPerSide + 1) / 2;
+      //LOG_DEBUG_STR("nrBlocks = " << nrBlocks);
 
-      return defs;
+      unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
+      globalWorkSize = gpu::Grid(16 * 16, nrBlocks, nrUsableChannels);
+      localWorkSize = gpu::Block(16 * 16, 1, 1);
+
+      // FIXME
+      //nrOperations   = (size_t) (32 * 32) * nrRectangles * nrUsableChannels * ps.nrSamplesPerChannel() * 32;
+      nrOperations = (size_t) ps.nrBaselines() * ps.nrSamplesPerSubband() * 32;
+      nrBytesRead = (size_t) (32 + 32) * nrRectangles * nrUsableChannels * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>);
+      nrBytesWritten = (size_t) (32 * 32) * nrRectangles * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
     }
+
+    CorrelateRectangleKernel::CorrelateRectangleKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program, gpu::DeviceMemory &devVisibilities, gpu::DeviceMemory &devCorrectedData)
+      :
+# if defined USE_2X2
+      Kernel(ps, program, "correlateRectangleKernel")
+# else
+#  error not implemented
+# endif
+    {
+      setArg(0, devVisibilities);
+      setArg(1, devCorrectedData);
+
+      unsigned nrRectanglesPerSide = (ps.nrStations() - 1) / (2 * 16);
+      unsigned nrRectangles = nrRectanglesPerSide * (nrRectanglesPerSide + 1) / 2;
+      LOG_DEBUG_STR("nrRectangles = " << nrRectangles);
+
+      unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
+      globalWorkSize = gpu::Grid(16 * 16, nrRectangles, nrUsableChannels);
+      localWorkSize = gpu::Block(16 * 16, 1, 1);
+
+      nrOperations = (size_t) (32 * 32) * nrRectangles * nrUsableChannels * ps.nrSamplesPerChannel() * 32;
+      nrBytesRead = (size_t) (32 + 32) * nrRectangles * nrUsableChannels * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>);
+      nrBytesWritten = (size_t) (32 * 32) * nrRectangles * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
+    }
+
+
+    CorrelateTriangleKernel::CorrelateTriangleKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program, gpu::DeviceMemory &devVisibilities, gpu::DeviceMemory &devCorrectedData)
+      :
+# if defined USE_2X2
+      Kernel(ps, program, "correlateTriangleKernel")
+# else
+#  error not implemented
+# endif
+    {
+      setArg(0, devVisibilities);
+      setArg(1, devCorrectedData);
+
+      unsigned nrTriangles = (ps.nrStations() + 2 * 16 - 1) / (2 * 16);
+      unsigned nrMiniBlocksPerSide = 16;
+      unsigned nrMiniBlocks = nrMiniBlocksPerSide * (nrMiniBlocksPerSide + 1) / 2;
+      size_t preferredMultiple;
+      //getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &preferredMultiple);
+      preferredMultiple = 64; // FOR NVIDIA CUDA, there is no call to get this. Could check what the NV OCL pf says, but set to 64 for now. Generalize later.
+      unsigned nrThreads = align(nrMiniBlocks, preferredMultiple);
+
+      LOG_DEBUG_STR("nrTriangles = " << nrTriangles << ", nrMiniBlocks = " << nrMiniBlocks << ", nrThreads = " << nrThreads);
+
+      unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
+      globalWorkSize = gpu::Grid(nrThreads, nrTriangles, nrUsableChannels);
+      localWorkSize = gpu::Block(nrThreads, 1, 1);
+
+      nrOperations = (size_t) (32 * 32 / 2) * nrTriangles * nrUsableChannels * ps.nrSamplesPerChannel() * 32;
+      nrBytesRead = (size_t) 32 * nrTriangles * nrUsableChannels * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>);
+      nrBytesWritten = (size_t) (32 * 32 / 2) * nrTriangles * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
+    }
+
+#endif
+
   }
 }
 

@@ -1,5 +1,5 @@
 //# CoherentStokesKernel.h
-//# Copyright (C) 2012-2014  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -23,8 +23,7 @@
 
 #include <CoInterface/Parset.h>
 
-#include <GPUProc/Kernels/Kernel.h>
-#include <GPUProc/KernelFactory.h>
+#include "Kernel.h"
 #include <GPUProc/gpu_wrapper.h>
 
 namespace LOFAR
@@ -32,59 +31,13 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    class CoherentStokesKernel : public CompiledKernel
+    class CoherentStokesKernel : public Kernel
     {
     public:
-      static std::string theirSourceFile;
-      static std::string theirFunction;
+      CoherentStokesKernel(const Parset &ps, gpu::Module &program,
+                           gpu::DeviceMemory &devStokesData, gpu::DeviceMemory &devComplexVoltages);
 
-      enum BufferType
-      {
-        INPUT_DATA,
-        OUTPUT_DATA
-      };
-
-      // Parameters that must be passed to the constructor of the
-      // CoherentStokesKernel class.
-      struct Parameters : Kernel::Parameters
-      {
-        Parameters(const Parset& ps);
-        unsigned nrChannels;
-        unsigned nrSamplesPerChannel;
-
-        unsigned nrTABs;
-        unsigned nrStokes;
-        bool     outputComplexVoltages;
-        unsigned timeIntegrationFactor;
-
-        size_t bufferSize(BufferType bufferType) const;
-      };
-
-      CoherentStokesKernel(const gpu::Stream &stream,
-                           const gpu::Module &module,
-                           const Buffers &buffers,
-                           const Parameters &param);
-
-      struct CoherentStokesExecConfig : gpu::ExecConfig
-      {
-        unsigned nrTimeParallelThreads;
-        friend std::ostream& operator<<(std::ostream& os,
-            const CoherentStokesKernel::CoherentStokesExecConfig& execConfig);
-      };
-
-    private:
-      // The timeParallelFactor is not a Parameter passed in, but is a kernel
-      // arg, so it must be a member var to outlive kernel launches.
-      unsigned itsTimeParallelFactor;
-
-
-      unsigned smallestFactorOf(unsigned n) const;
     };
-
-    //# --------  Template specializations for KernelFactory  -------- #//
-
-    template<> CompileDefinitions
-    KernelFactory<CoherentStokesKernel>::compileDefinitions() const;
   }
 }
 

@@ -15,7 +15,6 @@ set(common_LIB_SRCS
   Mmap.cc
   NewHandler.cc
   Numeric.cc
-  NsTimestamp.cc
   ParameterRecord.cc
   ParameterSet.cc
   ParameterSetImpl.cc
@@ -71,10 +70,8 @@ if(HAVE_SHMEM)
     -DMORECORE=shmbrk
     -DMORECORE_CONTIGUOUS=0
     -DMORECORE_CANNOT_TRIM=1
-    -DSHMEM_ALLOC)
-  if(EXISTS "/usr/include/malloc.h")
-    set(shmem_COMPILE_FLAGS ${shmem_COMPILE_FLAGS} -DHAVE_USR_INCLUDE_MALLOC_H)
-  endif()
+    -DSHMEM_ALLOC
+    -DHAVE_USR_INCLUDE_MALLOC_H)
   lofar_join_arguments(shmem_COMPILE_FLAGS)
   set_source_files_properties(${shmem_LIB_SRCS} 
     PROPERTIES COMPILE_FLAGS ${shmem_COMPILE_FLAGS})

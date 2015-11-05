@@ -36,16 +36,39 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    // TODO: Update documentation.
     // Data which needs to be transported between CN, ION and Storage.
     // Apart from read() and write() functionality, the data is augmented
     // with a sequence number in order to detect missing data. Furthermore,
     // an integration operator += can be defined to reduce the data.
+
+    // Endianness:
+    // * Endianness is defined by the correlator.
+    // * Both Data and sequence number will have endianness of the
+    //   correlator
+    //
+    // WARNING: We consider all data streams to have the endianness of the
+    // correlator. No conversion is done here.
+
+    class IntegratableData
+    {
+    public:
+      virtual ~IntegratableData()
+      {
+      }
+
+      virtual IntegratableData &operator += (const IntegratableData &) = 0;
+    };
+
+
     class StreamableData
     {
     public:
       static const uint32_t magic = 0xda7a;
+#ifdef HAVE_BGP
+      static const size_t alignment = 32;
+#else
       static const size_t alignment = 512;
+#endif
 
       // the CPU which fills the datastructure sets the peerMagicNumber,
       // because other CPUs will overwrite it with a read(s,true) call from
@@ -57,8 +80,8 @@ namespace LOFAR
       {
       }
 
-      void read(Stream *, bool withSequenceNumber, unsigned align = 1);
-      void write(Stream *, bool withSequenceNumber, unsigned align = 1);
+      void read(Stream *, bool withSequenceNumber, unsigned align = 0);
+      void write(Stream *, bool withSequenceNumber, unsigned align = 0);
 
       bool shouldByteSwap() const
       {
@@ -94,8 +117,8 @@ namespace LOFAR
 
     protected:
       // a subclass should override these to marshall its data
-      virtual void readData(Stream *, unsigned) = 0;
-      virtual void writeData(Stream *, unsigned) = 0;
+      virtual void readData(Stream *) = 0;
+      virtual void writeData(Stream *) = 0;
 
     private:
       uint32_t rawSequenceNumber; /// possibly needs byte swapping
@@ -116,8 +139,11 @@ namespace LOFAR
       MultiDimArray<SparseSet<unsigned>,FLAGS_DIM>   flags;
 
     protected:
-      virtual void readData(Stream *, unsigned);
-      virtual void writeData(Stream *, unsigned);
+      virtual void readData(Stream *);
+      virtual void writeData(Stream *);
+
+    private:
+      //bool	 itsHaveWarnedLittleEndian;
     };
 
 
@@ -134,7 +160,7 @@ namespace LOFAR
         rawSequenceNumber = seqNo;
       }
 
-      readData(str, alignment);
+      readData(str);
     }
 
 
@@ -157,7 +183,7 @@ namespace LOFAR
         str->write(&header[0], header.size());
       }
 
-      writeData(str, alignment);
+      writeData(str);
     }
 
 
@@ -166,24 +192,22 @@ namespace LOFAR
       :
       samples(extents, alignment, allocator),
       flags(flagsExtents) // e.g., for FilteredData [nrChannels][nrStations], sparse dimension [nrSamplesPerIntegration]
+
+      //itsHaveWarnedLittleEndian(false)
     {
     }
 
 
     template <typename T, unsigned DIM, unsigned FLAGS_DIM>
-    inline void SampleData<T,DIM,FLAGS_DIM>::readData(Stream *str, unsigned alignment)
+    inline void SampleData<T,DIM,FLAGS_DIM>::readData(Stream *str)
     {
-      (void)alignment;
-
       str->read(samples.origin(), samples.num_elements() * sizeof(T));
     }
 
 
     template <typename T, unsigned DIM, unsigned FLAGS_DIM>
-    inline void SampleData<T,DIM,FLAGS_DIM>::writeData(Stream *str, unsigned alignment)
+    inline void SampleData<T,DIM,FLAGS_DIM>::writeData(Stream *str)
     {
-      (void)alignment;
-
       str->write(samples.origin(), samples.num_elements() * sizeof(T));
     }
 

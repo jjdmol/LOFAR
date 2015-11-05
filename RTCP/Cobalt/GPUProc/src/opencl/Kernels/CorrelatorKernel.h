@@ -31,67 +31,37 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+#if !defined USE_NEW_CORRELATOR
 
     class CorrelatorKernel : public Kernel
     {
     public:
-      CorrelatorKernel(const Parset &ps, 
-                       cl::CommandQueue &queue,
-                       cl::Program &program,
-                       cl::Buffer &devVisibilities,
-                       cl::Buffer &devCorrectedData);
-
-      enum BufferType
-      {
-        INPUT_DATA,
-        OUTPUT_DATA
-      };
-
-      // Return required buffer size for \a bufferType
-      static size_t bufferSize(const Parset& ps, BufferType bufferType);
-
+      CorrelatorKernel(const Parset &ps, cl::CommandQueue &queue,
+                       cl::Program &program, cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData);
     };
 
-#if defined USE_NEW_CORRELATOR
+#else
+
+    class CorrelatorKernel : public Kernel
+    {
+    public:
+      CorrelatorKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program,
+                       cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData);
+
+    };
 
     class CorrelateRectangleKernel : public Kernel
     {
     public:
-      CorrelateRectangleKernel(const Parset &ps, 
-                               cl::CommandQueue &queue,
-                               cl::Program &program,
-                               cl::Buffer &devVisibilities,
-                               cl::Buffer &devCorrectedData);
-
-      enum BufferType
-      {
-        INPUT_DATA,
-        OUTPUT_DATA
-      };
-
-      // Return required buffer size for \a bufferType
-      static size_t bufferSize(const Parset& ps, BufferType bufferType);
-
+      CorrelateRectangleKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program,
+                               cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData);
     };
 
     class CorrelateTriangleKernel : public Kernel
     {
     public:
-      CorrelateTriangleKernel(const Parset &ps,
-                              cl::CommandQueue &queue,
-                              cl::Program &program,
-                              cl::Buffer &devVisibilities,
-                              cl::Buffer &devCorrectedData);
-
-      enum BufferType
-      {
-        INPUT_DATA,
-        OUTPUT_DATA
-      };
-
-      // Return required buffer size for \a bufferType
-      static size_t bufferSize(const Parset& ps, BufferType bufferType);
-
+      CorrelateTriangleKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program,
+                              cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData);
     };
 
 #endif

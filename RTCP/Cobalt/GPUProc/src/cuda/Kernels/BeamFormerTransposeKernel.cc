@@ -22,93 +22,34 @@
 
 #include "BeamFormerTransposeKernel.h"
 
-#include <GPUProc/gpu_utils.h>
-#include <CoInterface/Align.h>
-#include <CoInterface/BlockID.h>
-#include <CoInterface/Config.h>
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
 
-#include <boost/lexical_cast.hpp>
-#include <boost/format.hpp>
-
-#include <fstream>
-
-using boost::lexical_cast;
-using boost::format;
+#include <GPUProc/global_defines.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    string BeamFormerTransposeKernel::theirSourceFile = "Transpose.cu";
-    string BeamFormerTransposeKernel::theirFunction = "transpose";
 
-    BeamFormerTransposeKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters("beamFormerTranspose"),
-      nrChannels(ps.settings.beamFormer.nrHighResolutionChannels),
-      nrSamplesPerChannel(ps.settings.blockSize / nrChannels),
-      nrTABs(ps.settings.beamFormer.maxNrCoherentTABsPerSAP())
+    BeamFormerTransposeKernel::BeamFormerTransposeKernel(const Parset &ps, gpu::Module &program, gpu::DeviceMemory &devTransposedData, gpu::DeviceMemory &devComplexVoltages)
+      :
+      Kernel(ps, program, "transposeComplexVoltages")
     {
-      dumpBuffers = 
-        ps.getBool("Cobalt.Kernels.BeamFormerTransposeKernel.dumpOutput", false);
-      dumpFilePattern = 
-        str(format("L%d_SB%%03d_BL%%03d_BeamFormerTransposeKernel.dat") % 
-            ps.settings.observationID);
+      ASSERT(ps.nrSamplesPerChannel() % 16 == 0);
+      setArg(0, devTransposedData);
+      setArg(1, devComplexVoltages);
 
-    }
-
-    
-    size_t BeamFormerTransposeKernel::Parameters::bufferSize(BufferType bufferType) const
-    {
-      switch (bufferType) {
-      case BeamFormerTransposeKernel::INPUT_DATA: 
-      case BeamFormerTransposeKernel::OUTPUT_DATA:
-        return
-          (size_t) nrChannels * nrSamplesPerChannel * 
-            NR_POLARIZATIONS * nrTABs * sizeof(std::complex<float>);
-      default:
-        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
-      }
-    }
-
-    BeamFormerTransposeKernel::
-    BeamFormerTransposeKernel(const gpu::Stream& stream,
-                                       const gpu::Module& module,
-                                       const Buffers& buffers,
-                                       const Parameters& params) :
-      CompiledKernel(stream, gpu::Function(module, theirFunction), buffers, params)
-    {
-      ASSERT(params.nrSamplesPerChannel % 16 == 0);
-      setArg(0, buffers.output);
-      setArg(1, buffers.input);
-
-      setEnqueueWorkSizes( gpu::Grid(256, ceilDiv(params.nrTABs, 16U), params.nrSamplesPerChannel / 16),
-                           gpu::Block(256, 1, 1) );
+      //globalWorkSize = gpu::Grid(256, (ps.nrTABs(0) + 15) / 16, (ps.nrChannelsPerSubband() + 15) / 16);
+      globalWorkSize = gpu::Grid(256, (ps.nrTABs(0) + 15) / 16, ps.nrSamplesPerChannel() / 16);
+      localWorkSize = gpu::Block(256, 1, 1);
 
       nrOperations = 0;
-      nrBytesRead = nrBytesWritten =
-        (size_t) params.nrTABs * NR_POLARIZATIONS * params.nrChannels * 
-        params.nrSamplesPerChannel * sizeof(std::complex<float>);
+      nrBytesRead = (size_t) ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * ps.nrTABs(0) * NR_POLARIZATIONS * sizeof(std::complex<float>),
+      //nrBytesWritten = (size_t) ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband() * sizeof(std::complex<float>);
+      nrBytesWritten = (size_t) ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * sizeof(std::complex<float>);
     }
 
-    //--------  Template specializations for KernelFactory  --------//
-
-    template<> CompileDefinitions
-    KernelFactory<BeamFormerTransposeKernel>::compileDefinitions() const
-    {
-      CompileDefinitions defs =
-        KernelFactoryBase::compileDefinitions(itsParameters);
-
-      defs["NR_CHANNELS"] = lexical_cast<string>(itsParameters.nrChannels);
-      defs["NR_SAMPLES_PER_CHANNEL"] = 
-        lexical_cast<string>(itsParameters.nrSamplesPerChannel);
-
-      defs["NR_TABS"] =
-        lexical_cast<string>(itsParameters.nrTABs);
-
-      return defs;
-    }
   }
 }
 

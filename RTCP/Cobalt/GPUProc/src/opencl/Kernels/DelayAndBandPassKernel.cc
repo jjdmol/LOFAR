@@ -48,10 +48,10 @@ namespace LOFAR
       setArg(6, devPhaseOffsets);
       setArg(7, devBandPassCorrectionWeights);
 
-      globalWorkSize = cl::NDRange(256, ps.nrChannelsPerSubband() == 1 ? 1 : ps.nrChannelsPerSubband() / 16, ps.settings.antennaFields.size());
+      globalWorkSize = cl::NDRange(256, ps.nrChannelsPerSubband() == 1 ? 1 : ps.nrChannelsPerSubband() / 16, ps.nrStations());
       localWorkSize = cl::NDRange(256, 1, 1);
 
-      size_t nrSamples = ps.settings.antennaFields.size() * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * NR_POLARIZATIONS;
+      size_t nrSamples = ps.nrStations() * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * NR_POLARIZATIONS;
       nrOperations = nrSamples * 12;
       nrBytesRead = nrBytesWritten = nrSamples * sizeof(std::complex<float>);
     }
@@ -63,36 +63,6 @@ namespace LOFAR
       Kernel::enqueue(queue, counter);
     }
 
-    size_t
-    DelayAndBandPassKernel::bufferSize(const Parset& ps, BufferType bufferType)
-    {
-      switch (bufferType) {
-      case INPUT_DATA: 
-        if (ps.nrChannelsPerSubband() == 1)
-          return 
-            ps.settings.antennaFields.size() * NR_POLARIZATIONS * 
-            ps.nrSamplesPerSubband() * ps.nrBytesPerComplexSample();
-        else
-          return 
-            ps.settings.antennaFields.size() * NR_POLARIZATIONS * 
-            ps.nrSamplesPerSubband() * sizeof(std::complex<float>);
-      case OUTPUT_DATA:
-        return
-          ps.settings.antennaFields.size() * NR_POLARIZATIONS * 
-          ps.nrSamplesPerSubband() * sizeof(std::complex<float>);
-      case DELAYS:
-        return 
-          ps.nrBeams() * ps.settings.antennaFields.size() * NR_POLARIZATIONS * sizeof(float);
-      case PHASE_OFFSETS:
-        return
-          ps.settings.antennaFields.size() * NR_POLARIZATIONS * sizeof(float);
-      case BAND_PASS_CORRECTION_WEIGHTS:
-        return
-          ps.nrChannelsPerSubband() * sizeof(float);
-      default:
-        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
-      }
-    }
 
   }
 }

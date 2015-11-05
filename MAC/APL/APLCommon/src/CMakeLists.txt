@@ -25,9 +25,9 @@ add_dependencies(aplcommon
 
 lofar_add_bin_program(versionaplcommon versionaplcommon.cc)
 
-lofar_add_bin_scripts(
+install(PROGRAMS
   swlevel
-  run_timeout.sh)
+  DESTINATION bin)
 
 install(FILES
   swlevel.conf

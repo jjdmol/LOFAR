@@ -1,4 +1,4 @@
-//# UHEP_SubbandProc.cc
+//# UHEP_WorkQueue.cc
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include "UHEP_SubbandProc.h"
+#include "UHEP_WorkQueue.h"
 
 #include <Common/LofarLogger.h>
 #include <ApplCommon/PosixTime.h>
@@ -36,21 +36,21 @@
 #include <GPUProc/Kernels/UHEP_TriggerKernel.h>
 #include <GPUProc/Kernels/UHEP_BeamFormerKernel.h>
 
-#include "SubbandProc.h"
+#include "WorkQueue.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    UHEP_SubbandProc::UHEP_SubbandProc(UHEP_Pipeline &pipeline, unsigned gpuNumber)
+    UHEP_WorkQueue::UHEP_WorkQueue(UHEP_Pipeline &pipeline, unsigned gpuNumber)
       :
-      SubbandProc( pipeline.context, pipeline.devices[gpuNumber], gpuNumber, pipeline.ps),
+      WorkQueue( pipeline.context, pipeline.devices[gpuNumber], gpuNumber, pipeline.ps),
       pipeline(pipeline),
-      hostInputSamples(boost::extents[ps.settings.antennaFields.size()][ps.nrSubbands()][ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()], queue, CL_MEM_WRITE_ONLY),
-      hostBeamFormerWeights(boost::extents[ps.settings.antennaFields.size()][ps.nrSubbands()][ps.nrTABs(0)], queue, CL_MEM_WRITE_ONLY),
+      hostInputSamples(boost::extents[ps.nrStations()][ps.nrSubbands()][ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()], queue, CL_MEM_WRITE_ONLY),
+      hostBeamFormerWeights(boost::extents[ps.nrStations()][ps.nrSubbands()][ps.nrTABs(0)], queue, CL_MEM_WRITE_ONLY),
       hostTriggerInfo(boost::extents[ps.nrTABs(0)], queue, CL_MEM_READ_ONLY)
     {
-      size_t inputSamplesSize = ps.settings.antennaFields.size() * ps.nrSubbands() * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * NR_POLARIZATIONS * ps.nrBytesPerComplexSample();
+      size_t inputSamplesSize = ps.nrStations() * ps.nrSubbands() * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * NR_POLARIZATIONS * ps.nrBytesPerComplexSample();
       size_t complexVoltagesSize = ps.nrSubbands() * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * ps.nrTABs(0) * NR_POLARIZATIONS * sizeof(std::complex<float>);
       size_t transposedDataSize = ps.nrTABs(0) * NR_POLARIZATIONS * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * 512 * sizeof(std::complex<float>);
       size_t invFIRfilteredDataSize = ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * 512 * sizeof(std::complex<float>);
@@ -61,7 +61,7 @@ namespace LOFAR
       devBuffers[0] = cl::Buffer(pipeline.context, CL_MEM_READ_WRITE, buffer0size);
       devBuffers[1] = cl::Buffer(pipeline.context, CL_MEM_READ_WRITE, buffer1size);
 
-      size_t beamFormerWeightsSize = ps.settings.antennaFields.size() * ps.nrSubbands() * ps.nrTABs(0) * sizeof(std::complex<float>);
+      size_t beamFormerWeightsSize = ps.nrStations() * ps.nrSubbands() * ps.nrTABs(0) * sizeof(std::complex<float>);
       devBeamFormerWeights = cl::Buffer(pipeline.context, CL_MEM_READ_ONLY, beamFormerWeightsSize);
 
       devInputSamples = devBuffers[0];
@@ -76,7 +76,7 @@ namespace LOFAR
     }
 
 
-    void UHEP_SubbandProc::doWork(const float * /*delaysAtBegin*/, const float * /*delaysAfterEnd*/, const float * /*phaseOffsets*/)
+    void UHEP_WorkQueue::doWork(const float * /*delaysAtBegin*/, const float * /*delaysAfterEnd*/, const float * /*phaseOffsets*/)
     {
       UHEP_BeamFormerKernel beamFormer(ps, pipeline.beamFormerProgram, devComplexVoltages, devInputSamples, devBeamFormerWeights);
       UHEP_TransposeKernel transpose(ps, pipeline.transposeProgram, devFFTedData, devComplexVoltages, devReverseSubbandMapping);

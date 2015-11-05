@@ -1,4 +1,4 @@
-//# CorrelatorSubbandProc.h
+//# CorrelatorWorkQueue.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -33,7 +33,7 @@
 #include <CoInterface/SubbandMetaData.h>
 
 #include <GPUProc/global_defines.h>
-#include <GPUProc/MultiDimArrayHostBuffer.h>
+#include <GPUProc/Buffers.h>
 #include <GPUProc/FilterBank.h>
 #include <GPUProc/Pipelines/CorrelatorPipelinePrograms.h>
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
@@ -41,28 +41,28 @@
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
 #include <GPUProc/Kernels/CorrelatorKernel.h>
 
-#include "SubbandProc.h"
+#include "WorkQueue.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
     /*
-     * The CorrelatorSubbandProc does the following transformation:
-     *   SubbandProcInputData -> CorrelatedDataHostBuffer
+     * The CorrelatorWorkQueue does the following transformation:
+     *   WorkQueueInputData -> CorrelatedDataHostBuffer
      *
-     * The SubbandProcInputData represents one block of one subband
+     * The WorkQueueInputData represents one block of one subband
      * of input data, and the CorrelatedDataHostBuffer the complex
      * visibilities of such a block.
      *
      * For both input and output, a fixed set of objects is created,
-     * tied to the GPU specific for the SubbandProc, for increased
+     * tied to the GPU specific for the WorkQueue, for increased
      * performance. The objects are recycled by using Pool objects.
      *
      * The data flows as follows:
      *
      *   // Fetch the next input object to fill
-     *   SmartPtr<SubbandProcInputData> input = queue.inputPool.free.remove();
+     *   SmartPtr<WorkQueueInputData> input = queue.inputPool.free.remove();
      *
      *   // Provide input
      *   receiveInput(input);
@@ -85,7 +85,7 @@ namespace LOFAR
      *   temporarily store filled input and output objects. Such is needed to
      *   obtain parallellism (i.e. read/process/write in separate threads).
      */
-    class CorrelatorSubbandProc;
+    class CorrelatorWorkQueue;
 
     // The pool operates using a 'free' and a 'filled' queue to cycle through buffers. Producers
     // move elements free->filled, and consumers move elements filled->free.
@@ -98,13 +98,13 @@ namespace LOFAR
       Queue< SmartPtr<element_type> > filled;
     };
 
-    // A CorrelatedData object tied to a HostBuffer and SubbandProc. Such links
+    // A CorrelatedData object tied to a HostBuffer and WorkQueue. Such links
     // are needed for performance -- the visibilities are stored in a buffer
     // directly linked to the GPU output buffer.
     class CorrelatedDataHostBuffer: public MultiArrayHostBuffer<fcomplex, 4>, public CorrelatedData
     {
     public:
-      CorrelatedDataHostBuffer(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, DeviceBuffer &deviceBuffer, CorrelatorSubbandProc &queue) 
+      CorrelatedDataHostBuffer(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, DeviceBuffer &deviceBuffer, CorrelatorWorkQueue &queue) 
       :
         MultiArrayHostBuffer<fcomplex, 4>(boost::extents[nrStations * (nrStations + 1) / 2][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS], CL_MEM_WRITE_ONLY, deviceBuffer),
         CorrelatedData(nrStations, nrChannels, maxNrValidSamples, this->origin(), this->num_elements(), heapAllocator, 1),
@@ -116,7 +116,7 @@ namespace LOFAR
       size_t block;
       unsigned subband;
 
-      CorrelatorSubbandProc &queue;
+      CorrelatorWorkQueue &queue;
 
     private:
       CorrelatedDataHostBuffer();
@@ -124,13 +124,13 @@ namespace LOFAR
     };
 
     // 
-    //   Collect all inputData for the correlatorSubbandProc item:
+    //   Collect all inputData for the correlatorWorkQueue item:
     //    \arg inputsamples
     //    \arg delays
     //    \arg phaseOffSets
     //    \arg flags
     // It also contains a read function parsing all this data from an input stream.   
-    class SubbandProcInputData
+    class WorkQueueInputData
     {
     public:
 
@@ -173,7 +173,7 @@ namespace LOFAR
       MultiDimArray<SparseSet<unsigned>,1> inputFlags;
 
       // Create the inputData object we need shared host/device memory on the supplied devicequeue
-      SubbandProcInputData(size_t n_beams, size_t n_stations, size_t n_polarizations,
+      WorkQueueInputData(size_t n_beams, size_t n_stations, size_t n_polarizations,
                          size_t n_samples, size_t bytes_per_complex_sample,
                          DeviceBuffers &deviceBuffers,
                          cl_mem_flags hostBufferFlags = CL_MEM_WRITE_ONLY)
@@ -190,7 +190,7 @@ namespace LOFAR
       void flagInputSamples(unsigned station, const SubbandMetaData& metaData);
     };
 
-    class CorrelatorSubbandProc : public SubbandProc
+    class CorrelatorWorkQueue : public WorkQueue
     {
     public:
       // Collection of functions to tranfer the input flags to the output.
@@ -230,13 +230,13 @@ namespace LOFAR
       };
 
     public:
-      CorrelatorSubbandProc(const Parset &parset,cl::Context &context,
+      CorrelatorWorkQueue(const Parset &parset,cl::Context &context,
                           cl::Device &device, unsigned queueNumber,
                           CorrelatorPipelinePrograms &programs,
                           FilterBank &filterBank);
 
       // Correlate the data found in the input data buffer
-      void processSubband(SubbandProcInputData &input, CorrelatedDataHostBuffer &output);
+      void processSubband(WorkQueueInputData &input, CorrelatedDataHostBuffer &output);
 
       // Do post processing on the CPU
       void postprocessSubband(CorrelatedDataHostBuffer &output);
@@ -250,14 +250,14 @@ namespace LOFAR
 
       // Raw buffers, these are mapped with boost multiarrays 
       // in the InputData class
-      SubbandProcInputData::DeviceBuffers devInput;
+      WorkQueueInputData::DeviceBuffers devInput;
 
       DeviceBuffer devFilteredData;
 
     public:
       // A pool of input data, to allow items to be filled and
       // computed on in parallel.
-      Pool<SubbandProcInputData> inputPool;
+      Pool<WorkQueueInputData> inputPool;
 
       // A pool of output data, to allow items to be filled
       // and written in parallel.
@@ -277,7 +277,7 @@ namespace LOFAR
       CorrelatorKernel correlatorKernel;
 #endif
 
-      friend class SubbandProcInputData;
+      friend class WorkQueueInputData;
     };
 
   }

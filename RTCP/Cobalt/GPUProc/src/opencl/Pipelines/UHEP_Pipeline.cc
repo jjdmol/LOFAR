@@ -26,7 +26,7 @@
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/OpenMP_Lock.h>
-#include <GPUProc/SubbandProcs/UHEP_SubbandProc.h>
+#include <GPUProc/WorkQueues/UHEP_WorkQueue.h>
 
 namespace LOFAR
 {
@@ -64,9 +64,9 @@ namespace LOFAR
 
     void UHEP_Pipeline::doWork()
     {
-      float delaysAtBegin[ps.nrBeams()][ps.settings.antennaFields.size()][NR_POLARIZATIONS] __attribute__((aligned(32)));
-      float delaysAfterEnd[ps.nrBeams()][ps.settings.antennaFields.size()][NR_POLARIZATIONS] __attribute__((aligned(32)));
-      float phaseOffsets[ps.settings.antennaFields.size()][NR_POLARIZATIONS] __attribute__((aligned(32)));
+      float delaysAtBegin[ps.nrBeams()][ps.nrStations()][NR_POLARIZATIONS] __attribute__((aligned(32)));
+      float delaysAfterEnd[ps.nrBeams()][ps.nrStations()][NR_POLARIZATIONS] __attribute__((aligned(32)));
+      float phaseOffsets[ps.nrStations()][NR_POLARIZATIONS] __attribute__((aligned(32)));
 
       memset(delaysAtBegin, 0, sizeof delaysAtBegin);
       memset(delaysAfterEnd, 0, sizeof delaysAfterEnd);
@@ -74,7 +74,7 @@ namespace LOFAR
       delaysAtBegin[0][2][0] = 1e-6, delaysAfterEnd[0][2][0] = 1.1e-6;
 
 #pragma omp parallel num_threads((profiling ? 1 : 2) * nrGPUs)
-      UHEP_SubbandProc(*this, omp_get_thread_num() % nrGPUs).doWork(&delaysAtBegin[0][0][0], &delaysAfterEnd[0][0][0], &phaseOffsets[0][0]);
+      UHEP_WorkQueue(*this, omp_get_thread_num() % nrGPUs).doWork(&delaysAtBegin[0][0][0], &delaysAfterEnd[0][0][0], &phaseOffsets[0][0]);
     }
 
   }

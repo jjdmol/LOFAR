@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -1100,27 +1100,12 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
  * Method:    setTreeState
  * Signature: (IS)Z
  */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_setTreeState__IS(JNIEnv *env, jobject jTreeMaintenance, jint aTreeID, jshort aState) {
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_setTreeState(JNIEnv *env, jobject jTreeMaintenance, jint aTreeID, jshort aState) {
   jboolean succes(0);
   try {
     succes=((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->setTreeState (aTreeID, aState);
   } catch (exception &ex) {
     cout << "Exception during TreeMaintenance::setTreeState(" << aTreeID << "," << aState <<  ") " << ex.what() << endl; 
-    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
-  }  
-  return succes;
-}
-/*
- * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
- * Method:    setTreeState
- * Signature: (ISZ)Z
- */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_setTreeState__ISZ(JNIEnv *env, jobject jTreeMaintenance, jint aTreeID, jshort aState, jboolean allow_endtime_update) {
-  jboolean succes(0);
-  try {
-    succes=((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->setTreeState (aTreeID, aState,allow_endtime_update);
-  } catch (exception &ex) {
-    cout << "Exception during TreeMaintenance::setTreeState(" << aTreeID << "," << aState << "," << allow_endtime_update << ") " << ex.what() << endl; 
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
   }  
   return succes;

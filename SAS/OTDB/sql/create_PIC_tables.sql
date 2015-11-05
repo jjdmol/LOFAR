@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -38,15 +38,15 @@
 -- Needs the tables:
 --		param_type, unit, OTDBtree
 
-DROP TABLE IF EXISTS PIChierarchy CASCADE;
-DROP TABLE IF EXISTS PICkvt 		CASCADE;
-DROP TABLE IF EXISTS PICparamref  CASCADE;
-DROP SEQUENCE IF EXISTS PICparamrefID;
-DROP SEQUENCE IF EXISTS PIChierarchID;
-DROP INDEX IF EXISTS PIChierarchy_treeid_nodeid_indx;
-DROP INDEX IF EXISTS pic_kvt_id;
-DROP INDEX IF EXISTS pic_kvt_id_time_indx;
-DROP INDEX IF EXISTS pic_kvt_time;
+DROP TABLE PIChierarchy CASCADE;
+DROP TABLE PICkvt 		CASCADE;
+DROP TABLE PICparamref  CASCADE;
+DROP SEQUENCE PICparamrefID;
+DROP SEQUENCE PIChierarchID;
+DROP INDEX PIChierarchy_treeid_nodeid_indx;
+DROP INDEX pic_kvt_id;
+DROP INDEX pic_kvt_id_time_indx;
+DROP INDEX pic_kvt_time;
 
 --
 -- The PIC reference table is the representation of the master PIC 

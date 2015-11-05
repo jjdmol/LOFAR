@@ -24,9 +24,9 @@
 #include <string>
 
 #include <Common/Exception.h>
-#include <Stream/SocketStream.h>
-#include <MACIO/RTmetadata.h>
-#include <InputProc/Buffer/BoardMode.h>
+#include <Stream/Stream.h>
+
+#include <InputProc/Buffer/BufferSettings.h>
 
 #include "RSP.h"
 
@@ -43,23 +43,26 @@ namespace LOFAR
     class PacketReader
     {
     public:
-      static const BoardMode MODE_ANY;
+      EXCEPTION_CLASS(BadModeException, LOFAR::Exception);
 
-      PacketReader( const std::string &logPrefix, Stream &inputStream,
-                    const BoardMode &mode = MODE_ANY );
-
-      // Reads a set of packets from the input stream. Sets the payloadError
-      // flag for all invalid packets.
-      void readPackets( std::vector<struct RSP> &packets );
+      PacketReader( const std::string &logPrefix, Stream &inputStream );
 
       // Reads a packet from the input stream. Returns true if a packet was
       // succesfully read.
       bool readPacket( struct RSP &packet );
 
+      // Reads a packet from the input stream, and validates it against the given
+      // settings. Returns:
+      //
+      //   true, if the packet was read and valid.
+      //   false, if the packet was invalid.
+      //
+      // Throws BadModeException, if the packet was valid but did not correspond
+      // to `settings'.
+      bool readPacket( struct RSP &packet, const struct BufferSettings &settings );
+
       // Logs (and resets) statistics about the packets read.
-      void logStatistics(unsigned boardNr,
-                         MACIO::RTmetadata &mdLogger,
-                         const std::string &mdKeyPrefix);
+      void logStatistics();
 
     private:
       const std::string logPrefix;
@@ -67,26 +70,19 @@ namespace LOFAR
       // The stream from which packets are read.
       Stream &inputStream;
 
-      // The mode against which to validate (ignored if mode == MODE_ANY)
-      const BoardMode mode;
-
-      // Whether inputStream is an UDP stream
-      // UDP streams do not allow partial reads and can use recvmmsg(2) (Linux).
-      bool inputIsUDP;
+      // Whether inputStream can do a small read() without data loss.
+      bool supportPartialReads;
 
       // Statistics covering the packets read so far
       size_t nrReceived; // nr. of packets received
-      size_t nrBadMode; // nr. of packets with wrong mode (clock, bit mode)
+      size_t nrBadSize; // nr. of packets with wrong size (only if supportPartialReads == true)
       size_t nrBadTime; // nr. of packets with an illegal time stamp
       size_t nrBadData; // nr. of packets with payload errors
-      size_t nrBadOther; // nr. of packets that are bad in another fashion (illegal header, packet size, etc)
+      size_t nrBadMode; // nr. of packets with an incorrect clock/bitmode
+      size_t nrBadOther; // nr. of packets that are bad in another fashion (illegal header, etc)
 
       bool hadSizeError; // already reported about wrongly sized packets since last logStatistics()
-
-      double lastLogTime; // time since last log print, to monitor data rates
-
-      // numbytes is the actually received size, as indicated by the kernel
-      bool validatePacket(const struct RSP &packet, size_t numbytes);
+      bool hadModeError; // already reported about wrong clocks/bitmodes since last logStatistics()
     };
 
 

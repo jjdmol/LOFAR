@@ -23,6 +23,10 @@
 
 #define USE_ORIGINAL_FILTER 0
 
+#if 0 || !defined HAVE_BGP
+#define FIR_C_IMPLEMENTATION
+#endif
+
 #include <boost/multi_array.hpp>
 
 namespace LOFAR
@@ -58,9 +62,6 @@ namespace LOFAR
       void negateWeights();
 
       bool isNegated();
-
-      // Used for normalization of FFT fwd(+bwd) by FFTW/CUFFT.
-      void scaleWeights(float scale);
 
       // Used for debugging.
       void reverseTaps();

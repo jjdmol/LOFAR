@@ -20,130 +20,43 @@
 
 #include <lofar_config.h>
 
-#include <boost/lexical_cast.hpp>
-#include <boost/format.hpp>
-
 #include "BeamFormerKernel.h"
 
-#include <Common/lofar_complex.h>
-#include <Common/LofarLogger.h>
-#include <GPUProc/gpu_utils.h>
-#include <CoInterface/BlockID.h>
-#include <CoInterface/Config.h>
-
-#include <fstream>
 #include <algorithm>
 
-using boost::lexical_cast;
-using boost::format;
+#include <Common/lofar_complex.h>
+
+#include <GPUProc/global_defines.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    string BeamFormerKernel::theirSourceFile = "BeamFormer.cu";
-    string BeamFormerKernel::theirFunction = "beamFormer";
-
-    BeamFormerKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters("beamFormer"),
-      nrStations(ps.settings.antennaFields.size()),
-
-      nrChannels(ps.settings.beamFormer.nrHighResolutionChannels),
-      nrSamplesPerChannel(ps.settings.blockSize / nrChannels),
-
-      nrSAPs(ps.settings.beamFormer.SAPs.size()),
-      nrTABs(ps.settings.beamFormer.maxNrCoherentTABsPerSAP()),
-      subbandBandwidth(ps.settings.subbandWidth()),
-      doFlysEye(ps.settings.beamFormer.doFlysEye)
+    BeamFormerKernel::BeamFormerKernel(const Parset &ps, gpu::Module &program, gpu::DeviceMemory &devComplexVoltages, gpu::DeviceMemory &devCorrectedData, gpu::DeviceMemory &devBeamFormerWeights)
+      :
+      Kernel(ps, program, "complexVoltages")
     {
-      dumpBuffers = 
-        ps.getBool("Cobalt.Kernels.BeamFormerKernel.dumpOutput", false);
-      dumpFilePattern = 
-        str(format("L%d_SB%%03d_BL%%03d_BeamFormerKernel.dat") % 
-            ps.settings.observationID);
+      setArg(0, devComplexVoltages);
+      setArg(1, devCorrectedData);
+      setArg(2, devBeamFormerWeights);
+
+      globalWorkSize = gpu::Grid(NR_POLARIZATIONS, ps.nrTABs(0), ps.nrChannelsPerSubband());
+      localWorkSize = gpu::Block(NR_POLARIZATIONS, ps.nrTABs(0), 1);
+
+      // FIXME: nrTABs
+      //queue.enqueueNDRangeKernel(*this, cl::NullRange, gpu::dim3(16, ps.nrTABs(0), ps.nrChannelsPerSubband()), gpu::dim3(16, ps.nrTABs(0), 1), 0, &event);
+      //queue.launchKernel(*this, gpu::dim3(16, ps.nrTABs(0), ps.nrChannelsPerSubband()), gpu::dim3(16, ps.nrTABs(0), 0); // TODO: extend/use Kernel::enqueue(). This will also correct the CUDA vs OpenCL interpret of gridSize (when fixed/enabled).
+
+      size_t count = ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * NR_POLARIZATIONS;
+      size_t nrWeightsBytes = ps.nrStations() * ps.nrTABs(0) * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * sizeof(std::complex<float>);
+      size_t nrSampleBytesPerPass = count * ps.nrStations() * sizeof(std::complex<float>);
+      size_t nrComplexVoltagesBytesPerPass = count * ps.nrTABs(0) * sizeof(std::complex<float>);
+      unsigned nrPasses = std::max((ps.nrStations() + 6) / 16, 1U);
+      nrOperations = count * ps.nrStations() * ps.nrTABs(0) * 8;
+      nrBytesRead = nrWeightsBytes + nrSampleBytesPerPass + (nrPasses - 1) * nrComplexVoltagesBytesPerPass;
+      nrBytesWritten = nrPasses * nrComplexVoltagesBytesPerPass;
     }
 
-
-    size_t BeamFormerKernel::Parameters::bufferSize(BufferType bufferType) const {
-      switch (bufferType) {
-      case BeamFormerKernel::INPUT_DATA: 
-        return
-          (size_t) nrChannels *
-          nrSamplesPerChannel * NR_POLARIZATIONS *
-          nrStations * sizeof(std::complex<float>);
-      case BeamFormerKernel::OUTPUT_DATA:
-        return
-          (size_t) nrChannels * 
-          nrSamplesPerChannel * NR_POLARIZATIONS *
-          nrTABs * sizeof(std::complex<float>);
-      case BeamFormerKernel::BEAM_FORMER_DELAYS:
-        return 
-          (size_t) nrSAPs * nrStations *
-          nrTABs * sizeof(double);
-      default:
-        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
-      }
-    }
-
-    
-
-    BeamFormerKernel::BeamFormerKernel(const gpu::Stream& stream,
-                                       const gpu::Module& module,
-                                       const Buffers& buffers,
-                                       const Parameters& params) :
-      CompiledKernel(stream, gpu::Function(module, theirFunction), buffers, params),
-      beamFormerDelays(stream.getContext(), params.bufferSize(BEAM_FORMER_DELAYS))
-    {
-      setArg(0, buffers.output);
-      setArg(1, buffers.input);
-      setArg(2, beamFormerDelays);
-
-      // Beamformer kernel requires 1 channel in the blockDim.z dimension
-      setEnqueueWorkSizes(
-        gpu::Grid(NR_POLARIZATIONS,
-                  std::max(16U, params.nrTABs),  // if < 16 tabs use more to fill out the wave
-                  params.nrChannels),
-        gpu::Block(NR_POLARIZATIONS,
-                   std::max(16U, params.nrTABs),  // if < 16 tabs use more to fill out the wave
-                   1));
-        // The additional tabs added to fill out the waves are skipped
-        // in the kernel file. Additional threads are used to optimize
-        // memory access
-    }
-
-    void BeamFormerKernel::enqueue(const BlockID &blockId,
-                                   double subbandFrequency, unsigned SAP)
-    {
-      setArg(3, subbandFrequency);
-      setArg(4, SAP);
-      Kernel::enqueue(blockId);
-    }
-
-    //--------  Template specializations for KernelFactory  --------//
-    
-    template<> CompileDefinitions
-    KernelFactory<BeamFormerKernel>::compileDefinitions() const
-    {
-      CompileDefinitions defs =
-        KernelFactoryBase::compileDefinitions(itsParameters);
-
-      defs["NR_STATIONS"] = lexical_cast<string>(itsParameters.nrStations);
-
-      defs["NR_CHANNELS"] = lexical_cast<string>(itsParameters.nrChannels);
-      defs["NR_SAMPLES_PER_CHANNEL"] = 
-        lexical_cast<string>(itsParameters.nrSamplesPerChannel);
-
-      defs["NR_SAPS"] =
-        lexical_cast<string>(itsParameters.nrSAPs);
-      defs["NR_TABS"] =
-        lexical_cast<string>(itsParameters.nrTABs);
-      defs["SUBBAND_BANDWIDTH"] =
-        str(format("%.7f") % itsParameters.subbandBandwidth);
-      if (itsParameters.doFlysEye)
-        defs["FLYS_EYE"] = "1";
-
-      return defs;
-    }
   }
 }
 

@@ -35,12 +35,11 @@ namespace LOFAR
     class UHEP_Pipeline : public Pipeline
     {
     public:
-      UHEP_Pipeline(const Parset &, Pool<struct MPIRecvData> &pool);
+      UHEP_Pipeline(const Parset &);
 
       void doWork();
 
-      gpu::Module beamFormerProgram, transposeProgram, invFFTprogram, invFIRfilterProgram, triggerProgram;
-
+      gpu::Function beamFormerProgram, transposeProgram, invFFTprogram, invFIRfilterProgram, triggerProgram;
       PerformanceCounter beamFormerCounter, transposeCounter, invFFTcounter, invFIRfilterCounter, triggerCounter;
       PerformanceCounter beamFormerWeightsCounter, samplesCounter;
     };

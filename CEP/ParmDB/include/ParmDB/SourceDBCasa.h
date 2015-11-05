@@ -29,7 +29,6 @@
 
 //# Includes
 #include <ParmDB/SourceDB.h>
-#include <ParmDB/PatchInfo.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_set.h>
 #include <tables/Tables/Table.h>
@@ -83,11 +82,6 @@ namespace BBS {
                            double ra, double dec,
                            bool check);
 
-    // Update the ra/dec and apparent brightness of a patch.
-    virtual void updatePatch (uint patchId, 
-                              double apparentBrightness,
-                              double ra, double dec);
-
     // Add a source to a patch.
     // Its ra and dec and default parameters will be stored as default
     // values in the associated ParmDB tables. The names of the parameters
@@ -95,15 +89,11 @@ namespace BBS {
     // The map should contain the parameters belonging to the source type.
     // Missing parameters will default to 0.
     // <br>Optionally it is checked if the patch already exists.
-    // <group>
     virtual void addSource (const SourceInfo& sourceInfo,
                             const string& patchName,
                             const ParmMap& defaultParameters,
                             double ra, double dec,
                             bool check);
-    virtual void addSource (const SourceData& source,
-                            bool check);
-    // </group>
 
     // Add a source which forms a patch in itself (with the same name).
     // <br>Optionally it is checked if the patch or source already exists.
@@ -130,9 +120,6 @@ namespace BBS {
 
     // Get the sources belonging to the given patch.
     virtual vector<SourceInfo> getPatchSources (const string& patchName);
-
-    // Get all data of the sources belonging to the given patch.
-    virtual vector<SourceData> getPatchSourceData (const string& patchName);
 
     // Get the source info of the given source.
     virtual SourceInfo getSource (const string& sourceName);
@@ -165,10 +152,6 @@ namespace BBS {
                  uint patchId,
                  const ParmMap& defaultParameters,
                  double ra, double dec);
-
-    // Write the patch info in the given row.
-    void writePatch (double apparentBrightness,
-                     double ra, double dec, uint rownr);
 
     // Find the duplicate patches or sources.
     vector<string> findDuplicates (casa::Table& table,

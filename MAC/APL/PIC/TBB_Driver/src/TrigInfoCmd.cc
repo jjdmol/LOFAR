@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 #include <Common/StringUtil.h>
 
 #include "TrigInfoCmd.h"
-#include <Common/NsTimestamp.h>
+#include <APL/RTCCommon/NsTimestamp.h>
 
 
 using namespace LOFAR;
@@ -111,7 +111,7 @@ void TrigInfoCmd::saveTpAckEvent(GCFEvent& event)
 void TrigInfoCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
 	TBBTrigInfoAckEvent tbb_ack;
-	NsTimestamp nsTimestamp(itsTime, (uint32)((double)itsSampleNr * TS->getSampleTime()));
+	RTC::NsTimestamp nsTimestamp(itsTime, (uint32)((double)itsSampleNr * TS->getSampleTime()));
 	tbb_ack.status_mask     = getStatus(0);
 	tbb_ack.rcu             = itsRcu;
 	tbb_ack.nstimestamp     = nsTimestamp;

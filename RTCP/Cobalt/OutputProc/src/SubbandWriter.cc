@@ -1,4 +1,4 @@
-//# SubbandWriter.cc: Writes visibilities and beam-formed data
+//# SubbandWriter.cc: Writes visibilities in an AIPS++ measurement set
 //# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -22,61 +22,38 @@
 
 #include "SubbandWriter.h"
 
-#include <CoInterface/CorrelatedData.h>
-#include <CoInterface/OMPThread.h>
-
-#include <boost/format.hpp>
-using boost::format;
+#include <CoInterface/DataFactory.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    SubbandWriter::SubbandWriter(const Parset &parset, unsigned streamNr,
-        RTmetadata &mdLogger, const std::string &mdKeyPrefix,
-        const std::string &logPrefix)
-    :
-      itsStreamNr(streamNr),
-      itsOutputPool(str(format("SubbandWriter::itsOutputPool [stream %u]") % streamNr), parset.settings.realTime),
-      itsInputThread(parset, streamNr, itsOutputPool, logPrefix),
-      itsOutputThread(parset, streamNr, itsOutputPool, mdLogger, mdKeyPrefix, logPrefix)
+
+
+    SubbandWriter::SubbandWriter(const Parset &parset, OutputType outputType, unsigned streamNr, bool isBigEndian, const std::string &logPrefix)
     {
-      for (unsigned i = 0; i < maxReceiveQueueSize; i++)
-        itsOutputPool.free.append(new CorrelatedData(parset.settings.correlator.stations.size(), parset.settings.correlator.nrChannels, parset.settings.correlator.nrSamplesPerIntegration(), heapAllocator, 512));
-    }
+      itsInputThread = new InputThread(parset, outputType, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix);
+      itsInputThread->start();
 
-    
-    void SubbandWriter::process()
-    {
-#     pragma omp parallel sections num_threads(2)
-      {
-#       pragma omp section
-        {
-          OMPThread::ScopedName sn(str(format("input %u") % itsStreamNr));
-
-          itsInputThread.process();
-        }
-
-#       pragma omp section
-        {
-          OMPThread::ScopedName sn(str(format("output %u") % itsStreamNr));
-
-          itsOutputThread.process();
-        }
+      try {
+        itsOutputThread = new OutputThread(parset, outputType, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix, isBigEndian);
+        itsOutputThread->start();
+      } catch (...) {
+        itsInputThread->cancel();
+        throw;
       }
-    }
 
+      for (unsigned i = 0; i < maxReceiveQueueSize; i++)
+        itsFreeQueue.append(newStreamableData(parset, outputType, streamNr));
+
+    }
 
     void SubbandWriter::augment( const FinalMetaData &finalMetaData )
     {
-      itsOutputThread.augment(finalMetaData);
+      itsOutputThread->augment(finalMetaData);
     }
 
 
-    ParameterSet SubbandWriter::feedbackLTA() const
-    {
-      return itsOutputThread.feedbackLTA();
-    }
   } // namespace Cobalt
 } // namespace LOFAR
 

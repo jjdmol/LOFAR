@@ -40,8 +40,10 @@ namespace LOFAR
       SubbandMetaData(size_t nrTABs = 0);
 
       struct beamInfo {
-        double delayAtBegin;
-        double delayAfterEnd;
+        float delayAtBegin;
+        float delayAfterEnd;
+        double beamDirectionAtBegin[3];
+        double beamDirectionAfterEnd[3];
       };
 
       // delays for all directions
@@ -54,17 +56,7 @@ namespace LOFAR
       void read(Stream *str);
       void write(Stream *str) const;
 
-      // Maximum size of the buffer to marshall flags
-      static const size_t MAXFLAGSIZE     = 8192 + 4;
-
-      // Maximum number of TABs we'll support when marshalling
-      static const size_t MAXNRTABS       = 512;
-
-      // Maximum number of bytes write() will produce
-      static const size_t MAXMARSHALLSIZE = MAXFLAGSIZE
-                                          + sizeof(struct beamInfo)
-                                          + sizeof(size_t)
-                                          + MAXNRTABS * sizeof(struct beamInfo);
+      static const size_t MAXFLAGSIZE = 132;
     };
 
 
@@ -84,9 +76,7 @@ namespace LOFAR
       size_t nrTABs;
       str->read(&nrTABs, sizeof nrTABs);
       TABs.resize(nrTABs);
-      if (nrTABs > 0 ) {
-        str->read(&TABs[0], nrTABs * sizeof TABs[0]);
-      }
+      str->read(&TABs[0], TABs.size() * sizeof TABs[0]);
 
       // read flags
       std::vector<char> flagsBuffer(MAXFLAGSIZE);
@@ -103,31 +93,13 @@ namespace LOFAR
       // write TABs
       size_t nrTABs = TABs.size();
       str->write(&nrTABs, sizeof nrTABs);
-      if (nrTABs > 0) {
-        ASSERTSTR(nrTABs < MAXNRTABS, "Metadata buffers support up to " << MAXNRTABS << " TABs, but specification contains " << nrTABs);
-
-        str->write(&TABs[0], nrTABs * sizeof TABs[0]);
-      }
+      str->write(&TABs[0], TABs.size() * sizeof TABs[0]);
 
       // write flags
       std::vector<char> flagsBuffer(MAXFLAGSIZE);
 
       ssize_t size = flags.marshall(&flagsBuffer[0], flagsBuffer.size());
-      if (size < 0) {
-        LOG_DEBUG_STR("Error marshalling flags into buffer of size " << MAXFLAGSIZE << ", compressing flags");
-
-        // Span one flag set from the first to the last entry
-        const flags_type::Ranges &ranges = flags.getRanges();
-        const flags_type::range first = ranges[0];
-        const flags_type::range last  = ranges[ranges.size()-1];
-
-        flags_type newFlags;
-        newFlags.include(first.begin,last.end);
-
-        size = newFlags.marshall(&flagsBuffer[0], flagsBuffer.size());
-
-        ASSERTSTR(size >= 0, "Cannot marshall the compressed flags.");
-      }
+      ASSERT(size >= 0);
 
       str->write(&flagsBuffer[0], flagsBuffer.size());
     }

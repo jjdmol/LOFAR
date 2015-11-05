@@ -25,13 +25,11 @@
 #include <iostream>
 
 #include <GPUProc/gpu_wrapper.h>
-#include <Common/LofarLogger.h>
 
 using namespace std;
 using namespace LOFAR::Cobalt;
 
 int main() {
-  INIT_LOGGER("tStreamReadBuffer");
   try {
     gpu::Platform pf;
     cout << "Detected " << pf.size() << " CUDA devices" << endl;
@@ -43,18 +41,18 @@ int main() {
   gpu::Device dev(0);
   gpu::Context ctx(dev);
 
-  const size_t bufSize = 16 * 1024 * 1024;
+  const size_t bufSize = 64 * 1024 * 1024;
   const char expectedVal = 42;
-  gpu::HostMemory hBuf1(ctx, bufSize);
-  gpu::HostMemory hBuf2(ctx, bufSize);
+  gpu::HostMemory hBuf1(bufSize);
+  gpu::HostMemory hBuf2(bufSize);
   char *buf1 = hBuf1.get<char>();
   char *buf2 = hBuf2.get<char>();
   memset(buf1, expectedVal, bufSize * sizeof(char));
   memset(buf2,           0, bufSize * sizeof(char));
 
-  gpu::DeviceMemory dBuf(ctx, bufSize);
+  gpu::DeviceMemory dBuf(bufSize);
 
-  gpu::Stream strm(ctx);
+  gpu::Stream strm;
 
   strm.writeBuffer(dBuf, hBuf1, false);
   strm.synchronize();

@@ -42,32 +42,13 @@ namespace LOFAR
       getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
       unsigned totalNrThreads = ps.nrChannelsPerSubband() * NR_POLARIZATIONS * 2;
       unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
-      globalWorkSize = cl::NDRange(totalNrThreads, ps.settings.antennaFields.size());
+      globalWorkSize = cl::NDRange(totalNrThreads, ps.nrStations());
       localWorkSize = cl::NDRange(totalNrThreads / nrPasses, 1);
 
-      size_t nrSamples = (size_t) ps.settings.antennaFields.size() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS;
+      size_t nrSamples = (size_t) ps.nrStations() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS;
       nrOperations = nrSamples * ps.nrSamplesPerChannel() * NR_TAPS * 2 * 2;
       nrBytesRead = nrSamples * (NR_TAPS - 1 + ps.nrSamplesPerChannel()) * ps.nrBytesPerComplexSample();
       nrBytesWritten = nrSamples * ps.nrSamplesPerChannel() * sizeof(std::complex<float>);
-    }
-
-    size_t FIR_FilterKernel::bufferSize(const Parset& ps, BufferType bufferType)
-    {
-      switch (bufferType) {
-      case INPUT_DATA: 
-        return
-          (ps.nrHistorySamples() + ps.nrSamplesPerSubband()) * 
-          ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.nrBytesPerComplexSample();
-      case OUTPUT_DATA:
-        return
-          ps.nrSamplesPerSubband() * ps.settings.antennaFields.size() * 
-          NR_POLARIZATIONS * sizeof(std::complex<float>);
-      case FILTER_WEIGHTS:
-        return 
-          ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float);
-      default:
-        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
-      }
     }
 
   }

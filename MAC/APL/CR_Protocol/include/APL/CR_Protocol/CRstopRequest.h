@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2011
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
 #ifndef CR_STOP_REQUEST_H_
 #define CR_STOP_REQUEST_H_
 
-#include <Common/NsTimestamp.h>
+#include <APL/RTCCommon/NsTimestamp.h>
 
 namespace LOFAR {
   namespace CR_Protocol {
@@ -33,7 +33,7 @@ class CRstopRequest
 public:
 	//@{
 	// Constructors and destructors for a pointing.
-	CRstopRequest(const string& aStationList, const string& aRCUlist, NsTimestamp aStopTime) : 
+	CRstopRequest(const string& aStationList, const string& aRCUlist, RTC::NsTimestamp aStopTime) : 
 		stationList(aStationList), rcuList(aRCUlist), stopTime(aStopTime) {};
 	CRstopRequest() {};
 	~CRstopRequest() {};
@@ -52,7 +52,7 @@ public:
 	// --- datamembers ---
 	string				stationList;
 	string 		     	rcuList;
-	NsTimestamp 		stopTime;
+	RTC::NsTimestamp 	stopTime;
 };
 
 //

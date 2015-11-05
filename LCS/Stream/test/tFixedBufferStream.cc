@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: tAllocator.cc 14057 2009-09-18 12:26:29Z diepen $
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -109,7 +109,7 @@ int main(int /*argc*/, const char* argv[])
 
     try {
       testWrite(ws, 500);
-    } catch(EndOfStreamException &e) {
+    } catch(Stream::EndOfStreamException &e) {
       EOB = true;
     }
 
@@ -120,7 +120,7 @@ int main(int /*argc*/, const char* argv[])
 
     try {
       testRead(rs, 500);
-    } catch(EndOfStreamException &e) {
+    } catch(Stream::EndOfStreamException &e) {
       EOB = true;
     }
 

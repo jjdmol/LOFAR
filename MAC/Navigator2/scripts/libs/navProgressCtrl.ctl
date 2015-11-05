@@ -2,7 +2,7 @@
 //
 //  Copyright (C) 2002-2015
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -91,10 +91,11 @@ void navProgressCtrl_handleObservation(string selection){
   
   LOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation| finished: "+finished);  
   
-  if (percent >0 && percent <= 100) {
+  if (percent > 0) {
     percentDone = finished/percent;
   }
   if (percentDone > 100) {
+    LOG_ERROR("navProgressCtrl.ctl:navProgressCtrl_handleObservation| ERROR: Observation exceeds stoptime!! " + selection);
     percentDone = 100;
   } else if (percentDone < 0) {
     percentDone=0;

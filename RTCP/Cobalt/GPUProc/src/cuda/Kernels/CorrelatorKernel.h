@@ -21,51 +21,51 @@
 #ifndef LOFAR_GPUPROC_CUDA_CORRELATOR_KERNEL_H
 #define LOFAR_GPUPROC_CUDA_CORRELATOR_KERNEL_H
 
-#include <GPUProc/Kernels/Kernel.h>
-#include <GPUProc/KernelFactory.h>
+#include <CoInterface/Parset.h>
+
+#include "Kernel.h"
+#include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_wrapper.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    class CorrelatorKernel : public CompiledKernel
+#if !defined USE_NEW_CORRELATOR
+
+    class CorrelatorKernel : public Kernel
     {
     public:
-      static std::string theirSourceFile;
-      static std::string theirFunction;
-
-      enum BufferType
-      {
-        INPUT_DATA,
-        OUTPUT_DATA
-      };
-
-      struct Parameters : Kernel::Parameters
-      {
-        Parameters(const Parset& ps);
-        unsigned nrStations;
-        unsigned nrStationsPerThread;
-        unsigned nrBaselines() const;
-
-        unsigned nrChannels;
-        unsigned nrSamplesPerIntegration;
-        unsigned nrIntegrationsPerBlock;
-        size_t nrSamplesPerBlock() const;
-
-        size_t bufferSize(BufferType bufferType) const;
-      };
-
-      CorrelatorKernel(const gpu::Stream &stream,
-                       const gpu::Module &module,
-                       const Buffers &buffers,
-                       const Parameters &param);
+      CorrelatorKernel(const Parset &ps, gpu::Stream &queue,
+                       gpu::Module &program, gpu::DeviceMemory &devVisibilities, gpu::DeviceMemory &devCorrectedData);
     };
 
-    //# --------  Template specializations for KernelFactory  -------- #//
+#else
 
-    template<> CompileDefinitions
-    KernelFactory<CorrelatorKernel>::compileDefinitions() const;
+    class CorrelatorKernel : public Kernel
+    {
+    public:
+      CorrelatorKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program,
+                       gpu::DeviceMemory &devVisibilities, gpu::DeviceMemory &devCorrectedData);
+
+    };
+
+    class CorrelateRectangleKernel : public Kernel
+    {
+    public:
+      CorrelateRectangleKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program,
+                               gpu::DeviceMemory &devVisibilities, gpu::DeviceMemory &devCorrectedData);
+    };
+
+    class CorrelateTriangleKernel : public Kernel
+    {
+    public:
+      CorrelateTriangleKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program,
+                              gpu::DeviceMemory &devVisibilities, gpu::DeviceMemory &devCorrectedData);
+    };
+
+#endif
+
   }
 }
 

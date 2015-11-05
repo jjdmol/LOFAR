@@ -64,12 +64,12 @@ namespace LOFAR
 
         // lseek can return -1 as a valid file position, so check errno as well
         if (curlen == (off_t)-1 && errno)
-          THROW_SYSCALL("lseek");
+          throw SystemCallException("lseek", errno, THROW_ARGS);
 
         writeRemainder();
 
         if (ftruncate(fd, curlen + origremainder) < 0)
-          THROW_SYSCALL("ftruncate");
+          throw SystemCallException("ftruncate", errno, THROW_ARGS);
       } catch (Exception &ex) {
         LOG_ERROR_STR("Exception in destructor: " << ex);
       }
@@ -80,14 +80,13 @@ namespace LOFAR
     {
       if (remainder) {
         // pad with zeroes
-        size_t nrpadbytes = alignment - remainder;
         ensureBuffer(alignment);
-        memset(buffer.get() + remainder, 0, nrpadbytes);
+        memset(buffer.get() + remainder, 0, alignment - remainder);
         forceWrite(buffer, alignment);
 
         remainder = 0;
 
-        return nrpadbytes;
+        return alignment;
       }
 
       return 0;
@@ -177,7 +176,7 @@ namespace LOFAR
 
       // get rid of the old remainder first
       if (bytes + remainder >= alignment) {
-        bytes -= writeRemainder();
+        bytes -= (writeRemainder() - remainder);
 
         if (bytes >= alignment ) {
           // skip whole number of blocks
@@ -212,7 +211,7 @@ namespace LOFAR
 
       // lseek can return -1 as a valid file position, so check errno as well
       if (curlen == (off_t)-1 && errno)
-        THROW_SYSCALL("lseek");
+        throw SystemCallException("lseek", errno, THROW_ARGS);
 
       return curlen + remainder;
     }

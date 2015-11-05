@@ -1,5 +1,5 @@
-//# Mmap.cc: class to wrap the mmap and munmap system calls
-//# Copyright (C) 2013, 2015  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Mmap.cc: class wrap the mmap(2) system call and friends
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -23,6 +23,8 @@
 
 #include <Common/Mmap.h>
 
+#include <cerrno>
+
 #include <Common/SystemCallException.h>
 #include <Common/LofarLogger.h>
 
@@ -33,12 +35,12 @@ namespace LOFAR
              off_t offset) :
     _len(length)
   {
-    if (flags & MAP_ANON) {
+    if (flags & MAP_ANONYMOUS) {
       fd = -1; // portability
     }
     _ptr = ::mmap(addr, length, prot, flags, fd, offset);
     if (_ptr == MAP_FAILED) {
-       THROW_SYSCALL("mmap");
+       throw SystemCallException("mmap", errno, THROW_ARGS);
     }
   }
 

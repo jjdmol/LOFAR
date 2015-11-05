@@ -1,4 +1,4 @@
-//# CorrelatorSubbandProc.cc
+//# CorrelatorWorkQueue.cc
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include "CorrelatorSubbandProc.h"
+#include "CorrelatorWorkQueue.h"
 
 #include <cstring>
 #include <algorithm>
@@ -48,7 +48,7 @@ namespace LOFAR
      *          -> devFilteredData = visibilities
      * [output] <-
      */
-    CorrelatorSubbandProc::CorrelatorSubbandProc(const Parset       &parset,
+    CorrelatorWorkQueue::CorrelatorWorkQueue(const Parset       &parset,
       cl::Context &context, 
       cl::Device  &device,
       unsigned gpuNumber,
@@ -56,11 +56,11 @@ namespace LOFAR
                                              FilterBank &filterBank
                                              )
       :
-    SubbandProc( context, device, gpuNumber, parset),
+    WorkQueue( context, device, gpuNumber, parset),
       prevBlock(-1),
       prevSAP(-1),
       devInput(ps.nrBeams(),
-                ps.settings.antennaFields.size(),
+                ps.nrStations(),
                 NR_POLARIZATIONS,
                 ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
                 ps.nrBytesPerComplexSample(),
@@ -68,13 +68,13 @@ namespace LOFAR
 
                 // reserve enough space in inputSamples for the output of
                 // the delayAndBandPassKernel.
-                ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>)),
+                ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>)),
       devFilteredData(queue,
                       CL_MEM_READ_WRITE,
 
                       // reserve enough space for the output of the
                       // firFilterKernel,
-                      std::max(ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
+                      std::max(ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
                       // and the correlatorKernel.
                                ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>))),
       devFIRweights(queue,
@@ -121,8 +121,8 @@ namespace LOFAR
 #endif
     {
       // put enough objects in the inputPool to operate
-      // TODO: Tweak the number of inputPool objects per SubbandProc,
-      // probably something like max(3, nrSubbands/nrSubbandProcs * 2), because
+      // TODO: Tweak the number of inputPool objects per WorkQueue,
+      // probably something like max(3, nrSubbands/nrWorkQueues * 2), because
       // there both need to be enough items to receive all subbands at
       // once, and enough items to process the same amount in the
       // mean time.
@@ -130,9 +130,9 @@ namespace LOFAR
       // At least 3 items are needed for a smooth Pool operation.
       size_t nrInputDatas = std::max(3UL, ps.nrSubbands());
       for(size_t i = 0; i < nrInputDatas; ++i) {
-        inputPool.free.append(new SubbandProcInputData(
+        inputPool.free.append(new WorkQueueInputData(
                 ps.nrBeams(),
-                ps.settings.antennaFields.size(),
+                ps.nrStations(),
                 NR_POLARIZATIONS,
                 ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
                 ps.nrBytesPerComplexSample(),
@@ -142,7 +142,7 @@ namespace LOFAR
       // put enough objects in the outputPool to operate
       for(size_t i = 0; i < 3; ++i) {
         outputPool.free.append(new CorrelatedDataHostBuffer(
-                ps.settings.antennaFields.size(),
+                ps.nrStations(),
                 ps.nrChannelsPerSubband(),
                 ps.integrationSteps(),
                 devFilteredData,
@@ -187,8 +187,9 @@ namespace LOFAR
     }
 
     // Get the log2 of the supplied number
-    unsigned CorrelatorSubbandProc::flagFunctions::get2LogOfNrChannels(unsigned nrChannels)
+    unsigned CorrelatorWorkQueue::flagFunctions::get2LogOfNrChannels(unsigned nrChannels)
     {
+      // Assure that the nrChannels is more then zero: never ending loop 
       ASSERT(powerOfTwo(nrChannels));
 
       unsigned logNrChannels;
@@ -202,7 +203,7 @@ namespace LOFAR
       return logNrChannels;
     }
 
-    void CorrelatorSubbandProc::flagFunctions::propagateFlagsToOutput(
+    void CorrelatorWorkQueue::flagFunctions::propagateFlagsToOutput(
       Parset const &parset,
       MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
       CorrelatedData &output)
@@ -211,7 +212,7 @@ namespace LOFAR
 
       // Object for storing transformed flags
       MultiDimArray<SparseSet<unsigned>, 2> flagsPerChannel(
-        boost::extents[numberOfChannels][parset.settings.antennaFields.size()]);
+        boost::extents[numberOfChannels][parset.nrStations()]);
 
       // First transform the flags to channel flags: taking in account 
       // reduced resolution in time and the size of the filter
@@ -234,14 +235,14 @@ namespace LOFAR
       }
     }
 
-    void CorrelatorSubbandProc::flagFunctions::convertFlagsToChannelFlags(Parset const &parset,
+    void CorrelatorWorkQueue::flagFunctions::convertFlagsToChannelFlags(Parset const &parset,
       MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
       MultiDimArray<SparseSet<unsigned>, 2>& flagsPerChannel)
     {
       unsigned numberOfChannels = parset.nrChannelsPerSubband();
       unsigned log2NrChannels = get2LogOfNrChannels(numberOfChannels);
       //Convert the flags per sample to flags per channel
-      for (unsigned station = 0; station < parset.settings.antennaFields.size(); station ++) 
+      for (unsigned station = 0; station < parset.nrStations(); station ++) 
       {
         // get the flag ranges
         const SparseSet<unsigned>::Ranges &ranges = inputFlags[station].getRanges();
@@ -295,13 +296,13 @@ namespace LOFAR
       }
     }
 
-    template<typename T> void CorrelatorSubbandProc::flagFunctions::calculateAndSetNumberOfFlaggedSamples(
+    template<typename T> void CorrelatorWorkQueue::flagFunctions::calculateAndSetNumberOfFlaggedSamples(
       Parset const &parset,
       MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
       CorrelatedData &output)
     {
       // loop the stations
-      for (unsigned stat2 = 0; stat2 < parset.settings.antennaFields.size(); stat2 ++) {
+      for (unsigned stat2 = 0; stat2 < parset.nrStations(); stat2 ++) {
         for (unsigned stat1 = 0; stat1 <= stat2; stat1 ++) {
           unsigned bl = baseline(stat1, stat2);
 
@@ -336,20 +337,20 @@ namespace LOFAR
     }
 
     // Instantiate required templates
-    template void CorrelatorSubbandProc::flagFunctions::calculateAndSetNumberOfFlaggedSamples<uint32_t>(
+    template void CorrelatorWorkQueue::flagFunctions::calculateAndSetNumberOfFlaggedSamples<uint32_t>(
       Parset const &parset,
       MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
       CorrelatedData &output);
-    template void CorrelatorSubbandProc::flagFunctions::calculateAndSetNumberOfFlaggedSamples<uint16_t>(
+    template void CorrelatorWorkQueue::flagFunctions::calculateAndSetNumberOfFlaggedSamples<uint16_t>(
       Parset const &parset,
       MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
       CorrelatedData &output);
-    template void CorrelatorSubbandProc::flagFunctions::calculateAndSetNumberOfFlaggedSamples<uint8_t>(
+    template void CorrelatorWorkQueue::flagFunctions::calculateAndSetNumberOfFlaggedSamples<uint8_t>(
       Parset const &parset,
       MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
       CorrelatedData &output);
 
-    void CorrelatorSubbandProc::flagFunctions::applyWeightingToAllPolarizations(unsigned baseline, 
+    void CorrelatorWorkQueue::flagFunctions::applyWeightingToAllPolarizations(unsigned baseline, 
       unsigned channel, float weight, CorrelatedData &output)
     { // TODO: inline???
       for(unsigned idx_polarization_1 = 0; idx_polarization_1 < NR_POLARIZATIONS; ++idx_polarization_1)
@@ -357,7 +358,7 @@ namespace LOFAR
           output.visibilities[baseline][channel][idx_polarization_1][idx_polarization_2] *= weight;
     }
 
-    template<typename T> void CorrelatorSubbandProc::flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities(Parset const &parset,
+    template<typename T> void CorrelatorWorkQueue::flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities(Parset const &parset,
       CorrelatedData &output)
     {
       for (unsigned bl = 0; bl < output.itsNrBaselines; ++bl) {
@@ -379,15 +380,15 @@ namespace LOFAR
     }
 
     // Instantiate required templates
-    template void CorrelatorSubbandProc::flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities<uint32_t>(Parset const &parset,
+    template void CorrelatorWorkQueue::flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities<uint32_t>(Parset const &parset,
       CorrelatedData &output);
-    template void CorrelatorSubbandProc::flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities<uint16_t>(Parset const &parset,
+    template void CorrelatorWorkQueue::flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities<uint16_t>(Parset const &parset,
       CorrelatedData &output);
-    template void CorrelatorSubbandProc::flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities<uint8_t>(Parset const &parset,
+    template void CorrelatorWorkQueue::flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities<uint8_t>(Parset const &parset,
       CorrelatedData &output);
 
 
-    void CorrelatorSubbandProc::processSubband(SubbandProcInputData &input, CorrelatedDataHostBuffer &output)
+    void CorrelatorWorkQueue::processSubband(WorkQueueInputData &input, CorrelatedDataHostBuffer &output)
     {
       timers["GPU - total"]->start();
 
@@ -411,7 +412,7 @@ namespace LOFAR
       // Moved from doWork() The delay data should be available before the kernels start.
       // Queue processed ordered. This could main that the transfer is not nicely overlapped
 
-      unsigned SAP = ps.settings.subbands[subband].SAP;
+      unsigned SAP = ps.subbandToSAPmapping()[subband];
 
       // Only upload delays if they changed w.r.t. the previous subband
       if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) {
@@ -469,7 +470,7 @@ namespace LOFAR
     }
 
 
-    void CorrelatorSubbandProc::postprocessSubband(CorrelatedDataHostBuffer &output)
+    void CorrelatorWorkQueue::postprocessSubband(CorrelatedDataHostBuffer &output)
     {
       // The flags are alrady copied to the correct location
       // now the flagged amount should be applied to the visibilities
@@ -490,7 +491,7 @@ namespace LOFAR
 
 
     // flag the input samples.
-    void SubbandProcInputData::flagInputSamples(unsigned station,
+    void WorkQueueInputData::flagInputSamples(unsigned station,
                                               const SubbandMetaData& metaData)
     {
 

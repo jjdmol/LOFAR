@@ -22,12 +22,8 @@
 
 #include "UnitTest.h"
 
-#include <limits>
-#include <complex>
-#include <cmath>
-
 #include <GPUProc/global_defines.h>
-#include <GPUProc/opencl/gpu_utils.h>
+#include <GPUProc/gpu_utils.h>
 
 namespace LOFAR
 {
@@ -45,6 +41,21 @@ namespace LOFAR
         program = createProgram(ps, context, devices, programName);
     }
 
+
+    bool UnitTest::fpEquals(double val, double ref, double epsilon) const
+    {
+      double err = std::abs(val - ref);
+      if (ref >= 1.0e-1) {
+        err /= ref;         // prefer relative error cmp iff away from 0.0
+      }
+      return err < epsilon;
+    }
+
+    bool UnitTest::cfpEquals(std::complex<double> val, std::complex<double> ref, double epsilon) const
+    {
+      return fpEquals(val.real(), ref.real(), epsilon) &&
+             fpEquals(val.imag(), ref.imag(), epsilon);
+    }
   }
 }
 

@@ -21,14 +21,20 @@
 #ifndef LOFAR_GPUPROC_GLOBAL_DEFINES_H
 #define LOFAR_GPUPROC_GLOBAL_DEFINES_H
 
+#define NR_STATION_FILTER_TAPS  16
+#define USE_NEW_CORRELATOR
+#define NR_POLARIZATIONS         2 // TODO: get the nr of pol symbol from an LCS/Common header
+#define NR_TAPS                 16
+#define USE_2X2
+#undef USE_TEST_DATA
+#undef USE_B7015
+
 namespace LOFAR
 {
   namespace Cobalt
   {
     extern bool profiling;
-    extern bool gpuProfiling;
-
-    void set_affinity(unsigned device);
+    extern unsigned nrGPUs;
   }
 }
 

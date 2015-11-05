@@ -26,11 +26,8 @@
 
 #include <Common/LofarTypes.h>
 #include <CoInterface/MultiDimArray.h>
-#include <CoInterface/SmartPtr.h>
 
 #include "MPIProtocol.h"
-#include "MPIUtil.h"
-#include "ReceiveStations.h"
 
 #include <vector>
 
@@ -42,52 +39,63 @@ namespace LOFAR
      * A Receiver class for data sent by MPISendStation. This class receives
      * blocks of beamlets from all specified stations.
      */
-    class MPIReceiveStations: public ReceiveStations
+    class MPIReceiveStations
     {
     public:
       // Set up a receiver for the given stations and beamlets, receiving
       // blocks of the given size.
       //
-      // nrStations:
-      //   The number of stations to receive data from.
+      // stationRanks:
+      //   The rank of each station. MPI Nodes that host multiple stations
+      //   occur multiple times in the list, making len(stationRanks) ==
+      //   nrStations.
       //
       // beamlets:
       //   The list of beamlets to receive out of [0, nrBeamlets) w.r.t. the
       //   observation.
       //
       // blockSize:
-      //   The number of samples in each block.
-      MPIReceiveStations( size_t nrStations, const std::vector<size_t> &beamlets, size_t blockSize );
+      //   The number of samples in each block. Includes nrHistorySamples.
+      MPIReceiveStations( const std::vector<int> &stationRanks, const std::vector<size_t> &beamlets, size_t blockSize );
+
+      template<typename T>
+      struct Beamlet {
+        T *samples;
+        SubbandMetaData metaData;
+      };
+
+      template<typename T>
+      struct Block {
+        std::vector< struct Beamlet<T> > beamlets; // [beamlet]
+      };
 
       // Receive the next block. The `block' parameter is a structure allocated
       // by the caller, and needs to have dimensions
       // [stationRanks.size()][beamlets.size()]. Each sample block needs to be
       // blockSize in length.
       //
-      // Returns whether all stations are done sending. If so, this block does not
-      // have to be processed either since all metatData[stat][0].EOS will be set.
+      // It is the callers responsibility to call receiveBlock exactly as often
+      // as sendBlock is called by the stations.
       template<typename T>
-      bool receiveBlock( MultiDimArray<T,3> &data, MultiDimArray<struct MPIProtocol::MetaData,2> &metaData );
+      void receiveBlock( std::vector< struct Block<T> > &blocks );
 
     private:
       const std::string logPrefix;
-      const size_t nrStations;
+      const std::vector<int> stationRanks;
 
     public:
       const std::vector<size_t> beamlets;
       const size_t blockSize;
 
-      std::vector<int> stationSourceRanks; // [station]
-
-      // Which stations are done sending (and we should thus post no receive for for subsequent blocks)
-      std::vector<bool> stationDone; // [station]
+      // Receive a header (async) from the given rank.
+      MPI_Request receiveHeader( size_t station, struct MPIProtocol::Header &header );
 
       // Receive beamlet data (async) from the given rank.
       template<typename T>
-      MPI_Request receiveData( size_t station, T *buffer );
+      MPI_Request receiveData( size_t station, size_t beamlet, int transfer, T *from, size_t nrSamples );
 
       // Receive marshalled flags and metadata (async) from the given rank.
-      MPI_Request receiveMetaData( size_t station, struct MPIProtocol::MetaData *metaData );
+      MPI_Request receiveMetaData( size_t station, size_t beamlet, struct MPIProtocol::MetaData &metaData );
     };
 
   }

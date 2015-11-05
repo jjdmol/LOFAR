@@ -28,16 +28,16 @@
 // Utility functions to construct sub-expressions for the LOFAR measurement
 // expression.
 
-#include <BBSKernel/Instrument.h>
-#include <BBSKernel/IonosphereExpr.h>
 #include <BBSKernel/ModelConfig.h>
+#include <BBSKernel/IonosphereExpr.h>
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/Scope.h>
 #include <BBSKernel/Expr/Source.h>
-#include <Common/lofar_string.h>
+#include <BBSKernel/Instrument.h>
 #include <Common/lofar_vector.h>
-#include <measures/Measures/MDirection.h>
+#include <Common/lofar_string.h>
 #include <measures/Measures/MPosition.h>
+#include <measures/Measures/MDirection.h>
 
 namespace LOFAR
 {
@@ -76,13 +76,13 @@ makeBandpassExpr(Scope &scope,
     const Station::ConstPtr &station);
 
 Expr<JonesMatrix>::Ptr
-makeClockExpr(Scope &scope, const Station::ConstPtr &station,
-    const ClockConfig &config);
+makeClockExpr(Scope &scope,
+    const Station::ConstPtr &station);
 
 Expr<JonesMatrix>::Ptr
 makeGainExpr(Scope &scope,
     const Station::ConstPtr &station,
-    const GainConfig &config);
+    bool phasors);
 
 Expr<JonesMatrix>::Ptr
 makeTECExpr(Scope &scope,
@@ -101,7 +101,7 @@ Expr<JonesMatrix>::Ptr
 makeDirectionalGainExpr(Scope &scope,
     const Station::ConstPtr &station,
     const string &patch,
-    const DirectionalGainConfig &config);
+    bool phasors);
 
 Expr<JonesMatrix>::Ptr
 makeElevationCutExpr(const Expr<Vector<2> >::Ptr &exprAzEl,
@@ -138,7 +138,7 @@ makeScalarPhaseExpr(Scope &scope,
 Expr<JonesMatrix>::Ptr
 makeIonosphereExpr(const Station::ConstPtr &station,
     const casa::MPosition &refPosition,
-    const Expr<Vector<3> >::Ptr &exprDirection,
+    const Expr<Vector<2> >::Ptr &exprAzEl,
     const IonosphereExpr::Ptr &exprIonosphere);
 
 // Right multiply \p lhs by \p rhs. Return \p rhs if \p lhs is uninitialized.

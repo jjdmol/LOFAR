@@ -1,116 +1,45 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 1200 7500 N "_3DFace" 0
+PANEL,-1 -1 1307 841 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel
   navPanel_initPanel(\"fw_viewBox\");
+  baseDP         = g_currentDatapoint;
+  dpGet(baseDP+\".observationName\",observationNr);
+  observationName=\"Observation\"+observationNr;
   strModuleName   = myModuleName();
-  baseDP = \"LOFAR_PermSW\";
-  database=dpSubStr(baseDP,DPSUB_SYS);
-
-
-  // This panel needs to act on active observations, in running status so we connect to the MACScheduler te be updated  
   
-  activeObsDP =MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\";  
-  // check if MACScheduler pointenabled and accessible
-  if (dpExists(activeObsDP)) {
-    if (dpConnect(\"updateActiveObservations\", activeObsDP+\":_online.._value\",
-                                             activeObsDP+\":_online.._invalid\") == -1) {
-      LOG_ERROR(\"ObservationFlow_cobaltNodeProcesses.pnl:main|Couldn't connect to: \"+activeObsDP);
-    }
-  } else {
-    if (!isStandalone()) LOG_ERROR(\"ObservationFlow_cobaltInputStreams.pnl:main|Couldn't find DP to connect to: \"+activeObsDP);
-  }
+  TopLabel.text(observationName+\" InputBuffers\");
+  
+   
+  reload();
+
 }
-
-void updateActiveObservations(string dp1, dyn_string obs,
-                              string dp2, bool invalid)
-{
-
-  LOG_TRACE(\"ObservationFlow_cobaltInputStreams.pnl:updateActiveObservations| entered\");
-  // remove pipelines from the list
-  for (int i=dynlen(obs);i > 0;  i--) if (!navFunct_isObservation(obs[i])) dynRemove(obs,i);
-  
-  activeObservations = obs;
-  // if there are selected observation check the observationsList if those selected observations still are active
-  // remove the unactive observations from the list  
-  
-  // replace old observations if there are no observations selected
-  if (selectedObservations) {
-    for (int i=dynlen(observationsList); i < 1; i--) {
-      int idx = dynContains(activeObservations,observationsList[i]);
-      if (i <= 0) dynRemove(observationsList,i);
-    }
-    if (dynlen(observationsList) ==0) {
-      selectedObservations=false;
-    }
-  }
-  
-  if (!selectedObservations) {
-    observationsList = activeObservations;
-  }
-  // because CobaltProcesses claim their datapoints when the observation is actually running we need to connect to all these observations
-  // and give a signal when the runstate of one of them changes to running to trigger the Cobalt point collection
-  
-  LOG_DEBUG(\"ObservationFlow_cobaltInputStreams.pnl:updateActiveObservations|observationList: \"+observationsList);
-
-  obsConnections = makeDynString();  
-  for (int i = 1; i <= dynlen(observationsList) ; i++) {
-    // compose the WinCC OA DP name 
-    string obsName = \"LOFAR_ObsSW_\"+observationsList[i]; 
-
-    // Ask the claimmanager for the temp obs representation
-    string obsDP=MainDBName+claimManager_nameToRealName(obsName);
-
-    // add DP to list with all connects
-    if (! dynContains(obsConnections,obsDP+\".runState\")) dynAppend(obsConnections,obsDP+\".runState\");
-  }
-  
-  if (dynlen(oldObsConnections) > 0) {
-    // disconnect old observations
-    dpDisconnect(\"monitorRunStates\",oldObsConnections);
-    dynClear(oldObsConnections);
-  }
-  
-  // connect to runState for all active observations  
-  if (dynlen(obsConnections) > 0 && dpConnect(\"monitorRunStates\",obsConnections) == -1) {
-    LOG_ERROR(\"ObservationFlow_cobaltInputStreams.pnl:updateActiveObservations|ERROR: couldn't connect to : \"+obsConnections+ \" \" + getLastError());
-  } else if (dynlen(obsConnections) > 0) {
-    oldObsConnections = obsConnections;
-  }     
-}
-
-void monitorRunStates(dyn_string dpList,dyn_string runStates) {
-  LOG_TRACE(\"ObservationFlow_cobaltInputStreams.pnl:monitorrunstates| entered\");
-  for (int i=1; i<= dynlen(runStates); i++) {
-    if (runStates[i] == \"Running\" || runStates[i] == \"Quiting\") {
-      reload();
-      break;
-    }
-  }
-}
-
-
-
 
 void prepareProcesses() {
   dyn_string result;
-  string connectTo=\"LOFAR_PermSW\";
-  dynAppend(result,\",PermSW,\"+connectTo);    
+  string connectTo=MainDBName+claimManager_nameToRealName(\"LOFAR_ObsSW_\"+observationName);
+  dynAppend(result,\",\"+observationName+\",\"+connectTo);    
 
+  string nr=\"\";
+  string oldNr=\"\";
   for  (int i=1; i<= dynlen(inputBuffers); i++) {
-    dyn_string splitted = strsplit(inputBuffers[i],\"_\");
-    dynAppend(result,\"LOFAR_PermSW,\"+splitted[3]+\",\"+connectTo+\"_\"+splitted[3]);
-    dynAppend(result,connectTo+\"_\"+splitted[3]+\",CobaltStationInput,\"+connectTo+\"_\"+splitted[3]+\"_CobaltStationInput\");
+    nr  = substr(inputBuffers[i],strpos(inputBuffers[i],\"PSIONode\")+8,2);
+    if (nr != oldNr) {
+      dynAppend(result,connectTo+\",IONode\"+nr+\",\"+CEPDBName+\"LOFAR_PermSW_PSIOnode\"+nr);    
+      oldNr=nr;
+    }
+    dynAppend(result,CEPDBName+\"LOFAR_PermSW_PSIOnode\"+nr+\",InputBuffer,\"+inputBuffers[i]);    
     dynAppend(g_processesList,inputBuffers[i]);
   }  
   
   // write result to the db so various panels can reset themselves  
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",result);
   
-  LOG_DEBUG(\"ObservationInputBuffers.pnl:prepareProcesses|processList found: \"+ result);      
+  LOG_DEBUG(\"ObservationInputBuffers.pnl:prepareProcesses|processList found: \"+ result);    
+  
 }
 
 //
@@ -138,10 +67,10 @@ void reload() {
   navFunct_clearGlobalLists();
  
   addInputBuffers();
- 
+  
   // set the observation selectable items
   prepareProcesses();
-
+  
   redraw();
 
   // set panel to ready
@@ -153,40 +82,24 @@ void reload() {
 
 void addInputBuffers() {
 
-  // get all the InputBuffers used for all active observations
-  dynClear(inputBuffers);
-  for (int i =1; i <= dynlen(obsConnections); i++) {
-  
-    string observation = claimManager_realNameToName(obsConnections[i]);
-    
-    dyn_string ib = navFunct_getStationInputForObservation(navFunct_observationNameToNumber(observation));  
-  
-    dynAppend(inputBuffers,ib);
-  }
-  dynSort(inputBuffers);
+  // get all the InputBuffers used by this observation
+  inputBuffers = navFunct_getInputBuffersForObservation(observationName);  
+
 }" 0
  E E E E 1 -1 -1 0  0 0
 ""0  1
 E "#uses \"navPanel.ctl\"
 
 string baseDP=\"\";
-dyn_string observationsList;
-dyn_string obsConnections;   
-dyn_string oldObsConnections;   // keep copy latest observations to be disconnected when the list changes
-dyn_string activeObservations;
+string observationNr;
+string observationName;
 dyn_string inputBuffers;
-
-string activeObsDP = \"\";
-string database;
-bool selectedObservations=false;
-
 bool connected = false;
 dyn_string IBRefNames;
 string strModuleName;
 
 
 void clearIBRefNames() {
-  LOG_TRACE(\"ObservationInputBuffers.pnl:clearIBRefNames| entered with nr entries: \"+dynlen(IBRefNames));
   // remove all symbols because new ones will be added
   for (int i=1; i <= dynlen(IBRefNames); i++) {
     removeSymbol(strModuleName,\"\",IBRefNames[i]);
@@ -195,13 +108,12 @@ void clearIBRefNames() {
 }
 
 void redraw() {
-  LOG_TRACE(\"ObservationInputBuffers.pnl:redraw|entered with nr inputBuffers: \"+ dynlen(inputBuffers));
   string barColor = \"_3DFace\";
   if (dynlen(IBRefNames) > 0) {
     clearIBRefNames();
   }    
   int xPos_AddSymbol = 0; 
-  int yPos_AddSymbol = 0; 
+  int yPos_AddSymbol = 70; 
   int ref = 1;
   string addPanelName    = \"objects/Processes/inputBuffer.pnl\";
   //loop over list and prepare panel with all inputBuffer objects   
@@ -242,6 +154,386 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 0 
+2 0
+"TopLabel"
+""
+1 410 0 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+0 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 410 0 612 20
+0 2 2 "0s" 0 0 0 192 0 0  410 0 1
+1
+LANG:1 33 MS Shell Dlg,-1,16,5,75,0,0,0,0,0
+0 1
+LANG:1 24 Observation InputBuffers
+2 2
+"PRIMITIVE_TEXT2"
+""
+1 24 54 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 24 54 65 67
+0 2 2 "0s" 0 0 0 192 0 0  24 54 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 7 Station
+2 3
+"PRIMITIVE_TEXT3"
+""
+1 92 54 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 92 54 114 67
+0 2 2 "0s" 0 0 0 192 0 0  92 54 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 4 late
+2 5
+"PRIMITIVE_TEXT5"
+""
+1 142 52 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 142 52 183 65
+0 2 2 "0s" 0 0 0 192 0 0  142 52 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 6 IOTime
+2 7
+"PRIMITIVE_TEXT7"
+""
+1 202 52 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 202 52 250 65
+0 2 2 "0s" 0 0 0 192 0 0  202 52 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 8 blocksIn
+2 9
+"PRIMITIVE_TEXT9"
+""
+1 262 52 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 262 52 296 65
+0 2 2 "0s" 0 0 0 192 0 0  262 52 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 4 %Bad
+2 11
+"PRIMITIVE_TEXT11"
+""
+1 322 52 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 322 52 370 65
+0 2 2 "0s" 0 0 0 192 0 0  322 52 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 8 rejected
+2 13
+"PRIMITIVE_TEXT13"
+""
+1 260 32 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+13 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 260 32 308 45
+0 2 2 "0s" 0 0 0 192 0 0  260 32 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 7 stream0
+2 14
+"PRIMITIVE_TEXT14"
+""
+1 402 52 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+14 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 402 52 450 65
+0 2 2 "0s" 0 0 0 192 0 0  402 52 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 8 blocksIn
+2 16
+"PRIMITIVE_TEXT16"
+""
+1 472 52 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+16 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 472 52 506 65
+0 2 2 "0s" 0 0 0 192 0 0  472 52 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 4 %Bad
+2 18
+"PRIMITIVE_TEXT18"
+""
+1 522 52 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+18 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 522 52 570 65
+0 2 2 "0s" 0 0 0 192 0 0  522 52 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 8 rejected
+2 20
+"PRIMITIVE_TEXT20"
+""
+1 474 34 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+20 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 474 34 522 47
+0 2 2 "0s" 0 0 0 192 0 0  474 34 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 7 stream1
+2 39
+"PRIMITIVE_TEXT23"
+""
+1 602 52 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+39 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 602 52 650 65
+0 2 2 "0s" 0 0 0 192 0 0  602 52 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 8 blocksIn
+2 41
+"PRIMITIVE_TEXT25"
+""
+1 662 50 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+41 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 662 50 696 63
+0 2 2 "0s" 0 0 0 192 0 0  662 50 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 4 %Bad
+2 43
+"PRIMITIVE_TEXT27"
+""
+1 722 50 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+43 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 722 50 770 63
+0 2 2 "0s" 0 0 0 192 0 0  722 50 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 8 rejected
+2 45
+"PRIMITIVE_TEXT29"
+""
+1 660 34 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+45 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 660 34 708 47
+0 2 2 "0s" 0 0 0 192 0 0  660 34 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 7 stream2
+2 46
+"PRIMITIVE_TEXT39"
+""
+1 802 52 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+46 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 802 52 850 65
+0 2 2 "0s" 0 0 0 192 0 0  802 52 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 8 blocksIn
+2 48
+"PRIMITIVE_TEXT41"
+""
+1 862 52 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+48 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 862 52 896 65
+0 2 2 "0s" 0 0 0 192 0 0  862 52 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 4 %Bad
+2 50
+"PRIMITIVE_TEXT42"
+""
+1 922 52 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+50 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 922 52 970 65
+0 2 2 "0s" 0 0 0 192 0 0  922 52 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 8 rejected
+2 52
+"PRIMITIVE_TEXT45"
+""
+1 860 34 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+52 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 860 34 908 47
+0 2 2 "0s" 0 0 0 192 0 0  860 34 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 7 stream3
 0
 LAYER, 1 
 1

@@ -22,96 +22,33 @@
 
 #include "IntToFloatKernel.h"
 
-#include <GPUProc/gpu_utils.h>
-#include <CoInterface/BlockID.h>
-#include <CoInterface/Config.h>
 #include <Common/lofar_complex.h>
 
-#include <boost/lexical_cast.hpp>
-#include <boost/format.hpp>
-
-#include <fstream>
-
-using boost::lexical_cast;
-using boost::format;
+#include <GPUProc/global_defines.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    string IntToFloatKernel::theirSourceFile = "IntToFloat.cu";
-    string IntToFloatKernel::theirFunction = "intToFloat";
-
-    IntToFloatKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters("intToFloat"),
-      nrStations(ps.settings.antennaFields.size()),
-      nrBitsPerSample(ps.settings.nrBitsPerSample),
-
-      nrSamplesPerSubband(ps.settings.blockSize)
+    IntToFloatKernel::IntToFloatKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program, gpu::DeviceMemory &devFilteredData, gpu::DeviceMemory &devInputSamples)
+      :
+      Kernel(ps, program, "intToFloat")
     {
-      dumpBuffers = 
-        ps.getBool("Cobalt.Kernels.IntToFloatKernel.dumpOutput", false);
-      dumpFilePattern = 
-        str(format("L%d_SB%%03d_BL%%03d_IntToFloatKernel.dat") % 
-            ps.settings.observationID);
+      setArg(0, devFilteredData);
+      setArg(1, devInputSamples);
+
+      size_t maxNrThreads;
+      //getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
+      maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
+      globalWorkSize = gpu::Grid(maxNrThreads, ps.nrStations());
+      localWorkSize = gpu::Block(maxNrThreads, 1);
+
+      size_t nrSamples = ps.nrStations() * ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS;
+      nrOperations = nrSamples * 2;
+      nrBytesRead = nrSamples * 2 * ps.nrBitsPerSample() / 8;
+      nrBytesWritten = nrSamples * sizeof(std::complex<float>);
     }
 
-
-    unsigned IntToFloatKernel::Parameters::nrBytesPerComplexSample() const {
-      return 2 * nrBitsPerSample / 8;
-    }
-
-
-    size_t IntToFloatKernel::Parameters::bufferSize(BufferType bufferType) const
-    {
-      switch (bufferType) {
-      case IntToFloatKernel::INPUT_DATA:
-        return
-          (size_t) nrStations * NR_POLARIZATIONS * 
-            nrSamplesPerSubband * nrBytesPerComplexSample();
-      case IntToFloatKernel::OUTPUT_DATA:
-        return
-          (size_t) nrStations * NR_POLARIZATIONS * 
-            nrSamplesPerSubband * sizeof(std::complex<float>);
-      default:
-        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
-      }
-    }
-
-
-    IntToFloatKernel::IntToFloatKernel(const gpu::Stream& stream,
-                                       const gpu::Module& module,
-                                       const Buffers& buffers,
-                                       const Parameters& params) :
-      CompiledKernel(stream, gpu::Function(module, theirFunction), buffers, params)
-    {
-      setArg(0, buffers.output);
-      setArg(1, buffers.input);
-
-      setEnqueueWorkSizes( gpu::Grid(maxThreadsPerBlock, params.nrStations),
-                           gpu::Block(maxThreadsPerBlock, 1) );
-
-      unsigned nrSamples = params.nrStations * params.nrSamplesPerSubband * NR_POLARIZATIONS;
-      nrOperations = (size_t) nrSamples * 2;
-      nrBytesRead = (size_t) nrSamples * 2 * params.nrBitsPerSample / 8;
-      nrBytesWritten = (size_t) nrSamples * sizeof(std::complex<float>);
-    }
-
-    //--------  Template specializations for KernelFactory  --------//
-
-    template<> CompileDefinitions
-    KernelFactory<IntToFloatKernel>::compileDefinitions() const
-    {
-      CompileDefinitions defs =
-        KernelFactoryBase::compileDefinitions(itsParameters);
-
-      defs["NR_STATIONS"] = lexical_cast<string>(itsParameters.nrStations);
-      defs["NR_BITS_PER_SAMPLE"] =
-        lexical_cast<string>(itsParameters.nrBitsPerSample);
-      defs["NR_SAMPLES_PER_SUBBAND"] = 
-        lexical_cast<string>(itsParameters.nrSamplesPerSubband);
-      return defs;
-    }
 
   }
 }

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -27,18 +27,17 @@ prefix		= "KVT"; // for the signal names
 id 			= "(LOFAR::MACIO::F_GCF_PROTOCOL + 1)";
 
 // specify extra include files
-include = '<Common/KVpair.h>';
+include = '<MACIO/StringVector.h>';
+include = '<MACIO/DoubleVector.h>';
 
 prelude = << PRELUDE_END
 
-//	REGISTER 	  	 (uint obsID, std::string	name);
-//	REGISTER_ACK	 (uint obsID, std::string	name);
-//	SEND_MSG		 (int seqnr, KVpair		kvp;
+//	REGISTER 	  	 (uint obsID, string	name);
+//	REGISTER_ACK	 (uint obsID, string	name);
+//	SEND_MSG		 (int seqnr, string key, string value, double	secsEpoch1970);
 //	SEND_MSG_ACK	 (int seqnr, uint result);
-//	SEND_MSG_POOL	 (int seqnr, std::vector<KVpair> kvps);
+//	SEND_MSG_POOL	 (int seqnr, uint nrMsgs, strVector key, strVector value, dblVector time);
 //	SEND_MSG_POOL_ACK(int seqnr, uint result);
-
-using LOFAR::operator<<;
 
 PRELUDE_END;
 
@@ -57,7 +56,7 @@ event = {
 	};
 	param = {
 		name = "name";
-		type = "std::string";
+		type = "string";
 	};
 };
 
@@ -70,7 +69,7 @@ event = {
 	};
 	param = {
 		name = "name";
-		type = "std::string";
+		type = "string";
 	};
 };
 
@@ -82,8 +81,16 @@ event = {
 		type = "int32";
 	};
 	param = {
-		name = "kvp";
-		type = "KVpair";
+		name = "key";
+		type = "string";
+	};
+	param = {
+		name = "value";
+		type = "string";
+	};
+	param = {
+		name = "timestamp";
+		type = "double";
 	};
 };
 
@@ -108,8 +115,26 @@ event = {
 		type = "int32";
 	};
 	param = {
-		name = "kvps";
-		type = "std::vector<KVpair>";
+		name = "nrElements";
+		type = "uint32";
+	};
+	param = {
+		name = "keys";
+		type = "MACIO::StringVector";
+		userdefined;
+		printable;
+	};
+	param = {
+		name = "values";
+		type = "MACIO::StringVector";
+		userdefined;
+		printable;
+	};
+	param = {
+		name = "times";
+		type = "MACIO::DoubleVector";
+		userdefined;
+		printable;
 	};
 };
 

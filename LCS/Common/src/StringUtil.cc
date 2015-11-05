@@ -26,6 +26,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarTypes.h>
 #include <Common/StringUtil.h>
+#include <Common/lofar_algorithm.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_iomanip.h>
 #include <Common/lofar_map.h>
@@ -123,7 +124,7 @@ const string formatlString(const	char* format, ...) {
 //
 // timeString(aTime [,format]) --> string
 //
-// Define a global function that convert a timestamp into a human-readable 
+// Define a global function that convert a timestamp into a humanreadable 
 // format.
 //
 const string timeString(time_t		aTime, 
@@ -131,17 +132,8 @@ const string timeString(time_t		aTime,
 							 const char*	format)
 {
 	char	theTimeString [256];
-	struct tm tm;
-
-	if (gmt) {
-		gmtime_r(&aTime, &tm);
-	} else {
-		localtime_r(&aTime, &tm);
-	}
-	if (strftime(theTimeString, sizeof(theTimeString), format, &tm) == 0) {
-		strncpy(theTimeString, "unk timestamp", sizeof(theTimeString));
-		theTimeString[sizeof(theTimeString)-1] = '\0'; // defensive
-	}
+	strftime(theTimeString, 256, format, gmt ? gmtime(&aTime) 
+														: localtime(&aTime));
 
 	return (theTimeString);
 }
@@ -516,7 +508,7 @@ uint64 strToUint64 (const string& aString) throw(Exception)
 string compactedArrayString(const string&	orgStr)
 {
 	string	baseString(orgStr);			// destroyable copy
-	ltrim(baseString, " 	[");		// strip off brackets
+	ltrim(baseString, " 	[");		// strip of brackets
 	rtrim(baseString, " 	]");
 
 	// and split into a vector
@@ -605,11 +597,11 @@ string compactedArrayString(const string&	orgStr)
 	return (result+"]");
 }
 
-string stripBrackets(const string& orgStr)
+string stripBraces(const string& orgStr)
 {
   string baseString(orgStr); // destroyable copy
-  ltrim(baseString, " \t["); // strip off brackets
-  rtrim(baseString, " \t]");
+  ltrim(baseString, " 	["); // strip of brackets
+  rtrim(baseString, " 	]");
   
   return baseString;
 }

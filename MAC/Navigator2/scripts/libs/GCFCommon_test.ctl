@@ -2,7 +2,7 @@
 //
 //  Copyright (C) 2002-2004
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -41,7 +41,6 @@ const string   DPNAME_NAVIGATOR  = "__navigator";
 
 //the Database name & number for the Mainsystem (== MainCU)
 global string   MainDBName        = "MCU099:";
-global string   CEPDBName        = "CCU099:";
 global unsigned MainDBID          = 231;
 
 global mapping stateColor;
@@ -182,7 +181,7 @@ void showSelfState(string aDP) {
             setValue("selfState.light","backCol","Lofar_invalid");
           }
           if (!navFunct_dpReachable(aDP+".status.state")) {
-           updateSelfState("",0,"","","",true);
+           updateSelfState("",0,"",true);
           }              
   	} 
   	else {
@@ -206,7 +205,7 @@ void showChildState(string aDP) {
       	    setValue("childStateBorder","foreCol","Lofar_invalid");
           } 
           if (!navFunct_dpReachable(aDP+".status.childState")) {
-            updateChildState("",0,"","","",true);
+            updateChildState("",0,"",true);
           }              
   	} 
   	else {

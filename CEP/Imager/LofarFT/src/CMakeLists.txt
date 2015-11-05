@@ -25,8 +25,11 @@ lofar_add_bin_program(versionlofarft versionlofarft.cc)
 lofar_add_bin_program(awimager awimager.cc)
 lofar_add_bin_program(makefftwisdom2d makefftwisdom2d.cc)
 lofar_add_bin_program(fillRootImageGroup fillRootImageGroup.cc)
+lofar_add_bin_program(makebeamimage makebeamimage.cc)
 
-lofar_add_bin_scripts(addImagingInfo)
+install(PROGRAMS
+  addImagingInfo
+  DESTINATION bin)
 
 # Python modules.
 python_install(

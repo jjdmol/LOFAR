@@ -28,11 +28,10 @@
 
 #include <Common/LofarLogger.h>
 #include <Common/Thread/Thread.h>
-#include <MessageBus/ToBus.h>
-#include <MessageBus/Protocols/TaskFeedbackDataproducts.h>
 #include <Stream/PortBroker.h>
 #include <CoInterface/Stream.h>
-#include <CoInterface/LTAFeedback.h>
+
+#include "SSH.h"
 
 namespace LOFAR
 {
@@ -43,14 +42,14 @@ namespace LOFAR
     using boost::format;
 
 
-    StorageProcess::StorageProcess( const Parset &parset, const string &logPrefix, int rank, const string &hostname )
+    StorageProcess::StorageProcess( const Parset &parset, const string &logPrefix, int rank, const string &hostname, FinalMetaData &finalMetaData, Trigger &finalMetaDataAvailable )
       :
       itsParset(parset),
       itsLogPrefix(str(boost::format("%s [StorageWriter rank %2d host %s] ") % logPrefix % rank % hostname)),
       itsRank(rank),
       itsHostname(hostname),
-      itsSentFeedback(false),
-      itsSuccessful(false)
+      itsFinalMetaData(finalMetaData),
+      itsFinalMetaDataAvailable(finalMetaDataAvailable)
     {
     }
 
@@ -62,46 +61,6 @@ namespace LOFAR
       // stop immediately
       struct timespec immediately = { 0, 0 };
       stop(immediately);
-
-      if (!itsSentFeedback) {
-        // send default LTA feedback for this host
-        ToBus bus("lofar.task.feedback.dataproducts");
-
-        const std::string myName = "Cobalt/GPUProc/Storage/StorageProcess";
-
-        LTAFeedback feedback(itsParset.settings);
-
-        if (itsParset.settings.correlator.enabled)
-          for (size_t i = 0; i < itsParset.settings.correlator.files.size(); ++i) {
-            LOG_INFO_STR(itsParset.settings.correlator.files[i].location.host << " == " << itsHostname);
-
-            if (itsParset.settings.correlator.files[i].location.host == itsHostname) {
-              Protocols::TaskFeedbackDataproducts msg(
-                myName,
-                "",
-                str(boost::format("Feedback for Correlated Data, subband %s") % i),
-                str(format("%s") % itsParset.settings.momID),
-                str(format("%s") % itsParset.settings.observationID),
-                feedback.correlatedFeedback(i));
-
-              bus.send(msg);
-            }
-        }
-
-        if (itsParset.settings.beamFormer.enabled)
-          for (size_t i = 0; i < itsParset.settings.beamFormer.files.size(); ++i)
-            if (itsParset.settings.beamFormer.files[i].location.host == itsHostname) {
-              Protocols::TaskFeedbackDataproducts msg(
-                myName,
-                "",
-                str(boost::format("Feedback for Beamformed Data, file nr %s") % i),
-                str(format("%s") % itsParset.settings.momID),
-                str(format("%s") % itsParset.settings.observationID),
-                feedback.beamFormedFeedback(i));
-
-              bus.send(msg);
-            }
-      }
     }
 
 
@@ -109,7 +68,7 @@ namespace LOFAR
     {
       ASSERTSTR(!itsThread, "StorageProcess has already been started");
 
-      itsThread = new Thread(this, &StorageProcess::controlThread, str(boost::format("%s ctrl") % itsHostname), itsLogPrefix + "[ControlThread] ", 65535);
+      itsThread = new Thread(this, &StorageProcess::controlThread, itsLogPrefix + "[ControlThread] ", 65535);
     }
 
 
@@ -120,38 +79,75 @@ namespace LOFAR
         return;
       }
 
-      if (!itsThread->wait(deadline)) {
+      if (!itsThread->wait(deadline))
         itsThread->cancel();
-        itsThread->wait();
-      }
     }
 
 
-    bool StorageProcess::isSuccesful() const
-    {
-      return itsSuccessful;
-    }
-
-
-    bool StorageProcess::isDone() const
+    bool StorageProcess::isDone()
     {
       return itsThread->isDone();
     }
 
 
-    void StorageProcess::setFinalMetaData( const FinalMetaData &finalMetaData )
-    {
-      itsFinalMetaData = finalMetaData;
-      itsFinalMetaDataAvailable.up();
-    }
-
-
     void StorageProcess::controlThread()
     {
+      // Start Storage
+      std::string userName = itsParset.getString("OLAP.Storage.userName", "");
+      std::string pubKey = itsParset.getString("OLAP.Storage.sshPublicKey", "");
+      std::string privKey = itsParset.getString("OLAP.Storage.sshPrivateKey", "");
+      std::string executable = itsParset.getString("OLAP.Storage.msWriter", "outputProc");
+
+      if (userName == "") {
+        // No username given -- use $USER
+        const char *USER = getenv("USER");
+
+        ASSERTSTR(USER, "$USER not set.");
+
+        userName = USER;
+      }
+
+      if (pubKey == "" && privKey == "") {
+        // No SSH keys given -- try to discover them
+
+        char discover_pubkey[1024];
+        char discover_privkey[1024];
+
+        if (discover_ssh_keys(discover_pubkey, sizeof discover_pubkey, discover_privkey, sizeof discover_privkey)) {
+          pubKey = discover_pubkey;
+          privKey = discover_privkey;
+        }
+      }
+
+      char cwd[1024];
+
+      if (getcwd(cwd, sizeof cwd) == 0)
+        throw SystemCallException("getcwd", errno, THROW_ARGS);
+
+      std::string commandLine = str(boost::format("cd %s && %s%s %u %d %u")
+                                    % cwd
+#if defined USE_VALGRIND
+                                    % "valgrind --leak-check=full "
+#else
+                                    % ""
+#endif
+                                    % executable
+                                    % itsParset.observationID()
+                                    % itsRank
+#if defined WORDS_BIGENDIAN
+                                    % 1
+#else
+                                    % 0
+#endif
+                                    );
+
+      SSHconnection sshconn(itsLogPrefix, itsHostname, commandLine, userName, pubKey, privKey, 0);
+      sshconn.start();
+
       // Connect control stream
       LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] connecting...");
-      std::string resource = getStorageControlDescription(itsParset.settings.observationID, itsRank);
-      PortBroker::ClientStream stream(itsHostname, storageBrokerPort(itsParset.settings.observationID), resource, 0);
+      std::string resource = getStorageControlDescription(itsParset.observationID(), itsRank);
+      PortBroker::ClientStream stream(itsHostname, storageBrokerPort(itsParset.observationID()), resource, 0);
 
       // Send parset
       LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] connected -- sending parset");
@@ -159,17 +155,14 @@ namespace LOFAR
       LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sent parset");
 
       // Send final meta data once it is available
-      itsFinalMetaDataAvailable.down();
+      itsFinalMetaDataAvailable.wait();
 
       LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sending final meta data");
       itsFinalMetaData.write(stream);
       LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sent final meta data");
 
-      // Wait for OutputProc to finish
-      LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] waiting to finish");
-      stream.read(&itsSentFeedback, sizeof itsSentFeedback);
-      stream.read(&itsSuccessful, sizeof itsSuccessful);
-      LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] finished");
+      // Wait for Storage to finish properly
+      sshconn.wait();
     }
 
   }

@@ -35,31 +35,9 @@ namespace LOFAR
     class DelayAndBandPassKernel : public Kernel
     {
     public:
-      DelayAndBandPassKernel(const Parset &ps,
-                             cl::Program &program,
-                             cl::Buffer &devCorrectedData,
-                             cl::Buffer &devFilteredData,
-                             cl::Buffer &devDelaysAtBegin,
-                             cl::Buffer &devDelaysAfterEnd,
-                             cl::Buffer &devPhaseOffsets,
-                             cl::Buffer &devBandPassCorrectionWeights);
+      DelayAndBandPassKernel(const Parset &ps, cl::Program &program, cl::Buffer &devCorrectedData, cl::Buffer &devFilteredData, cl::Buffer &devDelaysAtBegin, cl::Buffer &devDelaysAfterEnd, cl::Buffer &devPhaseOffsets, cl::Buffer &devBandPassCorrectionWeights);
 
-      void enqueue(cl::CommandQueue &queue, 
-                   PerformanceCounter &counter, 
-                   unsigned subband);
-
-      enum BufferType
-      {
-        INPUT_DATA,
-        OUTPUT_DATA,
-        DELAYS,
-        PHASE_OFFSETS,
-        BAND_PASS_CORRECTION_WEIGHTS
-      };
-
-      // Return required buffer size for \a bufferType
-      static size_t bufferSize(const Parset& ps, BufferType bufferType);
-
+      void enqueue(cl::CommandQueue &queue, PerformanceCounter &counter, unsigned subband);
     };
   }
 }

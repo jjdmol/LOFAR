@@ -121,7 +121,7 @@ namespace LOFAR
       args << " -DSUBBAND_BANDWIDTH=" << std::setprecision(7) << ps.subbandBandwidth() << 'f';
       args << " -DNR_SUBBANDS=" << ps.nrSubbands();
       args << " -DNR_CHANNELS=" << ps.nrChannelsPerSubband();
-      args << " -DNR_STATIONS=" << ps.settings.antennaFields.size();
+      args << " -DNR_STATIONS=" << ps.nrStations();
       args << " -DNR_SAMPLES_PER_CHANNEL=" << ps.nrSamplesPerChannel();
       args << " -DNR_SAMPLES_PER_SUBBAND=" << ps.nrSamplesPerSubband();
       args << " -DNR_BEAMS=" << ps.nrBeams();
@@ -146,7 +146,6 @@ namespace LOFAR
 
     cl::Program createProgram(cl::Context &context, std::vector<cl::Device> &devices, const char *sources, const char *args)
     {
-      // Let the compiler read in the source file by passing an #include as source string.
       std::stringstream cmd;
       cmd << "#include \"" << std::string(sources) << '"' << std::endl;
       cl::Program program(context, cmd.str());

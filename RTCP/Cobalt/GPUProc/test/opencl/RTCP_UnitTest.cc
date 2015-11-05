@@ -28,8 +28,8 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/global_defines.h>
-#include <GPUProc/MultiDimArrayHostBuffer.h>
-#include <GPUProc/opencl/gpu_utils.h>
+#include <GPUProc/Buffers.h>
+#include <GPUProc/gpu_utils.h>
 
 #include <UnitTest.h>
 #include "Kernels/IncoherentStokesTest.h"
@@ -54,7 +54,7 @@ using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 
 // Use our own terminate handler
-Exception::TerminateHandler t(Exception::terminate);
+Exception::TerminateHandler t(gpu::terminate);
 
 int main(int argc, char **argv)
 {
@@ -70,7 +70,7 @@ int main(int argc, char **argv)
 
   Parset ps(argv[1]);
 
-  std::cout << "Obs ps: nSt=" << ps.settings.antennaFields.size() << " nPol=" << NR_POLARIZATIONS
+  std::cout << "Obs ps: nSt=" << ps.nrStations() << " nPol=" << NR_POLARIZATIONS
             << " nSampPerCh=" << ps.nrSamplesPerChannel() << " nChPerSb="
             << ps.nrChannelsPerSubband() << " nTaps=" << ps.nrPPFTaps()
             << " nBitsPerSamp=" << ps.nrBitsPerSample() << std::endl;
@@ -80,10 +80,8 @@ int main(int argc, char **argv)
   (FFT_Test)(ps);
   //(AMD_FFT_Test)(ps);
   (CorrelatorTest)(ps);
-#if defined USE_NEW_CORRELATOR
   (CorrelateRectangleTest)(ps);
   (CorrelateTriangleTest)(ps);
-#endif
 
   // Beamforming unittest
   (IncoherentStokesTest)(ps);
