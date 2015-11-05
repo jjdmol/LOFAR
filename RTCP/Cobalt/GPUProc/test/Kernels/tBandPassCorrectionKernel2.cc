@@ -40,7 +40,7 @@ struct TestFixture
       params.nrDelayCompensationChannels = 64; // unused
       params.nrHighResolutionChannels = 4096;
       params.nrSamplesPerChannel = 
-        ps.settings.blockSize / params.nrHighResolutionChannels;
+        ps.nrSamplesPerSubband() / params.nrHighResolutionChannels;
 
      factory = new KernelFactory<BandPassCorrectionKernel>(params);
     }

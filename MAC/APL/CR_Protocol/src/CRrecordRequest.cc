@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2011
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -47,17 +47,17 @@ size_t CRrecordRequest::getSize()
 
 size_t CRrecordRequest::pack  (char* buffer) const
 {
-	size_t offset = 0;
-	offset = MSH_pack(buffer, offset, stationList);	
-	offset = MSH_pack(buffer, offset, rcuList);	
+	uint32 offset = 0;
+	MSH_pack(buffer, offset, stationList);	
+	MSH_pack(buffer, offset, rcuList);	
 	return (offset);
 }
 
 size_t CRrecordRequest::unpack(const char *buffer)
 {
-	size_t offset = 0;
-	offset = MSH_unpack(buffer, offset, stationList);	
-	offset = MSH_unpack(buffer, offset, rcuList);	
+	uint32 offset = 0;
+	MSH_unpack(buffer, offset, stationList);	
+	MSH_unpack(buffer, offset, rcuList);	
 	return (offset);
 }
 

@@ -51,8 +51,7 @@ namespace LOFAR
       nrStationsPerThread(2),
 
       nrChannels(ps.settings.correlator.nrChannels),
-      nrSamplesPerIntegration(ps.settings.correlator.nrSamplesPerBlock / ps.settings.correlator.nrIntegrationsPerBlock),
-      nrIntegrationsPerBlock(ps.settings.correlator.nrIntegrationsPerBlock)
+      nrSamplesPerChannel(ps.settings.correlator.nrSamplesPerChannel)
     {
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.CorrelatorKernel.dumpOutput", false);
@@ -65,21 +64,17 @@ namespace LOFAR
       return nrStations * (nrStations + 1) / 2;
     }
 
-    size_t CorrelatorKernel::Parameters::nrSamplesPerBlock() const {
-      return nrSamplesPerIntegration * nrIntegrationsPerBlock;
-    }
-
 
     size_t CorrelatorKernel::Parameters::bufferSize(BufferType bufferType) const
     {
       switch (bufferType) {
       case CorrelatorKernel::INPUT_DATA:
         return
-          (size_t) nrChannels * nrSamplesPerBlock() * nrStations * 
+          (size_t) nrChannels * nrSamplesPerChannel * nrStations * 
             NR_POLARIZATIONS * sizeof(std::complex<float>);
       case CorrelatorKernel::OUTPUT_DATA:
         return 
-          (size_t) nrIntegrationsPerBlock * nrBaselines() * nrChannels * 
+          (size_t) nrBaselines() * nrChannels * 
             NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
       default: 
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
@@ -111,6 +106,10 @@ namespace LOFAR
       unsigned nrUsableChannels = std::max(params.nrChannels - 1, 1U);
       setEnqueueWorkSizes( gpu::Grid(nrPasses * nrThreads, nrUsableChannels),
                            gpu::Block(nrThreads, 1) );
+
+      nrOperations = (size_t) nrUsableChannels * params.nrBaselines() * params.nrSamplesPerChannel * 32;
+      nrBytesRead = (size_t) nrPasses * params.nrStations * nrUsableChannels * params.nrSamplesPerChannel * NR_POLARIZATIONS * sizeof(std::complex<float>);
+      nrBytesWritten = (size_t) params.nrBaselines() * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
     }
 
     //--------  Template specializations for KernelFactory  --------//
@@ -126,10 +125,8 @@ namespace LOFAR
       defs["NR_STATIONS_PER_THREAD"] = lexical_cast<string>(itsParameters.nrStationsPerThread);
 
       defs["NR_CHANNELS"] = lexical_cast<string>(itsParameters.nrChannels);
-      defs["NR_INTEGRATIONS"] =
-        lexical_cast<string>(itsParameters.nrIntegrationsPerBlock);
-      defs["NR_SAMPLES_PER_INTEGRATION"] = 
-        lexical_cast<string>(itsParameters.nrSamplesPerIntegration);
+      defs["NR_SAMPLES_PER_CHANNEL"] = 
+        lexical_cast<string>(itsParameters.nrSamplesPerChannel);
 
       return defs;
     }

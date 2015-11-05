@@ -28,7 +28,6 @@
 #include <ParmDB/SourceDB.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_vector.h>
-#include <sstream>
 #include <set>
 
 namespace LOFAR
@@ -144,67 +143,6 @@ vector<Patch::ConstPtr> makePatches(SourceDB &sourceDB,
   }
   return patchList;
 }
-
-vector<pair<ModelComponent::ConstPtr,Patch::ConstPtr> >
-makeSourceList (const vector<Patch::ConstPtr>& patchList) {
-  vector<Patch::ConstPtr>::const_iterator pIter=patchList.begin();
-  vector<Patch::ConstPtr>::const_iterator pEnd =patchList.end();
-
-  uint nSources=0;
-  for (; pIter!=pEnd; ++pIter) {
-    nSources+=(*pIter)->nComponents();
-  }
-
-  vector<pair<ModelComponent::ConstPtr,Patch::ConstPtr> > sourceList;
-  sourceList.reserve(nSources);
-
-  pIter=patchList.begin();
-
-  for (; pIter!=pEnd; ++pIter) {
-    Patch::const_iterator sIter=(*pIter)->begin();
-    Patch::const_iterator sEnd =(*pIter)->end();
-    for (; sIter!=sEnd; ++sIter) {
-      sourceList.push_back(make_pair(*sIter,*pIter));
-    }
-  }
-
-  return sourceList;
-}
-
-
-vector<Patch::ConstPtr> makeOnePatchPerComponent(
-    const vector<Patch::ConstPtr>& patchList) {
-    size_t numComponents=0;
-    vector<Patch::ConstPtr>::const_iterator patchIt;
-
-    for (patchIt=patchList.begin();patchIt!=patchList.end();++patchIt) {
-        numComponents+=(*patchIt)->nComponents();
-    }
-
-    vector<Patch::ConstPtr> largePatchList;
-    largePatchList.reserve(numComponents);
-
-    for (patchIt=patchList.begin();patchIt!=patchList.end();++patchIt) {
-        Patch::const_iterator compIt;
-
-        size_t compNum=0;
-        for (compIt=(*patchIt)->begin();compIt!=(*patchIt)->end();++compIt) {
-            // convert compNum to string (blegh)
-            stringstream ss;
-            ss<<compNum;
-
-            Patch::Ptr ppatch(new Patch((*patchIt)->name()+"_"+ss.str(),
-                                        compIt,
-                                        compIt+1));
-            ppatch->setPosition((*compIt)->position());
-            largePatchList.push_back(ppatch);
-            compNum++;
-        }
-    }
-
-    return largePatchList;
-}
-
 
 vector<string> makePatchList(SourceDB &sourceDB, vector<string> patterns)
 {

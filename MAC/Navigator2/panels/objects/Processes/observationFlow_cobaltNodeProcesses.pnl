@@ -1,13 +1,13 @@
 V 11
 1
 LANG:1 16 childStateBorder
-PANEL,-1 -1 242 91 N "_3DFace" 0
+PANEL,-1 -1 302 91 N "_3DFace" 0
 "main()
 {
   baseDP = \"LOFAR_PermSW\";
   database=dpSubStr(baseDP,DPSUB_SYS);
   
-  activeObsDP =MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\";  
+  activeObsDP =MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\";
   // check if MACScheduler pointenabled and accessible
   if (dpExists(activeObsDP)) {
     if (dpConnect(\"updateActiveObservations\", activeObsDP+\":_online.._value\",
@@ -16,9 +16,7 @@ PANEL,-1 -1 242 91 N "_3DFace" 0
     }
   } else {
     if (!isStandalone()) LOG_ERROR(\"ObservationFlow_cobaltNodeProcesses.pnl:main|Couldn't find DP to connect to: \"+activeObsDP);
-  }
-  
-  	
+  }	
 }
 " 0
  E "main(int x, int y)
@@ -40,13 +38,24 @@ E "#uses \"navPanel.ctl\"
 string baseDP          = \"\";
 bool   bDoubleClicked  = false;
 dyn_string observationsList;
-dyn_string oldObsConnections;   // keep copy latest observations to be disconnected when the list changes
+dyn_string oldObservationsList;   // keep copy latest observations to be disconnected when the list changes
 dyn_string activeObservations;
 string activeObsDP = \"\";
 string database;
+dyn_string gpuprocs;
+dyn_string connectToGPUProcs;
+dyn_string connectTo0;
+dyn_string connectTo1;
+dyn_string connectTo2;
+dyn_string connectTo3;
 string connectToStates;
 bool connectedStates;
-dyn_string oldStateDPs;
+bool connectedGPUProcs;
+bool connected0;
+bool connected1;
+bool connected2;
+bool connected3;
+
 bool selectedObservations=false;
 
 // routine for single mouse click
@@ -105,130 +114,328 @@ void updateActiveObservations(string dp1, dyn_string obs,
   if (!selectedObservations) {
     observationsList = activeObservations;
   }
-  // because CobaltProcesses claim their datapoints when the observation is actually running we need to connect to all these observations
-  // and give a signal when the runstate of one of them changes to running to trigger the Cobalt point collection
   
   LOG_DEBUG(\"ObservationFlow_cobaltNodeProcesses.pnl:updateActiveObservations|observationList: \"+observationsList);
-
-  dyn_string obsConnections = makeDynString();  
-  for (int i = 1; i <= dynlen(observationsList) ; i++) {
-    // compose the WinCC OA DP name 
-    string obsName = \"LOFAR_ObsSW_\"+observationsList[i]; 
-
-    // Ask the claimmanager for the temp obs representation
-    string obsDP=MainDBName+claimManager_nameToRealName(obsName);
-
-    // add DP to list with all connects
-    dynAppend(obsConnections,obsDP+\".runState\");
-  }
-  
-  if (dynlen(oldObsConnections) > 0) {
-    // disconnect old observations
-    dpDisconnect(\"monitorRunStates\",oldObsConnections);
-    dynClear(oldObsConnections);
-  }
-  
-  // connect to runState for all active observations  
-  if (dynlen(obsConnections) > 0 && dpConnect(\"monitorRunStates\",obsConnections) == -1) {
-    LOG_ERROR(\"ObservationFlow_cobaltNodeProcesses.pnl:updateActiveObservations|ERROR: couldn't connect to : \"+obsConnections+ \" \" + getLastError());
-  } else if (dynlen(obsConnections) > 0) {
-    oldObsConnections = obsConnections;
-  } else {
-    setStates(0,0);
-  }    
-  
+  connectCobaltNodesAndProcesses();
+  connectStationInputStreams();
+  connectGPUProcs();
 }
 
-void monitorRunStates(dyn_string dpList,dyn_string runStates) {
-  for (int i=1; i<= dynlen(runStates); i++) {
-    if (runStates[i] == \"Running\" || runStates[i] == \"Quiting\") {
-      connectCobaltNodesAndProcesses(runStates[i]);
-      break;
+// connect to stationInputStreams from the active observations
+void connectGPUProcs() {
+
+  //collect all active observations and their stationInputStreams
+  if (dynlen(observationsList) > 0) {
+
+    // change all found DP's to contain all the elements that contain the .dropping
+    if (connectedGPUProcs) {
+      dpDisconnect(\"gpuprocCB\",connectToGPUProcs);
+      dynClear(connectToGPUProcs);
     }
+
+    // prepare connectList
+    for(int i=1; i <= dynlen(observationsList); i++) {
+      // get all the GPUProcs used by this observation
+      gpuprocs = navFunct_getGPUProcsForObservation(observationsList[i]);
+      for (int i=1; i<= dynlen(gpuprocs); i++) {
+        dynAppend(connectToGPUProcs,gpuprocs[i]+\".dropping:_online.._value\");
+        dynAppend(connectToGPUProcs,gpuprocs[i]+\".dropped:_online.._value\");
+        dynAppend(connectToGPUProcs,gpuprocs[i]+\".subband:_online.._value\");
+        dynAppend(connectToGPUProcs,gpuprocs[i]+\".dataProductType:_online.._value\");
+      }
+      if (dynlen(gpuprocs) > 0) baseDP = gpuprocs[1];
+    }
+    
+    // check if the required datapoint for this view is enabled and accessible
+    if (navFunct_dpReachable(CEPDBName) && dynlen(connectToGPUProcs)>0 ){
+      if (dpConnect(\"gpuprocCB\", connectToGPUProcs) == -1) {
+        setValue(\"GPUProcsObject\", \"foreCol\", \"Lofar_dpdoesnotexist\");
+      }
+    } else {
+      setValue(\"GPUProcsObject\", \"foreCol\", \"Lofar_off\");
+    }
+  } else {
+      setValue(\"GPUProcsObject\", \"foreCol\", \"Lofar_off\");    
   }
 }
 
 
-void connectCobaltNodesAndProcesses(string runState) {
+// connect to stationInputStreams from the active observations
+void connectStationInputStreams() {
+  string obsDP=\"\";
+  dyn_string stream0DPList;
+  dyn_string stream1DPList;
+  dyn_string stream2DPList;
+  dyn_string stream3DPList;
+
+
+  //collect all active observations and their stationInputStreams
+  if (dynlen(observationsList) > 0) {
+    // prepare connectList
+    for(int i=1; i <= dynlen(observationsList); i++) {
+      dynClear(stream0DPList);
+      dynClear(stream1DPList);
+      dynClear(stream2DPList);
+      dynClear(stream3DPList);
+      // For all observations collect the PermSW streamInfo
+      dyn_string stationInputs = navFunct_getStationInputForObservation(observationsList[i]);
   
-  // change all found DP's to contain all the elements that contain the states and childstates
-  if (connectedStates) {
-    dpDisconnect(\"cobaltNodesAndProcessesCB\",oldStateDPs);
-    connectedStates = false;
-  }
+      // change all found DP's to contain all the elements that contain the stream.percBad
+      if (connected0) {
+        dpDisconnect(\"streamCB0\",connectTo0);
+        dynClear(connectTo0);
+      }
+      if (connected1) {
+        dpDisconnect(\"streamCB1\",connectTo1);
+        dynClear(connectTo1);
+      }
+      if (connected2) {
+        dpDisconnect(\"streamCB2\",connectTo2);
+        dynClear(connectTo2);
+      }
+      if (connected3) {
+        dpDisconnect(\"streamCB3\",connectTo3);
+        dynClear(connectTo3);
+      }
 
-  if (dynlen(observationsList) == 1 && runState == \"Quiting\") {
-    setStates(0,0);
-    return;
+      for (int i=1; i<= dynlen(stationInputs); i++) {
+        dynAppend(connectTo0,stationInputs[i]+\".stream0.rejected:_online.._value\");
+        dynAppend(connectTo1,stationInputs[i]+\".stream1.rejected:_online.._value\");
+        dynAppend(connectTo2,stationInputs[i]+\".stream2.rejected:_online.._value\");
+        dynAppend(connectTo3,stationInputs[i]+\".stream3.rejected:_online.._value\");
+      }
+      if (dynlen(stationInputs) > 0) baseDP = stationInputs[1];
+    }
+      
+  
+    // check if the required datapoint for this view are enabled and accessible
+    if (dynlen(connectTo0)>0 && navFunct_dpReachable(CEPDBName)  ){
+      if (dpConnect(\"streamCB0\", connectTo0) == -1) {
+        setValue(\"streamObject0\", \"foreCol\", \"Lofar_dpdoesnotexist\");
+      }
+    } else {
+      
+      setValue(\"streamObject0\", \"foreCol\", \"Lofar_off\");
+    }
+    if (dynlen(connectTo1)>0 && navFunct_dpReachable(CEPDBName) ){
+      if (dpConnect(\"streamCB1\", connectTo1) == -1) {
+        setValue(\"streamObject1\", \"foreCol\", \"Lofar_dpdoesnotexist\");
+      }
+    } else {
+      setValue(\"streamObject1\", \"foreCol\", \"Lofar_off\");
+    }
+    if (dynlen(connectTo2)>0 &&  navFunct_dpReachable(CEPDBName) ){
+      if (dpConnect(\"streamCB2\", connectTo2) == -1) {
+        setValue(\"streamObject2\", \"foreCol\", \"Lofar_dpdoesnotexist\");
+      }
+    } else {
+      setValue(\"streamObject2\", \"foreCol\", \"Lofar_off\");
+    }
+    if (dynlen(connectTo3)>0 && navFunct_dpReachable(CEPDBName)){
+      if (dpConnect(\"streamCB3\", connectTo3) == -1) {
+        setValue(\"streamObject3\", \"foreCol\", \"Lofar_dpdoesnotexist\");
+      }
+    } else {
+      setValue(\"streamObject3\", \"foreCol\", \"Lofar_off\");
+    }
+  } else {
+      setValue(\"streamObject0\", \"foreCol\", \"Lofar_off\");    
+      setValue(\"streamObject1\", \"foreCol\", \"Lofar_off\");    
+      setValue(\"streamObject2\", \"foreCol\", \"Lofar_off\");    
+      setValue(\"streamObject3\", \"foreCol\", \"Lofar_off\");    
   }
+}
 
+void connectCobaltNodesAndProcesses() {
   if (dynlen(observationsList) > 0 && navFunct_dpReachable(CEPDBName) ){
 
-    
+    // change all found DP's to contain all the elements that contain the states and childstates
+    if (connectedStates) {
+      dpQueryDisconnect(\"updateStates\",\"cobaltStateUpdate\");
+    }
     // prepare connectList for States/childStates for each observation
     for(int i=1; i <= dynlen(observationsList); i++) {
       string observation = navFunct_observationNameToNumber(observationsList[i]);
-      // first take all cobaltProcesses for the observations
       if (i==1) {
-        connectToStates = \"SELECT '_online.._value' FROM '{LOFAR**CobaltGPUProc*.status.state,LOFAR**CobaltGPUProc*.status.childState,LOFAR**CobaltStationInput.status.state,LOFAR**CobaltStationInput.status.childState}' REMOTE '\"+CEPDBName+\"' WHERE 'observationName:_online.._value' == \\\"\"+observation+\"\\\"\";
+        connectToStates =  \"SELECT '_online.._value' FROM '{LOFAR_*_*SCBT*_Cobalt*.status.state,LOFAR_*_*SCBT*_Cobalt*.status.childState,LOFAR_*_Cobalt*.observationName}' REMOTE 'CCU001:' WHERE 'observationName:_online.._value' == \\\"\"+observation+\"\\\"\";
       } else {
         connectToStates  +=\"OR  'observationName:_online.._value' == \\\"\"+observation+\"\\\"\";
       }
     }
-    dyn_dyn_anytype aResult;
-    dpQuery(connectToStates,aResult);
-
-    // Iterate through the results and collect the state and childState dps
-    dyn_string stateDPs;
-    for( int t = 2; t <= dynlen( aResult ); t++)
-    {
-      // skip the lines that contain the observationNames
-      string line = aResult[t][1];
-      if (strpos(line,\"observationName\") >= 0) continue;
-      if (!dynContains(stateDPs, line)) dynAppend(stateDPs,line);
-    }
-  
-    // append the main hardware state
-    dynAppend(stateDPs,CEPDBName+\"LOFAR_PIC_Cobalt.status.state\");
-    dynAppend(stateDPs,CEPDBName+\"LOFAR_PIC_Cobalt.status.childState\");
-    
-    
-    if (dpConnect(\"cobaltNodesAndProcessesCB\",TRUE,stateDPs) == -1) {
-      LOG_ERROR(\"ObservationFlow_cobaltNodeProcesses.pnl:connectCobaltNodesAndProcesses| ERROR: connect fails:\"+ stateDPs);
-    } else {
-      connectedStates = true;
-      oldStateDPs = stateDPs;
+    if (dpQueryConnectAll(\"cobaltNodesAndProcessesCB\",true,\"cobaltStateUpdate\",connectToStates) == -1) {
+      LOG_ERROR(\"ObservationFlow_cobaltNodeProcesses.pnl:connectCobaltNodesAndProcesses| ERROR: Query fails:\"+connectToStates);
     }
   } else {
     setStates(0,0);
   }
 }
 
-void cobaltNodesAndProcessesCB(dyn_string dpList,  dyn_int stateList) 
+void cobaltNodesAndProcessesCB(string strIdent,  dyn_dyn_anytype aResult) 
 {
-  LOG_DEBUG( \"ObservationFlow_cobaltNodeProcesses.pnl:cobaltNodesAndProcessesCB| has \" + dynlen( dpList) + \" results\" );
-  LOG_DEBUG( \"ObservationFlow_cobaltNodeProcesses.pnl:cobaltNodesAndProcessesCB| \"+stateList);
-  
+  LOG_DEBUG( \"ObservationFlow_cobaltNodeProcesses.pnl:cobaltNodesAndProcessesCB| has \" + dynlen( aResult ) + \" results\" );
+  LOG_DEBUG( \"ObservationFlow_cobaltNodeProcesses.pnl:cobaltNodesAndProcessesCB| \"+aResult);
   int highestState=0;
   int highestChildState=0;
 
-  if( dynlen( stateList ) < 2 ) {
+
+  if( dynlen( aResult ) < 2 ) {
     setStates(highestState,highestChildState);
     return;
   }
   
   // Iterate through the results
-  for( int t = 1; t < dynlen( dpList ); t++)
+  for( int t = 2; t <= dynlen( aResult ); t++)
   {
-    if (strpos(dpList[t],\"status.state\") >= 0 && stateList[t] > highestState) {
-      highestState=stateList[t];
-    } else if (strpos(dpList[t],\"status.childState\") >= 0 && stateList[t] > highestChildState) {
-      highestChildState=stateList[t];
+    // skip the lines that contain the observationNames
+    string line = aResult[t][1];
+    if (strpos(line,\"observationName\") >= 0) continue;
+    if (strpos(line,\"status.state\") >= 0 && aResult[t][2] > highestState) {
+      highestState=aResult[t][2];
+    } else if (strpos(line,\"status.childState\") >= 0 && aResult[t][2] > highestChildState) {
+      highestChildState=aResult[t][2];
     }
   }
   setStates(highestState,highestChildState);
 }  
       
+void streamCB0(dyn_string dps, dyn_float values)
+{
+  calcValues(0,dps,values);
+}
+
+void streamCB1(dyn_string dps, dyn_float values)
+{
+  calcValues(1,dps,values);
+}
+
+void streamCB2(dyn_string dps, dyn_float values)
+{
+  calcValues(2,dps,values);
+}
+
+void streamCB3(dyn_string dps, dyn_float values)
+{
+  calcValues(3,dps,values);
+}
+
+void calcValues(int stream,dyn_string dps,dyn_float values)
+{
+  // Here we get all bad values and we have to determine how many are wrong. 
+  // if a station has more then 25% bad data (i.e. a single value in the values list exceeds 25%, 
+  //   or more then 25% of the stations have bad data we need to set the color to yellow, 
+  // if a station has more then 50% bad data (i.e. a single value in the values list exceeds 50%, 
+  //   or more then 50% of the stations have bad data we need to set the color to orange, 
+  // if a station has more then 75% bad data (i.e. a single value in the values list exceeds 75%, 
+  //   or more then 75% of the stations have bad data we need to set the color to red, 
+  
+  string obsname = dpSubStr(dps,DPSUB_SYS_DP)+\".observationName\";
+  string obs;
+  dpGet(obsname,obs);
+  string observation = \"Observation\"+obs; 
+
+  
+  string toolTipText = observation+\" - stream\"+stream+\"<br>\";
+  
+  int count=0;
+  string color = \"Lofar_operational\";
+  dyn_string toollist;
+  for (int i = 1; i<= dynlen(values); i++) {
+    float val = values[i];
+    string dp = dps[i];
+    if (val > 0.0 && val < 33.0) {
+      color = \"Lofar_test\";
+    } else if (val >= 33.0 && val < 66.0) {
+      color = \"Lofar_maintenance\";
+    } else if (val >= 66.0 && val < 100.0) {
+      color = \"Lofar_suspicious\";
+    } else if (val >= 100.0) {
+      color = \"Lofar_broken\";
+    }
+        
+    if (val > 0.0) {
+      string aS=dp+\"</t> :\"+val+\"<br>\";
+      dynAppend(toollist,aS);
+      count++;
+    }
+  }
+  dynSort(toollist);
+  for (int i=1; i<= dynlen(toollist);i++) {
+    toolTipText += toollist[i];
+  }
+  if (count >= dynlen(values)*.8) {
+    if (getStateNumber(color) < getStateNumber(\"Lofar_broken\") ) {
+      color = \"Lofar_broken\";
+    }
+    toolTipText +=\"<br>\"+(float)(dynlen(values)/count)+\" % CobaltStationInput with bad values<br>\";
+  } else if (count >= dynlen(values)*.6) {
+    if (getStateNumber(color) < getStateNumber(\"Lofar_suspicious\") ) {
+      color = \"Lofar_suspicious\";
+    }
+    toolTipText +=\"<br>\"+(float)(dynlen(values)/count)+\" % CobaltStationInput with bad values<br>\";
+  } else if (count >= dynlen(values)*.4) {
+    if (getStateNumber(color) < getStateNumber(\"Lofar_maintenance\") ) {
+      color = \"Lofar_maintenance\";
+    }
+    toolTipText +=\"<br>\"+(float)(dynlen(values)/count)+\" % CobaltStationInput with bad values<br>\";
+  } else if (count > dynlen(values)*.2) {
+    if (getStateNumber(color) < getStateNumber(\"Lofar_test\") ) {
+      color = \"Lofar_test\";
+    }
+    toolTipText +=\"<br>\"+(float)(dynlen(values)/count)+\" % CobaltStationInput with bad values<br>\";
+  }
+
+  setValue(\"streamObject\"+stream, \"toolTipText\",toolTipText);
+  setValue(\"streamObject\"+stream, \"foreCol\", color);
+
+}
+
+void gpuprocCB(dyn_string dps, dyn_dyn_bool values)
+{
+  string color = \"Lofar_operational\";
+  
+  DebugN(\"dps : \", dps);
+  DebugN(\"vals: \", values);
+
+  // Here we get dropping values. 
+  // dps[i]  contains the GPUproc that is dropping
+  // vals[i]  contains list of all subbands with on vals[i][j]  the subband if it is dropping
+  string toolTipText = \"Dropping GPUProcs<br>\";
+  
+  for (int i = 1; i<= dynlen(dps); i++) {
+    dyn_bool droplist = values[i];
+    string dp = dps[i];
+    for (int j = 1; j<= dynlen(droplist); j++) {
+      if (droplist[j]) {
+        color = \"Lofar_broken\";
+//        dyn_int subband =\"-1\";
+//        dyn_string dataProductType=\"\";
+//        dyn_int dropped=0;
+//       dpGet(gpuprocs[i]+\".dropped\",dropped);
+//        dpGet(gpuprocs[i]+\".subband\",subband);
+//        dpGet(gpuprocs[i]+\".dataProductType\",dataProductType);
+
+//        toolTipText+=dp+\"</t> :\"+dropped[j]+\" - \"+subband[j]+\" - \"+dataProductType[j]+\"<br>\";
+      }
+    }
+  }
+
+  setValue(\"GPUProcsObject\",\"toolTipText\",toolTipText);
+  setValue(\"GPUProcsObject\", \"foreCol\", color);
+}
+
+
+void updateStationStates(dyn_string dps,dyn_string values) {
+  LOG_DEBUG(\"ObservationFlow_cobaltNodeProcesses.pnl:updateStationStates| dps:    \" + \"updateStationStates values: \"+values);
+  // determine the highest state and the highest childState, and add those to the observationsObject
+  int highestState=0;
+  int highestChildState=0;
+  
+  for (int i= 1; i<= dynlen(dps); i++) {
+    if (strpos(dps[i],\"status.state\") >= 0 && values[i] > highestState) highestState=values[i];
+    if (strpos(dps[i],\"status.childState\") >= 0 && values[i] > highestChildState) highestChildState=values[i];
+  }
+  setStates(highestState,highestChildState);
+}
 
 
 
@@ -306,6 +513,76 @@ E "main()
 LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
 0 1
 LANG:1 6 Cobalt
+4 3
+"streamObject0"
+""
+1 20 20 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 73 All inputbuffers involved in the  currently(selected) active observations
+
+1
+"dashclr"N "_Transparent"
+E E 0 4 1 2 1 E  20 20 50 20
+4 4
+"streamObject3"
+""
+1 20 50 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 73 All inputbuffers involved in the  currently(selected) active observations
+
+1
+"dashclr"N "_Transparent"
+E E 0 4 1 2 1 E  20 50 50 50
+4 5
+"streamObject1"
+""
+1 20 30 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 73 All inputbuffers involved in the  currently(selected) active observations
+
+1
+"dashclr"N "_Transparent"
+E E 0 4 1 2 1 E  20 30 50 30
+4 6
+"streamObject2"
+""
+1 20 40 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+1
+LANG:1 73 All inputbuffers involved in the  currently(selected) active observations
+
+1
+"dashclr"N "_Transparent"
+E E 0 4 1 2 1 E  20 40 50 40
+4 7
+"GPUProcsObject"
+""
+1 180 35 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 69 All GPUProcs involved in the  currently(selected) active observations
+
+1
+"dashclr"N "_Transparent"
+E E 0 4 1 2 1 E  180 35 210 35
 0
 LAYER, 1 
 1
