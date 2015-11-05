@@ -13,8 +13,8 @@ function error() {
 if [ -z "$HOSTS" ]; then
   case `hostname` in
     cbt001|cbt002|cbt003|cbt004|cbt005|cbt006|cbt007|cbt008)
-      # Production system -- switch test system as well, in case we use cbm009/cbm010!
-      HOSTS="cbm001 cbm002 cbm003 cbm004 cbm005 cbm006 cbm007 cbm008 cbm009 cbm010"
+      # Production system
+      HOSTS="cbm001 cbm002 cbm003 cbm004 cbm005 cbm006 cbm007 cbm008"
       ;;
 
     cbt009|cbt010)

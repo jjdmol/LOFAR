@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -40,13 +40,19 @@ namespace LOFAR {
     size_t XCStatistics::pack  (char* buffer) const
     {
       size_t offset = 0;
-      return MSH_pack(buffer, offset, m_xstatistics);
+      
+      MSH_pack(buffer, offset, m_xstatistics);
+
+      return offset;
     }
     
     size_t XCStatistics::unpack(const char *buffer) 
     {
       size_t offset = 0;
-      return MSH_unpack(buffer, offset, m_xstatistics);
+      
+      MSH_unpack(buffer, offset, m_xstatistics);
+      
+      return offset;
     }
   }
 }

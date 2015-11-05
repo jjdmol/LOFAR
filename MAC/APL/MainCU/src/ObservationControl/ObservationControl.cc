@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -48,9 +48,6 @@
 using namespace boost::posix_time;
 
 namespace LOFAR {
-	using namespace Controller_Protocol;
-	using namespace DP_Protocol;
-	using namespace CM_Protocol;
 	using namespace APLCommon;
 	using namespace GCF::TM;
 	using namespace GCF::PVSS;
@@ -110,11 +107,10 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	itsProcessType   = globalParameterSet()->getString("Observation.processType", "Observation");
 
 	// Values from my conf file
-	itsLateLimit       = globalParameterSet()->getTime  ("ObservationControl.lateLimit", 15);
-	itsFailedLimit     = globalParameterSet()->getTime  ("ObservationControl.failedLimit", 30);
-	itsHeartBeatItv	   = globalParameterSet()->getTime  ("ObservationControl.heartbeatInterval", 10);
-	itsFinalStateDelay = globalParameterSet()->getTime  ("ObservationControl.finalStateDelay", 10);
-	string reportType  = globalParameterSet()->getString("ObservationControl.reportType", "Full");
+	itsLateLimit     = globalParameterSet()->getTime  ("ObservationControl.lateLimit", 15);
+	itsFailedLimit   = globalParameterSet()->getTime  ("ObservationControl.failedLimit", 30);
+	itsHeartBeatItv	 = globalParameterSet()->getTime  ("ObservationControl.heartbeatInterval", 10);
+	string reportType= globalParameterSet()->getString("ObservationControl.reportType", "Full");
 	if 		(reportType == "Full")		itsFullReport = true;
 	else if (reportType == "Changes")	itsChangeReport = true;
 
@@ -659,8 +655,6 @@ GCFEvent::TResult ObservationControl::finishing_state(GCFEvent& 		event,
 		setState(CTState::QUITED);
 
 		// inform MACScheduler we are going down
-		LOG_INFO_STR("Waiting " << itsFinalStateDelay << " seconds before reporting final state...");
-		sleep (itsFinalStateDelay);
 		CONTROLQuitedEvent	msg;
 		msg.cntlrName = getName();
 		msg.result 	  = itsQuitReason;
@@ -815,27 +809,25 @@ void  ObservationControl::doHeartBeatTask()
 		time_t	now   = to_time_t(second_clock::universal_time());
 		time_t	stop  = to_time_t(itsStopTime);
 
-		if (!nrChilds || (now < stop && !centralControllerOk)) {
-            // while not yet in shutdown sequence this situation is wrong!
-            if (itsState < CTState::RESUMED) {
-                LOG_FATAL("Too few stations left or no central controller, FORCING QUIT OF OBSERVATION");
-                itsQuitReason = CT_RESULT_LOST_CONNECTION;
-            }
-            else { // we are in the shutdown sequence
-                if (!nrChilds) {
-                    LOG_INFO("Lost connection with last childcontroller, quiting...");
-                }
-            }
-            // start shutdown sequence if not already in it
-            if (itsState < CTState::SUSPEND) {
-                itsTimerPort->cancelTimer(itsStopTimer);
-                itsStopTimer = itsTimerPort->setTimer(0.0);
-            }
-            else {
-                TRAN(ObservationControl::finishing_state);
-            }
-            return;
-        }
+		if (!nrChilds || (now < stop && ((itsProcessType == "Observation" && !nrStations) || !centralControllerOk))) {
+			if (!nrChilds) {
+				LOG_INFO("Lost connection with last childcontroller, quiting...");
+			}
+			else {
+				LOG_FATAL("Too less stations left or no central controller, FORCING QUIT OF OBSERVATION");
+				if (itsState < CTState::RESUME) {
+					itsQuitReason = CT_RESULT_LOST_CONNECTION;
+				}
+			}
+			if (itsState < CTState::RESUME) {
+				itsTimerPort->cancelTimer(itsStopTimer);
+				itsStopTimer = itsTimerPort->setTimer(0.0);
+			}
+			else {
+				TRAN(ObservationControl::finishing_state);
+			}
+			return;
+		}
 	}
 
 	LOG_TRACE_FLOW_STR("itsBusyControllers=" << itsBusyControllers);

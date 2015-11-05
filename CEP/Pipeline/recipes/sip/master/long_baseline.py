@@ -45,12 +45,6 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
     """
 
     inputs = {
-        'nproc': ingredient.IntField(
-            '--nproc',
-            default=1,   # More then one might cause issues when ndppp shares 
-                         # temp files between runs
-            help="Maximum number of simultaneous processes per output node"
-        ),
         'ndppp_exec': ingredient.ExecField(
             '--ndppp-exec',
             help="The full path to the ndppp executable"
@@ -101,9 +95,9 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
             '--slices-mapfile',
             help="Path to mapfile containing the produced subband groups"
         ),
-        'ms_per_image_mapfile': ingredient.StringField(
-            '--ms-per-image-mapfile',
-            help="Path to mapfile containing the ms for each produced"
+        'raw_ms_per_image_mapfile': ingredient.StringField(
+            '--raw-ms-per-image-mapfile',
+            help="Path to mapfile containing the raw ms for each produced"
                 "image"
         ),
         'processed_ms_dir': ingredient.StringField(
@@ -129,8 +123,8 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
         'slices_mapfile': ingredient.FileField(
             help="Path to mapfile containing the produced subband groups"),
 
-        'ms_per_image_mapfile': ingredient.FileField(
-            help="Path to mapfile containing the ms for each produced"
+        'raw_ms_per_image_mapfile': ingredient.FileField(
+            help="Path to mapfile containing the raw ms for each produced"
                 "image")
     }
 
@@ -167,8 +161,7 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
         n_subband_groups = len(output_map)
 
         output_map.iterator = final_output_map.iterator = DataMap.SkipIterator
-        for idx_sb_group, (output_item, final_item) in enumerate(zip(output_map, 
-                                                            final_output_map)):
+        for idx_sb_group, (output_item, final_item) in enumerate(zip(output_map, final_output_map)):
             #create the input files for this node
             self.logger.debug("Creating input data subset for processing"
                               "on: {0}".format(output_item.host))
@@ -209,7 +202,7 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
             jobs.append(ComputeJob(output_item.host, node_command, arguments))
 
         # Hand over the job(s) to the pipeline scheduler
-        self._schedule_jobs(jobs, max_per_node=self.inputs['nproc'])
+        self._schedule_jobs(jobs)
 
         # *********************************************************************
         # validate the output, cleanup, return output
@@ -221,19 +214,8 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
         concat_ms = copy.deepcopy(output_map)
         slices = []
         finished_runs = 0
-        # If we have a skipped item, add the item to the slices with skip set
-        jobs_idx = 0
-        for item in concat_ms: 
-            # If this is an item that is skipped via the skip parameter in 
-            # the parset, append a skipped             
-            if item.skip:    
-                slices.append(tuple([item.host, [], True]))
-                continue
-
-            # we cannot use the skip iterator so we need to manually get the
-            # current job from the list
-            job = jobs[jobs_idx]
-
+        #scan the return dict for completed key
+        for (item, job) in zip(concat_ms, jobs):
             # only save the slices if the node has completed succesfull
             if job.results["returncode"] == 0:
                 finished_runs += 1
@@ -242,13 +224,10 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
             else:
                 # Set the dataproduct to skipped!!
                 item.skip = True
-                slices.append(tuple([item.host, [], True]))
+                slices.append(tuple([item.host, ["/Failed"], True]))
                 msg = "Failed run on {0}. NOT Created: {1} ".format(
                     item.host, item.file)
                 self.logger.warn(msg)
-
-            # we have a non skipped workitem, increase the job idx
-            jobs_idx += 1
 
         if finished_runs == 0:
             self.logger.error("None of the started compute node finished:"
@@ -267,15 +246,15 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
                 self.inputs['slices_mapfile']))
 
         #map with actual input mss.
-        self._store_data_map(self.inputs["ms_per_image_mapfile"],
+        self._store_data_map(self.inputs["raw_ms_per_image_mapfile"],
             DataMap(paths_to_image_mapfiles),
-                "mapfile containing input ms per image:")
+                "mapfile containing (raw) input ms per image:")
 
         # Set the return values
         self.outputs['mapfile'] = output_ms_mapfile_path
         self.outputs['slices_mapfile'] = self.inputs['slices_mapfile']
-        self.outputs['ms_per_image_mapfile'] = \
-            self.inputs["ms_per_image_mapfile"]
+        self.outputs['raw_ms_per_image_mapfile'] = \
+            self.inputs["raw_ms_per_image_mapfile"]
 
         return 0
 
@@ -316,7 +295,7 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
         """
         # The output_map contains a number of path/node pairs. The final data 
         # dataproduct of the prepare phase: The 'input' for each of these pairs
-        # is a number of measurement sets: The number of time slices times
+        # is a number of raw measurement sets: The number of time slices times
         # the number of subbands collected into each of these time slices.
         # The total length of the input map should match this.
         if len(input_map) != len(output_map) * \

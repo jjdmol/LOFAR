@@ -40,16 +40,9 @@
 #include <measures/Measures/MCPosition.h>
 #include <measures/Measures/MCDirection.h>
 
-#if defined(casacore)
-#include <python/Converters/PycExcp.h>
-#include <python/Converters/PycBasicData.h>
-#include <python/Converters/PycValueHolder.h>
-#define pyrap python
-#else
 #include <pyrap/Converters/PycExcp.h>
 #include <pyrap/Converters/PycBasicData.h>
 #include <pyrap/Converters/PycValueHolder.h>
-#endif
 
 #include <boost/python.hpp>
 #include <boost/python/args.hpp>
@@ -57,6 +50,7 @@
 #include "Package__Version.cc"
 
 using namespace casa;
+using namespace casa::pyrap;
 using namespace boost::python;
 using namespace LOFAR::StationResponse;
 

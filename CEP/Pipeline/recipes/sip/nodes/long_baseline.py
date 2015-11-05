@@ -43,7 +43,7 @@ class long_baseline(LOFARnodeTCP):
     """
     def run(self, environment, parset, working_dir, processed_ms_dir,
              ndppp_executable, output_measurement_set,
-            subbandgroups_per_ms, subbands_per_subbandgroup, ms_mapfile,
+            subbandgroups_per_ms, subbands_per_subbandgroup, raw_ms_mapfile,
             asciistat_executable, statplot_executable, msselect_executable,
             rficonsole_executable, add_beam_tables, final_output_path):
         """
@@ -52,7 +52,7 @@ class long_baseline(LOFARnodeTCP):
         self.environment.update(environment)
 
         with log_time(self.logger):
-            input_map = DataMap.load(ms_mapfile)
+            input_map = DataMap.load(raw_ms_mapfile)
             #******************************************************************
             # I. Create the directories used in this recipe
             create_directory(processed_ms_dir)
@@ -71,14 +71,14 @@ class long_baseline(LOFARnodeTCP):
 
             #******************************************************************
             # 1. Copy the input files
-            processed_ms_map = self._copy_input_files(
+            copied_ms_map = self._copy_input_files(
                             processed_ms_dir, input_map)
 
             #******************************************************************
             # 2. run dppp: collect frequencies into larger group
             time_slices_path_list = \
                 self._run_dppp(working_dir, time_slice_dir,
-                    subbandgroups_per_ms, processed_ms_map, subbands_per_subbandgroup,
+                    subbandgroups_per_ms, copied_ms_map, subbands_per_subbandgroup,
                     processed_ms_dir, parset, ndppp_executable)
 
             # If no timeslices were created, bail out with exit status 1
@@ -138,10 +138,6 @@ class long_baseline(LOFARnodeTCP):
             self._deep_copy_to_output_location(output_measurement_set,
                                                final_output_path)
 
-            # Write the actually used ms for the created dataset to the input 
-            # mapfile
-            processed_ms_map.save(ms_mapfile)
-
 
 
             #******************************************************************
@@ -171,49 +167,46 @@ class long_baseline(LOFARnodeTCP):
         This function collects all the file in the input map in the
         processed_ms_dir Return value is a set of missing files
         """
-        processed_ms_map = copy.deepcopy(input_map)
-
+        copied_ms_map = copy.deepcopy(input_map)
         # loop all measurement sets
-        for input_item, copied_item in zip(input_map, processed_ms_map):
+        for input_item, copied_item in zip(input_map, copied_ms_map):
             # fill the copied item with the correct data
             copied_item.host = self.host
             copied_item.file = os.path.join(
                     processed_ms_dir, os.path.basename(input_item.file))
 
-            stderrdata = None
             # If we have to skip this ms
             if input_item.skip == True:
-                exit_status = 1  
-                stderrdata = "SKIPPED_FILE"
+                exit_status = 1  #
 
-            else:
-              # skip the copy if machine is the same (execution on localhost) 
-              # make sure data is in the correct directory. 
-              # for now: working_dir/[jobname]/subbands
-              # construct copy command
-              command = ["rsync", "-r", "{0}:{1}".format(
-                              input_item.host, input_item.file),
-                                 "{0}".format(processed_ms_dir)]
-              if input_item.host == "localhost":
-                  command = ["cp", "-r", "{0}".format(input_item.file),
-                                         "{0}".format(processed_ms_dir)]
+            # skip the copy if machine is the same (execution on localhost) 
+            # make sure data is in the correct directory. for now: working_dir/[jobname]/subbands
+            #if input_item.host == "localhost":           
+            #    continue
+            # construct copy command
+            command = ["rsync", "-r", "{0}:{1}".format(
+                            input_item.host, input_item.file),
+                               "{0}".format(processed_ms_dir)]
+            if input_item.host == "localhost":
+                command = ["cp", "-r", "{0}".format(input_item.file),
+                                       "{0}".format(processed_ms_dir)]
 
-              self.logger.debug("executing: " + " ".join(command))
+            self.logger.debug("executing: " + " ".join(command))
 
-              # Spawn a subprocess and connect the pipes
-              # The copy step is performed 720 at once in that case which might
-              # saturate the cluster.
-              copy_process = subprocess.Popen(
-                          command,
-                          stdin = subprocess.PIPE,
-                          stdout = subprocess.PIPE,
-                          stderr = subprocess.PIPE)
+            # Spawn a subprocess and connect the pipes
+            # The copy step is performed 720 at once in that case which might
+            # saturate the cluster.
+            copy_process = subprocess.Popen(
+                        command,
+                        stdin = subprocess.PIPE,
+                        stdout = subprocess.PIPE,
+                        stderr = subprocess.PIPE)
 
-              # Wait for finish of copy inside the loop: enforce single tread
-              # copy
-              (stdoutdata, stderrdata) = copy_process.communicate()
+            # Wait for finish of copy inside the loop: enforce single tread
+            # copy
+            (stdoutdata, stderrdata) = copy_process.communicate()
 
-              exit_status = copy_process.returncode
+            exit_status = copy_process.returncode
 
             # if copy failed log the missing file and update the skip fields
             if  exit_status != 0:
@@ -225,7 +218,7 @@ class long_baseline(LOFARnodeTCP):
 
             self.logger.debug(stdoutdata)
 
-        return processed_ms_map
+        return copied_ms_map
 
 
     def _dppp_call(self, working_dir, ndppp, cmd, environment):
@@ -240,7 +233,7 @@ class long_baseline(LOFARnodeTCP):
                                   logger, cleanup = None)
 
     def _run_dppp(self, working_dir, time_slice_dir_path, slices_per_image,
-                  processed_ms_map, subbands_per_image, collected_ms_dir_name, parset,
+                  copied_ms_map, subbands_per_image, collected_ms_dir_name, parset,
                   ndppp):
         """
         Run NDPPP:
@@ -254,6 +247,9 @@ class long_baseline(LOFARnodeTCP):
             end_slice_range = (idx_time_slice + 1) * subbands_per_image
             # Get the subset of ms that are part of the current timeslice,
             # cast to datamap
+            input_map_subgroup = DataMap(
+                            copied_ms_map[start_slice_range:end_slice_range])
+
             output_ms_name = "time_slice_{0}.dppp.ms".format(idx_time_slice)
 
             # construct time slice name
@@ -262,21 +258,7 @@ class long_baseline(LOFARnodeTCP):
 
             # convert the datamap to a file list: Do not remove skipped files:
             # ndppp needs the incorrect files there to allow filling with zeros
-
-            ndppp_input_ms = []
-            for item in processed_ms_map[start_slice_range:end_slice_range]:
-                if item.skip:
-                    ndppp_input_ms.append("SKIPPEDSUBBAND")
-                    # We need an entry in the list: ndppp will add zeros to
-                    # pad missing subbands
-                else:
-                    ndppp_input_ms.append(item.file)
-
-            # if none of the input files was valid, skip the creation of the 
-            # timeslice all together, it will not show up in the timeslice 
-            # mapfile
-            if len(ndppp_input_ms) == 0:
-                continue
+            ndppp_input_ms = [item.file for item in input_map_subgroup]
 
             # Join into a single list of paths.
             msin = "['{0}']".format("', '".join(ndppp_input_ms))
@@ -318,9 +300,11 @@ class long_baseline(LOFARnodeTCP):
                 time_slice_path_list.append(time_slice_path)
 
             # On error the current timeslice should be skipped
+            except subprocess.CalledProcessError, exception:
+                self.logger.warning(str(exception))
+                continue
+
             except Exception, exception:
-                for item in processed_ms_map[start_slice_range:end_slice_range]:
-                    item.skip = True
                 self.logger.warning(str(exception))
                 continue
 
