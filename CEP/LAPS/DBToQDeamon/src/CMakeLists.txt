@@ -1,3 +1,7 @@
 # $Id$
 
-lofar_add_bin_scripts(DBToQDeamon.py)
+
+install(PROGRAMS
+  DBToQDeamon.py
+
+  DESTINATION bin)

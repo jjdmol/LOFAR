@@ -9,7 +9,7 @@ import itertools
 
 class RingCoordinates:
     """
-    Original RingCoordinates implementation (+ Vlad's fix). Taken from parset.py in 
+    Original RingCOordinates implementation. Taking from parset.py in 
     RTCP\Run\src\LOFAR\parset
     """
     def __init__(self, numrings, width, center, dirtype):
@@ -58,7 +58,7 @@ class RingCoordinates:
         \_/ _
              
         """
-        return self.width
+        return self.len_width()
 
     def delta_width(self):
         """
@@ -77,7 +77,7 @@ class RingCoordinates:
         \_/ \ -
           \_/  
         """
-        return 0.5 * self.len_height()
+        return 0.5 * self.len_width()
 
     def coordinates(self):
         if self.numrings == 0:
