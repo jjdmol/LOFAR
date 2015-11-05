@@ -1196,14 +1196,8 @@ GCFEvent::TResult ClockCommand::ack(GCFEvent& e)
 	if (e.signal == RSP_GETCLOCKACK) {
 		RSPGetclockackEvent ack(e);
 		if (RSP_SUCCESS != ack.status) {
-			if (ack.status == RSP_BUSY) {
-                logMessage(cerr,"Error: driver busy.");
-			    rspctl_exit_code = EXIT_FAILURE;
-            }
-            else {
-                logMessage(cerr,"Error: RSP_GETCLOCK command failed.");
-                rspctl_exit_code = EXIT_FAILURE;
-            }
+			logMessage(cerr,"Error: RSP_GETCLOCK command failed.");
+			rspctl_exit_code = EXIT_FAILURE;
 		}
 		else {
 			gSampleFrequency = 1.0e6 * ack.clock;

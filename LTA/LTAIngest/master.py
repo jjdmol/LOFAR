@@ -300,8 +300,7 @@ class startup(Process):
 
   def run(self):
     existingJobs = os.listdir(self.jobsdir)
-    #sort jobs by creation time to keep the order of the queue more or less intact
-    existingJobs.sort(key=lambda s: os.path.getmtime(os.path.join(self.jobsdir, s)))
+    existingJobs.sort()
     self.logger.info('Found %d existing jobs' % len(existingJobs))
     for e in existingJobs:
       self.jobs.put(e)
