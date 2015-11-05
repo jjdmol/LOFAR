@@ -239,47 +239,7 @@ def print_info(msg, keyvalue, msg_info):
                 boardstr += "%d, " % i
         print "-- RSP board DOWN   : %s" % boardstr[:-2]
     if msg == 'CHECKS':
-        """E5"""
-        checks = msg_info.split()
-        info = []
-        if 'RV' in checks:
-            info.append('RSP-version')
-        if 'TV' in checks:
-            info.append('TBB-version')    
-        if 'TM' in checks:
-            info.append('TBB-memory')
-        if 'SPU' in checks:
-            info.append('SPU-check')    
-        if 'RBV' in checks:
-            info.append('RSP-voltage')        
-        if len(info):         
-            print "-- Checks done      : %s" % string.join(info, ', ')
-        info = []
-        for mode in '1234567':
-            if 'M%s' % mode in checks:
-                info.append('Modem')
-            if 'SH%s' % mode in checks:
-                info.append('Short')
-            if 'F%s' % mode in checks:
-                info.append('Flat')
-            if 'D%s' % mode in checks:
-                info.append('Down')
-            if 'S%s' % mode in checks:
-                info.append('RF')    
-            if 'O%s' % mode in checks:
-                info.append('Oscillation') 
-            if 'SP%s' % mode in checks:
-                info.append('Spurious')
-            if 'SN%s' % mode in checks:
-                info.append('Summator-noise')
-            for check in checks:
-                if 'NS%s' % mode in check.split('='):
-                    info.append('Noise[%ssec]' % check.split('=')[1])
-            if 'E%s' % mode in checks:
-                info.append('Elements')                       
-            if len(info):         
-                print "-- Checks done M%s   : %s" % (mode, string.join(info, ', '))
-            info = []
+        print "-- Checks done      : %s" % msg_info
 
     if msg == 'STATISTICS':
         print "-- Bad antennas     :",
@@ -296,8 +256,7 @@ def print_info(msg, keyvalue, msg_info):
         print
 
     if msg == 'BADLIST':
-        # 20150723,NFO,---,BADLIST,LBL=83 84 94 95
-        bad_ant_str = msg_info.replace('=', '(').replace(' ', ',').replace(';', ')   ') + ')'
+        bad_ant_str = string.join(d[4:], ';').replace('=', '(').replace(' ', ',').replace(';', ')   ') + ')'
         print "-- bad-antenna-list : %s" % bad_ant_str
     return
 
@@ -327,10 +286,10 @@ def print_rsp(partnumber, msg, keyvalue):
             print "    Board %2d wrong firmware version: AP=%s BP=%s" % (
                 partnumber, keyvalue.get('AP'), keyvalue.get('BP'))
     if msg == 'VOLTAGE':
-        print "    Board %2d wrong voltage: 1.2V=%s 2.5V=%s 3.3V=%s" % (
+        print "    Board %2d wrong voltage: 1.2V=%3.1f 2.5V=%3.1f 3.3V=%3.1f" % (
               partnumber, keyvalue.get('1.2V'), keyvalue.get('2.5V'), keyvalue.get('3.3V'))
     if msg == 'TEMPERATURE':
-        print "    Board %2d high temperature: PCB=%s BP=%s AP0=%s AP1=%s AP2=%s AP3=%s" % (
+        print "    Board %2d high temperature: PCB=%3.1f BP=%3.1f AP0=%3.1f AP1=%3.1f AP2=%3.1f AP3=%3.1f" % (
               partnumber, keyvalue.get('PCB'), keyvalue.get('BP'), keyvalue.get('AP0'), keyvalue.get('AP1'),
               keyvalue.get('AP2'), keyvalue.get('AP3'))
     return

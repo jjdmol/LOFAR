@@ -8,7 +8,6 @@ import urlparse
 from mimetypes import MimeTypes
 from threading import Timer,Thread,Event
 import platform
-import datetime
 
 mime=MimeTypes()
 
@@ -37,11 +36,8 @@ class perpetualTimer:
 
 brokerlist= []
 
-if MyHostname.lower() != 'ccu099' :
+if MyHostname.lower() == 'ccu001' :
    brokerlist = [ "amqp://CCU001","amqp://sas001","amqp://lcs023","amqp://cbm001","amqp://cbm002","amqp://cbm003","amqp://cbm004","amqp://cbm005","amqp://cbm006","amqp://cbm007","amqp://cbm008","amqp://mcu001","amqp://lhn001.cep2.lofar","amqp://lhn002.cep2.lofar"]
-   for i in range(1,95):
-      nodename = 'amqp://locus%(#)03d.cep2.lofar' % {"#": i}
-      brokerlist.append(nodename)
 else:
     brokerlist = [ "amqp://ccu099","amqp://SAS099","amqp://lcs028","amqp://cbt009","amqp://locus098","amqp://locus099","amqp://locus102","amqp://mcu099"]
 
@@ -85,25 +81,18 @@ last_status="NOTCONNECTED"
 class GetHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
-	if self.path == '/':
-	    self.path = '/index.html'
-
-	if self.path == '/qpid':
-            self.send_response(200)
-            message = last_status
-            self.send_header('Content-type','application/json')
-            self.end_headers()
-            self.wfile.write(message)
-	elif self.path in filedict:
-            self.send_response(200)
-            self.send_header('Content-type',mimedict[self.path])
-	    message = filedict[self.path]
-            self.end_headers()
-            self.wfile.write(message)
+        self.send_response(200)
+        message=""
+	if self.path == '/qpid'  :
+               message = last_status
+               self.send_header('Content-type','application/json')
+               self.end_headers()
 	else:
-	    self.send_error(404)
-	    return
-
+	       if self.path in filedict:
+                     self.send_header('Content-type',mimedict[self.path])
+	             message = filedict[self.path]
+                     self.end_headers()	       
+        self.wfile.write(message)
         return
 
     def log_message(self, format, *args):
@@ -139,12 +128,7 @@ def retrieve_status():
     global sess
 
     queues = {}
-    queuestat = {}
-
-    # get current local time
-    ts = time.time()
-    datestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-    queuestat['datestamp']=datestamp
+    queuestat = {} 
     for brokername in brokerlist:
         queues[brokername] = sess[brokername].getObjects(_class="queue", _package="org.apache.qpid.broker")
         queuestat[brokername]={}
@@ -155,19 +139,13 @@ def retrieve_status():
     stest=str(queuestat).replace("'",'"',1000000).replace('(','[',10000000).replace(')',']',1000000).replace('L','',1000000)
     return stest 
 
-retrievebusy=False
-
 def periodic_retrieve( ):
     global last_status
-    global retrievebusy
     if (last_status=="NOTCONNECTED"):
-        connect_to_brokers()
+	connect_to_brokers()
         last_status="CONNECTION setup"
     else:
-        if (retrievebusy==False):
-           retrievebusy=True
-           last_status=retrieve_status()
-           retrievebusy=False
+        last_status=retrieve_status()
 
 if __name__ == '__main__':
     from BaseHTTPServer import HTTPServer
@@ -179,5 +157,5 @@ if __name__ == '__main__':
         server.serve_forever()
     except KeyboardInterrupt:
         pass
-    server.socket.close()
+    server.close()
 

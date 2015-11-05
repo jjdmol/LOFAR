@@ -120,25 +120,27 @@ endif()
 lofar_add_bin_program(mpi_node_list Station/mpi_node_list.cc)
 lofar_add_bin_program(station_stream Station/station_stream.cc)
 lofar_add_bin_program(send_state send_state.cc)
-lofar_add_bin_program(gpu_load gpu_load.cc)
 
 # install scripts used to run an observation under bin
-lofar_add_bin_scripts(
+install(PROGRAMS
   scripts/CobaltControl.sh
   scripts/runObservation.sh
   scripts/startstopkeys.sh
   scripts/startBGL.sh
   scripts/stopBGL.sh
-  scripts/watchlogs.sh)
+  scripts/watchlogs.sh
+  DESTINATION bin)
 
 # install support scripts (install, roll-out, debugging) into sbin
-lofar_add_sbin_scripts(
+install(PROGRAMS
   scripts/bw_monitor.sh
   scripts/cobaltswitch
   scripts/Cobalt_build.sh
   scripts/Cobalt_install.sh
   scripts/CobaltVersions.sh
-  scripts/setloglevels.sh)
+  scripts/setloglevels.sh
+  scripts/station_routes.sh
+  DESTINATION sbin)
 
 # install logprop files
 install(FILES

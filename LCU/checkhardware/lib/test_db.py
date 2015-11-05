@@ -210,7 +210,7 @@ class cDB:
                     log.addLine("%s,SPU,%03d,VOLTAGE%s" %(date, spu.nr, valstr))
                 
             if not spu.temp_ok:
-                log.addLine("%s,SPU,%03d,TEMPERATURE,PCB=%2.0f" %\
+                log.addLine("%s,SPU,%03d,TEMPERATURE,PCB=%3.1f" %\
                            (date, spu.nr, spu.temp))
 
         for rsp in self.rsp:
@@ -219,10 +219,10 @@ class cDB:
                 log.addLine("%s,RSP,%03d,VERSION,BP=%s,AP=%s" %\
                            (date, rsp.nr, rsp.bp_version, rsp.ap_version))
             if not rsp.voltage_ok:
-                log.addLine("%s,RSP,%03d,VOLTAGE,1.2V=%3.2f,2.5V=%3.2f,3.3V=%3.2f" %\
+                log.addLine("%s,RSP,%03d,VOLTAGE,1.2V=%3.1f,2.5V=%3.1f,3.3V=%3.1f" %\
                            (date,rsp.nr, rsp.voltage1_2, rsp.voltage2_5, rsp.voltage3_3))
             if not rsp.temp_ok:
-                log.addLine("%s,RSP,%03d,TEMPERATURE,PCB=%2.0f,BP=%2.0f,AP0=%2.0f,AP1=%2.0f,AP2=%2.0f,AP3=%2.0f" %\
+                log.addLine("%s,RSP,%03d,TEMPERATURE,PCB=%3.1f,BP=%3.1f,AP0=%3.1f,AP1=%3.1f,AP2=%3.1f,AP3=%3.1f" %\
                            (date,rsp.nr, rsp.pcb_temp, rsp.bp_temp, rsp.ap0_temp, rsp.ap1_temp, rsp.ap2_temp, rsp.ap3_temp))
 
         if self.tbbdriver_version != "ok" or self.tbbctl_version != "ok":
@@ -257,8 +257,7 @@ class cDB:
                                    (date, lba.label, lba.test_subband_x, lba.test_signal_x, lba.test_subband_y, lba.test_signal_y))
 
 
-            if lba.noise_check_done or lba.oscillation_check_done or lba.spurious_check_done or lba.signal_check_done or\
-                    lba.short_check_done or lba.flat_check_done or lba.down_check_done:
+            if lba.noise_check_done or lba.oscillation_check_done or lba.spurious_check_done or lba.signal_check_done:
                 for ant in lba.ant:
                     if ant.down:
                             log.addLine("%s,%s,%03d,DOWN,X=%3.1f,Y=%3.1f,Xoff=%d,Yoff=%d" %\
@@ -270,15 +269,13 @@ class cDB:
                             if ant.y.too_low or ant.y.too_high: valstr += ",Y=%3.1f" %(ant.y.test_signal)
                             if len(valstr):
                                 log.addLine("%s,%s,%03d,RF_FAIL%s" %(date, lba.label, ant.nr_pvss, valstr))
-                        
-                        if lba.flat_check_done:    
+                            
                             valstr = ''
                             if ant.x.flat: valstr += ",Xmean=%3.1f" %(ant.x.flat_val)
                             if ant.y.flat: valstr += ",Ymean=%3.1f" %(ant.y.flat_val)
                             if len(valstr):
                                 log.addLine("%s,%s,%03d,FLAT%s" %(date, lba.label, ant.nr_pvss, valstr))
-                        
-                        if lba.short_check_done:    
+                            
                             valstr = ''
                             if ant.x.short: valstr += ",Xmean=%3.1f" %(ant.x.short_val)
                             if ant.y.short: valstr += ",Ymean=%3.1f" %(ant.y.short_val)
@@ -611,9 +608,6 @@ class cDB:
             self.rsp_driver_down         = False
             self.noise_check_done        = 0
             self.signal_check_done       = 0
-            self.short_check_done        = 0
-            self.flat_check_done         = 0
-            self.down_check_done         = 0
             self.spurious_check_done     = 0
             self.oscillation_check_done  = 0
 
@@ -646,8 +640,7 @@ class cDB:
         def test(self):
             if self.rsp_driver_down:
                 return (self.error)
-            if self.noise_check_done or self.signal_check_done or self.short_check_done or self.flat_check_done or\
-                    self.down_check_done or self.signal_check_done or self.spurious_check_done or self.oscillation_check_done:
+            if self.noise_check_done or self.signal_check_done or self.spurious_check_done or self.oscillation_check_done:
                 self.nr_bad_antennas = 0
 
             for ant in self.ant:

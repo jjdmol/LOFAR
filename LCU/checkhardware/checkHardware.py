@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-info = '''    ----------------------------------------------------------------------------
+info = """    ----------------------------------------------------------------------------
     Usage of arguments
     -cf=fullfilename  : full path and filename for the configurationfile to use.
     -l=2              : set level to 2 (default level is 0)
@@ -19,9 +19,6 @@ info = '''    ------------------------------------------------------------------
     
     Select checks to do, can be combined with all levels
     -s(rcumode)       : signal check for rcumode
-    -sh(rcumode)      : short test for rcumode 1..4
-    -f(rcumode)       : flat test for rcumode 1..4
-    -d(rcumode)       : down test for rcumode 1..4
     -o(rcumode)       : oscillation check for rcumode
     -sp(rcumode)      : spurious check for rcumode
     -n(rcumode)[=120] : noise check for rcumode, optional data time in seconds default = 120 sec.
@@ -33,20 +30,17 @@ info = '''    ------------------------------------------------------------------
     
     -rv               : RSP version check, always done
     -tv               : TBB version check, always done
-    
-    -rbc              : RSP board check, voltage and temperature
-    -spu              : SPU voltage check
+    -spu              : RSP spu voltage check
     -tm               : TBB memmory check
     
     example   : ./checkHardware.py -s5 -n5=180
-    ----------------------------------------------------------------------------'''
+    ----------------------------------------------------------------------------"""
 
 
 import os
 import sys
-import traceback
 
-check_version = '0815'
+check_version = '0515'
 
 mainPath = r'/opt/stationtest'
 libPath  = os.path.join(mainPath, 'lib')
@@ -69,20 +63,11 @@ os.umask(001)
 
 logger = None
 
-rcu_keys    = ('RCU1','RCU2','RCU3','RCU4','RCU5','RCU6','RCU7')
-rcu_m1_keys = ('O1','SP1','N1','S1','SH1','D1','F1')
-rcu_m2_keys = ('O2','SP2','N2','S2','SH2','D2','F2')
-rcu_m3_keys = ('O3','SP3','N3','S3','SH3','D3','F3')
-rcu_m4_keys = ('O4','SP4','N4','S4','SH4','D4','F4')
-rcu_m5_keys = ('M5','O5','SN5','SP5','N5','S5','E5')
-rcu_m6_keys = ('M6','O6','SN6','SP6','N6','S6','E6')
-rcu_m7_keys = ('M7','O7','SN7','SP7','N7','S7','E7')
-
-rcu_m12_keys  = rcu_m1_keys + rcu_m2_keys
-rcu_m34_keys  = rcu_m3_keys + rcu_m4_keys
-rcu_m567_keys = rcu_m5_keys + rcu_m6_keys + rcu_m7_keys
-
-rsp_keys     = ('RV','SPU','RBC') + rcu_keys + rcu_m12_keys + rcu_m34_keys + rcu_m567_keys
+rcu_keys      = ('RCU1','RCU2','RCU3','RCU4','RCU5','RCU6','RCU7')
+rcu_m12_keys  = ('LBL','O1','SP1','N1','S1','O2','SP2','N2','S2')
+rcu_m34_keys  = ('LBH','O3','SP3','N3','S3','O4','SP4','N4','S4')
+rcu_m567_keys = ('HBA','M5','O5','SN5','SP5','N5','S5','E5','M6','O6','SN6','SP6','N6','S6','E6','M7','O7','SN7','SP7','N7','S7','E7')
+rsp_keys     = ('RV','SPU') + rcu_keys + rcu_m12_keys + rcu_m34_keys + rcu_m567_keys
 tbb_keys     = ('TV','TM')
 control_keys = ('R','START','STOP')
 all_keys     = control_keys + rsp_keys + tbb_keys
@@ -90,10 +75,10 @@ rsp_check    = False
 tbb_check    = False
 
 args = dict()
-
-# version checks are always done
-args['RV'] = '-'
-args['TV'] = '-'
+# next checks are always done
+args["RV"] = '-'
+args["TV"] = '-'
+#args["SPU"] = '-'
 
 
 def printHelp():
@@ -102,57 +87,47 @@ def printHelp():
 # return readable info for test
 def getTestInfo(key=''):
     if key[-1] in '1234567':
-        test_name = ''
         test = key[:-1]
         mode = key[-1]
-        
         if mode in '1234':
-            ant_type = 'LBA'
-        else:
-            ant_type = 'HBA'
-            
-        if test in ('O',):
-            test_name += 'Oscillation'
-        if test in ('SP',):
-            test_name += 'Spurious'
-        if test in ('N',):
-            test_name += 'Noise'
-        if test in ('S',):
-            test_name += 'RF'
-        if test in ('SH',):
-            test_name += 'Short'
-        if test in ('D',):
-            test_name += 'Down'
-        if test in ('F',):
-            test_name += 'Flat'                
-        if test in ('S',):
-            test_name += 'RF'
-        if test in ('SN',):
-            test_name += 'Summator noise'
-        if test in ('E',):
-            test_name += 'Element'
-        if test in ('M',):
-            test_name += 'Modem'    
-        
-        return '%s mode-%c %s check' % (ant_type, mode, test_name)
-    
+            if test == 'O':
+                return("LBA mode-%c Oscillation test" %(mode))
+            if test == 'SP':
+                return("LBA mode-%c Spurious test" %(mode))
+            if test == 'N':
+                return("LBA mode-%c Noise test" %(mode))
+            if test == 'S':
+                return("LBA mode-%c Short/Flat/Down/RF test" %(mode))    
+        if mode in '567':
+            if test == 'O':
+                return("HBA mode-%c Oscillation test" %(mode))
+            if test == 'S':
+                return("HBA mode-%c RF test" %(mode))
+            if test == 'N':
+                return("HBA mode-%c Noise test" %(mode))
+            if test == 'S':
+                return("HBA mode-%c RF test" %(mode))
+            if test == 'SN':
+                return("HBA mode-%c Summator noise test" %(mode))
+            if test == 'E':
+                return("HBA mode-%c Element test" %(mode))
+            if test == 'M':
+                return("HBA mode-%c Modem test" %(mode))    
     if key in 'RV':
-        return 'RSP Version check'
+        return("RSP Version test")
     if key in 'SPU':
-        return 'SPU check'
-    if key in 'RBC':
-        return 'RSP board check'    
+        return("RSP SPU test")    
     if key in 'TV':
-        return 'TBB Version check'
+        return("TBB Version test")
     if key in 'TM':
-        return 'TBB Memory check'
+        return("TBB Memory test")
     if key in 'START':
-        return 'START checks'
+        return("START checks")
     if key in 'STOP':
-        return 'STOP checks'    
+        return("STOP checks")    
     if key in 'R':
-        return 'Number of test repeats set to'
-    return('')    
+        return("Number of test repeats set to")
+    return("")    
         
 def addToArgs(key, value):
     if key == '':
@@ -161,15 +136,25 @@ def addToArgs(key, value):
     if key in rsp_keys or key in tbb_keys or key in ('H','L','LS','LF','R','START','STOP'):
         if value != '-':
             args[key] = value
-        else:    
-            args[key] = '-'
+        else:
+            if key in rcu_keys:
+                mode = key[-1]
+                args['O%c' %(mode)] = '-'
+                args['SP%c' %(mode)] = '-'
+                args['N%c' %(mode)] = '-'
+                args['S%c' %(mode)] = '-'
+                if mode in '567':
+                    args['M%c' %(mode)] = '-'
+                    args['SN%c' %(mode)] = '-'
+            else:    
+                args[key] = '-'
         
         if key in rsp_keys:
             rsp_check = True
         if key in tbb_keys:
             tbb_check = True
     else:
-        sys.exit('Unknown key %s' %(key))
+        sys.exit("Unknown key %s" %(key))
     return
     
            
@@ -210,12 +195,12 @@ def setLevelTests(conf):
 class cConfiguration:
     def __init__(self):
         self.conf = dict()
-        if args.has_key('CF'):
-            filename = args.get('CF')
+        if args.has_key("CF"):
+            filename = args.get("CF")
         else:
-            filename = '/localhome/stationtest/config/checkHardware.conf'
+            filename = "/localhome/stationtest/config/checkHardware.conf"
         
-        f = open('/localhome/stationtest/config/checkHardware.conf', 'r')
+        f = open("/localhome/stationtest/config/checkHardware.conf", 'r')
         data = f.readlines()
         f.close()
         for line in data:
@@ -228,7 +213,7 @@ class cConfiguration:
                 key = key.replace('_','-')
                 self.conf[key] = value
             except:
-                print 'Not a valid configuration setting: %s' %(line)
+                print "Not a valid configuration setting: %s" %(line)
 
     def getInt(self,key, default=0):
         return (int(self.conf.get(key, str(default))))
@@ -255,7 +240,7 @@ def init_logging():
         screen_log_level = args.get('LS', 'WARNING')
         file_log_level   = args.get('LF', 'DEBUG')
     except:
-        print 'Not a legal log level, try again'
+        print "Not a legal log level, try again"
         sys.exit(-1)
 
     station = getHostName()
@@ -302,7 +287,7 @@ def backupLogFiles():
 def waitForStart(start_datetime):
     start_time = time.mktime(start_datetime.timetuple())
     if start_time > time.time():
-        logger.info('delayed start, sleep till %s' %(time.asctime(start_datetime.timetuple())))
+        logger.info("delayed start, sleep till %s" %(time.asctime(start_datetime.timetuple())))
     
     while start_time > time.time():
         wait_time = start_time - time.time()
@@ -333,15 +318,15 @@ def main():
     StID = getHostName()
 
     logger.info('== START HARDWARE CHECK ==')
-    logger.info('== requested checks and settings ==')
-    logger.info('-'*40)
+    logger.info("== requested checks and settings ==")
+    logger.info("-"*40)
     for i in all_keys:
         if args.has_key(i):
             if args.get(i) == '-':
-                logger.info(' %s' %(getTestInfo(i)))
+                logger.info(" %s" %(getTestInfo(i)))
             else:
-                logger.info(' %s, time = %s' %(getTestInfo(i), args.get(i)))
-    logger.info('-'*40)
+                logger.info(" %s, time = %s" %(getTestInfo(i), args.get(i)))
+    logger.info("-"*40)
     
     removeAllDataFiles()
 
@@ -350,7 +335,7 @@ def main():
     if args.has_key('STOP'):
         stop = args.get('STOP')
         if len(stop) != 17:
-                sys.exit('wrong stoptime format must be YYYYMMDD_HH:MM:SS')
+                sys.exit("wrong stoptime format must be YYYYMMDD_HH:MM:SS")
         stop_datetime = datetime.datetime(int(stop[:4]),int(stop[4:6]),int(stop[6:8]), \
                                           int(stop[9:11]),int(stop[12:14]),int(stop[15:]))
         stop_time = time.mktime(stop_datetime.timetuple())
@@ -358,19 +343,19 @@ def main():
         if args.has_key('START'):
             start = args.get('START')
             if len(start) != 17:
-                sys.exit('wrong starttime format must be YYYYMMDD_HH:MM:SS')
+                sys.exit("wrong starttime format must be YYYYMMDD_HH:MM:SS")
             start_datetime = datetime.datetime(int(start[:4]),int(start[4:6]),int(start[6:8]), \
                                                int(start[9:11]),int(start[12:14]),int(start[15:]))
             if (time.mktime(start_datetime.timetuple()) < time.time()):
                 #print time.mktime(start_datetime.timetuple()), time.time()
-                logger.error('Stop program, StartTime in past')
+                logger.error("Stop program, StartTime in past")
                 sys.exit(2)
             if(time.mktime(start_datetime.timetuple()) > stop_time):
-                logger.error('Stop program, stop before start')
+                logger.error("Stop program, stop before start")
                 sys.exit(2)    
             waitForStart(start_datetime)
         
-        logger.info('run checks till %s' %(time.asctime(stop_datetime.timetuple())))
+        logger.info("run checks till %s" %(time.asctime(stop_datetime.timetuple())))
     
     start_time = time.gmtime()
     # Read in RemoteStation.conf
@@ -385,11 +370,11 @@ def main():
         
                     
     # set manualy marked bad antennas
-    global_log_dir = conf.getStr('log-dir-global')
+    log_dir = os.path.join(conf.getStr('log-dir-global'), "stationtest")
     host = getHostName()
-    if os.path.exists(global_log_dir):
-        full_filename = os.path.join(global_log_dir, 'bad_antenna_list.txt')
-        logger.info('add bad_antenna_list data from file "%s" to db' %(full_filename))
+    if os.path.exists(log_dir):
+        full_filename = os.path.join(log_dir, "bad_antenna_list.txt")
+        logger.info("add bad_antenna_list data from file '%s' to db" %(full_filename))
         f = open(full_filename, 'r')
         data = f.readlines()
         for line in data:
@@ -402,18 +387,16 @@ def main():
                         ant_type = ant[:3].strip().upper()
                         if ant_type == 'LBA':
                             ant_nr = int(ant[3:].strip())
-                            #print 'ant type=%s nr=%d' %(ant_type, ant_nr)
+                            #print "ant type=%s nr=%d" %(ant_type, ant_nr)
                             if ant_nr < nLBH:
                                 db.lbh.ant[ant_nr].on_bad_list = 1
                             else:
                                 db.lbl.ant[ant_nr-nLBH].on_bad_list = 1
                         elif ant_type == 'HBA':
                             ant_nr = int(ant[3:].strip())
-                            #print 'ant type=%s nr=%d' %(ant_type, ant_nr)
+                            #print "ant type=%s nr=%d" %(ant_type, ant_nr)
                             db.hba.tile[ant_nr].on_bad_list = 1
                 break
-    else:
-		logger.warn('bad_antenna_list data from file "%s" not found' %(full_filename))
     
     #
     db.script_versions = 'CHECK=%s,DB=%s,TEST=%s,SEARCH=%s,LOFAR=%s,GENERAL=%s' %\
@@ -424,7 +407,7 @@ def main():
     start_level, board_errors = swlevel()
     sw_level, board_errors = swlevel(2)
     if start_level == 1:
-        logger.info('Wait 30 seconds while startup RSPDriver')
+        logger.info("Wait 30 seconds while startup RSPDriver")
         time.sleep(30.0)
     if sw_level == 2:
         tbb = cTBB(db)
@@ -435,14 +418,14 @@ def main():
         if rsp_check == True:
             # check if RSPDriver is running
             if checkActiveRSPDriver() == False:
-                logger.warn('RSPDriver not running')
+                logger.warn("RSPDriver not running")
             else:
                 # wait for RSP boards ready, and reset 48V if needed, max 2x if no board errors after 48V reset
                 rsp_ready = False
                 restarts = 2
                 while (not rsp_ready) and (restarts > 0):
                     if waitRSPready() == False:
-                        logger.warn('Not all RSP boards ready, reset 48V to recover')
+                        logger.warn("Not all RSP boards ready, reset 48V to recover")
                         swlevel(1)
                         reset48V()
                         restarts -= 1
@@ -461,6 +444,8 @@ def main():
                 if rsp_ready:
                     if args.has_key('RV'):
                         rsp.checkVersions(conf.getStr('bp-version'), conf.getStr('ap-version'))
+                    
+                    
                         
                     resetRSPsettings()
     
@@ -478,38 +463,24 @@ def main():
                         try:
                             runstart = time.time()
                             if stop_time > -1:
-                                logger.info('\n=== Start testrun %d ===\n' %(repeat_cnt))
+                                logger.info("\n=== Start testrun %d ===\n" %(repeat_cnt))
                             else:
-                                logger.info('\n=== Start testrun %d of %d ===\n' %(repeat_cnt, repeats))
+                                logger.info("\n=== Start testrun %d of %d ===\n" %(repeat_cnt, repeats))
                             
                             if args.has_key('SPU'):
                                 spu.checkStatus()
-                            
-                            if args.has_key('RBC'):
-                                rsp.checkBoard()
 
-                            # check if mode 1,2 is available on this station
+                            # do all rcumode 1 tests if available
                             if StID in CoreStations or StID in RemoteStations:
                                 for mode in (1, 2):
-                                    lbl.reset()
-                                    # do all rcumode 1,2 tests        
-                                    if 'RCU%d' % mode in args or 'SH%d' % mode in args:
-                                       lbl.checkShort(mode=mode)
-                                    
-                                    if 'RCU%d' % mode in args or 'F%d' % mode in args:
-                                       lbl.checkFlat(mode=mode)
-                                    
-                                    if 'RCU%d' % mode in args or 'D%d' % mode in args:
-                                       lbl.checkDown(mode=mode, subband=conf.getInt('lbl-test-sb',301))
-                                    
-                                    if 'RCU%d' % mode in args or 'O%d' % mode in args:
+                                    if args.has_key('O%d' %(mode)):
                                         lbl.checkOscillation(mode=mode)
                 
-                                    if 'RCU%d' % mode in args or 'SP%d' % mode in args:
+                                    if args.has_key('SP%d' %(mode)):
                                         lbl.checkSpurious(mode=mode)
                 
-                                    if 'RCU%d' % mode in args or 'N%d' % mode in args:
-                                        if 'RCU%d' % mode in args or args.get('N%d' %(mode)) == '-':
+                                    if args.has_key('N%d' %(mode)):
+                                        if args.get('N%d' %(mode)) == '-':
                                             recordtime = 120
                                         else:
                                             recordtime = int(args.get('N%d' %(mode)))
@@ -518,34 +489,24 @@ def main():
                                                        low_deviation=conf.getFloat('lba-noise-min-deviation', -3.0),
                                                        high_deviation=conf.getFloat('lba-noise-max-deviation', 2.5),
                                                        max_diff=conf.getFloat('lba-noise-max-difference', 2.0))
-                                    
-                                    if 'RCU%d' % mode in args or 'S%d' % mode in args:
+                
+                                    if repeat_cnt == 1 and args.has_key('S%d' %(mode)):
                                        lbl.checkSignal(mode=mode,
                                                        subband=conf.getInt('lbl-test-sb',301),
                                                        min_signal=conf.getFloat('lba-rf-min-signal', 75.0),
                                                        low_deviation=conf.getFloat('lba-rf-min-deviation', -2.0),
-                                                       high_deviation=conf.getFloat('lba-rf-max-deviation', 2.0))
+                                                       high_deviation=conf.getFloat('lba-rf-max-deviation', 2.0))                        
                             
                             for mode in (3, 4):
-                                lbh.reset()
-                                # do all rcumode 3,4 tests
-                                if 'RCU%d' % mode in args or 'SH%d' % mode in args:
-                                   lbh.checkShort(mode=mode)
-                                
-                                if 'RCU%d' % mode in args or 'F%d' % mode in args:
-                                   lbh.checkFlat(mode=mode)
-                                
-                                if 'RCU%d' % mode in args or 'D%d' % mode in args:
-                                   lbh.checkDown(mode=mode, subband=conf.getInt('lbh-test-sb',301))
-
-                                if 'RCU%d' % mode in args or 'O%d' % mode in args:
+                                # do all rcumode 3,4 tests        
+                                if args.has_key('O%d' %(mode)):
                                     lbh.checkOscillation(mode=mode)
             
-                                if 'RCU%d' % mode in args or 'SP%d' % mode in args:
+                                if args.has_key('SP%d' %(mode)):
                                     lbh.checkSpurious(mode=mode)
             
-                                if 'RCU%d' % mode in args or 'N%d' % mode in args:
-                                    if 'RCU%d' % mode in args or args.get('N%d' %(mode)) == '-':
+                                if args.has_key('N%d' %(mode)):
+                                    if args.get('N%d' %(mode)) == '-':
                                         recordtime = 120
                                     else:
                                         recordtime = int(args.get('N%d' %(mode)))
@@ -554,8 +515,8 @@ def main():
                                                    low_deviation=conf.getFloat('lba-noise-min-deviation', -3.0),
                                                    high_deviation=conf.getFloat('lba-noise-max-deviation', 2.5),
                                                    max_diff=conf.getFloat('lba-noise-max-difference', 1.5))
-                                
-                                if 'RCU%d' % mode in args or 'S%d' % mode in args:
+                              
+                                if repeat_cnt == 1 and args.has_key('S%d' %(mode)):
                                     lbh.checkSignal(mode=mode, 
                                                     subband=conf.getInt('lbh-test-sb',301),
                                                     min_signal=conf.getFloat('lba-rf-min-signal', 75.0),
@@ -564,23 +525,21 @@ def main():
         
                             for mode in (5, 6, 7):
                                 # do all rcumode 5, 6, 7 tests    
-                                hba.reset()
-                                
-                                if 'RCU%d' % mode in args or 'M%d' % mode in args:
+                                if args.has_key('M%d' %(mode)):
                                     hba.checkModem(mode=mode)
                                     hba.turnOffBadTiles()
             
-                                if 'RCU%d' % mode in args or 'O%d' % mode in args:
+                                if args.has_key('O%d' %(mode)):
                                     hba.checkOscillation(mode=mode)
             
-                                if 'RCU%d' % mode in args or 'SN%d' % mode in args:
+                                if args.has_key('SN%d' %(mode)):
                                     hba.checkSummatorNoise(mode=mode)
             
-                                if 'RCU%d' % mode in args or 'SP%d' % mode in args:
+                                if args.has_key('SP%d' %(mode)):
                                     hba.checkSpurious(mode=mode)
             
-                                if 'RCU%d' % mode in args or 'N%d' % mode in args:
-                                    if 'RCU%d' % mode in args or args.get('N%d' %(mode)) == '-':
+                                if args.has_key('N%d' %(mode)):
+                                    if args.get('N%d' %(mode)) == '-':
                                         recordtime = 120
                                     else:
                                         recordtime = int(args.get('N%d' %(mode)))
@@ -591,7 +550,7 @@ def main():
                                                    max_diff=conf.getFloat('hba-noise-max-difference', 2.0))
             
             
-                                if 'RCU%d' % mode in args or 'S%d' % mode in args:
+                                if repeat_cnt == 1 and args.has_key('S%d' %(mode)):
                                     hba.checkSignal(mode=mode, subband=conf.getInt('hba-test-sb',155),
                                                             min_signal=conf.getFloat('hba-rf-min-signal', 80.0),
                                                             low_deviation=conf.getFloat('hba-rf-min-deviation', -24.0),
@@ -600,7 +559,7 @@ def main():
                                 runtime = (time.time() - runstart)
                                 
                                 # All element test
-                                if 'E%d' % mode in args:
+                                if args.has_key('E%d' %(mode)):
                                     if args.get('E%d' %(mode)) == '-':
                                         recordtime = 10
                                     else:
@@ -634,11 +593,7 @@ def main():
                             
 
                         except:
-                            logging.error('Caught %s', str(sys.exc_info()[0]))
-                            logging.error(str(sys.exc_info()[1]))
-                            logging.error('TRACEBACK:\n%s', traceback.format_exc())
-                            logging.error('Aborting NOW')
-                            #logger.error('Program fault, RSP test (%s)' %(sys.exc_value))
+                            logger.error("Program fault, RSP test (%s)" %(sys.exc_value))
                             #raise
                             break
                             
@@ -660,21 +615,20 @@ def main():
                         db.addTestDone('TM')
                         tbb.checkMemory()
                 except:
-                    logger.error('Program fault, TBB test (%s)' %(sys.exc_value))
+                    logger.error("Program fault, TBB test (%s)" %(sys.exc_value))
     db.check_stop_time = time.gmtime()
 
     # do db test and write result files to log directory
     log_dir = conf.getStr('log-dir-local')
     if os.path.exists(log_dir):
-        logger.info('write result data')
+        logger.info("write result data")
         db.test(log_dir)
     else:
-        logger.warn('not a valid log directory')
+        logger.warn("not a valid log directory")
     if not db.rsp_driver_down:
-        logger.info('Going back to swlevel %d' %(start_level))
+        logger.info("Going back to swlevel %d" %(start_level))
         swlevel(start_level)
-        
-    logger.info('Test ready.')
+    logger.info("Test ready.")
     writeMessage('!!!     The test is ready and the station can be used again!               !!!')
 
     # delete files from data directory

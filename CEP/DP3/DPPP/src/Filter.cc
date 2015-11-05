@@ -148,7 +148,6 @@ namespace LOFAR {
     {
       itsTimer.start();
       if (!itsDoSelect) {
-        itsBuf.referenceFilled (buf);
         itsTimer.stop();
         getNextStep()->process (buf);
         return true;
@@ -249,7 +248,6 @@ namespace LOFAR {
 
     void Filter::addToMS (const string& msName)
     {
-      getPrevStep()->addToMS(msName);
       if (! itsRemoveAnt) {
         return;
       }

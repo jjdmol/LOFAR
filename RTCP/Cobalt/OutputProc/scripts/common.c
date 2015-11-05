@@ -1,9 +1,8 @@
 /* Copyright 2008, John W. Romein, Stichting ASTRON
- * Copyright 2015, Alexander S. van Amesfoort, ASTRON
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 3 of the License, or
+ *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
  *
  *  This program is distributed in the hope that it will be useful,
@@ -14,8 +13,6 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- *  $Id$
  */
 
 
@@ -177,13 +174,8 @@ int create_file(const char *arg, int is_output)
 {
   int fd;
 
-  if (!strcmp(arg, "-")) {
-    return is_output ? STDOUT_FILENO : STDIN_FILENO;
-  }
-
   if ((fd = open(arg, is_output ? O_CREAT | O_WRONLY : O_RDONLY, 0666)) < 0) {
-    fprintf(stderr, "Error: open(\"%s\", ...): ", arg);
-    perror("");
+    perror("opening input file");
     exit(1);
   }
 
@@ -228,7 +220,7 @@ void read_mac(const char *arg, char mac[6])
 }
 
 
-int create_raw_eth_socket(const char *desc)
+int create_raw_eth_socket(const char *desc, int is_output)
 {
   char *copy = strdup(desc), *arg = copy;
   int sk;
@@ -384,10 +376,8 @@ int create_fd(const char *arg, int is_output, enum proto *proto, char *name, siz
     *proto = File;
   }
 
-  if (name != 0) {
+  if (name != 0)
     strncpy(name, arg, max_name_size);
-    name[max_name_size-1] = '\0'; // defensive: strncpy() omits if arg too long
-  }
 
   switch (*proto) {
     case UDP	:
@@ -395,7 +385,7 @@ int create_fd(const char *arg, int is_output, enum proto *proto, char *name, siz
 
     case File	: return create_file(arg, is_output);
 
-    case Eth	: return create_raw_eth_socket(arg);
+    case Eth	: return create_raw_eth_socket(arg, is_output);
 
     case StdIn	:
     case StdOut:
