@@ -26,7 +26,6 @@
 #include <Common/Timer.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
-#include <Stream/StreamFactory.h>
 #include <CoInterface/Stream.h>
 
 
@@ -58,9 +57,9 @@ namespace LOFAR
 
           LOG_DEBUG_STR(itsLogPrefix << "Read block with seqno = " << data->sequenceNumber());
         }
-      } catch (TimeOutException &) {
+      } catch (SocketStream::TimeOutException &) {
         LOG_WARN_STR(itsLogPrefix << "Connection from " << itsInputDescriptor << " timed out");
-      } catch (EndOfStreamException &) {
+      } catch (Stream::EndOfStreamException &) {
         LOG_INFO_STR(itsLogPrefix << "Connection from " << itsInputDescriptor << " closed");
       } catch (SystemCallException &ex) {
         LOG_WARN_STR(itsLogPrefix << "Connection from " << itsInputDescriptor << " failed: " << ex.text());

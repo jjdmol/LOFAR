@@ -29,7 +29,6 @@ void updateActiveObservations(string dp1, dyn_string obs,
                               string dp2, bool invalid)
 {
 
-  LOG_TRACE(\"ObservationFlow_cobaltInputStreams.pnl:updateActiveObservations| entered\");
   // remove pipelines from the list
   for (int i=dynlen(obs);i > 0;  i--) if (!navFunct_isObservation(obs[i])) dynRemove(obs,i);
   
@@ -83,7 +82,6 @@ void updateActiveObservations(string dp1, dyn_string obs,
 }
 
 void monitorRunStates(dyn_string dpList,dyn_string runStates) {
-  LOG_TRACE(\"ObservationFlow_cobaltInputStreams.pnl:monitorrunstates| entered\");
   for (int i=1; i<= dynlen(runStates); i++) {
     if (runStates[i] == \"Running\" || runStates[i] == \"Quiting\") {
       reload();
@@ -95,6 +93,115 @@ void monitorRunStates(dyn_string dpList,dyn_string runStates) {
 
 
 
+// connect to stationInputStreams from the active observations
+void connectStationInputStreams(string runState) {
+  stationInputs = \"\";
+  string obsDP=\"\";
+  dyn_string stream0DPList;
+  dyn_string stream1DPList;
+  dyn_string stream2DPList;
+  dyn_string stream3DPList;
+
+  // change all found DP's to contain all the elements that contain the stream.percBad
+  if (connected0) {
+    dpDisconnect(\"streamCB0\",connectTo0);
+    dynClear(connectTo0);
+    connected0 = false;
+  }
+  if (connected1) {
+    dpDisconnect(\"streamCB1\",connectTo1);
+    dynClear(connectTo1);
+    connected1 = false;
+  }
+  if (connected2) {
+    dpDisconnect(\"streamCB2\",connectTo2);
+    dynClear(connectTo2);
+    connected2 = false;
+  }
+  if (connected3) {
+    dpDisconnect(\"streamCB3\",connectTo3);
+    dynClear(connectTo3);
+    connected3 = false;
+  }
+
+  if (dynlen(observationsList) == 1 && runState == \"Quiting\") {
+    setValue(\"streamObject0\", \"foreCol\", \"Lofar_off\");
+    setValue(\"streamObject1\", \"foreCol\", \"Lofar_off\");
+    setValue(\"streamObject2\", \"foreCol\", \"Lofar_off\");
+    setValue(\"streamObject3\", \"foreCol\", \"Lofar_off\");
+    return;
+  }
+
+
+  //collect all active observations and their stationInputStreams
+  if (dynlen(observationsList) > 0) {
+    // prepare connectList
+    for(int i=1; i <= dynlen(observationsList); i++) {
+      dynClear(stream0DPList);
+      dynClear(stream1DPList);
+      dynClear(stream2DPList);
+      dynClear(stream3DPList);
+      // For all observations collect the PermSW streamInfo
+      stationInputs = navFunct_getStationInputForObservation(observationsList[i]);
+  
+
+      for (int i=1; i<= dynlen(stationInputs); i++) {
+        if (! dynContains(connectTo0,stationInputs[i]+\".stream0:_online.._value\")) dynAppend(connectTo0,stationInputs[i]+\".stream0.rejected:_online.._value\");
+        if (! dynContains(connectTo1,stationInputs[i]+\".stream1:_online.._value\")) dynAppend(connectTo1,stationInputs[i]+\".stream1.rejected:_online.._value\");
+        if (! dynContains(connectTo2,stationInputs[i]+\".stream2:_online.._value\")) dynAppend(connectTo2,stationInputs[i]+\".stream2.rejected:_online.._value\");
+        if (! dynContains(connectTo3,stationInputs[i]+\".stream3:_online.._value\")) dynAppend(connectTo3,stationInputs[i]+\".stream3.rejected:_online.._value\");
+      }
+      if (dynlen(stationInputs) > 0) baseDP = stationInputs[1];
+    }
+      
+  
+    // check if the required datapoint for this view are enabled and accessible
+    if (dynlen(connectTo0)>0 && navFunct_dpReachable(CEPDBName)  ){
+      if (dpConnect(\"streamCB0\", connectTo0) == -1) {
+        setValue(\"streamObject0\", \"foreCol\", \"Lofar_dpdoesnotexist\");
+      } else {
+        connected0 = true;
+      }
+    } else {
+      
+      setValue(\"streamObject0\", \"foreCol\", \"Lofar_off\");
+    }
+    if (dynlen(connectTo1)>0 && navFunct_dpReachable(CEPDBName) ){
+      if (dpConnect(\"streamCB1\", connectTo1) == -1) {
+        setValue(\"streamObject1\", \"foreCol\", \"Lofar_dpdoesnotexist\");
+      } else {
+        connected1 = true;
+      }
+    } else {
+      setValue(\"streamObject1\", \"foreCol\", \"Lofar_off\");
+    }
+    if (dynlen(connectTo2)>0 &&  navFunct_dpReachable(CEPDBName) ){
+      if (dpConnect(\"streamCB2\", connectTo2) == -1) {
+        setValue(\"streamObject2\", \"foreCol\", \"Lofar_dpdoesnotexist\");
+      } else {
+        connected2 = true;
+      }
+    } else {
+      setValue(\"streamObject2\", \"foreCol\", \"Lofar_off\");
+    }
+    if (dynlen(connectTo3)>0 && navFunct_dpReachable(CEPDBName)){
+      if (dpConnect(\"streamCB3\", connectTo3) == -1) {
+        setValue(\"streamObject3\", \"foreCol\", \"Lofar_dpdoesnotexist\");
+      } else {
+        connected3 = true;
+      }
+    } else {
+      setValue(\"streamObject3\", \"foreCol\", \"Lofar_off\");
+    }
+  } else {
+      setValue(\"streamObject0\", \"foreCol\", \"Lofar_off\");    
+      setValue(\"streamObject1\", \"foreCol\", \"Lofar_off\");    
+      setValue(\"streamObject2\", \"foreCol\", \"Lofar_off\");    
+      setValue(\"streamObject3\", \"foreCol\", \"Lofar_off\");    
+  }
+}
+
+
 void prepareProcesses() {
   dyn_string result;
   string connectTo=\"LOFAR_PermSW\";
@@ -104,7 +211,6 @@ void prepareProcesses() {
     dyn_string splitted = strsplit(inputBuffers[i],\"_\");
     dynAppend(result,\"LOFAR_PermSW,\"+splitted[3]+\",\"+connectTo+\"_\"+splitted[3]);
     dynAppend(result,connectTo+\"_\"+splitted[3]+\",CobaltStationInput,\"+connectTo+\"_\"+splitted[3]+\"_CobaltStationInput\");
-    dynAppend(g_processesList,inputBuffers[i]);
   }  
   
   // write result to the db so various panels can reset themselves  
@@ -180,13 +286,13 @@ string activeObsDP = \"\";
 string database;
 bool selectedObservations=false;
 
+dyn_string inputBuffers;
 bool connected = false;
 dyn_string IBRefNames;
 string strModuleName;
 
 
 void clearIBRefNames() {
-  LOG_TRACE(\"ObservationInputBuffers.pnl:clearIBRefNames| entered with nr entries: \"+dynlen(IBRefNames));
   // remove all symbols because new ones will be added
   for (int i=1; i <= dynlen(IBRefNames); i++) {
     removeSymbol(strModuleName,\"\",IBRefNames[i]);
@@ -195,7 +301,6 @@ void clearIBRefNames() {
 }
 
 void redraw() {
-  LOG_TRACE(\"ObservationInputBuffers.pnl:redraw|entered with nr inputBuffers: \"+ dynlen(inputBuffers));
   string barColor = \"_3DFace\";
   if (dynlen(IBRefNames) > 0) {
     clearIBRefNames();

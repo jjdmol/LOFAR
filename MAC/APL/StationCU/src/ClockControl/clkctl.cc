@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -31,7 +31,6 @@
 #include "clkctl.h"
 
 namespace LOFAR {
-	using namespace Clock_Protocol;
 	using namespace LOFAR::GCF::TM;
 
 ClkCtl::ClkCtl(const string& name) :

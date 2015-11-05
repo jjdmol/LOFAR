@@ -21,71 +21,85 @@ from qpid.messaging import *
 
 # Candidate for a config file
 broker="localhost" 
-address="laps.defualtqueue"
 options="create:always, node: { type: queue, durable: True}"
 
-class Bus():
-    def __init__(self, address=address, broker=broker, options=options):
+class ToBus():
+    def __init__(self, address, options=options, broker=broker):
         self.connection = Connection(broker)
         self.connection.reconnect = True
 
         try:
             self.connection.open()
             self.session = self.connection.session() 
-            self.receiver = self.session.receiver("%s;{%s}" %(address,options))
-	    self.receiver.capacity = 32
             self.sender = self.session.sender(address)
 
         except MessagingError,m:
             print " OMG!!"
             print m
 
-    def send(self,parsetdata,subject="defaultfilename.out"):
-        msg = Message(parsetdata)
-        msg.subject=subject
+    def sendstr(self,Str,subject=None,reply_to=None):
+        msg = Message(Str)
         msg.durable=True
+        if (subject)
+           msg.subject=subject
+        if (reply_to):
+           msg.reply_to=reply_to
         self.sender.send(msg)
 
-    def get(self):
-        msg= self.receiver.fetch()
-        return msg.content, msg.subject
+    def sendmsg(self,msg):
+        self.sender.send(msg)
 
-    def ack(self):
-          self.session.acknowledge()
+class FromBus():
+    def default_handler(self,msg):
+        print msg
+        self.session.acknowledge(msg)
 
-class MultiReceiveBus():
-    def __init__(self, handler, address=address, broker=broker, options=options):
+    def __init__(self, address, options=options, broker=broker, handler=self.default_handler):
         self.connection = Connection(broker)
         self.connection.reconnect = True
-        self.handlers={}
+
         try:
             self.connection.open()
             self.session = self.connection.session()
             receiver = self.session.receiver("%s;{%s}" %(address,options))
-            receiver.capacity = 32
-            self.handlers[receiver] = handler
+            receiver.capacity = 1 #32
+            self.handlers={}
+            self.handlers[receiver]=handler;
 
         except MessagingError,m:
             print " OMG!!"
             print m
 
-    def add(self,handler,address,options=options):
+    def add(self,address,options=options,handler=None):
         try:
             receiver=self.session.receiver("%s;{%s}" %(address,options))
-            receiver.capacity = 32
-            self.handlers[receiver]=handler
+            receiver.capacity = 1 #32
         except MessagingError,m:
             print "Error adding receiver"
             print m
 
-    def HandleMessages(self):
-        while True:
-                print "waiting for messages"
-                receiver = self.session.next_receiver()
-                print "got incoming message"
-                handler = self.handlers[receiver]
-                msg = receiver.fetch()
-                handler(self,msg.content,msg.subject)
+    def getmsg(self,timeout=None):
+        msg=None
+        try:
+                receiver = self.session.next_receiver(timeout)
+                if receiver != None: msg = self.receiver.get()
+        except exceptions.Empty, e:
+                return "None" , "None"
+        return msg
 
-    def ack(self):
-          self.session.acknowledge()
+    def handleOne(self,timeout=None):
+        msg=None
+        try:
+                receiver = self.session.next_receiver(timeout)
+                if receiver != None:
+                    msg = self.receiver.get()
+                    handler=handlers[receiver]
+                    if (handler):
+                        handler(self,msg)
+                    else
+                        self.default_handler(msg)
+        except exceptions.Empty, e:
+                print " Error during handleOne() "
+
+    def ack(self,msg):
+          self.session.acknowledge(msg)

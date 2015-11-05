@@ -12,6 +12,6 @@ fi
 for i in $QUEUES
 do
  echo deleting queue $i
- delqueue $i
+ delqueue.sh $i
 done
 

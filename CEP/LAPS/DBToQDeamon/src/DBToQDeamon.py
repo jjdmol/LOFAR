@@ -65,7 +65,7 @@ if __name__ == '__main__':
     otdb = pg.connect(user="postgres", host=dbHost, dbname=dbName)
 
     # connect to messaging system
-    msgbus = LAPS.MsgBus.Bus("LAPS.retrieved.parsets")
+    msgbus = LAPS.MsgBus.ToBus("LAPS.retrieved.parsets")
 
     # Check if a component LOFAR of this version exists
     treeList = otdb.query("select treeID from getTreeGroup(5,60)").dictresult()

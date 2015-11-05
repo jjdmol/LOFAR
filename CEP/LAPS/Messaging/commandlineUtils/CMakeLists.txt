@@ -1,6 +1,4 @@
-# $Id$
-
-lofar_add_bin_scripts(
+install(PROGRAMS
   qls.sh
   listqueues.sh
   fed.sh
@@ -8,4 +6,6 @@ lofar_add_bin_scripts(
   delqueue.sh
   cleanupq.sh
   addtopic.sh
-  addqueue.sh)
+  addqueue.sh
+  purgequeue.py
+  DESTINATION bin)

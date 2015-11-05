@@ -28,7 +28,7 @@
 
 #include <cstdlib>
 #include <cstring>
-#include <iosfwd>
+#include <iostream>
 
 #include <Common/LofarLogger.h>
 

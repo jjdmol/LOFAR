@@ -25,7 +25,7 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
     2. Load mapfiles
     3. call node side of the recipe
     4. validate performance
-    5. Create the parset and return it.
+    5. Create the parset-file and write it to disk.  
     
     **Command line arguments**
 
@@ -36,14 +36,19 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
             '--product-type',
             help="Data product type",
         ),
+        'parset_file': ingredient.StringField(
+            '--parset-file',
+            help="Path to the output parset file"
+        ),
         'parset_prefix': ingredient.StringField(
             '--parset-prefix',
             help="Prefix for each key in the output parset file",
             default=''
         ),
-        'metadata_file': ingredient.StringField(
-            '--metadata-file',
-            help="filename of parset to put obtained metadata in"
+        'toplevel_meta_data_path': ingredient.StringField(
+            '--toplevel-meta-data',
+            help="Path to parset with toplevel meta information, default = ''",
+            default=''
         )
     }
 
@@ -66,7 +71,7 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
             global_prefix += '.'
 
         if not product_type in self.valid_product_types:
-            self.logger.warn(
+            self.logger.error(
                 "Unknown product type: %s\n\tValid product types are: %s" %
                 (product_type, ', '.join(self.valid_product_types))
         )
@@ -112,11 +117,16 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
         data.save(args[0])
 
         # ********************************************************************
-        # 5. Create the parset-file and return it to the caller
+        # 5. Create the parset-file and write it to disk.        
         parset = parameterset()
-        prefix = "Output_%s_" % product_type  #Underscore is needed because
-                             # Mom / LTA cannot differentiate input and output
+        prefix = "Output_%s_" % product_type
         parset.replace('%snrOf%s' % (global_prefix, prefix), str(len(jobs)))
+
+        # If there is meta data to add from the toplevel script
+        pipeline_meta_parset_path = self.inputs['toplevel_meta_data_path']
+        if pipeline_meta_parset_path != "":
+            pipeline_meta_parset = parameterset(pipeline_meta_parset_path)
+            parset.adoptCollection(pipeline_meta_parset)
 
         prefix = global_prefix + prefix
         for idx, job in enumerate(jobs):
@@ -125,16 +135,21 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
             # the Master/node communication adds a monitor_stats entry,
             # this must be remove manually here 
             meta_data_parset = metadata.to_parset(job.results)
-            try:
-                meta_data_parset.remove("monitor_stats")
-            except:
-                pass
+            meta_data_parset.remove("monitor_stats")
 
             parset.adoptCollection(meta_data_parset,
                                    '%s[%d].' % (prefix, idx))
 
-        # Return result to caller
-        parset.writeFile(self.inputs["metadata_file"])
+        try:
+
+            create_directory(os.path.dirname(self.inputs['parset_file']))
+            parset.writeFile(self.inputs['parset_file'])
+            self.logger.info("Wrote meta data to: " + 
+                             self.inputs['parset_file'])
+        except RuntimeError, err:
+            self.logger.error("Failed to write meta-data: %s" % str(err))
+            return 1
+
         return 0
 
 

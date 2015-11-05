@@ -2,7 +2,7 @@
 //#
 //# Copyright (C) 2002-2003
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //# This program is free software; you can redistribute it and/or modify
 //# it under the terms of the GNU General Public License as published by
@@ -55,24 +55,22 @@ namespace LOFAR {
 		namespace PVSS {
 
 static const char*	SALErrors[]  = {
-	"No error",						// SA_NO_ERROR
-    "",								// SA_SCHEDULED
-	"Propertyname is missing",		// SA_PROPNAME_MISSING
-	"Datapointtype unknown",		// SA_DPTYPE_UNKNOWN
-	"MAC variabletype unknown",		// SA_MACTYPE_UNKNOWN
-	"Creation of DP failed",		// SA_CREATEPROP_FAILED
-	"Deletion of DP failed",		// SA_DELETEPROP_FAILED
-	"Subscribtion on DP failed",	// SA_SUBSCRIBEPROP_FAILED
-	"Unsubscribtion of DP failed",	// SA_UNSUBSCRIBEPROP_FAILED
-	"Set DP value failed",			// SA_SETPROP_FAILED
-	"Get DP value failed",			// SA_GETPROP_FAILED
-	"Subscribe on query failed",	// SA_QUERY_SUBSC_FAILED
-	"Unsubscribe of query failed",	// SA_QUERY_UNSUBSC_FAILED
-	"PVSS datbase not running",		// SA_SCADA_NOT_AVAILABLE
-	"DP does not exist",			// SA_PROP_DOES_NOT_EXIST
-	"DP already exists",			// SA_PROP_ALREADY_EXIST
-	"MAC variabletype mismatch",	// SA_MACTYPE_MISMATCH
-	"No such detapoint element"		// SA_ELEMENTS_MISSING
+	"No error",						//  SA_NO_ERROR
+	"Propertyname is missing",		//  SA_PROPNAME_MISSING
+	"Datapointtype unknown",		//  SA_DPTYPE_UNKNOWN
+	"MAC variabletype unknown",		//  SA_MACTYPE_UNKNOWN
+	"Creation of DP failed",		//  SA_CREATEPROP_FAILED
+	"Deletion of DP failed",		//  SA_DELETEPROP_FAILED
+	"Subscribtion on DP failed",	//  SA_SUBSCRIBEPROP_FAILED
+	"Unsubscribtion of DP failed",	//  SA_UNSUBSCRIBEPROP_FAILED
+	"Set DP value failed",			//  SA_SETPROP_FAILED
+	"Get DP value failed",			//  SA_GETPROP_FAILED
+	"Subscribe on query failed",	//  SA_QUERY_SUBSC_FAILED
+	"Unsubscribe of query failed",	//  SA_QUERY_UNSUBSC_FAILED
+	"PVSS datbase not running",		//  SA_SCADA_NOT_AVAILABLE
+	"DP does not exist",			//  SA_PROP_DOES_NOT_EXIST
+	"DP already exists",			//  SA_PROP_ALREADY_EXIST
+	"MAC variabletype mismatch"		//  SA_MACTYPE_MISMATCH
 };
 
 //
@@ -80,7 +78,7 @@ static const char*	SALErrors[]  = {
 //
 string PVSSerrstr(PVSSresult	resultNr)
 {
-	if ((resultNr < SA_NO_ERROR) || (resultNr > SA_ELEMENTS_MISSING)) {
+	if ((resultNr < SA_NO_ERROR) || (resultNr > SA_MACTYPE_MISMATCH)) {
 		return ("???");
 	}
 
@@ -497,6 +495,36 @@ void PVSSservice::_processQueryResult(Variable*		firstVar,
 		DPtimes.push_back (timePtr);
 		valuePtr = 0;
 		timePtr = 0;
+
+#if 0
+		// ---------- REO: Not the faintest ideas where we need to next code for ----------
+		TimeVar	ts = *(TimeVar*) pTempVar;
+		LOG_TRACE_VAR_STR("TimeStamp = " << pTempVar->formatValue(""));
+
+		PVSSinfo::_lastTimestamp.tv_sec = ts.getSeconds();
+		PVSSinfo::_lastTimestamp.tv_usec = ts.getMilli() * 1000;
+
+		// extract the originator mananger ID of the changed DP (column 4)
+		if ((pTempVar = extractArrayValue(*secondVar, row, 4)) == 0)  {
+			LOG_ERROR_STR("Extracting Manager from row " << row << " failed");
+			return;
+		}
+		if (pTempVar->isA() != UINTEGER_VAR)  {
+			LOG_ERROR_STR("Column 4 on row " << row << 
+						  " is not an IntegerVar type but has VarType " << 
+						  Variable::getTypeName(pTempVar->isA()));
+			return;
+		}
+		UIntegerVar* pManIdInt = (UIntegerVar*) pTempVar;
+		LOG_TRACE_VAR_STR("ManagerID = " << pTempVar->formatValue(""));
+
+		ManagerIdentifier manId;
+		manId.convFromInt(pManIdInt->getValue());
+		PVSSinfo::_lastManNum  = manId.getManNum();
+		PVSSinfo::_lastManType = manId.getManType();
+		PVSSinfo::_lastSysNr   = manId.getSystem();
+		// ---------- REO: end of obscure code ----------
+#endif
 	} // for row
 
 	if (!passSeperate) {
