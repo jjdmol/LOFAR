@@ -93,7 +93,8 @@ void BypassWrite::sendrequest_status()
 
 GCFEvent::TResult BypassWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-    uint16	globalBP = (0 == getCurrentIndex() ? getBoardId() * NR_BLPS_PER_RSPBOARD : getBoardId() * NR_BLPS_PER_RSPBOARD + (getCurrentIndex() - 1));
+    //uint16	globalBP = (0 == getCurrentIndex() ? getBoardId() * NR_BLPS_PER_RSPBOARD : getBoardId() * NR_BLPS_PER_RSPBOARD + (getCurrentIndex() - 1));
+    uint16	globalBP = getBoardId() * NR_BLPS_PER_RSPBOARD + getCurrentIndex();
 	
     if (event.signal != EPA_WRITEACK) {
 		LOG_WARN("BypassWrite::handleack: unexpected ack");
