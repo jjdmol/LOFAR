@@ -101,10 +101,11 @@ public:
     };
 
     BeamConfig();
-    BeamConfig(Mode mode, bool useChannelFreq);
+    BeamConfig(Mode mode, bool useChannelFreq, bool normalize);
 
     Mode mode() const;
     bool useChannelFreq() const;
+    bool normalize() const;
 
     static bool isDefined(Mode in);
     static Mode asMode(const string &in);
@@ -113,6 +114,7 @@ public:
 private:
     Mode            itsMode;
     bool            itsUseChannelFreq;
+    bool            itsNormalize;
 };
 
 // Configuration options specific to the ionospheric model.

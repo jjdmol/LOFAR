@@ -133,13 +133,15 @@ const string &BeamConfig::asString(Mode in)
 
 BeamConfig::BeamConfig()
     :   itsMode(DEFAULT),
-        itsUseChannelFreq(false)
+        itsUseChannelFreq(false),
+        itsNormalize(false)
 {
 }
 
-BeamConfig::BeamConfig(Mode mode, bool useChannelFreq)
+BeamConfig::BeamConfig(Mode mode, bool useChannelFreq, bool normalize)
     :   itsMode(mode),
-        itsUseChannelFreq(useChannelFreq)
+        itsUseChannelFreq(useChannelFreq),
+        itsNormalize(normalize)
 {
 }
 
@@ -151,6 +153,11 @@ BeamConfig::Mode BeamConfig::mode() const
 bool BeamConfig::useChannelFreq() const
 {
     return itsUseChannelFreq;
+}
+
+bool BeamConfig::normalize() const
+{
+    return itsNormalize;
 }
 
 // -------------------------------------------------------------------------- //
@@ -523,7 +530,8 @@ ostream &operator<<(ostream &out, const BeamConfig &obj)
 {
     out << indent << "Mode: " << BeamConfig::asString(obj.mode())
         << endl << indent << "Use channel frequency: " << boolalpha
-        << obj.useChannelFreq() << noboolalpha;
+        << obj.useChannelFreq() << noboolalpha << endl << indent 
+        << "Normalize beam (option does not work yet!): " << boolalpha << obj.normalize() << noboolalpha;
     return out;
 }
 

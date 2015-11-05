@@ -297,6 +297,11 @@ makeBeamExpr(const Station::ConstPtr &station,
         beam->useReferenceFreq(refFreq);
     }
 
+    if(config.normalize())
+    {
+        beam->normalize();
+    }
+
     return beam;
 }
 

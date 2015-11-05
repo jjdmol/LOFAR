@@ -4,7 +4,9 @@ lofar_package(StationResponse 0.1 DEPENDS Common ElementResponse)
 
 include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED)
-lofar_find_package(Casacore REQUIRED COMPONENTS casa measures ms tables images coordinates)
+lofar_find_package(WCSLIB REQUIRED)
+lofar_find_package(CFITSIO REQUIRED)
+lofar_find_package(Casacore REQUIRED COMPONENTS casa lattices measures ms tables coordinates images)
 
 # Uncomment to check for unsafe conversions (gcc), for example conversion of
 # size_t to unsigned int (truncation).
@@ -12,3 +14,6 @@ lofar_find_package(Casacore REQUIRED COMPONENTS casa measures ms tables images c
 
 add_subdirectory(include/StationResponse)
 add_subdirectory(src)
+
+install(DIRECTORY beamnorms/ DESTINATION share/beamnorms
+        FILES_MATCHING PATTERN "*.fits")

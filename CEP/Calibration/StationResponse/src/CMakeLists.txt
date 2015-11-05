@@ -15,6 +15,9 @@ lofar_add_library(stationresponse
   MathUtil.cc
   Station.cc
   TileAntenna.cc
-  Types.cc)
+  Types.cc
+  )
 
 lofar_add_bin_program(makeresponseimage makeresponseimage.cc)
+lofar_add_bin_program(testFITS testFITS.cc)
+lofar_add_bin_program(testConvert testConvert.cc)

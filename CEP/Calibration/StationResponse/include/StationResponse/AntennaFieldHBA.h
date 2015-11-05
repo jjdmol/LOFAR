@@ -28,6 +28,10 @@
 
 #include <StationResponse/AntennaField.h>
 #include <StationResponse/AntennaModelHBA.h>
+#include <casa/Arrays/Array.h>
+#include <casacore/casa/Utilities/CountedPtr.h>
+
+#include <wcslib/wcslib.h>
 
 namespace LOFAR
 {
@@ -61,9 +65,23 @@ public:
     virtual matrix22c_t elementResponse(real_t time, real_t freq,
         const vector3r_t &direction) const;
 
+    static std::pair<double,double> getAzEl(const vector3r_t &position,
+                                            const vector3r_t &direction);
+
+    real_t getNormalization(real_t freq, const vector3r_t &direction) const;
 private:
+    static std::map<string,double> readRotationMap();
+    static casa::CountedPtr<wcsprm> readWCS(const string &filename);
+    static casa::Array<casa::Float> readFITS(const string &filename);
+
     AntennaModelHBA::ConstPtr   itsAntennaModel;
+    double                      itsRotation;
+    static std::map<string,double>    theirRotationMap;
+    static casa::CountedPtr<wcsprm>   theirWCS_p;;
+    static casa::Array<casa::Float>   theirIntegrals;
 };
+
+
 
 // @}
 
