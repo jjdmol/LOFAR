@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -40,10 +40,10 @@ template <typename T> class Queue
     Queue() {}
 
     // Add an element to the back of the queue
-    void     append(const T&);
+    void     append(T);
 
     // Put an element back to the front of the queue
-    void     prepend(const T&);
+    void     prepend(T);
 
     // Remove the front element; waits for an element to be appended
     T	     remove();
@@ -65,7 +65,7 @@ template <typename T> class Queue
 };
 
 
-template <typename T> inline void Queue<T>::append(const T& element)
+template <typename T> inline void Queue<T>::append(T element)
 {
   ScopedLock scopedLock(itsMutex);
 
@@ -74,7 +74,7 @@ template <typename T> inline void Queue<T>::append(const T& element)
 }
 
 
-template <typename T> inline void Queue<T>::prepend(const T& element)
+template <typename T> inline void Queue<T>::prepend(T element)
 {
   ScopedLock scopedLock(itsMutex);
 

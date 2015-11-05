@@ -38,10 +38,13 @@ namespace LOFAR
     class StationNodeAllocation
     {
     public:
-      StationNodeAllocation( const StationID &stationID, const Parset &parset, int mpi_rank, int mpi_size );
+      StationNodeAllocation( const StationID &stationID, const Parset &parset );
 
       // Returns whether data for this station is received on this node
       bool receivedHere() const;
+
+      // Constructs and returns the input streams for this station
+      std::vector< SmartPtr<Stream> > inputStreams() const;
 
     private:
       const StationID stationID;
@@ -49,10 +52,6 @@ namespace LOFAR
 
       // Index of the station in parset.settings.stations
       const ssize_t stationIdx;
-
-      // Dimensions of MPI run, to do round-robin allocation
-      const int mpi_rank;
-      const int mpi_size;
 
       // Returns the rank of the MPI node that should receive this station
       int receiverRank() const;

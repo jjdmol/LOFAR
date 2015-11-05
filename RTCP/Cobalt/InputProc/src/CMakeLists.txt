@@ -23,6 +23,7 @@ if(MPI_FOUND)
     Transpose/MPISendStation.cc
     Transpose/MPIReceiveStations.cc
     Transpose/MPIUtil.cc
+    Transpose/MPIUtil2.cc
   )
 endif(MPI_FOUND)
 
@@ -38,7 +39,7 @@ lofar_add_bin_program(generateRSP Station/generateRSP.cc)
 lofar_add_bin_program(generate Station/generate.cc)
 lofar_add_bin_program(printDelays Delays/printDelays.cc)
 
-# install logprop files
+# install the logprop file
 install(FILES
   Delays/printDelays.log_prop
   Station/generateRSP.log_prop
@@ -48,4 +49,6 @@ configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mpirun.sh.in
   ${CMAKE_BINARY_DIR}/bin/mpirun.sh @ONLY)
 
-lofar_add_bin_scripts(${CMAKE_BINARY_DIR}/bin/mpirun.sh)
+install(PROGRAMS
+  ${CMAKE_BINARY_DIR}/bin/mpirun.sh
+  DESTINATION bin)

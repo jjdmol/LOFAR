@@ -28,7 +28,7 @@
 
 #include <cstdlib>
 #include <cstring>
-#include <iosfwd>
+#include <iostream>
 
 #include <Common/LofarLogger.h>
 
@@ -104,7 +104,7 @@ namespace LOFAR {
         NSTimer& itsTimer;
     };
 
-  protected:
+  private:
     void print_time(std::ostream &, const char *which, double time) const;
 
     union {

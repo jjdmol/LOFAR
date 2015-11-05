@@ -22,9 +22,9 @@
 
 #include "IntToFloatKernel.h"
 
+#include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_utils.h>
 #include <CoInterface/BlockID.h>
-#include <CoInterface/Config.h>
 #include <Common/lofar_complex.h>
 
 #include <boost/lexical_cast.hpp>
@@ -43,11 +43,9 @@ namespace LOFAR
     string IntToFloatKernel::theirFunction = "intToFloat";
 
     IntToFloatKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters("intToFloat"),
-      nrStations(ps.settings.antennaFields.size()),
+      Kernel::Parameters(ps),
       nrBitsPerSample(ps.settings.nrBitsPerSample),
-
-      nrSamplesPerSubband(ps.settings.blockSize)
+      nrBytesPerComplexSample(ps.nrBytesPerComplexSample())
     {
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.IntToFloatKernel.dumpOutput", false);
@@ -56,42 +54,21 @@ namespace LOFAR
             ps.settings.observationID);
     }
 
-
-    unsigned IntToFloatKernel::Parameters::nrBytesPerComplexSample() const {
-      return 2 * nrBitsPerSample / 8;
-    }
-
-
-    size_t IntToFloatKernel::Parameters::bufferSize(BufferType bufferType) const
-    {
-      switch (bufferType) {
-      case IntToFloatKernel::INPUT_DATA:
-        return
-          (size_t) nrStations * NR_POLARIZATIONS * 
-            nrSamplesPerSubband * nrBytesPerComplexSample();
-      case IntToFloatKernel::OUTPUT_DATA:
-        return
-          (size_t) nrStations * NR_POLARIZATIONS * 
-            nrSamplesPerSubband * sizeof(std::complex<float>);
-      default:
-        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
-      }
-    }
-
-
     IntToFloatKernel::IntToFloatKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      CompiledKernel(stream, gpu::Function(module, theirFunction), buffers, params)
+      Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
 
-      setEnqueueWorkSizes( gpu::Grid(maxThreadsPerBlock, params.nrStations),
-                           gpu::Block(maxThreadsPerBlock, 1) );
+      unsigned maxNrThreads;
+      maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
+      setEnqueueWorkSizes( gpu::Grid(maxNrThreads, params.nrStations),
+                           gpu::Block(maxNrThreads, 1) );
 
-      unsigned nrSamples = params.nrStations * params.nrSamplesPerSubband * NR_POLARIZATIONS;
+      unsigned nrSamples = params.nrStations * params.nrChannelsPerSubband * NR_POLARIZATIONS;
       nrOperations = (size_t) nrSamples * 2;
       nrBytesRead = (size_t) nrSamples * 2 * params.nrBitsPerSample / 8;
       nrBytesWritten = (size_t) nrSamples * sizeof(std::complex<float>);
@@ -99,17 +76,30 @@ namespace LOFAR
 
     //--------  Template specializations for KernelFactory  --------//
 
+    template<> size_t 
+    KernelFactory<IntToFloatKernel>::bufferSize(BufferType bufferType) const
+    {
+      switch (bufferType) {
+      case IntToFloatKernel::INPUT_DATA:
+        return
+          (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
+            itsParameters.nrSamplesPerSubband * itsParameters.nrBytesPerComplexSample;
+      case IntToFloatKernel::OUTPUT_DATA:
+        return
+          (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
+            itsParameters.nrSamplesPerSubband * sizeof(std::complex<float>);
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
+
     template<> CompileDefinitions
     KernelFactory<IntToFloatKernel>::compileDefinitions() const
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
-
-      defs["NR_STATIONS"] = lexical_cast<string>(itsParameters.nrStations);
       defs["NR_BITS_PER_SAMPLE"] =
         lexical_cast<string>(itsParameters.nrBitsPerSample);
-      defs["NR_SAMPLES_PER_SUBBAND"] = 
-        lexical_cast<string>(itsParameters.nrSamplesPerSubband);
       return defs;
     }
 

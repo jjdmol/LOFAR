@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarConstants.h>
-#include <Common/LofarLocators.h>
 #include <Common/lofar_bitset.h>
 #include <Common/LofarBitModeInfo.h>
 
@@ -34,93 +33,12 @@
 #include <APL/RTCCommon/PSAccess.h>
 
 #include <blitz/array.h>
-#include <fstream>
 
 using namespace blitz;
 using namespace LOFAR;
 using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
-
-#define MAX_RCU_MODE 7
-
-// default settings
-// sdo_ss=295:330,331:366,367:402,403:438
-blitz::Array<uint16, 2> str2blitz(const char* str, int max)
-{
-    string inputstring(str);
-    char* start  = (char*)inputstring.c_str();
-    char* end  = 0;
-    bool  range  = false;
-    long  prevval = 0;
-
-    blitz::Array<uint16, 2> ss(4,36); // ss = subband select
-    int bank_nr = 0;
-    int sb_nr = 0;
-    long i;
-
-    ss = 0;
-    while (start) {
-        long val = strtol(start, &end, 10); // read decimal numbers
-        start = (end ? (*end ? end + 1 : 0) : 0); // advance
-        if (val >= max || val < 0) {
-            LOG_WARN(formatString("Error: value %ld out of range",val));
-            ss = 0;
-            return ss;
-        }
-        LOG_INFO_STR("val=" << val << "  prevval=" << prevval);
-        if (end) {
-            switch (*end) {
-                case ',':
-                case 0: {
-                    if (range) {
-                        if (0 == prevval && 0 == val) {
-                            val = max - 1;
-                        }
-                        if (val < prevval) {
-                            LOG_WARN("Error: invalid range specification");
-                            ss = 0;
-                            return ss;
-                        }
-
-                        for (i = prevval; i <= val; i++) {
-                            //LOG_INFO(formatString("add value %ld to ss(%d,%d)", i, bank_nr, sb_nr));
-                            ss(bank_nr, sb_nr) = (uint16)i;
-                            sb_nr++;
-                            if (sb_nr >= 36) {
-                                bank_nr++;
-                                sb_nr = 0;
-                            }
-                        }
-                    }
-                    else {
-                        ss(bank_nr, sb_nr) = (uint16)val;
-                        sb_nr++;
-                        if (sb_nr >= 36) {
-                            bank_nr++;
-                            sb_nr = 0;
-                        }
-                    }
-                    range=false;
-                } break;
-
-                case ':': {
-                    range=true;
-                } break;
-
-                default: {
-                    LOG_WARN(formatString("Error: invalid character %c",*end));
-                    ss = 0;
-                    return ss;
-                } break;
-            } // switch
-        } // if (end)
-        prevval = val;
-    } // while
-
-    return (ss);
-}
-
 
 /**
  * Instance pointer for the Cache singleton class.
@@ -133,6 +51,8 @@ Cache* Cache::m_instance = 0;
 
 CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
 {
+  reset(); // reset by allocating memory and settings default values
+
   // When the sample frequency (m_clock) is modified the RSP
   // board goes through a reset. For this reason we reset all
   // values in the cacht to default (using Cache::reset), but
@@ -140,8 +60,6 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
   // it is initialized here separately outside reset().
   m_clock = GET_CONFIG("RSPDriver.DEFAULT_SAMPLING_FREQUENCY", i);
 
-  reset(); // reset by allocating memory and settings default values
-  
   // print sizes of the cache
   LOG_DEBUG_STR("m_beamletweights().size()            =" << m_beamletweights().size()     * sizeof(complex<int16>));
   LOG_DEBUG_STR("m_subbandselection.crosslets().size()=" << m_subbandselection.crosslets().size()   * sizeof(uint16));
@@ -164,16 +82,11 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
   LOG_DEBUG_STR("m_rawDataBlock.size()                =" << ETH_DATA_LEN + sizeof (uint16));
   LOG_DEBUG_STR("m_SdsWriteBuffer.size()              =" << sizeof(itsSdsWriteBuffer));
   LOG_DEBUG_STR("m_SdsReadBuffer.size()               =" << sizeof(itsSdsReadBuffer));
-  LOG_DEBUG_STR("m_latencys.size()                    =" << itsLatencys().size()          * sizeof(EPA_Protocol::RADLatency));
-  LOG_DEBUG_STR("itsSwappedXY.size()                  =" << itsSwappedXY.size());
-  LOG_DEBUG_STR("itsBitModeInfo.size()                =" << itsBitModeInfo().size()       * sizeof(EPA_Protocol::RSRBeamMode));
-  LOG_DEBUG_STR("itsBitsPerSample.size()              =" << sizeof(itsBitsPerSample));
-  LOG_DEBUG_STR("itsSDOModeInfo.size()                =" << itsSDOModeInfo().size()       * sizeof(EPA_Protocol::RSRSDOMode));
-  LOG_DEBUG_STR("itsSDOSelection.size()               =" << itsSDOSelection.subbands().size() * sizeof(uint16));
-  LOG_DEBUG_STR("itsSDOBitsPerSample.size()           =" << sizeof(itsSDOBitsPerSample));
-  LOG_DEBUG_STR("itsPPSsyncDelays.size()              =" << sizeof(itsPPSsyncDelays));
-  LOG_DEBUG_STR("itsFixedAttenuations.size()          =" << sizeof(itsFixedAttenuations));
-  LOG_DEBUG_STR("itsAttenuationStepSize.size()        =" << sizeof(itsAttenuationStepSize));
+  LOG_DEBUG_STR("m_latencys.size()                    =" << itsLatencys().size()    * sizeof(EPA_Protocol::RADLatency));
+  LOG_DEBUG_STR("itsSwappedXY.size()           =" << itsSwappedXY.size());
+  LOG_DEBUG_STR("itsBitsModeInfo.size()        =" << itsBitModeInfo().size()           * sizeof(EPA_Protocol::RSRBeamMode));
+  LOG_DEBUG_STR("itsBitsPerSample.size()       =" << sizeof(itsBitsPerSample));
+
   LOG_INFO_STR(formatString("CacheBuffer size = %d bytes",
 	         m_beamletweights().size()    	       
 	       + m_subbandselection.crosslets().size()  
@@ -196,16 +109,7 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
 		   + ETH_DATA_LEN + sizeof(uint16)
 		   + sizeof(itsSdsWriteBuffer)
 		   + sizeof(itsSdsReadBuffer)
-		   + itsLatencys().size()
-           + itsSwappedXY.size()
-           + itsBitModeInfo().size()
-           + sizeof(itsBitsPerSample)
-           + itsSDOModeInfo().size()
-           + itsSDOSelection.subbands().size()
-           + sizeof(itsBitsPerSample)
-           + sizeof(itsPPSsyncDelays)
-           + sizeof(itsFixedAttenuations)
-           + sizeof(itsAttenuationStepSize)));
+		   + itsLatencys().size()));
 }
 
 CacheBuffer::~CacheBuffer()
@@ -231,8 +135,6 @@ CacheBuffer::~CacheBuffer()
   m_bypasssettings().free();
   itsLatencys().free();
   itsBitModeInfo().free();
-  itsSDOModeInfo().free();
-  itsSDOSelection.subbands().free();
 }
 
 void CacheBuffer::reset(void)
@@ -245,7 +147,6 @@ void CacheBuffer::reset(void)
 	m_timestamp.set(tv);
 
     itsBitsPerSample = MAX_BITS_PER_SAMPLE;
-    itsSDOBitsPerSample = MAX_BITS_PER_SAMPLE;
     
 	m_beamletweights().resize( BeamletWeights::SINGLE_TIMESTEP, 
 	                           StationSettings::instance()->nrRcus(),
@@ -374,15 +275,12 @@ void CacheBuffer::reset(void)
 	bandsel = 0;
 	m_tbbsettings() = bandsel;
 
-	// BypassSettings (BP and AP's)
-	LOG_INFO_STR("Resizing bypass array to: " << StationSettings::instance()->nrBlps());
-    m_bypasssettings().resize(StationSettings::instance()->nrBlps());
+	// BypassSettings (per BP)
+	LOG_INFO_STR("Resizing bypass array to: " << StationSettings::instance()->nrRcus() / N_POL);
+	m_bypasssettings().resize(StationSettings::instance()->nrRcus() / N_POL);
 	BypassSettings::Control	control;
 	m_bypasssettings() = control;
-    for (int blp_nr = 0; blp_nr < StationSettings::instance()->nrBlps(); blp_nr += 4) {
-        m_bypasssettings()(blp_nr).setSDO(1);
-    }
-    
+
 	// clear rawdatablock
 	itsRawDataBlock.address = 0;
 	itsRawDataBlock.offset  = 0;
@@ -418,49 +316,6 @@ void CacheBuffer::reset(void)
 	bitmodeinfo.bm_max = 0;
 	itsBitModeInfo() = bitmodeinfo;
 	
-    // SDO default Mode selection
-    int sdo_mode = 0;
-    int bits_per_sample = GET_CONFIG("RSPDriver.SDO_MODE", i);
-    if      (bits_per_sample == 8) { sdo_mode = 1; }
-    else if (bits_per_sample == 5) { sdo_mode = 2; }
-    else if (bits_per_sample == 4) { sdo_mode = 3; }
-    
-	itsSDOModeInfo().resize(StationSettings::instance()->nrRspBoards());
-	RSRSDOMode sdomodeinfo;
-	sdomodeinfo.bm_select = sdo_mode;
-	sdomodeinfo.bm_max = 3;
-	itsSDOModeInfo() = sdomodeinfo;
-    
-    // SDO default subband selection
-    itsSDOSelection.subbands().resize(StationSettings::instance()->nrRcus(),
-                                     (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE),
-                                      MEPHeader::N_SDO_SUBBANDS);
-    char select_str[64];
-    blitz::Array<uint16, 2> select(4,36);
-    strncpy(select_str, GET_CONFIG_STRING("RSPDriver.SDO_SS"), 64);
-    select = str2blitz(select_str, 512);
-    for (int rcu = 0; rcu < StationSettings::instance()->nrRcus(); rcu++) {
-        for (int bank = 0; bank < (MAX_BITS_PER_SAMPLE / MIN_BITS_PER_SAMPLE); bank++) {
-            itsSDOSelection.subbands()(rcu, bank, Range::all()) = 0;
-            for (int sb = 0; sb < 36; sb++) {
-                itsSDOSelection.subbands()(rcu, bank, sb) = (select(bank, sb) * 2) + (rcu % 2);
-            } // for each subband
-        } // for each bank
-    }
-    readPPSdelaySettings();
-    
-    itsAttenuationStepSize = 0.25;
-    try { itsAttenuationStepSize = GET_CONFIG("RSPDriver.ATT_STEP_SIZE", f); }
-	catch (APSException&) { LOG_INFO_STR("RSPDriver.ATT_STEP_SIZE not found"); }
-    char key[40];
-    itsFixedAttenuations.resize(MAX_RCU_MODE + 1);
-    itsFixedAttenuations = 0.0;
-    for (int rcumode = 1; rcumode <= MAX_RCU_MODE; rcumode++) {
-        snprintf(key,  40, "RSPDriver.FIXED_ATT_MODE_%d", rcumode);
-        itsFixedAttenuations(rcumode) = 0.0;
-        try { itsFixedAttenuations(rcumode) = GET_CONFIG(key, f); }
-        catch (APSException&) { LOG_INFO_STR(formatString("RSPDriver.FIXED_ATT_MODE_%d not found", rcumode)); }
-    } 
 }
 
 
@@ -474,54 +329,6 @@ SerdesBuffer&	CacheBuffer::getSdsReadBuffer(int	rspBoardNr)
 void CacheBuffer::setTimestamp(const RTC::Timestamp& timestamp)
 {
   m_timestamp = timestamp;
-}
-
-//
-// readPPSdelaySettings()
-//
-void CacheBuffer::readPPSdelaySettings()
-{
-	ConfigLocator	CL;
-	string	filename = (CL.locate(GET_CONFIG_STRING(formatString("RSPDriver.PPSdelayFile%u", m_clock))));
-	LOG_DEBUG_STR("Trying to load the PPS delay settings for " << m_clock << " MHz from file: " << filename);
-
-	// setup default values first
-	int	nrRspBoards = StationSettings::instance()->nrRspBoards();
-    itsPPSsyncDelays.resize(nrRspBoards * NR_BLPS_PER_RSPBOARD);
-    itsPPSsyncDelays = 0;
-
-	ifstream	ppsFile;
-	ppsFile.open(filename.c_str());
-	if (!ppsFile.good()) {
-		ppsFile.close();
-		LOG_WARN_STR("File " << filename << " could not be opened, cannot synchronise PPS pulses");
-		return;
-	}
-
-	// Skip comment lines
-	string	line;
-	getline(ppsFile, line);
-	while (line != "" && ppsFile.peek() == '#') {
-		getline(ppsFile, line);
-	}
-
-	// read values
-	blitz::Array<int, 1> delayValues;
-	ppsFile >> delayValues;
-	ppsFile.close();
-
-	// Check number if values read in
-	if (delayValues.extent(firstDim) == nrRspBoards * NR_BLPS_PER_RSPBOARD) {
-        itsPPSsyncDelays = delayValues;
-	}
-	else {
-		LOG_ERROR_STR("File " << filename << " contains " << delayValues.extent(firstDim)
-					  << " values, expected " << nrRspBoards * NR_BLPS_PER_RSPBOARD 
-					  << " values, WILL NOT USE THEM!");
-	}
-    std::ostringstream logStream;
-    logStream << itsPPSsyncDelays(Range::all());
-	LOG_INFO_STR(formatString("PPSsyncDelays=%s", logStream.str().c_str()));
 }
 
 //
@@ -548,7 +355,7 @@ Cache::Cache() : m_front(0), m_back(0)
 					StationSettings::instance()->nrRcus());
 
 	// start by writing the correct clock setting
-	Sequencer::getInstance().startSequence(Sequencer::SEQ_STARTUP);
+	Sequencer::getInstance().startSequence(Sequencer::SEQ_SETCLOCK);
 }
 
 Cache::~Cache()

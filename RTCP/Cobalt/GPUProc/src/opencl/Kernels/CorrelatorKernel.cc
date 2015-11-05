@@ -67,20 +67,20 @@ namespace LOFAR
         getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &preferredMultiple);
 
 # if defined USE_4X4
-      unsigned quartStations = (ps.settings.antennaFields.size() + 2) / 4;
+      unsigned quartStations = (ps.nrStations() + 2) / 4;
       unsigned nrBlocks = quartStations * (quartStations + 1) / 2;
 # elif defined USE_3X3
-      unsigned thirdStations = (ps.settings.antennaFields.size() + 2) / 3;
+      unsigned thirdStations = (ps.nrStations() + 2) / 3;
       unsigned nrBlocks = thirdStations * (thirdStations + 1) / 2;
 # elif defined USE_2X2
-      unsigned halfStations = (ps.settings.antennaFields.size() + 1) / 2;
+      unsigned halfStations = (ps.nrStations() + 1) / 2;
       unsigned nrBlocks = halfStations * (halfStations + 1) / 2;
 # else
       unsigned nrBlocks = ps.nrBaselines();
 # endif
-      unsigned nrPasses = ceilDiv(nrBlocks, maxNrThreads);
-      unsigned nrThreads = ceilDiv(nrBlocks, nrPasses);
-      nrThreads = align(nrThreads, preferredMultiple);
+      unsigned nrPasses = (nrBlocks + maxNrThreads - 1) / maxNrThreads;
+      unsigned nrThreads = (nrBlocks + nrPasses - 1) / nrPasses;
+      nrThreads = (nrThreads + preferredMultiple - 1) / preferredMultiple * preferredMultiple;
       //LOG_DEBUG_STR("nrBlocks = " << nrBlocks << ", nrPasses = " << nrPasses << ", preferredMultiple = " << preferredMultiple << ", nrThreads = " << nrThreads);
 
       unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
@@ -88,7 +88,7 @@ namespace LOFAR
       localWorkSize = cl::NDRange(nrThreads, 1);
 
       nrOperations = (size_t) nrUsableChannels * ps.nrBaselines() * ps.nrSamplesPerChannel() * 32;
-      nrBytesRead = (size_t) nrPasses * ps.settings.antennaFields.size() * nrUsableChannels * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>);
+      nrBytesRead = (size_t) nrPasses * ps.nrStations() * nrUsableChannels * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>);
       nrBytesWritten = (size_t) ps.nrBaselines() * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
     }
 
@@ -97,7 +97,7 @@ namespace LOFAR
       switch (bufferType) {
       case INPUT_DATA:
         return
-          ps.nrSamplesPerSubband() * ps.settings.antennaFields.size() * 
+          ps.nrSamplesPerSubband() * ps.nrStations() * 
           NR_POLARIZATIONS * sizeof(std::complex<float>);
       case OUTPUT_DATA:
         return 
@@ -121,11 +121,11 @@ namespace LOFAR
 //       setArg(0, devVisibilities);
 //       setArg(1, devCorrectedData);
 
-//       unsigned nrRectanglesPerSide = (ps.settings.antennaFields.size() - 1) / (2 * 16);
+//       unsigned nrRectanglesPerSide = (ps.nrStations() - 1) / (2 * 16);
 //       unsigned nrRectangles = nrRectanglesPerSide * (nrRectanglesPerSide + 1) / 2;
 //       //LOG_DEBUG_STR("nrRectangles = " << nrRectangles);
 
-//       unsigned nrBlocksPerSide = (ps.settings.antennaFields.size() + 2 * 16 - 1) / (2 * 16);
+//       unsigned nrBlocksPerSide = (ps.nrStations() + 2 * 16 - 1) / (2 * 16);
 //       unsigned nrBlocks = nrBlocksPerSide * (nrBlocksPerSide + 1) / 2;
 //       //LOG_DEBUG_STR("nrBlocks = " << nrBlocks);
 
@@ -151,7 +151,7 @@ namespace LOFAR
       setArg(0, devVisibilities);
       setArg(1, devCorrectedData);
 
-      unsigned nrRectanglesPerSide = (ps.settings.antennaFields.size() - 1) / (2 * 16);
+      unsigned nrRectanglesPerSide = (ps.nrStations() - 1) / (2 * 16);
       unsigned nrRectangles = nrRectanglesPerSide * (nrRectanglesPerSide + 1) / 2;
       LOG_DEBUG_STR("nrRectangles = " << nrRectangles);
 
@@ -170,7 +170,7 @@ namespace LOFAR
       switch (bufferType) {
       case INPUT_DATA:
         return
-          ps.nrSamplesPerSubband() * ps.settings.antennaFields.size() * 
+          ps.nrSamplesPerSubband() * ps.nrStations() * 
           NR_POLARIZATIONS * sizeof(std::complex<float>);
       case OUTPUT_DATA:
         return 
@@ -193,7 +193,7 @@ namespace LOFAR
       setArg(0, devVisibilities);
       setArg(1, devCorrectedData);
 
-      unsigned nrTriangles = (ps.settings.antennaFields.size() + 2 * 16 - 1) / (2 * 16);
+      unsigned nrTriangles = (ps.nrStations() + 2 * 16 - 1) / (2 * 16);
       unsigned nrMiniBlocksPerSide = 16;
       unsigned nrMiniBlocks = nrMiniBlocksPerSide * (nrMiniBlocksPerSide + 1) / 2;
       size_t preferredMultiple;
@@ -216,7 +216,7 @@ namespace LOFAR
       switch (bufferType) {
       case INPUT_DATA:
         return
-          ps.nrSamplesPerSubband() * ps.settings.antennaFields.size() * 
+          ps.nrSamplesPerSubband() * ps.nrStations() * 
           NR_POLARIZATIONS * sizeof(std::complex<float>);
       case OUTPUT_DATA:
         return 

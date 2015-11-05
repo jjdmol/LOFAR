@@ -1,5 +1,5 @@
 //# station_stream.cc: Generate station input stream information from a parset
-//# Copyright (C) 2012-2014  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: mpi_node_list.cc 25888 2013-08-01 09:05:27Z mol $
 
 #include <lofar_config.h>
 
@@ -36,17 +36,17 @@ using boost::format;
 
 void usage(char **argv)
 {
-  cout << "usage: " << argv[0] << " -S station            -h parset" << endl;
-  cout << "usage: " << argv[0] << " -S station [-B board] -s parset" << endl;
-  cout << "usage: " << argv[0] << " -S station            -c parset" << endl;
-  cout << endl;
-  cout << "-h        : print the host name    on which this antenna field is received" << endl;
-  cout << "-s        : print the stream       on which this antenna field is received" << endl;
-  cout << "-s        : print the cpu (socket) on which this antenna field is received" << endl;
-  cout << endl;
-  cout << "-S station: select antenna field (CS001LBA, etc)" << endl;
-  cout << "-B board  : select board (0, 1, 2, 3)" << endl;
-  cout << endl;
+  cerr << "usage: " << argv[0] << " -S station            -h parset" << endl;
+  cerr << "usage: " << argv[0] << " -S station [-B board] -s parset" << endl;
+  cerr << "usage: " << argv[0] << " -S station            -c parset" << endl;
+  cerr << endl;
+  cerr << "-h        : print the host name    on which this station is received" << endl;
+  cerr << "-s        : print the stream       on which this station is received" << endl;
+  cerr << "-s        : print the cpu (socket) on which this station is received" << endl;
+  cerr << endl;
+  cerr << "-S station: select station (CS001LBA, etc)" << endl;
+  cerr << "-B board  : select board (0, 1, 2, 3)" << endl;
+  cerr << endl;
 }
 
 void print_node_list(Parset &ps)
@@ -63,7 +63,9 @@ void print_node_list(Parset &ps)
 
 int main(int argc, char **argv)
 {
-  string antennaField = "";
+  INIT_LOGGER("station_stream");
+
+  string station = "";
   unsigned board = 0;
   bool print_host = false;
   bool print_stream = false;
@@ -78,7 +80,7 @@ int main(int argc, char **argv)
       break;
 
     case 'S':
-      antennaField = optarg;
+      station = optarg;
       break;
 
     case 'h':
@@ -101,48 +103,47 @@ int main(int argc, char **argv)
 
   
   if ( optind >= argc   // we expect a parset filename as an additional parameter
-    || antennaField.empty()  // we expect a antenna field to be selected
+    || station.empty()  // we expect a station to be selected
     || (print_host + print_stream + print_cpu != 1) // print either host or stream
      ) {
     usage(argv);
     exit(1);
   }
 
-  INIT_LOGGER("station_stream");
-
   // Create a parameters set object based on the inputs
   Parset ps(argv[optind]);
 
 
-  // Find the selected antenna field
-  ssize_t antennaFieldIdx = ps.settings.antennaFieldIndex(antennaField);
+  // Find the selected station
+  ssize_t stationIdx = ps.settings.stationIndex(station);
 
-  if (antennaFieldIdx < 0) {
-    LOG_WARN_STR("Station not found in parset, adding: " << antennaField);
+  if (stationIdx < 0) {
+    LOG_WARN_STR("Station not found in parset, adding: " << station);
 
-    // Add our antenna field explicitly (possibly to a station list...)
-    ps.add("Observation.VirtualInstrument.stationList", str(format("[%s]") % antennaField));
+    // Add our station explicitly
+    ps.add("Observation.VirtualInstrument.stationList", str(format("[%s]") % station));
     ps.updateSettings();
 
     // Update index
-    antennaFieldIdx = ps.settings.antennaFieldIndex(antennaField);
+    stationIdx = ps.settings.stationIndex(station);
 
-    ASSERT(antennaFieldIdx >= 0);
+    ASSERT(stationIdx >= 0);
   }
 
   if (print_stream) {
-    if (board >= ps.settings.antennaFields[antennaFieldIdx].inputStreams.size()) {
-      LOG_ERROR_STR("Input for board " << board << " not found for antenna field " << antennaField);
+    if (board >= ps.settings.stations[stationIdx].inputStreams.size()) {
+      LOG_ERROR_STR("Input for board " << board << " not found for station " << station);
       cout << "file:/dev/null" << endl;
       return 1;
     }
 
-    // Print the input stream for the given antenna field and board
-    cout << ps.settings.antennaFields[antennaFieldIdx].inputStreams[board] << endl;
+    // Print the input stream for the given station and board
+    cout << ps.settings.stations[stationIdx].inputStreams[board] << endl;
   } else if (print_host || print_cpu) {
-    // Print the hostName of the given antenna field, or localhost if unknown.
+    // Print the hostName of the given station, or localhost if
+    // unknown.
 
-    const string receiver = ps.settings.antennaFields[antennaFieldIdx].receiver;
+    const string receiver = ps.settings.stations[stationIdx].receiver;
     bool found = false;
 
     for (size_t i = 0; i < ps.settings.nodes.size(); ++i) {

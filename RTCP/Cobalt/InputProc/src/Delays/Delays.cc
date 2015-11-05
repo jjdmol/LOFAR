@@ -48,11 +48,17 @@ namespace LOFAR
       stationIdx(stationIdx),
       from(from),
       increment(increment),
-      currentTime(from)
+      currentTime(from),
+      delayTimer("delay producer", true, true)
     {
       ASSERTSTR(test(), "Delay compensation engine is broken");
 
       init();
+    }
+
+
+    void Delays::start()
+    {
     }
 
 
@@ -69,7 +75,7 @@ namespace LOFAR
             const struct ObservationSettings::BeamFormer::SAP &bfSap = parset.settings.beamFormer.SAPs[sap];
 
             // Reserve room for coherent TABs only
-            SAPs[sap].TABs.resize(bfSap.nrCoherent);
+            SAPs[sap].TABs.resize(bfSap.nrCoherentTAB());
           }
         }
     }
@@ -135,11 +141,11 @@ namespace LOFAR
       frame.set(MEpoch(toUTC(from), MEpoch::UTC));
 
       // Set the position for the frame.
-      const MVPosition phaseCenter(casa::Vector<Double>(parset.settings.antennaFields[stationIdx].phaseCenter));
+      const MVPosition phaseCenter(parset.settings.stations[stationIdx].phaseCenter);
       frame.set(MPosition(phaseCenter, MPosition::ITRF));
 
       // Cache the difference with CS002LBA
-      const MVPosition pRef(casa::Vector<Double>(parset.settings.delayCompensation.referencePhaseCenter));
+      const MVPosition pRef(parset.settings.delayCompensation.referencePhaseCenter);
       phasePositionDiff = phaseCenter - pRef;
 
       // Set-up the direction cache and conversion engines, using reference direction ITRF.
@@ -252,7 +258,7 @@ namespace LOFAR
 
     double Delays::clockCorrection() const
     {
-      double corr = parset.settings.corrections.clock ? parset.settings.antennaFields[stationIdx].clockCorrection : 0.0;
+      double corr = parset.settings.corrections.clock ? parset.settings.stations[stationIdx].clockCorrection : 0.0;
 
       return corr;
     }
@@ -284,8 +290,8 @@ namespace LOFAR
 
         // The coarse delay compensation is based on the average delay
         // between begin and end.
-        coarseDelaysSamples[sap] = static_cast<ssize_t>(round(0.5 * (delayAtBegin + delayAfterEnd) * parset.settings.subbandWidth()));
-        coarseDelaysSeconds[sap] = coarseDelaysSamples[sap] / parset.settings.subbandWidth();
+        coarseDelaysSamples[sap] = static_cast<ssize_t>(round(0.5 * (delayAtBegin + delayAfterEnd) * parset.subbandBandwidth()));
+        coarseDelaysSeconds[sap] = coarseDelaysSamples[sap] / parset.subbandBandwidth();
       }
 
       // Compute the offsets at which each subband is read
@@ -308,11 +314,7 @@ namespace LOFAR
         metaDatas[i].stationBeam.delayAtBegin  = delaysAtBegin.SAPs[sap].SAP.totalDelay() - coarseDelay;
         metaDatas[i].stationBeam.delayAfterEnd = delaysAfterEnd.SAPs[sap].SAP.totalDelay() - coarseDelay;
 
-        size_t nrTABs = delaysAtBegin.SAPs[sap].TABs.size();
-
-        metaDatas[i].TABs.resize(nrTABs);
-
-        for (size_t tab = 0; tab < nrTABs; ++tab) {
+        for (size_t tab = 0; tab < metaDatas[i].TABs.size(); ++tab) {
           metaDatas[i].TABs[tab].delayAtBegin  = delaysAtBegin.SAPs[sap].TABs[tab].totalDelay() - coarseDelay;
           metaDatas[i].TABs[tab].delayAfterEnd = delaysAfterEnd.SAPs[sap].TABs[tab].totalDelay() - coarseDelay;
         }

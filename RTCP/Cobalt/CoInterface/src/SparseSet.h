@@ -77,9 +77,6 @@ namespace LOFAR
     // Returns the number of elements in the set.
     T            count() const;
 
-    // Returns the number of elements in [first, last).
-    T            count(T first, T last) const;
-
     // Returns true if `index' is in the set.
     bool         test(T index) const;
 
@@ -288,25 +285,6 @@ namespace LOFAR
 
 
   template <typename T>
-  T SparseSet<T>::count(T first, T last) const
-  {
-    T count = 0;
-
-    for (const_iterator it = ranges.begin(); it != ranges.end(); it++) {
-      if (it->end <= first)
-        continue;
-
-      if (it->begin >= last)
-        break;
-
-      count += std::min(last, it->end) - std::max(first, it->begin);
-    }
-
-    return count;
-  }
-
-
-  template <typename T>
   bool SparseSet<T>::test(T index) const
   {
     const_iterator it = lower_bound(ranges.begin(), ranges.end(), range(index, index + 1), less_equal());
@@ -476,9 +454,7 @@ namespace LOFAR
       return -1;
 
     *(uint32_t *) ptr = ranges.size();
-    if (ranges.size() > 0) {
-      std::memcpy((uint32_t *) ptr + 1, &ranges[0], ranges.size() * sizeof(range));
-    }
+    std::memcpy((uint32_t *) ptr + 1, &ranges[0], ranges.size() * sizeof(range));
 
     return size;
   }
@@ -488,9 +464,7 @@ namespace LOFAR
   void SparseSet<T>::unmarshall(const void *ptr)
   {
     ranges.resize(*(uint32_t *) ptr);
-    if (ranges.size() > 0) {
-      std::memcpy(&ranges[0], (uint32_t *) ptr + 1, ranges.size() * sizeof(range));
-    }
+    std::memcpy(&ranges[0], (uint32_t *) ptr + 1, ranges.size() * sizeof(range));
   }
 
 

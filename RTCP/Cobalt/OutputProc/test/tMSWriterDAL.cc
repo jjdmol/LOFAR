@@ -20,6 +20,7 @@
 
 #include <lofar_config.h>
 
+#include <CoInterface/BeamFormedData.h>
 #include <CoInterface/Parset.h>
 
 #ifdef HAVE_DAL
@@ -50,11 +51,10 @@ int main()
       ? parset.settings.beamFormer.coherentSettings
       : parset.settings.beamFormer.incoherentSettings;
 
-    const size_t nrSubbands = parset.settings.SAPs[file.sapNr].subbands.size();
-
-    SampleData<float,3,2> data(
-        boost::extents[sset.nrSamples][nrSubbands][sset.nrChannels],
-        boost::extents[nrSubbands][sset.nrChannels]);
+    FinalBeamFormedData data(
+        sset.nrSamples,
+        parset.settings.SAPs[file.sapNr].subbands.size(),
+        sset.nrChannels);
 
     memset(data.samples.origin(), 0, data.samples.num_elements() * sizeof *data.samples.origin());
 
