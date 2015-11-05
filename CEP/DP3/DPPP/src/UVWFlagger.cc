@@ -112,7 +112,7 @@ namespace LOFAR {
     void UVWFlagger::updateInfo (const DPInfo& infoIn)
     {
       info() = infoIn;
-      info().setWriteFlags();
+      info().setNeedWrite (DPInfo::NeedWriteFlags);
       // Convert the given frequencies to possibly averaged frequencies.
       // Divide it by speed of light to get reciproke of wavelengths.
       itsRecWavel = infoIn.chanFreqs() / casa::C::c;
@@ -127,10 +127,10 @@ namespace LOFAR {
     bool UVWFlagger::process (const DPBuffer& buf)
     {
       itsTimer.start();
-      // Because no buffers are kept, we can reference the filled arrays
-      // in the input buffer instead of copying them.
-      itsBuffer.referenceFilled (buf);
-      Cube<bool>& flags = itsBuffer.getFlags();
+      DPBuffer out(buf);
+      // The flags will be changed, so make sure we have a unique array.
+      Cube<bool>& flags = out.getFlags();
+      flags.unique();
       // Loop over the baselines and flag as needed.
       const IPosition& shape = flags.shape();
       uint nrcorr = shape[0];
@@ -141,7 +141,7 @@ namespace LOFAR {
       // Input uvw coordinates are only needed if no new phase center is used.
       Matrix<double> uvws;
       if (itsCenter.empty()) {
-        uvws.reference (itsInput->fetchUVW (buf, itsBuffer, itsTimer));
+        uvws.reference (itsInput->fetchUVW(buf, buf.getRowNrs(), itsTimer));
       }
       const double* uvwPtr = uvws.data();
       bool* flagPtr = flags.data();
@@ -204,7 +204,7 @@ namespace LOFAR {
       // Let the next step do its processing.
       itsTimer.stop();
       itsNTimes++;
-      getNextStep()->process (itsBuffer);
+      getNextStep()->process (out);
       return true;
     }
 

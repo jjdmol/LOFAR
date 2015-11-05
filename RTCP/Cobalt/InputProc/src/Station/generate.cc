@@ -25,7 +25,7 @@
 #include <omp.h>
 
 #include <Common/LofarLogger.h>
-#include <Stream/StreamFactory.h>
+#include <CoInterface/Stream.h>
 
 #include <InputProc/Station/PacketFactory.h>
 #include <InputProc/Station/Generator.h>
@@ -56,14 +56,14 @@ int main( int argc, char **argv )
     LOG_INFO_STR("Connected.");
   }
 
-  struct StationID stationID(stationName, "LBA");
-  struct BoardMode mode(8, 200);
+  struct StationID stationID(stationName, "LBA", 200, 16);
+  struct BufferSettings settings(stationID, false);
 
-  const TimeStamp from(time(0), 3, mode.clockHz());
+  const TimeStamp from(time(0), 0, stationID.clockMHz * 1000000);
   const TimeStamp to(0);
 
-  PacketFactory factory(mode);
-  Generator g(stationID, outputStreams, factory, from, to);
+  PacketFactory factory(settings);
+  Generator g(settings, outputStreams, factory, from, to);
 
   // Generate packets
   g.process();

@@ -396,7 +396,7 @@ int MSCreate::addField (double ra, double dec)
     msfield.addRow();
     msfieldCol.name().put (rownr, "BEAM_" + String::toString(rownr));
     msfieldCol.code().put (rownr, "");
-    msfieldCol.time().put (rownr, itsStartTime); // really startTime; everywhere else it is midpoint with an interval
+    msfieldCol.time().put (rownr, itsStartTime);
     msfieldCol.numPoly().put (rownr, 0);
     msfieldCol.delayDirMeasCol().put (rownr, outdir);
     msfieldCol.phaseDirMeasCol().put (rownr, outdir);
@@ -412,7 +412,7 @@ int MSCreate::addField (double ra, double dec)
     mspointing.addRow(itsNrAnt);
     for (Int i=0; i<itsNrAnt; i++) {
       mspointingCol.antennaId().put (rownr, i);
-      mspointingCol.time().put (rownr, itsStartTime); // actually midpoint (as in updateTimes()), but interval is still 0.0 (unknown) at creation
+      mspointingCol.time().put (rownr, itsStartTime);
       mspointingCol.interval().put (rownr, 0.);
       mspointingCol.name().put (rownr, "");
       mspointingCol.numPoly().put (rownr, 0);
@@ -851,7 +851,6 @@ void MSCreate::addImagerColumns (MeasurementSet& ms)
     ArrayColumn<Complex> mcd(ms, colName);
     mcd.rwKeywordSet().define ("CHANNEL_SELECTION",selection);
   }
-  /*///
   colName = MS::columnName(MS::IMAGING_WEIGHT);
   if (! ms.tableDesc().isColumn(colName)) {
     TableDesc td;
@@ -865,5 +864,4 @@ void MSCreate::addImagerColumns (MeasurementSet& ms)
     TiledColumnStMan stMan("TiledImagingWeight", dataTileShape.getLast(2));
     ms.addColumn (td, stMan);
   }
-  */
 }

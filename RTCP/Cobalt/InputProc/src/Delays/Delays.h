@@ -32,6 +32,9 @@
 #include <map>
 
 #include <Common/LofarTypes.h>
+#include <Common/Timer.h>
+#include <Common/Thread/Thread.h>
+#include <Common/Thread/Semaphore.h>
 #include <CoInterface/MultiDimArray.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/SubbandMetaData.h>
@@ -53,7 +56,7 @@ namespace LOFAR
   {
 
     // Speed of light in vacuum, in m/s.
-    const double speedOfLight = 299792458.0;
+    const double speedOfLight = 299792458;
 
     // Workholder for calculating the delay compensation that must be applied
     // per beam per station. We start by calculating the path length
@@ -88,30 +91,27 @@ namespace LOFAR
       Delays(const Parset &ps, size_t stationIdx, const TimeStamp &from, size_t increment);
       ~Delays();
 
+      void start();
+
       // Output structures for adjusted directions and delays
       struct Delay {
         double  direction[3];
         double  delay;
-        double  clockCorrection;
-
-        double  totalDelay() const {
-          return delay + clockCorrection;
-        }
 
         bool operator==(const Delay &other) const {
           return direction[0] == other.direction[0] &&
                  direction[1] == other.direction[1] &&
                  direction[2] == other.direction[2] &&
-                 delay == other.delay &&
-                 clockCorrection == other.clockCorrection;
+                 delay == other.delay;
         }
       };
 
       struct BeamDelays {
         struct Delay              SAP;
-
-        // Delays for all coherent (!) TABs
         std::vector<struct Delay> TABs;
+
+        void read( Stream *str );
+        void write( Stream *str ) const;
 
         bool operator==(const BeamDelays &other) const {
           return SAP == other.SAP && TABs == other.TABs;
@@ -124,6 +124,9 @@ namespace LOFAR
 
         // All delays for all SAPs (and their TABs)
         std::vector<struct BeamDelays> SAPs;
+
+        void read( Stream *str );
+        void write( Stream *str ) const;
 
         bool operator==(const AllDelays &other) const {
           return SAPs == other.SAPs;
@@ -147,14 +150,37 @@ namespace LOFAR
        * and in the metaData the remainders will be recorded, that is,
        *     SAP.delay % sampleDuration.
        */
-      void generateMetaData( const AllDelays &delaysAtBegin, const AllDelays &delaysAfterEnd, const std::vector<size_t> &subbands, std::vector<SubbandMetaData> &metaDatas, std::vector<ssize_t> &read_offsets );
+      void generateMetaData( const AllDelays &delaysAtBegin, const AllDelays &delaysAfterEnd, std::vector<SubbandMetaData> &metaDatas, std::vector<ssize_t> &read_offsets );
 
     private:
       const Parset &parset;
       const size_t stationIdx;
       const TimeStamp from;
       const size_t increment;
-      TimeStamp currentTime;
+
+      // do the delay compensation calculations in a separate thread to allow bulk
+      // calculations and to avoid blocking other threads
+      void                                mainLoop();
+
+      volatile bool stop;
+
+      // the number of seconds to maintain in the buffer, must be a multiple of
+      // nrCalcDelays.
+      static const size_t bufferSize = 128;
+
+      // the number of delays to calculate in a single run
+      static const size_t nrCalcDelays = 16;
+
+      // the circular buffer to hold the moving beam directions for every second of data
+      std::vector<AllDelays> buffer;
+      size_t head, tail;
+
+      // two semaphores are used: one to trigger the producer that free space is available,
+      // another to trigger the consumer that data is available.
+      Semaphore bufferFree, bufferUsed;
+
+      // Resize the given delay set to the right proportions.
+      void setAllDelaysSize( AllDelays &result ) const;
 
       // Test whether the conversion engine actually works.
       bool test();
@@ -166,8 +192,8 @@ namespace LOFAR
       // in `result'.
       void calcDelays( const TimeStamp &timestamp, AllDelays &result );
 
-      // Returns the clock correction delay to add for this station
-      double clockCorrection() const;
+      // Returns the non-geometric delay to add for this station
+      double baseDelay() const;
 
 #ifdef HAVE_CASACORE
       casa::MVEpoch                       toUTC( const TimeStamp &timestamp ) const;
@@ -183,6 +209,10 @@ namespace LOFAR
       // Station to reference station position difference vector.
       casa::MVPosition phasePositionDiff;
 #endif
+
+      NSTimer delayTimer;
+
+      SmartPtr<Thread>                    thread;
     };
 
   } // namespace Cobalt

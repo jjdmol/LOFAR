@@ -24,7 +24,6 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/Kernels/Kernel.h>
-#include <GPUProc/KernelFactory.h>
 #include <GPUProc/gpu_wrapper.h>
 //#include <GPUProc/PerformanceCounter.h>
 
@@ -33,69 +32,37 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    class DelayAndBandPassKernel : public CompiledKernel
+    class DelayAndBandPassKernel : public Kernel
     {
     public:
-      static std::string theirSourceFile;
-      static std::string theirFunction;
+      DelayAndBandPassKernel(const Parset &ps,
+                             gpu::Context &context,
+                             gpu::DeviceMemory &devCorrectedData,
+                             gpu::DeviceMemory &devFilteredData,
+                             gpu::DeviceMemory &devDelaysAtBegin,
+                             gpu::DeviceMemory &devDelaysAfterEnd,
+                             gpu::DeviceMemory &devPhaseOffsets,
+                             gpu::Stream &queue);
+
+      void enqueue(gpu::Stream &queue,
+                   /* PerformanceCounter &counter,*/
+                   unsigned subband);
 
       enum BufferType
       {
         INPUT_DATA,
         OUTPUT_DATA,
         DELAYS,
-        PHASE_ZEROS,
+        PHASE_OFFSETS,
         BAND_PASS_CORRECTION_WEIGHTS
       };
 
-      // Parameters that must be passed to the constructor of the
-      // DelayAndBandPassKernel class.
-      struct Parameters : Kernel::Parameters
-      {
-        Parameters(const Parset& ps, bool correlator);
-        unsigned nrStations;
-        unsigned nrBitsPerSample;
-        bool inputIsStationData;
-
-        unsigned nrChannels;
-        unsigned nrSamplesPerChannel;
-        double subbandBandwidth;
-
-        unsigned nrSAPs;
-
-        bool delayCompensation;
-        bool correctBandPass;
-        bool transpose;
-
-        unsigned nrSamplesPerSubband() const;
-        unsigned nrBytesPerComplexSample() const;
-
-        size_t bufferSize(BufferType bufferType) const;
-      };
-
-      DelayAndBandPassKernel(const gpu::Stream &stream,
-                             const gpu::Module &module,
-                             const Buffers &buffers,
-                             const Parameters &param);
-
-
-      void enqueue(const BlockID &blockId, 
-                   double subbandFrequency, unsigned SAP);
-
-      // Input parameters for the delay compensation
-      gpu::DeviceMemory delaysAtBegin;
-      gpu::DeviceMemory delaysAfterEnd;
-      gpu::DeviceMemory phase0s;
+      // Return required buffer size for \a bufferType
+      static size_t bufferSize(const Parset& ps, BufferType bufferType);
 
     private:
-      // The weights to correct the bandpass with, per channel
-      gpu::DeviceMemory bandPassCorrectionWeights;
+      gpu::DeviceMemory devBandPassCorrectionWeights;
     };
-
-    //# --------  Template specializations for KernelFactory  -------- #//
-
-    template<> CompileDefinitions
-    KernelFactory<DelayAndBandPassKernel>::compileDefinitions() const;
   }
 }
 

@@ -24,18 +24,19 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/Kernels/Kernel.h>
-#include <GPUProc/KernelFactory.h>
 #include <GPUProc/gpu_wrapper.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    class IntToFloatKernel : public CompiledKernel
+    class IntToFloatKernel : public Kernel
     {
     public:
-      static std::string theirSourceFile;
-      static std::string theirFunction;
+      IntToFloatKernel(const Parset &ps, 
+                       gpu::Context &context,
+                       gpu::DeviceMemory &devFilteredData, 
+                       gpu::DeviceMemory &devInputSamples);
 
       enum BufferType
       {
@@ -43,31 +44,10 @@ namespace LOFAR
         OUTPUT_DATA
       };
 
-      // Parameters that must be passed to the constructor of the
-      // IntToFloatKernel class.
-      struct Parameters : Kernel::Parameters
-      {
-        Parameters(const Parset& ps);
-        unsigned nrStations;
-        unsigned nrBitsPerSample;
-        unsigned nrBytesPerComplexSample() const;
-
-        unsigned nrSamplesPerSubband;
-
-        size_t bufferSize(BufferType bufferType) const;
-      };
-
-      IntToFloatKernel(const gpu::Stream &stream,
-                             const gpu::Module &module,
-                             const Buffers &buffers,
-                             const Parameters &param);
+      // Return required buffer size for \a bufferType
+      static size_t bufferSize(const Parset& ps, BufferType bufferType);
 
     };
-
-    //# --------  Template specializations for KernelFactory  -------- #//
-
-    template<> CompileDefinitions
-    KernelFactory<IntToFloatKernel>::compileDefinitions() const;
   }
 
 }

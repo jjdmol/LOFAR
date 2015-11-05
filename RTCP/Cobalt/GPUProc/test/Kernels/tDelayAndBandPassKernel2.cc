@@ -30,63 +30,55 @@ using namespace LOFAR::Cobalt;
 
 struct TestFixture
 {
-  TestFixture() : ps("tDelayAndBandPassKernel2.in_parset"), factory(DelayAndBandPassKernel::Parameters(ps, true)) {}
+  TestFixture() : ps("tDelayAndBandPassKernel2.in_parset") {}
   ~TestFixture() {}
-
   Parset ps;
-  KernelFactory<DelayAndBandPassKernel> factory;
 };
 
 TEST_FIXTURE(TestFixture, InputData)
 {
   CHECK_EQUAL(size_t(786432),
-              factory.bufferSize(
-                DelayAndBandPassKernel::INPUT_DATA));
+              DelayAndBandPassKernel::bufferSize(
+                ps, DelayAndBandPassKernel::INPUT_DATA));
 }
 
 TEST_FIXTURE(TestFixture, OutputData)
 {
   CHECK_EQUAL(size_t(786432),
-              factory.bufferSize(
-                DelayAndBandPassKernel::OUTPUT_DATA));
+              DelayAndBandPassKernel::bufferSize(
+                ps, DelayAndBandPassKernel::OUTPUT_DATA));
 }
 
 TEST_FIXTURE(TestFixture, Delays)
 {
-  CHECK_EQUAL(size_t(16),
-              factory.bufferSize(
-                DelayAndBandPassKernel::DELAYS));
+  CHECK_EQUAL(size_t(8),
+              DelayAndBandPassKernel::bufferSize(
+                ps, DelayAndBandPassKernel::DELAYS));
 }
 
-TEST_FIXTURE(TestFixture, Phase0s)
+TEST_FIXTURE(TestFixture, PhaseOffsets)
 {
-  CHECK_EQUAL(size_t(16),
-              factory.bufferSize(
-                DelayAndBandPassKernel::PHASE_ZEROS));
+  CHECK_EQUAL(size_t(8),
+              DelayAndBandPassKernel::bufferSize(
+                ps, DelayAndBandPassKernel::PHASE_OFFSETS));
 }
 
 TEST_FIXTURE(TestFixture, BandPassCorrectionWeights)
 {
   CHECK_EQUAL(size_t(64),
-              factory.bufferSize(
-                DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS));
+              DelayAndBandPassKernel::bufferSize(
+                ps, DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS));
 }
 
 TEST_FIXTURE(TestFixture, MustThrow)
 {
-  CHECK_THROW(factory.bufferSize(
-                DelayAndBandPassKernel::BufferType(5)),
+  CHECK_THROW(DelayAndBandPassKernel::bufferSize(
+                ps, DelayAndBandPassKernel::BufferType(5)),
               GPUProcException);
 }
 
 int main()
 {
   INIT_LOGGER("tDelayAndBandPassKernel");
-  try {
-    gpu::Platform pf;
-  } catch (gpu::GPUException&) {
-    cerr << "No GPU device(s) found. Skipping tests." << endl;
-    return 3;
-  }
   return UnitTest::RunAllTests() > 0;
 }

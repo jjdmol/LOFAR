@@ -51,7 +51,7 @@ void test(const std::string &filename, unsigned bitmode, unsigned nrPackets)
   for( size_t i = 0; i < 3; ++i) {
     try {
       ASSERT( !reader.readPacket(packet) );
-    } catch (EndOfStreamException &ex) {
+    } catch (Stream::EndOfStreamException &ex) {
       // expected
     }
   }

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -220,16 +220,16 @@ void ReadCmd::saveTpAckEvent(GCFEvent& event)
 				double sampletime = 1. / (itsLastSavedSampleFreq * 1E6); // in sec
 				 
 				// calculate time of last sample in memory
-				NsTimestamp 
+				RTC::NsTimestamp 
 				lastSampleTime(itsLastSavedSecond + ((itsLastSavedSampleNr + itsLastSavedNrOfSamples) * sampletime));
 				
 				// calculate time of first sample in memory
-				NsTimestamp 
+				RTC::NsTimestamp 
 				firstSampleTime((double)lastSampleTime - (TS->getChPageSize(getChannelNr()) * itsLastSavedNrOfSamples * sampletime));
 				
 				// calculate start and stop time
-				NsTimestamp startTimestamp = itsTimestamp - itsTimeBefore;
-				NsTimestamp stopTimestamp = itsTimestamp + itsTimeAfter;
+				RTC::NsTimestamp startTimestamp = itsTimestamp - itsTimeBefore;
+				RTC::NsTimestamp stopTimestamp = itsTimestamp + itsTimeAfter;
 				
 				#if 1
 			//LOG_DEBUG_STR(formatString("Timestamp      =  %lu seconds  %lu nseconds", itsTimestamp.sec(), itsTimestamp.nsec()));
@@ -314,7 +314,7 @@ void ReadCmd::saveTpAckEvent(GCFEvent& event)
 		*/
 		if (tp_ack.status == 0xfd) {
 			LOG_INFO_STR(formatString("TBB busy, %d pages left", tp_ack.pages_left));
-			usleep(100000); // wait for some time and try again
+			usleep(1000); // wait for some time and try again
 		}
 		else { 
 		    if (tp_ack.status != 0) {

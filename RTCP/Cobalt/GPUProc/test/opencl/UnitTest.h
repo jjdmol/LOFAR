@@ -23,9 +23,11 @@
 
 #include <vector>
 #include <iostream>
+#include <complex>
 
 #include <CoInterface/Parset.h>
 #include <GPUProc/PerformanceCounter.h>
+//#include <GPUProc/opencl-incl.h>
 
 namespace LOFAR
 {
@@ -54,6 +56,46 @@ namespace LOFAR
 
       PerformanceCounter counter;
     };
+
+
+    template <typename T>
+    bool fpEquals(T x, T y, T eps = std::numeric_limits<T>::epsilon())
+    {
+      // Despite comparisons below, x==y is still needed to correctly eval the
+      // equality of identical inf args: 1.0/0.0==1.0/0.0 and -1.0/0.0==-1.0/0.0
+      if (x == y)
+      {
+        return true;
+      }
+
+      // absolute
+      if (std::abs(x - y) <= eps)
+      {
+        return true;
+      }
+
+      // relative
+      if (std::abs(y) < std::abs(x)) {
+        return std::abs((x - y) / x) <= eps;
+      } else {
+        return std::abs((x - y) / y) <= eps;
+      }
+    }
+
+    template <typename T>
+    bool fpEquals(std::complex<T> x, std::complex<T> y,
+                  T eps = std::numeric_limits<T>::epsilon())
+    {
+      return fpEquals(x.real(), y.real(), eps) &&
+             fpEquals(x.imag(), y.imag(), eps);
+    }
+
+    template <typename T>
+    bool fpEquals(std::complex<T> x, T y, T eps = std::numeric_limits<T>::epsilon())
+    {
+      return fpEquals(x.real(), y, eps) &&
+             fpEquals(x.imag(), (T)0.0, eps);
+    }
 
   }
 }

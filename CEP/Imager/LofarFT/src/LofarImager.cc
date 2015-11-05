@@ -54,12 +54,11 @@ namespace LOFAR
   {
     CountedPtr<VisibilityResamplerBase> visResampler;
     Bool useDoublePrecGrid = False;
-    Double RefFreq = 0.0;
-    if (sm_p) RefFreq = Double((*sm_p).getReferenceFrequency());
+    Double RefFreq((*sm_p).getReferenceFrequency());
 
 
     if (itsParameters.asBool("splitbeam")) {
-      if (itsParameters.asInt("verbose")) cout << itsParameters<<endl;
+      cout << itsParameters<<endl;
       itsMachine = new LofarFTMachine(cache_p/2, tile_p,
                                       visResampler, gridfunction_p,
                                       *ms_p, wprojPlanes_p, mLocation_p,

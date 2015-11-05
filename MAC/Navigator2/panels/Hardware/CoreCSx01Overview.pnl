@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 8 (NoName)
-PANEL,-1 -1 1200 823 N "_3DFace" 0
+PANEL,-1 -1 1075 795 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel
@@ -93,7 +93,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 0 0 1199 822
+E E 0 1 1 0 1 E U  1 E 0 0 1008 744
 1 194 1 "" 0
 0
 1 195 1 "" 1
@@ -225,15 +225,15 @@ LANG:1 19 Core Stations CSx01
 0
 1 249 8 "" 5
 0
-1 250 9 "" 1
+1 255 9 "" 1
 0
-1 251 9 "" 2
+1 256 9 "" 2
 0
-1 252 9 "" 4
+1 257 9 "" 4
 0
-1 253 9 "" 5
+1 258 9 "" 5
 0
-1 254 9 "" 7
+1 259 9 "" 7
 0
 0
 LAYER, 1 
@@ -296,6 +296,6 @@ LANG:1 6 Layer8
 1
 "$station""CS103"
 3 9 "PANEL_REF9" -1
-"objects\\Hardware\\CS0nnStatusView.pnl" 280 220 T 91 1 0 1 15 -5
+"objects/Hardware\\CS0nnStatusView.pnl" 280 220 T 91 1 0 1 15 -5
 0
 0

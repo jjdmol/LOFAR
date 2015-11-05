@@ -24,17 +24,14 @@
 #include "gpu_wrapper.h"
 
 #include <string>
-#include <iostream>
-#include <algorithm>  // for std::min and std::max
+#include <algorithm>  // for std::min
 
 #include <boost/noncopyable.hpp>
-#include <boost/format.hpp>
 
 #include <Common/Exception.h>
 #include <Common/LofarLogger.h>
 
 #include <GPUProc/global_defines.h>
-#include <GPUProc/PerformanceCounter.h>
 
 // Convenience macro to call a CUDA Device API function and throw a
 // CUDAException if an error occurred.
@@ -49,20 +46,7 @@
     }                                                                   \
   } while(0)
 
-// Like checkCuCall, but don't emit log lines
-#define checkCuCall_noLog(func)                                               \
-  do {                                                                  \
-    CUresult result = func;                                             \
-    if (result != CUDA_SUCCESS) {                                       \
-      THROW (LOFAR::Cobalt::gpu::CUDAException,                         \
-             # func << ": " << LOFAR::Cobalt::gpu::errorMessage(result)); \
-    }                                                                   \
-  } while(0)
-
-
 LOFAR::Exception::TerminateHandler th(LOFAR::Exception::terminate);
-
-using boost::format;
 
 namespace LOFAR
 {
@@ -216,51 +200,30 @@ namespace LOFAR
       }
 
 
+      Block::Block(unsigned int x_, unsigned int y_, unsigned int z_) :
+        x(x_), y(y_), z(z_)
+      {
+      }
+
+
       Grid::Grid(unsigned int x_, unsigned int y_, unsigned int z_) :
         x(x_), y(y_), z(z_)
       {
       }
 
-      std::ostream& operator<<(std::ostream& os, const Grid& grid)
-      {
-        os << "[" << grid.x << ", " << grid.y << ", " << grid.z << "]";
-        return os;
-      }
-
-      Block::Block(unsigned int x_, unsigned int y_, unsigned int z_) :
-        x(x_), y(y_), z(z_)
-      {
-        // Cannot enforce this as an obj invariant (x, y, z public on purpose),
-        // but intended to trigger bugs early.
-        if (x == 0 || y == 0 || z == 0)
-          THROW(CUDAException, "Block(): block dims must be non-zero: " <<
-                               x << " " << y << " " << z);
-      }
-
-      std::ostream& operator<<(std::ostream& os, const Block& block)
-      {
-        os << "[" << block.x << ", " << block.y << ", " << block.z << "]";
-        return os;
-      }
-
-      ExecConfig::ExecConfig(Grid gr, Block bl, size_t dynShMem) :
-        grid(gr), block(bl), dynSharedMemSize(dynShMem)
-      {
-      }
-
-      std::ostream& operator<<(std::ostream& os, const ExecConfig& execConfig)
-      {
-        os << "{" << execConfig.grid << ", " << execConfig.block <<
-              ", " << execConfig.dynSharedMemSize << "}";
-        return os;
-      }
 
       Platform::Platform(unsigned int flags)
       {
-        // cuInit() is thread-safe, so we don't have to mutex it.
-        // In fact, if you start with multiple threads, all threads that
-        // do CUDA calls must first call cuInit().
-        checkCuCall(cuInit(flags));
+        // TODO: Technically, we need to make this thread safe.
+        // Typically, however, the first platform is created in the main
+        // thread.
+        static bool initialised = false;
+
+        if (!initialised) {
+          initialised = true;
+
+          checkCuCall(cuInit(flags));
+        }
       }
 
       int Platform::version() const
@@ -287,12 +250,6 @@ namespace LOFAR
           devices.push_back(Device(i));
         }
 
-        // sort to get a predictable order,
-        // because CUDA derives its own sorting
-        // based on expected performance, which
-        // might differ per NUMA binding.
-        sort(devices.begin(), devices.end());
-
         return devices;
       }
 
@@ -301,31 +258,10 @@ namespace LOFAR
         return "NVIDIA CUDA";
       }
 
-      unsigned Platform::getMaxThreadsPerBlock() const
-      {
-        const std::vector<Device> _devices = devices();
-
-        unsigned lowest = 0;
-
-        for (std::vector<Device>::const_iterator i = _devices.begin(); i != _devices.end(); ++i) {
-          const unsigned maxThreadsPerBlock = i->getMaxThreadsPerBlock();
-
-          if (i == _devices.begin() || maxThreadsPerBlock < lowest)
-            lowest = maxThreadsPerBlock;
-        }
-
-        return lowest;
-      }
-
 
       Device::Device(int ordinal)
       {
         checkCuCall(cuDeviceGet(&_device, ordinal));
-      }
-
-      bool Device::operator<(const Device &other) const
-      {
-        return pciId() < other.pciId();
       }
 
       std::string Device::getName() const
@@ -384,47 +320,6 @@ namespace LOFAR
         return (size_t)getAttribute(CU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY);
       }
 
-      std::string Device::pciId() const
-      {
-        int bus    = getAttribute(CU_DEVICE_ATTRIBUTE_PCI_BUS_ID);
-        int device = getAttribute(CU_DEVICE_ATTRIBUTE_PCI_DEVICE_ID);
-
-        return str(format("%04x:%04x") % bus % device);
-      }
-
-      unsigned Device::getMaxThreadsPerBlock() const
-      {
-        return (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
-      }
-
-      struct Block Device::getMaxBlockDims() const
-      {
-        Block block;
-        block.x = (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_X);
-        block.y = (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_Y);
-        block.z = (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_Z);
-        return block;
-      }
-
-      struct Grid Device::getMaxGridDims() const
-      {
-        Grid grid;
-        grid.x = (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_X);
-        grid.y = (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Y);
-        grid.z = (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Z);
-        return grid;
-      }
-
-      unsigned Device::getMultiProcessorCount() const
-      {
-        return (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT);
-      }
-
-      unsigned Device::getMaxThreadsPerMultiProcessor() const
-      {
-        return (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_MULTIPROCESSOR);
-      }
-
       int Device::getAttribute(CUdevice_attribute attribute) const
       {
         int value;
@@ -432,6 +327,7 @@ namespace LOFAR
         checkCuCall(cuDeviceGetAttribute(&value, attribute, _device));
         return value;
       }
+
 
       class Context::Impl : boost::noncopyable
       {
@@ -449,19 +345,19 @@ namespace LOFAR
           checkCuCall(cuCtxDestroy(_context));
         }
 
-        CUdevice getCurrentDevice() const
+        CUdevice getDevice() const
         {
           CUdevice dev;
           checkCuCall(cuCtxGetDevice(&dev));
           return dev;
         }
 
-        void setCurrentCacheConfig(CUfunc_cache config) const
+        void setCacheConfig(CUfunc_cache config) const
         {
           checkCuCall(cuCtxSetCacheConfig(config));
         }
 
-        void setCurrentSharedMemConfig(CUsharedconfig config) const
+        void setSharedMemConfig(CUsharedconfig config) const
         {
 #if CUDA_VERSION >= 4020
           checkCuCall(cuCtxSetSharedMemConfig(config));
@@ -493,21 +389,21 @@ namespace LOFAR
       {
         ScopedCurrentContext scc(*this);
 
-        return Device(_impl->getCurrentDevice());
+        return Device(_impl->getDevice());
       }
 
       void Context::setCacheConfig(CUfunc_cache config) const
       {
         ScopedCurrentContext scc(*this);
 
-        _impl->setCurrentCacheConfig(config);
+        _impl->setCacheConfig(config);
       }
 
       void Context::setSharedMemConfig(CUsharedconfig config) const
       {
         ScopedCurrentContext scc(*this);
 
-        _impl->setCurrentSharedMemConfig(config);
+        _impl->setSharedMemConfig(config);
       }
 
 
@@ -584,7 +480,7 @@ namespace LOFAR
         {
           ScopedCurrentContext scc(_context);
 
-          checkCuCall(cuMemAlloc(&_ptr, std::max(1UL, size)));
+          checkCuCall(cuMemAlloc(&_ptr, size));
         }
 
         ~Impl()
@@ -599,21 +495,9 @@ namespace LOFAR
           return _ptr;
         }
 
-        void set(unsigned char uc, size_t n) const
-        {
-          ScopedCurrentContext scc(_context);
-
-          checkCuCall(cuMemsetD8(_ptr, uc, n));
-        }
-
         size_t size() const
         {
           return _size;
-        }
-
-        Context getContext() const
-        {
-          return _context;
         }
 
       //private: // Functions needs its address to set kernel args
@@ -633,28 +517,9 @@ namespace LOFAR
         return (void *)_impl->get();
       }
 
-      void DeviceMemory::set(unsigned char uc, size_t n) const
-      {
-        _impl->set(uc, std::min(n, size()));
-      }
-
       size_t DeviceMemory::size() const
       {
         return _impl->size();
-      }
-
-      HostMemory DeviceMemory::fetch() const
-      {
-        // Create a host buffer of the right size
-        // in the right context.
-        HostMemory host(_impl->getContext(), size());
-
-        // Read the contents of our buffer synchronously,
-        // using a dedicated stream.
-        Stream s(_impl->getContext());
-        s.readBuffer(host, *this, true);
-
-        return host;
       }
 
 
@@ -763,11 +628,6 @@ namespace LOFAR
                                         name.c_str()));
       }
 
-      std::string Function::name() const
-      {
-        return _name;
-      }
-
       void Function::setArg(size_t index, const DeviceMemory &mem)
       {
         doSetArg(index, &mem._impl->_ptr);
@@ -830,9 +690,7 @@ namespace LOFAR
           ScopedCurrentContext scc(_context);
 
           float ms;
-
-          checkCuCall_noLog(cuEventElapsedTime(&ms, other, _event));
-
+          checkCuCall(cuEventElapsedTime(&ms, other, _event));
           return ms;
         }
 
@@ -898,23 +756,15 @@ namespace LOFAR
           checkCuCall(cuMemcpyDtoHAsync(hostPtr, devPtr, size, _stream));
         }
 
-        void memcpyDtoDAsync(CUdeviceptr targetPtr, CUdeviceptr sourcePtr, 
-                             size_t size)
-        {
-          ScopedCurrentContext scc(_context);
-
-          checkCuCall(cuMemcpyDtoDAsync(targetPtr, sourcePtr, size, _stream));
-        }
-
         void launchKernel(CUfunction function, unsigned gridX, unsigned gridY,
                           unsigned gridZ, unsigned blockX, unsigned blockY,
-                          unsigned blockZ, unsigned dynSharedMemSize,
+                          unsigned blockZ, unsigned sharedMemBytes,
                           void **parameters)
         {
           ScopedCurrentContext scc(_context);
 
           checkCuCall(cuLaunchKernel(function, gridX, gridY, gridZ, blockX,
-                                     blockY, blockZ, dynSharedMemSize, _stream,
+                                     blockY, blockZ, sharedMemBytes, _stream,
                                      parameters, NULL));
         }
 
@@ -952,7 +802,7 @@ namespace LOFAR
           checkCuCall(cuStreamWaitEvent(_stream, event, 0));
         }
 
-        void recordEvent(CUevent event) const
+        void recordEvent(CUevent event)
         {
           ScopedCurrentContext scc(_context);
 
@@ -980,9 +830,9 @@ namespace LOFAR
       {
       }
 
-      void Stream::writeBuffer(const DeviceMemory &devMem, 
+      void Stream::writeBuffer(DeviceMemory &devMem, 
                                const HostMemory &hostMem,
-                               bool synchronous) const
+                               bool synchronous)
       {
         // tmp check: avoid async writeBuffer request that will fail later.
         // TODO: This interface may still change at which point a cleaner solution can be used.
@@ -994,55 +844,14 @@ namespace LOFAR
         _impl->memcpyHtoDAsync((CUdeviceptr)devMem.get(), 
                                hostMem.get<void>(),
                                hostMem.size());
-        if (synchronous || force_synchronous) 
-        {
+        if (synchronous || force_synchronous) {
           synchronize();
         }
       }
 
-      void Stream::writeBuffer(const DeviceMemory &devMem, const HostMemory &hostMem,
-                         PerformanceCounter &counter, bool synchronous) const
-      {
-        counter.recordStart(*this);
-        writeBuffer(devMem, hostMem, synchronous); 
-        counter.recordStop(*this);
-      }
-
-      void Stream::copyBuffer(const DeviceMemory &devTarget, 
-                              const DeviceMemory &devSource,
-                              bool synchronous) const
-      {
-        // tmp check: avoid async writeBuffer request that will fail later.
-        // TODO: This interface may still change at which point a cleaner solution can be used.
-        if (devSource.size() > devTarget.size())
-        {
-          THROW(CUDAException, "copyBuffer(): device source buffer too large for device target buffer: " <<
-                "source buffer is " << devSource.size() << " bytes, " << 
-                "device buffer is " << devTarget.size() << " bytes");
-        }
-
-        _impl->memcpyDtoDAsync((CUdeviceptr)devTarget.get(), 
-                               (CUdeviceptr)devSource.get(),
-                               devSource.size());
-        if (synchronous || force_synchronous) 
-        {
-          synchronize();
-        }
-      }
-
-      void Stream::copyBuffer(const DeviceMemory &devTarget, 
-                              const DeviceMemory &devSource,
-                              PerformanceCounter &counter,
-                              bool synchronous) const
-      {
-        counter.recordStart(*this);
-        copyBuffer(devTarget, devSource, synchronous); 
-        counter.recordStop(*this);
-      }
-
-      void Stream::readBuffer(const HostMemory &hostMem, 
+      void Stream::readBuffer(HostMemory &hostMem, 
                               const DeviceMemory &devMem,
-                              bool synchronous) const
+                              bool synchronous)
       {
         // Host buffer can be smaller, because the device
         // buffers can be used for multiple purposes in
@@ -1053,34 +862,25 @@ namespace LOFAR
         _impl->memcpyDtoHAsync(hostMem.get<void>(),
                                (CUdeviceptr)devMem.get(),
                                size);
-        if (synchronous || force_synchronous) 
-        {
+        if (synchronous || force_synchronous) {
           synchronize();
         }
       }
 
-      void Stream::readBuffer(const HostMemory &hostMem, const DeviceMemory &devMem,
-                        PerformanceCounter &counter, bool synchronous) const
-      {
-        counter.recordStart(*this);
-        readBuffer(hostMem, devMem, synchronous);  
-        counter.recordStop(*this);
-      }
-
-
       void Stream::launchKernel(const Function &function,
-                                const Grid &grid, const Block &block) const
+                                const Grid &grid, const Block &block)
       {
         LOG_DEBUG_STR("Launching " << function._name);
 
-        const unsigned dynSharedMemSize = 0; // we don't need this for LOFAR
+        const unsigned dynSharedMemBytes = 0; // we don't need this for LOFAR
         _impl->launchKernel(function._function, grid.x, grid.y, grid.z,
-                            block.x, block.y, block.z, dynSharedMemSize,
+                            block.x, block.y, block.z, dynSharedMemBytes,
                             const_cast<void **>(&function._kernelArgs[0]));
 
-        if (force_synchronous) {
-          synchronize();
-        }
+          if (force_synchronous) {
+            synchronize();
+          }
+
       }
 
       bool Stream::query() const
@@ -1098,7 +898,7 @@ namespace LOFAR
         _impl->waitEvent(event._impl->_event);
       }
 
-      void Stream::recordEvent(const Event &event) const
+      void Stream::recordEvent(const Event &event)
       {
         _impl->recordEvent(event._impl->_event);
       }

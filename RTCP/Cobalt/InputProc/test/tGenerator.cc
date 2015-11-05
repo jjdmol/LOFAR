@@ -26,9 +26,9 @@
 #include <omp.h>
 
 #include <Common/LofarLogger.h>
-#include <Stream/StreamFactory.h>
-#include <CoInterface/OMPThread.h>
+#include <CoInterface/Stream.h>
 
+#include <InputProc/OMPThread.h>
 #include <InputProc/Station/PacketFactory.h>
 #include <InputProc/Station/Generator.h>
 #include <InputProc/Station/PacketReader.h>
@@ -57,7 +57,7 @@ int main( int, char **argv )
   vector< SmartPtr<Stream> > inputStreams(1);
   vector< SmartPtr<Stream> > outputStreams(1);
 
-  #pragma omp parallel sections num_threads(2)
+  #pragma omp parallel sections
   {
     #pragma omp section
     inputStreams[0] = createStream(desc, true);
@@ -66,17 +66,17 @@ int main( int, char **argv )
     outputStreams[0] = createStream(desc, false);
   }
 
-  struct StationID stationID("RS106", "LBA");
-  struct BoardMode mode(16, 200);
+  struct StationID stationID("RS106", "LBA", 200, 16);
+  struct BufferSettings settings(stationID, false);
 
-  const TimeStamp from(time(0), 0, mode.clockHz());
+  const TimeStamp from(time(0), 0, stationID.clockMHz * 1000000);
   const TimeStamp to = from + NUMPACKETS * 16; /* 16 timeslots/packet */
-  PacketFactory factory(mode);
-  Generator g(stationID, outputStreams, factory, from, to);
+  PacketFactory factory(settings);
+  Generator g(settings, outputStreams, factory, from, to);
 
   bool error = false;
 
-  #pragma omp parallel sections num_threads(2)
+  #pragma omp parallel sections
   {
     #pragma omp section
     {
@@ -92,8 +92,6 @@ int main( int, char **argv )
 
     #pragma omp section
     {
-      MACIO::RTmetadata rtmd(12345, "", "");
-
       // Read and verify the generated packets
 
       try {
@@ -102,20 +100,19 @@ int main( int, char **argv )
         for(size_t nr = 0; nr < NUMPACKETS; ++nr) {
           struct RSP packet;
 
-          if (!reader.readPacket(packet)) {
-            const unsigned boardNr = 0;
-            reader.logStatistics(boardNr, rtmd, "rtmd key prefix");
+          if (!reader.readPacket(packet, settings)) {
+            reader.logStatistics();
 
             ASSERT(false);
           }
         }
+
+        // We received NUMPACKETS packets, kill the generator
+        g.stop();
       } catch(Exception &ex) {
         LOG_ERROR_STR("Caught exception: " << ex);
         error = true;
       }
-
-      // We received NUMPACKETS packets, kill the generator
-      g.stop();
     }
   }
 

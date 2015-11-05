@@ -18,663 +18,650 @@
 //#
 //# $Id$
 
-#include "gpu_math.cuh"
-
-//# Some defines used to determine the correct way the process the data
+// Some defines used to determine the correct way the process the data
 #define MAX(A,B) ((A)>(B) ? (A) : (B))
 
 #define NR_PASSES MAX((NR_STATIONS + 6) / 16, 1) // gives best results on GTX 680
 
 #ifndef NR_STATIONS_PER_PASS  // Allow overriding for testing optimalizations 
-#define NR_STATIONS_PER_PASS ((NR_STATIONS + NR_PASSES - 1) / NR_PASSES)
+  #define NR_STATIONS_PER_PASS ((NR_STATIONS + NR_PASSES - 1) / NR_PASSES)
 #endif
 #if NR_STATIONS_PER_PASS > 32
 #error "need more passes to beam for this number of stations"
 #endif
 
-#ifdef FLYS_EYE
-# if !(NR_STATIONS == NR_TABS)
-# error Precondition violated: NR_STATIONS == NR_TABS
-# endif
-#endif
-
-//# Typedefs used to map input data on arrays
-typedef  double (*DelaysType)[NR_SAPS][NR_STATIONS][NR_TABS];
-#ifdef FLYS_EYE
-typedef  float2 (*BandPassCorrectedType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_POLARIZATIONS];
-#else
+// Typedefs used to map input data on arrays
+typedef  float2 (*WeightsType)[NR_STATIONS][NR_CHANNELS][NR_TABS];
 typedef  float4 (*BandPassCorrectedType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
-#endif
 typedef  float2 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TABS][NR_POLARIZATIONS];
 
 /*!
- * The beamformer kernel performs a complex weighted multiply-add of each sample
- * of the provided input data, except when fly's eye mode is enabled (FLYS_EYE
- * is defined). Then data is only transposed, nothing more.
+ * Performs beamforming to x beam based.
+ * The beamformer performs a complex weighted multiply add of the each sample of the
+ * provided input data.
  *
  * \param[out] complexVoltagesPtr      4D output array of beams. For each channel a number of Tied Array Beams time serires is created for two polarizations
- * \param[in]  samplesPtr              3D input array of samples. A time series for each station and channel pair. Each sample contains the 2 polarizations X, Y, each of complex float type.
- * \param[in]  delaysPtr               3D input array of complex valued delays to be applied to the correctData samples. There is a delay for each Sub-Array Pointing, station, and Tied Array Beam triplet.
- * \param[in]  subbandFrequency        central frequency of the subband
- * \param[in]  sap                     number (index) of the Sub-Array Pointing (aka (station) beam)
- *
+ * \param[in]  correctedDataPtr        3D input array of samples. A time series for each station and channel pair. Each sample contains the 2 polarizations X, Y, each of complex float type.
+ * \param[in]  weightsPtr              3d input array of complex valued weights to be applied to the correctData samples. THere is a weight for each station, channel and Tied Array Beam triplet.
  * Pre-processor input symbols (some are tied to the execution configuration)
  * Symbol                  | Valid Values            | Description
  * ----------------------- | ----------------------- | -----------
  * NR_STATIONS             | >= 1                    | number of antenna fields
  * NR_SAMPLES_PER_CHANNEL  | >= 1                    | number of input samples per channel
  * NR_CHANNELS             | >= 1                    | number of frequency channels per subband
- * NR_SAPS                 | >= 1 && > sap           | number of Sub-Array Pointings
- * NR_TABS                 | >= 1                    | number of Tied Array Beams (old name: pencil beams) to create
- * SUBBAND_BANDWIDTH       | double, multiple of NR_CHANNELS | Bandwidth of a subband in Hz
+ * NR_TABS                 | >= 1                    | number of Tied Array Beams to create
+ * ----------------------- | ------------------------| 
  * NR_STATIONS_PER_PASS    | 1 >= && <= 32           | Set to overide default: Parallelization parameter, controls the number stations to beamform in a single pass over the input data. 
  *
- * Note that this kernel assumes  NR_POLARIZATIONS == 2
+ * Note that this kernel assumes  NR_POLARIZATIONS == 2 and COMPLEX == 2
  *
  * Execution configuration:
- * - LocalWorkSize = (NR_POLARIZATIONS, NR_TABS, NR_CHANNELS) Note that for full utilization NR_TABS * NR_CHANNELS % 16 = 0. Also note that NR_CHANNELS should be set to 1 per block (i.e. a 2D block). To process N channels, launch N blocks.
+ * - LocalWorkSize = (NR_POLARIZATIONS, NR_TABS, NR_CHANNELS) Note that for full utilization NR_TABS * NR_CHANNELS % 16 = 0
  */
 extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
                                        const void *samplesPtr,
-                                       const void *delaysPtr,
-                                       double subbandFrequency,
-                                       unsigned sap)
+                                       const void *weightsPtr)
 {
   ComplexVoltagesType complexVoltages = (ComplexVoltagesType) complexVoltagesPtr;
   BandPassCorrectedType samples = (BandPassCorrectedType) samplesPtr;
+  WeightsType weights = (WeightsType) weightsPtr;
 
   unsigned pol = threadIdx.x;
   unsigned tab = threadIdx.y;
-  unsigned channel = blockDim.z * blockIdx.z + threadIdx.z; // The parallelization in the channel is controllable with extra blocks only, not extra threads per block
+  unsigned channel =  blockDim.z * blockIdx.z + threadIdx.z;  // The paralellization in the channel is controllable with extra blocks
 
-#ifdef FLYS_EYE
-  if (tab < NR_TABS) {
-    // Do not do these calculations if we are padding to fill the wave
-    for (unsigned t = 0; t < NR_SAMPLES_PER_CHANNEL; t++) {
-      (*complexVoltages)[channel][t][tab][pol] = (*samples)[tab][channel][t][pol];
-    }
-  }
-#else
-
-  DelaysType delays = (DelaysType) delaysPtr;
-
+  float2 sample;
   // This union is in shared memory because it is used by all threads in the block
   __shared__ union { // Union: Maps two variables to the same adress space
     float2 samples[NR_STATIONS_PER_PASS][16][NR_POLARIZATIONS];
     float4 samples4[NR_STATIONS_PER_PASS][16];
   } _local;
 
-#if NR_CHANNELS == 1
-  double frequency = subbandFrequency;
-#else
-  double frequency = subbandFrequency - 0.5 * SUBBAND_BANDWIDTH + channel * (SUBBAND_BANDWIDTH / NR_CHANNELS);
-#endif
-
 #pragma unroll
   for (unsigned first_station = 0;  // Step over data with NR_STATIONS_PER_PASS stride
        first_station < NR_STATIONS;
        first_station += NR_STATIONS_PER_PASS) 
-  { // this for loop spans the whole file
-    
-    // Micro Optimalization 
-    // The work in this thread is local an can be ignored if it is a thread
-    // this is used for padding the wave. These threads are only used for mem access
-    // Use a value for tab this is always valid (0)
-    unsigned tab_or_zero = tab < NR_TABS ? tab : 0;
-
+  { // this for loop spand the whole file
 #if NR_STATIONS_PER_PASS >= 1
-    fcomplex weight_00;                     // assign the weights to register variables
-    if (first_station + 0 < NR_STATIONS) {  // Number of station might be larger then 32:
-                                            // We then do multiple passes to span all stations
-      double delay = (*delays)[sap][first_station + 0][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_00 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_00;                     // assign the weights to register variables
+    if (first_station + 0 < NR_STATIONS)  // Number of station might be larger then 32: We 
+                                          // the do multiple passes to span all stations
+      weight_00 = (*weights)[first_station + 0][channel][tab]; // Get data from global mem
 #endif
-    // Loop unrolling allows usage of registers for weights
+    // Loop onrolling allows usage of registers for weights
 #if NR_STATIONS_PER_PASS >= 2
-    fcomplex weight_01;
-    if (first_station + 1 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 1][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_01 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_01;
+
+    if (first_station + 1 < NR_STATIONS)
+      weight_01 = (*weights)[first_station + 1][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 3
-    fcomplex weight_02;
-    if (first_station + 2 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 2][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_02 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_02;
+
+    if (first_station + 2 < NR_STATIONS)
+      weight_02 = (*weights)[first_station + 2][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 4
-    fcomplex weight_03;
-    if (first_station + 3 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 3][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_03 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_03;
+
+    if (first_station + 3 < NR_STATIONS)
+      weight_03 = (*weights)[first_station + 3][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 5
-    fcomplex weight_04;
-    if (first_station + 4 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 4][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_04 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_04;
+
+    if (first_station + 4 < NR_STATIONS)
+      weight_04 = (*weights)[first_station + 4][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 6
-    fcomplex weight_05;
-    if (first_station + 5 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 5][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_05 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_05;
+
+    if (first_station + 5 < NR_STATIONS)
+      weight_05 = (*weights)[first_station + 5][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 7
-    fcomplex weight_06;
-    if (first_station + 6 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 6][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_06 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_06;
+
+    if (first_station + 6 < NR_STATIONS)
+      weight_06 = (*weights)[first_station + 6][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 8
-    fcomplex weight_07;
-    if (first_station + 7 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 7][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_07 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_07;
+
+    if (first_station + 7 < NR_STATIONS)
+      weight_07 = (*weights)[first_station + 7][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 9
-    fcomplex weight_08;
-    if (first_station + 8 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 8][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_08 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_08;
+
+    if (first_station + 8 < NR_STATIONS)
+      weight_08 = (*weights)[first_station + 8][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 10
-    fcomplex weight_09;
-    if (first_station + 9 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 9][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_09 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_09;
+
+    if (first_station + 9 < NR_STATIONS)
+      weight_09 = (*weights)[first_station + 9][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 11
-    fcomplex weight_10;
-    if (first_station + 10 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 10][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_10 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_10;
+
+    if (first_station + 10 < NR_STATIONS)
+      weight_10 = (*weights)[first_station + 10][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 12
-    fcomplex weight_11;
-    if (first_station + 11 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 11][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_11 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_11;
+
+    if (first_station + 11 < NR_STATIONS)
+      weight_11 = (*weights)[first_station + 11][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 13
-    fcomplex weight_12;
-    if (first_station + 12 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 12][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_12 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_12;
+
+    if (first_station + 12 < NR_STATIONS)
+      weight_12 = (*weights)[first_station + 12][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 14
-    fcomplex weight_13;
-    if (first_station + 13 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 13][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_13 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_13;
+
+    if (first_station + 13 < NR_STATIONS)
+      weight_13 = (*weights)[first_station + 13][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 15
-    fcomplex weight_14;
-    if (first_station + 14 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 14][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_14 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_14;
+
+    if (first_station + 14 < NR_STATIONS)
+      weight_14 = (*weights)[first_station + 14][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 16
-    fcomplex weight_15;
-    if (first_station + 15 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 15][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_15 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_15;
+
+    if (first_station + 15 < NR_STATIONS)
+      weight_15 = (*weights)[first_station + 15][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 17
-    fcomplex weight_16;
-    if (first_station + 16 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 16][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_16 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_16;
+
+    if (first_station + 16 < NR_STATIONS)
+      weight_16 = (*weights)[first_station + 16][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 18
-    fcomplex weight_17;
-    if (first_station + 17 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 17][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_17 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_17;
+
+    if (first_station + 17 < NR_STATIONS)
+      weight_17 = (*weights)[first_station + 17][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 19
-    fcomplex weight_18;
-    if (first_station + 18 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 18][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_18 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_18;
+
+    if (first_station + 18 < NR_STATIONS)
+      weight_18 = (*weights)[first_station + 18][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 20
-    fcomplex weight_19;
-    if (first_station + 19 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 19][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_19 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_19;
+
+    if (first_station + 19 < NR_STATIONS)
+      weight_19 = (*weights)[first_station + 19][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 21
-    fcomplex weight_20;
-    if (first_station + 20 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 20][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_20 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_20;
+
+    if (first_station + 20 < NR_STATIONS)
+      weight_20 = (*weights)[first_station + 20][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 22
-    fcomplex weight_21;
-    if (first_station + 21 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 21][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_21 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_21;
+
+    if (first_station + 21 < NR_STATIONS)
+      weight_21 = (*weights)[first_station + 21][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 23
-    fcomplex weight_22;
-    if (first_station + 22 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 22][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_22 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_22;
+
+    if (first_station + 22 < NR_STATIONS)
+      weight_22 = (*weights)[first_station + 22][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 24
-    fcomplex weight_23;
-    if (first_station + 23 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 23][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_23 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_23;
+
+    if (first_station + 23 < NR_STATIONS)
+      weight_23 = (*weights)[first_station + 23][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 25
-    fcomplex weight_24;
-    if (first_station + 24 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 24][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_24 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_24;
+
+    if (first_station + 24 < NR_STATIONS)
+      weight_24 = (*weights)[first_station + 24][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 26
-    fcomplex weight_25;
-    if (first_station + 25 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 25][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_25 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_25;
+
+    if (first_station + 25 < NR_STATIONS)
+      weight_25 = (*weights)[first_station + 25][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 27
-    fcomplex weight_26;
-    if (first_station + 26 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 26][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_26 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_26;
+
+    if (first_station + 26 < NR_STATIONS)
+      weight_26 = (*weights)[first_station + 26][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 28
-    fcomplex weight_27;
-    if (first_station + 27 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 27][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_27 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_27;
+
+    if (first_station + 27 < NR_STATIONS)
+      weight_27 = (*weights)[first_station + 27][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 29
-    fcomplex weight_28;
-    if (first_station + 28 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 28][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_28 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_28;
+
+    if (first_station + 28 < NR_STATIONS)
+      weight_28 = (*weights)[first_station + 28][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 30
-    fcomplex weight_29;
-    if (first_station + 29 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 29][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_29 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_29;
+
+    if (first_station + 29 < NR_STATIONS)
+      weight_29 = (*weights)[first_station + 29][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 31
-    fcomplex weight_30;
-    if (first_station + 30 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 30][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_30 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_30;
+
+    if (first_station + 30 < NR_STATIONS)
+      weight_30 = (*weights)[first_station + 30][channel][tab];
 #endif
 
 #if NR_STATIONS_PER_PASS >= 32
-    fcomplex weight_31;
-    if (first_station + 31 < NR_STATIONS) {
-      double delay = (*delays)[sap][first_station + 31][tab_or_zero];
-      dcomplex weight = dphaseShift(frequency, delay);
-      weight_31 = make_float2(weight.x, weight.y);
-    }
+    float2 weight_31;
+
+    if (first_station + 31 < NR_STATIONS)
+      weight_31 = (*weights)[first_station + 31][channel][tab];
 #endif
 
-    // Loop over all the samples in time. Perform the addition for 16 time steps.
-    for (unsigned time = 0; time < NR_SAMPLES_PER_CHANNEL; time += 16)
+    // Loop over all the samples in time
+    // TODO: This is a candidate to be added as an extra paralellization dim.
+    // problem: we already have the x,y and z filled with parallel parameters. Make the polarization implicit?
+    for (unsigned time = 0; time < NR_SAMPLES_PER_CHANNEL; time += 16)  // Perform the addition for 16 timesteps
     {
-      // precalculate the upper limit and only do the loop for a valid range
-      unsigned laststation = min(NR_STATIONS_PER_PASS, NR_STATIONS - first_station);
-      // Optimized memory transfer: Threads load from memory in parallel
+      // Optimized memory transver: Threads load paralel memory
       for (unsigned i = threadIdx.x + NR_POLARIZATIONS * threadIdx.y;
-                    i < laststation * 16;
-                    i += blockDim.y * NR_POLARIZATIONS) // Use blockdim steps: memmory access done by more threads then we might have tabs
+                    i < NR_STATIONS_PER_PASS * 16;
+                    i += NR_TABS * NR_POLARIZATIONS) 
       {
         unsigned t = i % 16;
         unsigned s = i / 16;
 
         if (NR_SAMPLES_PER_CHANNEL % 16 == 0 || time + t < NR_SAMPLES_PER_CHANNEL)
+          if (NR_STATIONS % NR_STATIONS_PER_PASS == 0 || first_station + s < NR_STATIONS)
             _local.samples4[0][i] = (*samples)[first_station + s][channel][time + t];
       }
 
-      __syncthreads();
+       __syncthreads();
 
-      // Some threads are scheduled to fill the wave, so check for actual work.
-      // Note that we can't simply call 'continue' for idle threads, as they still need
-      // to participate in the sync_threads below
-      if (tab < NR_TABS) {
-        for (unsigned t = 0; 
-                      t < (NR_SAMPLES_PER_CHANNEL % 16 == 0 ? 16 : min(16U, NR_SAMPLES_PER_CHANNEL - time));
-                      t++) 
-        {
-          fcomplex sum = first_station == 0 ? // The first run the sum should be zero, otherwise we need to take the sum of the previous run
-                      make_float2(0,0) :
-                      (*complexVoltages)[channel][time + t][tab][pol];
 
-          // Calculate the weighted complex sum of the samples
+      for (unsigned t = 0; 
+                    t < (NR_SAMPLES_PER_CHANNEL % 16 == 0 ? 16 : min(16U, NR_SAMPLES_PER_CHANNEL - time));
+                    t++) 
+      {
+        float2 sum = first_station == 0 ? // The first run the sum should be zero, otherwise we need to take the sum of the previous run
+                    make_float2(0,0) :
+                    (*complexVoltages)[channel][time + t][tab][pol];
+
+        // Calculate the weighted complex sum of the samples
 #if NR_STATIONS_PER_PASS >= 1
-          if (first_station + 1 <= NR_STATIONS) {  // Remember that the number of stations might not be a multiple of 32. Skip if station does not exist
-            fcomplex sample = _local.samples[ 0][t][pol];
-            sum = sum + weight_00 * sample;
-          }
+        if (first_station + 1 <= NR_STATIONS) {  // Remember that the number of stations might not be a multiple of 32. Skip if station does not exist
+          sample = _local.samples[ 0][t][pol];
+          sum.x += weight_00.x * sample.x;
+          sum.y += weight_00.x * sample.y;
+          sum.x += weight_00.y * -sample.y;
+          sum.y += weight_00.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 2
-          if (first_station + 2 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[ 1][t][pol];
-            sum = sum + weight_01 * sample;
-          }
+        if (first_station + 2 <+ NR_STATIONS) {
+          sample = _local.samples[ 1][t][pol];
+          sum.x += weight_01.x * sample.x;
+          sum.y += weight_01.x * sample.y;
+          sum.x += weight_01.y * -sample.y;
+          sum.y += weight_01.y * sample.x;
+        }
 #endif
 
 
 #if NR_STATIONS_PER_PASS >= 3
-          if (first_station + 3 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[ 2][t][pol];
-            sum = sum + weight_02 * sample;
-          }
+        if (first_station + 3 <= NR_STATIONS) {
+          sample = _local.samples[ 2][t][pol];
+          sum.x += weight_02.x * sample.x;
+          sum.y += weight_02.x * sample.y;
+          sum.x += weight_02.y * -sample.y;
+          sum.y += weight_02.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 4
-          if (first_station + 4 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[ 3][t][pol];
-            sum = sum + weight_03 * sample;
-          }
+        if (first_station + 4 <= NR_STATIONS) {
+          sample = _local.samples[ 3][t][pol];
+          sum.x += weight_03.x * sample.x;
+          sum.y += weight_03.x * sample.y;
+          sum.x += weight_03.y * -sample.y;
+          sum.y += weight_03.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 5
-          if (first_station + 5 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[ 4][t][pol];
-            sum = sum + weight_04 * sample;
-          }
+        if (first_station + 5 <= NR_STATIONS) {
+          sample = _local.samples[ 4][t][pol];
+          sum.x += weight_04.x * sample.x;
+          sum.y += weight_04.x * sample.y;
+          sum.x += weight_04.y * -sample.y;
+          sum.y += weight_04.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 6
-          if (first_station + 6 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[ 5][t][pol];
-            sum = sum + weight_05 * sample;
-          }
+        if (first_station + 6 <= NR_STATIONS) {
+          sample = _local.samples[ 5][t][pol];
+          sum.x += weight_05.x * sample.x;
+          sum.y += weight_05.x * sample.y;
+          sum.x += weight_05.y * -sample.y;
+          sum.y += weight_05.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 7
-          if (first_station + 7 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[ 6][t][pol];
-            sum = sum + weight_06 * sample;
-          }
+        if (first_station + 7 <= NR_STATIONS) {
+          sample = _local.samples[ 6][t][pol];
+          sum.x += weight_06.x * sample.x;
+          sum.y += weight_06.x * sample.y;
+          sum.x += weight_06.y * -sample.y;
+          sum.y += weight_06.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 8
-          if (first_station + 8 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[ 7][t][pol];
-            sum = sum + weight_07 * sample;
-          }
+        if (first_station + 8 <= NR_STATIONS) {
+          sample = _local.samples[ 7][t][pol];
+          sum.x += weight_07.x * sample.x;
+          sum.y += weight_07.x * sample.y;
+          sum.x += weight_07.y * -sample.y;
+          sum.y += weight_07.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 9
-          if (first_station + 9 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[ 8][t][pol];
-            sum = sum + weight_08 * sample;
-          }
+        if (first_station + 9 <= NR_STATIONS) {
+          sample = _local.samples[ 8][t][pol];
+          sum.x += weight_08.x * sample.x;
+          sum.y += weight_08.x * sample.y;
+          sum.x += weight_08.y * -sample.y;
+          sum.y += weight_08.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 10
-          if (first_station + 10 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[ 9][t][pol];
-            sum = sum + weight_09 * sample;
-          }
+        if (first_station + 10 <= NR_STATIONS) {
+          sample = _local.samples[ 9][t][pol];
+          sum.x += weight_09.x * sample.x;
+          sum.y += weight_09.x * sample.y;
+          sum.x += weight_09.y * -sample.y;
+          sum.y += weight_09.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 11
-          if (first_station + 11 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[10][t][pol];
-            sum = sum + weight_10 * sample;
-          }
+        if (first_station + 11 <= NR_STATIONS) {
+          sample = _local.samples[10][t][pol];
+          sum.x += weight_10.x * sample.x;
+          sum.y += weight_10.x * sample.y;
+          sum.x += weight_10.y * -sample.y;
+          sum.y += weight_10.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 12
-          if (first_station + 12 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[11][t][pol];
-            sum = sum + weight_11 * sample;
-          }
+        if (first_station + 12 <= NR_STATIONS) {
+          sample = _local.samples[11][t][pol];
+          sum.x += weight_11.x * sample.x;
+          sum.y += weight_11.x * sample.y;
+          sum.x += weight_11.y * -sample.y;
+          sum.y += weight_11.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 13
-          if (first_station + 13 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[12][t][pol];
-            sum = sum + weight_12 * sample;
-          }
+        if (first_station + 13 <= NR_STATIONS) {
+          sample = _local.samples[12][t][pol];
+          sum.x += weight_12.x * sample.x;
+          sum.y += weight_12.x * sample.y;
+          sum.x += weight_12.y * -sample.y;
+          sum.y += weight_12.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 14
-          if (first_station + 14 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[13][t][pol];
-            sum = sum + weight_13 * sample;
-          }
+        if (first_station + 14 <= NR_STATIONS) {
+          sample = _local.samples[13][t][pol];
+          sum.x += weight_13.x * sample.x;
+          sum.y += weight_13.x * sample.y;
+          sum.x += weight_13.y * -sample.y;
+          sum.y += weight_13.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 15
-          if (first_station + 15 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[14][t][pol];
-            sum = sum + weight_14 * sample;
-          }
+        if (first_station + 15 <= NR_STATIONS) {
+          sample = _local.samples[14][t][pol];
+          sum.x += weight_14.x * sample.x;
+          sum.y += weight_14.x * sample.y;
+          sum.x += weight_14.y * -sample.y;
+          sum.y += weight_14.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 16
-          if (first_station + 16 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[15][t][pol];
-            sum = sum + weight_15 * sample;
-          }
+        if (first_station + 16 <= NR_STATIONS) {
+          sample = _local.samples[15][t][pol];
+          sum.x += weight_15.x * sample.x;
+          sum.y += weight_15.x * sample.y;
+          sum.x += weight_15.y * -sample.y;
+          sum.y += weight_15.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 17
-          if (first_station + 17 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[16][t][pol];
-            sum = sum + weight_16 * sample;
-          }
+        if (first_station + 17 <= NR_STATIONS) {
+          sample = _local.samples[16][t][pol];
+          sum.x += weight_16.x * sample.x;
+          sum.y += weight_16.x * sample.y;
+          sum.x += weight_16.y * -sample.y;
+          sum.y += weight_16.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 18
-          if (first_station + 18 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[17][t][pol];
-            sum = sum + weight_17 * sample;
-          }
+        if (first_station + 18 <= NR_STATIONS) {
+          sample = _local.samples[17][t][pol];
+          sum.x += weight_17.x * sample.x;
+          sum.y += weight_17.x * sample.y;
+          sum.x += weight_17.y * -sample.y;
+          sum.y += weight_17.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 19
-          if (first_station + 19 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[18][t][pol];
-            sum = sum + weight_18 * sample;
-          }
+        if (first_station + 19 <= NR_STATIONS) {
+          sample = _local.samples[18][t][pol];
+          sum.x += weight_18.x * sample.x;
+          sum.y += weight_18.x * sample.y;
+          sum.x += weight_18.y * -sample.y;
+          sum.y += weight_18.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 20
-          if (first_station + 20 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[19][t][pol];
-            sum = sum + weight_19 * sample;
-          }
+        if (first_station + 20 <= NR_STATIONS) {
+          sample = _local.samples[19][t][pol];
+          sum.x += weight_19.x * sample.x;
+          sum.y += weight_19.x * sample.y;
+          sum.x += weight_19.y * -sample.y;
+          sum.y += weight_19.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 21
-          if (first_station + 21 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[20][t][pol];
-            sum = sum + weight_20 * sample;
-          }
+        if (first_station + 21 <= NR_STATIONS) {
+          sample = _local.samples[20][t][pol];
+          sum.x += weight_20.x * sample.x;
+          sum.y += weight_20.x * sample.y;
+          sum.x += weight_20.y * -sample.y;
+          sum.y += weight_20.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 22
-          if (first_station + 22 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[21][t][pol];
-            sum = sum + weight_21 * sample;
-          }
+        if (first_station + 22 <= NR_STATIONS) {
+          sample = _local.samples[21][t][pol];
+          sum.x += weight_21.x * sample.x;
+          sum.y += weight_21.x * sample.y;
+          sum.x += weight_21.y * -sample.y;
+          sum.y += weight_21.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 23
-          if (first_station + 23 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[22][t][pol];
-            sum = sum + weight_22 * sample;
-          }
+        if (first_station + 23 <= NR_STATIONS) {
+          sample = _local.samples[22][t][pol];
+          sum.x += weight_22.x * sample.x;
+          sum.y += weight_22.x * sample.y;
+          sum.x += weight_22.y * -sample.y;
+          sum.y += weight_22.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 24
-          if (first_station + 24 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[23][t][pol];
-            sum = sum + weight_23 * sample;
-          }
+        if (first_station + 24 <= NR_STATIONS) {
+          sample = _local.samples[23][t][pol];
+          sum.x += weight_23.x * sample.x;
+          sum.y += weight_23.x * sample.y;
+          sum.x += weight_23.y * -sample.y;
+          sum.y += weight_23.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 25
-          if (first_station + 25 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[24][t][pol];
-            sum = sum + weight_24 * sample;
-          }
+        if (first_station + 25 <= NR_STATIONS) {
+          sample = _local.samples[24][t][pol];
+          sum.x += weight_24.x * sample.x;
+          sum.y += weight_24.x * sample.y;
+          sum.x += weight_24.y * -sample.y;
+          sum.y += weight_24.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 26
-          if (first_station + 26 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[25][t][pol];
-            sum = sum + weight_25 * sample;
-          }
+        if (first_station + 26 <= NR_STATIONS) {
+          sample = _local.samples[25][t][pol];
+          sum.x += weight_25.x * sample.x;
+          sum.y += weight_25.x * sample.y;
+          sum.x += weight_25.y * -sample.y;
+          sum.y += weight_25.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 27
-          if (first_station + 27 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[26][t][pol];
-            sum = sum + weight_26 * sample;
-          }
+        if (first_station + 27 <= NR_STATIONS) {
+          sample = _local.samples[26][t][pol];
+          sum.x += weight_26.x * sample.x;
+          sum.y += weight_26.x * sample.y;
+          sum.x += weight_26.y * -sample.y;
+          sum.y += weight_26.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 28
-          if (first_station + 28 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[27][t][pol];
-            sum = sum + weight_27 * sample;
-          }
+        if (first_station + 28 <= NR_STATIONS) {
+          sample = _local.samples[27][t][pol];
+          sum.x += weight_27.x * sample.x;
+          sum.y += weight_27.x * sample.y;
+          sum.x += weight_27.y * -sample.y;
+          sum.y += weight_27.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 29
-          if (first_station + 29 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[28][t][pol];
-            sum = sum + weight_28 * sample;
-          }
+        if (first_station + 29 <= NR_STATIONS) {
+          sample = _local.samples[28][t][pol];
+          sum.x += weight_28.x * sample.x;
+          sum.y += weight_28.x * sample.y;
+          sum.x += weight_28.y * -sample.y;
+          sum.y += weight_28.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 30
-          if (first_station + 30 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[29][t][pol];
-            sum = sum + weight_29 * sample;
-          }
+        if (first_station + 30 <= NR_STATIONS) {
+          sample = _local.samples[29][t][pol];
+          sum.x += weight_29.x * sample.x;
+          sum.y += weight_29.x * sample.y;
+          sum.x += weight_29.y * -sample.y;
+          sum.y += weight_29.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 31
-          if (first_station + 31 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[30][t][pol];
-            sum = sum + weight_30 * sample;
-          }
+        if (first_station + 31 <= NR_STATIONS) {
+          sample = _local.samples[30][t][pol];
+          sum.x += weight_30.x * sample.x;
+          sum.y += weight_30.x * sample.y;
+          sum.x += weight_30.y * -sample.y;
+          sum.y += weight_30.y * sample.x;
+        }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 32
-          if (first_station + 32 <= NR_STATIONS) {
-            fcomplex sample = _local.samples[31][t][pol];
-            sum = sum + weight_31 * sample;
-          }
-#endif
-          // Write data to global mem
-          (*complexVoltages)[channel][time + t][tab][pol] = sum;
+        if (first_station + 32 <= NR_STATIONS) {
+          sample = _local.samples[31][t][pol];
+          sum.x += weight_31.x * sample.x;
+          sum.y += weight_31.x * sample.y;
+          sum.x += weight_31.y * -sample.y;
+          sum.y += weight_31.y * sample.x;
         }
+#endif
+        // Write data to global mem
+        (*complexVoltages)[channel][time + t][tab][pol] = sum;
       }
 
       __syncthreads();
     }
   }
-#endif /* FLYS_EYE */
 }
 

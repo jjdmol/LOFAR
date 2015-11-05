@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -235,12 +235,6 @@ public class jTreeMaintenance implements jTreeMaintenanceInterface
     @Override
     public native boolean setTreeState (int aTreeID, short aState) throws RemoteException;
 
-    // Set the state of any tree. When changing the state of a tree all
-    // constraints/validations for the current type must be fulfilled.
-    // When errors occur these can be retrieved with the errorMsg function.
-    // possibility to overwrite the endDate or not (
-    @Override
-    public native boolean setTreeState (int aTreeID, short aState, boolean allow_endtime_update) throws RemoteException;
 
     // Update the description of a tree.
     @Override

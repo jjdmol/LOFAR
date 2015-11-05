@@ -6,19 +6,35 @@ include(LofarCTest)
 # source files and headers in subdirectories include UnitTest.h
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-lofar_add_test(tBandPass tBandPass.cc)
-lofar_add_test(t_cpu_utils t_cpu_utils.cc)
-lofar_add_test(tMPIReceive tMPIReceive.cc)
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/runrtcp.sh.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/runrtcp.sh"  # internal, no need to install
+)
+
+
+lofar_add_test(tBestEffortQueue tBestEffortQueue.cc)
+lofar_add_test(tSSH tSSH.cc)
+
+# tests that use testParset.sh
+lofar_add_test(tCorrelate_1sec_1st_5sb_noflagging DEPENDS rtcp)
+lofar_add_test(tCorrelate_3sec_1st_5sb DEPENDS rtcp)
+lofar_add_test(tCorrelate_3sec_2st_5sb DEPENDS rtcp)
+#lofar_add_test(tGPUPerformance DEPENDS rtcp) # performance measurement and comparison are broken
+set_tests_properties(
+  tCorrelate_1sec_1st_5sb_noflagging
+  tCorrelate_3sec_1st_5sb
+  tCorrelate_3sec_2st_5sb
+  PROPERTIES RUN_SERIAL ON
+)
+
 if(UNITTEST++_FOUND)
   lofar_add_test(t_gpu_utils t_gpu_utils)
-  lofar_add_test(tStationInput tStationInput)
-  
 endif()
 
 add_subdirectory(Kernels)
 add_subdirectory(Pipelines)
 add_subdirectory(Storage)
-add_subdirectory(SubbandProcs)
+add_subdirectory(WorkQueues)
 
 if(USE_CUDA)
   add_subdirectory(cuda)

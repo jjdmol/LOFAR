@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@
 #include <Common/LofarTypes.h>
 #include <Common/StringUtil.h>
 #include <time.h>
-#include <Common/NsTimestamp.h>
+#include <APL/RTCCommon/NsTimestamp.h>
 
 #include "TP_Protocol.ph"
 
@@ -40,7 +40,7 @@ namespace LOFAR {
 static const int DRIVER_VERSION = 251;
 
 enum BoardStateT {noBoard,
-				  setDefaultImage, defaultImageSet,
+				  setImage1, image1Set,
 				  checkAlive, boardAlive,
 				  checkStatus, statusChecked,
 				  clearBoard, boardCleared,
@@ -112,7 +112,7 @@ struct TriggerInfo {
 	
 	int32  boardnr;
 	int32  rcu;
-	NsTimestamp ns_timestamp;
+	RTC::NsTimestamp ns_timestamp;
 };
 
 // forward declaration
@@ -248,7 +248,6 @@ public:
 	uint32 getMemorySize(int32 boardnr);
 	void setMemorySize(int32 boardnr,uint32 pages);
 	
-	uint32 getDefaultImageNr();
 	uint32 getImageNr(int32 boardnr);
 	void setImageNr(int32 boardnr, uint32 image);
 	
@@ -275,7 +274,6 @@ private:
 
 	// --- Datamembers ---  
 	int32  itsDriverVersion;
-    uint32 itsDefaultImageNr;
 	int32  itsMaxBoards;	// constants
 	int32  itsMaxChannels;
 	int32  itsMpsOnBoard;
@@ -422,7 +420,7 @@ inline  void TbbSettings::setTriggerInfo(int32 boardnr, uint8 *info) {
 				uint32 sec  = itsTriggerInfo->time;
 				uint32 nsec = (uint32)((double)itsTriggerInfo->sample_nr * itsSampleTime);
 				
-				NsTimestamp ns_timestamp(sec, nsec);
+				RTC::NsTimestamp ns_timestamp(sec, nsec);
 				itsTriggerInfo->ns_timestamp = ns_timestamp;
             
 				itsNewTriggerInfo = true;
@@ -475,7 +473,6 @@ inline	void TbbSettings::setDstMacCep(int32 channelnr, string mac) { itsChannelI
 //---- inline functions for board information ------------
 inline	uint32 TbbSettings::getMemorySize(int32 boardnr) { return (itsBoardInfo[boardnr].memorySize); }
 inline	void TbbSettings::setMemorySize(int32 boardnr,uint32 pages) { itsBoardInfo[boardnr].memorySize = pages; }
-inline	uint32 TbbSettings::getDefaultImageNr() { return (itsDefaultImageNr); }
 inline	uint32 TbbSettings::getImageNr(int32 boardnr) { return (itsBoardInfo[boardnr].imageNr); }
 inline	void TbbSettings::setImageNr(int32 boardnr,uint32 image) { itsBoardInfo[boardnr].imageNr = image; }
 inline	uint32 TbbSettings::getImageState(int32 boardnr) { return (itsBoardInfo[boardnr].configState & 0x1); }

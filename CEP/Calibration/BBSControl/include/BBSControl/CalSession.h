@@ -31,11 +31,11 @@
 #include <BBSControl/CommandResult.h>
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/Types.h>
+#include <BBSKernel/Types.h>
 #include <BBSControl/ProcessId.h>
-#include <BBSKernel/Interval.h>
-#include <ParmDB/Axis.h>
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_string.h>
+#include <ParmDB/Axis.h>
 #include <pqxx/connection>
 #include <pqxx/trigger>
 #include <functional>
@@ -89,6 +89,7 @@ public:
     CalSession(const string &key, const string &db, const string &user,
         const string &password = "", const string &host = "localhost",
         const string &port = "");
+    ~CalSession();
 
     ProcessId getProcessId() const;
 
@@ -293,7 +294,6 @@ private:
     mutable vector<size_t>          itsSlotCount;
     mutable map<ProcessId, size_t>  itsRegisterMap;
     mutable vector<Worker>          itsRegister;
-    mutable bool                    itsRegisterDirty;
 
     // Triggers that have been registered with the database.
     // \note Triggers cannot be copied, so we must use a shared pointer.

@@ -1,9 +1,9 @@
 //#
 //#  CalServer.cc: implementation of CalServer class
 //#
-//#  Copyright (C) 2002-2014
+//#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -79,9 +79,6 @@ using namespace GCF::TM;
 // Use a terminate handler that can produce a backtrace.
 Exception::TerminateHandler t(Exception::terminate);
 
-// static pointer used for signal handler.
-static CalServer*	thisCalServer = 0;
-	
 //
 // CalServer constructor
 //
@@ -142,60 +139,6 @@ CalServer::~CalServer()
 #ifdef USE_CAL_THREAD
 	if (m_calthread) delete m_calthread;
 #endif
-}
-
-//
-// sigintHandler(signum)
-//
-void CalServer::sigintHandler(int signum)
-{
-	LOG_WARN (formatString("SIGINT signal detected (%d)",signum));
-
-	// Note we can't call TRAN here because the siginthandler does not know our object.
-	if (thisCalServer) {
-		thisCalServer->finish();
-	}
-}
-
-//
-// finish
-//
-void CalServer::finish()
-{
-	TRAN(CalServer::finishing_state);
-}
-
-//
-// finishing_state(event, port)
-//
-// Powerdown all antenna's for safety.
-//
-GCFEvent::TResult CalServer::finishing_state(GCFEvent& 		event, GCFPortInterface& port)
-{
-	LOG_INFO_STR ("finishing_state:" << eventName(event) << "@" << port.getName());
-
-	switch (event.signal) {
-	case F_ENTRY: {
-		// turn off 'old' timers
-		itsCheckTimer->cancelAllTimers();
-		SubArray::RCUmask_t	rcus2switchOff;
-		rcus2switchOff.reset();
-		for (uint i = 0; i < m_n_rcus; i++) {
-			rcus2switchOff.set(i);
-		}
-		_powerdownRCUs(rcus2switchOff);
-		itsCheckTimer->setTimer(0.2);
-	} break;
-
-	case F_TIMER: {
-		GCFScheduler::instance()->stop();
-	} break;
-  
-	default:
-		LOG_DEBUG("finishing_state, default");
-		break;
-	}    
-	return (GCFEvent::HANDLED);
 }
 
 //
@@ -278,10 +221,6 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 			}
 			LOG_INFO_STR("Interim datafile will be stored in " << itsDataDir);
 
-			// get HBA poweroff delay.
-			itsPowerOffDelay = globalParameterSet()->getTime("CalServer.PowerOffDelay", 180);
-			LOG_INFO_STR("PowerOff delay = " << itsPowerOffDelay << " seconds.");
-
 			// Setup calibration algorithm
 			m_cal = new RemoteStationCalibration(m_sources, m_dipolemodels, *m_converter);
 #ifdef USE_CAL_THREAD
@@ -328,7 +267,6 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 		LOG_INFO_STR("nrRSPboards=" << m_n_rspboards << ", nrRCUS=" << m_n_rcus);
 		// resize and clear itsRCUcounters.
 		itsRCUcounts.assign(m_n_rcus, 0);
-		itsPowerOffTime.assign(m_n_rcus, 0);
 
 		// get initial clock setting
 		RSPGetclockEvent getclock;
@@ -427,13 +365,6 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 		// switch off receivers by default.
 		_disableRCUs(0);
 		itsCheckTimer->setTimer(0.0, 1.0);
-
-		// redirect signalhandler to always powerdown the antenna's when quiting...
-		thisCalServer = this;
-		signal (SIGINT,  CalServer::sigintHandler);	// ctrl-c
-		signal (SIGTERM, CalServer::sigintHandler);	// kill
-		signal (SIGABRT, CalServer::sigintHandler);	// kill -6
-
 	}
 	break;
 
@@ -470,11 +401,7 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 
 	case RSP_SETRCUACK: {
 		RSPSetrcuackEvent ack(e);
-		if (ack.status == RSP_Protocol::RSP_BUSY) {
-			// We could be switching off the RCU during a clock switch for the next
-			// observation. In that case, we don't need to try again.
-			LOG_INFO_STR("Failed to set RCU control register: RSP is busy.");
-		} else if (ack.status != RSP_Protocol::RSP_SUCCESS) {
+		if (ack.status != RSP_Protocol::RSP_SUCCESS) {
 			LOG_FATAL_STR("Failed to set RCU control register.");
 			exit (EXIT_FAILURE);
 		}
@@ -496,23 +423,8 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 	break;
 
 	case F_TIMER: {
-		// first check Poweroff timer
-		SubArray::RCUmask_t		rcus2switchOff;
-		rcus2switchOff.reset();
-		time_t		now(time(0L));
-		for (uint i = 0; i < m_n_rcus; i++) {				// loop over all rcus
-			if (itsPowerOffTime[i] && itsPowerOffTime[i] <= now) {	// elapsed?
-				rcus2switchOff.set(i);
-				itsPowerOffTime[i] = 0;
-			}
-		} // for
-		if (rcus2switchOff.any()) {
-			LOG_INFO ("Delayed power-off of HBA tiles.");
-			_powerdownRCUs(rcus2switchOff);		// Finally shut them down.
-		}
-
-		// swap buffers
 		GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);
+
 		const Timestamp t = Timestamp(timer->sec, timer->usec);
 		LOG_DEBUG_STR("updateAll @ " << t);
 
@@ -711,32 +623,77 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 								GET_CONFIG("CalServer.N_SUBBANDS", i),
 								start.rcumode()(0).getRaw());
 
-			if (m_subarrays.conflicting(subarray)) {
-				// error is already printed
-				ack.status = ERR_NO_PARENT;
+			m_subarrays.schedule_add(subarray);
+
+			bitset<MAX_RCUS> validmask;
+
+			for (uint rcu = 0; rcu < m_n_rcus; ++rcu) {
+				validmask.set(rcu);   // select rcu
 			}
-			else {
-				m_subarrays.schedule_add(subarray);
 
-				// calibration will start within one second
-				// set the spectral inversion right
-				RSPSetbypassEvent	specInvCmd;
-				bool				SIon(start.rcumode()(0).getNyquistZone() == 2);// on or off?
-				specInvCmd.timestamp = Timestamp(0,0);
-				specInvCmd.rcumask   = start.subset;
-				specInvCmd.settings().resize(1);
-				specInvCmd.settings()(0).setXSI(SIon);
-				specInvCmd.settings()(0).setYSI(SIon);
-				LOG_DEBUG_STR("NyquistZone = " << start.rcumode()(0).getNyquistZone()
-								<< " setting spectral inversion " << ((SIon) ? "ON" : "OFF"));
-				itsRSPDriver->send(specInvCmd);
+			// calibration will start within one second
+			// set the spectral inversion right
+			RSPSetbypassEvent	specInvCmd;
+			bool				SIon(start.rcumode()(0).getNyquistZone() == 2);// on or off?
+			specInvCmd.timestamp = Timestamp(0,0);
+			specInvCmd.rcumask   = start.subset & validmask;
+			specInvCmd.settings().resize(1);
+			specInvCmd.settings()(0).setXSI(SIon);
+			specInvCmd.settings()(0).setYSI(SIon);
+			LOG_DEBUG_STR("NyquistZone = " << start.rcumode()(0).getNyquistZone()
+							<< " setting spectral inversion " << ((SIon) ? "ON" : "OFF"));
+			itsRSPDriver->send(specInvCmd);
 
-                RCUSettings rcu_settings;
-                rcu_settings().resize(1);
-                rcu_settings()(0) = start.rcumode()(0);
-                				
-                _enableRCUs(subarray, rcu_settings, SCHEDULING_DELAY + 4);
-			} // conflict?
+			//
+			// set the control register of the RCU's
+			// if in HBA mode turn on HBAs in groups to prevent resetting of boards
+			//
+
+			RSPSetrcuEvent setrcu;
+			bitset<MAX_RCUS> testmask;
+			Timestamp timeStamp;
+
+			#define N_PWR_RCUS_PER_STEP 12
+
+			int nPwrRCUs = m_n_rcus / 2;  // only the even rcus deliver power to the HBAs
+			int steps    = nPwrRCUs / N_PWR_RCUS_PER_STEP;  // 4 steps for NL stations, 8 steps for IS stations
+			int jump     = m_n_rcus / N_PWR_RCUS_PER_STEP;  // jump = 8 for NL stations and 16 for IS stations
+
+			if (steps == 0) { steps = 1; }  // limit for test cabinet
+			if (jump < 2) { jump = 2; }     // limit for test cabinet
+
+			// if LBA mode select all rcus in one step
+			if (start.rcumode()(0).getMode() <= 4) {
+				steps = 1;
+				jump = 2;
+			}
+            int delay(0);
+			for (int step = 0; step < steps; ++step) {
+				validmask.reset();
+				// select 12 even(X) rcus and 12 odd(Y) rcus
+				for (uint rcu = (step * 2); rcu < m_n_rcus; rcu += jump) {
+					validmask.set(rcu);   // select X (HBA power supply)
+					validmask.set(rcu+1); // select Y
+				}
+
+				// if any rcus in this masker send command
+				testmask = start.subset & validmask;
+				if (testmask.any()) {
+					delay = SCHEDULING_DELAY + step;
+					timeStamp.setNow(delay);
+					setrcu.timestamp = timeStamp; // in steps of 1 second
+
+					//TODO: Step20.2: might have to send 2 settings e.g. when using all X-pols
+
+					setrcu.rcumask = start.subset & validmask;
+					setrcu.settings().resize(1);
+					setrcu.settings()(0) = start.rcumode()(0);
+
+					LOG_DEBUG(formatString("Sending RSP_SETRCU(%08X)", start.rcumode()(0).getRaw()));
+					itsRSPDriver->send(setrcu);
+				}
+			}
+			_enableRCUs(subarray, delay + 4);
 		}
 	}
 	port.send(ack); // send ack
@@ -875,9 +832,9 @@ GCFEvent::TResult CalServer::handle_cal_getsubarray(GCFEvent& e, GCFPortInterfac
 }
 
 //
-//  (subarray*)
+// _enableRCUs(subarray*)
 //
-void CalServer::_enableRCUs(SubArray*	subarray, RCUSettings rcu_settings, int delay)
+void CalServer::_enableRCUs(SubArray*	subarray, int delay)
 {
 	// increment the usecount of the receivers
 	SubArray::RCUmask_t	rcuMask = subarray->getRCUMask();
@@ -886,9 +843,8 @@ void CalServer::_enableRCUs(SubArray*	subarray, RCUSettings rcu_settings, int de
 	Timestamp timeStamp;
 	for (uint r = 0; r < m_n_rcus; r++) {
 		if (rcuMask.test(r)) {
-			if (++itsRCUcounts[r] == 1) {
+			if(++itsRCUcounts[r] == 1) {
 				rcus2switchOn.set(r);
-				itsPowerOffTime[r] = 0;	// reset poweroff time
 			} // new count is 1
 		} // rcu in mask
 	} // for all rcus
@@ -901,9 +857,8 @@ void CalServer::_enableRCUs(SubArray*	subarray, RCUSettings rcu_settings, int de
 		RSPSetrcuEvent	enableCmd;
 		timeStamp.setNow(delay);
 		enableCmd.timestamp = timeStamp;
-		enableCmd.rcumask   = rcus2switchOn;
+		enableCmd.rcumask = rcus2switchOn;
 		enableCmd.settings().resize(1);
-        enableCmd.settings()(0) = rcu_settings()(0);
 		enableCmd.settings()(0).setEnable(true);
 		sleep (1);
 		LOG_INFO("Enabling some rcu's because they are used for the first time");
@@ -915,11 +870,12 @@ void CalServer::_enableRCUs(SubArray*	subarray, RCUSettings rcu_settings, int de
 	if (rcumode == 1 || rcumode == 2) {		// LBLinput used?
 		LOG_INFO("LBL inputs are used, swapping X and Y RCU's");
 		RSPSetswapxyEvent	swapCmd;
-		swapCmd.timestamp   = timeStamp;
-		swapCmd.swapxy	    = true;
+		swapCmd.timestamp =timeStamp;
+		swapCmd.swapxy	  = true;
 		swapCmd.antennamask = RCU2AntennaMask(rcuMask);
 		itsRSPDriver->send(swapCmd);
 	}
+
 }
 
 //
@@ -931,8 +887,6 @@ void CalServer::_disableRCUs(SubArray*	subarray)
 	bool				allSwitchedOff(true);
 	SubArray::RCUmask_t	rcus2switchOff;
 	rcus2switchOff.reset();
-	Timestamp 			powerOffTime;
-	powerOffTime.setNow(itsPowerOffDelay);
 
 	if (subarray) {		// when no subarray is defined skip this loop: switch all rcus off.
 		SubArray::RCUmask_t	rcuMask = subarray->getRCUMask();
@@ -940,7 +894,6 @@ void CalServer::_disableRCUs(SubArray*	subarray)
 			if (rcuMask.test(r)) {
 				if (--itsRCUcounts[r] == 0) {
 					rcus2switchOff.set(r);
-					itsPowerOffTime[r] = powerOffTime;
 				} // count reaches 0
 			} // rcu in mask
 
@@ -951,44 +904,33 @@ void CalServer::_disableRCUs(SubArray*	subarray)
 		} // for all rcus
 	}
 
-	if (allSwitchedOff) { 	// all receivers off? make mask that addresses them all.
+	if (allSwitchedOff) { 	// all receivers off? force all rcu's to mode 0, disable
 		rcus2switchOff.reset();
 		for (uint i = 0; i < m_n_rcus; i++) {
 			rcus2switchOff.set(i);
 		}
-//		LOG_INFO("No active rcu's anymore, forcing all units to mode 0 and disable");
+		LOG_INFO("No active rcu's anymore, forcing all units to mode 0 and disable");
 	}
 
     // when the lbl inputs are selected swap the X and the Y.
 	LOG_INFO("Resetting swap of X and Y");
 	RSPSetswapxyEvent   swapCmd;
-	swapCmd.timestamp   = Timestamp(0,0);
-	swapCmd.swapxy      = false;
+	swapCmd.timestamp =Timestamp(0,0);
+	swapCmd.swapxy    = false;
 	swapCmd.antennamask = RCU2AntennaMask(rcus2switchOff);
 	itsRSPDriver->send(swapCmd);
 
-	_updateDataStream(0); // asap
-
-	if (!subarray) {	// reset at startup of CalServer or stopping LBA's?
-		sleep (1);
-		_powerdownRCUs(rcus2switchOff);
-	}
-	// Note: when NOT in startup mode the poweroff is delayed.
-}
-
-//
-// _powerdownRCUs(rcus2switchOff)
-//
-void CalServer::_powerdownRCUs(SubArray::RCUmask_t	rcus2switchOff)
-{
 	// anything to disable? Tell the RSPDriver.
 	if (rcus2switchOff.any()) {
+		_updateDataStream(0); // asap
+		
 		RSPSetrcuEvent	disableCmd;
 		disableCmd.timestamp = Timestamp(0,0);
-		disableCmd.rcumask   = rcus2switchOff;
+		disableCmd.rcumask = rcus2switchOff;
 		disableCmd.settings().resize(1);
 		disableCmd.settings()(0).setEnable(false);
 		disableCmd.settings()(0).setMode(RCUSettings::Control::MODE_OFF);
+		sleep (1);
 		LOG_INFO_STR("Disabling " << rcus2switchOff.count() << " rcu's because they are not used anymore");
 		itsRSPDriver->send(disableCmd);
 	}
@@ -1025,7 +967,6 @@ void CalServer::_updateDataStream(uint	delay)
 {
 	bool	switchFirstOn  = _dataOnRing(0);
 	bool	switchSecondOn = itsSecondRingActive && _dataOnRing(1);
-
 	if ((itsFirstRingOn != switchFirstOn) || (itsSecondRingOn != switchSecondOn)) {
 		RSPSetdatastreamEvent	dsCmd;
 		dsCmd.timestamp.setNow(delay);
@@ -1138,7 +1079,7 @@ int main(int argc, char** argv)
 		exit(EXIT_FAILURE);
 	}
 
-	// SOMETIMES CALSERVER IS STARTED BEFORE RSPDRIVER IS ON THE AIR THIS SHOULD NOT BE A PROBLEM
+	// SOMETIMES CALSERVER IS STARTED BEFORE RSPDRIVER IS ON THE AIR THIS SHOULD BE A PROBLEM
 	// BUT IT SOMETIMES IS. QAD HACK TO AVOID HANGING CalServer
 	sleep(3);
 

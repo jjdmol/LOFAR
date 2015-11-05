@@ -12,7 +12,6 @@ par  _hostname               I    text   -      100	0	'CCU001'                  
 par  pythonProgram           I    text   -      100	0	'startPipeline.py'				-	"Python script to start"
 par  pythonHost              I    text   -      100	0	'lhn001.cep2.lofar'				-	"Machine the Pythonscript should be started"
 par  canCommunicate          I    bool   -      10	0	'true'						-	"Temp flag to tell MAC if the current PythonController can respond to CONTROL_xxx messages"
-par  softwareVersion         I    text   -      100     0       ''                                              -       "the LOFAR software version to use for the pipeline (literally the sub-directory name in lofar_versions)"
 
 uses DPPP	   4.0.0  development 	1	"DPcube"
 uses BBS  	   4.0.0  development 	1	"Blackboard System"
@@ -22,5 +21,4 @@ uses GSM 	   4.0.0  development 	1	"GSM"
 uses BDSM 	   4.0.0  development 	1	"BDSM"
 uses Calibration   4.0.0  development   1   	"Calibration"
 uses PreProcessing 4.0.0  development   1       "Pre-processing"
-uses Pulsar        4.0.0  development   1       "Pulsar Pipeline tuning parameters"
-uses LongBaseline  4.0.0  development   1       "LongBaseline Pipeline tuning parameters"
+

@@ -42,16 +42,18 @@ namespace LOFAR
     class MSWriterDAL : public MSWriterFile
     {
     public:
-      MSWriterDAL(const std::string &filename, const Parset &parset, unsigned fileno);
+      MSWriterDAL(const std::string &filename, const Parset &parset, unsigned fileno, bool isBigEndian);
       ~MSWriterDAL();
       virtual void write(StreamableData *data);
     private:
       const Parset &itsParset;
-      unsigned itsNrChannels;
-      unsigned itsNrSamples;
+      const Transpose2 &itsTransposeLogic;
+      const StreamInfo &itsInfo;
+      const unsigned itsNrChannels;
+      const unsigned itsNrSamples;
       unsigned itsNextSeqNr;
-      unsigned itsFileNr;
-      unsigned itsBlockSize; // the size of StreamableData::samples, in T
+
+      const unsigned itsBlockSize; // the size of StreamableData::samples, in T
     };
   }
 }

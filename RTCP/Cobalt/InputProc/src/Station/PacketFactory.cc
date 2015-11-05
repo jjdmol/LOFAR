@@ -23,16 +23,16 @@
 
 #include "PacketFactory.h"
 
-#include <cstring>
+#include <string.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
 
-    PacketFactory::PacketFactory( const struct BoardMode &mode )
+    PacketFactory::PacketFactory( const BufferSettings &settings )
       :
-      boardMode(mode)
+      settings(settings)
     {
     }
 
@@ -40,24 +40,16 @@ namespace LOFAR
     {
     }
 
-    bool PacketFactory::makePacket( struct RSP &packet, const TimeStamp &timestamp, size_t boardNr )
-    {
-      memset(&packet, 0, sizeof packet);
-
-      return 
-        makeHeader(packet, timestamp, boardNr) &&
-        makePayload(packet);
-    }
     
-    bool PacketFactory::makeHeader( struct RSP &packet, const TimeStamp &timestamp, size_t boardNr )
+    void PacketFactory::makeHeader( struct RSP &packet, const TimeStamp &timestamp, size_t boardNr )
     {
       // configure the packet header
       packet.header.version = 3; // we emulate BDI 6.0
 
       packet.header.sourceInfo1 =
-        (boardNr & 0x1F) | (boardMode.clockMHz == 200 ? 1 << 7 : 0);
+        (boardNr & 0x1F) | (settings.station.clockMHz == 200 ? 1 << 7 : 0);
 
-      switch (boardMode.bitMode) {
+      switch (settings.station.bitMode) {
       case 16:
         packet.header.sourceInfo2 = 0;
         break;
@@ -71,7 +63,7 @@ namespace LOFAR
         break;
       }
 
-      packet.header.nrBeamlets = boardMode.nrBeamletsPerBoard();
+      packet.header.nrBeamlets = settings.nrBeamletsPerBoard();
       packet.header.nrBlocks = 16;
 
       packet.header.timestamp = timestamp.getSeqId();
@@ -80,25 +72,29 @@ namespace LOFAR
       // verify whether the packet really reflects what we intended
       ASSERT(packet.rspBoard()     == boardNr);
       ASSERT(packet.payloadError() == false);
-      ASSERT(packet.bitMode()      == boardMode.bitMode);
-      ASSERT(packet.clockMHz()     == boardMode.clockMHz);
+      ASSERT(packet.bitMode()      == settings.station.bitMode);
+      ASSERT(packet.clockMHz()     == settings.station.clockMHz);
 
       // verify that the packet has a valid size
       ASSERT(packet.packetSize()   <= sizeof packet);
-
-      return true;
     }
 
-    bool PacketFactory::makePayload( struct RSP &packet )
+
+    
+    void PacketFactory::makePayload( struct RSP &packet )
     {
       // insert data that is different for each packet
       int64 data = packet.timeStamp();
 
       memset(packet.payload.data, data & 0xFF, sizeof packet.payload.data);
-
-      return true;
     }
 
+
+    void PacketFactory::makePacket( struct RSP &packet, const TimeStamp &timestamp, size_t boardNr )
+    {
+      makeHeader(packet, timestamp, boardNr);
+      makePayload(packet);
+    }
   }
 }
 

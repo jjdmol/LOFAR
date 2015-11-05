@@ -29,6 +29,7 @@
 #include <MSLofar/MSLofar.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
+#include "Format.h"
 
 #include <casa/aips.h>
 #include <casa/Utilities/DataType.h>
@@ -44,10 +45,6 @@
  *  1            conjugated      1,2               2
  *  2            conjugated      2,1               1,2,4
  *  3            normal          1,2               1,2,4
- *
- * For a description of the meta-data tables, see
- *
- * http://www.lofar.org/operations/lib/exe/fetch.php?media=public:documents:ms2_description_for_lofar_2.08.00.pdf
  */
 
 static const unsigned LofarStManVersion = 3;
@@ -66,13 +63,13 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    class MeasurementSetFormat
+    class MeasurementSetFormat : public Format
     {
     public:
       MeasurementSetFormat(const Parset &, uint32 alignment = 1);
-      ~MeasurementSetFormat();
+      virtual ~MeasurementSetFormat();
 
-      void addSubband(const std::string MSname, unsigned subband);
+      virtual void addSubband(const std::string MSname, unsigned subband, bool isBigEndian);
 
       // casacore/measurementset mutex
       static Mutex sharedMutex;
@@ -81,7 +78,7 @@ namespace LOFAR
       const Parset &itsPS;
 
       const std::vector<std::string> stationNames;
-      const MultiDimArray<double,2>  antPos;
+      const std::vector<double> antPos;
 
       const unsigned itsNrAnt;
       uint32 itsNrTimes;
@@ -95,7 +92,7 @@ namespace LOFAR
       const uint32 itsAlignment;
 
       void createMSTables(const std::string &MSname, unsigned subband);
-      void createMSMetaFile(const std::string &MSname, unsigned subband);
+      void createMSMetaFile(const std::string &MSname, unsigned subband, bool isBigEndian);
 
       void fillFeed();
       void fillAntenna(const casa::Block<casa::MPosition>& antMPos);
@@ -105,9 +102,6 @@ namespace LOFAR
       void fillSpecWindow(unsigned subband);
       void fillObs(unsigned subarray);
       void fillHistory();
-      void fillProcessor();
-      void fillState();
-      void fillPointing(unsigned subarray);
     };
 
   } // namespace Cobalt

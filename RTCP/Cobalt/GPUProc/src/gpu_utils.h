@@ -1,5 +1,4 @@
 //# gpu_utils.h
-//#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -27,6 +26,7 @@
 #include <string>
 #include <vector>
 
+#include <CoInterface/Parset.h>
 #include "gpu_wrapper.h"
 
 namespace LOFAR
@@ -41,8 +41,8 @@ namespace LOFAR
     {
     };
 
-    // Return default compile definitions.
-    CompileDefinitions defaultCompileDefinitions();
+    // Return default compile definitions
+    const CompileDefinitions& defaultCompileDefinitions();
 
     // Set for storing compile flags that will be passed to the GPU kernel
     // compiler on the command line. Flags generally don't have an associated
@@ -52,10 +52,7 @@ namespace LOFAR
     };
 
     // Return default compile flags.
-    CompileFlags defaultCompileFlags();
-
-    // Vector for storing all the GPU devices present in the system.
-    typedef std::vector<gpu::Device> GPUDevices;
+    const CompileFlags& defaultCompileFlags();
 
     // Compile \a srcFilename and return the PTX code as string.
     // \par srcFilename Name of the file containing the source code to be
@@ -74,11 +71,11 @@ namespace LOFAR
     // \note The arguments \a srcFilename, \a flags and \a definitions are
     //       passed by value intentionally, because they will be modified by
     //       this method.
-    std::string 
-    createPTX(std::string srcFilename, 
-              CompileDefinitions definitions = CompileDefinitions(),
-              CompileFlags flags = CompileFlags(),
-              const GPUDevices &devices = gpu::Platform().devices());
+    std::string createPTX(std::string srcFilename, 
+                          CompileDefinitions definitions = defaultCompileDefinitions(),
+                          CompileFlags flags = defaultCompileFlags(),
+                          const std::vector<gpu::Device> &devices = gpu::Platform().devices()
+      );
 
     // Create a Module from a PTX (string).
     // \par context The context that the Module should be associated with.
@@ -86,14 +83,6 @@ namespace LOFAR
     gpu::Module createModule(const gpu::Context &context,
                              const std::string &srcFilename, 
                              const std::string &ptx);
-
-    // Dump the contents of a device memory buffer as raw binary data to file.
-    // \par deviceMemory Device memory buffer to be dumped.
-    // \par dumpFile Name of the dump file.
-    // \warning The underlying gpu::Stream must be synchronized, in order to
-    // dump a device buffer. This may have a serious impact on performance.
-    void dumpBuffer(const gpu::DeviceMemory &deviceMemory, 
-                    const std::string &dumpFile);
   }
 }
 

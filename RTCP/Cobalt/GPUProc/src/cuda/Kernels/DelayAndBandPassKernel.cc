@@ -22,191 +22,93 @@
 
 #include "DelayAndBandPassKernel.h"
 
-#include <GPUProc/gpu_utils.h>
-#include <GPUProc/BandPass.h>
-#include <CoInterface/BlockID.h>
-#include <CoInterface/Config.h>
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
 
-#include <boost/lexical_cast.hpp>
-#include <boost/format.hpp>
-
-#include <fstream>
-
-using boost::lexical_cast;
-using boost::format;
+#include <GPUProc/global_defines.h>
+#include <GPUProc/BandPass.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    string DelayAndBandPassKernel::theirSourceFile = "DelayAndBandPass.cu";
-    string DelayAndBandPassKernel::theirFunction = "applyDelaysAndCorrectBandPass";
-
-    DelayAndBandPassKernel::Parameters::Parameters(const Parset& ps, bool correlator) :
-      Kernel::Parameters(correlator ? "delayAndBandPass" : "delayCompensation"),
-      nrStations(ps.settings.antennaFields.size()),
-      nrBitsPerSample(ps.settings.nrBitsPerSample),
-      inputIsStationData(correlator && ps.settings.correlator.nrChannels == 1
-                                    ? true
-                                    : false),
-
-      nrChannels(correlator ? ps.settings.correlator.nrChannels
-                            : ps.settings.beamFormer.nrDelayCompensationChannels),
-      nrSamplesPerChannel(ps.settings.blockSize / nrChannels),
-      subbandBandwidth(ps.settings.subbandWidth()),
-
-      nrSAPs(ps.settings.SAPs.size()),
-      
-      delayCompensation(ps.settings.delayCompensation.enabled),
-      correctBandPass(correlator ? ps.settings.corrections.bandPass
-                                 : false),
-      transpose(correlator ? true
-                           : false)
+    DelayAndBandPassKernel::
+    DelayAndBandPassKernel(const Parset &ps, 
+                           gpu::Context &context,
+                           gpu::DeviceMemory &devCorrectedData,
+                           gpu::DeviceMemory &devFilteredData,
+                           gpu::DeviceMemory &devDelaysAtBegin,
+                           gpu::DeviceMemory &devDelaysAfterEnd,
+                           gpu::DeviceMemory &devPhaseOffsets,
+                           gpu::Stream &queue)
+      :
+      Kernel(ps, context, "DelayAndBandPass.cu", "applyDelaysAndCorrectBandPass"),
+      devBandPassCorrectionWeights(context, bufferSize(ps, BAND_PASS_CORRECTION_WEIGHTS))
     {
-      dumpBuffers = 
-        ps.getBool("Cobalt.Kernels.DelayAndBandPassKernel.dumpOutput", false);
-      dumpFilePattern = 
-        str(format("L%d_SB%%03d_BL%%03d_DelayAndBandPassKernel_%c%c%c.dat") % 
-            ps.settings.observationID %
-            (correctBandPass ? "B" : "b") %
-            (delayCompensation ? "D" : "d") %
-            (transpose ? "T" : "t"));
+      ASSERT(ps.nrChannelsPerSubband() % 16 == 0 || ps.nrChannelsPerSubband() == 1);
+      ASSERT(ps.nrSamplesPerChannel() % 16 == 0);
+
+      setArg(0, devCorrectedData);
+      setArg(1, devFilteredData);
+      setArg(4, devDelaysAtBegin);
+      setArg(5, devDelaysAfterEnd);
+      setArg(6, devPhaseOffsets);
+      setArg(7, devBandPassCorrectionWeights);
+
+      globalWorkSize = gpu::Grid(256, ps.nrChannelsPerSubband() == 1 ? 1 : ps.nrChannelsPerSubband() / 16, ps.nrStations());
+      localWorkSize = gpu::Block(256, 1, 1);
+
+      size_t nrSamples = ps.nrStations() * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * NR_POLARIZATIONS;
+      nrOperations = nrSamples * 12;
+      nrBytesRead = nrBytesWritten = nrSamples * sizeof(std::complex<float>);
+
+      // Initialise bandpass correction weights
+      if (ps.correctBandPass())
+      {
+        gpu::HostMemory bpWeights(queue.getContext(), bufferSize(ps, BAND_PASS_CORRECTION_WEIGHTS));
+        BandPass::computeCorrectionFactors(bpWeights.get<float>(), ps.nrChannelsPerSubband());
+        queue.writeBuffer(devBandPassCorrectionWeights, bpWeights, true);
+      }
     }
 
 
-    unsigned DelayAndBandPassKernel::Parameters::nrSamplesPerSubband() const {
-      return nrChannels * nrSamplesPerChannel;
+    void DelayAndBandPassKernel::enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/, unsigned subband)
+    {
+      setArg(2, static_cast<float>(ps.settings.subbands[subband].centralFrequency));
+      setArg(3, ps.settings.subbands[subband].SAP);
+      Kernel::enqueue(queue/*, counter*/);
     }
 
-
-    unsigned DelayAndBandPassKernel::Parameters::nrBytesPerComplexSample() const {
-      return inputIsStationData
-               ? 2 * nrBitsPerSample / 8
-               : sizeof(std::complex<float>);
-    }
-
-
-    size_t DelayAndBandPassKernel::Parameters::bufferSize(BufferType bufferType) const {
+    size_t
+    DelayAndBandPassKernel::bufferSize(const Parset& ps, BufferType bufferType)
+    {
       switch (bufferType) {
-      case DelayAndBandPassKernel::INPUT_DATA: 
+      case INPUT_DATA: 
+        if (ps.nrChannelsPerSubband() == 1)
+          return 
+            ps.nrStations() * NR_POLARIZATIONS * 
+            ps.nrSamplesPerSubband() * ps.nrBytesPerComplexSample();
+        else
+          return 
+            ps.nrStations() * NR_POLARIZATIONS * 
+            ps.nrSamplesPerSubband() * sizeof(std::complex<float>);
+      case OUTPUT_DATA:
+        return
+          ps.nrStations() * NR_POLARIZATIONS * 
+          ps.nrSamplesPerSubband() * sizeof(std::complex<float>);
+      case DELAYS:
         return 
-          (size_t) nrStations * NR_POLARIZATIONS * 
-            nrSamplesPerSubband() * nrBytesPerComplexSample();
-      case DelayAndBandPassKernel::OUTPUT_DATA:
+          ps.nrBeams() * ps.nrStations() * NR_POLARIZATIONS * sizeof(float);
+      case PHASE_OFFSETS:
         return
-          (size_t) nrStations * NR_POLARIZATIONS * 
-            nrSamplesPerSubband() * sizeof(std::complex<float>);
-      case DelayAndBandPassKernel::DELAYS:
-        return 
-          (size_t) nrSAPs * nrStations * 
-            NR_POLARIZATIONS * sizeof(double);
-      case DelayAndBandPassKernel::PHASE_ZEROS:
+          ps.nrStations() * NR_POLARIZATIONS * sizeof(float);
+      case BAND_PASS_CORRECTION_WEIGHTS:
         return
-          (size_t) nrStations * NR_POLARIZATIONS * sizeof(double);
-      case DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS:
-        return
-          correctBandPass ? (size_t) nrChannels * sizeof(float) : 1UL;
+          ps.nrChannelsPerSubband() * sizeof(float);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
     }
 
-
-    DelayAndBandPassKernel::DelayAndBandPassKernel(const gpu::Stream& stream,
-                                       const gpu::Module& module,
-                                       const Buffers& buffers,
-                                       const Parameters& params) :
-      CompiledKernel(stream, gpu::Function(module, theirFunction), buffers, params),
-      delaysAtBegin(stream.getContext(), params.bufferSize(DELAYS)),
-      delaysAfterEnd(stream.getContext(), params.bufferSize(DELAYS)),
-      phase0s(stream.getContext(), params.bufferSize(PHASE_ZEROS)),
-      bandPassCorrectionWeights(stream.getContext(), params.bufferSize(BAND_PASS_CORRECTION_WEIGHTS))
-    {
-      LOG_DEBUG_STR("DelayAndBandPassKernel:" <<
-                    " delayCompensation=" <<
-                    (params.delayCompensation ? "true" : "false") <<
-                    " #channels/sb=" << params.nrChannels <<
-                    " correctBandPass=" << 
-                    (params.correctBandPass ? "true" : "false") <<
-                    " transpose=" << (params.transpose ? "true" : "false"));
-
-      ASSERT(params.nrChannels % 16 == 0 || params.nrChannels == 1);
-      ASSERT(params.nrSamplesPerChannel % 16 == 0);
-
-      setArg(0, buffers.output);
-      setArg(1, buffers.input);
-      setArg(4, delaysAtBegin);
-      setArg(5, delaysAfterEnd);
-      setArg(6, phase0s);
-      setArg(7, bandPassCorrectionWeights);
-
-      setEnqueueWorkSizes( gpu::Grid(256,
-                                     params.nrChannels == 1 ?
-                                       1 :
-                                       params.nrChannels / 16,
-                                     params.nrStations),
-                           gpu::Block(256, 1, 1) );
-      
-      size_t nrSamples = (size_t)params.nrStations * params.nrChannels * params.nrSamplesPerChannel * NR_POLARIZATIONS;
-      nrOperations = nrSamples * 12;
-      nrBytesRead = nrBytesWritten = nrSamples * params.nrBytesPerComplexSample();
-
-      // Initialise bandpass correction weights
-      if (params.correctBandPass)
-      {
-        gpu::HostMemory bpWeights(stream.getContext(), bandPassCorrectionWeights.size());
-        BandPass::computeCorrectionFactors(bpWeights.get<float>(), params.nrChannels);
-        stream.writeBuffer(bandPassCorrectionWeights, bpWeights, true);
-      }
-    }
-
-
-    void DelayAndBandPassKernel::enqueue(const BlockID &blockId,
-                                         double subbandFrequency, unsigned SAP)
-    {
-      setArg(2, subbandFrequency);
-      setArg(3, SAP);
-      Kernel::enqueue(blockId);
-    }
-
-    //--------  Template specializations for KernelFactory  --------//
-
-    template<> CompileDefinitions
-    KernelFactory<DelayAndBandPassKernel>::compileDefinitions() const
-    {
-      CompileDefinitions defs =
-        KernelFactoryBase::compileDefinitions(itsParameters);
-
-      defs["NR_STATIONS"] = lexical_cast<string>(itsParameters.nrStations);
-      defs["NR_BITS_PER_SAMPLE"] =
-        lexical_cast<string>(itsParameters.nrBitsPerSample);
-
-      if (itsParameters.inputIsStationData)
-        defs["INPUT_IS_STATIONDATA"] = "1";
-
-      defs["NR_CHANNELS"] = lexical_cast<string>(itsParameters.nrChannels);
-      defs["NR_SAMPLES_PER_CHANNEL"] = 
-        lexical_cast<string>(itsParameters.nrSamplesPerChannel);
-      defs["NR_SAMPLES_PER_SUBBAND"] = 
-        lexical_cast<string>(itsParameters.nrSamplesPerSubband());
-      defs["SUBBAND_BANDWIDTH"] =
-        str(format("%.7f") % itsParameters.subbandBandwidth);
-
-      defs["NR_SAPS"] =
-        lexical_cast<string>(itsParameters.nrSAPs);
-
-      if (itsParameters.delayCompensation)
-        defs["DELAY_COMPENSATION"] = "1";
-
-      if (itsParameters.correctBandPass)
-        defs["BANDPASS_CORRECTION"] = "1";
-
-      if (itsParameters.transpose)
-        defs["DO_TRANSPOSE"] = "1";
-
-      return defs;
-    }
   }
 }

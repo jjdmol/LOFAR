@@ -32,53 +32,11 @@ namespace BBS
 {
 using LOFAR::operator<<;
 
-// -------------------------------------------------------------------------- //
-// - ClockConfig implementation                                             - //
-// -------------------------------------------------------------------------- //
-ClockConfig::ClockConfig()
-    : itsSplitClock(false)
-{
-}
-
-ClockConfig::ClockConfig(bool splitClock)
-    :   itsSplitClock(splitClock)
-{
-}
-
-bool ClockConfig::splitClock() const
-{
-  return itsSplitClock;
-}
-
-// -------------------------------------------------------------------------- //
-// - GainConfig implementation                                               - //
-// -------------------------------------------------------------------------- //
-GainConfig::GainConfig(bool phasors)
-    :   itsPhasors(phasors)
-{
-}
-
-bool GainConfig::phasors() const
-{
-    return itsPhasors;
-}
-
-// -------------------------------------------------------------------------- //
-// - DirectionalGainConfig implementation                                   - //
-// -------------------------------------------------------------------------- //
-DirectionalGainConfig::DirectionalGainConfig(bool phasors)
-    :   itsPhasors(phasors)
-{
-}
-
-bool DirectionalGainConfig::phasors() const
-{
-    return itsPhasors;
-}
 
 // -------------------------------------------------------------------------- //
 // - ElevationCutConfig implementation                                      - //
 // -------------------------------------------------------------------------- //
+
 ElevationCutConfig::ElevationCutConfig()
     :   itsThreshold(0.0)
 {
@@ -97,6 +55,7 @@ double ElevationCutConfig::threshold() const
 // -------------------------------------------------------------------------- //
 // - BeamConfig implementation                                              - //
 // -------------------------------------------------------------------------- //
+
 bool BeamConfig::isDefined(Mode in)
 {
     return in != N_Mode;
@@ -133,13 +92,15 @@ const string &BeamConfig::asString(Mode in)
 
 BeamConfig::BeamConfig()
     :   itsMode(DEFAULT),
-        itsUseChannelFreq(false)
+        itsUseChannelFreq(false),
+        itsConjugateAF(false)
 {
 }
 
-BeamConfig::BeamConfig(Mode mode, bool useChannelFreq)
+BeamConfig::BeamConfig(Mode mode, bool useChannelFreq, bool conjugateAF)
     :   itsMode(mode),
-        itsUseChannelFreq(useChannelFreq)
+        itsUseChannelFreq(useChannelFreq),
+        itsConjugateAF(conjugateAF)
 {
 }
 
@@ -153,9 +114,15 @@ bool BeamConfig::useChannelFreq() const
     return itsUseChannelFreq;
 }
 
+bool BeamConfig::conjugateAF() const
+{
+    return itsConjugateAF;
+}
+
 // -------------------------------------------------------------------------- //
 // - IonosphereConfig implementation                                        - //
 // -------------------------------------------------------------------------- //
+
 bool IonosphereConfig::isDefined(ModelType in)
 {
     return in != N_ModelType;
@@ -214,6 +181,7 @@ unsigned int IonosphereConfig::degree() const
 // -------------------------------------------------------------------------- //
 // - FlaggerConfig implementation                                           - //
 // -------------------------------------------------------------------------- //
+
 FlaggerConfig::FlaggerConfig()
     :   itsThreshold(1.0)
 {
@@ -232,9 +200,15 @@ double FlaggerConfig::threshold() const
 // -------------------------------------------------------------------------- //
 // - ModelConfig implementation                                             - //
 // -------------------------------------------------------------------------- //
+
 ModelConfig::ModelConfig()
 {
     fill(itsModelOptions, itsModelOptions + N_ModelOptions, false);
+}
+
+bool ModelConfig::usePhasors() const
+{
+    return itsModelOptions[PHASORS];
 }
 
 bool ModelConfig::useBandpass() const
@@ -247,19 +221,9 @@ bool ModelConfig::useClock() const
     return itsModelOptions[CLOCK];
 }
 
-const ClockConfig &ModelConfig::getClockConfig() const
-{
-    return itsConfigClock;
-}
-
 bool ModelConfig::useGain() const
 {
     return itsModelOptions[GAIN];
-}
-
-const GainConfig &ModelConfig::getGainConfig() const
-{
-    return itsConfigGain;
 }
 
 bool ModelConfig::useTEC() const
@@ -280,11 +244,6 @@ bool ModelConfig::useCommonScalarPhase() const
 bool ModelConfig::useDirectionalGain() const
 {
     return itsModelOptions[DIRECTIONAL_GAIN];
-}
-
-const DirectionalGainConfig &ModelConfig::getDirectionalGainConfig() const
-{
-    return itsConfigDirectionalGain;
 }
 
 bool ModelConfig::useElevationCut() const
@@ -352,33 +311,24 @@ bool ModelConfig::useCache() const
     return itsModelOptions[CACHE];
 }
 
+void ModelConfig::setPhasors(bool value)
+{
+    itsModelOptions[PHASORS] = value;
+}
+
 void ModelConfig::setBandpass(bool value)
 {
     itsModelOptions[BANDPASS] = value;
 }
 
-void ModelConfig::setClockConfig(const ClockConfig &config)
+void ModelConfig::setClock(bool value)
 {
-    itsModelOptions[CLOCK] = true;
-    itsConfigClock = config;
+    itsModelOptions[CLOCK] = value;
 }
 
-void ModelConfig::clearClockConfig()
+void ModelConfig::setGain(bool value)
 {
-    itsConfigClock = ClockConfig();
-    itsModelOptions[CLOCK] = false;
-}
-
-void ModelConfig::setGainConfig(const GainConfig &config)
-{
-    itsModelOptions[GAIN] = true;
-    itsConfigGain = config;
-}
-
-void ModelConfig::clearGainConfig()
-{
-    itsModelOptions[GAIN] = false;
-    itsConfigGain = GainConfig();
+    itsModelOptions[GAIN] = value;
 }
 
 void ModelConfig::setTEC(bool value)
@@ -396,16 +346,9 @@ void ModelConfig::setCommonScalarPhase(bool value)
     itsModelOptions[COMMON_SCALAR_PHASE] = value;
 }
 
-void ModelConfig::setDirectionalGainConfig(const DirectionalGainConfig &config)
+void ModelConfig::setDirectionalGain(bool value)
 {
-    itsModelOptions[DIRECTIONAL_GAIN] = true;
-    itsConfigDirectionalGain = config;
-}
-
-void ModelConfig::clearDirectionalGainConfig()
-{
-    itsModelOptions[DIRECTIONAL_GAIN] = false;
-    itsConfigDirectionalGain = DirectionalGainConfig();
+    itsModelOptions[DIRECTIONAL_GAIN] = value;
 }
 
 void ModelConfig::setElevationCutConfig(const ElevationCutConfig &config)
@@ -494,36 +437,10 @@ const vector<string> &ModelConfig::sources() const
 // -------------------------------------------------------------------------- //
 // - Non-member functions                                                   - //
 // -------------------------------------------------------------------------- //
-ostream &operator<<(ostream &out, const ClockConfig &obj)
-{
-    out << indent << "Split clock: " << boolalpha << obj.splitClock()
-        << noboolalpha;
-    return out;
-}
 
-ostream &operator<<(ostream &out, const GainConfig &obj)
+ostream &operator<<(ostream &out, const FlaggerConfig &obj)
 {
-    out << indent << "Phasors: " << boolalpha << obj.phasors() << noboolalpha;
-    return out;
-}
-
-ostream &operator<<(ostream &out, const DirectionalGainConfig &obj)
-{
-    out << indent << "Phasors: " << boolalpha << obj.phasors() << noboolalpha;
-    return out;
-}
-
-ostream &operator<<(ostream &out, const ElevationCutConfig &obj)
-{
-    out << indent << "Threshold: " << obj.threshold() << " (deg)";
-    return out;
-}
-
-ostream &operator<<(ostream &out, const BeamConfig &obj)
-{
-    out << indent << "Mode: " << BeamConfig::asString(obj.mode())
-        << endl << indent << "Use channel frequency: " << boolalpha
-        << obj.useChannelFreq() << noboolalpha;
+    out << indent << "Threshold: " << obj.threshold();
     return out;
 }
 
@@ -540,9 +457,19 @@ ostream &operator<<(ostream &out, const IonosphereConfig &obj)
     return out;
 }
 
-ostream &operator<<(ostream &out, const FlaggerConfig &obj)
+ostream &operator<<(ostream &out, const BeamConfig &obj)
 {
-    out << indent << "Threshold: " << obj.threshold();
+    out << indent << "Mode: " << BeamConfig::asString(obj.mode())
+        << endl << indent << "Use channel frequency: " << boolalpha
+        << obj.useChannelFreq() << noboolalpha
+        << endl << indent << "Conjugate array factor: " << boolalpha
+        << obj.conjugateAF() << noboolalpha;
+    return out;
+}
+
+ostream &operator<<(ostream &out, const ElevationCutConfig &obj)
+{
+    out << indent << "Threshold: " << obj.threshold() << " (deg)";
     return out;
 }
 
@@ -551,23 +478,14 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
     out << "Model configuration:";
 
     Indent id;
+    out << endl << indent << "Phasors enabled: " << boolalpha
+        << obj.usePhasors() << noboolalpha;
     out << endl << indent << "Bandpass enabled: " << boolalpha
         << obj.useBandpass() << noboolalpha;
     out << endl << indent << "Clock enabled: " << boolalpha
         << obj.useClock() << noboolalpha;
-    if (obj.useClock()) {
-      Indent id;
-      out << endl << obj.getClockConfig();
-    }
-
     out << endl << indent << "Gain enabled: " << boolalpha
         << obj.useGain() << noboolalpha;
-    if(obj.useGain())
-    {
-        Indent id;
-        out << endl << obj.getGainConfig();
-    }
-
     out << endl << indent << "TEC enabled: " << boolalpha
         << obj.useTEC() << noboolalpha;
     out << endl << indent << "Common rotation enabled: " << boolalpha
@@ -576,11 +494,6 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
         << obj.useCommonScalarPhase() << noboolalpha;
     out << endl << indent << "Direction dependent gain enabled: " << boolalpha
         << obj.useDirectionalGain() << noboolalpha;
-    if(obj.useDirectionalGain())
-    {
-        Indent id;
-        out << endl << obj.getDirectionalGainConfig();
-    }
 
     out << endl << indent << "Elevation cut enabled: " << boolalpha
         << obj.useElevationCut() << noboolalpha;

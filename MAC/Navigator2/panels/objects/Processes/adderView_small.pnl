@@ -1,0 +1,186 @@
+V 11
+1
+LANG:1 0 
+PANEL,-1 -1 156 103 N "_3DFace" 1
+"$observation"
+"main()
+{
+  observation = $observation;
+    // we just need to make clear the type of this baseDP to get the right panel.
+  // The panel itself will sort out the list of adders belonging to it
+  baseDP =CEPDBName+\"LOFAR_ObsSW_OSIONode00_Adder0\";
+  delay(5);
+  reload();
+}
+  
+private void reload() {
+  
+  // get all the InputBuffers used by this observation
+  adders = navFunct_getAddersForObservation(observation);
+
+  // change all found DP's to contain all the elements that contain the .dropping
+  if (connected) {
+    dpDisconnect(\"adderCB\",connectTo);
+    dynClear(connectTo);
+  }
+
+  for (int i=1; i<= dynlen(adders); i++) {
+    dynAppend(connectTo,adders[i]+\".dropping:_online.._value\");
+  }
+  if (dynlen(adders) > 0) baseDP = adders[1];
+  
+  // check if the required datapoint for this view are enabled and accessible
+  if (navFunct_dpReachable(CEPDBName) && dynlen(connectTo)>0 ){
+    if (dpConnect(\"adderCB\", connectTo) == -1) {
+      setValue(\"adderObject\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    }
+  } else {
+    setValue(\"adderObject\", \"backCol\", \"Lofar_dpOffline\");
+  }
+}
+
+void adderCB(dyn_string dps, dyn_bool values)
+{
+  // Here we get dropping values. if a station is dropping
+  string toolTipText = observation+\" - dropping stations:<br>\";
+  
+  string color = \"Lofar_operational\";
+  
+  for (int i = 1; i<= dynlen(values); i++) {
+    bool val = values[i];
+    string dp = dps[i];
+    if (val) {
+      color = \"Lofar_broken\";
+      string station;
+      int nr  = substr(dp,strpos(dp,\"OSIONode\")+8,2);
+      string IONodeDP = navFunct_IONode2DPName(nr);
+      dpGet(IONodeDP+\".usedStation\",station);
+      string locusNode=\"\";
+      string fileName=\"\";
+      int dropped=0;
+      dpGet(adders[i]+\".dropped\",dropped);
+      dpGet(adders[i]+\".locusNode\",locusNode);
+      dpGet(adders[i]+\".fileName\",fileName);
+
+      toolTipText+=station+\"</t> :\"+dropped+\" - \"+locusNode+\" - \"+fileName+\"<br>\";
+    }
+  }
+
+  setValue(\"adderObject\",\"toolTipText\",toolTipText);
+  setValue(\"adderObject\", \"backCol\", color);
+
+ }" 0
+ E "main(int x, int y)
+{
+  click();
+}" 0
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+ 1 -1 -1 0  0 0
+""0  1
+E "#uses \"navPanel.ctl\"
+string baseDP= \"\";
+string observation;
+dyn_string connectTo;
+dyn_string adders;
+bool connected = false;
+
+bool bDoubleClicked  = false;
+
+// routine for single mouse click
+void click() {
+
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true;   
+ 
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"adderView_small.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    g_currentDatapoint=baseDP;
+    //we also have to set the tabctrl to think this was initiated from the ProcessesTab, otherwise we will get the wrong panel.
+    navPanel_setEvent(\"Processes\",\"ChangeTab\");
+  }
+
+  
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}                       
+
+// routine for right mouse click
+void rClick() {
+
+}                       " 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+6 0
+"adderObject"
+""
+1 230 150 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+0 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  1 E 0 0 24 13
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

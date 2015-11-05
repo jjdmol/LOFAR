@@ -20,85 +20,155 @@
 
 #include <lofar_config.h>
 
-#include <iomanip>
-
 #include "PerformanceCounter.h"
+
+#include <iostream>
+#include <iomanip>
+#include <sstream>
+
 #include <Common/LofarLogger.h>
-#include <GPUProc/global_defines.h>
+#include <Common/PrettyUnits.h>
+
+#include <GPUProc/OpenMP_Lock.h>
+
+using namespace std;
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    /*
-     * The performance is measured by posting start and stop events into the context.
-     *
-     * The caller calls recordStart() and recordStop() to do so. The time span between
-     * events can be measured only after they have occurred (after the stream synchronises with
-     * the CPU). To not depend on stream synchronisation here, we simply query the time between
-     * stop and start (logTime()) when we
-     *   a) start a new measurement (recordStart), or
-     *   b) on destruction
-     */
-    PerformanceCounter::PerformanceCounter(const gpu::Context &context, const std::string &name)
+    PerformanceCounter::PerformanceCounter(const std::string &name, bool profiling, bool logAtDestruction)
       :
-    name(name),
-    start(context),
-    stop(context),
-    recording(false)
-    {}
+      name(name),
+      profiling(profiling),
+      logAtDestruction(logAtDestruction),
+      nrActiveEvents(0)
+    {
+    }
+
 
     PerformanceCounter::~PerformanceCounter()
     {
-      if (!gpuProfiling)
-        return;
+      waitForAllOperations();
 
-      // record any lingering information
-      logTime();
-
-      LOG_INFO_STR("(" << std::setw(30) << name << "): " << stats);
-    }
-
-
-    void PerformanceCounter::recordStart(const gpu::Stream &stream)
-    {
-      if (!gpuProfiling)
-        return;
-
-      // record any lingering information
-      logTime();
-
-      stream.recordEvent(start);
-      recording = true;
-    }
-
-
-    void PerformanceCounter::recordStop(const gpu::Stream &stream)
-    {
-      if (!gpuProfiling)
-        return;
-
-      stream.recordEvent(stop);
-    }
-
-
-
-    void PerformanceCounter::logTime()
-    {
-      if (!recording)
-        return;
-
-      recording = false;
-
-      // get the difference between start and stop. push it on the stats object
-      try {
-        stats.push(stop.elapsedTime(start));
-      } catch (LOFAR::Cobalt::gpu::CUDAException) {
-        // catch errors in case the event was not posted -- the current interface
-        // has no easy way to check beforehand.
+      if (logAtDestruction) {
+        LOG_INFO_STR(total.log(name));
       }
     }
-    
+
+
+    void PerformanceCounter::waitForAllOperations()
+    {
+      ScopedLock sl(mutex);
+
+      while (nrActiveEvents > 0)
+        activeEventsLowered.wait(mutex);
+    }
+
+
+    struct PerformanceCounter::figures PerformanceCounter::getTotal()
+    {
+      ScopedLock sl(mutex);
+
+      return total;
+    }
+
+
+    std::string PerformanceCounter::figures::log(const std::string &name) const
+    {
+      std::stringstream str;
+
+      // Mimic output of NSTimer::print (in LCS/Common/Timer.cc)
+      str << left << setw(25) << name << ": " << right
+          << "avg = " << PrettyTime(avrRuntime()) << ", "
+          << "total = " << PrettyTime(runtime) << ", "
+          << "count = " << setw(9) << nrEvents << ", "
+
+          << setprecision(3)
+          << "GFLOP/s = " << FLOPs() / 1e9 << ", "
+          << "read = " << readSpeed() / 1e9 << " GB/s, "
+          << "written = " << writeSpeed() / 1e9 << " GB/s, "
+          << "total I/O = " << (readSpeed() + writeSpeed()) / 1e9 << " GB/s";
+
+      return str.str();
+    }
+
+
+#if 0 // disabled for now until this infra is properly converted
+    void PerformanceCounter::eventCompleteCallBack(cl_event ev, cl_int /*status*/, void *userdata)
+    {
+      struct callBackArgs *args = static_cast<struct callBackArgs *>(userdata);
+
+      try {
+        // extract performance information
+        gpu::Event event(ev);
+
+        size_t queued = event.getProfilingInfo<CL_PROFILING_COMMAND_QUEUED>();
+        size_t submitted = event.getProfilingInfo<CL_PROFILING_COMMAND_SUBMIT>();
+        size_t start = event.getProfilingInfo<CL_PROFILING_COMMAND_START>();
+        size_t stop = event.getProfilingInfo<CL_PROFILING_COMMAND_END>();
+        double seconds = (stop - start) / 1e9;
+
+        // sanity checks TODO: make sure perf info trouble cannot crash the correlator in production
+        ASSERT(seconds >= 0);
+        ASSERTSTR(seconds < 15, "Kernel took " << seconds << " seconds to execute: thread " << omp_get_thread_num() << ": " << queued << ' ' << submitted - queued << ' ' << start - queued << ' ' << stop - queued);
+
+        args->figures.runtime = seconds;
+
+        // add figures to total
+        {
+          ScopedLock sl(args->this_->mutex);
+          args->this_->total += args->figures;
+        }
+
+        // cl::~Event() decreases ref count
+      } catch (cl::Error &error) {
+        // ignore errors in callBack function (OpenCL library not exception safe)
+      }
+
+      // we're done -- release event and possibly signal destructor
+      {
+        ScopedLock sl(args->this_->mutex);
+        args->this_->nrActiveEvents--;
+        args->this_->activeEventsLowered.signal();
+      }
+
+      delete args;
+    }
+#endif
+
+
+    void PerformanceCounter::doOperation(gpu::Event &event, size_t nrOperations, size_t nrBytesRead, size_t nrBytesWritten)
+    {
+      if (!profiling)
+        return;
+
+#if 0 // disabled for now until this infra is properly converted
+      // reference count between C and C++ conversions is seriously broken in C++ wrapper
+      cl_event ev = event();
+      cl_int error = clRetainEvent(ev);
+      if (error != CL_SUCCESS)
+        throw cl::Error(error, "clRetainEvent");
+#endif
+
+      // obtain run time information
+      struct callBackArgs *args = new callBackArgs;
+      args->this_ = this;
+      args->figures.nrOperations = nrOperations;
+      args->figures.nrBytesRead = nrBytesRead;
+      args->figures.nrBytesWritten = nrBytesWritten;
+      args->figures.runtime = 0.0;
+      args->figures.nrEvents = 1;
+
+      {
+        // allocate event as active
+        ScopedLock sl(mutex);
+        nrActiveEvents++;
+      }
+
+//      event.setCallback(CL_COMPLETE, &PerformanceCounter::eventCompleteCallBack, args);
+    }
+
   }
 }
 

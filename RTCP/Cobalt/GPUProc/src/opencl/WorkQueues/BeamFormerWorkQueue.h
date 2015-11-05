@@ -1,4 +1,4 @@
-//# BeamFormerSubbandProc.h
+//# BeamFormerWorkQueue.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -39,16 +39,16 @@
 #include <GPUProc/Kernels/DedispersionBackwardFFTkernel.h>
 #include <GPUProc/Kernels/DedispersionChirpKernel.h>
 
-#include "SubbandProc.h"
+#include "WorkQueue.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    class BeamFormerSubbandProc : public SubbandProc
+    class BeamFormerWorkQueue : public WorkQueue
     {
     public:
-      BeamFormerSubbandProc(BeamFormerPipeline &, unsigned queueNumber);
+      BeamFormerWorkQueue(BeamFormerPipeline &, unsigned queueNumber);
 
       void doWork();
 

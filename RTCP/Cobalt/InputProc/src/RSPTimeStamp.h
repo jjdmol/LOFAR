@@ -23,7 +23,6 @@
 
 #include <Common/lofar_iosfwd.h>
 #include <Common/LofarTypes.h>
-#include <Common/LofarLogger.h>
 
 #define EVEN_SECOND_HAS_MORE_SAMPLES
 
@@ -75,17 +74,6 @@ namespace LOFAR
       operator uint64 () const;
       operator struct timespec () const;
 
-      // Give the current time, for the given clock speed.
-      static TimeStamp now(unsigned clockSpeed);
-
-      // Give a time we won't reach
-      static TimeStamp universe_heat_death(unsigned clockSpeed);
-
-      // Convert from seconds since 1970. This is a separate static
-      // function to avoid confusion with the TimeStamp(uint64, unsigned)
-      // constructor.
-      static TimeStamp convert(double seconds, unsigned clockSpeed);
-
       friend ostream &operator << (ostream &os, const TimeStamp &ss);
 
     protected:
@@ -95,13 +83,13 @@ namespace LOFAR
 
     inline TimeStamp::TimeStamp() :
       itsTime(0),
-      itsClockSpeed(1)
+      itsClockSpeed(0)
     {
     }
 
     inline TimeStamp::TimeStamp(uint64 time) :
       itsTime(time),
-      itsClockSpeed(1)
+      itsClockSpeed(0)
     {
     }
 
@@ -109,13 +97,10 @@ namespace LOFAR
       itsTime(time),
       itsClockSpeed(clockSpeed)
     {
-      ASSERT(clockSpeed > 0);
     }
 
     inline TimeStamp::TimeStamp(unsigned seqId, unsigned blockId, unsigned clockSpeed)
     {
-      ASSERT(clockSpeed > 0);
-
       itsClockSpeed = clockSpeed;
 
 #ifdef EVEN_SECOND_HAS_MORE_SAMPLES

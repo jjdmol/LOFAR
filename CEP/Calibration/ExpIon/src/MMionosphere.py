@@ -32,10 +32,8 @@ import atexit
 
 # import 3rd party modules
 #from IPython.parallel import client
-from numpy import *
-#from pylab import *
-from numpy.linalg.linalg import inv
-from numpy import linalg
+import numpy
+from pylab import *
 import scipy.optimize
 
 # import user modules
@@ -45,7 +43,7 @@ from acalc import *
 import sphere
 from error import *
 import tables
-import PosTools
+
 
 ###############################################################################
 
@@ -82,8 +80,7 @@ class IonosphericModel:
          row['position'] = list(self.pointing)
          row.append()
          source_table.flush()
-      if not 'timewidths' in self.hdf5.root:
-         self.timewidths=(self.times[1]-self.times[0])*ones(self.times.shape)
+    
       self.sources = self.hdf5.root.sources[:]['name']
       self.source_positions = self.hdf5.root.sources[:]['position']
       self.N_sources = len(self.sources)
@@ -106,94 +103,41 @@ class IonosphericModel:
   
             
       
-   def calculate_piercepoints(self, time_steps = [], station_select=[],height = 200.e3):
+   def calculate_piercepoints(self, time_steps = [], height = 200.e3):
       if ( len( time_steps ) == 0 ):
-         n_list = range( self.times[:].shape[0] )
+         n_list = range( self.times.shape[0] )
       else:
          n_list = time_steps
       self.n_list = n_list
       if 'n_list' in self.hdf5.root: self.hdf5.root.n_list.remove()
       self.hdf5.createArray(self.hdf5.root, 'n_list', self.n_list)
-      if ( len( station_select ) == 0 ):
-         stat_select = range( self.stations[:].shape[0] )
-      else:
-         stat_select = station_select
-      self.stat_select = stat_select
-      if 'stat_select' in self.hdf5.root: self.hdf5.root.stat_select.remove()
-      self.hdf5.createArray(self.hdf5.root, 'stat_select', self.stat_select)
-
 
       self.height = height
 
-      N_stations=len(stat_select)
       if 'piercepoints' in self.hdf5.root: self.hdf5.root.piercepoints.remove()
-      description = {'positions':tables.Float64Col((self.N_sources, N_stations,2)), \
-                     'positions_xyz':tables.Float64Col((self.N_sources, N_stations,3)), \
-                     'zenith_angles':tables.Float64Col((self.N_sources, N_stations))}
+      description = {'positions':tables.Float64Col((self.N_sources, self.N_stations,2)), \
+                     'positions_xyz':tables.Float64Col((self.N_sources, self.N_stations,3)), \
+                     'zenith_angles':tables.Float64Col((self.N_sources, self.N_stations))}
       self.piercepoints = self.hdf5.createTable(self.hdf5.root, 'piercepoints', description)
       self.piercepoints.attrs.height = self.height
       piercepoints_row = self.piercepoints.row
       p = ProgressBar(len(n_list), "Calculating piercepoints: ")
       for (n, counter) in zip(n_list, range(len(n_list))):
          p.update(counter)
-         
-         piercepoints=PosTools.getPiercePoints(self.times[n],self.source_positions,self.station_positions[:][self.stat_select[:]],height=self.height)
-         #piercepoints =  PiercePoints( self.times[ n ], self.pointing, self.array_center, self.source_positions, self.station_positions[:][self.stat_select[:]], height = self.height )
+         piercepoints =  PiercePoints( self.times[ n ], self.pointing, self.array_center, self.source_positions, self.station_positions, height = self.height )
          piercepoints_row['positions'] = piercepoints.positions
          piercepoints_row['positions_xyz'] = piercepoints.positions_xyz
          piercepoints_row['zenith_angles'] = piercepoints.zenith_angles
          piercepoints_row.append()
       self.piercepoints.flush()
       p.finished()
-
-
-   def calculate_Sage_piercepoints(self, sage_group=0,time_steps = [], station_select=[],height = 200.e3):
-      if ( len( time_steps ) == 0 ):
-         n_list = range( self.times[:].shape[0] )
-      else:
-         n_list = time_steps
-      self.sage_n_list = n_list
-      if 'sage%d_n_list'%sage_group in self.hdf5.root: self.hdf5.removeNode('\sage%d_n_list'%sage_group)
-      self.hdf5.createArray(self.hdf5.root, 'sage%d_n_list'%sage_group, self.sage_n_list)
-      if ( len( station_select ) == 0 ):
-         stat_select = range( self.stations[:].shape[0] )
-      else:
-         stat_select = station_select
-      self.sage_stat_select = stat_select
-      if 'sage%d_stat_select'%sage_group in self.hdf5.root: self.hdf5.removeNode('\sage%d_stat_select'%sage_group)
-      self.hdf5.createArray(self.hdf5.root,'sage%d_stat_select'%sage_group, self.sage_stat_select)
-
-
-      self.sage_height = height
-
-      N_stations=len(stat_select)
-      if 'sage%d_piercepoints'%sage_group in self.hdf5.root: self.hdf5.removeNode('\sage%d_piercepoints'%sage_group)
-      description = {'positions':tables.Float64Col((self.N_sources, N_stations,2)), \
-                     'positions_xyz':tables.Float64Col((self.N_sources, N_stations,3)), \
-                     'zenith_angles':tables.Float64Col((self.N_sources, N_stations))}
-      self.sage_piercepoints = self.hdf5.createTable(self.hdf5.root,'sage%d_piercepoints'%sage_group, description)
-      self.sage_piercepoints.attrs.height = self.sage_height
-      piercepoints_row = self.sage_piercepoints.row
-      source_positions=self.hdf5.getNode('sage_radec%d'%sage_group)[:]
-      p = ProgressBar(len(n_list), "Calculating piercepoints: ")
-      for (n, counter) in zip(n_list, range(len(n_list))):
-         p.update(counter)
          
-         piercepoints=PosTools.getPiercePoints(self.times[n],source_positions,self.station_positions[:][self.stat_select[:]],height=self.sage_height)
-         #piercepoints =  PiercePoints( self.times[ n ], self.pointing, self.array_center, self.source_positions, self.station_positions[:][self.stat_select[:]], height = self.height )
-         piercepoints_row['positions'] = piercepoints.positions
-         piercepoints_row['positions_xyz'] = piercepoints.positions_xyz
-         piercepoints_row['zenith_angles'] = piercepoints.zenith_angles
-         piercepoints_row.append()
-      self.sage_piercepoints.flush()
-      p.finished()
-        
    def calculate_basevectors(self, order = 15, beta = 5. / 3., r_0 = 1.):
       self.order = order
       self.beta = beta
       self.r_0 = r_0
-      #N_stations = len(self.stations)
-      N_stations = len(self.stat_select[:])
+      
+      N_stations = len(self.stations)
       N_sources = len(self.sources)
       
       N_piercepoints = N_stations * N_sources
@@ -230,19 +174,18 @@ class IonosphericModel:
          self.S_list.append(S)
       p.finished()
 
-   def fit_model  ( self) :
-      #N_stations = len(self.stations)
-      N_stations = len(self.stat_select[:])
+   def fit_model  ( self ) :
+      N_stations = len(self.stations)
       N_times = len(self.times)
       N_sources = len(self.sources)
       N_pol = min(len(self.polarizations),2)
       G = kron(eye( N_sources ), ( eye( N_stations ) - ones((N_stations, N_stations)) / N_stations))
 
       if 'TECfit' in self.hdf5.root: self.hdf5.root.TECfit.remove()
-      self.TECfit = self.hdf5.createArray(self.hdf5.root, 'TECfit', zeros(self.TEC[:].shape))
+      self.TECfit = self.hdf5.createArray(self.hdf5.root, 'TECfit', zeros(self.TEC.shape))
       
       if 'TECfit_white' in self.hdf5.root: self.hdf5.root.TECfit_white.remove()
-      self.TECfit_white = self.hdf5.createArray(self.hdf5.root, 'TECfit_white', zeros(self.TEC[:].shape))
+      self.TECfit_white = self.hdf5.createArray(self.hdf5.root, 'TECfit_white', zeros(self.TEC.shape))
       
       self.offsets = zeros((len(self.n_list),N_pol))
       p = ProgressBar(len(self.n_list), "Fitting phase screen: ")
@@ -253,16 +196,13 @@ class IonosphericModel:
          S = self.S_list[i]
          for pol in range(N_pol) :
             #print self.TEC[ self.n_list[i], :, :,pol].shape
-            TEC = multiply(self.TEC[:][ self.n_list[i], self.stat_select[:], :,pol].swapaxes(0,1),
+            TEC = multiply(self.TEC[ self.n_list[i], :, :,pol].swapaxes(0,1),
                            cos(za[i,:,:])).reshape( (N_sources * N_stations, 1) )
             TECfit = dot(U, dot(inv(dot(U.T, dot(G, U))), dot(U.T, dot(G, TEC))))
             TECfit_white = dot(U, dot(diag(1/S), dot(U.T, TECfit)))
             self.offsets[i,pol] = TECfit[0] - dot(self.C_list[i][0,:], TECfit_white)
-            TECfit=reshape( TECfit,  (N_sources,N_stations) ).swapaxes(0,1)
-            TECfit_white= reshape( TECfit_white,(N_sources,N_stations)  ).swapaxes(0,1)
-            for istat,stat in enumerate(self.stat_select[:]):
-               self.TECfit[i, stat, : ,pol] = TECfit[istat,:]
-               self.TECfit_white[i,stat,: ,pol ] = TECfit_white[istat,:]
+            self.TECfit[ i, :, : ,pol] = reshape( TECfit,  (N_sources,N_stations) ).swapaxes(0,1)
+            self.TECfit_white[ i, :, :,pol ] = reshape( TECfit_white,(N_sources,N_stations)  ).swapaxes(0,1)
       p.finished()      
 
       self.TECfit_white.attrs.r_0 = self.r_0
@@ -270,78 +210,6 @@ class IonosphericModel:
       
       if 'offsets' in self.hdf5.root: self.hdf5.root.offsets.remove()
       self.hdf5.createArray(self.hdf5.root, 'offsets', self.offsets)
-
-   def get_TEC_pp(self,radec,pol=0,new_stat_select=None):
-      TEC_out=[]      
-      N_stations = len(self.stat_select[:])
-      N_sources = len(self.sources)
-      N_piercepoints = N_stations * N_sources
-      h=self.piercepoints.attrs.height
-      r_0 = self.TECfit_white.attrs.r_0
-      beta = self.TECfit_white.attrs.beta
-      pp_out=[]
-      am_out=[]
-      TEC_out=[]
-      stations=self.station_positions[:]
-      if not (new_stat_select is None):
-         stations=stations[new_stat_select]
-      for i in range(len(self.n_list)) :
-         if i%10==0:
-            sys.stdout.write(str(i)+'...')
-            sys.stdout.flush()                
-         time=self.times[i]
-         piercepoints=PosTools.getPiercePoints(time,radec.reshape((1,-1)),stations,height=h)
-         pp=piercepoints.positions_xyz
-         am=piercepoints.zenith_angles
-         pp_out.append(pp)
-         am_out.append(am)
-         Xp_table=reshape(self.piercepoints[i]['positions_xyz'], (N_piercepoints, 3))
-         #v=self.TECfit_white[ i, :, : ,pol][self.stat_select[:]].reshape((N_piercepoints,1))
-         v=self.TECfit_white[ i, :, : ,pol][self.stat_select[:]].reshape((N_piercepoints,1))
-         tecs=[]
-         for ist in range(stations[:].shape[0]):
-            tecs.append(get_interpolated_TEC_white(Xp_table,v,beta,r_0,pp[0,ist]))
-         TEC_out.append(tecs)
-      return array(pp_out),array(am_out),array(TEC_out)
-
-   def get_TEC_frame(self,time=0,pol=0,scale=1.1,steps=10):
-      N_stations = len(self.stat_select[:])
-      N_sources = len(self.sources)
-      N_piercepoints = N_stations * N_sources
-
-      h=self.piercepoints.attrs.height
-      r_0 = self.TECfit_white.attrs.r_0
-      beta = self.TECfit_white.attrs.beta
-      pp=self.piercepoints[time]['positions'].reshape(N_piercepoints,2)
-      Xp_table=reshape(self.piercepoints[time]['positions_xyz'], (N_piercepoints, 3))
-      v=self.TECfit_white[ time, :, : ,pol][self.stat_select[:]].reshape((N_piercepoints,1))
-      myxlim=[min(pp[:,0]),max(pp[:,0])]
-      myylim=[min(pp[:,1]),max(pp[:,1])]
-      diff=(myxlim[1]-myxlim[0])*(scale-1.)*0.5
-      myxlim[0]-=diff
-      myxlim[1]+=diff
-      xsize=(myxlim[1]-myxlim[0])*scale/(steps+1)
-      myxlim[1]+=xsize
-      diff=(myylim[1]-myylim[0])*(scale-1.)*0.5
-      myylim[0]-=diff
-      myylim[1]+=diff
-      ysize=(myylim[1]-myylim[0])*scale/(steps+1)
-      myylim[1]+=ysize
-      length=sqrt(dot(Xp_table[0],Xp_table[0].T))
-      #print "length",length,myxlim,myylim,xsize,ysize
-      iy=0
-      ix=0
-      phi=zeros((steps,steps),dtype=float)
-      for lat in arange(myylim[0],myylim[1],ysize): 
-         for lon in arange(myxlim[0],myxlim[1],xsize): 
-            xyzpp=[cos(lat)*cos(lon)*length,cos(lat)*sin(lon)*length,sin(lat)*length]
-            #print "my",ix,iy,lon,lat,xyzpp
-            #print Xp_table[0]
-            phi[iy,ix]=get_interpolated_TEC_white(Xp_table,v,beta,r_0,xyzpp)
-            ix+=1
-         ix=0
-         iy+=1
-      return phi,arange(myxlim[0],myxlim[1],xsize),arange(myylim[0],myylim[1],ysize)
 
    def make_movie( self, extent = 0, npixels = 100, vmin = 0, vmax = 0 ):
       """
@@ -354,7 +222,7 @@ class IonosphericModel:
       #tc = client.TaskClient( task_furl )
       tc = client.TaskClient( )
       N_stations = len(self.stations)
-      N_times = self.TECfit[:].shape[1]
+      N_times = self.TECfit.shape[1]
       N_sources = len(self.sources)
       N_piercepoints = N_stations * N_sources
       N_pol = len(self.polarizations)
@@ -371,7 +239,7 @@ class IonosphericModel:
          else :
             w = 1.1*abs(Xp_table).max()
          for pol in range(N_pol) :
-            v = self.TECfit[ i, :, : ,pol].reshape((N_piercepoints,1))
+            v = self.TECfit_white[ i, :, : ,pol].reshape((N_piercepoints,1))
             maptask = client.MapTask(calculate_frame, (Xp_table, v, self.beta, self.r_0, npixels, w) )
             taskids.append(tc.run(maptask))
       p.finished()
@@ -433,7 +301,7 @@ class IonosphericModel:
 
       print self.n_list
       if 'STEC_facets' in self.hdf5.root: self.hdf5.root.STEC_facets.remove()
-      self.STEC_facets = self.hdf5.createCArray(self.hdf5.root, 'STEC_facets', tables.Float32Atom(), shape = (self.N_pol, self.n_list[:].shape[0],  self.N_facets, self.N_stations))
+      self.STEC_facets = self.hdf5.createCArray(self.hdf5.root, 'STEC_facets', tables.Float32Atom(), shape = (self.N_pol, self.n_list.shape[0],  self.N_facets, self.N_stations))
 
       #if 'facet_piercepoints' in self.hdf5.root: self.hdf5.root.facet_piercepoints.remove()
       #description = {'positions':tables.Float64Col((self.N_facets, self.N_stations,2)), \
@@ -487,53 +355,18 @@ def fillarray( a, v ) :
 
 def calculate_frame(Xp_table, v, beta, r_0, npixels, w):
    import numpy
-   phi = zeros((npixels,npixels))
+   phi = numpy.zeros((npixels,npixels))
    N_piercepoints = Xp_table.shape[0]
-   P = eye(N_piercepoints) - ones((N_piercepoints, N_piercepoints)) / N_piercepoints
-   # calculate structure matrix
-   D = resize( Xp_table, ( N_piercepoints, N_piercepoints, 2 ) )
-   D = transpose( D, ( 1, 0, 2 ) ) - D
-   D2 = sum( D**2, 2 )
-   C = -(D2 / ( r_0**2 ) )**( beta / 2.0 )/2.0
-   C = dot(dot(P, C ), P)
-   v = dot(linalg.pinv(C), v)
-
+   P = numpy.eye(N_piercepoints) - numpy.ones((N_piercepoints, N_piercepoints)) / N_piercepoints
    for x_idx in range(0, npixels):
       x = -w + 2*x_idx*w/( npixels-1 )  
       for y_idx in range(0, npixels):
          y = -w + 2*y_idx*w/(npixels-1)
-         #D2 = sum((6378452*(Xp_table - array([ x, y ])))**2,1)
-         D2 = sum(((Xp_table - array([ x, y ])))**2,1)
+         D2 = numpy.sum((6378452*(Xp_table - numpy.array([ x, y ])))**2,1)
          C = (D2 / ( r_0**2 ) )**( beta / 2. ) / -2.
-         phi[y_idx, x_idx] = dot(C, v)
+         phi[y_idx, x_idx] = numpy.dot(C, v)
    return phi, w
 
-
-
-
-def get_interpolated_TEC(Xp_table,v,beta,r_0,pp):
-   N_piercepoints = Xp_table.shape[0]
-   n_axes=Xp_table.shape[1]
-   if n_axes!=pp.shape[0]:
-      print "wrong number of axes, original:",n_axes,"requested:",pp.shape[0]
-      return -1
-   P = eye(N_piercepoints) - ones((N_piercepoints, N_piercepoints)) / N_piercepoints
-   # calculate structure matrix
-   D = resize( Xp_table, ( N_piercepoints, N_piercepoints, n_axes ) )
-   D = transpose( D, ( 1, 0, 2 ) ) - D
-   D2 = sum( D**2, 2 )
-   C = -(D2 / ( r_0**2 ) )**( beta / 2.0 )/2.0
-   C = dot(dot(P, C ), P)
-   v = dot(linalg.pinv(C), v)
-   D2 = sum((Xp_table - pp)**2,axis=1)
-   C = (D2 / ( r_0**2 ) )**( beta / 2. ) / -2.
-   return dot(C, v)
-
-
-def get_interpolated_TEC_white(Xp_table,v,beta,r_0,pp):
-   D2 = sum((Xp_table - pp)**2,axis=1)
-   C = (D2 / ( r_0**2 ) )**( beta / 2. ) / -2.
-   return dot(C, v)
 
 
 

@@ -1,5 +1,4 @@
 //# gpu_utils.cc
-//#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -23,20 +22,25 @@
 
 #include <GPUProc/gpu_utils.h>
 
-#include <cstdlib>    // for getenv()
-#include <cstdio>     // for popen(), pclose(), fgets()
-#include <fstream>
+#include <cstdlib>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/fcntl.h>
+#include <unistd.h>
+#include <cstring>
+#include <cerrno>
 #include <iostream>
 #include <sstream>
+#include <set>
 #include <boost/format.hpp>
 
+#include <Common/SystemUtil.h>
 #include <Common/SystemCallException.h>
-#include <Common/LofarLogger.h>
-#include <CoInterface/Exceptions.h>
+#include <Stream/FileStream.h>
 
 #include <GPUProc/global_defines.h>
 
-#include "cuda_config.h"
+#define BUILD_MAX_LOG_SIZE	4095
 
 namespace LOFAR
 {
@@ -192,9 +196,12 @@ namespace LOFAR
 
       string lofarRoot()
       {
-        // Prefer copy over racy static var or mutex.
-        const char* env = getenv("LOFARROOT");
-        return env ? string(env) : string();
+        static const char* env;
+        static bool init(false);
+        if (!init) {
+          env = getenv("LOFARROOT");
+        }
+        return string(env ? env : "");
       }
 
       string prefixPath()
@@ -234,19 +241,19 @@ namespace LOFAR
                          const CompileFlags& flags,
                          const CompileDefinitions& defs)
       {
-        // TODO: first try 'nvcc', then this path.
         ostringstream oss;
-        oss << CUDA_TOOLKIT_ROOT_DIR << "/bin/nvcc " << source << flags << defs;
+        oss << "nvcc " << source << flags << defs;
         string cmd(oss.str());
         LOG_DEBUG_STR("Starting runtime compilation:\n\t" << cmd);
 
         string ptx;
         char buffer [1024];       
         FILE * stream = popen(cmd.c_str(), "r");
+
         if (!stream) {
-          THROW_SYSCALL("popen");
+          throw SystemCallException("popen", errno, THROW_ARGS);
         }
-        while (!feof(stream)) {  // NOTE: We do not get stderr (TODO)
+        while (!feof(stream)) {  // NOTE: We do not get stderr
           if (fgets(buffer, sizeof buffer, stream) != NULL) {
             ptx += buffer;
           }
@@ -260,24 +267,24 @@ namespace LOFAR
     } // namespace {anonymous}
 
 
-    CompileDefinitions defaultCompileDefinitions()
+    const CompileDefinitions& defaultCompileDefinitions()
     {
-      CompileDefinitions defs;
+      static CompileDefinitions defs;
+      if (defs.empty()) {
+        // initialize default definitions
+      }
       return defs;
     }
 
-    CompileFlags defaultCompileFlags()
+    const CompileFlags& defaultCompileFlags()
     {
-      CompileFlags flags;
-      flags.insert("-o /dev/stdout");
-      flags.insert("-ptx");
-
-      // For now, keep optimisations the same to detect changes in
-      // output with reference.
-      flags.insert("--restrict");
-      flags.insert("-O3");
-
-      flags.insert(str(format("-I%s") % includePath()));
+      static CompileFlags flags;
+      if (flags.empty()) {
+        flags.insert("-o -");
+        flags.insert("-ptx");
+        flags.insert("-use_fast_math");
+        flags.insert(str(format("-I%s") % includePath()));
+      }
       return flags;
     }
 
@@ -292,12 +299,10 @@ namespace LOFAR
                        get_virtarch(computeTarget(devices))));
 
       // Add default definitions and flags
-      CompileDefinitions defaultDefinitions(defaultCompileDefinitions());
-      definitions.insert(defaultDefinitions.begin(), 
-                         defaultDefinitions.end());
-      CompileFlags defaultFlags(defaultCompileFlags());
-      flags.insert(defaultFlags.begin(),
-                   defaultFlags.end());
+      definitions.insert(defaultCompileDefinitions().begin(), 
+                         defaultCompileDefinitions().end());
+      flags.insert(defaultCompileFlags().begin(),
+                   defaultCompileFlags().end());
 
 #if 0
       // We'll compile a specific version for each device that has a different
@@ -328,7 +333,6 @@ namespace LOFAR
                              const string &srcFilename,
                              const string &ptx)
     {
-      const unsigned int BUILD_MAX_LOG_SIZE = 4095;
       /*
        * JIT compilation options.
        * Note: need to pass a void* with option vals. Preferably, do not alloc
@@ -391,9 +395,9 @@ namespace LOFAR
           infoLogSize = infoLog.size();
         }
         infoLog[infoLogSize - 1] = '\0';
-        LOG_DEBUG_STR( "Build info for '" << srcFilename 
+        cout << "Build info for '" << srcFilename 
              << "' (build time: " << jitWallTime 
-             << " ms):" << endl << &infoLog[0] );
+             << " ms):" << endl << &infoLog[0] << endl;
 
         return module;
       } catch (gpu::CUDAException& exc) {
@@ -401,20 +405,11 @@ namespace LOFAR
           errorLogSize = errorLog.size();
         }
         errorLog[errorLogSize - 1] = '\0';
-        LOG_FATAL_STR( "Build errors for '" << srcFilename 
+        cerr << "Build errors for '" << srcFilename 
              << "' (build time: " << jitWallTime 
-             << " ms):" << endl << &errorLog[0] );
+             << " ms):" << endl << &errorLog[0] << endl;
         throw;
       }
-    }
-
-    void dumpBuffer(const gpu::DeviceMemory &deviceMemory, 
-                    const std::string &dumpFile)
-    {
-      LOG_INFO_STR("Dumping device memory to file: " << dumpFile);
-      gpu::HostMemory hostMemory(deviceMemory.fetch());
-      std::ofstream ofs(dumpFile.c_str(), std::ios::binary);
-      ofs.write(hostMemory.get<char>(), hostMemory.size());
     }
 
   } // namespace Cobalt

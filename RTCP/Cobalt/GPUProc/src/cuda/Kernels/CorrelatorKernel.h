@@ -21,19 +21,30 @@
 #ifndef LOFAR_GPUPROC_CUDA_CORRELATOR_KERNEL_H
 #define LOFAR_GPUPROC_CUDA_CORRELATOR_KERNEL_H
 
+#include <CoInterface/Parset.h>
+
 #include <GPUProc/Kernels/Kernel.h>
-#include <GPUProc/KernelFactory.h>
+#include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_wrapper.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    class CorrelatorKernel : public CompiledKernel
+#if !defined USE_NEW_CORRELATOR
+
+    class CorrelatorKernel : public Kernel
     {
     public:
-      static std::string theirSourceFile;
-      static std::string theirFunction;
+      CorrelatorKernel(const Parset &ps, 
+                       gpu::Context &context,
+                       gpu::DeviceMemory &devVisibilities, 
+                       gpu::DeviceMemory &devCorrectedData);
+
+      CorrelatorKernel(const Parset &ps, 
+                       gpu::Module &module,
+                       gpu::DeviceMemory &devVisibilities, 
+                       gpu::DeviceMemory &devCorrectedData);
 
       enum BufferType
       {
@@ -41,31 +52,47 @@ namespace LOFAR
         OUTPUT_DATA
       };
 
-      struct Parameters : Kernel::Parameters
-      {
-        Parameters(const Parset& ps);
-        unsigned nrStations;
-        unsigned nrStationsPerThread;
-        unsigned nrBaselines() const;
+      // Return required buffer size for \a bufferType
+      static size_t bufferSize(const Parset& ps, BufferType bufferType);
 
-        unsigned nrChannels;
-        unsigned nrSamplesPerIntegration;
-        unsigned nrIntegrationsPerBlock;
-        size_t nrSamplesPerBlock() const;
+    private:
+      void init(gpu::DeviceMemory &devVisibilities, 
+                gpu::DeviceMemory &devCorrectedData);
 
-        size_t bufferSize(BufferType bufferType) const;
-      };
-
-      CorrelatorKernel(const gpu::Stream &stream,
-                       const gpu::Module &module,
-                       const Buffers &buffers,
-                       const Parameters &param);
     };
 
-    //# --------  Template specializations for KernelFactory  -------- #//
+#else
 
-    template<> CompileDefinitions
-    KernelFactory<CorrelatorKernel>::compileDefinitions() const;
+    class CorrelatorKernel : public Kernel
+    {
+    public:
+      CorrelatorKernel(const Parset &ps, 
+                       gpu::Context &context,
+                       gpu::DeviceMemory &devVisibilities,
+                       gpu::DeviceMemory &devCorrectedData);
+
+    };
+
+    class CorrelateRectangleKernel : public Kernel
+    {
+    public:
+      CorrelateRectangleKernel(const Parset &ps,
+                               gpu::Context &context,
+                               gpu::DeviceMemory &devVisibilities,
+                               gpu::DeviceMemory &devCorrectedData);
+    };
+
+    class CorrelateTriangleKernel : public Kernel
+    {
+    public:
+      CorrelateTriangleKernel(const Parset &ps, 
+                              gpu::Context &context,
+                              gpu::DeviceMemory &devVisibilities,
+                              gpu::DeviceMemory &devCorrectedData);
+    };
+
+#endif
+
   }
 }
 

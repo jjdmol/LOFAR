@@ -33,6 +33,7 @@ par  dispersionMeasure	 I	dbl   -              10    0    0                    -
 par  coherent	         I	bool  -              10    0    true                 -       'coherent = true, incoherent = false'
 
 
+
 #########################################################################################################
 # -- Beam --
 #      name       		 vers   qual  constr.            descr.

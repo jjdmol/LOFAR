@@ -3,7 +3,7 @@
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //# This program is free software; you can redistribute it and/or modify
 //# it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@
 #define LOFAR_BBSKERNEL_EXPR_EXPRVISDATA_H
 
 #include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/Interval.h>
 #include <BBSKernel/VisBuffer.h>
 
 // \file

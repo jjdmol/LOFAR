@@ -25,7 +25,7 @@
 #include <Common/LofarLogger.h>
 
 #include <GPUProc/OpenMP_Lock.h>
-#include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
+#include <GPUProc/WorkQueues/BeamFormerWorkQueue.h>
 
 namespace LOFAR
 {
@@ -66,7 +66,7 @@ namespace LOFAR
     void BeamFormerPipeline::doWork()
     {
 #pragma omp parallel num_threads((profiling ? 1 : 2) * nrGPUs)
-      BeamFormerSubbandProc(*this, omp_get_thread_num() % nrGPUs).doWork();
+      BeamFormerWorkQueue(*this, omp_get_thread_num() % nrGPUs).doWork();
     }
   }
 }

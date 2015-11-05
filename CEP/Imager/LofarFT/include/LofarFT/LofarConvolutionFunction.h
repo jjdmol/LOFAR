@@ -46,11 +46,7 @@
 #include <casa/OS/PrecTimer.h>
 
 #include <lattices/Lattices/ArrayLattice.h>
-#if defined(casacore)
-#include <lattices/LatticeMath/LatticeFFT.h>
-#else
 #include <lattices/Lattices/LatticeFFT.h>
-#endif
 
 
 
@@ -80,8 +76,7 @@ namespace LOFAR
   {
 
   public:
-    LofarConvolutionFunction(const IPosition& shape,    //# padded shape
-                             const IPosition& imageShape,
+    LofarConvolutionFunction(const IPosition& shape,
                              const DirectionCoordinate& coordinates,
                              const MeasurementSet& ms,
                              uInt nW, double Wmax,
@@ -139,8 +134,7 @@ namespace LOFAR
       }
 
       if(t0>tmax){
-	double d = std::min(dt, t1-t0);
-	for(Double tat=t0+d/2.;tat<t1; tat+=d)
+	for(Double tat=t0+dt/2.;tat<t1; tat+=dt)
 	  {
 	    computeAterm(tat);
 	    VecTimesAterm.push_back(tat);
@@ -968,7 +962,7 @@ namespace LOFAR
     CoordinateSystem csys;
     csys.addCoordinate(dir);
     csys.addCoordinate(StokesCoordinate(stokes));
-    csys.addCoordinate(SpectralCoordinate(casa::MFrequency::TOPO, 60e6, 1.0, 0.0, 60e6));
+    csys.addCoordinate(SpectralCoordinate(casa::MFrequency::TOPO, 60e6, 0.0, 0.0, 60e6));
     PagedImage<T> im(TiledShape(IPosition(4, data.shape()(0), data.shape()(1), 1, 1)), csys, name);
     im.putSlice(data, IPosition(4, 0, 0, 0, 0));
   }

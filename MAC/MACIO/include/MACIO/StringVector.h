@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -49,9 +49,9 @@ public:
 	StringVector() {};
 	~StringVector() {};
 
-	uint32 getSize() const;
-	uint32 pack  (char	*buffer) const;
-	uint32 unpack(char	*buffer);
+	size_t getSize() const;
+	size_t pack  (char	*buffer) const;
+	size_t unpack(char	*buffer);
 	ostream& print (ostream& os) const;
 
 	vector<string>&	operator()()
@@ -66,23 +66,23 @@ private:
 // @}
 
 // getSize()
-inline uint32 StringVector::getSize() const
+inline size_t StringVector::getSize() const
 {
 	return (MSH_size(theVector));
 }
 
 // pack()
-inline uint32 StringVector::pack(char	*buffer) const
+inline size_t StringVector::pack(char	*buffer) const
 {
-	uint32 offset = 0;
+	size_t offset = 0;
 	MSH_pack(buffer, offset, theVector);
 	return (offset);
 }
 
 // unpack()
-inline uint32 StringVector::unpack(char	*buffer)
+inline size_t StringVector::unpack(char	*buffer)
 {
-	uint32 offset = 0;
+	size_t offset = 0;
 	MSH_unpack(buffer, offset, theVector);
 	return (offset);
 }

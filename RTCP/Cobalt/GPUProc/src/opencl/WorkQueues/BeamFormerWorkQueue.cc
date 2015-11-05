@@ -1,4 +1,4 @@
-//# BeamFormerSubbandProc.cc
+//# BeamFormerWorkQueue.cc
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include "BeamFormerSubbandProc.h"
+#include "BeamFormerWorkQueue.h"
 
 #include <Common/LofarLogger.h>
 #include <ApplCommon/PosixTime.h>
@@ -34,18 +34,18 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    BeamFormerSubbandProc::BeamFormerSubbandProc(BeamFormerPipeline &pipeline, unsigned gpuNumber)
+    BeamFormerWorkQueue::BeamFormerWorkQueue(BeamFormerPipeline &pipeline, unsigned gpuNumber)
       :
-      SubbandProc( pipeline.context,pipeline.devices[gpuNumber], gpuNumber, pipeline.ps),
+      WorkQueue( pipeline.context,pipeline.devices[gpuNumber], gpuNumber, pipeline.ps),
       pipeline(pipeline),
-      inputSamples(boost::extents[ps.settings.antennaFields.size()][ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband()][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
-      devFilteredData(queue, CL_MEM_READ_WRITE, ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband() * sizeof(std::complex<float>)),
+      inputSamples(boost::extents[ps.nrStations()][ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband()][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
+      devFilteredData(queue, CL_MEM_READ_WRITE, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband() * sizeof(std::complex<float>)),
       bandPassCorrectionWeights(boost::extents[ps.nrChannelsPerSubband()], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
-      delaysAtBegin(boost::extents[ps.nrBeams()][ps.settings.antennaFields.size()][NR_POLARIZATIONS], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
-      delaysAfterEnd(boost::extents[ps.nrBeams()][ps.settings.antennaFields.size()][NR_POLARIZATIONS], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
+      delaysAtBegin(boost::extents[ps.nrBeams()][ps.nrStations()][NR_POLARIZATIONS], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
+      delaysAfterEnd(boost::extents[ps.nrBeams()][ps.nrStations()][NR_POLARIZATIONS], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
       phaseOffsets(boost::extents[ps.nrBeams()][NR_POLARIZATIONS], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
-      devCorrectedData(queue, CL_MEM_READ_WRITE, ps.settings.antennaFields.size() * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>)),
-      beamFormerWeights(boost::extents[ps.settings.antennaFields.size()][ps.nrChannelsPerSubband()][ps.nrTABs(0)], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
+      devCorrectedData(queue, CL_MEM_READ_WRITE, ps.nrStations() * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>)),
+      beamFormerWeights(boost::extents[ps.nrStations()][ps.nrChannelsPerSubband()][ps.nrTABs(0)], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
       devComplexVoltages(queue, CL_MEM_READ_WRITE, ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * ps.nrTABs(0) * NR_POLARIZATIONS * sizeof(std::complex<float>)),
       //transposedComplexVoltages(boost::extents[ps.nrTABs(0)][NR_POLARIZATIONS][ps.nrSamplesPerChannel()][ps.nrChannelsPerSubband()], queue, CL_MEM_READ_ONLY, CL_MEM_READ_WRITE)
       transposedComplexVoltages(boost::extents[ps.nrTABs(0)][NR_POLARIZATIONS][ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel()], queue, CL_MEM_READ_ONLY, CL_MEM_READ_WRITE),
@@ -68,7 +68,7 @@ namespace LOFAR
     }
 
 
-    void BeamFormerSubbandProc::doWork()
+    void BeamFormerWorkQueue::doWork()
     {
       //queue.enqueueWriteBuffer(devFIRweights, CL_TRUE, 0, firWeightsSize, firFilterWeights);
       bandPassCorrectionWeights.hostToDevice(CL_TRUE);
@@ -89,7 +89,7 @@ namespace LOFAR
         memset(phaseOffsets.origin(), 0, phaseOffsets.bytesize());
 
         // FIXME!!!
-        if (ps.settings.antennaFields.size() >= 3)
+        if (ps.nrStations() >= 3)
           delaysAtBegin[0][2][0] = 1e-6, delaysAfterEnd[0][2][0] = 1.1e-6;
 
         delaysAtBegin.hostToDevice(CL_FALSE);

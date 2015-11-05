@@ -103,17 +103,17 @@ namespace LOFAR
       itsAlignment(alignment)
     {
       if (itsPS.nrTabStations() > 0) {
-        ASSERTSTR(antPos.size() == itsPS.nrTabStations(),
-                  antPos.size() << " == " << itsPS.nrTabStations());
+        ASSERTSTR(antPos.size() == 3 * itsPS.nrTabStations(),
+                  antPos.size() << " == " << 3 * itsPS.nrTabStations());
       } else {
-        ASSERTSTR(antPos.size() == itsPS.settings.antennaFields.size(),
-                  antPos.size() << " == " << itsPS.settings.antennaFields.size());
+        ASSERTSTR(antPos.size() == 3 * itsPS.nrStations(),
+                  antPos.size() << " == " << 3 * itsPS.nrStations());
       }
 
-      itsStartTime = toMJDs(itsPS.settings.startTime);
+      itsStartTime = toMJDs(itsPS.startTime());
 
-      itsTimeStep = itsPS.settings.correlator.integrationTime();
-      itsNrTimes = itsPS.settings.correlator.nrIntegrations;
+      itsTimeStep = itsPS.IONintegrationTime();
+      itsNrTimes = itsPS.nrCorrelatedBlocks();
     }
 
 
@@ -122,7 +122,7 @@ namespace LOFAR
     }
 
 
-    void MeasurementSetFormat::addSubband(const string MSname, unsigned subband)
+    void MeasurementSetFormat::addSubband(const string MSname, unsigned subband, bool isBigEndian)
     {
       ScopedLock scopedLock(sharedMutex);
 
@@ -131,7 +131,7 @@ namespace LOFAR
       createMSTables(MSname, subband);
       /// Next make a metafile which describes the raw datafile we're
       /// going to write
-      createMSMetaFile(MSname, subband);
+      createMSMetaFile(MSname, subband, isBigEndian);
     }
 
 
@@ -162,9 +162,9 @@ namespace LOFAR
 
         try {
           for (unsigned i = 0; i < itsNrAnt; i++) {
-            antMPos[i] = MPosition(MVPosition(antPos[i][0],
-                                              antPos[i][1],
-                                              antPos[i][2]),
+            antMPos[i] = MPosition(MVPosition(antPos[3 * i],
+                                              antPos[3 * i + 1],
+                                              antPos[3 * i + 2]),
                                    MPosition::ITRF);
           }
         } catch (AipsError &ex) {
@@ -182,31 +182,26 @@ namespace LOFAR
         fillSpecWindow(subband);
         fillObs(subarray);
         fillHistory();
-        fillProcessor();
-        fillState();
-        fillPointing(subarray);
 
         try {
           // Use ConfigLocator to locate antenna configuration files.
           ConfigLocator configLocator;
-          // Add static meta data path from parset at the front for regression testing.
-          string staticMetaDataDir =
-            itsPS.isDefined("Cobalt.OutputProc.StaticMetaDataDirectory")
-            ? itsPS.getString("Cobalt.OutputProc.StaticMetaDataDirectory", "")
-            : itsPS.getString("OLAP.Storage.StaticMetaDataDirectory", "");
-          if (!staticMetaDataDir.empty()) {
-            configLocator.addPathAtFront(staticMetaDataDir);
+          // By default, ConfigLocator doesn't add ${LOFARROOT} to its search
+          // path, so we have to do it here :(
+          const char* lofarroot = getenv("LOFARROOT");
+          if (lofarroot) {
+            configLocator.addPathAtFront(lofarroot);
           }
           LOG_DEBUG_STR("Config locator search path: " << 
                         configLocator.getPath());
           // Fill the tables containing the beam info.
           BeamTables::fill(*itsMS,
-                           itsPS.settings.antennaSet,
+                           itsPS.antennaSet(),
                            configLocator.locate("AntennaSets.conf"),
                            configLocator.locate("StaticMetaData"),
                            configLocator.locate("StaticMetaData"));
         } catch (LOFAR::AssertError &ex) {
-          LOG_ERROR_STR("Failed to add beam tables: " << ex);
+          LOG_WARN_STR("Ignoring exception from BeamTables::fill(): " << ex.what());
         }
       } catch (AipsError &ex) {
         THROW(StorageException, "AIPS/CASA error: " << ex.getMesg());
@@ -298,43 +293,36 @@ namespace LOFAR
 
     void MeasurementSetFormat::fillField(unsigned subarray)
     {
+
       // Beam direction
-      MVDirection radec(Quantity(itsPS.settings.SAPs[subarray].direction.angle1, "rad"),
-                        Quantity(itsPS.settings.SAPs[subarray].direction.angle2, "rad"));
+      MVDirection radec(Quantity(itsPS.getBeamDirection(subarray)[0], "rad"),
+                        Quantity(itsPS.getBeamDirection(subarray)[1], "rad"));
       MDirection::Types beamDirectionType;
-      if (!MDirection::getType(beamDirectionType, itsPS.settings.SAPs[subarray].direction.type))
-        THROW(StorageException, "Beam direction type unknown: " << itsPS.settings.SAPs[subarray].direction.type);
+      MDirection::getType(beamDirectionType, itsPS.getBeamDirectionType(subarray));
       MDirection indir(radec, beamDirectionType);
       casa::Vector<MDirection> outdir(1);
       outdir(0) = indir;
 
       // AnaBeam direction type
       MDirection::Types anaBeamDirectionType;
-      if (itsPS.settings.anaBeam.enabled)
-        if (!MDirection::getType(anaBeamDirectionType, itsPS.settings.anaBeam.direction.type))
-          THROW(StorageException, "Beam direction type unknown: " << itsPS.settings.anaBeam.direction.type);
-
-
-      // ScSupp fills Observation.Beam[x].target, sometimes with field codes, sometimes with pointing names.
-      // Use it here to write FIELD CODE.
-      casa::String ctarget(itsPS.settings.SAPs[subarray].target);
+      if (itsPS.haveAnaBeam())
+        MDirection::getType(anaBeamDirectionType, itsPS.getAnaBeamDirectionType());
 
       // Put the direction into the FIELD subtable.
       MSLofarField msfield = itsMS->field();
       MSLofarFieldColumns msfieldCol(msfield);
 
       uInt rownr = msfield.nrow();
-
-      // Set refframe for MS direction columns to be able to write non-J2000 refframe coords.
       ASSERT(rownr == 0); // can only set directionType on first row, so only one field per MeasurementSet for now
-      if (itsPS.settings.anaBeam.enabled)
+
+      if (itsPS.haveAnaBeam())
         msfieldCol.setDirectionRef(beamDirectionType, anaBeamDirectionType);
       else
         msfieldCol.setDirectionRef(beamDirectionType);
 
       msfield.addRow();
       msfieldCol.name().put(rownr, "BEAM_" + String::toString(subarray));
-      msfieldCol.code().put(rownr, ctarget);
+      msfieldCol.code().put(rownr, "");
       msfieldCol.time().put(rownr, itsStartTime);
       msfieldCol.numPoly().put(rownr, 0);
 
@@ -345,10 +333,10 @@ namespace LOFAR
       msfieldCol.sourceId().put(rownr, -1);
       msfieldCol.flagRow().put(rownr, False);
 
-      if (itsPS.settings.anaBeam.enabled) {
+      if (itsPS.haveAnaBeam()) {
         // Analog beam direction
-        MVDirection radec_AnaBeamDirection(Quantity(itsPS.settings.anaBeam.direction.angle1, "rad"),
-                                           Quantity(itsPS.settings.anaBeam.direction.angle2, "rad"));
+        MVDirection radec_AnaBeamDirection(Quantity(itsPS.getAnaBeamDirection()[0], "rad"),
+                                           Quantity(itsPS.getAnaBeamDirection()[1], "rad"));
         MDirection anaBeamDirection(radec_AnaBeamDirection, anaBeamDirectionType);
         msfieldCol.tileBeamDirMeasCol().put(rownr, anaBeamDirection);
       } else {
@@ -359,7 +347,7 @@ namespace LOFAR
 
     void MeasurementSetFormat::fillPola()
     {
-      const unsigned npolarizations = itsPS.settings.nrCrossPolarisations();
+      const unsigned npolarizations = itsPS.nrCrossPolarisations();
 
       MSPolarization mspol = itsMS->polarization();
       MSPolarizationColumns mspolCol(mspol);
@@ -415,8 +403,8 @@ namespace LOFAR
       timeRange[1] = itsStartTime + itsNrTimes * itsTimeStep;
 
       // Get minimum and maximum frequency.
-      vector<double> freqs(itsPS.settings.subbands.size());
-      for(size_t sb = 0; sb < itsPS.settings.subbands.size(); ++sb)
+      vector<double> freqs(itsPS.nrSubbands());
+      for(size_t sb = 0; sb < itsPS.nrSubbands(); ++sb)
          freqs[sb] = itsPS.settings.subbands[sb].centralFrequency;
 
       ASSERT( freqs.size() > 0 );
@@ -424,11 +412,11 @@ namespace LOFAR
       double minFreq = *std::min_element( freqs.begin(), freqs.end() );
       double maxFreq = *std::max_element( freqs.begin(), freqs.end() );
 
-      const size_t nchan = itsPS.settings.correlator.nrChannels;
+      size_t nchan = itsPS.nrChannelsPerSubband();
 
       if( nchan > 1 ) {
         // 2nd PPF shifts frequencies downwards by half a channel
-        const double width = itsPS.settings.correlator.channelWidth;
+        double width = itsPS.channelWidth();
 
         minFreq -= 0.5 * nchan * width;
         maxFreq -= 0.5 * nchan * width;
@@ -438,13 +426,13 @@ namespace LOFAR
       corrSchedule = "corrSchedule";
 
       vector<string> targets(itsPS.getStringVector
-                               ("Observation.Beam[" + String::toString(subarray) + "].target", vector<string>(), true));
+                               ("Observation.Beam[" + String::toString(subarray) + "].target"));
       casa::Vector<String> ctargets(targets.size());
 
       for (uint i = 0; i < targets.size(); ++i)
         ctargets[i] = targets[i];
 
-      vector<string> cois(itsPS.getStringVector("Observation.Campaign.CO_I", vector<string>(), true));
+      vector<string> cois(itsPS.getStringVector("Observation.Campaign.CO_I"));
       casa::Vector<String> ccois(cois.size());
 
       for (uint i = 0; i < cois.size(); ++i)
@@ -462,14 +450,14 @@ namespace LOFAR
       msobsCol.observer().put(0, "unknown");
       msobsCol.scheduleType().put(0, "LOFAR");
       msobsCol.schedule().put(0, corrSchedule);
-      msobsCol.project().put(0, itsPS.getString("Observation.Campaign.name", ""));
+      msobsCol.project().put(0, itsPS.getString("Observation.Campaign.name"));
       msobsCol.releaseDate().put(0, releaseDate);
       msobsCol.flagRow().put(0, False);
-      msobsCol.projectTitle().put(0, itsPS.getString("Observation.Campaign.title", ""));
-      msobsCol.projectPI().put(0,  itsPS.getString("Observation.Campaign.PI", ""));
+      msobsCol.projectTitle().put(0, itsPS.getString("Observation.Campaign.title"));
+      msobsCol.projectPI().put(0,  itsPS.getString("Observation.Campaign.PI"));
       msobsCol.projectCoI().put(0, ccois);
-      msobsCol.projectContact().put(0, itsPS.getString("Observation.Campaign.contact", ""));
-      msobsCol.observationId().put(0, String::toString(itsPS.settings.observationID));
+      msobsCol.projectContact().put(0, itsPS.getString("Observation.Campaign.contact"));
+      msobsCol.observationId().put(0, String::toString(itsPS.observationID()));
       msobsCol.observationStart().put(0, timeRange[0]);
       msobsCol.observationEnd().put(0, timeRange[1]);
       msobsCol.observationFrequencyMaxQuant().put(0, Quantity(maxFreq, "Hz"));
@@ -477,9 +465,9 @@ namespace LOFAR
       msobsCol.observationFrequencyCenterQuant().put(0, Quantity(0.5 * (minFreq + maxFreq), "Hz"));
       msobsCol.subArrayPointing().put(0, subarray);
       msobsCol.nofBitsPerSample().put(0, itsPS.nrBitsPerSample());
-      msobsCol.antennaSet().put(0, itsPS.settings.antennaSet);
-      msobsCol.filterSelection().put(0, itsPS.settings.bandFilter);
-      msobsCol.clockFrequencyQuant().put(0, Quantity(itsPS.settings.clockHz(), "Hz"));
+      msobsCol.antennaSet().put(0, itsPS.antennaSet());
+      msobsCol.filterSelection().put(0, itsPS.bandFilter());
+      msobsCol.clockFrequencyQuant().put(0, Quantity(itsPS.clockSpeed(), "Hz"));
       msobsCol.target().put(0, ctargets);
       msobsCol.systemVersion().put(0, Version::getInfo<OutputProcVersion>("OutputProc",
                                                                           "brief"));
@@ -495,10 +483,10 @@ namespace LOFAR
     void MeasurementSetFormat::fillSpecWindow(unsigned subband)
     {
       const double refFreq = itsPS.settings.subbands[subband].centralFrequency;
-      const size_t nchan = itsPS.settings.correlator.nrChannels;
-      const double chanWidth = itsPS.settings.correlator.channelWidth;
+      const size_t nchan = itsPS.nrChannelsPerSubband();
+      const double chanWidth = itsPS.channelWidth();
       const double totalBW = nchan * chanWidth;
-      const double channel0freq = itsPS.channel0Frequency(subband, nchan);
+      const double channel0freq = itsPS.channel0Frequency(subband);
 
       casa::Vector<double> chanWidths(nchan, chanWidth);
       casa::Vector<double> chanFreqs(nchan);
@@ -524,11 +512,6 @@ namespace LOFAR
       msspwCol.freqGroup().put(0, 0);
       msspwCol.freqGroupName().put(0, "");
       msspwCol.flagRow().put(0, False);
-
-      // Remove a few keywords from the MEASINFO, because old CASA cannot
-      // deal with them since Dirk Petry added type Undefined.
-      MSLofar::removeMeasKeys (msspw, "REF_FREQUENCY");
-      MSLofar::removeMeasKeys (msspw, "CHAN_FREQ");
 
       msspw.flush();
     }
@@ -567,87 +550,15 @@ namespace LOFAR
       cli.put         (rownr, clivec);
     }
 
-    void MeasurementSetFormat::fillProcessor()
-    {
-      MSProcessor msproc = itsMS->processor();
-      MSProcessorColumns msprocCol(msproc);
-      // Fill the columns
-      msproc.addRow();
-      msprocCol.type().put (0, "CORRELATOR");
-      msprocCol.subType().put (0, "LOFAR-COBALT");
-      msprocCol.typeId().put (0, -1);
-      msprocCol.modeId().put (0, -1);
-      msprocCol.flagRow().put (0, False);
-      msproc.flush();
-    }
 
-    void MeasurementSetFormat::fillState()
-    {
-      MSState msstate = itsMS->state();
-      MSStateColumns msstateCol(msstate);
-      // Fill the columns
-      msstate.addRow();
-      msstateCol.sig().put (0, True);
-      msstateCol.ref().put (0, False);
-      msstateCol.cal().put (0, 0.);
-      msstateCol.load().put (0, 0.);
-      msstateCol.subScan().put (0, 0);
-      msstateCol.obsMode().put (0, "");
-      msstateCol.flagRow().put (0, False);
-      msstate.flush();
-    }
-
-    void MeasurementSetFormat::fillPointing(unsigned subarray)
-    {
-      // Beam direction
-      MVDirection radec(Quantity(itsPS.settings.SAPs[subarray].direction.angle1, "rad"),
-                        Quantity(itsPS.settings.SAPs[subarray].direction.angle2, "rad"));
-      MDirection::Types beamDirectionType;
-      if (!MDirection::getType(beamDirectionType, itsPS.settings.SAPs[subarray].direction.type))
-        THROW(StorageException, "Beam direction type unknown: " << itsPS.settings.SAPs[subarray].direction.type);
-      MDirection indir(radec, beamDirectionType);
-
-      casa::Vector<MDirection> outdir(1);
-      outdir(0) = indir;
-
-      // ScSupp fills Observation.Beam[x].target, sometimes with field codes, sometimes with pointing names.
-      // Use it here to write POINTING NAME.
-      casa::String ctarget(itsPS.settings.SAPs[subarray].target);
-
-      // Fill the POINTING subtable.
-      MSPointing mspointing = itsMS->pointing();
-      MSPointingColumns mspointingCol(mspointing);
-
-      uInt rownr = mspointing.nrow();
-      // Set refframe for MS direction columns to be able to write non-J2000 refframe coords.
-      ASSERT(rownr == 0); // can only set directionType on first row, so only one field per MeasurementSet for now
-      mspointingCol.setDirectionRef(beamDirectionType);
-
-      mspointing.addRow(itsNrAnt);
-      for (unsigned i = 0; i < itsNrAnt; i++) {
-        mspointingCol.antennaId().put(i, i);
-        mspointingCol.time().put(i, itsStartTime + itsNrTimes * itsTimeStep / 2.);
-        mspointingCol.interval().put(i, itsNrTimes * itsTimeStep);
-        mspointingCol.name().put(i, ctarget);
-        mspointingCol.numPoly().put(i, 0);
-        mspointingCol.timeOrigin().put(i, itsStartTime);
-        mspointingCol.directionMeasCol().put(i, outdir);
-        mspointingCol.targetMeasCol().put(i, outdir);
-        mspointingCol.tracking().put(i, true); // not tracking N/A w/ current obs software
-      }
-
-      mspointing.flush();
-    }
-
-
-    void MeasurementSetFormat::createMSMetaFile(const string &MSname, unsigned subband)
+    void MeasurementSetFormat::createMSMetaFile(const string &MSname, unsigned subband, bool isBigEndian)
     {
       (void) subband;
 
       Block<Int> ant1(itsPS.nrBaselines());
       Block<Int> ant2(itsPS.nrBaselines());
       uInt inx = 0;
-      uInt nStations = itsPS.nrTabStations() > 0 ? itsPS.nrTabStations() : itsPS.settings.antennaFields.size();
+      uInt nStations = itsPS.nrTabStations() > 0 ? itsPS.nrTabStations() : itsPS.nrStations();
 
       for (uInt i = 0; i < nStations; ++i) {
         for (uInt j = 0; j <= i; ++j) {
@@ -670,18 +581,15 @@ namespace LOFAR
       aio.putstart("LofarStMan", LofarStManVersion);
       aio << ant1 << ant2
           << itsStartTime
-          << itsPS.settings.correlator.integrationTime()
-          << itsPS.settings.correlator.nrChannels
-          << itsPS.settings.nrCrossPolarisations()
-          << static_cast<double>(itsPS.settings.correlator.nrSamplesPerIntegration())
+          << itsPS.IONintegrationTime()
+          << itsPS.nrChannelsPerSubband()
+          << itsPS.nrCrossPolarisations()
+          << static_cast<double>(itsPS.CNintegrationSteps() * itsPS.IONintegrationSteps())
           << itsAlignment
-          << false; // isBigEndian
+          << isBigEndian;
       if (LofarStManVersion > 1) {
-        const size_t integrationSteps = itsPS.settings.correlator.nrSamplesPerIntegration();
-        const uInt itsNrBytesPerNrValidSamples =
-          integrationSteps < 256 ? 1 :
-          integrationSteps < 65536 ? 2 :
-          4;
+        uInt itsNrBytesPerNrValidSamples =
+          itsPS.integrationSteps() < 256 ? 1 : itsPS.integrationSteps() < 65536 ? 2 : 4;
         aio << itsNrBytesPerNrValidSamples;
       }
       aio.close();

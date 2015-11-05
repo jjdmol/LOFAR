@@ -1,4 +1,4 @@
-//# IntToFloat.cu: Convert integer input to float; transpose time and pol dims
+//# IntToFloat.cl
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,77 +20,53 @@
 
 #include "IntToFloat.cuh"
 
-// SampleType is a COMPLEX sample
-#if NR_BITS_PER_SAMPLE ==  4
-typedef signed char SampleType;
-#elif NR_BITS_PER_SAMPLE ==  8
-typedef char2  SampleType;
-#elif NR_BITS_PER_SAMPLE == 16
+#if NR_BITS_PER_SAMPLE == 16
 typedef short2 SampleType;
+#elif NR_BITS_PER_SAMPLE == 8
+typedef char2 SampleType;
 #else
-#error unsupported NR_BITS_PER_SAMPLE: must be 4, 8, or 16
+#error unsupport NR_BITS_PER_SAMPLE
 #endif
 
-#if NR_BITS_PER_SAMPLE ==  4
-#define REAL(sample) extractRI(sample, false)
-#define IMAG(sample) extractRI(sample, true)
-#else
-#define REAL(sample) sample.x
-#define IMAG(sample) sample.y
-#endif
-
-typedef SampleType (*SampledDataType)  [NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR_POLARIZATIONS];
-typedef float2     (*ConvertedDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLES_PER_SUBBAND];
+typedef  SampleType (*SampledDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR_POLARIZATIONS];
+typedef  float2 (*ConvertedDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLES_PER_SUBBAND];
 
 /**
- * This kernel performs a conversion of the integer valued input to floats and
- * transposes the data to get per station: first all samples with polX, then polY.
- * - It supports 8 and 16 bit (char and short) input, which is selectable using
+ * This kernel performs a conversion of the integer valued input to floats.
+ * - It supports both 16 and 8 bits (short and char) input selectable using
  *   the define NR_BITS_PER_SAMPLE
- * - In 8 bit mode the converted samples with value -128 are clamped to -127.0f
+ * - In 8 bit mode the converted chars with value -128 are clamped to a minimum of -127 
  *
- * @param[out] convertedDataPtr    pointer to output data of ConvertedDataType,
+ * @param[out] correctedDataPtr    pointer to output data of ::ConvertedDataType,
  *                                 a 4D array [station][polarizations][n_samples_subband][complex]
- *                                 of floats (2 complex polarizations).
- * @param[in]  sampledDataPtr      pointer to input data; this can either be a
+ *                                 of floats (2 complex polarizations)
+ * @param[in]  SampledDataType     pointer to input data; this can either be a
  *                                 4D array [station][n_samples_subband][polarizations][complex]
- *                                 of shorts or chars, depending on NR_BITS_PER_SAMPLE.
- *
- * Required preprocessor symbols:
- * - NR_SAMPLES_PER_CHANNEL: > 0
- * - NR_BITS_PER_SAMPLE: 8 or 16
- *
- * Execution configuration:
- * - Use a 1D thread block. No restrictions.
- * - Use a 2D grid dim, where the x dim has 1 block and the y dim represents the
- *   number of stations (i.e. antenna fields).
+ *                                 of shorts or chars. depending on NR_BITS_PER_SAMPLE.
  */
 
 extern "C" {
-__global__ void intToFloat(void *convertedDataPtr,
-                           const void *sampledDataPtr)
+ __global__ void intToFloat( void * convertedDataPtr,
+                          const void * sampledDataPtr)
 {
-  ConvertedDataType convertedData = (ConvertedDataType)convertedDataPtr;
-  SampledDataType   sampledData   = (SampledDataType)  sampledDataPtr;
-
-  uint station = blockIdx.y;
-
-  for (uint time = threadIdx.x; time < NR_SAMPLES_PER_SUBBAND; time += blockDim.x)
-  {
-    float4 sample;
-
-    sample = make_float4(convertIntToFloat(REAL((*sampledData)[station][time][0])),
-                         convertIntToFloat(IMAG((*sampledData)[station][time][0])),
-                         convertIntToFloat(REAL((*sampledData)[station][time][1])),
-                         convertIntToFloat(IMAG((*sampledData)[station][time][1])));
-
-    float2 sampleX = make_float2(sample.x, sample.y);
-    (*convertedData)[station][0][time] = sampleX;
-    float2 sampleY = make_float2(sample.z, sample.w);
-    (*convertedData)[station][1][time] = sampleY;
+  ConvertedDataType convertedData = (ConvertedDataType) convertedDataPtr;
+  SampledDataType sampledData = (SampledDataType) sampledDataPtr;
+  // Use the y dim for selecting the station. blockDim.y is normally 1
+  uint station = blockIdx.y * blockDim.y + threadIdx.y;
+  
+  // Step data with whole blocks allows for coalesced reads and writes
+  for (uint time = threadIdx.x; time < NR_SAMPLES_PER_SUBBAND; time += blockDim.x) {
+    // pol 1
+    (*convertedData)[station][0][time] = make_float2(
+			convertIntToFloat((*sampledData)[station][time][0].x),
+            convertIntToFloat((*sampledData)[station][time][0].y));
+    // pol 2
+    (*convertedData)[station][1][time] = make_float2(
+			convertIntToFloat((*sampledData)[station][time][1].x), 
+            convertIntToFloat((*sampledData)[station][time][1].y));
+    // TODO: Is a sync needed here? Dont think so but..
   }
-
+}
 }
 
-}
 

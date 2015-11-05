@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@
 //# Includes
 #include <Common/LofarTypes.h>
 
-#include <Common/NsTimestamp.h>
+#include <APL/RTCCommon/NsTimestamp.h>
 
 // Avoid 'using namespace' in headerfiles
 
@@ -45,7 +45,7 @@ class TBBTrigger
 {
 public:
 	// Most likely way to construct the trigger.
-	TBBTrigger (uint32 rcuNr, uint32 time, uint32 sampleNr, NsTimestamp nsTimestamp,
+	TBBTrigger (uint32 rcuNr, uint32 time, uint32 sampleNr, RTC::NsTimestamp nsTimestamp,
 					uint32 sum, uint32 nrSamples, uint32 peakValue, uint32 missed);
 
 	// default construction
@@ -58,15 +58,15 @@ public:
 
 	// --- Datamembers ---
 	// Note that the members are public, we use it as a struct.
-	uint32          itsNo;
-	uint32          itsRcuNr;
-	uint32          itsTime;
-	uint32          itsSampleNr;
-	NsTimestamp 	itsNsTimestamp;
-	uint32          itsSum;
-	uint32          itsNrSamples;
-	uint32          itsPeakValue;
-	uint32          itsMissed;
+	uint32           itsNo;
+	uint32           itsRcuNr;
+	uint32           itsTime;
+	uint32           itsSampleNr;
+	RTC::NsTimestamp itsNsTimestamp;
+	uint32           itsSum;
+	uint32           itsNrSamples;
+	uint32           itsPeakValue;
+	uint32           itsMissed;
 
 	//# print function for operator<<
 	ostream&	print(ostream&	os) const;

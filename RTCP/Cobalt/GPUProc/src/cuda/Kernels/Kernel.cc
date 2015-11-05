@@ -21,17 +21,11 @@
 #include <lofar_config.h>
 
 #include <ostream>
-#include <sstream>
 #include <boost/format.hpp>
-#include <cuda_runtime.h>
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/Kernels/Kernel.h>
-#include <GPUProc/PerformanceCounter.h>
-#include <CoInterface/Align.h>
-#include <CoInterface/Parset.h>
-#include <CoInterface/BlockID.h>
-#include <Common/LofarLogger.h>
+#include <GPUProc/gpu_utils.h>    // for createModule()
 
 using namespace std;
 
@@ -39,245 +33,92 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    Kernel::Parameters::Parameters(const std::string &name) :
-      name(name),
-      dumpBuffers(false)
-    {
-    }
-
-
-    Kernel::~Kernel()
-    {
-    }
-
-
-    Kernel::Kernel(const gpu::Stream& stream, 
-                   const Buffers &buffers,
-                   const Parameters &params)
+    Kernel::Kernel(const Parset &ps, 
+                   const gpu::Context &context,
+                   const string& srcFilename,
+                   const string& functionName)
       : 
-      itsCounter(stream.getContext(), params.name),
-      itsStream(stream),
-      itsBuffers(buffers),
-      itsParameters(params)
+      gpu::Function(
+        createModule(context, 
+                     srcFilename,
+                     createPTX(srcFilename, 
+                               compileDefinitions(ps))),
+        functionName),
+      event(context),
+      ps(ps)
     {
     }
 
-    void Kernel::enqueue(const BlockID &blockId)
-    {
-      // record duration of last invocation (or noop
-      // if there was none)
-      itsCounter.recordStart(itsStream);
-      launch();
-      itsCounter.recordStop(itsStream);
-
-      if (itsParameters.dumpBuffers && blockId.block >= 0) {
-        itsStream.synchronize();
-        dumpBuffers(blockId);
-      }
-    }
-
-    void Kernel::dumpBuffers(const BlockID &blockId) const
-    {
-      dumpBuffer(itsBuffers.output,
-                 str(boost::format(itsParameters.dumpFilePattern) %
-                     blockId.globalSubbandIdx %
-                     blockId.block));
-    }
-
-
-    CompiledKernel::CompiledKernel(
-                   const gpu::Stream& stream, 
-                   const gpu::Function& function,
-                   const Buffers &buffers,
-                   const Parameters &params)
-      : 
-      Kernel(stream, buffers, params),
-      gpu::Function(function),
-      maxThreadsPerBlock(getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK))
-    {
-      LOG_INFO_STR(
-        "Function " << name() << ":" << 
-        "\n  nr. of registers used : " <<
-        getAttribute(CU_FUNC_ATTRIBUTE_NUM_REGS) <<
-        "\n  nr. of bytes of shared memory used (static) : " <<
-        getAttribute(CU_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES)
-      );
-    }
-
-
-    CompiledKernel::~CompiledKernel()
+    // TODO: Remove
+    Kernel::Kernel(const Parset &ps, 
+                   const gpu::Module& module, 
+                   const string &name)
+      :
+      gpu::Function(module, name),
+      event(module.getContext()),
+      ps(ps)
     {
     }
 
-
-    void CompiledKernel::launch() const
+    void Kernel::enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/)
     {
-      itsStream.launchKernel(*this, itsGridDims, itsBlockDims);
+      // Unlike OpenCL, no need to check for 0-sized work. CUDA can handle it.
+      //if (globalWorkSize.x == 0)
+      //  return;
+
+      // TODO: to globalWorkSize in terms of localWorkSize (CUDA) (+ remove assertion): add protected setThreadDim()
+      gpu::Block block(localWorkSize);
+      assert(globalWorkSize.x % block.x == 0 &&
+             globalWorkSize.y % block.y == 0 &&
+             globalWorkSize.z % block.z == 0);
+      gpu::Grid grid(globalWorkSize.x / block.x,
+                     globalWorkSize.y / block.y,
+                     globalWorkSize.z / block.z);
+      //queue.enqueueNDRangeKernel(*this, gpu::nullDim, globalWorkSize, localWorkSize, 0, &event);
+      queue.launchKernel(*this, grid, block);
+//      counter.doOperation(event, nrOperations, nrBytesRead, nrBytesWritten);
     }
 
-
-    void CompiledKernel::setEnqueueWorkSizes(gpu::Grid globalWorkSize, 
-                                             gpu::Block localWorkSize,
-                                             string* errorStrings)
+    // TODO: Remove
+    const CompileDefinitions& Kernel::compileDefinitions(const Parset& ps)
     {
-      const gpu::Device device(_context.getDevice());
-      gpu::Grid grid;
-      ostringstream errMsgs;
+      static CompileDefinitions defs;
 
-      // Enforce by the hardware supported work sizes to see errors early
+      using boost::format;
 
-      gpu::Block maxLocalWorkSize = device.getMaxBlockDims();
-      if (localWorkSize.x > maxLocalWorkSize.x ||
-          localWorkSize.y > maxLocalWorkSize.y ||
-          localWorkSize.z > maxLocalWorkSize.z)
-        errMsgs << "  - localWorkSize must be at most " << maxLocalWorkSize 
-                << endl;
+      if (defs.empty()) {
+        defs["NVIDIA_CUDA"] = ""; // left-over from OpenCL for Correlator.cl/.cu 
+        // TODO: support device specific defs somehow (createPTX() knows about targets, but may be kernel and target specific)
+        //if (devices[0].getInfo<CL_DEVICE_NAME>() == "GeForce GTX 680")
+        //  defs["USE_FLOAT4_IN_CORRELATOR"] = "";
 
-      if (localWorkSize.x * localWorkSize.y * localWorkSize.z > 
-          maxThreadsPerBlock)
-        errMsgs << "  - localWorkSize total must be at most " 
-                << maxThreadsPerBlock << " threads/block" << endl;
+        // TODO: kernel-specific defs should be specified in the XXXKernel class
+        defs["COMPLEX"] = "2";
 
-      // globalWorkSize may (in theory) be all zero (no work), so allow.
-      // Do reject an all zero localWorkSize. We need to mod or div by it.
-      if (localWorkSize.x == 0 || 
-          localWorkSize.y == 0 ||
-          localWorkSize.z == 0) {
-        errMsgs << "  - localWorkSize dimensions must be non-zero" << endl;
-      } else {
-        if (globalWorkSize.x % localWorkSize.x != 0 ||
-            globalWorkSize.y % localWorkSize.y != 0 ||
-            globalWorkSize.z % localWorkSize.z != 0)
-          errMsgs << "  - globalWorkSize must divide localWorkSize" << endl;
-
-        // Translate OpenCL globalWorkSize semantic to CUDA grid.
-        grid = gpu::Grid(globalWorkSize.x / localWorkSize.x,
-                         globalWorkSize.y / localWorkSize.y,
-                         globalWorkSize.z / localWorkSize.z);
-
-        gpu::Grid maxGridWorkSize = device.getMaxGridDims();
-        if (grid.x > maxGridWorkSize.x ||
-            grid.y > maxGridWorkSize.y ||
-            grid.z > maxGridWorkSize.z)
-          errMsgs << "  - globalWorkSize / localWorkSize must be at most "
-                  << maxGridWorkSize << endl;
+        defs["NR_BITS_PER_SAMPLE"] = str(format("%u") % ps.nrBitsPerSample());
+        defs["SUBBAND_BANDWIDTH"]  = str(format("%.7ff") % ps.subbandBandwidth()); // returns double, so rounding issue?
+        defs["NR_SUBBANDS"]        = str(format("%u") % ps.nrSubbands()); // size_t, but %zu not supp
+        defs["NR_CHANNELS"]        = str(format("%u") % ps.nrChannelsPerSubband());
+        defs["NR_STATIONS"]        = str(format("%u") % ps.nrStations());
+        defs["NR_SAMPLES_PER_CHANNEL"] = str(format("%u") % ps.nrSamplesPerChannel());
+        defs["NR_SAMPLES_PER_SUBBAND"] = str(format("%u") % ps.nrSamplesPerSubband());
+        defs["NR_BEAMS"]           = str(format("%u") % ps.nrBeams());
+        defs["NR_TABS"]            = str(format("%u") % ps.nrTABs(0)); // TODO: 0 should be dep on #beams
+        defs["NR_COHERENT_STOKES"] = str(format("%u") % ps.nrCoherentStokes()); // size_t
+        defs["NR_INCOHERENT_STOKES"] = str(format("%u") % ps.nrIncoherentStokes()); // size_t
+        defs["COHERENT_STOKES_TIME_INTEGRATION_FACTOR"]   = str(format("%u") % ps.coherentStokesTimeIntegrationFactor());
+        defs["INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR"] = str(format("%u") % ps.incoherentStokesTimeIntegrationFactor());
+        defs["NR_POLARIZATIONS"]   = str(format("%u") % NR_POLARIZATIONS);
+        defs["NR_TAPS"]            = str(format("%u") % NR_TAPS);
+        defs["NR_STATION_FILTER_TAPS"] = str(format("%u") % NR_STATION_FILTER_TAPS);
+        if (ps.delayCompensation())
+          defs["DELAY_COMPENSATION"] = "";
+        if (ps.correctBandPass())
+          defs["BANDPASS_CORRECTION"] = "";
+        defs["DEDISPERSION_FFT_SIZE"] = str(format("%u") % ps.dedispersionFFTsize()); // size_t
       }
 
-      // On error, store error messages in output parameter, or throw.
-      string errStr(errMsgs.str());
-      if (!errStr.empty()) {
-        if (errorStrings != NULL) {
-          *errorStrings = errStr;
-        } else {
-          THROW(gpu::GPUException,
-                "setEnqueueWorkSizes(): unsupported globalWorkSize " <<
-                globalWorkSize << " and/or localWorkSize " << localWorkSize <<
-                " selected:" << endl << errStr);
-        }
-      }
-
-      LOG_DEBUG_STR("Setting CUDA grid size: "  << grid);
-      LOG_DEBUG_STR("Setting CUDA block size: " << localWorkSize);
-
-      itsGridDims  = grid;
-      itsBlockDims = localWorkSize;
-    }
-
-    unsigned CompiledKernel::getNrBlocksPerMultiProc(unsigned dynSharedMemBytes) const
-    {
-      // See NVIDIA's CUDA_Occupancy_Calculator.xls
-      // TODO: Take warp allocation granularity into account. (Or only use a multiple of 32.)
-      const gpu::Device device(_context.getDevice());
-      const unsigned computeCapMajor = device.getAttribute(CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR);
-      const unsigned warpSize = device.getAttribute(CU_DEVICE_ATTRIBUTE_WARP_SIZE);
-      unsigned factor;
-
-      // #blocks regardless of kernel
-      /*const */unsigned maxBlocksPerMultiProc; // no device.getAttribute() to retrieve it
-      switch (computeCapMajor) {
-        case 1:
-        case 2:  maxBlocksPerMultiProc =  8; break;
-        case 3:  maxBlocksPerMultiProc = 16; break;
-        case 5:  maxBlocksPerMultiProc = 32; break;
-        default: maxBlocksPerMultiProc = 32; break; // guess; unknown for future hardware
-      }
-      factor = maxBlocksPerMultiProc;
-
-      // take block size into account
-      unsigned nrThreadsPerBlock = itsBlockDims.x * itsBlockDims.y * itsBlockDims.z;
-      nrThreadsPerBlock = (nrThreadsPerBlock + warpSize - 1) & ~(warpSize - 1); // assumes warpSize is a pow of 2
-      const unsigned maxThreadsPerMP = device.getAttribute(CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_MULTIPROCESSOR);
-      unsigned threadsFactor = maxThreadsPerMP / nrThreadsPerBlock;
-      if (threadsFactor < factor)
-        factor = threadsFactor;
-
-      // number of registers
-      unsigned nrRegsPerThread = getAttribute(CU_FUNC_ATTRIBUTE_NUM_REGS);
-      if (nrRegsPerThread > 0) {
-        unsigned nrRegsPerBlock;
-        // sm_1x devices apply the reg gran per block. Newer devices apply it per warp.
-        if (computeCapMajor == 1) {
-          const unsigned computeCapMinor = device.getAttribute(CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR);
-          nrRegsPerBlock = nrRegsPerThread * nrThreadsPerBlock;
-          unsigned regsGranularity = computeCapMinor <= 1 ? 256 : 512;
-          nrRegsPerBlock = (nrRegsPerBlock + regsGranularity - 1) & ~(regsGranularity - 1); // assumes regsGranularity is a pow of 2
-        } else {
-          unsigned nrRegsPerWarp = nrRegsPerThread * warpSize;
-          unsigned regsGranularity;
-          switch (computeCapMajor) {
-            // case 1 is dealt with above under the 'if'
-            case 2:  regsGranularity = 64;  break;
-            case 3:
-            case 5:  regsGranularity = 256; break;
-            default: regsGranularity = 256; break; // guess; unknown for future hardware
-          }
-          nrRegsPerWarp = (nrRegsPerWarp + regsGranularity - 1) & ~(regsGranularity - 1); // assumes regsGranularity is a pow of 2
-          unsigned nrWarpsPerBlock = nrThreadsPerBlock / warpSize;
-          nrRegsPerBlock = nrRegsPerWarp * nrWarpsPerBlock;
-        }
-        const unsigned devNrRegs = device.getAttribute(CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_BLOCK);
-        unsigned regsFactor = devNrRegs / nrRegsPerBlock;
-        if (regsFactor < factor)
-          factor = regsFactor;
-      }
-
-      // shared memory size
-      size_t shMem = getAttribute(CU_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES) + dynSharedMemBytes;
-      if (shMem > 0) {
-        size_t shMemGranularity;
-        switch (computeCapMajor) {
-          case 1:  shMemGranularity = 512; break;
-          case 2:  shMemGranularity = 128; break;
-          case 3:
-          case 5:  shMemGranularity = 256; break;
-          default: shMemGranularity = 256; break; // guess; unknown for future hardware
-        }
-        shMem = (shMem + shMemGranularity - 1) & ~(shMemGranularity - 1); // assumes shMemGranularity is a pow of 2
-        const size_t devShMem = device.getAttribute(CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK);
-        unsigned shMemFactor = devShMem / shMem;
-        if (shMemFactor < factor)
-          factor = shMemFactor;
-      }
-
-      return factor;
-    }
-
-    double CompiledKernel::predictMultiProcOccupancy(unsigned dynSharedMemBytes) const
-    {
-      const gpu::Device device(_context.getDevice());
-      //const unsigned nrMPs = device.getMultiProcessorCount();
-      //const unsigned maxThreadsPerBlock = device.getMaxThreadsPerBlock();
-
-      const unsigned warpSize = device.getAttribute(CU_DEVICE_ATTRIBUTE_WARP_SIZE);
-      unsigned nrThreadsPerBlock = itsBlockDims.x * itsBlockDims.y * itsBlockDims.z;
-      unsigned nrWarpsPerBlock = ceilDiv(nrThreadsPerBlock, warpSize);
-      unsigned nrBlocksPerMP = getNrBlocksPerMultiProc(dynSharedMemBytes);
-      unsigned nrWarps = nrBlocksPerMP * nrWarpsPerBlock;
-
-      const unsigned maxThreadsPerMP = device.getAttribute(CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_MULTIPROCESSOR);
-      unsigned maxNrWarpsPerMP = maxThreadsPerMP / warpSize;
-
-      return static_cast<double>(nrWarps) / maxNrWarpsPerMP;
+      return defs;
     }
 
   }
