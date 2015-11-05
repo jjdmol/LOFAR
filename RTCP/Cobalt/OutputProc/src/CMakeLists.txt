@@ -26,7 +26,9 @@ lofar_add_library(outputproc
   TBB_StaticMapping.cc
 )
 
-lofar_add_sbin_scripts(gnuplotMS.sh)
+install(PROGRAMS
+  gnuplotMS.sh
+  DESTINATION sbin)
 
 install(FILES
   outputProc.log_prop

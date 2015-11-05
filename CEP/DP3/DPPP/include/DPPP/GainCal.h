@@ -108,8 +108,12 @@ namespace LOFAR {
       // flagged data from vis and mvis
       void removeDeadAntennas ();
 
-      // Fills the matrices itsVis and itsMVis
+      // Fills the matrices itsVis and itsMVis (single precision model)
       void fillMatrices (casa::Complex* model, casa::Complex* data, float* weight,
+                         const casa::Bool* flag);
+
+      // Fills the matrices itsVis and itsMVis (for double precision model)
+      void fillMatrices (dcomplex* model, casa::Complex* data, float* weight,
                          const casa::Bool* flag);
 
       //# Data members.

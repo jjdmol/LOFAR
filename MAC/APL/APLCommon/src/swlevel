@@ -184,7 +184,6 @@ if [ -e $BINDIR/tbbctl ]; then
    # Introduce a timeout of 60 sec for images to initialize
    echo "Waiting for TBB images to be initialized"
    timeout=60
-   sleep 10
    for (( s=0 ; s<timeout; s++ ))
    do 
      tbb_respons=`tbbctl --version`
@@ -503,8 +502,6 @@ goto_level()
               if [ $status == 1 ]; then 
        	        echo "set rcumode to 0 (power save)"
 	        rspctl --rcumode=0 1>/dev/null 2>&1
-                # Wait for setting to take effect before killing RSPDriver
-                sleep 2 
 	      else
 		echo "Beware: NOT going to rcumode 0 as images are still being initialized"
 	      fi
