@@ -1,8 +1,9 @@
 # $Id$
 
 lofar_package(OTDB_SQL 1.0)
-
-lofar_add_sbin_scripts(fresh_database)
+install(PROGRAMS
+  fresh_database
+DESTINATION sbin)
 
 file(GLOB otdb_sql_files
   *.sql)
