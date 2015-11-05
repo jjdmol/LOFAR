@@ -1,4 +1,4 @@
-#!/bin/echo Usage: source
+#!/bin/bash
 #
 # Usage: source MessageFuncs.sh
 #
