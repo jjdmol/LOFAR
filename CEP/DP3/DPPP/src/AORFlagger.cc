@@ -271,7 +271,6 @@ namespace LOFAR {
 
     void AORFlagger::addToMS (const string& msName)
     {
-      getPrevStep()->addToMS(msName);
       itsTimer.start();
       if (itsDoRfiStats) {
         itsQualityTimer.start();

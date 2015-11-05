@@ -249,7 +249,6 @@ namespace LOFAR {
 
     void Filter::addToMS (const string& msName)
     {
-      getPrevStep()->addToMS(msName);
       if (! itsRemoveAnt) {
         return;
       }

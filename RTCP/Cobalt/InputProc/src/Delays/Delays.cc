@@ -135,11 +135,13 @@ namespace LOFAR
       frame.set(MEpoch(toUTC(from), MEpoch::UTC));
 
       // Set the position for the frame.
-      const MVPosition phaseCenter(casa::Vector<Double>(parset.settings.antennaFields[stationIdx].phaseCenter));
+      const MVPosition phaseCenter(
+              casa::Vector<double>(parset.settings.antennaFields[stationIdx].phaseCenter));
       frame.set(MPosition(phaseCenter, MPosition::ITRF));
 
       // Cache the difference with CS002LBA
-      const MVPosition pRef(casa::Vector<Double>(parset.settings.delayCompensation.referencePhaseCenter));
+      const MVPosition pRef(
+              casa::Vector<double>(parset.settings.delayCompensation.referencePhaseCenter));
       phasePositionDiff = phaseCenter - pRef;
 
       // Set-up the direction cache and conversion engines, using reference direction ITRF.
