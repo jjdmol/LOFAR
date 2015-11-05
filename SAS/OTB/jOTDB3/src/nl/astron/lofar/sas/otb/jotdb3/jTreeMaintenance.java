@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -145,9 +145,6 @@ public class jTreeMaintenance implements jTreeMaintenanceInterface
     // Get a list of nodes based on a namefragment. Use '%' as wildchar.
     public native Vector<jOTDBnode> getItemList (int aTreeID, String aNameFragment) throws RemoteException;
 
-    // Get a list of nodes based on a namefragment. aNameFragment can be a regex.
-    public native Vector<jOTDBnode> getItemList (int aTreeID, String aNameFragment, boolean isRegex) throws RemoteException;
-
     // Duplicates the given node (and its parameters and children)
     // in the template database. The duplicate gets the new index.
     @Override
@@ -198,14 +195,6 @@ public class jTreeMaintenance implements jTreeMaintenanceInterface
     @Override
     public native boolean exportResultTree (int aTreeID,int topItem,String filename) throws RemoteException;
 
-    // Export all reported metadata from the given VIC tree
-    @Override
-    public native boolean exportMetadata (int	aTreeID,String filename) throws RemoteException;
-
-    // Export all reported metadata from the given VIC tree
-    @Override
-    public native boolean exportMetadata (int	aTreeID,String filename, boolean uniqueKeys) throws RemoteException;
-
     //# --- Finally some general tree maintenance ---
     // Delete a tree (of any kind) from the database.
     @Override
@@ -235,12 +224,6 @@ public class jTreeMaintenance implements jTreeMaintenanceInterface
     @Override
     public native boolean setTreeState (int aTreeID, short aState) throws RemoteException;
 
-    // Set the state of any tree. When changing the state of a tree all
-    // constraints/validations for the current type must be fulfilled.
-    // When errors occur these can be retrieved with the errorMsg function.
-    // possibility to overwrite the endDate or not (
-    @Override
-    public native boolean setTreeState (int aTreeID, short aState, boolean allow_endtime_update) throws RemoteException;
 
     // Update the description of a tree.
     @Override
@@ -249,10 +232,6 @@ public class jTreeMaintenance implements jTreeMaintenanceInterface
     // Set the scheduling times of the tree
     @Override
     public native boolean setSchedule(int aTreeID, String aStartTime,String aStopTime) throws RemoteException;
-
-    // Set the scheduling times of the tree
-    @Override
-    public native boolean setSchedule(int aTreeID, String aStartTime,String aStopTime,boolean inTreeAlso) throws RemoteException;
 
     // Whenever an error occurs in one the OTDB functions the message can
     // be retrieved with this function.

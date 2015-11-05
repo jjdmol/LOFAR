@@ -101,7 +101,7 @@ namespace BBS {
     itsShapeletScaleV = scaleV;
   }
 
-  void SourceInfo::write (BlobOStream& bos) const
+  void SourceInfo::write (BlobOStream& bos)
   {
     int16 version = 1;
     bos << version << itsName << int16(itsType) << itsRefType

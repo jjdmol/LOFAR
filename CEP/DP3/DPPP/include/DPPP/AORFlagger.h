@@ -1,4 +1,4 @@
-//# AORFlagger.h: DPPP step class to flag data using rficonsole's functionality
+//# AORFlagger.h: DPPP step class to flag data usibng rficonsole's functionality
 //# Copyright (C) 2010
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -32,16 +32,15 @@
 #include <DPPP/FlagCounter.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_smartptr.h>
-#include <AOFlagger/msio/image2d.h>
-#include <AOFlagger/msio/mask2d.h>
+#include <AOFlagger/strategy/actions/strategyaction.h>
 #include <AOFlagger/util/progresslistener.h>
 #include <AOFlagger/quality/statisticscollection.h>
 
 namespace LOFAR {
 
-  class ParameterSet;
-
   namespace DPPP {
+    class ParSet;
+
     // @ingroup NDPPP
 
     // This class is a DPStep class flagging data points based on the
@@ -71,7 +70,7 @@ namespace LOFAR {
     public:
       // Construct the object.
       // Parameters are obtained from the parset using the given prefix.
-      AORFlagger (DPInput*, const ParameterSet&, const string& prefix);
+      AORFlagger (DPInput*, const ParSet&, const string& prefix);
 
       virtual ~AORFlagger();
 
@@ -107,19 +106,20 @@ namespace LOFAR {
       void flagBaseline (uint leftOverlap, uint windowSize,
                          uint rightOverlap, uint bl,
                          FlagCounter& counter,
-                         rfiStrategy::Strategy&,
+			 rfiStrategy::Strategy&,
                          StatisticsCollection& rfiStats);
 
       // Add the flags to the statistics.
       void addStats (StatisticsCollection& rfiStats,
                      const Image2DPtr& reals, const Image2DPtr& imags,
-                     const Mask2DCPtr& mask, const Mask2DPtr& origFlags,
+		     const Mask2DCPtr& mask, const Mask2DPtr& origFlags,
                      int bl, uint polarization);
 
       // Fill the rfi strategy.
       void fillStrategy (boost::shared_ptr<rfiStrategy::Strategy>&);
 
       //# Data members.
+      DPInput*         itsInput;
       string           itsName;
       uint             itsBufIndex;
       uint             itsNTimes;

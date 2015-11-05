@@ -1,4 +1,4 @@
-//# StationAdder.h: DPPP step class to add stations as a superstation
+//# StationAdder.h: DPPP step class to add station to a superstation
 //# Copyright (C) 2012
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -25,7 +25,7 @@
 #define DPPP_STATIONADDER_H
 
 // @file
-// @brief DPPP step class to add stations as a superstation
+// @brief DPPP step class to average in time and/or freq
 
 #include <DPPP/DPInput.h>
 #include <DPPP/DPBuffer.h>
@@ -34,9 +34,10 @@
 #include <measures/Measures/MPosition.h>
 
 namespace LOFAR {
-  class ParameterSet;
 
   namespace DPPP {
+    class ParSet;
+
     // @ingroup NDPPP
 
     // This class is a DPStep class summing stations to a superstation.
@@ -62,7 +63,7 @@ namespace LOFAR {
     public:
       // Construct the object.
       // Parameters are obtained from the parset using the given prefix.
-      StationAdder (DPInput*, const ParameterSet&, const string& prefix);
+      StationAdder (DPInput*, const ParSet&, const string& prefix);
 
       virtual ~StationAdder();
 
@@ -105,14 +106,11 @@ namespace LOFAR {
       DPInput*        itsInput;
       string          itsName;
       DPBuffer        itsBuf;
-      DPBuffer        itsBufTmp;
       ParameterRecord itsStatRec;     // stations definitions
       vector<casa::Vector<int> > itsParts;  // the stations in each superstation
       vector<vector<int> > itsBufRows; // old baseline rows in each new baseline
       uint            itsMinNPoint  ;  // flag data if too few unflagged data
-      bool            itsMakeAutoCorr; // also form new auto-correlations?
-      bool            itsSumAutoCorr;  // sum auto- or cross-correlations?
-      bool            itsDoAverage;    // average or sum?
+      bool            itsMakeAutoCorr; // also form new autocorrelations?
       bool            itsUseWeight;    // false = use weight 1 per station
       UVWCalculator   itsUVWCalc;
       NSTimer         itsTimer;

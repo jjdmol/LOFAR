@@ -39,6 +39,8 @@ namespace LOFAR {
   class ParameterSet;
 
   namespace DPPP {
+    class ParSet;
+
     // @ingroup NDPPP
 
     // This class is a DPStep creating a new MeasurementSet and writing
@@ -61,7 +63,8 @@ namespace LOFAR {
     {
     public:
       explicit MSWriter (MSReader* reader, const std::string& outName,
-                         const ParameterSet&, const string& prefix);
+                         const DPInfo&,
+                         const ParSet&, const string& prefix);
 
       virtual ~MSWriter();
 
@@ -74,13 +77,6 @@ namespace LOFAR {
 
       // Show the step parameters.
       virtual void show (std::ostream&) const;
-
-      // Add some data to the MeasurementSet written/updated.
-      // Calls addToMS from the previous step, with the current output msname.
-      virtual void addToMS (const string&);
-
-      // Update the general info.
-      virtual void updateInfo (const DPInfo&);
 
       // Show the timings.
       virtual void showTimings (std::ostream&, double duration) const;
@@ -164,28 +160,19 @@ namespace LOFAR {
 
       //# Data items.
       MSReader*       itsReader;
-      string          itsName;
-      string          itsOutName;
-      DPBuffer        itsBuffer;
       casa::Table     itsMS;
-      const ParameterSet&   itsParset; //# parset for writing history
       casa::String    itsDataColName;
-      casa::String    itsWeightColName;
       double          itsInterval;
       bool            itsOverwrite;   //# Overwrite an existing output MS?
       bool            itsCopyCorrData;
       bool            itsCopyModelData;
       bool            itsWriteFullResFlags;
-      uint            itsTileSize;
-      uint            itsTileNChan;
       uint            itsNrCorr;
       uint            itsNrChan;
       uint            itsNrBl;
       uint            itsNrTimes;
       uint            itsNChanAvg;    //# nr of channels in input averaged to 1
       uint            itsNTimeAvg;    //# nr of times in input averaged to 1
-      uint            itsNrTimesFlush;//# flush every N time slots (0=no flush)
-      uint            itsNrDone;      //# nr of time slots written
       std::string     itsVdsDir;      //# directory where to put VDS file
       std::string     itsClusterDesc; //# name of clusterdesc file
       NSTimer         itsTimer;

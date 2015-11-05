@@ -11,11 +11,9 @@ import monetdb.sql as db
 import logging
 from gsm_exceptions import GSMException
 
-def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius,
-                           assoc_theta, bbsfile, 
-                           storespectraplots=False, deruiter_radius=0.,
-                           vlss_flux_cutoff=None,
-                           patchname=''):
+def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius, assoc_theta, bbsfile, 
+                                 storespectraplots=False, deruiter_radius=0.,
+                                 vlss_flux_cutoff=None):
     """Search for VLSS, WENSS and NVSS sources that
     are in the given FoV. The FoV is set by its central position
     (ra_central, decl_central) out to a radius of fov_radius.
@@ -32,9 +30,6 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius,
     The query returns all vlss sources (id) that are in the FoV.
     If so, the counterparts from other catalogues are returned as well 
     (also their ids).
-
-    If patchname is given, all sources get that patch name and the center of
-    the patch is given central ra/dec. Its brightness is the summed flux.
     """
     
     DERUITER_R = deruiter_radius
@@ -48,30 +43,35 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius,
     
     #TODO: Check what happens at high decl when alpha goes to 180 degrees
     if ra_central - alpha(fov_radius, decl_central) < 0:
+        #"This will be implemented soon"
         ra_min1 = np.float(ra_central - alpha(fov_radius, decl_central) + 360.0)
         ra_max1 = np.float(360.0)
         ra_min2 = np.float(0.0)
         ra_max2 = np.float(ra_central + alpha(fov_radius, decl_central))
+        #print ra_min1, ra_max1, ra_min2, ra_max2
         q = "q_across_ra0"
     elif ra_central + alpha(fov_radius, decl_central) > 360:
+        #"This will be implemented soon"
         ra_min1 = np.float(ra_central - alpha(fov_radius, decl_central))
         ra_max1 = np.float(360.0)
         ra_min2 = np.float(0.0)
         ra_max2 = np.float(ra_central + alpha(fov_radius, decl_central) - 360)
+        #print ra_min1, ra_max1, ra_min2, ra_max2
         q = "q_across_ra0"
     elif ra_central - alpha(fov_radius, decl_central) < 0 and ra_central + alpha(fov_radius, decl_central) > 360:
         raise BaseException("ra = %s > 360 degrees, not implemented yet" % str(ra_central + alpha(fov_radius, decl_central))) 
     else:
         ra_min = np.float(ra_central - alpha(fov_radius, decl_central))
         ra_max = np.float(ra_central + alpha(fov_radius, decl_central))
+        #print ra_min, ra_max
         q = "q0"
     
     if vlss_flux_cutoff is None:
         vlss_flux_cutoff = 0.
-
+    skymodel = open(bbsfile, 'w')
+    header = "# (Name, Type, Ra, Dec, I, Q, U, V, ReferenceFrequency='60e6',  SpectralIndex='[0.0]', MajorAxis, MinorAxis, Orientation) = format\n\n"
+    skymodel.write(header)
     status = True
-    bbsrows = []
-    totalFlux = 0.
 
     # This is dimensionless search radius that takes into account 
     # the ra and decl difference between two sources weighted by 
@@ -122,21 +122,21 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius,
                           ,i_int_avg_err
                       FROM catalogedsources 
                      WHERE cat_id = 4
-                       AND zone BETWEEN CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s) AS INTEGER)
-                                    AND CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s) AS INTEGER)
-                       AND decl BETWEEN CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s
-                                    AND CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s
-                       AND (ra BETWEEN %(ra_min1)s
-                                   AND %(ra_max1)s
-                            OR ra BETWEEN %(ra_min2)s
-                                      AND %(ra_max2)s
+                       AND zone BETWEEN CAST(FLOOR(CAST(%s AS DOUBLE) - %s) AS INTEGER)
+                                    AND CAST(FLOOR(CAST(%s AS DOUBLE) + %s) AS INTEGER)
+                       AND decl BETWEEN CAST(%s AS DOUBLE) - %s
+                                    AND CAST(%s AS DOUBLE) + %s
+                       AND (ra BETWEEN %s
+                                   AND %s
+                            OR ra BETWEEN %s
+                                      AND %s
                            )
-                       AND x * COS(RADIANS(%(decl_central)s)) * COS(RADIANS(%(ra_central)s))
-                         + y * COS(RADIANS(%(decl_central)s)) * SIN(RADIANS(%(ra_central)s))
-                         + z * SIN(RADIANS(%(decl_central)s)) > COS(RADIANS(%(fov_radius)s))
+                       AND x * COS(RADIANS(%s)) * COS(RADIANS(%s))
+                          + y * COS(RADIANS(%s)) * SIN(RADIANS(%s))
+                          + z * SIN(RADIANS(%s)) > COS(RADIANS(%s))
                    ) c1
            ) t0
-           LEFT OUTER JOIN 
+           FULL OUTER JOIN 
            (SELECT c1.catsrcid AS v_catsrcid
                   ,c2.catsrcid AS wm_catsrcid
                   ,c2.i_int_avg AS wm_flux
@@ -162,21 +162,20 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius,
                           ,z
                       FROM catalogedsources 
                      WHERE cat_id = 4
-                       AND zone BETWEEN CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s) AS INTEGER)
-                                    AND CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s) AS INTEGER)
-                       AND decl BETWEEN CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s
-                                    AND CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s
-                       AND (ra BETWEEN %(ra_min1)s
-                                   AND %(ra_max1)s
-                            OR ra BETWEEN %(ra_min2)s
-                                      AND %(ra_max2)s
+                       AND zone BETWEEN CAST(FLOOR(CAST(%s AS DOUBLE) - %s) AS INTEGER)
+                                    AND CAST(FLOOR(CAST(%s AS DOUBLE) + %s) AS INTEGER)
+                       AND decl BETWEEN CAST(%s AS DOUBLE) - %s
+                                    AND CAST(%s AS DOUBLE) + %s
+                       AND (ra BETWEEN %s
+                                   AND %s
+                            OR ra BETWEEN %s
+                                      AND %s
                            )
-                       AND x * COS(RADIANS(%(decl_central)s)) * COS(RADIANS(%(ra_central)s))
-                         + y * COS(RADIANS(%(decl_central)s)) * SIN(RADIANS(%(ra_central)s))
-                         + z * SIN(RADIANS(%(decl_central)s)) > COS(RADIANS(%(fov_radius)s))
+                       AND x * COS(RADIANS(%s)) * COS(RADIANS(%s))
+                          + y * COS(RADIANS(%s)) * SIN(RADIANS(%s))
+                          + z * SIN(RADIANS(%s)) > COS(RADIANS(%s))
                    ) c1
                   ,(SELECT catsrcid
-                          ,zone
                           ,MOD(ra + 180, 360) AS ra_mod
                           ,decl
                           ,ra_err
@@ -189,32 +188,28 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius,
                       FROM catalogedsources 
                      WHERE cat_id = 5
                        AND (src_type = 'S' OR src_type = 'M')
-                       AND zone BETWEEN CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s) AS INTEGER)
-                                    AND CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s) AS INTEGER)
-                       AND decl BETWEEN CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s
-                                    AND CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s
-                       AND (ra BETWEEN %(ra_min1)s
-                                   AND %(ra_max1)s
-                            OR ra BETWEEN %(ra_min2)s
-                                      AND %(ra_max2)s
+                       AND zone BETWEEN CAST(FLOOR(CAST(%s AS DOUBLE) - %s) AS INTEGER)
+                                    AND CAST(FLOOR(CAST(%s AS DOUBLE) + %s) AS INTEGER)
+                       AND decl BETWEEN CAST(%s AS DOUBLE) - %s
+                                    AND CAST(%s AS DOUBLE) + %s
+                       AND (ra BETWEEN %s
+                                   AND %s
+                            OR ra BETWEEN %s
+                                      AND %s
                            )
-                       AND x * COS(RADIANS(%(decl_central)s)) * COS(RADIANS(%(ra_central)s))
-                         + y * COS(RADIANS(%(decl_central)s)) * SIN(RADIANS(%(ra_central)s))
-                         + z * SIN(RADIANS(%(decl_central)s)) > COS(RADIANS(%(fov_radius)s))
+                       AND x * COS(RADIANS(%s)) * COS(RADIANS(%s))
+                          + y * COS(RADIANS(%s)) * SIN(RADIANS(%s))
+                          + z * SIN(RADIANS(%s)) > COS(RADIANS(%s))
                    ) c2
-             WHERE c2.zone BETWEEN CAST(FLOOR(c1.decl - %(assoc_theta)s) AS INTEGER)
-                               AND CAST(FLOOR(c1.decl + %(assoc_theta)s) AS INTEGER)
-               AND c2.decl BETWEEN c1.decl - %(assoc_theta)s
-                               AND c1.decl + %(assoc_theta)s
-               AND c2.x * c1.x + c2.y * c1.y + c2.z * c1.z > COS(RADIANS(%(assoc_theta)s))
-               AND SQRT(((c2.ra_mod * COS(RADIANS(c2.decl)) - c1.ra_mod * COS(RADIANS(c1.decl)))
-                        * (c2.ra_mod * COS(RADIANS(c2.decl)) - c1.ra_mod * COS(RADIANS(c1.decl)))
-                        / (c2.ra_err * c2.ra_err + c1.ra_err * c1.ra_err))
-                        + ((c2.decl - c1.decl) * (c2.decl - c1.decl)
-                        / (c2.decl_err * c2.decl_err + c1.decl_err * c1.decl_err))) < %(deRuiter_reduced)s
+             WHERE c1.x * c2.x + c1.y * c2.y + c1.z * c2.z > COS(RADIANS(%s))
+               AND SQRT(((c1.ra_mod * COS(RADIANS(c1.decl)) - c2.ra_mod * COS(RADIANS(c2.decl)))
+                        * (c1.ra_mod * COS(RADIANS(c1.decl)) - c2.ra_mod * COS(RADIANS(c2.decl)))
+                        / (c1.ra_err * c1.ra_err + c2.ra_err * c2.ra_err))
+                        + ((c1.decl - c2.decl) * (c1.decl - c2.decl)
+                        / (c1.decl_err * c1.decl_err + c2.decl_err * c2.decl_err))) < %s
            ) t1
         ON t0.v_catsrcid = t1.v_catsrcid
-           LEFT OUTER JOIN 
+           FULL OUTER JOIN 
            (SELECT c1.catsrcid AS v_catsrcid
                   ,c2.catsrcid AS wp_catsrcid
                   ,c2.i_int_avg AS wp_flux
@@ -240,21 +235,20 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius,
                           ,z
                       FROM catalogedsources 
                      WHERE cat_id = 4
-                       AND zone BETWEEN CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s) AS INTEGER)
-                                    AND CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s) AS INTEGER)
-                       AND decl BETWEEN CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s
-                                    AND CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s
-                       AND (ra BETWEEN %(ra_min1)s
-                                   AND %(ra_max1)s
-                            OR ra BETWEEN %(ra_min2)s
-                                      AND %(ra_max2)s
+                       AND zone BETWEEN CAST(FLOOR(CAST(%s AS DOUBLE) - %s) AS INTEGER)
+                                    AND CAST(FLOOR(CAST(%s AS DOUBLE) + %s) AS INTEGER)
+                       AND decl BETWEEN CAST(%s AS DOUBLE) - %s
+                                    AND CAST(%s AS DOUBLE) + %s
+                       AND (ra BETWEEN %s
+                                   AND %s
+                            OR ra BETWEEN %s
+                                      AND %s
                            )
-                       AND x * COS(RADIANS(%(decl_central)s)) * COS(RADIANS(%(ra_central)s))
-                         + y * COS(RADIANS(%(decl_central)s)) * SIN(RADIANS(%(ra_central)s))
-                         + z * SIN(RADIANS(%(decl_central)s)) > COS(RADIANS(%(fov_radius)s))
+                       AND x * COS(RADIANS(%s)) * COS(RADIANS(%s))
+                          + y * COS(RADIANS(%s)) * SIN(RADIANS(%s))
+                          + z * SIN(RADIANS(%s)) > COS(RADIANS(%s))
                    ) c1
                   ,(SELECT catsrcid
-                          ,zone
                           ,MOD(ra + 180, 360) AS ra_mod
                           ,decl
                           ,ra_err
@@ -267,32 +261,28 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius,
                       FROM catalogedsources 
                      WHERE cat_id = 6
                        AND (src_type = 'S' OR src_type = 'M')
-                       AND zone BETWEEN CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s) AS INTEGER)
-                                    AND CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s) AS INTEGER)
-                       AND decl BETWEEN CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s
-                                    AND CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s
-                       AND (ra BETWEEN %(ra_min1)s
-                                   AND %(ra_max1)s
-                            OR ra BETWEEN %(ra_min2)s
-                                      AND %(ra_max2)s
+                       AND zone BETWEEN CAST(FLOOR(CAST(%s AS DOUBLE) - %s) AS INTEGER)
+                                    AND CAST(FLOOR(CAST(%s AS DOUBLE) + %s) AS INTEGER)
+                       AND decl BETWEEN CAST(%s AS DOUBLE) - %s
+                                    AND CAST(%s AS DOUBLE) + %s
+                       AND (ra BETWEEN %s
+                                   AND %s
+                            OR ra BETWEEN %s
+                                      AND %s
                            )
-                       AND x * COS(RADIANS(%(decl_central)s)) * COS(RADIANS(%(ra_central)s))
-                         + y * COS(RADIANS(%(decl_central)s)) * SIN(RADIANS(%(ra_central)s))
-                         + z * SIN(RADIANS(%(decl_central)s)) > COS(RADIANS(%(fov_radius)s))
+                       AND x * COS(RADIANS(%s)) * COS(RADIANS(%s))
+                          + y * COS(RADIANS(%s)) * SIN(RADIANS(%s))
+                          + z * SIN(RADIANS(%s)) > COS(RADIANS(%s))
                    ) c2
-             WHERE c2.zone BETWEEN CAST(FLOOR(c1.decl - %(assoc_theta)s) AS INTEGER)
-                               AND CAST(FLOOR(c1.decl + %(assoc_theta)s) AS INTEGER)
-               AND c2.decl BETWEEN c1.decl - %(assoc_theta)s
-                               AND c1.decl + %(assoc_theta)s
-               AND c2.x * c1.x + c2.y * c1.y + c2.z * c1.z > COS(RADIANS(%(assoc_theta)s))
-               AND SQRT(((c2.ra_mod * COS(RADIANS(c2.decl)) - c1.ra_mod * COS(RADIANS(c1.decl)))
-                        * (c2.ra_mod * COS(RADIANS(c2.decl)) - c1.ra_mod * COS(RADIANS(c1.decl)))
-                        / (c2.ra_err * c2.ra_err + c1.ra_err * c1.ra_err))
-                        + ((c2.decl - c1.decl) * (c2.decl - c1.decl)
-                        / (c2.decl_err * c2.decl_err + c1.decl_err * c1.decl_err))) < %(deRuiter_reduced)s
+             WHERE c1.x * c2.x + c1.y * c2.y + c1.z * c2.z > COS(RADIANS(%s))
+               AND SQRT(( (c1.ra_mod * COS(RADIANS(c1.decl)) - c2.ra_mod * COS(RADIANS(c2.decl)))
+                        * (c1.ra_mod * COS(RADIANS(c1.decl)) - c2.ra_mod * COS(RADIANS(c2.decl)))
+                        / (c1.ra_err * c1.ra_err + c2.ra_err * c2.ra_err))
+                        + ((c1.decl - c2.decl) * (c1.decl - c2.decl)
+                        / (c1.decl_err * c1.decl_err + c2.decl_err * c2.decl_err))) < %s
            ) t2
         ON t0.v_catsrcid = t2.v_catsrcid
-           LEFT OUTER JOIN 
+           FULL OUTER JOIN 
            (SELECT c1.catsrcid AS v_catsrcid
                   ,c2.catsrcid AS n_catsrcid
                   ,c2.i_int_avg AS n_flux
@@ -318,21 +308,20 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius,
                           ,z
                       FROM catalogedsources 
                      WHERE cat_id = 4
-                       AND zone BETWEEN CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s) AS INTEGER)
-                                    AND CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s) AS INTEGER)
-                       AND decl BETWEEN CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s
-                                    AND CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s
-                       AND (ra BETWEEN %(ra_min1)s
-                                   AND %(ra_max1)s
-                            OR ra BETWEEN %(ra_min2)s
-                                      AND %(ra_max2)s
+                       AND zone BETWEEN CAST(FLOOR(CAST(%s AS DOUBLE) - %s) AS INTEGER)
+                                    AND CAST(FLOOR(CAST(%s AS DOUBLE) + %s) AS INTEGER)
+                       AND decl BETWEEN CAST(%s AS DOUBLE) - %s
+                                    AND CAST(%s AS DOUBLE) + %s
+                       AND (ra BETWEEN %s
+                                   AND %s
+                            OR ra BETWEEN %s
+                                      AND %s
                            )
-                       AND x * COS(RADIANS(%(decl_central)s)) * COS(RADIANS(%(ra_central)s))
-                         + y * COS(RADIANS(%(decl_central)s)) * SIN(RADIANS(%(ra_central)s))
-                         + z * SIN(RADIANS(%(decl_central)s)) > COS(RADIANS(%(fov_radius)s))
+                       AND x * COS(RADIANS(%s)) * COS(RADIANS(%s))
+                          + y * COS(RADIANS(%s)) * SIN(RADIANS(%s))
+                          + z * SIN(RADIANS(%s)) > COS(RADIANS(%s))
                    ) c1
                   ,(SELECT catsrcid
-                          ,zone
                           ,MOD(ra + 180, 360) AS ra_mod
                           ,decl
                           ,ra_err
@@ -344,33 +333,28 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius,
                           ,i_int_avg_err
                       FROM catalogedsources 
                      WHERE cat_id = 3
-                       AND zone BETWEEN CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s) AS INTEGER)
-                                    AND CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s) AS INTEGER)
-                       AND decl BETWEEN CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s
-                                    AND CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s
-                       AND (ra BETWEEN %(ra_min1)s
-                                   AND %(ra_max1)s
-                            OR ra BETWEEN %(ra_min2)s
-                                      AND %(ra_max2)s
+                       AND zone BETWEEN CAST(FLOOR(CAST(%s AS DOUBLE) - %s) AS INTEGER)
+                                    AND CAST(FLOOR(CAST(%s AS DOUBLE) + %s) AS INTEGER)
+                       AND decl BETWEEN CAST(%s AS DOUBLE) - %s
+                                    AND CAST(%s AS DOUBLE) + %s
+                       AND (ra BETWEEN %s
+                                   AND %s
+                            OR ra BETWEEN %s
+                                      AND %s
                            )
-                       AND x * COS(RADIANS(%(decl_central)s)) * COS(RADIANS(%(ra_central)s))
-                         + y * COS(RADIANS(%(decl_central)s)) * SIN(RADIANS(%(ra_central)s))
-                         + z * SIN(RADIANS(%(decl_central)s)) > COS(RADIANS(%(fov_radius)s))
+                       AND x * COS(RADIANS(%s)) * COS(RADIANS(%s))
+                          + y * COS(RADIANS(%s)) * SIN(RADIANS(%s))
+                          + z * SIN(RADIANS(%s)) > COS(RADIANS(%s))
                    ) c2
-             WHERE c2.zone BETWEEN CAST(FLOOR(c1.decl - %(assoc_theta)s) AS INTEGER)
-                               AND CAST(FLOOR(c1.decl + %(assoc_theta)s) AS INTEGER)
-               AND c2.decl BETWEEN c1.decl - %(assoc_theta)s
-                               AND c1.decl + %(assoc_theta)s
-               AND c2.x * c1.x + c2.y * c1.y + c2.z * c1.z > COS(RADIANS(%(assoc_theta)s))
-               AND SQRT(((c2.ra_mod * COS(RADIANS(c2.decl)) - c1.ra_mod * COS(RADIANS(c1.decl)))
-                        * (c2.ra_mod * COS(RADIANS(c2.decl)) - c1.ra_mod * COS(RADIANS(c1.decl)))
-                        / (c2.ra_err * c2.ra_err + c1.ra_err * c1.ra_err))
-                        + ((c2.decl - c1.decl) * (c2.decl - c1.decl)
-                        / (c2.decl_err * c2.decl_err + c1.decl_err * c1.decl_err))) < %(deRuiter_reduced)s
+             WHERE c1.x * c2.x + c1.y * c2.y + c1.z * c2.z > COS(RADIANS(%s))
+               AND SQRT(((c1.ra_mod * COS(RADIANS(c1.decl)) - c2.ra_mod * COS(RADIANS(c2.decl)))
+                        * (c1.ra_mod * COS(RADIANS(c1.decl)) - c2.ra_mod * COS(RADIANS(c2.decl)))
+                        / (c1.ra_err * c1.ra_err + c2.ra_err * c2.ra_err))
+                        + ((c1.decl - c2.decl) * (c1.decl - c2.decl)
+                        / (c1.decl_err * c1.decl_err + c2.decl_err * c2.decl_err))) < %s
            ) t3
         ON t0.v_catsrcid = t3.v_catsrcid
-     WHERE t0.v_flux >= %(vlss_flux_cutoff)s
-    ORDER BY t0.v_catsrcid
+     WHERE t0.v_flux >= %s
     """
     q0 = """\
     SELECT t0.v_catsrcid
@@ -417,18 +401,18 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius,
                           ,i_int_avg_err
                       FROM catalogedsources 
                      WHERE cat_id = 4
-                       AND zone BETWEEN CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s) AS INTEGER)
-                                    AND CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s) AS INTEGER)
-                       AND decl BETWEEN CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s
-                                    AND CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s
-                       AND ra BETWEEN CAST(%(ra_central)s AS DOUBLE) - alpha(%(fov_radius)s, %(decl_central)s)
-                                  AND CAST(%(ra_central)s AS DOUBLE) + alpha(%(fov_radius)s, %(decl_central)s)
-                       AND x * COS(RADIANS(%(decl_central)s)) * COS(RADIANS(%(ra_central)s))
-                         + y * COS(RADIANS(%(decl_central)s)) * SIN(RADIANS(%(ra_central)s))
-                         + z * SIN(RADIANS(%(decl_central)s)) > COS(RADIANS(%(fov_radius)s))
+                       AND zone BETWEEN CAST(FLOOR(CAST(%s AS DOUBLE) - %s) AS INTEGER)
+                                    AND CAST(FLOOR(CAST(%s AS DOUBLE) + %s) AS INTEGER)
+                       AND decl BETWEEN CAST(%s AS DOUBLE) - %s
+                                    AND CAST(%s AS DOUBLE) + %s
+                       AND ra BETWEEN CAST(%s AS DOUBLE) - alpha(%s, %s)
+                                  AND CAST(%s AS DOUBLE) + alpha(%s, %s)
+                       AND x * COS(RADIANS(%s)) * COS(RADIANS(%s))
+                          + y * COS(RADIANS(%s)) * SIN(RADIANS(%s))
+                          + z * SIN(RADIANS(%s)) > COS(RADIANS(%s))
                    ) c1
            ) t0
-           LEFT OUTER JOIN 
+           FULL OUTER JOIN 
            (SELECT c1.catsrcid AS v_catsrcid
                   ,c2.catsrcid AS wm_catsrcid
                   ,c2.i_int_avg AS wm_flux
@@ -454,18 +438,17 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius,
                           ,z
                       FROM catalogedsources 
                      WHERE cat_id = 4
-                       AND zone BETWEEN CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s) AS INTEGER)
-                                    AND CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s) AS INTEGER)
-                       AND decl BETWEEN CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s
-                                    AND CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s
-                       AND ra BETWEEN CAST(%(ra_central)s AS DOUBLE) - alpha(%(fov_radius)s, %(decl_central)s)
-                                  AND CAST(%(ra_central)s AS DOUBLE) + alpha(%(fov_radius)s, %(decl_central)s)
-                       AND x * COS(RADIANS(%(decl_central)s)) * COS(RADIANS(%(ra_central)s))
-                         + y * COS(RADIANS(%(decl_central)s)) * SIN(RADIANS(%(ra_central)s))
-                         + z * SIN(RADIANS(%(decl_central)s)) > COS(RADIANS(%(fov_radius)s))
+                       AND zone BETWEEN CAST(FLOOR(CAST(%s AS DOUBLE) - %s) AS INTEGER)
+                                    AND CAST(FLOOR(CAST(%s AS DOUBLE) + %s) AS INTEGER)
+                       AND decl BETWEEN CAST(%s AS DOUBLE) - %s
+                                    AND CAST(%s AS DOUBLE) + %s
+                       AND ra BETWEEN CAST(%s AS DOUBLE) - alpha(%s, %s)
+                                  AND CAST(%s AS DOUBLE) + alpha(%s, %s)
+                       AND x * COS(RADIANS(%s)) * COS(RADIANS(%s))
+                          + y * COS(RADIANS(%s)) * SIN(RADIANS(%s))
+                          + z * SIN(RADIANS(%s)) > COS(RADIANS(%s))
                    ) c1
                   ,(SELECT catsrcid
-                          ,zone
                           ,ra
                           ,decl
                           ,ra_err
@@ -478,31 +461,25 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius,
                       FROM catalogedsources 
                      WHERE cat_id = 5
                        AND (src_type = 'S' OR src_type = 'M')
-                       AND zone BETWEEN CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s) AS INTEGER)
-                                    AND CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s) AS INTEGER)
-                       AND decl BETWEEN CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s
-                                    AND CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s
-                       AND ra BETWEEN CAST(%(ra_central)s AS DOUBLE) - alpha(%(fov_radius)s, %(decl_central)s)
-                                  AND CAST(%(ra_central)s AS DOUBLE) + alpha(%(fov_radius)s, %(decl_central)s)
-                       AND x * COS(RADIANS(%(decl_central)s)) * COS(RADIANS(%(ra_central)s))
-                         + y * COS(RADIANS(%(decl_central)s)) * SIN(RADIANS(%(ra_central)s))
-                         + z * SIN(RADIANS(%(decl_central)s)) > COS(RADIANS(%(fov_radius)s))
+                       AND zone BETWEEN CAST(FLOOR(CAST(%s AS DOUBLE) - %s) AS INTEGER)
+                                    AND CAST(FLOOR(CAST(%s AS DOUBLE) + %s) AS INTEGER)
+                       AND decl BETWEEN CAST(%s AS DOUBLE) - %s
+                                    AND CAST(%s AS DOUBLE) + %s
+                       AND ra BETWEEN CAST(%s AS DOUBLE) - alpha(%s, %s)
+                                  AND CAST(%s AS DOUBLE) + alpha(%s, %s)
+                       AND x * COS(RADIANS(%s)) * COS(RADIANS(%s))
+                          + y * COS(RADIANS(%s)) * SIN(RADIANS(%s))
+                          + z * SIN(RADIANS(%s)) > COS(RADIANS(%s))
                    ) c2
-             WHERE c2.zone BETWEEN CAST(FLOOR(c1.decl - %(assoc_theta)s) AS INTEGER)
-                               AND CAST(FLOOR(c1.decl + %(assoc_theta)s) AS INTEGER)
-               AND c2.decl BETWEEN c1.decl - %(assoc_theta)s
-                               AND c1.decl + %(assoc_theta)s
-               AND c2.ra BETWEEN c1.ra - alpha(%(assoc_theta)s, c1.decl)
-                             AND c1.ra + alpha(%(assoc_theta)s, c1.decl)
-               AND c2.x * c1.x + c2.y * c1.y + c2.z * c1.z > COS(RADIANS(%(assoc_theta)s))
-               AND SQRT(((c2.ra * COS(RADIANS(c2.decl)) - c1.ra * COS(RADIANS(c1.decl)))
-                        * (c2.ra * COS(RADIANS(c2.decl)) - c1.ra * COS(RADIANS(c1.decl)))
-                        / (c2.ra_err * c2.ra_err + c1.ra_err * c1.ra_err))
-                        + ((c2.decl - c1.decl) * (c2.decl - c1.decl)
-                        / (c2.decl_err * c2.decl_err + c1.decl_err * c1.decl_err))) < %(deRuiter_reduced)s
+             WHERE c1.x * c2.x + c1.y * c2.y + c1.z * c2.z > COS(RADIANS(%s))
+               AND SQRT(((c1.ra * COS(RADIANS(c1.decl)) - c2.ra * COS(RADIANS(c2.decl)))
+                        * (c1.ra * COS(RADIANS(c1.decl)) - c2.ra * COS(RADIANS(c2.decl)))
+                        / (c1.ra_err * c1.ra_err + c2.ra_err * c2.ra_err))
+                        + ((c1.decl - c2.decl) * (c1.decl - c2.decl)
+                        / (c1.decl_err * c1.decl_err + c2.decl_err * c2.decl_err))) < %s
            ) t1
         ON t0.v_catsrcid = t1.v_catsrcid
-           LEFT OUTER JOIN 
+           FULL OUTER JOIN 
            (SELECT c1.catsrcid AS v_catsrcid
                   ,c2.catsrcid AS wp_catsrcid
                   ,c2.i_int_avg AS wp_flux
@@ -528,18 +505,17 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius,
                           ,z
                       FROM catalogedsources 
                      WHERE cat_id = 4
-                       AND zone BETWEEN CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s) AS INTEGER)
-                                    AND CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s) AS INTEGER)
-                       AND decl BETWEEN CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s
-                                    AND CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s
-                       AND ra BETWEEN CAST(%(ra_central)s AS DOUBLE) - alpha(%(fov_radius)s, %(decl_central)s)
-                                  AND CAST(%(ra_central)s AS DOUBLE) + alpha(%(fov_radius)s, %(decl_central)s)
-                       AND x * COS(RADIANS(%(decl_central)s)) * COS(RADIANS(%(ra_central)s))
-                         + y * COS(RADIANS(%(decl_central)s)) * SIN(RADIANS(%(ra_central)s))
-                         + z * SIN(RADIANS(%(decl_central)s)) > COS(RADIANS(%(fov_radius)s))
+                       AND zone BETWEEN CAST(FLOOR(CAST(%s AS DOUBLE) - %s) AS INTEGER)
+                                    AND CAST(FLOOR(CAST(%s AS DOUBLE) + %s) AS INTEGER)
+                       AND decl BETWEEN CAST(%s AS DOUBLE) - %s
+                                    AND CAST(%s AS DOUBLE) + %s
+                       AND ra BETWEEN CAST(%s AS DOUBLE) - alpha(%s, %s)
+                                  AND CAST(%s AS DOUBLE) + alpha(%s, %s)
+                       AND x * COS(RADIANS(%s)) * COS(RADIANS(%s))
+                          + y * COS(RADIANS(%s)) * SIN(RADIANS(%s))
+                          + z * SIN(RADIANS(%s)) > COS(RADIANS(%s))
                    ) c1
                   ,(SELECT catsrcid
-                          ,zone
                           ,ra
                           ,decl
                           ,ra_err
@@ -552,31 +528,25 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius,
                       FROM catalogedsources 
                      WHERE cat_id = 6
                        AND (src_type = 'S' OR src_type = 'M')
-                       AND zone BETWEEN CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s) AS INTEGER)
-                                    AND CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s) AS INTEGER)
-                       AND decl BETWEEN CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s
-                                    AND CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s
-                       AND ra BETWEEN CAST(%(ra_central)s AS DOUBLE) - alpha(%(fov_radius)s, %(decl_central)s)
-                                  AND CAST(%(ra_central)s AS DOUBLE) + alpha(%(fov_radius)s, %(decl_central)s)
-                       AND x * COS(RADIANS(%(decl_central)s)) * COS(RADIANS(%(ra_central)s))
-                         + y * COS(RADIANS(%(decl_central)s)) * SIN(RADIANS(%(ra_central)s))
-                         + z * SIN(RADIANS(%(decl_central)s)) > COS(RADIANS(%(fov_radius)s))
+                       AND zone BETWEEN CAST(FLOOR(CAST(%s AS DOUBLE) - %s) AS INTEGER)
+                                    AND CAST(FLOOR(CAST(%s AS DOUBLE) + %s) AS INTEGER)
+                       AND decl BETWEEN CAST(%s AS DOUBLE) - %s
+                                    AND CAST(%s AS DOUBLE) + %s
+                       AND ra BETWEEN CAST(%s AS DOUBLE) - alpha(%s, %s)
+                                  AND CAST(%s AS DOUBLE) + alpha(%s, %s)
+                       AND x * COS(RADIANS(%s)) * COS(RADIANS(%s))
+                          + y * COS(RADIANS(%s)) * SIN(RADIANS(%s))
+                          + z * SIN(RADIANS(%s)) > COS(RADIANS(%s))
                    ) c2
-             WHERE c2.zone BETWEEN CAST(FLOOR(c1.decl - %(assoc_theta)s) AS INTEGER)
-                               AND CAST(FLOOR(c1.decl + %(assoc_theta)s) AS INTEGER)
-               AND c2.decl BETWEEN c1.decl - %(assoc_theta)s
-                               AND c1.decl + %(assoc_theta)s
-               AND c2.ra BETWEEN c1.ra - alpha(%(assoc_theta)s, c1.decl)
-                             AND c1.ra + alpha(%(assoc_theta)s, c1.decl)
-               AND c2.x * c1.x + c2.y * c1.y + c2.z * c1.z > COS(RADIANS(%(assoc_theta)s))
-               AND SQRT(((c2.ra * COS(RADIANS(c2.decl)) - c1.ra * COS(RADIANS(c1.decl)))
-                        * (c2.ra * COS(RADIANS(c2.decl)) - c1.ra * COS(RADIANS(c1.decl)))
-                        / (c2.ra_err * c2.ra_err + c1.ra_err * c1.ra_err))
-                        + ((c2.decl - c1.decl) * (c2.decl - c1.decl)
-                        / (c2.decl_err * c2.decl_err + c1.decl_err * c1.decl_err))) < %(deRuiter_reduced)s
+             WHERE c1.x * c2.x + c1.y * c2.y + c1.z * c2.z > COS(RADIANS(%s))
+               AND SQRT(((c1.ra * COS(RADIANS(c1.decl)) - c2.ra * COS(RADIANS(c2.decl)))
+                        * (c1.ra * COS(RADIANS(c1.decl)) - c2.ra * COS(RADIANS(c2.decl)))
+                        / (c1.ra_err * c1.ra_err + c2.ra_err * c2.ra_err))
+                        + ((c1.decl - c2.decl) * (c1.decl - c2.decl)
+                        / (c1.decl_err * c1.decl_err + c2.decl_err * c2.decl_err))) < %s
            ) t2
         ON t0.v_catsrcid = t2.v_catsrcid
-           LEFT OUTER JOIN 
+           FULL OUTER JOIN 
            (SELECT c1.catsrcid AS v_catsrcid
                   ,c2.catsrcid AS n_catsrcid
                   ,c2.i_int_avg AS n_flux
@@ -591,7 +561,7 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius,
                         / (c1.ra_err * c1.ra_err + c2.ra_err * c2.ra_err))
                         + ((c1.decl - c2.decl) * (c1.decl - c2.decl)
                         / (c1.decl_err * c1.decl_err + c2.decl_err * c2.decl_err))
-                       ) AS n_assoc_r
+                        ) AS n_assoc_r
               FROM (SELECT catsrcid
                           ,ra
                           ,decl
@@ -602,18 +572,17 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius,
                           ,z
                       FROM catalogedsources 
                      WHERE cat_id = 4
-                       AND zone BETWEEN CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s) AS INTEGER)
-                                    AND CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s) AS INTEGER)
-                       AND decl BETWEEN CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s
-                                    AND CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s
-                       AND ra BETWEEN CAST(%(ra_central)s AS DOUBLE) - alpha(%(fov_radius)s, %(decl_central)s)
-                                  AND CAST(%(ra_central)s AS DOUBLE) + alpha(%(fov_radius)s, %(decl_central)s)
-                       AND x * COS(RADIANS(%(decl_central)s)) * COS(RADIANS(%(ra_central)s))
-                         + y * COS(RADIANS(%(decl_central)s)) * SIN(RADIANS(%(ra_central)s))
-                         + z * SIN(RADIANS(%(decl_central)s)) > COS(RADIANS(%(fov_radius)s))
+                       AND zone BETWEEN CAST(FLOOR(CAST(%s AS DOUBLE) - %s) AS INTEGER)
+                                    AND CAST(FLOOR(CAST(%s AS DOUBLE) + %s) AS INTEGER)
+                       AND decl BETWEEN CAST(%s AS DOUBLE) - %s
+                                    AND CAST(%s AS DOUBLE) + %s
+                       AND ra BETWEEN CAST(%s AS DOUBLE) - alpha(%s, %s)
+                                  AND CAST(%s AS DOUBLE) + alpha(%s, %s)
+                       AND x * COS(RADIANS(%s)) * COS(RADIANS(%s))
+                          + y * COS(RADIANS(%s)) * SIN(RADIANS(%s))
+                          + z * SIN(RADIANS(%s)) > COS(RADIANS(%s))
                    ) c1
                   ,(SELECT catsrcid
-                          ,zone
                           ,ra
                           ,decl
                           ,ra_err
@@ -625,115 +594,126 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius,
                           ,i_int_avg_err
                       FROM catalogedsources 
                      WHERE cat_id = 3
-                       AND zone BETWEEN CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s) AS INTEGER)
-                                    AND CAST(FLOOR(CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s) AS INTEGER)
-                       AND decl BETWEEN CAST(%(decl_central)s AS DOUBLE) - %(fov_radius)s
-                                    AND CAST(%(decl_central)s AS DOUBLE) + %(fov_radius)s
-                       AND ra BETWEEN CAST(%(ra_central)s AS DOUBLE) - alpha(%(fov_radius)s, %(decl_central)s)
-                                  AND CAST(%(ra_central)s AS DOUBLE) + alpha(%(fov_radius)s, %(decl_central)s)
-                       AND x * COS(RADIANS(%(decl_central)s)) * COS(RADIANS(%(ra_central)s))
-                         + y * COS(RADIANS(%(decl_central)s)) * SIN(RADIANS(%(ra_central)s))
-                         + z * SIN(RADIANS(%(decl_central)s)) > COS(RADIANS(%(fov_radius)s))
+                       AND zone BETWEEN CAST(FLOOR(CAST(%s AS DOUBLE) - %s) AS INTEGER)
+                                    AND CAST(FLOOR(CAST(%s AS DOUBLE) + %s) AS INTEGER)
+                       AND decl BETWEEN CAST(%s AS DOUBLE) - %s
+                                    AND CAST(%s AS DOUBLE) + %s
+                       AND ra BETWEEN CAST(%s AS DOUBLE) - alpha(%s, %s)
+                                  AND CAST(%s AS DOUBLE) + alpha(%s, %s)
+                       AND x * COS(RADIANS(%s)) * COS(RADIANS(%s))
+                          + y * COS(RADIANS(%s)) * SIN(RADIANS(%s))
+                          + z * SIN(RADIANS(%s)) > COS(RADIANS(%s))
                    ) c2
-             WHERE c2.zone BETWEEN CAST(FLOOR(c1.decl - %(assoc_theta)s) AS INTEGER)
-                              AND CAST(FLOOR(c1.decl + %(assoc_theta)s) AS INTEGER)
-               AND c2.decl BETWEEN c1.decl - %(assoc_theta)s
-                              AND c1.decl + %(assoc_theta)s
-               AND c2.ra BETWEEN c1.ra - alpha(%(assoc_theta)s, c1.decl)
-                             AND c1.ra + alpha(%(assoc_theta)s, c1.decl)
-               AND c2.x * c1.x + c2.y * c1.y + c2.z * c1.z > COS(RADIANS(%(assoc_theta)s))
-               AND SQRT(((c2.ra * COS(RADIANS(c2.decl)) - c1.ra * COS(RADIANS(c1.decl)))
-                        * (c2.ra * COS(RADIANS(c2.decl)) - c1.ra * COS(RADIANS(c1.decl)))
-                        / (c2.ra_err * c2.ra_err + c1.ra_err * c1.ra_err))
-                        + ((c2.decl - c1.decl) * (c2.decl - c1.decl)
-                        / (c2.decl_err * c2.decl_err + c1.decl_err * c1.decl_err))) < %(deRuiter_reduced)s
+             WHERE c1.x * c2.x + c1.y * c2.y + c1.z * c2.z > COS(RADIANS(%s))
+               AND SQRT(((c1.ra * COS(RADIANS(c1.decl)) - c2.ra * COS(RADIANS(c2.decl)))
+                        * (c1.ra * COS(RADIANS(c1.decl)) - c2.ra * COS(RADIANS(c2.decl)))
+                        / (c1.ra_err * c1.ra_err + c2.ra_err * c2.ra_err))
+                        + ((c1.decl - c2.decl) * (c1.decl - c2.decl)
+                        / (c1.decl_err * c1.decl_err + c2.decl_err * c2.decl_err))) < %s
            ) t3
         ON t0.v_catsrcid = t3.v_catsrcid
-     WHERE t0.v_flux >= %(vlss_flux_cutoff)s
-    ORDER BY t0.v_catsrcid
+     WHERE t0.v_flux >= %s
     """
     try:
         cursor = conn.cursor()
         if q == "q0":
             query = q0
-            args = {'decl_central': decl_central
-                   ,'ra_central': ra_central
-                   ,'fov_radius': fov_radius
-                   ,'assoc_theta': assoc_theta
-                   ,'deRuiter_reduced': deRuiter_reduced
-                   ,'vlss_flux_cutoff': vlss_flux_cutoff}
-            cursor.execute(query, args)
+            cursor.execute(query, (
+                     decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius,
+                     ra_central, fov_radius, decl_central, ra_central, fov_radius, decl_central, 
+                     decl_central, ra_central, decl_central, ra_central, decl_central, fov_radius,
+                     decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius,
+                     ra_central, fov_radius, decl_central,ra_central, fov_radius, decl_central, 
+                     decl_central, ra_central, decl_central, ra_central, decl_central, fov_radius,
+                     decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius,
+                     ra_central, fov_radius, decl_central,ra_central, fov_radius, decl_central, 
+                     decl_central, ra_central, decl_central, ra_central, decl_central, fov_radius,
+                     assoc_theta, deRuiter_reduced,
+                     decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius,
+                     ra_central, fov_radius, decl_central,ra_central, fov_radius, decl_central, 
+                     decl_central, ra_central, decl_central, ra_central, decl_central, fov_radius,
+                     decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius,
+                     ra_central, fov_radius, decl_central,ra_central, fov_radius, decl_central, 
+                     decl_central, ra_central, decl_central, ra_central, decl_central, fov_radius,
+                     assoc_theta, deRuiter_reduced,
+                     decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius,
+                     ra_central, fov_radius, decl_central,ra_central, fov_radius, decl_central, 
+                     decl_central, ra_central, decl_central, ra_central, decl_central, fov_radius,
+                     decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius,
+                     ra_central, fov_radius, decl_central,ra_central, fov_radius, decl_central, 
+                     decl_central, ra_central, decl_central, ra_central, decl_central, fov_radius,
+                     assoc_theta, deRuiter_reduced,
+                     vlss_flux_cutoff
+                              ))
         elif q == "q_across_ra0":
             query = q_across_ra0
-            args = {'decl_central': decl_central
-                   ,'ra_central': ra_central
-                   ,'ra_min1': ra_min1
-                   ,'ra_max1': ra_max1
-                   ,'ra_min2': ra_min2
-                   ,'ra_max2': ra_max2
-                   ,'fov_radius': fov_radius
-                   ,'assoc_theta': assoc_theta
-                   ,'deRuiter_reduced': deRuiter_reduced
-                   ,'vlss_flux_cutoff': vlss_flux_cutoff}
-            cursor.execute(query, args)
+            cursor.execute(query, (
+                     decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius,
+                     ra_min1, ra_max1, ra_min2, ra_max2,
+                     decl_central, ra_central, decl_central, ra_central, decl_central, fov_radius,
+                     decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius,
+                     ra_min1, ra_max1, ra_min2, ra_max2,
+                     decl_central, ra_central, decl_central, ra_central, decl_central, fov_radius,
+                     decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius,
+                     ra_min1, ra_max1, ra_min2, ra_max2,
+                     decl_central, ra_central, decl_central, ra_central, decl_central, fov_radius,
+                     assoc_theta, deRuiter_reduced,
+                     decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius,
+                     ra_min1, ra_max1, ra_min2, ra_max2,
+                     decl_central, ra_central, decl_central, ra_central, decl_central, fov_radius,
+                     decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius,
+                     ra_min1, ra_max1, ra_min2, ra_max2,
+                     decl_central, ra_central, decl_central, ra_central, decl_central, fov_radius,
+                     assoc_theta, deRuiter_reduced,
+                     decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius,
+                     ra_min1, ra_max1, ra_min2, ra_max2,
+                     decl_central, ra_central, decl_central, ra_central, decl_central, fov_radius,
+                     decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius,
+                     ra_min1, ra_max1, ra_min2, ra_max2,
+                     decl_central, ra_central, decl_central, ra_central, decl_central, fov_radius,
+                     assoc_theta, deRuiter_reduced,
+                     vlss_flux_cutoff
+                              ))
         else:    
             raise BaseException("ra = %s > 360 degrees, not implemented yet" % str(ra_central + alpha(fov_radius, decl_central))) 
         results = zip(*cursor.fetchall())
         cursor.close()
-        if len(results) == 0:
-            raise GSMException("No sources found, so Sky Model File %s is not created" % (bbsfile,))
-
-        vlss_catsrcid = results[0]
-        vlss_name = results[1]
-        wenssm_catsrcid = results[2]
-        wenssp_catsrcid = results[3]
-        nvss_catsrcid = results[4]
-        v_flux = results[5]
-        wm_flux = results[6]
-        wp_flux = results[7]
-        n_flux = results[8]
-        v_flux_err = results[9]
-        wm_flux_err = results[10]
-        wp_flux_err = results[11]
-        n_flux_err = results[12]
-        wm_assoc_distance_arcsec = results[13]
-        wm_assoc_r = results[14]
-        wp_assoc_distance_arcsec = results[15]
-        wp_assoc_r = results[16]
-        n_assoc_distance_arcsec = results[17]
-        n_assoc_r = results[18]
-        pa = results[19]
-        major = results[20]
-        minor = results[21]
-        ra = results[22]
-        decl = results[23]
-
+        if len(results) != 0:
+            vlss_catsrcid = results[0]
+            vlss_name = results[1]
+            wenssm_catsrcid = results[2]
+            wenssp_catsrcid = results[3]
+            nvss_catsrcid = results[4]
+            v_flux = results[5]
+            wm_flux = results[6]
+            wp_flux = results[7]
+            n_flux = results[8]
+            v_flux_err = results[9]
+            wm_flux_err = results[10]
+            wp_flux_err = results[11]
+            n_flux_err = results[12]
+            wm_assoc_distance_arcsec = results[13]
+            wm_assoc_r = results[14]
+            wp_assoc_distance_arcsec = results[15]
+            wp_assoc_r = results[16]
+            n_assoc_distance_arcsec = results[17]
+            n_assoc_r = results[18]
+            pa = results[19]
+            major = results[20]
+            minor = results[21]
+            ra = results[22]
+            decl = results[23]
+        else:
+            status = False
         spectrumfiles = []
-        # Check for duplicate vlss_names. This may arise when a VLSS source 
-        # is associated with one or more (genuine) counterparts.
-        # Eg., if two NVSS sources are seen as counterparts
-        # VLSS - WENSS - NVSS_1
-        # VLSS - WENSS - NVSS_2
-        # two rows will be added to the sky model, where the VLSS name 
-        # is postfixed with _0 and _1, resp.
-        import collections
-        items = collections.defaultdict(list)
-        src_name = list(vlss_name)
-        for i, item in enumerate(src_name):
-            items[item].append(i)
-        for item, locs in items.iteritems():
-            if len(locs) > 1:
-                #print "duplicates of", item, "at", locs
-                for j in range(len(locs)):
-                    src_name[locs[j]] = src_name[locs[j]] + "_" + str(j)
         if len(results) != 0:
             for i in range(len(vlss_catsrcid)):
                 ##print "\ni = ", i
                 bbsrow = ""
                 # Here we check the cases for the degree of the polynomial spectral index fit
                 #print i, vlss_name[i],vlss_catsrcid[i], wenssm_catsrcid[i], wenssp_catsrcid[i], nvss_catsrcid[i]
-                # Write the vlss name of the source (either postfixed or not)
-                bbsrow += src_name[i] + ", "
+                #print "VLSS",vlss_name[i]
+                bbsrow += vlss_name[i] + ", "
                 # According to Jess, only sources that have values for all
                 # three are considered as GAUSSIAN
                 if pa[i] is not None and major[i] is not None and minor[i] is not None:
@@ -770,9 +750,7 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius,
                 if len(lognu) == 1:
                     #print "Exp. flux:", 10**(np.log10(v_flux[i]) + 0.7 * np.log10(74.0/60.0))
                     #print "Default -0.7"
-                    fluxrow = round(10**(np.log10(v_flux[i]) + 0.7 * np.log10(74.0/60.0)), 2)
-                    totalFlux += fluxrow
-                    bbsrow += str(fluxrow) + ", , , , , "
+                    bbsrow += str(round(10**(np.log10(v_flux[i]) + 0.7 * np.log10(74.0/60.0)), 2)) + ", , , , , "
                     bbsrow += "[-0.7]"
                 elif len(lognu) == 2 or (len(lognu) == 3 and nvss_catsrcid[i] is None):
                     #print "Do a 1-degree polynomial fit"
@@ -784,9 +762,7 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius,
                         spectrumfiles.append(spectrumfile)
                     # Default reference frequency is reported, so we leave it empty here;
                     # Catalogues just report on Stokes I, so others are empty.
-                    fluxrow = round(10**p[0], 4)
-                    totalFlux += fluxrow
-                    bbsrow += str(fluxrow) + ", , , , , "
+                    bbsrow += str(round(10**p[0], 4)) + ", , , , , "
                     bbsrow += "[" + str(round(p[1], 4)) + "]"
                 elif (len(lognu) == 3 and nvss_catsrcid[i] is not None) or len(lognu) == 4:
                     #print "Do a 2-degree polynomial fit"
@@ -803,26 +779,16 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius,
                     # Gaussian source:
                     bbsrow += ", " + str(round(major[i], 2)) + ", " + str(round(minor[i], 2)) + ", " + str(round(pa[i], 2))
                 #print bbsrow
-                bbsrows.append (bbsrow)
+                skymodel.write(bbsrow + '\n')
             
             if storespectraplots:
                 print "Spectra available in:", spectrumfiles
-                
-        # Write the format line.
-        # Optionally it contains a column containing the patch name.
-        skymodel = open(bbsfile, 'w')
-        header = "FORMAT = Name, Type, Ra, Dec, I, Q, U, V, ReferenceFrequency='60e6', SpectralIndex='[0.0]', MajorAxis, MinorAxis, Orientation"
-        # Add fixed patch name to the header and add a line defining the patch.
-        if len(patchname) > 0:
-            header += ", patch=fixed'" + patchname + "'\n\n"
-            header += "# the next line defines the patch\n"
-            header += ',, ' + ra2bbshms(ra_central) + ', ' + decl2bbsdms(decl_central) + ', ' + str(totalFlux)
-        header += "\n\n# the next lines define the sources\n"
-        skymodel.write(header)
-        for bbsrow in bbsrows:
-            skymodel.write(bbsrow + '\n')
+        
         skymodel.close()
         print "Sky model stored in source table:", bbsfile
+        
+        if not status:
+            raise GSMException("Sky Model File %s is empty" % (bbsfile,))
 
     except db.Error, e:
         logging.warn("Failed on query nr %s; for reason %s" % (query, e))

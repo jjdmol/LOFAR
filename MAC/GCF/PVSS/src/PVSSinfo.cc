@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -403,11 +403,11 @@ void buildTypeStructTree(const string 			path,
 		}
 		delete [] elName; 
 	}
-//	LOG_INFO_STR("propName=" << propName);
+//	LOG_TRACE_COND_STR("propName=" << propName);
 
 	if (elType != DPELEMENT_RECORD && elType != DPELEMENT_TYPEREFERENCE) {
 		if (macValueTypes[elType] != NO_LPT) {      
-			if (propName.empty() || PVSSinfo::isValidPropName(propName.c_str())) {
+			if (PVSSinfo::isValidPropName(propName.c_str())) {
 				TPropertyInfo propInfo;
 				propInfo.propName = propName;
 				propInfo.type 	  = macValueTypes[elType];
@@ -415,14 +415,14 @@ void buildTypeStructTree(const string 			path,
 			}
 			else {
 				LOG_WARN(formatString ( 
-					"Property name %s does not meet the name convention! Not added!!!",
+					"Property name %s does not meet the name convention! Not add!!!",
 					propName.c_str()));
 			}
 		}
 		else {
 			// TODO: IMPLEMENT THESE TYPES LATER.
 			LOG_DEBUG(formatString(
-				"TypeElement type %d (see DpElementType.hxx) is unknown to GCF (%s). Not added!!!",
+				"TypeElement type %d (see DpElementType.hxx) is unknown to GCF (%s). Not add!!!",
 				elType, propName.c_str()));      
 		}
 	} 
@@ -443,50 +443,45 @@ bool PVSSinfo::isValidPropName(const char* propName)
 {
 	ASSERT(propName);
 
-	if (!*propName) {
-		LOG_WARN("isValidPropName: property name is empty");
-		return (false);
-	}
-
 	char			doubleSep[] = {GCF_PROP_NAME_SEP, GCF_PROP_NAME_SEP, 0};
 	unsigned int	length = strlen(propName);
 
 	// Invalid: .***   ***.  and  ***..***
 	if (propName[0] == GCF_PROP_NAME_SEP || propName[length - 1] == GCF_PROP_NAME_SEP ) {
-		LOG_WARN_STR("isValidPropName(" << propName << "): dot at edge of name");
+		LOG_TRACE_COND_STR("isValidPropName(" << propName << "): dot at edge of name");
 		return (false);
 	}
 	if (strstr(propName, doubleSep) != 0) {
-		LOG_WARN_STR("isValidPropName(" << propName << "): double dot");
+		LOG_TRACE_COND_STR("isValidPropName(" << propName << "): double dot");
 		return (false);
 	}
 
 	// ref indication may only found at begin or after a GCF_PROP_NAME_SEP
 	char	refInd[] = "__";
-	const char*	refIndPos = strstr(propName, refInd);
+	char*	refIndPos = strstr(propName, refInd);
 	if (refIndPos != 0) {									// we found it
 		if (refIndPos > propName) {							// not at begin
 			if (*(refIndPos - 1) != GCF_PROP_NAME_SEP) {	// not at a dot
-				LOG_WARN_STR("isValidPropName(" << propName << "): double underscore not after dot");
+				LOG_TRACE_COND_STR("isValidPropName(" << propName << "): double underscore not after dot");
 				return (false);
 			}
 		}
 		// ref indication may not used in struct name: ***__***.*** is not valid
-		if (strchr(refIndPos, GCF_PROP_NAME_SEP) != 0) {
-			LOG_WARN_STR("isValidPropName(" << propName << "): double underscore in DP-part");
+		if (strchr(refIndPos, GCF_PROP_NAME_SEP) > 0) {
+			LOG_TRACE_COND_STR("isValidPropName(" << propName << "): double underscore in DP-part");
 			return (false);
 		}
 	}
 
 	// only allow dots, :  and __ in the name.
 	for (unsigned short i = 0; i < length; i++) {
-		if (refIndPos != 0 && ((propName + i) == refIndPos)) {
+		if (refIndPos > 0 && ((propName + i) == refIndPos)) {
 			i += 2; // skip the ref indicator
 		}
 		if (!isalnum(propName[i]) && (propName[i] != GCF_PROP_NAME_SEP) && 
 									 (propName[i] != GCF_SYS_NAME_SEP) &&
 									 (propName[i] != GCF_SCOPE_NAME_SEP)) {
-			LOG_WARN_STR("isValidPropName(" << propName << "): illegal character at pos " << i << ":" << propName[i]);
+			LOG_TRACE_COND_STR("isValidPropName(" << propName << "): illegal character at pos " << i << ":" << propName[i]);
 			return (false);
 		}
 	}

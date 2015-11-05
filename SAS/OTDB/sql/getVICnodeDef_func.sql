@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -35,7 +35,6 @@
 --
 CREATE OR REPLACE FUNCTION getVICnodedef(INT4)
   RETURNS OTDBnodeDef AS '
-    --  $Id$
 	DECLARE
 		vRecord		RECORD;
 
@@ -69,9 +68,8 @@ CREATE OR REPLACE FUNCTION getVICnodedef(INT4)
 --
 -- Types:	OTDBnodeDef
 --
-CREATE OR REPLACE FUNCTION getVICnodedef(VARCHAR(150), INT4, INT2)
+CREATE OR REPLACE FUNCTION getVICnodedef(VARCHAR(40), INT4, INT2)
   RETURNS OTDBnodeDef AS '
-    --  $Id$
 	DECLARE
 		vRecord		RECORD;
 
@@ -110,7 +108,6 @@ CREATE OR REPLACE FUNCTION getVICnodedef(VARCHAR(150), INT4, INT2)
 --
 CREATE OR REPLACE FUNCTION getVICnodedef(INT4, VARCHAR(150), VARCHAR(150))
   RETURNS OTDBnode AS '
-    --  $Id$
 	DECLARE
 		vNodeID		VICtemplate.nodeID%TYPE;
 		vRecord		RECORD;
@@ -130,7 +127,7 @@ CREATE OR REPLACE FUNCTION getVICnodedef(INT4, VARCHAR(150), VARCHAR(150))
 	    SELECT t.nodeid,
 			   t.parentid, 
 			   t.originid,
-			   t.name::VARCHAR(150), 
+			   t.name, 
 			   t.index, 
 			   t.leaf,
 			   t.instances,

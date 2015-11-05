@@ -1,0 +1,8 @@
+system success
+SSHconnection success [stdout]
+SSHconnection success [stderr]
+SSHconnection success [stderr]
+SSHconnection success [stdout]
+SSHconnection success [stdout]
+SSHconnection success [stderr]
+forkExec success

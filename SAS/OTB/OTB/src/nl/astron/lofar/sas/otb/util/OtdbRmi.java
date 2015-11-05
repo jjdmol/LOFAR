@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@
 
 package nl.astron.lofar.sas.otb.util;
 
-import java.rmi.AccessException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -268,12 +267,7 @@ public final class OtdbRmi {
 
     public boolean openAccessConnection() throws NoAccessException {
         String aRa="rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIAccessName;
-        try {
-            isOpened=openRemoteAccess(aRa);
-        } catch (RemoteException ex) {
-	     String aS="Open Remote Access via RMI and JNI failed: " + ex;
-             logger.error(aS);            
-        }
+        isOpened=openRemoteAccess(aRa);
         if (isOpened){
             logger.debug("Remote access connection opened");
             isConnected=true;
@@ -293,7 +287,7 @@ public final class OtdbRmi {
         return isConnected;
     }
 
-    private boolean openRemoteAccess(String RMIRegHostName) throws RemoteException, AccessException {
+    private boolean openRemoteAccess(String RMIRegHostName) {
         try {
             logger.debug("openRemoteAccess for "+RMIRegHostName);
 
@@ -308,7 +302,7 @@ public final class OtdbRmi {
 	    logger.debug("Connection to RemoteAccess succesful!");
             return true;
           }
-        catch (NumberFormatException | NotBoundException | RemoteException e)
+        catch (NumberFormatException | RemoteException | NotBoundException e)
 	  {
 	     String aS="Open Remote Access via RMI and JNI failed: " + e;
              logger.error(aS);

@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -59,7 +59,6 @@ namespace LOFAR {
   using namespace RTC;
   using namespace IBS_Protocol;
   using namespace RSP_Protocol;
-  using namespace CAL_Protocol;
   using namespace GCF::TM;
   namespace BS {
 
@@ -1272,7 +1271,7 @@ DigitalBeam* BeamServer::checkBeam(GCFPortInterface* 				port,
 	}
 
 	// nr of subbands should fit in the beamlet space.
-	if (static_cast<int>(allocation.getSubbandBitset().count()) > itsCurrentMaxBeamlets) {
+	if (allocation.getSubbandBitset().count() > itsCurrentMaxBeamlets) {
 		LOG_ERROR_STR("Too many subbands specified (" << allocation.getSubbandBitset().count() << ") only " 
 					<< itsCurrentMaxBeamlets << " allowed");
 		return (0);
@@ -1577,6 +1576,8 @@ vector<double>	BeamServer::blitz2vector(const blitz::Array<double,1>&	anBA) cons
 	return (resultVect);
 }
 
+BZ_DECLARE_FUNCTION_RET(convert2complex_int16_t, complex<int16_t>)
+
 //
 // Convert the weights to 16-bits signed integer.
 //
@@ -1585,7 +1586,6 @@ inline complex<int16_t> convert2complex_int16_t(complex<double> cd)
 	return complex<int16_t>((int16_t)(round(cd.real() * gBeamformerGain)),
 							(int16_t)(round(cd.imag() * gBeamformerGain)));
 }
-BZ_DECLARE_FUNCTION_RET(convert2complex_int16_t, complex<int16_t>)
 
 //
 // compute_weights(time)

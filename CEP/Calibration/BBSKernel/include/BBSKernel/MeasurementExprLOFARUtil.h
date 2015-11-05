@@ -28,16 +28,16 @@
 // Utility functions to construct sub-expressions for the LOFAR measurement
 // expression.
 
-#include <BBSKernel/Instrument.h>
-#include <BBSKernel/IonosphereExpr.h>
 #include <BBSKernel/ModelConfig.h>
+#include <BBSKernel/IonosphereExpr.h>
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/Scope.h>
 #include <BBSKernel/Expr/Source.h>
-#include <Common/lofar_string.h>
+#include <BBSKernel/Instrument.h>
 #include <Common/lofar_vector.h>
-#include <measures/Measures/MDirection.h>
+#include <Common/lofar_string.h>
 #include <measures/Measures/MPosition.h>
+#include <measures/Measures/MDirection.h>
 
 namespace LOFAR
 {
@@ -76,24 +76,16 @@ makeBandpassExpr(Scope &scope,
     const Station::ConstPtr &station);
 
 Expr<JonesMatrix>::Ptr
-makeClockExpr(Scope &scope, const Station::ConstPtr &station,
-    const ClockConfig &config);
+makeClockExpr(Scope &scope,
+    const Station::ConstPtr &station);
 
 Expr<JonesMatrix>::Ptr
 makeGainExpr(Scope &scope,
     const Station::ConstPtr &station,
-    const GainConfig &config);
+    bool phasors);
 
 Expr<JonesMatrix>::Ptr
 makeTECExpr(Scope &scope,
-    const Station::ConstPtr &station);
-
-Expr<JonesMatrix>::Ptr
-makeCommonRotationExpr(Scope &scope,
-    const Station::ConstPtr &station);
-
-Expr<Scalar>::Ptr
-makeCommonScalarPhaseExpr(Scope &scope,
     const Station::ConstPtr &station);
 
 // Direction dependent effects.
@@ -101,7 +93,7 @@ Expr<JonesMatrix>::Ptr
 makeDirectionalGainExpr(Scope &scope,
     const Station::ConstPtr &station,
     const string &patch,
-    const DirectionalGainConfig &config);
+    bool phasors);
 
 Expr<JonesMatrix>::Ptr
 makeElevationCutExpr(const Expr<Vector<2> >::Ptr &exprAzEl,
@@ -126,31 +118,15 @@ makeFaradayRotationExpr(Scope &scope,
     const string &patch);
 
 Expr<JonesMatrix>::Ptr
-makeRotationExpr(Scope &scope,
-    const Station::ConstPtr &station,
-    const string &patch);
-
-Expr<Scalar>::Ptr
-makeScalarPhaseExpr(Scope &scope,
-    const Station::ConstPtr &station,
-    const string &patch);
-
-Expr<JonesMatrix>::Ptr
 makeIonosphereExpr(const Station::ConstPtr &station,
     const casa::MPosition &refPosition,
-    const Expr<Vector<3> >::Ptr &exprDirection,
+    const Expr<Vector<2> >::Ptr &exprAzEl,
     const IonosphereExpr::Ptr &exprIonosphere);
 
 // Right multiply \p lhs by \p rhs. Return \p rhs if \p lhs is uninitialized.
 Expr<JonesMatrix>::Ptr
 compose(const Expr<JonesMatrix>::Ptr &lhs,
     const Expr<JonesMatrix>::Ptr &rhs);
-
-// Right multiply \p lhs by \p rhs. Return \p rhs as a diagonal Jones matrix
-// if \p lhs is uninitialized.
-Expr<JonesMatrix>::Ptr
-compose(const Expr<JonesMatrix>::Ptr &lhs,
-    const Expr<Scalar>::Ptr &rhs);
 
 // Construct \p lhs * \p coherence * (\p rhs)^H. Return \p coherence if
 // either \p lhs or \p rhs are uninitialized.

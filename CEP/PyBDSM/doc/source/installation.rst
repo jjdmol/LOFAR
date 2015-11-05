@@ -11,19 +11,15 @@ Downloading and installing
 
 Downloading the code
 --------------------
-The latest version of the code may be obtained as a gzipped tar file from the Hamburg Observatory FTP server at ftp://ftp.hs.uni-hamburg.de/pub/outgoing/rafferty/PyBDSM (e.g., ``PyBDSM-1.8.2.tar.gz``). Once downloaded, extract the files in the directory where you would like to install PyBDSM. The files are all contained in a subdirectory named ``LOFAR``.
+The latest version of the code may be obtained as a gzipped tar file from the STRW FTP server at ftp://ftp.strw.leidenuniv.nl/pub/rafferty/PyBDSM (e.g., ``PyBDSM-1.2.tar.gz``). Once downloaded, extract the files in the directory where you would like to install PyBDSM. The files are all contained in a subdirectory named ``LOFAR``.
 
 Preparing to compile the code
 -----------------------------
 Before compiling the PyBDSM source code, you need to make sure you have the required dependencies:
 
-.. note::
-
-    The minimal set of dependencies is usually part of most Linux distributions, so if you are installing PyBDSM on Linux you can likely skip to the next step (compiling and installing). On a Mac, you will also need to have XCode installed (from the Mac App Store), including the command-line tools (installed either from XCode's Preferences or, on 10.9 Mavericks, by running ``xcode-select --install`` in a terminal).
-
-* Python 2.6 or 2.7 (including NumPy, SciPy, Matplotlib, and IPython). The easiest way to install Python and all of the required modules is to use the free 64-bit Anaconda distribution, available at http://www.continuum.io/downloads (Anaconda also includes Astropy, which is needed by PyBDSM). Python 3 is not yet supported.
+* Python 2.6 or newer (including NumPy, SciPy, Matplotlib, and IPython). The easiest way to install Python and all of the required modules is to use the 64-bit EPD Python distribution, available at http://enthought.com/products/epd.php. For academic users, a free version is available at http://www.enthought.com/products/edudownload.php.
 * gfortran. Binaries are available from http://gcc.gnu.org/wiki/GFortranBinaries.
-* A C++ compiler. Note that the default system compiler on OS 10.9 does not work with PyBDSM at this time, so it is necessary to install a recent version of the GCC compiler suite (e.g., the GCC 4.8 binaries from http://hpc.sourceforge.net). The easiest way to use these alternative compilers is to replace the system versions of the compilers in /usr/bin/ (i.e., cc, gcc, g++, c++) with these versions (before compiling Boost).
+* PyWCS. You can get PyWCS from https://trac6.assembla.com/astrolib.
 * Boost. Get the latest version from http://www.boost.org. Only the Python libraries need to be compiled. For example, on a Mac, do the following (which assumes the latest version is ``boost_1_49_0.tar.gz``)::
 
     $ cd /usr/local/
@@ -31,33 +27,6 @@ Before compiling the PyBDSM source code, you need to make sure you have the requ
     $ cd boost_1_49_0/
     $ sudo ./bootstrap.sh --with-libraries=python
     $ sudo ./b2 install
-
-.. note::
-
-    If you are using Anaconda Python, you may need to edit the ``project_config.bjam`` file before running the b2 executable by changing the line::
-
-        using python : 2.7 : /path/to/anaconda ;
-
-    to::
-
-        using python : 2.7 : /path/to/anaconda : /path/to/anaconda/include/python2.7 : /path/to/anaconda/lib ;
-
-    then run::
-
-        sudo ./b2 toolset=clang cxxflags=-stdlib=libstdc++ linkflags=-stdlib=libstdc++ -j2 install
-
-.. note::
-
-    If you don't have superuser access, you can install Boost to a local directory by adding::
-
-        --prefix=path/to/installation/prefix
-
-    to the bootstrap.sh command above and then passing this directory to the cmake command below by adding::
-
-        -DBOOST_ROOT_DIR=/path/to/boost
-
-
-* Astropy (if you use the Anaconda Python distribution above, Astropy is already included). You can get Astropy from http://www.astropy.org.
 
 
 Compiling and installing
@@ -96,7 +65,7 @@ For the Bash shell::
 
 Keeping up-to-date
 ------------------
-PyBDSM is currently under active development, and bug fixes and improvements are frequently implemented. PyBDSM will automatically check for updates each time the interactive shell is started. To update PyBDSM to the latest version, download the new version and repeat the "compiling and installing" steps.
+PyBDSM is currently under active development, and bug fixes and improvements are frequently implemented. PyBDSM will automatically check for updates each time the interactive shell is started. To update PyBDSM to the latest version, download the new version and repeat the above steps.
 
 Major updates will be listed in :ref:`new`.
 

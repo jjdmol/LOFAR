@@ -43,10 +43,6 @@ if(GSL_FOUND)
   link_libraries(${GSL_LIBRARIES})
 endif(GSL_FOUND)
 
-if(SIGCXX_FOUND)
-  include_directories(${SIGCXX_INCLUDE_DIRS})
-endif(SIGCXX_FOUND)
-
 lofar_add_bin_program(rfihistory rfihistory.cpp)
 
 lofar_add_bin_program(aorefscript aorefscript.cpp)
@@ -105,9 +101,8 @@ set(MSIO_FILES
   msio/timestepaccessor.cpp)
   
 set(QUALITY_FILES
-  quality/histogramcollection.cpp
   quality/histogramtablesformatter.cpp
-  quality/rayleighfitter.cpp
+	quality/rayleighfitter.cpp
   quality/qualitytablesformatter.cpp)
 
 set(REMOTEAO_FILES
@@ -163,6 +158,9 @@ set(STRATEGY_PLOTS_FILES
   strategy/plots/rfiplots.cpp
   strategy/plots/timeflagcountplot.cpp
   util/multiplot.cpp)
+set(QUALITY_FILES 
+  ${QUALITY_FILES} 
+  quality/histogramcollection.cpp)
 else()
  set(STRATEGY_PLOTS_FILES)
 endif(GTKMM_FOUND)

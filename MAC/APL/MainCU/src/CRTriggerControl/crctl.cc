@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -567,7 +567,7 @@ Command* CRCtl::parse_options(int argc, char** argv)
                         exit(EXIT_FAILURE);
                     }
                 }
-                cmd->setStopTime(NsTimestamp(stopTime));
+                cmd->setStopTime(RTC::NsTimestamp(stopTime));
             } break;
 
             case 'c': {   // --read
@@ -587,9 +587,9 @@ Command* CRCtl::parse_options(int argc, char** argv)
                         exit(EXIT_FAILURE);
                     }
                 }
-                cmd->setTime(NsTimestamp(time));
-                cmd->setTimeBefore(NsTimestamp(timeBefore));
-                cmd->setTimeAfter(NsTimestamp(timeAfter));
+                cmd->setTime(RTC::NsTimestamp(time));
+                cmd->setTimeBefore(RTC::NsTimestamp(timeBefore));
+                cmd->setTimeAfter(RTC::NsTimestamp(timeAfter));
             } break;
 
             case 'd': {   // --record

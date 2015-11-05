@@ -30,7 +30,6 @@
 //# Includes
 #include <ParmDB/SourceInfo.h>
 #include <Common/lofar_vector.h>
-#include <iosfwd>
 
 
 namespace LOFAR {
@@ -61,10 +60,8 @@ namespace BBS {
       { return itsInfo; }
     const string& getPatchName() const
       { return itsPatchName; }
-    // Get right ascension in radians.
     double getRa() const
       { return itsRa; }
-    // Get declination in radians.
     double getDec() const
       { return itsDec; }
     double getI() const
@@ -75,13 +72,10 @@ namespace BBS {
       { return itsU; }
     double getV() const
       { return itsV; }
-    // Get major axis in arcsec.
     double getMajorAxis() const
       { return itsMajorAxis; }
-    // Get minor axis in arcsec.
     double getMinorAxis() const
       { return itsMinorAxis; }
-    // Get orientation in degrees.
     double getOrientation() const
       { return itsOrientation; }
     double getPolarizationAngle() const
@@ -128,17 +122,11 @@ namespace BBS {
     // Set the parameters from a ParmMap object.
     void setParms (const ParmMap& defaultParameters);
 
-    // Get the parameters as a ParmMap object.
-    void getParms (ParmMap& parms) const;
-
     // Write the source data into a blob stream.
-    void writeSource (BlobOStream&) const;
+    void writeSource (BlobOStream&);
 
     // Read the source data from a blob stream.
     void readSource (BlobIStream&);
-
-    // Print the source data.
-    void print (std::ostream&) const;
 
   private:
     // Set a parameter.
@@ -147,22 +135,17 @@ namespace BBS {
     void setParm (const ParmMap& parms, const string& name,
                   double defValue, double& value);
 
-    // Add a parm to the ParmMap.
-    void makeParm (ParmMap& parms, const string& name,
-                   double value, bool pertRel=true) const;
-
-    //# Data members
     SourceInfo     itsInfo;
     string         itsPatchName;
-    double         itsRa;            //# radians
-    double         itsDec;           //# radians
+    double         itsRa;
+    double         itsDec;
     double         itsI;
     double         itsQ;
     double         itsU;
     double         itsV;
-    double         itsMajorAxis;     //# arcsec
-    double         itsMinorAxis;     //# arcsec
-    double         itsOrientation;   //# degrees
+    double         itsMajorAxis;
+    double         itsMinorAxis;
+    double         itsOrientation;
     double         itsPolAngle;
     double         itsPolFrac;
     double         itsRM;

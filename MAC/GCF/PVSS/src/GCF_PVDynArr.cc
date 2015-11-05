@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@
 #include <GCF/PVSS/GCF_PVDynArr.h>
 #include <Common/DataConvert.h>
 #include <Common/LofarTypes.h>
-#include <cstring>
 
 using LOFAR::TYPES::uint16;
 
@@ -168,23 +167,11 @@ void GCFPVDynArr::setValue(const GCFPValueArray& newVal)
 //
 // getValueAsString(format)
 //
-string GCFPVDynArr::getValueAsString(const string& /*format*/) const
+string GCFPVDynArr::getValueAsString(const string& format) const
 {
-	stringstream	os;
-	os << "[";
-	GCFPValueArray::const_iterator iter = _values.begin();
-	GCFPValueArray::const_iterator end  = _values.end();
-	GCFPValueArray::const_iterator last(end);
-	last--;
-	while (iter != end) {
-		os << (*iter)->getValueAsString();
-		if (iter != last) {
-			os << ",";
-		}
-		++iter;
-	}
-	os << "]";
-	return (os.str());
+	(void)format;
+
+	return ("Not yet implemented!");
 }
 
 //

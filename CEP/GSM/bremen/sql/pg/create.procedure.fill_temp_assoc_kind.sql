@@ -102,5 +102,5 @@ end;
 $BODY$
 LANGUAGE plpgsql VOLATILE
 COST 100;
-ALTER FUNCTION fill_temp_assoc_kind(int)
+ALTER FUNCTION fill_temp_assoc_kind()
 OWNER TO postgres;

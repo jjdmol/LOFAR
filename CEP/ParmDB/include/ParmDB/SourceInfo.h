@@ -33,6 +33,7 @@
 #include <casa/Arrays/Array.h>
 #include <measures/Measures/MDirection.h>
 
+
 namespace LOFAR {
 
   //# Forward Declaration.
@@ -129,7 +130,7 @@ namespace BBS {
     // </group>
 
     // Write into a blob.
-    void write (BlobOStream&) const;
+    void write (BlobOStream&);
 
     // Read from a blob.
     void read (BlobIStream&);

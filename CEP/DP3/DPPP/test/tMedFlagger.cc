@@ -26,7 +26,7 @@
 #include <DPPP/DPInput.h>
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
-#include <Common/ParameterSet.h>
+#include <DPPP/ParSet.h>
 #include <Common/StringUtil.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
@@ -86,7 +86,7 @@ private:
   {
     info() = infoIn;
     // Use timeInterval=5
-    info().init (itsNCorr, itsNChan, itsNTime, 100, 5, string(), string());
+    info().init (itsNCorr, itsNChan, itsNTime, 100, 5, string());
     // Fill the baseline stations; use 4 stations.
     // So they are called 00 01 02 03 10 11 12 13 20, etc.
     Vector<Int> ant1(itsNBl);
@@ -123,8 +123,7 @@ private:
     vals[0] = 3828713; vals[1] = 442878; vals[2] = 5064926;
     antPos[3] = MPosition(Quantum<Vector<double> >(vals,"m"),
                           MPosition::ITRF);
-    Vector<double> antDiam(4, 70.);
-    info().set (antNames, antDiam, antPos, ant1, ant2);
+    info().set (antNames, antPos, ant1, ant2);
     // Define the frequencies.
     Vector<double> chanFreqs(itsNChan);
     Vector<double> chanWidth(itsNChan, 100000);
@@ -196,7 +195,7 @@ private:
   }
 
   int itsCount;
-  int itsNTime, itsNBl, itsNChan, itsNCorr;
+  int itsNTime, itsNBl, itsNChan, itsNCorr, itsNAvgTime, itsNAvgChan;
   bool itsFlag, itsUseAutoCorr, itsShortBL;
 };
 

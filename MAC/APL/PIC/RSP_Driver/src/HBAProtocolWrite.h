@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -74,7 +74,6 @@ namespace LOFAR {
       static const int PROTOCOL_SIZE         = 320;
       static const int RESULT_SIZE           = 115;
 
-      static const int PROTOCOL_WAIT_OFFSET  = 43; // offset of wait settings in i2c_protocol
       static const int PROTOCOL_DELAY_OFFSET = 10; // offset of delay settings in i2c_protocol
       static const int RESULT_DELAY_OFFSET   = 6;  // offset of delay settings in i2c_result
       static const int RESULT_DELAY_STRIDE   = 7;  // nof bytes to next pair of X,Y delays

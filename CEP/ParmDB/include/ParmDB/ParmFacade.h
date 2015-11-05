@@ -38,7 +38,7 @@ namespace LOFAR { namespace BBS {
   // @{
 
   // ParmFacade is the high level interface to the Parameter Data Base.
-  // The current version assumes it is a Casacore table; with a few extra
+  // The current version assumes it is an AIPS++ table; with a few extra
   // constructor arguments it can easily be changed to other types of
   // databases.
   //
@@ -80,9 +80,8 @@ namespace LOFAR { namespace BBS {
 
     // Get parameter names in the table matching the pattern.
     // An empty name pattern is the same as * (all parm names).
-    vector<string> getNames (const string& parmNamePattern = string(),
-                             bool includeDefaults = false) const
-    { return itsRep->getNames (parmNamePattern, includeDefaults); }
+    vector<string> getNames (const string& parmNamePattern = string()) const
+      { return itsRep->getNames (parmNamePattern); }
 
     // Get default parameter names in the table matching the pattern.
     // An empty name pattern is the same as * (all parm names).
@@ -105,15 +104,13 @@ namespace LOFAR { namespace BBS {
                                                double freqStep,
                                                double timev1, double timev2,
                                                double timeStep,
-                                               bool asStartEnd=false,
-                                               bool includeDefaults=false);
+                                               bool asStartEnd=false);
     map<string, vector<double> > getValuesMap (const string& parmNamePattern,
                                                double freqv1, double freqv2,
                                                double timev1, double timev2,
-                                               bool asStartEnd=false,
-                                               bool includeDefaults=false)
+                                               bool asStartEnd=false)
       { return getValuesMap (parmNamePattern, freqv1, freqv2, 0,
-                             timev1, timev2, asStartEnd, includeDefaults); }
+                             timev1, timev2, asStartEnd); }
     // </group>
 
     // Get the values of the given parameters on the given regular grid
@@ -125,16 +122,13 @@ namespace LOFAR { namespace BBS {
     casa::Record getValues (const string& parmNamePattern,
                             double freqv1, double freqv2, double freqStep,
                             double timev1, double timev2, double timeStep,
-                            bool asStartEnd=true,
-                            bool includeDefaults=false)
+                            bool asStartEnd=true)
       { return itsRep->getValues (parmNamePattern, freqv1, freqv2, freqStep,
-                                  timev1, timev2, timeStep, asStartEnd,
-                                  includeDefaults); }
+                                  timev1, timev2, timeStep, asStartEnd); }
     casa::Record getValues (const string& parmNamePattern,
                             double freqv1=-1e30, double freqv2=1e30,
                             double timev1=-1e30, double timev2=1e30,
-                            bool asStartEnd=true,
-                            bool includeDefaults=false);
+                            bool asStartEnd=true);
     // </group>
 
     // Get the values of the given parameters on the given grid where v1/v2
@@ -145,10 +139,9 @@ namespace LOFAR { namespace BBS {
                             const vector<double>& freqv2,
                             const vector<double>& timev1,
                             const vector<double>& timev2,
-                            bool asStartEnd=true,
-                            bool includeDefaults=false)
+                            bool asStartEnd=true)
       { return itsRep->getValues (parmNamePattern, freqv1, freqv2,
-                                  timev1, timev2, asStartEnd, includeDefaults); }
+                                  timev1, timev2, asStartEnd); }
 
     // Get the values of the given parameters for the given domain.
     // The Record contains a map of parameter name to subrecords.

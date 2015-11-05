@@ -42,6 +42,7 @@ class HistogramPage : public Gtk::HBox {
 	public:
 		HistogramPage();
     ~HistogramPage();
+
 		void SetStatistics(const std::string &filename)
 		{
 			_statFilename = filename;

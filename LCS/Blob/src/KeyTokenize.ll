@@ -3,7 +3,7 @@
 //#
 //# Copyright (C) 2004
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //# This program is free software; you can redistribute it and/or modify
 //# it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 
 /* yy_unput is not used, so let flex not generate it, otherwise picky
    compilers will issue warnings. */
-%option nounput noinput
+%option nounput
 
 %{
 #include <Blob/KeyValue.h>

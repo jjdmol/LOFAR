@@ -2,7 +2,7 @@
 //
 //  Copyright (C) 2006-2008
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -34,7 +34,6 @@
 #include <ApplCommon/LofarDirs.h>
 #include <ApplCommon/StationInfo.h>
 #include <ApplCommon/Observation.h>
-#include <ApplCommon/PosixTime.h>
 
 #include <MACIO/MACServiceInfo.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
@@ -50,19 +49,14 @@
 #include "TriggerControl.h"
 #include "PVSSDatapointDefs.h"
 
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::RTDB;
-using namespace boost::posix_time;
 using namespace std;
 using namespace LOFAR::StringUtil;
 
 namespace LOFAR {
-    using namespace DP_Protocol;
-    using namespace Controller_Protocol;
-    using namespace CR_Protocol;
     using namespace APLCommon;
     namespace MainCU {
 

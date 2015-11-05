@@ -38,6 +38,7 @@ set(pvss_definitions
   -Dbcm_boolean_h 
   -DOS_LINUX 
   -DLINUX 
+  -DLINUX2 
   -DDLLEXP_BASICS= 
   -DDLLEXP_CONFIGS= 
   -DDLLEXP_DATAPOINT= 
@@ -67,46 +68,28 @@ set(pvss_libraries
   
 if(NOT PVSS_FOUND)
 
-  # Get the PVSS version information. This information can be found in the file
-  # VersInfo.mk, which sets a number of Makefile variables. The version string
-  # that is used in the filenames of the shared libraries can be found in the
-  # variable PVSS_DLL_VERS. This variable is either set directly, or composed
-  # from the Makefile variables PVSS_VERSION_MAIN and PVSS_VERSION_BUILD.
+  # Get the PVSS version information. 
+  # Use hard-coded value if version information file cannot be found.
   find_file(PVSS_VERSINFO_MK
     NAMES VersInfo.mk
-    HINTS ${PVSS_ROOT_DIR}
-    PATH_SUFFIXES api)
+    HINTS ${PVSS_PROJ_DIR})
   mark_as_advanced(PVSS_VERSINFO_MK)
-
   if(NOT PVSS_VERSINFO_MK)
-    set(_errmsg "Could NOT find file api/VersInfo.mk.\nPlease make sure that PVSS_ROOT_DIR is set to the root directory of your PVSS installation.")
-    if(PVSS_FIND_REQUIRED)
-      message(FATAL_ERROR "${_errmsg}")
-    elseif(NOT PVSS_FIND_QUIETLY)
-      message(STATUS "${_errmsg}")
-    endif()
-    return()
-  endif()
+    set(pvss_version "V37_304")
+    set(PVSS_ROOT_DIR "/opt/pvss/pvss2_v3.7")
+  else()
+    file(STRINGS ${PVSS_VERSINFO_MK} match REGEX "^PVSS_VERSION_MAIN")
+    string(REGEX REPLACE "^.*= *([^ ]+)$" "\\1" pvss_version_main ${match})
+    file(STRINGS ${PVSS_VERSINFO_MK} match REGEX "^PVSS_VERSION_BUILD")
+    string(REGEX REPLACE "^.*= *([^ ]+)$" "\\1" pvss_version_build ${match})
+    file(STRINGS ${PVSS_VERSINFO_MK} match REGEX "^PVSS_ROOT_DIR")
+    string(REGEX REPLACE "^.*= *([^ ]+)$" "\\1" pvss_root_dir ${match})
+    set(pvss_version "V${pvss_version_main}_${pvss_version_build}")
 
-  # Get the main version
-  file(STRINGS ${PVSS_VERSINFO_MK} match REGEX "^PVSS_VERSION_MAIN *=")
-  string(REGEX REPLACE "^.*= *([^ ]+)$" "\\1" PVSS_VERSION_MAIN "${match}")
-
-  # Get the build version
-  file(STRINGS ${PVSS_VERSINFO_MK} match REGEX "^PVSS_VERSION_BUILD *=")
-  string(REGEX REPLACE "^.*= *([^ ]+)$" "\\1" PVSS_VERSION_BUILD "${match}")
-
-  # Get the library version (which may contains Makefile variables)
-  file(STRINGS ${PVSS_VERSINFO_MK} match REGEX "^PVSS_DLL_VERS *=")
-  string(REGEX REPLACE "^.*= *([^ ]+)$" "\\1" match "${match}")
-
-  # Replace Makefile variables $(name) with CMake variables ${name}
-  string(REGEX REPLACE "\\(([^)]+)\\)" "{\\1}" match "${match}")
-
-  # Replace the CMake variables with their contents
-  string(CONFIGURE "${match}" PVSS_DLL_VERS)
-
-  message(STATUS "Searching for PVSS ${PVSS_DLL_VERS}")
+    file(STRINGS ${PVSS_VERSINFO_MK} match REGEX "^PVSS_ROOT_DIR")
+    string(REGEX REPLACE "^.*= *([^ ]+)$" "\\1" pvss_root ${match})
+    set(PVSS_ROOT_DIR "${pvss_root}")
+  endif(NOT PVSS_VERSINFO_MK)
 
   # Search for the PVSS include directory
   find_path(PVSS_INCLUDE_DIR
@@ -120,11 +103,11 @@ if(NOT PVSS_FOUND)
   string(TOLOWER "${CMAKE_SYSTEM_NAME}" osname)
   foreach(lib ${pvss_libraries})
     find_library(PVSS_${lib}_LIBRARY
-      NAMES ${lib}${PVSS_DLL_VERS}
+      NAMES ${lib}${pvss_version}
       HINTS ${PVSS_ROOT_DIR}
-      PATH_SUFFIXES api/lib.${osname} bin)
+      PATH_SUFFIXES api/lib.${osname})
     list(APPEND pvss_check_list PVSS_${lib}_LIBRARY)
-  endforeach()
+  endforeach(lib Manager Messages Datapoint Basics bcm)
 
   # Mark all variables in pvss_check_list as advanced
   mark_as_advanced(${pvss_check_list})
@@ -138,13 +121,13 @@ if(NOT PVSS_FOUND)
   if(PVSS_FOUND)
     foreach(def ${pvss_definitions})
       set(PVSS_DEFINITIONS "${PVSS_DEFINITIONS} ${def}")
-    endforeach()
+    endforeach(def ${pvss_definitions})
     foreach(dir ${pvss_include_dirs})
       list(APPEND PVSS_INCLUDE_DIRS ${PVSS_INCLUDE_DIR}/${dir})
-    endforeach()
+    endforeach(dir ${pvss_include_dirs})
     foreach(lib ${pvss_libraries})
       list(APPEND PVSS_LIBRARIES ${PVSS_${lib}_LIBRARY})
-    endforeach()
-  endif()
+    endforeach(lib ${pvss_libraries})
+  endif(PVSS_FOUND)
 
-endif()
+endif(NOT PVSS_FOUND)

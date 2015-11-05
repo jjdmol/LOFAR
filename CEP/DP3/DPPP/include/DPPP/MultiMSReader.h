@@ -38,9 +38,9 @@
 
 namespace LOFAR {
 
-  class ParameterSet;
-
   namespace DPPP {
+    class ParSet;
+
     // @ingroup NDPPP
 
     // This class is a DPInput step reading the data from a MeasurementSet.
@@ -131,7 +131,7 @@ namespace LOFAR {
       // Construct the object for the given MS.
       // Parameters are obtained from the parset using the given prefix.
       MultiMSReader (const vector<string>& msNames,
-                     const ParameterSet&, const string& prefix);
+                     const ParSet&, const string& prefix);
 
       virtual ~MultiMSReader();
 
@@ -155,24 +155,29 @@ namespace LOFAR {
       virtual void showTimings (std::ostream&, double duration) const;
 
       // Read the UVW at the given row numbers.
-      virtual void getUVW (const casa::RefRows& rowNrs,
-                           double time,
-                           DPBuffer& buf);
+      virtual casa::Matrix<double> getUVW (const casa::RefRows& rowNrs);
 
       // Read the weights at the given row numbers.
-      virtual void getWeights (const casa::RefRows& rowNrs,
-                               DPBuffer& buf);
+      virtual casa::Cube<float> getWeights (const casa::RefRows& rowNrs,
+                                            const DPBuffer& buf);
 
       // Read the FullRes flags (LOFAR_FULL_RES_FLAG) at the given row numbers.
       // It returns a 3-dim array [norigchan, ntimeavg, nbaseline].
-      // If undefined, false is returned.
-      virtual bool getFullResFlags (const casa::RefRows& rowNrs,
-                                    DPBuffer& buf);
+      // If undefined, an empty array is returned.
+      virtual casa::Cube<bool> getFullResFlags (const casa::RefRows& rowNrs);
+
+      // Read the given data column at the given row numbers.
+      virtual casa::Cube<casa::Complex> getData (const casa::String& columnName,
+                                                 const casa::RefRows& rowNrs);
 
       // Tell if the visibility data are to be read.
       virtual void setReadVisData (bool readVisData);
 
     private:
+      // Combine all cubes in the vector to a single one.
+      void combineFullResFlags (const vector<casa::Cube<bool> >& vec,
+                                casa::Cube<bool>& flags) const;
+
       // Handle the info for all bands.
       void handleBands();
 
@@ -189,10 +194,9 @@ namespace LOFAR {
       vector<string>        itsMSNames;
       vector<MSReader*>     itsReaders;   //# same as itsSteps
       vector<DPStep::ShPtr> itsSteps;     //# used for automatic destruction
-      vector<DPBuffer>      itsBuffers;
       uint                  itsFillNChan; //# nr of chans for missing MSs
+      casa::Cube<bool>      itsFullResCube;  //# FullResFlags for missing MSs
       FlagCounter           itsFlagCounter;
-      bool                  itsRegularChannels; // Are resulting channels regularly spaced
     };
 
   } //# end namespace

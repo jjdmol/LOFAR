@@ -72,7 +72,7 @@ def cleanup_db(conn):
     conn.commit()
     cursor.close()
 
-def write_parset(filename, source, freq, ra=0.0, decl=0.0, beam=1.0):
+def write_parset(filename, source, freq, ra=0.0, decl=0.0):
     fil = open(filename, 'w')
     fil.write("""##############################
 # Lofar GSM input parset.    #
@@ -83,6 +83,6 @@ image_date = ???
 frequency = %s # in Hz
 pointing_ra = %s # in degrees
 pointing_decl = %s # in degrees
-beam_size = %s # in degrees
-stokes = I""" % (source, filename, freq, ra, decl, beam))
+beam_size = 1.00 # in degrees
+stokes = I""" % (source, filename, freq, ra, decl))
     fil.close()

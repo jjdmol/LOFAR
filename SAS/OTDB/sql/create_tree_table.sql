@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -32,21 +32,16 @@
 --		operator
 --		campaign
 --
-DROP TABLE IF EXISTS OTDBtree CASCADE;
-DROP SEQUENCE IF EXISTS	OTDBtreeID;
-DROP SEQUENCE IF EXISTS	OTDBgroupID;
-DROP TABLE IF EXISTS StateHistory CASCADE;
-DROP INDEX IF EXISTS otdbtree_treeid_indx;
+DROP TABLE OTDBtree CASCADE;
+DROP SEQUENCE	OTDBtreeID;
+DROP SEQUENCE	OTDBgroupID;
+DROP TABLE StateHistory CASCADE;
+DROP INDEX otdbtree_treeid_indx;
 
-CREATE SEQUENCE	OTDBtreeID START 1;
--- Create a new start number based on current time. To prevent overlap in treeid's
--- The subtraction is to end up with a number of order 100,000 
-SELECT setval('OTDBtreeID',(select (EXTRACT(EPOCH FROM NOW())/60-23000000) :: bigint),false);
-
+CREATE SEQUENCE	OTDBtreeID START 6112;
 CREATE SEQUENCE	OTDBgroupID START 1;
 
 CREATE TABLE OTDBtree (
-    --  $Id$
 	-- required info
 	treeID		INT4			NOT NULL DEFAULT nextval('OTDBtreeID'),
 	momID 		INT4			NOT NULL DEFAULT 0,
@@ -66,13 +61,10 @@ CREATE TABLE OTDBtree (
 	description	TEXT,
 	name		VARCHAR(32),	-- for default templates only
 
-	-- categorisation
+	-- categorisaton
 	processType			VARCHAR(20) DEFAULT '',
 	processSubtype		VARCHAR(50) DEFAULT '',
 	strategy			VARCHAR(30) DEFAULT '',
-
-	-- modifier
-	modificationDate	TIMESTAMP(0) DEFAULT now(),
 
 	-- contraints
 	CONSTRAINT	tree_uniq		UNIQUE (treeID),
@@ -81,7 +73,6 @@ CREATE TABLE OTDBtree (
 ) WITHOUT OIDS;
 
 CREATE OR REPLACE FUNCTION newGroupID()
-    --  $Id$
   RETURNS INT4 AS $$
   BEGIN
    RETURN nextval('OTDBgroupID');
@@ -93,7 +84,6 @@ $$ LANGUAGE plpgsql;
 CREATE INDEX otdbtree_treeid_indx ON otdbtree(treeid);
 
 CREATE TABLE StateHistory (
-    --  $Id$
 	treeID		INT4			NOT NULL,
 	momID		INT4			NOT NULL,
 	state		INT2			NOT NULL,

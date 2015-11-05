@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -37,7 +37,6 @@
 --
 CREATE OR REPLACE FUNCTION getVTChildren(INT4, TEXT)
   RETURNS SETOF OTDBnode AS '
-    --  $Id$
 	DECLARE
 		vRecord		RECORD;
 
@@ -48,7 +47,7 @@ CREATE OR REPLACE FUNCTION getVTChildren(INT4, TEXT)
 	    SELECT t.nodeid,
 			   t.parentid, 
 			   t.originid,
-			   t.name::VARCHAR(150),
+			   t.name, 
 			   t.index, 
 			   t.leaf,
 			   t.instances,

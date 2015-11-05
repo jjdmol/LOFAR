@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -41,7 +41,6 @@ using namespace std;
 namespace LOFAR {
 	using namespace APLCommon;
 	using namespace GCF::TM;
-	using namespace Controller_Protocol;
 	namespace Test {
 	
 //
@@ -553,9 +552,7 @@ void ControllerMenu::_doStartMenu()
 	cout << "Its name has the format " << LOFAR_SHARE_LOCATION 
 	     << "/Observation<nr>." << endl;
 	string	command("ls -1 " LOFAR_SHARE_LOCATION "/Observation[0-9]*");
-	if (system(command.c_str()) != 0) {
-		cout << "Command '" << command << "' failed!" << endl;
-	}
+	system(command.c_str());
 
 	int32	obsnr(-1);
 	while (obsnr < 0) {

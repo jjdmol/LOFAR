@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -84,7 +84,7 @@ namespace LOFAR {
       /**
        * Setup an appropriate UDP/IP header
        */
-      void setup_udpip_header(uint32 l_srcip, uint32 l_dstip, uint16 l_dstport);
+      void setup_udpip_header(uint32 l_srcip, uint32 l_dstip);
 
       /**
        * Compute the 16-bit 1-complements checksum for the IP header.

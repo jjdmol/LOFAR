@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -22,49 +22,6 @@
 --  $Id$
 --
 
--- exportIDs(treeID, prefixLen)
---
--- Return all the IDs that are attached to this tree (sas/mom/origin)
---
--- Authorisation: none
---
--- Tables: 	otdbtree	read
---
--- Types:	none
---
-CREATE OR REPLACE FUNCTION exportIDs(INT4, INT4)
-  RETURNS TEXT AS $$
-    --  $Id$
-	DECLARE
-		vResult			    TEXT := '';
-		vPrefix     		TEXT;
-		vTreeID		 		OTDBtree.treeID%TYPE;
-		vMoMID				OTDBtree.momID%TYPE;
-		vOriginID			OTDBtree.originID%TYPE;
-		aTreeID				ALIAS FOR $1;
-		aPrefixLen			ALIAS FOR $2;
-
-	BEGIN
-		-- get processInfo
-		SELECT	treeid, momid, originid
-		INTO	vTreeID, vMoMID, vOriginID
-		FROM	OTDBtree
-		WHERE	treeID = aTreeID;
-		IF NOT FOUND THEN
-		  RAISE EXCEPTION 'Tree % does not exist', aTreeID;
-		END IF;
-
-		SELECT substr(name, aPrefixLen)
-		INTO   vPrefix
-		FROM   getVHitemList(aTreeID, '%.Observation');
-		vResult := vResult || vPrefix || '.otdbID='    || vTreeID   || chr(10);
-		vResult := vResult || vPrefix || '.momID='     || vMoMID    || chr(10);
-		vResult := vResult || vPrefix || '.originID='  || vOriginID || chr(10);
-
-		RETURN vResult;
-	END;
-$$ LANGUAGE plpgsql;
-
 --
 -- recursive helper function
 -- fullTemplateNodeName (treeID, nodeID, lastPart)
@@ -79,7 +36,6 @@ $$ LANGUAGE plpgsql;
 --
 CREATE OR REPLACE FUNCTION fullTemplateNodeName(INT4, INT4, TEXT)
   RETURNS TEXT AS $$
-    --  $Id$
 	DECLARE
 	  vResult		TEXT;
 	  vName			VICtemplate.name%TYPE;
@@ -117,7 +73,6 @@ $$ LANGUAGE plpgsql;
 --
 CREATE OR REPLACE FUNCTION exportTemplateSubTree(INT4, INT4, TEXT)
   RETURNS TEXT AS $$
-    --  $Id$
 	DECLARE
 	  vResult		TEXT := '';
 	  vRow			RECORD;
@@ -175,7 +130,6 @@ $$ LANGUAGE plpgsql;
 --
 CREATE OR REPLACE FUNCTION exportVICSubTree(INT4, INT4, INT4)
   RETURNS TEXT AS $$
-    --  $Id$
 	DECLARE
 	  vResult		TEXT := '';
 	  vRow			RECORD;
@@ -224,7 +178,6 @@ $$ LANGUAGE plpgsql;
 --
 CREATE OR REPLACE FUNCTION exportPICSubTree(INT4, INT4, INT4)
   RETURNS TEXT AS $$
-    --  $Id$
 	DECLARE
 	  vResult		TEXT := '';
 	  vRow			RECORD;
@@ -271,7 +224,6 @@ $$ LANGUAGE plpgsql;
 --
 CREATE OR REPLACE FUNCTION exportTree(INT4, INT4, INT4)
   RETURNS TEXT AS $$
-    --  $Id$
 	DECLARE
 		vFunction		INT2 := 1;
 		vIsAuth			BOOLEAN;
@@ -331,7 +283,7 @@ CREATE OR REPLACE FUNCTION exportTree(INT4, INT4, INT4)
 		  vResult := vResult || exportPICSubTree($2, $3, vPrefixLen+2);
 		ELSE
 		  IF vIsVicTree THEN
-		    vResult := vResult || exportVICSubTree($2, $3, vPrefixLen+2) || exportProcessType($2, vPrefixLen+2) || exportCampaign($2, vPrefixLen+2) || exportIDs($2, vPrefixLen+2);
+		    vResult := vResult || exportVICSubTree($2, $3, vPrefixLen+2) || exportProcessType($2, vPrefixLen+2) || exportCampaign($2, vPrefixLen+2);
 		  ELSE
 			vResult := vResult || exportTemplateSubTree($2, $3, '');
 		  END IF;

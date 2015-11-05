@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -25,12 +25,12 @@
 
 -- creates the OTDB event and action tables
 
-DROP TABLE IF EXISTS OTDBevent    CASCADE;
-DROP TABLE IF EXISTS OTDBaction   CASCADE;
-DROP TABLE IF EXISTS eventStatus  CASCADE;
-DROP TABLE IF EXISTS actionStatus CASCADE;
-DROP SEQUENCE IF EXISTS	OTDBeventID;
-DROP SEQUENCE IF EXISTS	OTDBactionID;
+DROP TABLE OTDBevent    CASCADE;
+DROP TABLE OTDBaction   CASCADE;
+DROP TABLE eventStatus  CASCADE;
+DROP TABLE actionStatus CASCADE;
+DROP SEQUENCE	OTDBeventID;
+DROP SEQUENCE	OTDBactionID;
 
 
 --
@@ -42,7 +42,6 @@ DROP SEQUENCE IF EXISTS	OTDBactionID;
 -- TODO: Check if table contents is complete
 --
 CREATE TABLE eventStatus (
-    --  $Id$
 	status		INT2			NOT NULL,
 	name		VARCHAR(20)		NOT NULL,
 
@@ -65,7 +64,6 @@ INSERT INTO eventStatus VALUES ( 32, 'maintenance');
 -- TODO: Check if table contents is complete
 --
 CREATE TABLE actionStatus (
-    --  $Id$
 	status		INT2			NOT NULL,
 	name		VARCHAR(20)		NOT NULL,
 
@@ -87,7 +85,6 @@ INSERT INTO actionStatus VALUES ( 32, 'closed');
 CREATE SEQUENCE	OTDBeventID;
 
 CREATE TABLE OTDBevent (
-    --  $Id$
 	eventID		INT4			NOT NULL DEFAULT nextval('OTDBeventID'),
 	nodename	VARCHAR(80)		NOT NULL,
 	status		INT2			NOT NULL REFERENCES eventStatus(status),
@@ -108,7 +105,6 @@ CREATE TABLE OTDBevent (
 CREATE SEQUENCE	OTDBactionID;
 
 CREATE TABLE OTDBaction (
-    --  $Id$
 	actionID	INT4			NOT NULL DEFAULT nextval('OTDBactionID'),
 	eventID		INT4			NOT NULL REFERENCES OTDBevent(eventID),
 	userID		INT4			NOT NULL REFERENCES OTDBuser(userID),

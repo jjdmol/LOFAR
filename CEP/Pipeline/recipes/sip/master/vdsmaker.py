@@ -15,7 +15,7 @@ from lofarpipe.support.utilities import create_directory
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.data_map import DataMap
+from lofarpipe.support.group_data import load_data_map
 from lofarpipe.support.pipelinelogging import log_process_output
 
 class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
@@ -74,41 +74,35 @@ class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
         # 1. Load data from disk create output files
         args = self.inputs['args']
         self.logger.debug("Loading input-data mapfile: %s" % args[0])
-        data = DataMap.load(args[0])
-
-        # Skip items in `data` that have 'skip' set to True
-        data.iterator = DataMap.SkipIterator
+        data = load_data_map(args[0])
 
         # Create output vds names
         vdsnames = [
             os.path.join(
-                self.inputs['directory'], os.path.basename(item.file) + '.vds'
-            ) for item in data
+                self.inputs['directory'], os.path.basename(x[1]) + '.vds'
+            ) for x in data
         ]
 
         # *********************************************************************
         # 2. Call vdsmaker 
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
         jobs = []
-        for inp, vdsfile in zip(data, vdsnames):
+        for host, infile, outfile in (x + (y,) for x, y in zip(data, vdsnames)):
             jobs.append(
                 ComputeJob(
-                    inp.host, command,
+                    host, command,
                     arguments=[
-                        inp.file,
+                        infile,
                         self.config.get('cluster', 'clusterdesc'),
-                        vdsfile,
+                        outfile,
                         self.inputs['makevds']
                     ]
                 )
             )
         self._schedule_jobs(jobs, max_per_node=self.inputs['nproc'])
-        vdsnames = [
-            vds for vds, job in zip(vdsnames, jobs) 
-            if job.results['returncode'] == 0
-        ]
-        if not vdsnames:
-            self.logger.error("All makevds processes failed. Bailing out!")
+
+        if self.error.isSet():
+            self.logger.warn("Failed vdsmaker process detected")
             return 1
 
         # *********************************************************************
