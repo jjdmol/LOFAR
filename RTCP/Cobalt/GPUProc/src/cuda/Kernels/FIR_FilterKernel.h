@@ -33,37 +33,23 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    class FIR_FilterKernel : public CompiledKernel
+    class FIR_FilterKernel : public Kernel
     {
     public:
       static std::string theirSourceFile;
       static std::string theirFunction;
 
-      enum BufferType
-      {
-        INPUT_DATA,
-        OUTPUT_DATA,
-        FILTER_WEIGHTS,
-        HISTORY_DATA
-      };
-
       // Parameters that must be passed to the constructor of the
       // FIR_FilterKernel class.
       struct Parameters : Kernel::Parameters
       {
-        Parameters(const Parset& ps, unsigned nrSTABs, bool inputIsStationData, unsigned nrSubbands, unsigned nrChannels, float scaleFactor, const std::string &name = "FIR");
+        Parameters(const Parset& ps);
+        unsigned nrBitsPerSample;
+        unsigned nrBytesPerComplexSample;
 
         // The number of stations or TABs to filter. The FIR filter will
         // deal with either in the same way.
         unsigned nrSTABs;
-
-        unsigned nrBitsPerSample;
-        unsigned nrBytesPerComplexSample() const;
-
-        unsigned nrChannels;
-        unsigned nrSamplesPerChannel;
-        unsigned nrSamplesPerSubband() const;
-
 
         // The number of subbands \e this kernel instance will process,
         // typically equal to \c nrSubbandsPerSubbandProc.
@@ -74,20 +60,28 @@ namespace LOFAR
 
         // The number of history samples used for each block
         unsigned nrHistorySamples() const;
+      };
 
-        // Additional scale factor (e.g. for FFT normalization).
-        // Derived differently from nrChannelsPerSubband for correlation
-        // and beamforming, so must be passed into this class.
-        float scaleFactor;
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA,
+        FILTER_WEIGHTS,
+        HISTORY_DATA
+      };
 
-        // If true, we'll read integers in the order as they're coming from the
-        // stations: intXX[stab][sample][pol]
-        //
-        // If false, we'll read floats in the order produced by the beam-former
-        // pipeline: float[stab][pol][sample]
-        bool inputIsStationData;
-
-        size_t bufferSize(FIR_FilterKernel::BufferType bufferType) const;
+      // Buffers that must be passed to the constructor of the FIR_FilterKernel
+      // class.
+      struct Buffers : Kernel::Buffers
+      {
+        Buffers(const gpu::DeviceMemory& in, 
+                const gpu::DeviceMemory& out,
+                const gpu::DeviceMemory& fw,
+                const gpu::DeviceMemory& hs) :
+          Kernel::Buffers(in, out), filterWeights(fw), historySamples(hs)
+        {}
+        gpu::DeviceMemory filterWeights;
+        gpu::DeviceMemory historySamples;
       };
 
       FIR_FilterKernel(const gpu::Stream& stream,
@@ -96,6 +90,7 @@ namespace LOFAR
                        const Parameters& param);
 
       void enqueue(const BlockID &blockId,
+                   PerformanceCounter &counter,
                    unsigned subbandIdx);
 
       // Put the historyFlags[subbandIdx] in front of the given inputFlags,
@@ -107,12 +102,6 @@ namespace LOFAR
       // The Kernel parameters as given to the constructor
       const Parameters params;
 
-      // The FIR filter weights
-      gpu::DeviceMemory filterWeights;
-
-      // The history samples
-      gpu::DeviceMemory historySamples;
-
       // The flags of the history samples.
       //
       // Dimensions: [nrSubbands][nrStations]
@@ -120,6 +109,9 @@ namespace LOFAR
     };
 
     //# --------  Template specializations for KernelFactory  -------- #//
+
+    template<> size_t
+    KernelFactory<FIR_FilterKernel>::bufferSize(BufferType bufferType) const;
 
     template<> CompileDefinitions
     KernelFactory<FIR_FilterKernel>::compileDefinitions() const;

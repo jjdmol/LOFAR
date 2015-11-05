@@ -37,7 +37,7 @@ namespace LOFAR
     :
       from(from),
       to(to),
-      thread(this, &SysInfoLogger::mainLoop, "SysInfoLogger")
+      thread(this, &SysInfoLogger::mainLoop)
     {
     }
 
@@ -60,8 +60,6 @@ namespace LOFAR
         // nr of UDP packets received but triggered an error (likely, we failed
         // to fetch it from the kernel in time)
         int inerror;
-
-        stats(): noport(0), inerror(0) {}
       };
 
       struct stats old_stats;

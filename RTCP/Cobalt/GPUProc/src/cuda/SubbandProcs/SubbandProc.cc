@@ -21,123 +21,44 @@
 #include <lofar_config.h>
 
 #include "SubbandProc.h"
-#include "KernelFactories.h"
 
-#include <GPUProc/global_defines.h>
-#include <GPUProc/gpu_wrapper.h>
-
-#include <CoInterface/Parset.h>
-#include <CoInterface/Align.h>
-
-#include <ApplCommon/PosixTime.h>
 #include <Common/LofarLogger.h>
 
-#include <iomanip>
+#include <GPUProc/global_defines.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    SubbandProc::SubbandProc(
-      const Parset &ps,
-      gpu::Context &context,
-      KernelFactories &factories,
-      size_t nrSubbandsPerSubbandProc)
+    SubbandProc::SubbandProc(const Parset &ps, gpu::Context &context, size_t nrSubbandsPerSubbandProc)
     :
-      inputPool("SubbandProc::inputPool", ps.settings.realTime),
-      processPool("SubbandProc::processPool", ps.settings.realTime),
-      outputPool("SubbandProc::outputPool", ps.settings.realTime),
-
       ps(ps),
       nrSubbandsPerSubbandProc(nrSubbandsPerSubbandProc),
-      queue(gpu::Stream(context)),
-      prevBlock(-1),
-      prevSAP(-1),
-      totalCounter(context, "total"),
-      inputCounter(context, "input"),
-      processCPUTimer("processCPU", ps.settings.blockDuration() / nrSubbandsPerSubbandProc, true, true)
+      queue(gpu::Stream(context))
     {
-      // See doc/bf-pipeline.txt
-      size_t devA_size = 0;
-      size_t devB_size = 0;
-
-      if (factories.correlator) {
-        CorrelatorStep::Factories &cf = *factories.correlator;
-
-        devA_size = std::max(devA_size,
-          cf.firFilter ? cf.firFilter->bufferSize(FIR_FilterKernel::INPUT_DATA)
-                       : cf.delayAndBandPass.bufferSize(DelayAndBandPassKernel::INPUT_DATA));
-        devB_size = std::max(devB_size,
-                      cf.correlator.bufferSize(CorrelatorKernel::INPUT_DATA));
-      }
-
-      if (factories.preprocessing) {
-        devA_size = std::max(devA_size,
-          factories.preprocessing->intToFloat.bufferSize(IntToFloatKernel::OUTPUT_DATA));
-        devB_size = std::max(devB_size,
-          factories.preprocessing->intToFloat.bufferSize(IntToFloatKernel::OUTPUT_DATA));
-      }
-
-      if (factories.incoherentStokes) {
-        ASSERT(factories.preprocessing);
-
-        /* incoherentStokes uses devA and devB, but the sizes provided b the preprocessing
-           pipeline are already sufficient. */
-      }
-
-      // NOTE: For an explanation of the different buffers being used, please refer
-      // to the document bf-pipeline.txt in the GPUProc/doc directory.
-      devA.reset(new gpu::DeviceMemory(context, devA_size));
-      devB.reset(new gpu::DeviceMemory(context, devB_size));
-
-      //################################################
-      // Create objects containing the kernel and device buffers
-
-      if (factories.correlator) {
-        correlatorStep = std::auto_ptr<CorrelatorStep>(
-          new CorrelatorStep(ps, queue, context, *factories.correlator,
-          devA, devB, nrSubbandsPerSubbandProc));
-      }
-
-      if (factories.preprocessing) {
-        preprocessingStep = std::auto_ptr<BeamFormerPreprocessingStep>(
-          new BeamFormerPreprocessingStep(ps, queue, context, *factories.preprocessing, 
-          devA, devB));
-      }
-
-      if (factories.coherentStokes) {
-        coherentStep = std::auto_ptr<BeamFormerCoherentStep>(
-          new BeamFormerCoherentStep(ps, queue, context, *factories.coherentStokes,
-          devB));
-      }
-
-      if (factories.incoherentStokes) {
-        incoherentStep = std::auto_ptr<BeamFormerIncoherentStep>(
-          new BeamFormerIncoherentStep(ps, queue, context, *factories.incoherentStokes, 
-              devA, devB));
-      }
-
-
-      LOG_INFO_STR("Pipeline configuration: "
-        << (correlatorStep.get() ?    "[correlator] " : "")
-        << (preprocessingStep.get() ? "[bf preproc] " : "")
-        << (coherentStep.get() ?      "[coh stokes] " : "")
-        << (incoherentStep.get() ?    "[incoh stokes] " : "")
-      );
-
       // put enough objects in the inputPool to operate
       //
       // At least 3 items are needed for a smooth Pool operation.
       size_t nrInputDatas = std::max(3UL, 2 * nrSubbandsPerSubbandProc);
       for (size_t i = 0; i < nrInputDatas; ++i) {
-        inputPool.free.append(new SubbandProcInputData(ps, context), false);
+        inputPool.free.append(new SubbandProcInputData(
+                ps.nrBeams(),
+                ps.nrStations(),
+                ps.settings.nrPolarisations,
+                ps.settings.beamFormer.maxNrTABsPerSAP(),
+                ps.nrSamplesPerSubband(),
+                ps.nrBytesPerComplexSample(),
+                context));
       }
-      
-      // put enough objects in the outputPool to operate
-      for (size_t i = 0; i < nrOutputElements(); ++i)
-      {
-        outputPool.free.append(new SubbandProcOutputData(ps, context));
-      }
+    }
+
+    SubbandProc::~SubbandProc()
+    {
+    }
+
+    void SubbandProc::addTimer(const std::string &name)
+    {
+      timers[name] = new NSTimer(name, false, false);
     }
 
 
@@ -145,102 +66,146 @@ namespace LOFAR
     {
       /*
        * Output elements can get stuck in:
-       *   process()                1 element
        *   Best-effort queue:       3 elements
-       *   In flight to BE queue:   1 element
        *   In flight to outputProc: 1 element
        *
-       * which means we'll need at least 7 elements
+       * which means we'll need at least 5 elements
        * in the pool to get a smooth operation.
        */
-      return 7 * nrSubbandsPerSubbandProc;
+      return 5 * nrSubbandsPerSubbandProc;
     }
 
 
-    void SubbandProc::processSubband( SubbandProcInputData &input,
-      SubbandProcOutputData &output)
+    void SubbandProcInputData::applyMetaData(const Parset &ps,
+                                           unsigned station, unsigned SAP,
+                                           const SubbandMetaData &metaData)
     {
-      //*******************************************************************
-      // calculate some variables depending on the input subband
-      size_t block = input.blockID.block;
-      unsigned SAP = ps.settings.subbands[input.blockID.globalSubbandIdx].SAP;
+      // extract and apply the flags
+      inputFlags[station] = metaData.flags;
 
-      totalCounter.recordStart(queue);
+      flagInputSamples(station, metaData);
 
-      //****************************************
-      // Send inputs to GPU
-      queue.writeBuffer(*devA, input.inputSamples, inputCounter, true);
+      // extract and assign the delays for the station beams
 
-      // Some additional buffers
-      // Only upload delays if they changed w.r.t. the previous subband.
-      if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) {
-        if (correlatorStep.get()) {
-          correlatorStep->writeInput(input);
-        }
+      // X polarisation
+      delaysAtBegin[SAP][station][0]  = ps.settings.stations[station].delay.x + metaData.stationBeam.delayAtBegin;
+      delaysAfterEnd[SAP][station][0] = ps.settings.stations[station].delay.x + metaData.stationBeam.delayAfterEnd;
+      phase0s[station][0]             = ps.settings.stations[station].phase0.x;
 
-        if (preprocessingStep.get()) {
-          preprocessingStep->writeInput(input);
-        }
+      // Y polarisation
+      delaysAtBegin[SAP][station][1]  = ps.settings.stations[station].delay.y + metaData.stationBeam.delayAtBegin;
+      delaysAfterEnd[SAP][station][1] = ps.settings.stations[station].delay.y + metaData.stationBeam.delayAfterEnd;
+      phase0s[station][1]             = ps.settings.stations[station].phase0.y;
 
-        if (coherentStep.get()) {
-          coherentStep->writeInput(input);
-        }
 
-        prevSAP = SAP;
-        prevBlock = block;
-      }
-
-      // ************************************************
-      // Start the GPU processing
-
-      if (correlatorStep.get()) {
-        correlatorStep->process(input);
-        correlatorStep->readOutput(output);
-      }
-
-      if (preprocessingStep.get()) {
-        preprocessingStep->process(input);
-      }
-
-      if (coherentStep.get())
+      if (ps.settings.beamFormer.enabled)
       {
-        coherentStep->process(input);
-        coherentStep->readOutput(output);
+        for (unsigned tab = 0; tab < metaData.TABs.size(); tab++)
+        {
+          // we already compensated for the delay for the first beam
+          double compensatedDelay = (metaData.stationBeam.delayAfterEnd +
+                                     metaData.stationBeam.delayAtBegin) * 0.5;
+
+          // subtract the delay that was already compensated for
+          tabDelays[SAP][station][tab] = (metaData.TABs[tab].delayAtBegin +
+                                          metaData.TABs[tab].delayAfterEnd) * 0.5 -
+                                         compensatedDelay;
+        }
       }
-
-      if (incoherentStep.get())
-      {
-        incoherentStep->process(input);
-        incoherentStep->readOutput(output);
-      }
-
-      totalCounter.recordStop(queue);
-
-      // ************************************************
-      // Do CPU computations while the GPU is working
-
-      processCPUTimer.start();
-
-      if (correlatorStep.get()) {
-        correlatorStep->processCPU(input, output);
-      }
-
-      processCPUTimer.stop();
-
-      // Synchronise to assure that all the work in the data is done
-      queue.synchronize();
     }
 
 
-    void SubbandProc::postprocessSubband(SubbandProcOutputData &output)
+    // flag the input samples.
+    void SubbandProcInputData::flagInputSamples(unsigned station,
+                                              const SubbandMetaData& metaData)
     {
-      if (correlatorStep.get()) {
-        output.emit_correlatedData = correlatorStep->postprocessSubband(output);
-      } else {
-        output.emit_correlatedData = false;
+
+      // Get the size of a sample in bytes.
+      size_t sizeof_sample = sizeof *inputSamples.origin();
+
+      // Calculate the number elements to skip when striding over the second
+      // dimension of inputSamples.
+      size_t stride = inputSamples[station][0].num_elements();
+
+      // Zero the bytes in the input data for the flagged ranges.
+      for(SparseSet<unsigned>::const_iterator it = metaData.flags.getRanges().begin();
+        it != metaData.flags.getRanges().end(); ++it)
+      {
+        void *offset = inputSamples[station][it->begin].origin();
+        size_t size = stride * (it->end - it->begin) * sizeof_sample;
+        memset(offset, 0, size);
+      }
+    }
+
+
+    // Get the log2 of the supplied number
+    // TODO: move this into a util/helper function/file (just like CorrelatorSubbandProc.cc::baseline() and Align.h::powerOfTwo(),nextPowerOfTwo())
+    unsigned SubbandProc::Flagger::log2(unsigned n)
+    {
+      ASSERT(powerOfTwo(n));
+
+      unsigned log;
+      for (log = 0; 1U << log != n; log ++)
+        {;} // do nothing, the creation of the log is a side effect of the for loop
+
+      //Alternative solution snipped:
+      //int targetlevel = 0;
+      //while (index >>= 1) ++targetlevel; 
+      return log;
+    }
+
+    void SubbandProc::Flagger::convertFlagsToChannelFlags(Parset const &parset,
+      MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
+      MultiDimArray<SparseSet<unsigned>, 2>& flagsPerChannel)
+    {
+      unsigned numberOfChannels = parset.nrChannelsPerSubband();
+      unsigned log2NrChannels = log2(numberOfChannels);
+      //Convert the flags per sample to flags per channel
+      for (unsigned station = 0; station < parset.nrStations(); station ++) 
+      {
+        // get the flag ranges
+        const SparseSet<unsigned>::Ranges &ranges = inputFlags[station].getRanges();
+        for (SparseSet<unsigned>::const_iterator it = ranges.begin();
+          it != ranges.end(); it ++) 
+        {
+          unsigned begin_idx;
+          unsigned end_idx;
+          if (numberOfChannels == 1)
+          {
+            // do nothing, just take the ranges as supplied
+            begin_idx = it->begin; 
+            end_idx = std::min(parset.nrSamplesPerChannel(), it->end );
+          }
+          else
+          {
+            // Never flag before the start of the time range               
+            // use bitshift to divide to the number of channels. 
+            //
+            // NR_TAPS is the width of the filter: they are
+            // absorbed by the FIR and thus should be excluded
+            // from the original flag set.
+            //
+            // At the same time, every sample is affected by
+            // the NR_TAPS-1 samples before it. So, any flagged
+            // sample in the input flags NR_TAPS samples in
+            // the channel.
+            begin_idx = std::max(0, 
+              (signed) (it->begin >> log2NrChannels) - NR_TAPS + 1);
+
+            // The min is needed, because flagging the last input
+            // samples would cause NR_TAPS subsequent samples to
+            // be flagged, which aren't necessarily part of this block.
+            end_idx = std::min(parset.nrSamplesPerChannel() + 1, 
+              ((it->end - 1) >> log2NrChannels) + 1);
+          }
+
+          // Now copy the transformed ranges to the channelflags
+          for (unsigned ch = 0; ch < numberOfChannels; ch++) {
+            flagsPerChannel[ch][station].include(begin_idx, end_idx);
+          }
+        }
       }
     }
   }
 }
-
 

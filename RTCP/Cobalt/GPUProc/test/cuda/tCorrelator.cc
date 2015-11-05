@@ -44,7 +44,7 @@ using LOFAR::Exception;
 
 unsigned NR_STATIONS = 4;
 unsigned NR_CHANNELS = 16;
-unsigned NR_SAMPLES_PER_INTEGRATION = 64;
+unsigned NR_SAMPLES_PER_CHANNEL = 64;
 unsigned NR_POLARIZATIONS = 2;
 unsigned COMPLEX = 2;
 unsigned NR_BASELINES = (NR_STATIONS * (NR_STATIONS + 1) / 2);
@@ -53,11 +53,12 @@ unsigned NR_BASELINES = (NR_STATIONS * (NR_STATIONS + 1) / 2);
 HostMemory runTest(gpu::Context ctx,
                    Stream cuStream,
                    float * inputData,
-                   unsigned nrStationsPerThread)
+                   string function,
+                   unsigned nrStationsPerFunction)
 {
   string kernelFile = "Correlator.cu";
 
-  cout << "\n==== runTest: correlate_" << nrStationsPerThread << "x" << nrStationsPerThread << " ====\n" << endl;
+  cout << "\n==== runTest: function = " << function << " ====\n" << endl;
 
   // Get an instantiation of the default parameters
   CompileDefinitions definitions = CompileDefinitions();
@@ -67,22 +68,20 @@ HostMemory runTest(gpu::Context ctx,
   // Compile to ptx
   // Set op string string pairs to be provided to the compiler as defines
   definitions["NVIDIA_CUDA"] = "";
-  definitions["NR_STATIONS_PER_THREAD"] = lexical_cast<string>(nrStationsPerThread);
   definitions["NR_STATIONS"] = lexical_cast<string>(NR_STATIONS);
   definitions["NR_CHANNELS"] = lexical_cast<string>(NR_CHANNELS);
-  definitions["NR_SAMPLES_PER_INTEGRATION"] = lexical_cast<string>(NR_SAMPLES_PER_INTEGRATION);
-  definitions["NR_INTEGRATIONS"] = "1";
+  definitions["NR_SAMPLES_PER_CHANNEL"] = lexical_cast<string>(NR_SAMPLES_PER_CHANNEL);
   definitions["NR_POLARIZATIONS"] = lexical_cast<string>(NR_POLARIZATIONS);
   definitions["COMPLEX"] = lexical_cast<string>(COMPLEX);
 
   vector<Device> devices(1, ctx.getDevice());
   string ptx = createPTX(kernelFile, definitions, flags, devices);
   gpu::Module module(createModule(ctx, kernelFile, ptx));
-  Function hKernel(module, "correlate");   // c function this no argument overloading
+  Function hKernel(module, function);   // c function this no argument overloading
 
   // *************************************************************
   // Create the data arrays
-  size_t sizeCorrectedData = NR_STATIONS * NR_CHANNELS * NR_SAMPLES_PER_INTEGRATION * NR_POLARIZATIONS * COMPLEX * sizeof(float);
+  size_t sizeCorrectedData = NR_STATIONS * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX * sizeof(float);
   DeviceMemory devCorrectedMemory(ctx, sizeCorrectedData);
   HostMemory rawCorrectedData = getInitializedArray(ctx, sizeCorrectedData, 0.0f);
 
@@ -104,10 +103,10 @@ HostMemory runTest(gpu::Context ctx,
   hKernel.setArg(1, devCorrectedMemory);
 
   // Calculate the number of threads in total and per block
-  unsigned nrFuncStations = ceilDiv(NR_STATIONS, nrStationsPerThread);
+  unsigned nrFuncStations = (NR_STATIONS + nrStationsPerFunction - 1)/nrStationsPerFunction;
   unsigned nrBlocks = nrFuncStations * (nrFuncStations + 1) / 2;
-  unsigned nrPasses = ceilDiv(nrBlocks, 1024U);
-  unsigned nrThreads = ceilDiv(nrBlocks, nrPasses);
+  unsigned nrPasses = (nrBlocks + 1024 - 1) / 1024;
+  unsigned nrThreads = (nrBlocks + nrPasses - 1) / nrPasses;
   unsigned nrUsableChannels = 15;
   Grid globalWorkSize(nrPasses, nrUsableChannels, 1);
   Block localWorkSize(nrThreads, 1,1);
@@ -144,13 +143,24 @@ int main()
   Stream cuStream(ctx);
 
   // Create data members
-  MultiDimArray<float, 3> inputData(boost::extents[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_INTEGRATION * NR_POLARIZATIONS * COMPLEX]);
+  MultiDimArray<float, 3> inputData(boost::extents[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX]);
   MultiDimArray<float, 3> outputData(boost::extents[NR_BASELINES][NR_CHANNELS][NR_POLARIZATIONS * NR_POLARIZATIONS * COMPLEX]);
   float * outputOnHostPtr;
 
-  for (unsigned nrStationsPerThread = 1; nrStationsPerThread <= 4; nrStationsPerThread++)
+  const char * kernel_functions[] = {
+    "correlate", "correlate_2x2", "correlate_3x3", "correlate_4x4"
+  };
+  unsigned kernel_nrstations[] = {
+    1, 2, 3, 4
+  };
+
+  unsigned nr_kernel_functions =
+    sizeof(kernel_functions) / sizeof(kernel_functions[0]);
+
+  for (unsigned func_idx = 0; func_idx < nr_kernel_functions; func_idx++) 
   {
-    cerr << "correlate_" << nrStationsPerThread << "x" << nrStationsPerThread << endl;
+    cerr << kernel_functions[func_idx] << endl;
+    const char* function = kernel_functions[func_idx];
 
     // ***********************************************************
     // Baseline test: If all input data is zero the output should be zero
@@ -158,7 +168,7 @@ int main()
     for (unsigned idx = 0; idx < inputData.num_elements(); ++idx)
       inputData.origin()[idx] = 0;
 
-    HostMemory outputOnHost = runTest(ctx, cuStream, inputData.origin(), nrStationsPerThread);
+    HostMemory outputOnHost = runTest(ctx, cuStream, inputData.origin(), function, kernel_nrstations[func_idx]);
 
     // Copy the output data to a local array
     outputOnHostPtr = outputOnHost.get<float>();
@@ -193,9 +203,9 @@ int main()
     // With zero delay the output should be the highest. A fringe :D
 
     // 1. First create a random channel with a length that is large enough
-    // It should be length NR_SAMPLES_PER_INTEGRATION plus padding at both side to encompass the delay
+    // It should be length NR_SAMPLES_PER_CHANNEL plus padding at both side to encompass the delay
     unsigned padding = 7; // We have 15 channels with content 2 * 7 delays + delay 0
-    unsigned lengthRandomData = NR_SAMPLES_PER_INTEGRATION * NR_POLARIZATIONS * COMPLEX + 2 * (padding + 1) * 4;
+    unsigned lengthRandomData = NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX + 2 * padding * 4;
     vector<float> randomInputData(lengthRandomData);
 
     // Create the random signal, seed random generator with zero
@@ -212,7 +222,7 @@ int main()
       for (unsigned idx_channel = 0; idx_channel < 16; ++idx_channel)
       {
         for (unsigned idx_datapoint = 0;
-             idx_datapoint< NR_SAMPLES_PER_INTEGRATION * NR_POLARIZATIONS * COMPLEX;
+             idx_datapoint< NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX;
              ++idx_datapoint)
         {
           // Pick from the random array the same number of samples
@@ -237,7 +247,7 @@ int main()
     }
 
     // Run the kernel
-    outputOnHost = runTest(ctx, cuStream, inputData.origin(), nrStationsPerThread);
+    outputOnHost = runTest(ctx, cuStream, inputData.origin(), function, kernel_nrstations[func_idx]);
 
     // Copy the output data to a local array
     outputOnHostPtr = outputOnHost.get<float>();
@@ -245,8 +255,7 @@ int main()
       outputData.origin()[idx] = outputOnHostPtr[idx];
 
     // Target value for correlation channel
-    // NOTE: XY and YX polarizations have been swapped (see issue #5640)
-    float targetValues[8] = {36.2332, 0, -7.83033, -3.32368, -7.83033, 3.32368, 42.246, 0};
+    float targetValues[8] = {36.2332, 0, -7.83033, 3.32368, -7.83033, -3.32368, 42.246, 0};
 
     // print the contents of the output array for debugging purpose
     for (unsigned idx_baseline = 0; idx_baseline < NR_BASELINES; ++idx_baseline)
@@ -309,7 +318,7 @@ int main()
     const unsigned baseline10 = 1;
     const unsigned baseline11 = 2;
 
-    outputOnHost = runTest(ctx, cuStream, inputData.origin(), nrStationsPerThread);
+    outputOnHost = runTest(ctx, cuStream, inputData.origin(), function, kernel_nrstations[func_idx]);
 
     // Copy the output data to a local array
     outputOnHostPtr = outputOnHost.get<float>();
@@ -334,15 +343,14 @@ int main()
 
           // We need to find 4 specific indexes with values:
           // THe output location of the values does not change with differing input size
-	  // NOTE: XY and YX polarizations have been swapped (see issue #5640)
           if (idx_baseline == baseline00 &&  idx_channels == 5 && idx == 0)
             expected = 13.0f; // XX, real((2+3i)(2-3i))
           
-          if (idx_baseline == baseline10 &&  idx_channels == 5 && idx == 2)
-            expected = 23.0f; // XY, real((4+5i)(2-3i))
+          if (idx_baseline == baseline10 &&  idx_channels == 5 && idx == 4)
+            expected = 23.0f; // YX, real((4+5i)(2-3i))
 
-          if (idx_baseline == baseline10 &&  idx_channels == 5 && idx == 3)
-            expected = -2.0f; // XY, imag((4+5i)(2-3i))
+          if (idx_baseline == baseline10 &&  idx_channels == 5 && idx == 5)
+            expected = -2.0f; // YX, imag((4+5i)(2-3i))
           
           if (idx_baseline == baseline11 &&  idx_channels == 5 && idx == 6)
             expected = 41.0f; // YY, real((4+5i)(4-5i))
@@ -350,7 +358,6 @@ int main()
           if (sample != expected)
           {
             cerr << "Unexpected number encountered: got " << sample << " but expected " << expected << endl;
-	    return 1;
           }
         }
         cerr << endl;

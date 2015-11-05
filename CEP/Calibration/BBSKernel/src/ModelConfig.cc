@@ -51,32 +51,6 @@ bool ClockConfig::splitClock() const
 }
 
 // -------------------------------------------------------------------------- //
-// - GainConfig implementation                                               - //
-// -------------------------------------------------------------------------- //
-GainConfig::GainConfig(bool phasors)
-    :   itsPhasors(phasors)
-{
-}
-
-bool GainConfig::phasors() const
-{
-    return itsPhasors;
-}
-
-// -------------------------------------------------------------------------- //
-// - DirectionalGainConfig implementation                                   - //
-// -------------------------------------------------------------------------- //
-DirectionalGainConfig::DirectionalGainConfig(bool phasors)
-    :   itsPhasors(phasors)
-{
-}
-
-bool DirectionalGainConfig::phasors() const
-{
-    return itsPhasors;
-}
-
-// -------------------------------------------------------------------------- //
 // - ElevationCutConfig implementation                                      - //
 // -------------------------------------------------------------------------- //
 ElevationCutConfig::ElevationCutConfig()
@@ -133,13 +107,15 @@ const string &BeamConfig::asString(Mode in)
 
 BeamConfig::BeamConfig()
     :   itsMode(DEFAULT),
-        itsUseChannelFreq(false)
+        itsUseChannelFreq(false),
+        itsConjugateAF(false)
 {
 }
 
-BeamConfig::BeamConfig(Mode mode, bool useChannelFreq)
+BeamConfig::BeamConfig(Mode mode, bool useChannelFreq, bool conjugateAF)
     :   itsMode(mode),
-        itsUseChannelFreq(useChannelFreq)
+        itsUseChannelFreq(useChannelFreq),
+        itsConjugateAF(conjugateAF)
 {
 }
 
@@ -151,6 +127,11 @@ BeamConfig::Mode BeamConfig::mode() const
 bool BeamConfig::useChannelFreq() const
 {
     return itsUseChannelFreq;
+}
+
+bool BeamConfig::conjugateAF() const
+{
+    return itsConjugateAF;
 }
 
 // -------------------------------------------------------------------------- //
@@ -237,6 +218,11 @@ ModelConfig::ModelConfig()
     fill(itsModelOptions, itsModelOptions + N_ModelOptions, false);
 }
 
+bool ModelConfig::usePhasors() const
+{
+    return itsModelOptions[PHASORS];
+}
+
 bool ModelConfig::useBandpass() const
 {
     return itsModelOptions[BANDPASS];
@@ -257,11 +243,6 @@ bool ModelConfig::useGain() const
     return itsModelOptions[GAIN];
 }
 
-const GainConfig &ModelConfig::getGainConfig() const
-{
-    return itsConfigGain;
-}
-
 bool ModelConfig::useTEC() const
 {
     return itsModelOptions[TEC];
@@ -280,11 +261,6 @@ bool ModelConfig::useCommonScalarPhase() const
 bool ModelConfig::useDirectionalGain() const
 {
     return itsModelOptions[DIRECTIONAL_GAIN];
-}
-
-const DirectionalGainConfig &ModelConfig::getDirectionalGainConfig() const
-{
-    return itsConfigDirectionalGain;
 }
 
 bool ModelConfig::useElevationCut() const
@@ -352,6 +328,11 @@ bool ModelConfig::useCache() const
     return itsModelOptions[CACHE];
 }
 
+void ModelConfig::setPhasors(bool value)
+{
+    itsModelOptions[PHASORS] = value;
+}
+
 void ModelConfig::setBandpass(bool value)
 {
     itsModelOptions[BANDPASS] = value;
@@ -369,16 +350,9 @@ void ModelConfig::clearClockConfig()
     itsModelOptions[CLOCK] = false;
 }
 
-void ModelConfig::setGainConfig(const GainConfig &config)
+void ModelConfig::setGain(bool value)
 {
-    itsModelOptions[GAIN] = true;
-    itsConfigGain = config;
-}
-
-void ModelConfig::clearGainConfig()
-{
-    itsModelOptions[GAIN] = false;
-    itsConfigGain = GainConfig();
+    itsModelOptions[GAIN] = value;
 }
 
 void ModelConfig::setTEC(bool value)
@@ -396,16 +370,9 @@ void ModelConfig::setCommonScalarPhase(bool value)
     itsModelOptions[COMMON_SCALAR_PHASE] = value;
 }
 
-void ModelConfig::setDirectionalGainConfig(const DirectionalGainConfig &config)
+void ModelConfig::setDirectionalGain(bool value)
 {
-    itsModelOptions[DIRECTIONAL_GAIN] = true;
-    itsConfigDirectionalGain = config;
-}
-
-void ModelConfig::clearDirectionalGainConfig()
-{
-    itsModelOptions[DIRECTIONAL_GAIN] = false;
-    itsConfigDirectionalGain = DirectionalGainConfig();
+    itsModelOptions[DIRECTIONAL_GAIN] = value;
 }
 
 void ModelConfig::setElevationCutConfig(const ElevationCutConfig &config)
@@ -501,18 +468,6 @@ ostream &operator<<(ostream &out, const ClockConfig &obj)
     return out;
 }
 
-ostream &operator<<(ostream &out, const GainConfig &obj)
-{
-    out << indent << "Phasors: " << boolalpha << obj.phasors() << noboolalpha;
-    return out;
-}
-
-ostream &operator<<(ostream &out, const DirectionalGainConfig &obj)
-{
-    out << indent << "Phasors: " << boolalpha << obj.phasors() << noboolalpha;
-    return out;
-}
-
 ostream &operator<<(ostream &out, const ElevationCutConfig &obj)
 {
     out << indent << "Threshold: " << obj.threshold() << " (deg)";
@@ -523,7 +478,9 @@ ostream &operator<<(ostream &out, const BeamConfig &obj)
 {
     out << indent << "Mode: " << BeamConfig::asString(obj.mode())
         << endl << indent << "Use channel frequency: " << boolalpha
-        << obj.useChannelFreq() << noboolalpha;
+        << obj.useChannelFreq() << noboolalpha
+        << endl << indent << "Conjugate array factor: " << boolalpha
+        << obj.conjugateAF() << noboolalpha;
     return out;
 }
 
@@ -551,6 +508,8 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
     out << "Model configuration:";
 
     Indent id;
+    out << endl << indent << "Phasors enabled: " << boolalpha
+        << obj.usePhasors() << noboolalpha;
     out << endl << indent << "Bandpass enabled: " << boolalpha
         << obj.useBandpass() << noboolalpha;
     out << endl << indent << "Clock enabled: " << boolalpha
@@ -562,12 +521,6 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
 
     out << endl << indent << "Gain enabled: " << boolalpha
         << obj.useGain() << noboolalpha;
-    if(obj.useGain())
-    {
-        Indent id;
-        out << endl << obj.getGainConfig();
-    }
-
     out << endl << indent << "TEC enabled: " << boolalpha
         << obj.useTEC() << noboolalpha;
     out << endl << indent << "Common rotation enabled: " << boolalpha
@@ -576,11 +529,6 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
         << obj.useCommonScalarPhase() << noboolalpha;
     out << endl << indent << "Direction dependent gain enabled: " << boolalpha
         << obj.useDirectionalGain() << noboolalpha;
-    if(obj.useDirectionalGain())
-    {
-        Indent id;
-        out << endl << obj.getDirectionalGainConfig();
-    }
 
     out << endl << indent << "Elevation cut enabled: " << boolalpha
         << obj.useElevationCut() << noboolalpha;

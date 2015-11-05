@@ -48,16 +48,33 @@ namespace LOFAR
       stationIdx(stationIdx),
       from(from),
       increment(increment),
-      currentTime(from)
+
+      stop(false),
+      // we need an extra entry for the central beam
+      buffer(bufferSize, AllDelays(parset)),
+      head(0),
+      tail(0),
+      bufferFree(bufferSize),
+      bufferUsed(0),
+      delayTimer("delay producer", true, true)
     {
       ASSERTSTR(test(), "Delay compensation engine is broken");
+    }
 
-      init();
+
+    void Delays::start()
+    {
+      thread = new Thread(this, &Delays::mainLoop, "[DelayCompensation] ");
     }
 
 
     Delays::~Delays()
     {
+      ScopedDelayCancellation dc; // Semaphores provide cancellation points
+
+      // trigger mainLoop and force it to stop
+      stop = true;
+      bufferFree.up(nrCalcDelays);
     }
 
 
@@ -68,8 +85,7 @@ namespace LOFAR
           if (parset.settings.beamFormer.enabled) {
             const struct ObservationSettings::BeamFormer::SAP &bfSap = parset.settings.beamFormer.SAPs[sap];
 
-            // Reserve room for coherent TABs only
-            SAPs[sap].TABs.resize(bfSap.nrCoherent);
+            SAPs[sap].TABs.resize(bfSap.TABs.size());
           }
         }
     }
@@ -131,15 +147,21 @@ namespace LOFAR
       ScopedLock lock(casacoreMutex);
       ScopedDelayCancellation dc;
 
+      // We need bufferSize to be a multiple of batchSize to avoid wraparounds in
+      // the middle of the batch calculations. This makes life a lot easier and there is no
+      // need to support other cases.
+
+      ASSERT(bufferSize % nrCalcDelays == 0);
+
       // Set an initial epoch for the frame
       frame.set(MEpoch(toUTC(from), MEpoch::UTC));
 
       // Set the position for the frame.
-      const MVPosition phaseCenter(casa::Vector<Double>(parset.settings.antennaFields[stationIdx].phaseCenter));
+      const MVPosition phaseCenter(parset.settings.stations[stationIdx].phaseCenter);
       frame.set(MPosition(phaseCenter, MPosition::ITRF));
 
       // Cache the difference with CS002LBA
-      const MVPosition pRef(casa::Vector<Double>(parset.settings.delayCompensation.referencePhaseCenter));
+      const MVPosition pRef(parset.settings.delayCompensation.referencePhaseCenter);
       phasePositionDiff = phaseCenter - pRef;
 
       // Set-up the direction cache and conversion engines, using reference direction ITRF.
@@ -204,19 +226,11 @@ namespace LOFAR
           if (parset.settings.beamFormer.enabled) {
             // Convert the TAB directions using the convert engine
             const struct ObservationSettings::BeamFormer::SAP &bfSap = parset.settings.beamFormer.SAPs[sap];
-
-            size_t resultTabIdx = 0;
-
             for (size_t tab = 0; tab < bfSap.TABs.size(); tab++) {
-              const struct ObservationSettings::BeamFormer::TAB &bfTab = bfSap.TABs[tab];
+              const MVDirection dir(sapInfo.direction.angle1 + bfSap.TABs[tab].directionDelta.angle1,
+                                    sapInfo.direction.angle2 + bfSap.TABs[tab].directionDelta.angle2);
 
-              if (!bfTab.coherent)
-                continue;
-
-              const MVDirection dir(bfTab.direction.angle1,
-                                    bfTab.direction.angle2);
-
-              result.SAPs[sap].TABs[resultTabIdx++] = convert(converter, dir);
+              result.SAPs[sap].TABs[tab] = convert(converter, dir);
             }
           }
         }
@@ -252,18 +266,86 @@ namespace LOFAR
 
     double Delays::clockCorrection() const
     {
-      double corr = parset.settings.corrections.clock ? parset.settings.antennaFields[stationIdx].clockCorrection : 0.0;
+      double corr = parset.settings.corrections.clock ? parset.settings.stations[stationIdx].clockCorrection : 0.0;
 
       return corr;
     }
 
 
+    void Delays::mainLoop()
+    {
+      LOG_DEBUG("Delay compensation thread running");
+
+      init();
+
+      // the current time, in samples
+      TimeStamp currentTime = from;
+
+      try {
+        while (!stop) {
+          bufferFree.down(nrCalcDelays);
+
+          delayTimer.start();
+
+          // Calculate nrCalcDelays seconds worth of delays. Technically, we do not have
+          // to calculate that many at the end of the run, but there is no need to
+          // prevent the few excess delays from being calculated.
+
+          {
+            for (size_t i = 0; i < nrCalcDelays; i++) {
+              // Check whether we will store results in a valid place
+              ASSERTSTR(tail < bufferSize, tail << " < " << bufferSize);
+
+              // Calculate the delays and store them in buffer[tail]
+              calcDelays(currentTime, buffer[tail]);
+
+              // Advance time for the next calculation
+              currentTime += increment;
+
+              // Advance to the next result set.
+              // since bufferSize % nrCalcDelays == 0, wrap
+              // around can only occur between runs
+              ++tail;
+            }
+          }
+
+          // check for wrap around for the next run
+          if (tail >= bufferSize)
+            tail = 0;
+
+          delayTimer.stop();
+
+          bufferUsed.up(nrCalcDelays);
+        }
+      } catch (Exception &ex) {
+        // trigger getNextDelays and force it to stop
+        stop = true;
+        bufferUsed.up(1);
+
+        throw;
+      }
+
+      LOG_DEBUG("Delay compensation thread stopped");
+    }
+
+
     void Delays::getNextDelays( AllDelays &result )
     {
-      // Calculate the delays and store them in result
-      calcDelays(currentTime, result);
+      ASSERT(thread);
 
-      currentTime += increment;
+      bufferUsed.down();
+
+      if (stop)
+        THROW(Exception, "Cannot obtain delays -- delay thread stopped running");
+
+      // copy the directions at buffer[head]
+      result = buffer[head];
+
+      // increment the head pointer
+      if (++head == bufferSize)
+        head = 0;
+
+      bufferFree.up();
     }
 
     void Delays::generateMetaData( const AllDelays &delaysAtBegin, const AllDelays &delaysAfterEnd, const vector<size_t> &subbands, vector<SubbandMetaData> &metaDatas, vector<ssize_t> &read_offsets )
@@ -275,17 +357,16 @@ namespace LOFAR
       // correction is done by shifting the block to read by a whole
       // number of samples. Then, in the GPU, the remainder of the delay
       // will be corrected for using a phase shift.
-      size_t nrSAPs = parset.settings.SAPs.size();
-      vector<ssize_t> coarseDelaysSamples(nrSAPs); // [sap], in samples
-      vector<double>  coarseDelaysSeconds(nrSAPs); // [sap], in seconds
-      for (size_t sap = 0; sap < nrSAPs; ++sap) {
+      vector<ssize_t> coarseDelaysSamples(parset.settings.SAPs.size()); // [sap], in samples
+      vector<double>  coarseDelaysSeconds(parset.settings.SAPs.size()); // [sap], in seconds
+      for (size_t sap = 0; sap < parset.nrBeams(); ++sap) {
         double delayAtBegin  = delaysAtBegin.SAPs[sap].SAP.totalDelay();
         double delayAfterEnd = delaysAfterEnd.SAPs[sap].SAP.totalDelay();
 
         // The coarse delay compensation is based on the average delay
         // between begin and end.
-        coarseDelaysSamples[sap] = static_cast<ssize_t>(round(0.5 * (delayAtBegin + delayAfterEnd) * parset.settings.subbandWidth()));
-        coarseDelaysSeconds[sap] = coarseDelaysSamples[sap] / parset.settings.subbandWidth();
+        coarseDelaysSamples[sap] = static_cast<ssize_t>(round(0.5 * (delayAtBegin + delayAfterEnd) * parset.subbandBandwidth()));
+        coarseDelaysSeconds[sap] = coarseDelaysSamples[sap] / parset.subbandBandwidth();
       }
 
       // Compute the offsets at which each subband is read
@@ -308,11 +389,7 @@ namespace LOFAR
         metaDatas[i].stationBeam.delayAtBegin  = delaysAtBegin.SAPs[sap].SAP.totalDelay() - coarseDelay;
         metaDatas[i].stationBeam.delayAfterEnd = delaysAfterEnd.SAPs[sap].SAP.totalDelay() - coarseDelay;
 
-        size_t nrTABs = delaysAtBegin.SAPs[sap].TABs.size();
-
-        metaDatas[i].TABs.resize(nrTABs);
-
-        for (size_t tab = 0; tab < nrTABs; ++tab) {
+        for (size_t tab = 0; tab < metaDatas[i].TABs.size(); ++tab) {
           metaDatas[i].TABs[tab].delayAtBegin  = delaysAtBegin.SAPs[sap].TABs[tab].totalDelay() - coarseDelay;
           metaDatas[i].TABs[tab].delayAfterEnd = delaysAfterEnd.SAPs[sap].TABs[tab].totalDelay() - coarseDelay;
         }

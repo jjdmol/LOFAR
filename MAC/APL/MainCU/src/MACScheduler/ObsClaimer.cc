@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -52,8 +52,6 @@ using namespace boost::posix_time;
 using namespace std;
 
 namespace LOFAR {
-	using namespace DP_Protocol;
-	using namespace CM_Protocol;
 	using namespace APLCommon;
 	namespace MainCU {
 
@@ -99,7 +97,7 @@ ObsClaimer::~ObsClaimer()
 
 }
 
-// -------------------- The only two public function --------------------
+// -------------------- The only public function --------------------
 //
 // prepareObservation(const string&		observationName);
 //
@@ -117,29 +115,6 @@ void ObsClaimer::prepareObservation(const string&		observationName)
 	}	
 	else {
 		LOG_DEBUG_STR("Observation " << observationName << " already in the prepareList with state " << iter->second->state);
-	}
-
-	// Wake up state-machine asap.
-	itsHeartBeat->cancelAllTimers();
-	itsHeartBeat->setTimer(0.0);
-}
-
-//
-// freeObservation(const string&		observationName);
-//
-// Just add the observationname to our freeList and trigger main-loop.
-void ObsClaimer::freeObservation(const string&		observationName)
-{
-	OMiter	iter = itsFreeMap.find(observationName);
-	if (iter == itsFreeMap.end()) {	// new?
-		obsInfo*	oldObs = new obsInfo();
-		oldObs->obsName = observationName;
-		oldObs->state   = OS_NEW;
-		itsFreeMap["LOFAR_ObsSW_"+observationName] = oldObs;
-		LOG_DEBUG_STR("Added observation " << observationName << " to the freeList");
-	}	
-	else {
-		LOG_DEBUG_STR("Observation " << observationName << " already in the freeList with state " << iter->second->state);
 	}
 
 	// Wake up state-machine asap.
@@ -178,16 +153,6 @@ GCFEvent::TResult ObsClaimer::idle_state (GCFEvent& event, GCFPortInterface& por
 					break;	// claim one at the time.
 				}
 				++iter;
-			}
-			if (iter == end) {	// nothing to claim. Something to free?
-				FMiter		FreeIter = itsFreeMap.begin();
-				FMiter		FreeEnd  = itsFreeMap.end();
-				while (FreeIter != FreeEnd) {
-					itsClaimMgrTask->freeObject("Observation", "LOFAR_ObsSW_"+FreeIter->second->obsName);
-					// will not result in an event
-					++FreeIter;
-				}
-				itsFreeMap.clear();
 			}
 		}
 		break;

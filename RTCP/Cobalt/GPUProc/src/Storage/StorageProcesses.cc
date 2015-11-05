@@ -29,10 +29,9 @@
 #include <boost/format.hpp>
 
 #include <Stream/PortBroker.h>
-#include <Stream/SocketStream.h>
 #include <CoInterface/Stream.h>
-#include <CoInterface/FinalMetaData.h>
-#include <BrokenAntennaInfo/FinalMetaDataGatherer.h>
+
+#include "SSH.h"
 
 namespace LOFAR
 {
@@ -58,6 +57,12 @@ namespace LOFAR
     }
 
 
+    ParameterSet StorageProcesses::feedbackLTA() const
+    {
+      return itsFeedbackLTA;
+    }
+
+
     void StorageProcesses::start()
     {
       const vector<string> &hostnames = itsParset.settings.outputProcHosts;
@@ -68,7 +73,7 @@ namespace LOFAR
 
       // Start all processes
       for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank++) {
-        itsStorageProcesses[rank] = new StorageProcess(itsParset, itsLogPrefix, rank, hostnames[rank]);
+        itsStorageProcesses[rank] = new StorageProcess(itsParset, itsLogPrefix, rank, hostnames[rank], itsFinalMetaData, itsFinalMetaDataAvailable);
         itsStorageProcesses[rank]->start();
       }
     }
@@ -85,6 +90,9 @@ namespace LOFAR
         // stop storage process
         itsStorageProcesses[rank]->stop(deadline_ts);
 
+        // obtain feedback for LTA
+        itsFeedbackLTA.adoptCollection(itsStorageProcesses[rank]->feedbackLTA());
+
         // free the StorageProcess object
         itsStorageProcesses[rank] = 0;
       }
@@ -95,28 +103,76 @@ namespace LOFAR
     }
 
 
-    bool StorageProcesses::forwardFinalMetaData()
+    void StorageProcesses::forwardFinalMetaData( time_t deadline )
     {
-      bool success = true;
-      FinalMetaData finalMetaData;
-      
-      try {
-        finalMetaData = getFinalMetaData(itsParset);
-      } catch(Exception &ex) {
-        // Not having FinalMetaData is FATAL!
-        LOG_FATAL_STR("Cannot obtain FinalMetaData: " << ex.what());
+      struct timespec deadline_ts = { deadline, 0 };
 
-        success = false;
+      Thread thread(this, &StorageProcesses::finalMetaDataThread, itsLogPrefix + "[FinalMetaDataThread] ", 65536);
+
+      thread.cancel(deadline_ts);
+      thread.wait();
+
+      // Notify clients
+      itsFinalMetaDataAvailable.trigger();
+    }
+
+
+    void StorageProcesses::finalMetaDataThread()
+    {
+      std::string hostName = itsParset.getString("Cobalt.FinalMetaDataGatherer.host", "localhost");
+      std::string userName = itsParset.getString("Cobalt.FinalMetaDataGatherer.userName", "");
+      std::string pubKey = itsParset.getString("Cobalt.FinalMetaDataGatherer.sshPublicKey", "");
+      std::string privKey = itsParset.getString("Cobalt.FinalMetaDataGatherer.sshPrivateKey", "");
+      std::string executable = itsParset.getString("Cobalt.FinalMetaDataGatherer.executable", "FinalMetaDataGatherer");
+
+      if (userName == "") {
+        // No username given -- use $USER
+        const char *USER = getenv("USER");
+
+        ASSERTSTR(USER, "$USER not set.");
+
+        userName = USER;
       }
 
-      // Unblock Storage threads, even if we don't have finalMetaData,
-      // in order to complete as much of the operational sequence as possible.
+      if (pubKey == "" && privKey == "") {
+        // No SSH keys given -- try to discover them
 
-      for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank++)
-        itsStorageProcesses[rank]->setFinalMetaData(finalMetaData);
+        char discover_pubkey[1024];
+        char discover_privkey[1024];
 
-      return success;
+        if (discover_ssh_keys(discover_pubkey, sizeof discover_pubkey, discover_privkey, sizeof discover_privkey)) {
+          pubKey = discover_pubkey;
+          privKey = discover_privkey;
+        }
+      }
+
+      std::string commandLine = str(boost::format("%s %d")
+                                    % executable
+                                    % itsParset.observationID()
+                                    );
+
+      // Start the remote process
+      SSHconnection sshconn(itsLogPrefix + "[FinalMetaData] ", hostName, commandLine, userName, pubKey, privKey);
+      sshconn.start();
+
+      // Connect
+      LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] connecting...");
+      std::string resource = getStorageControlDescription(itsParset.observationID(), -1);
+      PortBroker::ClientStream stream(hostName, storageBrokerPort(itsParset.observationID()), resource, 0);
+
+      // Send parset
+      LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] connected -- sending parset");
+      itsParset.write(&stream);
+      LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] sent parset");
+
+      // Receive final meta data
+      itsFinalMetaData.read(stream);
+      LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] obtained final meta data");
+
+      // Wait for or end the remote process
+      sshconn.wait();
     }
+
   }
 }
 

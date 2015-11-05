@@ -58,13 +58,6 @@ void test_simple(Mutex::Type type) {
   {
     ScopedLock sl(mutex);
   }
-
-  {
-    // scoped locking and unlocking should be stackable
-    ScopedLock sl1(mutex, false);
-    ScopedLock sl2(mutex, true);
-    ScopedLock sl3(mutex, false);
-  }
 }
 
 void test_trylock(Mutex::Type type) {

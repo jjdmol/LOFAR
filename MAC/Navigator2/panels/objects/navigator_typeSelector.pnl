@@ -81,11 +81,6 @@ void doAction(string aDP, string anAction) {
       selectedObservation = \"\";
       // fill observations
       updateObsList();
-    } else if (typeSelector.selectedText() == \"Pipelines\") {
-      // empty prior selections
-      selectedPipeline = \"\";
-      // fill pipelines
-      updatePlList();
     } else if (typeSelector.selectedText() == \"Hardware\") {
       // empty prior selections
       selectedHardware = \"\";
@@ -138,15 +133,8 @@ void doHighlight(string dp1,bool aTrigger) {
     
     shape aShape=getShape(\"observationsTree\");
     selectTreeItems(aShape,\"\");
-
-  } else if (itsSelection == \"Pipelines\") {
-    // action asked for highlighting of pipelines so we have to determine
-    // which items in the current selectionlist make use of the components asked for.
-    
-    shape aShape=getShape(\"pipelinesTree\");
-    selectTreeItems(aShape,\"\");
   } else {
-    LOG_DEBUG(\"navigator_typeSelector.pnl:doHighlight|$name illegal call for Highlight: \" + itsSelection);
+    LOG_DEBUG(\"navigator_typeSelector.pnl:doHighlight|$name illegal call for Highlight: \" + tab);
   }
 }
 
@@ -197,7 +185,6 @@ bool            bDoubleClicked  = false;
 bool            connected       = false;
 
 string          selectedObservation=\"\";
-string          selectedPipeline=\"\";
 string          selectedHardware=\"\";
 string          selectedProcess=\"\";
 
@@ -232,26 +219,16 @@ void changeSelection(string str) {
   if (str == \"Observations\" ) {
                 
     observationsTree.visible = true;
-    pipelinesTree.visible = false;
-    hardwareTree.visible    = false;
-    processesTree.visible    = false;			
-  }
-  else if (str == \"Pipelines\" ) {
-                
-    observationsTree.visible = false;
-    pipelinesTree.visible = true;
     hardwareTree.visible    = false;
     processesTree.visible    = false;			
   }
   else if (str == \"Hardware\" ) {
     observationsTree.visible = false;
-    pipelinesTree.visible = false;
     hardwareTree.visible    = true;
     processesTree.visible    = false;			
   }
   else if (str == \"Processes\" ) {
     observationsTree.visible = false;
-    pipelinesTree.visible = false;
     hardwareTree.visible    = false;
     processesTree.visible    = true;			
   }
@@ -265,13 +242,11 @@ void click(string info) {
     
   if (itsSelection == \"Observations\") {
       selectedObservation = info;
-  } else if (itsSelection == \"Pipelines\") {
-      selectedPipeline = info;
-  } else if (itsSelection == \"Hardware\") {
+    } else if (itsSelection == \"Hardware\") {
       selectedHardware = info;
-  } else if (itsSelection == \"Processes\") {
+    } else if (itsSelection == \"Processes\") {
       selectedProcess = info;
-  }     
+    }     
     // check if DBName and :, then strip :
     string aS=strrtrim(info,\":\"); 
     setEvent(aS,\"EventClick\");
@@ -285,8 +260,6 @@ void dblClick(string info) {
   // empty prior selections
   if (itsSelection == \"Observations\") {
     selectedObservation = \"\";
-  } else if (itsSelection == \"Pipeline\") {
-    selectedPipeline = \"\";
   } else if (itsSelection == \"Hardware\") {
     selectedHardware = \"\";
   } else if (itsSelection == \"Processes\") {
@@ -307,7 +280,7 @@ void rClick(string info) {
 
 void updateHWList()
 {
-  delay(0,50);
+  delay(0,100);
   dyn_string list;
   if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\")) {
     dpGet(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\",list);
@@ -339,7 +312,7 @@ void updateHWList()
 
 void updateProcList()
 {
-  delay(0,50);
+  delay(0,100);
   dyn_string list;
   if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\")) {
     dpGet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",list);
@@ -356,7 +329,7 @@ void updateProcList()
     if (spl[1] == \"\" || processesTree.itemExists(spl[1])) {
       processesTree.appendItem(spl[1],spl[3],spl[2]);
       if (processesTree.itemExists(spl[3])) {
-//        processesTree.ensureItemVisible(spl[3]);
+        processesTree.ensureItemVisible(spl[3]);
         processesTree.setIcon(spl[3],0,\"16_empty.gif\");
       }
     }
@@ -370,7 +343,7 @@ void updateProcList()
 
 void updateObsList()
 {
-  delay(0,50);
+  delay(0,100);
   dyn_string list;
   if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".observationsList\")) {
     dpGet(DPNAME_NAVIGATOR + g_navigatorID + \".observationsList\",list);
@@ -398,38 +371,6 @@ void updateObsList()
     setEvent(selectedObservation,\"EventClick\");
   }
 
-}
-
-void updatePlList()
-{
-  delay(0,50);
-  dyn_string list;
-  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".pipelinesList\")) {
-    dpGet(DPNAME_NAVIGATOR + g_navigatorID + \".pipelinesList\",list);
-  } else {
-    LOG_ERROR(\"navigator_typeSelector.pnl:updatePlList|Error retrieving pipelinesList lists \" + getLastError());
-    return;
-  }  
-  LOG_TRACE(\"navigator_typeSelector.pnl:updatePlList|Found Pipelines:\"+list);
-  pipelinesTree.clear();
-  if (dynlen(list) <= 0 || list[1]==\"\") return;
-  for (int i=1; i <=dynlen(list); i++) {
-    // split entries in parent and name
-    dyn_string spl = strsplit(list[i],\",\");
-    if (spl[1] == \"\" || pipelinesTree.itemExists(spl[1])) {
-      pipelinesTree.appendItem(spl[1],spl[3],spl[2]);
-      if (pipelinesTree.itemExists(spl[3])) {
-        pipelinesTree.ensureItemVisible(spl[3]);
-        pipelinesTree.setIcon(spl[3],0,\"16_empty.gif\");
-      }
-    }
-  }
-  if (selectedPipeline != \"\") {
-    LOG_TRACE(\"navigator_typeSelector.pnl:updatePlList|setting selection \" +strsplit(selectedPipeline,\"|\")[2] );
-    pipelinesTree.setSelectedItem(strsplit(selectedPipeline,\"|\")[2],true);
-    setEvent(selectedPipeline,\"EventClick\");
-  }
-
 }" 0
  2
 "CBRef" "1"
@@ -439,35 +380,6 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
-29 12
-"pipelinesTree"
-""
-1 23.93034825870647 87.63688760806916 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
- E E
-17 0 0 0 0 0
-E E E
-0
-1
-LANG:1 9 processes
-
-1
-"allColumnsShowFocus" "bool FALSE"
-1
-LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
-0  10 30 289 429
-10 TreeWidget
-3
-0 "clicked" "(string id, int column)"
-"  click(typeSelector.text+\"|\"+pipelinesTree.parent(pipelinesTree.selectedItem())+\"|\"+pipelinesTree.getText(pipelinesTree.selectedItem(),0));"
-0 "doubleClicked" "(string id, int column)"
-"  dblClick(typeSelector.text+\"|\"+pipelinesTree.parent(pipelinesTree.selectedItem())+\"|\"+pipelinesTree.selectedItem(),0);"
-0 "rightClicked" "(string id, int column)"
-"  rClick(typeSelector.text+\"|\"+pipelinesTree.parent(pipelinesTree.selectedItem())+\"|\"+pipelinesTree.getText(pipelinesTree.selectedItem(),0));"
-"main()
-{
-  pipelinesTree.addColumn(\"Pipelines\");
-  pipelinesTree.setColumnWidth(0,201);
-}" 0
 29 6
 "hardwareTree"
 ""
@@ -584,15 +496,11 @@ LANG:1 0
 1
 LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
 0  8 5 156 32
-4
+3
 1
 LANG:1 12 Observations
 
 1
-1
-LANG:1 9 Pipelines
-
-0
 1
 LANG:1 8 Hardware
 

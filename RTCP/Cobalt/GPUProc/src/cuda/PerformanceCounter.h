@@ -23,7 +23,7 @@
 
 
 #include <GPUProc/gpu_wrapper.h>
-#include <CoInterface/RunningStatistics.h>
+#include <GPUProc/RunningStatistics.h>
 
 namespace LOFAR
 {
@@ -32,17 +32,9 @@ namespace LOFAR
     class PerformanceCounter
     {
     public:
-      PerformanceCounter(const gpu::Context &context, const std::string &name);
-      ~PerformanceCounter();
+      PerformanceCounter(const gpu::Context &context);
 
-      void recordStart(const gpu::Stream &stream);
-      void recordStop(const gpu::Stream &stream);
-
-      // Warning: user must make sure that the counter is not running!
-      RunningStatistics getStats() { logTime(); return stats; }
-
-    private:
-      const std::string name;
+      void logTime();
 
       // Public event: it needs to be inserted into a stream.
       // @{
@@ -50,13 +42,9 @@ namespace LOFAR
       gpu::Event stop;
       // @}
 
-      // Whether we have posted events that still need to be
-      // processed in logTime()
-      bool recording;
-
       RunningStatistics stats;
-
-      void logTime();
+    private:
+      
     };
   }
 }

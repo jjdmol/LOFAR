@@ -21,7 +21,6 @@
 #define HISTOGRAM_TABLES_FORMATTER_H
 
 #include <ms/MeasurementSets/MeasurementSet.h>
-#include <tables/Tables/TableRecord.h>
 
 #include <vector>
 

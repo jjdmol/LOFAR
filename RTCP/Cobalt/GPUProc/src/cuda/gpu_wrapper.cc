@@ -49,17 +49,6 @@
     }                                                                   \
   } while(0)
 
-// Like checkCuCall, but don't emit log lines
-#define checkCuCall_noLog(func)                                               \
-  do {                                                                  \
-    CUresult result = func;                                             \
-    if (result != CUDA_SUCCESS) {                                       \
-      THROW (LOFAR::Cobalt::gpu::CUDAException,                         \
-             # func << ": " << LOFAR::Cobalt::gpu::errorMessage(result)); \
-    }                                                                   \
-  } while(0)
-
-
 LOFAR::Exception::TerminateHandler th(LOFAR::Exception::terminate);
 
 using boost::format;
@@ -216,25 +205,9 @@ namespace LOFAR
       }
 
 
-      Grid::Grid(unsigned int x_, unsigned int y_, unsigned int z_) :
-        x(x_), y(y_), z(z_)
-      {
-      }
-
-      std::ostream& operator<<(std::ostream& os, const Grid& grid)
-      {
-        os << "[" << grid.x << ", " << grid.y << ", " << grid.z << "]";
-        return os;
-      }
-
       Block::Block(unsigned int x_, unsigned int y_, unsigned int z_) :
         x(x_), y(y_), z(z_)
       {
-        // Cannot enforce this as an obj invariant (x, y, z public on purpose),
-        // but intended to trigger bugs early.
-        if (x == 0 || y == 0 || z == 0)
-          THROW(CUDAException, "Block(): block dims must be non-zero: " <<
-                               x << " " << y << " " << z);
       }
 
       std::ostream& operator<<(std::ostream& os, const Block& block)
@@ -243,15 +216,14 @@ namespace LOFAR
         return os;
       }
 
-      ExecConfig::ExecConfig(Grid gr, Block bl, size_t dynShMem) :
-        grid(gr), block(bl), dynSharedMemSize(dynShMem)
+      Grid::Grid(unsigned int x_, unsigned int y_, unsigned int z_) :
+        x(x_), y(y_), z(z_)
       {
       }
 
-      std::ostream& operator<<(std::ostream& os, const ExecConfig& execConfig)
+      std::ostream& operator<<(std::ostream& os, const Grid& grid)
       {
-        os << "{" << execConfig.grid << ", " << execConfig.block <<
-              ", " << execConfig.dynSharedMemSize << "}";
+        os << "[" << grid.x << ", " << grid.y << ", " << grid.z << "]";
         return os;
       }
 
@@ -449,19 +421,19 @@ namespace LOFAR
           checkCuCall(cuCtxDestroy(_context));
         }
 
-        CUdevice getCurrentDevice() const
+        CUdevice getDevice() const
         {
           CUdevice dev;
           checkCuCall(cuCtxGetDevice(&dev));
           return dev;
         }
 
-        void setCurrentCacheConfig(CUfunc_cache config) const
+        void setCacheConfig(CUfunc_cache config) const
         {
           checkCuCall(cuCtxSetCacheConfig(config));
         }
 
-        void setCurrentSharedMemConfig(CUsharedconfig config) const
+        void setSharedMemConfig(CUsharedconfig config) const
         {
 #if CUDA_VERSION >= 4020
           checkCuCall(cuCtxSetSharedMemConfig(config));
@@ -493,21 +465,21 @@ namespace LOFAR
       {
         ScopedCurrentContext scc(*this);
 
-        return Device(_impl->getCurrentDevice());
+        return Device(_impl->getDevice());
       }
 
       void Context::setCacheConfig(CUfunc_cache config) const
       {
         ScopedCurrentContext scc(*this);
 
-        _impl->setCurrentCacheConfig(config);
+        _impl->setCacheConfig(config);
       }
 
       void Context::setSharedMemConfig(CUsharedconfig config) const
       {
         ScopedCurrentContext scc(*this);
 
-        _impl->setCurrentSharedMemConfig(config);
+        _impl->setSharedMemConfig(config);
       }
 
 
@@ -599,7 +571,7 @@ namespace LOFAR
           return _ptr;
         }
 
-        void set(unsigned char uc, size_t n) const
+        void set(unsigned char uc, size_t n)
         {
           ScopedCurrentContext scc(_context);
 
@@ -633,7 +605,7 @@ namespace LOFAR
         return (void *)_impl->get();
       }
 
-      void DeviceMemory::set(unsigned char uc, size_t n) const
+      void DeviceMemory::set(unsigned char uc, size_t n)
       {
         _impl->set(uc, std::min(n, size()));
       }
@@ -830,9 +802,7 @@ namespace LOFAR
           ScopedCurrentContext scc(_context);
 
           float ms;
-
-          checkCuCall_noLog(cuEventElapsedTime(&ms, other, _event));
-
+          checkCuCall(cuEventElapsedTime(&ms, other, _event));
           return ms;
         }
 
@@ -908,13 +878,13 @@ namespace LOFAR
 
         void launchKernel(CUfunction function, unsigned gridX, unsigned gridY,
                           unsigned gridZ, unsigned blockX, unsigned blockY,
-                          unsigned blockZ, unsigned dynSharedMemSize,
+                          unsigned blockZ, unsigned sharedMemBytes,
                           void **parameters)
         {
           ScopedCurrentContext scc(_context);
 
           checkCuCall(cuLaunchKernel(function, gridX, gridY, gridZ, blockX,
-                                     blockY, blockZ, dynSharedMemSize, _stream,
+                                     blockY, blockZ, sharedMemBytes, _stream,
                                      parameters, NULL));
         }
 
@@ -1001,11 +971,18 @@ namespace LOFAR
       }
 
       void Stream::writeBuffer(const DeviceMemory &devMem, const HostMemory &hostMem,
-                         PerformanceCounter &counter, bool synchronous) const
+                         const PerformanceCounter &counter, bool synchronous) const
       {
-        counter.recordStart(*this);
-        writeBuffer(devMem, hostMem, synchronous); 
-        counter.recordStop(*this);
+        if (gpuProfiling)
+        {
+          recordEvent(counter.start);
+          writeBuffer(devMem, hostMem, synchronous); 
+          recordEvent(counter.stop);
+        }
+        else
+        {
+          writeBuffer(devMem, hostMem, synchronous);
+        }
       }
 
       void Stream::copyBuffer(const DeviceMemory &devTarget, 
@@ -1032,12 +1009,19 @@ namespace LOFAR
 
       void Stream::copyBuffer(const DeviceMemory &devTarget, 
                               const DeviceMemory &devSource,
-                              PerformanceCounter &counter,
+                              const PerformanceCounter &counter,
                               bool synchronous) const
       {
-        counter.recordStart(*this);
-        copyBuffer(devTarget, devSource, synchronous); 
-        counter.recordStop(*this);
+        if (gpuProfiling)
+        {
+          recordEvent(counter.start);
+          copyBuffer(devTarget, devSource, synchronous); 
+          recordEvent(counter.stop);
+        }
+        else
+        {
+          copyBuffer(devTarget, devSource, synchronous);
+        }
       }
 
       void Stream::readBuffer(const HostMemory &hostMem, 
@@ -1060,11 +1044,18 @@ namespace LOFAR
       }
 
       void Stream::readBuffer(const HostMemory &hostMem, const DeviceMemory &devMem,
-                        PerformanceCounter &counter, bool synchronous) const
+                        const PerformanceCounter &counter, bool synchronous) const
       {
-        counter.recordStart(*this);
-        readBuffer(hostMem, devMem, synchronous);  
-        counter.recordStop(*this);
+        if (gpuProfiling)
+        {
+          recordEvent(counter.start);
+          readBuffer(hostMem, devMem, synchronous);  
+          recordEvent(counter.stop);
+        }
+        else
+        {
+          writeBuffer(devMem, hostMem, synchronous);
+        }
       }
 
 
@@ -1073,9 +1064,9 @@ namespace LOFAR
       {
         LOG_DEBUG_STR("Launching " << function._name);
 
-        const unsigned dynSharedMemSize = 0; // we don't need this for LOFAR
+        const unsigned dynSharedMemBytes = 0; // we don't need this for LOFAR
         _impl->launchKernel(function._function, grid.x, grid.y, grid.z,
-                            block.x, block.y, block.z, dynSharedMemSize,
+                            block.x, block.y, block.z, dynSharedMemBytes,
                             const_cast<void **>(&function._kernelArgs[0]));
 
         if (force_synchronous) {

@@ -108,7 +108,7 @@ LANG:1 0
 4 24
 "swline1"
 ""
-1 99 0 E E E 1 E 1 E N "_3DText" E N {255,255,255} E E
+1 68 0 E E E 1 E 1 E N "_3DText" E N {255,255,255} E E
  E E
 31 0 0 0 0 0
 E E E
@@ -118,11 +118,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 2 1 E  99 0 99 9
+E E 0 3 1 2 1 E  68 0 68 9
 4 25
 "swline2"
 ""
-1 142 0 E E E 1 E 1 E N "_3DText" E N {255,255,255} E E
+1 126 0 E E E 1 E 1 E N "_3DText" E N {255,255,255} E E
  E E
 32 0 0 0 0 0
 E E E
@@ -132,11 +132,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 2 1 E  142 0 142 9
+E E 0 3 1 2 1 E  126 0 126 9
 4 26
 "swline3"
 ""
-1 192 0 E E E 1 E 1 E N "_3DText" E N {255,255,255} E E
+1 176 0 E E E 1 E 1 E N "_3DText" E N {255,255,255} E E
  E E
 33 0 0 0 0 0
 E E E
@@ -146,11 +146,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 2 1 E  192 0 192 9
+E E 0 3 1 2 1 E  176 0 176 9
 4 27
 "swline4"
 ""
-1 226 0 E E E 1 E 1 E N "_3DText" E N {255,255,255} E E
+1 210 0 E E E 1 E 1 E N "_3DText" E N {255,255,255} E E
  E E
 34 0 0 0 0 0
 E E E
@@ -160,11 +160,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 2 1 E  226 0 226 9
+E E 0 3 1 2 1 E  210 0 210 9
 4 28
 "swline5"
 ""
-1 266 0 E E E 1 E 1 E N "_3DText" E N {255,255,255} E E
+1 250 0 E E E 1 E 1 E N "_3DText" E N {255,255,255} E E
  E E
 35 0 0 0 0 0
 E E E
@@ -174,7 +174,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 2 1 E  266 0 266 9
+E E 0 3 1 2 1 E  250 0 250 9
 4 29
 "swline6"
 ""
@@ -189,10 +189,6 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 3 1 2 1 E  370 0 370 9
-1 37 14 "" 0
-0
-1 38 15 "" 0
-0
 0
 LAYER, 1 
 1
@@ -256,15 +252,5 @@ LANG:1 0
 "objects\\Processes\\SWControler_small.pnl" 300 0 T 30 1 0 1 2 0
 2
 "$name""PythonControl"
-"$station""$station"
-3 14 "PANEL_REF14" -1
-"objects\\Processes\\SWControler_small.pnl" 0 0 T 37 1 0 1 64 0
-2
-"$name""PermSW_Daemons_PVSSGateway"
-"$station""$station"
-3 15 "PANEL_REF15" -1
-"objects\\Processes\\SWControler_small.pnl" 0 0 T 37 1 0 1 80 0
-2
-"$name""PermSW_Daemons_MessageRouter"
 "$station""$station"
 0

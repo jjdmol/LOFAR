@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -79,9 +79,6 @@ class GCFPVDynArr : public GCFPValue
 
 	// add value to the dynarray
 	void push_back(GCFPValue*	newElem) { _values.push_back(newElem); }
-
-	// return number of elements
-	size_t count() const { return(_values.size()); }
  
   private:
     /// @see GCFPValue::unpack()

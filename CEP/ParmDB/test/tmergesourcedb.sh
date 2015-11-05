@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tmergesourcedb
+./runctest.sh tmergesourcedb > tmergesourcedb.log 2>&1

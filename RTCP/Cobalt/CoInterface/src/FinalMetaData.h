@@ -42,11 +42,9 @@ namespace LOFAR
         size_t seqnr;      // RCU/antenna number
         std::string time;  // date time of break
 
-        BrokenRCU() :
-          seqnr(0)
+        BrokenRCU()
         {
         }
-
         BrokenRCU(const std::string &station, const std::string &type, size_t seqnr, const std::string &time) :
           station(station), type(type), seqnr(seqnr), time(time)
         {

@@ -39,27 +39,12 @@ TEST(FIR_FilterKernel)
   Parset ps;
   ps.add("Observation.nrBitsPerSample", "8");
   ps.add("Observation.VirtualInstrument.stationList", "[RS000]");
-  ps.add("Observation.antennaSet", "LBA_INNER");
-  ps.add("Observation.Dataslots.RS000LBA.RSPBoardList", "[0]");
-  ps.add("Observation.Dataslots.RS000LBA.DataslotList", "[0]");
-  ps.add("Observation.nrBeams", "1");
-  ps.add("Observation.Beam[0].subbandList", "[0]");
   ps.add("OLAP.CNProc.integrationSteps", "128");
-  ps.add("Cobalt.Correlator.nrChannelsPerSubband", "64");
+  ps.add("Observation.channelsPerSubband", "64");
   ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
-  ps.add("Observation.DataProducts.Output_Correlated.filenames", "[L12345_SAP000_SB000_uv.MS]");
-  ps.add("Observation.DataProducts.Output_Correlated.locations", "[localhost:.]");
   ps.updateSettings();
 
-  FIR_FilterKernel::Parameters params(ps,
-    ps.settings.antennaFields.size(),
-    true,
-    1,
-    ps.settings.correlator.nrChannels,
-    1.0f
-    );
-
-  KernelFactory<FIR_FilterKernel> factory(params);
+  KernelFactory<FIR_FilterKernel> factory(ps);
 
   gpu::Device device(gpu::Platform().devices()[0]);
   gpu::Context context(device);
@@ -73,10 +58,14 @@ TEST(FIR_FilterKernel)
 
   gpu::HostMemory
     hInput(context, dInput.size()),
-    hOutput(context, dOutput.size());
+    hOutput(context, dOutput.size()),
+    hCoeff(context, dCoeff.size()),
+    hHistory(context, dHistory.size());
 
   cout << "dInput.size() = " << dInput.size() << endl;
   cout << "dOutput.size() = " << dOutput.size() << endl;
+  cout << "dCoeff.size() = " << dCoeff.size() << endl;
+  cout << "dHistory.size() = " << dHistory.size() << endl;
 
   // hInput.get<i8complex>()[2176] = i8complex(1,0);
 
@@ -90,11 +79,14 @@ TEST(FIR_FilterKernel)
   // initialize history data
   dHistory.set(0);
 
-  auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, dInput, dOutput));
+  FIR_FilterKernel::Buffers buffers(dInput, dOutput, dCoeff, dHistory);
+  auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, buffers));
+  PerformanceCounter counter(context);
   BlockID blockId;
-  kernel->enqueue(blockId, 0);
+  kernel->enqueue(blockId, counter, 0);
 
   stream.readBuffer(hOutput, dOutput);
+  stream.readBuffer(hCoeff, dCoeff);
 
   /*  Comment out printing of this information: it disrupts the logfile and add no information.
   float* buf = hOutput.get<float>();
@@ -118,25 +110,12 @@ TEST(HistoryFlags)
   Parset ps;
   ps.add("Observation.nrBitsPerSample", "8");
   ps.add("Observation.VirtualInstrument.stationList", "[RS000]");
-  ps.add("Observation.antennaSet", "LBA_INNER");
-  ps.add("Observation.Dataslots.RS000LBA.RSPBoardList", "[0]");
-  ps.add("Observation.Dataslots.RS000LBA.DataslotList", "[0]");
-  ps.add("Observation.nrBeams", "1");
-  ps.add("Observation.Beam[0].subbandList", "[0]");
   ps.add("OLAP.CNProc.integrationSteps", "128");
-  ps.add("Cobalt.Correlator.nrChannelsPerSubband", "64");
+  ps.add("Observation.channelsPerSubband", "64");
   ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
-  ps.add("Observation.DataProducts.Output_Correlated.filenames", "[L12345_SAP000_SB000_uv.MS]");
-  ps.add("Observation.DataProducts.Output_Correlated.locations", "[localhost:.]");
   ps.updateSettings();
 
-  FIR_FilterKernel::Parameters params(ps,
-    ps.settings.antennaFields.size(),
-    true,
-    1,
-    ps.settings.correlator.nrChannels,
-    1.0f
-    );
+  FIR_FilterKernel::Parameters params(ps);
 
   KernelFactory<FIR_FilterKernel> factory(params);
 
@@ -146,9 +125,12 @@ TEST(HistoryFlags)
 
   gpu::DeviceMemory
     dInput(context, factory.bufferSize(FIR_FilterKernel::INPUT_DATA)),
-    dOutput(context, factory.bufferSize(FIR_FilterKernel::OUTPUT_DATA));
+    dOutput(context, factory.bufferSize(FIR_FilterKernel::OUTPUT_DATA)),
+    dCoeff(context, factory.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
+    dHistory(context, factory.bufferSize(FIR_FilterKernel::HISTORY_DATA));
 
-  auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, dInput, dOutput));
+  FIR_FilterKernel::Buffers buffers(dInput, dOutput, dCoeff, dHistory);
+  auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, buffers));
 
   /*
    * Test propagation of history flags. Each block tests for the flags of
@@ -164,7 +146,7 @@ TEST(HistoryFlags)
 
   // Flag only the last sample
   inputFlags[0].reset();
-  inputFlags[0].include(ps.settings.blockSize - 1);
+  inputFlags[0].include(ps.nrSamplesPerSubband() - 1);
 
   // insert and update history flags
   kernel->prefixHistoryFlags(inputFlags, 0);
@@ -190,12 +172,12 @@ TEST(HistoryFlags)
 
   // next block
   inputFlags[0].reset();
-  inputFlags[0].include(0, ps.settings.blockSize);
+  inputFlags[0].include(0, ps.nrSamplesPerSubband());
   kernel->prefixHistoryFlags(inputFlags, 0);
 
   // the number of flagged samples should have remained unchanged (the last
   // block had no flags)
-  CHECK_EQUAL(ps.settings.blockSize, inputFlags[0].count());
+  CHECK_EQUAL(ps.nrSamplesPerSubband(), inputFlags[0].count());
 
   /*
    * Block 3: no samples are flagged

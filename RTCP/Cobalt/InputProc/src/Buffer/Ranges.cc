@@ -226,40 +226,11 @@ namespace LOFAR
         if (i->to == 0)
           continue;
 
-        if (to > i->from && from < i->to) {
-          // If [from,to) falls into an already existing range,
-          // we're receiving duplicate data. This occasionally
-          // happens if a board resyncs.
-          //
-          // We need to take care to include the non-overlapping part.
-          //
-          // 3 cases:
-          //   1. from < i->from < to < i->to (overlap is to - i->from)
-          //   2. i->from < from < to < i->to (overlap is to - from)
-          //   3. i->from < from < i->to < to (overlap is i->to - from)
+        // we shouldn't fall into an already existing range,
+        // or we'd be a duplicate packet
+        ASSERT(to <= i->from || from >= i->to);
 
-          // Draw *i out of the volatile domain.
-          const value_type i_to = i->to;
-          const value_type i_from = i->from;
-
-          const value_type overlap =
-            std::min(i_to, to) - std::max(i_from, from);
-
-          LOG_WARN_STR("Packet [" << from << ", " << to << ") contains already-received data. Overlap is " << overlap << " samples.");
-
-          if (from < i_from) {
-            // case 1, reduce to (packet) (i)
-            to = i_from;
-          } else if (to < i_to) {
-            // case 2, nothing to add
-            return true;
-          } else {
-            // case 3, reduce to (i) (packet)
-            from = i_to;
-          }
-        }
-
-        if (i->to == from) { // (i) (packet)
+        if (i->to == from) {
           // *i can be extended
           i->to = to;
 
@@ -272,7 +243,7 @@ namespace LOFAR
           }
 
           return true;
-        } else if (i->from == to) { // (packet) (i)
+        } else if (i->from == to) {
           // *i can be extended
           i->from = from;
 
@@ -323,9 +294,9 @@ namespace LOFAR
       return false;
     }
 
-    Ranges::flags_type Ranges::sparseSet( value_type first, value_type last ) const
+    BufferSettings::flags_type Ranges::sparseSet( value_type first, value_type last ) const
     {
-      Ranges::flags_type result;
+      BufferSettings::flags_type result;
 
       if (first >= last)
         return result;

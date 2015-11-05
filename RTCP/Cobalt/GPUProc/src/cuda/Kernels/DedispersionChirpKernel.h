@@ -32,7 +32,7 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    class DedispersionChirpKernel : public CompiledKernel
+    class DedispersionChirpKernel : public Kernel
     {
     public:
       DedispersionChirpKernel(const Parset &ps,
@@ -40,7 +40,7 @@ namespace LOFAR
                               gpu::DeviceMemory &buffer,
                               gpu::DeviceMemory &DMs);
 
-      void enqueue(gpu::Stream &queue, double subbandFrequency);
+      void enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/, double subbandFrequency);
 
     };
 

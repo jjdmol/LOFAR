@@ -93,14 +93,14 @@ namespace LOFAR
     }
 
 
-    void NextChunkCommand::read(const ParameterSet& ps, const string prefix)
+    void NextChunkCommand::read(const ParameterSet& ps)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
-      itsFreqRange = make_pair(ps.getDouble(prefix+"Freq.Start"),
-        ps.getDouble(prefix+"Freq.End"));
-      itsTimeRange = make_pair(ps.getDouble(prefix+"Time.Start"),
-        ps.getDouble(prefix+"Time.End"));
+      itsFreqRange = make_pair(ps.getDouble("Freq.Start"),
+        ps.getDouble("Freq.End"));
+      itsTimeRange = make_pair(ps.getDouble("Time.Start"),
+        ps.getDouble("Time.End"));
     }
 
   } //# namespace BBS
