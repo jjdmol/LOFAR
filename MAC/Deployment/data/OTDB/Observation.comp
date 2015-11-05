@@ -45,3 +45,4 @@ uses  Dataslots  	 4.0.0  development '1'		       "Dataslot (beamlet) allocation
 uses  ObservationControl 4.0.2  development '1'		       "Observation Control"
 uses  Scheduler          4.0.0  development '1'                "Scheduler"
 uses  DataProducts       4.0.2  development '1'                "Place holder for all data products"
+uses  Cluster            4.0.2  development '1'                "Placeholder for cluster description(s) for processing locations"

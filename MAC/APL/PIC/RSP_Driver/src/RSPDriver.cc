@@ -216,8 +216,8 @@ RSPDriver::RSPDriver(string name) :
 	ssp->setAartfaac      (sc.hasAartfaac);
 	LOG_DEBUG_STR (*ssp);
 
-	LOG_DEBUG("Setting up cable characteristics from CableAttenuation.conf and CableDelays.conf");
-	RCUCables		cables("CableAttenuation.conf", "CableDelays.conf");
+	LOG_DEBUG("Setting up cable characteristics from Attenuation.conf and CableDelays.conf");
+	RCUCables		cables("Attenuation.conf", "CableDelays.conf");
 	CableSettings::createInstance(cables);
 
 	int mode = GET_CONFIG("RSPDriver.SYNC_MODE", i);
@@ -1979,17 +1979,7 @@ void RSPDriver::rsp_getclock(GCFEvent& event, GCFPortInterface& port)
 {
 	Ptr<GetClocksCmd> command = new GetClocksCmd(event, port, Command::READ);
 
-	if (Sequencer::getInstance().isActive()) {
-		LOG_INFO("GETCLOCK: sequencer busy");
-
-		RSPGetclockackEvent ack;
-		ack.timestamp = Timestamp(0,0);
-		ack.status = RSP_BUSY;
-		port.send(ack);
-		return;
-	}
-    
-    if (!command->validate()) {
+	if (!command->validate()) {
 		LOG_ERROR("GETCLOCK: invalid parameter");
 
 		RSPGetclockackEvent ack;
