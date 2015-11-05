@@ -38,13 +38,7 @@
 #include <measures/TableMeasures/ScalarMeasColumn.h>
 
 #include <ms/MeasurementSets/MSAntenna.h>
-#if defined(casacore)
-#include <ms/MSSel/MSSelection.h>
-#include <ms/MSSel/MSAntennaParse.h>
-#else
-#include <ms/MeasurementSets/MSSelection.h>
 #include <ms/MeasurementSets/MSAntennaParse.h>
-#endif
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <ms/MeasurementSets/MSDataDescription.h>
 #include <ms/MeasurementSets/MSDataDescColumns.h>
@@ -56,6 +50,7 @@
 #include <ms/MeasurementSets/MSPolColumns.h>
 #include <ms/MeasurementSets/MSSpectralWindow.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
+#include <ms/MeasurementSets/MSSelection.h>
 
 namespace LOFAR
 {

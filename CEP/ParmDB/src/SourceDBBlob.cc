@@ -206,18 +206,16 @@ namespace BBS {
       }
     }
     // Sort in order of category, brightness, name.
+    Sort sort;
+    sort.sortKey (&(categories[0]), TpInt);
+    sort.sortKey (&(brightness[0]), TpDouble, 0, Sort::Descending);
+    sort.sortKey (&(names[0]), TpString);
+    Vector<uInt> index(names.size());
+    sort.sort (index, names.size());
     vector<string> nmout;
-    if (! names.empty()) {
-      Sort sort;
-      sort.sortKey (&(categories[0]), TpInt);
-      sort.sortKey (&(brightness[0]), TpDouble, 0, Sort::Descending);
-      sort.sortKey (&(names[0]), TpString);
-      Vector<uInt> index(names.size());
-      sort.sort (index, names.size());
-      nmout.reserve (names.size());
-      for (uint i=0; i<names.size(); ++i) {
-        nmout.push_back (names[index[i]]);
-      }
+    nmout.reserve (names.size());
+    for (uint i=0; i<names.size(); ++i) {
+      nmout.push_back (names[index[i]]);
     }
     return nmout;
   }

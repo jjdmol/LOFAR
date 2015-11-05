@@ -20,10 +20,10 @@
 
 #include <lofar_config.h>
 
+#include <GPUProc/global_defines.h>
 #include <GPUProc/Kernels/IncoherentStokesKernel.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <CoInterface/BlockID.h>
-#include <CoInterface/Config.h>
 #include <CoInterface/Parset.h>
 #include <Common/LofarLogger.h>
 
@@ -56,7 +56,7 @@ struct ParsetFixture
     nrChannels = 37,
     nrOutputSamples = 29,
     nrInputSamples = nrOutputSamples * timeIntegrationFactor, 
-    blockSize = nrChannels * nrInputSamples,
+    blockSize = timeIntegrationFactor * nrChannels * nrInputSamples,
     nrStations = 43,
     nrDelayCompensationChannels = 64;
 
@@ -73,13 +73,8 @@ struct ParsetFixture
                "IQUV");
     parset.add("Observation.VirtualInstrument.stationList",
                str(format("[%d*RS000]") % nrStations));
-    parset.add("Observation.antennaSet", "LBA_INNER");
-    parset.add("Observation.rspBoardList", "[0]");
-    parset.add("Observation.rspSlotList", "[0]");
     parset.add("Cobalt.blockSize", 
                lexical_cast<string>(blockSize)); 
-    parset.add("Observation.nrBeams", "1");
-    parset.add("Observation.Beam[0].subbandList", "[0]");
     parset.add("Cobalt.BeamFormer.nrDelayCompensationChannels",
                lexical_cast<string>(nrDelayCompensationChannels));
     parset.updateSettings();
@@ -104,8 +99,8 @@ TEST_FIXTURE(ParsetFixture, BufferSizes)
   CHECK_EQUAL(timeIntegrationFactor, settings.timeIntegrationFactor);
   CHECK_EQUAL(nrChannels, settings.nrChannels);
   CHECK_EQUAL(4U, settings.nrStokes);
-  CHECK_EQUAL(nrStations, parset.settings.antennaFields.size());
-  CHECK_EQUAL(nrOutputSamples, settings.nrSamples);
+  CHECK_EQUAL(nrStations, parset.nrStations());
+  CHECK_EQUAL(nrInputSamples, settings.nrSamples(blockSize));
 }
 
 
@@ -127,8 +122,7 @@ struct KernelFixture : ParsetFixture
   MultiDimArrayHostBuffer<fcomplex, 4> hInput;
   MultiDimArrayHostBuffer<float, 3> hOutput;
   MultiDimArrayHostBuffer<float, 3> hRefOutput;
-  gpu::DeviceMemory inputBuffer;
-  gpu::DeviceMemory outputBuffer;
+  IncoherentStokesKernel::Buffers buffers;
   scoped_ptr<IncoherentStokesKernel> kernel;
 
   KernelFixture() :
@@ -146,9 +140,12 @@ struct KernelFixture : ParsetFixture
     hRefOutput(
       boost::extents[nrStokes][nrOutputSamples][nrChannels],
       context),
-    inputBuffer(context, factory.bufferSize(IncoherentStokesKernel::INPUT_DATA)),
-    outputBuffer(context, factory.bufferSize(IncoherentStokesKernel::OUTPUT_DATA)),
-    kernel(factory.create(stream, inputBuffer, outputBuffer))
+    buffers(
+      gpu::DeviceMemory(
+        context, factory.bufferSize(IncoherentStokesKernel::INPUT_DATA)),
+      gpu::DeviceMemory(
+        context, factory.bufferSize(IncoherentStokesKernel::OUTPUT_DATA))),
+    kernel(factory.create(stream, buffers))
   {
     initializeHostBuffers();
   }
@@ -164,11 +161,11 @@ struct KernelFixture : ParsetFixture
          // << "\n  nrOutputSamples       = " << setw(7) << nrOutputSamples
          // << "\n  nrStations            = " << setw(7) << nrStations
          // << "\n  blockSize             = " << setw(7) << blockSize
-         << "\n  buffers.input.size()  = " << setw(7) << inputBuffer.size()
-         << "\n  buffers.output.size() = " << setw(7) << outputBuffer.size()
+         << "\n  buffers.input.size()  = " << setw(7) << buffers.input.size()
+         << "\n  buffers.output.size() = " << setw(7) << buffers.output.size()
          << endl;
-    CHECK_EQUAL(inputBuffer.size(), hInput.size());
-    CHECK_EQUAL(outputBuffer.size(), hOutput.size());
+    CHECK_EQUAL(buffers.input.size(), hInput.size());
+    CHECK_EQUAL(buffers.output.size(), hOutput.size());
     fill(hInput.data(), hInput.data() + hInput.num_elements(), 0);
     fill(hOutput.data(), hOutput.data() + hOutput.num_elements(), 0.0f / 0.0f);
     fill(hRefOutput.data(), hRefOutput.data() + hRefOutput.num_elements(), 0);
@@ -179,11 +176,11 @@ struct KernelFixture : ParsetFixture
     // Dummy BlockID
     BlockID blockId;
     // Copy input data from host- to device buffer synchronously
-    stream.writeBuffer(inputBuffer, hInput, true);
+    stream.writeBuffer(buffers.input, hInput, true);
     // Launch the kernel
     kernel->enqueue(blockId);
     // Copy output data from device- to host buffer synchronously
-    stream.readBuffer(hOutput, outputBuffer, true);
+    stream.readBuffer(hOutput, buffers.output, true);
   }
 
   // void printNonZeroOutput() const

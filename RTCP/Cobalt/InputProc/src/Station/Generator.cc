@@ -35,10 +35,10 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    Generator::Generator( const StationID &stationID, const std::vector< SmartPtr<Stream> > &outputStreams_, PacketFactory &packetFactory, const TimeStamp &from, const TimeStamp &to )
+    Generator::Generator( const BufferSettings &settings, const std::vector< SmartPtr<Stream> > &outputStreams_, PacketFactory &packetFactory, const TimeStamp &from, const TimeStamp &to )
       :
-      RSPBoards(str(boost::format("[station %s] [Generator] ") % stationID.name()), outputStreams_.size()),
-      stationID(stationID),
+      RSPBoards(str(boost::format("[station %s %s] [Generator] ") % settings.station.stationName % settings.station.antennaField), outputStreams_.size()),
+      settings(settings),
       outputStreams(outputStreams_.size()),
       packetFactory(packetFactory),
       nrSent(nrBoards, 0),
@@ -55,7 +55,7 @@ namespace LOFAR
 
     void Generator::processBoard( size_t nr )
     {
-      const std::string logPrefix(str(boost::format("[station %s board %u] [Generator] ") % stationID.name() % nr));
+      const std::string logPrefix(str(boost::format("[station %s %s board %u] [Generator] ") % settings.station.stationName % settings.station.antennaField % nr));
 
       try {
         Stream &s = *outputStreams[nr];
@@ -85,11 +85,11 @@ namespace LOFAR
 
           current += packet.header.nrBlocks;
         }
-      } catch (EndOfStreamException &ex) {
+      } catch (Stream::EndOfStreamException &ex) {
         LOG_INFO_STR( logPrefix << "End of stream");
       } catch (SystemCallException &ex) {
         if (ex.error == EINTR)
-          LOG_INFO_STR( logPrefix << "Stopped: " << ex.what());
+          LOG_INFO_STR( logPrefix << "Aborted: " << ex.what());
         else
           LOG_ERROR_STR( logPrefix << "Caught Exception: " << ex);
       } catch (Exception &ex) {
@@ -102,7 +102,7 @@ namespace LOFAR
     void Generator::logStatistics()
     {
       for( size_t nr = 0; nr < nrBoards; nr++ ) {
-        const std::string logPrefix(str(boost::format("[station %s board %u] [Generator] ") % stationID.name() % nr));
+        const std::string logPrefix(str(boost::format("[station %s %s board %u] [Generator] ") % settings.station.stationName % settings.station.antennaField % nr));
 
         LOG_INFO_STR( logPrefix << nrSent[nr] << " packets sent.");
 

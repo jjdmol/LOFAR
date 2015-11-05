@@ -90,6 +90,9 @@
 /* Define if libbfd is available */
 #cmakedefine HAVE_BFD 1
 
+/* Define if BG/L MPICH is installed */
+#cmakedefine HAVE_BGLMPICH 1
+
 /* Define if Blitz is installed */
 #cmakedefine HAVE_BLITZ 1
 
@@ -129,9 +132,6 @@
 /* Define if libssh2 is installed */
 #cmakedefine HAVE_LIBSSH2 1
 
-/* Define if libxml++ is installed */
-#cmakedefine HAVE_LIBXMLXX 1
-
 /* Define if LOG4CPLUS is installed */
 #cmakedefine HAVE_LOG4CPLUS 1
 
@@ -140,6 +140,9 @@
 
 /* Define if we have an MPI implementation installed */
 #cmakedefine HAVE_MPI 1
+
+/* Define if MASS is installed */ 
+#cmakedefine HAVE_MASS 1
 
 /* Define if MPICH is installed */
 #cmakedefine HAVE_MPICH 1
@@ -156,9 +159,6 @@
 /* Define if using Rational Purify */
 #cmakedefine HAVE_PURIFY 1
 
-/* Define if QPID is installed */
-#cmakedefine HAVE_QPID 1
-
 /* Define if readline is installed */
 #cmakedefine HAVE_READLINE 1
 
@@ -167,9 +167,6 @@
 
 /* Defined if shared memory is used */
 #cmakedefine HAVE_SHMEM 1
-
-/* Defined if uuid is installed */
-#cmakedefine HAVE_UUID 1
 
 /* Define if WCSLIB is installed */
 #cmakedefine HAVE_WCSLIB 1

@@ -28,10 +28,11 @@
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
-#include <CoInterface/fpequals.h>
 #include <GPUProc/gpu_utils.h>
-#include <GPUProc/SubbandProcs/SubbandProc.h>
-#include <GPUProc/SubbandProcs/KernelFactories.h>
+#include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
+#include <GPUProc/SubbandProcs/BeamFormerFactories.h>
+
+#include "../fpequals.h"
 
 using namespace std;
 using namespace LOFAR::Cobalt;
@@ -74,11 +75,11 @@ int main() {
   Parset ps("tFlysEyeBeamFormerSubbandProcProcessSb.parset");
 
   // Input array sizes
-  const size_t nrBeams = ps.settings.SAPs.size();
-  const size_t nrStations = ps.settings.antennaFields.size();
+  const size_t nrBeams = ps.nrBeams();
+  const size_t nrStations = ps.nrStations();
   const size_t nrPolarisations = ps.settings.nrPolarisations;
   const size_t maxNrTABsPerSAP = ps.settings.beamFormer.maxNrTABsPerSAP();
-  const size_t nrSamplesPerSubband = ps.settings.blockSize;
+  const size_t nrSamplesPerSubband = ps.nrSamplesPerSubband();
   const size_t nrBitsPerSample = ps.settings.nrBitsPerSample;
   const size_t nrBytesPerComplexSample = ps.nrBytesPerComplexSample();
 
@@ -111,7 +112,8 @@ int main() {
   const size_t nrTABs = maxNrTABsPerSAP;
   const size_t nrStokes = ps.settings.beamFormer.coherentSettings.nrStokes;
   const size_t nrSamples = 
-    ps.settings.beamFormer.coherentSettings.nrSamples;
+    ps.settings.beamFormer.coherentSettings.nrSamples(
+      ps.settings.nrSamplesPerSubband());
   const size_t nrChannels = 
     ps.settings.beamFormer.coherentSettings.nrChannels;
 
@@ -129,8 +131,8 @@ int main() {
   // correction (but that kernel will run to convert int to float and to
   // transform the data order).
 
-  KernelFactories factories(ps);
-  SubbandProc bwq(ps, ctx, factories);
+  BeamFormerFactories factories(ps);
+  BeamFormerSubbandProc bwq(ps, ctx, factories);
 
   SubbandProcInputData in(
     nrBeams, nrStations, nrPolarisations, nrTABs, 
@@ -182,7 +184,7 @@ int main() {
     in.tabDelays.get<float>()[i] = 0.0f;
 
   // Allocate buffer for output signal
-  SubbandProcOutputData out(ps, ctx);
+  BeamFormedData out(ps, ctx);
 
   for (size_t i = 0; i < out.coherentData.num_elements(); i++)
     out.coherentData.get<float>()[i] = 42.0f;

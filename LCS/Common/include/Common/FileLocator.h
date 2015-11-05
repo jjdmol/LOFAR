@@ -44,7 +44,7 @@ namespace LOFAR {
 class FileLocator
 {
 public:
-	#define		BASE_SEARCH_DIR		"$LOFARROOT:/opt/lofar"
+	#define		BASE_SEARCH_DIR		".:..:/opt/lofar:/opt/lofar/var/run"
 
 	typedef list<string>::iterator		iterator;
 

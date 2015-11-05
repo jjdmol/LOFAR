@@ -1,0 +1,3 @@
+#!/bin/sh
+EXECUTABLE_PREFIX=${LOFAR_CHECKTOOL} \
+  mpirun.sh -H localhost,localhost t_cpu_utils

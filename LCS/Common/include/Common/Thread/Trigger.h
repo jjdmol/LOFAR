@@ -38,7 +38,6 @@ class Trigger
     Trigger();
 
     void trigger();
-    bool test();
     void wait();
     bool wait(const struct timespec &timespec);
 
@@ -60,18 +59,9 @@ inline Trigger::Trigger()
 {
 }
 
-inline bool Trigger::test()
-{
-  return triggered;
-}
-
 
 inline void Trigger::trigger()
 {
-  // Make repeated triggering very cheap
-  if (triggered) 
-    return;
-
   ScopedLock lock(mutex);
 
   triggered = true;

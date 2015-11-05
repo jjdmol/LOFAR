@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 
+#include "Buffer/BufferSettings.h"
 #include "WallClockTime.h"
 
 namespace LOFAR

@@ -44,10 +44,6 @@
  *  1            conjugated      1,2               2
  *  2            conjugated      2,1               1,2,4
  *  3            normal          1,2               1,2,4
- *
- * For a description of the meta-data tables, see
- *
- * http://www.lofar.org/operations/lib/exe/fetch.php?media=public:documents:ms2_description_for_lofar_2.08.00.pdf
  */
 
 static const unsigned LofarStManVersion = 3;
@@ -105,9 +101,6 @@ namespace LOFAR
       void fillSpecWindow(unsigned subband);
       void fillObs(unsigned subarray);
       void fillHistory();
-      void fillProcessor();
-      void fillState();
-      void fillPointing(unsigned subarray);
     };
 
   } // namespace Cobalt

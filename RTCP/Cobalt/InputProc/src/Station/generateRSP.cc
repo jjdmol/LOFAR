@@ -31,8 +31,8 @@
 
 #include <Common/LofarLogger.h>
 #include <ApplCommon/PosixTime.h>
-#include <Stream/StreamFactory.h>
 #include <CoInterface/SmartPtr.h>
+#include <CoInterface/Stream.h>
 #include <InputProc/Buffer/BoardMode.h>
 #include <InputProc/RSPTimeStamp.h>
 #include <InputProc/Station/RSP.h>
@@ -80,7 +80,7 @@ void usage()
 time_t parseTime(const char *str)
 {
   try {
-    return LOFAR::to_time_t(posix_time::time_from_string(str));
+    return to_time_t(posix_time::time_from_string(str));
   } catch (std::exception &err) {
     THROW (Exception, "Invalid date/time: " << err.what());
   }
@@ -152,8 +152,8 @@ int main(int argc, char **argv)
     RSPPacketFactory packetFactory(inStream, boardMode, subbands);
     RSP packet;
 
-    TimeStamp current(TimeStamp::convert(from, boardMode.clockHz()));
-    TimeStamp end(TimeStamp::convert(to, boardMode.clockHz()));
+    TimeStamp current(TimeStamp::convert(from, clockmode * 1000000));
+    TimeStamp end(TimeStamp::convert(to, clockmode * 1000000));
 
     while(current < end && packetFactory.makePacket(packet, current, boardNr)) {
       // Write packet
