@@ -214,7 +214,7 @@ void outputProcCB(dyn_string dps, dyn_dyn_bool values)
     setValue(\"outputProcsObject\", \"foreCol\", \"Lofar_off\");    
     return;
   }
-    
+  
   // Here we get dropping  and locusnodevalues from all involved observations
   string toolTipText = \"Dropping outputProcs<br>\";
   
@@ -229,6 +229,7 @@ void outputProcCB(dyn_string dps, dyn_dyn_bool values)
     string outputProcDP = dpSubStr(dp,DPSUB_SYS_DP);
     dpGet(outputProcDP+\".dropped\",dropped);
     dpGet(outputProcDP+\".locusNode\",lnodes);
+    
     for (int j=1; j<= dynlen(lnodes);j++) {
       dynAppend(locusnodes,lnodes[j]);
       if (dynlen(dropped) <= j)  continue;

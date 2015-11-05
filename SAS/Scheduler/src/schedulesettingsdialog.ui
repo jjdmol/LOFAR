@@ -116,7 +116,7 @@ to make it easy to recognise files and directories written by the test system.</
        <item row="0" column="0">
         <widget class="QLabel" name="label">
          <property name="text">
-          <string>Schedule earliest date</string><!--Used to be Mondays only [AS]-->
+          <string>Schedule earliest date (monday)</string>
          </property>
         </widget>
        </item>

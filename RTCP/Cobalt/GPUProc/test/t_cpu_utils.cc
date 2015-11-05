@@ -66,10 +66,9 @@ int main()
   INIT_LOGGER("t_cpu_utils");
 
   string name(LOFAR::myHostname(false));
-  if (strncmp(name.c_str(), "cbt", sizeof("cbt")-1) &&
-      strncmp(name.c_str(), "drg", sizeof("drg")-1))
+  if (strncmp(name.c_str(), "cbt", sizeof("cbt")-1))
   {
-    cout << "Test is not running on cbt* (COBALT) or drg* (DRAGNET) nodes and therefore skipped: " << name << endl;
+    cout << "Test is not running on cobalt hardware and therefore skipped: " << name << endl;
     return 0;
   }
 

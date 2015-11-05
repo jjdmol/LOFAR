@@ -22,18 +22,10 @@
 #include <lofar_config.h>
 #include <PythonDPPP/DPStepBase.h>
 
-#if defined(casacore)
-#include <python/Converters/PycExcp.h>
-#include <python/Converters/PycBasicData.h>
-#include <python/Converters/PycValueHolder.h>
-#include <python/Converters/PycRecord.h>
-#define pyrap python
-#else
 #include <pyrap/Converters/PycExcp.h>
 #include <pyrap/Converters/PycBasicData.h>
 #include <pyrap/Converters/PycValueHolder.h>
 #include <pyrap/Converters/PycRecord.h>
-#endif
 #include <boost/python.hpp>
 #include <boost/python/args.hpp>
 
@@ -70,7 +62,7 @@ namespace LOFAR {
         .def ("_getUVW", &DPStepBase::_getUVW,
               "Get the UVW coordinates into the given array",
               (boost::python::arg("value")))
-        .def ("_getModelData", &DPStepBase::_getModelData,
+        .def ("_getModelData", &DPStepBase::_getData,
               "Get the model data into the given array",
               (boost::python::arg("value")))
         .def ("_processNext", &DPStepBase::_processNext,
