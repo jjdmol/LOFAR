@@ -2,18 +2,10 @@
 # Useful functions that can be used by the cluster test scripts
 #
 
-# Print error message and exit.
-error()
-{
-  local STATUS=$?
-  echo >&2 "ERROR: $@"
-  exit $STATUS
-}
-
 # Signal handler function. Prints exit status and returns it.
 print_status()
 {
-  local STATUS=$?
+  STATUS=$?
   case $STATUS in
     0)
       echo >&2 "OK" ;;
@@ -27,8 +19,7 @@ print_status()
   return $STATUS
 }
 
-# Run a command with a timeout. The command is run in the background; so that
-# the shell can react on signals (e.g., a SIGINT send from the keyboard).
+# Run a command with a timeout.
 #
 # Usage: run_command [options] "command" [timeout]
 #

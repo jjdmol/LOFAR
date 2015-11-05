@@ -21,7 +21,6 @@
 #define MSIO_QUALITY_DATA_H
 
 #include <ms/MeasurementSets/MeasurementSet.h>
-#include <tables/Tables/TableRecord.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>

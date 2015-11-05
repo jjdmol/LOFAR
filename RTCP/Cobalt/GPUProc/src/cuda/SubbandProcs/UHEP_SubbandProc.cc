@@ -46,11 +46,11 @@ namespace LOFAR
       :
       SubbandProc( pipeline.context, pipeline.devices[gpuNumber], gpuNumber, pipeline.ps),
       pipeline(pipeline),
-      hostInputSamples(boost::extents[ps.settings.antennaFields.size()][ps.nrSubbands()][ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()], queue, CL_MEM_WRITE_ONLY),
-      hostBeamFormerWeights(boost::extents[ps.settings.antennaFields.size()][ps.nrSubbands()][ps.nrTABs(0)], queue, CL_MEM_WRITE_ONLY),
+      hostInputSamples(boost::extents[ps.nrStations()][ps.nrSubbands()][ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()], queue, CL_MEM_WRITE_ONLY),
+      hostBeamFormerWeights(boost::extents[ps.nrStations()][ps.nrSubbands()][ps.nrTABs(0)], queue, CL_MEM_WRITE_ONLY),
       hostTriggerInfo(boost::extents[ps.nrTABs(0)], queue, CL_MEM_READ_ONLY)
     {
-      size_t inputSamplesSize = ps.settings.antennaFields.size() * ps.nrSubbands() * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * NR_POLARIZATIONS * ps.nrBytesPerComplexSample();
+      size_t inputSamplesSize = ps.nrStations() * ps.nrSubbands() * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * NR_POLARIZATIONS * ps.nrBytesPerComplexSample();
       size_t complexVoltagesSize = ps.nrSubbands() * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * ps.nrTABs(0) * NR_POLARIZATIONS * sizeof(std::complex<float>);
       size_t transposedDataSize = ps.nrTABs(0) * NR_POLARIZATIONS * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * 512 * sizeof(std::complex<float>);
       size_t invFIRfilteredDataSize = ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * 512 * sizeof(std::complex<float>);
@@ -61,7 +61,7 @@ namespace LOFAR
       devBuffers[0] = gpu::DeviceMemory(pipeline.context, CL_MEM_READ_WRITE, buffer0size);
       devBuffers[1] = gpu::DeviceMemory(pipeline.context, CL_MEM_READ_WRITE, buffer1size);
 
-      size_t beamFormerWeightsSize = ps.settings.antennaFields.size() * ps.nrSubbands() * ps.nrTABs(0) * sizeof(std::complex<float>);
+      size_t beamFormerWeightsSize = ps.nrStations() * ps.nrSubbands() * ps.nrTABs(0) * sizeof(std::complex<float>);
       devBeamFormerWeights = gpu::DeviceMemory(pipeline.context, CL_MEM_READ_ONLY, beamFormerWeightsSize);
 
       devInputSamples = devBuffers[0];

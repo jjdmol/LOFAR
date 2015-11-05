@@ -95,9 +95,9 @@ void splitUVW(size_t nStation, size_t nBaseline,
 // \param[in]   nUVW
 // The number of UVW coordinates to transform.
 // \param[in]   uvw
-// A 2-D buffer of UVW coordinates of shape (\p UVW, 3).
+// A cursor for a 2-D buffer of UVW coordinates of shape (\p UVW, 3).
 void rotateUVW(const Position &from, const Position &to, size_t nUVW,
-    double *uvw);
+    cursor<double> uvw);
 
 // Simulate visibilities for a patch of sources. The computed visibilities are
 // added to \p vis.

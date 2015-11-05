@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -61,11 +61,6 @@ using namespace boost::posix_time;
 using namespace std;
 
 namespace LOFAR {
-    using namespace Controller_Protocol;
-    using namespace CR_Protocol;
-    using namespace TBB_Protocol;
-    using namespace RSP_Protocol;
-    using namespace DP_Protocol;
     using namespace GCF::TM;
     using namespace GCF::PVSS;
     using namespace GCF::RTDB;
@@ -173,23 +168,21 @@ TBBControl::TBBControl(const string&    cntlrName) :
     LOG_TRACE_OBJ_STR (cntlrName << " construction");
     LOG_INFO(Version::getInfo<StationCUVersion>("TBBControl"));
 
-    
     // First readin our observation related config file.
-    //LOFAR::ConfigLocator cl;
-    //LOG_DEBUG_STR("Reading parset file:" << cl.locate(cntlrName));
-    //itsParameterSet = new ParameterSet(cl.locate(cntlrName));
-    //itsObs = new TBBObservation(itsParameterSet);   // does all nasty conversions
+    LOFAR::ConfigLocator cl;
+    LOG_DEBUG_STR("Reading parset file:" << cl.locate(cntlrName));
+    itsParameterSet = new ParameterSet(cl.locate(cntlrName));
+    itsObs = new TBBObservation(itsParameterSet);   // does all nasty conversions
 
-    LOG_DEBUG_STR("Reading parset file:" << LOFAR_SHARE_LOCATION << "/" << cntlrName);
+    //LOG_DEBUG_STR("Reading parset file:" << LOFAR_SHARE_LOCATION << "/" << cntlrName);
     //itsParameterSet = new ParameterSet(string(LOFAR_SHARE_LOCATION)+"/"+cntlrName);
     //itsObs = new TBBObservation(itsParameterSet); // does all nasty conversions
-    
-    globalParameterSet()->adoptFile(string(LOFAR_SHARE_LOCATION)+"/"+cntlrName);
-    itsObs = new TBBObservation(globalParameterSet());    // does all nasty conversions
+    //globalParameterSet()->adoptFile(string(LOFAR_SHARE_LOCATION)+"/"+cntlrName);
+    //itsObs = new TBBObservation(globalParameterSet());    // does all nasty conversions
 
     LOG_DEBUG_STR(*itsObs);
     // Readin some parameters from the ParameterSet.
-    //itsTreePrefix = itsParameterSet->getString("prefix");
+    itsTreePrefix = itsParameterSet->getString("prefix");
     //itsInstanceNr = globalParameterSet()->getUint32("_instanceNr");
 
     // attach to parent control task
@@ -213,7 +206,7 @@ TBBControl::TBBControl(const string&    cntlrName) :
     
     // prepare RTDB port for receiving External trigger messages.
     itsTriggerPort = new GCFRTDBPort (*this,
-                                    "RTDB_CR_TriggerPort",
+                                    "RTDB_TriggerPort",
                                     PSN_CR_TRIGGERPORT);
     
     // prepare TCP port to TBBDriver.
@@ -303,7 +296,7 @@ GCFEvent::TResult TBBControl::initial_state(GCFEvent& event,
             // Get access to my own propertyset.
             string propSetName( createPropertySetName(PSN_TBB_CONTROL,
                                 getName(),
-                                globalParameterSet()->getString("_DPname")));
+                                itsParameterSet->getString("_DPname")));
             LOG_INFO_STR ("Activating PropertySet " << propSetName);
             itsPropertySet = new RTDBPropertySet(   propSetName,
                                                     PST_TBB_CONTROL,
@@ -375,8 +368,8 @@ GCFEvent::TResult TBBControl::initial_state(GCFEvent& event,
             sendControlResult(port, CONTROL_CONNECTED, msg.cntlrName, CT_RESULT_NO_ERROR);
 
             // let ParentControl watch over the start and stop times for extra safety.
-            ptime startTime = time_from_string(globalParameterSet()->getString("Observation.startTime"));
-            ptime stopTime  = time_from_string(globalParameterSet()->getString("Observation.stopTime"));
+            ptime startTime = time_from_string(itsParameterSet->getString("Observation.startTime"));
+            ptime stopTime  = time_from_string(itsParameterSet->getString("Observation.stopTime"));
             itsParentControl->activateObservationTimers(msg.cntlrName, startTime, stopTime);
 
             LOG_INFO ("Going to started state");
@@ -416,7 +409,7 @@ GCFEvent::TResult TBBControl::started_state(GCFEvent& event, GCFPortInterface& p
             if (&port == itsTBBDriver) {
                 LOG_INFO ("Connected with TBBDriver");
             }
-            else if (&port == itsRSPDriver) {
+        else if (&port == itsRSPDriver) {
                 LOG_INFO ("Connected with RSPDriver");
             }
             else if (&port == itsTriggerPort) {
@@ -446,7 +439,6 @@ GCFEvent::TResult TBBControl::started_state(GCFEvent& event, GCFPortInterface& p
             }
             port.close();
             itsPropertySet->setValue(PN_TBC_CONNECTED,  GCFPVBool(false));
-            //itsTimerPort->cancelAllTimers();
             itsTimerPort->setTimer(2.0);
         } break;
 
@@ -472,9 +464,9 @@ GCFEvent::TResult TBBControl::started_state(GCFEvent& event, GCFPortInterface& p
             setState(CTState::CLAIM);
             LOG_DEBUG ("Trying to connect to TBBDriver");
             itsTBBDriver->open();  // will result in F_CONN or F_DISCONN
-            LOG_DEBUG ("Trying to connect to RSPDriver");
+            LOG_DEBUG ("Trying to reconnect to RSPDriver");
             itsRSPDriver->open();  // will result in F_CONN or F_DISCONN
-            LOG_DEBUG ("Trying to connect to RTDB");
+            LOG_DEBUG ("Trying to reconnect to RTDB");
             itsTriggerPort->open();  // will result in F_CONN or F_DISCONN
         } break;
 
@@ -1213,7 +1205,7 @@ int TBBControl::handleRecordAck(GCFEvent& event)
     for (int b = 0; b < itsNrTBBs; b++) {
         if (isBoardUsed(b) == false) { continue; }
         if (ack.status_mask[b] != TBB_SUCCESS) {
-            //status_ok = false;  // error
+            status_ok = false;  // error
             LOG_DEBUG_STR (formatString("returned status TBB_RECORD_ACK, board-%d status=%u", b, ack.status_mask[b])); 
         }
     }
@@ -1256,7 +1248,7 @@ int TBBControl::handleReleaseAck(GCFEvent& event)
     for (int b = 0; b < itsNrTBBs; b++) {
         if (isBoardUsed(b) == false) { continue; }
         if (ack.status_mask[b] != TBB_SUCCESS) {
-            //status_ok = false;  // error
+            status_ok = false;  // error
             LOG_DEBUG_STR (formatString("returned status TBB_TRIG_RELEASE_ACK, board-%d status=%u", b, ack.status_mask[b])); 
         }
     }
@@ -1349,7 +1341,7 @@ int TBBControl::handleStopAck(GCFEvent& event)
     for (int b = 0; b < itsNrTBBs; b++) {
         if (isBoardUsed(b) == false) { continue; }
         if (ack.status_mask[b] != TBB_SUCCESS) {  // if error, check if rcu is used
-            //status_ok = false;
+            status_ok = false;
             LOG_DEBUG_STR(formatString("returned status TBB_STOP_ACK, board=%d", b));
         }
     }
@@ -1393,7 +1385,7 @@ int TBBControl::handleCepStatusAck(GCFEvent& event)
         if (isBoardUsed(b) == false) { continue; }
         if (ack.status_mask[b] != TBB_SUCCESS) {
             itsBoardInfo.at(b).cepActive = false;
-            //status_ok = false;  // error
+            status_ok = false;  // error
             LOG_DEBUG_STR (formatString("returned status TBB_CEP_STATUS_ACK, board-%d status=%u", b, ack.status_mask[b])); 
         }
         else {
@@ -1445,7 +1437,7 @@ int TBBControl::handleCepDelayAck(GCFEvent& event)
     
     for (int b = 0; b < itsNrTBBs; b++) {
         if (ack.status_mask[b] != TBB_SUCCESS) {
-            //status_ok = false;  // error
+            status_ok = false;  // error
             LOG_DEBUG_STR (formatString("returned status TBB_CEP_DELAY_ACK, board-%d status=%u", b, ack.status_mask[b])); 
         }
     }
@@ -1490,7 +1482,7 @@ int TBBControl::handleStopCepAck(GCFEvent& event)
     for (int b = 0; b < itsNrTBBs; b++) {
         if (ack.status_mask[b] != TBB_SUCCESS) {
             itsBoardInfo.at(b).cepActive = false;
-            //status_ok = false;  // error
+            status_ok = false;  // error
             LOG_DEBUG_STR (formatString("returned status TBB_STOP_CEP_ACK, board-%d status=%u", b, ack.status_mask[b])); 
         }
         itsBoardInfo.at(b).cepActive = false; 
@@ -1718,7 +1710,7 @@ int TBBControl::handleFreeAck(GCFEvent& event)
     for (int b = 0; b < itsNrTBBs; b++) {
         if (isBoardUsed(b) == false) { continue; }
         if (ack.status_mask[b] != TBB_SUCCESS) {  // if error, check if rcu is used
-            //status_ok = false;
+            status_ok = false;
             LOG_DEBUG_STR (formatString("returned status TBB_FREE_ACK, board-%d status=0x%x", b, ack.status_mask[b])); 
         }
     }
@@ -1758,7 +1750,7 @@ int TBBControl::handleAllocAck(GCFEvent& event)
     for (int b = 0; b < itsNrTBBs; b++) {
         if (isBoardUsed(b) == false) { continue; }
         if (ack.status_mask[b] != TBB_SUCCESS) {
-            //status_ok = false;  // error
+            status_ok = false;  // error
             LOG_DEBUG_STR (formatString("returned status TBB_ALLOC_ACK, board-%d status=%u", b, ack.status_mask[b])); 
         }
     }
@@ -1795,7 +1787,7 @@ int TBBControl::handleRcuInfoAck(GCFEvent& event)
     bool status_ok = true;
 
     if (ack.status_mask != TBB_SUCCESS) {
-        //status_ok = false;  // error
+        status_ok = false;  // error
         LOG_DEBUG_STR (formatString("returned status TBB_RCU_INFO_ACK, status=%u", ack.status_mask)); 
     }
 
@@ -1863,7 +1855,7 @@ int TBBControl::handleTrigSetupAck(GCFEvent& event)
     for (int b = 0; b < itsNrTBBs; b++) {
         if (isBoardUsed(b) == false) { continue; }
         if (ack.status_mask[b] != TBB_SUCCESS) {
-            //status_ok = false;  // error
+            status_ok = false;  // error
             LOG_DEBUG_STR (formatString("returned status TBB_TRIG_SETUP_ACK, board-%d status=%u", b, ack.status_mask[b])); 
         }
     }
@@ -1917,7 +1909,7 @@ int TBBControl::handleTrigCoefAck(GCFEvent& event)
     for (int b = 0; b < itsNrTBBs; b++) {
         if (isBoardUsed(b) == false) { continue; }
         if (ack.status_mask[b] != TBB_SUCCESS) {
-            //status_ok = false;  // error
+            status_ok = false;  // error
             LOG_DEBUG_STR (formatString("returned status TBB_TRIG_ACK, board-%d status=%u", b, ack.status_mask[b])); 
         }
     }

@@ -55,6 +55,7 @@ TEST(Tracking) {
 
   // blockSize is ~1s
   Delays delays(ps, 0, TimeStamp(time(0), 0, 200000000), dayOfSamples);
+  delays.start();
 
   Delays::AllDelays delaySet(ps), prevDelaySet(ps);
 
@@ -103,13 +104,14 @@ TEST(TiedArrayBeam) {
   ps.add( "Observation.Beam[1].angle2", "0" );
   ps.add( "Observation.Beam[1].nrTiedArrayBeams", "1" );
   ps.add( "Observation.Beam[1].TiedArrayBeam[0].directionType", "J2000" );
-  ps.add( "Observation.Beam[1].TiedArrayBeam[0].angle1", "1" ); // Observation.Beam[1].angle1 + 0
-  ps.add( "Observation.Beam[1].TiedArrayBeam[0].angle2", "1" ); // Observation.Beam[1].angle2 + 1
+  ps.add( "Observation.Beam[1].TiedArrayBeam[0].absoluteAngle1", "1" ); // Observation.Beam[1].angle1 + 0
+  ps.add( "Observation.Beam[1].TiedArrayBeam[0].absoluteAngle2", "1" ); // Observation.Beam[1].angle2 + 1
   ps.add( "Observation.Beam[1].TiedArrayBeam[0].coherent", "true" );
   ps.updateSettings();
 
   // blockSize is ~1s
   Delays delays(ps, 0, TimeStamp(time(0), 0, 200000000), dayOfSamples);
+  delays.start();
 
   Delays::AllDelays delaySet(ps);
 
@@ -130,6 +132,9 @@ TEST(TiedArrayBeam) {
 int main()
 {
   INIT_LOGGER( "tDelays" );
+
+  // Don't run forever if communication fails for some reason
+  alarm(10);
 
   return UnitTest::RunAllTests() > 0;
 }

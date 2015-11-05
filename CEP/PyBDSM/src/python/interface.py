@@ -96,7 +96,7 @@ def get_op_chain(img):
                 'outlist',
                 'cleanup']
     prev_opts = img._prev_opts
-    if prev_opts is None:
+    if prev_opts == None:
         return img, default_chain
     new_opts = img.opts.to_dict()
 
@@ -370,7 +370,7 @@ def save_pars(img, savefile=None, quiet=False):
     import tc
     import sys
 
-    if savefile is None or savefile == '':
+    if savefile == None or savefile == '':
         savefile = img.opts.filename + '.pybdsm.sav'
 
     # convert opts to dictionary
@@ -397,7 +397,7 @@ def list_pars(img, opts_list=None, banner=None, use_groups=True):
     opts = img.opts.to_list()
 
     # Filter list
-    if opts_list is not None:
+    if opts_list != None:
         opts_temp = []
         for o in opts:
             if o[0] in opts_list:
@@ -471,7 +471,7 @@ def group_opts(opts):
     gp = []
     for i in range(len(opts)):
         grp = opts[i][1].group()
-        if grp is not None and grp not in groups:
+        if grp != None and grp not in groups:
             groups.append(opts[i][1].group())
 
     groups.sort()
@@ -528,7 +528,7 @@ def print_opts(grouped_opts_list, img, banner=None):
     nc = '\033[0m'    # normal text color
     ncb = '\033[1m'    # normal text color bold
 
-    if banner is not None:
+    if banner != None:
         print banner
     spcstr = ' ' * minwidth # spaces string for second or later lines
     infix = nc + ': ' + nc # infix character used to separate values from comments
@@ -626,9 +626,9 @@ def print_opts(grouped_opts_list, img, banner=None):
                     else:
                         if isinstance(val, float):
                             val = round_float(val)
-                        if k == 'beam_spectrum' and val is not None:
+                        if k == 'beam_spectrum' and val != None:
                             val = round_list_of_tuples(val)
-                        if k == 'frequency_sp' and val is not None:
+                        if k == 'frequency_sp' and val != None:
                             val = round_list(val)
                         valstr = v1 + str(val) + v2
                         width_par_val = max(minwidth, len(k) + len(str(val)) + 6)
@@ -807,7 +807,7 @@ def export_image(img, outfile=None, img_format='fits', pad_image = False,
         print '\033[91mERROR\033[0m: img_format must be "fits" or "casa"'
         return False
     filename = outfile
-    if filename is None or filename == '':
+    if filename == None or filename == '':
         filename = img.imagename + '_' + img_type + '.' + format
     if os.path.exists(filename) and clobber == False:
         print '\033[91mERROR\033[0m: File exists and clobber = False.'
@@ -887,14 +887,10 @@ def export_image(img, outfile=None, img_format='fits', pad_image = False,
                 pbeam = int(round(img.beam2pix(img.beam)[0] * 1.5))
                 island_mask_bool = nd.binary_closing(island_mask_bool,
                     structure=N.ones((pbeam, pbeam)))
-
-            # Check for telescope, needed for CASA clean masks
-            if img._telescope is None:
-                print '\033[91mWARNING\033[0m: Telescope is unknown. Mask may not work correctly in CASA.'
             island_mask = N.array(island_mask_bool, dtype=N.float32)
             func.write_image_to_file(use_io, filename,
                                      island_mask, img, bdir, pad_image,
-                                     clobber=clobber, is_mask=True)
+                                     clobber=clobber)
         else:
             print "\n\033[91mERROR\033[0m: img_type not recognized."
             return False
@@ -996,9 +992,6 @@ def write_catalog(img, outfile=None, format='bbs', srcroot=None, catalog_type='g
         print '\033[91mERROR\033[0m: catalog_type must be "gaul", '\
               '"srl", or "shap"'
         return False
-    if catalog_type == 'shap' and format != 'fits':
-        print "\033[91mERROR\033[0m: Only format = 'fits' is supported with shapelet output."
-        return False
     if (len(img.sources) == 0 and not incl_empty) or (len(img.sources) == 0 and len(img.dsources) == 0 and incl_empty):
         if not force_output:
             print 'No sources were found in the image. Output file not written.'
@@ -1034,7 +1027,7 @@ def write_catalog(img, outfile=None, format='bbs', srcroot=None, catalog_type='g
         filename = output.write_fits_list(img, filename=filename,
                                              incl_chan=incl_chan, incl_empty=incl_empty,
                                              clobber=clobber, objtype=catalog_type)
-        if filename is None:
+        if filename == None:
             print '\033[91mERROR\033[0m: File exists and clobber = False.'
             return False
         else:
@@ -1045,7 +1038,7 @@ def write_catalog(img, outfile=None, format='bbs', srcroot=None, catalog_type='g
                                               incl_chan=incl_chan, incl_empty=incl_empty,
                                               sort_by='index', format = format,
                                               clobber=clobber, objtype=catalog_type)
-        if filename is None:
+        if filename == None:
             print '\033[91mERROR\033[0m: File exists and clobber = False.'
             return False
         else:
@@ -1060,7 +1053,7 @@ def write_catalog(img, outfile=None, format='bbs', srcroot=None, catalog_type='g
                                             patch=patch, correct_proj=correct_proj,
                                             sort_by='flux',
                                             clobber=clobber)
-        if filename is None:
+        if filename == None:
             print '\033[91mERROR\033[0m: File exists and clobber = False.'
             return False
         else:
@@ -1075,7 +1068,7 @@ def write_catalog(img, outfile=None, format='bbs', srcroot=None, catalog_type='g
                                             patch=patch,
                                             sort_by='flux',
                                             clobber=clobber)
-        if filename is None:
+        if filename == None:
             print '\033[91mERROR\033[0m: File exists and clobber = False.'
             return False
         else:
@@ -1085,7 +1078,7 @@ def write_catalog(img, outfile=None, format='bbs', srcroot=None, catalog_type='g
         filename = output.write_ds9_list(img, filename=filename,
                                             srcroot=srcroot, incl_empty=incl_empty,
                                             clobber=clobber, objtype=catalog_type)
-        if filename is None:
+        if filename == None:
             print '\033[91mERROR\033[0m: File exists and clobber = False.'
             return False
         else:
@@ -1097,7 +1090,7 @@ def write_catalog(img, outfile=None, format='bbs', srcroot=None, catalog_type='g
             return False
         filename = output.write_star(img, filename=filename,
                                         clobber=clobber)
-        if filename is None:
+        if filename == None:
             print '\033[91mERROR\033[0m: File exists and clobber = False.'
             return False
         else:
@@ -1109,7 +1102,7 @@ def write_catalog(img, outfile=None, format='bbs', srcroot=None, catalog_type='g
             return False
         filename = output.write_kvis_ann(img, filename=filename,
                                             clobber=clobber)
-        if filename is None:
+        if filename == None:
             print '\033[91mERROR\033[0m: File exists and clobber=False.'
             return False
         else:
@@ -1118,7 +1111,7 @@ def write_catalog(img, outfile=None, format='bbs', srcroot=None, catalog_type='g
     if format == 'casabox':
         filename = output.write_casa_gaul(img, filename=filename,
                                       incl_empty=incl_empty, clobber=clobber)
-        if filename is None:
+        if filename == None:
             print '\033[91mERROR\033[0m: File exists and clobber=False.'
         else:
             print '--> Wrote CASA clean box file ' + filename

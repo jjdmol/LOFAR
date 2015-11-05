@@ -25,7 +25,6 @@
 #include <CoInterface/Stream.h>
 
 #include <ctime>
-#include <cstring>
 #include <vector>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
@@ -48,6 +47,40 @@ namespace LOFAR
   namespace Cobalt
   {
 
+    Stream *createStream(const string &descriptor, bool asServer, time_t deadline)
+    {
+      vector<string> split = StringUtil::split(descriptor, ':');
+
+      if (deadline > 0 && deadline <= std::time(0))
+        THROW(SocketStream::TimeOutException, "Deadline already passed at start");
+
+      if (descriptor == "null:")
+        return new NullStream;
+      else if (split.size() == 3 && split[0] == "udp")
+        return new SocketStream(split[1].c_str(), boost::lexical_cast<unsigned short>(split[2]), SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, deadline);
+      else if (split.size() == 3 && split[0] == "tcp")
+        return new SocketStream(split[1].c_str(), boost::lexical_cast<unsigned short>(split[2]), SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, deadline);
+      else if (split.size() == 3 && split[0] == "udpkey")
+        return new SocketStream(split[1].c_str(), 0, SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, deadline, split[2].c_str());
+      else if (split.size() == 4 && split[0] == "tcpbroker")
+        return asServer ? static_cast<Stream*>(new PortBroker::ServerStream(split[3])) : static_cast<Stream*>(new PortBroker::ClientStream(split[1], boost::lexical_cast<unsigned short>(split[2]), split[3]));
+      else if (split.size() == 3 && split[0] == "tcpkey")
+        return new SocketStream(split[1].c_str(), 0, SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, deadline, split[2].c_str());
+      else if (split.size() > 1 && split[0] == "file") {
+        // don't use split[1] to allow : in filenames
+        const string filename = descriptor.substr(5);
+        return asServer ? new FileStream(filename.c_str()) : new FileStream(filename.c_str(), 0666);
+      } else if (split.size() == 2 && split[0] == "pipe")
+        return new NamedPipeStream(split[1].c_str(), asServer);
+      else if (split.size() == 2)
+        return new SocketStream(split[0].c_str(), boost::lexical_cast<unsigned short>(split[1]), SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, deadline);
+      else if (split.size() == 1)
+        return asServer ? new FileStream(split[0].c_str()) : new FileStream(split[0].c_str(), 0666);
+      else
+        THROW(CoInterfaceException, string("unrecognized connector format: \"" + descriptor + '"'));
+    }
+
+
     uint16 storageBrokerPort(int observationID)
     {
       return 7000 + observationID % 1000;
@@ -60,16 +93,11 @@ namespace LOFAR
     }
 
 
-    // The returned descriptor can be supplied to LCS/Stream StreamFactory.h
-    string getStreamDescriptorBetweenIONandStorage(const Parset &parset, OutputType outputType, unsigned streamNr, const std::string &bind_local_iface)
+    string getStreamDescriptorBetweenIONandStorage(const Parset &parset, OutputType outputType, unsigned streamNr)
     {
       string host = parset.getHostName(outputType, streamNr);
-      uint16 port = storageBrokerPort(parset.settings.observationID);
-
-      if (host == "")
-        return str(format("file:%s") % parset.getFileName(outputType, streamNr));
-      else
-        return str(format("tcpbroker:%s:%u:ion-storage-obs-%u-type-%u-stream-%u:%s") % host % port % parset.settings.observationID % outputType % streamNr % bind_local_iface);
+      uint16 port = storageBrokerPort(parset.observationID());
+      return str(format("tcpbroker:%s:%u:ion-storage-obs-%u-type-%u-stream-%u") % host % port % parset.observationID() % outputType % streamNr);
     }
 
   } // namespace Cobalt

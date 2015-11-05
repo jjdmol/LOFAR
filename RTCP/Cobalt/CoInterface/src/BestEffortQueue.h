@@ -22,7 +22,7 @@
 #define LOFAR_GPUPROC_BEST_EFFORT_QUEUE_H
 
 #include <CoInterface/Queue.h>
-#include <Common/Thread/Condition.h>
+#include <Common/Thread/Semaphore.h>
 
 namespace LOFAR
 {
@@ -43,41 +43,33 @@ namespace LOFAR
     {
     public:
       // Create a best-effort queue with room for `maxSize' elements.
-      // If `canDrop' is true, appends are dropped if the queue
+      // If `drop' is true, appends are dropped if the queue
       // has reached `maxSize', or if no remove() has been posted yet.
-      BestEffortQueue(const std::string &name, size_t maxSize, bool canDrop);
+      BestEffortQueue(const std::string &name, size_t maxSize, bool drop);
       ~BestEffortQueue();
 
       // Add an element. Returns true if append succeeded, false if element
-      // was dropped. The dropped element is assigned to `element'.
-      bool append(T& element, bool timed=true);
+      // was dropped.
+      bool append(const T&);
 
-    // Remove the front element; waits until `deadline' for an element,
-    // and returns `null' if the deadline passed.
-    T	       remove(const struct timespec &deadline = TimeSpec::universe_heat_death, T null = 0);
+      // Remove an element -- 0 or NULL signals end-of-stream.
+      T remove();
 
       // Signal end-of-stream.
       void noMore();
 
     private:
       const size_t maxSize;
+      const bool drop;
 
-      // Whether dropping is allowed due to the queue overflowing.
-      // Note that even if drop=false, elements can still be dropped
-      // on append() if the queue is being flushed.
-      const bool canDrop;
+      // Percentage of elements that were dropped in append()
+      RunningStatistics dropped_on_append;
 
-      // Percentage of elements that were dropped
-      RunningStatistics dropped;
+      // contains the amount of free space in the queue
+      Semaphore freeSpace;
 
       // true if the queue is being flushed
       bool flushing;
-
-      // signal that an element has been removed
-      Condition removeSignal;
-
-      // whether the queue has overflowed. Cannot grab itsMutex!
-      bool _overflow() const;
     };
   }
 }

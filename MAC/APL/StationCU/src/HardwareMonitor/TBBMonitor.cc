@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -42,8 +42,6 @@
 using namespace boost::posix_time;
 
 namespace LOFAR {
-	using namespace TBB_Protocol;
-	using namespace DP_Protocol;
 	using namespace GCF::TM;
 	using namespace GCF::PVSS;
 	using namespace GCF::RTDB;
@@ -457,15 +455,8 @@ GCFEvent::TResult TBBMonitor::askVersion(GCFEvent& event, GCFPortInterface& port
 			itsTBBs[tbb]->flush();
 			
 			// set right color
-			//string reasonStr;
-			if (ack.status_mask[tbb] == TBB_SUCCESS) {
-				//reasonStr = formatString("%s: good", getName());
-				setObjectState("TBBMonitor: good", itsTBBs[tbb]->getFullScope(), RTDB_OBJ_STATE_OPERATIONAL);
-			}
-			else {
-				//reasonStr = formatString("%s: wrong image", getName());
-				setObjectState("TBBMonitor: wrong image", itsTBBs[tbb]->getFullScope(), RTDB_OBJ_STATE_BROKEN);
-			}
+			setObjectState(getName(), itsTBBs[tbb]->getFullScope(), (ack.status_mask[tbb] == TBB_SUCCESS) ? 
+							RTDB_OBJ_STATE_OPERATIONAL : RTDB_OBJ_STATE_OFF);
 		}
 
 		LOG_DEBUG_STR ("Version information updated, going to status information");
@@ -1016,5 +1007,5 @@ string	TBBMonitor::TBBRCUstate(char	stateCode)
 	}
 }
 
-	}; // StationCU
+}; // StationCU
 }; // LOFAR

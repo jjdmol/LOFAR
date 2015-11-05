@@ -62,7 +62,7 @@ PortBroker &PortBroker::instance()
 
 PortBroker::PortBroker( uint16 port )
 :
-  SocketStream( "0.0.0.0", port, TCP, Server, 0, false ),
+  SocketStream( "0.0.0.0", port, TCP, Server, 0, "", false ),
   itsDone(false)
 {
 }
@@ -94,7 +94,7 @@ PortBroker::~PortBroker()
 
 
 void PortBroker::start() {
-  itsThread.reset(new Thread(this, &PortBroker::serverLoop, "PortBroker", "[PortBroker] ", 65535));
+  itsThread.reset(new Thread(this, &PortBroker::serverLoop, "[PortBroker] ", 65535));
 }
 
 
@@ -259,10 +259,10 @@ std::string PortBroker::ServerStream::getResource() const
 }
 
 
-PortBroker::ClientStream::ClientStream( const string &hostname, uint16 port, const string &resource, time_t deadline, const std::string &bind_local_iface )
+PortBroker::ClientStream::ClientStream( const string &hostname, uint16 port, const string &resource, time_t deadline )
 :
   // connect to port broker
-  SocketStream(hostname, port, SocketStream::TCP, SocketStream::Client, deadline, true, bind_local_iface)
+  SocketStream(hostname, port, SocketStream::TCP, SocketStream::Client, deadline)
 {
   // request service
   PortBroker::requestResource(*this, resource);

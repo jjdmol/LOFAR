@@ -49,7 +49,6 @@ typedef signed char SampleType;
 #include <boost/lexical_cast.hpp>
 
 #include <Common/LofarLogger.h>
-#include <CoInterface/Align.h>
 #include <CoInterface/fpequals.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
@@ -135,9 +134,9 @@ int test()
   // Dit moet nog opgevraagd worden en niet als magisch getal
   int MAXNRCUDATHREADS = 64;
 
-  unsigned maxNrThreads = MAXNRCUDATHREADS;
+  size_t maxNrThreads = MAXNRCUDATHREADS;
   unsigned totalNrThreads = NR_CHANNELS * NR_POLARIZATIONS * 2;
-  unsigned nrPasses = ceilDiv(totalNrThreads, maxNrThreads);
+  unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
   
   Grid globalWorkSize(nrPasses, NR_STATIONS); 
   Block localWorkSize(totalNrThreads / nrPasses, 1); 
@@ -193,7 +192,7 @@ int test()
   hKernel.setArg(1, devSampledData);
   hKernel.setArg(2, devFirWeights);
   hKernel.setArg(3, devHistoryData);
-  unsigned subbandIdx = 0;
+  size_t subbandIdx = 0;
   hKernel.setArg(4, subbandIdx);
 
   // Run the kernel
