@@ -117,14 +117,11 @@ LANG:1 0
 1
 LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
 0  -2 8 1201 854
-E6 "Hardware" 1
+E5 "Hardware" 1
 LANG:1 8 Hardware
 0
 "Observations" 1
 LANG:1 12 Observations
-0
-"Pipelines" 1
-LANG:1 9 Pipelines
 0
 "Processes" 1
 LANG:1 9 Processes
@@ -136,6 +133,55 @@ LANG:1 7 Reports
 LANG:1 6 Alerts
 0
 
+13 13
+"testButton"
+""
+1 1100 8 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+14 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  1098 6 1197 32
+
+T 
+1
+LANG:1 14 Show TestPanel
+"// SimpleCtrlScriptStart {invalid}
+main()
+{
+  EP_childPanelOn();
+}
+
+EP_childPanelOn()
+{
+  if ( isdir (\"d:/data/TRUNK-Navigator2\") || getenv(\"HOSTNAME\") == \"kis001\") {
+    ChildPanelOnCentral(\"Test/Event_Viewer.pnl\",
+                        \"Test Panel\",
+                        makeDynString(\"\"));
+    } else {
+      ChildPanelOnCentral(\"objects/lofar_logger.pnl\",
+                          \"LOFAR logger settings\",
+                          makeDynString(\"\"));
+    }
+}
+
+// SimpleCtrlScript {EP_childPanelOn}
+// Function {ChildPanelOnCentral}
+// File {Test/Event_Viewer.pnl}
+// Panel {Test Panel}
+// Parent {}
+// Module {}
+// OffsetX {0}
+// OffsetY {0}
+// SimpleCtrlScriptEnd {EP_childPanelOn}
+" 0
+ E E E
 22 14
 "panelChoice"
 ""
@@ -164,68 +210,12 @@ E
 
 E
  1 0
-1 25 0 "" 1
+1 19 0 "" 1
 0
-1 26 1 "" 1
+1 20 1 "" 1
 0
-1 27 2 "" 1
+1 21 2 "" 1
 0
-26 24
-"CASCADE_BUTTON3"
-""
-1 863 218 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
- E E
-19 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-0
-1
-LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
-0  1091 6 1190 32
- 0 1
-LANG:1 8 Settings
-"" 0 0 0 0 0
- 3 0 1
-LANG:1 5 Debug
-"1" 0 0 0 0 0
- 2 1 1
-LANG:1 8 Loglevel
-"3" 0 0 0 0 0
- 1 1
-LANG:1 14 show testPanel
-"4" 0 0 0 0 0
- 1 1
-LANG:1 3 ___
-"6" 0 0 0 0 0
- 0 1
-LANG:1 6 Alarms
-"2" 0 0 0 0 0
- 1 1 1
-LANG:1 5 email
-"5" 0 0 0 0 0
- "main()
-{
-  // later only for developpers now we only have root
-  if ( isdir (\"d:/data/TRUNK-Navigator2\") || getenv(\"HOSTNAME\") == \"kis001\") {
-    this.enableItemId(\"4\",TRUE);
-  } else {
-    this.enableItemId(\"4\",FALSE);
-  }
-}" 0
- "main(string id)
-{
-  if (id == \"3\") {
-    ModuleOnWithPanel(\"LOFAR logger settings\", -1, -1, 0, 0, 1, 1,\"\", \"objects/lofar_logger.pnl\", \"\" , makeDynString());
-  } else if (id == \"4\") {
-    ModuleOnWithPanel(\"Test Panel\", -1, -1, 0, 0, 1, 1, \"\", \"Test/Event_Viewer.pnl\", \"\" , makeDynString());
-  } else if (id == \"5\") {
-    ModuleOnWithPanel(\"Email settings\", -1, -1, 0, 0, 1, 1, \"\", \"Settings/mail.pnl\", \"\" , makeDynString());
-  }
-}" 0
-0 
 0
 LAYER, 1 
 1
@@ -259,9 +249,9 @@ LANG:1 0
 "objects\\Hardware\\lofar_HW_state.pnl" 45 5 T 16 1 0 1 -16 1
 0
 3 1 "PANEL_REF2" -1
-"objects\\Observations\\lofar_Obs_state.pnl" 125 5 T 16 1 0 1 43 1
+"objects\\Observations\\lofar_Obs_state.pnl" 125 5 T 16 1 0 1 -8 1
 0
 3 2 "PANEL_REF3" -1
-"objects\\Processes\\lofar_Proc_state.pnl" 225 5 T 16 1 0 1 59 1
+"objects\\Processes\\lofar_Proc_state.pnl" 225 5 T 16 1 0 1 -19 1
 0
 0

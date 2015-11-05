@@ -300,7 +300,7 @@ int main (Int argc, char** argv)
 		   "Name of psf image file (default is <imagename>.psf",
 		   "string");
     inputs.create ("data", "DATA",
-		   "Name of DATA column to use (if operation is not \"image\", CORRECTED_DATA is always used!)",
+		   "Name of DATA column to use",
 		   "string");
     inputs.create ("mode", "mfs",
 		   "Imaging mode (mfs, channel, or velocity)",
@@ -484,7 +484,7 @@ int main (Int argc, char** argv)
 		   "If turned to true, apply the element beam every TWElement.",
 		   "int");
     inputs.create ("ApplyBeamCode", "0",
-		   "0: arrayfactor and elementbeam (default), 1: only arrayfactor, 2: only elementbeam, 3: no arrayfactor, no elementbeam",
+		   "Ask developers.",
 		   "int");
     inputs.create ("UseMasks", "true",
 		   "When the element beam is applied (StepApplyElement), the addictional step of convolving the grid can be made more efficient by computing masks. If true, it will create a directory in which it stores the masks.",
@@ -679,29 +679,16 @@ int main (Int argc, char** argv)
     if (psfName.empty()) {
       psfName = imgName + ".psf";
     }
-    
-    if (weight == "robust") 
-    {
+    if (weight == "robust") {
       weight = "briggs";
-    } 
-    else if (weight == "robustabs") 
-    {
+    } else if (weight == "robustabs") {
       weight = "briggsabs";
     }
-    
-    // rmode for weighting (only valid for weight "uniform" "superuniform" "briggs")
-    // anything but "norm" or "abs" means (super)uniform weighting
-    String rmode; 
-    if (weight == "briggs") 
-    {
-      rmode  = "norm";
-    }
-    else if (weight == "briggsabs") 
-    {
+    string rmode = "norm";
+    if (weight == "briggsabs") {
       weight = "briggs";
       rmode  = "abs";
     }
-    
     bool doShift = False;
     MDirection phaseCenter;
     if (! phasectr.empty()) {
@@ -718,13 +705,6 @@ int main (Int argc, char** argv)
                   operation=="mfclark"||
                   operation=="multiscale", 
                   "Unknown operation");
-
-    if (operation!="image") {
-      // Skip assert if imageType=="observed" because it is the default
-      ASSERTSTR (imageType=="corrected" || imageType=="observed",
-                 "When operation is not \"image\", CORRECTED_DATA is used");
-    }
-
     IPosition maskBlc, maskTrc;
     Quantity threshold;
     Quantity sigma;

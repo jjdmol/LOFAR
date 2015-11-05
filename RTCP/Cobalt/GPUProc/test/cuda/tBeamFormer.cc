@@ -31,10 +31,11 @@
 
 #include <Common/Exception.h>
 #include <Common/LofarLogger.h>
-#include <CoInterface/fpequals.h>
+
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 
+#include "../fpequals.h"
 #include "../TestUtil.h"
 
 using namespace std;

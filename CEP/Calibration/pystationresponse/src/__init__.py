@@ -143,18 +143,3 @@ class stationresponse(object):
           Set).
         """
         return self._response.evaluate2(time, station, channel)
-    
-    def evaluateFreq (self, time, station, freq):
-        """Compute the beam Jones matrix for the given time, station, and
-        frequency. The result is returned as a 2-dim complex numpy array with
-        shape: 2 x 2.
-
-        `time`
-          Time (MJD in seconds).
-        `station`
-          Station number (as defined in the ANTENNA table of the Measurement
-          Set).
-        `frequency`
-          Frequency to compute beam at (in Hz)
-        """
-        return self._response.evaluate3(time, station, freq)

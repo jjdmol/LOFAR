@@ -64,6 +64,18 @@ namespace LOFAR
       std::string errorMessage(CUresult errcode);
 
 
+      // Struct representing a CUDA Block, which is similar to the @c dim3 type
+      // in the CUDA Runtime API.
+      struct Block
+      {
+        Block(unsigned int x_ = 1, unsigned int y_ = 1, unsigned int z_ = 1);
+        unsigned int x;
+        unsigned int y;
+        unsigned int z;
+        friend std::ostream& operator<<(std::ostream& os, const Block& block);
+      };
+
+
       // Struct representing a CUDA Grid, which is similar to the @c dim3 type
       // in the CUDA Runtime API.
       struct Grid
@@ -74,31 +86,6 @@ namespace LOFAR
         unsigned int z;
         friend std::ostream& operator<<(std::ostream& os, const Grid& grid);
       };
-
-      // Struct representing a CUDA Block, which is similar to the @c dim3 type
-      // in the CUDA Runtime API.
-      //
-      // @invariant x > 0, y > 0, z > 0
-      struct Block
-      {
-        Block(unsigned int x_ = 1, unsigned int y_ = 1, unsigned int z_ = 1);
-        unsigned int x;
-        unsigned int y;
-        unsigned int z;
-        friend std::ostream& operator<<(std::ostream& os, const Block& block);
-      };
-
-      // Struct containing kernel launch configuration.
-      struct ExecConfig
-      {
-        ExecConfig(Grid gr = Grid(), Block bl = Block(), size_t dynShMem = 0);
-        Grid   grid;
-        Block  block;
-        size_t dynSharedMemSize;
-        friend std::ostream& operator<<(std::ostream& os,
-                                        const ExecConfig& execConfig);
-      };
-
 
       // Forward declaration needed by Platform::devices.
       class Device;
@@ -112,7 +99,7 @@ namespace LOFAR
         // \param flags must be 0 (at least up till CUDA 5.0).
         Platform(unsigned int flags = 0);
 
-        // The CUDA version (e.g. 5.0 -> 5000).
+        // The CUDA version (f.e. 5.0 -> 5000).
         int version() const;
 
         // Returns the number of devices in the CUDA platform.
@@ -213,37 +200,15 @@ namespace LOFAR
       public:
         // Create a new CUDA context and associate it with the calling thread.
         // In other words, \c setCurrent() is implied.
-        //
-        // Flags:
+        Context(const Device &device, unsigned int flags = CU_CTX_SCHED_AUTO);
 
-        //    CU_CTX_SCHED_AUTO:
-        //        The default value if the flags parameter is zero, uses a
-        //        heuristic based on the number of active CUDA contexts in the
-        //        process C and the number of logical processors in the system P.
-        //        If C > P, then CUDA will yield to other OS threads when waiting
-        //        for the GPU, otherwise CUDA will not yield while waiting for
-        //        results and actively spin on the processor.
-        //    CU_CTX_SCHED_SPIN:
-        //        Instruct CUDA to actively spin when waiting for results from the GPU.
-        //        This can decrease latency when waiting for the GPU, but may lower
-        //        the performance of CPU threads if they are performing work in parallel
-        //        with the CUDA thread.
-        //    CU_CTX_SCHED_YIELD:
-        //        Instruct CUDA to yield its thread when waiting for results from the GPU.
-        //        This can increase latency when waiting for the GPU, but can increase
-        //        the performance of CPU threads performing work in parallel with the GPU.
-        //    CU_CTX_SCHED_BLOCKING_SYNC:
-        //        Instruct CUDA to block the CPU thread on a synchronization primitive
-        //        when waiting for the GPU to finish work.
-        Context(const Device &device, unsigned int flags = CU_CTX_SCHED_YIELD);
-
-        // Returns the device associated to this context.
+        // Returns the device associated to the _current_ context.
         Device getDevice() const;
 
-        // Set the cache configuration for kernel launches in this context.
+        // Set the cache configuration of the _current_ context.
         void setCacheConfig(CUfunc_cache config) const;
 
-        // Set the shared memory configuration for kernel launches in this context.
+        // Set the shared memory configuration of the _current_ context.
         void setSharedMemConfig(CUsharedconfig config) const;
 
       private:
@@ -329,7 +294,7 @@ namespace LOFAR
         // \param n  Number of bytes to set. Defaults to the complete block.
         //           If \a n is larger than the current memory block size, then
         //           the complete block will be set to \a uc.
-        void set(unsigned char uc, size_t n = (size_t)-1) const;
+        void set(unsigned char uc, size_t n = (size_t)-1);
 
         // Return the size of this memory block.
         size_t size() const;
@@ -438,10 +403,9 @@ namespace LOFAR
         // documentation of cuFuncSetSharedMemConfig in the CUDA Driver API.
         void setSharedMemConfig(CUsharedconfig config) const;
 
-      protected:
+      private:
         const Context _context;
 
-      private:
         // Keep the Module alive, because Function actually wraps a pointer
         // to a function within the Module.
         const Module _module;
@@ -536,7 +500,7 @@ namespace LOFAR
         // \param synchronous Indicates whether the transfer must be done
         //        synchronously or asynchronously. Default == false
         void writeBuffer(const DeviceMemory &devMem, const HostMemory &hostMem,
-                         PerformanceCounter &counter, bool synchronous = false) const;
+                         const PerformanceCounter &counter, bool synchronous = false) const;
 
         // Transfer data from device memory \a devMem to host memory \a hostMem.
         // \param hostMem Host memory that will be copied to.
@@ -555,7 +519,7 @@ namespace LOFAR
         // \param synchronous Indicates whether the transfer must be done
         //        synchronously or asynchronously. Default == false
         void readBuffer(const HostMemory &hostMem, const DeviceMemory &devMem,
-                        PerformanceCounter &counter, bool synchronous = false) const;
+                        const PerformanceCounter &counter, bool synchronous = false) const;
 
         // Transfer data from device memory \a devSource to device memory \a devTarget.
         // \param devTarget Device memory that will be copied to.
@@ -575,7 +539,7 @@ namespace LOFAR
         //        synchronously or asynchronously. Defaults to \c false
         //        (asynchronously).
         void copyBuffer(const DeviceMemory &devTarget, const DeviceMemory &devSource,
-                        PerformanceCounter &counter, bool synchronous = false) const;
+                        const PerformanceCounter &counter, bool synchronous = false) const;
 
         // Launch a CUDA function.
         // \param function object containing the function to launch

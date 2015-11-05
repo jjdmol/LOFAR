@@ -1,5 +1,5 @@
 //# outputProc.cc
-//# Copyright (C) 2008-2015  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -22,12 +22,13 @@
 #include <lofar_config.h>
 
 #include <cstdio> // for setvbuf
-#include <unistd.h>
 #include <omp.h>
+
 #include <string>
 #include <stdexcept>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
+
 #include <Common/LofarLogger.h>
 #include <Common/CasaLogSink.h>
 #include <Common/Exceptions.h>
@@ -36,102 +37,72 @@
 #include <CoInterface/Exceptions.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/Stream.h>
-#include <CoInterface/OMPThread.h>
 #include <OutputProc/Package__Version.h>
-#include <MessageBus/MessageBus.h>
 #include "GPUProcIO.h"
+#include "IOPriority.h"
 
-#define STDLOG_BUFFER_SIZE     1024
+// install a new handler to produce backtraces for bad_alloc
+LOFAR::NewHandler h(LOFAR::BadAllocException::newHandler);
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace std;
 using boost::format;
 
-// install a new handler to produce backtraces for bad_alloc
-LOFAR::NewHandler h(LOFAR::BadAllocException::newHandler);
-
 // Use a terminate handler that can produce a backtrace.
 Exception::TerminateHandler t(Exception::terminate);
 
-static char stdoutbuf[STDLOG_BUFFER_SIZE];
-static char stderrbuf[STDLOG_BUFFER_SIZE];
+char stdoutbuf[1024], stderrbuf[1024];
 
 static void usage(const char *argv0)
 {
-  cout << "OutputProc: Data writer for the Real-Time Central Processing of the" << endl;
-  cout << "LOFAR radio telescope." << endl;
-  cout << "OutputProc provides CASA Measurement Set files with correlated data" << endl;
-  cout << "for the Standard Imaging mode and HDF5 files with beamformed data" << endl;
-  cout << "for the Pulsar mode." << endl; 
-  cout << "OutputProc version " << OutputProcVersion::getVersion() << " r" << OutputProcVersion::getRevision() << endl;
-  cout << endl;
-  cout << "Usage: " << argv0 << " ObservationID mpi_rank" << endl;
-  cout << endl;
-  cout << "  -h: print this message" << endl;
+  cerr << "OutputProc: Data writer for the Real-Time Central Processing of the" << endl;
+  cerr << "LOFAR radio telescope." << endl;
+  cerr << "OutputProc provides CASA Measurement Set files with correlated data" << endl;
+  cerr << "for the Standard Imaging mode and HDF5 files with beamformed data" << endl;
+  cerr << "for the Pulsar mode." << endl; 
+  cerr << endl;
+  cerr << "Usage: " << argv0 << " ObservationID mpi_rank" << endl;
 }
 
 int main(int argc, char *argv[])
 {
+  INIT_LOGGER("outputProc");
+
+  LOG_INFO_STR("OutputProc version " << OutputProcVersion::getVersion() << " r" << OutputProcVersion::getRevision());
+
+  CasaLogSink::attach();
+
+  if (argc != 3)
+  {
+    usage(argv[0]);
+    return 1;
+  }
+   
   setvbuf(stdout, stdoutbuf, _IOLBF, sizeof stdoutbuf);
   setvbuf(stderr, stderrbuf, _IOLBF, sizeof stderrbuf);
 
-  int opt;
-  while ((opt = getopt(argc, argv, "h")) != -1) {
-    switch (opt) {
-    case 'h':
-      usage(argv[0]);
-      return EXIT_SUCCESS;
-
-    default: /* '?' */
-      usage(argv[0]);
-      return EXIT_FAILURE;
-    }
-  }
-
-  if (argc != 3) {
-    usage(argv[0]);
-    return EXIT_FAILURE;
-  }
-
-  int observationID = boost::lexical_cast<int>(argv[1]);
-  unsigned myRank = boost::lexical_cast<unsigned>(argv[2]);
-
-  // Ignore SIGPIPE, as we handle disconnects ourselves
-  struct sigaction sa;
-  sigemptyset(&sa.sa_mask);
-  sa.sa_flags = 0;
-  sa.sa_handler = SIG_IGN;
-  if (sigaction(SIGPIPE, &sa, NULL) < 0)
-    THROW_SYSCALL("sigaction(SIGPIPE, <SIG_IGN>)");
-
-  // Make sure all time is dealt with and reported in UTC
-  if (setenv("TZ", "UTC", 1) < 0)
-    THROW_SYSCALL("setenv(TZ)");
-
-  INIT_LOGGER("outputProc"); // also attaches to CasaLogSink
-
-  LOG_DEBUG_STR("Started: " << argv[0] << ' ' << argv[1] << ' ' << argv[2]);
-  LOG_INFO_STR("OutputProc version " << OutputProcVersion::getVersion() << " r" << OutputProcVersion::getRevision());
-
-  MessageBus::init();
-
   omp_set_nested(true);
 
-  OMPThread::init();
+  LOG_DEBUG_STR("Started: " << argv[0] << ' ' << argv[1] << ' ' << argv[2]);
+
+  int observationID = boost::lexical_cast<int>(argv[1]);
+  size_t myRank = boost::lexical_cast<size_t>(argv[2]);
+
+  setIOpriority();
+  setRTpriority();
+  lockInMemory();
 
   PortBroker::createInstance(storageBrokerPort(observationID));
 
-  // retrieve control stream to receive the parset and report back
+  // retrieve the parset
   string resource = getStorageControlDescription(observationID, myRank);
   PortBroker::ServerStream controlStream(resource);
 
-  if (process(controlStream, myRank)) {
-    LOG_INFO("Program terminated succesfully");
-    return EXIT_SUCCESS;
-  } else {
-    LOG_ERROR("Program terminated with errors");
-    return EXIT_FAILURE;
-  }
+  process(controlStream, myRank);
+
+  LOG_INFO("Program end");
+
+  return 0;
 }
 

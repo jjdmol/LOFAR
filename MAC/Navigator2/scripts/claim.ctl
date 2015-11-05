@@ -952,7 +952,8 @@ void checkAndCreateDPs() {
     //    CEPObservation: LOFAR_ObsSW_TempObs0001-g_MaxNrClaims
     //    OnlineControl:  LOFAR_ObsSW_TempObs0001-g_MaxNrClaims_OnlineControl
     //    PythonControl:  LOFAR_ObsSW_TempObs0001-g_MaxNrClaims_PythonControl
-    //    CobaltGPUProc:  LOFAR_ObsSW_TempObs0001-g_MaxNrClaims_OSCBT001-009_CobaltGPYProc00-01
+    //    BGLAppl:        LOFAR_ObsSW_TempObs0001-g_MaxNrClaims_OnlineControl_BGLAppl
+    //    BGLProc:        LOFAR_ObsSW_TempObs0001-g_MaxNrClaims_OnlineControl_BGLAppl_BGLProc
     
 
     if (claimableTypes[i] == "Observation") {
@@ -982,6 +983,16 @@ void checkAndCreateDPs() {
             //PythonControl
             if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_PythonControl")) {
               dpCreate("LOFAR_ObsSW_TempObs"+pre+"_PythonControl","PythonControl");
+              changed = true;
+            }
+            //BGPAppl
+            if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_BGPAppl")) {
+              dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_BGPAppl","BGPAppl");
+              changed = true;
+            }
+            //BGPProc
+            if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_BGPAppl_BGPProc")) {
+              dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_BGPAppl_BGPProc","BGPProc");
               changed = true;
             }
             //CobaltGPUProc
