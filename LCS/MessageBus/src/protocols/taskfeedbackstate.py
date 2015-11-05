@@ -19,6 +19,7 @@
 
 #import lofar.messagebus.Message
 from lofar.messagebus.message import MessageContent
+import xml.dom.minidom as xml
 
 LOFAR_STATUS_MSG_TEMPLATE = """
 <task>
@@ -37,7 +38,9 @@ class TaskFeedbackState(MessageContent):
       momID,
       sasID)
 
-    self.document.insertXML("message.payload", LOFAR_STATUS_MSG_TEMPLATE)
+    payload_document = xml.parseString(LOFAR_STATUS_MSG_TEMPLATE)
+
+    self._getXMLnode("message.payload").appendChild(payload_document.firstChild)
 
     self.type_ = "pipeline"
     if status:

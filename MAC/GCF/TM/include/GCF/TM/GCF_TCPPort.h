@@ -105,7 +105,6 @@ public:// consturctors && destructors
     void setHostName  (const string& hostname);
     void setPortNumber(unsigned int portNumber);
     string getHostName();
-    bool isLocalhost() const;
     unsigned int getPortNumber();
 
 	// support of UDP
@@ -170,12 +169,6 @@ inline void GCFTCPPort::setPortNumber(unsigned int portNumber)
 inline string GCFTCPPort::getHostName()
 {
 	return _host;
-}
-
-inline bool GCFTCPPort::isLocalhost() const
-{
-  // Note: setHostname converts 'localhost' and '' to myHostname(false)
-	return _host == myHostname(false) || _host == myHostname(true);
 }
 
 inline unsigned int GCFTCPPort::getPortNumber()
